@@ -989,3 +989,13 @@ Added:
 - Implemented scoring for typed answers, explicit overrides, editorial exclusions and pending manual responses. Partial credit supports matching and multiple-select.
 - Added focused engine tests. **Pending verification:** CI and runtime adapter; the v11 UI is not yet wired to this engine.
 - Known follow-up: strict response validation against question option identities and range rules at the input boundary; clarify manual-vs-automatic section expiry policy before UI integration.
+
+
+### Pass 2 checkpoint — source bank integration
+
+- Added a strict typed adapter from the five existing SSC CGL source papers and reviewed patch overlays to generic question, answer-key and paper revision records.
+- Uses SHA-256 fingerprints of revision payloads; keys and paper revisions pin exact identities. Does not mutate source JSON.
+- Keeps source-invalid questions excluded unless an explicit corrected patch repairs them; fixes the audited silent promotion of invalid source records.
+- CGL-specific 25-question grouping and 15-minute sectional limits live only in the CGL importer, not the generic engine.
+- Added candidate-response boundary checks for options, numeric constraints, matching and free-response length.
+- Focused import and scoring tests included. Still pending: CI check, runtime/UI adapter and historical persistence (Pass 3).
