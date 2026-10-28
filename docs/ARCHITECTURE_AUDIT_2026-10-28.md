@@ -1114,3 +1114,11 @@ Added:
 - Images in imported packages are checked against their actual decoded byte SHA-256 hashes. Assets are content-addressed by image bytes rather than data-URI text.
 - Attempt results show human-readable option labels, numbers, true/false values, matching labels and manual-response status, with expected answers and source explanations only after submission.
 - The frozen generic attempt now carries its explanation text for historical review even if an uploaded package is subsequently edited.
+
+
+### Pass 4 storage and UI workload checkpoint
+
+- Generic exam workspace timer now checkpoints to IndexedDB at most every 10 seconds during stable countdown; answers, section changes and submission are persisted immediately.
+- Added synchronous emergency mirror for the current attempt, reconciled against IndexedDB on reopening with completed records taking precedence.
+- Import rejects a package attempting to reuse an existing paper revision ID, preventing silent replacement of built-in or previously imported content.
+- An actual multi-browser file:// reopen test is still pending. Browser persistence remains best-effort; signed provenance is not provided by the import checksum.

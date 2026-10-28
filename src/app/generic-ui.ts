@@ -3,7 +3,7 @@ import type { ExamPackage, GenericAttempt } from "./exam-package.ts";
 import type { QuestionRevision, CandidateResponse } from "../domain/question.js";
 import type { QuestionRevisionId } from "../domain/ids.js";
 import type { SessionEvent } from "../engine/session.ts";
-import { restoreSession } from "../history/frozen.ts";
+import { restoreSession, chooseRecovered, assertFrozenContent } from "../history/frozen.ts";
 import { scoreAttempt } from "../engine/scoring.ts";
 import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
 
@@ -76,11 +76,17 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  let choice=packages.keys().next().value as string;
  let attempt:GenericAttempt|null=null, view:"library"|"exam"|"result"="library";
  let db:IDBDatabase|null=null, warning="",disposed=false, writeQueue=Promise.resolve();
- const storageKey="practiceDesk.generic.fallback.v1";
+ let lastTimerSave=0;
+ const storageKey="practiceDesk.generic.fallback.v1", mirrorKey="practiceDesk.generic.active.v1";
+ const writeMirror=(record:GenericAttempt)=>{
+   try{localStorage.setItem(mirrorKey,JSON.stringify(record));}
+   catch{warning="Emergency session mirror could not be saved. Use a history export.";}
+ };
  const notice=(s:string)=>{warning=s;draw();};
  const now=()=>Date.now();
  const save=(record:RecordItem)=>{
    records.set(record.id,record);
+   if(isAttempt(record))writeMirror(record);
    writeQueue=writeQueue.catch(()=>{}).then(()=>new Promise<void>((resolve,reject)=>{
      if(!db){
        try{localStorage.setItem(storageKey,JSON.stringify([...records.values()]));resolve();}
@@ -206,6 +212,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        if(file.size>25*1024*1024){notice("Exam package exceeds the 25 MiB import limit.");return;}
        try{
          const pkg=validateExamPackage(JSON.parse(await file.text()));
+         if(packages.has(pkg.paper.id))throw new Error("Paper revision ID already exists. Supply a new revision ID.");
          packages.set(pkg.paper.id,pkg);choice=pkg.paper.id;
          save({recordType:"generic-package",id:"generic-package:"+pkg.paper.id,bundle:pkg});
          notice("Package validated and imported.");
@@ -281,9 +288,13 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    const next=transitionGenericAttempt(original,{type:"TICK",nowMs:now()},
      new Map(original.frozen.questions.map(q=>[q.id,q])));
    if(next!==original){
-     attempt=next;save(attempt);
+     attempt=next;
+     const changedSection=original.state.sectionIndex!==next.state.sectionIndex;
+     if(next.finishedAt!==null||changedSection||now()-lastTimerSave>=10000){
+       save(attempt);lastTimerSave=now();
+     }
      if(next.finishedAt!==null){view="result";draw();return;}
-     if(original.state.sectionIndex!==next.state.sectionIndex){draw();return;}
+     if(changedSection){draw();return;}
    }
    const el=root.querySelector("#g-timer");
    if(el&&attempt){const time=examTimeRemaining(attempt.frozen.paper,attempt.state);
@@ -291,7 +302,17 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  },1000);
  const visibility=()=>{if(view==="exam"&&attempt)dispatch({type:"VISIBILITY",nowMs:now(),visible:!document.hidden});};
  document.addEventListener("visibilitychange",visibility);
- const pagehide=()=>{if(view==="exam"&&attempt)dispatch({type:"VISIBILITY",nowMs:now(),visible:false});};
+ const pagehide=()=>{
+   if(view==="exam"&&attempt){
+     try{
+       const current=attempt;
+       attempt=transitionGenericAttempt(current,{type:"VISIBILITY",nowMs:now(),visible:false},
+         new Map(current.frozen.questions.map(q=>[q.id,q])));
+       writeMirror(attempt);
+       save(attempt);
+     }catch(error){console.warn("Pagehide checkpoint failed",error);}
+   }
+ };
  window.addEventListener("pagehide",pagehide);
  function cleanup(){disposed=true;window.clearInterval(timer);document.removeEventListener("visibilitychange",visibility);
    window.removeEventListener("pagehide",pagehide);db?.close();root.classList.remove("generic-workspace");}
@@ -309,9 +330,21 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
      });
      for(const record of all){
-       if(isPackage(record)){try{packages.set(record.bundle.paper.id,validateExamPackage(record.bundle));records.set(record.id,record);}catch{}}
+       if(isPackage(record)){try{
+         const valid=validateExamPackage(record.bundle);
+         if(!packages.has(valid.paper.id)){packages.set(valid.paper.id,valid);records.set(record.id,record);}
+       }catch(error){console.warn("Invalid saved package",error);}}
        else if(isAttempt(record))records.set(record.id,record);
      }
+     try{
+       const mirror=JSON.parse(localStorage.getItem(mirrorKey)??"null") as unknown;
+       if(isAttempt(mirror)){
+         assertFrozenContent(mirror.frozen);
+         const existing=records.get(mirror.id);
+         const winner=chooseRecovered(isAttempt(existing)?existing:undefined,mirror);
+         if(winner===mirror){records.set(mirror.id,mirror);save(mirror);}
+       }
+     }catch(error){console.warn("Invalid emergency session mirror",error);}
    }catch{
      warning="IndexedDB unavailable. Limited localStorage fallback is in use.";
      try{
