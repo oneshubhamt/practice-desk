@@ -979,3 +979,13 @@ Added:
 **Final acceptance — pending:** Exact offline single-HTML distribution, original 500-question collection and editions, scoring/timing correctness, and end-to-end flows on `file://`.
 
 **Amendments:** Record changes in this ledger with a reason and validation evidence. Keep the historical audit intact above.
+
+
+### Pass 2 checkpoint — engine correctness
+
+- Implemented pure transitions for start, tick, visibility, pause/resume, navigation, response, clear, flag, section submit and attempt submit.
+- Corrected visibility-time accounting: checkpoint before visibility mutation. Expiry now caps time and allocates oversized ticks across sequential sectional limits.
+- Added monotonic-clock rebase for future persisted session restoration. Wall-clock offline restore semantics remain for Pass 3; rebase alone does not enforce elapsed time while the app is closed.
+- Implemented scoring for typed answers, explicit overrides, editorial exclusions and pending manual responses. Partial credit supports matching and multiple-select.
+- Added focused engine tests. **Pending verification:** CI and runtime adapter; the v11 UI is not yet wired to this engine.
+- Known follow-up: strict response validation against question option identities and range rules at the input boundary; clarify manual-vs-automatic section expiry policy before UI integration.

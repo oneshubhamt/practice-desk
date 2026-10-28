@@ -13,10 +13,14 @@ function equal(a: CorrectAnswer, b: CandidateResponse): boolean {
   if (a.kind !== b.kind) return false;
   switch (a.kind) {
     case "single-choice": return b.kind === a.kind && a.optionId === b.optionId;
-    case "multiple-select": return b.kind === a.kind && a.optionIds.length === b.optionIds.length && new Set(a.optionIds).size === a.optionIds.length && a.optionIds.every(id => b.optionIds.includes(id));
-    case "numeric-entry": return b.kind === a.kind && a.acceptedValues.some(value => Math.abs(value - b.value) <= Math.max(a.absoluteTolerance ?? 0, (a.relativeTolerance ?? 0) * Math.abs(value)));
+    case "multiple-select": return b.kind === a.kind && a.optionIds.length === b.optionIds.length &&
+      new Set(b.optionIds).size === b.optionIds.length && a.optionIds.every(id => b.optionIds.includes(id));
+    case "numeric-entry": return b.kind === a.kind && Number.isFinite(b.value) &&
+      a.acceptedValues.some(value => Math.abs(value - b.value) <= Math.max(a.absoluteTolerance ?? 0, (a.relativeTolerance ?? 0) * Math.abs(value)));
     case "true-false": return b.kind === a.kind && a.value === b.value;
-    case "matching": return b.kind === a.kind && a.pairs.length === b.pairs.length && a.pairs.every(pair => b.pairs.some(candidate => candidate.leftId === pair.leftId && candidate.rightId === pair.rightId));
+    case "matching": return b.kind === a.kind && a.pairs.length === b.pairs.length &&
+      new Set(b.pairs.map(p => p.leftId)).size === b.pairs.length &&
+      a.pairs.every(pair => b.pairs.some(candidate => candidate.leftId === pair.leftId && candidate.rightId === pair.rightId));
     case "free-response": return false;
   }
 }
@@ -25,11 +29,12 @@ function componentMarks(answer: CorrectAnswer, response: CandidateResponse, rule
   if (!partial || answer.kind !== response.kind) return null;
   if (answer.kind === "multiple-select" && response.kind === "multiple-select") {
     const selected = new Set(response.optionIds);
+    if (selected.size !== response.optionIds.length) throw new Error("Duplicate selected option");
     const correct = response.optionIds.filter(id => answer.optionIds.includes(id)).length;
-    const wrong = selected.size - correct;
-    return correct * partial.marksPerCorrectComponent - wrong * (partial.penaltyPerIncorrectComponent ?? 0);
+    return correct * partial.marksPerCorrectComponent - (selected.size - correct) * (partial.penaltyPerIncorrectComponent ?? 0);
   }
   if (answer.kind === "matching" && response.kind === "matching") {
+    if (new Set(response.pairs.map(p => p.leftId)).size !== response.pairs.length) throw new Error("Duplicate matching left item");
     const correct = response.pairs.filter(pair => answer.pairs.some(a => a.leftId === pair.leftId && a.rightId === pair.rightId)).length;
     return correct * partial.marksPerCorrectComponent - (response.pairs.length - correct) * (partial.penaltyPerIncorrectComponent ?? 0);
   }
@@ -41,7 +46,8 @@ export function scoreAttempt(paper: PaperRevision, key: AnswerKeyRevision, quest
   const answerMap = new Map(key.entries.map(e => [e.questionRevisionId, e]));
   const responseMap = new Map(responses.map(r => [r.questionRevisionId, r]));
   const ids = paper.sections.flatMap(s => s.questionRevisionIds);
-  if (new Set(ids).size !== ids.length) throw new Error("Duplicate question in paper");
+  if (new Set(ids).size !== ids.length || responseMap.size !== responses.length) throw new Error("Duplicate question or response");
+  if (responses.some(r => !ids.includes(r.questionRevisionId))) throw new Error("Response references question outside paper");
   const items: ItemScore[] = [];
   let earnedMarks = 0, positiveMarks = 0, penaltyMarks = 0;
   let correctCount = 0, incorrectCount = 0, unansweredCount = 0, excludedCount = 0;
@@ -51,6 +57,7 @@ export function scoreAttempt(paper: PaperRevision, key: AnswerKeyRevision, quest
     if (!question || !entry) throw new Error("Missing question or answer key entry");
     const rule = entry.scoringOverride ?? section.scoringOverride ?? paper.scoring.byQuestionKind?.[question.content.kind] ?? paper.scoring.defaultRule;
     const response = responseMap.get(id)?.response;
+    if (response && response.kind !== question.content.kind) throw new Error("Response kind mismatch");
     let verdict: Verdict;
     let marks: number;
     if (["invalid", "incomplete-source", "under-review", "superseded"].includes(question.editorial.status)) { verdict = "excluded"; marks = 0; excludedCount++; }

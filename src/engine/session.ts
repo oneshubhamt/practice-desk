@@ -1,5 +1,5 @@
 import type { PaperRevision } from "../domain/exam.js";
-import type { CandidateResponse } from "../domain/question.js";
+import type { CandidateResponse, QuestionRevision } from "../domain/question.js";
 import type { QuestionRevisionId } from "../domain/ids.js";
 import type { AttemptResponseRecord } from "../domain/attempt.js";
 
@@ -13,7 +13,7 @@ export interface SessionState {
   readonly responses: readonly AttemptResponseRecord[];
   readonly completedSections: readonly number[];
   readonly visible: boolean;
-  /** Last monotonic timestamp; the host must provide monotonic milliseconds. */
+  /** Monotonic time origin for the current live process; never persist this as a restore deadline. */
   readonly clockMs: number;
 }
 export type SessionEvent =
@@ -32,14 +32,20 @@ function questionId(paper: PaperRevision, state: SessionState): QuestionRevision
   return id;
 }
 function record(state: SessionState, id: QuestionRevisionId): AttemptResponseRecord {
-  return state.responses.find(r => r.questionRevisionId === id) ?? { questionRevisionId: id, flagged: false, timeSpentMs: 0, answerChangeCount: 0 };
+  return state.responses.find(r => r.questionRevisionId === id) ?? {
+    questionRevisionId: id, flagged: false, timeSpentMs: 0, answerChangeCount: 0,
+  };
 }
 function put(state: SessionState, value: AttemptResponseRecord): SessionState {
   return { ...state, responses: [...state.responses.filter(r => r.questionRevisionId !== value.questionRevisionId), value] };
 }
 export function startSession(paper: PaperRevision, nowMs: number): SessionState {
   if (!Number.isFinite(nowMs) || !paper.sections[0]?.questionRevisionIds.length) throw new Error("Invalid session start");
-  return { status: "running", sectionIndex: 0, questionIndex: 0, elapsedMs: 0, sectionElapsedMs: 0, foregroundMs: 0, responses: [], completedSections: [], visible: true, clockMs: nowMs };
+  return {
+    status: "running", sectionIndex: 0, questionIndex: 0, elapsedMs: 0,
+    sectionElapsedMs: 0, foregroundMs: 0, responses: [], completedSections: [],
+    visible: true, clockMs: nowMs,
+  };
 }
 function advance(paper: PaperRevision, state: SessionState): SessionState {
   const completedSections = [...state.completedSections, state.sectionIndex];
@@ -48,31 +54,44 @@ function advance(paper: PaperRevision, state: SessionState): SessionState {
     ? { ...state, completedSections, status: "completed" }
     : { ...state, completedSections, sectionIndex: next, questionIndex: 0, sectionElapsedMs: 0 };
 }
-function expire(paper: PaperRevision, state: SessionState): SessionState {
-  if (state.status !== "running") return state;
-  if (paper.timing.kind === "whole-paper" && state.elapsedMs >= paper.timing.durationMs) return { ...state, status: "completed" };
-  if (paper.timing.kind === "sectional") {
-    let current = state;
-    while (current.status === "running") {
-      const limit = paper.timing.sectionLimits.find(s => s.sectionId === paper.sections[current.sectionIndex]?.id)?.durationMs;
-      if (limit === null || limit === undefined || current.sectionElapsedMs < limit) break;
-      current = advance(paper, current);
-    }
-    return current;
-  }
-  return state;
+function sectionLimit(paper: PaperRevision, sectionIndex: number): number | null {
+  if (paper.timing.kind !== "sectional") return null;
+  const sectionId = paper.sections[sectionIndex]?.id;
+  const limit = paper.timing.sectionLimits.find(s => s.sectionId === sectionId);
+  if (!limit) throw new Error("Missing sectional timer");
+  return limit.durationMs;
 }
+/** Consume a monotonic interval without assigning time after expiry to a completed question. */
 function checkpoint(paper: PaperRevision, state: SessionState, nowMs: number): SessionState {
   if (!Number.isFinite(nowMs) || nowMs < state.clockMs) throw new Error("Clock must be monotonic");
-  const delta = state.status === "running" ? nowMs - state.clockMs : 0;
-  const visibleDelta = state.visible ? delta : 0;
-  let next: SessionState = { ...state, clockMs: nowMs, elapsedMs: state.elapsedMs + delta, sectionElapsedMs: state.sectionElapsedMs + delta, foregroundMs: state.foregroundMs + visibleDelta };
-  if (visibleDelta > 0) {
-    const id = questionId(paper, state);
-    const previous = record(next, id);
-    next = put(next, { ...previous, timeSpentMs: previous.timeSpentMs + visibleDelta });
+  let remaining = state.status === "running" ? nowMs - state.clockMs : 0;
+  let next: SessionState = { ...state, clockMs: nowMs };
+  if (state.status !== "running") return next;
+  // Every iteration either consumes time, advances a section, or terminates.
+  while (next.status === "running") {
+    const limit = paper.timing.kind === "whole-paper"
+      ? Math.max(0, paper.timing.durationMs - next.elapsedMs)
+      : sectionLimit(paper, next.sectionIndex) === null
+        ? Infinity : Math.max(0, (sectionLimit(paper, next.sectionIndex) ?? Infinity) - next.sectionElapsedMs);
+    const spent = Math.min(remaining, limit);
+    if (spent > 0) {
+      next = { ...next, elapsedMs: next.elapsedMs + spent, sectionElapsedMs: next.sectionElapsedMs + spent,
+        foregroundMs: next.foregroundMs + (next.visible ? spent : 0) };
+      if (next.visible) {
+        const id = questionId(paper, next);
+        const previous = record(next, id);
+        next = put(next, { ...previous, timeSpentMs: previous.timeSpentMs + spent });
+      }
+    }
+    remaining -= spent;
+    if (limit !== Infinity && spent === limit) {
+      if (paper.timing.kind === "whole-paper") return { ...next, status: "completed" };
+      next = advance(paper, next);
+      continue;
+    }
+    break;
   }
-  return expire(paper, next);
+  return next;
 }
 export function transition(paper: PaperRevision, state: SessionState, event: SessionEvent): SessionState {
   const current = checkpoint(paper, state, event.nowMs);
@@ -87,21 +106,36 @@ export function transition(paper: PaperRevision, state: SessionState, event: Ses
   if (current.status !== "running") return current;
   if (event.type === "SUBMIT_ATTEMPT") return { ...current, status: "completed" };
   if (event.type === "SUBMIT_SECTION") {
-    if (paper.timing.kind === "sectional" && !paper.timing.allowEarlySubmit) return current;
+    if (paper.timing.kind !== "sectional" || !paper.timing.allowEarlySubmit) return current;
     return advance(paper, current);
   }
   if (event.type === "NAVIGATE") {
     const section = paper.sections[event.sectionIndex];
     if (!section?.questionRevisionIds[event.questionIndex] || current.completedSections.includes(event.sectionIndex)) return current;
-    if (paper.navigation.sectionNavigation === "sequential-locked" && event.sectionIndex !== current.sectionIndex) return current;
-    if (paper.navigation.questionNavigation === "forward-only" && event.sectionIndex === current.sectionIndex && event.questionIndex < current.questionIndex) return current;
     if (paper.timing.kind === "sectional" && event.sectionIndex !== current.sectionIndex) return current;
-    return { ...current, sectionIndex: event.sectionIndex, questionIndex: event.questionIndex, sectionElapsedMs: event.sectionIndex === current.sectionIndex ? current.sectionElapsedMs : 0 };
+    if (paper.navigation.sectionNavigation === "sequential-locked" && event.sectionIndex !== current.sectionIndex) return current;
+    if (paper.navigation.questionNavigation === "forward-only" &&
+        (event.sectionIndex < current.sectionIndex ||
+         (event.sectionIndex === current.sectionIndex && event.questionIndex < current.questionIndex))) return current;
+    return { ...current, sectionIndex: event.sectionIndex, questionIndex: event.questionIndex,
+      sectionElapsedMs: event.sectionIndex === current.sectionIndex ? current.sectionElapsedMs : 0 };
   }
   const id = questionId(paper, current);
   const previous = record(current, id);
   if (event.type === "FLAG") return paper.navigation.allowFlagging ? put(current, { ...previous, flagged: event.flagged }) : current;
-  if (event.type === "CLEAR") return put(current, { ...previous, answerChangeCount: previous.response ? previous.answerChangeCount + 1 : previous.answerChangeCount, response: undefined });
-  if (event.type === "ANSWER") return put(current, { ...previous, response: event.response, answerChangeCount: previous.response ? previous.answerChangeCount + 1 : previous.answerChangeCount });
+  if (event.type === "CLEAR") {
+    const { response: _removed, ...rest } = previous;
+    return put(current, { ...rest, answerChangeCount: previous.response ? previous.answerChangeCount + 1 : previous.answerChangeCount });
+  }
+  if (event.type === "ANSWER") {
+    return put(current, { ...previous, response: event.response,
+      answerChangeCount: previous.response && JSON.stringify(previous.response) !== JSON.stringify(event.response)
+        ? previous.answerChangeCount + 1 : previous.answerChangeCount });
+  }
   return current;
+}
+/** Rebase a saved session onto a fresh monotonic origin after a process restart. */
+export function rebaseSession(state: SessionState, nowMs: number): SessionState {
+  if (!Number.isFinite(nowMs)) throw new Error("Invalid restore clock");
+  return { ...state, clockMs: nowMs };
 }
