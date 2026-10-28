@@ -1016,3 +1016,12 @@ Added:
 - Existing library/exam/results/history UI now invokes the generic browser adapter; policy-based scoring drives total and per-section results.
 - Current CGL UI still presents four fixed sections, four letter choices and the existing timer widgets. Generic engine is configured by the importer; Pass 4 must replace the remaining CGL-specific UI assumptions for other exams.
 - Pass 3 may begin after the final adapter regression suite passes. No changes to `main` or `baseline/v11`.
+
+
+### Pass 2 closure — 2026-10-28
+
+**Status: implemented and CI-green for the existing CGL UI.** The pure engine, CGL source/reviewed adapter, response validation, scoring, browser bridge, embedded offline build and integration regression tests are on `overhaul`. CI run 40636491131 passed.
+
+**Explicit scope boundary:** The current interface is still CGL-shaped; its presentation assumes 4 sections and 25 questions, and the existing timer widgets remain. Those are UI generalization tasks for Pass 4, not evidence that the generic engine supports only CGL. No claim of a manual browser smoke test or generic non-CGL end-to-end UI acceptance is made.
+
+**Next:** Pass 3 immutable history, frozen revision snapshots, persistence and restore. Preserve the single-file offline build and CI gate.
