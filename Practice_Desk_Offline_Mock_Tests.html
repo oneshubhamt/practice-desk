@@ -762,6 +762,37 @@ var PracticeDeskEngine = (() => {
     }
     return current;
   }
+  function rebaseSession(state, nowMs) {
+    if (!Number.isFinite(nowMs)) throw new Error("Invalid restore clock");
+    return { ...state, clockMs: nowMs };
+  }
+
+  // src/history/frozen.ts
+  function freezeAttempt(paper, key, questions, mode, frozenAt) {
+    validateAnswerKeyRevision(key, questions);
+    validatePaperRevision(paper, questions, key);
+    const snapshot = {
+      examId: "ssc-cgl",
+      paperId: paper.paperId,
+      paperRevisionId: paper.id,
+      answerKeyRevisionId: key.id,
+      scoringPolicy: paper.scoring,
+      mode
+    };
+    return structuredClone({ schema: 1, frozenAt, snapshot, paper, key, questions });
+  }
+  function assertFrozenContent(value) {
+    if (!value || value.schema !== 1 || !value.snapshot || !value.paper || !value.key || !Array.isArray(value.questions) || value.snapshot.paperId !== value.paper.paperId || value.snapshot.paperRevisionId !== value.paper.id || value.snapshot.answerKeyRevisionId !== value.key.id || JSON.stringify(value.snapshot.scoringPolicy) !== JSON.stringify(value.paper.scoring) || !Number.isFinite(Date.parse(value.frozenAt))) {
+      throw new Error("Invalid or mismatched frozen attempt content");
+    }
+    validatePaperRevision(value.paper, value.questions, value.key);
+    return value;
+  }
+  function restoreSession(paper, saved, wallNowMs, visible) {
+    if (!Number.isFinite(wallNowMs)) throw new Error("Invalid restoration time");
+    const aligned = wallNowMs < saved.clockMs ? rebaseSession({ ...saved, visible: false }, wallNowMs) : transition(paper, { ...saved, visible: false }, { type: "TICK", nowMs: wallNowMs });
+    return { state: { ...aligned, visible }, expired: aligned.status === "completed" };
+  }
 
   // src/engine/scoring.ts
   function equal(a, b) {
@@ -890,6 +921,11 @@ var PracticeDeskEngine = (() => {
       e
     ]));
     function context(attempt) {
+      if (attempt.frozen) {
+        const frozen = assertFrozenContent(attempt.frozen);
+        if (frozen.paper.paperId !== attempt.paperId.replace(/-reviewed$/, "")) throw new Error("Frozen paper identity mismatch");
+        return frozen;
+      }
       const base = editions.get(attempt.paperId);
       if (!base) throw new Error("Unknown paper edition");
       const paper = attempt.mode === "strict" ? base.paper : {
@@ -899,6 +935,14 @@ var PracticeDeskEngine = (() => {
         navigation: { ...base.paper.navigation, sectionNavigation: attempt.mode === "free" ? "free" : "sequential-locked" }
       };
       return { ...base, paper };
+    }
+    function capture(a, wallNowMs) {
+      if (!a.frozen) {
+        const { paper, key, questions } = context(a);
+        const mode = a.mode === "strict" ? "exam-simulation" : a.mode === "single" ? "section-practice" : "full-paper-practice";
+        a.frozen = freezeAttempt(paper, key, questions, mode, new Date(wallNowMs).toISOString());
+      }
+      return assertFrozenContent(a.frozen);
     }
     function responseRecords(a) {
       const { questions } = context(a);
@@ -918,22 +962,32 @@ var PracticeDeskEngine = (() => {
       });
     }
     function ensure(a, nowMs) {
+      capture(a, nowMs);
       const { paper } = context(a);
       if (a.engineState && a.enginePaperRevisionId === paper.id) return a.engineState;
       let state = startSession(paper, a.startedAt);
+      if (nowMs >= a.startedAt && nowMs > a.startedAt) {
+        state = transition(paper, { ...state, visible: false }, { type: "TICK", nowMs });
+        state = { ...state, visible: true };
+      }
       const sectionIndex = a.mode === "single" ? 0 : a.section;
       state = {
         ...state,
-        sectionIndex,
+        sectionIndex: Math.min(sectionIndex, paper.sections.length - 1),
         questionIndex: a.cursors[a.section] ?? 0,
         responses: responseRecords(a),
-        // Existing attempts have wall-clock start times, not a monotonic-origin snapshot.
-        elapsedMs: Math.max(0, nowMs - a.startedAt),
         clockMs: nowMs
       };
       a.engineState = state;
       a.enginePaperRevisionId = paper.id;
       return state;
+    }
+    function restore(a, wallNowMs, visible) {
+      const { paper } = context(a);
+      if (!a.engineState) ensure(a, wallNowMs);
+      const restored = restoreSession(paper, a.engineState, wallNowMs, visible);
+      a.engineState = restored.state;
+      return restored;
     }
     function event(a, event2) {
       const { paper } = context(a);
@@ -961,7 +1015,7 @@ var PracticeDeskEngine = (() => {
       const { paper, key, questions } = context(a);
       return scoreAttempt(paper, key, questions, responseRecords(a), calculatedAt);
     }
-    return { context, ensure, event, answer, score, importedCount: imported.length, questionCount: imported.reduce((n, e) => n + e.questions.length, 0) };
+    return { context, capture, ensure, restore, event, answer, score, importedCount: imported.length, questionCount: imported.reduce((n, e) => n + e.questions.length, 0) };
   }
   return __toCommonJS(browser_engine_exports);
 })();
