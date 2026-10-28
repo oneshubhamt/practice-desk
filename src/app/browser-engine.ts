@@ -1,6 +1,6 @@
 import { importCglBank } from "../content/import-cgl.ts";
 import { transition, startSession } from "../engine/session.ts";
-import { freezeAttempt, assertFrozenContent, restoreSession } from "../history/frozen.ts";
+import { freezeAttempt, assertFrozenContent, restoreSession, chooseRecovered } from "../history/frozen.ts";
 import type { FrozenAttemptContent } from "../history/frozen.ts";
 import { scoreAttempt } from "../engine/scoring.ts";
 import { validateResponse } from "../engine/response.ts";
@@ -50,7 +50,7 @@ export function createBrowserEngine(sources: SourcePaperBank, patches: ReviewPat
     if (!a.frozen) {
       const { paper, key, questions } = context(a);
       const mode = a.mode === "strict" ? "exam-simulation" : a.mode === "single" ? "section-practice" : "full-paper-practice";
-      a.frozen = freezeAttempt(paper, key, questions, mode, new Date(wallNowMs).toISOString());
+      a.frozen = freezeAttempt(paper, key, questions, mode, new Date(wallNowMs).toISOString(), "ssc-cgl");
     }
     if (!verifiedBundles.has(a.frozen)) { assertFrozenContent(a.frozen); verifiedBundles.add(a.frozen); }
     return a.frozen;
@@ -126,5 +126,5 @@ export function createBrowserEngine(sources: SourcePaperBank, patches: ReviewPat
     const { paper, key, questions } = context(a);
     return scoreAttempt(paper, key, questions, responseRecords(a), calculatedAt);
   }
-  return { context, capture, assetMatches, ensure, restore, event, answer, score, importedCount: imported.length, questionCount: imported.reduce((n,e)=>n+e.questions.length,0) };
+  return { context, capture, assetMatches, chooseRecovered, ensure, restore, event, answer, score, importedCount: imported.length, questionCount: imported.reduce((n,e)=>n+e.questions.length,0) };
 }

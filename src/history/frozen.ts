@@ -23,12 +23,12 @@ export interface FrozenAttemptContent {
 }
 export function freezeAttempt(
   paper: PaperRevision, key: AnswerKeyRevision, questions: readonly QuestionRevision[],
-  mode: AttemptMode, frozenAt: string,
+  mode: AttemptMode, frozenAt: string, examId: ExamId,
 ): FrozenAttemptContent {
   validateAnswerKeyRevision(key, questions);
   validatePaperRevision(paper, questions, key);
   const snapshot: AttemptSnapshot = {
-    examId: "ssc-cgl" as ExamId, paperId: paper.paperId, paperRevisionId: paper.id,
+    examId, paperId: paper.paperId, paperRevisionId: paper.id,
     answerKeyRevisionId: key.id, scoringPolicy: paper.scoring, mode,
   };
   return structuredClone({ schema: 1 as const, frozenAt, snapshot, paper, key, questions });
@@ -36,6 +36,7 @@ export function freezeAttempt(
 export function assertFrozenContent(value: FrozenAttemptContent): FrozenAttemptContent {
   if (!value || value.schema !== 1 ||
       !value.snapshot || !value.paper || !value.key || !Array.isArray(value.questions) ||
+      typeof value.snapshot.examId !== "string" || value.snapshot.examId.length === 0 ||
       value.snapshot.paperId !== value.paper.paperId ||
       value.snapshot.paperRevisionId !== value.paper.id ||
       value.snapshot.answerKeyRevisionId !== value.key.id ||

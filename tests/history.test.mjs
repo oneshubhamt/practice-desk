@@ -10,7 +10,7 @@ const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",im
 const first=importCglBank(sources,patches)[0];
 
 test("frozen attempt survives a later changed key, paper or editorial state",()=>{
- const frozen=freezeAttempt(first.paper,first.key,first.questions,"exam-simulation","2026-10-28T05:00:00Z");
+ const frozen=freezeAttempt(first.paper,first.key,first.questions,"exam-simulation","2026-10-28T05:00:00Z","ssc-cgl");
  assertFrozenContent(frozen);
  assert.notEqual(frozen.paper,first.paper);
  const old=scoreAttempt(frozen.paper,frozen.key,frozen.questions,[],frozen.frozenAt).snapshot;

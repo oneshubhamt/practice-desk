@@ -1036,3 +1036,14 @@ Added:
 - Hardened active mirror recovery so a stale in-progress mirror cannot resurrect a completed IndexedDB record; queued deletes now follow pending writes.
 - Completed score snapshots are not silently recalculated when importing backups.
 - Pending acceptance: strict CI, restore regressions and testing the file:// reopen flow on supported browsers.
+
+
+### Pass 3 recovery and backup hardening
+
+- New attempt archives now capture a validated, revision-locked content bundle and image-free display copy; archived scores and text remain independent of later review edits.
+- Simplified startup recovery: IndexedDB remains authoritative, recovery journal is imported in atomic per-attempt transactions and cleared once successfully incorporated, and a terminal record wins over stale active mirrors.
+- Removed obsolete v2 legacy-history migration code (this new app has no backward-compatibility requirement).
+- Backups now use format version 2 containing frozen attempt data. Completed records are append-only by ID during merge; previous completed scores are not overwritten by imported copies.
+- Session restore errors no longer discard the entire IndexedDB history in favour of fallback. Restoration is isolated from database opening.
+- The archived source image bytes are not duplicated in history; unchanged revisions can still use matching embedded bank images.
+- UI generalization and actual file:// browser reopen testing remain for later acceptance.
