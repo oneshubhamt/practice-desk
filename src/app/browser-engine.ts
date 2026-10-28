@@ -1,5 +1,7 @@
 import { importCglBank } from "../content/import-cgl.ts";
-import { transition, startSession, rebaseSession } from "../engine/session.ts";
+import { transition, startSession } from "../engine/session.ts";
+import { freezeAttempt, assertFrozenContent, restoreSession } from "../history/frozen.ts";
+import type { FrozenAttemptContent } from "../history/frozen.ts";
 import { scoreAttempt } from "../engine/scoring.ts";
 import { validateResponse } from "../engine/response.ts";
 import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
@@ -19,6 +21,7 @@ interface LegacyAttempt {
   cursors: number[];
   engineState?: SessionState;
   enginePaperRevisionId?: string;
+  frozen?: FrozenAttemptContent;
 }
 export function createBrowserEngine(sources: SourcePaperBank, patches: ReviewPatchBank) {
   const imported = importCglBank(sources, patches);
@@ -26,6 +29,11 @@ export function createBrowserEngine(sources: SourcePaperBank, patches: ReviewPat
     e.paper.paperId + (e.paper.edition === "reviewed" ? "-reviewed" : ""), e,
   ]));
   function context(attempt: LegacyAttempt) {
+    if (attempt.frozen) {
+      const frozen = assertFrozenContent(attempt.frozen);
+      if (frozen.paper.paperId !== attempt.paperId.replace(/-reviewed$/, "")) throw new Error("Frozen paper identity mismatch");
+      return frozen;
+    }
     const base = editions.get(attempt.paperId);
     if (!base) throw new Error("Unknown paper edition");
     const paper: PaperRevision = attempt.mode === "strict" ? base.paper : {
@@ -35,6 +43,14 @@ export function createBrowserEngine(sources: SourcePaperBank, patches: ReviewPat
       navigation: { ...base.paper.navigation, sectionNavigation: attempt.mode === "free" ? "free" : "sequential-locked" },
     };
     return { ...base, paper };
+  }
+  function capture(a: LegacyAttempt, wallNowMs: number): FrozenAttemptContent {
+    if (!a.frozen) {
+      const { paper, key, questions } = context(a);
+      const mode = a.mode === "strict" ? "exam-simulation" : a.mode === "single" ? "section-practice" : "full-paper-practice";
+      a.frozen = freezeAttempt(paper, key, questions, mode, new Date(wallNowMs).toISOString());
+    }
+    return assertFrozenContent(a.frozen);
   }
   function responseRecords(a: LegacyAttempt): AttemptResponseRecord[] {
     const { questions } = context(a);
@@ -51,16 +67,29 @@ export function createBrowserEngine(sources: SourcePaperBank, patches: ReviewPat
     });
   }
   function ensure(a: LegacyAttempt, nowMs: number): SessionState {
+    capture(a, nowMs);
     const { paper } = context(a);
     if (a.engineState && a.enginePaperRevisionId === paper.id) return a.engineState;
     let state = startSession(paper, a.startedAt);
+    if (nowMs >= a.startedAt && nowMs > a.startedAt) {
+      state = transition(paper, { ...state, visible: false }, { type: "TICK", nowMs });
+      state = { ...state, visible: true };
+    }
     const sectionIndex = a.mode === "single" ? 0 : a.section;
-    state = { ...state, sectionIndex, questionIndex: a.cursors[a.section] ?? 0, responses: responseRecords(a),
-      // Existing attempts have wall-clock start times, not a monotonic-origin snapshot.
-      elapsedMs: Math.max(0, nowMs - a.startedAt), clockMs: nowMs };
+    state = { ...state,
+      sectionIndex: Math.min(sectionIndex, paper.sections.length - 1),
+      questionIndex: a.cursors[a.section] ?? 0,
+      responses: responseRecords(a), clockMs: nowMs };
     a.engineState = state;
     a.enginePaperRevisionId = paper.id;
     return state;
+  }
+  function restore(a: LegacyAttempt, wallNowMs: number, visible: boolean) {
+    const { paper } = context(a);
+    if (!a.engineState) ensure(a, wallNowMs);
+    const restored = restoreSession(paper, a.engineState!, wallNowMs, visible);
+    a.engineState = restored.state;
+    return restored;
   }
   function event(a: LegacyAttempt, event: SessionEvent): SessionState {
     const { paper } = context(a);
@@ -88,5 +117,5 @@ export function createBrowserEngine(sources: SourcePaperBank, patches: ReviewPat
     const { paper, key, questions } = context(a);
     return scoreAttempt(paper, key, questions, responseRecords(a), calculatedAt);
   }
-  return { context, ensure, event, answer, score, importedCount: imported.length, questionCount: imported.reduce((n,e)=>n+e.questions.length,0) };
+  return { context, capture, ensure, restore, event, answer, score, importedCount: imported.length, questionCount: imported.reduce((n,e)=>n+e.questions.length,0) };
 }
