@@ -21,8 +21,8 @@ const SHA_CONSTANTS = {
 };
 
 /** SHA-256, synchronous and browser-safe; no Node crypto or network API required. */
-export function sha256(input: string): string {
-  const bytes = new TextEncoder().encode(input);
+export function sha256(input: string | Uint8Array): string {
+  const bytes = typeof input === "string" ? new TextEncoder().encode(input) : input;
   const padded = new Uint8Array(Math.ceil((bytes.length + 9) / 64) * 64);
   padded.set(bytes);
   padded[bytes.length] = 0x80;

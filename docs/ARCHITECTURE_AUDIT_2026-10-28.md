@@ -1108,3 +1108,9 @@ Added:
 - Added option-image references to the typed CGL importer and embedded option-image assets to generic exam packages, preserving figure-based questions in the new UI.
 - Explanations are carried separately into each generic package, with the solution bank supplying missing inline explanations; editorial notes and answer keys remain hidden during the attempt.
 - The original CGL library and result screens remain unmodified; this work targets the new model-driven workspace only.
+
+
+### Pass 4 integrity and result transparency
+- Images in imported packages are checked against their actual decoded byte SHA-256 hashes. Assets are content-addressed by image bytes rather than data-URI text.
+- Attempt results show human-readable option labels, numbers, true/false values, matching labels and manual-response status, with expected answers and source explanations only after submission.
+- The frozen generic attempt now carries its explanation text for historical review even if an uploaded package is subsequently edited.

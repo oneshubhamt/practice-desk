@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { renderGenericControls, examTimeRemaining } from "../src/app/generic-ui.ts";
+import { readableAnswer } from "../src/app/exam-package.ts";
 
 const stub={format:"practice-desk-exam",version:1,examId:"example",
  title:"Example",paper:{},answerKey:{},questions:[],assets:[]};
@@ -26,4 +27,16 @@ test("timer display derives from paper policy, not CGL constants",()=>{
  assert.equal(examTimeRemaining({timing:{kind:"whole-paper",durationMs:12000}},state),7000);
  assert.equal(examTimeRemaining({timing:{kind:"sectional",sectionLimits:[{sectionId:"one",durationMs:3000},{sectionId:"two",durationMs:9000}]},
  sections:[{id:"one"},{id:"two"}]},state),7000);
+});
+
+test("review answers resolve human labels for all six question kinds",()=>{
+ const options=[{id:"a",text:"Label A"},{id:"b",text:"Label B"}];
+ const q=(content)=>revision(content);
+ assert.equal(readableAnswer(q({kind:"single-choice",options}),{kind:"single-choice",optionId:"a"}),"Label A");
+ assert.equal(readableAnswer(q({kind:"multiple-select",options}),{kind:"multiple-select",optionIds:["a","b"]}),"Label A; Label B");
+ assert.equal(readableAnswer(q({kind:"numeric-entry"}),{kind:"numeric-entry",value:3.5}),"3.5");
+ assert.equal(readableAnswer(q({kind:"true-false"}),{kind:"true-false",value:false}),"False");
+ assert.equal(readableAnswer(q({kind:"matching",leftItems:[{id:"l",text:"Left"}],rightItems:[{id:"r",text:"Right"}]}),
+  {kind:"matching",pairs:[{leftId:"l",rightId:"r"}]}),"Left → Right");
+ assert.equal(readableAnswer(q({kind:"free-response"}),{kind:"free-response",evaluation:"manual"}),"Manual assessment required");
 });

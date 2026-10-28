@@ -3,7 +3,7 @@ import { importCglBank, sha256 } from "../content/import-cgl.ts";
 import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
 import type { PaperRevision } from "../domain/exam.js";
 import type { QuestionRevision, StimulusDefinition, ImageAsset, CandidateResponse } from "../domain/question.js";
-import type { AnswerKeyRevision } from "../domain/answer-key.js";
+import type { AnswerKeyRevision, CorrectAnswer } from "../domain/answer-key.js";
 import type { ExamId, QuestionRevisionId } from "../domain/ids.js";
 import { validateResponse } from "../engine/response.ts";
 import { startSession, transition } from "../engine/session.ts";
@@ -65,6 +65,9 @@ export function validateExamPackage(value: unknown): ExamPackage {
        !/^[A-Za-z0-9+/=]+$/.test(item.dataUri.split(",")[1] ?? "") ||
        typeof item.contentHash !== "string" || !/^[a-f0-9]{64}$/.test(item.contentHash))
        throw new Error("Media must be an embedded image with a SHA-256 hash");
+   const encoded=item.dataUri.slice(item.dataUri.indexOf(",")+1);
+   const decoded=Uint8Array.from(atob(encoded),char=>char.charCodeAt(0));
+   if (sha256(decoded)!==item.contentHash) throw new Error("Embedded image digest does not match its content hash");
    assetIds.add(item.id);
  }
  for (const q of questions) {
@@ -75,6 +78,14 @@ export function validateExamPackage(value: unknown): ExamPackage {
         for (const id of option.assetIds ?? []) if (!assetIds.has(id)) throw new Error("Missing option image");
    if (q.content.kind === "matching") for (const item of [...q.content.leftItems, ...q.content.rightItems])
       for (const id of item.assetIds ?? []) if (!assetIds.has(id)) throw new Error("Missing matching image");
+ }
+ const explanations=raw.explanations;
+ if(explanations!==undefined){
+   if(!explanations || typeof explanations!=="object" || Array.isArray(explanations))
+     throw new Error("Invalid explanations");
+   for(const [id,text] of Object.entries(explanations)){
+     if(!ids.has(id) || typeof text!=="string" || text.length>20000) throw new Error("Invalid explanation reference");
+   }
  }
  return value as ExamPackage;
 }
@@ -102,7 +113,7 @@ export function builtinCglPackages(sources: SourcePaperBank, patches: ReviewPatc
      const stemId = `${paper.paperId}:q:${n}:stem`;
      const asImage=(id:string, uri:string):ImageAsset=>({
        id:id as ImageAsset["id"],mediaType:(uri.match(/^data:(image\/[a-z]+);/)?.[1]??"image/webp") as ImageAsset["mediaType"],
-       dataUri:uri,contentHash:sha256(uri) as ImageAsset["contentHash"],
+       dataUri:uri,contentHash:sha256(Uint8Array.from(atob(uri.slice(uri.indexOf(",")+1)),char=>char.charCodeAt(0))) as ImageAsset["contentHash"],
      });
      if (merged.images.stem) assets.push(asImage(stemId,merged.images.stem));
      merged.images.options?.forEach((uri,i)=>{
@@ -125,13 +136,15 @@ export interface GenericAttempt {
  readonly frozen: FrozenAttemptContent;
  readonly state: SessionState;
  readonly result?: ReturnType<typeof scoreAttempt>;
+ readonly explanations?: Readonly<Record<string,string>>;
 }
 export function startGenericAttempt(bundle: ExamPackage, id: string, timestamp: number): GenericAttempt {
  const validated = validateExamPackage(bundle);
  const frozen = freezeAttempt(validated.paper,validated.answerKey,validated.questions,
    "exam-simulation",new Date(timestamp).toISOString(),validated.examId);
  return {recordType:"generic-attempt",id,packageId:bundle.paper.id,startedAt:timestamp,
-   updatedAt:timestamp,finishedAt:null,frozen,state:startSession(bundle.paper,timestamp)};
+   updatedAt:timestamp,finishedAt:null,frozen,state:startSession(bundle.paper,timestamp),
+   ...(validated.explanations?{explanations:structuredClone(validated.explanations)}:{})};
 }
 export function transitionGenericAttempt(
  attempt: GenericAttempt, event: SessionEvent, questionMap: ReadonlyMap<QuestionRevisionId,QuestionRevision>,
@@ -152,4 +165,28 @@ export function transitionGenericAttempt(
 }
 export function responseFor(state: SessionState, questionId: QuestionRevisionId): CandidateResponse | undefined {
  return state.responses.find(r=>r.questionRevisionId===questionId)?.response;
+}
+
+/** Resolve display labels from frozen question definitions, not option positions or keys. */
+export function readableAnswer(q:QuestionRevision,
+ answer:CorrectAnswer | CandidateResponse | undefined):string{
+ if(!answer)return "Unanswered";
+ const content=q.content;
+ switch(answer.kind){
+ case "single-choice":
+   return content.kind==="single-choice"||content.kind==="multiple-select"?
+     content.options.find(o=>o.id===answer.optionId)?.text??"Unknown option":"Unknown option";
+ case "multiple-select":
+   return content.kind==="multiple-select"?
+     content.options.filter(o=>answer.optionIds.includes(o.id)).map(o=>o.text).join("; "):"Invalid response";
+ case "numeric-entry":
+   return "acceptedValues" in answer?answer.acceptedValues.join(", "):String(answer.value);
+ case "true-false":return answer.value?"True":"False";
+ case "matching":return content.kind==="matching"?answer.pairs.map(pair=>{
+   const left=content.leftItems.find(item=>item.id===pair.leftId)?.text??pair.leftId;
+   const right=content.rightItems.find(item=>item.id===pair.rightId)?.text??pair.rightId;
+   return left+" → "+right;
+ }).join("; "):"Invalid response";
+ case "free-response":return "text" in answer?answer.text:"Manual assessment required";
+ }
 }

@@ -1,4 +1,4 @@
-import { builtinCglPackages, validateExamPackage, startGenericAttempt, transitionGenericAttempt } from "./exam-package.ts";
+import { builtinCglPackages, validateExamPackage, startGenericAttempt, transitionGenericAttempt, readableAnswer } from "./exam-package.ts";
 import type { ExamPackage, GenericAttempt } from "./exam-package.ts";
 import type { QuestionRevision, CandidateResponse } from "../domain/question.js";
 import type { QuestionRevisionId } from "../domain/ids.js";
@@ -179,10 +179,13 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
     '<section class="panel pad"><h2>Review</h2>'+s.items.map((it,i)=>{
       const q=qs.get(it.questionRevisionId);
       const response=attempt!.state.responses.find(r=>r.questionRevisionId===it.questionRevisionId)?.response;
+      const answer=attempt!.frozen.key.entries.find(e=>e.questionRevisionId===it.questionRevisionId)?.answer;
+      const explanation=attempt!.explanations?.[it.questionRevisionId]||q?.editorial.notes;
       return q?'<article class="generic-review"><strong>'+(i+1)+'. '+escapeText(q.content.prompt)+'</strong>'+
        '<p class="fine">'+escapeText(it.verdict)+' · '+it.marks+' marks</p>'+
-       '<p class="fine">Your answer: '+escapeText(response?JSON.stringify(response):"Unanswered")+'</p>'+
-       (q.editorial.notes?'<p class="fine">Note: '+escapeText(q.editorial.notes)+'</p>':"")+'</article>':"";
+       '<p class="fine">Your answer: '+escapeText(readableAnswer(q,response))+'</p>'+
+       '<p class="fine">Expected: '+escapeText(readableAnswer(q,answer))+'</p>'+
+       (explanation?'<p class="fine">Explanation: '+escapeText(explanation)+'</p>':"")+'</article>':"";
     }).join("")+'</section>';
  }
  function draw():void{
