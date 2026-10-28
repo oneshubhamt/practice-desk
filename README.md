@@ -4,7 +4,7 @@ Offline mock-test app, currently with five SSC CGL memory-based papers (500 sour
 
 ## Development
 
-Requires Node.js 24 LTS+ and TypeScript **7.0.2** (pinned).
+Development requires **Node.js 24.x LTS** (CI automatically selects its latest 24.x patch) and **TypeScript 7.0.2** (exactly pinned). GitHub Actions uses checkout/setup-node **v7**.
 
 ```bash
 npm install
@@ -13,7 +13,9 @@ npm test
 npm run typecheck
 ```
 
-Open **`Practice_Desk_Offline_Mock_Tests.html`** in your browser. No server, account, or network connection is required for the released file.
+**Using the app:** Double-click **`Practice_Desk_Offline_Mock_Tests.html`**. It must run directly at `file://` with **no localhost, web server, installation, account, or internet**. Node.js is only needed to *develop/build* the app, not to take a test.
+
+**Stable baseline:** The initial working v11 app is preserved at [`baseline/v11`](../../tree/baseline/v11). Do not replace it during future architectural work.
 
 ## Repository structure
 
@@ -29,4 +31,6 @@ Open **`Practice_Desk_Offline_Mock_Tests.html`** in your browser. No server, acc
 
 The legacy runtime has `@ts-nocheck` to preserve its existing behaviour **during initial repository setup**. The upcoming architecture work will replace it with properly typed modules for exam configuration, state, scoring, persistence and UI. This setup is not a claim that the legacy runtime has already been refactored.
 
-Local attempt history is stored by the browser, **not** in the HTML or Git repository. No data migration is required at this stage.
+Local attempt history is stored by the browser, **not** inside the HTML or Git repository. Browser storage behaviour can vary for `file://` files, so export important attempts. The app is new and there is **no migration or backward-compatibility obligation** at this stage.
+
+Run `npm run check` before committing; CI enforces type checking, the lean test suite and reproducible single-file output. The long-term goal is a fully typed, exam-agnostic implementation following the **CLEAR** development rules in `AGENTS.md`.
