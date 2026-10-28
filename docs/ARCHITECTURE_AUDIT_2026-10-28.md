@@ -999,3 +999,11 @@ Added:
 - CGL-specific 25-question grouping and 15-minute sectional limits live only in the CGL importer, not the generic engine.
 - Added candidate-response boundary checks for options, numeric constraints, matching and free-response length.
 - Focused import and scoring tests included. Still pending: CI check, runtime/UI adapter and historical persistence (Pass 3).
+
+
+### Pass 2 — browser UI wiring (in progress, verify CI before closing)
+
+- Embedded the typed engine/importer into the existing offline HTML build using TypeScript transpilation and a tiny static CommonJS module loader; no network imports, no runtime npm or server.
+- Existing library, exam, results and history screens now call the generic adapter for start, answer, clear, flag, navigation, pause, section submit, attempt submit, tick and visibility. Score totals are taken from generic scoring.
+- The legacy UI data structures and timer presentation remain during this transitional integration. Pass 2 acceptance requires CI, offline execution checks and reconciling the legacy timer with engine timer before marking complete.
+- Fixed earlier CI errors: removed Node crypto dependency from browser importer; corrected merged editorial typing.
