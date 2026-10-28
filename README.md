@@ -4,7 +4,7 @@ Offline mock-test app, currently with five SSC CGL memory-based papers (500 sour
 
 ## Development
 
-Requires Node.js 22+ and TypeScript **7.0.2** (pinned).
+Requires Node.js 24 LTS+ and TypeScript **7.0.2** (pinned).
 
 ```bash
 npm install
