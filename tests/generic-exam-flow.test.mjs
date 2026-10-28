@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { validateExamPackage, startGenericAttempt, transitionGenericAttempt, readableAnswer } from "../src/app/exam-package.ts";
+import { validateGenericStoredRecord } from "../src/app/generic-ui.ts";
+import { makeBackup, verifyBackup, planBackupMerge } from "../src/history/backup.ts";
 
 const hash="a".repeat(64);
 const items=[
@@ -76,4 +78,32 @@ test("forward-only navigation restrictions are respected for non-CGL papers",()=
  attempt=transitionGenericAttempt(attempt,{type:"NAVIGATE",nowMs:1,sectionIndex:0,questionIndex:2},lookup);
  const back=transitionGenericAttempt(attempt,{type:"NAVIGATE",nowMs:2,sectionIndex:0,questionIndex:0},lookup);
  assert.equal(back.state.questionIndex,2);
+});
+
+test("generic attempts and imported packages survive a verified history backup round trip",()=>{
+ const bundle=validateExamPackage(pkg);
+ const unfinished=startGenericAttempt(bundle,"resumeable",1000);
+ let completed=startGenericAttempt(bundle,"completed",1000);
+ completed=transitionGenericAttempt(completed,{type:"ANSWER",nowMs:1001,response:responses[0]},lookup);
+ completed=transitionGenericAttempt(completed,{type:"SUBMIT_ATTEMPT",nowMs:1002},lookup);
+ assert.equal(validateGenericStoredRecord(unfinished),unfinished);
+ assert.equal(validateGenericStoredRecord(completed),completed);
+ const importedPackage={recordType:"generic-package",id:"generic-package:"+bundle.paper.id,bundle};
+ const contents=[importedPackage,unfinished,completed];
+ const backup=makeBackup(contents,[],null,"2026-10-28T00:00:00Z");
+ const reloaded=verifyBackup(JSON.parse(JSON.stringify(backup)));
+ assert.equal(reloaded.attempts.length,3);
+ for(const record of reloaded.attempts) assert.doesNotThrow(()=>validateGenericStoredRecord(record));
+ assert.deepEqual(planBackupMerge([completed],reloaded.attempts,"completed").map(x=>x.id),
+  [importedPackage.id,unfinished.id]);
+ assert.throws(()=>verifyBackup({...reloaded,attempts:reloaded.attempts.slice(1)}),/integrity/);
+});
+test("completed generic scores cannot be silently rewritten in stored history",()=>{
+ const bundle=validateExamPackage(pkg);
+ let completed=startGenericAttempt(bundle,"tamper",1000);
+ completed=transitionGenericAttempt(completed,{type:"SUBMIT_ATTEMPT",nowMs:1100},lookup);
+ const altered=structuredClone(completed);
+ altered.result.snapshot.earnedMarks=123456;
+ assert.throws(()=>validateGenericStoredRecord(altered),/score does not match/);
+ assert.throws(()=>validateGenericStoredRecord({...completed,packageId:"different-revision"}),/incorrect revision/);
 });
