@@ -612,7 +612,11 @@ var PracticeDeskEngine = (() => {
           const patch = patchMap[String(original.n)] ?? {};
           const merged = { ...original, ...patch };
           const stableId = `${source.id}:q:${original.n}`;
-          const options = merged.opts.map((text2, index) => ({ id: optionId(stableId, "abcd"[index]), text: text2 }));
+          const options = merged.opts.map((text2, index) => ({
+            id: optionId(stableId, "abcd"[index]),
+            text: text2,
+            ...merged.images.options?.[index] ? { assetIds: [`${stableId}:option:${index}`] } : {}
+          }));
           const editorialStatus = edition === "source" ? original.status === "ok" ? "verified" : original.status : patch.status === "corrected" ? "corrected" : patch.status === "caution" ? "caution" : original.status === "invalid" ? "invalid" : original.status === "caution" ? "caution" : "verified";
           const content = {
             kind: "single-choice",
@@ -1566,7 +1570,11 @@ var PracticeDeskGeneric = (() => {
           const patch = patchMap[String(original.n)] ?? {};
           const merged = { ...original, ...patch };
           const stableId = `${source.id}:q:${original.n}`;
-          const options = merged.opts.map((text2, index) => ({ id: optionId(stableId, "abcd"[index]), text: text2 }));
+          const options = merged.opts.map((text2, index) => ({
+            id: optionId(stableId, "abcd"[index]),
+            text: text2,
+            ...merged.images.options?.[index] ? { assetIds: [`${stableId}:option:${index}`] } : {}
+          }));
           const editorialStatus = edition === "source" ? original.status === "ok" ? "verified" : original.status : patch.status === "corrected" ? "corrected" : patch.status === "caution" ? "caution" : original.status === "invalid" ? "invalid" : original.status === "caution" ? "caution" : "verified";
           const content = {
             kind: "single-choice",
@@ -1941,13 +1949,14 @@ var PracticeDeskGeneric = (() => {
     }
     return value;
   }
-  function builtinCglPackages(sources, patches) {
+  function builtinCglPackages(sources, patches, solutions = {}) {
     const editions = importCglBank(sources, patches);
     return editions.map(({ paper, key, questions }) => {
       const source = sources[paper.paperId];
       if (!source) throw new Error("Missing CGL source");
       const assets = [];
       const stimuli = [];
+      const explanations = {};
       const patchMap = paper.edition === "reviewed" ? patches[paper.paperId] ?? {} : {};
       for (const [id, text2] of Object.entries(source.passages))
         stimuli.push({ id: `${paper.paperId}:passage:${id}`, kind: "passage", text: text2 });
@@ -1955,12 +1964,18 @@ var PracticeDeskGeneric = (() => {
         const n = Number(question.questionId.split(":").at(-1));
         const original = source.questions.find((q) => q.n === n);
         const merged = { ...original, ...patchMap[String(n)] ?? {} };
+        const explanation = merged.explanation || solutions[paper.paperId]?.[String(n)] || "";
+        if (explanation) explanations[question.id] = explanation;
         const stemId = `${paper.paperId}:q:${n}:stem`;
-        if (merged.images.stem) assets.push({
-          id: stemId,
-          mediaType: merged.images.stem.match(/^data:(image\/[a-z]+);/)?.[1] || "image/webp",
-          dataUri: merged.images.stem,
-          contentHash: question.contentHash
+        const asImage = (id, uri) => ({
+          id,
+          mediaType: uri.match(/^data:(image\/[a-z]+);/)?.[1] ?? "image/webp",
+          dataUri: uri,
+          contentHash: sha256(uri)
+        });
+        if (merged.images.stem) assets.push(asImage(stemId, merged.images.stem));
+        merged.images.options?.forEach((uri, i) => {
+          if (uri) assets.push(asImage(`${paper.paperId}:q:${n}:option:${i}`, uri));
         });
       }
       return {
@@ -1972,7 +1987,8 @@ var PracticeDeskGeneric = (() => {
         answerKey: key,
         questions,
         stimuli,
-        assets
+        assets,
+        explanations
       };
     });
   }
@@ -2066,8 +2082,8 @@ var PracticeDeskGeneric = (() => {
   }
   var isAttempt = (x) => !!x && typeof x === "object" && x.recordType === "generic-attempt";
   var isPackage = (x) => !!x && typeof x === "object" && x.recordType === "generic-package";
-  function mountExamWorkspace(root, sources, patches, onBack) {
-    const packages = new Map(builtinCglPackages(sources, patches).map((p) => [p.paper.id, p]));
+  function mountExamWorkspace(root, sources, patches, solutions, onBack) {
+    const packages = new Map(builtinCglPackages(sources, patches, solutions).map((p) => [p.paper.id, p]));
     const records = /* @__PURE__ */ new Map();
     let choice = packages.keys().next().value;
     let attempt = null, view = "library";
@@ -2613,7 +2629,7 @@ function drawHome(){let p=getPaper(prefs.paper)||Object.values(PAPERS)[0];let st
  <aside class="stack"><section class="panel pad"><h3>Selected paper</h3><div class="mini-data"><div><b>100</b><small>Questions</small></div><div><b>60 min</b><small>Full paper</small></div><div><b>4</b><small>Sections</small></div><div><b>200</b><small>Original max marks</small></div></div><div class="audit-legend"><b>${p.edition==='reviewed'?'Reviewed edition':'Original PDF edition'}</b><p>${p.edition==='reviewed'?`${Object.keys(REVIEW_PATCHES[p.familyId]||{}).length} reviewed refinements over the original; ${status.invalid||0} unresolved defective items, ${status.caution||0} additional cautions.`:`The source questions and publisher answer labels are preserved (readability formatting is normalized). ${status.invalid||0} disputed or defective questions excluded from adjusted scoring.`} Detailed notes appear only after submission.</p></div></section>
  <section class="panel pad"><div class="row between"><h3 style="margin:0">Recent attempts</h3><button class="textlink" id="recentHistory">View all →</button></div>${last.length?last.map(a=>{let r=summaryFor(a);return `<button class="recent-link" data-open="${esc(a.id)}"><span><b>${esc(paperFor(a)?.name||a.paperId)}</b><small>${dateText(a.finishedAt)} · ${esc(modeName(a.mode))}</small></span><span class="recent-score">${signed(r.score)} <small>/ ${r.max}</small></span></button>`;}).join(''):'<p class="fine" style="margin-top:16px">Completed attempts will appear here and can be reopened for analysis.</p>'}</section>
  </aside></div><details id="help" class="panel pad"><summary><b>Test rules and storage</b></summary><p>Strict mode locks each section. Submit a section early to start the next immediately with its full 15-minute allocation; unused minutes never carry over. In free mode there is one 60-minute clock, and in single-section mode there is a 15-minute clock. Only the last submission reveals answers.</p><p><b>Editorial policy:</b> Original preserves source questions and publisher keys. Corrected papers may repair errors, but must not quote the correct option or disclose the solving rule in a question stem unless the source already did so. Explanations and source-to-correction comparisons appear only after submission. Every correction is tracked by paper and question number; these are independent educational edits, not official answer keys.</p><p>Data is stored on your device (${storageMode==='indexeddb'?'IndexedDB':storageMode==='localStorage'?'localStorage fallback':'initializing'}). For long-term safety, export a backup from History & insights. Use the same browser and file location when possible. Shortcuts: A–D answer; arrow keys navigate; M flags a question; F toggles full screen. Display choices are in Aa at the upper right.</p></details><footer>Practice Desk · Single offline HTML · Not affiliated with SSC</footer>`;
- $('genericWorkspace').onclick=()=>{screen='generic';genericWorkspaceCleanup=globalThis.PD_GENERIC_UI($('app'),SOURCE_PAPERS,REVIEW_PATCHES,()=>{genericWorkspaceCleanup=null;screen='home';render();});};
+ $('genericWorkspace').onclick=()=>{screen='generic';genericWorkspaceCleanup=globalThis.PD_GENERIC_UI($('app'),SOURCE_PAPERS,REVIEW_PATCHES,SOLUTION_BANK,()=>{genericWorkspaceCleanup=null;screen='home';render();});};
  $('paperSelect').onchange=e=>{prefs.paper=e.target.value+(p.edition==='reviewed'?'-reviewed':'');savePrefs();drawHome()};document.querySelectorAll('[data-edition]').forEach(el=>el.onclick=()=>{prefs.paper=p.familyId+(el.dataset.edition==='reviewed'?'-reviewed':'');savePrefs();drawHome()});document.querySelectorAll('[data-mode]').forEach(el=>el.onclick=()=>{prefs.mode=el.dataset.mode;savePrefs();drawHome()});if($('singleSelect'))$('singleSelect').onchange=e=>{prefs.section=+e.target.value;savePrefs();};$('start').onclick=startNew;if($('resume'))$('resume').onclick=resumeAttempt;$('openHistory').onclick=goHistory;$('recentHistory').onclick=goHistory;document.querySelectorAll('[data-open]').forEach(el=>el.onclick=()=>openResults(el.dataset.open));}
 function drawExam(){let a=active;if(!a)return drawHome();let s=a.section,qs=questionsFor(a,s),q=qs[cursor];if(!q)return;let so=qs.filter(q=>a.answers[q.n]).length;let total=Object.keys(a.answers).length,marked=qs.filter(q=>a.flags[q.n]).length;let strict=a.mode==='strict',single=a.mode==='single',closedSecs=strict?a.sections.filter(x=>x.endAt).length:0;
  $('app').innerHTML=`<div class="test-header"><div><div class="paperline">${esc(paperFor(a)?.name)}</div><div class="test-sub">${esc(modeName(a.mode))} · ${total} of ${single?25:100} answered</div></div><div class="row"><div class="clock" id="clock"><span id="clockValue">${msec(timeRemaining(a)/1000)}</span><small id="clockLabel">${strict?'This section':'Time remaining'}</small></div><button class="btn quiet" id="goHome">Library</button><button class="btn exam-full" id="examFull" aria-label="Toggle full-screen test view">⛶ Full screen</button></div></div><div class="progress"><div id="timeBar" style="width:${progress(a)}%"></div></div><div class="sectiontabs">${SECTIONS.map((name,i)=>{const locked=strict?i!==s:single?i!==s:false;let closed=strict&&i<s;return `<button class="sectiontab ${s===i?'active':''} ${locked?'locked':''}" data-section="${i}" ${locked?'disabled':''}><b>${esc(name)}</b><small>${closed?'Closed':strict&&i>s?'Locked':`${questionsFor(a,i).filter(x=>a.answers[x.n]).length}/25 answered`}</small></button>`;}).join('')}</div><div class="exam-layout"><section><div class="panel question"><div class="qid">${esc(SECTIONS[s])} · Question ${cursor+1} of 25 · Paper Q${q.n}</div>${qHTML(q)}<div class="choices">${optionsHTML(q)}</div><div class="qfoot"><div class="row"><button class="btn" id="prev" ${cursor===0?'disabled':''}>← Previous</button><button class="btn primary" id="next" ${cursor===24?'disabled':''}>Next →</button></div><div class="row"><button class="btn" id="clear" ${!a.answers[q.n]||a.pausedAt?'disabled':''}>Clear</button><button class="btn" id="mark">${a.flags[q.n]?'Unmark':'Mark for review'}</button></div></div></div><div class="sectionbar">${strict?`Section ${s+1} of 4 · ${closedSecs} completed · Each section has an independent 15-minute timer.`:single?'Only the selected section contributes to this attempt.':'Switch sections freely within the 60-minute total budget.'}</div><div class="row test-actions"><button class="btn ${strict?'primary':'danger'}" id="finish">${strict?s===3?'Submit final section':'Submit section early →':single?'Submit section':'Submit full paper'}</button>${!strict?`<button class="btn" id="pause">${a.pausedAt?'Resume timer':'Pause timer'}</button>`:''}</div></section><aside class="panel side"><h3>Question navigator</h3><p class="hint">Jump to a question in this section</p><div class="palette">${qs.map((x,i)=>`<button class="num ${cursor===i?'here':''} ${a.answers[x.n]?'answered':''} ${a.flags[x.n]?'marked':''}" data-num="${i}" title="Question ${x.n}">${i+1}</button>`).join('')}</div><div class="navigator-stats"><div><b>${so}<span> / 25</span></b><small>Answered</small></div><div><b>${25-so}</b><small>Not answered</small></div><div><b>${marked}</b><small>Flagged</small></div></div><div class="legend"><span><i class="dot g"></i>Answered</span><span><i class="dot y"></i>Review</span><span><i class="dot"></i>Not answered</span></div><p class="statusline">${strict?'The answer key stays hidden until all sections finish. Submitting this section closes it permanently.':'Answers remain hidden until you submit.'}</p></aside></div><footer>${strict?'Strict timer cannot be paused.':'Timer may be paused.'} Your answers and question timings are saved locally.</footer>`;
