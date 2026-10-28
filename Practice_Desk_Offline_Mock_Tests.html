@@ -2220,7 +2220,7 @@ var PracticeDeskGeneric = (() => {
     const records = /* @__PURE__ */ new Map();
     let choice = packages.keys().next().value;
     let attempt = null, view = "library";
-    let db = null, warning = "", disposed = false, writeQueue = Promise.resolve();
+    let db = null, warning = "", disposed = false, loading = true, writeQueue = Promise.resolve();
     let lastTimerSave = 0;
     const storageKey = "practiceDesk.generic.fallback.v1", mirrorKey = "practiceDesk.generic.active.v1";
     const downloadBackup = () => {
@@ -2323,7 +2323,7 @@ var PracticeDeskGeneric = (() => {
     };
     function listHTML() {
       const attempts = [...records.values()].filter(isAttempt).sort((a, b) => b.startedAt - a.startedAt);
-      return '<div class="generic-heading"><h1>Exam workspace</h1><button class="btn" id="g-back">\u2190 Test library</button></div><p class="muted">Configurable papers \xB7 Six question types \xB7 Works offline</p>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + '<div class="generic-layout"><section class="panel pad"><h2>Select an exam</h2><select id="g-papers" aria-label="Select exam package">' + [...packages.values()].map((p) => '<option value="' + escapeText(p.paper.id) + '"' + (choice === p.paper.id ? " selected" : "") + ">" + escapeText(p.title) + "</option>").join("") + '</select><p class="fine">Built-in CGL papers remain available. You can also import any validated Practice Desk exam JSON file.</p><div class="row"><button class="btn primary" id="g-start">Start exam</button><button class="btn" id="g-import">Import JSON</button></div><input type="file" id="g-file" accept=".json,application/json" hidden></section><section class="panel pad"><div class="row between"><h2>Generic exam history</h2><div class="row"><button class="btn" id="g-export-history">Export</button><button class="btn" id="g-import-history">Import</button></div></div><input type="file" id="g-history-file" accept=".json,application/json" hidden>' + (attempts.length ? attempts.slice(0, 30).map((a) => '<button class="generic-history" data-attempt="' + escapeText(a.id) + '">' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + " \xB7 " + new Date(a.startedAt).toLocaleString() + "<small>" + (a.finishedAt ? " Completed" : " Resume") + "</small></button>").join("") : '<p class="fine">No attempts yet.</p>') + "</section></div>";
+      return '<div class="generic-heading"><h1>Exam workspace</h1><button class="btn" id="g-back">\u2190 Test library</button></div><p class="muted">Configurable papers \xB7 Six question types \xB7 Works offline</p>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + '<div class="generic-layout"><section class="panel pad"><h2>Select an exam</h2><select id="g-papers" aria-label="Select exam package">' + [...packages.values()].map((p) => '<option value="' + escapeText(p.paper.id) + '"' + (choice === p.paper.id ? " selected" : "") + ">" + escapeText(p.title) + "</option>").join("") + '</select><p class="fine">Built-in CGL papers remain available. You can also import any validated Practice Desk exam JSON file.</p><div class="row"><button class="btn primary" id="g-start"' + (loading ? " disabled" : "") + '>Start exam</button><button class="btn" id="g-import"' + (loading ? " disabled" : "") + '>Import JSON</button></div><input type="file" id="g-file" accept=".json,application/json" hidden></section><section class="panel pad"><div class="row between"><h2>Generic exam history</h2><div class="row"><button class="btn" id="g-export-history"' + (loading ? " disabled" : "") + '>Export</button><button class="btn" id="g-import-history"' + (loading ? " disabled" : "") + '>Import</button></div></div><input type="file" id="g-history-file" accept=".json,application/json" hidden>' + (attempts.length ? attempts.slice(0, 30).map((a) => '<button class="generic-history" data-attempt="' + escapeText(a.id) + '">' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + " \xB7 " + new Date(a.startedAt).toLocaleString() + "<small>" + (a.finishedAt ? " Completed" : " Resume") + "</small></button>").join("") : '<p class="fine">No attempts yet.</p>') + "</section></div>";
     }
     function examHTML() {
       if (!attempt) return "";
@@ -2638,6 +2638,7 @@ var PracticeDeskGeneric = (() => {
           warning = "Browser storage is unavailable; attempts may not survive a reload.";
         }
       }
+      loading = false;
       if (!disposed) {
         const target = initialAttemptId && records.get(initialAttemptId);
         if (isAttempt(target)) {
