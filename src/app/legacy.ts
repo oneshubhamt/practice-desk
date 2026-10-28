@@ -46,7 +46,7 @@ function frozenPaper(a){
  const archived=displayRevisions.get(a.frozen?.snapshot?.paperRevisionId)?.displayPaper;
  const current=getPaper(a.paperId);
  const result={...a.frozenDisplay,questions:a.frozenDisplay.questions.map(q=>({
-   ...q,images:archived?.questions?.find(x=>x.n===q.n)?.images||
+   ...q,images:archived?.questions?.find(x=>x.n===q.n&&x.stem===q.stem&&JSON.stringify(x.opts)===JSON.stringify(q.opts))?.images||
      (GENERIC_ENGINE.assetMatches(a,q.n)?current?.questions?.find(x=>x.n===q.n)?.images||{}:{})
  }))};
  frozenPaperCache.set(a.frozenDisplay,result);
@@ -126,7 +126,8 @@ function captureDisplayArchive(a){
  const id=a.frozen?.snapshot?.paperRevisionId;
  if(!id||displayRevisions.has(id))return;
  const paper=getPaper(a.paperId);
- if(paper)displayRevisions.set(id,GENERIC_ENGINE.archiveDisplayRevision(id,a.paperId,paper));
+ if(paper&&a.frozen?.questions?.every(q=>GENERIC_ENGINE.assetMatches(a,Number(q.questionId.split(':').at(-1)))))
+  displayRevisions.set(id,GENERIC_ENGINE.archiveDisplayRevision(id,a.paperId,paper));
 }
 function dbDelete(store,id){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).delete(id);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);tx.onabort=()=>rej(tx.error);});}
 function queueWrite(job){writeChain=writeChain.catch(()=>{}).then(job).catch(e=>{db=null;storageMode='localStorage';storageMessage='IndexedDB write failed. Switched to localStorage; export a backup.';fallbackSave();saveActiveMirror();if(!autosaveWarned){notify('Storage problem: using browser fallback. Export a backup.');autosaveWarned=true;}console.warn('Practice Desk storage',e)});return writeChain;}
@@ -319,7 +320,7 @@ function dbImportBackupBatch(records,revisions){
  return new Promise((resolve,reject)=>{
   const tx=db.transaction(['attempts','revisions'],'readwrite');
   const store=tx.objectStore('attempts'),archive=tx.objectStore('revisions');
-  for(const revision of revisions)archive.put(structuredClone(revision));
+  for(const revision of revisions)if(!savedRevisionIds.has(revision.id))archive.add(structuredClone(revision));
   for(const attempt of records)store.add(structuredClone(attempt));
   tx.oncomplete=()=>resolve();
   tx.onerror=()=>reject(tx.error||Error('Backup transaction failed'));

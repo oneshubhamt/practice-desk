@@ -1076,3 +1076,11 @@ Added:
 **Not yet claimed:** Manual `file://` browser reopen and backup round-trip testing, multi-tab concurrent mutation correctness, or generic non-CGL end-to-end UI functionality. Those need final acceptance (and the UI work belongs to Pass 4). Local file-origin storage remains browser-dependent; independent exports are advised.
 
 **Next:** Pass 4 removes the remaining fixed-CGL UI and presentation assumptions. Keep `main` and `baseline/v11` unchanged pending final validation.
+
+
+### Pass 3 hardening checkpoint — historical media and storage
+
+- Avoid recomputing SHA-256 prime constants for every question and backup hash; constants are initialized once per offline build process.
+- Archived image bytes are only attached when the frozen stem/options match the archived question. An older attempt cannot silently acquire media from a changed source revision.
+- Import preserves existing IndexedDB revision archives: a backup can add a missing revision, but cannot overwrite the already stored revision with the same ID.
+- Added append-only backup-merge regression coverage. CI and offline distribution verification required before closure.

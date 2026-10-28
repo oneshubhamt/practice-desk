@@ -39,3 +39,9 @@ test("backup merge is additive and never overwrites a completed or active record
    {id:"new",finishedAt:null},{id:"new",finishedAt:99}];
  assert.deepEqual(planBackupMerge(existing,incoming,"ongoing"),[{id:"new",finishedAt:null}]);
 });
+
+test("backup merge is append-only and preserves existing completed records",()=>{
+ const current=[{id:"complete",finishedAt:200},{id:"active",finishedAt:null}];
+ const incoming=[{id:"complete",finishedAt:300},{id:"new",finishedAt:100},{id:"new",finishedAt:150}];
+ assert.deepEqual(planBackupMerge(current,incoming,"active"),[{id:"new",finishedAt:100}]);
+});

@@ -5,6 +5,22 @@ import type { AnswerKeyRevision } from "../domain/answer-key.js";
 import type { AssetId, ContentHash, OptionId, PaperId, PaperRevisionId, QuestionId, QuestionRevisionId, SectionId, AnswerKeyRevisionId, StimulusId } from "../domain/ids.js";
 import { validateAnswerKeyRevision, validatePaperRevision, validateQuestionRevision } from "../domain/validate.ts";
 
+/** Shared initial state/constants; never rebuild primes for every question hash. */
+const SHA_CONSTANTS = (() => {
+  const primes: number[] = [];
+  for (let candidate = 2; primes.length < 64; candidate++) {
+    let prime = true;
+    for (let divisor = 2; divisor * divisor <= candidate; divisor++) {
+      if (candidate % divisor === 0) { prime = false; break; }
+    }
+    if (prime) primes.push(candidate);
+  }
+  return {
+    k: new Uint32Array(primes.map(p => Math.floor((Math.cbrt(p) % 1) * 2 ** 32) >>> 0)),
+    initial: new Uint32Array(primes.slice(0,8).map(p => Math.floor((Math.sqrt(p) % 1) * 2 ** 32) >>> 0)),
+  };
+})();
+
 /** SHA-256, synchronous and browser-safe; no Node crypto or network API required. */
 export function sha256(input: string): string {
   const bytes = new TextEncoder().encode(input);
@@ -14,17 +30,8 @@ export function sha256(input: string): string {
   const view = new DataView(padded.buffer);
   view.setUint32(padded.length - 8, Math.floor((bytes.length * 8) / 0x100000000));
   view.setUint32(padded.length - 4, (bytes.length * 8) >>> 0);
-  // Constants are the fractional 32-bit parts of roots of the first 64 primes.
-  const primes: number[] = [];
-  for (let candidate = 2; primes.length < 64; candidate++) {
-    let prime = true;
-    for (let divisor = 2; divisor * divisor <= candidate; divisor++) {
-      if (candidate % divisor === 0) { prime = false; break; }
-    }
-    if (prime) primes.push(candidate);
-  }
-  const k = new Uint32Array(primes.map(p => Math.floor((Math.cbrt(p) % 1) * 2 ** 32) >>> 0));
-  const h = new Uint32Array(primes.slice(0, 8).map(p => Math.floor((Math.sqrt(p) % 1) * 2 ** 32) >>> 0));
+  const { k, initial } = SHA_CONSTANTS;
+  const h = new Uint32Array(initial);
   const w = new Uint32Array(64);
   const rotr = (x: number, n: number): number => (x >>> n) | (x << (32 - n));
   for (let offset = 0; offset < padded.length; offset += 64) {
