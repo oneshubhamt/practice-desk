@@ -1138,3 +1138,12 @@ Added:
 - This supplements (not replaces) pure TypeScript tests and static single-file reproducibility verification.
 - The test uses the runner's preinstalled Chrome/Chromium, without changing browser dependencies shipped to users.
 - CI run is required before calling the browser acceptance gate verified.
+
+
+### Pass 4 verified checkpoint — 29 October 2026
+
+**CI success:** [40751917786](https://github.com/oneshubhamt/practice-desk/actions/runs/40751917786) — strict TS, existing engine/content tests, generic backup round-trip and immutable-score validation, single-file build, real Chrome `file://` launch/save/reopen with the same browser profile, keyboard focus persistence after selecting an answer, and generated HTML reproducibility all passed.
+
+**Implemented since the earlier checkpoint:** Main History lists completed generic attempts and opens their frozen reviews without mixing unlike exams in CGL analytics. Generic workspace has SHA-256-verified export/import of saved attempts and uploaded packs, adds records atomically, refuses duplicate record IDs, validates stored responses and frozen scores, and disables Start until storage initializes. Question navigator exposes the current item and flag state to assistive technology.
+
+**Not yet release-complete:** Unified one-click backup across legacy and generic data, manual Firefox/Safari `file://` reopen acceptance, cross-tab write-conflict testing, and removing the parallel CGL-specific user interface in favour of one exam-agnostic presentation. `main` and `baseline/v11` remain unchanged.
