@@ -98,13 +98,9 @@ function assertImages(value: unknown, path: string): void {
 
   if (Object.hasOwn(images, "stem")) assertDataImage(images["stem"], path + ".stem");
   if (Object.hasOwn(images, "options")) {
-    const options = asRecord(images["options"], path + ".options");
-    for (const [index, image] of Object.entries(options)) {
-      if (!["0", "1", "2", "3"].includes(index)) {
-        fail(path + ".options." + index, "option image index must be between 0 and 3");
-      }
-      assertDataImage(image, path + ".options." + index);
-    }
+    const options = asArray(images["options"], path + ".options");
+    if (options.length !== 4) fail(path + ".options", "expected one image slot per source option");
+    options.forEach((image, index) => assertDataImage(image, path + ".options[" + index + "]"));
   }
 }
 
