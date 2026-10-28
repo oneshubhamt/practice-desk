@@ -941,3 +941,24 @@ The lean content tests now derive counts from the actual bank rather than assumi
 
 **Next:** Pass 2 maps the existing CGL papers into these contracts and builds the configurable state/timing/navigation/scoring engine. Pass 3 then implements immutable history and persistence around the frozen attempt snapshot. The UI should be reviewed after those contracts are integrated, before final release acceptance.
 
+---
+
+## Implementation addendum — Pass 1 (domain foundation)
+
+**Scope:** Establish target domain contracts and validation without changing the v11 runtime or generated HTML.
+
+Added:
+- Branded identifier types for exam, paper, paper revision, question revision, answer-key revision, attempt, section, option, stimulus and asset identities.
+- Discriminated question/response contracts for single-choice, multiple-select, numeric entry, true/false, matching and free-response items.
+- Immutable paper/key/question revision contracts, explicit timing and navigation policies, scoring policies and frozen attempt snapshots.
+- Runtime validators for question revisions, answer-key revisions and paper revisions, including identity uniqueness, valid response-kind matching, option/item references, timing/section consistency, score-policy constraints and answer-key coverage.
+- Focused domain tests for valid configuration and representative invalid states.
+- A data-topology document defining authority, immutability, normalization, referential integrity and deferred storage decisions.
+
+**Data topology decision:** Optimize deliberately, based on the real access patterns and growth of the question library/history. Deduplicate image assets by content hash and keep stimuli separate from question records. Do not introduce unnecessary database stores or indexes before the query patterns are established. Pass 3 will decide the concrete IndexedDB schema.
+
+**Important boundary:** These are validated target contracts, not a claim that the legacy runtime already uses them. Current source/patch/solution banks and v11 HTML remain unchanged in this pass. No content hash has been assigned to the existing 500 questions yet; hashes must be computed from a specified canonical serialization when the content-packaging step is implemented.
+
+**UI note:** No visual redesign is part of Pass 1. The existing interface remains the stable reference; usability, focus behaviour, accessibility and library navigation will be reconsidered during Pass 4.
+
+**Acceptance gate:** Strict TypeScript check, content-bank validation, domain invariant tests, build reproducibility and GitHub CI must pass before this pass is considered complete.
