@@ -9,6 +9,7 @@ import type { PaperRevision } from "../domain/exam.js";
 import type { SessionState, SessionEvent } from "../engine/session.ts";
 import type { AttemptResponseRecord } from "../domain/attempt.js";
 import type { QuestionRevision } from "../domain/question.js";
+import type { ExamId } from "../domain/ids.js";
 
 interface LegacyAttempt {
   paperId: string;
@@ -50,7 +51,7 @@ export function createBrowserEngine(sources: SourcePaperBank, patches: ReviewPat
     if (!a.frozen) {
       const { paper, key, questions } = context(a);
       const mode = a.mode === "strict" ? "exam-simulation" : a.mode === "single" ? "section-practice" : "full-paper-practice";
-      a.frozen = freezeAttempt(paper, key, questions, mode, new Date(wallNowMs).toISOString(), "ssc-cgl");
+      a.frozen = freezeAttempt(paper, key, questions, mode, new Date(wallNowMs).toISOString(), "ssc-cgl" as ExamId);
     }
     if (!verifiedBundles.has(a.frozen)) { assertFrozenContent(a.frozen); verifiedBundles.add(a.frozen); }
     return a.frozen;
