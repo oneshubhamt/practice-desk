@@ -43,6 +43,8 @@ try{
    await first.page.locator("#genericWorkspace").click();
    await first.page.locator("#g-start").click();
    await first.page.locator('input[data-choice]').first().click();
+   const focused=await first.page.locator('input[data-choice]:checked').evaluate(el=>document.activeElement===el);
+   if(!focused)throw new Error("Keyboard focus was lost after answering");
    for(let i=0;i<50;i++){
      const records=await readGenericAttempts(first.page);
      const saved=records.find(x=>x.state?.responses?.some(r=>r.response?.kind==="single-choice"));

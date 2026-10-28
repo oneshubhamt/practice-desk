@@ -253,7 +253,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      stimulusHTML(assets,q)+'<h2 class="generic-prompt">'+escapeText(q.content.prompt)+'</h2>'+
      assetHTML(assets,q.content.assetIds)+renderGenericControls(assets,q,response)+
      '<div class="row generic-actions"><button class="btn" id="g-clear"'+(!response?" disabled":"")+'>Clear</button>'+
-     '<button class="btn" id="g-flag"'+(!paper.navigation.allowFlagging?" disabled":"")+'>Flag</button></div>'+
+     '<button class="btn" id="g-flag" aria-pressed="'+Boolean(state.responses.find(r=>r.questionRevisionId===q.id)?.flagged)+'"'+(!paper.navigation.allowFlagging?" disabled":"")+'>Flag</button></div>'+
      '<div class="row generic-actions"><button class="btn" id="g-prev"'+(!state.questionIndex?" disabled":"")+'>← Previous</button>'+
      '<button class="btn" id="g-next"'+(state.questionIndex===section.questionRevisionIds.length-1?" disabled":"")+'>Next →</button></div>'+
      '<div class="row generic-actions">'+
@@ -264,7 +264,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       section.questionRevisionIds.map((qid,i)=>{
         const r=state.responses.find(x=>x.questionRevisionId===qid);
         return '<button class="num '+(i===state.questionIndex?"here ":"")+(r?.response?"answered ":"")+
-        (r?.flagged?"marked":"")+'" data-q="'+i+'">'+(i+1)+'</button>';
+        (r?.flagged?"marked":"")+'" data-q="'+i+'" aria-current="'+(i===state.questionIndex?"step":"false")+'" aria-label="Question '+(i+1)+
+        (r?.response?", answered":"")+(r?.flagged?", flagged":"")+'">'+(i+1)+'</button>';
       }).join("")+'</div><p class="fine">'+(paper.navigation.questionNavigation==="forward-only"?
         "Questions cannot be revisited in this exam.":"Navigate freely where the paper permits.")+'</p></aside></div>';
  }
@@ -294,8 +295,18 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  }
  function draw():void{
    if(disposed)return;
+   const previous=document.activeElement;
+   const focusKey=previous instanceof HTMLElement && root.contains(previous)?
+     {id:previous.id,attributes:["data-choice","data-bool","data-match","data-q","data-section","data-attempt"]
+       .filter(name=>previous.hasAttribute(name)).map(name=>[name,previous.getAttribute(name)] as const)}:null;
    root.classList.add("generic-workspace");
    root.innerHTML=view==="library"?listHTML():view==="exam"?examHTML():resultHTML();
+   if(focusKey){
+     const controls=[...root.querySelectorAll<HTMLElement>("button,input,select,textarea")];
+     const target=focusKey.id?controls.find(item=>item.id===focusKey.id):
+       controls.find(item=>focusKey.attributes.some(([name,value])=>item.getAttribute(name)===value&&item.hasAttribute(name)));
+     if(target && !("disabled" in target && target.disabled))target.focus({preventScroll:true});
+   }
    if(view==="library"){
      root.querySelector<HTMLButtonElement>("#g-back")!.onclick=()=>{
        cleanup();
