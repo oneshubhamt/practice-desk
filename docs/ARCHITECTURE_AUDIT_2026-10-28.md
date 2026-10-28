@@ -1130,3 +1130,11 @@ Added:
 - Generic workspace exports/imports checksum-verified version-2 archives of generic attempts and uploaded package definitions, with additive transactional IDB merge. Incoming records undergo schema, frozen-revision, response and completed-score validation before writes; existing attempt IDs are never replaced.
 - Explicitly maintain separate CGL and generic backup export actions; the old CGL import pipeline does not silently accept generic records.
 - Deferred acceptance: browser reopen and full file:// smoke tests; consider a unified all-data backup flow before release.
+
+
+### Pass 4 — actual offline browser acceptance gate
+
+- Added a real Chrome/Chromium headless `file://` CI smoke test: double-click equivalent loads the generated standalone HTML, enters the generic workspace, starts a CGL exam, saves a selected response into IndexedDB, shuts down the browser, reopens **the same file URL and profile**, and checks that the response is restored.
+- This supplements (not replaces) pure TypeScript tests and static single-file reproducibility verification.
+- The test uses the runner's preinstalled Chrome/Chromium, without changing browser dependencies shipped to users.
+- CI run is required before calling the browser acceptance gate verified.
