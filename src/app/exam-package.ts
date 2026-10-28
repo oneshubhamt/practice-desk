@@ -1,0 +1,145 @@
+import { validateAnswerKeyRevision, validatePaperRevision, validateQuestionRevision } from "../domain/validate.ts";
+import { importCglBank } from "../content/import-cgl.ts";
+import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
+import type { PaperRevision } from "../domain/exam.js";
+import type { QuestionRevision, StimulusDefinition, ImageAsset, CandidateResponse } from "../domain/question.js";
+import type { AnswerKeyRevision } from "../domain/answer-key.js";
+import type { ExamId, QuestionRevisionId } from "../domain/ids.js";
+import { validateResponse } from "../engine/response.ts";
+import { startSession, transition } from "../engine/session.ts";
+import type { SessionState, SessionEvent } from "../engine/session.ts";
+import { scoreAttempt } from "../engine/scoring.ts";
+import { freezeAttempt } from "../history/frozen.ts";
+import type { FrozenAttemptContent } from "../history/frozen.ts";
+
+export interface ExamPackage {
+ readonly format: "practice-desk-exam";
+ readonly version: 1;
+ readonly examId: ExamId;
+ readonly title: string;
+ readonly paper: PaperRevision;
+ readonly answerKey: AnswerKeyRevision;
+ readonly questions: readonly QuestionRevision[];
+ readonly stimuli?: readonly StimulusDefinition[];
+ readonly assets?: readonly ImageAsset[];
+}
+
+/** Every supplied question, key and attachment is validated before becoming visible. */
+export function validateExamPackage(value: unknown): ExamPackage {
+ if (!value || typeof value !== "object") throw new Error("Exam package must be an object");
+ const raw = value as Record<string, unknown>;
+ if (raw.format !== "practice-desk-exam" || raw.version !== 1 ||
+    typeof raw.examId !== "string" || !raw.examId.trim() ||
+    typeof raw.title !== "string" || !raw.title.trim() ||
+    !Array.isArray(raw.questions) || raw.questions.length > 2000)
+    throw new Error("Invalid exam package header or question count");
+ const questions = raw.questions.map(x => validateQuestionRevision(x));
+ const key = validateAnswerKeyRevision(raw.answerKey, questions);
+ const paper = validatePaperRevision(raw.paper, questions, key);
+ const ids = new Set(paper.sections.flatMap(s => s.questionRevisionIds));
+ if (ids.size !== questions.length || questions.some(q => !ids.has(q.id)))
+    throw new Error("Every question must belong to this paper exactly once");
+ const stimuli = raw.stimuli ?? [];
+ const assets = raw.assets ?? [];
+ if (!Array.isArray(stimuli) || stimuli.length > 200 || !Array.isArray(assets) || assets.length > 1000)
+    throw new Error("Invalid media inventory");
+ const stimulusIds = new Set<string>();
+ for (const item of stimuli) {
+   if (!item || typeof item !== "object" || typeof item.id !== "string" || !item.id || stimulusIds.has(item.id))
+      throw new Error("Duplicate or invalid stimulus");
+   if (!["passage","case","table","chart","image"].includes(item.kind)) throw new Error("Unsupported stimulus");
+   if (["passage","case"].includes(item.kind) && typeof item.text !== "string")
+      throw new Error("Missing stimulus text");
+   if (item.kind === "table" && (!Array.isArray(item.columns) || !Array.isArray(item.rows) ||
+       item.rows.some((row: unknown) => !Array.isArray(row) || row.length !== item.columns.length)))
+       throw new Error("Invalid stimulus table");
+   stimulusIds.add(item.id);
+ }
+ const assetIds = new Set<string>();
+ for (const item of assets) {
+   if (!item || typeof item !== "object" || typeof item.id !== "string" || !item.id || assetIds.has(item.id))
+      throw new Error("Duplicate or invalid media asset");
+   if (!["image/png","image/jpeg","image/webp","image/avif","image/gif"].includes(item.mediaType) ||
+       typeof item.dataUri !== "string" || !item.dataUri.startsWith("data:" + item.mediaType + ";base64,") ||
+       !/^[A-Za-z0-9+/=]+$/.test(item.dataUri.split(",")[1] ?? "") ||
+       typeof item.contentHash !== "string" || !/^[a-f0-9]{64}$/.test(item.contentHash))
+       throw new Error("Media must be an embedded image with a SHA-256 hash");
+   assetIds.add(item.id);
+ }
+ for (const q of questions) {
+   if (q.content.stimulusId && !stimulusIds.has(q.content.stimulusId)) throw new Error("Missing stimulus");
+   for (const id of q.content.assetIds ?? []) if (!assetIds.has(id)) throw new Error("Missing question image");
+   if (q.content.kind === "single-choice" || q.content.kind === "multiple-select")
+      for (const option of q.content.options)
+        for (const id of option.assetIds ?? []) if (!assetIds.has(id)) throw new Error("Missing option image");
+   if (q.content.kind === "matching") for (const item of [...q.content.leftItems, ...q.content.rightItems])
+      for (const id of item.assetIds ?? []) if (!assetIds.has(id)) throw new Error("Missing matching image");
+ }
+ return value as ExamPackage;
+}
+
+/** Convert existing CGL content without changing the original bank or editions. */
+export function builtinCglPackages(sources: SourcePaperBank, patches: ReviewPatchBank): ExamPackage[] {
+ const editions = importCglBank(sources, patches);
+ return editions.map(({ paper, key, questions }) => {
+   const source = sources[paper.paperId];
+   if (!source) throw new Error("Missing CGL source");
+   const assets: ImageAsset[] = [];
+   const stimuli: StimulusDefinition[] = [];
+   const patchMap = paper.edition === "reviewed" ? patches[paper.paperId] ?? {} : {};
+   for (const [id, text] of Object.entries(source.passages))
+      stimuli.push({id: `${paper.paperId}:passage:${id}` as StimulusDefinition["id"],kind:"passage",text});
+   // CGL images are pre-embedded as data URIs. Never request remote resources.
+   for (const question of questions) {
+     const n = Number(question.questionId.split(":").at(-1));
+     const original = source.questions.find(q => q.n === n)!;
+     const merged = {...original, ...(patchMap[String(n)] ?? {})};
+     const stemId = `${paper.paperId}:q:${n}:stem`;
+     if (merged.images.stem) assets.push({id:stemId as ImageAsset["id"],
+       mediaType: merged.images.stem.match(/^data:(image\/[a-z]+);/)?.[1] as ImageAsset["mediaType"] || "image/webp",
+       dataUri:merged.images.stem,contentHash:question.contentHash});
+   }
+   return {format:"practice-desk-exam",version:1,examId:"ssc-cgl" as ExamId,
+     title:`${source.name} · ${paper.edition === "reviewed" ? "Reviewed" : "Original"}`,
+     paper,answerKey:key,questions,stimuli,assets};
+ });
+}
+
+export interface GenericAttempt {
+ readonly recordType: "generic-attempt";
+ readonly id: string;
+ readonly packageId: string;
+ readonly startedAt: number;
+ readonly updatedAt: number;
+ readonly finishedAt: number | null;
+ readonly frozen: FrozenAttemptContent;
+ readonly state: SessionState;
+ readonly result?: ReturnType<typeof scoreAttempt>;
+}
+export function startGenericAttempt(bundle: ExamPackage, id: string, timestamp: number): GenericAttempt {
+ const validated = validateExamPackage(bundle);
+ const frozen = freezeAttempt(validated.paper,validated.answerKey,validated.questions,
+   "exam-simulation",new Date(timestamp).toISOString(),validated.examId);
+ return {recordType:"generic-attempt",id,packageId:bundle.paper.id,startedAt:timestamp,
+   updatedAt:timestamp,finishedAt:null,frozen,state:startSession(bundle.paper,timestamp)};
+}
+export function transitionGenericAttempt(
+ attempt: GenericAttempt, event: SessionEvent, questionMap: ReadonlyMap<QuestionRevisionId,QuestionRevision>,
+): GenericAttempt {
+ if (attempt.finishedAt !== null) return attempt;
+ const paper = attempt.frozen.paper;
+ if (event.type === "ANSWER") {
+   const id=paper.sections[attempt.state.sectionIndex]?.questionRevisionIds[attempt.state.questionIndex];
+   const q=id && questionMap.get(id);
+   if (!q) throw new Error("No question at the cursor");
+   validateResponse(q,event.response);
+ }
+ const state=transition(paper,attempt.state,event);
+ const finished = state.status === "completed";
+ return {...attempt,state,updatedAt:event.nowMs,finishedAt:finished?event.nowMs:null,
+    ...(finished ? {result:scoreAttempt(paper,attempt.frozen.key,attempt.frozen.questions,
+      state.responses,new Date(event.nowMs).toISOString())}: {})};
+}
+export function responseFor(state: SessionState, questionId: QuestionRevisionId): CandidateResponse | undefined {
+ return state.responses.find(r=>r.questionRevisionId===questionId)?.response;
+}
