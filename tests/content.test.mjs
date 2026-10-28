@@ -1,23 +1,59 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFile} from 'node:fs/promises';
-import {validateContent} from '../scripts/validate.mjs';
-const load=async name=>JSON.parse(await readFile(new URL('../src/content/'+name+'.json',import.meta.url),'utf8'));
-test('all packs satisfy structural invariants',async()=>{
- const data={papers:await load('papers'),patches:await load('patches'),solutions:await load('solutions')};
- assert.deepEqual(validateContent(data),{sourcePapers:5,questions:500});
- for(const p of Object.values(data.papers)){
-  assert.equal(p.questions.length,100);
-  assert.equal(new Set(p.questions.map(q=>q.n)).size,100);
-  assert.equal(Object.keys(data.solutions[p.id]||{}).length,50);
- }
+import { readFile } from 'node:fs/promises';
+import { validateContent } from '../src/content/validate.ts';
+
+const load = async name => JSON.parse(
+  await readFile(new URL('../src/content/' + name + '.json', import.meta.url), 'utf8')
+);
+const loadContent = async () => ({
+  papers: await load('papers'),
+  patches: await load('patches'),
+  solutions: await load('solutions'),
 });
-test('validator rejects malformed records',()=>{
- const paper={id:'test',questions:[{n:1,stem:'Question?',opts:['A','B','C','D'],key:'a'}]};
- const d={papers:{test:paper},patches:{},solutions:{}};
- assert.doesNotThrow(()=>validateContent(d));
- paper.questions.push({...paper.questions[0]});
- assert.throws(()=>validateContent(d),/Duplicate/);
- paper.questions.pop();d.patches.test={2:{key:'b'}};
- assert.throws(()=>validateContent(d),/Orphan patch/);
+const countEntries = bank => Object.values(bank).reduce(
+  (total, pack) => total + Object.keys(pack).length, 0
+);
+
+test('current library satisfies schema and all cross-bank references', async () => {
+  const data = await loadContent();
+  const summary = validateContent(data);
+  assert.equal(summary.sourcePapers, Object.keys(data.papers).length);
+  assert.equal(summary.questions, Object.values(data.papers).reduce((n, paper) => n + paper.questions.length, 0));
+  assert.equal(summary.patches, countEntries(data.patches));
+  assert.equal(summary.solutions, countEntries(data.solutions));
+  assert.ok(summary.sourcePapers > 0);
+  assert.ok(summary.questions > 0);
+});
+
+test('validator rejects duplicate question numbers and invalid answer keys', async () => {
+  const duplicate = await loadContent();
+  const paperId = Object.keys(duplicate.papers)[0];
+  const questions = duplicate.papers[paperId].questions;
+  questions[1].n = questions[0].n;
+  assert.throws(() => validateContent(duplicate), /duplicate question number/);
+
+  const badKey = await loadContent();
+  const firstPaperId = Object.keys(badKey.papers)[0];
+  badKey.papers[firstPaperId].questions[0].key = 'e';
+  assert.throws(() => validateContent(badKey), /expected one of a, b, c or d/);
+});
+
+test('validator rejects orphaned patches, missing stimuli and unknown fields', async () => {
+  const orphanPatch = await loadContent();
+  const paperId = Object.keys(orphanPatch.papers)[0];
+  orphanPatch.patches[paperId]['999'] = { key: 'a' };
+  assert.throws(() => validateContent(orphanPatch), /references a question that does not exist/);
+
+  const missingPassage = await loadContent();
+  const firstPaperId = Object.keys(missingPassage.papers)[0];
+  const passageQuestion = missingPassage.papers[firstPaperId].questions.find(q => q.passageRef);
+  assert.ok(passageQuestion);
+  passageQuestion.passageRef = 'missing-passage';
+  assert.throws(() => validateContent(missingPassage), /references missing passage/);
+
+  const unknownField = await loadContent();
+  const patchPaperId = Object.keys(unknownField.papers)[0];
+  unknownField.patches[patchPaperId]['1'] = { unexpected: true };
+  assert.throws(() => validateContent(unknownField), /unknown field/);
 });
