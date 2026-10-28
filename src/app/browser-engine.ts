@@ -65,7 +65,8 @@ export function createBrowserEngine(sources: SourcePaperBank, patches: ReviewPat
   function event(a: LegacyAttempt, event: SessionEvent): SessionState {
     const { paper } = context(a);
     const current = ensure(a, event.nowMs);
-    const next = transition(paper, current, event);
+    const safeEvent = { ...event, nowMs: Math.max(event.nowMs, current.clockMs) } as SessionEvent;
+    const next = transition(paper, current, safeEvent);
     a.engineState = next;
     return next;
   }

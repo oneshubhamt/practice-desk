@@ -54,9 +54,15 @@ function questionsFor(a,s){return paperFor(a)?.questions?.slice(s*25,(s+1)*25)||
 function sectionsFor(a){return a.mode==='single'?[a.singleSection]:[0,1,2,3];}
 function includedQs(a){return sectionsFor(a).flatMap(s=>questionsFor(a,s));}
 function selectedQuestion(){return questionsFor(active,active.section)[cursor]||null;}
-function sumSection(a,s){let xs=questionsFor(a,s),valid=xs.filter(q=>q.status!=='invalid');let answers=a.answers||{};let right=valid.filter(q=>answers[q.n]===q.key).length,wrong=valid.filter(q=>answers[q.n]&&answers[q.n]!==q.key).length;
- let origRight=xs.filter(q=>answers[q.n]===q.original).length,origWrong=xs.filter(q=>answers[q.n]&&answers[q.n]!==q.original).length;
- return {section:s,answered:xs.filter(q=>answers[q.n]).length,right,wrong,skip:valid.length-right-wrong,invalid:xs.length-valid.length,max:valid.length*2,score:right*2-wrong*.5,raw:origRight*2-origWrong*.5};}
+function sumSection(a,s){const xs=questionsFor(a,s),answers=a.answers||{},engine=GENERIC_ENGINE.context(a);
+ const scores=GENERIC_ENGINE.score(a,new Date(now()).toISOString());
+ const ids=new Set(engine.paper.sections[a.mode==='single'?0:s]?.questionRevisionIds||[]);
+ const relevant=scores.items.filter(x=>ids.has(x.questionRevisionId));
+ const count=verdict=>relevant.filter(x=>x.verdict===verdict).length;
+ const origRight=xs.filter(q=>answers[q.n]===q.original).length,origWrong=xs.filter(q=>answers[q.n]&&answers[q.n]!==q.original).length;
+ return {section:s,answered:xs.filter(q=>answers[q.n]).length,right:count('correct'),wrong:count('incorrect'),
+ skip:count('unanswered'),invalid:count('excluded'),max:2*(relevant.length-count('excluded')),
+ score:relevant.reduce((n,x)=>n+x.marks,0),raw:origRight*2-origWrong*.5};}
 function calculate(a){if(!paperFor(a))return a.scoreSnapshot||{score:0,raw:0,max:0,right:0,wrong:0,skip:0,invalid:0,answered:0,rows:[]};
  const rows=sectionsFor(a).map(s=>sumSection(a,s));
  const result=GENERIC_ENGINE.score(a,new Date(now()).toISOString());
@@ -75,7 +81,7 @@ function liveTimeMs(a){if(!a)return 0;return Math.max(0,(a.pausedAt||now())-a.st
 function segment(a){return a?.sections?.[a.sections.length-1];}
 function timeRemaining(a){if(a.mode==='strict')return Math.max(0,900000-(now()-segment(a).startAt));return Math.max(0,(a.mode==='single'?900000:3600000)-liveTimeMs(a));}
 function submitFinished(reason='manual',at=now()){if(!active||active.finishedAt)return;GENERIC_ENGINE.event(active,{type:'SUBMIT_ATTEMPT',nowMs:at});stopTracking(at);let s=segment(active);if(s&&!s.endAt){s.endAt=at;s.reason=reason;}active.finishedAt=at;active.endedBy=reason;active.updatedAt=at;active.pausedAt=null;active.scoreSnapshot=calculate(active);let completed=active;upsertAttempt(completed);resultId=completed.id;active=null;saveActiveMirror();screen='results';resultTab='insights';reviewFilter='all';render();}
-function strictNext(reason='early',at=now()){if(!active||active.mode!=='strict')return;GENERIC_ENGINE.event(active,{type:'SUBMIT_SECTION',nowMs:at});stopTracking(at);const old=segment(active);if(old.endAt)return;old.endAt=at;old.reason=reason;
+function strictNext(reason='early',at=now()){if(!active||active.mode!=='strict')return;if(reason!=='time')GENERIC_ENGINE.event(active,{type:'SUBMIT_SECTION',nowMs:at});stopTracking(at);const old=segment(active);if(old.endAt)return;old.endAt=at;old.reason=reason;
  if(old.section===3){submitFinished(reason==='time'?'time':'section-early',at);return;}
  let next=old.section+1;active.section=next;active.sections.push({section:next,startAt:at,endAt:null,reason:null});cursor=active.cursors[next]||0;active.updatedAt=at;upsertAttempt(active);resetTracking();if(screen==='exam'){render();} }
 function settleTimer(){if(!active||active.finishedAt)return;const t=now();GENERIC_ENGINE.event(active,{type:'TICK',nowMs:t});if(active.mode==='strict'){let count=0;while(active&&active.mode==='strict'&&t>=segment(active).startAt+900000&&count++<5){let at=segment(active).startAt+900000;strictNext('time',at);}}else if(liveTimeMs(active)>=(active.mode==='single'?900000:3600000)){submitFinished('time',active.startedAt+(active.mode==='single'?900000:3600000)+active.pausedMs);} }
