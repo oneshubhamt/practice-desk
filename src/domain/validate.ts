@@ -1,7 +1,10 @@
 import type { AnswerKeyRevision } from "./answer-key.js";
 import type { ExamDefinition, PaperRevision, SectionDefinition } from "./exam.js";
-import type { CandidateResponse, QuestionRevision } from "./question.js";
-import { QUESTION_KINDS } from "./question.js";
+import type { QuestionRevision } from "./question.js";
+
+const QUESTION_KINDS = [
+  "single-choice", "multiple-select", "numeric-entry", "true-false", "matching", "free-response",
+] as const;
 import type { MarkingRule, ScoringPolicy } from "./scoring.js";
 
 type RecordValue = Record<string, unknown>;
