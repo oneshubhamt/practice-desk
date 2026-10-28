@@ -69,8 +69,9 @@ type RecordItem=PackageRecord|GenericAttempt;
 const isAttempt=(x:unknown):x is GenericAttempt=>!!x&&typeof x==="object"&&(x as GenericAttempt).recordType==="generic-attempt";
 const isPackage=(x:unknown):x is PackageRecord=>!!x&&typeof x==="object"&&(x as PackageRecord).recordType==="generic-package";
 
-export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patches:ReviewPatchBank,onBack:()=>void):()=>void{
- const packages=new Map<string,ExamPackage>(builtinCglPackages(sources,patches).map(p=>[p.paper.id,p]));
+export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patches:ReviewPatchBank,
+ solutions:Readonly<Record<string,Readonly<Record<string,string>>>>,onBack:()=>void):()=>void{
+ const packages=new Map<string,ExamPackage>(builtinCglPackages(sources,patches,solutions).map(p=>[p.paper.id,p]));
  const records=new Map<string,RecordItem>();
  let choice=packages.keys().next().value as string;
  let attempt:GenericAttempt|null=null, view:"library"|"exam"|"result"="library";

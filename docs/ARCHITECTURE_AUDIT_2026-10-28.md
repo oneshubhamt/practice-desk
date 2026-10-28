@@ -1102,3 +1102,9 @@ Added:
 - Local JSON packages can be loaded without a network. Generic attempts and imported packs are written to the existing IndexedDB attempts store with distinct record types, leaving the CGL history filtered separately. LocalStorage is a best-effort fallback.
 - Existing CGL home/exam/results/history flows remain untouched except the exam-workspace entry point. All code bundles into the single offline HTML.
 - Pass 4 remains in progress: generic and existing histories should be unified, complete multi-kind browser tests are needed, image/asset checking needs more coverage, and final file:// acceptance across browsers is outstanding.
+
+
+### Pass 4 CGL fidelity in generic workspace
+- Added option-image references to the typed CGL importer and embedded option-image assets to generic exam packages, preserving figure-based questions in the new UI.
+- Explanations are carried separately into each generic package, with the solution bank supplying missing inline explanations; editorial notes and answer keys remain hidden during the attempt.
+- The original CGL library and result screens remain unmodified; this work targets the new model-driven workspace only.

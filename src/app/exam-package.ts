@@ -1,5 +1,5 @@
 import { validateAnswerKeyRevision, validatePaperRevision, validateQuestionRevision } from "../domain/validate.ts";
-import { importCglBank } from "../content/import-cgl.ts";
+import { importCglBank, sha256 } from "../content/import-cgl.ts";
 import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
 import type { PaperRevision } from "../domain/exam.js";
 import type { QuestionRevision, StimulusDefinition, ImageAsset, CandidateResponse } from "../domain/question.js";
@@ -22,6 +22,7 @@ export interface ExamPackage {
  readonly questions: readonly QuestionRevision[];
  readonly stimuli?: readonly StimulusDefinition[];
  readonly assets?: readonly ImageAsset[];
+ readonly explanations?: Readonly<Record<string,string>>;
 }
 
 /** Every supplied question, key and attachment is validated before becoming visible. */
@@ -79,13 +80,15 @@ export function validateExamPackage(value: unknown): ExamPackage {
 }
 
 /** Convert existing CGL content without changing the original bank or editions. */
-export function builtinCglPackages(sources: SourcePaperBank, patches: ReviewPatchBank): ExamPackage[] {
+export function builtinCglPackages(sources: SourcePaperBank, patches: ReviewPatchBank,
+  solutions: Readonly<Record<string,Readonly<Record<string,string>>>> = {}): ExamPackage[] {
  const editions = importCglBank(sources, patches);
  return editions.map(({ paper, key, questions }) => {
    const source = sources[paper.paperId];
    if (!source) throw new Error("Missing CGL source");
    const assets: ImageAsset[] = [];
    const stimuli: StimulusDefinition[] = [];
+   const explanations: Record<string,string> = {};
    const patchMap = paper.edition === "reviewed" ? patches[paper.paperId] ?? {} : {};
    for (const [id, text] of Object.entries(source.passages))
       stimuli.push({id: `${paper.paperId}:passage:${id}` as StimulusDefinition["id"],kind:"passage",text});
@@ -94,14 +97,21 @@ export function builtinCglPackages(sources: SourcePaperBank, patches: ReviewPatc
      const n = Number(question.questionId.split(":").at(-1));
      const original = source.questions.find(q => q.n === n)!;
      const merged = {...original, ...(patchMap[String(n)] ?? {})};
+     const explanation = merged.explanation || solutions[paper.paperId]?.[String(n)] || "";
+     if (explanation) explanations[question.id] = explanation;
      const stemId = `${paper.paperId}:q:${n}:stem`;
-     if (merged.images.stem) assets.push({id:stemId as ImageAsset["id"],
-       mediaType: merged.images.stem.match(/^data:(image\/[a-z]+);/)?.[1] as ImageAsset["mediaType"] || "image/webp",
-       dataUri:merged.images.stem,contentHash:question.contentHash});
+     const asImage=(id:string, uri:string):ImageAsset=>({
+       id:id as ImageAsset["id"],mediaType:(uri.match(/^data:(image\/[a-z]+);/)?.[1]??"image/webp") as ImageAsset["mediaType"],
+       dataUri:uri,contentHash:sha256(uri),
+     });
+     if (merged.images.stem) assets.push(asImage(stemId,merged.images.stem));
+     merged.images.options?.forEach((uri,i)=>{
+       if(uri)assets.push(asImage(`${paper.paperId}:q:${n}:option:${i}`,uri));
+     });
    }
    return {format:"practice-desk-exam",version:1,examId:"ssc-cgl" as ExamId,
      title:`${source.name} · ${paper.edition === "reviewed" ? "Reviewed" : "Original"}`,
-     paper,answerKey:key,questions,stimuli,assets};
+     paper,answerKey:key,questions,stimuli,assets,explanations};
  });
 }
 

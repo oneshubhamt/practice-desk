@@ -79,7 +79,10 @@ export function importCglBank(papers: SourcePaperBank, patches: ReviewPatchBank)
         const patch: QuestionPatch = patchMap[String(original.n)] ?? {};
         const merged = { ...original, ...patch };
         const stableId = `${source.id}:q:${original.n}`;
-        const options = merged.opts.map((text, index) => ({ id: optionId(stableId, "abcd"[index]!), text }));
+        const options = merged.opts.map((text, index) => ({
+          id: optionId(stableId, "abcd"[index]!), text,
+          ...(merged.images.options?.[index] ? { assetIds: [`${stableId}:option:${index}` as AssetId] } : {}),
+        }));
         const editorialStatus = edition === "source"
           ? original.status === "ok" ? "verified" : original.status
           : patch.status === "corrected" ? "corrected"
