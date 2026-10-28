@@ -84,7 +84,7 @@ export function validateExamPackage(value: unknown): ExamPackage {
    if(!explanations || typeof explanations!=="object" || Array.isArray(explanations))
      throw new Error("Invalid explanations");
    for(const [id,text] of Object.entries(explanations)){
-     if(!ids.has(id) || typeof text!=="string" || text.length>20000) throw new Error("Invalid explanation reference");
+     if(!ids.has(id as QuestionRevisionId) || typeof text!=="string" || text.length>20000) throw new Error("Invalid explanation reference");
    }
  }
  return value as ExamPackage;
