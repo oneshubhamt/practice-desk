@@ -1047,3 +1047,12 @@ Added:
 - Session restore errors no longer discard the entire IndexedDB history in favour of fallback. Restoration is isolated from database opening.
 - The archived source image bytes are not duplicated in history; unchanged revisions can still use matching embedded bank images.
 - UI generalization and actual file:// browser reopen testing remain for later acceptance.
+
+
+### Pass 3 integration — revision archive and complete backup
+
+- IndexedDB upgraded in-place from v1 to v2, adding a `revisions` store keyed by SHA-256 paper revision ID; media-rich display content is stored once per revision instead of being repeated in each attempt. An attempt and any newly referenced revision are persisted in **one readwrite transaction**.
+- History review now reuses archived display media when available; `frozenDisplay` and frozen domain data retain the original wording, keys and scores.
+- Full version-2 backup exports completed **and unfinished** attempts, display revisions and preferences; SHA-256 manifest validated before importing. Duplicate IDs do not overwrite existing records.
+- Reopening the offline file restores completed and active history through the existing recovery journal and wall-clock session rebase.
+- External browser/file origin storage is still best-effort. Independently exported backups remain necessary; UI generalisation and browser acceptance stay in Pass 4.

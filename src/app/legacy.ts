@@ -16,7 +16,8 @@ for(const [pid,source] of Object.entries(SOURCE_PAPERS)){
 
 'use strict';
 const SECTIONS=['Reasoning','General Awareness','Quantitative Aptitude','English'];
-const DB_NAME='practiceDesk.history.v1', DB_VERSION=1;
+const DB_NAME='practiceDesk.history.v1', DB_VERSION=2;
+const displayRevisions=new Map(),savedRevisionIds=new Set();
 const SETTINGS_LS='practiceDesk.settings.v3', MIRROR_LS='practiceDesk.active.mirror.v3', FALLBACK_LS='practiceDesk.attempts.fallback.v3';
 const $=id=>document.getElementById(id), letters='abcd';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -42,10 +43,11 @@ function frozenPaper(a){
  if(!a?.frozenDisplay)return null;
  const cached=frozenPaperCache.get(a.frozenDisplay);
  if(cached)return cached;
+ const archived=displayRevisions.get(a.frozen?.snapshot?.paperRevisionId)?.displayPaper;
  const current=getPaper(a.paperId);
  const result={...a.frozenDisplay,questions:a.frozenDisplay.questions.map(q=>({
-   ...q,images:GENERIC_ENGINE.assetMatches(a,q.n)
-     ? current?.questions?.find(x=>x.n===q.n)?.images||{} : {}
+   ...q,images:archived?.questions?.find(x=>x.n===q.n)?.images||
+     (GENERIC_ENGINE.assetMatches(a,q.n)?current?.questions?.find(x=>x.n===q.n)?.images||{}:{})
  }))};
  frozenPaperCache.set(a.frozenDisplay,result);
  return result;
@@ -105,10 +107,27 @@ function strictNext(reason='early',at=now()){if(!active||active.mode!=='strict')
  let next=old.section+1;active.section=next;active.sections.push({section:next,startAt:at,endAt:null,reason:null});cursor=active.cursors[next]||0;active.updatedAt=at;upsertAttempt(active);resetTracking();if(screen==='exam'){render();} }
 function settleTimer(){if(!active||active.finishedAt)return;const t=now();GENERIC_ENGINE.event(active,{type:'TICK',nowMs:t});if(active.mode==='strict'){let count=0;while(active&&active.mode==='strict'&&t>=segment(active).startAt+900000&&count++<5){let at=segment(active).startAt+900000;strictNext('time',at);}}else if(liveTimeMs(active)>=(active.mode==='single'?900000:3600000)){submitFinished('time',active.startedAt+(active.mode==='single'?900000:3600000)+active.pausedMs);} }
 // IndexedDB: immutable paper content lives in the HTML; each attempt is one atomic record.
-function openDB(){return new Promise((resolve,reject)=>{if(!('indexedDB'in window))return reject(Error('IndexedDB unavailable'));let req;try{req=indexedDB.open(DB_NAME,DB_VERSION)}catch(e){reject(e);return;}req.onupgradeneeded=()=>{const d=req.result;let st;if(!d.objectStoreNames.contains('attempts')){st=d.createObjectStore('attempts',{keyPath:'id'});st.createIndex('by_finished','finishedAt');st.createIndex('by_paper','paperId');st.createIndex('by_mode','mode');st.createIndex('by_paper_finished',['paperId','finishedAt']);}if(!d.objectStoreNames.contains('settings'))d.createObjectStore('settings',{keyPath:'key'});};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||Error('Failed to open IndexedDB'));req.onblocked=()=>reject(Error('Database upgrade blocked by another tab'));});}
+function openDB(){return new Promise((resolve,reject)=>{if(!('indexedDB'in window))return reject(Error('IndexedDB unavailable'));let req;try{req=indexedDB.open(DB_NAME,DB_VERSION)}catch(e){reject(e);return;}req.onupgradeneeded=()=>{const d=req.result;let st;if(!d.objectStoreNames.contains('attempts')){st=d.createObjectStore('attempts',{keyPath:'id'});st.createIndex('by_finished','finishedAt');st.createIndex('by_paper','paperId');st.createIndex('by_mode','mode');st.createIndex('by_paper_finished',['paperId','finishedAt']);}if(!d.objectStoreNames.contains('settings'))d.createObjectStore('settings',{keyPath:'key'});if(!d.objectStoreNames.contains('revisions'))d.createObjectStore('revisions',{keyPath:'id'});};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||Error('Failed to open IndexedDB'));req.onblocked=()=>reject(Error('Database upgrade blocked by another tab'));});}
 function dbRead(store,key){return new Promise((res,rej)=>{const tx=db.transaction(store,'readonly'),req=tx.objectStore(store).get(key);req.onsuccess=()=>res(req.result);req.onerror=()=>rej(req.error);});}
 function dbGetAll(store){return new Promise((res,rej)=>{const tx=db.transaction(store,'readonly'),req=tx.objectStore(store).getAll();req.onsuccess=()=>res(req.result||[]);req.onerror=()=>rej(req.error);});}
 function dbPut(store,value){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).put(value);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);tx.onabort=()=>rej(tx.error);});}
+function dbPutAttemptWithRevision(a){
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(['attempts','revisions'],'readwrite');
+  const id=a.frozen?.snapshot?.paperRevisionId,revision=id&&displayRevisions.get(id);
+  if(revision&&!savedRevisionIds.has(id))tx.objectStore('revisions').put(structuredClone(revision));
+  tx.objectStore('attempts').put(structuredClone(a));
+  tx.oncomplete=()=>{if(revision)savedRevisionIds.add(id);resolve();};
+  tx.onerror=()=>reject(tx.error||Error('Attempt write failed'));
+  tx.onabort=()=>reject(tx.error||Error('Attempt write aborted'));
+ });
+}
+function captureDisplayArchive(a){
+ const id=a.frozen?.snapshot?.paperRevisionId;
+ if(!id||displayRevisions.has(id))return;
+ const paper=getPaper(a.paperId);
+ if(paper)displayRevisions.set(id,GENERIC_ENGINE.archiveDisplayRevision(id,a.paperId,paper));
+}
 function dbDelete(store,id){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).delete(id);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);tx.onabort=()=>rej(tx.error);});}
 function queueWrite(job){writeChain=writeChain.catch(()=>{}).then(job).catch(e=>{db=null;storageMode='localStorage';storageMessage='IndexedDB write failed. Switched to localStorage; export a backup.';fallbackSave();saveActiveMirror();if(!autosaveWarned){notify('Storage problem: using browser fallback. Export a backup.');autosaveWarned=true;}console.warn('Practice Desk storage',e)});return writeChain;}
 function fallbackSave(){const data=JSON.stringify(attempts);if(!setLS(FALLBACK_LS,data)){storageMessage='Browser storage full or blocked. Export a backup.';notify(storageMessage);}}
@@ -119,11 +138,11 @@ function saveActiveMirror(){if(active&&!active.finishedAt){
   if(!autosaveWarned){notify(storageMessage);autosaveWarned=true;}
  }
 }else removeLS(MIRROR_LS);}
-function upsertAttempt(a){a.updatedAt=now();const idx=attempts.findIndex(x=>x.id===a.id);if(idx<0)attempts.push(a);else attempts[idx]=a;saveActiveMirror();if(db){const snap=structuredClone(a);queueWrite(()=>dbPut('attempts',snap));}else fallbackSave();}
+function upsertAttempt(a){captureDisplayArchive(a);a.updatedAt=now();const idx=attempts.findIndex(x=>x.id===a.id);if(idx<0)attempts.push(a);else attempts[idx]=a;saveActiveMirror();if(db){const snap=structuredClone(a);queueWrite(()=>dbPutAttemptWithRevision(snap));}else fallbackSave();}
 async function removeAttempt(id){attempts=attempts.filter(a=>a.id!==id);if(db)await queueWrite(()=>dbDelete('attempts',id));if(!db)fallbackSave();if(resultId===id)resultId=null;if(active?.id===id){active=null;saveActiveMirror();}}
 /** Check local records before allowing them to influence the visible history or live state. */
 function usableStored(a){
- if(!a||typeof a!=='object'||typeof a.id!=='string'||!getPaper(a.paperId)||
+ if(!a||typeof a!=='object'||typeof a.id!=='string'||(!getPaper(a.paperId)&&!a.frozenDisplay)||
    !['strict','free','single'].includes(a.mode))return false;
  if(!a.finishedAt&&(!Number.isFinite(a.startedAt)||!Array.isArray(a.cursors)||
    !Array.isArray(a.sections)||!a.sections.length))return false;
@@ -148,7 +167,8 @@ async function initStorage(){
  const rawMirror=safeJSON(getLS(MIRROR_LS),null),mirror=usableStored(rawMirror)?rawMirror:null;
  try{
   db=await openDB();storageMode='indexeddb';
-  const [list,settings]=await Promise.all([dbGetAll('attempts'),dbRead('settings','preferences')]);
+  const [list,settings,revisions]=await Promise.all([dbGetAll('attempts'),dbRead('settings','preferences'),dbGetAll('revisions')]);
+  for(const revision of revisions){displayRevisions.set(revision.id,revision);savedRevisionIds.add(revision.id);}
   attempts=Array.isArray(list)?list.filter(usableStored):[];
   if(!localPrefs&&settings?.value&&getPaper(settings.value.paper))prefs={...prefs,...settings.value};
   // Replay the fallback journal first; each attempt is committed in a single IDB transaction.
@@ -161,7 +181,7 @@ async function initStorage(){
     if(winner!==previous){
      attempts=attempts.filter(a=>a.id!==item.id);
      attempts.push(winner);
-     await dbPut('attempts',structuredClone(winner));
+     captureDisplayArchive(winner);await dbPutAttemptWithRevision(winner);
     }
    }
   }
@@ -198,7 +218,7 @@ function onPageNav(){if(screen==='exam')stopTracking();}
 function goHome(){if(screen==='exam'&&active&&!confirm('Return to library? The test timer will keep running.'))return;onPageNav();screen='home';render();}
 function goHistory(){onPageNav();screen='history';render();}
 function openResults(id){const a=record(id);if(!a||!a.finishedAt)return;onPageNav();resultId=id;resultTab='insights';reviewFilter='all';screen='results';render();}
-function startNew(){if(active&&!active.finishedAt&&!confirm('A test is still active. Discard it and start a new attempt?'))return;if(active&&!active.finishedAt){const old=active;old.finishedAt=now();old.endedBy='discarded';old.scoreSnapshot=calculate(old);upsertAttempt(old);}active=makeAttempt();GENERIC_ENGINE.ensure(active,now());active.frozenDisplay=freezeDisplay(active);cursor=0;resultId=null;screen='exam';savePrefs();upsertAttempt(active);render();}
+function startNew(){if(active&&!active.finishedAt&&!confirm('A test is still active. Discard it and start a new attempt?'))return;if(active&&!active.finishedAt){const old=active;old.finishedAt=now();old.endedBy='discarded';old.scoreSnapshot=calculate(old);upsertAttempt(old);}active=makeAttempt();GENERIC_ENGINE.ensure(active,now());active.frozenDisplay=freezeDisplay(active);captureDisplayArchive(active);cursor=0;resultId=null;screen='exam';savePrefs();upsertAttempt(active);render();}
 function resumeAttempt(){if(!active)return;GENERIC_ENGINE.ensure(active,now());screen='exam';cursor=active.cursors?.[active.section]||0;settleTimer();render();}
 function changeQuestion(i){if(!active||i<0||i>24)return;GENERIC_ENGINE.event(active,{type:'NAVIGATE',nowMs:now(),sectionIndex:active.mode==='single'?0:active.section,questionIndex:i});stopTracking();cursor=i;active.cursors[active.section]=i;upsertAttempt(active);render();}
 function changeSection(i){if(active.mode!=='free'||i<0||i>3)return;GENERIC_ENGINE.event(active,{type:'NAVIGATE',nowMs:now(),sectionIndex:i,questionIndex:active.cursors[i]||0});stopTracking();active.section=i;cursor=active.cursors[i]||0;upsertAttempt(active);render();}
@@ -279,23 +299,38 @@ function historyTrendHTML(all){let eligible=all.filter(a=>!a.legacySummary&&summ
  return `<section class="panel pad trend-panel"><div class="row between"><div><h3 style="margin:0">Progress across comparable attempts</h3><p class="fine" style="margin:5px 0 0">${esc(desc)} · ${same.length} latest attempts</p></div><b>${vals[vals.length-1].toFixed(1)}% <span class="fine">latest adjusted score</span></b></div><svg class="trend-chart" role="img" aria-label="Comparable attempt scores: ${vals.map(v=>v.toFixed(1)+' percent').join(', ')}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><path d="M ${margin} ${h-margin} H ${w-margin}" stroke="#dce6f0" stroke-width="2"/><path d="${path}" fill="none" stroke="#2468a7" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>${xy.map(([x,y])=>`<circle cx="${x}" cy="${y}" r="5" fill="#fff" stroke="#2468a7" stroke-width="3"/>`).join('')}</svg><div class="row between fine"><span>${dateText(same[0].finishedAt)}</span><span>Scores shown as % of audited maximum</span><span>${dateText(same[same.length-1].finishedAt)}</span></div></section>`;
 }
 function drawHistory(){let list=groupedHistory(),all=attempts.filter(a=>a.finishedAt&&a.endedBy!=='discarded');let full=all.filter(a=>!a.legacySummary);let best=all.length?all.reduce((a,b)=>{let sc=summaryFor(a),sd=summaryFor(b);return sc.max&&sd.max&&sc.score/sc.max>sd.score/sd.max?a:b;},all[0]):null;
- $('app').innerHTML=`<div class="row between results-header"><div><h1>History & insights</h1><p class="muted">Revisit attempts, compare results and safeguard your data.</p></div><button class="btn" id="historyHome">← Test library</button></div><div class="history-metrics"><div class="panel"><strong>${all.length}</strong><span>Completed attempts</span></div><div class="panel"><strong>${new Set(all.map(a=>a.paperId)).size}</strong><span>Papers practised</span></div><div class="panel"><strong>${best?(100*summaryFor(best).score/(summaryFor(best).max||1)).toFixed(1)+'%':'—'}</strong><span>Best adjusted percentage*</span></div></div>${historyTrendHTML(all)}${historyPrioritiesHTML(all)}<div class="homegrid history-layout"><section class="panel pad"><div class="row between"><h2 style="margin:0">Saved attempts</h2><div class="row compact"><select id="historyFilter" aria-label="Filter papers"><option value="all">All papers</option>${Object.values(PAPERS).map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select><select id="historySort" aria-label="Sort attempts"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select></div></div>${list.length?list.map(a=>{let r=summaryFor(a);return `<div class="attempt-row"><button class="attempt-open" data-attempt="${esc(a.id)}"><span><b>${esc(paperFor(a)?.name||a.paperId)}</b><small>${dateText(a.finishedAt)} · ${esc(modeName(a.mode))}${a.legacySummary?' · Legacy summary':''}</small></span><span class="attempt-score">${signed(r.score)} <small>/ ${r.max}</small></span></button><button class="iconbtn" data-delete="${esc(a.id)}" aria-label="Delete attempt" title="Delete attempt">✕</button></div>`;}).join(''):'<p class="fine" style="margin-top:15px">No completed attempts match this filter.</p>'}</section><aside class="stack"><section class="panel pad"><h3>Storage & safety</h3><div class="storage-line"><span class="storage-indicator ${storageMode==='indexeddb'?'success':'warn'}"></span><b>${storageMode==='indexeddb'?'IndexedDB ready':'Browser fallback'}</b></div><p class="fine">${storageMode==='indexeddb'?'Attempts are saved as indexed records in your browser.':'IndexedDB is unavailable. History is being stored in localStorage and may be more fragile.'} Export backups to protect your history from clearing browser data or moving to another device.</p>${storageMessage?`<p class="fine bad">${esc(storageMessage)}</p>`:''}<p class="fine" id="quotaInfo">Checking storage quota…</p><div class="row"><button class="btn" id="requestPersist">Protect stored data</button></div></section><section class="panel pad"><h3>Backup & management</h3><div class="management-actions"><button class="btn primary" id="exportBackup">Export history (.json)</button><button class="btn" id="importBackup">Import / merge backup</button><input id="importFile" type="file" accept="application/json,.json" hidden><button class="btn danger" id="clearHistory" ${all.length?'':'disabled'}>Delete all completed attempts</button></div><p class="fine">Import merges by attempt ID. Existing attempts are preserved unless the imported copy is newer. Backups include answers, timing, frozen question text and scoring rules; image bytes are not duplicated.</p></section></aside></div><p class="fine">*Maximum marks differ between full-paper and single-section attempts; compare normalized percentages and the same test mode for meaningful progress.</p><footer>Practice Desk · Your data stays on this device unless you export it.</footer>`;
+ $('app').innerHTML=`<div class="row between results-header"><div><h1>History & insights</h1><p class="muted">Revisit attempts, compare results and safeguard your data.</p></div><button class="btn" id="historyHome">← Test library</button></div><div class="history-metrics"><div class="panel"><strong>${all.length}</strong><span>Completed attempts</span></div><div class="panel"><strong>${new Set(all.map(a=>a.paperId)).size}</strong><span>Papers practised</span></div><div class="panel"><strong>${best?(100*summaryFor(best).score/(summaryFor(best).max||1)).toFixed(1)+'%':'—'}</strong><span>Best adjusted percentage*</span></div></div>${historyTrendHTML(all)}${historyPrioritiesHTML(all)}<div class="homegrid history-layout"><section class="panel pad"><div class="row between"><h2 style="margin:0">Saved attempts</h2><div class="row compact"><select id="historyFilter" aria-label="Filter papers"><option value="all">All papers</option>${Object.values(PAPERS).map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select><select id="historySort" aria-label="Sort attempts"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select></div></div>${list.length?list.map(a=>{let r=summaryFor(a);return `<div class="attempt-row"><button class="attempt-open" data-attempt="${esc(a.id)}"><span><b>${esc(paperFor(a)?.name||a.paperId)}</b><small>${dateText(a.finishedAt)} · ${esc(modeName(a.mode))}${a.legacySummary?' · Legacy summary':''}</small></span><span class="attempt-score">${signed(r.score)} <small>/ ${r.max}</small></span></button><button class="iconbtn" data-delete="${esc(a.id)}" aria-label="Delete attempt" title="Delete attempt">✕</button></div>`;}).join(''):'<p class="fine" style="margin-top:15px">No completed attempts match this filter.</p>'}</section><aside class="stack"><section class="panel pad"><h3>Storage & safety</h3><div class="storage-line"><span class="storage-indicator ${storageMode==='indexeddb'?'success':'warn'}"></span><b>${storageMode==='indexeddb'?'IndexedDB ready':'Browser fallback'}</b></div><p class="fine">${storageMode==='indexeddb'?'Attempts are saved as indexed records in your browser.':'IndexedDB is unavailable. History is being stored in localStorage and may be more fragile.'} Export backups to protect your history from clearing browser data or moving to another device.</p>${storageMessage?`<p class="fine bad">${esc(storageMessage)}</p>`:''}<p class="fine" id="quotaInfo">Checking storage quota…</p><div class="row"><button class="btn" id="requestPersist">Protect stored data</button></div></section><section class="panel pad"><h3>Backup & management</h3><div class="management-actions"><button class="btn primary" id="exportBackup">Export full backup (.json)</button><button class="btn" id="importBackup">Import / merge backup</button><input id="importFile" type="file" accept="application/json,.json" hidden><button class="btn danger" id="clearHistory" ${all.length?'':'disabled'}>Delete all completed attempts</button></div><p class="fine">Full backups include unfinished tests, frozen revisions, responses and an integrity checksum. Existing completed attempts cannot be overwritten.</p></section></aside></div><p class="fine">*Maximum marks differ between full-paper and single-section attempts; compare normalized percentages and the same test mode for meaningful progress.</p><footer>Practice Desk · Your data stays on this device unless you export it.</footer>`;
  $('historyHome').onclick=goHome;$('historyFilter').value=historyFilter;$('historySort').value=historySort;$('historyFilter').onchange=e=>{historyFilter=e.target.value;render();};$('historySort').onchange=e=>{historySort=e.target.value;render();};document.querySelectorAll('[data-attempt]').forEach(el=>el.onclick=()=>openResults(el.dataset.attempt));document.querySelectorAll('[data-delete]').forEach(el=>el.onclick=()=>deleteOne(el.dataset.delete));$('exportBackup').onclick=exportBackup;$('importBackup').onclick=()=>$('importFile').click();$('importFile').onchange=e=>importBackup(e.target.files?.[0]);$('clearHistory').onclick=clearHistory;$('requestPersist').onclick=requestPersist;showQuota();}
 async function showQuota(){let node=$('quotaInfo');if(!node)return;try{if(!navigator.storage?.estimate){node.textContent='Storage estimate unavailable for this browser/file.';return;}let x=await navigator.storage.estimate();if(!node.isConnected)return;node.textContent=`Browser storage: ${((x.usage||0)/1048576).toFixed(1)} MiB used${x.quota?` of approximately ${(x.quota/1048576).toFixed(0)} MiB quota`:''}.`;}catch{node.textContent='Storage estimate unavailable.';}}
 async function requestPersist(){if(!navigator.storage?.persist){notify('Persistent storage request is unavailable for this browser/file.');return;}try{let ok=await navigator.storage.persist();notify(ok?'Browser granted persistent storage.':'Browser did not grant persistent storage. Keep manual backups.');}catch{notify('Storage persistence cannot be requested here. Keep backups.');}}
-function validImported(a){if(!a||typeof a!=='object'||typeof a.id!=='string'||a.id.length>200||!getPaper(a.paperId)||!['strict','free','single'].includes(a.mode))return false;
- if(!Number.isFinite(a.finishedAt)||a.finishedAt<1||!a.legacySummary&&!Number.isFinite(a.startedAt))return false;
+function validImported(a){if(!a||typeof a!=='object'||typeof a.id!=='string'||a.id.length>200||(!getPaper(a.paperId)&&!a.frozenDisplay)||!['strict','free','single'].includes(a.mode))return false;
+ if(a.finishedAt!=null&&(!Number.isFinite(a.finishedAt)||a.finishedAt<1))return false;
+ if(!a.legacySummary&&!Number.isFinite(a.startedAt))return false;
  if(a.mode==='single'&&(!Number.isInteger(a.singleSection)||a.singleSection<0||a.singleSection>3))return false;
  if(a.answers&&(typeof a.answers!=='object'||Array.isArray(a.answers)))return false;
  if(a.timing&&(typeof a.timing!=='object'||Array.isArray(a.timing)))return false;
  if(a.sections&&(!Array.isArray(a.sections)||a.sections.length>4))return false;
- if(a.schema>=4&&(!a.frozen||!a.frozenDisplay||!a.scoreSnapshot))return false;
+ if(a.schema>=4&&(!a.frozen||!a.frozenDisplay||(a.finishedAt&&!a.scoreSnapshot)))return false;
  if(a.frozen){try{GENERIC_ENGINE.context(a);}catch{return false;}}
  for(const [n,v] of Object.entries(a.answers||{})){if(!/^(?:[1-9]|[1-9][0-9]|100)$/.test(n)||!letters.includes(v))return false;}
  return true;}
-function exportBackup(){let payload={format:'practice-desk-backup',version:2,exportedAt:new Date().toISOString(),attempts:attempts.filter(a=>a.finishedAt),preferences:prefs};let content=JSON.stringify(payload,null,2),blob=new Blob([content],{type:'application/json'});let url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='Practice_Desk_Backup_'+new Date().toISOString().slice(0,10)+'.json';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);notify('History backup exported.');}
-async function importBackup(file){if(!file)return;if(file.size>150*1024*1024){notify('Backup file is too large (150 MB maximum).');return;}let data;try{data=JSON.parse(await file.text());}catch{notify('This is not a valid JSON backup.');return;}if(data?.format!=='practice-desk-backup'||data.version!==2||!Array.isArray(data.attempts)){notify('Not a compatible Practice Desk backup.');return;}let good=data.attempts.filter(validImported).slice(0,5000);for(let a of good){if(!a.scoreSnapshot)a.scoreSnapshot=calculate(a);}if(!good.length){notify('No valid attempts found in this backup.');return;}if(!confirm(`Merge ${good.length} saved attempt(s) into this browser? Matching IDs will use the newer saved copy. The current test, if any, will be preserved.`))return;let count=0;for(let a of good){if(a.id===active?.id)continue;let old=record(a.id);if(!old){await upsertImported(a);count++;}}render();notify(`Imported ${count} new or newer attempts.`);}
-async function upsertImported(a){let ix=attempts.findIndex(x=>x.id===a.id);if(ix>=0)attempts[ix]=a;else attempts.push(a);if(db)await queueWrite(()=>dbPut('attempts',structuredClone(a)));else fallbackSave();}
+function exportBackup(){let payload=GENERIC_ENGINE.makeBackup(attempts,[...displayRevisions.values()],prefs,new Date().toISOString());let content=JSON.stringify(payload,null,2),blob=new Blob([content],{type:'application/json'});let url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='Practice_Desk_Backup_'+new Date().toISOString().slice(0,10)+'.json';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);notify('History backup exported.');}
+async function importBackup(file){
+ if(!file)return;
+ if(file.size>150*1024*1024){notify('Backup file is too large (150 MB maximum).');return;}
+ let backup;
+ try{backup=GENERIC_ENGINE.verifyBackup(JSON.parse(await file.text()));}
+ catch(e){notify('Backup rejected: invalid format or integrity checksum.');console.warn('Backup',e);return;}
+ const good=backup.attempts.filter(validImported).slice(0,5000);
+ if(!good.length){notify('No valid attempts in this backup.');return;}
+ if(!confirm(`Import ${good.length} saved attempts, including unfinished tests? Existing records will not be overwritten.`))return;
+ for(const rev of backup.revisions){if(!displayRevisions.has(rev.id))displayRevisions.set(rev.id,rev);}
+ let count=0;
+ for(const a of good){if(a.id===active?.id||record(a.id))continue;await upsertImported(a);count++;}
+ if(!active)restoreActive();
+ render();notify(`Imported ${count} new attempts. Existing records preserved.`);
+}
+async function upsertImported(a){let ix=attempts.findIndex(x=>x.id===a.id);if(ix>=0)attempts[ix]=a;else attempts.push(a);captureDisplayArchive(a);if(db)await queueWrite(()=>dbPutAttemptWithRevision(a));else fallbackSave();}
 async function deleteOne(id){const a=record(id);if(!a||!a.finishedAt)return;if(!confirm(`Permanently delete this saved attempt from ${dateText(a.finishedAt)}? Export a backup first if needed.`))return;await removeAttempt(id);render();notify('Attempt deleted.');}
 async function clearHistory(){let list=attempts.filter(a=>a.finishedAt);if(!list.length)return;if(!confirm(`Delete all ${list.length} completed attempt records from this browser? This cannot be undone without a backup.`))return;if(!confirm('Confirm permanent deletion of saved test history?'))return;for(let a of list)await removeAttempt(a.id);render();notify('Completed attempt history deleted.');}
 function render(){if(screen==='exam'&&active){settleTimer();if(screen!=='exam')return;}if(screen==='exam'&&!active)screen='home';if(screen!=='exam')stopTracking();if(screen==='exam')drawExam();else if(screen==='results')drawResults();else if(screen==='history')drawHistory();else drawHome();}

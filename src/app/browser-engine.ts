@@ -3,6 +3,7 @@ import { transition, startSession } from "../engine/session.ts";
 import { freezeAttempt, assertFrozenContent, restoreSession, chooseRecovered } from "../history/frozen.ts";
 import type { FrozenAttemptContent } from "../history/frozen.ts";
 import { scoreAttempt } from "../engine/scoring.ts";
+import { makeBackup,verifyBackup,archiveDisplayRevision } from "../history/backup.ts";
 import { validateResponse } from "../engine/response.ts";
 import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
 import type { PaperRevision } from "../domain/exam.js";
