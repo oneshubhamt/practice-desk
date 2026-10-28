@@ -1,7 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { Script } from 'node:vm';
-import ts from 'typescript';
+import { build as bundleJavaScript } from 'esbuild';
 import { dirname, posix } from 'node:path';
 import { validateContent } from '../src/content/validate.ts';
 const root = resolve(import.meta.dirname, '..');
@@ -12,36 +12,14 @@ const payloads = {
   REVIEW_PATCHES: `<script id="review-patches" type="application/json">${(await read('src/content/patches.json')).trim()}</script>`,
   SOLUTION_BANK: `<script id="solution-bank" type="application/json">${(await read('src/content/solutions.json')).trim()}</script>`,
 };
-// Compile the strict TypeScript engine into the same file://-safe script as the UI.
-const modules = new Map();
-async function compileModule(id) {
-  if (modules.has(id)) return;
-  const source = await read(id);
-  const compiled = ts.transpileModule(source, { fileName: id, compilerOptions: {
-    target: 9, module: 1,
-  }}).outputText;
-  modules.set(id, compiled);
-  for (const match of compiled.matchAll(/require\(["'](\.[^"']+)["']\)/g)) {
-    const child = posix.normalize(posix.join(posix.dirname(id), match[1])).replace(/\.js$/, '.ts');
-    await compileModule(child);
-  }
-}
-await compileModule('src/app/browser-engine.ts');
-const bundle = `(function(){
-const modules = Object.create(null), cache = Object.create(null);
-${[...modules].map(([id,code])=>`modules[${JSON.stringify(id)}] = function(require,module,exports){${code}};`).join('\n')}
-function load(id) {
- if (cache[id]) return cache[id].exports;
- const factory = modules[id];
- if (!factory) throw new Error('Missing embedded module: '+id);
- const module = {exports:{}}; cache[id] = module;
- factory(function(spec){ const target = spec.startsWith('.') ?
-   spec.split('/').reduce((parts,segment)=>segment==='..'?(parts.pop(),parts):segment==='.'?parts:(parts.push(segment),parts),id.split('/').slice(0,-1)).join('/').replace(/\\.js$/,'.ts') : spec;
-   return load(target); },module,module.exports);
- return module.exports;
-}
-globalThis.PD_ENGINE_FACTORY = load('src/app/browser-engine.ts').createBrowserEngine;
-})();`;
+// Bundle the generic engine into a self-contained, file://-safe browser script.
+const bundleResult = await bundleJavaScript({
+  entryPoints: [resolve(root, 'src/app/browser-engine.ts')],
+  bundle: true, write: false, platform: 'browser', format: 'iife',
+  globalName: 'PracticeDeskEngine', target: 'es2022', logLevel: 'silent',
+});
+const bundle = bundleResult.outputFiles[0].text +
+  '\n globalThis.PD_ENGINE_FACTORY = PracticeDeskEngine.createBrowserEngine;\n';
 new Script(bundle);
 const runtime = (await read('src/app/legacy.ts')).replace(/^\/\/ @ts-nocheck\r?\n(?:\/\/[^\n]*\r?\n)?/,'');
 new Script(runtime);
