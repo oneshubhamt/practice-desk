@@ -18,7 +18,7 @@ async function compileModule(id) {
   if (modules.has(id)) return;
   const source = await read(id);
   const compiled = ts.transpileModule(source, { fileName: id, compilerOptions: {
-    target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS,
+    target: 9, module: 1,
   }}).outputText;
   modules.set(id, compiled);
   for (const match of compiled.matchAll(/require\(["'](\.[^"']+)["']\)/g)) {
