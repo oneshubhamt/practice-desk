@@ -23,7 +23,9 @@ npm run typecheck
 - `src/styles/app.css` — styling
 - `src/app/legacy.ts` — preserved v11 runtime (transitional TypeScript source)
 - `src/content/*.json` — source papers, review patches, and post-test explanations
-- `src/content/schema.ts` — initial typed content contracts
+- `src/content/schema.ts` — typed contracts for the preserved source/patch/solution JSON
+- `src/content/validate.ts` — strict, dependency-free runtime validation
+- `src/domain/` — generic exam, question, answer-key, scoring and attempt contracts
 - `scripts/` — tiny dependency-free build and content validation
 - `tests/` — lean content-integrity and artifact checks using Node's built-in test runner
 - `docs/ARCHITECTURE_AUDIT_2026-10-28.md` — architecture audit / roadmap
