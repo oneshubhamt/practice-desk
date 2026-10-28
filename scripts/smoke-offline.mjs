@@ -33,7 +33,9 @@ function savedAttempts(){
  });
 }
 async function enterWorkspace(){
+ document.documentElement.dataset.pdSmokeStage="home";
  (await until(()=>document.querySelector("#genericWorkspace"))).click();
+ document.documentElement.dataset.pdSmokeStage="generic-loading";
  await until(()=>document.querySelector("#g-start:not([disabled])"));
 }
 `;
@@ -75,7 +77,8 @@ function run(expected){
  if(!result.stdout.includes('data-pd-smoke="'+expected+'"')){
   const failure=result.stdout.match(/data-pd-smoke-error="([^"]+)"/)?.[1];
   const stage=result.stdout.match(/data-pd-smoke-stage="([^"]+)"/)?.[1];
-  throw new Error("Offline file:// "+expected+" failed: "+("stage="+(stage??"unknown")+" "+(failure||result.stderr.slice(-1000)||"no smoke marker")));
+  const app=result.stdout.slice(result.stdout.indexOf('id="app"'),result.stdout.indexOf('id="app"')+500).replace(/\\s+/g," ");
+  throw new Error("Offline file:// "+expected+" failed: "+("stage="+(stage??"unknown")+" "+(failure||result.stderr.slice(-1000)||"no smoke marker")+" app="+app));
  }
  console.log("Offline file://: "+expected+" passed");
 }
