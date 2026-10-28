@@ -1104,7 +1104,8 @@ var PracticeDeskGeneric = (() => {
   __export(generic_ui_exports, {
     examTimeRemaining: () => examTimeRemaining,
     mountExamWorkspace: () => mountExamWorkspace,
-    renderGenericControls: () => renderGenericControls
+    renderGenericControls: () => renderGenericControls,
+    validateGenericStoredRecord: () => validateGenericStoredRecord
   });
 
   // src/domain/validate.ts
@@ -2087,6 +2088,47 @@ var PracticeDeskGeneric = (() => {
     }
   }
 
+  // src/history/backup.ts
+  var clone = (v) => JSON.parse(JSON.stringify(v));
+  var digest = (core) => sha256(JSON.stringify(core));
+  function makeBackup(attempts, revisions, preferences, exportedAt) {
+    if (!Number.isFinite(Date.parse(exportedAt))) throw new Error("Invalid export timestamp");
+    const core = clone({
+      format: "practice-desk-backup",
+      version: 2,
+      exportedAt,
+      attempts,
+      revisions,
+      preferences
+    });
+    return { ...core, manifest: {
+      algorithm: "sha256",
+      digest: digest(core),
+      attemptCount: core.attempts.length,
+      revisionCount: core.revisions.length
+    } };
+  }
+  function verifyBackup(raw) {
+    if (!raw || typeof raw !== "object") throw new Error("Invalid backup");
+    const b = raw;
+    if (b.format !== "practice-desk-backup" || b.version !== 2 || !Array.isArray(b.attempts) || !Array.isArray(b.revisions) || b.attempts.length > 5e3 || b.revisions.length > 500 || typeof b.exportedAt !== "string" || !Number.isFinite(Date.parse(b.exportedAt))) throw new Error("Invalid backup format");
+    if (b.attempts.some((a) => !a || typeof a !== "object" || typeof a.id !== "string" || a.id.length > 200) || b.revisions.some((r) => !r || typeof r.id !== "string" || typeof r.paperId !== "string" || !r.displayPaper || !Array.isArray(r.displayPaper.questions)) || new Set(b.attempts.map((a) => a.id)).size !== b.attempts.length || new Set(b.revisions.map((r) => r.id)).size !== b.revisions.length) throw new Error("Invalid backup records");
+    const { manifest, ...core } = b;
+    if (!manifest || manifest.algorithm !== "sha256" || manifest.attemptCount !== b.attempts.length || manifest.revisionCount !== b.revisions.length || manifest.digest !== digest(core)) throw new Error("Backup integrity check failed");
+    return b;
+  }
+  function planBackupMerge(existing, incoming, activeId) {
+    const known = new Set(existing.map((x) => x.id));
+    if (activeId) known.add(activeId);
+    const result = [];
+    for (const candidate of incoming) {
+      if (known.has(candidate.id)) continue;
+      known.add(candidate.id);
+      result.push(candidate);
+    }
+    return result;
+  }
+
   // src/app/generic-ui.ts
   var escapeText = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
   var minutes = (ms) => {
@@ -2130,7 +2172,50 @@ var PracticeDeskGeneric = (() => {
   }
   var isAttempt = (x) => !!x && typeof x === "object" && x.recordType === "generic-attempt";
   var isPackage = (x) => !!x && typeof x === "object" && x.recordType === "generic-package";
-  function mountExamWorkspace(root, sources, patches, solutions, onBack) {
+  function validateGenericStoredRecord(value) {
+    if (isPackage(value)) {
+      if (typeof value.id !== "string" || value.id !== "generic-package:" + value.bundle?.paper?.id)
+        throw new Error("Invalid imported package record identity");
+      validateExamPackage(value.bundle);
+      return value;
+    }
+    if (!isAttempt(value)) throw new Error("Unsupported generic history record");
+    if (typeof value.id !== "string" || !value.id || value.id.length > 200 || typeof value.packageId !== "string" || !Number.isFinite(value.startedAt) || !Number.isFinite(value.updatedAt) || value.finishedAt !== null && !Number.isFinite(value.finishedAt) || !value.state || !Array.isArray(value.state.responses) || !Number.isFinite(value.state.clockMs) || !Number.isInteger(value.state.sectionIndex) || !Number.isInteger(value.state.questionIndex))
+      throw new Error("Invalid generic attempt record");
+    assertFrozenContent(value.frozen);
+    const paper = value.frozen.paper;
+    if (value.packageId !== paper.id) throw new Error("Attempt references an incorrect revision");
+    const current = paper.sections[value.state.sectionIndex]?.questionRevisionIds[value.state.questionIndex];
+    if (!current) throw new Error("Attempt cursor references an unknown question");
+    if (value.finishedAt !== null && value.state.status !== "completed")
+      throw new Error("Completed attempt has an unfinished session");
+    if (value.finishedAt === null && value.state.status === "completed")
+      throw new Error("Unfinished attempt has a completed session");
+    const questionMap = new Map(value.frozen.questions.map((q) => [q.id, q]));
+    const allowed = new Set(paper.sections.flatMap((section) => section.questionRevisionIds));
+    const seen = /* @__PURE__ */ new Set();
+    for (const row of value.state.responses) {
+      if (!row || typeof row.questionRevisionId !== "string" || !allowed.has(row.questionRevisionId) || seen.has(row.questionRevisionId) || !Number.isFinite(row.timeSpentMs) || row.timeSpentMs < 0 || !Number.isInteger(row.answerChangeCount) || row.answerChangeCount < 0)
+        throw new Error("Invalid saved response");
+      seen.add(row.questionRevisionId);
+      if (row.response) validateResponse(questionMap.get(row.questionRevisionId), row.response);
+    }
+    if (value.finishedAt !== null) {
+      if (!value.result) throw new Error("Completed attempt has no immutable score");
+      const recalculated = scoreAttempt(
+        paper,
+        value.frozen.key,
+        value.frozen.questions,
+        value.state.responses,
+        value.result.snapshot.calculatedAt
+      );
+      const fields = ["earnedMarks", "positiveMarks", "penaltyMarks", "correctCount", "incorrectCount", "unansweredCount", "excludedCount"];
+      if (fields.some((field) => value.result.snapshot[field] !== recalculated.snapshot[field]))
+        throw new Error("Completed attempt score does not match its frozen inputs");
+    }
+    return value;
+  }
+  function mountExamWorkspace(root, sources, patches, solutions, onBack, initialAttemptId) {
     const packages = new Map(builtinCglPackages(sources, patches, solutions).map((p) => [p.paper.id, p]));
     const records = /* @__PURE__ */ new Map();
     let choice = packages.keys().next().value;
@@ -2138,6 +2223,54 @@ var PracticeDeskGeneric = (() => {
     let db = null, warning = "", disposed = false, writeQueue = Promise.resolve();
     let lastTimerSave = 0;
     const storageKey = "practiceDesk.generic.fallback.v1", mirrorKey = "practiceDesk.generic.active.v1";
+    const downloadBackup = () => {
+      const recordsToExport = [...records.values()].filter((record3) => isPackage(record3) || isAttempt(record3));
+      const backup = makeBackup(recordsToExport, [], null, (/* @__PURE__ */ new Date()).toISOString());
+      const blob = new Blob([JSON.stringify(backup)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "Practice_Desk_Generic_Backup_" + (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) + ".json";
+      document.body.append(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 2e3);
+    };
+    const importHistory = async (file) => {
+      if (file.size > 75 * 1024 * 1024) throw new Error("History backup exceeds 75 MiB");
+      const backup = verifyBackup(JSON.parse(await file.text()));
+      if (backup.revisions.length) throw new Error("This archive contains CGL display records; import those from History");
+      const imported = backup.attempts.map((record3) => validateGenericStoredRecord(record3));
+      if (!imported.length) throw new Error("Backup contains no generic records");
+      const incoming = planBackupMerge([...records.values()], imported, attempt?.id);
+      if (!incoming.length) {
+        warning = "These records are already present.";
+        draw();
+        return;
+      }
+      if (!confirm("Import " + incoming.length + " generic history records? Existing saved attempts will not be replaced.")) return;
+      await writeQueue;
+      if (db) {
+        await new Promise((resolve, reject) => {
+          const transaction = db.transaction("attempts", "readwrite");
+          const store = transaction.objectStore("attempts");
+          for (const record3 of incoming) store.add(structuredClone(record3));
+          transaction.oncomplete = () => resolve();
+          transaction.onerror = () => reject(transaction.error ?? new Error("Import failed"));
+          transaction.onabort = () => reject(transaction.error ?? new Error("Import aborted"));
+        });
+      } else {
+        const replacement = [...records.values(), ...incoming];
+        localStorage.setItem(storageKey, JSON.stringify(replacement));
+      }
+      for (const record3 of incoming) {
+        records.set(record3.id, record3);
+        if (isPackage(record3) && !packages.has(record3.bundle.paper.id))
+          packages.set(record3.bundle.paper.id, record3.bundle);
+      }
+      warning = "Imported " + incoming.length + " records; existing attempts preserved.";
+      draw();
+    };
     const writeMirror = (record3) => {
       try {
         localStorage.setItem(mirrorKey, JSON.stringify(record3));
@@ -2190,7 +2323,7 @@ var PracticeDeskGeneric = (() => {
     };
     function listHTML() {
       const attempts = [...records.values()].filter(isAttempt).sort((a, b) => b.startedAt - a.startedAt);
-      return '<div class="generic-heading"><h1>Exam workspace</h1><button class="btn" id="g-back">\u2190 Test library</button></div><p class="muted">Configurable papers \xB7 Six question types \xB7 Works offline</p>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + '<div class="generic-layout"><section class="panel pad"><h2>Select an exam</h2><select id="g-papers" aria-label="Select exam package">' + [...packages.values()].map((p) => '<option value="' + escapeText(p.paper.id) + '"' + (choice === p.paper.id ? " selected" : "") + ">" + escapeText(p.title) + "</option>").join("") + '</select><p class="fine">Built-in CGL papers remain available. You can also import any validated Practice Desk exam JSON file.</p><div class="row"><button class="btn primary" id="g-start">Start exam</button><button class="btn" id="g-import">Import JSON</button></div><input type="file" id="g-file" accept=".json,application/json" hidden></section><section class="panel pad"><h2>Generic exam history</h2>' + (attempts.length ? attempts.slice(0, 30).map((a) => '<button class="generic-history" data-attempt="' + escapeText(a.id) + '">' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + " \xB7 " + new Date(a.startedAt).toLocaleString() + "<small>" + (a.finishedAt ? " Completed" : " Resume") + "</small></button>").join("") : '<p class="fine">No attempts yet.</p>') + "</section></div>";
+      return '<div class="generic-heading"><h1>Exam workspace</h1><button class="btn" id="g-back">\u2190 Test library</button></div><p class="muted">Configurable papers \xB7 Six question types \xB7 Works offline</p>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + '<div class="generic-layout"><section class="panel pad"><h2>Select an exam</h2><select id="g-papers" aria-label="Select exam package">' + [...packages.values()].map((p) => '<option value="' + escapeText(p.paper.id) + '"' + (choice === p.paper.id ? " selected" : "") + ">" + escapeText(p.title) + "</option>").join("") + '</select><p class="fine">Built-in CGL papers remain available. You can also import any validated Practice Desk exam JSON file.</p><div class="row"><button class="btn primary" id="g-start">Start exam</button><button class="btn" id="g-import">Import JSON</button></div><input type="file" id="g-file" accept=".json,application/json" hidden></section><section class="panel pad"><div class="row between"><h2>Generic exam history</h2><div class="row"><button class="btn" id="g-export-history">Export</button><button class="btn" id="g-import-history">Import</button></div></div><input type="file" id="g-history-file" accept=".json,application/json" hidden>' + (attempts.length ? attempts.slice(0, 30).map((a) => '<button class="generic-history" data-attempt="' + escapeText(a.id) + '">' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + " \xB7 " + new Date(a.startedAt).toLocaleString() + "<small>" + (a.finishedAt ? " Completed" : " Resume") + "</small></button>").join("") : '<p class="fine">No attempts yet.</p>') + "</section></div>";
     }
     function examHTML() {
       if (!attempt) return "";
@@ -2243,7 +2376,7 @@ var PracticeDeskGeneric = (() => {
       if (view === "library") {
         root.querySelector("#g-back").onclick = () => {
           cleanup();
-          onBack();
+          void writeQueue.then(onBack, onBack);
         };
         root.querySelector("#g-papers").onchange = (e) => {
           choice = e.target.value;
@@ -2259,6 +2392,17 @@ var PracticeDeskGeneric = (() => {
           draw();
         };
         root.querySelector("#g-import").onclick = () => root.querySelector("#g-file")?.click();
+        root.querySelector("#g-export-history").onclick = downloadBackup;
+        root.querySelector("#g-import-history").onclick = () => root.querySelector("#g-history-file")?.click();
+        root.querySelector("#g-history-file").onchange = async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          try {
+            await importHistory(file);
+          } catch (error) {
+            notice(error instanceof Error ? error.message : "History import failed");
+          }
+        };
         root.querySelector("#g-file").onchange = async (e) => {
           const file = e.target.files?.[0];
           if (!file) return;
@@ -2277,8 +2421,8 @@ var PracticeDeskGeneric = (() => {
             notice(error instanceof Error ? error.message : "Invalid exam package");
           }
         };
-        root.querySelectorAll("[data-attempt]").forEach((button) => button.onclick = () => {
-          const saved = records.get(button.dataset.attempt ?? "");
+        const openSaved = (id) => {
+          const saved = records.get(id);
           if (!isAttempt(saved)) return;
           attempt = saved;
           if (saved.finishedAt === null) {
@@ -2298,6 +2442,9 @@ var PracticeDeskGeneric = (() => {
           }
           view = attempt.finishedAt ? "result" : "exam";
           draw();
+        };
+        root.querySelectorAll("[data-attempt]").forEach((button) => button.onclick = () => {
+          openSaved(button.dataset.attempt ?? "");
         });
         return;
       }
@@ -2416,7 +2563,7 @@ var PracticeDeskGeneric = (() => {
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", visibility);
       window.removeEventListener("pagehide", pagehide);
-      db?.close();
+      void writeQueue.finally(() => db?.close());
       root.classList.remove("generic-workspace");
     }
     draw();
@@ -2444,12 +2591,19 @@ var PracticeDeskGeneric = (() => {
             } catch (error) {
               console.warn("Invalid saved package", error);
             }
-          } else if (isAttempt(record3)) records.set(record3.id, record3);
+          } else if (isAttempt(record3)) {
+            try {
+              validateGenericStoredRecord(record3);
+              records.set(record3.id, record3);
+            } catch (error) {
+              console.warn("Invalid saved generic attempt", error);
+            }
+          }
         }
         try {
           const mirror = JSON.parse(localStorage.getItem(mirrorKey) ?? "null");
           if (isAttempt(mirror)) {
-            assertFrozenContent(mirror.frozen);
+            validateGenericStoredRecord(mirror);
             const existing = records.get(mirror.id);
             const winner = chooseRecovered(isAttempt(existing) ? existing : void 0, mirror);
             if (winner === mirror) {
@@ -2471,13 +2625,42 @@ var PracticeDeskGeneric = (() => {
                 records.set(record3.id, record3);
               } catch {
               }
-            } else if (isAttempt(record3)) records.set(record3.id, record3);
+            } else if (isAttempt(record3)) {
+              try {
+                validateGenericStoredRecord(record3);
+                records.set(record3.id, record3);
+              } catch (error) {
+                console.warn("Invalid saved generic attempt", error);
+              }
+            }
           }
         } catch {
           warning = "Browser storage is unavailable; attempts may not survive a reload.";
         }
       }
-      if (!disposed) draw();
+      if (!disposed) {
+        const target = initialAttemptId && records.get(initialAttemptId);
+        if (isAttempt(target)) {
+          attempt = target;
+          if (target.finishedAt === null) {
+            const restored = restoreSession(target.frozen.paper, target.state, now(), !document.hidden);
+            attempt = {
+              ...target,
+              state: restored.state,
+              ...restored.expired ? { finishedAt: now(), result: scoreAttempt(
+                target.frozen.paper,
+                target.frozen.key,
+                target.frozen.questions,
+                restored.state.responses,
+                (/* @__PURE__ */ new Date()).toISOString()
+              ) } : {}
+            };
+            save(attempt);
+          }
+          view = attempt.finishedAt ? "result" : "exam";
+        } else if (initialAttemptId) warning = "The selected attempt could not be found in this browser.";
+        draw();
+      }
     })();
     return cleanup;
   }
@@ -2542,6 +2725,7 @@ const modeName=m=>({strict:'Exam simulation',free:'Full paper · flexible',singl
 const questionSection=n=>Math.floor((n-1)/25);
 let prefs={paper:'cgl-2026-10-08-reviewed',mode:'strict',section:0,displayTheme:'light',fontScale:100};
 let resultPaperId=null;let active=null,attempts=[],screen='home',resultId=null,reviewFilter='all',resultTab='insights',historyFilter='all',historySort='newest';
+let genericHistoryRecords=[];
 let cursor=0,db=null,storageMode='checking',storageMessage='',writeChain=Promise.resolve(),testNow=null;
 let trackedQuestion=null,trackStart=0,tabVisible=!document.hidden,autosaveWarned=false;
 const now=()=>testNow==null?Date.now():testNow;
@@ -2639,6 +2823,27 @@ function usableStored(a){
  }
  return true;
 }
+async function refreshGenericHistory(){
+ try{
+  if(db){
+   await writeChain;
+   genericHistoryRecords=(await dbGetAll('attempts')).filter(x=>x?.recordType==='generic-attempt'&&
+    typeof x.id==='string'&&Number.isFinite(x.startedAt)&&
+    (x.finishedAt===null||Number.isFinite(x.finishedAt))&&x.frozen?.paper?.id);
+  }else{
+   const saved=safeJSON(getLS('practiceDesk.generic.fallback.v1'),[]);
+   genericHistoryRecords=Array.isArray(saved)?saved.filter(x=>x?.recordType==='generic-attempt'&&
+    typeof x.id==='string'&&x.frozen?.paper?.id):[];
+  }
+ }catch(error){console.warn('Generic history summary unavailable',error);}
+}
+function openGenericAttempt(id){
+ screen='generic';
+ genericWorkspaceCleanup=globalThis.PD_GENERIC_UI($('app'),SOURCE_PAPERS,REVIEW_PATCHES,SOLUTION_BANK,()=>{
+   genericWorkspaceCleanup=null;
+   refreshGenericHistory().finally(()=>{screen='history';render();});
+ },id);
+}
 function restoreActive(){
  const live=attempts.filter(a=>!a.finishedAt).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
  active=live[0]||null;
@@ -2657,6 +2862,8 @@ async function initStorage(){
   const [list,settings,revisions]=await Promise.all([dbGetAll('attempts'),dbRead('settings','preferences'),dbGetAll('revisions')]);
   for(const revision of revisions){displayRevisions.set(revision.id,revision);savedRevisionIds.add(revision.id);}
   attempts=Array.isArray(list)?list.filter(usableStored):[];
+  genericHistoryRecords=Array.isArray(list)?list.filter(x=>x?.recordType==='generic-attempt'&&
+   typeof x.id==='string'&&Number.isFinite(x.startedAt)&&x.frozen?.paper?.id):[];
   if(!localPrefs&&settings?.value&&getPaper(settings.value.paper))prefs={...prefs,...settings.value};
   // Replay the fallback journal first; each attempt is committed in a single IDB transaction.
   const fallback=safeJSON(getLS(FALLBACK_LS),[]);
@@ -2688,6 +2895,9 @@ async function initStorage(){
   storageMessage='IndexedDB is unavailable; using localStorage fallback. Export backups regularly.';
   const fallback=safeJSON(getLS(FALLBACK_LS),[]);
   attempts=Array.isArray(fallback)?fallback.filter(usableStored):[];
+  const genericFallback=safeJSON(getLS('practiceDesk.generic.fallback.v1'),[]);
+  genericHistoryRecords=Array.isArray(genericFallback)?genericFallback.filter(x=>x?.recordType==='generic-attempt'&&
+   typeof x.id==='string'&&Number.isFinite(x.startedAt)&&x.frozen?.paper?.id):[];
   if(mirror&&!mirror.finishedAt){
    const previous=attempts.find(a=>a.id===mirror.id);
    const winner=GENERIC_ENGINE.chooseRecovered(previous,mirror);
@@ -2724,7 +2934,7 @@ function drawHome(){let p=getPaper(prefs.paper)||Object.values(PAPERS)[0];let st
  <aside class="stack"><section class="panel pad"><h3>Selected paper</h3><div class="mini-data"><div><b>100</b><small>Questions</small></div><div><b>60 min</b><small>Full paper</small></div><div><b>4</b><small>Sections</small></div><div><b>200</b><small>Original max marks</small></div></div><div class="audit-legend"><b>${p.edition==='reviewed'?'Reviewed edition':'Original PDF edition'}</b><p>${p.edition==='reviewed'?`${Object.keys(REVIEW_PATCHES[p.familyId]||{}).length} reviewed refinements over the original; ${status.invalid||0} unresolved defective items, ${status.caution||0} additional cautions.`:`The source questions and publisher answer labels are preserved (readability formatting is normalized). ${status.invalid||0} disputed or defective questions excluded from adjusted scoring.`} Detailed notes appear only after submission.</p></div></section>
  <section class="panel pad"><div class="row between"><h3 style="margin:0">Recent attempts</h3><button class="textlink" id="recentHistory">View all →</button></div>${last.length?last.map(a=>{let r=summaryFor(a);return `<button class="recent-link" data-open="${esc(a.id)}"><span><b>${esc(paperFor(a)?.name||a.paperId)}</b><small>${dateText(a.finishedAt)} · ${esc(modeName(a.mode))}</small></span><span class="recent-score">${signed(r.score)} <small>/ ${r.max}</small></span></button>`;}).join(''):'<p class="fine" style="margin-top:16px">Completed attempts will appear here and can be reopened for analysis.</p>'}</section>
  </aside></div><details id="help" class="panel pad"><summary><b>Test rules and storage</b></summary><p>Strict mode locks each section. Submit a section early to start the next immediately with its full 15-minute allocation; unused minutes never carry over. In free mode there is one 60-minute clock, and in single-section mode there is a 15-minute clock. Only the last submission reveals answers.</p><p><b>Editorial policy:</b> Original preserves source questions and publisher keys. Corrected papers may repair errors, but must not quote the correct option or disclose the solving rule in a question stem unless the source already did so. Explanations and source-to-correction comparisons appear only after submission. Every correction is tracked by paper and question number; these are independent educational edits, not official answer keys.</p><p>Data is stored on your device (${storageMode==='indexeddb'?'IndexedDB':storageMode==='localStorage'?'localStorage fallback':'initializing'}). For long-term safety, export a backup from History & insights. Use the same browser and file location when possible. Shortcuts: A–D answer; arrow keys navigate; M flags a question; F toggles full screen. Display choices are in Aa at the upper right.</p></details><footer>Practice Desk · Single offline HTML · Not affiliated with SSC</footer>`;
- $('genericWorkspace').onclick=()=>{screen='generic';genericWorkspaceCleanup=globalThis.PD_GENERIC_UI($('app'),SOURCE_PAPERS,REVIEW_PATCHES,SOLUTION_BANK,()=>{genericWorkspaceCleanup=null;screen='home';render();});};
+ $('genericWorkspace').onclick=()=>{screen='generic';genericWorkspaceCleanup=globalThis.PD_GENERIC_UI($('app'),SOURCE_PAPERS,REVIEW_PATCHES,SOLUTION_BANK,()=>{genericWorkspaceCleanup=null;refreshGenericHistory().finally(()=>{screen='home';render();});});};
  $('paperSelect').onchange=e=>{prefs.paper=e.target.value+(p.edition==='reviewed'?'-reviewed':'');savePrefs();drawHome()};document.querySelectorAll('[data-edition]').forEach(el=>el.onclick=()=>{prefs.paper=p.familyId+(el.dataset.edition==='reviewed'?'-reviewed':'');savePrefs();drawHome()});document.querySelectorAll('[data-mode]').forEach(el=>el.onclick=()=>{prefs.mode=el.dataset.mode;savePrefs();drawHome()});if($('singleSelect'))$('singleSelect').onchange=e=>{prefs.section=+e.target.value;savePrefs();};$('start').onclick=startNew;if($('resume'))$('resume').onclick=resumeAttempt;$('openHistory').onclick=goHistory;$('recentHistory').onclick=goHistory;document.querySelectorAll('[data-open]').forEach(el=>el.onclick=()=>openResults(el.dataset.open));}
 function drawExam(){let a=active;if(!a)return drawHome();let s=a.section,qs=questionsFor(a,s),q=qs[cursor];if(!q)return;let so=qs.filter(q=>a.answers[q.n]).length;let total=Object.keys(a.answers).length,marked=qs.filter(q=>a.flags[q.n]).length;let strict=a.mode==='strict',single=a.mode==='single',closedSecs=strict?a.sections.filter(x=>x.endAt).length:0;
  $('app').innerHTML=`<div class="test-header"><div><div class="paperline">${esc(paperFor(a)?.name)}</div><div class="test-sub">${esc(modeName(a.mode))} · ${total} of ${single?25:100} answered</div></div><div class="row"><div class="clock" id="clock"><span id="clockValue">${msec(timeRemaining(a)/1000)}</span><small id="clockLabel">${strict?'This section':'Time remaining'}</small></div><button class="btn quiet" id="goHome">Library</button><button class="btn exam-full" id="examFull" aria-label="Toggle full-screen test view">⛶ Full screen</button></div></div><div class="progress"><div id="timeBar" style="width:${progress(a)}%"></div></div><div class="sectiontabs">${SECTIONS.map((name,i)=>{const locked=strict?i!==s:single?i!==s:false;let closed=strict&&i<s;return `<button class="sectiontab ${s===i?'active':''} ${locked?'locked':''}" data-section="${i}" ${locked?'disabled':''}><b>${esc(name)}</b><small>${closed?'Closed':strict&&i>s?'Locked':`${questionsFor(a,i).filter(x=>a.answers[x.n]).length}/25 answered`}</small></button>`;}).join('')}</div><div class="exam-layout"><section><div class="panel question"><div class="qid">${esc(SECTIONS[s])} · Question ${cursor+1} of 25 · Paper Q${q.n}</div>${qHTML(q)}<div class="choices">${optionsHTML(q)}</div><div class="qfoot"><div class="row"><button class="btn" id="prev" ${cursor===0?'disabled':''}>← Previous</button><button class="btn primary" id="next" ${cursor===24?'disabled':''}>Next →</button></div><div class="row"><button class="btn" id="clear" ${!a.answers[q.n]||a.pausedAt?'disabled':''}>Clear</button><button class="btn" id="mark">${a.flags[q.n]?'Unmark':'Mark for review'}</button></div></div></div><div class="sectionbar">${strict?`Section ${s+1} of 4 · ${closedSecs} completed · Each section has an independent 15-minute timer.`:single?'Only the selected section contributes to this attempt.':'Switch sections freely within the 60-minute total budget.'}</div><div class="row test-actions"><button class="btn ${strict?'primary':'danger'}" id="finish">${strict?s===3?'Submit final section':'Submit section early →':single?'Submit section':'Submit full paper'}</button>${!strict?`<button class="btn" id="pause">${a.pausedAt?'Resume timer':'Pause timer'}</button>`:''}</div></section><aside class="panel side"><h3>Question navigator</h3><p class="hint">Jump to a question in this section</p><div class="palette">${qs.map((x,i)=>`<button class="num ${cursor===i?'here':''} ${a.answers[x.n]?'answered':''} ${a.flags[x.n]?'marked':''}" data-num="${i}" title="Question ${x.n}">${i+1}</button>`).join('')}</div><div class="navigator-stats"><div><b>${so}<span> / 25</span></b><small>Answered</small></div><div><b>${25-so}</b><small>Not answered</small></div><div><b>${marked}</b><small>Flagged</small></div></div><div class="legend"><span><i class="dot g"></i>Answered</span><span><i class="dot y"></i>Review</span><span><i class="dot"></i>Not answered</span></div><p class="statusline">${strict?'The answer key stays hidden until all sections finish. Submitting this section closes it permanently.':'Answers remain hidden until you submit.'}</p></aside></div><footer>${strict?'Strict timer cannot be paused.':'Timer may be paused.'} Your answers and question timings are saved locally.</footer>`;
@@ -2786,9 +2996,17 @@ function historyTrendHTML(all){let eligible=all.filter(a=>!a.legacySummary&&summ
  let path=xy.map(([x,y],i)=>`${i?'L':'M'} ${x} ${y}`).join(' ');
  return `<section class="panel pad trend-panel"><div class="row between"><div><h3 style="margin:0">Progress across comparable attempts</h3><p class="fine" style="margin:5px 0 0">${esc(desc)} · ${same.length} latest attempts</p></div><b>${vals[vals.length-1].toFixed(1)}% <span class="fine">latest adjusted score</span></b></div><svg class="trend-chart" role="img" aria-label="Comparable attempt scores: ${vals.map(v=>v.toFixed(1)+' percent').join(', ')}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><path d="M ${margin} ${h-margin} H ${w-margin}" stroke="#dce6f0" stroke-width="2"/><path d="${path}" fill="none" stroke="#2468a7" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>${xy.map(([x,y])=>`<circle cx="${x}" cy="${y}" r="5" fill="#fff" stroke="#2468a7" stroke-width="3"/>`).join('')}</svg><div class="row between fine"><span>${dateText(same[0].finishedAt)}</span><span>Scores shown as % of audited maximum</span><span>${dateText(same[same.length-1].finishedAt)}</span></div></section>`;
 }
-function drawHistory(){let list=groupedHistory(),all=attempts.filter(a=>a.finishedAt&&a.endedBy!=='discarded');let full=all.filter(a=>!a.legacySummary);let best=all.length?all.reduce((a,b)=>{let sc=summaryFor(a),sd=summaryFor(b);return sc.max&&sd.max&&sc.score/sc.max>sd.score/sd.max?a:b;},all[0]):null;
- $('app').innerHTML=`<div class="row between results-header"><div><h1>History & insights</h1><p class="muted">Revisit attempts, compare results and safeguard your data.</p></div><button class="btn" id="historyHome">← Test library</button></div><div class="history-metrics"><div class="panel"><strong>${all.length}</strong><span>Completed attempts</span></div><div class="panel"><strong>${new Set(all.map(a=>a.paperId)).size}</strong><span>Papers practised</span></div><div class="panel"><strong>${best?(100*summaryFor(best).score/(summaryFor(best).max||1)).toFixed(1)+'%':'—'}</strong><span>Best adjusted percentage*</span></div></div>${historyTrendHTML(all)}${historyPrioritiesHTML(all)}<div class="homegrid history-layout"><section class="panel pad"><div class="row between"><h2 style="margin:0">Saved attempts</h2><div class="row compact"><select id="historyFilter" aria-label="Filter papers"><option value="all">All papers</option>${Object.values(PAPERS).map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select><select id="historySort" aria-label="Sort attempts"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select></div></div>${list.length?list.map(a=>{let r=summaryFor(a);return `<div class="attempt-row"><button class="attempt-open" data-attempt="${esc(a.id)}"><span><b>${esc(paperFor(a)?.name||a.paperId)}</b><small>${dateText(a.finishedAt)} · ${esc(modeName(a.mode))}${a.legacySummary?' · Legacy summary':''}</small></span><span class="attempt-score">${signed(r.score)} <small>/ ${r.max}</small></span></button><button class="iconbtn" data-delete="${esc(a.id)}" aria-label="Delete attempt" title="Delete attempt">✕</button></div>`;}).join(''):'<p class="fine" style="margin-top:15px">No completed attempts match this filter.</p>'}</section><aside class="stack"><section class="panel pad"><h3>Storage & safety</h3><div class="storage-line"><span class="storage-indicator ${storageMode==='indexeddb'?'success':'warn'}"></span><b>${storageMode==='indexeddb'?'IndexedDB ready':'Browser fallback'}</b></div><p class="fine">${storageMode==='indexeddb'?'Attempts are saved as indexed records in your browser.':'IndexedDB is unavailable. History is being stored in localStorage and may be more fragile.'} Export backups to protect your history from clearing browser data or moving to another device.</p>${storageMessage?`<p class="fine bad">${esc(storageMessage)}</p>`:''}<p class="fine" id="quotaInfo">Checking storage quota…</p><div class="row"><button class="btn" id="requestPersist">Protect stored data</button></div></section><section class="panel pad"><h3>Backup & management</h3><div class="management-actions"><button class="btn primary" id="exportBackup">Export full backup (.json)</button><button class="btn" id="importBackup">Import / merge backup</button><input id="importFile" type="file" accept="application/json,.json" hidden><button class="btn danger" id="clearHistory" ${all.length?'':'disabled'}>Delete all completed attempts</button></div><p class="fine">Full backups include unfinished tests, frozen revisions, responses and an integrity checksum. Existing completed attempts cannot be overwritten.</p></section></aside></div><p class="fine">*Maximum marks differ between full-paper and single-section attempts; compare normalized percentages and the same test mode for meaningful progress.</p><footer>Practice Desk · Your data stays on this device unless you export it.</footer>`;
- $('historyHome').onclick=goHome;$('historyFilter').value=historyFilter;$('historySort').value=historySort;$('historyFilter').onchange=e=>{historyFilter=e.target.value;render();};$('historySort').onchange=e=>{historySort=e.target.value;render();};document.querySelectorAll('[data-attempt]').forEach(el=>el.onclick=()=>openResults(el.dataset.attempt));document.querySelectorAll('[data-delete]').forEach(el=>el.onclick=()=>deleteOne(el.dataset.delete));$('exportBackup').onclick=exportBackup;$('importBackup').onclick=()=>$('importFile').click();$('importFile').onchange=e=>importBackup(e.target.files?.[0]);$('clearHistory').onclick=clearHistory;$('requestPersist').onclick=requestPersist;showQuota();}
+function drawHistory(){let list=groupedHistory(),all=attempts.filter(a=>a.finishedAt&&a.endedBy!=='discarded');
+ const genericCompleted=genericHistoryRecords.filter(a=>a.finishedAt!==null).sort((a,b)=>historySort==='oldest'?a.finishedAt-b.finishedAt:b.finishedAt-a.finishedAt);
+ const genericHTML=historyFilter==='all'&&genericCompleted.length?
+   '<section class="panel pad"><h2>Generic and imported exams</h2><p class="fine">Revision-frozen attempts from the exam workspace. Export and import these records from the workspace.</p>'+
+   genericCompleted.map(a=>'<div class="attempt-row"><button class="attempt-open" data-generic-attempt="'+esc(a.id)+'"><span><b>'+
+     esc(a.frozen?.paper?.paperId||'Imported exam')+'</b><small>'+dateText(a.finishedAt)+' · Generic exam</small></span>'+
+     '<span class="attempt-score">'+(Number.isFinite(a.result?.snapshot?.earnedMarks)?signed(a.result.snapshot.earnedMarks):'—')+'</span></button></div>').join('')+
+   '</section>':'';
+let full=all.filter(a=>!a.legacySummary);let best=all.length?all.reduce((a,b)=>{let sc=summaryFor(a),sd=summaryFor(b);return sc.max&&sd.max&&sc.score/sc.max>sd.score/sd.max?a:b;},all[0]):null;
+ $('app').innerHTML=`<div class="row between results-header"><div><h1>History & insights</h1><p class="muted">Revisit attempts, compare results and safeguard your data.</p></div><button class="btn" id="historyHome">← Test library</button></div><div class="history-metrics"><div class="panel"><strong>${all.length+genericCompleted.length}</strong><span>Completed attempts</span></div><div class="panel"><strong>${new Set(all.map(a=>a.paperId)).size}</strong><span>Papers practised</span></div><div class="panel"><strong>${best?(100*summaryFor(best).score/(summaryFor(best).max||1)).toFixed(1)+'%':'—'}</strong><span>Best adjusted percentage*</span></div></div>${historyTrendHTML(all)}${historyPrioritiesHTML(all)}${genericHTML}<div class="homegrid history-layout"><section class="panel pad"><div class="row between"><h2 style="margin:0">Saved attempts</h2><div class="row compact"><select id="historyFilter" aria-label="Filter papers"><option value="all">All papers</option>${Object.values(PAPERS).map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select><select id="historySort" aria-label="Sort attempts"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select></div></div>${list.length?list.map(a=>{let r=summaryFor(a);return `<div class="attempt-row"><button class="attempt-open" data-attempt="${esc(a.id)}"><span><b>${esc(paperFor(a)?.name||a.paperId)}</b><small>${dateText(a.finishedAt)} · ${esc(modeName(a.mode))}${a.legacySummary?' · Legacy summary':''}</small></span><span class="attempt-score">${signed(r.score)} <small>/ ${r.max}</small></span></button><button class="iconbtn" data-delete="${esc(a.id)}" aria-label="Delete attempt" title="Delete attempt">✕</button></div>`;}).join(''):'<p class="fine" style="margin-top:15px">No completed attempts match this filter.</p>'}</section><aside class="stack"><section class="panel pad"><h3>Storage & safety</h3><div class="storage-line"><span class="storage-indicator ${storageMode==='indexeddb'?'success':'warn'}"></span><b>${storageMode==='indexeddb'?'IndexedDB ready':'Browser fallback'}</b></div><p class="fine">${storageMode==='indexeddb'?'Attempts are saved as indexed records in your browser.':'IndexedDB is unavailable. History is being stored in localStorage and may be more fragile.'} Export backups to protect your history from clearing browser data or moving to another device.</p>${storageMessage?`<p class="fine bad">${esc(storageMessage)}</p>`:''}<p class="fine" id="quotaInfo">Checking storage quota…</p><div class="row"><button class="btn" id="requestPersist">Protect stored data</button></div></section><section class="panel pad"><h3>Backup & management</h3><div class="management-actions"><button class="btn primary" id="exportBackup">Export full backup (.json)</button><button class="btn" id="importBackup">Import / merge backup</button><input id="importFile" type="file" accept="application/json,.json" hidden><button class="btn danger" id="clearHistory" ${all.length?'':'disabled'}>Delete all completed attempts</button></div><p class="fine">Full backups include unfinished tests, frozen revisions, responses and an integrity checksum. Existing completed attempts cannot be overwritten.</p></section></aside></div><p class="fine">*Maximum marks differ between full-paper and single-section attempts; compare normalized percentages and the same test mode for meaningful progress.</p><footer>Practice Desk · Your data stays on this device unless you export it.</footer>`;
+ $('historyHome').onclick=goHome;document.querySelectorAll('[data-generic-attempt]').forEach(el=>el.onclick=()=>openGenericAttempt(el.dataset.genericAttempt));$('historyFilter').value=historyFilter;$('historySort').value=historySort;$('historyFilter').onchange=e=>{historyFilter=e.target.value;render();};$('historySort').onchange=e=>{historySort=e.target.value;render();};document.querySelectorAll('[data-attempt]').forEach(el=>el.onclick=()=>openResults(el.dataset.attempt));document.querySelectorAll('[data-delete]').forEach(el=>el.onclick=()=>deleteOne(el.dataset.delete));$('exportBackup').onclick=exportBackup;$('importBackup').onclick=()=>$('importFile').click();$('importFile').onchange=e=>importBackup(e.target.files?.[0]);$('clearHistory').onclick=clearHistory;$('requestPersist').onclick=requestPersist;showQuota();}
 async function showQuota(){let node=$('quotaInfo');if(!node)return;try{if(!navigator.storage?.estimate){node.textContent='Storage estimate unavailable for this browser/file.';return;}let x=await navigator.storage.estimate();if(!node.isConnected)return;node.textContent=`Browser storage: ${((x.usage||0)/1048576).toFixed(1)} MiB used${x.quota?` of approximately ${(x.quota/1048576).toFixed(0)} MiB quota`:''}.`;}catch{node.textContent='Storage estimate unavailable.';}}
 async function requestPersist(){if(!navigator.storage?.persist){notify('Persistent storage request is unavailable for this browser/file.');return;}try{let ok=await navigator.storage.persist();notify(ok?'Browser granted persistent storage.':'Browser did not grant persistent storage. Keep manual backups.');}catch{notify('Storage persistence cannot be requested here. Keep backups.');}}
 function validImported(a){if(!a||typeof a!=='object'||typeof a.id!=='string'||a.id.length>200||(!getPaper(a.paperId)&&!a.frozenDisplay)||!['strict','free','single'].includes(a.mode))return false;
