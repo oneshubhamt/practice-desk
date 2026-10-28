@@ -1894,10 +1894,24 @@ var PracticeDeskGeneric = (() => {
     };
     return structuredClone({ schema: 1, frozenAt, snapshot, paper, key, questions });
   }
+  function assertFrozenContent(value) {
+    if (!value || value.schema !== 1 || !value.snapshot || !value.paper || !value.key || !Array.isArray(value.questions) || typeof value.snapshot.examId !== "string" || value.snapshot.examId.length === 0 || value.snapshot.paperId !== value.paper.paperId || value.snapshot.paperRevisionId !== value.paper.id || value.snapshot.answerKeyRevisionId !== value.key.id || JSON.stringify(value.snapshot.scoringPolicy) !== JSON.stringify(value.paper.scoring) || !Number.isFinite(Date.parse(value.frozenAt))) {
+      throw new Error("Invalid or mismatched frozen attempt content");
+    }
+    validatePaperRevision(value.paper, value.questions, value.key);
+    return value;
+  }
   function restoreSession(paper, saved, wallNowMs, visible) {
     if (!Number.isFinite(wallNowMs)) throw new Error("Invalid restoration time");
     const aligned = wallNowMs < saved.clockMs ? rebaseSession({ ...saved, visible: false }, wallNowMs) : transition(paper, { ...saved, visible: false }, { type: "TICK", nowMs: wallNowMs });
     return { state: { ...aligned, visible }, expired: aligned.status === "completed" };
+  }
+  function chooseRecovered(stored, mirror) {
+    if (!stored) return mirror;
+    if (!mirror || stored.id !== mirror.id) return stored;
+    if (stored.finishedAt && !mirror.finishedAt) return stored;
+    if (mirror.finishedAt && !stored.finishedAt) return mirror;
+    return (mirror.updatedAt ?? 0) > (stored.updatedAt ?? 0) ? mirror : stored;
   }
 
   // src/app/exam-package.ts
@@ -2122,7 +2136,15 @@ var PracticeDeskGeneric = (() => {
     let choice = packages.keys().next().value;
     let attempt = null, view = "library";
     let db = null, warning = "", disposed = false, writeQueue = Promise.resolve();
-    const storageKey = "practiceDesk.generic.fallback.v1";
+    let lastTimerSave = 0;
+    const storageKey = "practiceDesk.generic.fallback.v1", mirrorKey = "practiceDesk.generic.active.v1";
+    const writeMirror = (record3) => {
+      try {
+        localStorage.setItem(mirrorKey, JSON.stringify(record3));
+      } catch {
+        warning = "Emergency session mirror could not be saved. Use a history export.";
+      }
+    };
     const notice = (s) => {
       warning = s;
       draw();
@@ -2130,6 +2152,7 @@ var PracticeDeskGeneric = (() => {
     const now = () => Date.now();
     const save = (record3) => {
       records.set(record3.id, record3);
+      if (isAttempt(record3)) writeMirror(record3);
       writeQueue = writeQueue.catch(() => {
       }).then(() => new Promise((resolve, reject) => {
         if (!db) {
@@ -2245,6 +2268,7 @@ var PracticeDeskGeneric = (() => {
           }
           try {
             const pkg = validateExamPackage(JSON.parse(await file.text()));
+            if (packages.has(pkg.paper.id)) throw new Error("Paper revision ID already exists. Supply a new revision ID.");
             packages.set(pkg.paper.id, pkg);
             choice = pkg.paper.id;
             save({ recordType: "generic-package", id: "generic-package:" + pkg.paper.id, bundle: pkg });
@@ -2345,13 +2369,17 @@ var PracticeDeskGeneric = (() => {
       );
       if (next !== original) {
         attempt = next;
-        save(attempt);
+        const changedSection = original.state.sectionIndex !== next.state.sectionIndex;
+        if (next.finishedAt !== null || changedSection || now() - lastTimerSave >= 1e4) {
+          save(attempt);
+          lastTimerSave = now();
+        }
         if (next.finishedAt !== null) {
           view = "result";
           draw();
           return;
         }
-        if (original.state.sectionIndex !== next.state.sectionIndex) {
+        if (changedSection) {
           draw();
           return;
         }
@@ -2367,7 +2395,20 @@ var PracticeDeskGeneric = (() => {
     };
     document.addEventListener("visibilitychange", visibility);
     const pagehide = () => {
-      if (view === "exam" && attempt) dispatch({ type: "VISIBILITY", nowMs: now(), visible: false });
+      if (view === "exam" && attempt) {
+        try {
+          const current = attempt;
+          attempt = transitionGenericAttempt(
+            current,
+            { type: "VISIBILITY", nowMs: now(), visible: false },
+            new Map(current.frozen.questions.map((q) => [q.id, q]))
+          );
+          writeMirror(attempt);
+          save(attempt);
+        } catch (error) {
+          console.warn("Pagehide checkpoint failed", error);
+        }
+      }
     };
     window.addEventListener("pagehide", pagehide);
     function cleanup() {
@@ -2395,11 +2436,29 @@ var PracticeDeskGeneric = (() => {
         for (const record3 of all) {
           if (isPackage(record3)) {
             try {
-              packages.set(record3.bundle.paper.id, validateExamPackage(record3.bundle));
-              records.set(record3.id, record3);
-            } catch {
+              const valid = validateExamPackage(record3.bundle);
+              if (!packages.has(valid.paper.id)) {
+                packages.set(valid.paper.id, valid);
+                records.set(record3.id, record3);
+              }
+            } catch (error) {
+              console.warn("Invalid saved package", error);
             }
           } else if (isAttempt(record3)) records.set(record3.id, record3);
+        }
+        try {
+          const mirror = JSON.parse(localStorage.getItem(mirrorKey) ?? "null");
+          if (isAttempt(mirror)) {
+            assertFrozenContent(mirror.frozen);
+            const existing = records.get(mirror.id);
+            const winner = chooseRecovered(isAttempt(existing) ? existing : void 0, mirror);
+            if (winner === mirror) {
+              records.set(mirror.id, mirror);
+              save(mirror);
+            }
+          }
+        } catch (error) {
+          console.warn("Invalid emergency session mirror", error);
         }
       } catch {
         warning = "IndexedDB unavailable. Limited localStorage fallback is in use.";
