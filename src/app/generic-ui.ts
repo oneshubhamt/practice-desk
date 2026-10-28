@@ -122,7 +122,7 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
 
 
 export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patches:ReviewPatchBank,
- solutions:Readonly<Record<string,Readonly<Record<string,string>>>>,onBack:()=>void):()=>void{
+ solutions:Readonly<Record<string,Readonly<Record<string,string>>>>,onBack:()=>void,initialAttemptId?:string):()=>void{
  const packages=new Map<string,ExamPackage>(builtinCglPackages(sources,patches,solutions).map(p=>[p.paper.id,p]));
  const records=new Map<string,RecordItem>();
  let choice=packages.keys().next().value as string;
@@ -297,7 +297,10 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    root.classList.add("generic-workspace");
    root.innerHTML=view==="library"?listHTML():view==="exam"?examHTML():resultHTML();
    if(view==="library"){
-     root.querySelector<HTMLButtonElement>("#g-back")!.onclick=()=>{cleanup();onBack();};
+     root.querySelector<HTMLButtonElement>("#g-back")!.onclick=()=>{
+       cleanup();
+       void writeQueue.then(onBack,onBack);
+     };
      root.querySelector<HTMLSelectElement>("#g-papers")!.onchange=e=>{choice=(e.target as HTMLSelectElement).value;};
      root.querySelector<HTMLButtonElement>("#g-start")!.onclick=()=>{
        const p=packages.get(choice);if(!p)return;
@@ -322,9 +325,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          notice("Package validated and imported.");
        }catch(error){notice(error instanceof Error?error.message:"Invalid exam package");}
      };
-     root.querySelectorAll<HTMLButtonElement>("[data-attempt]").forEach(button=>button.onclick=()=>{
-       const saved=records.get(button.dataset.attempt??"");
-       if(!isAttempt(saved))return;
+     const openSaved=(id:string)=>{
+       const saved=records.get(id);if(!isAttempt(saved))return;
        attempt=saved;
        if(saved.finishedAt===null){
          const restored=restoreSession(saved.frozen.paper,saved.state,now(),!document.hidden);
@@ -334,6 +336,9 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          save(attempt);
        }
        view=attempt.finishedAt?"result":"exam";draw();
+     };
+     root.querySelectorAll<HTMLButtonElement>("[data-attempt]").forEach(button=>button.onclick=()=>{
+       openSaved(button.dataset.attempt??"");
      });
      return;
    }
@@ -419,7 +424,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  };
  window.addEventListener("pagehide",pagehide);
  function cleanup(){disposed=true;window.clearInterval(timer);document.removeEventListener("visibilitychange",visibility);
-   window.removeEventListener("pagehide",pagehide);db?.close();root.classList.remove("generic-workspace");}
+   window.removeEventListener("pagehide",pagehide);void writeQueue.finally(()=>db?.close());root.classList.remove("generic-workspace");}
  draw();
  (async()=>{
    try{
@@ -465,7 +470,21 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        }
      }catch{warning="Browser storage is unavailable; attempts may not survive a reload.";}
    }
-   if(!disposed)draw();
+   if(!disposed){
+     const target=initialAttemptId&&records.get(initialAttemptId);
+     if(isAttempt(target)){
+       attempt=target;
+       if(target.finishedAt===null){
+         const restored=restoreSession(target.frozen.paper,target.state,now(),!document.hidden);
+         attempt={...target,state:restored.state,
+          ...(restored.expired?{finishedAt:now(),result:scoreAttempt(target.frozen.paper,target.frozen.key,
+            target.frozen.questions,restored.state.responses,new Date().toISOString())}:{})};
+         save(attempt);
+       }
+       view=attempt.finishedAt?"result":"exam";
+     }else if(initialAttemptId)warning="The selected attempt could not be found in this browser.";
+     draw();
+   }
  })();
  return cleanup;
 }

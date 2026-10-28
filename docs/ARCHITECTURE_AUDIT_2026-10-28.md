@@ -1122,3 +1122,11 @@ Added:
 - Added synchronous emergency mirror for the current attempt, reconciled against IndexedDB on reopening with completed records taking precedence.
 - Import rejects a package attempting to reuse an existing paper revision ID, preventing silent replacement of built-in or previously imported content.
 - An actual multi-browser file:// reopen test is still pending. Browser persistence remains best-effort; signed provenance is not provided by the import checksum.
+
+
+### Pass 4 integration checkpoint — cross-exam history and generic backup
+
+- The existing History screen now includes completed attempts made in the generic exam workspace, with deep links to their frozen answer review. Metrics count completed generic and CGL attempts, but heterogeneous exams remain excluded from CGL-only analytics trends.
+- Generic workspace exports/imports checksum-verified version-2 archives of generic attempts and uploaded package definitions, with additive transactional IDB merge. Incoming records undergo schema, frozen-revision, response and completed-score validation before writes; existing attempt IDs are never replaced.
+- Explicitly maintain separate CGL and generic backup export actions; the old CGL import pipeline does not silently accept generic records.
+- Deferred acceptance: browser reopen and full file:// smoke tests; consider a unified all-data backup flow before release.
