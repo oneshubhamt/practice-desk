@@ -962,3 +962,20 @@ Added:
 **UI note:** No visual redesign is part of Pass 1. The existing interface remains the stable reference; usability, focus behaviour, accessibility and library navigation will be reconsidered during Pass 4.
 
 **Acceptance gate:** Strict TypeScript check, content-bank validation, domain invariant tests, build reproducibility and GitHub CI must pass before this pass is considered complete.
+
+
+## Living implementation ledger — overhaul branch
+
+**Branch policy (user decision):** All remaining implementation passes take place on `overhaul`. `main` and `baseline/v11` remain stable. The earlier `work/pass-2-exam-engine` is superseded as the development target; it is not a separate release lane.
+
+**Pass 1 — complete:** Strict generic domain contracts, validation and source-content integrity. Existing offline HTML and bank unchanged. PR #1 documents the foundational work.
+
+**Pass 2 — in progress:** Pure TypeScript exam session transitions and policy-based scoring. Initial engine files: `src/engine/session.ts`, `src/engine/scoring.ts`. Still required: focused tests, review of timer limits and restore semantics, content adapter, CI validation. Do not claim runtime integration before it exists.
+
+**Pass 3 — pending:** Immutable attempt history, persistence and transactional restore. Design storage around real access patterns, not hypothetical migrations.
+
+**Pass 4 — pending:** Connect the generic engine and bank to the user interface, then review responsive behaviour, accessibility and exam workflows.
+
+**Final acceptance — pending:** Exact offline single-HTML distribution, original 500-question collection and editions, scoring/timing correctness, and end-to-end flows on `file://`.
+
+**Amendments:** Record changes in this ledger with a reason and validation evidence. Keep the historical audit intact above.
