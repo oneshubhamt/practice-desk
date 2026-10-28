@@ -2,7 +2,7 @@
 
 - Follow **CLEAR**: **Clean, Lean, Efficient, Elegant, Reliable**. Prefer simple, readable, well-tested solutions over unnecessary complexity.
 - This is a **new app**: no data migration, compatibility shims, or preservation of past storage schemas is needed yet.
-- The working v11 application is the protected reference at `baseline/v11`. Keep behaviour intact unless a task intentionally changes it.
+- The working v11 application is the frozen baseline reference on `baseline/v11`. Keep behaviour intact unless a task intentionally changes it.
 - Deliver **one self-contained HTML** that users can **double-click and run offline** via `file://`. No localhost, server, network, external assets, or runtime module imports. Change deployment strategy only if a later requirement truly warrants it.
 - Author modular, **strictly typed TypeScript** (plus separate CSS, HTML template and content files). Use precise domain types, explicit invariants and sound state transitions; avoid unnecessary `any`, `@ts-ignore` and new `@ts-nocheck`. The existing `legacy.ts` exemption is temporary.
 - Use good data topology: stable identities, immutable paper revisions, deliberate normalization, referential integrity and indexes matched to access patterns. **Revisit and optimize data structures when evidence or growth warrants it**; avoid premature complexity.
