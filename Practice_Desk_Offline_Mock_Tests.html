@@ -1305,20 +1305,41 @@ function validImported(a){if(!a||typeof a!=='object'||typeof a.id!=='string'||a.
  for(const [n,v] of Object.entries(a.answers||{})){if(!/^(?:[1-9]|[1-9][0-9]|100)$/.test(n)||!letters.includes(v))return false;}
  return true;}
 function exportBackup(){let payload=GENERIC_ENGINE.makeBackup(attempts,[...displayRevisions.values()],prefs,new Date().toISOString());let content=JSON.stringify(payload,null,2),blob=new Blob([content],{type:'application/json'});let url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='Practice_Desk_Backup_'+new Date().toISOString().slice(0,10)+'.json';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);notify('History backup exported.');}
+function dbImportBackupBatch(records,revisions){
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(['attempts','revisions'],'readwrite');
+  const store=tx.objectStore('attempts'),archive=tx.objectStore('revisions');
+  for(const revision of revisions)archive.put(structuredClone(revision));
+  for(const attempt of records)store.add(structuredClone(attempt));
+  tx.oncomplete=()=>resolve();
+  tx.onerror=()=>reject(tx.error||Error('Backup transaction failed'));
+  tx.onabort=()=>reject(tx.error||Error('Backup transaction aborted'));
+ });
+}
 async function importBackup(file){
  if(!file)return;
- if(file.size>150*1024*1024){notify('Backup file is too large (150 MB maximum).');return;}
+ if(file.size>150*1024*1024){notify('Backup file exceeds 150 MB.');return;}
  let backup;
  try{backup=GENERIC_ENGINE.verifyBackup(JSON.parse(await file.text()));}
  catch(e){notify('Backup rejected: invalid format or integrity checksum.');console.warn('Backup',e);return;}
- const good=backup.attempts.filter(validImported).slice(0,5000);
- if(!good.length){notify('No valid attempts in this backup.');return;}
- if(!confirm(`Import ${good.length} saved attempts, including unfinished tests? Existing records will not be overwritten.`))return;
- for(const rev of backup.revisions){if(!displayRevisions.has(rev.id))displayRevisions.set(rev.id,rev);}
- let count=0;
- for(const a of good){if(a.id===active?.id||record(a.id))continue;await upsertImported(a);count++;}
+ if(!backup.attempts.length||backup.attempts.some(a=>!validImported(a))){
+  notify('Backup rejected: at least one saved attempt is incomplete or incompatible.');return;
+ }
+ const incoming=GENERIC_ENGINE.planBackupMerge(attempts,backup.attempts,active?.id);
+ if(!incoming.length){notify('These saved attempts are already present.');return;}
+ if(!confirm(`Import ${incoming.length} saved attempts (including any unfinished tests)? Existing records will be preserved.`))return;
+ if(db){
+  try{await writeChain;await dbImportBackupBatch(incoming,backup.revisions);}
+  catch(e){notify('Backup import failed; no records were imported.');console.warn('Backup import',e);return;}
+ }
+ for(const revision of backup.revisions){
+  if(!displayRevisions.has(revision.id))displayRevisions.set(revision.id,revision);
+  if(db)savedRevisionIds.add(revision.id);
+ }
+ attempts.push(...incoming);
+ if(!db)fallbackSave();
  if(!active)restoreActive();
- render();notify(`Imported ${count} new attempts. Existing records preserved.`);
+ render();notify(`Imported ${incoming.length} saved attempts.`);
 }
 async function upsertImported(a){let ix=attempts.findIndex(x=>x.id===a.id);if(ix>=0)attempts[ix]=a;else attempts.push(a);captureDisplayArchive(a);if(db)await queueWrite(()=>dbPutAttemptWithRevision(a));else fallbackSave();}
 async function deleteOne(id){const a=record(id);if(!a||!a.finishedAt)return;if(!confirm(`Permanently delete this saved attempt from ${dateText(a.finishedAt)}? Export a backup first if needed.`))return;await removeAttempt(id);render();notify('Attempt deleted.');}
