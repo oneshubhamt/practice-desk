@@ -59,7 +59,9 @@ function stimulusHTML(bundle:ExamPackage,q:QuestionRevision):string{
  if(stimulus.kind==="table")return '<section class="generic-stimulus"><b>'+escapeText(stimulus.title||"Table")+'</b><div class="scroll-table"><table><tr>'+
    stimulus.columns.map(c=>'<th>'+escapeText(c)+'</th>').join("")+'</tr>'+
    stimulus.rows.map(r=>'<tr>'+r.map(c=>'<td>'+escapeText(c)+'</td>').join("")+'</tr>').join("")+'</table></div></section>';
- return '<section class="generic-stimulus">'+assetHTML(bundle,[stimulus.assetId])+'<p>'+escapeText(stimulus.caption||stimulus.altText)+'</p></section>';
+ if ("assetId" in stimulus) return '<section class="generic-stimulus">'+
+    assetHTML(bundle,[stimulus.assetId])+'<p>'+escapeText(stimulus.caption||stimulus.altText)+'</p></section>';
+  return "";
 }
 
 type PackageRecord={recordType:"generic-package";id:string;bundle:ExamPackage};
