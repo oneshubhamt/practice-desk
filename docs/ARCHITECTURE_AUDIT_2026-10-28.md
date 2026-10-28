@@ -972,7 +972,7 @@ Added:
 
 **Pass 2 — in progress:** Pure TypeScript exam session transitions and policy-based scoring. Initial engine files: `src/engine/session.ts`, `src/engine/scoring.ts`. Still required: focused tests, review of timer limits and restore semantics, content adapter, CI validation. Do not claim runtime integration before it exists.
 
-**Pass 3 — pending:** Immutable attempt history, persistence and transactional restore. Design storage around real access patterns, not hypothetical migrations.
+**Pass 3 — complete (CI verified):** Immutable attempt history, persistence and transactional restore. Design storage around real access patterns, not hypothetical migrations.
 
 **Pass 4 — pending:** Connect the generic engine and bank to the user interface, then review responsive behaviour, accessibility and exam workflows.
 
@@ -1063,3 +1063,16 @@ Added:
 - Merge planning is additive: immutable completed records and the current live test are never overwritten.
 - IndexedDB backup import commits all new records and their archived display revisions in a single read/write transaction, after prior saves finish. A failed transaction imports none.
 - Added tests for additive merge and duplicate identity protection.
+
+
+### Pass 3 closure — 2026-10-28
+
+**Status: implemented and CI-green.** CI run [40641304190](https://github.com/oneshubhamt/practice-desk/actions/runs/40641304190) completed successfully. Strict TypeScript, unit/integration tests, single-file build and generated artifact reproducibility gate passed.
+
+**Accepted scope:** Frozen question/paper/key/scoring snapshots tied to attempts; immutable completed score records; wall-clock-aware restart with paused-session semantics and terminal mirror precedence; transactional IndexedDB storage for an attempt and a deduplicated display/media revision; complete SHA-256-verified backups including unfinished sessions; atomic additive import with duplicate protection.
+
+**Revision of earlier checkpoint:** The implementation subsequently introduced an IndexedDB **v2** `revisions` store (schema upgrade). Earlier statements above that media archival and database upgrade were not implemented describe only interim checkpoints.
+
+**Not yet claimed:** Manual `file://` browser reopen and backup round-trip testing, multi-tab concurrent mutation correctness, or generic non-CGL end-to-end UI functionality. Those need final acceptance (and the UI work belongs to Pass 4). Local file-origin storage remains browser-dependent; independent exports are advised.
+
+**Next:** Pass 4 removes the remaining fixed-CGL UI and presentation assumptions. Keep `main` and `baseline/v11` unchanged pending final validation.
