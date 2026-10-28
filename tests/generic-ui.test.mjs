@@ -1,0 +1,29 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { renderGenericControls, examTimeRemaining } from "../src/app/generic-ui.ts";
+
+const stub={format:"practice-desk-exam",version:1,examId:"example",
+ title:"Example",paper:{},answerKey:{},questions:[],assets:[]};
+const revision=(content)=>({id:"q",questionId:"q",revision:1,contentHash:"0".repeat(64),
+ editorial:{status:"verified"},content});
+test("six exam question response kinds render editable, escaped controls",()=>{
+ const cases=[
+  [{kind:"single-choice",prompt:"x",options:[{id:"1",text:"<script>"},{id:"2",text:"Second"}]},"data-choice"],
+  [{kind:"multiple-select",prompt:"x",options:[{id:"1",text:"First"},{id:"2",text:"Second"}]},"checkbox"],
+  [{kind:"numeric-entry",prompt:"x",numericRules:{minimum:0,maximum:100}},"type=\"number\""],
+  [{kind:"true-false",prompt:"x"},"data-bool"],
+  [{kind:"matching",prompt:"x",leftItems:[{id:"a",text:"A"}],rightItems:[{id:"b",text:"B"}]},"data-match"],
+  [{kind:"free-response",prompt:"x",responseRules:{maxWords:20}},"textarea"],
+ ];
+ for(const [content,marker] of cases)assert.match(renderGenericControls(stub,revision(content)),new RegExp(marker));
+ const html=renderGenericControls(stub,revision(cases[0][0]));
+ assert.ok(!html.includes("<script>"));
+ assert.ok(html.includes("&lt;script&gt;"));
+});
+test("timer display derives from paper policy, not CGL constants",()=>{
+ const state={sectionIndex:1,elapsedMs:5000,sectionElapsedMs:2000};
+ assert.equal(examTimeRemaining({timing:{kind:"untimed"}},state),null);
+ assert.equal(examTimeRemaining({timing:{kind:"whole-paper",durationMs:12000}},state),7000);
+ assert.equal(examTimeRemaining({timing:{kind:"sectional",sectionLimits:[{sectionId:"one",durationMs:3000},{sectionId:"two",durationMs:9000}]},
+ sections:[{id:"one"},{id:"two"}]},state),7000);
+});

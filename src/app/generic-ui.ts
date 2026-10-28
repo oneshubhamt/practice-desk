@@ -238,8 +238,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    root.querySelectorAll<HTMLInputElement>("[data-bool]").forEach(input=>input.onchange=()=>{
      dispatch({type:"ANSWER",nowMs:now(),response:{kind:"true-false",value:input.dataset.bool==="true"}});
    });
-   const save=root.querySelector<HTMLButtonElement>("#g-save");
-   if(save)save.onclick=()=>{
+   const saveButton=root.querySelector<HTMLButtonElement>("#g-save");
+   if(saveButton)saveButton.onclick=()=>{
      if(q.content.kind==="numeric-entry"){
        const field=root.querySelector<HTMLInputElement>("#g-number")!;
        if(!field.value||!Number.isFinite(field.valueAsNumber)){notice("Enter a finite numeric answer.");return;}
