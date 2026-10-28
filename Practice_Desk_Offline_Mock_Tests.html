@@ -555,7 +555,7 @@ var PracticeDeskEngine = (() => {
     initial: new Uint32Array([1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225])
   };
   function sha256(input) {
-    const bytes = new TextEncoder().encode(input);
+    const bytes = typeof input === "string" ? new TextEncoder().encode(input) : input;
     const padded = new Uint8Array(Math.ceil((bytes.length + 9) / 64) * 64);
     padded.set(bytes);
     padded[bytes.length] = 128;
@@ -1513,7 +1513,7 @@ var PracticeDeskGeneric = (() => {
     initial: new Uint32Array([1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225])
   };
   function sha256(input) {
-    const bytes = new TextEncoder().encode(input);
+    const bytes = typeof input === "string" ? new TextEncoder().encode(input) : input;
     const padded = new Uint8Array(Math.ceil((bytes.length + 9) / 64) * 64);
     padded.set(bytes);
     padded[bytes.length] = 128;
@@ -1933,6 +1933,9 @@ var PracticeDeskGeneric = (() => {
         throw new Error("Duplicate or invalid media asset");
       if (!["image/png", "image/jpeg", "image/webp", "image/avif", "image/gif"].includes(item.mediaType) || typeof item.dataUri !== "string" || !item.dataUri.startsWith("data:" + item.mediaType + ";base64,") || !/^[A-Za-z0-9+/=]+$/.test(item.dataUri.split(",")[1] ?? "") || typeof item.contentHash !== "string" || !/^[a-f0-9]{64}$/.test(item.contentHash))
         throw new Error("Media must be an embedded image with a SHA-256 hash");
+      const encoded = item.dataUri.slice(item.dataUri.indexOf(",") + 1);
+      const decoded = Uint8Array.from(atob(encoded), (char) => char.charCodeAt(0));
+      if (sha256(decoded) !== item.contentHash) throw new Error("Embedded image digest does not match its content hash");
       assetIds.add(item.id);
     }
     for (const q of questions) {
@@ -1945,6 +1948,14 @@ var PracticeDeskGeneric = (() => {
       if (q.content.kind === "matching") {
         for (const item of [...q.content.leftItems, ...q.content.rightItems])
           for (const id of item.assetIds ?? []) if (!assetIds.has(id)) throw new Error("Missing matching image");
+      }
+    }
+    const explanations = raw.explanations;
+    if (explanations !== void 0) {
+      if (!explanations || typeof explanations !== "object" || Array.isArray(explanations))
+        throw new Error("Invalid explanations");
+      for (const [id, text2] of Object.entries(explanations)) {
+        if (!ids.has(id) || typeof text2 !== "string" || text2.length > 2e4) throw new Error("Invalid explanation reference");
       }
     }
     return value;
@@ -1971,7 +1982,7 @@ var PracticeDeskGeneric = (() => {
           id,
           mediaType: uri.match(/^data:(image\/[a-z]+);/)?.[1] ?? "image/webp",
           dataUri: uri,
-          contentHash: sha256(uri)
+          contentHash: sha256(Uint8Array.from(atob(uri.slice(uri.indexOf(",") + 1)), (char) => char.charCodeAt(0)))
         });
         if (merged.images.stem) assets.push(asImage(stemId, merged.images.stem));
         merged.images.options?.forEach((uri, i) => {
@@ -2010,7 +2021,8 @@ var PracticeDeskGeneric = (() => {
       updatedAt: timestamp,
       finishedAt: null,
       frozen,
-      state: startSession(bundle.paper, timestamp)
+      state: startSession(bundle.paper, timestamp),
+      ...validated.explanations ? { explanations: structuredClone(validated.explanations) } : {}
     };
   }
   function transitionGenericAttempt(attempt, event, questionMap) {
@@ -2037,6 +2049,28 @@ var PracticeDeskGeneric = (() => {
         new Date(event.nowMs).toISOString()
       ) } : {}
     };
+  }
+  function readableAnswer(q, answer) {
+    if (!answer) return "Unanswered";
+    const content = q.content;
+    switch (answer.kind) {
+      case "single-choice":
+        return content.kind === "single-choice" || content.kind === "multiple-select" ? content.options.find((o) => o.id === answer.optionId)?.text ?? "Unknown option" : "Unknown option";
+      case "multiple-select":
+        return content.kind === "multiple-select" ? content.options.filter((o) => answer.optionIds.includes(o.id)).map((o) => o.text).join("; ") : "Invalid response";
+      case "numeric-entry":
+        return "acceptedValues" in answer ? answer.acceptedValues.join(", ") : String(answer.value);
+      case "true-false":
+        return answer.value ? "True" : "False";
+      case "matching":
+        return content.kind === "matching" ? answer.pairs.map((pair) => {
+          const left = content.leftItems.find((item) => item.id === pair.leftId)?.text ?? pair.leftId;
+          const right = content.rightItems.find((item) => item.id === pair.rightId)?.text ?? pair.rightId;
+          return left + " \u2192 " + right;
+        }).join("; ") : "Invalid response";
+      case "free-response":
+        return "text" in answer ? answer.text : "Manual assessment required";
+    }
   }
 
   // src/app/generic-ui.ts
@@ -2174,7 +2208,9 @@ var PracticeDeskGeneric = (() => {
       return '<div class="generic-heading"><h1>Exam results</h1><button class="btn" id="g-library">Library</button></div><section class="panel pad"><div class="scoregrid"><div class="score standout"><b>' + s.snapshot.earnedMarks + '</b><small>Marks</small></div><div class="score"><b>' + s.snapshot.correctCount + '</b><small>Correct</small></div><div class="score"><b>' + s.snapshot.incorrectCount + '</b><small>Incorrect</small></div><div class="score"><b>' + s.snapshot.unansweredCount + '</b><small>Unanswered</small></div><div class="score"><b>' + s.snapshot.excludedCount + '</b><small>Excluded</small></div></div><p class="fine">Written responses marked pending require manual evaluation.</p></section><section class="panel pad"><h2>Review</h2>' + s.items.map((it, i) => {
         const q = qs.get(it.questionRevisionId);
         const response = attempt.state.responses.find((r) => r.questionRevisionId === it.questionRevisionId)?.response;
-        return q ? '<article class="generic-review"><strong>' + (i + 1) + ". " + escapeText(q.content.prompt) + '</strong><p class="fine">' + escapeText(it.verdict) + " \xB7 " + it.marks + ' marks</p><p class="fine">Your answer: ' + escapeText(response ? JSON.stringify(response) : "Unanswered") + "</p>" + (q.editorial.notes ? '<p class="fine">Note: ' + escapeText(q.editorial.notes) + "</p>" : "") + "</article>" : "";
+        const answer = attempt.frozen.key.entries.find((e) => e.questionRevisionId === it.questionRevisionId)?.answer;
+        const explanation = attempt.explanations?.[it.questionRevisionId] || q?.editorial.notes;
+        return q ? '<article class="generic-review"><strong>' + (i + 1) + ". " + escapeText(q.content.prompt) + '</strong><p class="fine">' + escapeText(it.verdict) + " \xB7 " + it.marks + ' marks</p><p class="fine">Your answer: ' + escapeText(readableAnswer(q, response)) + '</p><p class="fine">Expected: ' + escapeText(readableAnswer(q, answer)) + "</p>" + (explanation ? '<p class="fine">Explanation: ' + escapeText(explanation) + "</p>" : "") + "</article>" : "";
       }).join("") + "</section>";
     }
     function draw() {
