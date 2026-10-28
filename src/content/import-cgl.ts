@@ -6,7 +6,7 @@ import type { AssetId, ContentHash, OptionId, PaperId, PaperRevisionId, Question
 import { validateAnswerKeyRevision, validatePaperRevision, validateQuestionRevision } from "../domain/validate.ts";
 
 /** Small synchronous SHA-256 implementation for offline/file:// compatibility. */
-function sha256(input: string): string {
+export function sha256(input: string): string {
   const bytes = new TextEncoder().encode(input);
   const length = bytes.length;
   const padded = new Uint8Array(Math.ceil((length + 9) / 64) * 64);
