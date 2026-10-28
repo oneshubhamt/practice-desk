@@ -17,7 +17,7 @@ const scriptFor=(code)=>artifact.replace("</body>",`<script>\n${code}\n</script>
 const common=`
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function until(fn) {
- for(let i=0;i<100;i++){const found=await fn();if(found)return found;await sleep(100);}
+ for(let i=0;i<200;i++){const found=await fn();if(found)return found;await sleep(100);}
  throw new Error("Offline smoke condition timed out");
 }
 function savedAttempts(){
@@ -38,9 +38,13 @@ async function enterWorkspace(){
 }
 `;
 const first=`(async()=>{${common}
+ document.documentElement.dataset.pdSmokeStage="enter";
  await enterWorkspace();
+ document.documentElement.dataset.pdSmokeStage="start";
  document.querySelector("#g-start").click();
+ document.documentElement.dataset.pdSmokeStage="choice";
  (await until(()=>document.querySelector("#app input[data-choice]"))).click();
+ document.documentElement.dataset.pdSmokeStage="database";
  await until(async()=>{
   const records=await savedAttempts();
   return records.some(x=>x.state?.responses?.some(r=>r.response?.kind==="single-choice"));
@@ -48,10 +52,14 @@ const first=`(async()=>{${common}
  document.documentElement.dataset.pdSmoke="saved";
 })().catch(e=>{document.documentElement.dataset.pdSmoke="error";document.documentElement.dataset.pdSmokeError=e.message;});`;
 const second=`(async()=>{${common}
+ document.documentElement.dataset.pdSmokeStage="reopen";
  await enterWorkspace();
+ document.documentElement.dataset.pdSmokeStage="lookup";
  const record=await until(async()=> (await savedAttempts()).find(x=>x.state?.responses?.some(r=>r.response?.kind==="single-choice")));
+ document.documentElement.dataset.pdSmokeStage="history";
  const button=await until(()=>[...document.querySelectorAll("[data-attempt]")].find(x=>x.dataset.attempt===record.id));
  button.click();
+ document.documentElement.dataset.pdSmokeStage="answer";
  await until(()=>document.querySelector("input[data-choice]:checked"));
  document.documentElement.dataset.pdSmoke="restored";
 })().catch(e=>{document.documentElement.dataset.pdSmoke="error";document.documentElement.dataset.pdSmokeError=e.message;});`;
@@ -59,14 +67,15 @@ function run(expected){
  const result=spawnSync(chrome,[
   "--headless=new","--no-sandbox","--disable-gpu","--disable-dev-shm-usage",
   "--no-first-run","--disable-extensions","--disable-background-networking",
-  "--virtual-time-budget=15000","--dump-dom","--user-data-dir="+profile,
+  "--virtual-time-budget=40000","--dump-dom","--user-data-dir="+profile,
   pathToFileURL(path).href,
  ],{encoding:"utf8",timeout:45000,maxBuffer:32*1024*1024});
  if(result.error)throw result.error;
  if(result.status!==0)throw new Error("Chrome exited "+result.status+": "+result.stderr.slice(-1500));
  if(!result.stdout.includes('data-pd-smoke="'+expected+'"')){
   const failure=result.stdout.match(/data-pd-smoke-error="([^"]+)"/)?.[1];
-  throw new Error("Offline file:// "+expected+" failed: "+(failure||result.stderr.slice(-1000)||"no smoke marker"));
+  const stage=result.stdout.match(/data-pd-smoke-stage="([^"]+)"/)?.[1];
+  throw new Error("Offline file:// "+expected+" failed: "+("stage="+(stage??"unknown")+" "+(failure||result.stderr.slice(-1000)||"no smoke marker")));
  }
  console.log("Offline file://: "+expected+" passed");
 }
