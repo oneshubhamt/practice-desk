@@ -460,109 +460,56 @@ var PracticeDeskEngine = (() => {
   // src/content/import-cgl.ts
   function sha256(input) {
     const bytes = new TextEncoder().encode(input);
-    const length = bytes.length;
-    const padded = new Uint8Array(Math.ceil((length + 9) / 64) * 64);
+    const padded = new Uint8Array(Math.ceil((bytes.length + 9) / 64) * 64);
     padded.set(bytes);
-    padded[length] = 128;
+    padded[bytes.length] = 128;
     const view = new DataView(padded.buffer);
-    const bits = length * 8;
-    view.setUint32(padded.length - 8, Math.floor(bits / 4294967296));
-    view.setUint32(padded.length - 4, bits >>> 0);
-    const k = new Uint32Array([
-      1116352408,
-      1899447441,
-      3049323471,
-      3921009573,
-      961987163,
-      1508970993,
-      2453635748,
-      2870763221,
-      3624381080,
-      310598401,
-      607225278,
-      1426881987,
-      1925078388,
-      2162078206,
-      2614888103,
-      3248222580,
-      3835390401,
-      4022224774,
-      264347078,
-      604807628,
-      770255983,
-      1249150122,
-      1555081692,
-      1996064986,
-      2554220882,
-      2821834349,
-      2952996808,
-      3210313671,
-      3336571891,
-      3584528711,
-      113926993,
-      338241895,
-      666307205,
-      773529912,
-      1294757372,
-      1396182291,
-      1695183700,
-      1986661051,
-      2177026350,
-      2456956037,
-      2730485921,
-      2820302411,
-      3259730800,
-      3345764771,
-      3516065817,
-      3600352804,
-      4094571909,
-      275423344,
-      430227734,
-      506948616,
-      659060556,
-      883997877,
-      958139571,
-      1322822218,
-      1537002063,
-      1747873779,
-      1955562222,
-      2024104815,
-      2227730452,
-      2361852424,
-      2428436474,
-      2756734187,
-      3204031479,
-      3329325298
-    ]);
-    const h = new Uint32Array([1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225]);
-    const w = new Uint32Array(64);
-    const rotate = (x, n) => x >>> n | x << 32 - n;
-    for (let offset = 0; offset < padded.length; offset += 64) {
-      for (let i = 0; i < 16; i++) w[i] = view.getUint32(offset + i * 4);
-      for (let i = 16; i < 64; i++) {
-        const a2 = w[i - 15], b2 = w[i - 2];
-        w[i] = w[i - 16] + (rotate(a2, 7) ^ rotate(a2, 18) ^ a2 >>> 3) + w[i - 7] + (rotate(b2, 17) ^ rotate(b2, 19) ^ b2 >>> 10) >>> 0;
+    view.setUint32(padded.length - 8, Math.floor(bytes.length * 8 / 4294967296));
+    view.setUint32(padded.length - 4, bytes.length * 8 >>> 0);
+    const primes = [];
+    for (let candidate = 2; primes.length < 64; candidate++) {
+      let prime = true;
+      for (let divisor = 2; divisor * divisor <= candidate; divisor++) {
+        if (candidate % divisor === 0) {
+          prime = false;
+          break;
+        }
       }
-      let [a, b, c, d, e, f, g, z] = h;
+      if (prime) primes.push(candidate);
+    }
+    const k = new Uint32Array(primes.map((p) => Math.floor(Math.cbrt(p) % 1 * 2 ** 32) >>> 0));
+    const h = new Uint32Array(primes.slice(0, 8).map((p) => Math.floor(Math.sqrt(p) % 1 * 2 ** 32) >>> 0));
+    const w = new Uint32Array(64);
+    const rotr = (x, n) => x >>> n | x << 32 - n;
+    for (let offset = 0; offset < padded.length; offset += 64) {
+      for (let i = 0; i < 16; i++) w[i] = view.getUint32(offset + 4 * i);
+      for (let i = 16; i < 64; i++) {
+        const left = w[i - 15] ?? 0, right = w[i - 2] ?? 0;
+        w[i] = (w[i - 16] ?? 0) + (rotr(left, 7) ^ rotr(left, 18) ^ left >>> 3) + (w[i - 7] ?? 0) + (rotr(right, 17) ^ rotr(right, 19) ^ right >>> 10) >>> 0;
+      }
+      let a = h[0] ?? 0, b = h[1] ?? 0, c = h[2] ?? 0, d = h[3] ?? 0;
+      let e = h[4] ?? 0, f = h[5] ?? 0, g = h[6] ?? 0, z = h[7] ?? 0;
       for (let i = 0; i < 64; i++) {
-        const s1 = rotate(e, 6) ^ rotate(e, 11) ^ rotate(e, 25);
-        const ch = e & f ^ ~e & g;
-        const t1 = z + s1 + ch + k[i] + w[i] >>> 0;
-        const s0 = rotate(a, 2) ^ rotate(a, 13) ^ rotate(a, 22);
-        const maj = a & b ^ a & c ^ b & c;
-        const t2 = s0 + maj >>> 0;
+        const s1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
+        const choose = e & f ^ ~e & g;
+        const temp1 = z + s1 + choose + (k[i] ?? 0) + (w[i] ?? 0) >>> 0;
+        const s0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
+        const majority = a & b ^ a & c ^ b & c;
+        const temp2 = s0 + majority >>> 0;
         z = g;
         g = f;
         f = e;
-        e = d + t1 >>> 0;
+        e = d + temp1 >>> 0;
         d = c;
         c = b;
         b = a;
-        a = t1 + t2 >>> 0;
+        a = temp1 + temp2 >>> 0;
       }
-      for (const [i, v] of [a, b, c, d, e, f, g, z].entries()) h[i] = h[i] + v >>> 0;
+      for (const [i, value] of [a, b, c, d, e, f, g, z].entries()) {
+        h[i] = (h[i] ?? 0) + value >>> 0;
+      }
     }
-    return Array.from(h, (n) => n.toString(16).padStart(8, "0")).join("");
+    return Array.from(h, (part) => part.toString(16).padStart(8, "0")).join("");
   }
   var hash2 = (data) => sha256(JSON.stringify(data));
   var optionId = (question, letter) => `${question}:option:${letter}`;
