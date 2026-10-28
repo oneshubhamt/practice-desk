@@ -7,7 +7,7 @@ export type FourOptions = readonly [string, string, string, string];
 
 export interface SourceQuestionImages {
   readonly stem?: string;
-  readonly options?: Readonly<Record<string, string>>;
+  readonly options?: readonly string[];
 }
 
 /** Faithful transcription layer: preserve source wording, options and published key. */
