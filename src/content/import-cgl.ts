@@ -3,7 +3,7 @@ import type { PaperRevision } from "../domain/exam.js";
 import type { QuestionRevision } from "../domain/question.js";
 import type { AnswerKeyRevision } from "../domain/answer-key.js";
 import type { AssetId, ContentHash, OptionId, PaperId, PaperRevisionId, QuestionId, QuestionRevisionId, SectionId, AnswerKeyRevisionId, StimulusId } from "../domain/ids.js";
-import { validateAnswerKeyRevision, validatePaperRevision, validateQuestionRevision } from "../domain/validate.js";
+import { validateAnswerKeyRevision, validatePaperRevision, validateQuestionRevision } from "../domain/validate.ts";
 
 /** Small synchronous SHA-256 implementation for offline/file:// compatibility. */
 function sha256(input: string): string {

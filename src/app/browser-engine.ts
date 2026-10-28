@@ -1,10 +1,10 @@
-import { importCglBank } from "../content/import-cgl.js";
-import { transition, startSession, rebaseSession } from "../engine/session.js";
-import { scoreAttempt } from "../engine/scoring.js";
-import { validateResponse } from "../engine/response.js";
+import { importCglBank } from "../content/import-cgl.ts";
+import { transition, startSession, rebaseSession } from "../engine/session.ts";
+import { scoreAttempt } from "../engine/scoring.ts";
+import { validateResponse } from "../engine/response.ts";
 import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
 import type { PaperRevision } from "../domain/exam.js";
-import type { SessionState, SessionEvent } from "../engine/session.js";
+import type { SessionState, SessionEvent } from "../engine/session.ts";
 import type { AttemptResponseRecord } from "../domain/attempt.js";
 import type { QuestionRevision } from "../domain/question.js";
 
