@@ -132,7 +132,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  const storageKey="practiceDesk.generic.fallback.v1", mirrorKey="practiceDesk.generic.active.v1";
  const downloadBackup=()=>{
    const recordsToExport=[...records.values()].filter(record=>isPackage(record)||isAttempt(record));
-   const backup=makeBackup(recordsToExport,[],null,new Date().toISOString());
+   const backup=makeBackup(recordsToExport as unknown as readonly Record<string,unknown>[],[],null,new Date().toISOString());
    const blob=new Blob([JSON.stringify(backup)],{type:"application/json"});
    const url=URL.createObjectURL(blob);
    const link=document.createElement("a");link.href=url;
