@@ -1056,3 +1056,10 @@ Added:
 - Full version-2 backup exports completed **and unfinished** attempts, display revisions and preferences; SHA-256 manifest validated before importing. Duplicate IDs do not overwrite existing records.
 - Reopening the offline file restores completed and active history through the existing recovery journal and wall-clock session rebase.
 - External browser/file origin storage is still best-effort. Independently exported backups remain necessary; UI generalisation and browser acceptance stay in Pass 4.
+
+### Pass 3 acceptance hardening — atomic backup import
+
+- Verify **every** imported attempt before any mutation; reject an incompatible batch rather than silently dropping records.
+- Merge planning is additive: immutable completed records and the current live test are never overwritten.
+- IndexedDB backup import commits all new records and their archived display revisions in a single read/write transaction, after prior saves finish. A failed transaction imports none.
+- Added tests for additive merge and duplicate identity protection.

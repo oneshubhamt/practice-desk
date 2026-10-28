@@ -58,3 +58,18 @@ export function verifyBackup(raw: unknown): BackupV2 {
       manifest.digest !== digest(core as Core)) throw new Error("Backup integrity check failed");
   return b as BackupV2;
 }
+
+/** Import missing records only: never replace a previously completed or active attempt. */
+export function planBackupMerge<T extends { readonly id: string }>(
+  existing: readonly T[], incoming: readonly T[], activeId?: string,
+): T[] {
+  const known = new Set(existing.map(x => x.id));
+  if (activeId) known.add(activeId);
+  const result: T[] = [];
+  for (const candidate of incoming) {
+    if (known.has(candidate.id)) continue;
+    known.add(candidate.id);
+    result.push(candidate);
+  }
+  return result;
+}

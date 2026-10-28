@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { importCglBank, sha256 } from "../src/content/import-cgl.ts";
-import { archiveDisplayRevision, makeBackup, verifyBackup } from "../src/history/backup.ts";
+import { archiveDisplayRevision, makeBackup, verifyBackup, planBackupMerge } from "../src/history/backup.ts";
 
 const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
@@ -31,4 +31,11 @@ test("versioned backup includes unfinished tests and checks data integrity",()=>
  assert.throws(()=>verifyBackup(tampered),/integrity/);
  const duplicate=makeBackup([{id:"x"},{id:"x"}],[],{},backup.exportedAt);
  assert.throws(()=>verifyBackup(duplicate),/records/);
+});
+
+test("backup merge is additive and never overwrites a completed or active record",()=>{
+ const existing=[{id:"completed",finishedAt:100},{id:"ongoing",finishedAt:null}];
+ const incoming=[{id:"completed",finishedAt:200},{id:"ongoing",finishedAt:300},
+   {id:"new",finishedAt:null},{id:"new",finishedAt:99}];
+ assert.deepEqual(planBackupMerge(existing,incoming,"ongoing"),[{id:"new",finishedAt:null}]);
 });
