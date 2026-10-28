@@ -1093,3 +1093,12 @@ Added:
 **Acceptance limits:** CI validates compilation, content integrity, scoring, frozen-history contracts, restore logic, backup checksums/merge behaviour and one-file build. Actual reopening under `file://` across Chromium, Firefox and Safari, quota-exhaustion recovery, and multi-tab concurrency have not been independently exercised and remain release acceptance checks. A checksum detects accidental backup alteration; it does not authenticate an untrusted source or encrypt user data.
 
 **Next:** Pass 4 — fully exam-agnostic UI, remove remaining SSC-specific presentation assumptions, accessibility, responsive testing and end-to-end browser/file:// acceptance. `main` and `baseline/v11` remain untouched.
+
+
+### Pass 4 first implementation — model-driven exam workspace
+
+- Added `src/app/exam-package.ts` as a validated, self-contained examination package contract (paper/key/questions/stimuli/embedded images), alongside adapters for the five existing CGL source/reviewed editions.
+- Introduced `src/app/generic-ui.ts` as a schema-driven exam workspace accessible from the existing library. It uses the same generic session/scoring engine and supports single-choice, multiple-select, numeric, true/false, matching and written responses; sections/timers/navigation derive from the paper definition.
+- Local JSON packages can be loaded without a network. Generic attempts and imported packs are written to the existing IndexedDB attempts store with distinct record types, leaving the CGL history filtered separately. LocalStorage is a best-effort fallback.
+- Existing CGL home/exam/results/history flows remain untouched except the exam-workspace entry point. All code bundles into the single offline HTML.
+- Pass 4 remains in progress: generic and existing histories should be unified, complete multi-kind browser tests are needed, image/asset checking needs more coverage, and final file:// acceptance across browsers is outstanding.

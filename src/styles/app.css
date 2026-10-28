@@ -91,3 +91,30 @@ optgroup{font-weight:700;color:var(--ink)}.change-log{margin:12px 0 0;border:1px
 .worked-solution-body{padding:13px 15px;font-size:14px;line-height:1.65;white-space:normal;color:var(--ink)}
 .worked-solution summary:focus-visible{outline:2px solid var(--blue);outline-offset:-3px}
 
+
+/* Model-driven exam workspace — reuses the established Practice Desk theme. */
+.generic-workspace .generic-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin:12px 0 18px;flex-wrap:wrap}
+.generic-workspace .generic-heading h1{margin:0 0 6px}
+.generic-workspace .generic-layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(250px,1fr);gap:18px}
+.generic-workspace .generic-layout section,.generic-workspace .generic-layout aside{min-width:0}
+.generic-workspace .generic-layout select,.generic-workspace .generic-layout input[type=number],.generic-workspace .generic-layout textarea{width:100%;max-width:100%;font:inherit}
+.generic-workspace .generic-choices{border:0;padding:0;margin:20px 0;display:grid;gap:9px}
+.generic-workspace .generic-choices legend{font-weight:600;margin-bottom:8px}
+.generic-workspace .generic-choice{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line,#d9e0e8);border-radius:10px;padding:12px;cursor:pointer}
+.generic-workspace .generic-choice:has(input:checked){outline:2px solid var(--accent,#2768a8)}
+.generic-workspace .generic-choice input{margin-top:4px}
+.generic-workspace .generic-choice span{white-space:pre-wrap;min-width:0}
+.generic-workspace .generic-choice .generic-figure,.generic-workspace .generic-stimulus .generic-figure{display:block;max-width:100%;max-height:340px;object-fit:contain;margin:10px 0}
+.generic-workspace .generic-prompt{font-size:1.12rem;white-space:pre-wrap;line-height:1.55;margin:20px 0}
+.generic-workspace .generic-stimulus{padding:14px;border:1px solid var(--line,#d9e0e8);border-radius:10px;margin-bottom:16px;white-space:pre-wrap}
+.generic-workspace .generic-stimulus p{margin:8px 0}
+.generic-workspace .generic-matches{display:grid;gap:12px;margin:14px 0}
+.generic-workspace .generic-matches label{display:grid;gap:7px}
+.generic-workspace .generic-sections,.generic-workspace .generic-actions{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0}
+.generic-workspace .generic-palette{display:grid;grid-template-columns:repeat(auto-fill,minmax(42px,1fr));gap:7px;margin:15px 0}
+.generic-workspace .generic-history{display:block;text-align:left;width:100%;padding:12px;background:transparent;border:0;border-bottom:1px solid var(--line,#e0e6eb);color:inherit;cursor:pointer}
+.generic-workspace .generic-history small{margin-left:8px;opacity:.7}
+.generic-workspace .generic-warning{border-left:3px solid currentColor;padding:10px 14px;margin:12px 0}
+.generic-workspace .generic-timer{font-variant-numeric:tabular-nums;font-size:1.2rem}
+.generic-workspace .generic-review{padding:15px 0;border-bottom:1px solid var(--line,#d9e0e8);white-space:pre-wrap}
+@media(max-width:760px){.generic-workspace .generic-layout{grid-template-columns:1fr}.generic-workspace .generic-heading{align-items:stretch}.generic-workspace .generic-heading .row{justify-content:space-between}}

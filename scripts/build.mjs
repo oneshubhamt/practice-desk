@@ -21,6 +21,14 @@ const bundleResult = await bundleJavaScript({
 const bundle = bundleResult.outputFiles[0].text +
   '\n globalThis.PD_ENGINE_FACTORY = PracticeDeskEngine.createBrowserEngine;\n';
 new Script(bundle);
+const genericResult = await bundleJavaScript({
+  entryPoints: [resolve(root, 'src/app/generic-ui.ts')],
+  bundle: true, write: false, platform: 'browser', format: 'iife',
+  globalName: 'PracticeDeskGeneric', target: 'es2022', logLevel: 'silent',
+});
+const genericBundle = genericResult.outputFiles[0].text +
+  '\n globalThis.PD_GENERIC_UI = PracticeDeskGeneric.mountExamWorkspace;\n';
+new Script(genericBundle);
 const runtime = (await read('src/app/legacy.ts')).replace(/^\/\/ @ts-nocheck\r?\n(?:\/\/[^\n]*\r?\n)?/,'');
 new Script(runtime);
 validateContent({
@@ -28,7 +36,7 @@ validateContent({
  patches:JSON.parse(await read('src/content/patches.json')),
  solutions:JSON.parse(await read('src/content/solutions.json'))
 });
-payloads.APPLICATION=`<script>\n${bundle}\n${runtime.trimEnd()}\n</script>`;
+payloads.APPLICATION=`<script>\n${bundle}\n${genericBundle}\n${runtime.trimEnd()}\n</script>`;
 let html=await read('src/template.html');
 for(const [key,value] of Object.entries(payloads)){
  const marker=`<!-- PD:${key} -->`;
