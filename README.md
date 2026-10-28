@@ -25,9 +25,10 @@ npm run typecheck
 - `src/content/*.json` — source papers, review patches, and post-test explanations
 - `src/content/schema.ts` — typed contracts for the preserved source/patch/solution JSON
 - `src/content/validate.ts` — strict, dependency-free runtime validation
-- `src/domain/` — generic exam, question, answer-key, scoring and attempt contracts
+- `src/domain/` — generic exam, question, answer-key, scoring, attempt contracts and cross-entity validators
+- `docs/DATA_MODEL.md` — identity, revision, immutability, normalization and data-topology decisions
 - `scripts/` — tiny dependency-free build and content validation
-- `tests/` — lean content-integrity and artifact checks using Node's built-in test runner
+- `tests/` — lean content-integrity, domain-invariant and artifact checks using Node's built-in test runner
 - `docs/ARCHITECTURE_AUDIT_2026-10-28.md` — architecture audit / roadmap
 - `Practice_Desk_Offline_Mock_Tests.html` — generated, distributable single-file app
 
