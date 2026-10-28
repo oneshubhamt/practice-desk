@@ -475,7 +475,7 @@ var PracticeDeskEngine = (() => {
       3921009573,
       961987163,
       1508970993,
-      39258171979,
+      2453635748,
       2870763221,
       3624381080,
       310598401,
@@ -768,11 +768,11 @@ var PracticeDeskEngine = (() => {
   }
 
   // src/history/frozen.ts
-  function freezeAttempt(paper, key, questions, mode, frozenAt) {
+  function freezeAttempt(paper, key, questions, mode, frozenAt, examId) {
     validateAnswerKeyRevision(key, questions);
     validatePaperRevision(paper, questions, key);
     const snapshot = {
-      examId: "ssc-cgl",
+      examId,
       paperId: paper.paperId,
       paperRevisionId: paper.id,
       answerKeyRevisionId: key.id,
@@ -782,7 +782,7 @@ var PracticeDeskEngine = (() => {
     return structuredClone({ schema: 1, frozenAt, snapshot, paper, key, questions });
   }
   function assertFrozenContent(value) {
-    if (!value || value.schema !== 1 || !value.snapshot || !value.paper || !value.key || !Array.isArray(value.questions) || value.snapshot.paperId !== value.paper.paperId || value.snapshot.paperRevisionId !== value.paper.id || value.snapshot.answerKeyRevisionId !== value.key.id || JSON.stringify(value.snapshot.scoringPolicy) !== JSON.stringify(value.paper.scoring) || !Number.isFinite(Date.parse(value.frozenAt))) {
+    if (!value || value.schema !== 1 || !value.snapshot || !value.paper || !value.key || !Array.isArray(value.questions) || typeof value.snapshot.examId !== "string" || value.snapshot.examId.length === 0 || value.snapshot.paperId !== value.paper.paperId || value.snapshot.paperRevisionId !== value.paper.id || value.snapshot.answerKeyRevisionId !== value.key.id || JSON.stringify(value.snapshot.scoringPolicy) !== JSON.stringify(value.paper.scoring) || !Number.isFinite(Date.parse(value.frozenAt))) {
       throw new Error("Invalid or mismatched frozen attempt content");
     }
     validatePaperRevision(value.paper, value.questions, value.key);
@@ -792,6 +792,13 @@ var PracticeDeskEngine = (() => {
     if (!Number.isFinite(wallNowMs)) throw new Error("Invalid restoration time");
     const aligned = wallNowMs < saved.clockMs ? rebaseSession({ ...saved, visible: false }, wallNowMs) : transition(paper, { ...saved, visible: false }, { type: "TICK", nowMs: wallNowMs });
     return { state: { ...aligned, visible }, expired: aligned.status === "completed" };
+  }
+  function chooseRecovered(stored, mirror) {
+    if (!stored) return mirror;
+    if (!mirror || stored.id !== mirror.id) return stored;
+    if (stored.finishedAt && !mirror.finishedAt) return stored;
+    if (mirror.finishedAt && !stored.finishedAt) return mirror;
+    return (mirror.updatedAt ?? 0) > (stored.updatedAt ?? 0) ? mirror : stored;
   }
 
   // src/engine/scoring.ts
@@ -945,7 +952,7 @@ var PracticeDeskEngine = (() => {
       if (!a.frozen) {
         const { paper, key, questions } = context(a);
         const mode = a.mode === "strict" ? "exam-simulation" : a.mode === "single" ? "section-practice" : "full-paper-practice";
-        a.frozen = freezeAttempt(paper, key, questions, mode, new Date(wallNowMs).toISOString());
+        a.frozen = freezeAttempt(paper, key, questions, mode, new Date(wallNowMs).toISOString(), "ssc-cgl");
       }
       if (!verifiedBundles.has(a.frozen)) {
         assertFrozenContent(a.frozen);
@@ -1029,7 +1036,7 @@ var PracticeDeskEngine = (() => {
       const { paper, key, questions } = context(a);
       return scoreAttempt(paper, key, questions, responseRecords(a), calculatedAt);
     }
-    return { context, capture, assetMatches, ensure, restore, event, answer, score, importedCount: imported.length, questionCount: imported.reduce((n, e) => n + e.questions.length, 0) };
+    return { context, capture, assetMatches, chooseRecovered, ensure, restore, event, answer, score, importedCount: imported.length, questionCount: imported.reduce((n, e) => n + e.questions.length, 0) };
   }
   return __toCommonJS(browser_engine_exports);
 })();
@@ -1054,7 +1061,6 @@ for(const [pid,source] of Object.entries(SOURCE_PAPERS)){
 const SECTIONS=['Reasoning','General Awareness','Quantitative Aptitude','English'];
 const DB_NAME='practiceDesk.history.v1', DB_VERSION=1;
 const SETTINGS_LS='practiceDesk.settings.v3', MIRROR_LS='practiceDesk.active.mirror.v3', FALLBACK_LS='practiceDesk.attempts.fallback.v3';
-const LEGACY_LS='practiceDesk.v2';
 const $=id=>document.getElementById(id), letters='abcd';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtText=s=>esc(s).replace(/\n/g,'<br>');
@@ -1150,26 +1156,87 @@ function dbDelete(store,id){return new Promise((res,rej)=>{const tx=db.transacti
 function queueWrite(job){writeChain=writeChain.catch(()=>{}).then(job).catch(e=>{db=null;storageMode='localStorage';storageMessage='IndexedDB write failed. Switched to localStorage; export a backup.';fallbackSave();saveActiveMirror();if(!autosaveWarned){notify('Storage problem: using browser fallback. Export a backup.');autosaveWarned=true;}console.warn('Practice Desk storage',e)});return writeChain;}
 function fallbackSave(){const data=JSON.stringify(attempts);if(!setLS(FALLBACK_LS,data)){storageMessage='Browser storage full or blocked. Export a backup.';notify(storageMessage);}}
 function savePrefs(){setLS(SETTINGS_LS,JSON.stringify(prefs));if(db)queueWrite(()=>dbPut('settings',{key:'preferences',value:prefs}));}
-function saveActiveMirror(){if(active&&!active.finishedAt)setLS(MIRROR_LS,JSON.stringify(active));else removeLS(MIRROR_LS);}
+function saveActiveMirror(){if(active&&!active.finishedAt){
+ if(!setLS(MIRROR_LS,JSON.stringify(active))){
+  storageMessage='Active-session emergency copy could not be saved. Export a backup.';
+  if(!autosaveWarned){notify(storageMessage);autosaveWarned=true;}
+ }
+}else removeLS(MIRROR_LS);}
 function upsertAttempt(a){a.updatedAt=now();const idx=attempts.findIndex(x=>x.id===a.id);if(idx<0)attempts.push(a);else attempts[idx]=a;saveActiveMirror();if(db){const snap=structuredClone(a);queueWrite(()=>dbPut('attempts',snap));}else fallbackSave();}
 async function removeAttempt(id){attempts=attempts.filter(a=>a.id!==id);if(db)await queueWrite(()=>dbDelete('attempts',id));if(!db)fallbackSave();if(resultId===id)resultId=null;if(active?.id===id){active=null;saveActiveMirror();}}
-function legacyConvert(x,i){return {id:`legacy-${x.date||Date.now()}-${i}-${x.paper}`,schema:2,paperId:x.paper,mode:x.mode,startedAt:null,finishedAt:x.date||Date.now(),updatedAt:x.date||Date.now(),legacySummary:true,singleSection:x.mode==='single'?0:0,answers:{},flags:{},timing:{},sections:[],scoreSnapshot:{score:x.score||0,max:x.eligible||0,answered:x.attempted||0,raw:null,right:null,wrong:null,skip:null,invalid:null,rows:[]}};}
-async function initStorage(){let localPrefs=safeJSON(getLS(SETTINGS_LS),null);if(localPrefs?.paper&&getPaper(localPrefs.paper))prefs={...prefs,...localPrefs};let mirror=safeJSON(getLS(MIRROR_LS),null);let fromLegacy=safeJSON(getLS(LEGACY_LS),null);try{db=await openDB();storageMode='indexeddb';let [list,settings]=await Promise.all([dbGetAll('attempts'),dbRead('settings','preferences')]);attempts=list||[];if(!localPrefs&&settings?.value&&getPaper(settings.value.paper))prefs={...prefs,...settings.value};
- // Recover attempts that were saved to localStorage during a prior IndexedDB failure.
- let fallback=safeJSON(getLS(FALLBACK_LS),[]);if(Array.isArray(fallback)){for(let item of fallback){if(!item||!getPaper(item.paperId)||!item.id)continue;let old=attempts.find(x=>x.id===item.id);if(!old||(!old.finishedAt||item.finishedAt)&&((item.updatedAt||0)>(old.updatedAt||0))){attempts=attempts.filter(x=>x.id!==item.id);attempts.push(item);await dbPut('attempts',item);}}}
- if(fromLegacy&&!getLS('practiceDesk.migration.v3')){if(Array.isArray(fromLegacy.history))for(let [i,h]of fromLegacy.history.entries()){if(!attempts.some(a=>a.paperId===h.paper&&a.finishedAt===h.date))attempts.push(legacyConvert(h,i));}if(fromLegacy.active?.paper&&getPaper(fromLegacy.active.paper)){let a=fromLegacy.active;a.id=`migrated-v2-${a.startedAt}`;a.paperId=a.paper;a.updatedAt=a.finishedAt||Date.now();a.sections=a.mode==='strict'?[{section:a.section||0,startAt:a.startedAt+(a.section||0)*900000,endAt:null,reason:null}]:[{section:a.mode==='single'?a.singleSection:a.section||0,startAt:a.startedAt,endAt:null,reason:null}];a.timing={};a.schema=2;a.legacyTiming=true;if(a.finishedAt){a.scoreSnapshot=calculate(a);}if(!attempts.some(y=>y.id===a.id))attempts.push(a);}setLS('practiceDesk.migration.v3','1');for(let a of attempts)await dbPut('attempts',a);}
- let live=attempts.filter(a=>!a.finishedAt).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));if(mirror?.paperId&&getPaper(mirror.paperId)){let existing=attempts.find(a=>a.id===mirror.id);
- if(!existing||(!existing.finishedAt&&(mirror.updatedAt||0)>(existing.updatedAt||0))){
-  attempts=attempts.filter(a=>a.id!==mirror.id);attempts.push(mirror);await dbPut('attempts',mirror);
+/** Check local records before allowing them to influence the visible history or live state. */
+function usableStored(a){
+ if(!a||typeof a!=='object'||typeof a.id!=='string'||!getPaper(a.paperId)||
+   !['strict','free','single'].includes(a.mode))return false;
+ if(!a.finishedAt&&(!Number.isFinite(a.startedAt)||!Array.isArray(a.cursors)||
+   !Array.isArray(a.sections)||!a.sections.length))return false;
+ if(a.schema>=4){
+  if(!a.frozen||!a.frozenDisplay)return false;
+  try{GENERIC_ENGINE.context(a);}catch{return false;}
  }
- live=attempts.filter(a=>!a.finishedAt).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+ return true;
 }
- active=live[0]||null;if(active&&!active.sections?.length){active.sections=[{section:active.section||0,startAt:active.startedAt,endAt:null,reason:null}];}
- if(active){active.section=active.mode==='strict'?segment(active).section:active.section;cursor=active.cursors?.[active.section]||0;
-  if(active.engineState)GENERIC_ENGINE.restore(active,now(),tabVisible);}
- }catch(e){db=null;storageMode='localStorage';storageMessage='IndexedDB unavailable; using localStorage fallback. Export backups regularly.';attempts=safeJSON(getLS(FALLBACK_LS),[])||[];if(!Array.isArray(attempts))attempts=[];if(mirror?.paperId){const previous=attempts.find(a=>a.id===mirror.id);if(!previous||(!previous.finishedAt&&(mirror.updatedAt||0)>(previous.updatedAt||0))){attempts=attempts.filter(a=>a.id!==mirror.id);attempts.push(mirror);}}if(fromLegacy&&!getLS('practiceDesk.migration.fallback.v3')){for(let [i,h]of (fromLegacy.history||[]).entries())if(!attempts.some(a=>a.paperId===h.paper&&a.finishedAt===h.date))attempts.push(legacyConvert(h,i));if(fromLegacy.active?.paper){let a=fromLegacy.active;a.id=`migrated-v2-${a.startedAt}`;a.paperId=a.paper;a.sections=a.mode==='strict'?[{section:a.section||0,startAt:a.startedAt+(a.section||0)*900000,endAt:null,reason:null}]:[{section:a.section||0,startAt:a.startedAt,endAt:null,reason:null}];a.timing={};a.schema=2;a.legacyTiming=true;if(a.finishedAt)a.scoreSnapshot=calculate(a);if(!attempts.some(x=>x.id===a.id))attempts.push(a);}setLS('practiceDesk.migration.fallback.v3','1');fallbackSave();}
- active=attempts.filter(a=>!a.finishedAt).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0))[0]||null;if(active){cursor=active.cursors?.[active.section]||0;if(active.engineState)GENERIC_ENGINE.restore(active,now(),tabVisible);}console.warn('IndexedDB unavailable',e);}
- applyDisplayPrefs();savePrefs();saveActiveMirror();screen='home';settleTimer();render();}
+function restoreActive(){
+ const live=attempts.filter(a=>!a.finishedAt).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+ active=live[0]||null;
+ if(!active)return;
+ active.section=active.mode==='strict'?segment(active).section:active.section;
+ cursor=active.cursors?.[active.section]||0;
+ try{if(active.engineState)GENERIC_ENGINE.restore(active,now(),tabVisible);}
+ catch(e){console.warn('Practice Desk session recovery',e);storageMessage='The last active session could not be restored. Saved completed attempts remain available.';active=null;}
+}
+async function initStorage(){
+ const localPrefs=safeJSON(getLS(SETTINGS_LS),null);
+ if(localPrefs?.paper&&getPaper(localPrefs.paper))prefs={...prefs,...localPrefs};
+ const rawMirror=safeJSON(getLS(MIRROR_LS),null),mirror=usableStored(rawMirror)?rawMirror:null;
+ try{
+  db=await openDB();storageMode='indexeddb';
+  const [list,settings]=await Promise.all([dbGetAll('attempts'),dbRead('settings','preferences')]);
+  attempts=Array.isArray(list)?list.filter(usableStored):[];
+  if(!localPrefs&&settings?.value&&getPaper(settings.value.paper))prefs={...prefs,...settings.value};
+  // Replay the fallback journal first; each attempt is committed in a single IDB transaction.
+  const fallback=safeJSON(getLS(FALLBACK_LS),[]);
+  if(Array.isArray(fallback)){
+   for(const item of fallback){
+    if(!usableStored(item))continue;
+    const previous=attempts.find(a=>a.id===item.id);
+    const winner=GENERIC_ENGINE.chooseRecovered(previous,item);
+    if(winner!==previous){
+     attempts=attempts.filter(a=>a.id!==item.id);
+     attempts.push(winner);
+     await dbPut('attempts',structuredClone(winner));
+    }
+   }
+  }
+  // Do not replay an old fallback journal after deleting a completed attempt.
+  removeLS(FALLBACK_LS);
+  if(mirror&&!mirror.finishedAt){
+   const previous=attempts.find(a=>a.id===mirror.id);
+   const winner=GENERIC_ENGINE.chooseRecovered(previous,mirror);
+   if(winner!==previous){
+    attempts=attempts.filter(a=>a.id!==mirror.id);
+    attempts.push(winner);
+    await dbPut('attempts',structuredClone(winner));
+   }
+  }
+ }catch(e){
+  db=null;storageMode='localStorage';
+  storageMessage='IndexedDB is unavailable; using localStorage fallback. Export backups regularly.';
+  const fallback=safeJSON(getLS(FALLBACK_LS),[]);
+  attempts=Array.isArray(fallback)?fallback.filter(usableStored):[];
+  if(mirror&&!mirror.finishedAt){
+   const previous=attempts.find(a=>a.id===mirror.id);
+   const winner=GENERIC_ENGINE.chooseRecovered(previous,mirror);
+   if(winner!==previous){
+    attempts=attempts.filter(a=>a.id!==mirror.id);
+    attempts.push(winner);
+   }
+  }
+  console.warn('IndexedDB unavailable',e);
+ }
+ restoreActive();
+ applyDisplayPrefs();savePrefs();saveActiveMirror();screen='home';settleTimer();render();
+}
 function onPageNav(){if(screen==='exam')stopTracking();}
 function goHome(){if(screen==='exam'&&active&&!confirm('Return to library? The test timer will keep running.'))return;onPageNav();screen='home';render();}
 function goHistory(){onPageNav();screen='history';render();}
@@ -1255,7 +1322,7 @@ function historyTrendHTML(all){let eligible=all.filter(a=>!a.legacySummary&&summ
  return `<section class="panel pad trend-panel"><div class="row between"><div><h3 style="margin:0">Progress across comparable attempts</h3><p class="fine" style="margin:5px 0 0">${esc(desc)} · ${same.length} latest attempts</p></div><b>${vals[vals.length-1].toFixed(1)}% <span class="fine">latest adjusted score</span></b></div><svg class="trend-chart" role="img" aria-label="Comparable attempt scores: ${vals.map(v=>v.toFixed(1)+' percent').join(', ')}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><path d="M ${margin} ${h-margin} H ${w-margin}" stroke="#dce6f0" stroke-width="2"/><path d="${path}" fill="none" stroke="#2468a7" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>${xy.map(([x,y])=>`<circle cx="${x}" cy="${y}" r="5" fill="#fff" stroke="#2468a7" stroke-width="3"/>`).join('')}</svg><div class="row between fine"><span>${dateText(same[0].finishedAt)}</span><span>Scores shown as % of audited maximum</span><span>${dateText(same[same.length-1].finishedAt)}</span></div></section>`;
 }
 function drawHistory(){let list=groupedHistory(),all=attempts.filter(a=>a.finishedAt&&a.endedBy!=='discarded');let full=all.filter(a=>!a.legacySummary);let best=all.length?all.reduce((a,b)=>{let sc=summaryFor(a),sd=summaryFor(b);return sc.max&&sd.max&&sc.score/sc.max>sd.score/sd.max?a:b;},all[0]):null;
- $('app').innerHTML=`<div class="row between results-header"><div><h1>History & insights</h1><p class="muted">Revisit attempts, compare results and safeguard your data.</p></div><button class="btn" id="historyHome">← Test library</button></div><div class="history-metrics"><div class="panel"><strong>${all.length}</strong><span>Completed attempts</span></div><div class="panel"><strong>${new Set(all.map(a=>a.paperId)).size}</strong><span>Papers practised</span></div><div class="panel"><strong>${best?(100*summaryFor(best).score/(summaryFor(best).max||1)).toFixed(1)+'%':'—'}</strong><span>Best adjusted percentage*</span></div></div>${historyTrendHTML(all)}${historyPrioritiesHTML(all)}<div class="homegrid history-layout"><section class="panel pad"><div class="row between"><h2 style="margin:0">Saved attempts</h2><div class="row compact"><select id="historyFilter" aria-label="Filter papers"><option value="all">All papers</option>${Object.values(PAPERS).map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select><select id="historySort" aria-label="Sort attempts"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select></div></div>${list.length?list.map(a=>{let r=summaryFor(a);return `<div class="attempt-row"><button class="attempt-open" data-attempt="${esc(a.id)}"><span><b>${esc(paperFor(a)?.name||a.paperId)}</b><small>${dateText(a.finishedAt)} · ${esc(modeName(a.mode))}${a.legacySummary?' · Legacy summary':''}</small></span><span class="attempt-score">${signed(r.score)} <small>/ ${r.max}</small></span></button><button class="iconbtn" data-delete="${esc(a.id)}" aria-label="Delete attempt" title="Delete attempt">✕</button></div>`;}).join(''):'<p class="fine" style="margin-top:15px">No completed attempts match this filter.</p>'}</section><aside class="stack"><section class="panel pad"><h3>Storage & safety</h3><div class="storage-line"><span class="storage-indicator ${storageMode==='indexeddb'?'success':'warn'}"></span><b>${storageMode==='indexeddb'?'IndexedDB ready':'Browser fallback'}</b></div><p class="fine">${storageMode==='indexeddb'?'Attempts are saved as indexed records in your browser.':'IndexedDB is unavailable. History is being stored in localStorage and may be more fragile.'} Export backups to protect your history from clearing browser data or moving to another device.</p>${storageMessage?`<p class="fine bad">${esc(storageMessage)}</p>`:''}<p class="fine" id="quotaInfo">Checking storage quota…</p><div class="row"><button class="btn" id="requestPersist">Protect stored data</button></div></section><section class="panel pad"><h3>Backup & management</h3><div class="management-actions"><button class="btn primary" id="exportBackup">Export history (.json)</button><button class="btn" id="importBackup">Import / merge backup</button><input id="importFile" type="file" accept="application/json,.json" hidden><button class="btn danger" id="clearHistory" ${all.length?'':'disabled'}>Delete all completed attempts</button></div><p class="fine">Import merges by attempt ID. Existing attempts are preserved unless the imported copy is newer. Backups contain your choices and timings, not the question bank.</p></section></aside></div><p class="fine">*Maximum marks differ between full-paper and single-section attempts; compare normalized percentages and the same test mode for meaningful progress.</p><footer>Practice Desk · Your data stays on this device unless you export it.</footer>`;
+ $('app').innerHTML=`<div class="row between results-header"><div><h1>History & insights</h1><p class="muted">Revisit attempts, compare results and safeguard your data.</p></div><button class="btn" id="historyHome">← Test library</button></div><div class="history-metrics"><div class="panel"><strong>${all.length}</strong><span>Completed attempts</span></div><div class="panel"><strong>${new Set(all.map(a=>a.paperId)).size}</strong><span>Papers practised</span></div><div class="panel"><strong>${best?(100*summaryFor(best).score/(summaryFor(best).max||1)).toFixed(1)+'%':'—'}</strong><span>Best adjusted percentage*</span></div></div>${historyTrendHTML(all)}${historyPrioritiesHTML(all)}<div class="homegrid history-layout"><section class="panel pad"><div class="row between"><h2 style="margin:0">Saved attempts</h2><div class="row compact"><select id="historyFilter" aria-label="Filter papers"><option value="all">All papers</option>${Object.values(PAPERS).map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select><select id="historySort" aria-label="Sort attempts"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select></div></div>${list.length?list.map(a=>{let r=summaryFor(a);return `<div class="attempt-row"><button class="attempt-open" data-attempt="${esc(a.id)}"><span><b>${esc(paperFor(a)?.name||a.paperId)}</b><small>${dateText(a.finishedAt)} · ${esc(modeName(a.mode))}${a.legacySummary?' · Legacy summary':''}</small></span><span class="attempt-score">${signed(r.score)} <small>/ ${r.max}</small></span></button><button class="iconbtn" data-delete="${esc(a.id)}" aria-label="Delete attempt" title="Delete attempt">✕</button></div>`;}).join(''):'<p class="fine" style="margin-top:15px">No completed attempts match this filter.</p>'}</section><aside class="stack"><section class="panel pad"><h3>Storage & safety</h3><div class="storage-line"><span class="storage-indicator ${storageMode==='indexeddb'?'success':'warn'}"></span><b>${storageMode==='indexeddb'?'IndexedDB ready':'Browser fallback'}</b></div><p class="fine">${storageMode==='indexeddb'?'Attempts are saved as indexed records in your browser.':'IndexedDB is unavailable. History is being stored in localStorage and may be more fragile.'} Export backups to protect your history from clearing browser data or moving to another device.</p>${storageMessage?`<p class="fine bad">${esc(storageMessage)}</p>`:''}<p class="fine" id="quotaInfo">Checking storage quota…</p><div class="row"><button class="btn" id="requestPersist">Protect stored data</button></div></section><section class="panel pad"><h3>Backup & management</h3><div class="management-actions"><button class="btn primary" id="exportBackup">Export history (.json)</button><button class="btn" id="importBackup">Import / merge backup</button><input id="importFile" type="file" accept="application/json,.json" hidden><button class="btn danger" id="clearHistory" ${all.length?'':'disabled'}>Delete all completed attempts</button></div><p class="fine">Import merges by attempt ID. Existing attempts are preserved unless the imported copy is newer. Backups include answers, timing, frozen question text and scoring rules; image bytes are not duplicated.</p></section></aside></div><p class="fine">*Maximum marks differ between full-paper and single-section attempts; compare normalized percentages and the same test mode for meaningful progress.</p><footer>Practice Desk · Your data stays on this device unless you export it.</footer>`;
  $('historyHome').onclick=goHome;$('historyFilter').value=historyFilter;$('historySort').value=historySort;$('historyFilter').onchange=e=>{historyFilter=e.target.value;render();};$('historySort').onchange=e=>{historySort=e.target.value;render();};document.querySelectorAll('[data-attempt]').forEach(el=>el.onclick=()=>openResults(el.dataset.attempt));document.querySelectorAll('[data-delete]').forEach(el=>el.onclick=()=>deleteOne(el.dataset.delete));$('exportBackup').onclick=exportBackup;$('importBackup').onclick=()=>$('importFile').click();$('importFile').onchange=e=>importBackup(e.target.files?.[0]);$('clearHistory').onclick=clearHistory;$('requestPersist').onclick=requestPersist;showQuota();}
 async function showQuota(){let node=$('quotaInfo');if(!node)return;try{if(!navigator.storage?.estimate){node.textContent='Storage estimate unavailable for this browser/file.';return;}let x=await navigator.storage.estimate();if(!node.isConnected)return;node.textContent=`Browser storage: ${((x.usage||0)/1048576).toFixed(1)} MiB used${x.quota?` of approximately ${(x.quota/1048576).toFixed(0)} MiB quota`:''}.`;}catch{node.textContent='Storage estimate unavailable.';}}
 async function requestPersist(){if(!navigator.storage?.persist){notify('Persistent storage request is unavailable for this browser/file.');return;}try{let ok=await navigator.storage.persist();notify(ok?'Browser granted persistent storage.':'Browser did not grant persistent storage. Keep manual backups.');}catch{notify('Storage persistence cannot be requested here. Keep backups.');}}
@@ -1269,8 +1336,8 @@ function validImported(a){if(!a||typeof a!=='object'||typeof a.id!=='string'||a.
  if(a.frozen){try{GENERIC_ENGINE.context(a);}catch{return false;}}
  for(const [n,v] of Object.entries(a.answers||{})){if(!/^(?:[1-9]|[1-9][0-9]|100)$/.test(n)||!letters.includes(v))return false;}
  return true;}
-function exportBackup(){let payload={format:'practice-desk-backup',version:1,exportedAt:new Date().toISOString(),attempts:attempts.filter(a=>a.finishedAt),preferences:prefs};let content=JSON.stringify(payload,null,2),blob=new Blob([content],{type:'application/json'});let url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='Practice_Desk_Backup_'+new Date().toISOString().slice(0,10)+'.json';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);notify('History backup exported.');}
-async function importBackup(file){if(!file)return;if(file.size>30*1024*1024){notify('Backup file is too large (30 MB maximum).');return;}let data;try{data=JSON.parse(await file.text());}catch{notify('This is not a valid JSON backup.');return;}if(data?.format!=='practice-desk-backup'||data.version!==1||!Array.isArray(data.attempts)){notify('Not a compatible Practice Desk backup.');return;}let good=data.attempts.filter(validImported).slice(0,5000);for(let a of good){if(!a.scoreSnapshot)a.scoreSnapshot=calculate(a);}if(!good.length){notify('No valid attempts found in this backup.');return;}if(!confirm(`Merge ${good.length} saved attempt(s) into this browser? Matching IDs will use the newer saved copy. The current test, if any, will be preserved.`))return;let count=0;for(let a of good){if(a.id===active?.id)continue;let old=record(a.id);if(!old||(a.updatedAt||0)>(old.updatedAt||0)){await upsertImported(a);count++;}}render();notify(`Imported ${count} new or newer attempts.`);}
+function exportBackup(){let payload={format:'practice-desk-backup',version:2,exportedAt:new Date().toISOString(),attempts:attempts.filter(a=>a.finishedAt),preferences:prefs};let content=JSON.stringify(payload,null,2),blob=new Blob([content],{type:'application/json'});let url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='Practice_Desk_Backup_'+new Date().toISOString().slice(0,10)+'.json';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);notify('History backup exported.');}
+async function importBackup(file){if(!file)return;if(file.size>150*1024*1024){notify('Backup file is too large (150 MB maximum).');return;}let data;try{data=JSON.parse(await file.text());}catch{notify('This is not a valid JSON backup.');return;}if(data?.format!=='practice-desk-backup'||data.version!==2||!Array.isArray(data.attempts)){notify('Not a compatible Practice Desk backup.');return;}let good=data.attempts.filter(validImported).slice(0,5000);for(let a of good){if(!a.scoreSnapshot)a.scoreSnapshot=calculate(a);}if(!good.length){notify('No valid attempts found in this backup.');return;}if(!confirm(`Merge ${good.length} saved attempt(s) into this browser? Matching IDs will use the newer saved copy. The current test, if any, will be preserved.`))return;let count=0;for(let a of good){if(a.id===active?.id)continue;let old=record(a.id);if(!old){await upsertImported(a);count++;}}render();notify(`Imported ${count} new or newer attempts.`);}
 async function upsertImported(a){let ix=attempts.findIndex(x=>x.id===a.id);if(ix>=0)attempts[ix]=a;else attempts.push(a);if(db)await queueWrite(()=>dbPut('attempts',structuredClone(a)));else fallbackSave();}
 async function deleteOne(id){const a=record(id);if(!a||!a.finishedAt)return;if(!confirm(`Permanently delete this saved attempt from ${dateText(a.finishedAt)}? Export a backup first if needed.`))return;await removeAttempt(id);render();notify('Attempt deleted.');}
 async function clearHistory(){let list=attempts.filter(a=>a.finishedAt);if(!list.length)return;if(!confirm(`Delete all ${list.length} completed attempt records from this browser? This cannot be undone without a backup.`))return;if(!confirm('Confirm permanent deletion of saved test history?'))return;for(let a of list)await removeAttempt(a.id);render();notify('Completed attempt history deleted.');}
