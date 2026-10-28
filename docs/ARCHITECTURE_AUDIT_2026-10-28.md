@@ -893,3 +893,51 @@ This addendum does not alter the original audit above. It records decisions for 
 **Deployment contract:** For now the production artifact must be a **single self-contained HTML file that opens directly via a double-click (`file://`) and runs without localhost or internet access**. Keep source files modular (TypeScript, CSS, HTML, content) and bundle them at build time. A hosted/PWA workflow may be evaluated later only if its benefits outweigh the lost simplicity; it is not required for this phase.
 
 **Quality and release discipline:** Preserve the initial working application on Git branch `baseline/v11`. Develop improvements in deliberate, testable slices; keep the test suite small and fast, centred on complete domain contracts, mathematical correctness, timing, persistence and content validity. Move the transitional `legacy.ts` runtime towards strict TypeScript rather than extending its unchecked architecture. Release each phase only after the offline HTML builds, its invariants pass and the primary exam flows are exercised.
+
+---
+
+## Pass 1 implementation addendum — domain foundation
+
+**Scope:** typed domain contracts and strict source-content validation. This pass intentionally does not replace the v11 runtime or alter the generated offline HTML.
+
+### Canonical domain model
+
+The new `src/domain/` contracts separate the concepts that must not share mutable identity:
+
+- **Exam definition** — stable examination family and display metadata.
+- **Paper definition** — stable paper identity and source provenance.
+- **Paper revision** — immutable paper structure, ordered sections, navigation/timing/scoring policies, content fingerprint, and an exact answer-key revision reference.
+- **Question revision** — immutable wording, response type, option identities, stimulus/media references, editorial status and content fingerprint.
+- **Answer-key revision** — separate correct responses and per-question scoring overrides. Question content itself contains no answer key.
+- **Stimuli and assets** — shared passages, tables, charts and image assets can be referenced rather than copied into every question.
+- **Attempt snapshot** — records the exact paper revision, answer-key revision and scoring policy used when the attempt began.
+
+IDs are branded by entity kind in TypeScript. Revision hashes use a SHA-256 contract. Runtime validation and hash generation for future imported exam packages will be completed when those boundaries are implemented; declaring a type does not itself verify a hash.
+
+### Generic question and exam policies
+
+The canonical question union covers single-choice, multiple-select, numeric entry, true/false, matching and free response. Timing, navigation and scoring are configuration data rather than SSC-specific constants. The current source JSON still uses four-option MCQs; that is intentionally a **legacy import format**, not a limitation of the new generic domain model.
+
+### Source-content integrity
+
+The existing source/patch/solution schema is now explicitly typed. A dependency-free TypeScript validator checks required fields, unknown fields, answer-key labels, question-number uniqueness, image data URIs, source references, passage references and patch/solution links. The build and tests use the same validator; the previous duplicate JavaScript validator has been removed.
+
+The lean content tests now derive counts from the actual bank rather than assuming exactly five papers, 100 questions per paper or 50 solutions per paper. This avoids baking the current CGL collection size into the test architecture.
+
+### Deliberate boundaries
+
+- Existing source questions, review patches, solutions and the generated v11 HTML remain unchanged.
+- The new domain contracts are not yet wired into the live runtime. Pass 2 will introduce the adapter and exam/session engine; this separation avoids a risky all-at-once rewrite.
+- No data migration or backward-compatibility work is required for this new application.
+- The released artifact must continue to open directly from `file://`, without a server or network dependencies.
+- UI/UX is not frozen: revisit it after the generic model is connected, focusing on accessibility, clarity, keyboard/focus behaviour and responsive exam workflows rather than decorative redesign.
+
+### Pass 1 acceptance checks
+
+- TypeScript checks the new contracts under strict mode, including exact optional-property semantics.
+- Source content validation runs before the single-file build.
+- Tests cover current-bank integrity, malformed records and dangling references.
+- CI must pass, and rebuilding must leave the generated HTML unchanged.
+
+**Next:** Pass 2 maps the existing CGL papers into these contracts and builds the configurable state/timing/navigation/scoring engine. Pass 3 then implements immutable history and persistence around the frozen attempt snapshot. The UI should be reviewed after those contracts are integrated, before final release acceptance.
+
