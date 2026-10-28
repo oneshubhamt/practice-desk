@@ -102,7 +102,7 @@ export function builtinCglPackages(sources: SourcePaperBank, patches: ReviewPatc
      const stemId = `${paper.paperId}:q:${n}:stem`;
      const asImage=(id:string, uri:string):ImageAsset=>({
        id:id as ImageAsset["id"],mediaType:(uri.match(/^data:(image\/[a-z]+);/)?.[1]??"image/webp") as ImageAsset["mediaType"],
-       dataUri:uri,contentHash:sha256(uri),
+       dataUri:uri,contentHash:sha256(uri) as ImageAsset["contentHash"],
      });
      if (merged.images.stem) assets.push(asImage(stemId,merged.images.stem));
      merged.images.options?.forEach((uri,i)=>{
