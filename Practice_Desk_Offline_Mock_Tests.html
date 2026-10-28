@@ -458,14 +458,7 @@ var PracticeDeskEngine = (() => {
   }
 
   // src/content/import-cgl.ts
-  function sha256(input) {
-    const bytes = new TextEncoder().encode(input);
-    const padded = new Uint8Array(Math.ceil((bytes.length + 9) / 64) * 64);
-    padded.set(bytes);
-    padded[bytes.length] = 128;
-    const view = new DataView(padded.buffer);
-    view.setUint32(padded.length - 8, Math.floor(bytes.length * 8 / 4294967296));
-    view.setUint32(padded.length - 4, bytes.length * 8 >>> 0);
+  var SHA_CONSTANTS = (() => {
     const primes = [];
     for (let candidate = 2; primes.length < 64; candidate++) {
       let prime = true;
@@ -477,8 +470,21 @@ var PracticeDeskEngine = (() => {
       }
       if (prime) primes.push(candidate);
     }
-    const k = new Uint32Array(primes.map((p) => Math.floor(Math.cbrt(p) % 1 * 2 ** 32) >>> 0));
-    const h = new Uint32Array(primes.slice(0, 8).map((p) => Math.floor(Math.sqrt(p) % 1 * 2 ** 32) >>> 0));
+    return {
+      k: new Uint32Array(primes.map((p) => Math.floor(Math.cbrt(p) % 1 * 2 ** 32) >>> 0)),
+      initial: new Uint32Array(primes.slice(0, 8).map((p) => Math.floor(Math.sqrt(p) % 1 * 2 ** 32) >>> 0))
+    };
+  })();
+  function sha256(input) {
+    const bytes = new TextEncoder().encode(input);
+    const padded = new Uint8Array(Math.ceil((bytes.length + 9) / 64) * 64);
+    padded.set(bytes);
+    padded[bytes.length] = 128;
+    const view = new DataView(padded.buffer);
+    view.setUint32(padded.length - 8, Math.floor(bytes.length * 8 / 4294967296));
+    view.setUint32(padded.length - 4, bytes.length * 8 >>> 0);
+    const { k, initial } = SHA_CONSTANTS;
+    const h = new Uint32Array(initial);
     const w = new Uint32Array(64);
     const rotr = (x, n) => x >>> n | x << 32 - n;
     for (let offset = 0; offset < padded.length; offset += 64) {
@@ -1036,7 +1042,7 @@ function frozenPaper(a){
  const archived=displayRevisions.get(a.frozen?.snapshot?.paperRevisionId)?.displayPaper;
  const current=getPaper(a.paperId);
  const result={...a.frozenDisplay,questions:a.frozenDisplay.questions.map(q=>({
-   ...q,images:archived?.questions?.find(x=>x.n===q.n)?.images||
+   ...q,images:archived?.questions?.find(x=>x.n===q.n&&x.stem===q.stem&&JSON.stringify(x.opts)===JSON.stringify(q.opts))?.images||
      (GENERIC_ENGINE.assetMatches(a,q.n)?current?.questions?.find(x=>x.n===q.n)?.images||{}:{})
  }))};
  frozenPaperCache.set(a.frozenDisplay,result);
@@ -1116,7 +1122,8 @@ function captureDisplayArchive(a){
  const id=a.frozen?.snapshot?.paperRevisionId;
  if(!id||displayRevisions.has(id))return;
  const paper=getPaper(a.paperId);
- if(paper)displayRevisions.set(id,GENERIC_ENGINE.archiveDisplayRevision(id,a.paperId,paper));
+ if(paper&&a.frozen?.questions?.every(q=>GENERIC_ENGINE.assetMatches(a,Number(q.questionId.split(':').at(-1)))))
+  displayRevisions.set(id,GENERIC_ENGINE.archiveDisplayRevision(id,a.paperId,paper));
 }
 function dbDelete(store,id){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).delete(id);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);tx.onabort=()=>rej(tx.error);});}
 function queueWrite(job){writeChain=writeChain.catch(()=>{}).then(job).catch(e=>{db=null;storageMode='localStorage';storageMessage='IndexedDB write failed. Switched to localStorage; export a backup.';fallbackSave();saveActiveMirror();if(!autosaveWarned){notify('Storage problem: using browser fallback. Export a backup.');autosaveWarned=true;}console.warn('Practice Desk storage',e)});return writeChain;}
@@ -1309,7 +1316,7 @@ function dbImportBackupBatch(records,revisions){
  return new Promise((resolve,reject)=>{
   const tx=db.transaction(['attempts','revisions'],'readwrite');
   const store=tx.objectStore('attempts'),archive=tx.objectStore('revisions');
-  for(const revision of revisions)archive.put(structuredClone(revision));
+  for(const revision of revisions)if(!savedRevisionIds.has(revision.id))archive.add(structuredClone(revision));
   for(const attempt of records)store.add(structuredClone(attempt));
   tx.oncomplete=()=>resolve();
   tx.onerror=()=>reject(tx.error||Error('Backup transaction failed'));
