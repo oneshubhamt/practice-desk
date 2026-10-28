@@ -1084,3 +1084,12 @@ Added:
 - Archived image bytes are only attached when the frozen stem/options match the archived question. An older attempt cannot silently acquire media from a changed source revision.
 - Import preserves existing IndexedDB revision archives: a backup can add a missing revision, but cannot overwrite the already stored revision with the same ID.
 - Added append-only backup-merge regression coverage. CI and offline distribution verification required before closure.
+
+
+### Pass 3 closure — 28 October 2026
+
+**Status: implementation complete, automated CI-green.** Latest verified CI: run 40641863622. Immutable revision references and scoring snapshots are stored with attempts, media-bearing display revisions are shared across attempts in IndexedDB, and the version-2 backup exports both in-progress and completed attempts plus referenced revision archives with a SHA-256 integrity manifest. Restore handles elapsed wall time, paused modes, stale mirrors and backward clock changes. Returning from browser back-forward cache now resumes visibility/timer accounting.
+
+**Acceptance limits:** CI validates compilation, content integrity, scoring, frozen-history contracts, restore logic, backup checksums/merge behaviour and one-file build. Actual reopening under `file://` across Chromium, Firefox and Safari, quota-exhaustion recovery, and multi-tab concurrency have not been independently exercised and remain release acceptance checks. A checksum detects accidental backup alteration; it does not authenticate an untrusted source or encrypt user data.
+
+**Next:** Pass 4 — fully exam-agnostic UI, remove remaining SSC-specific presentation assumptions, accessibility, responsive testing and end-to-end browser/file:// acceptance. `main` and `baseline/v11` remain untouched.
