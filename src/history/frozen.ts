@@ -1,0 +1,81 @@
+import { validatePaperRevision, validateAnswerKeyRevision } from "../domain/validate.ts";
+import { transition, rebaseSession } from "../engine/session.ts";
+import type { SessionState } from "../engine/session.ts";
+import type { PaperRevision } from "../domain/exam.js";
+import type { AnswerKeyRevision } from "../domain/answer-key.js";
+import type { QuestionRevision } from "../domain/question.js";
+import type { AttemptSnapshot, AttemptMode } from "../domain/attempt.js";
+import type { ExamId } from "../domain/ids.js";
+
+/**
+ * The content used to score an attempt belongs to that attempt, not to the
+ * mutable library selection or a later application release. All fields are
+ * ordinary structured-clone-compatible data so IndexedDB writes remain atomic.
+ * Image bytes belong to the separately packaged asset bank; no repeated base64.
+ */
+export interface FrozenAttemptContent {
+  readonly schema: 1;
+  readonly frozenAt: string;
+  readonly snapshot: AttemptSnapshot;
+  readonly paper: PaperRevision;
+  readonly key: AnswerKeyRevision;
+  readonly questions: readonly QuestionRevision[];
+}
+export function freezeAttempt(
+  paper: PaperRevision, key: AnswerKeyRevision, questions: readonly QuestionRevision[],
+  mode: AttemptMode, frozenAt: string,
+): FrozenAttemptContent {
+  validateAnswerKeyRevision(key, questions);
+  validatePaperRevision(paper, questions, key);
+  const snapshot: AttemptSnapshot = {
+    examId: "ssc-cgl" as ExamId, paperId: paper.paperId, paperRevisionId: paper.id,
+    answerKeyRevisionId: key.id, scoringPolicy: paper.scoring, mode,
+  };
+  return structuredClone({ schema: 1 as const, frozenAt, snapshot, paper, key, questions });
+}
+export function assertFrozenContent(value: FrozenAttemptContent): FrozenAttemptContent {
+  if (!value || value.schema !== 1 ||
+      !value.snapshot || !value.paper || !value.key || !Array.isArray(value.questions) ||
+      value.snapshot.paperId !== value.paper.paperId ||
+      value.snapshot.paperRevisionId !== value.paper.id ||
+      value.snapshot.answerKeyRevisionId !== value.key.id ||
+      JSON.stringify(value.snapshot.scoringPolicy) !== JSON.stringify(value.paper.scoring) ||
+      !Number.isFinite(Date.parse(value.frozenAt))) {
+    throw new Error("Invalid or mismatched frozen attempt content");
+  }
+  validatePaperRevision(value.paper, value.questions, value.key);
+  return value;
+}
+export interface RestoredSession {
+  readonly state: SessionState;
+  readonly expired: boolean;
+}
+/**
+ * On a file:// reopen, the saved clock origin is no longer a safe monotonic
+ * source. Account for actual wall-clock absence without charging foreground
+ * question time; paused attempts remain paused. Never extend a deadline.
+ */
+export function restoreSession(
+  paper: PaperRevision, saved: SessionState, wallNowMs: number, visible: boolean,
+): RestoredSession {
+  if (!Number.isFinite(wallNowMs)) throw new Error("Invalid restoration time");
+  const aligned = wallNowMs < saved.clockMs
+    ? rebaseSession({ ...saved, visible: false }, wallNowMs)
+    : transition(paper, { ...saved, visible: false }, { type: "TICK", nowMs: wallNowMs });
+  return { state: { ...aligned, visible }, expired: aligned.status === "completed" };
+}
+export interface RecoveryCandidate {
+  readonly id: string;
+  readonly startedAt?: number | null;
+  readonly finishedAt?: number | null;
+  readonly updatedAt?: number | null;
+  readonly schema?: number;
+}
+/** Terminal records win over stale in-progress mirrors for the same ID. */
+export function chooseRecovered<T extends RecoveryCandidate>(stored: T | undefined, mirror: T | undefined): T | undefined {
+  if (!stored) return mirror;
+  if (!mirror || stored.id !== mirror.id) return stored;
+  if (stored.finishedAt && !mirror.finishedAt) return stored;
+  if (mirror.finishedAt && !stored.finishedAt) return mirror;
+  return (mirror.updatedAt ?? 0) > (stored.updatedAt ?? 0) ? mirror : stored;
+}
