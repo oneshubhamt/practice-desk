@@ -5,6 +5,8 @@ import type { QuestionRevisionId } from "../domain/ids.js";
 import type { SessionEvent } from "../engine/session.ts";
 import { restoreSession, chooseRecovered, assertFrozenContent } from "../history/frozen.ts";
 import { scoreAttempt } from "../engine/scoring.ts";
+import { makeBackup, verifyBackup, planBackupMerge } from "../history/backup.ts";
+import { validateResponse } from "../engine/response.ts";
 import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
 
 const escapeText=(s:unknown):string=>String(s??"").replace(/[&<>"']/g,c=>
@@ -69,6 +71,56 @@ type RecordItem=PackageRecord|GenericAttempt;
 const isAttempt=(x:unknown):x is GenericAttempt=>!!x&&typeof x==="object"&&(x as GenericAttempt).recordType==="generic-attempt";
 const isPackage=(x:unknown):x is PackageRecord=>!!x&&typeof x==="object"&&(x as PackageRecord).recordType==="generic-package";
 
+/** Treat browser records and exported JSON as untrusted until their frozen inputs and responses validate. */
+export function validateGenericStoredRecord(value:unknown):RecordItem {
+ if(isPackage(value)){
+   if(typeof value.id!=="string" || value.id!=="generic-package:"+value.bundle?.paper?.id)
+     throw new Error("Invalid imported package record identity");
+   validateExamPackage(value.bundle);
+   return value;
+ }
+ if(!isAttempt(value))throw new Error("Unsupported generic history record");
+ if(typeof value.id!=="string"||!value.id||value.id.length>200||
+    typeof value.packageId!=="string"||
+    !Number.isFinite(value.startedAt)||!Number.isFinite(value.updatedAt)||
+    (value.finishedAt!==null&&!Number.isFinite(value.finishedAt))||
+    !value.state||!Array.isArray(value.state.responses)||
+    !Number.isFinite(value.state.clockMs)||
+    !Number.isInteger(value.state.sectionIndex)||!Number.isInteger(value.state.questionIndex))
+   throw new Error("Invalid generic attempt record");
+ assertFrozenContent(value.frozen);
+ const paper=value.frozen.paper;
+ if(value.packageId!==paper.id)throw new Error("Attempt references an incorrect revision");
+ const current=paper.sections[value.state.sectionIndex]?.questionRevisionIds[value.state.questionIndex];
+ if(!current)throw new Error("Attempt cursor references an unknown question");
+ if(value.finishedAt!==null && value.state.status!=="completed")
+   throw new Error("Completed attempt has an unfinished session");
+ if(value.finishedAt===null && value.state.status==="completed")
+   throw new Error("Unfinished attempt has a completed session");
+ const questionMap=new Map(value.frozen.questions.map(q=>[q.id,q]));
+ const allowed=new Set(paper.sections.flatMap(section=>section.questionRevisionIds));
+ const seen=new Set<string>();
+ for(const row of value.state.responses){
+   if(!row || typeof row.questionRevisionId!=="string" ||
+      !allowed.has(row.questionRevisionId) || seen.has(row.questionRevisionId)||
+      !Number.isFinite(row.timeSpentMs)||row.timeSpentMs<0 ||
+      !Number.isInteger(row.answerChangeCount)||row.answerChangeCount<0)
+     throw new Error("Invalid saved response");
+   seen.add(row.questionRevisionId);
+   if(row.response)validateResponse(questionMap.get(row.questionRevisionId)!,row.response);
+ }
+ if(value.finishedAt!==null){
+   if(!value.result)throw new Error("Completed attempt has no immutable score");
+   const recalculated=scoreAttempt(paper,value.frozen.key,value.frozen.questions,value.state.responses,
+     value.result.snapshot.calculatedAt);
+   const fields=["earnedMarks","positiveMarks","penaltyMarks","correctCount","incorrectCount","unansweredCount","excludedCount"] as const;
+   if(fields.some(field=>value.result!.snapshot[field]!==recalculated.snapshot[field]))
+     throw new Error("Completed attempt score does not match its frozen inputs");
+ }
+ return value;
+}
+
+
 export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patches:ReviewPatchBank,
  solutions:Readonly<Record<string,Readonly<Record<string,string>>>>,onBack:()=>void):()=>void{
  const packages=new Map<string,ExamPackage>(builtinCglPackages(sources,patches,solutions).map(p=>[p.paper.id,p]));
@@ -78,6 +130,49 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  let db:IDBDatabase|null=null, warning="",disposed=false, writeQueue=Promise.resolve();
  let lastTimerSave=0;
  const storageKey="practiceDesk.generic.fallback.v1", mirrorKey="practiceDesk.generic.active.v1";
+ const downloadBackup=()=>{
+   const recordsToExport=[...records.values()].filter(record=>isPackage(record)||isAttempt(record));
+   const backup=makeBackup(recordsToExport,[],null,new Date().toISOString());
+   const blob=new Blob([JSON.stringify(backup)],{type:"application/json"});
+   const url=URL.createObjectURL(blob);
+   const link=document.createElement("a");link.href=url;
+   link.download="Practice_Desk_Generic_Backup_"+new Date().toISOString().slice(0,10)+".json";
+   document.body.append(link);link.click();link.remove();
+   window.setTimeout(()=>URL.revokeObjectURL(url),2000);
+ };
+ const importHistory=async(file:File)=>{
+   if(file.size>75*1024*1024)throw new Error("History backup exceeds 75 MiB");
+   const backup=verifyBackup(JSON.parse(await file.text()));
+   if(backup.revisions.length)throw new Error("This archive contains CGL display records; import those from History");
+   const imported=backup.attempts.map(record=>validateGenericStoredRecord(record));
+   if(!imported.length)throw new Error("Backup contains no generic records");
+   const incoming=planBackupMerge([...records.values()],imported,attempt?.id);
+   if(!incoming.length){warning="These records are already present.";draw();return;}
+   if(!confirm("Import "+incoming.length+" generic history records? Existing saved attempts will not be replaced."))return;
+   // IDB add is atomic for the entire batch. Never modify in-memory records before commit.
+   await writeQueue;
+   if(db){
+     await new Promise<void>((resolve,reject)=>{
+       const transaction=db!.transaction("attempts","readwrite");
+       const store=transaction.objectStore("attempts");
+       for(const record of incoming)store.add(structuredClone(record));
+       transaction.oncomplete=()=>resolve();
+       transaction.onerror=()=>reject(transaction.error??new Error("Import failed"));
+       transaction.onabort=()=>reject(transaction.error??new Error("Import aborted"));
+     });
+   }else{
+     const replacement=[...records.values(),...incoming];
+     localStorage.setItem(storageKey,JSON.stringify(replacement));
+   }
+   for(const record of incoming){
+     records.set(record.id,record);
+     if(isPackage(record) && !packages.has(record.bundle.paper.id))
+       packages.set(record.bundle.paper.id,record.bundle);
+   }
+   warning="Imported "+incoming.length+" records; existing attempts preserved.";
+   draw();
+ };
+
  const writeMirror=(record:GenericAttempt)=>{
    try{localStorage.setItem(mirrorKey,JSON.stringify(record));}
    catch{warning="Emergency session mirror could not be saved. Use a history export.";}
@@ -123,7 +218,10 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
     '<p class="fine">Built-in CGL papers remain available. You can also import any validated Practice Desk exam JSON file.</p>'+
     '<div class="row"><button class="btn primary" id="g-start">Start exam</button><button class="btn" id="g-import">Import JSON</button></div>'+
     '<input type="file" id="g-file" accept=".json,application/json" hidden></section>'+
-    '<section class="panel pad"><h2>Generic exam history</h2>'+
+    '<section class="panel pad"><div class="row between"><h2>Generic exam history</h2>'+
+    '<div class="row"><button class="btn" id="g-export-history">Export</button>'+
+    '<button class="btn" id="g-import-history">Import</button></div></div>'+
+    '<input type="file" id="g-history-file" accept=".json,application/json" hidden>'+
     (attempts.length?attempts.slice(0,30).map(a=>'<button class="generic-history" data-attempt="'+escapeText(a.id)+'">'+
       escapeText(packages.get(a.packageId)?.title??a.frozen.paper.paperId)+' · '+new Date(a.startedAt).toLocaleString()+
       '<small>'+(a.finishedAt?" Completed":" Resume")+'</small></button>').join(""):'<p class="fine">No attempts yet.</p>')+
@@ -207,6 +305,12 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        attempt=startGenericAttempt(p,id,now());save(attempt);warning="";view="exam";draw();
      };
      root.querySelector<HTMLButtonElement>("#g-import")!.onclick=()=>root.querySelector<HTMLInputElement>("#g-file")?.click();
+     root.querySelector<HTMLButtonElement>("#g-export-history")!.onclick=downloadBackup;
+     root.querySelector<HTMLButtonElement>("#g-import-history")!.onclick=()=>root.querySelector<HTMLInputElement>("#g-history-file")?.click();
+     root.querySelector<HTMLInputElement>("#g-history-file")!.onchange=async e=>{
+       const file=(e.target as HTMLInputElement).files?.[0];if(!file)return;
+       try{await importHistory(file);}catch(error){notice(error instanceof Error?error.message:"History import failed");}
+     };
      root.querySelector<HTMLInputElement>("#g-file")!.onchange=async e=>{
        const file=(e.target as HTMLInputElement).files?.[0];if(!file)return;
        if(file.size>25*1024*1024){notice("Exam package exceeds the 25 MiB import limit.");return;}
@@ -334,12 +438,15 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          const valid=validateExamPackage(record.bundle);
          if(!packages.has(valid.paper.id)){packages.set(valid.paper.id,valid);records.set(record.id,record);}
        }catch(error){console.warn("Invalid saved package",error);}}
-       else if(isAttempt(record))records.set(record.id,record);
+       else if(isAttempt(record)){
+         try{validateGenericStoredRecord(record);records.set(record.id,record);}
+         catch(error){console.warn("Invalid saved generic attempt",error);}
+       }
      }
      try{
        const mirror=JSON.parse(localStorage.getItem(mirrorKey)??"null") as unknown;
        if(isAttempt(mirror)){
-         assertFrozenContent(mirror.frozen);
+         validateGenericStoredRecord(mirror);
          const existing=records.get(mirror.id);
          const winner=chooseRecovered(isAttempt(existing)?existing:undefined,mirror);
          if(winner===mirror){records.set(mirror.id,mirror);save(mirror);}
@@ -351,7 +458,10 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        const recordsFromStorage=JSON.parse(localStorage.getItem(storageKey)??"[]") as unknown[];
        for(const record of recordsFromStorage){
          if(isPackage(record)){try{packages.set(record.bundle.paper.id,validateExamPackage(record.bundle));records.set(record.id,record);}catch{}}
-         else if(isAttempt(record))records.set(record.id,record);
+         else if(isAttempt(record)){
+         try{validateGenericStoredRecord(record);records.set(record.id,record);}
+         catch(error){console.warn("Invalid saved generic attempt",error);}
+       }
        }
      }catch{warning="Browser storage is unavailable; attempts may not survive a reload.";}
    }

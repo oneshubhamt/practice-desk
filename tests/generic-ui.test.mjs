@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { renderGenericControls, examTimeRemaining } from "../src/app/generic-ui.ts";
+import { renderGenericControls, examTimeRemaining, validateGenericStoredRecord } from "../src/app/generic-ui.ts";
 import { readableAnswer } from "../src/app/exam-package.ts";
 
 const stub={format:"practice-desk-exam",version:1,examId:"example",
@@ -39,4 +39,9 @@ test("review answers resolve human labels for all six question kinds",()=>{
  assert.equal(readableAnswer(q({kind:"matching",leftItems:[{id:"l",text:"Left"}],rightItems:[{id:"r",text:"Right"}]}),
   {kind:"matching",pairs:[{leftId:"l",rightId:"r"}]}),"Left → Right");
  assert.equal(readableAnswer(q({kind:"free-response"}),{kind:"free-response",evaluation:"manual"}),"Manual assessment required");
+});
+
+test("generic history rejects malformed stored records before import",()=>{
+ assert.throws(()=>validateGenericStoredRecord({recordType:"generic-attempt",id:"fake"}),/Invalid generic/);
+ assert.throws(()=>validateGenericStoredRecord({recordType:"generic-package",id:"wrong",bundle:{paper:{id:"x"}}}),/identity/);
 });
