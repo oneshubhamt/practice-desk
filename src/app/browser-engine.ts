@@ -25,12 +25,14 @@ interface LegacyAttempt {
 }
 export function createBrowserEngine(sources: SourcePaperBank, patches: ReviewPatchBank) {
   const imported = importCglBank(sources, patches);
+  const verifiedBundles = new WeakSet<object>();
   const editions = new Map(imported.map(e => [
     e.paper.paperId + (e.paper.edition === "reviewed" ? "-reviewed" : ""), e,
   ]));
   function context(attempt: LegacyAttempt) {
     if (attempt.frozen) {
-      const frozen = assertFrozenContent(attempt.frozen);
+      const frozen = attempt.frozen;
+      if (!verifiedBundles.has(frozen)) { assertFrozenContent(frozen); verifiedBundles.add(frozen); }
       if (frozen.paper.paperId !== attempt.paperId.replace(/-reviewed$/, "")) throw new Error("Frozen paper identity mismatch");
       return frozen;
     }
@@ -50,7 +52,14 @@ export function createBrowserEngine(sources: SourcePaperBank, patches: ReviewPat
       const mode = a.mode === "strict" ? "exam-simulation" : a.mode === "single" ? "section-practice" : "full-paper-practice";
       a.frozen = freezeAttempt(paper, key, questions, mode, new Date(wallNowMs).toISOString());
     }
-    return assertFrozenContent(a.frozen);
+    if (!verifiedBundles.has(a.frozen)) { assertFrozenContent(a.frozen); verifiedBundles.add(a.frozen); }
+    return a.frozen;
+  }
+  /** Prevent a later changed figure from being displayed beside frozen older text. */
+  function assetMatches(a: LegacyAttempt, questionNumber: number): boolean {
+    const live = editions.get(a.paperId)?.questions.find(q => Number(q.questionId.split(":").at(-1)) === questionNumber);
+    const frozen = a.frozen?.questions.find(q => Number(q.questionId.split(":").at(-1)) === questionNumber);
+    return !!live && !!frozen && live.id === frozen.id;
   }
   function responseRecords(a: LegacyAttempt): AttemptResponseRecord[] {
     const { questions } = context(a);
@@ -117,5 +126,5 @@ export function createBrowserEngine(sources: SourcePaperBank, patches: ReviewPat
     const { paper, key, questions } = context(a);
     return scoreAttempt(paper, key, questions, responseRecords(a), calculatedAt);
   }
-  return { context, capture, ensure, restore, event, answer, score, importedCount: imported.length, questionCount: imported.reduce((n,e)=>n+e.questions.length,0) };
+  return { context, capture, assetMatches, ensure, restore, event, answer, score, importedCount: imported.length, questionCount: imported.reduce((n,e)=>n+e.questions.length,0) };
 }

@@ -1025,3 +1025,14 @@ Added:
 **Explicit scope boundary:** The current interface is still CGL-shaped; its presentation assumes 4 sections and 25 questions, and the existing timer widgets remain. Those are UI generalization tasks for Pass 4, not evidence that the generic engine supports only CGL. No claim of a manual browser smoke test or generic non-CGL end-to-end UI acceptance is made.
 
 **Next:** Pass 3 immutable history, frozen revision snapshots, persistence and restore. Preserve the single-file offline build and CI gate.
+
+
+### Pass 3 — durable attempt snapshots and restored sessions (implementation checkpoint)
+
+- `src/history/frozen.ts` creates and validates a structured-cloneable copy of paper/key/question revisions and immutable scoring policies per attempt. Historical totals use that frozen content even if the current library changes.
+- The user-facing UI preserves an image-free text/options/explanation snapshot of the attempted paper. Image bytes are not duplicated per attempt; original embedded images are only shown when their question revision still matches. Older changed figures may therefore be unavailable in historical review; a deduplicated immutable media archive is future work.
+- New live attempts use schema 4 and freeze content before the first answer. Existing IDB `attempts` store retains one atomic record per attempt. No database schema upgrade or migration is needed.
+- Session restoration accounts for wall-clock absence without fictitiously charging foreground question time; paused sessions do not accrue time. Timer expiry still uses the existing CGL UI presentation.
+- Hardened active mirror recovery so a stale in-progress mirror cannot resurrect a completed IndexedDB record; queued deletes now follow pending writes.
+- Completed score snapshots are not silently recalculated when importing backups.
+- Pending acceptance: strict CI, restore regressions and testing the file:// reopen flow on supported browsers.

@@ -9,7 +9,7 @@ for(const [pid,source] of Object.entries(SOURCE_PAPERS)){
   source.name=source.name+' · Original (PDF)';source.edition='original';source.familyId=pid;source.versionLabel='Original';PAPERS[pid]=source;
   const overrides=REVIEW_PATCHES[pid]||{};
   const reviewed={...source,id:pid+'-reviewed',name:source.name.replace(' · Original (PDF)',' · Reviewed & Corrected'),edition:'reviewed',versionLabel:'Reviewed & Corrected',familyId:pid,
-    questions:source.questions.map(q=>({...q,status:(q.status==='invalid'||q.status==='caution')?'caution':'ok',...overrides[q.n],edition:'reviewed'}))};
+    questions:source.questions.map(q=>({...q,...overrides[q.n],edition:'reviewed'}))};
   PAPERS[reviewed.id]=reviewed;
 }
 
@@ -31,6 +31,26 @@ const getLS=(k)=>{try{return localStorage.getItem(k)}catch{return null}};
 const setLS=(k,v)=>{try{localStorage.setItem(k,v);return true}catch{return false}};
 const removeLS=k=>{try{localStorage.removeItem(k)}catch{}};
 const getPaper=id=>PAPERS[id];
+const frozenPaperCache=new WeakMap();
+function freezeDisplay(a){
+ const paper=getPaper(a.paperId);
+ if(!paper)throw Error('Cannot freeze missing paper');
+ return {id:paper.id,name:paper.name,kind:paper.kind,date:paper.date,edition:paper.edition,
+ familyId:paper.familyId,versionLabel:paper.versionLabel,passages:structuredClone(paper.passages),
+ questions:paper.questions.map(q=>({...q,images:{}}))};
+}
+function frozenPaper(a){
+ if(!a?.frozenDisplay)return null;
+ const cached=frozenPaperCache.get(a.frozenDisplay);
+ if(cached)return cached;
+ const current=getPaper(a.paperId);
+ const result={...a.frozenDisplay,questions:a.frozenDisplay.questions.map(q=>({
+   ...q,images:GENERIC_ENGINE.assetMatches(a,q.n)
+     ? current?.questions?.find(x=>x.n===q.n)?.images||{} : {}
+ }))};
+ frozenPaperCache.set(a.frozenDisplay,result);
+ return result;
+}
 const modeName=m=>({strict:'Exam simulation',free:'Full paper · flexible',single:'Single-section practice'})[m]||m;
 const questionSection=n=>Math.floor((n-1)/25);
 let prefs={paper:'cgl-2026-10-08-reviewed',mode:'strict',section:0,displayTheme:'light',fontScale:100};
@@ -49,7 +69,7 @@ async function toggleFullscreen(){if(document.fullscreenElement){try{await docum
 function initDisplayTools(){const root=$('displayTools');$('displayTrigger').onclick=()=>{displayOpen=!displayOpen;updateDisplayPanel();};$('displayClose').onclick=()=>{displayOpen=false;updateDisplayPanel();};$('fontLess').onclick=()=>setFontScale(-5);$('fontMore').onclick=()=>setFontScale(5);$('fontReset').onclick=()=>{prefs.fontScale=100;savePrefs();applyDisplayPrefs();};$('themeLight').onclick=()=>setDisplayTheme('light');$('themeDark').onclick=()=>setDisplayTheme('dark');$('displayFullscreen').onclick=toggleFullscreen;document.addEventListener('pointerdown',e=>{if(displayOpen&&!root.contains(e.target)){displayOpen=false;updateDisplayPanel();}});document.addEventListener('fullscreenchange',()=>{if(document.fullscreenElement){nativeFullscreen=true;setImmersive(true);}else if(nativeFullscreen){nativeFullscreen=false;setImmersive(false);}else updateDisplayPanel();});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&displayOpen){displayOpen=false;updateDisplayPanel();}});applyDisplayPrefs();}
 function notify(message){const n=$('toast');if(n){n.textContent=message;n.classList.add('show');clearTimeout(notify.timeout);notify.timeout=setTimeout(()=>n.classList.remove('show'),3600);}}
 function record(id){return attempts.find(a=>a.id===id)||null;}
-function paperFor(a){return getPaper(a?.paperId||prefs.paper);}
+function paperFor(a){return frozenPaper(a)||getPaper(a?.paperId||prefs.paper);}
 function questionsFor(a,s){return paperFor(a)?.questions?.slice(s*25,(s+1)*25)||[];}
 function sectionsFor(a){return a.mode==='single'?[a.singleSection]:[0,1,2,3];}
 function includedQs(a){return sectionsFor(a).flatMap(s=>questionsFor(a,s));}
@@ -71,7 +91,7 @@ function calculate(a){if(!paperFor(a))return a.scoreSnapshot||{score:0,raw:0,max
  return out;}
 function summaryFor(a){if(a.scoreSnapshot)return a.scoreSnapshot;return calculate(a);}
 const newId=()=>{try{return crypto.randomUUID()}catch{return `test-${now()}-${Math.random().toString(36).slice(2,11)}`}};
-function makeAttempt(){const t=now(),a={id:newId(),schema:3,paperId:prefs.paper,mode:prefs.mode,singleSection:prefs.section,startedAt:t,finishedAt:null,updatedAt:t,section: prefs.mode==='single'?prefs.section:0,sections:[],answers:{},flags:{},cursors:[0,0,0,0],timing:{},totalVisits:0,pausedAt:null,pausedMs:0,endedBy:'',scoreSnapshot:null};if(a.mode==='strict')a.sections.push({section:0,startAt:t,endAt:null,reason:null});else a.sections.push({section:a.section,startAt:t,endAt:null,reason:null});return a;}
+function makeAttempt(){const t=now(),a={id:newId(),schema:4,paperId:prefs.paper,mode:prefs.mode,singleSection:prefs.section,startedAt:t,finishedAt:null,updatedAt:t,section: prefs.mode==='single'?prefs.section:0,sections:[],answers:{},flags:{},cursors:[0,0,0,0],timing:{},totalVisits:0,pausedAt:null,pausedMs:0,endedBy:'',scoreSnapshot:null};if(a.mode==='strict')a.sections.push({section:0,startAt:t,endAt:null,reason:null});else a.sections.push({section:a.section,startAt:t,endAt:null,reason:null});return a;}
 function ensureTimeStat(a,q){let key=String(q);if(!a.timing)a.timing={};if(!a.timing[key])a.timing[key]={ms:0,visits:0,changes:0,firstAnswerAt:null,lastAnswerAt:null};return a.timing[key];}
 function capQTime(end){if(!active||!trackedQuestion||!trackStart||!tabVisible)return 0;let cap=end;const seg=active.mode==='strict'?active.sections[active.sections.length-1]:null;if(seg)cap=Math.min(cap,seg.endAt||seg.startAt+900000);else if(active.mode==='single'||active.mode==='free'){let due=active.startedAt+(active.mode==='single'?900000:3600000)+active.pausedMs;cap=Math.min(cap,due);}return Math.max(0,cap-trackStart);}
 function stopTracking(t=now()){if(trackedQuestion&&active&&trackStart&&tabVisible){ensureTimeStat(active,trackedQuestion).ms+=capQTime(t);active.updatedAt=t;}trackedQuestion=null;trackStart=0;}
@@ -94,25 +114,31 @@ function dbDelete(store,id){return new Promise((res,rej)=>{const tx=db.transacti
 function queueWrite(job){writeChain=writeChain.catch(()=>{}).then(job).catch(e=>{db=null;storageMode='localStorage';storageMessage='IndexedDB write failed. Switched to localStorage; export a backup.';fallbackSave();saveActiveMirror();if(!autosaveWarned){notify('Storage problem: using browser fallback. Export a backup.');autosaveWarned=true;}console.warn('Practice Desk storage',e)});return writeChain;}
 function fallbackSave(){const data=JSON.stringify(attempts);if(!setLS(FALLBACK_LS,data)){storageMessage='Browser storage full or blocked. Export a backup.';notify(storageMessage);}}
 function savePrefs(){setLS(SETTINGS_LS,JSON.stringify(prefs));if(db)queueWrite(()=>dbPut('settings',{key:'preferences',value:prefs}));}
-function saveActiveMirror(){if(active)setLS(MIRROR_LS,JSON.stringify(active));else removeLS(MIRROR_LS);}
+function saveActiveMirror(){if(active&&!active.finishedAt)setLS(MIRROR_LS,JSON.stringify(active));else removeLS(MIRROR_LS);}
 function upsertAttempt(a){a.updatedAt=now();const idx=attempts.findIndex(x=>x.id===a.id);if(idx<0)attempts.push(a);else attempts[idx]=a;saveActiveMirror();if(db){const snap=structuredClone(a);queueWrite(()=>dbPut('attempts',snap));}else fallbackSave();}
-async function removeAttempt(id){if(db)await queueWrite(()=>dbDelete('attempts',id));attempts=attempts.filter(a=>a.id!==id);if(!db)fallbackSave();if(resultId===id)resultId=null;if(active?.id===id){active=null;saveActiveMirror();}}
+async function removeAttempt(id){attempts=attempts.filter(a=>a.id!==id);if(db)await queueWrite(()=>dbDelete('attempts',id));if(!db)fallbackSave();if(resultId===id)resultId=null;if(active?.id===id){active=null;saveActiveMirror();}}
 function legacyConvert(x,i){return {id:`legacy-${x.date||Date.now()}-${i}-${x.paper}`,schema:2,paperId:x.paper,mode:x.mode,startedAt:null,finishedAt:x.date||Date.now(),updatedAt:x.date||Date.now(),legacySummary:true,singleSection:x.mode==='single'?0:0,answers:{},flags:{},timing:{},sections:[],scoreSnapshot:{score:x.score||0,max:x.eligible||0,answered:x.attempted||0,raw:null,right:null,wrong:null,skip:null,invalid:null,rows:[]}};}
 async function initStorage(){let localPrefs=safeJSON(getLS(SETTINGS_LS),null);if(localPrefs?.paper&&getPaper(localPrefs.paper))prefs={...prefs,...localPrefs};let mirror=safeJSON(getLS(MIRROR_LS),null);let fromLegacy=safeJSON(getLS(LEGACY_LS),null);try{db=await openDB();storageMode='indexeddb';let [list,settings]=await Promise.all([dbGetAll('attempts'),dbRead('settings','preferences')]);attempts=list||[];if(!localPrefs&&settings?.value&&getPaper(settings.value.paper))prefs={...prefs,...settings.value};
  // Recover attempts that were saved to localStorage during a prior IndexedDB failure.
- let fallback=safeJSON(getLS(FALLBACK_LS),[]);if(Array.isArray(fallback)){for(let item of fallback){if(!item||!getPaper(item.paperId)||!item.id)continue;let old=attempts.find(x=>x.id===item.id);if(!old||(item.updatedAt||0)>(old.updatedAt||0)){attempts=attempts.filter(x=>x.id!==item.id);attempts.push(item);await dbPut('attempts',item);}}}
+ let fallback=safeJSON(getLS(FALLBACK_LS),[]);if(Array.isArray(fallback)){for(let item of fallback){if(!item||!getPaper(item.paperId)||!item.id)continue;let old=attempts.find(x=>x.id===item.id);if(!old||(!old.finishedAt||item.finishedAt)&&((item.updatedAt||0)>(old.updatedAt||0))){attempts=attempts.filter(x=>x.id!==item.id);attempts.push(item);await dbPut('attempts',item);}}}
  if(fromLegacy&&!getLS('practiceDesk.migration.v3')){if(Array.isArray(fromLegacy.history))for(let [i,h]of fromLegacy.history.entries()){if(!attempts.some(a=>a.paperId===h.paper&&a.finishedAt===h.date))attempts.push(legacyConvert(h,i));}if(fromLegacy.active?.paper&&getPaper(fromLegacy.active.paper)){let a=fromLegacy.active;a.id=`migrated-v2-${a.startedAt}`;a.paperId=a.paper;a.updatedAt=a.finishedAt||Date.now();a.sections=a.mode==='strict'?[{section:a.section||0,startAt:a.startedAt+(a.section||0)*900000,endAt:null,reason:null}]:[{section:a.mode==='single'?a.singleSection:a.section||0,startAt:a.startedAt,endAt:null,reason:null}];a.timing={};a.schema=2;a.legacyTiming=true;if(a.finishedAt){a.scoreSnapshot=calculate(a);}if(!attempts.some(y=>y.id===a.id))attempts.push(a);}setLS('practiceDesk.migration.v3','1');for(let a of attempts)await dbPut('attempts',a);}
- let live=attempts.filter(a=>!a.finishedAt).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));if(mirror?.paperId&&getPaper(mirror.paperId)&&(!live[0]||(mirror.updatedAt||0)>(live[0].updatedAt||0))){attempts=attempts.filter(a=>a.id!==mirror.id);attempts.push(mirror);await dbPut('attempts',mirror);live=[mirror];}
+ let live=attempts.filter(a=>!a.finishedAt).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));if(mirror?.paperId&&getPaper(mirror.paperId)){let existing=attempts.find(a=>a.id===mirror.id);
+ if(!existing||(!existing.finishedAt&&(mirror.updatedAt||0)>(existing.updatedAt||0))){
+  attempts=attempts.filter(a=>a.id!==mirror.id);attempts.push(mirror);await dbPut('attempts',mirror);
+ }
+ live=attempts.filter(a=>!a.finishedAt).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+}
  active=live[0]||null;if(active&&!active.sections?.length){active.sections=[{section:active.section||0,startAt:active.startedAt,endAt:null,reason:null}];}
- if(active){active.section=active.mode==='strict'?segment(active).section:active.section;cursor=active.cursors?.[active.section]||0;}
- }catch(e){db=null;storageMode='localStorage';storageMessage='IndexedDB unavailable; using localStorage fallback. Export backups regularly.';attempts=safeJSON(getLS(FALLBACK_LS),[])||[];if(!Array.isArray(attempts))attempts=[];if(mirror?.paperId){attempts=attempts.filter(a=>a.id!==mirror.id);attempts.push(mirror);}if(fromLegacy&&!getLS('practiceDesk.migration.fallback.v3')){for(let [i,h]of (fromLegacy.history||[]).entries())if(!attempts.some(a=>a.paperId===h.paper&&a.finishedAt===h.date))attempts.push(legacyConvert(h,i));if(fromLegacy.active?.paper){let a=fromLegacy.active;a.id=`migrated-v2-${a.startedAt}`;a.paperId=a.paper;a.sections=a.mode==='strict'?[{section:a.section||0,startAt:a.startedAt+(a.section||0)*900000,endAt:null,reason:null}]:[{section:a.section||0,startAt:a.startedAt,endAt:null,reason:null}];a.timing={};a.schema=2;a.legacyTiming=true;if(a.finishedAt)a.scoreSnapshot=calculate(a);if(!attempts.some(x=>x.id===a.id))attempts.push(a);}setLS('practiceDesk.migration.fallback.v3','1');fallbackSave();}
- active=attempts.filter(a=>!a.finishedAt).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0))[0]||null;if(active)cursor=active.cursors?.[active.section]||0;console.warn('IndexedDB unavailable',e);}
+ if(active){active.section=active.mode==='strict'?segment(active).section:active.section;cursor=active.cursors?.[active.section]||0;
+  if(active.engineState)GENERIC_ENGINE.restore(active,now(),tabVisible);}
+ }catch(e){db=null;storageMode='localStorage';storageMessage='IndexedDB unavailable; using localStorage fallback. Export backups regularly.';attempts=safeJSON(getLS(FALLBACK_LS),[])||[];if(!Array.isArray(attempts))attempts=[];if(mirror?.paperId){const previous=attempts.find(a=>a.id===mirror.id);if(!previous||(!previous.finishedAt&&(mirror.updatedAt||0)>(previous.updatedAt||0))){attempts=attempts.filter(a=>a.id!==mirror.id);attempts.push(mirror);}}if(fromLegacy&&!getLS('practiceDesk.migration.fallback.v3')){for(let [i,h]of (fromLegacy.history||[]).entries())if(!attempts.some(a=>a.paperId===h.paper&&a.finishedAt===h.date))attempts.push(legacyConvert(h,i));if(fromLegacy.active?.paper){let a=fromLegacy.active;a.id=`migrated-v2-${a.startedAt}`;a.paperId=a.paper;a.sections=a.mode==='strict'?[{section:a.section||0,startAt:a.startedAt+(a.section||0)*900000,endAt:null,reason:null}]:[{section:a.section||0,startAt:a.startedAt,endAt:null,reason:null}];a.timing={};a.schema=2;a.legacyTiming=true;if(a.finishedAt)a.scoreSnapshot=calculate(a);if(!attempts.some(x=>x.id===a.id))attempts.push(a);}setLS('practiceDesk.migration.fallback.v3','1');fallbackSave();}
+ active=attempts.filter(a=>!a.finishedAt).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0))[0]||null;if(active){cursor=active.cursors?.[active.section]||0;if(active.engineState)GENERIC_ENGINE.restore(active,now(),tabVisible);}console.warn('IndexedDB unavailable',e);}
  applyDisplayPrefs();savePrefs();saveActiveMirror();screen='home';settleTimer();render();}
 function onPageNav(){if(screen==='exam')stopTracking();}
 function goHome(){if(screen==='exam'&&active&&!confirm('Return to library? The test timer will keep running.'))return;onPageNav();screen='home';render();}
 function goHistory(){onPageNav();screen='history';render();}
 function openResults(id){const a=record(id);if(!a||!a.finishedAt)return;onPageNav();resultId=id;resultTab='insights';reviewFilter='all';screen='results';render();}
-function startNew(){if(active&&!active.finishedAt&&!confirm('A test is still active. Discard it and start a new attempt?'))return;if(active&&!active.finishedAt){const old=active;old.finishedAt=now();old.endedBy='discarded';old.scoreSnapshot=calculate(old);upsertAttempt(old);}active=makeAttempt();GENERIC_ENGINE.ensure(active,now());cursor=0;resultId=null;screen='exam';savePrefs();upsertAttempt(active);render();}
+function startNew(){if(active&&!active.finishedAt&&!confirm('A test is still active. Discard it and start a new attempt?'))return;if(active&&!active.finishedAt){const old=active;old.finishedAt=now();old.endedBy='discarded';old.scoreSnapshot=calculate(old);upsertAttempt(old);}active=makeAttempt();GENERIC_ENGINE.ensure(active,now());active.frozenDisplay=freezeDisplay(active);cursor=0;resultId=null;screen='exam';savePrefs();upsertAttempt(active);render();}
 function resumeAttempt(){if(!active)return;GENERIC_ENGINE.ensure(active,now());screen='exam';cursor=active.cursors?.[active.section]||0;settleTimer();render();}
 function changeQuestion(i){if(!active||i<0||i>24)return;GENERIC_ENGINE.event(active,{type:'NAVIGATE',nowMs:now(),sectionIndex:active.mode==='single'?0:active.section,questionIndex:i});stopTracking();cursor=i;active.cursors[active.section]=i;upsertAttempt(active);render();}
 function changeSection(i){if(active.mode!=='free'||i<0||i>3)return;GENERIC_ENGINE.event(active,{type:'NAVIGATE',nowMs:now(),sectionIndex:i,questionIndex:active.cursors[i]||0});stopTracking();active.section=i;cursor=active.cursors[i]||0;upsertAttempt(active);render();}
@@ -203,17 +229,19 @@ function validImported(a){if(!a||typeof a!=='object'||typeof a.id!=='string'||a.
  if(a.answers&&(typeof a.answers!=='object'||Array.isArray(a.answers)))return false;
  if(a.timing&&(typeof a.timing!=='object'||Array.isArray(a.timing)))return false;
  if(a.sections&&(!Array.isArray(a.sections)||a.sections.length>4))return false;
+ if(a.schema>=4&&(!a.frozen||!a.frozenDisplay||!a.scoreSnapshot))return false;
+ if(a.frozen){try{GENERIC_ENGINE.context(a);}catch{return false;}}
  for(const [n,v] of Object.entries(a.answers||{})){if(!/^(?:[1-9]|[1-9][0-9]|100)$/.test(n)||!letters.includes(v))return false;}
  return true;}
 function exportBackup(){let payload={format:'practice-desk-backup',version:1,exportedAt:new Date().toISOString(),attempts:attempts.filter(a=>a.finishedAt),preferences:prefs};let content=JSON.stringify(payload,null,2),blob=new Blob([content],{type:'application/json'});let url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='Practice_Desk_Backup_'+new Date().toISOString().slice(0,10)+'.json';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);notify('History backup exported.');}
-async function importBackup(file){if(!file)return;if(file.size>30*1024*1024){notify('Backup file is too large (30 MB maximum).');return;}let data;try{data=JSON.parse(await file.text());}catch{notify('This is not a valid JSON backup.');return;}if(data?.format!=='practice-desk-backup'||data.version!==1||!Array.isArray(data.attempts)){notify('Not a compatible Practice Desk backup.');return;}let good=data.attempts.filter(validImported).slice(0,5000);for(let a of good){if(!a.legacySummary){a.scoreSnapshot=calculate(a);}else if(!a.scoreSnapshot||typeof a.scoreSnapshot.score!=='number')a.scoreSnapshot=calculate(a);}if(!good.length){notify('No valid attempts found in this backup.');return;}if(!confirm(`Merge ${good.length} saved attempt(s) into this browser? Matching IDs will use the newer saved copy. The current test, if any, will be preserved.`))return;let count=0;for(let a of good){if(a.id===active?.id)continue;let old=record(a.id);if(!old||(a.updatedAt||0)>(old.updatedAt||0)){await upsertImported(a);count++;}}render();notify(`Imported ${count} new or newer attempts.`);}
+async function importBackup(file){if(!file)return;if(file.size>30*1024*1024){notify('Backup file is too large (30 MB maximum).');return;}let data;try{data=JSON.parse(await file.text());}catch{notify('This is not a valid JSON backup.');return;}if(data?.format!=='practice-desk-backup'||data.version!==1||!Array.isArray(data.attempts)){notify('Not a compatible Practice Desk backup.');return;}let good=data.attempts.filter(validImported).slice(0,5000);for(let a of good){if(!a.scoreSnapshot)a.scoreSnapshot=calculate(a);}if(!good.length){notify('No valid attempts found in this backup.');return;}if(!confirm(`Merge ${good.length} saved attempt(s) into this browser? Matching IDs will use the newer saved copy. The current test, if any, will be preserved.`))return;let count=0;for(let a of good){if(a.id===active?.id)continue;let old=record(a.id);if(!old||(a.updatedAt||0)>(old.updatedAt||0)){await upsertImported(a);count++;}}render();notify(`Imported ${count} new or newer attempts.`);}
 async function upsertImported(a){let ix=attempts.findIndex(x=>x.id===a.id);if(ix>=0)attempts[ix]=a;else attempts.push(a);if(db)await queueWrite(()=>dbPut('attempts',structuredClone(a)));else fallbackSave();}
 async function deleteOne(id){const a=record(id);if(!a||!a.finishedAt)return;if(!confirm(`Permanently delete this saved attempt from ${dateText(a.finishedAt)}? Export a backup first if needed.`))return;await removeAttempt(id);render();notify('Attempt deleted.');}
 async function clearHistory(){let list=attempts.filter(a=>a.finishedAt);if(!list.length)return;if(!confirm(`Delete all ${list.length} completed attempt records from this browser? This cannot be undone without a backup.`))return;if(!confirm('Confirm permanent deletion of saved test history?'))return;for(let a of list)await removeAttempt(a.id);render();notify('Completed attempt history deleted.');}
 function render(){if(screen==='exam'&&active){settleTimer();if(screen!=='exam')return;}if(screen==='exam'&&!active)screen='home';if(screen!=='exam')stopTracking();if(screen==='exam')drawExam();else if(screen==='results')drawResults();else if(screen==='history')drawHistory();else drawHome();}
 document.addEventListener('keydown',e=>{if(screen!=='exam'||!active||active.pausedAt||e.target.closest('input,textarea,select'))return;const k=e.key.toLowerCase();if(k==='f'&&!e.ctrlKey&&!e.altKey&&!e.metaKey){e.preventDefault();toggleFullscreen();return;}if(letters.includes(k)){e.preventDefault();pickAnswer(k);}else if(k==='arrowright'){e.preventDefault();changeQuestion(Math.min(24,cursor+1));}else if(k==='arrowleft'){e.preventDefault();changeQuestion(Math.max(0,cursor-1));}else if(k==='m'){e.preventDefault();markQuestion();}});
 document.addEventListener('visibilitychange',()=>{tabVisible=!document.hidden;if(active)GENERIC_ENGINE.event(active,{type:'VISIBILITY',nowMs:now(),visible:tabVisible});if(!tabVisible){stopTracking();if(active)upsertAttempt(active);}else{settleTimer();if(screen==='exam'){resetTracking();startTracking();render();}}});
-window.addEventListener('pagehide',()=>{if(active){stopTracking();saveActiveMirror();if(!db)fallbackSave();}});
+window.addEventListener('pagehide',()=>{if(active){stopTracking();GENERIC_ENGINE.event(active,{type:'VISIBILITY',nowMs:now(),visible:false});saveActiveMirror();if(!db)fallbackSave();}});
 setInterval(()=>{if(!active)return;let before=active.section;settleTimer();if(!active)return;if(screen==='exam'){if(before!==active.section)render();else updateClock();}},700);
 $('app').innerHTML='<div class="panel pad">Opening your test library…</div>';initDisplayTools();initStorage();
 
