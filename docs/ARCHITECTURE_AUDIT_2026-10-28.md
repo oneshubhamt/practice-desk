@@ -877,3 +877,19 @@ The right next step is an architectural v12 focused on integrity and generic exa
 The strongest indicator of success would be that adding a new examination requires supplying a validated exam configuration and question bank—not changing timer, scoring, history or UI logic.
 
 That is the point at which Practice Desk becomes a reusable examination platform rather than an increasingly sophisticated SSC CGL mock-test file.
+
+---
+
+### Implementation addendum — 28 October 2026
+
+This addendum does not alter the original audit above. It records decisions for the new GitHub-based development workflow.
+
+**CLEAR engineering standard:** The application and its implementation should be **Clean, Lean, Efficient, Elegant, Reliable**. Favour strong TypeScript domain models, explicit invariants, clear module boundaries, predictable performance, deterministic state transitions and robust error handling over unnecessary dependencies or abstractions.
+
+**Data topology is an ongoing design decision:** Assess the shape, ownership and lifecycle of exam definitions, source questions, answer-key revisions, editorial overlays, shared passages/figures, attempts, responses, events, settings and derived analytics. Prefer stable identifiers, immutable references, consistent granularity, referential integrity, sensible indexes and transactional writes. Normalize where it prevents inconsistency; share assets/unchanged questions rather than duplicating them. If profiling, new exam formats or growth show that the topology is suboptimal, **redesign or optimize it**, backed by invariants, validation and measurements—not premature overengineering. There is currently **no data-migration or backward-compatibility burden**.
+
+**UI/UX remains reviewable:** The current design is a stable visual baseline, not a permanent constraint. Reconsider exam-family selection, question interactions, navigation, accessibility, responsive layout and results as functional needs evolve; change UI only when an improvement is justified and verifiable.
+
+**Deployment contract:** For now the production artifact must be a **single self-contained HTML file that opens directly via a double-click (`file://`) and runs without localhost or internet access**. Keep source files modular (TypeScript, CSS, HTML, content) and bundle them at build time. A hosted/PWA workflow may be evaluated later only if its benefits outweigh the lost simplicity; it is not required for this phase.
+
+**Quality and release discipline:** Preserve the initial working application on Git branch `baseline/v11`. Develop improvements in deliberate, testable slices; keep the test suite small and fast, centred on complete domain contracts, mathematical correctness, timing, persistence and content validity. Move the transitional `legacy.ts` runtime towards strict TypeScript rather than extending its unchecked architecture. Release each phase only after the offline HTML builds, its invariants pass and the primary exam flows are exercised.
