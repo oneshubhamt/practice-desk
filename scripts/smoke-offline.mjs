@@ -8,9 +8,11 @@ import { chromium } from "playwright-core";
 const binaries=["google-chrome","google-chrome-stable","chromium","chromium-browser"];
 const chrome=binaries.find(bin=>spawnSync(bin,["--version"],{encoding:"utf8"}).status===0);
 if(!chrome)throw new Error("Chrome/Chromium is required for the file:// smoke test");
+const chromePath=spawnSync("which",[chrome],{encoding:"utf8"}).stdout.trim();
+if(!chromePath.startsWith("/"))throw new Error("Could not resolve Chrome executable");
 const profile=await mkdtemp(join(tmpdir(),"pd-file-smoke-"));
 const file=pathToFileURL(resolve(import.meta.dirname,"..","Practice_Desk_Offline_Mock_Tests.html")).href;
-const browserOptions={executablePath:chrome,headless:true,
+const browserOptions={executablePath:chromePath,headless:true,
  args:["--no-sandbox","--disable-gpu","--disable-dev-shm-usage","--disable-background-networking"]};
 async function launch(){
  const context=await chromium.launchPersistentContext(profile,browserOptions);
