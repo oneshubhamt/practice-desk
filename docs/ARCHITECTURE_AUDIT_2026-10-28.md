@@ -1007,3 +1007,12 @@ Added:
 - Existing library, exam, results and history screens now call the generic adapter for start, answer, clear, flag, navigation, pause, section submit, attempt submit, tick and visibility. Score totals are taken from generic scoring.
 - The legacy UI data structures and timer presentation remain during this transitional integration. Pass 2 acceptance requires CI, offline execution checks and reconciling the legacy timer with engine timer before marking complete.
 - Fixed earlier CI errors: removed Node crypto dependency from browser importer; corrected merged editorial typing.
+
+
+### Pass 2 verification and release boundary
+
+- CI run 40636395994 **passed** (strict typecheck, all tests, generated HTML build and reproducibility check).
+- CI committed the rebuilt, fully embedded `Practice_Desk_Offline_Mock_Tests.html` to `overhaul` at abbc0e02adb1905c6e9df26a98d8aabfde9e3e01.
+- Existing library/exam/results/history UI now invokes the generic browser adapter; policy-based scoring drives total and per-section results.
+- Current CGL UI still presents four fixed sections, four letter choices and the existing timer widgets. Generic engine is configured by the importer; Pass 4 must replace the remaining CGL-specific UI assumptions for other exams.
+- Pass 3 may begin after the final adapter regression suite passes. No changes to `main` or `baseline/v11`.
