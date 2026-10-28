@@ -1,7 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { Script } from 'node:vm';
-import { validateContent } from './validate.mjs';
+import { validateContent } from '../src/content/validate.ts';
 const root = resolve(import.meta.dirname, '..');
 const read = file => readFile(resolve(root,file),'utf8');
 const payloads = {
