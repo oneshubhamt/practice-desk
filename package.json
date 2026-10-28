@@ -1,0 +1,9 @@
+{
+  "name": "practice-desk",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {"node": ">=22"},
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "npm run build && node --test tests
