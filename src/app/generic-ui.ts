@@ -127,7 +127,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  const records=new Map<string,RecordItem>();
  let choice=packages.keys().next().value as string;
  let attempt:GenericAttempt|null=null, view:"library"|"exam"|"result"="library";
- let db:IDBDatabase|null=null, warning="",disposed=false, writeQueue=Promise.resolve();
+ let db:IDBDatabase|null=null, warning="",disposed=false, loading=true, writeQueue=Promise.resolve();
  let lastTimerSave=0;
  const storageKey="practiceDesk.generic.fallback.v1", mirrorKey="practiceDesk.generic.active.v1";
  const downloadBackup=()=>{
@@ -216,11 +216,11 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
     '<select id="g-papers" aria-label="Select exam package">'+[...packages.values()].map(p=>'<option value="'+escapeText(p.paper.id)+'"'+
        (choice===p.paper.id?" selected":"")+'>'+escapeText(p.title)+'</option>').join("")+'</select>'+
     '<p class="fine">Built-in CGL papers remain available. You can also import any validated Practice Desk exam JSON file.</p>'+
-    '<div class="row"><button class="btn primary" id="g-start">Start exam</button><button class="btn" id="g-import">Import JSON</button></div>'+
+    '<div class="row"><button class="btn primary" id="g-start"'+(loading?' disabled':'')+'>Start exam</button><button class="btn" id="g-import"'+(loading?' disabled':'')+'>Import JSON</button></div>'+
     '<input type="file" id="g-file" accept=".json,application/json" hidden></section>'+
     '<section class="panel pad"><div class="row between"><h2>Generic exam history</h2>'+
-    '<div class="row"><button class="btn" id="g-export-history">Export</button>'+
-    '<button class="btn" id="g-import-history">Import</button></div></div>'+
+    '<div class="row"><button class="btn" id="g-export-history"'+(loading?' disabled':'')+'>Export</button>'+
+    '<button class="btn" id="g-import-history"'+(loading?' disabled':'')+'>Import</button></div></div>'+
     '<input type="file" id="g-history-file" accept=".json,application/json" hidden>'+
     (attempts.length?attempts.slice(0,30).map(a=>'<button class="generic-history" data-attempt="'+escapeText(a.id)+'">'+
       escapeText(packages.get(a.packageId)?.title??a.frozen.paper.paperId)+' · '+new Date(a.startedAt).toLocaleString()+
@@ -470,6 +470,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        }
      }catch{warning="Browser storage is unavailable; attempts may not survive a reload.";}
    }
+   loading=false;
    if(!disposed){
      const target=initialAttemptId&&records.get(initialAttemptId);
      if(isAttempt(target)){
