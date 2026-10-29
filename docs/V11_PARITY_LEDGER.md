@@ -1,19 +1,19 @@
-# v11 feature and visual parity ledger
+# v11 reference and Pass 9 parity ledger
 
-**Baseline:** `baseline/v11` (`src/app/legacy.ts`, `src/styles/app.css` 28.7 KB, `src/template.html`). **Current:** `overhaul` (`src/app/generic-ui.ts`, `src/styles/app.css` 7.3 KB, `src/template.html`). This is a **behavioral and visual comparison**, not permission to reintroduce `legacy.ts` or its runtime. Preserve the high-quality established UI with cleaner typed modules.
+**Frozen reference:** `baseline/v11` with `src/app/legacy.ts`, v11 CSS/template. **Current:** typed `overhaul`, no parallel legacy runtime, no v11 migration. Source behavior has been audited; Chromium automated UI and responsive regression is green. Pixel-by-pixel visual approval on real devices remains a **separate Pass 10/manual task**.
 
-| Capability / experience | v11 | Overhaul after Pass 6 | Restoration target |
-|---|---|---|---|
-| Visually designed home, strong paper selection / metadata and resume emphasis | Dedicated home grid, summary cards and ongoing-attempt panel | Basic library selector + history list | Pass 9: redesigned premium home with clear hierarchy, richer cards and resume |
-| History & insights workspace | Dedicated history screen, sorting, filtering, statistics, best/latest and comparison | Small list with status filter | Pass 9: distinct sophisticated history with search, sort, grouped comparisons |
-| Results navigation and structure | Insights and review tabs; powerful exploration | One long vertically stacked summary/review | Pass 9: coherent tabbed insights/review/ledger, responsive and accessible |
-| Score explanation and source-vs-reviewed comparisons | Audit-adjusted / publisher-key context | Pass 7 added frozen original-source key comparator alongside audited marks; basic visual tiles remain | Pass 9: richer score story, context and presentation |
-| Section pacing and visual progress | Progress bars, section breakdown, current time | Pass 8 frozen section timing/accuracy/positive/penalty evidence, currently displayed in basic tables | Pass 9 rich presentation and interaction |
-| Speed × accuracy, improvement opportunities, answer revisions | Rich analytical panels | Pass 8 pure median-based speed, exact marks opportunities and answer-change counts; no inferred rescue/loss | Pass 9 v11-grade visualization, filters and honest methodology |
-| Question time ledger, filterable reviews | Detailed question timings and filters | Bare text review for all questions | Pass 7 frozen figure/passage correctness; Pass 9 filters, timestamps and density controls |
-| Exam workspace quality | Distinct exam header, clock bar, question navigator, immersive state | Simplified two-column panels | Pass 9: restored polished exam shell, responsive palette, focus and status |
-| Display controls | Compact Aa popover, theme/size/fullscreen | Header buttons, no fullscreen | Pass 9: compact, accessible and consistent controls |
-| Revision and learned content | Basic earlier history/workflow | Pass 8 genuine notebook-generated exams, source lineage, FSRS-7 and stronger evidence gates; visuals still rudimentary | Pass 9 integrated polished learning and history UI |
-| Content and correctness safeguards | CGL-specific behavior | More generic, typed, hashed, offline, backup v3 | Keep all new invariants; no regression |
+| V11 capability | Restored / improved on `overhaul` in Pass 9 | Verification and bounds |
+|---|---|---|
+| Designed home, selected paper and active resume | Rich home overview; mode cards; accurate timer/question/navigation preview; four summary stats; resume banner; recent attempts, learning and backup tiles | Native Chrome `file://` start/resume and mode previews |
+| Dedicated history & insights | Search, sort, status filters, historical scores, resume/delete, summaries, exact revision trend and cross-paper section priorities | Browser filter/sort/search/return; null accuracy never graphed as 0; no arbitrary cross-paper mark comparison |
+| Separate insights, review and timing | Three accessible keyboard-operable result tabs, frozen review, full item timing ledger and shortcuts from ledger to review | Chrome result tab/filter/ledger and keyboard tests; answers hidden until submission |
+| Audited vs original score story | Original-key unadjusted score remains pinned separately; reviewed score, manual written self-assessment and revision-exam practice marks are labelled | Pass 7/8 immutable score and backup regression retained |
+| Section pacing and visual status | Section progress/accuracy bars, foreground time and precise mode timer rules; exam progressbar, timer, palette/flag/status legend | Browser 390/768/desktop responsive; timers are not claims about thinking time |
+| Speed×accuracy, mark opportunities, answer revisions | Section-relative speed matrix, real penalty and hypothetical wrong/skipped arithmetic, direct targeted review; now persists **actual answer events** and shows observed rescue/loss for directly replaced single-choice answers | Pure tests and Chrome review navigation; cleared/unlogged items not assigned false outcomes |
+| Detailed question timing/review filters | Sortable chronological time ledger via frozen order, review by verdict/flag/speed, source page/citation/frozen images, notebook capture | Browser item ledger, filters, figure decode, source provenance; no claimed cause of errors |
+| Immersive mock-test workspace | Styled question panel, progress/timer, sections, sticky navigator, palette, buttons, keyboard navigation and responsiveness | CGL all modes, custom six-kind exam, Alt+arrows and small screens |
+| Compact display settings | Accessible Aa popover, saved theme/text scale, optional fullscreen, Escape/outside close | Browser preference/backup, visible popover, Escape; platform fullscreen acceptance pending |
+| Learning/revision | FSRS-7 due queue and generated revision exams plus new notebook summary/error pattern cards, consistent visual system | FSRS/notes/source linkage/backup/reopen regression |
+| Correctness, integrity and recovery | New strict TS, frozen revisions/media, backup v3, two-tab conflict and UNSAVED_RECOVERY retained | All 75 tests, Chromium offline smoke; no v11 runtime/data compatibility |
 
-**Acceptance requirement:** Audit each row against actual v11 source and screenshots/UI before marking Pass 9 complete. Preserve content richness, interaction affordances, responsive polish, accessibility, and general-exam capabilities. This ledger records specific deficits and is not evidence of completed parity.
+**Honesty boundary:** These rows indicate **functional and authored-visual parity work performed**, not proof that users will prefer the result or that every v11 pixel is duplicated. Preserve this ledger in Pass 10 for screenshot comparisons, accessibility, real devices and residual visual adjustments rather than silently declaring those verified.

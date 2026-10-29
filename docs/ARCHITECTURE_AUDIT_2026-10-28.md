@@ -1348,8 +1348,32 @@ See `docs/PASS4_RELEASE_ACCEPTANCE.md` for remaining verification. Do not merge 
 
 **2 · Analyze:** Implement presentation as distinct `library`, `history`, `exam`, `result`, `learning` views using existing record/map/engine; dedicated history sorting/filtering and revision-cohort trends must derive from frozen record data, not invented psychometrics. Result tabs separate overview, question review and timing, with scoped filters; keep original key/manual grades/provenance media available and no answers visible in exams. Add responsive, visually designed home, active-attempt notice, metric cards/visual pacing, enhanced exam navigator/timer, display popover/fullscreen without breaking dark/scale persistence. Preserve all historical tests and add actual Chrome `file://` UI interactions at 390px, 768px and desktop. Pass 10 remains cross-browser/screen-reader/performance/forced-exit QA.
 
-**3 · Implementation:** Pending.
+**3 · Implementation (typed, on `overhaul` only):**
+- **Home:** `generic-ui.ts` `listHTML` now returns designed page hierarchy (paper/mode card, accurate selected mode stats, active resume, recent attempts, progress summaries, learning and backup utilities, offline rules). The same existing exam store, source banks and engine are used; the new view is not an imported v11 runtime.
+- **History:** new `src/app/history-page.ts`, `view:"history"`, query state and event bindings. Search/filter/sort; resume/delete, import/export; same-revision longitudinal visual trend (plotted only for measured accuracy, 2+ eligible points); cross-paper *descriptive* section priorities (no notebook-revision synthetic cohorts).
+- **Results:** new `src/app/result-presentation.ts`, stateful `overview/review/timing` tabs, keyboard arrows, scoped review filters, tabpanel labels and frozen question timing rows. Existing immutable scored items/manual grades/media/provenance intact. Score-opportunity and speed-miss controls jump into filtered rich review. Section coverage bars and a coherent scorecard hierarchy.
+- **Exam:** `renderModelExam` now renders active mode, high-salience remaining clock and low-time state, accessible timer/coverage progressbar, answered/viewed/flagged counts, section buttons, rich question surface and sticky palette with legend; Alt+arrows navigate via the same typed `transition` as buttons, never bypassing policy.
+- **Answer revisions:** session transitions capture actual timestamped per-question selection/clear events; bounded optional histories are validated on every store/backup import (linked events, final response, time bounds and answer shapes). New `src/learning/answer-revisions.ts` computes truthful single-choice wrong→correct / correct→wrong sequences; clears and missing historic logs explicitly do **not** generate outcomes. Previous summary-only answer-change counts still available.
+- **Display:** compact header `Aa` settings popover in `src/template.html`, bootstrap keyboard/outside dismiss, font-theme persistence and optional fullscreen with failure reporting. `src/styles/app.css` now contains a consistent responsive tokenized palette, stronger typography, cards, visual hierarchies, history/score/learning and dark state with reduced-motion guard. No runtime network or UI library.
+- **Learning:** `src/app/learning-ui.ts` gains due/bookmarked/reviewed summary and self-reported error-pattern cards, maintaining FSRS-7 and source-linked revision behavior.
 
-**4 · Check each objective vs v11:** Pending.
+**4 · Objective reconciliation against [parity ledger](V11_PARITY_LEDGER.md):**
+1. Home identity/selected paper/resume — **met** in source + Chromium user flows.
+2. Dedicated history/insights — **met** with valid cohort selection, correctly excluded synthetic revisions and accessible archive filters; *not* claiming rank/percentile.
+3. Results tabs, source/modified scoring, review filters, ledger — **met** with frozen data and positive/negative paths.
+4. Real answer revisions — **met for newly captured direct single-choice edits**; older attempts and clear/reselect events appropriately cannot show rescues/losses.
+5. Timed exam shell/palette/keyboard — **met** in strict/flexible/single and generic exams.
+6. Appearance popover/theme/size/fullscreen control — **met as browser-supported controls**; actual fullscreen permission behavior remains platform-specific.
+7. Integrated learning visuals — **met**; scheduled FSRS records never mutated by mock attempts.
+8. Responsive/adaptive CSS and keyboard — **met in automated Chrome 390/768/desktop tests**, **manual real-device visual/accessibility signoff unverified**.
+9. Preserved core invariants — **met**: previous 70 Node tests and expanded Pass 9 tests, offline distribution, frozen scoring, media, storage conflict and recovery all retained.
+10. Screenshot pixel-perfect parity / all-platform release — **not claimed**. Requires visual review and device testing in Pass 10.
 
-**5 · Targeted QA and final CI:** Pending.
+**5 · Targeted QA and evidence:**
+- New `tests/pass9-ui.test.mjs`: dedicated history status/search/sort and non-mutating order, empty/null trend behavior, content-safe archive, result tabs/time ledger/review filters, exam shell/no active key leak and recorded answer event rescue/loss with tamper rejection.
+- Expanded `scripts/smoke-offline.mjs`: premium home summaries, actual history search/sort/status/return and safe resume, result tabs/keyboard/ledger deep links, filtered review and source media, settings popover/Escape/theme/preferences restoration, accurate free/section mode preview, Alt+arrow exam navigation, desktop and 390/768px overflow across library, history, exam, insights, review, time ledger and learning.
+- Existing full flows: strict/whole/section SSC CGL, imported six response kinds, complete original/reviewed scoring, manual written assessment, FSRS cards, notebook-generated exams, backup restore/reopen, IndexedDB stale-tab rejection (assert *newer answer* persists even with timer commits), fallback conflicts, deliberately denied quota save and emergency recovery export.
+- [Latest verified pre-documentation Chrome run #40915424874](https://github.com/oneshubhamt/practice-desk/actions/runs/40915424874): **75/75 Node tests**, strict TypeScript, one self-contained HTML and complete `file://` smoke green. Final exact-HEAD run must be inspected after the release doc update.
+
+**Still open as manual Pass 10 signoff:** visual screenshot comparisons with original v11 in browsers, Firefox/Safari/mobile/screen readers, long-history and force-quit recovery, physical device quota and native fullscreen support. None of these are concealed under 'Pass 9 complete'.
+
