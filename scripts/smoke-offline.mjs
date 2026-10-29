@@ -61,7 +61,7 @@ try{
  fail(await figures.count()>=5,"CGL figures lost in single unified exam");
  fail(await figures.first().evaluate(img=>img.complete&&img.naturalWidth>0),"CGL image did not decode");
  await page.locator("#g-library").click();
- await page.locator('[data-attempt="'+cgl.id+'"]').click();
+ await page.locator('[data-attempt="'+cgl.id+'"]').first().click();
  fail(await page.locator('input[data-choice]:checked').count()===0,"Question navigation not restored");
  await page.locator('[data-q="0"]').click();
  fail(await page.locator('input[data-choice]:checked').count()===1,"Saved CGL answer not restored");
@@ -72,6 +72,7 @@ try{
   page.once("dialog",d=>d.accept());
   await page.locator("#g-submit").click();
  }
+ await page.locator('[data-result-tab="review"]').click();
  await page.getByRole("heading",{name:"Question review"}).waitFor();
  fail(await page.locator(".generic-review").count()===100,"CGL results do not contain 100 questions");
  fail(await page.locator(".generic-review .generic-figure").count()>=5,
@@ -80,6 +81,7 @@ try{
    "Historical review figure did not decode");
  fail(await page.locator(".generic-review").filter({hasText:"Source page"}).count()>0,
    "Source document page provenance missing from review");
+ await page.locator('[data-result-tab="overview"]').click();
  fail(await page.getByRole("heading",{name:"Section performance"}).count()===1,"Section breakdown absent");
  const completed=await find(page,x=>x.id===cgl.id&&x.finishedAt!==null);
  fail(completed.result?.items?.length===100,"Frozen CGL score not persisted");
@@ -88,9 +90,43 @@ try{
  fail(await page.getByText("Original-source key (unadjusted):",{exact:false}).count()===1,
    "Original-key comparison is missing or mislabelled");
  await page.locator("#g-library").click();
- await page.locator('[data-attempt="'+cgl.id+'"]').click();
+ await page.locator('[data-attempt="'+cgl.id+'"]').first().click();
  await page.getByRole("heading",{name:"Question review"}).waitFor();
+ // Pass 9: independent insights, review and timing tabs, source media and filters.
+ await page.locator('[data-result-tab="timing"]').click();
+ fail(await page.locator("#result-timing tbody tr").count()===100,
+   "Item-level timing ledger incomplete");
+ await page.locator("[data-ledger-q]").first().click();
+ fail(await page.locator("#result-review").isVisible(),"Ledger did not open filtered review");
+ await page.locator("#g-review-filter").selectOption("incorrect");
+ const incorrectCount=await page.locator(".generic-review").count();
+ fail(incorrectCount===completed.result.snapshot.incorrectCount,
+   "Review filter did not match frozen incorrect count");
+ await page.locator("#g-review-filter").selectOption("all");
+ await page.locator('[data-result-tab="overview"]').click();
+ fail(await page.locator("#g-attempt-evidence").isVisible(),
+   "Performance analytics not visible in insights");
+
  console.log("Chrome file://: completed CGL analytics and saved history passed");
+
+ // Pass 9: history has its own independently navigable, sortable, filtered workspace.
+ await page.locator("#g-history").click();
+ await page.getByRole("heading",{name:"History & insights"}).waitFor();
+ fail(await page.locator(".history-summary .summary-stat").count()===4,
+   "History statistics missing");
+ await page.locator("#g-filter").selectOption("complete");
+ fail(await page.locator('[data-attempt="'+cgl.id+'"]').count()===1,
+   "History filter did not retain completed attempt");
+ await page.locator("#g-history-sort").selectOption("oldest");
+ await page.locator("#g-history-search").fill("nonexistent paper query");
+ fail(await page.locator(".history-entries").count()===0,
+   "Search did not filter history");
+ await page.locator("#g-history-search").fill("");
+ await page.locator("#g-filter").selectOption("all");
+ await page.locator("#g-library").click();
+ fail(await page.locator(".home-stats .home-stat").count()===4,
+   "Home dashboard statistics missing");
+ console.log("Chrome file://: Pass 9 responsive home, filtered history and return route passed");
 
  // Three CGL modes are paper policies, not separate application implementations.
  await page.locator("#g-library").click();
@@ -111,6 +147,7 @@ try{
  fail(single.frozen.questions.length===25,"Single section froze incorrect question count");
  page.once("dialog",d=>d.accept());
  await page.locator("#g-submit").click();
+ await page.locator('[data-result-tab="review"]').click();
  fail(await page.locator(".generic-review").count()===25,"Single section review invalid");
  console.log("Chrome file://: flexible and single-section policies passed");
 
@@ -139,6 +176,7 @@ try{
  await page.locator("#g-save").click();
  page.once("dialog",d=>d.accept());
  await page.locator("#g-submit").click();
+ await page.locator('[data-result-tab="review"]').click();
  fail(await page.locator(".generic-review").count()===6,"Six response kinds were not reviewed");
  const custom=await find(page,x=>x.recordType==="generic-attempt"&&x.packageId==="rev-paper"&&x.finishedAt);
  fail(custom.result.snapshot.correctCount===5,"Custom exam score incorrect");
@@ -150,12 +188,14 @@ try{
  fail(graded.result.snapshot.earnedMarks===custom.result.snapshot.earnedMarks,
    "Manual self-marking changed the immutable automated score");
  fail(graded.manualGrades[0].note==="Self assessed using the rubric.","Written grading note was not persisted");
+ await page.locator('[data-result-tab="overview"]').click();
  fail(await page.getByText("Separate self-assessment:",{exact:false}).count()>0,
    "Manual marks are not explicitly separated in results");
  console.log("Chrome file://: manual grading persisted without rewriting automatic score");
  console.log("Chrome file://: six response types and immutable custom result passed");
 
  // Pass 5: card creation never leaks answers during an active mock test.
+ await page.locator('[data-result-tab="review"]').click();
  await page.locator("[data-add-card]").first().click();
  const firstLearning=await find(page,x=>x.recordType==="learning-card");
  fail(firstLearning.reviews.length===0,"Mock answers were incorrectly treated as FSRS ratings");
@@ -209,10 +249,11 @@ try{
  fail(revisedCompleted.result.items.length===1,"Revision exam did not complete as a normal attempt");
  fail(await page.locator(".generic-review").count()===1,
    "Revision results did not contain the frozen notebook question");
+ await page.locator('[data-result-tab="review"]').click();
  fail(await page.getByText("Notebook source:",{exact:false}).count()>0,
    "Revision review lost its origin metadata");
  await page.locator("#g-library").click();
- await page.locator('[data-attempt="'+revision.id+'"]').click();
+ await page.locator('[data-attempt="'+revision.id+'"]').first().click();
  fail(await page.locator("#g-attempt-evidence").count()===1,
    "Generated revision was not available in persisted attempt history");
  const unchangedCard=await find(page,x=>x.id===firstLearning.id);
@@ -223,6 +264,8 @@ try{
 
 
  // Preferences are included in the v3 complete backup and restored with data.
+ await page.locator("#displayTrigger").click();
+ fail(await page.locator("#displayPanel").isVisible(),"Compact appearance popover did not open");
  await page.locator("#themeToggle").click();
  await page.locator("#fontMore").click();
  const pending=page.waitForEvent("download");
@@ -251,7 +294,7 @@ try{
  const importedCustom=await find(page,x=>x.id===custom.id);
  fail(importedCustom.manualGrades?.[0]?.marks===1.5,
    "Backup restore did not retain written self-assessment");
- fail(await page.locator("#themeToggle").innerText()==="Light theme","Theme preference not restored");
+ fail(await page.locator("#themeToggle").textContent()==="Light theme","Theme preference not restored");
  fail(await page.locator("#fontReset").innerText()==="105%","Font preference not restored");
  console.log("Chrome file://: complete backup, preferences, restore and deletion passed");
 
@@ -260,7 +303,8 @@ try{
  context=await chromium.launchPersistentContext(profile,opts);
  const reopened=context.pages()[0]??await context.newPage();
  const reopenedErrors=await testPage(reopened);
- await reopened.locator('[data-attempt="'+custom.id+'"]').click();
+ await reopened.locator('[data-attempt="'+custom.id+'"]').first().click();
+ await reopened.locator('[data-result-tab="review"]').click();
  fail(await reopened.locator(".generic-review").count()===6,"file:// reopen lost stored custom result");
  fail(await reopened.locator('[data-manual-marks="rev-5"]').inputValue()==="1.5",
    "file:// reopen lost independent written self-assessment");
@@ -279,7 +323,7 @@ try{
    x.state?.responses?.some(r=>r.response)&&x.saveRevision>0);
  const second=await context.newPage();
  await testPage(second);
- await second.locator('[data-attempt="'+race.id+'"]').click();
+ await second.locator('[data-attempt="'+race.id+'"]').first().click();
  await second.locator('input[data-choice]').nth(1).click();
  const advanced=await find(second,x=>x.id===race.id&&x.saveRevision>race.saveRevision);
  if(await reopened.locator('input[data-choice]').count()>=3)
@@ -352,6 +396,9 @@ try{
   await testPage(responsive);
   const overflow=()=>responsive.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
   fail(await overflow()<=3,"Library overflow at "+width);
+  await responsive.locator("#g-history").click();
+  fail(await overflow()<=3,"History overflow at "+width);
+  await responsive.locator("#g-library").click();
   await responsive.locator("#g-start").click();
   fail(await overflow()<=3,"Exam overflow at "+width);
  }
