@@ -267,6 +267,43 @@ try{
      if(examOverflow>3)throw new Error("Generic exam overflows at "+width+"px by "+examOverflow+"px");
    }
    console.log("Offline file://: 390px mobile and 768px tablet responsive checks passed");
+
+   // Exercise CGL's specialized free and single-section modes through the
+   // common model-driven question renderer, retaining its detailed results UI.
+   const modeProfile=await mkdtemp(join(tmpdir(),"pd-cgl-modes-"));
+   const modeContext=await chromium.launchPersistentContext(modeProfile,browserOptions);
+   try{
+     const modePage=modeContext.pages()[0]??await modeContext.newPage();
+     modePage.setDefaultTimeout(25000);
+     await modePage.goto(file,{waitUntil:"load"});
+     await modePage.locator('[data-mode="free"]').click();
+     await modePage.locator("#start").click();
+     await modePage.locator('input[data-choice]').first().click();
+     await modePage.keyboard.press("b");
+     if(!await modePage.locator('input[data-choice]').nth(1).isChecked())
+       throw new Error("CGL keyboard A-D choice shortcut failed in shared exam renderer");
+     await modePage.locator('[data-section="1"]').click();
+     await modePage.locator("#g-pause").click();
+     await modePage.locator("#g-pause").filter({hasText:"Resume timer"}).waitFor();
+     await modePage.locator("#g-pause").click();
+     modePage.once("dialog",dialog=>dialog.accept());
+     await modePage.locator("#g-submit").click();
+     await modePage.getByRole("heading",{name:"Attempt analysis"}).waitFor();
+     await modePage.locator("#homeBack").click();
+     await modePage.locator('[data-mode="single"]').click();
+     await modePage.locator("#singleSelect").selectOption("2");
+     await modePage.locator("#start").click();
+     if(!await modePage.locator(".generic-prompt").count())
+       throw new Error("CGL single-section question surface absent");
+     await modePage.locator('input[data-choice]').first().click();
+     modePage.once("dialog",dialog=>dialog.accept());
+     await modePage.locator("#g-submit").click();
+     await modePage.getByRole("heading",{name:"Attempt analysis"}).waitFor();
+     console.log("Offline file://: CGL free and single-section modes retain submission and analytics");
+   }finally{
+     await modeContext.close();
+     await rm(modeProfile,{recursive:true,force:true});
+   }
  }catch(error){throw new Error("CGL file:// test: "+error.message+"; browser errors: "+cgl.errors.join(" | "));}
  finally{await cgl.context.close();}
 }finally{
