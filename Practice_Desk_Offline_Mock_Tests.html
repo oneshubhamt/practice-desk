@@ -2190,6 +2190,18 @@ var PracticeDeskGeneric = (() => {
     return result;
   }
 
+  // src/history/concurrency.ts
+  function assertWriteVersion(current, expected) {
+    if (expected === null) {
+      if (current) throw new Error("Another tab already created this record");
+    } else if (!current || (current.saveRevision ?? 0) !== expected) {
+      throw new Error("Another tab changed this record; reopen to see the latest version");
+    }
+  }
+  function nextWriteVersion(expected) {
+    return expected === null ? 1 : expected + 1;
+  }
+
   // src/app/generic-ui.ts
   var escapeText = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
   var minutes = (ms) => {
@@ -2234,6 +2246,11 @@ var PracticeDeskGeneric = (() => {
   var isAttempt = (x) => !!x && typeof x === "object" && x.recordType === "generic-attempt";
   var isPackage = (x) => !!x && typeof x === "object" && x.recordType === "generic-package";
   function validateGenericStoredRecord(value) {
+    if (value && typeof value === "object" && "saveRevision" in value) {
+      const n = value.saveRevision;
+      if (typeof n !== "number" || !Number.isSafeInteger(n) || n < 0)
+        throw new Error("Invalid stored write revision");
+    }
     if (isPackage(value)) {
       if (typeof value.id !== "string" || value.id !== "generic-package:" + value.bundle?.paper?.id)
         throw new Error("Invalid imported package record identity");
@@ -2345,8 +2362,14 @@ var PracticeDeskGeneric = (() => {
     };
     const now = () => Date.now();
     const save = (record3) => {
-      records.set(record3.id, record3);
-      if (isAttempt(record3)) writeMirror(record3);
+      const previous = records.get(record3.id);
+      const expected = previous ? previous.saveRevision ?? 0 : null;
+      const versioned = { ...record3, saveRevision: nextWriteVersion(expected) };
+      records.set(record3.id, versioned);
+      if (isAttempt(versioned)) {
+        if (attempt?.id === versioned.id) attempt = versioned;
+        writeMirror(versioned);
+      }
       writeQueue = writeQueue.catch(() => {
       }).then(() => new Promise((resolve, reject) => {
         if (!db) {
@@ -2359,12 +2382,50 @@ var PracticeDeskGeneric = (() => {
           return;
         }
         const tx = db.transaction("attempts", "readwrite");
-        tx.objectStore("attempts").put(record3);
+        const store = tx.objectStore("attempts");
+        let conflict = null;
+        const read = store.get(record3.id);
+        read.onsuccess = () => {
+          try {
+            assertWriteVersion(read.result, expected);
+            store.put(structuredClone(versioned));
+          } catch (error) {
+            conflict = error;
+            tx.abort();
+          }
+        };
         tx.oncomplete = () => resolve();
-        tx.onerror = () => reject(tx.error);
-        tx.onabort = () => reject(tx.error);
-      })).catch((e) => {
-        warning = "Saving failed. Export important history before closing.";
+        tx.onerror = () => reject(conflict ?? tx.error ?? new Error("Write failed"));
+        tx.onabort = () => reject(conflict ?? tx.error ?? new Error("Write aborted"));
+      })).catch(async (e) => {
+        if (e instanceof Error && e.message.startsWith("Another tab")) {
+          warning = e.message + "; changes in this tab were not saved.";
+          if (isAttempt(versioned) && attempt?.id === versioned.id) {
+            attempt = null;
+            view = "library";
+          }
+          try {
+            localStorage.removeItem(mirrorKey);
+          } catch {
+          }
+          records.delete(versioned.id);
+          if (db) try {
+            const req = db.transaction("attempts", "readonly").objectStore("attempts").get(versioned.id);
+            const latest = await new Promise((resolve, reject) => {
+              req.onsuccess = () => resolve(req.result);
+              req.onerror = () => reject(req.error);
+            });
+            if (latest) {
+              validateGenericStoredRecord(latest);
+              records.set(versioned.id, latest);
+            }
+          } catch (error) {
+            console.warn("Could not reload changed record", error);
+          }
+          if (!disposed) draw();
+        } else {
+          warning = "Saving failed. Export important history before closing.";
+        }
         console.warn("Exam workspace save", e);
       });
     };
@@ -2674,10 +2735,7 @@ var PracticeDeskGeneric = (() => {
             validateGenericStoredRecord(mirror);
             const existing = records.get(mirror.id);
             const winner = chooseRecovered(isAttempt(existing) ? existing : void 0, mirror);
-            if (winner === mirror) {
-              records.set(mirror.id, mirror);
-              save(mirror);
-            }
+            if (winner === mirror) save(mirror);
           }
         } catch (error) {
           console.warn("Invalid emergency session mirror", error);
