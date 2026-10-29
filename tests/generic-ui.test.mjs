@@ -61,7 +61,7 @@ test("shared renderer enforces paused, forward-only and no-early-submit policies
  assert.match(html,/id="g-flag"[^>]*disabled/);
  assert.match(html,/id="g-submit" disabled/);
  const sectioned=validateExamPackage({...pkg,paper:{...pkg.paper,
-   timing:{kind:"sectional",sectionLimits:[{sectionId:"s1",durationMs:10000},{sectionId:"s2",durationMs:10000}],allowEarlySubmit:false,pausePolicy:"forbidden"}
+   timing:{kind:"sectional",sectionLimits:[{sectionId:"s1",durationMs:10000},{sectionId:"s2",durationMs:10000}],transition:"automatic",allowEarlySubmit:false,pausePolicy:"forbidden"}
  }});
  const noEarly=renderModelExam(startGenericAttempt(sectioned,"noearly",0),sectioned);
  assert.match(noEarly,/id="g-submit" disabled/);
