@@ -83,6 +83,10 @@ try{
  fail(await page.getByRole("heading",{name:"Section performance"}).count()===1,"Section breakdown absent");
  const completed=await find(page,x=>x.id===cgl.id&&x.finishedAt!==null);
  fail(completed.result?.items?.length===100,"Frozen CGL score not persisted");
+ fail(completed.sourceKeyReference?.entries?.length===100,
+   "Reviewed CGL attempt did not pin its original source key");
+ fail(await page.getByText("Original-source key (unadjusted):",{exact:false}).count()===1,
+   "Original-key comparison is missing or mislabelled");
  await page.locator("#g-library").click();
  await page.locator('[data-attempt="'+cgl.id+'"]').click();
  await page.getByRole("heading",{name:"Question review"}).waitFor();

@@ -7,6 +7,8 @@ import {validateExamPackage,configureCglPractice,builtinCglPackages,startGeneric
 import {validateGenericStoredRecord} from "../src/app/generic-ui.ts";
 import {transition,startSession} from "../src/engine/session.ts";
 import {setManualGrade,validateManualGrades,manualGradeSummary} from "../src/engine/manual-grading.ts";
+import {createSourceKeyReference,sourceKeyScore,validateSourceKeyReference} from "../src/engine/source-comparison.ts";
+import {scoreAttempt} from "../src/engine/scoring.ts";
 
 const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
@@ -93,4 +95,43 @@ test("written response can be explicitly self-assessed without modifying frozen 
  assert.throws(()=>validateManualGrades({...marked,manualGrades:[...marked.manualGrades,...marked.manualGrades]}),/invalid manual grade/i);
  assert.throws(()=>setManualGrade(marked,bundle.questions[0].id,1,"",new Date(2000).toISOString()),/pending written responses/);
  assert.throws(()=>setManualGrade(startGenericAttempt(bundle,"open",2000),bundle.questions[5].id,1,"",new Date(2001).toISOString()),/pending written responses/);
+});
+
+test("source-key comparison pins original answer references independently of reviewed revisions",()=>{
+ const reviewed=builtins.find(p=>p.paper.edition==="reviewed");
+ const source=builtins.find(p=>p.paper.paperId===reviewed.paper.paperId&&p.paper.edition==="source");
+ const original=createSourceKeyReference(reviewed,source);
+ assert.equal(original.entries.length,100);
+ let a=startGenericAttempt(reviewed,"original-vs-reviewed",1000);
+ a={...a,sourceKeyReference:original};
+ validateSourceKeyReference(a);
+ assert.equal(sourceKeyScore(a),null,"Never compare an active attempt");
+ const qm=new Map(reviewed.questions.map(q=>[q.id,q]));
+ a=transitionGenericAttempt(a,{type:"ANSWER",nowMs:1001,
+   response:{kind:"single-choice",optionId:reviewed.questions[0].content.options[0].id}},qm);
+ for(let i=0;i<4;i++)a=transitionGenericAttempt(a,{type:"SUBMIT_SECTION",nowMs:1010+i},qm);
+ const comparison=sourceKeyScore(a);
+ assert.equal(comparison.correct+comparison.incorrect+comparison.unanswered,100);
+ assert.equal(comparison.maxMarks,200);
+ assert.equal(validateGenericStoredRecord(JSON.parse(JSON.stringify(a))).sourceKeyReference.contentHash,original.contentHash);
+ const malicious=structuredClone(a);
+ malicious.sourceKeyReference.entries[0].originalOptionId="tampered";
+ assert.throws(()=>validateGenericStoredRecord(malicious),/source-key reference hash mismatch/);
+ const single=configureCglPractice(reviewed,"single",2);
+ const singleRef=createSourceKeyReference(single,source);
+ assert.equal(singleRef.entries.length,25);
+ assert.equal(createSourceKeyReference(pkg,source),null);
+});
+test("draft and editorial-unsafe questions are excluded rather than treated as correct",()=>{
+ const reviewed=builtins.find(p=>p.paper.edition==="reviewed");
+ const q=reviewed.questions[0];
+ const draft={...q,editorial:{...q.editorial,status:"draft"}};
+ const paper={...reviewed.paper,sections:[{...reviewed.paper.sections[0],questionRevisionIds:[q.id]}],
+   timing:{kind:"untimed"}};
+ const score=scoreAttempt(paper,reviewed.answerKey,[draft],[
+  {questionRevisionId:q.id,response:{kind:"single-choice",optionId:reviewed.answerKey.entries[0].answer.optionId},
+   timeSpentMs:0,flagged:false,answerChangeCount:0}
+ ],new Date(1000).toISOString());
+ assert.deepEqual(score.items.map(x=>x.verdict),["excluded"]);
+ assert.equal(score.snapshot.earnedMarks,0);
 });
