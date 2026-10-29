@@ -16,6 +16,7 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npm run check
       - run: node scripts/smoke-offline.mjs
+      - run: node scripts/pass10-platform.mjs chromium
       # On the development branch, publish the generated single-file distribution
       # only after all tests pass. main and baseline/v11 are never written.
       - name: Commit verified offline distribution
@@ -29,3 +30,22 @@ jobs:
             git push origin HEAD:overhaul
           fi
       - run: git diff --exit-code -- Practice_Desk_Offline_Mock_Tests.html
+
+  cross-browser:
+    name: Offline acceptance (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [firefox, webkit]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - run: npm install --no-audit --no-fund
+      - run: node node_modules/playwright-core/cli.js install --with-deps ${{ matrix.browser }}
+      - run: npm run check
+      - run: node scripts/pass10-platform.mjs ${{ matrix.browser }}
