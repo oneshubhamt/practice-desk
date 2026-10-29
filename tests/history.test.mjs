@@ -48,3 +48,11 @@ test("completed record always defeats stale active mirror",()=>{
  assert.equal(chooseRecovered(mirror,stored),stored);
  assert.equal(chooseRecovered(stored,{...stored,updatedAt:120}).updatedAt,120);
 });
+
+test("revision-aware recovery cannot revive an older tab's emergency mirror",()=>{
+ const persisted={id:"same",startedAt:10,updatedAt:200,finishedAt:null,saveRevision:8};
+ const stale={...persisted,updatedAt:300,saveRevision:7};
+ assert.equal(chooseRecovered(persisted,stale),persisted);
+ assert.equal(chooseRecovered(persisted,{...stale,saveRevision:8}),persisted);
+ assert.equal(chooseRecovered(persisted,{...stale,saveRevision:9}).saveRevision,9);
+});
