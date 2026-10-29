@@ -160,23 +160,30 @@ try{
  console.log("Chrome file://: Pass 5 FSRS-7 review, notebook notes and topic analytics passed");
 
 
- // Export/import checksum verified backup through the real file chooser.
+ // Preferences are included in the v3 complete backup and restored with data.
+ await page.locator("#themeToggle").click();
+ await page.locator("#fontMore").click();
  const pending=page.waitForEvent("download");
  await page.locator("#g-export-history").click();
  const downloaded=await pending;
  const backup=JSON.parse(await readFile(await downloaded.path(),"utf8"));
  fail(backup.version===3&&backup.records.some(a=>a.id===custom.id),"All-exam backup missing records");
+ fail(backup.preferences.dark===true&&backup.preferences.scale===105,"Display preferences missing from backup");
  fail(backup.records.some(a=>a.id===firstLearning.id&&a.reviews?.length===1),
    "Learning review history missing from backup");
  page.once("dialog",d=>d.accept());
  await page.locator('[data-delete="'+custom.id+'"]').click();
  const deleted=await attempts(page);
  fail(!deleted.some(a=>a.id===custom.id),"Attempt deletion not committed");
+ await page.locator("#themeToggle").click();
+ await page.locator("#fontReset").click();
  page.once("dialog",d=>d.accept());
  await page.locator("#g-history-file").setInputFiles({name:"backup.json",mimeType:"application/json",
   buffer:Buffer.from(JSON.stringify(backup))});
  await find(page,x=>x.id===custom.id);
- console.log("Chrome file://: all-exam backup restore and deletion passed");
+ fail(await page.locator("#themeToggle").innerText()==="Light theme","Theme preference not restored");
+ fail(await page.locator("#fontReset").innerText()==="105%","Font preference not restored");
+ console.log("Chrome file://: complete backup, preferences, restore and deletion passed");
 
  // Reopen the identical local file with the same profile.
  await context.close();context=null;
@@ -236,6 +243,34 @@ try{
  const fallbackArchive=JSON.parse(await readFile(await (await downloadFallback).path(),"utf8"));
  fail(fallbackArchive.records.some(x=>x.id===fallbackId),"Fallback recovery export unavailable");
  console.log("Chrome file://: localStorage fallback conflict and safe export passed");
+
+ // Inject a synchronous IndexedDB write rejection. No success claim may survive the failed commit,
+ // and an explicitly named recovery export must contain the in-memory unsaved record.
+ const denied=await context.newPage();
+ await testPage(denied);
+ const savedIds=new Set((await attempts(denied)).map(x=>x.id));
+ await denied.evaluate(()=>{
+   const original=IDBObjectStore.prototype.put;
+   Object.defineProperty(window,"__originalPut",{value:original});
+   IDBObjectStore.prototype.put=function(){
+     throw new DOMException("Injected quota denial","QuotaExceededError");
+   };
+ });
+ await denied.locator("#g-start").click();
+ await denied.locator(".generic-warning").filter({hasText:"SAVE FAILED"}).waitFor();
+ await denied.locator("#g-library").click();
+ const emergencyDownload=denied.waitForEvent("download");
+ await denied.locator("#g-export-history").click();
+ const emergencyFile=await emergencyDownload;
+ fail(emergencyFile.suggestedFilename().includes("UNSAVED_RECOVERY"),
+   "Failed write not labelled as an unsaved recovery backup");
+ const emergencyBackup=JSON.parse(await readFile(await emergencyFile.path(),"utf8"));
+ fail(emergencyBackup.version===3&&emergencyBackup.records.some(x=>
+   x.recordType==="generic-attempt"&&!savedIds.has(x.id)),
+   "Emergency export did not retain rejected in-memory attempt");
+ fail(await denied.locator(".generic-warning").filter({hasText:"Emergency recovery file"}).count()===1,
+   "Recovery export did not explain non-durable state");
+ console.log("Chrome file://: quota-denied save and unsaved recovery export passed");
 
  // Mobile/tablet screens must remain within viewport.
  const responsive=await context.newPage();
