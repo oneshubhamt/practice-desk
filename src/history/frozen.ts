@@ -77,11 +77,11 @@ export interface RecoveryCandidate {
 export function chooseRecovered<T extends RecoveryCandidate>(stored: T | undefined, mirror: T | undefined): T | undefined {
   if (!stored) return mirror;
   if (!mirror || stored.id !== mirror.id) return stored;
-  if (stored.finishedAt && !mirror.finishedAt) return stored;
-  if (mirror.finishedAt && !stored.finishedAt) return mirror;
-  // A persisted record with a newer (or identical) write revision is authoritative,
-  // regardless of wall-clock timestamps in another tab's emergency mirror.
+  // Version precedence comes first: even a completed mirror can be stale when
+  // another tab has already persisted a newer revision of the same attempt.
   if (Number.isSafeInteger(stored.saveRevision) && Number.isSafeInteger(mirror.saveRevision) &&
       (stored.saveRevision as number) >= (mirror.saveRevision as number)) return stored;
+  if (stored.finishedAt && !mirror.finishedAt) return stored;
+  if (mirror.finishedAt && !stored.finishedAt) return mirror;
   return (mirror.updatedAt ?? 0) > (stored.updatedAt ?? 0) ? mirror : stored;
 }
