@@ -6,6 +6,7 @@ import type { SessionEvent } from "../engine/session.ts";
 import { restoreSession, chooseRecovered, assertFrozenContent } from "../history/frozen.ts";
 import { scoreAttempt } from "../engine/scoring.ts";
 import { manualGradeLimit, manualGradeSummary, setManualGrade, validateManualGrades } from "../engine/manual-grading.ts";
+import { createSourceKeyReference,sourceKeyScore,validateSourceKeyReference } from "../engine/source-comparison.ts";
 import { makeBackup, verifyBackup, planBackupMerge } from "../history/backup.ts";
 import { validateResponse } from "../engine/response.ts";
 import { assertWriteVersion, nextWriteVersion } from "../history/concurrency.ts";
@@ -134,6 +135,7 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
      throw new Error("Completed attempt score does not match its frozen inputs (summary or item verdict)");
  }
  validateManualGrades(value);
+ validateSourceKeyReference(value);
  return value;
 }
 
@@ -519,6 +521,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    const qs=new Map(attempt.frozen.questions.map(q=>[q.id,q]));
    const grades=manualGradeSummary(attempt);
    const selfAssessed=s.snapshot.earnedMarks+grades.total;
+   const originalKey=sourceKeyScore(attempt);
    const paperSectionRows=paper.sections.map(section=>{
      const ids=new Set(section.questionRevisionIds);
      const items=s.items.filter(item=>ids.has(item.questionRevisionId));
@@ -535,6 +538,10 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
     '</b><small>Incorrect</small></div><div class="score"><b>'+s.snapshot.unansweredCount+
     '</b><small>Unanswered</small></div><div class="score"><b>'+s.snapshot.excludedCount+
     '</b><small>Excluded</small></div></div>'+
+    (originalKey?'<p class="fine"><b>Original-source key (unadjusted):</b> '+
+      escapeText(originalKey.marks.toFixed(1))+' / '+escapeText(originalKey.maxMarks.toFixed(1))+
+      ' marks · '+originalKey.correct+' correct · '+originalKey.incorrect+' incorrect · '+
+      originalKey.unanswered+' unanswered. Uses the source key frozen at test start, including questions excluded from the reviewed score. This is a comparison, not an official score.</p>':"")+
     (grades.graded||grades.pending?'<p class="fine"><b>Separate self-assessment:</b> '+escapeText(grades.graded)+
       ' of '+escapeText(grades.graded+grades.pending)+' written responses marked; self-assessed total '+
       escapeText(selfAssessed.toFixed(2))+'. Original automated score above remains unchanged.</p>':
@@ -609,7 +616,14 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        const p=packages.get(choice);if(!p)return;
        const id=typeof crypto!=="undefined"&&crypto.randomUUID?crypto.randomUUID():"generic-"+now()+"-"+Math.random();
        const configured=p.examId==="ssc-cgl"?configureCglPractice(p,cglMode,singleSection):p;
-       attempt=startGenericAttempt(configured,id,now());warning="";view="exam";draw();void save(attempt);
+       attempt=startGenericAttempt(configured,id,now());
+       if(configured.paper.edition==="reviewed"){
+         const source=[...packages.values()].find(candidate=>candidate.paper.edition==="source"&&
+           candidate.paper.paperId===configured.paper.paperId&&candidate.examId===configured.examId);
+         const original=source?createSourceKeyReference(configured,source):null;
+         if(original)attempt={...attempt,sourceKeyReference:original};
+       }
+       warning="";view="exam";draw();void save(attempt);
      };
      root.querySelector<HTMLButtonElement>("#g-import")!.onclick=()=>root.querySelector<HTMLInputElement>("#g-file")?.click();
      root.querySelector<HTMLButtonElement>("#g-export-history")!.onclick=()=>{void downloadBackup();};
