@@ -26,6 +26,10 @@ try{
  page.setDefaultTimeout(30000);
  const errors=[];
  page.on("pageerror",e=>errors.push(e.message));
+ page.on("dialog",dialog=>{
+   if(dialog.type()==="confirm"&&dialog.message().includes("Return to library?"))
+     void dialog.accept();
+ });
  await page.goto(html,{waitUntil:"load"});
  await page.locator("#g-start").click();
  await page.locator('input[data-choice]').first().click();

@@ -19,6 +19,7 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npm run check
       - run: node scripts/smoke-offline.mjs
+      - run: node scripts/pass11-parity.mjs
       - run: node scripts/pass10-platform.mjs chromium
       # On the development branch, publish the generated single-file distribution
       # only after all tests pass. main and baseline/v11 are never written.

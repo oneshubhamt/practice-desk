@@ -979,7 +979,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    if(next!==original){
      attempt=next;
      const changedSection=original.state.sectionIndex!==next.state.sectionIndex;
-     if(next.finishedAt!==null||changedSection||now()-lastTimerSave>=10000){
+     if(next.finishedAt!==null||changedSection||(view==="exam"&&now()-lastTimerSave>=10000)){
        void save(attempt);lastTimerSave=now();
      }
      if(next.finishedAt!==null){
