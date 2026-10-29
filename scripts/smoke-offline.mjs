@@ -192,6 +192,10 @@ try{
  fail(backup.preferences.dark===true&&backup.preferences.scale===105,"Display preferences missing from backup");
  fail(backup.records.some(a=>a.id===firstLearning.id&&a.reviews?.length===1),
    "Learning review history missing from backup");
+ fail(backup.records.some(a=>a.id===custom.id&&a.manualGrades?.[0]?.marks===1.5),
+   "Written self-assessment missing from complete backup");
+ fail(backup.records.some(a=>a.id===cgl.id&&a.sourceKeyReference?.entries?.length===100),
+   "Frozen original-source key missing from complete backup");
  page.once("dialog",d=>d.accept());
  await page.locator('[data-delete="'+custom.id+'"]').click();
  const deleted=await attempts(page);
@@ -201,7 +205,9 @@ try{
  page.once("dialog",d=>d.accept());
  await page.locator("#g-history-file").setInputFiles({name:"backup.json",mimeType:"application/json",
   buffer:Buffer.from(JSON.stringify(backup))});
- await find(page,x=>x.id===custom.id);
+ const importedCustom=await find(page,x=>x.id===custom.id);
+ fail(importedCustom.manualGrades?.[0]?.marks===1.5,
+   "Backup restore did not retain written self-assessment");
  fail(await page.locator("#themeToggle").innerText()==="Light theme","Theme preference not restored");
  fail(await page.locator("#fontReset").innerText()==="105%","Font preference not restored");
  console.log("Chrome file://: complete backup, preferences, restore and deletion passed");
@@ -213,6 +219,8 @@ try{
  const reopenedErrors=await testPage(reopened);
  await reopened.locator('[data-attempt="'+custom.id+'"]').click();
  fail(await reopened.locator(".generic-review").count()===6,"file:// reopen lost stored custom result");
+ fail(await reopened.locator('[data-manual-marks="rev-5"]').inputValue()==="1.5",
+   "file:// reopen lost independent written self-assessment");
  await reopened.locator("#g-library").click();
  await reopened.locator("#g-learning").click();
  fail(await reopened.locator("#learning-note").inputValue()==="Review the underlying concept.",
