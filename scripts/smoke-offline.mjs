@@ -68,8 +68,10 @@ try{
  console.log("Chrome file://: strict CGL, figures and resume passed");
 
  // One completed CGL run exercises immutable scored review and history.
- page.once("dialog",d=>d.accept());
- await page.locator("#g-submit").click();
+ for(let section=0;section<4;section++){
+  page.once("dialog",d=>d.accept());
+  await page.locator("#g-submit").click();
+ }
  await page.getByRole("heading",{name:"Question review"}).waitFor();
  fail(await page.locator(".generic-review").count()===100,"CGL results do not contain 100 questions");
  fail(await page.getByRole("heading",{name:"Section performance"}).count()===1,"Section breakdown absent");
