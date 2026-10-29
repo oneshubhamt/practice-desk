@@ -3656,7 +3656,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
   }
   function startGenericAttempt(bundle, id, timestamp) {
     const validated = validateExamPackage(bundle);
-    const mode = validated.examId === "ssc-cgl" ? validated.practiceMode === "free" ? "full-paper-practice" : validated.practiceMode === "single" ? "section-practice" : "exam-simulation" : validated.paper.edition === "custom" ? "custom-practice" : "exam-simulation";
+    const mode = validated.paper.edition === "custom" ? "custom-practice" : validated.examId === "ssc-cgl" ? validated.practiceMode === "free" ? "full-paper-practice" : validated.practiceMode === "single" ? "section-practice" : "exam-simulation" : "exam-simulation";
     const frozen = freezeAttempt(
       validated.paper,
       validated.answerKey,
@@ -4936,6 +4936,204 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     return [...groups.values()].map((g) => ({ ...g, points: g.points.sort((a, b) => a.at - b.at) })).sort((a, b) => b.count - a.count);
   }
 
+  // src/learning/attempt-evidence.ts
+  function median(values) {
+    if (!values.length) return null;
+    const x = [...values].sort((a, b) => a - b), middle = Math.floor(x.length / 2);
+    return x.length % 2 === 0 ? ((x[middle - 1] ?? 0) + (x[middle] ?? 0)) / 2 : x[middle] ?? null;
+  }
+  var scoringRule = (a, id) => {
+    const section = a.frozen.paper.sections.find((s) => s.questionRevisionIds.includes(id));
+    const question = a.frozen.questions.find((q) => q.id === id);
+    if (!section || !question) throw Error("Question not in frozen attempt");
+    const override = a.frozen.key.entries.find((e) => e.questionRevisionId === id)?.scoringOverride;
+    return override ?? section.scoringOverride ?? a.frozen.paper.scoring.byQuestionKind?.[question.content.kind] ?? a.frozen.paper.scoring.defaultRule;
+  };
+  function addCounts(row, verdict, marks) {
+    row.total++;
+    row.marks += marks;
+    row.positive += Math.max(0, marks);
+    row.penalties += Math.max(0, -marks);
+    if (verdict === "correct") row.correct++;
+    if (verdict === "incorrect") row.incorrect++;
+    if (verdict === "unanswered") row.unanswered++;
+    if (verdict === "excluded") row.excluded++;
+    if (verdict === "pending") row.pending++;
+    if (verdict === "correct" || verdict === "incorrect") row.answered++;
+  }
+  function attemptEvidence(a) {
+    if (a.finishedAt === null || !a.result) return null;
+    const byId = new Map(a.state.responses.map((r) => [r.questionRevisionId, r]));
+    const results = new Map(a.result.items.map((i) => [i.questionRevisionId, i]));
+    const sectionRows = [];
+    const speeds = [
+      { label: "Fast", correct: 0, incorrect: 0, items: 0 },
+      { label: "Typical", correct: 0, incorrect: 0, items: 0 },
+      { label: "Slow", correct: 0, incorrect: 0, items: 0 }
+    ];
+    let measured = 0, classified = 0, wrongToCorrect = 0, skippedToCorrect = 0, countWrong = 0, countSkipped = 0;
+    for (const section of a.frozen.paper.sections) {
+      const row = {
+        sectionId: section.id,
+        title: section.title,
+        total: 0,
+        answered: 0,
+        correct: 0,
+        incorrect: 0,
+        unanswered: 0,
+        excluded: 0,
+        pending: 0,
+        marks: 0,
+        positive: 0,
+        penalties: 0,
+        foregroundMs: 0,
+        measuredAnswered: 0,
+        medianAnsweredMs: null,
+        coverage: 0,
+        accuracy: null
+      };
+      const times = [];
+      for (const id of section.questionRevisionIds) {
+        const item = results.get(id);
+        if (!item) throw Error("Incomplete scored attempt");
+        const answer = byId.get(id);
+        addCounts(row, item.verdict, item.marks);
+        row.foregroundMs += answer?.timeSpentMs ?? 0;
+        if ((item.verdict === "correct" || item.verdict === "incorrect") && (answer?.timeSpentMs ?? 0) > 0)
+          times.push(answer.timeSpentMs);
+        if (item.verdict === "incorrect") {
+          wrongToCorrect += scoringRule(a, id).correctMarks - item.marks;
+          countWrong++;
+        } else if (item.verdict === "unanswered") {
+          skippedToCorrect += scoringRule(a, id).correctMarks - item.marks;
+          countSkipped++;
+        }
+      }
+      row.coverage = row.answered + row.unanswered ? row.answered / (row.answered + row.unanswered) : 0;
+      row.accuracy = row.answered ? row.correct / row.answered : null;
+      row.measuredAnswered = times.length;
+      row.medianAnsweredMs = median(times);
+      measured += times.length;
+      if (times.length >= 5 && row.medianAnsweredMs !== null && row.medianAnsweredMs > 0) {
+        for (const id of section.questionRevisionIds) {
+          const item = results.get(id);
+          const ms = byId.get(id)?.timeSpentMs ?? 0;
+          if (ms <= 0 || item.verdict !== "correct" && item.verdict !== "incorrect") continue;
+          const bucket = speeds[ms < row.medianAnsweredMs * 0.75 ? 0 : ms > row.medianAnsweredMs * 1.5 ? 2 : 1];
+          bucket.items++;
+          if (item.verdict === "correct") bucket.correct++;
+          else bucket.incorrect++;
+          classified++;
+        }
+      }
+      sectionRows.push(row);
+    }
+    const responses = a.state.responses;
+    const timedAnswers = responses.filter((r) => r.timeSpentMs > 0 && r.response !== void 0).length;
+    return {
+      paperRevisionId: a.frozen.paper.id,
+      sections: sectionRows,
+      speed: { measured, classified, buckets: speeds },
+      timing: {
+        foregroundMs: a.state.foregroundMs,
+        elapsedMs: a.state.elapsedMs,
+        questionMeasuredMs: responses.reduce((n, r) => n + r.timeSpentMs, 0),
+        changedAnswers: responses.filter((r) => r.answerChangeCount > 0).length,
+        timedAnswers
+      },
+      opportunity: {
+        observedPenalty: a.result.snapshot.penaltyMarks,
+        wrongToCorrect: Math.max(0, wrongToCorrect),
+        skippedToCorrect: Math.max(0, skippedToCorrect),
+        countWrong,
+        countSkipped
+      }
+    };
+  }
+  function evidenceProgression(rows) {
+    return rows.map((r) => {
+      const attempts = r.attempts ?? 0, distinctQuestions = r.distinctQuestions ?? 0;
+      const accuracy = r.answered > 0 ? r.correct / r.answered : null;
+      const label = attempts < 2 || r.answered < 10 ? "insufficient" : distinctQuestions < 5 ? "repeated-items" : accuracy !== null && accuracy >= 0.8 ? "consistently-accurate" : accuracy !== null && accuracy >= 0.6 ? "moderate-observed" : "mixed";
+      return { examId: r.examId, topic: r.label, answered: r.answered, attempts, distinctQuestions, accuracy, label };
+    });
+  }
+
+  // src/learning/revision-test.ts
+  var REVISION_MAX_QUESTIONS = 25;
+  var REVISION_SCORING = { correctMarks: 1, incorrectMarks: 0, unansweredMarks: 0 };
+  var SCOREABLE_STATUSES = ["verified", "corrected", "caution"];
+  function mergeUnique(items, into, kind) {
+    for (const item of items) {
+      const existing = into.get(item.id);
+      if (existing && JSON.stringify(existing) !== JSON.stringify(item))
+        throw new Error("Conflicting frozen " + kind + " identity: " + item.id);
+      if (!existing) into.set(item.id, item);
+    }
+  }
+  function makeRevisionPackage(cards, paperNonce) {
+    if (!cards.length || cards.length > REVISION_MAX_QUESTIONS)
+      throw new Error("Select 1\u2013" + REVISION_MAX_QUESTIONS + " notebook cards for revision");
+    if (!/^[A-Za-z0-9_-]{1,80}$/.test(paperNonce))
+      throw new Error("Invalid revision-test identity");
+    const validated = cards.map(validateLearningCard);
+    const examId = validated[0].examId;
+    if (validated.some((card) => card.examId !== examId))
+      throw new Error("Revision tests cannot mix different exams");
+    const questions = validated.map((card) => card.question);
+    if (new Set(questions.map((q) => q.id)).size !== questions.length)
+      throw new Error("Duplicate question revisions in revision test");
+    if (questions.some((q) => !SCOREABLE_STATUSES.some((status) => status === q.editorial.status)))
+      throw new Error("A notebook question is no longer editorially eligible for scoring");
+    const images = /* @__PURE__ */ new Map(), stimuli = /* @__PURE__ */ new Map();
+    for (const card of validated) {
+      mergeUnique(card.assets, images, "image");
+      mergeUnique(card.stimuli, stimuli, "stimulus");
+    }
+    const paperId = "notebook-revision:" + paperNonce;
+    const revisionId = paperId + ":paper";
+    const keyId = paperId + ":key";
+    const entries = validated.map((card) => ({ questionRevisionId: card.question.id, answer: card.answer }));
+    const answerKey = {
+      id: keyId,
+      paperId,
+      revision: 1,
+      entries,
+      contentHash: answerKeyRevisionHash({ entries })
+    };
+    const section = {
+      id: paperId + ":section",
+      title: "Notebook revision",
+      questionRevisionIds: questions.map((q) => q.id)
+    };
+    const source = {
+      id: revisionId,
+      paperId,
+      revision: 1,
+      edition: "custom",
+      sections: [section],
+      answerKeyRevisionId: keyId,
+      timing: { kind: "untimed" },
+      navigation: { questionNavigation: "free", sectionNavigation: "free", allowFlagging: true, allowReview: true },
+      scoring: { defaultRule: REVISION_SCORING }
+    };
+    const paper = { ...source, contentHash: paperRevisionHash(source) };
+    const explanations = Object.fromEntries(validated.filter((c) => c.explanation).map((c) => [c.question.id, c.explanation]));
+    const packageValue = {
+      format: "practice-desk-exam",
+      version: 1,
+      examId,
+      title: "Notebook revision \xB7 " + examId,
+      paper,
+      answerKey,
+      questions,
+      stimuli: [...stimuli.values()],
+      assets: [...images.values()],
+      explanations
+    };
+    return validateExamPackage(packageValue);
+  }
+
   // src/app/learning-ui.ts
   var esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
   function figures(assets, ids) {
@@ -4961,13 +5159,25 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     let scheduler = null;
     let selectedId = null, reviewId = null, revealed = false;
     let filter = "all", message = "", closed = false, opened = false;
+    const cache = /* @__PURE__ */ new Map();
+    const schedule = (card) => {
+      const current = cache.get(card.id);
+      if (current?.record === card) return current.scheduled;
+      const computed = scheduledCard(card, scheduler);
+      cache.set(card.id, { record: card, scheduled: computed });
+      return computed;
+    };
+    const invalidate = () => {
+      for (const [id, entry] of cache) if (!host.cards().some((card) => card.id === id && card === entry.record)) cache.delete(id);
+    };
     const now2 = () => /* @__PURE__ */ new Date();
-    const due = (card) => scheduler?.newCard !== void 0 ? scheduledCard(card, scheduler).dueAt.getTime() <= Date.now() : false;
+    const due = (card) => scheduler?.newCard !== void 0 ? schedule(card).dueAt.getTime() <= Date.now() : false;
     const cards = () => host.cards().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-    const dueCards = () => cards().filter(due).sort((a, b) => scheduledCard(a, scheduler).dueAt.getTime() - scheduledCard(b, scheduler).dueAt.getTime());
+    const dueCards = () => cards().filter(due).sort((a, b) => schedule(a).dueAt.getTime() - schedule(b).dueAt.getTime());
     function draw() {
       if (closed || !opened) return;
       const all = cards();
+      invalidate();
       const selected = all.find((c) => c.id === selectedId) ?? all[0];
       const dueNow = dueCards();
       if (reviewId) {
@@ -5006,14 +5216,26 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
           return;
         }
       }
-      const visible = all.filter((c) => filter === "all" || filter === "due" && due(c) || filter === "bookmarked" && c.bookmarked);
       const done = host.attempts().filter((a) => a.finishedAt !== null && a.result);
       const topics = topicMetrics(done, all), cohorts = comparableTrends(done).filter((x) => x.count >= 2);
-      root2.innerHTML = '<div class="generic-heading"><div><h1>Learning & revision</h1><p class="muted">Error notebook \xB7 FSRS-7 spaced review \xB7 Topic evidence</p></div><button class="btn" id="learning-close">\u2190 Test library</button></div>' + (message ? '<p class="generic-warning" role="status">' + esc(message) + "</p>" : "") + '<section class="panel pad"><div class="row between"><div><h2>Revision queue</h2><p class="fine">' + all.length + " cards \xB7 " + (scheduler ? dueNow.length + " due now" : "Scheduler initializing") + ' \xB7 Mock results do not automatically count as spaced-repetition reviews</p></div><button class="btn primary" id="learning-due"' + (!scheduler || !dueNow.length ? " disabled" : "") + '>Review due cards</button></div></section><div class="generic-layout learning-layout"><section class="panel pad"><div class="row between"><h2>Error notebook</h2><select id="learning-filter" aria-label="Filter notebook" class="learning-filter">' + [["all", "All cards"], ["due", "Due now"], ["bookmarked", "Bookmarked"]].map(([key, label]) => '<option value="' + key + '"' + (filter === key ? " selected" : "") + ">" + label + "</option>").join("") + "</select></div>" + (visible.length ? visible.map((c) => {
-        const next = scheduler ? scheduledCard(c, scheduler) : null;
+      const progress = evidenceProgression(topics);
+      const visible = all.filter((c) => filter === "all" || filter === "due" && due(c) || filter === "bookmarked" && c.bookmarked);
+      const exam = all.find((c) => c.id === selectedId)?.examId ?? visible[0]?.examId ?? all[0]?.examId;
+      const candidates = visible.filter((c) => c.examId === exam && ["verified", "corrected", "caution"].includes(c.question.editorial.status)).slice(0, REVISION_MAX_QUESTIONS);
+      root2.innerHTML = '<div class="generic-heading"><div><h1>Learning & revision</h1><p class="muted">Error notebook \xB7 FSRS-7 spaced review \xB7 Topic evidence</p></div><button class="btn" id="learning-close">\u2190 Test library</button></div>' + (message ? '<p class="generic-warning" role="status">' + esc(message) + "</p>" : "") + '<section class="panel pad"><div class="row between"><div><h2>Revision queue</h2><p class="fine">' + all.length + " cards \xB7 " + (scheduler ? dueNow.length + " due now" : "Scheduler initializing") + ' \xB7 Mock results do not automatically count as spaced-repetition reviews</p></div><div class="row generic-actions"><button class="btn primary" id="learning-due"' + (!scheduler || !dueNow.length ? " disabled" : "") + '>Review due cards</button><button class="btn" id="learning-test"' + (!candidates.length ? " disabled" : "") + ">Start revision test (" + candidates.length + ')</button></div></div><p class="fine">Practice test uses the selected exam and current notebook filter (up to ' + REVISION_MAX_QUESTIONS + ' eligible cards). Untimed; +1 correct, 0 incorrect/unanswered. It is not the source exam score and does not rate FSRS cards.</p></section><div class="generic-layout learning-layout"><section class="panel pad"><div class="row between"><h2>Error notebook</h2><select id="learning-filter" aria-label="Filter notebook" class="learning-filter">' + [["all", "All cards"], ["due", "Due now"], ["bookmarked", "Bookmarked"]].map(([key, label]) => '<option value="' + key + '"' + (filter === key ? " selected" : "") + ">" + label + "</option>").join("") + "</select></div>" + (visible.length ? visible.map((c) => {
+        const next = scheduler ? schedule(c) : null;
         return '<button class="generic-history ' + (selected?.id === c.id ? "learning-selected" : "") + '" data-learning-id="' + esc(c.id) + '">' + esc(c.sectionTitle) + " \xB7 " + esc(c.question.content.prompt.slice(0, 92)) + "<small>" + esc(c.errorLabel ?? "Unclassified") + " \xB7 " + (next ? next.dueAt.getTime() <= Date.now() ? "Due now" : "Due " + next.dueAt.toLocaleDateString() : "Unscheduled") + " \xB7 " + c.reviews.length + " ratings</small></button>";
-      }).join("") : '<p class="fine">No cards in this view. Add a question from a completed test result.</p>') + '</section><section class="panel pad"><h2>Notebook detail</h2>' + (selected ? "<h3>" + esc(selected.question.content.prompt) + '</h3><p class="fine">' + esc(selected.paperId) + " \xB7 " + esc(selected.sectionTitle) + "</p><p>Expected: <strong>" + esc(readableAnswer(selected.question, selected.answer)) + "</strong></p>" + (selected.explanation ? '<p class="fine">' + esc(selected.explanation) + "</p>" : "") + '<label class="picker" for="learning-error">Error type (self-reported)</label><select id="learning-error"><option value="">Not classified</option>' + ERROR_LABELS.map((label) => '<option value="' + label + '"' + (selected.errorLabel === label ? " selected" : "") + ">" + esc(label) + "</option>").join("") + '</select><label class="picker" for="learning-topic">Specific topic (optional)</label><input id="learning-topic" maxlength="120" value="' + esc(selected.customTopic) + '" placeholder="Your own subtopic label"><label class="picker" for="learning-note">Notes</label><textarea id="learning-note" maxlength="8000" rows="5">' + esc(selected.note) + '</textarea><label class="learning-bookmark"><input id="learning-bookmark" type="checkbox"' + (selected.bookmarked ? " checked" : "") + '> Bookmark</label><div class="row generic-actions"><button class="btn primary" id="learning-save">Save note</button><button class="btn" id="learning-one">Review this card</button><button class="btn danger" id="learning-delete">Delete</button></div>' : '<p class="fine">Select a card from the notebook.</p>') + '</section></div><section class="panel pad learning-insights"><h2>Topic performance</h2><p class="fine">Official CGL section labels are the default broad topics. Imported exam topic IDs and your explicitly labelled subtopics remain separate; no topic is guessed. Five answered items minimum for measured evidence. Skips are excluded from accuracy.</p><div class="scroll-table"><table><thead><tr><th>Exam</th><th>Topic</th><th>Answered / total</th><th>Accuracy</th><th>Evidence</th></tr></thead><tbody>' + (topics.length ? topics.map((t) => "<tr><td>" + esc(t.examId) + "</td><td>" + esc(t.label) + "</td><td>" + t.answered + " / " + t.total + "</td><td>" + (t.accuracy === null ? "\u2014" : Math.round(t.accuracy * 100) + "%") + "</td><td>" + (t.evidence === "measured" ? "Observed" : "Insufficient") + "</td></tr>").join("") : '<tr><td colspan="5">Complete an exam to view topic performance.</td></tr>') + '</tbody></table></div><h2>Comparable attempt trends</h2><p class="fine">Only identical frozen paper revisions, including their rules and answer keys, are compared.</p><div class="scroll-table"><table><thead><tr><th>Paper revision</th><th>Attempts</th><th>Accuracy sequence</th><th>Marks sequence</th></tr></thead><tbody>' + (cohorts.length ? cohorts.map((g) => "<tr><td>" + esc(g.label) + "</td><td>" + g.count + "</td><td>" + g.points.map((p) => p.accuracy === null ? "\u2014" : Math.round(p.accuracy * 100) + "%").join(" \u2192 ") + "</td><td>" + g.points.map((p) => p.marks.toFixed(1)).join(" \u2192 ") + "</td></tr>").join("") : '<tr><td colspan="4">Complete the same paper revision twice to see a valid comparison.</td></tr>') + "</tbody></table></div></section>";
+      }).join("") : '<p class="fine">No cards in this view. Add a question from a completed test result.</p>') + '</section><section class="panel pad"><h2>Notebook detail</h2>' + (selected ? "<h3>" + esc(selected.question.content.prompt) + '</h3><p class="fine">' + esc(selected.paperId) + " \xB7 " + esc(selected.sectionTitle) + "</p><p>Expected: <strong>" + esc(readableAnswer(selected.question, selected.answer)) + "</strong></p>" + (selected.explanation ? '<p class="fine">' + esc(selected.explanation) + "</p>" : "") + '<label class="picker" for="learning-error">Error type (self-reported)</label><select id="learning-error"><option value="">Not classified</option>' + ERROR_LABELS.map((label) => '<option value="' + label + '"' + (selected.errorLabel === label ? " selected" : "") + ">" + esc(label) + "</option>").join("") + '</select><label class="picker" for="learning-topic">Specific topic (optional)</label><input id="learning-topic" maxlength="120" value="' + esc(selected.customTopic) + '" placeholder="Your own subtopic label"><label class="picker" for="learning-note">Notes</label><textarea id="learning-note" maxlength="8000" rows="5">' + esc(selected.note) + '</textarea><label class="learning-bookmark"><input id="learning-bookmark" type="checkbox"' + (selected.bookmarked ? " checked" : "") + '> Bookmark</label><div class="row generic-actions"><button class="btn primary" id="learning-save">Save note</button><button class="btn" id="learning-one">Review this card</button><button class="btn danger" id="learning-delete">Delete</button></div>' : '<p class="fine">Select a card from the notebook.</p>') + '</section></div><section class="panel pad learning-insights"><h2>Topic performance</h2><p class="fine">Official CGL section labels are the default broad topics. Imported exam topic IDs and your explicitly labelled subtopics remain separate; no topic is guessed. Five answered items minimum for measured evidence. Skips are excluded from accuracy.</p><div class="scroll-table"><table><thead><tr><th>Exam</th><th>Type</th><th>Topic</th><th>Answered / total</th><th>Distinct questions</th><th>Attempts</th><th>Accuracy</th><th>Evidence</th></tr></thead><tbody>' + (topics.length ? topics.map((t) => "<tr><td>" + esc(t.examId) + "</td><td>" + esc(t.kind) + "</td><td>" + esc(t.label) + "</td><td>" + t.answered + " / " + t.total + "</td><td>" + t.distinctQuestions + "</td><td>" + t.attempts + "</td><td>" + (t.accuracy === null ? "\u2014" : Math.round(t.accuracy * 100) + "%") + "</td><td>" + (t.evidence === "measured" ? "Observed" : "Insufficient") + "</td></tr>").join("") : '<tr><td colspan="8">Complete an exam to view topic performance.</td></tr>') + '</tbody></table></div><h2>Observed topic consistency</h2><p class="fine">Requires at least two attempts, ten answered observations and five distinct question revisions. Repeated questions are tracked separately; these are descriptive bands, not predictions of mastery.</p><div class="scroll-table"><table><thead><tr><th>Exam</th><th>Topic</th><th>Evidence</th></tr></thead><tbody>' + (progress.length ? progress.map((p) => "<tr><td>" + esc(p.examId) + "</td><td>" + esc(p.topic) + "</td><td>" + esc(p.label) + "</td></tr>").join("") : '<tr><td colspan="3">No completed practice evidence yet.</td></tr>') + '</tbody></table></div><h2>Comparable attempt trends</h2><p class="fine">Only identical frozen paper revisions, including their rules and answer keys, are compared.</p><div class="scroll-table"><table><thead><tr><th>Paper revision</th><th>Attempts</th><th>Accuracy sequence</th><th>Marks sequence</th></tr></thead><tbody>' + (cohorts.length ? cohorts.map((g) => "<tr><td>" + esc(g.label) + "</td><td>" + g.count + "</td><td>" + g.points.map((p) => p.accuracy === null ? "\u2014" : Math.round(p.accuracy * 100) + "%").join(" \u2192 ") + "</td><td>" + g.points.map((p) => p.marks.toFixed(1)).join(" \u2192 ") + "</td></tr>").join("") : '<tr><td colspan="4">Complete the same paper revision twice to see a valid comparison.</td></tr>') + "</tbody></table></div></section>";
       root2.querySelector("#learning-close").onclick = host.close;
+      root2.querySelector("#learning-test").onclick = async () => {
+        const button = root2.querySelector("#learning-test");
+        if (button) button.disabled = true;
+        const ok = await host.startRevision(candidates);
+        if (!ok) {
+          message = "Revision exam was not saved. Check storage and retry.";
+          draw();
+        }
+      };
       root2.querySelector("#learning-due").onclick = () => {
         reviewId = dueCards()[0]?.id ?? null;
         revealed = false;
@@ -5068,6 +5290,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     }
     void DefaultScheduler({ version: "FSRS-7", desiredRetention: 0.9, enableFuzz: false }).then((value) => {
       scheduler = value;
+      cache.clear();
       draw();
     }).catch((e) => {
       message = "FSRS scheduler failed to initialize.";
@@ -5470,6 +5693,27 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
       attempts: () => [...records.values()].filter(isAttempt),
       save: (item) => save(item),
       remove: (id) => removeSavedAttempt(id),
+      startRevision: async (selected) => {
+        if (storageFault || fallbackConflict || loading) {
+          notice("Storage unavailable; cannot start a revision exam.");
+          return false;
+        }
+        try {
+          const nonce = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "revision-" + now2() + "-" + Math.floor(Math.random() * 1e5);
+          const paper = makeRevisionPackage(selected, nonce);
+          const id = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "attempt-" + now2() + "-" + Math.floor(Math.random() * 1e5);
+          const generated = startGenericAttempt(paper, id, now2());
+          if (!await save(generated)) return false;
+          attempt = generated;
+          view = "exam";
+          warning = "Untimed notebook revision \xB7 +1 correct, 0 incorrect. This is not a source-exam score.";
+          draw();
+          return true;
+        } catch (error) {
+          notice(error instanceof Error ? error.message : "Cannot create revision test");
+          return false;
+        }
+      },
       close: () => {
         view = "library";
         draw();
@@ -5575,7 +5819,9 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
         const responseTime = attempt.state.responses.filter((r) => ids.has(r.questionRevisionId)).reduce((sum, r) => sum + r.timeSpentMs, 0);
         return "<tr><td>" + escapeText(section.title) + "</td><td>" + scored.toFixed(1) + "</td><td>" + items.filter((item) => item.verdict === "correct").length + "/" + items.length + "</td><td>" + minutes(responseTime) + "</td></tr>";
       }).join("");
-      return '<div class="generic-heading"><h1>Exam results</h1><button class="btn" id="g-library">Library</button></div><section class="panel pad"><div class="scoregrid"><div class="score standout"><b>' + s.snapshot.earnedMarks + '</b><small>Marks</small></div><div class="score"><b>' + s.snapshot.correctCount + '</b><small>Correct</small></div><div class="score"><b>' + s.snapshot.incorrectCount + '</b><small>Incorrect</small></div><div class="score"><b>' + s.snapshot.unansweredCount + '</b><small>Unanswered</small></div><div class="score"><b>' + s.snapshot.excludedCount + "</b><small>Excluded</small></div></div>" + (originalKey ? '<p class="fine"><b>Original-source key (unadjusted):</b> ' + escapeText(originalKey.marks.toFixed(1)) + " / " + escapeText(originalKey.maxMarks.toFixed(1)) + " marks \xB7 " + originalKey.correct + " correct \xB7 " + originalKey.incorrect + " incorrect \xB7 " + originalKey.unanswered + " unanswered. Uses the source key frozen at test start, including questions excluded from the reviewed score. This is a comparison, not an official score.</p>" : "") + (grades2.graded || grades2.pending ? '<p class="fine"><b>Separate self-assessment:</b> ' + escapeText(grades2.graded) + " of " + escapeText(grades2.graded + grades2.pending) + " written responses marked; self-assessed total " + escapeText(selfAssessed.toFixed(2)) + ". Original automated score above remains unchanged.</p>" : '<p class="fine">Automated marks reflect only scoreable questions.</p>') + '</section><section class="panel pad"><h2>Section performance</h2><div class="scroll-table"><table><thead><tr><th>Section</th><th>Marks</th><th>Correct</th><th>Time on questions</th></tr></thead><tbody>' + paperSectionRows + '</tbody></table></div></section><section class="panel pad"><div class="row between"><h2>Question review</h2><button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div><p class="fine">Mock-test results never automatically become FSRS review ratings.</p>' + s.items.map((it, i) => {
+      const evidence = attemptEvidence(attempt);
+      const analyticHTML = evidence ? '<section class="panel pad" id="g-attempt-evidence"><h2>Timing, accuracy & marks evidence</h2><p class="fine">Times are foreground exposure to each question; they do not measure thinking time. Opportunity figures describe hypothetical arithmetic, not projected marks.</p><div class="scroll-table"><table><thead><tr><th>Section</th><th>Answered</th><th>Coverage</th><th>Accuracy</th><th>Median answered time</th><th>Positive</th><th>Penalty</th></tr></thead><tbody>' + evidence.sections.map((e) => "<tr><td>" + escapeText(e.title) + "</td><td>" + e.answered + "</td><td>" + Math.round(e.coverage * 100) + "%</td><td>" + (e.accuracy === null ? "\u2014" : Math.round(e.accuracy * 100) + "%") + "</td><td>" + (e.medianAnsweredMs === null ? "\u2014" : Math.round(e.medianAnsweredMs / 1e3) + "s") + "</td><td>" + e.positive.toFixed(2) + "</td><td>" + e.penalties.toFixed(2) + "</td></tr>").join("") + '</tbody></table></div><div class="row generic-actions"><span class="tag">Foreground ' + minutes(evidence.timing.foregroundMs) + '</span><span class="tag">Question exposure ' + minutes(evidence.timing.questionMeasuredMs) + '</span><span class="tag">Answers changed ' + evidence.timing.changedAnswers + `</span></div><h3>Section-relative speed \xD7 accuracy</h3><p class="fine">Only sections with at least 5 measured answered responses are classified; fast is under 0.75\xD7 and slow over 1.5\xD7 that section's median.</p><div class="learning-metric-grid">` + evidence.speed.buckets.map((e) => '<div class="learning-metric"><strong>' + e.label + "</strong><b>" + e.correct + " correct \xB7 " + e.incorrect + " incorrect</b><small>" + e.items + " classified answers</small></div>").join("") + '</div><p class="fine">' + evidence.speed.classified + " of " + evidence.speed.measured + ' measurable answers classified; insufficient section samples remain unclassified.</p><h3>Marks decomposition and hypothetical opportunities</h3><div class="learning-metric-grid"><div class="learning-metric"><strong>Observed negative marks</strong><b>' + evidence.opportunity.observedPenalty.toFixed(2) + '</b><small>Actual penalty magnitude</small></div><div class="learning-metric"><strong>Wrong \u2192 correct</strong><b>+' + evidence.opportunity.wrongToCorrect.toFixed(2) + "</b><small>Hypothetical, " + evidence.opportunity.countWrong + ' incorrect scored items</small></div><div class="learning-metric"><strong>Skipped \u2192 correct</strong><b>+' + evidence.opportunity.skippedToCorrect.toFixed(2) + "</b><small>Hypothetical, " + evidence.opportunity.countSkipped + " unanswered scored items</small></div></div></section>" : "";
+      return '<div class="generic-heading"><h1>Exam results</h1><button class="btn" id="g-library">Library</button></div><section class="panel pad"><div class="scoregrid"><div class="score standout"><b>' + s.snapshot.earnedMarks + '</b><small>Marks</small></div><div class="score"><b>' + s.snapshot.correctCount + '</b><small>Correct</small></div><div class="score"><b>' + s.snapshot.incorrectCount + '</b><small>Incorrect</small></div><div class="score"><b>' + s.snapshot.unansweredCount + '</b><small>Unanswered</small></div><div class="score"><b>' + s.snapshot.excludedCount + "</b><small>Excluded</small></div></div>" + (originalKey ? '<p class="fine"><b>Original-source key (unadjusted):</b> ' + escapeText(originalKey.marks.toFixed(1)) + " / " + escapeText(originalKey.maxMarks.toFixed(1)) + " marks \xB7 " + originalKey.correct + " correct \xB7 " + originalKey.incorrect + " incorrect \xB7 " + originalKey.unanswered + " unanswered. Uses the source key frozen at test start, including questions excluded from the reviewed score. This is a comparison, not an official score.</p>" : "") + (grades2.graded || grades2.pending ? '<p class="fine"><b>Separate self-assessment:</b> ' + escapeText(grades2.graded) + " of " + escapeText(grades2.graded + grades2.pending) + " written responses marked; self-assessed total " + escapeText(selfAssessed.toFixed(2)) + ". Original automated score above remains unchanged.</p>" : '<p class="fine">Automated marks reflect only scoreable questions.</p>') + '</section><section class="panel pad"><h2>Section performance</h2><div class="scroll-table"><table><thead><tr><th>Section</th><th>Marks</th><th>Correct</th><th>Time on questions</th></tr></thead><tbody>' + paperSectionRows + "</tbody></table></div></section>" + analyticHTML + '<section class="panel pad"><div class="row between"><h2>Question review</h2><button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div><p class="fine">Mock-test results never automatically become FSRS review ratings.</p>' + s.items.map((it, i) => {
         const q = qs.get(it.questionRevisionId);
         const response = attempt.state.responses.find((r) => r.questionRevisionId === it.questionRevisionId)?.response;
         const answer = attempt.frozen.key.entries.find((e) => e.questionRevisionId === it.questionRevisionId)?.answer;
