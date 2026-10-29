@@ -920,6 +920,18 @@ var PracticeDeskEngine = (() => {
     return { items, snapshot: { earnedMarks, positiveMarks, penaltyMarks, correctCount, incorrectCount, unansweredCount, excludedCount, calculatedAt } };
   }
 
+  // src/history/concurrency.ts
+  function assertWriteVersion(current, expected) {
+    if (expected === null) {
+      if (current) throw new Error("Another tab already created this record");
+    } else if (!current || (current.saveRevision ?? 0) !== expected) {
+      throw new Error("Another tab changed this record; reopen to see the latest version");
+    }
+  }
+  function nextWriteVersion(expected) {
+    return expected === null ? 1 : expected + 1;
+  }
+
   // src/history/backup.ts
   var clone = (v) => JSON.parse(JSON.stringify(v));
   var digest = (core) => sha256(JSON.stringify(core));
@@ -1126,6 +1138,8 @@ var PracticeDeskEngine = (() => {
       verifyBackup,
       planBackupMerge,
       archiveDisplayRevision,
+      assertWriteVersion,
+      nextWriteVersion,
       ensure,
       restore,
       event,
