@@ -834,6 +834,7 @@ var PracticeDeskEngine = (() => {
     if (!mirror || stored.id !== mirror.id) return stored;
     if (stored.finishedAt && !mirror.finishedAt) return stored;
     if (mirror.finishedAt && !stored.finishedAt) return mirror;
+    if (Number.isSafeInteger(stored.saveRevision) && Number.isSafeInteger(mirror.saveRevision) && stored.saveRevision >= mirror.saveRevision) return stored;
     return (mirror.updatedAt ?? 0) > (stored.updatedAt ?? 0) ? mirror : stored;
   }
 
@@ -1987,6 +1988,7 @@ var PracticeDeskGeneric = (() => {
     if (!mirror || stored.id !== mirror.id) return stored;
     if (stored.finishedAt && !mirror.finishedAt) return stored;
     if (mirror.finishedAt && !stored.finishedAt) return mirror;
+    if (Number.isSafeInteger(stored.saveRevision) && Number.isSafeInteger(mirror.saveRevision) && stored.saveRevision >= mirror.saveRevision) return stored;
     return (mirror.updatedAt ?? 0) > (stored.updatedAt ?? 0) ? mirror : stored;
   }
 
@@ -2314,6 +2316,7 @@ var PracticeDeskGeneric = (() => {
     let attempt = null, view = "library";
     let db = null, warning = "", disposed = false, loading = true, writeQueue = Promise.resolve();
     let lastTimerSave = 0;
+    let fallbackStamp = null, fallbackConflict = false;
     const storageKey = "practiceDesk.generic.fallback.v1", mirrorKey = "practiceDesk.generic.active.v1";
     const downloadBackup = () => {
       const recordsToExport = [...records.values()].filter((record3) => isPackage(record3) || isAttempt(record3));
@@ -2353,7 +2356,11 @@ var PracticeDeskGeneric = (() => {
         });
       } else {
         const replacement = [...records.values(), ...incoming];
-        localStorage.setItem(storageKey, JSON.stringify(replacement));
+        if (fallbackConflict || localStorage.getItem(storageKey) !== fallbackStamp)
+          throw new Error("Another tab changed fallback history; reopen before importing");
+        const encoded = JSON.stringify(replacement);
+        localStorage.setItem(storageKey, encoded);
+        fallbackStamp = encoded;
       }
       for (const record3 of incoming) {
         records.set(record3.id, record3);
@@ -2376,6 +2383,11 @@ var PracticeDeskGeneric = (() => {
     };
     const now = () => Date.now();
     const save = (record3) => {
+      if (fallbackConflict) {
+        warning = "Another tab changed fallback history. Reopen before editing.";
+        draw();
+        return;
+      }
       const previous = records.get(record3.id);
       const expected = previous ? previous.saveRevision ?? 0 : null;
       const versioned = { ...record3, saveRevision: nextWriteVersion(expected) };
@@ -2388,7 +2400,11 @@ var PracticeDeskGeneric = (() => {
       }).then(() => new Promise((resolve, reject) => {
         if (!db) {
           try {
-            localStorage.setItem(storageKey, JSON.stringify([...records.values()]));
+            if (fallbackConflict || localStorage.getItem(storageKey) !== fallbackStamp)
+              throw new Error("Another tab changed fallback history; reopen before editing");
+            const encoded = JSON.stringify([...records.values()]);
+            localStorage.setItem(storageKey, encoded);
+            fallbackStamp = encoded;
             resolve();
           } catch (e) {
             reject(e);
@@ -2423,15 +2439,21 @@ var PracticeDeskGeneric = (() => {
           } catch {
           }
           records.delete(versioned.id);
-          if (db) try {
-            const req = db.transaction("attempts", "readonly").objectStore("attempts").get(versioned.id);
-            const latest = await new Promise((resolve, reject) => {
-              req.onsuccess = () => resolve(req.result);
-              req.onerror = () => reject(req.error);
-            });
+          try {
+            let latest;
+            if (db) {
+              const req = db.transaction("attempts", "readonly").objectStore("attempts").get(versioned.id);
+              latest = await new Promise((resolve, reject) => {
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+              });
+            } else {
+              fallbackConflict = true;
+              const saved = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
+              latest = saved.find((x) => x && typeof x === "object" && x.id === versioned.id);
+            }
             if (latest) {
-              validateGenericStoredRecord(latest);
-              records.set(versioned.id, latest);
+              records.set(versioned.id, validateGenericStoredRecord(latest));
             }
           } catch (error) {
             console.warn("Could not reload changed record", error);
@@ -2459,7 +2481,7 @@ var PracticeDeskGeneric = (() => {
     };
     function listHTML() {
       const attempts = [...records.values()].filter(isAttempt).sort((a, b) => b.startedAt - a.startedAt);
-      return '<div class="generic-heading"><h1>Exam workspace</h1><button class="btn" id="g-back">\u2190 Test library</button></div><p class="muted">Configurable papers \xB7 Six question types \xB7 Works offline</p>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + '<div class="generic-layout"><section class="panel pad"><h2>Select an exam</h2><select id="g-papers" aria-label="Select exam package">' + [...packages.values()].map((p) => '<option value="' + escapeText(p.paper.id) + '"' + (choice === p.paper.id ? " selected" : "") + ">" + escapeText(p.title) + "</option>").join("") + '</select><p class="fine">Built-in CGL papers remain available. You can also import any validated Practice Desk exam JSON file.</p><div class="row"><button class="btn primary" id="g-start"' + (loading ? " disabled" : "") + '>Start exam</button><button class="btn" id="g-import"' + (loading ? " disabled" : "") + '>Import JSON</button></div><input type="file" id="g-file" accept=".json,application/json" hidden></section><section class="panel pad"><div class="row between"><h2>Generic exam history</h2><div class="row"><button class="btn" id="g-export-history"' + (loading ? " disabled" : "") + '>Export</button><button class="btn" id="g-import-history"' + (loading ? " disabled" : "") + '>Import</button></div></div><input type="file" id="g-history-file" accept=".json,application/json" hidden>' + (attempts.length ? attempts.slice(0, 30).map((a) => '<button class="generic-history" data-attempt="' + escapeText(a.id) + '">' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + " \xB7 " + new Date(a.startedAt).toLocaleString() + "<small>" + (a.finishedAt ? " Completed" : " Resume") + "</small></button>").join("") : '<p class="fine">No attempts yet.</p>') + "</section></div>";
+      return '<div class="generic-heading"><h1>Exam workspace</h1><button class="btn" id="g-back">\u2190 Test library</button></div><p class="muted">Configurable papers \xB7 Six question types \xB7 Works offline</p>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + '<div class="generic-layout"><section class="panel pad"><h2>Select an exam</h2><select id="g-papers" aria-label="Select exam package">' + [...packages.values()].map((p) => '<option value="' + escapeText(p.paper.id) + '"' + (choice === p.paper.id ? " selected" : "") + ">" + escapeText(p.title) + "</option>").join("") + '</select><p class="fine">Built-in CGL papers remain available. You can also import any validated Practice Desk exam JSON file.</p><div class="row"><button class="btn primary" id="g-start"' + (loading || fallbackConflict ? " disabled" : "") + '>Start exam</button><button class="btn" id="g-import"' + (loading || fallbackConflict ? " disabled" : "") + '>Import JSON</button></div><input type="file" id="g-file" accept=".json,application/json" hidden></section><section class="panel pad"><div class="row between"><h2>Generic exam history</h2><div class="row"><button class="btn" id="g-export-history"' + (loading || fallbackConflict ? " disabled" : "") + '>Export</button><button class="btn" id="g-import-history"' + (loading || fallbackConflict ? " disabled" : "") + '>Import</button></div></div><input type="file" id="g-history-file" accept=".json,application/json" hidden>' + (attempts.length ? attempts.slice(0, 30).map((a) => '<button class="generic-history" data-attempt="' + escapeText(a.id) + '">' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + " \xB7 " + new Date(a.startedAt).toLocaleString() + "<small>" + (a.finishedAt ? " Completed" : " Resume") + "</small></button>").join("") : '<p class="fine">No attempts yet.</p>') + "</section></div>";
     }
     function examHTML() {
       if (!attempt) return "";
@@ -2701,11 +2723,21 @@ var PracticeDeskGeneric = (() => {
       }
     };
     window.addEventListener("pagehide", pagehide);
+    const storage = (event) => {
+      if (db || event.key !== storageKey || event.newValue === fallbackStamp) return;
+      fallbackConflict = true;
+      warning = "Fallback history changed in another tab. Reopen the file before continuing.";
+      attempt = null;
+      view = "library";
+      if (!disposed) draw();
+    };
+    window.addEventListener("storage", storage);
     function cleanup() {
       disposed = true;
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", visibility);
       window.removeEventListener("pagehide", pagehide);
+      window.removeEventListener("storage", storage);
       void writeQueue.finally(() => db?.close());
       root.classList.remove("generic-workspace");
     }
@@ -2757,7 +2789,9 @@ var PracticeDeskGeneric = (() => {
       } catch {
         warning = "IndexedDB unavailable. Limited localStorage fallback is in use.";
         try {
-          const recordsFromStorage = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
+          const storedFallback = localStorage.getItem(storageKey);
+          fallbackStamp = storedFallback;
+          const recordsFromStorage = JSON.parse(storedFallback ?? "[]");
           for (const record3 of recordsFromStorage) {
             if (isPackage(record3)) {
               try {
