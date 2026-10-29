@@ -7,7 +7,7 @@ import type { ErrorLabel, LearningCard, ReviewGrade } from "../learning/learning
 export interface LearningDeskHost {
   cards:()=>LearningCard[];
   attempts:()=>GenericAttempt[];
-  save:(record:LearningCard)=>void;
+  save:(record:LearningCard)=>Promise<boolean>;
   remove:(id:string)=>Promise<void>;
   close:()=>void;
 }
@@ -77,10 +77,12 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
        (message?'<p role="status" class="generic-warning">'+esc(message)+'</p>':"");
      root.querySelector<HTMLButtonElement>("#learning-back")!.onclick=()=>{reviewId=null;revealed=false;draw();};
      root.querySelector<HTMLButtonElement>("#learning-reveal")?.addEventListener("click",()=>{revealed=true;draw();});
-     root.querySelectorAll<HTMLButtonElement>("[data-grade]").forEach(button=>button.onclick=()=>{
+     root.querySelectorAll<HTMLButtonElement>("[data-grade]").forEach(button=>button.onclick=async()=>{
        if(!revealed||!scheduler)return;
        try{
-         host.save(rateLearningCard(item,Number(button.dataset.grade) as ReviewGrade,now().toISOString(),scheduler));
+         if(!await host.save(rateLearningCard(item,Number(button.dataset.grade) as ReviewGrade,now().toISOString(),scheduler))){
+           message="Review not durably saved. Export a recovery backup from the library.";draw();return;
+         }
          message="Review recorded. The next due date is scheduled by FSRS-7.";
          reviewId=dueCards().find(c=>c.id!==item.id)?.id??null;
          revealed=false;draw();
@@ -156,14 +158,16 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     selectedId=b.dataset.learningId??null;draw();
   });
   if(!selected)return;
-  root.querySelector<HTMLButtonElement>("#learning-save")!.onclick=()=>{
+  root.querySelector<HTMLButtonElement>("#learning-save")!.onclick=async()=>{
     try{
       const note=root.querySelector<HTMLTextAreaElement>("#learning-note")!.value;
       const customTopic=root.querySelector<HTMLInputElement>("#learning-topic")!.value.trim();
       const errorLabel=root.querySelector<HTMLSelectElement>("#learning-error")!.value as ErrorLabel|"";
       const bookmarked=root.querySelector<HTMLInputElement>("#learning-bookmark")!.checked;
-      host.save(validateLearningCard({...selected,note,customTopic,errorLabel:errorLabel||null,
-         bookmarked,updatedAt:now().toISOString()}));
+      if(!await host.save(validateLearningCard({...selected,note,customTopic,errorLabel:errorLabel||null,
+         bookmarked,updatedAt:now().toISOString()}))){
+        message="Notebook changes could not be durably saved. Export a recovery backup.";draw();return;
+      }
       message="Notebook saved.";draw();
     }catch(e){message=e instanceof Error?e.message:"Cannot save notebook";draw();}
   };
