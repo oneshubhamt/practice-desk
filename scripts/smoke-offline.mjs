@@ -152,6 +152,8 @@ try{
 
  // Three CGL modes are paper policies, not separate application implementations.
  await page.locator('[data-mode="free"]').click();
+ fail((await page.locator(".preview-metrics").innerText()).includes("Free"),
+   "Flexible mode preview incorrectly shows locked navigation");
  await page.locator("#g-start").click();
  await page.locator('[data-section="2"]').click();
  fail((await find(page,x=>x.recordType==="generic-attempt"&&x.id!==cgl.id&&x.frozen.paper.timing.kind==="whole-paper")).frozen.paper.sections.length===4,
@@ -161,6 +163,8 @@ try{
  await page.locator("#g-pause").click();
  await page.locator("#g-library").click();
  await page.locator('[data-mode="single"]').click();
+ fail((await page.locator(".preview-metrics").innerText()).includes("One section"),
+   "Single-section preview incorrectly claims four sections");
  await page.locator("#g-single-section").selectOption("2");
  await page.locator("#g-start").click();
  fail(await page.locator(".generic-prompt").count()===1,"Single section failed");

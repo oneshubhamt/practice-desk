@@ -36,6 +36,8 @@ test("history is a genuinely separate panel with faithful evidence disclaimers a
  assert.match(html,/data-attempt="first"/);
  assert.match(html,/id="g-export-history"/);
  assert.match(html,/Comparable progression/);
+ assert.ok(!html.includes('class="history-sparkline"'),
+   "Two unanswered attempts must not be plotted as false zero-percent scores");
  assert.match(html,/repeated questions count as repeated observations/i);
  assert.ok(!html.includes("Expected answer:"));
  const empty=historyHTML([],packages,{status:"all",sort:"newest",search:"x"},false,true,"");
