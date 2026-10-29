@@ -1,75 +1,50 @@
-import { sha256 } from "../content/import-cgl.ts";
+import { sha256 } from "../domain/hash.ts";
+import { validateDisplayPreferences } from "../app/preferences.ts";
+import type { DisplayPreferences } from "../app/preferences.ts";
 
-/** Display assets are archived once per paper revision, not once per attempt. */
-export interface ArchivedDisplayRevision {
-  readonly id: string;
-  readonly paperId: string;
-  readonly displayPaper: Record<string, unknown>;
+export interface BackupV3 {
+ readonly format:"practice-desk-backup";
+ readonly version:3;
+ readonly exportedAt:string;
+ readonly records:readonly Record<string,unknown>[];
+ readonly preferences:DisplayPreferences;
+ readonly manifest:{
+   readonly algorithm:"sha256";
+   readonly digest:string;
+   readonly recordCount:number;
+ };
 }
-export interface BackupV2 {
-  readonly format: "practice-desk-backup";
-  readonly version: 2;
-  readonly exportedAt: string;
-  readonly attempts: readonly Record<string, unknown>[];
-  readonly revisions: readonly ArchivedDisplayRevision[];
-  readonly preferences: unknown;
-  readonly manifest: {
-    readonly algorithm: "sha256";
-    readonly digest: string;
-    readonly attemptCount: number;
-    readonly revisionCount: number;
-  };
-}
-type Core = Omit<BackupV2, "manifest">;
-const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
-const digest = (core: Core): string => sha256(JSON.stringify(core));
-
-export function archiveDisplayRevision(id: string, paperId: string, displayPaper: Record<string, unknown>): ArchivedDisplayRevision {
-  if (!id || !paperId || !displayPaper || !Array.isArray(displayPaper.questions)) throw new Error("Invalid display revision");
-  return clone({ id, paperId, displayPaper });
-}
+type Core=Omit<BackupV3,"manifest">;
+const clone=<T>(v:T):T=>JSON.parse(JSON.stringify(v)) as T;
+const digest=(core:Core):string=>sha256(JSON.stringify(core));
 
 export function makeBackup(
-  attempts: readonly Record<string, unknown>[], revisions: readonly ArchivedDisplayRevision[],
-  preferences: unknown, exportedAt: string,
-): BackupV2 {
-  if (!Number.isFinite(Date.parse(exportedAt))) throw new Error("Invalid export timestamp");
-  const core = clone({ format: "practice-desk-backup" as const, version: 2 as const,
-    exportedAt, attempts, revisions, preferences });
-  return { ...core, manifest: { algorithm: "sha256", digest: digest(core),
-    attemptCount: core.attempts.length, revisionCount: core.revisions.length } };
+ records:readonly Record<string,unknown>[],preferences:DisplayPreferences,exportedAt:string
+):BackupV3{
+ if(!Number.isFinite(Date.parse(exportedAt)))throw new Error("Invalid export timestamp");
+ const validated=validateDisplayPreferences(preferences);
+ const core=clone({format:"practice-desk-backup" as const,version:3 as const,exportedAt,records,preferences:validated});
+ return {...core,manifest:{algorithm:"sha256",digest:digest(core),recordCount:core.records.length}};
 }
-
-export function verifyBackup(raw: unknown): BackupV2 {
-  if (!raw || typeof raw !== "object") throw new Error("Invalid backup");
-  const b = raw as Partial<BackupV2>;
-  if (b.format !== "practice-desk-backup" || b.version !== 2 ||
-      !Array.isArray(b.attempts) || !Array.isArray(b.revisions) ||
-      b.attempts.length > 5000 || b.revisions.length > 500 ||
-      typeof b.exportedAt !== "string" || !Number.isFinite(Date.parse(b.exportedAt))) throw new Error("Invalid backup format");
-  if (b.attempts.some(a => !a || typeof a !== "object" || typeof a.id !== "string" || a.id.length > 200) ||
-      b.revisions.some(r => !r || typeof r.id !== "string" || typeof r.paperId !== "string" ||
-        !r.displayPaper || !Array.isArray(r.displayPaper.questions)) ||
-      new Set(b.attempts.map(a => a.id)).size !== b.attempts.length ||
-      new Set(b.revisions.map(r => r.id)).size !== b.revisions.length) throw new Error("Invalid backup records");
-  const { manifest, ...core } = b;
-  if (!manifest || manifest.algorithm !== "sha256" ||
-      manifest.attemptCount !== b.attempts.length || manifest.revisionCount !== b.revisions.length ||
-      manifest.digest !== digest(core as Core)) throw new Error("Backup integrity check failed");
-  return b as BackupV2;
+export function verifyBackup(raw:unknown):BackupV3{
+ if(!raw||typeof raw!=="object")throw new Error("Invalid backup");
+ const b=raw as Partial<BackupV3>;
+ if(b.format!=="practice-desk-backup"||b.version!==3||!Array.isArray(b.records)||
+    b.records.length>5000||typeof b.exportedAt!=="string"||!Number.isFinite(Date.parse(b.exportedAt)))
+   throw new Error("Invalid backup format");
+ if(b.records.some(x=>!x||typeof x!=="object"||typeof x.id!=="string"||x.id.length>200)||
+    new Set(b.records.map(x=>x.id)).size!==b.records.length)throw new Error("Invalid backup records");
+ const {manifest,...core}=b;
+ if(!manifest||manifest.algorithm!=="sha256"||manifest.recordCount!==b.records.length||
+    manifest.digest!==digest(core as Core))throw new Error("Backup integrity check failed");
+ validateDisplayPreferences(b.preferences);
+ return b as BackupV3;
 }
-
-/** Import missing records only: never replace a previously completed or active attempt. */
-export function planBackupMerge<T extends { readonly id: string }>(
-  existing: readonly T[], incoming: readonly T[], activeId?: string,
-): T[] {
-  const known = new Set(existing.map(x => x.id));
-  if (activeId) known.add(activeId);
-  const result: T[] = [];
-  for (const candidate of incoming) {
-    if (known.has(candidate.id)) continue;
-    known.add(candidate.id);
-    result.push(candidate);
-  }
-  return result;
+export function planBackupMerge<T extends {readonly id:string}>(
+ existing:readonly T[],incoming:readonly T[],activeId?:string
+):T[]{
+ const known=new Set(existing.map(x=>x.id));if(activeId)known.add(activeId);
+ const result:T[]=[];
+ for(const candidate of incoming)if(!known.has(candidate.id)){known.add(candidate.id);result.push(candidate);}
+ return result;
 }

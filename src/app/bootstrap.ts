@@ -1,5 +1,7 @@
 import { mountExamWorkspace } from "./generic-ui.ts";
 import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
+import { readDisplayPreferences, writeDisplayPreferences, SETTINGS_EVENT } from "./preferences.ts";
+import type { DisplayPreferences } from "./preferences.ts";
 
 function readEmbedded<T>(id:string):T {
  const element=document.getElementById(id);
@@ -12,14 +14,7 @@ const solutions=readEmbedded<Readonly<Record<string,Readonly<Record<string,strin
 const root=document.getElementById("app");
 if(!root)throw new Error("Practice Desk mount missing");
 mountExamWorkspace(root,sources,patches,solutions);
-const settingsKey="practiceDesk.overhaul.settings.v1";
-type Settings={dark:boolean;scale:number};
-let settings:Settings={dark:false,scale:100};
-try{
- const stored=JSON.parse(localStorage.getItem(settingsKey)??"null") as Partial<Settings>|null;
- if(typeof stored?.dark==="boolean")settings.dark=stored.dark;
- if(Number.isInteger(stored?.scale)&&stored!.scale!>=85&&stored!.scale!<=140)settings.scale=stored!.scale!;
-}catch{/* Browser may block file:// preferences. */}
+let settings:DisplayPreferences=readDisplayPreferences();
 function apply(){
  document.documentElement.dataset.theme=settings.dark?"dark":"light";
  document.documentElement.style.setProperty("--type-scale",String(settings.scale/100));
@@ -31,9 +26,15 @@ function apply(){
  if(less)less.disabled=settings.scale<=85;
  if(more)more.disabled=settings.scale>=140;
 }
-function persist(){apply();try{localStorage.setItem(settingsKey,JSON.stringify(settings));}catch{}}
-document.getElementById("themeToggle")?.addEventListener("click",()=>{settings.dark=!settings.dark;persist();});
-document.getElementById("fontLess")?.addEventListener("click",()=>{settings.scale=Math.max(85,settings.scale-5);persist();});
-document.getElementById("fontMore")?.addEventListener("click",()=>{settings.scale=Math.min(140,settings.scale+5);persist();});
-document.getElementById("fontReset")?.addEventListener("click",()=>{settings.scale=100;persist();});
+function persist(next:DisplayPreferences){
+ try{settings=writeDisplayPreferences(next);apply();}
+ catch{const status=document.getElementById("preferences-warning");if(status)status.textContent="Display preference could not be saved.";}
+}
+document.getElementById("themeToggle")?.addEventListener("click",()=>persist({...settings,dark:!settings.dark}));
+document.getElementById("fontLess")?.addEventListener("click",()=>persist({...settings,scale:Math.max(85,settings.scale-5)}));
+document.getElementById("fontMore")?.addEventListener("click",()=>persist({...settings,scale:Math.min(140,settings.scale+5)}));
+document.getElementById("fontReset")?.addEventListener("click",()=>persist({...settings,scale:100}));
+window.addEventListener(SETTINGS_EVENT,()=>{
+ settings=readDisplayPreferences();apply();
+});
 apply();

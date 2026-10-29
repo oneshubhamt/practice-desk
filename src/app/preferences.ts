@@ -8,7 +8,7 @@ export function validateDisplayPreferences(value:unknown):DisplayPreferences{
  const p=value as Partial<DisplayPreferences>;
  if(p.schema!==1||typeof p.dark!=="boolean"||!Number.isInteger(p.scale)||p.scale!<85||p.scale!>140)
    throw new Error("Invalid display preferences");
- return {schema:1,dark:p.dark,scale:p.scale};
+ return {schema:1,dark:p.dark,scale:p.scale!};
 }
 export function readDisplayPreferences(storage:Pick<Storage,"getItem">=localStorage):DisplayPreferences{
  try{

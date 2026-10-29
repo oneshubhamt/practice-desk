@@ -38,7 +38,7 @@ export function importCglBank(papers: SourcePaperBank, patches: ReviewPatchBank)
         const content = { kind: "single-choice" as const, prompt: merged.stem, options,
           ...(original.passageRef ? { stimulusId: `${source.id}:passage:${original.passageRef}` as StimulusId } : {}),
           ...(merged.images.stem ? { assetIds: [`${stableId}:stem` as AssetId] } : {}) };
-        const editorial = { status: editorialStatus, ...(merged.review ? { notes: merged.review } : {}),
+        const editorial = { status: editorialStatus as QuestionRevision["editorial"]["status"], ...(merged.review ? { notes: merged.review } : {}),
           ...(merged.sources?.length ? { sources: merged.sources } : {}) };
         const fingerprint = questionRevisionHash({content,editorial});
         const id = `${stableId}:${edition}:${fingerprint.slice(0,16)}` as QuestionRevisionId;
