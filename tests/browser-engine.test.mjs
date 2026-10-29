@@ -43,3 +43,14 @@ test("strict mode enforces section lock and a late tick closes elapsed sections"
  assert.equal(state.sectionIndex,2);
  assert.deepEqual(state.completedSections,[0,1]);
 });
+
+test("CGL UI bridge exposes transactional archive and history backup APIs",()=>{
+ const engine=createBrowserEngine(sources,patches);
+ const a={paperId:Object.keys(sources)[0],mode:"strict",singleSection:0,startedAt:100,answers:{},flags:{},section:0,cursors:[0,0,0,0]};
+ engine.capture(a,100);
+ const display=engine.archiveDisplayRevision(a.frozen.snapshot.paperRevisionId,a.paperId,{questions:[]});
+ assert.equal(display.id,a.frozen.paper.id);
+ const backup=engine.makeBackup([{id:"example",paperId:a.paperId}], [display],null,"2026-10-28T00:00:00Z");
+ assert.equal(engine.verifyBackup(backup).manifest.attemptCount,1);
+ assert.equal(engine.planBackupMerge([{id:"example"}],[{id:"example"},{id:"other"}]).length,1);
+});

@@ -66,6 +66,23 @@ try{
    console.log("Offline file://: same attempt reopened with answer selected");
  }catch(error){throw new Error("Reopen file:// test: "+error.message+"; browser errors: "+second.errors.join(" | "));}
  finally{await second.context.close();}
+ // Independently exercise the original CGL UI: its start path archives frozen
+ // display assets and its History path must export a checksum-verified backup.
+ const cgl=await launch();
+ try{
+   await cgl.page.locator("#start").click();
+   await cgl.page.locator('[data-answer="a"]').first().click();
+   cgl.page.once("dialog",dialog=>dialog.accept());
+   await cgl.page.locator("#goHome").click();
+   await cgl.page.locator("#openHistory").click();
+   const downloadPromise=cgl.page.waitForEvent("download");
+   await cgl.page.locator("#exportBackup").click();
+   const backupDownload=await downloadPromise;
+   if(!backupDownload.suggestedFilename().endsWith(".json"))throw new Error("Backup download missing");
+   if(cgl.errors.length)throw new Error("CGL UI errors: "+cgl.errors.join(" | "));
+   console.log("Offline file://: original CGL start, answer and backup export passed");
+ }catch(error){throw new Error("CGL file:// test: "+error.message+"; browser errors: "+cgl.errors.join(" | "));}
+ finally{await cgl.context.close();}
 }finally{
  await rm(profile,{recursive:true,force:true});
 }

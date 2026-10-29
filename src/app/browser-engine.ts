@@ -128,5 +128,6 @@ export function createBrowserEngine(sources: SourcePaperBank, patches: ReviewPat
     const { paper, key, questions } = context(a);
     return scoreAttempt(paper, key, questions, responseRecords(a), calculatedAt);
   }
-  return { context, capture, assetMatches, chooseRecovered, ensure, restore, event, answer, score, importedCount: imported.length, questionCount: imported.reduce((n,e)=>n+e.questions.length,0) };
+  return { context, capture, assetMatches, chooseRecovered, makeBackup, verifyBackup, planBackupMerge,
+    archiveDisplayRevision, ensure, restore, event, answer, score, importedCount: imported.length, questionCount: imported.reduce((n,e)=>n+e.questions.length,0) };
 }
