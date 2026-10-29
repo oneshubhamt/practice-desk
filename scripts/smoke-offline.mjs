@@ -288,6 +288,8 @@ try{
      await modePage.locator('[data-section="1"]').click();
      await modePage.locator("#g-pause").click();
      await modePage.locator("#g-pause").filter({hasText:"Resume timer"}).waitFor();
+     if(await modePage.locator('input[data-choice]').first().isEnabled())
+       throw new Error("Paused CGL exam still permits editing answer controls");
      await modePage.locator("#g-pause").click();
      modePage.once("dialog",dialog=>dialog.accept());
      await modePage.locator("#g-submit").click();
