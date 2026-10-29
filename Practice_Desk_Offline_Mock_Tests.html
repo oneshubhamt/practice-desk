@@ -1181,6 +1181,8 @@ var PracticeDeskGeneric = (() => {
     examTimeRemaining: () => examTimeRemaining,
     mountExamWorkspace: () => mountExamWorkspace,
     renderGenericControls: () => renderGenericControls,
+    renderLegacyCglExam: () => renderLegacyCglExam,
+    renderModelExam: () => renderModelExam,
     validateGenericStoredRecord: () => validateGenericStoredRecord
   });
 
@@ -2309,8 +2311,48 @@ var PracticeDeskGeneric = (() => {
     }
     return value;
   }
+  function renderModelExam(attempt, bundle, warning = "") {
+    const paper = attempt.frozen.paper, state = attempt.state;
+    const section = paper.sections[state.sectionIndex];
+    const id = section?.questionRevisionIds[state.questionIndex];
+    const q = attempt.frozen.questions.find((x) => x.id === id);
+    if (!section || !q) return "<p>Question unavailable</p>";
+    const response = state.responses.find((r) => r.questionRevisionId === q.id)?.response;
+    const remaining = examTimeRemaining(paper, state);
+    const assets = bundle ?? {
+      format: "practice-desk-exam",
+      version: 1,
+      examId: attempt.frozen.snapshot.examId,
+      title: "",
+      paper,
+      answerKey: attempt.frozen.key,
+      questions: attempt.frozen.questions
+    };
+    return '<div class="generic-heading"><div><h1>' + escapeText(bundle?.title ?? paper.paperId) + '</h1><p class="muted">' + escapeText(section.title) + " \xB7 " + state.responses.filter((r) => r.response).length + ' answered</p></div><div class="row"><strong class="generic-timer" id="g-timer">' + (remaining === null ? "Untimed" : minutes(remaining)) + '</strong><button class="btn" id="g-library">Library</button></div></div>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + '<div class="generic-sections">' + paper.sections.map((s, i) => {
+      const locked = state.completedSections.includes(i) || (paper.timing.kind === "sectional" || paper.navigation.sectionNavigation === "sequential-locked") && i !== state.sectionIndex;
+      return '<button class="btn ' + (i === state.sectionIndex ? "primary" : "") + '" data-section="' + i + '"' + (locked ? " disabled" : "") + ">" + escapeText(s.title) + "</button>";
+    }).join("") + '</div><div class="generic-layout"><section class="panel pad"><p class="fine">' + escapeText(section.title) + " \xB7 Question " + (state.questionIndex + 1) + " of " + section.questionRevisionIds.length + "</p>" + stimulusHTML(assets, q) + '<h2 class="generic-prompt">' + escapeText(q.content.prompt) + "</h2>" + assetHTML(assets, q.content.assetIds) + renderGenericControls(assets, q, response) + '<div class="row generic-actions"><button class="btn" id="g-clear"' + (!response ? " disabled" : "") + '>Clear</button><button class="btn" id="g-flag" aria-pressed="' + Boolean(state.responses.find((r) => r.questionRevisionId === q.id)?.flagged) + '"' + (!paper.navigation.allowFlagging ? " disabled" : "") + '>Flag</button></div><div class="row generic-actions"><button class="btn" id="g-prev"' + (!state.questionIndex ? " disabled" : "") + '>\u2190 Previous</button><button class="btn" id="g-next"' + (state.questionIndex === section.questionRevisionIds.length - 1 ? " disabled" : "") + '>Next \u2192</button></div><div class="row generic-actions">' + (paper.timing.kind !== "untimed" && paper.timing.pausePolicy === "allowed" ? '<button class="btn" id="g-pause">' + (state.status === "paused" ? "Resume timer" : "Pause timer") + "</button>" : "") + '<button class="btn danger" id="g-submit">' + (paper.timing.kind === "sectional" ? "Submit section" : "Submit exam") + '</button></div></section><aside class="panel pad"><h3>Question navigator</h3><div class="generic-palette">' + section.questionRevisionIds.map((qid, i) => {
+      const r = state.responses.find((x) => x.questionRevisionId === qid);
+      return '<button class="num ' + (i === state.questionIndex ? "here " : "") + (r?.response ? "answered " : "") + (r?.flagged ? "marked" : "") + '" data-q="' + i + '" aria-current="' + (i === state.questionIndex ? "step" : "false") + '" aria-label="Question ' + (i + 1) + (r?.response ? ", answered" : "") + (r?.flagged ? ", flagged" : "") + '">' + (i + 1) + "</button>";
+    }).join("") + '</div><p class="fine">' + (paper.navigation.questionNavigation === "forward-only" ? "Questions cannot be revisited in this exam." : "Navigate freely where the paper permits.") + "</p></aside></div>";
+  }
+  var builtinCache = null;
+  function cachedCglPackages(sources, patches, solutions) {
+    if (builtinCache && builtinCache.sources === sources && builtinCache.patches === patches && builtinCache.solutions === solutions)
+      return builtinCache.bundles;
+    const bundles = builtinCglPackages(sources, patches, solutions);
+    builtinCache = { sources, patches, solutions, bundles };
+    return bundles;
+  }
+  function renderLegacyCglExam(attempt, sources, patches, solutions) {
+    const reviewed = attempt.paperId.endsWith("-reviewed");
+    const paperId = attempt.paperId.replace(/-reviewed$/, "");
+    const bundle = cachedCglPackages(sources, patches, solutions).find((x) => x.paper.paperId === paperId && x.paper.edition === (reviewed ? "reviewed" : "source"));
+    if (!bundle) throw new Error("CGL edition not found");
+    return renderModelExam({ packageId: bundle.paper.id, frozen: attempt.frozen, state: attempt.engineState }, bundle);
+  }
   function mountExamWorkspace(root, sources, patches, solutions, onBack, initialAttemptId) {
-    const packages = new Map(builtinCglPackages(sources, patches, solutions).map((p) => [p.paper.id, p]));
+    const packages = new Map(cachedCglPackages(sources, patches, solutions).map((p) => [p.paper.id, p]));
     const records = /* @__PURE__ */ new Map();
     let choice = packages.keys().next().value;
     let attempt = null, view = "library";
@@ -2484,30 +2526,7 @@ var PracticeDeskGeneric = (() => {
       return '<div class="generic-heading"><h1>Exam workspace</h1><button class="btn" id="g-back">\u2190 Test library</button></div><p class="muted">Configurable papers \xB7 Six question types \xB7 Works offline</p>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + '<div class="generic-layout"><section class="panel pad"><h2>Select an exam</h2><select id="g-papers" aria-label="Select exam package">' + [...packages.values()].map((p) => '<option value="' + escapeText(p.paper.id) + '"' + (choice === p.paper.id ? " selected" : "") + ">" + escapeText(p.title) + "</option>").join("") + '</select><p class="fine">Built-in CGL papers remain available. You can also import any validated Practice Desk exam JSON file.</p><div class="row"><button class="btn primary" id="g-start"' + (loading || fallbackConflict ? " disabled" : "") + '>Start exam</button><button class="btn" id="g-import"' + (loading || fallbackConflict ? " disabled" : "") + '>Import JSON</button></div><input type="file" id="g-file" accept=".json,application/json" hidden></section><section class="panel pad"><div class="row between"><h2>Generic exam history</h2><div class="row"><button class="btn" id="g-export-history"' + (loading || fallbackConflict ? " disabled" : "") + '>Export</button><button class="btn" id="g-import-history"' + (loading || fallbackConflict ? " disabled" : "") + '>Import</button></div></div><input type="file" id="g-history-file" accept=".json,application/json" hidden>' + (attempts.length ? attempts.slice(0, 30).map((a) => '<button class="generic-history" data-attempt="' + escapeText(a.id) + '">' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + " \xB7 " + new Date(a.startedAt).toLocaleString() + "<small>" + (a.finishedAt ? " Completed" : " Resume") + "</small></button>").join("") : '<p class="fine">No attempts yet.</p>') + "</section></div>";
     }
     function examHTML() {
-      if (!attempt) return "";
-      const paper = attempt.frozen.paper, state = attempt.state, bundle = packages.get(attempt.packageId);
-      const section = paper.sections[state.sectionIndex];
-      const id = section?.questionRevisionIds[state.questionIndex];
-      const q = attempt.frozen.questions.find((x) => x.id === id);
-      if (!section || !q) return "<p>Question unavailable</p>";
-      const response = state.responses.find((r) => r.questionRevisionId === q.id)?.response;
-      const remaining = examTimeRemaining(paper, state);
-      const assets = bundle ?? {
-        format: "practice-desk-exam",
-        version: 1,
-        examId: attempt.frozen.snapshot.examId,
-        title: "",
-        paper,
-        answerKey: attempt.frozen.key,
-        questions: attempt.frozen.questions
-      };
-      return '<div class="generic-heading"><div><h1>' + escapeText(bundle?.title ?? paper.paperId) + '</h1><p class="muted">' + escapeText(section.title) + " \xB7 " + state.responses.filter((r) => r.response).length + ' answered</p></div><div class="row"><strong class="generic-timer" id="g-timer">' + (remaining === null ? "Untimed" : minutes(remaining)) + '</strong><button class="btn" id="g-library">Library</button></div></div>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + '<div class="generic-sections">' + paper.sections.map((s, i) => {
-        const locked = state.completedSections.includes(i) || (paper.timing.kind === "sectional" || paper.navigation.sectionNavigation === "sequential-locked") && i !== state.sectionIndex;
-        return '<button class="btn ' + (i === state.sectionIndex ? "primary" : "") + '" data-section="' + i + '"' + (locked ? " disabled" : "") + ">" + escapeText(s.title) + "</button>";
-      }).join("") + '</div><div class="generic-layout"><section class="panel pad"><p class="fine">' + escapeText(section.title) + " \xB7 Question " + (state.questionIndex + 1) + " of " + section.questionRevisionIds.length + "</p>" + stimulusHTML(assets, q) + '<h2 class="generic-prompt">' + escapeText(q.content.prompt) + "</h2>" + assetHTML(assets, q.content.assetIds) + renderGenericControls(assets, q, response) + '<div class="row generic-actions"><button class="btn" id="g-clear"' + (!response ? " disabled" : "") + '>Clear</button><button class="btn" id="g-flag" aria-pressed="' + Boolean(state.responses.find((r) => r.questionRevisionId === q.id)?.flagged) + '"' + (!paper.navigation.allowFlagging ? " disabled" : "") + '>Flag</button></div><div class="row generic-actions"><button class="btn" id="g-prev"' + (!state.questionIndex ? " disabled" : "") + '>\u2190 Previous</button><button class="btn" id="g-next"' + (state.questionIndex === section.questionRevisionIds.length - 1 ? " disabled" : "") + '>Next \u2192</button></div><div class="row generic-actions">' + (paper.timing.kind !== "untimed" && paper.timing.pausePolicy === "allowed" ? '<button class="btn" id="g-pause">' + (state.status === "paused" ? "Resume timer" : "Pause timer") + "</button>" : "") + '<button class="btn danger" id="g-submit">' + (paper.timing.kind === "sectional" ? "Submit section" : "Submit exam") + '</button></div></section><aside class="panel pad"><h3>Question navigator</h3><div class="generic-palette">' + section.questionRevisionIds.map((qid, i) => {
-        const r = state.responses.find((x) => x.questionRevisionId === qid);
-        return '<button class="num ' + (i === state.questionIndex ? "here " : "") + (r?.response ? "answered " : "") + (r?.flagged ? "marked" : "") + '" data-q="' + i + '" aria-current="' + (i === state.questionIndex ? "step" : "false") + '" aria-label="Question ' + (i + 1) + (r?.response ? ", answered" : "") + (r?.flagged ? ", flagged" : "") + '">' + (i + 1) + "</button>";
-      }).join("") + '</div><p class="fine">' + (paper.navigation.questionNavigation === "forward-only" ? "Questions cannot be revisited in this exam." : "Navigate freely where the paper permits.") + "</p></aside></div>";
+      return attempt ? renderModelExam(attempt, packages.get(attempt.packageId), warning) : "";
     }
     function resultHTML() {
       if (!attempt) return "";
@@ -2844,6 +2863,7 @@ var PracticeDeskGeneric = (() => {
 
  globalThis.PD_GENERIC_UI = PracticeDeskGeneric.mountExamWorkspace;
 globalThis.PD_GENERIC_VALIDATE_RECORD = PracticeDeskGeneric.validateGenericStoredRecord;
+globalThis.PD_GENERIC_RENDER_CGL = PracticeDeskGeneric.renderLegacyCglExam;
 
 const SOURCE_PAPERS=JSON.parse(document.getElementById("paper-bank").textContent);
 const REVIEW_PATCHES=JSON.parse(document.getElementById("review-patches").textContent);
@@ -3189,10 +3209,33 @@ function drawHome(){let p=getPaper(prefs.paper)||Object.values(PAPERS)[0];let st
  </aside></div><details id="help" class="panel pad"><summary><b>Test rules and storage</b></summary><p>Strict mode locks each section. Submit a section early to start the next immediately with its full 15-minute allocation; unused minutes never carry over. In free mode there is one 60-minute clock, and in single-section mode there is a 15-minute clock. Only the last submission reveals answers.</p><p><b>Editorial policy:</b> Original preserves source questions and publisher keys. Corrected papers may repair errors, but must not quote the correct option or disclose the solving rule in a question stem unless the source already did so. Explanations and source-to-correction comparisons appear only after submission. Every correction is tracked by paper and question number; these are independent educational edits, not official answer keys.</p><p>Data is stored on your device (${storageMode==='indexeddb'?'IndexedDB':storageMode==='localStorage'?'localStorage fallback':'initializing'}). For long-term safety, export a backup from History & insights. Use the same browser and file location when possible. Shortcuts: A–D answer; arrow keys navigate; M flags a question; F toggles full screen. Display choices are in Aa at the upper right.</p></details><footer>Practice Desk · Single offline HTML · Not affiliated with SSC</footer>`;
  $('genericWorkspace').onclick=()=>{screen='generic';genericWorkspaceCleanup=globalThis.PD_GENERIC_UI($('app'),SOURCE_PAPERS,REVIEW_PATCHES,SOLUTION_BANK,()=>{genericWorkspaceCleanup=null;refreshGenericHistory().finally(()=>{screen='home';render();});});};
  $('paperSelect').onchange=e=>{prefs.paper=e.target.value+(p.edition==='reviewed'?'-reviewed':'');savePrefs();drawHome()};document.querySelectorAll('[data-edition]').forEach(el=>el.onclick=()=>{prefs.paper=p.familyId+(el.dataset.edition==='reviewed'?'-reviewed':'');savePrefs();drawHome()});document.querySelectorAll('[data-mode]').forEach(el=>el.onclick=()=>{prefs.mode=el.dataset.mode;savePrefs();drawHome()});if($('singleSelect'))$('singleSelect').onchange=e=>{prefs.section=+e.target.value;savePrefs();};$('start').onclick=startNew;if($('resume'))$('resume').onclick=resumeAttempt;$('openHistory').onclick=goHistory;$('recentHistory').onclick=goHistory;document.querySelectorAll('[data-open]').forEach(el=>el.onclick=()=>openResults(el.dataset.open));}
-function drawExam(){let a=active;if(!a)return drawHome();let s=a.section,qs=questionsFor(a,s),q=qs[cursor];if(!q)return;let so=qs.filter(q=>a.answers[q.n]).length;let total=Object.keys(a.answers).length,marked=qs.filter(q=>a.flags[q.n]).length;let strict=a.mode==='strict',single=a.mode==='single',closedSecs=strict?a.sections.filter(x=>x.endAt).length:0;
- $('app').innerHTML=`<div class="test-header"><div><div class="paperline">${esc(paperFor(a)?.name)}</div><div class="test-sub">${esc(modeName(a.mode))} · ${total} of ${single?25:100} answered</div></div><div class="row"><div class="clock" id="clock"><span id="clockValue">${msec(timeRemaining(a)/1000)}</span><small id="clockLabel">${strict?'This section':'Time remaining'}</small></div><button class="btn quiet" id="goHome">Library</button><button class="btn exam-full" id="examFull" aria-label="Toggle full-screen test view">⛶ Full screen</button></div></div><div class="progress"><div id="timeBar" style="width:${progress(a)}%"></div></div><div class="sectiontabs">${SECTIONS.map((name,i)=>{const locked=strict?i!==s:single?i!==s:false;let closed=strict&&i<s;return `<button class="sectiontab ${s===i?'active':''} ${locked?'locked':''}" data-section="${i}" ${locked?'disabled':''}><b>${esc(name)}</b><small>${closed?'Closed':strict&&i>s?'Locked':`${questionsFor(a,i).filter(x=>a.answers[x.n]).length}/25 answered`}</small></button>`;}).join('')}</div><div class="exam-layout"><section><div class="panel question"><div class="qid">${esc(SECTIONS[s])} · Question ${cursor+1} of 25 · Paper Q${q.n}</div>${qHTML(q)}<div class="choices">${optionsHTML(q)}</div><div class="qfoot"><div class="row"><button class="btn" id="prev" ${cursor===0?'disabled':''}>← Previous</button><button class="btn primary" id="next" ${cursor===24?'disabled':''}>Next →</button></div><div class="row"><button class="btn" id="clear" ${!a.answers[q.n]||a.pausedAt?'disabled':''}>Clear</button><button class="btn" id="mark">${a.flags[q.n]?'Unmark':'Mark for review'}</button></div></div></div><div class="sectionbar">${strict?`Section ${s+1} of 4 · ${closedSecs} completed · Each section has an independent 15-minute timer.`:single?'Only the selected section contributes to this attempt.':'Switch sections freely within the 60-minute total budget.'}</div><div class="row test-actions"><button class="btn ${strict?'primary':'danger'}" id="finish">${strict?s===3?'Submit final section':'Submit section early →':single?'Submit section':'Submit full paper'}</button>${!strict?`<button class="btn" id="pause">${a.pausedAt?'Resume timer':'Pause timer'}</button>`:''}</div></section><aside class="panel side"><h3>Question navigator</h3><p class="hint">Jump to a question in this section</p><div class="palette">${qs.map((x,i)=>`<button class="num ${cursor===i?'here':''} ${a.answers[x.n]?'answered':''} ${a.flags[x.n]?'marked':''}" data-num="${i}" title="Question ${x.n}">${i+1}</button>`).join('')}</div><div class="navigator-stats"><div><b>${so}<span> / 25</span></b><small>Answered</small></div><div><b>${25-so}</b><small>Not answered</small></div><div><b>${marked}</b><small>Flagged</small></div></div><div class="legend"><span><i class="dot g"></i>Answered</span><span><i class="dot y"></i>Review</span><span><i class="dot"></i>Not answered</span></div><p class="statusline">${strict?'The answer key stays hidden until all sections finish. Submitting this section closes it permanently.':'Answers remain hidden until you submit.'}</p></aside></div><footer>${strict?'Strict timer cannot be paused.':'Timer may be paused.'} Your answers and question timings are saved locally.</footer>`;
- $('goHome').onclick=goHome;$('examFull').onclick=toggleFullscreen;updateDisplayPanel();$('prev').onclick=()=>changeQuestion(cursor-1);$('next').onclick=()=>changeQuestion(cursor+1);$('clear').onclick=clearAnswer;$('mark').onclick=markQuestion;$('finish').onclick=confirmSubmit;if($('pause'))$('pause').onclick=togglePause;document.querySelectorAll('[data-answer]').forEach(x=>x.onclick=()=>pickAnswer(x.dataset.answer));document.querySelectorAll('[data-num]').forEach(x=>x.onclick=()=>changeQuestion(+x.dataset.num));document.querySelectorAll('[data-section]').forEach(x=>x.onclick=()=>changeSection(+x.dataset.section));if(a.pausedAt){$('clockLabel').textContent='Paused';}startTracking();updateClock();}
-function updateClock(){if(!active||screen!=='exam')return;const v=$('clockValue'),c=$('clock'),bar=$('timeBar');if(!v)return;v.textContent=msec(timeRemaining(active)/1000);c.classList.toggle('low',timeRemaining(active)<60000);if(bar)bar.style.width=`${progress(active).toFixed(2)}%`;}
+function drawExam(){
+ const a=active;
+ if(!a)return drawHome();
+ GENERIC_ENGINE.ensure(a,now());
+ const root=$('app');
+ root.classList.add('generic-workspace');
+ root.innerHTML=globalThis.PD_GENERIC_RENDER_CGL(a,SOURCE_PAPERS,REVIEW_PATCHES,SOLUTION_BANK);
+ $('g-library').onclick=goHome;
+ document.querySelectorAll('input[data-choice]').forEach(input=>input.onchange=()=>{
+  const q=selectedQuestion();
+  if(!q)return;
+  const typed=GENERIC_ENGINE.context(a).questions.find(x=>x.questionId.endsWith(':q:'+q.n));
+  if(typed?.content.kind!=='single-choice')return;
+  const idx=typed.content.options.findIndex(x=>x.id===input.dataset.choice);
+  if(idx>=0)pickAnswer(letters[idx]);
+ });
+ $('g-clear').onclick=clearAnswer;
+ $('g-flag').onclick=markQuestion;
+ $('g-prev').onclick=()=>changeQuestion(cursor-1);
+ $('g-next').onclick=()=>changeQuestion(cursor+1);
+ $('g-submit').onclick=confirmSubmit;
+ const pause=$('g-pause');if(pause)pause.onclick=togglePause;
+ document.querySelectorAll('[data-q]').forEach(el=>el.onclick=()=>changeQuestion(+el.dataset.q));
+ document.querySelectorAll('[data-section]').forEach(el=>el.onclick=()=>changeSection(+el.dataset.section));
+ updateDisplayPanel();startTracking();updateClock();
+}
+function updateClock(){if(!active||screen!=='exam')return;const v=$('clockValue'),c=$('clock'),bar=$('timeBar'),generic=$('g-timer');if(generic)generic.textContent=msec(timeRemaining(active)/1000);if(!v)return;v.textContent=msec(timeRemaining(active)/1000);c.classList.toggle('low',timeRemaining(active)<60000);if(bar)bar.style.width=`${progress(active).toFixed(2)}%`;}
 function timing(a,n){return a.timing?.[String(n)]||{ms:0,visits:0,changes:0,firstAnswerAt:null};}
 function durationOfSection(a,s){if(a.legacySummary)return null;if(a.mode==='strict'){let x=a.sections?.find(z=>z.section===s);return x?(x.endAt||now())-x.startAt:null;}if(a.mode==='single'){return a.singleSection===s?Math.max(0,(a.finishedAt||now())-a.startedAt-(a.pausedMs||0)):null;} // free: time attributed to foreground questions of each section; sums may differ from wall-time
  return questionsFor(a,s).reduce((sum,q)=>sum+timing(a,q.n).ms,0);}
@@ -3362,8 +3405,8 @@ async function importBackup(file){
 }
 async function deleteOne(id){const a=record(id);if(!a||!a.finishedAt)return;if(!confirm(`Permanently delete this saved attempt from ${dateText(a.finishedAt)}? Export a backup first if needed.`))return;const deleted=await removeAttempt(id);render();if(deleted)notify('Attempt deleted.');}
 async function clearHistory(){let list=attempts.filter(a=>a.finishedAt);if(!list.length)return;if(!confirm(`Delete all ${list.length} completed attempt records from this browser? This cannot be undone without a backup.`))return;if(!confirm('Confirm permanent deletion of saved test history?'))return;let count=0;for(let a of list){if(!await removeAttempt(a.id))break;count++;}render();notify(count===list.length?'Completed attempt history deleted.':`Deleted ${count} records; another tab or storage error stopped the operation.`);}
-function render(){if(screen==='generic')return;if(screen==='exam'&&active){settleTimer();if(screen!=='exam')return;}if(screen==='exam'&&!active)screen='home';if(screen!=='exam')stopTracking();if(screen==='exam')drawExam();else if(screen==='results')drawResults();else if(screen==='history')drawHistory();else drawHome();}
-document.addEventListener('keydown',e=>{if(screen!=='exam'||!active||active.pausedAt||e.target.closest('input,textarea,select'))return;const k=e.key.toLowerCase();if(k==='f'&&!e.ctrlKey&&!e.altKey&&!e.metaKey){e.preventDefault();toggleFullscreen();return;}if(letters.includes(k)){e.preventDefault();pickAnswer(k);}else if(k==='arrowright'){e.preventDefault();changeQuestion(Math.min(24,cursor+1));}else if(k==='arrowleft'){e.preventDefault();changeQuestion(Math.max(0,cursor-1));}else if(k==='m'){e.preventDefault();markQuestion();}});
+function render(){if(screen!=='exam'&&screen!=='generic')$('app').classList.remove('generic-workspace');if(screen==='generic')return;if(screen==='exam'&&active){settleTimer();if(screen!=='exam')return;}if(screen==='exam'&&!active)screen='home';if(screen!=='exam')stopTracking();if(screen==='exam')drawExam();else if(screen==='results')drawResults();else if(screen==='history')drawHistory();else drawHome();}
+document.addEventListener('keydown',e=>{if(screen!=='exam'||!active||active.pausedAt||(e.target.closest('input,textarea,select')&&!e.target.matches('input[data-choice]')))return;const k=e.key.toLowerCase();if(k==='f'&&!e.ctrlKey&&!e.altKey&&!e.metaKey){e.preventDefault();toggleFullscreen();return;}if(letters.includes(k)){e.preventDefault();pickAnswer(k);}else if(k==='arrowright'){e.preventDefault();changeQuestion(Math.min(24,cursor+1));}else if(k==='arrowleft'){e.preventDefault();changeQuestion(Math.max(0,cursor-1));}else if(k==='m'){e.preventDefault();markQuestion();}});
 document.addEventListener('visibilitychange',()=>{tabVisible=!document.hidden;if(active)GENERIC_ENGINE.event(active,{type:'VISIBILITY',nowMs:now(),visible:tabVisible});if(!tabVisible){stopTracking();if(active)upsertAttempt(active);}else{settleTimer();if(screen==='exam'){resetTracking();startTracking();render();}}});
 window.addEventListener('storage',e=>{
  if(e.key===FALLBACK_LS&&storageMode==='localStorage'&&e.newValue!==fallbackStamp){
