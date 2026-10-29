@@ -130,7 +130,7 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
       JSON.stringify(value.result.items)!==JSON.stringify(recalculated.items)||
       typeof value.result.snapshot.calculatedAt!=="string"||
       !Number.isFinite(Date.parse(value.result.snapshot.calculatedAt)))
-     throw new Error("Completed attempt score or item verdict does not match its frozen inputs");
+     throw new Error("Completed attempt score does not match its frozen inputs (summary or item verdict)");
  }
  return value;
 }
