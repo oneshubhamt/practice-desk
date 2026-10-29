@@ -84,6 +84,9 @@ try{
  try{
    await cgl.page.locator("#start").click();
    await cgl.page.locator('input[data-choice]').first().click();
+   const cglFocused=await cgl.page.locator('input[data-choice]:checked')
+     .evaluate(el=>document.activeElement===el);
+   if(!cglFocused)throw new Error("CGL focus lost after answer in shared renderer");
    cgl.page.once("dialog",dialog=>dialog.accept());
    await cgl.page.locator("#g-library").click();
    await cgl.page.locator("#openHistory").click();
