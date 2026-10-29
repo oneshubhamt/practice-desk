@@ -548,6 +548,35 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        '</td><td>'+items.filter(item=>item.verdict==="correct").length+'/'+items.length+
        '</td><td>'+minutes(responseTime)+'</td></tr>';
    }).join("");
+   const evidence=attemptEvidence(attempt);
+   const analyticHTML=evidence?'<section class="panel pad" id="g-attempt-evidence">'+
+     '<h2>Timing, accuracy & marks evidence</h2>'+
+     '<p class="fine">Times are foreground exposure to each question; they do not measure thinking time. Opportunity figures describe hypothetical arithmetic, not projected marks.</p>'+
+     '<div class="scroll-table"><table><thead><tr><th>Section</th><th>Answered</th><th>Coverage</th><th>Accuracy</th><th>Median answered time</th><th>Positive</th><th>Penalty</th></tr></thead><tbody>'+
+     evidence.sections.map(e=>'<tr><td>'+escapeText(e.title)+'</td><td>'+e.answered+'</td><td>'+
+       Math.round(e.coverage*100)+'%</td><td>'+(e.accuracy===null?"—":Math.round(e.accuracy*100)+"%")+
+       '</td><td>'+(e.medianAnsweredMs===null?"—":Math.round(e.medianAnsweredMs/1000)+"s")+
+       '</td><td>'+e.positive.toFixed(2)+'</td><td>'+e.penalties.toFixed(2)+'</td></tr>').join("")+'</tbody></table></div>'+
+     '<div class="row generic-actions"><span class="tag">Foreground '+minutes(evidence.timing.foregroundMs)+'</span>'+
+       '<span class="tag">Question exposure '+minutes(evidence.timing.questionMeasuredMs)+'</span>'+
+       '<span class="tag">Answers changed '+evidence.timing.changedAnswers+'</span></div>'+
+     '<h3>Section-relative speed × accuracy</h3>'+
+     '<p class="fine">Only sections with at least 5 measured answered responses are classified; fast is under 0.75× and slow over 1.5× that section\'s median.</p>'+
+     '<div class="learning-metric-grid">'+evidence.speed.buckets.map(e=>'<div class="learning-metric">'+
+       '<strong>'+e.label+'</strong><b>'+e.correct+' correct · '+e.incorrect+' incorrect</b>'+
+       '<small>'+e.items+' classified answers</small></div>').join("")+'</div>'+
+     '<p class="fine">'+evidence.speed.classified+' of '+evidence.speed.measured+
+       ' measurable answers classified; insufficient section samples remain unclassified.</p>'+
+     '<h3>Marks decomposition and hypothetical opportunities</h3>'+
+     '<div class="learning-metric-grid"><div class="learning-metric"><strong>Observed negative marks</strong><b>'+
+        evidence.opportunity.observedPenalty.toFixed(2)+'</b><small>Actual penalty magnitude</small></div>'+
+     '<div class="learning-metric"><strong>Wrong → correct</strong><b>+'+
+        evidence.opportunity.wrongToCorrect.toFixed(2)+'</b><small>Hypothetical, '+
+        evidence.opportunity.countWrong+' incorrect scored items</small></div>'+
+     '<div class="learning-metric"><strong>Skipped → correct</strong><b>+'+
+        evidence.opportunity.skippedToCorrect.toFixed(2)+'</b><small>Hypothetical, '+
+        evidence.opportunity.countSkipped+' unanswered scored items</small></div></div>'+
+     '</section>':"";
    return '<div class="generic-heading"><h1>Exam results</h1><button class="btn" id="g-library">Library</button></div>'+
     '<section class="panel pad"><div class="scoregrid"><div class="score standout"><b>'+s.snapshot.earnedMarks+
     '</b><small>Marks</small></div><div class="score"><b>'+s.snapshot.correctCount+
@@ -564,7 +593,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       escapeText(selfAssessed.toFixed(2))+'. Original automated score above remains unchanged.</p>':
       '<p class="fine">Automated marks reflect only scoreable questions.</p>')+'</section>'+
     '<section class="panel pad"><h2>Section performance</h2><div class="scroll-table"><table><thead><tr><th>Section</th><th>Marks</th><th>Correct</th><th>Time on questions</th></tr></thead><tbody>'+
-     paperSectionRows+'</tbody></table></div></section>'+
+     paperSectionRows+'</tbody></table></div></section>'+analyticHTML+
     '<section class="panel pad"><div class="row between"><h2>Question review</h2>'+
       '<button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div>'+
       '<p class="fine">Mock-test results never automatically become FSRS review ratings.</p>'+s.items.map((it,i)=>{
