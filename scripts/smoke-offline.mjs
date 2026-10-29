@@ -284,6 +284,7 @@ try{
    // Both entry points must render the embedded figures in real CGL questions.
    const figures=await cgl.context.newPage();
    await figures.goto(file,{waitUntil:"load"});
+   figures.once("dialog",dialog=>dialog.accept()); // another CGL attempt may still be active
    await figures.locator("#start").click();
    await figures.locator('[data-q="2"]').click(); // Oct 8 CGL Q3 has a stem and four visual options
    const cglImages=figures.locator(".generic-figure");
