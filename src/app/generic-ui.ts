@@ -153,7 +153,9 @@ export function renderModelExam(
      }).join("")+'</div><div class="generic-layout"><section class="panel pad"><p class="fine">'+
      escapeText(section.title)+' · Question '+(state.questionIndex+1)+' of '+section.questionRevisionIds.length+'</p>'+
      stimulusHTML(assets,q)+'<h2 class="generic-prompt">'+escapeText(q.content.prompt)+'</h2>'+
-     assetHTML(assets,q.content.assetIds)+renderGenericControls(assets,q,response)+
+     assetHTML(assets,q.content.assetIds)+
+     '<fieldset class="generic-response-group"'+(state.status==="paused"?" disabled":"")+'>'
+     +renderGenericControls(assets,q,response)+'</fieldset>'+
      '<div class="row generic-actions"><button class="btn" id="g-clear"'+(!response?" disabled":"")+'>Clear</button>'+
      '<button class="btn" id="g-flag" aria-pressed="'+Boolean(state.responses.find(r=>r.questionRevisionId===q.id)?.flagged)+'"'+(!paper.navigation.allowFlagging?" disabled":"")+'>Flag</button></div>'+
      '<div class="row generic-actions"><button class="btn" id="g-prev"'+(!state.questionIndex?" disabled":"")+'>← Previous</button>'+
