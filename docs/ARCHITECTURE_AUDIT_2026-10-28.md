@@ -1168,3 +1168,9 @@ Added:
 
 - Extended Chrome headless `file://` smoke: two simultaneous tabs reopen the same generic attempt. The second tab commits a newer revision, then the first attempts a stale update.
 - The first tab must display a storage-conflict warning and the persisted record must retain the second tab's revision. This is an automated gate for generic attempts only; original CGL tab conflicts and browser-specific fallback behaviour remain deferred.
+
+### Pass 4 verified incremental acceptance — 29 October 2026
+
+**CI run 40805453923 passed:** strict TypeScript, all tests, single offline HTML build and real Chrome `file://` smoke. Browser smoke now covers *both* exam entry points: CGL start/answer, unified backup download including generic and CGL attempts, generic reopen, and simultaneous tabs where an outdated attempt edit is rejected without overwriting the newer IndexedDB revision.
+
+**Current state:** Unified all-data backup and generic IndexedDB optimistic-concurrency guards are implemented. These are real checks, not a claim of final Pass 4 completion. Open acceptance items: original CGL multi-tab edits, consistent localStorage fallback conflict handling, collapsing duplicate fixed-CGL UI into the model-driven workspace, and Firefox/Safari offline manual tests. Preserve `main` and `baseline/v11`.
