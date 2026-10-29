@@ -1,6 +1,6 @@
 # Pass 9 — v11-grade product interface and feature restoration
 
-**Status:** Engineering scope implemented on `overhaul`, [automated Chromium regression green #40915424874](https://github.com/oneshubhamt/practice-desk/actions/runs/40915424874) with **75/75 Node tests**; final code/documentation HEAD must also pass before closure. `main` and `baseline/v11` are protected. This is source-and-automated-UI parity, **not a claim of pixel-identical appearance or physical-device signoff**.
+**Status:** **Complete for engineering and automated Chromium acceptance** on `overhaul`: [verified final CI #40916049802](https://github.com/oneshubhamt/practice-desk/actions/runs/40916049802), **75/75 Node tests**, strict TypeScript, generated offline HTML and the full Chromium `file://` suite green. `main` and `baseline/v11` are protected. This is source-and-automated-UI parity, **not a claim of pixel-identical appearance or physical-device signoff**.
 
 Read the [architecture audit](ARCHITECTURE_AUDIT_2026-10-28.md), [v11 parity ledger](V11_PARITY_LEDGER.md), [data model](DATA_MODEL.md) and [AGENTS.md](../AGENTS.md).
 
@@ -16,7 +16,7 @@ Read the [architecture audit](ARCHITECTURE_AUDIT_2026-10-28.md), [v11 parity led
 - [x] **Learning integration:** Existing FSRS-7 notebook, source-linked revision exams and topic analytics preserved, and enhanced with due/review/bookmark summary cards and self-reported error-pattern counts in the same visual system.
 - [x] **Visual design and responsiveness:** CSS [`src/styles/app.css`](../src/styles/app.css) now gives coherent hierarchy, progress tracks, responsive panels/tables, premium card styles, dark-mode tokens, focus-visible and reduced-motion handling. Chrome automated no-horizontal-overflow checks span **390px and 768px** for library, history, exam, insights, review, time ledger and learning.
 - [x] **Regression QA:** 75 strict Node tests, build-generated offline HTML, real Chromium `file://` end-to-end CGL three modes, six imported question kinds, frozen media, self-assessment, FSRS, generated revision, backup/reopen, optimistic multi-tab conflicts, fallback collisions, injected quota failure and responsive tests.
-- [x] **Five-step execution:** architecture scratchpad tracks audit→analysis→implementation→objective reconciliation→targeted QA with explicit limitations and evidence; final CI needs to be checked on exact final HEAD.
+- [x] **Five-step execution:** architecture scratchpad tracks audit→analysis→implementation→objective reconciliation→targeted QA with explicit limitations and evidence; the complete implementation and documentation HEAD was verified in CI #40916049802.
 
 ## Separate Pass 10/manual release gates (not claimed met)
 
