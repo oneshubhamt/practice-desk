@@ -16,5 +16,8 @@
     "typescript": "7.0.2",
     "esbuild": "0.25.12",
     "playwright-core": "1.64.1"
+  },
+  "dependencies": {
+    "ts-fsrs": "6.0.0"
   }
 }
