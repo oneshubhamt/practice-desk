@@ -136,7 +136,8 @@ export function renderModelExam(
    const id=section?.questionRevisionIds[state.questionIndex];
    const q=attempt.frozen.questions.find(x=>x.id===id);
    if(!section||!q)return '<p>Question unavailable</p>';
-   const response=state.responses.find(r=>r.questionRevisionId===q.id)?.response;
+   const responsesById=new Map(state.responses.map(row=>[row.questionRevisionId,row]));
+   const response=responsesById.get(q.id)?.response;
    const remaining=examTimeRemaining(paper,state);
    const assets=bundle??{format:"practice-desk-exam" as const,version:1 as const,
      examId:attempt.frozen.snapshot.examId,title:"",paper,answerKey:attempt.frozen.key,questions:attempt.frozen.questions};
@@ -157,7 +158,7 @@ export function renderModelExam(
      '<fieldset class="generic-response-group"'+(state.status==="paused"?" disabled":"")+'>'
      +renderGenericControls(assets,q,response)+'</fieldset>'+
      '<div class="row generic-actions"><button class="btn" id="g-clear"'+(!response||state.status==="paused"?" disabled":"")+'>Clear</button>'+
-     '<button class="btn" id="g-flag" aria-pressed="'+Boolean(state.responses.find(r=>r.questionRevisionId===q.id)?.flagged)+'"'+(!paper.navigation.allowFlagging||state.status==="paused"?" disabled":"")+'>Flag</button></div>'+
+     '<button class="btn" id="g-flag" aria-pressed="'+Boolean(responsesById.get(q.id)?.flagged)+'"'+(!paper.navigation.allowFlagging||state.status==="paused"?" disabled":"")+'>Flag</button></div>'+
      '<div class="row generic-actions"><button class="btn" id="g-prev"'+(!state.questionIndex||paper.navigation.questionNavigation==="forward-only"?" disabled":"")+'>← Previous</button>'+
      '<button class="btn" id="g-next"'+(state.questionIndex===section.questionRevisionIds.length-1?" disabled":"")+'>Next →</button></div>'+
      '<div class="row generic-actions">'+
@@ -167,7 +168,7 @@ export function renderModelExam(
       (paper.timing.kind==="sectional"?"Submit section":"Submit exam")+'</button></div></section>'+
      '<aside class="panel pad"><h3>Question navigator</h3><div class="generic-palette">'+
       section.questionRevisionIds.map((qid,i)=>{
-        const r=state.responses.find(x=>x.questionRevisionId===qid);
+        const r=responsesById.get(qid);
         const locked=paper.navigation.questionNavigation==="forward-only"&&i<state.questionIndex;
         return '<button class="num '+(i===state.questionIndex?"here ":"")+(r?.response?"answered ":"")+
         (r?.flagged?"marked":"")+'" data-q="'+i+'" aria-current="'+(i===state.questionIndex?"step":"false")+'" aria-label="Question '+(i+1)+
