@@ -127,9 +127,81 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
 }
 
 
+export function renderModelExam(
+ attempt:Pick<GenericAttempt,"state"|"frozen"|"packageId">,
+ bundle:ExamPackage|undefined,warning=""
+):string {
+   const paper=attempt.frozen.paper, state=attempt.state;
+   const section=paper.sections[state.sectionIndex];
+   const id=section?.questionRevisionIds[state.questionIndex];
+   const q=attempt.frozen.questions.find(x=>x.id===id);
+   if(!section||!q)return '<p>Question unavailable</p>';
+   const response=state.responses.find(r=>r.questionRevisionId===q.id)?.response;
+   const remaining=examTimeRemaining(paper,state);
+   const assets=bundle??{format:"practice-desk-exam" as const,version:1 as const,
+     examId:attempt.frozen.snapshot.examId,title:"",paper,answerKey:attempt.frozen.key,questions:attempt.frozen.questions};
+   return '<div class="generic-heading"><div><h1>'+escapeText(bundle?.title??paper.paperId)+'</h1><p class="muted">'+
+     escapeText(section.title)+' · '+state.responses.filter(r=>r.response).length+' answered</p></div>'+
+     '<div class="row"><strong class="generic-timer" id="g-timer">'+(remaining===null?"Untimed":minutes(remaining))+'</strong>'+
+     '<button class="btn" id="g-library">Library</button></div></div>'+
+     (warning?'<p class="generic-warning" role="status">'+escapeText(warning)+'</p>':"")+
+     '<div class="generic-sections">'+paper.sections.map((s,i)=>{
+       const locked=state.completedSections.includes(i)||
+         ((paper.timing.kind==="sectional"||paper.navigation.sectionNavigation==="sequential-locked")&&i!==state.sectionIndex);
+       return '<button class="btn '+(i===state.sectionIndex?"primary":"")+'" data-section="'+i+'"'+(locked?" disabled":"")+'>'+
+         escapeText(s.title)+'</button>';
+     }).join("")+'</div><div class="generic-layout"><section class="panel pad"><p class="fine">'+
+     escapeText(section.title)+' · Question '+(state.questionIndex+1)+' of '+section.questionRevisionIds.length+'</p>'+
+     stimulusHTML(assets,q)+'<h2 class="generic-prompt">'+escapeText(q.content.prompt)+'</h2>'+
+     assetHTML(assets,q.content.assetIds)+renderGenericControls(assets,q,response)+
+     '<div class="row generic-actions"><button class="btn" id="g-clear"'+(!response?" disabled":"")+'>Clear</button>'+
+     '<button class="btn" id="g-flag" aria-pressed="'+Boolean(state.responses.find(r=>r.questionRevisionId===q.id)?.flagged)+'"'+(!paper.navigation.allowFlagging?" disabled":"")+'>Flag</button></div>'+
+     '<div class="row generic-actions"><button class="btn" id="g-prev"'+(!state.questionIndex?" disabled":"")+'>← Previous</button>'+
+     '<button class="btn" id="g-next"'+(state.questionIndex===section.questionRevisionIds.length-1?" disabled":"")+'>Next →</button></div>'+
+     '<div class="row generic-actions">'+
+     (paper.timing.kind!=="untimed"&&paper.timing.pausePolicy==="allowed"?
+      '<button class="btn" id="g-pause">'+(state.status==="paused"?"Resume timer":"Pause timer")+'</button>':"")+
+     '<button class="btn danger" id="g-submit">'+(paper.timing.kind==="sectional"?"Submit section":"Submit exam")+'</button></div></section>'+
+     '<aside class="panel pad"><h3>Question navigator</h3><div class="generic-palette">'+
+      section.questionRevisionIds.map((qid,i)=>{
+        const r=state.responses.find(x=>x.questionRevisionId===qid);
+        return '<button class="num '+(i===state.questionIndex?"here ":"")+(r?.response?"answered ":"")+
+        (r?.flagged?"marked":"")+'" data-q="'+i+'" aria-current="'+(i===state.questionIndex?"step":"false")+'" aria-label="Question '+(i+1)+
+        (r?.response?", answered":"")+(r?.flagged?", flagged":"")+'">'+(i+1)+'</button>';
+      }).join("")+'</div><p class="fine">'+(paper.navigation.questionNavigation==="forward-only"?
+        "Questions cannot be revisited in this exam.":"Navigate freely where the paper permits.")+'</p></aside></div>';
+ }
+
+
+let builtinCache:{
+ sources:SourcePaperBank;patches:ReviewPatchBank;
+ solutions:Readonly<Record<string,Readonly<Record<string,string>>>>;bundles:ExamPackage[]
+}|null=null;
+function cachedCglPackages(sources:SourcePaperBank,patches:ReviewPatchBank,
+ solutions:Readonly<Record<string,Readonly<Record<string,string>>>>):ExamPackage[]{
+ if(builtinCache&&builtinCache.sources===sources&&builtinCache.patches===patches&&builtinCache.solutions===solutions)
+   return builtinCache.bundles;
+ const bundles=builtinCglPackages(sources,patches,solutions);
+ builtinCache={sources,patches,solutions,bundles};
+ return bundles;
+}
+/** Reuse the same model-driven exam view for the specialized CGL shell. */
+export function renderLegacyCglExam(
+ attempt:{paperId:string;frozen:GenericAttempt["frozen"];engineState:GenericAttempt["state"]},
+ sources:SourcePaperBank,patches:ReviewPatchBank,
+ solutions:Readonly<Record<string,Readonly<Record<string,string>>>>
+):string {
+ const reviewed=attempt.paperId.endsWith("-reviewed");
+ const paperId=attempt.paperId.replace(/-reviewed$/,"");
+ const bundle=cachedCglPackages(sources,patches,solutions).find(x=>
+   x.paper.paperId===paperId&&x.paper.edition===(reviewed?"reviewed":"source"));
+ if(!bundle)throw new Error("CGL edition not found");
+ return renderModelExam({packageId:bundle.paper.id,frozen:attempt.frozen,state:attempt.engineState},bundle);
+}
+
 export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patches:ReviewPatchBank,
  solutions:Readonly<Record<string,Readonly<Record<string,string>>>>,onBack:()=>void,initialAttemptId?:string):()=>void{
- const packages=new Map<string,ExamPackage>(builtinCglPackages(sources,patches,solutions).map(p=>[p.paper.id,p]));
+ const packages=new Map<string,ExamPackage>(cachedCglPackages(sources,patches,solutions).map(p=>[p.paper.id,p]));
  const records=new Map<string,RecordItem>();
  let choice=packages.keys().next().value as string;
  let attempt:GenericAttempt|null=null, view:"library"|"exam"|"result"="library";
@@ -282,46 +354,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
     '</section></div>';
  }
  function examHTML():string {
-   if(!attempt)return "";
-   const paper=attempt.frozen.paper, state=attempt.state, bundle=packages.get(attempt.packageId);
-   const section=paper.sections[state.sectionIndex];
-   const id=section?.questionRevisionIds[state.questionIndex];
-   const q=attempt.frozen.questions.find(x=>x.id===id);
-   if(!section||!q)return '<p>Question unavailable</p>';
-   const response=state.responses.find(r=>r.questionRevisionId===q.id)?.response;
-   const remaining=examTimeRemaining(paper,state);
-   const assets=bundle??{format:"practice-desk-exam" as const,version:1 as const,
-     examId:attempt.frozen.snapshot.examId,title:"",paper,answerKey:attempt.frozen.key,questions:attempt.frozen.questions};
-   return '<div class="generic-heading"><div><h1>'+escapeText(bundle?.title??paper.paperId)+'</h1><p class="muted">'+
-     escapeText(section.title)+' · '+state.responses.filter(r=>r.response).length+' answered</p></div>'+
-     '<div class="row"><strong class="generic-timer" id="g-timer">'+(remaining===null?"Untimed":minutes(remaining))+'</strong>'+
-     '<button class="btn" id="g-library">Library</button></div></div>'+
-     (warning?'<p class="generic-warning" role="status">'+escapeText(warning)+'</p>':"")+
-     '<div class="generic-sections">'+paper.sections.map((s,i)=>{
-       const locked=state.completedSections.includes(i)||
-         ((paper.timing.kind==="sectional"||paper.navigation.sectionNavigation==="sequential-locked")&&i!==state.sectionIndex);
-       return '<button class="btn '+(i===state.sectionIndex?"primary":"")+'" data-section="'+i+'"'+(locked?" disabled":"")+'>'+
-         escapeText(s.title)+'</button>';
-     }).join("")+'</div><div class="generic-layout"><section class="panel pad"><p class="fine">'+
-     escapeText(section.title)+' · Question '+(state.questionIndex+1)+' of '+section.questionRevisionIds.length+'</p>'+
-     stimulusHTML(assets,q)+'<h2 class="generic-prompt">'+escapeText(q.content.prompt)+'</h2>'+
-     assetHTML(assets,q.content.assetIds)+renderGenericControls(assets,q,response)+
-     '<div class="row generic-actions"><button class="btn" id="g-clear"'+(!response?" disabled":"")+'>Clear</button>'+
-     '<button class="btn" id="g-flag" aria-pressed="'+Boolean(state.responses.find(r=>r.questionRevisionId===q.id)?.flagged)+'"'+(!paper.navigation.allowFlagging?" disabled":"")+'>Flag</button></div>'+
-     '<div class="row generic-actions"><button class="btn" id="g-prev"'+(!state.questionIndex?" disabled":"")+'>← Previous</button>'+
-     '<button class="btn" id="g-next"'+(state.questionIndex===section.questionRevisionIds.length-1?" disabled":"")+'>Next →</button></div>'+
-     '<div class="row generic-actions">'+
-     (paper.timing.kind!=="untimed"&&paper.timing.pausePolicy==="allowed"?
-      '<button class="btn" id="g-pause">'+(state.status==="paused"?"Resume timer":"Pause timer")+'</button>':"")+
-     '<button class="btn danger" id="g-submit">'+(paper.timing.kind==="sectional"?"Submit section":"Submit exam")+'</button></div></section>'+
-     '<aside class="panel pad"><h3>Question navigator</h3><div class="generic-palette">'+
-      section.questionRevisionIds.map((qid,i)=>{
-        const r=state.responses.find(x=>x.questionRevisionId===qid);
-        return '<button class="num '+(i===state.questionIndex?"here ":"")+(r?.response?"answered ":"")+
-        (r?.flagged?"marked":"")+'" data-q="'+i+'" aria-current="'+(i===state.questionIndex?"step":"false")+'" aria-label="Question '+(i+1)+
-        (r?.response?", answered":"")+(r?.flagged?", flagged":"")+'">'+(i+1)+'</button>';
-      }).join("")+'</div><p class="fine">'+(paper.navigation.questionNavigation==="forward-only"?
-        "Questions cannot be revisited in this exam.":"Navigate freely where the paper permits.")+'</p></aside></div>';
+   return attempt?renderModelExam(attempt,packages.get(attempt.packageId),warning):"";
  }
  function resultHTML():string {
    if(!attempt)return "";
