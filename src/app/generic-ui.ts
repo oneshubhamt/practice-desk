@@ -168,9 +168,10 @@ export function renderModelExam(
      '<aside class="panel pad"><h3>Question navigator</h3><div class="generic-palette">'+
       section.questionRevisionIds.map((qid,i)=>{
         const r=state.responses.find(x=>x.questionRevisionId===qid);
+        const locked=paper.navigation.questionNavigation==="forward-only"&&i<state.questionIndex;
         return '<button class="num '+(i===state.questionIndex?"here ":"")+(r?.response?"answered ":"")+
         (r?.flagged?"marked":"")+'" data-q="'+i+'" aria-current="'+(i===state.questionIndex?"step":"false")+'" aria-label="Question '+(i+1)+
-        (r?.response?", answered":"")+(r?.flagged?", flagged":"")+'">'+(i+1)+'</button>';
+        (r?.response?", answered":"")+(r?.flagged?", flagged":"")+'"'+(locked?" disabled":"")+'>'+(i+1)+'</button>';
       }).join("")+'</div><p class="fine">'+(paper.navigation.questionNavigation==="forward-only"?
         "Questions cannot be revisited in this exam.":"Navigate freely where the paper permits.")+'</p></aside></div>';
  }
