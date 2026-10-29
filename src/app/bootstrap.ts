@@ -47,7 +47,7 @@ function setDisplayOpen(open:boolean):void{
  displayTrigger.setAttribute("aria-expanded",String(open));
  if(open)document.getElementById("fontReset")?.focus();
 }
-displayTrigger?.addEventListener("click",()=>setDisplayOpen(displayPanel?.hidden??false));
+displayTrigger?.addEventListener("click",()=>setDisplayOpen(displayPanel?.hidden===true));
 document.getElementById("displayClose")?.addEventListener("click",()=>{setDisplayOpen(false);displayTrigger?.focus();});
 document.addEventListener("pointerdown",event=>{
  if(displayPanel&&!displayPanel.hidden&&!((event.target instanceof Node)&&
