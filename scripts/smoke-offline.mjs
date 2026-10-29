@@ -325,6 +325,9 @@ try{
  await reopened.locator('input[data-choice]').first().click();
  const race=await find(reopened,x=>x.recordType==="generic-attempt"&&x.finishedAt===null&&
    x.state?.responses?.some(r=>r.response)&&x.saveRevision>0);
+ // Keep the first tab's local revision stale without a competing periodic timer
+ // changing the authoritative record during the controlled two-tab race.
+ await reopened.locator("#g-library").click();
  const second=await context.newPage();
  await testPage(second);
  await second.locator("#g-history").click();
@@ -333,6 +336,8 @@ try{
    "Concurrent history resume failed: "+await second.locator("main").innerText().then(text=>text.slice(0,240)));
  await second.locator('input[data-choice]').nth(1).click();
  const advanced=await find(second,x=>x.id===race.id&&x.saveRevision>race.saveRevision);
+ if(await reopened.locator('[data-attempt="'+race.id+'"]').count())
+  await reopened.locator('[data-attempt="'+race.id+'"]').first().click();
  if(await reopened.locator('input[data-choice]').count()>=3)
   await reopened.locator('input[data-choice]').nth(2).click();
  await reopened.locator(".generic-warning").filter({hasText:"Another tab"}).waitFor();
