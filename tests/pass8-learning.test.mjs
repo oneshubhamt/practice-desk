@@ -49,6 +49,11 @@ test("generated notebook revision is a real validated attempt, not a copied note
  const backed=verifyBackup(makeBackup([attempt],{schema:1,dark:false,scale:100},"2026-10-29T20:00:00Z"));
  assert.equal(backed.records[0].frozen.questions.length,3);
  assert.equal(backed.records[0].notebookLineage.entries[0].cardId,selected[0].id);
+ assert.equal(selected[0].sourceAttemptId,"completed-source");
+ const otherPaper={...card(1),paperId:"another-paper-revision",paperEdition:"source"};
+ const mixedPapers=makeRevisionPackage([selected[0],otherPaper],"same-exam-different-papers");
+ assert.equal(mixedPapers.questions.length,2,"Cards from distinct source papers in one exam may be combined");
+ assert.equal(createNotebookLineage([selected[0],otherPaper]).entries[1].sourcePaperId,"another-paper-revision");
  const forged=structuredClone(attempt);forged.notebookLineage.entries[0].sourceAttemptId="different";
  assert.throws(()=>validateGenericStoredRecord(forged),/lineage hash mismatch/);
 });
@@ -78,6 +83,8 @@ test("media from notebook remains in generated paper even if source package disa
  const active=startGenericAttempt(paper,"visual",1000);
  assert.equal(active.frozen.assets[0].contentHash,asset.contentHash);
  assert.throws(()=>makeRevisionPackage([one,{...card(1),assets:[{...asset,dataUri:"data:image/png;base64,AA=="}]}],"collision"),/Conflicting frozen image|digest mismatch/);
+ const second={...card(1),assets:[{...asset,altText:"Different asset metadata"}]};
+ assert.throws(()=>makeRevisionPackage([one,second],"conflicting-valid-asset"),/Conflicting frozen image identity/);
 });
 
 test("pace, speed relative to a section median and marking opportunities are exact",()=>{
