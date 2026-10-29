@@ -154,7 +154,7 @@ function queueWrite(job){writeChain=writeChain.catch(()=>{}).then(()=>legacyWrit
  fallbackSave();saveActiveMirror();
  if(!autosaveWarned){notify('Storage problem: using browser fallback. Export a backup.');autosaveWarned=true;}
  console.warn('Practice Desk storage',e);
-});return writeChain;
+});return writeChain;}
 function fallbackSave(){
  if(legacyWriteConflict)return false;
  if(getLS(FALLBACK_LS)!==fallbackStamp){
