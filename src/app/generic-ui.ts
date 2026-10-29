@@ -487,10 +487,11 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        const value=root.querySelector<HTMLTextAreaElement>("#g-text")!.value;
        dispatch(value.trim()?{type:"ANSWER",nowMs:now(),response:{kind:"free-response",text:value}}:{type:"CLEAR",nowMs:now()});
      }else if(q.content.kind==="matching"){
+       const matching=q.content;
        const pairs=[...root.querySelectorAll<HTMLSelectElement>("[data-match]")].filter(x=>x.value)
          .map(x=>{
-           const left=q.content.leftItems.find(item=>item.id===x.dataset.match);
-           const right=q.content.rightItems.find(item=>item.id===x.value);
+           const left=matching.leftItems.find(item=>item.id===x.dataset.match);
+           const right=matching.rightItems.find(item=>item.id===x.value);
            return left&&right?{leftId:left.id,rightId:right.id}:null;
          });
        if(pairs.some(x=>x===null)){notice("Unknown matching option.");return;}
