@@ -157,9 +157,9 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
        '<p class="fine">Select a card from the notebook.</p>')+'</section></div>'+
     '<section class="panel pad learning-insights"><h2>Topic performance</h2>'+
     '<p class="fine">Official CGL section labels are the default broad topics. Imported exam topic IDs and your explicitly labelled subtopics remain separate; no topic is guessed. Five answered items minimum for measured evidence. Skips are excluded from accuracy.</p>'+
-    '<div class="scroll-table"><table><thead><tr><th>Exam</th><th>Type</th><th>Topic</th><th>Answered / total</th><th>Distinct questions</th><th>Attempts</th><th>Accuracy</th><th>Evidence</th></tr></thead><tbody>'+
+    '<div class="scroll-table"><table><thead><tr><th>Exam</th><th>Type</th><th>Topic</th><th>Answered / total</th><th>Distinct answered</th><th>Answering attempts</th><th>Accuracy</th><th>Evidence</th></tr></thead><tbody>'+
      (topics.length?topics.map(t=>'<tr><td>'+esc(t.examId)+'</td><td>'+esc(t.kind)+'</td><td>'+esc(t.label)+'</td><td>'+
-       t.answered+' / '+t.total+'</td><td>'+t.distinctQuestions+'</td><td>'+t.attempts+
+       t.answered+' / '+t.total+'</td><td>'+t.distinctAnsweredQuestions+'</td><td>'+t.answeredAttempts+
        '</td><td>'+(t.accuracy===null?"—":Math.round(t.accuracy*100)+"%")+
        '</td><td>'+(t.evidence==="measured"?"Observed":"Insufficient")+'</td></tr>').join(""):
        '<tr><td colspan="8">Complete an exam to view topic performance.</td></tr>')+'</tbody></table></div>'+

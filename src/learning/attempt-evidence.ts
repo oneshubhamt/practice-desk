@@ -116,10 +116,10 @@ export interface ProgressionEvidence {
  label:"insufficient"|"repeated-items"|"moderate-observed"|"mixed"|"consistently-accurate";
 }
 export function evidenceProgression(rows:readonly {
- examId:string;label:string;answered:number;correct:number;attempts?:number;distinctQuestions?:number;
+ examId:string;label:string;answered:number;correct:number;attempts?:number;answeredAttempts?:number;distinctQuestions?:number;distinctAnsweredQuestions?:number;
 }[]):ProgressionEvidence[]{
  return rows.map(r=>{
-   const attempts=r.attempts??0,distinctQuestions=r.distinctQuestions??0;
+   const attempts=r.answeredAttempts??r.attempts??0,distinctQuestions=r.distinctAnsweredQuestions??r.distinctQuestions??0;
    const accuracy=r.answered>0?r.correct/r.answered:null;
    const label=attempts<2||r.answered<10?"insufficient":
      distinctQuestions<5?"repeated-items":

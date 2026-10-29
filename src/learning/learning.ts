@@ -104,12 +104,13 @@ export interface TopicMetrics {
  id:string;label:string;examId:string;total:number;answered:number;correct:number;incorrect:number;skipped:number;
  accuracy:number|null;coverage:number;evidence:"insufficient"|"measured";
  /** Repeated answers are observations, not additional distinct questions. */
- attempts:number;distinctQuestions:number;kind:"section"|"source-topic"|"user-topic";
+ attempts:number;answeredAttempts:number;distinctQuestions:number;distinctAnsweredQuestions:number;kind:"section"|"source-topic"|"user-topic";
 }
 export function topicMetrics(attempts:readonly GenericAttempt[],cards:readonly LearningCard[]=[]):TopicMetrics[]{
  const manual=new Map(cards.filter(c=>c.customTopic.trim()).map(c=>[c.question.id,c.customTopic.trim()]));
  const rows=new Map<string,TopicMetrics>();
  const distinct=new Map<string,Set<string>>(),independent=new Map<string,Set<string>>();
+ const answeredDistinct=new Map<string,Set<string>>(),answeredIndependent=new Map<string,Set<string>>();
  for(const attempt of attempts){
    if(!attempt.result||attempt.finishedAt===null)continue;
    const sections=attempt.frozen.paper.sections;
@@ -133,7 +134,7 @@ export function topicMetrics(attempts:readonly GenericAttempt[],cards:readonly L
        unique.add(key);
        const row:TopicMetrics=rows.get(key)??{id:key,label,kind,examId,total:0,answered:0,correct:0,
          incorrect:0,skipped:0,accuracy:null,coverage:0,evidence:"insufficient",
-         attempts:0,distinctQuestions:0};
+         attempts:0,answeredAttempts:0,distinctQuestions:0,distinctAnsweredQuestions:0};
        row.total++;
        if(item.verdict==="correct"){row.correct++;row.answered++;}
        if(item.verdict==="incorrect"){row.incorrect++;row.answered++;}
@@ -144,6 +145,14 @@ export function topicMetrics(attempts:readonly GenericAttempt[],cards:readonly L
        attemptIds.add(attempt.id);independent.set(key,attemptIds);
        row.distinctQuestions=distinctIds.size;
        row.attempts=attemptIds.size;
+       if(item.verdict==="correct"||item.verdict==="incorrect"){
+         const answeredIds=answeredDistinct.get(key)??new Set<string>();
+         answeredIds.add(q.id);answeredDistinct.set(key,answeredIds);
+         const answeredAttempts=answeredIndependent.get(key)??new Set<string>();
+         answeredAttempts.add(attempt.id);answeredIndependent.set(key,answeredAttempts);
+       }
+       row.distinctAnsweredQuestions=answeredDistinct.get(key)?.size??0;
+       row.answeredAttempts=answeredIndependent.get(key)?.size??0;
        row.accuracy=row.answered?row.correct/row.answered:null;
        row.coverage=row.answered/row.total;
        // Five answers is the minimum to display raw observed accuracy,
