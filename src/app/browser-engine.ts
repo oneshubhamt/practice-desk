@@ -3,6 +3,7 @@ import { transition, startSession } from "../engine/session.ts";
 import { freezeAttempt, assertFrozenContent, restoreSession, chooseRecovered } from "../history/frozen.ts";
 import type { FrozenAttemptContent } from "../history/frozen.ts";
 import { scoreAttempt } from "../engine/scoring.ts";
+import { assertWriteVersion, nextWriteVersion } from "../history/concurrency.ts";
 import { makeBackup,verifyBackup,archiveDisplayRevision,planBackupMerge } from "../history/backup.ts";
 import { validateResponse } from "../engine/response.ts";
 import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
@@ -129,5 +130,5 @@ export function createBrowserEngine(sources: SourcePaperBank, patches: ReviewPat
     return scoreAttempt(paper, key, questions, responseRecords(a), calculatedAt);
   }
   return { context, capture, assetMatches, chooseRecovered, makeBackup, verifyBackup, planBackupMerge,
-    archiveDisplayRevision, ensure, restore, event, answer, score, importedCount: imported.length, questionCount: imported.reduce((n,e)=>n+e.questions.length,0) };
+    archiveDisplayRevision, assertWriteVersion, nextWriteVersion, ensure, restore, event, answer, score, importedCount: imported.length, questionCount: imported.reduce((n,e)=>n+e.questions.length,0) };
 }
