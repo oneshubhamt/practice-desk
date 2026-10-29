@@ -140,7 +140,6 @@ try{
  fail(firstLearning.reviews.length===0,"Mock answers were incorrectly treated as FSRS ratings");
  await page.locator("#g-library").click();
  await page.locator("#g-learning").click();
- await page.locator("#learning-due").waitFor({state:"enabled"});
  await page.locator("#learning-due").click();
  fail(await page.locator(".learning-answer").count()===0,"Review answer leaked before reveal");
  await page.locator("#learning-reveal").click();
