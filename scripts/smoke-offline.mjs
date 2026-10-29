@@ -161,7 +161,6 @@ try{
 
 
  // Export/import checksum verified backup through the real file chooser.
- await page.locator("#g-library").click();
  const pending=page.waitForEvent("download");
  await page.locator("#g-export-history").click();
  const downloaded=await pending;
