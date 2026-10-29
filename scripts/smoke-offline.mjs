@@ -283,6 +283,7 @@ try{
    "Frozen original-source key missing from complete backup");
  fail(backup.records.some(a=>a.id===revision.id&&a.notebookLineage?.entries[0]?.sourceAttemptId===custom.id&&a.frozen.paper.edition==="custom"),
    "Notebook revision test missing from full backup");
+ await page.locator("#g-history").click();
  page.once("dialog",d=>d.accept());
  await page.locator('[data-delete="'+custom.id+'"]').click();
  const deleted=await attempts(page);
@@ -304,6 +305,7 @@ try{
  context=await chromium.launchPersistentContext(profile,opts);
  const reopened=context.pages()[0]??await context.newPage();
  const reopenedErrors=await testPage(reopened);
+ await reopened.locator("#g-history").click();
  await reopened.locator('[data-attempt="'+custom.id+'"]').first().click();
  await reopened.locator('[data-result-tab="review"]').click();
  fail(await reopened.locator(".generic-review").count()===6,"file:// reopen lost stored custom result");
