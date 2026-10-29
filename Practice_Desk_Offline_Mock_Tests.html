@@ -3779,6 +3779,77 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     };
   }
 
+  // src/engine/source-comparison.ts
+  function createSourceKeyReference(target, source) {
+    if (target.paper.edition !== "reviewed" || source.paper.edition !== "source" || target.examId !== source.examId || target.paper.paperId !== source.paper.paperId) return null;
+    const byQuestion = new Map(source.questions.map((q) => [q.questionId, q]));
+    const byEntry = new Map(source.answerKey.entries.map((e) => [e.questionRevisionId, e]));
+    const sections = new Map(source.paper.sections.flatMap((s) => s.questionRevisionIds.map((id) => [id, s])));
+    const entries = [];
+    for (const q of target.questions) {
+      const sourceQ = byQuestion.get(q.questionId);
+      if (!sourceQ || q.content.kind !== "single-choice" || sourceQ.content.kind !== "single-choice") return null;
+      const entry = byEntry.get(sourceQ.id), section = sections.get(sourceQ.id);
+      if (!entry || entry.answer.kind !== "single-choice" || !section) return null;
+      const originalOptionId = entry.answer.optionId;
+      if (!q.content.options.some((o) => o.id === originalOptionId)) return null;
+      const rule = entry.scoringOverride ?? section.scoringOverride ?? source.paper.scoring.byQuestionKind?.["single-choice"] ?? source.paper.scoring.defaultRule;
+      entries.push({ questionRevisionId: q.id, originalOptionId, markingRule: structuredClone(rule) });
+    }
+    const core = {
+      schema: 1,
+      paperId: target.paper.paperId,
+      sourcePaperRevisionId: source.paper.id,
+      sourceAnswerKeyRevisionId: source.answerKey.id,
+      entries
+    };
+    return { ...core, contentHash: hashJson(core) };
+  }
+  function validateSourceKeyReference(attempt) {
+    const reference = attempt.sourceKeyReference;
+    if (!reference) return;
+    if (reference.schema !== 1 || reference.paperId !== attempt.frozen.paper.paperId || typeof reference.sourcePaperRevisionId !== "string" || typeof reference.sourceAnswerKeyRevisionId !== "string" || !Array.isArray(reference.entries) || reference.entries.length !== attempt.frozen.questions.length) throw Error("Invalid original source-key comparison");
+    const core = {
+      schema: reference.schema,
+      paperId: reference.paperId,
+      sourcePaperRevisionId: reference.sourcePaperRevisionId,
+      sourceAnswerKeyRevisionId: reference.sourceAnswerKeyRevisionId,
+      entries: reference.entries
+    };
+    if (reference.contentHash !== hashJson(core)) throw Error("Original source-key reference hash mismatch");
+    const allowed = new Map(attempt.frozen.questions.map((q) => [q.id, q]));
+    const seen = /* @__PURE__ */ new Set();
+    for (const entry of reference.entries) {
+      const q = allowed.get(entry.questionRevisionId);
+      if (!q || q.content.kind !== "single-choice" || seen.has(q.id) || !q.content.options.some((o) => o.id === entry.originalOptionId) || !Number.isFinite(entry.markingRule.correctMarks) || !Number.isFinite(entry.markingRule.incorrectMarks) || !Number.isFinite(entry.markingRule.unansweredMarks) || entry.markingRule.correctMarks < 0 || entry.markingRule.incorrectMarks > 0)
+        throw Error("Invalid original source-key answer entry");
+      seen.add(q.id);
+    }
+  }
+  function sourceKeyScore(attempt) {
+    const ref = attempt.sourceKeyReference;
+    if (!ref || attempt.finishedAt === null) return null;
+    validateSourceKeyReference(attempt);
+    const responses = new Map(attempt.state.responses.map((row) => [row.questionRevisionId, row.response]));
+    let marks = 0, maxMarks = 0, correct = 0, incorrect = 0, unanswered = 0;
+    for (const entry of ref.entries) {
+      const r = responses.get(entry.questionRevisionId);
+      const rule = entry.markingRule;
+      maxMarks += rule.correctMarks;
+      if (!r) {
+        unanswered++;
+        marks += rule.unansweredMarks;
+      } else if (r.kind === "single-choice" && r.optionId === entry.originalOptionId) {
+        correct++;
+        marks += rule.correctMarks;
+      } else {
+        incorrect++;
+        marks += rule.incorrectMarks;
+      }
+    }
+    return { marks, maxMarks, correct, incorrect, unanswered };
+  }
+
   // src/app/preferences.ts
   var SETTINGS_KEY = "practiceDesk.overhaul.settings.v1";
   var SETTINGS_EVENT = "practice-desk-preferences";
@@ -5063,6 +5134,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
         throw new Error("Completed attempt score does not match its frozen inputs (summary or item verdict)");
     }
     validateManualGrades(value);
+    validateSourceKeyReference(value);
     return value;
   }
   function renderModelExam(attempt, bundle, warning = "") {
@@ -5451,6 +5523,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
       const qs = new Map(attempt.frozen.questions.map((q) => [q.id, q]));
       const grades2 = manualGradeSummary(attempt);
       const selfAssessed = s.snapshot.earnedMarks + grades2.total;
+      const originalKey = sourceKeyScore(attempt);
       const paperSectionRows = paper.sections.map((section) => {
         const ids = new Set(section.questionRevisionIds);
         const items = s.items.filter((item) => ids.has(item.questionRevisionId));
@@ -5458,7 +5531,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
         const responseTime = attempt.state.responses.filter((r) => ids.has(r.questionRevisionId)).reduce((sum, r) => sum + r.timeSpentMs, 0);
         return "<tr><td>" + escapeText(section.title) + "</td><td>" + scored.toFixed(1) + "</td><td>" + items.filter((item) => item.verdict === "correct").length + "/" + items.length + "</td><td>" + minutes(responseTime) + "</td></tr>";
       }).join("");
-      return '<div class="generic-heading"><h1>Exam results</h1><button class="btn" id="g-library">Library</button></div><section class="panel pad"><div class="scoregrid"><div class="score standout"><b>' + s.snapshot.earnedMarks + '</b><small>Marks</small></div><div class="score"><b>' + s.snapshot.correctCount + '</b><small>Correct</small></div><div class="score"><b>' + s.snapshot.incorrectCount + '</b><small>Incorrect</small></div><div class="score"><b>' + s.snapshot.unansweredCount + '</b><small>Unanswered</small></div><div class="score"><b>' + s.snapshot.excludedCount + "</b><small>Excluded</small></div></div>" + (grades2.graded || grades2.pending ? '<p class="fine"><b>Separate self-assessment:</b> ' + escapeText(grades2.graded) + " of " + escapeText(grades2.graded + grades2.pending) + " written responses marked; self-assessed total " + escapeText(selfAssessed.toFixed(2)) + ". Original automated score above remains unchanged.</p>" : '<p class="fine">Automated marks reflect only scoreable questions.</p>') + '</section><section class="panel pad"><h2>Section performance</h2><div class="scroll-table"><table><thead><tr><th>Section</th><th>Marks</th><th>Correct</th><th>Time on questions</th></tr></thead><tbody>' + paperSectionRows + '</tbody></table></div></section><section class="panel pad"><div class="row between"><h2>Question review</h2><button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div><p class="fine">Mock-test results never automatically become FSRS review ratings.</p>' + s.items.map((it, i) => {
+      return '<div class="generic-heading"><h1>Exam results</h1><button class="btn" id="g-library">Library</button></div><section class="panel pad"><div class="scoregrid"><div class="score standout"><b>' + s.snapshot.earnedMarks + '</b><small>Marks</small></div><div class="score"><b>' + s.snapshot.correctCount + '</b><small>Correct</small></div><div class="score"><b>' + s.snapshot.incorrectCount + '</b><small>Incorrect</small></div><div class="score"><b>' + s.snapshot.unansweredCount + '</b><small>Unanswered</small></div><div class="score"><b>' + s.snapshot.excludedCount + "</b><small>Excluded</small></div></div>" + (originalKey ? '<p class="fine"><b>Original-source key (unadjusted):</b> ' + escapeText(originalKey.marks.toFixed(1)) + " / " + escapeText(originalKey.maxMarks.toFixed(1)) + " marks \xB7 " + originalKey.correct + " correct \xB7 " + originalKey.incorrect + " incorrect \xB7 " + originalKey.unanswered + " unanswered. Uses the source key frozen at test start, including questions excluded from the reviewed score. This is a comparison, not an official score.</p>" : "") + (grades2.graded || grades2.pending ? '<p class="fine"><b>Separate self-assessment:</b> ' + escapeText(grades2.graded) + " of " + escapeText(grades2.graded + grades2.pending) + " written responses marked; self-assessed total " + escapeText(selfAssessed.toFixed(2)) + ". Original automated score above remains unchanged.</p>" : '<p class="fine">Automated marks reflect only scoreable questions.</p>') + '</section><section class="panel pad"><h2>Section performance</h2><div class="scroll-table"><table><thead><tr><th>Section</th><th>Marks</th><th>Correct</th><th>Time on questions</th></tr></thead><tbody>' + paperSectionRows + '</tbody></table></div></section><section class="panel pad"><div class="row between"><h2>Question review</h2><button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div><p class="fine">Mock-test results never automatically become FSRS review ratings.</p>' + s.items.map((it, i) => {
         const q = qs.get(it.questionRevisionId);
         const response = attempt.state.responses.find((r) => r.questionRevisionId === it.questionRevisionId)?.response;
         const answer = attempt.frozen.key.entries.find((e) => e.questionRevisionId === it.questionRevisionId)?.answer;
@@ -5514,6 +5587,11 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
           const id = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "generic-" + now2() + "-" + Math.random();
           const configured = p.examId === "ssc-cgl" ? configureCglPractice(p, cglMode, singleSection) : p;
           attempt = startGenericAttempt(configured, id, now2());
+          if (configured.paper.edition === "reviewed") {
+            const source = [...packages.values()].find((candidate) => candidate.paper.edition === "source" && candidate.paper.paperId === configured.paper.paperId && candidate.examId === configured.examId);
+            const original = source ? createSourceKeyReference(configured, source) : null;
+            if (original) attempt = { ...attempt, sourceKeyReference: original };
+          }
           warning = "";
           view = "exam";
           draw();
