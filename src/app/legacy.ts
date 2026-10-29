@@ -139,7 +139,20 @@ function captureDisplayArchive(a){
  if(paper&&a.frozen?.questions?.every(q=>GENERIC_ENGINE.assetMatches(a,Number(q.questionId.split(':').at(-1)))))
   displayRevisions.set(id,GENERIC_ENGINE.archiveDisplayRevision(id,a.paperId,paper));
 }
-function dbDelete(store,id){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).delete(id);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);tx.onabort=()=>rej(tx.error);});}
+function dbDelete(store,id,expected=undefined){return new Promise((res,rej)=>{
+ const tx=db.transaction(store,'readwrite'),st=tx.objectStore(store);
+ let conflict=null;
+ if(store==='attempts'&&expected!==undefined){
+  const read=st.get(id);
+  read.onsuccess=()=>{
+   try{GENERIC_ENGINE.assertWriteVersion(read.result,expected);st.delete(id);}
+   catch(error){conflict=error;tx.abort();}
+  };
+ }else st.delete(id);
+ tx.oncomplete=()=>res();
+ tx.onerror=()=>rej(conflict||tx.error);
+ tx.onabort=()=>rej(conflict||tx.error);
+});}
 function queueWrite(job){writeChain=writeChain.catch(()=>{}).then(()=>legacyWriteConflict?null:job()).catch(async e=>{
  if(String(e?.message||'').startsWith('Another tab')){
   legacyWriteConflict=true;
@@ -185,7 +198,19 @@ function upsertAttempt(a){
  if(db){const snap=structuredClone(a);queueWrite(()=>dbPutAttemptWithRevision(snap,expected));}
  else fallbackSave();
 }
-async function removeAttempt(id){attempts=attempts.filter(a=>a.id!==id);if(db)await queueWrite(()=>dbDelete('attempts',id));if(!db)fallbackSave();if(resultId===id)resultId=null;if(active?.id===id){active=null;saveActiveMirror();}}
+async function removeAttempt(id){
+ if(legacyWriteConflict)return false;
+ const previous=record(id);
+ if(!previous)return false;
+ const expected=Number.isSafeInteger(previous.saveRevision)?previous.saveRevision:0;
+ if(db)await queueWrite(()=>dbDelete('attempts',id,expected));
+ if(legacyWriteConflict)return false;
+ attempts=attempts.filter(a=>a.id!==id);
+ if(!db&&!fallbackSave())return false;
+ if(resultId===id)resultId=null;
+ if(active?.id===id){active=null;saveActiveMirror();}
+ return true;
+}
 /** Check local records before allowing them to influence the visible history or live state. */
 function usableStored(a){
  if(!a||typeof a!=='object'||typeof a.id!=='string'||(!getPaper(a.paperId)&&!a.frozenDisplay)||
@@ -481,6 +506,7 @@ async function importBackup(file){
    if(!setLS('practiceDesk.generic.fallback.v1',JSON.stringify(newGeneric))||
       !setLS(FALLBACK_LS,JSON.stringify(newCgl)))
     throw new Error('LocalStorage quota or permissions prevented a complete import');
+   fallbackStamp=getLS(FALLBACK_LS);
   }
   for(const revision of revisions){displayRevisions.set(revision.id,revision);if(db)savedRevisionIds.add(revision.id);}
   attempts.push(...incoming.filter(a=>a.recordType!=='generic-attempt'&&a.recordType!=='generic-package'));
@@ -489,9 +515,8 @@ async function importBackup(file){
   render();notify('Imported '+incoming.length+' saved records without replacing existing history.');
  }catch(error){notify('Backup import failed. IndexedDB changes were rolled back, if available.');console.warn('Backup import',error);}
 }
-async function upsertImported(a){let ix=attempts.findIndex(x=>x.id===a.id);if(ix>=0)attempts[ix]=a;else attempts.push(a);captureDisplayArchive(a);if(db)await queueWrite(()=>dbPutAttemptWithRevision(a));else fallbackSave();}
-async function deleteOne(id){const a=record(id);if(!a||!a.finishedAt)return;if(!confirm(`Permanently delete this saved attempt from ${dateText(a.finishedAt)}? Export a backup first if needed.`))return;await removeAttempt(id);render();notify('Attempt deleted.');}
-async function clearHistory(){let list=attempts.filter(a=>a.finishedAt);if(!list.length)return;if(!confirm(`Delete all ${list.length} completed attempt records from this browser? This cannot be undone without a backup.`))return;if(!confirm('Confirm permanent deletion of saved test history?'))return;for(let a of list)await removeAttempt(a.id);render();notify('Completed attempt history deleted.');}
+async function deleteOne(id){const a=record(id);if(!a||!a.finishedAt)return;if(!confirm(`Permanently delete this saved attempt from ${dateText(a.finishedAt)}? Export a backup first if needed.`))return;const deleted=await removeAttempt(id);render();if(deleted)notify('Attempt deleted.');}
+async function clearHistory(){let list=attempts.filter(a=>a.finishedAt);if(!list.length)return;if(!confirm(`Delete all ${list.length} completed attempt records from this browser? This cannot be undone without a backup.`))return;if(!confirm('Confirm permanent deletion of saved test history?'))return;let count=0;for(let a of list){if(!await removeAttempt(a.id))break;count++;}render();notify(count===list.length?'Completed attempt history deleted.':`Deleted ${count} records; another tab or storage error stopped the operation.`);}
 function render(){if(screen==='generic')return;if(screen==='exam'&&active){settleTimer();if(screen!=='exam')return;}if(screen==='exam'&&!active)screen='home';if(screen!=='exam')stopTracking();if(screen==='exam')drawExam();else if(screen==='results')drawResults();else if(screen==='history')drawHistory();else drawHome();}
 document.addEventListener('keydown',e=>{if(screen!=='exam'||!active||active.pausedAt||e.target.closest('input,textarea,select'))return;const k=e.key.toLowerCase();if(k==='f'&&!e.ctrlKey&&!e.altKey&&!e.metaKey){e.preventDefault();toggleFullscreen();return;}if(letters.includes(k)){e.preventDefault();pickAnswer(k);}else if(k==='arrowright'){e.preventDefault();changeQuestion(Math.min(24,cursor+1));}else if(k==='arrowleft'){e.preventDefault();changeQuestion(Math.max(0,cursor-1));}else if(k==='m'){e.preventDefault();markQuestion();}});
 document.addEventListener('visibilitychange',()=>{tabVisible=!document.hidden;if(active)GENERIC_ENGINE.event(active,{type:'VISIBILITY',nowMs:now(),visible:tabVisible});if(!tabVisible){stopTracking();if(active)upsertAttempt(active);}else{settleTimer();if(screen==='exam'){resetTracking();startTracking();render();}}});
