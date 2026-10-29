@@ -25,3 +25,5 @@ Double-click **Practice_Desk_Offline_Mock_Tests.html** to run offline without a 
 **No v11 runtime, compatibility, historical-data migration, or duplicated CGL storage path.** The reference app remains at [baseline/v11](../../tree/baseline/v11); this branch is an intentionally fresh product. No earlier browser data is loaded. Browser-local persistence is best effort under `file://`; export backups periodically.
 
 Development stays on `overhaul`. `main` and `baseline/v11` remain unchanged.
+
+**Pass 4 (29 October 2026):** Code overhaul complete, [Chromium offline CI green](https://github.com/oneshubhamt/practice-desk/actions/runs/40855216283). Manual Firefox/Safari and device-level quota/accessibility release acceptance still pending.

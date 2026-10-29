@@ -1214,3 +1214,16 @@ Added:
 **Acceptance decision:** The **Pass 4 shared exam presentation and Chromium regression implementation** is complete. **Final cross-browser release acceptance is not complete**: Firefox and Safari `file://` reopen/storage/backup behaviour, quota-exhaustion recovery and assistive-technology/manual interaction checks require platform testing. The original specialized CGL home, analytics and historical review remain functional but in the `@ts-nocheck` transitional shell; replacing that shell without preserving full feature parity is a separate outstanding architectural cleanup. Do not claim a fully strict-TypeScript frontend.
 
 See `docs/PASS4_RELEASE_ACCEPTANCE.md` for remaining verification. Do not merge to `main` or overwrite `baseline/v11` before deciding on these release gates.
+
+
+### Pass 4 clean-break overhaul — 29 October 2026 (supersedes earlier Pass 4 architecture notes)
+
+**User decision:** v11 lives on `baseline/v11` as the frozen reference. There are zero current user records to migrate. Do not maintain a second legacy implementation or build backwards-compatibility storage adapters.
+
+**Completed:** Replaced the entire `src/app/legacy.ts` runtime and `src/app/browser-engine.ts` adapter with a single `src/app/bootstrap.ts` entry, strictly typed `src/app/generic-ui.ts`, and versioned `src/app/exam-package.ts` policy configuration. The old files and their adapter tests were deleted from `overhaul` only. One library shows all ten CGL original/reviewed editions and imported exams. CGL strict, flexible and section-practice modes are revisioned paper policies, not separate renderers/engines. One history and result path presents frozen answer keys, editorial notes, explanations, per-section performance and per-question time. Users can resume, delete, export checksum-verified backups, import additive records and switch themes and type scale.
+
+**Storage reset:** Fresh IndexedDB database `practiceDesk.overhaul.v1` (single `attempts` store) and fresh overhaul-prefixed localStorage fallback/mirror/settings keys. No reading or migrating v11 browser data. The source/paper/review/solution JSON remains separate; all execution is single-file offline.
+
+**Verified:** CI [#40855216283](https://github.com/oneshubhamt/practice-desk/actions/runs/40855216283) passed Node 24 / strict TS 7.0.2 / unit tests / new Chrome `file://` smoke. The smoke covers all four CGL sectional submissions, free/single CGL practices, CGL image decode, custom six-response exam, frozen results, backup round trip, persistent-profile restart, IndexedDB stale-tab rejection, blocked-IDB localStorage fallback conflict/export, 390/768 px widths, and page errors. The GitHub Actions build publishes the generated self-contained HTML back to `overhaul` after successful checks. `main` and `baseline/v11` remain untouched.
+
+**Manual release checks only:** Firefox/Safari `file://` persistence/reopen, quota exhaustion and physical-device touch/screen-reader tests remain unverified. These platform-dependent release checks must not be described as completed. Pass 5 is separate.
