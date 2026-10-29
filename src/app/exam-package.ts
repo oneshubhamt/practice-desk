@@ -14,6 +14,7 @@ import type { SessionState, SessionEvent } from "../engine/session.ts";
 import { scoreAttempt } from "../engine/scoring.ts";
 import { freezeAttempt } from "../history/frozen.ts";
 import type { FrozenAttemptContent } from "../history/frozen.ts";
+import type { ManualGrade } from "../engine/manual-grading.ts";
 
 export interface ExamPackage {
  readonly format: "practice-desk-exam";
@@ -131,6 +132,7 @@ export interface GenericAttempt {
  readonly frozen: FrozenAttemptContent;
  readonly state: SessionState;
  readonly result?: ReturnType<typeof scoreAttempt>;
+ readonly manualGrades?: readonly ManualGrade[];
  readonly explanations?: Readonly<Record<string,string>>;
 }
 export function startGenericAttempt(bundle: ExamPackage, id: string, timestamp: number): GenericAttempt {

@@ -5,6 +5,7 @@ import type { QuestionRevisionId } from "../domain/ids.js";
 import type { SessionEvent } from "../engine/session.ts";
 import { restoreSession, chooseRecovered, assertFrozenContent } from "../history/frozen.ts";
 import { scoreAttempt } from "../engine/scoring.ts";
+import { manualGradeLimit, manualGradeSummary, setManualGrade, validateManualGrades } from "../engine/manual-grading.ts";
 import { makeBackup, verifyBackup, planBackupMerge } from "../history/backup.ts";
 import { validateResponse } from "../engine/response.ts";
 import { assertWriteVersion, nextWriteVersion } from "../history/concurrency.ts";
@@ -132,6 +133,7 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
       !Number.isFinite(Date.parse(value.result.snapshot.calculatedAt)))
      throw new Error("Completed attempt score does not match its frozen inputs (summary or item verdict)");
  }
+ validateManualGrades(value);
  return value;
 }
 
@@ -492,11 +494,31 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  function examHTML():string {
    return attempt?renderModelExam(attempt,packageForAttempt(attempt),warning):"";
  }
+ /** Result presentation must use the frozen media, not a mutable current package. */
+ function frozenReviewMedia(saved:GenericAttempt,q:QuestionRevision):string{
+   const frozen=saved.frozen;
+   const display:ExamPackage={format:"practice-desk-exam",version:1,
+     examId:frozen.snapshot.examId,title:"",paper:frozen.paper,answerKey:frozen.key,
+     questions:frozen.questions,stimuli:frozen.stimuli,assets:frozen.assets};
+   const content=q.content;
+   const passage=stimulusHTML(display,q);
+   const promptAssets=assetHTML(display,content.assetIds);
+   const options=content.kind==="single-choice"||content.kind==="multiple-select"?
+     '<div class="generic-choices">'+content.options.map((option,i)=>
+       '<div class="generic-choice"><span><b>'+String.fromCharCode(65+i)+'.</b> '+
+       escapeText(option.text)+assetHTML(display,option.assetIds)+'</span></div>').join("")+'</div>':"";
+   const matches=content.kind==="matching"?
+     '<div class="generic-matches">'+[...content.leftItems,...content.rightItems].map(item=>
+       '<div><span>'+escapeText(item.text)+assetHTML(display,item.assetIds)+'</span></div>').join("")+'</div>':"";
+   return passage+promptAssets+options+matches;
+ }
  function resultHTML():string {
    if(!attempt)return "";
    const paper=attempt.frozen.paper,s=attempt.result??scoreAttempt(paper,attempt.frozen.key,attempt.frozen.questions,
       attempt.state.responses,new Date().toISOString());
    const qs=new Map(attempt.frozen.questions.map(q=>[q.id,q]));
+   const grades=manualGradeSummary(attempt);
+   const selfAssessed=s.snapshot.earnedMarks+grades.total;
    const paperSectionRows=paper.sections.map(section=>{
      const ids=new Set(section.questionRevisionIds);
      const items=s.items.filter(item=>ids.has(item.questionRevisionId));
@@ -512,7 +534,11 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
     '</b><small>Correct</small></div><div class="score"><b>'+s.snapshot.incorrectCount+
     '</b><small>Incorrect</small></div><div class="score"><b>'+s.snapshot.unansweredCount+
     '</b><small>Unanswered</small></div><div class="score"><b>'+s.snapshot.excludedCount+
-    '</b><small>Excluded</small></div></div><p class="fine">Written responses marked pending require manual evaluation.</p></section>'+
+    '</b><small>Excluded</small></div></div>'+
+    (grades.graded||grades.pending?'<p class="fine"><b>Separate self-assessment:</b> '+escapeText(grades.graded)+
+      ' of '+escapeText(grades.graded+grades.pending)+' written responses marked; self-assessed total '+
+      escapeText(selfAssessed.toFixed(2))+'. Original automated score above remains unchanged.</p>':
+      '<p class="fine">Automated marks reflect only scoreable questions.</p>')+'</section>'+
     '<section class="panel pad"><h2>Section performance</h2><div class="scroll-table"><table><thead><tr><th>Section</th><th>Marks</th><th>Correct</th><th>Time on questions</th></tr></thead><tbody>'+
      paperSectionRows+'</tbody></table></div></section>'+
     '<section class="panel pad"><div class="row between"><h2>Question review</h2>'+
@@ -523,17 +549,31 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       const answer=attempt!.frozen.key.entries.find(e=>e.questionRevisionId===it.questionRevisionId)?.answer;
       const explanation=attempt!.explanations?.[it.questionRevisionId]||q?.editorial.notes;
       const seconds=attempt!.state.responses.find(r=>r.questionRevisionId===it.questionRevisionId)?.timeSpentMs??0;
-      return q?'<article class="generic-review"><strong>'+(i+1)+'. '+escapeText(q.content.prompt)+'</strong>'+
-       '<p class="fine">'+escapeText(q.editorial.status)+' · '+minutes(seconds)+' spent</p>'+
-       '<p class="fine">'+escapeText(it.verdict)+' · '+it.marks+' marks</p>'+
+      if(!q)return "";
+      const prior=attempt!.manualGrades?.find(g=>g.questionRevisionId===q.id);
+      const limit=manualGradeLimit(attempt!,q.id);
+      const provenance=q.editorial.sources??[];
+      return '<article class="generic-review"><strong>'+(i+1)+'. '+escapeText(q.content.prompt)+'</strong>'+
+       '<p class="fine">'+escapeText(q.editorial.status)+
+         (q.editorial.sourcePage?' · Source page '+q.editorial.sourcePage:"")+
+         ' · '+minutes(seconds)+' spent</p>'+
+       frozenReviewMedia(attempt!,q)+
+       '<p class="fine">'+escapeText(it.verdict)+' · '+it.marks+' automated marks</p>'+
        '<p class="fine">Your answer: '+escapeText(readableAnswer(q,response))+'</p>'+
        '<p class="fine">Expected: '+escapeText(readableAnswer(q,answer))+'</p>'+
        (q.editorial.notes?'<p class="fine">Editorial note: '+escapeText(q.editorial.notes)+'</p>':"")+
        (explanation?'<p class="fine">Explanation: '+escapeText(explanation)+'</p>':"")+
+       (provenance.length?'<p class="fine">Sources: '+provenance.map(source=>
+         '<a href="'+escapeText(source.url)+'" target="_blank" rel="noopener noreferrer">'+
+         escapeText(source.title)+'</a>').join(' · ')+'</p>':"")+
+       (limit!==null?'<div class="generic-manual-grade"><p class="fine">Written response requires explicit human assessment. Self-marked results are separate from exam scores.</p>'+
+          '<label>Self-assessed marks (0–'+limit+')<input type="number" step="0.01" min="0" max="'+limit+'" data-manual-marks="'+escapeText(q.id)+'" value="'+escapeText(prior?.marks??"")+'"></label>'+
+          '<label>Assessment note (optional)<textarea maxlength="2000" rows="2" data-manual-note="'+escapeText(q.id)+'">'+escapeText(prior?.note??"")+'</textarea></label>'+
+          '<button class="btn" data-manual-save="'+escapeText(q.id)+'">Save self-assessment</button></div>':"")+
        '<button class="btn" data-add-card="'+escapeText(q.id)+'"'+
          (records.has("learning-card:"+q.id)?" disabled":"")+'>'
          +(records.has("learning-card:"+q.id)?"In notebook":"Add to notebook")+
-       '</button></article>':"";
+       '</button></article>';
     }).join("")+'</section>';
  }
  function draw():void{
@@ -612,6 +652,18 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    root.querySelector<HTMLButtonElement>("#g-library")!.onclick=()=>{view="library";attempt=null;draw();};
    if(view==="result"&&attempt){
      root.querySelector<HTMLButtonElement>("#g-revision-set")!.onclick=()=>{void addResultCards(attempt!);};
+     root.querySelectorAll<HTMLButtonElement>("[data-manual-save]").forEach(button=>button.onclick=async()=>{
+       if(!attempt||storageFault)return;
+       const id=button.dataset.manualSave as QuestionRevisionId|undefined;
+       if(!id)return;
+       const marksField=[...root.querySelectorAll<HTMLInputElement>("[data-manual-marks]")].find(x=>x.dataset.manualMarks===id);
+       const noteField=[...root.querySelectorAll<HTMLTextAreaElement>("[data-manual-note]")].find(x=>x.dataset.manualNote===id);
+       if(!marksField?.value||!Number.isFinite(marksField.valueAsNumber)){notice("Enter a finite assessment mark.");return;}
+       try{
+         const assessed=setManualGrade(attempt,id,marksField.valueAsNumber,noteField?.value??"",new Date(now()).toISOString());
+         if(await save(assessed)){warning="Self-assessment committed separately from original exam score.";draw();}
+       }catch(error){notice(error instanceof Error?error.message:"Invalid manual assessment");}
+     });
      root.querySelectorAll<HTMLButtonElement>("[data-add-card]").forEach(button=>button.onclick=()=>{
        if(attempt)addNotebookCard(attempt,button.dataset.addCard??"");
      });
