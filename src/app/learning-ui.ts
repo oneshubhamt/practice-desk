@@ -7,33 +7,41 @@ import type { ErrorLabel, LearningCard, ReviewGrade } from "../learning/learning
 export interface LearningDeskHost {
   cards:()=>LearningCard[];
   attempts:()=>GenericAttempt[];
-  packages:()=>ExamPackage[];
   save:(record:LearningCard)=>void;
   remove:(id:string)=>Promise<void>;
   close:()=>void;
 }
 const esc=(v:unknown):string=>String(v??"").replace(/[&<>"']/g,c=>
   ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]??c));
-function figures(pkg:ExamPackage|undefined,ids:readonly string[]|undefined):string{
+function figures(assets:LearningCard["assets"],ids:readonly string[]|undefined):string{
  return (ids??[]).map(id=>{
-  const a=pkg?.assets?.find(x=>x.id===id);
+  const a=assets.find(x=>x.id===id);
   return a?'<img class="generic-figure" src="'+esc(a.dataUri)+'" alt="'+esc(a.altText??"Question figure")+'">':"";
  }).join("");
 }
-function questionHTML(record:LearningCard,packages:readonly ExamPackage[]):string{
- const q=record.question,c=q.content;
- const pkg=packages.find(p=>p.questions.some(item=>item.id===q.id));
- const stimulus=pkg?.stimuli?.find(s=>s.id===c.stimulusId);
- const passage=stimulus&&(stimulus.kind==="passage"||stimulus.kind==="case")?
-  '<section class="generic-stimulus"><strong>'+esc(stimulus.title??"Source passage")+'</strong><p>'+esc(stimulus.text)+'</p></section>':"";
+function questionHTML(record:LearningCard):string{
+ const q=record.question,c=q.content,assets=record.assets;
+ const stimulus=record.stimuli.find(s=>s.id===c.stimulusId);
+ let stimulusHtml="";
+ if(stimulus?.kind==="passage"||stimulus?.kind==="case")
+   stimulusHtml='<section class="generic-stimulus"><strong>'+esc(stimulus.title??"Source passage")+
+     '</strong><p>'+esc(stimulus.text)+'</p>'+figures(assets,stimulus.assetIds)+'</section>';
+ else if(stimulus?.kind==="table")
+   stimulusHtml='<section class="generic-stimulus"><strong>'+esc(stimulus.title??"Table")+
+     '</strong><div class="scroll-table"><table><tr>'+stimulus.columns.map(x=>'<th>'+esc(x)+'</th>').join("")+
+     '</tr>'+stimulus.rows.map(row=>'<tr>'+row.map(x=>'<td>'+esc(x)+'</td>').join("")+'</tr>').join("")+
+     '</table></div></section>';
+ else if(stimulus&&(stimulus.kind==="chart"||stimulus.kind==="image"))
+   stimulusHtml='<section class="generic-stimulus">'+figures(assets,[stimulus.assetId])+
+     '<p>'+esc(stimulus.caption??stimulus.altText)+'</p></section>';
  const choices=(c.kind==="single-choice"||c.kind==="multiple-select")?
    '<div class="generic-choices">'+c.options.map((o,i)=>'<label class="generic-choice"><input type="'+
    (c.kind==="single-choice"?"radio":"checkbox")+'" name="learning-answer"><span>'+
-   String.fromCharCode(65+i)+'. '+esc(o.text)+figures(pkg,o.assetIds)+'</span></label>').join("")+'</div>':
+   String.fromCharCode(65+i)+'. '+esc(o.text)+figures(assets,o.assetIds)+'</span></label>').join("")+'</div>':
    c.kind==="true-false"?'<div class="generic-choices"><label><input type="radio" name="learning-true"> True</label> '+
       '<label><input type="radio" name="learning-true"> False</label></div>':
    '<textarea aria-label="Recall your response" rows="3" placeholder="Think through or write your answer before revealing it."></textarea>';
- return passage+'<h2 class="generic-prompt">'+esc(c.prompt)+'</h2>'+figures(pkg,c.assetIds)+choices;
+ return stimulusHtml+'<h2 class="generic-prompt">'+esc(c.prompt)+'</h2>'+figures(assets,c.assetIds)+choices;
 }
 
 export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
@@ -58,7 +66,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
      root.innerHTML='<div class="generic-heading"><div><h1>Spaced revision</h1><p class="muted">'+
        esc(item.sectionTitle)+' · FSRS-7 · rate your recall, not your exam mark</p></div>'+
        '<button class="btn" id="learning-back">Learning desk</button></div>'+
-       '<section class="panel pad">'+questionHTML(item,host.packages())+
+       '<section class="panel pad">'+questionHTML(item)+
        (revealed?'<div class="learning-answer"><h3>Expected answer</h3><p>'+esc(readableAnswer(item.question,item.answer))+'</p>'+
          (item.explanation?'<p>'+esc(item.explanation)+'</p>':"")+
          (item.note?'<p class="fine">Your note: '+esc(item.note)+'</p>':"")+

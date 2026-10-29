@@ -144,8 +144,9 @@ export function renderModelExam(
    const responsesById=new Map(state.responses.map(row=>[row.questionRevisionId,row]));
    const response=responsesById.get(q.id)?.response;
    const remaining=examTimeRemaining(paper,state);
-   const assets=bundle??{format:"practice-desk-exam" as const,version:1 as const,
-     examId:attempt.frozen.snapshot.examId,title:"",paper,answerKey:attempt.frozen.key,questions:attempt.frozen.questions};
+   const assets:ExamPackage={format:"practice-desk-exam",version:1,
+     examId:attempt.frozen.snapshot.examId,title:bundle?.title??"",paper,answerKey:attempt.frozen.key,
+     questions:attempt.frozen.questions,stimuli:attempt.frozen.stimuli,assets:attempt.frozen.assets};
    return '<div class="generic-heading"><div><h1>'+escapeText(bundle?.title??paper.paperId)+'</h1><p class="muted">'+
      escapeText(section.title)+' · '+state.responses.filter(r=>r.response).length+' answered</p></div>'+
      '<div class="row"><strong class="generic-timer" id="g-timer">'+(remaining===null?"Untimed":minutes(remaining))+'</strong>'+
@@ -362,7 +363,6 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  const learningDesk=createLearningDesk(root,{
    cards:()=>[...records.values()].filter(isLearning),
    attempts:()=>[...records.values()].filter(isAttempt),
-   packages:()=>[...packages.values()],
    save:(item)=>save(item),
    remove:(id)=>removeSavedAttempt(id),
    close:()=>{view="library";draw();}

@@ -1,5 +1,7 @@
 import type { GenericAttempt } from "../app/exam-package.ts";
-import type { QuestionRevision } from "../domain/question.js";
+import type { QuestionRevision, StimulusDefinition, ImageAsset } from "../domain/question.js";
+import { questionRevisionHash, answerKeyRevisionHash } from "../domain/integrity.ts";
+import { selectDisplayResources, validateMediaInventory, validateQuestionMediaReferences } from "../domain/media.ts";
 import type { CorrectAnswer } from "../domain/answer-key.js";
 import type { QuestionRevisionId } from "../domain/ids.js";
 import type { DefaultScheduler, Grade } from "ts-fsrs";
@@ -14,6 +16,8 @@ export interface LearningCard {
  readonly saveRevision?:number;
  readonly question:QuestionRevision;
  readonly answer:CorrectAnswer;
+ readonly stimuli:readonly StimulusDefinition[];
+ readonly assets:readonly ImageAsset[];
  readonly examId:string;
  readonly paperId:string;
  readonly paperEdition:string;
@@ -46,10 +50,15 @@ export function validateLearningCard(input:unknown):LearningCard{
     !Array.isArray(raw.reviews)||raw.reviews.length>10000)
    throw Error("Invalid learning card fields");
  const question=validateQuestionRevision(raw.question);
+ if(question.contentHash!==questionRevisionHash(question))throw Error("Learning card question hash mismatch");
+ if(!Array.isArray(raw.stimuli)||!Array.isArray(raw.assets))throw Error("Learning card display media missing");
+ const media=validateMediaInventory(raw.stimuli,raw.assets);
+ validateQuestionMediaReferences([question],media.stimuli,media.assets);
  if(raw.id!=="learning-card:"+question.id)throw Error("Learning card question identity mismatch");
  // Reuse the real answer-key validator, even for cards imported from a JSON backup.
- validateAnswerKeyRevision({id:"learning-key",paperId:raw.paperId,revision:1,
-   contentHash:"0".repeat(64),entries:[{questionRevisionId:question.id,answer:raw.answer}]},[question]);
+ const entries=[{questionRevisionId:question.id,answer:raw.answer!}];
+ validateAnswerKeyRevision({id:"learning-key",paperId:raw.paperId!,revision:1,
+   contentHash:answerKeyRevisionHash({entries}),entries},[question]);
  let previous=Date.parse(raw.createdAt);
  for(const review of raw.reviews){
    if(!review||!validDate(review.at)||!([1,2,3,4] as readonly number[]).includes(review.rating)||
@@ -66,12 +75,13 @@ export function addLearningCard(attempt:GenericAttempt,id:QuestionRevisionId,at:
  const key=attempt.frozen.key.entries.find(x=>x.questionRevisionId===id);
  const section=attempt.frozen.paper.sections.find(s=>s.questionRevisionIds.includes(id));
  if(!question||!key||!section)throw Error("Question not in completed exam");
+ const display=selectDisplayResources([question],attempt.frozen.stimuli,attempt.frozen.assets);
  const record:LearningCard={
    recordType:"learning-card",id:"learning-card:"+id,
    examId:attempt.frozen.snapshot.examId,paperId:attempt.frozen.paper.paperId,
    paperEdition:attempt.frozen.paper.edition,sectionTitle:section.title,
    sourceTitle:attempt.frozen.paper.paperId,question:structuredClone(question),
-   answer:structuredClone(key.answer),note:"",customTopic:"",errorLabel:null,bookmarked:false,
+   answer:structuredClone(key.answer),...display,note:"",customTopic:"",errorLabel:null,bookmarked:false,
    ...(attempt.explanations?.[id]?{explanation:attempt.explanations[id]}:{}),
    createdAt:at,updatedAt:at,reviews:[]
  };

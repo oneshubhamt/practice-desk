@@ -101,21 +101,19 @@ export function configureCglPractice(base: ExamPackage, mode:CglPracticeMode, se
  const source=base.paper;
  if(mode==="single"&&!source.sections[sectionIndex])throw new Error("Unknown practice section");
  const sections=mode==="single"?[source.sections[sectionIndex]!]:[...source.sections];
- const fingerprint=sha256(JSON.stringify({revision:source.id,mode,sectionIndex:mode==="single"?sectionIndex:null}));
- const paperBase={...source,
-   id:(source.id+":practice:"+mode+(mode==="single"?":"+sectionIndex:"")) as PaperRevision["id"],
-   sections,
-   timing:{kind:"whole-paper" as const,durationMs:mode==="single"?900000:3600000,pausePolicy:"allowed" as const},
-   navigation:{...source.navigation,sectionNavigation:mode==="free" as const?"free" as const:"sequential-locked" as const}};
- const paper:PaperRevision={...paperBase,contentHash:paperRevisionHash(paperBase)};
  const included=new Set(sections.flatMap(s=>s.questionRevisionIds));
  const questions=base.questions.filter(q=>included.has(q.id));
  const entries=base.answerKey.entries.filter(e=>included.has(e.questionRevisionId));
  const answerKey={...base.answerKey,
    id:(base.answerKey.id+":practice:"+mode+(mode==="single"?":"+sectionIndex:"")) as AnswerKeyRevision["id"],
    contentHash:answerKeyRevisionHash({entries}),entries};
- const adjusted={...paper,answerKeyRevisionId:answerKey.id};
- return {...base,paper:adjusted,answerKey,questions,
+ const paperBase={...source,
+   id:(source.id+":practice:"+mode+(mode==="single"?":"+sectionIndex:"")) as PaperRevision["id"],
+   answerKeyRevisionId:answerKey.id,sections,
+   timing:{kind:"whole-paper" as const,durationMs:mode==="single"?900000:3600000,pausePolicy:"allowed" as const},
+   navigation:{...source.navigation,sectionNavigation:mode==="free"?"free" as const:"sequential-locked" as const}};
+ const paper:PaperRevision={...paperBase,contentHash:paperRevisionHash(paperBase)};
+ return {...base,paper,answerKey,questions,
    ...(base.explanations?{explanations:Object.fromEntries(Object.entries(base.explanations)
      .filter(([id])=>included.has(id as QuestionRevisionId)))}:{}),
    title:base.title+(mode==="free"?" · Flexible practice":" · "+sections[0]!.title+" practice")};
