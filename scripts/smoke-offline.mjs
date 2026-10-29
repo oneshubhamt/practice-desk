@@ -98,6 +98,32 @@ try{
    if(cgl.errors.length)throw new Error("CGL UI errors: "+cgl.errors.join(" | "));
    console.log("Offline file://: original CGL start, answer and unified backup export passed");
 
+   // Import the all-data archive through the real file picker after deleting
+   // one generic record. The import must restore it without touching other IDs.
+   await cgl.page.evaluate(id=>new Promise((resolve,reject)=>{
+     const req=indexedDB.open("practiceDesk.history.v1",2);
+     req.onerror=()=>reject(req.error);
+     req.onsuccess=()=>{
+       const db=req.result,tx=db.transaction("attempts","readwrite");
+       tx.objectStore("attempts").delete(id);
+       tx.oncomplete=()=>{db.close();resolve();};
+       tx.onerror=()=>{db.close();reject(tx.error);};
+     };
+   }),savedId);
+   if((await readGenericAttempts(cgl.page)).some(a=>a.id===savedId))
+     throw new Error("Backup round-trip setup could not delete generic record");
+   cgl.page.once("dialog",dialog=>dialog.accept());
+   await cgl.page.locator("#importFile").setInputFiles({
+     name:"all-data-backup.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(backup))
+   });
+   let recovered=false;
+   for(let i=0;i<60;i++){
+     if((await readGenericAttempts(cgl.page)).some(a=>a.id===savedId)){recovered=true;break;}
+     await delay(100);
+   }
+   if(!recovered)throw new Error("Unified backup import did not restore the deleted generic attempt");
+   console.log("Offline file://: unified backup exported and imported with IDB restore");
+
    // Two tabs use one IndexedDB origin. Resuming in tab B advances the saved
    // revision; editing the stale copy in tab A must not overwrite it.
    await cgl.page.locator("#historyHome").click();
