@@ -28,7 +28,8 @@ const genericResult = await bundleJavaScript({
 });
 const genericBundle = genericResult.outputFiles[0].text +
   '\n globalThis.PD_GENERIC_UI = PracticeDeskGeneric.mountExamWorkspace;\n'+
-  'globalThis.PD_GENERIC_VALIDATE_RECORD = PracticeDeskGeneric.validateGenericStoredRecord;\n';
+  'globalThis.PD_GENERIC_VALIDATE_RECORD = PracticeDeskGeneric.validateGenericStoredRecord;\n'+
+  'globalThis.PD_GENERIC_RENDER_CGL = PracticeDeskGeneric.renderLegacyCglExam;\n';
 new Script(genericBundle);
 const runtime = (await read('src/app/legacy.ts')).replace(/^\/\/ @ts-nocheck\r?\n(?:\/\/[^\n]*\r?\n)?/,'');
 new Script(runtime);
