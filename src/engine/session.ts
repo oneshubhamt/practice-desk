@@ -136,12 +136,18 @@ export function transition(paper: PaperRevision, state: SessionState, event: Ses
   if (event.type === "FLAG") return paper.navigation.allowFlagging ? put(current, { ...previous, flagged: event.flagged }) : current;
   if (event.type === "CLEAR") {
     const { response: _removed, ...rest } = previous;
-    return put(current, { ...rest, answerChangeCount: previous.response ? previous.answerChangeCount + 1 : previous.answerChangeCount });
+    if(!previous.response)return current;
+    return put(current, { ...rest, answerChangeCount: previous.answerChangeCount + 1,
+      answerEvents:[...(previous.answerEvents??[]),{at:new Date(event.nowMs).toISOString(),from:previous.response}] });
   }
   if (event.type === "ANSWER") {
+    const changed=!previous.response||JSON.stringify(previous.response)!==JSON.stringify(event.response);
+    if(!changed)return current;
     return put(current, { ...previous, response: event.response,
-      answerChangeCount: previous.response && JSON.stringify(previous.response) !== JSON.stringify(event.response)
-        ? previous.answerChangeCount + 1 : previous.answerChangeCount });
+      firstAnsweredAt:previous.firstAnsweredAt??new Date(event.nowMs).toISOString(),
+      answerEvents:[...(previous.answerEvents??[]),
+        {at:new Date(event.nowMs).toISOString(),...(previous.response?{from:previous.response}:{}),to:event.response}],
+      answerChangeCount: previous.answerChangeCount + (previous.response?1:0) });
   }
   return current;
 }

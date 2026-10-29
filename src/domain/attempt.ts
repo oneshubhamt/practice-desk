@@ -40,6 +40,14 @@ export interface AttemptResponseRecord {
   readonly firstViewedAt?: string;
   readonly firstAnsweredAt?: string;
   readonly answerChangeCount: number;
+  /** Explicit response sequence, when captured. Mock history stores the choices,
+   * not a claim about why a changed answer improved or worsened.
+   */
+  readonly answerEvents?: readonly {
+    readonly at: string;
+    readonly from?: CandidateResponse;
+    readonly to?: CandidateResponse;
+  }[];
 }
 
 export interface AttemptScoreSnapshot {

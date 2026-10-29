@@ -128,6 +128,24 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
      throw new Error("Invalid saved response");
    seen.add(row.questionRevisionId);
    if(row.response)validateResponse(questionMap.get(row.questionRevisionId)!,row.response);
+   if(row.answerEvents!==undefined){
+     if(!Array.isArray(row.answerEvents)||row.answerEvents.length>1000)
+       throw new Error("Invalid saved answer revision history");
+     let previousEvent:typeof row.answerEvents[number]|undefined;
+     let previousTime=value.startedAt;
+     for(const event of row.answerEvents){
+       if(!event||typeof event.at!=="string"||!Number.isFinite(Date.parse(event.at))||
+          Date.parse(event.at)<previousTime||Date.parse(event.at)>value.updatedAt||
+          (!event.from&&!event.to))throw new Error("Invalid saved answer revision event");
+       if(event.from)validateResponse(questionMap.get(row.questionRevisionId)!,event.from);
+       if(event.to)validateResponse(questionMap.get(row.questionRevisionId)!,event.to);
+       if(previousEvent&&JSON.stringify(previousEvent.to??null)!==JSON.stringify(event.from??null))
+         throw new Error("Disconnected saved answer revision history");
+       previousTime=Date.parse(event.at);previousEvent=event;
+     }
+     if(previousEvent&&JSON.stringify(previousEvent.to??null)!==JSON.stringify(row.response??null))
+       throw new Error("Saved answer revision does not match final response");
+   }
  }
  if(value.finishedAt!==null){
    if(!value.result)throw new Error("Completed attempt has no immutable score");
