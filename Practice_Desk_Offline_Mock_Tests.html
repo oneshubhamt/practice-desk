@@ -343,6 +343,23 @@ select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-vis
 .learning-answer{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:22px;margin-top:20px}
 .learning-answer .btn{min-width:84px}
 @media(max-width:760px){.learning-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.learning-revision-callout{padding:16px}}
+
+/* Pass 11 — v11 section counts and in-page exam-only focus layout. */
+.generic-sections .exam-section-tab{display:flex;flex:1 1 145px;min-width:0;flex-direction:column;align-items:flex-start;justify-content:center;gap:3px;padding:10px 12px;text-align:left}
+.generic-sections .exam-section-tab b{font-size:12px;line-height:1.4}
+.generic-sections .exam-section-tab small{font-size:10px;line-height:1.45;font-weight:620;opacity:.87}
+.exam-header-actions #g-exam-full{white-space:nowrap}
+#g-fullscreen-status{margin:-10px 0 12px;color:var(--muted);font-size:.8em}
+#g-fullscreen-status:empty{display:none}
+/* Never conceal global display controls while browsing library/history. */
+html.immersive:has(#g-exam-full) header{display:none}
+html.immersive:has(#g-exam-full) main{max-width:1600px;padding:16px clamp(12px,2.4vw,34px) 45px}
+html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-columns:minmax(0,2fr) minmax(250px,.8fr)}
+@media(max-width:760px){
+ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-columns:1fr}
+ .generic-sections .exam-section-tab{flex-basis:calc(50% - 5px)}
+ .exam-header-actions #g-exam-full{white-space:normal}
+}
 </style></head>
 <body><header><div class="wrap"><div class="brand"><div class="symbol">P</div><div><b>Practice Desk</b><small>Offline exam practice</small></div></div><div class="header-actions"><span class="header-offline"><span class="offline-dot"></span> Works offline</span><div class="display-tools" aria-label="Display options"><button type="button" id="displayTrigger" class="display-trigger" aria-label="Display settings" aria-haspopup="true" aria-controls="displayPanel" aria-expanded="false">Aa <span>Display</span></button><div id="displayPanel" class="display-panel" hidden><div class="display-heading"><strong>Appearance</strong><button id="displayClose" type="button" class="display-close" aria-label="Close display settings">×</button></div><div class="display-control"><span>Text size</span><div class="display-size"><button id="fontLess" type="button" class="btn" aria-label="Decrease text size">−</button><button id="fontReset" type="button" class="btn" aria-label="Reset text size">100%</button><button id="fontMore" type="button" class="btn" aria-label="Increase text size">+</button></div></div><div class="display-control"><span>Color theme</span><button id="themeToggle" class="btn display-theme" type="button" aria-pressed="false">Dark theme</button></div><button id="displayFullscreen" type="button" class="btn display-fullscreen" aria-pressed="false">Enter full screen</button><p class="fine display-hint">Saved on this device. Full screen is optional.</p><p class="fine" id="preferences-warning" role="status"></p></div></div></div></div></header>
 <main id="app" class="generic-workspace"></main>
@@ -5932,6 +5949,9 @@ select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-vis
     const elapsed = paper.timing.kind === "sectional" ? state.sectionElapsedMs : state.elapsedMs;
     const progressValue = timeLimit !== null && timeLimit > 0 ? Math.min(100, 100 * elapsed / timeLimit) : Math.min(100, 100 * answered / Math.max(1, total));
     const isLow = remaining !== null && remaining <= 6e4;
+    const focused = typeof document !== "undefined" && Boolean(
+      document.fullscreenElement || document.documentElement.classList.contains("immersive")
+    );
     const assets = {
       format: "practice-desk-exam",
       version: 1,
@@ -5943,14 +5963,16 @@ select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-vis
       stimuli: attempt.frozen.stimuli,
       assets: attempt.frozen.assets
     };
-    return '<div class="generic-heading exam-header"><div><span class="eyebrow">EXAM IN PROGRESS \xB7 ' + escapeText(attempt.frozen.snapshot.mode) + "</span><h1>" + escapeText(bundle?.title ?? paper.paperId) + '</h1><p class="muted">' + escapeText(section.title) + " \xB7 Section " + (state.sectionIndex + 1) + " of " + paper.sections.length + '</p></div><div class="row exam-header-actions"><div class="exam-clock ' + (isLow ? "low" : "") + '"><strong class="generic-timer" id="g-timer" role="timer">' + (remaining === null ? "Untimed" : minutes(remaining)) + "</strong><small>" + (remaining === null ? "PRACTICE" : "TIME REMAINING") + '</small></div><button class="btn quiet" id="g-library">\u2190 Library</button></div></div>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + '<section class="exam-progress"><div class="row between"><span class="fine">' + answered + " / " + total + " answered \xB7 " + visited + " viewed \xB7 " + flagged + ' flagged</span><span class="fine">' + (timeLimit !== null ? "Section timer" : "Question coverage") + " \xB7 " + Math.round(progressValue) + '%</span></div><div class="progress-track exam-time-progress" role="progressbar" aria-valuenow="' + Math.round(progressValue) + '" aria-valuemin="0" aria-valuemax="100" aria-label="' + (timeLimit !== null ? "Time used" : "Questions answered") + '"><span style="width:' + progressValue.toFixed(1) + '%"></span></div></section><div class="generic-sections" role="group" aria-label="Exam sections">' + paper.sections.map((s, i) => {
+    return '<div class="generic-heading exam-header"><div><span class="eyebrow">EXAM IN PROGRESS \xB7 ' + escapeText(attempt.frozen.snapshot.mode) + "</span><h1>" + escapeText(bundle?.title ?? paper.paperId) + '</h1><p class="muted">' + escapeText(section.title) + " \xB7 Section " + (state.sectionIndex + 1) + " of " + paper.sections.length + '</p></div><div class="row exam-header-actions"><div class="exam-clock ' + (isLow ? "low" : "") + '"><strong class="generic-timer" id="g-timer" role="timer">' + (remaining === null ? "Untimed" : minutes(remaining)) + "</strong><small>" + (remaining === null ? "PRACTICE" : "TIME REMAINING") + '</small></div><button class="btn quiet" id="g-library">\u2190 Library</button><button class="btn" type="button" id="g-exam-full" aria-label="Toggle full-screen test view" aria-pressed="' + focused + '">' + (focused ? "\u26F6 Exit full screen" : "\u26F6 Full screen") + '</button></div></div><p id="g-fullscreen-status" role="status"></p>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + '<section class="exam-progress"><div class="row between"><span class="fine">' + answered + " / " + total + " answered \xB7 " + visited + " viewed \xB7 " + flagged + ' flagged</span><span class="fine">' + (timeLimit !== null ? "Section timer" : "Question coverage") + " \xB7 " + Math.round(progressValue) + '%</span></div><div class="progress-track exam-time-progress" role="progressbar" aria-valuenow="' + Math.round(progressValue) + '" aria-valuemin="0" aria-valuemax="100" aria-label="' + (timeLimit !== null ? "Time used" : "Questions answered") + '"><span style="width:' + progressValue.toFixed(1) + '%"></span></div></section><div class="generic-sections" role="group" aria-label="Exam sections">' + paper.sections.map((s, i) => {
       const locked = state.completedSections.includes(i) || (paper.timing.kind === "sectional" || paper.navigation.sectionNavigation === "sequential-locked") && i !== state.sectionIndex;
-      return '<button class="btn ' + (i === state.sectionIndex ? "primary" : "") + '" data-section="' + i + '" aria-current="' + (i === state.sectionIndex ? "step" : "false") + '"' + (locked ? " disabled" : "") + ">" + escapeText(s.title) + "</button>";
-    }).join("") + '</div><div class="generic-layout exam-grid"><section class="panel pad exam-question"><p class="eyebrow">' + escapeText(section.title) + " \xB7 Question " + (state.questionIndex + 1) + " of " + section.questionRevisionIds.length + "</p>" + stimulusHTML(assets, q) + '<h2 class="generic-prompt">' + escapeText(q.content.prompt) + "</h2>" + assetHTML(assets, q.content.assetIds) + '<fieldset class="generic-response-group"' + (state.status === "paused" ? " disabled" : "") + ">" + renderGenericControls(assets, q, response) + '</fieldset><div class="row generic-actions exam-answer-actions"><button class="btn" id="g-clear"' + (!response || state.status === "paused" ? " disabled" : "") + '>Clear</button><button class="btn" id="g-flag" aria-pressed="' + Boolean(responsesById.get(q.id)?.flagged) + '"' + (!paper.navigation.allowFlagging || state.status === "paused" ? " disabled" : "") + '>Flag</button></div><div class="row generic-actions exam-nav-actions"><button class="btn" id="g-prev"' + (!state.questionIndex || paper.navigation.questionNavigation === "forward-only" ? " disabled" : "") + '>\u2190 Previous</button><button class="btn" id="g-next"' + (state.questionIndex === section.questionRevisionIds.length - 1 ? " disabled" : "") + '>Next \u2192</button></div><div class="row generic-actions exam-submit-actions">' + (paper.timing.kind !== "untimed" && paper.timing.pausePolicy === "allowed" ? '<button class="btn" id="g-pause">' + (state.status === "paused" ? "Resume timer" : "Pause timer") + "</button>" : "") + '<button class="btn danger" id="g-submit"' + (state.status === "paused" || paper.timing.kind === "sectional" && !paper.timing.allowEarlySubmit ? " disabled" : "") + ">" + (paper.timing.kind === "sectional" ? "Submit section" : "Submit exam") + '</button></div></section><aside class="panel pad exam-sidebar"><div class="row between"><h3>Question navigator</h3><span class="fine">' + section.questionRevisionIds.length + ' questions</span></div><p class="fine">Select a question number to navigate within the current section.</p><div class="generic-palette">' + section.questionRevisionIds.map((qid, i) => {
+      const filled = s.questionRevisionIds.filter((qid) => Boolean(responsesById.get(qid)?.response)).length;
+      const status = state.completedSections.includes(i) ? "Closed" : locked ? "Locked" : filled + " / " + s.questionRevisionIds.length + " answered";
+      return '<button class="btn exam-section-tab ' + (i === state.sectionIndex ? "primary" : "") + '" data-section="' + i + '" aria-current="' + (i === state.sectionIndex ? "step" : "false") + '"' + (locked ? " disabled" : "") + "><b>" + escapeText(s.title) + "</b><small>" + status + "</small></button>";
+    }).join("") + '</div><div class="generic-layout exam-grid"><section class="panel pad exam-question"><p class="eyebrow">' + escapeText(section.title) + " \xB7 Question " + (state.questionIndex + 1) + " of " + section.questionRevisionIds.length + (attempt.frozen.snapshot.examId === "ssc-cgl" ? " \xB7 Paper Q" + escapeText(q.questionId.split(":").at(-1)) : "") + "</p>" + stimulusHTML(assets, q) + '<h2 class="generic-prompt">' + escapeText(q.content.prompt) + "</h2>" + assetHTML(assets, q.content.assetIds) + '<fieldset class="generic-response-group"' + (state.status === "paused" ? " disabled" : "") + ">" + renderGenericControls(assets, q, response) + '</fieldset><div class="row generic-actions exam-answer-actions"><button class="btn" id="g-clear"' + (!response || state.status === "paused" ? " disabled" : "") + '>Clear</button><button class="btn" id="g-flag" aria-pressed="' + Boolean(responsesById.get(q.id)?.flagged) + '"' + (!paper.navigation.allowFlagging || state.status === "paused" ? " disabled" : "") + '>Flag</button></div><div class="row generic-actions exam-nav-actions"><button class="btn" id="g-prev"' + (!state.questionIndex || paper.navigation.questionNavigation === "forward-only" ? " disabled" : "") + '>\u2190 Previous</button><button class="btn" id="g-next"' + (state.questionIndex === section.questionRevisionIds.length - 1 ? " disabled" : "") + '>Next \u2192</button></div><div class="row generic-actions exam-submit-actions">' + (paper.timing.kind !== "untimed" && paper.timing.pausePolicy === "allowed" ? '<button class="btn" id="g-pause">' + (state.status === "paused" ? "Resume timer" : "Pause timer") + "</button>" : "") + '<button class="btn danger" id="g-submit"' + (state.status === "paused" || paper.timing.kind === "sectional" && !paper.timing.allowEarlySubmit ? " disabled" : "") + ">" + (paper.timing.kind === "sectional" ? "Submit section" : "Submit exam") + '</button></div></section><aside class="panel pad exam-sidebar"><div class="row between"><h3>Question navigator</h3><span class="fine">' + section.questionRevisionIds.length + ' questions</span></div><p class="fine">Select a question number to navigate within the current section.</p><div class="generic-palette">' + section.questionRevisionIds.map((qid, i) => {
       const r = responsesById.get(qid);
       const locked = paper.navigation.questionNavigation === "forward-only" && i < state.questionIndex;
       return '<button class="num ' + (i === state.questionIndex ? "here " : "") + (r?.response ? "answered " : "") + (r?.flagged ? "marked" : "") + '" data-q="' + i + '" aria-current="' + (i === state.questionIndex ? "step" : "false") + '" aria-label="Question ' + (i + 1) + (r?.response ? ", answered" : "") + (r?.flagged ? ", flagged" : "") + '"' + (locked ? " disabled" : "") + ">" + (i + 1) + "</button>";
-    }).join("") + '</div><div class="palette-legend"><span><i class="legend-dot answered"></i>Answered</span><span><i class="legend-dot marked"></i>Flagged</span><span><i class="legend-dot current"></i>Current</span><span><i class="legend-dot empty"></i>Unanswered</span></div><p class="fine">' + (paper.navigation.questionNavigation === "forward-only" ? "Questions cannot be revisited in this exam." : "Navigate freely where the paper permits.") + " Press Alt + \u2190 / \u2192 for previous / next when not typing.</p></aside></div>";
+    }).join("") + '</div><div class="palette-legend"><span><i class="legend-dot answered"></i>Answered</span><span><i class="legend-dot marked"></i>Flagged</span><span><i class="legend-dot current"></i>Current</span><span><i class="legend-dot empty"></i>Unanswered</span></div><p class="fine">' + (paper.navigation.questionNavigation === "forward-only" ? "Questions cannot be revisited in this exam." : "Navigate freely where the paper permits.") + " Shortcuts: A\u2013D answer single-choice questions, \u2190 / \u2192 navigate, M flag, F full screen. Alt + \u2190 / \u2192 also works. Shortcuts are disabled while typing or paused.</p></aside></div>";
   }
   var builtinCache = null;
   function cachedCglPackages(sources2, patches2, solutions2) {
@@ -6484,6 +6506,10 @@ select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-vis
         root2.querySelector("#g-start").onclick = () => {
           const p = packages.get(choice);
           if (!p) return;
+          const unfinished = [...records.values()].filter((row) => isAttempt(row) && row.finishedAt === null);
+          if (unfinished.length && !confirm(
+            "You have " + unfinished.length + " unfinished test" + (unfinished.length === 1 ? "" : "s") + ". Start a separate attempt? Existing attempts will be kept; their timers continue until expiry when resumed or while active."
+          )) return;
           const id = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "generic-" + now2() + "-" + Math.random();
           const configured = p.examId === "ssc-cgl" ? configureCglPractice(p, cglMode, singleSection) : p;
           attempt = startGenericAttempt(configured, id, now2());
@@ -6538,8 +6564,17 @@ select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-vis
         return;
       }
       root2.querySelector("#g-library").onclick = () => {
+        if (view === "exam" && attempt?.finishedAt === null) {
+          if (!confirm("Return to library? Your test timer will keep running and the attempt can be resumed.")) return;
+          const current = attempt;
+          attempt = transitionGenericAttempt(
+            current,
+            { type: "VISIBILITY", nowMs: now2(), visible: false },
+            new Map(current.frozen.questions.map((question) => [question.id, question]))
+          );
+          void save(attempt);
+        }
         view = "library";
-        attempt = null;
         draw();
       };
       if (view === "result" && attempt) {
@@ -6607,6 +6642,7 @@ select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-vis
         return;
       }
       if (view !== "exam" || !attempt) return;
+      root2.querySelector("#g-exam-full").onclick = () => window.dispatchEvent(new Event("practice-desk:toggle-fullscreen"));
       const section = attempt.frozen.paper.sections[attempt.state.sectionIndex];
       const q = attempt.frozen.questions.find((x) => x.id === section?.questionRevisionIds[attempt.state.questionIndex]);
       if (!q) return;
@@ -6690,7 +6726,7 @@ select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-vis
       };
     }
     const timer = window.setInterval(() => {
-      if (disposed || storageFault || view !== "exam" || !attempt || attempt.state.status === "paused") return;
+      if (disposed || storageFault || !attempt || attempt.finishedAt !== null || attempt.state.status === "paused") return;
       const original = attempt;
       const next = transitionGenericAttempt(
         original,
@@ -6700,48 +6736,101 @@ select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-vis
       if (next !== original) {
         attempt = next;
         const changedSection = original.state.sectionIndex !== next.state.sectionIndex;
-        if (next.finishedAt !== null || changedSection || now2() - lastTimerSave >= 1e4) {
+        if (next.finishedAt !== null || changedSection || view === "exam" && now2() - lastTimerSave >= 1e4) {
           void save(attempt);
           lastTimerSave = now2();
         }
         if (next.finishedAt !== null) {
-          view = "result";
-          resultTab = "overview";
-          reviewFilter = "all";
+          if (view === "exam") {
+            view = "result";
+            resultTab = "overview";
+            reviewFilter = "all";
+          }
           draw();
           return;
         }
-        if (changedSection) {
+        if (changedSection && view === "exam") {
           draw();
           return;
         }
       }
-      const el = root2.querySelector("#g-timer");
-      if (el && attempt) {
-        const time = examTimeRemaining(attempt.frozen.paper, attempt.state);
-        el.textContent = time === null ? "Untimed" : minutes(time);
+      if (view === "exam") {
+        const el = root2.querySelector("#g-timer");
+        if (el && attempt) {
+          const time = examTimeRemaining(attempt.frozen.paper, attempt.state);
+          el.textContent = time === null ? "Untimed" : minutes(time);
+        }
       }
     }, 1e3);
     const visibility = () => {
-      if (view === "exam" && attempt) dispatch({ type: "VISIBILITY", nowMs: now2(), visible: !document.hidden });
+      if (!attempt || attempt.finishedAt !== null || storageFault) return;
+      dispatchVisibility(view === "exam" && !document.hidden);
     };
+    function dispatchVisibility(visible) {
+      if (!attempt || storageFault || attempt.finishedAt !== null) return;
+      const current = attempt;
+      attempt = transitionGenericAttempt(
+        current,
+        { type: "VISIBILITY", nowMs: now2(), visible },
+        new Map(current.frozen.questions.map((q) => [q.id, q]))
+      );
+      void save(attempt);
+      if (attempt.finishedAt !== null && view === "exam") {
+        view = "result";
+        resultTab = "overview";
+        reviewFilter = "all";
+      }
+      draw();
+    }
     document.addEventListener("visibilitychange", visibility);
     const keyboard = (event) => {
-      if (disposed || view !== "exam" || !attempt || !event.altKey || event.ctrlKey || event.metaKey || !["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+      if (disposed || view !== "exam" || !attempt || attempt.finishedAt !== null || attempt.state.status !== "running" || document.hidden || event.ctrlKey || event.metaKey || event.shiftKey || event.isComposing) return;
       const focused = event.target;
-      if (focused instanceof HTMLElement && (focused.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(focused.tagName))) return;
+      if (focused instanceof HTMLElement) {
+        if (focused.isContentEditable || focused.closest('[contenteditable="true"]')) return;
+        if (focused instanceof HTMLTextAreaElement || focused instanceof HTMLSelectElement) return;
+        if (focused instanceof HTMLInputElement && !(focused.type === "radio" && focused.name === "generic-answer" && root2.contains(focused))) return;
+      }
+      const displayPanel2 = document.getElementById("displayPanel");
+      if (displayPanel2 && !displayPanel2.hidden) return;
+      const key = event.key.toLowerCase();
+      const arrow = key === "arrowright" || key === "arrowleft";
+      if (event.altKey && !arrow) return;
+      if (arrow) {
+        event.preventDefault();
+        const move = key === "arrowright" ? 1 : -1;
+        const target = attempt.state.questionIndex + move;
+        const section = attempt.frozen.paper.sections[attempt.state.sectionIndex];
+        if (!section?.questionRevisionIds[target] || move < 0 && attempt.frozen.paper.navigation.questionNavigation === "forward-only") return;
+        dispatch({ type: "NAVIGATE", nowMs: now2(), sectionIndex: attempt.state.sectionIndex, questionIndex: target });
+        return;
+      }
+      if (event.altKey || event.repeat) return;
+      if (key === "f") {
+        event.preventDefault();
+        window.dispatchEvent(new Event("practice-desk:toggle-fullscreen"));
+        return;
+      }
+      if (key === "m") {
+        if (!attempt.frozen.paper.navigation.allowFlagging) return;
+        event.preventDefault();
+        const id2 = attempt.frozen.paper.sections[attempt.state.sectionIndex].questionRevisionIds[attempt.state.questionIndex];
+        const marked = attempt.state.responses.find((r) => r.questionRevisionId === id2)?.flagged ?? false;
+        dispatch({ type: "FLAG", nowMs: now2(), flagged: !marked });
+        return;
+      }
+      if (!["a", "b", "c", "d"].includes(key)) return;
+      const id = attempt.frozen.paper.sections[attempt.state.sectionIndex].questionRevisionIds[attempt.state.questionIndex];
+      const question = attempt.frozen.questions.find((q) => q.id === id);
+      if (question?.content.kind !== "single-choice") return;
+      const option = question.content.options[key.charCodeAt(0) - 97];
+      if (!option) return;
       event.preventDefault();
-      const move = event.key === "ArrowRight" ? 1 : -1;
-      dispatch({
-        type: "NAVIGATE",
-        nowMs: now2(),
-        sectionIndex: attempt.state.sectionIndex,
-        questionIndex: attempt.state.questionIndex + move
-      });
+      dispatch({ type: "ANSWER", nowMs: now2(), response: { kind: "single-choice", optionId: option.id } });
     };
     window.addEventListener("keydown", keyboard);
     const pagehide = () => {
-      if (view === "exam" && attempt && !storageFault) {
+      if (attempt && attempt.finishedAt === null && !storageFault) {
         try {
           const current = attempt;
           attempt = transitionGenericAttempt(
@@ -6933,23 +7022,63 @@ select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-vis
     }
   });
   var fullButton = document.getElementById("displayFullscreen");
-  var updateFullscreen = () => {
-    if (!fullButton) return;
-    const active = Boolean(document.fullscreenElement);
-    fullButton.textContent = active ? "Exit full screen" : "Enter full screen";
-    fullButton.setAttribute("aria-pressed", String(active));
-  };
-  fullButton?.addEventListener("click", async () => {
-    try {
-      if (document.fullscreenElement) await document.exitFullscreen();
-      else await document.documentElement.requestFullscreen();
-      updateFullscreen();
-    } catch {
-      const status = document.getElementById("preferences-warning");
-      if (status) status.textContent = "Full screen is unavailable in this browser or file context.";
+  var isFullscreen = () => Boolean(document.fullscreenElement || document.documentElement.classList.contains("immersive"));
+  function updateFullscreen() {
+    const active = isFullscreen();
+    if (fullButton) {
+      fullButton.textContent = active ? "Exit full screen" : "Enter full screen";
+      fullButton.setAttribute("aria-pressed", String(active));
     }
+    const examButton = document.getElementById("g-exam-full");
+    if (examButton) {
+      examButton.textContent = active ? "\u26F6 Exit full screen" : "\u26F6 Full screen";
+      examButton.setAttribute("aria-pressed", String(active));
+    }
+  }
+  function setImmersive(active) {
+    document.documentElement.classList.toggle("immersive", active);
+    updateFullscreen();
+  }
+  async function toggleFullscreen() {
+    if (document.fullscreenElement) {
+      try {
+        await document.exitFullscreen();
+      } catch {
+        setImmersive(false);
+      }
+      updateFullscreen();
+      return;
+    }
+    if (document.documentElement.classList.contains("immersive")) {
+      setImmersive(false);
+      return;
+    }
+    try {
+      if (!document.documentElement.requestFullscreen) throw new Error("Fullscreen unsupported");
+      await document.documentElement.requestFullscreen();
+      setImmersive(true);
+    } catch {
+      setImmersive(true);
+      const message = "Focus layout enabled. Browser full screen is unavailable here.";
+      const globalStatus = document.getElementById("preferences-warning");
+      if (globalStatus) globalStatus.textContent = message;
+      const examStatus = document.getElementById("g-fullscreen-status");
+      if (examStatus) examStatus.textContent = message;
+    }
+  }
+  fullButton?.addEventListener("click", () => {
+    void toggleFullscreen();
   });
-  document.addEventListener("fullscreenchange", updateFullscreen);
+  window.addEventListener("practice-desk:toggle-fullscreen", () => {
+    void toggleFullscreen();
+  });
+  document.addEventListener("fullscreenchange", () => {
+    setImmersive(Boolean(document.fullscreenElement));
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !document.fullscreenElement && document.documentElement.classList.contains("immersive") && (!displayPanel || displayPanel.hidden)) setImmersive(false);
+  });
+  updateFullscreen();
 })();
 </script>
 </body></html>
