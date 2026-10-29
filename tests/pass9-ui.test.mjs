@@ -22,7 +22,7 @@ test("dedicated history filters/sorts completed and in-progress records without 
  assert.equal(filteredHistory(original,packages,{...query,status:"complete"}).length,2);
  assert.equal(filteredHistory(original,packages,{...query,sort:"oldest"})[0].id,"first");
  assert.equal(filteredHistory(original,packages,{...query,search:"NOT FOUND"}).length,0);
- assert.equal(filteredHistory(original,packages,{...query,search:"example"})[0].id,"active");
+ assert.equal(filteredHistory(original,packages,{...query,search:bundle.paper.paperId})[0].id,"active");
  assert.deepEqual(original.map(x=>x.id),["first","second","active"]);
 });
 test("history is a genuinely separate panel with faithful evidence disclaimers and native actions",()=>{
