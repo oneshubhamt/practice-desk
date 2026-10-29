@@ -920,6 +920,51 @@ var PracticeDeskEngine = (() => {
     return { items, snapshot: { earnedMarks, positiveMarks, penaltyMarks, correctCount, incorrectCount, unansweredCount, excludedCount, calculatedAt } };
   }
 
+  // src/history/backup.ts
+  var clone = (v) => JSON.parse(JSON.stringify(v));
+  var digest = (core) => sha256(JSON.stringify(core));
+  function archiveDisplayRevision(id, paperId, displayPaper) {
+    if (!id || !paperId || !displayPaper || !Array.isArray(displayPaper.questions)) throw new Error("Invalid display revision");
+    return clone({ id, paperId, displayPaper });
+  }
+  function makeBackup(attempts, revisions, preferences, exportedAt) {
+    if (!Number.isFinite(Date.parse(exportedAt))) throw new Error("Invalid export timestamp");
+    const core = clone({
+      format: "practice-desk-backup",
+      version: 2,
+      exportedAt,
+      attempts,
+      revisions,
+      preferences
+    });
+    return { ...core, manifest: {
+      algorithm: "sha256",
+      digest: digest(core),
+      attemptCount: core.attempts.length,
+      revisionCount: core.revisions.length
+    } };
+  }
+  function verifyBackup(raw) {
+    if (!raw || typeof raw !== "object") throw new Error("Invalid backup");
+    const b = raw;
+    if (b.format !== "practice-desk-backup" || b.version !== 2 || !Array.isArray(b.attempts) || !Array.isArray(b.revisions) || b.attempts.length > 5e3 || b.revisions.length > 500 || typeof b.exportedAt !== "string" || !Number.isFinite(Date.parse(b.exportedAt))) throw new Error("Invalid backup format");
+    if (b.attempts.some((a) => !a || typeof a !== "object" || typeof a.id !== "string" || a.id.length > 200) || b.revisions.some((r) => !r || typeof r.id !== "string" || typeof r.paperId !== "string" || !r.displayPaper || !Array.isArray(r.displayPaper.questions)) || new Set(b.attempts.map((a) => a.id)).size !== b.attempts.length || new Set(b.revisions.map((r) => r.id)).size !== b.revisions.length) throw new Error("Invalid backup records");
+    const { manifest, ...core } = b;
+    if (!manifest || manifest.algorithm !== "sha256" || manifest.attemptCount !== b.attempts.length || manifest.revisionCount !== b.revisions.length || manifest.digest !== digest(core)) throw new Error("Backup integrity check failed");
+    return b;
+  }
+  function planBackupMerge(existing, incoming, activeId) {
+    const known = new Set(existing.map((x) => x.id));
+    if (activeId) known.add(activeId);
+    const result = [];
+    for (const candidate of incoming) {
+      if (known.has(candidate.id)) continue;
+      known.add(candidate.id);
+      result.push(candidate);
+    }
+    return result;
+  }
+
   // src/engine/response.ts
   function validateResponse(question, response) {
     const content = question.content;
@@ -1072,7 +1117,23 @@ var PracticeDeskEngine = (() => {
       const { paper, key, questions } = context(a);
       return scoreAttempt(paper, key, questions, responseRecords(a), calculatedAt);
     }
-    return { context, capture, assetMatches, chooseRecovered, ensure, restore, event, answer, score, importedCount: imported.length, questionCount: imported.reduce((n, e) => n + e.questions.length, 0) };
+    return {
+      context,
+      capture,
+      assetMatches,
+      chooseRecovered,
+      makeBackup,
+      verifyBackup,
+      planBackupMerge,
+      archiveDisplayRevision,
+      ensure,
+      restore,
+      event,
+      answer,
+      score,
+      importedCount: imported.length,
+      questionCount: imported.reduce((n, e) => n + e.questions.length, 0)
+    };
   }
   return __toCommonJS(browser_engine_exports);
 })();
