@@ -12,6 +12,7 @@ import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
 import { createLearningDesk } from "./learning-ui.ts";
 import { addLearningCard, validateLearningCard } from "../learning/learning.ts";
 import type { LearningCard } from "../learning/learning.ts";
+import { readDisplayPreferences, writeDisplayPreferences, SETTINGS_EVENT } from "./preferences.ts";
 
 const escapeText=(s:unknown):string=>String(s??"").replace(/[&<>"']/g,c=>
   ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" })[c]??c);
@@ -205,107 +206,122 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  let attempt:GenericAttempt|null=null, view:"library"|"exam"|"result"|"learning"="library";
  let db:IDBDatabase|null=null, warning="",disposed=false, loading=true, writeQueue=Promise.resolve();
  let lastTimerSave=0;
- let fallbackStamp:string|null=null, fallbackConflict=false;
+ let fallbackStamp:string|null=null, fallbackConflict=false, storageFault=false;
  const storageKey="practiceDesk.overhaul.fallback.v1", mirrorKey="practiceDesk.overhaul.active.v1";
  const dbName="practiceDesk.overhaul.v1";
- const downloadBackup=()=>{
-   let recordsToExport=[...records.values()].filter(record=>isPackage(record)||isAttempt(record)||isLearning(record));
-   if(fallbackConflict&&!db){
-     try{
+ const downloadBackup=async():Promise<void>=>{
+   await writeQueue;
+   try{
+     let toExport=[...records.values()];
+     if(fallbackConflict&&!db&&!storageFault){
        const latest=JSON.parse(localStorage.getItem(storageKey)??"[]") as unknown;
        if(!Array.isArray(latest))throw new Error("Invalid fallback history");
-       recordsToExport=latest.map(value=>validateGenericStoredRecord(value));
-     }catch{
-       warning="Backup unavailable: browser fallback records could not be validated.";
-       draw();return;
+       toExport=latest.map(value=>validateGenericStoredRecord(value));
      }
-   }
-   const backup=makeBackup(recordsToExport as unknown as readonly Record<string,unknown>[],[],null,new Date().toISOString());
-   const blob=new Blob([JSON.stringify(backup)],{type:"application/json"});
-   const url=URL.createObjectURL(blob);
-   const link=document.createElement("a");link.href=url;
-   link.download="Practice_Desk_Backup_"+new Date().toISOString().slice(0,10)+".json";
-   document.body.append(link);link.click();link.remove();
-   window.setTimeout(()=>URL.revokeObjectURL(url),2000);
+     const valid=toExport.map(value=>validateGenericStoredRecord(value));
+     const archive=makeBackup(valid as unknown as readonly Record<string,unknown>[],
+       readDisplayPreferences(),new Date().toISOString());
+     const blob=new Blob([JSON.stringify(archive)],{type:"application/json"});
+     const url=URL.createObjectURL(blob);
+     const link=document.createElement("a");link.href=url;
+     link.download="Practice_Desk_Backup_"+new Date().toISOString().slice(0,10)+
+       (storageFault?"_UNSAVED_RECOVERY":"")+".json";
+     document.body.append(link);link.click();link.remove();
+     window.setTimeout(()=>URL.revokeObjectURL(url),2000);
+     if(storageFault){warning="Emergency recovery file exported. Some records were not committed to browser storage. Keep this file and reopen before editing.";draw();}
+   }catch(error){warning=error instanceof Error?"Backup failed: "+error.message:"Backup failed";draw();}
  };
  const importHistory=async(file:File)=>{
+   if(storageFault||fallbackConflict)throw new Error("Storage is unavailable or changed in another tab. Reopen before importing.");
    if(file.size>75*1024*1024)throw new Error("History backup exceeds 75 MiB");
-   const backup=verifyBackup(JSON.parse(await file.text()));
-   if(backup.revisions.length)throw new Error("Unsupported display archives; only versioned exam records are accepted.");
-   const imported=backup.attempts.map(record=>validateGenericStoredRecord(record));
-   if(!imported.length)throw new Error("Backup contains no exam records");
+   const archive=verifyBackup(JSON.parse(await file.text()));
+   const imported=archive.records.map(record=>validateGenericStoredRecord(record));
    const incoming=planBackupMerge([...records.values()],imported,attempt?.id);
-   if(!incoming.length){warning="These records are already present.";draw();return;}
-   if(!confirm("Import "+incoming.length+" exam history records? Existing saved attempts will not be replaced."))return;
-   // IDB add is atomic for the entire batch. Never modify in-memory records before commit.
+   if(!confirm("Import "+incoming.length+" new saved records and restore display preferences? Existing records will not be overwritten."))return;
    await writeQueue;
-   if(db){
-     await new Promise<void>((resolve,reject)=>{
-       const transaction=db!.transaction("attempts","readwrite");
-       const store=transaction.objectStore("attempts");
-       for(const record of incoming)store.add(structuredClone(record));
-       transaction.oncomplete=()=>resolve();
-       transaction.onerror=()=>reject(transaction.error??new Error("Import failed"));
-       transaction.onabort=()=>reject(transaction.error??new Error("Import aborted"));
-     });
-   }else{
-     const replacement=[...records.values(),...incoming];
-     if(fallbackConflict||localStorage.getItem(storageKey)!==fallbackStamp)
-       throw new Error("Another tab changed fallback history; reopen before importing");
-     const encoded=JSON.stringify(replacement);
-     localStorage.setItem(storageKey,encoded);fallbackStamp=encoded;
+   if(incoming.length){
+     if(db){
+       await new Promise<void>((resolve,reject)=>{
+         const transaction=db!.transaction("attempts","readwrite");
+         const store=transaction.objectStore("attempts");
+         for(const record of incoming)store.add(structuredClone(record));
+         transaction.oncomplete=()=>resolve();
+         transaction.onerror=()=>reject(transaction.error??new Error("Import failed"));
+         transaction.onabort=()=>reject(transaction.error??new Error("Import aborted"));
+       });
+     }else{
+       if(localStorage.getItem(storageKey)!==fallbackStamp)
+         throw new Error("Another tab changed fallback history; reopen before importing");
+       const encoded=JSON.stringify([...records.values(),...incoming]);
+       localStorage.setItem(storageKey,encoded);fallbackStamp=encoded;
+     }
+     for(const record of incoming){
+       records.set(record.id,record);
+       if(isPackage(record)&&!packages.has(record.bundle.paper.id))
+         packages.set(record.bundle.paper.id,record.bundle);
+     }
    }
-   for(const record of incoming){
-     records.set(record.id,record);
-     if(isPackage(record) && !packages.has(record.bundle.paper.id))
-       packages.set(record.bundle.paper.id,record.bundle);
+   try{
+     writeDisplayPreferences(archive.preferences);
+     window.dispatchEvent(new Event(SETTINGS_EVENT));
+     warning="Imported "+incoming.length+" records; display preferences restored.";
+   }catch{
+     warning="Imported "+incoming.length+" records. Display preferences could not be stored by this browser.";
    }
-   warning="Imported "+incoming.length+" records; existing attempts and learning cards preserved.";
    draw();
  };
-
  const writeMirror=(record:GenericAttempt)=>{
    try{localStorage.setItem(mirrorKey,JSON.stringify(record));}
    catch{warning="Emergency session mirror could not be saved. Use a history export.";}
  };
  const notice=(s:string)=>{warning=s;draw();};
  const now=()=>Date.now();
- const save=(record:RecordItem)=>{
-   if(fallbackConflict){warning="Another tab changed fallback history. Reopen before editing.";draw();return;}
+ const save=(record:RecordItem):Promise<boolean>=>{
+   if(fallbackConflict||storageFault){
+     warning="Storage is unavailable or changed in another tab. Export a recovery backup and reopen before editing.";
+     draw();return Promise.resolve(false);
+   }
    const previous=records.get(record.id);
-   const expected=previous ? previous.saveRevision??0 : null;
+   const expected=previous?previous.saveRevision??0:null;
    const versioned={...record,saveRevision:nextWriteVersion(expected)};
    records.set(record.id,versioned);
    if(isAttempt(versioned)){
      if(attempt?.id===versioned.id)attempt=versioned;
      writeMirror(versioned);
    }
-   writeQueue=writeQueue.catch(()=>{}).then(()=>new Promise<void>((resolve,reject)=>{
+   const pending=writeQueue.then(()=>new Promise<void>((resolve,reject)=>{
+     if(storageFault){reject(new Error("A previous storage operation failed"));return;}
      if(!db){
        try{
          if(fallbackConflict||localStorage.getItem(storageKey)!==fallbackStamp)
            throw new Error("Another tab changed fallback history; reopen before editing");
          const encoded=JSON.stringify([...records.values()]);
          localStorage.setItem(storageKey,encoded);fallbackStamp=encoded;resolve();
-       }catch(e){reject(e);}
+       }catch(error){reject(error);}
        return;
      }
-     const tx=db.transaction("attempts","readwrite");
-     const store=tx.objectStore("attempts");
-     let conflict:Error|null=null;
-     const read=store.get(record.id);
-     read.onsuccess=()=>{
-       try{
-         assertWriteVersion(read.result as RecordItem|undefined,expected);
-         store.put(structuredClone(versioned));
-       }catch(error){conflict=error as Error;tx.abort();}
-     };
-     tx.oncomplete=()=>resolve();
-     tx.onerror=()=>reject(conflict??tx.error??new Error("Write failed"));
-     tx.onabort=()=>reject(conflict??tx.error??new Error("Write aborted"));
-   })).catch(async e=>{
-     if(e instanceof Error && e.message.startsWith("Another tab")){
-       warning=e.message+"; changes in this tab were not saved.";
+     try{
+       const tx=db.transaction("attempts","readwrite");
+       const store=tx.objectStore("attempts");
+       let conflict:Error|null=null;
+       const read=store.get(record.id);
+       read.onsuccess=()=>{
+         try{
+           assertWriteVersion(read.result as RecordItem|undefined,expected);
+           store.put(structuredClone(versioned));
+         }catch(error){conflict=error as Error;tx.abort();}
+       };
+       tx.oncomplete=()=>resolve();
+       tx.onerror=()=>reject(conflict??tx.error??new Error("Write failed"));
+       tx.onabort=()=>reject(conflict??tx.error??new Error("Write aborted"));
+     }catch(error){reject(error);}
+   }));
+   writeQueue=pending.catch(()=>{});
+   return pending.then(()=>true).catch(async e=>{
+     const conflict=e instanceof Error&&e.message.startsWith("Another tab");
+     storageFault=true;
+     if(conflict){
+       warning=e.message+"; changes in this tab were not saved. Reopen before editing.";
        if(isAttempt(versioned)&&attempt?.id===versioned.id){attempt=null;view="library";}
        try{localStorage.removeItem(mirrorKey);}catch{}
        records.delete(versioned.id);
@@ -318,20 +334,23 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
            });
          }else{
            fallbackConflict=true;
-           const saved=JSON.parse(localStorage.getItem(storageKey)??"[]") as unknown[];
-           latest=saved.find(x=>x&&typeof x==="object"&&(x as {id?:string}).id===versioned.id);
+           const stored=JSON.parse(localStorage.getItem(storageKey)??"[]") as unknown[];
+           latest=stored.find(x=>x&&typeof x==="object"&&(x as {id?:string}).id===versioned.id);
          }
-         if(latest){records.set(versioned.id,validateGenericStoredRecord(latest));}
+         if(latest)records.set(versioned.id,validateGenericStoredRecord(latest));
        }catch(error){console.warn("Could not reload changed record",error);}
-       if(!disposed)draw();
      }else{
-       warning="Saving failed. Export important history before closing.";
+       warning="SAVE FAILED — changes in this tab are not safely stored. Export an UNSAVED recovery backup now, then reopen. "+
+         (e instanceof Error?e.message:"");
      }
      console.warn("Exam workspace save",e);
+     if(!disposed)draw();
+     return false;
    });
  };
  const removeSavedAttempt=async(id:string):Promise<void>=>{
    const saved=records.get(id);
+   if(storageFault||fallbackConflict){notice("Storage locked. Export recovery backup and reopen before deleting.");return;}
    if(!(isAttempt(saved)||isLearning(saved))||!confirm("Permanently delete this saved item? Export a backup first if needed."))return;
    try{
      await writeQueue;
@@ -371,23 +390,27 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    if(records.has("learning-card:"+id))return;
    try{
      const record=addLearningCard(source,id as QuestionRevisionId,new Date(now()).toISOString());
-     save(record);warning="Question added to the notebook.";draw();
+     void save(record).then(ok=>{if(ok){warning="Question added to the notebook.";draw();}});
    }catch(error){notice(error instanceof Error?error.message:"Unable to add notebook card");}
  };
- const addResultCards=(source:GenericAttempt):void=>{
+ const addResultCards=async(source:GenericAttempt):Promise<void>=>{
    const ids=source.result?.items.filter(item=>item.verdict==="incorrect"||item.verdict==="unanswered")
      .map(item=>item.questionRevisionId).filter(id=>!records.has("learning-card:"+id))??[];
-   for(const id of ids)save(addLearningCard(source,id,new Date(now()).toISOString()));
-   warning=ids.length?ids.length+" mistake/skipped cards saved to the revision notebook.":"All mistakes/skips are already in the notebook.";
+   let saved=0;
+   for(const id of ids){
+     if(!await save(addLearningCard(source,id,new Date(now()).toISOString())))break;
+     saved++;
+   }
+   if(!storageFault)warning=saved?saved+" mistake/skipped cards saved to the revision notebook.":"All mistakes/skips are already in the notebook.";
    draw();
  };
  const dispatch=(event:SessionEvent)=>{
-   if(!attempt)return;
+   if(!attempt||storageFault)return;
    try{
      const ids=new Map(attempt.frozen.questions.map(q=>[q.id,q]));
      const before=attempt;
      attempt=transitionGenericAttempt(attempt,event,ids);
-     if(attempt!==before)save(attempt);
+     if(attempt!==before)void save(attempt);
      if(attempt.finishedAt!==null)view="result";
      warning="";
    }catch(error){warning=error instanceof Error?error.message:"Invalid response";}
@@ -423,8 +446,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          '<select id="g-single-section">'+selected!.paper.sections.map((s,i)=>
            '<option value="'+i+'"'+(singleSection===i?" selected":"")+'>'+escapeText(s.title)+'</option>').join("")+
          '</select>':""):"")+
-     '<div class="row generic-actions"><button class="btn primary" id="g-start"'+(loading||fallbackConflict?' disabled':'')+
-     '>Start exam</button><button class="btn" id="g-import"'+(loading||fallbackConflict?' disabled':'')+'>Import exam JSON</button></div>'+
+     '<div class="row generic-actions"><button class="btn primary" id="g-start"'+(loading||fallbackConflict||storageFault?' disabled':'')+
+     '>Start exam</button><button class="btn" id="g-import"'+(loading||fallbackConflict||storageFault?' disabled':'')+'>Import exam JSON</button></div>'+
      '<input type="file" id="g-file" accept=".json,application/json" hidden>'+
      '<p class="fine">SSC CGL original/reviewed papers and other validated exams use one examination engine. Answers and explanations stay hidden until submission.</p>'+
      '</section><section class="panel pad"><div class="row between"><h2>Attempt history</h2><span class="fine">'+all.length+' total</span></div>'+
@@ -432,7 +455,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      [["all","All attempts"],["progress","In progress"],["complete","Completed"]].map(([v,t])=>
        '<option value="'+v+'"'+(v===historyFilter?" selected":"")+'>'+t+'</option>').join("")+'</select>'+
      '<div class="row generic-actions"><button class="btn" id="g-export-history"'+(loading?' disabled':'')+'>Export backup</button>'+
-     '<button class="btn" id="g-import-history"'+(loading||fallbackConflict?' disabled':'')+'>Import backup</button></div>'+
+     '<button class="btn" id="g-import-history"'+(loading||fallbackConflict||storageFault?' disabled':'')+'>Import backup</button></div>'+
      '<input type="file" id="g-history-file" accept=".json,application/json" hidden>'+
      (filtered.length?filtered.map(a=>{
        const result=a.result?.snapshot;
@@ -531,10 +554,10 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        const p=packages.get(choice);if(!p)return;
        const id=typeof crypto!=="undefined"&&crypto.randomUUID?crypto.randomUUID():"generic-"+now()+"-"+Math.random();
        const configured=p.examId==="ssc-cgl"?configureCglPractice(p,cglMode,singleSection):p;
-       attempt=startGenericAttempt(configured,id,now());save(attempt);warning="";view="exam";draw();
+       attempt=startGenericAttempt(configured,id,now());warning="";view="exam";draw();void save(attempt);
      };
      root.querySelector<HTMLButtonElement>("#g-import")!.onclick=()=>root.querySelector<HTMLInputElement>("#g-file")?.click();
-     root.querySelector<HTMLButtonElement>("#g-export-history")!.onclick=downloadBackup;
+     root.querySelector<HTMLButtonElement>("#g-export-history")!.onclick=()=>{void downloadBackup();};
      root.querySelector<HTMLButtonElement>("#g-import-history")!.onclick=()=>root.querySelector<HTMLInputElement>("#g-history-file")?.click();
      root.querySelector<HTMLInputElement>("#g-history-file")!.onchange=async e=>{
        const file=(e.target as HTMLInputElement).files?.[0];if(!file)return;
@@ -546,8 +569,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        try{
          const pkg=validateExamPackage(JSON.parse(await file.text()));
          if(packages.has(pkg.paper.id))throw new Error("Paper revision ID already exists. Supply a new revision ID.");
+         if(!await save({recordType:"generic-package",id:"generic-package:"+pkg.paper.id,bundle:pkg}))return;
          packages.set(pkg.paper.id,pkg);choice=pkg.paper.id;
-         save({recordType:"generic-package",id:"generic-package:"+pkg.paper.id,bundle:pkg});
          notice("Package validated and imported.");
        }catch(error){notice(error instanceof Error?error.message:"Invalid exam package");}
      };
@@ -559,7 +582,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          attempt={...saved,state:restored.state,
            ...(restored.expired?{finishedAt:now(),result:scoreAttempt(saved.frozen.paper,saved.frozen.key,
              saved.frozen.questions,restored.state.responses,new Date().toISOString())}:{})};
-         save(attempt);
+         void save(attempt);
        }
        view=attempt.finishedAt?"result":"exam";draw();
      };
@@ -573,7 +596,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    }
    root.querySelector<HTMLButtonElement>("#g-library")!.onclick=()=>{view="library";attempt=null;draw();};
    if(view==="result"&&attempt){
-     root.querySelector<HTMLButtonElement>("#g-revision-set")!.onclick=()=>addResultCards(attempt!);
+     root.querySelector<HTMLButtonElement>("#g-revision-set")!.onclick=()=>{void addResultCards(attempt!);};
      root.querySelectorAll<HTMLButtonElement>("[data-add-card]").forEach(button=>button.onclick=()=>{
        if(attempt)addNotebookCard(attempt,button.dataset.addCard??"");
      });
@@ -649,7 +672,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    };
  }
  const timer=window.setInterval(()=>{
-   if(disposed||view!=="exam"||!attempt||attempt.state.status==="paused")return;
+   if(disposed||storageFault||view!=="exam"||!attempt||attempt.state.status==="paused")return;
    const original=attempt;
    const next=transitionGenericAttempt(original,{type:"TICK",nowMs:now()},
      new Map(original.frozen.questions.map(q=>[q.id,q])));
@@ -657,7 +680,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      attempt=next;
      const changedSection=original.state.sectionIndex!==next.state.sectionIndex;
      if(next.finishedAt!==null||changedSection||now()-lastTimerSave>=10000){
-       save(attempt);lastTimerSave=now();
+       void save(attempt);lastTimerSave=now();
      }
      if(next.finishedAt!==null){view="result";draw();return;}
      if(changedSection){draw();return;}
@@ -669,13 +692,13 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  const visibility=()=>{if(view==="exam"&&attempt)dispatch({type:"VISIBILITY",nowMs:now(),visible:!document.hidden});};
  document.addEventListener("visibilitychange",visibility);
  const pagehide=()=>{
-   if(view==="exam"&&attempt){
+   if(view==="exam"&&attempt&&!storageFault){
      try{
        const current=attempt;
        attempt=transitionGenericAttempt(current,{type:"VISIBILITY",nowMs:now(),visible:false},
          new Map(current.frozen.questions.map(q=>[q.id,q])));
        writeMirror(attempt);
-       save(attempt);
+       void save(attempt);
      }catch(error){console.warn("Pagehide checkpoint failed",error);}
    }
  };
@@ -723,7 +746,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          validateGenericStoredRecord(mirror);
          const existing=records.get(mirror.id);
          const winner=chooseRecovered(isAttempt(existing)?existing:undefined,mirror);
-         if(winner===mirror)save(mirror);
+         if(winner===mirror)void save(mirror);
        }
      }catch(error){console.warn("Invalid emergency session mirror",error);}
    }catch{
