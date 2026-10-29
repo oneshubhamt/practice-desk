@@ -1,3 +1,5 @@
+> **Documentation coordination (30 Oct 2026):** This file remains authoritative for **data structures/invariants**. Live v11 **feature** parity, user-visible gaps, Passes 11–16 and new evidence belong in [V11_FEATURE_PARITY_PROGRAMME.md](V11_FEATURE_PARITY_PROGRAMME.md). Do not copy old presentation behavior into the data model as an implicit migration requirement. The no-v11-history-migration and additive-backup-v3 decisions remain explicit.
+
 # Practice Desk data model — clean overhaul
 
 One validated `ExamPackage` holds the paper revision, immutable answer-key revision, ordered question revisions, stimuli/media and post-submission explanations. All exams, including built-in CGL original/reviewed and user-imported papers, share the same typed engine and UI.

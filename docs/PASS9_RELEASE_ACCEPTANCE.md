@@ -1,3 +1,5 @@
+> **DOCUMENT STATUS (30 Oct 2026): HISTORICAL / SUPERSEDED FEATURE-PARITY CLAIM.** The authoritative current v11 feature audit and Passes 11–16 are in [V11_FEATURE_PARITY_PROGRAMME.md](V11_FEATURE_PARITY_PROGRAMME.md); historical green CI or an older “parity complete” claim **does not prove full feature parity**. See [consolidated project status](PROJECT_STATUS.md).
+
 # Pass 9 — v11-grade product interface and feature restoration
 
 **Status:** **Complete for engineering and automated Chromium acceptance** on `overhaul`: [verified final CI #40916049802](https://github.com/oneshubhamt/practice-desk/actions/runs/40916049802), **75/75 Node tests**, strict TypeScript, generated offline HTML and the full Chromium `file://` suite green. `main` and `baseline/v11` are protected. This is source-and-automated-UI parity, **not a claim of pixel-identical appearance or physical-device signoff**.

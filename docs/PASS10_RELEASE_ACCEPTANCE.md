@@ -1,3 +1,5 @@
+> **DOCUMENT STATUS (30 Oct 2026): HISTORICAL RELEASE-HARDENING LEDGER.** The authoritative current v11 feature audit and Passes 11–16 are in [V11_FEATURE_PARITY_PROGRAMME.md](V11_FEATURE_PARITY_PROGRAMME.md); historical green CI or an older “parity complete” claim **does not prove full feature parity**. See [consolidated project status](PROJECT_STATUS.md).
+
 # Pass 10 — release hardening and independent acceptance
 
 **Status: IN PROGRESS.** Started 29 October 2026, `overhaul` only. This ledger distinguishes automated engineering checks from physical-device release approval; do not merge into `main` or change `baseline/v11`.
@@ -55,3 +57,8 @@ Before Pass 10: final Pass 9 HEAD `70c63d6`, [CI #40916405833](https://github.co
 **Pass 10 automated source/Chromium/Firefox/Linux WebKit gates: GREEN** in [CI #40921780620](https://github.com/oneshubhamt/practice-desk/actions/runs/40921780620). Source commit `8eb82a7`; CI-generated offline HTML commit `840e070`. Earlier individual runs on `d71bc68` through `1d3c0e9` failed only because the generated-HTML publishing step raced with newer commits; browser and tests passed. Branch CI now has `cancel-in-progress` concurrency.
 
 **Release decision: NOT YET APPROVED.** Exact final documentation HEAD verification and physical-device/manual signoff remain open; do not convert automated results to device approvals.
+
+
+## 7. Post-ledger verification and current programme correction (30 October 2026)
+
+The previously pending docs-only final HEAD `5b9dce604faef10a714415341c7da5116bf6ff8a` subsequently **passed all three jobs** in [CI #40922144096](https://github.com/oneshubhamt/practice-desk/actions/runs/40922144096). This resolves the **automated final HEAD verification** row above without rewriting dated original history. It does **not** satisfy device, accessibility, forced-exit or visual signoff. A further **independent source audit identified nontrivial v11 functional/UI gaps**; current status is [V11_FEATURE_PARITY_PROGRAMME.md](V11_FEATURE_PARITY_PROGRAMME.md). Passes 11–16 are planned; no parity fix was made in this documentation update.

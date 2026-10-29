@@ -1,3 +1,5 @@
+> **ARCHIVAL NOTICE — 30 October 2026:** This is the historical architecture audit and Passes 1–10 chronological scratchpad. Some earlier feature-parity claims were later found incomplete by a de novo v11/overhaul source comparison. **Current authoritative Passes 11–16 live scratchpad, feature matrix and decisions: [V11_FEATURE_PARITY_PROGRAMME.md](V11_FEATURE_PARITY_PROGRAMME.md).** Historical paragraphs have not been retroactively edited. See [PROJECT_STATUS.md](PROJECT_STATUS.md) for consolidated history.
+
 Worked for 4m 29s
 
 ### Practice Desk — Comprehensive Architecture Audit
@@ -1392,3 +1394,8 @@ See `docs/PASS4_RELEASE_ACCEPTANCE.md` for remaining verification. Do not merge 
 **5 · Targeted QA (pending final-head CI):** Check browser jobs and step logs, repair any actual failures, record evidence in the dedicated Pass 10 ledger. Outstanding physical Firefox/Safari/Android/iOS, assistive technology, forced renderer termination and visual screenshot approval cannot be declared passed from the available headless runner.
 
 **Pass 10 automated QA checkpoint — 29 October 2026:** [CI #40921780620](https://github.com/oneshubhamt/practice-desk/actions/runs/40921780620) passed all jobs (full Chromium checks, Firefox, Linux WebKit), 75/75 Node tests, initial-IDB-read-failure fallback regression, all existing browser recovery/score/learning regressions and 80-record history rendering (438 ms on runner). The verified generated distribution was committed as `840e070`. Earlier CI failures were generated-file push races during rapid commits, not browser regressions; workflow concurrency now cancels superseded runs. Final docs-only HEAD CI is pending. Real Safari/iOS/Android, screen readers, forced termination and screenshot approval are still **not** claimed; see [Pass 10 acceptance](PASS10_RELEASE_ACCEPTANCE.md).
+
+
+## Documentation transition — 30 October 2026 (no code changes)
+
+The historical Passes 1–10 engineering/design record is retained intact here. New direct-source audit of v11 `e661822` against overhaul `5b9dce6` revealed material missing user-facing features despite previously green QA and “parity” descriptions. **Feature-parity execution, Passes 11–16 and five-step objective evidence now live exclusively in [V11_FEATURE_PARITY_PROGRAMME.md](V11_FEATURE_PARITY_PROGRAMME.md).** The historical status and old acceptance documents are indexed in [PROJECT_STATUS.md](PROJECT_STATUS.md). This addendum does not assert any gap fixed.

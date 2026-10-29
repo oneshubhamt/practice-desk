@@ -1,3 +1,9 @@
+# v11 reference — superseded Pass 9 ledger (historical record)
+
+> **SUPERSEDED 30 October 2026.** This was the Pass 9 *implemented-work and automated-check* checklist. An independent source-to-source audit subsequently identified many v11 UI and feature regressions. **Do not use the table below as evidence of complete parity.** Use **[the authoritative v11 Feature Parity Programme](V11_FEATURE_PARITY_PROGRAMME.md)** for live status, source anchors, gap IDs, Passes 11–16 and acceptance. Historical claims are retained verbatim below for traceability.
+
+---
+
 # v11 reference and Pass 9 parity ledger
 
 **Frozen reference:** `baseline/v11` with `src/app/legacy.ts`, v11 CSS/template. **Current:** typed `overhaul`, no parallel legacy runtime, no v11 migration. Source behavior has been audited; Chromium automated UI and responsive regression is green. Pixel-by-pixel visual approval on real devices remains a **separate Pass 10/manual task**.
