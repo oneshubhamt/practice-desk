@@ -327,7 +327,10 @@ try{
    x.state?.responses?.some(r=>r.response)&&x.saveRevision>0);
  const second=await context.newPage();
  await testPage(second);
+ await second.locator("#g-history").click();
  await second.locator('[data-attempt="'+race.id+'"]').first().click();
+ fail(await second.locator('input[data-choice]').count()>=3,
+   "Concurrent history resume failed: "+await second.locator("main").innerText().then(text=>text.slice(0,240)));
  await second.locator('input[data-choice]').nth(1).click();
  const advanced=await find(second,x=>x.id===race.id&&x.saveRevision>race.saveRevision);
  if(await reopened.locator('input[data-choice]').count()>=3)
