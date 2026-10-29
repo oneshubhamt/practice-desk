@@ -5179,8 +5179,9 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
       cache.set(card.id, { record: card, scheduled: computed });
       return computed;
     };
-    const invalidate = () => {
-      for (const [id, entry] of cache) if (!host.cards().some((card) => card.id === id && card === entry.record)) cache.delete(id);
+    const invalidate = (all) => {
+      const active = new Map(all.map((card) => [card.id, card]));
+      for (const [id, entry] of cache) if (active.get(id) !== entry.record) cache.delete(id);
     };
     const now2 = () => /* @__PURE__ */ new Date();
     const due = (card) => scheduler?.newCard !== void 0 ? schedule(card).dueAt.getTime() <= Date.now() : false;
@@ -5189,7 +5190,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     function draw() {
       if (closed || !opened) return;
       const all = cards();
-      invalidate();
+      invalidate(all);
       const selected = all.find((c) => c.id === selectedId) ?? all[0];
       const dueNow = dueCards();
       if (reviewId) {
@@ -5232,7 +5233,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
       const topics = topicMetrics(done, all), cohorts = comparableTrends(done).filter((x) => x.count >= 2);
       const progress = evidenceProgression(topics);
       const visible = all.filter((c) => filter === "all" || filter === "due" && due(c) || filter === "bookmarked" && c.bookmarked);
-      const exam = all.find((c) => c.id === selectedId)?.examId ?? visible[0]?.examId ?? all[0]?.examId;
+      const exam = visible.find((c) => c.id === selectedId)?.examId ?? visible[0]?.examId;
       const candidates = visible.filter((c) => c.examId === exam && ["verified", "corrected", "caution"].includes(c.question.editorial.status)).slice(0, REVISION_MAX_QUESTIONS);
       root2.innerHTML = '<div class="generic-heading"><div><h1>Learning & revision</h1><p class="muted">Error notebook \xB7 FSRS-7 spaced review \xB7 Topic evidence</p></div><button class="btn" id="learning-close">\u2190 Test library</button></div>' + (message ? '<p class="generic-warning" role="status">' + esc(message) + "</p>" : "") + '<section class="panel pad"><div class="row between"><div><h2>Revision queue</h2><p class="fine">' + all.length + " cards \xB7 " + (scheduler ? dueNow.length + " due now" : "Scheduler initializing") + ' \xB7 Mock results do not automatically count as spaced-repetition reviews</p></div><div class="row generic-actions"><button class="btn primary" id="learning-due"' + (!scheduler || !dueNow.length ? " disabled" : "") + '>Review due cards</button><button class="btn" id="learning-test"' + (!candidates.length ? " disabled" : "") + ">Start revision test (" + candidates.length + ')</button></div></div><p class="fine">Practice test uses the selected exam and current notebook filter (up to ' + REVISION_MAX_QUESTIONS + ' eligible cards). Untimed; +1 correct, 0 incorrect/unanswered. It is not the source exam score and does not rate FSRS cards.</p></section><div class="generic-layout learning-layout"><section class="panel pad"><div class="row between"><h2>Error notebook</h2><select id="learning-filter" aria-label="Filter notebook" class="learning-filter">' + [["all", "All cards"], ["due", "Due now"], ["bookmarked", "Bookmarked"]].map(([key, label]) => '<option value="' + key + '"' + (filter === key ? " selected" : "") + ">" + label + "</option>").join("") + "</select></div>" + (visible.length ? visible.map((c) => {
         const next = scheduler ? schedule(c) : null;
