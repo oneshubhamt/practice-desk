@@ -12,7 +12,6 @@ import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
 import { createLearningDesk } from "./learning-ui.ts";
 import { addLearningCard, validateLearningCard } from "../learning/learning.ts";
 import type { LearningCard } from "../learning/learning.ts";
-import type { QuestionRevisionId } from "../domain/ids.js";
 
 const escapeText=(s:unknown):string=>String(s??"").replace(/[&<>"']/g,c=>
   ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" })[c]??c);
