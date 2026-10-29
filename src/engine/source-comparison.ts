@@ -32,10 +32,11 @@ export function createSourceKeyReference(
    const entry=byEntry.get(sourceQ.id),section=sections.get(sourceQ.id);
    if(!entry||entry.answer.kind!=="single-choice"||!section)return null;
    // Options are referenced by stable semantic identity across editions.
-   if(!q.content.options.some(o=>o.id===entry.answer.optionId))return null;
+   const originalOptionId=entry.answer.optionId;
+   if(!q.content.options.some(o=>o.id===originalOptionId))return null;
    const rule=entry.scoringOverride??section.scoringOverride??
       source.paper.scoring.byQuestionKind?.["single-choice"]??source.paper.scoring.defaultRule;
-   entries.push({questionRevisionId:q.id,originalOptionId:entry.answer.optionId,markingRule:structuredClone(rule)});
+   entries.push({questionRevisionId:q.id,originalOptionId,markingRule:structuredClone(rule)});
  }
  const core:Content={schema:1,paperId:target.paper.paperId,
    sourcePaperRevisionId:source.paper.id,sourceAnswerKeyRevisionId:source.answerKey.id,entries};
