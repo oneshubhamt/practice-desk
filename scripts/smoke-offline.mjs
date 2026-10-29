@@ -256,6 +256,15 @@ try{
    if(!fallbackSaved?.state?.responses?.some(r=>r.response?.kind==="single-choice"&&
       r.response.optionId.endsWith(":b")))throw new Error("Fallback writer did not retain its response");
    console.log("Offline file://: localStorage fallback detects competing generic tab");
+   // Even after refusing stale writes, the affected tab must allow a safe export.
+   const fallbackDownloadPromise=fallbackA.waitForEvent("download");
+   await fallbackA.locator("#g-export-history").click();
+   const fallbackDownload=await fallbackDownloadPromise;
+   const recoveredFallback=JSON.parse(await readFile(await fallbackDownload.path(),"utf8"));
+   if(!recoveredFallback.attempts.some(a=>a.id===fallbackId&&
+      a.state?.responses?.some(r=>r.response?.kind==="single-choice"&&r.response.optionId.endsWith(":b"))))
+     throw new Error("Conflict recovery backup exported stale fallback answers");
+   console.log("Offline file://: fallback conflict preserves latest record in export");
 
    // Narrow and tablet viewports must not introduce whole-page horizontal scrolling.
    const responsive=await cgl.context.newPage();

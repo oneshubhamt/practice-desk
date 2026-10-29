@@ -212,7 +212,17 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  let fallbackStamp:string|null=null, fallbackConflict=false;
  const storageKey="practiceDesk.generic.fallback.v1", mirrorKey="practiceDesk.generic.active.v1";
  const downloadBackup=()=>{
-   const recordsToExport=[...records.values()].filter(record=>isPackage(record)||isAttempt(record));
+   let recordsToExport=[...records.values()].filter(record=>isPackage(record)||isAttempt(record));
+   if(fallbackConflict&&!db){
+     try{
+       const latest=JSON.parse(localStorage.getItem(storageKey)??"[]") as unknown;
+       if(!Array.isArray(latest))throw new Error("Invalid fallback history");
+       recordsToExport=latest.map(value=>validateGenericStoredRecord(value));
+     }catch{
+       warning="Backup unavailable: browser fallback records could not be validated.";
+       draw();return;
+     }
+   }
    const backup=makeBackup(recordsToExport as unknown as readonly Record<string,unknown>[],[],null,new Date().toISOString());
    const blob=new Blob([JSON.stringify(backup)],{type:"application/json"});
    const url=URL.createObjectURL(blob);
@@ -347,7 +357,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
     '<div class="row"><button class="btn primary" id="g-start"'+(loading||fallbackConflict?' disabled':'')+'>Start exam</button><button class="btn" id="g-import"'+(loading||fallbackConflict?' disabled':'')+'>Import JSON</button></div>'+
     '<input type="file" id="g-file" accept=".json,application/json" hidden></section>'+
     '<section class="panel pad"><div class="row between"><h2>Generic exam history</h2>'+
-    '<div class="row"><button class="btn" id="g-export-history"'+(loading||fallbackConflict?' disabled':'')+'>Export</button>'+
+    '<div class="row"><button class="btn" id="g-export-history"'+(loading?' disabled':'')+'>Export</button>'+
     '<button class="btn" id="g-import-history"'+(loading||fallbackConflict?' disabled':'')+'>Import</button></div></div>'+
     '<input type="file" id="g-history-file" accept=".json,application/json" hidden>'+
     (attempts.length?attempts.slice(0,30).map(a=>'<button class="generic-history" data-attempt="'+escapeText(a.id)+'">'+
@@ -448,13 +458,20 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    const q=attempt.frozen.questions.find(x=>x.id===section?.questionRevisionIds[attempt!.state.questionIndex]);
    if(!q)return;
    root.querySelectorAll<HTMLInputElement>("[data-choice]").forEach(input=>input.onchange=()=>{
-     if(q.content.kind==="single-choice")
-       dispatch({type:"ANSWER",nowMs:now(),response:{kind:"single-choice",optionId:input.dataset.choice! as any}});
-     else if(q.content.kind==="multiple-select"){
-       const selected=[...root.querySelectorAll<HTMLInputElement>("[data-choice]:checked")].map(x=>x.dataset.choice!);
-       if(!selected.length)dispatch({type:"CLEAR",nowMs:now()});
-       else if(selected.length<(q.content.minSelections??1)) warning="Select at least "+(q.content.minSelections??1)+" options before saving.";
-       else dispatch({type:"ANSWER",nowMs:now(),response:{kind:"multiple-select",optionIds:selected as any}});
+     if(q.content.kind==="single-choice"){
+       const option=q.content.options.find(x=>x.id===input.dataset.choice);
+       if(!option){notice("Unknown question option.");return;}
+       dispatch({type:"ANSWER",nowMs:now(),response:{kind:"single-choice",optionId:option.id}});
+     }else if(q.content.kind==="multiple-select"){
+       const raw=[...root.querySelectorAll<HTMLInputElement>("[data-choice]:checked")].map(x=>x.dataset.choice);
+       const chosen=q.content.options.filter(option=>raw.includes(option.id)).map(option=>option.id);
+       if(raw.length!==chosen.length){notice("Unknown question option.");return;}
+       if(!chosen.length)dispatch({type:"CLEAR",nowMs:now()});
+       else if(chosen.length<(q.content.minSelections??1)) {
+         warning="Select at least "+(q.content.minSelections??1)+" options before saving.";
+         const noticeElement=root.querySelector<HTMLElement>(".generic-warning");
+         if(noticeElement)noticeElement.textContent=warning;
+       }else dispatch({type:"ANSWER",nowMs:now(),response:{kind:"multiple-select",optionIds:chosen}});
      }
    });
    root.querySelectorAll<HTMLInputElement>("[data-bool]").forEach(input=>input.onchange=()=>{
@@ -471,8 +488,14 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        dispatch(value.trim()?{type:"ANSWER",nowMs:now(),response:{kind:"free-response",text:value}}:{type:"CLEAR",nowMs:now()});
      }else if(q.content.kind==="matching"){
        const pairs=[...root.querySelectorAll<HTMLSelectElement>("[data-match]")].filter(x=>x.value)
-         .map(x=>({leftId:x.dataset.match! as any,rightId:x.value as any}));
-       dispatch(pairs.length?{type:"ANSWER",nowMs:now(),response:{kind:"matching",pairs}}:{type:"CLEAR",nowMs:now()});
+         .map(x=>{
+           const left=q.content.leftItems.find(item=>item.id===x.dataset.match);
+           const right=q.content.rightItems.find(item=>item.id===x.value);
+           return left&&right?{leftId:left.id,rightId:right.id}:null;
+         });
+       if(pairs.some(x=>x===null)){notice("Unknown matching option.");return;}
+       const validPairs=pairs.filter((pair):pair is NonNullable<typeof pair>=>pair!==null);
+       dispatch(validPairs.length?{type:"ANSWER",nowMs:now(),response:{kind:"matching",pairs:validPairs}}:{type:"CLEAR",nowMs:now()});
      }
    };
    root.querySelector<HTMLButtonElement>("#g-clear")!.onclick=()=>dispatch({type:"CLEAR",nowMs:now()});
