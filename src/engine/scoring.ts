@@ -60,7 +60,7 @@ export function scoreAttempt(paper: PaperRevision, key: AnswerKeyRevision, quest
     if (response && response.kind !== question.content.kind) throw new Error("Response kind mismatch");
     let verdict: Verdict;
     let marks: number;
-    if (["invalid", "incomplete-source", "under-review", "superseded"].includes(question.editorial.status)) { verdict = "excluded"; marks = 0; excludedCount++; }
+    if (["draft", "invalid", "incomplete-source", "under-review", "superseded"].includes(question.editorial.status)) { verdict = "excluded"; marks = 0; excludedCount++; }
     else if (!response) { verdict = "unanswered"; marks = rule.unansweredMarks; unansweredCount++; }
     else if (entry.answer.kind === "free-response") { verdict = "pending"; marks = 0; }
     else if (equal(entry.answer, response)) { verdict = "correct"; marks = rule.correctMarks; correctCount++; }

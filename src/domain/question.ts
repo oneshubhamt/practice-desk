@@ -43,6 +43,8 @@ export type EditorialChange =
 export interface EditorialRecord {
   readonly status: EditorialStatus;
   readonly notes?: string;
+  /** Page of the transcribed source document, if known; not an invented URL. */
+  readonly sourcePage?: number;
   readonly changes?: readonly EditorialChange[];
   readonly sources?: readonly SourceReference[];
 }

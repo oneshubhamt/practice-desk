@@ -174,6 +174,7 @@ export function validateQuestionRevision(value: unknown): QuestionRevision {
     if (!Array.isArray(editorial["changes"])) throw new Error("question.editorial.changes: expected an array");
     editorial["changes"].forEach((change, index) => oneOf(change, EDITORIAL_CHANGES, "question.editorial.changes[" + index + "]"));
   }
+  if (editorial["sourcePage"] !== undefined) positiveInteger(editorial["sourcePage"],"question.editorial.sourcePage");
   if (editorial["sources"] !== undefined) validateSourceReferences(editorial["sources"], "question.editorial.sources");
   return question as unknown as QuestionRevision;
 }

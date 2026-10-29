@@ -63,7 +63,10 @@ function sectionLimit(paper: PaperRevision, sectionIndex: number): number | null
 }
 /** Consume a monotonic interval without assigning time after expiry to a completed question. */
 function checkpoint(paper: PaperRevision, state: SessionState, nowMs: number): SessionState {
-  if (!Number.isFinite(nowMs) || nowMs < state.clockMs) throw new Error("Clock must be monotonic");
+  if (!Number.isFinite(nowMs)) throw new Error("Invalid session clock");
+  // Wall-clock adjustments can move backwards. Rebase without subtracting time
+  // or inventing a negative interval; future intervals are measured from the new origin.
+  if(nowMs<state.clockMs)return {...state,clockMs:nowMs};
   let remaining = state.status === "running" ? nowMs - state.clockMs : 0;
   let next: SessionState = { ...state, clockMs: nowMs };
   if (state.status !== "running") return next;
@@ -102,11 +105,19 @@ export function transition(paper: PaperRevision, state: SessionState, event: Ses
     if (current.status !== "running" || paper.timing.kind === "untimed" || paper.timing.pausePolicy !== "allowed") return current;
     return { ...current, status: "paused" };
   }
-  if (event.type === "RESUME") return current.status === "paused" ? { ...current, status: "running" } : current;
+  if (event.type === "RESUME") return current.status === "paused" &&
+    paper.timing.kind !== "untimed" && paper.timing.pausePolicy === "allowed"
+    ? { ...current, status: "running" } : current;
   if (current.status !== "running") return current;
-  if (event.type === "SUBMIT_ATTEMPT") return { ...current, status: "completed" };
+  // A sectional paper is finished exclusively by section completion. A direct
+  // SUBMIT_ATTEMPT must not bypass section locks or no-early-submit policy.
+  if (event.type === "SUBMIT_ATTEMPT")
+    return paper.timing.kind === "sectional" ? current : { ...current, status: "completed" };
   if (event.type === "SUBMIT_SECTION") {
-    if (paper.timing.kind !== "sectional" || !paper.timing.allowEarlySubmit) return current;
+    if (paper.timing.kind !== "sectional" || !paper.timing.allowEarlySubmit ||
+        current.sectionIndex !== state.sectionIndex) return current;
+    // Expiry may have advanced to the next section during checkpoint(). Never
+    // accidentally submit two sections with one delayed click.
     return advance(paper, current);
   }
   if (event.type === "NAVIGATE") {

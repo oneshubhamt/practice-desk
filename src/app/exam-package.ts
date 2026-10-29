@@ -26,6 +26,8 @@ export interface ExamPackage {
  readonly stimuli?: readonly StimulusDefinition[];
  readonly assets?: readonly ImageAsset[];
  readonly explanations?: Readonly<Record<string,string>>;
+ /** Runtime mode chosen by the user for derived CGL policies; never trusted as imported exam content. */
+ readonly practiceMode?: CglPracticeMode;
 }
 
 /** Every supplied question, key and attachment is validated before becoming visible. */
@@ -97,7 +99,7 @@ export function builtinCglPackages(sources: SourcePaperBank, patches: ReviewPatc
 export type CglPracticeMode = "strict" | "free" | "single";
 export function configureCglPractice(base: ExamPackage, mode:CglPracticeMode, sectionIndex=0):ExamPackage {
  if(base.examId!=="ssc-cgl")return base;
- if(mode==="strict")return base;
+ if(mode==="strict")return {...base,practiceMode:"strict"};
  const source=base.paper;
  if(mode==="single"&&!source.sections[sectionIndex])throw new Error("Unknown practice section");
  const sections=mode==="single"?[source.sections[sectionIndex]!]:[...source.sections];
@@ -113,7 +115,7 @@ export function configureCglPractice(base: ExamPackage, mode:CglPracticeMode, se
    timing:{kind:"whole-paper" as const,durationMs:mode==="single"?900000:3600000,pausePolicy:"allowed" as const},
    navigation:{...source.navigation,sectionNavigation:mode==="free"?"free" as const:"sequential-locked" as const}};
  const paper:PaperRevision={...paperBase,contentHash:paperRevisionHash(paperBase)};
- return {...base,paper,answerKey,questions,
+ return {...base,paper,answerKey,questions,practiceMode:mode,
    ...(base.explanations?{explanations:Object.fromEntries(Object.entries(base.explanations)
      .filter(([id])=>included.has(id as QuestionRevisionId)))}:{}),
    title:base.title+(mode==="free"?" · Flexible practice":" · "+sections[0]!.title+" practice")};
@@ -133,8 +135,12 @@ export interface GenericAttempt {
 }
 export function startGenericAttempt(bundle: ExamPackage, id: string, timestamp: number): GenericAttempt {
  const validated = validateExamPackage(bundle);
+ const mode=validated.examId==="ssc-cgl" ?
+   validated.practiceMode==="free"?"full-paper-practice":
+   validated.practiceMode==="single"?"section-practice":"exam-simulation":
+   validated.paper.edition==="custom"?"custom-practice":"exam-simulation";
  const frozen = freezeAttempt(validated.paper,validated.answerKey,validated.questions,
-   validated.stimuli??[],validated.assets??[],"exam-simulation",new Date(timestamp).toISOString(),validated.examId);
+   validated.stimuli??[],validated.assets??[],mode,new Date(timestamp).toISOString(),validated.examId);
  return {recordType:"generic-attempt",id,packageId:bundle.paper.id,startedAt:timestamp,
    updatedAt:timestamp,finishedAt:null,frozen,state:startSession(bundle.paper,timestamp),
    ...(validated.explanations?{explanations:structuredClone(validated.explanations)}:{})};
