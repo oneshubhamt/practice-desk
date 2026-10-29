@@ -1,6 +1,6 @@
 # Pass 6 — Integrity and persistence hardening
 
-Status: **Implementation integrated; automated verification is tracked in CI**. `overhaul` only; `main` and `baseline/v11` are unchanged.
+Status: **Engineering and automated Chromium acceptance complete**, [CI #40863482395](https://github.com/oneshubhamt/practice-desk/actions/runs/40863482395) green, **55/55 unit tests** and real `file://` browser smoke passed. `overhaul` only; `main` and `baseline/v11` are unchanged.
 
 ## Engineering scope
 
