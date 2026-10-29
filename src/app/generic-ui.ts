@@ -611,7 +611,10 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      '<p class="fine">Only sections with at least 5 measured answered responses are classified; fast is under 0.75× and slow over 1.5× that section\'s median.</p>'+
      '<div class="learning-metric-grid">'+evidence.speed.buckets.map(e=>'<div class="learning-metric">'+
        '<strong>'+e.label+'</strong><b>'+e.correct+' correct · '+e.incorrect+' incorrect</b>'+
-       '<small>'+e.items+' classified answers</small></div>').join("")+'</div>'+
+       '<small>'+e.items+' classified answers</small>'+
+       (e.label==="Fast"||e.label==="Slow"?'<button class="textlink" data-review-preset="'+
+         (e.label==="Fast"?"fastwrong":"slowwrong")+'">Review '+e.incorrect+' '+e.label.toLowerCase()+
+         ' mistakes →</button>':"")+'</div>').join("")+'</div>'+
      '<p class="fine">'+evidence.speed.classified+' of '+evidence.speed.measured+
        ' measurable answers classified; insufficient section samples remain unclassified.</p>'+
      '<h3>Marks decomposition and hypothetical opportunities</h3>'+
@@ -619,10 +622,12 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
         evidence.opportunity.observedPenalty.toFixed(2)+'</b><small>Actual penalty magnitude</small></div>'+
      '<div class="learning-metric"><strong>Wrong → correct</strong><b>+'+
         evidence.opportunity.wrongToCorrect.toFixed(2)+'</b><small>Hypothetical, '+
-        evidence.opportunity.countWrong+' incorrect scored items</small></div>'+
+        evidence.opportunity.countWrong+' incorrect scored items</small>'+
+        '<button class="textlink" data-review-preset="incorrect">Review incorrect →</button></div>'+
      '<div class="learning-metric"><strong>Skipped → correct</strong><b>+'+
         evidence.opportunity.skippedToCorrect.toFixed(2)+'</b><small>Hypothetical, '+
-        evidence.opportunity.countSkipped+' unanswered scored items</small></div></div>'+
+        evidence.opportunity.countSkipped+' unanswered scored items</small>'+
+        '<button class="textlink" data-review-preset="unanswered">Review skips →</button></div></div>'+
      '</section>':"";
    return '<div class="generic-heading results-heading"><div><span class="eyebrow">FROZEN EXAM RECORD</span>'+
      '<h1>Performance overview</h1><p class="muted">'+escapeText(paper.paperId)+' · '+escapeText(paper.edition)+
@@ -815,6 +820,9 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      root.querySelector<HTMLSelectElement>("#g-review-filter")!.onchange=e=>{
        reviewFilter=(e.target as HTMLSelectElement).value as ReviewFilter;draw();
      };
+     root.querySelectorAll<HTMLButtonElement>("[data-review-preset]").forEach(button=>button.onclick=()=>{
+       reviewFilter=(button.dataset.reviewPreset??"all") as ReviewFilter;resultTab="review";draw();
+     });
      root.querySelectorAll<HTMLButtonElement>("[data-ledger-q]").forEach(button=>button.onclick=()=>{
        const question=button.dataset.ledgerQ;resultTab="review";reviewFilter="all";draw();
        const target=[...root.querySelectorAll<HTMLElement>("[data-review-id]")].find(node=>node.dataset.reviewId===question);
