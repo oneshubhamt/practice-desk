@@ -89,7 +89,7 @@ test("written response can be explicitly self-assessed without modifying frozen 
  assert.equal(manualGradeSummary(marked).graded,1);
  assert.equal(validateGenericStoredRecord(JSON.parse(JSON.stringify(marked))).manualGrades[0].marks,1.5);
  assert.throws(()=>setManualGrade(marked,bundle.questions[5].id,99,"",new Date(2000).toISOString()),/Invalid manual grade/);
- assert.throws(()=>validateManualGrades({...marked,manualGrades:[...marked.manualGrades,...marked.manualGrades]}),/Invalid manual grade/);
+ assert.throws(()=>validateManualGrades({...marked,manualGrades:[...marked.manualGrades,...marked.manualGrades]}),/invalid manual grade/i);
  assert.throws(()=>setManualGrade(marked,bundle.questions[0].id,1,"",new Date(2000).toISOString()),/pending written responses/);
  assert.throws(()=>setManualGrade(startGenericAttempt(bundle,"open",2000),bundle.questions[5].id,1,"",new Date(2001).toISOString()),/pending written responses/);
 });
