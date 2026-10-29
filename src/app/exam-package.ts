@@ -126,6 +126,30 @@ export function builtinCglPackages(sources: SourcePaperBank, patches: ReviewPatc
  });
 }
 
+/** Runtime-only CGL practice policies share the same versioned model as every exam. */
+export type CglPracticeMode = "strict" | "free" | "single";
+export function configureCglPractice(base: ExamPackage, mode:CglPracticeMode, sectionIndex=0):ExamPackage {
+ if(base.examId!=="ssc-cgl")return base;
+ if(mode==="strict")return base;
+ const source=base.paper;
+ if(mode==="single"&&!source.sections[sectionIndex])throw new Error("Unknown practice section");
+ const sections=mode==="single"?[source.sections[sectionIndex]!]:[...source.sections];
+ const fingerprint=sha256(JSON.stringify({revision:source.id,mode,sectionIndex:mode==="single"?sectionIndex:null}));
+ const paper:PaperRevision={...source,
+   id:(source.id+":practice:"+mode+(mode==="single"?":"+sectionIndex:"")) as PaperRevision["id"],
+   contentHash:fingerprint as PaperRevision["contentHash"],sections,
+   timing:{kind:"whole-paper",durationMs:mode==="single"?900000:3600000,pausePolicy:"allowed"},
+   navigation:{...source.navigation,sectionNavigation:mode==="free"?"free":"sequential-locked"}};
+ const included=new Set(sections.flatMap(s=>s.questionRevisionIds));
+ const questions=base.questions.filter(q=>included.has(q.id));
+ const entries=base.answerKey.entries.filter(e=>included.has(e.questionRevisionId));
+ const answerKey={...base.answerKey,
+   id:(base.answerKey.id+":practice:"+mode+(mode==="single"?":"+sectionIndex:"")) as AnswerKeyRevision["id"],
+   contentHash:sha256(JSON.stringify(entries)) as AnswerKeyRevision["contentHash"],entries};
+ const adjusted={...paper,answerKeyRevisionId:answerKey.id};
+ return {...base,paper:adjusted,answerKey,questions,
+   title:base.title+(mode==="free"?" · Flexible practice":" · "+sections[0]!.title+" practice")};
+}
 export interface GenericAttempt {
  readonly recordType: "generic-attempt";
  readonly saveRevision?: number;

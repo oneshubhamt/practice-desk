@@ -1,33 +1,18 @@
-# Practice Desk — Pass 4 release acceptance
+# Pass 4 — clean overhaul release acceptance
 
-Status: **Chromium-verified implementation; manual cross-browser acceptance pending (29 October 2026).** All development stays on `overhaul`; `main` and `baseline/v11` are protected reference points.
+Architecture: **one typed runtime**, one offline library/history/results path. No `legacy.ts`, CGL bridge, v11 storage compatibility or migration. The complete v11 reference stays untouched on `baseline/v11`.
 
-## Automatically verified by GitHub Actions
+## Automated CI gates
+- [ ] Node 24, TypeScript 7.0.2, one reproducible `file://` HTML and no external assets
+- [ ] 10 built-in CGL source/reviewed editions; strict/flexible/single-section modes through the same engine
+- [ ] Imported six-response-kind exam, frozen scoring and section/question review
+- [ ] IndexedDB new-profile save/reopen and stale-tab rejection; localStorage fallback conflict
+- [ ] SHA-256 backup export/import and rejection of corrupt archives
+- [ ] Source/reviewed images from inlined data and 390px/768px responsive screens
 
-- [x] Node 24 / TypeScript 7.0.2 and offline reproducible HTML; no external JS/CSS assets.
-- [x] Five SSC CGL source papers plus reviewed editions; 500 source questions.
-- [x] Original CGL strict, flexible and single-section workflows use one shared model-driven examination renderer.
-- [x] Six generic question kinds, validation, scoring, end-of-attempt explanations and reopened frozen results.
-- [x] Original/reviewed figure questions load stem and option images from inline data, under `file://`.
-- [x] Chrome `file://` fresh launch, response persistence, same-path same-profile reopen.
-- [x] CGL + generic backup export/import, including interrupted and completed attempt data, checksum and additive restore.
-- [x] CGL + generic IndexedDB stale-tab rejection; generic fallback localStorage competing-tab warning and recoverable export.
-- [x] Responsive no-horizontal-overflow at 390px and 768px; preserved answer focus, pause controls and navigation policies.
+## Platform-dependent manual release checks
+- [ ] Firefox and Safari `file://` open/reopen behavior and storage permissions
+- [ ] Device storage-quota denial, private browsing, browsers with blocked IndexedDB
+- [ ] Mobile touch/keyboard, assistive technology, reduced-motion and zoomed layouts
 
-## Manual release gates that have **not** been verified here
-
-- [ ] Open the generated HTML directly from its final file location in current **Firefox**. Complete, pause, close/reopen and resume CGL strict/flexible/single and imported exam tests. Confirm same-origin saved responses and final results after restart.
-- [ ] Repeat the same `file://` open/close/reopen, history and backup round-trip in current **Safari**, including mobile Safari if supported. Treat local file storage permissions as browser-dependent.
-- [ ] Test low-storage / quota denial and blocked IndexedDB. Confirm explicit warnings, no false successful saves and independently usable backup exports. The localStorage two-key import is not atomic.
-- [ ] Check iOS/iPadOS and Android keyboard/touch responsiveness, option images, screen-reader announcements, focus order, reduced-motion support and zoomed layouts.
-- [ ] Before release, manually compare the original v11 CGL feature set: correction/audit notes, detailed solution explanations, source-PDF comparison, pacing and question-time metrics, history filtering/deletion, dark theme and immersive mode.
-
-## Architectural cleanup not yet complete
-
-- [ ] Replace/transitively type the CGL-specific analytics/library/review shell in `src/app/legacy.ts`, removing `@ts-nocheck` **without dropping features**. The common active exam renderer and new domain/engine modules are already strictly typed.
-- [ ] Consider a single consistent history/library presentation for imported exams and CGL while retaining specialized CGL analytics.
-- [ ] Remove transitional duplicate state and unused helpers after parity and full browser verification; avoid new dependencies or incompatible storage migrations.
-
-## Scope boundary
-
-Pass 5 (advanced learning) is separate: error notebook, topic taxonomy, revision sets, mastery tracking and richer comparable cross-exam analytics. A green Chromium CI run cannot substitute for the Firefox/Safari and storage manual gates.
+Pass 5 (mastery analytics, error notebook and revision sets) is separate.

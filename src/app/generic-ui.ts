@@ -1,5 +1,5 @@
-import { builtinCglPackages, validateExamPackage, startGenericAttempt, transitionGenericAttempt, readableAnswer } from "./exam-package.ts";
-import type { ExamPackage, GenericAttempt } from "./exam-package.ts";
+import { builtinCglPackages, configureCglPractice, validateExamPackage, startGenericAttempt, transitionGenericAttempt, readableAnswer } from "./exam-package.ts";
+import type { ExamPackage, GenericAttempt, CglPracticeMode } from "./exam-package.ts";
 import type { QuestionRevision, CandidateResponse } from "../domain/question.js";
 import type { QuestionRevisionId } from "../domain/ids.js";
 import type { SessionEvent } from "../engine/session.ts";
@@ -190,30 +190,18 @@ function cachedCglPackages(sources:SourcePaperBank,patches:ReviewPatchBank,
  builtinCache={sources,patches,solutions,bundles};
  return bundles;
 }
-/** Reuse the same model-driven exam view for the specialized CGL shell. */
-export function renderLegacyCglExam(
- attempt:{paperId:string;frozen:GenericAttempt["frozen"];engineState:GenericAttempt["state"]},
- sources:SourcePaperBank,patches:ReviewPatchBank,
- solutions:Readonly<Record<string,Readonly<Record<string,string>>>>
-):string {
- const reviewed=attempt.paperId.endsWith("-reviewed");
- const paperId=attempt.paperId.replace(/-reviewed$/,"");
- const bundle=cachedCglPackages(sources,patches,solutions).find(x=>
-   x.paper.paperId===paperId&&x.paper.edition===(reviewed?"reviewed":"source"));
- if(!bundle)throw new Error("CGL edition not found");
- return renderModelExam({packageId:bundle.paper.id,frozen:attempt.frozen,state:attempt.engineState},bundle);
-}
-
 export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patches:ReviewPatchBank,
- solutions:Readonly<Record<string,Readonly<Record<string,string>>>>,onBack:()=>void,initialAttemptId?:string):()=>void{
+ solutions:Readonly<Record<string,Readonly<Record<string,string>>>>):()=>void{
  const packages=new Map<string,ExamPackage>(cachedCglPackages(sources,patches,solutions).map(p=>[p.paper.id,p]));
  const records=new Map<string,RecordItem>();
- let choice=packages.keys().next().value as string;
+ let choice=packages.values().find(p=>p.paper.edition==="reviewed")?.paper.id??(packages.keys().next().value as string);
+ let cglMode:CglPracticeMode="strict", singleSection=0, historyFilter="all";
  let attempt:GenericAttempt|null=null, view:"library"|"exam"|"result"="library";
  let db:IDBDatabase|null=null, warning="",disposed=false, loading=true, writeQueue=Promise.resolve();
  let lastTimerSave=0;
  let fallbackStamp:string|null=null, fallbackConflict=false;
- const storageKey="practiceDesk.generic.fallback.v1", mirrorKey="practiceDesk.generic.active.v1";
+ const storageKey="practiceDesk.overhaul.fallback.v1", mirrorKey="practiceDesk.overhaul.active.v1";
+ const dbName="practiceDesk.overhaul.v1";
  const downloadBackup=()=>{
    let recordsToExport=[...records.values()].filter(record=>isPackage(record)||isAttempt(record));
    if(fallbackConflict&&!db){
@@ -230,19 +218,19 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    const blob=new Blob([JSON.stringify(backup)],{type:"application/json"});
    const url=URL.createObjectURL(blob);
    const link=document.createElement("a");link.href=url;
-   link.download="Practice_Desk_Generic_Backup_"+new Date().toISOString().slice(0,10)+".json";
+   link.download="Practice_Desk_Backup_"+new Date().toISOString().slice(0,10)+".json";
    document.body.append(link);link.click();link.remove();
    window.setTimeout(()=>URL.revokeObjectURL(url),2000);
  };
  const importHistory=async(file:File)=>{
    if(file.size>75*1024*1024)throw new Error("History backup exceeds 75 MiB");
    const backup=verifyBackup(JSON.parse(await file.text()));
-   if(backup.revisions.length)throw new Error("This archive contains CGL display records; import those from History");
+   if(backup.revisions.length)throw new Error("Unsupported display archives; only versioned exam records are accepted.");
    const imported=backup.attempts.map(record=>validateGenericStoredRecord(record));
-   if(!imported.length)throw new Error("Backup contains no generic records");
+   if(!imported.length)throw new Error("Backup contains no exam records");
    const incoming=planBackupMerge([...records.values()],imported,attempt?.id);
    if(!incoming.length){warning="These records are already present.";draw();return;}
-   if(!confirm("Import "+incoming.length+" generic history records? Existing saved attempts will not be replaced."))return;
+   if(!confirm("Import "+incoming.length+" exam history records? Existing saved attempts will not be replaced."))return;
    // IDB add is atomic for the entire batch. Never modify in-memory records before commit.
    await writeQueue;
    if(db){
@@ -336,6 +324,36 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      console.warn("Exam workspace save",e);
    });
  };
+ const removeSavedAttempt=async(id:string):Promise<void>=>{
+   const saved=records.get(id);
+   if(!isAttempt(saved)||!confirm("Permanently delete this attempt? Export a backup first if needed."))return;
+   try{
+     await writeQueue;
+     if(db){
+       await new Promise<void>((resolve,reject)=>{
+         const tx=db!.transaction("attempts","readwrite");
+         const store=tx.objectStore("attempts");
+         let conflict:Error|null=null;
+         const request=store.get(id);
+         request.onsuccess=()=>{
+           try{assertWriteVersion(request.result as RecordItem|undefined,saved.saveRevision??0);store.delete(id);}
+           catch(error){conflict=error as Error;tx.abort();}
+         };
+         tx.oncomplete=()=>resolve();
+         tx.onerror=()=>reject(conflict??tx.error);
+         tx.onabort=()=>reject(conflict??tx.error);
+       });
+     }else{
+       if(fallbackConflict||localStorage.getItem(storageKey)!==fallbackStamp)
+         throw new Error("Another tab changed fallback history");
+       const encoded=JSON.stringify([...records.values()].filter(r=>r.id!==id));
+       localStorage.setItem(storageKey,encoded);fallbackStamp=encoded;
+     }
+     records.delete(id);
+     if(attempt?.id===id){attempt=null;view="library";}
+     draw();
+   }catch(error){notice(error instanceof Error?error.message:"Deletion failed");}
+ };
  const dispatch=(event:SessionEvent)=>{
    if(!attempt)return;
    try{
@@ -349,33 +367,77 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    draw();
  };
  function listHTML():string {
-   const attempts=[...records.values()].filter(isAttempt).sort((a,b)=>b.startedAt-a.startedAt);
-   return '<div class="generic-heading"><h1>Exam workspace</h1><button class="btn" id="g-back">← Test library</button></div>'+
-    '<p class="muted">Configurable papers · Six question types · Works offline</p>'+
-    (warning?'<p class="generic-warning" role="status">'+escapeText(warning)+'</p>':"")+
-    '<div class="generic-layout"><section class="panel pad"><h2>Select an exam</h2>'+
-    '<select id="g-papers" aria-label="Select exam package">'+[...packages.values()].map(p=>'<option value="'+escapeText(p.paper.id)+'"'+
-       (choice===p.paper.id?" selected":"")+'>'+escapeText(p.title)+'</option>').join("")+'</select>'+
-    '<p class="fine">Built-in CGL papers remain available. You can also import any validated Practice Desk exam JSON file.</p>'+
-    '<div class="row"><button class="btn primary" id="g-start"'+(loading||fallbackConflict?' disabled':'')+'>Start exam</button><button class="btn" id="g-import"'+(loading||fallbackConflict?' disabled':'')+'>Import JSON</button></div>'+
-    '<input type="file" id="g-file" accept=".json,application/json" hidden></section>'+
-    '<section class="panel pad"><div class="row between"><h2>Generic exam history</h2>'+
-    '<div class="row"><button class="btn" id="g-export-history"'+(loading?' disabled':'')+'>Export</button>'+
-    '<button class="btn" id="g-import-history"'+(loading||fallbackConflict?' disabled':'')+'>Import</button></div></div>'+
-    '<input type="file" id="g-history-file" accept=".json,application/json" hidden>'+
-    (attempts.length?attempts.slice(0,30).map(a=>'<button class="generic-history" data-attempt="'+escapeText(a.id)+'">'+
-      escapeText(packages.get(a.packageId)?.title??a.frozen.paper.paperId)+' · '+new Date(a.startedAt).toLocaleString()+
-      '<small>'+(a.finishedAt?" Completed":" Resume")+'</small></button>').join(""):'<p class="fine">No attempts yet.</p>')+
-    '</section></div>';
+   const all=[...records.values()].filter(isAttempt).sort((a,b)=>b.startedAt-a.startedAt);
+   const filtered=all.filter(a=>historyFilter==="all"||
+     historyFilter==="complete"&&a.finishedAt!==null||
+     historyFilter==="progress"&&a.finishedAt===null);
+   const selected=packages.get(choice);
+   const cgl=selected?.examId==="ssc-cgl";
+   const count=all.filter(a=>a.finishedAt!==null).length;
+   const options=[...packages.values()].map(p=>
+     '<option value="'+escapeText(p.paper.id)+'"'+(choice===p.paper.id?" selected":"")+'>'+
+     escapeText(p.title)+'</option>').join("");
+   return '<div class="generic-heading"><div><h1>Test library</h1><p class="muted">'+packages.size+
+     ' paper editions · '+count+' completed attempts · Offline</p></div></div>'+
+     (warning?'<p class="generic-warning" role="status">'+escapeText(warning)+'</p>':"")+
+     '<div class="generic-layout"><section class="panel pad"><h2>Choose an exam</h2>'+
+     '<label class="picker" for="g-papers">Paper / edition</label>'+
+     '<select id="g-papers">'+options+'</select>'+
+     (cgl?'<h3 class="subhead">Practice mode</h3>'+
+       '<div class="generic-modes" role="group" aria-label="SSC CGL practice mode">'+
+       ([
+        ["strict","Exam simulation","4 locked sections · 15 min each"],
+        ["free","Flexible full paper","60 minutes · free section navigation"],
+        ["single","Section practice","25 questions · 15 minutes"]
+       ] as const).map(([key,title,detail])=>
+        '<button type="button" class="mode '+(cglMode===key?"on":"")+'" data-mode="'+key+'" aria-pressed="'+(cglMode===key)+'">'+
+        '<span><strong>'+title+'</strong><small>'+detail+'</small></span></button>').join("")+'</div>'+
+       (cglMode==="single"?'<label class="picker" for="g-single-section">Section</label>'+
+         '<select id="g-single-section">'+selected!.paper.sections.map((s,i)=>
+           '<option value="'+i+'"'+(singleSection===i?" selected":"")+'>'+escapeText(s.title)+'</option>').join("")+
+         '</select>':""):"")+
+     '<div class="row generic-actions"><button class="btn primary" id="g-start"'+(loading||fallbackConflict?' disabled':'')+
+     '>Start exam</button><button class="btn" id="g-import"'+(loading||fallbackConflict?' disabled':'')+'>Import exam JSON</button></div>'+
+     '<input type="file" id="g-file" accept=".json,application/json" hidden>'+
+     '<p class="fine">SSC CGL original/reviewed papers and other validated exams use one examination engine. Answers and explanations stay hidden until submission.</p>'+
+     '</section><section class="panel pad"><div class="row between"><h2>Attempt history</h2><span class="fine">'+all.length+' total</span></div>'+
+     '<label class="picker" for="g-filter">Show</label><select id="g-filter">'+
+     [["all","All attempts"],["progress","In progress"],["complete","Completed"]].map(([v,t])=>
+       '<option value="'+v+'"'+(v===historyFilter?" selected":"")+'>'+t+'</option>').join("")+'</select>'+
+     '<div class="row generic-actions"><button class="btn" id="g-export-history"'+(loading?' disabled':'')+'>Export backup</button>'+
+     '<button class="btn" id="g-import-history"'+(loading||fallbackConflict?' disabled':'')+'>Import backup</button></div>'+
+     '<input type="file" id="g-history-file" accept=".json,application/json" hidden>'+
+     (filtered.length?filtered.map(a=>{
+       const result=a.result?.snapshot;
+       return '<div class="generic-history-row"><button class="generic-history" data-attempt="'+escapeText(a.id)+'">'+
+         escapeText(packages.get(a.packageId)?.title??a.frozen.paper.paperId)+
+         '<small>'+new Date(a.startedAt).toLocaleString()+' · '+
+         (a.finishedAt?(result?result.earnedMarks+' marks · ':"")+'Completed':'Resume')+'</small></button>'+
+         '<button class="btn danger generic-delete" data-delete="'+escapeText(a.id)+'" aria-label="Delete saved attempt">Delete</button></div>';
+     }).join(""):'<p class="fine">No matching attempts.</p>')+
+     '</section></div>';
+ }
+ function packageForAttempt(saved:GenericAttempt):ExamPackage|undefined{
+   return packages.get(saved.packageId)??[...packages.values()].find(p=>
+     p.paper.paperId===saved.frozen.paper.paperId&&p.paper.edition===saved.frozen.paper.edition);
  }
  function examHTML():string {
-   return attempt?renderModelExam(attempt,packages.get(attempt.packageId),warning):"";
+   return attempt?renderModelExam(attempt,packageForAttempt(attempt),warning):"";
  }
  function resultHTML():string {
    if(!attempt)return "";
    const paper=attempt.frozen.paper,s=attempt.result??scoreAttempt(paper,attempt.frozen.key,attempt.frozen.questions,
       attempt.state.responses,new Date().toISOString());
    const qs=new Map(attempt.frozen.questions.map(q=>[q.id,q]));
+   const paperSectionRows=paper.sections.map(section=>{
+     const ids=new Set(section.questionRevisionIds);
+     const items=s.items.filter(item=>ids.has(item.questionRevisionId));
+     const scored=items.reduce((sum,item)=>sum+item.marks,0);
+     const responseTime=attempt!.state.responses.filter(r=>ids.has(r.questionRevisionId)).reduce((sum,r)=>sum+r.timeSpentMs,0);
+     return '<tr><td>'+escapeText(section.title)+'</td><td>'+scored.toFixed(1)+
+       '</td><td>'+items.filter(item=>item.verdict==="correct").length+'/'+items.length+
+       '</td><td>'+minutes(responseTime)+'</td></tr>';
+   }).join("");
    return '<div class="generic-heading"><h1>Exam results</h1><button class="btn" id="g-library">Library</button></div>'+
     '<section class="panel pad"><div class="scoregrid"><div class="score standout"><b>'+s.snapshot.earnedMarks+
     '</b><small>Marks</small></div><div class="score"><b>'+s.snapshot.correctCount+
@@ -383,15 +445,20 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
     '</b><small>Incorrect</small></div><div class="score"><b>'+s.snapshot.unansweredCount+
     '</b><small>Unanswered</small></div><div class="score"><b>'+s.snapshot.excludedCount+
     '</b><small>Excluded</small></div></div><p class="fine">Written responses marked pending require manual evaluation.</p></section>'+
-    '<section class="panel pad"><h2>Review</h2>'+s.items.map((it,i)=>{
+    '<section class="panel pad"><h2>Section performance</h2><div class="scroll-table"><table><thead><tr><th>Section</th><th>Marks</th><th>Correct</th><th>Time on questions</th></tr></thead><tbody>'+
+     paperSectionRows+'</tbody></table></div></section>'+
+    '<section class="panel pad"><h2>Question review</h2>'+s.items.map((it,i)=>{
       const q=qs.get(it.questionRevisionId);
       const response=attempt!.state.responses.find(r=>r.questionRevisionId===it.questionRevisionId)?.response;
       const answer=attempt!.frozen.key.entries.find(e=>e.questionRevisionId===it.questionRevisionId)?.answer;
       const explanation=attempt!.explanations?.[it.questionRevisionId]||q?.editorial.notes;
+      const seconds=attempt!.state.responses.find(r=>r.questionRevisionId===it.questionRevisionId)?.timeSpentMs??0;
       return q?'<article class="generic-review"><strong>'+(i+1)+'. '+escapeText(q.content.prompt)+'</strong>'+
+       '<p class="fine">'+escapeText(q.editorial.status)+' · '+minutes(seconds)+' spent</p>'+
        '<p class="fine">'+escapeText(it.verdict)+' · '+it.marks+' marks</p>'+
        '<p class="fine">Your answer: '+escapeText(readableAnswer(q,response))+'</p>'+
        '<p class="fine">Expected: '+escapeText(readableAnswer(q,answer))+'</p>'+
+       (q.editorial.notes?'<p class="fine">Editorial note: '+escapeText(q.editorial.notes)+'</p>':"")+
        (explanation?'<p class="fine">Explanation: '+escapeText(explanation)+'</p>':"")+'</article>':"";
     }).join("")+'</section>';
  }
@@ -410,15 +477,22 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      if(target && !("disabled" in target && target.disabled))target.focus({preventScroll:true});
    }
    if(view==="library"){
-     root.querySelector<HTMLButtonElement>("#g-back")!.onclick=()=>{
-       cleanup();
-       void writeQueue.then(onBack,onBack);
+     root.querySelector<HTMLSelectElement>("#g-papers")!.onchange=e=>{
+       choice=(e.target as HTMLSelectElement).value;draw();
      };
-     root.querySelector<HTMLSelectElement>("#g-papers")!.onchange=e=>{choice=(e.target as HTMLSelectElement).value;};
+     root.querySelector<HTMLSelectElement>("#g-filter")!.onchange=e=>{
+       historyFilter=(e.target as HTMLSelectElement).value;draw();
+     };
+     root.querySelectorAll<HTMLButtonElement>("[data-mode]").forEach(button=>button.onclick=()=>{
+       cglMode=button.dataset.mode as CglPracticeMode;draw();
+     });
+     const single=root.querySelector<HTMLSelectElement>("#g-single-section");
+     if(single)single.onchange=()=>{singleSection=Number(single.value);};
      root.querySelector<HTMLButtonElement>("#g-start")!.onclick=()=>{
        const p=packages.get(choice);if(!p)return;
        const id=typeof crypto!=="undefined"&&crypto.randomUUID?crypto.randomUUID():"generic-"+now()+"-"+Math.random();
-       attempt=startGenericAttempt(p,id,now());save(attempt);warning="";view="exam";draw();
+       const configured=p.examId==="ssc-cgl"?configureCglPractice(p,cglMode,singleSection):p;
+       attempt=startGenericAttempt(configured,id,now());save(attempt);warning="";view="exam";draw();
      };
      root.querySelector<HTMLButtonElement>("#g-import")!.onclick=()=>root.querySelector<HTMLInputElement>("#g-file")?.click();
      root.querySelector<HTMLButtonElement>("#g-export-history")!.onclick=downloadBackup;
@@ -450,6 +524,9 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        }
        view=attempt.finishedAt?"result":"exam";draw();
      };
+     root.querySelectorAll<HTMLButtonElement>("[data-delete]").forEach(button=>button.onclick=()=>{
+       void removeSavedAttempt(button.dataset.delete??"");
+     });
      root.querySelectorAll<HTMLButtonElement>("[data-attempt]").forEach(button=>button.onclick=()=>{
        openSaved(button.dataset.attempt??"");
      });
@@ -571,7 +648,11 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  (async()=>{
    try{
      db=await new Promise<IDBDatabase>((resolve,reject)=>{
-       const request=indexedDB.open("practiceDesk.history.v1",2);
+       const request=indexedDB.open(dbName,1);
+       request.onupgradeneeded=()=>{
+         if(!request.result.objectStoreNames.contains("attempts"))
+           request.result.createObjectStore("attempts",{keyPath:"id"});
+       };
        request.onsuccess=()=>resolve(request.result);
        request.onerror=()=>reject(request.error);
        request.onblocked=()=>reject(new Error("Database blocked"));
@@ -615,21 +696,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      }catch{warning="Browser storage is unavailable; attempts may not survive a reload.";}
    }
    loading=false;
-   if(!disposed){
-     const target=initialAttemptId&&records.get(initialAttemptId);
-     if(isAttempt(target)){
-       attempt=target;
-       if(target.finishedAt===null){
-         const restored=restoreSession(target.frozen.paper,target.state,now(),!document.hidden);
-         attempt={...target,state:restored.state,
-          ...(restored.expired?{finishedAt:now(),result:scoreAttempt(target.frozen.paper,target.frozen.key,
-            target.frozen.questions,restored.state.responses,new Date().toISOString())}:{})};
-         save(attempt);
-       }
-       view=attempt.finishedAt?"result":"exam";
-     }else if(initialAttemptId)warning="The selected attempt could not be found in this browser.";
-     draw();
-   }
+   if(!disposed)draw();
  })();
  return cleanup;
 }
