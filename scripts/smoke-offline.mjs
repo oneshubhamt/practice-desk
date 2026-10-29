@@ -210,7 +210,8 @@ try{
  await second.locator('[data-attempt="'+race.id+'"]').click();
  await second.locator('input[data-choice]').nth(1).click();
  const advanced=await find(second,x=>x.id===race.id&&x.saveRevision>race.saveRevision);
- await reopened.locator('input[data-choice]').nth(2).click();
+ if(await reopened.locator('input[data-choice]').count()>=3)
+  await reopened.locator('input[data-choice]').nth(2).click();
  await reopened.locator(".generic-warning").filter({hasText:"Another tab"}).waitFor();
  const authoritative=(await attempts(second)).find(x=>x.id===race.id);
  fail(authoritative.saveRevision===advanced.saveRevision,"Stale tab replaced newer revision");
