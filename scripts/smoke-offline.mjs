@@ -134,6 +134,33 @@ try{
  fail(custom.result.snapshot.correctCount===5,"Custom exam score incorrect");
  console.log("Chrome file://: six response types and immutable custom result passed");
 
+ // Pass 5: card creation never leaks answers during an active mock test.
+ await page.locator("[data-add-card]").first().click();
+ const firstLearning=await find(page,x=>x.recordType==="learning-card");
+ fail(firstLearning.reviews.length===0,"Mock answers were incorrectly treated as FSRS ratings");
+ await page.locator("#g-library").click();
+ await page.locator("#g-learning").click();
+ await page.locator("#learning-due").waitFor({state:"enabled"});
+ await page.locator("#learning-due").click();
+ fail(await page.locator(".learning-answer").count()===0,"Review answer leaked before reveal");
+ await page.locator("#learning-reveal").click();
+ fail(await page.locator(".learning-answer").count()===1,"Review answer failed to reveal");
+ await page.locator('[data-grade="3"]').click();
+ await page.locator("#learning-note").waitFor({state:"visible"});
+ await page.locator("#learning-error").selectOption("conceptual");
+ await page.locator("#learning-topic").fill("Explicit user subtopic");
+ await page.locator("#learning-note").fill("Review the underlying concept.");
+ await page.locator("#learning-save").click();
+ const ratedLearning=await find(page,x=>x.id===firstLearning.id&&x.reviews?.length===1&&
+   x.note==="Review the underlying concept.");
+ fail(ratedLearning.errorLabel==="conceptual"&&ratedLearning.customTopic==="Explicit user subtopic",
+   "Notebook classification or user topic did not save");
+ fail(await page.getByRole("heading",{name:"Topic performance"}).count()===1,
+   "Learning analytics are missing");
+ await page.locator("#learning-close").click();
+ console.log("Chrome file://: Pass 5 FSRS-7 review, notebook notes and topic analytics passed");
+
+
  // Export/import checksum verified backup through the real file chooser.
  await page.locator("#g-library").click();
  const pending=page.waitForEvent("download");
@@ -141,6 +168,8 @@ try{
  const downloaded=await pending;
  const backup=JSON.parse(await readFile(await downloaded.path(),"utf8"));
  fail(backup.version===2&&backup.attempts.some(a=>a.id===custom.id),"All-exam backup missing records");
+ fail(backup.attempts.some(a=>a.id===firstLearning.id&&a.reviews?.length===1),
+   "Learning review history missing from backup");
  page.once("dialog",d=>d.accept());
  await page.locator('[data-delete="'+custom.id+'"]').click();
  const deleted=await attempts(page);
@@ -159,7 +188,11 @@ try{
  await reopened.locator('[data-attempt="'+custom.id+'"]').click();
  fail(await reopened.locator(".generic-review").count()===6,"file:// reopen lost stored custom result");
  await reopened.locator("#g-library").click();
- console.log("Chrome file://: profile restart restores CGL and non-CGL history");
+ await reopened.locator("#g-learning").click();
+ fail(await reopened.locator("#learning-note").inputValue()==="Review the underlying concept.",
+   "file:// restart lost FSRS notebook history");
+ await reopened.locator("#learning-close").click();
+ console.log("Chrome file://: profile restart restores exam and FSRS learning history");
 
  // Multi-tab IndexedDB conflict must reject stale overwrites.
  await reopened.locator('[data-mode="strict"]').click();
