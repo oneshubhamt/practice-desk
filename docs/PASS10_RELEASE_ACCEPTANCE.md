@@ -27,13 +27,15 @@
 
 ## 4. Objective and targeted-QA ledger
 
-- [ ] Latest exact source and generated HTML verified at final branch HEAD.
-- [ ] Strict TS/build and all prior Node and Chromium tests green.
-- [ ] Injected IndexedDB read failure and fallback save green on Chromium.
-- [ ] Firefox Playwright `file://` profile re-open/save/backup acceptance green.
-- [ ] Linux WebKit Playwright `file://` profile re-open/save/backup acceptance green.
-- [ ] Bounded Chromium 80-record history rendering green.
-- [ ] Final GitHub Actions run evidence links, measured time and known limitations recorded.
+- [x] Strict TypeScript, reproducible offline HTML build and **75/75 Node tests**; [Pass 10 source CI #40921780620](https://github.com/oneshubhamt/practice-desk/actions/runs/40921780620) green.
+- [x] Original full Chromium `file://` suite, including SSC modes, six question kinds, FSRS, backup/restore, two-tab stale-write and simulated quota failure.
+- [x] Injected IndexedDB *initial read* failure now produces working localStorage fallback writes (real Chromium browser).
+- [x] Firefox Playwright `file://` saved answer → backup → reload → recovered selection.
+- [x] Linux WebKit Playwright `file://` saved answer → backup → reload → recovered selection.
+- [x] Bounded Chromium 80-record frozen-history loading/rendering: **438 ms** measured in CI #40921780620 (runner-specific).
+- [x] Generated `Practice_Desk_Offline_Mock_Tests.html` refreshed after successful source checks in auto-commit `840e070`.
+- [ ] Final documentation-only HEAD CI verification; do not claim its result before it completes.
+- [ ] Manual browser, actual devices, crash/OS-kill, screen reader and screenshot signoff remain separate (below).
 
 ## 5. Independent manual/platform release gates
 
@@ -50,4 +52,6 @@
 
 Before Pass 10: final Pass 9 HEAD `70c63d6`, [CI #40916405833](https://github.com/oneshubhamt/practice-desk/actions/runs/40916405833) green.
 
-**Final Pass 10 result pending** until current HEAD CI and manual release gates are assessed. Do not convert automation coverage into claims of physical-device approval.
+**Pass 10 automated source/Chromium/Firefox/Linux WebKit gates: GREEN** in [CI #40921780620](https://github.com/oneshubhamt/practice-desk/actions/runs/40921780620). Source commit `8eb82a7`; CI-generated offline HTML commit `840e070`. Earlier individual runs on `d71bc68` through `1d3c0e9` failed only because the generated-HTML publishing step raced with newer commits; browser and tests passed. Branch CI now has `cancel-in-progress` concurrency.
+
+**Release decision: NOT YET APPROVED.** Exact final documentation HEAD verification and physical-device/manual signoff remain open; do not convert automated results to device approvals.
