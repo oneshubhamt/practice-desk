@@ -1317,8 +1317,26 @@ See `docs/PASS4_RELEASE_ACCEPTANCE.md` for remaining verification. Do not merge 
 
 **2 · Analyze/design:** Use one transient, custom revision exam through the existing `ExamPackage` validator, frozen attempt and generic engine. Source cards may be mixed across paper revisions **only within one exam ID**; deduplicate IDs, reject conflicting shared media and unscoreable editorial statuses, and announce +1/0 practice scoring. Revision history must retain all source media even without the original package. Analytics separate raw observation counts, unique questions, and independent attempts, use section-relative measured speed, recompute from frozen responses and marking rules, and avoid rank/causal/predictive claims. Prevent repeated full FSRS schedule replays during the same redraw by caching state keyed to unchanged card objects. [Design details](PASS8_DESIGN.md). Pass 9 remains a **mandatory v11-or-better UX** gate, not optional polish.
 
-**3 · Implement:** Pending.
+**3 · Implement (on `overhaul`):**
+- `src/learning/revision-test.ts`: build 1–25 card validated, one-exam, untimed custom practice exams using frozen question/key/media and fixed +1/0/0 marks; reject duplicate/unsafe questions and conflicting shared assets; add integrity-hashed `notebookLineage` tracing each source card to its completed source attempt/paper/section.
+- `src/learning/learning.ts`: saved notebook cards now pin the source completed attempt ID. Topic categories distinguish source-provided topic IDs, section labels and user-entered labels; record raw observations, distinct answered revisions and independent **answering** attempts.
+- `src/learning/attempt-evidence.ts`: pure, frozen-input section summaries; measurable question time, speed–accuracy with explicit thresholds, actual penalties, hypothetical wrong/skipped improvement arithmetic, and descriptive topic consistency bands that reject repeated-item false confidence.
+- `src/app/learning-ui.ts`: "Start revision test" from current due/bookmarked/all filter, scoped to a single exam and up to 25 eligible cards; FSRS-7 schedule cache keyed by unchanged records, invalidated on replacement/deletion; richer topic evidence and consistency tables. Original FSRS rating workflow and answer-reveal behavior unchanged.
+- `src/app/generic-ui.ts`: start revision through ordinary validated engine + committed history, show separate result evidence and source-note lineage; generated attempts reopen and export through backup v3 without new parallel storage.
+- `src/styles/app.css`: compact responsive metric and evidence layout while explicitly deferring sophisticated home/exam/insights shell to Pass 9; no v11 runtime introduced.
 
-**4 · Check objectives:** Pending.
+**4 · Objective reconciliation:**
+1. **True generated revision exams — met.** Original immutable card questions/keys/media, no active answer leak, validated custom scoring (not official), unique attempt/paper identities, history/backup/reopen and source-attempt lineage.
+2. **Topic taxonomy and evidence — met.** Only explicit section/source/user labels, observation versus unique answered question versus answering attempts, five-answer measurement gate and stricter ten-answer/two-attempt/five-unique consistency gate.
+3. **Detailed analytics — met as descriptive computations.** Section marks, positive/penalty, coverage, measured time, median-relative speed buckets, changes counted, exact hypothetical score swings; no causation or invented elapsed mental effort.
+4. **Longitudinal evidence — met.** Prior exact-paper trend sequence preserved; consistency groups never claim calibrated mastery or compare differing keys/editions as identical.
+5. **Efficient FSRS — met.** Cache prevents repeated replay for unchanged cards, invalidates on changes; no automatic rating from mock/revision scores.
+6. **v11 visual parity — not claimed.** Dedicated Pass 9 remains mandatory for complete history/insights, rich result tabs, speed and pacing presentation, examiner-grade shell and full display controls.
+7. **Cross-browser/manual release acceptance — not claimed.** Firefox/Safari, mobile touch, screen readers, actual quota and forced termination remain Pass 10.
 
-**5 · Targeted QA:** Pending.
+**5 · Targeted QA:**
+- New pure tests: genuine revision package and automatic scoring, raw source/answer-media identity, inherited backup v3, unsafe/draft and mixed-exam rejections, valid cross-paper sources within one exam, conflicting asset identities, source lineage tampering, min sample/unique question gates, speed medians and unclassified insufficiency, exact opportunity arithmetic.
+- Chromium `file://` end-to-end: create notebook→FSRS rating and note→generate revision→answer hidden→complete→pacing evidence→reopen→backup→restore. Confirm FSRS rating log unchanged by generated exam.
+- All previous CGL strict/free/section, six-kind custom, manual scoring, hashed media, offline backup, IndexedDB multi-tab and quota denial, 390/768-pixel responsive gates retained.
+- [Green intermediate implementation CI #40903965637](https://github.com/oneshubhamt/practice-desk/actions/runs/40903965637) confirms full test suite/browser flows after lineage integration. Final-head CI evidence should be recorded and verified before the pass is declared fully complete.
+

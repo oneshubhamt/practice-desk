@@ -79,3 +79,13 @@ See [Pass 6 acceptance](docs/PASS6_RELEASE_ACCEPTANCE.md).
 - All work follows the documented [audit → analyze → implement → check objectives → targeted QA](docs/ARCHITECTURE_AUDIT_2026-10-28.md) loop. The visual/interaction experience is **not yet equivalent to v11**; [v11 parity targets](docs/V11_PARITY_LEDGER.md) are mandatory in Pass 9.
 
 See [Pass 7 acceptance](docs/PASS7_RELEASE_ACCEPTANCE.md). Pass 8 handles deeper analytics/revision, Pass 9 v11-grade UI/function parity, Pass 10 platform and scale release acceptance.
+
+## Pass 8 — executable revision tests and advanced analytics
+
+- **Start revision test** in Learning & revision: uses the current notebook filter (all, bookmarked, due), scoped to one exam, up to 25 eligible cards. It creates a real **untimed** practice exam with 1 correct / 0 incorrect / 0 skipped marking, not a source/examination score. Frozen keys/images remain answer-hidden until submission.
+- Revision attempts carry a validated source trail to the originating notebook cards and completed source attempts, and persist in the same IndexedDB history and backup v3 as all other exams. Generated exams **never** automatically rate FSRS cards.
+- Topic evidence now separates section/source/user labels and counts measured answers, distinct answered questions and independent answering attempts. The learning desk shows descriptive consistency bands only after adequate evidence. No artificial mastery, percentile or examination-readiness forecast is asserted.
+- Completed results contain section-relative speed–accuracy, foreground timing, actual negative marks, and mathematically derived **hypothetical** wrong/skipped mark opportunities. Exact-revision trends remain separate from comparisons across different paper revisions. Unmeasured or undersampled timing is labelled as such.
+- Cached FSRS-7 schedules avoid repeated full review-log replay when a card hasn't changed. The richer v11-quality visual treatment remains a **required Pass 9 gate**, not waived by these functional additions.
+
+See [Pass 8 acceptance](docs/PASS8_RELEASE_ACCEPTANCE.md), [Pass 8 design](docs/PASS8_DESIGN.md), the [architecture scratchpad](docs/ARCHITECTURE_AUDIT_2026-10-28.md) and [v11 parity ledger](docs/V11_PARITY_LEDGER.md).

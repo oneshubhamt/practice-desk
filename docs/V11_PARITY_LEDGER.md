@@ -8,12 +8,12 @@
 | History & insights workspace | Dedicated history screen, sorting, filtering, statistics, best/latest and comparison | Small list with status filter | Pass 9: distinct sophisticated history with search, sort, grouped comparisons |
 | Results navigation and structure | Insights and review tabs; powerful exploration | One long vertically stacked summary/review | Pass 9: coherent tabbed insights/review/ledger, responsive and accessible |
 | Score explanation and source-vs-reviewed comparisons | Audit-adjusted / publisher-key context | Pass 7 added frozen original-source key comparator alongside audited marks; basic visual tiles remain | Pass 9: richer score story, context and presentation |
-| Section pacing and visual progress | Progress bars, section breakdown, current time | Table only | Pass 8 evidence; Pass 9 rich presentation |
-| Speed × accuracy, improvement opportunities, answer revisions | Rich analytical panels | Missing | Pass 8 faithful analytics; Pass 9 visualization, without unsupported inference |
+| Section pacing and visual progress | Progress bars, section breakdown, current time | Pass 8 frozen section timing/accuracy/positive/penalty evidence, currently displayed in basic tables | Pass 9 rich presentation and interaction |
+| Speed × accuracy, improvement opportunities, answer revisions | Rich analytical panels | Pass 8 pure median-based speed, exact marks opportunities and answer-change counts; no inferred rescue/loss | Pass 9 v11-grade visualization, filters and honest methodology |
 | Question time ledger, filterable reviews | Detailed question timings and filters | Bare text review for all questions | Pass 7 frozen figure/passage correctness; Pass 9 filters, timestamps and density controls |
 | Exam workspace quality | Distinct exam header, clock bar, question navigator, immersive state | Simplified two-column panels | Pass 9: restored polished exam shell, responsive palette, focus and status |
 | Display controls | Compact Aa popover, theme/size/fullscreen | Header buttons, no fullscreen | Pass 9: compact, accessible and consistent controls |
-| Revision and learned content | Basic earlier history/workflow | FSRS-7 notebook and typed cards; advanced sets incomplete | Pass 8 advanced learning, integrated in Pass 9 visual system |
+| Revision and learned content | Basic earlier history/workflow | Pass 8 genuine notebook-generated exams, source lineage, FSRS-7 and stronger evidence gates; visuals still rudimentary | Pass 9 integrated polished learning and history UI |
 | Content and correctness safeguards | CGL-specific behavior | More generic, typed, hashed, offline, backup v3 | Keep all new invariants; no regression |
 
 **Acceptance requirement:** Audit each row against actual v11 source and screenshots/UI before marking Pass 9 complete. Preserve content richness, interaction affordances, responsive polish, accessibility, and general-exam capabilities. This ledger records specific deficits and is not evidence of completed parity.
