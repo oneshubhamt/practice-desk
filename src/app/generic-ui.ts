@@ -18,7 +18,6 @@ import { attemptEvidence } from "../learning/attempt-evidence.ts";
 import { answerRevisionEvidence } from "../learning/answer-revisions.ts";
 import { historyHTML, type HistorySort, type HistoryStatus } from "./history-page.ts";
 import { reviewMatch, reviewFiltersHTML, resultTabsHTML, sectionPaceHTML, timingLedgerHTML, type ResultTab, type ReviewFilter } from "./result-presentation.ts";
-import { comparableTrends } from "../learning/learning.ts";
 import { addLearningCard, validateLearningCard } from "../learning/learning.ts";
 import type { LearningCard } from "../learning/learning.ts";
 import { readDisplayPreferences, writeDisplayPreferences, SETTINGS_EVENT } from "./preferences.ts";
