@@ -356,7 +356,7 @@ try{
  const fallbackB=await context.newPage();
  await fallbackB.addInitScript(()=>Object.defineProperty(window,"indexedDB",{configurable:true,value:undefined}));
  await testPage(fallbackB);
- await fallbackB.locator('[data-attempt="'+fallbackId+'"]').click();
+ await fallbackB.locator('[data-attempt="'+fallbackId+'"]').first().click();
  await fallbackB.locator('input[data-choice]').nth(1).click();
  await fallbackA.locator(".generic-warning").filter({hasText:"Fallback history changed"}).waitFor();
  const downloadFallback=fallbackA.waitForEvent("download");
