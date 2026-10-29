@@ -16,6 +16,7 @@ import { createLearningDesk } from "./learning-ui.ts";
 import { makeRevisionPackage,createNotebookLineage,validateNotebookLineage } from "../learning/revision-test.ts";
 import { attemptEvidence } from "../learning/attempt-evidence.ts";
 import { historyHTML, type HistorySort, type HistoryStatus } from "./history-page.ts";
+import { reviewMatch, reviewFiltersHTML, resultTabsHTML, sectionPaceHTML, timingLedgerHTML, type ResultTab, type ReviewFilter } from "./result-presentation.ts";
 import { comparableTrends } from "../learning/learning.ts";
 import { addLearningCard, validateLearningCard } from "../learning/learning.ts";
 import type { LearningCard } from "../learning/learning.ts";
@@ -217,8 +218,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  let choice=[...packages.values()].reverse().find(p=>p.paper.edition==="reviewed")?.paper.id??(packages.keys().next().value as string);
  let cglMode:CglPracticeMode="strict", singleSection=0;
   let historyFilter:HistoryStatus="all",historySort:HistorySort="newest",historySearch="";
-  let resultTab:"overview"|"review"|"timing"="overview";
-  let reviewFilter="all";
+  let resultTab:ResultTab="overview";
+  let reviewFilter:ReviewFilter="all";
  let attempt:GenericAttempt|null=null, view:"library"|"history"|"exam"|"result"|"learning"="library";
  let db:IDBDatabase|null=null, warning="",disposed=false, loading=true, writeQueue=Promise.resolve();
  let lastTimerSave=0;
@@ -453,7 +454,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      const before=attempt;
      attempt=transitionGenericAttempt(attempt,event,ids);
      if(attempt!==before)void save(attempt);
-     if(attempt.finishedAt!==null)view="result";
+     if(attempt.finishedAt!==null){view="result";resultTab="overview";reviewFilter="all";}
      warning="";
    }catch(error){warning=error instanceof Error?error.message:"Invalid response";}
    draw();
@@ -599,7 +600,14 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
         evidence.opportunity.skippedToCorrect.toFixed(2)+'</b><small>Hypothetical, '+
         evidence.opportunity.countSkipped+' unanswered scored items</small></div></div>'+
      '</section>':"";
-   return '<div class="generic-heading"><h1>Exam results</h1><button class="btn" id="g-library">Library</button></div>'+
+   return '<div class="generic-heading results-heading"><div><span class="eyebrow">FROZEN EXAM RECORD</span>'+
+     '<h1>Performance overview</h1><p class="muted">'+escapeText(paper.paperId)+' · '+escapeText(paper.edition)+
+     ' · '+(attempt.finishedAt?new Date(attempt.finishedAt).toLocaleString():"")+'</p></div>'+
+     '<div class="row"><button class="btn quiet" id="g-history-results">History & insights</button>'+
+     '<button class="btn" id="g-library">Library</button></div></div>'+
+    (warning?'<p class="generic-warning" role="status">'+escapeText(warning)+'</p>':"")+
+    resultTabsHTML(resultTab)+
+    '<div class="result-pane" id="result-overview" role="tabpanel"'+(resultTab!=="overview"?" hidden":"")+'>'+
     '<section class="panel pad"><div class="scoregrid"><div class="score standout"><b>'+s.snapshot.earnedMarks+
     '</b><small>Marks</small></div><div class="score"><b>'+s.snapshot.correctCount+
     '</b><small>Correct</small></div><div class="score"><b>'+s.snapshot.incorrectCount+
@@ -615,10 +623,14 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       escapeText(selfAssessed.toFixed(2))+'. Original automated score above remains unchanged.</p>':
       '<p class="fine">Automated marks reflect only scoreable questions.</p>')+'</section>'+
     '<section class="panel pad"><h2>Section performance</h2><div class="scroll-table"><table><thead><tr><th>Section</th><th>Marks</th><th>Correct</th><th>Time on questions</th></tr></thead><tbody>'+
-     paperSectionRows+'</tbody></table></div></section>'+analyticHTML+
-    '<section class="panel pad"><div class="row between"><h2>Question review</h2>'+
+     paperSectionRows+'</tbody></table></div></section>'+sectionPaceHTML(attempt)+analyticHTML+'</div>'+
+    '<section class="panel pad result-pane" id="result-review" role="tabpanel"'+(resultTab!=="review"?" hidden":"")+'>'+
+    '<div class="row between"><h2>Question review</h2>'+
       '<button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div>'+
-      '<p class="fine">Mock-test results never automatically become FSRS review ratings.</p>'+s.items.map((it,i)=>{
+      reviewFiltersHTML(reviewFilter)+
+      '<p class="fine">Review frozen questions, actual responses, solutions and foreground time. Mock scores never become FSRS ratings.</p>'+
+      '<p class="fine">'+s.items.filter(it=>reviewMatch(attempt!,it,reviewFilter)).length+' of '+s.items.length+' items</p>'+
+      s.items.filter(it=>reviewMatch(attempt!,it,reviewFilter)).map((it,i)=>{
       const q=qs.get(it.questionRevisionId);
       const response=attempt!.state.responses.find(r=>r.questionRevisionId===it.questionRevisionId)?.response;
       const answer=attempt!.frozen.key.entries.find(e=>e.questionRevisionId===it.questionRevisionId)?.answer;
@@ -629,7 +641,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       const limit=manualGradeLimit(attempt!,q.id);
       const provenance=q.editorial.sources??[];
       const origin=attempt!.notebookLineage?.entries.find(x=>x.questionRevisionId===q.id);
-      return '<article class="generic-review"><strong>'+(i+1)+'. '+escapeText(q.content.prompt)+'</strong>'+
+      return '<article class="generic-review" data-review-id="'+escapeText(q.id)+'" data-verdict="'+escapeText(it.verdict)+'"><strong>'+
+       (paper.sections.flatMap(z=>z.questionRevisionIds).indexOf(q.id)+1)+'. '+escapeText(q.content.prompt)+'</strong>'+
        '<p class="fine">'+escapeText(q.editorial.status)+
          (q.editorial.sourcePage?' · Source page '+q.editorial.sourcePage:"")+
          ' · '+minutes(seconds)+' spent</p>'+
@@ -653,7 +666,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          (records.has("learning-card:"+q.id)?" disabled":"")+'>'
          +(records.has("learning-card:"+q.id)?"In notebook":"Add to notebook")+
        '</button></article>';
-    }).join("")+'</section>';
+    }).join("")+'</section>'+timingLedgerHTML(attempt,resultTab==="timing");
  }
  const openSaved=(id:string)=>{
    const saved=records.get(id);if(!isAttempt(saved))return;
@@ -756,6 +769,18 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    }
    root.querySelector<HTMLButtonElement>("#g-library")!.onclick=()=>{view="library";attempt=null;draw();};
    if(view==="result"&&attempt){
+     root.querySelector<HTMLButtonElement>("#g-history-results")!.onclick=()=>{view="history";draw();};
+     root.querySelectorAll<HTMLButtonElement>("[data-result-tab]").forEach(button=>button.onclick=()=>{
+       resultTab=button.dataset.resultTab as ResultTab;draw();
+     });
+     root.querySelector<HTMLSelectElement>("#g-review-filter")!.onchange=e=>{
+       reviewFilter=(e.target as HTMLSelectElement).value as ReviewFilter;draw();
+     };
+     root.querySelectorAll<HTMLButtonElement>("[data-ledger-q]").forEach(button=>button.onclick=()=>{
+       const question=button.dataset.ledgerQ;resultTab="review";reviewFilter="all";draw();
+       const target=[...root.querySelectorAll<HTMLElement>("[data-review-id]")].find(node=>node.dataset.reviewId===question);
+       target?.scrollIntoView({block:"start"});
+     });
      root.querySelector<HTMLButtonElement>("#g-revision-set")!.onclick=()=>{void addResultCards(attempt!);};
      root.querySelectorAll<HTMLButtonElement>("[data-manual-save]").forEach(button=>button.onclick=async()=>{
        if(!attempt||storageFault)return;
@@ -854,7 +879,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      if(next.finishedAt!==null||changedSection||now()-lastTimerSave>=10000){
        void save(attempt);lastTimerSave=now();
      }
-     if(next.finishedAt!==null){view="result";draw();return;}
+     if(next.finishedAt!==null){view="result";resultTab="overview";reviewFilter="all";draw();return;}
      if(changedSection){draw();return;}
    }
    const el=root.querySelector("#g-timer");
