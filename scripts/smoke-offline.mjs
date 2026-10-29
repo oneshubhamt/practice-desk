@@ -165,8 +165,8 @@ try{
  await page.locator("#g-export-history").click();
  const downloaded=await pending;
  const backup=JSON.parse(await readFile(await downloaded.path(),"utf8"));
- fail(backup.version===2&&backup.attempts.some(a=>a.id===custom.id),"All-exam backup missing records");
- fail(backup.attempts.some(a=>a.id===firstLearning.id&&a.reviews?.length===1),
+ fail(backup.version===3&&backup.records.some(a=>a.id===custom.id),"All-exam backup missing records");
+ fail(backup.records.some(a=>a.id===firstLearning.id&&a.reviews?.length===1),
    "Learning review history missing from backup");
  page.once("dialog",d=>d.accept());
  await page.locator('[data-delete="'+custom.id+'"]').click();

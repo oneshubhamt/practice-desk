@@ -62,11 +62,11 @@ test("backup preserves notes and FSRS review logs with strict integrity checks",
  const original=addLearningCard(a,bundle.questions[0].id,new Date(1030).toISOString());
  const rated=rateLearningCard({...original,note:"Review concept carefully",errorLabel:"conceptual",customTopic:"Topic"},
  Rating.Again,new Date(2030).toISOString(),scheduler);
- const archived=verifyBackup(makeBackup([a,rated],[],null,"2026-10-29T10:00:00Z"));
- assert.equal(archived.attempts.length,2);
- const card=validateLearningCard(archived.attempts.find(x=>x.recordType==="learning-card"));
+ const archived=verifyBackup(makeBackup([a,rated],{schema:1,dark:false,scale:100},"2026-10-29T10:00:00Z"));
+ assert.equal(archived.records.length,2);
+ const card=validateLearningCard(archived.records.find(x=>x.recordType==="learning-card"));
  assert.equal(card.note,"Review concept carefully");
  assert.equal(card.reviews.length,1);
  assert.throws(()=>validateLearningCard({...card,reviews:[{rating:9,at:card.updatedAt}]}),/history/);
- assert.throws(()=>verifyBackup({...archived,attempts:archived.attempts.slice(1)}),/integrity/);
+ assert.throws(()=>verifyBackup({...archived,records:archived.records.slice(1)}),/integrity/);
 });
