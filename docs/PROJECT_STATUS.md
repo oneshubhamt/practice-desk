@@ -47,14 +47,14 @@
 
 | Pass | Focus | Primary targets | Current status |
 |---|---|---|---|
-| 11 | Exam experience, keyboard, fullscreen, timer and navigation | E01–E09 | PLANNED |
+| 11 | Exam experience, keyboard, fullscreen, timer and navigation | E01–E09 DONE | DONE — [CI #40940761995](https://github.com/oneshubhamt/practice-desk/actions/runs/40940761995) |
 | 12 | Question review, original-version diff, correct/incorrect styling, score max | R01–R03, R09–R12 | PLANNED |
 | 13 | History operations, persistence and preferences | H01–H09 | PLANNED |
 | 14 | Timing visits, review filters, recommendations, comparable marks trends | R04–R08, H07 | PLANNED |
 | 15 | Visual side-by-side, mobile and accessibility | V01–V10 | PLANNED |
 | 16 | **Independent new v11 source audit**, final targeted browser comparison and parity decision | All rows | PLANNED |
 
-**Progress is updated ONLY in the [feature-parity programme](V11_FEATURE_PARITY_PROGRAMME.md)**, not in archived pass-level reports. Historical architecture scratchpad may receive a small redirect marker but is no longer the live parity log.
+**Pass 11 is completed and independently browser-checked; Passes 12–16 remain open.** Progress is updated ONLY in the [feature-parity programme](V11_FEATURE_PARITY_PROGRAMME.md), not in archived pass-level reports. Historical architecture scratchpad may receive a small redirect marker but is no longer the live parity log.
 
 ## Decisions and exclusions retained
 
