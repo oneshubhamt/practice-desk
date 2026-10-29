@@ -15,6 +15,8 @@ import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
 import { createLearningDesk } from "./learning-ui.ts";
 import { makeRevisionPackage,createNotebookLineage,validateNotebookLineage } from "../learning/revision-test.ts";
 import { attemptEvidence } from "../learning/attempt-evidence.ts";
+import { historyHTML, type HistorySort, type HistoryStatus } from "./history-page.ts";
+import { comparableTrends } from "../learning/learning.ts";
 import { addLearningCard, validateLearningCard } from "../learning/learning.ts";
 import type { LearningCard } from "../learning/learning.ts";
 import { readDisplayPreferences, writeDisplayPreferences, SETTINGS_EVENT } from "./preferences.ts";
@@ -213,8 +215,11 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  const packages=new Map<string,ExamPackage>(cachedCglPackages(sources,patches,solutions).map(p=>[p.paper.id,p]));
  const records=new Map<string,RecordItem>();
  let choice=[...packages.values()].reverse().find(p=>p.paper.edition==="reviewed")?.paper.id??(packages.keys().next().value as string);
- let cglMode:CglPracticeMode="strict", singleSection=0, historyFilter="all";
- let attempt:GenericAttempt|null=null, view:"library"|"exam"|"result"|"learning"="library";
+ let cglMode:CglPracticeMode="strict", singleSection=0;
+  let historyFilter:HistoryStatus="all",historySort:HistorySort="newest",historySearch="";
+  let resultTab:"overview"|"review"|"timing"="overview";
+  let reviewFilter="all";
+ let attempt:GenericAttempt|null=null, view:"library"|"history"|"exam"|"result"|"learning"="library";
  let db:IDBDatabase|null=null, warning="",disposed=false, loading=true, writeQueue=Promise.resolve();
  let lastTimerSave=0;
  let fallbackStamp:string|null=null, fallbackConflict=false, storageFault=false;
@@ -455,57 +460,73 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  };
  function listHTML():string {
    const all=[...records.values()].filter(isAttempt).sort((a,b)=>b.startedAt-a.startedAt);
-   const filtered=all.filter(a=>historyFilter==="all"||
-     historyFilter==="complete"&&a.finishedAt!==null||
-     historyFilter==="progress"&&a.finishedAt===null);
+   const complete=all.filter(a=>a.finishedAt!==null);
+   const pending=all.filter(a=>a.finishedAt===null);
+   const latest=all.slice(0,3);
    const selected=packages.get(choice);
    const cgl=selected?.examId==="ssc-cgl";
-   const count=all.filter(a=>a.finishedAt!==null).length;
+   const count=selected?.paper.sections.reduce((n,z)=>n+z.questionRevisionIds.length,0)??0;
+   const modeLabel=cgl?cglMode==="strict"?"Exam simulation":cglMode==="free"?"Full paper practice":"Section practice":"Custom examination";
+   const time=selected?.paper.timing.kind==="untimed"?"Untimed":cgl?
+     cglMode==="strict"?"15 min per section":cglMode==="single"?"15 minutes":"60 minutes":
+     selected?.paper.timing.kind==="whole-paper"?minutes(selected.paper.timing.durationMs):
+     "Section timers";
+   const questionCount=cgl&&cglMode==="single"?selected?.paper.sections[singleSection]?.questionRevisionIds.length??0:count;
    const options=[...packages.values()].map(p=>
-     '<option value="'+escapeText(p.paper.id)+'"'+(choice===p.paper.id?" selected":"")+'>'+
-     escapeText(p.title)+'</option>').join("");
-   return '<div class="generic-heading"><div><h1>Test library</h1><p class="muted">'+packages.size+
-     ' paper editions · '+count+' completed attempts · Offline</p></div></div>'+
+      '<option value="'+escapeText(p.paper.id)+'"'+(choice===p.paper.id?" selected":"")+'>'+
+      escapeText(p.title)+'</option>').join("");
+   return '<div class="generic-heading home-heading"><div><span class="eyebrow">OFFLINE PRACTICE STUDIO</span>'+
+     '<h1>Test library</h1><p class="muted">Choose a paper, work in exam conditions and learn from every attempt.</p></div>'+
+     '<button class="btn quiet" id="g-history">History & insights →</button></div>'+
      (warning?'<p class="generic-warning" role="status">'+escapeText(warning)+'</p>':"")+
-     '<div class="generic-layout"><section class="panel pad"><h2>Choose an exam</h2>'+
-     '<label class="picker" for="g-papers">Paper / edition</label>'+
-     '<select id="g-papers">'+options+'</select>'+
-     (cgl?'<h3 class="subhead">Practice mode</h3>'+
-       '<div class="generic-modes" role="group" aria-label="SSC CGL practice mode">'+
-       ([
-        ["strict","Exam simulation","4 locked sections · 15 min each"],
-        ["free","Flexible full paper","60 minutes · free section navigation"],
-        ["single","Section practice","25 questions · 15 minutes"]
-       ] as const).map(([key,title,detail])=>
-        '<button type="button" class="mode '+(cglMode===key?"on":"")+'" data-mode="'+key+'" aria-pressed="'+(cglMode===key)+'">'+
-        '<span><strong>'+title+'</strong><small>'+detail+'</small></span></button>').join("")+'</div>'+
-       (cglMode==="single"?'<label class="picker" for="g-single-section">Section</label>'+
-         '<select id="g-single-section">'+selected!.paper.sections.map((s,i)=>
-           '<option value="'+i+'"'+(singleSection===i?" selected":"")+'>'+escapeText(s.title)+'</option>').join("")+
-         '</select>':""):"")+
-     '<div class="row generic-actions"><button class="btn primary" id="g-start"'+(loading||fallbackConflict||storageFault?' disabled':'')+
-     '>Start exam</button><button class="btn" id="g-import"'+(loading||fallbackConflict||storageFault?' disabled':'')+'>Import exam JSON</button></div>'+
-     '<input type="file" id="g-file" accept=".json,application/json" hidden>'+
-     '<p class="fine">SSC CGL original/reviewed papers and other validated exams use one examination engine. Answers and explanations stay hidden until submission.</p>'+
-     '</section><section class="panel pad"><div class="row between"><h2>Attempt history</h2><span class="fine">'+all.length+' total</span></div>'+
-     '<label class="picker" for="g-filter">Show</label><select id="g-filter">'+
-     [["all","All attempts"],["progress","In progress"],["complete","Completed"]].map(([v,t])=>
-       '<option value="'+v+'"'+(v===historyFilter?" selected":"")+'>'+t+'</option>').join("")+'</select>'+
-     '<div class="row generic-actions"><button class="btn" id="g-export-history"'+(loading?' disabled':'')+'>Export backup</button>'+
-     '<button class="btn" id="g-import-history"'+(loading||fallbackConflict||storageFault?' disabled':'')+'>Import backup</button></div>'+
-     '<input type="file" id="g-history-file" accept=".json,application/json" hidden>'+
-     (filtered.length?filtered.map(a=>{
-       const result=a.result?.snapshot;
-       return '<div class="generic-history-row"><button class="generic-history" data-attempt="'+escapeText(a.id)+'">'+
-         escapeText(packages.get(a.packageId)?.title??a.frozen.paper.paperId)+
-         '<small>'+new Date(a.startedAt).toLocaleString()+' · '+
-         (a.finishedAt?(result?result.earnedMarks+' marks · ':"")+'Completed':'Resume')+'</small></button>'+
-         '<button class="btn danger generic-delete" data-delete="'+escapeText(a.id)+'" aria-label="Delete saved attempt">Delete</button></div>';
-     }).join(""):'<p class="fine">No matching attempts.</p>')+
-     '</section></div>'+
-      '<section class="panel pad learning-entry"><div><h2>Learning & revision</h2><p class="fine">'+
-       [...records.values()].filter(isLearning).length+' notebook cards · FSRS-7 reviews and comparable topic analytics</p></div>'+
-       '<button class="btn primary" id="g-learning">Open learning desk</button></section>';
+     (pending.length?'<section class="ongoing-banner"><div><span class="eyebrow">PICK UP WHERE YOU LEFT OFF</span>'+
+      '<h2>'+escapeText(packages.get(pending[0]!.packageId)?.title??pending[0]!.frozen.paper.paperId)+'</h2>'+
+      '<p>'+pending.length+' unfinished attempt'+(pending.length===1?"":"s")+' · '+new Date(pending[0]!.startedAt).toLocaleString()+
+      ' · exam timing resumes with the saved policy</p></div><button class="btn primary" data-attempt="'+escapeText(pending[0]!.id)+'">Resume attempt</button></section>':"")+
+     '<div class="home-stats">'+
+       [['Paper editions',packages.size],['Completed tests',complete.length],['Attempts in progress',pending.length],['Notebook cards',[...records.values()].filter(isLearning).length]]
+         .map(([name,value])=>'<div class="home-stat"><small>'+escapeText(name)+'</small><b>'+escapeText(value)+'</b></div>').join("")+
+     '</div>'+
+     '<div class="generic-layout home-grid"><section class="panel pad home-picker"><div class="section-header"><span class="eyebrow">01 · SET UP</span><h2>Start a practice session</h2></div>'+
+     '<label class="picker" for="g-papers">Paper and edition</label><select id="g-papers">'+options+'</select>'+
+     (cgl?'<h3 class="subhead">Practice mode</h3><div class="generic-modes" role="group" aria-label="SSC CGL practice mode">'+
+      ([["strict","Exam simulation","4 locked sections · 15 minutes each"],["free","Flexible full paper","60 minutes · move between sections"],
+       ["single","Section practice","25 questions · 15 minutes"]] as const).map(([key,title,detail])=>
+      '<button type="button" class="mode '+(cglMode===key?"on":"")+'" data-mode="'+key+'" aria-pressed="'+(cglMode===key)+'">'+
+      '<span class="radio-dot"></span><span><strong>'+title+'</strong><small>'+detail+'</small></span></button>').join("")+'</div>'+
+      (cglMode==="single"?'<label class="picker" for="g-single-section">Choose section</label><select id="g-single-section">'+
+       selected!.paper.sections.map((z,i)=>'<option value="'+i+'"'+(singleSection===i?" selected":"")+'>'+escapeText(z.title)+'</option>').join("")+'</select>':""):"")+
+     '<div class="row generic-actions home-start"><button class="btn primary" id="g-start"'+
+      (loading||fallbackConflict||storageFault?' disabled':'')+'>Start '+escapeText(modeLabel)+' →</button>'+
+      '<button class="btn" id="g-import"'+(loading||fallbackConflict||storageFault?' disabled':'')+'>Import exam JSON</button></div>'+
+      '<input type="file" id="g-file" accept=".json,application/json" hidden>'+
+      '<p class="fine">Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section>'+
+     '<aside class="home-side"><section class="panel pad paper-preview"><span class="eyebrow">SELECTED PAPER</span>'+
+      '<h2>'+escapeText(selected?.title??"Choose a paper")+'</h2>'+
+      '<p class="fine">'+escapeText(selected?.paper.paperId??"")+' · '+escapeText(selected?.paper.edition??"")+'</p>'+
+      '<div class="preview-metrics"><div><b>'+questionCount+'</b><small>Questions</small></div>'+
+      '<div><b>'+escapeText(time)+'</b><small>Time</small></div><div><b>'+escapeText(selected?.paper.sections.length??0)+'</b><small>Sections</small></div>'+
+      '<div><b>'+escapeText(selected?.paper.timing.kind==="sectional"?"Section-locked":selected?.paper.navigation.sectionNavigation==="free"?"Free":"Sequential")+
+      '</b><small>Navigation</small></div></div>'+
+      '<p class="fine">Scoring and timer rules are frozen when you start; later paper edits cannot change a saved result.</p></section>'+
+      '<section class="panel pad recent-panel"><div class="row between"><h2>Recent attempts</h2>'+
+      '<button class="textlink" id="g-history-recent">View all →</button></div>'+
+      (latest.length?latest.map(a=>'<button class="recent-attempt" data-attempt="'+escapeText(a.id)+'">'+
+       '<b>'+escapeText(packages.get(a.packageId)?.title??a.frozen.paper.paperId)+'</b>'+
+       '<small>'+new Date(a.startedAt).toLocaleDateString()+' · '+
+       (a.finishedAt?(a.result?.snapshot.earnedMarks.toFixed(1)??"—")+' marks':'Resume in-progress test')+'</small></button>').join(""):
+       '<p class="fine">Your most recent tests appear here automatically.</p>')+
+      '</section></aside></div>'+
+      '<div class="home-utilities"><section class="panel pad learning-entry"><div><span class="eyebrow">REVISE & IMPROVE</span>'+
+       '<h2>Learning & revision</h2><p class="fine">Error notebook, FSRS-7 spaced review, source-linked revision tests and topic evidence.</p></div>'+
+       '<button class="btn primary" id="g-learning">Open learning desk →</button></section>'+
+      '<section class="panel pad backup-home"><div><span class="eyebrow">YOUR DATA</span><h2>Portable offline history</h2>'+
+       '<p class="fine">Stored in this browser. Export a backup to protect your history and notes.</p></div>'+
+       '<div class="row generic-actions"><button class="btn" id="g-export-history"'+(loading?" disabled":"")+'>Export backup</button>'+
+       '<button class="btn" id="g-import-history"'+(loading||fallbackConflict||storageFault?" disabled":"")+'>Import backup</button></div>'+
+       '<input type="file" id="g-history-file" accept=".json,application/json" hidden></section></div>'+
+       '<details class="panel pad help-rules"><summary>Exam rules, accuracy and offline storage</summary><p class="fine">'+
+        'Strict mode advances through four locked 15-minute sections. Flexible and section practice use their selected time limits. Results use frozen answer keys, and score exclusions follow editorial review. Browser-local storage may be cleared by the device; backups are recommended.</p></details>';
  }
  function packageForAttempt(saved:GenericAttempt):ExamPackage|undefined{
    return packages.get(saved.packageId)??[...packages.values()].find(p=>
@@ -634,6 +655,19 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        '</button></article>';
     }).join("")+'</section>';
  }
+ const openSaved=(id:string)=>{
+   const saved=records.get(id);if(!isAttempt(saved))return;
+   attempt=saved;
+   if(saved.finishedAt===null){
+ const restored=restoreSession(saved.frozen.paper,saved.state,now(),!document.hidden);
+ attempt={...saved,state:restored.state,
+   ...(restored.expired?{finishedAt:now(),result:scoreAttempt(saved.frozen.paper,saved.frozen.key,
+     saved.frozen.questions,restored.state.responses,new Date().toISOString())}:{})};
+ void save(attempt);
+   }
+   view=attempt.finishedAt?"result":"exam";draw();
+ };
+
  function draw():void{
    if(disposed)return;
    const previous=document.activeElement;
@@ -643,21 +677,39 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    root.classList.add("generic-workspace");
    if(view==="learning"){learningDesk.show();return;}
    learningDesk.hide();
-   root.innerHTML=view==="library"?listHTML():view==="exam"?examHTML():resultHTML();
+   root.innerHTML=view==="library"?listHTML():view==="history"?historyHTML([...records.values()].filter(isAttempt),packages,
+     {status:historyFilter,sort:historySort,search:historySearch},loading,fallbackConflict||storageFault,warning):view==="exam"?examHTML():resultHTML();
    if(focusKey){
      const controls=[...root.querySelectorAll<HTMLElement>("button,input,select,textarea")];
      const target=focusKey.id?controls.find(item=>item.id===focusKey.id):
        controls.find(item=>focusKey.attributes.some(([name,value])=>item.getAttribute(name)===value&&item.hasAttribute(name)));
      if(target && !("disabled" in target && target.disabled))target.focus({preventScroll:true});
    }
+   if(view==="history"){
+     root.querySelector<HTMLButtonElement>("#g-library")!.onclick=()=>{view="library";draw();};
+     root.querySelector<HTMLSelectElement>("#g-filter")!.onchange=e=>{historyFilter=(e.target as HTMLSelectElement).value as HistoryStatus;draw();};
+     root.querySelector<HTMLSelectElement>("#g-history-sort")!.onchange=e=>{historySort=(e.target as HTMLSelectElement).value as HistorySort;draw();};
+     root.querySelector<HTMLInputElement>("#g-history-search")!.oninput=e=>{
+       const search=(e.target as HTMLInputElement).value;
+       historySearch=search;draw();
+     };
+     root.querySelector<HTMLButtonElement>("#g-export-history")!.onclick=()=>{void downloadBackup();};
+     root.querySelector<HTMLButtonElement>("#g-import-history")!.onclick=()=>root.querySelector<HTMLInputElement>("#g-history-file")?.click();
+     root.querySelector<HTMLInputElement>("#g-history-file")!.onchange=async e=>{
+       const file=(e.target as HTMLInputElement).files?.[0];if(!file)return;
+       try{await importHistory(file);}catch(error){notice(error instanceof Error?error.message:"History import failed");}
+     };
+     root.querySelectorAll<HTMLButtonElement>("[data-delete]").forEach(button=>button.onclick=()=>{void removeSavedAttempt(button.dataset.delete??"");});
+     root.querySelectorAll<HTMLButtonElement>("[data-attempt]").forEach(button=>button.onclick=()=>openSaved(button.dataset.attempt??""));
+     return;
+   }
    if(view==="library"){
      root.querySelector<HTMLButtonElement>("#g-learning")!.onclick=()=>{view="learning";draw();};
      root.querySelector<HTMLSelectElement>("#g-papers")!.onchange=e=>{
        choice=(e.target as HTMLSelectElement).value;draw();
      };
-     root.querySelector<HTMLSelectElement>("#g-filter")!.onchange=e=>{
-       historyFilter=(e.target as HTMLSelectElement).value;draw();
-     };
+     root.querySelector<HTMLButtonElement>("#g-history")!.onclick=()=>{view="history";draw();};
+     root.querySelector<HTMLButtonElement>("#g-history-recent")!.onclick=()=>{view="history";draw();};
      root.querySelectorAll<HTMLButtonElement>("[data-mode]").forEach(button=>button.onclick=()=>{
        cglMode=button.dataset.mode as CglPracticeMode;draw();
      });
@@ -693,18 +745,6 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          packages.set(pkg.paper.id,pkg);choice=pkg.paper.id;
          notice("Package validated and imported.");
        }catch(error){notice(error instanceof Error?error.message:"Invalid exam package");}
-     };
-     const openSaved=(id:string)=>{
-       const saved=records.get(id);if(!isAttempt(saved))return;
-       attempt=saved;
-       if(saved.finishedAt===null){
-         const restored=restoreSession(saved.frozen.paper,saved.state,now(),!document.hidden);
-         attempt={...saved,state:restored.state,
-           ...(restored.expired?{finishedAt:now(),result:scoreAttempt(saved.frozen.paper,saved.frozen.key,
-             saved.frozen.questions,restored.state.responses,new Date().toISOString())}:{})};
-         void save(attempt);
-       }
-       view=attempt.finishedAt?"result":"exam";draw();
      };
      root.querySelectorAll<HTMLButtonElement>("[data-delete]").forEach(button=>button.onclick=()=>{
        void removeSavedAttempt(button.dataset.delete??"");
