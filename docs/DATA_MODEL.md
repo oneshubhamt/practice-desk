@@ -2,7 +2,7 @@
 
 ## Scope
 
-The generic domain types describe the target model; the current SSC CGL JSON banks remain the untouched source/transcription layer until a later migration-by-replacement is deliberately implemented. This pass does not change runtime behaviour or rewrite the generated HTML.
+The five SSC CGL source papers, reviewed patches and solution bank remain separate immutable input layers. A strict adapter produces versioned generic paper, key and question records without rewriting those JSON sources. The engine, archive, storage and model-driven UI now use these contracts. The original CGL-specific UI and analytics are still a transitional parallel path.
 
 ## Identity and revision rules
 
@@ -48,11 +48,19 @@ The generic domain types describe the target model; the current SSC CGL JSON ban
 9. External JSON is `unknown` until runtime validation succeeds. Do not trust a TypeScript cast as validation.
 10. The released artifact remains a self-contained HTML file runnable from `file://` without network, server, external module or asset dependencies.
 
-## What is intentionally deferred
+## Implemented persistence and release boundaries (29 October 2026)
 
-- IndexedDB object-store design and transaction APIs: Pass 3.
-- Session transitions, timer semantics and scoring calculation: Pass 2.
-- Converting the 500 current records into normalized question revisions, assigning content hashes and de-duplicating their 92 image assets: a later content-packaging step after the domain contract is accepted.
-- UI integration and rendering changes: Pass 4.
+- IndexedDB version 2 stores attempt records and imported exam-package records in `attempts`, preferences in `settings`, and deduplicated revision display/media records in `revisions`. Historical attempts pin frozen paper, key, scoring rules and answers.
+- An attempt and its display revision are persisted atomically in a readwrite transaction; completed score snapshots are immutable.
+- Generic and original CGL attempts now use version-checked IndexedDB writes. Stale-tab edits are rejected rather than silently replacing newer records. Legacy CGL deletes also check record versions.
+- Recovering from an emergency mirror or a fallback journal uses saved revisions to prefer a newer IndexedDB record. Browser-local persistence is best-effort under `file://`.
+- Unified backup format version 2 exports both CGL and generic attempts, imported packages, archived display revisions and preferences. The SHA-256 manifest detects accidental alterations; additive IndexedDB imports validate records and do not overwrite existing IDs.
+- The localStorage fallback is nontransactional. The UI detects competing-tab changes and stops stale editing, but no localStorage-only scheme offers the same atomic guarantees as IndexedDB, particularly for importing data across multiple keys. Encourage separate exported backups.
 
-This is a target topology, not a claim that the current runtime or persisted data already implements it.
+## Still deferred / not release-accepted
+
+- Replace the parallel fixed-CGL presentation with one model-driven exam UI **without losing CGL-specific exam modes, rich review, insights or accessibility**.
+- Retire the existing `@ts-nocheck` legacy file after feature parity. Most new modules already compile under strict TypeScript.
+- Verify `file://` reopen, quota and persistence behaviour in Firefox and Safari on supported platforms. Chrome has automated offline reopen, import round-trip, six-kind exam, conflict and responsive-viewport gates.
+- Normalize the editorial/source store and deduplicate all assets globally if later content growth justifies it. Current immutable revision archives avoid duplicating frozen media for each attempt.
+- Advanced cross-exam topic taxonomy, mastery analytics, error notebooks and targeted revision sets are separate later roadmap work.

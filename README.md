@@ -21,18 +21,22 @@ npm run typecheck
 
 - `src/template.html` — page structure
 - `src/styles/app.css` — styling
-- `src/app/legacy.ts` — preserved v11 runtime (transitional TypeScript source)
+- `src/app/legacy.ts` — preserved CGL-specific screens, advanced analytics and compatibility shell (still transitional)
+- `src/app/browser-engine.ts` — typed adapter between existing CGL records and the generic engine
+- `src/app/exam-package.ts`, `src/app/generic-ui.ts` — validated offline exam imports and model-driven exam workspace
+- `src/engine/`, `src/history/` — tested session/scoring, frozen history, backups and write version guards
 - `src/content/*.json` — source papers, review patches, and post-test explanations
 - `src/content/schema.ts` — typed contracts for the preserved source/patch/solution JSON
 - `src/content/validate.ts` — strict, dependency-free runtime validation
 - `src/domain/` — generic exam, question, answer-key, scoring, attempt contracts and cross-entity validators
 - `docs/DATA_MODEL.md` — identity, revision, immutability, normalization and data-topology decisions
 - `scripts/` — tiny dependency-free build and content validation
-- `tests/` — lean content-integrity, domain-invariant and artifact checks using Node's built-in test runner
+- `tests/` — content, invariants, engine, archive, six-kind exam and concurrency tests
+- `scripts/smoke-offline.mjs` — real Chrome `file://` acceptance: persistence/reopen, all question kinds, unified backup restore, tab conflicts and responsive screens
 - `docs/ARCHITECTURE_AUDIT_2026-10-28.md` — architecture audit / roadmap
 - `Practice_Desk_Offline_Mock_Tests.html` — generated, distributable single-file app
 
-The legacy runtime has `@ts-nocheck` to preserve its existing behaviour **during initial repository setup**. The upcoming architecture work will replace it with properly typed modules for exam configuration, state, scoring, persistence and UI. This setup is not a claim that the legacy runtime has already been refactored.
+**Overhaul status (29 October 2026):** Passes 1–3 have been implemented and are CI-verified. Pass 4 includes a functioning model-driven workspace and a real-browser acceptance suite. The original, feature-rich SSC CGL interface is still a parallel path; `legacy.ts` retains `@ts-nocheck`. Do not describe the UI consolidation or strict legacy conversion as finished. See the living audit ledger for the remaining acceptance items. `main` and `baseline/v11` remain unchanged.
 
 Local attempt history is stored by the browser, **not** inside the HTML or Git repository. Browser storage behaviour can vary for `file://` files, so export important attempts. The app is new and there is **no migration or backward-compatibility obligation** at this stage.
 

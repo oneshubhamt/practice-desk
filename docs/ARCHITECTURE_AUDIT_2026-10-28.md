@@ -1174,3 +1174,15 @@ Added:
 **CI run 40805453923 passed:** strict TypeScript, all tests, single offline HTML build and real Chrome `file://` smoke. Browser smoke now covers *both* exam entry points: CGL start/answer, unified backup download including generic and CGL attempts, generic reopen, and simultaneous tabs where an outdated attempt edit is rejected without overwriting the newer IndexedDB revision.
 
 **Current state:** Unified all-data backup and generic IndexedDB optimistic-concurrency guards are implemented. These are real checks, not a claim of final Pass 4 completion. Open acceptance items: original CGL multi-tab edits, consistent localStorage fallback conflict handling, collapsing duplicate fixed-CGL UI into the model-driven workspace, and Firefox/Safari offline manual tests. Preserve `main` and `baseline/v11`.
+
+
+### Pass 4 reliability and browser-acceptance expansion — 29 October 2026
+
+- The original four-section CGL UI now has optimistic IndexedDB write versions, matching the generic workspace's compare-before-write transaction. A stale CGL tab halts editing, warns and reloads persisted history instead of silently overwriting another tab's answers.
+- CGL completion/recovery and deletion paths were strengthened: emergency mirrors are ordered by saved revision, fallback-journal recovery uses a version-guarded transaction, and deletion checks its expected revision.
+- The generic localStorage fallback checks for changed records before writes and listens for cross-tab storage changes. Both UIs fail closed and warn on competing fallback edits. This is **best-effort conflict detection**, not a claim of atomic localStorage writes or atomic two-key fallback imports.
+- The Chrome `file://` CI gate now tests real **CGL and generic two-tab races**, generic fallback with IndexedDB deliberately unavailable, unified export and actual file-picker import/restore, plus the **six question kinds** in a non-CGL package through submission and frozen historical review.
+- Responsive browser gates cover 390 px mobile and 768 px tablet layouts without whole-page horizontal overflow. No external runtime assets, server, localhost or account were added.
+- Verified: [CI run 40811155245](https://github.com/oneshubhamt/practice-desk/actions/runs/40811155245) succeeded with strict typecheck, unit tests, reproducible offline build and browser smoke checks.
+
+**Pass 4 remains open.** The remaining substantive implementation is collapsing the fixed-CGL exam and analytics screens into the model-driven workspace without losing existing CGL-specific modes, detailed insights or presentation. The original `legacy.ts` retains `@ts-nocheck`. Manual Firefox/Safari offline testing and quota-exhaustion acceptance are also not verified here. Do not mark final release acceptance complete based on Chrome CI alone. Keep `main` and `baseline/v11` stable.
