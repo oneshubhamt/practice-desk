@@ -57,6 +57,14 @@ try{
  fail(await page.locator('input[data-choice]:checked').first().evaluate(el=>document.activeElement===el),"Answer focus lost");
  const cgl=await find(page,x=>x.recordType==="generic-attempt"&&x.state?.responses?.some(r=>r.response));
  fail(cgl.frozen.paper.sections.length===4,"Strict CGL revision invalid");
+ // Native keyboard focus and a non-input shortcut should navigate the same engine.
+ fail(await page.locator(".exam-time-progress[role=progressbar]").count()===1,
+   "Exam time progress or accessible progressbar missing");
+ await page.locator("#g-library").focus();
+ await page.keyboard.press("Alt+ArrowRight");
+ fail(await page.locator('[data-q="1"]').getAttribute("aria-current")==="step",
+   "Alt+Right did not navigate the current section");
+ await page.locator('[data-q="0"]').click();
  // Preview original inline figure using the same shared engine.
  await page.locator('[data-q="2"]').click();
  const figures=page.locator(".generic-figure");
@@ -96,6 +104,10 @@ try{
  await page.locator('[data-result-tab="review"]').click();
  await page.getByRole("heading",{name:"Question review"}).waitFor();
  // Pass 9: independent insights, review and timing tabs, source media and filters.
+ await page.locator('[data-result-tab="review"]').focus();
+ await page.keyboard.press("ArrowRight");
+ fail(await page.locator("#result-timing").isVisible(),
+   "Result tab arrow-key navigation failed");
  await page.locator('[data-result-tab="timing"]').click();
  fail(await page.locator("#result-timing tbody tr").count()===100,
    "Item-level timing ledger incomplete");
@@ -275,7 +287,12 @@ try{
  // Preferences are included in the v3 complete backup and restored with data.
  await page.locator("#displayTrigger").click();
  fail(await page.locator("#displayPanel").isVisible(),"Compact appearance popover did not open");
+ fail(await page.locator("#displayFullscreen").count()===1,"Full-screen option missing");
+ await page.keyboard.press("Escape");
+ fail(!(await page.locator("#displayPanel").isVisible()),"Display popover ignored Escape");
+ await page.locator("#displayTrigger").click();
  await page.locator("#themeToggle").click();
+ fail(await page.evaluate(()=>document.documentElement.dataset.theme)==="dark","Dark appearance not applied");
  await page.locator("#fontMore").click();
  const pending=page.waitForEvent("download");
  await page.locator("#g-export-history").click();
@@ -423,7 +440,16 @@ try{
   fail(await overflow()<=3,"Library overflow at "+width);
   await responsive.locator("#g-history").click();
   fail(await overflow()<=3,"History overflow at "+width);
+  await responsive.locator('[data-attempt="'+cgl.id+'"]').first().click();
+  fail(await overflow()<=3,"Result insights overflow at "+width);
+  await responsive.locator('[data-result-tab="review"]').click();
+  fail(await overflow()<=3,"Result review overflow at "+width);
+  await responsive.locator('[data-result-tab="timing"]').click();
+  fail(await overflow()<=3,"Time ledger overflow at "+width);
   await responsive.locator("#g-library").click();
+  await responsive.locator("#g-learning").click();
+  fail(await overflow()<=3,"Learning notebook overflow at "+width);
+  await responsive.locator("#learning-close").click();
   await responsive.locator("#g-start").click();
   fail(await overflow()<=3,"Exam overflow at "+width);
  }
