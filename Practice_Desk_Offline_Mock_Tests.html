@@ -3727,6 +3727,20 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     }
   }
 
+  // src/engine/clock.ts
+  function createSessionClock(wallStartMs, monoStartMs, monoNow) {
+    if (!Number.isFinite(wallStartMs) || !Number.isFinite(monoStartMs))
+      throw new Error("Invalid session clock origin");
+    let last = wallStartMs;
+    return () => {
+      const sample = monoNow();
+      if (!Number.isFinite(sample)) throw new Error("Invalid monotonic clock sample");
+      const elapsed = Math.max(0, sample - monoStartMs);
+      last = Math.max(last, wallStartMs + elapsed);
+      return Math.floor(last);
+    };
+  }
+
   // src/engine/manual-grading.ts
   function maxFor(attempt, id) {
     const paper = attempt.frozen.paper;
@@ -5281,7 +5295,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
       warning = s;
       draw();
     };
-    const now2 = () => Date.now();
+    const now2 = createSessionClock(Date.now(), performance.now(), () => performance.now());
     const save = (record3) => {
       if (fallbackConflict || storageFault) {
         warning = "Storage is unavailable or changed in another tab. Export a recovery backup and reopen before editing.";
