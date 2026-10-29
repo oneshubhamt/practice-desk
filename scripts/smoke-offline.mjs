@@ -288,6 +288,7 @@ try{
  await page.locator('[data-delete="'+custom.id+'"]').click();
  const deleted=await attempts(page);
  fail(!deleted.some(a=>a.id===custom.id),"Attempt deletion not committed");
+ await page.locator("#displayTrigger").click();
  await page.locator("#themeToggle").click();
  await page.locator("#fontReset").click();
  page.once("dialog",d=>d.accept());
