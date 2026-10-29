@@ -1,5 +1,8 @@
 import { validateAnswerKeyRevision, validatePaperRevision, validateQuestionRevision } from "../domain/validate.ts";
-import { importCglBank, sha256 } from "../content/import-cgl.ts";
+import { importCglBank } from "../content/import-cgl.ts";
+import { sha256 } from "../domain/hash.ts";
+import { assertRevisionHashes, answerKeyRevisionHash, paperRevisionHash } from "../domain/integrity.ts";
+import { validateMediaInventory, validateQuestionMediaReferences } from "../domain/media.ts";
 import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
 import type { PaperRevision } from "../domain/exam.js";
 import type { QuestionRevision, StimulusDefinition, ImageAsset, CandidateResponse } from "../domain/question.js";
@@ -40,45 +43,9 @@ export function validateExamPackage(value: unknown): ExamPackage {
  const ids = new Set(paper.sections.flatMap(s => s.questionRevisionIds));
  if (ids.size !== questions.length || questions.some(q => !ids.has(q.id)))
     throw new Error("Every question must belong to this paper exactly once");
- const stimuli = raw.stimuli ?? [];
- const assets = raw.assets ?? [];
- if (!Array.isArray(stimuli) || stimuli.length > 200 || !Array.isArray(assets) || assets.length > 1000)
-    throw new Error("Invalid media inventory");
- const stimulusIds = new Set<string>();
- for (const item of stimuli) {
-   if (!item || typeof item !== "object" || typeof item.id !== "string" || !item.id || stimulusIds.has(item.id))
-      throw new Error("Duplicate or invalid stimulus");
-   if (!["passage","case","table","chart","image"].includes(item.kind)) throw new Error("Unsupported stimulus");
-   if (["passage","case"].includes(item.kind) && typeof item.text !== "string")
-      throw new Error("Missing stimulus text");
-   if (item.kind === "table" && (!Array.isArray(item.columns) || !Array.isArray(item.rows) ||
-       item.rows.some((row: unknown) => !Array.isArray(row) || row.length !== item.columns.length)))
-       throw new Error("Invalid stimulus table");
-   stimulusIds.add(item.id);
- }
- const assetIds = new Set<string>();
- for (const item of assets) {
-   if (!item || typeof item !== "object" || typeof item.id !== "string" || !item.id || assetIds.has(item.id))
-      throw new Error("Duplicate or invalid media asset");
-   if (!["image/png","image/jpeg","image/webp","image/avif","image/gif"].includes(item.mediaType) ||
-       typeof item.dataUri !== "string" || !item.dataUri.startsWith("data:" + item.mediaType + ";base64,") ||
-       !/^[A-Za-z0-9+/=]+$/.test(item.dataUri.split(",")[1] ?? "") ||
-       typeof item.contentHash !== "string" || !/^[a-f0-9]{64}$/.test(item.contentHash))
-       throw new Error("Media must be an embedded image with a SHA-256 hash");
-   const encoded=item.dataUri.slice(item.dataUri.indexOf(",")+1);
-   const decoded=Uint8Array.from(atob(encoded),char=>char.charCodeAt(0));
-   if (sha256(decoded)!==item.contentHash) throw new Error("Embedded image digest does not match its content hash");
-   assetIds.add(item.id);
- }
- for (const q of questions) {
-   if (q.content.stimulusId && !stimulusIds.has(q.content.stimulusId)) throw new Error("Missing stimulus");
-   for (const id of q.content.assetIds ?? []) if (!assetIds.has(id)) throw new Error("Missing question image");
-   if (q.content.kind === "single-choice" || q.content.kind === "multiple-select")
-      for (const option of q.content.options)
-        for (const id of option.assetIds ?? []) if (!assetIds.has(id)) throw new Error("Missing option image");
-   if (q.content.kind === "matching") for (const item of [...q.content.leftItems, ...q.content.rightItems])
-      for (const id of item.assetIds ?? []) if (!assetIds.has(id)) throw new Error("Missing matching image");
- }
+ const {stimuli,assets}=validateMediaInventory(raw.stimuli??[],raw.assets??[]);
+ validateQuestionMediaReferences(questions,stimuli,assets);
+ assertRevisionHashes(questions,key,paper);
  const explanations=raw.explanations;
  if(explanations!==undefined){
    if(!explanations || typeof explanations!=="object" || Array.isArray(explanations))
@@ -135,17 +102,18 @@ export function configureCglPractice(base: ExamPackage, mode:CglPracticeMode, se
  if(mode==="single"&&!source.sections[sectionIndex])throw new Error("Unknown practice section");
  const sections=mode==="single"?[source.sections[sectionIndex]!]:[...source.sections];
  const fingerprint=sha256(JSON.stringify({revision:source.id,mode,sectionIndex:mode==="single"?sectionIndex:null}));
- const paper:PaperRevision={...source,
+ const paperBase={...source,
    id:(source.id+":practice:"+mode+(mode==="single"?":"+sectionIndex:"")) as PaperRevision["id"],
-   contentHash:fingerprint as PaperRevision["contentHash"],sections,
-   timing:{kind:"whole-paper",durationMs:mode==="single"?900000:3600000,pausePolicy:"allowed"},
-   navigation:{...source.navigation,sectionNavigation:mode==="free"?"free":"sequential-locked"}};
+   sections,
+   timing:{kind:"whole-paper" as const,durationMs:mode==="single"?900000:3600000,pausePolicy:"allowed" as const},
+   navigation:{...source.navigation,sectionNavigation:mode==="free" as const?"free" as const:"sequential-locked" as const}};
+ const paper:PaperRevision={...paperBase,contentHash:paperRevisionHash(paperBase)};
  const included=new Set(sections.flatMap(s=>s.questionRevisionIds));
  const questions=base.questions.filter(q=>included.has(q.id));
  const entries=base.answerKey.entries.filter(e=>included.has(e.questionRevisionId));
  const answerKey={...base.answerKey,
    id:(base.answerKey.id+":practice:"+mode+(mode==="single"?":"+sectionIndex:"")) as AnswerKeyRevision["id"],
-   contentHash:sha256(JSON.stringify(entries)) as AnswerKeyRevision["contentHash"],entries};
+   contentHash:answerKeyRevisionHash({entries}),entries};
  const adjusted={...paper,answerKeyRevisionId:answerKey.id};
  return {...base,paper:adjusted,answerKey,questions,
    ...(base.explanations?{explanations:Object.fromEntries(Object.entries(base.explanations)
@@ -168,7 +136,7 @@ export interface GenericAttempt {
 export function startGenericAttempt(bundle: ExamPackage, id: string, timestamp: number): GenericAttempt {
  const validated = validateExamPackage(bundle);
  const frozen = freezeAttempt(validated.paper,validated.answerKey,validated.questions,
-   "exam-simulation",new Date(timestamp).toISOString(),validated.examId);
+   validated.stimuli??[],validated.assets??[],"exam-simulation",new Date(timestamp).toISOString(),validated.examId);
  return {recordType:"generic-attempt",id,packageId:bundle.paper.id,startedAt:timestamp,
    updatedAt:timestamp,finishedAt:null,frozen,state:startSession(bundle.paper,timestamp),
    ...(validated.explanations?{explanations:structuredClone(validated.explanations)}:{})};

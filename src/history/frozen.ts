@@ -3,7 +3,9 @@ import { transition, rebaseSession } from "../engine/session.ts";
 import type { SessionState } from "../engine/session.ts";
 import type { PaperRevision } from "../domain/exam.js";
 import type { AnswerKeyRevision } from "../domain/answer-key.js";
-import type { QuestionRevision } from "../domain/question.js";
+import type { QuestionRevision, StimulusDefinition, ImageAsset } from "../domain/question.js";
+import { assertRevisionHashes } from "../domain/integrity.ts";
+import { selectDisplayResources, validateMediaInventory, validateQuestionMediaReferences } from "../domain/media.ts";
 import type { AttemptSnapshot, AttemptMode } from "../domain/attempt.js";
 import type { ExamId } from "../domain/ids.js";
 
@@ -11,31 +13,37 @@ import type { ExamId } from "../domain/ids.js";
  * The content used to score an attempt belongs to that attempt, not to the
  * mutable library selection or a later application release. All fields are
  * ordinary structured-clone-compatible data so IndexedDB writes remain atomic.
- * Image bytes belong to the separately packaged asset bank; no repeated base64.
+ * Exact display resources are frozen with the attempt so historical questions remain renderable.
  */
 export interface FrozenAttemptContent {
-  readonly schema: 1;
+  readonly schema: 2;
   readonly frozenAt: string;
   readonly snapshot: AttemptSnapshot;
   readonly paper: PaperRevision;
   readonly key: AnswerKeyRevision;
   readonly questions: readonly QuestionRevision[];
+  readonly stimuli: readonly StimulusDefinition[];
+  readonly assets: readonly ImageAsset[];
 }
 export function freezeAttempt(
   paper: PaperRevision, key: AnswerKeyRevision, questions: readonly QuestionRevision[],
+  stimuli:readonly StimulusDefinition[],assets:readonly ImageAsset[],
   mode: AttemptMode, frozenAt: string, examId: ExamId,
 ): FrozenAttemptContent {
   validateAnswerKeyRevision(key, questions);
   validatePaperRevision(paper, questions, key);
+  assertRevisionHashes(questions,key,paper);
+  const display=selectDisplayResources(questions,stimuli,assets);
   const snapshot: AttemptSnapshot = {
     examId, paperId: paper.paperId, paperRevisionId: paper.id,
     answerKeyRevisionId: key.id, scoringPolicy: paper.scoring, mode,
   };
-  return structuredClone({ schema: 1 as const, frozenAt, snapshot, paper, key, questions });
+  return structuredClone({ schema: 2 as const, frozenAt, snapshot, paper, key, questions, ...display });
 }
 export function assertFrozenContent(value: FrozenAttemptContent): FrozenAttemptContent {
-  if (!value || value.schema !== 1 ||
+  if (!value || value.schema !== 2 ||
       !value.snapshot || !value.paper || !value.key || !Array.isArray(value.questions) ||
+      !Array.isArray(value.stimuli) || !Array.isArray(value.assets) ||
       typeof value.snapshot.examId !== "string" || value.snapshot.examId.length === 0 ||
       value.snapshot.paperId !== value.paper.paperId ||
       value.snapshot.paperRevisionId !== value.paper.id ||
@@ -45,6 +53,9 @@ export function assertFrozenContent(value: FrozenAttemptContent): FrozenAttemptC
     throw new Error("Invalid or mismatched frozen attempt content");
   }
   validatePaperRevision(value.paper, value.questions, value.key);
+  assertRevisionHashes(value.questions,value.key,value.paper);
+  validateMediaInventory(value.stimuli,value.assets);
+  validateQuestionMediaReferences(value.questions,value.stimuli,value.assets);
   return value;
 }
 export interface RestoredSession {
