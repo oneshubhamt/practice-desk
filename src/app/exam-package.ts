@@ -16,6 +16,7 @@ import { freezeAttempt } from "../history/frozen.ts";
 import type { FrozenAttemptContent } from "../history/frozen.ts";
 import type { ManualGrade } from "../engine/manual-grading.ts";
 import type { SourceKeyReference } from "../engine/source-comparison.ts";
+import type { NotebookLineage } from "../learning/revision-test.ts";
 
 export interface ExamPackage {
  readonly format: "practice-desk-exam";
@@ -135,6 +136,7 @@ export interface GenericAttempt {
  readonly result?: ReturnType<typeof scoreAttempt>;
  readonly manualGrades?: readonly ManualGrade[];
  readonly sourceKeyReference?: SourceKeyReference;
+ readonly notebookLineage?: NotebookLineage;
  readonly explanations?: Readonly<Record<string,string>>;
 }
 export function startGenericAttempt(bundle: ExamPackage, id: string, timestamp: number): GenericAttempt {

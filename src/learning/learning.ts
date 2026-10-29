@@ -23,6 +23,8 @@ export interface LearningCard {
  readonly paperEdition:string;
  readonly sectionTitle:string;
  readonly sourceTitle:string;
+ /** Completed attempt which originally supplied this frozen notebook card. */
+ readonly sourceAttemptId:string;
  readonly explanation?:string;
  readonly note:string;
  readonly errorLabel:ErrorLabel|null;
@@ -41,6 +43,7 @@ export function validateLearningCard(input:unknown):LearningCard{
     !raw.id.startsWith("learning-card:")||typeof raw.examId!=="string"||!raw.examId||
     typeof raw.paperId!=="string"||!raw.paperId||typeof raw.paperEdition!=="string"||
     typeof raw.sectionTitle!=="string"||typeof raw.sourceTitle!=="string"||
+    typeof raw.sourceAttemptId!=="string"||!raw.sourceAttemptId||raw.sourceAttemptId.length>200||
     typeof raw.note!=="string"||raw.note.length>8000||
     typeof raw.customTopic!=="string"||raw.customTopic.length>120||
     typeof raw.bookmarked!=="boolean"||
@@ -80,7 +83,7 @@ export function addLearningCard(attempt:GenericAttempt,id:QuestionRevisionId,at:
    recordType:"learning-card",id:"learning-card:"+id,
    examId:attempt.frozen.snapshot.examId,paperId:attempt.frozen.paper.paperId,
    paperEdition:attempt.frozen.paper.edition,sectionTitle:section.title,
-   sourceTitle:attempt.frozen.paper.paperId,question:structuredClone(question),
+   sourceTitle:attempt.frozen.paper.paperId,sourceAttemptId:attempt.id,question:structuredClone(question),
    answer:structuredClone(key.answer),...display,note:"",customTopic:"",errorLabel:null,bookmarked:false,
    ...(attempt.explanations?.[id]?{explanation:attempt.explanations[id]}:{}),
    createdAt:at,updatedAt:at,reviews:[]

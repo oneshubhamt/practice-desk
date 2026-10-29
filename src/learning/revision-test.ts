@@ -7,6 +7,8 @@ import type { PaperRevision } from "../domain/exam.js";
 import type { AnswerKeyRevision } from "../domain/answer-key.js";
 import type { ExamId,PaperId,PaperRevisionId,AnswerKeyRevisionId,SectionId } from "../domain/ids.js";
 import { answerKeyRevisionHash,paperRevisionHash } from "../domain/integrity.ts";
+import { hashJson } from "../domain/hash.ts";
+import type { GenericAttempt } from "../app/exam-package.ts";
 
 export const REVISION_MAX_QUESTIONS=25;
 export const REVISION_SCORING={correctMarks:1,incorrectMarks:0,unansweredMarks:0} as const;
@@ -66,4 +68,53 @@ export function makeRevisionPackage(cards:readonly LearningCard[],paperNonce:str
    paper,answerKey,questions,
    stimuli:[...stimuli.values()],assets:[...images.values()],explanations};
  return validateExamPackage(packageValue);
+}
+
+/** A verifiable trail from each revision item to the completed original attempt.
+ * Source attempts may subsequently be deleted: identifiers/labels remain frozen.
+ */
+export interface NotebookLineage{
+ readonly schema:1;
+ readonly entries:readonly {
+   readonly cardId:string;
+   readonly questionRevisionId:string;
+   readonly sourceAttemptId:string;
+   readonly sourcePaperId:string;
+   readonly sourcePaperEdition:string;
+   readonly sourceSectionTitle:string;
+ }[];
+ readonly contentHash:string;
+}
+export function createNotebookLineage(cards:readonly LearningCard[]):NotebookLineage{
+ if(!cards.length||cards.length>REVISION_MAX_QUESTIONS)
+   throw Error("Invalid revision source selection");
+ const entries=cards.map(value=>{
+   const c=validateLearningCard(value);
+   return {cardId:c.id,questionRevisionId:c.question.id,sourceAttemptId:c.sourceAttemptId,
+     sourcePaperId:c.paperId,sourcePaperEdition:c.paperEdition,sourceSectionTitle:c.sectionTitle};
+ });
+ if(new Set(entries.map(x=>x.questionRevisionId)).size!==entries.length)
+   throw Error("Duplicate notebook source question");
+ return {schema:1,entries,contentHash:hashJson({schema:1,entries})};
+}
+export function validateNotebookLineage(attempt:GenericAttempt):void{
+ const lineage=attempt.notebookLineage;
+ if(!lineage)return;
+ if(lineage.schema!==1||!Array.isArray(lineage.entries)||
+   attempt.frozen.paper.edition!=="custom"||
+   !attempt.frozen.paper.paperId.startsWith("notebook-revision:")||
+   lineage.entries.length!==attempt.frozen.questions.length)
+   throw Error("Invalid notebook revision lineage");
+ const eligible=new Set(attempt.frozen.questions.map(x=>x.id));
+ const seen=new Set<string>();
+ for(const entry of lineage.entries){
+   if(!entry||typeof entry.questionRevisionId!=="string"||!eligible.has(entry.questionRevisionId)||
+      seen.has(entry.questionRevisionId)||entry.cardId!=="learning-card:"+entry.questionRevisionId||
+      ![entry.sourceAttemptId,entry.sourcePaperId,entry.sourcePaperEdition,entry.sourceSectionTitle]
+        .every(x=>typeof x==="string"&&!!x&&x.length<=200))
+     throw Error("Invalid notebook revision lineage entry");
+   seen.add(entry.questionRevisionId);
+ }
+ if(lineage.contentHash!==hashJson({schema:1,entries:lineage.entries}))
+   throw Error("Notebook revision lineage hash mismatch");
 }
