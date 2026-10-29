@@ -109,6 +109,11 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   }
   const done=host.attempts().filter(a=>a.finishedAt!==null&&a.result);
   const topics=topicMetrics(done,all),cohorts=comparableTrends(done).filter(x=>x.count>=2);
+  const reviewedCount=all.filter(c=>c.reviews.length>0).length;
+  const bookmarkedCount=all.filter(c=>c.bookmarked).length;
+  const reports=new Map<string,number>();
+  for(const card of all)if(card.errorLabel)reports.set(card.errorLabel,(reports.get(card.errorLabel)??0)+1);
+  const commonReports=[...reports].sort((a,b)=>b[1]-a[1]).slice(0,4);
   const progress=evidenceProgression(topics);
   const visible=all.filter(c=>filter==="all"||filter==="due"&&due(c)||filter==="bookmarked"&&c.bookmarked);
   const exam=visible.find(c=>c.id===selectedId)?.examId??visible[0]?.examId;
@@ -117,7 +122,11 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   root.innerHTML='<div class="generic-heading"><div><h1>Learning & revision</h1><p class="muted">Error notebook · FSRS-7 spaced review · Topic evidence</p></div>'+
     '<button class="btn" id="learning-close">← Test library</button></div>'+
     (message?'<p class="generic-warning" role="status">'+esc(message)+'</p>':"")+
-    '<section class="panel pad"><div class="row between"><div><h2>Revision queue</h2>'+
+    '<div class="learning-summary">'+
+    [['Notebook cards',all.length],['Due for revision',dueNow.length],['Reviewed with FSRS',reviewedCount],['Bookmarked',bookmarkedCount]]
+      .map(([label,value])=>'<div class="summary-stat"><small>'+esc(label)+'</small><b>'+esc(value)+'</b></div>').join("")+
+    '</div>'+
+    '<section class="panel pad learning-revision-callout"><div class="row between"><div><h2>Revision queue</h2>'+
     '<p class="fine">'+all.length+' cards · '+(scheduler?dueNow.length+" due now":"Scheduler initializing")+
       ' · Mock results do not automatically count as spaced-repetition reviews</p></div>'+
     '<div class="row generic-actions"><button class="btn primary" id="learning-due"'+(!scheduler||!dueNow.length?" disabled":"")+'>Review due cards</button>'+
@@ -156,6 +165,11 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
        '<button class="btn" id="learning-one">Review this card</button>'+
        '<button class="btn danger" id="learning-delete">Delete</button></div>':
        '<p class="fine">Select a card from the notebook.</p>')+'</section></div>'+
+    '<section class="panel pad learning-reports"><div class="row between"><div><h2>Reported error patterns</h2>'+
+      '<p class="fine">Self-labelled notebook observations, not inferred diagnoses.</p></div></div>'+
+      (commonReports.length?'<div class="learning-report-list">'+commonReports.map(([label,count])=>
+        '<div><span>'+esc(label)+'</span><b>'+count+' card'+(count===1?"":"s")+'</b></div>').join("")+'</div>':
+        '<p class="fine">Label errors in your notebook to see recurring patterns here.</p>')+'</section>'+
     '<section class="panel pad learning-insights"><h2>Topic performance</h2>'+
     '<p class="fine">Official CGL section labels are the default broad topics. Imported exam topic IDs and your explicitly labelled subtopics remain separate; no topic is guessed. Five answered items minimum for measured evidence. Skips are excluded from accuracy.</p>'+
     '<div class="scroll-table"><table><thead><tr><th>Exam</th><th>Type</th><th>Topic</th><th>Answered / total</th><th>Distinct answered</th><th>Answering attempts</th><th>Accuracy</th><th>Evidence</th></tr></thead><tbody>'+
