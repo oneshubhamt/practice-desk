@@ -2928,7 +2928,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     return paper;
   }
 
-  // src/content/import-cgl.ts
+  // src/domain/hash.ts
   var SHA_CONSTANTS = {
     k: new Uint32Array([
       1116352408,
@@ -3006,9 +3006,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     const view = new DataView(padded.buffer);
     view.setUint32(padded.length - 8, Math.floor(bytes.length * 8 / 4294967296));
     view.setUint32(padded.length - 4, bytes.length * 8 >>> 0);
-    const { k, initial } = SHA_CONSTANTS;
-    const h = new Uint32Array(initial);
-    const w = new Uint32Array(64);
+    const { k, initial } = SHA_CONSTANTS, h = new Uint32Array(initial), w = new Uint32Array(64);
     const rotr = (x, n) => x >>> n | x << 32 - n;
     for (let offset = 0; offset < padded.length; offset += 64) {
       for (let i = 0; i < 16; i++) w[i] = view.getUint32(offset + 4 * i);
@@ -3016,31 +3014,55 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
         const left = w[i - 15] ?? 0, right = w[i - 2] ?? 0;
         w[i] = (w[i - 16] ?? 0) + (rotr(left, 7) ^ rotr(left, 18) ^ left >>> 3) + (w[i - 7] ?? 0) + (rotr(right, 17) ^ rotr(right, 19) ^ right >>> 10) >>> 0;
       }
-      let a = h[0] ?? 0, b = h[1] ?? 0, c = h[2] ?? 0, d = h[3] ?? 0;
-      let e = h[4] ?? 0, f = h[5] ?? 0, g = h[6] ?? 0, z = h[7] ?? 0;
+      let a = h[0] ?? 0, b = h[1] ?? 0, c = h[2] ?? 0, d = h[3] ?? 0, e = h[4] ?? 0, f = h[5] ?? 0, g = h[6] ?? 0, z = h[7] ?? 0;
       for (let i = 0; i < 64; i++) {
-        const s1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
-        const choose = e & f ^ ~e & g;
-        const temp1 = z + s1 + choose + (k[i] ?? 0) + (w[i] ?? 0) >>> 0;
-        const s0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
-        const majority = a & b ^ a & c ^ b & c;
-        const temp2 = s0 + majority >>> 0;
+        const s1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25), choose = e & f ^ ~e & g;
+        const t1 = z + s1 + choose + (k[i] ?? 0) + (w[i] ?? 0) >>> 0;
+        const s0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22), majority = a & b ^ a & c ^ b & c;
+        const t2 = s0 + majority >>> 0;
         z = g;
         g = f;
         f = e;
-        e = d + temp1 >>> 0;
+        e = d + t1 >>> 0;
         d = c;
         c = b;
         b = a;
-        a = temp1 + temp2 >>> 0;
+        a = t1 + t2 >>> 0;
       }
-      for (const [i, value] of [a, b, c, d, e, f, g, z].entries()) {
-        h[i] = (h[i] ?? 0) + value >>> 0;
-      }
+      for (const [i, value] of [a, b, c, d, e, f, g, z].entries()) h[i] = (h[i] ?? 0) + value >>> 0;
     }
     return Array.from(h, (part) => part.toString(16).padStart(8, "0")).join("");
   }
-  var hash2 = (data) => sha256(JSON.stringify(data));
+  var hashJson = (value) => sha256(JSON.stringify(value));
+
+  // src/domain/integrity.ts
+  function questionRevisionHash(value) {
+    return hashJson({ content: value.content, editorial: value.editorial });
+  }
+  function answerKeyRevisionHash(value) {
+    return hashJson(value.entries);
+  }
+  function paperRevisionHash(value) {
+    return hashJson({
+      sections: value.sections,
+      timing: value.timing,
+      navigation: value.navigation,
+      scoring: value.scoring,
+      answerKeyRevisionId: value.answerKeyRevisionId,
+      edition: value.edition
+    });
+  }
+  function assertRevisionHashes(questions, key, paper) {
+    for (const question of questions)
+      if (question.contentHash !== questionRevisionHash(question))
+        throw new Error("Question revision content hash mismatch: " + question.id);
+    if (key.contentHash !== answerKeyRevisionHash(key))
+      throw new Error("Answer-key revision content hash mismatch");
+    if (paper.contentHash !== paperRevisionHash(paper))
+      throw new Error("Paper revision content hash mismatch");
+  }
+
+  // src/content/import-cgl.ts
   var optionId = (question, letter) => `${question}:option:${letter}`;
   var sectionNames = ["Reasoning", "General Awareness", "Quantitative Aptitude", "English"];
   function importCglBank(papers, patches2) {
@@ -3069,7 +3091,12 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
             ...original.passageRef ? { stimulusId: `${source.id}:passage:${original.passageRef}` } : {},
             ...merged.images.stem ? { assetIds: [`${stableId}:stem`] } : {}
           };
-          const fingerprint2 = hash2({ content, editorialStatus, review: merged.review, explanation: merged.explanation, images: merged.images });
+          const editorial = {
+            status: editorialStatus,
+            ...merged.review ? { notes: merged.review } : {},
+            ...merged.sources?.length ? { sources: merged.sources } : {}
+          };
+          const fingerprint2 = questionRevisionHash({ content, editorial });
           const id = `${stableId}:${edition}:${fingerprint2.slice(0, 16)}`;
           const question = validateQuestionRevision({
             id,
@@ -3077,7 +3104,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
             revision: 1,
             contentHash: fingerprint2,
             content,
-            editorial: { status: editorialStatus, ...merged.review ? { notes: merged.review } : {} }
+            editorial
           });
           questions.push(question);
           entries.push({ questionRevisionId: id, answer: { kind: "single-choice", optionId: optionId(stableId, merged.key) } });
@@ -3085,7 +3112,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
           if (!section) throw new Error("CGL source question out of section range");
           section.questionRevisionIds.push(id);
         }
-        const keyFingerprint = hash2(entries);
+        const keyFingerprint = answerKeyRevisionHash({ entries });
         const key = validateAnswerKeyRevision({
           id: `${source.id}:${edition}:key:${keyFingerprint.slice(0, 16)}`,
           paperId,
@@ -3108,7 +3135,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
         };
         const scoring = { defaultRule: { correctMarks: 2, incorrectMarks: -0.5, unansweredMarks: 0 } };
         const paperContent = { sections, timing, navigation, scoring, answerKeyRevisionId: key.id, edition };
-        const fingerprint = hash2(paperContent);
+        const fingerprint = paperRevisionHash(paperContent);
         const paper = validatePaperRevision({
           id: `${source.id}:${edition}:${fingerprint.slice(0, 16)}`,
           paperId,
@@ -3120,6 +3147,121 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
       }
     }
     return results;
+  }
+
+  // src/domain/media.ts
+  var MAX_ASSET_BYTES = 10 * 1024 * 1024;
+  var MAX_TOTAL_ASSET_BYTES = 20 * 1024 * 1024;
+  var rec = (v, path) => {
+    if (!v || typeof v !== "object" || Array.isArray(v)) throw new Error(path + ": expected an object");
+    return v;
+  };
+  var txt = (v, path, allowEmpty = false) => {
+    if (typeof v !== "string" || !allowEmpty && !v.trim()) throw new Error(path + ": expected a string");
+    return v;
+  };
+  var only = (o, keys, path) => {
+    for (const key of Object.keys(o)) if (!keys.includes(key)) throw new Error(path + "." + key + ": unsupported field");
+  };
+  var stringList = (v, path) => {
+    if (!Array.isArray(v)) throw new Error(path + ": expected an array");
+    return v.map((x, i) => txt(x, path + "[" + i + "]"));
+  };
+  function decodeAsset(uri, path) {
+    const comma = uri.indexOf(",");
+    const encoded = comma >= 0 ? uri.slice(comma + 1) : "";
+    if (!encoded || !/^[A-Za-z0-9+/]+={0,2}$/.test(encoded)) throw new Error(path + ": invalid base64 image");
+    if (Math.ceil(encoded.length * 3 / 4) > MAX_ASSET_BYTES) throw new Error(path + ": image exceeds 10 MiB");
+    try {
+      return Uint8Array.from(atob(encoded), (c) => c.charCodeAt(0));
+    } catch {
+      throw new Error(path + ": invalid base64 image");
+    }
+  }
+  function validateMediaInventory(stimuliInput, assetsInput) {
+    if (!Array.isArray(stimuliInput) || stimuliInput.length > 200) throw new Error("Invalid stimulus inventory");
+    if (!Array.isArray(assetsInput) || assetsInput.length > 1e3) throw new Error("Invalid media inventory");
+    const assetIds = /* @__PURE__ */ new Set();
+    let total = 0;
+    for (const [i, value] of assetsInput.entries()) {
+      const path = "assets[" + i + "]", a = rec(value, path);
+      only(a, ["id", "mediaType", "dataUri", "contentHash", "altText"], path);
+      const id = txt(a.id, path + ".id");
+      if (assetIds.has(id)) throw new Error("Duplicate media asset");
+      const media = txt(a.mediaType, path + ".mediaType");
+      if (!["image/png", "image/jpeg", "image/webp", "image/avif", "image/gif"].includes(media)) throw new Error(path + ": unsupported image type");
+      const uri = txt(a.dataUri, path + ".dataUri");
+      if (!uri.startsWith("data:" + media + ";base64,")) throw new Error(path + ": media type and data URI mismatch");
+      const bytes = decodeAsset(uri, path + ".dataUri");
+      total += bytes.length;
+      if (total > MAX_TOTAL_ASSET_BYTES) throw new Error("Embedded media exceeds 20 MiB");
+      const digest2 = txt(a.contentHash, path + ".contentHash");
+      if (!/^[a-f0-9]{64}$/.test(digest2) || sha256(bytes) !== digest2) throw new Error(path + ": embedded image digest mismatch");
+      if (a.altText !== void 0) txt(a.altText, path + ".altText", true);
+      assetIds.add(id);
+    }
+    const stimulusIds = /* @__PURE__ */ new Set();
+    for (const [i, value] of stimuliInput.entries()) {
+      const path = "stimuli[" + i + "]", s = rec(value, path);
+      const id = txt(s.id, path + ".id");
+      if (stimulusIds.has(id)) throw new Error("Duplicate stimulus");
+      const kind = txt(s.kind, path + ".kind");
+      if (!["passage", "case", "table", "chart", "image"].includes(kind)) throw new Error(path + ": unsupported stimulus kind");
+      if (kind === "passage" || kind === "case") {
+        only(s, ["id", "kind", "title", "text", "assetIds"], path);
+        if (s.title !== void 0) txt(s.title, path + ".title", true);
+        txt(s.text, path + ".text", true);
+        const ids = s.assetIds === void 0 ? [] : stringList(s.assetIds, path + ".assetIds");
+        if (new Set(ids).size !== ids.length) throw new Error(path + ".assetIds: duplicate asset");
+        if (ids.some((x) => !assetIds.has(x))) throw new Error(path + ": missing stimulus image");
+      } else if (kind === "table") {
+        only(s, ["id", "kind", "title", "columns", "rows"], path);
+        if (s.title !== void 0) txt(s.title, path + ".title", true);
+        const columns = stringList(s.columns, path + ".columns");
+        if (!columns.length) throw new Error(path + ": table has no columns");
+        if (!Array.isArray(s.rows)) throw new Error(path + ".rows: expected an array");
+        for (const [ri, row] of s.rows.entries()) {
+          const cells = stringList(row, path + ".rows[" + ri + "]");
+          if (cells.length !== columns.length) throw new Error(path + ": table row width mismatch");
+        }
+      } else {
+        only(s, ["id", "kind", "title", "assetId", "altText", "caption"], path);
+        if (s.title !== void 0) txt(s.title, path + ".title", true);
+        const asset = txt(s.assetId, path + ".assetId");
+        if (!assetIds.has(asset)) throw new Error(path + ": missing stimulus image");
+        txt(s.altText, path + ".altText");
+        if (s.caption !== void 0) txt(s.caption, path + ".caption", true);
+      }
+      stimulusIds.add(id);
+    }
+    return { stimuli: stimuliInput, assets: assetsInput };
+  }
+  function referencedAssets(question) {
+    const c = question.content, ids = [...c.assetIds ?? []];
+    if (c.kind === "single-choice" || c.kind === "multiple-select") for (const o of c.options) ids.push(...o.assetIds ?? []);
+    if (c.kind === "matching") for (const item of [...c.leftItems, ...c.rightItems]) ids.push(...item.assetIds ?? []);
+    return ids;
+  }
+  function validateQuestionMediaReferences(questions, stimuli, assets) {
+    const stimuliById = new Map(stimuli.map((s) => [s.id, s])), assetIds = new Set(assets.map((a) => a.id));
+    for (const q of questions) {
+      if (q.content.stimulusId && !stimuliById.has(q.content.stimulusId)) throw new Error("Missing stimulus");
+      if (referencedAssets(q).some((id) => !assetIds.has(id))) throw new Error("Missing question image");
+    }
+  }
+  function selectDisplayResources(questions, stimuli = [], assets = []) {
+    const wantedStimuli = new Set(questions.flatMap((q) => q.content.stimulusId ? [q.content.stimulusId] : []));
+    const selectedStimuli = stimuli.filter((s) => wantedStimuli.has(s.id));
+    const wantedAssets = /* @__PURE__ */ new Set();
+    for (const q of questions) for (const id of referencedAssets(q)) wantedAssets.add(id);
+    for (const s of selectedStimuli) {
+      if (s.kind === "passage" || s.kind === "case") for (const id of s.assetIds ?? []) wantedAssets.add(id);
+      else if (s.kind === "chart" || s.kind === "image") wantedAssets.add(s.assetId);
+    }
+    const selectedAssets = assets.filter((a) => wantedAssets.has(a.id));
+    validateQuestionMediaReferences(questions, selectedStimuli, selectedAssets);
+    validateMediaInventory(selectedStimuli, selectedAssets);
+    return { stimuli: structuredClone(selectedStimuli), assets: structuredClone(selectedAssets) };
   }
 
   // src/engine/response.ts
@@ -3367,9 +3509,11 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
   }
 
   // src/history/frozen.ts
-  function freezeAttempt(paper, key, questions, mode, frozenAt, examId) {
+  function freezeAttempt(paper, key, questions, stimuli, assets, mode, frozenAt, examId) {
     validateAnswerKeyRevision(key, questions);
     validatePaperRevision(paper, questions, key);
+    assertRevisionHashes(questions, key, paper);
+    const display = selectDisplayResources(questions, stimuli, assets);
     const snapshot = {
       examId,
       paperId: paper.paperId,
@@ -3378,13 +3522,16 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
       scoringPolicy: paper.scoring,
       mode
     };
-    return structuredClone({ schema: 1, frozenAt, snapshot, paper, key, questions });
+    return structuredClone({ schema: 2, frozenAt, snapshot, paper, key, questions, ...display });
   }
   function assertFrozenContent(value) {
-    if (!value || value.schema !== 1 || !value.snapshot || !value.paper || !value.key || !Array.isArray(value.questions) || typeof value.snapshot.examId !== "string" || value.snapshot.examId.length === 0 || value.snapshot.paperId !== value.paper.paperId || value.snapshot.paperRevisionId !== value.paper.id || value.snapshot.answerKeyRevisionId !== value.key.id || JSON.stringify(value.snapshot.scoringPolicy) !== JSON.stringify(value.paper.scoring) || !Number.isFinite(Date.parse(value.frozenAt))) {
+    if (!value || value.schema !== 2 || !value.snapshot || !value.paper || !value.key || !Array.isArray(value.questions) || !Array.isArray(value.stimuli) || !Array.isArray(value.assets) || typeof value.snapshot.examId !== "string" || value.snapshot.examId.length === 0 || value.snapshot.paperId !== value.paper.paperId || value.snapshot.paperRevisionId !== value.paper.id || value.snapshot.answerKeyRevisionId !== value.key.id || JSON.stringify(value.snapshot.scoringPolicy) !== JSON.stringify(value.paper.scoring) || !Number.isFinite(Date.parse(value.frozenAt))) {
       throw new Error("Invalid or mismatched frozen attempt content");
     }
     validatePaperRevision(value.paper, value.questions, value.key);
+    assertRevisionHashes(value.questions, value.key, value.paper);
+    validateMediaInventory(value.stimuli, value.assets);
+    validateQuestionMediaReferences(value.questions, value.stimuli, value.assets);
     return value;
   }
   function restoreSession(paper, saved, wallNowMs, visible) {
@@ -3413,44 +3560,9 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     const ids = new Set(paper.sections.flatMap((s) => s.questionRevisionIds));
     if (ids.size !== questions.length || questions.some((q) => !ids.has(q.id)))
       throw new Error("Every question must belong to this paper exactly once");
-    const stimuli = raw.stimuli ?? [];
-    const assets = raw.assets ?? [];
-    if (!Array.isArray(stimuli) || stimuli.length > 200 || !Array.isArray(assets) || assets.length > 1e3)
-      throw new Error("Invalid media inventory");
-    const stimulusIds = /* @__PURE__ */ new Set();
-    for (const item of stimuli) {
-      if (!item || typeof item !== "object" || typeof item.id !== "string" || !item.id || stimulusIds.has(item.id))
-        throw new Error("Duplicate or invalid stimulus");
-      if (!["passage", "case", "table", "chart", "image"].includes(item.kind)) throw new Error("Unsupported stimulus");
-      if (["passage", "case"].includes(item.kind) && typeof item.text !== "string")
-        throw new Error("Missing stimulus text");
-      if (item.kind === "table" && (!Array.isArray(item.columns) || !Array.isArray(item.rows) || item.rows.some((row) => !Array.isArray(row) || row.length !== item.columns.length)))
-        throw new Error("Invalid stimulus table");
-      stimulusIds.add(item.id);
-    }
-    const assetIds = /* @__PURE__ */ new Set();
-    for (const item of assets) {
-      if (!item || typeof item !== "object" || typeof item.id !== "string" || !item.id || assetIds.has(item.id))
-        throw new Error("Duplicate or invalid media asset");
-      if (!["image/png", "image/jpeg", "image/webp", "image/avif", "image/gif"].includes(item.mediaType) || typeof item.dataUri !== "string" || !item.dataUri.startsWith("data:" + item.mediaType + ";base64,") || !/^[A-Za-z0-9+/=]+$/.test(item.dataUri.split(",")[1] ?? "") || typeof item.contentHash !== "string" || !/^[a-f0-9]{64}$/.test(item.contentHash))
-        throw new Error("Media must be an embedded image with a SHA-256 hash");
-      const encoded = item.dataUri.slice(item.dataUri.indexOf(",") + 1);
-      const decoded = Uint8Array.from(atob(encoded), (char) => char.charCodeAt(0));
-      if (sha256(decoded) !== item.contentHash) throw new Error("Embedded image digest does not match its content hash");
-      assetIds.add(item.id);
-    }
-    for (const q of questions) {
-      if (q.content.stimulusId && !stimulusIds.has(q.content.stimulusId)) throw new Error("Missing stimulus");
-      for (const id of q.content.assetIds ?? []) if (!assetIds.has(id)) throw new Error("Missing question image");
-      if (q.content.kind === "single-choice" || q.content.kind === "multiple-select") {
-        for (const option of q.content.options)
-          for (const id of option.assetIds ?? []) if (!assetIds.has(id)) throw new Error("Missing option image");
-      }
-      if (q.content.kind === "matching") {
-        for (const item of [...q.content.leftItems, ...q.content.rightItems])
-          for (const id of item.assetIds ?? []) if (!assetIds.has(id)) throw new Error("Missing matching image");
-      }
-    }
+    const { stimuli, assets } = validateMediaInventory(raw.stimuli ?? [], raw.assets ?? []);
+    validateQuestionMediaReferences(questions, stimuli, assets);
+    assertRevisionHashes(questions, key, paper);
     const explanations = raw.explanations;
     if (explanations !== void 0) {
       if (!explanations || typeof explanations !== "object" || Array.isArray(explanations))
@@ -3510,28 +3622,27 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     const source = base.paper;
     if (mode === "single" && !source.sections[sectionIndex]) throw new Error("Unknown practice section");
     const sections = mode === "single" ? [source.sections[sectionIndex]] : [...source.sections];
-    const fingerprint = sha256(JSON.stringify({ revision: source.id, mode, sectionIndex: mode === "single" ? sectionIndex : null }));
-    const paper = {
-      ...source,
-      id: source.id + ":practice:" + mode + (mode === "single" ? ":" + sectionIndex : ""),
-      contentHash: fingerprint,
-      sections,
-      timing: { kind: "whole-paper", durationMs: mode === "single" ? 9e5 : 36e5, pausePolicy: "allowed" },
-      navigation: { ...source.navigation, sectionNavigation: mode === "free" ? "free" : "sequential-locked" }
-    };
     const included = new Set(sections.flatMap((s) => s.questionRevisionIds));
     const questions = base.questions.filter((q) => included.has(q.id));
     const entries = base.answerKey.entries.filter((e) => included.has(e.questionRevisionId));
     const answerKey = {
       ...base.answerKey,
       id: base.answerKey.id + ":practice:" + mode + (mode === "single" ? ":" + sectionIndex : ""),
-      contentHash: sha256(JSON.stringify(entries)),
+      contentHash: answerKeyRevisionHash({ entries }),
       entries
     };
-    const adjusted = { ...paper, answerKeyRevisionId: answerKey.id };
+    const paperBase = {
+      ...source,
+      id: source.id + ":practice:" + mode + (mode === "single" ? ":" + sectionIndex : ""),
+      answerKeyRevisionId: answerKey.id,
+      sections,
+      timing: { kind: "whole-paper", durationMs: mode === "single" ? 9e5 : 36e5, pausePolicy: "allowed" },
+      navigation: { ...source.navigation, sectionNavigation: mode === "free" ? "free" : "sequential-locked" }
+    };
+    const paper = { ...paperBase, contentHash: paperRevisionHash(paperBase) };
     return {
       ...base,
-      paper: adjusted,
+      paper,
       answerKey,
       questions,
       ...base.explanations ? { explanations: Object.fromEntries(Object.entries(base.explanations).filter(([id]) => included.has(id))) } : {},
@@ -3544,6 +3655,8 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
       validated.paper,
       validated.answerKey,
       validated.questions,
+      validated.stimuli ?? [],
+      validated.assets ?? [],
       "exam-simulation",
       new Date(timestamp).toISOString(),
       validated.examId
@@ -3608,41 +3721,56 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     }
   }
 
+  // src/app/preferences.ts
+  var SETTINGS_KEY = "practiceDesk.overhaul.settings.v1";
+  var SETTINGS_EVENT = "practice-desk-preferences";
+  var DEFAULT_PREFERENCES = { schema: 1, dark: false, scale: 100 };
+  function validateDisplayPreferences(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid display preferences");
+    const p = value;
+    if (p.schema !== 1 || typeof p.dark !== "boolean" || !Number.isInteger(p.scale) || p.scale < 85 || p.scale > 140)
+      throw new Error("Invalid display preferences");
+    return { schema: 1, dark: p.dark, scale: p.scale };
+  }
+  function readDisplayPreferences(storage = localStorage) {
+    try {
+      const raw = storage.getItem(SETTINGS_KEY);
+      return raw ? validateDisplayPreferences(JSON.parse(raw)) : DEFAULT_PREFERENCES;
+    } catch {
+      return DEFAULT_PREFERENCES;
+    }
+  }
+  function writeDisplayPreferences(value, storage = localStorage) {
+    const p = validateDisplayPreferences(value);
+    storage.setItem(SETTINGS_KEY, JSON.stringify(p));
+    return p;
+  }
+
   // src/history/backup.ts
   var clone = (v) => JSON.parse(JSON.stringify(v));
   var digest = (core) => sha256(JSON.stringify(core));
-  function makeBackup(attempts, revisions, preferences, exportedAt) {
+  function makeBackup(records, preferences, exportedAt) {
     if (!Number.isFinite(Date.parse(exportedAt))) throw new Error("Invalid export timestamp");
-    const core = clone({
-      format: "practice-desk-backup",
-      version: 2,
-      exportedAt,
-      attempts,
-      revisions,
-      preferences
-    });
-    return { ...core, manifest: {
-      algorithm: "sha256",
-      digest: digest(core),
-      attemptCount: core.attempts.length,
-      revisionCount: core.revisions.length
-    } };
+    const validated = validateDisplayPreferences(preferences);
+    const core = clone({ format: "practice-desk-backup", version: 3, exportedAt, records, preferences: validated });
+    return { ...core, manifest: { algorithm: "sha256", digest: digest(core), recordCount: core.records.length } };
   }
   function verifyBackup(raw) {
     if (!raw || typeof raw !== "object") throw new Error("Invalid backup");
     const b = raw;
-    if (b.format !== "practice-desk-backup" || b.version !== 2 || !Array.isArray(b.attempts) || !Array.isArray(b.revisions) || b.attempts.length > 5e3 || b.revisions.length > 500 || typeof b.exportedAt !== "string" || !Number.isFinite(Date.parse(b.exportedAt))) throw new Error("Invalid backup format");
-    if (b.attempts.some((a) => !a || typeof a !== "object" || typeof a.id !== "string" || a.id.length > 200) || b.revisions.some((r) => !r || typeof r.id !== "string" || typeof r.paperId !== "string" || !r.displayPaper || !Array.isArray(r.displayPaper.questions)) || new Set(b.attempts.map((a) => a.id)).size !== b.attempts.length || new Set(b.revisions.map((r) => r.id)).size !== b.revisions.length) throw new Error("Invalid backup records");
+    if (b.format !== "practice-desk-backup" || b.version !== 3 || !Array.isArray(b.records) || b.records.length > 5e3 || typeof b.exportedAt !== "string" || !Number.isFinite(Date.parse(b.exportedAt)))
+      throw new Error("Invalid backup format");
+    if (b.records.some((x) => !x || typeof x !== "object" || typeof x.id !== "string" || x.id.length > 200) || new Set(b.records.map((x) => x.id)).size !== b.records.length) throw new Error("Invalid backup records");
     const { manifest, ...core } = b;
-    if (!manifest || manifest.algorithm !== "sha256" || manifest.attemptCount !== b.attempts.length || manifest.revisionCount !== b.revisions.length || manifest.digest !== digest(core)) throw new Error("Backup integrity check failed");
+    if (!manifest || manifest.algorithm !== "sha256" || manifest.recordCount !== b.records.length || manifest.digest !== digest(core)) throw new Error("Backup integrity check failed");
+    validateDisplayPreferences(b.preferences);
     return b;
   }
   function planBackupMerge(existing, incoming, activeId) {
     const known = new Set(existing.map((x) => x.id));
     if (activeId) known.add(activeId);
     const result = [];
-    for (const candidate of incoming) {
-      if (known.has(candidate.id)) continue;
+    for (const candidate of incoming) if (!known.has(candidate.id)) {
       known.add(candidate.id);
       result.push(candidate);
     }
@@ -3700,12 +3828,12 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     };
   }
   function fnv1a32(str) {
-    let hash3 = 2166136261;
+    let hash2 = 2166136261;
     for (let index = 0; index < str.length; index += 1) {
-      hash3 ^= str.charCodeAt(index);
-      hash3 = Math.imul(hash3, 16777619);
+      hash2 ^= str.charCodeAt(index);
+      hash2 = Math.imul(hash2, 16777619);
     }
-    return hash3 >>> 0;
+    return hash2 >>> 0;
   }
   function mulberry32(seed) {
     let a = seed >>> 0;
@@ -4513,13 +4641,18 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     if (raw.recordType !== "learning-card" || typeof raw.id !== "string" || !raw.id.startsWith("learning-card:") || typeof raw.examId !== "string" || !raw.examId || typeof raw.paperId !== "string" || !raw.paperId || typeof raw.paperEdition !== "string" || typeof raw.sectionTitle !== "string" || typeof raw.sourceTitle !== "string" || typeof raw.note !== "string" || raw.note.length > 8e3 || typeof raw.customTopic !== "string" || raw.customTopic.length > 120 || typeof raw.bookmarked !== "boolean" || !(raw.errorLabel === null || ERROR_LABELS.includes(raw.errorLabel)) || !validDate(raw.createdAt) || !validDate(raw.updatedAt) || raw.explanation !== void 0 && (typeof raw.explanation !== "string" || raw.explanation.length > 2e4) || !Array.isArray(raw.reviews) || raw.reviews.length > 1e4)
       throw Error("Invalid learning card fields");
     const question = validateQuestionRevision(raw.question);
+    if (question.contentHash !== questionRevisionHash(question)) throw Error("Learning card question hash mismatch");
+    if (!Array.isArray(raw.stimuli) || !Array.isArray(raw.assets)) throw Error("Learning card display media missing");
+    const media = validateMediaInventory(raw.stimuli, raw.assets);
+    validateQuestionMediaReferences([question], media.stimuli, media.assets);
     if (raw.id !== "learning-card:" + question.id) throw Error("Learning card question identity mismatch");
+    const entries = [{ questionRevisionId: question.id, answer: raw.answer }];
     validateAnswerKeyRevision({
       id: "learning-key",
       paperId: raw.paperId,
       revision: 1,
-      contentHash: "0".repeat(64),
-      entries: [{ questionRevisionId: question.id, answer: raw.answer }]
+      contentHash: answerKeyRevisionHash({ entries }),
+      entries
     }, [question]);
     let previous = Date.parse(raw.createdAt);
     for (const review of raw.reviews) {
@@ -4536,6 +4669,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     const key = attempt.frozen.key.entries.find((x) => x.questionRevisionId === id);
     const section = attempt.frozen.paper.sections.find((s) => s.questionRevisionIds.includes(id));
     if (!question || !key || !section) throw Error("Question not in completed exam");
+    const display = selectDisplayResources([question], attempt.frozen.stimuli, attempt.frozen.assets);
     const record3 = {
       recordType: "learning-card",
       id: "learning-card:" + id,
@@ -4546,6 +4680,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
       sourceTitle: attempt.frozen.paper.paperId,
       question: structuredClone(question),
       answer: structuredClone(key.answer),
+      ...display,
       note: "",
       customTopic: "",
       errorLabel: null,
@@ -4630,19 +4765,24 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
 
   // src/app/learning-ui.ts
   var esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
-  function figures(pkg, ids) {
+  function figures(assets, ids) {
     return (ids ?? []).map((id) => {
-      const a = pkg?.assets?.find((x) => x.id === id);
+      const a = assets.find((x) => x.id === id);
       return a ? '<img class="generic-figure" src="' + esc(a.dataUri) + '" alt="' + esc(a.altText ?? "Question figure") + '">' : "";
     }).join("");
   }
-  function questionHTML(record3, packages) {
-    const q = record3.question, c = q.content;
-    const pkg = packages.find((p) => p.questions.some((item) => item.id === q.id));
-    const stimulus = pkg?.stimuli?.find((s) => s.id === c.stimulusId);
-    const passage = stimulus && (stimulus.kind === "passage" || stimulus.kind === "case") ? '<section class="generic-stimulus"><strong>' + esc(stimulus.title ?? "Source passage") + "</strong><p>" + esc(stimulus.text) + "</p></section>" : "";
-    const choices = c.kind === "single-choice" || c.kind === "multiple-select" ? '<div class="generic-choices">' + c.options.map((o, i) => '<label class="generic-choice"><input type="' + (c.kind === "single-choice" ? "radio" : "checkbox") + '" name="learning-answer"><span>' + String.fromCharCode(65 + i) + ". " + esc(o.text) + figures(pkg, o.assetIds) + "</span></label>").join("") + "</div>" : c.kind === "true-false" ? '<div class="generic-choices"><label><input type="radio" name="learning-true"> True</label> <label><input type="radio" name="learning-true"> False</label></div>' : '<textarea aria-label="Recall your response" rows="3" placeholder="Think through or write your answer before revealing it."></textarea>';
-    return passage + '<h2 class="generic-prompt">' + esc(c.prompt) + "</h2>" + figures(pkg, c.assetIds) + choices;
+  function questionHTML(record3) {
+    const q = record3.question, c = q.content, assets = record3.assets;
+    const stimulus = record3.stimuli.find((s) => s.id === c.stimulusId);
+    let stimulusHtml = "";
+    if (stimulus?.kind === "passage" || stimulus?.kind === "case")
+      stimulusHtml = '<section class="generic-stimulus"><strong>' + esc(stimulus.title ?? "Source passage") + "</strong><p>" + esc(stimulus.text) + "</p>" + figures(assets, stimulus.assetIds) + "</section>";
+    else if (stimulus?.kind === "table")
+      stimulusHtml = '<section class="generic-stimulus"><strong>' + esc(stimulus.title ?? "Table") + '</strong><div class="scroll-table"><table><tr>' + stimulus.columns.map((x) => "<th>" + esc(x) + "</th>").join("") + "</tr>" + stimulus.rows.map((row) => "<tr>" + row.map((x) => "<td>" + esc(x) + "</td>").join("") + "</tr>").join("") + "</table></div></section>";
+    else if (stimulus && (stimulus.kind === "chart" || stimulus.kind === "image"))
+      stimulusHtml = '<section class="generic-stimulus">' + figures(assets, [stimulus.assetId]) + "<p>" + esc(stimulus.caption ?? stimulus.altText) + "</p></section>";
+    const choices = c.kind === "single-choice" || c.kind === "multiple-select" ? '<div class="generic-choices">' + c.options.map((o, i) => '<label class="generic-choice"><input type="' + (c.kind === "single-choice" ? "radio" : "checkbox") + '" name="learning-answer"><span>' + String.fromCharCode(65 + i) + ". " + esc(o.text) + figures(assets, o.assetIds) + "</span></label>").join("") + "</div>" : c.kind === "true-false" ? '<div class="generic-choices"><label><input type="radio" name="learning-true"> True</label> <label><input type="radio" name="learning-true"> False</label></div>' : '<textarea aria-label="Recall your response" rows="3" placeholder="Think through or write your answer before revealing it."></textarea>';
+    return stimulusHtml + '<h2 class="generic-prompt">' + esc(c.prompt) + "</h2>" + figures(assets, c.assetIds) + choices;
   }
   function createLearningDesk(root2, host) {
     let scheduler = null;
@@ -4663,7 +4803,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
           reviewId = null;
           revealed = false;
         } else {
-          root2.innerHTML = '<div class="generic-heading"><div><h1>Spaced revision</h1><p class="muted">' + esc(item.sectionTitle) + ' \xB7 FSRS-7 \xB7 rate your recall, not your exam mark</p></div><button class="btn" id="learning-back">Learning desk</button></div><section class="panel pad">' + questionHTML(item, host.packages()) + (revealed ? '<div class="learning-answer"><h3>Expected answer</h3><p>' + esc(readableAnswer(item.question, item.answer)) + "</p>" + (item.explanation ? "<p>" + esc(item.explanation) + "</p>" : "") + (item.note ? '<p class="fine">Your note: ' + esc(item.note) + "</p>" : "") + '<h3>How well did you recall it?</h3><div class="row generic-actions">' + [[Rating.Again, "Again"], [Rating.Hard, "Hard"], [Rating.Good, "Good"], [Rating.Easy, "Easy"]].map(([grade, label]) => '<button class="btn" data-grade="' + grade + '">' + label + "</button>").join("") + "</div></div>" : '<button class="btn primary" id="learning-reveal">Reveal answer</button>') + "</section>" + (message ? '<p role="status" class="generic-warning">' + esc(message) + "</p>" : "");
+          root2.innerHTML = '<div class="generic-heading"><div><h1>Spaced revision</h1><p class="muted">' + esc(item.sectionTitle) + ' \xB7 FSRS-7 \xB7 rate your recall, not your exam mark</p></div><button class="btn" id="learning-back">Learning desk</button></div><section class="panel pad">' + questionHTML(item) + (revealed ? '<div class="learning-answer"><h3>Expected answer</h3><p>' + esc(readableAnswer(item.question, item.answer)) + "</p>" + (item.explanation ? "<p>" + esc(item.explanation) + "</p>" : "") + (item.note ? '<p class="fine">Your note: ' + esc(item.note) + "</p>" : "") + '<h3>How well did you recall it?</h3><div class="row generic-actions">' + [[Rating.Again, "Again"], [Rating.Hard, "Hard"], [Rating.Good, "Good"], [Rating.Easy, "Easy"]].map(([grade, label]) => '<button class="btn" data-grade="' + grade + '">' + label + "</button>").join("") + "</div></div>" : '<button class="btn primary" id="learning-reveal">Reveal answer</button>') + "</section>" + (message ? '<p role="status" class="generic-warning">' + esc(message) + "</p>" : "");
           root2.querySelector("#learning-back").onclick = () => {
             reviewId = null;
             revealed = false;
@@ -4673,10 +4813,14 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
             revealed = true;
             draw();
           });
-          root2.querySelectorAll("[data-grade]").forEach((button) => button.onclick = () => {
+          root2.querySelectorAll("[data-grade]").forEach((button) => button.onclick = async () => {
             if (!revealed || !scheduler) return;
             try {
-              host.save(rateLearningCard(item, Number(button.dataset.grade), now2().toISOString(), scheduler));
+              if (!await host.save(rateLearningCard(item, Number(button.dataset.grade), now2().toISOString(), scheduler))) {
+                message = "Review not durably saved. Export a recovery backup from the library.";
+                draw();
+                return;
+              }
               message = "Review recorded. The next due date is scheduled by FSRS-7.";
               reviewId = dueCards().find((c) => c.id !== item.id)?.id ?? null;
               revealed = false;
@@ -4712,20 +4856,24 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
         draw();
       });
       if (!selected) return;
-      root2.querySelector("#learning-save").onclick = () => {
+      root2.querySelector("#learning-save").onclick = async () => {
         try {
           const note = root2.querySelector("#learning-note").value;
           const customTopic = root2.querySelector("#learning-topic").value.trim();
           const errorLabel = root2.querySelector("#learning-error").value;
           const bookmarked = root2.querySelector("#learning-bookmark").checked;
-          host.save(validateLearningCard({
+          if (!await host.save(validateLearningCard({
             ...selected,
             note,
             customTopic,
             errorLabel: errorLabel || null,
             bookmarked,
             updatedAt: now2().toISOString()
-          }));
+          }))) {
+            message = "Notebook changes could not be durably saved. Export a recovery backup.";
+            draw();
+            return;
+          }
           message = "Notebook saved.";
           draw();
         } catch (e) {
@@ -4853,8 +5001,8 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
         value.result.snapshot.calculatedAt
       );
       const fields = ["earnedMarks", "positiveMarks", "penaltyMarks", "correctCount", "incorrectCount", "unansweredCount", "excludedCount"];
-      if (fields.some((field) => value.result.snapshot[field] !== recalculated.snapshot[field]))
-        throw new Error("Completed attempt score does not match its frozen inputs");
+      if (fields.some((field) => value.result.snapshot[field] !== recalculated.snapshot[field]) || JSON.stringify(value.result.items) !== JSON.stringify(recalculated.items) || typeof value.result.snapshot.calculatedAt !== "string" || !Number.isFinite(Date.parse(value.result.snapshot.calculatedAt)))
+        throw new Error("Completed attempt score does not match its frozen inputs (summary or item verdict)");
     }
     return value;
   }
@@ -4867,14 +5015,16 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     const responsesById = new Map(state.responses.map((row) => [row.questionRevisionId, row]));
     const response = responsesById.get(q.id)?.response;
     const remaining = examTimeRemaining(paper, state);
-    const assets = bundle ?? {
+    const assets = {
       format: "practice-desk-exam",
       version: 1,
       examId: attempt.frozen.snapshot.examId,
-      title: "",
+      title: bundle?.title ?? "",
       paper,
       answerKey: attempt.frozen.key,
-      questions: attempt.frozen.questions
+      questions: attempt.frozen.questions,
+      stimuli: attempt.frozen.stimuli,
+      assets: attempt.frozen.assets
     };
     return '<div class="generic-heading"><div><h1>' + escapeText(bundle?.title ?? paper.paperId) + '</h1><p class="muted">' + escapeText(section.title) + " \xB7 " + state.responses.filter((r) => r.response).length + ' answered</p></div><div class="row"><strong class="generic-timer" id="g-timer">' + (remaining === null ? "Untimed" : minutes(remaining)) + '</strong><button class="btn" id="g-library">Library</button></div></div>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + '<div class="generic-sections">' + paper.sections.map((s, i) => {
       const locked = state.completedSections.includes(i) || (paper.timing.kind === "sectional" || paper.navigation.sectionNavigation === "sequential-locked") && i !== state.sectionIndex;
@@ -4901,70 +5051,80 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     let attempt = null, view = "library";
     let db = null, warning = "", disposed = false, loading = true, writeQueue = Promise.resolve();
     let lastTimerSave = 0;
-    let fallbackStamp = null, fallbackConflict = false;
+    let fallbackStamp = null, fallbackConflict = false, storageFault = false;
     const storageKey = "practiceDesk.overhaul.fallback.v1", mirrorKey = "practiceDesk.overhaul.active.v1";
     const dbName = "practiceDesk.overhaul.v1";
-    const downloadBackup = () => {
-      let recordsToExport = [...records.values()].filter((record3) => isPackage(record3) || isAttempt(record3) || isLearning(record3));
-      if (fallbackConflict && !db) {
-        try {
+    const downloadBackup = async () => {
+      await writeQueue;
+      try {
+        let toExport = [...records.values()];
+        if (fallbackConflict && !db && !storageFault) {
           const latest = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
           if (!Array.isArray(latest)) throw new Error("Invalid fallback history");
-          recordsToExport = latest.map((value) => validateGenericStoredRecord(value));
-        } catch {
-          warning = "Backup unavailable: browser fallback records could not be validated.";
-          draw();
-          return;
+          toExport = latest.map((value) => validateGenericStoredRecord(value));
         }
+        const valid = toExport.map((value) => validateGenericStoredRecord(value));
+        const archive = makeBackup(
+          valid,
+          readDisplayPreferences(),
+          (/* @__PURE__ */ new Date()).toISOString()
+        );
+        const blob = new Blob([JSON.stringify(archive)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "Practice_Desk_Backup_" + (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) + (storageFault ? "_UNSAVED_RECOVERY" : "") + ".json";
+        document.body.append(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 2e3);
+        if (storageFault) {
+          warning = "Emergency recovery file exported. Some records were not committed to browser storage. Keep this file and reopen before editing.";
+          draw();
+        }
+      } catch (error) {
+        warning = error instanceof Error ? "Backup failed: " + error.message : "Backup failed";
+        draw();
       }
-      const backup = makeBackup(recordsToExport, [], null, (/* @__PURE__ */ new Date()).toISOString());
-      const blob = new Blob([JSON.stringify(backup)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "Practice_Desk_Backup_" + (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) + ".json";
-      document.body.append(link);
-      link.click();
-      link.remove();
-      window.setTimeout(() => URL.revokeObjectURL(url), 2e3);
     };
     const importHistory = async (file) => {
+      if (storageFault || fallbackConflict) throw new Error("Storage is unavailable or changed in another tab. Reopen before importing.");
       if (file.size > 75 * 1024 * 1024) throw new Error("History backup exceeds 75 MiB");
-      const backup = verifyBackup(JSON.parse(await file.text()));
-      if (backup.revisions.length) throw new Error("Unsupported display archives; only versioned exam records are accepted.");
-      const imported = backup.attempts.map((record3) => validateGenericStoredRecord(record3));
-      if (!imported.length) throw new Error("Backup contains no exam records");
+      const archive = verifyBackup(JSON.parse(await file.text()));
+      const imported = archive.records.map((record3) => validateGenericStoredRecord(record3));
       const incoming = planBackupMerge([...records.values()], imported, attempt?.id);
-      if (!incoming.length) {
-        warning = "These records are already present.";
-        draw();
-        return;
-      }
-      if (!confirm("Import " + incoming.length + " exam history records? Existing saved attempts will not be replaced.")) return;
+      if (!confirm("Import " + incoming.length + " new saved records and restore display preferences? Existing records will not be overwritten.")) return;
       await writeQueue;
-      if (db) {
-        await new Promise((resolve, reject) => {
-          const transaction = db.transaction("attempts", "readwrite");
-          const store = transaction.objectStore("attempts");
-          for (const record3 of incoming) store.add(structuredClone(record3));
-          transaction.oncomplete = () => resolve();
-          transaction.onerror = () => reject(transaction.error ?? new Error("Import failed"));
-          transaction.onabort = () => reject(transaction.error ?? new Error("Import aborted"));
-        });
-      } else {
-        const replacement = [...records.values(), ...incoming];
-        if (fallbackConflict || localStorage.getItem(storageKey) !== fallbackStamp)
-          throw new Error("Another tab changed fallback history; reopen before importing");
-        const encoded = JSON.stringify(replacement);
-        localStorage.setItem(storageKey, encoded);
-        fallbackStamp = encoded;
+      if (incoming.length) {
+        if (db) {
+          await new Promise((resolve, reject) => {
+            const transaction = db.transaction("attempts", "readwrite");
+            const store = transaction.objectStore("attempts");
+            for (const record3 of incoming) store.add(structuredClone(record3));
+            transaction.oncomplete = () => resolve();
+            transaction.onerror = () => reject(transaction.error ?? new Error("Import failed"));
+            transaction.onabort = () => reject(transaction.error ?? new Error("Import aborted"));
+          });
+        } else {
+          if (localStorage.getItem(storageKey) !== fallbackStamp)
+            throw new Error("Another tab changed fallback history; reopen before importing");
+          const encoded = JSON.stringify([...records.values(), ...incoming]);
+          localStorage.setItem(storageKey, encoded);
+          fallbackStamp = encoded;
+        }
+        for (const record3 of incoming) {
+          records.set(record3.id, record3);
+          if (isPackage(record3) && !packages.has(record3.bundle.paper.id))
+            packages.set(record3.bundle.paper.id, record3.bundle);
+        }
       }
-      for (const record3 of incoming) {
-        records.set(record3.id, record3);
-        if (isPackage(record3) && !packages.has(record3.bundle.paper.id))
-          packages.set(record3.bundle.paper.id, record3.bundle);
+      try {
+        writeDisplayPreferences(archive.preferences);
+        window.dispatchEvent(new Event(SETTINGS_EVENT));
+        warning = "Imported " + incoming.length + " records; display preferences restored.";
+      } catch {
+        warning = "Imported " + incoming.length + " records. Display preferences could not be stored by this browser.";
       }
-      warning = "Imported " + incoming.length + " records; existing attempts and learning cards preserved.";
       draw();
     };
     const writeMirror = (record3) => {
@@ -4980,10 +5140,10 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     };
     const now2 = () => Date.now();
     const save = (record3) => {
-      if (fallbackConflict) {
-        warning = "Another tab changed fallback history. Reopen before editing.";
+      if (fallbackConflict || storageFault) {
+        warning = "Storage is unavailable or changed in another tab. Export a recovery backup and reopen before editing.";
         draw();
-        return;
+        return Promise.resolve(false);
       }
       const previous = records.get(record3.id);
       const expected = previous ? previous.saveRevision ?? 0 : null;
@@ -4993,8 +5153,11 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
         if (attempt?.id === versioned.id) attempt = versioned;
         writeMirror(versioned);
       }
-      writeQueue = writeQueue.catch(() => {
-      }).then(() => new Promise((resolve, reject) => {
+      const pending = writeQueue.then(() => new Promise((resolve, reject) => {
+        if (storageFault) {
+          reject(new Error("A previous storage operation failed"));
+          return;
+        }
         if (!db) {
           try {
             if (fallbackConflict || localStorage.getItem(storageKey) !== fallbackStamp)
@@ -5003,30 +5166,39 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
             localStorage.setItem(storageKey, encoded);
             fallbackStamp = encoded;
             resolve();
-          } catch (e) {
-            reject(e);
+          } catch (error) {
+            reject(error);
           }
           return;
         }
-        const tx = db.transaction("attempts", "readwrite");
-        const store = tx.objectStore("attempts");
-        let conflict = null;
-        const read = store.get(record3.id);
-        read.onsuccess = () => {
-          try {
-            assertWriteVersion(read.result, expected);
-            store.put(structuredClone(versioned));
-          } catch (error) {
-            conflict = error;
-            tx.abort();
-          }
-        };
-        tx.oncomplete = () => resolve();
-        tx.onerror = () => reject(conflict ?? tx.error ?? new Error("Write failed"));
-        tx.onabort = () => reject(conflict ?? tx.error ?? new Error("Write aborted"));
-      })).catch(async (e) => {
-        if (e instanceof Error && e.message.startsWith("Another tab")) {
-          warning = e.message + "; changes in this tab were not saved.";
+        try {
+          const tx = db.transaction("attempts", "readwrite");
+          const store = tx.objectStore("attempts");
+          let conflict = null;
+          const read = store.get(record3.id);
+          read.onsuccess = () => {
+            try {
+              assertWriteVersion(read.result, expected);
+              store.put(structuredClone(versioned));
+            } catch (error) {
+              conflict = error;
+              tx.abort();
+            }
+          };
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(conflict ?? tx.error ?? new Error("Write failed"));
+          tx.onabort = () => reject(conflict ?? tx.error ?? new Error("Write aborted"));
+        } catch (error) {
+          reject(error);
+        }
+      }));
+      writeQueue = pending.catch(() => {
+      });
+      return pending.then(() => true).catch(async (e) => {
+        const conflict = e instanceof Error && e.message.startsWith("Another tab");
+        storageFault = true;
+        if (conflict) {
+          warning = e.message + "; changes in this tab were not saved. Reopen before editing.";
           if (isAttempt(versioned) && attempt?.id === versioned.id) {
             attempt = null;
             view = "library";
@@ -5046,24 +5218,27 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
               });
             } else {
               fallbackConflict = true;
-              const saved = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
-              latest = saved.find((x) => x && typeof x === "object" && x.id === versioned.id);
+              const stored = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
+              latest = stored.find((x) => x && typeof x === "object" && x.id === versioned.id);
             }
-            if (latest) {
-              records.set(versioned.id, validateGenericStoredRecord(latest));
-            }
+            if (latest) records.set(versioned.id, validateGenericStoredRecord(latest));
           } catch (error) {
             console.warn("Could not reload changed record", error);
           }
-          if (!disposed) draw();
         } else {
-          warning = "Saving failed. Export important history before closing.";
+          warning = "SAVE FAILED \u2014 changes in this tab are not safely stored. Export an UNSAVED recovery backup now, then reopen. " + (e instanceof Error ? e.message : "");
         }
         console.warn("Exam workspace save", e);
+        if (!disposed) draw();
+        return false;
       });
     };
     const removeSavedAttempt = async (id) => {
       const saved = records.get(id);
+      if (storageFault || fallbackConflict) {
+        notice("Storage locked. Export recovery backup and reopen before deleting.");
+        return;
+      }
       if (!(isAttempt(saved) || isLearning(saved)) || !confirm("Permanently delete this saved item? Export a backup first if needed.")) return;
       try {
         await writeQueue;
@@ -5106,7 +5281,6 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     const learningDesk = createLearningDesk(root2, {
       cards: () => [...records.values()].filter(isLearning),
       attempts: () => [...records.values()].filter(isAttempt),
-      packages: () => [...packages.values()],
       save: (item) => save(item),
       remove: (id) => removeSavedAttempt(id),
       close: () => {
@@ -5118,26 +5292,33 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
       if (records.has("learning-card:" + id)) return;
       try {
         const record3 = addLearningCard(source, id, new Date(now2()).toISOString());
-        save(record3);
-        warning = "Question added to the notebook.";
-        draw();
+        void save(record3).then((ok) => {
+          if (ok) {
+            warning = "Question added to the notebook.";
+            draw();
+          }
+        });
       } catch (error) {
         notice(error instanceof Error ? error.message : "Unable to add notebook card");
       }
     };
-    const addResultCards = (source) => {
+    const addResultCards = async (source) => {
       const ids = source.result?.items.filter((item) => item.verdict === "incorrect" || item.verdict === "unanswered").map((item) => item.questionRevisionId).filter((id) => !records.has("learning-card:" + id)) ?? [];
-      for (const id of ids) save(addLearningCard(source, id, new Date(now2()).toISOString()));
-      warning = ids.length ? ids.length + " mistake/skipped cards saved to the revision notebook." : "All mistakes/skips are already in the notebook.";
+      let saved = 0;
+      for (const id of ids) {
+        if (!await save(addLearningCard(source, id, new Date(now2()).toISOString()))) break;
+        saved++;
+      }
+      if (!storageFault) warning = saved ? saved + " mistake/skipped cards saved to the revision notebook." : "All mistakes/skips are already in the notebook.";
       draw();
     };
     const dispatch = (event) => {
-      if (!attempt) return;
+      if (!attempt || storageFault) return;
       try {
         const ids = new Map(attempt.frozen.questions.map((q) => [q.id, q]));
         const before = attempt;
         attempt = transitionGenericAttempt(attempt, event, ids);
-        if (attempt !== before) save(attempt);
+        if (attempt !== before) void save(attempt);
         if (attempt.finishedAt !== null) view = "result";
         warning = "";
       } catch (error) {
@@ -5156,7 +5337,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
         ["strict", "Exam simulation", "4 locked sections \xB7 15 min each"],
         ["free", "Flexible full paper", "60 minutes \xB7 free section navigation"],
         ["single", "Section practice", "25 questions \xB7 15 minutes"]
-      ].map(([key, title, detail]) => '<button type="button" class="mode ' + (cglMode === key ? "on" : "") + '" data-mode="' + key + '" aria-pressed="' + (cglMode === key) + '"><span><strong>' + title + "</strong><small>" + detail + "</small></span></button>").join("") + "</div>" + (cglMode === "single" ? '<label class="picker" for="g-single-section">Section</label><select id="g-single-section">' + selected.paper.sections.map((s, i) => '<option value="' + i + '"' + (singleSection === i ? " selected" : "") + ">" + escapeText(s.title) + "</option>").join("") + "</select>" : "") : "") + '<div class="row generic-actions"><button class="btn primary" id="g-start"' + (loading || fallbackConflict ? " disabled" : "") + '>Start exam</button><button class="btn" id="g-import"' + (loading || fallbackConflict ? " disabled" : "") + '>Import exam JSON</button></div><input type="file" id="g-file" accept=".json,application/json" hidden><p class="fine">SSC CGL original/reviewed papers and other validated exams use one examination engine. Answers and explanations stay hidden until submission.</p></section><section class="panel pad"><div class="row between"><h2>Attempt history</h2><span class="fine">' + all.length + ' total</span></div><label class="picker" for="g-filter">Show</label><select id="g-filter">' + [["all", "All attempts"], ["progress", "In progress"], ["complete", "Completed"]].map(([v, t]) => '<option value="' + v + '"' + (v === historyFilter ? " selected" : "") + ">" + t + "</option>").join("") + '</select><div class="row generic-actions"><button class="btn" id="g-export-history"' + (loading ? " disabled" : "") + '>Export backup</button><button class="btn" id="g-import-history"' + (loading || fallbackConflict ? " disabled" : "") + '>Import backup</button></div><input type="file" id="g-history-file" accept=".json,application/json" hidden>' + (filtered.length ? filtered.map((a) => {
+      ].map(([key, title, detail]) => '<button type="button" class="mode ' + (cglMode === key ? "on" : "") + '" data-mode="' + key + '" aria-pressed="' + (cglMode === key) + '"><span><strong>' + title + "</strong><small>" + detail + "</small></span></button>").join("") + "</div>" + (cglMode === "single" ? '<label class="picker" for="g-single-section">Section</label><select id="g-single-section">' + selected.paper.sections.map((s, i) => '<option value="' + i + '"' + (singleSection === i ? " selected" : "") + ">" + escapeText(s.title) + "</option>").join("") + "</select>" : "") : "") + '<div class="row generic-actions"><button class="btn primary" id="g-start"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + '>Start exam</button><button class="btn" id="g-import"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + '>Import exam JSON</button></div><input type="file" id="g-file" accept=".json,application/json" hidden><p class="fine">SSC CGL original/reviewed papers and other validated exams use one examination engine. Answers and explanations stay hidden until submission.</p></section><section class="panel pad"><div class="row between"><h2>Attempt history</h2><span class="fine">' + all.length + ' total</span></div><label class="picker" for="g-filter">Show</label><select id="g-filter">' + [["all", "All attempts"], ["progress", "In progress"], ["complete", "Completed"]].map(([v, t]) => '<option value="' + v + '"' + (v === historyFilter ? " selected" : "") + ">" + t + "</option>").join("") + '</select><div class="row generic-actions"><button class="btn" id="g-export-history"' + (loading ? " disabled" : "") + '>Export backup</button><button class="btn" id="g-import-history"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + '>Import backup</button></div><input type="file" id="g-history-file" accept=".json,application/json" hidden>' + (filtered.length ? filtered.map((a) => {
         const result = a.result?.snapshot;
         return '<div class="generic-history-row"><button class="generic-history" data-attempt="' + escapeText(a.id) + '">' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + "<small>" + new Date(a.startedAt).toLocaleString() + " \xB7 " + (a.finishedAt ? (result ? result.earnedMarks + " marks \xB7 " : "") + "Completed" : "Resume") + '</small></button><button class="btn danger generic-delete" data-delete="' + escapeText(a.id) + '" aria-label="Delete saved attempt">Delete</button></div>';
       }).join("") : '<p class="fine">No matching attempts.</p>') + '</section></div><section class="panel pad learning-entry"><div><h2>Learning & revision</h2><p class="fine">' + [...records.values()].filter(isLearning).length + ' notebook cards \xB7 FSRS-7 reviews and comparable topic analytics</p></div><button class="btn primary" id="g-learning">Open learning desk</button></section>';
@@ -5236,13 +5417,15 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
           const id = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "generic-" + now2() + "-" + Math.random();
           const configured = p.examId === "ssc-cgl" ? configureCglPractice(p, cglMode, singleSection) : p;
           attempt = startGenericAttempt(configured, id, now2());
-          save(attempt);
           warning = "";
           view = "exam";
           draw();
+          void save(attempt);
         };
         root2.querySelector("#g-import").onclick = () => root2.querySelector("#g-file")?.click();
-        root2.querySelector("#g-export-history").onclick = downloadBackup;
+        root2.querySelector("#g-export-history").onclick = () => {
+          void downloadBackup();
+        };
         root2.querySelector("#g-import-history").onclick = () => root2.querySelector("#g-history-file")?.click();
         root2.querySelector("#g-history-file").onchange = async (e) => {
           const file = e.target.files?.[0];
@@ -5263,9 +5446,9 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
           try {
             const pkg = validateExamPackage(JSON.parse(await file.text()));
             if (packages.has(pkg.paper.id)) throw new Error("Paper revision ID already exists. Supply a new revision ID.");
+            if (!await save({ recordType: "generic-package", id: "generic-package:" + pkg.paper.id, bundle: pkg })) return;
             packages.set(pkg.paper.id, pkg);
             choice = pkg.paper.id;
-            save({ recordType: "generic-package", id: "generic-package:" + pkg.paper.id, bundle: pkg });
             notice("Package validated and imported.");
           } catch (error) {
             notice(error instanceof Error ? error.message : "Invalid exam package");
@@ -5288,7 +5471,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
                 (/* @__PURE__ */ new Date()).toISOString()
               ) } : {}
             };
-            save(attempt);
+            void save(attempt);
           }
           view = attempt.finishedAt ? "result" : "exam";
           draw();
@@ -5307,7 +5490,9 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
         draw();
       };
       if (view === "result" && attempt) {
-        root2.querySelector("#g-revision-set").onclick = () => addResultCards(attempt);
+        root2.querySelector("#g-revision-set").onclick = () => {
+          void addResultCards(attempt);
+        };
         root2.querySelectorAll("[data-add-card]").forEach((button) => button.onclick = () => {
           if (attempt) addNotebookCard(attempt, button.dataset.addCard ?? "");
         });
@@ -5397,7 +5582,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
       };
     }
     const timer = window.setInterval(() => {
-      if (disposed || view !== "exam" || !attempt || attempt.state.status === "paused") return;
+      if (disposed || storageFault || view !== "exam" || !attempt || attempt.state.status === "paused") return;
       const original = attempt;
       const next = transitionGenericAttempt(
         original,
@@ -5408,7 +5593,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
         attempt = next;
         const changedSection = original.state.sectionIndex !== next.state.sectionIndex;
         if (next.finishedAt !== null || changedSection || now2() - lastTimerSave >= 1e4) {
-          save(attempt);
+          void save(attempt);
           lastTimerSave = now2();
         }
         if (next.finishedAt !== null) {
@@ -5432,7 +5617,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     };
     document.addEventListener("visibilitychange", visibility);
     const pagehide = () => {
-      if (view === "exam" && attempt) {
+      if (view === "exam" && attempt && !storageFault) {
         try {
           const current = attempt;
           attempt = transitionGenericAttempt(
@@ -5441,7 +5626,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
             new Map(current.frozen.questions.map((q) => [q.id, q]))
           );
           writeMirror(attempt);
-          save(attempt);
+          void save(attempt);
         } catch (error) {
           console.warn("Pagehide checkpoint failed", error);
         }
@@ -5511,7 +5696,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
             validateGenericStoredRecord(mirror);
             const existing = records.get(mirror.id);
             const winner = chooseRecovered(isAttempt(existing) ? existing : void 0, mirror);
-            if (winner === mirror) save(mirror);
+            if (winner === mirror) void save(mirror);
           }
         } catch (error) {
           console.warn("Invalid emergency session mirror", error);
@@ -5560,14 +5745,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
   var root = document.getElementById("app");
   if (!root) throw new Error("Practice Desk mount missing");
   mountExamWorkspace(root, sources, patches, solutions);
-  var settingsKey = "practiceDesk.overhaul.settings.v1";
-  var settings = { dark: false, scale: 100 };
-  try {
-    const stored = JSON.parse(localStorage.getItem(settingsKey) ?? "null");
-    if (typeof stored?.dark === "boolean") settings.dark = stored.dark;
-    if (Number.isInteger(stored?.scale) && stored.scale >= 85 && stored.scale <= 140) settings.scale = stored.scale;
-  } catch {
-  }
+  var settings = readDisplayPreferences();
   function apply() {
     document.documentElement.dataset.theme = settings.dark ? "dark" : "light";
     document.documentElement.style.setProperty("--type-scale", String(settings.scale / 100));
@@ -5583,28 +5761,22 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     if (less) less.disabled = settings.scale <= 85;
     if (more) more.disabled = settings.scale >= 140;
   }
-  function persist() {
-    apply();
+  function persist(next) {
     try {
-      localStorage.setItem(settingsKey, JSON.stringify(settings));
+      settings = writeDisplayPreferences(next);
+      apply();
     } catch {
+      const status = document.getElementById("preferences-warning");
+      if (status) status.textContent = "Display preference could not be saved.";
     }
   }
-  document.getElementById("themeToggle")?.addEventListener("click", () => {
-    settings.dark = !settings.dark;
-    persist();
-  });
-  document.getElementById("fontLess")?.addEventListener("click", () => {
-    settings.scale = Math.max(85, settings.scale - 5);
-    persist();
-  });
-  document.getElementById("fontMore")?.addEventListener("click", () => {
-    settings.scale = Math.min(140, settings.scale + 5);
-    persist();
-  });
-  document.getElementById("fontReset")?.addEventListener("click", () => {
-    settings.scale = 100;
-    persist();
+  document.getElementById("themeToggle")?.addEventListener("click", () => persist({ ...settings, dark: !settings.dark }));
+  document.getElementById("fontLess")?.addEventListener("click", () => persist({ ...settings, scale: Math.max(85, settings.scale - 5) }));
+  document.getElementById("fontMore")?.addEventListener("click", () => persist({ ...settings, scale: Math.min(140, settings.scale + 5) }));
+  document.getElementById("fontReset")?.addEventListener("click", () => persist({ ...settings, scale: 100 }));
+  window.addEventListener(SETTINGS_EVENT, () => {
+    settings = readDisplayPreferences();
+    apply();
   });
   apply();
 })();
