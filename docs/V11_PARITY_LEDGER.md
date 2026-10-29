@@ -7,7 +7,7 @@
 | Visually designed home, strong paper selection / metadata and resume emphasis | Dedicated home grid, summary cards and ongoing-attempt panel | Basic library selector + history list | Pass 9: redesigned premium home with clear hierarchy, richer cards and resume |
 | History & insights workspace | Dedicated history screen, sorting, filtering, statistics, best/latest and comparison | Small list with status filter | Pass 9: distinct sophisticated history with search, sort, grouped comparisons |
 | Results navigation and structure | Insights and review tabs; powerful exploration | One long vertically stacked summary/review | Pass 9: coherent tabbed insights/review/ledger, responsive and accessible |
-| Score explanation and source-vs-reviewed comparisons | Audit-adjusted / publisher-key context | Simple marks tiles | Pass 7: correct comparison logic/provenance; Pass 9: polished presentation |
+| Score explanation and source-vs-reviewed comparisons | Audit-adjusted / publisher-key context | Pass 7 added frozen original-source key comparator alongside audited marks; basic visual tiles remain | Pass 9: richer score story, context and presentation |
 | Section pacing and visual progress | Progress bars, section breakdown, current time | Table only | Pass 8 evidence; Pass 9 rich presentation |
 | Speed × accuracy, improvement opportunities, answer revisions | Rich analytical panels | Missing | Pass 8 faithful analytics; Pass 9 visualization, without unsupported inference |
 | Question time ledger, filterable reviews | Detailed question timings and filters | Bare text review for all questions | Pass 7 frozen figure/passage correctness; Pass 9 filters, timestamps and density controls |

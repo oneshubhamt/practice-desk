@@ -67,3 +67,13 @@ See [Pass 5 acceptance](docs/PASS5_RELEASE_ACCEPTANCE.md). The Android/iOS/Firef
 - Browser storage, emergency mirror writes and quota limits are inherently best-effort; periodically export backups. Firefox/Safari and device/assistive-technology manual release acceptance still remain.
 
 See [Pass 6 acceptance](docs/PASS6_RELEASE_ACCEPTANCE.md).
+
+## Pass 7 — Exam and review correctness
+
+- Enforce sectional submission locks, early-submit policy and forward-only/flag/pause decisions **in the engine**, not only in disabled buttons. Live timers use a monotonic source; offline intervals can only trust the device's wall clock.
+- Frozen attempts capture the actual practice mode. Source and reviewed editions preserve source-page references; invalid, draft and unverified questions are never counted as automatically scoreable.
+- Completed review renders the question's frozen figures, reading passages, tables, choices and provenance. A revised SSC CGL attempt may show a **separate original-source key comparison**, pinned at attempt start, without conflating it with reviewed marks.
+- Answered free-response items remain `pending` in the automatic result; optional **self-assessment** is a separately persisted, validated annotation and cannot rewrite the original score.
+- All work follows the documented [audit → analyze → implement → check objectives → targeted QA](docs/ARCHITECTURE_AUDIT_2026-10-28.md) loop. The visual/interaction experience is **not yet equivalent to v11**; [v11 parity targets](docs/V11_PARITY_LEDGER.md) are mandatory in Pass 9.
+
+See [Pass 7 acceptance](docs/PASS7_RELEASE_ACCEPTANCE.md). Pass 8 handles deeper analytics/revision, Pass 9 v11-grade UI/function parity, Pass 10 platform and scale release acceptance.

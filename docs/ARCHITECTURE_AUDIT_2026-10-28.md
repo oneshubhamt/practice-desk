@@ -1280,8 +1280,32 @@ See `docs/PASS4_RELEASE_ACCEPTANCE.md` for remaining verification. Do not merge 
 - Restore all figure/passage/tabular context in results using frozen snapshot even after current package disappearance; HTML escaped and data-URI bounded.
 - Run targeted engine + imported synthetic policy tests, immutable result review, v11 CGL smoke, multi-tab and backup/regression. Update this section with outcome when verified.
 
-**3 · Implementation ledger:** Pending.
+**3 · Implementation ledger — changes on `overhaul`:**
+- `src/engine/session.ts`: sectional attempts require section transitions; direct overall submission cannot bypass them; early-submit policy and delayed section-click after timeout enforced at the pure transition boundary. Clock-rollbacks cannot cause negative time and `RESUME` checks pause policy.
+- `src/engine/clock.ts` plus `src/app/generic-ui.ts`: use an epoch-anchored monotonic in-tab clock, replacing `Date.now()` for live exam event timestamps. Offline duration after a browser restart remains a best-effort wall-clock estimate (no anti-tampering claim).
+- `src/app/exam-package.ts`: snapshots now distinguish `exam-simulation`, `full-paper-practice`, `section-practice` and `custom-practice`; remains a single generic engine.
+- `src/domain/question.ts`, `src/domain/validate.ts`, `src/content/import-cgl.ts`: typed positive `editorial.sourcePage`, with source/review references and hashes preserved. `src/engine/scoring.ts` excludes `draft`.
+- `src/engine/manual-grading.ts`: validates optional user-entered marks/notes on submitted pending free-response items; original automatically scored snapshot remains immutable. `generic-ui.ts` awaits durable save and explicitly displays independent self-assessed totals.
+- `src/engine/source-comparison.ts`: captures a pinned, integrity-checked original-source key basis for reviewed attempts. Includes original-key unadjusted excluded items, **separately** from audited reviewed marks; only generated when matching source and reviewed revision identities exist.
+- `src/app/generic-ui.ts`: historical review now renders frozen passage/table/image/option/matching media, source page, source URLs and answer context; not dependent on currently installed package.
+- `tests/pass7-engine.test.mjs`, `tests/exam-package.test.mjs`, `scripts/smoke-offline.mjs`: comprehensive new negative engine tests and preservation of existing Chrome/offline release gates.
 
-**4 · Objective check:** Pending.
+**4 · Objective reconciliation:**
+1. Policy enforcement — **met**: no-early, strict CGL, delayed click, forward-only, pause/flag in engine tests.
+2. Time integrity — **met for in-tab monotonic clock and tested restore/visibility**, **not a guaranteed anti-tamper clock across device shutdown or altered wall clock**; platform release limitation explicitly retained.
+3. Mode / source provenance / editorial status — **met** with hash-covered fields and pure tests.
+4. Pinned source-key comparator — **met** with separate presentation and mutation rejection.
+5. Frozen visual review — **met** in Chrome with decoded built-in CGL figures; media integrity inherited from Pass 6.
+6. Written response manual assessment — **met**; original result unchanged and separately persisted, backup and reopen checked.
+7. Comprehensive v11 UI/feature parity — **intentionally not met in Pass 7**; feature-by-feature mandatory scope preserved in `docs/V11_PARITY_LEDGER.md`, dedicated Pass 9.
+8. Offline platform QA — **Chrome automated met**, Firefox/Safari/manual touch/screen reader/storage remains Pass 10.
 
-**5 · Targeted QA:** Pending.
+**5 · Targeted QA evidence:**
+- Strict TS 7.0.2 / Node 24, unit testing and generated offline HTML;
+- Engine tests: strict sectional rejection; no-early and automatic timeouts; delayed double-submission prevention; forward-only/flag/pause; monotonic live clock rollback;
+- Import/review: draft exclusions, source-page and citation preservation, original-key integrity/tamper, full 100-item CGL frozen media decoding;
+- Free response: pending automatic result, durable user-rated mark/note, unchanged scored snapshot, backup v3 and reopen;
+- Chromium `file://`: strict/flexible/section modes, six answer kinds, learning/FSRS, backup/preferences, two-tab stale write conflict, fallback collision, simulated quota denial, mobile/tablet widths and no console page errors.
+- [Baseline green run #40898692499](https://github.com/oneshubhamt/practice-desk/actions/runs/40898692499) — **63/63 unit tests and full Chrome smoke**, before the later targeted backup/reopen and monotonic-clock additions. The **final-HEAD CI** must also pass before closing the pass (see release acceptance file for the verified final run).
+
+**Unresolved / next:** Pass 8 deepen learning and analytics without guessing; Pass 9 deliberately recover **v11-or-better** UI and functionality rather than perpetuating the rudimentary implementation; Pass 10 scale/real-device/cross-browser release hardening. Keep v11 frozen as the reference, not as a duplicate runtime in overhaul.
