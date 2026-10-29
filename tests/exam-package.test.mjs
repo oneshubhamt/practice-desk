@@ -29,7 +29,12 @@ test("generic attempt uses validated responses and frozen revisions",()=>{
  assert.equal(next.state.responses.find(x=>x.questionRevisionId===id).response.optionId,option);
  assert.throws(()=>transitionGenericAttempt(start,{type:"ANSWER",nowMs:101,
    response:{kind:"single-choice",optionId:"not-real"}},index),/Unknown option/);
- const end=transitionGenericAttempt(next,{type:"SUBMIT_ATTEMPT",nowMs:200},index);
- assert.equal(end.finishedAt,200);
+ // Sectional exam cannot bypass the locked sections by directly submitting.
+ const blocked=transitionGenericAttempt(next,{type:"SUBMIT_ATTEMPT",nowMs:200},index);
+ assert.equal(blocked.finishedAt,null);
+ let end=blocked;
+ for(let section=0;section<4;section++)
+   end=transitionGenericAttempt(end,{type:"SUBMIT_SECTION",nowMs:201+section},index);
+ assert.equal(end.finishedAt,204);
  assert.equal(end.result.items.length,100);
 });
