@@ -4850,6 +4850,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
   function topicMetrics(attempts, cards = []) {
     const manual = new Map(cards.filter((c) => c.customTopic.trim()).map((c) => [c.question.id, c.customTopic.trim()]));
     const rows = /* @__PURE__ */ new Map();
+    const distinct = /* @__PURE__ */ new Map(), independent = /* @__PURE__ */ new Map();
     for (const attempt of attempts) {
       if (!attempt.result || attempt.finishedAt === null) continue;
       const sections = attempt.frozen.paper.sections;
@@ -4859,31 +4860,60 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
         const q = questions.get(item.questionRevisionId);
         const section = sections.find((s) => s.questionRevisionIds.includes(item.questionRevisionId));
         if (!q || !section) continue;
-        const topics = [...new Set([section.title, ...q.content.topicIds ?? [], manual.get(q.id)].filter(
-          (label) => typeof label === "string" && label.length > 0
-        ))];
-        for (const topic of topics) {
-          const id = attempt.frozen.snapshot.examId;
-          const key = id + "|" + topic;
-          const r = rows.get(key) ?? { id: key, label: topic, examId: id, total: 0, answered: 0, correct: 0, incorrect: 0, skipped: 0, accuracy: null, coverage: 0, evidence: "insufficient" };
-          r.total++;
+        const labels = [
+          { label: section.title, kind: "section" },
+          ...(q.content.topicIds ?? []).map((label) => ({ label, kind: "source-topic" })),
+          ...manual.get(q.id) ? [{ label: manual.get(q.id), kind: "user-topic" }] : []
+        ];
+        const unique2 = /* @__PURE__ */ new Set();
+        for (const { label, kind } of labels) {
+          if (!label.trim()) continue;
+          const examId = attempt.frozen.snapshot.examId;
+          const key = examId + "|" + kind + "|" + label;
+          if (unique2.has(key)) continue;
+          unique2.add(key);
+          const row = rows.get(key) ?? {
+            id: key,
+            label,
+            kind,
+            examId,
+            total: 0,
+            answered: 0,
+            correct: 0,
+            incorrect: 0,
+            skipped: 0,
+            accuracy: null,
+            coverage: 0,
+            evidence: "insufficient",
+            attempts: 0,
+            distinctQuestions: 0
+          };
+          row.total++;
           if (item.verdict === "correct") {
-            r.correct++;
-            r.answered++;
+            row.correct++;
+            row.answered++;
           }
           if (item.verdict === "incorrect") {
-            r.incorrect++;
-            r.answered++;
+            row.incorrect++;
+            row.answered++;
           }
-          if (item.verdict === "unanswered") r.skipped++;
-          r.accuracy = r.answered ? r.correct / r.answered : null;
-          r.coverage = r.answered / r.total;
-          r.evidence = r.answered >= 5 ? "measured" : "insufficient";
-          rows.set(key, r);
+          if (item.verdict === "unanswered") row.skipped++;
+          const distinctIds = distinct.get(key) ?? /* @__PURE__ */ new Set();
+          distinctIds.add(q.id);
+          distinct.set(key, distinctIds);
+          const attemptIds = independent.get(key) ?? /* @__PURE__ */ new Set();
+          attemptIds.add(attempt.id);
+          independent.set(key, attemptIds);
+          row.distinctQuestions = distinctIds.size;
+          row.attempts = attemptIds.size;
+          row.accuracy = row.answered ? row.correct / row.answered : null;
+          row.coverage = row.answered / row.total;
+          row.evidence = row.answered >= 5 ? "measured" : "insufficient";
+          rows.set(key, row);
         }
       }
     }
-    return [...rows.values()].sort((a, b) => a.examId.localeCompare(b.examId) || a.label.localeCompare(b.label));
+    return [...rows.values()].sort((a, b) => a.examId.localeCompare(b.examId) || a.kind.localeCompare(b.kind) || a.label.localeCompare(b.label));
   }
   function comparableTrends(attempts) {
     const groups = /* @__PURE__ */ new Map();
