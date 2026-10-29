@@ -56,3 +56,9 @@ test("revision-aware recovery cannot revive an older tab's emergency mirror",()=
  assert.equal(chooseRecovered(persisted,{...stale,saveRevision:8}),persisted);
  assert.equal(chooseRecovered(persisted,{...stale,saveRevision:9}).saveRevision,9);
 });
+
+test("an older completed mirror cannot supersede a newer in-progress revision",()=>{
+ const saved={id:"a",startedAt:1,finishedAt:null,updatedAt:120,saveRevision:9};
+ const mirror={...saved,finishedAt:100,updatedAt:200,saveRevision:8};
+ assert.equal(chooseRecovered(saved,mirror),saved);
+});
