@@ -1,6 +1,6 @@
 # Pass 8 — Advanced revision and trustworthy analytics
 
-Status: **Pass 8 implementation and automated Chromium acceptance completed** (latest verified code run: [CI #40903965637](https://github.com/oneshubhamt/practice-desk/actions/runs/40903965637); a further negative-case run and final documentation HEAD are separately verified before closure). Maintain this alongside [architecture scratchpad](ARCHITECTURE_AUDIT_2026-10-28.md), [data model](DATA_MODEL.md), [v11 parity ledger](V11_PARITY_LEDGER.md), and [engineering rules](../AGENTS.md). All work remains on `overhaul`.
+Status: **Pass 8 implementation and automated Chromium acceptance completed** (final documentation HEAD verified in [CI #40904651689](https://github.com/oneshubhamt/practice-desk/actions/runs/40904651689): 70/70 Node tests, strict TypeScript, standalone HTML generation, and Chromium `file://` regression passed). Maintain this alongside [architecture scratchpad](ARCHITECTURE_AUDIT_2026-10-28.md), [data model](DATA_MODEL.md), [v11 parity ledger](V11_PARITY_LEDGER.md), and [engineering rules](../AGENTS.md). All work remains on `overhaul`.
 
 ## Acceptance checklist — no check without verification
 
