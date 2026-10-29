@@ -1,8 +1,8 @@
 # v11 feature-parity restoration programme — Passes 11–16
 
-> **CURRENT, AUTHORITATIVE FEATURE-PARITY PROGRAMME · 30 October 2026 · PLANNED, NOT IMPLEMENTED**
+> **CURRENT, AUTHORITATIVE FEATURE-PARITY PROGRAMME · 30 October 2026 · PASS 11 VERIFIED; PASSES 12–16 OPEN**
 >
-> New source-to-source audit performed against frozen `baseline/v11` commit `e661822d865927e89a837790c1c6bc1cfc2562a6` and `overhaul` commit `5b9dce604faef10a714415341c7da5116bf6ff8a`. This document is the source of truth for **v11 feature parity** from Pass 11 onward, superseding the old [Pass 9 parity ledger](V11_PARITY_LEDGER.md). No parity fixes were made by the documentation-only creation of this plan.
+> New source-to-source audit performed against frozen `baseline/v11` commit `e661822d865927e89a837790c1c6bc1cfc2562a6` and `overhaul` commit `5b9dce604faef10a714415341c7da5116bf6ff8a`. This document is the source of truth for **v11 feature parity** from Pass 11 onward, superseding the old [Pass 9 parity ledger](V11_PARITY_LEDGER.md). The plan was documentation-only at creation; Pass 11 was subsequently implemented and verified.
 >
 > **Verdict: full v11 UI/functionality parity NOT achieved. Release signoff NOT granted.** Existing automated success is necessary but insufficient: the source audit identified missing controls, review detail, history management, analytics and presentation differences. Physical device, assistive-technology and side-by-side rendered-visual checks remain outstanding.
 
@@ -47,15 +47,15 @@
 
 | ID | Severity | v11 behavior | Current overhaul finding | Source anchor | State |
 |---|---|---|---|---|---|
-| E01 | **P0** | A–D answer, plain ←/→ navigate, M flag, F fullscreen | Exam keyboard handler only recognizes **Alt+←/→** | v11 `legacy.ts` 202; new `generic-ui.ts` 966–977 | OPEN |
-| E02 | P1 | Keyboard navigation available during focused choice workflow | New Alt+arrow handler ignores key events from INPUT/TEXTAREA/SELECT; radios are INPUT | new `generic-ui.ts` 966–976 | OPEN |
-| E03 | P1 | Fullscreen button in test header | Exam header lacks fullscreen action; only global Display panel controls fullscreen | v11 124–125; new `generic-ui.ts` 194–200 | OPEN |
-| E04 | P1 | Blocked native fullscreen falls back to in-page immersive focus layout | New fullscreen code only displays unavailable notice on failure | v11 46–48; new `bootstrap.ts` | OPEN |
-| E05 | P1 | Section tabs show answered/25 and Closed/Locked | New section buttons show names/disabled states, not the v11 per-section counts/status labels | v11 124; new `generic-ui.ts` 206–211 | OPEN |
-| E06 | P1 | Leaving running test asks confirmation and explains running timer | New Library handler returns directly, without confirmation | v11 100; new `generic-ui.ts` 834 | OPEN |
-| E07 | P1 | Starting another while an attempt exists requests confirmation | New Start creates another pending attempt, preserving former, without explaining behavior | v11 103; new `generic-ui.ts` 795–807 | OPEN |
-| E08 | P2 | Active question displays section-relative **and original paper Q number** | New exam question label primarily section-relative; paper position is not surfaced equivalently | v11 124; new `generic-ui.ts` 211–213 | OPEN |
-| E09 | P1 | Timer settlement also runs when viewing library/history | New 1s tick returns unless `view === "exam"`; restore reconciles elapsed on reopen, but expiration UI can lag | v11 205; new `generic-ui.ts` 946–963, 728–739 | OPEN / DESIGN REVIEW |
+| E01 | **P0** | A–D answer, plain ←/→ navigate, M flag, F fullscreen | Exam keyboard handler only recognizes **Alt+←/→** | v11 `legacy.ts` 202; new `generic-ui.ts` 966–977 | DONE (Pass 11) |
+| E02 | P1 | Keyboard navigation available during focused choice workflow | New Alt+arrow handler ignores key events from INPUT/TEXTAREA/SELECT; radios are INPUT | new `generic-ui.ts` 966–976 | DONE (Pass 11) |
+| E03 | P1 | Fullscreen button in test header | Exam header lacks fullscreen action; only global Display panel controls fullscreen | v11 124–125; new `generic-ui.ts` 194–200 | DONE (Pass 11) |
+| E04 | P1 | Blocked native fullscreen falls back to in-page immersive focus layout | New fullscreen code only displays unavailable notice on failure | v11 46–48; new `bootstrap.ts` | DONE (Pass 11) |
+| E05 | P1 | Section tabs show answered/25 and Closed/Locked | New section buttons show names/disabled states, not the v11 per-section counts/status labels | v11 124; new `generic-ui.ts` 206–211 | DONE (Pass 11) |
+| E06 | P1 | Leaving running test asks confirmation and explains running timer | New Library handler returns directly, without confirmation | v11 100; new `generic-ui.ts` 834 | DONE (Pass 11) |
+| E07 | P1 | Starting another while an attempt exists requests confirmation | New Start creates another pending attempt, preserving former, without explaining behavior | v11 103; new `generic-ui.ts` 795–807 | DONE (safe retain variation) |
+| E08 | P2 | Active question displays section-relative **and original paper Q number** | New exam question label primarily section-relative; paper position is not surfaced equivalently | v11 124; new `generic-ui.ts` 211–213 | DONE (Pass 11) |
+| E09 | P1 | Timer settlement also runs when viewing library/history | New 1s tick returns unless `view === "exam"`; restore reconciles elapsed on reopen, but expiration UI can lag | v11 205; new `generic-ui.ts` 946–963, 728–739 | DONE (Pass 11) |
 
 **Engine safety:** shortcuts may never mutate answers during pause, bypass locked/forward-only rules, interfere with text/numeric entry, or let letter keys trigger browser UI. For E09 ensure a consistent one-time expiration transition in any view without excessive storage writes/redraws. Strict section early-submit must still begin a full fresh 15-minute allocation.
 
@@ -101,13 +101,13 @@
 |---|---|---|---|---|
 | V01 | P1 | v11 header vs redesigned header and Display placement | Side-by-side desktop/mobile inspection; retain accessibility and keyboard access | UNVERIFIED |
 | V02 | P1 | v11 paper/date picker + explicit two-choice edition toggle vs combined dropdown | Restore clear edition distinction and inspect ease of selection | OPEN |
-| V03 | P1 | v11 large custom A–D selection buttons vs native radio labels | Keep accessible native semantics **and** restore obvious visual affordance, keyboard shortcuts and image handling | OPEN |
+| V03 | P1 | v11 large custom A–D selection buttons vs native radio labels | Keep accessible native semantics **and** restore obvious visual affordance, keyboard shortcuts and image handling | PARTIAL (visual signoff pending) |
 | V04 | P1 | v11 review option highlights and status hierarchy vs generic response listing | Non-color accessible correct/incorrect/excluded visualization; R02 | OPEN |
 | V05 | P1 | v11 result max-marks/section table hierarchy vs new summary | Show equivalent metrics prominently; R03 | OPEN |
 | V06 | P1 | v11 history management information and storage panel vs new archive | H01–H09 available and readable on all target sizes | OPEN |
 | V07 | P1 | v11 templates included `aria-live="polite"` on `#app`; new template removes it | Verify dynamic announcements with AT; avoid chatty full-page live region if better targeted status regions | UNVERIFIED |
 | V08 | P1 | Responsive layouts structurally redesigned, not pixel-identical | Side-by-side desktop/tablet/phone screenshots, touch hit areas, no clipping, scroll/focus/zoom | UNVERIFIED |
-| V09 | P1 | Global fullscreen uses native API only | Restore v11 functional immersive fallback; E03–E04 | OPEN |
+| V09 | P1 | Global fullscreen uses native API only | Restore v11 functional immersive fallback; E03–E04 | DONE (Pass 11) |
 | V10 | P2 | Theme two distinct Light/Dark buttons changed to one toggle | Either restore explicit selection or document/evaluate equivalent discoverability, screen-reader state | OPEN / DECISION |
 
 **Visual audit boundary:** Both branches have responsive CSS; newer CSS includes focus indicators, dark-mode variables and responsive grids. **No pixel-parity, preference ranking or actual physical-device approval is inferred from CSS alone.** Source stylesheets have distinct DOM/selector architectures, so tests for element existence cannot stand in for screenshots. Visual design may improve while preserving functional floor; pixel-identical reimplementation is **not** required.
@@ -215,11 +215,18 @@ Remaining: <IDs still OPEN/UNVERIFIED; manual/device gates>
 
 | Pass | Stage | Objective status | Evidence / notes |
 |---|---|---|---|
-| 11 — Exam UX | PLANNED | E01–E09 OPEN | None yet |
+| 11 — Exam UX | DONE — tested | E01–E09 done; V09 done | CI #40940761995; device and visual gates remain |
 | 12 — Result fidelity | PLANNED | R01–R03/R09–R12 OPEN | None yet |
 | 13 — History & settings | PLANNED | H01–H09 OPEN; H10 exclusion | None yet |
 | 14 — Analytics | PLANNED | R04–R08/H07 OPEN | None yet |
 | 15 — Visual/AT | PLANNED | V01–V10 OPEN/UNVERIFIED | No screenshot/device signoff |
 | 16 — Independent final audit | PLANNED | NO PARITY SIGNOFF | Requires de novo source+browser review |
 
-**Next step:** Pass 11 begins with exact source inspection and a written audit/design checkpoint here, not implementation from historical CI claims.
+**Next step:** Pass 12 — result and review fidelity, beginning with fresh direct-source comparison.
+
+
+## Pass 11 checkpoint — 30 October 2026
+
+**Audit:** Directly compared v11 exam/render/keyboard/fullscreen/navigation/timer handlers with the typed overhaul source. **Analysis:** preserve engine-owned policies; make shortcuts safe with focused radios and disabled in typing fields; avoid foreground time accumulation and periodic competing-tab writes when in the library. Starting another exam asks first but retains the previous pending attempt; this is a deliberate safer alternative to v11's discard. **Implementation:** changes in `src/app/generic-ui.ts`, `src/app/bootstrap.ts`, `src/styles/app.css`, `scripts/pass11-parity.mjs`, browser smoke/platform harnesses and CI. **Objective check:** E01–E09 addressed: A–D, arrow/Alt-arrow, M/F; focused-choice shortcuts; exam fullscreen button and rejected-API focus fallback; answered/Closed/Locked tabs; cancelable leave and new-start prompts; original paper Q number; continued off-screen timer without added question foreground duration. **Targeted QA:** [CI #40940761995](https://github.com/oneshubhamt/practice-desk/actions/runs/40940761995) passed TypeScript, 75 Node tests, existing and new real-CGL Chromium `file://` regression, Firefox and Linux WebKit offline acceptance. A two-tab collision due to background autosave and a duplicate browser-dialog listener were identified and repaired during this pass. Browser-generated offline HTML was rebuilt. Source commits: `718ea4a`, `08f0fa3`, `6998897`.
+
+**Limits:** This is functional Pass 11 acceptance, not full v11 parity, device fullscreen approval, screen-reader verification or pixel visual signoff. Those and Passes 12–16 remain open. Neither `main` nor `baseline/v11` was edited.
