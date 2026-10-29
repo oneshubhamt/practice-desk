@@ -2,15 +2,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { importCglBank } from "../src/content/import-cgl.ts";
+import { builtinCglPackages } from "../src/app/exam-package.ts";
 import { freezeAttempt, assertFrozenContent, restoreSession, chooseRecovered } from "../src/history/frozen.ts";
 import { startSession, transition } from "../src/engine/session.ts";
 import { scoreAttempt } from "../src/engine/scoring.ts";
 const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
 const first=importCglBank(sources,patches)[0];
+const firstAssets=builtinCglPackages(sources,patches)[0];
 
 test("frozen attempt survives a later changed key, paper or editorial state",()=>{
- const frozen=freezeAttempt(first.paper,first.key,first.questions,[],[],"exam-simulation","2026-10-28T05:00:00Z","ssc-cgl");
+ const frozen=freezeAttempt(first.paper,first.key,first.questions,firstAssets.stimuli,firstAssets.assets,"exam-simulation","2026-10-28T05:00:00Z","ssc-cgl");
  assertFrozenContent(frozen);
  assert.notEqual(frozen.paper,first.paper);
  const old=scoreAttempt(frozen.paper,frozen.key,frozen.questions,[],frozen.frozenAt).snapshot;

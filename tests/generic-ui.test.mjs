@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { renderGenericControls, examTimeRemaining, validateGenericStoredRecord } from "../src/app/generic-ui.ts";
 import { readableAnswer } from "../src/app/exam-package.ts";
+import { paperRevisionHash } from "../src/domain/integrity.ts";
 
 const stub={format:"practice-desk-exam",version:1,examId:"example",
  title:"Example",paper:{},answerKey:{},questions:[],assets:[]};
@@ -50,7 +51,8 @@ test("shared renderer enforces paused, forward-only and no-early-submit policies
  const {renderModelExam}=await import("../src/app/generic-ui.ts");
  const {validateExamPackage,startGenericAttempt,transitionGenericAttempt}=await import("../src/app/exam-package.ts");
  const {pkg}=await import("./fixtures/six-kinds.mjs");
- const forward=validateExamPackage({...pkg,paper:{...pkg.paper,navigation:{...pkg.paper.navigation,questionNavigation:"forward-only"}}});
+ const forwardPaper={...pkg.paper,navigation:{...pkg.paper.navigation,questionNavigation:"forward-only"}};
+ const forward=validateExamPackage({...pkg,paper:{...forwardPaper,contentHash:paperRevisionHash(forwardPaper)}});
  const attempt=startGenericAttempt(forward,"policies",0);
  const questionMap=new Map(forward.questions.map(q=>[q.id,q]));
  const moved=transitionGenericAttempt(attempt,{type:"NAVIGATE",nowMs:1,sectionIndex:0,questionIndex:1},questionMap);
@@ -60,9 +62,10 @@ test("shared renderer enforces paused, forward-only and no-early-submit policies
  assert.match(html,/id="g-clear" disabled/);
  assert.match(html,/id="g-flag"[^>]*disabled/);
  assert.match(html,/id="g-submit" disabled/);
- const sectioned=validateExamPackage({...pkg,paper:{...pkg.paper,
+ const sectionedPaper={...pkg.paper,
    timing:{kind:"sectional",sectionLimits:[{sectionId:"s1",durationMs:10000},{sectionId:"s2",durationMs:10000}],transition:"automatic",allowEarlySubmit:false,pausePolicy:"forbidden"}
- }});
+ };
+ const sectioned=validateExamPackage({...pkg,paper:{...sectionedPaper,contentHash:paperRevisionHash(sectionedPaper)}});
  const noEarly=renderModelExam(startGenericAttempt(sectioned,"noearly",0),sectioned);
  assert.match(noEarly,/id="g-submit" disabled/);
  assert.match(noEarly,/data-section="0" aria-current="step"/);

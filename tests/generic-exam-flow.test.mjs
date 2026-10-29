@@ -43,7 +43,8 @@ test("invalid numeric value, underspecified selections and duplicate matches are
  assert.throws(()=>transitionGenericAttempt(attempt,{type:"ANSWER",nowMs:1004,response:{kind:"matching",pairs:[{leftId:"l1",rightId:"r1"},{leftId:"l2",rightId:"r1"}]}},lookup),/matching/i);
 });
 test("forward-only navigation restrictions are respected for non-CGL papers",()=>{
- const b=validateExamPackage({...pkg,paper:{...pkg.paper,navigation:{...pkg.paper.navigation,questionNavigation:"forward-only"}}});
+ const changed={...pkg.paper,navigation:{...pkg.paper.navigation,questionNavigation:"forward-only"}};
+ const b=validateExamPackage({...pkg,paper:{...changed,contentHash:paperRevisionHash(changed)}});
  let attempt=startGenericAttempt(b,"forward",0);
  attempt=transitionGenericAttempt(attempt,{type:"NAVIGATE",nowMs:1,sectionIndex:0,questionIndex:2},lookup);
  const back=transitionGenericAttempt(attempt,{type:"NAVIGATE",nowMs:2,sectionIndex:0,questionIndex:0},lookup);
@@ -60,13 +61,13 @@ test("generic attempts and imported packages survive a verified history backup r
  assert.equal(validateGenericStoredRecord(completed),completed);
  const importedPackage={recordType:"generic-package",id:"generic-package:"+bundle.paper.id,bundle};
  const contents=[importedPackage,unfinished,completed];
- const backup=makeBackup(contents,[],null,"2026-10-28T00:00:00Z");
+ const backup=makeBackup(contents,{schema:1,dark:false,scale:100},"2026-10-28T00:00:00Z");
  const reloaded=verifyBackup(JSON.parse(JSON.stringify(backup)));
- assert.equal(reloaded.attempts.length,3);
- for(const record of reloaded.attempts) assert.doesNotThrow(()=>validateGenericStoredRecord(record));
- assert.deepEqual(planBackupMerge([completed],reloaded.attempts,"completed").map(x=>x.id),
+ assert.equal(reloaded.records.length,3);
+ for(const record of reloaded.records) assert.doesNotThrow(()=>validateGenericStoredRecord(record));
+ assert.deepEqual(planBackupMerge([completed],reloaded.records,"completed").map(x=>x.id),
   [importedPackage.id,unfinished.id]);
- assert.throws(()=>verifyBackup({...reloaded,attempts:reloaded.attempts.slice(1)}),/integrity/);
+ assert.throws(()=>verifyBackup({...reloaded,records:reloaded.records.slice(1)}),/integrity/);
 });
 test("completed generic scores cannot be silently rewritten in stored history",()=>{
  const bundle=validateExamPackage(pkg);
