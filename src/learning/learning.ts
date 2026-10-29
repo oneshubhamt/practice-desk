@@ -103,10 +103,13 @@ export function rateLearningCard(item:LearningCard,rating:ReviewGrade,at:string,
 export interface TopicMetrics {
  id:string;label:string;examId:string;total:number;answered:number;correct:number;incorrect:number;skipped:number;
  accuracy:number|null;coverage:number;evidence:"insufficient"|"measured";
+ /** Repeated answers are observations, not additional distinct questions. */
+ attempts:number;distinctQuestions:number;kind:"section"|"source-topic"|"user-topic";
 }
 export function topicMetrics(attempts:readonly GenericAttempt[],cards:readonly LearningCard[]=[]):TopicMetrics[]{
  const manual=new Map(cards.filter(c=>c.customTopic.trim()).map(c=>[c.question.id,c.customTopic.trim()]));
  const rows=new Map<string,TopicMetrics>();
+ const distinct=new Map<string,Set<string>>(),independent=new Map<string,Set<string>>();
  for(const attempt of attempts){
    if(!attempt.result||attempt.finishedAt===null)continue;
    const sections=attempt.frozen.paper.sections;
@@ -116,24 +119,42 @@ export function topicMetrics(attempts:readonly GenericAttempt[],cards:readonly L
      const q=questions.get(item.questionRevisionId);
      const section=sections.find(s=>s.questionRevisionIds.includes(item.questionRevisionId));
      if(!q||!section)continue;
-     const topics=[...new Set([section.title,...(q.content.topicIds??[]),manual.get(q.id)].filter(
-       (label):label is string=>typeof label==="string"&&label.length>0))];
-     for(const topic of topics){
-       const id=attempt.frozen.snapshot.examId;
-       const key=id+"|"+topic;
-       const r:TopicMetrics=rows.get(key)??{id:key,label:topic,examId:id,total:0,answered:0,correct:0,incorrect:0,skipped:0,accuracy:null,coverage:0,evidence:"insufficient"};
-       r.total++;
-       if(item.verdict==="correct"){r.correct++;r.answered++;}
-       if(item.verdict==="incorrect"){r.incorrect++;r.answered++;}
-       if(item.verdict==="unanswered")r.skipped++;
-       r.accuracy=r.answered?r.correct/r.answered:null;
-       r.coverage=r.answered/r.total;
-       r.evidence=r.answered>=5?"measured":"insufficient";
-       rows.set(key,r);
+     const labels:{label:string;kind:TopicMetrics["kind"]}[]=[
+       {label:section.title,kind:"section"},
+       ...(q.content.topicIds??[]).map(label=>({label,kind:"source-topic" as const})),
+       ...(manual.get(q.id)?[{label:manual.get(q.id)!,kind:"user-topic" as const}]:[])
+     ];
+     const unique=new Set<string>();
+     for(const {label,kind} of labels){
+       if(!label.trim())continue;
+       const examId=attempt.frozen.snapshot.examId;
+       const key=examId+"|"+kind+"|"+label;
+       if(unique.has(key))continue;
+       unique.add(key);
+       const row:TopicMetrics=rows.get(key)??{id:key,label,kind,examId,total:0,answered:0,correct:0,
+         incorrect:0,skipped:0,accuracy:null,coverage:0,evidence:"insufficient",
+         attempts:0,distinctQuestions:0};
+       row.total++;
+       if(item.verdict==="correct"){row.correct++;row.answered++;}
+       if(item.verdict==="incorrect"){row.incorrect++;row.answered++;}
+       if(item.verdict==="unanswered")row.skipped++;
+       const distinctIds=distinct.get(key)??new Set<string>();
+       distinctIds.add(q.id);distinct.set(key,distinctIds);
+       const attemptIds=independent.get(key)??new Set<string>();
+       attemptIds.add(attempt.id);independent.set(key,attemptIds);
+       row.distinctQuestions=distinctIds.size;
+       row.attempts=attemptIds.size;
+       row.accuracy=row.answered?row.correct/row.answered:null;
+       row.coverage=row.answered/row.total;
+       // Five answers is the minimum to display raw observed accuracy,
+       // never a declaration of topic mastery.
+       row.evidence=row.answered>=5?"measured":"insufficient";
+       rows.set(key,row);
      }
    }
  }
- return [...rows.values()].sort((a,b)=>a.examId.localeCompare(b.examId)||a.label.localeCompare(b.label));
+ return [...rows.values()].sort((a,b)=>a.examId.localeCompare(b.examId)||
+   a.kind.localeCompare(b.kind)||a.label.localeCompare(b.label));
 }
 export interface ComparableTrend {paperRevisionId:string;label:string;count:number;points:{at:number;accuracy:number|null;coverage:number;marks:number}[]}
 export function comparableTrends(attempts:readonly GenericAttempt[]):ComparableTrend[]{

@@ -113,7 +113,7 @@ export function attemptEvidence(a:GenericAttempt):AttemptEvidence|null{
 }
 export interface ProgressionEvidence {
  examId:string;topic:string;attempts:number;answered:number;distinctQuestions:number;accuracy:number|null;
- label:"insufficient"|"repeated-items"|"improving"|"mixed"|"consistently-accurate";
+ label:"insufficient"|"repeated-items"|"moderate-observed"|"mixed"|"consistently-accurate";
 }
 export function evidenceProgression(rows:readonly {
  examId:string;label:string;answered:number;correct:number;attempts?:number;distinctQuestions?:number;
@@ -124,7 +124,7 @@ export function evidenceProgression(rows:readonly {
    const label=attempts<2||r.answered<10?"insufficient":
      distinctQuestions<5?"repeated-items":
      accuracy!==null&&accuracy>=0.8?"consistently-accurate":
-     accuracy!==null&&accuracy>=0.6?"improving":"mixed";
+     accuracy!==null&&accuracy>=0.6?"moderate-observed":"mixed";
    return {examId:r.examId,topic:r.label,answered:r.answered,attempts,distinctQuestions,accuracy,label};
  });
 }
