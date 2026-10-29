@@ -1,4 +1,4 @@
-import { DefaultScheduler, Rating } from "ts-fsrs";
+import { DefaultScheduler, Rating, type DefaultScheduler as Scheduler } from "ts-fsrs";
 import type { ExamPackage, GenericAttempt } from "./exam-package.ts";
 import { readableAnswer } from "./exam-package.ts";
 import { ERROR_LABELS, comparableTrends, rateLearningCard, scheduledCard, topicMetrics, validateLearningCard } from "../learning/learning.ts";
@@ -37,7 +37,7 @@ function questionHTML(record:LearningCard,packages:readonly ExamPackage[]):strin
 }
 
 export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
- let scheduler:Awaited<ReturnType<typeof DefaultScheduler>>|null=null;
+ let scheduler:Scheduler<"FSRS-7">|null=null;
  let selectedId:string|null=null,reviewId:string|null=null,revealed=false;
  let filter:"all"|"due"|"bookmarked"="all",message="",closed=false,opened=false;
  const now=()=>new Date();
@@ -166,7 +166,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     await host.remove(selected.id);selectedId=null;draw();
   };
  }
- void DefaultScheduler({version:"FSRS-7",desiredRetention:0.9,enableFuzz:false})
+ void DefaultScheduler<"FSRS-7">({version:"FSRS-7",desiredRetention:0.9,enableFuzz:false})
   .then(value=>{scheduler=value;draw();})
   .catch(e=>{message="FSRS scheduler failed to initialize.";console.error(e);draw();});
  return {show(){opened=true;draw();},hide(){opened=false;},select(id:string){selectedId=id;},dispose(){closed=true}};
