@@ -11,7 +11,8 @@ Strictly typed, exam-agnostic offline practice desk. Built-in SSC CGL source/rev
 | [Architecture audit / live scratchpad](docs/ARCHITECTURE_AUDIT_2026-10-28.md) | **Authoritative current pass goals, evidence, decisions, QA and outstanding work**; historic entries superseded by later dated entries |
 | [Data model](docs/DATA_MODEL.md) | Schemas, integrity, persistence and invariants |
 | [v11 feature-parity ledger](docs/V11_PARITY_LEDGER.md) | Side-by-side UX/function inventory; mandatory regression targets for Pass 9 |
-| [Pass 9 acceptance](docs/PASS9_RELEASE_ACCEPTANCE.md) | **Current UI and feature-parity objectives** |
+| [Pass 9 acceptance](docs/PASS9_RELEASE_ACCEPTANCE.md) | Completed automated UI and feature-parity objectives |
+| [Pass 10 acceptance](docs/PASS10_RELEASE_ACCEPTANCE.md) | **Current release hardening, cross-browser and physical-device acceptance ledger** |
 | [Pass 4 acceptance](docs/PASS4_RELEASE_ACCEPTANCE.md) | Clean typed app and offline engine baseline |
 | [Pass 5 acceptance](docs/PASS5_RELEASE_ACCEPTANCE.md) | Learning/FSRS baseline |
 | [Pass 6 acceptance](docs/PASS6_RELEASE_ACCEPTANCE.md) | Content integrity, frozen media and backup v3 baseline |
@@ -100,4 +101,4 @@ See [Pass 8 acceptance](docs/PASS8_RELEASE_ACCEPTANCE.md), [Pass 8 design](docs/
 - The header now uses a compact **Aa display popover** with saved theme, text scaling and optional fullscreen. Learning & revision has clearer FSRS/due/bookmark cards and self-reported error patterns.
 - All changes remain modular strict TypeScript and a single self-contained `file://` HTML, with no v11 runtime copied in or storage migration. **Functional/browser parity is not a claim of pixel-identical or personally approved design.** See [Pass 9 objective acceptance](docs/PASS9_RELEASE_ACCEPTANCE.md), [v11 parity ledger](docs/V11_PARITY_LEDGER.md) and [architecture scratchpad](docs/ARCHITECTURE_AUDIT_2026-10-28.md).
 
-**Pass 10:** release engineering, performance/long-history stress, real-device and multi-browser behavior, accessibility, forced-exit recovery and direct screenshot-based visual signoff against v11.
+**Pass 10:** release engineering, performance/long-history stress, real-device and multi-browser behavior, accessibility, forced-exit recovery and direct screenshot-based visual signoff against v11. See [the active Pass 10 acceptance ledger](docs/PASS10_RELEASE_ACCEPTANCE.md). Linux WebKit automation is not physical Safari/iOS approval.

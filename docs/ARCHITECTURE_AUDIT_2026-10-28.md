@@ -1377,3 +1377,16 @@ See `docs/PASS4_RELEASE_ACCEPTANCE.md` for remaining verification. Do not merge 
 
 **Still open as manual Pass 10 signoff:** visual screenshot comparisons with original v11 in browsers, Firefox/Safari/mobile/screen readers, long-history and force-quit recovery, physical device quota and native fullscreen support. None of these are concealed under 'Pass 9 complete'.
 
+
+
+## Pass 10 — five-step release and recovery scratchpad (29 October 2026)
+
+**1 · Audit:** Previous Pass 9 Chromium/headless and 75 Node tests were green, but real browser/device behavior, stress, forced exit, accessibility and v11 screenshot signoff were unverified. A source review of `generic-ui.ts` found that a successful IndexedDB open followed by a failed initial `getAll()` left `db` nonnull when the catch selected localStorage fallback; subsequent writes could therefore target the wrong storage backend. [Pass 10 acceptance](PASS10_RELEASE_ACCEPTANCE.md) tracks detailed gates.
+
+**2 · Analyze:** One storage failure must have one coherent fallback backend for both displayed data and future writes; close/clear the defective handle before entering fallback. Test this browser path, not just domain helpers. Keep the current single-file offline distribution and immutable scoring/backup invariants. Use Playwright Chromium, Firefox and Linux WebKit for targeted `file://` persistence and backup checks, plus a bounded 80-attempt history stress screen. Real Safari/iOS, force-crash semantics and screen readers are separate manual gates, not inferable from headless success.
+
+**3 · Implement:** `src/app/generic-ui.ts` closes/sets `db=null` in startup catch. `scripts/smoke-offline.mjs` injects a throw from initial IndexedDB `getAll()`, then verifies a new saved answer reaches localStorage fallback. New `scripts/pass10-platform.mjs` exercises save → export → reload → saved answer in browsers and stresses Chromium with 80 uniquely identified frozen attempts. CI runs these in dedicated jobs using Playwright Firefox and WebKit, in addition to original Chromium smoke and TypeScript/test gates. `README.md`, `AGENTS.md` and this live scratchpad link to `docs/PASS10_RELEASE_ACCEPTANCE.md`.
+
+**4 · Objective reconciliation (pending final-head CI):** Recovery-code fix and tests authored; do not mark multi-browser, scale, final HTML or CI objectives verified until the exact branch HEAD run passes. Existing historical score, provenance, backup and FSRS requirements remain non-regression gates. Additional manual acceptance remains intentionally separate.
+
+**5 · Targeted QA (pending final-head CI):** Check browser jobs and step logs, repair any actual failures, record evidence in the dedicated Pass 10 ledger. Outstanding physical Firefox/Safari/Android/iOS, assistive technology, forced renderer termination and visual screenshot approval cannot be declared passed from the available headless runner.
