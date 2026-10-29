@@ -351,7 +351,11 @@ try{
  await reopened.evaluate(()=>document.querySelectorAll('input[data-choice]')[2]?.click());
  await reopened.locator(".generic-warning").filter({hasText:"Another tab"}).waitFor();
  const authoritative=(await attempts(second)).find(x=>x.id===race.id);
- fail(authoritative.saveRevision===advanced.saveRevision,"Stale tab replaced newer revision");
+ const latestAnswer=authoritative?.state.responses.find(row=>row.response)?.response;
+ const secondAnswer=advanced.state.responses.find(row=>row.response)?.response;
+ fail(authoritative?.saveRevision>=advanced.saveRevision&&
+   JSON.stringify(latestAnswer)===JSON.stringify(secondAnswer),
+   "Stale tab replaced newer answer or revision");
  console.log("Chrome file://: stale-tab IndexedDB write rejected");
 
  // A blocked IndexedDB session uses conflict-aware fallback with usable export.
