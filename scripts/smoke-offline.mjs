@@ -6,340 +6,217 @@ import { pathToFileURL } from "node:url";
 import { chromium } from "playwright-core";
 import { pkg as sixKindsPackage } from "../tests/fixtures/six-kinds.mjs";
 
-const binaries=["google-chrome","google-chrome-stable","chromium","chromium-browser"];
-const chrome=binaries.find(bin=>spawnSync(bin,["--version"],{encoding:"utf8"}).status===0);
-if(!chrome)throw new Error("Chrome/Chromium is required for the file:// smoke test");
-const chromePath=spawnSync("which",[chrome],{encoding:"utf8"}).stdout.trim();
-if(!chromePath.startsWith("/"))throw new Error("Could not resolve Chrome executable");
-const profile=await mkdtemp(join(tmpdir(),"pd-file-smoke-"));
-const file=pathToFileURL(resolve(import.meta.dirname,"..","Practice_Desk_Offline_Mock_Tests.html")).href;
-const browserOptions={executablePath:chromePath,headless:true,
- args:["--no-sandbox","--disable-gpu","--disable-dev-shm-usage","--disable-background-networking"]};
-async function launch(){
- const context=await chromium.launchPersistentContext(profile,browserOptions);
- const page=context.pages()[0]??await context.newPage();
- page.setDefaultTimeout(25000);
- const errors=[];
- page.on("pageerror",error=>errors.push(error.message));
- await page.goto(file,{waitUntil:"load"});
- return {context,page,errors};
-}
-async function readGenericAttempts(page){
+const binary=["google-chrome","google-chrome-stable","chromium","chromium-browser"]
+ .find(x=>spawnSync(x,["--version"],{encoding:"utf8"}).status===0);
+if(!binary)throw Error("Headless Chrome is required for offline release acceptance");
+const executablePath=spawnSync("which",[binary],{encoding:"utf8"}).stdout.trim();
+const html=pathToFileURL(resolve(import.meta.dirname,"..","Practice_Desk_Offline_Mock_Tests.html")).href;
+const opts={executablePath,headless:true,args:["--no-sandbox","--disable-dev-shm-usage","--disable-background-networking"]};
+const profile=await mkdtemp(join(tmpdir(),"practice-desk-overhaul-"));
+const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+const fail=(value,msg)=>{if(!value)throw Error(msg);};
+async function attempts(page){
  return page.evaluate(()=>new Promise((resolve,reject)=>{
-  const request=indexedDB.open("practiceDesk.history.v1",2);
-  request.onerror=()=>reject(request.error?.message||"open failed");
+  const request=indexedDB.open("practiceDesk.overhaul.v1",1);
+  request.onerror=()=>reject(request.error);
   request.onsuccess=()=>{
    const db=request.result;
    const get=db.transaction("attempts","readonly").objectStore("attempts").getAll();
-   get.onerror=()=>{db.close();reject(get.error?.message||"read failed");};
-   get.onsuccess=()=>{const result=get.result.filter(x=>x.recordType==="generic-attempt");db.close();resolve(result);};
+   get.onsuccess=()=>{db.close();resolve(get.result);};
+   get.onerror=()=>{db.close();reject(get.error);};
   };
  }));
 }
-async function readCglAttempts(page){
- return page.evaluate(()=>new Promise((resolve,reject)=>{
-  const req=indexedDB.open("practiceDesk.history.v1",2);
-  req.onerror=()=>reject(req.error??Error("Open failed"));
-  req.onsuccess=()=>{
-   const db=req.result,all=db.transaction("attempts","readonly").objectStore("attempts").getAll();
-   all.onerror=()=>{db.close();reject(all.error??Error("Read failed"));};
-   all.onsuccess=()=>{const rows=all.result.filter(a=>a.schema===4);db.close();resolve(rows);};
-  };
- }));
+async function find(page,predicate){
+ for(let i=0;i<100;i++){
+  const result=(await attempts(page)).find(predicate);
+  if(result)return result;
+  await delay(100);
+ }
+ throw Error("Timed out waiting for persisted record");
 }
-const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-let savedId;
+async function testPage(page){
+ const errors=[];page.on("pageerror",e=>errors.push(e.message));
+ page.setDefaultTimeout(20000);
+ await page.goto(html,{waitUntil:"load"});
+ await page.locator("#g-start").waitFor({state:"visible"});
+ return errors;
+}
+let context;
 try{
- const first=await launch();
- try{
-   await first.page.locator("#genericWorkspace").click();
-   await first.page.locator("#g-start").click();
-   await first.page.locator('input[data-choice]').first().click();
-   const focused=await first.page.locator('input[data-choice]:checked').evaluate(el=>document.activeElement===el);
-   if(!focused)throw new Error("Keyboard focus was lost after answering");
-   for(let i=0;i<50;i++){
-     const records=await readGenericAttempts(first.page);
-     const saved=records.find(x=>x.state?.responses?.some(r=>r.response?.kind==="single-choice"));
-     if(saved){savedId=saved.id;break;}
-     await delay(100);
-   }
-   if(!savedId)throw new Error("Answer did not persist to IndexedDB");
-   console.log("Offline file://: answer saved to IndexedDB");
- }catch(error){throw new Error("Initial file:// test: "+error.message+"; browser errors: "+first.errors.join(" | "));}
- finally{await first.context.close();}
- const second=await launch();
- try{
-   await second.page.locator("#genericWorkspace").click();
-   await second.page.locator("#g-start").waitFor({state:"visible"});
-   await second.page.locator('[data-attempt="'+savedId+'"]').click();
-   await second.page.locator('input[data-choice]:checked').first().waitFor({state:"visible"});
-   const records=await readGenericAttempts(second.page);
-   if(!records.some(x=>x.id===savedId))throw new Error("Persisted attempt disappeared");
-   console.log("Offline file://: same attempt reopened with answer selected");
- }catch(error){throw new Error("Reopen file:// test: "+error.message+"; browser errors: "+second.errors.join(" | "));}
- finally{await second.context.close();}
- // Independently exercise the original CGL UI: its start path archives frozen
- // display assets and its History path must export a checksum-verified backup.
- const cgl=await launch();
- try{
-   await cgl.page.locator("#start").click();
-   await cgl.page.locator('input[data-choice]').first().click();
-   const cglFocused=await cgl.page.locator('input[data-choice]:checked')
-     .evaluate(el=>document.activeElement===el);
-   if(!cglFocused)throw new Error("CGL focus lost after answer in shared renderer");
-   cgl.page.once("dialog",dialog=>dialog.accept());
-   await cgl.page.locator("#g-library").click();
-   await cgl.page.locator("#openHistory").click();
-   const downloadPromise=cgl.page.waitForEvent("download");
-   await cgl.page.locator("#exportBackup").click();
-   const backupDownload=await downloadPromise;
-   if(!backupDownload.suggestedFilename().endsWith(".json"))throw new Error("Backup download missing");
-   const backup=JSON.parse(await readFile(await backupDownload.path(),"utf8"));
-   if(backup.version!==2||backup.manifest?.attemptCount!==backup.attempts?.length)throw new Error("Backup manifest missing");
-   if(!backup.attempts.some(a=>a.recordType==="generic-attempt")||
-      !backup.attempts.some(a=>a.schema===4))throw new Error("All-data backup omitted CGL or generic history");
-   if(cgl.errors.length)throw new Error("CGL UI errors: "+cgl.errors.join(" | "));
-   console.log("Offline file://: original CGL start, answer and unified backup export passed");
+ context=await chromium.launchPersistentContext(profile,opts);
+ const page=context.pages()[0]??await context.newPage();
+ const errors=await testPage(page);
+ fail(await page.locator(".generic-layout").count()===1,"Unified library not visible");
+ fail(await page.locator('[data-mode="strict"]').count()===1,"CGL mode selector absent");
+ await page.locator("#g-start").click();
+ fail(await page.locator('[data-section="1"]').isDisabled(),"Strict CGL sections not locked");
+ await page.locator('input[data-choice]').first().click();
+ fail(await page.locator('input[data-choice]:checked').first().evaluate(el=>document.activeElement===el),"Answer focus lost");
+ const cgl=await find(page,x=>x.recordType==="generic-attempt"&&x.state?.responses?.some(r=>r.response));
+ fail(cgl.frozen.paper.sections.length===4,"Strict CGL revision invalid");
+ // Preview original inline figure using the same shared engine.
+ await page.locator('[data-q="2"]').click();
+ const figures=page.locator(".generic-figure");
+ fail(await figures.count()>=5,"CGL figures lost in single unified exam");
+ fail(await figures.first().evaluate(img=>img.complete&&img.naturalWidth>0),"CGL image did not decode");
+ await page.locator("#g-library").click();
+ await page.locator('[data-attempt="'+cgl.id+'"]').click();
+ fail(await page.locator('input[data-choice]:checked').count()===0,"Question navigation not restored");
+ await page.locator('[data-q="0"]').click();
+ fail(await page.locator('input[data-choice]:checked').count()===1,"Saved CGL answer not restored");
+ console.log("Chrome file://: strict CGL, figures and resume passed");
 
-   // Import the all-data archive through the real file picker after deleting
-   // one generic record. The import must restore it without touching other IDs.
-   await cgl.page.evaluate(id=>new Promise((resolve,reject)=>{
-     const req=indexedDB.open("practiceDesk.history.v1",2);
-     req.onerror=()=>reject(req.error);
-     req.onsuccess=()=>{
-       const db=req.result,tx=db.transaction("attempts","readwrite");
-       tx.objectStore("attempts").delete(id);
-       tx.oncomplete=()=>{db.close();resolve();};
-       tx.onerror=()=>{db.close();reject(tx.error);};
-     };
-   }),savedId);
-   if((await readGenericAttempts(cgl.page)).some(a=>a.id===savedId))
-     throw new Error("Backup round-trip setup could not delete generic record");
-   cgl.page.once("dialog",dialog=>dialog.accept());
-   await cgl.page.locator("#importFile").setInputFiles({
-     name:"all-data-backup.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(backup))
-   });
-   let recovered=false;
-   for(let i=0;i<60;i++){
-     if((await readGenericAttempts(cgl.page)).some(a=>a.id===savedId)){recovered=true;break;}
-     await delay(100);
-   }
-   if(!recovered)throw new Error("Unified backup import did not restore the deleted generic attempt");
-   console.log("Offline file://: unified backup exported and imported with IDB restore");
+ // One completed CGL run exercises immutable scored review and history.
+ page.once("dialog",d=>d.accept());
+ await page.locator("#g-submit").click();
+ await page.getByRole("heading",{name:"Question review"}).waitFor();
+ fail(await page.locator(".generic-review").count()===100,"CGL results do not contain 100 questions");
+ fail(await page.getByRole("heading",{name:"Section performance"}).count()===1,"Section breakdown absent");
+ const completed=await find(page,x=>x.id===cgl.id&&x.finishedAt!==null);
+ fail(completed.result?.items?.length===100,"Frozen CGL score not persisted");
+ await page.locator("#g-library").click();
+ await page.locator('[data-attempt="'+cgl.id+'"]').click();
+ await page.getByRole("heading",{name:"Question review"}).waitFor();
+ console.log("Chrome file://: completed CGL analytics and saved history passed");
 
-   // Two tabs use one IndexedDB origin. Resuming in tab B advances the saved
-   // revision; editing the stale copy in tab A must not overwrite it.
-   await cgl.page.locator("#historyHome").click();
-   await cgl.page.locator("#genericWorkspace").click();
-   await cgl.page.locator("#g-start").waitFor({state:"visible"});
-   await cgl.page.locator('[data-attempt="'+savedId+'"]').click();
-   await cgl.page.locator('input[data-choice]').first().waitFor({state:"visible"});
-   let firstVersion=0;
-   for(let i=0;i<50;i++){
-     const found=(await readGenericAttempts(cgl.page)).find(x=>x.id===savedId);
-     if(found?.saveRevision>0){firstVersion=found.saveRevision;break;}
-     await delay(100);
-   }
-   if(!firstVersion)throw new Error("Initial tab revision not persisted");
-   const competing=await cgl.context.newPage();
-   await competing.goto(file,{waitUntil:"load"});
-   await competing.locator("#genericWorkspace").click();
-   await competing.locator("#g-start").waitFor({state:"visible"});
-   await competing.locator('[data-attempt="'+savedId+'"]').click();
-   await competing.locator('input[data-choice]').first().waitFor({state:"visible"});
-   let otherVersion=firstVersion;
-   for(let i=0;i<60;i++){
-     const found=(await readGenericAttempts(competing)).find(x=>x.id===savedId);
-     if(found?.saveRevision>firstVersion){otherVersion=found.saveRevision;break;}
-     await delay(100);
-   }
-   if(otherVersion<=firstVersion)throw new Error("Second tab did not checkpoint a new revision");
-   await cgl.page.locator('input[data-choice]').nth(1).click();
-   await cgl.page.locator('.generic-warning').filter({hasText:"Another tab"}).waitFor({state:"visible"});
-   const after=(await readGenericAttempts(cgl.page)).find(x=>x.id===savedId);
-   if(after?.saveRevision!==otherVersion)throw new Error("Stale tab overwrote the newer revision");
-   console.log("Offline file://: stale tab rejected without changing the saved attempt");
-   // The original CGL path also rejects stale writes between simultaneous tabs.
-   await cgl.page.locator("#g-back").click();
-   await cgl.page.locator("#resume").click();
-   const source=(await readCglAttempts(cgl.page)).find(a=>!a.finishedAt);
-   if(!source?.id||!source.saveRevision)throw new Error("No versioned active CGL attempt");
-   const cglTab=await cgl.context.newPage();
-   await cglTab.goto(file,{waitUntil:"load"});
-   await cglTab.locator("#resume").click();
-   await cglTab.locator('input[data-choice]').nth(1).click();
-   let latestCgl=null;
-   for(let i=0;i<60;i++){
-    latestCgl=(await readCglAttempts(cglTab)).find(a=>a.id===source.id);
-    if(latestCgl?.saveRevision>source.saveRevision)break;
-    await delay(100);
-   }
-   if(!latestCgl||latestCgl.saveRevision<=source.saveRevision)
-    throw new Error("CGL tab B did not persist a new version");
-   await cgl.page.locator('input[data-choice]').nth(2).click();
-   await cgl.page.locator("#toast").filter({hasText:"Another tab"}).waitFor({state:"visible"});
-   const preserved=(await readCglAttempts(cglTab)).find(a=>a.id===source.id);
-   if(preserved?.answers?.[1]!=="b"||preserved.saveRevision!==latestCgl.saveRevision)
-    throw new Error("Stale CGL tab overwrote a newer answer");
-   console.log("Offline file://: original CGL stale-tab write rejected");
-   // Exercise every generic response widget and a non-CGL frozen result in the real browser.
-   const multi=await cgl.context.newPage();
-   await multi.goto(file,{waitUntil:"load"});
-   await multi.locator("#genericWorkspace").click();
-   await multi.locator("#g-file").setInputFiles({name:"six-kinds.json",mimeType:"application/json",
-     buffer:Buffer.from(JSON.stringify(sixKindsPackage))});
-   await multi.locator("#g-papers").selectOption("rev-paper");
-   await multi.locator("#g-start").click();
-   await multi.locator('input[data-choice]').first().click();
-   await multi.locator("#g-next").click();
-   await multi.locator('input[data-choice]').first().click();
-   await multi.locator(".generic-inline-warning").filter({hasText:"Select at least 2 options"}).waitFor({state:"visible"});
-   await multi.locator('input[data-choice]').nth(2).click();
-   await multi.locator("#g-next").click();
-   await multi.locator("#g-number").fill("3.5");
-   await multi.locator("#g-save").click();
-   await multi.locator('[data-section="1"]').click();
-   await multi.locator('input[data-bool="true"]').click();
-   await multi.locator("#g-next").click();
-   await multi.locator('select[data-match]').nth(0).selectOption("r1");
-   await multi.locator('select[data-match]').nth(1).selectOption("r2");
-   await multi.locator("#g-save").click();
-   await multi.locator("#g-next").click();
-   await multi.locator("#g-text").fill("A concise written explanation.");
-   await multi.locator("#g-save").click();
-   multi.once("dialog",dialog=>dialog.accept());
-   await multi.locator("#g-submit").click();
-   await multi.locator(".generic-review").first().waitFor({state:"visible"});
-   if(await multi.locator(".generic-review").count()!==6)
-     throw new Error("Multi-kind browser result omitted reviewed questions");
-   const completed=(await readGenericAttempts(multi)).find(a=>a.packageId==="rev-paper"&&a.finishedAt);
-   if(!completed||completed.result?.snapshot.correctCount!==5)
-     throw new Error("Multi-kind browser score or frozen record mismatch");
-   await multi.reload();
-   await multi.locator("#genericWorkspace").click();
-   await multi.locator('[data-attempt="'+completed.id+'"]').click();
-   if(await multi.locator(".generic-review").count()!==6)
-     throw new Error("Non-CGL frozen review failed to reopen");
-   console.log("Offline file://: all six answer widgets and non-CGL result reopened");
+ // Three CGL modes are paper policies, not separate application implementations.
+ await page.locator("#g-library").click();
+ await page.locator('[data-mode="free"]').click();
+ await page.locator("#g-start").click();
+ await page.locator('[data-section="2"]').click();
+ fail((await find(page,x=>x.recordType==="generic-attempt"&&x.id!==cgl.id&&x.frozen.paper.timing.kind==="whole-paper")).frozen.paper.sections.length===4,
+   "Flexible mode did not use full paper");
+ await page.locator("#g-pause").click();
+ fail(!await page.locator('input[data-choice]').first().isEnabled(),"Paused exam permits editing");
+ await page.locator("#g-pause").click();
+ await page.locator("#g-library").click();
+ await page.locator('[data-mode="single"]').click();
+ await page.locator("#g-single-section").selectOption("2");
+ await page.locator("#g-start").click();
+ fail(await page.locator(".generic-prompt").count()===1,"Single section failed");
+ const single=await find(page,x=>x.recordType==="generic-attempt"&&x.frozen.paper.sections.length===1);
+ fail(single.frozen.questions.length===25,"Single section froze incorrect question count");
+ page.once("dialog",d=>d.accept());
+ await page.locator("#g-submit").click();
+ fail(await page.locator(".generic-review").count()===25,"Single section review invalid");
+ console.log("Chrome file://: flexible and single-section policies passed");
 
-   // Simulate browsers where IndexedDB is blocked. A second tab must not
-   // silently overwrite the localStorage-only record from a stale first tab.
-   const fallbackPage=async()=>{
-     const page=await cgl.context.newPage();
-     await page.addInitScript(()=>Object.defineProperty(window,"indexedDB",{configurable:true,value:undefined}));
-     await page.goto(file,{waitUntil:"load"});
-     await page.locator("#genericWorkspace").click();
-     await page.locator("#g-start").waitFor({state:"visible"});
-     return page;
-   };
-   const fallbackA=await fallbackPage();
-   await fallbackA.locator("#g-start").click();
-   await fallbackA.locator('input[data-choice]').first().click();
-   let fallbackId=null;
-   for(let i=0;i<60;i++){
-     fallbackId=await fallbackA.evaluate(()=>{
-       const records=JSON.parse(localStorage.getItem("practiceDesk.generic.fallback.v1")??"[]");
-       return records.find(a=>a.recordType==="generic-attempt"&&a.state?.responses?.some(r=>r.response))?.id??null;
-     });
-     if(fallbackId)break;
-     await delay(100);
-   }
-   if(!fallbackId)throw new Error("Generic localStorage fallback did not save an answer");
-   const fallbackB=await fallbackPage();
-   await fallbackB.locator('[data-attempt="'+fallbackId+'"]').click();
-   await fallbackB.locator('input[data-choice]').nth(1).click();
-   await fallbackA.locator(".generic-warning").filter({hasText:"Fallback history changed"})
-     .waitFor({state:"visible"});
-   const fallbackSaved=await fallbackB.evaluate(id=>{
-     const records=JSON.parse(localStorage.getItem("practiceDesk.generic.fallback.v1")??"[]");
-     return records.find(a=>a.id===id);
-   },fallbackId);
-   if(!fallbackSaved?.state?.responses?.some(r=>r.response?.kind==="single-choice"&&
-      r.response.optionId.endsWith(":b")))throw new Error("Fallback writer did not retain its response");
-   console.log("Offline file://: localStorage fallback detects competing generic tab");
-   // Even after refusing stale writes, the affected tab must allow a safe export.
-   const fallbackDownloadPromise=fallbackA.waitForEvent("download");
-   await fallbackA.locator("#g-export-history").click();
-   const fallbackDownload=await fallbackDownloadPromise;
-   const recoveredFallback=JSON.parse(await readFile(await fallbackDownload.path(),"utf8"));
-   if(!recoveredFallback.attempts.some(a=>a.id===fallbackId&&
-      a.state?.responses?.some(r=>r.response?.kind==="single-choice"&&r.response.optionId.endsWith(":b"))))
-     throw new Error("Conflict recovery backup exported stale fallback answers");
-   console.log("Offline file://: fallback conflict preserves latest record in export");
+ // Import a non-CGL fixture and exercise all six answer kinds in the same UI.
+ await page.locator("#g-library").click();
+ await page.locator("#g-file").setInputFiles({name:"six-kinds.json",mimeType:"application/json",
+  buffer:Buffer.from(JSON.stringify(sixKindsPackage))});
+ await page.locator("#g-papers").selectOption("rev-paper");
+ await page.locator("#g-start").click();
+ await page.locator('input[data-choice]').first().click();
+ await page.locator("#g-next").click();
+ await page.locator('input[data-choice]').first().click();
+ await page.locator(".generic-inline-warning").waitFor();
+ await page.locator('input[data-choice]').nth(2).click();
+ await page.locator("#g-next").click();
+ await page.locator("#g-number").fill("3.5");
+ await page.locator("#g-save").click();
+ await page.locator('[data-section="1"]').click();
+ await page.locator('input[data-bool="true"]').click();
+ await page.locator("#g-next").click();
+ await page.locator('select[data-match]').nth(0).selectOption("r1");
+ await page.locator('select[data-match]').nth(1).selectOption("r2");
+ await page.locator("#g-save").click();
+ await page.locator("#g-next").click();
+ await page.locator("#g-text").fill("A short written explanation.");
+ await page.locator("#g-save").click();
+ page.once("dialog",d=>d.accept());
+ await page.locator("#g-submit").click();
+ fail(await page.locator(".generic-review").count()===6,"Six response kinds were not reviewed");
+ const custom=await find(page,x=>x.recordType==="generic-attempt"&&x.packageId==="rev-paper"&&x.finishedAt);
+ fail(custom.result.snapshot.correctCount===5,"Custom exam score incorrect");
+ console.log("Chrome file://: six response types and immutable custom result passed");
 
-   // Narrow and tablet viewports must not introduce whole-page horizontal scrolling.
-   const responsive=await cgl.context.newPage();
-   for(const width of [390,768]){
-     await responsive.setViewportSize({width,height:844});
-     await responsive.goto(file,{waitUntil:"load"});
-     const homeOverflow=await responsive.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
-     if(homeOverflow>3)throw new Error("CGL home overflows at "+width+"px by "+homeOverflow+"px");
-     await responsive.locator("#genericWorkspace").click();
-     await responsive.locator("#g-start").click();
-     const examOverflow=await responsive.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
-     if(examOverflow>3)throw new Error("Generic exam overflows at "+width+"px by "+examOverflow+"px");
-   }
-   console.log("Offline file://: 390px mobile and 768px tablet responsive checks passed");
+ // Export/import checksum verified backup through the real file chooser.
+ await page.locator("#g-library").click();
+ const pending=page.waitForEvent("download");
+ await page.locator("#g-export-history").click();
+ const downloaded=await pending;
+ const backup=JSON.parse(await readFile(await downloaded.path(),"utf8"));
+ fail(backup.version===2&&backup.attempts.some(a=>a.id===custom.id),"All-exam backup missing records");
+ page.once("dialog",d=>d.accept());
+ await page.locator('[data-delete="'+custom.id+'"]').click();
+ const deleted=await attempts(page);
+ fail(!deleted.some(a=>a.id===custom.id),"Attempt deletion not committed");
+ page.once("dialog",d=>d.accept());
+ await page.locator("#g-history-file").setInputFiles({name:"backup.json",mimeType:"application/json",
+  buffer:Buffer.from(JSON.stringify(backup))});
+ await find(page,x=>x.id===custom.id);
+ console.log("Chrome file://: all-exam backup restore and deletion passed");
 
-   // Both entry points must render the embedded figures in real CGL questions.
-   const figures=await cgl.context.newPage();
-   await figures.goto(file,{waitUntil:"load"});
-   figures.once("dialog",dialog=>dialog.accept()); // another CGL attempt may still be active
-   await figures.locator("#start").click();
-   await figures.locator('[data-q="2"]').click(); // Oct 8 CGL Q3 has a stem and four visual options
-   const cglImages=figures.locator(".generic-figure");
-   if(await cglImages.count()<5 || !await cglImages.first().evaluate(img=>img.complete&&img.naturalWidth>0))
-     throw new Error("Original CGL shared renderer lost embedded figure or option images");
-   figures.once("dialog",dialog=>dialog.accept());
-   await figures.locator("#g-library").click();
-   await figures.locator("#genericWorkspace").click();
-   await figures.locator("#g-start").click();
-   await figures.locator('[data-q="4"]').click(); // Sep 30 source Q5 has stem and option media
-   const genericImages=figures.locator(".generic-figure");
-   if(await genericImages.count()<5 || !await genericImages.first().evaluate(img=>img.complete&&img.naturalWidth>0))
-     throw new Error("Generic CGL package lost embedded figure or option images");
-   console.log("Offline file://: source and reviewed visual questions decode inline images");
+ // Reopen the identical local file with the same profile.
+ await context.close();context=null;
+ context=await chromium.launchPersistentContext(profile,opts);
+ const reopened=context.pages()[0]??await context.newPage();
+ const reopenedErrors=await testPage(reopened);
+ await reopened.locator('[data-attempt="'+custom.id+'"]').click();
+ fail(await reopened.locator(".generic-review").count()===6,"file:// reopen lost stored custom result");
+ await reopened.locator("#g-library").click();
+ console.log("Chrome file://: profile restart restores CGL and non-CGL history");
 
-   // Exercise CGL's specialized free and single-section modes through the
-   // common model-driven question renderer, retaining its detailed results UI.
-   const modeProfile=await mkdtemp(join(tmpdir(),"pd-cgl-modes-"));
-   const modeContext=await chromium.launchPersistentContext(modeProfile,browserOptions);
-   try{
-     const modePage=modeContext.pages()[0]??await modeContext.newPage();
-     modePage.setDefaultTimeout(25000);
-     await modePage.goto(file,{waitUntil:"load"});
-     await modePage.locator('[data-mode="free"]').click();
-     await modePage.locator("#start").click();
-     await modePage.locator('input[data-choice]').first().click();
-     await modePage.keyboard.press("b");
-     if(!await modePage.locator('input[data-choice]').nth(1).isChecked())
-       throw new Error("CGL keyboard A-D choice shortcut failed in shared exam renderer");
-     await modePage.locator('[data-section="1"]').click();
-     await modePage.locator("#g-pause").click();
-     await modePage.locator("#g-pause").filter({hasText:"Resume timer"}).waitFor();
-     if(await modePage.locator('input[data-choice]').first().isEnabled())
-       throw new Error("Paused CGL exam still permits editing answer controls");
-     await modePage.locator("#g-pause").click();
-     modePage.once("dialog",dialog=>dialog.accept());
-     await modePage.locator("#g-submit").click();
-     await modePage.getByRole("heading",{name:"Attempt analysis"}).waitFor();
-     await modePage.locator("#homeBack").click();
-     await modePage.locator('[data-mode="single"]').click();
-     await modePage.locator("#singleSelect").selectOption("2");
-     await modePage.locator("#start").click();
-     if(!await modePage.locator(".generic-prompt").count())
-       throw new Error("CGL single-section question surface absent");
-     await modePage.locator('input[data-choice]').first().click();
-     modePage.once("dialog",dialog=>dialog.accept());
-     await modePage.locator("#g-submit").click();
-     await modePage.getByRole("heading",{name:"Attempt analysis"}).waitFor();
-     console.log("Offline file://: CGL free and single-section modes retain submission and analytics");
-   }finally{
-     await modeContext.close();
-     await rm(modeProfile,{recursive:true,force:true});
-   }
- }catch(error){throw new Error("CGL file:// test: "+error.message+"; browser errors: "+cgl.errors.join(" | "));}
- finally{await cgl.context.close();}
+ // Multi-tab IndexedDB conflict must reject stale overwrites.
+ await reopened.locator('[data-mode="strict"]').click();
+ await reopened.locator("#g-start").click();
+ await reopened.locator('input[data-choice]').first().click();
+ const race=await find(reopened,x=>x.recordType==="generic-attempt"&&x.finishedAt===null&&
+   x.state?.responses?.some(r=>r.response)&&x.saveRevision>0);
+ const second=await context.newPage();
+ await testPage(second);
+ await second.locator('[data-attempt="'+race.id+'"]').click();
+ await second.locator('input[data-choice]').nth(1).click();
+ const advanced=await find(second,x=>x.id===race.id&&x.saveRevision>race.saveRevision);
+ await reopened.locator('input[data-choice]').nth(2).click();
+ await reopened.locator(".generic-warning").filter({hasText:"Another tab"}).waitFor();
+ const authoritative=(await attempts(second)).find(x=>x.id===race.id);
+ fail(authoritative.saveRevision===advanced.saveRevision,"Stale tab replaced newer revision");
+ console.log("Chrome file://: stale-tab IndexedDB write rejected");
+
+ // A blocked IndexedDB session uses conflict-aware fallback with usable export.
+ const fallbackA=await context.newPage();
+ await fallbackA.addInitScript(()=>Object.defineProperty(window,"indexedDB",{configurable:true,value:undefined}));
+ await testPage(fallbackA);
+ await fallbackA.locator("#g-start").click();
+ await fallbackA.locator('input[data-choice]').first().click();
+ let fallbackId;
+ for(let i=0;i<100;i++){
+  fallbackId=await fallbackA.evaluate(()=>{
+   const items=JSON.parse(localStorage.getItem("practiceDesk.overhaul.fallback.v1")??"[]");
+   return items.find(x=>x.recordType==="generic-attempt"&&x.state.responses.some(r=>r.response))?.id;
+  });
+  if(fallbackId)break;
+  await delay(100);
+ }
+ fail(fallbackId,"LocalStorage fallback didn't retain answer");
+ const fallbackB=await context.newPage();
+ await fallbackB.addInitScript(()=>Object.defineProperty(window,"indexedDB",{configurable:true,value:undefined}));
+ await testPage(fallbackB);
+ await fallbackB.locator('[data-attempt="'+fallbackId+'"]').click();
+ await fallbackB.locator('input[data-choice]').nth(1).click();
+ await fallbackA.locator(".generic-warning").filter({hasText:"Fallback history changed"}).waitFor();
+ const downloadFallback=fallbackA.waitForEvent("download");
+ await fallbackA.locator("#g-export-history").click();
+ const fallbackArchive=JSON.parse(await readFile(await (await downloadFallback).path(),"utf8"));
+ fail(fallbackArchive.attempts.some(x=>x.id===fallbackId),"Fallback recovery export unavailable");
+ console.log("Chrome file://: localStorage fallback conflict and safe export passed");
+
+ // Mobile/tablet screens must remain within viewport.
+ const responsive=await context.newPage();
+ for(const width of [390,768]){
+  await responsive.setViewportSize({width,height:844});
+  await testPage(responsive);
+  const overflow=()=>responsive.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
+  fail(await overflow()<=3,"Library overflow at "+width);
+  await responsive.locator("#g-start").click();
+  fail(await overflow()<=3,"Exam overflow at "+width);
+ }
+ fail(!errors.length&&!reopenedErrors.length,"Uncaught browser errors: "+errors.concat(reopenedErrors).join("; "));
+ console.log("Chrome file://: responsive layouts and error-free execution passed");
 }finally{
+ if(context)await context.close();
  await rm(profile,{recursive:true,force:true});
 }
