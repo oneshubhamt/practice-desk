@@ -54,6 +54,7 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
  const answered=done.reduce((n,a)=>n+a.result!.snapshot.correctCount+a.result!.snapshot.incorrectCount,0);
  const mostRecent=[...done].sort((a,b)=>(b.finishedAt??0)-(a.finishedAt??0))[0];
  const matching=mostRecent?comparableTrends(done).find(t=>t.paperRevisionId===mostRecent.frozen.paper.id):undefined;
+ const trendPoints=matching?.points.filter(p=>p.accuracy!==null)??[];
  const priorities=sectionPriorities(done).slice(0,5);
  const pCount=attempts.length;
  return '<div class="generic-heading page-heading"><div><span class="eyebrow">ATTEMPT ARCHIVE</span>'+
@@ -68,9 +69,9 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
   '<div class="history-panels">'+
   '<section class="panel pad history-trend"><div class="row between"><div><h2>Comparable progression</h2>'+
   '<p class="fine">Latest completed exact paper revision — identical questions, key and policy only.</p></div></div>'+
-  (matching&&matching.points.length>=2?'<div class="history-trend-chart">'+trendSVG(matching.points.map(p=>100*(p.accuracy??0)))+'</div>'+
+  (matching&&trendPoints.length>=2?'<div class="history-trend-chart">'+trendSVG(trendPoints.map(p=>100*p.accuracy!))+'</div>'+
    '<p class="fine">'+esc(matching.label)+' · '+matching.count+' attempts · '+
-   matching.points.map(x=>x.accuracy===null?"No answers":Math.round(x.accuracy*100)+"%").join(" → ")+
+   trendPoints.map(x=>Math.round(x.accuracy!*100)+"%").join(" → ")+
    ' observed accuracy</p>':'<p class="empty-state">Complete the same frozen paper twice to unlock a defensible trend. Different papers are not assumed equally difficult.</p>')+
   '</section>'+
   '<section class="panel pad history-priorities"><h2>Section priorities</h2><p class="fine">Observed accuracy across completed attempts; repeated questions count as repeated observations, not mastery.</p>'+

@@ -20,7 +20,7 @@ export function reviewMatch(a:GenericAttempt,item:ItemScore,filter:ReviewFilter)
 export function resultTabsHTML(active:ResultTab):string{
  return '<nav class="result-tabs" role="tablist" aria-label="Result views">'+
   (["overview","review","timing"] as const).map((id,i)=>
-   '<button type="button" role="tab" class="result-tab '+(id===active?"active":"")+
+   '<button id="result-tab-'+id+'" type="button" role="tab" tabindex="'+(id===active?"0":"-1")+'" class="result-tab '+(id===active?"active":"")+
    '" aria-controls="result-'+id+'" aria-selected="'+(id===active)+'" data-result-tab="'+id+'">'+
    ["Insights","Question review","Time ledger"][i]+'</button>').join("")+'</nav>';
 }
@@ -33,7 +33,7 @@ export function reviewFiltersHTML(active:ReviewFilter):string{
 }
 export function timingLedgerHTML(a:GenericAttempt,active:boolean):string{
  if(!a.result)return "";
- return '<section class="panel pad result-pane" id="result-timing" role="tabpanel"'+(!active?' hidden':'')+'>'+
+ return '<section class="panel pad result-pane" id="result-timing" role="tabpanel" aria-labelledby="result-tab-timing"'+(!active?' hidden':'')+'>'+
   '<h2>Question timing ledger</h2><p class="fine">Time recorded while the question was in the foreground. This does not measure thinking time. Answer changes are counts, not proof they improved performance.</p>'+
   '<div class="scroll-table"><table><thead><tr><th>Question</th><th>Section</th><th>Verdict</th><th>Time</th><th>Changes</th><th>Review</th></tr></thead><tbody>'+
   a.result.items.map((x,i)=>{

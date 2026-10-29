@@ -516,6 +516,9 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      selected?.paper.timing.kind==="whole-paper"?minutes(selected.paper.timing.durationMs):
      "Section timers";
    const questionCount=cgl&&cglMode==="single"?selected?.paper.sections[singleSection]?.questionRevisionIds.length??0:count;
+   const previewSections=cgl&&cglMode==="single"?1:selected?.paper.sections.length??0;
+   const previewNavigation=cgl?cglMode==="free"?"Free":cglMode==="single"?"One section":"Section locked":
+     selected?.paper.navigation.sectionNavigation==="free"?"Free":"Sequential";
    const options=[...packages.values()].map(p=>
       '<option value="'+escapeText(p.paper.id)+'"'+(choice===p.paper.id?" selected":"")+'>'+
       escapeText(p.title)+'</option>').join("");
@@ -549,8 +552,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       '<h2>'+escapeText(selected?.title??"Choose a paper")+'</h2>'+
       '<p class="fine">'+escapeText(selected?.paper.paperId??"")+' · '+escapeText(selected?.paper.edition??"")+'</p>'+
       '<div class="preview-metrics"><div><b>'+questionCount+'</b><small>Questions</small></div>'+
-      '<div><b>'+escapeText(time)+'</b><small>Time</small></div><div><b>'+escapeText(selected?.paper.sections.length??0)+'</b><small>Sections</small></div>'+
-      '<div><b>'+escapeText(selected?.paper.timing.kind==="sectional"?"Section-locked":selected?.paper.navigation.sectionNavigation==="free"?"Free":"Sequential")+
+      '<div><b>'+escapeText(time)+'</b><small>Time</small></div><div><b>'+escapeText(previewSections)+'</b><small>Sections</small></div>'+
+      '<div><b>'+escapeText(previewNavigation)+
       '</b><small>Navigation</small></div></div>'+
       '<p class="fine">Scoring and timer rules are frozen when you start; later paper edits cannot change a saved result.</p></section>'+
       '<section class="panel pad recent-panel"><div class="row between"><h2>Recent attempts</h2>'+
@@ -656,7 +659,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      '<button class="btn" id="g-library">Library</button></div></div>'+
     (warning?'<p class="generic-warning" role="status">'+escapeText(warning)+'</p>':"")+
     resultTabsHTML(resultTab)+
-    '<div class="result-pane" id="result-overview" role="tabpanel"'+(resultTab!=="overview"?" hidden":"")+'>'+
+    '<div class="result-pane" id="result-overview" role="tabpanel" aria-labelledby="result-tab-overview"'+(resultTab!=="overview"?" hidden":"")+'>'+
     '<section class="panel pad"><div class="scoregrid"><div class="score standout"><b>'+s.snapshot.earnedMarks+
     '</b><small>Marks</small></div><div class="score"><b>'+s.snapshot.correctCount+
     '</b><small>Correct</small></div><div class="score"><b>'+s.snapshot.incorrectCount+
@@ -679,7 +682,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        .map(([label,value])=>'<div class="learning-metric"><strong>'+escapeText(label)+'</strong><b>'+escapeText(value)+'</b></div>').join("")+
       '</div>':'<p class="fine">No saved answer-revision sequence is available for this attempt.</p>')+
     '<p class="fine">Based only on recorded successive single-choice selections. Clear-and-reselect and unverified items are not classified as rescued/lost. A changed answer may coincide with better marks; this is not evidence that revision caused improvement.</p></section></div>'+
-    '<section class="panel pad result-pane" id="result-review" role="tabpanel"'+(resultTab!=="review"?" hidden":"")+'>'+
+    '<section class="panel pad result-pane" id="result-review" role="tabpanel" aria-labelledby="result-tab-review"'+(resultTab!=="review"?" hidden":"")+'>'+
     '<div class="row between"><h2>Question review</h2>'+
       '<button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div>'+
       reviewFiltersHTML(reviewFilter)+
