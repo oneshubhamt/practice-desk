@@ -193,6 +193,7 @@ try{
    await multi.locator('input[data-choice]').first().click();
    await multi.locator("#g-next").click();
    await multi.locator('input[data-choice]').first().click();
+   await multi.locator(".generic-inline-warning").filter({hasText:"Select at least 2 options"}).waitFor({state:"visible"});
    await multi.locator('input[data-choice]').nth(2).click();
    await multi.locator("#g-next").click();
    await multi.locator("#g-number").fill("3.5");
