@@ -131,7 +131,6 @@ try{
  console.log("Chrome file://: Pass 9 responsive home, filtered history and return route passed");
 
  // Three CGL modes are paper policies, not separate application implementations.
- await page.locator("#g-library").click();
  await page.locator('[data-mode="free"]').click();
  await page.locator("#g-start").click();
  await page.locator('[data-section="2"]').click();
