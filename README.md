@@ -36,7 +36,7 @@ npm run typecheck
 - `docs/ARCHITECTURE_AUDIT_2026-10-28.md` — architecture audit / roadmap
 - `Practice_Desk_Offline_Mock_Tests.html` — generated, distributable single-file app
 
-**Overhaul status (29 October 2026):** Passes 1–3 have been implemented and are CI-verified. Pass 4 includes a functioning model-driven workspace and a real-browser acceptance suite. The original, feature-rich SSC CGL interface is still a parallel path; `legacy.ts` retains `@ts-nocheck`. Do not describe the UI consolidation or strict legacy conversion as finished. See the living audit ledger for the remaining acceptance items. `main` and `baseline/v11` remain unchanged.
+**Overhaul status (29 October 2026):** Passes 1–3 are CI-verified. Pass 4 now uses **one model-driven exam-question renderer** across the original CGL modes and custom exams. CGL's specialized library, historical analysis and review remain separate to avoid loss of functionality. The transitional CGL shell in `legacy.ts` still uses `@ts-nocheck`, and browser/file-origin acceptance on Firefox and Safari remains unverified. Do not claim the entire frontend has been rewritten in strict TypeScript or that final cross-browser release acceptance is complete. `main` and `baseline/v11` remain unchanged.
 
 Local attempt history is stored by the browser, **not** inside the HTML or Git repository. Browser storage behaviour can vary for `file://` files, so export important attempts. The app is new and there is **no migration or backward-compatibility obligation** at this stage.
 

@@ -1186,3 +1186,14 @@ Added:
 - Verified: [CI run 40811155245](https://github.com/oneshubhamt/practice-desk/actions/runs/40811155245) succeeded with strict typecheck, unit tests, reproducible offline build and browser smoke checks.
 
 **Pass 4 remains open.** The remaining substantive implementation is collapsing the fixed-CGL exam and analytics screens into the model-driven workspace without losing existing CGL-specific modes, detailed insights or presentation. The original `legacy.ts` retains `@ts-nocheck`. Manual Firefox/Safari offline testing and quota-exhaustion acceptance are also not verified here. Do not mark final release acceptance complete based on Chrome CI alone. Keep `main` and `baseline/v11` stable.
+
+
+### Pass 4 shared exam-surface integration — 29 October 2026
+
+- Extracted a pure, strictly typed model-driven `renderModelExam` presentation. The original CGL shell now calls that same renderer using its revision-frozen paper and generic engine state; custom exams already use it.
+- Removed the duplicate fixed-CGL active exam markup. All three original CGL modes (locked sectional simulation, free-navigation full paper, and selected single section) retain the legacy CGL history/insights workflow and revision-aware persistence, but draw questions and controls from the generic model. Cached CGL package assets are reused.
+- Original CGL and generic rendering both preserve keyboard focus on answer changes. The model-view response form is disabled while a session is paused.
+- CI expanded to launch the original CGL free and single-section modes with the shared rendering, test keyboard A-D answer control, section switching, pause/resume and post-submission analytics; existing strict-mode, generic six-kind, multi-tab and backup/file-origin tests remain.
+- **Verified Chrome `file://` CI:** [40812177739](https://github.com/oneshubhamt/practice-desk/actions/runs/40812177739) — typecheck, tests, generated artifact, original CGL and non-CGL end-to-end, mobile/tablet responsive gates, full backup import and concurrent-write protection passed.
+
+**Remaining release-boundary limitations:** The CGL-specialized home, rich analytics and historical review still live in the transitional `legacy.ts` shell under `@ts-nocheck`; their removal must be preceded by feature-equivalent typed components, not a silent downgrade. Manual Firefox/Safari `file://` acceptance and quota-exhaustion behaviour are still unverified. The best-effort localStorage fallback cannot offer multi-key atomicity. Keep all changes isolated to `overhaul` until those release qualifications are addressed.

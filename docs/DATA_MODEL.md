@@ -59,7 +59,7 @@ The five SSC CGL source papers, reviewed patches and solution bank remain separa
 
 ## Still deferred / not release-accepted
 
-- Replace the parallel fixed-CGL presentation with one model-driven exam UI **without losing CGL-specific exam modes, rich review, insights or accessibility**.
+- The **active exam renderer is now shared** by CGL and generic packages. CGL-specific home/library, detailed historical review and analytics remain specialized by design until a typed replacement demonstrates full feature parity.
 - Retire the existing `@ts-nocheck` legacy file after feature parity. Most new modules already compile under strict TypeScript.
 - Verify `file://` reopen, quota and persistence behaviour in Firefox and Safari on supported platforms. Chrome has automated offline reopen, import round-trip, six-kind exam, conflict and responsive-viewport gates.
 - Normalize the editorial/source store and deduplicate all assets globally if later content growth justifies it. Current immutable revision archives avoid duplicating frozen media for each attempt.
