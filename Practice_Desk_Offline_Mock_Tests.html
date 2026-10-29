@@ -6826,7 +6826,13 @@ select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-vis
         } catch (error) {
           console.warn("Invalid emergency session mirror", error);
         }
-      } catch {
+      } catch (error) {
+        console.warn("IndexedDB startup failed; switching to local fallback", error);
+        try {
+          db?.close();
+        } catch {
+        }
+        db = null;
         warning = "IndexedDB unavailable. Limited localStorage fallback is in use.";
         try {
           const storedFallback = localStorage.getItem(storageKey);
@@ -6843,8 +6849,8 @@ select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-vis
               try {
                 validateGenericStoredRecord(record3);
                 records.set(record3.id, record3);
-              } catch (error) {
-                console.warn("Invalid saved practice record", error);
+              } catch (error2) {
+                console.warn("Invalid saved practice record", error2);
               }
             }
           }
