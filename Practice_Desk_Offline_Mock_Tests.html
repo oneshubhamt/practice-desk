@@ -2869,6 +2869,7 @@ let prefs={paper:'cgl-2026-10-08-reviewed',mode:'strict',section:0,displayTheme:
 let resultPaperId=null;let active=null,attempts=[],screen='home',resultId=null,reviewFilter='all',resultTab='insights',historyFilter='all',historySort='newest';
 let genericHistoryRecords=[];
 let cursor=0,db=null,storageMode='checking',storageMessage='',writeChain=Promise.resolve(),testNow=null;
+let legacyWriteConflict=false,fallbackStamp=getLS(FALLBACK_LS);
 let trackedQuestion=null,trackStart=0,tabVisible=!document.hidden,autosaveWarned=false;
 const now=()=>testNow==null?Date.now():testNow;
 
@@ -2923,15 +2924,23 @@ function openDB(){return new Promise((resolve,reject)=>{if(!('indexedDB'in windo
 function dbRead(store,key){return new Promise((res,rej)=>{const tx=db.transaction(store,'readonly'),req=tx.objectStore(store).get(key);req.onsuccess=()=>res(req.result);req.onerror=()=>rej(req.error);});}
 function dbGetAll(store){return new Promise((res,rej)=>{const tx=db.transaction(store,'readonly'),req=tx.objectStore(store).getAll();req.onsuccess=()=>res(req.result||[]);req.onerror=()=>rej(req.error);});}
 function dbPut(store,value){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).put(value);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);tx.onabort=()=>rej(tx.error);});}
-function dbPutAttemptWithRevision(a){
+function dbPutAttemptWithRevision(a,expected=undefined){
  return new Promise((resolve,reject)=>{
+  if(legacyWriteConflict)return reject(Error('Another tab changed this CGL attempt'));
   const tx=db.transaction(['attempts','revisions'],'readwrite');
   const id=a.frozen?.snapshot?.paperRevisionId,revision=id&&displayRevisions.get(id);
+  let conflict=null;
   if(revision&&!savedRevisionIds.has(id))tx.objectStore('revisions').put(structuredClone(revision));
-  tx.objectStore('attempts').put(structuredClone(a));
+  const store=tx.objectStore('attempts'),read=store.get(a.id);
+  read.onsuccess=()=>{
+   try{
+    if(expected!==undefined)GENERIC_ENGINE.assertWriteVersion(read.result,expected);
+    store.put(structuredClone(a));
+   }catch(error){conflict=error;tx.abort();}
+  };
   tx.oncomplete=()=>{if(revision)savedRevisionIds.add(id);resolve();};
-  tx.onerror=()=>reject(tx.error||Error('Attempt write failed'));
-  tx.onabort=()=>reject(tx.error||Error('Attempt write aborted'));
+  tx.onerror=()=>reject(conflict||tx.error||Error('Attempt write failed'));
+  tx.onabort=()=>reject(conflict||tx.error||Error('Attempt write aborted'));
  });
 }
 function captureDisplayArchive(a){
@@ -2942,16 +2951,51 @@ function captureDisplayArchive(a){
   displayRevisions.set(id,GENERIC_ENGINE.archiveDisplayRevision(id,a.paperId,paper));
 }
 function dbDelete(store,id){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).delete(id);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);tx.onabort=()=>rej(tx.error);});}
-function queueWrite(job){writeChain=writeChain.catch(()=>{}).then(job).catch(e=>{db=null;storageMode='localStorage';storageMessage='IndexedDB write failed. Switched to localStorage; export a backup.';fallbackSave();saveActiveMirror();if(!autosaveWarned){notify('Storage problem: using browser fallback. Export a backup.');autosaveWarned=true;}console.warn('Practice Desk storage',e)});return writeChain;}
-function fallbackSave(){const data=JSON.stringify(attempts);if(!setLS(FALLBACK_LS,data)){storageMessage='Browser storage full or blocked. Export a backup.';notify(storageMessage);}}
+function queueWrite(job){writeChain=writeChain.catch(()=>{}).then(()=>legacyWriteConflict?null:job()).catch(async e=>{
+ if(String(e?.message||'').startsWith('Another tab')){
+  legacyWriteConflict=true;
+  storageMessage='Another tab changed this CGL attempt. Editing stopped here; reopen to continue.';
+  removeLS(MIRROR_LS);active=null;screen='home';
+  try{if(db){const saved=await dbGetAll('attempts');attempts=saved.filter(usableStored);}}catch(error){console.warn('Could not reload concurrent CGL changes',error);}
+  render();notify(storageMessage);console.warn('Practice Desk conflict',e);return;
+ }
+ db=null;storageMode='localStorage';
+ storageMessage='IndexedDB write failed. Switched to localStorage; export a backup.';
+ fallbackStamp=getLS(FALLBACK_LS);
+ fallbackSave();saveActiveMirror();
+ if(!autosaveWarned){notify('Storage problem: using browser fallback. Export a backup.');autosaveWarned=true;}
+ console.warn('Practice Desk storage',e);
+});return writeChain;}
+function fallbackSave(){
+ if(legacyWriteConflict)return false;
+ if(getLS(FALLBACK_LS)!==fallbackStamp){
+  legacyWriteConflict=true;storageMessage='Another tab modified fallback history. Reopen before editing.';
+  removeLS(MIRROR_LS);notify(storageMessage);return false;
+ }
+ const data=JSON.stringify(attempts);
+ if(!setLS(FALLBACK_LS,data)){
+  storageMessage='Browser storage full or blocked. Export a backup.';notify(storageMessage);return false;
+ }
+ fallbackStamp=data;return true;
+}
 function savePrefs(){setLS(SETTINGS_LS,JSON.stringify(prefs));if(db)queueWrite(()=>dbPut('settings',{key:'preferences',value:prefs}));}
-function saveActiveMirror(){if(active&&!active.finishedAt){
+function saveActiveMirror(){if(legacyWriteConflict)return;if(active&&!active.finishedAt){
  if(!setLS(MIRROR_LS,JSON.stringify(active))){
   storageMessage='Active-session emergency copy could not be saved. Export a backup.';
   if(!autosaveWarned){notify(storageMessage);autosaveWarned=true;}
  }
 }else removeLS(MIRROR_LS);}
-function upsertAttempt(a){captureDisplayArchive(a);a.updatedAt=now();const idx=attempts.findIndex(x=>x.id===a.id);if(idx<0)attempts.push(a);else attempts[idx]=a;saveActiveMirror();if(db){const snap=structuredClone(a);queueWrite(()=>dbPutAttemptWithRevision(snap));}else fallbackSave();}
+function upsertAttempt(a){
+ if(legacyWriteConflict){notify('Another tab changed the saved attempt. Reopen before editing.');return;}
+ captureDisplayArchive(a);a.updatedAt=now();
+ const idx=attempts.findIndex(x=>x.id===a.id);
+ const expected=idx<0?null:(Number.isSafeInteger(a.saveRevision)?a.saveRevision:0);
+ a.saveRevision=GENERIC_ENGINE.nextWriteVersion(expected);
+ if(idx<0)attempts.push(a);else attempts[idx]=a;
+ saveActiveMirror();
+ if(db){const snap=structuredClone(a);queueWrite(()=>dbPutAttemptWithRevision(snap,expected));}
+ else fallbackSave();
+}
 async function removeAttempt(id){attempts=attempts.filter(a=>a.id!==id);if(db)await queueWrite(()=>dbDelete('attempts',id));if(!db)fallbackSave();if(resultId===id)resultId=null;if(active?.id===id){active=null;saveActiveMirror();}}
 /** Check local records before allowing them to influence the visible history or live state. */
 function usableStored(a){
@@ -3254,6 +3298,13 @@ async function clearHistory(){let list=attempts.filter(a=>a.finishedAt);if(!list
 function render(){if(screen==='generic')return;if(screen==='exam'&&active){settleTimer();if(screen!=='exam')return;}if(screen==='exam'&&!active)screen='home';if(screen!=='exam')stopTracking();if(screen==='exam')drawExam();else if(screen==='results')drawResults();else if(screen==='history')drawHistory();else drawHome();}
 document.addEventListener('keydown',e=>{if(screen!=='exam'||!active||active.pausedAt||e.target.closest('input,textarea,select'))return;const k=e.key.toLowerCase();if(k==='f'&&!e.ctrlKey&&!e.altKey&&!e.metaKey){e.preventDefault();toggleFullscreen();return;}if(letters.includes(k)){e.preventDefault();pickAnswer(k);}else if(k==='arrowright'){e.preventDefault();changeQuestion(Math.min(24,cursor+1));}else if(k==='arrowleft'){e.preventDefault();changeQuestion(Math.max(0,cursor-1));}else if(k==='m'){e.preventDefault();markQuestion();}});
 document.addEventListener('visibilitychange',()=>{tabVisible=!document.hidden;if(active)GENERIC_ENGINE.event(active,{type:'VISIBILITY',nowMs:now(),visible:tabVisible});if(!tabVisible){stopTracking();if(active)upsertAttempt(active);}else{settleTimer();if(screen==='exam'){resetTracking();startTracking();render();}}});
+window.addEventListener('storage',e=>{
+ if(e.key===FALLBACK_LS&&storageMode==='localStorage'&&e.newValue!==fallbackStamp){
+  legacyWriteConflict=true;removeLS(MIRROR_LS);
+  storageMessage='Fallback history changed in another tab. Reopen this file to continue safely.';
+  active=null;screen='home';render();notify(storageMessage);
+ }
+});
 window.addEventListener('pagehide',()=>{if(active){stopTracking();GENERIC_ENGINE.event(active,{type:'VISIBILITY',nowMs:now(),visible:false});saveActiveMirror();if(!db)fallbackSave();}});
 window.addEventListener('pageshow',e=>{if(!e.persisted||!active)return;
  tabVisible=!document.hidden;
