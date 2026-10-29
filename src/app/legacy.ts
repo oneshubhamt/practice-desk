@@ -349,8 +349,20 @@ function drawExam(){
  if(!a)return drawHome();
  GENERIC_ENGINE.ensure(a,now());
  const root=$('app');
+ const previous=document.activeElement;
+ const focus=previous instanceof HTMLElement&&root.contains(previous)?
+  {id:previous.id,choice:previous.dataset.choice,question:previous.dataset.q,section:previous.dataset.section}:null;
  root.classList.add('generic-workspace');
  root.innerHTML=globalThis.PD_GENERIC_RENDER_CGL(a,SOURCE_PAPERS,REVIEW_PATCHES,SOLUTION_BANK);
+ if(focus){
+  const controls=[...root.querySelectorAll('button,input,select,textarea')];
+  const matched=controls.find(el=>
+   (focus.choice!==undefined&&el.dataset.choice===focus.choice)||
+   (focus.question!==undefined&&el.dataset.q===focus.question)||
+   (focus.section!==undefined&&el.dataset.section===focus.section)||
+   (focus.id&&el.id===focus.id));
+  if(matched&&!matched.disabled)matched.focus({preventScroll:true});
+ }
  $('g-library').onclick=goHome;
  document.querySelectorAll('input[data-choice]').forEach(input=>input.onchange=()=>{
   const q=selectedQuestion();
