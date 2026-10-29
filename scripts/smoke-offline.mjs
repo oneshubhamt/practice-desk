@@ -346,8 +346,9 @@ try{
  const advanced=await find(second,x=>x.id===race.id&&x.saveRevision>race.saveRevision);
  if(await reopened.locator('[data-attempt="'+race.id+'"]').count())
   await reopened.locator('[data-attempt="'+race.id+'"]').first().click();
- if(await reopened.locator('input[data-choice]').count()>=3)
-  await reopened.locator('input[data-choice]').nth(2).click();
+ // A stale-tab rejection may remove the exam inputs while a click is pending.
+ // Dispatch at most one synchronous user-level click if the form still exists.
+ await reopened.evaluate(()=>document.querySelectorAll('input[data-choice]')[2]?.click());
  await reopened.locator(".generic-warning").filter({hasText:"Another tab"}).waitFor();
  const authoritative=(await attempts(second)).find(x=>x.id===race.id);
  fail(authoritative.saveRevision===advanced.saveRevision,"Stale tab replaced newer revision");
