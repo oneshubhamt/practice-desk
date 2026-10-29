@@ -1,3 +1,4 @@
+import { paperRevisionHash } from "../src/domain/integrity.ts";
 import test from "node:test";
 import { questions, answers, pkg } from "./fixtures/six-kinds.mjs";
 import assert from "node:assert/strict";
