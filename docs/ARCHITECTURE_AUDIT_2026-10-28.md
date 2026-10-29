@@ -1340,3 +1340,16 @@ See `docs/PASS4_RELEASE_ACCEPTANCE.md` for remaining verification. Do not merge 
 - All previous CGL strict/free/section, six-kind custom, manual scoring, hashed media, offline backup, IndexedDB multi-tab and quota denial, 390/768-pixel responsive gates retained.
 - [Green intermediate implementation CI #40903965637](https://github.com/oneshubhamt/practice-desk/actions/runs/40903965637) confirms full test suite/browser flows after lineage integration. Final documentation HEAD [CI #40904651689](https://github.com/oneshubhamt/practice-desk/actions/runs/40904651689) passed: **70/70 Node tests**, strict TS/build, all real Chromium `file://` smoke including generated revision and provenance, FSRS noninterference, complete backups/reopen, CGL/custom modes, stale-tab/fallback/quota failure and responsive layouts.
 
+
+
+## Pass 9 — five-step UI and v11 parity scratchpad (29 October 2026)
+
+**1 · Audit:** Current `generic-ui.ts` has one combined library/history listing, exam shell of two panels with plain timer and palette, and a continuous result page with every review rendered. `learning-ui.ts` displays FSRS, revision and topic evidence but remains a raw two-column form/table. Current CSS is ~8 KB versus v11's ~29 KB, and the current header exposes four permanent display buttons instead of v11's compact popover/fullscreen. v11 `legacy.ts` supplies dedicated home, compact in-progress resume, comprehensive history with trend/priorities, tabbed results, review filters, item timings, progress bars, speed×accuracy and mark-swing cards, and a polished immersive exam shell. The **new typed engine, FSRS, backups, provenance, draft/score integrity and offline restrictions are preserved**; no v11 code/DB migrations. [Feature parity ledger](V11_PARITY_LEDGER.md).
+
+**2 · Analyze:** Implement presentation as distinct `library`, `history`, `exam`, `result`, `learning` views using existing record/map/engine; dedicated history sorting/filtering and revision-cohort trends must derive from frozen record data, not invented psychometrics. Result tabs separate overview, question review and timing, with scoped filters; keep original key/manual grades/provenance media available and no answers visible in exams. Add responsive, visually designed home, active-attempt notice, metric cards/visual pacing, enhanced exam navigator/timer, display popover/fullscreen without breaking dark/scale persistence. Preserve all historical tests and add actual Chrome `file://` UI interactions at 390px, 768px and desktop. Pass 10 remains cross-browser/screen-reader/performance/forced-exit QA.
+
+**3 · Implementation:** Pending.
+
+**4 · Check each objective vs v11:** Pending.
+
+**5 · Targeted QA and final CI:** Pending.

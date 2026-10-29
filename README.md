@@ -11,6 +11,7 @@ Strictly typed, exam-agnostic offline practice desk. Built-in SSC CGL source/rev
 | [Architecture audit / live scratchpad](docs/ARCHITECTURE_AUDIT_2026-10-28.md) | **Authoritative current pass goals, evidence, decisions, QA and outstanding work**; historic entries superseded by later dated entries |
 | [Data model](docs/DATA_MODEL.md) | Schemas, integrity, persistence and invariants |
 | [v11 feature-parity ledger](docs/V11_PARITY_LEDGER.md) | Side-by-side UX/function inventory; mandatory regression targets for Pass 9 |
+| [Pass 9 acceptance](docs/PASS9_RELEASE_ACCEPTANCE.md) | **Current UI and feature-parity objectives** |
 | [Pass 4 acceptance](docs/PASS4_RELEASE_ACCEPTANCE.md) | Clean typed app and offline engine baseline |
 | [Pass 5 acceptance](docs/PASS5_RELEASE_ACCEPTANCE.md) | Learning/FSRS baseline |
 | [Pass 6 acceptance](docs/PASS6_RELEASE_ACCEPTANCE.md) | Content integrity, frozen media and backup v3 baseline |
