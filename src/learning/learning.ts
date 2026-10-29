@@ -107,7 +107,7 @@ export function topicMetrics(attempts:readonly GenericAttempt[]):TopicMetrics[]{
      if(!q||!section)continue;
      const topics=q.content.topicIds?.length?q.content.topicIds.map(id=>String(id)):[section.title];
      for(const topic of topics){
-       const id=attempt.examId??attempt.frozen.snapshot.examId;
+       const id=attempt.frozen.snapshot.examId;
        const key=id+"|"+topic;
        const r=rows.get(key)??{id:key,label:topic,examId:id,total:0,answered:0,correct:0,incorrect:0,skipped:0,accuracy:null,coverage:0,evidence:"insufficient" as const};
        r.total++;
