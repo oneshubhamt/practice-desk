@@ -407,6 +407,31 @@ try{
  fail(fallbackArchive.records.some(x=>x.id===fallbackId),"Fallback recovery export unavailable");
  console.log("Chrome file://: localStorage fallback conflict and safe export passed");
 
+ // An opened IndexedDB with a failed initial read must also switch writes.
+ const readFailure=await context.newPage();
+ await readFailure.addInitScript(()=>{
+  IDBObjectStore.prototype.getAll=function(){
+   throw new Error("Injected initial IndexedDB read failure");
+  };
+ });
+ await testPage(readFailure);
+ await readFailure.locator(".generic-warning").filter({hasText:"IndexedDB unavailable"}).waitFor();
+ const fallbackBefore=await readFailure.evaluate(()=>
+  JSON.parse(localStorage.getItem("practiceDesk.overhaul.fallback.v1")??"[]").length);
+ await readFailure.locator("#g-start").click();
+ await readFailure.locator('input[data-choice]').first().click();
+ let fallbackAfter=0;
+ for(let i=0;i<100;i++){
+  fallbackAfter=await readFailure.evaluate(()=>
+   JSON.parse(localStorage.getItem("practiceDesk.overhaul.fallback.v1")??"[]").length);
+  if(fallbackAfter>fallbackBefore)break;
+  await delay(100);
+ }
+ fail(fallbackAfter>fallbackBefore,
+  "Failed initial IndexedDB read did not switch writes to fallback storage");
+ console.log("Chrome file://: failed initial IndexedDB read uses durable fallback");
+
+
  // Inject a synchronous IndexedDB write rejection. No success claim may survive the failed commit,
  // and an explicitly named recovery export must contain the in-memory unsaved record.
  const denied=await context.newPage();

@@ -1034,7 +1034,12 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          if(winner===mirror)void save(mirror);
        }
      }catch(error){console.warn("Invalid emergency session mirror",error);}
-   }catch{
+   }catch(error){
+     // A failed initial read must not leave an active IndexedDB handle
+     // behind while displaying fallback localStorage data.
+     console.warn("IndexedDB startup failed; switching to local fallback",error);
+     try{db?.close();}catch{}
+     db=null;
      warning="IndexedDB unavailable. Limited localStorage fallback is in use.";
      try{
        const storedFallback=localStorage.getItem(storageKey);
