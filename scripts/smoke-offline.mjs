@@ -180,6 +180,39 @@ try{
  await page.locator("#learning-close").click();
  console.log("Chrome file://: Pass 5 FSRS-7 review, notebook notes and topic analytics passed");
 
+ // Pass 8: turn the frozen notebook into a real practice test; never leak solutions.
+ await page.locator("#g-learning").click();
+ fail(await page.locator("#learning-test").count()===1,"Notebook revision-test entry missing");
+ await page.locator("#learning-test").click();
+ await page.locator(".generic-prompt").waitFor();
+ const revision=await find(page,x=>x.recordType==="generic-attempt"&&
+   x.frozen.paper.paperId?.startsWith("notebook-revision:")&&x.finishedAt===null);
+ fail(revision.frozen.paper.timing.kind==="untimed"&&revision.frozen.snapshot.mode==="custom-practice",
+   "Notebook revision did not start through the generic exam engine");
+ fail(revision.frozen.paper.scoring.defaultRule.correctMarks===1&&
+   revision.frozen.paper.scoring.defaultRule.incorrectMarks===0,
+   "Notebook revision incorrectly inherited official test marks");
+ fail(await page.locator(".learning-answer").count()===0,
+   "Answer revealed in an active generated exam");
+ fail(await page.locator("#g-attempt-evidence").count()===0,
+   "Results analytics leaked into an active test");
+ const revisionButtons=await page.locator('input[data-choice]').count();
+ fail(revisionButtons>=2,"Generated revision question controls missing");
+ await page.locator('input[data-choice]').first().click();
+ page.once("dialog",d=>d.accept());
+ await page.locator("#g-submit").click();
+ await page.locator("#g-attempt-evidence").waitFor();
+ const revisedCompleted=await find(page,x=>x.id===revision.id&&x.finishedAt!==null);
+ fail(revisedCompleted.result.items.length===1,"Revision exam did not complete as a normal attempt");
+ fail(await page.locator(".generic-review").count()===1,
+   "Revision results did not contain the frozen notebook question");
+ await page.locator("#g-library").click();
+ await page.locator('[data-attempt="'+revision.id+'"]').click();
+ fail(await page.locator("#g-attempt-evidence").count()===1,
+   "Generated revision was not available in persisted attempt history");
+ await page.locator("#g-library").click();
+ console.log("Chrome file://: notebook-generated revision, scoring, analysis and reopening passed");
+
 
  // Preferences are included in the v3 complete backup and restored with data.
  await page.locator("#themeToggle").click();
@@ -196,6 +229,8 @@ try{
    "Written self-assessment missing from complete backup");
  fail(backup.records.some(a=>a.id===cgl.id&&a.sourceKeyReference?.entries?.length===100),
    "Frozen original-source key missing from complete backup");
+ fail(backup.records.some(a=>a.id===revision.id&&a.frozen.paper.edition==="custom"),
+   "Notebook revision test missing from full backup");
  page.once("dialog",d=>d.accept());
  await page.locator('[data-delete="'+custom.id+'"]').click();
  const deleted=await attempts(page);

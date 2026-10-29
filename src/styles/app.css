@@ -42,3 +42,15 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
 .learning-answer{border-top:1px solid var(--line);padding-top:15px;margin-top:16px}
 .learning-answer p{white-space:pre-wrap}
 @media(max-width:760px){.learning-entry{padding:16px}.learning-layout{grid-template-columns:1fr}}
+
+
+/* Pass 8 evidence presentation — v11-grade composition is a separate Pass 9 gate. */
+.learning-metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:11px;margin:12px 0 18px}
+.learning-metric{display:grid;gap:5px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px;min-width:0}
+.learning-metric strong{font-size:.85em;color:var(--muted)}.learning-metric b{font-size:1.12em;font-variant-numeric:tabular-nums}
+.learning-metric small{color:var(--muted);font-size:.78em}
+#g-attempt-evidence{margin-top:18px}
+#g-attempt-evidence h3{margin:20px 0 9px}
+.learning-insights .scroll-table{margin-bottom:16px}
+.learning-entry .btn:disabled{opacity:.6}
+@media(max-width:430px){.learning-metric-grid{grid-template-columns:1fr 1fr}.learning-metric{padding:10px}}
