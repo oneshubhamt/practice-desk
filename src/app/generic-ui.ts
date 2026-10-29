@@ -9,6 +9,10 @@ import { makeBackup, verifyBackup, planBackupMerge } from "../history/backup.ts"
 import { validateResponse } from "../engine/response.ts";
 import { assertWriteVersion, nextWriteVersion } from "../history/concurrency.ts";
 import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
+import { createLearningDesk } from "./learning-ui.ts";
+import { addLearningCard, validateLearningCard } from "../learning/learning.ts";
+import type { LearningCard } from "../learning/learning.ts";
+import type { QuestionRevisionId } from "../domain/ids.js";
 
 const escapeText=(s:unknown):string=>String(s??"").replace(/[&<>"']/g,c=>
   ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" })[c]??c);
@@ -68,9 +72,10 @@ function stimulusHTML(bundle:ExamPackage,q:QuestionRevision):string{
 }
 
 type PackageRecord={recordType:"generic-package";id:string;bundle:ExamPackage;saveRevision?:number};
-type RecordItem=PackageRecord|GenericAttempt;
+type RecordItem=PackageRecord|GenericAttempt|LearningCard;
 const isAttempt=(x:unknown):x is GenericAttempt=>!!x&&typeof x==="object"&&(x as GenericAttempt).recordType==="generic-attempt";
 const isPackage=(x:unknown):x is PackageRecord=>!!x&&typeof x==="object"&&(x as PackageRecord).recordType==="generic-package";
+const isLearning=(x:unknown):x is LearningCard=>!!x&&typeof x==="object"&&(x as LearningCard).recordType==="learning-card";
 
 /** Treat browser records and exported JSON as untrusted until their frozen inputs and responses validate. */
 export function validateGenericStoredRecord(value:unknown):RecordItem {
@@ -79,6 +84,7 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
    if(typeof n!=="number"||!Number.isSafeInteger(n)||n<0)
      throw new Error("Invalid stored write revision");
  }
+ if(isLearning(value))return validateLearningCard(value);
  if(isPackage(value)){
    if(typeof value.id!=="string" || value.id!=="generic-package:"+value.bundle?.paper?.id)
      throw new Error("Invalid imported package record identity");
@@ -196,14 +202,14 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  const records=new Map<string,RecordItem>();
  let choice=[...packages.values()].reverse().find(p=>p.paper.edition==="reviewed")?.paper.id??(packages.keys().next().value as string);
  let cglMode:CglPracticeMode="strict", singleSection=0, historyFilter="all";
- let attempt:GenericAttempt|null=null, view:"library"|"exam"|"result"="library";
+ let attempt:GenericAttempt|null=null, view:"library"|"exam"|"result"|"learning"="library";
  let db:IDBDatabase|null=null, warning="",disposed=false, loading=true, writeQueue=Promise.resolve();
  let lastTimerSave=0;
  let fallbackStamp:string|null=null, fallbackConflict=false;
  const storageKey="practiceDesk.overhaul.fallback.v1", mirrorKey="practiceDesk.overhaul.active.v1";
  const dbName="practiceDesk.overhaul.v1";
  const downloadBackup=()=>{
-   let recordsToExport=[...records.values()].filter(record=>isPackage(record)||isAttempt(record));
+   let recordsToExport=[...records.values()].filter(record=>isPackage(record)||isAttempt(record)||isLearning(record));
    if(fallbackConflict&&!db){
      try{
        const latest=JSON.parse(localStorage.getItem(storageKey)??"[]") as unknown;
@@ -254,7 +260,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      if(isPackage(record) && !packages.has(record.bundle.paper.id))
        packages.set(record.bundle.paper.id,record.bundle);
    }
-   warning="Imported "+incoming.length+" records; existing attempts preserved.";
+   warning="Imported "+incoming.length+" records; existing attempts and learning cards preserved.";
    draw();
  };
 
@@ -326,7 +332,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  };
  const removeSavedAttempt=async(id:string):Promise<void>=>{
    const saved=records.get(id);
-   if(!isAttempt(saved)||!confirm("Permanently delete this attempt? Export a backup first if needed."))return;
+   if(!(isAttempt(saved)||isLearning(saved))||!confirm("Permanently delete this saved item? Export a backup first if needed."))return;
    try{
      await writeQueue;
      if(db){
@@ -353,6 +359,28 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      if(attempt?.id===id){attempt=null;view="library";}
      draw();
    }catch(error){notice(error instanceof Error?error.message:"Deletion failed");}
+ };
+ const learningDesk=createLearningDesk(root,{
+   cards:()=>[...records.values()].filter(isLearning),
+   attempts:()=>[...records.values()].filter(isAttempt),
+   packages:()=>[...packages.values()],
+   save:(item)=>save(item),
+   remove:(id)=>removeSavedAttempt(id),
+   close:()=>{view="library";draw();}
+ });
+ const addNotebookCard=(source:GenericAttempt,id:string):void=>{
+   if(records.has("learning-card:"+id))return;
+   try{
+     const record=addLearningCard(source,id as QuestionRevisionId,new Date(now()).toISOString());
+     save(record);warning="Question added to the notebook.";draw();
+   }catch(error){notice(error instanceof Error?error.message:"Unable to add notebook card");}
+ };
+ const addResultCards=(source:GenericAttempt):void=>{
+   const ids=source.result?.items.filter(item=>item.verdict==="incorrect"||item.verdict==="unanswered")
+     .map(item=>item.questionRevisionId).filter(id=>!records.has("learning-card:"+id))??[];
+   for(const id of ids)save(addLearningCard(source,id,new Date(now()).toISOString()));
+   warning=ids.length?ids.length+" mistake/skipped cards saved to the revision notebook.":"All mistakes/skips are already in the notebook.";
+   draw();
  };
  const dispatch=(event:SessionEvent)=>{
    if(!attempt)return;
@@ -415,7 +443,10 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          (a.finishedAt?(result?result.earnedMarks+' marks · ':"")+'Completed':'Resume')+'</small></button>'+
          '<button class="btn danger generic-delete" data-delete="'+escapeText(a.id)+'" aria-label="Delete saved attempt">Delete</button></div>';
      }).join(""):'<p class="fine">No matching attempts.</p>')+
-     '</section></div>';
+     '</section></div>'+
+      '<section class="panel pad learning-entry"><div><h2>Learning & revision</h2><p class="fine">'+
+       [...records.values()].filter(isLearning).length+' notebook cards · FSRS-7 reviews and comparable topic analytics</p></div>'+
+       '<button class="btn primary" id="g-learning">Open learning desk</button></section>';
  }
  function packageForAttempt(saved:GenericAttempt):ExamPackage|undefined{
    return packages.get(saved.packageId)??[...packages.values()].find(p=>
@@ -447,7 +478,9 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
     '</b><small>Excluded</small></div></div><p class="fine">Written responses marked pending require manual evaluation.</p></section>'+
     '<section class="panel pad"><h2>Section performance</h2><div class="scroll-table"><table><thead><tr><th>Section</th><th>Marks</th><th>Correct</th><th>Time on questions</th></tr></thead><tbody>'+
      paperSectionRows+'</tbody></table></div></section>'+
-    '<section class="panel pad"><h2>Question review</h2>'+s.items.map((it,i)=>{
+    '<section class="panel pad"><div class="row between"><h2>Question review</h2>'+
+      '<button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div>'+
+      '<p class="fine">Mock-test results never automatically become FSRS review ratings.</p>'+s.items.map((it,i)=>{
       const q=qs.get(it.questionRevisionId);
       const response=attempt!.state.responses.find(r=>r.questionRevisionId===it.questionRevisionId)?.response;
       const answer=attempt!.frozen.key.entries.find(e=>e.questionRevisionId===it.questionRevisionId)?.answer;
@@ -459,7 +492,11 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        '<p class="fine">Your answer: '+escapeText(readableAnswer(q,response))+'</p>'+
        '<p class="fine">Expected: '+escapeText(readableAnswer(q,answer))+'</p>'+
        (q.editorial.notes?'<p class="fine">Editorial note: '+escapeText(q.editorial.notes)+'</p>':"")+
-       (explanation?'<p class="fine">Explanation: '+escapeText(explanation)+'</p>':"")+'</article>':"";
+       (explanation?'<p class="fine">Explanation: '+escapeText(explanation)+'</p>':"")+
+       '<button class="btn" data-add-card="'+escapeText(q.id)+'"'+
+         (records.has("learning-card:"+q.id)?" disabled":"")+'>'
+         +(records.has("learning-card:"+q.id)?"In notebook":"Add to notebook")+
+       '</button></article>':"";
     }).join("")+'</section>';
  }
  function draw():void{
@@ -469,6 +506,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      {id:previous.id,attributes:["data-choice","data-bool","data-match","data-q","data-section","data-attempt"]
        .filter(name=>previous.hasAttribute(name)).map(name=>[name,previous.getAttribute(name)] as const)}:null;
    root.classList.add("generic-workspace");
+   if(view==="learning"){learningDesk.show();return;}
+   learningDesk.hide();
    root.innerHTML=view==="library"?listHTML():view==="exam"?examHTML():resultHTML();
    if(focusKey){
      const controls=[...root.querySelectorAll<HTMLElement>("button,input,select,textarea")];
@@ -477,6 +516,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      if(target && !("disabled" in target && target.disabled))target.focus({preventScroll:true});
    }
    if(view==="library"){
+     root.querySelector<HTMLButtonElement>("#g-learning")!.onclick=()=>{view="learning";draw();};
      root.querySelector<HTMLSelectElement>("#g-papers")!.onchange=e=>{
        choice=(e.target as HTMLSelectElement).value;draw();
      };
@@ -533,6 +573,13 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      return;
    }
    root.querySelector<HTMLButtonElement>("#g-library")!.onclick=()=>{view="library";attempt=null;draw();};
+   if(view==="result"&&attempt){
+     root.querySelector<HTMLButtonElement>("#g-revision-set")!.onclick=()=>addResultCards(attempt!);
+     root.querySelectorAll<HTMLButtonElement>("[data-add-card]").forEach(button=>button.onclick=()=>{
+       if(attempt)addNotebookCard(attempt,button.dataset.addCard??"");
+     });
+     return;
+   }
    if(view!=="exam"||!attempt)return;
    const section=attempt.frozen.paper.sections[attempt.state.sectionIndex];
    const q=attempt.frozen.questions.find(x=>x.id===section?.questionRevisionIds[attempt!.state.questionIndex]);
@@ -642,7 +689,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    if(!disposed)draw();
  };
  window.addEventListener("storage",storage);
- function cleanup(){disposed=true;window.clearInterval(timer);document.removeEventListener("visibilitychange",visibility);
+ function cleanup(){learningDesk.dispose();disposed=true;window.clearInterval(timer);document.removeEventListener("visibilitychange",visibility);
    window.removeEventListener("pagehide",pagehide);window.removeEventListener("storage",storage);void writeQueue.finally(()=>db?.close());root.classList.remove("generic-workspace");}
  draw();
  (async()=>{
@@ -666,9 +713,9 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          const valid=validateExamPackage(record.bundle);
          if(!packages.has(valid.paper.id)){packages.set(valid.paper.id,valid);records.set(record.id,record);}
        }catch(error){console.warn("Invalid saved package",error);}}
-       else if(isAttempt(record)){
+       else if(isAttempt(record)||isLearning(record)){
          try{validateGenericStoredRecord(record);records.set(record.id,record);}
-         catch(error){console.warn("Invalid saved generic attempt",error);}
+         catch(error){console.warn("Invalid saved practice record",error);}
        }
      }
      try{
@@ -688,9 +735,9 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        const recordsFromStorage=JSON.parse(storedFallback??"[]") as unknown[];
        for(const record of recordsFromStorage){
          if(isPackage(record)){try{packages.set(record.bundle.paper.id,validateExamPackage(record.bundle));records.set(record.id,record);}catch{}}
-         else if(isAttempt(record)){
+         else if(isAttempt(record)||isLearning(record)){
          try{validateGenericStoredRecord(record);records.set(record.id,record);}
-         catch(error){console.warn("Invalid saved generic attempt",error);}
+         catch(error){console.warn("Invalid saved practice record",error);}
        }
        }
      }catch{warning="Browser storage is unavailable; attempts may not survive a reload.";}

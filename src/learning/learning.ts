@@ -94,7 +94,8 @@ export interface TopicMetrics {
  id:string;label:string;examId:string;total:number;answered:number;correct:number;incorrect:number;skipped:number;
  accuracy:number|null;coverage:number;evidence:"insufficient"|"measured";
 }
-export function topicMetrics(attempts:readonly GenericAttempt[]):TopicMetrics[]{
+export function topicMetrics(attempts:readonly GenericAttempt[],cards:readonly LearningCard[]=[]):TopicMetrics[]{
+ const manual=new Map(cards.filter(c=>c.customTopic.trim()).map(c=>[c.question.id,c.customTopic.trim()]));
  const rows=new Map<string,TopicMetrics>();
  for(const attempt of attempts){
    if(!attempt.result||attempt.finishedAt===null)continue;
@@ -105,11 +106,12 @@ export function topicMetrics(attempts:readonly GenericAttempt[]):TopicMetrics[]{
      const q=questions.get(item.questionRevisionId);
      const section=sections.find(s=>s.questionRevisionIds.includes(item.questionRevisionId));
      if(!q||!section)continue;
-     const topics=q.content.topicIds?.length?q.content.topicIds.map(id=>String(id)):[section.title];
+     const topics=[...new Set([section.title,...(q.content.topicIds??[]),manual.get(q.id)].filter(
+       (label):label is string=>typeof label==="string"&&label.length>0))];
      for(const topic of topics){
        const id=attempt.frozen.snapshot.examId;
        const key=id+"|"+topic;
-       const r=rows.get(key)??{id:key,label:topic,examId:id,total:0,answered:0,correct:0,incorrect:0,skipped:0,accuracy:null,coverage:0,evidence:"insufficient" as const};
+       const r:TopicMetrics=rows.get(key)??{id:key,label:topic,examId:id,total:0,answered:0,correct:0,incorrect:0,skipped:0,accuracy:null,coverage:0,evidence:"insufficient"};
        r.total++;
        if(item.verdict==="correct"){r.correct++;r.answered++;}
        if(item.verdict==="incorrect"){r.incorrect++;r.answered++;}
