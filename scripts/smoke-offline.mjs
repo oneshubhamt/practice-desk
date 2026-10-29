@@ -234,7 +234,7 @@ try{
  const downloadFallback=fallbackA.waitForEvent("download");
  await fallbackA.locator("#g-export-history").click();
  const fallbackArchive=JSON.parse(await readFile(await (await downloadFallback).path(),"utf8"));
- fail(fallbackArchive.attempts.some(x=>x.id===fallbackId),"Fallback recovery export unavailable");
+ fail(fallbackArchive.records.some(x=>x.id===fallbackId),"Fallback recovery export unavailable");
  console.log("Chrome file://: localStorage fallback conflict and safe export passed");
 
  // Mobile/tablet screens must remain within viewport.

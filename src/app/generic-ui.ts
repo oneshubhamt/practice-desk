@@ -126,8 +126,11 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
    const recalculated=scoreAttempt(paper,value.frozen.key,value.frozen.questions,value.state.responses,
      value.result.snapshot.calculatedAt);
    const fields=["earnedMarks","positiveMarks","penaltyMarks","correctCount","incorrectCount","unansweredCount","excludedCount"] as const;
-   if(fields.some(field=>value.result!.snapshot[field]!==recalculated.snapshot[field]))
-     throw new Error("Completed attempt score does not match its frozen inputs");
+   if(fields.some(field=>value.result!.snapshot[field]!==recalculated.snapshot[field])||
+      JSON.stringify(value.result.items)!==JSON.stringify(recalculated.items)||
+      typeof value.result.snapshot.calculatedAt!=="string"||
+      !Number.isFinite(Date.parse(value.result.snapshot.calculatedAt)))
+     throw new Error("Completed attempt score or item verdict does not match its frozen inputs");
  }
  return value;
 }
