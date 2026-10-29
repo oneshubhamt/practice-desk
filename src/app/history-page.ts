@@ -52,7 +52,7 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
  const progressing=attempts.filter(a=>a.finishedAt===null);
  const accurate=done.reduce((n,a)=>n+a.result!.snapshot.correctCount,0);
  const answered=done.reduce((n,a)=>n+a.result!.snapshot.correctCount+a.result!.snapshot.incorrectCount,0);
- const mostRecent=done.toSorted((a,b)=>(b.finishedAt??0)-(a.finishedAt??0))[0];
+ const mostRecent=[...done].sort((a,b)=>(b.finishedAt??0)-(a.finishedAt??0))[0];
  const matching=mostRecent?comparableTrends(done).find(t=>t.paperRevisionId===mostRecent.frozen.paper.id):undefined;
  const priorities=sectionPriorities(done).slice(0,5);
  const pCount=attempts.length;
