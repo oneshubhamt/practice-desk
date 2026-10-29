@@ -35,6 +35,17 @@ async function readGenericAttempts(page){
   };
  }));
 }
+async function readCglAttempts(page){
+ return page.evaluate(()=>new Promise((resolve,reject)=>{
+  const req=indexedDB.open("practiceDesk.history.v1",2);
+  req.onerror=()=>reject(req.error??Error("Open failed"));
+  req.onsuccess=()=>{
+   const db=req.result,all=db.transaction("attempts","readonly").objectStore("attempts").getAll();
+   all.onerror=()=>{db.close();reject(all.error??Error("Read failed"));};
+   all.onsuccess=()=>{const rows=all.result.filter(a=>a.schema===4);db.close();resolve(rows);};
+  };
+ }));
+}
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 let savedId;
 try{
@@ -118,6 +129,29 @@ try{
    const after=(await readGenericAttempts(cgl.page)).find(x=>x.id===savedId);
    if(after?.saveRevision!==otherVersion)throw new Error("Stale tab overwrote the newer revision");
    console.log("Offline file://: stale tab rejected without changing the saved attempt");
+   // The original CGL path also rejects stale writes between simultaneous tabs.
+   await cgl.page.locator("#g-back").click();
+   await cgl.page.locator("#resume").click();
+   const source=(await readCglAttempts(cgl.page)).find(a=>!a.finishedAt);
+   if(!source?.id||!source.saveRevision)throw new Error("No versioned active CGL attempt");
+   const cglTab=await cgl.context.newPage();
+   await cglTab.goto(file,{waitUntil:"load"});
+   await cglTab.locator("#resume").click();
+   await cglTab.locator('[data-answer="b"]').first().click();
+   let latestCgl=null;
+   for(let i=0;i<60;i++){
+    latestCgl=(await readCglAttempts(cglTab)).find(a=>a.id===source.id);
+    if(latestCgl?.saveRevision>source.saveRevision)break;
+    await delay(100);
+   }
+   if(!latestCgl||latestCgl.saveRevision<=source.saveRevision)
+    throw new Error("CGL tab B did not persist a new version");
+   await cgl.page.locator('[data-answer="c"]').first().click();
+   await cgl.page.locator("#toast").filter({hasText:"Another tab"}).waitFor({state:"visible"});
+   const preserved=(await readCglAttempts(cglTab)).find(a=>a.id===source.id);
+   if(preserved?.answers?.[1]!=="b"||preserved.saveRevision!==latestCgl.saveRevision)
+    throw new Error("Stale CGL tab overwrote a newer answer");
+   console.log("Offline file://: original CGL stale-tab write rejected");
  }catch(error){throw new Error("CGL file:// test: "+error.message+"; browser errors: "+cgl.errors.join(" | "));}
  finally{await cgl.context.close();}
 }finally{
