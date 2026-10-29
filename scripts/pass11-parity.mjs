@@ -29,10 +29,10 @@ async function stored(page){
    }finally{db.close();}
  });
 }
-async function saved(page,id){
+async function saved(page,id,accept=()=>true){
  for(let n=0;n<50;n++){
    const row=(await stored(page)).find(x=>x.id===id);
-   if(row)return row;
+   if(row&&accept(row))return row;
    await page.waitForTimeout(100);
  }
  throw Error("Attempt not persisted: "+id);
@@ -103,7 +103,8 @@ try{
  const spent=departed.state.responses.find(x=>x.questionRevisionId===questionId)?.timeSpentMs??0;
  await page.waitForTimeout(1500);
  await page.locator('[data-attempt="'+before.id+'"]').first().click();
- const resumed=await saved(page,before.id);
+ const resumed=await saved(page,before.id,row=>
+   row.state.visible===true&&row.state.elapsedMs>departed.state.elapsedMs+800);
  assert(resumed.state.elapsedMs>departed.state.elapsedMs+800,
    "Elapsed timer failed to advance while in library");
  assert((resumed.state.responses.find(x=>x.questionRevisionId===questionId)?.timeSpentMs??0)-spent<300,
@@ -117,6 +118,17 @@ try{
  page.once("dialog",dialog=>dialog.accept());
  await page.locator("#g-start").click();
  assert(await page.locator("#g-timer").count()===1,"Confirmed parallel attempt did not begin");
+ await page.waitForFunction(async()=>{
+   const request=indexedDB.open("practiceDesk.overhaul.v1",1);
+   const db=await new Promise((resolve,reject)=>{
+     request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);
+   });
+   try{return await new Promise((resolve,reject)=>{
+     const read=db.transaction("attempts","readonly").objectStore("attempts").getAll();
+     read.onsuccess=()=>resolve(read.result.filter(x=>x.recordType==="generic-attempt"&&x.finishedAt===null).length>=2);
+     read.onerror=()=>reject(read.error);
+   });}finally{db.close();}
+ });
  const pending=(await stored(page)).filter(x=>x.recordType==="generic-attempt"&&x.finishedAt===null);
  assert(pending.length>=2,"New attempt discarded previous unfinished record");
  page.once("dialog",dialog=>dialog.accept());

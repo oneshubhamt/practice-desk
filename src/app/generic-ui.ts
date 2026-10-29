@@ -187,6 +187,8 @@ export function renderModelExam(
    const progressValue=timeLimit!==null&&timeLimit>0?
      Math.min(100,100*elapsed/timeLimit):Math.min(100,100*answered/Math.max(1,total));
    const isLow=remaining!==null&&remaining<=60000;
+   const focused=typeof document!=="undefined"&&Boolean(
+     document.fullscreenElement||document.documentElement.classList.contains("immersive"));
 
    const assets:ExamPackage={format:"practice-desk-exam",version:1,
      examId:attempt.frozen.snapshot.examId,title:bundle?.title??"",paper,answerKey:attempt.frozen.key,
@@ -198,8 +200,7 @@ export function renderModelExam(
        (remaining===null?"Untimed":minutes(remaining))+'</strong><small>'+(remaining===null?"PRACTICE":"TIME REMAINING")+'</small></div>'+
      '<button class="btn quiet" id="g-library">← Library</button>'+
      '<button class="btn" type="button" id="g-exam-full" aria-label="Toggle full-screen test view" aria-pressed="'+
-     Boolean(typeof document!=="undefined"&&(document.fullscreenElement||document.documentElement.classList.contains("immersive")))+
-     '">⛶ Full screen</button></div></div>'+
+     focused+'">'+(focused?"⛶ Exit full screen":"⛶ Full screen")+'</button></div></div>'+
      '<p id="g-fullscreen-status" role="status"></p>'+
      (warning?'<p class="generic-warning" role="status">'+escapeText(warning)+'</p>':"")+
      '<section class="exam-progress"><div class="row between"><span class="fine">'+answered+' / '+total+' answered · '+visited+' viewed · '+flagged+' flagged</span>'+
