@@ -1260,3 +1260,28 @@ See `docs/PASS4_RELEASE_ACCEPTANCE.md` for remaining verification. Do not merge 
 - **No migration:** There are no production v11 records to migrate; v11 stays on `baseline/v11`. Fresh frozen schema 2 and backup v3 are clean-break formats in `overhaul`.
 
 **Still unverified and not claimed release-complete:** Firefox/Safari `file://` storage behavior, physical Android/iOS quota and touch tests, forced termination/pagehide data loss, accessibility/screen readers and large-history scaling. Passes 7–9 remain for exam-policy correctness, advanced learning and final UI/release hardening. See `docs/PASS6_RELEASE_ACCEPTANCE.md`.
+
+## Pass 7 current-work scratchpad — audit and design (29 October 2026)
+
+**1 · Audit evidence (current HEAD `69871878`, v11 `e661822d`):**
+- Seven Markdown files mapped in [README.md](../README.md) and [AGENTS.md](../AGENTS.md), with this document as the sole live design scratchpad and `PASS7_RELEASE_ACCEPTANCE.md` as the explicit objective list.
+- `src/engine/session.ts` handles section expiry and forward-only navigation; **`SUBMIT_ATTEMPT` ignores sectional policy** and `RESUME` does not verify that pausing was allowed; UI offers sectional submission only, but engine contract is bypassable.
+- `src/engine/scoring.ts` scores `draft` editorial content despite excluded invalid/under-review/incomplete/superseded statuses; no explicit self-evaluated written response workflow.
+- `src/app/exam-package.ts` always freezes mode `exam-simulation` despite separate CGL flexible/section and generic practice paths.
+- `src/app/generic-ui.ts` result HTML does **not render frozen stimulus or images**, although `frozen.schema=2` retains them; result only has a long text-only list.
+- `src/content/import-cgl.ts` preserves optional source URLs, but loses `sourcePage` and source/patch distinction unless explicitly restored.
+- v11 CSS ~28.7 KB vs new CSS ~7.3 KB, and v11 legacy app offers dedicated history, insights, nuanced review, speed/accuracy, question timings, polished navigators and display popover. Overhaul is deliberately cleaner but **visually and functionally below the v11 baseline**. The explicit [v11 parity ledger](V11_PARITY_LEDGER.md) prevents treating this as acceptable; Pass 9 restores/refines it, while Pass 8 supplies richer analytic data and Pass 10 is platform hardening.
+
+**2 · Design constraints and decisions:**
+- Keep frozen content and scored snapshot immutable; source and reviewed answer keys must never be conflated. Original-key comparisons require a pinned, validated provenance basis; no newly guessed original scores.
+- Enforce timing and navigation in pure engine, not only disabled buttons. CGL strict four 15-minute sections and early section submit **remain supported**. Whole-paper flexible is allowed to end early. For no-early-submit sectional papers, direct submission and premature section submit must be rejected.
+- Maintain source-page provenance and explicit original vs reviewed citations in editorial records, verify hashes, and leave unknown sources unknown.
+- For written responses, auto result remains `pending`; explicit user self-assessment may add a separately labelled persisted marks layer, never alter the original frozen `scoreAttempt` result.
+- Restore all figure/passage/tabular context in results using frozen snapshot even after current package disappearance; HTML escaped and data-URI bounded.
+- Run targeted engine + imported synthetic policy tests, immutable result review, v11 CGL smoke, multi-tab and backup/regression. Update this section with outcome when verified.
+
+**3 · Implementation ledger:** Pending.
+
+**4 · Objective check:** Pending.
+
+**5 · Targeted QA:** Pending.

@@ -2,6 +2,24 @@
 
 Strictly typed, exam-agnostic offline practice desk. Built-in SSC CGL source/reviewed papers and validated imported exam packages use one exam library, session engine, history and analysis flow.
 
+## Architecture and execution map (read before each pass)
+
+| File | Purpose |
+|---|---|
+| [AGENTS.md](AGENTS.md) | Non-negotiable engineering and execution discipline |
+| [README.md](README.md) | Entry point, build, repository/document map |
+| [Architecture audit / live scratchpad](docs/ARCHITECTURE_AUDIT_2026-10-28.md) | **Authoritative current pass goals, evidence, decisions, QA and outstanding work**; historic entries superseded by later dated entries |
+| [Data model](docs/DATA_MODEL.md) | Schemas, integrity, persistence and invariants |
+| [v11 feature-parity ledger](docs/V11_PARITY_LEDGER.md) | Side-by-side UX/function inventory; mandatory regression targets for Pass 9 |
+| [Pass 4 acceptance](docs/PASS4_RELEASE_ACCEPTANCE.md) | Clean typed app and offline engine baseline |
+| [Pass 5 acceptance](docs/PASS5_RELEASE_ACCEPTANCE.md) | Learning/FSRS baseline |
+| [Pass 6 acceptance](docs/PASS6_RELEASE_ACCEPTANCE.md) | Content integrity, frozen media and backup v3 baseline |
+| [Pass 7 acceptance](docs/PASS7_RELEASE_ACCEPTANCE.md) | Current exam/review correctness and QA target |
+
+**Required execution loop for every pass:** (1) **audit** existing sources and baseline plus relevant documents; (2) **analyze** exact invariants, data risks, user-facing regressions and design boundaries in architecture scratchpad; (3) **implement** on `overhaul` only; (4) **check objectives** one-by-one in the same scratchpad; (5) **targeted QA** of both new and existing scenarios, inspect CI and record evidence. No "complete" designation for unchecked objectives. Document new or deferred items precisely and do not hide regression behind a redesigned UI.
+
+**Product sequencing:** Pass 7 exam/review correctness; Pass 8 learning and deeper analytics; Pass 9 **v11-grade feature/UI parity plus improvements** (not a minimal dashboard); Pass 10 scale, cross-browser/device acceptance and release hardening. Keep separate legacy code off `overhaul` while using `baseline/v11` as the behavior/visual reference.
+
 ## Build and test
 Node.js 24.x, TypeScript 7.0.2, GitHub Actions checkout/setup-node v7.
 
