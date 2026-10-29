@@ -281,6 +281,23 @@ try{
    }
    console.log("Offline file://: 390px mobile and 768px tablet responsive checks passed");
 
+   // Both entry points must render the embedded figures in real CGL questions.
+   const figures=await cgl.context.newPage();
+   await figures.goto(file,{waitUntil:"load"});
+   await figures.locator("#start").click();
+   await figures.locator('[data-q="2"]').click(); // Oct 8 CGL Q3 has a stem and four visual options
+   const cglImages=figures.locator(".generic-figure");
+   if(await cglImages.count()<5 || !await cglImages.first().evaluate(img=>img.complete&&img.naturalWidth>0))
+     throw new Error("Original CGL shared renderer lost embedded figure or option images");
+   await figures.locator("#g-library").click();
+   await figures.locator("#genericWorkspace").click();
+   await figures.locator("#g-start").click();
+   await figures.locator('[data-q="4"]').click(); // Sep 30 source Q5 has stem and option media
+   const genericImages=figures.locator(".generic-figure");
+   if(await genericImages.count()<5 || !await genericImages.first().evaluate(img=>img.complete&&img.naturalWidth>0))
+     throw new Error("Generic CGL package lost embedded figure or option images");
+   console.log("Offline file://: source and reviewed visual questions decode inline images");
+
    // Exercise CGL's specialized free and single-section modes through the
    // common model-driven question renderer, retaining its detailed results UI.
    const modeProfile=await mkdtemp(join(tmpdir(),"pd-cgl-modes-"));
