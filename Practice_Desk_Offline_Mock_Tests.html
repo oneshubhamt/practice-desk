@@ -832,9 +832,9 @@ var PracticeDeskEngine = (() => {
   function chooseRecovered(stored, mirror) {
     if (!stored) return mirror;
     if (!mirror || stored.id !== mirror.id) return stored;
+    if (Number.isSafeInteger(stored.saveRevision) && Number.isSafeInteger(mirror.saveRevision) && stored.saveRevision >= mirror.saveRevision) return stored;
     if (stored.finishedAt && !mirror.finishedAt) return stored;
     if (mirror.finishedAt && !stored.finishedAt) return mirror;
-    if (Number.isSafeInteger(stored.saveRevision) && Number.isSafeInteger(mirror.saveRevision) && stored.saveRevision >= mirror.saveRevision) return stored;
     return (mirror.updatedAt ?? 0) > (stored.updatedAt ?? 0) ? mirror : stored;
   }
 
@@ -1986,9 +1986,9 @@ var PracticeDeskGeneric = (() => {
   function chooseRecovered(stored, mirror) {
     if (!stored) return mirror;
     if (!mirror || stored.id !== mirror.id) return stored;
+    if (Number.isSafeInteger(stored.saveRevision) && Number.isSafeInteger(mirror.saveRevision) && stored.saveRevision >= mirror.saveRevision) return stored;
     if (stored.finishedAt && !mirror.finishedAt) return stored;
     if (mirror.finishedAt && !stored.finishedAt) return mirror;
-    if (Number.isSafeInteger(stored.saveRevision) && Number.isSafeInteger(mirror.saveRevision) && stored.saveRevision >= mirror.saveRevision) return stored;
     return (mirror.updatedAt ?? 0) > (stored.updatedAt ?? 0) ? mirror : stored;
   }
 
