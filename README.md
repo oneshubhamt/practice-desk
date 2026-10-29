@@ -2,7 +2,7 @@
 
 Single-file offline examination and learning application. Built-in SSC CGL original/reviewed editions and validated imported exam packages share one strict TypeScript engine, frozen results, local history, backup and revision workflows.
 
-> **Current project status — 30 October 2026:** The overhaul has passed the historical Pass 10 automated engineering/browser gates, but a fresh comparison with the frozen v11 source revealed **incomplete UI/functionality parity**. **Passes 11–16 are planned; none is complete.** Do not merge into `main` or claim release approval. See the [authoritative feature-parity programme](docs/V11_FEATURE_PARITY_PROGRAMME.md).
+> **Current project status — 30 October 2026:** The overhaul has passed the historical Pass 10 automated engineering/browser gates, but a fresh comparison with the frozen v11 source revealed **incomplete UI/functionality parity**. **Pass 11 is complete and browser-verified; Passes 12–16 remain open.** Do not merge into `main` or claim release approval. See the [authoritative feature-parity programme](docs/V11_FEATURE_PARITY_PROGRAMME.md).
 
 ## Documentation — canonical reading order
 
@@ -45,4 +45,4 @@ Browser scripts require the configured Playwright-core browsers. Firefox and Lin
 
 Preserve `baseline/v11` and `main` untouched; implement only on `overhaul`. Keep one exam engine (no legacy runtime), strict TS, immutable paper/key/media snapshots, offline `file://`, checksum-verified backup v3 and user-driven FSRS. **No v11 data migration** is the explicitly accepted exception.
 
-The next **six passes (11–16)** restore actual feature coverage first (exam UI, review, history, analytics, comparative visuals), then independently re-audit the full v11 codebase against the final implementation. See the authoritative [objective-by-objective matrix](docs/V11_FEATURE_PARITY_PROGRAMME.md); all identified gaps remain open until implemented and verified.
+The **six-pass programme (11–16)** restore actual feature coverage first (exam UI, review, history, analytics, comparative visuals), then independently re-audit the full v11 codebase against the final implementation. See the authoritative [objective-by-objective matrix](docs/V11_FEATURE_PARITY_PROGRAMME.md); the nine exam-interaction gaps are now verified addressed; results, history, analytics and final visual parity remain open.
