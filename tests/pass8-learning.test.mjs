@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { pkg } from "./fixtures/six-kinds.mjs";
-import { makeRevisionPackage,REVISION_MAX_QUESTIONS } from "../src/learning/revision-test.ts";
+import { makeRevisionPackage,createNotebookLineage,validateNotebookLineage,REVISION_MAX_QUESTIONS } from "../src/learning/revision-test.ts";
 import { attemptEvidence,evidenceProgression } from "../src/learning/attempt-evidence.ts";
 import { topicMetrics,addLearningCard } from "../src/learning/learning.ts";
 import { validateExamPackage,startGenericAttempt,transitionGenericAttempt } from "../src/app/exam-package.ts";
@@ -24,12 +24,16 @@ test("generated notebook revision is a real validated attempt, not a copied note
  const selected=[card(0),card(2),card(5)];
  const revision=makeRevisionPackage(selected,"nonce-1");
  assert.equal(revision.questions.length,3);
+ const lineage=createNotebookLineage(selected);
+ assert.equal(lineage.entries.length,3);
+ assert.equal(lineage.entries[0].sourceAttemptId,"completed-source");
  assert.equal(revision.paper.edition,"custom");
  assert.equal(revision.paper.timing.kind,"untimed");
  assert.deepEqual(revision.paper.scoring.defaultRule,{correctMarks:1,incorrectMarks:0,unansweredMarks:0});
  assert.deepEqual(revision.answerKey.entries.map(e=>e.answer),selected.map(x=>x.answer));
  assert.equal(validateExamPackage(revision),revision);
- let attempt=startGenericAttempt(revision,"revision-attempt",5000);
+ let attempt={...startGenericAttempt(revision,"revision-attempt",5000),notebookLineage:lineage};
+ validateNotebookLineage(attempt);
  assert.equal(attempt.frozen.snapshot.mode,"custom-practice");
  assert.equal(attempt.frozen.paper.sections.length,1);
  assert.equal(renderModelExam(attempt,revision).includes("Expected answer"),false,"Active exam reveals answer");
@@ -44,6 +48,9 @@ test("generated notebook revision is a real validated attempt, not a copied note
  assert.equal(validateGenericStoredRecord(JSON.parse(JSON.stringify(attempt))).id,"revision-attempt");
  const backed=verifyBackup(makeBackup([attempt],{schema:1,dark:false,scale:100},"2026-10-29T20:00:00Z"));
  assert.equal(backed.records[0].frozen.questions.length,3);
+ assert.equal(backed.records[0].notebookLineage.entries[0].cardId,selected[0].id);
+ const forged=structuredClone(attempt);forged.notebookLineage.entries[0].sourceAttemptId="different";
+ assert.throws(()=>validateGenericStoredRecord(forged),/lineage hash mismatch/);
 });
 
 test("revision selection rejects duplicates, unsafe statuses, mixed exams and impossible sizes",()=>{
@@ -115,6 +122,8 @@ test("evidence progression requires independent attempts and distinct questions"
  assert.equal(topic.distinctQuestions,1);
  assert.equal(topic.total,2);
  assert.equal(topic.answered,0);
+ assert.equal(topic.answeredAttempts,0);
+ assert.equal(topic.distinctAnsweredQuestions,0);
  assert.ok(topics.some(x=>x.kind==="section"));
 });
 

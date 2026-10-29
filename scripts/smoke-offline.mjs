@@ -189,6 +189,9 @@ try{
    x.frozen.paper.paperId?.startsWith("notebook-revision:")&&x.finishedAt===null);
  fail(revision.frozen.paper.timing.kind==="untimed"&&revision.frozen.snapshot.mode==="custom-practice",
    "Notebook revision did not start through the generic exam engine");
+ fail(revision.notebookLineage?.entries?.length===1&&
+   revision.notebookLineage.entries[0].sourceAttemptId===custom.id,
+   "Revision lacks the source notebook and completed-attempt provenance");
  fail(revision.frozen.paper.scoring.defaultRule.correctMarks===1&&
    revision.frozen.paper.scoring.defaultRule.incorrectMarks===0,
    "Notebook revision incorrectly inherited official test marks");
@@ -206,6 +209,8 @@ try{
  fail(revisedCompleted.result.items.length===1,"Revision exam did not complete as a normal attempt");
  fail(await page.locator(".generic-review").count()===1,
    "Revision results did not contain the frozen notebook question");
+ fail(await page.getByText("Notebook source:",{exact:false}).count()>0,
+   "Revision review lost its origin metadata");
  await page.locator("#g-library").click();
  await page.locator('[data-attempt="'+revision.id+'"]').click();
  fail(await page.locator("#g-attempt-evidence").count()===1,
@@ -229,7 +234,7 @@ try{
    "Written self-assessment missing from complete backup");
  fail(backup.records.some(a=>a.id===cgl.id&&a.sourceKeyReference?.entries?.length===100),
    "Frozen original-source key missing from complete backup");
- fail(backup.records.some(a=>a.id===revision.id&&a.frozen.paper.edition==="custom"),
+ fail(backup.records.some(a=>a.id===revision.id&&a.notebookLineage?.entries[0]?.sourceAttemptId===custom.id&&a.frozen.paper.edition==="custom"),
    "Notebook revision test missing from full backup");
  page.once("dialog",d=>d.accept());
  await page.locator('[data-delete="'+custom.id+'"]').click();

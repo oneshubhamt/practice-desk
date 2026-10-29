@@ -138,7 +138,8 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     }).join(""):'<p class="fine">No cards in this view. Add a question from a completed test result.</p>')+'</section>'+
     '<section class="panel pad"><h2>Notebook detail</h2>'+
      (selected?'<h3>'+esc(selected.question.content.prompt)+'</h3>'+
-       '<p class="fine">'+esc(selected.paperId)+' · '+esc(selected.sectionTitle)+'</p>'+
+       '<p class="fine">'+esc(selected.paperId)+' · '+esc(selected.sectionTitle)+
+         ' · captured from completed attempt '+esc(selected.sourceAttemptId)+'</p>'+
        '<p>Expected: <strong>'+esc(readableAnswer(selected.question,selected.answer))+'</strong></p>'+
        (selected.explanation?'<p class="fine">'+esc(selected.explanation)+'</p>':"")+
        '<label class="picker" for="learning-error">Error type (self-reported)</label>'+
