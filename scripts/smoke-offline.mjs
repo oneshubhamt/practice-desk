@@ -91,6 +91,7 @@ try{
    "Original-key comparison is missing or mislabelled");
  await page.locator("#g-library").click();
  await page.locator('[data-attempt="'+cgl.id+'"]').first().click();
+ await page.locator('[data-result-tab="review"]').click();
  await page.getByRole("heading",{name:"Question review"}).waitFor();
  // Pass 9: independent insights, review and timing tabs, source media and filters.
  await page.locator('[data-result-tab="timing"]').click();
@@ -110,6 +111,7 @@ try{
  console.log("Chrome file://: completed CGL analytics and saved history passed");
 
  // Pass 9: history has its own independently navigable, sortable, filtered workspace.
+ await page.locator("#g-library").click();
  await page.locator("#g-history").click();
  await page.getByRole("heading",{name:"History & insights"}).waitFor();
  fail(await page.locator(".history-summary .summary-stat").count()===4,
