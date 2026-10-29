@@ -1197,3 +1197,20 @@ Added:
 - **Verified Chrome `file://` CI:** [40812177739](https://github.com/oneshubhamt/practice-desk/actions/runs/40812177739) — typecheck, tests, generated artifact, original CGL and non-CGL end-to-end, mobile/tablet responsive gates, full backup import and concurrent-write protection passed.
 
 **Remaining release-boundary limitations:** The CGL-specialized home, rich analytics and historical review still live in the transitional `legacy.ts` shell under `@ts-nocheck`; their removal must be preceded by feature-equivalent typed components, not a silent downgrade. Manual Firefox/Safari `file://` acceptance and quota-exhaustion behaviour are still unverified. The best-effort localStorage fallback cannot offer multi-key atomicity. Keep all changes isolated to `overhaul` until those release qualifications are addressed.
+
+
+### Pass 4 final Chromium acceptance checkpoint — 29 October 2026
+
+**Verified browser run:** [40848082790](https://github.com/oneshubhamt/practice-desk/actions/runs/40848082790) — Node 24, strict new-module typecheck, all Node tests, standalone `file://` Chrome browser flows and regenerated distribution passed.
+
+**Implemented and verified:**
+- One typed `renderModelExam` question/answer interface now handles all three SSC CGL modes and generic/custom tests, including the original/reviewed paper figures and option-image data URIs.
+- All six generic response types work through result submission and reopen of a frozen attempt. Min-selection feedback is in-place and accessible; answer inputs are mapped to validated option/matching identities without `as any`.
+- Shared controls honor pause, forward-only navigation and no-early-section-submission policies. The question palette disables previously visited positions in forward-only mode.
+- Both CGL and generic indexed attempts reject stale-tab writes. Emergency recovery respects saved revisions; fallback storage has best-effort conflict warnings and permits exporting the latest stored generic history even after a conflict.
+- Chrome `file://` regression checks restore both generic and CGL history from one checksum-verified export, exercise active-session reopen and two-tab conflicts, check 390/768-pixel layouts and decode real question/option images.
+- The shared renderer indexes response records once per redraw rather than repeatedly scanning all answers for each question navigator entry.
+
+**Acceptance decision:** The **Pass 4 shared exam presentation and Chromium regression implementation** is complete. **Final cross-browser release acceptance is not complete**: Firefox and Safari `file://` reopen/storage/backup behaviour, quota-exhaustion recovery and assistive-technology/manual interaction checks require platform testing. The original specialized CGL home, analytics and historical review remain functional but in the `@ts-nocheck` transitional shell; replacing that shell without preserving full feature parity is a separate outstanding architectural cleanup. Do not claim a fully strict-TypeScript frontend.
+
+See `docs/PASS4_RELEASE_ACCEPTANCE.md` for remaining verification. Do not merge to `main` or overwrite `baseline/v11` before deciding on these release gates.

@@ -34,6 +34,7 @@ npm run typecheck
 - `tests/` — content, invariants, engine, archive, six-kind exam and concurrency tests
 - `scripts/smoke-offline.mjs` — real Chrome `file://` acceptance: persistence/reopen, all question kinds, unified backup restore, tab conflicts and responsive screens
 - `docs/ARCHITECTURE_AUDIT_2026-10-28.md` — architecture audit / roadmap
+- `docs/PASS4_RELEASE_ACCEPTANCE.md` — verified CI scope and remaining cross-browser release gates
 - `Practice_Desk_Offline_Mock_Tests.html` — generated, distributable single-file app
 
 **Overhaul status (29 October 2026):** Passes 1–3 are CI-verified. Pass 4 now uses **one model-driven exam-question renderer** across the original CGL modes and custom exams. CGL's specialized library, historical analysis and review remain separate to avoid loss of functionality. The transitional CGL shell in `legacy.ts` still uses `@ts-nocheck`, and browser/file-origin acceptance on Firefox and Safari remains unverified. Do not claim the entire frontend has been rewritten in strict TypeScript or that final cross-browser release acceptance is complete. `main` and `baseline/v11` remain unchanged.
