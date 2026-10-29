@@ -4793,7 +4793,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
   function validateLearningCard(input) {
     if (!input || typeof input !== "object" || Array.isArray(input)) throw Error("Invalid learning card");
     const raw = input;
-    if (raw.recordType !== "learning-card" || typeof raw.id !== "string" || !raw.id.startsWith("learning-card:") || typeof raw.examId !== "string" || !raw.examId || typeof raw.paperId !== "string" || !raw.paperId || typeof raw.paperEdition !== "string" || typeof raw.sectionTitle !== "string" || typeof raw.sourceTitle !== "string" || typeof raw.note !== "string" || raw.note.length > 8e3 || typeof raw.customTopic !== "string" || raw.customTopic.length > 120 || typeof raw.bookmarked !== "boolean" || !(raw.errorLabel === null || ERROR_LABELS.includes(raw.errorLabel)) || !validDate(raw.createdAt) || !validDate(raw.updatedAt) || raw.explanation !== void 0 && (typeof raw.explanation !== "string" || raw.explanation.length > 2e4) || !Array.isArray(raw.reviews) || raw.reviews.length > 1e4)
+    if (raw.recordType !== "learning-card" || typeof raw.id !== "string" || !raw.id.startsWith("learning-card:") || typeof raw.examId !== "string" || !raw.examId || typeof raw.paperId !== "string" || !raw.paperId || typeof raw.paperEdition !== "string" || typeof raw.sectionTitle !== "string" || typeof raw.sourceTitle !== "string" || typeof raw.sourceAttemptId !== "string" || !raw.sourceAttemptId || raw.sourceAttemptId.length > 200 || typeof raw.note !== "string" || raw.note.length > 8e3 || typeof raw.customTopic !== "string" || raw.customTopic.length > 120 || typeof raw.bookmarked !== "boolean" || !(raw.errorLabel === null || ERROR_LABELS.includes(raw.errorLabel)) || !validDate(raw.createdAt) || !validDate(raw.updatedAt) || raw.explanation !== void 0 && (typeof raw.explanation !== "string" || raw.explanation.length > 2e4) || !Array.isArray(raw.reviews) || raw.reviews.length > 1e4)
       throw Error("Invalid learning card fields");
     const question = validateQuestionRevision(raw.question);
     if (question.contentHash !== questionRevisionHash(question)) throw Error("Learning card question hash mismatch");
@@ -4833,6 +4833,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
       paperEdition: attempt.frozen.paper.edition,
       sectionTitle: section.title,
       sourceTitle: attempt.frozen.paper.paperId,
+      sourceAttemptId: attempt.id,
       question: structuredClone(question),
       answer: structuredClone(key.answer),
       ...display,
@@ -5158,6 +5159,39 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     };
     return validateExamPackage(packageValue);
   }
+  function createNotebookLineage(cards) {
+    if (!cards.length || cards.length > REVISION_MAX_QUESTIONS)
+      throw Error("Invalid revision source selection");
+    const entries = cards.map((value) => {
+      const c = validateLearningCard(value);
+      return {
+        cardId: c.id,
+        questionRevisionId: c.question.id,
+        sourceAttemptId: c.sourceAttemptId,
+        sourcePaperId: c.paperId,
+        sourcePaperEdition: c.paperEdition,
+        sourceSectionTitle: c.sectionTitle
+      };
+    });
+    if (new Set(entries.map((x) => x.questionRevisionId)).size !== entries.length)
+      throw Error("Duplicate notebook source question");
+    return { schema: 1, entries, contentHash: hashJson({ schema: 1, entries }) };
+  }
+  function validateNotebookLineage(attempt) {
+    const lineage = attempt.notebookLineage;
+    if (!lineage) return;
+    if (lineage.schema !== 1 || !Array.isArray(lineage.entries) || attempt.frozen.paper.edition !== "custom" || !attempt.frozen.paper.paperId.startsWith("notebook-revision:") || lineage.entries.length !== attempt.frozen.questions.length)
+      throw Error("Invalid notebook revision lineage");
+    const eligible = new Set(attempt.frozen.questions.map((x) => x.id));
+    const seen = /* @__PURE__ */ new Set();
+    for (const entry of lineage.entries) {
+      if (!entry || typeof entry.questionRevisionId !== "string" || !eligible.has(entry.questionRevisionId) || seen.has(entry.questionRevisionId) || entry.cardId !== "learning-card:" + entry.questionRevisionId || ![entry.sourceAttemptId, entry.sourcePaperId, entry.sourcePaperEdition, entry.sourceSectionTitle].every((x) => typeof x === "string" && !!x && x.length <= 200))
+        throw Error("Invalid notebook revision lineage entry");
+      seen.add(entry.questionRevisionId);
+    }
+    if (lineage.contentHash !== hashJson({ schema: 1, entries: lineage.entries }))
+      throw Error("Notebook revision lineage hash mismatch");
+  }
 
   // src/app/learning-ui.ts
   var esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
@@ -5428,6 +5462,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     }
     validateManualGrades(value);
     validateSourceKeyReference(value);
+    validateNotebookLineage(value);
     return value;
   }
   function renderModelExam(attempt, bundle, warning = "") {
@@ -5728,7 +5763,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
           const nonce = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "revision-" + now2() + "-" + Math.floor(Math.random() * 1e5);
           const paper = makeRevisionPackage(selected, nonce);
           const id = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "attempt-" + now2() + "-" + Math.floor(Math.random() * 1e5);
-          const generated = startGenericAttempt(paper, id, now2());
+          const generated = { ...startGenericAttempt(paper, id, now2()), notebookLineage: createNotebookLineage(selected) };
           if (!await save(generated)) return false;
           attempt = generated;
           view = "exam";
@@ -5857,7 +5892,8 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
         const prior = attempt.manualGrades?.find((g) => g.questionRevisionId === q.id);
         const limit = manualGradeLimit(attempt, q.id);
         const provenance = q.editorial.sources ?? [];
-        return '<article class="generic-review"><strong>' + (i + 1) + ". " + escapeText(q.content.prompt) + '</strong><p class="fine">' + escapeText(q.editorial.status) + (q.editorial.sourcePage ? " \xB7 Source page " + q.editorial.sourcePage : "") + " \xB7 " + minutes(seconds) + " spent</p>" + frozenReviewMedia(attempt, q) + '<p class="fine">' + escapeText(it.verdict) + " \xB7 " + it.marks + ' automated marks</p><p class="fine">Your answer: ' + escapeText(readableAnswer(q, response)) + '</p><p class="fine">Expected: ' + escapeText(readableAnswer(q, answer)) + "</p>" + (q.editorial.notes ? '<p class="fine">Editorial note: ' + escapeText(q.editorial.notes) + "</p>" : "") + (explanation ? '<p class="fine">Explanation: ' + escapeText(explanation) + "</p>" : "") + (provenance.length ? '<p class="fine">Sources: ' + provenance.map((source) => '<a href="' + escapeText(source.url) + '" target="_blank" rel="noopener noreferrer">' + escapeText(source.title) + "</a>").join(" \xB7 ") + "</p>" : "") + (limit !== null ? '<div class="generic-manual-grade"><p class="fine">Written response requires explicit human assessment. Self-marked results are separate from exam scores.</p><label>Self-assessed marks (0\u2013' + limit + ')<input type="number" step="0.01" min="0" max="' + limit + '" data-manual-marks="' + escapeText(q.id) + '" value="' + escapeText(prior?.marks ?? "") + '"></label><label>Assessment note (optional)<textarea maxlength="2000" rows="2" data-manual-note="' + escapeText(q.id) + '">' + escapeText(prior?.note ?? "") + '</textarea></label><button class="btn" data-manual-save="' + escapeText(q.id) + '">Save self-assessment</button></div>' : "") + '<button class="btn" data-add-card="' + escapeText(q.id) + '"' + (records.has("learning-card:" + q.id) ? " disabled" : "") + ">" + (records.has("learning-card:" + q.id) ? "In notebook" : "Add to notebook") + "</button></article>";
+        const origin = attempt.notebookLineage?.entries.find((x) => x.questionRevisionId === q.id);
+        return '<article class="generic-review"><strong>' + (i + 1) + ". " + escapeText(q.content.prompt) + '</strong><p class="fine">' + escapeText(q.editorial.status) + (q.editorial.sourcePage ? " \xB7 Source page " + q.editorial.sourcePage : "") + " \xB7 " + minutes(seconds) + " spent</p>" + frozenReviewMedia(attempt, q) + (origin ? '<p class="fine">Notebook source: ' + escapeText(origin.sourcePaperId) + " \xB7 " + escapeText(origin.sourcePaperEdition) + " \xB7 " + escapeText(origin.sourceSectionTitle) + " \xB7 source attempt " + escapeText(origin.sourceAttemptId) + "</p>" : "") + '<p class="fine">' + escapeText(it.verdict) + " \xB7 " + it.marks + ' automated marks</p><p class="fine">Your answer: ' + escapeText(readableAnswer(q, response)) + '</p><p class="fine">Expected: ' + escapeText(readableAnswer(q, answer)) + "</p>" + (q.editorial.notes ? '<p class="fine">Editorial note: ' + escapeText(q.editorial.notes) + "</p>" : "") + (explanation ? '<p class="fine">Explanation: ' + escapeText(explanation) + "</p>" : "") + (provenance.length ? '<p class="fine">Sources: ' + provenance.map((source) => '<a href="' + escapeText(source.url) + '" target="_blank" rel="noopener noreferrer">' + escapeText(source.title) + "</a>").join(" \xB7 ") + "</p>" : "") + (limit !== null ? '<div class="generic-manual-grade"><p class="fine">Written response requires explicit human assessment. Self-marked results are separate from exam scores.</p><label>Self-assessed marks (0\u2013' + limit + ')<input type="number" step="0.01" min="0" max="' + limit + '" data-manual-marks="' + escapeText(q.id) + '" value="' + escapeText(prior?.marks ?? "") + '"></label><label>Assessment note (optional)<textarea maxlength="2000" rows="2" data-manual-note="' + escapeText(q.id) + '">' + escapeText(prior?.note ?? "") + '</textarea></label><button class="btn" data-manual-save="' + escapeText(q.id) + '">Save self-assessment</button></div>' : "") + '<button class="btn" data-add-card="' + escapeText(q.id) + '"' + (records.has("learning-card:" + q.id) ? " disabled" : "") + ">" + (records.has("learning-card:" + q.id) ? "In notebook" : "Add to notebook") + "</button></article>";
       }).join("") + "</section>";
     }
     function draw() {
