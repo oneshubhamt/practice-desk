@@ -470,8 +470,15 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        if(!chosen.length)dispatch({type:"CLEAR",nowMs:now()});
        else if(chosen.length<(q.content.minSelections??1)) {
          warning="Select at least "+(q.content.minSelections??1)+" options before saving.";
-         const noticeElement=root.querySelector<HTMLElement>(".generic-warning");
-         if(noticeElement)noticeElement.textContent=warning;
+         const group=root.querySelector<HTMLElement>(".generic-response-group");
+         let feedback=group?.querySelector<HTMLElement>(".generic-inline-warning");
+         if(group&&!feedback){
+           feedback=document.createElement("p");
+           feedback.className="generic-inline-warning";
+           feedback.setAttribute("role","status");
+           group.append(feedback);
+         }
+         if(feedback)feedback.textContent=warning;
        }else dispatch({type:"ANSWER",nowMs:now(),response:{kind:"multiple-select",optionIds:chosen}});
      }
    });
