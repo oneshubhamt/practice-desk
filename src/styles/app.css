@@ -340,3 +340,20 @@ select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-vis
 .learning-answer{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:22px;margin-top:20px}
 .learning-answer .btn{min-width:84px}
 @media(max-width:760px){.learning-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.learning-revision-callout{padding:16px}}
+
+/* Pass 11 — v11 section counts and in-page exam-only focus layout. */
+.generic-sections .exam-section-tab{display:flex;flex:1 1 145px;min-width:0;flex-direction:column;align-items:flex-start;justify-content:center;gap:3px;padding:10px 12px;text-align:left}
+.generic-sections .exam-section-tab b{font-size:12px;line-height:1.4}
+.generic-sections .exam-section-tab small{font-size:10px;line-height:1.45;font-weight:620;opacity:.87}
+.exam-header-actions #g-exam-full{white-space:nowrap}
+#g-fullscreen-status{margin:-10px 0 12px;color:var(--muted);font-size:.8em}
+#g-fullscreen-status:empty{display:none}
+/* Never conceal global display controls while browsing library/history. */
+html.immersive:has(#g-exam-full) header{display:none}
+html.immersive:has(#g-exam-full) main{max-width:1600px;padding:16px clamp(12px,2.4vw,34px) 45px}
+html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-columns:minmax(0,2fr) minmax(250px,.8fr)}
+@media(max-width:760px){
+ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-columns:1fr}
+ .generic-sections .exam-section-tab{flex-basis:calc(50% - 5px)}
+ .exam-header-actions #g-exam-full{white-space:normal}
+}

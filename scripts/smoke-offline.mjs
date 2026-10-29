@@ -37,6 +37,9 @@ async function find(page,predicate){
 }
 async function testPage(page){
  const errors=[];page.on("pageerror",e=>errors.push(e.message));
+ page.on("dialog",dialog=>{
+   if(/Return to library\?|unfinished test/.test(dialog.message()))void dialog.accept();
+ });
  page.setDefaultTimeout(20000);
  await page.goto(html,{waitUntil:"load"});
  await page.locator("#g-start").waitFor({state:"visible"});

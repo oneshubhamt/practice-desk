@@ -57,20 +57,54 @@ document.addEventListener("keydown",event=>{
  if(event.key==="Escape"&&displayPanel&&!displayPanel.hidden){setDisplayOpen(false);displayTrigger?.focus();}
 });
 const fullButton=document.getElementById("displayFullscreen") as HTMLButtonElement|null;
-const updateFullscreen=()=>{
- if(!fullButton)return;
- const active=Boolean(document.fullscreenElement);
- fullButton.textContent=active?"Exit full screen":"Enter full screen";
- fullButton.setAttribute("aria-pressed",String(active));
-};
-fullButton?.addEventListener("click",async()=>{
- try{
-   if(document.fullscreenElement)await document.exitFullscreen();
-   else await document.documentElement.requestFullscreen();
-   updateFullscreen();
- }catch{
-   const status=document.getElementById("preferences-warning");
-   if(status)status.textContent="Full screen is unavailable in this browser or file context.";
+const isFullscreen=()=>Boolean(document.fullscreenElement||
+ document.documentElement.classList.contains("immersive"));
+function updateFullscreen():void{
+ const active=isFullscreen();
+ if(fullButton){
+   fullButton.textContent=active?"Exit full screen":"Enter full screen";
+   fullButton.setAttribute("aria-pressed",String(active));
  }
+ const examButton=document.getElementById("g-exam-full");
+ if(examButton){
+   examButton.textContent=active?"⛶ Exit full screen":"⛶ Full screen";
+   examButton.setAttribute("aria-pressed",String(active));
+ }
+}
+function setImmersive(active:boolean):void{
+ document.documentElement.classList.toggle("immersive",active);
+ updateFullscreen();
+}
+async function toggleFullscreen():Promise<void>{
+ if(document.fullscreenElement){
+   try{await document.exitFullscreen();}
+   catch{setImmersive(false);}
+   updateFullscreen();return;
+ }
+ if(document.documentElement.classList.contains("immersive")){
+   setImmersive(false);return;
+ }
+ try{
+   if(!document.documentElement.requestFullscreen)throw new Error("Fullscreen unsupported");
+   await document.documentElement.requestFullscreen();
+   setImmersive(true);
+ }catch{
+   setImmersive(true);
+   const message="Focus layout enabled. Browser full screen is unavailable here.";
+   const globalStatus=document.getElementById("preferences-warning");
+   if(globalStatus)globalStatus.textContent=message;
+   const examStatus=document.getElementById("g-fullscreen-status");
+   if(examStatus)examStatus.textContent=message;
+ }
+}
+fullButton?.addEventListener("click",()=>{void toggleFullscreen();});
+window.addEventListener("practice-desk:toggle-fullscreen",()=>{void toggleFullscreen();});
+document.addEventListener("fullscreenchange",()=>{
+ setImmersive(Boolean(document.fullscreenElement));
 });
-document.addEventListener("fullscreenchange",updateFullscreen);
+document.addEventListener("keydown",event=>{
+ if(event.key==="Escape"&&!document.fullscreenElement&&
+    document.documentElement.classList.contains("immersive")&&
+    (!displayPanel||displayPanel.hidden))setImmersive(false);
+});
+updateFullscreen();

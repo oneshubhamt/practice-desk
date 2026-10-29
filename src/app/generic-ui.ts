@@ -196,7 +196,11 @@ export function renderModelExam(
      escapeText(section.title)+' · Section '+(state.sectionIndex+1)+' of '+paper.sections.length+'</p></div>'+
      '<div class="row exam-header-actions"><div class="exam-clock '+(isLow?"low":"")+'"><strong class="generic-timer" id="g-timer" role="timer">'+
        (remaining===null?"Untimed":minutes(remaining))+'</strong><small>'+(remaining===null?"PRACTICE":"TIME REMAINING")+'</small></div>'+
-     '<button class="btn quiet" id="g-library">← Library</button></div></div>'+
+     '<button class="btn quiet" id="g-library">← Library</button>'+
+     '<button class="btn" type="button" id="g-exam-full" aria-label="Toggle full-screen test view" aria-pressed="'+
+     Boolean(typeof document!=="undefined"&&(document.fullscreenElement||document.documentElement.classList.contains("immersive")))+
+     '">⛶ Full screen</button></div></div>'+
+     '<p id="g-fullscreen-status" role="status"></p>'+
      (warning?'<p class="generic-warning" role="status">'+escapeText(warning)+'</p>':"")+
      '<section class="exam-progress"><div class="row between"><span class="fine">'+answered+' / '+total+' answered · '+visited+' viewed · '+flagged+' flagged</span>'+
        '<span class="fine">'+(timeLimit!==null?"Section timer":"Question coverage")+' · '+Math.round(progressValue)+'%</span></div>'+
@@ -206,10 +210,15 @@ export function renderModelExam(
      '<div class="generic-sections" role="group" aria-label="Exam sections">'+paper.sections.map((s,i)=>{
        const locked=state.completedSections.includes(i)||
          ((paper.timing.kind==="sectional"||paper.navigation.sectionNavigation==="sequential-locked")&&i!==state.sectionIndex);
-       return '<button class="btn '+(i===state.sectionIndex?"primary":"")+'" data-section="'+i+'" aria-current="'+(i===state.sectionIndex?"step":"false")+'"'+(locked?" disabled":"")+'>'+
-         escapeText(s.title)+'</button>';
+       const filled=s.questionRevisionIds.filter(qid=>Boolean(responsesById.get(qid)?.response)).length;
+       const status=state.completedSections.includes(i)?"Closed":
+         locked?"Locked":filled+" / "+s.questionRevisionIds.length+" answered";
+       return '<button class="btn exam-section-tab '+(i===state.sectionIndex?"primary":"")+'" data-section="'+i+'" aria-current="'+(i===state.sectionIndex?"step":"false")+'"'+(locked?" disabled":"")+'>'+
+         '<b>'+escapeText(s.title)+'</b><small>'+status+'</small></button>';
      }).join("")+'</div><div class="generic-layout exam-grid"><section class="panel pad exam-question"><p class="eyebrow">'+
-     escapeText(section.title)+' · Question '+(state.questionIndex+1)+' of '+section.questionRevisionIds.length+'</p>'+
+     escapeText(section.title)+' · Question '+(state.questionIndex+1)+' of '+section.questionRevisionIds.length+
+     (attempt.frozen.snapshot.examId==="ssc-cgl"?
+       ' · Paper Q'+escapeText(q.questionId.split(":").at(-1)):"")+'</p>'+
      stimulusHTML(assets,q)+'<h2 class="generic-prompt">'+escapeText(q.content.prompt)+'</h2>'+
      assetHTML(assets,q.content.assetIds)+
      '<fieldset class="generic-response-group"'+(state.status==="paused"?" disabled":"")+'>'
@@ -237,7 +246,7 @@ export function renderModelExam(
        '<span><i class="legend-dot current"></i>Current</span>'+
        '<span><i class="legend-dot empty"></i>Unanswered</span></div><p class="fine">'+(paper.navigation.questionNavigation==="forward-only"?
         "Questions cannot be revisited in this exam.":"Navigate freely where the paper permits.")+
-      ' Press Alt + ← / → for previous / next when not typing.</p></aside></div>';
+      ' Shortcuts: A–D answer single-choice questions, ← / → navigate, M flag, F full screen. Alt + ← / → also works. Shortcuts are disabled while typing or paused.</p></aside></div>';
  }
 
 
@@ -794,6 +803,11 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      if(single)single.onchange=()=>{singleSection=Number(single.value);};
      root.querySelector<HTMLButtonElement>("#g-start")!.onclick=()=>{
        const p=packages.get(choice);if(!p)return;
+       const unfinished=[...records.values()].filter((row):row is GenericAttempt=>
+         isAttempt(row)&&row.finishedAt===null);
+       if(unfinished.length&&!confirm(
+         "You have "+unfinished.length+" unfinished test"+(unfinished.length===1?"":"s")+
+         ". Start a separate attempt? Existing attempts will be kept; their timers continue until expiry when resumed or while active."))return;
        const id=typeof crypto!=="undefined"&&crypto.randomUUID?crypto.randomUUID():"generic-"+now()+"-"+Math.random();
        const configured=p.examId==="ssc-cgl"?configureCglPractice(p,cglMode,singleSection):p;
        attempt=startGenericAttempt(configured,id,now());
@@ -831,7 +845,16 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      });
      return;
    }
-   root.querySelector<HTMLButtonElement>("#g-library")!.onclick=()=>{view="library";attempt=null;draw();};
+   root.querySelector<HTMLButtonElement>("#g-library")!.onclick=()=>{
+     if(view==="exam"&&attempt?.finishedAt===null){
+       if(!confirm("Return to library? Your test timer will keep running and the attempt can be resumed."))return;
+       const current=attempt;
+       attempt=transitionGenericAttempt(current,{type:"VISIBILITY",nowMs:now(),visible:false},
+         new Map(current.frozen.questions.map(question=>[question.id,question])));
+       void save(attempt);
+     }
+     view="library";draw();
+   };
    if(view==="result"&&attempt){
      root.querySelector<HTMLButtonElement>("#g-history-results")!.onclick=()=>{view="history";draw();};
      const tabs=[...root.querySelectorAll<HTMLButtonElement>("[data-result-tab]")];
@@ -875,6 +898,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      return;
    }
    if(view!=="exam"||!attempt)return;
+   root.querySelector<HTMLButtonElement>("#g-exam-full")!.onclick=()=>
+     window.dispatchEvent(new Event("practice-desk:toggle-fullscreen"));
    const section=attempt.frozen.paper.sections[attempt.state.sectionIndex];
    const q=attempt.frozen.questions.find(x=>x.id===section?.questionRevisionIds[attempt!.state.questionIndex]);
    if(!q)return;
@@ -944,7 +969,10 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    };
  }
  const timer=window.setInterval(()=>{
-   if(disposed||storageFault||view!=="exam"||!attempt||attempt.state.status==="paused")return;
+   // Time limits still elapse outside exam view, but hidden/library time is
+   // not charged to the last foreground question.
+   if(disposed||storageFault||!attempt||attempt.finishedAt!==null||
+      attempt.state.status==="paused")return;
    const original=attempt;
    const next=transitionGenericAttempt(original,{type:"TICK",nowMs:now()},
      new Map(original.frozen.questions.map(q=>[q.id,q])));
@@ -954,29 +982,86 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      if(next.finishedAt!==null||changedSection||now()-lastTimerSave>=10000){
        void save(attempt);lastTimerSave=now();
      }
-     if(next.finishedAt!==null){view="result";resultTab="overview";reviewFilter="all";draw();return;}
-     if(changedSection){draw();return;}
+     if(next.finishedAt!==null){
+       if(view==="exam"){view="result";resultTab="overview";reviewFilter="all";}
+       draw();return;
+     }
+     if(changedSection&&view==="exam"){draw();return;}
    }
-   const el=root.querySelector("#g-timer");
-   if(el&&attempt){const time=examTimeRemaining(attempt.frozen.paper,attempt.state);
-     el.textContent=time===null?"Untimed":minutes(time);}
+   if(view==="exam"){
+     const el=root.querySelector("#g-timer");
+     if(el&&attempt){const time=examTimeRemaining(attempt.frozen.paper,attempt.state);
+       el.textContent=time===null?"Untimed":minutes(time);}
+   }
  },1000);
- const visibility=()=>{if(view==="exam"&&attempt)dispatch({type:"VISIBILITY",nowMs:now(),visible:!document.hidden});};
+ const visibility=()=>{
+   if(!attempt||attempt.finishedAt!==null||storageFault)return;
+   dispatchVisibility(view==="exam"&&!document.hidden);
+ };
+ function dispatchVisibility(visible:boolean):void{
+   if(!attempt||storageFault||attempt.finishedAt!==null)return;
+   const current=attempt;
+   attempt=transitionGenericAttempt(current,{type:"VISIBILITY",nowMs:now(),visible},
+     new Map(current.frozen.questions.map(q=>[q.id,q])));
+   void save(attempt);
+   if(attempt.finishedAt!==null&&view==="exam"){view="result";resultTab="overview";reviewFilter="all";}
+   draw();
+ }
  document.addEventListener("visibilitychange",visibility);
  const keyboard=(event:KeyboardEvent)=>{
-   if(disposed||view!=="exam"||!attempt||!event.altKey||event.ctrlKey||event.metaKey||
-      !["ArrowLeft","ArrowRight"].includes(event.key))return;
+   if(disposed||view!=="exam"||!attempt||attempt.finishedAt!==null||
+      attempt.state.status!=="running"||document.hidden||
+      event.ctrlKey||event.metaKey||event.shiftKey||event.isComposing)return;
    const focused=event.target;
-   if(focused instanceof HTMLElement&&
-      (focused.isContentEditable||["INPUT","TEXTAREA","SELECT"].includes(focused.tagName)))return;
+   if(focused instanceof HTMLElement){
+     if(focused.isContentEditable||focused.closest('[contenteditable="true"]'))return;
+     if(focused instanceof HTMLTextAreaElement||focused instanceof HTMLSelectElement)return;
+     // Focused answer radios must still support shortcuts without interfering
+     // with numeric/text entry or other native controls.
+     if(focused instanceof HTMLInputElement&&
+        !(focused.type==="radio"&&focused.name==="generic-answer"&&root.contains(focused)))return;
+   }
+   const displayPanel=document.getElementById("displayPanel");
+   if(displayPanel&&!displayPanel.hidden)return;
+   const key=event.key.toLowerCase();
+   const arrow=key==="arrowright"||key==="arrowleft";
+   if(event.altKey&&!arrow)return;
+   if(arrow){
+     event.preventDefault();
+     const move=key==="arrowright"?1:-1;
+     const target=attempt.state.questionIndex+move;
+     const section=attempt.frozen.paper.sections[attempt.state.sectionIndex];
+     if(!section?.questionRevisionIds[target]||
+        (move<0&&attempt.frozen.paper.navigation.questionNavigation==="forward-only"))return;
+     dispatch({type:"NAVIGATE",nowMs:now(),sectionIndex:attempt.state.sectionIndex,questionIndex:target});
+     return;
+   }
+   if(event.altKey||event.repeat)return;
+   if(key==="f"){
+     event.preventDefault();
+     window.dispatchEvent(new Event("practice-desk:toggle-fullscreen"));return;
+   }
+   if(key==="m"){
+     if(!attempt.frozen.paper.navigation.allowFlagging)return;
+     event.preventDefault();
+     const id=attempt.frozen.paper.sections[attempt.state.sectionIndex]!
+       .questionRevisionIds[attempt.state.questionIndex]!;
+     const marked=attempt.state.responses.find(r=>r.questionRevisionId===id)?.flagged??false;
+     dispatch({type:"FLAG",nowMs:now(),flagged:!marked});return;
+   }
+   if(!["a","b","c","d"].includes(key))return;
+   const id=attempt.frozen.paper.sections[attempt.state.sectionIndex]!
+     .questionRevisionIds[attempt.state.questionIndex]!;
+   const question=attempt.frozen.questions.find(q=>q.id===id);
+   if(question?.content.kind!=="single-choice")return;
+   const option=question.content.options[key.charCodeAt(0)-97];
+   if(!option)return;
    event.preventDefault();
-   const move=event.key==="ArrowRight"?1:-1;
-   dispatch({type:"NAVIGATE",nowMs:now(),sectionIndex:attempt.state.sectionIndex,
-     questionIndex:attempt.state.questionIndex+move});
+   dispatch({type:"ANSWER",nowMs:now(),response:{kind:"single-choice",optionId:option.id}});
  };
  window.addEventListener("keydown",keyboard);
  const pagehide=()=>{
-   if(view==="exam"&&attempt&&!storageFault){
+   if(attempt&&attempt.finishedAt===null&&!storageFault){
      try{
        const current=attempt;
        attempt=transitionGenericAttempt(current,{type:"VISIBILITY",nowMs:now(),visible:false},
