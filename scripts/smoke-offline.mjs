@@ -74,6 +74,12 @@ try{
  }
  await page.getByRole("heading",{name:"Question review"}).waitFor();
  fail(await page.locator(".generic-review").count()===100,"CGL results do not contain 100 questions");
+ fail(await page.locator(".generic-review .generic-figure").count()>=5,
+   "Completed CGL review omitted frozen figures");
+ fail(await page.locator(".generic-review .generic-figure").first().evaluate(img=>img.complete&&img.naturalWidth>0),
+   "Historical review figure did not decode");
+ fail(await page.locator(".generic-review").filter({hasText:"Source page"}).count()>0,
+   "Source document page provenance missing from review");
  fail(await page.getByRole("heading",{name:"Section performance"}).count()===1,"Section breakdown absent");
  const completed=await find(page,x=>x.id===cgl.id&&x.finishedAt!==null);
  fail(completed.result?.items?.length===100,"Frozen CGL score not persisted");
@@ -132,6 +138,17 @@ try{
  fail(await page.locator(".generic-review").count()===6,"Six response kinds were not reviewed");
  const custom=await find(page,x=>x.recordType==="generic-attempt"&&x.packageId==="rev-paper"&&x.finishedAt);
  fail(custom.result.snapshot.correctCount===5,"Custom exam score incorrect");
+ // Explicit written-answer grading must be durable and stay outside the machine-scored snapshot.
+ await page.locator('[data-manual-marks="rev-5"]').fill("1.5");
+ await page.locator('[data-manual-note="rev-5"]').fill("Self assessed using the rubric.");
+ await page.locator('[data-manual-save="rev-5"]').click();
+ const graded=await find(page,x=>x.id===custom.id&&x.manualGrades?.some(g=>g.marks===1.5));
+ fail(graded.result.snapshot.earnedMarks===custom.result.snapshot.earnedMarks,
+   "Manual self-marking changed the immutable automated score");
+ fail(graded.manualGrades[0].note==="Self assessed using the rubric.","Written grading note was not persisted");
+ fail(await page.getByText("Separate self-assessment:",{exact:false}).count()>0,
+   "Manual marks are not explicitly separated in results");
+ console.log("Chrome file://: manual grading persisted without rewriting automatic score");
  console.log("Chrome file://: six response types and immutable custom result passed");
 
  // Pass 5: card creation never leaks answers during an active mock test.
