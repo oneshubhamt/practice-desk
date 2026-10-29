@@ -5,6 +5,8 @@ import { validateExamPackage,startGenericAttempt,transitionGenericAttempt } from
 import { renderModelExam } from "../src/app/generic-ui.ts";
 import { filteredHistory,historyHTML,sectionPriorities } from "../src/app/history-page.ts";
 import { reviewMatch,resultTabsHTML,reviewFiltersHTML,timingLedgerHTML,sectionPaceHTML } from "../src/app/result-presentation.ts";
+import { answerRevisionEvidence } from "../src/learning/answer-revisions.ts";
+import { validateGenericStoredRecord } from "../src/app/generic-ui.ts";
 
 const bundle=validateExamPackage(pkg);
 const questionMap=new Map(bundle.questions.map(q=>[q.id,q]));
@@ -71,4 +73,34 @@ test("restored exam shell exposes progress, timer and navigator while withholdin
  assert.match(html,/palette-legend/);
  assert.match(html,/aria-label="Question 1/);
  assert.ok(!html.includes("Expected answer"));
+});
+
+test("answer changes preserve actual events and distinguish rescued from lost answers",()=>{
+ const first=bundle.questions[0];
+ assert.equal(first.content.kind,"single-choice");
+ const right=bundle.answerKey.entries[0].answer;
+ assert.equal(right.kind,"single-choice");
+ const wrong=first.content.options.find(x=>x.id!==right.optionId).id;
+ function take(initial,final){
+  let a=startGenericAttempt(bundle,"revision-logged",1000);
+  a=transitionGenericAttempt(a,{type:"ANSWER",nowMs:1010,
+    response:{kind:"single-choice",optionId:initial}},questionMap);
+  a=transitionGenericAttempt(a,{type:"ANSWER",nowMs:1020,
+    response:{kind:"single-choice",optionId:final}},questionMap);
+  return transitionGenericAttempt(a,{type:"SUBMIT_ATTEMPT",nowMs:1030},questionMap);
+ }
+ const rescued=take(wrong,right.optionId);
+ const row=rescued.state.responses.find(x=>x.questionRevisionId===first.id);
+ assert.equal(row.answerEvents.length,2);
+ assert.equal(row.answerChangeCount,1);
+ assert.equal(row.firstAnsweredAt,new Date(1010).toISOString());
+ assert.deepEqual(answerRevisionEvidence(rescued),{recorded:1,changed:1,rescued:1,lost:0,other:0});
+ assert.equal(validateGenericStoredRecord(JSON.parse(JSON.stringify(rescued))).id,rescued.id);
+ assert.equal(answerRevisionEvidence(take(right.optionId,wrong)).lost,1);
+ const altered=structuredClone(rescued);
+ const entry=altered.state.responses.find(x=>x.questionRevisionId===first.id);
+ entry.answerEvents[1].from={kind:"single-choice",optionId:wrong};
+ // Change the first selection so the sequence no longer chains.
+ entry.answerEvents[0].to={kind:"single-choice",optionId:right.optionId};
+ assert.throws(()=>validateGenericStoredRecord(altered),/Disconnected saved answer revision/);
 });

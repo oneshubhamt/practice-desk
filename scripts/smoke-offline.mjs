@@ -52,6 +52,8 @@ try{
  await page.locator("#g-start").click();
  fail(await page.locator('[data-section="1"]').isDisabled(),"Strict CGL sections not locked");
  await page.locator('input[data-choice]').first().click();
+ await page.locator('input[data-choice]').nth(1).click();
+ await page.locator('input[data-choice]').first().click();
  fail(await page.locator('input[data-choice]:checked').first().evaluate(el=>document.activeElement===el),"Answer focus lost");
  const cgl=await find(page,x=>x.recordType==="generic-attempt"&&x.state?.responses?.some(r=>r.response));
  fail(cgl.frozen.paper.sections.length===4,"Strict CGL revision invalid");
@@ -107,6 +109,12 @@ try{
  await page.locator('[data-result-tab="overview"]').click();
  fail(await page.locator("#g-attempt-evidence").isVisible(),
    "Performance analytics not visible in insights");
+ fail(await page.locator(".answer-revision-panel").isVisible(),
+   "Actual answer change evidence missing from v11-grade insights");
+ await page.locator('[data-review-preset="incorrect"]').click();
+ fail(await page.locator("#g-review-filter").inputValue()==="incorrect",
+   "Marks-opportunity card did not open targeted question review");
+ await page.locator('[data-result-tab="overview"]').click();
 
  console.log("Chrome file://: completed CGL analytics and saved history passed");
 
