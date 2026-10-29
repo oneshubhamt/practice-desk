@@ -83,9 +83,9 @@ try{
  const cgl=await launch();
  try{
    await cgl.page.locator("#start").click();
-   await cgl.page.locator('[data-answer="a"]').first().click();
+   await cgl.page.locator('input[data-choice]').first().click();
    cgl.page.once("dialog",dialog=>dialog.accept());
-   await cgl.page.locator("#goHome").click();
+   await cgl.page.locator("#g-library").click();
    await cgl.page.locator("#openHistory").click();
    const downloadPromise=cgl.page.waitForEvent("download");
    await cgl.page.locator("#exportBackup").click();
@@ -164,7 +164,7 @@ try{
    const cglTab=await cgl.context.newPage();
    await cglTab.goto(file,{waitUntil:"load"});
    await cglTab.locator("#resume").click();
-   await cglTab.locator('[data-answer="b"]').first().click();
+   await cglTab.locator('input[data-choice]').nth(1).click();
    let latestCgl=null;
    for(let i=0;i<60;i++){
     latestCgl=(await readCglAttempts(cglTab)).find(a=>a.id===source.id);
@@ -173,7 +173,7 @@ try{
    }
    if(!latestCgl||latestCgl.saveRevision<=source.saveRevision)
     throw new Error("CGL tab B did not persist a new version");
-   await cgl.page.locator('[data-answer="c"]').first().click();
+   await cgl.page.locator('input[data-choice]').nth(2).click();
    await cgl.page.locator("#toast").filter({hasText:"Another tab"}).waitFor({state:"visible"});
    const preserved=(await readCglAttempts(cglTab)).find(a=>a.id===source.id);
    if(preserved?.answers?.[1]!=="b"||preserved.saveRevision!==latestCgl.saveRevision)
