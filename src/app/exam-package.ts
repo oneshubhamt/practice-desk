@@ -128,6 +128,7 @@ export function builtinCglPackages(sources: SourcePaperBank, patches: ReviewPatc
 
 export interface GenericAttempt {
  readonly recordType: "generic-attempt";
+ readonly saveRevision?: number;
  readonly id: string;
  readonly packageId: string;
  readonly startedAt: number;

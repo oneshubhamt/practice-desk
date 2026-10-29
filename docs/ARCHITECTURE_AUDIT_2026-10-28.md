@@ -1156,3 +1156,10 @@ Added:
 - History now labels the one-click action `Export all data` and clarifies what is included. Generic workspace's separate export remains available.
 - Extended Chrome `file://` acceptance: use the original CGL test UI, save an answer, export a downloaded archive, and verify both generic and CGL records are present.
 - Requires CI validation; localStorage fallback cannot provide atomicity across two keys and must clearly surface save failures. This is not a multi-tab edit-lease implementation.
+
+### Pass 4 reliability checkpoint — generic multi-tab write conflicts
+
+- Generic records now include an optional integer `saveRevision` (missing means zero) checked atomically inside an IndexedDB readwrite transaction; failed checks never overwrite another tab's changes.
+- A conflict stops further editing in the stale tab, clears its emergency mirror and reloads the last saved record with a warning.
+- LocalStorage fallback and the original CGL UI are not yet cross-tab guarded; do not claim complete cross-tab safety.
+- Focused version-guard tests added. Real two-tab Chromium verification remains part of the acceptance suite.

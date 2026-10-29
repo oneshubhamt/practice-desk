@@ -7,6 +7,7 @@ import { restoreSession, chooseRecovered, assertFrozenContent } from "../history
 import { scoreAttempt } from "../engine/scoring.ts";
 import { makeBackup, verifyBackup, planBackupMerge } from "../history/backup.ts";
 import { validateResponse } from "../engine/response.ts";
+import { assertWriteVersion, nextWriteVersion } from "../history/concurrency.ts";
 import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
 
 const escapeText=(s:unknown):string=>String(s??"").replace(/[&<>"']/g,c=>
@@ -66,13 +67,18 @@ function stimulusHTML(bundle:ExamPackage,q:QuestionRevision):string{
   return "";
 }
 
-type PackageRecord={recordType:"generic-package";id:string;bundle:ExamPackage};
+type PackageRecord={recordType:"generic-package";id:string;bundle:ExamPackage;saveRevision?:number};
 type RecordItem=PackageRecord|GenericAttempt;
 const isAttempt=(x:unknown):x is GenericAttempt=>!!x&&typeof x==="object"&&(x as GenericAttempt).recordType==="generic-attempt";
 const isPackage=(x:unknown):x is PackageRecord=>!!x&&typeof x==="object"&&(x as PackageRecord).recordType==="generic-package";
 
 /** Treat browser records and exported JSON as untrusted until their frozen inputs and responses validate. */
 export function validateGenericStoredRecord(value:unknown):RecordItem {
+ if(value && typeof value==="object" && "saveRevision" in value){
+   const n=(value as {saveRevision:unknown}).saveRevision;
+   if(typeof n!=="number"||!Number.isSafeInteger(n)||n<0)
+     throw new Error("Invalid stored write revision");
+ }
  if(isPackage(value)){
    if(typeof value.id!=="string" || value.id!=="generic-package:"+value.bundle?.paper?.id)
      throw new Error("Invalid imported package record identity");
@@ -180,8 +186,14 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  const notice=(s:string)=>{warning=s;draw();};
  const now=()=>Date.now();
  const save=(record:RecordItem)=>{
-   records.set(record.id,record);
-   if(isAttempt(record))writeMirror(record);
+   const previous=records.get(record.id);
+   const expected=previous ? previous.saveRevision??0 : null;
+   const versioned={...record,saveRevision:nextWriteVersion(expected)};
+   records.set(record.id,versioned);
+   if(isAttempt(versioned)){
+     if(attempt?.id===versioned.id)attempt=versioned;
+     writeMirror(versioned);
+   }
    writeQueue=writeQueue.catch(()=>{}).then(()=>new Promise<void>((resolve,reject)=>{
      if(!db){
        try{localStorage.setItem(storageKey,JSON.stringify([...records.values()]));resolve();}
@@ -189,11 +201,37 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        return;
      }
      const tx=db.transaction("attempts","readwrite");
-     tx.objectStore("attempts").put(record);
+     const store=tx.objectStore("attempts");
+     let conflict:Error|null=null;
+     const read=store.get(record.id);
+     read.onsuccess=()=>{
+       try{
+         assertWriteVersion(read.result as RecordItem|undefined,expected);
+         store.put(structuredClone(versioned));
+       }catch(error){conflict=error as Error;tx.abort();}
+     };
      tx.oncomplete=()=>resolve();
-     tx.onerror=()=>reject(tx.error);
-     tx.onabort=()=>reject(tx.error);
-   })).catch(e=>{warning="Saving failed. Export important history before closing.";console.warn("Exam workspace save",e);});
+     tx.onerror=()=>reject(conflict??tx.error??new Error("Write failed"));
+     tx.onabort=()=>reject(conflict??tx.error??new Error("Write aborted"));
+   })).catch(async e=>{
+     if(e instanceof Error && e.message.startsWith("Another tab")){
+       warning=e.message+"; changes in this tab were not saved.";
+       if(isAttempt(versioned)&&attempt?.id===versioned.id){attempt=null;view="library";}
+       try{localStorage.removeItem(mirrorKey);}catch{}
+       records.delete(versioned.id);
+       if(db)try{
+         const req=db.transaction("attempts","readonly").objectStore("attempts").get(versioned.id);
+         const latest=await new Promise<unknown>((resolve,reject)=>{
+           req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+         });
+         if(latest){validateGenericStoredRecord(latest);records.set(versioned.id,latest as RecordItem);}
+       }catch(error){console.warn("Could not reload changed record",error);}
+       if(!disposed)draw();
+     }else{
+       warning="Saving failed. Export important history before closing.";
+     }
+     console.warn("Exam workspace save",e);
+   });
  };
  const dispatch=(event:SessionEvent)=>{
    if(!attempt)return;
@@ -465,7 +503,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          validateGenericStoredRecord(mirror);
          const existing=records.get(mirror.id);
          const winner=chooseRecovered(isAttempt(existing)?existing:undefined,mirror);
-         if(winner===mirror){records.set(mirror.id,mirror);save(mirror);}
+         if(winner===mirror)save(mirror);
        }
      }catch(error){console.warn("Invalid emergency session mirror",error);}
    }catch{
