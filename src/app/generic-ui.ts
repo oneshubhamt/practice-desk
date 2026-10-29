@@ -159,42 +159,65 @@ export function renderModelExam(
    const responsesById=new Map(state.responses.map(row=>[row.questionRevisionId,row]));
    const response=responsesById.get(q.id)?.response;
    const remaining=examTimeRemaining(paper,state);
+   const total=paper.sections.reduce((n,section)=>n+section.questionRevisionIds.length,0);
+   const answered=state.responses.filter(record=>record.response).length;
+   const flagged=state.responses.filter(record=>record.flagged).length;
+   const visited=state.responses.filter(record=>record.timeSpentMs>0).length;
+   const timeLimit=paper.timing.kind==="whole-paper"?paper.timing.durationMs:
+     paper.timing.kind==="sectional"?paper.timing.sectionLimits.find(t=>t.sectionId===section.id)?.durationMs??null:null;
+   const elapsed=paper.timing.kind==="sectional"?state.sectionElapsedMs:state.elapsedMs;
+   const progressValue=timeLimit!==null&&timeLimit>0?
+     Math.min(100,100*elapsed/timeLimit):Math.min(100,100*answered/Math.max(1,total));
+   const isLow=remaining!==null&&remaining<=60000;
+
    const assets:ExamPackage={format:"practice-desk-exam",version:1,
      examId:attempt.frozen.snapshot.examId,title:bundle?.title??"",paper,answerKey:attempt.frozen.key,
      questions:attempt.frozen.questions,stimuli:attempt.frozen.stimuli,assets:attempt.frozen.assets};
-   return '<div class="generic-heading"><div><h1>'+escapeText(bundle?.title??paper.paperId)+'</h1><p class="muted">'+
-     escapeText(section.title)+' · '+state.responses.filter(r=>r.response).length+' answered</p></div>'+
-     '<div class="row"><strong class="generic-timer" id="g-timer">'+(remaining===null?"Untimed":minutes(remaining))+'</strong>'+
-     '<button class="btn" id="g-library">Library</button></div></div>'+
+   return '<div class="generic-heading exam-header"><div><span class="eyebrow">EXAM IN PROGRESS · '+escapeText(attempt.frozen.snapshot.mode)+'</span>'+
+     '<h1>'+escapeText(bundle?.title??paper.paperId)+'</h1><p class="muted">'+
+     escapeText(section.title)+' · Section '+(state.sectionIndex+1)+' of '+paper.sections.length+'</p></div>'+
+     '<div class="row exam-header-actions"><div class="exam-clock '+(isLow?"low":"")+'"><strong class="generic-timer" id="g-timer" role="timer">'+
+       (remaining===null?"Untimed":minutes(remaining))+'</strong><small>'+(remaining===null?"PRACTICE":"TIME REMAINING")+'</small></div>'+
+     '<button class="btn quiet" id="g-library">← Library</button></div></div>'+
      (warning?'<p class="generic-warning" role="status">'+escapeText(warning)+'</p>':"")+
-     '<div class="generic-sections">'+paper.sections.map((s,i)=>{
+     '<section class="exam-progress"><div class="row between"><span class="fine">'+answered+' / '+total+' answered · '+visited+' viewed · '+flagged+' flagged</span>'+
+       '<span class="fine">'+(timeLimit!==null?"Section timer":"Question coverage")+' · '+Math.round(progressValue)+'%</span></div>'+
+       '<div class="progress-track exam-time-progress" role="progressbar" aria-valuenow="'+Math.round(progressValue)+
+        '" aria-valuemin="0" aria-valuemax="100" aria-label="'+(timeLimit!==null?"Time used":"Questions answered")+'">'+
+         '<span style="width:'+progressValue.toFixed(1)+'%"></span></div></section>'+
+     '<div class="generic-sections" role="group" aria-label="Exam sections">'+paper.sections.map((s,i)=>{
        const locked=state.completedSections.includes(i)||
          ((paper.timing.kind==="sectional"||paper.navigation.sectionNavigation==="sequential-locked")&&i!==state.sectionIndex);
        return '<button class="btn '+(i===state.sectionIndex?"primary":"")+'" data-section="'+i+'" aria-current="'+(i===state.sectionIndex?"step":"false")+'"'+(locked?" disabled":"")+'>'+
          escapeText(s.title)+'</button>';
-     }).join("")+'</div><div class="generic-layout"><section class="panel pad"><p class="fine">'+
+     }).join("")+'</div><div class="generic-layout exam-grid"><section class="panel pad exam-question"><p class="eyebrow">'+
      escapeText(section.title)+' · Question '+(state.questionIndex+1)+' of '+section.questionRevisionIds.length+'</p>'+
      stimulusHTML(assets,q)+'<h2 class="generic-prompt">'+escapeText(q.content.prompt)+'</h2>'+
      assetHTML(assets,q.content.assetIds)+
      '<fieldset class="generic-response-group"'+(state.status==="paused"?" disabled":"")+'>'
      +renderGenericControls(assets,q,response)+'</fieldset>'+
-     '<div class="row generic-actions"><button class="btn" id="g-clear"'+(!response||state.status==="paused"?" disabled":"")+'>Clear</button>'+
+     '<div class="row generic-actions exam-answer-actions"><button class="btn" id="g-clear"'+(!response||state.status==="paused"?" disabled":"")+'>Clear</button>'+
      '<button class="btn" id="g-flag" aria-pressed="'+Boolean(responsesById.get(q.id)?.flagged)+'"'+(!paper.navigation.allowFlagging||state.status==="paused"?" disabled":"")+'>Flag</button></div>'+
-     '<div class="row generic-actions"><button class="btn" id="g-prev"'+(!state.questionIndex||paper.navigation.questionNavigation==="forward-only"?" disabled":"")+'>← Previous</button>'+
+     '<div class="row generic-actions exam-nav-actions"><button class="btn" id="g-prev"'+(!state.questionIndex||paper.navigation.questionNavigation==="forward-only"?" disabled":"")+'>← Previous</button>'+
      '<button class="btn" id="g-next"'+(state.questionIndex===section.questionRevisionIds.length-1?" disabled":"")+'>Next →</button></div>'+
-     '<div class="row generic-actions">'+
+     '<div class="row generic-actions exam-submit-actions">'+
      (paper.timing.kind!=="untimed"&&paper.timing.pausePolicy==="allowed"?
       '<button class="btn" id="g-pause">'+(state.status==="paused"?"Resume timer":"Pause timer")+'</button>':"")+
      '<button class="btn danger" id="g-submit"'+(state.status==="paused"||(paper.timing.kind==="sectional"&&!paper.timing.allowEarlySubmit)?" disabled":"")+'>'+
       (paper.timing.kind==="sectional"?"Submit section":"Submit exam")+'</button></div></section>'+
-     '<aside class="panel pad"><h3>Question navigator</h3><div class="generic-palette">'+
+     '<aside class="panel pad exam-sidebar"><div class="row between"><h3>Question navigator</h3><span class="fine">'+
+       section.questionRevisionIds.length+' questions</span></div>'+
+      '<p class="fine">Select a question number to navigate within the current section.</p><div class="generic-palette">'+
       section.questionRevisionIds.map((qid,i)=>{
         const r=responsesById.get(qid);
         const locked=paper.navigation.questionNavigation==="forward-only"&&i<state.questionIndex;
         return '<button class="num '+(i===state.questionIndex?"here ":"")+(r?.response?"answered ":"")+
         (r?.flagged?"marked":"")+'" data-q="'+i+'" aria-current="'+(i===state.questionIndex?"step":"false")+'" aria-label="Question '+(i+1)+
         (r?.response?", answered":"")+(r?.flagged?", flagged":"")+'"'+(locked?" disabled":"")+'>'+(i+1)+'</button>';
-      }).join("")+'</div><p class="fine">'+(paper.navigation.questionNavigation==="forward-only"?
+      }).join("")+'</div><div class="palette-legend"><span><i class="legend-dot answered"></i>Answered</span>'+
+       '<span><i class="legend-dot marked"></i>Flagged</span>'+
+       '<span><i class="legend-dot current"></i>Current</span>'+
+       '<span><i class="legend-dot empty"></i>Unanswered</span></div><p class="fine">'+(paper.navigation.questionNavigation==="forward-only"?
         "Questions cannot be revisited in this exam.":"Navigate freely where the paper permits.")+'</p></aside></div>';
  }
 
