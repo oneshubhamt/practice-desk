@@ -71,6 +71,7 @@ export interface RecoveryCandidate {
   readonly finishedAt?: number | null;
   readonly updatedAt?: number | null;
   readonly schema?: number;
+  readonly saveRevision?: number;
 }
 /** Terminal records win over stale in-progress mirrors for the same ID. */
 export function chooseRecovered<T extends RecoveryCandidate>(stored: T | undefined, mirror: T | undefined): T | undefined {
@@ -78,5 +79,9 @@ export function chooseRecovered<T extends RecoveryCandidate>(stored: T | undefin
   if (!mirror || stored.id !== mirror.id) return stored;
   if (stored.finishedAt && !mirror.finishedAt) return stored;
   if (mirror.finishedAt && !stored.finishedAt) return mirror;
+  // A persisted record with a newer (or identical) write revision is authoritative,
+  // regardless of wall-clock timestamps in another tab's emergency mirror.
+  if (Number.isSafeInteger(stored.saveRevision) && Number.isSafeInteger(mirror.saveRevision) &&
+      (stored.saveRevision as number) >= (mirror.saveRevision as number)) return stored;
   return (mirror.updatedAt ?? 0) > (stored.updatedAt ?? 0) ? mirror : stored;
 }
