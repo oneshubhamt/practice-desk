@@ -1227,3 +1227,20 @@ See `docs/PASS4_RELEASE_ACCEPTANCE.md` for remaining verification. Do not merge 
 **Verified:** CI [#40855216283](https://github.com/oneshubhamt/practice-desk/actions/runs/40855216283) passed Node 24 / strict TS 7.0.2 / unit tests / new Chrome `file://` smoke. The smoke covers all four CGL sectional submissions, free/single CGL practices, CGL image decode, custom six-response exam, frozen results, backup round trip, persistent-profile restart, IndexedDB stale-tab rejection, blocked-IDB localStorage fallback conflict/export, 390/768 px widths, and page errors. The GitHub Actions build publishes the generated self-contained HTML back to `overhaul` after successful checks. `main` and `baseline/v11` remain untouched.
 
 **Manual release checks only:** Firefox/Safari `file://` persistence/reopen, quota exhaustion and physical-device touch/screen-reader tests remain unverified. These platform-dependent release checks must not be described as completed. Pass 5 is separate.
+
+
+### Pass 5 — Learning/revision implementation (29 October 2026)
+
+**Runtime decision:** Pin the latest stable `ts-fsrs@6.0.0` (published 28 October 2026), use its asynchronous `DefaultScheduler` with explicit FSRS-7, no homegrown scheduler and no pre-release/beta. Esbuild packages the scheduler into the one standalone `file://` HTML. Node 24 and TypeScript 7.0.2 remain pinned in CI. Retention 0.9, fuzzing disabled for deterministic replay.
+
+**Completed:**
+- `src/learning/learning.ts`: strictly validated, revision-frozen notebook cards with self-reported error type, bounded notes, explicit manual subtopics/bookmarks and ISO-ordered review-grade logs. Each card is created only after exam submission, never from an answer preview.
+- `src/app/learning-ui.ts`: one responsive learning desk with notebook editing, due-card queue, answer reveal, four explicit FSRS review grades, user filters and descriptive topic/comparable-attempt metrics. The review UI discloses solutions only after revealing.
+- `src/app/generic-ui.ts`: individual completed-result question bookmarking and one-click revision set from incorrect/unanswered items. The same validated IndexedDB store, write-revision guards, localStorage fallback and checksum-verified all-data backup now include learning cards. No new migration or duplicate legacy code.
+- Evidence taxonomy: source `topicIds`, user-labelled subtopic and section fallback, grouped by exam; minimum 5 answered items before drawing conclusions. Comparable trends require identical immutable paper revision and policy. No rank/percentile prediction.
+- `tests/learning.test.mjs`: frozen references and answer-key validation, FSRS-7 deterministic review replay, manual subtopics, fair comparable trend cohorts and backup integrity.
+- `scripts/smoke-offline.mjs`: actual Chrome `file://` flow checks save-to-notebook, first review answer hidden/revealed, FSRS grading, note and error classification, backup, close/reopen persistence and previous CGL/generic/regression tests.
+
+**Verified:** [GitHub Actions #40858120327](https://github.com/oneshubhamt/practice-desk/actions/runs/40858120327) — Node 24, TS 7.0.2 strict typecheck, 51 unit tests, single-file build, real Chrome `file://` smoke including Pass 5, IDB recovery/conflict and responsive layouts. Old `main` and `baseline/v11` remain unchanged.
+
+**Release gates still manual:** Firefox and Safari `file://` storage, quota-denial recovery, iOS/Android input and accessibility. FSRS review feedback is self-rated; do not infer its grades from mock scores or claim statistically calibrated readiness.

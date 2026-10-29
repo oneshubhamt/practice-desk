@@ -27,3 +27,14 @@ Double-click **Practice_Desk_Offline_Mock_Tests.html** to run offline without a 
 Development stays on `overhaul`. `main` and `baseline/v11` remain unchanged.
 
 **Pass 4 (29 October 2026):** Code overhaul complete, [Chromium offline CI green](https://github.com/oneshubhamt/practice-desk/actions/runs/40855216283). Manual Firefox/Safari and device-level quota/accessibility release acceptance still pending.
+
+## Pass 5 — Learning and targeted revision
+
+- In a completed result, **Add to notebook** for one question or **Add mistakes & skips** for a revision set.
+- Open **Learning & revision** from the library: user-confirmed error types, editable notes, manual subtopic labels, bookmarks and due-card review.
+- **`ts-fsrs@6.0.0`**, the latest stable release as of 29 October 2026, runs **FSRS-7**. It is bundled locally; no server is needed. Cards are rated **Again / Hard / Good / Easy only after revealing the answer**. Original mock scores never silently rate spaced-repetition cards.
+- Topic accuracy/coverage and sample sizes are drawn from completed frozen exam results, not guessed labels. Imported per-question `topicIds` and user-entered subtopics are supported; SSC CGL defaults to section-level topics unless specifically tagged.
+- Compare attempts only on the **identical frozen paper revision** (edition, key, timing and question set). The learning view shows accuracy, marks and sample counts, without percentile/rank predictions.
+- Notebook notes and review history are validated and included with exam attempts in the same checksum-verified backup and fresh IndexedDB store.
+
+See [Pass 5 acceptance](docs/PASS5_RELEASE_ACCEPTANCE.md). The Android/iOS/Firefox/Safari physical-device release checks remain manual.

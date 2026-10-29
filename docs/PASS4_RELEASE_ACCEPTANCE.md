@@ -17,4 +17,4 @@ Architecture: **one typed runtime**, one offline library/history/results path. N
 
 **Pass 4 engineering complete and Chromium CI green (29 October 2026).** The unchecked platform-specific items above are real-device/browser release acceptance checks, not remaining legacy-code work. Neither Firefox nor Safari has been claimed as tested.
 
-Pass 5 (mastery analytics, error notebook and revision sets) is separate.
+Pass 5 (mastery evidence, error notebook, FSRS-7 and revision sets) is tracked in `docs/PASS5_RELEASE_ACCEPTANCE.md`.
