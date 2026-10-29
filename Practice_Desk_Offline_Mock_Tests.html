@@ -2363,7 +2363,18 @@ var PracticeDeskGeneric = (() => {
     let fallbackStamp = null, fallbackConflict = false;
     const storageKey = "practiceDesk.generic.fallback.v1", mirrorKey = "practiceDesk.generic.active.v1";
     const downloadBackup = () => {
-      const recordsToExport = [...records.values()].filter((record3) => isPackage(record3) || isAttempt(record3));
+      let recordsToExport = [...records.values()].filter((record3) => isPackage(record3) || isAttempt(record3));
+      if (fallbackConflict && !db) {
+        try {
+          const latest = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
+          if (!Array.isArray(latest)) throw new Error("Invalid fallback history");
+          recordsToExport = latest.map((value) => validateGenericStoredRecord(value));
+        } catch {
+          warning = "Backup unavailable: browser fallback records could not be validated.";
+          draw();
+          return;
+        }
+      }
       const backup = makeBackup(recordsToExport, [], null, (/* @__PURE__ */ new Date()).toISOString());
       const blob = new Blob([JSON.stringify(backup)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -2525,7 +2536,7 @@ var PracticeDeskGeneric = (() => {
     };
     function listHTML() {
       const attempts = [...records.values()].filter(isAttempt).sort((a, b) => b.startedAt - a.startedAt);
-      return '<div class="generic-heading"><h1>Exam workspace</h1><button class="btn" id="g-back">\u2190 Test library</button></div><p class="muted">Configurable papers \xB7 Six question types \xB7 Works offline</p>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + '<div class="generic-layout"><section class="panel pad"><h2>Select an exam</h2><select id="g-papers" aria-label="Select exam package">' + [...packages.values()].map((p) => '<option value="' + escapeText(p.paper.id) + '"' + (choice === p.paper.id ? " selected" : "") + ">" + escapeText(p.title) + "</option>").join("") + '</select><p class="fine">Built-in CGL papers remain available. You can also import any validated Practice Desk exam JSON file.</p><div class="row"><button class="btn primary" id="g-start"' + (loading || fallbackConflict ? " disabled" : "") + '>Start exam</button><button class="btn" id="g-import"' + (loading || fallbackConflict ? " disabled" : "") + '>Import JSON</button></div><input type="file" id="g-file" accept=".json,application/json" hidden></section><section class="panel pad"><div class="row between"><h2>Generic exam history</h2><div class="row"><button class="btn" id="g-export-history"' + (loading || fallbackConflict ? " disabled" : "") + '>Export</button><button class="btn" id="g-import-history"' + (loading || fallbackConflict ? " disabled" : "") + '>Import</button></div></div><input type="file" id="g-history-file" accept=".json,application/json" hidden>' + (attempts.length ? attempts.slice(0, 30).map((a) => '<button class="generic-history" data-attempt="' + escapeText(a.id) + '">' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + " \xB7 " + new Date(a.startedAt).toLocaleString() + "<small>" + (a.finishedAt ? " Completed" : " Resume") + "</small></button>").join("") : '<p class="fine">No attempts yet.</p>') + "</section></div>";
+      return '<div class="generic-heading"><h1>Exam workspace</h1><button class="btn" id="g-back">\u2190 Test library</button></div><p class="muted">Configurable papers \xB7 Six question types \xB7 Works offline</p>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + '<div class="generic-layout"><section class="panel pad"><h2>Select an exam</h2><select id="g-papers" aria-label="Select exam package">' + [...packages.values()].map((p) => '<option value="' + escapeText(p.paper.id) + '"' + (choice === p.paper.id ? " selected" : "") + ">" + escapeText(p.title) + "</option>").join("") + '</select><p class="fine">Built-in CGL papers remain available. You can also import any validated Practice Desk exam JSON file.</p><div class="row"><button class="btn primary" id="g-start"' + (loading || fallbackConflict ? " disabled" : "") + '>Start exam</button><button class="btn" id="g-import"' + (loading || fallbackConflict ? " disabled" : "") + '>Import JSON</button></div><input type="file" id="g-file" accept=".json,application/json" hidden></section><section class="panel pad"><div class="row between"><h2>Generic exam history</h2><div class="row"><button class="btn" id="g-export-history"' + (loading ? " disabled" : "") + '>Export</button><button class="btn" id="g-import-history"' + (loading || fallbackConflict ? " disabled" : "") + '>Import</button></div></div><input type="file" id="g-history-file" accept=".json,application/json" hidden>' + (attempts.length ? attempts.slice(0, 30).map((a) => '<button class="generic-history" data-attempt="' + escapeText(a.id) + '">' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + " \xB7 " + new Date(a.startedAt).toLocaleString() + "<small>" + (a.finishedAt ? " Completed" : " Resume") + "</small></button>").join("") : '<p class="fine">No attempts yet.</p>') + "</section></div>";
     }
     function examHTML() {
       return attempt ? renderModelExam(attempt, packages.get(attempt.packageId), warning) : "";
@@ -2644,13 +2655,26 @@ var PracticeDeskGeneric = (() => {
       const q = attempt.frozen.questions.find((x) => x.id === section?.questionRevisionIds[attempt.state.questionIndex]);
       if (!q) return;
       root.querySelectorAll("[data-choice]").forEach((input) => input.onchange = () => {
-        if (q.content.kind === "single-choice")
-          dispatch({ type: "ANSWER", nowMs: now(), response: { kind: "single-choice", optionId: input.dataset.choice } });
-        else if (q.content.kind === "multiple-select") {
-          const selected = [...root.querySelectorAll("[data-choice]:checked")].map((x) => x.dataset.choice);
-          if (!selected.length) dispatch({ type: "CLEAR", nowMs: now() });
-          else if (selected.length < (q.content.minSelections ?? 1)) warning = "Select at least " + (q.content.minSelections ?? 1) + " options before saving.";
-          else dispatch({ type: "ANSWER", nowMs: now(), response: { kind: "multiple-select", optionIds: selected } });
+        if (q.content.kind === "single-choice") {
+          const option = q.content.options.find((x) => x.id === input.dataset.choice);
+          if (!option) {
+            notice("Unknown question option.");
+            return;
+          }
+          dispatch({ type: "ANSWER", nowMs: now(), response: { kind: "single-choice", optionId: option.id } });
+        } else if (q.content.kind === "multiple-select") {
+          const raw = [...root.querySelectorAll("[data-choice]:checked")].map((x) => x.dataset.choice);
+          const chosen = q.content.options.filter((option) => raw.includes(option.id)).map((option) => option.id);
+          if (raw.length !== chosen.length) {
+            notice("Unknown question option.");
+            return;
+          }
+          if (!chosen.length) dispatch({ type: "CLEAR", nowMs: now() });
+          else if (chosen.length < (q.content.minSelections ?? 1)) {
+            warning = "Select at least " + (q.content.minSelections ?? 1) + " options before saving.";
+            const noticeElement = root.querySelector(".generic-warning");
+            if (noticeElement) noticeElement.textContent = warning;
+          } else dispatch({ type: "ANSWER", nowMs: now(), response: { kind: "multiple-select", optionIds: chosen } });
         }
       });
       root.querySelectorAll("[data-bool]").forEach((input) => input.onchange = () => {
@@ -2669,8 +2693,18 @@ var PracticeDeskGeneric = (() => {
           const value = root.querySelector("#g-text").value;
           dispatch(value.trim() ? { type: "ANSWER", nowMs: now(), response: { kind: "free-response", text: value } } : { type: "CLEAR", nowMs: now() });
         } else if (q.content.kind === "matching") {
-          const pairs = [...root.querySelectorAll("[data-match]")].filter((x) => x.value).map((x) => ({ leftId: x.dataset.match, rightId: x.value }));
-          dispatch(pairs.length ? { type: "ANSWER", nowMs: now(), response: { kind: "matching", pairs } } : { type: "CLEAR", nowMs: now() });
+          const matching = q.content;
+          const pairs = [...root.querySelectorAll("[data-match]")].filter((x) => x.value).map((x) => {
+            const left = matching.leftItems.find((item) => item.id === x.dataset.match);
+            const right = matching.rightItems.find((item) => item.id === x.value);
+            return left && right ? { leftId: left.id, rightId: right.id } : null;
+          });
+          if (pairs.some((x) => x === null)) {
+            notice("Unknown matching option.");
+            return;
+          }
+          const validPairs = pairs.filter((pair) => pair !== null);
+          dispatch(validPairs.length ? { type: "ANSWER", nowMs: now(), response: { kind: "matching", pairs: validPairs } } : { type: "CLEAR", nowMs: now() });
         }
       };
       root.querySelector("#g-clear").onclick = () => dispatch({ type: "CLEAR", nowMs: now() });
