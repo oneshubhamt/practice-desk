@@ -191,6 +191,42 @@ try{
    if(await multi.locator(".generic-review").count()!==6)
      throw new Error("Non-CGL frozen review failed to reopen");
    console.log("Offline file://: all six answer widgets and non-CGL result reopened");
+
+   // Simulate browsers where IndexedDB is blocked. A second tab must not
+   // silently overwrite the localStorage-only record from a stale first tab.
+   const fallbackPage=async()=>{
+     const page=await cgl.context.newPage();
+     await page.addInitScript(()=>Object.defineProperty(window,"indexedDB",{configurable:true,value:undefined}));
+     await page.goto(file,{waitUntil:"load"});
+     await page.locator("#genericWorkspace").click();
+     await page.locator("#g-start").waitFor({state:"visible"});
+     return page;
+   };
+   const fallbackA=await fallbackPage();
+   await fallbackA.locator("#g-start").click();
+   await fallbackA.locator('input[data-choice]').first().click();
+   let fallbackId=null;
+   for(let i=0;i<60;i++){
+     fallbackId=await fallbackA.evaluate(()=>{
+       const records=JSON.parse(localStorage.getItem("practiceDesk.generic.fallback.v1")??"[]");
+       return records.find(a=>a.recordType==="generic-attempt"&&a.state?.responses?.some(r=>r.response))?.id??null;
+     });
+     if(fallbackId)break;
+     await delay(100);
+   }
+   if(!fallbackId)throw new Error("Generic localStorage fallback did not save an answer");
+   const fallbackB=await fallbackPage();
+   await fallbackB.locator('[data-attempt="'+fallbackId+'"]').click();
+   await fallbackB.locator('input[data-choice]').nth(1).click();
+   await fallbackA.locator(".generic-warning").filter({hasText:"Fallback history changed"})
+     .waitFor({state:"visible"});
+   const fallbackSaved=await fallbackB.evaluate(id=>{
+     const records=JSON.parse(localStorage.getItem("practiceDesk.generic.fallback.v1")??"[]");
+     return records.find(a=>a.id===id);
+   },fallbackId);
+   if(!fallbackSaved?.state?.responses?.some(r=>r.response?.kind==="single-choice"&&
+      r.response.optionId.endsWith(":b")))throw new Error("Fallback writer did not retain its response");
+   console.log("Offline file://: localStorage fallback detects competing generic tab");
  }catch(error){throw new Error("CGL file:// test: "+error.message+"; browser errors: "+cgl.errors.join(" | "));}
  finally{await cgl.context.close();}
 }finally{
