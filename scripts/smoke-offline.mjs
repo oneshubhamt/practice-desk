@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -79,6 +79,10 @@ try{
    await cgl.page.locator("#exportBackup").click();
    const backupDownload=await downloadPromise;
    if(!backupDownload.suggestedFilename().endsWith(".json"))throw new Error("Backup download missing");
+   const backup=JSON.parse(await readFile(await backupDownload.path(),"utf8"));
+   if(backup.version!==2||backup.manifest?.attemptCount!==backup.attempts?.length)throw new Error("Backup manifest missing");
+   if(!backup.attempts.some(a=>a.recordType==="generic-attempt")||
+      !backup.attempts.some(a=>a.schema===4))throw new Error("All-data backup omitted CGL or generic history");
    if(cgl.errors.length)throw new Error("CGL UI errors: "+cgl.errors.join(" | "));
    console.log("Offline file://: original CGL start, answer and backup export passed");
  }catch(error){throw new Error("CGL file:// test: "+error.message+"; browser errors: "+cgl.errors.join(" | "));}

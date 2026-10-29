@@ -27,7 +27,8 @@ const genericResult = await bundleJavaScript({
   globalName: 'PracticeDeskGeneric', target: 'es2022', logLevel: 'silent',
 });
 const genericBundle = genericResult.outputFiles[0].text +
-  '\n globalThis.PD_GENERIC_UI = PracticeDeskGeneric.mountExamWorkspace;\n';
+  '\n globalThis.PD_GENERIC_UI = PracticeDeskGeneric.mountExamWorkspace;\n'+
+  'globalThis.PD_GENERIC_VALIDATE_RECORD = PracticeDeskGeneric.validateGenericStoredRecord;\n';
 new Script(genericBundle);
 const runtime = (await read('src/app/legacy.ts')).replace(/^\/\/ @ts-nocheck\r?\n(?:\/\/[^\n]*\r?\n)?/,'');
 new Script(runtime);

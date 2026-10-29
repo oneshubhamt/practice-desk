@@ -1147,3 +1147,12 @@ Added:
 **Implemented since the earlier checkpoint:** Main History lists completed generic attempts and opens their frozen reviews without mixing unlike exams in CGL analytics. Generic workspace has SHA-256-verified export/import of saved attempts and uploaded packs, adds records atomically, refuses duplicate record IDs, validates stored responses and frozen scores, and disables Start until storage initializes. Question navigator exposes the current item and flag state to assistive technology.
 
 **Not yet release-complete:** Unified one-click backup across legacy and generic data, manual Firefox/Safari `file://` reopen acceptance, cross-tab write-conflict testing, and removing the parallel CGL-specific user interface in favour of one exam-agnostic presentation. `main` and `baseline/v11` remain unchanged.
+
+
+### Pass 4 continuation — unified all-data history backup
+
+- Combined the former CGL-only History export/import with generic exam attempts and imported exam-package records in one SHA-256-verified v2 archive; includes CGL frozen display revisions.
+- Import validates every record with its own existing domain validator before an atomic IndexedDB `add()` transaction and skips IDs already present. There is no overwrite of completed attempts or installed exam packages.
+- History now labels the one-click action `Export all data` and clarifies what is included. Generic workspace's separate export remains available.
+- Extended Chrome `file://` acceptance: use the original CGL test UI, save an answer, export a downloaded archive, and verify both generic and CGL records are present.
+- Requires CI validation; localStorage fallback cannot provide atomicity across two keys and must clearly surface save failures. This is not a multi-tab edit-lease implementation.
