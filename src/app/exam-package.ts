@@ -139,7 +139,7 @@ export interface GenericAttempt {
 }
 export function startGenericAttempt(bundle: ExamPackage, id: string, timestamp: number): GenericAttempt {
  const validated = validateExamPackage(bundle);
- const mode=validated.examId==="ssc-cgl" ?
+ const mode=validated.paper.edition==="custom"?"custom-practice":validated.examId==="ssc-cgl" ?
    validated.practiceMode==="free"?"full-paper-practice":
    validated.practiceMode==="single"?"section-practice":"exam-simulation":
    validated.paper.edition==="custom"?"custom-practice":"exam-simulation";

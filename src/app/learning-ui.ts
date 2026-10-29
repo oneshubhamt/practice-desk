@@ -2,6 +2,8 @@ import { DefaultScheduler, Rating, type DefaultScheduler as Scheduler } from "ts
 import type { ExamPackage, GenericAttempt } from "./exam-package.ts";
 import { readableAnswer } from "./exam-package.ts";
 import { ERROR_LABELS, comparableTrends, rateLearningCard, scheduledCard, topicMetrics, validateLearningCard } from "../learning/learning.ts";
+import { evidenceProgression } from "../learning/attempt-evidence.ts";
+import { REVISION_MAX_QUESTIONS } from "../learning/revision-test.ts";
 import type { ErrorLabel, LearningCard, ReviewGrade } from "../learning/learning.ts";
 
 export interface LearningDeskHost {
@@ -9,6 +11,7 @@ export interface LearningDeskHost {
   attempts:()=>GenericAttempt[];
   save:(record:LearningCard)=>Promise<boolean>;
   remove:(id:string)=>Promise<void>;
+  startRevision:(cards:readonly LearningCard[])=>Promise<boolean>;
   close:()=>void;
 }
 const esc=(v:unknown):string=>String(v??"").replace(/[&<>"']/g,c=>
@@ -48,15 +51,25 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
  let scheduler:Scheduler<"FSRS-7">|null=null;
  let selectedId:string|null=null,reviewId:string|null=null,revealed=false;
  let filter:"all"|"due"|"bookmarked"="all",message="",closed=false,opened=false;
+ const cache=new Map<string,{record:LearningCard;scheduled:ReturnType<typeof scheduledCard>}>();
+ const schedule=(card:LearningCard)=>{
+   const current=cache.get(card.id);
+   if(current?.record===card)return current.scheduled;
+   const computed=scheduledCard(card,scheduler!);
+   cache.set(card.id,{record:card,scheduled:computed});
+   return computed;
+ };
+ const invalidate=()=>{for(const [id,entry] of cache)if(!host.cards().some(card=>card.id===id&&card===entry.record))cache.delete(id);};
  const now=()=>new Date();
  const due=(card:LearningCard)=>scheduler?.newCard!==undefined?
-   scheduledCard(card,scheduler).dueAt.getTime()<=Date.now():false;
+   schedule(card).dueAt.getTime()<=Date.now():false;
  const cards=()=>host.cards().sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
  const dueCards=()=>cards().filter(due).sort((a,b)=>
-   scheduledCard(a,scheduler!).dueAt.getTime()-scheduledCard(b,scheduler!).dueAt.getTime());
+   schedule(a).dueAt.getTime()-schedule(b).dueAt.getTime());
  function draw(){
   if(closed||!opened)return;
   const all=cards();
+  invalidate();
   const selected=all.find(c=>c.id===selectedId)??all[0];
   const dueNow=dueCards();
   if(reviewId){
@@ -91,22 +104,29 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
      return;
     }
   }
-  const visible=all.filter(c=>filter==="all"||filter==="due"&&due(c)||filter==="bookmarked"&&c.bookmarked);
   const done=host.attempts().filter(a=>a.finishedAt!==null&&a.result);
   const topics=topicMetrics(done,all),cohorts=comparableTrends(done).filter(x=>x.count>=2);
+  const progress=evidenceProgression(topics);
+  const visible=all.filter(c=>filter==="all"||filter==="due"&&due(c)||filter==="bookmarked"&&c.bookmarked);
+  const exam=all.find(c=>c.id===selectedId)?.examId??visible[0]?.examId??all[0]?.examId;
+  const candidates=visible.filter(c=>c.examId===exam&&
+    ["verified","corrected","caution"].includes(c.question.editorial.status)).slice(0,REVISION_MAX_QUESTIONS);
   root.innerHTML='<div class="generic-heading"><div><h1>Learning & revision</h1><p class="muted">Error notebook · FSRS-7 spaced review · Topic evidence</p></div>'+
     '<button class="btn" id="learning-close">← Test library</button></div>'+
     (message?'<p class="generic-warning" role="status">'+esc(message)+'</p>':"")+
     '<section class="panel pad"><div class="row between"><div><h2>Revision queue</h2>'+
     '<p class="fine">'+all.length+' cards · '+(scheduler?dueNow.length+" due now":"Scheduler initializing")+
       ' · Mock results do not automatically count as spaced-repetition reviews</p></div>'+
-    '<button class="btn primary" id="learning-due"'+(!scheduler||!dueNow.length?" disabled":"")+'>Review due cards</button></div></section>'+
+    '<div class="row generic-actions"><button class="btn primary" id="learning-due"'+(!scheduler||!dueNow.length?" disabled":"")+'>Review due cards</button>'+
+    '<button class="btn" id="learning-test"'+(!candidates.length?" disabled":"")+'>Start revision test ('+candidates.length+')</button></div></div>'+
+    '<p class="fine">Practice test uses the selected exam and current notebook filter (up to '+REVISION_MAX_QUESTIONS+
+    ' eligible cards). Untimed; +1 correct, 0 incorrect/unanswered. It is not the source exam score and does not rate FSRS cards.</p></section>'+
     '<div class="generic-layout learning-layout"><section class="panel pad"><div class="row between"><h2>Error notebook</h2>'+
       '<select id="learning-filter" aria-label="Filter notebook" class="learning-filter">'+
       [["all","All cards"],["due","Due now"],["bookmarked","Bookmarked"]].map(([key,label])=>
        '<option value="'+key+'"'+(filter===key?" selected":"")+'>'+label+'</option>').join("")+'</select></div>'+
     (visible.length?visible.map(c=>{
-      const next=scheduler?scheduledCard(c,scheduler):null;
+      const next=scheduler?schedule(c):null;
       return '<button class="generic-history '+(selected?.id===c.id?"learning-selected":"")+
         '" data-learning-id="'+esc(c.id)+'">'+esc(c.sectionTitle)+' · '+esc(c.question.content.prompt.slice(0,92))+
         '<small>'+esc(c.errorLabel??"Unclassified")+' · '+
@@ -134,11 +154,16 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
        '<p class="fine">Select a card from the notebook.</p>')+'</section></div>'+
     '<section class="panel pad learning-insights"><h2>Topic performance</h2>'+
     '<p class="fine">Official CGL section labels are the default broad topics. Imported exam topic IDs and your explicitly labelled subtopics remain separate; no topic is guessed. Five answered items minimum for measured evidence. Skips are excluded from accuracy.</p>'+
-    '<div class="scroll-table"><table><thead><tr><th>Exam</th><th>Topic</th><th>Answered / total</th><th>Accuracy</th><th>Evidence</th></tr></thead><tbody>'+
-     (topics.length?topics.map(t=>'<tr><td>'+esc(t.examId)+'</td><td>'+esc(t.label)+'</td><td>'+
-       t.answered+' / '+t.total+'</td><td>'+(t.accuracy===null?"—":Math.round(t.accuracy*100)+"%")+
+    '<div class="scroll-table"><table><thead><tr><th>Exam</th><th>Type</th><th>Topic</th><th>Answered / total</th><th>Distinct questions</th><th>Attempts</th><th>Accuracy</th><th>Evidence</th></tr></thead><tbody>'+
+     (topics.length?topics.map(t=>'<tr><td>'+esc(t.examId)+'</td><td>'+esc(t.kind)+'</td><td>'+esc(t.label)+'</td><td>'+
+       t.answered+' / '+t.total+'</td><td>'+t.distinctQuestions+'</td><td>'+t.attempts+
+       '</td><td>'+(t.accuracy===null?"—":Math.round(t.accuracy*100)+"%")+
        '</td><td>'+(t.evidence==="measured"?"Observed":"Insufficient")+'</td></tr>').join(""):
-       '<tr><td colspan="5">Complete an exam to view topic performance.</td></tr>')+'</tbody></table></div>'+
+       '<tr><td colspan="8">Complete an exam to view topic performance.</td></tr>')+'</tbody></table></div>'+
+    '<h2>Observed topic consistency</h2><p class="fine">Requires at least two attempts, ten answered observations and five distinct question revisions. Repeated questions are tracked separately; these are descriptive bands, not predictions of mastery.</p>'+
+    '<div class="scroll-table"><table><thead><tr><th>Exam</th><th>Topic</th><th>Evidence</th></tr></thead><tbody>'+
+      (progress.length?progress.map(p=>'<tr><td>'+esc(p.examId)+'</td><td>'+esc(p.topic)+'</td><td>'+esc(p.label)+'</td></tr>').join(""):
+      '<tr><td colspan="3">No completed practice evidence yet.</td></tr>')+'</tbody></table></div>'+
     '<h2>Comparable attempt trends</h2>'+
     '<p class="fine">Only identical frozen paper revisions, including their rules and answer keys, are compared.</p>'+
     '<div class="scroll-table"><table><thead><tr><th>Paper revision</th><th>Attempts</th><th>Accuracy sequence</th><th>Marks sequence</th></tr></thead><tbody>'+
@@ -148,6 +173,12 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
        '<tr><td colspan="4">Complete the same paper revision twice to see a valid comparison.</td></tr>')+
     '</tbody></table></div></section>';
   root.querySelector<HTMLButtonElement>("#learning-close")!.onclick=host.close;
+  root.querySelector<HTMLButtonElement>("#learning-test")!.onclick=async()=>{
+    const button=root.querySelector<HTMLButtonElement>("#learning-test");
+    if(button)button.disabled=true;
+    const ok=await host.startRevision(candidates);
+    if(!ok){message="Revision exam was not saved. Check storage and retry.";draw();}
+  };
   root.querySelector<HTMLButtonElement>("#learning-due")!.onclick=()=>{
     reviewId=dueCards()[0]?.id??null;revealed=false;message="";draw();
   };
@@ -179,7 +210,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   };
  }
  void DefaultScheduler<"FSRS-7">({version:"FSRS-7",desiredRetention:0.9,enableFuzz:false})
-  .then(value=>{scheduler=value;draw();})
+.then(value=>{scheduler=value;cache.clear();draw();})
   .catch(e=>{message="FSRS scheduler failed to initialize.";console.error(e);draw();});
  return {show(){opened=true;draw();},hide(){opened=false;},select(id:string){selectedId=id;},dispose(){closed=true}};
 }

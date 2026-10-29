@@ -13,6 +13,8 @@ import { validateResponse } from "../engine/response.ts";
 import { assertWriteVersion, nextWriteVersion } from "../history/concurrency.ts";
 import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
 import { createLearningDesk } from "./learning-ui.ts";
+import { makeRevisionPackage } from "../learning/revision-test.ts";
+import { attemptEvidence } from "../learning/attempt-evidence.ts";
 import { addLearningCard, validateLearningCard } from "../learning/learning.ts";
 import type { LearningCard } from "../learning/learning.ts";
 import { readDisplayPreferences, writeDisplayPreferences, SETTINGS_EVENT } from "./preferences.ts";
@@ -404,6 +406,20 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    attempts:()=>[...records.values()].filter(isAttempt),
    save:(item)=>save(item),
    remove:(id)=>removeSavedAttempt(id),
+   startRevision:async selected=>{
+     if(storageFault||fallbackConflict||loading){notice("Storage unavailable; cannot start a revision exam.");return false;}
+     try{
+       const nonce=typeof crypto!=="undefined"&&crypto.randomUUID?crypto.randomUUID():
+         "revision-"+now()+"-"+Math.floor(Math.random()*100000);
+       const paper=makeRevisionPackage(selected,nonce);
+       const id=typeof crypto!=="undefined"&&crypto.randomUUID?crypto.randomUUID():
+         "attempt-"+now()+"-"+Math.floor(Math.random()*100000);
+       const generated=startGenericAttempt(paper,id,now());
+       if(!await save(generated))return false;
+       attempt=generated;view="exam";warning="Untimed notebook revision · +1 correct, 0 incorrect. This is not a source-exam score.";
+       draw();return true;
+     }catch(error){notice(error instanceof Error?error.message:"Cannot create revision test");return false;}
+   },
    close:()=>{view="library";draw();}
  });
  const addNotebookCard=(source:GenericAttempt,id:string):void=>{
