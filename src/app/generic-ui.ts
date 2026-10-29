@@ -194,7 +194,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  solutions:Readonly<Record<string,Readonly<Record<string,string>>>>):()=>void{
  const packages=new Map<string,ExamPackage>(cachedCglPackages(sources,patches,solutions).map(p=>[p.paper.id,p]));
  const records=new Map<string,RecordItem>();
- let choice=packages.values().find(p=>p.paper.edition==="reviewed")?.paper.id??(packages.keys().next().value as string);
+ let choice=[...packages.values()].find(p=>p.paper.edition==="reviewed")?.paper.id??(packages.keys().next().value as string);
  let cglMode:CglPracticeMode="strict", singleSection=0, historyFilter="all";
  let attempt:GenericAttempt|null=null, view:"library"|"exam"|"result"="library";
  let db:IDBDatabase|null=null, warning="",disposed=false, loading=true, writeQueue=Promise.resolve();
