@@ -316,3 +316,27 @@ select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-vis
 @media(prefers-reduced-motion:reduce){
  *,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}
 }
+
+/* Learning desk, consistent with the richer library/history dashboard. */
+.learning-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:0 0 18px}
+.learning-revision-callout{background:linear-gradient(105deg,var(--soft-blue),var(--panel));border-color:color-mix(in srgb,var(--blue) 20%,var(--line))}
+.learning-revision-callout h2{margin-bottom:4px}
+.learning-revision-callout p{margin-bottom:0}
+.learning-layout{align-items:start}
+.learning-layout>section{min-width:0}
+.learning-layout #learning-filter{font-size:12px;max-width:150px}
+.learning-layout .generic-history{border-bottom:1px solid var(--line);padding:14px 8px}
+.learning-layout .generic-history:hover{background:var(--soft)}
+.learning-layout .generic-history.learning-selected{border-left:3px solid var(--blue);background:var(--soft-blue)}
+.learning-layout #learning-error,.learning-layout #learning-topic,.learning-layout #learning-note{margin-bottom:11px}
+.learning-layout #learning-note{min-height:120px}
+.learning-layout #learning-save{min-width:125px}
+.learning-reports{margin-top:18px}
+.learning-reports h2{margin-bottom:5px}
+.learning-report-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.learning-report-list>div{border:1px solid var(--line);border-radius:10px;background:var(--soft);padding:14px}
+.learning-report-list span{display:block;text-transform:capitalize;color:var(--muted);font-size:12px}
+.learning-report-list b{display:block;margin-top:6px;font-size:19px}
+.learning-answer{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:22px;margin-top:20px}
+.learning-answer .btn{min-width:84px}
+@media(max-width:760px){.learning-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.learning-revision-callout{padding:16px}}
