@@ -45,3 +45,25 @@ test("generic history rejects malformed stored records before import",()=>{
  assert.throws(()=>validateGenericStoredRecord({recordType:"generic-attempt",id:"fake"}),/Invalid generic/);
  assert.throws(()=>validateGenericStoredRecord({recordType:"generic-package",id:"wrong",bundle:{paper:{id:"x"}}}),/identity/);
 });
+
+test("shared renderer enforces paused, forward-only and no-early-submit policies",async()=>{
+ const {renderModelExam}=await import("../src/app/generic-ui.ts");
+ const {validateExamPackage,startGenericAttempt,transitionGenericAttempt}=await import("../src/app/exam-package.ts");
+ const {pkg}=await import("./fixtures/six-kinds.mjs");
+ const forward=validateExamPackage({...pkg,paper:{...pkg.paper,navigation:{...pkg.paper.navigation,questionNavigation:"forward-only"}}});
+ const attempt=startGenericAttempt(forward,"policies",0);
+ const questionMap=new Map(forward.questions.map(q=>[q.id,q]));
+ const moved=transitionGenericAttempt(attempt,{type:"NAVIGATE",nowMs:1,sectionIndex:0,questionIndex:1},questionMap);
+ assert.match(renderModelExam(moved,forward),/id="g-prev" disabled/);
+ const paused=transitionGenericAttempt(moved,{type:"PAUSE",nowMs:2},questionMap);
+ const html=renderModelExam(paused,forward);
+ assert.match(html,/id="g-clear" disabled/);
+ assert.match(html,/id="g-flag"[^>]*disabled/);
+ assert.match(html,/id="g-submit" disabled/);
+ const sectioned=validateExamPackage({...pkg,paper:{...pkg.paper,
+   timing:{kind:"sectional",sectionLimits:[{sectionId:"s1",durationMs:10000},{sectionId:"s2",durationMs:10000}],allowEarlySubmit:false,pausePolicy:"forbidden"}
+ }});
+ const noEarly=renderModelExam(startGenericAttempt(sectioned,"noearly",0),sectioned);
+ assert.match(noEarly,/id="g-submit" disabled/);
+ assert.match(noEarly,/data-section="0" aria-current="step"/);
+});

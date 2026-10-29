@@ -148,7 +148,7 @@ export function renderModelExam(
      '<div class="generic-sections">'+paper.sections.map((s,i)=>{
        const locked=state.completedSections.includes(i)||
          ((paper.timing.kind==="sectional"||paper.navigation.sectionNavigation==="sequential-locked")&&i!==state.sectionIndex);
-       return '<button class="btn '+(i===state.sectionIndex?"primary":"")+'" data-section="'+i+'"'+(locked?" disabled":"")+'>'+
+       return '<button class="btn '+(i===state.sectionIndex?"primary":"")+'" data-section="'+i+'" aria-current="'+(i===state.sectionIndex?"step":"false")+'"'+(locked?" disabled":"")+'>'+
          escapeText(s.title)+'</button>';
      }).join("")+'</div><div class="generic-layout"><section class="panel pad"><p class="fine">'+
      escapeText(section.title)+' · Question '+(state.questionIndex+1)+' of '+section.questionRevisionIds.length+'</p>'+
@@ -156,14 +156,15 @@ export function renderModelExam(
      assetHTML(assets,q.content.assetIds)+
      '<fieldset class="generic-response-group"'+(state.status==="paused"?" disabled":"")+'>'
      +renderGenericControls(assets,q,response)+'</fieldset>'+
-     '<div class="row generic-actions"><button class="btn" id="g-clear"'+(!response?" disabled":"")+'>Clear</button>'+
-     '<button class="btn" id="g-flag" aria-pressed="'+Boolean(state.responses.find(r=>r.questionRevisionId===q.id)?.flagged)+'"'+(!paper.navigation.allowFlagging?" disabled":"")+'>Flag</button></div>'+
-     '<div class="row generic-actions"><button class="btn" id="g-prev"'+(!state.questionIndex?" disabled":"")+'>← Previous</button>'+
+     '<div class="row generic-actions"><button class="btn" id="g-clear"'+(!response||state.status==="paused"?" disabled":"")+'>Clear</button>'+
+     '<button class="btn" id="g-flag" aria-pressed="'+Boolean(state.responses.find(r=>r.questionRevisionId===q.id)?.flagged)+'"'+(!paper.navigation.allowFlagging||state.status==="paused"?" disabled":"")+'>Flag</button></div>'+
+     '<div class="row generic-actions"><button class="btn" id="g-prev"'+(!state.questionIndex||paper.navigation.questionNavigation==="forward-only"?" disabled":"")+'>← Previous</button>'+
      '<button class="btn" id="g-next"'+(state.questionIndex===section.questionRevisionIds.length-1?" disabled":"")+'>Next →</button></div>'+
      '<div class="row generic-actions">'+
      (paper.timing.kind!=="untimed"&&paper.timing.pausePolicy==="allowed"?
       '<button class="btn" id="g-pause">'+(state.status==="paused"?"Resume timer":"Pause timer")+'</button>':"")+
-     '<button class="btn danger" id="g-submit">'+(paper.timing.kind==="sectional"?"Submit section":"Submit exam")+'</button></div></section>'+
+     '<button class="btn danger" id="g-submit"'+(state.status==="paused"||(paper.timing.kind==="sectional"&&!paper.timing.allowEarlySubmit)?" disabled":"")+'>'+
+      (paper.timing.kind==="sectional"?"Submit section":"Submit exam")+'</button></div></section>'+
      '<aside class="panel pad"><h3>Question navigator</h3><div class="generic-palette">'+
       section.questionRevisionIds.map((qid,i)=>{
         const r=state.responses.find(x=>x.questionRevisionId===qid);
