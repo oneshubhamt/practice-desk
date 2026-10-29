@@ -215,8 +215,20 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  const downloadBackup=async():Promise<void>=>{
    await writeQueue;
    try{
-     let toExport=[...records.values()];
-     if(fallbackConflict&&!db&&!storageFault){
+     let toExport:RecordItem[]=[...records.values()];
+     if(db&&!storageFault){
+       try{
+         const snapshot=await new Promise<unknown[]>((resolve,reject)=>{
+           const request=db!.transaction("attempts","readonly").objectStore("attempts").getAll();
+           request.onsuccess=()=>resolve(request.result);
+           request.onerror=()=>reject(request.error??new Error("Database snapshot failed"));
+         });
+         toExport=snapshot.map(value=>validateGenericStoredRecord(value));
+       }catch(error){
+         storageFault=true;
+         console.warn("Cannot read authoritative backup snapshot; exporting working-memory recovery",error);
+       }
+     }else if(fallbackConflict&&!storageFault){
        const latest=JSON.parse(localStorage.getItem(storageKey)??"[]") as unknown;
        if(!Array.isArray(latest))throw new Error("Invalid fallback history");
        toExport=latest.map(value=>validateGenericStoredRecord(value));
