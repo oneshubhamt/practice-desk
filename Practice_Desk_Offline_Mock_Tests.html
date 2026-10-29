@@ -42,6 +42,2545 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
 <script>
 "use strict";
 (() => {
+  var __defProp = Object.defineProperty;
+  var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __esm = (fn, res) => function __init() {
+    return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+  };
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+
+  // node_modules/ts-fsrs/dist/schema-utils-DX7uVwiJ.mjs
+  function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max);
+  }
+  function roundTo(num, decimals) {
+    const factor = 10 ** decimals;
+    return Math.round(num * factor) / factor;
+  }
+  function isObject(value) {
+    return typeof value === "object" && value !== null;
+  }
+  function isNumberArray(value) {
+    if (!Array.isArray(value)) return false;
+    for (const item of value) if (typeof item !== "number" || !Number.isFinite(item)) return false;
+    return true;
+  }
+  var init_schema_utils_DX7uVwiJ = __esm({
+    "node_modules/ts-fsrs/dist/schema-utils-DX7uVwiJ.mjs"() {
+    }
+  });
+
+  // node_modules/@open-spaced-repetition/srs-kit/dist/esm/schema-CgTDED3c.js
+  function isObject2(value) {
+    return !!value && !Array.isArray(value) && typeof value === "object";
+  }
+  function isFiniteNumber(value) {
+    return Number.isFinite(value);
+  }
+  function isFunction(fn) {
+    return typeof fn === "function";
+  }
+  function defineOwnDataField(target, key, value) {
+    const record3 = target;
+    if (key in target) {
+      const existing = Object.getOwnPropertyDescriptor(target, key);
+      if (existing && "value" in existing && existing.writable) {
+        record3[key] = value;
+        return;
+      }
+    } else {
+      const prototype = Object.getPrototypeOf(target);
+      if (prototype === Object.prototype || prototype === null) {
+        record3[key] = value;
+        return;
+      }
+    }
+    Object.defineProperty(target, key, {
+      value,
+      writable: true,
+      enumerable: true,
+      configurable: true
+    });
+  }
+  function assignObjectFields(target, source) {
+    const fields = source;
+    for (const key in fields) if (Object.hasOwn(fields, key)) defineOwnDataField(target, key, fields[key]);
+  }
+  function assignEnumerableDataFields(target, ...sources2) {
+    for (const source of sources2) {
+      if (source == null) continue;
+      const fields = Object(source);
+      assignObjectFields(target, fields);
+      for (const key of Object.getOwnPropertySymbols(fields)) {
+        if (!Object.getOwnPropertyDescriptor(fields, key)?.enumerable) continue;
+        defineOwnDataField(target, key, fields[key]);
+      }
+    }
+    return target;
+  }
+  function isPromiseLike(value) {
+    return "then" in value && typeof value.then === "function";
+  }
+  function validateSync(schema, input) {
+    const result = schema["~standard"].validate(input);
+    if (isPromiseLike(result)) {
+      Promise.resolve(result).catch((error) => {
+        console.error("Async Standard Schema validation rejected", error);
+      });
+      throw new TypeError("Async Standard Schema validation is not supported");
+    }
+    return result;
+  }
+  function defineSchema(validate) {
+    return {
+      "~standard": {
+        version: 1,
+        vendor: "@open-spaced-repetition/srs-kit",
+        validate
+      },
+      parse(input) {
+        const result = validate(input);
+        if (result.issues) throw new SRSSchemaError(result.issues);
+        return result.value;
+      },
+      safeParse(input) {
+        const result = validate(input);
+        if (result.issues) return {
+          success: false,
+          issues: result.issues
+        };
+        return {
+          success: true,
+          data: result.value
+        };
+      }
+    };
+  }
+  function parse(schema, input) {
+    const result = validateSync(schema, input);
+    if (result.issues) throw new SRSSchemaError(result.issues);
+    return result.value;
+  }
+  function isValidDate(value) {
+    return value instanceof Date && value.getTime() !== 0 && Number.isFinite(value.getTime());
+  }
+  function createLazyIterable(keys, getValue) {
+    return {
+      map(callback) {
+        return Array.from(this, (value) => callback(value));
+      },
+      [Symbol.iterator]() {
+        let index = 0;
+        const iterator = {
+          next() {
+            if (index >= keys.length) return {
+              value: void 0,
+              done: true
+            };
+            return {
+              value: getValue(keys[index++]),
+              done: false
+            };
+          },
+          [Symbol.iterator]() {
+            return iterator;
+          }
+        };
+        return iterator;
+      }
+    };
+  }
+  function runMiddlewares(handlers, context, terminal) {
+    if (handlers.length === 0) {
+      terminal(context);
+      return;
+    }
+    let index = -1;
+    const dispatch = (nextIndex) => {
+      if (nextIndex <= index) throw new Error("Middleware next() called multiple times");
+      index = nextIndex;
+      if (nextIndex >= handlers.length) {
+        terminal(context);
+        return;
+      }
+      const handler = handlers[nextIndex];
+      if (!handler) {
+        dispatch(nextIndex + 1);
+        return;
+      }
+      handler(context, () => dispatch(nextIndex + 1));
+    };
+    dispatch(0);
+  }
+  var emptyRecordPrototype, SRSSchemaError, emptyObjectSchema, numberSchema, dateSchema, desiredRetentionSchema, elapsedDaysSchema, scheduledDaysSchema, fractionalDaysConfigSchema;
+  var init_schema_CgTDED3c = __esm({
+    "node_modules/@open-spaced-repetition/srs-kit/dist/esm/schema-CgTDED3c.js"() {
+      emptyRecordPrototype = Object.freeze(/* @__PURE__ */ Object.create(null));
+      SRSSchemaError = class SRSSchemaError2 extends Error {
+        issues;
+        constructor(issues) {
+          super(issues.map((issue) => issue.message).join("\n"));
+          this.name = "SRSSchemaError";
+          this.issues = issues;
+          Error?.captureStackTrace?.(this, SRSSchemaError2);
+        }
+      };
+      emptyObjectSchema = defineSchema((value) => {
+        if (!isObject2(value) || Object.keys(value).length > 0) return { issues: [{ message: "Expected empty object" }] };
+        return { value: {} };
+      });
+      numberSchema = defineSchema((value) => isFiniteNumber(value) ? { value } : { issues: [{ message: "Expected finite number" }] });
+      dateSchema = defineSchema((value) => isValidDate(value) ? { value } : { issues: [{ message: "Expected valid Date" }] });
+      desiredRetentionSchema = defineSchema((value) => isFiniteNumber(value) && value > 0 && value < 1 ? { value } : { issues: [{ message: "desiredRetention must be finite and in (0, 1)" }] });
+      elapsedDaysSchema = defineSchema((value) => isFiniteNumber(value) && value >= 0 ? { value } : { issues: [{ message: "elapsedDays must be finite and non-negative" }] });
+      scheduledDaysSchema = defineSchema((value) => isFiniteNumber(value) && value >= 0 ? { value } : { issues: [{ message: "scheduledDays must be finite and non-negative" }] });
+      fractionalDaysConfigSchema = defineSchema((value) => {
+        if (!isObject2(value)) return { issues: [{ message: "Expected fractional days config" }] };
+        const fractionalDays = value.fractionalDays === void 0 ? false : value.fractionalDays;
+        if (typeof fractionalDays !== "boolean") return { issues: [{ message: "Expected fractionalDays to be a boolean" }] };
+        return { value: { fractionalDays } };
+      });
+    }
+  });
+
+  // node_modules/@open-spaced-repetition/srs-kit/dist/esm/define-chrono-DVqT65EB.js
+  function defineChronoTimeNormalizer(validate) {
+    return defineSchema(validate);
+  }
+  function resolveChronoTimeNormalizer(normalize) {
+    if (typeof normalize === "function") return defineChronoTimeNormalizer(normalize);
+    return normalize;
+  }
+  function defineChrono(definition) {
+    return {
+      schema: {
+        time: definition.schema.time,
+        ...definition.schema.config ? { config: definition.schema.config } : {},
+        ...definition.schema.card ? { card: definition.schema.card } : {},
+        ...definition.schema.revlog ? { revlog: definition.schema.revlog } : {}
+      },
+      normalize: resolveChronoTimeNormalizer(definition.normalize),
+      defaultValue: definition.defaultValue ?? {},
+      create: definition.create
+    };
+  }
+  var init_define_chrono_DVqT65EB = __esm({
+    "node_modules/@open-spaced-repetition/srs-kit/dist/esm/define-chrono-DVqT65EB.js"() {
+      init_schema_CgTDED3c();
+    }
+  });
+
+  // node_modules/@open-spaced-repetition/srs-kit/dist/esm/state-B8lS4k1a.js
+  var Rating, ratings, grades, ratingSchema, gradeSchema, State, states, stateSchema;
+  var init_state_B8lS4k1a = __esm({
+    "node_modules/@open-spaced-repetition/srs-kit/dist/esm/state-B8lS4k1a.js"() {
+      init_schema_CgTDED3c();
+      Rating = Object.freeze({
+        Manual: 0,
+        Again: 1,
+        Hard: 2,
+        Good: 3,
+        Easy: 4
+      });
+      ratings = Object.freeze([
+        Rating.Manual,
+        Rating.Again,
+        Rating.Hard,
+        Rating.Good,
+        Rating.Easy
+      ]);
+      grades = Object.freeze([
+        Rating.Again,
+        Rating.Hard,
+        Rating.Good,
+        Rating.Easy
+      ]);
+      ratingSchema = defineSchema((value) => value === Rating.Manual || value === Rating.Again || value === Rating.Hard || value === Rating.Good || value === Rating.Easy ? { value } : { issues: [{ message: "Expected rating" }] });
+      gradeSchema = defineSchema((value) => value === Rating.Again || value === Rating.Hard || value === Rating.Good || value === Rating.Easy ? { value } : { issues: [{ message: "Expected grade" }] });
+      State = Object.freeze({
+        New: 0,
+        Learning: 1,
+        Review: 2,
+        Relearning: 3
+      });
+      states = Object.freeze([
+        State.New,
+        State.Learning,
+        State.Review,
+        State.Relearning
+      ]);
+      stateSchema = defineSchema((value) => value === State.New || value === State.Learning || value === State.Review || value === State.Relearning ? { value } : { issues: [{ message: "Expected state" }] });
+    }
+  });
+
+  // node_modules/@open-spaced-repetition/srs-kit/dist/esm/middleware-CkL5v5zL.js
+  function defineMiddleware(definition) {
+    return definition;
+  }
+  var statsConfigSchema, statsFieldsSchema, schedulerStatsMiddleware;
+  var init_middleware_CkL5v5zL = __esm({
+    "node_modules/@open-spaced-repetition/srs-kit/dist/esm/middleware-CkL5v5zL.js"() {
+      init_schema_CgTDED3c();
+      init_state_B8lS4k1a();
+      statsConfigSchema = defineSchema((value) => {
+        if (!isObject2(value)) return { issues: [{ message: "Expected stats config object" }] };
+        const { clearStatsOnForget } = value;
+        if (clearStatsOnForget === void 0) return { value: { clearStatsOnForget: true } };
+        if (typeof clearStatsOnForget !== "boolean") return { issues: [{ message: "Expected boolean clearStatsOnForget" }] };
+        return { value: { clearStatsOnForget } };
+      });
+      statsFieldsSchema = defineSchema((value) => {
+        if (!isObject2(value)) return { issues: [{ message: "Expected stats object" }] };
+        const { reps, lapses } = value;
+        if (typeof reps !== "number" || !Number.isSafeInteger(reps) || reps < 0) return { issues: [{ message: "Expected non-negative integer reps" }] };
+        if (typeof lapses !== "number" || !Number.isSafeInteger(lapses) || lapses < 0) return { issues: [{ message: "Expected non-negative integer lapses" }] };
+        return { value: {
+          reps,
+          lapses
+        } };
+      });
+      schedulerStatsMiddleware = defineMiddleware({
+        name: Symbol("srs-kit.stats"),
+        schema: {
+          config: statsConfigSchema,
+          card: statsFieldsSchema
+        },
+        defaultValue: { card(ctx) {
+          if (ctx.operation === "forget" && ctx.config.clearStatsOnForget === false) {
+            const card = ctx.input;
+            return {
+              reps: card.reps,
+              lapses: card.lapses
+            };
+          }
+          return {
+            reps: 0,
+            lapses: 0
+          };
+        } },
+        handlers: {
+          review(ctx, next) {
+            next();
+            const card = ctx.input.card;
+            const previousState = card.state;
+            const previousLapses = card.lapses;
+            const isLapse = ctx.input.grade === Rating.Again && previousState === State.Review;
+            ctx.result.card.reps = card.reps + 1;
+            ctx.result.card.lapses = isLapse ? previousLapses + 1 : previousLapses;
+          },
+          rollback(ctx, next) {
+            next();
+            const card = ctx.input.card;
+            const revlog = ctx.input.revlog;
+            const isLapse = revlog.rating === Rating.Again && revlog.state === State.Review;
+            ctx.result.card.reps = Math.max(0, card.reps - 1);
+            ctx.result.card.lapses = Math.max(0, card.lapses - (isLapse ? 1 : 0));
+          }
+        }
+      });
+    }
+  });
+
+  // node_modules/@open-spaced-repetition/srs-kit/dist/esm/model/index.js
+  function defineModel(definition) {
+    return definition;
+  }
+  var init_model = __esm({
+    "node_modules/@open-spaced-repetition/srs-kit/dist/esm/model/index.js"() {
+    }
+  });
+
+  // node_modules/@open-spaced-repetition/srs-kit/dist/esm/status-Bx46bpYh.js
+  var scheduleStatuses, scheduleStatusSchema;
+  var init_status_Bx46bpYh = __esm({
+    "node_modules/@open-spaced-repetition/srs-kit/dist/esm/status-Bx46bpYh.js"() {
+      init_schema_CgTDED3c();
+      scheduleStatuses = Object.freeze([
+        "new",
+        "learning",
+        "review"
+      ]);
+      scheduleStatusSchema = defineSchema((value) => value === "new" || value === "learning" || value === "review" ? { value } : { issues: [{ message: "Expected schedule status" }] });
+    }
+  });
+
+  // node_modules/@open-spaced-repetition/srs-kit/dist/esm/scheduler-BnkL-8NY.js
+  function getAttachedValue(target, key) {
+    return target[key];
+  }
+  function rememberAttachedValue(target, key, value) {
+    Object.defineProperty(target, key, {
+      value,
+      writable: false,
+      enumerable: false,
+      configurable: false
+    });
+    return target;
+  }
+  function createSchedulerSchema(ctx) {
+    const { model, chrono, middlewares } = ctx;
+    const modelConfigSchema = model.schema.config;
+    const chronoSchema = chrono.schema;
+    const chronoConfigSchema = chronoSchema.config;
+    const chronoCardSchema = chronoSchema.card;
+    const chronoRevlogSchema = chronoSchema.revlog;
+    const middlewareConfigSchemas = [];
+    const middlewareCardInitInputSchemas = [];
+    const middlewareCardSchemas = [];
+    const middlewareRevlogSchemas = [];
+    for (const middleware of middlewares) {
+      const schema = middleware.schema;
+      if (!schema) continue;
+      if (schema.config) middlewareConfigSchemas.push(schema.config);
+      if (schema.cardInitInput) middlewareCardInitInputSchemas.push(schema.cardInitInput);
+      if (schema.card) middlewareCardSchemas.push(schema.card);
+      if (schema.revlog) middlewareRevlogSchemas.push(schema.revlog);
+    }
+    const scheduleStatusSchema2 = defineSchema((value) => {
+      if (typeof value !== "string") return { issues: [{ message: "Expected scheduleStatus string" }] };
+      let isKnownStatus = scheduleStatuses.includes(value);
+      for (const middleware of middlewares) {
+        if (isKnownStatus) break;
+        isKnownStatus = middleware.scheduleStatus?.includes(value) === true;
+      }
+      if (!isKnownStatus) return { issues: [{ message: "Expected known scheduleStatus" }] };
+      return { value };
+    });
+    const parseCoreFields = (fields, options) => {
+      const scheduleStatus = validateSync(scheduleStatusSchema2, fields.scheduleStatus);
+      if (scheduleStatus.issues) return scheduleStatus;
+      const state = validateSync(stateSchema, fields.state);
+      if (state.issues) return state;
+      if (!options?.rating) return { value: {
+        state: state.value,
+        scheduleStatus: scheduleStatus.value
+      } };
+      const rating = validateSync(gradeSchema, fields.rating);
+      if (rating.issues) return rating;
+      return { value: {
+        state: state.value,
+        scheduleStatus: scheduleStatus.value,
+        rating: rating.value
+      } };
+    };
+    return {
+      config: defineSchema((value) => {
+        if (!isObject2(value)) return { issues: [{ message: "Expected scheduler config object" }] };
+        const modelResult = validateSync(modelConfigSchema, value);
+        if (modelResult.issues) return modelResult;
+        const result = {};
+        assignObjectFields(result, modelResult.value);
+        if (chronoConfigSchema) {
+          const chronoResult = validateSync(chronoConfigSchema, value);
+          if (chronoResult.issues) return chronoResult;
+          assignObjectFields(result, chronoResult.value);
+        }
+        for (const schema of middlewareConfigSchemas) {
+          const middlewareResult = validateSync(schema, value);
+          if (middlewareResult.issues) return middlewareResult;
+          assignObjectFields(result, middlewareResult.value);
+        }
+        return { value: rememberAttachedValue(result, parsedModelConfigSymbol, modelResult.value) };
+      }),
+      cardInitInput: defineSchema((value) => {
+        if (!isObject2(value)) return { issues: [{ message: "Expected card init input object" }] };
+        const { now: now2, ...middlewareValue } = value;
+        let firstMiddlewareFields;
+        let combinedFields;
+        for (const schema of middlewareCardInitInputSchemas) {
+          const middlewareResult = validateSync(schema, middlewareValue);
+          if (middlewareResult.issues) return middlewareResult;
+          const fields = middlewareResult.value;
+          if (firstMiddlewareFields === void 0) {
+            firstMiddlewareFields = fields;
+            continue;
+          }
+          combinedFields ??= { ...firstMiddlewareFields };
+          assignObjectFields(combinedFields, fields);
+        }
+        return { value: {
+          input: combinedFields ?? firstMiddlewareFields ?? {},
+          now: now2
+        } };
+      }),
+      card: defineSchema((value) => {
+        if (!isObject2(value)) return { issues: [{ message: "Expected card object" }] };
+        const modelResult = validateSync(model.schema.memoryState, value);
+        if (modelResult.issues) return modelResult;
+        const memoryState = modelResult.value;
+        const card = { ...memoryState };
+        if (chronoCardSchema) {
+          const chronoCard = validateSync(chronoCardSchema, value);
+          if (chronoCard.issues) return chronoCard;
+          assignEnumerableDataFields(card, chronoCard.value);
+        }
+        const coreFields = parseCoreFields(value);
+        if (coreFields.issues) return coreFields;
+        card.state = coreFields.value.state;
+        card.scheduleStatus = coreFields.value.scheduleStatus;
+        for (const schema of middlewareCardSchemas) {
+          const middlewareCard = validateSync(schema, value);
+          if (middlewareCard.issues) return middlewareCard;
+          assignEnumerableDataFields(card, middlewareCard.value);
+        }
+        return { value: rememberAttachedValue(card, parsedCardMemoryStateSymbol, memoryState) };
+      }),
+      revlog: defineSchema((value) => {
+        if (!isObject2(value)) return { issues: [{ message: "Expected revlog object" }] };
+        const modelResult = validateSync(model.schema.memoryState, value);
+        if (modelResult.issues) return modelResult;
+        const result = modelResult.value;
+        if (chronoRevlogSchema) {
+          const chronoRevlog = validateSync(chronoRevlogSchema, value);
+          if (chronoRevlog.issues) return chronoRevlog;
+          assignEnumerableDataFields(result, chronoRevlog.value);
+        }
+        const coreFields = parseCoreFields(value, { rating: true });
+        if (coreFields.issues) return coreFields;
+        result.scheduleStatus = coreFields.value.scheduleStatus;
+        result.rating = coreFields.value.rating;
+        result.state = coreFields.value.state;
+        for (const schema of middlewareRevlogSchemas) {
+          const middlewareRevlog = validateSync(schema, value);
+          if (middlewareRevlog.issues) return middlewareRevlog;
+          assignEnumerableDataFields(result, middlewareRevlog.value);
+        }
+        return { value: result };
+      }),
+      scheduleStatus: scheduleStatusSchema2
+    };
+  }
+  function resolveChronoDefault(value) {
+    return isFunction(value) ? value : void 0;
+  }
+  function createSchedulerDefaultValue(ctx) {
+    const { model, chrono, middlewares } = ctx;
+    const chronoCardDefault = resolveChronoDefault(chrono.defaultValue?.card);
+    const cardDefaults = middlewares.map((middleware) => middleware.defaultValue?.card).filter(isFunction);
+    return { newCard(defaultValue, time) {
+      const { config } = defaultValue;
+      const card = Object.assign(Object.create(emptyRecordPrototype), model.defaultValue.memoryState({ config }));
+      card.state = State.New;
+      card.scheduleStatus = "new";
+      if (chronoCardDefault) Object.assign(card, chronoCardDefault({
+        config,
+        time,
+        previous: null
+      }));
+      for (const getDefaults of cardDefaults) Object.assign(card, getDefaults(defaultValue));
+      return Object.setPrototypeOf(card, Object.prototype);
+    } };
+  }
+  function flattenMiddlewares(node) {
+    if (!node) return emptyMiddlewares;
+    const middlewares = new Array(node.length);
+    let index = node.length;
+    for (let current = node; current; current = current.parent) middlewares[--index] = current.middleware;
+    return middlewares;
+  }
+  function defineScheduler(definition) {
+    const { model, chrono } = definition;
+    function build(node) {
+      let middlewares;
+      let defaultValue;
+      let schedulerSchema;
+      let initialized = false;
+      const getMiddlewares = () => {
+        middlewares ??= flattenMiddlewares(node);
+        return middlewares;
+      };
+      const scheduler = {
+        name: model.name,
+        modelDef: model,
+        chronoDef: chrono,
+        get defaultValue() {
+          defaultValue ??= createSchedulerDefaultValue({
+            model,
+            chrono,
+            middlewares: getMiddlewares()
+          });
+          return defaultValue;
+        },
+        get schema() {
+          schedulerSchema ??= createSchedulerSchema({
+            model,
+            chrono,
+            middlewares: getMiddlewares()
+          });
+          return schedulerSchema;
+        },
+        create(ctx) {
+          if (!initialized) {
+            schedulerSchema = scheduler.schema;
+            defaultValue = scheduler.defaultValue;
+            initialized = true;
+          }
+          return new BaseScheduler({
+            model,
+            chrono,
+            schema: schedulerSchema,
+            defaultValue,
+            middlewares,
+            config: ctx.config
+          });
+        },
+        use(...added) {
+          if (added.length === 0) return scheduler;
+          let child = node;
+          let length = node?.length ?? 0;
+          for (const middleware of added) child = {
+            parent: child,
+            middleware,
+            length: ++length
+          };
+          return build(child);
+        }
+      };
+      return scheduler;
+    }
+    return build();
+  }
+  var parsedModelConfigSymbol, parsedCardMemoryStateSymbol, DEFAULT_DESIRED_RETENTION, FORWARD_PREPARE_OPTIONS, ReviewInput, BaseScheduler, emptyMiddlewares;
+  var init_scheduler_BnkL_8NY = __esm({
+    "node_modules/@open-spaced-repetition/srs-kit/dist/esm/scheduler-BnkL-8NY.js"() {
+      init_schema_CgTDED3c();
+      init_state_B8lS4k1a();
+      init_status_Bx46bpYh();
+      parsedModelConfigSymbol = Symbol("parsedModelConfig");
+      parsedCardMemoryStateSymbol = Symbol("parsedCardMemoryState");
+      DEFAULT_DESIRED_RETENTION = 0.9;
+      FORWARD_PREPARE_OPTIONS = { freezeCard: false };
+      ReviewInput = class {
+        input;
+        constructor(input) {
+          this.input = input;
+        }
+        get card() {
+          return this.input.card;
+        }
+        set card(_value) {
+          throw new Error("Review input card cannot be changed");
+        }
+        get grade() {
+          return this.input.grade;
+        }
+        set grade(_value) {
+          throw new Error("Review input grade cannot be changed");
+        }
+        get now() {
+          return this.input.now;
+        }
+        set now(_value) {
+          throw new Error("Review input now cannot be changed");
+        }
+      };
+      BaseScheduler = class {
+        config;
+        model;
+        chrono;
+        schedulerDefinition;
+        defaultValue;
+        schema;
+        nextIntervalHandlers;
+        reviewHandlers;
+        reviewIntervalHandlers;
+        rollbackHandlers;
+        constructor(ctx) {
+          const { model, chrono, schema, defaultValue, middlewares = [] } = ctx;
+          this.schedulerDefinition = Object.freeze({
+            model,
+            chrono
+          });
+          this.schema = schema;
+          this.defaultValue = defaultValue;
+          const config = parse(schema.config, ctx.config);
+          this.config = config;
+          this.model = model.create({
+            config: getAttachedValue(config, parsedModelConfigSymbol),
+            bypass: true
+          });
+          this.chrono = Reflect.apply(chrono.create, chrono, [{ config }]);
+          this.nextIntervalHandlers = middlewares.map((middleware) => middleware.handlers?.nextInterval);
+          this.reviewHandlers = middlewares.map((middleware) => middleware.handlers?.review);
+          this.reviewIntervalHandlers = this.reviewHandlers.flatMap((handler, index) => [handler, this.nextIntervalHandlers[index]]);
+          this.rollbackHandlers = middlewares.map((middleware) => middleware.handlers?.rollback);
+        }
+        get definition() {
+          return this.schedulerDefinition;
+        }
+        createNewCard = (options) => {
+          const { now: now2, input } = parse(this.schema.cardInitInput, options === void 0 ? {} : options);
+          return this.defaultValue.newCard({
+            operation: "newCard",
+            config: this.config,
+            input
+          }, this.parseNow(now2));
+        };
+        newCard = this.createNewCard;
+        /**
+        * Replays a review history and returns the card and revlog produced by each
+        * review.
+        *
+        * The history is consumed as given: it must already be sorted by review time
+        * and must not contain manual ratings.
+        */
+        forward = (input) => {
+          const { history } = input;
+          if (history.length === 0) return [];
+          const results = new Array(history.length);
+          const initialCard = input.initialCard == null ? this.createNewCard({ now: history[0].reviewTime }) : input.initialCard;
+          let card = parse(this.schema.card, initialCard);
+          for (let index = 0; index < history.length; index++) {
+            const review = history[index];
+            const now2 = review.reviewTime;
+            const prepared = this.prepareParsedReview(card, now2, FORWARD_PREPARE_OPTIONS);
+            const result = this.parseReviewResult(this.runReview(prepared, review.rating, now2));
+            results[index] = result;
+            card = result.card;
+          }
+          return results;
+        };
+        forget = (input) => {
+          const card = parse(this.schema.card, input.card);
+          const now2 = this.parseNow(input.now);
+          return this.defaultValue.newCard({
+            operation: "forget",
+            config: this.config,
+            input: card
+          }, now2);
+        };
+        nextInterval = (memoryState, desiredRetention, context) => {
+          const grade = parse(gradeSchema, context.grade);
+          const elapsedDays = parse(elapsedDaysSchema, context.elapsedDays);
+          const retention = parse(desiredRetentionSchema, desiredRetention);
+          const card = Object.freeze(parse(this.schema.card, context.card));
+          const _memoryState = getAttachedValue(card, parsedCardMemoryStateSymbol);
+          if (!_memoryState) throw new Error("Parsed scheduler card is missing model memory state");
+          const nextMemoryState = parse(this.schedulerDefinition.model.schema.memoryState, memoryState);
+          const candidate = this.createCandidate(_memoryState, elapsedDays, void 0, [grade, nextMemoryState], retention);
+          const ctx = {
+            instance: this,
+            config: this.config,
+            input: Object.freeze({
+              card,
+              grade,
+              desiredRetention: retention
+            }),
+            elapsedDays,
+            scheduledDays: void 0,
+            candidate
+          };
+          runMiddlewares(this.nextIntervalHandlers, ctx, (ctx2) => {
+            const memoryState2 = ctx2.candidate.step(ctx2.input.grade);
+            ctx2.scheduledDays ??= ctx2.candidate.nextInterval(memoryState2, parse(desiredRetentionSchema, ctx2.candidate.desiredRetention[ctx2.input.grade]));
+          });
+          return parse(scheduledDaysSchema, ctx.scheduledDays);
+        };
+        review = (input) => {
+          const { card: inputCard, grade: inputGrade } = input;
+          const grade = parse(gradeSchema, inputGrade);
+          const now2 = this.parseNow(input.now);
+          const prepared = this.prepareReview(inputCard, now2);
+          return this.parseReviewResult(this.runReview(prepared, grade, now2));
+        };
+        preview = (input) => {
+          const inputCard = input.card;
+          const now2 = this.parseNow(input.now);
+          const prepared = this.prepareReview(inputCard, now2);
+          return createLazyIterable(grades, (grade) => {
+            const { card, revlog } = this.parseReviewResult(this.runReview(prepared, grade, now2));
+            return {
+              grade,
+              card,
+              revlog
+            };
+          });
+        };
+        rollback = (input) => {
+          const { card: inputCard, revlog: inputRevlog } = input;
+          const revlog = parse(this.schema.revlog, inputRevlog);
+          const card = parse(this.schema.card, inputCard);
+          const ctx = {
+            instance: this,
+            config: this.config,
+            input: {
+              card: Object.freeze(card),
+              revlog: Object.freeze(revlog)
+            },
+            result: { card: {} }
+          };
+          runMiddlewares(this.rollbackHandlers, ctx, (ctx2) => this.finalizeRollback(ctx2));
+          this.applyRollbackChronoDefaults(ctx.result, revlog);
+          return parse(this.schema.card, ctx.result.card);
+        };
+        prepareReview(inputCard, now2) {
+          const parsedCard = parse(this.schema.card, inputCard);
+          return this.prepareParsedReview(parsedCard, now2);
+        }
+        prepareParsedReview(parsedCard, now2, { freezeCard = true } = {}) {
+          const memoryState = getAttachedValue(parsedCard, parsedCardMemoryStateSymbol);
+          if (!memoryState) throw new Error("Parsed scheduler card is missing model memory state");
+          const card = freezeCard ? Object.freeze(parsedCard) : parsedCard;
+          const time = parse(this.schedulerDefinition.chrono.normalize, {
+            card,
+            time: now2
+          });
+          const _elapsedDays = card.state === State.New ? 0 : this.chrono.difference(time.previous ?? time.current, now2);
+          const elapsedDays = elapsedDaysSchema.parse(_elapsedDays);
+          const retrievability = this.model.forgettingCurve(memoryState, elapsedDays);
+          return {
+            card,
+            time,
+            elapsedDays,
+            memoryState,
+            retrievability,
+            candidate: this.createCandidate(memoryState, elapsedDays, retrievability)
+          };
+        }
+        createCandidate(memoryState, elapsedDays, retrievability, initial, desiredRetention = DEFAULT_DESIRED_RETENTION) {
+          const memoryStateByGrade = new Map(initial ? [initial] : void 0);
+          const gradeByMemoryState = /* @__PURE__ */ new Map();
+          const step = (grade) => {
+            let nextMemoryState = memoryStateByGrade.get(grade);
+            if (nextMemoryState === void 0) {
+              retrievability ??= this.model.forgettingCurve(memoryState, elapsedDays);
+              nextMemoryState = this.model.step({
+                memoryState,
+                rating: grade,
+                elapsedDays,
+                retrievability
+              });
+              memoryStateByGrade.set(grade, nextMemoryState);
+            }
+            gradeByMemoryState.set(nextMemoryState, grade);
+            return nextMemoryState;
+          };
+          const findGrade = (nextMemoryState) => gradeByMemoryState.get(nextMemoryState);
+          const intervalCache = /* @__PURE__ */ new Map();
+          const nextInterval = (nextMemoryState, desiredRetention2) => {
+            let inner = intervalCache.get(nextMemoryState);
+            if (inner) {
+              const cached = inner.get(desiredRetention2);
+              if (cached !== void 0) return cached;
+            } else {
+              inner = /* @__PURE__ */ new Map();
+              intervalCache.set(nextMemoryState, inner);
+            }
+            const value = this.model.nextInterval(nextMemoryState, desiredRetention2);
+            inner.set(desiredRetention2, value);
+            return value;
+          };
+          return {
+            desiredRetention: {
+              [Rating.Again]: desiredRetention,
+              [Rating.Hard]: desiredRetention,
+              [Rating.Good]: desiredRetention,
+              [Rating.Easy]: desiredRetention
+            },
+            step,
+            findGrade,
+            nextInterval
+          };
+        }
+        runReview(prepared, grade, now2) {
+          const ctx = {
+            instance: this,
+            config: this.config,
+            input: new ReviewInput({
+              card: prepared.card,
+              grade,
+              now: now2
+            }),
+            elapsedDays: prepared.elapsedDays,
+            retrievability: prepared.retrievability,
+            scheduledDays: void 0,
+            candidate: prepared.candidate,
+            result: {
+              card: {},
+              revlog: {}
+            }
+          };
+          runMiddlewares(this.reviewIntervalHandlers, ctx, (ctx2) => {
+            const memoryState = ctx2.candidate.step(ctx2.input.grade);
+            ctx2.scheduledDays ??= ctx2.candidate.nextInterval(memoryState, parse(desiredRetentionSchema, ctx2.candidate.desiredRetention[ctx2.input.grade]));
+            this.finalizeReview(prepared, ctx2, memoryState);
+          });
+          this.applyReviewChronoDefaults(prepared, ctx);
+          return ctx.result;
+        }
+        parseReviewResult(result) {
+          return {
+            card: parse(this.schema.card, result.card),
+            revlog: parse(this.schema.revlog, result.revlog)
+          };
+        }
+        finalizeReview(prepared, ctx, newMemoryState) {
+          const { memoryState } = prepared;
+          const { grade } = ctx.input;
+          const result = ctx.result;
+          assignEnumerableDataFields(result.card, newMemoryState, {
+            state: State.Review,
+            scheduleStatus: "review"
+          });
+          assignEnumerableDataFields(result.revlog, memoryState, {
+            rating: grade,
+            state: prepared.card.state,
+            scheduleStatus: prepared.card.scheduleStatus
+          });
+          return result;
+        }
+        finalizeRollback(ctx) {
+          const result = ctx.result;
+          const revlog = ctx.input.revlog;
+          assignEnumerableDataFields(result.card, parse(this.schedulerDefinition.model.schema.memoryState, revlog));
+          result.card.state = revlog.state;
+          result.card.scheduleStatus = revlog.scheduleStatus;
+          return result.card;
+        }
+        applyReviewChronoDefaults(prepared, ctx) {
+          const { result, scheduledDays, input: { now: now2 } } = ctx;
+          if (scheduledDays === void 0) throw new Error("Expected scheduledDays after review middleware");
+          const chronoCardDefault = this.schedulerDefinition.chrono.defaultValue?.card;
+          if (chronoCardDefault) assignEnumerableDataFields(result.card, chronoCardDefault({
+            config: this.config,
+            time: this.chrono.add(now2, scheduledDays),
+            previous: now2
+          }));
+          const chronoRevlogDefault = this.schedulerDefinition.chrono.defaultValue?.revlog;
+          if (chronoRevlogDefault) assignEnumerableDataFields(result.revlog, chronoRevlogDefault({
+            config: this.config,
+            time: prepared.time.current,
+            previous: {
+              previous: prepared.time.previous,
+              current: now2
+            }
+          }));
+        }
+        applyRollbackChronoDefaults(result, revlog) {
+          if (!this.schedulerDefinition.chrono.schema.card) return;
+          const normalizedTime = parse(this.schedulerDefinition.chrono.normalize, { revlog });
+          const isNew = revlog.state === State.New;
+          const cardFields = this.schedulerDefinition.chrono.defaultValue?.card?.({
+            config: this.config,
+            previous: isNew ? null : normalizedTime.previous,
+            time: normalizedTime.current
+          });
+          if (cardFields) assignEnumerableDataFields(result.card, cardFields);
+        }
+        parseNow(now2) {
+          return now2 === void 0 ? this.chrono.now() : parse(this.schedulerDefinition.chrono.schema.time, now2);
+        }
+      };
+      emptyMiddlewares = [];
+    }
+  });
+
+  // node_modules/@open-spaced-repetition/srs-kit/dist/esm/index.js
+  var init_esm = __esm({
+    "node_modules/@open-spaced-repetition/srs-kit/dist/esm/index.js"() {
+      init_schema_CgTDED3c();
+      init_middleware_CkL5v5zL();
+      init_state_B8lS4k1a();
+      init_model();
+      init_scheduler_BnkL_8NY();
+    }
+  });
+
+  // node_modules/ts-fsrs/dist/schema-D7q2J7dh.mjs
+  var FSRSMemoryStateSchema;
+  var init_schema_D7q2J7dh = __esm({
+    "node_modules/ts-fsrs/dist/schema-D7q2J7dh.mjs"() {
+      init_schema_utils_DX7uVwiJ();
+      init_esm();
+      FSRSMemoryStateSchema = defineSchema((value) => {
+        if (isObject(value) && isFiniteNumber(value.stability) && isFiniteNumber(value.difficulty)) return { value: {
+          stability: value.stability,
+          difficulty: value.difficulty
+        } };
+        return { issues: [{ message: "Expected FSRS memory state" }] };
+      });
+    }
+  });
+
+  // node_modules/ts-fsrs/dist/error.mjs
+  var FSRSError, FSRSValidationError;
+  var init_error = __esm({
+    "node_modules/ts-fsrs/dist/error.mjs"() {
+      FSRSError = class FSRSError2 extends Error {
+        constructor(message = "FSRS Error") {
+          super(message);
+          this.name = "FSRSError";
+          Error.captureStackTrace?.(this, FSRSError2);
+        }
+      };
+      FSRSValidationError = class FSRSValidationError2 extends FSRSError {
+        constructor(message) {
+          super(message);
+          this.name = "FSRSValidationError";
+          Error.captureStackTrace?.(this, FSRSValidationError2);
+        }
+      };
+    }
+  });
+
+  // node_modules/ts-fsrs/dist/constants-YU7EeO-L.mjs
+  var FSRS5_DECAY, FSRS5_FACTOR, FSRS5_W17_W18_CEILING, FSRS5_MODEL_BOUNDS, FSRS5_DEFAULT_WEIGHTS, FSRS5ParameterBounds;
+  var init_constants_YU7EeO_L = __esm({
+    "node_modules/ts-fsrs/dist/constants-YU7EeO-L.mjs"() {
+      FSRS5_DECAY = 0.5;
+      FSRS5_FACTOR = 19 / 81;
+      FSRS5_W17_W18_CEILING = 2;
+      FSRS5_MODEL_BOUNDS = Object.freeze({
+        sMin: 0.01,
+        sMax: 36500,
+        dMin: 1,
+        dMax: 10
+      });
+      FSRS5_DEFAULT_WEIGHTS = Object.freeze([
+        0.40255,
+        1.18385,
+        3.173,
+        15.69105,
+        7.1949,
+        0.5345,
+        1.4604,
+        46e-4,
+        1.54575,
+        0.1192,
+        1.01925,
+        1.9395,
+        0.11,
+        0.29605,
+        2.2698,
+        0.2315,
+        2.9898,
+        0.51655,
+        0.6621
+      ]);
+      FSRS5ParameterBounds = () => [
+        [FSRS5_MODEL_BOUNDS.sMin, 100],
+        [FSRS5_MODEL_BOUNDS.sMin, 100],
+        [FSRS5_MODEL_BOUNDS.sMin, 100],
+        [FSRS5_MODEL_BOUNDS.sMin, 100],
+        [FSRS5_MODEL_BOUNDS.dMin, FSRS5_MODEL_BOUNDS.dMax],
+        [1e-3, 4],
+        [1e-3, 4],
+        [1e-3, 0.75],
+        [0, 4.5],
+        [0, 0.8],
+        [1e-3, 3.5],
+        [1e-3, 5],
+        [1e-3, 0.25],
+        [1e-3, 0.9],
+        [0, 4],
+        [0, 1],
+        [1, 6],
+        [0, 2],
+        [0, 2]
+      ];
+    }
+  });
+
+  // node_modules/ts-fsrs/dist/fsrs-6-Bt0f3F6X.mjs
+  function forgetting_curve(decayOrParams, elapsed_days, stability) {
+    const { decay, factor } = computeDecayFactor(decayOrParams);
+    return roundTo(Math.pow(1 + factor * elapsed_days / stability, decay), 8);
+  }
+  var FSRS6_DECAY, FSRS6_W17_W18_CEILING, FSRS6_MODEL_BOUNDS, FSRS6_DEFAULT_WEIGHTS, FSRS6ParameterBounds, decaySchema, clipFSRS6Parameters, checkFSRS6Parameters, migrateFSRS6Parameters, fsrs6ConfigSchema, computeDecayFactor, FSRS6Algorithm, createFSRS6Model, FSRS6Model;
+  var init_fsrs_6_Bt0f3F6X = __esm({
+    "node_modules/ts-fsrs/dist/fsrs-6-Bt0f3F6X.mjs"() {
+      init_schema_utils_DX7uVwiJ();
+      init_schema_D7q2J7dh();
+      init_error();
+      init_constants_YU7EeO_L();
+      init_esm();
+      FSRS6_DECAY = 0.1542;
+      FSRS6_W17_W18_CEILING = 2;
+      FSRS6_MODEL_BOUNDS = Object.freeze({
+        sMin: 1e-3,
+        sMax: 36500,
+        dMin: 1,
+        dMax: 10
+      });
+      FSRS6_DEFAULT_WEIGHTS = Object.freeze([
+        0.212,
+        1.2931,
+        2.3065,
+        8.2956,
+        6.4133,
+        0.8334,
+        3.0194,
+        1e-3,
+        1.8722,
+        0.1666,
+        0.796,
+        1.4835,
+        0.0614,
+        0.2629,
+        1.6483,
+        0.6014,
+        1.8729,
+        0.5425,
+        0.0912,
+        0.0658,
+        FSRS6_DECAY
+      ]);
+      FSRS6ParameterBounds = (w17W18Ceiling, enableShortTerm = true) => [
+        [FSRS6_MODEL_BOUNDS.sMin, 100],
+        [FSRS6_MODEL_BOUNDS.sMin, 100],
+        [FSRS6_MODEL_BOUNDS.sMin, 100],
+        [FSRS6_MODEL_BOUNDS.sMin, 100],
+        [FSRS6_MODEL_BOUNDS.dMin, FSRS6_MODEL_BOUNDS.dMax],
+        [1e-3, 4],
+        [1e-3, 4],
+        [1e-3, 0.75],
+        [0, 4.5],
+        [0, 0.8],
+        [1e-3, 3.5],
+        [1e-3, 5],
+        [1e-3, 0.25],
+        [1e-3, 0.9],
+        [0, 4],
+        [0, 1],
+        [1, 6],
+        [0, w17W18Ceiling],
+        [0, w17W18Ceiling],
+        [enableShortTerm ? 0.01 : 0, 0.8],
+        [0.1, 0.8]
+      ];
+      decaySchema = defineSchema((value) => typeof value === "number" && value >= 0.1 && value <= 0.8 ? { value } : { issues: [{ message: "Expected decay between 0.1 and 0.8" }] });
+      clipFSRS6Parameters = (parameters, numRelearningSteps = 0, enableShortTerm = true) => {
+        const clip = FSRS6ParameterBounds(2, enableShortTerm).slice(0, parameters.length);
+        if (Math.max(0, numRelearningSteps) > 1 && parameters.length >= 19) {
+          const w11 = clamp(parameters[11] || 0, clip[11][0], clip[11][1]);
+          const w13 = clamp(parameters[13] || 0, clip[13][0], clip[13][1]);
+          const w14 = clamp(parameters[14] || 0, clip[14][0], clip[14][1]);
+          const value = -(Math.log(w11) + Math.log(Math.pow(2, w13) - 1) + w14 * 0.3) / numRelearningSteps;
+          const w17W18Ceiling = clamp(roundTo(Math.sqrt(Math.max(value, 0)), 8), 0.01, 2);
+          clip[17] = [clip[17][0], w17W18Ceiling];
+          clip[18] = [clip[18][0], w17W18Ceiling];
+        }
+        return clip.map(([min, max], index) => clamp(parameters[index] || 0, min, max));
+      };
+      checkFSRS6Parameters = (parameters, numRelearningSteps = 0, enableShortTerm = true) => {
+        const clipped = clipFSRS6Parameters(Array.from(parameters), numRelearningSteps, enableShortTerm);
+        if (!(parameters.length === FSRS6_DEFAULT_WEIGHTS.length && clipped.every((value, index) => value === parameters[index]))) throw new FSRSValidationError("Expected FSRS6 weights within model bounds.");
+        return parameters;
+      };
+      migrateFSRS6Parameters = (parameters) => {
+        if (!Array.isArray(parameters) || parameters.length === 0) return [...FSRS6_DEFAULT_WEIGHTS];
+        switch (parameters.length) {
+          case 21:
+            return Array.from(parameters);
+          case 19:
+            return Array.from(parameters).concat([0, FSRS5_DECAY]);
+          case 17: {
+            const weights = Array.from(parameters);
+            weights[4] = +(weights[5] * 2 + weights[4]).toFixed(8);
+            weights[5] = +(Math.log(weights[5] * 3 + 1) / 3).toFixed(8);
+            weights[6] = +(weights[6] + 0.5).toFixed(8);
+            return weights.concat([
+              0,
+              0,
+              0,
+              FSRS5_DECAY
+            ]);
+          }
+          default:
+            throw new FSRSValidationError(`Invalid parameters length "${parameters.length}", expected 17, 19 or 21.`);
+        }
+      };
+      fsrs6ConfigSchema = defineSchema((value) => {
+        if (isObject2(value) && isNumberArray(value.weights) && typeof value.enableShortTerm === "boolean" && typeof value.numRelearningSteps === "number" && Number.isSafeInteger(value.numRelearningSteps) && value.numRelearningSteps >= 0) return { value: {
+          weights: value.weights,
+          enableShortTerm: value.enableShortTerm,
+          numRelearningSteps: value.numRelearningSteps
+        } };
+        return { issues: [{ message: "Expected FSRS6 config" }] };
+      });
+      computeDecayFactor = (decayOrParams) => {
+        const decay = typeof decayOrParams === "number" ? -decayOrParams : -decayOrParams[20];
+        const factor = Math.exp(Math.pow(decay, -1) * Math.log(0.9)) - 1;
+        return {
+          decay,
+          factor: roundTo(factor, 8)
+        };
+      };
+      FSRS6Algorithm = class {
+        weights;
+        enableShortTerm;
+        bounds;
+        decayWeight = NaN;
+        decay = 0;
+        factor = 0;
+        forgetting_curve;
+        constructor(weights, enableShortTerm, bounds) {
+          this.weights = weights;
+          this.enableShortTerm = enableShortTerm;
+          this.bounds = bounds;
+          if (!Array.isArray(weights) || weights.length !== 21) throw new FSRSValidationError(`FSRS6Algorithm requires exactly 21 weights, but received ${weights?.length}`);
+          this.forgetting_curve = (elapsed_days, stability) => {
+            const { decay, factor } = this.getDecayFactor();
+            return roundTo(Math.pow(1 + factor * elapsed_days / stability, decay), 8);
+          };
+        }
+        getDecayFactor() {
+          const decayWeight = this.weights[20];
+          if (decayWeight !== this.decayWeight) {
+            const { decay, factor } = computeDecayFactor(decayWeight);
+            this.decayWeight = decayWeight;
+            this.decay = decay;
+            this.factor = factor;
+          }
+          return {
+            decay: this.decay,
+            factor: this.factor
+          };
+        }
+        init_stability(g) {
+          return clamp(this.weights[g - 1], this.bounds.sMin, this.bounds.sMax);
+        }
+        init_difficulty(g) {
+          const w = this.weights;
+          const d = w[4] - Math.exp((g - 1) * w[5]) + 1;
+          return roundTo(d, 8);
+        }
+        next_interval(s, desired_retention) {
+          if (!Number.isFinite(desired_retention) || desired_retention <= 0 || desired_retention > 1) throw new FSRSValidationError("Desired retention rate should be in the range (0,1]");
+          const { decay, factor } = this.getDecayFactor();
+          return Math.max(Math.round(s / factor * (Math.pow(desired_retention, 1 / decay) - 1)), 1);
+        }
+        /**
+        * @see https://github.com/open-spaced-repetition/fsrs4anki/issues/697
+        */
+        linear_damping(delta_d, old_d) {
+          return roundTo(delta_d * (10 - old_d) / 9, 8);
+        }
+        next_difficulty(d, g) {
+          const delta_d = -this.weights[6] * (g - 3);
+          const next_d = d + this.linear_damping(delta_d, d);
+          return clamp(this.mean_reversion(this.init_difficulty(Rating.Easy), next_d), 1, 10);
+        }
+        mean_reversion(init, current) {
+          const w = this.weights;
+          return roundTo(w[7] * init + (1 - w[7]) * current, 8);
+        }
+        next_recall_stability(d, s, r, g) {
+          const w = this.weights;
+          const hard_penalty = Rating.Hard === g ? w[15] : 1;
+          const easy_bound = Rating.Easy === g ? w[16] : 1;
+          return roundTo(clamp(s * (1 + Math.exp(w[8]) * (11 - d) * Math.pow(s, -w[9]) * (Math.exp((1 - r) * w[10]) - 1) * hard_penalty * easy_bound), this.bounds.sMin, this.bounds.sMax), 8);
+        }
+        next_forget_stability(d, s, r) {
+          const w = this.weights;
+          return roundTo(clamp(w[11] * Math.pow(d, -w[12]) * (Math.pow(s + 1, w[13]) - 1) * Math.exp((1 - r) * w[14]), this.bounds.sMin, this.bounds.sMax), 8);
+        }
+        next_short_term_stability(s, g) {
+          const w = this.weights;
+          const sinc = Math.pow(s, -w[19]) * Math.exp(w[17] * (g - 3 + w[18]));
+          const maskedSinc = g >= Rating.Hard ? Math.max(sinc, 1) : sinc;
+          return roundTo(clamp(s * maskedSinc, this.bounds.sMin, this.bounds.sMax), 8);
+        }
+        next_state(memory_state, t, g, r) {
+          const { difficulty: d, stability: s } = memory_state ?? {
+            difficulty: 0,
+            stability: 0
+          };
+          if (t < 0) throw new FSRSValidationError(`Invalid delta_t "${t}"`);
+          if (g < 0 || g > 4) throw new FSRSValidationError(`Invalid grade "${g}"`);
+          if (g === Rating.Manual) return {
+            difficulty: d,
+            stability: s
+          };
+          const grade = g;
+          if (d === 0 && s === 0) return {
+            difficulty: clamp(this.init_difficulty(grade), 1, 10),
+            stability: this.init_stability(grade)
+          };
+          if (d < 1 || s < this.bounds.sMin) throw new FSRSValidationError(`Invalid memory state { difficulty: ${d}, stability: ${s} }`);
+          const w = this.weights;
+          r = typeof r === "number" ? r : this.forgetting_curve(t, s);
+          let new_s;
+          if (t === 0 && this.enableShortTerm) new_s = this.next_short_term_stability(s, grade);
+          else if (g === 1) {
+            const s_after_fail = this.next_forget_stability(d, s, r);
+            let [w_17, w_18] = [0, 0];
+            if (this.enableShortTerm) {
+              w_17 = w[17];
+              w_18 = w[18];
+            }
+            const next_s_min = s / Math.exp(w_17 * w_18);
+            new_s = clamp(roundTo(next_s_min, 8), this.bounds.sMin, s_after_fail);
+          } else new_s = this.next_recall_stability(d, s, r, grade);
+          return {
+            difficulty: this.next_difficulty(d, grade),
+            stability: new_s
+          };
+        }
+      };
+      createFSRS6Model = (config) => {
+        const bounds = FSRS6_MODEL_BOUNDS;
+        const algo = new FSRS6Algorithm(config.weights, config.enableShortTerm, FSRS6_MODEL_BOUNDS);
+        const step = ({ memoryState, rating, elapsedDays, retrievability }) => {
+          return algo.next_state(memoryState, elapsedDays, rating, retrievability);
+        };
+        const nextInterval = (memoryState, desiredRetention) => {
+          return algo.next_interval(memoryState.stability, desiredRetention);
+        };
+        const forgettingCurve = (memoryState, elapsedDays) => {
+          return algo.forgetting_curve(elapsedDays, memoryState.stability);
+        };
+        const forward = ({ history, initialState }) => {
+          const states2 = [];
+          let memoryState = initialState || null;
+          for (const review of history) {
+            memoryState = step({
+              memoryState,
+              rating: review.rating,
+              elapsedDays: review.deltaT
+            });
+            states2.push(memoryState);
+          }
+          return states2;
+        };
+        return {
+          config,
+          bounds,
+          algorithm: algo,
+          step,
+          nextInterval,
+          forgettingCurve,
+          forward
+        };
+      };
+      FSRS6Model = defineModel({
+        name: "fsrs-6",
+        schema: {
+          config: fsrs6ConfigSchema,
+          memoryState: FSRSMemoryStateSchema
+        },
+        defaultValue: { memoryState() {
+          return {
+            stability: 0,
+            difficulty: 0
+          };
+        } },
+        create({ config, migrate = true, clip = true, check = true, bypass = false }) {
+          if (bypass) return createFSRS6Model(config);
+          let weights = migrate ? migrateFSRS6Parameters(config.weights) : config.weights;
+          if (clip && Array.isArray(weights)) weights = clipFSRS6Parameters(weights, config.numRelearningSteps, config.enableShortTerm);
+          if (check) checkFSRS6Parameters(weights, config.numRelearningSteps, config.enableShortTerm);
+          const $config = fsrs6ConfigSchema.parse({
+            weights,
+            enableShortTerm: config.enableShortTerm,
+            numRelearningSteps: config.numRelearningSteps
+          });
+          return createFSRS6Model(Object.freeze($config));
+        }
+      });
+    }
+  });
+
+  // node_modules/ts-fsrs/dist/models/fsrs-3.mjs
+  var fsrs_3_exports = {};
+  __export(fsrs_3_exports, {
+    FSRS3Algorithm: () => FSRS3Algorithm,
+    FSRS3Model: () => FSRS3Model,
+    FSRS3ParameterBounds: () => FSRS3ParameterBounds,
+    FSRS3_DEFAULT_WEIGHTS: () => FSRS3_DEFAULT_WEIGHTS,
+    FSRS3_MODEL_BOUNDS: () => FSRS3_MODEL_BOUNDS,
+    checkFSRS3Parameters: () => checkFSRS3Parameters,
+    clipFSRS3Parameters: () => clipFSRS3Parameters,
+    forgettingCurve: () => forgetting_curve2,
+    fsrs3ConfigSchema: () => fsrs3ConfigSchema,
+    migrateFSRS3Parameters: () => migrateFSRS3Parameters
+  });
+  function forgetting_curve2(elapsed_days, stability) {
+    return roundTo(Math.pow(0.9, elapsed_days / stability), 8);
+  }
+  var FSRS3Algorithm, FSRS3_MODEL_BOUNDS, FSRS3_DEFAULT_WEIGHTS, FSRS3ParameterBounds, clipFSRS3Parameters, checkFSRS3Parameters, migrateFSRS3Parameters, fsrs3ConfigSchema, createFSRS3Model, FSRS3Model;
+  var init_fsrs_3 = __esm({
+    "node_modules/ts-fsrs/dist/models/fsrs-3.mjs"() {
+      init_schema_utils_DX7uVwiJ();
+      init_schema_D7q2J7dh();
+      init_error();
+      init_esm();
+      FSRS3Algorithm = class {
+        weights;
+        bounds;
+        constructor(weights, bounds) {
+          this.weights = weights;
+          this.bounds = bounds;
+          if (!Array.isArray(weights) || weights.length !== 13) throw new FSRSValidationError(`FSRS3Algorithm requires exactly 13 weights, but received ${weights?.length}`);
+        }
+        init_stability(g) {
+          const w = this.weights;
+          return clamp(w[0] + (g - 1) * w[1], this.bounds.sMin, this.bounds.sMax);
+        }
+        init_difficulty(g) {
+          const w = this.weights;
+          return clamp(w[2] + (g - 3) * w[3], this.bounds.dMin, this.bounds.dMax);
+        }
+        next_interval(s, desired_retention) {
+          if (!Number.isFinite(desired_retention) || desired_retention <= 0 || desired_retention > 1) throw new FSRSValidationError("Desired retention rate should be in the range (0,1]");
+          const intervalModifier = Math.log(desired_retention) / Math.log(0.9);
+          return roundTo(Math.max(Math.round(s * intervalModifier), 1), 8);
+        }
+        next_difficulty(d, g) {
+          const w = this.weights;
+          const next_d = d + w[4] * (g - 3);
+          return roundTo(clamp(this.mean_reversion(w[2], next_d), this.bounds.dMin, this.bounds.dMax), 8);
+        }
+        mean_reversion(init, current) {
+          const w = this.weights;
+          return roundTo(w[5] * init + (1 - w[5]) * current, 8);
+        }
+        next_recall_stability(d, s, r) {
+          const w = this.weights;
+          return roundTo(clamp(s * (1 + Math.exp(w[6]) * (11 - d) * Math.pow(s, w[7]) * (Math.exp((1 - r) * w[8]) - 1)), this.bounds.sMin, this.bounds.sMax), 8);
+        }
+        next_forget_stability(d, s, r) {
+          const w = this.weights;
+          return roundTo(clamp(w[9] * Math.pow(d, w[10]) * Math.pow(s, w[11]) * Math.exp((1 - r) * w[12]), this.bounds.sMin, this.bounds.sMax), 8);
+        }
+        forgetting_curve = forgetting_curve2;
+        next_state(memory_state, t, g, r) {
+          const { difficulty: d, stability: s } = memory_state ?? {
+            difficulty: 0,
+            stability: 0
+          };
+          if (t < 0) throw new FSRSValidationError(`Invalid delta_t "${t}"`);
+          if (g < 0 || g > 4) throw new FSRSValidationError(`Invalid grade "${g}"`);
+          if (g === Rating.Manual) return {
+            difficulty: d,
+            stability: s
+          };
+          const grade = g;
+          if (d === 0 && s === 0) return {
+            difficulty: this.init_difficulty(grade),
+            stability: this.init_stability(grade)
+          };
+          if (d < this.bounds.dMin || s < this.bounds.sMin) throw new FSRSValidationError(`Invalid memory state { difficulty: ${d}, stability: ${s} }`);
+          r = typeof r === "number" ? r : this.forgetting_curve(t, s);
+          const new_d = this.next_difficulty(d, grade);
+          return {
+            difficulty: new_d,
+            stability: grade === Rating.Again ? this.next_forget_stability(new_d, s, r) : this.next_recall_stability(new_d, s, r)
+          };
+        }
+      };
+      FSRS3_MODEL_BOUNDS = Object.freeze({
+        sMin: 0.01,
+        sMax: 36500,
+        dMin: 1,
+        dMax: 10
+      });
+      FSRS3_DEFAULT_WEIGHTS = Object.freeze([
+        0.9605,
+        1.7234,
+        4.8527,
+        -1.1917,
+        -1.2956,
+        0.0573,
+        1.7352,
+        -0.1673,
+        1.065,
+        1.8907,
+        -0.3832,
+        0.5867,
+        1.0721
+      ]);
+      FSRS3ParameterBounds = () => [
+        [0.1, 10],
+        [0.1, 5],
+        [FSRS3_MODEL_BOUNDS.dMin, FSRS3_MODEL_BOUNDS.dMax],
+        [-5, -0.1],
+        [-5, -0.1],
+        [0.05, 0.5],
+        [0, 2],
+        [-0.8, -0.15],
+        [0.01, 1.5],
+        [0.5, 5],
+        [-2, -0.01],
+        [0.01, 0.9],
+        [0.01, 2]
+      ];
+      clipFSRS3Parameters = (parameters) => {
+        return FSRS3ParameterBounds().slice(0, parameters.length).map(([min, max], index) => clamp(parameters[index] ?? 0, min, max));
+      };
+      checkFSRS3Parameters = (parameters) => {
+        const clipped = clipFSRS3Parameters(Array.from(parameters));
+        if (!(parameters.length === FSRS3_DEFAULT_WEIGHTS.length && clipped.every((value, index) => value === parameters[index]))) throw new FSRSValidationError("Expected FSRS3 weights within model bounds.");
+        return parameters;
+      };
+      migrateFSRS3Parameters = (parameters) => {
+        if (!Array.isArray(parameters) || parameters.length === 0) return [...FSRS3_DEFAULT_WEIGHTS];
+        return parameters.slice(0, FSRS3_DEFAULT_WEIGHTS.length);
+      };
+      fsrs3ConfigSchema = defineSchema((value) => {
+        if (isObject2(value) && isNumberArray(value.weights)) return { value: { weights: value.weights } };
+        return { issues: [{ message: "Expected FSRS3 config" }] };
+      });
+      createFSRS3Model = (config) => {
+        const bounds = FSRS3_MODEL_BOUNDS;
+        const algo = new FSRS3Algorithm(config.weights, bounds);
+        const step = ({ memoryState, rating, elapsedDays, retrievability }) => {
+          return algo.next_state(memoryState, elapsedDays, rating, retrievability);
+        };
+        const nextInterval = (memoryState, desiredRetention) => {
+          return algo.next_interval(memoryState.stability, desiredRetention);
+        };
+        const forgettingCurve = (memoryState, elapsedDays) => {
+          return algo.forgetting_curve(elapsedDays, memoryState.stability);
+        };
+        const forward = ({ history, initialState }) => {
+          const states2 = [];
+          let memoryState = initialState || null;
+          for (const review of history) {
+            memoryState = step({
+              memoryState,
+              rating: review.rating,
+              elapsedDays: review.deltaT
+            });
+            states2.push(memoryState);
+          }
+          return states2;
+        };
+        return {
+          config,
+          bounds,
+          algorithm: algo,
+          step,
+          nextInterval,
+          forgettingCurve,
+          forward
+        };
+      };
+      FSRS3Model = defineModel({
+        name: "fsrs-3",
+        schema: {
+          config: fsrs3ConfigSchema,
+          memoryState: FSRSMemoryStateSchema
+        },
+        defaultValue: { memoryState() {
+          return {
+            stability: 0,
+            difficulty: 0
+          };
+        } },
+        create({ config, migrate = true, clip = true, check = true, bypass = false }) {
+          if (bypass) return createFSRS3Model(config);
+          let weights = migrate ? migrateFSRS3Parameters(config.weights) : config.weights;
+          if (clip && Array.isArray(weights)) weights = clipFSRS3Parameters(weights);
+          if (check) checkFSRS3Parameters(weights);
+          const $config = fsrs3ConfigSchema.parse({ weights });
+          return createFSRS3Model(Object.freeze($config));
+        }
+      });
+    }
+  });
+
+  // node_modules/ts-fsrs/dist/models/fsrs-4.mjs
+  var fsrs_4_exports = {};
+  __export(fsrs_4_exports, {
+    FSRS4Algorithm: () => FSRS4Algorithm,
+    FSRS4Model: () => FSRS4Model,
+    FSRS4_DEFAULT_WEIGHTS: () => FSRS4_DEFAULT_WEIGHTS,
+    FSRS4_MODEL_BOUNDS: () => FSRS4_MODEL_BOUNDS,
+    checkFSRS4Parameters: () => checkFSRS4Parameters,
+    clipFSRS4Parameters: () => clipFSRS4Parameters,
+    forgettingCurve: () => forgetting_curve3,
+    fsrs4ConfigSchema: () => fsrs4ConfigSchema,
+    migrateFSRS4Parameters: () => migrateFSRS4Parameters
+  });
+  function forgetting_curve3(elapsed_days, stability) {
+    return roundTo(Math.pow(1 + elapsed_days / (9 * stability), -1), 8);
+  }
+  var FSRS4Algorithm, FSRS4_MODEL_BOUNDS, FSRS4_DEFAULT_WEIGHTS, FSRS4ParameterBounds, clipFSRS4Parameters, checkFSRS4Parameters, migrateFSRS4Parameters, fsrs4ConfigSchema, createFSRS4Model, FSRS4Model;
+  var init_fsrs_4 = __esm({
+    "node_modules/ts-fsrs/dist/models/fsrs-4.mjs"() {
+      init_schema_utils_DX7uVwiJ();
+      init_schema_D7q2J7dh();
+      init_error();
+      init_esm();
+      FSRS4Algorithm = class {
+        weights;
+        bounds;
+        constructor(weights, bounds) {
+          this.weights = weights;
+          this.bounds = bounds;
+          if (!Array.isArray(weights) || weights.length !== 17) throw new FSRSValidationError(`FSRS4Algorithm requires exactly 17 weights, but received ${weights?.length}`);
+        }
+        init_stability(g) {
+          return clamp(this.weights[g - 1], this.bounds.sMin, this.bounds.sMax);
+        }
+        init_difficulty(g) {
+          const w = this.weights;
+          const d = w[4] - (g - 3) * w[5];
+          return clamp(roundTo(d, 8), this.bounds.dMin, this.bounds.dMax);
+        }
+        next_interval(s, desired_retention) {
+          if (!Number.isFinite(desired_retention) || desired_retention <= 0 || desired_retention > 1) throw new FSRSValidationError("Requested retention rate should be in the range (0,1]");
+          const intervalModifier = roundTo(9 * (1 / desired_retention - 1), 8);
+          return Math.max(Math.round(s * intervalModifier), 1);
+        }
+        next_difficulty(d, g) {
+          const next_d = d - this.weights[6] * (g - 3);
+          return clamp(this.mean_reversion(this.weights[4], next_d), this.bounds.dMin, this.bounds.dMax);
+        }
+        mean_reversion(init, current) {
+          const w = this.weights;
+          return roundTo(w[7] * init + (1 - w[7]) * current, 8);
+        }
+        next_recall_stability(d, s, r, g) {
+          const w = this.weights;
+          const hard_penalty = Rating.Hard === g ? w[15] : 1;
+          const easy_bound = Rating.Easy === g ? w[16] : 1;
+          return roundTo(clamp(s * (1 + Math.exp(w[8]) * (11 - d) * Math.pow(s, -w[9]) * (Math.exp((1 - r) * w[10]) - 1) * hard_penalty * easy_bound), this.bounds.sMin, this.bounds.sMax), 8);
+        }
+        next_forget_stability(d, s, r) {
+          const w = this.weights;
+          return roundTo(clamp(w[11] * Math.pow(d, -w[12]) * (Math.pow(s + 1, w[13]) - 1) * Math.exp((1 - r) * w[14]), this.bounds.sMin, this.bounds.sMax), 8);
+        }
+        forgetting_curve = forgetting_curve3;
+        next_state(memory_state, t, g, r) {
+          const { difficulty: d, stability: s } = memory_state ?? {
+            difficulty: 0,
+            stability: 0
+          };
+          if (t < 0) throw new FSRSValidationError(`Invalid delta_t "${t}"`);
+          if (g < 0 || g > 4) throw new FSRSValidationError(`Invalid grade "${g}"`);
+          if (g === Rating.Manual) return {
+            difficulty: d,
+            stability: s
+          };
+          const grade = g;
+          if (d === 0 && s === 0) return {
+            difficulty: this.init_difficulty(grade),
+            stability: this.init_stability(grade)
+          };
+          if (d < this.bounds.dMin || s < this.bounds.sMin) throw new FSRSValidationError(`Invalid memory state { difficulty: ${d}, stability: ${s} }`);
+          r = typeof r === "number" ? r : this.forgetting_curve(t, s);
+          const new_s = grade === Rating.Again ? this.next_forget_stability(d, s, r) : this.next_recall_stability(d, s, r, grade);
+          return {
+            difficulty: this.next_difficulty(d, grade),
+            stability: new_s
+          };
+        }
+      };
+      FSRS4_MODEL_BOUNDS = Object.freeze({
+        sMin: 0.01,
+        sMax: 36500,
+        dMin: 1,
+        dMax: 10
+      });
+      FSRS4_DEFAULT_WEIGHTS = Object.freeze([
+        0.4,
+        0.9,
+        2.3,
+        10.9,
+        4.93,
+        0.94,
+        0.86,
+        0.01,
+        1.49,
+        0.14,
+        0.94,
+        2.18,
+        0.05,
+        0.34,
+        1.26,
+        0.29,
+        2.61
+      ]);
+      FSRS4ParameterBounds = () => [
+        [FSRS4_MODEL_BOUNDS.sMin, FSRS4_MODEL_BOUNDS.sMax],
+        [FSRS4_MODEL_BOUNDS.sMin, FSRS4_MODEL_BOUNDS.sMax],
+        [FSRS4_MODEL_BOUNDS.sMin, FSRS4_MODEL_BOUNDS.sMax],
+        [FSRS4_MODEL_BOUNDS.sMin, FSRS4_MODEL_BOUNDS.sMax],
+        [1, 10],
+        [0.1, 5],
+        [0.1, 5],
+        [0, 0.5],
+        [0, 3],
+        [0.1, 0.8],
+        [0.01, 2.5],
+        [0.5, 5],
+        [0.01, 0.2],
+        [0.01, 0.9],
+        [0.01, 2],
+        [0, 1],
+        [1, 4]
+      ];
+      clipFSRS4Parameters = (parameters) => {
+        return FSRS4ParameterBounds().slice(0, parameters.length).map(([min, max], index) => clamp(parameters[index] ?? 0, min, max));
+      };
+      checkFSRS4Parameters = (parameters) => {
+        const clipped = clipFSRS4Parameters(Array.from(parameters));
+        if (!(parameters.length === FSRS4_DEFAULT_WEIGHTS.length && clipped.every((value, index) => value === parameters[index]))) throw new FSRSValidationError("Expected FSRS4 weights within model bounds.");
+        return parameters;
+      };
+      migrateFSRS4Parameters = (parameters) => {
+        if (!Array.isArray(parameters) || parameters.length === 0) return [...FSRS4_DEFAULT_WEIGHTS];
+        return parameters.slice(0, FSRS4_DEFAULT_WEIGHTS.length);
+      };
+      fsrs4ConfigSchema = defineSchema((value) => {
+        if (isObject2(value) && isNumberArray(value.weights)) return { value: { weights: value.weights } };
+        return { issues: [{ message: "Expected FSRS4 config" }] };
+      });
+      createFSRS4Model = (config) => {
+        const bounds = FSRS4_MODEL_BOUNDS;
+        const algo = new FSRS4Algorithm(config.weights, FSRS4_MODEL_BOUNDS);
+        const step = ({ memoryState, rating, elapsedDays, retrievability }) => {
+          return algo.next_state(memoryState, elapsedDays, rating, retrievability);
+        };
+        const nextInterval = (memoryState, desiredRetention) => {
+          return algo.next_interval(memoryState.stability, desiredRetention);
+        };
+        const forgettingCurve = (memoryState, elapsedDays) => {
+          return algo.forgetting_curve(elapsedDays, memoryState.stability);
+        };
+        const forward = ({ history, initialState }) => {
+          const states2 = [];
+          let memoryState = initialState || null;
+          for (const review of history) {
+            memoryState = step({
+              memoryState,
+              rating: review.rating,
+              elapsedDays: review.deltaT
+            });
+            states2.push(memoryState);
+          }
+          return states2;
+        };
+        return {
+          config,
+          bounds,
+          algorithm: algo,
+          step,
+          nextInterval,
+          forgettingCurve,
+          forward
+        };
+      };
+      FSRS4Model = defineModel({
+        name: "fsrs-4",
+        schema: {
+          config: fsrs4ConfigSchema,
+          memoryState: FSRSMemoryStateSchema
+        },
+        defaultValue: { memoryState() {
+          return {
+            stability: 0,
+            difficulty: 0
+          };
+        } },
+        create({ config, migrate = true, clip = true, check = true, bypass = false }) {
+          if (bypass) return createFSRS4Model(config);
+          let weights = migrate ? migrateFSRS4Parameters(config.weights) : config.weights;
+          if (clip && Array.isArray(weights)) weights = clipFSRS4Parameters(weights);
+          if (check) checkFSRS4Parameters(weights);
+          const $config = fsrs4ConfigSchema.parse({ weights });
+          return createFSRS4Model(Object.freeze($config));
+        }
+      });
+    }
+  });
+
+  // node_modules/ts-fsrs/dist/models/fsrs-4dot5.mjs
+  var fsrs_4dot5_exports = {};
+  __export(fsrs_4dot5_exports, {
+    FSRS4Dot5Algorithm: () => FSRS4Dot5Algorithm,
+    FSRS4Dot5Model: () => FSRS4Dot5Model,
+    FSRS4Dot5_DECAY: () => FSRS4Dot5_DECAY,
+    FSRS4Dot5_DEFAULT_WEIGHTS: () => FSRS4Dot5_DEFAULT_WEIGHTS,
+    FSRS4Dot5_FACTOR: () => FSRS4Dot5_FACTOR,
+    FSRS4Dot5_MODEL_BOUNDS: () => FSRS4Dot5_MODEL_BOUNDS,
+    checkFSRS4Dot5Parameters: () => checkFSRS4Dot5Parameters,
+    clipFSRS4Dot5Parameters: () => clipFSRS4Dot5Parameters,
+    forgettingCurve: () => forgetting_curve4,
+    fsrs4Dot5ConfigSchema: () => fsrs4Dot5ConfigSchema,
+    migrateFSRS4Dot5Parameters: () => migrateFSRS4Dot5Parameters
+  });
+  function forgetting_curve4(elapsed_days, stability) {
+    return roundTo(Math.pow(1 + FSRS4Dot5_FACTOR * elapsed_days / stability, -FSRS4Dot5_DECAY), 8);
+  }
+  var FSRS4Dot5_DECAY, FSRS4Dot5_FACTOR, FSRS4Dot5_MODEL_BOUNDS, FSRS4Dot5_DEFAULT_WEIGHTS, FSRS4Dot5ParameterBounds, FSRS4Dot5Algorithm, clipFSRS4Dot5Parameters, checkFSRS4Dot5Parameters, migrateFSRS4Dot5Parameters, fsrs4Dot5ConfigSchema, createFSRS4Dot5Model, FSRS4Dot5Model;
+  var init_fsrs_4dot5 = __esm({
+    "node_modules/ts-fsrs/dist/models/fsrs-4dot5.mjs"() {
+      init_schema_utils_DX7uVwiJ();
+      init_schema_D7q2J7dh();
+      init_error();
+      init_esm();
+      FSRS4Dot5_DECAY = 0.5;
+      FSRS4Dot5_FACTOR = 19 / 81;
+      FSRS4Dot5_MODEL_BOUNDS = Object.freeze({
+        sMin: 0.01,
+        sMax: 36500,
+        dMin: 1,
+        dMax: 10
+      });
+      FSRS4Dot5_DEFAULT_WEIGHTS = Object.freeze([
+        0.4872,
+        1.4003,
+        3.7145,
+        13.8206,
+        5.1618,
+        1.2298,
+        0.8975,
+        0.031,
+        1.6474,
+        0.1367,
+        1.0461,
+        2.1072,
+        0.0793,
+        0.3246,
+        1.587,
+        0.2272,
+        2.8755
+      ]);
+      FSRS4Dot5ParameterBounds = () => [
+        [FSRS4Dot5_MODEL_BOUNDS.sMin, 100],
+        [FSRS4Dot5_MODEL_BOUNDS.sMin, 100],
+        [FSRS4Dot5_MODEL_BOUNDS.sMin, 100],
+        [FSRS4Dot5_MODEL_BOUNDS.sMin, 100],
+        [0, FSRS4Dot5_MODEL_BOUNDS.dMax],
+        [0.01, 5],
+        [0.01, 5],
+        [0, 0.8],
+        [0, 6],
+        [0, 0.8],
+        [0.01, 5],
+        [0.2, 6],
+        [0.01, 0.4],
+        [0.01, 0.9],
+        [0.01, 4],
+        [0, 1],
+        [1, 10]
+      ];
+      FSRS4Dot5Algorithm = class {
+        weights;
+        bounds;
+        constructor(weights, bounds) {
+          this.weights = weights;
+          this.bounds = bounds;
+          if (!Array.isArray(weights) || weights.length !== 17) throw new FSRSValidationError(`FSRS4Dot5Algorithm requires exactly 17 weights, but received ${weights?.length}`);
+        }
+        init_stability(g) {
+          return clamp(this.weights[g - 1], this.bounds.sMin, this.bounds.sMax);
+        }
+        init_difficulty(g) {
+          const w = this.weights;
+          const d = w[4] - (g - 3) * w[5];
+          return clamp(roundTo(d, 8), this.bounds.dMin, this.bounds.dMax);
+        }
+        next_interval(s, desired_retention) {
+          if (!Number.isFinite(desired_retention) || desired_retention <= 0 || desired_retention > 1) throw new FSRSValidationError("Desired retention rate should be in the range (0,1]");
+          const intervalModifier = roundTo((Math.pow(desired_retention, 1 / -FSRS4Dot5_DECAY) - 1) / FSRS4Dot5_FACTOR, 8);
+          return Math.max(Math.round(s * intervalModifier), 1);
+        }
+        next_difficulty(d, g) {
+          const next_d = d - this.weights[6] * (g - 3);
+          return clamp(this.mean_reversion(this.weights[4], next_d), this.bounds.dMin, this.bounds.dMax);
+        }
+        mean_reversion(init, current) {
+          const w = this.weights;
+          return roundTo(w[7] * init + (1 - w[7]) * current, 8);
+        }
+        next_recall_stability(d, s, r, g) {
+          const w = this.weights;
+          const hard_penalty = Rating.Hard === g ? w[15] : 1;
+          const easy_bound = Rating.Easy === g ? w[16] : 1;
+          return roundTo(clamp(s * (1 + Math.exp(w[8]) * (11 - d) * Math.pow(s, -w[9]) * (Math.exp((1 - r) * w[10]) - 1) * hard_penalty * easy_bound), this.bounds.sMin, this.bounds.sMax), 8);
+        }
+        next_forget_stability(d, s, r) {
+          const w = this.weights;
+          const next_s = w[11] * Math.pow(d, -w[12]) * (Math.pow(s + 1, w[13]) - 1) * Math.exp((1 - r) * w[14]);
+          return roundTo(clamp(Math.min(next_s, s), this.bounds.sMin, this.bounds.sMax), 8);
+        }
+        forgetting_curve = forgetting_curve4;
+        next_state(memory_state, t, g, r) {
+          const { difficulty: d, stability: s } = memory_state ?? {
+            difficulty: 0,
+            stability: 0
+          };
+          if (t < 0) throw new FSRSValidationError(`Invalid delta_t "${t}"`);
+          if (g < 0 || g > 4) throw new FSRSValidationError(`Invalid grade "${g}"`);
+          if (g === Rating.Manual) return {
+            difficulty: d,
+            stability: s
+          };
+          const grade = g;
+          if (d === 0 && s === 0) return {
+            difficulty: this.init_difficulty(grade),
+            stability: this.init_stability(grade)
+          };
+          if (d < this.bounds.dMin || s < this.bounds.sMin) throw new FSRSValidationError(`Invalid memory state { difficulty: ${d}, stability: ${s} }`);
+          r = typeof r === "number" ? r : this.forgetting_curve(t, s);
+          const new_s = g === Rating.Again ? this.next_forget_stability(d, s, r) : this.next_recall_stability(d, s, r, grade);
+          return {
+            difficulty: this.next_difficulty(d, grade),
+            stability: new_s
+          };
+        }
+      };
+      clipFSRS4Dot5Parameters = (parameters) => {
+        return FSRS4Dot5ParameterBounds().slice(0, parameters.length).map(([min, max], index) => clamp(parameters[index] || 0, min, max));
+      };
+      checkFSRS4Dot5Parameters = (parameters) => {
+        const clipped = clipFSRS4Dot5Parameters(Array.from(parameters));
+        if (!(parameters.length === FSRS4Dot5_DEFAULT_WEIGHTS.length && clipped.every((value, index) => value === parameters[index]))) throw new FSRSValidationError("Expected FSRS4.5 weights within model bounds.");
+        return parameters;
+      };
+      migrateFSRS4Dot5Parameters = (parameters) => {
+        if (!Array.isArray(parameters) || parameters.length === 0) return [...FSRS4Dot5_DEFAULT_WEIGHTS];
+        return parameters.slice(0, FSRS4Dot5_DEFAULT_WEIGHTS.length);
+      };
+      fsrs4Dot5ConfigSchema = defineSchema((value) => {
+        if (isObject2(value) && isNumberArray(value.weights)) return { value: { weights: value.weights } };
+        return { issues: [{ message: "Expected FSRS4.5 config" }] };
+      });
+      createFSRS4Dot5Model = (config) => {
+        const bounds = FSRS4Dot5_MODEL_BOUNDS;
+        const algo = new FSRS4Dot5Algorithm(config.weights, FSRS4Dot5_MODEL_BOUNDS);
+        const step = ({ memoryState, rating, elapsedDays, retrievability }) => {
+          return algo.next_state(memoryState, elapsedDays, rating, retrievability);
+        };
+        const nextInterval = (memoryState, desiredRetention) => {
+          return algo.next_interval(memoryState.stability, desiredRetention);
+        };
+        const forgettingCurve = (memoryState, elapsedDays) => {
+          return algo.forgetting_curve(elapsedDays, memoryState.stability);
+        };
+        const forward = ({ history, initialState }) => {
+          const states2 = [];
+          let memoryState = initialState || null;
+          for (const review of history) {
+            memoryState = step({
+              memoryState,
+              rating: review.rating,
+              elapsedDays: review.deltaT
+            });
+            states2.push(memoryState);
+          }
+          return states2;
+        };
+        return {
+          config,
+          bounds,
+          algorithm: algo,
+          step,
+          nextInterval,
+          forgettingCurve,
+          forward
+        };
+      };
+      FSRS4Dot5Model = defineModel({
+        name: "fsrs-4dot5",
+        schema: {
+          config: fsrs4Dot5ConfigSchema,
+          memoryState: FSRSMemoryStateSchema
+        },
+        defaultValue: { memoryState() {
+          return {
+            stability: 0,
+            difficulty: 0
+          };
+        } },
+        create({ config, migrate = true, clip = true, check = true, bypass = false }) {
+          if (bypass) return createFSRS4Dot5Model(config);
+          let weights = migrate ? migrateFSRS4Dot5Parameters(config.weights) : config.weights;
+          if (clip && Array.isArray(weights)) weights = clipFSRS4Dot5Parameters(weights);
+          if (check) checkFSRS4Dot5Parameters(weights);
+          const $config = fsrs4Dot5ConfigSchema.parse({ weights });
+          return createFSRS4Dot5Model(Object.freeze($config));
+        }
+      });
+    }
+  });
+
+  // node_modules/ts-fsrs/dist/models/fsrs-5.mjs
+  var fsrs_5_exports = {};
+  __export(fsrs_5_exports, {
+    FSRS5Algorithm: () => FSRS5Algorithm,
+    FSRS5Model: () => FSRS5Model,
+    FSRS5_DECAY: () => FSRS5_DECAY,
+    FSRS5_DEFAULT_WEIGHTS: () => FSRS5_DEFAULT_WEIGHTS,
+    FSRS5_FACTOR: () => FSRS5_FACTOR,
+    FSRS5_MODEL_BOUNDS: () => FSRS5_MODEL_BOUNDS,
+    FSRS5_W17_W18_CEILING: () => FSRS5_W17_W18_CEILING,
+    checkFSRS5Parameters: () => checkFSRS5Parameters,
+    clipFSRS5Parameters: () => clipFSRS5Parameters,
+    forgettingCurve: () => forgetting_curve5,
+    fsrs5ConfigSchema: () => fsrs5ConfigSchema,
+    migrateFSRS5Parameters: () => migrateFSRS5Parameters
+  });
+  function forgetting_curve5(elapsed_days, stability) {
+    return roundTo(Math.pow(1 + FSRS5_FACTOR * elapsed_days / stability, -FSRS5_DECAY), 8);
+  }
+  var FSRS5Algorithm, clipFSRS5Parameters, checkFSRS5Parameters, migrateFSRS5Parameters, fsrs5ConfigSchema, createFSRS5Model, FSRS5Model;
+  var init_fsrs_5 = __esm({
+    "node_modules/ts-fsrs/dist/models/fsrs-5.mjs"() {
+      init_schema_utils_DX7uVwiJ();
+      init_schema_D7q2J7dh();
+      init_error();
+      init_constants_YU7EeO_L();
+      init_esm();
+      FSRS5Algorithm = class {
+        weights;
+        enableShortTerm;
+        bounds;
+        constructor(weights, enableShortTerm, bounds) {
+          this.weights = weights;
+          this.enableShortTerm = enableShortTerm;
+          this.bounds = bounds;
+          if (!Array.isArray(weights) || weights.length !== 19) throw new FSRSValidationError(`FSRS5Algorithm requires exactly 19 weights, but received ${weights?.length}`);
+        }
+        init_stability(g) {
+          return clamp(this.weights[g - 1], this.bounds.sMin, this.bounds.sMax);
+        }
+        init_difficulty(g) {
+          const w = this.weights;
+          const d = w[4] - Math.exp((g - 1) * w[5]) + 1;
+          return clamp(roundTo(d, 8), this.bounds.dMin, this.bounds.dMax);
+        }
+        next_interval(s, desired_retention) {
+          if (!Number.isFinite(desired_retention) || desired_retention <= 0 || desired_retention > 1) throw new FSRSValidationError("Requested retention rate should be in the range (0,1]");
+          const intervalModifier = roundTo((Math.pow(desired_retention, 1 / -FSRS5_DECAY) - 1) / FSRS5_FACTOR, 8);
+          return Math.max(Math.round(s * intervalModifier), 1);
+        }
+        /**
+        * @see https://github.com/open-spaced-repetition/fsrs4anki/issues/697
+        */
+        linear_damping(delta_d, old_d) {
+          return roundTo(delta_d * (10 - old_d) / 9, 8);
+        }
+        next_difficulty(d, g) {
+          const delta_d = -this.weights[6] * (g - 3);
+          const next_d = d + this.linear_damping(delta_d, d);
+          return clamp(this.mean_reversion(this.init_difficulty(Rating.Easy), next_d), this.bounds.dMin, this.bounds.dMax);
+        }
+        mean_reversion(init, current) {
+          const w = this.weights;
+          return roundTo(w[7] * init + (1 - w[7]) * current, 8);
+        }
+        next_recall_stability(d, s, r, g) {
+          const w = this.weights;
+          const hard_penalty = Rating.Hard === g ? w[15] : 1;
+          const easy_bound = Rating.Easy === g ? w[16] : 1;
+          return roundTo(clamp(s * (1 + Math.exp(w[8]) * (11 - d) * Math.pow(s, -w[9]) * (Math.exp((1 - r) * w[10]) - 1) * hard_penalty * easy_bound), this.bounds.sMin, this.bounds.sMax), 8);
+        }
+        next_forget_stability(d, s, r) {
+          const w = this.weights;
+          return roundTo(clamp(w[11] * Math.pow(d, -w[12]) * (Math.pow(s + 1, w[13]) - 1) * Math.exp((1 - r) * w[14]), this.bounds.sMin, this.bounds.sMax), 8);
+        }
+        next_short_term_stability(s, g) {
+          const w = this.weights;
+          return roundTo(clamp(s * Math.exp(w[17] * (g - 3 + w[18])), this.bounds.sMin, this.bounds.sMax), 8);
+        }
+        forgetting_curve = forgetting_curve5;
+        next_state(memory_state, t, g, r) {
+          const { difficulty: d, stability: s } = memory_state ?? {
+            difficulty: 0,
+            stability: 0
+          };
+          if (t < 0) throw new FSRSValidationError(`Invalid delta_t "${t}"`);
+          if (g < 0 || g > 4) throw new FSRSValidationError(`Invalid grade "${g}"`);
+          if (g === Rating.Manual) return {
+            difficulty: d,
+            stability: s
+          };
+          const grade = g;
+          if (d === 0 && s === 0) return {
+            difficulty: this.init_difficulty(grade),
+            stability: this.init_stability(grade)
+          };
+          if (d < this.bounds.dMin || s < this.bounds.sMin) throw new FSRSValidationError(`Invalid memory state { difficulty: ${d}, stability: ${s} }`);
+          r = typeof r === "number" ? r : this.forgetting_curve(t, s);
+          let new_s;
+          if (t === 0 && this.enableShortTerm) new_s = this.next_short_term_stability(s, grade);
+          else if (g === Rating.Again) {
+            const s_after_fail = this.next_forget_stability(d, s, r);
+            let [w_17, w_18] = [0, 0];
+            if (this.enableShortTerm) {
+              w_17 = this.weights[17];
+              w_18 = this.weights[18];
+            }
+            const next_s_min = s / Math.exp(w_17 * w_18);
+            new_s = clamp(roundTo(next_s_min, 8), this.bounds.sMin, s_after_fail);
+          } else new_s = this.next_recall_stability(d, s, r, grade);
+          return {
+            difficulty: this.next_difficulty(d, grade),
+            stability: new_s
+          };
+        }
+      };
+      clipFSRS5Parameters = (parameters) => {
+        return FSRS5ParameterBounds().slice(0, parameters.length).map(([min, max], index) => clamp(parameters[index] || 0, min, max));
+      };
+      checkFSRS5Parameters = (parameters) => {
+        const clipped = clipFSRS5Parameters(Array.from(parameters));
+        if (!(parameters.length === FSRS5_DEFAULT_WEIGHTS.length && clipped.every((value, index) => value === parameters[index]))) throw new FSRSValidationError("Expected FSRS5 weights within model bounds.");
+        return parameters;
+      };
+      migrateFSRS5Parameters = (parameters) => {
+        if (!Array.isArray(parameters) || parameters.length === 0) return [...FSRS5_DEFAULT_WEIGHTS];
+        if (parameters.length > 19) return parameters.slice(0, 19);
+        switch (parameters.length) {
+          case 19:
+            return Array.from(parameters);
+          case 17: {
+            const weights = Array.from(parameters);
+            weights[4] = roundTo(weights[5] * 2 + weights[4], 8);
+            weights[5] = roundTo(Math.log(weights[5] * 3 + 1) / 3, 8);
+            weights[6] = roundTo(weights[6] + 0.5, 8);
+            return weights.concat([0, 0]);
+          }
+          default:
+            throw new FSRSValidationError(`Invalid parameters length "${parameters.length}", expected 17 or 19.`);
+        }
+      };
+      fsrs5ConfigSchema = defineSchema((value) => {
+        if (isObject2(value) && isNumberArray(value.weights) && typeof value.enableShortTerm === "boolean") return { value: {
+          weights: value.weights,
+          enableShortTerm: value.enableShortTerm
+        } };
+        return { issues: [{ message: "Expected FSRS5 config" }] };
+      });
+      createFSRS5Model = (config) => {
+        const bounds = FSRS5_MODEL_BOUNDS;
+        const algo = new FSRS5Algorithm(config.weights, config.enableShortTerm, FSRS5_MODEL_BOUNDS);
+        const step = ({ memoryState, rating, elapsedDays, retrievability }) => {
+          return algo.next_state(memoryState, elapsedDays, rating, retrievability);
+        };
+        const nextInterval = (memoryState, desiredRetention) => {
+          return algo.next_interval(memoryState.stability, desiredRetention);
+        };
+        const forgettingCurve = (memoryState, elapsedDays) => {
+          return algo.forgetting_curve(elapsedDays, memoryState.stability);
+        };
+        const forward = ({ history, initialState }) => {
+          const states2 = [];
+          let memoryState = initialState || null;
+          for (const review of history) {
+            memoryState = step({
+              memoryState,
+              rating: review.rating,
+              elapsedDays: review.deltaT
+            });
+            states2.push(memoryState);
+          }
+          return states2;
+        };
+        return {
+          config,
+          bounds,
+          algorithm: algo,
+          step,
+          nextInterval,
+          forgettingCurve,
+          forward
+        };
+      };
+      FSRS5Model = defineModel({
+        name: "fsrs-5",
+        schema: {
+          config: fsrs5ConfigSchema,
+          memoryState: FSRSMemoryStateSchema
+        },
+        defaultValue: { memoryState() {
+          return {
+            stability: 0,
+            difficulty: 0
+          };
+        } },
+        create({ config, migrate = true, clip = true, check = true, bypass = false }) {
+          if (bypass) return createFSRS5Model(config);
+          let weights = migrate ? migrateFSRS5Parameters(config.weights) : config.weights;
+          if (clip && Array.isArray(weights)) weights = clipFSRS5Parameters(weights);
+          if (check) checkFSRS5Parameters(weights);
+          const $config = fsrs5ConfigSchema.parse({
+            weights,
+            enableShortTerm: config.enableShortTerm
+          });
+          return createFSRS5Model(Object.freeze($config));
+        }
+      });
+    }
+  });
+
+  // node_modules/ts-fsrs/dist/models/fsrs-6.mjs
+  var fsrs_6_exports = {};
+  __export(fsrs_6_exports, {
+    FSRS6Algorithm: () => FSRS6Algorithm,
+    FSRS6Model: () => FSRS6Model,
+    FSRS6_DECAY: () => FSRS6_DECAY,
+    FSRS6_DEFAULT_WEIGHTS: () => FSRS6_DEFAULT_WEIGHTS,
+    FSRS6_MODEL_BOUNDS: () => FSRS6_MODEL_BOUNDS,
+    FSRS6_W17_W18_CEILING: () => FSRS6_W17_W18_CEILING,
+    checkFSRS6Parameters: () => checkFSRS6Parameters,
+    clipFSRS6Parameters: () => clipFSRS6Parameters,
+    computeDecayFactor: () => computeDecayFactor,
+    decaySchema: () => decaySchema,
+    forgettingCurve: () => forgetting_curve,
+    fsrs6ConfigSchema: () => fsrs6ConfigSchema,
+    migrateFSRS6Parameters: () => migrateFSRS6Parameters
+  });
+  var init_fsrs_6 = __esm({
+    "node_modules/ts-fsrs/dist/models/fsrs-6.mjs"() {
+      init_fsrs_6_Bt0f3F6X();
+    }
+  });
+
+  // node_modules/ts-fsrs/dist/models/fsrs-7.mjs
+  var fsrs_7_exports = {};
+  __export(fsrs_7_exports, {
+    FSRS7Algorithm: () => FSRS7Algorithm,
+    FSRS7MemoryStateSchema: () => FSRS7MemoryStateSchema,
+    FSRS7Model: () => FSRS7Model,
+    FSRS7ParameterBounds: () => FSRS7ParameterBounds,
+    FSRS7_DEFAULT_WEIGHTS: () => FSRS7_DEFAULT_WEIGHTS,
+    FSRS7_MODEL_BOUNDS: () => FSRS7_MODEL_BOUNDS,
+    checkFSRS7Parameters: () => checkFSRS7Parameters,
+    clipFSRS7Parameters: () => clipFSRS7Parameters,
+    curve: () => curve,
+    decaySchema: () => decaySchema2,
+    fsrs7ConfigSchema: () => fsrs7ConfigSchema,
+    migrateFSRS7Parameters: () => migrateFSRS7Parameters
+  });
+  function prepare_fast(w, s) {
+    const decay = -clamp(w[23] * Math.pow(s, w[33] - 0.3), 0.01, 0.95);
+    return {
+      decay,
+      scale: (Math.exp(Math.min(Math.log(w[25]) / decay, 60)) - 1) / s
+    };
+  }
+  function fast_component(t, params) {
+    const days = Math.max(t, 0);
+    const { decay, scale } = params;
+    const base = 1 + scale * days;
+    return {
+      recall: Math.pow(base, decay),
+      derivative: decay * Math.pow(base, decay - 1) * scale
+    };
+  }
+  function prepare_curve(w, state, bounds) {
+    const { sMin: sMin2, sMax, stabilityFastMin, stabilityFastMax, dMin: dMin2, dMax: dMax2 } = bounds;
+    const s = clamp(state.stability, sMin2, sMax);
+    const sFast = clamp(state.stabilityFast, stabilityFastMin, stabilityFastMax);
+    const d = clamp(state.difficulty, dMin2, dMax2);
+    const fast = prepare_fast(w, sFast);
+    const decay = -clamp(w[24], 0.01, 0.95);
+    const scale = (Math.pow(w[26], 1 / decay) - 1) * Math.exp((d - 5) * (w[32] - 0.3)) / s;
+    const weight1 = w[27] * Math.pow(sFast, -w[29]);
+    const weight2 = w[28] * Math.pow(s, w[30]) * Math.exp((d - 5) * (w[31] - 0.5));
+    return {
+      fast,
+      decay,
+      scale,
+      weight1,
+      weight2,
+      total: weight1 + weight2
+    };
+  }
+  function compute_curve(t, params) {
+    const { decay, scale, weight1, weight2, total } = params;
+    const days = Math.max(t, 0);
+    const fast = fast_component(days, params.fast);
+    const base = 1 + scale * days;
+    const slow = Math.pow(base, decay);
+    const derivative = decay * Math.pow(base, decay - 1) * scale;
+    return {
+      retrievability: (weight1 * fast.recall + weight2 * slow) / total * 0.99998 + 1e-5,
+      derivative: (weight1 * fast.derivative + weight2 * derivative) / total * 0.99998,
+      fast: fast.recall,
+      slow,
+      fastWeight: weight1,
+      slowWeight: weight2,
+      total
+    };
+  }
+  function curve(weights, elapsedDays, state) {
+    return compute_curve(elapsedDays, prepare_curve(weights, state, FSRS7_MODEL_BOUNDS));
+  }
+  function clipFSRS7Parameters(parameters) {
+    const clipped = Array.from(parameters);
+    if (clipped.length < FSRS7_DEFAULT_WEIGHTS.length) return clipped;
+    for (const [index, [min, max]] of FSRS7ParameterBounds().entries()) {
+      const low = index > 0 && index < 4 ? Math.max(min, clipped[index - 1]) : index === 26 ? Math.max(min, clipped[25]) : min;
+      clipped[index] = clamp(Number.isFinite(clipped[index]) ? clipped[index] : low, low, max);
+    }
+    return clipped;
+  }
+  function checkFSRS7Parameters(parameters) {
+    if (parameters.length !== FSRS7_DEFAULT_WEIGHTS.length || !clipFSRS7Parameters(parameters).every((value, index) => value === parameters[index])) throw new FSRSValidationError("Expected FSRS7 weights within model bounds.");
+    return parameters;
+  }
+  function migrateFSRS7Parameters(parameters) {
+    if (!parameters || parameters.length === 0) return [...FSRS7_DEFAULT_WEIGHTS];
+    if (parameters.length !== FSRS7_DEFAULT_WEIGHTS.length) throw new FSRSValidationError(`Invalid parameters length "${parameters.length}", expected 34. FSRS-7 requires its own weights; replay review history to migrate memory states.`);
+    return Array.from(parameters);
+  }
+  function createFSRS7Model(config) {
+    const bounds = FSRS7_MODEL_BOUNDS;
+    const algorithm = new FSRS7Algorithm(config.weights, bounds);
+    return {
+      config,
+      bounds,
+      algorithm,
+      step: ({ memoryState, elapsedDays, rating, retrievability }) => algorithm.next_state(memoryState, elapsedDays, rating, retrievability),
+      nextInterval: (state, desiredRetention) => algorithm.next_interval(state, desiredRetention),
+      forgettingCurve: (state, elapsedDays) => algorithm.curve(elapsedDays, state).retrievability,
+      forward({ history, initialState }) {
+        const states2 = [];
+        let state = initialState ?? null;
+        for (const { rating, deltaT } of history) {
+          state = algorithm.next_state(state, deltaT, rating);
+          states2.push(state);
+        }
+        return states2;
+      }
+    };
+  }
+  var FSRS7_MODEL_BOUNDS, sMin, dMin, dMax, FSRS7ParameterBounds, FSRS7_DEFAULT_WEIGHTS, MIN_T, LOG_MIN_T, DR_MIN, DR_MAX, FSRS7Algorithm, decaySchema2, fsrs7ConfigSchema, FSRS7MemoryStateSchema, FSRS7Model;
+  var init_fsrs_7 = __esm({
+    "node_modules/ts-fsrs/dist/models/fsrs-7.mjs"() {
+      init_schema_utils_DX7uVwiJ();
+      init_error();
+      init_esm();
+      FSRS7_MODEL_BOUNDS = Object.freeze({
+        sMin: 1e-4,
+        sMax: 36500,
+        stabilityFastMin: 1e-4,
+        stabilityFastMax: 36500,
+        dMin: 1,
+        dMax: 10
+      });
+      ({ sMin, dMin, dMax } = FSRS7_MODEL_BOUNDS);
+      FSRS7ParameterBounds = () => [
+        [sMin, 100 / 2],
+        [sMin, 100],
+        [sMin, 100],
+        [sMin, 100],
+        [dMin, dMax],
+        [1e-3, 4],
+        [0.1, 4],
+        [0, 4],
+        [0, 1.2],
+        [0.3, 3],
+        [0.01, 1.5],
+        [0.1, 1],
+        [0, 3.5],
+        [0, 1],
+        [1, 7],
+        [0, 4],
+        [0, 2],
+        [0.5, 6],
+        [1e-3, 1.5],
+        [1e-3, 1],
+        [0, 5],
+        [0, 1],
+        [1, 7],
+        [0.01, 0.25],
+        [0.01, 0.95],
+        [0.2, 0.85],
+        [0.5, 0.99],
+        [0.01, 1],
+        [0.1, 1],
+        [0, 0.9],
+        [0.1, 1.1],
+        [0, 1],
+        [0, 0.6],
+        [0, 0.6]
+      ];
+      FSRS7_DEFAULT_WEIGHTS = Object.freeze([
+        0.1104,
+        2.2395,
+        3.9221,
+        11.7841,
+        6.1686,
+        0.6457,
+        3.6807,
+        1.9795,
+        0,
+        1.3826,
+        0.7024,
+        0.5999,
+        0.8146,
+        0.6398,
+        1,
+        1.3207,
+        0.6707,
+        3.8668,
+        0.4416,
+        0.0934,
+        1.8631,
+        0.6162,
+        1.0869,
+        0.1567,
+        0.0801,
+        0.2421,
+        0.9464,
+        0.1433,
+        0.7145,
+        0,
+        0.5667,
+        0.3734,
+        0.5333,
+        0.3048
+      ]);
+      MIN_T = 1 / 86400;
+      LOG_MIN_T = Math.log(MIN_T);
+      DR_MIN = 1e-4;
+      DR_MAX = 0.9999;
+      FSRS7Algorithm = class {
+        weights;
+        bounds;
+        logSMax;
+        constructor(weights, bounds) {
+          this.weights = weights;
+          this.bounds = bounds;
+          if (!Array.isArray(weights) || weights.length !== 34 || !weights.every(Number.isFinite)) throw new FSRSValidationError("FSRS7Algorithm requires exactly 34 finite weights");
+          this.logSMax = Math.log(bounds.sMax);
+        }
+        init_stability(grade) {
+          return clamp(this.weights[grade - 1], this.bounds.sMin, this.bounds.sMax);
+        }
+        init_difficulty(grade) {
+          const w = this.weights;
+          return w[4] - Math.exp(w[5] * (grade - 1)) + 1;
+        }
+        /**
+        * Retrievability and its elapsed-day derivative, plus the raw trace recalls
+        * and the unnormalised weights mixing them.
+        */
+        curve(t, state) {
+          return compute_curve(t, prepare_curve(this.weights, state, this.bounds));
+        }
+        /** Raw fractional days for retention in (0,1); rates >= 0.9999 yield zero. */
+        next_interval(state, desiredRetention) {
+          const { sMin: sMin2, sMax, stabilityFastMin, stabilityFastMax } = this.bounds;
+          if (!Number.isFinite(desiredRetention) || desiredRetention <= 0 || desiredRetention >= 1) throw new FSRSValidationError("Desired retention rate should be in the range (0,1)");
+          const target = clamp(desiredRetention, DR_MIN, DR_MAX);
+          if (target >= 0.9999) return 0;
+          const s = clamp(state.stability, sMin2, sMax);
+          const sFast = clamp(state.stabilityFast, stabilityFastMin, stabilityFastMax);
+          const maxStability = Math.max(s, sFast);
+          const params = prepare_curve(this.weights, state, this.bounds);
+          let logT = Math.log(maxStability);
+          for (let i = 0; i < 7; i++) {
+            logT = clamp(logT, LOG_MIN_T, this.logSMax);
+            const t = clamp(Math.exp(logT), MIN_T, sMax);
+            const { retrievability, derivative } = compute_curve(t, params);
+            logT -= clamp((retrievability - target) / Math.min(derivative * t, -1e-12), -4, 4);
+            if (!Number.isFinite(logT)) break;
+          }
+          const interval = clamp(Math.exp(logT), 0, sMax);
+          if (Math.abs(compute_curve(interval, params).retrievability - target) <= 1e-3) return interval;
+          let low = 0;
+          let high = Math.min(Math.max(maxStability, 1), sMax);
+          while (compute_curve(high, params).retrievability > target && high < sMax) high = Math.min(high * 2, sMax);
+          for (let i = 0; i < 50; i++) {
+            const mid = (low + high) / 2;
+            if (compute_curve(mid, params).retrievability > target) low = mid;
+            else high = mid;
+          }
+          return (low + high) / 2;
+        }
+        next_stability(s, d, r, grade, start) {
+          const w = this.weights;
+          const fail = w[start + 3] * (Math.pow(s + 1, w[start + 4]) - 1) * Math.exp((1 - r) * w[start + 5]);
+          const pls = Math.min(s, fail);
+          if (grade === Rating.Again) return pls;
+          const hardPenalty = grade === Rating.Hard ? w[start + 6] : 1;
+          const easyBonus = grade === Rating.Easy ? w[start + 7] : 1;
+          const increase = Math.exp(w[start] - 1.5) * (11 - d) * Math.pow(s, -w[start + 1]) * (Math.exp((1 - r) * w[start + 2]) - 1) * hardPenalty * easyBonus + 1;
+          return Math.max(pls, s * increase);
+        }
+        next_state(memoryState, elapsedDays, rating, retrievability) {
+          const { sMin: sMin2, sMax, stabilityFastMin, stabilityFastMax, dMin: dMin2, dMax: dMax2 } = this.bounds;
+          if (!Number.isSafeInteger(rating) || rating < Rating.Manual || rating > Rating.Easy) throw new FSRSValidationError(`Invalid grade "${rating}"`);
+          const state = memoryState === null ? {
+            stability: 0,
+            stabilityFast: 0,
+            difficulty: 0
+          } : memoryState;
+          if (rating === Rating.Manual) return {
+            stability: state.stability,
+            stabilityFast: state.stabilityFast,
+            difficulty: state.difficulty
+          };
+          const grade = rating;
+          if (state.stability === 0 && state.stabilityFast === 0 && state.difficulty === 0) {
+            const stability2 = this.init_stability(grade);
+            return {
+              stability: clamp(roundTo(stability2, 8), sMin2, sMax),
+              stabilityFast: clamp(roundTo(stability2 * 0.8, 8), stabilityFastMin, stabilityFastMax),
+              difficulty: clamp(roundTo(this.init_difficulty(grade), 8), dMin2, dMax2)
+            };
+          }
+          if (state.stability <= 0 || state.stabilityFast <= 0) throw new FSRSValidationError("Invalid FSRS7 memory state: both stabilities must be positive");
+          if (retrievability !== void 0 && (!Number.isFinite(retrievability) || retrievability <= 0 || retrievability >= 1)) throw new FSRSValidationError("Retrievability should be in the range (0,1)");
+          const s = clamp(state.stability, sMin2, sMax);
+          const sFast = clamp(state.stabilityFast, stabilityFastMin, stabilityFastMax);
+          const d = clamp(state.difficulty, dMin2, dMax2);
+          const r = retrievability ?? compute_curve(elapsedDays, prepare_curve(this.weights, state, this.bounds)).retrievability;
+          const stability = this.next_stability(s, d, r, grade, 7);
+          let stabilityFast = this.next_stability(sFast, d, fast_component(elapsedDays, prepare_fast(this.weights, sFast)).recall, grade, 15);
+          if (grade === Rating.Again) stabilityFast = Math.min(stabilityFast, stability * 0.8);
+          let deltaD = -this.weights[6] * (grade - 3);
+          if (grade === Rating.Again) deltaD *= r + 0.1;
+          const difficulty = 0.01 * this.init_difficulty(Rating.Easy) + 0.99 * (d + (10 - d) * deltaD / 9);
+          return {
+            stability: clamp(roundTo(stability, 8), sMin2, sMax),
+            stabilityFast: clamp(roundTo(stabilityFast, 8), stabilityFastMin, stabilityFastMax),
+            difficulty: clamp(roundTo(difficulty, 8), dMin2, dMax2)
+          };
+        }
+      };
+      decaySchema2 = defineSchema((value) => {
+        if (isFiniteNumber(value) && value >= 0.01 && value <= 0.95) return { value };
+        return { issues: [{ message: "Expected finite decay in the range [0.01, 0.95]" }] };
+      });
+      fsrs7ConfigSchema = defineSchema((value) => {
+        if (isObject2(value) && isNumberArray(value.weights) && value.weights.length === FSRS7_DEFAULT_WEIGHTS.length) return { value: { weights: value.weights } };
+        return { issues: [{ message: `Expected FSRS7 config with exactly ${FSRS7_DEFAULT_WEIGHTS.length} finite weights` }] };
+      });
+      FSRS7MemoryStateSchema = defineSchema((value) => {
+        if (isObject2(value) && isFiniteNumber(value.stability) && isFiniteNumber(value.stabilityFast) && isFiniteNumber(value.difficulty)) return { value: {
+          stability: value.stability,
+          stabilityFast: value.stabilityFast,
+          difficulty: value.difficulty
+        } };
+        return { issues: [{ message: "Expected FSRS7 memory state with finite stability, stabilityFast and difficulty" }] };
+      });
+      FSRS7Model = defineModel({
+        name: "fsrs-7",
+        schema: {
+          config: fsrs7ConfigSchema,
+          memoryState: FSRS7MemoryStateSchema
+        },
+        defaultValue: { memoryState() {
+          return {
+            stability: 0,
+            stabilityFast: 0,
+            difficulty: 0
+          };
+        } },
+        create({ config, migrate = true, clip = true, check = true, bypass = false }) {
+          if (bypass) return createFSRS7Model(config);
+          let weights = migrate ? migrateFSRS7Parameters(config.weights) : config.weights;
+          if (clip && Array.isArray(weights)) weights = clipFSRS7Parameters(weights);
+          if (check) checkFSRS7Parameters(weights);
+          return createFSRS7Model(Object.freeze(fsrs7ConfigSchema.parse({ weights })));
+        }
+      });
+    }
+  });
+
   // src/domain/validate.ts
   var QUESTION_KINDS = [
     "single-choice",
@@ -1110,6 +3649,1110 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     return expected === null ? 1 : expected + 1;
   }
 
+  // node_modules/ts-fsrs/dist/index.mjs
+  init_error();
+
+  // node_modules/ts-fsrs/dist/middlewares-DSIyRr_E.mjs
+  init_schema_utils_DX7uVwiJ();
+  init_schema_D7q2J7dh();
+  init_error();
+  init_esm();
+  var FUZZ_RANGES = Object.freeze([
+    {
+      start: 2.5,
+      end: 7,
+      factor: 0.15
+    },
+    {
+      start: 7,
+      end: 20,
+      factor: 0.1
+    },
+    {
+      start: 20,
+      end: Number.POSITIVE_INFINITY,
+      factor: 0.05
+    }
+  ]);
+  function getFuzzRange(interval, elapsedDays, maximumInterval, fuzzRanges = FUZZ_RANGES) {
+    let delta = 1;
+    for (const range of fuzzRanges) delta += range.factor * Math.max(Math.min(interval, range.end) - range.start, 0);
+    const cappedInterval = Math.min(interval, maximumInterval);
+    let minInterval = Math.max(2, Math.round(cappedInterval - delta));
+    const maxInterval = Math.min(Math.round(cappedInterval + delta), maximumInterval);
+    if (cappedInterval > elapsedDays) minInterval = Math.max(minInterval, elapsedDays + 1);
+    minInterval = Math.min(minInterval, maxInterval);
+    return {
+      minInterval,
+      maxInterval
+    };
+  }
+  function fnv1a32(str) {
+    let hash3 = 2166136261;
+    for (let index = 0; index < str.length; index += 1) {
+      hash3 ^= str.charCodeAt(index);
+      hash3 = Math.imul(hash3, 16777619);
+    }
+    return hash3 >>> 0;
+  }
+  function mulberry32(seed) {
+    let a = seed >>> 0;
+    return () => {
+      let t = a += 1831565813;
+      t = Math.imul(t ^ t >>> 15, t | 1);
+      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  var fnv1aMulberry32Rng = (seed) => mulberry32(fnv1a32(seed));
+  var DECIMAL_PATTERN = /^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/;
+  var ConvertStepUnitToMinutes = (step) => {
+    if (typeof step !== "string" || step.length < 2) throw new FSRSValidationError(`Invalid step value: ${step}`);
+    const unit = step.slice(-1);
+    const numericPart = step.slice(0, -1);
+    if (!DECIMAL_PATTERN.test(numericPart)) throw new FSRSValidationError(`Invalid step value: ${step}`);
+    const value = Number(numericPart);
+    if (!Number.isFinite(value)) throw new FSRSValidationError(`Invalid step value: ${step}`);
+    let minutes2;
+    switch (unit) {
+      case "m":
+        minutes2 = value;
+        break;
+      case "h":
+        minutes2 = value * 60;
+        break;
+      case "d":
+        minutes2 = value * 1440;
+        break;
+      default:
+        throw new FSRSValidationError(`Invalid step unit: ${step}, expected m/h/d`);
+    }
+    if (!Number.isFinite(minutes2) || !Number.isFinite(minutes2 * 60)) throw new FSRSValidationError(`Invalid step value: ${step}`);
+    return minutes2;
+  };
+  var calculateLearningSteps = (config, state, learningStep) => {
+    const steps = state === State.Relearning || state === State.Review ? config.relearningSteps : config.learningSteps;
+    const stepsLength = steps.length;
+    if (stepsLength === 0 || learningStep >= stepsLength) return {};
+    const learningStepUnit = steps[Math.max(0, learningStep)];
+    if (state === State.Review) return { [Rating.Again]: {
+      scheduledMinutes: ConvertStepUnitToMinutes(learningStepUnit),
+      nextStep: 0
+    } };
+    const firstMinutes = ConvertStepUnitToMinutes(steps[0]);
+    const secondMinutes = stepsLength > 1 ? ConvertStepUnitToMinutes(steps[1]) : void 0;
+    const hardMinutes = secondMinutes === void 0 ? firstMinutes * 1.5 : (firstMinutes + secondMinutes) / 2;
+    const result = {
+      [Rating.Again]: {
+        scheduledMinutes: firstMinutes,
+        nextStep: 0
+      },
+      [Rating.Hard]: {
+        scheduledMinutes: hardMinutes,
+        nextStep: learningStep
+      }
+    };
+    const nextStepUnit = steps[learningStep + 1];
+    if (nextStepUnit) {
+      const nextMinutes = learningStep === 0 && secondMinutes !== void 0 ? secondMinutes : ConvertStepUnitToMinutes(nextStepUnit);
+      if (nextMinutes > 0) result[Rating.Good] = {
+        scheduledMinutes: nextMinutes,
+        nextStep: learningStep + 1
+      };
+    }
+    return result;
+  };
+  var defaultLearningSteps = Object.freeze(["1m", "10m"]);
+  var defaultRelearningSteps = Object.freeze(["10m"]);
+  function isStepUnit(value) {
+    if (typeof value !== "string") return false;
+    try {
+      const minutes2 = ConvertStepUnitToMinutes(value);
+      return Number.isFinite(minutes2 * 9e4);
+    } catch {
+      return false;
+    }
+  }
+  function isStepList(value) {
+    if (!Array.isArray(value) || Object.getOwnPropertyNames(value).length - 1 < value.length) return false;
+    for (let index = 0; index < value.length; index++) if (!Object.hasOwn(value, index) || !isStepUnit(value[index])) return false;
+    return true;
+  }
+  var learningStepsConfigSchema = defineSchema((value) => {
+    if (!isObject2(value)) return { issues: [{ message: "Expected learning steps config object" }] };
+    const { enableShortTerm, learningSteps, relearningSteps } = value;
+    if (typeof enableShortTerm !== "boolean") return { issues: [{ message: "Expected enableShortTerm boolean" }] };
+    if (!isStepList(learningSteps)) return { issues: [{ message: "Expected valid learningSteps array" }] };
+    if (!isStepList(relearningSteps)) return { issues: [{ message: "Expected valid relearningSteps array" }] };
+    const { graduatingInterval = 1, allowModelOverride = false } = value;
+    if (!isFiniteNumber(graduatingInterval) || graduatingInterval <= 0) return { issues: [{ message: "Expected positive graduatingInterval days" }] };
+    if (typeof allowModelOverride !== "boolean") return { issues: [{ message: "Expected allowModelOverride boolean" }] };
+    return { value: {
+      enableShortTerm,
+      learningSteps,
+      relearningSteps,
+      graduatingInterval,
+      allowModelOverride
+    } };
+  });
+  var learningStepFieldsSchema = defineSchema((value) => {
+    if (!isObject2(value)) return { issues: [{ message: "Expected learning step fields object" }] };
+    const { learningStep } = value;
+    if (learningStep === void 0) return { value: { learningStep: 0 } };
+    if (typeof learningStep !== "number" || !Number.isSafeInteger(learningStep) || learningStep < 0) return { issues: [{ message: "Expected non-negative integer learningStep" }] };
+    return { value: { learningStep } };
+  });
+  var SECONDS_PER_DAY = 86400;
+  var toSeconds = (days) => Math.round(days * SECONDS_PER_DAY);
+  function calculateScheduleDay(candidates, maximumInterval) {
+    let scheduledDay;
+    let subDay = candidates[0];
+    for (let index = 0; index < candidates.length; index++) {
+      const interval = candidates[index];
+      if (interval >= 1) scheduledDay = Math.min(scheduledDay === void 0 ? interval : Math.max(interval, scheduledDay + 1), maximumInterval);
+      else if (scheduledDay === void 0 && index > 0) {
+        const raised = Math.max(interval, subDay);
+        subDay = subDay > 0 && toSeconds(interval) >= toSeconds(candidates[index - 1]) && toSeconds(raised) === toSeconds(subDay) ? subDay + 1 / SECONDS_PER_DAY : raised;
+      }
+    }
+    return scheduledDay ?? subDay;
+  }
+  var COST_ADR_DEFAULT_POLICY = Object.freeze({
+    coefficients: Object.freeze([
+      -0.202,
+      9.14,
+      -0.0978,
+      0.226,
+      -5.31,
+      -7.44,
+      24.1,
+      -0.375,
+      1.81,
+      -22.9,
+      -5.82,
+      22.3,
+      1.72,
+      -1.99,
+      -19.4
+    ]),
+    costWeightMin: 0,
+    costWeightMax: 1024,
+    retentionMin: 0.3,
+    retentionMax: 0.995,
+    bounds: Object.freeze({
+      sMin: 1e-4,
+      sMax: 36500,
+      dMin: 1,
+      dMax: 10
+    })
+  });
+  function evaluateCostAdrRetention(policy, memoryState, costWeight) {
+    const { bounds, coefficients } = policy;
+    const stability = clamp(memoryState.stability, bounds.sMin, bounds.sMax);
+    const difficulty = clamp(memoryState.difficulty, bounds.dMin, bounds.dMax);
+    const logMin = Math.log(bounds.sMin);
+    const xs = clamp((Math.log(stability) - logMin) / (Math.log(bounds.sMax) - logMin), 0, 1);
+    const xd = clamp((difficulty - bounds.dMin) / (bounds.dMax - bounds.dMin), 0, 1);
+    const weight = clamp(costWeight, policy.costWeightMin, policy.costWeightMax);
+    const logWeightMin = Math.log1p(policy.costWeightMin);
+    const z = clamp((Math.log1p(weight) - logWeightMin) / (Math.log1p(policy.costWeightMax) - logWeightMin), 0, 1);
+    const features = [
+      1,
+      xs,
+      xd,
+      xs * xd,
+      xs * xs
+    ];
+    const dot = (offset) => features.reduce((sum, feature, index) => sum + coefficients[offset + index] * feature, 0);
+    const value = dot(0) - softplus(dot(5)) * z - softplus(dot(10)) * z * z;
+    const exp = Math.exp(-Math.abs(value));
+    const sigmoid = value >= 0 ? 1 / (1 + exp) : exp / (1 + exp);
+    return clamp(policy.retentionMin + (policy.retentionMax - policy.retentionMin) * sigmoid, policy.retentionMin, policy.retentionMax);
+  }
+  function softplus(value) {
+    if (value > 20) return value;
+    if (value < -20) return Math.exp(value);
+    return Math.log1p(Math.exp(value));
+  }
+  var costAdrPolicySchema = defineSchema((value) => {
+    if (!isObject2(value) || !isNumberArray(value.coefficients) || value.coefficients.length !== 15 || value.coefficients.some((coefficient) => coefficient < -64 || coefficient > 64) || !isFiniteNumber(value.costWeightMin) || !isFiniteNumber(value.costWeightMax) || value.costWeightMin < 0 || value.costWeightMax <= value.costWeightMin || Math.log1p(value.costWeightMax) <= Math.log1p(value.costWeightMin) || !isFiniteNumber(value.retentionMin) || !isFiniteNumber(value.retentionMax) || value.retentionMin <= 0 || value.retentionMax <= value.retentionMin || value.retentionMax >= 1) return { issues: [{ message: "Expected valid Cost ADR policy" }] };
+    const { bounds } = value;
+    if (!isObject2(bounds) || !isFiniteNumber(bounds.sMin) || !isFiniteNumber(bounds.sMax) || !isFiniteNumber(bounds.dMin) || !isFiniteNumber(bounds.dMax) || bounds.sMin <= 0 || bounds.sMax <= bounds.sMin || Math.log(bounds.sMax) <= Math.log(bounds.sMin) || bounds.dMax <= bounds.dMin || !Number.isFinite(bounds.dMax - bounds.dMin)) return { issues: [{ message: "Expected valid Cost ADR bounds" }] };
+    return { value: {
+      coefficients: Array.from(value.coefficients),
+      costWeightMin: value.costWeightMin,
+      costWeightMax: value.costWeightMax,
+      retentionMin: value.retentionMin,
+      retentionMax: value.retentionMax,
+      bounds: {
+        sMin: bounds.sMin,
+        sMax: bounds.sMax,
+        dMin: bounds.dMin,
+        dMax: bounds.dMax
+      }
+    } };
+  });
+  var costAdrConfigSchema = defineSchema((value) => {
+    if (!isObject2(value) || !isFiniteNumber(value.goalCostWeight) || value.goalCostWeight < 0 || value.goalCostWeight > 1024) return { issues: [{ message: "Expected finite goalCostWeight in [0, 1024]" }] };
+    const policy = costAdrPolicySchema["~standard"].validate(value.costAdrPolicy);
+    if (policy.issues) return policy;
+    return { value: {
+      costAdrPolicy: policy.value,
+      goalCostWeight: value.goalCostWeight
+    } };
+  });
+  var costAdrRetentionsSymbol = Symbol("ts-fsrs.cost-adr.retentions");
+  var schedulerCostAdrMiddleware = defineMiddleware({
+    name: Symbol("ts-fsrs.cost-adr"),
+    schema: { config: costAdrConfigSchema },
+    handlers: { nextInterval(ctx, next) {
+      const { costAdrPolicy, goalCostWeight } = ctx.config;
+      const candidate = ctx.candidate;
+      candidate[costAdrRetentionsSymbol] ??= {
+        retentions: candidate.desiredRetention,
+        lastGrade: 0
+      };
+      const cached = candidate[costAdrRetentionsSymbol];
+      for (const grade of grades) {
+        if (grade > ctx.input.grade) break;
+        if (grade <= cached.lastGrade) continue;
+        cached.retentions[grade] = evaluateCostAdrRetention(costAdrPolicy, parse(FSRSMemoryStateSchema, candidate.step(grade)), goalCostWeight);
+        cached.lastGrade = grade;
+      }
+      next();
+    } }
+  });
+  var desiredRetentionConfigSchema = defineSchema((value) => {
+    if (!isObject2(value)) return { issues: [{ message: "Expected desiredRetention in (0, 1)" }] };
+    const retention = value.desiredRetention;
+    const desiredRetention = {};
+    if (typeof retention === "number") {
+      const result = desiredRetentionSchema.safeParse(retention);
+      if (!result.success) return { issues: [{ message: "Expected desiredRetention in (0, 1)" }] };
+      for (const grade of grades) desiredRetention[grade] = result.data;
+    } else {
+      if (!isObject2(retention)) return { issues: [{ message: "Expected desiredRetention in (0, 1)" }] };
+      for (const grade of grades) {
+        const result = desiredRetentionSchema.safeParse(retention[grade]);
+        if (!result.success) return { issues: [{ message: "Expected desiredRetention in (0, 1)" }] };
+        desiredRetention[grade] = result.data;
+      }
+    }
+    return { value: { desiredRetention } };
+  });
+  var retentionInjectedSymbol = Symbol("ts-fsrs.desired-retention.injected");
+  var schedulerDesiredRetentionMiddleware = defineMiddleware({
+    name: Symbol("ts-fsrs.desired-retention"),
+    schema: { config: desiredRetentionConfigSchema },
+    handlers: { nextInterval(ctx, next) {
+      const candidate = ctx.candidate;
+      if (ctx.input.desiredRetention === void 0 && !candidate[retentionInjectedSymbol]) {
+        for (const grade of grades) candidate.desiredRetention[grade] = ctx.config.desiredRetention[grade];
+        candidate[retentionInjectedSymbol] = true;
+      }
+      next();
+    } }
+  });
+  function createCardId() {
+    const crypto2 = globalThis.crypto;
+    if (typeof crypto2?.randomUUID === "function") return crypto2.randomUUID();
+    const bytes = /* @__PURE__ */ new Uint8Array(16);
+    if (typeof crypto2?.getRandomValues === "function") crypto2.getRandomValues(bytes);
+    else for (let index = 0; index < bytes.length; index += 1) bytes[index] = Math.floor(Math.random() * 256);
+    bytes[6] = bytes[6] & 15 | 64;
+    bytes[8] = bytes[8] & 63 | 128;
+    const hex = Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join("");
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+  }
+  function parseCardId(value) {
+    if (typeof value === "string" && value.length > 0) return value;
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+  }
+  var fuzzingConfigSchema = defineSchema((value) => {
+    if (!isObject2(value)) return { issues: [{ message: "Expected fuzzing config object" }] };
+    const { enableFuzz, maximumInterval } = value;
+    if (typeof enableFuzz !== "boolean") return { issues: [{ message: "Expected enableFuzz boolean" }] };
+    if (typeof maximumInterval !== "number" || !Number.isSafeInteger(maximumInterval) || maximumInterval <= 0) return { issues: [{ message: "Expected positive integer maximumInterval" }] };
+    const fractional = fractionalDaysConfigSchema["~standard"].validate(value);
+    if (fractional.issues) return fractional;
+    return { value: {
+      enableFuzz,
+      maximumInterval,
+      fractionalDays: fractional.value.fractionalDays
+    } };
+  });
+  var fuzzingCardInitInputSchema = defineSchema((value) => {
+    if (!isObject2(value)) return { issues: [{ message: "Expected fuzzing card init input object" }] };
+    if (value.cardId === void 0) return { value: {} };
+    const cardId = parseCardId(value.cardId);
+    return cardId === void 0 ? { issues: [{ message: "Expected new card cardId" }] } : { value: { cardId } };
+  });
+  var fuzzingCardFieldsSchema = defineSchema((value) => {
+    if (!isObject2(value)) return { issues: [{ message: "Expected card cardId" }] };
+    const cardId = parseCardId(value.cardId);
+    if (cardId === void 0) return { issues: [{ message: "Expected card cardId" }] };
+    const { reps } = value;
+    if (typeof reps !== "number" || !Number.isSafeInteger(reps) || reps < 0) return { issues: [{ message: "Expected non-negative integer reps" }] };
+    return { value: {
+      cardId,
+      reps
+    } };
+  });
+  var fuzzingRevlogFieldsSchema = defineSchema((value) => {
+    if (!isObject2(value)) return { issues: [{ message: "Expected revlog cardId" }] };
+    const cardId = parseCardId(value.cardId);
+    return cardId === void 0 ? { issues: [{ message: "Expected revlog cardId" }] } : { value: { cardId } };
+  });
+  var fuzzingDecoratorSymbol = Symbol("ts-fsrs.fuzzing.decorator");
+  function createSchedulerFuzzingMiddleware(options = {}) {
+    const { fuzzingRange = FUZZ_RANGES, rng = fnv1aMulberry32Rng } = options;
+    function decorateInterval(ctx, reps) {
+      if (!ctx.config.enableFuzz) return;
+      const card = ctx.input.card;
+      const candidate = ctx.candidate;
+      if (!candidate[fuzzingDecoratorSymbol]) {
+        const nextInterval = candidate.nextInterval;
+        const seed = `${card.cardId}${reps}`;
+        candidate.nextInterval = (memoryState, desiredRetention) => {
+          const interval = nextInterval(memoryState, desiredRetention);
+          if (interval < 2.5) return ctx.config.fractionalDays ? interval : Math.round(interval);
+          const { minInterval, maxInterval } = getFuzzRange(interval, ctx.elapsedDays, ctx.config.maximumInterval, fuzzingRange);
+          const fuzzFactor = rng(seed)();
+          return Math.floor(fuzzFactor * (maxInterval - minInterval + 1) + minInterval);
+        };
+        candidate[fuzzingDecoratorSymbol] = true;
+      }
+    }
+    return defineMiddleware({
+      name: Symbol("ts-fsrs.fuzzing"),
+      schema: {
+        config: fuzzingConfigSchema,
+        cardInitInput: fuzzingCardInitInputSchema,
+        card: fuzzingCardFieldsSchema,
+        revlog: fuzzingRevlogFieldsSchema
+      },
+      defaultValue: { card(ctx) {
+        if (ctx.operation === "forget") return {
+          cardId: ctx.input.cardId,
+          reps: ctx.config.clearStatsOnForget === false ? ctx.input.reps : 0
+        };
+        return {
+          cardId: ctx.input.cardId ?? createCardId(),
+          reps: 0
+        };
+      } },
+      handlers: {
+        nextInterval(ctx, next) {
+          decorateInterval(ctx, ctx.input.card.reps + 1);
+          if (ctx.config.enableFuzz) ctx.scheduledDays = void 0;
+          next();
+        },
+        review(ctx, next) {
+          const card = ctx.input.card;
+          if (!ctx.config.enableFuzz) {
+            next();
+            ctx.result.card.cardId = card.cardId;
+            ctx.result.card.reps ??= card.reps + 1;
+            ctx.result.revlog.cardId = card.cardId;
+            return;
+          }
+          const reps = ctx.result.card.reps ?? card.reps + 1;
+          decorateInterval(ctx, reps);
+          next();
+          ctx.result.card.cardId = card.cardId;
+          ctx.result.card.reps ??= reps;
+          ctx.result.revlog.cardId = card.cardId;
+        },
+        rollback(ctx, next) {
+          next();
+          ctx.result.card.cardId = ctx.input.revlog.cardId;
+          ctx.result.card.reps ??= Math.max(0, ctx.input.card.reps - 1);
+        }
+      }
+    });
+  }
+  var schedulerFuzzingMiddleware = createSchedulerFuzzingMiddleware();
+  var MINUTES_PER_DAY = 1440;
+  var SECONDS_PER_MINUTE = 60;
+  var resolvedStepsSymbol = Symbol("ts-fsrs.learning-steps.resolved");
+  var schedulerLearningStepsMiddleware = defineMiddleware({
+    name: Symbol("ts-fsrs.learning-steps"),
+    schema: {
+      config: learningStepsConfigSchema,
+      card: learningStepFieldsSchema,
+      revlog: learningStepFieldsSchema
+    },
+    defaultValue: { card() {
+      return { learningStep: 0 };
+    } },
+    handlers: {
+      nextInterval: scheduleLearningSteps,
+      review(ctx, next) {
+        const resolved = ctx.config.enableShortTerm ? resolveLearningSteps(ctx) : void 0;
+        next();
+        const { card, grade } = ctx.input;
+        const { graduatingInterval } = ctx.config;
+        const scheduledDays = ctx.scheduledDays;
+        const step = resolved?.stepIntervals[grade] !== void 0 ? resolved.steps[grade] : void 0;
+        ctx.result.revlog.learningStep = card.learningStep;
+        ctx.result.card.learningStep = 0;
+        if (grade === Rating.Again && resolved?.overridesStep[grade] === true || scheduledDays !== void 0 && scheduledDays < graduatingInterval) {
+          ctx.result.card.state = nextLearningState(card.state);
+          ctx.result.card.scheduleStatus = "learning";
+          if (step) ctx.result.card.learningStep = Math.max(0, step.nextStep);
+        }
+      },
+      rollback(ctx, next) {
+        next();
+        ctx.result.card.learningStep = ctx.input.revlog.learningStep;
+      }
+    }
+  });
+  function scheduleLearningSteps(ctx, next) {
+    if (!ctx.config.enableShortTerm) {
+      next();
+      return;
+    }
+    const resolved = resolveLearningSteps(ctx);
+    next();
+    const { grade } = ctx.input;
+    const stepInterval = resolved.stepIntervals[grade];
+    if (stepInterval !== void 0 && !resolved.overridesStep[grade]) ctx.scheduledDays = stepInterval;
+    return resolved;
+  }
+  function resolveLearningSteps(ctx) {
+    const candidate = ctx.candidate;
+    const cached = candidate[resolvedStepsSymbol];
+    if (cached) return cached;
+    const { card } = ctx.input;
+    const { config } = ctx;
+    const stepList = card.state === State.Relearning || card.state === State.Review ? config.relearningSteps : config.learningSteps;
+    const steps = calculateLearningSteps(config, card.state, card.learningStep);
+    const stepIntervals = {};
+    for (const grade of grades) {
+      const step = steps[grade];
+      if (!step) continue;
+      const minutes2 = Math.round(Math.max(0, step.scheduledMinutes) * SECONDS_PER_MINUTE) / SECONDS_PER_MINUTE;
+      if (minutes2 > 0) stepIntervals[grade] = minutes2 / MINUTES_PER_DAY;
+    }
+    const resolved = {
+      steps,
+      hasSteps: stepList.length > 0,
+      stepIntervals,
+      overridesStep: {}
+    };
+    candidate[resolvedStepsSymbol] = resolved;
+    const nextInterval = candidate.nextInterval;
+    candidate.nextInterval = (memoryState, desiredRetention) => {
+      const grade = candidate.findGrade(memoryState);
+      if (grade === void 0) return nextInterval(memoryState, desiredRetention);
+      const interval = getLearningStepInterval(resolved, grade, config, () => nextInterval(memoryState, desiredRetention));
+      const stepInterval = resolved.stepIntervals[grade];
+      resolved.overridesStep[grade] = stepInterval !== void 0 && interval !== stepInterval;
+      return interval;
+    };
+    return resolved;
+  }
+  function getLearningStepInterval(resolved, grade, { allowModelOverride, graduatingInterval }, modelInterval) {
+    const stepInterval = resolved.stepIntervals[grade];
+    switch (grade) {
+      case Rating.Again:
+        if (stepInterval === void 0) return modelInterval();
+        return allowModelOverride ? Math.max(stepInterval, Math.min(modelInterval(), graduatingInterval)) : stepInterval;
+      default:
+        if (stepInterval === void 0) return resolved.hasSteps ? Math.max(modelInterval(), graduatingInterval) : modelInterval();
+        return allowModelOverride ? Math.max(stepInterval, modelInterval()) : stepInterval;
+    }
+  }
+  function nextLearningState(state) {
+    if (state === State.New) return State.Learning;
+    if (state === State.Review) return State.Relearning;
+    return state;
+  }
+  var leechConfigSchema = defineSchema((value) => {
+    if (!isObject2(value)) return { issues: [{ message: "Expected leech config object" }] };
+    const leechThreshold = value.leechThreshold === void 0 ? 0 : value.leechThreshold;
+    if (typeof leechThreshold !== "number" || !Number.isSafeInteger(leechThreshold) || leechThreshold < 0) return { issues: [{ message: "Expected non-negative integer leechThreshold" }] };
+    return { value: { leechThreshold } };
+  });
+  var leechCardFieldsSchema = defineSchema((value) => {
+    if (!isObject2(value)) return { issues: [{ message: "Expected leech card fields" }] };
+    const { lapses } = value;
+    if (typeof lapses !== "number" || !Number.isSafeInteger(lapses) || lapses < 0) return { issues: [{ message: "Expected non-negative integer lapses" }] };
+    return { value: { lapses } };
+  });
+  var schedulerLeechMiddleware = defineMiddleware({
+    name: Symbol("ts-fsrs.leech"),
+    scheduleStatus: ["suspended"],
+    schema: {
+      config: leechConfigSchema,
+      card: leechCardFieldsSchema
+    },
+    defaultValue: { card(ctx) {
+      return { lapses: ctx.operation === "forget" && ctx.config.clearStatsOnForget === false ? ctx.input.lapses : 0 };
+    } },
+    handlers: {
+      review(ctx, next) {
+        next();
+        const card = ctx.input.card;
+        const isLapse = card.state === State.Review && ctx.input.grade === Rating.Again;
+        ctx.result.card.lapses ??= isLapse ? card.lapses + 1 : card.lapses;
+        const { lapses } = ctx.result.card;
+        const { leechThreshold } = ctx.config;
+        if (isLapse && leechThreshold > 0 && lapses % leechThreshold === 0) ctx.result.card.scheduleStatus = "suspended";
+      },
+      rollback(ctx, next) {
+        next();
+        const card = ctx.input.card;
+        const revlog = ctx.input.revlog;
+        const isLapse = revlog.rating === Rating.Again && revlog.state === State.Review;
+        ctx.result.card.lapses ??= Math.max(0, card.lapses - (isLapse ? 1 : 0));
+      }
+    }
+  });
+  var DEFAULT_MAXIMUM_INTERVAL = 36500;
+  var monotonicIntervalConfigSchema = defineSchema((value) => {
+    if (!isObject2(value)) return { issues: [{ message: "Expected monotonic interval config" }] };
+    const maximumInterval = value.maximumInterval === void 0 ? DEFAULT_MAXIMUM_INTERVAL : value.maximumInterval;
+    if (typeof maximumInterval !== "number" || !Number.isSafeInteger(maximumInterval) || maximumInterval <= 0) return { issues: [{ message: "Expected positive integer maximumInterval" }] };
+    return { value: { maximumInterval } };
+  });
+  var schedulerMaximumIntervalMiddleware = defineMiddleware({
+    name: Symbol("ts-fsrs.maximum-interval"),
+    schema: { config: monotonicIntervalConfigSchema },
+    handlers: { nextInterval(ctx, next) {
+      next();
+      if (ctx.scheduledDays !== void 0) ctx.scheduledDays = Math.min(ctx.scheduledDays, ctx.config.maximumInterval);
+    } }
+  });
+  var schedulerMonotonicIntervalMiddleware = defineMiddleware({
+    name: Symbol("ts-fsrs.monotonic-interval"),
+    schema: { config: monotonicIntervalConfigSchema },
+    handlers: { nextInterval(ctx, next) {
+      const { grade } = ctx.input;
+      const interval = (rating) => ctx.candidate.nextInterval(ctx.candidate.step(rating), parse(desiredRetentionSchema, ctx.candidate.desiredRetention[rating]));
+      const schedule = (...candidates) => calculateScheduleDay(candidates, ctx.config.maximumInterval);
+      next();
+      const scheduledDays = ctx.scheduledDays;
+      switch (grade) {
+        case Rating.Again:
+          ctx.scheduledDays = schedule(scheduledDays);
+          break;
+        case Rating.Hard:
+          ctx.scheduledDays = schedule(interval(Rating.Again), scheduledDays);
+          break;
+        case Rating.Good:
+          ctx.scheduledDays = schedule(interval(Rating.Again), interval(Rating.Hard), scheduledDays);
+          break;
+        case Rating.Easy:
+          ctx.scheduledDays = schedule(interval(Rating.Again), interval(Rating.Hard), interval(Rating.Good), scheduledDays);
+      }
+    } }
+  });
+  var scheduledDaysFieldsSchema = defineSchema((value) => {
+    if (!isObject2(value)) return { issues: [{ message: "Expected object with scheduledDays" }] };
+    const scheduledDays = scheduledDaysSchema.safeParse(value.scheduledDays);
+    if (!scheduledDays.success) return scheduledDays;
+    return { value: { scheduledDays: scheduledDays.data } };
+  });
+  var schedulerScheduledDaysMiddleware = defineMiddleware({
+    name: Symbol("ts-fsrs.scheduled-days"),
+    schema: {
+      config: fractionalDaysConfigSchema,
+      card: scheduledDaysFieldsSchema,
+      revlog: scheduledDaysFieldsSchema
+    },
+    defaultValue: { card() {
+      return { scheduledDays: 0 };
+    } },
+    handlers: {
+      review(ctx, next) {
+        const previousScheduledDays = ctx.input.card.scheduledDays;
+        next();
+        const days = Math.max(0, ctx.scheduledDays ?? 0);
+        ctx.result.card.scheduledDays = ctx.config.fractionalDays ? days : Math.floor(days);
+        ctx.result.revlog.scheduledDays = previousScheduledDays;
+      },
+      rollback(ctx, next) {
+        next();
+        ctx.result.card.scheduledDays = ctx.input.revlog.scheduledDays;
+      }
+    }
+  });
+
+  // node_modules/ts-fsrs/dist/index.mjs
+  init_fsrs_6_Bt0f3F6X();
+  init_esm();
+
+  // node_modules/@open-spaced-repetition/srs-kit/dist/esm/chrono/date/index.js
+  init_schema_CgTDED3c();
+  init_define_chrono_DVqT65EB();
+  var MS_PER_DAY = 864e5;
+  function isValidDate2(value) {
+    return dateSchema.safeParse(value).success;
+  }
+  function invalidDateFields() {
+    return { issues: [{ message: "Expected valid Date fields" }] };
+  }
+  var dateCardFieldsSchema = defineSchema((value) => {
+    if (!isObject2(value) || !("dueAt" in value)) return invalidDateFields();
+    const { dueAt, lastReviewAt } = value;
+    if (!isValidDate2(dueAt)) return invalidDateFields();
+    if (lastReviewAt !== void 0 && lastReviewAt !== null && !isValidDate2(lastReviewAt)) return invalidDateFields();
+    return { value: {
+      dueAt,
+      lastReviewAt: lastReviewAt !== void 0 ? lastReviewAt : null
+    } };
+  });
+  var dateRevlogFieldsSchema = defineSchema((value) => {
+    if (!isObject2(value) || !("reviewTime" in value)) return invalidDateFields();
+    const card = dateCardFieldsSchema["~standard"].validate(value);
+    if (card.issues) return card;
+    const { reviewTime } = value;
+    if (!isValidDate2(reviewTime)) return invalidDateFields();
+    const revlog = card.value;
+    revlog.reviewTime = reviewTime;
+    return { value: revlog };
+  });
+  var differenceByMode = {
+    elapsed: elapsedUtcDays,
+    calendar: dateDiffInDays
+  };
+  var dateChrono = defineChrono({
+    schema: {
+      config: fractionalDaysConfigSchema,
+      card: dateCardFieldsSchema,
+      revlog: dateRevlogFieldsSchema,
+      time: dateSchema
+    },
+    normalize(value) {
+      if (!isObject2(value)) return { issues: [{ message: "Expected valid Date fields" }] };
+      if ("card" in value) {
+        const card = dateCardFieldsSchema["~standard"].validate(value.card);
+        if (card.issues) return card;
+        const time = dateSchema["~standard"].validate(value.time);
+        if (time.issues) return time;
+        return { value: {
+          previous: card.value.lastReviewAt,
+          current: card.value.dueAt
+        } };
+      }
+      const revlog = dateRevlogFieldsSchema["~standard"].validate(value.revlog);
+      if (revlog.issues) return revlog;
+      return { value: {
+        previous: revlog.value.lastReviewAt,
+        current: revlog.value.dueAt
+      } };
+    },
+    defaultValue: {
+      card({ previous, time }) {
+        return {
+          dueAt: time,
+          lastReviewAt: previous ?? null
+        };
+      },
+      revlog({ time, previous }) {
+        return {
+          dueAt: time,
+          lastReviewAt: previous?.previous ?? null,
+          reviewTime: previous?.current ?? time
+        };
+      }
+    },
+    create({ config }) {
+      const differenceMode = config.fractionalDays ? "elapsed" : "calendar";
+      const difference = differenceByMode[differenceMode];
+      return {
+        now,
+        compare,
+        difference,
+        add
+      };
+    }
+  });
+  var now = () => /* @__PURE__ */ new Date();
+  var compare = (left, right) => {
+    const leftTime = left.getTime();
+    const rightTime = right.getTime();
+    return leftTime < rightTime ? -1 : leftTime > rightTime ? 1 : 0;
+  };
+  var add = (from, days) => new Date(from.getTime() + days * MS_PER_DAY);
+  function elapsedUtcDays(from, to) {
+    return (to.getTime() - from.getTime()) / MS_PER_DAY;
+  }
+  function dateDiffInDays(last, cur) {
+    const utc1 = Date.UTC(last.getUTCFullYear(), last.getUTCMonth(), last.getUTCDate());
+    const utc2 = Date.UTC(cur.getUTCFullYear(), cur.getUTCMonth(), cur.getUTCDate());
+    return Math.floor((utc2 - utc1) / MS_PER_DAY);
+  }
+
+  // node_modules/ts-fsrs/dist/index.mjs
+  var Grades = Object.freeze([
+    Rating.Again,
+    Rating.Hard,
+    Rating.Good,
+    Rating.Easy
+  ]);
+  var version = "6.0.0";
+  var FSRSVersion = `v${version}`;
+  var S_MIN = FSRS6_MODEL_BOUNDS.sMin;
+  var S_MAX = FSRS6_MODEL_BOUNDS.sMax;
+  var defaultSchedulerMiddlewares = [
+    schedulerDesiredRetentionMiddleware,
+    schedulerFuzzingMiddleware,
+    schedulerStatsMiddleware,
+    schedulerScheduledDaysMiddleware,
+    schedulerLearningStepsMiddleware,
+    schedulerMaximumIntervalMiddleware,
+    schedulerMonotonicIntervalMiddleware
+  ];
+  function createRuntimeDefaultSchedulerDefinition(model) {
+    return defineScheduler({
+      model,
+      chrono: dateChrono
+    }).use(...defaultSchedulerMiddlewares);
+  }
+  var schedulerPresetLoaders = {
+    "FSRS-3": async () => {
+      const { FSRS3Model: FSRS3Model2, migrateFSRS3Parameters: migrateFSRS3Parameters2 } = await Promise.resolve().then(() => (init_fsrs_3(), fsrs_3_exports));
+      return {
+        model: FSRS3Model2,
+        migrateParameters: migrateFSRS3Parameters2
+      };
+    },
+    "FSRS-4": async () => {
+      const { FSRS4Model: FSRS4Model2, migrateFSRS4Parameters: migrateFSRS4Parameters2 } = await Promise.resolve().then(() => (init_fsrs_4(), fsrs_4_exports));
+      return {
+        model: FSRS4Model2,
+        migrateParameters: migrateFSRS4Parameters2
+      };
+    },
+    "FSRS-4.5": async () => {
+      const { FSRS4Dot5Model: FSRS4Dot5Model2, migrateFSRS4Dot5Parameters: migrateFSRS4Dot5Parameters2 } = await Promise.resolve().then(() => (init_fsrs_4dot5(), fsrs_4dot5_exports));
+      return {
+        model: FSRS4Dot5Model2,
+        migrateParameters: migrateFSRS4Dot5Parameters2
+      };
+    },
+    "FSRS-5": async () => {
+      const { FSRS5Model: FSRS5Model2, migrateFSRS5Parameters: migrateFSRS5Parameters2 } = await Promise.resolve().then(() => (init_fsrs_5(), fsrs_5_exports));
+      return {
+        model: FSRS5Model2,
+        migrateParameters: migrateFSRS5Parameters2
+      };
+    },
+    "FSRS-6": async () => {
+      const { FSRS6Model: FSRS6Model2, migrateFSRS6Parameters: migrateFSRS6Parameters2 } = await Promise.resolve().then(() => (init_fsrs_6(), fsrs_6_exports));
+      return {
+        model: FSRS6Model2,
+        migrateParameters: migrateFSRS6Parameters2
+      };
+    },
+    "FSRS-7": async () => {
+      const { FSRS7Model: FSRS7Model2, migrateFSRS7Parameters: migrateFSRS7Parameters2 } = await Promise.resolve().then(() => (init_fsrs_7(), fsrs_7_exports));
+      return {
+        model: FSRS7Model2,
+        migrateParameters: migrateFSRS7Parameters2
+      };
+    }
+  };
+  var schedulerPresetCache = /* @__PURE__ */ new Map();
+  async function getSchedulerPreset(version2) {
+    const resolvedVersion = version2 ?? "FSRS-7";
+    if (!Object.hasOwn(schedulerPresetLoaders, resolvedVersion)) throw new FSRSValidationError(`Unsupported FSRS version "${version2}"`);
+    let preset = schedulerPresetCache.get(resolvedVersion);
+    if (!preset) {
+      preset = schedulerPresetLoaders[resolvedVersion]().then(({ model, migrateParameters }) => ({
+        definition: createRuntimeDefaultSchedulerDefinition(model),
+        migrateParameters
+      }));
+      schedulerPresetCache.set(resolvedVersion, preset);
+    }
+    return preset;
+  }
+  async function DefaultScheduler(options = {}) {
+    const version2 = options.version ?? "FSRS-7";
+    const isFSRS7 = version2 === "FSRS-7";
+    const preset = await getSchedulerPreset(version2);
+    const { weights, enableShortTerm = true, desiredRetention = 0.9, learningSteps = defaultLearningSteps, relearningSteps = defaultRelearningSteps, allowModelOverride = isFSRS7, enableFuzz = false, maximumInterval = DEFAULT_MAXIMUM_INTERVAL } = options;
+    const migratedWeights = preset.migrateParameters(weights ? Array.from(weights) : void 0, relearningSteps.length, enableShortTerm);
+    return preset.definition.create({ config: {
+      fractionalDays: isFSRS7,
+      weights: migratedWeights,
+      enableShortTerm,
+      numRelearningSteps: relearningSteps.length,
+      desiredRetention,
+      learningSteps: Array.from(learningSteps),
+      relearningSteps: Array.from(relearningSteps),
+      graduatingInterval: options.graduatingInterval,
+      allowModelOverride,
+      enableFuzz,
+      maximumInterval,
+      clearStatsOnForget: options.clearStatsOnForget
+    } });
+  }
+
+  // src/learning/learning.ts
+  var ERROR_LABELS = ["conceptual", "calculation", "interpretation", "time-pressure", "guessing", "careless", "knowledge-gap", "other"];
+  var validDate = (x) => typeof x === "string" && Number.isFinite(Date.parse(x));
+  function validateLearningCard(input) {
+    if (!input || typeof input !== "object" || Array.isArray(input)) throw Error("Invalid learning card");
+    const raw = input;
+    if (raw.recordType !== "learning-card" || typeof raw.id !== "string" || !raw.id.startsWith("learning-card:") || typeof raw.examId !== "string" || !raw.examId || typeof raw.paperId !== "string" || !raw.paperId || typeof raw.paperEdition !== "string" || typeof raw.sectionTitle !== "string" || typeof raw.sourceTitle !== "string" || typeof raw.note !== "string" || raw.note.length > 8e3 || typeof raw.customTopic !== "string" || raw.customTopic.length > 120 || typeof raw.bookmarked !== "boolean" || !(raw.errorLabel === null || ERROR_LABELS.includes(raw.errorLabel)) || !validDate(raw.createdAt) || !validDate(raw.updatedAt) || raw.explanation !== void 0 && (typeof raw.explanation !== "string" || raw.explanation.length > 2e4) || !Array.isArray(raw.reviews) || raw.reviews.length > 1e4)
+      throw Error("Invalid learning card fields");
+    const question = validateQuestionRevision(raw.question);
+    if (raw.id !== "learning-card:" + question.id) throw Error("Learning card question identity mismatch");
+    validateAnswerKeyRevision({
+      id: "learning-key",
+      paperId: raw.paperId,
+      revision: 1,
+      contentHash: "0".repeat(64),
+      entries: [{ questionRevisionId: question.id, answer: raw.answer }]
+    }, [question]);
+    let previous = Date.parse(raw.createdAt);
+    for (const review of raw.reviews) {
+      if (!review || !validDate(review.at) || ![1, 2, 3, 4].includes(review.rating) || Date.parse(review.at) < previous || Date.parse(review.at) > Date.parse(raw.updatedAt))
+        throw Error("Invalid or unordered learning review history");
+      previous = Date.parse(review.at);
+    }
+    return input;
+  }
+  function addLearningCard(attempt, id, at) {
+    if (attempt.finishedAt === null) throw Error("Learning notebook is available only after submission");
+    if (!validDate(at)) throw Error("Invalid learning-card timestamp");
+    const question = attempt.frozen.questions.find((q) => q.id === id);
+    const key = attempt.frozen.key.entries.find((x) => x.questionRevisionId === id);
+    const section = attempt.frozen.paper.sections.find((s) => s.questionRevisionIds.includes(id));
+    if (!question || !key || !section) throw Error("Question not in completed exam");
+    const record3 = {
+      recordType: "learning-card",
+      id: "learning-card:" + id,
+      examId: attempt.frozen.snapshot.examId,
+      paperId: attempt.frozen.paper.paperId,
+      paperEdition: attempt.frozen.paper.edition,
+      sectionTitle: section.title,
+      sourceTitle: attempt.frozen.paper.paperId,
+      question: structuredClone(question),
+      answer: structuredClone(key.answer),
+      note: "",
+      customTopic: "",
+      errorLabel: null,
+      bookmarked: false,
+      ...attempt.explanations?.[id] ? { explanation: attempt.explanations[id] } : {},
+      createdAt: at,
+      updatedAt: at,
+      reviews: []
+    };
+    return validateLearningCard(record3);
+  }
+  function scheduledCard(item, scheduler) {
+    let card = scheduler.newCard({ cardId: item.id, now: new Date(item.createdAt) });
+    for (const review of item.reviews)
+      card = scheduler.review({ card, grade: review.rating, now: new Date(review.at) }).card;
+    return card;
+  }
+  function rateLearningCard(item, rating, at, scheduler) {
+    if (!validDate(at) || Date.parse(at) < Date.parse(item.reviews.at(-1)?.at ?? item.createdAt))
+      throw Error("Review time must be monotonic");
+    scheduler.review({ card: scheduledCard(item, scheduler), grade: rating, now: new Date(at) });
+    return validateLearningCard({ ...item, reviews: [...item.reviews, { rating, at }], updatedAt: at });
+  }
+  function topicMetrics(attempts, cards = []) {
+    const manual = new Map(cards.filter((c) => c.customTopic.trim()).map((c) => [c.question.id, c.customTopic.trim()]));
+    const rows = /* @__PURE__ */ new Map();
+    for (const attempt of attempts) {
+      if (!attempt.result || attempt.finishedAt === null) continue;
+      const sections = attempt.frozen.paper.sections;
+      const questions = new Map(attempt.frozen.questions.map((q) => [q.id, q]));
+      for (const item of attempt.result.items) {
+        if (item.verdict === "excluded" || item.verdict === "pending") continue;
+        const q = questions.get(item.questionRevisionId);
+        const section = sections.find((s) => s.questionRevisionIds.includes(item.questionRevisionId));
+        if (!q || !section) continue;
+        const topics = [...new Set([section.title, ...q.content.topicIds ?? [], manual.get(q.id)].filter(
+          (label) => typeof label === "string" && label.length > 0
+        ))];
+        for (const topic of topics) {
+          const id = attempt.frozen.snapshot.examId;
+          const key = id + "|" + topic;
+          const r = rows.get(key) ?? { id: key, label: topic, examId: id, total: 0, answered: 0, correct: 0, incorrect: 0, skipped: 0, accuracy: null, coverage: 0, evidence: "insufficient" };
+          r.total++;
+          if (item.verdict === "correct") {
+            r.correct++;
+            r.answered++;
+          }
+          if (item.verdict === "incorrect") {
+            r.incorrect++;
+            r.answered++;
+          }
+          if (item.verdict === "unanswered") r.skipped++;
+          r.accuracy = r.answered ? r.correct / r.answered : null;
+          r.coverage = r.answered / r.total;
+          r.evidence = r.answered >= 5 ? "measured" : "insufficient";
+          rows.set(key, r);
+        }
+      }
+    }
+    return [...rows.values()].sort((a, b) => a.examId.localeCompare(b.examId) || a.label.localeCompare(b.label));
+  }
+  function comparableTrends(attempts) {
+    const groups = /* @__PURE__ */ new Map();
+    for (const a of attempts) {
+      if (!a.result || a.finishedAt === null) continue;
+      const id = a.frozen.paper.id;
+      const group = groups.get(id) ?? { paperRevisionId: id, label: a.frozen.paper.paperId + " \xB7 " + a.frozen.paper.edition, count: 0, points: [] };
+      const s = a.result.snapshot;
+      const attempted = s.correctCount + s.incorrectCount;
+      const total = attempted + s.unansweredCount;
+      group.count++;
+      group.points.push({
+        at: a.finishedAt,
+        accuracy: attempted ? s.correctCount / attempted : null,
+        coverage: total ? attempted / total : 0,
+        marks: s.earnedMarks
+      });
+      groups.set(id, group);
+    }
+    return [...groups.values()].map((g) => ({ ...g, points: g.points.sort((a, b) => a.at - b.at) })).sort((a, b) => b.count - a.count);
+  }
+
+  // src/app/learning-ui.ts
+  var esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
+  function figures(pkg, ids) {
+    return (ids ?? []).map((id) => {
+      const a = pkg?.assets?.find((x) => x.id === id);
+      return a ? '<img class="generic-figure" src="' + esc(a.dataUri) + '" alt="' + esc(a.altText ?? "Question figure") + '">' : "";
+    }).join("");
+  }
+  function questionHTML(record3, packages) {
+    const q = record3.question, c = q.content;
+    const pkg = packages.find((p) => p.questions.some((item) => item.id === q.id));
+    const stimulus = pkg?.stimuli?.find((s) => s.id === c.stimulusId);
+    const passage = stimulus && (stimulus.kind === "passage" || stimulus.kind === "case") ? '<section class="generic-stimulus"><strong>' + esc(stimulus.title ?? "Source passage") + "</strong><p>" + esc(stimulus.text) + "</p></section>" : "";
+    const choices = c.kind === "single-choice" || c.kind === "multiple-select" ? '<div class="generic-choices">' + c.options.map((o, i) => '<label class="generic-choice"><input type="' + (c.kind === "single-choice" ? "radio" : "checkbox") + '" name="learning-answer"><span>' + String.fromCharCode(65 + i) + ". " + esc(o.text) + figures(pkg, o.assetIds) + "</span></label>").join("") + "</div>" : c.kind === "true-false" ? '<div class="generic-choices"><label><input type="radio" name="learning-true"> True</label> <label><input type="radio" name="learning-true"> False</label></div>' : '<textarea aria-label="Recall your response" rows="3" placeholder="Think through or write your answer before revealing it."></textarea>';
+    return passage + '<h2 class="generic-prompt">' + esc(c.prompt) + "</h2>" + figures(pkg, c.assetIds) + choices;
+  }
+  function createLearningDesk(root2, host) {
+    let scheduler = null;
+    let selectedId = null, reviewId = null, revealed = false;
+    let filter = "all", message = "", closed = false, opened = false;
+    const now2 = () => /* @__PURE__ */ new Date();
+    const due = (card) => scheduler?.newCard !== void 0 ? scheduledCard(card, scheduler).dueAt.getTime() <= Date.now() : false;
+    const cards = () => host.cards().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    const dueCards = () => cards().filter(due).sort((a, b) => scheduledCard(a, scheduler).dueAt.getTime() - scheduledCard(b, scheduler).dueAt.getTime());
+    function draw() {
+      if (closed || !opened) return;
+      const all = cards();
+      const selected = all.find((c) => c.id === selectedId) ?? all[0];
+      const dueNow = dueCards();
+      if (reviewId) {
+        const item = all.find((c) => c.id === reviewId);
+        if (!item) {
+          reviewId = null;
+          revealed = false;
+        } else {
+          root2.innerHTML = '<div class="generic-heading"><div><h1>Spaced revision</h1><p class="muted">' + esc(item.sectionTitle) + ' \xB7 FSRS-7 \xB7 rate your recall, not your exam mark</p></div><button class="btn" id="learning-back">Learning desk</button></div><section class="panel pad">' + questionHTML(item, host.packages()) + (revealed ? '<div class="learning-answer"><h3>Expected answer</h3><p>' + esc(readableAnswer(item.question, item.answer)) + "</p>" + (item.explanation ? "<p>" + esc(item.explanation) + "</p>" : "") + (item.note ? '<p class="fine">Your note: ' + esc(item.note) + "</p>" : "") + '<h3>How well did you recall it?</h3><div class="row generic-actions">' + [[Rating.Again, "Again"], [Rating.Hard, "Hard"], [Rating.Good, "Good"], [Rating.Easy, "Easy"]].map(([grade, label]) => '<button class="btn" data-grade="' + grade + '">' + label + "</button>").join("") + "</div></div>" : '<button class="btn primary" id="learning-reveal">Reveal answer</button>') + "</section>" + (message ? '<p role="status" class="generic-warning">' + esc(message) + "</p>" : "");
+          root2.querySelector("#learning-back").onclick = () => {
+            reviewId = null;
+            revealed = false;
+            draw();
+          };
+          root2.querySelector("#learning-reveal")?.addEventListener("click", () => {
+            revealed = true;
+            draw();
+          });
+          root2.querySelectorAll("[data-grade]").forEach((button) => button.onclick = () => {
+            if (!revealed || !scheduler) return;
+            try {
+              host.save(rateLearningCard(item, Number(button.dataset.grade), now2().toISOString(), scheduler));
+              message = "Review recorded. The next due date is scheduled by FSRS-7.";
+              reviewId = dueCards().find((c) => c.id !== item.id)?.id ?? null;
+              revealed = false;
+              draw();
+            } catch (error) {
+              message = error instanceof Error ? error.message : "Scheduling failed";
+              draw();
+            }
+          });
+          return;
+        }
+      }
+      const visible = all.filter((c) => filter === "all" || filter === "due" && due(c) || filter === "bookmarked" && c.bookmarked);
+      const done = host.attempts().filter((a) => a.finishedAt !== null && a.result);
+      const topics = topicMetrics(done, all), cohorts = comparableTrends(done).filter((x) => x.count >= 2);
+      root2.innerHTML = '<div class="generic-heading"><div><h1>Learning & revision</h1><p class="muted">Error notebook \xB7 FSRS-7 spaced review \xB7 Topic evidence</p></div><button class="btn" id="learning-close">\u2190 Test library</button></div>' + (message ? '<p class="generic-warning" role="status">' + esc(message) + "</p>" : "") + '<section class="panel pad"><div class="row between"><div><h2>Revision queue</h2><p class="fine">' + all.length + " cards \xB7 " + (scheduler ? dueNow.length + " due now" : "Scheduler initializing") + ' \xB7 Mock results do not automatically count as spaced-repetition reviews</p></div><button class="btn primary" id="learning-due"' + (!scheduler || !dueNow.length ? " disabled" : "") + '>Review due cards</button></div></section><div class="generic-layout learning-layout"><section class="panel pad"><div class="row between"><h2>Error notebook</h2><select id="learning-filter" aria-label="Filter notebook" class="learning-filter">' + [["all", "All cards"], ["due", "Due now"], ["bookmarked", "Bookmarked"]].map(([key, label]) => '<option value="' + key + '"' + (filter === key ? " selected" : "") + ">" + label + "</option>").join("") + "</select></div>" + (visible.length ? visible.map((c) => {
+        const next = scheduler ? scheduledCard(c, scheduler) : null;
+        return '<button class="generic-history ' + (selected?.id === c.id ? "learning-selected" : "") + '" data-learning-id="' + esc(c.id) + '">' + esc(c.sectionTitle) + " \xB7 " + esc(c.question.content.prompt.slice(0, 92)) + "<small>" + esc(c.errorLabel ?? "Unclassified") + " \xB7 " + (next ? next.dueAt.getTime() <= Date.now() ? "Due now" : "Due " + next.dueAt.toLocaleDateString() : "Unscheduled") + " \xB7 " + c.reviews.length + " ratings</small></button>";
+      }).join("") : '<p class="fine">No cards in this view. Add a question from a completed test result.</p>') + '</section><section class="panel pad"><h2>Notebook detail</h2>' + (selected ? "<h3>" + esc(selected.question.content.prompt) + '</h3><p class="fine">' + esc(selected.paperId) + " \xB7 " + esc(selected.sectionTitle) + "</p><p>Expected: <strong>" + esc(readableAnswer(selected.question, selected.answer)) + "</strong></p>" + (selected.explanation ? '<p class="fine">' + esc(selected.explanation) + "</p>" : "") + '<label class="picker" for="learning-error">Error type (self-reported)</label><select id="learning-error"><option value="">Not classified</option>' + ERROR_LABELS.map((label) => '<option value="' + label + '"' + (selected.errorLabel === label ? " selected" : "") + ">" + esc(label) + "</option>").join("") + '</select><label class="picker" for="learning-topic">Specific topic (optional)</label><input id="learning-topic" maxlength="120" value="' + esc(selected.customTopic) + '" placeholder="Your own subtopic label"><label class="picker" for="learning-note">Notes</label><textarea id="learning-note" maxlength="8000" rows="5">' + esc(selected.note) + '</textarea><label class="learning-bookmark"><input id="learning-bookmark" type="checkbox"' + (selected.bookmarked ? " checked" : "") + '> Bookmark</label><div class="row generic-actions"><button class="btn primary" id="learning-save">Save note</button><button class="btn" id="learning-one">Review this card</button><button class="btn danger" id="learning-delete">Delete</button></div>' : '<p class="fine">Select a card from the notebook.</p>') + '</section></div><section class="panel pad learning-insights"><h2>Topic performance</h2><p class="fine">Official CGL section labels are the default broad topics. Imported exam topic IDs and your explicitly labelled subtopics remain separate; no topic is guessed. Five answered items minimum for measured evidence. Skips are excluded from accuracy.</p><div class="scroll-table"><table><thead><tr><th>Exam</th><th>Topic</th><th>Answered / total</th><th>Accuracy</th><th>Evidence</th></tr></thead><tbody>' + (topics.length ? topics.map((t) => "<tr><td>" + esc(t.examId) + "</td><td>" + esc(t.label) + "</td><td>" + t.answered + " / " + t.total + "</td><td>" + (t.accuracy === null ? "\u2014" : Math.round(t.accuracy * 100) + "%") + "</td><td>" + (t.evidence === "measured" ? "Observed" : "Insufficient") + "</td></tr>").join("") : '<tr><td colspan="5">Complete an exam to view topic performance.</td></tr>') + '</tbody></table></div><h2>Comparable attempt trends</h2><p class="fine">Only identical frozen paper revisions, including their rules and answer keys, are compared.</p><div class="scroll-table"><table><thead><tr><th>Paper revision</th><th>Attempts</th><th>Accuracy sequence</th><th>Marks sequence</th></tr></thead><tbody>' + (cohorts.length ? cohorts.map((g) => "<tr><td>" + esc(g.label) + "</td><td>" + g.count + "</td><td>" + g.points.map((p) => p.accuracy === null ? "\u2014" : Math.round(p.accuracy * 100) + "%").join(" \u2192 ") + "</td><td>" + g.points.map((p) => p.marks.toFixed(1)).join(" \u2192 ") + "</td></tr>").join("") : '<tr><td colspan="4">Complete the same paper revision twice to see a valid comparison.</td></tr>') + "</tbody></table></div></section>";
+      root2.querySelector("#learning-close").onclick = host.close;
+      root2.querySelector("#learning-due").onclick = () => {
+        reviewId = dueCards()[0]?.id ?? null;
+        revealed = false;
+        message = "";
+        draw();
+      };
+      root2.querySelector("#learning-filter").onchange = (e) => {
+        filter = e.target.value;
+        draw();
+      };
+      root2.querySelectorAll("[data-learning-id]").forEach((b) => b.onclick = () => {
+        selectedId = b.dataset.learningId ?? null;
+        draw();
+      });
+      if (!selected) return;
+      root2.querySelector("#learning-save").onclick = () => {
+        try {
+          const note = root2.querySelector("#learning-note").value;
+          const customTopic = root2.querySelector("#learning-topic").value.trim();
+          const errorLabel = root2.querySelector("#learning-error").value;
+          const bookmarked = root2.querySelector("#learning-bookmark").checked;
+          host.save(validateLearningCard({
+            ...selected,
+            note,
+            customTopic,
+            errorLabel: errorLabel || null,
+            bookmarked,
+            updatedAt: now2().toISOString()
+          }));
+          message = "Notebook saved.";
+          draw();
+        } catch (e) {
+          message = e instanceof Error ? e.message : "Cannot save notebook";
+          draw();
+        }
+      };
+      root2.querySelector("#learning-one").onclick = () => {
+        reviewId = selected.id;
+        revealed = false;
+        message = "";
+        draw();
+      };
+      root2.querySelector("#learning-delete").onclick = async () => {
+        await host.remove(selected.id);
+        selectedId = null;
+        draw();
+      };
+    }
+    void DefaultScheduler({ version: "FSRS-7", desiredRetention: 0.9, enableFuzz: false }).then((value) => {
+      scheduler = value;
+      draw();
+    }).catch((e) => {
+      message = "FSRS scheduler failed to initialize.";
+      console.error(e);
+      draw();
+    });
+    return { show() {
+      opened = true;
+      draw();
+    }, hide() {
+      opened = false;
+    }, select(id) {
+      selectedId = id;
+    }, dispose() {
+      closed = true;
+    } };
+  }
+
   // src/app/generic-ui.ts
   var escapeText = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
   var minutes = (ms) => {
@@ -1153,12 +4796,14 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
   }
   var isAttempt = (x) => !!x && typeof x === "object" && x.recordType === "generic-attempt";
   var isPackage = (x) => !!x && typeof x === "object" && x.recordType === "generic-package";
+  var isLearning = (x) => !!x && typeof x === "object" && x.recordType === "learning-card";
   function validateGenericStoredRecord(value) {
     if (value && typeof value === "object" && "saveRevision" in value) {
       const n = value.saveRevision;
       if (typeof n !== "number" || !Number.isSafeInteger(n) || n < 0)
         throw new Error("Invalid stored write revision");
     }
+    if (isLearning(value)) return validateLearningCard(value);
     if (isPackage(value)) {
       if (typeof value.id !== "string" || value.id !== "generic-package:" + value.bundle?.paper?.id)
         throw new Error("Invalid imported package record identity");
@@ -1248,7 +4893,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     const storageKey = "practiceDesk.overhaul.fallback.v1", mirrorKey = "practiceDesk.overhaul.active.v1";
     const dbName = "practiceDesk.overhaul.v1";
     const downloadBackup = () => {
-      let recordsToExport = [...records.values()].filter((record3) => isPackage(record3) || isAttempt(record3));
+      let recordsToExport = [...records.values()].filter((record3) => isPackage(record3) || isAttempt(record3) || isLearning(record3));
       if (fallbackConflict && !db) {
         try {
           const latest = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
@@ -1307,7 +4952,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
         if (isPackage(record3) && !packages.has(record3.bundle.paper.id))
           packages.set(record3.bundle.paper.id, record3.bundle);
       }
-      warning = "Imported " + incoming.length + " records; existing attempts preserved.";
+      warning = "Imported " + incoming.length + " records; existing attempts and learning cards preserved.";
       draw();
     };
     const writeMirror = (record3) => {
@@ -1321,7 +4966,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
       warning = s;
       draw();
     };
-    const now = () => Date.now();
+    const now2 = () => Date.now();
     const save = (record3) => {
       if (fallbackConflict) {
         warning = "Another tab changed fallback history. Reopen before editing.";
@@ -1407,7 +5052,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     };
     const removeSavedAttempt = async (id) => {
       const saved = records.get(id);
-      if (!isAttempt(saved) || !confirm("Permanently delete this attempt? Export a backup first if needed.")) return;
+      if (!(isAttempt(saved) || isLearning(saved)) || !confirm("Permanently delete this saved item? Export a backup first if needed.")) return;
       try {
         await writeQueue;
         if (db) {
@@ -1446,6 +5091,34 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
         notice(error instanceof Error ? error.message : "Deletion failed");
       }
     };
+    const learningDesk = createLearningDesk(root2, {
+      cards: () => [...records.values()].filter(isLearning),
+      attempts: () => [...records.values()].filter(isAttempt),
+      packages: () => [...packages.values()],
+      save: (item) => save(item),
+      remove: (id) => removeSavedAttempt(id),
+      close: () => {
+        view = "library";
+        draw();
+      }
+    });
+    const addNotebookCard = (source, id) => {
+      if (records.has("learning-card:" + id)) return;
+      try {
+        const record3 = addLearningCard(source, id, new Date(now2()).toISOString());
+        save(record3);
+        warning = "Question added to the notebook.";
+        draw();
+      } catch (error) {
+        notice(error instanceof Error ? error.message : "Unable to add notebook card");
+      }
+    };
+    const addResultCards = (source) => {
+      const ids = source.result?.items.filter((item) => item.verdict === "incorrect" || item.verdict === "unanswered").map((item) => item.questionRevisionId).filter((id) => !records.has("learning-card:" + id)) ?? [];
+      for (const id of ids) save(addLearningCard(source, id, new Date(now2()).toISOString()));
+      warning = ids.length ? ids.length + " mistake/skipped cards saved to the revision notebook." : "All mistakes/skips are already in the notebook.";
+      draw();
+    };
     const dispatch = (event) => {
       if (!attempt) return;
       try {
@@ -1474,7 +5147,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
       ].map(([key, title, detail]) => '<button type="button" class="mode ' + (cglMode === key ? "on" : "") + '" data-mode="' + key + '" aria-pressed="' + (cglMode === key) + '"><span><strong>' + title + "</strong><small>" + detail + "</small></span></button>").join("") + "</div>" + (cglMode === "single" ? '<label class="picker" for="g-single-section">Section</label><select id="g-single-section">' + selected.paper.sections.map((s, i) => '<option value="' + i + '"' + (singleSection === i ? " selected" : "") + ">" + escapeText(s.title) + "</option>").join("") + "</select>" : "") : "") + '<div class="row generic-actions"><button class="btn primary" id="g-start"' + (loading || fallbackConflict ? " disabled" : "") + '>Start exam</button><button class="btn" id="g-import"' + (loading || fallbackConflict ? " disabled" : "") + '>Import exam JSON</button></div><input type="file" id="g-file" accept=".json,application/json" hidden><p class="fine">SSC CGL original/reviewed papers and other validated exams use one examination engine. Answers and explanations stay hidden until submission.</p></section><section class="panel pad"><div class="row between"><h2>Attempt history</h2><span class="fine">' + all.length + ' total</span></div><label class="picker" for="g-filter">Show</label><select id="g-filter">' + [["all", "All attempts"], ["progress", "In progress"], ["complete", "Completed"]].map(([v, t]) => '<option value="' + v + '"' + (v === historyFilter ? " selected" : "") + ">" + t + "</option>").join("") + '</select><div class="row generic-actions"><button class="btn" id="g-export-history"' + (loading ? " disabled" : "") + '>Export backup</button><button class="btn" id="g-import-history"' + (loading || fallbackConflict ? " disabled" : "") + '>Import backup</button></div><input type="file" id="g-history-file" accept=".json,application/json" hidden>' + (filtered.length ? filtered.map((a) => {
         const result = a.result?.snapshot;
         return '<div class="generic-history-row"><button class="generic-history" data-attempt="' + escapeText(a.id) + '">' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + "<small>" + new Date(a.startedAt).toLocaleString() + " \xB7 " + (a.finishedAt ? (result ? result.earnedMarks + " marks \xB7 " : "") + "Completed" : "Resume") + '</small></button><button class="btn danger generic-delete" data-delete="' + escapeText(a.id) + '" aria-label="Delete saved attempt">Delete</button></div>';
-      }).join("") : '<p class="fine">No matching attempts.</p>') + "</section></div>";
+      }).join("") : '<p class="fine">No matching attempts.</p>') + '</section></div><section class="panel pad learning-entry"><div><h2>Learning & revision</h2><p class="fine">' + [...records.values()].filter(isLearning).length + ' notebook cards \xB7 FSRS-7 reviews and comparable topic analytics</p></div><button class="btn primary" id="g-learning">Open learning desk</button></section>';
     }
     function packageForAttempt(saved) {
       return packages.get(saved.packageId) ?? [...packages.values()].find((p) => p.paper.paperId === saved.frozen.paper.paperId && p.paper.edition === saved.frozen.paper.edition);
@@ -1499,13 +5172,13 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
         const responseTime = attempt.state.responses.filter((r) => ids.has(r.questionRevisionId)).reduce((sum, r) => sum + r.timeSpentMs, 0);
         return "<tr><td>" + escapeText(section.title) + "</td><td>" + scored.toFixed(1) + "</td><td>" + items.filter((item) => item.verdict === "correct").length + "/" + items.length + "</td><td>" + minutes(responseTime) + "</td></tr>";
       }).join("");
-      return '<div class="generic-heading"><h1>Exam results</h1><button class="btn" id="g-library">Library</button></div><section class="panel pad"><div class="scoregrid"><div class="score standout"><b>' + s.snapshot.earnedMarks + '</b><small>Marks</small></div><div class="score"><b>' + s.snapshot.correctCount + '</b><small>Correct</small></div><div class="score"><b>' + s.snapshot.incorrectCount + '</b><small>Incorrect</small></div><div class="score"><b>' + s.snapshot.unansweredCount + '</b><small>Unanswered</small></div><div class="score"><b>' + s.snapshot.excludedCount + '</b><small>Excluded</small></div></div><p class="fine">Written responses marked pending require manual evaluation.</p></section><section class="panel pad"><h2>Section performance</h2><div class="scroll-table"><table><thead><tr><th>Section</th><th>Marks</th><th>Correct</th><th>Time on questions</th></tr></thead><tbody>' + paperSectionRows + '</tbody></table></div></section><section class="panel pad"><h2>Question review</h2>' + s.items.map((it, i) => {
+      return '<div class="generic-heading"><h1>Exam results</h1><button class="btn" id="g-library">Library</button></div><section class="panel pad"><div class="scoregrid"><div class="score standout"><b>' + s.snapshot.earnedMarks + '</b><small>Marks</small></div><div class="score"><b>' + s.snapshot.correctCount + '</b><small>Correct</small></div><div class="score"><b>' + s.snapshot.incorrectCount + '</b><small>Incorrect</small></div><div class="score"><b>' + s.snapshot.unansweredCount + '</b><small>Unanswered</small></div><div class="score"><b>' + s.snapshot.excludedCount + '</b><small>Excluded</small></div></div><p class="fine">Written responses marked pending require manual evaluation.</p></section><section class="panel pad"><h2>Section performance</h2><div class="scroll-table"><table><thead><tr><th>Section</th><th>Marks</th><th>Correct</th><th>Time on questions</th></tr></thead><tbody>' + paperSectionRows + '</tbody></table></div></section><section class="panel pad"><div class="row between"><h2>Question review</h2><button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div><p class="fine">Mock-test results never automatically become FSRS review ratings.</p>' + s.items.map((it, i) => {
         const q = qs.get(it.questionRevisionId);
         const response = attempt.state.responses.find((r) => r.questionRevisionId === it.questionRevisionId)?.response;
         const answer = attempt.frozen.key.entries.find((e) => e.questionRevisionId === it.questionRevisionId)?.answer;
         const explanation = attempt.explanations?.[it.questionRevisionId] || q?.editorial.notes;
         const seconds = attempt.state.responses.find((r) => r.questionRevisionId === it.questionRevisionId)?.timeSpentMs ?? 0;
-        return q ? '<article class="generic-review"><strong>' + (i + 1) + ". " + escapeText(q.content.prompt) + '</strong><p class="fine">' + escapeText(q.editorial.status) + " \xB7 " + minutes(seconds) + ' spent</p><p class="fine">' + escapeText(it.verdict) + " \xB7 " + it.marks + ' marks</p><p class="fine">Your answer: ' + escapeText(readableAnswer(q, response)) + '</p><p class="fine">Expected: ' + escapeText(readableAnswer(q, answer)) + "</p>" + (q.editorial.notes ? '<p class="fine">Editorial note: ' + escapeText(q.editorial.notes) + "</p>" : "") + (explanation ? '<p class="fine">Explanation: ' + escapeText(explanation) + "</p>" : "") + "</article>" : "";
+        return q ? '<article class="generic-review"><strong>' + (i + 1) + ". " + escapeText(q.content.prompt) + '</strong><p class="fine">' + escapeText(q.editorial.status) + " \xB7 " + minutes(seconds) + ' spent</p><p class="fine">' + escapeText(it.verdict) + " \xB7 " + it.marks + ' marks</p><p class="fine">Your answer: ' + escapeText(readableAnswer(q, response)) + '</p><p class="fine">Expected: ' + escapeText(readableAnswer(q, answer)) + "</p>" + (q.editorial.notes ? '<p class="fine">Editorial note: ' + escapeText(q.editorial.notes) + "</p>" : "") + (explanation ? '<p class="fine">Explanation: ' + escapeText(explanation) + "</p>" : "") + '<button class="btn" data-add-card="' + escapeText(q.id) + '"' + (records.has("learning-card:" + q.id) ? " disabled" : "") + ">" + (records.has("learning-card:" + q.id) ? "In notebook" : "Add to notebook") + "</button></article>" : "";
       }).join("") + "</section>";
     }
     function draw() {
@@ -1513,6 +5186,11 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
       const previous = document.activeElement;
       const focusKey = previous instanceof HTMLElement && root2.contains(previous) ? { id: previous.id, attributes: ["data-choice", "data-bool", "data-match", "data-q", "data-section", "data-attempt"].filter((name) => previous.hasAttribute(name)).map((name) => [name, previous.getAttribute(name)]) } : null;
       root2.classList.add("generic-workspace");
+      if (view === "learning") {
+        learningDesk.show();
+        return;
+      }
+      learningDesk.hide();
       root2.innerHTML = view === "library" ? listHTML() : view === "exam" ? examHTML() : resultHTML();
       if (focusKey) {
         const controls = [...root2.querySelectorAll("button,input,select,textarea")];
@@ -1520,6 +5198,10 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
         if (target && !("disabled" in target && target.disabled)) target.focus({ preventScroll: true });
       }
       if (view === "library") {
+        root2.querySelector("#g-learning").onclick = () => {
+          view = "learning";
+          draw();
+        };
         root2.querySelector("#g-papers").onchange = (e) => {
           choice = e.target.value;
           draw();
@@ -1539,9 +5221,9 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
         root2.querySelector("#g-start").onclick = () => {
           const p = packages.get(choice);
           if (!p) return;
-          const id = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "generic-" + now() + "-" + Math.random();
+          const id = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "generic-" + now2() + "-" + Math.random();
           const configured = p.examId === "ssc-cgl" ? configureCglPractice(p, cglMode, singleSection) : p;
-          attempt = startGenericAttempt(configured, id, now());
+          attempt = startGenericAttempt(configured, id, now2());
           save(attempt);
           warning = "";
           view = "exam";
@@ -1582,11 +5264,11 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
           if (!isAttempt(saved)) return;
           attempt = saved;
           if (saved.finishedAt === null) {
-            const restored = restoreSession(saved.frozen.paper, saved.state, now(), !document.hidden);
+            const restored = restoreSession(saved.frozen.paper, saved.state, now2(), !document.hidden);
             attempt = {
               ...saved,
               state: restored.state,
-              ...restored.expired ? { finishedAt: now(), result: scoreAttempt(
+              ...restored.expired ? { finishedAt: now2(), result: scoreAttempt(
                 saved.frozen.paper,
                 saved.frozen.key,
                 saved.frozen.questions,
@@ -1612,6 +5294,13 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
         attempt = null;
         draw();
       };
+      if (view === "result" && attempt) {
+        root2.querySelector("#g-revision-set").onclick = () => addResultCards(attempt);
+        root2.querySelectorAll("[data-add-card]").forEach((button) => button.onclick = () => {
+          if (attempt) addNotebookCard(attempt, button.dataset.addCard ?? "");
+        });
+        return;
+      }
       if (view !== "exam" || !attempt) return;
       const section = attempt.frozen.paper.sections[attempt.state.sectionIndex];
       const q = attempt.frozen.questions.find((x) => x.id === section?.questionRevisionIds[attempt.state.questionIndex]);
@@ -1623,7 +5312,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
             notice("Unknown question option.");
             return;
           }
-          dispatch({ type: "ANSWER", nowMs: now(), response: { kind: "single-choice", optionId: option.id } });
+          dispatch({ type: "ANSWER", nowMs: now2(), response: { kind: "single-choice", optionId: option.id } });
         } else if (q.content.kind === "multiple-select") {
           const raw = [...root2.querySelectorAll("[data-choice]:checked")].map((x) => x.dataset.choice);
           const chosen = q.content.options.filter((option) => raw.includes(option.id)).map((option) => option.id);
@@ -1631,7 +5320,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
             notice("Unknown question option.");
             return;
           }
-          if (!chosen.length) dispatch({ type: "CLEAR", nowMs: now() });
+          if (!chosen.length) dispatch({ type: "CLEAR", nowMs: now2() });
           else if (chosen.length < (q.content.minSelections ?? 1)) {
             warning = "Select at least " + (q.content.minSelections ?? 1) + " options before saving.";
             const group = root2.querySelector(".generic-response-group");
@@ -1643,11 +5332,11 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
               group.append(feedback);
             }
             if (feedback) feedback.textContent = warning;
-          } else dispatch({ type: "ANSWER", nowMs: now(), response: { kind: "multiple-select", optionIds: chosen } });
+          } else dispatch({ type: "ANSWER", nowMs: now2(), response: { kind: "multiple-select", optionIds: chosen } });
         }
       });
       root2.querySelectorAll("[data-bool]").forEach((input) => input.onchange = () => {
-        dispatch({ type: "ANSWER", nowMs: now(), response: { kind: "true-false", value: input.dataset.bool === "true" } });
+        dispatch({ type: "ANSWER", nowMs: now2(), response: { kind: "true-false", value: input.dataset.bool === "true" } });
       });
       const saveButton = root2.querySelector("#g-save");
       if (saveButton) saveButton.onclick = () => {
@@ -1657,10 +5346,10 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
             notice("Enter a finite numeric answer.");
             return;
           }
-          dispatch({ type: "ANSWER", nowMs: now(), response: { kind: "numeric-entry", value: field.valueAsNumber } });
+          dispatch({ type: "ANSWER", nowMs: now2(), response: { kind: "numeric-entry", value: field.valueAsNumber } });
         } else if (q.content.kind === "free-response") {
           const value = root2.querySelector("#g-text").value;
-          dispatch(value.trim() ? { type: "ANSWER", nowMs: now(), response: { kind: "free-response", text: value } } : { type: "CLEAR", nowMs: now() });
+          dispatch(value.trim() ? { type: "ANSWER", nowMs: now2(), response: { kind: "free-response", text: value } } : { type: "CLEAR", nowMs: now2() });
         } else if (q.content.kind === "matching") {
           const matching = q.content;
           const pairs = [...root2.querySelectorAll("[data-match]")].filter((x) => x.value).map((x) => {
@@ -1673,26 +5362,26 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
             return;
           }
           const validPairs = pairs.filter((pair) => pair !== null);
-          dispatch(validPairs.length ? { type: "ANSWER", nowMs: now(), response: { kind: "matching", pairs: validPairs } } : { type: "CLEAR", nowMs: now() });
+          dispatch(validPairs.length ? { type: "ANSWER", nowMs: now2(), response: { kind: "matching", pairs: validPairs } } : { type: "CLEAR", nowMs: now2() });
         }
       };
-      root2.querySelector("#g-clear").onclick = () => dispatch({ type: "CLEAR", nowMs: now() });
+      root2.querySelector("#g-clear").onclick = () => dispatch({ type: "CLEAR", nowMs: now2() });
       root2.querySelector("#g-flag").onclick = () => dispatch({
         type: "FLAG",
-        nowMs: now(),
+        nowMs: now2(),
         flagged: !attempt.state.responses.find((r) => r.questionRevisionId === q.id)?.flagged
       });
-      const navigate = (s, i) => dispatch({ type: "NAVIGATE", nowMs: now(), sectionIndex: s, questionIndex: i });
+      const navigate = (s, i) => dispatch({ type: "NAVIGATE", nowMs: now2(), sectionIndex: s, questionIndex: i });
       root2.querySelector("#g-prev").onclick = () => navigate(attempt.state.sectionIndex, attempt.state.questionIndex - 1);
       root2.querySelector("#g-next").onclick = () => navigate(attempt.state.sectionIndex, attempt.state.questionIndex + 1);
       root2.querySelectorAll("[data-q]").forEach((b) => b.onclick = () => navigate(attempt.state.sectionIndex, Number(b.dataset.q)));
       root2.querySelectorAll("[data-section]").forEach((b) => b.onclick = () => navigate(Number(b.dataset.section), 0));
       const pause = root2.querySelector("#g-pause");
-      if (pause) pause.onclick = () => dispatch({ type: attempt.state.status === "paused" ? "RESUME" : "PAUSE", nowMs: now() });
+      if (pause) pause.onclick = () => dispatch({ type: attempt.state.status === "paused" ? "RESUME" : "PAUSE", nowMs: now2() });
       root2.querySelector("#g-submit").onclick = () => {
         const sectional = attempt.frozen.paper.timing.kind === "sectional";
         if (!confirm(sectional ? "Submit this section? You cannot return." : "Submit this exam and view results?")) return;
-        dispatch({ type: sectional ? "SUBMIT_SECTION" : "SUBMIT_ATTEMPT", nowMs: now() });
+        dispatch({ type: sectional ? "SUBMIT_SECTION" : "SUBMIT_ATTEMPT", nowMs: now2() });
       };
     }
     const timer = window.setInterval(() => {
@@ -1700,15 +5389,15 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
       const original = attempt;
       const next = transitionGenericAttempt(
         original,
-        { type: "TICK", nowMs: now() },
+        { type: "TICK", nowMs: now2() },
         new Map(original.frozen.questions.map((q) => [q.id, q]))
       );
       if (next !== original) {
         attempt = next;
         const changedSection = original.state.sectionIndex !== next.state.sectionIndex;
-        if (next.finishedAt !== null || changedSection || now() - lastTimerSave >= 1e4) {
+        if (next.finishedAt !== null || changedSection || now2() - lastTimerSave >= 1e4) {
           save(attempt);
-          lastTimerSave = now();
+          lastTimerSave = now2();
         }
         if (next.finishedAt !== null) {
           view = "result";
@@ -1727,7 +5416,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
       }
     }, 1e3);
     const visibility = () => {
-      if (view === "exam" && attempt) dispatch({ type: "VISIBILITY", nowMs: now(), visible: !document.hidden });
+      if (view === "exam" && attempt) dispatch({ type: "VISIBILITY", nowMs: now2(), visible: !document.hidden });
     };
     document.addEventListener("visibilitychange", visibility);
     const pagehide = () => {
@@ -1736,7 +5425,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
           const current = attempt;
           attempt = transitionGenericAttempt(
             current,
-            { type: "VISIBILITY", nowMs: now(), visible: false },
+            { type: "VISIBILITY", nowMs: now2(), visible: false },
             new Map(current.frozen.questions.map((q) => [q.id, q]))
           );
           writeMirror(attempt);
@@ -1757,6 +5446,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     };
     window.addEventListener("storage", storage);
     function cleanup() {
+      learningDesk.dispose();
       disposed = true;
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", visibility);
@@ -1794,12 +5484,12 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
             } catch (error) {
               console.warn("Invalid saved package", error);
             }
-          } else if (isAttempt(record3)) {
+          } else if (isAttempt(record3) || isLearning(record3)) {
             try {
               validateGenericStoredRecord(record3);
               records.set(record3.id, record3);
             } catch (error) {
-              console.warn("Invalid saved generic attempt", error);
+              console.warn("Invalid saved practice record", error);
             }
           }
         }
@@ -1827,12 +5517,12 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
                 records.set(record3.id, record3);
               } catch {
               }
-            } else if (isAttempt(record3)) {
+            } else if (isAttempt(record3) || isLearning(record3)) {
               try {
                 validateGenericStoredRecord(record3);
                 records.set(record3.id, record3);
               } catch (error) {
-                console.warn("Invalid saved generic attempt", error);
+                console.warn("Invalid saved practice record", error);
               }
             }
           }
