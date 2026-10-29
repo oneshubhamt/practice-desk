@@ -13,7 +13,7 @@ import { validateResponse } from "../engine/response.ts";
 import { assertWriteVersion, nextWriteVersion } from "../history/concurrency.ts";
 import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
 import { createLearningDesk } from "./learning-ui.ts";
-import { makeRevisionPackage } from "../learning/revision-test.ts";
+import { makeRevisionPackage,createNotebookLineage,validateNotebookLineage } from "../learning/revision-test.ts";
 import { attemptEvidence } from "../learning/attempt-evidence.ts";
 import { addLearningCard, validateLearningCard } from "../learning/learning.ts";
 import type { LearningCard } from "../learning/learning.ts";
@@ -139,6 +139,7 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
  }
  validateManualGrades(value);
  validateSourceKeyReference(value);
+ validateNotebookLineage(value);
  return value;
 }
 
@@ -414,7 +415,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        const paper=makeRevisionPackage(selected,nonce);
        const id=typeof crypto!=="undefined"&&crypto.randomUUID?crypto.randomUUID():
          "attempt-"+now()+"-"+Math.floor(Math.random()*100000);
-       const generated=startGenericAttempt(paper,id,now());
+       const generated={...startGenericAttempt(paper,id,now()),notebookLineage:createNotebookLineage(selected)};
        if(!await save(generated))return false;
        attempt=generated;view="exam";warning="Untimed notebook revision · +1 correct, 0 incorrect. This is not a source-exam score.";
        draw();return true;
@@ -606,11 +607,15 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       const prior=attempt!.manualGrades?.find(g=>g.questionRevisionId===q.id);
       const limit=manualGradeLimit(attempt!,q.id);
       const provenance=q.editorial.sources??[];
+      const origin=attempt!.notebookLineage?.entries.find(x=>x.questionRevisionId===q.id);
       return '<article class="generic-review"><strong>'+(i+1)+'. '+escapeText(q.content.prompt)+'</strong>'+
        '<p class="fine">'+escapeText(q.editorial.status)+
          (q.editorial.sourcePage?' · Source page '+q.editorial.sourcePage:"")+
          ' · '+minutes(seconds)+' spent</p>'+
        frozenReviewMedia(attempt!,q)+
+       (origin?'<p class="fine">Notebook source: '+escapeText(origin.sourcePaperId)+
+         ' · '+escapeText(origin.sourcePaperEdition)+' · '+escapeText(origin.sourceSectionTitle)+
+         ' · source attempt '+escapeText(origin.sourceAttemptId)+'</p>':"")+
        '<p class="fine">'+escapeText(it.verdict)+' · '+it.marks+' automated marks</p>'+
        '<p class="fine">Your answer: '+escapeText(readableAnswer(q,response))+'</p>'+
        '<p class="fine">Expected: '+escapeText(readableAnswer(q,answer))+'</p>'+
