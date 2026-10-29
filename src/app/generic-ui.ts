@@ -15,6 +15,7 @@ import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
 import { createLearningDesk } from "./learning-ui.ts";
 import { makeRevisionPackage,createNotebookLineage,validateNotebookLineage } from "../learning/revision-test.ts";
 import { attemptEvidence } from "../learning/attempt-evidence.ts";
+import { answerRevisionEvidence } from "../learning/answer-revisions.ts";
 import { historyHTML, type HistorySort, type HistoryStatus } from "./history-page.ts";
 import { reviewMatch, reviewFiltersHTML, resultTabsHTML, sectionPaceHTML, timingLedgerHTML, type ResultTab, type ReviewFilter } from "./result-presentation.ts";
 import { comparableTrends } from "../learning/learning.ts";
@@ -614,6 +615,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        '</td><td>'+minutes(responseTime)+'</td></tr>';
    }).join("");
    const evidence=attemptEvidence(attempt);
+   const revisions=answerRevisionEvidence(attempt);
    const analyticHTML=evidence?'<section class="panel pad" id="g-attempt-evidence">'+
      '<h2>Timing, accuracy & marks evidence</h2>'+
      '<p class="fine">Times are foreground exposure to each question; they do not measure thinking time. Opportunity figures describe hypothetical arithmetic, not projected marks.</p>'+
@@ -670,7 +672,13 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       escapeText(selfAssessed.toFixed(2))+'. Original automated score above remains unchanged.</p>':
       '<p class="fine">Automated marks reflect only scoreable questions.</p>')+'</section>'+
     '<section class="panel pad"><h2>Section performance</h2><div class="scroll-table"><table><thead><tr><th>Section</th><th>Marks</th><th>Correct</th><th>Time on questions</th></tr></thead><tbody>'+
-     paperSectionRows+'</tbody></table></div></section>'+sectionPaceHTML(attempt)+analyticHTML+'</div>'+
+     paperSectionRows+'</tbody></table></div></section>'+sectionPaceHTML(attempt)+analyticHTML+
+    '<section class="panel pad answer-revision-panel"><h2>Answer revisions</h2>'+
+    (revisions.recorded?'<div class="learning-metric-grid">'+
+      [['Modified answers',revisions.changed],['Wrong → correct',revisions.rescued],['Correct → wrong',revisions.lost],['Other changes',revisions.other]]
+       .map(([label,value])=>'<div class="learning-metric"><strong>'+escapeText(label)+'</strong><b>'+escapeText(value)+'</b></div>').join("")+
+      '</div>':'<p class="fine">No saved answer-revision sequence is available for this attempt.</p>')+
+    '<p class="fine">Based only on recorded successive single-choice selections. Clear-and-reselect and unverified items are not classified as rescued/lost. A changed answer may coincide with better marks; this is not evidence that revision caused improvement.</p></section></div>'+
     '<section class="panel pad result-pane" id="result-review" role="tabpanel"'+(resultTab!=="review"?" hidden":"")+'>'+
     '<div class="row between"><h2>Question review</h2>'+
       '<button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div>'+
