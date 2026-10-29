@@ -1,0 +1,9 @@
+# Pass 8 data decisions
+
+This is a companion to the [live five-step architecture scratchpad](ARCHITECTURE_AUDIT_2026-10-28.md). Source of truth remains the scratchpad and executable code/tests.
+
+- **Revision package:** derive a transient, validated custom paper from explicit notebook selection, never mutate original paper/key or write a second data store. Pin source question revisions and answer definitions; freeze only required referenced media, reject conflicting asset/stimulus identities and duplicate IDs. Group within the same exam, allow cards from different paper editions, and use a fixed, explicitly disclosed practice rule of +1 correct, 0 incorrect/unanswered. Use a new UUID-based paper/attempt revision identity to avoid confusing different revision sessions. Normal engine/history/backup handles the generated attempt.
+- **Topic granularity:** retain section as broad fallback; add explicit question topic IDs and user-labelled topics without classification inference. Distinguish observations (multiple attempts may repeat a question) and unique question revisions, and gate interpretation by answered sample sizes/independent attempts.
+- **Timed analysis:** per-question duration means foreground time in the question, not total cognitive work. Speed buckets require a section median and sufficient measured, answered items. Marks opportunities use frozen marking rules only; avoid presenting maximum opportunities for partial-credit/pending/excluded items as predictions.
+- **FSRS:** cache scheduled cards keyed by immutable card object identity and clear caches when the card record changes. Never schedule a card from a mock score, never create FSRS ratings for generated revision exams.
+- **UX constraints:** This pass provides functional entry points and evidence, not the final UI. Rebuild home/history/results controls and v11-level aesthetics in Pass 9 using the parity ledger.

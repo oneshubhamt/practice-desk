@@ -14,7 +14,9 @@ Strictly typed, exam-agnostic offline practice desk. Built-in SSC CGL source/rev
 | [Pass 4 acceptance](docs/PASS4_RELEASE_ACCEPTANCE.md) | Clean typed app and offline engine baseline |
 | [Pass 5 acceptance](docs/PASS5_RELEASE_ACCEPTANCE.md) | Learning/FSRS baseline |
 | [Pass 6 acceptance](docs/PASS6_RELEASE_ACCEPTANCE.md) | Content integrity, frozen media and backup v3 baseline |
-| [Pass 7 acceptance](docs/PASS7_RELEASE_ACCEPTANCE.md) | Current exam/review correctness and QA target |
+| [Pass 7 acceptance](docs/PASS7_RELEASE_ACCEPTANCE.md) | Completed exam/review correctness baseline |
+| [Pass 8 acceptance](docs/PASS8_RELEASE_ACCEPTANCE.md) | **Current learning and analytics objective checks** |
+| [Pass 8 design](docs/PASS8_DESIGN.md) | Revision-test/metrics data policies and explicit uncertainty |
 
 **Required execution loop for every pass:** (1) **audit** existing sources and baseline plus relevant documents; (2) **analyze** exact invariants, data risks, user-facing regressions and design boundaries in architecture scratchpad; (3) **implement** on `overhaul` only; (4) **check objectives** one-by-one in the same scratchpad; (5) **targeted QA** of both new and existing scenarios, inspect CI and record evidence. No "complete" designation for unchecked objectives. Document new or deferred items precisely and do not hide regression behind a redesigned UI.
 

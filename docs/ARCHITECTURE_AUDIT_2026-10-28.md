@@ -1309,3 +1309,16 @@ See `docs/PASS4_RELEASE_ACCEPTANCE.md` for remaining verification. Do not merge 
 - [Baseline green run #40898692499](https://github.com/oneshubhamt/practice-desk/actions/runs/40898692499) — **63/63 unit tests and full Chrome smoke**, before the later targeted backup/reopen and monotonic-clock additions. The **final-HEAD CI** passed at [GitHub Actions #40899786917](https://github.com/oneshubhamt/practice-desk/actions/runs/40899786917): **64/64 tests**; all Chrome `file://` smoke checks, including manual marks and source references in backup/reopen, passed. This is an engineering/Chromium acceptance result, not cross-browser or v11 product-UI parity.
 
 **Unresolved / next:** Pass 8 deepen learning and analytics without guessing; Pass 9 deliberately recover **v11-or-better** UI and functionality rather than perpetuating the rudimentary implementation; Pass 10 scale/real-device/cross-browser release hardening. Keep v11 frozen as the reference, not as a duplicate runtime in overhaul.
+
+
+## Pass 8 — live five-step scratchpad (29 October 2026)
+
+**1 · Audit (source, docs, v11 comparison):** `src/learning/learning.ts` has per-question frozen cards, FSRS-7 review replay, section/topic labels with a 5-answered observation gate, and exact-paper comparison, but **no executable revision sets**, no distinct-question or independent-attempt evidence, and no questions' pace/speed–accuracy/negative-mark decomposition. `src/app/learning-ui.ts` presently only lists and edits cards/reviews; `src/app/generic-ui.ts` supports add-to-notebook but not a derived exam. Every redraw calls `scheduledCard` for each item multiple times. The v11 baseline contains richer analytics and dedicated history/insights, recorded in `docs/V11_PARITY_LEDGER.md` and reserved for visual parity in Pass 9. Pass 7 resulted in 64 Node tests and Chrome offline acceptance; do not regress them.
+
+**2 · Analyze/design:** Use one transient, custom revision exam through the existing `ExamPackage` validator, frozen attempt and generic engine. Source cards may be mixed across paper revisions **only within one exam ID**; deduplicate IDs, reject conflicting shared media and unscoreable editorial statuses, and announce +1/0 practice scoring. Revision history must retain all source media even without the original package. Analytics separate raw observation counts, unique questions, and independent attempts, use section-relative measured speed, recompute from frozen responses and marking rules, and avoid rank/causal/predictive claims. Prevent repeated full FSRS schedule replays during the same redraw by caching state keyed to unchanged card objects. [Design details](PASS8_DESIGN.md). Pass 9 remains a **mandatory v11-or-better UX** gate, not optional polish.
+
+**3 · Implement:** Pending.
+
+**4 · Check objectives:** Pending.
+
+**5 · Targeted QA:** Pending.
