@@ -9,6 +9,7 @@ import {transition,startSession} from "../src/engine/session.ts";
 import {setManualGrade,validateManualGrades,manualGradeSummary} from "../src/engine/manual-grading.ts";
 import {createSourceKeyReference,sourceKeyScore,validateSourceKeyReference} from "../src/engine/source-comparison.ts";
 import {scoreAttempt} from "../src/engine/scoring.ts";
+import {createSessionClock} from "../src/engine/clock.ts";
 
 const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
@@ -134,4 +135,19 @@ test("draft and editorial-unsafe questions are excluded rather than treated as c
  ],new Date(1000).toISOString());
  assert.deepEqual(score.items.map(x=>x.verdict),["excluded"]);
  assert.equal(score.snapshot.earnedMarks,0);
+});
+
+test("live timer uses nondecreasing monotonic elapsed time even if wall clock moves",()=>{
+ let mono=100;
+ const clock=createSessionClock(10000,100,()=>mono);
+ assert.equal(clock(),10000);
+ mono=110;assert.equal(clock(),10010);
+ mono=105;assert.equal(clock(),10010,"A backwards sample must never reverse the timer");
+ mono=130;assert.equal(clock(),10030);
+ const paper={...pkg.paper,timing:{kind:"whole-paper",durationMs:40,pausePolicy:"forbidden"}};
+ const initial=startSession(paper,10000);
+ const after=transition(paper,initial,{type:"TICK",nowMs:clock()});
+ assert.equal(after.elapsedMs,30);
+ mono=145;
+ assert.equal(transition(paper,after,{type:"TICK",nowMs:clock()}).status,"completed");
 });
