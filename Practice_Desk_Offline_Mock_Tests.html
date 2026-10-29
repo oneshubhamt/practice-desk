@@ -33,6 +33,18 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
 .generic-response-group{border:0;margin:0;padding:0;min-width:0}fieldset:disabled{opacity:.65}
 @media(max-width:760px){.generic-workspace .generic-layout{grid-template-columns:1fr}.pad{padding:16px}main{padding:15px 12px 45px}.wrap{padding:11px 12px}}
 @media(max-width:430px){.display-tools .btn{font-size:11px;padding:6px}.generic-workspace .generic-heading{align-items:stretch}}
+
+/* Pass 5 — notebook and evidence-based learning, using the shared responsive shell. */
+.learning-entry{margin-top:18px;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.learning-entry h2{margin-bottom:4px}.learning-entry p{margin-bottom:0}
+.learning-layout{margin-top:18px}.learning-filter{width:auto;max-width:160px;padding:7px;min-width:120px}
+.learning-layout .generic-history small{display:block;margin-top:4px;color:var(--muted)}
+.learning-layout .generic-history.learning-selected{background:color-mix(in srgb,var(--blue) 9%,var(--panel));border-radius:8px;padding-left:9px}
+.learning-layout textarea{resize:vertical}.learning-bookmark{display:flex;gap:8px;align-items:center;margin:12px 0}
+.learning-bookmark input{width:auto}.learning-insights{margin-top:18px}.learning-insights h2:not(:first-child){margin-top:22px}
+.learning-answer{border-top:1px solid var(--line);padding-top:15px;margin-top:16px}
+.learning-answer p{white-space:pre-wrap}
+@media(max-width:760px){.learning-entry{padding:16px}.learning-layout{grid-template-columns:1fr}}
 </style></head>
 <body><header><div class="wrap"><div class="brand"><div class="symbol">P</div><div><b>Practice Desk</b><small>Offline exam practice</small></div></div><div class="display-tools" role="group" aria-label="Display options"><button id="themeToggle" class="btn" aria-pressed="false">Dark theme</button><button id="fontLess" class="btn" aria-label="Decrease text size">−</button><button id="fontReset" class="btn" aria-label="Reset text size">100%</button><button id="fontMore" class="btn" aria-label="Increase text size">+</button></div></div></header>
 <main id="app" class="generic-workspace"></main>
