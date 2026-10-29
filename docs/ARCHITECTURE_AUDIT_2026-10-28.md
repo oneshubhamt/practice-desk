@@ -1163,3 +1163,8 @@ Added:
 - A conflict stops further editing in the stale tab, clears its emergency mirror and reloads the last saved record with a warning.
 - LocalStorage fallback and the original CGL UI are not yet cross-tab guarded; do not claim complete cross-tab safety.
 - Focused version-guard tests added. Real two-tab Chromium verification remains part of the acceptance suite.
+
+### Pass 4 two-tab browser regression gate
+
+- Extended Chrome headless `file://` smoke: two simultaneous tabs reopen the same generic attempt. The second tab commits a newer revision, then the first attempts a stale update.
+- The first tab must display a storage-conflict warning and the persisted record must retain the second tab's revision. This is an automated gate for generic attempts only; original CGL tab conflicts and browser-specific fallback behaviour remain deferred.

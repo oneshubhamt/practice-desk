@@ -84,7 +84,40 @@ try{
    if(!backup.attempts.some(a=>a.recordType==="generic-attempt")||
       !backup.attempts.some(a=>a.schema===4))throw new Error("All-data backup omitted CGL or generic history");
    if(cgl.errors.length)throw new Error("CGL UI errors: "+cgl.errors.join(" | "));
-   console.log("Offline file://: original CGL start, answer and backup export passed");
+   console.log("Offline file://: original CGL start, answer and unified backup export passed");
+
+   // Two tabs use one IndexedDB origin. Resuming in tab B advances the saved
+   // revision; editing the stale copy in tab A must not overwrite it.
+   await cgl.page.locator("#historyHome").click();
+   await cgl.page.locator("#genericWorkspace").click();
+   await cgl.page.locator("#g-start").waitFor({state:"visible"});
+   await cgl.page.locator('[data-attempt="'+savedId+'"]').click();
+   await cgl.page.locator('input[data-choice]').first().waitFor({state:"visible"});
+   let firstVersion=0;
+   for(let i=0;i<50;i++){
+     const found=(await readGenericAttempts(cgl.page)).find(x=>x.id===savedId);
+     if(found?.saveRevision>0){firstVersion=found.saveRevision;break;}
+     await delay(100);
+   }
+   if(!firstVersion)throw new Error("Initial tab revision not persisted");
+   const competing=await cgl.context.newPage();
+   await competing.goto(file,{waitUntil:"load"});
+   await competing.locator("#genericWorkspace").click();
+   await competing.locator("#g-start").waitFor({state:"visible"});
+   await competing.locator('[data-attempt="'+savedId+'"]').click();
+   await competing.locator('input[data-choice]').first().waitFor({state:"visible"});
+   let otherVersion=firstVersion;
+   for(let i=0;i<60;i++){
+     const found=(await readGenericAttempts(competing)).find(x=>x.id===savedId);
+     if(found?.saveRevision>firstVersion){otherVersion=found.saveRevision;break;}
+     await delay(100);
+   }
+   if(otherVersion<=firstVersion)throw new Error("Second tab did not checkpoint a new revision");
+   await cgl.page.locator('input[data-choice]').nth(1).click();
+   await cgl.page.locator('.generic-warning').filter({hasText:"Another tab"}).waitFor({state:"visible"});
+   const after=(await readGenericAttempts(cgl.page)).find(x=>x.id===savedId);
+   if(after?.saveRevision!==otherVersion)throw new Error("Stale tab overwrote the newer revision");
+   console.log("Offline file://: stale tab rejected without changing the saved attempt");
  }catch(error){throw new Error("CGL file:// test: "+error.message+"; browser errors: "+cgl.errors.join(" | "));}
  finally{await cgl.context.close();}
 }finally{
