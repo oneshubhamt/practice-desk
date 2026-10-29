@@ -2760,6 +2760,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
       if (!Array.isArray(editorial["changes"])) throw new Error("question.editorial.changes: expected an array");
       editorial["changes"].forEach((change, index) => oneOf(change, EDITORIAL_CHANGES, "question.editorial.changes[" + index + "]"));
     }
+    if (editorial["sourcePage"] !== void 0) positiveInteger(editorial["sourcePage"], "question.editorial.sourcePage");
     if (editorial["sources"] !== void 0) validateSourceReferences(editorial["sources"], "question.editorial.sources");
     return question;
   }
@@ -3093,6 +3094,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
           };
           const editorial = {
             status: editorialStatus,
+            sourcePage: original.sourcePage,
             ...merged.review ? { notes: merged.review } : {},
             ...merged.sources?.length ? { sources: merged.sources } : {}
           };
@@ -3345,7 +3347,8 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     return limit.durationMs;
   }
   function checkpoint(paper, state, nowMs) {
-    if (!Number.isFinite(nowMs) || nowMs < state.clockMs) throw new Error("Clock must be monotonic");
+    if (!Number.isFinite(nowMs)) throw new Error("Invalid session clock");
+    if (nowMs < state.clockMs) return { ...state, clockMs: nowMs };
     let remaining = state.status === "running" ? nowMs - state.clockMs : 0;
     let next = { ...state, clockMs: nowMs };
     if (state.status !== "running") return next;
@@ -3384,11 +3387,12 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
       if (current.status !== "running" || paper.timing.kind === "untimed" || paper.timing.pausePolicy !== "allowed") return current;
       return { ...current, status: "paused" };
     }
-    if (event.type === "RESUME") return current.status === "paused" ? { ...current, status: "running" } : current;
+    if (event.type === "RESUME") return current.status === "paused" && paper.timing.kind !== "untimed" && paper.timing.pausePolicy === "allowed" ? { ...current, status: "running" } : current;
     if (current.status !== "running") return current;
-    if (event.type === "SUBMIT_ATTEMPT") return { ...current, status: "completed" };
+    if (event.type === "SUBMIT_ATTEMPT")
+      return paper.timing.kind === "sectional" ? current : { ...current, status: "completed" };
     if (event.type === "SUBMIT_SECTION") {
-      if (paper.timing.kind !== "sectional" || !paper.timing.allowEarlySubmit) return current;
+      if (paper.timing.kind !== "sectional" || !paper.timing.allowEarlySubmit || current.sectionIndex !== state.sectionIndex) return current;
       return advance(paper, current);
     }
     if (event.type === "NAVIGATE") {
@@ -3479,7 +3483,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
       if (response && response.kind !== question.content.kind) throw new Error("Response kind mismatch");
       let verdict;
       let marks;
-      if (["invalid", "incomplete-source", "under-review", "superseded"].includes(question.editorial.status)) {
+      if (["draft", "invalid", "incomplete-source", "under-review", "superseded"].includes(question.editorial.status)) {
         verdict = "excluded";
         marks = 0;
         excludedCount++;
@@ -3618,7 +3622,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
   }
   function configureCglPractice(base, mode, sectionIndex = 0) {
     if (base.examId !== "ssc-cgl") return base;
-    if (mode === "strict") return base;
+    if (mode === "strict") return { ...base, practiceMode: "strict" };
     const source = base.paper;
     if (mode === "single" && !source.sections[sectionIndex]) throw new Error("Unknown practice section");
     const sections = mode === "single" ? [source.sections[sectionIndex]] : [...source.sections];
@@ -3645,19 +3649,21 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
       paper,
       answerKey,
       questions,
+      practiceMode: mode,
       ...base.explanations ? { explanations: Object.fromEntries(Object.entries(base.explanations).filter(([id]) => included.has(id))) } : {},
       title: base.title + (mode === "free" ? " \xB7 Flexible practice" : " \xB7 " + sections[0].title + " practice")
     };
   }
   function startGenericAttempt(bundle, id, timestamp) {
     const validated = validateExamPackage(bundle);
+    const mode = validated.examId === "ssc-cgl" ? validated.practiceMode === "free" ? "full-paper-practice" : validated.practiceMode === "single" ? "section-practice" : "exam-simulation" : validated.paper.edition === "custom" ? "custom-practice" : "exam-simulation";
     const frozen = freezeAttempt(
       validated.paper,
       validated.answerKey,
       validated.questions,
       validated.stimuli ?? [],
       validated.assets ?? [],
-      "exam-simulation",
+      mode,
       new Date(timestamp).toISOString(),
       validated.examId
     );
@@ -3719,6 +3725,58 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
       case "free-response":
         return "text" in answer ? answer.text : "Manual assessment required";
     }
+  }
+
+  // src/engine/manual-grading.ts
+  function maxFor(attempt, id) {
+    const paper = attempt.frozen.paper;
+    const section = paper.sections.find((x) => x.questionRevisionIds.includes(id));
+    const question = attempt.frozen.questions.find((x) => x.id === id);
+    const entry = attempt.frozen.key.entries.find((x) => x.questionRevisionId === id);
+    if (!section || question?.content.kind !== "free-response" || entry?.answer.kind !== "free-response") return null;
+    const result = attempt.result?.items.find((x) => x.questionRevisionId === id);
+    if (result?.verdict !== "pending") return null;
+    return entry.scoringOverride?.correctMarks ?? section.scoringOverride?.correctMarks ?? paper.scoring.byQuestionKind?.["free-response"]?.correctMarks ?? paper.scoring.defaultRule.correctMarks;
+  }
+  function manualGradeLimit(attempt, id) {
+    if (attempt.finishedAt === null || attempt.state.status !== "completed") return null;
+    return maxFor(attempt, id);
+  }
+  function validateManualGrades(attempt) {
+    const grades2 = attempt.manualGrades ?? [];
+    if (!Array.isArray(grades2) || grades2.length > attempt.frozen.questions.length)
+      throw new Error("Invalid manual grading records");
+    if (attempt.finishedAt === null && grades2.length) throw new Error("Cannot grade an active attempt");
+    const ids = /* @__PURE__ */ new Set();
+    for (const grade of grades2) {
+      if (!grade || typeof grade.questionRevisionId !== "string" || ids.has(grade.questionRevisionId))
+        throw new Error("Duplicate or invalid manual grade");
+      ids.add(grade.questionRevisionId);
+      const maximum = manualGradeLimit(attempt, grade.questionRevisionId);
+      if (maximum === null || !Number.isFinite(grade.marks) || grade.marks < 0 || grade.marks > maximum || !Number.isFinite(maximum) || typeof grade.note !== "string" || grade.note.length > 2e3 || typeof grade.gradedAt !== "string" || !Number.isFinite(Date.parse(grade.gradedAt)) || Date.parse(grade.gradedAt) < (attempt.finishedAt ?? 0))
+        throw new Error("Invalid manual grade for pending written response");
+    }
+  }
+  function setManualGrade(attempt, id, marks, note, at) {
+    if (manualGradeLimit(attempt, id) === null) throw new Error("Only submitted pending written responses can be manually assessed");
+    const grade = { questionRevisionId: id, marks, note, gradedAt: at };
+    const next = {
+      ...attempt,
+      manualGrades: [...(attempt.manualGrades ?? []).filter((x) => x.questionRevisionId !== id), grade],
+      updatedAt: Math.max(attempt.updatedAt, Date.parse(at))
+    };
+    validateManualGrades(next);
+    return next;
+  }
+  function manualGradeSummary(attempt) {
+    validateManualGrades(attempt);
+    const grades2 = attempt.manualGrades ?? [];
+    const eligible = attempt.result?.items.filter((x) => x.verdict === "pending").length ?? 0;
+    return {
+      total: grades2.reduce((sum, x) => sum + x.marks, 0),
+      graded: grades2.length,
+      pending: Math.max(0, eligible - grades2.length)
+    };
   }
 
   // src/app/preferences.ts
@@ -5004,6 +5062,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
       if (fields.some((field) => value.result.snapshot[field] !== recalculated.snapshot[field]) || JSON.stringify(value.result.items) !== JSON.stringify(recalculated.items) || typeof value.result.snapshot.calculatedAt !== "string" || !Number.isFinite(Date.parse(value.result.snapshot.calculatedAt)))
         throw new Error("Completed attempt score does not match its frozen inputs (summary or item verdict)");
     }
+    validateManualGrades(value);
     return value;
   }
   function renderModelExam(attempt, bundle, warning = "") {
@@ -5360,6 +5419,26 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
     function examHTML() {
       return attempt ? renderModelExam(attempt, packageForAttempt(attempt), warning) : "";
     }
+    function frozenReviewMedia(saved, q) {
+      const frozen = saved.frozen;
+      const display = {
+        format: "practice-desk-exam",
+        version: 1,
+        examId: frozen.snapshot.examId,
+        title: "",
+        paper: frozen.paper,
+        answerKey: frozen.key,
+        questions: frozen.questions,
+        stimuli: frozen.stimuli,
+        assets: frozen.assets
+      };
+      const content = q.content;
+      const passage = stimulusHTML(display, q);
+      const promptAssets = assetHTML(display, content.assetIds);
+      const options = content.kind === "single-choice" || content.kind === "multiple-select" ? '<div class="generic-choices">' + content.options.map((option, i) => '<div class="generic-choice"><span><b>' + String.fromCharCode(65 + i) + ".</b> " + escapeText(option.text) + assetHTML(display, option.assetIds) + "</span></div>").join("") + "</div>" : "";
+      const matches = content.kind === "matching" ? '<div class="generic-matches">' + [...content.leftItems, ...content.rightItems].map((item) => "<div><span>" + escapeText(item.text) + assetHTML(display, item.assetIds) + "</span></div>").join("") + "</div>" : "";
+      return passage + promptAssets + options + matches;
+    }
     function resultHTML() {
       if (!attempt) return "";
       const paper = attempt.frozen.paper, s = attempt.result ?? scoreAttempt(
@@ -5370,6 +5449,8 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
         (/* @__PURE__ */ new Date()).toISOString()
       );
       const qs = new Map(attempt.frozen.questions.map((q) => [q.id, q]));
+      const grades2 = manualGradeSummary(attempt);
+      const selfAssessed = s.snapshot.earnedMarks + grades2.total;
       const paperSectionRows = paper.sections.map((section) => {
         const ids = new Set(section.questionRevisionIds);
         const items = s.items.filter((item) => ids.has(item.questionRevisionId));
@@ -5377,13 +5458,17 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
         const responseTime = attempt.state.responses.filter((r) => ids.has(r.questionRevisionId)).reduce((sum, r) => sum + r.timeSpentMs, 0);
         return "<tr><td>" + escapeText(section.title) + "</td><td>" + scored.toFixed(1) + "</td><td>" + items.filter((item) => item.verdict === "correct").length + "/" + items.length + "</td><td>" + minutes(responseTime) + "</td></tr>";
       }).join("");
-      return '<div class="generic-heading"><h1>Exam results</h1><button class="btn" id="g-library">Library</button></div><section class="panel pad"><div class="scoregrid"><div class="score standout"><b>' + s.snapshot.earnedMarks + '</b><small>Marks</small></div><div class="score"><b>' + s.snapshot.correctCount + '</b><small>Correct</small></div><div class="score"><b>' + s.snapshot.incorrectCount + '</b><small>Incorrect</small></div><div class="score"><b>' + s.snapshot.unansweredCount + '</b><small>Unanswered</small></div><div class="score"><b>' + s.snapshot.excludedCount + '</b><small>Excluded</small></div></div><p class="fine">Written responses marked pending require manual evaluation.</p></section><section class="panel pad"><h2>Section performance</h2><div class="scroll-table"><table><thead><tr><th>Section</th><th>Marks</th><th>Correct</th><th>Time on questions</th></tr></thead><tbody>' + paperSectionRows + '</tbody></table></div></section><section class="panel pad"><div class="row between"><h2>Question review</h2><button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div><p class="fine">Mock-test results never automatically become FSRS review ratings.</p>' + s.items.map((it, i) => {
+      return '<div class="generic-heading"><h1>Exam results</h1><button class="btn" id="g-library">Library</button></div><section class="panel pad"><div class="scoregrid"><div class="score standout"><b>' + s.snapshot.earnedMarks + '</b><small>Marks</small></div><div class="score"><b>' + s.snapshot.correctCount + '</b><small>Correct</small></div><div class="score"><b>' + s.snapshot.incorrectCount + '</b><small>Incorrect</small></div><div class="score"><b>' + s.snapshot.unansweredCount + '</b><small>Unanswered</small></div><div class="score"><b>' + s.snapshot.excludedCount + "</b><small>Excluded</small></div></div>" + (grades2.graded || grades2.pending ? '<p class="fine"><b>Separate self-assessment:</b> ' + escapeText(grades2.graded) + " of " + escapeText(grades2.graded + grades2.pending) + " written responses marked; self-assessed total " + escapeText(selfAssessed.toFixed(2)) + ". Original automated score above remains unchanged.</p>" : '<p class="fine">Automated marks reflect only scoreable questions.</p>') + '</section><section class="panel pad"><h2>Section performance</h2><div class="scroll-table"><table><thead><tr><th>Section</th><th>Marks</th><th>Correct</th><th>Time on questions</th></tr></thead><tbody>' + paperSectionRows + '</tbody></table></div></section><section class="panel pad"><div class="row between"><h2>Question review</h2><button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div><p class="fine">Mock-test results never automatically become FSRS review ratings.</p>' + s.items.map((it, i) => {
         const q = qs.get(it.questionRevisionId);
         const response = attempt.state.responses.find((r) => r.questionRevisionId === it.questionRevisionId)?.response;
         const answer = attempt.frozen.key.entries.find((e) => e.questionRevisionId === it.questionRevisionId)?.answer;
         const explanation = attempt.explanations?.[it.questionRevisionId] || q?.editorial.notes;
         const seconds = attempt.state.responses.find((r) => r.questionRevisionId === it.questionRevisionId)?.timeSpentMs ?? 0;
-        return q ? '<article class="generic-review"><strong>' + (i + 1) + ". " + escapeText(q.content.prompt) + '</strong><p class="fine">' + escapeText(q.editorial.status) + " \xB7 " + minutes(seconds) + ' spent</p><p class="fine">' + escapeText(it.verdict) + " \xB7 " + it.marks + ' marks</p><p class="fine">Your answer: ' + escapeText(readableAnswer(q, response)) + '</p><p class="fine">Expected: ' + escapeText(readableAnswer(q, answer)) + "</p>" + (q.editorial.notes ? '<p class="fine">Editorial note: ' + escapeText(q.editorial.notes) + "</p>" : "") + (explanation ? '<p class="fine">Explanation: ' + escapeText(explanation) + "</p>" : "") + '<button class="btn" data-add-card="' + escapeText(q.id) + '"' + (records.has("learning-card:" + q.id) ? " disabled" : "") + ">" + (records.has("learning-card:" + q.id) ? "In notebook" : "Add to notebook") + "</button></article>" : "";
+        if (!q) return "";
+        const prior = attempt.manualGrades?.find((g) => g.questionRevisionId === q.id);
+        const limit = manualGradeLimit(attempt, q.id);
+        const provenance = q.editorial.sources ?? [];
+        return '<article class="generic-review"><strong>' + (i + 1) + ". " + escapeText(q.content.prompt) + '</strong><p class="fine">' + escapeText(q.editorial.status) + (q.editorial.sourcePage ? " \xB7 Source page " + q.editorial.sourcePage : "") + " \xB7 " + minutes(seconds) + " spent</p>" + frozenReviewMedia(attempt, q) + '<p class="fine">' + escapeText(it.verdict) + " \xB7 " + it.marks + ' automated marks</p><p class="fine">Your answer: ' + escapeText(readableAnswer(q, response)) + '</p><p class="fine">Expected: ' + escapeText(readableAnswer(q, answer)) + "</p>" + (q.editorial.notes ? '<p class="fine">Editorial note: ' + escapeText(q.editorial.notes) + "</p>" : "") + (explanation ? '<p class="fine">Explanation: ' + escapeText(explanation) + "</p>" : "") + (provenance.length ? '<p class="fine">Sources: ' + provenance.map((source) => '<a href="' + escapeText(source.url) + '" target="_blank" rel="noopener noreferrer">' + escapeText(source.title) + "</a>").join(" \xB7 ") + "</p>" : "") + (limit !== null ? '<div class="generic-manual-grade"><p class="fine">Written response requires explicit human assessment. Self-marked results are separate from exam scores.</p><label>Self-assessed marks (0\u2013' + limit + ')<input type="number" step="0.01" min="0" max="' + limit + '" data-manual-marks="' + escapeText(q.id) + '" value="' + escapeText(prior?.marks ?? "") + '"></label><label>Assessment note (optional)<textarea maxlength="2000" rows="2" data-manual-note="' + escapeText(q.id) + '">' + escapeText(prior?.note ?? "") + '</textarea></label><button class="btn" data-manual-save="' + escapeText(q.id) + '">Save self-assessment</button></div>' : "") + '<button class="btn" data-add-card="' + escapeText(q.id) + '"' + (records.has("learning-card:" + q.id) ? " disabled" : "") + ">" + (records.has("learning-card:" + q.id) ? "In notebook" : "Add to notebook") + "</button></article>";
       }).join("") + "</section>";
     }
     function draw() {
@@ -5505,6 +5590,26 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
         root2.querySelector("#g-revision-set").onclick = () => {
           void addResultCards(attempt);
         };
+        root2.querySelectorAll("[data-manual-save]").forEach((button) => button.onclick = async () => {
+          if (!attempt || storageFault) return;
+          const id = button.dataset.manualSave;
+          if (!id) return;
+          const marksField = [...root2.querySelectorAll("[data-manual-marks]")].find((x) => x.dataset.manualMarks === id);
+          const noteField = [...root2.querySelectorAll("[data-manual-note]")].find((x) => x.dataset.manualNote === id);
+          if (!marksField?.value || !Number.isFinite(marksField.valueAsNumber)) {
+            notice("Enter a finite assessment mark.");
+            return;
+          }
+          try {
+            const assessed = setManualGrade(attempt, id, marksField.valueAsNumber, noteField?.value ?? "", new Date(now2()).toISOString());
+            if (await save(assessed)) {
+              warning = "Self-assessment committed separately from original exam score.";
+              draw();
+            }
+          } catch (error) {
+            notice(error instanceof Error ? error.message : "Invalid manual assessment");
+          }
+        });
         root2.querySelectorAll("[data-add-card]").forEach((button) => button.onclick = () => {
           if (attempt) addNotebookCard(attempt, button.dataset.addCard ?? "");
         });
