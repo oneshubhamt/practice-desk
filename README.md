@@ -38,3 +38,14 @@ Development stays on `overhaul`. `main` and `baseline/v11` remain unchanged.
 - Notebook notes and review history are validated and included with exam attempts in the same checksum-verified backup and fresh IndexedDB store.
 
 See [Pass 5 acceptance](docs/PASS5_RELEASE_ACCEPTANCE.md). The Android/iOS/Firefox/Safari physical-device release checks remain manual.
+
+## Pass 6 — Integrity, durability and complete recovery
+
+- Imported exams validate all stimuli, embedded media, references, sizes, SHA-256 image hashes and canonical question/key/paper revision hashes. Changing exam content requires a new hash.
+- A completed saved attempt validates **every item-level verdict and mark**, not only aggregate marks. Historical attempts now carry the exact passage/figure resources needed for subsequent offline review; learning cards pin their own relevant media.
+- The versioned **backup v3** exports saved attempts, imported packages, learning cards, frozen media and display preferences together. Import is additive; after committing records it restores theme and text size. Backups do **not** overwrite existing IDs.
+- Notebook ratings, notes and imported packages report success only after the browser acknowledges a committed write. Failed IndexedDB/localStorage writes lock further edits, display a warning and allow an **UNSAVED_RECOVERY** export containing the in-memory changes. Exports wait for queued writes before capturing a snapshot.
+- This is a fresh product with no prior production user data: the new frozen-record schema and backup version deliberately have **no legacy compatibility reader**. The established v11 reference still lives in `baseline/v11`.
+- Browser storage, emergency mirror writes and quota limits are inherently best-effort; periodically export backups. Firefox/Safari and device/assistive-technology manual release acceptance still remain.
+
+See [Pass 6 acceptance](docs/PASS6_RELEASE_ACCEPTANCE.md).
