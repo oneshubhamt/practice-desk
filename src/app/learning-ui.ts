@@ -59,7 +59,10 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
    cache.set(card.id,{record:card,scheduled:computed});
    return computed;
  };
- const invalidate=()=>{for(const [id,entry] of cache)if(!host.cards().some(card=>card.id===id&&card===entry.record))cache.delete(id);};
+ const invalidate=(all:readonly LearningCard[])=>{
+   const active=new Map(all.map(card=>[card.id,card]));
+   for(const [id,entry] of cache)if(active.get(id)!==entry.record)cache.delete(id);
+ };
  const now=()=>new Date();
  const due=(card:LearningCard)=>scheduler?.newCard!==undefined?
    schedule(card).dueAt.getTime()<=Date.now():false;
@@ -69,7 +72,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
  function draw(){
   if(closed||!opened)return;
   const all=cards();
-  invalidate();
+  invalidate(all);
   const selected=all.find(c=>c.id===selectedId)??all[0];
   const dueNow=dueCards();
   if(reviewId){
@@ -108,7 +111,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   const topics=topicMetrics(done,all),cohorts=comparableTrends(done).filter(x=>x.count>=2);
   const progress=evidenceProgression(topics);
   const visible=all.filter(c=>filter==="all"||filter==="due"&&due(c)||filter==="bookmarked"&&c.bookmarked);
-  const exam=all.find(c=>c.id===selectedId)?.examId??visible[0]?.examId??all[0]?.examId;
+  const exam=visible.find(c=>c.id===selectedId)?.examId??visible[0]?.examId;
   const candidates=visible.filter(c=>c.examId===exam&&
     ["verified","corrected","caution"].includes(c.question.editorial.status)).slice(0,REVISION_MAX_QUESTIONS);
   root.innerHTML='<div class="generic-heading"><div><h1>Learning & revision</h1><p class="muted">Error notebook · FSRS-7 spaced review · Topic evidence</p></div>'+

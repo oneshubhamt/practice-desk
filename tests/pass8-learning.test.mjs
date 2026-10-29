@@ -7,7 +7,7 @@ import { topicMetrics,addLearningCard } from "../src/learning/learning.ts";
 import { validateExamPackage,startGenericAttempt,transitionGenericAttempt } from "../src/app/exam-package.ts";
 import { validateGenericStoredRecord,renderModelExam } from "../src/app/generic-ui.ts";
 import { scoreAttempt } from "../src/engine/scoring.ts";
-import { questionRevisionHash } from "../src/domain/integrity.ts";
+import { questionRevisionHash,paperRevisionHash } from "../src/domain/integrity.ts";
 import { makeBackup,verifyBackup } from "../src/history/backup.ts";
 import { sha256 } from "../src/domain/hash.ts";
 
@@ -116,4 +116,28 @@ test("evidence progression requires independent attempts and distinct questions"
  assert.equal(topic.total,2);
  assert.equal(topic.answered,0);
  assert.ok(topics.some(x=>x.kind==="section"));
+});
+
+test("speed classification uses a sufficient section median and distinguishes fast mistakes",()=>{
+ const group={...bundle.paper.sections[0],questionRevisionIds:bundle.questions.map(q=>q.id)};
+ const source={...bundle.paper,sections:[group]};
+ const combined=validateExamPackage({...bundle,paper:{...source,contentHash:paperRevisionHash(source)}});
+ const responses=[
+  {questionRevisionId:"rev-0",response:{kind:"single-choice",optionId:"a"},timeSpentMs:1000,flagged:false,answerChangeCount:0},
+  {questionRevisionId:"rev-1",response:{kind:"multiple-select",optionIds:["x","z"]},timeSpentMs:2000,flagged:false,answerChangeCount:0},
+  {questionRevisionId:"rev-2",response:{kind:"numeric-entry",value:3.5},timeSpentMs:3000,flagged:false,answerChangeCount:0},
+  {questionRevisionId:"rev-3",response:{kind:"true-false",value:false},timeSpentMs:6000,flagged:false,answerChangeCount:0},
+  {questionRevisionId:"rev-4",response:{kind:"matching",pairs:[{leftId:"l1",rightId:"r1"},{leftId:"l2",rightId:"r2"}]},timeSpentMs:10000,flagged:false,answerChangeCount:0}
+ ];
+ const a=startGenericAttempt(combined,"speed",1000);
+ const scores=scoreAttempt(a.frozen.paper,a.frozen.key,a.frozen.questions,responses,"2026-10-29T12:00:00Z");
+ const completed={...a,finishedAt:2000,state:{...a.state,responses,status:"completed",foregroundMs:22000},result:scores};
+ const rows=attemptEvidence(completed);
+ assert.equal(rows.sections.length,1);
+ assert.equal(rows.sections[0].medianAnsweredMs,3000);
+ assert.equal(rows.speed.measured,5);
+ assert.equal(rows.speed.classified,5);
+ assert.deepEqual(rows.speed.buckets.map(x=>x.items),[2,1,2]);
+ assert.equal(rows.speed.buckets[0].incorrect+rows.speed.buckets[1].incorrect+rows.speed.buckets[2].incorrect,
+   scores.snapshot.incorrectCount);
 });
