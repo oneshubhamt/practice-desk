@@ -289,6 +289,7 @@ try{
    const cglImages=figures.locator(".generic-figure");
    if(await cglImages.count()<5 || !await cglImages.first().evaluate(img=>img.complete&&img.naturalWidth>0))
      throw new Error("Original CGL shared renderer lost embedded figure or option images");
+   figures.once("dialog",dialog=>dialog.accept());
    await figures.locator("#g-library").click();
    await figures.locator("#genericWorkspace").click();
    await figures.locator("#g-start").click();
