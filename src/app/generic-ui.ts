@@ -218,7 +218,8 @@ export function renderModelExam(
        '<span><i class="legend-dot marked"></i>Flagged</span>'+
        '<span><i class="legend-dot current"></i>Current</span>'+
        '<span><i class="legend-dot empty"></i>Unanswered</span></div><p class="fine">'+(paper.navigation.questionNavigation==="forward-only"?
-        "Questions cannot be revisited in this exam.":"Navigate freely where the paper permits.")+'</p></aside></div>';
+        "Questions cannot be revisited in this exam.":"Navigate freely where the paper permits.")+
+      ' Press Alt + ← / → for previous / next when not typing.</p></aside></div>';
  }
 
 
@@ -708,7 +709,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    if(disposed)return;
    const previous=document.activeElement;
    const focusKey=previous instanceof HTMLElement && root.contains(previous)?
-     {id:previous.id,attributes:["data-choice","data-bool","data-match","data-q","data-section","data-attempt"]
+     {id:previous.id,attributes:["data-choice","data-bool","data-match","data-q","data-section","data-attempt","data-result-tab"]
        .filter(name=>previous.hasAttribute(name)).map(name=>[name,previous.getAttribute(name)] as const)}:null;
    root.classList.add("generic-workspace");
    if(view==="learning"){learningDesk.show();return;}
@@ -719,7 +720,14 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      const controls=[...root.querySelectorAll<HTMLElement>("button,input,select,textarea")];
      const target=focusKey.id?controls.find(item=>item.id===focusKey.id):
        controls.find(item=>focusKey.attributes.some(([name,value])=>item.getAttribute(name)===value&&item.hasAttribute(name)));
-     if(target && !("disabled" in target && target.disabled))target.focus({preventScroll:true});
+     if(target && !("disabled" in target && target.disabled)){
+       target.focus({preventScroll:true});
+       if(target instanceof HTMLInputElement && previous instanceof HTMLInputElement &&
+          target.type==="search" && previous.type==="search"){
+         try{target.setSelectionRange(previous.selectionStart??target.value.length,previous.selectionEnd??target.value.length);}
+         catch{ /* Some input modes do not expose selection ranges. */ }
+       }
+     }
    }
    if(view==="history"){
      root.querySelector<HTMLButtonElement>("#g-library")!.onclick=()=>{view="library";draw();};
@@ -793,8 +801,16 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    root.querySelector<HTMLButtonElement>("#g-library")!.onclick=()=>{view="library";attempt=null;draw();};
    if(view==="result"&&attempt){
      root.querySelector<HTMLButtonElement>("#g-history-results")!.onclick=()=>{view="history";draw();};
-     root.querySelectorAll<HTMLButtonElement>("[data-result-tab]").forEach(button=>button.onclick=()=>{
-       resultTab=button.dataset.resultTab as ResultTab;draw();
+     const tabs=[...root.querySelectorAll<HTMLButtonElement>("[data-result-tab]")];
+     tabs.forEach((button,index)=>{
+       button.onclick=()=>{resultTab=button.dataset.resultTab as ResultTab;draw();};
+       button.onkeydown=event=>{
+         if(!["ArrowLeft","ArrowRight","Home","End"].includes(event.key))return;
+         event.preventDefault();
+         const next=event.key==="Home"?0:event.key==="End"?tabs.length-1:
+           (index+(event.key==="ArrowRight"?1:tabs.length-1))%tabs.length;
+         resultTab=tabs[next]!.dataset.resultTab as ResultTab;draw();
+       };
      });
      root.querySelector<HTMLSelectElement>("#g-review-filter")!.onchange=e=>{
        reviewFilter=(e.target as HTMLSelectElement).value as ReviewFilter;draw();
@@ -911,6 +927,18 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  },1000);
  const visibility=()=>{if(view==="exam"&&attempt)dispatch({type:"VISIBILITY",nowMs:now(),visible:!document.hidden});};
  document.addEventListener("visibilitychange",visibility);
+ const keyboard=(event:KeyboardEvent)=>{
+   if(disposed||view!=="exam"||!attempt||!event.altKey||event.ctrlKey||event.metaKey||
+      !["ArrowLeft","ArrowRight"].includes(event.key))return;
+   const focused=event.target;
+   if(focused instanceof HTMLElement&&
+      (focused.isContentEditable||["INPUT","TEXTAREA","SELECT"].includes(focused.tagName)))return;
+   event.preventDefault();
+   const move=event.key==="ArrowRight"?1:-1;
+   dispatch({type:"NAVIGATE",nowMs:now(),sectionIndex:attempt.state.sectionIndex,
+     questionIndex:attempt.state.questionIndex+move});
+ };
+ window.addEventListener("keydown",keyboard);
  const pagehide=()=>{
    if(view==="exam"&&attempt&&!storageFault){
      try{
@@ -932,7 +960,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  };
  window.addEventListener("storage",storage);
  function cleanup(){learningDesk.dispose();disposed=true;window.clearInterval(timer);document.removeEventListener("visibilitychange",visibility);
-   window.removeEventListener("pagehide",pagehide);window.removeEventListener("storage",storage);void writeQueue.finally(()=>db?.close());root.classList.remove("generic-workspace");}
+   window.removeEventListener("pagehide",pagehide);window.removeEventListener("storage",storage);
+   window.removeEventListener("keydown",keyboard);void writeQueue.finally(()=>db?.close());root.classList.remove("generic-workspace");}
  draw();
  (async()=>{
    try{
