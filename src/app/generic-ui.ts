@@ -4,6 +4,7 @@ import type { QuestionRevision, CandidateResponse } from "../domain/question.js"
 import type { QuestionRevisionId } from "../domain/ids.js";
 import type { SessionEvent } from "../engine/session.ts";
 import { restoreSession, chooseRecovered, assertFrozenContent } from "../history/frozen.ts";
+import { createSessionClock } from "../engine/clock.ts";
 import { scoreAttempt } from "../engine/scoring.ts";
 import { manualGradeLimit, manualGradeSummary, setManualGrade, validateManualGrades } from "../engine/manual-grading.ts";
 import { createSourceKeyReference,sourceKeyScore,validateSourceKeyReference } from "../engine/source-comparison.ts";
@@ -294,7 +295,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    catch{warning="Emergency session mirror could not be saved. Use a history export.";}
  };
  const notice=(s:string)=>{warning=s;draw();};
- const now=()=>Date.now();
+ const now=createSessionClock(Date.now(),performance.now(),()=>performance.now());
  const save=(record:RecordItem):Promise<boolean>=>{
    if(fallbackConflict||storageFault){
      warning="Storage is unavailable or changed in another tab. Export a recovery backup and reopen before editing.";
