@@ -228,6 +228,21 @@ function restoreActive(){
  try{if(active.engineState)GENERIC_ENGINE.restore(active,now(),tabVisible);}
  catch(e){console.warn('Practice Desk session recovery',e);storageMessage='The last active session could not be restored. Saved completed attempts remain available.';active=null;}
 }
+async function recoverAttempt(candidate,previous){
+ const expected=previous?(Number.isSafeInteger(previous.saveRevision)?previous.saveRevision:0):null;
+ const saved={...candidate,saveRevision:GENERIC_ENGINE.nextWriteVersion(expected)};
+ try{
+  captureDisplayArchive(saved);
+  await dbPutAttemptWithRevision(saved,expected);
+  attempts=attempts.filter(a=>a.id!==saved.id);attempts.push(saved);
+ }catch(error){
+  if(!String(error?.message||'').startsWith('Another tab'))throw error;
+  const persisted=await dbRead('attempts',candidate.id);
+  attempts=attempts.filter(a=>a.id!==candidate.id);
+  if(usableStored(persisted))attempts.push(persisted);
+  console.warn('Recovery skipped because another tab saved a newer record',error);
+ }
+}
 async function initStorage(){
  const localPrefs=safeJSON(getLS(SETTINGS_LS),null);
  if(localPrefs?.paper&&getPaper(localPrefs.paper))prefs={...prefs,...localPrefs};
@@ -247,29 +262,22 @@ async function initStorage(){
     if(!usableStored(item))continue;
     const previous=attempts.find(a=>a.id===item.id);
     const winner=GENERIC_ENGINE.chooseRecovered(previous,item);
-    if(winner!==previous){
-     attempts=attempts.filter(a=>a.id!==item.id);
-     attempts.push(winner);
-     captureDisplayArchive(winner);await dbPutAttemptWithRevision(winner);
-    }
+    if(winner!==previous)await recoverAttempt(winner,previous);
    }
   }
   // Do not replay an old fallback journal after deleting a completed attempt.
-  removeLS(FALLBACK_LS);
+  removeLS(FALLBACK_LS);fallbackStamp=null;
   if(mirror&&!mirror.finishedAt){
    const previous=attempts.find(a=>a.id===mirror.id);
    const winner=GENERIC_ENGINE.chooseRecovered(previous,mirror);
-   if(winner!==previous){
-    attempts=attempts.filter(a=>a.id!==mirror.id);
-    attempts.push(winner);
-    await dbPut('attempts',structuredClone(winner));
-   }
+   if(winner!==previous)await recoverAttempt(winner,previous);
   }
  }catch(e){
   db=null;storageMode='localStorage';
   storageMessage='IndexedDB is unavailable; using localStorage fallback. Export backups regularly.';
   const fallback=safeJSON(getLS(FALLBACK_LS),[]);
   attempts=Array.isArray(fallback)?fallback.filter(usableStored):[];
+  fallbackStamp=getLS(FALLBACK_LS);
   const genericFallback=safeJSON(getLS('practiceDesk.generic.fallback.v1'),[]);
   genericHistoryRecords=Array.isArray(genericFallback)?genericFallback.filter(x=>x?.recordType==='generic-attempt'&&
    typeof x.id==='string'&&Number.isFinite(x.startedAt)&&x.frozen?.paper?.id):[];
