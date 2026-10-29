@@ -1,6 +1,6 @@
 # Pass 7 — Exam and review correctness
 
-**Status:** Engineering implemented and tested on `overhaul`. Keep `main` and `baseline/v11` unchanged. Follow the [five-step workflow and file map](../README.md#architecture-and-execution-map); full reasoning and evidence are in the [architecture scratchpad](ARCHITECTURE_AUDIT_2026-10-28.md).
+**Status:** Pass 7 correctness engineering complete and verified by [GitHub Actions #40899786917](https://github.com/oneshubhamt/practice-desk/actions/runs/40899786917): **64/64 Node tests**, strict TypeScript, one standalone offline HTML, and headless Chrome `file://` end-to-end smoke green. Implemented on `overhaul`. Keep `main` and `baseline/v11` unchanged. Follow the [five-step workflow and file map](../README.md#architecture-and-execution-map); full reasoning and evidence are in the [architecture scratchpad](ARCHITECTURE_AUDIT_2026-10-28.md).
 
 ## Objective-by-objective acceptance
 
