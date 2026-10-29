@@ -4,6 +4,7 @@ import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import { chromium } from "playwright-core";
+import { pkg as sixKindsPackage } from "../tests/fixtures/six-kinds.mjs";
 
 const binaries=["google-chrome","google-chrome-stable","chromium","chromium-browser"];
 const chrome=binaries.find(bin=>spawnSync(bin,["--version"],{encoding:"utf8"}).status===0);
@@ -152,6 +153,44 @@ try{
    if(preserved?.answers?.[1]!=="b"||preserved.saveRevision!==latestCgl.saveRevision)
     throw new Error("Stale CGL tab overwrote a newer answer");
    console.log("Offline file://: original CGL stale-tab write rejected");
+   // Exercise every generic response widget and a non-CGL frozen result in the real browser.
+   const multi=await cgl.context.newPage();
+   await multi.goto(file,{waitUntil:"load"});
+   await multi.locator("#genericWorkspace").click();
+   await multi.locator("#g-file").setInputFiles({name:"six-kinds.json",mimeType:"application/json",
+     buffer:Buffer.from(JSON.stringify(sixKindsPackage))});
+   await multi.locator("#g-papers").selectOption("rev-paper");
+   await multi.locator("#g-start").click();
+   await multi.locator('input[data-choice]').first().click();
+   await multi.locator("#g-next").click();
+   await multi.locator('input[data-choice]').first().click();
+   await multi.locator('input[data-choice]').nth(2).click();
+   await multi.locator("#g-next").click();
+   await multi.locator("#g-number").fill("3.5");
+   await multi.locator("#g-save").click();
+   await multi.locator('[data-section="1"]').click();
+   await multi.locator('input[data-bool="true"]').click();
+   await multi.locator("#g-next").click();
+   await multi.locator('select[data-match]').nth(0).selectOption("r1");
+   await multi.locator('select[data-match]').nth(1).selectOption("r2");
+   await multi.locator("#g-save").click();
+   await multi.locator("#g-next").click();
+   await multi.locator("#g-text").fill("A concise written explanation.");
+   await multi.locator("#g-save").click();
+   multi.once("dialog",dialog=>dialog.accept());
+   await multi.locator("#g-submit").click();
+   await multi.locator(".generic-review").first().waitFor({state:"visible"});
+   if(await multi.locator(".generic-review").count()!==6)
+     throw new Error("Multi-kind browser result omitted reviewed questions");
+   const completed=(await readGenericAttempts(multi)).find(a=>a.packageId==="rev-paper"&&a.finishedAt);
+   if(!completed||completed.result?.snapshot.correctCount!==5)
+     throw new Error("Multi-kind browser score or frozen record mismatch");
+   await multi.reload();
+   await multi.locator("#genericWorkspace").click();
+   await multi.locator('[data-attempt="'+completed.id+'"]').click();
+   if(await multi.locator(".generic-review").count()!==6)
+     throw new Error("Non-CGL frozen review failed to reopen");
+   console.log("Offline file://: all six answer widgets and non-CGL result reopened");
  }catch(error){throw new Error("CGL file:// test: "+error.message+"; browser errors: "+cgl.errors.join(" | "));}
  finally{await cgl.context.close();}
 }finally{
