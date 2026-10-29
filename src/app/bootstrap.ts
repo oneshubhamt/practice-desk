@@ -38,3 +38,39 @@ window.addEventListener(SETTINGS_EVENT,()=>{
  settings=readDisplayPreferences();apply();
 });
 apply();
+
+const displayTrigger=document.getElementById("displayTrigger") as HTMLButtonElement|null;
+const displayPanel=document.getElementById("displayPanel") as HTMLElement|null;
+function setDisplayOpen(open:boolean):void{
+ if(!displayPanel||!displayTrigger)return;
+ displayPanel.hidden=!open;
+ displayTrigger.setAttribute("aria-expanded",String(open));
+ if(open)document.getElementById("fontReset")?.focus();
+}
+displayTrigger?.addEventListener("click",()=>setDisplayOpen(displayPanel?.hidden??false));
+document.getElementById("displayClose")?.addEventListener("click",()=>{setDisplayOpen(false);displayTrigger?.focus();});
+document.addEventListener("pointerdown",event=>{
+ if(displayPanel&&!displayPanel.hidden&&!((event.target instanceof Node)&&
+   (displayPanel.contains(event.target)||displayTrigger?.contains(event.target))))setDisplayOpen(false);
+});
+document.addEventListener("keydown",event=>{
+ if(event.key==="Escape"&&displayPanel&&!displayPanel.hidden){setDisplayOpen(false);displayTrigger?.focus();}
+});
+const fullButton=document.getElementById("displayFullscreen") as HTMLButtonElement|null;
+const updateFullscreen=()=>{
+ if(!fullButton)return;
+ const active=Boolean(document.fullscreenElement);
+ fullButton.textContent=active?"Exit full screen":"Enter full screen";
+ fullButton.setAttribute("aria-pressed",String(active));
+};
+fullButton?.addEventListener("click",async()=>{
+ try{
+   if(document.fullscreenElement)await document.exitFullscreen();
+   else await document.documentElement.requestFullscreen();
+   updateFullscreen();
+ }catch{
+   const status=document.getElementById("preferences-warning");
+   if(status)status.textContent="Full screen is unavailable in this browser or file context.";
+ }
+});
+document.addEventListener("fullscreenchange",updateFullscreen);
