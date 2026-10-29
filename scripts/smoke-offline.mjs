@@ -253,6 +253,20 @@ try{
    if(!fallbackSaved?.state?.responses?.some(r=>r.response?.kind==="single-choice"&&
       r.response.optionId.endsWith(":b")))throw new Error("Fallback writer did not retain its response");
    console.log("Offline file://: localStorage fallback detects competing generic tab");
+
+   // Narrow and tablet viewports must not introduce whole-page horizontal scrolling.
+   const responsive=await cgl.context.newPage();
+   for(const width of [390,768]){
+     await responsive.setViewportSize({width,height:844});
+     await responsive.goto(file,{waitUntil:"load"});
+     const homeOverflow=await responsive.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
+     if(homeOverflow>3)throw new Error("CGL home overflows at "+width+"px by "+homeOverflow+"px");
+     await responsive.locator("#genericWorkspace").click();
+     await responsive.locator("#g-start").click();
+     const examOverflow=await responsive.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
+     if(examOverflow>3)throw new Error("Generic exam overflows at "+width+"px by "+examOverflow+"px");
+   }
+   console.log("Offline file://: 390px mobile and 768px tablet responsive checks passed");
  }catch(error){throw new Error("CGL file:// test: "+error.message+"; browser errors: "+cgl.errors.join(" | "));}
  finally{await cgl.context.close();}
 }finally{
