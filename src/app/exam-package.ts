@@ -148,6 +148,8 @@ export function configureCglPractice(base: ExamPackage, mode:CglPracticeMode, se
    contentHash:sha256(JSON.stringify(entries)) as AnswerKeyRevision["contentHash"],entries};
  const adjusted={...paper,answerKeyRevisionId:answerKey.id};
  return {...base,paper:adjusted,answerKey,questions,
+   ...(base.explanations?{explanations:Object.fromEntries(Object.entries(base.explanations)
+     .filter(([id])=>included.has(id as QuestionRevisionId)))}:{}),
    title:base.title+(mode==="free"?" · Flexible practice":" · "+sections[0]!.title+" practice")};
 }
 export interface GenericAttempt {
