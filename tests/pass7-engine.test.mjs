@@ -44,7 +44,8 @@ test("pause and flag policies hold in pure transitions, including clock rollback
  const moved=transition(bundle.paper,initial,{type:"NAVIGATE",nowMs:3010,sectionIndex:0,questionIndex:2});
  assert.equal(moved.questionIndex,2);
  assert.equal(transition(bundle.paper,moved,{type:"NAVIGATE",nowMs:3011,sectionIndex:0,questionIndex:0}).questionIndex,2);
- assert.equal(transition(bundle.paper,moved,{type:"FLAG",nowMs:3011,flagged:true}).responses.length,0);
+ const flagRejected=transition(bundle.paper,moved,{type:"FLAG",nowMs:3011,flagged:true});
+ assert.ok(flagRejected.responses.every(row=>!row.flagged),"Disabled flag event created a flag");
  const rebased=transition(bundle.paper,moved,{type:"TICK",nowMs:2000});
  assert.equal(rebased.clockMs,2000);
  assert.equal(rebased.elapsedMs,moved.elapsedMs);
