@@ -22,8 +22,7 @@ interface Priority { readonly examId:string; readonly title:string; readonly ans
 export function sectionPriorities(attempts:readonly GenericAttempt[]):Priority[]{
  const map=new Map<string,Priority>();
  for(const a of attempts){
-  if(a.finishedAt===null||!a.result)continue;
-  const p=a.frozen.paper;
+  if(a.finishedAt===null||!a.result||a.frozen.paper.paperId.startsWith("notebook-revision:"))continue;
   // Independently preserve exam identity. Repeated question observations are disclosed.
   for(const s of attemptEvidence(a)?.sections??[]){
    const id=a.frozen.snapshot.examId+"|"+s.title;
@@ -52,8 +51,8 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
  const progressing=attempts.filter(a=>a.finishedAt===null);
  const accurate=done.reduce((n,a)=>n+a.result!.snapshot.correctCount,0);
  const answered=done.reduce((n,a)=>n+a.result!.snapshot.correctCount+a.result!.snapshot.incorrectCount,0);
- const mostRecent=[...done].sort((a,b)=>(b.finishedAt??0)-(a.finishedAt??0))[0];
- const matching=mostRecent?comparableTrends(done).find(t=>t.paperRevisionId===mostRecent.frozen.paper.id):undefined;
+ const matching=comparableTrends(done).filter(t=>t.points.filter(x=>x.accuracy!==null).length>=2)
+    .sort((a,b)=>(b.points.at(-1)?.at??0)-(a.points.at(-1)?.at??0))[0];
  const trendPoints=matching?.points.filter(p=>p.accuracy!==null)??[];
  const priorities=sectionPriorities(done).slice(0,5);
  const pCount=attempts.length;
@@ -68,7 +67,7 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
   '</div>'+
   '<div class="history-panels">'+
   '<section class="panel pad history-trend"><div class="row between"><div><h2>Comparable progression</h2>'+
-  '<p class="fine">Latest completed exact paper revision — identical questions, key and policy only.</p></div></div>'+
+  '<p class="fine">Most recently repeated exact paper revision — identical questions, key and policy only.</p></div></div>'+
   (matching&&trendPoints.length>=2?'<div class="history-trend-chart">'+trendSVG(trendPoints.map(p=>100*p.accuracy!))+'</div>'+
    '<p class="fine">'+esc(matching.label)+' · '+matching.count+' attempts · '+
    trendPoints.map(x=>Math.round(x.accuracy!*100)+"%").join(" → ")+
