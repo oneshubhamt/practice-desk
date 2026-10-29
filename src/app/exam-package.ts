@@ -142,7 +142,7 @@ export function startGenericAttempt(bundle: ExamPackage, id: string, timestamp: 
  const mode=validated.paper.edition==="custom"?"custom-practice":validated.examId==="ssc-cgl" ?
    validated.practiceMode==="free"?"full-paper-practice":
    validated.practiceMode==="single"?"section-practice":"exam-simulation":
-   validated.paper.edition==="custom"?"custom-practice":"exam-simulation";
+   "exam-simulation";
  const frozen = freezeAttempt(validated.paper,validated.answerKey,validated.questions,
    validated.stimuli??[],validated.assets??[],mode,new Date(timestamp).toISOString(),validated.examId);
  return {recordType:"generic-attempt",id,packageId:bundle.paper.id,startedAt:timestamp,
