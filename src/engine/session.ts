@@ -141,7 +141,7 @@ export function transition(paper: PaperRevision, state: SessionState, event: Ses
   if (event.type === "SUBMIT_SECTION") {
     // Locked whole-paper sections share one continuous total clock, but must
     // have an explicit forward-only transition; final completion uses submit.
-    if (paper.timing.kind === "whole-paper" &&
+    if ((paper.timing.kind === "whole-paper" || paper.timing.kind === "untimed") &&
         paper.navigation.sectionNavigation === "sequential-locked" &&
         current.sectionIndex < paper.sections.length - 1) return advance(paper,current);
     // Untimed sections cannot expire, so explicit continuation is their only
