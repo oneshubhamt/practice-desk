@@ -544,3 +544,39 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
  outline:2px solid var(--bad);outline-offset:2px;
  background:var(--soft)
 }
+
+/* Pass 25 — laptop Library: restore v11's action-first information hierarchy.
+   Deliberately scoped to the Library and >= 981px; the six-kind exam,
+   results, History and compact/mobile accessibility rules are not restyled.
+   Do not hide metrics, warnings or preflight content; show them after setup. */
+@media (min-width:981px){
+ main:has(.home-grid){padding-top:15px}
+ .generic-workspace .home-heading{margin:0 0 13px!important;align-items:center}
+ .home-heading .eyebrow{display:none}
+ .home-heading h1{font-size:calc(27px * var(--type-scale));line-height:1.2;margin:0 0 3px}
+ .home-heading p{font-size:.85em;line-height:1.45}
+ .generic-workspace .home-grid{gap:17px}
+ .home-grid .home-picker{padding:17px 22px 18px}
+ .home-picker .picker{margin:10px 0 5px}
+ .home-picker .picker:first-of-type{margin-top:0}
+ .home-picker .subhead{margin:12px 0 7px}
+ .home-picker .generic-modes{gap:6px;margin:0 0 8px}
+ .home-picker .mode{padding:9px 12px;gap:10px;border-radius:9px;min-height:49px}
+ .home-picker .mode strong{font-size:13px;line-height:1.35}
+ .home-picker .mode small{font-size:11px;line-height:1.25;margin-top:2px}
+ .home-picker .radio-dot{width:16px;height:16px}
+ .home-picker .home-start{border-top:1px solid var(--line);padding-top:10px;margin:11px 0 0}
+ .home-picker .home-start .btn{min-height:39px}
+ .home-picker>.fine{margin:8px 0 0;font-size:11px;line-height:1.4}
+ .home-grid .paper-preview{padding:18px 20px}
+ .paper-preview .preview-metrics{margin:12px 0;gap:8px}
+ .paper-preview .preview-metrics>div{padding:9px 11px}
+ .paper-preview .preview-metrics b{font-size:18px}
+ .paper-preview .paper-preflight{margin-top:12px;padding-top:10px}
+ .home-grid .recent-panel{padding:17px 20px}
+ .home-stats{margin:17px 0 10px;gap:11px}
+ .home-stat{padding:11px 15px}
+ .home-stat b{font-size:21px;margin-top:2px}
+}
+/* Screen-reader-only setup heading remains the accessible label for the
+   second-level task; the visible Test library heading is not duplicated. */
