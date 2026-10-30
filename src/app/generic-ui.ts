@@ -3,6 +3,7 @@ import type { ExamPackage, GenericAttempt, CglPracticeMode } from "./exam-packag
 import type { QuestionRevision, CandidateResponse } from "../domain/question.js";
 import type { QuestionRevisionId } from "../domain/ids.js";
 import type { SessionEvent } from "../engine/session.ts";
+import { validateSectionTimingEvidence, sectionTimerDuration } from "../engine/session.ts";
 import { restoreSession, chooseRecovered, assertFrozenContent } from "../history/frozen.ts";
 import { createSessionClock } from "../engine/clock.ts";
 import { scoreAttempt } from "../engine/scoring.ts";
@@ -125,6 +126,7 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
    throw new Error("Unfinished attempt has a completed session");
  if(!["running","paused","section-expired","completed"].includes(value.state.status))
    throw new Error("Invalid saved session status");
+ validateSectionTimingEvidence(paper,value.state);
  if(value.state.status==="section-expired"){
    if(paper.timing.kind!=="sectional"||paper.timing.transition!=="manual")
      throw new Error("Expired-section state requires manual sectional timing");
