@@ -17,7 +17,7 @@
 | D11 | Binding | No premature answer/editorial/solution disclosure |
 | D12 | Binding | Comparisons require truly matching paper/key/mode; no projected rank, national percentile or arbitrary psychometrics |
 | D13 | Unapproved | Unconditional release/merge; physical Android/iOS/macOS Safari/NVDA/VoiceOver and OS-kill/eviction and human UI signoff |
-| D14 | Open | Full v11 behavioral/UI superset. See F01–F13; no “parity attained” claim |
+| D14 | Open | Full v11 behavioral/UI superset. See F01–F15; no “parity attained” claim |
 | D15 | Open | Valid generic rule envelope. See G01–G10; external paper acceptance must reflect actually executable semantics |
 
 **Rule for edits:** audit → analyze invariants → implement → reconcile requirements → targeted independent QA. Preserve `main`/`baseline/v11`; all changes to `overhaul` only, except explicit release authorization.
