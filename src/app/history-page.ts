@@ -132,7 +132,10 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
     '<span class="archive-numbers">'+(a.finishedAt?(s?esc(s.earnedMarks.toFixed(1))+' marks · '+s.correctCount+' correct':'Completed'):
      answered+'/'+count+' answered · In progress')+'</span></button>'+
     '<span class="history-status '+(a.finishedAt?"complete":"active")+'">'+status+'</span>'+
-    '<button class="btn danger generic-delete" data-delete="'+esc(a.id)+'" aria-label="Delete saved attempt">Delete</button></div>';
+    (a.finishedAt?
+      '<button class="btn danger generic-delete" data-delete="'+esc(a.id)+'" aria-label="Delete completed result">Delete</button>':
+      '<button class="btn danger generic-delete" data-discard="'+esc(a.id)+'" aria-label="Discard unfinished test and lose its answers">Discard unfinished</button>')+
+    '</div>';
   }).join("")+'</div>':'<p class="empty-state">No attempts match these filters. Your saved records have not been deleted.</p>')+
   '</section>'+
   '<div class="history-management-grid"><section class="panel pad" id="g-storage-panel">'+
