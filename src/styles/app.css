@@ -392,3 +392,16 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
 .display-theme-choices .btn{flex:1}
 .display-theme-choices [aria-pressed="true"]{border-color:var(--blue);background:var(--soft-blue);font-weight:800}
 @media(max-width:760px){.history-management-grid{grid-template-columns:1fr}}
+
+/* Pass 14: evidence-linked question review and compact coaching. */
+.result-coaching{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px;margin-bottom:18px}
+.result-coaching>.panel{min-width:0}
+.slow-list{display:grid;gap:7px;margin-top:12px}
+.slow-link{display:flex;align-items:center;justify-content:space-between;gap:14px;min-width:0;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--ink);text-align:left;cursor:pointer}
+.slow-link:hover{border-color:var(--blue);background:var(--soft-blue)}
+.slow-link>span:last-child{white-space:nowrap;color:var(--blue)}
+.plainlist{margin:10px 0 0;padding-left:22px}
+.plainlist li+li{margin-top:10px}
+.speed-not-classified{color:var(--muted)}
+@media(max-width:800px){.result-coaching{grid-template-columns:1fr}}
+@media(max-width:450px){.slow-link{align-items:flex-start;flex-direction:column;gap:4px}.slow-link>span:last-child{white-space:normal}}
