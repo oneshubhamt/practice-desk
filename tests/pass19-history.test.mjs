@@ -32,7 +32,11 @@ function finish(bundle,id,startedAt,sectionAnswers={}){
      a=transitionGenericAttempt(a,act("ANSWER",++time,{response:{kind:"single-choice",optionId:option}}),qmap);
    }
    const last=section===bundle.paper.sections.length-1;
-   a=transitionGenericAttempt(a,act(last?"SUBMIT_ATTEMPT":"SUBMIT_SECTION",++time),qmap);
+   // Sectional strict exams must finish via section submission, including the
+   // final section; direct SUBMIT_ATTEMPT cannot bypass the section policy.
+   const action=bundle.paper.timing.kind==="sectional"?"SUBMIT_SECTION":
+     last?"SUBMIT_ATTEMPT":"SUBMIT_SECTION";
+   a=transitionGenericAttempt(a,act(action,++time),qmap);
  }
  assert.notEqual(a.finishedAt,null);
  assert.doesNotThrow(()=>validateGenericStoredRecord(a));
