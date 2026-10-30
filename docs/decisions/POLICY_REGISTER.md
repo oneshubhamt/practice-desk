@@ -19,6 +19,8 @@
 | D13 | Unapproved | Unconditional release/merge; physical Android/iOS/macOS Safari/NVDA/VoiceOver and OS-kill/eviction and human UI signoff |
 | D14 | Open | Full v11 behavioral/UI superset. See F01–F15; no “parity attained” claim |
 | D15 | Open | Valid generic rule envelope. See G01–G10; external paper acceptance must reflect actually executable semantics |
+| D16 | User approved | Maintain the **active source audit Section G as the durable implementation scratchpad**. Each pass: audit, analyze, implement, reconcile each assigned objective, and targeted NEW QA; iterate repairs before QA when needed. Comprehensive whole-app source/UI audit and broad QA belong in Pass 23, with physical-device/AT caveats honest |
+| D17 | User approved | Preserve the useful v11 UI layout, navigation convenience, clarity and material workflows, but implement demonstrably better design and reusable generic abstractions where helpful; pixel-perfect imitation and restoration of unsafe legacy behavior are not required |
 
 **Rule for edits:** audit → analyze invariants → implement → reconcile requirements → targeted independent QA. Preserve `main`/`baseline/v11`; all changes to `overhaul` only, except explicit release authorization.
 
