@@ -360,6 +360,32 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
  .generic-sections .exam-section-tab{flex-basis:calc(50% - 5px)}
  .exam-header-actions #g-exam-full{white-space:normal}
 }
+
+/* Pass 12 — accessible, exam-generic completed-answer comparison. */
+.generic-review .review-opt{cursor:default;white-space:pre-wrap}
+.generic-review .review-opt.review-option-correct{
+ border:1px solid var(--good);background:color-mix(in srgb,var(--good) 11%,var(--panel))
+}
+.generic-review .review-opt.review-option-incorrect{
+ border:1px solid var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--panel))
+}
+.review-option-label{font-weight:740;font-size:.87em}
+.review-option-correct .review-option-label{color:var(--good)}
+.review-option-incorrect .review-option-label{color:var(--bad)}
+.generic-review .change-log,.generic-review .worked-solution{
+ margin:14px 0;padding:12px 15px;border:1px solid var(--line);
+ border-radius:10px;background:var(--soft)
+}
+.generic-review .change-log summary,.generic-review .worked-solution summary{
+ cursor:pointer;font-weight:750;line-height:1.5
+}
+.generic-review .change-body,.generic-review .worked-solution-body{
+ margin-top:13px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere
+}
+.generic-review .source-review .generic-prompt{font-size:1em;white-space:pre-wrap}
+.generic-review .source-review .generic-choice{background:var(--panel)}
+.generic-review .worked-solution-body{border-top:1px solid var(--line);padding-top:12px}
+.score.standout b small{font-size:.55em;color:var(--muted);white-space:nowrap}
 </style></head>
 <body><header><div class="wrap"><div class="brand"><div class="symbol">P</div><div><b>Practice Desk</b><small>Offline exam practice</small></div></div><div class="header-actions"><span class="header-offline"><span class="offline-dot"></span> Works offline</span><div class="display-tools" aria-label="Display options"><button type="button" id="displayTrigger" class="display-trigger" aria-label="Display settings" aria-haspopup="true" aria-controls="displayPanel" aria-expanded="false">Aa <span>Display</span></button><div id="displayPanel" class="display-panel" hidden><div class="display-heading"><strong>Appearance</strong><button id="displayClose" type="button" class="display-close" aria-label="Close display settings">×</button></div><div class="display-control"><span>Text size</span><div class="display-size"><button id="fontLess" type="button" class="btn" aria-label="Decrease text size">−</button><button id="fontReset" type="button" class="btn" aria-label="Reset text size">100%</button><button id="fontMore" type="button" class="btn" aria-label="Increase text size">+</button></div></div><div class="display-control"><span>Color theme</span><button id="themeToggle" class="btn display-theme" type="button" aria-pressed="false">Dark theme</button></div><button id="displayFullscreen" type="button" class="btn display-fullscreen" aria-pressed="false">Enter full screen</button><p class="fine display-hint">Saved on this device. Full screen is optional.</p><p class="fine" id="preferences-warning" role="status"></p></div></div></div></div></header>
 <main id="app" class="generic-workspace"></main>
@@ -4197,6 +4223,145 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
     return { marks, maxMarks, correct, incorrect, unanswered };
   }
 
+  // src/engine/review-source.ts
+  function createSourceReviewReference(target, source) {
+    if (target.paper.edition !== "reviewed" || source.paper.edition !== "source" || target.examId !== source.examId || target.paper.paperId !== source.paper.paperId) return null;
+    const byQuestion = new Map(source.questions.map((q) => [q.questionId, q]));
+    const sourceKeys = new Map(source.answerKey.entries.map((e) => [e.questionRevisionId, e.answer]));
+    const targetKeys = new Map(target.answerKey.entries.map((e) => [e.questionRevisionId, e.answer]));
+    const sourceAssets = new Map((source.assets ?? []).map((a) => [a.id, a.contentHash]));
+    const targetAssets = new Map((target.assets ?? []).map((a) => [a.id, a.contentHash]));
+    const selected = [];
+    for (const question of target.questions) {
+      const original = byQuestion.get(question.questionId);
+      if (!original) continue;
+      const sourceAnswer = sourceKeys.get(original.id), currentAnswer = targetKeys.get(question.id);
+      if (!sourceAnswer || !currentAnswer) continue;
+      const mediaChanged = [
+        ...original.content.assetIds ?? [],
+        ...original.content.kind === "single-choice" || original.content.kind === "multiple-select" ? original.content.options.flatMap((o) => o.assetIds ?? []) : []
+      ].some((id) => sourceAssets.get(id) !== targetAssets.get(id));
+      if (original.contentHash === question.contentHash && JSON.stringify(sourceAnswer) === JSON.stringify(currentAnswer) && !mediaChanged) continue;
+      selected.push({
+        targetQuestionRevisionId: question.id,
+        sourceQuestion: structuredClone(original),
+        sourceAnswer: structuredClone(sourceAnswer)
+      });
+    }
+    if (!selected.length) return null;
+    const resources = selectDisplayResources(
+      selected.map((e) => e.sourceQuestion),
+      source.stimuli ?? [],
+      source.assets ?? []
+    );
+    const core = {
+      schema: 1,
+      examId: target.examId,
+      paperId: target.paper.paperId,
+      targetPaperRevisionId: target.paper.id,
+      sourcePaperRevisionId: source.paper.id,
+      sourceAnswerKeyRevisionId: source.answerKey.id,
+      entries: selected,
+      ...resources
+    };
+    return { ...core, contentHash: hashJson(core) };
+  }
+  function validateSourceReviewReference(attempt) {
+    const ref = attempt.sourceReviewReference;
+    if (!ref) return;
+    const frozen = attempt.frozen;
+    if (ref.schema !== 1 || frozen.paper.edition !== "reviewed" || ref.examId !== frozen.snapshot.examId || ref.paperId !== frozen.paper.paperId || ref.targetPaperRevisionId !== frozen.paper.id || typeof ref.sourcePaperRevisionId !== "string" || !ref.sourcePaperRevisionId || typeof ref.sourceAnswerKeyRevisionId !== "string" || !ref.sourceAnswerKeyRevisionId || !Array.isArray(ref.entries) || !ref.entries.length || ref.entries.length > frozen.questions.length || !Array.isArray(ref.stimuli) || !Array.isArray(ref.assets))
+      throw new Error("Invalid frozen source-review reference");
+    const core = {
+      schema: ref.schema,
+      examId: ref.examId,
+      paperId: ref.paperId,
+      targetPaperRevisionId: ref.targetPaperRevisionId,
+      sourcePaperRevisionId: ref.sourcePaperRevisionId,
+      sourceAnswerKeyRevisionId: ref.sourceAnswerKeyRevisionId,
+      entries: ref.entries,
+      stimuli: ref.stimuli,
+      assets: ref.assets
+    };
+    if (ref.contentHash !== hashJson(core)) throw new Error("Frozen source-review hash mismatch");
+    const targets = new Map(frozen.questions.map((q) => [q.id, q]));
+    const seen = /* @__PURE__ */ new Set(), originalQuestions = [];
+    const keyEntries = [];
+    for (const entry of ref.entries) {
+      const target = targets.get(entry.targetQuestionRevisionId);
+      const original = entry.sourceQuestion;
+      if (!target || !original || seen.has(target.id) || original.questionId !== target.questionId || original.id === target.id)
+        throw new Error("Frozen source-review question identity mismatch");
+      validateQuestionRevision(original);
+      if (questionRevisionHash(original) !== original.contentHash)
+        throw new Error("Frozen source-review question content mismatch");
+      seen.add(target.id);
+      originalQuestions.push(original);
+      keyEntries.push({ questionRevisionId: original.id, answer: entry.sourceAnswer });
+      const aggregate = attempt.sourceKeyReference?.entries.find((e) => e.questionRevisionId === target.id);
+      if (aggregate && entry.sourceAnswer.kind === "single-choice" && aggregate.originalOptionId !== entry.sourceAnswer.optionId)
+        throw new Error("Frozen source-review published key mismatch");
+    }
+    validateAnswerKeyRevision({
+      id: ref.sourceAnswerKeyRevisionId,
+      paperId: ref.paperId,
+      revision: 1,
+      entries: keyEntries,
+      contentHash: answerKeyRevisionHash({ entries: keyEntries })
+    }, originalQuestions);
+    validateMediaInventory(ref.stimuli, ref.assets);
+    validateQuestionMediaReferences(originalQuestions, ref.stimuli, ref.assets);
+  }
+
+  // src/engine/score-ceiling.ts
+  var excluded = /* @__PURE__ */ new Set(["draft", "invalid", "incomplete-source", "under-review", "superseded"]);
+  function scoreableMaximum(paper, key, questions, section) {
+    const qs = new Map(questions.map((q) => [q.id, q]));
+    const entries = new Map(key.entries.map((e) => [e.questionRevisionId, e]));
+    return (section ? [section] : paper.sections).reduce((total, part) => total + part.questionRevisionIds.reduce((sum, id) => {
+      const q = qs.get(id), entry = entries.get(id);
+      if (!q || !entry) throw new Error("Cannot derive maximum for missing frozen question or key");
+      if (excluded.has(q.editorial.status) || q.content.kind === "free-response") return sum;
+      const rule = entry.scoringOverride ?? part.scoringOverride ?? paper.scoring.byQuestionKind?.[q.content.kind] ?? paper.scoring.defaultRule;
+      return sum + rule.correctMarks;
+    }, 0), 0);
+  }
+  function sectionScoreSummaries(attempt, result) {
+    const paper = attempt.frozen.paper;
+    const scores = new Map(result.items.map((x) => [x.questionRevisionId, x]));
+    const responses = new Map(attempt.state.responses.map((x) => [x.questionRevisionId, x]));
+    return paper.sections.map((section) => {
+      let attempted = 0, correct = 0, incorrect = 0, unanswered = 0, pending = 0, excluded2 = 0, marks = 0, foregroundMs = 0;
+      for (const id of section.questionRevisionIds) {
+        const item = scores.get(id);
+        if (!item) throw new Error("Missing frozen section verdict");
+        const row = responses.get(id);
+        foregroundMs += row?.timeSpentMs ?? 0;
+        marks += item.marks;
+        if (item.verdict === "correct") correct++;
+        else if (item.verdict === "incorrect") incorrect++;
+        else if (item.verdict === "unanswered") unanswered++;
+        else if (item.verdict === "pending") pending++;
+        else excluded2++;
+        if (row?.response && item.verdict !== "excluded") attempted++;
+      }
+      return {
+        sectionId: section.id,
+        title: section.title,
+        questions: section.questionRevisionIds.length,
+        attempted,
+        correct,
+        incorrect,
+        unanswered,
+        pending,
+        excluded: excluded2,
+        marks,
+        foregroundMs,
+        eligibleMax: scoreableMaximum(paper, attempt.frozen.key, attempt.frozen.questions, section)
+      };
+    });
+  }
+
   // src/app/preferences.ts
   var SETTINGS_KEY = "practiceDesk.overhaul.settings.v1";
   var SETTINGS_EVENT = "practice-desk-preferences";
@@ -5935,6 +6100,11 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
     }
     validateManualGrades(value);
     validateSourceKeyReference(value);
+    validateSourceReviewReference(value);
+    if (value.completionReason !== void 0) {
+      if (value.finishedAt === null || !["time-expired", "submitted", "section-submitted"].includes(value.completionReason))
+        throw new Error("Invalid saved completion provenance");
+    }
     validateNotebookLineage(value);
     return value;
   }
@@ -6337,7 +6507,7 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
     function examHTML() {
       return attempt ? renderModelExam(attempt, packageForAttempt(attempt), warning) : "";
     }
-    function frozenReviewMedia(saved, q) {
+    function frozenReviewMedia(saved, q, response, answer, verdict) {
       const frozen = saved.frozen;
       const display = {
         format: "practice-desk-exam",
@@ -6353,9 +6523,49 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
       const content = q.content;
       const passage = stimulusHTML(display, q);
       const promptAssets = assetHTML(display, content.assetIds);
-      const options = content.kind === "single-choice" || content.kind === "multiple-select" ? '<div class="generic-choices">' + content.options.map((option, i) => '<div class="generic-choice"><span><b>' + String.fromCharCode(65 + i) + ".</b> " + escapeText(option.text) + assetHTML(display, option.assetIds) + "</span></div>").join("") + "</div>" : "";
+      const options = content.kind === "single-choice" || content.kind === "multiple-select" ? '<div class="generic-choices" role="list" aria-label="Answer options">' + content.options.map((option, i) => {
+        const chosen = response?.kind === "single-choice" ? response.optionId === option.id : response?.kind === "multiple-select" ? response.optionIds.includes(option.id) : false;
+        const expected = answer?.kind === "single-choice" ? answer.optionId === option.id : answer?.kind === "multiple-select" ? answer.optionIds.includes(option.id) : false;
+        const scored = verdict !== "excluded" && verdict !== "pending";
+        const correct = scored && expected;
+        const wrong = scored && chosen && !expected;
+        const state = correct ? " review-option-correct" : wrong ? " review-option-incorrect" : "";
+        const badges = [
+          ...chosen ? ["Your choice"] : [],
+          ...correct ? ["Correct answer"] : [],
+          ...wrong ? ["Incorrect choice"] : []
+        ];
+        return '<div role="listitem" class="generic-choice review-opt' + state + '"><span><b>' + String.fromCharCode(65 + i) + ".</b> " + escapeText(option.text) + assetHTML(display, option.assetIds) + (badges.length ? '<span class="review-option-label"> \xB7 ' + escapeText(badges.join(" \xB7 ")) + "</span>" : "") + "</span></div>";
+      }).join("") + "</div>" : "";
       const matches = content.kind === "matching" ? '<div class="generic-matches">' + [...content.leftItems, ...content.rightItems].map((item) => "<div><span>" + escapeText(item.text) + assetHTML(display, item.assetIds) + "</span></div>").join("") + "</div>" : "";
       return passage + promptAssets + options + matches;
+    }
+    function sourceReviewHTML(saved, target) {
+      const ref = saved.sourceReviewReference;
+      const entry = ref?.entries.find((item) => item.targetQuestionRevisionId === target.id);
+      if (!ref || !entry) return "";
+      const original = entry.sourceQuestion;
+      const display = {
+        format: "practice-desk-exam",
+        version: 1,
+        examId: ref.examId,
+        title: "Original source",
+        paper: saved.frozen.paper,
+        answerKey: saved.frozen.key,
+        questions: [original],
+        stimuli: ref.stimuli,
+        assets: ref.assets
+      };
+      const content = original.content;
+      const optionLines = content.kind === "single-choice" || content.kind === "multiple-select" ? '<div class="generic-choices" role="list" aria-label="Original source options">' + content.options.map((option, index) => '<div role="listitem" class="generic-choice"><span><b>' + String.fromCharCode(65 + index) + ".</b> " + escapeText(option.text) + assetHTML(display, option.assetIds) + "</span></div>").join("") + "</div>" : "";
+      const matches = content.kind === "matching" ? '<div class="generic-matches">' + [...content.leftItems, ...content.rightItems].map((x) => "<div>" + escapeText(x.text) + assetHTML(display, x.assetIds) + "</div>").join("") + "</div>" : "";
+      const currentAnswer = saved.frozen.key.entries.find((x) => x.questionRevisionId === target.id)?.answer;
+      const modifications = [
+        ...content.prompt !== target.content.prompt ? ["question wording"] : [],
+        ...JSON.stringify(content) !== JSON.stringify(target.content) ? ["options or media"] : [],
+        ...JSON.stringify(entry.sourceAnswer) !== JSON.stringify(currentAnswer) ? ["answer key"] : []
+      ];
+      return '<details class="change-log source-review"><summary>Compare with original source edition</summary><div class="change-body"><p class="fine"><b>Original source revision</b>' + (original.editorial.sourcePage ? " \xB7 Source page " + original.editorial.sourcePage : "") + " \xB7 Published key shown for provenance, not as a score adjustment.</p>" + stimulusHTML(display, original) + '<p class="generic-prompt">' + escapeText(content.prompt) + "</p>" + assetHTML(display, content.assetIds) + optionLines + matches + '<p class="fine"><b>Original published answer:</b> ' + escapeText(readableAnswer(original, entry.sourceAnswer)) + '</p><p class="fine"><b>Changes in reviewed edition:</b> ' + escapeText(modifications.length ? [...new Set(modifications)].join(", ") : "editorial review/status") + "</p></div></details>";
     }
     function resultHTML() {
       if (!attempt) return "";
@@ -6370,28 +6580,25 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
       const grades2 = manualGradeSummary(attempt);
       const selfAssessed = s.snapshot.earnedMarks + grades2.total;
       const originalKey = sourceKeyScore(attempt);
-      const paperSectionRows = paper.sections.map((section) => {
-        const ids = new Set(section.questionRevisionIds);
-        const items = s.items.filter((item) => ids.has(item.questionRevisionId));
-        const scored = items.reduce((sum, item) => sum + item.marks, 0);
-        const responseTime = attempt.state.responses.filter((r) => ids.has(r.questionRevisionId)).reduce((sum, r) => sum + r.timeSpentMs, 0);
-        return "<tr><td>" + escapeText(section.title) + "</td><td>" + scored.toFixed(1) + "</td><td>" + items.filter((item) => item.verdict === "correct").length + "/" + items.length + "</td><td>" + minutes(responseTime) + "</td></tr>";
-      }).join("");
+      const eligibleMax = scoreableMaximum(paper, attempt.frozen.key, attempt.frozen.questions);
+      const paperSectionRows = sectionScoreSummaries(attempt, s).map((row) => "<tr><td>" + escapeText(row.title) + "</td><td>" + row.attempted + "/" + (row.questions - row.excluded) + "</td><td>" + row.correct + "</td><td>" + row.incorrect + "</td><td>" + escapeText(row.marks.toFixed(2)) + " / " + escapeText(row.eligibleMax.toFixed(2)) + "</td><td>" + minutes(row.foregroundMs) + "</td></tr>").join("");
       const evidence = attemptEvidence(attempt);
       const revisions = answerRevisionEvidence(attempt);
       const analyticHTML = evidence ? '<section class="panel pad" id="g-attempt-evidence"><h2>Timing, accuracy & marks evidence</h2><p class="fine">Times are foreground exposure to each question; they do not measure thinking time. Opportunity figures describe hypothetical arithmetic, not projected marks.</p><div class="scroll-table"><table><thead><tr><th>Section</th><th>Answered</th><th>Coverage</th><th>Accuracy</th><th>Median answered time</th><th>Positive</th><th>Penalty</th></tr></thead><tbody>' + evidence.sections.map((e) => "<tr><td>" + escapeText(e.title) + "</td><td>" + e.answered + "</td><td>" + Math.round(e.coverage * 100) + "%</td><td>" + (e.accuracy === null ? "\u2014" : Math.round(e.accuracy * 100) + "%") + "</td><td>" + (e.medianAnsweredMs === null ? "\u2014" : Math.round(e.medianAnsweredMs / 1e3) + "s") + "</td><td>" + e.positive.toFixed(2) + "</td><td>" + e.penalties.toFixed(2) + "</td></tr>").join("") + '</tbody></table></div><div class="row generic-actions"><span class="tag">Foreground ' + minutes(evidence.timing.foregroundMs) + '</span><span class="tag">Question exposure ' + minutes(evidence.timing.questionMeasuredMs) + '</span><span class="tag">Answers changed ' + evidence.timing.changedAnswers + `</span></div><h3>Section-relative speed \xD7 accuracy</h3><p class="fine">Only sections with at least 5 measured answered responses are classified; fast is under 0.75\xD7 and slow over 1.5\xD7 that section's median.</p><div class="learning-metric-grid">` + evidence.speed.buckets.map((e) => '<div class="learning-metric"><strong>' + e.label + "</strong><b>" + e.correct + " correct \xB7 " + e.incorrect + " incorrect</b><small>" + e.items + " classified answers</small>" + (e.label === "Fast" || e.label === "Slow" ? '<button class="textlink" data-review-preset="' + (e.label === "Fast" ? "fastwrong" : "slowwrong") + '">Review ' + e.incorrect + " " + e.label.toLowerCase() + " mistakes \u2192</button>" : "") + "</div>").join("") + '</div><p class="fine">' + evidence.speed.classified + " of " + evidence.speed.measured + ' measurable answers classified; insufficient section samples remain unclassified.</p><h3>Marks decomposition and hypothetical opportunities</h3><div class="learning-metric-grid"><div class="learning-metric"><strong>Observed negative marks</strong><b>' + evidence.opportunity.observedPenalty.toFixed(2) + '</b><small>Actual penalty magnitude</small></div><div class="learning-metric"><strong>Wrong \u2192 correct</strong><b>+' + evidence.opportunity.wrongToCorrect.toFixed(2) + "</b><small>Hypothetical, " + evidence.opportunity.countWrong + ' incorrect scored items</small><button class="textlink" data-review-preset="incorrect">Review incorrect \u2192</button></div><div class="learning-metric"><strong>Skipped \u2192 correct</strong><b>+' + evidence.opportunity.skippedToCorrect.toFixed(2) + "</b><small>Hypothetical, " + evidence.opportunity.countSkipped + ' unanswered scored items</small><button class="textlink" data-review-preset="unanswered">Review skips \u2192</button></div></div></section>' : "";
-      return '<div class="generic-heading results-heading"><div><span class="eyebrow">FROZEN EXAM RECORD</span><h1>Performance overview</h1><p class="muted">' + escapeText(paper.paperId) + " \xB7 " + escapeText(paper.edition) + " \xB7 " + (attempt.finishedAt ? new Date(attempt.finishedAt).toLocaleString() : "") + '</p></div><div class="row"><button class="btn quiet" id="g-history-results">History & insights</button><button class="btn" id="g-library">Library</button></div></div>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + resultTabsHTML(resultTab) + '<div class="result-pane" id="result-overview" role="tabpanel" aria-labelledby="result-tab-overview"' + (resultTab !== "overview" ? " hidden" : "") + '><section class="panel pad"><div class="scoregrid"><div class="score standout"><b>' + s.snapshot.earnedMarks + '</b><small>Marks</small></div><div class="score"><b>' + s.snapshot.correctCount + '</b><small>Correct</small></div><div class="score"><b>' + s.snapshot.incorrectCount + '</b><small>Incorrect</small></div><div class="score"><b>' + s.snapshot.unansweredCount + '</b><small>Unanswered</small></div><div class="score"><b>' + s.snapshot.excludedCount + "</b><small>Excluded</small></div></div>" + (originalKey ? '<p class="fine"><b>Original-source key (unadjusted):</b> ' + escapeText(originalKey.marks.toFixed(1)) + " / " + escapeText(originalKey.maxMarks.toFixed(1)) + " marks \xB7 " + originalKey.correct + " correct \xB7 " + originalKey.incorrect + " incorrect \xB7 " + originalKey.unanswered + " unanswered. Uses the source key frozen at test start, including questions excluded from the reviewed score. This is a comparison, not an official score.</p>" : "") + (grades2.graded || grades2.pending ? '<p class="fine"><b>Separate self-assessment:</b> ' + escapeText(grades2.graded) + " of " + escapeText(grades2.graded + grades2.pending) + " written responses marked; self-assessed total " + escapeText(selfAssessed.toFixed(2)) + ". Original automated score above remains unchanged.</p>" : '<p class="fine">Automated marks reflect only scoreable questions.</p>') + '</section><section class="panel pad"><h2>Section performance</h2><div class="scroll-table"><table><thead><tr><th>Section</th><th>Marks</th><th>Correct</th><th>Time on questions</th></tr></thead><tbody>' + paperSectionRows + "</tbody></table></div></section>" + sectionPaceHTML(attempt) + analyticHTML + '<section class="panel pad answer-revision-panel"><h2>Answer revisions</h2>' + (revisions.recorded ? '<div class="learning-metric-grid">' + [["Modified answers", revisions.changed], ["Wrong \u2192 correct", revisions.rescued], ["Correct \u2192 wrong", revisions.lost], ["Other changes", revisions.other]].map(([label2, value]) => '<div class="learning-metric"><strong>' + escapeText(label2) + "</strong><b>" + escapeText(value) + "</b></div>").join("") + "</div>" : '<p class="fine">No saved answer-revision sequence is available for this attempt.</p>') + '<p class="fine">Based only on recorded successive single-choice selections. Clear-and-reselect and unverified items are not classified as rescued/lost. A changed answer may coincide with better marks; this is not evidence that revision caused improvement.</p></section></div><section class="panel pad result-pane" id="result-review" role="tabpanel" aria-labelledby="result-tab-review"' + (resultTab !== "review" ? " hidden" : "") + '><div class="row between"><h2>Question review</h2><button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div>' + reviewFiltersHTML(reviewFilter) + '<p class="fine">Review frozen questions, actual responses, solutions and foreground time. Mock scores never become FSRS ratings.</p><p class="fine">' + s.items.filter((it) => reviewMatch(attempt, it, reviewFilter)).length + " of " + s.items.length + " items</p>" + s.items.filter((it) => reviewMatch(attempt, it, reviewFilter)).map((it, i) => {
+      return '<div class="generic-heading results-heading"><div><span class="eyebrow">FROZEN EXAM RECORD</span><h1>Performance overview</h1><p class="muted">' + escapeText(paper.paperId) + " \xB7 " + escapeText(paper.edition) + " \xB7 " + (attempt.finishedAt ? new Date(attempt.finishedAt).toLocaleString() : "") + "</p>" + (attempt.completionReason ? '<span class="tag">' + escapeText(
+        attempt.completionReason === "time-expired" ? "Time expired" : attempt.completionReason === "section-submitted" ? "Final section submitted" : "Submitted by user"
+      ) + "</span>" : "") + '</div><div class="row"><button class="btn quiet" id="g-history-results">History & insights</button><button class="btn" id="g-library">Library</button></div></div>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + resultTabsHTML(resultTab) + '<div class="result-pane" id="result-overview" role="tabpanel" aria-labelledby="result-tab-overview"' + (resultTab !== "overview" ? " hidden" : "") + '><section class="panel pad"><div class="scoregrid"><div class="score standout"><b>' + escapeText(s.snapshot.earnedMarks.toFixed(2)) + " <small>/ " + escapeText(eligibleMax.toFixed(2)) + '</small></b><small>Audit-adjusted automated marks</small></div><div class="score"><b>' + s.snapshot.correctCount + '</b><small>Correct</small></div><div class="score"><b>' + s.snapshot.incorrectCount + '</b><small>Incorrect</small></div><div class="score"><b>' + s.snapshot.unansweredCount + '</b><small>Unanswered</small></div><div class="score"><b>' + s.snapshot.excludedCount + "</b><small>Excluded</small></div></div>" + (originalKey ? '<p class="fine"><b>Original-source key (unadjusted):</b> ' + escapeText(originalKey.marks.toFixed(1)) + " / " + escapeText(originalKey.maxMarks.toFixed(1)) + " marks \xB7 " + originalKey.correct + " correct \xB7 " + originalKey.incorrect + " incorrect \xB7 " + originalKey.unanswered + " unanswered. Uses the source key frozen at test start, including questions excluded from the reviewed score. This is a comparison, not an official score.</p>" : "") + (grades2.graded || grades2.pending ? '<p class="fine"><b>Separate self-assessment:</b> ' + escapeText(grades2.graded) + " of " + escapeText(grades2.graded + grades2.pending) + " written responses marked; self-assessed total " + escapeText(selfAssessed.toFixed(2)) + ". Original automated score above remains unchanged.</p>" : '<p class="fine">Automated marks reflect only scoreable questions.</p>') + '</section><section class="panel pad"><h2>Section performance</h2><p class="fine">Eligible maximum excludes editorially unscored and manually assessed questions. Time is measured question foreground exposure, not the sectional wall clock.</p><div class="scroll-table"><table><thead><tr><th>Section</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Marks / eligible max</th><th>Time on questions</th></tr></thead><tbody>' + paperSectionRows + "</tbody></table></div></section>" + sectionPaceHTML(attempt) + analyticHTML + '<section class="panel pad answer-revision-panel"><h2>Answer revisions</h2>' + (revisions.recorded ? '<div class="learning-metric-grid">' + [["Modified answers", revisions.changed], ["Wrong \u2192 correct", revisions.rescued], ["Correct \u2192 wrong", revisions.lost], ["Other changes", revisions.other]].map(([label2, value]) => '<div class="learning-metric"><strong>' + escapeText(label2) + "</strong><b>" + escapeText(value) + "</b></div>").join("") + "</div>" : '<p class="fine">No saved answer-revision sequence is available for this attempt.</p>') + '<p class="fine">Based only on recorded successive single-choice selections. Clear-and-reselect and unverified items are not classified as rescued/lost. A changed answer may coincide with better marks; this is not evidence that revision caused improvement.</p></section></div><section class="panel pad result-pane" id="result-review" role="tabpanel" aria-labelledby="result-tab-review"' + (resultTab !== "review" ? " hidden" : "") + '><div class="row between"><h2>Question review</h2><div class="row"><button class="btn" id="g-review-top">Top \u2191</button><button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div></div>' + reviewFiltersHTML(reviewFilter) + '<p class="fine">Review frozen questions, actual responses, solutions and foreground time. Mock scores never become FSRS ratings.</p><p class="fine">' + s.items.filter((it) => reviewMatch(attempt, it, reviewFilter)).length + " of " + s.items.length + " items</p>" + s.items.filter((it) => reviewMatch(attempt, it, reviewFilter)).map((it, i) => {
         const q = qs.get(it.questionRevisionId);
         const response = attempt.state.responses.find((r) => r.questionRevisionId === it.questionRevisionId)?.response;
         const answer = attempt.frozen.key.entries.find((e) => e.questionRevisionId === it.questionRevisionId)?.answer;
-        const explanation = attempt.explanations?.[it.questionRevisionId] || q?.editorial.notes;
+        const explanation = attempt.explanations?.[it.questionRevisionId];
         const seconds = attempt.state.responses.find((r) => r.questionRevisionId === it.questionRevisionId)?.timeSpentMs ?? 0;
         if (!q) return "";
         const prior = attempt.manualGrades?.find((g) => g.questionRevisionId === q.id);
         const limit = manualGradeLimit(attempt, q.id);
         const provenance = q.editorial.sources ?? [];
         const origin = attempt.notebookLineage?.entries.find((x) => x.questionRevisionId === q.id);
-        return '<article class="generic-review" data-review-id="' + escapeText(q.id) + '" data-verdict="' + escapeText(it.verdict) + '"><strong>' + (paper.sections.flatMap((z) => z.questionRevisionIds).indexOf(q.id) + 1) + ". " + escapeText(q.content.prompt) + '</strong><p class="fine">' + escapeText(q.editorial.status) + (q.editorial.sourcePage ? " \xB7 Source page " + q.editorial.sourcePage : "") + " \xB7 " + minutes(seconds) + " spent</p>" + frozenReviewMedia(attempt, q) + (origin ? '<p class="fine">Notebook source: ' + escapeText(origin.sourcePaperId) + " \xB7 " + escapeText(origin.sourcePaperEdition) + " \xB7 " + escapeText(origin.sourceSectionTitle) + " \xB7 source attempt " + escapeText(origin.sourceAttemptId) + "</p>" : "") + '<p class="fine">' + escapeText(it.verdict) + " \xB7 " + it.marks + ' automated marks</p><p class="fine">Your answer: ' + escapeText(readableAnswer(q, response)) + '</p><p class="fine">Expected: ' + escapeText(readableAnswer(q, answer)) + "</p>" + (q.editorial.notes ? '<p class="fine">Editorial note: ' + escapeText(q.editorial.notes) + "</p>" : "") + (explanation ? '<p class="fine">Explanation: ' + escapeText(explanation) + "</p>" : "") + (provenance.length ? '<p class="fine">Sources: ' + provenance.map((source) => '<a href="' + escapeText(source.url) + '" target="_blank" rel="noopener noreferrer">' + escapeText(source.title) + "</a>").join(" \xB7 ") + "</p>" : "") + (limit !== null ? '<div class="generic-manual-grade"><p class="fine">Written response requires explicit human assessment. Self-marked results are separate from exam scores.</p><label>Self-assessed marks (0\u2013' + limit + ')<input type="number" step="0.01" min="0" max="' + limit + '" data-manual-marks="' + escapeText(q.id) + '" value="' + escapeText(prior?.marks ?? "") + '"></label><label>Assessment note (optional)<textarea maxlength="2000" rows="2" data-manual-note="' + escapeText(q.id) + '">' + escapeText(prior?.note ?? "") + '</textarea></label><button class="btn" data-manual-save="' + escapeText(q.id) + '">Save self-assessment</button></div>' : "") + '<button class="btn" data-add-card="' + escapeText(q.id) + '"' + (records.has("learning-card:" + q.id) ? " disabled" : "") + ">" + (records.has("learning-card:" + q.id) ? "In notebook" : "Add to notebook") + "</button></article>";
+        return '<article class="generic-review" data-review-id="' + escapeText(q.id) + '" data-verdict="' + escapeText(it.verdict) + '"><strong>' + (paper.sections.flatMap((z) => z.questionRevisionIds).indexOf(q.id) + 1) + ". " + escapeText(q.content.prompt) + '</strong><p class="fine">' + escapeText(q.editorial.status) + (q.editorial.sourcePage ? " \xB7 Source page " + q.editorial.sourcePage : "") + " \xB7 " + minutes(seconds) + " spent</p>" + frozenReviewMedia(attempt, q, response, answer, it.verdict) + (origin ? '<p class="fine">Notebook source: ' + escapeText(origin.sourcePaperId) + " \xB7 " + escapeText(origin.sourcePaperEdition) + " \xB7 " + escapeText(origin.sourceSectionTitle) + " \xB7 source attempt " + escapeText(origin.sourceAttemptId) + "</p>" : "") + '<p class="fine"><span class="verdict ' + escapeText(it.verdict) + '">' + escapeText(it.verdict) + "</span> \xB7 " + it.marks + ' automated marks</p><p class="fine">Your answer: ' + escapeText(readableAnswer(q, response)) + '</p><p class="fine">Expected: ' + escapeText(readableAnswer(q, answer)) + "</p>" + (q.editorial.notes ? '<p class="fine">Editorial note: ' + escapeText(q.editorial.notes) + "</p>" : "") + (explanation ? '<details class="worked-solution"' + (it.verdict === "incorrect" || it.verdict === "unanswered" ? " open" : "") + "><summary>" + (q.content.assetIds?.length || (q.content.kind === "single-choice" || q.content.kind === "multiple-select") && q.content.options.some((o) => o.assetIds?.length) ? "Visual solving method" : "Solving approach & worked reasoning") + '</summary><div class="worked-solution-body">' + escapeText(explanation) + "</div></details>" : "") + sourceReviewHTML(attempt, q) + (provenance.length ? '<p class="fine">Sources: ' + provenance.map((source) => '<a href="' + escapeText(source.url) + '" target="_blank" rel="noopener noreferrer">' + escapeText(source.title) + "</a>").join(" \xB7 ") + "</p>" : "") + (limit !== null ? '<div class="generic-manual-grade"><p class="fine">Written response requires explicit human assessment. Self-marked results are separate from exam scores.</p><label>Self-assessed marks (0\u2013' + limit + ')<input type="number" step="0.01" min="0" max="' + limit + '" data-manual-marks="' + escapeText(q.id) + '" value="' + escapeText(prior?.marks ?? "") + '"></label><label>Assessment note (optional)<textarea maxlength="2000" rows="2" data-manual-note="' + escapeText(q.id) + '">' + escapeText(prior?.note ?? "") + '</textarea></label><button class="btn" data-manual-save="' + escapeText(q.id) + '">Save self-assessment</button></div>' : "") + '<button class="btn" data-add-card="' + escapeText(q.id) + '"' + (records.has("learning-card:" + q.id) ? " disabled" : "") + ">" + (records.has("learning-card:" + q.id) ? "In notebook" : "Add to notebook") + "</button></article>";
       }).join("") + "</section>" + timingLedgerHTML(attempt, resultTab === "timing");
     }
     const openSaved = (id) => {
@@ -6403,13 +6610,17 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
         attempt = {
           ...saved,
           state: restored.state,
-          ...restored.expired ? { finishedAt: now2(), result: scoreAttempt(
-            saved.frozen.paper,
-            saved.frozen.key,
-            saved.frozen.questions,
-            restored.state.responses,
-            (/* @__PURE__ */ new Date()).toISOString()
-          ) } : {}
+          ...restored.expired ? {
+            finishedAt: now2(),
+            completionReason: "time-expired",
+            result: scoreAttempt(
+              saved.frozen.paper,
+              saved.frozen.key,
+              saved.frozen.questions,
+              restored.state.responses,
+              (/* @__PURE__ */ new Date()).toISOString()
+            )
+          } : {}
         };
         void save(attempt);
       }
@@ -6521,8 +6732,15 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
           attempt = startGenericAttempt(configured, id, now2());
           if (configured.paper.edition === "reviewed") {
             const source = [...packages.values()].find((candidate) => candidate.paper.edition === "source" && candidate.paper.paperId === configured.paper.paperId && candidate.examId === configured.examId);
-            const original = source ? createSourceKeyReference(configured, source) : null;
-            if (original) attempt = { ...attempt, sourceKeyReference: original };
+            if (source) {
+              const original = createSourceKeyReference(configured, source);
+              const review = createSourceReviewReference(configured, source);
+              attempt = {
+                ...attempt,
+                ...original ? { sourceKeyReference: original } : {},
+                ...review ? { sourceReviewReference: review } : {}
+              };
+            }
           }
           warning = "";
           view = "exam";
@@ -6621,6 +6839,10 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
         });
         root2.querySelector("#g-revision-set").onclick = () => {
           void addResultCards(attempt);
+        };
+        root2.querySelector("#g-review-top").onclick = () => {
+          document.getElementById("result-tab-review")?.focus({ preventScroll: true });
+          window.scrollTo({ top: 0, behavior: "smooth" });
         };
         root2.querySelectorAll("[data-manual-save]").forEach((button) => button.onclick = async () => {
           if (!attempt || storageFault) return;
