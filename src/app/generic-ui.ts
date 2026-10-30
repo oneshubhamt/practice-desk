@@ -20,8 +20,9 @@ import { createLearningDesk } from "./learning-ui.ts";
 import { makeRevisionPackage,createNotebookLineage,validateNotebookLineage } from "../learning/revision-test.ts";
 import { attemptEvidence } from "../learning/attempt-evidence.ts";
 import { answerRevisionEvidence } from "../learning/answer-revisions.ts";
+import { questionSpeed } from "../learning/question-analytics.ts";
 import { historyHTML, type HistorySort, type HistoryStatus } from "./history-page.ts";
-import { reviewMatch, reviewFiltersHTML, resultTabsHTML, sectionPaceHTML, timingLedgerHTML, type ResultTab, type ReviewFilter } from "./result-presentation.ts";
+import { reviewMatch, reviewFiltersHTML, resultTabsHTML, sectionPaceHTML, timingLedgerHTML, questionCoachingHTML, type ResultTab, type ReviewFilter } from "./result-presentation.ts";
 import { addLearningCard, validateLearningCard } from "../learning/learning.ts";
 import type { LearningCard } from "../learning/learning.ts";
 import { readDisplayPreferences, writeDisplayPreferences, SETTINGS_EVENT } from "./preferences.ts";
@@ -855,9 +856,11 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      '<div class="learning-metric-grid">'+evidence.speed.buckets.map(e=>'<div class="learning-metric">'+
        '<strong>'+e.label+'</strong><b>'+e.correct+' correct · '+e.incorrect+' incorrect</b>'+
        '<small>'+e.items+' classified answers</small>'+
-       (e.label==="Fast"||e.label==="Slow"?'<button class="textlink" data-review-preset="'+
-         (e.label==="Fast"?"fastwrong":"slowwrong")+'">Review '+e.incorrect+' '+e.label.toLowerCase()+
-         ' mistakes →</button>':"")+'</div>').join("")+'</div>'+
+       '<button class="textlink" data-review-preset="'+
+         (e.label==="Fast"?"fastwrong":e.label==="Slow"?"slowwrong":"typicalwrong")+
+         '"'+(e.incorrect?"":" disabled")+' aria-label="Review '+e.label.toLowerCase()+
+         ' incorrect questions">Review '+e.incorrect+' '+e.label.toLowerCase()+
+         ' mistakes →</button></div>').join("")+'</div>'+
      '<p class="fine">'+evidence.speed.classified+' of '+evidence.speed.measured+
        ' measurable answers classified; insufficient section samples remain unclassified.</p>'+
      '<h3>Marks decomposition and hypothetical opportunities</h3>'+
@@ -904,6 +907,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
     '<p class="fine">Eligible maximum excludes editorially unscored and manually assessed questions. Time is measured question foreground exposure, not the sectional wall clock.</p>'+
     '<div class="scroll-table"><table><thead><tr><th>Section</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Marks / eligible max</th><th>Time on questions</th></tr></thead><tbody>'+
      paperSectionRows+'</tbody></table></div></section>'+sectionPaceHTML(attempt)+analyticHTML+
+     questionCoachingHTML(attempt)+
     '<section class="panel pad answer-revision-panel"><h2>Answer revisions</h2>'+
     (revisions.recorded?'<div class="learning-metric-grid">'+
       [['Modified answers',revisions.changed],['Wrong → correct',revisions.rescued],['Correct → wrong',revisions.lost],['Other changes',revisions.other]]
@@ -923,6 +927,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       const answer=attempt!.frozen.key.entries.find(e=>e.questionRevisionId===it.questionRevisionId)?.answer;
       const explanation=attempt!.explanations?.[it.questionRevisionId];
       const seconds=attempt!.state.responses.find(r=>r.questionRevisionId===it.questionRevisionId)?.timeSpentMs??0;
+      const visitCount=attempt!.state.questionVisits?.find(r=>r.questionRevisionId===it.questionRevisionId)?.count;
+      const speed=questionSpeed(attempt!,it.questionRevisionId);
       if(!q)return "";
       const prior=attempt!.manualGrades?.find(g=>g.questionRevisionId===q.id);
       const limit=manualGradeLimit(attempt!,q.id);
@@ -932,7 +938,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        (paper.sections.flatMap(z=>z.questionRevisionIds).indexOf(q.id)+1)+'. '+escapeText(q.content.prompt)+'</strong>'+
        '<p class="fine">'+escapeText(q.editorial.status)+
          (q.editorial.sourcePage?' · Source page '+q.editorial.sourcePage:"")+
-         ' · '+minutes(seconds)+' spent</p>'+
+         ' · '+minutes(seconds)+' foreground exposure · Speed: '+escapeText(speed)+
+         ' · Visits: '+(attempt!.state.questionVisits===undefined?"Not recorded":visitCount??0)+'</p>'+
        frozenReviewMedia(attempt!,q,response,answer,it.verdict)+
        (origin?'<p class="fine">Notebook source: '+escapeText(origin.sourcePaperId)+
          ' · '+escapeText(origin.sourcePaperEdition)+' · '+escapeText(origin.sourceSectionTitle)+
