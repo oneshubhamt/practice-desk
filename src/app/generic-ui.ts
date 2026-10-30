@@ -9,7 +9,7 @@ import { scoreAttempt } from "../engine/scoring.ts";
 import { manualGradeLimit, manualGradeSummary, setManualGrade, validateManualGrades } from "../engine/manual-grading.ts";
 import { createSourceKeyReference,sourceKeyScore,validateSourceKeyReference } from "../engine/source-comparison.ts";
 import { createSourceReviewReference,validateSourceReviewReference } from "../engine/review-source.ts";
-import { scoreableMaximum, sectionScoreSummaries } from "../engine/score-ceiling.ts";
+import { scoreableMaximum, scoreableLowerBound, sectionScoreSummaries } from "../engine/score-ceiling.ts";
 import type { CorrectAnswer } from "../domain/answer-key.js";
 import type { Verdict } from "../engine/scoring.ts";
 import { makeBackup, verifyBackup, planBackupMerge } from "../history/backup.ts";
@@ -845,6 +845,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    const scorePrecision=paper.scoring.decimalPlaces??2;
    const markLabel=(value:number)=>value.toFixed(scorePrecision);
    const eligibleMax=scoreableMaximum(paper,attempt.frozen.key,attempt.frozen.questions);
+   const conservativeFloor=scoreableLowerBound(paper,attempt.frozen.key,attempt.frozen.questions);
    const paperSectionRows=sectionScoreSummaries(attempt,s).map(row=>
      '<tr><td>'+escapeText(row.title)+'</td><td>'+row.attempted+'/'+
        (row.questions-row.excluded)+'</td><td>'+row.correct+'</td><td>'+row.incorrect+
@@ -871,7 +872,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        '<small>'+e.items+' classified answers</small>'+
        '<button class="textlink" data-review-preset="'+
          (e.label==="Fast"?"fastwrong":e.label==="Slow"?"slowwrong":"typicalwrong")+
-         '"'+(e.incorrect?"":" disabled")+' aria-label="Review '+e.label.toLowerCase()+
+         '"'+(e.incorrect&&revealReview?"":" disabled")+' aria-label="Review '+e.label.toLowerCase()+
          ' incorrect questions">Review '+e.incorrect+' '+e.label.toLowerCase()+
          ' mistakes →</button></div>').join("")+'</div>'+
      '<p class="fine">'+evidence.speed.classified+' of '+evidence.speed.measured+
@@ -882,11 +883,11 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      '<div class="learning-metric"><strong>Wrong → correct</strong><b>+'+
         evidence.opportunity.wrongToCorrect.toFixed(2)+'</b><small>Hypothetical, '+
         evidence.opportunity.countWrong+' incorrect scored items</small>'+
-        '<button class="textlink" data-review-preset="incorrect">Review incorrect →</button></div>'+
+        (revealReview?'<button class="textlink" data-review-preset="incorrect">Review incorrect →</button>':"")+'</div>'+
      '<div class="learning-metric"><strong>Skipped → correct</strong><b>+'+
         evidence.opportunity.skippedToCorrect.toFixed(2)+'</b><small>Hypothetical, '+
         evidence.opportunity.countSkipped+' unanswered scored items</small>'+
-        '<button class="textlink" data-review-preset="unanswered">Review skips →</button></div></div>'+
+        (revealReview?'<button class="textlink" data-review-preset="unanswered">Review skips →</button>':"")+'</div></div>'+
      '</section>':"";
    return '<div class="generic-heading results-heading"><div><span class="eyebrow">FROZEN EXAM RECORD</span>'+
      '<h1>Performance overview</h1><p class="muted">'+escapeText(paper.paperId)+' · '+escapeText(paper.edition)+
@@ -912,6 +913,11 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       escapeText(originalKey.marks.toFixed(1))+' / '+escapeText(originalKey.maxMarks.toFixed(1))+
       ' marks · '+originalKey.correct+' correct · '+originalKey.incorrect+' incorrect · '+
       originalKey.unanswered+' unanswered. Uses the source key frozen at test start, including questions excluded from the reviewed score. This is a comparison, not an official score.</p>':"")+
+    '<p class="fine"><b>Scoring envelope:</b> nominal full-credit ceiling '+
+      escapeText(markLabel(eligibleMax))+'; conservative lower bound '+
+      escapeText(markLabel(conservativeFloor))+
+      '. The lower bound need not be attainable; written responses are assessed separately.</p>'+
+    (!revealReview?'<p class="fine"><b>Detailed answers withheld:</b> this exam permits numerical results and timing feedback but does not release its question-by-question answer key or worked solutions after submission.</p>':"")+
     (grades.graded||grades.pending?'<p class="fine"><b>Separate self-assessment:</b> '+escapeText(grades.graded)+
       ' of '+escapeText(grades.graded+grades.pending)+' written responses marked; self-assessed total '+
       escapeText(selfAssessed.toFixed(2))+'. Original automated score above remains unchanged.</p>':
