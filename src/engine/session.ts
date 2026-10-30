@@ -211,6 +211,44 @@ export function transition(paper: PaperRevision, state: SessionState, event: Ses
   }
   return current;
 }
+/** Freeze per-section timer claims only when the exact interval was recorded.
+ * Older attempts without this collection explicitly have no section evidence.
+ */
+export function sectionTimerDuration(state:SessionState,sectionIndex:number):number|null{
+  return state.completedSectionTimings?.find(x=>x.sectionIndex===sectionIndex)?.durationMs??null;
+}
+/** Never trust claimed section timing supplied by imported backups or local storage. */
+export function validateSectionTimingEvidence(paper:PaperRevision,state:SessionState):void{
+  const rows=state.completedSectionTimings;
+  if(rows===undefined)return; // Older attempts: preserve absence, never backfill.
+  if(!Array.isArray(rows)||rows.length>paper.sections.length||
+     (paper.navigation.sectionNavigation!=="sequential-locked"&&paper.sections.length!==1&&rows.length>0))
+    throw Error("Invalid saved section timing evidence");
+  let sum=0;
+  rows.forEach((row,index)=>{
+    const section=paper.sections[index];
+    if(!row||row.sectionIndex!==index||row.sectionId!==section?.id||
+       !Number.isFinite(row.durationMs)||row.durationMs<0||
+       (row.reason!=="time-expired"&&row.reason!=="submitted"))
+      throw Error("Invalid saved section timing entry");
+    if(paper.timing.kind==="sectional"){
+      const limit=sectionLimit(paper,index);
+      if(limit!==null&&row.durationMs>limit)
+        throw Error("Saved section timer exceeds its limit");
+      if(row.reason==="time-expired"&&(limit===null||row.durationMs!==limit))
+        throw Error("Saved section expiry does not match the timer limit");
+    }
+    sum+=row.durationMs;
+  });
+  if(!Number.isFinite(sum)||sum>state.elapsedMs+0.001||
+     rows.length<state.completedSections.length||
+     state.completedSections.some((section,index)=>rows[index]?.sectionIndex!==section)||
+     (state.status!=="completed"&&rows.length!==state.completedSections.length)||
+     (state.status==="completed"&&paper.navigation.sectionNavigation==="sequential-locked"&&
+       rows.length!==paper.sections.length)||
+     (state.status==="completed"&&paper.sections.length===1&&rows.length!==1))
+     throw Error("Saved section timing history is inconsistent with the session");
+}
 /** Rebase a saved session onto a fresh monotonic origin after a process restart. */
 export function rebaseSession(state: SessionState, nowMs: number): SessionState {
   if (!Number.isFinite(nowMs)) throw new Error("Invalid restore clock");
