@@ -40,6 +40,24 @@ test("G01: whole-paper locked sections have explicit one-way progress and cannot
  assert.doesNotThrow(()=>validateGenericStoredRecord(a));
 });
 
+test("G01: untimed sequentially locked sections are reachable but cannot be skipped",()=>{
+ const b=bundleWith({timing:{kind:"untimed"},navigation:{...pkg.paper.navigation,sectionNavigation:"sequential-locked"}});
+ let a=startGenericAttempt(b,"untimed-locked",1000);
+ assert.match(renderModelExam(a,b),/Finish section →/);
+ a=transitionGenericAttempt(a,evt("SUBMIT_ATTEMPT",1010),lookup);
+ assert.equal(a.state.status,"running");
+ a=transitionGenericAttempt(a,evt("SUBMIT_SECTION",1020),lookup);
+ assert.equal(a.state.sectionIndex,1);
+ a=transitionGenericAttempt(a,evt("SUBMIT_ATTEMPT",1030),lookup);
+ assert.equal(a.state.status,"completed");
+});
+
+test("G01/G02: sectional clocks reject a contradictory free section-navigation promise",()=>{
+ const base={...pkg.paper,timing:{kind:"sectional",transition:"automatic",allowEarlySubmit:true,pausePolicy:"allowed",
+  sectionLimits:[{sectionId:"s1",durationMs:100},{sectionId:"s2",durationMs:200}]}};
+ assert.throws(()=>validatePaperRevision(base,questions),/require sequential-locked/);
+});
+
 test("G01 adjacent: a whole-paper lock cannot bypass the global deadline",()=>{
  const bundle=bundleWith({timing:{kind:"whole-paper",durationMs:50,pausePolicy:"forbidden"},
   navigation:{...pkg.paper.navigation,sectionNavigation:"sequential-locked"}});
