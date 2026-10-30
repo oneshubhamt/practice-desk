@@ -3925,6 +3925,10 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       return { ...current, status: "paused" };
     }
     if (event.type === "RESUME") return current.status === "paused" && paper.timing.kind !== "untimed" && paper.timing.pausePolicy === "allowed" ? { ...current, status: "running" } : current;
+    if (current.status === "paused" && event.type === "FLAG" && paper.navigation.allowFlagging) {
+      const id2 = questionId(paper, current), previous2 = record2(current, id2);
+      return previous2.flagged === event.flagged ? current : put(current, { ...previous2, flagged: event.flagged });
+    }
     if (current.status !== "running") return current;
     if (event.type === "SUBMIT_ATTEMPT")
       return paper.timing.kind === "sectional" || paper.navigation.sectionNavigation === "sequential-locked" && current.sectionIndex < paper.sections.length - 1 ? current : finish(paper, current, "submitted");
@@ -4174,15 +4178,20 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
         const explanation = merged.explanation || solutions2[paper.paperId]?.[String(n)] || "";
         if (explanation) explanations[question.id] = explanation;
         const stemId = `${paper.paperId}:q:${n}:stem`;
-        const asImage = (id, uri) => ({
+        const asImage = (id, uri, altText) => ({
           id,
           mediaType: uri.match(/^data:(image\/[a-z]+);/)?.[1] ?? "image/webp",
           dataUri: uri,
-          contentHash: sha256(Uint8Array.from(atob(uri.slice(uri.indexOf(",") + 1)), (char) => char.charCodeAt(0)))
+          contentHash: sha256(Uint8Array.from(atob(uri.slice(uri.indexOf(",") + 1)), (char) => char.charCodeAt(0))),
+          altText
         });
-        if (merged.images.stem) assets.push(asImage(stemId, merged.images.stem));
+        if (merged.images.stem) assets.push(asImage(stemId, merged.images.stem, "Diagram for question " + n));
         merged.images.options?.forEach((uri, i) => {
-          if (uri) assets.push(asImage(`${paper.paperId}:q:${n}:option:${i}`, uri));
+          if (uri) assets.push(asImage(
+            `${paper.paperId}:q:${n}:option:${i}`,
+            uri,
+            "Image for option " + String.fromCharCode(65 + i) + " of question " + n
+          ));
         });
       }
       return {
@@ -6471,6 +6480,28 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     }).join("") + "</div>" : '<p class="empty-state">No attempts match these filters. Your saved records have not been deleted.</p>') + '</section><div class="history-management-grid"><section class="panel pad" id="g-storage-panel"><h2>Storage & safety</h2><p class="fine">Storage backend: <b id="g-storage-backend">' + (backend === "indexeddb" ? "IndexedDB" : "localStorage fallback") + "</b>. " + (backend === "indexeddb" ? "Records are indexed in this browser." : "Fallback capacity is limited; export a backup.") + ' Browser data can still be cleared; keep exported backups.</p><p id="g-storage-quota" class="fine" role="status">Checking browser storage estimate\u2026</p><p id="g-storage-persist-status" class="fine" role="status"></p><button class="btn" id="g-storage-persist" type="button">Protect stored data</button></section><section class="panel pad"><h2>Backup & management</h2><p class="fine">Backup v3 imports are checksum-verified and additive only. Matching records are never overwritten; export before deleting.</p><button class="btn danger" id="g-delete-completed" type="button"' + (done.length === 0 || loading || storageLocked ? " disabled" : "") + ">Delete all " + done.length + ' completed attempts</button><p class="fine">Only finished test records are deleted. In-progress tests, imported papers and learning cards remain untouched.</p></section></div>';
   }
 
+  // src/app/editorial-labels.ts
+  function editorialStatusLabel(record3) {
+    switch (record3.status) {
+      case "verified":
+        return "Marked verified by source or author";
+      case "corrected":
+        return record3.changes?.includes("answer-key") ? "Key corrected \xB7 recorded editorial change" : "Editorial correction recorded \xB7 type may vary";
+      case "caution":
+        return record3.changes?.includes("wording") ? "Wording caution \xB7 review notes; answer key not certified here" : "Editorial caution \xB7 review notes; answer key not certified here";
+      case "invalid":
+        return "Defective \xB7 excluded from automated scoring";
+      case "draft":
+        return "Draft \xB7 excluded from automated scoring";
+      case "under-review":
+        return "Under review \xB7 excluded from automated scoring";
+      case "incomplete-source":
+        return "Incomplete source \xB7 excluded from automated scoring";
+      case "superseded":
+        return "Superseded \xB7 excluded from automated scoring";
+    }
+  }
+
   // src/app/exam-preflight.ts
   var excludedStatuses = /* @__PURE__ */ new Set(["draft", "invalid", "incomplete-source", "under-review", "superseded"]);
   var escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
@@ -6562,7 +6593,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
   }
   function examRulesHTML(p) {
     const list = (items) => "<ul>" + items.map((item) => "<li>" + escapeHTML(item) + "</li>").join("") + "</ul>";
-    return '<details class="panel pad help-rules" id="g-exam-rules"><summary>Full exam rules, shortcuts, source audit & offline storage</summary><div class="help-rules-body"><h3>Exam clock and sections</h3>' + list(p.timingRules) + "<h3>Questions, review and navigation</h3>" + list(p.navigationRules) + "<h3>Scoring for this selection</h3><p>" + escapeHTML(p.ruleSummary) + ". Maximum eligible automated marks: <b>" + escapeHTML(p.maximum.toFixed(p.decimals)) + "</b>. Excluded items are omitted; written/manual questions are self-assessed separately.</p><h3>Exam keyboard shortcuts</h3><p>During a running exam, A\u2013D answer a single-choice question; left/right arrows navigate questions when focus allows; M toggles a flag if permitted; F toggles full-screen/focus layout. Keyboard shortcuts do not operate in text entry or an open Display panel. Use ordinary Tab, Enter and Space to navigate controls.</p><h3>Source and editorial independence</h3><p>" + escapeHTML(p.provenance) + " No answer key, solution, dispute details or correction comparison is disclosed before permitted post-test review.</p><h3>Offline data and backups</h3><p>This is a standalone offline tool, not a synchronised account. Attempts and display choices are kept in the current browser profile; storage can be cleared or evicted. Export checksum-verified backups from History, store them outside this device, and keep a separate copy before deleting. Imported backups merge additively; existing saved records are not silently replaced. Fullscreen depends on browser support and may use a focus-layout fallback.</p></div></details>";
+    return '<details class="panel pad help-rules" id="g-exam-rules"><summary>Full exam rules, shortcuts, source audit & offline storage</summary><div class="help-rules-body"><h3>Exam clock and sections</h3>' + list(p.timingRules) + "<h3>Questions, review and navigation</h3>" + list(p.navigationRules) + "<h3>Scoring for this selection</h3><p>" + escapeHTML(p.ruleSummary) + ". Maximum eligible automated marks: <b>" + escapeHTML(p.maximum.toFixed(p.decimals)) + "</b>. Excluded items are omitted; written/manual questions are self-assessed separately.</p><h3>Exam keyboard shortcuts</h3><p>During a running exam, A\u2013D answer a single-choice question; left/right arrows navigate between questions except when a native answer radio is focused. On a focused radio, unmodified arrows select answer options; Alt+left/right navigates questions instead. M toggles a flag if permitted, including while paused; F toggles full-screen/focus layout. Answer and navigation shortcuts do not operate while paused or in text entry or an open Display panel. Use ordinary Tab, Enter and Space to navigate controls.</p><h3>Source and editorial independence</h3><p>" + escapeHTML(p.provenance) + " No answer key, solution, dispute details or correction comparison is disclosed before permitted post-test review.</p><h3>Offline data and backups</h3><p>This is a standalone offline tool, not a synchronised account. Attempts and display choices are kept in the current browser profile; storage can be cleared or evicted. Export checksum-verified backups from History, store them outside this device, and keep a separate copy before deleting. Imported backups merge additively; existing saved records are not silently replaced. Fullscreen depends on browser support and may use a focus-layout fallback.</p></div></details>";
   }
 
   // src/app/result-presentation.ts
@@ -6633,10 +6664,10 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     const limit = paper.timing.sectionLimits.find((s) => s.sectionId === id)?.durationMs;
     return limit == null ? null : Math.max(0, limit - state.sectionElapsedMs);
   }
-  function assetHTML(bundle, ids) {
+  function assetHTML(bundle, ids, fallbackAlt = "Question figure") {
     return (ids ?? []).map((id) => {
       const a = bundle.assets?.find((x) => x.id === id);
-      return a ? '<img class="generic-figure" src="' + escapeText(a.dataUri) + '" alt="' + escapeText(a.altText ?? "Question image") + '">' : "";
+      return a ? '<img class="generic-figure" src="' + escapeText(a.dataUri) + '" alt="' + escapeText(a.altText ?? fallbackAlt) + '">' : "";
     }).join("");
   }
   function renderGenericControls(bundle, q, response) {
@@ -6644,21 +6675,21 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     if (c.kind === "single-choice" || c.kind === "multiple-select") {
       const selected = response?.kind === "single-choice" ? [response.optionId] : response?.kind === "multiple-select" ? response.optionIds : [];
       const kind = c.kind === "single-choice" ? "radio" : "checkbox";
-      return '<fieldset class="generic-choices"><legend>' + (kind === "radio" ? "Select one option" : "Select applicable options") + "</legend>" + c.options.map((o, i) => '<label class="generic-choice"><input type="' + kind + '" name="generic-answer" data-choice="' + escapeText(o.id) + '"' + (selected.includes(o.id) ? " checked" : "") + "><span><b>" + String.fromCharCode(65 + i) + ".</b> " + escapeText(o.text) + assetHTML(bundle, o.assetIds) + "</span></label>").join("") + "</fieldset>";
+      return '<fieldset class="generic-choices"><legend>' + (kind === "radio" ? "Select one option" : "Select applicable options") + "</legend>" + c.options.map((o, i) => '<label class="generic-choice"><input type="' + kind + '" name="generic-answer" data-choice="' + escapeText(o.id) + '"' + (selected.includes(o.id) ? " checked" : "") + "><span><b>" + String.fromCharCode(65 + i) + ".</b> " + escapeText(o.text) + assetHTML(bundle, o.assetIds, "Image for option " + String.fromCharCode(65 + i)) + "</span></label>").join("") + "</fieldset>";
     }
     if (c.kind === "true-false") return '<fieldset class="generic-choices"><legend>Choose a response</legend>' + [true, false].map((value) => '<label class="generic-choice"><input type="radio" name="generic-boolean" data-bool="' + value + '"' + (response?.kind === "true-false" && response.value === value ? " checked" : "") + "><span>" + (value ? "True" : "False") + "</span></label>").join("") + "</fieldset>";
     if (c.kind === "numeric-entry") return '<label class="picker" for="g-number">Numeric answer</label><input type="number" step="any" id="g-number"' + (c.numericRules.minimum !== void 0 ? ' min="' + c.numericRules.minimum + '"' : "") + (c.numericRules.maximum !== void 0 ? ' max="' + c.numericRules.maximum + '"' : "") + ' value="' + (response?.kind === "numeric-entry" ? escapeText(response.value) : "") + '"><button class="btn primary" id="g-save">Save answer</button>';
     if (c.kind === "free-response") return '<label class="picker" for="g-text">Written response</label><textarea id="g-text" rows="6">' + (response?.kind === "free-response" ? escapeText(response.text) : "") + '</textarea><button class="btn primary" id="g-save">Save response</button>';
     const pairs = response?.kind === "matching" ? response.pairs : [];
-    return '<div class="generic-matches">' + c.leftItems.map((left) => "<label><span>" + escapeText(left.text) + assetHTML(bundle, left.assetIds) + '</span><select data-match="' + escapeText(left.id) + '"><option value="">Not matched</option>' + c.rightItems.map((right) => '<option value="' + escapeText(right.id) + '"' + (pairs.some((p) => p.leftId === left.id && p.rightId === right.id) ? " selected" : "") + ">" + escapeText(right.text) + "</option>").join("") + "</select></label>").join("") + '</div><button class="btn primary" id="g-save">Save matches</button>';
+    return '<div class="generic-matches">' + c.leftItems.map((left) => "<label><span>" + escapeText(left.text) + assetHTML(bundle, left.assetIds, "Image for matching item " + left.text) + '</span><select data-match="' + escapeText(left.id) + '"><option value="">Not matched</option>' + c.rightItems.map((right) => '<option value="' + escapeText(right.id) + '"' + (pairs.some((p) => p.leftId === left.id && p.rightId === right.id) ? " selected" : "") + ">" + escapeText(right.text) + "</option>").join("") + "</select></label>").join("") + '</div><button class="btn primary" id="g-save">Save matches</button>';
   }
   function stimulusHTML(bundle, q) {
     const stimulus = bundle.stimuli?.find((s) => s.id === q.content.stimulusId);
     if (!stimulus) return "";
     if (stimulus.kind === "passage" || stimulus.kind === "case")
-      return '<section class="generic-stimulus"><b>' + escapeText(stimulus.title || "Reading passage") + "</b><p>" + escapeText(stimulus.text) + "</p>" + assetHTML(bundle, stimulus.assetIds) + "</section>";
+      return '<section class="generic-stimulus"><b>' + escapeText(stimulus.title || "Reading passage") + "</b><p>" + escapeText(stimulus.text) + "</p>" + assetHTML(bundle, stimulus.assetIds, "Image accompanying " + (stimulus.title || "reading passage")) + "</section>";
     if (stimulus.kind === "table") return '<section class="generic-stimulus"><b>' + escapeText(stimulus.title || "Table") + '</b><div class="scroll-table"><table><tr>' + stimulus.columns.map((c) => "<th>" + escapeText(c) + "</th>").join("") + "</tr>" + stimulus.rows.map((r) => "<tr>" + r.map((c) => "<td>" + escapeText(c) + "</td>").join("") + "</tr>").join("") + "</table></div></section>";
-    if ("assetId" in stimulus) return '<section class="generic-stimulus">' + assetHTML(bundle, [stimulus.assetId]) + "<p>" + escapeText(stimulus.caption || stimulus.altText) + "</p></section>";
+    if ("assetId" in stimulus) return '<section class="generic-stimulus">' + assetHTML(bundle, [stimulus.assetId], stimulus.altText) + "<p>" + escapeText(stimulus.caption || stimulus.altText) + "</p></section>";
     return "";
   }
   var isAttempt = (x) => !!x && typeof x === "object" && x.recordType === "generic-attempt";
@@ -6789,15 +6820,15 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       assets: attempt.frozen.assets
     };
     return '<div class="generic-heading exam-header"><div><span class="eyebrow">EXAM IN PROGRESS \xB7 ' + escapeText(attempt.frozen.snapshot.mode) + "</span><h1>" + escapeText(bundle?.title ?? paper.paperId) + '</h1><p class="muted">' + escapeText(section.title) + " \xB7 Section " + (state.sectionIndex + 1) + " of " + paper.sections.length + '</p></div><div class="row exam-header-actions"><div class="exam-clock ' + (isLow ? "low" : "") + '"><strong class="generic-timer" id="g-timer" role="timer">' + (remaining === null ? "Untimed" : minutes(remaining)) + "</strong><small>" + (remaining === null ? "PRACTICE" : "TIME REMAINING") + '</small></div><button class="btn quiet" id="g-library">\u2190 Library</button><button class="btn" type="button" id="g-exam-full" aria-label="Toggle full-screen test view" aria-pressed="' + focused + '">' + (focused ? "\u26F6 Exit full screen" : "\u26F6 Full screen") + '</button></div></div><p id="g-fullscreen-status" role="status"></p>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + (expired ? '<p class="generic-warning" role="status">Section time has expired. Answers are locked. Select Continue to advance without using extra time.</p>' : "") + '<section class="exam-progress"><div class="row between"><span class="fine">' + answered + " / " + total + " answered \xB7 " + visited + " viewed \xB7 " + flagged + ' flagged</span><span class="fine">' + (timeLimit !== null ? "Section timer" : "Question coverage") + " \xB7 " + Math.round(progressValue) + '%</span></div><div class="progress-track exam-time-progress" role="progressbar" aria-valuenow="' + Math.round(progressValue) + '" aria-valuemin="0" aria-valuemax="100" aria-label="' + (timeLimit !== null ? "Time used" : "Questions answered") + '"><span style="width:' + progressValue.toFixed(1) + '%"></span></div></section><div class="generic-sections" role="group" aria-label="Exam sections">' + paper.sections.map((s, i) => {
-      const locked = state.completedSections.includes(i) || (paper.timing.kind === "sectional" || paper.navigation.sectionNavigation === "sequential-locked") && i !== state.sectionIndex;
+      const locked = state.status !== "running" || state.completedSections.includes(i) || (paper.timing.kind === "sectional" || paper.navigation.sectionNavigation === "sequential-locked") && i !== state.sectionIndex;
       const filled = s.questionRevisionIds.filter((qid) => Boolean(responsesById.get(qid)?.response)).length;
       const status = state.completedSections.includes(i) ? "Closed" : locked ? "Locked" : filled + " / " + s.questionRevisionIds.length + " answered";
       return '<button class="btn exam-section-tab ' + (i === state.sectionIndex ? "primary" : "") + '" data-section="' + i + '" aria-current="' + (i === state.sectionIndex ? "step" : "false") + '"' + (locked ? " disabled" : "") + "><b>" + escapeText(s.title) + "</b><small>" + status + "</small></button>";
-    }).join("") + '</div><div class="generic-layout exam-grid"><section class="panel pad exam-question"><p class="eyebrow">' + escapeText(section.title) + " \xB7 Question " + (state.questionIndex + 1) + " of " + section.questionRevisionIds.length + (attempt.frozen.snapshot.examId === "ssc-cgl" ? " \xB7 Paper Q" + escapeText(q.questionId.split(":").at(-1)) : "") + "</p>" + stimulusHTML(assets, q) + '<h2 class="generic-prompt">' + escapeText(q.content.prompt) + "</h2>" + assetHTML(assets, q.content.assetIds) + '<fieldset class="generic-response-group"' + (state.status !== "running" ? " disabled" : "") + ">" + renderGenericControls(assets, q, response) + '</fieldset><div class="row generic-actions exam-answer-actions"><button class="btn" id="g-clear"' + (!response || state.status !== "running" ? " disabled" : "") + '>Clear</button><button class="btn" id="g-flag" aria-pressed="' + Boolean(responsesById.get(q.id)?.flagged) + '"' + (!paper.navigation.allowFlagging || state.status === "paused" || expired ? " disabled" : "") + '>Flag</button></div><div class="row generic-actions exam-nav-actions"><button class="btn" id="g-prev"' + (expired || !state.questionIndex || paper.navigation.questionNavigation === "forward-only" ? " disabled" : "") + '>\u2190 Previous</button><button class="btn" id="g-next"' + (expired || state.questionIndex === section.questionRevisionIds.length - 1 ? " disabled" : "") + '>Next \u2192</button></div><div class="row generic-actions exam-submit-actions">' + (paper.timing.kind !== "untimed" && paper.timing.pausePolicy === "allowed" ? '<button class="btn" id="g-pause"' + (expired ? " disabled" : "") + ">" + (state.status === "paused" ? "Resume timer" : "Pause timer") + "</button>" : "") + '<button class="btn danger" id="g-submit"' + (state.status === "paused" || paper.timing.kind === "sectional" && !paper.timing.allowEarlySubmit && !expired && !untimedSection ? " disabled" : "") + ">" + (expired ? hasNextSection ? "Continue to next section" : "Finish expired exam" : paper.timing.kind === "sectional" ? untimedSection ? "Finish untimed section" : "Submit section" : lockedWhole && hasNextSection ? "Finish section \u2192" : "Submit exam") + '</button></div></section><aside class="panel pad exam-sidebar"><div class="row between"><h3>Question navigator</h3><span class="fine">' + section.questionRevisionIds.length + ' questions</span></div><p class="fine">Select a question number to navigate within the current section.</p><div class="generic-palette">' + section.questionRevisionIds.map((qid, i) => {
+    }).join("") + '</div><div class="generic-layout exam-grid"><section class="panel pad exam-question"><p class="eyebrow">' + escapeText(section.title) + " \xB7 Question " + (state.questionIndex + 1) + " of " + section.questionRevisionIds.length + (attempt.frozen.snapshot.examId === "ssc-cgl" ? " \xB7 Paper Q" + escapeText(q.questionId.split(":").at(-1)) : "") + "</p>" + stimulusHTML(assets, q) + '<h2 class="generic-prompt">' + escapeText(q.content.prompt) + "</h2>" + assetHTML(assets, q.content.assetIds, "Figure for question " + (state.questionIndex + 1)) + '<fieldset class="generic-response-group"' + (state.status !== "running" ? " disabled" : "") + ">" + renderGenericControls(assets, q, response) + '</fieldset><div class="row generic-actions exam-answer-actions"><button class="btn" id="g-clear"' + (!response || state.status !== "running" ? " disabled" : "") + '>Clear</button><button class="btn" id="g-flag" aria-pressed="' + Boolean(responsesById.get(q.id)?.flagged) + '"' + (!paper.navigation.allowFlagging || expired ? " disabled" : "") + '>Flag</button></div><div class="row generic-actions exam-nav-actions"><button class="btn" id="g-prev"' + (state.status !== "running" || !state.questionIndex || paper.navigation.questionNavigation === "forward-only" ? " disabled" : "") + '>\u2190 Previous</button><button class="btn" id="g-next"' + (state.status !== "running" || state.questionIndex === section.questionRevisionIds.length - 1 ? " disabled" : "") + '>Next \u2192</button></div><div class="row generic-actions exam-submit-actions">' + (paper.timing.kind !== "untimed" && paper.timing.pausePolicy === "allowed" ? '<button class="btn" id="g-pause"' + (expired ? " disabled" : "") + ">" + (state.status === "paused" ? "Resume timer" : "Pause timer") + "</button>" : "") + '<button class="btn danger" id="g-submit"' + (state.status === "paused" || paper.timing.kind === "sectional" && !paper.timing.allowEarlySubmit && !expired && !untimedSection ? " disabled" : "") + ">" + (expired ? hasNextSection ? "Continue to next section" : "Finish expired exam" : paper.timing.kind === "sectional" ? untimedSection ? "Finish untimed section" : "Submit section" : lockedWhole && hasNextSection ? "Finish section \u2192" : "Submit exam") + '</button></div></section><aside class="panel pad exam-sidebar"><div class="row between"><h3>Question navigator</h3><span class="fine">' + section.questionRevisionIds.length + ' questions</span></div><p class="fine">Select a question number to navigate within the current section.</p><div class="generic-palette">' + section.questionRevisionIds.map((qid, i) => {
       const r = responsesById.get(qid);
-      const locked = expired || paper.navigation.questionNavigation === "forward-only" && i < state.questionIndex;
+      const locked = state.status !== "running" || paper.navigation.questionNavigation === "forward-only" && i < state.questionIndex;
       return '<button class="num ' + (i === state.questionIndex ? "here " : "") + (r?.response ? "answered " : "") + (r?.flagged ? "marked" : "") + '" data-q="' + i + '" aria-current="' + (i === state.questionIndex ? "step" : "false") + '" aria-label="Question ' + (i + 1) + (r?.response ? ", answered" : "") + (r?.flagged ? ", flagged" : "") + '"' + (locked ? " disabled" : "") + ">" + (i + 1) + "</button>";
-    }).join("") + '</div><div class="palette-legend"><span><i class="legend-dot answered"></i>Answered</span><span><i class="legend-dot marked"></i>Flagged</span><span><i class="legend-dot current"></i>Current</span><span><i class="legend-dot empty"></i>Unanswered</span></div><p class="fine">' + (paper.navigation.questionNavigation === "forward-only" ? "Questions cannot be revisited in this exam." : "Navigate freely where the paper permits.") + " Shortcuts: A\u2013D answer single-choice questions, \u2190 / \u2192 navigate, M flag, F full screen. Alt + \u2190 / \u2192 also works. Shortcuts are disabled while typing or paused.</p></aside></div>";
+    }).join("") + '</div><div class="palette-legend"><span><i class="legend-dot answered"></i>Answered</span><span><i class="legend-dot marked"></i>Flagged</span><span><i class="legend-dot current"></i>Current</span><span><i class="legend-dot empty"></i>Unanswered</span></div><p class="fine">' + (paper.navigation.questionNavigation === "forward-only" ? "Questions cannot be revisited in this exam." : "Navigate freely where the paper permits.") + " Shortcuts: A\u2013D answer single-choice questions; \u2190 / \u2192 navigate unless an answer radio is focused (where they select options); Alt + \u2190 / \u2192 navigates while a radio is focused. M toggles a flag even while paused; F enters full screen. Answer/navigation shortcuts are disabled while paused or typing.</p></aside></div>";
   }
   var builtinCache = null;
   function cachedCglPackages(sources2, patches2, solutions2) {
@@ -7320,7 +7351,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       };
       const content = q.content;
       const passage = stimulusHTML(display, q);
-      const promptAssets = assetHTML(display, content.assetIds);
+      const promptAssets = assetHTML(display, content.assetIds, "Figure for reviewed question");
       const options = content.kind === "single-choice" || content.kind === "multiple-select" ? '<div class="generic-choices" role="list" aria-label="Answer options">' + content.options.map((option, i) => {
         const chosen = response?.kind === "single-choice" ? response.optionId === option.id : response?.kind === "multiple-select" ? response.optionIds.includes(option.id) : false;
         const expected = answer?.kind === "single-choice" ? answer.optionId === option.id : answer?.kind === "multiple-select" ? answer.optionIds.includes(option.id) : false;
@@ -7333,7 +7364,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
           ...correct ? ["Correct answer"] : [],
           ...wrong ? ["Incorrect choice"] : []
         ];
-        return '<div role="listitem" class="generic-choice review-opt' + state + '"><span><b>' + String.fromCharCode(65 + i) + ".</b> " + escapeText(option.text) + assetHTML(display, option.assetIds) + (badges.length ? '<span class="review-option-label"> \xB7 ' + escapeText(badges.join(" \xB7 ")) + "</span>" : "") + "</span></div>";
+        return '<div role="listitem" class="generic-choice review-opt' + state + '"><span><b>' + String.fromCharCode(65 + i) + ".</b> " + escapeText(option.text) + assetHTML(display, option.assetIds, "Image for option " + String.fromCharCode(65 + i)) + (badges.length ? '<span class="review-option-label"> \xB7 ' + escapeText(badges.join(" \xB7 ")) + "</span>" : "") + "</span></div>";
       }).join("") + "</div>" : "";
       const booleanOptions = content.kind === "true-false" ? '<div class="generic-choices" role="list" aria-label="True or false answer options">' + [true, false].map((value) => {
         const chosen = response?.kind === "true-false" && response.value === value;
@@ -7346,7 +7377,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
         ];
         return '<div role="listitem" class="generic-choice review-opt' + (correct ? " review-option-correct" : incorrect ? " review-option-incorrect" : "") + '"><span><b>' + (value ? "True" : "False") + "</b>" + (labels.length ? '<span class="review-option-label"> \xB7 ' + escapeText(labels.join(" \xB7 ")) + "</span>" : "") + "</span></div>";
       }).join("") + "</div>" : "";
-      const matches = content.kind === "matching" ? '<div class="generic-matches">' + [...content.leftItems, ...content.rightItems].map((item) => "<div><span>" + escapeText(item.text) + assetHTML(display, item.assetIds) + "</span></div>").join("") + "</div>" : "";
+      const matches = content.kind === "matching" ? '<div class="generic-matches">' + [...content.leftItems, ...content.rightItems].map((item) => "<div><span>" + escapeText(item.text) + assetHTML(display, item.assetIds, "Image for matching item " + item.text) + "</span></div>").join("") + "</div>" : "";
       return passage + promptAssets + options + booleanOptions + matches;
     }
     function sourceReviewHTML(saved, target, ref) {
@@ -7427,7 +7458,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
         const limit = manualGradeLimit(attempt, q.id);
         const provenance = q.editorial.sources ?? [];
         const origin = attempt.notebookLineage?.entries.find((x) => x.questionRevisionId === q.id);
-        return '<article class="generic-review" data-review-id="' + escapeText(q.id) + '" data-verdict="' + escapeText(it.verdict) + '"><strong>' + (paper.sections.flatMap((z) => z.questionRevisionIds).indexOf(q.id) + 1) + ". " + escapeText(q.content.prompt) + '</strong><p class="fine">' + escapeText(q.editorial.status) + (q.editorial.sourcePage ? " \xB7 Source page " + q.editorial.sourcePage : "") + " \xB7 " + minutes(seconds) + " foreground exposure \xB7 Speed: " + escapeText(speed) + " \xB7 Visits: " + (attempt.state.questionVisits === void 0 ? "Not recorded" : visitCount ?? 0) + "</p>" + frozenReviewMedia(attempt, q, response, answer, it.verdict) + (origin ? '<p class="fine">Notebook source: ' + escapeText(origin.sourcePaperId) + " \xB7 " + escapeText(origin.sourcePaperEdition) + " \xB7 " + escapeText(origin.sourceSectionTitle) + " \xB7 source attempt " + escapeText(origin.sourceAttemptId) + "</p>" : "") + '<p class="fine"><span class="verdict ' + escapeText(it.verdict) + '">' + escapeText(it.verdict) + "</span> \xB7 " + it.marks + ' automated marks</p><p class="fine">Your answer: ' + escapeText(readableAnswer(q, response)) + '</p><p class="fine">' + (it.verdict === "excluded" ? "Frozen answer key (not scored): " : it.verdict === "pending" ? "Manual assessment: " : "Expected: ") + escapeText(readableAnswer(q, answer)) + "</p>" + (q.editorial.notes ? '<p class="fine">Editorial note: ' + escapeText(q.editorial.notes) + "</p>" : "") + (explanation ? '<details class="worked-solution"' + (it.verdict === "incorrect" || it.verdict === "unanswered" ? " open" : "") + "><summary>" + (q.content.assetIds?.length || (q.content.kind === "single-choice" || q.content.kind === "multiple-select") && q.content.options.some((o) => o.assetIds?.length) ? "Visual solving method" : "Solving approach & worked reasoning") + '</summary><div class="worked-solution-body">' + escapeText(explanation) + "</div></details>" : "") + sourceReviewHTML(attempt, q, reviewSource) + (provenance.length ? '<p class="fine">Sources: ' + provenance.map((source) => '<a href="' + escapeText(source.url) + '" target="_blank" rel="noopener noreferrer">' + escapeText(source.title) + "</a>").join(" \xB7 ") + "</p>" : "") + (limit !== null ? '<div class="generic-manual-grade"><p class="fine">Written response requires explicit human assessment. Self-marked results are separate from exam scores.</p><label>Self-assessed marks (0\u2013' + limit + ')<input type="number" step="0.01" min="0" max="' + limit + '" data-manual-marks="' + escapeText(q.id) + '" value="' + escapeText(prior?.marks ?? "") + '"></label><label>Assessment note (optional)<textarea maxlength="2000" rows="2" data-manual-note="' + escapeText(q.id) + '">' + escapeText(prior?.note ?? "") + '</textarea></label><button class="btn" data-manual-save="' + escapeText(q.id) + '">Save self-assessment</button></div>' : "") + '<button class="btn" data-add-card="' + escapeText(q.id) + '"' + (records.has("learning-card:" + q.id) ? " disabled" : "") + ">" + (records.has("learning-card:" + q.id) ? "In notebook" : "Add to notebook") + "</button></article>";
+        return '<article class="generic-review" data-review-id="' + escapeText(q.id) + '" data-verdict="' + escapeText(it.verdict) + '"><strong>' + (paper.sections.flatMap((z) => z.questionRevisionIds).indexOf(q.id) + 1) + ". " + escapeText(q.content.prompt) + '</strong><p class="fine editorial-meta"><span class="editorial-status editorial-status-' + escapeText(q.editorial.status) + '">' + escapeText(editorialStatusLabel(q.editorial)) + "</span>" + (q.editorial.sourcePage ? " \xB7 Source page " + q.editorial.sourcePage : "") + " \xB7 " + minutes(seconds) + " foreground exposure \xB7 Speed: " + escapeText(speed) + " \xB7 Visits: " + (attempt.state.questionVisits === void 0 ? "Not recorded" : visitCount ?? 0) + "</p>" + frozenReviewMedia(attempt, q, response, answer, it.verdict) + (origin ? '<p class="fine">Notebook source: ' + escapeText(origin.sourcePaperId) + " \xB7 " + escapeText(origin.sourcePaperEdition) + " \xB7 " + escapeText(origin.sourceSectionTitle) + " \xB7 source attempt " + escapeText(origin.sourceAttemptId) + "</p>" : "") + '<p class="fine"><span class="verdict ' + escapeText(it.verdict) + '">' + escapeText(it.verdict) + "</span> \xB7 " + it.marks + ' automated marks</p><p class="fine">Your answer: ' + escapeText(readableAnswer(q, response)) + '</p><p class="fine">' + (it.verdict === "excluded" ? "Frozen answer key (not scored): " : it.verdict === "pending" ? "Manual assessment: " : "Expected: ") + escapeText(readableAnswer(q, answer)) + "</p>" + (q.editorial.notes ? '<p class="fine">Editorial note: ' + escapeText(q.editorial.notes) + "</p>" : "") + (explanation ? '<details class="worked-solution"' + (it.verdict === "incorrect" || it.verdict === "unanswered" ? " open" : "") + "><summary>" + (q.content.assetIds?.length || (q.content.kind === "single-choice" || q.content.kind === "multiple-select") && q.content.options.some((o) => o.assetIds?.length) ? "Visual solving method" : "Solving approach & worked reasoning") + '</summary><div class="worked-solution-body">' + escapeText(explanation) + "</div></details>" : "") + sourceReviewHTML(attempt, q, reviewSource) + (provenance.length ? '<p class="fine">Sources: ' + provenance.map((source) => '<a href="' + escapeText(source.url) + '" target="_blank" rel="noopener noreferrer">' + escapeText(source.title) + "</a>").join(" \xB7 ") + "</p>" : "") + (limit !== null ? '<div class="generic-manual-grade"><p class="fine">Written response requires explicit human assessment. Self-marked results are separate from exam scores.</p><label>Self-assessed marks (0\u2013' + limit + ')<input type="number" step="0.01" min="0" max="' + limit + '" data-manual-marks="' + escapeText(q.id) + '" value="' + escapeText(prior?.marks ?? "") + '"></label><label>Assessment note (optional)<textarea maxlength="2000" rows="2" data-manual-note="' + escapeText(q.id) + '">' + escapeText(prior?.note ?? "") + '</textarea></label><button class="btn" data-manual-save="' + escapeText(q.id) + '">Save self-assessment</button></div>' : "") + '<button class="btn" data-add-card="' + escapeText(q.id) + '"' + (records.has("learning-card:" + q.id) ? " disabled" : "") + ">" + (records.has("learning-card:" + q.id) ? "In notebook" : "Add to notebook") + "</button></article>";
       }).join("") + "</section>" : "") + timingLedgerHTML(attempt, resultTab === "timing", revealReview);
     }
     const openSaved = (id) => {
@@ -7926,19 +7957,29 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     }
     document.addEventListener("visibilitychange", visibility);
     const keyboard = (event) => {
-      if (disposed || view !== "exam" || !attempt || attempt.finishedAt !== null || attempt.state.status !== "running" || document.hidden || event.ctrlKey || event.metaKey || event.shiftKey || event.isComposing) return;
+      if (disposed || view !== "exam" || !attempt || attempt.finishedAt !== null || attempt.state.status !== "running" && attempt.state.status !== "paused" || document.hidden || event.ctrlKey || event.metaKey || event.shiftKey || event.isComposing) return;
       const focused = event.target;
+      const focusedRadio = focused instanceof HTMLInputElement && focused.type === "radio" && root2.contains(focused) && (focused.name === "generic-answer" || focused.name === "generic-boolean");
       if (focused instanceof HTMLElement) {
         if (focused.isContentEditable || focused.closest('[contenteditable="true"]')) return;
         if (focused instanceof HTMLTextAreaElement || focused instanceof HTMLSelectElement) return;
-        if (focused instanceof HTMLInputElement && !(focused.type === "radio" && focused.name === "generic-answer" && root2.contains(focused))) return;
+        if (focused instanceof HTMLInputElement && !focusedRadio) return;
       }
       const displayPanel2 = document.getElementById("displayPanel");
       if (displayPanel2 && !displayPanel2.hidden) return;
       const key = event.key.toLowerCase();
       const arrow = key === "arrowright" || key === "arrowleft";
       if (event.altKey && !arrow) return;
+      if (attempt.state.status === "paused") {
+        if (key !== "m" || event.altKey || event.repeat || !attempt.frozen.paper.navigation.allowFlagging) return;
+        event.preventDefault();
+        const id2 = attempt.frozen.paper.sections[attempt.state.sectionIndex].questionRevisionIds[attempt.state.questionIndex];
+        const marked = attempt.state.responses.find((r) => r.questionRevisionId === id2)?.flagged ?? false;
+        dispatch({ type: "FLAG", nowMs: now2(), flagged: !marked });
+        return;
+      }
       if (arrow) {
+        if (focusedRadio && !event.altKey) return;
         event.preventDefault();
         const move = key === "arrowright" ? 1 : -1;
         const target = attempt.state.questionIndex + move;
