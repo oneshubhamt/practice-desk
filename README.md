@@ -2,7 +2,7 @@
 
 Single-file offline examination and learning application. Built-in SSC CGL original/reviewed editions and validated imported exam packages share one strict TypeScript engine, frozen results, local history, backup and revision workflows.
 
-> **Current project status — 30 October 2026:** The overhaul has passed the historical Pass 10 automated engineering/browser gates, but a fresh comparison with the frozen v11 source revealed **incomplete UI/functionality parity**. **Pass 11 is complete and browser-verified; Passes 12–16 remain open.** Do not merge into `main` or claim release approval. See the [authoritative feature-parity programme](docs/V11_FEATURE_PARITY_PROGRAMME.md).
+> **Current project status — 30 October 2026:** The overhaul has passed the historical Pass 10 automated engineering/browser gates, but a fresh comparison with the frozen v11 source revealed **incomplete UI/functionality parity**. **Passes 11–12 are complete and browser-verified; Passes 13–16 remain open.** Do not merge into `main` or claim release approval. See the [authoritative feature-parity programme](docs/V11_FEATURE_PARITY_PROGRAMME.md).
 
 ## Documentation — canonical reading order
 
@@ -46,3 +46,7 @@ Browser scripts require the configured Playwright-core browsers. Firefox and Lin
 Preserve `baseline/v11` and `main` untouched; implement only on `overhaul`. Keep one exam engine (no legacy runtime), strict TS, immutable paper/key/media snapshots, offline `file://`, checksum-verified backup v3 and user-driven FSRS. **No v11 data migration** is the explicitly accepted exception.
 
 The **six-pass programme (11–16)** restore actual feature coverage first (exam UI, review, history, analytics, comparative visuals), then independently re-audit the full v11 codebase against the final implementation. See the authoritative [objective-by-objective matrix](docs/V11_FEATURE_PARITY_PROGRAMME.md); the nine exam-interaction gaps are now verified addressed; results, history, analytics and final visual parity remain open.
+
+## Generic exam review (Pass 12)
+
+The app is not restricted to SSC CGL. All six question kinds, imported custom scoring and optional matching `source` / `reviewed` exam revisions use the same typed exam, frozen attempt and result pipeline. An original question, source answer and its images/passages are captured only for grounded paired revisions, then integrity-checked before historical review. Original CGL versions are a test dataset, not a hardcoded application dependency. Score maxima come from each frozen paper/key/section's rules; manual-only questions are separated from the automated denominator. See the [Pass 12 objective evidence](docs/V11_FEATURE_PARITY_PROGRAMME.md#pass-12-closure--30-october-2026).
