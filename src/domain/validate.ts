@@ -183,18 +183,26 @@ function validateMarkingRule(value: unknown, path: string): MarkingRule {
   const rule = record(value, path);
   const correct = finite(rule["correctMarks"], path + ".correctMarks");
   const incorrect = finite(rule["incorrectMarks"], path + ".incorrectMarks");
-  finite(rule["unansweredMarks"], path + ".unansweredMarks");
+  const unanswered = finite(rule["unansweredMarks"], path + ".unansweredMarks");
   if (correct < 0) throw new Error(path + ".correctMarks: must be non-negative");
   if (incorrect > 0) throw new Error(path + ".incorrectMarks: must be non-positive");
+  // A blank cannot outscore a fully correct answer or be punished more severely
+  // than a wrong answer. Individual component penalties remain explicit.
+  if (unanswered > correct || unanswered < incorrect) throw new Error(path + ".unansweredMarks: must lie between incorrectMarks and correctMarks");
+  // Bounded imports avoid overflowing a 2,000-question score or its component ledger.
+  if ([correct,incorrect,unanswered].some(mark => Math.abs(mark)>1000000))
+    throw new Error(path + ": mark magnitudes must not exceed 1000000");
   if (rule["partialCredit"] !== undefined) {
     const partial = record(rule["partialCredit"], path + ".partialCredit");
     oneOf(partial["kind"], ["per-correct-component"] as const, path + ".partialCredit.kind");
-    if (finite(partial["marksPerCorrectComponent"], path + ".partialCredit.marksPerCorrectComponent") < 0) {
-      throw new Error(path + ".partialCredit.marksPerCorrectComponent: must be non-negative");
+    const component = finite(partial["marksPerCorrectComponent"], path + ".partialCredit.marksPerCorrectComponent");
+    if (component < 0 || component > 1000000) {
+      throw new Error(path + ".partialCredit.marksPerCorrectComponent: expected 0 to 1000000");
     }
     if (partial["penaltyPerIncorrectComponent"] !== undefined &&
-        finite(partial["penaltyPerIncorrectComponent"], path + ".partialCredit.penaltyPerIncorrectComponent") < 0) {
-      throw new Error(path + ".partialCredit.penaltyPerIncorrectComponent: penalty is a non-negative magnitude");
+        (finite(partial["penaltyPerIncorrectComponent"], path + ".partialCredit.penaltyPerIncorrectComponent") < 0 ||
+         (partial["penaltyPerIncorrectComponent"] as number) > 1000000)) {
+      throw new Error(path + ".partialCredit.penaltyPerIncorrectComponent: expected 0 to 1000000");
     }
     if (partial["floorAtZero"] !== undefined && typeof partial["floorAtZero"] !== "boolean") {
       throw new Error(path + ".partialCredit.floorAtZero: expected a boolean");
@@ -253,6 +261,10 @@ export function validateAnswerKeyRevision(
       if (selected.length === 0) throw new Error(path + ".answer.optionIds: expected at least one option");
       unique(selected, path + ".answer.optionIds");
       if (selected.some(id => !optionIds.includes(id))) throw new Error(path + ".answer.optionIds: unknown option");
+      if (question.content.kind === "multiple-select" &&
+          (selected.length < (question.content.minSelections ?? 1) ||
+           selected.length > (question.content.maxSelections ?? optionIds.length)))
+        throw new Error(path + ".answer.optionIds: answer cardinality violates question selection bounds");
     } else if (expectedKind === "numeric-entry") {
       const accepted = answer["acceptedValues"];
       if (!Array.isArray(accepted) || accepted.length === 0) throw new Error(path + ".answer.acceptedValues: expected at least one value");
@@ -268,13 +280,19 @@ export function validateAnswerKeyRevision(
       const content = question.content.kind === "matching" ? question.content : undefined;
       const left = new Set(content?.leftItems.map(item => item.id as string) ?? []);
       const right = new Set(content?.rightItems.map(item => item.id as string) ?? []);
+      const seenLeft: string[] = [], seenRight: string[] = [];
       pairs.forEach((rawPair, pairIndex) => {
         const pair = record(rawPair, path + ".answer.pairs[" + pairIndex + "]");
-        if (!left.has(text(pair["leftId"], path + ".answer.pairs[" + pairIndex + "].leftId")) ||
-            !right.has(text(pair["rightId"], path + ".answer.pairs[" + pairIndex + "].rightId"))) {
+        const l = text(pair["leftId"], path + ".answer.pairs[" + pairIndex + "].leftId");
+        const r = text(pair["rightId"], path + ".answer.pairs[" + pairIndex + "].rightId");
+        if (!left.has(l) || !right.has(r)) {
           throw new Error(path + ".answer.pairs[" + pairIndex + "]: references an unknown match item");
         }
+        seenLeft.push(l);seenRight.push(r);
       });
+      unique(seenLeft, path + ".answer.pairs left");
+      unique(seenRight, path + ".answer.pairs right");
+      if (seenLeft.length === 0) throw new Error(path + ".answer.pairs: expected at least one pair");
     } else if (expectedKind === "free-response") {
       oneOf(answer["evaluation"], ["manual"] as const, path + ".answer.evaluation");
       if (answer["rubricId"] !== undefined) text(answer["rubricId"], path + ".answer.rubricId");
