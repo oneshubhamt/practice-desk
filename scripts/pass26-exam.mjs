@@ -160,7 +160,13 @@ try{
     "Scrollable passage is not labelled/focusable to keyboard users");
    assert(detail.text.length>400,"Full reading passage appears truncated");
    assert(detail.scroll>detail.client,"Long passage is not actually scrollable");
-   await reader.focus();await now.page.keyboard.press("End");
+   await reader.focus();
+   await now.page.keyboard.press("PageDown");
+   // CSS scroll movement can be asynchronous even with reduced-motion.
+   // Test genuine keyboard scrolling, waiting for its observable outcome.
+   await now.page.waitForFunction(()=>
+     (document.querySelector(".exam-question .generic-stimulus")?.scrollTop??0)>0,
+     null,{timeout:2500});
    assert((await reader.evaluate(el=>el.scrollTop))>0,
     "Keyboard cannot scroll the full passage");
    assert(now.errors.length===0&&old.errors.length===0,
