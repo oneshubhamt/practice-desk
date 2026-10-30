@@ -14,7 +14,11 @@ import {createSessionClock} from "../src/engine/clock.ts";
 const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
 const builtins=builtinCglPackages(sources,patches);
-const mock=(paperChanges)=>{const base={...pkg.paper,...paperChanges};return validateExamPackage({...pkg,paper:{...base,contentHash:paperRevisionHash(base)}});};
+const mock=(paperChanges)=>{const base={...pkg.paper,...paperChanges,
+  navigation:paperChanges.timing?.kind==="sectional"?
+    {...pkg.paper.navigation,sectionNavigation:"sequential-locked",...paperChanges.navigation}:
+    paperChanges.navigation??pkg.paper.navigation};
+ return validateExamPackage({...pkg,paper:{...base,contentHash:paperRevisionHash(base)}});};
 
 test("strict section submission policy is an engine invariant, not a disabled button",()=>{
  const bundle=mock({timing:{kind:"sectional",transition:"automatic",pausePolicy:"forbidden",allowEarlySubmit:false,
