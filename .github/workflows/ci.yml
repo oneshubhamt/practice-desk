@@ -32,6 +32,19 @@ jobs:
       - run: node scripts/pass13-history.mjs
       - run: node scripts/pass14-parity.mjs
       - run: node scripts/pass15-visual.mjs
+      - name: Capture independent laptop-size v11 / overhaul screenshots and landmarks
+        env:
+          PASS15_OUTPUT: artifacts/pass24-laptop/
+          PASS15_VIEWPORTS: '[{"name":"laptop1366","width":1366,"height":768},{"name":"laptop1440","width":1440,"height":900},{"name":"laptop1536","width":1536,"height":864}]'
+        run: node scripts/pass15-visual.mjs
+      - name: Save laptop screenshot comparison evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pass24-laptop-v11-overhaul-visual-evidence
+          path: artifacts/pass24-laptop/
+          if-no-files-found: warn
+          retention-days: 30
       - name: Save visual comparison evidence
         if: always()
         uses: actions/upload-artifact@v4
