@@ -24,6 +24,7 @@ import { attemptEvidence } from "../learning/attempt-evidence.ts";
 import { answerRevisionEvidence } from "../learning/answer-revisions.ts";
 import { questionSpeed } from "../learning/question-analytics.ts";
 import { historyHTML, type HistorySort, type HistoryStatus } from "./history-page.ts";
+import { frozenScoreSummary } from "./history-score.ts";
 import { reviewMatch, reviewFiltersHTML, resultTabsHTML, sectionPaceHTML, timingLedgerHTML, questionCoachingHTML, type ResultTab, type ReviewFilter } from "./result-presentation.ts";
 import { addLearningCard, validateLearningCard } from "../learning/learning.ts";
 import type { LearningCard } from "../learning/learning.ts";
@@ -675,7 +676,10 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    const all=[...records.values()].filter(isAttempt).sort((a,b)=>b.startedAt-a.startedAt);
    const complete=all.filter(a=>a.finishedAt!==null);
    const pending=all.filter(a=>a.finishedAt===null);
-   const latest=all.slice(0,3);
+   // Completed results and resumable tests are separate workflows.
+   // A recent unfinished attempt must not evict an older completed result.
+   const latest=[...complete].sort((a,b)=>(b.finishedAt??0)-(a.finishedAt??0)||
+     b.startedAt-a.startedAt).slice(0,3);
    const selected=packages.get(choice);
    const cgl=selected?.examId==="ssc-cgl";
    const count=selected?.paper.sections.reduce((n,z)=>n+z.questionRevisionIds.length,0)??0;
@@ -699,10 +703,19 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      '<h1>Test library</h1><p class="muted">Choose a paper, work in exam conditions and learn from every attempt.</p></div>'+
      '<button class="btn quiet" id="g-history">History & insights →</button></div>'+
      (warning?'<p class="generic-warning" role="status">'+escapeText(warning)+'</p>':"")+
-     (pending.length?'<section class="ongoing-banner"><div><span class="eyebrow">PICK UP WHERE YOU LEFT OFF</span>'+
-      '<h2>'+escapeText(packages.get(pending[0]!.packageId)?.title??pending[0]!.frozen.paper.paperId)+'</h2>'+
-      '<p>'+pending.length+' unfinished attempt'+(pending.length===1?"":"s")+' · '+new Date(pending[0]!.startedAt).toLocaleString()+
-      ' · exam timing resumes with the saved policy</p></div><button class="btn primary" data-attempt="'+escapeText(pending[0]!.id)+'">Resume attempt</button></section>':"")+
+     (pending.length?'<section class="panel pad pending-panel" id="g-pending-attempts">'+
+      '<div class="row between"><div><span class="eyebrow">PICK UP WHERE YOU LEFT OFF</span>'+
+      '<h2>Unfinished attempts</h2><p class="fine">'+pending.length+' saved, resumable test'+(pending.length===1?"":"s")+
+      '. Section timers follow the frozen exam policy; leaving the app does not pause a running clock.</p></div>'+
+      (pending.length>5?'<button type="button" class="textlink" id="g-pending-history">View all '+pending.length+' →</button>':"")+
+      '</div><div class="pending-attempt-list">'+pending.slice(0,5).map(a=>
+        '<button class="recent-attempt" data-attempt="'+escapeText(a.id)+'" aria-label="Resume '+escapeText(packages.get(a.packageId)?.title??a.frozen.paper.paperId)+'">'+
+        '<b>'+escapeText(packages.get(a.packageId)?.title??a.frozen.paper.paperId)+'</b>'+
+        '<small>'+new Date(a.startedAt).toLocaleString()+' · '+
+          escapeText(a.frozen.snapshot.mode.replaceAll("-"," "))+' · '+
+          a.state.responses.filter(z=>z.response!==undefined).length+' answers · Resume →</small></button>').join("")+
+      '</div>'+(pending.length>5?'<p class="fine">Showing the five most recent unfinished tests; all others are preserved in History.</p>':"")+
+      '</section>':"")+
      '<div class="home-stats">'+
        [['Paper editions',packages.size],['Completed tests',complete.length],['Attempts in progress',pending.length],['Notebook cards',[...records.values()].filter(isLearning).length]]
          .map(([name,value])=>'<div class="home-stat"><small>'+escapeText(name)+'</small><b>'+escapeText(value)+'</b></div>').join("")+
@@ -735,13 +748,14 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       '<div><b>'+escapeText(previewNavigation)+
       '</b><small>Navigation</small></div></div>'+
       '<p class="fine">Scoring and timer rules are frozen when you start; later paper edits cannot change a saved result.</p></section>'+
-      '<section class="panel pad recent-panel"><div class="row between"><h2>Recent attempts</h2>'+
+      '<section class="panel pad recent-panel"><div class="row between"><h2>Recent completed results</h2>'+
       '<button class="textlink" id="g-history-recent">View all →</button></div>'+
       (latest.length?latest.map(a=>'<button class="recent-attempt" data-attempt="'+escapeText(a.id)+'">'+
        '<b>'+escapeText(packages.get(a.packageId)?.title??a.frozen.paper.paperId)+'</b>'+
-       '<small>'+new Date(a.startedAt).toLocaleDateString()+' · '+
-       (a.finishedAt?(a.result?.snapshot.earnedMarks.toFixed(1)??"—")+' marks':'Resume in-progress test')+'</small></button>').join(""):
-       '<p class="fine">Your most recent tests appear here automatically.</p>')+
+       '<small>'+new Date(a.finishedAt??a.startedAt).toLocaleDateString()+' · '+
+         escapeText(a.frozen.snapshot.mode.replaceAll("-"," "))+' · '+
+         escapeText(frozenScoreSummary(a)?.text??"Score unavailable")+'</small></button>').join(""):
+       '<p class="fine">Your three most recent completed results will appear here; unfinished attempts stay in their own Resume area.</p>')+
       '</section></aside></div>'+
       '<div class="home-utilities"><section class="panel pad learning-entry"><div><span class="eyebrow">REVISE & IMPROVE</span>'+
        '<h2>Learning & revision</h2><p class="fine">Error notebook, FSRS-7 spaced review, source-linked revision tests and topic evidence.</p></div>'+
@@ -1167,7 +1181,15 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        choice=edition.value;saveSelection();draw();
      };
      root.querySelector<HTMLButtonElement>("#g-history")!.onclick=()=>{view="history";draw();};
-     root.querySelector<HTMLButtonElement>("#g-history-recent")!.onclick=()=>{view="history";draw();};
+     root.querySelector<HTMLButtonElement>("#g-history-recent")!.onclick=()=>{
+       historyFilter="complete";historyPaper="all";historySearch="";historySort="newest";
+       view="history";draw();
+     };
+     const pendingHistory=root.querySelector<HTMLButtonElement>("#g-pending-history");
+     if(pendingHistory)pendingHistory.onclick=()=>{
+       historyFilter="progress";historyPaper="all";historySearch="";historySort="newest";
+       view="history";draw();
+     };
      root.querySelectorAll<HTMLButtonElement>("[data-mode]").forEach(button=>button.onclick=()=>{
        cglMode=button.dataset.mode as CglPracticeMode;saveSelection();draw();
      });
