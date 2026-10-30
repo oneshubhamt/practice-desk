@@ -60,15 +60,26 @@ try{
  assert(await page.locator('input[data-choice]').nth(1).isChecked(),"B shortcut failed from focused radio");
  await page.keyboard.press("m");
  assert(await page.locator("#g-flag").getAttribute("aria-pressed")==="true","M flag shortcut failed");
+ // Pass 21: answer radios must own their native unmodified arrow keys.
+ await page.locator('input[data-choice]').nth(1).focus();
  await page.keyboard.press("ArrowRight");
- assert(await page.locator('[data-q="1"]').getAttribute("aria-current")==="step",
-   "ArrowRight shortcut failed from focused radio");
- await page.keyboard.press("ArrowLeft");
+ assert(await page.locator('input[data-choice]').nth(2).isChecked(),
+   "Focused radio ArrowRight should select the next answer option");
  assert(await page.locator('[data-q="0"]').getAttribute("aria-current")==="step",
-   "ArrowLeft shortcut failed");
+   "Native radio key must not navigate away from the question");
+ await page.keyboard.press("ArrowLeft");
+ assert(await page.locator('input[data-choice]').nth(1).isChecked(),
+   "Focused radio ArrowLeft should select the previous option");
  await page.keyboard.press("Alt+ArrowRight");
  assert(await page.locator('[data-q="1"]').getAttribute("aria-current")==="step",
-   "Alt+ArrowRight backward-compatible shortcut failed");
+   "Alt+ArrowRight should navigate while a radio is focused");
+ await page.locator("#g-next").focus();
+ await page.keyboard.press("ArrowLeft");
+ assert(await page.locator('[data-q="0"]').getAttribute("aria-current")==="step",
+   "Unmodified ArrowLeft from a non-radio must still navigate");
+ await page.keyboard.press("Alt+ArrowRight");
+ assert(await page.locator('[data-q="1"]').getAttribute("aria-current")==="step",
+   "Alt+ArrowRight non-radio shortcut failed");
  await page.locator('[data-q="0"]').click();
  assert((await page.locator('[data-section="0"]').innerText()).includes("1 / 25 answered"),
    "Section counts failed to reflect keyboard response");
