@@ -12,7 +12,7 @@
 | D06 | User approved | Backup v3 SHA-256 and additive/no-silent-overwrite import, not v11 replace-newer-on-ID |
 | D07 | Binding | One generic six-kind engine, no CGL-only parallel runtime, strict TS, one offline single-file artifact |
 | D08 | Binding | Freeze questions, key, media, scoring policy, solutions/source provenance and response events; preserve honesty of historic evidence |
-| D09 | Binding | Report section time, question exposure, and elapsed time separately; never fabricate old timings |
+| D09 | Implemented + binding | Pass 18 records exact consumed sequential/single-section timer durations only for new sessions, reports elapsed timer, attempted/non-excluded rate, global measured scored-answer median and question exposure separately; old/free multi-section timers remain unknown. Never fabricate historical durations |
 | D10 | Binding | FSRS review is explicit, cannot be inferred from test mark or used to regrade source attempt |
 | D11 | Binding | No premature answer/editorial/solution disclosure |
 | D12 | Binding | Comparisons require truly matching paper/key/mode; no projected rank, national percentile or arbitrary psychometrics |
