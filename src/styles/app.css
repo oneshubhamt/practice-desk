@@ -489,6 +489,16 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
  header .display-trigger{padding:6px 8px;gap:5px}
  header .display-trigger span{font-size:11px}
 }
+/* At 200% phone zoom the logical viewport can be only ~195px. Anchor the
+   expanded popover to the viewport instead of the wrapped flex child: the
+   content must remain on screen even when the header's brand cannot fit. */
+@media(max-width:250px){
+ header .brand{display:none}
+ header .wrap{justify-content:flex-end;min-width:0}
+ header .header-actions{margin-left:auto;min-width:0}
+ header .display-panel{position:fixed;top:55px;left:8px;right:8px;
+   width:auto;max-width:none;max-height:calc(100dvh - 65px)}
+}
 .paper-preflight{border-top:1px solid var(--line);margin-top:17px;padding-top:16px;display:grid;gap:9px}
 .paper-preflight h3{margin:0}
 .paper-preflight p{margin:0}
