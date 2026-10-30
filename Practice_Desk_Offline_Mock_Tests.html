@@ -534,6 +534,19 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
  .generic-sections,.exam-sections{margin-top:9px!important;margin-bottom:11px!important}
  .exam-progress{margin-bottom:9px}
 }
+
+/* Pass 22: draft answers are explicitly unscored; conflicting native matching
+   selections stay editable via mouse and keyboard, with direct row feedback. */
+.generic-response-group .generic-inline-warning{
+ margin:9px 0 0;padding:9px 12px;border-left:3px solid var(--amber);
+ background:var(--soft);color:var(--ink);line-height:1.5
+}
+#g-match-feedback{min-height:1.2em;margin:9px 0;color:var(--ink);font-size:.9em;line-height:1.5}
+.generic-matches select.match-conflict,
+.generic-matches select[aria-invalid="true"]{
+ outline:2px solid var(--bad);outline-offset:2px;
+ background:var(--soft)
+}
 </style></head>
 <body><header><div class="wrap"><div class="brand"><div class="symbol">P</div><div><b>Practice Desk</b><small>Offline exam practice</small></div></div><div class="header-actions"><span class="header-offline"><span class="offline-dot"></span> Works offline</span><div class="display-tools" aria-label="Display options"><button type="button" id="displayTrigger" class="display-trigger" aria-label="Display settings" aria-haspopup="true" aria-controls="displayPanel" aria-expanded="false">Aa <span>Display</span></button><div id="displayPanel" class="display-panel" hidden><div class="display-heading"><strong>Appearance</strong><button id="displayClose" type="button" class="display-close" aria-label="Close display settings">×</button></div><div class="display-control"><span>Text size</span><div class="display-size"><button id="fontLess" type="button" class="btn" aria-label="Decrease text size">−</button><button id="fontReset" type="button" class="btn" aria-label="Reset text size">100%</button><button id="fontMore" type="button" class="btn" aria-label="Increase text size">+</button></div></div><div class="display-control"><span>Color theme</span><div class="display-theme-choices" role="group" aria-label="Color theme"><button id="themeLight" class="btn" type="button" aria-pressed="true">Light</button><button id="themeDark" class="btn" type="button" aria-pressed="false">Dark</button></div><button id="themeToggle" class="btn display-theme" type="button" aria-pressed="false">Toggle theme</button></div><button id="displayFullscreen" type="button" class="btn display-fullscreen" aria-pressed="false">Enter full screen</button><p class="fine display-hint">Saved on this device. Full screen is optional.</p><p class="fine" id="preferences-warning" role="status"></p></div></div></div></div></header>
 <div id="screen-announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -6502,6 +6515,22 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     }
   }
 
+  // src/app/response-drafts.ts
+  function multipleDraftMessage(count, min, max) {
+    if (count < min) return "Unsaved draft: select at least " + min + " options (" + count + " currently selected). No answer is scored until valid; this partial choice is kept only in the current browser tab, not saved to your attempt or backup.";
+    if (max !== void 0 && count > max) return "Unsaved draft: select at most " + max + " options (" + count + " currently selected). No answer is scored until valid; this partial choice is kept only in the current browser tab, not saved to your attempt or backup.";
+    return "";
+  }
+  function duplicateMatchingTargets(values) {
+    const seen = /* @__PURE__ */ new Set(), duplicates = /* @__PURE__ */ new Set();
+    for (const value of values) {
+      if (!value) continue;
+      if (seen.has(value)) duplicates.add(value);
+      seen.add(value);
+    }
+    return [...duplicates];
+  }
+
   // src/app/exam-preflight.ts
   var excludedStatuses = /* @__PURE__ */ new Set(["draft", "invalid", "incomplete-source", "under-review", "superseded"]);
   var escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
@@ -6681,7 +6710,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     if (c.kind === "numeric-entry") return '<label class="picker" for="g-number">Numeric answer</label><input type="number" step="any" id="g-number"' + (c.numericRules.minimum !== void 0 ? ' min="' + c.numericRules.minimum + '"' : "") + (c.numericRules.maximum !== void 0 ? ' max="' + c.numericRules.maximum + '"' : "") + ' value="' + (response?.kind === "numeric-entry" ? escapeText(response.value) : "") + '"><button class="btn primary" id="g-save">Save answer</button>';
     if (c.kind === "free-response") return '<label class="picker" for="g-text">Written response</label><textarea id="g-text" rows="6">' + (response?.kind === "free-response" ? escapeText(response.text) : "") + '</textarea><button class="btn primary" id="g-save">Save response</button>';
     const pairs = response?.kind === "matching" ? response.pairs : [];
-    return '<div class="generic-matches">' + c.leftItems.map((left) => "<label><span>" + escapeText(left.text) + assetHTML(bundle, left.assetIds, "Image for matching item " + left.text) + '</span><select data-match="' + escapeText(left.id) + '"><option value="">Not matched</option>' + c.rightItems.map((right) => '<option value="' + escapeText(right.id) + '"' + (pairs.some((p) => p.leftId === left.id && p.rightId === right.id) ? " selected" : "") + ">" + escapeText(right.text) + "</option>").join("") + "</select></label>").join("") + '</div><button class="btn primary" id="g-save">Save matches</button>';
+    return '<div class="generic-matches">' + c.leftItems.map((left) => "<label><span>" + escapeText(left.text) + assetHTML(bundle, left.assetIds, "Image for matching item " + left.text) + '</span><select data-match="' + escapeText(left.id) + '"><option value="">Not matched</option>' + c.rightItems.map((right) => '<option value="' + escapeText(right.id) + '"' + (pairs.some((p) => p.leftId === left.id && p.rightId === right.id) ? " selected" : "") + ">" + escapeText(right.text) + "</option>").join("") + "</select></label>").join("") + '</div><p class="generic-inline-warning" id="g-match-feedback" role="status" aria-live="polite" aria-atomic="true"></p><button class="btn primary" id="g-save">Save matches</button>';
   }
   function stimulusHTML(bundle, q) {
     const stimulus = bundle.stimuli?.find((s) => s.id === q.content.stimulusId);
@@ -6784,7 +6813,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     validateNotebookLineage(value);
     return value;
   }
-  function renderModelExam(attempt, bundle, warning = "") {
+  function renderModelExam(attempt, bundle, warning = "", draft) {
     const paper = attempt.frozen.paper, state = attempt.state;
     const section = paper.sections[state.sectionIndex];
     const id = section?.questionRevisionIds[state.questionIndex];
@@ -6792,6 +6821,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     if (!section || !q) return "<p>Question unavailable</p>";
     const responsesById = new Map(state.responses.map((row) => [row.questionRevisionId, row]));
     const response = responsesById.get(q.id)?.response;
+    const currentDraft = draft?.questionId === q.id && q.content.kind === "multiple-select" ? draft : null;
     const remaining = examTimeRemaining(paper, state);
     const total = paper.sections.reduce((n, section2) => n + section2.questionRevisionIds.length, 0);
     const answered = state.responses.filter((record3) => record3.response).length;
@@ -6824,7 +6854,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       const filled = s.questionRevisionIds.filter((qid) => Boolean(responsesById.get(qid)?.response)).length;
       const status = state.completedSections.includes(i) ? "Closed" : locked ? "Locked" : filled + " / " + s.questionRevisionIds.length + " answered";
       return '<button class="btn exam-section-tab ' + (i === state.sectionIndex ? "primary" : "") + '" data-section="' + i + '" aria-current="' + (i === state.sectionIndex ? "step" : "false") + '"' + (locked ? " disabled" : "") + "><b>" + escapeText(s.title) + "</b><small>" + status + "</small></button>";
-    }).join("") + '</div><div class="generic-layout exam-grid"><section class="panel pad exam-question"><p class="eyebrow">' + escapeText(section.title) + " \xB7 Question " + (state.questionIndex + 1) + " of " + section.questionRevisionIds.length + (attempt.frozen.snapshot.examId === "ssc-cgl" ? " \xB7 Paper Q" + escapeText(q.questionId.split(":").at(-1)) : "") + "</p>" + stimulusHTML(assets, q) + '<h2 class="generic-prompt">' + escapeText(q.content.prompt) + "</h2>" + assetHTML(assets, q.content.assetIds, "Figure for question " + (state.questionIndex + 1)) + '<fieldset class="generic-response-group"' + (state.status !== "running" ? " disabled" : "") + ">" + renderGenericControls(assets, q, response) + '</fieldset><div class="row generic-actions exam-answer-actions"><button class="btn" id="g-clear"' + (!response || state.status !== "running" ? " disabled" : "") + '>Clear</button><button class="btn" id="g-flag" aria-pressed="' + Boolean(responsesById.get(q.id)?.flagged) + '"' + (!paper.navigation.allowFlagging || expired ? " disabled" : "") + '>Flag</button></div><div class="row generic-actions exam-nav-actions"><button class="btn" id="g-prev"' + (state.status !== "running" || !state.questionIndex || paper.navigation.questionNavigation === "forward-only" ? " disabled" : "") + '>\u2190 Previous</button><button class="btn" id="g-next"' + (state.status !== "running" || state.questionIndex === section.questionRevisionIds.length - 1 ? " disabled" : "") + '>Next \u2192</button></div><div class="row generic-actions exam-submit-actions">' + (paper.timing.kind !== "untimed" && paper.timing.pausePolicy === "allowed" ? '<button class="btn" id="g-pause"' + (expired ? " disabled" : "") + ">" + (state.status === "paused" ? "Resume timer" : "Pause timer") + "</button>" : "") + '<button class="btn danger" id="g-submit"' + (state.status === "paused" || paper.timing.kind === "sectional" && !paper.timing.allowEarlySubmit && !expired && !untimedSection ? " disabled" : "") + ">" + (expired ? hasNextSection ? "Continue to next section" : "Finish expired exam" : paper.timing.kind === "sectional" ? untimedSection ? "Finish untimed section" : "Submit section" : lockedWhole && hasNextSection ? "Finish section \u2192" : "Submit exam") + '</button></div></section><aside class="panel pad exam-sidebar"><div class="row between"><h3>Question navigator</h3><span class="fine">' + section.questionRevisionIds.length + ' questions</span></div><p class="fine">Select a question number to navigate within the current section.</p><div class="generic-palette">' + section.questionRevisionIds.map((qid, i) => {
+    }).join("") + '</div><div class="generic-layout exam-grid"><section class="panel pad exam-question"><p class="eyebrow">' + escapeText(section.title) + " \xB7 Question " + (state.questionIndex + 1) + " of " + section.questionRevisionIds.length + (attempt.frozen.snapshot.examId === "ssc-cgl" ? " \xB7 Paper Q" + escapeText(q.questionId.split(":").at(-1)) : "") + "</p>" + stimulusHTML(assets, q) + '<h2 class="generic-prompt">' + escapeText(q.content.prompt) + "</h2>" + assetHTML(assets, q.content.assetIds, "Figure for question " + (state.questionIndex + 1)) + '<fieldset class="generic-response-group"' + (state.status !== "running" ? " disabled" : "") + ">" + renderGenericControls(assets, q, currentDraft ? { kind: "multiple-select", optionIds: currentDraft.optionIds } : response) + (currentDraft ? '<p class="generic-inline-warning" role="status">' + escapeText(currentDraft.message) + "</p>" : "") + '</fieldset><div class="row generic-actions exam-answer-actions"><button class="btn" id="g-clear"' + (!response || state.status !== "running" ? " disabled" : "") + '>Clear</button><button class="btn" id="g-flag" aria-pressed="' + Boolean(responsesById.get(q.id)?.flagged) + '"' + (!paper.navigation.allowFlagging || expired ? " disabled" : "") + '>Flag</button></div><div class="row generic-actions exam-nav-actions"><button class="btn" id="g-prev"' + (state.status !== "running" || !state.questionIndex || paper.navigation.questionNavigation === "forward-only" ? " disabled" : "") + '>\u2190 Previous</button><button class="btn" id="g-next"' + (state.status !== "running" || state.questionIndex === section.questionRevisionIds.length - 1 ? " disabled" : "") + '>Next \u2192</button></div><div class="row generic-actions exam-submit-actions">' + (paper.timing.kind !== "untimed" && paper.timing.pausePolicy === "allowed" ? '<button class="btn" id="g-pause"' + (expired ? " disabled" : "") + ">" + (state.status === "paused" ? "Resume timer" : "Pause timer") + "</button>" : "") + '<button class="btn danger" id="g-submit"' + (state.status === "paused" || paper.timing.kind === "sectional" && !paper.timing.allowEarlySubmit && !expired && !untimedSection ? " disabled" : "") + ">" + (expired ? hasNextSection ? "Continue to next section" : "Finish expired exam" : paper.timing.kind === "sectional" ? untimedSection ? "Finish untimed section" : "Submit section" : lockedWhole && hasNextSection ? "Finish section \u2192" : "Submit exam") + '</button></div></section><aside class="panel pad exam-sidebar"><div class="row between"><h3>Question navigator</h3><span class="fine">' + section.questionRevisionIds.length + ' questions</span></div><p class="fine">Select a question number to navigate within the current section.</p><div class="generic-palette">' + section.questionRevisionIds.map((qid, i) => {
       const r = responsesById.get(qid);
       const locked = state.status !== "running" || paper.navigation.questionNavigation === "forward-only" && i < state.questionIndex;
       return '<button class="num ' + (i === state.questionIndex ? "here " : "") + (r?.response ? "answered " : "") + (r?.flagged ? "marked" : "") + '" data-q="' + i + '" aria-current="' + (i === state.questionIndex ? "step" : "false") + '" aria-label="Question ' + (i + 1) + (r?.response ? ", answered" : "") + (r?.flagged ? ", flagged" : "") + '"' + (locked ? " disabled" : "") + ">" + (i + 1) + "</button>";
@@ -6865,6 +6895,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     let resultTab = "overview";
     let reviewFilter = "all";
     let attempt = null, view = "library";
+    const choiceDrafts = /* @__PURE__ */ new Map();
     let lastScreenKey = "", lastDrawView = null, lastResultPane = "overview";
     let db = null, warning = "", disposed = false, loading = true, writeQueue = Promise.resolve();
     let lastTimerSave = 0;
@@ -7334,7 +7365,10 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       return packages.get(saved.packageId) ?? [...packages.values()].find((p) => p.paper.paperId === saved.frozen.paper.paperId && p.paper.edition === saved.frozen.paper.edition);
     }
     function examHTML() {
-      return attempt ? renderModelExam(attempt, packageForAttempt(attempt), warning) : "";
+      if (!attempt) return "";
+      const qid = attempt.frozen.paper.sections[attempt.state.sectionIndex]?.questionRevisionIds[attempt.state.questionIndex];
+      const draft = qid ? choiceDrafts.get(attempt.id + "|" + qid) : void 0;
+      return renderModelExam(attempt, packageForAttempt(attempt), warning, draft);
     }
     function frozenReviewMedia(saved, q, response, answer, verdict) {
       const frozen = saved.frozen;
@@ -7415,11 +7449,11 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
         attempt.state.responses,
         (/* @__PURE__ */ new Date()).toISOString()
       );
-      const qs = new Map(attempt.frozen.questions.map((q) => [q.id, q]));
+      const qs = resultTab === "review" ? new Map(attempt.frozen.questions.map((q) => [q.id, q])) : /* @__PURE__ */ new Map();
       const revealReview = paper.navigation.allowReview !== false;
       if (!revealReview && resultTab === "review") resultTab = "overview";
       const originalReference = attempt.sourceKeyReference;
-      const pinnedOriginal = !attempt.sourceReviewReference && attempt.frozen.snapshot.examId === "ssc-cgl" && originalReference ? cachedCglPackages(sources2, patches2, solutions2).find((p) => p.paper.edition === "source" && p.paper.id === originalReference.sourcePaperRevisionId && p.answerKey.id === originalReference.sourceAnswerKeyRevisionId && p.paper.paperId === attempt.frozen.paper.paperId) : void 0;
+      const pinnedOriginal = resultTab === "review" && !attempt.sourceReviewReference && attempt.frozen.snapshot.examId === "ssc-cgl" && originalReference ? cachedCglPackages(sources2, patches2, solutions2).find((p) => p.paper.edition === "source" && p.paper.id === originalReference.sourcePaperRevisionId && p.answerKey.id === originalReference.sourceAnswerKeyRevisionId && p.paper.paperId === attempt.frozen.paper.paperId) : void 0;
       const frozenTarget = {
         format: "practice-desk-exam",
         version: 1,
@@ -7431,21 +7465,21 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
         stimuli: attempt.frozen.stimuli,
         assets: attempt.frozen.assets
       };
-      const reviewSource = attempt.sourceReviewReference ?? (pinnedOriginal ? createSourceReviewReference(frozenTarget, pinnedOriginal) : null);
-      const grades2 = manualGradeSummary(attempt);
+      const reviewSource = resultTab === "review" ? attempt.sourceReviewReference ?? (pinnedOriginal ? createSourceReviewReference(frozenTarget, pinnedOriginal) : null) : null;
+      const grades2 = resultTab === "overview" ? manualGradeSummary(attempt) : { graded: 0, pending: 0, total: 0 };
       const selfAssessed = s.snapshot.earnedMarks + grades2.total;
-      const originalKey = sourceKeyScore(attempt);
+      const originalKey = resultTab === "overview" ? sourceKeyScore(attempt) : null;
       const scorePrecision = paper.scoring.decimalPlaces ?? 2;
       const markLabel = (value) => value.toFixed(scorePrecision);
-      const eligibleMax = scoreableMaximum(paper, attempt.frozen.key, attempt.frozen.questions);
-      const conservativeFloor = scoreableLowerBound(paper, attempt.frozen.key, attempt.frozen.questions);
-      const paperSectionRows = sectionScoreSummaries(attempt, s).map((row) => "<tr><td>" + escapeText(row.title) + "</td><td>" + row.attempted + "/" + (row.questions - row.excluded) + "</td><td>" + row.correct + "</td><td>" + row.incorrect + "</td><td>" + escapeText(markLabel(row.marks)) + " / " + escapeText(markLabel(row.eligibleMax)) + "</td><td>" + (row.timerMs === null ? "Not recorded" : minutes(row.timerMs) + (row.timerReason === "time-expired" ? " \xB7 Expired" : " \xB7 Submitted")) + "</td><td>" + minutes(row.foregroundMs) + "</td></tr>").join("");
-      const evidence = attemptEvidence(attempt);
-      const revisions = answerRevisionEvidence(attempt);
+      const eligibleMax = resultTab === "overview" ? scoreableMaximum(paper, attempt.frozen.key, attempt.frozen.questions) : 0;
+      const conservativeFloor = resultTab === "overview" ? scoreableLowerBound(paper, attempt.frozen.key, attempt.frozen.questions) : 0;
+      const paperSectionRows = resultTab === "overview" ? sectionScoreSummaries(attempt, s).map((row) => "<tr><td>" + escapeText(row.title) + "</td><td>" + row.attempted + "/" + (row.questions - row.excluded) + "</td><td>" + row.correct + "</td><td>" + row.incorrect + "</td><td>" + escapeText(markLabel(row.marks)) + " / " + escapeText(markLabel(row.eligibleMax)) + "</td><td>" + (row.timerMs === null ? "Not recorded" : minutes(row.timerMs) + (row.timerReason === "time-expired" ? " \xB7 Expired" : " \xB7 Submitted")) + "</td><td>" + minutes(row.foregroundMs) + "</td></tr>").join("") : "";
+      const evidence = resultTab === "overview" ? attemptEvidence(attempt) : null;
+      const revisions = resultTab === "overview" ? answerRevisionEvidence(attempt) : null;
       const analyticHTML = evidence ? '<section class="panel pad" id="g-attempt-evidence"><h2>Timing, accuracy & marks evidence</h2><p class="fine">Elapsed is consumed test timer time (including hidden intervals, excluding permitted pauses and expired waiting). Question exposure is measured only in the visible foreground. The global median uses measured scored answers; hypothetical opportunities are not predicted marks.</p><div class="learning-metric-grid" id="g-overall-pacing"><div class="learning-metric"><strong>Test timer used</strong><b>' + minutes(evidence.timing.elapsedMs) + '</b><small>Consumed active exam clock</small></div><div class="learning-metric"><strong>Attempt rate</strong><b>' + (evidence.timing.attemptRate === null ? "\u2014" : (100 * evidence.timing.attemptRate).toFixed(1) + "%") + "</b><small>" + evidence.timing.attemptedEligible + " / " + evidence.timing.eligibleQuestions + ' non-excluded questions answered (includes manual pending)</small></div><div class="learning-metric"><strong>Median answered time</strong><b>' + (evidence.timing.overallMedianAnsweredMs === null ? "Not recorded" : minutes(evidence.timing.overallMedianAnsweredMs)) + "</b><small>" + evidence.timing.measuredAnswered + ' measured scored answers, foreground only</small></div><div class="learning-metric"><strong>Foreground question exposure</strong><b>' + minutes(evidence.timing.questionMeasuredMs) + '</b><small>Not equivalent to timer time</small></div></div><div class="scroll-table"><table><thead><tr><th>Section</th><th>Answered</th><th>Coverage</th><th>Accuracy</th><th>Median answered time</th><th>Positive</th><th>Penalty</th></tr></thead><tbody>' + evidence.sections.map((e) => "<tr><td>" + escapeText(e.title) + "</td><td>" + e.answered + "</td><td>" + Math.round(e.coverage * 100) + "%</td><td>" + (e.accuracy === null ? "\u2014" : Math.round(e.accuracy * 100) + "%") + "</td><td>" + (e.medianAnsweredMs === null ? "\u2014" : Math.round(e.medianAnsweredMs / 1e3) + "s") + "</td><td>" + e.positive.toFixed(2) + "</td><td>" + e.penalties.toFixed(2) + "</td></tr>").join("") + '</tbody></table></div><div class="row generic-actions"><span class="tag">Foreground ' + minutes(evidence.timing.foregroundMs) + '</span><span class="tag">Question exposure ' + minutes(evidence.timing.questionMeasuredMs) + '</span><span class="tag">Answers changed ' + evidence.timing.changedAnswers + `</span></div><h3>Section-relative speed \xD7 accuracy</h3><p class="fine">Only sections with at least 5 measured answered responses are classified; fast is under 0.75\xD7 and slow over 1.5\xD7 that section's median.</p><div class="learning-metric-grid">` + evidence.speed.buckets.map((e) => '<div class="learning-metric"><strong>' + e.label + "</strong><b>" + e.correct + " correct \xB7 " + e.incorrect + " incorrect</b><small>" + e.items + ' classified answers</small><button class="textlink" data-review-preset="' + (e.label === "Fast" ? "fastwrong" : e.label === "Slow" ? "slowwrong" : "typicalwrong") + '"' + (e.incorrect && revealReview ? "" : " disabled") + ' aria-label="Review ' + e.label.toLowerCase() + ' incorrect questions">Review ' + e.incorrect + " " + e.label.toLowerCase() + " mistakes \u2192</button></div>").join("") + '</div><p class="fine">' + evidence.speed.classified + " of " + evidence.speed.measured + ' measurable answers classified; insufficient section samples remain unclassified.</p><h3>Marks decomposition and hypothetical opportunities</h3><div class="learning-metric-grid"><div class="learning-metric"><strong>Observed negative marks</strong><b>' + evidence.opportunity.observedPenalty.toFixed(2) + '</b><small>Actual penalty magnitude</small></div><div class="learning-metric"><strong>Wrong \u2192 correct</strong><b>+' + evidence.opportunity.wrongToCorrect.toFixed(2) + "</b><small>Hypothetical, " + evidence.opportunity.countWrong + " incorrect scored items</small>" + (revealReview ? '<button class="textlink" data-review-preset="incorrect">Review incorrect \u2192</button>' : "") + '</div><div class="learning-metric"><strong>Skipped \u2192 correct</strong><b>+' + evidence.opportunity.skippedToCorrect.toFixed(2) + "</b><small>Hypothetical, " + evidence.opportunity.countSkipped + " unanswered scored items</small>" + (revealReview ? '<button class="textlink" data-review-preset="unanswered">Review skips \u2192</button>' : "") + "</div></div></section>" : "";
       return '<div class="generic-heading results-heading"><div><span class="eyebrow">FROZEN EXAM RECORD</span><h1>Performance overview</h1><p class="muted">' + escapeText(paper.paperId) + " \xB7 " + escapeText(paper.edition) + " \xB7 " + (attempt.finishedAt ? new Date(attempt.finishedAt).toLocaleString() : "") + "</p>" + (attempt.completionReason ? '<span class="tag">' + escapeText(
         attempt.completionReason === "time-expired" ? "Time expired" : attempt.completionReason === "section-submitted" ? "Submitted early" : "Submitted by user"
-      ) + "</span>" : "") + '</div><div class="row"><button class="btn quiet" id="g-history-results">History & insights</button><button class="btn" id="g-library">Library</button></div></div>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + resultTabsHTML(resultTab, revealReview) + '<div class="result-pane" id="result-overview" role="tabpanel" aria-labelledby="result-tab-overview"' + (resultTab !== "overview" ? " hidden" : "") + '><section class="panel pad"><div class="scoregrid"><div class="score standout"><b>' + escapeText(markLabel(s.snapshot.earnedMarks)) + " <small>/ " + escapeText(markLabel(eligibleMax)) + '</small></b><small>Audit-adjusted automated marks</small></div><div class="score"><b>' + s.snapshot.correctCount + '</b><small>Correct</small></div><div class="score"><b>' + s.snapshot.incorrectCount + '</b><small>Incorrect</small></div><div class="score"><b>' + s.snapshot.unansweredCount + '</b><small>Unanswered</small></div><div class="score"><b>' + s.snapshot.excludedCount + "</b><small>Excluded</small></div></div>" + (originalKey ? '<p class="fine"><b>Original-source key (unadjusted):</b> ' + escapeText(originalKey.marks.toFixed(1)) + " / " + escapeText(originalKey.maxMarks.toFixed(1)) + " marks \xB7 " + originalKey.correct + " correct \xB7 " + originalKey.incorrect + " incorrect \xB7 " + originalKey.unanswered + " unanswered. Uses the source key frozen at test start, including questions excluded from the reviewed score. This is a comparison, not an official score.</p>" : "") + '<p class="fine"><b>Scoring envelope:</b> nominal full-credit ceiling ' + escapeText(markLabel(eligibleMax)) + "; conservative lower bound " + escapeText(markLabel(conservativeFloor)) + ". The lower bound need not be attainable; written responses are assessed separately.</p>" + (!revealReview ? '<p class="fine"><b>Detailed answers withheld:</b> this exam permits numerical results and timing feedback but does not release its question-by-question answer key or worked solutions after submission.</p>' : "") + (grades2.graded || grades2.pending ? '<p class="fine"><b>Separate self-assessment:</b> ' + escapeText(grades2.graded) + " of " + escapeText(grades2.graded + grades2.pending) + " written responses marked; self-assessed total " + escapeText(selfAssessed.toFixed(2)) + ". Original automated score above remains unchanged.</p>" : '<p class="fine">Automated marks reflect only scoreable questions.</p>') + '</section><section class="panel pad"><h2>Section performance</h2><p class="fine">Eligible maximum excludes editorially unscored and manually assessed questions. Section timer is actual consumed time for sequential timed sections; foreground exposure is separate. Older records and unrestricted multi-section navigation show Not recorded rather than invented section time.</p><div class="scroll-table"><table><thead><tr><th>Section</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Marks / eligible max</th><th>Section timer</th><th>Question foreground</th></tr></thead><tbody>' + paperSectionRows + "</tbody></table></div></section>" + sectionPaceHTML(attempt) + analyticHTML + questionCoachingHTML(attempt, revealReview) + '<section class="panel pad answer-revision-panel"><h2>Answer revisions</h2>' + (revisions.recorded ? '<div class="learning-metric-grid">' + [["Modified answers", revisions.changed], ["Wrong \u2192 correct", revisions.rescued], ["Correct \u2192 wrong", revisions.lost], ["Other changes", revisions.other]].map(([label2, value]) => '<div class="learning-metric"><strong>' + escapeText(label2) + "</strong><b>" + escapeText(value) + "</b></div>").join("") + "</div>" : '<p class="fine">No saved answer-revision sequence is available for this attempt.</p>') + '<p class="fine">Based only on recorded successive single-choice selections. Clear-and-reselect and unverified items are not classified as rescued/lost. A changed answer may coincide with better marks; this is not evidence that revision caused improvement.</p></section></div>' + (revealReview ? '<section class="panel pad result-pane" id="result-review" role="tabpanel" aria-labelledby="result-tab-review"' + (resultTab !== "review" ? " hidden" : "") + '><div class="row between"><h2>Question review</h2><div class="row"><button class="btn" id="g-review-top">Top \u2191</button><button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div></div>' + reviewFiltersHTML(reviewFilter) + '<p class="fine">Review frozen questions, actual responses, solutions and foreground time. Mock scores never become FSRS ratings.</p><p class="fine">' + s.items.filter((it) => reviewMatch(attempt, it, reviewFilter)).length + " of " + s.items.length + " items</p>" + s.items.filter((it) => reviewMatch(attempt, it, reviewFilter)).map((it, i) => {
+      ) + "</span>" : "") + '</div><div class="row"><button class="btn quiet" id="g-history-results">History & insights</button><button class="btn" id="g-library">Library</button></div></div>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + resultTabsHTML(resultTab, revealReview) + (resultTab === "overview" ? '<div class="result-pane" id="result-overview" role="tabpanel" aria-labelledby="result-tab-overview"><section class="panel pad"><div class="scoregrid"><div class="score standout"><b>' + escapeText(markLabel(s.snapshot.earnedMarks)) + " <small>/ " + escapeText(markLabel(eligibleMax)) + '</small></b><small>Audit-adjusted automated marks</small></div><div class="score"><b>' + s.snapshot.correctCount + '</b><small>Correct</small></div><div class="score"><b>' + s.snapshot.incorrectCount + '</b><small>Incorrect</small></div><div class="score"><b>' + s.snapshot.unansweredCount + '</b><small>Unanswered</small></div><div class="score"><b>' + s.snapshot.excludedCount + "</b><small>Excluded</small></div></div>" + (originalKey ? '<p class="fine"><b>Original-source key (unadjusted):</b> ' + escapeText(originalKey.marks.toFixed(1)) + " / " + escapeText(originalKey.maxMarks.toFixed(1)) + " marks \xB7 " + originalKey.correct + " correct \xB7 " + originalKey.incorrect + " incorrect \xB7 " + originalKey.unanswered + " unanswered. Uses the source key frozen at test start, including questions excluded from the reviewed score. This is a comparison, not an official score.</p>" : "") + '<p class="fine"><b>Scoring envelope:</b> nominal full-credit ceiling ' + escapeText(markLabel(eligibleMax)) + "; conservative lower bound " + escapeText(markLabel(conservativeFloor)) + ". The lower bound need not be attainable; written responses are assessed separately.</p>" + (!revealReview ? '<p class="fine"><b>Detailed answers withheld:</b> this exam permits numerical results and timing feedback but does not release its question-by-question answer key or worked solutions after submission.</p>' : "") + (grades2.graded || grades2.pending ? '<p class="fine"><b>Separate self-assessment:</b> ' + escapeText(grades2.graded) + " of " + escapeText(grades2.graded + grades2.pending) + " written responses marked; self-assessed total " + escapeText(selfAssessed.toFixed(2)) + ". Original automated score above remains unchanged.</p>" : '<p class="fine">Automated marks reflect only scoreable questions.</p>') + '</section><section class="panel pad"><h2>Section performance</h2><p class="fine">Eligible maximum excludes editorially unscored and manually assessed questions. Section timer is actual consumed time for sequential timed sections; foreground exposure is separate. Older records and unrestricted multi-section navigation show Not recorded rather than invented section time.</p><div class="scroll-table"><table><thead><tr><th>Section</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Marks / eligible max</th><th>Section timer</th><th>Question foreground</th></tr></thead><tbody>' + paperSectionRows + "</tbody></table></div></section>" + sectionPaceHTML(attempt) + analyticHTML + questionCoachingHTML(attempt, revealReview) + '<section class="panel pad answer-revision-panel"><h2>Answer revisions</h2>' + (revisions?.recorded ? '<div class="learning-metric-grid">' + [["Modified answers", revisions.changed], ["Wrong \u2192 correct", revisions.rescued], ["Correct \u2192 wrong", revisions.lost], ["Other changes", revisions.other]].map(([label2, value]) => '<div class="learning-metric"><strong>' + escapeText(label2) + "</strong><b>" + escapeText(value) + "</b></div>").join("") + "</div>" : '<p class="fine">No saved answer-revision sequence is available for this attempt.</p>') + '<p class="fine">Based only on recorded successive single-choice selections. Clear-and-reselect and unverified items are not classified as rescued/lost. A changed answer may coincide with better marks; this is not evidence that revision caused improvement.</p></section></div>' : '<div class="result-pane" id="result-overview" role="tabpanel" aria-labelledby="result-tab-overview" hidden></div>') + (revealReview && resultTab === "review" ? '<section class="panel pad result-pane" id="result-review" role="tabpanel" aria-labelledby="result-tab-review"><div class="row between"><h2>Question review</h2><div class="row"><button class="btn" id="g-review-top">Top \u2191</button><button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div></div>' + reviewFiltersHTML(reviewFilter) + '<p class="fine">Review frozen questions, actual responses, solutions and foreground time. Mock scores never become FSRS ratings.</p><p class="fine">' + s.items.filter((it) => reviewMatch(attempt, it, reviewFilter)).length + " of " + s.items.length + " items</p>" + s.items.filter((it) => reviewMatch(attempt, it, reviewFilter)).map((it, i) => {
         const q = qs.get(it.questionRevisionId);
         const response = attempt.state.responses.find((r) => r.questionRevisionId === it.questionRevisionId)?.response;
         const answer = attempt.frozen.key.entries.find((e) => e.questionRevisionId === it.questionRevisionId)?.answer;
@@ -7459,7 +7493,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
         const provenance = q.editorial.sources ?? [];
         const origin = attempt.notebookLineage?.entries.find((x) => x.questionRevisionId === q.id);
         return '<article class="generic-review" data-review-id="' + escapeText(q.id) + '" data-verdict="' + escapeText(it.verdict) + '"><strong>' + (paper.sections.flatMap((z) => z.questionRevisionIds).indexOf(q.id) + 1) + ". " + escapeText(q.content.prompt) + '</strong><p class="fine editorial-meta"><span class="editorial-status editorial-status-' + escapeText(q.editorial.status) + '">' + escapeText(editorialStatusLabel(q.editorial)) + "</span>" + (q.editorial.sourcePage ? " \xB7 Source page " + q.editorial.sourcePage : "") + " \xB7 " + minutes(seconds) + " foreground exposure \xB7 Speed: " + escapeText(speed) + " \xB7 Visits: " + (attempt.state.questionVisits === void 0 ? "Not recorded" : visitCount ?? 0) + "</p>" + frozenReviewMedia(attempt, q, response, answer, it.verdict) + (origin ? '<p class="fine">Notebook source: ' + escapeText(origin.sourcePaperId) + " \xB7 " + escapeText(origin.sourcePaperEdition) + " \xB7 " + escapeText(origin.sourceSectionTitle) + " \xB7 source attempt " + escapeText(origin.sourceAttemptId) + "</p>" : "") + '<p class="fine"><span class="verdict ' + escapeText(it.verdict) + '">' + escapeText(it.verdict) + "</span> \xB7 " + it.marks + ' automated marks</p><p class="fine">Your answer: ' + escapeText(readableAnswer(q, response)) + '</p><p class="fine">' + (it.verdict === "excluded" ? "Frozen answer key (not scored): " : it.verdict === "pending" ? "Manual assessment: " : "Expected: ") + escapeText(readableAnswer(q, answer)) + "</p>" + (q.editorial.notes ? '<p class="fine">Editorial note: ' + escapeText(q.editorial.notes) + "</p>" : "") + (explanation ? '<details class="worked-solution"' + (it.verdict === "incorrect" || it.verdict === "unanswered" ? " open" : "") + "><summary>" + (q.content.assetIds?.length || (q.content.kind === "single-choice" || q.content.kind === "multiple-select") && q.content.options.some((o) => o.assetIds?.length) ? "Visual solving method" : "Solving approach & worked reasoning") + '</summary><div class="worked-solution-body">' + escapeText(explanation) + "</div></details>" : "") + sourceReviewHTML(attempt, q, reviewSource) + (provenance.length ? '<p class="fine">Sources: ' + provenance.map((source) => '<a href="' + escapeText(source.url) + '" target="_blank" rel="noopener noreferrer">' + escapeText(source.title) + "</a>").join(" \xB7 ") + "</p>" : "") + (limit !== null ? '<div class="generic-manual-grade"><p class="fine">Written response requires explicit human assessment. Self-marked results are separate from exam scores.</p><label>Self-assessed marks (0\u2013' + limit + ')<input type="number" step="0.01" min="0" max="' + limit + '" data-manual-marks="' + escapeText(q.id) + '" value="' + escapeText(prior?.marks ?? "") + '"></label><label>Assessment note (optional)<textarea maxlength="2000" rows="2" data-manual-note="' + escapeText(q.id) + '">' + escapeText(prior?.note ?? "") + '</textarea></label><button class="btn" data-manual-save="' + escapeText(q.id) + '">Save self-assessment</button></div>' : "") + '<button class="btn" data-add-card="' + escapeText(q.id) + '"' + (records.has("learning-card:" + q.id) ? " disabled" : "") + ">" + (records.has("learning-card:" + q.id) ? "In notebook" : "Add to notebook") + "</button></article>";
-      }).join("") + "</section>" : "") + timingLedgerHTML(attempt, resultTab === "timing", revealReview);
+      }).join("") + "</section>" : revealReview ? '<section class="result-pane" id="result-review" role="tabpanel" aria-labelledby="result-tab-review" hidden></section>' : "") + (resultTab === "timing" ? timingLedgerHTML(attempt, true, revealReview) : '<section class="result-pane" id="result-timing" role="tabpanel" aria-labelledby="result-tab-timing" hidden></section>');
     }
     const openSaved = (id) => {
       const saved = records.get(id);
@@ -7830,25 +7864,51 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
             notice("Unknown question option.");
             return;
           }
-          if (!chosen.length) dispatch({ type: "CLEAR", nowMs: now2() });
-          else if (chosen.length < (q.content.minSelections ?? 1)) {
-            warning = "Select at least " + (q.content.minSelections ?? 1) + " options before saving.";
-            const group = root2.querySelector(".generic-response-group");
-            let feedback = group?.querySelector(".generic-inline-warning");
-            if (group && !feedback) {
-              feedback = document.createElement("p");
-              feedback.className = "generic-inline-warning";
-              feedback.setAttribute("role", "status");
-              group.append(feedback);
-            }
-            if (feedback) feedback.textContent = warning;
-          } else dispatch({ type: "ANSWER", nowMs: now2(), response: { kind: "multiple-select", optionIds: chosen } });
+          const draftKey = attempt.id + "|" + q.id;
+          const min = q.content.minSelections ?? 1, max = q.content.maxSelections;
+          const message = chosen.length ? multipleDraftMessage(chosen.length, min, max) : "";
+          if (message) {
+            choiceDrafts.set(draftKey, { questionId: q.id, optionIds: chosen, message });
+            dispatch({ type: "CLEAR", nowMs: now2() });
+          } else {
+            choiceDrafts.delete(draftKey);
+            dispatch(!chosen.length ? { type: "CLEAR", nowMs: now2() } : { type: "ANSWER", nowMs: now2(), response: { kind: "multiple-select", optionIds: chosen } });
+          }
         }
       });
       root2.querySelectorAll("[data-bool]").forEach((input) => input.onchange = () => {
         dispatch({ type: "ANSWER", nowMs: now2(), response: { kind: "true-false", value: input.dataset.bool === "true" } });
       });
       const saveButton = root2.querySelector("#g-save");
+      if (q.content.kind === "matching" && saveButton) {
+        const matching = q.content;
+        const controls = [...root2.querySelectorAll("[data-match]")];
+        const feedback = root2.querySelector("#g-match-feedback");
+        const updateConflicts = (dirty) => {
+          const duplicates = duplicateMatchingTargets(controls.map((control) => control.value));
+          for (const control of controls) {
+            const conflict = Boolean(control.value && duplicates.includes(control.value));
+            control.classList.toggle("match-conflict", conflict);
+            if (conflict) {
+              control.setAttribute("aria-invalid", "true");
+              control.setAttribute("aria-describedby", "g-match-feedback");
+            } else {
+              control.removeAttribute("aria-invalid");
+              control.removeAttribute("aria-describedby");
+            }
+          }
+          saveButton.disabled = duplicates.length > 0;
+          if (feedback) {
+            const labels = duplicates.map((id) => matching.rightItems.find((item) => item.id === id)?.text ?? id);
+            feedback.textContent = duplicates.length ? "Conflicting matches: " + labels.join(", ") + " selected for multiple left items. Each right option may be used once; correct the highlighted rows before saving." : dirty ? "Matching changes not yet saved. Select Save matches to commit." : "";
+          }
+          return duplicates;
+        };
+        controls.forEach((control) => control.onchange = () => {
+          updateConflicts(true);
+        });
+        updateConflicts(false);
+      }
       if (saveButton) saveButton.onclick = () => {
         if (q.content.kind === "numeric-entry") {
           const field = root2.querySelector("#g-number");
@@ -7862,7 +7922,13 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
           dispatch(value.trim() ? { type: "ANSWER", nowMs: now2(), response: { kind: "free-response", text: value } } : { type: "CLEAR", nowMs: now2() });
         } else if (q.content.kind === "matching") {
           const matching = q.content;
-          const pairs = [...root2.querySelectorAll("[data-match]")].filter((x) => x.value).map((x) => {
+          const controls = [...root2.querySelectorAll("[data-match]")];
+          const duplicate = duplicateMatchingTargets(controls.map((control) => control.value));
+          if (duplicate.length) {
+            notice("Conflicting right-side matches must be corrected before saving.");
+            return;
+          }
+          const pairs = controls.filter((x) => x.value).map((x) => {
             const left = matching.leftItems.find((item) => item.id === x.dataset.match);
             const right = matching.rightItems.find((item) => item.id === x.value);
             return left && right ? { leftId: left.id, rightId: right.id } : null;
