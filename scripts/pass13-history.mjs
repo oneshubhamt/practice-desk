@@ -187,6 +187,21 @@ try{
    fallbackPrompts.push(d.message());void d.accept();
   }
  });
+ await fallback.evaluate(()=>{
+   window.__originalSetItem=Storage.prototype.setItem;
+   Storage.prototype.setItem=function(key,value){
+     if(key==="practiceDesk.overhaul.fallback.v1")
+       throw new DOMException("Storage quota denied","QuotaExceededError");
+     return window.__originalSetItem.call(this,key,value);
+   };
+ });
+ await fallback.locator("#g-delete-completed").click();
+ await fallback.waitForFunction(()=>document.querySelector(".generic-warning")?.textContent?.includes("No completed history was cleared"));
+ yes(JSON.parse(await fallback.evaluate(()=>localStorage.getItem("practiceDesk.overhaul.fallback.v1")??"[]"))
+   .some(x=>x.recordType==="generic-attempt"&&x.finishedAt!==null),
+  "Quota-rejected fallback delete changed durable history");
+ await fallback.evaluate(()=>{Storage.prototype.setItem=window.__originalSetItem;});
+ fallbackPrompts.length=0;
  await fallback.locator("#g-delete-completed").click();
  await fallback.waitForFunction(()=>document.querySelector("#g-delete-completed")?.disabled===true);
  const fallbackAfter=JSON.parse(await fallback.evaluate(()=>
