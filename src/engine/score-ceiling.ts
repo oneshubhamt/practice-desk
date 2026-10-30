@@ -1,0 +1,68 @@
+import type { PaperRevision, SectionDefinition } from "../domain/exam.js";
+import type { AnswerKeyRevision } from "../domain/answer-key.js";
+import type { QuestionRevision } from "../domain/question.js";
+import type { MarkingRule } from "../domain/scoring.js";
+import type { GenericAttempt } from "../app/exam-package.ts";
+import type { ScoreResult } from "./scoring.ts";
+
+const excluded=new Set(["draft","invalid","incomplete-source","under-review","superseded"]);
+
+/** Maximum nominal automated marks under this exact frozen paper/key policy.
+ * Pending written responses belong to separate manual self-assessment, not
+ * this automated maximum. No SSC CGL-specific 2-point/50-point assumptions.
+ */
+export function scoreableMaximum(
+ paper:PaperRevision,key:AnswerKeyRevision,questions:readonly QuestionRevision[],
+ section?:SectionDefinition
+):number{
+ const qs=new Map(questions.map(q=>[q.id,q]));
+ const entries=new Map(key.entries.map(e=>[e.questionRevisionId,e]));
+ return (section?[section]:paper.sections).reduce((total,part)=>
+   total+part.questionRevisionIds.reduce((sum,id)=>{
+     const q=qs.get(id),entry=entries.get(id);
+     if(!q||!entry)throw new Error("Cannot derive maximum for missing frozen question or key");
+     if(excluded.has(q.editorial.status)||q.content.kind==="free-response")return sum;
+     const rule:MarkingRule=entry.scoringOverride??part.scoringOverride??
+       paper.scoring.byQuestionKind?.[q.content.kind]??paper.scoring.defaultRule;
+     return sum+rule.correctMarks;
+   },0),0);
+}
+
+export interface SectionScoreSummary {
+ readonly sectionId:string;
+ readonly title:string;
+ readonly questions:number;
+ readonly attempted:number;
+ readonly correct:number;
+ readonly incorrect:number;
+ readonly unanswered:number;
+ readonly pending:number;
+ readonly excluded:number;
+ readonly marks:number;
+ readonly eligibleMax:number;
+ readonly foregroundMs:number;
+}
+export function sectionScoreSummaries(attempt:GenericAttempt,result:ScoreResult):SectionScoreSummary[]{
+ const paper=attempt.frozen.paper;
+ const scores=new Map(result.items.map(x=>[x.questionRevisionId,x]));
+ const responses=new Map(attempt.state.responses.map(x=>[x.questionRevisionId,x]));
+ return paper.sections.map(section=>{
+   let attempted=0,correct=0,incorrect=0,unanswered=0,pending=0,excluded=0,marks=0,foregroundMs=0;
+   for(const id of section.questionRevisionIds){
+     const item=scores.get(id);
+     if(!item)throw new Error("Missing frozen section verdict");
+     const row=responses.get(id);
+     foregroundMs+=row?.timeSpentMs??0;
+     marks+=item.marks;
+     if(item.verdict==="correct")correct++;
+     else if(item.verdict==="incorrect")incorrect++;
+     else if(item.verdict==="unanswered")unanswered++;
+     else if(item.verdict==="pending")pending++;
+     else excluded++;
+     if(row?.response&&item.verdict!=="excluded")attempted++;
+   }
+   return {sectionId:section.id,title:section.title,questions:section.questionRevisionIds.length,
+     attempted,correct,incorrect,unanswered,pending,excluded,marks,foregroundMs,
+     eligibleMax:scoreableMaximum(paper,attempt.frozen.key,attempt.frozen.questions,section)};
+ });
+}
