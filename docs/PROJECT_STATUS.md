@@ -50,11 +50,11 @@
 | 11 | Exam experience, keyboard, fullscreen, timer and navigation | E01–E09 DONE | DONE — [CI #40940761995](https://github.com/oneshubhamt/practice-desk/actions/runs/40940761995) |
 | 12 | **Generic result/review parity**: source revision, correct/wrong option states, scoring denominator, solutions, completion labels | R01–R03, R09–R12 DONE; V04/V05 visual approval pending | **COMPLETED** — [CI #40988982138](https://github.com/oneshubhamt/practice-desk/actions/runs/40988982138) |
 | 13 | Atomic completed-only deletion, exact edition, saved setup, storage controls, comparable scores and safe backup v3 | H01–H07/H09 DONE; H08 safe variation, H10 exception | **COMPLETED** — [CI #40992327902](https://github.com/oneshubhamt/practice-desk/actions/runs/40992327902) |
-| 14 | Timing visits, speed labels, review filters, longest-question links and recommendations | R04–R08; H07 already DONE | PLANNED |
+| 14 | Genuine visits, section-gated speed, key-audit/typical filters, top-five review links and conservative study guidance | R04–R08 and C05 DONE; H07 preserved | **COMPLETED** — [CI #40994179081](https://github.com/oneshubhamt/practice-desk/actions/runs/40994179081) |
 | 15 | Visual side-by-side, mobile and accessibility | V01–V10 | PLANNED |
 | 16 | **Independent new v11 source audit**, final targeted browser comparison and parity decision | All rows | PLANNED |
 
-**Passes 11–13 are completed and source/browser-checked; Passes 14–16 remain open.** Progress is updated ONLY in the [feature-parity programme](V11_FEATURE_PARITY_PROGRAMME.md), not in archived pass-level reports. Historical architecture scratchpad may receive a small redirect marker but is no longer the live parity log.
+**Passes 11–14 are completed and source/browser-checked; Passes 15–16 remain open.** Progress is updated ONLY in the [feature-parity programme](V11_FEATURE_PARITY_PROGRAMME.md), not in archived pass-level reports. Historical architecture scratchpad may receive a small redirect marker but is no longer the live parity log.
 
 ## Decisions and exclusions retained
 
@@ -87,3 +87,8 @@ The post-v11 overhaul remains a **generic multi-exam app**, not a CGL-only viewe
 ## Pass 13 consolidation — 30 October 2026
 
 Generic history now includes exact paper/edition filtering, papers-practised and adjusted-best statistics, and a separate comparable adjusted-score trend based on matching frozen paper, key and mode. Completed-history deletion requires two confirmations and is atomic in IndexedDB or a single validated localStorage fallback write; stale tabs or refused writes do not partially clear history. In-progress attempts, imported exam packages and FSRS notebook cards are excluded. Browser storage estimates and persistence requests are clearly best effort. Saved paper/edition/mode/section—including imported exams loaded asynchronously—survive reload. The existing checksum-verified additive backup v3 may optionally carry that setup, while old v3 backups still work. v11 historical storage/v1 backups are not migrated. Full source review, acceptance and remaining manual limits: [Pass 13 checkpoint](V11_FEATURE_PARITY_PROGRAMME.md#pass-13-five-step-closure--30-october-2026).
+
+
+## Pass 14 consolidation — 30 October 2026
+
+The new optional `SessionState.questionVisits` records **real question entries for new attempts**; old results have no reconstructed visits. Speed labels (Fast/Typical/Slow/Not classified) and filters share the **existing** median thresholds and at least five measured answered responses per section. Generic result review, the timing ledger and ranked top-five cumulative foreground exposures link to specific frozen questions. Audit-note and typical-speed-wrong filters and up to three cautious evidence-based recommendations complete R04–R08/C05. Negative marking, manual pending/excluded results, interrupted/zero-time entries and old persisted records are covered. Source and browser evidence: [Pass 14 closure](V11_FEATURE_PARITY_PROGRAMME.md#pass-14-five-step-closure--30-october-2026), [CI #40994179081](https://github.com/oneshubhamt/practice-desk/actions/runs/40994179081). H07's comparable score trend remains Pass 13 work. Only visual/AT Pass 15 and de novo Pass 16 now remain.

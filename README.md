@@ -2,7 +2,7 @@
 
 Single-file offline examination and learning application. Built-in SSC CGL original/reviewed editions and validated imported exam packages share one strict TypeScript engine, frozen results, local history, backup and revision workflows.
 
-> **Current project status — 30 October 2026:** The overhaul has passed the historical Pass 10 automated engineering/browser gates, but a fresh comparison with the frozen v11 source revealed **incomplete UI/functionality parity**. **Passes 11–13 are implemented and browser-verified; Passes 14–16 remain open.** Do not merge into `main` or claim release approval. See the [authoritative feature-parity programme](docs/V11_FEATURE_PARITY_PROGRAMME.md).
+> **Current project status — 30 October 2026:** The overhaul has passed the historical Pass 10 automated engineering/browser gates, but a fresh comparison with the frozen v11 source revealed **incomplete UI/functionality parity**. **Passes 11–14 are implemented and browser-verified; Passes 15–16 remain open.** Do not merge into `main` or claim release approval. See the [authoritative feature-parity programme](docs/V11_FEATURE_PARITY_PROGRAMME.md).
 
 ## Documentation — canonical reading order
 
@@ -54,3 +54,7 @@ The app is not restricted to SSC CGL. All six question kinds, imported custom sc
 ## Pass 13: generic history and backup
 
 History supports exact revision/edition filtering, comparable adjusted marks, two-confirmation completed-only atomic deletion, storage health/quota/persistence and safe denial handling. Paper/edition/mode/section choices—including imported exam packages—persist locally and optionally travel in checksum-covered, additive **backup v3**. No legacy v11 migration or automatic replacement of existing attempts is performed. [Pass 13 source/QA checklist](docs/V11_FEATURE_PARITY_PROGRAMME.md#pass-13-five-step-closure--30-october-2026).
+
+## Pass 14: trustworthy timing and study review
+
+New attempts measure actual question entries and returns, while older attempts explicitly show **Not recorded**. The shared five-sample section-median policy drives Fast/Typical/Slow labels in timing and review; audit notes and typical-speed mistakes are filterable. The five longest recorded cumulative foreground exposures link to their question reviews; evidence-based study prompts never claim a cause or predict future scores. These features work for original/reviewed CGL and imported six-question-kind exams. [Pass 14 source audit and browser evidence](docs/V11_FEATURE_PARITY_PROGRAMME.md#pass-14-five-step-closure--30-october-2026).
