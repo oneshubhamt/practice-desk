@@ -17,10 +17,11 @@
 | D11 | Binding | No premature answer/editorial/solution disclosure |
 | D12 | Binding (Pass 19 clarified) | Longitudinal trends require exact paper/key/mode. Separate cross-paper section *marks diagnostics* allow up to eight full attempts of at least two papers with matching exam, edition, mode, section blueprint, effective per-item grading, navigation and timer rules; ratios remain descriptive and never estimate rank, percentile or normalized difficulty |
 | D13 | Unapproved | Unconditional release/merge; physical Android/iOS/macOS Safari/NVDA/VoiceOver and OS-kill/eviction and human UI signoff |
-| D14 | Open | Targeted Passes 17–19 verify their allocated generic rules, timers and history changes including F03/F04/F05. Full v11 behavioral/UI superset and manual/device validation remain open; no blanket “parity attained” claim before Pass 23 |
+| D14 | Open | Targeted Passes 17–20 verified their allocated generic engine, timing, history, preflight/Display/provenance findings. F07/F08/F10/F11 and G07/G08/F12 plus independent Pass 23 are still open; no blanket v11 parity or release approval |
 | D15 | Open | Valid generic rule envelope. See G01–G10; external paper acceptance must reflect actually executable semantics |
 | D16 | User approved | Maintain the **active source audit Section G as the durable implementation scratchpad**. Each pass: audit, analyze, implement, reconcile each assigned objective, and targeted NEW QA; iterate repairs before QA when needed. Comprehensive whole-app source/UI audit and broad QA belong in Pass 23, with physical-device/AT caveats honest |
 | D17 | User approved | Preserve the useful v11 UI layout, navigation convenience, clarity and material workflows, but implement demonstrably better design and reusable generic abstractions where helpful; pixel-perfect imitation and restoration of unsafe legacy behavior are not required |
+| D18 | Implemented + binding (Pass 20) | Pre-start scoring, editor/audit counts and complete rules derive from the exact executable selected exam; never invent official attribution or hardcode SSC marks. No premature keys/solutions/disputed-question details. Keep Display accessible on scrolled/immersive screens and within narrow/200%-zoom viewport bounds, with a persistent generic non-affiliation footer and built-in-only SSC-specific provenance |
 
 **Rule for edits:** audit → analyze invariants → implement → reconcile requirements → targeted independent QA. Preserve `main`/`baseline/v11`; all changes to `overhaul` only, except explicit release authorization.
 
