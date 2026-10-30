@@ -4,7 +4,8 @@ import type { QuestionRevisionId } from "../domain/ids.js";
 import type { AttemptResponseRecord } from "../domain/attempt.js";
 
 export interface SessionState {
-  readonly status: "running" | "paused" | "completed";
+  /** An expired manual section is frozen until the candidate explicitly advances. */
+  readonly status: "running" | "paused" | "section-expired" | "completed";
   readonly sectionIndex: number;
   readonly questionIndex: number;
   readonly elapsedMs: number;
@@ -102,6 +103,8 @@ function checkpoint(paper: PaperRevision, state: SessionState, nowMs: number): S
     remaining -= spent;
     if (limit !== Infinity && spent === limit) {
       if (paper.timing.kind === "whole-paper") return { ...next, status: "completed" };
+      if (paper.timing.kind === "sectional" && paper.timing.transition === "manual")
+        return { ...next, status: "section-expired" };
       next = advance(paper, next);
       continue;
     }
@@ -114,6 +117,12 @@ export function transition(paper: PaperRevision, state: SessionState, event: Ses
   if (event.type === "VISIBILITY") return { ...current, visible: event.visible };
   if (current.status === "completed") return current;
   if (event.type === "TICK") return current;
+  // No answers, flags, pause or navigation can change an expired manual section.
+  // Continuing is explicit, and late clocks cannot leak the waiting interval
+  // into either elapsed session time or foreground question exposure.
+  if (current.status === "section-expired")
+    return event.type === "SUBMIT_SECTION" && paper.timing.kind === "sectional"
+      ? advance(paper, { ...current, status: "running" }) : current;
   if (event.type === "PAUSE") {
     if (current.status !== "running" || paper.timing.kind === "untimed" || paper.timing.pausePolicy !== "allowed") return current;
     return { ...current, status: "paused" };
@@ -125,8 +134,16 @@ export function transition(paper: PaperRevision, state: SessionState, event: Ses
   // A sectional paper is finished exclusively by section completion. A direct
   // SUBMIT_ATTEMPT must not bypass section locks or no-early-submit policy.
   if (event.type === "SUBMIT_ATTEMPT")
-    return paper.timing.kind === "sectional" ? current : { ...current, status: "completed" };
+    return paper.timing.kind === "sectional" ||
+      (paper.navigation.sectionNavigation === "sequential-locked" &&
+        current.sectionIndex < paper.sections.length - 1)
+      ? current : { ...current, status: "completed" };
   if (event.type === "SUBMIT_SECTION") {
+    // Locked whole-paper sections share one continuous total clock, but must
+    // have an explicit forward-only transition; final completion uses submit.
+    if (paper.timing.kind === "whole-paper" &&
+        paper.navigation.sectionNavigation === "sequential-locked" &&
+        current.sectionIndex < paper.sections.length - 1) return advance(paper,current);
     if (paper.timing.kind !== "sectional" || !paper.timing.allowEarlySubmit ||
         current.sectionIndex !== state.sectionIndex) return current;
     // Expiry may have advanced to the next section during checkpoint(). Never
