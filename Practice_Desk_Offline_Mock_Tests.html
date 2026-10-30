@@ -7437,6 +7437,14 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
           warning = "Browser storage is unavailable; attempts may not survive a reload.";
         }
       }
+      if (storedSelection && packages.has(storedSelection.paperRevisionId)) {
+        choice = storedSelection.paperRevisionId;
+        cglMode = storedSelection.mode;
+        singleSection = Math.min(
+          storedSelection.section,
+          Math.max(0, (packages.get(choice)?.paper.sections.length ?? 1) - 1)
+        );
+      }
       loading = false;
       if (!disposed) draw();
     })();
