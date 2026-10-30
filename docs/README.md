@@ -1,6 +1,6 @@
 # Practice Desk documentation — canonical map
 
-**Reference:** frozen `baseline/v11` · **implementation:** `overhaul`. **IMPORTANT 30 Oct Pass24 correction:** laptop screenshot/first-viewport visual parity **FAILED** despite green functional CI; key test actions move below fold. Engineering status is *not* full v11 UI parity or a release. Read the [laptop regression audit](audits/PASS24_LAPTOP_VISUAL_REGRESSION_2026-10-30.md) before the conditional earlier Pass23 source/functional report.
+**Reference:** frozen `baseline/v11` · **implementation:** `overhaul`. **Pass25 update (30 Oct):** Library first-viewport regression **L01 repaired and independently measured** at four laptop widths; **L02–L11 remain OPEN**, so desktop overall UI parity is **not yet demonstrated**. [Pass25 actual screenshot verification](audits/PASS24_LAPTOP_VISUAL_REGRESSION_2026-10-30.md#pass-25-implementation-status--one-of-eleven-findings-repaired-30-oct-2026). Previously, laptop screenshot/first-viewport visual parity **FAILED** despite green functional CI; exam/history tasks remain below fold. Engineering status is *not* full v11 UI parity or a release. Read the [laptop regression audit](audits/PASS24_LAPTOP_VISUAL_REGRESSION_2026-10-30.md) before the conditional earlier Pass23 source/functional report.
 
 ## Read in this order
 
