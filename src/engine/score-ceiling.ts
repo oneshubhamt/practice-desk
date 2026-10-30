@@ -28,6 +28,49 @@ export function scoreableMaximum(
    },0),0);
 }
 
+/** Conservative automated score floor under a validated scoring policy.
+ * A component-based wrong response may incur penalties per incorrect selected
+ * component, so a simple sum of incorrectMarks is not necessarily a floor.
+ * The bound is never presented as an attainable worst-case score. */
+export function scoreableLowerBound(
+ paper:PaperRevision,key:AnswerKeyRevision,questions:readonly QuestionRevision[],
+ section?:SectionDefinition
+):number{
+ const qs=new Map(questions.map(q=>[q.id,q]));
+ const entries=new Map(key.entries.map(e=>[e.questionRevisionId,e]));
+ return (section?[section]:paper.sections).reduce((total,part)=>
+   total+part.questionRevisionIds.reduce((sum,id)=>{
+     const q=qs.get(id),entry=entries.get(id);
+     if(!q||!entry)throw new Error("Cannot derive lower bound for missing frozen question or key");
+     if(excluded.has(q.editorial.status)||q.content.kind==="free-response")return sum;
+     const rule:MarkingRule=entry.scoringOverride??part.scoringOverride??
+       paper.scoring.byQuestionKind?.[q.content.kind]??paper.scoring.defaultRule;
+     let floor=Math.min(rule.correctMarks,rule.incorrectMarks,rule.unansweredMarks);
+     if(rule.partialCredit){
+       const count=q.content.kind==="multiple-select"?
+         q.content.maxSelections??q.content.options.length:
+         q.content.kind==="matching"?
+           Math.min(q.content.leftItems.length,q.content.rightItems.length):0;
+       if(count>0){
+         const componentFloor=rule.partialCredit.floorAtZero?0:
+           -count*(rule.partialCredit.penaltyPerIncorrectComponent??0);
+         floor=Math.min(floor,componentFloor);
+       }
+     }
+     return sum+floor;
+   },0),0);
+}
+
+/** Explicit bounds distinguish a nominal full-credit ceiling from a conservative
+ * lower bound when unusual imported partial-credit penalties are allowed. */
+export function scoreableBounds(
+ paper:PaperRevision,key:AnswerKeyRevision,questions:readonly QuestionRevision[],
+ section?:SectionDefinition
+):{readonly lowerBound:number;readonly maximum:number}{
+ return {lowerBound:scoreableLowerBound(paper,key,questions,section),
+   maximum:scoreableMaximum(paper,key,questions,section)};
+}
+
 export interface SectionScoreSummary {
  readonly sectionId:string;
  readonly title:string;
