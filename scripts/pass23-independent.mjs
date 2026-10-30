@@ -194,7 +194,7 @@ try{
  // Enforce numeric parity (not merely similar displayed text) between the
  // frozen old app and this build on each paired scoring scenario.
  const numericScore=(label)=>{
-  const found=label.replaceAll("−","-").match(/^(-?\\d+(?:\\.\\d+)?)\\s*\\/\\s*(\\d+(?:\\.\\d+)?)/);
+  const found=label.replaceAll("−","-").match(/^(-?\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)/);
   ensure(found,"Cannot parse a paired adjusted score: "+label);
   return [Number(found[1]),Number(found[2])];
  };
