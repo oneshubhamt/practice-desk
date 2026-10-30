@@ -49,6 +49,14 @@ try{
  await page.evaluate(()=>localStorage.setItem("practiceDesk.overhaul.selection.v1","{invalid"));
  await page.reload({waitUntil:"load"});
  yes(await page.locator("#g-start").count()===1,"Corrupt setup preferences broke offline startup");
+ await page.locator("#displayTrigger").click();
+ await page.locator("#themeDark").click();
+ yes(await page.locator("#themeDark").getAttribute("aria-pressed")==="true",
+  "Explicit dark theme selection missing");
+ await page.locator("#themeLight").click();
+ yes(await page.locator("#themeLight").getAttribute("aria-pressed")==="true",
+  "Explicit light theme selection missing");
+ await page.locator("#displayClose").click();
  await page.locator("#g-file").setInputFiles({name:"six-kinds.json",mimeType:"application/json",
   buffer:Buffer.from(JSON.stringify(pkg))});
  await page.locator("#g-papers").selectOption(reviewed);
@@ -99,9 +107,37 @@ try{
   "Checksum-verified v3 backup format changed");
  yes(exported.selection?.paperRevisionId===reviewed&&exported.selection?.mode==="free",
   "Device exam setup was not included in the integrity-protected backup");
+ // Cancel at first confirmation: nothing should be touched.
+ page.once("dialog",d=>d.dismiss());
+ await page.locator("#g-delete-completed").click();
+ yes((await dbRecords(page)).filter(x=>x.recordType==="generic-attempt"&&x.finishedAt!==null).length===2,
+  "Cancelled bulk action deleted completed history");
+
+ // Simulate a second tab updating one completed record after it was rendered
+ // in this tab. The whole IndexedDB transaction must abort and roll back.
+ const competing=(await dbRecords(page)).find(x=>x.recordType==="generic-attempt"&&x.finishedAt!==null);
+ await page.evaluate(async id=>{
+  const db=await new Promise((resolve,reject)=>{
+   const req=indexedDB.open("practiceDesk.overhaul.v1",1);
+   req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+  });
+  try{await new Promise((resolve,reject)=>{
+   const tx=db.transaction("attempts","readwrite"),store=tx.objectStore("attempts");
+   const get=store.get(id);
+   get.onsuccess=()=>store.put({...get.result,saveRevision:get.result.saveRevision+1});
+   tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);
+  });}finally{db.close();}
+ },competing.id);
  const prompts=[];
  page.on("dialog",d=>{if(d.message().includes("Delete all")||d.message().includes("Confirm permanent deletion")){
   prompts.push(d.message());void d.accept();}else if(d.message().startsWith("Import ")){void d.accept();}});
+ await page.locator("#g-delete-completed").click();
+ await page.waitForFunction(()=>document.querySelector(".generic-warning")?.textContent?.includes("No completed history was cleared"));
+ yes((await dbRecords(page)).filter(x=>x.recordType==="generic-attempt"&&x.finishedAt!==null).length===2,
+  "Competing version allowed partial completed-history deletion");
+ await page.reload({waitUntil:"load"});
+ await page.locator("#g-history").click();
+ prompts.length=0;
  await page.locator("#g-delete-completed").click();
  await page.waitForFunction(()=>document.querySelector("#g-delete-completed")?.disabled===true);
  yes(prompts.length===2,"Bulk deletion must require two confirmations");
