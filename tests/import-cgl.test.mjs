@@ -20,13 +20,15 @@ test("imports all five CGL source and reviewed editions with revision-pinned key
   }
 });
 
-test("source invalid status is never automatically promoted in reviewed edition", () => {
+test("v11-reviewed editorial policy: source invalid without a patch is scored as caution", () => {
   for (let i = 0; i < library.length; i += 2) {
     const source = library[i], reviewed = library[i + 1];
     for (let j = 0; j < source.questions.length; j++) {
       const original = source.questions[j], corrected = reviewed.questions[j];
-      if (original.editorial.status === "invalid" && corrected.editorial.status !== "corrected") {
-        assert.equal(corrected.editorial.status, "invalid");
+      if (original.editorial.status === "invalid") {
+        assert.equal(corrected.editorial.status,
+          patches[source.paper.paperId]?.[String(j+1)]?.status ?? "caution");
+        assert.equal(original.editorial.status,"invalid","Source edition must remain unchanged");
       }
     }
   }
