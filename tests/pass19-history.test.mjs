@@ -100,6 +100,12 @@ test("F03: separate exam identities and differently structured papers cannot pro
  const changedScheme=structuredClone(b);
  changedScheme.frozen.paper.scoring.defaultRule.correctMarks=7;
  assert.equal(crossPaperMarksPriorities([a,changedScheme]),null);
+ const changedTiming=structuredClone(b);
+ changedTiming.frozen.paper.timing.transition="manual";
+ assert.equal(crossPaperMarksPriorities([a,changedTiming]),null);
+ const changedNavigation=structuredClone(b);
+ changedNavigation.frozen.paper.navigation.questionNavigation="forward-only";
+ assert.equal(crossPaperMarksPriorities([a,changedNavigation]),null);
 });
 
 test("F03: negative earned marks stay visible while progress width can be clamped for display",()=>{
