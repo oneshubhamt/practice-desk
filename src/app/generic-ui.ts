@@ -653,8 +653,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        '<div><span>'+escapeText(item.text)+assetHTML(display,item.assetIds)+'</span></div>').join("")+'</div>':"";
    return passage+promptAssets+options+booleanOptions+matches;
  }
- function sourceReviewHTML(saved:GenericAttempt,target:QuestionRevision):string{
-   const ref=saved.sourceReviewReference;
+ function sourceReviewHTML(saved:GenericAttempt,target:QuestionRevision,
+   ref:NonNullable<GenericAttempt["sourceReviewReference"]>|null):string{
    const entry=ref?.entries.find(item=>item.targetQuestionRevisionId===target.id);
    if(!ref||!entry)return "";
    const original=entry.sourceQuestion;
@@ -697,6 +697,24 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    const paper=attempt.frozen.paper,s=attempt.result??scoreAttempt(paper,attempt.frozen.key,attempt.frozen.questions,
       attempt.state.responses,new Date().toISOString());
    const qs=new Map(attempt.frozen.questions.map(q=>[q.id,q]));
+   // New attempts carry a frozen original-text/media snapshot. For older
+   // overhaul CGL attempts only, permit a read-only comparison if the immutable
+   // bundled source paper AND source key revision exactly match the previously
+   // saved original-key reference. Never fabricate or persist this fallback.
+   const originalReference=attempt.sourceKeyReference;
+   const pinnedOriginal= !attempt.sourceReviewReference&&
+     attempt.frozen.snapshot.examId==="ssc-cgl"&&originalReference?
+       cachedCglPackages(sources,patches,solutions).find(p=>
+         p.paper.edition==="source"&&p.paper.id===originalReference.sourcePaperRevisionId&&
+         p.answerKey.id===originalReference.sourceAnswerKeyRevisionId&&
+         p.paper.paperId===attempt!.frozen.paper.paperId):undefined;
+   const frozenTarget:ExamPackage={format:"practice-desk-exam",version:1,
+     examId:attempt.frozen.snapshot.examId,title:"Frozen reviewed attempt",
+     paper:attempt.frozen.paper,answerKey:attempt.frozen.key,
+     questions:attempt.frozen.questions,stimuli:attempt.frozen.stimuli,
+     assets:attempt.frozen.assets};
+   const reviewSource=attempt.sourceReviewReference ??
+     (pinnedOriginal?createSourceReviewReference(frozenTarget,pinnedOriginal):null);
    const grades=manualGradeSummary(attempt);
    const selfAssessed=s.snapshot.earnedMarks+grades.total;
    const originalKey=sourceKeyScore(attempt);
@@ -822,7 +840,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
           "Visual solving method":"Solving approach & worked reasoning")+
          '</summary><div class="worked-solution-body">'+
          escapeText(explanation)+'</div></details>':"")+
-       sourceReviewHTML(attempt!,q)+
+       sourceReviewHTML(attempt!,q,reviewSource)+
        (provenance.length?'<p class="fine">Sources: '+provenance.map(source=>
          '<a href="'+escapeText(source.url)+'" target="_blank" rel="noopener noreferrer">'+
          escapeText(source.title)+'</a>').join(' · ')+'</p>':"")+
