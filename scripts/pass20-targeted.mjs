@@ -54,6 +54,7 @@ try{
  ensure((await page.locator("#g-preflight").innerText()).includes("50.00"),
    "Single 25-question mode shows wrong eligible maximum");
  await page.locator('[data-mode="free"]').click();
+ await page.locator("#g-exam-rules summary").click();
  help=await page.locator("#g-exam-rules").innerText();
  ensure(help.includes("One shared 60 min paper timer")&&help.includes("Pause control is available"),
    "Flexible mode did not update selected timing/rules");
