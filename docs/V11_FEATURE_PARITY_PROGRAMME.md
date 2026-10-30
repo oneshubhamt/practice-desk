@@ -1,10 +1,10 @@
 # v11 feature-parity restoration programme — Passes 11–16
 
-> **CURRENT, AUTHORITATIVE FEATURE-PARITY PROGRAMME · 30 October 2026 · PASSES 11–15 AUTOMATED VERIFIED; PASS 16 OPEN · PHYSICAL DEVICE/SCREEN READER SIGNOFF PENDING**
+> **CURRENT, AUTHORITATIVE FEATURE-PARITY PROGRAMME · 30 October 2026 · PASSES 11–16 AUTOMATED VERIFIED · CONDITIONAL PARITY ACCEPTANCE · PHYSICAL DEVICE/SCREEN READER SIGNOFF PENDING**
 >
 > New source-to-source audit performed against frozen `baseline/v11` commit `e661822d865927e89a837790c1c6bc1cfc2562a6` and `overhaul` commit `5b9dce604faef10a714415341c7da5116bf6ff8a`. This document is the source of truth for **v11 feature parity** from Pass 11 onward, superseding the old [Pass 9 parity ledger](V11_PARITY_LEDGER.md). The plan was documentation-only at creation; Pass 11 was subsequently implemented and verified.
 >
-> **Verdict: full v11 UI/functionality parity NOT achieved. Release signoff NOT granted.** Existing automated success is necessary but insufficient: the source audit identified missing controls, review detail, history management, analytics and presentation differences. Physical device, assistive-technology and side-by-side rendered-visual checks remain outstanding.
+> **Current verdict (Pass 16): automated v11 material UI/functionality parity conditionally accepted following independent source and real browser comparison.** The preceding gaps were repaired across Passes 11–16; deliberate H08/H10 new-app exceptions remain. **Unconditional release/merge is NOT approved** without user authorization. Real device, Apple Safari, NVDA/VoiceOver and OS-kill/eviction tests remain unverified; automated side-by-side visual checks are completed. See [Pass 16 independent audit](PASS16_INDEPENDENT_AUDIT.md).
 
 ## 1. Scope, ground rules and evidence hierarchy
 
@@ -116,7 +116,7 @@
 
 | ID | Issue | Decision / handling |
 |---|---|---|
-| C01 | Source-invalid reviewed CGL item: 6 Oct 2026 Q62 is not patched; v11 reviewed transformer treated source invalid/caution as caution, whereas new importer retains invalid | **Do not silently alter scoring** to mimic old behavior. Examine source, audit rationale and original/reviewed semantics; document why exclusion or caution is warranted. Regression is a genuine score-policy difference. |
+| C01 | Source-invalid reviewed CGL item: 6 Oct 2026 Q62 unpatched, v11 reviewed status caution versus prior overhaul invalid exclusion | **DONE — user explicitly selected v11 reviewed caution scoring**. Original source remains invalid/excluded; reviewed CGL caution scores original published B, but notes clearly flag dispute and no independent correction. Confirmed against all 500 original/reviewed source questions and actual Q62 browser review. |
 | C02 | v11 backup v1 / local data migration | **Accepted out of scope**, because overhaul is a new product, not a migration of real production history; review only if user changes this. |
 | C03 | v11 newer-copy import replacement vs safer additive v3 | Retain additive v3 by default; document explicit difference, decide whether separate *review/replace* action is desirable. No blind overwrite. |
 | C04 | v11 score-based trends vs new observed accuracy | Add score-based view for **identical frozen paper/key/mode**; keep accuracy trends. Never compare arbitrary paper difficulties as if normalized scores were interchangeable. |
@@ -220,9 +220,9 @@ Remaining: <IDs still OPEN/UNVERIFIED; manual/device gates>
 | 13 — History & settings | **DONE — source + browser QA** | H01–H07/H09 DONE, H08 safe variation, H10 exclusion; V02/V06/V10 visual pending | [CI #40992327902](https://github.com/oneshubhamt/practice-desk/actions/runs/40992327902) |
 | 14 — Analytics | **DONE — source + multi-engine browser QA** | R04–R08 DONE; H07 preserved from Pass 13; C05 historic visits honest | [CI #40994179081](https://github.com/oneshubhamt/practice-desk/actions/runs/40994179081) · 90 Node, Chromium/Firefox/Linux WebKit |
 | 15 — Visual/AT | **AUTOMATED DONE — source + paired screenshot QA** | V01–V10 browser behavior audited; real device/NVDA/VoiceOver approval UNCHECKED | [Pass 15 visual audit](PASS15_VISUAL_AUDIT.md) · [CI #40998410079](https://github.com/oneshubhamt/practice-desk/actions/runs/40998410079) · 390/768/1280, figure/passage, zoom, contrast, keyboard, 85–140% and light/dark screenshots |
-| 16 — Independent final audit | PLANNED | NO PARITY SIGNOFF | Requires de novo source+browser review |
+| 16 — Independent final audit | **AUTOMATED COMPLETE — CONDITIONAL ACCEPTANCE** | E/R/H/V/C re-audited; C01 user-approved v11 policy, imported scoring ceiling repaired, Learning Desk announcement fixed; human/AT/platform gates UNCHECKED | [De novo audit](PASS16_INDEPENDENT_AUDIT.md) · [CI #41001307679](https://github.com/oneshubhamt/practice-desk/actions/runs/41001307679) 95 Node tests, 10 CGL editions and Q62 in new browser E2E |
 
-**Next step:** Pass 16 — independent de novo source and rendered parity audit. Preserve all Pass 15 screenshot evidence; collect physical-device and screen-reader approvals separately, and do not imply they have been signed off.
+**Next step:** No planned engineering passes remain. Maintain [Pass 16 conditional acceptance and outstanding manual gates](PASS16_INDEPENDENT_AUDIT.md); obtain user permission before any production merge. Do not claim actual iOS/macOS Safari, physical-device or NVDA/VoiceOver testing completed.
 
 
 ## Pass 11 checkpoint — 30 October 2026
@@ -354,3 +354,11 @@ Remaining: <IDs still OPEN/UNVERIFIED; manual/device gates>
 **Direct finding F16-03 (navigation/accessibility):** `generic-ui.ts` `draw()` returns early for `view="learning"` before updating `lastScreenKey`, targeted screen-reader `#screen-announcement` or route focus. The newly added Pass 15 route announcement is therefore absent for notebook navigation; check and fix without interfering with the Learning Desk's own focus/timing behavior.
 
 **Status:** source re-audit IN PROGRESS; design/implementation/targeted independent QA OPEN. Retain manual Android/iOS/macOS Safari, NVDA/VoiceOver, actual storage eviction, OS kill and subjective visual approval as UNCHECKED. Preserve H08 additive backup and H10 accepted no-v11-migration decisions.
+
+## Pass 16 closure — user-approved decisions supersede opening hypotheses
+
+**Audit → analyze → implement → reconcile → targeted QA: DONE** (source/browser, not unverified physical or AT tests). [Read the complete independent fresh-source audit and release boundaries](PASS16_INDEPENDENT_AUDIT.md). The original Pass 16 scratchpad recorded *pre-approval* hypotheses that initially recommended excluding unpatched invalid Q62 and preserving hypothetical pre-release aberrant partial-credit records. The user explicitly **overrode both**: (1) use the **v11 reviewed caution scoring policy**, retain original publisher B despite dispute and show post-result caution; (2) fix overscoring directly because the app is new, has no live user data, and needs no old-score migration. Those initial cautions are **superseded**, not live objections. The original source edition still excludes Q62; the reviewed edition scores the published B (+2) and marks D (−0.5), while explaining that the published key is disputed.
+
+**Independent actual-source findings and fixes:** F16-01 CGL edition mapping in `src/content/import-cgl.ts`, F16-02 generic partial cap in `src/engine/scoring.ts`, and F16-03 scoped Learning Desk route status/focus in `src/app/generic-ui.ts`. Original CGL JSON/patch/solution banks unchanged, no separate runtime, no changes to CGL scoring constants. **All five published CGL papers** tested at all 100 source/reviewed question mappings; ten source/reviewed editions plus real Q62 run as independently authored `file://` browser tests. Adversarial non-CGL six-kind scoring tests ensure incomplete matching/multiple-select cannot earn above full marks. `tests/import-cgl.test.mjs` updated to user-authorized policy, not weakened to skip the case. `tests/pass16-independent.test.mjs`, `scripts/pass16-independent.mjs` and CI workflow are new acceptance gates.
+
+**Proven source/CI checkpoint:** [CI #41001307679](https://github.com/oneshubhamt/practice-desk/actions/runs/41001307679) passed **95 Node tests**, established Passes 11–15 end-to-end checks, new Pass 16 ten-edition browser matrix and actual reviewed disputed-key scoring, Chromium platform checks, Firefox and Linux WebKit. This checkpoint is the verified **source implementation**. Final documentation-only HEAD must separately pass CI before declaring exact-HEAD success. User-signoff and real platform gates remain unverified and separate from automated acceptance. `main` and `baseline/v11` remain untouched.
