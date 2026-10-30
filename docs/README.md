@@ -6,7 +6,7 @@
 
 | Need | Canonical location | Type |
 |---|---|---|
-| **What to do next / what regressed?** | [Independent V11 source audit, 30 October 2026](audits/V11_SOURCE_AUDIT_2026-10-30.md) | Active findings, severity, code references, retest gates |
+| **What to do next / what regressed?** | [Independent V11 source audit, 30 October 2026](audits/V11_SOURCE_AUDIT_2026-10-30.md) | The controlling 25 findings and Passes 17–23 plan; **Section G is the implementer's persistent working scratchpad**, updated during each pass |
 | **Current architecture** | [Source topology, modules and lifecycle](architecture/CURRENT_ARCHITECTURE.md) | Current system, not historic proposals |
 | **Data and scoring integrity rules** | [Data contracts](architecture/DATA_CONTRACTS.md) | Current contracts and known implementation gaps |
 | **Non-negotiable engineering choices** | [Decision/policy register](decisions/POLICY_REGISTER.md) | Binding user-approved decisions, accepted exceptions |
