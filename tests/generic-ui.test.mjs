@@ -63,6 +63,7 @@ test("shared renderer enforces paused, forward-only and no-early-submit policies
  assert.match(html,/id="g-flag"[^>]*disabled/);
  assert.match(html,/id="g-submit" disabled/);
  const sectionedPaper={...pkg.paper,
+   navigation:{...pkg.paper.navigation,sectionNavigation:"sequential-locked"},
    timing:{kind:"sectional",sectionLimits:[{sectionId:"s1",durationMs:10000},{sectionId:"s2",durationMs:10000}],transition:"automatic",allowEarlySubmit:false,pausePolicy:"forbidden"}
  };
  const sectioned=validateExamPackage({...pkg,paper:{...sectionedPaper,contentHash:paperRevisionHash(sectionedPaper)}});
