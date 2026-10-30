@@ -531,3 +531,16 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
  .generic-sections,.exam-sections{margin-top:9px!important;margin-bottom:11px!important}
  .exam-progress{margin-bottom:9px}
 }
+
+/* Pass 22: draft answers are explicitly unscored; conflicting native matching
+   selections stay editable via mouse and keyboard, with direct row feedback. */
+.generic-response-group .generic-inline-warning{
+ margin:9px 0 0;padding:9px 12px;border-left:3px solid var(--amber);
+ background:var(--soft);color:var(--ink);line-height:1.5
+}
+#g-match-feedback{min-height:1.2em;margin:9px 0;color:var(--ink);font-size:.9em;line-height:1.5}
+.generic-matches select.match-conflict,
+.generic-matches select[aria-invalid="true"]{
+ outline:2px solid var(--bad);outline-offset:2px;
+ background:var(--soft)
+}
