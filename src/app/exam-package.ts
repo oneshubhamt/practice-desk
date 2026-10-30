@@ -84,13 +84,17 @@ export function builtinCglPackages(sources: SourcePaperBank, patches: ReviewPatc
      const explanation = merged.explanation || solutions[paper.paperId]?.[String(n)] || "";
      if (explanation) explanations[question.id] = explanation;
      const stemId = `${paper.paperId}:q:${n}:stem`;
-     const asImage=(id:string, uri:string):ImageAsset=>({
+     // The immutable packaged media should identify its question/option to
+     // assist screen readers in both the live paper and frozen post-test review.
+     const asImage=(id:string, uri:string, altText:string):ImageAsset=>({
        id:id as ImageAsset["id"],mediaType:(uri.match(/^data:(image\/[a-z]+);/)?.[1]??"image/webp") as ImageAsset["mediaType"],
        dataUri:uri,contentHash:sha256(Uint8Array.from(atob(uri.slice(uri.indexOf(",")+1)),char=>char.charCodeAt(0))) as ImageAsset["contentHash"],
+       altText
      });
-     if (merged.images.stem) assets.push(asImage(stemId,merged.images.stem));
+     if (merged.images.stem) assets.push(asImage(stemId,merged.images.stem,"Diagram for question "+n));
      merged.images.options?.forEach((uri,i)=>{
-       if(uri)assets.push(asImage(`${paper.paperId}:q:${n}:option:${i}`,uri));
+       if(uri)assets.push(asImage(`${paper.paperId}:q:${n}:option:${i}`,uri,
+         "Image for option "+String.fromCharCode(65+i)+" of question "+n));
      });
    }
    return {format:"practice-desk-exam",version:1,examId:"ssc-cgl" as ExamId,
