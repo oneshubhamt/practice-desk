@@ -281,9 +281,11 @@ try{
  await page.locator("#g-attempt-evidence").waitFor();
  const revisedCompleted=await find(page,x=>x.id===revision.id&&x.finishedAt!==null);
  fail(revisedCompleted.result.items.length===1,"Revision exam did not complete as a normal attempt");
- fail(await page.locator(".generic-review").count()===1,
-   "Revision results did not contain the frozen notebook question");
+ fail(await page.locator(".generic-review").count()===0,
+   "Lazy Review must not be rendered while Overview is selected");
  await page.locator('[data-result-tab="review"]').click();
+ fail(await page.locator(".generic-review").count()===1,
+   "Active Revision Review did not render the frozen notebook question");
  fail(await page.getByText("Notebook source:",{exact:false}).count()>0,
    "Revision review lost its origin metadata");
  await page.locator("#g-library").click();
