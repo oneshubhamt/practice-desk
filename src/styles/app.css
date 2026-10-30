@@ -405,3 +405,49 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
 .speed-not-classified{color:var(--muted)}
 @media(max-width:800px){.result-coaching{grid-template-columns:1fr}}
 @media(max-width:450px){.slow-link{align-items:flex-start;flex-direction:column;gap:4px}.slow-link>span:last-child{white-space:normal}}
+
+/* Pass 15 — responsive/AT restitution, scoped to the generic multi-exam app.
+   The route status is screen-reader-only, never a visually hidden control. */
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;
+ padding:0!important;margin:-1px!important;overflow:hidden!important;
+ clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.generic-workspace h1[tabindex="-1"]:focus{outline:none}
+.generic-workspace h1[tabindex="-1"]:focus-visible{outline:3px solid var(--focus);outline-offset:4px}
+.generic-workspace .generic-choice:focus-within{outline:3px solid var(--focus);outline-offset:2px}
+.generic-workspace .generic-choice:has(input:checked):focus-within{outline-color:var(--focus)}
+.generic-review summary:focus-visible,.help-rules summary:focus-visible{
+ outline:3px solid var(--focus);outline-offset:3px;border-radius:4px}
+.generic-workspace .generic-figure{height:auto}
+.generic-workspace .generic-prompt,.generic-review>strong,.archive-title,.display-panel{
+ overflow-wrap:anywhere}
+@media(max-width:550px){
+ .generic-workspace .generic-choice{min-height:44px}
+ .generic-workspace .btn,.generic-workspace .num{min-height:44px}
+ .generic-sections .exam-section-tab{min-height:50px}
+ .result-tab{min-height:44px}
+ .history-open{min-height:44px}
+ .results-heading .row{width:auto}
+ .result-pane .scoregrid{gap:8px}
+ .result-pane .score{min-width:0;padding:12px}
+ .result-pane .score b{font-size:clamp(16px,5vw,24px);overflow-wrap:anywhere}
+ .history-filters label,.history-management-grid .panel{min-width:0}
+}
+@media(max-width:300px){
+ header .wrap{padding:10px;gap:8px}
+ .brand{min-width:0;gap:7px}
+ .brand b{font-size:15px}.brand small{font-size:9px}
+ .symbol{width:32px!important;height:32px!important;flex:none}
+ main{padding:10px 8px 35px}
+ .pad{padding:12px}
+ .display-panel{width:calc(100vw - 16px);right:-1px;padding:12px}
+ .display-control{display:block;padding:10px 0}
+ .display-size{width:100%;margin-top:7px}
+ .display-size .btn{flex:1;min-width:0;padding:5px}
+ .display-theme-choices{flex-wrap:wrap}
+ .exam-header-actions{gap:6px}
+ .exam-clock{min-width:100px;padding:7px}
+ .result-pane .scoregrid,.home-stats,.history-summary{grid-template-columns:1fr}
+ .generic-palette{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+ .generic-sections .exam-section-tab{flex-basis:100%}
+ .result-coaching{gap:8px}
+}
