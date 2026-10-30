@@ -214,7 +214,7 @@ export function renderModelExam(
      paper.timing.kind==="sectional"?paper.timing.sectionLimits.find(t=>t.sectionId===section.id)?.durationMs??null:null;
    const elapsed=paper.timing.kind==="sectional"?state.sectionElapsedMs:state.elapsedMs;
    const expired=state.status==="section-expired";
-   const lockedWhole=paper.timing.kind==="whole-paper"&&paper.navigation.sectionNavigation==="sequential-locked";
+   const lockedWhole=paper.timing.kind!=="sectional"&&paper.navigation.sectionNavigation==="sequential-locked";
    const hasNextSection=state.sectionIndex < paper.sections.length-1;
    const untimedSection=paper.timing.kind==="sectional"&&
      paper.timing.sectionLimits.find(limit=>limit.sectionId===section.id)?.durationMs===null;
@@ -1305,7 +1305,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    root.querySelector<HTMLButtonElement>("#g-submit")!.onclick=()=>{
      const p=attempt!.frozen.paper, st=attempt!.state;
      const sectional=p.timing.kind==="sectional";
-     const lockedWhole=p.timing.kind==="whole-paper"&&p.navigation.sectionNavigation==="sequential-locked";
+     const lockedWhole=p.timing.kind!=="sectional"&&p.navigation.sectionNavigation==="sequential-locked";
      const continuing=(sectional||lockedWhole)&&st.sectionIndex<p.sections.length-1;
      const expired=st.status==="section-expired";
      if(!expired&&!confirm(continuing?"Close this section and advance? You cannot return.":"Submit this exam and view results?"))return;
