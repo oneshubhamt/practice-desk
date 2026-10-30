@@ -357,3 +357,29 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
  .generic-sections .exam-section-tab{flex-basis:calc(50% - 5px)}
  .exam-header-actions #g-exam-full{white-space:normal}
 }
+
+/* Pass 12 — accessible, exam-generic completed-answer comparison. */
+.generic-review .review-opt{cursor:default;white-space:pre-wrap}
+.generic-review .review-opt.review-option-correct{
+ border:1px solid var(--good);background:color-mix(in srgb,var(--good) 11%,var(--panel))
+}
+.generic-review .review-opt.review-option-incorrect{
+ border:1px solid var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--panel))
+}
+.review-option-label{font-weight:740;font-size:.87em}
+.review-option-correct .review-option-label{color:var(--good)}
+.review-option-incorrect .review-option-label{color:var(--bad)}
+.generic-review .change-log,.generic-review .worked-solution{
+ margin:14px 0;padding:12px 15px;border:1px solid var(--line);
+ border-radius:10px;background:var(--soft)
+}
+.generic-review .change-log summary,.generic-review .worked-solution summary{
+ cursor:pointer;font-weight:750;line-height:1.5
+}
+.generic-review .change-body,.generic-review .worked-solution-body{
+ margin-top:13px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere
+}
+.generic-review .source-review .generic-prompt{font-size:1em;white-space:pre-wrap}
+.generic-review .source-review .generic-choice{background:var(--panel)}
+.generic-review .worked-solution-body{border-top:1px solid var(--line);padding-top:12px}
+.score.standout b small{font-size:.55em;color:var(--muted);white-space:nowrap}
