@@ -56,6 +56,7 @@ const cssWide=async p=>p.evaluate(()=>{
   overflow:doc.scrollWidth>w+2,overflowing};
 });
 async function capture(p,edition,screen,viewport){
+ if(screen!=="corrected-review")await p.evaluate(()=>window.scrollTo(0,0));
  await p.screenshot({path:join(out,edition+"-"+viewport.name+"-"+screen+".png"),animations:"disabled"});
  const sizing=await cssWide(p);
  screens.push(edition+"-"+viewport.name+"-"+screen+".png");
@@ -77,6 +78,7 @@ async function exercise(edition,viewport,filepath){
   if(old)await page.locator("#paperSelect").selectOption(sourcePaper.id);
   else await page.locator("#g-papers").selectOption(revised.paper.id);
   await capture(page,edition,"library",viewport);
+  const title100=await page.locator("#app h1").evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
   await page.locator("#displayTrigger").click();
   await capture(page,edition,"display-open",viewport);
   ensure(await page.locator("#themeLight").getAttribute("aria-pressed")==="true",
@@ -86,13 +88,46 @@ async function exercise(edition,viewport,filepath){
   await page.locator("#themeLight").click();
   for(let i=0;i<8;i++)await page.locator("#fontMore").click();
   ensure(await page.locator("#fontReset").innerText()==="140%",edition+" text scale 140% not reached");
+  const title140=await page.locator("#app h1").evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
+  if(!old)ensure(title140>title100*1.3,
+    "Overhaul heading did not scale with user 140% preference");
   await capture(page,edition,"display-text140",viewport);
-  for(let i=0;i<8;i++)await page.locator("#fontLess").click();
+  for(let i=0;i<11;i++)await page.locator("#fontLess").click();
+  ensure(await page.locator("#fontReset").innerText()==="85%",edition+" text scale 85% not reached");
+  await capture(page,edition,"display-text85",viewport);
+  for(let i=0;i<3;i++)await page.locator("#fontMore").click();
   await page.locator("#displayClose").click();
+  if(!old){
+    await page.locator("#displayTrigger").focus();
+    await page.keyboard.press("Enter");
+    ensure(await page.locator("#displayPanel").isVisible(),"Display menu cannot be opened by keyboard");
+    await page.keyboard.press("Escape");
+    ensure(await page.locator("#displayPanel").isHidden(),"Escape did not dismiss Display menu");
+    ensure(await page.evaluate(()=>document.activeElement?.id)==="displayTrigger",
+      "Display keyboard dismissal failed to restore trigger focus");
+  }
   await page.locator('[data-mode="free"]').click();
   await page.locator(old?"#start":"#g-start").click();
   await page.locator(old?".choices .choice":"input[data-choice]").first().click();
   await capture(page,edition,"exam-answered",viewport);
+  const figure=sourcePaper.questions.find(q=>q.n<=25&&
+    (Boolean(q.images?.stem)||(q.images?.options??[]).some(Boolean)));
+  if(figure){
+    await page.locator(old?'[data-num="'+(figure.n-1)+'"]':'[data-q="'+(figure.n-1)+'"]').click();
+    await capture(page,edition,"exam-figure",viewport);
+    ensure(await page.locator(old?".question img":".exam-question img").count()>0,
+      edition+" figure option/stem image missing");
+  }
+  const passage=sourcePaper.questions.find(q=>q.passageRef);
+  if(passage){
+    const sectionIndex=Math.floor((passage.n-1)/25),qIndex=(passage.n-1)%25;
+    await page.locator('[data-section="'+sectionIndex+'"]').click();
+    await page.locator(old?'[data-num="'+qIndex+'"]':'[data-q="'+qIndex+'"]').click();
+    await capture(page,edition,"exam-passage",viewport);
+    ensure(await page.locator(old?".passage":".exam-question .generic-stimulus").count()>0,
+      edition+" shared reading passage missing");
+    await page.locator('[data-section="0"]').click();
+  }
   if(auditQ<=25){
    await page.locator(old?'[data-num="'+(auditQ-1)+'"]':'[data-q="'+(auditQ-1)+'"]').click();
    await capture(page,edition,"exam-audited-question",viewport);
@@ -101,6 +136,28 @@ async function exercise(edition,viewport,filepath){
   await page.locator(old?"[data-tab='insights']":"#result-overview").waitFor();
   await capture(page,edition,"results-overview",viewport);
   await page.locator(old?"[data-tab='review']":"[data-result-tab='review']").click();
+  if(!old){
+    ensure((await page.locator("#screen-announcement").textContent())?.includes("Question review"),
+      "Review panel activation did not announce its destination");
+    ensure(await page.evaluate(()=>document.activeElement?.id)==="result-tab-review",
+      "Result tab failed to retain keyboard focus after rerender");
+    // Native tab semantics: ArrowRight and ArrowLeft must track the active view
+    // rather than leaving focus behind on an inactive tab.
+    await page.keyboard.press("ArrowRight");
+    ensure(await page.locator("#result-tab-timing").getAttribute("aria-selected")==="true"&&
+      await page.evaluate(()=>document.activeElement?.id)==="result-tab-timing",
+      "Result tab keyboard ArrowRight did not move selection and focus");
+    await page.keyboard.press("ArrowLeft");
+    ensure(await page.locator("#result-tab-review").getAttribute("aria-selected")==="true"&&
+      await page.evaluate(()=>document.activeElement?.id)==="result-tab-review",
+      "Result tab keyboard ArrowLeft did not move selection and focus");
+    ensure(await page.evaluate(()=>matchMedia("(prefers-reduced-motion: reduce)").matches),
+      "Reduced-motion browser preference not exposed");
+    const motion=await page.locator("#g-review-top").evaluate(el=>
+      getComputedStyle(el).transitionDuration);
+    ensure(motion.split(",").every(x=>parseFloat(x)<=0.001),
+      "Reduced-motion setting did not suppress button animations");
+  }
   await capture(page,edition,"results-review",viewport);
   if(old){
    const q=page.locator("#review-"+auditQ);
