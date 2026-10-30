@@ -61,6 +61,11 @@ try{
   buffer:Buffer.from(JSON.stringify(pkg))});
  await page.waitForFunction(expected=>document.querySelector("#g-papers")?.value===expected,
   pkg.paper.id);
+ await page.reload({waitUntil:"load"});
+ await page.waitForFunction(expected=>document.querySelector("#g-papers")?.value===expected,
+  pkg.paper.id);
+ yes(await page.locator("#g-papers").inputValue()===pkg.paper.id,
+  "Persisted imported exam selection was lost during asynchronous startup");
  await page.locator("#g-papers").selectOption(reviewed);
  await page.waitForFunction(expected=>document.querySelector("#g-papers")?.value===expected,
   reviewed);
