@@ -462,6 +462,53 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
 .generic-workspace h2{font-size:calc(19px * var(--type-scale))}
 .generic-workspace h3{font-size:calc(15px * var(--type-scale))}
 
+/* Pass 20: non-obstructing global Display access, including scroll-heavy result and
+   history routes. A sticky header consumes layout space rather than covering
+   question text as a fixed floating pill would. The existing focusable popover
+   remains anchored to the trigger and scrolls inside short viewports. */
+header{position:sticky;top:0;z-index:100}
+html{scroll-padding-top:96px}
+header .display-tools{position:relative}
+header .display-panel{max-height:min(620px,calc(100dvh - 105px));
+ overflow-y:auto;overscroll-behavior:contain}
+html.immersive:has(#g-exam-full) header{display:block}
+html.immersive:has(#g-exam-full) header .wrap{min-height:52px;padding:7px 15px}
+html.immersive:has(#g-exam-full) header .brand small,
+html.immersive:has(#g-exam-full) header .header-offline{display:none}
+@media(max-width:430px){
+ header .wrap{min-height:54px;padding:8px 11px;gap:7px}
+ header .header-offline{display:none}
+ header .brand small{display:none}
+ header .symbol{width:32px;height:32px}
+ header .brand b{font-size:16px}
+ header .display-panel{max-height:calc(100dvh - 92px)}
+}
+@media(max-width:300px){
+ header .display-panel{left:auto;right:0;max-width:calc(100vw - 20px)}
+ header .brand{gap:6px}
+ header .display-trigger{padding:6px 8px;gap:5px}
+ header .display-trigger span{font-size:11px}
+}
+.paper-preflight{border-top:1px solid var(--line);margin-top:17px;padding-top:16px;display:grid;gap:9px}
+.paper-preflight h3{margin:0}
+.paper-preflight p{margin:0}
+.preflight-scoreline{display:flex;align-items:baseline;flex-wrap:wrap;gap:10px;
+ border:1px solid var(--line);background:var(--soft-blue);border-radius:10px;padding:12px 14px}
+.preflight-scoreline strong{font-size:calc(26px * var(--type-scale));font-variant-numeric:tabular-nums}
+.preflight-scoreline span{font-size:.89em;color:var(--muted);font-weight:650}
+.preflight-rule{line-height:1.55}
+.preflight-provenance{border-left:3px solid var(--blue);padding-left:11px;color:var(--ink)}
+.help-rules-body{margin-top:15px}
+.help-rules-body h3{font-size:calc(15px * var(--type-scale));margin:16px 0 6px}
+.help-rules-body ul{padding-left:22px;margin:6px 0 16px}
+.help-rules-body li{margin:6px 0}
+.help-rules-body p{margin-bottom:13px}
+.app-independent-footer{background:var(--soft);border-top:1px solid var(--line);
+ margin-top:12px;padding:19px 18px;color:var(--muted)}
+.app-independent-footer .wrap{max-width:1160px;margin:auto;display:block;padding:0}
+.app-independent-footer b{display:block;color:var(--ink);font-size:.88em;margin-bottom:5px}
+.app-independent-footer p{max-width:1000px;font-size:.79em;margin:0;line-height:1.55}
+
 /* Pass 15 screenshot audit: mobile controls previously wrapped the immersive
    toggle onto a whole extra line above the question. Keep all three usable. */
 @media(min-width:301px) and (max-width:550px){
