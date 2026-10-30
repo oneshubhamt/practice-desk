@@ -1,22 +1,20 @@
-# Practice Desk — offline generic examination studio
+# Practice Desk — offline examination studio
 
-**Development branch:** `overhaul`. **Frozen feature-parity baseline:** `baseline/v11`. The current product is a self-contained HTML practice application that runs directly through `file://` with no login, server, analytics or runtime internet access.
+**Development branch:** `overhaul` · **frozen comparison:** `baseline/v11`.
 
-## Documentation — read in this order
+Practice Desk is a single-file offline exam application with a typed six-kind generic engine, built-in original/reviewed SSC CGL papers, imported exams, frozen source/answer-key revisions, configurable scoring and timing, post-submit corrections, detailed history, validated backup v3, learning notebook, FSRS-7 and evidence-based practice.
 
-1. **[Canonical engineering record, Passes 4–16](docs/ENGINEERING_RECORD.md):** consolidated historical audit, implementation rationale, acceptance decisions, source-parity objective matrix and frozen data-model contracts. Older per-pass files were consolidated; their exact contents remain in Git history at [the pre-consolidation source tree](https://github.com/oneshubhamt/practice-desk/tree/d4c36f9286059af970be342a7a894415517087aa/docs).
-2. **[Independent v11 source audit](docs/V11_INDEPENDENT_SOURCE_AUDIT.md)** — fresh comparison of `baseline/v11` and `overhaul`; separate from earlier fixtures/QA. Until its findings have been closed, do not infer complete feature parity from pass checkmarks.
-3. [Contributor instructions](AGENTS.md) — mandatory safety, branches and source-first working loop.
+## Documentation and source audit
 
-## Product capabilities
+**[Read the documentation index](docs/README.md)** for the current architecture, data contracts, engineering decisions, complete Passes 4–16 historical record, and an independent **source-to-source v11 versus overhaul audit**.
 
-A single typed six-kind exam runtime supports the published SSC CGL source/reviewed editions and imported generic papers; strict/free/single-section test modes; source-vs-edited question/key/media comparison after test completion; immutable score, timer and attempt data; reviewed answer explanations, optional self-graded writing; history, saved exam-selection preferences and additive checksum-verified backup v3; learning notebook, FSRS-7 self-rated cards, revision tests and bounded evidence-based analytics.
+**Current finding:** The October 30 independent source audit identifies **material behavior and user-interface regressions** and **unsupported imported exam-rule combinations**. Overhaul is architecturally and functionally broader, but **full v11-superset feature parity has not yet been established**. The current corrective worklist is [the independent audit](docs/audits/V11_SOURCE_AUDIT_2026-10-30.md). Do not treat passing Pass 16 automated fixtures as a release-parity signoff.
 
-The frozen v11 is a **feature floor**, not an instruction to reintroduce its monolithic runtime or less-safe storage policies. Intentional exceptions include **no migration of old v11 history**, **safe additive backup instead of replacement**, and the user's reviewed-CGL `caution` policy for disputed published keys.
+Historical source and earlier separate Markdown records remain available in Git at [pre-consolidation `d4c36f928605`](https://github.com/oneshubhamt/practice-desk/tree/d4c36f9286059af970be342a7a894415517087aa/docs), and their full decisions/worklogs are consolidated in [Passes 4–16 history](docs/history/PASSES_04_16.md).
 
-## Build and inspect
+## Build and runtime
 
-Requires Node.js 24.x.
+Requires Node.js 24.x; this is an offline **`file://`** app with no account, analytics or runtime server.
 
 ```bash
 npm install --no-audit --no-fund
@@ -25,8 +23,8 @@ node scripts/smoke-offline.mjs
 node scripts/pass16-independent.mjs
 ```
 
-Build creates `Practice_Desk_Offline_Mock_Tests.html`. Never hand-edit the generated distribution. Primary source is `src/`: `app/` for UI and import, `domain/` for schema and integrity, `engine/` for sessions/scores, `history/` for persistence/backup, `learning/` for study evidence, `content/` for original immutable published data and separate patches/solutions, `styles/` and `template.html` for presentation.
+Generated distribution: `Practice_Desk_Offline_Mock_Tests.html` (do **not** hand edit). Code: `src/content/` published original banks/patches; `src/domain/` schema and integrity; `src/engine/` timing and scoring; `src/history/` frozen records/backup; `src/learning/` FSRS and evidence; `src/app/` UI controller and history/results; `src/styles/` CSS and `src/template.html`.
 
-## Release boundary
+## Release safety
 
-**Do not merge into `main` without explicit authorization.** Real Android/iOS and macOS Safari, NVDA/VoiceOver, physical data-loss/OS-kill, full keyboard-only manual usability and human visual preference are not certified by headless tests. Source parity must be determined by an independent code review, not existing QA fixture results.
+Write only to `overhaul`. Preserve `main` and `baseline/v11`. No migration of old v11 user records, and v3 backups merge additively without silent overwrites, by explicit policy. CGL 6 October Q62 retains the disputed published B in *reviewed caution* scoring while excluding the original invalid item, as specifically approved. Manual Safari/Android/iOS/assistive technology, OS-kill/eviction and human design signoff are outstanding. **No merge without user authorization.**
