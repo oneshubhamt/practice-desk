@@ -721,12 +721,14 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    const grades=manualGradeSummary(attempt);
    const selfAssessed=s.snapshot.earnedMarks+grades.total;
    const originalKey=sourceKeyScore(attempt);
+   const scorePrecision=paper.scoring.decimalPlaces??2;
+   const markLabel=(value:number)=>value.toFixed(scorePrecision);
    const eligibleMax=scoreableMaximum(paper,attempt.frozen.key,attempt.frozen.questions);
    const paperSectionRows=sectionScoreSummaries(attempt,s).map(row=>
      '<tr><td>'+escapeText(row.title)+'</td><td>'+row.attempted+'/'+
        (row.questions-row.excluded)+'</td><td>'+row.correct+'</td><td>'+row.incorrect+
-       '</td><td>'+escapeText(row.marks.toFixed(2))+' / '+
-       escapeText(row.eligibleMax.toFixed(2))+'</td><td>'+
+       '</td><td>'+escapeText(markLabel(row.marks))+' / '+
+       escapeText(markLabel(row.eligibleMax))+'</td><td>'+
        minutes(row.foregroundMs)+'</td></tr>').join("");
    const evidence=attemptEvidence(attempt);
    const revisions=answerRevisionEvidence(attempt);
@@ -776,8 +778,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
     resultTabsHTML(resultTab)+
     '<div class="result-pane" id="result-overview" role="tabpanel" aria-labelledby="result-tab-overview"'+(resultTab!=="overview"?" hidden":"")+'>'+
     '<section class="panel pad"><div class="scoregrid"><div class="score standout"><b>'+
-     escapeText(s.snapshot.earnedMarks.toFixed(2))+
-     ' <small>/ '+escapeText(eligibleMax.toFixed(2))+'</small></b>'+
+     escapeText(markLabel(s.snapshot.earnedMarks))+
+     ' <small>/ '+escapeText(markLabel(eligibleMax))+'</small></b>'+
      '<small>Audit-adjusted automated marks</small></div><div class="score"><b>'+s.snapshot.correctCount+
     '</b><small>Correct</small></div><div class="score"><b>'+s.snapshot.incorrectCount+
     '</b><small>Incorrect</small></div><div class="score"><b>'+s.snapshot.unansweredCount+
