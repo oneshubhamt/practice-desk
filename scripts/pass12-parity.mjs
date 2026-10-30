@@ -89,6 +89,8 @@ try{
  page.once("dialog",d=>d.accept());
  await page.locator("#g-submit").click();
  await page.locator("#result-overview").waitFor();
+ ok((await page.locator(".results-heading").innerText()).includes("Submitted by user"),
+   "Explicit early completion reason is not visible");
  const max=scoreableMaximum(reviewed.paper,reviewed.answerKey,reviewed.questions);
  ok((await page.locator(".score.standout").innerText()).includes("/ "+max.toFixed(2)),
   "CGL adjusted score max missing");
@@ -110,6 +112,15 @@ try{
   "Original key provenance missing");
  ok(await page.locator(".generic-review .generic-figure").count()>=5,
   "Figures not preserved across completed CGL reviews");
+ const withOptionImage=reviewed.questions.find(question=>
+   (question.content.kind==="single-choice"||question.content.kind==="multiple-select")&&
+   question.content.options.some(option=>option.assetIds?.length));
+ ok(withOptionImage&&
+   await page.locator('[data-review-id="'+withOptionImage.id+'"] .review-opt img').count()>0,
+   "Original option diagrams absent from the completed frozen review");
+ const solution=reviewed.questions.find(question=>Boolean(reviewed.explanations?.[question.id]));
+ ok(solution&&await page.locator('[data-review-id="'+solution.id+'"] details.worked-solution[open]').count()===1,
+   "Unanswered question with a worked solution should expand its explanation");
  ok(await page.locator("#g-review-top").count()===1,"Review Top action missing");
  await page.locator("#g-review-top").click();
  const oldRecord=(await stored(page)).find(x=>x.recordType==="generic-attempt"&&
