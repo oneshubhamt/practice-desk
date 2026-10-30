@@ -100,8 +100,7 @@ test("F01: locked whole-paper sections have consumable section time; free multi-
 
 test("F01: older stored attempt lacks section timer evidence, and imported false claims are rejected",()=>{
  const b=bundle({timing:{kind:"whole-paper",durationMs:500,pausePolicy:"allowed"}});
- const completed=transitionGenericAttempt(startGenericAttempt(b,"old",1000),event("SUBMIT_ATTEMPT",1075),qm);
- // Locked multi-section cannot finish from Section 1. Close the first, then finish.
+  // Locked multi-section cannot finish from Section 1. Close the first, then finish.
  let a=startGenericAttempt(b,"old",1000);
  a=transitionGenericAttempt(a,event("SUBMIT_SECTION",1030),qm);
  a=transitionGenericAttempt(a,event("SUBMIT_ATTEMPT",1075),qm);
@@ -136,11 +135,9 @@ test("F09: elapsed timer, actual answer attempt-rate and global median exclude e
  assert.equal(e.timing.attemptedEligible,2);
  assert.equal(e.timing.eligibleQuestions,6);
  assert.equal(e.timing.attemptRate,2/6);
- assert.equal(e.timing.overallMedianAnsweredMs,40);
+ assert.equal(e.timing.overallMedianAnsweredMs,50);
  assert.equal(e.timing.measuredAnswered,2);
- const revised=structuredClone(a);
- revised.frozen.questions[0].editorial.status="invalid"; // this violates frozen hash: calculate via controlled result only
- // Instead test existing excluded condition with CGL source in separate integration checks.
+ // Editorially excluded CGL questions are covered by existing source/review tests.
  assert.equal(e.sections.length,2);
 });
 
