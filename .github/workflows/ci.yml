@@ -34,6 +34,7 @@ jobs:
           path: artifacts/pass15-visual/
           if-no-files-found: warn
           retention-days: 30
+      - run: node scripts/pass16-independent.mjs
       - run: node scripts/pass10-platform.mjs chromium
       # On the development branch, publish the generated single-file distribution
       # only after all tests pass. main and baseline/v11 are never written.
