@@ -739,11 +739,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
           a.state.responses.filter(z=>z.response!==undefined).length+' answers · Resume →</small></button>').join("")+
       '</div>'+(pending.length>5?'<p class="fine">Showing the five most recent unfinished tests; all others are preserved in History.</p>':"")+
       '</section>':"")+
-     '<div class="home-stats">'+
-       [['Paper editions',packages.size],['Completed tests',complete.length],['Attempts in progress',pending.length],['Notebook cards',[...records.values()].filter(isLearning).length]]
-         .map(([name,value])=>'<div class="home-stat"><small>'+escapeText(name)+'</small><b>'+escapeText(value)+'</b></div>').join("")+
-     '</div>'+
-     '<div class="generic-layout home-grid"><section class="panel pad home-picker"><div class="section-header"><span class="eyebrow">01 · SET UP</span><h2>Start a practice session</h2></div>'+
+     '<div class="generic-layout home-grid"><section class="panel pad home-picker"><h2 class="sr-only">Start a practice session</h2>'+
      '<label class="picker" for="g-papers">Paper</label><select id="g-papers">'+options+'</select>'+
      (paired?'<label class="picker" for="g-edition">Edition</label>'+
        '<select id="g-edition" aria-label="Selected paper edition">'+
@@ -789,6 +785,12 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        '<div class="row generic-actions"><button class="btn" id="g-export-history"'+(loading?" disabled":"")+'>Export backup</button>'+
        '<button class="btn" id="g-import-history"'+(loading||fallbackConflict||storageFault?" disabled":"")+'>Import backup</button></div>'+
        '<input type="file" id="g-history-file" accept=".json,application/json" hidden></section></div>'+
+       // At desktop widths the user should see the exam setup, not four
+       // dashboard totals, first. Retain all counts after primary workflows.
+     '<div class="home-stats">'+
+       [['Paper editions',packages.size],['Completed tests',complete.length],['Attempts in progress',pending.length],['Notebook cards',[...records.values()].filter(isLearning).length]]
+         .map(([name,value])=>'<div class="home-stat"><small>'+escapeText(name)+'</small><b>'+escapeText(value)+'</b></div>').join("")+
+     '</div>'+
        (preflight?examRulesHTML(preflight):"");
  }
  function packageForAttempt(saved:GenericAttempt):ExamPackage|undefined{
