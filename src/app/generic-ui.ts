@@ -204,6 +204,9 @@ export function renderModelExam(
    const timeLimit=paper.timing.kind==="whole-paper"?paper.timing.durationMs:
      paper.timing.kind==="sectional"?paper.timing.sectionLimits.find(t=>t.sectionId===section.id)?.durationMs??null:null;
    const elapsed=paper.timing.kind==="sectional"?state.sectionElapsedMs:state.elapsedMs;
+   const expired=state.status==="section-expired";
+   const lockedWhole=paper.timing.kind==="whole-paper"&&paper.navigation.sectionNavigation==="sequential-locked";
+   const hasNextSection=state.sectionIndex < paper.sections.length-1;
    const progressValue=timeLimit!==null&&timeLimit>0?
      Math.min(100,100*elapsed/timeLimit):Math.min(100,100*answered/Math.max(1,total));
    const isLow=remaining!==null&&remaining<=60000;
@@ -223,6 +226,7 @@ export function renderModelExam(
      focused+'">'+(focused?"⛶ Exit full screen":"⛶ Full screen")+'</button></div></div>'+
      '<p id="g-fullscreen-status" role="status"></p>'+
      (warning?'<p class="generic-warning" role="status">'+escapeText(warning)+'</p>':"")+
+     (expired?'<p class="generic-warning" role="status">Section time has expired. Answers are locked. Select Continue to advance without using extra time.</p>':"")+
      '<section class="exam-progress"><div class="row between"><span class="fine">'+answered+' / '+total+' answered · '+visited+' viewed · '+flagged+' flagged</span>'+
        '<span class="fine">'+(timeLimit!==null?"Section timer":"Question coverage")+' · '+Math.round(progressValue)+'%</span></div>'+
        '<div class="progress-track exam-time-progress" role="progressbar" aria-valuenow="'+Math.round(progressValue)+
@@ -242,23 +246,26 @@ export function renderModelExam(
        ' · Paper Q'+escapeText(q.questionId.split(":").at(-1)):"")+'</p>'+
      stimulusHTML(assets,q)+'<h2 class="generic-prompt">'+escapeText(q.content.prompt)+'</h2>'+
      assetHTML(assets,q.content.assetIds)+
-     '<fieldset class="generic-response-group"'+(state.status==="paused"?" disabled":"")+'>'
+     '<fieldset class="generic-response-group"'+(state.status!=="running"?" disabled":"")+'>'
      +renderGenericControls(assets,q,response)+'</fieldset>'+
-     '<div class="row generic-actions exam-answer-actions"><button class="btn" id="g-clear"'+(!response||state.status==="paused"?" disabled":"")+'>Clear</button>'+
+     '<div class="row generic-actions exam-answer-actions"><button class="btn" id="g-clear"'+(!response||state.status!=="running"?" disabled":"")+'>Clear</button>'+
      '<button class="btn" id="g-flag" aria-pressed="'+Boolean(responsesById.get(q.id)?.flagged)+'"'+(!paper.navigation.allowFlagging||state.status==="paused"?" disabled":"")+'>Flag</button></div>'+
-     '<div class="row generic-actions exam-nav-actions"><button class="btn" id="g-prev"'+(!state.questionIndex||paper.navigation.questionNavigation==="forward-only"?" disabled":"")+'>← Previous</button>'+
-     '<button class="btn" id="g-next"'+(state.questionIndex===section.questionRevisionIds.length-1?" disabled":"")+'>Next →</button></div>'+
+     '<div class="row generic-actions exam-nav-actions"><button class="btn" id="g-prev"'+(expired||!state.questionIndex||paper.navigation.questionNavigation==="forward-only"?" disabled":"")+'>← Previous</button>'+
+     '<button class="btn" id="g-next"'+(expired||state.questionIndex===section.questionRevisionIds.length-1?" disabled":"")+'>Next →</button></div>'+
      '<div class="row generic-actions exam-submit-actions">'+
      (paper.timing.kind!=="untimed"&&paper.timing.pausePolicy==="allowed"?
-      '<button class="btn" id="g-pause">'+(state.status==="paused"?"Resume timer":"Pause timer")+'</button>':"")+
-     '<button class="btn danger" id="g-submit"'+(state.status==="paused"||(paper.timing.kind==="sectional"&&!paper.timing.allowEarlySubmit)?" disabled":"")+'>'+
-      (paper.timing.kind==="sectional"?"Submit section":"Submit exam")+'</button></div></section>'+
+      '<button class="btn" id="g-pause"'+(expired?" disabled":"")+'>'+(state.status==="paused"?"Resume timer":"Pause timer")+'</button>':"")+
+     '<button class="btn danger" id="g-submit"'+(state.status==="paused"||
+       (paper.timing.kind==="sectional"&&!paper.timing.allowEarlySubmit&&!expired)?" disabled":"")+'>'+
+      (expired?(hasNextSection?"Continue to next section":"Finish expired exam"):
+        paper.timing.kind==="sectional"?"Submit section":
+        lockedWhole&&hasNextSection?"Finish section →":"Submit exam")+'</button></div></section>'+
      '<aside class="panel pad exam-sidebar"><div class="row between"><h3>Question navigator</h3><span class="fine">'+
        section.questionRevisionIds.length+' questions</span></div>'+
       '<p class="fine">Select a question number to navigate within the current section.</p><div class="generic-palette">'+
       section.questionRevisionIds.map((qid,i)=>{
         const r=responsesById.get(qid);
-        const locked=paper.navigation.questionNavigation==="forward-only"&&i<state.questionIndex;
+        const locked=expired||(paper.navigation.questionNavigation==="forward-only"&&i<state.questionIndex);
         return '<button class="num '+(i===state.questionIndex?"here ":"")+(r?.response?"answered ":"")+
         (r?.flagged?"marked":"")+'" data-q="'+i+'" aria-current="'+(i===state.questionIndex?"step":"false")+'" aria-label="Question '+(i+1)+
         (r?.response?", answered":"")+(r?.flagged?", flagged":"")+'"'+(locked?" disabled":"")+'>'+(i+1)+'</button>';
@@ -810,6 +817,10 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    const paper=attempt.frozen.paper,s=attempt.result??scoreAttempt(paper,attempt.frozen.key,attempt.frozen.questions,
       attempt.state.responses,new Date().toISOString());
    const qs=new Map(attempt.frozen.questions.map(q=>[q.id,q]));
+   // allowReview controls post-completion detailed question/solution disclosure,
+   // not question navigation during the attempt or numerical score visibility.
+   const revealReview=paper.navigation.allowReview!==false;
+   if(!revealReview&&resultTab==="review")resultTab="overview";
    // New attempts carry a frozen original-text/media snapshot. For older
    // overhaul CGL attempts only, permit a read-only comparison if the immutable
    // bundled source paper AND source key revision exactly match the previously
@@ -887,7 +898,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      '<div class="row"><button class="btn quiet" id="g-history-results">History & insights</button>'+
      '<button class="btn" id="g-library">Library</button></div></div>'+
     (warning?'<p class="generic-warning" role="status">'+escapeText(warning)+'</p>':"")+
-    resultTabsHTML(resultTab)+
+    resultTabsHTML(resultTab,revealReview)+
     '<div class="result-pane" id="result-overview" role="tabpanel" aria-labelledby="result-tab-overview"'+(resultTab!=="overview"?" hidden":"")+'>'+
     '<section class="panel pad"><div class="scoregrid"><div class="score standout"><b>'+
      escapeText(markLabel(s.snapshot.earnedMarks))+
@@ -916,7 +927,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        .map(([label,value])=>'<div class="learning-metric"><strong>'+escapeText(label)+'</strong><b>'+escapeText(value)+'</b></div>').join("")+
       '</div>':'<p class="fine">No saved answer-revision sequence is available for this attempt.</p>')+
     '<p class="fine">Based only on recorded successive single-choice selections. Clear-and-reselect and unverified items are not classified as rescued/lost. A changed answer may coincide with better marks; this is not evidence that revision caused improvement.</p></section></div>'+
-    '<section class="panel pad result-pane" id="result-review" role="tabpanel" aria-labelledby="result-tab-review"'+(resultTab!=="review"?" hidden":"")+'>'+
+    (revealReview?'<section class="panel pad result-pane" id="result-review" role="tabpanel" aria-labelledby="result-tab-review"'+(resultTab!=="review"?" hidden":"")+'>'+
     '<div class="row between"><h2>Question review</h2>'+
       '<div class="row"><button class="btn" id="g-review-top">Top ↑</button>'+
       '<button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div></div>'+
@@ -973,7 +984,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          (records.has("learning-card:"+q.id)?" disabled":"")+'>'
          +(records.has("learning-card:"+q.id)?"In notebook":"Add to notebook")+
        '</button></article>';
-    }).join("")+'</section>'+timingLedgerHTML(attempt,resultTab==="timing");
+    }).join("")+'</section>':'')+timingLedgerHTML(attempt,resultTab==="timing");
  }
  const openSaved=(id:string)=>{
    const saved=records.get(id);if(!isAttempt(saved))return;
@@ -1171,19 +1182,24 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          resultTab=tabs[next]!.dataset.resultTab as ResultTab;draw();
        };
      });
-     root.querySelector<HTMLSelectElement>("#g-review-filter")!.onchange=e=>{
+     const reviewFilterControl=root.querySelector<HTMLSelectElement>("#g-review-filter");
+     if(reviewFilterControl)reviewFilterControl.onchange=e=>{
        reviewFilter=(e.target as HTMLSelectElement).value as ReviewFilter;draw();
      };
      root.querySelectorAll<HTMLButtonElement>("[data-review-preset]").forEach(button=>button.onclick=()=>{
+       if(!attempt?.frozen.paper.navigation.allowReview)return;
        reviewFilter=(button.dataset.reviewPreset??"all") as ReviewFilter;resultTab="review";draw();
      });
      root.querySelectorAll<HTMLButtonElement>("[data-ledger-q]").forEach(button=>button.onclick=()=>{
+       if(!attempt?.frozen.paper.navigation.allowReview)return;
        const question=button.dataset.ledgerQ;resultTab="review";reviewFilter="all";draw();
        const target=[...root.querySelectorAll<HTMLElement>("[data-review-id]")].find(node=>node.dataset.reviewId===question);
        target?.scrollIntoView({block:"start"});
      });
-     root.querySelector<HTMLButtonElement>("#g-revision-set")!.onclick=()=>{void addResultCards(attempt!);};
-     root.querySelector<HTMLButtonElement>("#g-review-top")!.onclick=()=>{
+     const revisionSet=root.querySelector<HTMLButtonElement>("#g-revision-set");
+     if(revisionSet)revisionSet.onclick=()=>{void addResultCards(attempt!);};
+     const reviewTop=root.querySelector<HTMLButtonElement>("#g-review-top");
+     if(reviewTop)reviewTop.onclick=()=>{
        document.getElementById("result-tab-review")?.focus({preventScroll:true});
        window.scrollTo({top:0,behavior:"smooth"});
      };
@@ -1270,9 +1286,13 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    const pause=root.querySelector<HTMLButtonElement>("#g-pause");
    if(pause)pause.onclick=()=>dispatch({type:attempt!.state.status==="paused"?"RESUME":"PAUSE",nowMs:now()});
    root.querySelector<HTMLButtonElement>("#g-submit")!.onclick=()=>{
-     const sectional=attempt!.frozen.paper.timing.kind==="sectional";
-     if(!confirm(sectional?"Submit this section? You cannot return.":"Submit this exam and view results?"))return;
-     dispatch({type:sectional?"SUBMIT_SECTION":"SUBMIT_ATTEMPT",nowMs:now()});
+     const p=attempt!.frozen.paper, st=attempt!.state;
+     const sectional=p.timing.kind==="sectional";
+     const lockedWhole=p.timing.kind==="whole-paper"&&p.navigation.sectionNavigation==="sequential-locked";
+     const continuing=(sectional||lockedWhole)&&st.sectionIndex<p.sections.length-1;
+     const expired=st.status==="section-expired";
+     if(!expired&&!confirm(continuing?"Close this section and advance? You cannot return.":"Submit this exam and view results?"))return;
+     dispatch({type:sectional||continuing?"SUBMIT_SECTION":"SUBMIT_ATTEMPT",nowMs:now()});
    };
  }
  const timer=window.setInterval(()=>{
@@ -1286,14 +1306,15 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    if(next!==original){
      attempt=next;
      const changedSection=original.state.sectionIndex!==next.state.sectionIndex;
-     if(next.finishedAt!==null||changedSection||(view==="exam"&&now()-lastTimerSave>=10000)){
+     if(next.finishedAt!==null||changedSection||original.state.status!==next.state.status||
+       (view==="exam"&&now()-lastTimerSave>=10000)){
        void save(attempt);lastTimerSave=now();
      }
      if(next.finishedAt!==null){
        if(view==="exam"){view="result";resultTab="overview";reviewFilter="all";}
        draw();return;
      }
-     if(changedSection&&view==="exam"){draw();return;}
+     if((changedSection||original.state.status!==next.state.status)&&view==="exam"){draw();return;}
    }
    if(view==="exam"){
      const el=root.querySelector("#g-timer");
