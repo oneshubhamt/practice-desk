@@ -114,7 +114,7 @@ test("G01/G02/F01/F09: locked shared paper, manual expiry and frozen truthful se
  assert.equal(sectionTimerDuration(s,0),1000);
  s=advance(locked,s,"SUBMIT_ATTEMPT",2500);
  assert.equal(s.status,"completed");
- assert.equal(sectionTimerDuration(s,1),1500);
+ assert.equal(sectionTimerDuration(s,1),500); // Section 2 starts at t=2000; only 500ms consumed
  const manual=rehash({...pkg.paper,
    timing:{kind:"sectional",transition:"manual",allowEarlySubmit:false,pausePolicy:"allowed",
     sectionLimits:[{sectionId:"s1",durationMs:75},{sectionId:"s2",durationMs:100}]},
