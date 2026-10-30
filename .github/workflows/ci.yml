@@ -22,6 +22,7 @@ jobs:
       - run: node scripts/pass11-parity.mjs
       - run: node scripts/pass12-parity.mjs
       - run: node scripts/pass13-history.mjs
+      - run: node scripts/pass14-parity.mjs
       - run: node scripts/pass10-platform.mjs chromium
       # On the development branch, publish the generated single-file distribution
       # only after all tests pass. main and baseline/v11 are never written.
