@@ -16,6 +16,7 @@ import { freezeAttempt } from "../history/frozen.ts";
 import type { FrozenAttemptContent } from "../history/frozen.ts";
 import type { ManualGrade } from "../engine/manual-grading.ts";
 import type { SourceKeyReference } from "../engine/source-comparison.ts";
+import type { SourceReviewReference } from "../engine/review-source.ts";
 import type { NotebookLineage } from "../learning/revision-test.ts";
 
 export interface ExamPackage {
@@ -136,6 +137,10 @@ export interface GenericAttempt {
  readonly result?: ReturnType<typeof scoreAttempt>;
  readonly manualGrades?: readonly ManualGrade[];
  readonly sourceKeyReference?: SourceKeyReference;
+ /** Optional frozen original wording, media and source answer for revised exams. */
+ readonly sourceReviewReference?: SourceReviewReference;
+ /** Explicit completion cause, only populated on newly finished attempts. */
+ readonly completionReason?: "time-expired" | "submitted" | "section-submitted";
  readonly notebookLineage?: NotebookLineage;
  readonly explanations?: Readonly<Record<string,string>>;
 }
@@ -164,8 +169,17 @@ export function transitionGenericAttempt(
  }
  const state=transition(paper,attempt.state,event);
  const finished = state.status === "completed";
+ const expired=finished&&(paper.timing.kind==="whole-paper"?
+   state.elapsedMs>=paper.timing.durationMs:
+   paper.timing.kind==="sectional"?(()=>{
+     const section=paper.sections[state.sectionIndex];
+     const limit=paper.timing.sectionLimits.find(x=>x.sectionId===section?.id)?.durationMs;
+     return limit!==undefined&&limit!==null&&state.sectionElapsedMs>=limit;
+   })():false);
+ const completionReason=expired?"time-expired":
+   event.type==="SUBMIT_SECTION"?"section-submitted":"submitted";
  return {...attempt,state,updatedAt:event.nowMs,finishedAt:finished?event.nowMs:null,
-    ...(finished ? {result:scoreAttempt(paper,attempt.frozen.key,attempt.frozen.questions,
+    ...(finished ? {completionReason,result:scoreAttempt(paper,attempt.frozen.key,attempt.frozen.questions,
       state.responses,new Date(event.nowMs).toISOString())}: {})};
 }
 export function responseFor(state: SessionState, questionId: QuestionRevisionId): CandidateResponse | undefined {
