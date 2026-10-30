@@ -1,5 +1,7 @@
 # Pass 23 — independent final v11 / overhaul audit
 
+> **POST-AUDIT CORRECTION (30 October 2026):** The [subsequent Pass24 laptop screenshot/geometry comparison](PASS24_LAPTOP_VISUAL_REGRESSION_2026-10-30.md) found **material desktop visual/task-discoverability regressions**, despite this report's successful behavioral, scoring and broad responsive CI. Start, Next/Flag and saved attempt rows are shifted below the first viewport; the full-paper timer label is misleading. The conditional status below **does not establish desktop v11 visual parity**. A visual remediation pass and manual review are still required.
+
 **Date:** 30 October 2026 · **Repository:** `oneshubhamt/practice-desk` · **Development branch:** `overhaul`  
 **Frozen v11 reference:** `baseline/v11` at `e661822d865927e89a837790c1c6bc1cfc2562a6`  
 **Final verified source CI HEAD:** `efe362675c120ca0c21fc7a9425cde4c52362126` (later documentation-only commits are `[skip ci]`)  
