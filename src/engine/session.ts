@@ -1,6 +1,6 @@
 import type { PaperRevision } from "../domain/exam.js";
 import type { CandidateResponse, QuestionRevision } from "../domain/question.js";
-import type { QuestionRevisionId } from "../domain/ids.js";
+import type { QuestionRevisionId, SectionId } from "../domain/ids.js";
 import type { AttemptResponseRecord } from "../domain/attempt.js";
 
 export interface SessionState {
@@ -17,6 +17,16 @@ export interface SessionState {
    */
   readonly questionVisits?: readonly { readonly questionRevisionId:QuestionRevisionId;readonly count:number }[];
   readonly completedSections: readonly number[];
+  /** Observed consumed timer time for each finished sequential section.
+   * Absent on older saved attempts; never reconstruct from question exposure.
+   * A free multi-section paper has no defensible per-section wall-time split.
+   */
+  readonly completedSectionTimings?: readonly {
+    readonly sectionId: SectionId;
+    readonly sectionIndex: number;
+    readonly durationMs: number;
+    readonly reason: "time-expired" | "submitted";
+  }[];
   readonly visible: boolean;
   /** Monotonic time origin for the current live process; never persist this as a restore deadline. */
   readonly clockMs: number;
@@ -48,7 +58,7 @@ export function startSession(paper: PaperRevision, nowMs: number): SessionState 
   if (!Number.isFinite(nowMs) || !paper.sections[0]?.questionRevisionIds.length) throw new Error("Invalid session start");
   return {
     status: "running", sectionIndex: 0, questionIndex: 0, elapsedMs: 0,
-    sectionElapsedMs: 0, foregroundMs: 0, responses: [], completedSections: [],
+    sectionElapsedMs: 0, foregroundMs: 0, responses: [], completedSections: [], completedSectionTimings: [],
     visible: true, clockMs: nowMs,
     questionVisits:[{questionRevisionId:paper.sections[0]!.questionRevisionIds[0]!,count:1}],
   };
@@ -60,12 +70,27 @@ function enterQuestion(state:SessionState,id:QuestionRevisionId):SessionState{
  const item={questionRevisionId:id,count:(previous?.count??0)+1};
  return {...state,questionVisits:[...state.questionVisits.filter(row=>row.questionRevisionId!==id),item]};
 }
-function advance(paper: PaperRevision, state: SessionState): SessionState {
-  const completedSections = [...state.completedSections, state.sectionIndex];
+/** One section clock is meaningful only when sections are sequential or the
+ * paper contains a single section. Historical records without this property
+ * remain unmeasured, rather than inventing past section durations. */
+function closeSection(paper:PaperRevision,state:SessionState,reason:"time-expired"|"submitted"):SessionState{
+  if(!state.completedSectionTimings ||
+     (paper.navigation.sectionNavigation!=="sequential-locked"&&paper.sections.length!==1))return state;
+  const section=paper.sections[state.sectionIndex];
+  if(!section || state.completedSectionTimings.some(row=>row.sectionIndex===state.sectionIndex))return state;
+  return {...state,completedSectionTimings:[...state.completedSectionTimings,
+    {sectionId:section.id,sectionIndex:state.sectionIndex,durationMs:state.sectionElapsedMs,reason}]};
+}
+function finish(paper:PaperRevision,state:SessionState,reason:"time-expired"|"submitted"):SessionState{
+  return {...closeSection(paper,state,reason),status:"completed"};
+}
+function advance(paper: PaperRevision, state: SessionState, reason:"time-expired"|"submitted"="submitted"): SessionState {
+  const measured=closeSection(paper,state,reason);
+  const completedSections = [...measured.completedSections, state.sectionIndex];
   const next = state.sectionIndex + 1;
   return next >= paper.sections.length
-    ? { ...state, completedSections, status: "completed" }
-    : enterQuestion({ ...state, completedSections, sectionIndex: next, questionIndex: 0, sectionElapsedMs: 0 },
+    ? { ...measured, completedSections, status: "completed" }
+    : enterQuestion({ ...measured, completedSections, sectionIndex: next, questionIndex: 0, sectionElapsedMs: 0 },
       paper.sections[next]!.questionRevisionIds[0]!);
 }
 function sectionLimit(paper: PaperRevision, sectionIndex: number): number | null {
@@ -102,10 +127,10 @@ function checkpoint(paper: PaperRevision, state: SessionState, nowMs: number): S
     }
     remaining -= spent;
     if (limit !== Infinity && spent === limit) {
-      if (paper.timing.kind === "whole-paper") return { ...next, status: "completed" };
+      if (paper.timing.kind === "whole-paper") return finish(paper,next,"time-expired");
       if (paper.timing.kind === "sectional" && paper.timing.transition === "manual")
         return { ...next, status: "section-expired" };
-      next = advance(paper, next);
+      next = advance(paper, next,"time-expired");
       continue;
     }
     break;
@@ -122,7 +147,7 @@ export function transition(paper: PaperRevision, state: SessionState, event: Ses
   // into either elapsed session time or foreground question exposure.
   if (current.status === "section-expired")
     return event.type === "SUBMIT_SECTION" && paper.timing.kind === "sectional"
-      ? advance(paper, { ...current, status: "running" }) : current;
+      ? advance(paper, { ...current, status: "running" },"time-expired") : current;
   if (event.type === "PAUSE") {
     if (current.status !== "running" || paper.timing.kind === "untimed" || paper.timing.pausePolicy !== "allowed") return current;
     return { ...current, status: "paused" };
@@ -137,7 +162,7 @@ export function transition(paper: PaperRevision, state: SessionState, event: Ses
     return paper.timing.kind === "sectional" ||
       (paper.navigation.sectionNavigation === "sequential-locked" &&
         current.sectionIndex < paper.sections.length - 1)
-      ? current : { ...current, status: "completed" };
+      ? current : finish(paper,current,"submitted");
   if (event.type === "SUBMIT_SECTION") {
     // Locked whole-paper sections share one continuous total clock, but must
     // have an explicit forward-only transition; final completion uses submit.
