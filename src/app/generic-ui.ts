@@ -323,7 +323,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      }
      const valid=toExport.map(value=>validateGenericStoredRecord(value));
      const archive=makeBackup(valid as unknown as readonly Record<string,unknown>[],
-       readDisplayPreferences(),new Date().toISOString());
+       readDisplayPreferences(),new Date().toISOString(),readPracticeSelection());
      const blob=new Blob([JSON.stringify(archive)],{type:"application/json"});
      const url=URL.createObjectURL(blob);
      const link=document.createElement("a");link.href=url;
@@ -340,7 +340,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    const archive=verifyBackup(JSON.parse(await file.text()));
    const imported=archive.records.map(record=>validateGenericStoredRecord(record));
    const incoming=planBackupMerge([...records.values()],imported,attempt?.id);
-   if(!confirm("Import "+incoming.length+" new saved records and restore display preferences? Existing records will not be overwritten."))return;
+   if(!confirm("Import "+incoming.length+" new saved records and restore available display/exam setup preferences? Existing records will not be overwritten."))return;
    await writeQueue;
    if(incoming.length){
      if(db){
@@ -367,7 +367,14 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    try{
      writeDisplayPreferences(archive.preferences);
      window.dispatchEvent(new Event(SETTINGS_EVENT));
-     warning="Imported "+incoming.length+" records; display preferences restored.";
+     if(archive.selection&&packages.has(archive.selection.paperRevisionId)){
+       choice=archive.selection.paperRevisionId;
+       cglMode=archive.selection.mode;
+       singleSection=Math.min(archive.selection.section,
+         Math.max(0,(packages.get(choice)?.paper.sections.length??1)-1));
+       saveSelection();
+     }
+     warning="Imported "+incoming.length+" records; available display/exam setup preferences restored.";
    }catch{
      warning="Imported "+incoming.length+" records. Display preferences could not be stored by this browser.";
    }
