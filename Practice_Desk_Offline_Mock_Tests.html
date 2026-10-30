@@ -395,6 +395,19 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
 .display-theme-choices .btn{flex:1}
 .display-theme-choices [aria-pressed="true"]{border-color:var(--blue);background:var(--soft-blue);font-weight:800}
 @media(max-width:760px){.history-management-grid{grid-template-columns:1fr}}
+
+/* Pass 14: evidence-linked question review and compact coaching. */
+.result-coaching{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px;margin-bottom:18px}
+.result-coaching>.panel{min-width:0}
+.slow-list{display:grid;gap:7px;margin-top:12px}
+.slow-link{display:flex;align-items:center;justify-content:space-between;gap:14px;min-width:0;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--ink);text-align:left;cursor:pointer}
+.slow-link:hover{border-color:var(--blue);background:var(--soft-blue)}
+.slow-link>span:last-child{white-space:nowrap;color:var(--blue)}
+.plainlist{margin:10px 0 0;padding-left:22px}
+.plainlist li+li{margin-top:10px}
+.speed-not-classified{color:var(--muted)}
+@media(max-width:800px){.result-coaching{grid-template-columns:1fr}}
+@media(max-width:450px){.slow-link{align-items:flex-start;flex-direction:column;gap:4px}.slow-link>span:last-child{white-space:normal}}
 </style></head>
 <body><header><div class="wrap"><div class="brand"><div class="symbol">P</div><div><b>Practice Desk</b><small>Offline exam practice</small></div></div><div class="header-actions"><span class="header-offline"><span class="offline-dot"></span> Works offline</span><div class="display-tools" aria-label="Display options"><button type="button" id="displayTrigger" class="display-trigger" aria-label="Display settings" aria-haspopup="true" aria-controls="displayPanel" aria-expanded="false">Aa <span>Display</span></button><div id="displayPanel" class="display-panel" hidden><div class="display-heading"><strong>Appearance</strong><button id="displayClose" type="button" class="display-close" aria-label="Close display settings">×</button></div><div class="display-control"><span>Text size</span><div class="display-size"><button id="fontLess" type="button" class="btn" aria-label="Decrease text size">−</button><button id="fontReset" type="button" class="btn" aria-label="Reset text size">100%</button><button id="fontMore" type="button" class="btn" aria-label="Increase text size">+</button></div></div><div class="display-control"><span>Color theme</span><div class="display-theme-choices" role="group" aria-label="Color theme"><button id="themeLight" class="btn" type="button" aria-pressed="true">Light</button><button id="themeDark" class="btn" type="button" aria-pressed="false">Dark</button></div><button id="themeToggle" class="btn display-theme" type="button" aria-pressed="false">Toggle theme</button></div><button id="displayFullscreen" type="button" class="btn display-fullscreen" aria-pressed="false">Enter full screen</button><p class="fine display-hint">Saved on this device. Full screen is optional.</p><p class="fine" id="preferences-warning" role="status"></p></div></div></div></div></header>
 <main id="app" class="generic-workspace"></main>
@@ -3681,13 +3694,23 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
       responses: [],
       completedSections: [],
       visible: true,
-      clockMs: nowMs
+      clockMs: nowMs,
+      questionVisits: [{ questionRevisionId: paper.sections[0].questionRevisionIds[0], count: 1 }]
     };
+  }
+  function enterQuestion(state, id) {
+    if (!state.questionVisits) return state;
+    const previous = state.questionVisits.find((row) => row.questionRevisionId === id);
+    const item = { questionRevisionId: id, count: (previous?.count ?? 0) + 1 };
+    return { ...state, questionVisits: [...state.questionVisits.filter((row) => row.questionRevisionId !== id), item] };
   }
   function advance(paper, state) {
     const completedSections = [...state.completedSections, state.sectionIndex];
     const next = state.sectionIndex + 1;
-    return next >= paper.sections.length ? { ...state, completedSections, status: "completed" } : { ...state, completedSections, sectionIndex: next, questionIndex: 0, sectionElapsedMs: 0 };
+    return next >= paper.sections.length ? { ...state, completedSections, status: "completed" } : enterQuestion(
+      { ...state, completedSections, sectionIndex: next, questionIndex: 0, sectionElapsedMs: 0 },
+      paper.sections[next].questionRevisionIds[0]
+    );
   }
   function sectionLimit(paper, sectionIndex) {
     if (paper.timing.kind !== "sectional") return null;
@@ -3751,12 +3774,16 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
       if (paper.timing.kind === "sectional" && event.sectionIndex !== current.sectionIndex) return current;
       if (paper.navigation.sectionNavigation === "sequential-locked" && event.sectionIndex !== current.sectionIndex) return current;
       if (paper.navigation.questionNavigation === "forward-only" && (event.sectionIndex < current.sectionIndex || event.sectionIndex === current.sectionIndex && event.questionIndex < current.questionIndex)) return current;
-      return {
-        ...current,
-        sectionIndex: event.sectionIndex,
-        questionIndex: event.questionIndex,
-        sectionElapsedMs: event.sectionIndex === current.sectionIndex ? current.sectionElapsedMs : 0
-      };
+      if (event.sectionIndex === current.sectionIndex && event.questionIndex === current.questionIndex) return current;
+      return enterQuestion(
+        {
+          ...current,
+          sectionIndex: event.sectionIndex,
+          questionIndex: event.questionIndex,
+          sectionElapsedMs: event.sectionIndex === current.sectionIndex ? current.sectionElapsedMs : 0
+        },
+        section.questionRevisionIds[event.questionIndex]
+      );
     }
     const id = questionId(paper, current);
     const previous = record2(current, id);
@@ -5934,6 +5961,53 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
     return { recorded, changed, rescued, lost, other };
   }
 
+  // src/learning/question-analytics.ts
+  function questionSpeed(a, id) {
+    const item = a.result?.items.find((row) => row.questionRevisionId === id);
+    if (item?.verdict !== "correct" && item?.verdict !== "incorrect") return "Not classified";
+    const ms = a.state.responses.find((r) => r.questionRevisionId === id)?.timeSpentMs ?? 0;
+    const section = a.frozen.paper.sections.find((s) => s.questionRevisionIds.includes(id));
+    const evidence = attemptEvidence(a)?.sections.find((s) => s.sectionId === section?.id);
+    const median2 = evidence?.medianAnsweredMs;
+    if (ms <= 0 || !median2 || median2 <= 0 || (evidence?.measuredAnswered ?? 0) < 5) return "Not classified";
+    return ms < median2 * 0.75 ? "Fast" : ms > median2 * 1.5 ? "Slow" : "Typical";
+  }
+  function isAuditQuestion(a, id) {
+    const q = a.frozen.questions.find((row) => row.id === id);
+    return Boolean(q && (q.editorial.status !== "verified" || q.editorial.notes?.trim() || q.editorial.changes?.length || a.sourceReviewReference?.entries.some((x) => x.targetQuestionRevisionId === id)));
+  }
+  function longestQuestionExposure(a, limit = 5) {
+    if (!a.result) return [];
+    const rows = new Map(a.state.responses.map((x) => [x.questionRevisionId, x]));
+    const scored = new Map(a.result.items.map((x) => [x.questionRevisionId, x]));
+    const items = a.frozen.paper.sections.flatMap((s) => s.questionRevisionIds.map((id) => ({ id, section: s.title })));
+    return items.map((item, i) => ({
+      id: item.id,
+      paperNumber: i + 1,
+      section: item.section,
+      milliseconds: rows.get(item.id)?.timeSpentMs ?? 0,
+      verdict: scored.get(item.id).verdict
+    })).filter((x) => Number.isFinite(x.milliseconds) && x.milliseconds > 0).sort((x, y) => y.milliseconds - x.milliseconds || x.paperNumber - y.paperNumber).slice(0, Math.max(0, Math.min(5, Math.floor(limit))));
+  }
+  function studySuggestions(a) {
+    const evidence = attemptEvidence(a);
+    if (!a.result || !evidence) return [];
+    const sections = evidence.sections;
+    const valid = sections.reduce((n, s) => n + s.answered + s.unanswered, 0);
+    const answered = sections.reduce((n, s) => n + s.answered, 0);
+    if (!answered) return ["No scored answers were recorded. Review available solutions and complete a practice section to establish a useful baseline."];
+    const notes = [];
+    const weak = sections.filter((s) => s.answered >= 4 && s.incorrect >= 3).sort((x, y) => x.correct / x.answered - y.correct / y.answered || y.answered - x.answered)[0];
+    if (weak) notes.push("Review " + weak.title + ": " + weak.incorrect + " incorrect among " + weak.answered + " scored responses (" + Math.round(weak.correct / weak.answered * 100) + "% observed accuracy).");
+    const fast = evidence.speed.buckets.find((x) => x.label === "Fast")?.incorrect ?? 0;
+    const slow = evidence.speed.buckets.find((x) => x.label === "Slow")?.incorrect ?? 0;
+    if (fast >= 2) notes.push(fast + " incorrect responses had relatively short foreground exposure in their sections. Recheck these questions; timing alone does not explain the errors.");
+    if (slow >= 2) notes.push(slow + " incorrect responses had relatively long foreground exposure in their sections. Review the solving steps and time allocation; timing alone does not establish the cause.");
+    if (valid >= 10 && answered / valid < 0.7) notes.push("You answered " + answered + " of " + valid + " scoreable questions (" + Math.round(100 * answered / valid) + "% coverage). Consider practising question selection and pacing.");
+    if (!notes.length) notes.push("Review incorrect and unanswered scoreable questions against their worked explanations. There is not enough evidence for a more specific study priority.");
+    return notes.slice(0, 3);
+  }
+
   // src/app/history-metrics.ts
   function comparableScoreTrends(attempts) {
     const groups = /* @__PURE__ */ new Map();
@@ -6057,11 +6131,10 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
     if (["correct", "incorrect", "unanswered", "excluded", "pending"].includes(filter)) return item.verdict === filter;
     const answer = a.state.responses.find((x) => x.questionRevisionId === item.questionRevisionId);
     if (filter === "flagged") return Boolean(answer?.flagged);
-    const section = a.frozen.paper.sections.find((s) => s.questionRevisionIds.includes(item.questionRevisionId));
-    const evidence = attemptEvidence(a)?.sections.find((x) => x.sectionId === section?.id);
-    const n = answer?.timeSpentMs ?? 0, med = evidence?.medianAnsweredMs ?? 0;
-    if (item.verdict !== "incorrect" || (evidence?.measuredAnswered ?? 0) < 5 || n <= 0 || med <= 0) return false;
-    return filter === "fastwrong" ? n < med * 0.75 : n > med * 1.5;
+    if (filter === "audit") return isAuditQuestion(a, item.questionRevisionId);
+    if (item.verdict !== "incorrect") return false;
+    const speed = questionSpeed(a, item.questionRevisionId);
+    return filter === "fastwrong" ? speed === "Fast" : filter === "slowwrong" ? speed === "Slow" : filter === "typicalwrong" && speed === "Typical";
   }
   function resultTabsHTML(active) {
     return '<nav class="result-tabs" role="tablist" aria-label="Result views">' + ["overview", "review", "timing"].map((id, i) => '<button id="result-tab-' + id + '" type="button" role="tab" tabindex="' + (id === active ? "0" : "-1") + '" class="result-tab ' + (id === active ? "active" : "") + '" aria-controls="result-' + id + '" aria-selected="' + (id === active) + '" data-result-tab="' + id + '">' + ["Insights", "Question review", "Time ledger"][i] + "</button>").join("") + "</nav>";
@@ -6075,22 +6148,31 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
       ["excluded", "Excluded"],
       ["pending", "Awaiting assessment"],
       ["flagged", "Flagged"],
+      ["audit", "Key-audit notes"],
       ["fastwrong", "Fast incorrect"],
+      ["typicalwrong", "Typical-speed incorrect"],
       ["slowwrong", "Slow incorrect"]
     ].map(([id, label2]) => '<option value="' + id + '"' + (id === active ? " selected" : "") + ">" + label2 + "</option>").join("") + "</select></label>";
   }
   function timingLedgerHTML(a, active) {
     if (!a.result) return "";
-    return '<section class="panel pad result-pane" id="result-timing" role="tabpanel" aria-labelledby="result-tab-timing"' + (!active ? " hidden" : "") + '><h2>Question timing ledger</h2><p class="fine">Time recorded while the question was in the foreground. This does not measure thinking time. Answer changes are counts, not proof they improved performance.</p><div class="scroll-table"><table><thead><tr><th>Question</th><th>Section</th><th>Verdict</th><th>Time</th><th>Changes</th><th>Review</th></tr></thead><tbody>' + a.result.items.map((x, i) => {
+    return '<section class="panel pad result-pane" id="result-timing" role="tabpanel" aria-labelledby="result-tab-timing"' + (!active ? " hidden" : "") + '><h2>Question timing ledger</h2><p class="fine">Time is cumulative foreground question exposure, not thinking time or an uninterrupted visit. Speed is relative to each section\u2019s median only when at least five answered, scored items have measurable time. Older attempts may not have recorded visits.</p><div class="scroll-table"><table><thead><tr><th>Question</th><th>Section</th><th>Verdict</th><th>Time</th><th>Speed</th><th>Visits</th><th>Changes</th><th>Review</th></tr></thead><tbody>' + a.result.items.map((x, i) => {
       const response = a.state.responses.find((r) => r.questionRevisionId === x.questionRevisionId);
       const section = a.frozen.paper.sections.find((s) => s.questionRevisionIds.includes(x.questionRevisionId));
-      return "<tr><td>" + (i + 1) + "</td><td>" + esc3(section?.title ?? "\u2014") + '</td><td><span class="verdict ' + esc3(x.verdict) + '">' + esc3(x.verdict) + "</span></td><td>" + duration(response?.timeSpentMs ?? 0) + "</td><td>" + (response?.answerChangeCount ?? 0) + '</td><td><button class="textlink" data-ledger-q="' + esc3(x.questionRevisionId) + '">Review \u2192</button></td></tr>';
+      const visit = a.state.questionVisits?.find((v) => v.questionRevisionId === x.questionRevisionId)?.count;
+      const speed = questionSpeed(a, x.questionRevisionId);
+      return "<tr><td>" + (i + 1) + "</td><td>" + esc3(section?.title ?? "\u2014") + '</td><td><span class="verdict ' + esc3(x.verdict) + '">' + esc3(x.verdict) + "</span></td><td>" + duration(response?.timeSpentMs ?? 0) + '</td><td><span class="tag speed-' + speed.toLowerCase().replace(/[^a-z]+/g, "-") + '">' + esc3(speed) + "</span></td><td>" + (a.state.questionVisits === void 0 ? "Not recorded" : visit ?? 0) + "</td><td>" + (response?.answerChangeCount ?? 0) + '</td><td><button class="textlink" data-ledger-q="' + esc3(x.questionRevisionId) + '" aria-label="Review question ' + (i + 1) + '">Review \u2192</button></td></tr>';
     }).join("") + "</tbody></table></div></section>";
   }
   function sectionPaceHTML(a) {
     const evidence = attemptEvidence(a);
     if (!evidence) return "";
     return '<section class="panel pad section-bars"><h2>Section pacing & coverage</h2><p class="fine">Section progress is based on scoreable questions. Time is recorded foreground exposure.</p>' + evidence.sections.map((e) => '<div class="pace-row"><div class="row between"><b>' + esc3(e.title) + '</b><span class="fine">' + e.answered + " answered \xB7 " + (e.accuracy === null ? "\u2014" : Math.round(e.accuracy * 100) + "% accuracy") + " \xB7 " + duration(e.foregroundMs) + '</span></div><div class="progress-track"><span style="width:' + Math.round(100 * e.coverage) + '%"></span></div></div>').join("") + "</section>";
+  }
+  function questionCoachingHTML(a) {
+    const longest = longestQuestionExposure(a);
+    const suggestions = studySuggestions(a);
+    return '<div class="result-coaching"><section class="panel pad" id="g-longest-questions"><h2>Longest recorded question exposure</h2><p class="fine">Five highest cumulative foreground viewing times, including any measured unanswered items. These are not uninterrupted visit durations or evidence of difficulty.</p>' + (longest.length ? '<div class="slow-list">' + longest.map((row) => '<button type="button" class="slow-link" data-ledger-q="' + esc3(row.id) + '" aria-label="Review question ' + row.paperNumber + '"><span><b>Q' + row.paperNumber + "</b> \xB7 " + esc3(row.section) + " \xB7 " + esc3(row.verdict) + "</span><span>" + duration(row.milliseconds) + " \xB7 Review \u2192</span></button>").join("") + "</div>" : '<p class="fine">No positive foreground question time was recorded.</p>') + '</section><section class="panel pad" id="g-next-work"><h2>What to work on next</h2><p class="fine">Suggestions are based on answers and measured timing in this attempt, not predictions or diagnoses of why mistakes occurred.</p><ul class="plainlist">' + suggestions.map((t) => "<li>" + esc3(t) + "</li>").join("") + "</ul></section></div>";
   }
 
   // src/app/generic-ui.ts
@@ -6164,6 +6246,11 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
       throw new Error("Unfinished attempt has a completed session");
     const questionMap = new Map(value.frozen.questions.map((q) => [q.id, q]));
     const allowed = new Set(paper.sections.flatMap((section) => section.questionRevisionIds));
+    if (value.state.questionVisits !== void 0) {
+      const visits = value.state.questionVisits;
+      if (!Array.isArray(visits) || visits.length === 0 || visits.length > allowed.size || new Set(visits.map((row) => row?.questionRevisionId)).size !== visits.length || visits.some((row) => !row || !allowed.has(row.questionRevisionId) || !Number.isSafeInteger(row.count) || row.count < 1 || row.count > 1e6))
+        throw new Error("Invalid saved question visit history");
+    }
     const seen = /* @__PURE__ */ new Set();
     for (const row of value.state.responses) {
       if (!row || typeof row.questionRevisionId !== "string" || !allowed.has(row.questionRevisionId) || seen.has(row.questionRevisionId) || !Number.isFinite(row.timeSpentMs) || row.timeSpentMs < 0 || !Number.isInteger(row.answerChangeCount) || row.answerChangeCount < 0)
@@ -6822,21 +6909,23 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
       const paperSectionRows = sectionScoreSummaries(attempt, s).map((row) => "<tr><td>" + escapeText(row.title) + "</td><td>" + row.attempted + "/" + (row.questions - row.excluded) + "</td><td>" + row.correct + "</td><td>" + row.incorrect + "</td><td>" + escapeText(markLabel(row.marks)) + " / " + escapeText(markLabel(row.eligibleMax)) + "</td><td>" + minutes(row.foregroundMs) + "</td></tr>").join("");
       const evidence = attemptEvidence(attempt);
       const revisions = answerRevisionEvidence(attempt);
-      const analyticHTML = evidence ? '<section class="panel pad" id="g-attempt-evidence"><h2>Timing, accuracy & marks evidence</h2><p class="fine">Times are foreground exposure to each question; they do not measure thinking time. Opportunity figures describe hypothetical arithmetic, not projected marks.</p><div class="scroll-table"><table><thead><tr><th>Section</th><th>Answered</th><th>Coverage</th><th>Accuracy</th><th>Median answered time</th><th>Positive</th><th>Penalty</th></tr></thead><tbody>' + evidence.sections.map((e) => "<tr><td>" + escapeText(e.title) + "</td><td>" + e.answered + "</td><td>" + Math.round(e.coverage * 100) + "%</td><td>" + (e.accuracy === null ? "\u2014" : Math.round(e.accuracy * 100) + "%") + "</td><td>" + (e.medianAnsweredMs === null ? "\u2014" : Math.round(e.medianAnsweredMs / 1e3) + "s") + "</td><td>" + e.positive.toFixed(2) + "</td><td>" + e.penalties.toFixed(2) + "</td></tr>").join("") + '</tbody></table></div><div class="row generic-actions"><span class="tag">Foreground ' + minutes(evidence.timing.foregroundMs) + '</span><span class="tag">Question exposure ' + minutes(evidence.timing.questionMeasuredMs) + '</span><span class="tag">Answers changed ' + evidence.timing.changedAnswers + `</span></div><h3>Section-relative speed \xD7 accuracy</h3><p class="fine">Only sections with at least 5 measured answered responses are classified; fast is under 0.75\xD7 and slow over 1.5\xD7 that section's median.</p><div class="learning-metric-grid">` + evidence.speed.buckets.map((e) => '<div class="learning-metric"><strong>' + e.label + "</strong><b>" + e.correct + " correct \xB7 " + e.incorrect + " incorrect</b><small>" + e.items + " classified answers</small>" + (e.label === "Fast" || e.label === "Slow" ? '<button class="textlink" data-review-preset="' + (e.label === "Fast" ? "fastwrong" : "slowwrong") + '">Review ' + e.incorrect + " " + e.label.toLowerCase() + " mistakes \u2192</button>" : "") + "</div>").join("") + '</div><p class="fine">' + evidence.speed.classified + " of " + evidence.speed.measured + ' measurable answers classified; insufficient section samples remain unclassified.</p><h3>Marks decomposition and hypothetical opportunities</h3><div class="learning-metric-grid"><div class="learning-metric"><strong>Observed negative marks</strong><b>' + evidence.opportunity.observedPenalty.toFixed(2) + '</b><small>Actual penalty magnitude</small></div><div class="learning-metric"><strong>Wrong \u2192 correct</strong><b>+' + evidence.opportunity.wrongToCorrect.toFixed(2) + "</b><small>Hypothetical, " + evidence.opportunity.countWrong + ' incorrect scored items</small><button class="textlink" data-review-preset="incorrect">Review incorrect \u2192</button></div><div class="learning-metric"><strong>Skipped \u2192 correct</strong><b>+' + evidence.opportunity.skippedToCorrect.toFixed(2) + "</b><small>Hypothetical, " + evidence.opportunity.countSkipped + ' unanswered scored items</small><button class="textlink" data-review-preset="unanswered">Review skips \u2192</button></div></div></section>' : "";
+      const analyticHTML = evidence ? '<section class="panel pad" id="g-attempt-evidence"><h2>Timing, accuracy & marks evidence</h2><p class="fine">Times are foreground exposure to each question; they do not measure thinking time. Opportunity figures describe hypothetical arithmetic, not projected marks.</p><div class="scroll-table"><table><thead><tr><th>Section</th><th>Answered</th><th>Coverage</th><th>Accuracy</th><th>Median answered time</th><th>Positive</th><th>Penalty</th></tr></thead><tbody>' + evidence.sections.map((e) => "<tr><td>" + escapeText(e.title) + "</td><td>" + e.answered + "</td><td>" + Math.round(e.coverage * 100) + "%</td><td>" + (e.accuracy === null ? "\u2014" : Math.round(e.accuracy * 100) + "%") + "</td><td>" + (e.medianAnsweredMs === null ? "\u2014" : Math.round(e.medianAnsweredMs / 1e3) + "s") + "</td><td>" + e.positive.toFixed(2) + "</td><td>" + e.penalties.toFixed(2) + "</td></tr>").join("") + '</tbody></table></div><div class="row generic-actions"><span class="tag">Foreground ' + minutes(evidence.timing.foregroundMs) + '</span><span class="tag">Question exposure ' + minutes(evidence.timing.questionMeasuredMs) + '</span><span class="tag">Answers changed ' + evidence.timing.changedAnswers + `</span></div><h3>Section-relative speed \xD7 accuracy</h3><p class="fine">Only sections with at least 5 measured answered responses are classified; fast is under 0.75\xD7 and slow over 1.5\xD7 that section's median.</p><div class="learning-metric-grid">` + evidence.speed.buckets.map((e) => '<div class="learning-metric"><strong>' + e.label + "</strong><b>" + e.correct + " correct \xB7 " + e.incorrect + " incorrect</b><small>" + e.items + ' classified answers</small><button class="textlink" data-review-preset="' + (e.label === "Fast" ? "fastwrong" : e.label === "Slow" ? "slowwrong" : "typicalwrong") + '"' + (e.incorrect ? "" : " disabled") + ' aria-label="Review ' + e.label.toLowerCase() + ' incorrect questions">Review ' + e.incorrect + " " + e.label.toLowerCase() + " mistakes \u2192</button></div>").join("") + '</div><p class="fine">' + evidence.speed.classified + " of " + evidence.speed.measured + ' measurable answers classified; insufficient section samples remain unclassified.</p><h3>Marks decomposition and hypothetical opportunities</h3><div class="learning-metric-grid"><div class="learning-metric"><strong>Observed negative marks</strong><b>' + evidence.opportunity.observedPenalty.toFixed(2) + '</b><small>Actual penalty magnitude</small></div><div class="learning-metric"><strong>Wrong \u2192 correct</strong><b>+' + evidence.opportunity.wrongToCorrect.toFixed(2) + "</b><small>Hypothetical, " + evidence.opportunity.countWrong + ' incorrect scored items</small><button class="textlink" data-review-preset="incorrect">Review incorrect \u2192</button></div><div class="learning-metric"><strong>Skipped \u2192 correct</strong><b>+' + evidence.opportunity.skippedToCorrect.toFixed(2) + "</b><small>Hypothetical, " + evidence.opportunity.countSkipped + ' unanswered scored items</small><button class="textlink" data-review-preset="unanswered">Review skips \u2192</button></div></div></section>' : "";
       return '<div class="generic-heading results-heading"><div><span class="eyebrow">FROZEN EXAM RECORD</span><h1>Performance overview</h1><p class="muted">' + escapeText(paper.paperId) + " \xB7 " + escapeText(paper.edition) + " \xB7 " + (attempt.finishedAt ? new Date(attempt.finishedAt).toLocaleString() : "") + "</p>" + (attempt.completionReason ? '<span class="tag">' + escapeText(
         attempt.completionReason === "time-expired" ? "Time expired" : attempt.completionReason === "section-submitted" ? "Submitted early" : "Submitted by user"
-      ) + "</span>" : "") + '</div><div class="row"><button class="btn quiet" id="g-history-results">History & insights</button><button class="btn" id="g-library">Library</button></div></div>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + resultTabsHTML(resultTab) + '<div class="result-pane" id="result-overview" role="tabpanel" aria-labelledby="result-tab-overview"' + (resultTab !== "overview" ? " hidden" : "") + '><section class="panel pad"><div class="scoregrid"><div class="score standout"><b>' + escapeText(markLabel(s.snapshot.earnedMarks)) + " <small>/ " + escapeText(markLabel(eligibleMax)) + '</small></b><small>Audit-adjusted automated marks</small></div><div class="score"><b>' + s.snapshot.correctCount + '</b><small>Correct</small></div><div class="score"><b>' + s.snapshot.incorrectCount + '</b><small>Incorrect</small></div><div class="score"><b>' + s.snapshot.unansweredCount + '</b><small>Unanswered</small></div><div class="score"><b>' + s.snapshot.excludedCount + "</b><small>Excluded</small></div></div>" + (originalKey ? '<p class="fine"><b>Original-source key (unadjusted):</b> ' + escapeText(originalKey.marks.toFixed(1)) + " / " + escapeText(originalKey.maxMarks.toFixed(1)) + " marks \xB7 " + originalKey.correct + " correct \xB7 " + originalKey.incorrect + " incorrect \xB7 " + originalKey.unanswered + " unanswered. Uses the source key frozen at test start, including questions excluded from the reviewed score. This is a comparison, not an official score.</p>" : "") + (grades2.graded || grades2.pending ? '<p class="fine"><b>Separate self-assessment:</b> ' + escapeText(grades2.graded) + " of " + escapeText(grades2.graded + grades2.pending) + " written responses marked; self-assessed total " + escapeText(selfAssessed.toFixed(2)) + ". Original automated score above remains unchanged.</p>" : '<p class="fine">Automated marks reflect only scoreable questions.</p>') + '</section><section class="panel pad"><h2>Section performance</h2><p class="fine">Eligible maximum excludes editorially unscored and manually assessed questions. Time is measured question foreground exposure, not the sectional wall clock.</p><div class="scroll-table"><table><thead><tr><th>Section</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Marks / eligible max</th><th>Time on questions</th></tr></thead><tbody>' + paperSectionRows + "</tbody></table></div></section>" + sectionPaceHTML(attempt) + analyticHTML + '<section class="panel pad answer-revision-panel"><h2>Answer revisions</h2>' + (revisions.recorded ? '<div class="learning-metric-grid">' + [["Modified answers", revisions.changed], ["Wrong \u2192 correct", revisions.rescued], ["Correct \u2192 wrong", revisions.lost], ["Other changes", revisions.other]].map(([label2, value]) => '<div class="learning-metric"><strong>' + escapeText(label2) + "</strong><b>" + escapeText(value) + "</b></div>").join("") + "</div>" : '<p class="fine">No saved answer-revision sequence is available for this attempt.</p>') + '<p class="fine">Based only on recorded successive single-choice selections. Clear-and-reselect and unverified items are not classified as rescued/lost. A changed answer may coincide with better marks; this is not evidence that revision caused improvement.</p></section></div><section class="panel pad result-pane" id="result-review" role="tabpanel" aria-labelledby="result-tab-review"' + (resultTab !== "review" ? " hidden" : "") + '><div class="row between"><h2>Question review</h2><div class="row"><button class="btn" id="g-review-top">Top \u2191</button><button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div></div>' + reviewFiltersHTML(reviewFilter) + '<p class="fine">Review frozen questions, actual responses, solutions and foreground time. Mock scores never become FSRS ratings.</p><p class="fine">' + s.items.filter((it) => reviewMatch(attempt, it, reviewFilter)).length + " of " + s.items.length + " items</p>" + s.items.filter((it) => reviewMatch(attempt, it, reviewFilter)).map((it, i) => {
+      ) + "</span>" : "") + '</div><div class="row"><button class="btn quiet" id="g-history-results">History & insights</button><button class="btn" id="g-library">Library</button></div></div>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + resultTabsHTML(resultTab) + '<div class="result-pane" id="result-overview" role="tabpanel" aria-labelledby="result-tab-overview"' + (resultTab !== "overview" ? " hidden" : "") + '><section class="panel pad"><div class="scoregrid"><div class="score standout"><b>' + escapeText(markLabel(s.snapshot.earnedMarks)) + " <small>/ " + escapeText(markLabel(eligibleMax)) + '</small></b><small>Audit-adjusted automated marks</small></div><div class="score"><b>' + s.snapshot.correctCount + '</b><small>Correct</small></div><div class="score"><b>' + s.snapshot.incorrectCount + '</b><small>Incorrect</small></div><div class="score"><b>' + s.snapshot.unansweredCount + '</b><small>Unanswered</small></div><div class="score"><b>' + s.snapshot.excludedCount + "</b><small>Excluded</small></div></div>" + (originalKey ? '<p class="fine"><b>Original-source key (unadjusted):</b> ' + escapeText(originalKey.marks.toFixed(1)) + " / " + escapeText(originalKey.maxMarks.toFixed(1)) + " marks \xB7 " + originalKey.correct + " correct \xB7 " + originalKey.incorrect + " incorrect \xB7 " + originalKey.unanswered + " unanswered. Uses the source key frozen at test start, including questions excluded from the reviewed score. This is a comparison, not an official score.</p>" : "") + (grades2.graded || grades2.pending ? '<p class="fine"><b>Separate self-assessment:</b> ' + escapeText(grades2.graded) + " of " + escapeText(grades2.graded + grades2.pending) + " written responses marked; self-assessed total " + escapeText(selfAssessed.toFixed(2)) + ". Original automated score above remains unchanged.</p>" : '<p class="fine">Automated marks reflect only scoreable questions.</p>') + '</section><section class="panel pad"><h2>Section performance</h2><p class="fine">Eligible maximum excludes editorially unscored and manually assessed questions. Time is measured question foreground exposure, not the sectional wall clock.</p><div class="scroll-table"><table><thead><tr><th>Section</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Marks / eligible max</th><th>Time on questions</th></tr></thead><tbody>' + paperSectionRows + "</tbody></table></div></section>" + sectionPaceHTML(attempt) + analyticHTML + questionCoachingHTML(attempt) + '<section class="panel pad answer-revision-panel"><h2>Answer revisions</h2>' + (revisions.recorded ? '<div class="learning-metric-grid">' + [["Modified answers", revisions.changed], ["Wrong \u2192 correct", revisions.rescued], ["Correct \u2192 wrong", revisions.lost], ["Other changes", revisions.other]].map(([label2, value]) => '<div class="learning-metric"><strong>' + escapeText(label2) + "</strong><b>" + escapeText(value) + "</b></div>").join("") + "</div>" : '<p class="fine">No saved answer-revision sequence is available for this attempt.</p>') + '<p class="fine">Based only on recorded successive single-choice selections. Clear-and-reselect and unverified items are not classified as rescued/lost. A changed answer may coincide with better marks; this is not evidence that revision caused improvement.</p></section></div><section class="panel pad result-pane" id="result-review" role="tabpanel" aria-labelledby="result-tab-review"' + (resultTab !== "review" ? " hidden" : "") + '><div class="row between"><h2>Question review</h2><div class="row"><button class="btn" id="g-review-top">Top \u2191</button><button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div></div>' + reviewFiltersHTML(reviewFilter) + '<p class="fine">Review frozen questions, actual responses, solutions and foreground time. Mock scores never become FSRS ratings.</p><p class="fine">' + s.items.filter((it) => reviewMatch(attempt, it, reviewFilter)).length + " of " + s.items.length + " items</p>" + s.items.filter((it) => reviewMatch(attempt, it, reviewFilter)).map((it, i) => {
         const q = qs.get(it.questionRevisionId);
         const response = attempt.state.responses.find((r) => r.questionRevisionId === it.questionRevisionId)?.response;
         const answer = attempt.frozen.key.entries.find((e) => e.questionRevisionId === it.questionRevisionId)?.answer;
         const explanation = attempt.explanations?.[it.questionRevisionId];
         const seconds = attempt.state.responses.find((r) => r.questionRevisionId === it.questionRevisionId)?.timeSpentMs ?? 0;
+        const visitCount = attempt.state.questionVisits?.find((r) => r.questionRevisionId === it.questionRevisionId)?.count;
+        const speed = questionSpeed(attempt, it.questionRevisionId);
         if (!q) return "";
         const prior = attempt.manualGrades?.find((g) => g.questionRevisionId === q.id);
         const limit = manualGradeLimit(attempt, q.id);
         const provenance = q.editorial.sources ?? [];
         const origin = attempt.notebookLineage?.entries.find((x) => x.questionRevisionId === q.id);
-        return '<article class="generic-review" data-review-id="' + escapeText(q.id) + '" data-verdict="' + escapeText(it.verdict) + '"><strong>' + (paper.sections.flatMap((z) => z.questionRevisionIds).indexOf(q.id) + 1) + ". " + escapeText(q.content.prompt) + '</strong><p class="fine">' + escapeText(q.editorial.status) + (q.editorial.sourcePage ? " \xB7 Source page " + q.editorial.sourcePage : "") + " \xB7 " + minutes(seconds) + " spent</p>" + frozenReviewMedia(attempt, q, response, answer, it.verdict) + (origin ? '<p class="fine">Notebook source: ' + escapeText(origin.sourcePaperId) + " \xB7 " + escapeText(origin.sourcePaperEdition) + " \xB7 " + escapeText(origin.sourceSectionTitle) + " \xB7 source attempt " + escapeText(origin.sourceAttemptId) + "</p>" : "") + '<p class="fine"><span class="verdict ' + escapeText(it.verdict) + '">' + escapeText(it.verdict) + "</span> \xB7 " + it.marks + ' automated marks</p><p class="fine">Your answer: ' + escapeText(readableAnswer(q, response)) + '</p><p class="fine">' + (it.verdict === "excluded" ? "Frozen answer key (not scored): " : it.verdict === "pending" ? "Manual assessment: " : "Expected: ") + escapeText(readableAnswer(q, answer)) + "</p>" + (q.editorial.notes ? '<p class="fine">Editorial note: ' + escapeText(q.editorial.notes) + "</p>" : "") + (explanation ? '<details class="worked-solution"' + (it.verdict === "incorrect" || it.verdict === "unanswered" ? " open" : "") + "><summary>" + (q.content.assetIds?.length || (q.content.kind === "single-choice" || q.content.kind === "multiple-select") && q.content.options.some((o) => o.assetIds?.length) ? "Visual solving method" : "Solving approach & worked reasoning") + '</summary><div class="worked-solution-body">' + escapeText(explanation) + "</div></details>" : "") + sourceReviewHTML(attempt, q, reviewSource) + (provenance.length ? '<p class="fine">Sources: ' + provenance.map((source) => '<a href="' + escapeText(source.url) + '" target="_blank" rel="noopener noreferrer">' + escapeText(source.title) + "</a>").join(" \xB7 ") + "</p>" : "") + (limit !== null ? '<div class="generic-manual-grade"><p class="fine">Written response requires explicit human assessment. Self-marked results are separate from exam scores.</p><label>Self-assessed marks (0\u2013' + limit + ')<input type="number" step="0.01" min="0" max="' + limit + '" data-manual-marks="' + escapeText(q.id) + '" value="' + escapeText(prior?.marks ?? "") + '"></label><label>Assessment note (optional)<textarea maxlength="2000" rows="2" data-manual-note="' + escapeText(q.id) + '">' + escapeText(prior?.note ?? "") + '</textarea></label><button class="btn" data-manual-save="' + escapeText(q.id) + '">Save self-assessment</button></div>' : "") + '<button class="btn" data-add-card="' + escapeText(q.id) + '"' + (records.has("learning-card:" + q.id) ? " disabled" : "") + ">" + (records.has("learning-card:" + q.id) ? "In notebook" : "Add to notebook") + "</button></article>";
+        return '<article class="generic-review" data-review-id="' + escapeText(q.id) + '" data-verdict="' + escapeText(it.verdict) + '"><strong>' + (paper.sections.flatMap((z) => z.questionRevisionIds).indexOf(q.id) + 1) + ". " + escapeText(q.content.prompt) + '</strong><p class="fine">' + escapeText(q.editorial.status) + (q.editorial.sourcePage ? " \xB7 Source page " + q.editorial.sourcePage : "") + " \xB7 " + minutes(seconds) + " foreground exposure \xB7 Speed: " + escapeText(speed) + " \xB7 Visits: " + (attempt.state.questionVisits === void 0 ? "Not recorded" : visitCount ?? 0) + "</p>" + frozenReviewMedia(attempt, q, response, answer, it.verdict) + (origin ? '<p class="fine">Notebook source: ' + escapeText(origin.sourcePaperId) + " \xB7 " + escapeText(origin.sourcePaperEdition) + " \xB7 " + escapeText(origin.sourceSectionTitle) + " \xB7 source attempt " + escapeText(origin.sourceAttemptId) + "</p>" : "") + '<p class="fine"><span class="verdict ' + escapeText(it.verdict) + '">' + escapeText(it.verdict) + "</span> \xB7 " + it.marks + ' automated marks</p><p class="fine">Your answer: ' + escapeText(readableAnswer(q, response)) + '</p><p class="fine">' + (it.verdict === "excluded" ? "Frozen answer key (not scored): " : it.verdict === "pending" ? "Manual assessment: " : "Expected: ") + escapeText(readableAnswer(q, answer)) + "</p>" + (q.editorial.notes ? '<p class="fine">Editorial note: ' + escapeText(q.editorial.notes) + "</p>" : "") + (explanation ? '<details class="worked-solution"' + (it.verdict === "incorrect" || it.verdict === "unanswered" ? " open" : "") + "><summary>" + (q.content.assetIds?.length || (q.content.kind === "single-choice" || q.content.kind === "multiple-select") && q.content.options.some((o) => o.assetIds?.length) ? "Visual solving method" : "Solving approach & worked reasoning") + '</summary><div class="worked-solution-body">' + escapeText(explanation) + "</div></details>" : "") + sourceReviewHTML(attempt, q, reviewSource) + (provenance.length ? '<p class="fine">Sources: ' + provenance.map((source) => '<a href="' + escapeText(source.url) + '" target="_blank" rel="noopener noreferrer">' + escapeText(source.title) + "</a>").join(" \xB7 ") + "</p>" : "") + (limit !== null ? '<div class="generic-manual-grade"><p class="fine">Written response requires explicit human assessment. Self-marked results are separate from exam scores.</p><label>Self-assessed marks (0\u2013' + limit + ')<input type="number" step="0.01" min="0" max="' + limit + '" data-manual-marks="' + escapeText(q.id) + '" value="' + escapeText(prior?.marks ?? "") + '"></label><label>Assessment note (optional)<textarea maxlength="2000" rows="2" data-manual-note="' + escapeText(q.id) + '">' + escapeText(prior?.note ?? "") + '</textarea></label><button class="btn" data-manual-save="' + escapeText(q.id) + '">Save self-assessment</button></div>' : "") + '<button class="btn" data-add-card="' + escapeText(q.id) + '"' + (records.has("learning-card:" + q.id) ? " disabled" : "") + ">" + (records.has("learning-card:" + q.id) ? "In notebook" : "Add to notebook") + "</button></article>";
       }).join("") + "</section>" + timingLedgerHTML(attempt, resultTab === "timing");
     }
     const openSaved = (id) => {
