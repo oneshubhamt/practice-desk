@@ -33,14 +33,21 @@ export function importCglBank(papers: SourcePaperBank, patches: ReviewPatchBank)
           ? original.status === "ok" ? "verified" : original.status
           : patch.status === "corrected" ? "corrected"
             : patch.status === "caution" ? "caution"
-              : original.status === "invalid" ? "invalid"
-                : original.status === "caution" ? "caution" : "verified";
+              // v11 policy: an unpatched source-invalid/caution item remains
+              // scoreable in reviewed edition, marked as editorial caution.
+              // Never silently change the published key or source edition.
+              : original.status === "invalid" || original.status === "caution" ? "caution" : "verified";
         const content = { kind: "single-choice" as const, prompt: merged.stem, options,
           ...(original.passageRef ? { stimulusId: `${source.id}:passage:${original.passageRef}` as StimulusId } : {}),
           ...(merged.images.stem ? { assetIds: [`${stableId}:stem` as AssetId] } : {}) };
+        const sourceInvalidCaution=edition==="reviewed"&&original.status==="invalid"&&
+          patch.status===undefined;
+        const notes=sourceInvalidCaution
+          ? [merged.review,"Editorial caution: the original published answer is retained for scoring; it is disputed and has not been independently corrected."].filter(Boolean).join(" ")
+          : merged.review;
         const editorial = { status: editorialStatus as QuestionRevision["editorial"]["status"],
           sourcePage: original.sourcePage,
-          ...(merged.review ? { notes: merged.review } : {}),
+          ...(notes ? { notes } : {}),
           ...(merged.sources?.length ? { sources: merged.sources } : {}) };
         const fingerprint = questionRevisionHash({content,editorial});
         const id = `${stableId}:${edition}:${fingerprint.slice(0,16)}` as QuestionRevisionId;
