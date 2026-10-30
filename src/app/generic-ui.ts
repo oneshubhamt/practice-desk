@@ -26,6 +26,7 @@ import { questionSpeed } from "../learning/question-analytics.ts";
 import { historyHTML, type HistorySort, type HistoryStatus } from "./history-page.ts";
 import { frozenScoreSummary } from "./history-score.ts";
 import { editorialStatusLabel } from "./editorial-labels.ts";
+import { multipleDraftMessage,duplicateMatchingTargets } from "./response-drafts.ts";
 import { examPreflight,preflightHTML,examRulesHTML } from "./exam-preflight.ts";
 import { reviewMatch, reviewFiltersHTML, resultTabsHTML, sectionPaceHTML, timingLedgerHTML, questionCoachingHTML, type ResultTab, type ReviewFilter } from "./result-presentation.ts";
 import { addLearningCard, validateLearningCard } from "../learning/learning.ts";
@@ -204,7 +205,8 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
 
 export function renderModelExam(
  attempt:Pick<GenericAttempt,"state"|"frozen"|"packageId">,
- bundle:ExamPackage|undefined,warning=""
+ bundle:ExamPackage|undefined,warning="",
+ draft?:{readonly questionId:string;readonly optionIds:readonly string[];readonly message:string}
 ):string {
    const paper=attempt.frozen.paper, state=attempt.state;
    const section=paper.sections[state.sectionIndex];
@@ -213,6 +215,7 @@ export function renderModelExam(
    if(!section||!q)return '<p>Question unavailable</p>';
    const responsesById=new Map(state.responses.map(row=>[row.questionRevisionId,row]));
    const response=responsesById.get(q.id)?.response;
+   const currentDraft=draft?.questionId===q.id&&q.content.kind==="multiple-select"?draft:null;
    const remaining=examTimeRemaining(paper,state);
    const total=paper.sections.reduce((n,section)=>n+section.questionRevisionIds.length,0);
    const answered=state.responses.filter(record=>record.response).length;
@@ -266,7 +269,9 @@ export function renderModelExam(
      stimulusHTML(assets,q)+'<h2 class="generic-prompt">'+escapeText(q.content.prompt)+'</h2>'+
      assetHTML(assets,q.content.assetIds,"Figure for question "+(state.questionIndex+1))+
      '<fieldset class="generic-response-group"'+(state.status!=="running"?" disabled":"")+'>'
-     +renderGenericControls(assets,q,response)+'</fieldset>'+
+     +renderGenericControls(assets,q,currentDraft?{kind:"multiple-select",optionIds:currentDraft.optionIds as string[]}:response)+
+     (currentDraft?'<p class="generic-inline-warning" role="status">'+escapeText(currentDraft.message)+'</p>':"")+
+     '</fieldset>'+
      '<div class="row generic-actions exam-answer-actions"><button class="btn" id="g-clear"'+(!response||state.status!=="running"?" disabled":"")+'>Clear</button>'+
      '<button class="btn" id="g-flag" aria-pressed="'+Boolean(responsesById.get(q.id)?.flagged)+'"'+(!paper.navigation.allowFlagging||expired?" disabled":"")+'>Flag</button></div>'+
      '<div class="row generic-actions exam-nav-actions"><button class="btn" id="g-prev"'+(state.status!=="running"||!state.questionIndex||paper.navigation.questionNavigation==="forward-only"?" disabled":"")+'>← Previous</button>'+
@@ -332,6 +337,9 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
   let resultTab:ResultTab="overview";
   let reviewFilter:ReviewFilter="all";
  let attempt:GenericAttempt|null=null, view:"library"|"history"|"exam"|"result"|"learning"="library";
+ // Transient incomplete multi-select selections are NEVER part of the scored
+ // response; saved answers are cleared when a draft becomes invalid.
+ const choiceDrafts=new Map<string,{questionId:string;optionIds:string[];message:string}>();
  // Live-region updates depend on actual route/question changes, not timer ticks.
  let lastScreenKey="",lastDrawView:"library"|"history"|"exam"|"result"|"learning"|null=null,lastResultPane:ResultTab="overview";
  let db:IDBDatabase|null=null, warning="",disposed=false, loading=true, writeQueue=Promise.resolve();
@@ -786,7 +794,11 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      p.paper.paperId===saved.frozen.paper.paperId&&p.paper.edition===saved.frozen.paper.edition);
  }
  function examHTML():string {
-   return attempt?renderModelExam(attempt,packageForAttempt(attempt),warning):"";
+   if(!attempt)return "";
+   const qid=attempt.frozen.paper.sections[attempt.state.sectionIndex]
+     ?.questionRevisionIds[attempt.state.questionIndex];
+   const draft=qid?choiceDrafts.get(attempt.id+"|"+qid):undefined;
+   return renderModelExam(attempt,packageForAttempt(attempt),warning,draft);
  }
  /** Result presentation must use the frozen media, not a mutable current package. */
  function frozenReviewMedia(saved:GenericAttempt,q:QuestionRevision,
@@ -1337,19 +1349,19 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        const raw=[...root.querySelectorAll<HTMLInputElement>("[data-choice]:checked")].map(x=>x.dataset.choice);
        const chosen=q.content.options.filter(option=>raw.includes(option.id)).map(option=>option.id);
        if(raw.length!==chosen.length){notice("Unknown question option.");return;}
-       if(!chosen.length)dispatch({type:"CLEAR",nowMs:now()});
-       else if(chosen.length<(q.content.minSelections??1)) {
-         warning="Select at least "+(q.content.minSelections??1)+" options before saving.";
-         const group=root.querySelector<HTMLElement>(".generic-response-group");
-         let feedback=group?.querySelector<HTMLElement>(".generic-inline-warning");
-         if(group&&!feedback){
-           feedback=document.createElement("p");
-           feedback.className="generic-inline-warning";
-           feedback.setAttribute("role","status");
-           group.append(feedback);
-         }
-         if(feedback)feedback.textContent=warning;
-       }else dispatch({type:"ANSWER",nowMs:now(),response:{kind:"multiple-select",optionIds:chosen}});
+       const draftKey=attempt!.id+"|"+q.id;
+       const min=q.content.minSelections??1,max=q.content.maxSelections;
+       const message=chosen.length?multipleDraftMessage(chosen.length,min,max):"";
+       if(message){
+         // Preserve the visible draft while clearing any previously committed
+         // response. A half-edited old answer must not silently count as saved.
+         choiceDrafts.set(draftKey,{questionId:q.id,optionIds:chosen,message});
+         dispatch({type:"CLEAR",nowMs:now()});
+       }else{
+         choiceDrafts.delete(draftKey);
+         dispatch(!chosen.length?{type:"CLEAR",nowMs:now()}:
+           {type:"ANSWER",nowMs:now(),response:{kind:"multiple-select",optionIds:chosen}});
+       }
      }
    });
    root.querySelectorAll<HTMLInputElement>("[data-bool]").forEach(input=>input.onchange=()=>{
