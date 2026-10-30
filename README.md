@@ -2,7 +2,7 @@
 
 Single-file offline examination and learning application. Built-in SSC CGL original/reviewed editions and validated imported exam packages share one strict TypeScript engine, frozen results, local history, backup and revision workflows.
 
-> **Current project status — 30 October 2026:** The overhaul has passed the historical Pass 10 automated engineering/browser gates, but a fresh comparison with the frozen v11 source revealed **incomplete UI/functionality parity**. **Passes 11–14 are implemented and browser-verified; Passes 15–16 remain open.** Do not merge into `main` or claim release approval. See the [authoritative feature-parity programme](docs/V11_FEATURE_PARITY_PROGRAMME.md).
+> **Current project status — 30 October 2026:** The overhaul has passed the historical Pass 10 automated engineering/browser gates, but a fresh comparison with the frozen v11 source revealed **incomplete UI/functionality parity**. **Passes 11–15 are implemented and browser-verified; Pass 16 remains open.** Physical devices, real Safari, NVDA/VoiceOver and human visual signoff are still unchecked. Do not merge into `main` or claim release approval. See the [authoritative feature-parity programme](docs/V11_FEATURE_PARITY_PROGRAMME.md).
 
 ## Documentation — canonical reading order
 
@@ -10,7 +10,7 @@ Single-file offline examination and learning application. Built-in SSC CGL origi
 |---|---|
 | [Engineering rules](AGENTS.md) | Non-negotiable constraints and audit → analyze → implement → check objectives → targeted QA |
 | **[v11 feature-parity programme](docs/V11_FEATURE_PARITY_PROGRAMME.md)** | **LIVE** de novo v11/overhaul audit, all identified gaps, objective IDs, Passes 11–16, acceptance and progress log |
-| [Consolidated programme status](docs/PROJECT_STATUS.md) | **LIVE** index of history, current plan, evidence and unresolved platform gates |
+| [Pass 15 paired visual and accessibility audit](docs/PASS15_VISUAL_AUDIT.md) | **CURRENT** direct frozen v11/overhaul screenshot evidence, zoom/keyboard/contrast and separate unchecked manual signoff matrix |\n| [Consolidated programme status](docs/PROJECT_STATUS.md) | **LIVE** index of history, current plan, evidence and unresolved platform gates |
 | [Data model](docs/DATA_MODEL.md) | **CURRENT** exam, scoring, history, backup and learning invariants |
 | [Original architecture audit](docs/ARCHITECTURE_AUDIT_2026-10-28.md) | **HISTORICAL** Passes 1–10 architectural reasoning; no longer the active parity scratchpad |
 | [Former Pass 9 parity ledger](docs/V11_PARITY_LEDGER.md) | **SUPERSEDED** historical checklist; not proof of full v11 feature parity |
@@ -58,3 +58,7 @@ History supports exact revision/edition filtering, comparable adjusted marks, tw
 ## Pass 14: trustworthy timing and study review
 
 New attempts measure actual question entries and returns, while older attempts explicitly show **Not recorded**. The shared five-sample section-median policy drives Fast/Typical/Slow labels in timing and review; audit notes and typical-speed mistakes are filterable. The five longest recorded cumulative foreground exposures link to their question reviews; evidence-based study prompts never claim a cause or predict future scores. These features work for original/reviewed CGL and imported six-question-kind exams. [Pass 14 source audit and browser evidence](docs/V11_FEATURE_PARITY_PROGRAMME.md#pass-14-five-step-closure--30-october-2026).
+
+## Pass 15 visual and accessibility acceptance
+
+Automated v11/overhaul screenshot comparison runs under `file://` at 390, 768 and 1280 pixels, including real reviewed CGL source correction, option image, passage, result, history, separate 85/100/140% text-size and light/dark states. The `scripts/pass15-visual.mjs` screenshot matrix also checks narrow 200%-zoom-equivalent layout, keyboard focus and targeted screen reader status, reduced motion, and computed AA contrast. Each CI run publishes `pass15-v11-overhaul-visual-evidence` as a PNG/JSON artifact. **These automated tests do not certify physical devices or NVDA/VoiceOver.** Full findings and required manual gates are listed in [PASS15_VISUAL_AUDIT.md](docs/PASS15_VISUAL_AUDIT.md); independent v11 source parity and release decision remain Pass 16.
