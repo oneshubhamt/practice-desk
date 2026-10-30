@@ -80,6 +80,7 @@ test("G02: manual expiry freezes answers and elapsed time until an explicit cont
  assert.equal(a.state.sectionIndex,0);
  assert.match(renderModelExam(a,bundle),/Answers are locked/);
  assert.match(renderModelExam(a,bundle),/Continue to next section/);
+ assert.match(renderModelExam(a,bundle),/id="g-flag"[^>]*disabled/,"Expired boundary must not present an active but inert flag button");
  assert.doesNotMatch(renderModelExam(a,bundle),/id="g-submit" disabled/);
  a=transitionGenericAttempt(a,evt("ANSWER",1250,{response:{kind:"single-choice",optionId:"a"}}),lookup);
  assert.equal(a.state.responses.length,1,"Expired question time record remains, but the answer must not change");
