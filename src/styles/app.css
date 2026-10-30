@@ -451,3 +451,13 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
  .generic-sections .exam-section-tab{flex-basis:100%}
  .result-coaching{gap:8px}
 }
+
+/* Respect the user-selected 85–140% scale in headings as well as body copy.
+   Pixel-sized headings otherwise remained fixed at the highest text setting. */
+.generic-workspace h1{
+ font-size:clamp(calc(25px * var(--type-scale)),
+                 calc(2.5vw * var(--type-scale)),
+                 calc(32px * var(--type-scale)));
+}
+.generic-workspace h2{font-size:calc(19px * var(--type-scale))}
+.generic-workspace h3{font-size:calc(15px * var(--type-scale))}
