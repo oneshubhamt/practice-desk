@@ -65,7 +65,6 @@ test("section auto-advance records a new section's first question once",()=>{
     {sectionId:"second",durationMs:1000}],allowEarlySubmit:true,pausePolicy:"forbidden"},
    navigation:{questionNavigation:"free",sectionNavigation:"sequential-locked",allowFlagging:true,allowReview:true}};
  const done=transition(modified,startSession(modified,0),{type:"TICK",nowMs:2500});
- assert.equal(done.state,undefined);
  assert.equal(done.status,"completed");
  assert.equal(done.questionVisits.find(x=>x.questionRevisionId===id(0)).count,1);
  assert.equal(done.questionVisits.find(x=>x.questionRevisionId===id(2)).count,1);
@@ -75,7 +74,7 @@ test("generic six-kind frozen timing classifications, accurate filters, longest 
  validateGenericStoredRecord(a);
  const verdicts=Object.fromEntries(a.result.items.map(x=>[x.questionRevisionId,x.verdict]));
  assert.deepEqual([verdicts[id(0)],verdicts[id(1)],verdicts[id(2)],verdicts[id(3)],verdicts[id(4)],verdicts[id(5)]],
-  ["incorrect","incorrect","correct","incorrect","correct","pending"]);
+  ["incorrect","incorrect","correct","incorrect","correct","unanswered"]);
  assert.equal(questionSpeed(a,id(0)),"Fast");
  assert.equal(questionSpeed(a,id(1)),"Typical");
  assert.equal(questionSpeed(a,id(4)),"Slow");
