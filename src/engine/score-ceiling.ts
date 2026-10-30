@@ -4,6 +4,7 @@ import type { QuestionRevision } from "../domain/question.js";
 import type { MarkingRule } from "../domain/scoring.js";
 import type { GenericAttempt } from "../app/exam-package.ts";
 import type { ScoreResult } from "./scoring.ts";
+import { sectionTimerDuration } from "./session.ts";
 
 const excluded=new Set(["draft","invalid","incomplete-source","under-review","superseded"]);
 
@@ -84,6 +85,9 @@ export interface SectionScoreSummary {
  readonly marks:number;
  readonly eligibleMax:number;
  readonly foregroundMs:number;
+ /** Closed sequential-section timer time; null for old/free multi-section data. */
+ readonly timerMs:number|null;
+ readonly timerReason:"time-expired"|"submitted"|null;
 }
 export function sectionScoreSummaries(attempt:GenericAttempt,result:ScoreResult):SectionScoreSummary[]{
  const paper=attempt.frozen.paper;
@@ -106,6 +110,8 @@ export function sectionScoreSummaries(attempt:GenericAttempt,result:ScoreResult)
    }
    return {sectionId:section.id,title:section.title,questions:section.questionRevisionIds.length,
      attempted,correct,incorrect,unanswered,pending,excluded,marks,foregroundMs,
-     eligibleMax:scoreableMaximum(paper,attempt.frozen.key,attempt.frozen.questions,section)};
+     eligibleMax:scoreableMaximum(paper,attempt.frozen.key,attempt.frozen.questions,section),
+     timerMs:sectionTimerDuration(attempt.state,paper.sections.indexOf(section)),
+     timerReason:attempt.state.completedSectionTimings?.find(z=>z.sectionId===section.id)?.reason??null};
  });
 }
