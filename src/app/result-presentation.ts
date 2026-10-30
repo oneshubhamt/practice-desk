@@ -33,7 +33,7 @@ export function reviewFiltersHTML(active:ReviewFilter):string{
     ["typicalwrong","Typical-speed incorrect"],["slowwrong","Slow incorrect"]] as const)
    .map(([id,label])=>'<option value="'+id+'"'+(id===active?" selected":"")+'>'+label+'</option>').join("")+'</select></label>';
 }
-export function timingLedgerHTML(a:GenericAttempt,active:boolean):string{
+export function timingLedgerHTML(a:GenericAttempt,active:boolean,allowReview=true):string{
  if(!a.result)return "";
  return '<section class="panel pad result-pane" id="result-timing" role="tabpanel" aria-labelledby="result-tab-timing"'+(!active?' hidden':'')+'>'+
   '<h2>Question timing ledger</h2><p class="fine">Time is cumulative foreground question exposure, not thinking time or an uninterrupted visit. Speed is relative to each section’s median only when at least five answered, scored items have measurable time. Older attempts may not have recorded visits.</p>'+
@@ -49,7 +49,7 @@ export function timingLedgerHTML(a:GenericAttempt,active:boolean):string{
     '<td><span class="tag speed-'+speed.toLowerCase().replace(/[^a-z]+/g,"-")+'">'+esc(speed)+'</span></td>'+
     '<td>'+(a.state.questionVisits===undefined?"Not recorded":visit??0)+'</td>'+
     '<td>'+(response?.answerChangeCount??0)+'</td>'+
-    '<td><button class="textlink" data-ledger-q="'+esc(x.questionRevisionId)+'" aria-label="Review question '+(i+1)+'">Review →</button></td></tr>';
+    '<td>'+(allowReview?'<button class="textlink" data-ledger-q="'+esc(x.questionRevisionId)+'" aria-label="Review question '+(i+1)+'">Review →</button>':"Not released")+'</td></tr>';
   }).join("")+'</tbody></table></div></section>';
 }
 export function sectionPaceHTML(a:GenericAttempt):string{
@@ -63,17 +63,19 @@ export function sectionPaceHTML(a:GenericAttempt):string{
 }
 
 /** Source-backed question exposure rankings and conditional coaching. */
-export function questionCoachingHTML(a:GenericAttempt):string{
+export function questionCoachingHTML(a:GenericAttempt,allowReview=true):string{
  const longest=longestQuestionExposure(a);
  const suggestions=studySuggestions(a);
  return '<div class="result-coaching">'+
   '<section class="panel pad" id="g-longest-questions"><h2>Longest recorded question exposure</h2>'+
   '<p class="fine">Five highest cumulative foreground viewing times, including any measured unanswered items. These are not uninterrupted visit durations or evidence of difficulty.</p>'+
   (longest.length?'<div class="slow-list">'+longest.map(row=>
-   '<button type="button" class="slow-link" data-ledger-q="'+esc(row.id)+
-   '" aria-label="Review question '+row.paperNumber+'"><span><b>Q'+row.paperNumber+
+   (allowReview?'<button type="button" class="slow-link" data-ledger-q="'+esc(row.id)+
+   '" aria-label="Review question '+row.paperNumber+'">':'<div class="slow-link">')+
+   '<span><b>Q'+row.paperNumber+
    '</b> · '+esc(row.section)+' · '+esc(row.verdict)+'</span><span>'+
-   duration(row.milliseconds)+' · Review →</span></button>').join("")+'</div>':
+   duration(row.milliseconds)+(allowReview?' · Review →':'')+'</span>'+
+   (allowReview?'</button>':'</div>')).join("")+'</div>':
    '<p class="fine">No positive foreground question time was recorded.</p>')+
   '</section><section class="panel pad" id="g-next-work"><h2>What to work on next</h2>'+
   '<p class="fine">Suggestions are based on answers and measured timing in this attempt, not predictions or diagnoses of why mistakes occurred.</p>'+
