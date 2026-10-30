@@ -260,7 +260,7 @@ export function renderModelExam(
      '<fieldset class="generic-response-group"'+(state.status!=="running"?" disabled":"")+'>'
      +renderGenericControls(assets,q,response)+'</fieldset>'+
      '<div class="row generic-actions exam-answer-actions"><button class="btn" id="g-clear"'+(!response||state.status!=="running"?" disabled":"")+'>Clear</button>'+
-     '<button class="btn" id="g-flag" aria-pressed="'+Boolean(responsesById.get(q.id)?.flagged)+'"'+(!paper.navigation.allowFlagging||state.status==="paused"?" disabled":"")+'>Flag</button></div>'+
+     '<button class="btn" id="g-flag" aria-pressed="'+Boolean(responsesById.get(q.id)?.flagged)+'"'+(!paper.navigation.allowFlagging||state.status==="paused"||expired?" disabled":"")+'>Flag</button></div>'+
      '<div class="row generic-actions exam-nav-actions"><button class="btn" id="g-prev"'+(expired||!state.questionIndex||paper.navigation.questionNavigation==="forward-only"?" disabled":"")+'>← Previous</button>'+
      '<button class="btn" id="g-next"'+(expired||state.questionIndex===section.questionRevisionIds.length-1?" disabled":"")+'>Next →</button></div>'+
      '<div class="row generic-actions exam-submit-actions">'+
