@@ -16,6 +16,7 @@ import type { Verdict } from "../engine/scoring.ts";
 import { makeBackup, verifyBackup, planBackupMerge } from "../history/backup.ts";
 import { validateResponse } from "../engine/response.ts";
 import { assertWriteVersion, nextWriteVersion } from "../history/concurrency.ts";
+import { assertDeletionAllowed, deletionWarning, type DeletionIntent } from "../history/deletion-policy.ts";
 import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
 import { createLearningDesk } from "./learning-ui.ts";
 import { makeRevisionPackage,createNotebookLineage,validateNotebookLineage } from "../learning/revision-test.ts";
@@ -489,12 +490,25 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      return false;
    });
  };
- const removeSavedAttempt=async(id:string):Promise<void>=>{
-   const saved=records.get(id);
+ const removeSavedAttempt=async(id:string,intent:DeletionIntent="completed"):Promise<void>=>{
+   const chosen=records.get(id);
    if(storageFault||fallbackConflict){notice("Storage locked. Export recovery backup and reopen before deleting.");return;}
-   if(!(isAttempt(saved)||isLearning(saved))||!confirm("Permanently delete this saved item? Export a backup first if needed."))return;
+   // The action's label and the stored record must agree before confirmation.
+   try{assertDeletionAllowed(chosen,intent);}
+   catch(error){notice(error instanceof Error?error.message:"Deletion action no longer matches this record");return;}
+   const answers=isAttempt(chosen)?chosen.state.responses.filter(row=>row.response!==undefined).length:0;
+   if(!confirm(deletionWarning(intent,answers)))return;
+   if(intent==="discard-unfinished"&&!confirm(
+     "Final confirmation: permanently discard this unfinished test, including "+
+     answers+" saved answer"+(answers===1?"":"s")+
+     "? This cannot be undone without a previously exported backup."))return;
    try{
      await writeQueue;
+     if(storageFault||fallbackConflict)throw Error("Storage changed while deleting; reopen first");
+     const current=records.get(id);
+     assertDeletionAllowed(current,intent);
+     if(!current||current.saveRevision!==chosen?.saveRevision)
+       throw Error("Record was updated while confirming deletion. Reopen and try again.");
      if(db){
        await new Promise<void>((resolve,reject)=>{
          const tx=db!.transaction("attempts","readwrite");
@@ -502,8 +516,12 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          let conflict:Error|null=null;
          const request=store.get(id);
          request.onsuccess=()=>{
-           try{assertWriteVersion(request.result as RecordItem|undefined,saved.saveRevision??0);store.delete(id);}
-           catch(error){conflict=error as Error;tx.abort();}
+           try{
+             const stored=request.result as RecordItem|undefined;
+             assertWriteVersion(stored,current.saveRevision??0);
+             assertDeletionAllowed(stored,intent);
+             store.delete(id);
+           }catch(error){conflict=error as Error;tx.abort();}
          };
          tx.oncomplete=()=>resolve();
          tx.onerror=()=>reject(conflict??tx.error);
@@ -516,7 +534,14 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        localStorage.setItem(storageKey,encoded);fallbackStamp=encoded;
      }
      records.delete(id);
+     // A deleted active attempt must not be revived from its emergency mirror.
+     try{
+       const raw=localStorage.getItem(mirrorKey);
+       if(raw&&JSON.parse(raw)?.id===id)localStorage.removeItem(mirrorKey);
+     }catch(error){console.warn("Could not clear the discarded attempt mirror",error);}
      if(attempt?.id===id){attempt=null;view="library";}
+     warning=intent==="discard-unfinished"?"Unfinished test discarded. Other saved work was preserved.":
+       intent==="completed"?"Completed result deleted.":"Learning card deleted.";
      draw();
    }catch(error){notice(error instanceof Error?error.message:"Deletion failed");}
  };
@@ -594,7 +619,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    cards:()=>[...records.values()].filter(isLearning),
    attempts:()=>[...records.values()].filter(isAttempt),
    save:(item)=>save(item),
-   remove:(id)=>removeSavedAttempt(id),
+   remove:(id)=>removeSavedAttempt(id,"learning-card"),
    startRevision:async selected=>{
      if(storageFault||fallbackConflict||loading){notice("Storage unavailable; cannot start a revision exam.");return false;}
      try{
@@ -1117,7 +1142,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        const file=(e.target as HTMLInputElement).files?.[0];if(!file)return;
        try{await importHistory(file);}catch(error){notice(error instanceof Error?error.message:"History import failed");}
      };
-     root.querySelectorAll<HTMLButtonElement>("[data-delete]").forEach(button=>button.onclick=()=>{void removeSavedAttempt(button.dataset.delete??"");});
+     root.querySelectorAll<HTMLButtonElement>("[data-delete]").forEach(button=>button.onclick=()=>{void removeSavedAttempt(button.dataset.delete??"","completed");});
+     root.querySelectorAll<HTMLButtonElement>("[data-discard]").forEach(button=>button.onclick=()=>{void removeSavedAttempt(button.dataset.discard??"","discard-unfinished");});
      root.querySelectorAll<HTMLButtonElement>("[data-attempt]").forEach(button=>button.onclick=()=>openSaved(button.dataset.attempt??""));
      root.querySelector<HTMLButtonElement>("#g-delete-completed")!.onclick=()=>{void deleteAllCompleted();};
      root.querySelector<HTMLButtonElement>("#g-storage-persist")!.onclick=()=>{void requestPersistentStorage();};
@@ -1184,7 +1210,10 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        }catch(error){notice(error instanceof Error?error.message:"Invalid exam package");}
      };
      root.querySelectorAll<HTMLButtonElement>("[data-delete]").forEach(button=>button.onclick=()=>{
-       void removeSavedAttempt(button.dataset.delete??"");
+       void removeSavedAttempt(button.dataset.delete??"","completed");
+     });
+     root.querySelectorAll<HTMLButtonElement>("[data-discard]").forEach(button=>button.onclick=()=>{
+       void removeSavedAttempt(button.dataset.discard??"","discard-unfinished");
      });
      root.querySelectorAll<HTMLButtonElement>("[data-attempt]").forEach(button=>button.onclick=()=>{
        openSaved(button.dataset.attempt??"");
