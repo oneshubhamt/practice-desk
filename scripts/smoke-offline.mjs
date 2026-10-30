@@ -335,7 +335,8 @@ try{
  const importedCustom=await find(page,x=>x.id===custom.id);
  fail(importedCustom.manualGrades?.[0]?.marks===1.5,
    "Backup restore did not retain written self-assessment");
- fail(await page.locator("#themeToggle").textContent()==="Light theme","Theme preference not restored");
+ fail(await page.locator("#themeToggle").getAttribute("aria-pressed")==="true"&&
+   await page.locator("html").getAttribute("data-theme")==="dark","Theme preference not restored");
  fail(await page.locator("#fontReset").innerText()==="105%","Font preference not restored");
  console.log("Chrome file://: complete backup, preferences, restore and deletion passed");
 
