@@ -68,8 +68,15 @@ try{
  for(let i=0;i<4;i++)await page.locator("#g-submit").click();
  ensure(await page.locator('[data-result-tab="overview"]').count()===1,
    "Strict four-section exam failed to complete");
- const completed=(await attempts(page)).find(x=>x.finishedAt!==null);
- ensure(Boolean(completed),"Completed attempt not persisted");
+ // The UI changes route immediately and saves through a version-guarded
+ // asynchronous queue. Require eventual durable presence, not the first
+ // IndexedDB read racing the pending transaction.
+ let completed;
+ for(let i=0;i<40&&!completed;i++){
+   completed=(await attempts(page)).find(x=>x.finishedAt!==null);
+   if(!completed)await page.waitForTimeout(75);
+ }
+ ensure(Boolean(completed),"Completed attempt not persisted within 3 seconds");
  ensure(completed.state.completedSectionTimings?.length===4,
    "Strict exam did not persist four section timer records");
  ensure(completed.state.completedSectionTimings.every(row=>Number.isFinite(row.durationMs)),
