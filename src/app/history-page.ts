@@ -1,10 +1,11 @@
 import type { GenericAttempt, ExamPackage } from "./exam-package.ts";
 import { attemptEvidence } from "../learning/attempt-evidence.ts";
 import { comparableTrends } from "../learning/learning.ts";
+import { comparableScoreTrends,adjustedHistoryMetrics } from "./history-metrics.ts";
 
 export type HistoryStatus="all"|"complete"|"progress";
 export type HistorySort="newest"|"oldest";
-export interface HistoryQuery { readonly status:HistoryStatus;readonly sort:HistorySort;readonly search:string; }
+export interface HistoryQuery { readonly status:HistoryStatus;readonly sort:HistorySort;readonly search:string;readonly paperRevisionId?:string; }
 const esc=(x:unknown):string=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]??c));
 const percent=(n:number)=>Math.max(0,Math.min(100,n));
 const stamp=(ms:number)=>new Date(ms).toLocaleString();
@@ -12,7 +13,9 @@ const label=(a:GenericAttempt,packages:ReadonlyMap<string,ExamPackage>)=>package
  a.frozen.paper.paperId+(a.frozen.paper.edition==="custom"?" · Practice":" · "+a.frozen.paper.edition);
 export function filteredHistory(attempts:readonly GenericAttempt[],packages:ReadonlyMap<string,ExamPackage>,query:HistoryQuery):GenericAttempt[]{
  const search=query.search.trim().toLocaleLowerCase();
- return attempts.filter(a=>(query.status==="all"||query.status==="complete"&&a.finishedAt!==null||
+ const selected=query.paperRevisionId??"all";
+ return attempts.filter(a=>(selected==="all"||a.frozen.paper.id===selected)&&
+  (query.status==="all"||query.status==="complete"&&a.finishedAt!==null||
   query.status==="progress"&&a.finishedAt===null)&&
   (!search||[label(a,packages),a.frozen.paper.paperId,a.frozen.snapshot.mode,a.frozen.paper.edition]
    .some(s=>s.toLocaleLowerCase().includes(search))))
@@ -33,19 +36,20 @@ export function sectionPriorities(attempts:readonly GenericAttempt[]):Priority[]
  return [...map.values()].filter(x=>x.answered>=5).sort((a,b)=>
   a.correct/a.answered-b.correct/b.answered||a.examId.localeCompare(b.examId));
 }
-function trendSVG(values:readonly number[]):string{
+function trendSVG(values:readonly number[],description="Comparable attempt accuracy sequence"):string{
  if(values.length<2)return "";
  const width=600,height=105,left=20,top=10;
  const min=Math.min(0,...values),max=Math.max(100,...values),span=max-min||1;
  const points=values.map((v,i)=>[left+i*(width-left*2)/(values.length-1),height-top-(v-min)*(height-top*2)/span]);
  const path=points.map(([x,y],i)=>(i?"L ":"M ")+x!.toFixed(1)+" "+y!.toFixed(1)).join(" ");
- return '<svg class="history-sparkline" viewBox="0 0 600 105" role="img" aria-label="Comparable attempt accuracy sequence">'+
+ return '<svg class="history-sparkline" viewBox="0 0 600 105" role="img" aria-label="'+esc(description)+'">'+
   '<path d="'+path+'" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'+
   points.map(([x,y])=>'<circle cx="'+x!.toFixed(1)+'" cy="'+y!.toFixed(1)+'" r="4" fill="currentColor"/>').join("")+'</svg>';
 }
 /** A dedicated history route, not a second exam store or a v11 runtime. */
 export function historyHTML(attempts:readonly GenericAttempt[],packages:ReadonlyMap<string,ExamPackage>,
- query:HistoryQuery,loading:boolean,storageLocked:boolean,warning:string):string{
+ query:HistoryQuery,loading:boolean,storageLocked:boolean,warning:string,
+ backend:"indexeddb"|"fallback"="indexeddb"):string{
  const visible=filteredHistory(attempts,packages,query);
  const done=attempts.filter(a=>a.finishedAt!==null&&a.result);
  const progressing=attempts.filter(a=>a.finishedAt===null);
@@ -55,6 +59,14 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
     .sort((a,b)=>(b.points.at(-1)?.at??0)-(a.points.at(-1)?.at??0))[0];
  const trendPoints=matching?.points.filter(p=>p.accuracy!==null)??[];
  const priorities=sectionPriorities(done).slice(0,5);
+ const metrics=adjustedHistoryMetrics(done);
+ const scoreTrend=comparableScoreTrends(done).find(x=>x.count>=2);
+ const editionOptions=new Map<string,string>();
+ for(const a of attempts)editionOptions.set(a.frozen.paper.id,
+   a.frozen.paper.paperId+" · "+a.frozen.paper.edition+" · "+a.frozen.snapshot.mode);
+ for(const p of packages.values())if(!editionOptions.has(p.paper.id))
+   editionOptions.set(p.paper.id,p.paper.paperId+" · "+p.paper.edition);
+
  const pCount=attempts.length;
  return '<div class="generic-heading page-heading"><div><span class="eyebrow">ATTEMPT ARCHIVE</span>'+
   '<h1>History & insights</h1><p class="muted">Review your work, compare like-for-like papers and safeguard offline records.</p></div>'+
@@ -62,9 +74,12 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
   (warning?'<p role="status" class="generic-warning">'+esc(warning)+'</p>':"")+
   '<div class="history-summary">'+
   [['Total attempts',pCount],['Completed',done.length],['In progress',progressing.length],
+   ['Papers practised',metrics.papersPractised],
+   ['Best adjusted %',metrics.bestAdjustedPercent===null?"—":metrics.bestAdjustedPercent.toFixed(1)+"%"],
    ['Observed accuracy',answered?Math.round(100*accurate/answered)+"%":"—"]]
    .map(([t,v])=>'<div class="summary-stat"><small>'+esc(t)+'</small><b>'+esc(v)+'</b></div>').join("")+
   '</div>'+
+  '<p class="fine">Best adjusted % is the highest observed automated score divided by that attempt’s eligible maximum. Different exams and modes are not equal-difficulty comparisons.</p>'+
   '<div class="history-panels">'+
   '<section class="panel pad history-trend"><div class="row between"><div><h2>Comparable progression</h2>'+
   '<p class="fine">Most recently repeated exact paper revision — identical questions, key and policy only.</p></div></div>'+
@@ -72,6 +87,15 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
    '<p class="fine">'+esc(matching.label)+' · '+matching.count+' attempts · '+
    trendPoints.map(x=>Math.round(x.accuracy!*100)+"%").join(" → ")+
    ' observed accuracy</p>':'<p class="empty-state">Complete the same frozen paper twice to unlock a defensible trend. Different papers are not assumed equally difficult.</p>')+
+  (scoreTrend?'<div class="history-score-trend"><h3>Adjusted score progression</h3>'+
+    '<p class="fine">Only the exact same frozen paper revision, key and practice mode are compared; '+scoreTrend.count+' attempts.</p>'+
+    '<div class="history-trend-chart">'+trendSVG(scoreTrend.points.map(x=>x.percent),
+      "Adjusted score progression, percent of eligible maximum: "+
+      scoreTrend.points.map(x=>x.percent.toFixed(1)).join(", "))+'</div>'+
+    '<p class="fine">'+esc(scoreTrend.label)+' · '+
+    scoreTrend.points.map(x=>x.percent.toFixed(1)+"%").join(" → ")+
+    ' of eligible automated maximum</p></div>':
+    '<p class="fine">Repeat the same frozen paper, key and mode to show adjusted score progression.</p>')+
   '</section>'+
   '<section class="panel pad history-priorities"><h2>Section priorities</h2><p class="fine">Observed accuracy across completed attempts; repeated questions count as repeated observations, not mastery.</p>'+
   (priorities.length?priorities.map(p=>{
@@ -85,6 +109,11 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
   '<input type="file" id="g-history-file" accept=".json,application/json" hidden>'+
   '<div class="history-filters"><label class="filter-label" for="g-history-search">Find a paper'+
     '<input type="search" id="g-history-search" placeholder="Search paper, mode or edition" value="'+esc(query.search)+'"></label>'+
+  '<label class="filter-label" for="g-history-paper">Paper / edition<select id="g-history-paper">'+
+    '<option value="all">All paper editions</option>'+
+    [...editionOptions.entries()].sort((a,b)=>a[1].localeCompare(b[1])).map(([id,label])=>
+      '<option value="'+esc(id)+'"'+((query.paperRevisionId??"all")===id?" selected":"")+'>'+
+      esc(label)+'</option>').join("")+'</select></label>'+
   '<label class="filter-label" for="g-filter">Status<select id="g-filter">'+
   ([["all","All attempts"],["progress","In progress"],["complete","Completed"]] as const)
    .map(([id,t])=>'<option value="'+id+'"'+(query.status===id?" selected":"")+'>'+t+'</option>').join("")+
@@ -105,5 +134,20 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
     '<span class="history-status '+(a.finishedAt?"complete":"active")+'">'+status+'</span>'+
     '<button class="btn danger generic-delete" data-delete="'+esc(a.id)+'" aria-label="Delete saved attempt">Delete</button></div>';
   }).join("")+'</div>':'<p class="empty-state">No attempts match these filters. Your saved records have not been deleted.</p>')+
-  '</section>';
+  '</section>'+
+  '<div class="history-management-grid"><section class="panel pad" id="g-storage-panel">'+
+  '<h2>Storage & safety</h2><p class="fine">Storage backend: <b id="g-storage-backend">'+
+   (backend==="indexeddb"?"IndexedDB":"localStorage fallback")+'</b>. '+
+   (backend==="indexeddb"?"Records are indexed in this browser.":"Fallback capacity is limited; export a backup.")+
+   ' Browser data can still be cleared; keep exported backups.</p>'+
+  '<p id="g-storage-quota" class="fine" role="status">Checking browser storage estimate…</p>'+
+  '<p id="g-storage-persist-status" class="fine" role="status"></p>'+
+  '<button class="btn" id="g-storage-persist" type="button">Protect stored data</button>'+
+  '</section><section class="panel pad"><h2>Backup & management</h2>'+
+  '<p class="fine">Backup v3 imports are checksum-verified and additive only. Matching records are never overwritten; export before deleting.</p>'+
+  '<button class="btn danger" id="g-delete-completed" type="button"'+
+  (done.length===0||loading||storageLocked?" disabled":"")+
+  '>Delete all '+done.length+' completed attempts</button>'+
+  '<p class="fine">Only finished test records are deleted. In-progress tests, imported papers and learning cards remain untouched.</p>'+
+  '</section></div>';
 }
