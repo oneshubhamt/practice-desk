@@ -67,7 +67,11 @@ export function scoreAttempt(paper: PaperRevision, key: AnswerKeyRevision, quest
     else {
       verdict = "incorrect"; incorrectCount++;
       const partial = componentMarks(entry.answer, response, rule);
-      marks = partial === null ? rule.incorrectMarks : (rule.partialCredit?.floorAtZero ? Math.max(0, partial) : partial);
+      // An incorrect partial-credit response cannot earn more than full
+      // marks even if an imported per-component rate is unusually generous.
+      // This keeps the frozen paper's declared eligible maximum truthful.
+      marks = partial === null ? rule.incorrectMarks :
+        Math.min(rule.correctMarks,rule.partialCredit?.floorAtZero ? Math.max(0,partial) : partial);
     }
     earnedMarks += marks;
     positiveMarks += Math.max(0, marks);
