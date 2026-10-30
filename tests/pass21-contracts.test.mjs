@@ -133,11 +133,13 @@ test("F10: cannot flag when disabled, after expiry or after completion",()=>{
  let expired=startSession(manual,0);
  expired=transition(manual,expired,send("TICK",40));
  assert.equal(expired.status,"section-expired");
+ const frozenAtExpiry=structuredClone(expired.responses);
  expired=transition(manual,expired,send("FLAG",1000,{flagged:true}));
- assert.equal(expired.responses.length,0);
+ assert.deepEqual(expired.responses,frozenAtExpiry,"Expired section must not accept new flags");
  let done=startSession(pkg.paper,0);
  done=transition(pkg.paper,done,send("SUBMIT_ATTEMPT",100));
  assert.equal(done.status,"completed");
+ const frozenAtCompletion=structuredClone(done.responses);
  done=transition(pkg.paper,done,send("FLAG",200,{flagged:true}));
- assert.equal(done.responses.length,0);
+ assert.deepEqual(done.responses,frozenAtCompletion,"Completed exam must not accept new flags");
 });
