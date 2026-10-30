@@ -28,6 +28,15 @@ jobs:
       - run: node scripts/pass22-targeted.mjs
       - run: node scripts/pass23-independent.mjs
       - run: node scripts/pass25-library.mjs
+      - run: node scripts/pass26-exam.mjs
+      - name: Save v11 versus overhaul laptop Exam geometry and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pass26-exam-first-fold-screenshots
+          path: artifacts/pass26-exam/
+          if-no-files-found: warn
+          retention-days: 30
       - name: Save v11 versus overhaul laptop Library geometry evidence
         if: always()
         uses: actions/upload-artifact@v4
