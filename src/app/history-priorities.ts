@@ -23,8 +23,9 @@ export interface CrossPaperMarksPriorities {
 }
 
 /** Match exam identity, edition, practice mode, scoring scheme, section names,
- * section ordering and question counts. Do not mix unrelated exams, full and
- * sectional attempts, or scoring systems just because sections share a name.
+ * section ordering, question counts, timer policy and navigation. Do not mix
+ * unrelated exams, full and sectional attempts, or scoring systems merely
+ * because sections share a name.
  *
  * Source and reviewed editions are deliberately different cohorts; an
  * individual item's editorial exclusion still alters its own frozen maximum.
@@ -35,6 +36,9 @@ function formatSignature(a:GenericAttempt):string{
    exam:a.frozen.snapshot.examId,edition:p.edition,mode:a.frozen.snapshot.mode,
    sectionStructure:p.sections.map(s=>({title:s.title,count:s.questionRevisionIds.length,
      scoringOverride:s.scoringOverride??null})),
+   timing:p.timing,
+   navigation:{questionNavigation:p.navigation.questionNavigation,
+     sectionNavigation:p.navigation.sectionNavigation},
    marking:{defaultRule:p.scoring.defaultRule,byQuestionKind:p.scoring.byQuestionKind??null}
  });
 }
