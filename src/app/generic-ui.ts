@@ -900,7 +900,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    if(!attempt)return "";
    const paper=attempt.frozen.paper,s=attempt.result??scoreAttempt(paper,attempt.frozen.key,attempt.frozen.questions,
       attempt.state.responses,new Date().toISOString());
-   const qs=new Map(attempt.frozen.questions.map(q=>[q.id,q]));
+   const qs=resultTab==="review"?new Map(attempt.frozen.questions.map(q=>[q.id,q])):new Map<string,QuestionRevision>();
    // allowReview controls post-completion detailed question/solution disclosure,
    // not question navigation during the attempt or numerical score visibility.
    const revealReview=paper.navigation.allowReview!==false;
@@ -910,7 +910,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    // bundled source paper AND source key revision exactly match the previously
    // saved original-key reference. Never fabricate or persist this fallback.
    const originalReference=attempt.sourceKeyReference;
-   const pinnedOriginal= !attempt.sourceReviewReference&&
+   const pinnedOriginal= resultTab==="review"&&!attempt.sourceReviewReference&&
      attempt.frozen.snapshot.examId==="ssc-cgl"&&originalReference?
        cachedCglPackages(sources,patches,solutions).find(p=>
          p.paper.edition==="source"&&p.paper.id===originalReference.sourcePaperRevisionId&&
@@ -921,25 +921,25 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      paper:attempt.frozen.paper,answerKey:attempt.frozen.key,
      questions:attempt.frozen.questions,stimuli:attempt.frozen.stimuli,
      assets:attempt.frozen.assets};
-   const reviewSource=attempt.sourceReviewReference ??
-     (pinnedOriginal?createSourceReviewReference(frozenTarget,pinnedOriginal):null);
-   const grades=manualGradeSummary(attempt);
+   const reviewSource=resultTab==="review"?
+     (attempt.sourceReviewReference??(pinnedOriginal?createSourceReviewReference(frozenTarget,pinnedOriginal):null)):null;
+   const grades=resultTab==="overview"?manualGradeSummary(attempt):{graded:0,pending:0,total:0};
    const selfAssessed=s.snapshot.earnedMarks+grades.total;
-   const originalKey=sourceKeyScore(attempt);
+   const originalKey=resultTab==="overview"?sourceKeyScore(attempt):null;
    const scorePrecision=paper.scoring.decimalPlaces??2;
    const markLabel=(value:number)=>value.toFixed(scorePrecision);
-   const eligibleMax=scoreableMaximum(paper,attempt.frozen.key,attempt.frozen.questions);
-   const conservativeFloor=scoreableLowerBound(paper,attempt.frozen.key,attempt.frozen.questions);
-   const paperSectionRows=sectionScoreSummaries(attempt,s).map(row=>
+   const eligibleMax=resultTab==="overview"?scoreableMaximum(paper,attempt.frozen.key,attempt.frozen.questions):0;
+   const conservativeFloor=resultTab==="overview"?scoreableLowerBound(paper,attempt.frozen.key,attempt.frozen.questions):0;
+   const paperSectionRows=resultTab==="overview"?sectionScoreSummaries(attempt,s).map(row=>
      '<tr><td>'+escapeText(row.title)+'</td><td>'+row.attempted+'/'+
        (row.questions-row.excluded)+'</td><td>'+row.correct+'</td><td>'+row.incorrect+
        '</td><td>'+escapeText(markLabel(row.marks))+' / '+
        escapeText(markLabel(row.eligibleMax))+'</td><td>'+
        (row.timerMs===null?"Not recorded":minutes(row.timerMs)+
          (row.timerReason==="time-expired"?" · Expired":" · Submitted"))+'</td><td>'+
-       minutes(row.foregroundMs)+'</td></tr>').join("");
-   const evidence=attemptEvidence(attempt);
-   const revisions=answerRevisionEvidence(attempt);
+       minutes(row.foregroundMs)+'</td></tr>').join(""):"";
+   const evidence=resultTab==="overview"?attemptEvidence(attempt):null;
+   const revisions=resultTab==="overview"?answerRevisionEvidence(attempt):null;
    const analyticHTML=evidence?'<section class="panel pad" id="g-attempt-evidence">'+
      '<h2>Timing, accuracy & marks evidence</h2>'+
      '<p class="fine">Elapsed is consumed test timer time (including hidden intervals, excluding permitted pauses and expired waiting). Question exposure is measured only in the visible foreground. The global median uses measured scored answers; hypothetical opportunities are not predicted marks.</p>'+
@@ -997,7 +997,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      '<button class="btn" id="g-library">Library</button></div></div>'+
     (warning?'<p class="generic-warning" role="status">'+escapeText(warning)+'</p>':"")+
     resultTabsHTML(resultTab,revealReview)+
-    '<div class="result-pane" id="result-overview" role="tabpanel" aria-labelledby="result-tab-overview"'+(resultTab!=="overview"?" hidden":"")+'>'+
+    (resultTab==="overview"?'<div class="result-pane" id="result-overview" role="tabpanel" aria-labelledby="result-tab-overview">'+
     '<section class="panel pad"><div class="scoregrid"><div class="score standout"><b>'+
      escapeText(markLabel(s.snapshot.earnedMarks))+
      ' <small>/ '+escapeText(markLabel(eligibleMax))+'</small></b>'+
@@ -1025,12 +1025,13 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      paperSectionRows+'</tbody></table></div></section>'+sectionPaceHTML(attempt)+analyticHTML+
      questionCoachingHTML(attempt,revealReview)+
     '<section class="panel pad answer-revision-panel"><h2>Answer revisions</h2>'+
-    (revisions.recorded?'<div class="learning-metric-grid">'+
+    (revisions?.recorded?'<div class="learning-metric-grid">'+
       [['Modified answers',revisions.changed],['Wrong → correct',revisions.rescued],['Correct → wrong',revisions.lost],['Other changes',revisions.other]]
        .map(([label,value])=>'<div class="learning-metric"><strong>'+escapeText(label)+'</strong><b>'+escapeText(value)+'</b></div>').join("")+
       '</div>':'<p class="fine">No saved answer-revision sequence is available for this attempt.</p>')+
-    '<p class="fine">Based only on recorded successive single-choice selections. Clear-and-reselect and unverified items are not classified as rescued/lost. A changed answer may coincide with better marks; this is not evidence that revision caused improvement.</p></section></div>'+
-    (revealReview?'<section class="panel pad result-pane" id="result-review" role="tabpanel" aria-labelledby="result-tab-review"'+(resultTab!=="review"?" hidden":"")+'>'+
+    '<p class="fine">Based only on recorded successive single-choice selections. Clear-and-reselect and unverified items are not classified as rescued/lost. A changed answer may coincide with better marks; this is not evidence that revision caused improvement.</p></section></div>':
+    '<div class="result-pane" id="result-overview" role="tabpanel" aria-labelledby="result-tab-overview" hidden></div>')+
+    (revealReview&&resultTab==="review"?'<section class="panel pad result-pane" id="result-review" role="tabpanel" aria-labelledby="result-tab-review">'+
     '<div class="row between"><h2>Question review</h2>'+
       '<div class="row"><button class="btn" id="g-review-top">Top ↑</button>'+
       '<button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div></div>'+
@@ -1088,7 +1089,10 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          (records.has("learning-card:"+q.id)?" disabled":"")+'>'
          +(records.has("learning-card:"+q.id)?"In notebook":"Add to notebook")+
        '</button></article>';
-    }).join("")+'</section>':'')+timingLedgerHTML(attempt,resultTab==="timing",revealReview);
+    }).join("")+'</section>':revealReview?
+       '<section class="result-pane" id="result-review" role="tabpanel" aria-labelledby="result-tab-review" hidden></section>':"")+
+    (resultTab==="timing"?timingLedgerHTML(attempt,true,revealReview):
+      '<section class="result-pane" id="result-timing" role="tabpanel" aria-labelledby="result-tab-timing" hidden></section>');
  }
  const openSaved=(id:string)=>{
    const saved=records.get(id);if(!isAttempt(saved))return;
