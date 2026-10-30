@@ -439,7 +439,7 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
  .symbol{width:32px!important;height:32px!important;flex:none}
  main{padding:10px 8px 35px}
  .pad{padding:12px}
- .display-panel{width:calc(100vw - 16px);right:-1px;padding:12px}
+ .display-panel{left:0;right:auto;width:calc(100vw - 20px);padding:12px}
  .display-control{display:block;padding:10px 0}
  .display-size{width:100%;margin-top:7px}
  .display-size .btn{flex:1;min-width:0;padding:5px}
