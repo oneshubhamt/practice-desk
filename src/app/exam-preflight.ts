@@ -116,7 +116,11 @@ export function examPreflight(bundle:ExamPackage,options:{
  const provenance=builtinCgl?
   (paper.edition==="source"?
    "SSC CGL original transcription: publisher-provided question wording and answer labels are preserved; disputed/invalid items can be excluded. This is not an SSC-operated or official answer-key service.":
-   "SSC CGL reviewed edition: independent educational corrections and publisher-key cautions, not official SSC answer keys. Some disputed published answers remain scoreable with a caution; details appear only after submission."):
+   "SSC CGL reviewed edition: independent educational corrections, not official SSC answer keys. "+
+   (cautionQuestions?
+     "Some disputed published answers remain scoreable with an editorial caution. ":
+     "This edition has no currently flagged caution questions. ")+
+   "The identity and reasoning for any individual correction are disclosed only after submission."):
   paper.edition==="source"?
    "Source edition supplied by the paper author/importer. Publication, key accuracy and any claimed official status are not independently authenticated by Practice Desk.":
   paper.edition==="reviewed"?
