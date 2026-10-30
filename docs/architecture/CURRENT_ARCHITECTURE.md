@@ -1,5 +1,7 @@
 # Current architecture — Practice Desk `overhaul`
 
+**Pass25 Library reflow (30 Oct 2026):** `generic-ui.ts:listHTML` now prioritizes paper, edition, CGL practice modes and Start in `home-grid` ahead of `home-stats` (preserved below utilities), with a non-duplicated screen-reader H2 and desktop-only home selectors in `app.css`. The freeze-safe `examPreflight`, imported generic paper picker, ongoing attempts, learning and backup actions retain their code paths and IDs. [Independent old-v-new real-browser geometry](https://github.com/oneshubhamt/practice-desk/actions/runs/41105425460) shows Start y551 vs v11 y702 at 1366x768; only **L01 closed**. Exam/History/Results visual density fixes L02–L11 and Pass29 independent visual signoff remain open.
+
 **Scope:** current source/runtime map. Pass 23 independently verified representative v11/current parity through actual paired `file://` browser scoring and CI, but **physical-device/AT/human release gates remain open**. Read [final independent Pass 23 report](../audits/PASS23_FINAL_INDEPENDENT_REVIEW_2026-10-30.md) before any release decision; the [original findings and worklog](../audits/V11_SOURCE_AUDIT_2026-10-30.md) and [Passes 4–16 history](../history/PASSES_04_16.md) remain preserved.
 
 ## 1. Topology
