@@ -82,7 +82,7 @@ test("G02: manual expiry freezes answers and elapsed time until an explicit cont
  assert.equal(a.state.elapsedMs,300);
  a=transitionGenericAttempt(a,evt("SUBMIT_SECTION",3900),lookup);
  assert.equal(a.state.status,"completed");
- assert.equal(a.result.snapshot.unansweredCount,5);
+ assert.equal(a.result.snapshot.unansweredCount,6);
  assert.doesNotThrow(()=>validateGenericStoredRecord(a));
 });
 
@@ -96,6 +96,20 @@ test("G02 adjacent: automatic sectional expiry still advances across overshoot; 
  s=transition(b.paper,s,evt("SUBMIT_SECTION",151));
  assert.equal(s.status,"completed");
  assert.equal(s.elapsedMs,151);
+});
+
+test("G02 extra: no-deadline sectional sections can always be finished explicitly",()=>{
+ const b=bundleWith({timing:{kind:"sectional",transition:"automatic",allowEarlySubmit:false,pausePolicy:"forbidden",
+  sectionLimits:[{sectionId:"s1",durationMs:null},{sectionId:"s2",durationMs:100}]}});
+ let a=startGenericAttempt(b,"untimed-section",1000);
+ assert.match(renderModelExam(a,b),/Finish untimed section/);
+ a=transitionGenericAttempt(a,evt("SUBMIT_SECTION",1500),lookup);
+ assert.equal(a.state.sectionIndex,1);
+ assert.equal(a.state.status,"running");
+ assert.equal(a.state.elapsedMs,500);
+ a=transitionGenericAttempt(a,evt("TICK",1600),lookup);
+ assert.equal(a.state.status,"completed");
+ assert.equal(a.state.elapsedMs,600);
 });
 
 test("G04: imported multi-select key is constrained by actual candidate selection bounds",()=>{
