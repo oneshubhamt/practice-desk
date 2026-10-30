@@ -170,8 +170,10 @@ export function examRulesHTML(p:ExamPreflight):string{
   '. Maximum eligible automated marks: <b>'+escapeHTML(p.maximum.toFixed(p.decimals))+
   '</b>. Excluded items are omitted; written/manual questions are self-assessed separately.</p>'+
   '<h3>Exam keyboard shortcuts</h3><p>During a running exam, A–D answer a single-choice question; '+
-  'left/right arrows navigate questions when focus allows; M toggles a flag if permitted; '+
-  'F toggles full-screen/focus layout. Keyboard shortcuts do not operate in text entry or an open Display panel. '+
+  'left/right arrows navigate between questions except when a native answer radio is focused. '+
+  'On a focused radio, unmodified arrows select answer options; Alt+left/right navigates questions instead. '+
+  'M toggles a flag if permitted, including while paused; F toggles full-screen/focus layout. '+
+  'Answer and navigation shortcuts do not operate while paused or in text entry or an open Display panel. '+
   'Use ordinary Tab, Enter and Space to navigate controls.</p>'+
   '<h3>Source and editorial independence</h3><p>'+escapeHTML(p.provenance)+
   ' No answer key, solution, dispute details or correction comparison is disclosed before permitted post-test review.</p>'+
