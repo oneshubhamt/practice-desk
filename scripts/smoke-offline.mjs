@@ -118,7 +118,7 @@ try{
  await page.locator('[data-result-tab="timing"]').click();
  fail(await page.locator("#result-timing tbody tr").count()===100,
    "Item-level timing ledger incomplete");
- await page.locator("[data-ledger-q]").first().click();
+ await page.locator("#result-timing [data-ledger-q]").first().click();
  fail(await page.locator("#result-review").isVisible(),"Ledger did not open filtered review");
  await page.locator("#g-review-filter").selectOption("incorrect");
  const incorrectCount=await page.locator(".generic-review").count();
