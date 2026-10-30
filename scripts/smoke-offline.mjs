@@ -358,9 +358,12 @@ try{
  await reopened.locator("#learning-close").click();
  console.log("Chrome file://: profile restart restores exam and FSRS learning history");
 
- // Imported exam setup now survives backup/reload. Explicitly select the
- // built-in CGL revision for the existing strict-mode stale-tab scenario.
- await reopened.locator("#g-papers").selectOption(cgl.packageId);
+ // The frozen strict-mode policy has its own hashed revision identity;
+ // the library lists the underlying source paper revision, not that derived
+ // practice revision. Re-select the original source before choosing mode.
+ fail(cgl.packageId.endsWith(":practice:strict"),"Saved strict revision identity is missing its mode suffix");
+ const sourcePaperRevisionId=cgl.packageId.slice(0,-":practice:strict".length);
+ await reopened.locator("#g-papers").selectOption(sourcePaperRevisionId);
  await reopened.locator('[data-mode="strict"]').click();
  await reopened.locator("#g-start").click();
  await reopened.locator('input[data-choice]').first().click();
