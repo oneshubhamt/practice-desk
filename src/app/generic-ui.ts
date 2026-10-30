@@ -78,7 +78,9 @@ export function renderGenericControls(bundle:ExamPackage,q:QuestionRevision,resp
   return '<div class="generic-matches">'+c.leftItems.map(left=>'<label><span>'+escapeText(left.text)+assetHTML(bundle,left.assetIds,"Image for matching item "+left.text)+'</span><select data-match="'+escapeText(left.id)+'"><option value="">Not matched</option>'+
     c.rightItems.map(right=>'<option value="'+escapeText(right.id)+'"'+
       (pairs.some(p=>p.leftId===left.id&&p.rightId===right.id)?" selected":"")+'>'+escapeText(right.text)+'</option>').join("")+
-    '</select></label>').join("")+'</div><button class="btn primary" id="g-save">Save matches</button>';
+    '</select></label>').join("")+'</div>'+
+    '<p class="generic-inline-warning" id="g-match-feedback" role="status" aria-live="polite" aria-atomic="true"></p>'+
+    '<button class="btn primary" id="g-save">Save matches</button>';
 }
 function stimulusHTML(bundle:ExamPackage,q:QuestionRevision):string{
  const stimulus=bundle.stimuli?.find(s=>s.id===q.content.stimulusId);
@@ -1368,6 +1370,36 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      dispatch({type:"ANSWER",nowMs:now(),response:{kind:"true-false",value:input.dataset.bool==="true"}});
    });
    const saveButton=root.querySelector<HTMLButtonElement>("#g-save");
+   if(q.content.kind==="matching"&&saveButton){
+     const matching=q.content;
+     const controls=[...root.querySelectorAll<HTMLSelectElement>("[data-match]")];
+     const feedback=root.querySelector<HTMLElement>("#g-match-feedback");
+     const updateConflicts=(dirty:boolean):readonly string[]=>{
+       const duplicates=duplicateMatchingTargets(controls.map(control=>control.value));
+       for(const control of controls){
+         const conflict=Boolean(control.value&&duplicates.includes(control.value));
+         control.classList.toggle("match-conflict",conflict);
+         if(conflict){
+           control.setAttribute("aria-invalid","true");
+           control.setAttribute("aria-describedby","g-match-feedback");
+         }else{
+           control.removeAttribute("aria-invalid");
+           control.removeAttribute("aria-describedby");
+         }
+       }
+       saveButton.disabled=duplicates.length>0;
+       if(feedback){
+         const labels=duplicates.map(id=>matching.rightItems.find(item=>item.id===id)?.text??id);
+         feedback.textContent=duplicates.length?
+           "Conflicting matches: "+labels.join(", ")+
+           " selected for multiple left items. Each right option may be used once; correct the highlighted rows before saving.":
+           dirty?"Matching changes not yet saved. Select Save matches to commit.":"";
+       }
+       return duplicates;
+     };
+     controls.forEach(control=>control.onchange=()=>{updateConflicts(true);});
+     updateConflicts(false);
+   }
    if(saveButton)saveButton.onclick=()=>{
      if(q.content.kind==="numeric-entry"){
        const field=root.querySelector<HTMLInputElement>("#g-number")!;
@@ -1378,7 +1410,12 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        dispatch(value.trim()?{type:"ANSWER",nowMs:now(),response:{kind:"free-response",text:value}}:{type:"CLEAR",nowMs:now()});
      }else if(q.content.kind==="matching"){
        const matching=q.content;
-       const pairs=[...root.querySelectorAll<HTMLSelectElement>("[data-match]")].filter(x=>x.value)
+       const controls=[...root.querySelectorAll<HTMLSelectElement>("[data-match]")];
+       const duplicate=duplicateMatchingTargets(controls.map(control=>control.value));
+       if(duplicate.length){
+         notice("Conflicting right-side matches must be corrected before saving.");return;
+       }
+       const pairs=controls.filter(x=>x.value)
          .map(x=>{
            const left=matching.leftItems.find(item=>item.id===x.dataset.match);
            const right=matching.rightItems.find(item=>item.id===x.value);
