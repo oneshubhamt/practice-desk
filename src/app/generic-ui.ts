@@ -633,10 +633,25 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          (badges.length?'<span class="review-option-label"> · '+
            escapeText(badges.join(" · "))+'</span>':"")+'</span></div>';
       }).join("")+'</div>':"";
+   const booleanOptions=content.kind==="true-false"?
+     '<div class="generic-choices" role="list" aria-label="True or false answer options">'+
+     [true,false].map(value=>{
+       const chosen=response?.kind==="true-false"&&response.value===value;
+       const correct=verdict!=="excluded"&&answer?.kind==="true-false"&&answer.value===value;
+       const incorrect=verdict!=="excluded"&&chosen&&!correct;
+       const labels=[...(chosen?["Your choice"]:[]),
+         ...(correct?["Correct answer"]:[]),
+         ...(incorrect?["Incorrect choice"]:[])];
+       return '<div role="listitem" class="generic-choice review-opt'+
+         (correct?" review-option-correct":incorrect?" review-option-incorrect":"")+
+         '"><span><b>'+(value?"True":"False")+'</b>'+
+         (labels.length?'<span class="review-option-label"> · '+
+           escapeText(labels.join(" · "))+'</span>':"")+'</span></div>';
+     }).join("")+'</div>':"";
    const matches=content.kind==="matching"?
      '<div class="generic-matches">'+[...content.leftItems,...content.rightItems].map(item=>
        '<div><span>'+escapeText(item.text)+assetHTML(display,item.assetIds)+'</span></div>').join("")+'</div>':"";
-   return passage+promptAssets+options+matches;
+   return passage+promptAssets+options+booleanOptions+matches;
  }
  function sourceReviewHTML(saved:GenericAttempt,target:QuestionRevision):string{
    const ref=saved.sourceReviewReference;
@@ -660,7 +675,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    const currentAnswer=saved.frozen.key.entries.find(x=>x.questionRevisionId===target.id)?.answer;
    const modifications=[
      ...(content.prompt!==target.content.prompt?["question wording"]:[]),
-     ...(JSON.stringify(content)!==JSON.stringify(target.content)?["options or media"]:[]),
+     ...(JSON.stringify({...content,prompt:""})!==JSON.stringify({...target.content,prompt:""})?
+       ["options, response rules or media"]:[]),
      ...(JSON.stringify(entry.sourceAnswer)!==JSON.stringify(currentAnswer)?["answer key"]:[])
    ];
    return '<details class="change-log source-review"><summary>Compare with original source edition</summary>'+
@@ -794,7 +810,9 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        '<p class="fine"><span class="verdict '+escapeText(it.verdict)+'">'+
         escapeText(it.verdict)+'</span> · '+it.marks+' automated marks</p>'+
        '<p class="fine">Your answer: '+escapeText(readableAnswer(q,response))+'</p>'+
-       '<p class="fine">Expected: '+escapeText(readableAnswer(q,answer))+'</p>'+
+       '<p class="fine">'+(it.verdict==="excluded"?"Frozen answer key (not scored): ":
+         it.verdict==="pending"?"Manual assessment: ":"Expected: ")+
+         escapeText(readableAnswer(q,answer))+'</p>'+
        (q.editorial.notes?'<p class="fine">Editorial note: '+escapeText(q.editorial.notes)+'</p>':"")+
        (explanation?'<details class="worked-solution"'+
          (it.verdict==="incorrect"||it.verdict==="unanswered"?" open":"")+'>'+
