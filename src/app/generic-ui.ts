@@ -252,7 +252,7 @@ export function renderModelExam(
         '" aria-valuemin="0" aria-valuemax="100" aria-label="'+(timeLimit!==null?"Time used":"Questions answered")+'">'+
          '<span style="width:'+progressValue.toFixed(1)+'%"></span></div></section>'+
      '<div class="generic-sections" role="group" aria-label="Exam sections">'+paper.sections.map((s,i)=>{
-       const locked=state.completedSections.includes(i)||
+       const locked=state.status!=="running"||state.completedSections.includes(i)||
          ((paper.timing.kind==="sectional"||paper.navigation.sectionNavigation==="sequential-locked")&&i!==state.sectionIndex);
        const filled=s.questionRevisionIds.filter(qid=>Boolean(responsesById.get(qid)?.response)).length;
        const status=state.completedSections.includes(i)?"Closed":
@@ -269,8 +269,8 @@ export function renderModelExam(
      +renderGenericControls(assets,q,response)+'</fieldset>'+
      '<div class="row generic-actions exam-answer-actions"><button class="btn" id="g-clear"'+(!response||state.status!=="running"?" disabled":"")+'>Clear</button>'+
      '<button class="btn" id="g-flag" aria-pressed="'+Boolean(responsesById.get(q.id)?.flagged)+'"'+(!paper.navigation.allowFlagging||expired?" disabled":"")+'>Flag</button></div>'+
-     '<div class="row generic-actions exam-nav-actions"><button class="btn" id="g-prev"'+(expired||!state.questionIndex||paper.navigation.questionNavigation==="forward-only"?" disabled":"")+'>← Previous</button>'+
-     '<button class="btn" id="g-next"'+(expired||state.questionIndex===section.questionRevisionIds.length-1?" disabled":"")+'>Next →</button></div>'+
+     '<div class="row generic-actions exam-nav-actions"><button class="btn" id="g-prev"'+(state.status!=="running"||!state.questionIndex||paper.navigation.questionNavigation==="forward-only"?" disabled":"")+'>← Previous</button>'+
+     '<button class="btn" id="g-next"'+(state.status!=="running"||state.questionIndex===section.questionRevisionIds.length-1?" disabled":"")+'>Next →</button></div>'+
      '<div class="row generic-actions exam-submit-actions">'+
      (paper.timing.kind!=="untimed"&&paper.timing.pausePolicy==="allowed"?
       '<button class="btn" id="g-pause"'+(expired?" disabled":"")+'>'+(state.status==="paused"?"Resume timer":"Pause timer")+'</button>':"")+
@@ -284,7 +284,7 @@ export function renderModelExam(
       '<p class="fine">Select a question number to navigate within the current section.</p><div class="generic-palette">'+
       section.questionRevisionIds.map((qid,i)=>{
         const r=responsesById.get(qid);
-        const locked=expired||(paper.navigation.questionNavigation==="forward-only"&&i<state.questionIndex);
+        const locked=state.status!=="running"||(paper.navigation.questionNavigation==="forward-only"&&i<state.questionIndex);
         return '<button class="num '+(i===state.questionIndex?"here ":"")+(r?.response?"answered ":"")+
         (r?.flagged?"marked":"")+'" data-q="'+i+'" aria-current="'+(i===state.questionIndex?"step":"false")+'" aria-label="Question '+(i+1)+
         (r?.response?", answered":"")+(r?.flagged?", flagged":"")+'"'+(locked?" disabled":"")+'>'+(i+1)+'</button>';
@@ -293,7 +293,7 @@ export function renderModelExam(
        '<span><i class="legend-dot current"></i>Current</span>'+
        '<span><i class="legend-dot empty"></i>Unanswered</span></div><p class="fine">'+(paper.navigation.questionNavigation==="forward-only"?
         "Questions cannot be revisited in this exam.":"Navigate freely where the paper permits.")+
-      ' Shortcuts: A–D answer single-choice questions, ← / → navigate, M flag, F full screen. Alt + ← / → also works. Shortcuts are disabled while typing or paused.</p></aside></div>';
+      ' Shortcuts: A–D answer single-choice questions; ← / → navigate unless an answer radio is focused (where they select options); Alt + ← / → navigates while a radio is focused. M toggles a flag even while paused; F enters full screen. Answer/navigation shortcuts are disabled while paused or typing.</p></aside></div>';
  }
 
 
