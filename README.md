@@ -2,7 +2,7 @@
 
 Single-file offline examination and learning application. Built-in SSC CGL original/reviewed editions and validated imported exam packages share one strict TypeScript engine, frozen results, local history, backup and revision workflows.
 
-> **Current project status — 30 October 2026:** The overhaul has passed the historical Pass 10 automated engineering/browser gates, but a fresh comparison with the frozen v11 source revealed **incomplete UI/functionality parity**. **Passes 11–15 are implemented and browser-verified; Pass 16 remains open.** Physical devices, real Safari, NVDA/VoiceOver and human visual signoff are still unchecked. Do not merge into `main` or claim release approval. See the [authoritative feature-parity programme](docs/V11_FEATURE_PARITY_PROGRAMME.md).
+> **Current project status — 30 October 2026:** **Passes 11–16 are source-audited, implemented and browser-verified; material v11 feature parity is conditionally accepted at the automated level.** The product is generic and retains six exam question kinds. The user-selected v11 reviewed-CGL caution policy and imported generic partial-credit ceiling are enforced. Real physical devices, Apple Safari, NVDA/VoiceOver, destructive storage failure and human release/visual approval are still unchecked. Do not merge into `main` without authorization. See the [independent Pass 16 release audit](docs/PASS16_INDEPENDENT_AUDIT.md).
 
 ## Documentation — canonical reading order
 
@@ -10,7 +10,7 @@ Single-file offline examination and learning application. Built-in SSC CGL origi
 |---|---|
 | [Engineering rules](AGENTS.md) | Non-negotiable constraints and audit → analyze → implement → check objectives → targeted QA |
 | **[v11 feature-parity programme](docs/V11_FEATURE_PARITY_PROGRAMME.md)** | **LIVE** de novo v11/overhaul audit, all identified gaps, objective IDs, Passes 11–16, acceptance and progress log |
-| [Pass 15 paired visual and accessibility audit](docs/PASS15_VISUAL_AUDIT.md) | **CURRENT** direct frozen v11/overhaul screenshot evidence, zoom/keyboard/contrast and separate unchecked manual signoff matrix |\n| [Consolidated programme status](docs/PROJECT_STATUS.md) | **LIVE** index of history, current plan, evidence and unresolved platform gates |
+| [Pass 16 independent source and conditional release audit](docs/PASS16_INDEPENDENT_AUDIT.md) | **CURRENT** five-paper/two-edition de novo verification, generic scoring repair, user-approved caution policy and remaining manual gates |\n| [Pass 15 paired visual and accessibility audit](docs/PASS15_VISUAL_AUDIT.md) | **CURRENT** direct frozen v11/overhaul screenshot evidence, zoom/keyboard/contrast and separate unchecked manual signoff matrix |\n| [Consolidated programme status](docs/PROJECT_STATUS.md) | **LIVE** index of history, current plan, evidence and unresolved platform gates |
 | [Data model](docs/DATA_MODEL.md) | **CURRENT** exam, scoring, history, backup and learning invariants |
 | [Original architecture audit](docs/ARCHITECTURE_AUDIT_2026-10-28.md) | **HISTORICAL** Passes 1–10 architectural reasoning; no longer the active parity scratchpad |
 | [Former Pass 9 parity ledger](docs/V11_PARITY_LEDGER.md) | **SUPERSEDED** historical checklist; not proof of full v11 feature parity |
@@ -62,3 +62,7 @@ New attempts measure actual question entries and returns, while older attempts e
 ## Pass 15 visual and accessibility acceptance
 
 Automated v11/overhaul screenshot comparison runs under `file://` at 390, 768 and 1280 pixels, including real reviewed CGL source correction, option image, passage, result, history, separate 85/100/140% text-size and light/dark states. The `scripts/pass15-visual.mjs` screenshot matrix also checks narrow 200%-zoom-equivalent layout, keyboard focus and targeted screen reader status, reduced motion, and computed AA contrast. Each CI run publishes `pass15-v11-overhaul-visual-evidence` as a PNG/JSON artifact. **These automated tests do not certify physical devices or NVDA/VoiceOver.** Full findings and required manual gates are listed in [PASS15_VISUAL_AUDIT.md](docs/PASS15_VISUAL_AUDIT.md); independent v11 source parity and release decision remain Pass 16.
+
+## Pass 16 — final independent automated verification
+
+The independent comparison against frozen v11 source covered all five CGL papers (500 questions) and **10 original/reviewed editions in a new offline browser acceptance**, as well as the real disputed 6 October 2026 Q62. Under the v11 policy selected by the user, the original source-invalid Q62 remains excluded, while the reviewed edition presents an editorial **caution**, scores against the retained published **B** (+2 for B; −0.5 for D) and explains the dispute after submission. Generic imported multi-select and matching partial-credit responses are capped at each question's full marks. The Learning Desk also announces route navigation and focuses the page heading. New tests run with the existing Passes 11–15 tests in CI. See [Pass 16 independent audit](docs/PASS16_INDEPENDENT_AUDIT.md). **Conditional automated readiness does not replace physical-device/AT testing or user authorization to merge.**
