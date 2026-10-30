@@ -1,11 +1,12 @@
 # Practice Desk documentation — canonical map
 
-**Reference:** frozen `baseline/v11` · **implementation:** `overhaul`. **Pass25 update (30 Oct):** Library first-viewport regression **L01 repaired and independently measured** at four laptop widths; **L02–L11 remain OPEN**, so desktop overall UI parity is **not yet demonstrated**. [Pass25 actual screenshot verification](audits/PASS24_LAPTOP_VISUAL_REGRESSION_2026-10-30.md#pass-25-implementation-status--one-of-eleven-findings-repaired-30-oct-2026). Previously, laptop screenshot/first-viewport visual parity **FAILED** despite green functional CI; exam/history tasks remain below fold. Engineering status is *not* full v11 UI parity or a release. Read the [laptop regression audit](audits/PASS24_LAPTOP_VISUAL_REGRESSION_2026-10-30.md) before the conditional earlier Pass23 source/functional report.
+**Reference:** frozen `baseline/v11` · **implementation:** `overhaul`. **Pass26 update (31 Oct):** four of eleven laptop findings **L01–L04 repaired and automated-verified** using paired, identical reviewed CGL `file://` screenshots/geometry at four laptop widths. **L05–L11 remain OPEN**, and overall desktop UI parity is **not established**. Pass25 restored Library Start visibility; Pass26 restored ordinary Next/Flag and passage/figure first-choice discoverability. [Controlling Pass24/26 audit register](audits/PASS24_LAPTOP_VISUAL_REGRESSION_2026-10-30.md) · [Pass26 full green CI](https://github.com/oneshubhamt/practice-desk/actions/runs/41113295966). The earlier [Pass23 functional source report](audits/PASS23_FINAL_INDEPENDENT_REVIEW_2026-10-30.md) remains conditional, not physical/assistive technology or human release signoff.
 
 ## Read in this order
 
 | Need | Canonical location | Type |
 |---|---|---|
+| **Laptop visual / current desktop status** | [Pass24 screenshot audit, Pass25/26 repairs and unresolved findings](audits/PASS24_LAPTOP_VISUAL_REGRESSION_2026-10-30.md) | L01–L04 automated-verified; L05–L11 open; Pass29 independent full visual review pending |
 | **Final verification / outstanding release gates** | [Pass 23 final independent audit and release report](audits/PASS23_FINAL_INDEPENDENT_REVIEW_2026-10-30.md) | All 25 current finding dispositions, six actual paired score/max checks, full automated CI evidence, explicit physical/AT/manual limitations and conditional status |
 | **Original findings and chronological worklog** | [Independent V11 source audit / active scratchpad](audits/V11_SOURCE_AUDIT_2026-10-30.md) | Preserves the 25 original problem statements, Passes 17–23 reasoning, evidence, accepted deviations and handoffs |
 | **Current architecture** | [Source topology, modules and lifecycle](architecture/CURRENT_ARCHITECTURE.md) | Current system, not historic proposals |
