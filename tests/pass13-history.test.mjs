@@ -33,9 +33,10 @@ test("device-local exam choice validates arbitrary exam revisions and survives c
  assert.equal(readPracticeSelection(adapter),null);
 });
 test("exact frozen paper edition filtering combines with free text and status",()=>{
- const a=ended(source,"original",1000),b=ended(reviewed,"reviewed",2000);
+ const a=ended(configureCglPractice(source,"free"),"original",1000),
+ b=ended(configureCglPractice(reviewed,"free"),"reviewed",2000);
  const pending=startGenericAttempt(reviewed,"pending",3000);
- const query={status:"all",sort:"newest",search:"",paperRevisionId:reviewed.paper.id};
+ const query={status:"all",sort:"newest",search:"",paperRevisionId:configureCglPractice(reviewed,"free").paper.id};
  assert.deepEqual(filteredHistory([a,b,pending],packages,query).map(x=>x.id),["pending","reviewed"]);
  assert.deepEqual(filteredHistory([a,b,pending],packages,{...query,status:"complete"}).map(x=>x.id),["reviewed"]);
  assert.deepEqual(filteredHistory([a,b,pending],packages,{...query,search:"no matching paper"}),[]);
@@ -47,18 +48,24 @@ test("exact frozen paper edition filtering combines with free text and status",(
  assert.match(fallback,/localStorage fallback/);
 });
 test("adjusted score trends require exact frozen key, revision and practice mode",()=>{
- const original=ended(source,"s1",1000),second=ended(source,"s2",2000);
- const corrected=ended(reviewed,"review",3000);
  const flexible=configureCglPractice(source,"free");
- const free=ended(flexible,"free",4000);
+ const original=ended(flexible,"s1",1000),second=ended(flexible,"s2",2000);
+ const corrected=ended(configureCglPractice(reviewed,"free"),"review",3000);
+ const single=configureCglPractice(source,"single",0);
+ const free=ended(single,"single",4000);
  const metrics=adjustedHistoryMetrics([original,second,corrected,free]);
  assert.equal(metrics.papersPractised,1);
  assert.equal(metrics.bestAdjustedPercent,0);
  const groups=comparableScoreTrends([original,second,corrected,free]);
- assert.equal(groups.length,3);
- assert.equal(groups.find(x=>x.count===2)?.points.length,2);
+ assert.equal(groups.length,0,"Unanswered attempts cannot create synthetic score trends");
+ const answered=transitionGenericAttempt(startGenericAttempt(flexible,"answered",5000),
+  {type:"ANSWER",nowMs:5001,response:{kind:"single-choice",optionId:flexible.questions[0].content.options[0].id}},
+  new Map(flexible.questions.map(q=>[q.id,q])));
+ const graded=transitionGenericAttempt(answered,{type:"SUBMIT_ATTEMPT",nowMs:5100},
+  new Map(flexible.questions.map(q=>[q.id,q])));
+ assert.equal(comparableScoreTrends([graded]).length,1);
  const page=historyHTML([original,second,corrected,free],packages,
   {status:"all",sort:"newest",search:""},false,false,"");
  assert.match(page,/Adjusted score progression/);
- assert.match(page,/eligible automated maximum/);
+ assert.match(page,/Repeat the same frozen paper, key and mode/);
 });

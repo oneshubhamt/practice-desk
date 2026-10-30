@@ -10,7 +10,8 @@ export interface ComparableScoreTrend{
 export function comparableScoreTrends(attempts:readonly GenericAttempt[]):ComparableScoreTrend[]{
  const groups=new Map<string,{label:string;points:{at:number;percent:number;marks:number;max:number}[]}>();
  for(const a of attempts){
-   if(a.finishedAt===null||!a.result||a.frozen.paper.paperId.startsWith("notebook-revision:"))continue;
+   if(a.finishedAt===null||!a.result||a.frozen.paper.paperId.startsWith("notebook-revision:")||
+      a.result.snapshot.correctCount+a.result.snapshot.incorrectCount===0)continue;
    const max=scoreableMaximum(a.frozen.paper,a.frozen.key,a.frozen.questions);
    if(max<=0)continue;
    const identity=[a.frozen.snapshot.examId,a.frozen.paper.id,
