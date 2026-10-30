@@ -183,14 +183,70 @@ In `src/app/generic-ui.ts`, checkbox changes below `minSelections` show a warnin
 6. **Learning:** v11 had no corresponding notebook/FSRS pathway; overhaul adds real functionality. Treat this as **O\V**, not as evidence that F01–F15 disappear.
 7. **No fixture reliance:** previous Passes 11–16 reports may be useful as historical rationale but were intentionally not accepted as independent audit proof; this audit's source observations are new and sometimes contradict their complete-parity language.
 
-## F. Earlier repair-stage outline (superseded by Section 0 pass plan)
+## F. Controlling implementation schedule
 
-**Stage 1 (parity):** F01 sectional wall time; F02 selected paper scoring/audit preflight; F03 marks-based cross-paper priorities; F04 denominator; F13 safe deletion; F07 image labels; F09 clock/attempt-rate; F11 keyboard radio behavior. Preserve v11 semantics or record an approved better replacement.
+**Section 0 is the sole active Passes 17–23 plan.** Earlier stage groupings have been retired to avoid two competing orders. Preserve the numbered findings and their original evidence in Sections B–E. No finding is closed through documentation alone.
 
-**Stage 2 (generic core):** G01/G02 unsupported navigation and transition modes, G03 over-maximum unanswered scoring, G04/G05 impossible answer keys; G06 policy semantics. These are correctness concerns and should be addressed before claiming generic examiner reliability.
+---
 
-**Stage 3 (polish/reliability):** F05/F06/F08/F10/F12/F14/F15 and G07–G09; test focus/layout and performance without relying solely on old fixture expectations.
+## G. IMPLEMENTER SCRATCHPAD — operational working area, not a release report
 
-**Stage 4 (independent retest):** A separate source-code comparison with the frozen baseline **after corrections**, targeted new adversarial tests derived from each finding, then fresh browser/manual inspection. Do not close findings by editing documents or loosening assertions. Real Safari/Android/iOS, assistive-technology, OS kill/storage pressure and human visual judgement remain distinct manual gates.
+**Purpose:** This is the durable, pass-by-pass engineering memory *within the active audit itself*. Before touching source, load Sections 0, B–E, this section, `docs/decisions/POLICY_REGISTER.md`, `docs/architecture/DATA_CONTRACTS.md`, relevant historic context, and the **current** branch source. If the scratchpad disagrees with current source, update it with the reason; never silently assume old observations still apply. This log is intentionally for execution discipline, not a user-facing achievements list.
 
-**Final decision:** Current overhaul is substantially more general and architecturally disciplined and preserves much of the v11 experience, but **there are material lost/changed v11 behaviors and valid imported contracts the engine doesn't honor**. It is **not yet demonstrably V11 ⊆ Overhaul**. No release merge or unconditional feature-parity signoff.
+### Rules for maintaining this scratchpad
+
+1. **At pass start:** save branch HEAD and changed file set; enumerate all assigned IDs, relevant source locations, exact v11 user benefit where applicable, generic contracts, adjacent functionality, potential regressions and immutable content constraints.
+2. **AUDIT:** read existing source paths *and consumers*, not just the code cited in one finding. Note the observed behavior with file references and distinguish proven code logic from suspected runtime/visual risk.
+3. **ANALYZE:** log the chosen design, rejected alternatives, state/validation/backward-compatibility implications and **why the replacement preserves or improves the v11 user task**. Keep generic behavior reusable; keep detailed repair notes here rather than editing 25 original findings into speculative success statements.
+4. **IMPLEMENT:** list exact files and commits, migrations or deliberate rejections, and any scope discoveries. Don't introduce new actions/rules that UI, persistence, restoration and scoring cannot honor.
+5. **OBJECTIVE CHECK:** reconcile *each* assigned ID individually using live source and observable output; label `OPEN`, `IMPLEMENTED — QA PENDING`, `VERIFIED`, `BLOCKED`, or `ACCEPTED DIFFERENCE` with evidence. Never turn a complete pass green while an assigned item is unfinished.
+6. **TARGETED QA:** add new positive, negative, adversarial and adjacent-regression checks focused on changed contracts; record **commands actually run** and their results, plus CI link/status if verified. Existing fixtures may supplement, not replace, fresh independent probes. Run necessary typecheck/build smoke checks but **do not repeat whole-app/full-device QA at every pass**.
+7. **After pass:** record commit HEAD, open risks and handoff for the next pass. Source of truth = actual code, not this log; keep `main` and `baseline/v11` frozen. Pass **23** performs independent complete source-to-source and paired UI review plus broad release QA; physical mobile/Safari/AT/storage testing is a separate gate until done.
+
+**Five-step cycle:** `AUDIT → ANALYZE → IMPLEMENT → OBJECTIVE RECONCILIATION → TARGETED QA`. Corrections uncovered at step 4 loop back to implementation **before** step 5; this is the intended repeated implementation/check sequence. Avoid pass-level approval solely from green CI.
+
+### Pass register — never infer implementation from this schedule
+
+| Pass | Assigned IDs | Status | Evidence / handoff |
+|---|---|---|---|
+| 17 | G01, G02, G03, G04, G05, G06, G09 | **PRE-AUDIT / DESIGN OPEN** | See Pass 17 notes below; **no engine repairs claimed** |
+| 18 | F01, F09, F13 | NOT STARTED | Read Pass 17 changes before choosing session record schema |
+| 19 | F03, F04, F05 | NOT STARTED | Consume truthful frozen timing/scoring denominator from previous passes |
+| 20 | F02, F06, F14, F15 | NOT STARTED | v11-informed layout and preflight; no hardcoded SSC-only generic UI |
+| 21 | F07, F08, F10, F11 | NOT STARTED | Contextual media/status, pause markers, native keyboard and screen-reader paths |
+| 22 | G07, G08, F12 | NOT STARTED | Response draft correctness and measured results performance |
+| 23 | F01–F15 and G01–G09 recheck; G10 accepted | NOT STARTED | Independent whole-app source/UI audit, full QA and explicit physical-device caveats |
+
+**Standing accepted exception:** G10 — new app needs no v11 saved-history or backup-v1 migration; SHA-256-verified v3 additive backup stays. Do not reopen without an explicit user change.
+
+### Pass 17 — pre-implementation source inspection and unanswered design decisions
+
+**Branch basis:** `overhaul` after documentation commit `e21098d377b7e76fee26e320a05da297ca5c2143`. At this point these notes concern **existing source**, not changed runtime code. **Next action:** finish cross-layer analysis, choose supported semantics, implement all seven IDs, then targeted new QA. Do not publish a Pass 17 completion claim from this pre-audit.
+
+| ID | Concrete source observation | Required design/QA decision before closure |
+|---|---|---|
+| G01 | `domain/exam.ts` declares whole-paper + sequential-locked; `domain/validate.ts` accepts it; `engine/session.ts:NAVIGATE` forbids section jump; `app/generic-ui.ts:renderModelExam` disables noncurrent section tabs; `advance()` only called for sectional transition | Prefer a genuinely useful generic next-section action with clear irreversible lock semantics; otherwise explicitly reject an unsupported combination **at package import**. QA multi-section whole-paper accessibility, expiry, and attempted-back navigation |
+| G02 | Sectional policy declares `transition:"manual"`; `engine/session.ts:checkpoint` advances unconditionally on expiry | Prefer real expired/manual boundary and unambiguous Next action, including background/offline restore; only if that is safely unsupported, reject manual transition explicitly. QA no extra time consumed or answer edits after expiry |
+| G03 | `validateMarkingRule` checks only finite unanswered; `scoreAttempt` awards it; `scoreableMaximum` sums correct marks | Define supported rule envelope so no answer/blank earns above displayed maximum; test over-rewarded blank, per-item override, negative blank and full-paper denominators; don't change frozen original CGL |
+| G04 | `validateAnswerKeyRevision` does not compare multiselect key count with `minSelections/maxSelections`; `validateResponse` enforces candidate limits | Cross-validate the key against exact question selection bounds; test both too-many and too-few key choices plus valid minima/maxima |
+| G05 | Matching key only verifies referenced IDs; candidate matching rejects duplicate left/right IDs | Require unique left/right answer pairs and key shape consistent with usable response controls; test duplicate left, duplicate right, valid one-to-one and potentially partial matching |
+| G06 | `navigation.allowReview` is accepted; no effective in-exam or post-completion enforcement exists | Define its meaning explicitly: in-exam revisit vs after-test solution visibility; preserve no-premature-key-disclosure. Enforce documented semantics across NAVIGATE and UI, or refuse unsupported imports; test user-facing paths |
+| G09 | Unanswered values and unbounded partial penalties can produce counterintuitive score floors/denominators; UI score policy assumptions are narrower | Specify mathematically consistent upper/lower bounds and presentation, separate automated pending free-response from graded scores, test adverse imported overrides and never silently clamp a previously frozen result |
+
+**Cross-layer inspection already performed for planning:** `src/domain/{exam,question,answer-key,scoring,validate}.ts`, `src/engine/{session,response,scoring,score-ceiling}.ts`, `src/app/{generic-ui,exam-package}.ts`, `src/history/frozen.ts`, and existing `tests/{domain,engine,pass7-engine,generic-ui}.test.mjs`. Current tests cover some built-in strict CGL and standard six-kind flows but are **not proof** that the seven adversarial imported contracts work. Check call sites and frozen-record verification again once actual source work starts.
+
+**Pass 17 protected invariants:** all five source CGL banks/published and reviewed editions unchanged; disputed 6 October Q62 original excluded and reviewed scoreable caution; no answers revealed before submission; CGL strict 4×15 minutes, free and single still function; source/key/media hashes and frozen attempt scoring remain coherent; no unsafe data-rewriting migration; UI affordances correspond to engine transitions; changes compile to one offline HTML. New rules must be tested at engine + import + UI + persisted-restore boundaries as applicable.
+
+**Pass 17 targeted QA queue (not executed):** import rejects impossible multiselect/matching key; valid one-to-one matching and valid bounded multi-select score; whole-paper locked multi-section advances or is explicitly rejected before start; manual sectional expiry obeys declared behavior or rejects at import; zero/negative/oversized unanswered and unusual partial credit cannot falsify the max; review policy works as documented; CGL strict sectional expiry and early submit remain unchanged; roundtrip of in-progress frozen attempts stays valid. After QA, record exact commits/results against **all seven IDs**, not a blanket green label.
+
+### Per-pass worklog template — copy beneath this section at pass start
+
+```text
+PASS NN | start HEAD | date | scope IDs | status OPEN
+AUDIT: baseline/user task; current source; consumers; adjacent risks; verified evidence.
+ANALYZE: alternatives; chosen reusable design; invariants; persistence/UX; reason better than v11.
+IMPLEMENT: changed files; commits; schema/compatibility notes; intentionally deferred pieces.
+OBJECTIVES: [ID → OPEN / IMPLEMENTED–QA PENDING / VERIFIED / BLOCKED / ACCEPTED DIFFERENCE + evidence] for every assigned ID.
+TARGETED QA: exact NEW test cases; command/output; adjacent regression checks; CI state if verified.
+HANDOFF: finish HEAD; unresolved risks; changes requiring next pass; external/manual gates.
+```
