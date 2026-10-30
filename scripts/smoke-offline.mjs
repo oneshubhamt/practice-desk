@@ -364,14 +364,24 @@ try{
  // Keep the first tab's local revision stale without a competing periodic timer
  // changing the authoritative record during the controlled two-tab race.
  await reopened.locator("#g-library").click();
+ // Do not race with the first tab's departure checkpoint: establish the
+ // actual committed baseline before making the second tab authoritative.
+ const departed=await find(reopened,x=>x.id===race.id&&
+   x.saveRevision>race.saveRevision&&x.state.visible===false);
  const second=await context.newPage();
  await testPage(second);
  await second.locator("#g-history").click();
  await second.locator('[data-attempt="'+race.id+'"]').first().click();
  fail(await second.locator('input[data-choice]').count()>=3,
    "Concurrent history resume failed: "+await second.locator("main").innerText().then(text=>text.slice(0,240)));
+ const secondOption=await second.locator('input[data-choice]').nth(1).getAttribute("data-choice");
+ fail(Boolean(secondOption),"Second-tab answer option unavailable");
  await second.locator('input[data-choice]').nth(1).click();
- const advanced=await find(second,x=>x.id===race.id&&x.saveRevision>race.saveRevision);
+ // A saveRevision bump alone can reflect the second tab's *restore*
+ // checkpoint. Wait for its different answer to be durably committed.
+ const advanced=await find(second,x=>x.id===race.id&&x.saveRevision>departed.saveRevision&&
+   x.state.responses.some(row=>row.response?.kind==="single-choice"&&
+     row.response.optionId===secondOption));
  if(await reopened.locator('[data-attempt="'+race.id+'"]').count())
   await reopened.locator('[data-attempt="'+race.id+'"]').first().click();
  // A stale-tab rejection may remove the exam inputs while a click is pending.
