@@ -46,7 +46,16 @@ function formatSignature(a:GenericAttempt):string{
          (kind?p.scoring.byQuestionKind?.[kind]:undefined)??p.scoring.defaultRule;
        return JSON.stringify({kind,rule});
      }).sort()})),
-   timing:p.timing,
+   // Section IDs are scoped to individual paper families. Compare timer
+   // budgets in section order, not raw IDs, so two genuine 4x15-minute papers
+   // share a cohort without accidentally equating 10- and 15-minute formats.
+   timing:p.timing.kind==="sectional"?
+     {kind:"sectional",transition:p.timing.transition,allowEarlySubmit:p.timing.allowEarlySubmit,
+       pausePolicy:p.timing.pausePolicy,
+       sectionDurations:p.sections.map(section=>
+         p.timing.kind==="sectional"?
+           p.timing.sectionLimits.find(limit=>limit.sectionId===section.id)?.durationMs??null:null)}:
+     p.timing,
    navigation:{questionNavigation:p.navigation.questionNavigation,
      sectionNavigation:p.navigation.sectionNavigation},
    marking:{defaultRule:p.scoring.defaultRule,byQuestionKind:p.scoring.byQuestionKind??null}
