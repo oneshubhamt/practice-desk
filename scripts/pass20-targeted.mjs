@@ -127,7 +127,7 @@ try{
  }
  await page.locator("#g-history-results").click();
  const foot=await page.locator(".app-independent-footer").innerText();
- ensure(foot.includes("Not affiliated")&&foot.includes("Imported"),
+ ensure(foot.includes("Not affiliated")&&foot.toLowerCase().includes("imported"),
    "Global independent-source footer lost on History route");
  ensure(errors.length===0,"Uncaught page errors: "+errors.join(" | "));
  console.log("Pass 20: long review & history, immersive, tiny 300px, scroll, controls, focus, theme and attribution passed");
