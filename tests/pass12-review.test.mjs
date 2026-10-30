@@ -127,3 +127,37 @@ test("source-review snapshots detect passage-only edits without forcing a new qu
  const attempt={...startGenericAttempt(updated,"passage",1000),sourceReviewReference:ref};
  assert.equal(validateGenericStoredRecord(attempt),attempt);
 });
+
+test("corrected published keys are compared by semantic source option ID, not display index",()=>{
+ let corrected=null;
+ for(const target of cgl.filter(x=>x.paper.edition==="reviewed")){
+   const source=byPaper(target.paper.paperId,"source");
+   const ref=createSourceReviewReference(target,source);
+   const reviewKeys=new Map(target.answerKey.entries.map(x=>[x.questionRevisionId,x.answer]));
+   corrected=ref?.entries.find(entry=>{
+     const current=reviewKeys.get(entry.targetQuestionRevisionId);
+     return current?.kind==="single-choice"&&
+       entry.sourceAnswer.kind==="single-choice"&&
+       entry.sourceAnswer.optionId!==current.optionId;
+   });
+   if(corrected)break;
+ }
+ assert.ok(corrected,"CGL revised source-answer keys not represented in frozen comparison");
+ assert.equal(corrected.sourceQuestion.content.kind,"single-choice");
+ const options=new Set(corrected.sourceQuestion.content.options.map(x=>x.id));
+ assert.ok(options.has(corrected.sourceAnswer.optionId));
+});
+test("time expiration and voluntary finishing have separate durable source-independent reasons",()=>{
+ const bundle=edition("reviewed",true),map=new Map(bundle.questions.map(q=>[q.id,q]));
+ const started=startGenericAttempt(bundle,"timed",1000);
+ const expired=transitionGenericAttempt(started,
+   {type:"TICK",nowMs:1000+bundle.paper.timing.durationMs},map);
+ assert.equal(expired.completionReason,"time-expired");
+ assert.equal(validateGenericStoredRecord(expired),expired);
+ const submitted=transitionGenericAttempt(started,{type:"SUBMIT_ATTEMPT",nowMs:1100},map);
+ assert.equal(submitted.completionReason,"submitted");
+ assert.equal(validateGenericStoredRecord(submitted),submitted);
+ const old=structuredClone(submitted);
+ delete old.completionReason;
+ assert.equal(validateGenericStoredRecord(old),old,"Older stored completion remains readable");
+});
