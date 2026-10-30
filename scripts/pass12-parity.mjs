@@ -46,7 +46,7 @@ function genericVariant(edition,revised=false){
   questionRevisionIds:s.questionRevisionIds.map(id=>ids.get(id))}));
  const paperBase={...pkg.paper,id:"six-"+edition,edition,
   answerKeyRevisionId:answerKey.id,sections,
-  scoring:{defaultRule:{correctMarks:2,incorrectMarks:-0.5,unansweredMarks:0},
+  scoring:{decimalPlaces:3,defaultRule:{correctMarks:2,incorrectMarks:-0.5,unansweredMarks:0},
    byQuestionKind:{"numeric-entry":{correctMarks:5,incorrectMarks:-1,unansweredMarks:0},
     "multiple-select":{correctMarks:3,incorrectMarks:-1,unansweredMarks:0}}}};
  return {...pkg,title:"Generic "+edition,questions,answerKey,
@@ -187,7 +187,7 @@ try{
  await page.locator("#g-submit").click();
  const maxGeneric=scoreableMaximum(target.paper,target.answerKey,target.questions);
  ok(maxGeneric===14,"Generic expected model score maximum is not 14");
- ok((await page.locator(".score.standout").innerText()).includes("/ 14.00"),
+ ok((await page.locator(".score.standout").innerText()).includes("/ 14.000"),
   "Generic score max incorrectly assumes SSC CGL");
  await page.locator('[data-result-tab="review"]').click();
  ok(await page.locator('[data-review-id="rev-0:reviewed"] details.source-review').count()===1,
