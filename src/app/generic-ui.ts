@@ -25,6 +25,7 @@ import { answerRevisionEvidence } from "../learning/answer-revisions.ts";
 import { questionSpeed } from "../learning/question-analytics.ts";
 import { historyHTML, type HistorySort, type HistoryStatus } from "./history-page.ts";
 import { frozenScoreSummary } from "./history-score.ts";
+import { editorialStatusLabel } from "./editorial-labels.ts";
 import { examPreflight,preflightHTML,examRulesHTML } from "./exam-preflight.ts";
 import { reviewMatch, reviewFiltersHTML, resultTabsHTML, sectionPaceHTML, timingLedgerHTML, questionCoachingHTML, type ResultTab, type ReviewFilter } from "./result-presentation.ts";
 import { addLearningCard, validateLearningCard } from "../learning/learning.ts";
@@ -45,10 +46,12 @@ export function examTimeRemaining(paper:ExamPackage["paper"],state:GenericAttemp
   const limit=paper.timing.sectionLimits.find(s=>s.sectionId===id)?.durationMs;
   return limit==null?null:Math.max(0,limit-state.sectionElapsedMs);
 }
-function assetHTML(bundle:ExamPackage,ids:readonly string[]|undefined):string{
+function assetHTML(bundle:ExamPackage,ids:readonly string[]|undefined,fallbackAlt="Question figure"):string{
   return (ids??[]).map(id=>{
     const a=bundle.assets?.find(x=>x.id===id);
-    return a?'<img class="generic-figure" src="'+escapeText(a.dataUri)+'" alt="'+escapeText(a.altText??"Question image")+'">':"";
+    // Author-supplied descriptions win; context is only a fallback when
+    // imported media has no explicit alt text.
+    return a?'<img class="generic-figure" src="'+escapeText(a.dataUri)+'" alt="'+escapeText(a.altText??fallbackAlt)+'">':"";
   }).join("");
 }
 export function renderGenericControls(bundle:ExamPackage,q:QuestionRevision,response?:CandidateResponse):string{
@@ -58,7 +61,7 @@ export function renderGenericControls(bundle:ExamPackage,q:QuestionRevision,resp
     const kind=c.kind==="single-choice"?"radio":"checkbox";
     return '<fieldset class="generic-choices"><legend>'+ (kind==="radio"?"Select one option":"Select applicable options")+'</legend>'+
       c.options.map((o,i)=>'<label class="generic-choice"><input type="'+kind+'" name="generic-answer" data-choice="'+escapeText(o.id)+'"'+
-        (selected.includes(o.id)?" checked":"")+'><span><b>'+String.fromCharCode(65+i)+'.</b> '+escapeText(o.text)+assetHTML(bundle,o.assetIds)+'</span></label>').join("")+
+        (selected.includes(o.id)?" checked":"")+'><span><b>'+String.fromCharCode(65+i)+'.</b> '+escapeText(o.text)+assetHTML(bundle,o.assetIds,"Image for option "+String.fromCharCode(65+i))+'</span></label>').join("")+
       '</fieldset>';
   }
   if(c.kind==="true-false")return '<fieldset class="generic-choices"><legend>Choose a response</legend>'+
@@ -71,7 +74,7 @@ export function renderGenericControls(bundle:ExamPackage,q:QuestionRevision,resp
   if(c.kind==="free-response")return '<label class="picker" for="g-text">Written response</label><textarea id="g-text" rows="6">'+
     (response?.kind==="free-response"?escapeText(response.text):"")+'</textarea><button class="btn primary" id="g-save">Save response</button>';
   const pairs=response?.kind==="matching"?response.pairs:[];
-  return '<div class="generic-matches">'+c.leftItems.map(left=>'<label><span>'+escapeText(left.text)+assetHTML(bundle,left.assetIds)+'</span><select data-match="'+escapeText(left.id)+'"><option value="">Not matched</option>'+
+  return '<div class="generic-matches">'+c.leftItems.map(left=>'<label><span>'+escapeText(left.text)+assetHTML(bundle,left.assetIds,"Image for matching item "+left.text)+'</span><select data-match="'+escapeText(left.id)+'"><option value="">Not matched</option>'+
     c.rightItems.map(right=>'<option value="'+escapeText(right.id)+'"'+
       (pairs.some(p=>p.leftId===left.id&&p.rightId===right.id)?" selected":"")+'>'+escapeText(right.text)+'</option>').join("")+
     '</select></label>').join("")+'</div><button class="btn primary" id="g-save">Save matches</button>';
@@ -80,12 +83,12 @@ function stimulusHTML(bundle:ExamPackage,q:QuestionRevision):string{
  const stimulus=bundle.stimuli?.find(s=>s.id===q.content.stimulusId);
  if(!stimulus)return "";
  if(stimulus.kind==="passage"||stimulus.kind==="case")
-   return '<section class="generic-stimulus"><b>'+escapeText(stimulus.title||"Reading passage")+'</b><p>'+escapeText(stimulus.text)+'</p>'+assetHTML(bundle,stimulus.assetIds)+'</section>';
+   return '<section class="generic-stimulus"><b>'+escapeText(stimulus.title||"Reading passage")+'</b><p>'+escapeText(stimulus.text)+'</p>'+assetHTML(bundle,stimulus.assetIds,"Image accompanying "+(stimulus.title||"reading passage"))+'</section>';
  if(stimulus.kind==="table")return '<section class="generic-stimulus"><b>'+escapeText(stimulus.title||"Table")+'</b><div class="scroll-table"><table><tr>'+
    stimulus.columns.map(c=>'<th>'+escapeText(c)+'</th>').join("")+'</tr>'+
    stimulus.rows.map(r=>'<tr>'+r.map(c=>'<td>'+escapeText(c)+'</td>').join("")+'</tr>').join("")+'</table></div></section>';
  if ("assetId" in stimulus) return '<section class="generic-stimulus">'+
-    assetHTML(bundle,[stimulus.assetId])+'<p>'+escapeText(stimulus.caption||stimulus.altText)+'</p></section>';
+    assetHTML(bundle,[stimulus.assetId],stimulus.altText)+'<p>'+escapeText(stimulus.caption||stimulus.altText)+'</p></section>';
   return "";
 }
 
@@ -261,11 +264,11 @@ export function renderModelExam(
      (attempt.frozen.snapshot.examId==="ssc-cgl"?
        ' · Paper Q'+escapeText(q.questionId.split(":").at(-1)):"")+'</p>'+
      stimulusHTML(assets,q)+'<h2 class="generic-prompt">'+escapeText(q.content.prompt)+'</h2>'+
-     assetHTML(assets,q.content.assetIds)+
+     assetHTML(assets,q.content.assetIds,"Figure for question "+(state.questionIndex+1))+
      '<fieldset class="generic-response-group"'+(state.status!=="running"?" disabled":"")+'>'
      +renderGenericControls(assets,q,response)+'</fieldset>'+
      '<div class="row generic-actions exam-answer-actions"><button class="btn" id="g-clear"'+(!response||state.status!=="running"?" disabled":"")+'>Clear</button>'+
-     '<button class="btn" id="g-flag" aria-pressed="'+Boolean(responsesById.get(q.id)?.flagged)+'"'+(!paper.navigation.allowFlagging||state.status==="paused"||expired?" disabled":"")+'>Flag</button></div>'+
+     '<button class="btn" id="g-flag" aria-pressed="'+Boolean(responsesById.get(q.id)?.flagged)+'"'+(!paper.navigation.allowFlagging||expired?" disabled":"")+'>Flag</button></div>'+
      '<div class="row generic-actions exam-nav-actions"><button class="btn" id="g-prev"'+(expired||!state.questionIndex||paper.navigation.questionNavigation==="forward-only"?" disabled":"")+'>← Previous</button>'+
      '<button class="btn" id="g-next"'+(expired||state.questionIndex===section.questionRevisionIds.length-1?" disabled":"")+'>Next →</button></div>'+
      '<div class="row generic-actions exam-submit-actions">'+
@@ -794,7 +797,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      questions:frozen.questions,stimuli:frozen.stimuli,assets:frozen.assets};
    const content=q.content;
    const passage=stimulusHTML(display,q);
-   const promptAssets=assetHTML(display,content.assetIds);
+   const promptAssets=assetHTML(display,content.assetIds,"Figure for reviewed question");
    const options=content.kind==="single-choice"||content.kind==="multiple-select"?
      '<div class="generic-choices" role="list" aria-label="Answer options">'+
       content.options.map((option,i)=>{
@@ -813,7 +816,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        ];
        return '<div role="listitem" class="generic-choice review-opt'+state+'"><span><b>'+
          String.fromCharCode(65+i)+'.</b> '+escapeText(option.text)+
-         assetHTML(display,option.assetIds)+
+         assetHTML(display,option.assetIds,"Image for option "+String.fromCharCode(65+i))+
          (badges.length?'<span class="review-option-label"> · '+
            escapeText(badges.join(" · "))+'</span>':"")+'</span></div>';
       }).join("")+'</div>':"";
@@ -834,7 +837,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      }).join("")+'</div>':"";
    const matches=content.kind==="matching"?
      '<div class="generic-matches">'+[...content.leftItems,...content.rightItems].map(item=>
-       '<div><span>'+escapeText(item.text)+assetHTML(display,item.assetIds)+'</span></div>').join("")+'</div>':"";
+       '<div><span>'+escapeText(item.text)+assetHTML(display,item.assetIds,"Image for matching item "+item.text)+'</span></div>').join("")+'</div>':"";
    return passage+promptAssets+options+booleanOptions+matches;
  }
  function sourceReviewHTML(saved:GenericAttempt,target:QuestionRevision,
@@ -1035,7 +1038,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       const origin=attempt!.notebookLineage?.entries.find(x=>x.questionRevisionId===q.id);
       return '<article class="generic-review" data-review-id="'+escapeText(q.id)+'" data-verdict="'+escapeText(it.verdict)+'"><strong>'+
        (paper.sections.flatMap(z=>z.questionRevisionIds).indexOf(q.id)+1)+'. '+escapeText(q.content.prompt)+'</strong>'+
-       '<p class="fine">'+escapeText(q.editorial.status)+
+       '<p class="fine editorial-meta"><span class="editorial-status editorial-status-'+escapeText(q.editorial.status)+'">'+
+         escapeText(editorialStatusLabel(q.editorial))+'</span>'+
          (q.editorial.sourcePage?' · Source page '+q.editorial.sourcePage:"")+
          ' · '+minutes(seconds)+' foreground exposure · Speed: '+escapeText(speed)+
          ' · Visits: '+(attempt!.state.questionVisits===undefined?"Not recorded":visitCount??0)+'</p>'+
@@ -1436,23 +1440,34 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  document.addEventListener("visibilitychange",visibility);
  const keyboard=(event:KeyboardEvent)=>{
    if(disposed||view!=="exam"||!attempt||attempt.finishedAt!==null||
-      attempt.state.status!=="running"||document.hidden||
+      (attempt.state.status!=="running"&&attempt.state.status!=="paused")||document.hidden||
       event.ctrlKey||event.metaKey||event.shiftKey||event.isComposing)return;
    const focused=event.target;
+   const focusedRadio=focused instanceof HTMLInputElement&&focused.type==="radio"&&
+     root.contains(focused)&&(focused.name==="generic-answer"||focused.name==="generic-boolean");
    if(focused instanceof HTMLElement){
      if(focused.isContentEditable||focused.closest('[contenteditable="true"]'))return;
      if(focused instanceof HTMLTextAreaElement||focused instanceof HTMLSelectElement)return;
-     // Focused answer radios must still support shortcuts without interfering
-     // with numeric/text entry or other native controls.
-     if(focused instanceof HTMLInputElement&&
-        !(focused.type==="radio"&&focused.name==="generic-answer"&&root.contains(focused)))return;
+     // Radios own unmodified arrows; Alt+arrows navigate, A–D still select
+     // single-choice answers, and text/numeric/select widgets are not hijacked.
+     if(focused instanceof HTMLInputElement&&!focusedRadio)return;
    }
    const displayPanel=document.getElementById("displayPanel");
    if(displayPanel&&!displayPanel.hidden)return;
    const key=event.key.toLowerCase();
    const arrow=key==="arrowright"||key==="arrowleft";
    if(event.altKey&&!arrow)return;
+   if(attempt.state.status==="paused"){
+     if(key!=="m"||event.altKey||event.repeat||
+       !attempt.frozen.paper.navigation.allowFlagging)return;
+     event.preventDefault();
+     const id=attempt.frozen.paper.sections[attempt.state.sectionIndex]!
+       .questionRevisionIds[attempt.state.questionIndex]!;
+     const marked=attempt.state.responses.find(r=>r.questionRevisionId===id)?.flagged??false;
+     dispatch({type:"FLAG",nowMs:now(),flagged:!marked});return;
+   }
    if(arrow){
+     if(focusedRadio&&!event.altKey)return; // native radio selection
      event.preventDefault();
      const move=key==="arrowright"?1:-1;
      const target=attempt.state.questionIndex+move;
