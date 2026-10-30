@@ -40,6 +40,8 @@ export function createSourceReviewReference(
  const targetKeys=new Map(target.answerKey.entries.map(e=>[e.questionRevisionId,e.answer]));
  const sourceAssets=new Map((source.assets??[]).map(a=>[a.id,a.contentHash]));
  const targetAssets=new Map((target.assets??[]).map(a=>[a.id,a.contentHash]));
+ const sourceStimuli=new Map((source.stimuli??[]).map(s=>[s.id,s]));
+ const targetStimuli=new Map((target.stimuli??[]).map(s=>[s.id,s]));
  const selected:Core["entries"][number][]=[];
  for(const question of target.questions){
    const original=byQuestion.get(question.questionId);
@@ -50,8 +52,17 @@ export function createSourceReviewReference(
      ...(original.content.kind==="single-choice"||original.content.kind==="multiple-select"?
        original.content.options.flatMap(o=>o.assetIds??[]):[])]
      .some(id=>sourceAssets.get(id)!==targetAssets.get(id));
+   // Passages, tables and charts are independent immutable resources and may
+   // change without a question's wording or answer-key revision changing.
+   const oldStim=original.content.stimulusId?sourceStimuli.get(original.content.stimulusId):undefined;
+   const newStim=question.content.stimulusId?targetStimuli.get(question.content.stimulusId):undefined;
+   const stimulusChanged=JSON.stringify(oldStim??null)!==JSON.stringify(newStim??null);
+   const stimulusMediaChanged=(oldStim&&"assetIds" in oldStim?oldStim.assetIds??[]:
+       oldStim&&"assetId" in oldStim?[oldStim.assetId]:[])
+      .some(id=>sourceAssets.get(id)!==targetAssets.get(id));
    if(original.contentHash===question.contentHash&&
-      JSON.stringify(sourceAnswer)===JSON.stringify(currentAnswer)&&!mediaChanged)continue;
+      JSON.stringify(sourceAnswer)===JSON.stringify(currentAnswer)&&
+      !mediaChanged&&!stimulusChanged&&!stimulusMediaChanged)continue;
    selected.push({targetQuestionRevisionId:question.id,
      sourceQuestion:structuredClone(original),sourceAnswer:structuredClone(sourceAnswer)});
  }
@@ -90,7 +101,7 @@ export function validateSourceReviewReference(attempt:GenericAttempt):void{
    const target=targets.get(entry.targetQuestionRevisionId);
    const original=entry.sourceQuestion;
    if(!target||!original||seen.has(target.id)||
-      original.questionId!==target.questionId||original.id===target.id)
+      original.questionId!==target.questionId)
      throw new Error("Frozen source-review question identity mismatch");
    validateQuestionRevision(original);
    if(questionRevisionHash(original)!==original.contentHash)
