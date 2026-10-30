@@ -54,6 +54,19 @@ try{
   const old=await setup(v11,v.width,v.height);
   const modern=await setup(current,v.width,v.height);
   try{
+   // Compare the exact same CGL family and reviewed edition, rather than
+   // silently contrasting v11's default first paper with overhaul's latest.
+   const dateId="cgl-2026-09-30";
+   await old.page.locator("#paperSelect").selectOption(dateId);
+   await old.page.locator('[data-edition="reviewed"]').click();
+   const sameEdition=await modern.page.locator("#g-papers option").evaluateAll((opts,id)=>
+     opts.find(o=>o.value.includes(id)&&o.value.includes("reviewed"))?.value??"",dateId);
+   assert(Boolean(sameEdition),"Paired source/reviewed CGL edition unavailable");
+   await modern.page.locator("#g-papers").selectOption(sameEdition);
+   assert((await old.page.locator("#app").innerText()).includes("30 September 2026"),
+     "v11 comparison paper not selected");
+   assert((await modern.page.locator("#g-papers option:checked").innerText()).includes("30 Sep 2026"),
+     "Overhaul comparison paper not selected");
    const base={paper:await rect(old.page,"#paperSelect"),start:await rect(old.page,"#start")};
    const main={paper:await rect(modern.page,"#g-papers"),
     start:await rect(modern.page,"#g-start"),mode:await rect(modern.page,'[data-mode="strict"]')};
