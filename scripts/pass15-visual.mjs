@@ -37,11 +37,19 @@ const executablePath=spawnSync("which",[executable],{encoding:"utf8"}).stdout.tr
 const browser=await chromium.launch({headless:true,executablePath,args:["--no-sandbox","--disable-dev-shm-usage","--disable-background-networking"]});
 const failures=[],observations=[],screens=[];
 const ensure=(v,message)=>{if(!v)throw Error(message);};
-const viewports=[
+const defaultViewports=[
  {name:"phone390",width:390,height:844},
  {name:"tablet768",width:768,height:1024},
  {name:"desktop1280",width:1280,height:800},
 ];
+// Pass 24: capture identical laptop states at additional desktop resolutions
+// without changing the stable Pass 15 default evidence/behavior.
+const viewports=process.env.PASS15_VIEWPORTS?JSON.parse(process.env.PASS15_VIEWPORTS):defaultViewports;
+if(!Array.isArray(viewports)||viewports.length<1||viewports.length>6||
+ viewports.some(v=>typeof v.name!=="string"||!/^[a-z0-9-]+$/.test(v.name)||
+ !Number.isInteger(v.width)||v.width<195||v.width>2400||
+ !Number.isInteger(v.height)||v.height<500||v.height>1600))
+ throw Error("Invalid PASS15_VIEWPORTS screen capture configuration");
 // WCAG 2.2 text contrast, evaluated against actual light/dark CSS tokens.
 async function contrastPairs(page){
  return page.evaluate(()=>{
@@ -80,6 +88,38 @@ async function capture(p,edition,screen,viewport){
  if(screen!=="corrected-review")await p.evaluate(()=>window.scrollTo(0,0));
  await p.screenshot({path:join(out,edition+"-"+viewport.name+"-"+screen+".png"),animations:"disabled"});
  const sizing=await cssWide(p);
+ // Screen-specific geometry is measured against the actual first viewport.
+ // The original visual test only checked overflow and missed below-fold actions.
+ const landmarks=await p.evaluate(({screen,old})=>{
+   const regions=screen.startsWith("library")?
+     {start:old?"#start":"#g-start",paper:old?"#paperSelect":"#g-papers",heading:"#app h1",
+      modes:"[data-mode=free]",edition:old?".edition-toggle":"#g-edition"}:
+    screen.startsWith("exam")?
+     {question:old?".question":".exam-question",firstOption:old?".choices .choice":".generic-choice",
+      next:old?"#next":"#g-next",flag:old?"#mark":"#g-flag",submit:old?"#finish":"#g-submit",
+      palette:old?".palette":".palette"}:
+    screen==="results-overview"?
+     {scores:old?"#resultContent .scoregrid":"#result-overview .scoregrid",
+      sectionTable:old?"#resultContent table":"#result-overview table",
+      tabs:old?".viewtabs":".result-tabs"}:
+    screen==="history-populated"?
+     {attempt:old?".attempt-row":".archive-entry",
+      storage:old?".storage-line":"#g-storage-panel",
+      filters:old?"#historyFilter":"#g-history-filter"}:{};
+   const info={};
+   for(const [key,selector] of Object.entries(regions)){
+     const el=document.querySelector(selector);
+     if(!el){info[key]={missing:true,selector};continue;}
+     const r=el.getBoundingClientRect(),style=getComputedStyle(el);
+     info[key]={x:Math.round(r.x),y:Math.round(r.y),
+       width:Math.round(r.width),height:Math.round(r.height),
+       viewportVisible:r.bottom>0&&r.top<innerHeight&&r.right>0&&r.left<innerWidth,
+       fullyVisible:r.top>=0&&r.bottom<=innerHeight,
+       fontPx:Math.round(parseFloat(style.fontSize)*10)/10};
+   }
+   return info;
+ },{screen,old:edition==="v11"});
+ observations.push({edition,viewport:viewport.name,screen,landmarks});
  if(edition==="overhaul"&&screen.includes("display")){
    const bounds=await p.locator("#displayPanel").boundingBox();
    if(bounds){
@@ -265,4 +305,4 @@ await writeFile(join(out,"visual-layout-report.json"),JSON.stringify({
  note:"Screenshots are automated browser evidence and are not physical-device or assistive-technology approval."
 },null,2));
 if(failures.length)throw Error("Pass 15 layout failures:\n"+failures.join("\n"));
-console.log("Pass 15: v11 versus overhaul screenshots, 390/768/1280, light/dark, 140% fonts, real audited CGL, result and history, 200%-equivalent zoom PASS");
+console.log("Pass 15: v11 versus overhaul screenshots at "+viewports.map(v=>v.width+"x"+v.height).join(", ")+", light/dark, 140% fonts, real audited CGL, result and history, zoom PASS");
