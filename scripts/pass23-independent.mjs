@@ -191,6 +191,26 @@ try{
  }
  await separateGenericReviewPolicy();
  await accessibilityAndOverflow();
+ // Enforce numeric parity (not merely similar displayed text) between the
+ // frozen old app and this build on each paired scoring scenario.
+ const numericScore=(label)=>{
+  const found=label.replaceAll("−","-").match(/^(-?\\d+(?:\\.\\d+)?)\\s*\\/\\s*(\\d+(?:\\.\\d+)?)/);
+  ensure(found,"Cannot parse a paired adjusted score: "+label);
+  return [Number(found[1]),Number(found[2])];
+ };
+ let paired=0;
+ for(const previous of observations.filter(x=>x.era==="v11")){
+  const current=observations.find(x=>x.era==="overhaul"&&x.id===previous.id&&
+    x.edition===previous.edition&&x.mode===previous.mode);
+  ensure(current,"Missing equivalent overhaul attempt for "+previous.id+"/"+previous.edition+"/"+previous.mode);
+  const old=numericScore(previous.score),next=numericScore(current.score);
+  ensure(old.every((value,i)=>Math.abs(value-next[i])<1e-9),
+    "Adjusted marks/eligible max disagree between frozen v11 and overhaul for "+
+     previous.id+"/"+previous.edition+"/"+previous.mode+": "+old+" versus "+next);
+  paired++;
+ }
+ ensure(paired===6,"Expected six independent paired score/max checks, found "+paired);
+ console.log("Pass23: six v11/current adjusted-score AND eligible-maximum numeric pairs agree");
  console.log("PASS23 PAIRED REAL-HTML EVIDENCE "+JSON.stringify(observations));
  console.log("Pass23: frozen v11/current end-to-end parity cases, selected generic no-review, editorial safety, saved history and responsive Display PASS");
 }finally{await browser.close();await rm(temp,{recursive:true,force:true});}
