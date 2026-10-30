@@ -97,6 +97,8 @@ try{
  const exported=JSON.parse(await readFile(await download.path(),"utf8"));
  yes(exported.format===backupName&&exported.version===3&&exported.manifest.recordCount===exported.records.length,
   "Checksum-verified v3 backup format changed");
+ yes(exported.selection?.paperRevisionId===reviewed&&exported.selection?.mode==="free",
+  "Device exam setup was not included in the integrity-protected backup");
  const prompts=[];
  page.on("dialog",d=>{if(d.message().includes("Delete all")||d.message().includes("Confirm permanent deletion")){
   prompts.push(d.message());void d.accept();}else if(d.message().startsWith("Import ")){void d.accept();}});
@@ -120,7 +122,39 @@ try{
  yes(restored.find(x=>x.id===pending.id)?.saveRevision===pendingBefore.saveRevision,
   "Additive import overwrote matching pending record");
  yes(!errors.length,"Browser errors: "+errors.join("; "));
- console.log("Pass 13: explicit edition, persisted mode/section, corrupt-pref fallback, exact history filter, adjusted trend, denied quota/persist, atomic completed deletion and additive backup preservation PASS");
+
+ // Confirm the same finished-only, double-checked operation remains atomic in
+ // localStorage fallback when IndexedDB cannot be opened on this file origin.
+ const fallback=await context.newPage();
+ await fallback.addInitScript(()=>Object.defineProperty(window,"indexedDB",
+  {configurable:true,value:undefined}));
+ await fallback.goto(url,{waitUntil:"load"});
+ await fallback.locator('[data-mode="free"]').click();
+ await fallback.locator("#g-start").click();
+ fallback.once("dialog",d=>d.accept());
+ await fallback.locator("#g-submit").click();
+ await fallback.locator("#g-library").click();
+ await fallback.locator("#g-history").click();
+ yes((await fallback.locator("#g-storage-backend").innerText()).includes("localStorage fallback"),
+  "Fallback storage backend must be visible");
+ const fallbackBefore=JSON.parse(await fallback.evaluate(()=>
+  localStorage.getItem("practiceDesk.overhaul.fallback.v1")??"[]"));
+ yes(fallbackBefore.some(x=>x.recordType==="generic-attempt"&&x.finishedAt!==null),
+  "Fallback completed attempt not durably saved");
+ const fallbackPrompts=[];
+ fallback.on("dialog",d=>{
+  if(d.message().includes("Delete all")||d.message().includes("Confirm permanent deletion")){
+   fallbackPrompts.push(d.message());void d.accept();
+  }
+ });
+ await fallback.locator("#g-delete-completed").click();
+ await fallback.waitForFunction(()=>document.querySelector("#g-delete-completed")?.disabled===true);
+ const fallbackAfter=JSON.parse(await fallback.evaluate(()=>
+  localStorage.getItem("practiceDesk.overhaul.fallback.v1")??"[]"));
+ yes(fallbackPrompts.length===2&&!fallbackAfter.some(x=>
+  x.recordType==="generic-attempt"&&x.finishedAt!==null),
+  "Fallback bulk delete failed atomic completed-only deletion");
+ console.log("Pass 13: explicit edition, persisted mode/section, corrupt-pref fallback, exact history filter, adjusted trend, denied quota/persist, atomic completed deletion, fallback and additive backup preservation PASS");
 }finally{
  await context?.close();
  await rm(dir,{recursive:true,force:true});
