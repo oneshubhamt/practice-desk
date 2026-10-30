@@ -59,7 +59,11 @@ try{
  await page.locator("#displayClose").click();
  await page.locator("#g-file").setInputFiles({name:"six-kinds.json",mimeType:"application/json",
   buffer:Buffer.from(JSON.stringify(pkg))});
+ await page.waitForFunction(expected=>document.querySelector("#g-papers")?.value===expected,
+  pkg.paper.id);
  await page.locator("#g-papers").selectOption(reviewed);
+ await page.waitForFunction(expected=>document.querySelector("#g-papers")?.value===expected,
+  reviewed);
  await page.locator('[data-mode="free"]').click();
  // Two completed exams with preserved notebook card; one pending exam later.
  for(let i=0;i<2;i++){
