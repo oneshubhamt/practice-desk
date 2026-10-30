@@ -123,10 +123,19 @@ try{
    "Unanswered question with a worked solution should expand its explanation");
  ok(await page.locator("#g-review-top").count()===1,"Review Top action missing");
  await page.locator("#g-review-top").click();
- const oldRecord=(await stored(page)).find(x=>x.recordType==="generic-attempt"&&
-  x.frozen.paper.paperId===reviewed.paper.paperId&&x.finishedAt!==null);
+ // The UI can render the just-finished immutable result before its queued
+ // IndexedDB write commits. Wait for the authoritative completed snapshot
+ // rather than treating the first read as a committed-history assertion.
+ let oldRecord;
+ for(let read=0;read<40;read++){
+   oldRecord=(await stored(page)).find(x=>x.recordType==="generic-attempt"&&
+     x.frozen.paper.paperId===reviewed.paper.paperId&&x.finishedAt!==null&&
+     x.sourceReviewReference?.entries.length===sourceReview.entries.length);
+   if(oldRecord)break;
+   await page.waitForTimeout(100);
+ }
  ok(oldRecord?.sourceReviewReference?.entries.length===sourceReview.entries.length,
-  "Source comparison was not stored with frozen attempt");
+  "Source comparison was not durably stored with frozen attempt");
  await page.locator("#g-library").click();
  await page.locator("#g-history").click();
  await page.locator('[data-attempt="'+oldRecord.id+'"]').first().click();
