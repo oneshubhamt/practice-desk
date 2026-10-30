@@ -1316,7 +1316,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    // Time limits still elapse outside exam view, but hidden/library time is
    // not charged to the last foreground question.
    if(disposed||storageFault||!attempt||attempt.finishedAt!==null||
-      attempt.state.status==="paused")return;
+      (attempt.state.status==="paused"||attempt.state.status==="section-expired"))return;
    const original=attempt;
    const next=transitionGenericAttempt(original,{type:"TICK",nowMs:now()},
      new Map(original.frozen.questions.map(q=>[q.id,q])));
