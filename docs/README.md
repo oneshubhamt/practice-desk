@@ -1,6 +1,6 @@
 # Practice Desk documentation — canonical map
 
-**Reference:** frozen `baseline/v11` · **implementation:** `overhaul` · **development state:** Passes 17–23 now have automated source/QA verification, including fresh old-v-new real-browser and exact-score checks. **Conditional engineering candidate, not release or manual-device/AT approval.** Read the final independent report before any distribution.
+**Reference:** frozen `baseline/v11` · **implementation:** `overhaul`. **IMPORTANT 30 Oct Pass24 correction:** laptop screenshot/first-viewport visual parity **FAILED** despite green functional CI; key test actions move below fold. Engineering status is *not* full v11 UI parity or a release. Read the [laptop regression audit](audits/PASS24_LAPTOP_VISUAL_REGRESSION_2026-10-30.md) before the conditional earlier Pass23 source/functional report.
 
 ## Read in this order
 
