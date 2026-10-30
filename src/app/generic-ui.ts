@@ -864,12 +864,25 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        (row.questions-row.excluded)+'</td><td>'+row.correct+'</td><td>'+row.incorrect+
        '</td><td>'+escapeText(markLabel(row.marks))+' / '+
        escapeText(markLabel(row.eligibleMax))+'</td><td>'+
+       (row.timerMs===null?"Not recorded":minutes(row.timerMs)+
+         (row.timerReason==="time-expired"?" · Expired":" · Submitted"))+'</td><td>'+
        minutes(row.foregroundMs)+'</td></tr>').join("");
    const evidence=attemptEvidence(attempt);
    const revisions=answerRevisionEvidence(attempt);
    const analyticHTML=evidence?'<section class="panel pad" id="g-attempt-evidence">'+
      '<h2>Timing, accuracy & marks evidence</h2>'+
-     '<p class="fine">Times are foreground exposure to each question; they do not measure thinking time. Opportunity figures describe hypothetical arithmetic, not projected marks.</p>'+
+     '<p class="fine">Elapsed is consumed test timer time (including hidden intervals, excluding permitted pauses and expired waiting). Question exposure is measured only in the visible foreground. The global median uses measured scored answers; hypothetical opportunities are not predicted marks.</p>'+
+     '<div class="learning-metric-grid" id="g-overall-pacing">'+
+     '<div class="learning-metric"><strong>Test timer used</strong><b>'+minutes(evidence.timing.elapsedMs)+'</b><small>Consumed active exam clock</small></div>'+
+     '<div class="learning-metric"><strong>Attempt rate</strong><b>'+
+      (evidence.timing.attemptRate===null?"—":(100*evidence.timing.attemptRate).toFixed(1)+"%")+
+      '</b><small>'+evidence.timing.attemptedEligible+' / '+evidence.timing.eligibleQuestions+
+      ' non-excluded questions answered (includes manual pending)</small></div>'+
+     '<div class="learning-metric"><strong>Median answered time</strong><b>'+
+      (evidence.timing.overallMedianAnsweredMs===null?"Not recorded":minutes(evidence.timing.overallMedianAnsweredMs))+
+      '</b><small>'+evidence.timing.measuredAnswered+' measured scored answers, foreground only</small></div>'+
+     '<div class="learning-metric"><strong>Foreground question exposure</strong><b>'+
+      minutes(evidence.timing.questionMeasuredMs)+'</b><small>Not equivalent to timer time</small></div></div>'+
      '<div class="scroll-table"><table><thead><tr><th>Section</th><th>Answered</th><th>Coverage</th><th>Accuracy</th><th>Median answered time</th><th>Positive</th><th>Penalty</th></tr></thead><tbody>'+
      evidence.sections.map(e=>'<tr><td>'+escapeText(e.title)+'</td><td>'+e.answered+'</td><td>'+
        Math.round(e.coverage*100)+'%</td><td>'+(e.accuracy===null?"—":Math.round(e.accuracy*100)+"%")+
@@ -936,8 +949,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       escapeText(selfAssessed.toFixed(2))+'. Original automated score above remains unchanged.</p>':
       '<p class="fine">Automated marks reflect only scoreable questions.</p>')+'</section>'+
     '<section class="panel pad"><h2>Section performance</h2>'+
-    '<p class="fine">Eligible maximum excludes editorially unscored and manually assessed questions. Time is measured question foreground exposure, not the sectional wall clock.</p>'+
-    '<div class="scroll-table"><table><thead><tr><th>Section</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Marks / eligible max</th><th>Time on questions</th></tr></thead><tbody>'+
+    '<p class="fine">Eligible maximum excludes editorially unscored and manually assessed questions. Section timer is actual consumed time for sequential timed sections; foreground exposure is separate. Older records and unrestricted multi-section navigation show Not recorded rather than invented section time.</p>'+
+    '<div class="scroll-table"><table><thead><tr><th>Section</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Marks / eligible max</th><th>Section timer</th><th>Question foreground</th></tr></thead><tbody>'+
      paperSectionRows+'</tbody></table></div></section>'+sectionPaceHTML(attempt)+analyticHTML+
      questionCoachingHTML(attempt,revealReview)+
     '<section class="panel pad answer-revision-panel"><h2>Answer revisions</h2>'+
