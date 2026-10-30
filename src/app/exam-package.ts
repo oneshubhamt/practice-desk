@@ -103,7 +103,18 @@ export function builtinCglPackages(sources: SourcePaperBank, patches: ReviewPatc
 export type CglPracticeMode = "strict" | "free" | "single";
 export function configureCglPractice(base: ExamPackage, mode:CglPracticeMode, sectionIndex=0):ExamPackage {
  if(base.examId!=="ssc-cgl")return base;
- if(mode==="strict")return {...base,practiceMode:"strict"};
+ if(mode==="strict"){
+   // The raw editorial/source package is an immutable document with a manual
+   // transition declaration. The actual v11-like exam simulation must instead
+   // explicitly freeze an AUTOMATIC 15-minute section policy; otherwise a
+   // correctly implemented manual expiry would strand the strict exam.
+   if(base.paper.timing.kind!=="sectional")throw new Error("Strict CGL requires sectional timing");
+   const derived={...base.paper,
+     id:(base.paper.id+":practice:strict") as PaperRevision["id"],
+     timing:{...base.paper.timing,transition:"automatic" as const}};
+   const paper:PaperRevision={...derived,contentHash:paperRevisionHash(derived)};
+   return {...base,paper,practiceMode:"strict"};
+ }
  const source=base.paper;
  if(mode==="single"&&!source.sections[sectionIndex])throw new Error("Unknown practice section");
  const sections=mode==="single"?[source.sections[sectionIndex]!]:[...source.sections];
