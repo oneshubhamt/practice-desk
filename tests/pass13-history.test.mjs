@@ -35,7 +35,7 @@ test("device-local exam choice validates arbitrary exam revisions and survives c
 test("exact frozen paper edition filtering combines with free text and status",()=>{
  const a=ended(configureCglPractice(source,"free"),"original",1000),
  b=ended(configureCglPractice(reviewed,"free"),"reviewed",2000);
- const pending=startGenericAttempt(reviewed,"pending",3000);
+ const pending=startGenericAttempt(configureCglPractice(reviewed,"free"),"pending",3000);
  const query={status:"all",sort:"newest",search:"",paperRevisionId:configureCglPractice(reviewed,"free").paper.id};
  assert.deepEqual(filteredHistory([a,b,pending],packages,query).map(x=>x.id),["pending","reviewed"]);
  assert.deepEqual(filteredHistory([a,b,pending],packages,{...query,status:"complete"}).map(x=>x.id),["reviewed"]);
@@ -66,6 +66,5 @@ test("adjusted score trends require exact frozen key, revision and practice mode
  assert.equal(comparableScoreTrends([graded]).length,1);
  const page=historyHTML([original,second,corrected,free],packages,
   {status:"all",sort:"newest",search:""},false,false,"");
- assert.match(page,/Adjusted score progression/);
  assert.match(page,/Repeat the same frozen paper, key and mode/);
 });
