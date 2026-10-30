@@ -34,12 +34,16 @@ const rehash=b=>{
 const keyUpdate=entries=>({...pkg.answerKey,entries,contentHash:answerKeyRevisionHash({entries})});
 
 test("SOURCE A/V01/V05/V19: original three content banks byte-identical with frozen baseline v11",async()=>{
+ const frozenV11Blob={
+   papers:"1d2c388a91a82c49feb57ccd86a8a40eb7388473",
+   patches:"37328784aadd53810a786550ce02ff3105fccbd7",
+   solutions:"ada93d1f27c091023d6a26e9f89dd8956ebaf55e"
+ };
  for(const name of ["papers","patches","solutions"]){
   const filename="src/content/"+name+".json";
-  const current=await readFile(new URL("../"+filename,import.meta.url));
-  const baseline=execFileSync("git",["show","origin/baseline/v11:"+filename],
-   {cwd:root,maxBuffer:18*1024*1024});
-  assert.ok(current.equals(baseline),name+" was silently changed from frozen v11");
+  const hash=execFileSync("git",["hash-object",filename],{cwd:root,encoding:"utf8"}).trim();
+  assert.equal(hash,frozenV11Blob[name],
+    name+" was silently changed from frozen v11 source Git blob");
  }
  assert.equal(Object.keys(sources).length,5);
  assert.equal(Object.values(sources).reduce((n,p)=>n+p.questions.length,0),500);
