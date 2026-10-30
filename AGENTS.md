@@ -1,19 +1,22 @@
-# Practice Desk — engineering rules
+# Practice Desk — engineering contract
 
-## Before editing `overhaul`
+## Reading order
 
-Read, in order: [README](README.md) → **[live v11 feature-parity programme](docs/V11_FEATURE_PARITY_PROGRAMME.md)** → [current consolidated status](docs/PROJECT_STATUS.md) → [data model](docs/DATA_MODEL.md). For Pass 15/16 visual checks also read [paired v11/overhaul screenshots and manual signoff](docs/PASS15_VISUAL_AUDIT.md). After Pass 16, use [independent final source audit and conditional release decision](docs/PASS16_INDEPENDENT_AUDIT.md); do not resurrect pre-approval CGL exclusion or uncapped generic partial scoring. Use [original architecture audit](docs/ARCHITECTURE_AUDIT_2026-10-28.md), [historical Passes 4–10 reports](docs/PROJECT_STATUS.md#consolidated-completed-development-history-passes-110) and [superseded v11 ledger](docs/V11_PARITY_LEDGER.md) only for context. **Do not treat historical acceptance checkmarks or passing test fixtures as proof of parity.**
+1. [README](README.md): build, current design and release boundary.
+2. [Canonical Passes 4–16 record](docs/ENGINEERING_RECORD.md): decisions, source matrix, historical work, frozen data model and accepted exceptions.
+3. [Independent v11 source audit](docs/V11_INDEPENDENT_SOURCE_AUDIT.md), when available: verified gaps and their status. It is **not** a replacement for actual source inspection.
+4. Direct code comparison between `baseline/v11` and current `overhaul`; never mistake old passing QA fixtures or documentary DONE labels for parity proof.
 
-For each Pass 11–16, follow **audit → analyze → implement → check objectives → targeted QA**. Before writing code, trace the exact v11 DOM, controls, handlers, engine behavior, information and CSS against the actual overhaul implementation. Record the audit and plan in the live parity programme. Afterwards reconcile *every relevant matrix ID* with code-level + rendered behavior evidence; do not simply repeat existing tests. Update the live programme status and unresolved items; verify CI at the exact final HEAD. At Pass 16 perform a wholly independent, new source parity comparison.
+## Safety and architecture
 
-## Non-negotiable implementation constraints
-
-- **CLEAR:** Clean, Lean, Efficient, Elegant, Reliable.
-- Work on `overhaul` only; keep `main` and frozen `baseline/v11` unchanged. No unrequested merges.
-- One **self-contained offline HTML** opening by double-click under `file://`. No runtime network, server, external assets or module imports. Build from sources; never hand-edit `Practice_Desk_Offline_Mock_Tests.html`.
-- Modular **strict TypeScript** with accurate types and state invariants. No new `any`, `@ts-ignore` or `@ts-nocheck`; do not reinstate the v11 `legacy.ts` runtime.
-- One validated model-driven exam/learning/history path with immutable paper/question/key/media snapshots, integrity hashes, safe optimistic save revisions, checksum-verified backup v3 and correct scoring. No silent changes to editorial keys, test timers, backup overwrite safety or FSRS schedules.
-- Preserve published source text/figures, independently reviewed corrections and post-test solutions as separate resources; never expose keys, detailed fixes or explanations before submission.
-- Keep the deliberately accepted **no v11 historical-data migration** decision unless the user explicitly changes it.
-- Keep QA focused but complete: source review, direct user-visible behavior, real representative paper content, relevant failure modes, accessibility and regression to new features; existing tests are a floor, not evidence of missing features.
-- Manual Safari/iOS/Android, physical data loss, screen-reader testing and visual preference must not be asserted complete without actual evidence. Clearly state any unavailable gates.
+- Write **only** on `overhaul`; leave `main` and `baseline/v11` frozen, with no unrequested merge.
+- Maintain a **self-contained** generated offline `file://` HTML application; no runtime network, analytics, external fonts or server dependencies. Do not edit the generated HTML by hand.
+- Use strict modular TypeScript; no new `any`, `@ts-nocheck`, `@ts-ignore` or parallel v11 runtime. Keep one generic validated six-kind engine, not CGL-specific forks.
+- Preserve frozen paper/question/key/media/response snapshots, calculated score integrity, optimistic save revisions, v3 additive checksum backup, separately labelled manual scores, explicit FSRS feedback, stable revisions and event timings.
+- Hide source answers, corrections and detailed explanations until submission. Keep independent published source data and editorial corrections separate.
+- **Binding user decision:** unpatched source-invalid/caution CGL questions are excluded in source edition, but scoreable as `caution` in reviewed edition with published key; disputed 6 Oct Q62 retains B for reviewed scoring and conspicuously notes dispute after submission.
+- Generic multi-select and matching partial-component awards may **not exceed** the item's declared full `correctMarks`.
+- No v11 legacy-user-history migration; backup imports remain additive, never silently replace same-ID local records.
+- Follow **source audit → analysis → implementation → objective-by-objective reconciliation → targeted QA**. Do not treat automated checks as independent functional parity verification.
+- Manual actual Apple Safari, Android/iOS, NVDA/VoiceOver, OS storage eviction/force kill and visual judgement are pending until tested on those platforms. Explicit user authorization is required for release/merge.
+- Keep engineering history in the canonical record. New independent source-to-source audit findings belong in the dated audit report; avoid recreating redundant pass documents.
