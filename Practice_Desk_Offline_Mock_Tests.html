@@ -3517,7 +3517,7 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
             text: text2,
             ...merged.images.options?.[index] ? { assetIds: [`${stableId}:option:${index}`] } : {}
           }));
-          const editorialStatus = edition === "source" ? original.status === "ok" ? "verified" : original.status : patch.status === "corrected" ? "corrected" : patch.status === "caution" ? "caution" : original.status === "invalid" ? "invalid" : original.status === "caution" ? "caution" : "verified";
+          const editorialStatus = edition === "source" ? original.status === "ok" ? "verified" : original.status : patch.status === "corrected" ? "corrected" : patch.status === "caution" ? "caution" : original.status === "invalid" || original.status === "caution" ? "caution" : "verified";
           const content = {
             kind: "single-choice",
             prompt: merged.stem,
@@ -3525,10 +3525,12 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
             ...original.passageRef ? { stimulusId: `${source.id}:passage:${original.passageRef}` } : {},
             ...merged.images.stem ? { assetIds: [`${stableId}:stem`] } : {}
           };
+          const sourceInvalidCaution = edition === "reviewed" && original.status === "invalid" && patch.status === void 0;
+          const notes = sourceInvalidCaution ? [merged.review, "Editorial caution: the original published answer is retained for scoring; it is disputed and has not been independently corrected."].filter(Boolean).join(" ") : merged.review;
           const editorial = {
             status: editorialStatus,
             sourcePage: original.sourcePage,
-            ...merged.review ? { notes: merged.review } : {},
+            ...notes ? { notes } : {},
             ...merged.sources?.length ? { sources: merged.sources } : {}
           };
           const fingerprint2 = questionRevisionHash({ content, editorial });
@@ -3961,7 +3963,7 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
         verdict = "incorrect";
         incorrectCount++;
         const partial = componentMarks(entry.answer, response, rule);
-        marks = partial === null ? rule.incorrectMarks : rule.partialCredit?.floorAtZero ? Math.max(0, partial) : partial;
+        marks = partial === null ? rule.incorrectMarks : Math.min(rule.correctMarks, rule.partialCredit?.floorAtZero ? Math.max(0, partial) : partial);
       }
       earnedMarks += marks;
       positiveMarks += Math.max(0, marks);
@@ -7031,7 +7033,19 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
       const focusKey = previous instanceof HTMLElement && root2.contains(previous) ? { id: previous.id, attributes: ["data-choice", "data-bool", "data-match", "data-q", "data-section", "data-attempt", "data-result-tab"].filter((name) => previous.hasAttribute(name)).map((name) => [name, previous.getAttribute(name)]) } : null;
       root2.classList.add("generic-workspace");
       if (view === "learning") {
+        const entering = lastScreenKey !== "learning";
+        lastScreenKey = "learning";
+        lastDrawView = "learning";
         learningDesk.show();
+        if (entering) {
+          const status = document.getElementById("screen-announcement");
+          if (status) status.textContent = "Learning and spaced revision.";
+          const heading = root2.querySelector("h1");
+          if (heading) {
+            heading.tabIndex = -1;
+            heading.focus({ preventScroll: true });
+          }
+        }
         return;
       }
       learningDesk.hide();
