@@ -584,6 +584,11 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        localStorage.setItem(storageKey,updated);fallbackStamp=updated;
      }
      for(const record of completed)records.delete(record.id);
+     try{
+       const mirror=localStorage.getItem(mirrorKey);
+       if(mirror&&completed.some(row=>row.id===JSON.parse(mirror)?.id))
+         localStorage.removeItem(mirrorKey);
+     }catch(error){console.warn("Could not clear a deleted completed attempt mirror",error);}
      if(attempt&&completed.some(r=>r.id===attempt!.id))attempt=null;
      notice("Deleted "+completed.length+" completed attempts. Other saved data was preserved.");
    }catch(error){
