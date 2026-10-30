@@ -304,6 +304,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
   let resultTab:ResultTab="overview";
   let reviewFilter:ReviewFilter="all";
  let attempt:GenericAttempt|null=null, view:"library"|"history"|"exam"|"result"|"learning"="library";
+ // Live-region updates depend on actual route/question changes, not timer ticks.
+ let lastScreenKey="",lastDrawView:typeof view|null=null,lastResultPane:ResultTab="overview";
  let db:IDBDatabase|null=null, warning="",disposed=false, loading=true, writeQueue=Promise.resolve();
  let lastTimerSave=0;
  let fallbackStamp:string|null=null, fallbackConflict=false, storageFault=false;
@@ -996,9 +998,29 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    root.classList.add("generic-workspace");
    if(view==="learning"){learningDesk.show();return;}
    learningDesk.hide();
+   const priorView=lastDrawView,priorPane=lastResultPane;
    root.innerHTML=view==="library"?listHTML():view==="history"?historyHTML([...records.values()].filter(isAttempt),packages,
      {status:historyFilter,sort:historySort,search:historySearch,paperRevisionId:historyPaper},
      loading,fallbackConflict||storageFault,warning,db?"indexeddb":"fallback"):view==="exam"?examHTML():resultHTML();
+   const currentSection=attempt?.frozen.paper.sections[attempt.state.sectionIndex];
+   const currentQuestion=attempt?.state.questionIndex;
+   const screenKey=view==="exam"?
+     "exam|"+attempt?.id+"|"+attempt?.state.sectionIndex+"|"+currentQuestion:
+     view==="result"?"result|"+attempt?.id+"|"+resultTab:view;
+   if(lastScreenKey!==screenKey){
+     lastScreenKey=screenKey;
+     const text=view==="exam"?
+       "Exam. "+(currentSection?.title??"Section")+", question "+((currentQuestion??0)+1)+
+       " of "+(currentSection?.questionRevisionIds.length??0)+".":
+       view==="result"?"Results. "+(resultTab==="overview"?"Performance overview":
+         resultTab==="review"?"Question review":"Question timing ledger")+".": 
+       view==="history"?"History and insights.":
+       view==="learning"?"Learning and revision.":"Test library.";
+     const announcer=document.getElementById("screen-announcement");
+     if(announcer)announcer.textContent=text;
+   }
+   lastDrawView=view;
+   lastResultPane=resultTab;
    if(focusKey){
      const controls=[...root.querySelectorAll<HTMLElement>("button,input,select,textarea")];
      const target=focusKey.id?controls.find(item=>item.id===focusKey.id):
@@ -1011,6 +1033,15 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          catch{ /* Some input modes do not expose selection ranges. */ }
        }
      }
+   }
+   // Route switches receive a predictable keyboard start; result tab changes
+   // retain focus on the newly selected tab instead of the old inactive tab.
+   // Do not steal focus during timer updates, answer edits or filter changes.
+   if(priorView!==null&&priorView!==view){
+     const heading=root.querySelector<HTMLElement>("h1");
+     if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}
+   }else if(view==="result"&&priorView==="result"&&priorPane!==resultTab){
+     root.querySelector<HTMLElement>("#result-tab-"+resultTab)?.focus({preventScroll:true});
    }
    if(view==="history"){
      root.querySelector<HTMLButtonElement>("#g-library")!.onclick=()=>{view="library";draw();};
