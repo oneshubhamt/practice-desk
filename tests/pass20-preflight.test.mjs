@@ -48,7 +48,12 @@ test("F02/F15: source edition reports excluded publisher items; reviewed is scor
  assert.equal(x.maximum,scoreableMaximum(original.paper,original.answerKey,original.questions));
  assert.ok(x.maximum<200);
  assert.equal(y.excludedQuestions,0);
- assert.ok(y.cautionQuestions>0);
+ assert.ok(y.correctedQuestions>0,"Reviewed paper contains independently corrected items");
+ const disputed=cgl.find(p=>p.paper.edition==="reviewed"&&p.paper.paperId==="cgl-2026-10-06");
+ assert.ok(disputed);
+ assert.ok(model(disputed,true).cautionQuestions>0,
+   "Disputed reviewed 6 October questions retain editorial caution rather than being silently excluded");
+ assert.equal(y.cautionQuestions,reviewed.questions.filter(q=>q.editorial.status==="caution").length);
  assert.equal(y.patchCount,Object.keys(patches[reviewed.paper.paperId]??{}).length);
  assert.ok(y.patchCount>0);
  assert.match(x.provenance,/publisher-provided/);
