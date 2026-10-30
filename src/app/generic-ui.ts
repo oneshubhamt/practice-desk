@@ -86,7 +86,11 @@ function stimulusHTML(bundle:ExamPackage,q:QuestionRevision):string{
  const stimulus=bundle.stimuli?.find(s=>s.id===q.content.stimulusId);
  if(!stimulus)return "";
  if(stimulus.kind==="passage"||stimulus.kind==="case")
-   return '<section class="generic-stimulus"><b>'+escapeText(stimulus.title||"Reading passage")+'</b><p>'+escapeText(stimulus.text)+'</p>'+assetHTML(bundle,stimulus.assetIds,"Image accompanying "+(stimulus.title||"reading passage"))+'</section>';
+   return '<section class="generic-stimulus" role="region" tabindex="0" aria-label="'+
+     escapeText((stimulus.title||(stimulus.kind==="case"?"Case study":"Reading passage"))+
+       " — scroll to read full text")+'"><b>'+escapeText(stimulus.title||"Reading passage")+
+     '</b><p>'+escapeText(stimulus.text)+'</p>'+
+     assetHTML(bundle,stimulus.assetIds,"Image accompanying "+(stimulus.title||"reading passage"))+'</section>';
  if(stimulus.kind==="table")return '<section class="generic-stimulus"><b>'+escapeText(stimulus.title||"Table")+'</b><div class="scroll-table"><table><tr>'+
    stimulus.columns.map(c=>'<th>'+escapeText(c)+'</th>').join("")+'</tr>'+
    stimulus.rows.map(r=>'<tr>'+r.map(c=>'<td>'+escapeText(c)+'</td>').join("")+'</tr>').join("")+'</table></div></section>';
@@ -274,10 +278,12 @@ export function renderModelExam(
      +renderGenericControls(assets,q,currentDraft?{kind:"multiple-select",optionIds:currentDraft.optionIds}:response)+
      (currentDraft?'<p class="generic-inline-warning" role="status">'+escapeText(currentDraft.message)+'</p>':"")+
      '</fieldset>'+
+     '<div class="exam-question-controls">'+
+     '<div class="row generic-actions exam-nav-actions"><button class="btn" id="g-prev"'+(state.status!=="running"||!state.questionIndex||paper.navigation.questionNavigation==="forward-only"?" disabled":"")+'>← Previous</button>'+
+     '<button class="btn primary" id="g-next"'+(state.status!=="running"||state.questionIndex===section.questionRevisionIds.length-1?" disabled":"")+'>Next →</button></div>'+
      '<div class="row generic-actions exam-answer-actions"><button class="btn" id="g-clear"'+(!response||state.status!=="running"?" disabled":"")+'>Clear</button>'+
      '<button class="btn" id="g-flag" aria-pressed="'+Boolean(responsesById.get(q.id)?.flagged)+'"'+(!paper.navigation.allowFlagging||expired?" disabled":"")+'>Flag</button></div>'+
-     '<div class="row generic-actions exam-nav-actions"><button class="btn" id="g-prev"'+(state.status!=="running"||!state.questionIndex||paper.navigation.questionNavigation==="forward-only"?" disabled":"")+'>← Previous</button>'+
-     '<button class="btn" id="g-next"'+(state.status!=="running"||state.questionIndex===section.questionRevisionIds.length-1?" disabled":"")+'>Next →</button></div>'+
+     '</div>'+
      '<div class="row generic-actions exam-submit-actions">'+
      (paper.timing.kind!=="untimed"&&paper.timing.pausePolicy==="allowed"?
       '<button class="btn" id="g-pause"'+(expired?" disabled":"")+'>'+(state.status==="paused"?"Resume timer":"Pause timer")+'</button>':"")+
