@@ -19,7 +19,11 @@ function apply(){
  document.documentElement.dataset.theme=settings.dark?"dark":"light";
  document.documentElement.style.setProperty("--type-scale",String(settings.scale/100));
  const theme=document.getElementById("themeToggle");
- if(theme){theme.textContent=settings.dark?"Light theme":"Dark theme";theme.setAttribute("aria-pressed",String(settings.dark));}
+ if(theme){theme.textContent=settings.dark?"Switch to light":"Switch to dark";theme.setAttribute("aria-pressed",String(settings.dark));}
+ for(const [id,pressed] of [["themeLight",!settings.dark],["themeDark",settings.dark]] as const){
+   const control=document.getElementById(id);
+   control?.setAttribute("aria-pressed",String(pressed));
+ }
  const size=document.getElementById("fontReset");if(size)size.textContent=settings.scale+"%";
  const less=document.getElementById("fontLess") as HTMLButtonElement|null;
  const more=document.getElementById("fontMore") as HTMLButtonElement|null;
@@ -31,6 +35,8 @@ function persist(next:DisplayPreferences){
  catch{const status=document.getElementById("preferences-warning");if(status)status.textContent="Display preference could not be saved.";}
 }
 document.getElementById("themeToggle")?.addEventListener("click",()=>persist({...settings,dark:!settings.dark}));
+document.getElementById("themeLight")?.addEventListener("click",()=>persist({...settings,dark:false}));
+document.getElementById("themeDark")?.addEventListener("click",()=>persist({...settings,dark:true}));
 document.getElementById("fontLess")?.addEventListener("click",()=>persist({...settings,scale:Math.max(85,settings.scale-5)}));
 document.getElementById("fontMore")?.addEventListener("click",()=>persist({...settings,scale:Math.min(140,settings.scale+5)}));
 document.getElementById("fontReset")?.addEventListener("click",()=>persist({...settings,scale:100}));

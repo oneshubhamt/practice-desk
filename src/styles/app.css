@@ -383,3 +383,12 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
 .generic-review .source-review .generic-choice{background:var(--panel)}
 .generic-review .worked-solution-body{border-top:1px solid var(--line);padding-top:12px}
 .score.standout b small{font-size:.55em;color:var(--muted);white-space:nowrap}
+
+/* Pass 13: storage/management and explicit v11-style theme selection. */
+.history-management-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:22px}
+.history-score-trend{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.history-management-grid .danger{margin-top:7px}
+.display-theme-choices{display:flex;gap:7px;margin:6px 0 8px}
+.display-theme-choices .btn{flex:1}
+.display-theme-choices [aria-pressed="true"]{border-color:var(--blue);background:var(--soft-blue);font-weight:800}
+@media(max-width:760px){.history-management-grid{grid-template-columns:1fr}}
