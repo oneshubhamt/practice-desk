@@ -166,7 +166,7 @@ async function profileResult(url,tag){
   const review=await snap();
   await go("timing");
   const timing=await snap();
-  const first=page.locator("[data-ledger-q]").first();
+  const first=page.locator("#result-timing [data-ledger-q]").first();
   await first.click();
   ensure(await page.locator('[data-result-tab="review"]').getAttribute("aria-selected")==="true",
     tag+" timing-to-review link failed to activate tab");
