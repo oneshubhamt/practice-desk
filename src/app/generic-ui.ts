@@ -1,7 +1,7 @@
 import { builtinCglPackages, configureCglPractice, validateExamPackage, startGenericAttempt, transitionGenericAttempt, readableAnswer } from "./exam-package.ts";
 import type { ExamPackage, GenericAttempt, CglPracticeMode } from "./exam-package.ts";
 import type { QuestionRevision, CandidateResponse } from "../domain/question.js";
-import type { QuestionRevisionId } from "../domain/ids.js";
+import type { QuestionRevisionId,OptionId } from "../domain/ids.js";
 import type { SessionEvent } from "../engine/session.ts";
 import { validateSectionTimingEvidence, sectionTimerDuration } from "../engine/session.ts";
 import { restoreSession, chooseRecovered, assertFrozenContent } from "../history/frozen.ts";
@@ -208,7 +208,7 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
 export function renderModelExam(
  attempt:Pick<GenericAttempt,"state"|"frozen"|"packageId">,
  bundle:ExamPackage|undefined,warning="",
- draft?:{readonly questionId:string;readonly optionIds:readonly string[];readonly message:string}
+ draft?:{readonly questionId:string;readonly optionIds:readonly OptionId[];readonly message:string}
 ):string {
    const paper=attempt.frozen.paper, state=attempt.state;
    const section=paper.sections[state.sectionIndex];
@@ -271,7 +271,7 @@ export function renderModelExam(
      stimulusHTML(assets,q)+'<h2 class="generic-prompt">'+escapeText(q.content.prompt)+'</h2>'+
      assetHTML(assets,q.content.assetIds,"Figure for question "+(state.questionIndex+1))+
      '<fieldset class="generic-response-group"'+(state.status!=="running"?" disabled":"")+'>'
-     +renderGenericControls(assets,q,currentDraft?{kind:"multiple-select",optionIds:currentDraft.optionIds as string[]}:response)+
+     +renderGenericControls(assets,q,currentDraft?{kind:"multiple-select",optionIds:currentDraft.optionIds}:response)+
      (currentDraft?'<p class="generic-inline-warning" role="status">'+escapeText(currentDraft.message)+'</p>':"")+
      '</fieldset>'+
      '<div class="row generic-actions exam-answer-actions"><button class="btn" id="g-clear"'+(!response||state.status!=="running"?" disabled":"")+'>Clear</button>'+
@@ -341,7 +341,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  let attempt:GenericAttempt|null=null, view:"library"|"history"|"exam"|"result"|"learning"="library";
  // Transient incomplete multi-select selections are NEVER part of the scored
  // response; saved answers are cleared when a draft becomes invalid.
- const choiceDrafts=new Map<string,{questionId:string;optionIds:string[];message:string}>();
+ const choiceDrafts=new Map<string,{questionId:string;optionIds:OptionId[];message:string}>();
  // Live-region updates depend on actual route/question changes, not timer ticks.
  let lastScreenKey="",lastDrawView:"library"|"history"|"exam"|"result"|"learning"|null=null,lastResultPane:ResultTab="overview";
  let db:IDBDatabase|null=null, warning="",disposed=false, loading=true, writeQueue=Promise.resolve();
