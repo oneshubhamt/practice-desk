@@ -6238,6 +6238,108 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
     return { papersPractised, bestAdjustedPercent: scores.length ? Math.max(...scores) : null };
   }
 
+  // src/app/history-priorities.ts
+  function formatSignature(a) {
+    const p = a.frozen.paper;
+    const questions = new Map(a.frozen.questions.map((q) => [q.id, q]));
+    const answers = new Map(a.frozen.key.entries.map((e) => [e.questionRevisionId, e]));
+    return JSON.stringify({
+      exam: a.frozen.snapshot.examId,
+      edition: p.edition,
+      mode: a.frozen.snapshot.mode,
+      sectionStructure: p.sections.map((s) => ({
+        title: s.title,
+        count: s.questionRevisionIds.length,
+        // Item-level scoring overrides and question-kind mixes matter for true
+        // scoring comparability, even when overall default rules agree. Sort the
+        // grading shapes so mere question order does not break the cohort.
+        gradingShapes: s.questionRevisionIds.map((id) => {
+          const kind = questions.get(id)?.content.kind;
+          const rule = answers.get(id)?.scoringOverride ?? s.scoringOverride ?? (kind ? p.scoring.byQuestionKind?.[kind] : void 0) ?? p.scoring.defaultRule;
+          return JSON.stringify({ kind, rule });
+        }).sort()
+      })),
+      // Section IDs are scoped to individual paper families. Compare timer
+      // budgets in section order, not raw IDs, so two genuine 4x15-minute papers
+      // share a cohort without accidentally equating 10- and 15-minute formats.
+      timing: p.timing.kind === "sectional" ? {
+        kind: "sectional",
+        transition: p.timing.transition,
+        allowEarlySubmit: p.timing.allowEarlySubmit,
+        pausePolicy: p.timing.pausePolicy,
+        sectionDurations: p.sections.map((section) => p.timing.kind === "sectional" ? p.timing.sectionLimits.find((limit) => limit.sectionId === section.id)?.durationMs ?? null : null)
+      } : p.timing,
+      navigation: {
+        questionNavigation: p.navigation.questionNavigation,
+        sectionNavigation: p.navigation.sectionNavigation
+      },
+      marking: { defaultRule: p.scoring.defaultRule, byQuestionKind: p.scoring.byQuestionKind ?? null }
+    });
+  }
+  function crossPaperMarksPriorities(attempts) {
+    const groups = /* @__PURE__ */ new Map();
+    const sorted = attempts.filter((a) => a.finishedAt !== null && a.result !== void 0 && !a.frozen.paper.paperId.startsWith("notebook-revision:") && a.frozen.snapshot.mode !== "section-practice" && a.frozen.paper.sections.length >= 2).sort((a, b) => (b.finishedAt ?? 0) - (a.finishedAt ?? 0) || b.startedAt - a.startedAt);
+    for (const a of sorted) {
+      const id = formatSignature(a);
+      const group = groups.get(id) ?? [];
+      group.push(a);
+      groups.set(id, group);
+    }
+    for (const group of groups.values()) {
+      const chosen = group.slice(0, 8);
+      const papers = new Set(chosen.map((a) => a.frozen.paper.paperId));
+      if (chosen.length < 2 || papers.size < 2) continue;
+      const aggregate = /* @__PURE__ */ new Map();
+      for (const attempt of chosen) {
+        const sections = sectionScoreSummaries(attempt, attempt.result);
+        for (let index = 0; index < sections.length; index++) {
+          const s = sections[index];
+          if (s.eligibleMax <= 0) continue;
+          const key = String(index);
+          const prior = aggregate.get(key) ?? { title: s.title, sections: 0, attempted: 0, correct: 0, incorrect: 0, earned: 0, eligibleMax: 0 };
+          aggregate.set(key, {
+            title: s.title,
+            sections: prior.sections + 1,
+            attempted: prior.attempted + s.attempted,
+            correct: prior.correct + s.correct,
+            incorrect: prior.incorrect + s.incorrect,
+            earned: prior.earned + s.marks,
+            eligibleMax: prior.eligibleMax + s.eligibleMax
+          });
+        }
+      }
+      const rows = [...aggregate.values()].filter((x) => x.eligibleMax > 0).map((x) => ({
+        ...x,
+        percent: 100 * x.earned / x.eligibleMax,
+        accuracy: x.correct + x.incorrect ? 100 * x.correct / (x.correct + x.incorrect) : null
+      })).sort((a, b) => a.percent - b.percent || a.title.localeCompare(b.title));
+      if (!rows.length) continue;
+      return {
+        examId: chosen[0].frozen.snapshot.examId,
+        edition: chosen[0].frozen.paper.edition,
+        mode: chosen[0].frozen.snapshot.mode,
+        attempts: chosen.length,
+        distinctPapers: papers.size,
+        rows
+      };
+    }
+    return null;
+  }
+
+  // src/app/history-score.ts
+  function frozenScoreSummary(attempt) {
+    if (attempt.finishedAt === null || !attempt.result) return null;
+    const maximum = scoreableMaximum(attempt.frozen.paper, attempt.frozen.key, attempt.frozen.questions);
+    const decimals = attempt.frozen.paper.scoring.decimalPlaces ?? 2;
+    const earned = attempt.result.snapshot.earnedMarks;
+    return {
+      earned,
+      maximum,
+      decimals,
+      text: earned.toFixed(decimals) + " / " + maximum.toFixed(decimals) + " marks"
+    };
+  }
+
   // src/app/history-page.ts
   var esc2 = (x) => String(x ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
   var percent = (n) => Math.max(0, Math.min(100, n));
@@ -6277,6 +6379,7 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
     const matching = comparableTrends(done).filter((t) => t.points.filter((x) => x.accuracy !== null).length >= 2).sort((a, b) => (b.points.at(-1)?.at ?? 0) - (a.points.at(-1)?.at ?? 0))[0];
     const trendPoints = matching?.points.filter((p) => p.accuracy !== null) ?? [];
     const priorities = sectionPriorities(done).slice(0, 5);
+    const marksPriorities = crossPaperMarksPriorities(done);
     const metrics = adjustedHistoryMetrics(done);
     const scoreTrend = comparableScoreTrends(done).find((x) => x.count >= 2);
     const editionOptions = /* @__PURE__ */ new Map();
@@ -6300,12 +6403,13 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
     ) + '</div><p class="fine">' + esc2(scoreTrend.label) + " \xB7 " + scoreTrend.points.map((x) => x.percent.toFixed(1) + "%").join(" \u2192 ") + " of eligible automated maximum</p></div>" : '<p class="fine">Repeat the same frozen paper, key and mode to show adjusted score progression.</p>') + '</section><section class="panel pad history-priorities"><h2>Section priorities</h2><p class="fine">Observed accuracy across completed attempts; repeated questions count as repeated observations, not mastery.</p>' + (priorities.length ? priorities.map((p) => {
       const n = Math.round(100 * p.correct / p.answered);
       return '<div class="priority-line"><div class="row between"><b>' + esc2(p.title) + '</b><span class="fine">' + n + "% \xB7 " + p.answered + ' answers</span></div><div class="progress-track"><span style="width:' + percent(n) + '%"></span></div></div>';
-    }).join("") : '<p class="empty-state">More scored section answers are needed.</p>') + '</section></div><section class="panel pad history-archive"><div class="row between"><div><h2>Saved attempts</h2><p class="fine">' + visible.length + " of " + pCount + ' records shown</p></div><div class="row generic-actions"><button class="btn" id="g-export-history"' + (loading ? " disabled" : "") + '>Export backup</button><button class="btn" id="g-import-history"' + (loading || storageLocked ? " disabled" : "") + '>Import backup</button></div></div><input type="file" id="g-history-file" accept=".json,application/json" hidden><div class="history-filters"><label class="filter-label" for="g-history-search">Find a paper<input type="search" id="g-history-search" placeholder="Search paper, mode or edition" value="' + esc2(query.search) + '"></label><label class="filter-label" for="g-history-paper">Paper / edition<select id="g-history-paper"><option value="all">All paper editions</option>' + [...editionOptions.entries()].sort((a, b) => a[1].localeCompare(b[1])).map(([id, label2]) => '<option value="' + esc2(id) + '"' + ((query.paperRevisionId ?? "all") === id ? " selected" : "") + ">" + esc2(label2) + "</option>").join("") + '</select></label><label class="filter-label" for="g-filter">Status<select id="g-filter">' + [["all", "All attempts"], ["progress", "In progress"], ["complete", "Completed"]].map(([id, t]) => '<option value="' + id + '"' + (query.status === id ? " selected" : "") + ">" + t + "</option>").join("") + '</select></label><label class="filter-label" for="g-history-sort">Order<select id="g-history-sort">' + [["newest", "Newest first"], ["oldest", "Oldest first"]].map(([id, t]) => '<option value="' + id + '"' + (query.sort === id ? " selected" : "") + ">" + t + "</option>").join("") + "</select></label></div>" + (visible.length ? '<div class="history-entries">' + visible.map((a) => {
+    }).join("") : '<p class="empty-state">More scored section answers are needed.</p>') + '</section></div><section class="panel pad history-marks-priorities" id="g-cross-paper-priorities"><h2>Cross-paper marks priorities</h2>' + (marksPriorities ? '<p class="fine">Latest ' + marksPriorities.attempts + " compatible full-paper attempt" + (marksPriorities.attempts === 1 ? "" : "s") + " across " + marksPriorities.distinctPapers + " distinct papers \xB7 " + esc2(marksPriorities.examId) + " \xB7 " + esc2(marksPriorities.edition) + " \xB7 " + esc2(marksPriorities.mode.replaceAll("-", " ")) + ". Same exam, section structure, scoring scheme, edition and practice mode. Sections ranked by actual frozen automated marks / eligible maximum (lowest first), not by difficulty-adjusted ability.</p>" + marksPriorities.rows.map((row) => '<div class="priority-line"><div class="row between"><b>' + esc2(row.title) + '</b><span class="fine">' + row.percent.toFixed(1) + "% marks (" + row.earned.toFixed(2) + " / " + row.eligibleMax.toFixed(2) + ") \xB7 " + (row.accuracy === null ? "No scored responses" : row.accuracy.toFixed(0) + "% accuracy") + '</span></div><div class="progress-track"><span style="width:' + percent(row.percent) + '%"></span></div><p class="fine">' + row.sections + " section result" + (row.sections === 1 ? "" : "s") + " \xB7 " + row.attempted + " submitted answers</p></div>").join("") + '<p class="fine">For study direction only. Paper difficulty can differ; repeated attempts are repeated observations, not independent evidence. No rank or percentile inference.</p>' : '<p class="empty-state">Complete at least two different, compatible full papers to unlock marks-based section priorities. Section-only practice, different exam formats, editions, modes and scoring policies are not pooled.</p>') + '</section><section class="panel pad history-archive"><div class="row between"><div><h2>Saved attempts</h2><p class="fine">' + visible.length + " of " + pCount + ' records shown</p></div><div class="row generic-actions"><button class="btn" id="g-export-history"' + (loading ? " disabled" : "") + '>Export backup</button><button class="btn" id="g-import-history"' + (loading || storageLocked ? " disabled" : "") + '>Import backup</button></div></div><input type="file" id="g-history-file" accept=".json,application/json" hidden><div class="history-filters"><label class="filter-label" for="g-history-search">Find a paper<input type="search" id="g-history-search" placeholder="Search paper, mode or edition" value="' + esc2(query.search) + '"></label><label class="filter-label" for="g-history-paper">Paper / edition<select id="g-history-paper"><option value="all">All paper editions</option>' + [...editionOptions.entries()].sort((a, b) => a[1].localeCompare(b[1])).map(([id, label2]) => '<option value="' + esc2(id) + '"' + ((query.paperRevisionId ?? "all") === id ? " selected" : "") + ">" + esc2(label2) + "</option>").join("") + '</select></label><label class="filter-label" for="g-filter">Status<select id="g-filter">' + [["all", "All attempts"], ["progress", "In progress"], ["complete", "Completed"]].map(([id, t]) => '<option value="' + id + '"' + (query.status === id ? " selected" : "") + ">" + t + "</option>").join("") + '</select></label><label class="filter-label" for="g-history-sort">Order<select id="g-history-sort">' + [["newest", "Newest first"], ["oldest", "Oldest first"]].map(([id, t]) => '<option value="' + id + '"' + (query.sort === id ? " selected" : "") + ">" + t + "</option>").join("") + "</select></label></div>" + (visible.length ? '<div class="history-entries">' + visible.map((a) => {
       const s = a.result?.snapshot;
+      const score = frozenScoreSummary(a);
       const count = a.frozen.paper.sections.reduce((n, z) => n + z.questionRevisionIds.length, 0);
       const answered2 = a.state.responses.filter((z) => z.response).length;
       const status = a.finishedAt ? "Completed" : "Resume";
-      return '<div class="archive-entry"><button class="history-open" data-attempt="' + esc2(a.id) + '"><span class="archive-title">' + esc2(label(a, packages)) + '</span><span class="archive-meta">' + esc2(stamp(a.startedAt)) + " \xB7 " + esc2(a.frozen.snapshot.mode) + " \xB7 " + count + ' questions</span><span class="archive-numbers">' + (a.finishedAt ? s ? esc2(s.earnedMarks.toFixed(1)) + " marks \xB7 " + s.correctCount + " correct" : "Completed" : answered2 + "/" + count + " answered \xB7 In progress") + '</span></button><span class="history-status ' + (a.finishedAt ? "complete" : "active") + '">' + status + "</span>" + (a.finishedAt ? '<button class="btn danger generic-delete" data-delete="' + esc2(a.id) + '" aria-label="Delete completed result">Delete</button>' : '<button class="btn danger generic-delete" data-discard="' + esc2(a.id) + '" aria-label="Discard unfinished test and lose its answers">Discard unfinished</button>') + "</div>";
+      return '<div class="archive-entry"><button class="history-open" data-attempt="' + esc2(a.id) + '"><span class="archive-title">' + esc2(label(a, packages)) + '</span><span class="archive-meta">' + esc2(stamp(a.startedAt)) + " \xB7 " + esc2(a.frozen.snapshot.mode.replaceAll("-", " ")) + " \xB7 " + count + ' questions</span><span class="archive-numbers">' + (a.finishedAt ? score && s ? esc2(score.text) + " \xB7 " + s.correctCount + " correct" : "Completed \xB7 score unavailable" : answered2 + "/" + count + " answered \xB7 In progress") + '</span></button><span class="history-status ' + (a.finishedAt ? "complete" : "active") + '">' + status + "</span>" + (a.finishedAt ? '<button class="btn danger generic-delete" data-delete="' + esc2(a.id) + '" aria-label="Delete completed result">Delete</button>' : '<button class="btn danger generic-delete" data-discard="' + esc2(a.id) + '" aria-label="Discard unfinished test and lose its answers">Discard unfinished</button>') + "</div>";
     }).join("") + "</div>" : '<p class="empty-state">No attempts match these filters. Your saved records have not been deleted.</p>') + '</section><div class="history-management-grid"><section class="panel pad" id="g-storage-panel"><h2>Storage & safety</h2><p class="fine">Storage backend: <b id="g-storage-backend">' + (backend === "indexeddb" ? "IndexedDB" : "localStorage fallback") + "</b>. " + (backend === "indexeddb" ? "Records are indexed in this browser." : "Fallback capacity is limited; export a backup.") + ' Browser data can still be cleared; keep exported backups.</p><p id="g-storage-quota" class="fine" role="status">Checking browser storage estimate\u2026</p><p id="g-storage-persist-status" class="fine" role="status"></p><button class="btn" id="g-storage-persist" type="button">Protect stored data</button></section><section class="panel pad"><h2>Backup & management</h2><p class="fine">Backup v3 imports are checksum-verified and additive only. Matching records are never overwritten; export before deleting.</p><button class="btn danger" id="g-delete-completed" type="button"' + (done.length === 0 || loading || storageLocked ? " disabled" : "") + ">Delete all " + done.length + ' completed attempts</button><p class="fine">Only finished test records are deleted. In-progress tests, imported papers and learning cards remain untouched.</p></section></div>';
   }
 
@@ -7017,7 +7121,7 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
       const all = [...records.values()].filter(isAttempt).sort((a, b) => b.startedAt - a.startedAt);
       const complete = all.filter((a) => a.finishedAt !== null);
       const pending = all.filter((a) => a.finishedAt === null);
-      const latest = all.slice(0, 3);
+      const latest = [...complete].sort((a, b) => (b.finishedAt ?? 0) - (a.finishedAt ?? 0) || b.startedAt - a.startedAt).slice(0, 3);
       const selected = packages.get(choice);
       const cgl = selected?.examId === "ssc-cgl";
       const count = selected?.paper.sections.reduce((n, z) => n + z.questionRevisionIds.length, 0) ?? 0;
@@ -7029,11 +7133,11 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
       const options = [...packages.values()].map((p) => '<option value="' + escapeText(p.paper.id) + '"' + (choice === p.paper.id ? " selected" : "") + ">" + escapeText(p.title) + "</option>").join("");
       const editions = selected ? [...packages.values()].filter((p) => p.examId === selected.examId && p.paper.paperId === selected.paper.paperId) : [];
       const paired = editions.some((p) => p.paper.edition === "source") && editions.some((p) => p.paper.edition === "reviewed");
-      return '<div class="generic-heading home-heading"><div><span class="eyebrow">OFFLINE PRACTICE STUDIO</span><h1>Test library</h1><p class="muted">Choose a paper, work in exam conditions and learn from every attempt.</p></div><button class="btn quiet" id="g-history">History & insights \u2192</button></div>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + (pending.length ? '<section class="ongoing-banner"><div><span class="eyebrow">PICK UP WHERE YOU LEFT OFF</span><h2>' + escapeText(packages.get(pending[0].packageId)?.title ?? pending[0].frozen.paper.paperId) + "</h2><p>" + pending.length + " unfinished attempt" + (pending.length === 1 ? "" : "s") + " \xB7 " + new Date(pending[0].startedAt).toLocaleString() + ' \xB7 exam timing resumes with the saved policy</p></div><button class="btn primary" data-attempt="' + escapeText(pending[0].id) + '">Resume attempt</button></section>' : "") + '<div class="home-stats">' + [["Paper editions", packages.size], ["Completed tests", complete.length], ["Attempts in progress", pending.length], ["Notebook cards", [...records.values()].filter(isLearning).length]].map(([name, value]) => '<div class="home-stat"><small>' + escapeText(name) + "</small><b>" + escapeText(value) + "</b></div>").join("") + '</div><div class="generic-layout home-grid"><section class="panel pad home-picker"><div class="section-header"><span class="eyebrow">01 \xB7 SET UP</span><h2>Start a practice session</h2></div><label class="picker" for="g-papers">Paper</label><select id="g-papers">' + options + "</select>" + (paired ? '<label class="picker" for="g-edition">Edition</label><select id="g-edition" aria-label="Selected paper edition">' + editions.filter((p) => p.paper.edition === "source" || p.paper.edition === "reviewed").map((p) => '<option value="' + escapeText(p.paper.id) + '"' + (choice === p.paper.id ? " selected" : "") + ">" + (p.paper.edition === "source" ? "Original source" : "Reviewed corrections") + "</option>").join("") + "</select>" : "") + (cgl ? '<h3 class="subhead">Practice mode</h3><div class="generic-modes" role="group" aria-label="SSC CGL practice mode">' + [
+      return '<div class="generic-heading home-heading"><div><span class="eyebrow">OFFLINE PRACTICE STUDIO</span><h1>Test library</h1><p class="muted">Choose a paper, work in exam conditions and learn from every attempt.</p></div><button class="btn quiet" id="g-history">History & insights \u2192</button></div>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + (pending.length ? '<section class="panel pad pending-panel" id="g-pending-attempts"><div class="row between"><div><span class="eyebrow">PICK UP WHERE YOU LEFT OFF</span><h2>Unfinished attempts</h2><p class="fine">' + pending.length + " saved, resumable test" + (pending.length === 1 ? "" : "s") + ". Section timers follow the frozen exam policy; leaving the app does not pause a running clock.</p></div>" + (pending.length > 5 ? '<button type="button" class="textlink" id="g-pending-history">View all ' + pending.length + " \u2192</button>" : "") + '</div><div class="pending-attempt-list">' + pending.slice(0, 5).map((a) => '<button class="recent-attempt" data-attempt="' + escapeText(a.id) + '" aria-label="Resume ' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + '"><b>' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + "</b><small>" + new Date(a.startedAt).toLocaleString() + " \xB7 " + escapeText(a.frozen.snapshot.mode.replaceAll("-", " ")) + " \xB7 " + a.state.responses.filter((z) => z.response !== void 0).length + " answers \xB7 Resume \u2192</small></button>").join("") + "</div>" + (pending.length > 5 ? '<p class="fine">Showing the five most recent unfinished tests; all others are preserved in History.</p>' : "") + "</section>" : "") + '<div class="home-stats">' + [["Paper editions", packages.size], ["Completed tests", complete.length], ["Attempts in progress", pending.length], ["Notebook cards", [...records.values()].filter(isLearning).length]].map(([name, value]) => '<div class="home-stat"><small>' + escapeText(name) + "</small><b>" + escapeText(value) + "</b></div>").join("") + '</div><div class="generic-layout home-grid"><section class="panel pad home-picker"><div class="section-header"><span class="eyebrow">01 \xB7 SET UP</span><h2>Start a practice session</h2></div><label class="picker" for="g-papers">Paper</label><select id="g-papers">' + options + "</select>" + (paired ? '<label class="picker" for="g-edition">Edition</label><select id="g-edition" aria-label="Selected paper edition">' + editions.filter((p) => p.paper.edition === "source" || p.paper.edition === "reviewed").map((p) => '<option value="' + escapeText(p.paper.id) + '"' + (choice === p.paper.id ? " selected" : "") + ">" + (p.paper.edition === "source" ? "Original source" : "Reviewed corrections") + "</option>").join("") + "</select>" : "") + (cgl ? '<h3 class="subhead">Practice mode</h3><div class="generic-modes" role="group" aria-label="SSC CGL practice mode">' + [
         ["strict", "Exam simulation", "4 locked sections \xB7 15 minutes each"],
         ["free", "Flexible full paper", "60 minutes \xB7 move between sections"],
         ["single", "Section practice", "25 questions \xB7 15 minutes"]
-      ].map(([key, title, detail]) => '<button type="button" class="mode ' + (cglMode === key ? "on" : "") + '" data-mode="' + key + '" aria-pressed="' + (cglMode === key) + '"><span class="radio-dot"></span><span><strong>' + title + "</strong><small>" + detail + "</small></span></button>").join("") + "</div>" + (cglMode === "single" ? '<label class="picker" for="g-single-section">Choose section</label><select id="g-single-section">' + selected.paper.sections.map((z, i) => '<option value="' + i + '"' + (singleSection === i ? " selected" : "") + ">" + escapeText(z.title) + "</option>").join("") + "</select>" : "") : "") + '<div class="row generic-actions home-start"><button class="btn primary" id="g-start"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + ">Start " + escapeText(modeLabel) + ' \u2192</button><button class="btn" id="g-import"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + '>Import exam JSON</button></div><input type="file" id="g-file" accept=".json,application/json" hidden><p class="fine">Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section><aside class="home-side"><section class="panel pad paper-preview"><span class="eyebrow">SELECTED PAPER</span><h2>' + escapeText(selected?.title ?? "Choose a paper") + '</h2><p class="fine">' + escapeText(selected?.paper.paperId ?? "") + " \xB7 " + escapeText(selected?.paper.edition ?? "") + '</p><div class="preview-metrics"><div><b>' + questionCount + "</b><small>Questions</small></div><div><b>" + escapeText(time) + "</b><small>Time</small></div><div><b>" + escapeText(previewSections) + "</b><small>Sections</small></div><div><b>" + escapeText(previewNavigation) + '</b><small>Navigation</small></div></div><p class="fine">Scoring and timer rules are frozen when you start; later paper edits cannot change a saved result.</p></section><section class="panel pad recent-panel"><div class="row between"><h2>Recent attempts</h2><button class="textlink" id="g-history-recent">View all \u2192</button></div>' + (latest.length ? latest.map((a) => '<button class="recent-attempt" data-attempt="' + escapeText(a.id) + '"><b>' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + "</b><small>" + new Date(a.startedAt).toLocaleDateString() + " \xB7 " + (a.finishedAt ? (a.result?.snapshot.earnedMarks.toFixed(1) ?? "\u2014") + " marks" : "Resume in-progress test") + "</small></button>").join("") : '<p class="fine">Your most recent tests appear here automatically.</p>') + '</section></aside></div><div class="home-utilities"><section class="panel pad learning-entry"><div><span class="eyebrow">REVISE & IMPROVE</span><h2>Learning & revision</h2><p class="fine">Error notebook, FSRS-7 spaced review, source-linked revision tests and topic evidence.</p></div><button class="btn primary" id="g-learning">Open learning desk \u2192</button></section><section class="panel pad backup-home"><div><span class="eyebrow">YOUR DATA</span><h2>Portable offline history</h2><p class="fine">Stored in this browser. Export a backup to protect your history and notes.</p></div><div class="row generic-actions"><button class="btn" id="g-export-history"' + (loading ? " disabled" : "") + '>Export backup</button><button class="btn" id="g-import-history"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + '>Import backup</button></div><input type="file" id="g-history-file" accept=".json,application/json" hidden></section></div><details class="panel pad help-rules"><summary>Exam rules, accuracy and offline storage</summary><p class="fine">Strict mode advances through four locked 15-minute sections. Flexible and section practice use their selected time limits. Results use frozen answer keys, and score exclusions follow editorial review. Browser-local storage may be cleared by the device; backups are recommended.</p></details>';
+      ].map(([key, title, detail]) => '<button type="button" class="mode ' + (cglMode === key ? "on" : "") + '" data-mode="' + key + '" aria-pressed="' + (cglMode === key) + '"><span class="radio-dot"></span><span><strong>' + title + "</strong><small>" + detail + "</small></span></button>").join("") + "</div>" + (cglMode === "single" ? '<label class="picker" for="g-single-section">Choose section</label><select id="g-single-section">' + selected.paper.sections.map((z, i) => '<option value="' + i + '"' + (singleSection === i ? " selected" : "") + ">" + escapeText(z.title) + "</option>").join("") + "</select>" : "") : "") + '<div class="row generic-actions home-start"><button class="btn primary" id="g-start"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + ">Start " + escapeText(modeLabel) + ' \u2192</button><button class="btn" id="g-import"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + '>Import exam JSON</button></div><input type="file" id="g-file" accept=".json,application/json" hidden><p class="fine">Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section><aside class="home-side"><section class="panel pad paper-preview"><span class="eyebrow">SELECTED PAPER</span><h2>' + escapeText(selected?.title ?? "Choose a paper") + '</h2><p class="fine">' + escapeText(selected?.paper.paperId ?? "") + " \xB7 " + escapeText(selected?.paper.edition ?? "") + '</p><div class="preview-metrics"><div><b>' + questionCount + "</b><small>Questions</small></div><div><b>" + escapeText(time) + "</b><small>Time</small></div><div><b>" + escapeText(previewSections) + "</b><small>Sections</small></div><div><b>" + escapeText(previewNavigation) + '</b><small>Navigation</small></div></div><p class="fine">Scoring and timer rules are frozen when you start; later paper edits cannot change a saved result.</p></section><section class="panel pad recent-panel"><div class="row between"><h2>Recent completed results</h2><button class="textlink" id="g-history-recent">View all \u2192</button></div>' + (latest.length ? latest.map((a) => '<button class="recent-attempt" data-attempt="' + escapeText(a.id) + '"><b>' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + "</b><small>" + new Date(a.finishedAt ?? a.startedAt).toLocaleDateString() + " \xB7 " + escapeText(a.frozen.snapshot.mode.replaceAll("-", " ")) + " \xB7 " + escapeText(frozenScoreSummary(a)?.text ?? "Score unavailable") + "</small></button>").join("") : '<p class="fine">Your three most recent completed results will appear here; unfinished attempts stay in their own Resume area.</p>') + '</section></aside></div><div class="home-utilities"><section class="panel pad learning-entry"><div><span class="eyebrow">REVISE & IMPROVE</span><h2>Learning & revision</h2><p class="fine">Error notebook, FSRS-7 spaced review, source-linked revision tests and topic evidence.</p></div><button class="btn primary" id="g-learning">Open learning desk \u2192</button></section><section class="panel pad backup-home"><div><span class="eyebrow">YOUR DATA</span><h2>Portable offline history</h2><p class="fine">Stored in this browser. Export a backup to protect your history and notes.</p></div><div class="row generic-actions"><button class="btn" id="g-export-history"' + (loading ? " disabled" : "") + '>Export backup</button><button class="btn" id="g-import-history"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + '>Import backup</button></div><input type="file" id="g-history-file" accept=".json,application/json" hidden></section></div><details class="panel pad help-rules"><summary>Exam rules, accuracy and offline storage</summary><p class="fine">Strict mode advances through four locked 15-minute sections. Flexible and section practice use their selected time limits. Results use frozen answer keys, and score exclusions follow editorial review. Browser-local storage may be cleared by the device; backups are recommended.</p></details>';
     }
     function packageForAttempt(saved) {
       return packages.get(saved.packageId) ?? [...packages.values()].find((p) => p.paper.paperId === saved.frozen.paper.paperId && p.paper.edition === saved.frozen.paper.edition);
@@ -7330,6 +7434,19 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
           draw();
         };
         root2.querySelector("#g-history-recent").onclick = () => {
+          historyFilter = "complete";
+          historyPaper = "all";
+          historySearch = "";
+          historySort = "newest";
+          view = "history";
+          draw();
+        };
+        const pendingHistory = root2.querySelector("#g-pending-history");
+        if (pendingHistory) pendingHistory.onclick = () => {
+          historyFilter = "progress";
+          historyPaper = "all";
+          historySearch = "";
+          historySort = "newest";
           view = "history";
           draw();
         };
