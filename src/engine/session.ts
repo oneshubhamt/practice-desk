@@ -144,7 +144,10 @@ export function transition(paper: PaperRevision, state: SessionState, event: Ses
     if (paper.timing.kind === "whole-paper" &&
         paper.navigation.sectionNavigation === "sequential-locked" &&
         current.sectionIndex < paper.sections.length - 1) return advance(paper,current);
-    if (paper.timing.kind !== "sectional" || !paper.timing.allowEarlySubmit ||
+    // Untimed sections cannot expire, so explicit continuation is their only
+    // legitimate forward path even when early submission is forbidden.
+    if (paper.timing.kind !== "sectional" ||
+        !(paper.timing.allowEarlySubmit || sectionLimit(paper,current.sectionIndex) === null) ||
         current.sectionIndex !== state.sectionIndex) return current;
     // Expiry may have advanced to the next section during checkpoint(). Never
     // accidentally submit two sections with one delayed click.
