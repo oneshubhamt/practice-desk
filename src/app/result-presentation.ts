@@ -18,12 +18,12 @@ export function reviewMatch(a:GenericAttempt,item:ItemScore,filter:ReviewFilter)
  return filter==="fastwrong"?speed==="Fast":filter==="slowwrong"?speed==="Slow":
    filter==="typicalwrong"&&speed==="Typical";
 }
-export function resultTabsHTML(active:ResultTab):string{
+export function resultTabsHTML(active:ResultTab,allowReview=true):string{
  return '<nav class="result-tabs" role="tablist" aria-label="Result views">'+
-  (["overview","review","timing"] as const).map((id,i)=>
+  (["overview","review","timing"] as const).filter(id=>id!=="review"||allowReview).map(id=>
    '<button id="result-tab-'+id+'" type="button" role="tab" tabindex="'+(id===active?"0":"-1")+'" class="result-tab '+(id===active?"active":"")+
    '" aria-controls="result-'+id+'" aria-selected="'+(id===active)+'" data-result-tab="'+id+'">'+
-   ["Insights","Question review","Time ledger"][i]+'</button>').join("")+'</nav>';
+   ({overview:"Insights",review:"Question review",timing:"Time ledger"} as const)[id]+'</button>').join("")+'</nav>';
 }
 export function reviewFiltersHTML(active:ReviewFilter):string{
  return '<label class="filter-label" for="g-review-filter">Show questions<select id="g-review-filter">'+
