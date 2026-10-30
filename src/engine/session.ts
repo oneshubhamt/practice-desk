@@ -155,6 +155,13 @@ export function transition(paper: PaperRevision, state: SessionState, event: Ses
   if (event.type === "RESUME") return current.status === "paused" &&
     paper.timing.kind !== "untimed" && paper.timing.pausePolicy === "allowed"
     ? { ...current, status: "running" } : current;
+  // A paused candidate may annotate the current item, but cannot change its
+  // answer, navigate or use time. Expired/finished sections remain immutable.
+  if (current.status==="paused"&&event.type==="FLAG"&&paper.navigation.allowFlagging){
+    const id=questionId(paper,current),previous=record(current,id);
+    return previous.flagged===event.flagged?current:
+      put(current,{...previous,flagged:event.flagged});
+  }
   if (current.status !== "running") return current;
   // A sectional paper is finished exclusively by section completion. A direct
   // SUBMIT_ATTEMPT must not bypass section locks or no-early-submit policy.
