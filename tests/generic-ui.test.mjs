@@ -60,7 +60,10 @@ test("shared renderer enforces paused, forward-only and no-early-submit policies
  const paused=transitionGenericAttempt(moved,{type:"PAUSE",nowMs:2},questionMap);
  const html=renderModelExam(paused,forward);
  assert.match(html,/id="g-clear" disabled/);
- assert.match(html,/id="g-flag"[^>]*disabled/);
+ // Paused review markers remain editable; answers, navigation and submit do not.
+ assert.doesNotMatch(html,/id="g-flag"[^>]*disabled/);
+ assert.match(html,/id="g-next" disabled/);
+ assert.match(html,/id="g-prev" disabled/);
  assert.match(html,/id="g-submit" disabled/);
  const sectionedPaper={...pkg.paper,
    navigation:{...pkg.paper.navigation,sectionNavigation:"sequential-locked"},
