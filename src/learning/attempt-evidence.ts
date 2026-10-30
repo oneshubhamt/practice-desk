@@ -16,7 +16,10 @@ export interface AttemptEvidence{
  readonly paperRevisionId:string;
  readonly sections:readonly SectionEvidence[];
  readonly speed:{readonly measured:number;readonly classified:number;readonly buckets:readonly SpeedBucket[]};
- readonly timing:{readonly foregroundMs:number;readonly elapsedMs:number;readonly questionMeasuredMs:number;readonly changedAnswers:number;readonly timedAnswers:number};
+ readonly timing:{readonly foregroundMs:number;readonly elapsedMs:number;readonly questionMeasuredMs:number;
+  readonly changedAnswers:number;readonly timedAnswers:number;
+  readonly attemptedEligible:number;readonly eligibleQuestions:number;readonly attemptRate:number|null;
+  readonly overallMedianAnsweredMs:number|null;readonly measuredAnswered:number};
  readonly opportunity:{readonly observedPenalty:number;readonly wrongToCorrect:number;readonly skippedToCorrect:number;readonly countWrong:number;readonly countSkipped:number};
 }
 function median(values:readonly number[]):number|null{
@@ -98,12 +101,22 @@ export function attemptEvidence(a:GenericAttempt):AttemptEvidence|null{
  }
  const responses=a.state.responses;
  const timedAnswers=responses.filter(r=>r.timeSpentMs>0&&r.response!==undefined).length;
+ const eligible=a.result.items.filter(row=>row.verdict!=="excluded");
+ const attemptedEligible=eligible.filter(row=>Boolean(byId.get(row.questionRevisionId)?.response)).length;
+ // Median uses only positively measured scored answers, not waiting time,
+ // exclusions, unattempted questions or pending written self-assessment.
+ const allMeasured=eligible.filter(row=>row.verdict==="correct"||row.verdict==="incorrect")
+   .map(row=>byId.get(row.questionRevisionId)?.timeSpentMs??0).filter(ms=>ms>0);
+ const overallMedianAnsweredMs=median(allMeasured);
  return {
    paperRevisionId:a.frozen.paper.id,sections:sectionRows,
    speed:{measured,classified,buckets:speeds},
    timing:{foregroundMs:a.state.foregroundMs,elapsedMs:a.state.elapsedMs,
      questionMeasuredMs:responses.reduce((n,r)=>n+r.timeSpentMs,0),
-     changedAnswers:responses.filter(r=>r.answerChangeCount>0).length,timedAnswers},
+     changedAnswers:responses.filter(r=>r.answerChangeCount>0).length,timedAnswers,
+     attemptedEligible,eligibleQuestions:eligible.length,
+     attemptRate:eligible.length?attemptedEligible/eligible.length:null,
+     overallMedianAnsweredMs,measuredAnswered:allMeasured.length},
    opportunity:{
      observedPenalty:a.result.snapshot.penaltyMarks,
      wrongToCorrect:Math.max(0,wrongToCorrect),skippedToCorrect:Math.max(0,skippedToCorrect),
