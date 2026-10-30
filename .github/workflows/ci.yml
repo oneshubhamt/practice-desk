@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0  # Pass 15 renders the frozen baseline/v11 single-file artifact.
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
@@ -23,6 +25,15 @@ jobs:
       - run: node scripts/pass12-parity.mjs
       - run: node scripts/pass13-history.mjs
       - run: node scripts/pass14-parity.mjs
+      - run: node scripts/pass15-visual.mjs
+      - name: Save visual comparison evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pass15-v11-overhaul-visual-evidence
+          path: artifacts/pass15-visual/
+          if-no-files-found: warn
+          retention-days: 30
       - run: node scripts/pass10-platform.mjs chromium
       # On the development branch, publish the generated single-file distribution
       # only after all tests pass. main and baseline/v11 are never written.
