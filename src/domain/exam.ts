@@ -52,6 +52,8 @@ export type TimingPolicy =
   | {
       readonly kind: "sectional";
       readonly sectionLimits: readonly SectionTimeLimit[];
+      /** At expiry automatic moves immediately; manual freezes the section and
+       * awaits an explicit advance with no further time/response consumption. */
       readonly transition: "manual" | "automatic";
       readonly allowEarlySubmit: boolean;
       readonly pausePolicy: PausePolicy;
@@ -61,6 +63,9 @@ export interface NavigationPolicy {
   readonly questionNavigation: "free" | "forward-only";
   readonly sectionNavigation: "free" | "sequential-locked";
   readonly allowFlagging: boolean;
+  /** Post-completion detailed question/answer/solution disclosure.
+   * Exam-time revisiting is controlled only by questionNavigation.
+   * Numerical results and the question timing ledger remain available. */
   readonly allowReview: boolean;
 }
 
