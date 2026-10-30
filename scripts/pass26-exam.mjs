@@ -108,7 +108,7 @@ try{
   try{
    await oldModernSelect(old.page,now.page);
    await old.page.locator(".choices .choice").first().click();
-   await now.page.locator(".exam-question input[data-choice]").first().check();
+   await now.page.locator(".exam-question input[data-choice]").first().click();
    const regular=await sample(old.page,now.page,"ordinary",viewport);
    assert(regular.current.question.top<=regular.base.question.top+65,
     viewport.name+" ordinary question remains too low, old "+regular.base.question.top+
