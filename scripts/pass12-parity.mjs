@@ -123,6 +123,41 @@ try{
  ok(await page.locator('[data-review-id="'+q.id+'"] details.source-review').count()===1,
   "Original comparison disappeared after opening saved CGL result");
 
+ // Previous overhaul versions saved a pinned original key but did not yet
+ // archive the original question text. Recover that comparison only when
+ // the bundled immutable source and original key revision match exactly.
+ const archiveId="pre-pass12-cgl-archived";
+ await page.evaluate(async({id,sourceId})=>{
+   const db=await new Promise((resolve,reject)=>{
+     const request=indexedDB.open("practiceDesk.overhaul.v1",1);
+     request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);
+   });
+   try{
+     await new Promise((resolve,reject)=>{
+       const tx=db.transaction("attempts","readwrite");
+       const store=tx.objectStore("attempts");
+       const read=store.get(sourceId);
+       read.onsuccess=()=>{
+         const archived={...read.result,id,saveRevision:1};
+         delete archived.sourceReviewReference;
+         store.add(archived);
+       };
+       tx.oncomplete=()=>resolve();
+       tx.onerror=()=>reject(tx.error);
+       tx.onabort=()=>reject(tx.error);
+     });
+   }finally{db.close();}
+ },{id:archiveId,sourceId:oldRecord.id});
+ await page.reload({waitUntil:"load"});
+ await page.locator("#g-history").click();
+ await page.locator('[data-attempt="'+archiveId+'"]').first().click();
+ await page.locator('[data-result-tab="review"]').click();
+ const restoredOlder=page.locator('[data-review-id="'+q.id+'"] details.source-review');
+ ok(await restoredOlder.count()===1,"Pinned pre-Pass-12 CGL source review was lost");
+ await restoredOlder.locator("summary").click();
+ ok((await restoredOlder.innerText()).includes(changed.sourceQuestion.content.prompt),
+   "Older saved CGL source text not correctly verified by pinned revision");
+
  // An arbitrary imported exam shares the same source/review model, even though
  // its answer kinds and marking rules differ from SSC CGL.
  await page.locator("#g-library").click();
