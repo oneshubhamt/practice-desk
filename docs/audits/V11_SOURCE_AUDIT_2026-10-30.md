@@ -478,6 +478,24 @@ In `src/app/generic-ui.ts`, checkbox changes below `minSelections` show a warnin
 
 **Final stage gate:** Original source AUDITED → policies ANALYZED → independent tests IMPLEMENTED (no app-code changes) → all F/G objectives independently RECONCILED → new paired `file://` Chromium + full CI QA **VERIFIED**. **Manual/physical-device/AT/human release approval remains OPEN**. See [Pass23 independent report](PASS23_FINAL_INDEPENDENT_REVIEW_2026-10-30.md).
 
+### Pass 25 — library/desktop density: AUDIT → ANALYZE (30 Oct 2026)
+
+**Status: IMPLEMENTATION PENDING; no claim of successful visual parity.** This pass owns **L01** only, and foundational home-scoped responsive spacing. No exam, History or Result density repair here; L02–L11 stay OPEN for Passes 26–28. Authoritative [Pass24 screenshot/landmark audit](PASS24_LAPTOP_VISUAL_REGRESSION_2026-10-30.md) was reviewed before implementation. Frozen baseline v11 HTML and current 1366×768 screenshots inspected directly; 1440×900/1536×864 data also inspected. **Measured before** at 1366×768: old Start top y702, overhaul y942 (+240); old paper selector top y225, overhaul y490 (+265).
+
+**AUDIT and root cause, source-specific:**
+- `src/app/generic-ui.ts:listHTML`: four full-width dashboard statistic cards (`home-stats`) rendered **before** `home-grid`, although not needed to select an exam. An additional large setup header with eyebrow/H2, full question+edition selectors, tall 3-row CGL mode list, and large home label margins force Start below first screen. Current extra panels have useful data and must not be deleted.
+- `src/styles/app.css`: global home heading/page/main spacing, `.home-picker .section-header`, `.home-picker .picker`, `.home-picker .subhead`, `.home-picker .mode`, `.home-picker .home-start` and generic section padding accumulate whitespace. Do not globally reduce accessible font size, scale, or all mode/option controls; scope changes to desktop Library.
+- v11 `baseline/v11:src/app/legacy.ts:drawHome` has **immediate** paper/edition/mode setup, side-by-side selected summary and a visible Start button at laptop height. Preserve v11 primary-action hierarchy while retaining generic paper selectors, preflight/exam rules, 10 editions, current resume/History, learning, backup, non-SSC import and source/review policy.
+
+**ANALYSIS / implementation design:**
+1. Reorder nonessential top `home-stats` below primary setup and supporting utilities (still visible; no lost counts). Keep incomplete attempts Resume accessible near top, without discarding.
+2. Make setup header a semantic screen-reader heading instead of a second large visual title under Test library; retain labels and full exam options. Tighten **only home-scoped laptop CSS** at >=1000 CSS px: heading margins, panel padding, picker gap, mode spacing/height, action row. No change to exam, results or History layouts.
+3. Preserve all IDs and event bindings (`#g-papers,#g-edition,#g-single-section,#g-start,#g-import`, mode buttons, backup, learning); retain editor/import warnings, preflight and key concealment.
+4. Add fresh strict **first-fold geometry acceptance** at 1366×768, 1440×900, 1536×864 and 1280×800: Start bounds entirely within viewport, no horizontal overflow, selected mode visible and operable; verify selected paper/edition, mode (strict/free/single), imported non-CGL, screen-reader-relevant heading and 140%/mobile/tablet behavior. Capture **actual** paired v11/current screenshots and report measured geometry; fail CI if regression. Do not overfit by making visual text tiny.
+5. Update Pass24 L01 status only after code + pass25 QA; preserve 11 original issue statements and close only verified item.
+
+**Five-step gate:** [x] AUDIT screenshot/source [x] ANALYZE above [ ] IMPLEMENT [ ] OBJECTIVE RECONCILE [ ] TARGETED CI/visual QA. Worklog gets commits, observed measurements and any surviving caveats once QA actually completes.
+
 ### Pass 23 — FINAL independent audit, evidence and handoff (30 October 2026)
 
 **Final independent status:** **AUTOMATED ENGINEERING ACCEPTANCE — CONDITIONAL; NOT RELEASED.** [Canonical Pass23 25-finding report](PASS23_FINAL_INDEPENDENT_REVIEW_2026-10-30.md) is the controlling detailed source/behavior matrix and unresolved release-gate record. This scratchpad retains the original F01–F15/G01–G10 problem descriptions intact; the independently verified *current* state is shown below and in the new report. Preserved `main` and immutable `baseline/v11`.
