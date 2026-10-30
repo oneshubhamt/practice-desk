@@ -44,7 +44,13 @@ The ordinary question card height increased from **487 to 734 px (+50.7%)**; lon
 
 This audit does **not** assert broken answer scoring, lost data or disabled buttons. Earlier v11/current exact numerical score/eligible-max comparisons (6/6), CGL original/caution handling, timer/review/history saved flows, multi-kind engine tests and Firefox/WebKit automated acceptance remain green. The new evidence identifies *user-visible hierarchy, discoverability and semantics* regressions that those tests failed to recognize.
 
-## Recommended repair programme — NOT yet implemented
+## Pass 25 implementation status — one of eleven findings repaired (30 Oct 2026)
+
+**L01 (HIGH): AUTOMATED-VERIFIED / REPAIRED** on `overhaul`, only for the primary Library task. The underlying audit observation remains historically true for *pre-Pass25* snapshots, but is not a current unresolved Library blocker. The overhaul now renders primary paper/edition/mode/Start above nonessential statistic totals, with compact home-scoped desktop styles. Exact same-paper/edition `file://` screenshot and landmark comparisons (30 Sep reviewed) at 1280×800, 1366×768, 1440×900, 1536×864 show **Start y551 vs old overhaul y942 and v11 y702; paper selector y203 vs old overhaul y490 and v11 y225**. All four Start buttons fit inside the laptop viewport. All source/review, free/strict/single, learning, backup, preflight and status cards remain available. 140%-text and mobile/tablet sanity checks passed. [Full CI 41105425460](https://github.com/oneshubhamt/practice-desk/actions/runs/41105425460): **3/3 green**; [paired screenshots and measured JSON](https://github.com/oneshubhamt/practice-desk/actions/runs/41105425460/artifacts/12999829929).
+
+**L02–L11 remain OPEN**; specifically Next/Flag, passage/figure answers, History and Results first-fold usability were **not repaired by Pass25**. The earlier pre-Pass25 table and measurements are retained for comparison and should not be misconstrued as updated current measurements. Passes 26–28 own the remaining repairs and Pass 29 the independent final visual review.
+
+## Recommended repair programme — originally all items open (now L01 repaired)
 
 **Priority 1:** Reestablish v11-like *compact, action-first CGL UI* for Library and Exam at 1366×768 and 1440×900; keep richer generic engine and optional metrics in expandable/secondary areas rather than above essential controls. Specifically require Start, ordinary Next/Flag and first answer for typical passage items to remain visible to the same degree as v11 in the first viewport. Adopt DOM rectangle assertions, not just screenshot existence/no-overflow checks.
 
