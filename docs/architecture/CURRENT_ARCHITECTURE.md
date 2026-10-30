@@ -49,7 +49,7 @@ SessionState ── SessionEvent transition, checkpoint, rebase/restore
 
 - Start: validate selected package, derive CGL mode if relevant, freeze exact revision/key, initialize timer and first question visit; source comparison snapshot only for compatible paired reviewed editions.
 - Edit: UI dispatches validated `ANSWER/CLEAR/FLAG/NAVIGATE/PAUSE/RESUME`; engine checkpoints time; new state/records optimistically saved.
-- Finish: manual submit or elapsed budget produces completed state and immutable scoring result. Editorially invalid/excluded questions are omitted; written answers remain pending for optional self assessment.
+- Finish: whole-paper or untimed sequential locks explicitly advance via `SUBMIT_SECTION` while maintaining total time. Automatic sectional expiry advances; manual sectional expiry freezes a `section-expired` boundary until the candidate continues, with no waiting-time debit. Final submission/expiry produces an immutable score; editorially invalid/excluded questions are omitted and written answers remain separately pending.
 - Restore: open frozen record, reconcile wall-time away from the page, avoid attributing hidden time to a question, and surface results if expired. All history computation derives from saved frozen evidence.
 - Persistence: `saveRevision` checked on record updates, loaded IndexedDB first; localStorage fallback is separately version-guarded; uncommitted recovery exports are labelled. Downloaded backups are checksum-covered and additive.
 - Reuse: stored question revision enters a LearningCard; FSRS rating is explicit feedback, not a rescoring of mock answer accuracy; revision exam is a fresh untimed custom paper with provenance and its own +1/0 rules.
@@ -57,8 +57,8 @@ SessionState ── SessionEvent transition, checkpoint, rebase/restore
 ## 4. Engineering quality and known boundaries
 
 - **Strengths over v11:** no monolithic untyped scoring engine, exact frozen exam definitions, generic six-kind input, typed rule/response model, source revisions, content and backup integrity, checked concurrency, separately attributable learning evidence.
-- **Debt:** `src/app/generic-ui.ts` still combines storage, routing, event handling and HTML construction in ~1,462 lines. Result tab redraw builds hidden views. Review current [audit findings](../audits/V11_SOURCE_AUDIT_2026-10-30.md) before claiming a performance or usability advantage.
-- **Open imported policy gaps:** `whole-paper+sequential-locked` cannot progress, sectional `transition=manual` ignored, strange unanswered awards can exceed nominal maximum, impossible matching/multi-select keys can validate. Repair at the engine/validator boundary, not with a UI-only patch.
+- **Debt:** `src/app/generic-ui.ts` still combines storage, routing, event handling and HTML construction in a large module. Results build hidden views eagerly (F12); assess measured performance in Pass 22, not by assumptions about code size.
+- **Pass 17 generic policy closure (targeted-source QA verified):** sequentially locked whole-paper/untimed sections can advance, manual sectional expiry freezes correctly, conflicting sectional/free navigation is rejected, unanswered rewards are bounded by full credit, multiple-selection/matching keys match candidate constraints, and post-test `allowReview` disclosure is enforced. An explicit conservative score lower bound is shown. The detailed QA record is in [the active audit scratchpad](../audits/V11_SOURCE_AUDIT_2026-10-30.md#pass-17--implementation-verification-and-handoff-30-october-2026). **Other v11 behavior/UI issues remain open; do not imply whole-app parity.**
 - **Offline:** no live network calls, local browser storage is best-effort, one self-contained HTML; appearance and local selection stored by browser.
 
 ## 5. Non-inferences
