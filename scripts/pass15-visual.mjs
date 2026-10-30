@@ -42,6 +42,26 @@ const viewports=[
  {name:"tablet768",width:768,height:1024},
  {name:"desktop1280",width:1280,height:800},
 ];
+// WCAG 2.2 text contrast, evaluated against actual light/dark CSS tokens.
+async function contrastPairs(page){
+ return page.evaluate(()=>{
+  const styles=getComputedStyle(document.documentElement);
+  const hex=(name)=>{
+   const value=styles.getPropertyValue(name).trim().replace("#","");
+   if(!/^[a-fA-F0-9]{6}$/.test(value))throw Error("Missing six-digit palette token: "+name);
+   return [0,2,4].map(i=>parseInt(value.slice(i,i+2),16)/255);
+  };
+  const lum=(v)=>v.reduce((total,n,i)=>{
+   const c=n<=.04045?n/12.92:((n+.055)/1.055)**2.4;
+   return total+c*[.2126,.7152,.0722][i];
+  },0);
+  const ratio=(a,b)=>{
+   const x=lum(hex(a)),y=lum(hex(b));return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);
+  };
+  return {main:ratio("--ink","--bg"),secondary:ratio("--muted","--panel"),
+   correct:ratio("--good","--panel"),incorrect:ratio("--bad","--panel")};
+ });
+}
 const cssWide=async p=>p.evaluate(()=>{
  const w=window.innerWidth,doc=document.documentElement,body=document.body;
  const overflowing=[...document.querySelectorAll("*")].filter(el=>{
@@ -78,6 +98,12 @@ async function exercise(edition,viewport,filepath){
   if(old)await page.locator("#paperSelect").selectOption(sourcePaper.id);
   else await page.locator("#g-papers").selectOption(revised.paper.id);
   await capture(page,edition,"library",viewport);
+  if(!old){
+    const colors=await contrastPairs(page);
+    ensure(Object.values(colors).every(value=>value>=4.5),
+      "Light-theme text/answer status contrast below WCAG AA: "+JSON.stringify(colors));
+    observations.push({edition,viewport:viewport.name,contrast:"light",ratios:colors});
+  }
   const title100=await page.locator("#app h1").evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
   await page.locator("#displayTrigger").click();
   await capture(page,edition,"display-open",viewport);
@@ -85,6 +111,12 @@ async function exercise(edition,viewport,filepath){
     edition+" theme selection missing");
   await page.locator("#themeDark").click();
   await capture(page,edition,"library-dark",viewport);
+  if(!old){
+    const colors=await contrastPairs(page);
+    ensure(Object.values(colors).every(value=>value>=4.5),
+      "Dark-theme text/answer status contrast below WCAG AA: "+JSON.stringify(colors));
+    observations.push({edition,viewport:viewport.name,contrast:"dark",ratios:colors});
+  }
   await page.locator("#themeLight").click();
   for(let i=0;i<8;i++)await page.locator("#fontMore").click();
   ensure(await page.locator("#fontReset").innerText()==="140%",edition+" text scale 140% not reached");
