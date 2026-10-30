@@ -105,3 +105,25 @@ test("non-CGL exam source/review snapshots support six response types and arbitr
  assert.equal(validateGenericStoredRecord(ended),ended);
  assert.equal(createSourceReviewReference(source,target),null,"Source/review direction cannot be reversed");
 });
+
+test("source-review snapshots detect passage-only edits without forcing a new question kind",()=>{
+ const source=edition("source"),reviewed=edition("reviewed");
+ const withPassage=(base,text)=>{
+   const questions=base.questions.map((q,i)=>{
+     if(i!==0)return q;
+     const changed={...q,content:{...q.content,stimulusId:"shared-passage"}};
+     return {...changed,contentHash:questionRevisionHash(changed)};
+   });
+   return validateExamPackage({...base,questions,
+     stimuli:[{id:"shared-passage",kind:"passage",text}]});
+ };
+ const original=withPassage(source,"Unedited clinical case text");
+ const updated=withPassage(reviewed,"Revised clinical case text");
+ assert.equal(original.questions[0].id,updated.questions[0].id,
+   "Passage-only edits should not need to re-key the question");
+ const ref=createSourceReviewReference(updated,original);
+ assert.equal(ref.entries.length,1);
+ assert.equal(ref.stimuli[0].text,"Unedited clinical case text");
+ const attempt={...startGenericAttempt(updated,"passage",1000),sourceReviewReference:ref};
+ assert.equal(validateGenericStoredRecord(attempt),attempt);
+});
