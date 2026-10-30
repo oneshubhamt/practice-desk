@@ -125,6 +125,19 @@ try{
    const focused=await page.evaluate(()=>document.activeElement?.id);
    ensure(focused==="displayTrigger","Display focus did not return to opener after Escape");
  }
+ // A 390px phone at 200% zoom is roughly a 195 CSS-pixel viewport.
+ // Assert that the actual popover stays within the logical viewport, not
+ // merely that the trigger has focus.
+ await page.setViewportSize({width:195,height:844});
+ await page.evaluate(()=>window.scrollTo(0,document.body.scrollHeight));
+ const tinyTrigger=await page.locator("#displayTrigger").boundingBox();
+ ensure(tinyTrigger&&inside(tinyTrigger,195,844),
+   "Display trigger overflowed 200%-equivalent phone viewport");
+ await page.locator("#displayTrigger").click();
+ const tinyPanel=await page.locator("#displayPanel").boundingBox();
+ ensure(tinyPanel&&inside(tinyPanel,195,844),
+   "Display settings popover overflowed 200%-equivalent phone viewport");
+ await page.keyboard.press("Escape");
  await page.locator("#g-history-results").click();
  const foot=await page.locator(".app-independent-footer").innerText();
  ensure(foot.includes("Not affiliated")&&foot.toLowerCase().includes("imported"),
