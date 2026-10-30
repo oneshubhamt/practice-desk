@@ -15,9 +15,9 @@
 | D09 | Implemented + binding | Pass 18 records exact consumed sequential/single-section timer durations only for new sessions, reports elapsed timer, attempted/non-excluded rate, global measured scored-answer median and question exposure separately; old/free multi-section timers remain unknown. Never fabricate historical durations |
 | D10 | Binding | FSRS review is explicit, cannot be inferred from test mark or used to regrade source attempt |
 | D11 | Binding | No premature answer/editorial/solution disclosure |
-| D12 | Binding | Comparisons require truly matching paper/key/mode; no projected rank, national percentile or arbitrary psychometrics |
+| D12 | Binding (Pass 19 clarified) | Longitudinal trends require exact paper/key/mode. Separate cross-paper section *marks diagnostics* allow up to eight full attempts of at least two papers with matching exam, edition, mode, section blueprint, effective per-item grading, navigation and timer rules; ratios remain descriptive and never estimate rank, percentile or normalized difficulty |
 | D13 | Unapproved | Unconditional release/merge; physical Android/iOS/macOS Safari/NVDA/VoiceOver and OS-kill/eviction and human UI signoff |
-| D14 | Open | Full v11 behavioral/UI superset. See F01–F15; no “parity attained” claim |
+| D14 | Open | Targeted Passes 17–19 verify their allocated generic rules, timers and history changes including F03/F04/F05. Full v11 behavioral/UI superset and manual/device validation remain open; no blanket “parity attained” claim before Pass 23 |
 | D15 | Open | Valid generic rule envelope. See G01–G10; external paper acceptance must reflect actually executable semantics |
 | D16 | User approved | Maintain the **active source audit Section G as the durable implementation scratchpad**. Each pass: audit, analyze, implement, reconcile each assigned objective, and targeted NEW QA; iterate repairs before QA when needed. Comprehensive whole-app source/UI audit and broad QA belong in Pass 23, with physical-device/AT caveats honest |
 | D17 | User approved | Preserve the useful v11 UI layout, navigation convenience, clarity and material workflows, but implement demonstrably better design and reusable generic abstractions where helpful; pixel-perfect imitation and restoration of unsafe legacy behavior are not required |
