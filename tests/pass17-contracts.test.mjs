@@ -13,7 +13,10 @@ import { restoreSession } from "../src/history/frozen.ts";
 
 const evt=(type,nowMs,rest={})=>({type,nowMs,...rest});
 const bundleWith=(changes)=>{
- const base={...pkg.paper,...changes};
+ const base={...pkg.paper,...changes,
+  navigation:changes.timing?.kind==="sectional"?
+    {...pkg.paper.navigation,sectionNavigation:"sequential-locked",...changes.navigation}:
+    changes.navigation??pkg.paper.navigation};
  return validateExamPackage({...pkg,paper:{...base,contentHash:paperRevisionHash(base)}});
 };
 const lookup=new Map(questions.map(q=>[q.id,q]));
