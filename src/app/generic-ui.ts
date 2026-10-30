@@ -937,7 +937,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
     '<p class="fine">Eligible maximum excludes editorially unscored and manually assessed questions. Time is measured question foreground exposure, not the sectional wall clock.</p>'+
     '<div class="scroll-table"><table><thead><tr><th>Section</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Marks / eligible max</th><th>Time on questions</th></tr></thead><tbody>'+
      paperSectionRows+'</tbody></table></div></section>'+sectionPaceHTML(attempt)+analyticHTML+
-     questionCoachingHTML(attempt)+
+     questionCoachingHTML(attempt,revealReview)+
     '<section class="panel pad answer-revision-panel"><h2>Answer revisions</h2>'+
     (revisions.recorded?'<div class="learning-metric-grid">'+
       [['Modified answers',revisions.changed],['Wrong → correct',revisions.rescued],['Correct → wrong',revisions.lost],['Other changes',revisions.other]]
@@ -1001,7 +1001,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          (records.has("learning-card:"+q.id)?" disabled":"")+'>'
          +(records.has("learning-card:"+q.id)?"In notebook":"Add to notebook")+
        '</button></article>';
-    }).join("")+'</section>':'')+timingLedgerHTML(attempt,resultTab==="timing");
+    }).join("")+'</section>':'')+timingLedgerHTML(attempt,resultTab==="timing",revealReview);
  }
  const openSaved=(id:string)=>{
    const saved=records.get(id);if(!isAttempt(saved))return;
