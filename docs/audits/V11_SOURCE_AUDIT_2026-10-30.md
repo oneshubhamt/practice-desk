@@ -464,6 +464,20 @@ In `src/app/generic-ui.ts`, checkbox changes below `minSelections` show a warnin
 
 **Pass 23 handoff:** All planned targeted repairs from Passes 17–22 have been source-verified. Conduct a **fresh independent end-to-end v11 vs overhaul source and rendered behavior audit**, enumerate any still-open gaps or contradictions against F01–F15/G01–G09 (G10 remains accepted), recheck originality and distribution commit, test real workflows/keyboard/accessibility/storage, document any limitations (especially physical iOS/Android, VoiceOver/NVDA, OS-kill/recovery). Do not infer full parity from successful targeted CI alone, and do not merge to `main` without user authorization.
 
+### Pass 23 — independent final audit start (30 October 2026)
+
+**Audit status: IN PROGRESS, not yet released.** Start branch `overhaul` at `90d6228195b6d61d4335ccd92a098e2735d8250b`. Baseline `baseline/v11` remains immutable `e661822d865927e89a837790c1c6bc1cfc2562a6`. Reopened *source* of original v11 `legacy.ts:drawHome/drawExam/drawResults/drawHistory`, current `generic-ui.ts`, `session.ts`, full original source findings A–G, current architecture/policy register, CI and unit/browser test catalog rather than accepting previous Pass 17–22 conclusions as independent proof. The original CGL paper/patch/solution content files remain excluded from changes.
+
+**AUDIT / ANALYSIS PLAN** (independent signoff, all prior findings revisited):
+1. Establish baseline/branch invariants and exact CGL source/patch/solution Git blob identities against `baseline/v11` and `main`. Check referenced Q62 editorial source-exclusion and reviewed-scoreable-caution at both key/source level and rendered review.
+2. Independently re-map V-01–V-20 and F01–F15 to actual current source and user-facing route interactions, checking scoring ceilings, provenance, performance, timer/section behavior, analytics, edit/save/backup, keyboard, Display, source comparison, history, learning, and review disclosure. Fail rather than assume if a current test is incorrectly scoped to hidden panes or only fixtures.
+3. Re-evaluate generic contracts G01–G09 using new adversarial scenarios beyond previously tested fixtures: different timing/navigation envelopes, unusual marking, multiple-select cardinality and drafts, matching uniqueness, review disabled, manual assessment and persistence. G10 remains explicitly accepted: no migration from v11 user data.
+4. Create fresh **Pass23 independent browser acceptance** which uses the *frozen v11 HTML as the comparator*, tests selected comparable real CGL flows on both builds and the extended generic flows on overhaul, runs keyboard, results, backup, history, responsive/zoom, and checks no answers before submission. Include deliberately adversarial / reload/real IDB cases; re-use previous scripts only as separate *adjacent* regressions. Make the suite run as part of Node24 CI and record concrete failures and repairs here.
+5. Verify build artifacts and all CI jobs, independently inspect original content SHA and branch main baseline non-mutation; document what automated headless tests **cannot** prove: physical iOS/Android storage/reopen, screen-reader speech (NVDA/VoiceOver), actual touch, OS-kill/eviction recovery, third-party import adversarial performance, legal/official-key accuracy or subjective UI superiority. Do not claim these tests were performed.
+6. Final deliverable: detailed source-backed source-vs-v11 matrix, per-finding evidence/caveats, measured pass/fail, residual risks, explicit release recommendation with **no merge**, documentation in architecture/contracts/policy, and preserved 25 finding headings.
+
+**Stage gate:** AUDIT underway → ANALYSIS underway → IMPLEMENT/repairs pending → OBJECTIVE reconciliation pending → fresh QA pending → report. No release approval implied.
+
 ### Per-pass worklog template — copy beneath this section at pass start
 
 ```text
