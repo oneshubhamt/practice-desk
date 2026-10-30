@@ -1,6 +1,7 @@
 import type { GenericAttempt } from "./exam-package.ts";
 import { attemptEvidence } from "../learning/attempt-evidence.ts";
 import { questionSpeed,isAuditQuestion,longestQuestionExposure,studySuggestions } from "../learning/question-analytics.ts";
+import { sectionTimerDuration } from "../engine/session.ts";
 import type { ItemScore } from "../engine/scoring.ts";
 
 export type ResultTab="overview"|"review"|"timing";
@@ -56,10 +57,12 @@ export function sectionPaceHTML(a:GenericAttempt):string{
  const evidence=attemptEvidence(a);
  if(!evidence)return "";
  return '<section class="panel pad section-bars"><h2>Section pacing & coverage</h2>'+
-  '<p class="fine">Section progress is based on scoreable questions. Time is recorded foreground exposure.</p>'+
+  '<p class="fine">Section progress is based on scoreable questions. Timer time is recorded only for sequentially closed sections; question foreground exposure is a different measurement.</p>'+
   evidence.sections.map(e=>'<div class="pace-row"><div class="row between"><b>'+esc(e.title)+
    '</b><span class="fine">'+e.answered+' answered · '+(e.accuracy===null?"—":Math.round(e.accuracy*100)+"% accuracy")+
-   ' · '+duration(e.foregroundMs)+'</span></div><div class="progress-track"><span style="width:'+Math.round(100*e.coverage)+'%"></span></div></div>').join("")+'</section>';
+   ' · Timer: '+(sectionTimerDuration(a.state,a.frozen.paper.sections.findIndex(s=>s.id===e.sectionId))===null?"Not recorded":
+     duration(sectionTimerDuration(a.state,a.frozen.paper.sections.findIndex(s=>s.id===e.sectionId))!))+
+   ' · Foreground: '+duration(e.foregroundMs)+'</span></div><div class="progress-track"><span style="width:'+Math.round(100*e.coverage)+'%"></span></div></div>').join("")+'</section>';
 }
 
 /** Source-backed question exposure rankings and conditional coaching. */
