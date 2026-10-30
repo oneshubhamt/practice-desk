@@ -27,17 +27,19 @@ const values=[
  {kind:"true-false",value:false},
  {kind:"matching",pairs:[{leftId:"l1",rightId:"r1"},{leftId:"l2",rightId:"r2"}]},
 ];
-function sample(){
+function sample(overrides={},written=false){
  let a=startGenericAttempt(bundle,"mixed",1000),now=1000;
  const times=[100,1000,1000,1000,6000];
  for(let i=0;i<5;i++){
-   a=transitionGenericAttempt(a,{type:"ANSWER",nowMs:now+1,response:values[i]},map);
+   a=transitionGenericAttempt(a,{type:"ANSWER",nowMs:now+1,response:overrides[i]??values[i]},map);
    now+=times[i];
    a=transitionGenericAttempt(a,{type:"NAVIGATE",nowMs:now,sectionIndex:0,questionIndex:i+1},map);
  }
  // A real revisit of q0 must not invent answer changes or extra exposure.
  a=transitionGenericAttempt(a,{type:"NAVIGATE",nowMs:now,sectionIndex:0,questionIndex:0},map);
  a=transitionGenericAttempt(a,{type:"NAVIGATE",nowMs:now,sectionIndex:0,questionIndex:5},map);
+ if(written)a=transitionGenericAttempt(a,{type:"ANSWER",nowMs:now,
+    response:{kind:"free-response",text:"A short self-assessed explanation"}},map);
  return transitionGenericAttempt(a,{type:"SUBMIT_ATTEMPT",nowMs:now},map);
 }
 test("visits reflect cursor entries, never answering, flags, repeated cursor or clock ticks",()=>{
@@ -123,4 +125,31 @@ test("historic visits and insufficient speed samples are disclosed, not manufact
    {type:"SUBMIT_ATTEMPT",nowMs:1000},map);
  assert.equal(longestQuestionExposure(zero).length,0);
  assert.match(studySuggestions(zero)[0],/No scored answers/);
+});
+
+test("negative marking, manual-pending and excluded questions stay separate from pace classification",()=>{
+ const negative=sample({
+   2:{kind:"numeric-entry",value:9},
+   4:{kind:"matching",pairs:[{leftId:"l1",rightId:"r2"},{leftId:"l2",rightId:"r1"}]}
+ });
+ assert.ok(negative.result.snapshot.earnedMarks<0,"Negative frozen exam marks remain negative");
+ assert.equal(questionSpeed(negative,id(0)),"Fast");
+ assert.ok(studySuggestions(negative).every(x=>!/(guarantee|careless|must improve|predicted)/i.test(x)));
+ const submitted=sample({},true);
+ assert.equal(submitted.result.items.at(-1).verdict,"pending");
+ assert.equal(questionSpeed(submitted,id(5)),"Not classified");
+ assert.equal(reviewMatch(submitted,submitted.result.items.at(-1),"pending"),true);
+ const copy=structuredClone(bundle);
+ const original=copy.questions[0],bad={...original,editorial:{...original.editorial,
+   status:"invalid",notes:"Source item cannot be scored"}};
+ copy.questions[0]={...bad,contentHash:questionRevisionHash(bad)};
+ const invalid=validateExamPackage(copy);
+ const m=new Map(invalid.questions.map(q=>[q.id,q]));
+ let a=startGenericAttempt(invalid,"invalid",1000);
+ a=transitionGenericAttempt(a,{type:"ANSWER",nowMs:1001,response:{kind:"single-choice",optionId:"b"}},m);
+ a=transitionGenericAttempt(a,{type:"SUBMIT_ATTEMPT",nowMs:1600},m);
+ assert.equal(a.result.items[0].verdict,"excluded");
+ assert.equal(questionSpeed(a,id(0)),"Not classified");
+ assert.equal(reviewMatch(a,a.result.items[0],"audit"),true);
+ assert.equal(reviewMatch(a,a.result.items[0],"fastwrong"),false);
 });
