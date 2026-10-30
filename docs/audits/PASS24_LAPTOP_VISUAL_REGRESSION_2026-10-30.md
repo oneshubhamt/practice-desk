@@ -50,7 +50,22 @@ This audit does **not** assert broken answer scoring, lost data or disabled butt
 
 **L02–L11 remain OPEN**; specifically Next/Flag, passage/figure answers, History and Results first-fold usability were **not repaired by Pass25**. The earlier pre-Pass25 table and measurements are retained for comparison and should not be misconstrued as updated current measurements. Passes 26–28 own the remaining repairs and Pass 29 the independent final visual review.
 
-## Recommended repair programme — originally all items open (now L01 repaired)
+## Pass 26 implementation status — exam L02/L03/L04 repaired (31 Oct 2026)
+
+**L02 (HIGH), L03 (HIGH), L04 (MEDIUM): AUTOMATED-VERIFIED / REPAIRED** for ordinary CGL, source figure and reading-passage scenarios at 1280×800, 1366×768, 1440×900 and 1536×864, compared with the same 30 Sep 2026 reviewed CGL paper and flexible mode in the frozen v11 HTML. The new actual `file://` `scripts/pass26-exam.mjs` fails CI if initial ordinary Next/Flag are below the viewport, if question layout drifts excessively below v11, if passage or figure first choice is below fold, if original imagery/alt/full passage is lost, if the scrollable passage is not keyboard-operable, or if mobile/tablet/140%-scaling checks overflow.
+
+| 1366×768 measured top, CSS px | Frozen v11 | Prior overhaul (Pass24) | After Pass26 |
+|---|---:|---:|---:|
+| Ordinary Next | 675 | 954 | **611** |
+| Ordinary Flag/Mark | 675 | 875 | **611** |
+| Figure first option | 693 | 857 | **637** |
+| Passage first option | 653 | 1014 | **598** |
+
+All four modern viewport results were identical for these sampled landmarks; Next and Flag completely within viewport. The passage remains full-text and keyboard-scrollable in a 210px tall area; figure retains original data and alt and is scaled down only in desktop presentation with `object-fit:contain`. Buttons remain fully active and source score/history rules did not change. New desktop styles are scoped to >=981px; mobile/tablet/140% overflow checks and the existing prior regression suite passed. [CI 41113295966](https://github.com/oneshubhamt/practice-desk/actions/runs/41113295966) **3/3 green**; [screenshot and geometry artifact](https://github.com/oneshubhamt/practice-desk/actions/runs/41113295966/artifacts/13003588788). Original Pass24 pre-repair measurements above remain archival. Full human/physical desktop visual signoff still belongs to Pass29. Detailed changes, test corrections and source reconciliation are in the canonical [audit scratchpad](V11_SOURCE_AUDIT_2026-10-30.md).
+
+**L05–L11 remain OPEN** for Passes 27–28, with Pass29 as independent final review. L09 remains a known misleading whole-paper timer label; do not call this programme or overall laptop UI parity complete.
+
+## Recommended repair programme — originally all items open (L01–L04 now automated-repaired)
 
 **Priority 1:** Reestablish v11-like *compact, action-first CGL UI* for Library and Exam at 1366×768 and 1440×900; keep richer generic engine and optional metrics in expandable/secondary areas rather than above essential controls. Specifically require Start, ordinary Next/Flag and first answer for typical passage items to remain visible to the same degree as v11 in the first viewport. Adopt DOM rectangle assertions, not just screenshot existence/no-overflow checks.
 
