@@ -93,6 +93,14 @@
 
 **Baseline:** `legacy.ts:deleteOne` checks `!a.finishedAt` and refuses unfinished records. **Overhaul:** `history-page.ts:historyHTML` renders a Delete button for **all** records and `generic-ui.ts:removeSavedAttempt` accepts any `isAttempt` including unfinished; it may remove the currently active session after a single generic confirmation. This is a destructive affordance change, not only a stylistic preference. **Repair:** separate “Discard unfinished attempt” with explicit state/answer-loss warning and dedicated confirmation from ordinary completed-result delete; make historical completed-only delete the default.
 
+### P2 · F14 — Always-accessible floating Display control removed
+
+**Baseline:** `src/styles/app.css` sets `.display-tools { position:fixed; right:14px; top:12px; z-index:80 }`. Its Aa/Display control is reachable while scrolled deep into a long question, a 100-item review, or history. **Overhaul:** `src/styles/app.css` sets `.display-tools { position:relative }` inside a non-sticky `header`; the control scrolls out of view. **Impact:** the user must scroll back to the top to change text size/theme or invoke global full screen, especially costly during long mobile reviews. **Repair:** preserve a non-obstructing, keyboard-accessible sticky/floating access path that works on tiny screens and does not cover content; validate focus and overlay bounds.
+
+### P2 · F15 — Original exam-source independence disclaimer omitted
+
+**Baseline:** `legacy.ts:drawHome` includes an explicit “Not affiliated with SSC” footer, together with source/review educational edit provenance. **Overhaul:** `src/template.html` has no corresponding footer and `generic-ui.ts:listHTML` shows neither an SSC independence disclaimer nor equally explicit reviewed-answer limitations in the pre-test screen. **Impact:** trust/provenance messaging is less clear even though the edited source can include disputed published keys. **Repair:** use a generic non-affiliation/source-label footer, with exam-specific wording only for a verified built-in source; avoid implying official provenance for imported exams.
+
 ## D. New generic-engine correctness issues discovered without QA fixtures
 
 The following are **new abstraction-contract gaps**, not necessarily existing SSC CGL regressions. They matter because the purpose of overhaul was a trustworthy general exam studio.
@@ -144,7 +152,7 @@ In `src/app/generic-ui.ts`, checkbox changes below `minSelections` show a warnin
 3. **Timing:** monotonic source + frozen wall clock restore is stronger, yet elapsed wall time/foreground exposure/section-specific timers are not completely interchangeable. See F01/F09 and G02.
 4. **UI:** labeled Display trigger, native controls, responsive CSS, semantic tabs/landmarks and scoped announcement are good changes; source cannot establish a visually superior experience without manual inspection.
 5. **Security:** text/HTML are generally escaped before `innerHTML`; embedded image media is validated and self-contained, and source URLs are validated as HTTP(S). A separate security review would still be needed for hostile oversized/exotic imports and runtime storage exhaustion.
-6. **Learning:** v11 had no corresponding notebook/FSRS pathway; overhaul adds real functionality. Treat this as **O\V**, not as evidence that F01–F13 disappear.
+6. **Learning:** v11 had no corresponding notebook/FSRS pathway; overhaul adds real functionality. Treat this as **O\V**, not as evidence that F01–F15 disappear.
 7. **No fixture reliance:** previous Passes 11–16 reports may be useful as historical rationale but were intentionally not accepted as independent audit proof; this audit's source observations are new and sometimes contradict their complete-parity language.
 
 ## F. Repair and release gate — explicit order
@@ -153,7 +161,7 @@ In `src/app/generic-ui.ts`, checkbox changes below `minSelections` show a warnin
 
 **Stage 2 (generic core):** G01/G02 unsupported navigation and transition modes, G03 over-maximum unanswered scoring, G04/G05 impossible answer keys; G06 policy semantics. These are correctness concerns and should be addressed before claiming generic examiner reliability.
 
-**Stage 3 (polish/reliability):** F05/F06/F08/F10/F12 and G07–G09; test focus/layout and performance without relying solely on old fixture expectations.
+**Stage 3 (polish/reliability):** F05/F06/F08/F10/F12/F14/F15 and G07–G09; test focus/layout and performance without relying solely on old fixture expectations.
 
 **Stage 4 (independent retest):** A separate source-code comparison with the frozen baseline **after corrections**, targeted new adversarial tests derived from each finding, then fresh browser/manual inspection. Do not close findings by editing documents or loosening assertions. Real Safari/Android/iOS, assistive-technology, OS kill/storage pressure and human visual judgement remain distinct manual gates.
 
