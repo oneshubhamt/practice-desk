@@ -9,7 +9,7 @@ import {fileURLToPath} from "node:url";
 import {resolve} from "node:path";
 import {pkg,questions} from "./fixtures/six-kinds.mjs";
 import {builtinCglPackages,configureCglPractice,validateExamPackage,startGenericAttempt,transitionGenericAttempt} from "../src/app/exam-package.ts";
-import {validateAnswerKeyRevision,validatePaperRevision,validateMarkingRule} from "../src/domain/validate.ts";
+import {validateAnswerKeyRevision,validatePaperRevision} from "../src/domain/validate.ts";
 import {paperRevisionHash,answerKeyRevisionHash} from "../src/domain/integrity.ts";
 import {scoreableMaximum,scoreableLowerBound} from "../src/engine/score-ceiling.ts";
 import {scoreAttempt} from "../src/engine/scoring.ts";
@@ -133,11 +133,11 @@ test("G01/G02/F01/F09: locked shared paper, manual expiry and frozen truthful se
 
 test("G03/G09: imported marks have honest ceiling/floor and forbid worse-than-wrong blanks",()=>{
  for(const blank of [-2,3]){
-  assert.throws(()=>validateMarkingRule({correctMarks:2,incorrectMarks:-1,unansweredMarks:blank},"marks"),
+  assert.throws(()=>validatePaperRevision({...pkg.paper,scoring:{defaultRule:{correctMarks:2,incorrectMarks:-1,unansweredMarks:blank}}},questions,pkg.answerKey),
    /unansweredMarks/);
  }
  const valid={correctMarks:3,incorrectMarks:-2,unansweredMarks:-0.25};
- validateMarkingRule(valid,"marks");
+ validatePaperRevision({...pkg.paper,scoring:{defaultRule:valid}},questions,pkg.answerKey);
  const p=rehash({...pkg.paper,scoring:{defaultRule:valid}});
  validatePaperRevision(p,questions,pkg.answerKey);
  const ceiling=scoreableMaximum(p,pkg.answerKey,questions);
@@ -178,9 +178,8 @@ test("F13/G10: delete lifecycle cannot bypass unfinished status; v11 backup inte
  assert.throws(()=>assertDeletionAllowed({recordType:"generic-attempt",finishedAt:1},"discard-unfinished"),/completed/);
  assert.doesNotThrow(()=>assertDeletionAllowed({recordType:"generic-attempt",finishedAt:1},"completed"));
  assert.throws(()=>verifyBackup({format:"practice-desk-backup",version:1,attempts:[]}),/Invalid backup/);
- const p={theme:"light",fontScale:100};
  // The checksum covers the backup's payload and is not a cosmetic metadata label.
- const saved=makeBackup([],{theme:"light",fontScale:100},new Date(0).toISOString());
+ const saved=makeBackup([],{schema:1,dark:false,scale:100},new Date(0).toISOString());
  assert.equal(verifyBackup(saved).manifest.recordCount,0);
  const corrupt=structuredClone(saved);corrupt.exportedAt=new Date(5000).toISOString();
  assert.throws(()=>verifyBackup(corrupt),/integrity/i);
