@@ -21,7 +21,7 @@
 - Store types: `generic-attempt`, `generic-package`, `learning-card`. Stored attempts recalculate frozen item verdicts/totals on read; answer event continuity, ids, hashes, provenance and manual grades are validated.
 - IndexedDB with per-record `saveRevision` compare-and-swap; fallback localStorage has cross-tab stamp conflicts; emergency mirror and explicitly labelled unsaved recovery export. Local storage is subject to browser eviction.
 - **Backup v3:** `practice-desk-backup` records + saved appearance/optional exam selection + manifest `sha256`, count, export time; verify checksum and validate every record before additive merge. Existing same-ID records never overwritten; v11 v1 backups and history are not migrated by design.
-- `LearningCard` saves exact question/key/media and manually confirmed error label, note, bookmark and FSRS review logs; mistake revision generates a new custom timed/untimed policy, never substitutes ratings for exam marks.
+- `LearningCard` saves exact question/key/media and manually confirmed error label, note, bookmark and FSRS review logs; mistake revision generates a new untimed custom paper, never substitutes ratings for exam marks.
 - Historical cases have absent visit counters when unknown. Treat foreground exposure, elapsed wall time, assessed written marks and score as different measurements. Trend comparisons require the same frozen revision, key and mode; do not infer national rank or percentile.
 
 ## Validation issues to resolve, not disguise
