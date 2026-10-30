@@ -72,6 +72,7 @@ try{
  ensure(imported.includes("10.00")&&imported.includes("manual-response")&&
    imported.includes("author/importer")&&!imported.includes("SSC"),
    "Generic imported exam preflight improperly assumes CGL or miscounts marks");
+ await page.locator("#g-exam-rules summary").click();
  ensure((await page.locator("#g-exam-rules").innerText()).includes("One shared 20 min"),
    "Imported exam rules did not derive from its own policy");
  console.log("Pass 20: configured CGL modes, editorial counts/provenance and generic imported exam preflight passed");
