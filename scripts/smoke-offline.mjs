@@ -290,8 +290,9 @@ try{
    "Revision review lost its origin metadata");
  await page.locator("#g-library").click();
  await page.locator('[data-attempt="'+revision.id+'"]').first().click();
+ await page.locator('[data-result-tab="overview"]').click();
  fail(await page.locator("#g-attempt-evidence").count()===1,
-   "Generated revision was not available in persisted attempt history");
+   "Generated revision Overview was not available in persisted attempt history");
  const unchangedCard=await find(page,x=>x.id===firstLearning.id);
  fail(unchangedCard.reviews.length===1,
    "Taking a generated revision exam improperly changed FSRS rating history");
