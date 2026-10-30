@@ -209,7 +209,7 @@ In `src/app/generic-ui.ts`, checkbox changes below `minSelections` show a warnin
 
 | Pass | Assigned IDs | Status | Evidence / handoff |
 |---|---|---|---|
-| 17 | G01, G02, G03, G04, G05, G06, G09 | **PRE-AUDIT / DESIGN OPEN** | See Pass 17 notes below; **no engine repairs claimed** |
+| 17 | G01, G02, G03, G04, G05, G06, G09 | **IMPLEMENTED — QA PENDING** | Source fixes and independent new tests committed; verify latest CI before promoting any ID to VERIFIED |
 | 18 | F01, F09, F13 | NOT STARTED | Read Pass 17 changes before choosing session record schema |
 | 19 | F03, F04, F05 | NOT STARTED | Consume truthful frozen timing/scoring denominator from previous passes |
 | 20 | F02, F06, F14, F15 | NOT STARTED | v11-informed layout and preflight; no hardcoded SSC-only generic UI |
@@ -238,6 +238,40 @@ In `src/app/generic-ui.ts`, checkbox changes below `minSelections` show a warnin
 **Pass 17 protected invariants:** all five source CGL banks/published and reviewed editions unchanged; disputed 6 October Q62 original excluded and reviewed scoreable caution; no answers revealed before submission; CGL strict 4×15 minutes, free and single still function; source/key/media hashes and frozen attempt scoring remain coherent; no unsafe data-rewriting migration; UI affordances correspond to engine transitions; changes compile to one offline HTML. New rules must be tested at engine + import + UI + persisted-restore boundaries as applicable.
 
 **Pass 17 targeted QA queue (not executed):** import rejects impossible multiselect/matching key; valid one-to-one matching and valid bounded multi-select score; whole-paper locked multi-section advances or is explicitly rejected before start; manual sectional expiry obeys declared behavior or rejects at import; zero/negative/oversized unanswered and unusual partial credit cannot falsify the max; review policy works as documented; CGL strict sectional expiry and early submit remain unchanged; roundtrip of in-progress frozen attempts stays valid. After QA, record exact commits/results against **all seven IDs**, not a blanket green label.
+
+### Pass 17 — implementation record and objective reconciliation (30 October 2026)
+
+**Audit (read, not assumed):** Checked current `domain/{exam,question,answer-key,scoring,validate}`, `engine/{session,response,scoring,score-ceiling}`, `app/{exam-package,generic-ui,result-presentation}`, `history/frozen`, and existing engine/history/UI/generic-flow/CGL regression tests. The raw CGL importer has `transition:"manual"`; the actual configured v11-like strict mode uses `transition:"automatic"`. This distinction is critical for assessing expiry correctly. Inspected result controls and frozen attempt validation, not only the validator and transition snippets. Baseline meaningful behavior protected: strict CGL four automatic 15-minute sections, original/reviewed source bank, source commentary only after exam, current result and history semantics.
+
+**Analyze — choices and rejected shortcuts:**
+- G01: implement explicit irreversible `SUBMIT_SECTION` for both whole-paper and untimed `sequential-locked` multi-section exams; preserve a *continuous whole-paper clock*. Rejected silent section jumps and rejecting this useful exam configuration. Opposite promise `sectional + free section-navigation` is rejected during validation because per-section clocks remain locked.
+- G02: implement `section-expired` frozen state on *manual* sectional expiry; stop consuming time; enable a visible continue action, prohibit answer/flag/navigation/pause changes while expired, preserve via storage and restore. `automatic` stays automatic. Untimed sectional sections can be submitted even if normal early-submit is disabled, because they cannot expire. Rejected falsely treating `manual` as `automatic`.
+- G03/G09: validate `incorrectMarks ≤ unansweredMarks ≤ correctMarks`, no positive wrong marks/negative correct marks, and finite magnitudes ≤ 1,000,000 to protect bound calculations. Existing Pass 16 component full-credit cap remains. Keep negative-but-not-worse-than-wrong blank marks supported. Show nominal full-credit max and separate **conservative lower bound**, explicitly not an attainable worst-case claim. Avoid silently rewriting frozen marks.
+- G04/G05: key validation now enforces multiselect correct-option count within exact question min/max and matching unique left/right choices, matching what a candidate can submit. Explicitly reject empty matching answer keys because current UI has no representable saved empty-pairs response.
+- G06: `allowReview=false` explicitly means *no post-completion detailed question/key/solution disclosure*. It does not prevent navigation during the exam or deny score/timing reporting. Hide the review tab, question cards/solutions and dead cross-links, preserve timing statistics and neutral question identifiers. This is honest **UI disclosure**, not a cryptographic hiding mechanism for locally frozen keys.
+
+**Implementation files:**
+`src/domain/validate.ts`, `src/domain/exam.ts`, `src/engine/session.ts`, `src/engine/score-ceiling.ts`, `src/app/generic-ui.ts`, `src/app/result-presentation.ts`, `docs/architecture/DATA_CONTRACTS.md`, `tests/pass17-contracts.test.mjs` and the corrected `tests/history.test.mjs`. Commits began at `f11e797` (validation) and continue through current `overhaul`; inspect current Git commit as authoritative.
+
+**Objective checks (source level; targeted CI is the remaining gate):**
+
+| ID | Current state | Exact evidence / unfinished gate |
+|---|---|---|
+| G01 | IMPLEMENTED — QA PENDING | Session `SUBMIT_SECTION` advances whole-paper/untimed locked section; navigation and early `SUBMIT_ATTEMPT` remain blocked; matching UI button + handler; contradictory sectional/free rejected; new locked progression/expiry tests |
+| G02 | IMPLEMENTED — QA PENDING | Manual expiry enters frozen `section-expired`; explicit continuation; no charged waiting time; UI status and persisted validation; untimed sectional explicit progression; auto CGL untouched; new expiry/restore tests |
+| G03 | IMPLEMENTED — QA PENDING | Validated per-rule blank reward cannot exceed `correctMarks` or punish worse than wrong, including item/section overrides; original full-score max remains coherent; negative blank edge tests |
+| G04 | IMPLEMENTED — QA PENDING | Key cardinality checked against question bounds at import/freeze; too-many/too-few and valid tests |
+| G05 | IMPLEMENTED — QA PENDING | Key left/right uniqueness and nonempty shape checked; duplicate-left/right tests |
+| G06 | IMPLEMENTED — QA PENDING | `allowReview` meaning documented in domain; review tab, detailed cards and key links withheld in UI, but scores and time ledger remain; new policy/UI-level tests; **real-browser route inspection still needed for final acceptance** |
+| G09 | IMPLEMENTED — QA PENDING | Magnitudes bounded; `scoreableLowerBound` conservative floor, `scoreableMaximum` full-credit ceiling, and explicitly labeled result explanation; harsh component and overflow-adjacent tests |
+
+**Targeted QA:**
+- Added `tests/pass17-contracts.test.mjs`: accepted/rejected key shapes, score bounds, manual expiry including save/restore, whole-paper and untimed locked progress, automatic expiry, and explicit review policy.
+- CI run `41007821731` compiled TypeScript and built the offline single-file HTML, then exposed two test expectation issues: legacy `history.test` checked automatic expiry on the *raw manual importer*, and new manual test incorrectly expected five rather than six unanswered questions. The assertions were **corrected against actual contracts**. No engine validation was weakened to satisfy tests.
+- Subsequent runs are automatically cancelled when superseded by new commits. **Latest final CI run/result must be inspected and recorded here before VERIFICATION.** Do not claim Pass 17 complete from a queued workflow.
+- Additional device, AT, visual/layout and full release QA remain Pass 23 gates, not claims made by Pass 17.
+
+**Pass 18 handoff:** session now has an explicit `section-expired` status for manual transitions; any new per-section wall-time archival records in F01 must not count frozen waiting intervals. Whole-paper locked forward moves and automatic expiry must preserve honest total elapsed time. When changing session schemas or recording duration, validate historical records without inventing missing section clocks; preserve automatic CGL status handling. Do not conflate this Pass 17 result-view policy with Pass 21 review-label UX.
 
 ### Per-pass worklog template — copy beneath this section at pass start
 
