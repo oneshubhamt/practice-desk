@@ -80,6 +80,17 @@ async function capture(p,edition,screen,viewport){
  if(screen!=="corrected-review")await p.evaluate(()=>window.scrollTo(0,0));
  await p.screenshot({path:join(out,edition+"-"+viewport.name+"-"+screen+".png"),animations:"disabled"});
  const sizing=await cssWide(p);
+ if(edition==="overhaul"&&screen.includes("display")){
+   const bounds=await p.locator("#displayPanel").boundingBox();
+   if(bounds){
+     const clipped=bounds.x< -1||bounds.x+bounds.width>viewport.width+1;
+     observations.push({edition,viewport:viewport.name,screen,
+       displayPopover:{left:Math.round(bounds.x),right:Math.round(bounds.x+bounds.width),
+         viewport:viewport.width,clipped}});
+     if(clipped)failures.push("Display popover is positioned offscreen: "+
+       viewport.name+" "+screen+" "+JSON.stringify(bounds));
+   }
+ }
  screens.push(edition+"-"+viewport.name+"-"+screen+".png");
  observations.push({edition,viewport:viewport.name,screen,sizing});
  if(sizing.overflow&&edition==="overhaul")
