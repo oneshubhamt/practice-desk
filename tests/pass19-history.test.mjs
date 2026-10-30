@@ -106,6 +106,11 @@ test("F03: separate exam identities and differently structured papers cannot pro
  const changedNavigation=structuredClone(b);
  changedNavigation.frozen.paper.navigation.questionNavigation="forward-only";
  assert.equal(crossPaperMarksPriorities([a,changedNavigation]),null);
+ const changedItemRule=structuredClone(b);
+ changedItemRule.frozen.key.entries[0].scoringOverride={
+   correctMarks:5,incorrectMarks:-1,unansweredMarks:0};
+ assert.equal(crossPaperMarksPriorities([a,changedItemRule]),null,
+   "An item-specific grading override must separate otherwise identical format cohorts");
 });
 
 test("F03: negative earned marks stay visible while progress width can be clamped for display",()=>{
