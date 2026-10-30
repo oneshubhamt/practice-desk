@@ -996,7 +996,22 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      {id:previous.id,attributes:["data-choice","data-bool","data-match","data-q","data-section","data-attempt","data-result-tab"]
        .filter(name=>previous.hasAttribute(name)).map(name=>[name,previous.getAttribute(name)] as const)}:null;
    root.classList.add("generic-workspace");
-   if(view==="learning"){learningDesk.show();return;}
+   if(view==="learning"){
+     // The Learning Desk owns its nested renders, but its route transition
+     // must still be announced and receive a predictable keyboard start.
+     // No repeated announcements on notebook edits or scheduler redraws.
+     const entering=lastScreenKey!=="learning";
+     lastScreenKey="learning";
+     lastDrawView="learning";
+     learningDesk.show();
+     if(entering){
+       const status=document.getElementById("screen-announcement");
+       if(status)status.textContent="Learning and spaced revision.";
+       const heading=root.querySelector<HTMLElement>("h1");
+       if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}
+     }
+     return;
+   }
    learningDesk.hide();
    const priorView=lastDrawView,priorPane=lastResultPane;
    root.innerHTML=view==="library"?listHTML():view==="history"?historyHTML([...records.values()].filter(isAttempt),packages,
