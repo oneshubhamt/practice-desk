@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { importCglBank } from "../src/content/import-cgl.ts";
-import { builtinCglPackages } from "../src/app/exam-package.ts";
+import { builtinCglPackages, configureCglPractice } from "../src/app/exam-package.ts";
 import { freezeAttempt, assertFrozenContent, restoreSession, chooseRecovered } from "../src/history/frozen.ts";
 import { startSession, transition } from "../src/engine/session.ts";
 import { scoreAttempt } from "../src/engine/scoring.ts";
@@ -23,8 +23,11 @@ test("frozen attempt survives a later changed key, paper or editorial state",()=
  assert.throws(()=>assertFrozenContent({...frozen,snapshot:{...frozen.snapshot,paperRevisionId:"wrong"}}),/Invalid or mismatched/);
 });
 test("saved strict session expires while app is closed, without fictitious foreground viewing",()=>{
- const saved=transition(first.paper,startSession(first.paper,0),{type:"VISIBILITY",nowMs:1000,visible:false});
- const restored=restoreSession(first.paper,JSON.parse(JSON.stringify(saved)),3600001,true);
+ // The actual strict CGL mode is automatic; the raw source package's
+ // manual timing contract intentionally waits for a user transition.
+ const strict=configureCglPractice(firstAssets,"strict",0);
+ const saved=transition(strict.paper,startSession(strict.paper,0),{type:"VISIBILITY",nowMs:1000,visible:false});
+ const restored=restoreSession(strict.paper,JSON.parse(JSON.stringify(saved)),3600001,true);
  assert.equal(restored.state.status,"completed");
  assert.equal(restored.state.elapsedMs,3600000);
  assert.equal(restored.state.foregroundMs,1000);
