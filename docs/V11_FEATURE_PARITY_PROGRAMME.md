@@ -1,6 +1,6 @@
 # v11 feature-parity restoration programme — Passes 11–16
 
-> **CURRENT, AUTHORITATIVE FEATURE-PARITY PROGRAMME · 30 October 2026 · PASSES 11–12 VERIFIED; PASSES 13–16 OPEN**
+> **CURRENT, AUTHORITATIVE FEATURE-PARITY PROGRAMME · 30 October 2026 · PASSES 11–13 VERIFIED; PASSES 14–16 OPEN**
 >
 > New source-to-source audit performed against frozen `baseline/v11` commit `e661822d865927e89a837790c1c6bc1cfc2562a6` and `overhaul` commit `5b9dce604faef10a714415341c7da5116bf6ff8a`. This document is the source of truth for **v11 feature parity** from Pass 11 onward, superseding the old [Pass 9 parity ledger](V11_PARITY_LEDGER.md). The plan was documentation-only at creation; Pass 11 was subsequently implemented and verified.
 >
@@ -82,15 +82,15 @@
 
 | ID | Severity | v11 behavior | Current overhaul finding | Source anchor | State |
 |---|---|---|---|---|---|
-| H01 | **P0/P1** | Delete all completed records with two destructive-action confirmations | New archive supports only individual delete | v11 200; new `history-page.ts` and `generic-ui.ts` 765–781 | OPEN |
-| H02 | P1 | Exact paper/edition dropdown filter | Archive search plus completion-status filter, no exact picker | v11 184–185; new `history-page.ts` | OPEN |
-| H03 | P1 | Storage quota/usage estimate via `navigator.storage.estimate()` | Missing from current History UI | v11 186; new `history-page.ts` | OPEN |
-| H04 | P1 | Explicit `Protect stored data` via `navigator.storage.persist()` | Missing current action | v11 187; new `history-page.ts` | OPEN |
-| H05 | P1 | Persist selected paper, edition, mode and practice section | New local preference schema persists only theme/font size; CGL mode and choice reset on reopen | v11 39–42,84,118–122; new `preferences.ts`, `generic-ui.ts` 256+ | OPEN |
-| H06 | P1 | History shows best adjusted %, papers practised | New counters replace these with attempts/status/observed accuracy | v11 184; new `history-page.ts` | OPEN |
-| H07 | P1 | History score-based progression for matching paper/mode | New trend charts observed answering accuracy for exact revisions; score progression absent | v11 173–181; new `history-page.ts` | OPEN |
-| H08 | P2/decision | Backup v1 import merges newer matching-ID records | Backup v3 import is additive/non-overwriting | v11 196–198; new `history/backup.ts`, `generic-ui.ts` | OPEN / DECISION |
-| H09 | P2 | Visible IndexedDB/fallback status panel in History | Failure banners exist; old status/quota panel not retained | v11 184; new `history-page.ts` | OPEN |
+| H01 | **P0/P1** | Delete all completed records with two destructive-action confirmations | New archive supports only individual delete | v11 200; new `history-page.ts` and `generic-ui.ts` 765–781 | DONE — Pass 13 atomic bulk |
+| H02 | P1 | Exact paper/edition dropdown filter | Archive search plus completion-status filter, no exact picker | v11 184–185; new `history-page.ts` | DONE — Pass 13 exact edition |
+| H03 | P1 | Storage quota/usage estimate via `navigator.storage.estimate()` | Missing from current History UI | v11 186; new `history-page.ts` | DONE — Pass 13 quota estimate |
+| H04 | P1 | Explicit `Protect stored data` via `navigator.storage.persist()` | Missing current action | v11 187; new `history-page.ts` | DONE — Pass 13 persistence request |
+| H05 | P1 | Persist selected paper, edition, mode and practice section | New local preference schema persists only theme/font size; CGL mode and choice reset on reopen | v11 39–42,84,118–122; new `preferences.ts`, `generic-ui.ts` 256+ | DONE — Pass 13 validated preferences |
+| H06 | P1 | History shows best adjusted %, papers practised | New counters replace these with attempts/status/observed accuracy | v11 184; new `history-page.ts` | DONE — Pass 13 adjusted metrics |
+| H07 | P1 | History score-based progression for matching paper/mode | New trend charts observed answering accuracy for exact revisions; score progression absent | v11 173–181; new `history-page.ts` | DONE — Pass 13 comparable marks trend |
+| H08 | P2/decision | Backup v1 import merges newer matching-ID records | Backup v3 import is additive/non-overwriting | v11 196–198; new `history/backup.ts`, `generic-ui.ts` | ACCEPTED VARIATION — additive backup v3 |
+| H09 | P2 | Visible IndexedDB/fallback status panel in History | Failure banners exist; old status/quota panel not retained | v11 184; new `history-page.ts` | DONE — Pass 13 storage panel |
 | H10 | EXCEPTION | Read previous v11 local IndexedDB/backup v1 | Clean break: new `practiceDesk.overhaul.v1` data and backup v3; no legacy migration | v11 17–20,89,196–198; new `DATA_MODEL.md` | **Accepted explicit exclusion**, unless user changes requirement |
 
 **Safety details for H01:** delete *only completed attempt* records; leave pending attempts, learning cards, imported packages and display settings untouched; support fallback/IndexedDB, stale tab conflicts, denied writes and backup confirmation. Do not silently replace additive v3 import behavior with risky overwrite: decide H08 explicitly.
@@ -100,15 +100,15 @@
 | ID | Severity | Difference or unverified property | Acceptance requirement | State |
 |---|---|---|---|---|
 | V01 | P1 | v11 header vs redesigned header and Display placement | Side-by-side desktop/mobile inspection; retain accessibility and keyboard access | UNVERIFIED |
-| V02 | P1 | v11 paper/date picker + explicit two-choice edition toggle vs combined dropdown | Restore clear edition distinction and inspect ease of selection | OPEN |
+| V02 | P1 | v11 paper/date picker + explicit two-choice edition toggle vs combined dropdown | Restore clear edition distinction and inspect ease of selection | FUNCTIONAL DONE — visual review Pass 15 |
 | V03 | P1 | v11 large custom A–D selection buttons vs native radio labels | Keep accessible native semantics **and** restore obvious visual affordance, keyboard shortcuts and image handling | PARTIAL (visual signoff pending) |
 | V04 | P1 | v11 review option highlights and status hierarchy vs generic response listing | Non-color accessible correct/incorrect/excluded visualization; R02 | PARTIAL — functional Pass 12 done; visual signoff Pass 15 |
 | V05 | P1 | v11 result max-marks/section table hierarchy vs new summary | Show equivalent metrics prominently; R03 | PARTIAL — functional Pass 12 done; visual signoff Pass 15 |
-| V06 | P1 | v11 history management information and storage panel vs new archive | H01–H09 available and readable on all target sizes | OPEN |
+| V06 | P1 | v11 history management information and storage panel vs new archive | H01–H09 available and readable on all target sizes | FUNCTIONAL DONE — visual review Pass 15 |
 | V07 | P1 | v11 templates included `aria-live="polite"` on `#app`; new template removes it | Verify dynamic announcements with AT; avoid chatty full-page live region if better targeted status regions | UNVERIFIED |
 | V08 | P1 | Responsive layouts structurally redesigned, not pixel-identical | Side-by-side desktop/tablet/phone screenshots, touch hit areas, no clipping, scroll/focus/zoom | UNVERIFIED |
 | V09 | P1 | Global fullscreen uses native API only | Restore v11 functional immersive fallback; E03–E04 | DONE (Pass 11) |
-| V10 | P2 | Theme two distinct Light/Dark buttons changed to one toggle | Either restore explicit selection or document/evaluate equivalent discoverability, screen-reader state | OPEN / DECISION |
+| V10 | P2 | Theme two distinct Light/Dark buttons changed to one toggle | Either restore explicit selection or document/evaluate equivalent discoverability, screen-reader state | FUNCTIONAL DONE — AT/visual review Pass 15 |
 
 **Visual audit boundary:** Both branches have responsive CSS; newer CSS includes focus indicators, dark-mode variables and responsive grids. **No pixel-parity, preference ranking or actual physical-device approval is inferred from CSS alone.** Source stylesheets have distinct DOM/selector architectures, so tests for element existence cannot stand in for screenshots. Visual design may improve while preserving functional floor; pixel-identical reimplementation is **not** required.
 
@@ -208,7 +208,7 @@ Remaining: <IDs still OPEN/UNVERIFIED; manual/device gates>
 - Historic Pass 9 acceptance establishes an earlier engineering milestone only; the old [parity ledger](V11_PARITY_LEDGER.md) overstates completeness and is superseded.
 - Pass 10 automated checks (Chromium, Firefox Playwright and Linux WebKit) were green on final historical HEAD `5b9dce6` [CI #40922144096](https://github.com/oneshubhamt/practice-desk/actions/runs/40922144096); **Linux WebKit is not actual Safari/iOS**.
 - Manual outstanding: real Firefox/Safari `file://`; physical Android/iOS; screen readers/AT; abrupt OS/browser termination; actual quota/eviction and recovery; thousands of cards/history on slower devices; direct side-by-side visual and user approval.
-- No production old-storage migration: explicitly waived `H10`; backup merge overwrite remains a decision `H08`, not a completed feature.
+- No production old-storage migration: explicitly waived `H10`. `H08` is accepted as a **safer variation**: checksum-verified backup v3 is additive rather than automatically replacing existing attempts.
 - This is a **planning and documentation pass only**. The source, generated HTML, `main` and `baseline/v11` are left untouched.
 
 ## 11. Live programme status
@@ -217,12 +217,12 @@ Remaining: <IDs still OPEN/UNVERIFIED; manual/device gates>
 |---|---|---|---|
 | 11 — Exam UX | DONE — tested | E01–E09 done; V09 done | CI #40940761995; device and visual gates remain |
 | 12 — Result fidelity | **DONE — source + real CGL and generic browser QA** | R01–R03/R09–R12 DONE; V04/V05 visual signoff pending | [CI #40988982138](https://github.com/oneshubhamt/practice-desk/actions/runs/40988982138) · 81/81 Node, Chromium, Firefox, Linux WebKit |
-| 13 — History & settings | PLANNED | H01–H09 OPEN; H10 exclusion | None yet |
-| 14 — Analytics | PLANNED | R04–R08/H07 OPEN | None yet |
+| 13 — History & settings | **DONE — source + browser QA** | H01–H07/H09 DONE, H08 safe variation, H10 exclusion; V02/V06/V10 visual pending | [CI #40992327902](https://github.com/oneshubhamt/practice-desk/actions/runs/40992327902) |
+| 14 — Analytics | PLANNED | R04–R08 OPEN; H07 already done | None yet |
 | 15 — Visual/AT | PLANNED | V01–V10 OPEN/UNVERIFIED | No screenshot/device signoff |
 | 16 — Independent final audit | PLANNED | NO PARITY SIGNOFF | Requires de novo source+browser review |
 
-**Next step:** Pass 12 — result and review fidelity, beginning with fresh direct-source comparison.
+**Next step:** Pass 14 — timing visits, speed labels, audit/typical filters, longest-question links and careful study recommendations. H07's score progression is already done.
 
 
 ## Pass 11 checkpoint — 30 October 2026
@@ -266,3 +266,24 @@ Remaining: <IDs still OPEN/UNVERIFIED; manual/device gates>
 **Audit:** Read frozen v11 `legacy.ts` history (lines 172–200), quota/persistence, deletion, backup merge and prefs; compared with current `history-page.ts`, `preferences.ts`, `generic-ui.ts`, `backup.ts`, scoring and exact-revision trends. H01–H09 are initially OPEN and H10 is an accepted exclusion; V02/V06/V10 need functional restore with visual signoff left for Pass 15.
 
 **Design:** Keep imported exams and all six question kinds. User-selected paper/revision/mode/section must persist in a separately validated local selection preference with safe fallback if the package was removed. Surface source versus reviewed edition explicitly for paired packages; do not replace the compatible `g-papers` picker or force CGL-centric assumptions. Bulk delete only completed attempt records, use *one* IndexedDB readwrite transaction with per-row optimistic version checks, or a single fallback localStorage replace with exact prior stamp. Require two confirmations; never delete learning cards, imported packages or pending attempts; report errors and do not claim success on failure. Quota/storage persistence are capability checks and report unavailable/denied outcomes, never promises. Keep checksum-verified v3 additive/non-overwriting import as the explicitly accepted H08/C03 difference and keep the H10 no-v11-migration exception. Calculate best adjusted % from frozen nominal eligible maximum; distinguish unlike modes. For comparable score progression use identical frozen paper/key/mode (not paper title alone), preserving existing observed accuracy. V10 restore explicit theme choice without removing the existing toggle. **Status: audit DONE; analysis DONE; implementation/open QA pending.**
+
+## Pass 13 five-step closure — 30 October 2026
+
+**1. Audit:** Compared frozen v11 `legacy.ts` history UI, controls, quota/persistent storage, selection settings, metrics, scored trends, backup merge and delete handlers (especially lines 39–42, 84, 172–200) to the current `overhaul` `generic-ui.ts`, `history-page.ts`, `preferences.ts`, `history/backup.ts`, scoring and persistence. Read the live parity programme and DATA_MODEL invariants first; the initial source gaps H01–H09 were recorded in the Pass 13 working checkpoint above.
+
+**2. Analyze:** Preserve one *generic* exam/history/learning runtime (not an SSC-specific replacement), all six response kinds, frozen paper/key/media and FSRS. Bulk delete must target only **completed** attempts, require **two confirmations**, and be one IndexedDB transaction with per-row optimistic revision/status checks; fallback uses single prior-stamp comparison and one localStorage replacement. Denied writes, stale tabs, canceled prompts and imported/learning/pending records must be safe. Device preferences identify exact paper/edition, mode and section and restore after asynchronous imported-package loading; missing/corrupted selections fall back safely. Browser quota/persistence are optional best effort. Score progression requires identical frozen paper revision, key hash, practice mode and real answered items. Preserve prior observed accuracy separately. The optional exam setup is included in integrity-covered backup v3 **without changing v3 version or rejecting older archives**. **H08/C03** intentionally retains additive, non-overwriting import. **H10/C02** remains an accepted no-v11-migration exclusion.
+
+**3. Implemented:**
+- `src/app/history-page.ts`: exact paper/revision/edition filter, papers-practised and best-adjusted metrics, comparable adjusted-score progression beside existing accuracy, storage backend/estimate/persistence and bulk-delete interface.
+- `src/app/history-metrics.ts`: policy-derived eligible adjusted percentages and exact-identity score trends, excluding unmeasured 0%-looking series.
+- `src/app/practice-selection.ts`: schema-validated device-local exam selection independent from display preferences; `generic-ui.ts` binds paper/edition/mode/section and restores imported exams after async package registration.
+- `src/app/generic-ui.ts`: double-confirm bulk deletion, atomic optimistic IDB/fallback writes, truthful failure/status messages, optional storage API reporting, and backup selection export/restore.
+- `src/history/backup.ts`: optional, validated, checksum-hashed exam selection in existing v3 format; additive merge and older v3 compatibility preserved.
+- `src/template.html`, `src/app/bootstrap.ts`, `src/styles/app.css`: explicit accessible Light/Dark selection alongside original toggle and responsive history storage/management.
+- `tests/pass13-history.test.mjs`, `scripts/pass13-history.mjs`, `.github/workflows/ci.yml`: strict unit and direct browser acceptance tests.
+
+**4. Objective-by-objective check:** H01 DONE: only completed attempts; two confirms; cancellation; one IDB readwrite transaction with whole-batch rollback under competing tab, quota-rejected fallback changes nothing; pending, imported packages, learning cards survive. H02 DONE: exact revision filter composed with search/status/sort, including imported exams. H03 DONE: approximate browser-wide storage usage/quota with denied/unsupported reporting. H04 DONE: persistence request with grant/denial/unavailable messages, no false guarantee. H05 DONE: validated saved paper/edition/mode/section, including asynchronous imported-exam reload and optional backup restoration. H06 DONE: papers practised and eligible-score best %, with cross-mode caveat. H07 DONE: frozen same paper/key/mode adjusted score trend, answers required, observed accuracy kept separate. H08/C03 **accepted safe non-overwrite variation**. H09 DONE: explicit IndexedDB/fallback health panel, quota, storage and backup controls. H10/C02 **accepted exclusion**. V02/V06/V10 functionally restored but **visual/physical-device/AT signoff pending Pass 15**.
+
+**5. Targeted QA:** [CI #40992327902](https://github.com/oneshubhamt/practice-desk/actions/runs/40992327902) completed successfully on tested source HEAD `d5909a13`: **85 Node tests, strict TypeScript, Chromium `file://` main smoke and Pass 11/12/13 real-browser workflows, cross-browser Firefox and Linux WebKit offline suites**, generated HTML self-contained and verified. Pass 13's browser QA directly tested paired edition picker, theme buttons, choice/mode/section persistence and corrupt recovery, imported generic paper persistence after async reload, history metrics/filter/score trend, denied storage estimate/persist, double-confirm cancel, a genuinely competing record revision forcing full transaction rollback, IndexedDB bulk deletion, quota-denied fallback unchanged plus successful retry, preserved pending/cards/packages, optional checksum-covered v3 selection and additive backup restore without overwriting existing IDs. The older main smoke assertions were corrected to expect the expanded history metrics, semantic theme state and deliberate persistence of imported exam selection; none of their original behaviors was removed.
+
+**Release boundary:** H01–H07/H09 have directly supported functional acceptance; H08/H10 are explicit accepted differences. R04–R08 remain for Pass 14. V02/V06/V10 plus overall visual, physical device and assistive technology testing remain for Pass 15; independent full source parity remains Pass 16. No merge or full v11 release signoff; `main` and `baseline/v11` untouched.
