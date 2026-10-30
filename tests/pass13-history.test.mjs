@@ -68,3 +68,17 @@ test("adjusted score trends require exact frozen key, revision and practice mode
   {status:"all",sort:"newest",search:""},false,false,"");
  assert.match(page,/Repeat the same frozen paper, key and mode/);
 });
+
+test("old v3 backups remain compatible and optional exam setup is checksum-covered",async()=>{
+ const { makeBackup,verifyBackup }=await import("../src/history/backup.ts");
+ const prefs={schema:1,dark:false,scale:100};
+ const old=makeBackup([],prefs,"2026-10-30T00:00:00.000Z");
+ assert.equal(old.version,3);
+ assert.equal(verifyBackup(old).selection,undefined);
+ const selection={schema:1,paperRevisionId:"source-revision:x",mode:"single",section:2};
+ const newer=makeBackup([],prefs,"2026-10-30T00:00:00.000Z",selection);
+ assert.deepEqual(verifyBackup(newer).selection,selection);
+ const damaged=structuredClone(newer);
+ damaged.selection.section=3;
+ assert.throws(()=>verifyBackup(damaged),/integrity/i);
+});
