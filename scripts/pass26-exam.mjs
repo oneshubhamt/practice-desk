@@ -77,6 +77,10 @@ async function selectQuestion(old,now,n){
  await now.locator('[data-q="'+q+'"]').click();
 }
 async function sample(old,now,screen,viewport){
+ // Element clicks can scroll the document. Geometry must compare the real
+ // initial viewport from scroll Y=0, not Playwright's scrolled click state.
+ await old.evaluate(()=>window.scrollTo({top:0,behavior:"instant"}));
+ await now.evaluate(()=>window.scrollTo({top:0,behavior:"instant"}));
  const selectors={
   old:{question:".question",choice:".choices .choice",next:"#next",flag:"#mark"},
   now:{question:".exam-question",choice:".exam-question .generic-choice",
