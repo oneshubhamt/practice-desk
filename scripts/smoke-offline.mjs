@@ -141,7 +141,9 @@ try{
  await page.locator("#g-library").click();
  await page.locator("#g-history").click();
  await page.getByRole("heading",{name:"History & insights"}).waitFor();
- fail(await page.locator(".history-summary .summary-stat").count()===4,
+ fail(await page.locator(".history-summary .summary-stat").count()===6&&
+   (await page.locator(".history-summary").innerText()).includes("Papers practised")&&
+   (await page.locator(".history-summary").innerText()).includes("Best adjusted %"),
    "History statistics missing");
  await page.locator("#g-filter").selectOption("complete");
  fail(await page.locator('[data-attempt="'+cgl.id+'"]').count()===1,
