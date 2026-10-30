@@ -25,6 +25,7 @@ import { reviewMatch, reviewFiltersHTML, resultTabsHTML, sectionPaceHTML, timing
 import { addLearningCard, validateLearningCard } from "../learning/learning.ts";
 import type { LearningCard } from "../learning/learning.ts";
 import { readDisplayPreferences, writeDisplayPreferences, SETTINGS_EVENT } from "./preferences.ts";
+import { readPracticeSelection,writePracticeSelection } from "./practice-selection.ts";
 
 const escapeText=(s:unknown):string=>String(s??"").replace(/[&<>"']/g,c=>
   ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" })[c]??c);
@@ -279,7 +280,18 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  const records=new Map<string,RecordItem>();
  let choice=[...packages.values()].reverse().find(p=>p.paper.edition==="reviewed")?.paper.id??(packages.keys().next().value as string);
  let cglMode:CglPracticeMode="strict", singleSection=0;
-  let historyFilter:HistoryStatus="all",historySort:HistorySort="newest",historySearch="";
+ const storedSelection=readPracticeSelection();
+ if(storedSelection){
+   if(packages.has(storedSelection.paperRevisionId))choice=storedSelection.paperRevisionId;
+   cglMode=storedSelection.mode;
+   singleSection=Math.min(storedSelection.section,
+     Math.max(0,(packages.get(choice)?.paper.sections.length??1)-1));
+ }
+ const saveSelection=():void=>{
+   try{writePracticeSelection({schema:1,paperRevisionId:choice,mode:cglMode,section:singleSection});}
+   catch{warning="Exam setup could not be saved on this device; current selection still works.";}
+ };
+  let historyFilter:HistoryStatus="all",historySort:HistorySort="newest",historySearch="",historyPaper="all";
   let resultTab:ResultTab="overview";
   let reviewFilter:ReviewFilter="all";
  let attempt:GenericAttempt|null=null, view:"library"|"history"|"exam"|"result"|"learning"="library";
@@ -470,6 +482,76 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      draw();
    }catch(error){notice(error instanceof Error?error.message:"Deletion failed");}
  };
+ const deleteAllCompleted=async():Promise<void>=>{
+   if(storageFault||fallbackConflict){notice("Storage is locked. Export recovery data and reopen before deletion.");return;}
+   const completed=[...records.values()].filter((r):r is GenericAttempt=>
+     isAttempt(r)&&r.finishedAt!==null);
+   if(!completed.length)return;
+   if(!confirm("Delete all "+completed.length+" completed attempts? Export a backup first. This cannot be undone."))return;
+   if(!confirm("Confirm permanent deletion of completed test history. In-progress attempts, imported papers and learning cards will remain."))return;
+   try{
+     await writeQueue;
+     if(storageFault||fallbackConflict)throw Error("Storage changed during deletion; reopen before editing.");
+     if(db){
+       await new Promise<void>((resolve,reject)=>{
+         const tx=db!.transaction("attempts","readwrite");
+         const store=tx.objectStore("attempts");
+         let conflict:Error|null=null;
+         for(const saved of completed){
+           const request=store.get(saved.id);
+           request.onsuccess=()=>{
+             try{
+               const current=request.result as RecordItem|undefined;
+               assertWriteVersion(current,saved.saveRevision??0);
+               if(!isAttempt(current)||current.finishedAt===null)
+                 throw Error("Completed status changed in another tab; deletion cancelled");
+               store.delete(saved.id);
+             }catch(error){conflict=error as Error;tx.abort();}
+           };
+         }
+         tx.oncomplete=()=>resolve();
+         tx.onerror=()=>reject(conflict??tx.error??Error("Bulk deletion failed"));
+         tx.onabort=()=>reject(conflict??tx.error??Error("Bulk deletion aborted"));
+       });
+     }else{
+       if(localStorage.getItem(storageKey)!==fallbackStamp)
+         throw Error("Another tab changed fallback history; reopen before deleting");
+       const ids=new Set(completed.map(r=>r.id));
+       const updated=JSON.stringify([...records.values()].filter(r=>!ids.has(r.id)));
+       localStorage.setItem(storageKey,updated);fallbackStamp=updated;
+     }
+     for(const record of completed)records.delete(record.id);
+     if(attempt&&completed.some(r=>r.id===attempt!.id))attempt=null;
+     notice("Deleted "+completed.length+" completed attempts. Other saved data was preserved.");
+   }catch(error){
+     notice("No completed history was cleared: "+(error instanceof Error?error.message:"Storage failed"));
+   }
+ };
+ const showStorageEstimate=async():Promise<void>=>{
+   const node=root.querySelector<HTMLElement>("#g-storage-quota");
+   if(!node)return;
+   try{
+     if(!navigator.storage?.estimate){node.textContent="Storage estimate unavailable in this browser or file context.";return;}
+     const estimate=await navigator.storage.estimate();
+     if(!node.isConnected)return;
+     const miB=(n:number)=>(n/1048576).toFixed(1)+" MiB";
+     node.textContent="Browser storage: "+(typeof estimate.usage==="number"?miB(estimate.usage):"unknown usage")+
+       (typeof estimate.quota==="number"?" of approximately "+miB(estimate.quota):" (quota unknown)")+
+       ". This is browser-wide, not just Practice Desk.";
+   }catch{if(node.isConnected)node.textContent="Storage estimate unavailable in this browser or file context.";}
+ };
+ const requestPersistentStorage=async():Promise<void>=>{
+   const node=root.querySelector<HTMLElement>("#g-storage-persist-status");
+   if(!node)return;
+   try{
+     if(!navigator.storage?.persist){node.textContent="Persistent storage requests are unavailable here. Keep exported backups.";return;}
+     const granted=await navigator.storage.persist();
+     if(node.isConnected)node.textContent=granted?"Browser granted persistent storage. Still export backups.":
+       "Persistent storage was not granted. Keep exported backups.";
+   }catch{
+     if(node.isConnected)node.textContent="Browser could not request persistent storage. Keep exported backups.";
+   }
+ };
  const learningDesk=createLearningDesk(root,{
    cards:()=>[...records.values()].filter(isLearning),
    attempts:()=>[...records.values()].filter(isAttempt),
@@ -541,6 +623,10 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    const options=[...packages.values()].map(p=>
       '<option value="'+escapeText(p.paper.id)+'"'+(choice===p.paper.id?" selected":"")+'>'+
       escapeText(p.title)+'</option>').join("");
+   const editions=selected?[...packages.values()].filter(p=>p.examId===selected.examId&&
+     p.paper.paperId===selected.paper.paperId):[];
+   const paired=editions.some(p=>p.paper.edition==="source")&&
+     editions.some(p=>p.paper.edition==="reviewed");
    return '<div class="generic-heading home-heading"><div><span class="eyebrow">OFFLINE PRACTICE STUDIO</span>'+
      '<h1>Test library</h1><p class="muted">Choose a paper, work in exam conditions and learn from every attempt.</p></div>'+
      '<button class="btn quiet" id="g-history">History & insights →</button></div>'+
@@ -554,7 +640,13 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          .map(([name,value])=>'<div class="home-stat"><small>'+escapeText(name)+'</small><b>'+escapeText(value)+'</b></div>').join("")+
      '</div>'+
      '<div class="generic-layout home-grid"><section class="panel pad home-picker"><div class="section-header"><span class="eyebrow">01 · SET UP</span><h2>Start a practice session</h2></div>'+
-     '<label class="picker" for="g-papers">Paper and edition</label><select id="g-papers">'+options+'</select>'+
+     '<label class="picker" for="g-papers">Paper</label><select id="g-papers">'+options+'</select>'+
+     (paired?'<label class="picker" for="g-edition">Edition</label>'+
+       '<select id="g-edition" aria-label="Selected paper edition">'+
+       editions.filter(p=>p.paper.edition==="source"||p.paper.edition==="reviewed").map(p=>
+         '<option value="'+escapeText(p.paper.id)+'"'+(choice===p.paper.id?" selected":"")+'>'+
+         (p.paper.edition==="source"?"Original source":"Reviewed corrections")+
+         '</option>').join("")+'</select>':"")+
      (cgl?'<h3 class="subhead">Practice mode</h3><div class="generic-modes" role="group" aria-label="SSC CGL practice mode">'+
       ([["strict","Exam simulation","4 locked sections · 15 minutes each"],["free","Flexible full paper","60 minutes · move between sections"],
        ["single","Section practice","25 questions · 15 minutes"]] as const).map(([key,title,detail])=>
@@ -883,7 +975,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    if(view==="learning"){learningDesk.show();return;}
    learningDesk.hide();
    root.innerHTML=view==="library"?listHTML():view==="history"?historyHTML([...records.values()].filter(isAttempt),packages,
-     {status:historyFilter,sort:historySort,search:historySearch},loading,fallbackConflict||storageFault,warning):view==="exam"?examHTML():resultHTML();
+     {status:historyFilter,sort:historySort,search:historySearch,paperRevisionId:historyPaper},
+     loading,fallbackConflict||storageFault,warning,db?"indexeddb":"fallback"):view==="exam"?examHTML():resultHTML();
    if(focusKey){
      const controls=[...root.querySelectorAll<HTMLElement>("button,input,select,textarea")];
      const target=focusKey.id?controls.find(item=>item.id===focusKey.id):
@@ -900,6 +993,9 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    if(view==="history"){
      root.querySelector<HTMLButtonElement>("#g-library")!.onclick=()=>{view="library";draw();};
      root.querySelector<HTMLSelectElement>("#g-filter")!.onchange=e=>{historyFilter=(e.target as HTMLSelectElement).value as HistoryStatus;draw();};
+     root.querySelector<HTMLSelectElement>("#g-history-paper")!.onchange=e=>{
+       historyPaper=(e.target as HTMLSelectElement).value;draw();
+     };
      root.querySelector<HTMLSelectElement>("#g-history-sort")!.onchange=e=>{historySort=(e.target as HTMLSelectElement).value as HistorySort;draw();};
      root.querySelector<HTMLInputElement>("#g-history-search")!.oninput=e=>{
        const search=(e.target as HTMLInputElement).value;
@@ -913,20 +1009,29 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      };
      root.querySelectorAll<HTMLButtonElement>("[data-delete]").forEach(button=>button.onclick=()=>{void removeSavedAttempt(button.dataset.delete??"");});
      root.querySelectorAll<HTMLButtonElement>("[data-attempt]").forEach(button=>button.onclick=()=>openSaved(button.dataset.attempt??""));
+     root.querySelector<HTMLButtonElement>("#g-delete-completed")!.onclick=()=>{void deleteAllCompleted();};
+     root.querySelector<HTMLButtonElement>("#g-storage-persist")!.onclick=()=>{void requestPersistentStorage();};
+     void showStorageEstimate();
      return;
    }
    if(view==="library"){
      root.querySelector<HTMLButtonElement>("#g-learning")!.onclick=()=>{view="learning";draw();};
      root.querySelector<HTMLSelectElement>("#g-papers")!.onchange=e=>{
-       choice=(e.target as HTMLSelectElement).value;draw();
+       choice=(e.target as HTMLSelectElement).value;
+       singleSection=Math.min(singleSection,Math.max(0,(packages.get(choice)?.paper.sections.length??1)-1));
+       saveSelection();draw();
+     };
+     const edition=root.querySelector<HTMLSelectElement>("#g-edition");
+     if(edition)edition.onchange=()=>{
+       choice=edition.value;saveSelection();draw();
      };
      root.querySelector<HTMLButtonElement>("#g-history")!.onclick=()=>{view="history";draw();};
      root.querySelector<HTMLButtonElement>("#g-history-recent")!.onclick=()=>{view="history";draw();};
      root.querySelectorAll<HTMLButtonElement>("[data-mode]").forEach(button=>button.onclick=()=>{
-       cglMode=button.dataset.mode as CglPracticeMode;draw();
+       cglMode=button.dataset.mode as CglPracticeMode;saveSelection();draw();
      });
      const single=root.querySelector<HTMLSelectElement>("#g-single-section");
-     if(single)single.onchange=()=>{singleSection=Number(single.value);};
+     if(single)single.onchange=()=>{singleSection=Number(single.value);saveSelection();};
      root.querySelector<HTMLButtonElement>("#g-start")!.onclick=()=>{
        const p=packages.get(choice);if(!p)return;
        const unfinished=[...records.values()].filter((row):row is GenericAttempt=>
@@ -964,7 +1069,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          const pkg=validateExamPackage(JSON.parse(await file.text()));
          if(packages.has(pkg.paper.id))throw new Error("Paper revision ID already exists. Supply a new revision ID.");
          if(!await save({recordType:"generic-package",id:"generic-package:"+pkg.paper.id,bundle:pkg}))return;
-         packages.set(pkg.paper.id,pkg);choice=pkg.paper.id;
+         packages.set(pkg.paper.id,pkg);choice=pkg.paper.id;singleSection=0;saveSelection();
          notice("Package validated and imported.");
        }catch(error){notice(error instanceof Error?error.message:"Invalid exam package");}
      };
