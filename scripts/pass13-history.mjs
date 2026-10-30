@@ -99,7 +99,7 @@ try{
   "Checksum-verified v3 backup format changed");
  const prompts=[];
  page.on("dialog",d=>{if(d.message().includes("Delete all")||d.message().includes("Confirm permanent deletion")){
-  prompts.push(d.message());void d.accept();}});
+  prompts.push(d.message());void d.accept();}else if(d.message().startsWith("Import ")){void d.accept();}});
  await page.locator("#g-delete-completed").click();
  await page.waitForFunction(()=>document.querySelector("#g-delete-completed")?.disabled===true);
  yes(prompts.length===2,"Bulk deletion must require two confirmations");
@@ -111,7 +111,6 @@ try{
  // Additive restoration can reintroduce deleted completed items; existing
  // pending/card/package IDs must remain untouched.
  const pendingBefore=after.find(x=>x.id===pending.id);
- page.once("dialog",d=>d.accept());
  await page.locator("#g-history-file").setInputFiles({name:"backup.json",mimeType:"application/json",
   buffer:Buffer.from(JSON.stringify(exported))});
  await page.waitForFunction(()=>document.querySelector("#g-delete-completed")?.disabled===false);
