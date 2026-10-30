@@ -363,6 +363,10 @@ export function validatePaperRevision(
   const navigation = record(paper["navigation"], "paperRevision.navigation");
   oneOf(navigation["questionNavigation"], ["free", "forward-only"] as const, "paperRevision.navigation.questionNavigation");
   oneOf(navigation["sectionNavigation"], ["free", "sequential-locked"] as const, "paperRevision.navigation.sectionNavigation");
+  // A sectional clock is bound to one active section at a time. Free
+  // cross-section navigation would misattribute time and violate section locks.
+  if (timingKind === "sectional" && navigation["sectionNavigation"] !== "sequential-locked")
+    throw new Error("paperRevision.navigation.sectionNavigation: sectional timers require sequential-locked sections");
   for (const field of ["allowFlagging", "allowReview"] as const) {
     if (typeof navigation[field] !== "boolean") throw new Error("paperRevision.navigation." + field + ": expected a boolean");
   }
