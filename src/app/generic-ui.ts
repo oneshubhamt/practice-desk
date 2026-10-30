@@ -689,8 +689,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    const selectedNumbers=new Set(configured?.questions.map(q=>q.questionId.split(":").at(-1))??[]);
    const preflight=configured?examPreflight(configured,{
      builtinCgl:cgl,
-     reviewedPatchCount:cgl?Object.keys(patches[selected!.paper.paperId]??{})
-       .filter(id=>selectedNumbers.has(id)).length:undefined
+     ...(cgl?{reviewedPatchCount:Object.keys(patches[selected!.paper.paperId]??{})
+       .filter(id=>selectedNumbers.has(id)).length}:{})
    }):null;
    const count=selected?.paper.sections.reduce((n,z)=>n+z.questionRevisionIds.length,0)??0;
    const modeLabel=cgl?cglMode==="strict"?"Exam simulation":cglMode==="free"?"Full paper practice":"Section practice":"Custom examination";
