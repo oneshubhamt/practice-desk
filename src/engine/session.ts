@@ -11,6 +11,10 @@ export interface SessionState {
   readonly sectionElapsedMs: number;
   readonly foregroundMs: number;
   readonly responses: readonly AttemptResponseRecord[];
+  /** Optional entry counters, present only for attempts begun after Pass 14.
+   * Previous attempts stay absent: duration/answer changes cannot reconstruct visits.
+   */
+  readonly questionVisits?: readonly { readonly questionRevisionId:QuestionRevisionId;readonly count:number }[];
   readonly completedSections: readonly number[];
   readonly visible: boolean;
   /** Monotonic time origin for the current live process; never persist this as a restore deadline. */
@@ -45,14 +49,23 @@ export function startSession(paper: PaperRevision, nowMs: number): SessionState 
     status: "running", sectionIndex: 0, questionIndex: 0, elapsedMs: 0,
     sectionElapsedMs: 0, foregroundMs: 0, responses: [], completedSections: [],
     visible: true, clockMs: nowMs,
+    questionVisits:[{questionRevisionId:paper.sections[0]!.questionRevisionIds[0]!,count:1}],
   };
+}
+/** Count entering a different question, never timing ticks or response edits. */
+function enterQuestion(state:SessionState,id:QuestionRevisionId):SessionState{
+ if(!state.questionVisits)return state;
+ const previous=state.questionVisits.find(row=>row.questionRevisionId===id);
+ const item={questionRevisionId:id,count:(previous?.count??0)+1};
+ return {...state,questionVisits:[...state.questionVisits.filter(row=>row.questionRevisionId!==id),item]};
 }
 function advance(paper: PaperRevision, state: SessionState): SessionState {
   const completedSections = [...state.completedSections, state.sectionIndex];
   const next = state.sectionIndex + 1;
   return next >= paper.sections.length
     ? { ...state, completedSections, status: "completed" }
-    : { ...state, completedSections, sectionIndex: next, questionIndex: 0, sectionElapsedMs: 0 };
+    : enterQuestion({ ...state, completedSections, sectionIndex: next, questionIndex: 0, sectionElapsedMs: 0 },
+      paper.sections[next]!.questionRevisionIds[0]!);
 }
 function sectionLimit(paper: PaperRevision, sectionIndex: number): number | null {
   if (paper.timing.kind !== "sectional") return null;
@@ -128,8 +141,10 @@ export function transition(paper: PaperRevision, state: SessionState, event: Ses
     if (paper.navigation.questionNavigation === "forward-only" &&
         (event.sectionIndex < current.sectionIndex ||
          (event.sectionIndex === current.sectionIndex && event.questionIndex < current.questionIndex))) return current;
-    return { ...current, sectionIndex: event.sectionIndex, questionIndex: event.questionIndex,
-      sectionElapsedMs: event.sectionIndex === current.sectionIndex ? current.sectionElapsedMs : 0 };
+    if(event.sectionIndex===current.sectionIndex&&event.questionIndex===current.questionIndex)return current;
+    return enterQuestion({ ...current, sectionIndex: event.sectionIndex, questionIndex: event.questionIndex,
+      sectionElapsedMs: event.sectionIndex === current.sectionIndex ? current.sectionElapsedMs : 0 },
+      section.questionRevisionIds[event.questionIndex]!);
   }
   const id = questionId(paper, current);
   const previous = record(current, id);

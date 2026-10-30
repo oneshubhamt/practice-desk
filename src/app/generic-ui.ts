@@ -124,6 +124,14 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
    throw new Error("Unfinished attempt has a completed session");
  const questionMap=new Map(value.frozen.questions.map(q=>[q.id,q]));
  const allowed=new Set(paper.sections.flatMap(section=>section.questionRevisionIds));
+ if(value.state.questionVisits!==undefined){
+   const visits=value.state.questionVisits;
+   if(!Array.isArray(visits)||visits.length===0||visits.length>allowed.size||
+      new Set(visits.map(row=>row?.questionRevisionId)).size!==visits.length||
+      visits.some(row=>!row||!allowed.has(row.questionRevisionId)||
+        !Number.isSafeInteger(row.count)||row.count<1||row.count>1000000))
+     throw new Error("Invalid saved question visit history");
+ }
  const seen=new Set<string>();
  for(const row of value.state.responses){
    if(!row || typeof row.questionRevisionId!=="string" ||
