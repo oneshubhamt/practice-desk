@@ -305,7 +305,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
   let reviewFilter:ReviewFilter="all";
  let attempt:GenericAttempt|null=null, view:"library"|"history"|"exam"|"result"|"learning"="library";
  // Live-region updates depend on actual route/question changes, not timer ticks.
- let lastScreenKey="",lastDrawView:typeof view|null=null,lastResultPane:ResultTab="overview";
+ let lastScreenKey="",lastDrawView:"library"|"history"|"exam"|"result"|"learning"|null=null,lastResultPane:ResultTab="overview";
  let db:IDBDatabase|null=null, warning="",disposed=false, loading=true, writeQueue=Promise.resolve();
  let lastTimerSave=0;
  let fallbackStamp:string|null=null, fallbackConflict=false, storageFault=false;
@@ -1014,8 +1014,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        " of "+(currentSection?.questionRevisionIds.length??0)+".":
        view==="result"?"Results. "+(resultTab==="overview"?"Performance overview":
          resultTab==="review"?"Question review":"Question timing ledger")+".": 
-       view==="history"?"History and insights.":
-       view==="learning"?"Learning and revision.":"Test library.";
+       view==="history"?"History and insights.":"Test library.";
      const announcer=document.getElementById("screen-announcement");
      if(announcer)announcer.textContent=text;
    }
