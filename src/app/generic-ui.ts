@@ -679,7 +679,10 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        ["options, response rules or media"]:[]),
      ...(JSON.stringify(entry.sourceAnswer)!==JSON.stringify(currentAnswer)?["answer key"]:[])
    ];
-   return '<details class="change-log source-review"><summary>Compare with original source edition</summary>'+
+   return '<details class="change-log source-review"><summary>'+
+     (saved.frozen.snapshot.examId==="ssc-cgl"?
+       "Compare with original PDF version":"Compare with original source edition")+
+     '</summary>'+
      '<div class="change-body"><p class="fine"><b>Original source revision</b>'+
        (original.editorial.sourcePage?' · Source page '+original.editorial.sourcePage:"")+
        ' · Published key shown for provenance, not as a score adjustment.</p>'+
@@ -765,7 +768,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      ' · '+(attempt.finishedAt?new Date(attempt.finishedAt).toLocaleString():"")+'</p>'+
      (attempt.completionReason?'<span class="tag">'+escapeText(
        attempt.completionReason==="time-expired"?"Time expired":
-       attempt.completionReason==="section-submitted"?"Final section submitted":"Submitted by user")+'</span>':"")+
+       attempt.completionReason==="section-submitted"?"Submitted early":"Submitted by user")+'</span>':"")+
      '</div>'+
      '<div class="row"><button class="btn quiet" id="g-history-results">History & insights</button>'+
      '<button class="btn" id="g-library">Library</button></div></div>'+
