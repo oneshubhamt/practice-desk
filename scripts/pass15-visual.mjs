@@ -47,8 +47,9 @@ async function contrastPairs(page){
  return page.evaluate(()=>{
   const styles=getComputedStyle(document.documentElement);
   const hex=(name)=>{
-   const value=styles.getPropertyValue(name).trim().replace("#","");
-   if(!/^[a-fA-F0-9]{6}$/.test(value))throw Error("Missing six-digit palette token: "+name);
+   let value=styles.getPropertyValue(name).trim().replace("#","");
+   if(/^[a-fA-F0-9]{3}$/.test(value))value=[...value].map(c=>c+c).join("");
+   if(!/^[a-fA-F0-9]{6}$/.test(value))throw Error("Invalid color palette token: "+name);
    return [0,2,4].map(i=>parseInt(value.slice(i,i+2),16)/255);
   };
   const lum=(v)=>v.reduce((total,n,i)=>{
