@@ -16,6 +16,8 @@ test("one engine supports strict, flexible and single CGL policies",()=>{
  const free=configureCglPractice(standard,"free");
  const single=configureCglPractice(standard,"single",2);
  assert.equal(strict.paper.timing.kind,"sectional");
+ assert.equal(strict.paper.timing.transition,"automatic","Actual strict mode must not inherit raw manual source transition");
+ assert.notEqual(strict.paper.id,standard.paper.id,"Derived strict policy must have distinct frozen revision identity");
  assert.equal(free.paper.timing.kind,"whole-paper");
  assert.equal(free.paper.sections.length,4);
  assert.equal(single.paper.sections.length,1);
