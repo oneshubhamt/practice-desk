@@ -123,6 +123,15 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
    throw new Error("Completed attempt has an unfinished session");
  if(value.finishedAt===null && value.state.status==="completed")
    throw new Error("Unfinished attempt has a completed session");
+ if(!["running","paused","section-expired","completed"].includes(value.state.status))
+   throw new Error("Invalid saved session status");
+ if(value.state.status==="section-expired"){
+   if(paper.timing.kind!=="sectional"||paper.timing.transition!=="manual")
+     throw new Error("Expired-section state requires manual sectional timing");
+   const limit=paper.timing.sectionLimits.find(x=>x.sectionId===paper.sections[value.state.sectionIndex]?.id);
+   if(limit?.durationMs==null||value.state.sectionElapsedMs!==limit.durationMs)
+     throw new Error("Expired-section state must be exactly at its section time limit");
+ }
  const questionMap=new Map(value.frozen.questions.map(q=>[q.id,q]));
  const allowed=new Set(paper.sections.flatMap(section=>section.questionRevisionIds));
  if(value.state.questionVisits!==undefined){
@@ -207,6 +216,8 @@ export function renderModelExam(
    const expired=state.status==="section-expired";
    const lockedWhole=paper.timing.kind==="whole-paper"&&paper.navigation.sectionNavigation==="sequential-locked";
    const hasNextSection=state.sectionIndex < paper.sections.length-1;
+   const untimedSection=paper.timing.kind==="sectional"&&
+     paper.timing.sectionLimits.find(limit=>limit.sectionId===section.id)?.durationMs===null;
    const progressValue=timeLimit!==null&&timeLimit>0?
      Math.min(100,100*elapsed/timeLimit):Math.min(100,100*answered/Math.max(1,total));
    const isLow=remaining!==null&&remaining<=60000;
@@ -256,9 +267,9 @@ export function renderModelExam(
      (paper.timing.kind!=="untimed"&&paper.timing.pausePolicy==="allowed"?
       '<button class="btn" id="g-pause"'+(expired?" disabled":"")+'>'+(state.status==="paused"?"Resume timer":"Pause timer")+'</button>':"")+
      '<button class="btn danger" id="g-submit"'+(state.status==="paused"||
-       (paper.timing.kind==="sectional"&&!paper.timing.allowEarlySubmit&&!expired)?" disabled":"")+'>'+
+       (paper.timing.kind==="sectional"&&!paper.timing.allowEarlySubmit&&!expired&&!untimedSection)?" disabled":"")+'>'+
       (expired?(hasNextSection?"Continue to next section":"Finish expired exam"):
-        paper.timing.kind==="sectional"?"Submit section":
+        paper.timing.kind==="sectional"?(untimedSection?"Finish untimed section":"Submit section"):
         lockedWhole&&hasNextSection?"Finish section →":"Submit exam")+'</button></div></section>'+
      '<aside class="panel pad exam-sidebar"><div class="row between"><h3>Question navigator</h3><span class="fine">'+
        section.questionRevisionIds.length+' questions</span></div>'+
