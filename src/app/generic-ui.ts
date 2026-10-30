@@ -1386,6 +1386,14 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        }
      }catch{warning="Browser storage is unavailable; attempts may not survive a reload.";}
    }
+   // The selected exam may be an imported package, unavailable until the
+   // asynchronous IndexedDB/fallback package inventory has finished loading.
+   if(storedSelection&&packages.has(storedSelection.paperRevisionId)){
+     choice=storedSelection.paperRevisionId;
+     cglMode=storedSelection.mode;
+     singleSection=Math.min(storedSelection.section,
+       Math.max(0,(packages.get(choice)?.paper.sections.length??1)-1));
+   }
    loading=false;
    if(!disposed)draw();
  })();
