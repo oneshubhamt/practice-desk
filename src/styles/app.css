@@ -461,3 +461,16 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
 }
 .generic-workspace h2{font-size:calc(19px * var(--type-scale))}
 .generic-workspace h3{font-size:calc(15px * var(--type-scale))}
+
+/* Pass 15 screenshot audit: mobile controls previously wrapped the immersive
+   toggle onto a whole extra line above the question. Keep all three usable. */
+@media(min-width:301px) and (max-width:550px){
+ .exam-header{padding-bottom:10px}
+ .exam-header-actions{width:100%;display:flex;flex-wrap:nowrap;justify-content:space-between;gap:6px}
+ .exam-header-actions .btn{padding:7px 8px;min-height:42px;font-size:12px}
+ .exam-header-actions #g-exam-full{white-space:nowrap}
+ .exam-clock{min-width:91px;padding:7px 8px}
+ .exam-clock strong{font-size:21px}
+ .generic-sections,.exam-sections{margin-top:9px!important;margin-bottom:11px!important}
+ .exam-progress{margin-bottom:9px}
+}
