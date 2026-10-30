@@ -48,13 +48,13 @@
 | Pass | Focus | Primary targets | Current status |
 |---|---|---|---|
 | 11 | Exam experience, keyboard, fullscreen, timer and navigation | E01–E09 DONE | DONE — [CI #40940761995](https://github.com/oneshubhamt/practice-desk/actions/runs/40940761995) |
-| 12 | Question review, original-version diff, correct/incorrect styling, score max | R01–R03, R09–R12 | PLANNED |
+| 12 | **Generic result/review parity**: source revision, correct/wrong option states, scoring denominator, solutions, completion labels | R01–R03, R09–R12 DONE; V04/V05 visual approval pending | **COMPLETED** — [CI #40988982138](https://github.com/oneshubhamt/practice-desk/actions/runs/40988982138) |
 | 13 | History operations, persistence and preferences | H01–H09 | PLANNED |
 | 14 | Timing visits, review filters, recommendations, comparable marks trends | R04–R08, H07 | PLANNED |
 | 15 | Visual side-by-side, mobile and accessibility | V01–V10 | PLANNED |
 | 16 | **Independent new v11 source audit**, final targeted browser comparison and parity decision | All rows | PLANNED |
 
-**Pass 11 is completed and independently browser-checked; Passes 12–16 remain open.** Progress is updated ONLY in the [feature-parity programme](V11_FEATURE_PARITY_PROGRAMME.md), not in archived pass-level reports. Historical architecture scratchpad may receive a small redirect marker but is no longer the live parity log.
+**Passes 11–12 are completed and source/browser-checked; Passes 13–16 remain open.** Progress is updated ONLY in the [feature-parity programme](V11_FEATURE_PARITY_PROGRAMME.md), not in archived pass-level reports. Historical architecture scratchpad may receive a small redirect marker but is no longer the live parity log.
 
 ## Decisions and exclusions retained
 
@@ -77,3 +77,8 @@
 - [ ] Exact final verified branch HEAD and separate release decision
 
 Retain earlier Markdown acceptance files unchanged as historic evidence **except explicit status/supersession annotations**. Do not delete or rewrite away proof of previous decisions and quality checks.
+
+
+## Pass 12 consolidation — 30 October 2026
+
+The post-v11 overhaul remains a **generic multi-exam app**, not a CGL-only viewer. Pass 12 added optional version-pinned source/reviewed comparisons for any compatible exam revision, including generic passage/table/chart changes and all six question types, plus per-section scoring denominators derived from the paper's policies. New reviews use frozen original questions/keys/media; older CGL attempts with a *matching pinned original source revision* may display a read-only verified bundled source comparison. Original-source comparison is available only when grounded; never fabricated for older custom exams. New question-level review states distinguish chosen wrong, correct option, excluded and manual-only results. Completion causes, explanations and review navigation are restored. Direct real CGL and imported generic browser tests plus 81 Node tests passed in [CI #40988982138](https://github.com/oneshubhamt/practice-desk/actions/runs/40988982138); source HEAD is recorded in the [live parity programme](V11_FEATURE_PARITY_PROGRAMME.md). Physical/assistive-technology/side-by-side visual signoff remains Pass 15, independent final parity audit Pass 16.
