@@ -1,12 +1,40 @@
 # Independent V11 → Overhaul source audit — 30 October 2026
 
-**Verdict: NOT A STRICT FEATURE SUPERSET. FULL PARITY NOT APPROVED.**
+**Verdict: broader capabilities and stronger engineering, but V11 practical functionality/UX superset NOT YET DEMONSTRATED; release signoff not approved.**
 
 - Baseline source branch: `baseline/v11` at `e661822d865927e89a837790c1c6bc1cfc2562a6`.
 - Target inspected: `overhaul` at `ccb07a249ada45cfb054e911041ae7ee7a2cde57` (documentation-only edits after `d4c36f9286059af970be342a7a894415517087aa`; no app-source modifications during this audit).
 - Method: **new manual code inspection** of baseline `src/app/legacy.ts`, baseline CSS/template, the source-paper tree, and present implementation across `src/app/`, `src/domain/`, `src/engine/`, `src/history/`, `src/learning/`, `src/content/`, CSS, and template. The existing pass-specific QA assertions, acceptance writeups and screenshots were deliberately **not used as proof**. This is a code-to-code semantic audit, not a fresh physical device/runtime usability trial. No fixture success or old audit's DONE flag is counted.
-- **Set-theoretic acceptance:** Let V be the set of material v11 user-visible capabilities and O those of overhaul. Require every element in V to have the same or a demonstrably better functional counterpart in O (explicit approved, safer behavior may be a qualified exception), **plus** preserve timing/data/safety semantics. Adding generic features does not compensate for V\O. Strict V ⊆ O is **not established**. This report deliberately keeps both positive and negative results.
+- **Set-theoretic acceptance:** Let V be the set of material v11 user-visible capabilities and O those of overhaul. Require every element in V to have the same or a demonstrably better functional counterpart in O (explicit approved, safer behavior may be a qualified exception), **plus** preserve timing/data/safety semantics. Adding generic features does not compensate for V\O. Useful v11 capability/UX inclusion is **not established**; literal identical implementation or visual replication is not the goal. This report deliberately keeps both positive and negative results.
 - Priority: P0 critical irreversible user loss/key exposure; P1 significant functional/behavioral/UI gap or inconsistent imported rules; P2 presentation, feedback, accessibility, or lower-risk workflow difference; P3 cleanup/polish. **Open findings are source-supported, not claims of user reproduction.**
+
+## 0. Governing acceptance touchstone and implementation plan (clarification, 30 October 2026)
+
+**User decision:** The target is a **superior, generic, well-engineered, familiar-to-v11 application** — not a pixel clone or a restoration of its internal architecture. Preserve *every useful v11 function and workflow* and the ease, clarity and predictability of its UI, or improve upon each with a defensible user-facing benefit. Additional features must not compensate for a removed v11 benefit. Preserve the original question banks, user-approved disputed Q62 caution policy, and single-file offline design. Do not reinstall less-safe legacy backup or monolithic architecture solely for exact equivalence.
+
+**Visual reference:** Keep v11's intuitive library, selected paper/mode, compact controls, full exam shell, 4-section layout and question navigator, timers, answer/flag states, worked review, insights/history, and always-accessible display settings recognizable. Better contrast, typography, information hierarchy, responsive layout and native accessibility are welcome; no pixel-for-pixel matching is required. Whether a redesigned screen is actually better needs paired human UI assessment, not a source assertion.
+
+**Important classification:** The **25 IDs stay intact**: F01–F15 (15 v11-facing) plus G01–G10 (10 generic/data). Original severity counts: **9 P1, 16 P2**. These are source observations, not 25 proven runtime failures. **G10 is an already-approved intentional improvement** (non-migrated legacy data and safer v3 additive backup), so it needs *no code change*. **24 IDs require implementation or explicit evidence-based disposition**, not necessarily 24 patches. F12 is a potential performance risk pending measurement, not a proven slowdown. F09's alternative fast/slow ratios are not inherently inferior; retain the more useful, coherently documented definition. F11 should retain both native-radio accessibility *and* useful exam navigation, not mimic v11's button markup. F10 requires preserving the practical ability to mark during permitted pauses unless an explicitly justified better workflow replaces it.
+
+**Closure rules:** For each open ID, compare the actual user task and UI path in both branches. Choose (a) preserve/extend the useful function, (b) repair a genuine logic or import-contract defect, or (c) justify with observable evidence an equally usable improvement. Do not close an issue merely because the old behavior is different, the UI looks more modern, or prior QA passed. Stronger typed abstractions and sound persistence are mandatory. Real-device/manual accessibility and aesthetic signoff remain separately pending.
+
+### Delivery estimate: 7 passes — Passes 17–23
+
+Six implementation/reconciliation passes, then one **independent** whole-app source/UI acceptance pass. Each pass uses **audit → analyze → implement → verify every assigned objective → targeted new QA**, with attention to adjacent-feature regressions.
+
+| Pass | Cohesive scope | Assigned audit IDs | Required outcome |
+|---|---|---|---|
+| **17** | Generic exam engine, score rules and import validation | **G01 G02 G03 G04 G05 G06 G09** | All accepted timing/navigation/review rules are executable and correctly scored, or clearly rejected; valid keys must be answerable; maxima honest |
+| **18** | Session timing, saved evidence and deletion safeguards | **F01 F09 F13** | Preserve actual sectional wall time *alongside* foreground metrics, useful elapsed/attempt-rate presentation, and safe unfinished/discard controls |
+| **19** | Historical analytics and recent results | **F03 F04 F05** | Restore marks-based section priorities *alongside* accuracy analysis, per-attempt denominators and distinct completed-results versus pending-resume access |
+| **20** | v11-familiar library and global layout | **F02 F06 F14 F15** | Clear pretest max/rules/editorial provenance, detailed help, accessible always-available display settings, appropriate independence notice, improved responsive composition |
+| **21** | Exam/review UI and accessibility | **F07 F08 F10 F11** | Contextual figure alt text, meaningful review labels, pause-time marking utility, nonconflicting native-radio/exam keyboard interaction |
+| **22** | Generic question interactions and real UI performance | **G07 G08 F12** | No misleading unsaved checkbox state, recoverable matching errors, performant results based on measured heavy views; cross-screen integration checks |
+| **23** | Independent de novo complete v11-to-overhaul audit | **Recheck F01–F15, G01–G09; record G10 as accepted** | Show a superior practical v11 capability/UX superset and generic correctness; no unconditional release claim without real devices, AT, storage-failure and human visual review |
+
+**Pass discipline:** Pass 17 protects the generic contract first; Passes 18–19 restore actual measurable benefits; Passes 20–21 preserve the look, feel, information and controls users liked in v11; Pass 22 verifies generic usability/performance; Pass 23 independently challenges the *whole* app, not only the 24 remediations. Findings discovered during fixes are logged and scoped rather than overlooked. No implementation is claimed by this planning amendment.
+
+**Status:** The audit remains **OPEN**, not a demonstrated complete v11 functional/UX superset; the seven passes are prospective only. Only `overhaul` may be edited; `main` and `baseline/v11` remain frozen. No release merge is authorized.
 
 ## A. Immutable content and branch integrity
 
@@ -143,7 +171,7 @@ In `src/app/generic-ui.ts`, checkbox changes below `minSelections` show a warnin
 
 ### P2 · G10 — Frozen data and source provenance are stronger but intentionally not backward-compatible with v11
 
-`src/history/backup.ts` v3 SHA-256 additive import, `src/history/frozen.ts` immutable paper/key/media, `src/history/concurrency.ts` optimistic revisions are safer. However, v11 backup v1 direct restore and old saved record migration are not supported by current code. This is an **approved deliberate product boundary**, not a silently passed element of a mathematically literal “superset of every old behavior.” Clarify the acceptance exception rather than claim exact inclusion.
+`src/history/backup.ts` v3 SHA-256 additive import, `src/history/frozen.ts` immutable paper/key/media, `src/history/concurrency.ts` optimistic revisions are safer. However, v11 backup v1 direct restore and old saved record migration are not supported by current code. **Already accepted exception, not an open defect.** This is a deliberate safer policy for a new app without live v11 user data. No v11 backup migration is required.
 
 ## E. Cross-layer source observations (not full regression determinations)
 
@@ -155,7 +183,7 @@ In `src/app/generic-ui.ts`, checkbox changes below `minSelections` show a warnin
 6. **Learning:** v11 had no corresponding notebook/FSRS pathway; overhaul adds real functionality. Treat this as **O\V**, not as evidence that F01–F15 disappear.
 7. **No fixture reliance:** previous Passes 11–16 reports may be useful as historical rationale but were intentionally not accepted as independent audit proof; this audit's source observations are new and sometimes contradict their complete-parity language.
 
-## F. Repair and release gate — explicit order
+## F. Earlier repair-stage outline (superseded by Section 0 pass plan)
 
 **Stage 1 (parity):** F01 sectional wall time; F02 selected paper scoring/audit preflight; F03 marks-based cross-paper priorities; F04 denominator; F13 safe deletion; F07 image labels; F09 clock/attempt-rate; F11 keyboard radio behavior. Preserve v11 semantics or record an approved better replacement.
 
