@@ -8,6 +8,10 @@ import { createSessionClock } from "../engine/clock.ts";
 import { scoreAttempt } from "../engine/scoring.ts";
 import { manualGradeLimit, manualGradeSummary, setManualGrade, validateManualGrades } from "../engine/manual-grading.ts";
 import { createSourceKeyReference,sourceKeyScore,validateSourceKeyReference } from "../engine/source-comparison.ts";
+import { createSourceReviewReference,validateSourceReviewReference } from "../engine/review-source.ts";
+import { scoreableMaximum, sectionScoreSummaries } from "../engine/score-ceiling.ts";
+import type { CorrectAnswer } from "../domain/answer-key.js";
+import type { Verdict } from "../engine/scoring.ts";
 import { makeBackup, verifyBackup, planBackupMerge } from "../history/backup.ts";
 import { validateResponse } from "../engine/response.ts";
 import { assertWriteVersion, nextWriteVersion } from "../history/concurrency.ts";
@@ -160,6 +164,12 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
  }
  validateManualGrades(value);
  validateSourceKeyReference(value);
+ validateSourceReviewReference(value);
+ if(value.completionReason!==undefined){
+   if(value.finishedAt===null||
+     !["time-expired","submitted","section-submitted"].includes(value.completionReason))
+     throw new Error("Invalid saved completion provenance");
+ }
  validateNotebookLineage(value);
  return value;
 }
@@ -592,7 +602,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    return attempt?renderModelExam(attempt,packageForAttempt(attempt),warning):"";
  }
  /** Result presentation must use the frozen media, not a mutable current package. */
- function frozenReviewMedia(saved:GenericAttempt,q:QuestionRevision):string{
+ function frozenReviewMedia(saved:GenericAttempt,q:QuestionRevision,
+    response?:CandidateResponse,answer?:CorrectAnswer,verdict?:Verdict):string{
    const frozen=saved.frozen;
    const display:ExamPackage={format:"practice-desk-exam",version:1,
      examId:frozen.snapshot.examId,title:"",paper:frozen.paper,answerKey:frozen.key,
@@ -601,13 +612,69 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    const passage=stimulusHTML(display,q);
    const promptAssets=assetHTML(display,content.assetIds);
    const options=content.kind==="single-choice"||content.kind==="multiple-select"?
-     '<div class="generic-choices">'+content.options.map((option,i)=>
-       '<div class="generic-choice"><span><b>'+String.fromCharCode(65+i)+'.</b> '+
-       escapeText(option.text)+assetHTML(display,option.assetIds)+'</span></div>').join("")+'</div>':"";
+     '<div class="generic-choices" role="list" aria-label="Answer options">'+
+      content.options.map((option,i)=>{
+       const chosen=response?.kind==="single-choice"?response.optionId===option.id:
+         response?.kind==="multiple-select"?response.optionIds.includes(option.id):false;
+       const expected=answer?.kind==="single-choice"?answer.optionId===option.id:
+         answer?.kind==="multiple-select"?answer.optionIds.includes(option.id):false;
+       const scored=verdict!=="excluded"&&verdict!=="pending";
+       const correct=scored&&expected;
+       const wrong=scored&&chosen&&!expected;
+       const state=correct?" review-option-correct":wrong?" review-option-incorrect":"";
+       const badges=[
+         ...(chosen?["Your choice"]:[]),
+         ...(correct?["Correct answer"]:[]),
+         ...(wrong?["Incorrect choice"]:[])
+       ];
+       return '<div role="listitem" class="generic-choice review-opt'+state+'"><span><b>'+
+         String.fromCharCode(65+i)+'.</b> '+escapeText(option.text)+
+         assetHTML(display,option.assetIds)+
+         (badges.length?'<span class="review-option-label"> · '+
+           escapeText(badges.join(" · "))+'</span>':"")+'</span></div>';
+      }).join("")+'</div>':"";
    const matches=content.kind==="matching"?
      '<div class="generic-matches">'+[...content.leftItems,...content.rightItems].map(item=>
        '<div><span>'+escapeText(item.text)+assetHTML(display,item.assetIds)+'</span></div>').join("")+'</div>':"";
    return passage+promptAssets+options+matches;
+ }
+ function sourceReviewHTML(saved:GenericAttempt,target:QuestionRevision):string{
+   const ref=saved.sourceReviewReference;
+   const entry=ref?.entries.find(item=>item.targetQuestionRevisionId===target.id);
+   if(!ref||!entry)return "";
+   const original=entry.sourceQuestion;
+   const display:ExamPackage={format:"practice-desk-exam",version:1,
+     examId:ref.examId,title:"Original source",paper:saved.frozen.paper,
+     answerKey:saved.frozen.key,questions:[original],
+     stimuli:ref.stimuli,assets:ref.assets};
+   const content=original.content;
+   const optionLines=content.kind==="single-choice"||content.kind==="multiple-select"?
+     '<div class="generic-choices" role="list" aria-label="Original source options">'+
+     content.options.map((option,index)=>
+       '<div role="listitem" class="generic-choice"><span><b>'+
+       String.fromCharCode(65+index)+'.</b> '+escapeText(option.text)+
+       assetHTML(display,option.assetIds)+'</span></div>').join("")+'</div>':"";
+   const matches=content.kind==="matching"?
+     '<div class="generic-matches">'+[...content.leftItems,...content.rightItems]
+       .map(x=>'<div>'+escapeText(x.text)+assetHTML(display,x.assetIds)+'</div>').join("")+'</div>':"";
+   const currentAnswer=saved.frozen.key.entries.find(x=>x.questionRevisionId===target.id)?.answer;
+   const modifications=[
+     ...(content.prompt!==target.content.prompt?["question wording"]:[]),
+     ...(JSON.stringify(content)!==JSON.stringify(target.content)?["options or media"]:[]),
+     ...(JSON.stringify(entry.sourceAnswer)!==JSON.stringify(currentAnswer)?["answer key"]:[])
+   ];
+   return '<details class="change-log source-review"><summary>Compare with original source edition</summary>'+
+     '<div class="change-body"><p class="fine"><b>Original source revision</b>'+
+       (original.editorial.sourcePage?' · Source page '+original.editorial.sourcePage:"")+
+       ' · Published key shown for provenance, not as a score adjustment.</p>'+
+     stimulusHTML(display,original)+
+     '<p class="generic-prompt">'+escapeText(content.prompt)+'</p>'+
+     assetHTML(display,content.assetIds)+optionLines+matches+
+     '<p class="fine"><b>Original published answer:</b> '+
+       escapeText(readableAnswer(original,entry.sourceAnswer))+'</p>'+
+     '<p class="fine"><b>Changes in reviewed edition:</b> '+
+       escapeText(modifications.length?[...new Set(modifications)].join(", "):"editorial review/status")+'</p>'+
+     '</div></details>';
  }
  function resultHTML():string {
    if(!attempt)return "";
@@ -617,15 +684,13 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    const grades=manualGradeSummary(attempt);
    const selfAssessed=s.snapshot.earnedMarks+grades.total;
    const originalKey=sourceKeyScore(attempt);
-   const paperSectionRows=paper.sections.map(section=>{
-     const ids=new Set(section.questionRevisionIds);
-     const items=s.items.filter(item=>ids.has(item.questionRevisionId));
-     const scored=items.reduce((sum,item)=>sum+item.marks,0);
-     const responseTime=attempt!.state.responses.filter(r=>ids.has(r.questionRevisionId)).reduce((sum,r)=>sum+r.timeSpentMs,0);
-     return '<tr><td>'+escapeText(section.title)+'</td><td>'+scored.toFixed(1)+
-       '</td><td>'+items.filter(item=>item.verdict==="correct").length+'/'+items.length+
-       '</td><td>'+minutes(responseTime)+'</td></tr>';
-   }).join("");
+   const eligibleMax=scoreableMaximum(paper,attempt.frozen.key,attempt.frozen.questions);
+   const paperSectionRows=sectionScoreSummaries(attempt,s).map(row=>
+     '<tr><td>'+escapeText(row.title)+'</td><td>'+row.attempted+'/'+
+       (row.questions-row.excluded)+'</td><td>'+row.correct+'</td><td>'+row.incorrect+
+       '</td><td>'+escapeText(row.marks.toFixed(2))+' / '+
+       escapeText(row.eligibleMax.toFixed(2))+'</td><td>'+
+       minutes(row.foregroundMs)+'</td></tr>').join("");
    const evidence=attemptEvidence(attempt);
    const revisions=answerRevisionEvidence(attempt);
    const analyticHTML=evidence?'<section class="panel pad" id="g-attempt-evidence">'+
@@ -663,14 +728,20 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      '</section>':"";
    return '<div class="generic-heading results-heading"><div><span class="eyebrow">FROZEN EXAM RECORD</span>'+
      '<h1>Performance overview</h1><p class="muted">'+escapeText(paper.paperId)+' · '+escapeText(paper.edition)+
-     ' · '+(attempt.finishedAt?new Date(attempt.finishedAt).toLocaleString():"")+'</p></div>'+
+     ' · '+(attempt.finishedAt?new Date(attempt.finishedAt).toLocaleString():"")+'</p>'+
+     (attempt.completionReason?'<span class="tag">'+escapeText(
+       attempt.completionReason==="time-expired"?"Time expired":
+       attempt.completionReason==="section-submitted"?"Final section submitted":"Submitted by user")+'</span>':"")+
+     '</div>'+
      '<div class="row"><button class="btn quiet" id="g-history-results">History & insights</button>'+
      '<button class="btn" id="g-library">Library</button></div></div>'+
     (warning?'<p class="generic-warning" role="status">'+escapeText(warning)+'</p>':"")+
     resultTabsHTML(resultTab)+
     '<div class="result-pane" id="result-overview" role="tabpanel" aria-labelledby="result-tab-overview"'+(resultTab!=="overview"?" hidden":"")+'>'+
-    '<section class="panel pad"><div class="scoregrid"><div class="score standout"><b>'+s.snapshot.earnedMarks+
-    '</b><small>Marks</small></div><div class="score"><b>'+s.snapshot.correctCount+
+    '<section class="panel pad"><div class="scoregrid"><div class="score standout"><b>'+
+     escapeText(s.snapshot.earnedMarks.toFixed(2))+
+     ' <small>/ '+escapeText(eligibleMax.toFixed(2))+'</small></b>'+
+     '<small>Audit-adjusted automated marks</small></div><div class="score"><b>'+s.snapshot.correctCount+
     '</b><small>Correct</small></div><div class="score"><b>'+s.snapshot.incorrectCount+
     '</b><small>Incorrect</small></div><div class="score"><b>'+s.snapshot.unansweredCount+
     '</b><small>Unanswered</small></div><div class="score"><b>'+s.snapshot.excludedCount+
@@ -683,7 +754,9 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       ' of '+escapeText(grades.graded+grades.pending)+' written responses marked; self-assessed total '+
       escapeText(selfAssessed.toFixed(2))+'. Original automated score above remains unchanged.</p>':
       '<p class="fine">Automated marks reflect only scoreable questions.</p>')+'</section>'+
-    '<section class="panel pad"><h2>Section performance</h2><div class="scroll-table"><table><thead><tr><th>Section</th><th>Marks</th><th>Correct</th><th>Time on questions</th></tr></thead><tbody>'+
+    '<section class="panel pad"><h2>Section performance</h2>'+
+    '<p class="fine">Eligible maximum excludes editorially unscored and manually assessed questions. Time is measured question foreground exposure, not the sectional wall clock.</p>'+
+    '<div class="scroll-table"><table><thead><tr><th>Section</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Marks / eligible max</th><th>Time on questions</th></tr></thead><tbody>'+
      paperSectionRows+'</tbody></table></div></section>'+sectionPaceHTML(attempt)+analyticHTML+
     '<section class="panel pad answer-revision-panel"><h2>Answer revisions</h2>'+
     (revisions.recorded?'<div class="learning-metric-grid">'+
@@ -693,7 +766,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
     '<p class="fine">Based only on recorded successive single-choice selections. Clear-and-reselect and unverified items are not classified as rescued/lost. A changed answer may coincide with better marks; this is not evidence that revision caused improvement.</p></section></div>'+
     '<section class="panel pad result-pane" id="result-review" role="tabpanel" aria-labelledby="result-tab-review"'+(resultTab!=="review"?" hidden":"")+'>'+
     '<div class="row between"><h2>Question review</h2>'+
-      '<button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div>'+
+      '<div class="row"><button class="btn" id="g-review-top">Top ↑</button>'+
+      '<button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div></div>'+
       reviewFiltersHTML(reviewFilter)+
       '<p class="fine">Review frozen questions, actual responses, solutions and foreground time. Mock scores never become FSRS ratings.</p>'+
       '<p class="fine">'+s.items.filter(it=>reviewMatch(attempt!,it,reviewFilter)).length+' of '+s.items.length+' items</p>'+
@@ -701,7 +775,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       const q=qs.get(it.questionRevisionId);
       const response=attempt!.state.responses.find(r=>r.questionRevisionId===it.questionRevisionId)?.response;
       const answer=attempt!.frozen.key.entries.find(e=>e.questionRevisionId===it.questionRevisionId)?.answer;
-      const explanation=attempt!.explanations?.[it.questionRevisionId]||q?.editorial.notes;
+      const explanation=attempt!.explanations?.[it.questionRevisionId];
       const seconds=attempt!.state.responses.find(r=>r.questionRevisionId===it.questionRevisionId)?.timeSpentMs??0;
       if(!q)return "";
       const prior=attempt!.manualGrades?.find(g=>g.questionRevisionId===q.id);
@@ -713,15 +787,24 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        '<p class="fine">'+escapeText(q.editorial.status)+
          (q.editorial.sourcePage?' · Source page '+q.editorial.sourcePage:"")+
          ' · '+minutes(seconds)+' spent</p>'+
-       frozenReviewMedia(attempt!,q)+
+       frozenReviewMedia(attempt!,q,response,answer,it.verdict)+
        (origin?'<p class="fine">Notebook source: '+escapeText(origin.sourcePaperId)+
          ' · '+escapeText(origin.sourcePaperEdition)+' · '+escapeText(origin.sourceSectionTitle)+
          ' · source attempt '+escapeText(origin.sourceAttemptId)+'</p>':"")+
-       '<p class="fine">'+escapeText(it.verdict)+' · '+it.marks+' automated marks</p>'+
+       '<p class="fine"><span class="verdict '+escapeText(it.verdict)+'">'+
+        escapeText(it.verdict)+'</span> · '+it.marks+' automated marks</p>'+
        '<p class="fine">Your answer: '+escapeText(readableAnswer(q,response))+'</p>'+
        '<p class="fine">Expected: '+escapeText(readableAnswer(q,answer))+'</p>'+
        (q.editorial.notes?'<p class="fine">Editorial note: '+escapeText(q.editorial.notes)+'</p>':"")+
-       (explanation?'<p class="fine">Explanation: '+escapeText(explanation)+'</p>':"")+
+       (explanation?'<details class="worked-solution"'+
+         (it.verdict==="incorrect"||it.verdict==="unanswered"?" open":"")+'>'+
+         '<summary>'+((q.content.assetIds?.length||(
+          (q.content.kind==="single-choice"||q.content.kind==="multiple-select")&&
+          q.content.options.some(o=>o.assetIds?.length)))?
+          "Visual solving method":"Solving approach & worked reasoning")+
+         '</summary><div class="worked-solution-body">'+
+         escapeText(explanation)+'</div></details>':"")+
+       sourceReviewHTML(attempt!,q)+
        (provenance.length?'<p class="fine">Sources: '+provenance.map(source=>
          '<a href="'+escapeText(source.url)+'" target="_blank" rel="noopener noreferrer">'+
          escapeText(source.title)+'</a>').join(' · ')+'</p>':"")+
@@ -741,7 +824,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    if(saved.finishedAt===null){
  const restored=restoreSession(saved.frozen.paper,saved.state,now(),!document.hidden);
  attempt={...saved,state:restored.state,
-   ...(restored.expired?{finishedAt:now(),result:scoreAttempt(saved.frozen.paper,saved.frozen.key,
+   ...(restored.expired?{finishedAt:now(),completionReason:"time-expired" as const,
+     result:scoreAttempt(saved.frozen.paper,saved.frozen.key,
      saved.frozen.questions,restored.state.responses,new Date().toISOString())}:{})};
  void save(attempt);
    }
@@ -815,8 +899,13 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        if(configured.paper.edition==="reviewed"){
          const source=[...packages.values()].find(candidate=>candidate.paper.edition==="source"&&
            candidate.paper.paperId===configured.paper.paperId&&candidate.examId===configured.examId);
-         const original=source?createSourceKeyReference(configured,source):null;
-         if(original)attempt={...attempt,sourceKeyReference:original};
+         if(source){
+           const original= createSourceKeyReference(configured,source);
+           const review= createSourceReviewReference(configured,source);
+           attempt={...attempt,
+             ...(original?{sourceKeyReference:original}:{}),
+             ...(review?{sourceReviewReference:review}:{})};
+         }
        }
        warning="";view="exam";draw();void save(attempt);
      };
@@ -881,6 +970,10 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        target?.scrollIntoView({block:"start"});
      });
      root.querySelector<HTMLButtonElement>("#g-revision-set")!.onclick=()=>{void addResultCards(attempt!);};
+     root.querySelector<HTMLButtonElement>("#g-review-top")!.onclick=()=>{
+       document.getElementById("result-tab-review")?.focus({preventScroll:true});
+       window.scrollTo({top:0,behavior:"smooth"});
+     };
      root.querySelectorAll<HTMLButtonElement>("[data-manual-save]").forEach(button=>button.onclick=async()=>{
        if(!attempt||storageFault)return;
        const id=button.dataset.manualSave as QuestionRevisionId|undefined;
