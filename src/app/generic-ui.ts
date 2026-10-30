@@ -25,6 +25,7 @@ import { answerRevisionEvidence } from "../learning/answer-revisions.ts";
 import { questionSpeed } from "../learning/question-analytics.ts";
 import { historyHTML, type HistorySort, type HistoryStatus } from "./history-page.ts";
 import { frozenScoreSummary } from "./history-score.ts";
+import { examPreflight,preflightHTML,examRulesHTML } from "./exam-preflight.ts";
 import { reviewMatch, reviewFiltersHTML, resultTabsHTML, sectionPaceHTML, timingLedgerHTML, questionCoachingHTML, type ResultTab, type ReviewFilter } from "./result-presentation.ts";
 import { addLearningCard, validateLearningCard } from "../learning/learning.ts";
 import type { LearningCard } from "../learning/learning.ts";
@@ -307,7 +308,9 @@ function cachedCglPackages(sources:SourcePaperBank,patches:ReviewPatchBank,
 }
 export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patches:ReviewPatchBank,
  solutions:Readonly<Record<string,Readonly<Record<string,string>>>>):()=>void{
- const packages=new Map<string,ExamPackage>(cachedCglPackages(sources,patches,solutions).map(p=>[p.paper.id,p]));
+ const builtins=cachedCglPackages(sources,patches,solutions);
+ const builtinPaperIds=new Set(builtins.map(p=>p.paper.id));
+ const packages=new Map<string,ExamPackage>(builtins.map(p=>[p.paper.id,p]));
  const records=new Map<string,RecordItem>();
  let choice=[...packages.values()].reverse().find(p=>p.paper.edition==="reviewed")?.paper.id??(packages.keys().next().value as string);
  let cglMode:CglPracticeMode="strict", singleSection=0;
@@ -681,7 +684,14 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    const latest=[...complete].sort((a,b)=>(b.finishedAt??0)-(a.finishedAt??0)||
      b.startedAt-a.startedAt).slice(0,3);
    const selected=packages.get(choice);
-   const cgl=selected?.examId==="ssc-cgl";
+   const cgl=selected!==undefined&&builtinPaperIds.has(selected.paper.id);
+   const configured=selected?(cgl?configureCglPractice(selected,cglMode,singleSection):selected):null;
+   const selectedNumbers=new Set(configured?.questions.map(q=>q.questionId.split(":").at(-1))??[]);
+   const preflight=configured?examPreflight(configured,{
+     builtinCgl:cgl,
+     reviewedPatchCount:cgl?Object.keys(patches[selected!.paper.paperId]??{})
+       .filter(id=>selectedNumbers.has(id)).length:undefined
+   }):null;
    const count=selected?.paper.sections.reduce((n,z)=>n+z.questionRevisionIds.length,0)??0;
    const modeLabel=cgl?cglMode==="strict"?"Exam simulation":cglMode==="free"?"Full paper practice":"Section practice":"Custom examination";
    const time=selected?.paper.timing.kind==="untimed"?"Untimed":cgl?
@@ -747,7 +757,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       '<div><b>'+escapeText(time)+'</b><small>Time</small></div><div><b>'+escapeText(previewSections)+'</b><small>Sections</small></div>'+
       '<div><b>'+escapeText(previewNavigation)+
       '</b><small>Navigation</small></div></div>'+
-      '<p class="fine">Scoring and timer rules are frozen when you start; later paper edits cannot change a saved result.</p></section>'+
+      '<p class="fine">Scoring and timer rules are frozen when you start; later paper edits cannot change a saved result.</p>'+
+      (preflight?preflightHTML(preflight):"")+'</section>'+
       '<section class="panel pad recent-panel"><div class="row between"><h2>Recent completed results</h2>'+
       '<button class="textlink" id="g-history-recent">View all →</button></div>'+
       (latest.length?latest.map(a=>'<button class="recent-attempt" data-attempt="'+escapeText(a.id)+'">'+
@@ -765,8 +776,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        '<div class="row generic-actions"><button class="btn" id="g-export-history"'+(loading?" disabled":"")+'>Export backup</button>'+
        '<button class="btn" id="g-import-history"'+(loading||fallbackConflict||storageFault?" disabled":"")+'>Import backup</button></div>'+
        '<input type="file" id="g-history-file" accept=".json,application/json" hidden></section></div>'+
-       '<details class="panel pad help-rules"><summary>Exam rules, accuracy and offline storage</summary><p class="fine">'+
-        'Strict mode advances through four locked 15-minute sections. Flexible and section practice use their selected time limits. Results use frozen answer keys, and score exclusions follow editorial review. Browser-local storage may be cleared by the device; backups are recommended.</p></details>';
+       (preflight?examRulesHTML(preflight):"");
  }
  function packageForAttempt(saved:GenericAttempt):ExamPackage|undefined{
    return packages.get(saved.packageId)??[...packages.values()].find(p=>
