@@ -210,7 +210,7 @@ In `src/app/generic-ui.ts`, checkbox changes below `minSelections` show a warnin
 | Pass | Assigned IDs | Status | Evidence / handoff |
 |---|---|---|---|
 | 17 | G01, G02, G03, G04, G05, G06, G09 | **VERIFIED — targeted QA + source objective reconciliation** | `tests/pass17-contracts.test.mjs`, Node24 typecheck/build, Chromium offline smoke and Pass 11–16 integration scripts succeeded in [CI 41008697861](https://github.com/oneshubhamt/practice-desk/actions/runs/41008697861). Pass 23 independent parity/manual UX gates remain open |
-| 18 | F01, F09, F13 | NOT STARTED | Read Pass 17 changes before choosing session record schema |
+| 18 | F01, F09, F13 | **VERIFIED — targeted QA** | Actual section timer records, global pacing and protected deletion; [CI run 41018428835](https://github.com/oneshubhamt/practice-desk/actions/runs/41018428835) passed all jobs |
 | 19 | F03, F04, F05 | NOT STARTED | Consume truthful frozen timing/scoring denominator from previous passes |
 | 20 | F02, F06, F14, F15 | NOT STARTED | v11-informed layout and preflight; no hardcoded SSC-only generic UI |
 | 21 | F07, F08, F10, F11 | NOT STARTED | Contextual media/status, pause markers, native keyboard and screen-reader paths |
@@ -287,7 +287,29 @@ In `src/app/generic-ui.ts`, checkbox changes below `minSelections` show a warnin
 
 **Adjacent tests to add:** automatic CGL 4× sectional timer, early section submit, global whole-paper lock, manual expiry/restore, paused/hidden time, unchanged old snapshots, corrupted timing-record rejection, free cross-section not misrepresented, marks/attempt rate and medians, completed vs unfinished button actions, declined discard, changed-status concurrent conflict, active mirror, and protection of notebook cards. Keep full cross-app QA for Pass 23.
 
-**Five-stage status:** AUDIT COMPLETE → ANALYZE COMPLETE → IMPLEMENT OPEN → OBJECTIVE RECONCILIATION PENDING → TARGETED QA PENDING. All F01/F09/F13 remain OPEN until source changes and test output verify them.
+**Five-stage status:** AUDIT COMPLETE → ANALYZE COMPLETE → IMPLEMENT DONE → OBJECTIVE CHECK VERIFIED → TARGETED QA PASSED. The F01/F09/F13 code-level objectives are verified; final independent Pass 23 parity/UX acceptance remains open.
+
+### Pass 18 — implementation, source reconciliation, QA and handoff (30 October 2026)
+
+**AUDIT/ANALYZE:** See the preceding Pass 18 source observations. The v11 benchmark was its real section time, visible test time/attempt rate/median, and completed-only Delete control. The superior generic design must keep foreground and consumed timer time distinct, never infer old section timing, and permit deliberately discarding unfinished attempts only with an appropriate warning and storage guards.
+
+**IMPLEMENT — actual files:** `src/engine/session.ts` adds `completedSectionTimings` to **new** sessions and archives per-section consumed timer milliseconds, section ID/index and reason (`submitted`/`time-expired`) at advance and finish. It handles automatic sectional overshoot, early completion, manual-expiry waiting, pause, hidden intervals and locked whole-paper mode; free multi-section navigation has no attributable section timer time. `validateSectionTimingEvidence` checks records from storage/import for order, identity, limits and timer totals; old attempts missing the optional field retain unknown durations. `src/engine/score-ceiling.ts` exposes genuine section timer next to question foreground. `src/learning/attempt-evidence.ts` adds actual attempted/non-excluded counts, response rate and global measured scored-answer median; `src/app/generic-ui.ts` and `src/app/result-presentation.ts` display test timer used, section timers, foreground and median separately. Section-relative speed 0.75×/1.5× remains an explicitly labelled newer policy, not a silent v11 coefficient imitation.
+
+**DELETE SAFETY:** `src/app/history-page.ts` displays **Delete** only on completed attempts, and distinct **Discard unfinished** for pending ones. `src/history/deletion-policy.ts` checks the action's type/status. `generic-ui.ts` requires two explicit confirmations for unfinished irreversible loss, rechecks status/revision after the pending write queue and again **inside the IndexedDB transaction**, respects fallback localStorage stamp conflicts, and removes the matching emergency mirror after deletion. Completed single delete remains single-confirmation; notebook-card deletion retains its separate intent; bulk completed removal still does not touch unfinished or learning data.
+
+**OBJECTIVE RECONCILIATION:**
+
+| ID | Result | Evidence |
+|---|---|---|
+| F01 | **VERIFIED (targeted source/UI)** | Per-section timer independently archived once, accurately split on expiry and early submit; paused/manual-expired waiting excluded; result table/pacing displays timer and foreground; old/free multiple-section displays `Not recorded`; corrupt imported timings rejected |
+| F09 | **VERIFIED (targeted source/UI)** | Overall test timer used, attempted/eligible, measured scored-answer median and foreground cards are displayed. Excluded items are removed from denominator; pending manual answers count as submitted but not automated correct/incorrect. No unsupported comparative pacing claim |
+| F13 | **VERIFIED (targeted source/UI)** | Archive controls separate completed Delete from unfinished Discard; explicit double warning, transactional lifecycle/CAS rechecks and targeted mirror cleanup; notebook and bulk completed policies preserved |
+
+**TARGETED QA:** Added `tests/pass18-timing-deletion.test.mjs` with automatic sectional overshoot, early submit, pause, background interval, manual expiry and restore, whole-paper sequential vs free navigation, old timing absence, forged evidence rejection, median/attempt-rate, deletion type policy and archive UI. Added **focused** `scripts/pass18-targeted.mjs` and a CI step. This Chromium `file://` test verifies discarding an unfinished attempt can be cancelled or double-confirmed, its saved answers/emergency mirror do not reappear, the strict four-section timer is frozen and visible in results, and a completed attempt has a distinct one-confirmation Delete. Earlier CI cross-feature regression scripts were still executed by the existing workflow; this is not a claim of full human/device QA.
+
+**Verified outcome:** [GitHub Actions run 41018428835](https://github.com/oneshubhamt/practice-desk/actions/runs/41018428835) finished **SUCCESS** on all three jobs: Node 24 TypeScript and test/build checks, new targeted tests, offline smoke, Passes 11–16 regression scripts, Chromium, automated Firefox and WebKit. CI regenerated the offline HTML at `aee173f3a271afd448dc46f5a0a58ca70d7e7d6c`. Git compare confirmed **no source CGL papers, patches or solutions JSON changed**.
+
+**Pass 19 handoff:** F03/F04/F05 history analytics need separately verified score-priority/denominator improvements. Use frozen `timerMs` only when present; do not manufacture historical per-section time. Compare like-for-like frozen paper/key/mode for mark-based priorities; distinguish recent completed attempts and resumable unfinished attempts without weakening the new Discard safeguards. Real devices, assistive technology, storage-eviction/OS-kill and final human v11-style UI signoff remain **Pass 23** gates.
 
 ### Per-pass worklog template — copy beneath this section at pass start
 
