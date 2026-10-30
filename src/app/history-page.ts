@@ -2,6 +2,8 @@ import type { GenericAttempt, ExamPackage } from "./exam-package.ts";
 import { attemptEvidence } from "../learning/attempt-evidence.ts";
 import { comparableTrends } from "../learning/learning.ts";
 import { comparableScoreTrends,adjustedHistoryMetrics } from "./history-metrics.ts";
+import { crossPaperMarksPriorities } from "./history-priorities.ts";
+import { frozenScoreSummary } from "./history-score.ts";
 
 export type HistoryStatus="all"|"complete"|"progress";
 export type HistorySort="newest"|"oldest";
@@ -59,6 +61,7 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
     .sort((a,b)=>(b.points.at(-1)?.at??0)-(a.points.at(-1)?.at??0))[0];
  const trendPoints=matching?.points.filter(p=>p.accuracy!==null)??[];
  const priorities=sectionPriorities(done).slice(0,5);
+ const marksPriorities=crossPaperMarksPriorities(done);
  const metrics=adjustedHistoryMetrics(done);
  const scoreTrend=comparableScoreTrends(done).find(x=>x.count>=2);
  const editionOptions=new Map<string,string>();
@@ -103,6 +106,22 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
    return '<div class="priority-line"><div class="row between"><b>'+esc(p.title)+'</b><span class="fine">'+n+'% · '+p.answered+' answers</span></div>'+
     '<div class="progress-track"><span style="width:'+percent(n)+'%"></span></div></div>';
   }).join(""):'<p class="empty-state">More scored section answers are needed.</p>')+'</section></div>'+
+  '<section class="panel pad history-marks-priorities" id="g-cross-paper-priorities"><h2>Cross-paper marks priorities</h2>'+
+  (marksPriorities?
+    '<p class="fine">Latest '+marksPriorities.attempts+' compatible full-paper attempt'+(marksPriorities.attempts===1?"":"s")+
+    ' across '+marksPriorities.distinctPapers+' distinct papers · '+esc(marksPriorities.examId)+
+    ' · '+esc(marksPriorities.edition)+' · '+esc(marksPriorities.mode.replaceAll("-"," "))+'. '+
+    'Same exam, section structure, scoring scheme, edition and practice mode. Sections ranked by actual frozen automated marks / eligible maximum (lowest first), not by difficulty-adjusted ability.</p>'+
+    marksPriorities.rows.map(row=>
+      '<div class="priority-line"><div class="row between"><b>'+esc(row.title)+'</b>'+
+      '<span class="fine">'+row.percent.toFixed(1)+'% marks ('+row.earned.toFixed(2)+' / '+
+      row.eligibleMax.toFixed(2)+') · '+(row.accuracy===null?"No scored responses":row.accuracy.toFixed(0)+"% accuracy")+
+      '</span></div><div class="progress-track"><span style="width:'+percent(row.percent)+
+      '%"></span></div><p class="fine">'+row.sections+' section result'+(row.sections===1?"":"s")+
+      ' · '+row.attempted+' submitted answers</p></div>').join("")+
+    '<p class="fine">For study direction only. Paper difficulty can differ; repeated attempts are repeated observations, not independent evidence. No rank or percentile inference.</p>':
+    '<p class="empty-state">Complete at least two different, compatible full papers to unlock marks-based section priorities. Section-only practice, different exam formats, editions, modes and scoring policies are not pooled.</p>')+
+  '</section>'+
   '<section class="panel pad history-archive"><div class="row between"><div><h2>Saved attempts</h2><p class="fine">'+visible.length+' of '+pCount+' records shown</p></div>'+
   '<div class="row generic-actions"><button class="btn" id="g-export-history"'+(loading?" disabled":"")+'>Export backup</button>'+
   '<button class="btn" id="g-import-history"'+(loading||storageLocked?" disabled":"")+'>Import backup</button></div></div>'+
@@ -123,13 +142,14 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
   '</select></label></div>'+
   (visible.length?'<div class="history-entries">'+visible.map(a=>{
    const s=a.result?.snapshot;
+   const score=frozenScoreSummary(a);
    const count=a.frozen.paper.sections.reduce((n,z)=>n+z.questionRevisionIds.length,0);
    const answered=a.state.responses.filter(z=>z.response).length;
    const status=a.finishedAt?"Completed":"Resume";
    return '<div class="archive-entry"><button class="history-open" data-attempt="'+esc(a.id)+'">'+
     '<span class="archive-title">'+esc(label(a,packages))+'</span><span class="archive-meta">'+
-    esc(stamp(a.startedAt))+' · '+esc(a.frozen.snapshot.mode)+' · '+count+' questions</span>'+
-    '<span class="archive-numbers">'+(a.finishedAt?(s?esc(s.earnedMarks.toFixed(1))+' marks · '+s.correctCount+' correct':'Completed'):
+    esc(stamp(a.startedAt))+' · '+esc(a.frozen.snapshot.mode.replaceAll("-"," "))+' · '+count+' questions</span>'+
+    '<span class="archive-numbers">'+(a.finishedAt?(score&&s?esc(score.text)+' · '+s.correctCount+' correct':'Completed · score unavailable'):
      answered+'/'+count+' answered · In progress')+'</span></button>'+
     '<span class="history-status '+(a.finishedAt?"complete":"active")+'">'+status+'</span>'+
     (a.finishedAt?
