@@ -32,10 +32,20 @@ export interface CrossPaperMarksPriorities {
  */
 function formatSignature(a:GenericAttempt):string{
  const p=a.frozen.paper;
+ const questions=new Map(a.frozen.questions.map(q=>[q.id,q]));
+ const answers=new Map(a.frozen.key.entries.map(e=>[e.questionRevisionId,e]));
  return JSON.stringify({
    exam:a.frozen.snapshot.examId,edition:p.edition,mode:a.frozen.snapshot.mode,
    sectionStructure:p.sections.map(s=>({title:s.title,count:s.questionRevisionIds.length,
-     scoringOverride:s.scoringOverride??null})),
+     // Item-level scoring overrides and question-kind mixes matter for true
+     // scoring comparability, even when overall default rules agree. Sort the
+     // grading shapes so mere question order does not break the cohort.
+     gradingShapes:s.questionRevisionIds.map(id=>{
+       const kind=questions.get(id)?.content.kind;
+       const rule=answers.get(id)?.scoringOverride??s.scoringOverride??
+         (kind?p.scoring.byQuestionKind?.[kind]:undefined)??p.scoring.defaultRule;
+       return JSON.stringify({kind,rule});
+     }).sort()})),
    timing:p.timing,
    navigation:{questionNavigation:p.navigation.questionNavigation,
      sectionNavigation:p.navigation.sectionNavigation},
