@@ -114,7 +114,7 @@ async function doCgl(era,id,edition,mode="free"){
   const historyButtons=page.locator(old?".attempt-open":"[data-attempt]");
   ensure(await historyButtons.count()>=1,era+" completed result not in history");
   if(!old){
-   const row=page.locator(".attempt-row").first();
+   const row=page.locator(".archive-entry").first();
    ensure((await row.innerText()).includes("/"),"Frozen history lacks scored denominator");
    ensure(await page.locator("#g-storage-panel").count()===1,"Storage/backup history omitted");
    ensure(await page.locator("#screen-announcement").getAttribute("aria-live")==="polite",
