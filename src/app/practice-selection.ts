@@ -20,8 +20,11 @@ export function validatePracticeSelection(value:unknown):PracticeSelection{
     (p.untimed!==undefined&&typeof p.untimed!=="boolean") ||
     (p.edition!==undefined&&p.edition!=="source"&&p.edition!=="reviewed"))
    throw Error("Invalid saved exam selection");
+ // Old v1 settings remain byte-for-byte equivalent; new optional fields
+ // are present only when the user actually saves these preferences.
  return {schema:1,paperRevisionId:p.paperRevisionId,mode:p.mode!,section:p.section!,
-   untimed:p.untimed??false,edition:p.edition??"reviewed"};
+   ...(p.untimed!==undefined?{untimed:p.untimed}:{}),
+   ...(p.edition!==undefined?{edition:p.edition}:{})};
 }
 export function readPracticeSelection(storage:Pick<Storage,"getItem">=localStorage):PracticeSelection|null{
  try{
