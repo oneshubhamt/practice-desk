@@ -726,3 +726,22 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
   overflow-wrap:anywhere
  }
 }
+
+/* Pass 29 F29-02: very narrow 200%-zoom History must not let intrinsic
+   insight headings or management headings widen their grid tracks. All
+   comparisons, priorities, controls and storage warnings remain readable. */
+@media (max-width:300px){
+ .history-panels,.history-management-grid{
+  grid-template-columns:minmax(0,1fr);min-width:0;max-width:100%
+ }
+ .history-panels .panel,.history-management-grid .panel,
+ .history-panels .row,.history-management-grid .row,
+ .history-panels .row>div{
+  min-width:0;max-width:100%
+ }
+ .history-panels .row,.history-management-grid .row{flex-wrap:wrap}
+ .history-panels h2,.history-management-grid h2,
+ .history-panels .fine,.history-management-grid .fine{
+  min-width:0;max-width:100%;overflow-wrap:anywhere
+ }
+}
