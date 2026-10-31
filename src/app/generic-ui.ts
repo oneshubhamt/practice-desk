@@ -995,7 +995,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
         (revealReview?'<button class="textlink" data-review-preset="unanswered">Review skips →</button>':"")+'</div></div>'+
      '</section>':"";
    return '<div class="generic-heading results-heading"><div><span class="eyebrow">FROZEN EXAM RECORD</span>'+
-     '<h1>Performance overview</h1><p class="muted">'+escapeText(paper.paperId)+' · '+escapeText(paper.edition)+
+     '<h1>Attempt analysis</h1><p class="muted">'+escapeText(paper.paperId)+' · '+escapeText(paper.edition)+
      ' · '+(attempt.finishedAt?new Date(attempt.finishedAt).toLocaleString():"")+'</p>'+
      (attempt.completionReason?'<span class="tag">'+escapeText(
        attempt.completionReason==="time-expired"?"Time expired":
@@ -1013,7 +1013,11 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
     '</b><small>Correct</small></div><div class="score"><b>'+s.snapshot.incorrectCount+
     '</b><small>Incorrect</small></div><div class="score"><b>'+s.snapshot.unansweredCount+
     '</b><small>Unanswered</small></div><div class="score"><b>'+s.snapshot.excludedCount+
-    '</b><small>Excluded</small></div></div>'+
+    '</b><small>Excluded</small></div></div></section>'+
+    '<section class="panel pad"><h2>Section performance</h2>'+
+    '<p class="fine">Eligible maximum excludes editorially unscored and manually assessed questions. Section timer is actual consumed time for sequential timed sections; foreground exposure is separate. Older records and unrestricted multi-section navigation show Not recorded rather than invented section time.</p>'+
+    '<div class="scroll-table"><table><thead><tr><th>Section</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Marks / eligible max</th><th>Section timer</th><th>Question foreground</th></tr></thead><tbody>'+
+     paperSectionRows+'</tbody></table></div></section>'+    '<section class="panel pad result-score-details">'+
     (originalKey?'<p class="fine"><b>Original-source key (unadjusted):</b> '+
       escapeText(originalKey.marks.toFixed(1))+' / '+escapeText(originalKey.maxMarks.toFixed(1))+
       ' marks · '+originalKey.correct+' correct · '+originalKey.incorrect+' incorrect · '+
@@ -1027,10 +1031,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       ' of '+escapeText(grades.graded+grades.pending)+' written responses marked; self-assessed total '+
       escapeText(selfAssessed.toFixed(2))+'. Original automated score above remains unchanged.</p>':
       '<p class="fine">Automated marks reflect only scoreable questions.</p>')+'</section>'+
-    '<section class="panel pad"><h2>Section performance</h2>'+
-    '<p class="fine">Eligible maximum excludes editorially unscored and manually assessed questions. Section timer is actual consumed time for sequential timed sections; foreground exposure is separate. Older records and unrestricted multi-section navigation show Not recorded rather than invented section time.</p>'+
-    '<div class="scroll-table"><table><thead><tr><th>Section</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Marks / eligible max</th><th>Section timer</th><th>Question foreground</th></tr></thead><tbody>'+
-     paperSectionRows+'</tbody></table></div></section>'+sectionPaceHTML(attempt)+analyticHTML+
+sectionPaceHTML(attempt)+analyticHTML+
      questionCoachingHTML(attempt,revealReview)+
     '<section class="panel pad answer-revision-panel"><h2>Answer revisions</h2>'+
     (revisions?.recorded?'<div class="learning-metric-grid">'+
