@@ -1,3 +1,4 @@
+import {chooseModernPaper} from "./paper-select.mjs";
 /**
  * Pass28: actual single-file browser acceptance of L07-L10, with frozen v11
  * display screenshots and source-backed editorial examples.
@@ -50,7 +51,7 @@ async function setPaper(page,id,reviewed=true){
   items.find(o=>o.value.includes(id)&&o.value.includes(reviewed?"reviewed":"source"))?.value??"",
   {id,reviewed});
  assert(Boolean(value),"Cannot find paired CGL paper "+id);
- await page.locator("#g-papers").selectOption(value);
+ await chooseModernPaper(page,value);
 }
 async function themeButtons(page){
  return await page.locator("#themeLight,#themeDark").evaluateAll(nodes=>nodes.map(button=>{
