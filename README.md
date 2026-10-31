@@ -12,6 +12,15 @@ Practice Desk is a single-file offline exam application with a typed six-kind ge
 
 Historical source and earlier separate Markdown records remain available in Git at [pre-consolidation `d4c36f928605`](https://github.com/oneshubhamt/practice-desk/tree/d4c36f9286059af970be342a7a894415517087aa/docs), and their full decisions/worklogs are consolidated in [Passes 4–16 history](docs/history/PASSES_04_16.md).
 
+## Create APFC, NAT and other examination banks
+
+Practice Desk is **one typed six-kind generic examination engine**; it does not require a separate application for APFC, NAT or another examination. The paper's own sections, positive/negative scoring, timer, navigation and provenance are input data. There are two import paths:
+
+- **Simplified MCQ/NAT bank:** Download the editable APFC/NAT starter JSON directly from the Library, fill in questions, options/answer letters, numerical answers/tolerances and scoring, then **Import question bank**. Revision hashes and internal IDs are generated automatically. A [complete example](examples/apfc-mcq-nat-starter.json) and [step-by-step authoring contract](docs/architecture/QUESTION_BANK_AUTHORING.md) are provided.
+- **Full six-kind advanced exam package:** Import the validated `practice-desk-exam` v1 format for multiple-select, matching, true/false, free-response, figures, passages and more involved timing/credit rules. Source/review editions are preserved separately.
+
+**Edition selection:** v11-style **Original PDF / Reviewed & Corrected** segmented buttons; the Paper dropdown lists only the active edition's papers and distinctly groups imported/custom banks. **Untimed practice:** an independent saved checkbox available alongside all CGL strict/flexible/single modes and for imported exams. It freezes an untimed policy only for the new attempt; existing attempts, navigation and marking remain unchanged. The offline app does not yet parse arbitrary PDFs/CSV/pasted text directly; those must first be converted to one of its documented JSON forms.
+
 ## Build and runtime
 
 Requires Node.js 24.x; this is an offline **`file://`** app with no account, analytics or runtime server.
