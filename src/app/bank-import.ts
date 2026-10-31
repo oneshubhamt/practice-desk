@@ -132,6 +132,24 @@ export function importSimpleQuestionBank(value:unknown):ExamPackage{
  return validateExamPackage(packageValue);
 }
 
+/** Offline author starter, not a verified exam question bank. Edit and import
+ * without manually supplying any internal revision/hash IDs. */
+export const APFC_NAT_BANK_TEMPLATE={
+ format:"practice-desk-bank",version:1,bankId:"my-apfc-bank",examId:"upsc-epfo-apfc",
+ title:"My APFC practice bank",revision:1,edition:"custom",
+ scoring:{correctMarks:2.5,negativeFraction:1/3,unansweredMarks:0},
+ timing:{kind:"untimed"},
+ questions:[
+  {id:"q1",section:"Labour and Social Security",type:"mcq",
+   question:"Replace this with a source-verified APFC question.",
+   options:["First option","Second option","Third option","Fourth option"],
+   answer:"A",explanation:"Replace this explanation with a verified reference."},
+  {id:"q2",section:"Numerical answer practice",type:"nat",
+   question:"Example: find the arithmetic mean of 2, 4 and 6.",
+   answer:4,tolerance:0.01,explanation:"(2 + 4 + 6) / 3 = 4."}
+ ]
+} as const;
+
 /** Autodetect the intentionally simpler bank envelope without weakening full-package validation. */
 export function importAuthoredExam(value:unknown):ExamPackage{
  if(value&&typeof value==="object"&&!Array.isArray(value)&&
