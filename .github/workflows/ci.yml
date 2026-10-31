@@ -30,6 +30,15 @@ jobs:
       - run: node scripts/pass25-library.mjs
       - run: node scripts/pass26-exam.mjs
       - run: node scripts/pass27-history-results.mjs
+      - run: node scripts/pass28-semantics.mjs
+      - name: Save v11/overhaul Display snapshots and live editorial/timer proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pass28-display-editorial-timer-mode-evidence
+          path: artifacts/pass28-semantics/
+          if-no-files-found: warn
+          retention-days: 30
       - name: Save paired v11 and overhaul History/Results laptop landmarks
         if: always()
         uses: actions/upload-artifact@v4
