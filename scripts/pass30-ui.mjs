@@ -91,8 +91,8 @@ try{
    for(const mode of ["strict","free","single"]){
     await page.locator('[data-mode="'+mode+'"]').click();
     if(mode==="single")await page.locator("#g-single-section").selectOption("2");
-    check((await page.locator("#g-preflight").innerText()).includes("Untimed practice"),
-     "Preflight misstates untimed policy "+mode);
+    check((await page.locator(".paper-preview .preview-metrics").innerText()).includes("Untimed"),
+     "Selected paper preview does not show untimed "+mode);
     await page.locator("#g-start").click();
     check(await page.locator("#g-timer").innerText()==="Untimed",
      "An exam countdown remains enabled in "+mode);
@@ -111,8 +111,8 @@ try{
    }
    await page.locator("#g-untimed").uncheck();
    await page.locator('[data-mode="free"]').click();
-   check((await page.locator("#g-preflight").innerText()).includes("One shared 60 min"),
-    "Disabling untimed did not restore timed paper");
+   check((await page.locator(".paper-preview .preview-metrics").innerText()).includes("60:00"),
+    "Disabling untimed did not restore the 60-minute whole-paper timer");
    await capture(page,vp,"timed-restored");
    // Author-friendly APFC MCQ/NAT bank: no manual hashes, sections or key IDs.
    await page.locator("#g-file").setInputFiles({
