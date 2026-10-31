@@ -1,3 +1,4 @@
+import {chooseModernPaper} from "./paper-select.mjs";
 // Pass 22 targeted offline browser verification and measured Pass21-vs-Pass22
 // 100-question result-pane benchmark. Not a physical-device/AT release gate.
 import {readFile,writeFile,mkdtemp,rm} from "node:fs/promises";
@@ -55,7 +56,7 @@ async function responseTest(){
   await page.locator("#g-file").setInputFiles({
    name:"six-kinds.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(pkg))
   });
-  await page.locator("#g-papers").selectOption(pkg.paper.id);
+  await chooseModernPaper(page,pkg.paper.id);
   await page.locator("#g-start").click();
   await page.locator('[data-q="1"]').click();
   await page.locator('[data-choice="x"]').check();
@@ -134,7 +135,7 @@ async function profileResult(url,tag){
   const reviewed=await page.locator("#g-papers option").evaluateAll(options=>
    options.find(option=>option.textContent.includes("Reviewed"))?.value);
   ensure(Boolean(reviewed),tag+" missing 100-question CGL paper");
-  await page.locator("#g-papers").selectOption(reviewed);
+  await chooseModernPaper(page,reviewed);
   await page.locator('[data-mode="strict"]').click();
   await page.locator("#g-start").click();
   for(let i=0;i<4;i++)await page.locator("#g-submit").click();
