@@ -366,6 +366,27 @@ async function genericJourney(vp){
    fail(await p.locator(".exam-question "+selector).count()>0,
     "Generic "+type+" form control missing");
    await shot(a,"exam-generic-"+type);
+   // Exercise real input and save, not just the presence of six control types.
+   if(type==="single-choice")await p.locator('.exam-question input[data-choice]').first().click();
+   if(type==="multiple-select"){
+    await p.locator('.exam-question input[type="checkbox"]').nth(0).check();
+    await p.locator('.exam-question input[type="checkbox"]').nth(2).check();
+   }
+   if(type==="numeric-entry"){
+    await p.locator("#g-number").fill("3.5");
+    await p.locator("#g-save").click();
+   }
+   if(type==="true-false")await p.locator('.exam-question input[data-bool="true"]').click();
+   if(type==="matching"){
+    await p.locator('[data-match="l1"]').selectOption("r1");
+    await p.locator('[data-match="l2"]').selectOption("r2");
+    await p.locator("#g-save").click();
+   }
+   if(type==="free-response"){
+    await p.locator("#g-text").fill("An example of a structured written answer.");
+    await p.locator("#g-save").click();
+   }
+   await shot(a,"exam-generic-"+type+"-answered");
   }
   await p.locator("#g-submit").click();
   await shot(a,"results-generic-overview",{full:vp.width===1366});
