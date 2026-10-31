@@ -6,7 +6,8 @@ import type { ExamPackage } from "./exam-package.ts";
 import { validateExamPackage } from "./exam-package.ts";
 import type { QuestionRevision } from "../domain/question.js";
 import type { AnswerKeyEntry } from "../domain/answer-key.js";
-import type { SectionDefinition } from "../domain/exam.js";
+import type { SectionDefinition, PaperEdition, PaperRevision } from "../domain/exam.js";
+import type { ExamId, PaperId, PaperRevisionId, QuestionRevisionId, QuestionId, OptionId, SectionId, AnswerKeyRevisionId } from "../domain/ids.js";
 import { questionRevisionHash,answerKeyRevisionHash,paperRevisionHash } from "../domain/integrity.ts";
 
 type Input=Record<string,unknown>;
@@ -54,11 +55,11 @@ export function importSimpleQuestionBank(value:unknown):ExamPackage{
    "Scoring values are outside supported marking bounds");
  const rule={correctMarks,incorrectMarks,unansweredMarks};
  const rawQuestions=bank["questions"];
- ensure(Array.isArray(rawQuestions)&&rawQuestions.length>0&&rawQuestions.length<=2000,
-   "Bank must have 1–2000 questions");
- const paperId="bank:"+bankId;
+ if(!Array.isArray(rawQuestions)||rawQuestions.length===0||rawQuestions.length>2000)
+   throw Error("Bank must have 1–2000 questions");
+ const paperId=("bank:"+bankId) as PaperId;
  const qIds=new Set<string>();
- const sections=new Map<string,{title:string;ids:string[]}>();
+ const sections=new Map<string,{title:string;ids:QuestionRevisionId[]}>();
  const questions:QuestionRevision[]=[];
  const entries:AnswerKeyEntry[]=[];
  const explanations:Record<string,string>={};
@@ -70,19 +71,20 @@ export function importSimpleQuestionBank(value:unknown):ExamPackage{
    const sec=str(q["section"]??"General",prefix+".section",120);
    const prompt=str(q["question"]??q["prompt"],prefix+".question",20000);
    const kind=q["type"]??"mcq";
-   const qid=paperId+":q:"+id+":r"+revision;
+   const qid=(paperId+":q:"+id+":r"+revision) as QuestionRevisionId;
    let content:QuestionRevision["content"];
    let answer:AnswerKeyEntry["answer"];
    if(kind==="mcq"||kind==="single-choice"){
      const rawOptions=q["options"];
-     ensure(Array.isArray(rawOptions)&&rawOptions.length>=2&&rawOptions.length<=26,
-       prefix+" requires 2–26 answer options");
-     const options=rawOptions.map((option,i)=>({id:LETTERS[i]!,text:str(option,prefix+".options["+(i+1)+"]",5000)}));
+     if(!Array.isArray(rawOptions)||rawOptions.length<2||rawOptions.length>26)
+       throw Error(prefix+" requires 2–26 answer options");
+     const options=rawOptions.map((option:unknown,i:number)=>({
+       id:LETTERS[i]! as OptionId,text:str(option,prefix+".options["+(i+1)+"]",5000)}));
      const letter=str(q["answer"],prefix+".answer",1).toUpperCase();
      ensure(LETTERS.indexOf(letter)>=0&&LETTERS.indexOf(letter)<options.length,
        prefix+" answer must be one of its option letters");
      content={kind:"single-choice",prompt,options};
-     answer={kind:"single-choice",optionId:letter};
+     answer={kind:"single-choice",optionId:letter as OptionId};
    }else if(kind==="nat"||kind==="numeric-entry"){
      const values=Array.isArray(q["answer"])?q["answer"]:[q["answer"]];
      ensure(values.length>=1&&values.length<=20,"NAT needs 1–20 accepted numeric answers");
@@ -93,7 +95,7 @@ export function importSimpleQuestionBank(value:unknown):ExamPackage{
      answer={kind:"numeric-entry",acceptedValues,absoluteTolerance:tolerance};
    }else throw Error(prefix+" unsupported simple-bank type: use mcq or nat (full exam JSON supports all six kinds)");
    const editorial={status:"verified" as const};
-   const source={id:qid,questionId:paperId+":q:"+id,revision,content,editorial};
+   const source={id:qid,questionId:(paperId+":q:"+id) as QuestionId,revision,content,editorial};
    const question={...source,contentHash:questionRevisionHash(source)};
    questions.push(question);
    entries.push({questionRevisionId:question.id,answer});
@@ -103,9 +105,9 @@ export function importSimpleQuestionBank(value:unknown):ExamPackage{
    group.ids.push(qid);sections.set(sec,group);
  }
  const sectionList:SectionDefinition[]=[...sections].map(([name,group],index)=>({
-  id:paperId+":section:"+(index+1),title:name,questionRevisionIds:group.ids
+  id:(paperId+":section:"+(index+1)) as SectionId,title:name,questionRevisionIds:group.ids
  }));
- const keyId=paperId+":key:r"+revision;
+ const keyId=(paperId+":key:r"+revision) as AnswerKeyRevisionId;
  const answerKey={id:keyId,paperId,revision,entries,contentHash:answerKeyRevisionHash({entries})};
  const rawTiming=bank["timing"];
  let timing:ExamPackage["paper"]["timing"]={kind:"untimed"};
@@ -118,15 +120,15 @@ export function importSimpleQuestionBank(value:unknown):ExamPackage{
    }else ensure(t["kind"]==="untimed","Simple bank timing must be untimed or whole-paper");
  }
  const paperBase={
-  id:paperId+":paper:r"+revision,paperId,revision,
-  edition,answerKeyRevisionId:keyId,sections:sectionList,timing,
+  id:(paperId+":paper:r"+revision) as PaperRevisionId,paperId,revision,
+  edition:edition as PaperEdition,answerKeyRevisionId:keyId,sections:sectionList,timing,
   navigation:{questionNavigation:"free" as const,sectionNavigation:"free" as const,
    allowFlagging:true,allowReview:true},
   scoring:{defaultRule:rule}
  };
- const paper={...paperBase,contentHash:paperRevisionHash(paperBase)};
+ const paper:PaperRevision={...paperBase,contentHash:paperRevisionHash(paperBase)};
  const packageValue={format:"practice-desk-exam" as const,version:1 as const,
-  examId,title,questions,answerKey,paper,explanations};
+  examId:examId as ExamId,title,questions,answerKey,paper,explanations};
  return validateExamPackage(packageValue);
 }
 
