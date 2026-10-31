@@ -36,6 +36,16 @@ import { readPracticeSelection,writePracticeSelection } from "./practice-selecti
 
 const escapeText=(s:unknown):string=>String(s??"").replace(/[&<>"']/g,c=>
   ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" })[c]??c);
+/** Human-readable view of a frozen practice mode; do not alter persistence. */
+export function readablePracticeMode(mode:string):string{
+ switch(mode){
+  case "exam-simulation": return "Exam simulation";
+  case "full-paper-practice": return "Full paper · flexible navigation";
+  case "section-practice": return "Single-section practice";
+  case "custom-practice": return "Custom practice";
+  default: return mode.replaceAll("-"," ");
+ }
+}
 const minutes=(ms:number):string=>{
   const sec=Math.ceil(Math.max(0,ms)/1000);
   return Math.floor(sec/60).toString().padStart(2,"0")+":"+(sec%60).toString().padStart(2,"0");
@@ -237,6 +247,10 @@ export function renderModelExam(
      paper.timing.sectionLimits.find(limit=>limit.sectionId===section.id)?.durationMs===null;
    const progressValue=timeLimit!==null&&timeLimit>0?
      Math.min(100,100*elapsed/timeLimit):Math.min(100,100*answered/Math.max(1,total));
+   const progressScope=timeLimit===null?"Question coverage":
+     paper.timing.kind==="whole-paper"?"Whole-paper timer":"Section timer";
+   const progressAccessibleName=timeLimit===null?"Questions answered":
+     paper.timing.kind==="whole-paper"?"Whole-paper time used":"Section time used";
    const isLow=remaining!==null&&remaining<=60000;
    const focused=typeof document!=="undefined"&&Boolean(
      document.fullscreenElement||document.documentElement.classList.contains("immersive"));
@@ -244,7 +258,7 @@ export function renderModelExam(
    const assets:ExamPackage={format:"practice-desk-exam",version:1,
      examId:attempt.frozen.snapshot.examId,title:bundle?.title??"",paper,answerKey:attempt.frozen.key,
      questions:attempt.frozen.questions,stimuli:attempt.frozen.stimuli,assets:attempt.frozen.assets};
-   return '<div class="generic-heading exam-header"><div><span class="eyebrow">EXAM IN PROGRESS · '+escapeText(attempt.frozen.snapshot.mode)+'</span>'+
+   return '<div class="generic-heading exam-header"><div><span class="eyebrow">EXAM IN PROGRESS · '+escapeText(readablePracticeMode(attempt.frozen.snapshot.mode))+'</span>'+
      '<h1>'+escapeText(bundle?.title??paper.paperId)+'</h1><p class="muted">'+
      escapeText(section.title)+' · Section '+(state.sectionIndex+1)+' of '+paper.sections.length+'</p></div>'+
      '<div class="row exam-header-actions"><div class="exam-clock '+(isLow?"low":"")+'"><strong class="generic-timer" id="g-timer" role="timer">'+
@@ -256,9 +270,9 @@ export function renderModelExam(
      (warning?'<p class="generic-warning" role="status">'+escapeText(warning)+'</p>':"")+
      (expired?'<p class="generic-warning" role="status">Section time has expired. Answers are locked. Select Continue to advance without using extra time.</p>':"")+
      '<section class="exam-progress"><div class="row between"><span class="fine">'+answered+' / '+total+' answered · '+visited+' viewed · '+flagged+' flagged</span>'+
-       '<span class="fine">'+(timeLimit!==null?"Section timer":"Question coverage")+' · '+Math.round(progressValue)+'%</span></div>'+
+       '<span class="fine">'+progressScope+' · '+Math.round(progressValue)+'%</span></div>'+
        '<div class="progress-track exam-time-progress" role="progressbar" aria-valuenow="'+Math.round(progressValue)+
-        '" aria-valuemin="0" aria-valuemax="100" aria-label="'+(timeLimit!==null?"Time used":"Questions answered")+'">'+
+        '" aria-valuemin="0" aria-valuemax="100" aria-label="'+progressAccessibleName+'">'+
          '<span style="width:'+progressValue.toFixed(1)+'%"></span></div></section>'+
      '<div class="generic-sections" role="group" aria-label="Exam sections">'+paper.sections.map((s,i)=>{
        const locked=state.status!=="running"||state.completedSections.includes(i)||
