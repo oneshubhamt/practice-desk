@@ -1,3 +1,4 @@
+import {chooseModernPaper} from "./paper-select.mjs";
 /**
  * Pass 15: actual v11 vs overhaul file:// screenshots at identical viewports.
  * The zip artifact is inspection evidence, NOT physical-device or AT signoff.
@@ -148,7 +149,7 @@ async function exercise(edition,viewport,filepath){
   const old=edition==="v11";
   await page.locator(old?"#paperSelect":"#g-papers").waitFor();
   if(old)await page.locator("#paperSelect").selectOption(sourcePaper.id);
-  else await page.locator("#g-papers").selectOption(revised.paper.id);
+  else await chooseModernPaper(page,revised.paper.id);
   await capture(page,edition,"library",viewport);
   if(!old){
     const colors=await contrastPairs(page);
