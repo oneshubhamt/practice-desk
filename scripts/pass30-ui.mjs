@@ -111,7 +111,7 @@ try{
    }
    await page.locator("#g-untimed").uncheck();
    await page.locator('[data-mode="free"]').click();
-   check((await page.locator(".paper-preview .preview-metrics").innerText()).includes("60:00"),
+   check((await page.locator(".paper-preview .preview-metrics").innerText()).includes("60 minutes"),
     "Disabling untimed did not restore the 60-minute whole-paper timer");
    await capture(page,vp,"timed-restored");
    // Author-friendly APFC MCQ/NAT bank: no manual hashes, sections or key IDs.
