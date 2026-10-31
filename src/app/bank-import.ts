@@ -46,10 +46,14 @@ export function importSimpleQuestionBank(value:unknown):ExamPackage{
  ensure(edition==="custom"||edition==="source"||edition==="reviewed","Unsupported bank edition");
  const scoring=obj(bank["scoring"],"scoring");
  const correctMarks=number(scoring["correctMarks"],"scoring.correctMarks");
+ const fraction=maybeNumber(scoring["negativeFraction"],"scoring.negativeFraction");
+ ensure(fraction===undefined||(fraction>=0&&fraction<=1),
+   "negativeFraction must be between 0 and 1");
+ ensure(fraction===undefined||scoring["incorrectMarks"]===undefined,
+   "Choose negativeFraction or incorrectMarks, not both");
  const incorrectMarks=scoring["incorrectMarks"]!==undefined?
    number(scoring["incorrectMarks"],"scoring.incorrectMarks"):
-   scoring["negativeFraction"]!==undefined?
-   -correctMarks*number(scoring["negativeFraction"],"scoring.negativeFraction"):0;
+   fraction!==undefined?-correctMarks*fraction:0;
  const unansweredMarks=number(scoring["unansweredMarks"]??0,"scoring.unansweredMarks");
  ensure(correctMarks>=0&&incorrectMarks<=correctMarks&&unansweredMarks<=correctMarks,
    "Scoring values are outside supported marking bounds");
