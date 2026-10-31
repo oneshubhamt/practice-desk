@@ -33,6 +33,19 @@ async function capture(page,vp,scene){
  await page.screenshot({path:join(dir,shot),animations:"disabled"});
  records.push({viewport:vp.name,scene,shot,buttons,papers,document:width,
   start:start?{top:start.y,bottom:start.y+start.height}:null});
+ if(width.scroll>width.inner+2){
+  const offenders=await page.evaluate(()=>[...document.querySelectorAll("#app *")]
+   .filter(el=>{
+    if(!(el instanceof HTMLElement)||!el.getClientRects().length)return false;
+    const r=el.getBoundingClientRect();
+    return r.right>innerWidth+2||el.scrollWidth>el.clientWidth+3;
+   }).slice(0,16).map(el=>{
+    const r=el.getBoundingClientRect();
+    return {tag:el.tagName,id:el.id,cls:typeof el.className==="string"?el.className.slice(0,90):"",
+     right:Math.round(r.right),scroll:el.scrollWidth,client:el.clientWidth};
+   }));
+  console.log("PASS30 overflow suspects "+vp.name+" "+scene+" "+JSON.stringify(offenders));
+ }
  check(width.scroll<=width.inner+2,"Horizontal overflow "+vp.name+" "+scene+" "+JSON.stringify(width));
 }
 try{
