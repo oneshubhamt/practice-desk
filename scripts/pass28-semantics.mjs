@@ -88,8 +88,23 @@ try{
     const panel=await modern.page.locator("#displayPanel").boundingBox();
     assert(panel&&panel.x>=-2&&panel.x+panel.width<=v.width+2,
       "Display popup offscreen "+v.name+" "+scale+" "+JSON.stringify(panel));
-    assert(await scrollOverflow(modern.page)<=2,
-      "Display/document horizontal overflow "+v.name+" "+scale);
+    const overflow=await scrollOverflow(modern.page);
+    if(overflow>2) {
+     const suspects=await modern.page.evaluate(()=>[...document.querySelectorAll("*")]
+       .filter(el=>{
+        if(!(el instanceof HTMLElement)||!el.getClientRects().length)return false;
+        const rect=el.getBoundingClientRect();
+        return rect.right>innerWidth+2||rect.left< -2||el.scrollWidth>el.clientWidth+3;
+       }).slice(0,14).map(el=>{
+        const r=el.getBoundingClientRect();
+        return {tag:el.tagName,id:el.id,cls:typeof el.className==="string"?el.className.slice(0,80):"",
+          right:Math.round(r.right),left:Math.round(r.left),scroll:el.scrollWidth,client:el.clientWidth};
+       }));
+     console.log("Pass28 overflow diagnosis "+v.name+" "+scale+" +"+overflow+
+       "px "+JSON.stringify(suspects));
+    }
+    assert(overflow<=2,"Display/document horizontal overflow "+v.name+" "+scale+
+      " by "+overflow+"px");
     evidence.push({viewport:v.name,scale,buttons:details,popup:{x:panel.x,right:panel.x+panel.width}});
     await capture(modern.page,"overhaul-"+v.name+"-display"+scale);
     if(legacy)await capture(legacy.page,"v11-"+v.name+"-display"+scale);
