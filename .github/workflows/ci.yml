@@ -29,6 +29,15 @@ jobs:
       - run: node scripts/pass23-independent.mjs
       - run: node scripts/pass25-library.mjs
       - run: node scripts/pass26-exam.mjs
+      - run: node scripts/pass27-history-results.mjs
+      - name: Save paired v11 and overhaul History/Results laptop landmarks
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pass27-history-results-first-fold
+          path: artifacts/pass27-history-results/
+          if-no-files-found: warn
+          retention-days: 30
       - name: Save v11 versus overhaul laptop Exam geometry and screenshots
         if: always()
         uses: actions/upload-artifact@v4
