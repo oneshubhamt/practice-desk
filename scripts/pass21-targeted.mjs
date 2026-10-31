@@ -96,9 +96,15 @@ try{
  await page.locator('[data-result-tab="review"]').click();
  const reviewed=await page.locator("#result-review").innerText();
  ensure(reviewed.includes("Editorial correction recorded"),
-   "Reviewed correction has only raw status or lost editorial label");
- ensure(!reviewed.includes("Key corrected · recorded editorial change"),
-   "Imported CGL status without explicit key-change flag was falsely called a proven key correction");
+   "Wording-only CGL corrections lost their non-key editorial label");
+ ensure(reviewed.includes("Key corrected · recorded editorial change"),
+   "Published-versus-reviewed changed-key question no longer identified after submission");
+ const q3Editorial=await page.locator("#result-review .generic-review").nth(2).innerText();
+ const q6Editorial=await page.locator("#result-review .generic-review").nth(5).innerText();
+ ensure(q3Editorial.includes("Editorial correction recorded")&&!q3Editorial.includes("Key corrected"),
+   "30 Sep Q3 has no key change: must not be called key corrected");
+ ensure(q6Editorial.includes("Key corrected · recorded editorial change"),
+   "30 Sep Q6 published C→D change must be labelled precisely");
  const reviewAlts=await page.locator("#result-review .generic-figure").evaluateAll(imgs=>
    imgs.map(img=>img.getAttribute("alt")));
  ensure(reviewAlts.some(alt=>alt?.includes("question "+target.n)),
