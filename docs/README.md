@@ -1,12 +1,13 @@
 # Practice Desk documentation — canonical map
 
-**Reference:** frozen `baseline/v11` · **implementation:** `overhaul`. **Pass28 update (31 Oct):** all **11/11** original laptop usability findings **L01–L11 have source repairs and targeted browser/contract verification** on `overhaul`: Pass25 Library, Pass26 Exam, Pass27 History/Results, Pass28 Display text scaling, actual CGL key-change metadata, timer scopes and readable mode labels. [Controlling desktop audit/status and evidence](audits/PASS24_LAPTOP_VISUAL_REGRESSION_2026-10-30.md) · [Pass28 full CI 3/3 green](https://github.com/oneshubhamt/practice-desk/actions/runs/41161903751) · [Pass28 screenshots](https://github.com/oneshubhamt/practice-desk/actions/runs/41161903751/artifacts/13027786199). **This is NOT final independent v11 overall laptop parity**: Pass29 must perform broad *fresh* screenshot/functional review; physical macOS Safari/mobile, assistive technologies, destructive device/storage, human user approval and release/merge remain open. Earlier [Pass23 conditional functional audit](audits/PASS23_FINAL_INDEPENDENT_REVIEW_2026-10-30.md) remains an independent source/scoring baseline, not a release certificate.
+**Reference:** frozen `baseline/v11` · **implementation:** `overhaul`. **Pass29 (31 Oct): Independent expanded visual/use-case journey matrix PASS** — **184 screenshots/measured scenes, 56 direct frozen-v11 paired CGL comparisons, 7 viewport sizes**, strict/free/single CGL modes, original/reviewed and disputed-key scenarios, 100/140% theme, figure/passage, Results/History and full generic six-kind/FSRS Learning journeys. The broader matrix found and verified **three additional repairs**: History saved-result reopen state (F29-01), zoomed History text overflow (F29-02), zoomed Learning text overflow (F29-03), beyond the 11 original L01–L11 fixes. [Current independent Pass29 report](audits/PASS29_INDEPENDENT_VISUAL_MATRIX_2026-10-31.md) · [full CI 4/4 success](https://github.com/oneshubhamt/practice-desk/actions/runs/41164616047) · [downloadable scene/geometry/image artifact](https://github.com/oneshubhamt/practice-desk/actions/runs/41164616047/artifacts/13028401081). **Conditional automated acceptance ONLY**: human screenshot appraisal, physical macOS Safari/mobile, NVDA/VoiceOver, device-kill/storage, arbitrary/stress imports and explicit merge/release approval are not established. [Pass23 source/scoring report](audits/PASS23_FINAL_INDEPENDENT_REVIEW_2026-10-30.md) remains authoritative for its original source findings.
 
 ## Read in this order
 
 | Need | Canonical location | Type |
 |---|---|---|
-| **Laptop visual / current desktop status** | [Pass24 screenshot audit, Pass25/26 repairs and unresolved findings](audits/PASS24_LAPTOP_VISUAL_REGRESSION_2026-10-30.md) | L01–L11 targeted automated-verified; Pass29 independent overall parity and external signoff pending |
+| **Current independent multi-journey visual audit** | [Pass29, 184-screen matrix, 56 paired v11 scenarios, three new findings](audits/PASS29_INDEPENDENT_VISUAL_MATRIX_2026-10-31.md) | Automated 4/4 CI PASS; conditional, manual/physical/AT release gate still open |
+| **Original visual regression and repair history** | [Pass24 laptop source and Passes25–29 repair register](audits/PASS24_LAPTOP_VISUAL_REGRESSION_2026-10-30.md) | 11 original + three newer findings source-fixed and browser-verified |
 | **Final verification / outstanding release gates** | [Pass 23 final independent audit and release report](audits/PASS23_FINAL_INDEPENDENT_REVIEW_2026-10-30.md) | All 25 current finding dispositions, six actual paired score/max checks, full automated CI evidence, explicit physical/AT/manual limitations and conditional status |
 | **Original findings and chronological worklog** | [Independent V11 source audit / active scratchpad](audits/V11_SOURCE_AUDIT_2026-10-30.md) | Preserves the 25 original problem statements, Passes 17–23 reasoning, evidence, accepted deviations and handoffs |
 | **Current architecture** | [Source topology, modules and lifecycle](architecture/CURRENT_ARCHITECTURE.md) | Current system, not historic proposals |
@@ -30,6 +31,7 @@ docs/
     POLICY_REGISTER.md       approved decisions and deliberate exceptions
   audits/
     V11_SOURCE_AUDIT_2026-10-30.md  original 25 findings and active engineering worklog
+    PASS29_INDEPENDENT_VISUAL_MATRIX_2026-10-31.md  current paired journey and screenshot report
     PASS23_FINAL_INDEPENDENT_REVIEW_2026-10-30.md  conditional final audit and manual-release gates
   history/
     BASELINE_V11_ARCHITECTURE.md    frozen original audit
