@@ -75,6 +75,43 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
   '<h1>History & insights</h1><p class="muted">Review your work, compare like-for-like papers and safeguard offline records.</p></div>'+
   '<button class="btn quiet" id="g-library">← Test library</button></div>'+
   (warning?'<p role="status" class="generic-warning">'+esc(warning)+'</p>':"")+
+  // Primary History task first: keep archive filters, records and backups together.
+  '<section class="panel pad history-archive"><div class="row between"><div><h2>Saved attempts</h2><p class="fine">'+visible.length+' of '+pCount+' records shown</p></div>'+
+  '<div class="row generic-actions"><button class="btn" id="g-export-history"'+(loading?" disabled":"")+'>Export backup</button>'+
+  '<button class="btn" id="g-import-history"'+(loading||storageLocked?" disabled":"")+'>Import backup</button></div></div>'+
+  '<input type="file" id="g-history-file" accept=".json,application/json" hidden>'+
+  '<div class="history-filters"><label class="filter-label" for="g-history-search">Find a paper'+
+    '<input type="search" id="g-history-search" placeholder="Search paper, mode or edition" value="'+esc(query.search)+'"></label>'+
+  '<label class="filter-label" for="g-history-paper">Paper / edition<select id="g-history-paper">'+
+    '<option value="all">All paper editions</option>'+
+    [...editionOptions.entries()].sort((a,b)=>a[1].localeCompare(b[1])).map(([id,label])=>
+      '<option value="'+esc(id)+'"'+((query.paperRevisionId??"all")===id?" selected":"")+'>'+
+      esc(label)+'</option>').join("")+'</select></label>'+
+  '<label class="filter-label" for="g-filter">Status<select id="g-filter">'+
+  ([["all","All attempts"],["progress","In progress"],["complete","Completed"]] as const)
+   .map(([id,t])=>'<option value="'+id+'"'+(query.status===id?" selected":"")+'>'+t+'</option>').join("")+
+  '</select></label><label class="filter-label" for="g-history-sort">Order<select id="g-history-sort">'+
+  ([["newest","Newest first"],["oldest","Oldest first"]] as const)
+   .map(([id,t])=>'<option value="'+id+'"'+(query.sort===id?" selected":"")+'>'+t+'</option>').join("")+
+  '</select></label></div>'+
+  (visible.length?'<div class="history-entries">'+visible.map(a=>{
+   const s=a.result?.snapshot;
+   const score=frozenScoreSummary(a);
+   const count=a.frozen.paper.sections.reduce((n,z)=>n+z.questionRevisionIds.length,0);
+   const answered=a.state.responses.filter(z=>z.response).length;
+   const status=a.finishedAt?"Completed":"Resume";
+   return '<div class="archive-entry"><button class="history-open" data-attempt="'+esc(a.id)+'">'+
+    '<span class="archive-title">'+esc(label(a,packages))+'</span><span class="archive-meta">'+
+    esc(stamp(a.startedAt))+' · '+esc(a.frozen.snapshot.mode.replaceAll("-"," "))+' · '+count+' questions</span>'+
+    '<span class="archive-numbers">'+(a.finishedAt?(score&&s?esc(score.text)+' · '+s.correctCount+' correct':'Completed · score unavailable'):
+     answered+'/'+count+' answered · In progress')+'</span></button>'+
+    '<span class="history-status '+(a.finishedAt?"complete":"active")+'">'+status+'</span>'+
+    (a.finishedAt?
+      '<button class="btn danger generic-delete" data-delete="'+esc(a.id)+'" aria-label="Delete completed result">Delete</button>':
+      '<button class="btn danger generic-delete" data-discard="'+esc(a.id)+'" aria-label="Discard unfinished test and lose its answers">Discard unfinished</button>')+
+    '</div>';
+  }).join("")+'</div>':'<p class="empty-state">No attempts match these filters. Your saved records have not been deleted.</p>')+
+  '</section>'+
   '<div class="history-summary">'+
   [['Total attempts',pCount],['Completed',done.length],['In progress',progressing.length],
    ['Papers practised',metrics.papersPractised],
@@ -121,42 +158,6 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
       ' · '+row.attempted+' submitted answers</p></div>').join("")+
     '<p class="fine">For study direction only. Paper difficulty can differ; repeated attempts are repeated observations, not independent evidence. No rank or percentile inference.</p>':
     '<p class="empty-state">Complete at least two different, compatible full papers to unlock marks-based section priorities. Section-only practice, different exam formats, editions, modes and scoring policies are not pooled.</p>')+
-  '</section>'+
-  '<section class="panel pad history-archive"><div class="row between"><div><h2>Saved attempts</h2><p class="fine">'+visible.length+' of '+pCount+' records shown</p></div>'+
-  '<div class="row generic-actions"><button class="btn" id="g-export-history"'+(loading?" disabled":"")+'>Export backup</button>'+
-  '<button class="btn" id="g-import-history"'+(loading||storageLocked?" disabled":"")+'>Import backup</button></div></div>'+
-  '<input type="file" id="g-history-file" accept=".json,application/json" hidden>'+
-  '<div class="history-filters"><label class="filter-label" for="g-history-search">Find a paper'+
-    '<input type="search" id="g-history-search" placeholder="Search paper, mode or edition" value="'+esc(query.search)+'"></label>'+
-  '<label class="filter-label" for="g-history-paper">Paper / edition<select id="g-history-paper">'+
-    '<option value="all">All paper editions</option>'+
-    [...editionOptions.entries()].sort((a,b)=>a[1].localeCompare(b[1])).map(([id,label])=>
-      '<option value="'+esc(id)+'"'+((query.paperRevisionId??"all")===id?" selected":"")+'>'+
-      esc(label)+'</option>').join("")+'</select></label>'+
-  '<label class="filter-label" for="g-filter">Status<select id="g-filter">'+
-  ([["all","All attempts"],["progress","In progress"],["complete","Completed"]] as const)
-   .map(([id,t])=>'<option value="'+id+'"'+(query.status===id?" selected":"")+'>'+t+'</option>').join("")+
-  '</select></label><label class="filter-label" for="g-history-sort">Order<select id="g-history-sort">'+
-  ([["newest","Newest first"],["oldest","Oldest first"]] as const)
-   .map(([id,t])=>'<option value="'+id+'"'+(query.sort===id?" selected":"")+'>'+t+'</option>').join("")+
-  '</select></label></div>'+
-  (visible.length?'<div class="history-entries">'+visible.map(a=>{
-   const s=a.result?.snapshot;
-   const score=frozenScoreSummary(a);
-   const count=a.frozen.paper.sections.reduce((n,z)=>n+z.questionRevisionIds.length,0);
-   const answered=a.state.responses.filter(z=>z.response).length;
-   const status=a.finishedAt?"Completed":"Resume";
-   return '<div class="archive-entry"><button class="history-open" data-attempt="'+esc(a.id)+'">'+
-    '<span class="archive-title">'+esc(label(a,packages))+'</span><span class="archive-meta">'+
-    esc(stamp(a.startedAt))+' · '+esc(a.frozen.snapshot.mode.replaceAll("-"," "))+' · '+count+' questions</span>'+
-    '<span class="archive-numbers">'+(a.finishedAt?(score&&s?esc(score.text)+' · '+s.correctCount+' correct':'Completed · score unavailable'):
-     answered+'/'+count+' answered · In progress')+'</span></button>'+
-    '<span class="history-status '+(a.finishedAt?"complete":"active")+'">'+status+'</span>'+
-    (a.finishedAt?
-      '<button class="btn danger generic-delete" data-delete="'+esc(a.id)+'" aria-label="Delete completed result">Delete</button>':
-      '<button class="btn danger generic-delete" data-discard="'+esc(a.id)+'" aria-label="Discard unfinished test and lose its answers">Discard unfinished</button>')+
-    '</div>';
-  }).join("")+'</div>':'<p class="empty-state">No attempts match these filters. Your saved records have not been deleted.</p>')+
   '</section>'+
   '<div class="history-management-grid"><section class="panel pad" id="g-storage-panel">'+
   '<h2>Storage & safety</h2><p class="fine">Storage backend: <b id="g-storage-backend">'+
