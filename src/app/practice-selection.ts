@@ -6,6 +6,8 @@ export interface PracticeSelection {
  readonly paperRevisionId:string;
  readonly mode:CglPracticeMode;
  readonly section:number;
+ readonly untimed?:boolean;
+ readonly edition?: "source" | "reviewed";
 }
 export const PRACTICE_SELECTION_KEY="practiceDesk.overhaul.selection.v1";
 export function validatePracticeSelection(value:unknown):PracticeSelection{
@@ -14,9 +16,12 @@ export function validatePracticeSelection(value:unknown):PracticeSelection{
  if(p.schema!==1||typeof p.paperRevisionId!=="string"||!p.paperRevisionId.trim()||
     p.paperRevisionId.length>300||
     !["strict","free","single"].includes(p.mode??"")||
-    !Number.isSafeInteger(p.section)||p.section!<0||p.section!>1999)
+    !Number.isSafeInteger(p.section)||p.section!<0||p.section!>1999 ||
+    (p.untimed!==undefined&&typeof p.untimed!=="boolean") ||
+    (p.edition!==undefined&&p.edition!=="source"&&p.edition!=="reviewed"))
    throw Error("Invalid saved exam selection");
- return {schema:1,paperRevisionId:p.paperRevisionId,mode:p.mode!,section:p.section!};
+ return {schema:1,paperRevisionId:p.paperRevisionId,mode:p.mode!,section:p.section!,
+   untimed:p.untimed??false,edition:p.edition??"reviewed"};
 }
 export function readPracticeSelection(storage:Pick<Storage,"getItem">=localStorage):PracticeSelection|null{
  try{
