@@ -1,3 +1,4 @@
+import {chooseModernPaper} from "./paper-select.mjs";
 /**
  * Pass29 independent expanded journey/visual matrix.
  * Pairs frozen v11/current CGL journeys, audits generic-only modern flows,
@@ -58,7 +59,7 @@ async function selectCgl(a,paper="cgl-2026-09-30",edition="reviewed",mode="free"
    xs.find(o=>o.value.includes(args.paper)&&o.value.includes(args.edition))?.value??"",
    {paper,edition});
   fail(Boolean(selected),"selected CGL edition not found "+paper+" "+edition);
-  await p.locator("#g-papers").selectOption(selected);
+  await chooseModernPaper(p,selected);
  }
  await p.locator('[data-mode="'+mode+'"]').click();
  if(mode==="single")await p.locator(old?"#singleSelect":"#g-single-section").selectOption(single);
