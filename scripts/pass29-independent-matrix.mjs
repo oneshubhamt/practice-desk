@@ -317,7 +317,7 @@ async function supplemental(vp){
   await a.page.locator("#g-library").click();
   await a.page.locator("#g-learning").click();
   await shot(a,"learning-empty",{full:vp.width===390});
-  await a.page.locator("#learning-back").click();
+  await a.page.locator("#learning-close").click();
   await a.page.locator('[data-mode="free"]').click();
   await a.page.locator("#g-start").click();
   await shot(a,"exam-responsive");
@@ -367,7 +367,7 @@ async function genericJourney(vp){
   await p.locator("#g-learning").click();
   await shot(a,"learning-populated",{full:vp.width===1366});
   fail(await p.locator("[data-learning-id]").count()>0,"Notebook card missing after review add");
-  await p.locator("#learning-back").click();
+  await p.locator("#learning-close").click();
   await p.locator("#g-history").click();
   await shot(a,"history-generic");
   fail(await p.locator(".archive-entry").count()>0,"Generic record missing in History");
