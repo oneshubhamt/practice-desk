@@ -146,3 +146,27 @@ jobs:
       - run: node node_modules/playwright-core/cli.js install --with-deps ${{ matrix.browser }}
       - run: npm run check
       - run: node scripts/pass10-platform.mjs ${{ matrix.browser }}
+
+  independent-journey-matrix:
+    name: Independent expanded laptop & use-case visual matrix
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - run: npm install --no-audit --no-fund
+      - run: npm run check
+      - run: node scripts/pass29-independent-matrix.mjs
+      - name: Upload paired journeys, scene measurements and review index
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pass29-independent-expanded-journey-matrix
+          path: artifacts/pass29-independent/
+          if-no-files-found: warn
+          retention-days: 30
