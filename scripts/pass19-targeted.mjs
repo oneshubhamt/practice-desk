@@ -1,3 +1,4 @@
+import {chooseModernPaper} from "./paper-select.mjs";
 // Pass 19 focused file:// UI acceptance: distinct papers, completed-only
 // recents, multiple resumable attempts, archived frozen denominators and routes.
 import {mkdtemp,rm} from "node:fs/promises";
@@ -27,7 +28,7 @@ try{
    options.filter(option=>option.textContent.includes("Reviewed")).map(option=>option.value));
  ensure(reviewed.length>=2,"Need at least two distinct reviewed CGL papers");
  for(let j=0;j<2;j++){
-   await page.locator("#g-papers").selectOption(reviewed[j]);
+   await chooseModernPaper(page,reviewed[j]);
    await page.locator('[data-mode="strict"]').click();
    await page.locator("#g-start").click();
    for(let section=0;section<4;section++)await page.locator("#g-submit").click();
