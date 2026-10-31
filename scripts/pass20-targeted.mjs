@@ -34,10 +34,12 @@ try{
  ensure(await page.locator("#g-exam-rules").count()===1,"Selected exam has no detailed rules");
  ensure((await page.locator(".app-independent-footer").innerText()).includes("Not affiliated"),
    "Independent educational attribution is absent");
+ await page.locator('[data-edition="reviewed"]').click();
  const reviewed=(await page.locator("#g-papers option").evaluateAll(opts=>
-   opts.find(x=>x.textContent.includes("Reviewed"))?.value));
+   opts.find(x=>x.value.includes("reviewed"))?.value));
+ await page.locator('[data-edition="source"]').click();
  const source=(await page.locator("#g-papers option").evaluateAll(opts=>
-   opts.find(x=>x.textContent.includes("Original"))?.value));
+   opts.find(x=>x.value.includes("source"))?.value));
  ensure(reviewed&&source,"Missing built-in paired paper editions");
  await chooseModernPaper(page,reviewed);
  await page.locator('[data-mode="strict"]').click();
