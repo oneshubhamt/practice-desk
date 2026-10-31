@@ -25,6 +25,7 @@ try{
  page.on("dialog",dialog=>{void dialog.accept()});
  await page.goto(html,{waitUntil:"load"});
  async function choose(family,edition){
+  await page.locator('[data-edition="'+(edition==="Original"?"source":"reviewed")+'"]').click();
   const value=await page.locator("#g-papers option").evaluateAll((options,query)=>{
    const [id,label]=query;
    return options.find(option=>option.value.includes(id)&&option.textContent.includes(label))?.value;
