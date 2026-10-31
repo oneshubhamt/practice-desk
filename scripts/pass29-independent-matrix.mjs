@@ -250,7 +250,10 @@ async function setupMain(vp){
   await current.page.locator("#g-history-search").fill("");
   await current.page.locator("#g-history-sort").selectOption("oldest");
   await current.page.locator(".history-open").click();
-  await shot(current,"results-reopened", {checks:["score"]});
+  await current.page.locator("#result-overview .score.standout").waitFor({state:"visible"});
+  fail(await current.page.locator("#result-tab-overview").getAttribute("aria-selected")==="true",
+    "History reopening inherited stale Timing/Review tab instead of starting at Overview");
+  await shot(current,"results-reopened", {checks:["score","table"]});
   fail(await current.page.locator(".score.standout").count()===1,
     "Saved result reopened without frozen score");
   console.log("PASS29 paired full CGL journey "+vp.id+" "+(cases.length)+" recorded states");
