@@ -1,3 +1,4 @@
+import {chooseModernPaper} from "./paper-select.mjs";
 /**
  * Pass27: v11-vs-overhaul laptop primary-task geometry for History/Results.
  * Use actual file:// offline builds, identical 30 Sep reviewed CGL edition,
@@ -59,7 +60,7 @@ async function beginPair(old,newer){
  const reviewed=await newer.locator("#g-papers option").evaluateAll(options=>
   options.find(o=>o.value.includes("cgl-2026-09-30")&&o.value.includes("reviewed"))?.value??"");
  check(Boolean(reviewed),"same reviewed CGL paper missing");
- await newer.locator("#g-papers").selectOption(reviewed);
+ await chooseModernPaper(newer,reviewed);
  await old.locator('[data-mode="free"]').click();
  await newer.locator('[data-mode="free"]').click();
  await old.locator("#start").click();await newer.locator("#g-start").click();
