@@ -759,3 +759,25 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
  }
  .learning-insights .scroll-table{max-width:100%;min-width:0;overflow-x:auto}
 }
+
+/* Pass30: v11-style genuine paper-edition filter, not a second select. */
+.home-picker .edition-row{margin:3px 0 4px}
+.home-picker .edition-row>.picker{display:block;margin:0 0 8px}
+.home-picker .edition-toggle{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:6px;background:var(--soft);padding:5px;border:1px solid var(--line);border-radius:12px}
+.home-picker .edition-choice{min-width:0;padding:11px 10px;border:1px solid transparent;
+ border-radius:9px;background:transparent;color:var(--muted);font-weight:700;
+ text-align:center;line-height:1.35;overflow-wrap:anywhere;cursor:pointer}
+.home-picker .edition-choice.active{background:var(--panel);border-color:var(--blue);
+ color:var(--ink);box-shadow:0 1px 5px color-mix(in srgb,var(--ink) 10%,transparent)}
+.home-picker .edition-choice:hover{border-color:var(--blue)}
+.home-picker .edition-choice:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.home-picker .edition-note{margin:7px 0 9px}
+.home-picker .untimed-option{display:flex;align-items:flex-start;gap:11px;
+ padding:12px 14px;margin:12px 0 0;border:1px solid var(--line);
+ border-radius:11px;background:var(--panel);cursor:pointer}
+.home-picker .untimed-option input{flex:none;width:18px;height:18px;accent-color:var(--blue);margin:2px 0}
+.home-picker .untimed-option strong,.home-picker .untimed-option small{display:block;min-width:0}
+.home-picker .untimed-option strong{font-size:14px}
+.home-picker .untimed-option small{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.45}
+@media(max-width:300px){.home-picker .edition-toggle{grid-template-columns:minmax(0,1fr)}}
