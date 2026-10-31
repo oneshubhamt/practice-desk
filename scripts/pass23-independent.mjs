@@ -1,3 +1,4 @@
+import {chooseModernPaper} from "./paper-select.mjs";
 /**
  * Independent Pass 23 paired v11/current acceptance.
  * Uses frozen v11 HTML, not previously generated v11 screenshots.
@@ -56,7 +57,7 @@ async function doCgl(era,id,edition,mode="free"){
    const selected=await page.locator("#g-papers option").evaluateAll((options,{id,edition})=>
     options.find(o=>o.value.includes(id)&&o.value.includes(edition))?.value,{id,edition});
    ensure(Boolean(selected),"selected edition missing: "+id+" "+edition);
-   await page.locator("#g-papers").selectOption(selected);
+   await chooseModernPaper(page,selected);
   }
   if(mode!=="strict")await page.locator('[data-mode="'+mode+'"]').click();
   if(mode==="single")await page.locator(old?"#singleSelect":"#g-single-section").selectOption("2");
@@ -135,7 +136,7 @@ async function separateGenericReviewPolicy(){
   q.questions[0].contentHash=questionRevisionHash(q.questions[0]);
   await page.locator("#g-file").setInputFiles({name:"private-custom.json",
    mimeType:"application/json",buffer:Buffer.from(JSON.stringify(q))});
-  await page.locator("#g-papers").selectOption(q.paper.id);
+  await chooseModernPaper(page,q.paper.id);
   ensure((await page.locator("#g-preflight").innerText()).includes("author/importer"),
    "Imported exams inappropriately inherit SSC official provenance");
   await page.locator("#g-start").click();
