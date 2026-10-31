@@ -34,12 +34,18 @@ try{
  await page.goto(url,{waitUntil:"load"});
  const paper=await page.locator("#g-papers").inputValue();
  yes(await page.locator("#g-edition").count()===1,"Paired source/reviewed editions not explicit");
- const source=await page.locator('#g-edition option').first().getAttribute("value");
- const reviewed=await page.locator('#g-edition option').last().getAttribute("value");
+ const reviewed=paper;
+ await page.locator('[data-edition="source"]').click();
+ const source=await page.locator("#g-papers").inputValue();
  yes(source!==reviewed,"Source and reviewed revision must be distinct");
- await page.locator("#g-edition").selectOption(source);
- yes(await page.locator("#g-papers").inputValue()===source,"Edition picker did not switch frozen paper");
- await page.locator("#g-edition").selectOption(reviewed);
+ yes(await page.locator('[data-edition="source"]').getAttribute("aria-pressed")==="true",
+  "Original edition did not become selected");
+ yes(await page.locator("#g-papers option").evaluateAll(opts=>
+  opts.filter(o=>o.value.includes("cgl-")).every(o=>o.value.includes("source"))),
+  "Reviewed editions leaked into Original paper list");
+ await page.locator('[data-edition="reviewed"]').click();
+ yes(await page.locator("#g-papers").inputValue()===reviewed,
+  "Edition picker did not restore same reviewed paper");
  await page.locator('[data-mode="single"]').click();
  await page.locator("#g-single-section").selectOption("2");
  await page.reload({waitUntil:"load"});
