@@ -153,8 +153,8 @@ try{
   const q62=await a.page.locator("#result-review .generic-review").nth(61).innerText();
   assert(q62.includes("Editorial caution")&&!q62.includes("Key corrected"),
    "Q62 disputed caution mislabeled key correction");
-  assert(q62.includes("Expected: B")||q62.includes("Expected: b"),
-   "Q62 publisher B not retained in review");
+  assert(q62.includes("Expected: Both 1 and 2, but not 3"),
+   "Q62 publisher option B text not retained in frozen review");
   await capture(a.page,"overhaul-q62-caution");
   assert(!a.errors.length,"Live exam/review console errors "+a.errors.join("; "));
   console.log("Pass28 live CGL strict/free/single scope, corrected Q6, wording Q3, caution Q62 PASS");
