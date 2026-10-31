@@ -745,3 +745,17 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
   min-width:0;max-width:100%;overflow-wrap:anywhere
  }
 }
+
+/* Pass29 F29-03: at a 195px zoom-equivalent viewport the Learning Desk
+   summary and insight/callout text must wrap without widening the document.
+   Keep the evidence table scrollable inside its own .scroll-table region. */
+@media (max-width:300px){
+ .learning-summary{grid-template-columns:minmax(0,1fr);min-width:0;max-width:100%}
+ .learning-summary .summary-stat,.learning-revision-callout,
+ .learning-insights{min-width:0;max-width:100%}
+ .learning-summary small,.learning-revision-callout p,
+ .learning-insights h2,.learning-insights p{
+  min-width:0;max-width:100%;overflow-wrap:anywhere
+ }
+ .learning-insights .scroll-table{max-width:100%;min-width:0;overflow-x:auto}
+}
