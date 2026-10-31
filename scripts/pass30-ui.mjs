@@ -40,7 +40,7 @@ try{
                   {name:"phone390",width:390,height:844},
                   {name:"zoom195",width:195,height:844}]){
   const ctx=await browser.newContext({viewport:{width:vp.width,height:vp.height},
-   reducedMotion:"reduce"});
+   reducedMotion:"reduce",acceptDownloads:true});
   const page=await ctx.newPage();page.setDefaultTimeout(17000);
   const errors=[];page.on("pageerror",e=>errors.push(e.message));
   page.on("dialog",d=>{void d.accept()});
@@ -48,6 +48,11 @@ try{
    await page.goto(pathToFileURL(join(root,"Practice_Desk_Offline_Mock_Tests.html")).href,
     {waitUntil:"load"});
    await page.locator("#g-papers").waitFor();
+   const templateDownload=page.waitForEvent("download");
+   await page.locator("#g-bank-template").click();
+   const savedTemplate=await templateDownload;
+   check(savedTemplate.suggestedFilename()==="Practice_Desk_APFC_NAT_Starter.json",
+    "Offline APFC/NAT authoring template download was not generated");
    check(await page.locator('[data-edition="source"]').count()===1&&
     await page.locator('[data-edition="reviewed"]').count()===1,
     "Both segmented edition controls must exist");
