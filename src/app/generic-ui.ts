@@ -1,4 +1,4 @@
-import { builtinCglPackages, configureCglPractice, validateExamPackage, startGenericAttempt, transitionGenericAttempt, readableAnswer } from "./exam-package.ts";
+import { builtinCglPackages, configureCglPractice, configureUntimedPractice, validateExamPackage, startGenericAttempt, transitionGenericAttempt, readableAnswer } from "./exam-package.ts";
 import type { ExamPackage, GenericAttempt, CglPracticeMode } from "./exam-package.ts";
 import type { QuestionRevision, CandidateResponse } from "../domain/question.js";
 import type { QuestionRevisionId,OptionId } from "../domain/ids.js";
@@ -343,16 +343,19 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  const packages=new Map<string,ExamPackage>(builtins.map(p=>[p.paper.id,p]));
  const records=new Map<string,RecordItem>();
  let choice=[...packages.values()].reverse().find(p=>p.paper.edition==="reviewed")?.paper.id??(packages.keys().next().value as string);
- let cglMode:CglPracticeMode="strict", singleSection=0;
+ let cglMode:CglPracticeMode="strict", singleSection=0, untimedPractice=false;
+ let editionView:"source"|"reviewed"=packages.get(choice)?.paper.edition==="source"?"source":"reviewed";
  const storedSelection=readPracticeSelection();
  if(storedSelection){
    if(packages.has(storedSelection.paperRevisionId))choice=storedSelection.paperRevisionId;
    cglMode=storedSelection.mode;
+   untimedPractice=storedSelection.untimed??false;
+   editionView=storedSelection.edition??(packages.get(choice)?.paper.edition==="source"?"source":"reviewed");
    singleSection=Math.min(storedSelection.section,
      Math.max(0,(packages.get(choice)?.paper.sections.length??1)-1));
  }
  const saveSelection=():void=>{
-   try{writePracticeSelection({schema:1,paperRevisionId:choice,mode:cglMode,section:singleSection});}
+   try{writePracticeSelection({schema:1,paperRevisionId:choice,mode:cglMode,section:singleSection,untimed:untimedPractice,edition:editionView});}
    catch{warning="Exam setup could not be saved on this device; current selection still works.";}
  };
   let historyFilter:HistoryStatus="all",historySort:HistorySort="newest",historySearch="",historyPaper="all";
@@ -718,7 +721,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      b.startedAt-a.startedAt).slice(0,3);
    const selected=packages.get(choice);
    const cgl=selected!==undefined&&builtinPaperIds.has(selected.paper.id);
-   const configured=selected?(cgl?configureCglPractice(selected,cglMode,singleSection):selected):null;
+   const configured=selected?configureUntimedPractice(
+     cgl?configureCglPractice(selected,cglMode,singleSection):selected,untimedPractice):null;
    const selectedNumbers=new Set(configured?.questions.map(q=>q.questionId.split(":").at(-1))??[]);
    const preflight=configured?examPreflight(configured,{
      builtinCgl:cgl,
@@ -727,21 +731,27 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    }):null;
    const count=selected?.paper.sections.reduce((n,z)=>n+z.questionRevisionIds.length,0)??0;
    const modeLabel=cgl?cglMode==="strict"?"Exam simulation":cglMode==="free"?"Full paper practice":"Section practice":"Custom examination";
-   const time=selected?.paper.timing.kind==="untimed"?"Untimed":cgl?
+   const time=configured?.paper.timing.kind==="untimed"?"Untimed":cgl?
      cglMode==="strict"?"15 min per section":cglMode==="single"?"15 minutes":"60 minutes":
-     selected?.paper.timing.kind==="whole-paper"?minutes(selected.paper.timing.durationMs):
+     configured?.paper.timing.kind==="whole-paper"?minutes(configured.paper.timing.durationMs):
      "Section timers";
    const questionCount=cgl&&cglMode==="single"?selected?.paper.sections[singleSection]?.questionRevisionIds.length??0:count;
    const previewSections=cgl&&cglMode==="single"?1:selected?.paper.sections.length??0;
    const previewNavigation=cgl?cglMode==="free"?"Free":cglMode==="single"?"One section":"Section locked":
      selected?.paper.navigation.sectionNavigation==="free"?"Free":"Sequential";
-   const options=[...packages.values()].map(p=>
-      '<option value="'+escapeText(p.paper.id)+'"'+(choice===p.paper.id?" selected":"")+'>'+
-      escapeText(p.title)+'</option>').join("");
-   const editions=selected?[...packages.values()].filter(p=>p.examId===selected.examId&&
-     p.paper.paperId===selected.paper.paperId):[];
-   const paired=editions.some(p=>p.paper.edition==="source")&&
-     editions.some(p=>p.paper.edition==="reviewed");
+   // The edition switch is a true paper-list filter, not another selector
+   // that leaves original/reviewed variants intermingled. Custom imported
+   // exams remain separately grouped and available from either edition.
+   const published=[...packages.values()].filter(p=>p.paper.edition===editionView);
+   const custom=[...packages.values()].filter(p=>p.paper.edition==="custom");
+   const option=(p:ExamPackage):string=>'<option value="'+escapeText(p.paper.id)+'"'+
+       (choice===p.paper.id?" selected":"")+'>'+escapeText(p.title)+'</option>';
+   const options='<optgroup label="'+(editionView==="reviewed"?"Reviewed papers":"Original papers")+'">'+
+       published.map(option).join("")+'</optgroup>'+
+       (custom.length?'<optgroup label="Imported / custom examinations">'+
+       custom.map(option).join("")+'</optgroup>':"");
+   const hasEditions=[...packages.values()].some(p=>p.paper.edition==="source")&&
+     [...packages.values()].some(p=>p.paper.edition==="reviewed");
    return '<div class="generic-heading home-heading"><div><span class="eyebrow">OFFLINE PRACTICE STUDIO</span>'+
      '<h1>Test library</h1><p class="muted">Choose a paper, work in exam conditions and learn from every attempt.</p></div>'+
      '<button class="btn quiet" id="g-history">History & insights →</button></div>'+
@@ -760,13 +770,17 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       '</div>'+(pending.length>5?'<p class="fine">Showing the five most recent unfinished tests; all others are preserved in History.</p>':"")+
       '</section>':"")+
      '<div class="generic-layout home-grid"><section class="panel pad home-picker"><h2 class="sr-only">Start a practice session</h2>'+
+     (hasEditions?'<div class="edition-row"><span class="picker" id="editionLabel">Paper edition</span>'+
+       '<div class="edition-toggle" id="g-edition" role="group" aria-labelledby="editionLabel">'+
+       (["reviewed","source"] as const).map(edition=>
+         '<button type="button" class="edition-choice '+(editionView===edition?"active":"")+
+         '" data-edition="'+edition+'" aria-pressed="'+(editionView===edition)+'">'+
+         (edition==="reviewed"?"Reviewed &amp; Corrected":"Original PDF")+'</button>').join("")+
+       '</div><p class="fine edition-note">'+(editionView==="reviewed"?
+         "Independently reviewed wording and answer keys; disputed items are labelled after submission.":
+         "Original publisher transcription; no independent key changes applied.")+
+       '</p></div>':"")+
      '<label class="picker" for="g-papers">Paper</label><select id="g-papers">'+options+'</select>'+
-     (paired?'<label class="picker" for="g-edition">Edition</label>'+
-       '<select id="g-edition" aria-label="Selected paper edition">'+
-       editions.filter(p=>p.paper.edition==="source"||p.paper.edition==="reviewed").map(p=>
-         '<option value="'+escapeText(p.paper.id)+'"'+(choice===p.paper.id?" selected":"")+'>'+
-         (p.paper.edition==="source"?"Original source":"Reviewed corrections")+
-         '</option>').join("")+'</select>':"")+
      (cgl?'<h3 class="subhead">Practice mode</h3><div class="generic-modes" role="group" aria-label="SSC CGL practice mode">'+
       ([["strict","Exam simulation","4 locked sections · 15 minutes each"],["free","Flexible full paper","60 minutes · move between sections"],
        ["single","Section practice","25 questions · 15 minutes"]] as const).map(([key,title,detail])=>
@@ -774,6 +788,9 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       '<span class="radio-dot"></span><span><strong>'+title+'</strong><small>'+detail+'</small></span></button>').join("")+'</div>'+
       (cglMode==="single"?'<label class="picker" for="g-single-section">Choose section</label><select id="g-single-section">'+
        selected!.paper.sections.map((z,i)=>'<option value="'+i+'"'+(singleSection===i?" selected":"")+'>'+escapeText(z.title)+'</option>').join("")+'</select>':""):"")+
+     '<label class="untimed-option" for="g-untimed"><input type="checkbox" id="g-untimed"'+
+        (untimedPractice?" checked":"")+'><span><strong>Untimed practice</strong>'+
+        '<small>No countdown or automatic expiry. Keep the selected navigation and scoring rules; finish when ready.</small></span></label>'+
      '<div class="row generic-actions home-start"><button class="btn primary" id="g-start"'+
       (loading||fallbackConflict||storageFault?' disabled':'')+'>Start '+escapeText(modeLabel)+' →</button>'+
       '<button class="btn" id="g-import"'+(loading||fallbackConflict||storageFault?' disabled':'')+'>Import exam JSON</button></div>'+
@@ -1231,13 +1248,25 @@ sectionPaceHTML(attempt)+analyticHTML+
      root.querySelector<HTMLButtonElement>("#g-learning")!.onclick=()=>{view="learning";draw();};
      root.querySelector<HTMLSelectElement>("#g-papers")!.onchange=e=>{
        choice=(e.target as HTMLSelectElement).value;
+       const chosen=packages.get(choice);
+       if(chosen?.paper.edition==="source"||chosen?.paper.edition==="reviewed")
+         editionView=chosen.paper.edition;
        singleSection=Math.min(singleSection,Math.max(0,(packages.get(choice)?.paper.sections.length??1)-1));
        saveSelection();draw();
      };
-     const edition=root.querySelector<HTMLSelectElement>("#g-edition");
-     if(edition)edition.onchange=()=>{
-       choice=edition.value;saveSelection();draw();
-     };
+     root.querySelectorAll<HTMLButtonElement>("[data-edition]").forEach(button=>button.onclick=()=>{
+       const next=button.dataset.edition;
+       if(next!=="source"&&next!=="reviewed")return;
+       if(next===editionView)return;
+       const current=packages.get(choice);
+       editionView=next;
+       const same=current?[...packages.values()].find(p=>p.paper.edition===next&&
+         p.examId===current.examId&&p.paper.paperId===current.paper.paperId):undefined;
+       const first=[...packages.values()].find(p=>p.paper.edition===next);
+       choice=(same??first??current)?.paper.id??choice;
+       singleSection=Math.min(singleSection,Math.max(0,(packages.get(choice)?.paper.sections.length??1)-1));
+       saveSelection();draw();
+     });
      root.querySelector<HTMLButtonElement>("#g-history")!.onclick=()=>{view="history";draw();};
      root.querySelector<HTMLButtonElement>("#g-history-recent")!.onclick=()=>{
        historyFilter="complete";historyPaper="all";historySearch="";historySort="newest";
@@ -1251,6 +1280,9 @@ sectionPaceHTML(attempt)+analyticHTML+
      root.querySelectorAll<HTMLButtonElement>("[data-mode]").forEach(button=>button.onclick=()=>{
        cglMode=button.dataset.mode as CglPracticeMode;saveSelection();draw();
      });
+     root.querySelector<HTMLInputElement>("#g-untimed")!.onchange=e=>{
+       untimedPractice=(e.target as HTMLInputElement).checked;saveSelection();draw();
+     };
      const single=root.querySelector<HTMLSelectElement>("#g-single-section");
      if(single)single.onchange=()=>{singleSection=Number(single.value);saveSelection();};
      root.querySelector<HTMLButtonElement>("#g-start")!.onclick=()=>{
@@ -1261,7 +1293,8 @@ sectionPaceHTML(attempt)+analyticHTML+
          "You have "+unfinished.length+" unfinished test"+(unfinished.length===1?"":"s")+
          ". Start a separate attempt? Existing attempts will be kept; their timers continue until expiry when resumed or while active."))return;
        const id=typeof crypto!=="undefined"&&crypto.randomUUID?crypto.randomUUID():"generic-"+now()+"-"+Math.random();
-       const configured=p.examId==="ssc-cgl"?configureCglPractice(p,cglMode,singleSection):p;
+       const configured=configureUntimedPractice(
+         p.examId==="ssc-cgl"?configureCglPractice(p,cglMode,singleSection):p,untimedPractice);
        attempt=startGenericAttempt(configured,id,now());
        if(configured.paper.edition==="reviewed"){
          const source=[...packages.values()].find(candidate=>candidate.paper.edition==="source"&&
@@ -1290,7 +1323,9 @@ sectionPaceHTML(attempt)+analyticHTML+
          const pkg=validateExamPackage(JSON.parse(await file.text()));
          if(packages.has(pkg.paper.id))throw new Error("Paper revision ID already exists. Supply a new revision ID.");
          if(!await save({recordType:"generic-package",id:"generic-package:"+pkg.paper.id,bundle:pkg}))return;
-         packages.set(pkg.paper.id,pkg);choice=pkg.paper.id;singleSection=0;saveSelection();
+         packages.set(pkg.paper.id,pkg);choice=pkg.paper.id;singleSection=0;
+         if(pkg.paper.edition==="source"||pkg.paper.edition==="reviewed")editionView=pkg.paper.edition;
+         saveSelection();
          notice("Package validated and imported.");
        }catch(error){notice(error instanceof Error?error.message:"Invalid exam package");}
      };
