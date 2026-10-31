@@ -97,7 +97,7 @@ try{
    assert(await modern.page.locator(".home-stat").count()===4,"Dashboard counts deleted instead of moved");
    await old.page.screenshot({path:join(out,"v11-"+v.name+"-library.png"),animations:"disabled"});
    await modern.page.screenshot({path:join(out,"overhaul-"+v.name+"-library.png"),animations:"disabled"});
-   const initialEdition=await modern.page.locator("#g-edition").inputValue();
+   const initialEdition=await modern.page.locator('[data-edition="reviewed"]').getAttribute("aria-pressed");
    await modern.page.locator('[data-mode="free"]').click();
    assert(await modern.page.locator('[data-mode="free"]').getAttribute("aria-pressed")==="true",
      "Flexible mode not operable at "+v.name);
@@ -107,7 +107,7 @@ try{
      "Single-section selector missing after mode change");
    await modern.page.locator("#g-single-section").selectOption("2");
    await modern.page.locator('[data-mode="strict"]').click();
-   assert(await modern.page.locator("#g-edition").inputValue()===initialEdition,
+   assert(await modern.page.locator('[data-edition="reviewed"]').getAttribute("aria-pressed")===initialEdition,
      "Edition was reset when changing modes");
    assert(modern.errors.length===0,"Current Library runtime errors "+modern.errors.join("; "));
    assert(old.errors.length===0,"v11 runtime errors "+old.errors.join("; "));
