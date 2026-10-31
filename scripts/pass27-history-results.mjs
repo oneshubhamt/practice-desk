@@ -68,7 +68,7 @@ async function beginPair(old,newer){
  await old.locator("#finish").click();
  await newer.locator("#g-submit").click();
  await old.locator("[data-tab='insights']").waitFor();
- await newer.locator("#result-overview table").waitFor();
+ await newer.locator("#result-overview > .panel:nth-child(2) table").waitFor();
 }
 async function validatePair(v){
  const old=await openFile(oldHtml,v),current=await openFile(newHtml,v);
@@ -77,7 +77,7 @@ async function validatePair(v){
   await capture(old.page,"v11-"+v.name+"-results.png");
   await capture(current.page,"overhaul-"+v.name+"-results.png");
   const tableOld=await geometry(old.page,"#resultContent table");
-  const tableNew=await geometry(current.page,"#result-overview table");
+  const tableNew=await geometry(current.page,"#result-overview > .panel:nth-child(2) table");
   const scoreNew=await geometry(current.page,"#result-overview .scoregrid");
   check(tableNew.y<=tableOld.y+80,
    v.name+" section table is too low vs v11: old "+tableOld.y+" new "+tableNew.y);
