@@ -781,3 +781,18 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
 .home-picker .untimed-option strong{font-size:14px}
 .home-picker .untimed-option small{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.45}
 @media(max-width:300px){.home-picker .edition-toggle{grid-template-columns:minmax(0,1fr)}}
+
+/* Pass30 F30-01: scored APFC/NAT Results at a 195px zoom-equivalent
+   viewport must fit within the document. The reusable analytics metric
+   minimum (165px) is larger than the available padded panel width.
+   Preserve all figures, scrollable tables and result tabs; only shrink
+   metric tracks and allow labels to wrap. */
+@media(max-width:300px){
+ #result-overview .learning-metric-grid{
+  grid-template-columns:minmax(0,1fr);min-width:0;max-width:100%
+ }
+ #result-overview .learning-metric{
+  min-width:0;max-width:100%;overflow-wrap:anywhere
+ }
+ #result-overview>.panel{min-width:0;max-width:100%}
+}
