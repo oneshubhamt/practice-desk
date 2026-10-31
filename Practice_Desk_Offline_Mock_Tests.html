@@ -692,6 +692,43 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
  .result-pane#result-overview>.panel:nth-child(2) .scroll-table td{padding:7px 9px}
  .result-pane .result-score-details{padding:15px 19px}
 }
+
+/* Pass 28 L07 — accessible non-wrapping Light/Dark at 100–140% and zoom.
+   Keep all three theme controls, with the toggle on its own full-width row.
+   This does not change the chosen font scale or hide settings on phone. */
+.display-control:has(.display-theme-choices){
+ display:block;padding:11px 0;min-height:0
+}
+.display-control:has(.display-theme-choices)>span{
+ display:block;margin:0 0 8px;line-height:1.35
+}
+.display-control:has(.display-theme-choices) .display-theme-choices{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:7px;width:100%;min-width:0;margin:0
+}
+.display-theme-choices .btn{
+ display:block;width:100%;min-width:0;padding:6px 5px;
+ white-space:nowrap;word-break:normal;overflow-wrap:normal;text-align:center
+}
+.display-control:has(.display-theme-choices) .display-theme{
+ display:block;width:100%;min-width:0;margin-top:7px;
+ white-space:normal;overflow-wrap:break-word;text-align:center
+}
+
+/* Pass28 narrow-zoom guard: the Library's scoring preflight had an intrinsic
+   183px grid column inside a 153px content box at 195px/140% zoom.
+   Preserve all disclosures and text scaling; let the grid and score wrap. */
+@media(max-width:300px){
+ .paper-preflight{grid-template-columns:minmax(0,1fr);min-width:0}
+ .paper-preflight>*{min-width:0;max-width:100%;overflow-wrap:anywhere}
+ .paper-preflight .preflight-scoreline{
+  width:100%;min-width:0;flex-wrap:wrap;padding:8px 9px
+ }
+ .paper-preflight .preflight-scoreline strong{
+  min-width:0;font-size:calc(20px * var(--type-scale));
+  overflow-wrap:anywhere
+ }
+}
 </style></head>
 <body><header><div class="wrap"><div class="brand"><div class="symbol">P</div><div><b>Practice Desk</b><small>Offline exam practice</small></div></div><div class="header-actions"><span class="header-offline"><span class="offline-dot"></span> Works offline</span><div class="display-tools" aria-label="Display options"><button type="button" id="displayTrigger" class="display-trigger" aria-label="Display settings" aria-haspopup="true" aria-controls="displayPanel" aria-expanded="false">Aa <span>Display</span></button><div id="displayPanel" class="display-panel" hidden><div class="display-heading"><strong>Appearance</strong><button id="displayClose" type="button" class="display-close" aria-label="Close display settings">×</button></div><div class="display-control"><span>Text size</span><div class="display-size"><button id="fontLess" type="button" class="btn" aria-label="Decrease text size">−</button><button id="fontReset" type="button" class="btn" aria-label="Reset text size">100%</button><button id="fontMore" type="button" class="btn" aria-label="Increase text size">+</button></div></div><div class="display-control"><span>Color theme</span><div class="display-theme-choices" role="group" aria-label="Color theme"><button id="themeLight" class="btn" type="button" aria-pressed="true">Light</button><button id="themeDark" class="btn" type="button" aria-pressed="false">Dark</button></div><button id="themeToggle" class="btn display-theme" type="button" aria-pressed="false">Toggle theme</button></div><button id="displayFullscreen" type="button" class="btn display-fullscreen" aria-pressed="false">Enter full screen</button><p class="fine display-hint">Saved on this device. Full screen is optional.</p><p class="fine" id="preferences-warning" role="status"></p></div></div></div></div></header>
 <div id="screen-announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -3759,10 +3796,20 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
           };
           const sourceInvalidCaution = edition === "reviewed" && original.status === "invalid" && patch.status === void 0;
           const notes = sourceInvalidCaution ? [merged.review, "Editorial caution: the original published answer is retained for scoring; it is disputed and has not been independently corrected."].filter(Boolean).join(" ") : merged.review;
+          const changes = [];
+          if (edition === "reviewed") {
+            if (patch.key !== void 0 && patch.key !== original.key) changes.push("answer-key");
+            if (patch.stem !== void 0 && patch.stem !== original.stem) changes.push("wording");
+            if (patch.opts !== void 0 && patch.opts.some((text2, i) => text2 !== original.opts[i]))
+              changes.push("options");
+            if (patch.explanation !== void 0 && patch.explanation !== original.explanation)
+              changes.push("explanation");
+          }
           const editorial = {
             status: editorialStatus,
             sourcePage: original.sourcePage,
             ...notes ? { notes } : {},
+            ...changes.length ? { changes } : {},
             ...merged.sources?.length ? { sources: merged.sources } : {}
           };
           const fingerprint2 = questionRevisionHash({ content, editorial });
@@ -6828,6 +6875,20 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
 
   // src/app/generic-ui.ts
   var escapeText = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
+  function readablePracticeMode(mode) {
+    switch (mode) {
+      case "exam-simulation":
+        return "Exam simulation";
+      case "full-paper-practice":
+        return "Full paper \xB7 flexible navigation";
+      case "section-practice":
+        return "Single-section practice";
+      case "custom-practice":
+        return "Custom practice";
+      default:
+        return mode.replaceAll("-", " ");
+    }
+  }
   var minutes = (ms) => {
     const sec = Math.ceil(Math.max(0, ms) / 1e3);
     return Math.floor(sec / 60).toString().padStart(2, "0") + ":" + (sec % 60).toString().padStart(2, "0");
@@ -6980,6 +7041,8 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     const hasNextSection = state.sectionIndex < paper.sections.length - 1;
     const untimedSection = paper.timing.kind === "sectional" && paper.timing.sectionLimits.find((limit) => limit.sectionId === section.id)?.durationMs === null;
     const progressValue = timeLimit !== null && timeLimit > 0 ? Math.min(100, 100 * elapsed / timeLimit) : Math.min(100, 100 * answered / Math.max(1, total));
+    const progressScope = timeLimit === null ? "Question coverage" : paper.timing.kind === "whole-paper" ? "Whole-paper timer" : "Section timer";
+    const progressAccessibleName = timeLimit === null ? "Questions answered" : paper.timing.kind === "whole-paper" ? "Whole-paper time used" : "Section time used";
     const isLow = remaining !== null && remaining <= 6e4;
     const focused = typeof document !== "undefined" && Boolean(
       document.fullscreenElement || document.documentElement.classList.contains("immersive")
@@ -6995,7 +7058,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       stimuli: attempt.frozen.stimuli,
       assets: attempt.frozen.assets
     };
-    return '<div class="generic-heading exam-header"><div><span class="eyebrow">EXAM IN PROGRESS \xB7 ' + escapeText(attempt.frozen.snapshot.mode) + "</span><h1>" + escapeText(bundle?.title ?? paper.paperId) + '</h1><p class="muted">' + escapeText(section.title) + " \xB7 Section " + (state.sectionIndex + 1) + " of " + paper.sections.length + '</p></div><div class="row exam-header-actions"><div class="exam-clock ' + (isLow ? "low" : "") + '"><strong class="generic-timer" id="g-timer" role="timer">' + (remaining === null ? "Untimed" : minutes(remaining)) + "</strong><small>" + (remaining === null ? "PRACTICE" : "TIME REMAINING") + '</small></div><button class="btn quiet" id="g-library">\u2190 Library</button><button class="btn" type="button" id="g-exam-full" aria-label="Toggle full-screen test view" aria-pressed="' + focused + '">' + (focused ? "\u26F6 Exit full screen" : "\u26F6 Full screen") + '</button></div></div><p id="g-fullscreen-status" role="status"></p>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + (expired ? '<p class="generic-warning" role="status">Section time has expired. Answers are locked. Select Continue to advance without using extra time.</p>' : "") + '<section class="exam-progress"><div class="row between"><span class="fine">' + answered + " / " + total + " answered \xB7 " + visited + " viewed \xB7 " + flagged + ' flagged</span><span class="fine">' + (timeLimit !== null ? "Section timer" : "Question coverage") + " \xB7 " + Math.round(progressValue) + '%</span></div><div class="progress-track exam-time-progress" role="progressbar" aria-valuenow="' + Math.round(progressValue) + '" aria-valuemin="0" aria-valuemax="100" aria-label="' + (timeLimit !== null ? "Time used" : "Questions answered") + '"><span style="width:' + progressValue.toFixed(1) + '%"></span></div></section><div class="generic-sections" role="group" aria-label="Exam sections">' + paper.sections.map((s, i) => {
+    return '<div class="generic-heading exam-header"><div><span class="eyebrow">EXAM IN PROGRESS \xB7 ' + escapeText(readablePracticeMode(attempt.frozen.snapshot.mode)) + "</span><h1>" + escapeText(bundle?.title ?? paper.paperId) + '</h1><p class="muted">' + escapeText(section.title) + " \xB7 Section " + (state.sectionIndex + 1) + " of " + paper.sections.length + '</p></div><div class="row exam-header-actions"><div class="exam-clock ' + (isLow ? "low" : "") + '"><strong class="generic-timer" id="g-timer" role="timer">' + (remaining === null ? "Untimed" : minutes(remaining)) + "</strong><small>" + (remaining === null ? "PRACTICE" : "TIME REMAINING") + '</small></div><button class="btn quiet" id="g-library">\u2190 Library</button><button class="btn" type="button" id="g-exam-full" aria-label="Toggle full-screen test view" aria-pressed="' + focused + '">' + (focused ? "\u26F6 Exit full screen" : "\u26F6 Full screen") + '</button></div></div><p id="g-fullscreen-status" role="status"></p>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + (expired ? '<p class="generic-warning" role="status">Section time has expired. Answers are locked. Select Continue to advance without using extra time.</p>' : "") + '<section class="exam-progress"><div class="row between"><span class="fine">' + answered + " / " + total + " answered \xB7 " + visited + " viewed \xB7 " + flagged + ' flagged</span><span class="fine">' + progressScope + " \xB7 " + Math.round(progressValue) + '%</span></div><div class="progress-track exam-time-progress" role="progressbar" aria-valuenow="' + Math.round(progressValue) + '" aria-valuemin="0" aria-valuemax="100" aria-label="' + progressAccessibleName + '"><span style="width:' + progressValue.toFixed(1) + '%"></span></div></section><div class="generic-sections" role="group" aria-label="Exam sections">' + paper.sections.map((s, i) => {
       const locked = state.status !== "running" || state.completedSections.includes(i) || (paper.timing.kind === "sectional" || paper.navigation.sectionNavigation === "sequential-locked") && i !== state.sectionIndex;
       const filled = s.questionRevisionIds.filter((qid) => Boolean(responsesById.get(qid)?.response)).length;
       const status = state.completedSections.includes(i) ? "Closed" : locked ? "Locked" : filled + " / " + s.questionRevisionIds.length + " answered";
