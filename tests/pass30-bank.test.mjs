@@ -15,7 +15,8 @@ test("easy APFC/NAT author bank generates a strict validated immutable exam pack
  assert.equal(pkg.paper.sections.length,3);
  assert.equal(pkg.paper.timing.kind,"untimed");
  assert.equal(pkg.paper.scoring.defaultRule.correctMarks,2.5);
- assert.equal(pkg.paper.scoring.defaultRule.incorrectMarks,-2.5/3);
+ assert(Math.abs(pkg.paper.scoring.defaultRule.incorrectMarks-(-5/6))<1e-12,
+  "APFC negative 1/3 of 2.5 marks must retain the full fractional value, not round to -0.83");
  assert.deepEqual(pkg.questions.map(q=>q.content.kind),["single-choice","single-choice","numeric-entry"]);
  assert.equal(pkg.answerKey.entries[0].answer.optionId,"A");
  assert.equal(pkg.answerKey.entries[1].answer.optionId,"B");
