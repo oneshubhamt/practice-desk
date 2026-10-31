@@ -139,6 +139,18 @@ export function configureCglPractice(base: ExamPackage, mode:CglPracticeMode, se
      .filter(([id])=>included.has(id as QuestionRevisionId)))}:{}),
    title:base.title+(mode==="free"?" · Flexible practice":" · "+sections[0]!.title+" practice")};
 }
+/** Optional timing override for any valid exam: never mutate the supplied paper.
+ * The distinct derived paper hash/id are frozen with each new attempt.
+ * Navigation, edition, keys, scoring and question order remain unchanged. */
+export function configureUntimedPractice(base:ExamPackage,enabled:boolean):ExamPackage{
+ if(!enabled||base.paper.timing.kind==="untimed")return base;
+ const derived={...base.paper,
+   id:(base.paper.id+":practice:untimed") as PaperRevision["id"],
+   timing:{kind:"untimed" as const}};
+ const paper:PaperRevision={...derived,contentHash:paperRevisionHash(derived)};
+ return {...base,paper};
+}
+
 export interface GenericAttempt {
  readonly recordType: "generic-attempt";
  readonly saveRevision?: number;
