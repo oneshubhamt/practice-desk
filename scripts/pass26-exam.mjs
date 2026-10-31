@@ -1,3 +1,4 @@
+import {chooseModernPaper} from "./paper-select.mjs";
 /**
  * Pass26: actual frozen v11 vs current offline laptop Exam landmarks (L02-L04).
  * Use the SAME reviewed 30 Sep CGL paper and flexible mode. Never infer parity
@@ -61,7 +62,7 @@ async function oldModernSelect(old,now){
  const id=await now.locator("#g-papers option").evaluateAll(list=>
   list.find(o=>o.value.includes("cgl-2026-09-30")&&o.value.includes("reviewed"))?.value??"");
  assert(Boolean(id),"Reviewed same-paper counterpart not found");
- await now.locator("#g-papers").selectOption(id);
+ await chooseModernPaper(now,id);
  assert((await now.locator("#g-papers option:checked").innerText()).includes("30 Sep 2026"),
   "Current paper selection drifted");
  await old.locator('[data-mode="free"]').click();
@@ -184,7 +185,7 @@ try{
   try{
    const id=await page.locator("#g-papers option").evaluateAll(list=>
     list.find(o=>o.value.includes("cgl-2026-09-30")&&o.value.includes("reviewed"))?.value??"");
-   await page.locator("#g-papers").selectOption(id);
+   await chooseModernPaper(page,id);
    await page.locator('[data-mode="free"]').click();await page.locator("#g-start").click();
    assert(await page.locator("#g-next").isEnabled(),"Responsive Next unavailable");
    assert(await page.locator("#g-flag").isEnabled(),"Responsive Flag unavailable");
