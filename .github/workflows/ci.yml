@@ -97,9 +97,8 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/overhaul'
         run: |
           if ! git diff --quiet -- Practice_Desk_Offline_Mock_Tests.html; then
-            # Only the verified checked-out source can produce this artifact.
-            # Concurrent documentation-only updates must not make the build
-            # commit fail; concurrent source changes MUST be re-tested.
+            # This artifact was built and tested from the verified checkout.
+            # Reconcile docs-only remote changes; reject source or HTML drift.
             verified_head=$(git rev-parse HEAD)
             git config user.name 'github-actions[bot]'
             git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
@@ -109,33 +108,12 @@ jobs:
               git fetch origin overhaul
               remote_head=$(git rev-parse FETCH_HEAD)
               if ! git merge-base --is-ancestor "$verified_head" "$remote_head"; then
-                echo "::error::Overhaul branch diverged from verified source; rebuild required."
+                echo "::error::Overhaul diverged from verified source; rebuild required."
                 exit 1
               fi
-              source_changes=$(git diff --name-only "$verified_head" "$remote_head" | grep -vE '\.md
-      - run: git diff --exit-code -- Practice_Desk_Offline_Mock_Tests.html
-
-  cross-browser:
-    name: Offline acceptance (${{ matrix.browser }})
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        browser: [firefox, webkit]
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: '24'
-          package-manager-cache: false
-      - run: npm install --no-audit --no-fund
-      - run: node node_modules/playwright-core/cli.js install --with-deps ${{ matrix.browser }}
-      - run: npm run check
-      - run: node scripts/pass10-platform.mjs ${{ matrix.browser }}
- || true)
+              source_changes=$(git diff --name-only "$verified_head" "$remote_head" | grep -vE '\.md$' || true)
               if [ -n "$source_changes" ]; then
-                echo "::error::Source or distribution changed while CI ran; fresh tests required."
+                echo "::error::Source or built HTML changed while CI ran; rerun checks."
                 printf '%s\n' "$source_changes"
                 exit 1
               fi
@@ -143,9 +121,9 @@ jobs:
               if git push origin HEAD:overhaul; then
                 exit 0
               fi
-              echo "Overhaul advanced during distribution push; retrying verified documentation-only reconciliation."
+              echo "Docs-only branch advance during push; retrying safe reconciliation."
             done
-            echo "::error::Could not publish verified offline distribution after three safe attempts."
+            echo "::error::Verified distribution publish could not complete safely."
             exit 1
           fi
       - run: git diff --exit-code -- Practice_Desk_Offline_Mock_Tests.html
