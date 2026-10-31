@@ -1,3 +1,4 @@
+import {chooseModernPaper} from "./paper-select.mjs";
 /**
  * Pass25: enforce laptop-first Library geometry and behavior vs frozen v11.
  * Unlike earlier screenshot-only checks, fail if the primary setup action
@@ -62,7 +63,7 @@ try{
    const sameEdition=await modern.page.locator("#g-papers option").evaluateAll((opts,id)=>
      opts.find(o=>o.value.includes(id)&&o.value.includes("reviewed"))?.value??"",dateId);
    assert(Boolean(sameEdition),"Paired source/reviewed CGL edition unavailable");
-   await modern.page.locator("#g-papers").selectOption(sameEdition);
+   await chooseModernPaper(modern.page,sameEdition);
    assert((await old.page.locator("#app").innerText()).includes("30 September 2026"),
      "v11 comparison paper not selected");
    assert((await modern.page.locator("#g-papers option:checked").innerText()).includes("30 Sep 2026"),
