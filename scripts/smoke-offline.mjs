@@ -1,3 +1,4 @@
+import {chooseModernPaper} from "./paper-select.mjs";
 import { mkdtemp, rm, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -189,7 +190,7 @@ try{
  await page.locator("#g-library").click();
  await page.locator("#g-file").setInputFiles({name:"six-kinds.json",mimeType:"application/json",
   buffer:Buffer.from(JSON.stringify(sixKindsPackage))});
- await page.locator("#g-papers").selectOption("rev-paper");
+ await chooseModernPaper(page,"rev-paper");
  await page.locator("#g-start").click();
  await page.locator('input[data-choice]').first().click();
  await page.locator("#g-next").click();
@@ -366,7 +367,7 @@ try{
  // practice revision. Re-select the original source before choosing mode.
  fail(cgl.packageId.endsWith(":practice:strict"),"Saved strict revision identity is missing its mode suffix");
  const sourcePaperRevisionId=cgl.packageId.slice(0,-":practice:strict".length);
- await reopened.locator("#g-papers").selectOption(sourcePaperRevisionId);
+ await chooseModernPaper(reopened,sourcePaperRevisionId);
  await reopened.locator('[data-mode="strict"]').click();
  await reopened.locator("#g-start").click();
  await reopened.locator('input[data-choice]').first().click();
