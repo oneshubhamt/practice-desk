@@ -33,7 +33,7 @@ import { addLearningCard, validateLearningCard } from "../learning/learning.ts";
 import type { LearningCard } from "../learning/learning.ts";
 import { readDisplayPreferences, writeDisplayPreferences, SETTINGS_EVENT } from "./preferences.ts";
 import { readPracticeSelection,writePracticeSelection } from "./practice-selection.ts";
-import { importAuthoredExam } from "./bank-import.ts";
+import { importAuthoredExam, APFC_NAT_BANK_TEMPLATE } from "./bank-import.ts";
 
 const escapeText=(s:unknown):string=>String(s??"").replace(/[&<>"']/g,c=>
   ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" })[c]??c);
@@ -796,7 +796,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       (loading||fallbackConflict||storageFault?' disabled':'')+'>Start '+escapeText(modeLabel)+' →</button>'+
       '<button class="btn" id="g-import"'+(loading||fallbackConflict||storageFault?' disabled':'')+'>Import question bank</button></div>'+
       '<input type="file" id="g-file" accept=".json,application/json" hidden>'+
-      '<p class="fine">Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section>'+
+      '<p class="fine">Start with an editable <button type="button" class="textlink" id="g-bank-template">Download APFC/NAT bank template</button> (JSON). '+
+      'Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section>'+
      '<aside class="home-side"><section class="panel pad paper-preview"><span class="eyebrow">SELECTED PAPER</span>'+
       '<h2>'+escapeText(selected?.title??"Choose a paper")+'</h2>'+
       '<p class="fine">'+escapeText(selected?.paper.paperId??"")+' · '+escapeText(selected?.paper.edition??"")+'</p>'+
@@ -1311,6 +1312,13 @@ sectionPaceHTML(attempt)+analyticHTML+
        warning="";view="exam";draw();void save(attempt);
      };
      root.querySelector<HTMLButtonElement>("#g-import")!.onclick=()=>root.querySelector<HTMLInputElement>("#g-file")?.click();
+     root.querySelector<HTMLButtonElement>("#g-bank-template")!.onclick=()=>{
+       const data=new Blob([JSON.stringify(APFC_NAT_BANK_TEMPLATE,null,2)],{type:"application/json"});
+       const url=URL.createObjectURL(data);
+       const link=document.createElement("a");link.href=url;link.download="Practice_Desk_APFC_NAT_Starter.json";
+       document.body.append(link);link.click();link.remove();
+       window.setTimeout(()=>URL.revokeObjectURL(url),2000);
+     };
      root.querySelector<HTMLButtonElement>("#g-export-history")!.onclick=()=>{void downloadBackup();};
      root.querySelector<HTMLButtonElement>("#g-import-history")!.onclick=()=>root.querySelector<HTMLInputElement>("#g-history-file")?.click();
      root.querySelector<HTMLInputElement>("#g-history-file")!.onchange=async e=>{
