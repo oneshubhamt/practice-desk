@@ -99,7 +99,17 @@ Original source key, reviewed patch key, original vs reviewed scoring, frozen re
 
 **Current programme:** **11/11** originally recorded L01–L11 laptop findings have source-level repairs with **targeted automated verification** across Passes 25–28. **Pass29 independent, broad, fresh visual/functional review is still required.** Do not label complete v11 laptop parity or release approval before that review. Real physical Safari/mobile, NVDA/VoiceOver, OS-kill/storage loss, human look-and-feel approval, and merge/release remain unverified/unapproved.
 
-## Recommended repair programme — original historical objectives (L01–L11 targeted-repaired; Pass29 open)
+## Pass 29 — final expanded independent automated journey review (31 Oct 2026)
+
+**[Complete separate dated Pass29 report](PASS29_INDEPENDENT_VISUAL_MATRIX_2026-10-31.md) · [successful CI 41164616047](https://github.com/oneshubhamt/practice-desk/actions/runs/41164616047) · [184 measured/screenshotted states and 56 paired frozen-v11 comparisons](https://github.com/oneshubhamt/practice-desk/actions/runs/41164616047/artifacts/13028401081).**
+
+**Automated independent matrix PASS: 4/4 CI jobs green.** This is a new independent, browser-driven **user-journey** review at 1280×800, 1366×768, 1440×900, 1536×864, 768 tablet, 390 phone and 195 zoom-equivalent; it includes different modes, source/review, 30 Sep and 6 Oct CGL, Display dark/140, answer/flag/pause/figure/passage, Results Overview/Review/Timing, History search/filter/reopen and two actual imported generic six-kind → manual grade → notebook → Learning → History flows. All L01–L11 original symptoms have passing targeted and refreshed independent automated acceptance; no new first-fold regression in these sampled journeys.
+
+**Three additional MEDIUM cross-journey defects discovered by the wider matrix and repaired, with strict regression assertions retained:** **F29-01** reopening a saved result after the Timing tab incorrectly retained Timing rather than showing Overview — result-tab/filter state now reset on completed-record reopen; **F29-02** 21px 195px/140%-dark History empty overflow — insights/storage H2 intrinsic widths made shrinkable; **F29-03** 23px 195px/140%-dark Learning empty overflow — summary/insight intrinsic widths constrained without hiding card metrics or tables. The initial generic written-grade test issue was an invalid expectation: an **unanswered** essay cannot be manually graded; new independent test submits real writing before self-grading.
+
+**Current disposition:** all **14/14 named desktop/journey findings** (11 prior L IDs + 3 newly found F29 IDs) have source repairs and passing **headless Chromium automated acceptance**; no physical/AT/human desktop signoff, all-configuration visual perfection or release authorization is claimed. The following original repair programme and old Release status paragraph are **archived Pass24 plans and pre-repair observations, not the current measured disposition**. Human review of the screenshot ZIP and macOS Safari/iOS/Android, NVDA/VoiceOver, real device storage/OS-kill remain outstanding; do not merge/promote without explicit user approval.
+
+## Archived Pass24 repair programme — historical objectives, NOT current status
 
 **Priority 1:** Reestablish v11-like *compact, action-first CGL UI* for Library and Exam at 1366×768 and 1440×900; keep richer generic engine and optional metrics in expandable/secondary areas rather than above essential controls. Specifically require Start, ordinary Next/Flag and first answer for typical passage items to remain visible to the same degree as v11 in the first viewport. Adopt DOM rectangle assertions, not just screenshot existence/no-overflow checks.
 
