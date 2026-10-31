@@ -1,3 +1,4 @@
+import {chooseModernPaper} from "./paper-select.mjs";
 // Pass 20 focused offline browser acceptance, not full release QA.
 // Challenges actual selected-policy scoring, editorial preflight, help,
 // independent attribution, sticky Display on long pages and tiny screens.
@@ -38,7 +39,7 @@ try{
  const source=(await page.locator("#g-papers option").evaluateAll(opts=>
    opts.find(x=>x.textContent.includes("Original"))?.value));
  ensure(reviewed&&source,"Missing built-in paired paper editions");
- await page.locator("#g-papers").selectOption(reviewed);
+ await chooseModernPaper(page,reviewed);
  await page.locator('[data-mode="strict"]').click();
  const strict=(await page.locator("#g-preflight").innerText());
  ensure(strict.includes("200.00")&&strict.includes("Correct +2")&&strict.includes("Incorrect -0.5"),
@@ -58,16 +59,16 @@ try{
  help=await page.locator("#g-exam-rules").innerText();
  ensure(help.includes("One shared 60 min paper timer")&&help.includes("Pause control is available"),
    "Flexible mode did not update selected timing/rules");
- await page.locator("#g-papers").selectOption(source);
+ await chooseModernPaper(page,source);
  const original=await page.locator("#g-preflight").innerText();
  ensure(original.includes("publisher-provided")&&original.includes("excluded"),
    "Original edition omitted publisher key or excluded-item cautions");
- await page.locator("#g-papers").selectOption(reviewed);
+ await chooseModernPaper(page,reviewed);
  // Import must not inherit built-in SSC provenance even if authored as a separate format.
  await page.locator("#g-file").setInputFiles({
    name:"six-kinds.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(pkg))
  });
- await page.locator("#g-papers").selectOption(pkg.paper.id);
+ await chooseModernPaper(page,pkg.paper.id);
  const imported=await page.locator("#g-preflight").innerText();
  ensure(imported.includes("10.00")&&imported.includes("manual-response")&&
    imported.includes("author/importer")&&!imported.includes("SSC"),
@@ -77,7 +78,7 @@ try{
    "Imported exam rules did not derive from its own policy");
  console.log("Pass 20: configured CGL modes, editorial counts/provenance and generic imported exam preflight passed");
 
- await page.locator("#g-papers").selectOption(reviewed);
+ await chooseModernPaper(page,reviewed);
  await page.locator('[data-mode="strict"]').click();
  await page.locator("#g-start").click();
  await page.locator("#g-exam-full").click();
