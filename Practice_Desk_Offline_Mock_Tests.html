@@ -729,6 +729,39 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
   overflow-wrap:anywhere
  }
 }
+
+/* Pass 29 F29-02: very narrow 200%-zoom History must not let intrinsic
+   insight headings or management headings widen their grid tracks. All
+   comparisons, priorities, controls and storage warnings remain readable. */
+@media (max-width:300px){
+ .history-panels,.history-management-grid{
+  grid-template-columns:minmax(0,1fr);min-width:0;max-width:100%
+ }
+ .history-panels .panel,.history-management-grid .panel,
+ .history-panels .row,.history-management-grid .row,
+ .history-panels .row>div{
+  min-width:0;max-width:100%
+ }
+ .history-panels .row,.history-management-grid .row{flex-wrap:wrap}
+ .history-panels h2,.history-management-grid h2,
+ .history-panels .fine,.history-management-grid .fine{
+  min-width:0;max-width:100%;overflow-wrap:anywhere
+ }
+}
+
+/* Pass29 F29-03: at a 195px zoom-equivalent viewport the Learning Desk
+   summary and insight/callout text must wrap without widening the document.
+   Keep the evidence table scrollable inside its own .scroll-table region. */
+@media (max-width:300px){
+ .learning-summary{grid-template-columns:minmax(0,1fr);min-width:0;max-width:100%}
+ .learning-summary .summary-stat,.learning-revision-callout,
+ .learning-insights{min-width:0;max-width:100%}
+ .learning-summary small,.learning-revision-callout p,
+ .learning-insights h2,.learning-insights p{
+  min-width:0;max-width:100%;overflow-wrap:anywhere
+ }
+ .learning-insights .scroll-table{max-width:100%;min-width:0;overflow-x:auto}
+}
 </style></head>
 <body><header><div class="wrap"><div class="brand"><div class="symbol">P</div><div><b>Practice Desk</b><small>Offline exam practice</small></div></div><div class="header-actions"><span class="header-offline"><span class="offline-dot"></span> Works offline</span><div class="display-tools" aria-label="Display options"><button type="button" id="displayTrigger" class="display-trigger" aria-label="Display settings" aria-haspopup="true" aria-controls="displayPanel" aria-expanded="false">Aa <span>Display</span></button><div id="displayPanel" class="display-panel" hidden><div class="display-heading"><strong>Appearance</strong><button id="displayClose" type="button" class="display-close" aria-label="Close display settings">×</button></div><div class="display-control"><span>Text size</span><div class="display-size"><button id="fontLess" type="button" class="btn" aria-label="Decrease text size">−</button><button id="fontReset" type="button" class="btn" aria-label="Reset text size">100%</button><button id="fontMore" type="button" class="btn" aria-label="Increase text size">+</button></div></div><div class="display-control"><span>Color theme</span><div class="display-theme-choices" role="group" aria-label="Color theme"><button id="themeLight" class="btn" type="button" aria-pressed="true">Light</button><button id="themeDark" class="btn" type="button" aria-pressed="false">Dark</button></div><button id="themeToggle" class="btn display-theme" type="button" aria-pressed="false">Toggle theme</button></div><button id="displayFullscreen" type="button" class="btn display-fullscreen" aria-pressed="false">Enter full screen</button><p class="fine display-hint">Saved on this device. Full screen is optional.</p><p class="fine" id="preferences-warning" role="status"></p></div></div></div></div></header>
 <div id="screen-announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -7726,6 +7759,10 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
           } : {}
         };
         void save(attempt);
+      }
+      if (attempt.finishedAt !== null) {
+        resultTab = "overview";
+        reviewFilter = "all";
       }
       view = attempt.finishedAt ? "result" : "exam";
       draw();
