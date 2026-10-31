@@ -1,3 +1,4 @@
+import {chooseModernPaper} from "./paper-select.mjs";
 import { mkdtemp,rm,readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join,resolve } from "node:path";
@@ -34,7 +35,7 @@ try{
  await page.locator("#g-papers").waitFor();
  const reviewed=await page.locator("#g-papers option").evaluateAll(opts=>
   opts.find(x=>x.textContent.includes("Reviewed"))?.value??opts[0]?.value);
- await page.locator("#g-papers").selectOption(reviewed);
+ await chooseModernPaper(page,reviewed);
  await page.locator('[data-mode="free"]').click();
  await page.locator("#g-start").click();
  // Observe a real return, independent from answer edits and timing ticks.
