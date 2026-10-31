@@ -54,6 +54,7 @@ async function doCgl(era,id,edition,mode="free"){
    await page.locator("#paperSelect").selectOption(id);
    await page.locator('[data-edition="'+(edition==="source"?"original":"reviewed")+'"]').click();
   }else{
+   await page.locator('[data-edition="'+edition+'"]').click();
    const selected=await page.locator("#g-papers option").evaluateAll((options,{id,edition})=>
     options.find(o=>o.value.includes(id)&&o.value.includes(edition))?.value,{id,edition});
    ensure(Boolean(selected),"selected edition missing: "+id+" "+edition);
