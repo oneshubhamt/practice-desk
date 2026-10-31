@@ -762,6 +762,43 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
  }
  .learning-insights .scroll-table{max-width:100%;min-width:0;overflow-x:auto}
 }
+
+/* Pass30: v11-style genuine paper-edition filter, not a second select. */
+.home-picker .edition-row{margin:3px 0 4px}
+.home-picker .edition-row>.picker{display:block;margin:0 0 8px}
+.home-picker .edition-toggle{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:6px;background:var(--soft);padding:5px;border:1px solid var(--line);border-radius:12px}
+.home-picker .edition-choice{min-width:0;padding:11px 10px;border:1px solid transparent;
+ border-radius:9px;background:transparent;color:var(--muted);font-weight:700;
+ text-align:center;line-height:1.35;overflow-wrap:anywhere;cursor:pointer}
+.home-picker .edition-choice.active{background:var(--panel);border-color:var(--blue);
+ color:var(--ink);box-shadow:0 1px 5px color-mix(in srgb,var(--ink) 10%,transparent)}
+.home-picker .edition-choice:hover{border-color:var(--blue)}
+.home-picker .edition-choice:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.home-picker .edition-note{margin:7px 0 9px}
+.home-picker .untimed-option{display:flex;align-items:flex-start;gap:11px;
+ padding:12px 14px;margin:12px 0 0;border:1px solid var(--line);
+ border-radius:11px;background:var(--panel);cursor:pointer}
+.home-picker .untimed-option input{flex:none;width:18px;height:18px;accent-color:var(--blue);margin:2px 0}
+.home-picker .untimed-option strong,.home-picker .untimed-option small{display:block;min-width:0}
+.home-picker .untimed-option strong{font-size:14px}
+.home-picker .untimed-option small{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.45}
+@media(max-width:300px){.home-picker .edition-toggle{grid-template-columns:minmax(0,1fr)}}
+
+/* Pass30 F30-01: scored APFC/NAT Results at a 195px zoom-equivalent
+   viewport must fit within the document. The reusable analytics metric
+   minimum (165px) is larger than the available padded panel width.
+   Preserve all figures, scrollable tables and result tabs; only shrink
+   metric tracks and allow labels to wrap. */
+@media(max-width:300px){
+ #result-overview .learning-metric-grid{
+  grid-template-columns:minmax(0,1fr);min-width:0;max-width:100%
+ }
+ #result-overview .learning-metric{
+  min-width:0;max-width:100%;overflow-wrap:anywhere
+ }
+ #result-overview>.panel{min-width:0;max-width:100%}
+}
 </style></head>
 <body><header><div class="wrap"><div class="brand"><div class="symbol">P</div><div><b>Practice Desk</b><small>Offline exam practice</small></div></div><div class="header-actions"><span class="header-offline"><span class="offline-dot"></span> Works offline</span><div class="display-tools" aria-label="Display options"><button type="button" id="displayTrigger" class="display-trigger" aria-label="Display settings" aria-haspopup="true" aria-controls="displayPanel" aria-expanded="false">Aa <span>Display</span></button><div id="displayPanel" class="display-panel" hidden><div class="display-heading"><strong>Appearance</strong><button id="displayClose" type="button" class="display-close" aria-label="Close display settings">×</button></div><div class="display-control"><span>Text size</span><div class="display-size"><button id="fontLess" type="button" class="btn" aria-label="Decrease text size">−</button><button id="fontReset" type="button" class="btn" aria-label="Reset text size">100%</button><button id="fontMore" type="button" class="btn" aria-label="Increase text size">+</button></div></div><div class="display-control"><span>Color theme</span><div class="display-theme-choices" role="group" aria-label="Color theme"><button id="themeLight" class="btn" type="button" aria-pressed="true">Light</button><button id="themeDark" class="btn" type="button" aria-pressed="false">Dark</button></div><button id="themeToggle" class="btn display-theme" type="button" aria-pressed="false">Toggle theme</button></div><button id="displayFullscreen" type="button" class="btn display-fullscreen" aria-pressed="false">Enter full screen</button><p class="fine display-hint">Saved on this device. Full screen is optional.</p><p class="fine" id="preferences-warning" role="status"></p></div></div></div></div></header>
 <div id="screen-announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -814,22 +851,22 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
   function isFunction(fn) {
     return typeof fn === "function";
   }
-  function defineOwnDataField(target, key, value) {
+  function defineOwnDataField(target, key2, value) {
     const record3 = target;
-    if (key in target) {
-      const existing = Object.getOwnPropertyDescriptor(target, key);
+    if (key2 in target) {
+      const existing = Object.getOwnPropertyDescriptor(target, key2);
       if (existing && "value" in existing && existing.writable) {
-        record3[key] = value;
+        record3[key2] = value;
         return;
       }
     } else {
       const prototype = Object.getPrototypeOf(target);
       if (prototype === Object.prototype || prototype === null) {
-        record3[key] = value;
+        record3[key2] = value;
         return;
       }
     }
-    Object.defineProperty(target, key, {
+    Object.defineProperty(target, key2, {
       value,
       writable: true,
       enumerable: true,
@@ -838,16 +875,16 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
   }
   function assignObjectFields(target, source) {
     const fields = source;
-    for (const key in fields) if (Object.hasOwn(fields, key)) defineOwnDataField(target, key, fields[key]);
+    for (const key2 in fields) if (Object.hasOwn(fields, key2)) defineOwnDataField(target, key2, fields[key2]);
   }
   function assignEnumerableDataFields(target, ...sources2) {
     for (const source of sources2) {
       if (source == null) continue;
       const fields = Object(source);
       assignObjectFields(target, fields);
-      for (const key of Object.getOwnPropertySymbols(fields)) {
-        if (!Object.getOwnPropertyDescriptor(fields, key)?.enumerable) continue;
-        defineOwnDataField(target, key, fields[key]);
+      for (const key2 of Object.getOwnPropertySymbols(fields)) {
+        if (!Object.getOwnPropertyDescriptor(fields, key2)?.enumerable) continue;
+        defineOwnDataField(target, key2, fields[key2]);
       }
     }
     return target;
@@ -1139,11 +1176,11 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
   });
 
   // node_modules/@open-spaced-repetition/srs-kit/dist/esm/scheduler-BnkL-8NY.js
-  function getAttachedValue(target, key) {
-    return target[key];
+  function getAttachedValue(target, key2) {
+    return target[key2];
   }
-  function rememberAttachedValue(target, key, value) {
-    Object.defineProperty(target, key, {
+  function rememberAttachedValue(target, key2, value) {
+    Object.defineProperty(target, key2, {
       value,
       writable: false,
       enumerable: false,
@@ -3340,11 +3377,11 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     return value;
   }
   function positiveInteger(value, path) {
-    const number = finite(value, path);
-    if (!Number.isSafeInteger(number) || number < 1) {
+    const number2 = finite(value, path);
+    if (!Number.isSafeInteger(number2) || number2 < 1) {
       throw new Error(path + ": expected a positive safe integer");
     }
-    return number;
+    return number2;
   }
   function stringArray(value, path) {
     if (!Array.isArray(value)) throw new Error(path + ": expected an array");
@@ -3526,15 +3563,15 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     return policy;
   }
   function validateAnswerKeyRevision(value, questions) {
-    const key = record(value, "answerKey");
-    text(key["id"], "answerKey.id");
-    text(key["paperId"], "answerKey.paperId");
-    positiveInteger(key["revision"], "answerKey.revision");
-    hash(key["contentHash"], "answerKey.contentHash");
-    if (!Array.isArray(key["entries"])) throw new Error("answerKey.entries: expected an array");
+    const key2 = record(value, "answerKey");
+    text(key2["id"], "answerKey.id");
+    text(key2["paperId"], "answerKey.paperId");
+    positiveInteger(key2["revision"], "answerKey.revision");
+    hash(key2["contentHash"], "answerKey.contentHash");
+    if (!Array.isArray(key2["entries"])) throw new Error("answerKey.entries: expected an array");
     const questionByRevision = new Map(questions.map((question) => [question.id, question]));
     const seen = /* @__PURE__ */ new Set();
-    key["entries"].forEach((rawEntry, index) => {
+    key2["entries"].forEach((rawEntry, index) => {
       const path = "answerKey.entries[" + index + "]";
       const entry = record(rawEntry, path);
       const questionRevisionId = text(entry["questionRevisionId"], path + ".questionRevisionId");
@@ -3559,7 +3596,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       } else if (expectedKind === "numeric-entry") {
         const accepted = answer["acceptedValues"];
         if (!Array.isArray(accepted) || accepted.length === 0) throw new Error(path + ".answer.acceptedValues: expected at least one value");
-        accepted.forEach((number, valueIndex) => finite(number, path + ".answer.acceptedValues[" + valueIndex + "]"));
+        accepted.forEach((number2, valueIndex) => finite(number2, path + ".answer.acceptedValues[" + valueIndex + "]"));
         for (const field of ["absoluteTolerance", "relativeTolerance"]) {
           if (answer[field] !== void 0 && finite(answer[field], path + ".answer." + field) < 0) throw new Error(path + ".answer." + field + ": must be non-negative");
         }
@@ -3591,7 +3628,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       }
       if (entry["scoringOverride"] !== void 0) validateMarkingRule(entry["scoringOverride"], path + ".scoringOverride");
     });
-    return key;
+    return key2;
   }
   function validatePaperRevision(value, questions, answerKey) {
     const paper = record(value, "paperRevision");
@@ -3788,11 +3825,11 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       edition: value.edition
     });
   }
-  function assertRevisionHashes(questions, key, paper) {
+  function assertRevisionHashes(questions, key2, paper) {
     for (const question of questions)
       if (question.contentHash !== questionRevisionHash(question))
         throw new Error("Question revision content hash mismatch: " + question.id);
-    if (key.contentHash !== answerKeyRevisionHash(key))
+    if (key2.contentHash !== answerKeyRevisionHash(key2))
       throw new Error("Answer-key revision content hash mismatch");
     if (paper.contentHash !== paperRevisionHash(paper))
       throw new Error("Paper revision content hash mismatch");
@@ -3862,7 +3899,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
           section.questionRevisionIds.push(id);
         }
         const keyFingerprint = answerKeyRevisionHash({ entries });
-        const key = validateAnswerKeyRevision({
+        const key2 = validateAnswerKeyRevision({
           id: `${source.id}:${edition}:key:${keyFingerprint.slice(0, 16)}`,
           paperId,
           revision: 1,
@@ -3883,7 +3920,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
           allowReview: true
         };
         const scoring = { defaultRule: { correctMarks: 2, incorrectMarks: -0.5, unansweredMarks: 0 } };
-        const paperContent = { sections, timing, navigation, scoring, answerKeyRevisionId: key.id, edition };
+        const paperContent = { sections, timing, navigation, scoring, answerKeyRevisionId: key2.id, edition };
         const fingerprint = paperRevisionHash(paperContent);
         const paper = validatePaperRevision({
           id: `${source.id}:${edition}:${fingerprint.slice(0, 16)}`,
@@ -3891,8 +3928,8 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
           revision: 1,
           contentHash: fingerprint,
           ...paperContent
-        }, questions, key);
-        results.push({ paper, key, questions });
+        }, questions, key2);
+        results.push({ paper, key: key2, questions });
       }
     }
     return results;
@@ -3910,7 +3947,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     return v;
   };
   var only = (o, keys, path) => {
-    for (const key of Object.keys(o)) if (!keys.includes(key)) throw new Error(path + "." + key + ": unsupported field");
+    for (const key2 of Object.keys(o)) if (!keys.includes(key2)) throw new Error(path + "." + key2 + ": unsupported field");
   };
   var stringList = (v, path) => {
     if (!Array.isArray(v)) throw new Error(path + ": expected an array");
@@ -4284,10 +4321,10 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     }
     return null;
   }
-  function scoreAttempt(paper, key, questions, responses, calculatedAt) {
-    if (paper.answerKeyRevisionId !== key.id || paper.paperId !== key.paperId) throw new Error("Answer key does not match paper revision");
+  function scoreAttempt(paper, key2, questions, responses, calculatedAt) {
+    if (paper.answerKeyRevisionId !== key2.id || paper.paperId !== key2.paperId) throw new Error("Answer key does not match paper revision");
     const questionMap = new Map(questions.map((q) => [q.id, q]));
-    const answerMap = new Map(key.entries.map((e) => [e.questionRevisionId, e]));
+    const answerMap = new Map(key2.entries.map((e) => [e.questionRevisionId, e]));
     const responseMap = new Map(responses.map((r) => [r.questionRevisionId, r]));
     const ids = paper.sections.flatMap((s) => s.questionRevisionIds);
     if (new Set(ids).size !== ids.length || responseMap.size !== responses.length) throw new Error("Duplicate question or response");
@@ -4334,20 +4371,20 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
   }
 
   // src/history/frozen.ts
-  function freezeAttempt(paper, key, questions, stimuli, assets, mode, frozenAt, examId) {
-    validateAnswerKeyRevision(key, questions);
-    validatePaperRevision(paper, questions, key);
-    assertRevisionHashes(questions, key, paper);
+  function freezeAttempt(paper, key2, questions, stimuli, assets, mode, frozenAt, examId) {
+    validateAnswerKeyRevision(key2, questions);
+    validatePaperRevision(paper, questions, key2);
+    assertRevisionHashes(questions, key2, paper);
     const display = selectDisplayResources(questions, stimuli, assets);
     const snapshot = {
       examId,
       paperId: paper.paperId,
       paperRevisionId: paper.id,
-      answerKeyRevisionId: key.id,
+      answerKeyRevisionId: key2.id,
       scoringPolicy: paper.scoring,
       mode
     };
-    return structuredClone({ schema: 2, frozenAt, snapshot, paper, key, questions, ...display });
+    return structuredClone({ schema: 2, frozenAt, snapshot, paper, key: key2, questions, ...display });
   }
   function assertFrozenContent(value) {
     if (!value || value.schema !== 2 || !value.snapshot || !value.paper || !value.key || !Array.isArray(value.questions) || !Array.isArray(value.stimuli) || !Array.isArray(value.assets) || typeof value.snapshot.examId !== "string" || value.snapshot.examId.length === 0 || value.snapshot.paperId !== value.paper.paperId || value.snapshot.paperRevisionId !== value.paper.id || value.snapshot.answerKeyRevisionId !== value.key.id || JSON.stringify(value.snapshot.scoringPolicy) !== JSON.stringify(value.paper.scoring) || !Number.isFinite(Date.parse(value.frozenAt))) {
@@ -4380,14 +4417,14 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     if (raw.format !== "practice-desk-exam" || raw.version !== 1 || typeof raw.examId !== "string" || !raw.examId.trim() || typeof raw.title !== "string" || !raw.title.trim() || !Array.isArray(raw.questions) || raw.questions.length > 2e3)
       throw new Error("Invalid exam package header or question count");
     const questions = raw.questions.map((x) => validateQuestionRevision(x));
-    const key = validateAnswerKeyRevision(raw.answerKey, questions);
-    const paper = validatePaperRevision(raw.paper, questions, key);
+    const key2 = validateAnswerKeyRevision(raw.answerKey, questions);
+    const paper = validatePaperRevision(raw.paper, questions, key2);
     const ids = new Set(paper.sections.flatMap((s) => s.questionRevisionIds));
     if (ids.size !== questions.length || questions.some((q) => !ids.has(q.id)))
       throw new Error("Every question must belong to this paper exactly once");
     const { stimuli, assets } = validateMediaInventory(raw.stimuli ?? [], raw.assets ?? []);
     validateQuestionMediaReferences(questions, stimuli, assets);
-    assertRevisionHashes(questions, key, paper);
+    assertRevisionHashes(questions, key2, paper);
     const explanations = raw.explanations;
     if (explanations !== void 0) {
       if (!explanations || typeof explanations !== "object" || Array.isArray(explanations))
@@ -4400,7 +4437,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
   }
   function builtinCglPackages(sources2, patches2, solutions2 = {}) {
     const editions = importCglBank(sources2, patches2);
-    return editions.map(({ paper, key, questions }) => {
+    return editions.map(({ paper, key: key2, questions }) => {
       const source = sources2[paper.paperId];
       if (!source) throw new Error("Missing CGL source");
       const assets = [];
@@ -4438,7 +4475,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
         examId: "ssc-cgl",
         title: `${source.name} \xB7 ${paper.edition === "reviewed" ? "Reviewed" : "Original"}`,
         paper,
-        answerKey: key,
+        answerKey: key2,
         questions,
         stimuli,
         assets,
@@ -4488,6 +4525,16 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       ...base.explanations ? { explanations: Object.fromEntries(Object.entries(base.explanations).filter(([id]) => included.has(id))) } : {},
       title: base.title + (mode === "free" ? " \xB7 Flexible practice" : " \xB7 " + sections[0].title + " practice")
     };
+  }
+  function configureUntimedPractice(base, enabled) {
+    if (!enabled || base.paper.timing.kind === "untimed") return base;
+    const derived = {
+      ...base.paper,
+      id: base.paper.id + ":practice:untimed",
+      timing: { kind: "untimed" }
+    };
+    const paper = { ...derived, contentHash: paperRevisionHash(derived) };
+    return { ...base, paper };
   }
   function startGenericAttempt(bundle, id, timestamp) {
     const validated = validateExamPackage(bundle);
@@ -4803,9 +4850,9 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
 
   // src/engine/score-ceiling.ts
   var excluded = /* @__PURE__ */ new Set(["draft", "invalid", "incomplete-source", "under-review", "superseded"]);
-  function scoreableMaximum(paper, key, questions, section) {
+  function scoreableMaximum(paper, key2, questions, section) {
     const qs = new Map(questions.map((q) => [q.id, q]));
-    const entries = new Map(key.entries.map((e) => [e.questionRevisionId, e]));
+    const entries = new Map(key2.entries.map((e) => [e.questionRevisionId, e]));
     return (section ? [section] : paper.sections).reduce((total, part) => total + part.questionRevisionIds.reduce((sum, id) => {
       const q = qs.get(id), entry = entries.get(id);
       if (!q || !entry) throw new Error("Cannot derive maximum for missing frozen question or key");
@@ -4814,9 +4861,9 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       return sum + rule.correctMarks;
     }, 0), 0);
   }
-  function scoreableLowerBound(paper, key, questions, section) {
+  function scoreableLowerBound(paper, key2, questions, section) {
     const qs = new Map(questions.map((q) => [q.id, q]));
-    const entries = new Map(key.entries.map((e) => [e.questionRevisionId, e]));
+    const entries = new Map(key2.entries.map((e) => [e.questionRevisionId, e]));
     return (section ? [section] : paper.sections).reduce((total, part) => total + part.questionRevisionIds.reduce((sum, id) => {
       const q = qs.get(id), entry = entries.get(id);
       if (!q || !entry) throw new Error("Cannot derive lower bound for missing frozen question or key");
@@ -4901,9 +4948,16 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
   function validatePracticeSelection(value) {
     if (!value || typeof value !== "object" || Array.isArray(value)) throw Error("Invalid saved exam selection");
     const p = value;
-    if (p.schema !== 1 || typeof p.paperRevisionId !== "string" || !p.paperRevisionId.trim() || p.paperRevisionId.length > 300 || !["strict", "free", "single"].includes(p.mode ?? "") || !Number.isSafeInteger(p.section) || p.section < 0 || p.section > 1999)
+    if (p.schema !== 1 || typeof p.paperRevisionId !== "string" || !p.paperRevisionId.trim() || p.paperRevisionId.length > 300 || !["strict", "free", "single"].includes(p.mode ?? "") || !Number.isSafeInteger(p.section) || p.section < 0 || p.section > 1999 || p.untimed !== void 0 && typeof p.untimed !== "boolean" || p.edition !== void 0 && p.edition !== "source" && p.edition !== "reviewed")
       throw Error("Invalid saved exam selection");
-    return { schema: 1, paperRevisionId: p.paperRevisionId, mode: p.mode, section: p.section };
+    return {
+      schema: 1,
+      paperRevisionId: p.paperRevisionId,
+      mode: p.mode,
+      section: p.section,
+      ...p.untimed !== void 0 ? { untimed: p.untimed } : {},
+      ...p.edition !== void 0 ? { edition: p.edition } : {}
+    };
   }
   function readPracticeSelection(storage = localStorage) {
     try {
@@ -5027,10 +5081,10 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       maxInterval
     };
   }
-  function fnv1a32(str) {
+  function fnv1a32(str2) {
     let hash2 = 2166136261;
-    for (let index = 0; index < str.length; index += 1) {
-      hash2 ^= str.charCodeAt(index);
+    for (let index = 0; index < str2.length; index += 1) {
+      hash2 ^= str2.charCodeAt(index);
       hash2 = Math.imul(hash2, 16777619);
     }
     return hash2 >>> 0;
@@ -5866,9 +5920,9 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     if (attempt.finishedAt === null) throw Error("Learning notebook is available only after submission");
     if (!validDate(at)) throw Error("Invalid learning-card timestamp");
     const question = attempt.frozen.questions.find((q) => q.id === id);
-    const key = attempt.frozen.key.entries.find((x) => x.questionRevisionId === id);
+    const key2 = attempt.frozen.key.entries.find((x) => x.questionRevisionId === id);
     const section = attempt.frozen.paper.sections.find((s) => s.questionRevisionIds.includes(id));
-    if (!question || !key || !section) throw Error("Question not in completed exam");
+    if (!question || !key2 || !section) throw Error("Question not in completed exam");
     const display = selectDisplayResources([question], attempt.frozen.stimuli, attempt.frozen.assets);
     const record3 = {
       recordType: "learning-card",
@@ -5880,7 +5934,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       sourceTitle: attempt.frozen.paper.paperId,
       sourceAttemptId: attempt.id,
       question: structuredClone(question),
-      answer: structuredClone(key.answer),
+      answer: structuredClone(key2.answer),
       ...display,
       note: "",
       customTopic: "",
@@ -5928,11 +5982,11 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
         for (const { label: label2, kind } of labels) {
           if (!label2.trim()) continue;
           const examId = attempt.frozen.snapshot.examId;
-          const key = examId + "|" + kind + "|" + label2;
-          if (unique2.has(key)) continue;
-          unique2.add(key);
-          const row = rows.get(key) ?? {
-            id: key,
+          const key2 = examId + "|" + kind + "|" + label2;
+          if (unique2.has(key2)) continue;
+          unique2.add(key2);
+          const row = rows.get(key2) ?? {
+            id: key2,
             label: label2,
             kind,
             examId,
@@ -5959,28 +6013,28 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
             row.answered++;
           }
           if (item.verdict === "unanswered") row.skipped++;
-          const distinctIds = distinct.get(key) ?? /* @__PURE__ */ new Set();
+          const distinctIds = distinct.get(key2) ?? /* @__PURE__ */ new Set();
           distinctIds.add(q.id);
-          distinct.set(key, distinctIds);
-          const attemptIds = independent.get(key) ?? /* @__PURE__ */ new Set();
+          distinct.set(key2, distinctIds);
+          const attemptIds = independent.get(key2) ?? /* @__PURE__ */ new Set();
           attemptIds.add(attempt.id);
-          independent.set(key, attemptIds);
+          independent.set(key2, attemptIds);
           row.distinctQuestions = distinctIds.size;
           row.attempts = attemptIds.size;
           if (item.verdict === "correct" || item.verdict === "incorrect") {
-            const answeredIds = answeredDistinct.get(key) ?? /* @__PURE__ */ new Set();
+            const answeredIds = answeredDistinct.get(key2) ?? /* @__PURE__ */ new Set();
             answeredIds.add(q.id);
-            answeredDistinct.set(key, answeredIds);
-            const answeredAttempts = answeredIndependent.get(key) ?? /* @__PURE__ */ new Set();
+            answeredDistinct.set(key2, answeredIds);
+            const answeredAttempts = answeredIndependent.get(key2) ?? /* @__PURE__ */ new Set();
             answeredAttempts.add(attempt.id);
-            answeredIndependent.set(key, answeredAttempts);
+            answeredIndependent.set(key2, answeredAttempts);
           }
-          row.distinctAnsweredQuestions = answeredDistinct.get(key)?.size ?? 0;
-          row.answeredAttempts = answeredIndependent.get(key)?.size ?? 0;
+          row.distinctAnsweredQuestions = answeredDistinct.get(key2)?.size ?? 0;
+          row.answeredAttempts = answeredIndependent.get(key2)?.size ?? 0;
           row.accuracy = row.answered ? row.correct / row.answered : null;
           row.coverage = row.answered / row.total;
           row.evidence = row.answered >= 5 ? "measured" : "insufficient";
-          rows.set(key, row);
+          rows.set(key2, row);
         }
       }
     }
@@ -6341,7 +6395,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       const visible = all.filter((c) => filter === "all" || filter === "due" && due(c) || filter === "bookmarked" && c.bookmarked);
       const exam = visible.find((c) => c.id === selectedId)?.examId ?? visible[0]?.examId;
       const candidates = visible.filter((c) => c.examId === exam && ["verified", "corrected", "caution"].includes(c.question.editorial.status)).slice(0, REVISION_MAX_QUESTIONS);
-      root2.innerHTML = '<div class="generic-heading"><div><h1>Learning & revision</h1><p class="muted">Error notebook \xB7 FSRS-7 spaced review \xB7 Topic evidence</p></div><button class="btn" id="learning-close">\u2190 Test library</button></div>' + (message ? '<p class="generic-warning" role="status">' + esc(message) + "</p>" : "") + '<div class="learning-summary">' + [["Notebook cards", all.length], ["Due for revision", dueNow.length], ["Reviewed with FSRS", reviewedCount], ["Bookmarked", bookmarkedCount]].map(([label2, value]) => '<div class="summary-stat"><small>' + esc(label2) + "</small><b>" + esc(value) + "</b></div>").join("") + '</div><section class="panel pad learning-revision-callout"><div class="row between"><div><h2>Revision queue</h2><p class="fine">' + all.length + " cards \xB7 " + (scheduler ? dueNow.length + " due now" : "Scheduler initializing") + ' \xB7 Mock results do not automatically count as spaced-repetition reviews</p></div><div class="row generic-actions"><button class="btn primary" id="learning-due"' + (!scheduler || !dueNow.length ? " disabled" : "") + '>Review due cards</button><button class="btn" id="learning-test"' + (!candidates.length ? " disabled" : "") + ">Start revision test (" + candidates.length + ')</button></div></div><p class="fine">Practice test uses the selected exam and current notebook filter (up to ' + REVISION_MAX_QUESTIONS + ' eligible cards). Untimed; +1 correct, 0 incorrect/unanswered. It is not the source exam score and does not rate FSRS cards.</p></section><div class="generic-layout learning-layout"><section class="panel pad"><div class="row between"><h2>Error notebook</h2><select id="learning-filter" aria-label="Filter notebook" class="learning-filter">' + [["all", "All cards"], ["due", "Due now"], ["bookmarked", "Bookmarked"]].map(([key, label2]) => '<option value="' + key + '"' + (filter === key ? " selected" : "") + ">" + label2 + "</option>").join("") + "</select></div>" + (visible.length ? visible.map((c) => {
+      root2.innerHTML = '<div class="generic-heading"><div><h1>Learning & revision</h1><p class="muted">Error notebook \xB7 FSRS-7 spaced review \xB7 Topic evidence</p></div><button class="btn" id="learning-close">\u2190 Test library</button></div>' + (message ? '<p class="generic-warning" role="status">' + esc(message) + "</p>" : "") + '<div class="learning-summary">' + [["Notebook cards", all.length], ["Due for revision", dueNow.length], ["Reviewed with FSRS", reviewedCount], ["Bookmarked", bookmarkedCount]].map(([label2, value]) => '<div class="summary-stat"><small>' + esc(label2) + "</small><b>" + esc(value) + "</b></div>").join("") + '</div><section class="panel pad learning-revision-callout"><div class="row between"><div><h2>Revision queue</h2><p class="fine">' + all.length + " cards \xB7 " + (scheduler ? dueNow.length + " due now" : "Scheduler initializing") + ' \xB7 Mock results do not automatically count as spaced-repetition reviews</p></div><div class="row generic-actions"><button class="btn primary" id="learning-due"' + (!scheduler || !dueNow.length ? " disabled" : "") + '>Review due cards</button><button class="btn" id="learning-test"' + (!candidates.length ? " disabled" : "") + ">Start revision test (" + candidates.length + ')</button></div></div><p class="fine">Practice test uses the selected exam and current notebook filter (up to ' + REVISION_MAX_QUESTIONS + ' eligible cards). Untimed; +1 correct, 0 incorrect/unanswered. It is not the source exam score and does not rate FSRS cards.</p></section><div class="generic-layout learning-layout"><section class="panel pad"><div class="row between"><h2>Error notebook</h2><select id="learning-filter" aria-label="Filter notebook" class="learning-filter">' + [["all", "All cards"], ["due", "Due now"], ["bookmarked", "Bookmarked"]].map(([key2, label2]) => '<option value="' + key2 + '"' + (filter === key2 ? " selected" : "") + ">" + label2 + "</option>").join("") + "</select></div>" + (visible.length ? visible.map((c) => {
         const next = scheduler ? schedule(c) : null;
         return '<button class="generic-history ' + (selected?.id === c.id ? "learning-selected" : "") + '" data-learning-id="' + esc(c.id) + '">' + esc(c.sectionTitle) + " \xB7 " + esc(c.question.content.prompt.slice(0, 92)) + "<small>" + esc(c.errorLabel ?? "Unclassified") + " \xB7 " + (next ? next.dueAt.getTime() <= Date.now() ? "Due now" : "Due " + next.dueAt.toLocaleDateString() : "Unscheduled") + " \xB7 " + c.reviews.length + " ratings</small></button>";
       }).join("") : '<p class="fine">No cards in this view. Add a question from a completed test result.</p>') + '</section><section class="panel pad"><h2>Notebook detail</h2>' + (selected ? "<h3>" + esc(selected.question.content.prompt) + '</h3><p class="fine">' + esc(selected.paperId) + " \xB7 " + esc(selected.sectionTitle) + " \xB7 captured from completed attempt " + esc(selected.sourceAttemptId) + "</p><p>Expected: <strong>" + esc(readableAnswer(selected.question, selected.answer)) + "</strong></p>" + (selected.explanation ? '<p class="fine">' + esc(selected.explanation) + "</p>" : "") + '<label class="picker" for="learning-error">Error type (self-reported)</label><select id="learning-error"><option value="">Not classified</option>' + ERROR_LABELS.map((label2) => '<option value="' + label2 + '"' + (selected.errorLabel === label2 ? " selected" : "") + ">" + esc(label2) + "</option>").join("") + '</select><label class="picker" for="learning-topic">Specific topic (optional)</label><input id="learning-topic" maxlength="120" value="' + esc(selected.customTopic) + '" placeholder="Your own subtopic label"><label class="picker" for="learning-note">Notes</label><textarea id="learning-note" maxlength="8000" rows="5">' + esc(selected.note) + '</textarea><label class="learning-bookmark"><input id="learning-bookmark" type="checkbox"' + (selected.bookmarked ? " checked" : "") + '> Bookmark</label><div class="row generic-actions"><button class="btn primary" id="learning-save">Save note</button><button class="btn" id="learning-one">Review this card</button><button class="btn danger" id="learning-delete">Delete</button></div>' : '<p class="fine">Select a card from the notebook.</p>') + '</section></div><section class="panel pad learning-reports"><div class="row between"><div><h2>Reported error patterns</h2><p class="fine">Self-labelled notebook observations, not inferred diagnoses.</p></div></div>' + (commonReports.length ? '<div class="learning-report-list">' + commonReports.map(([label2, count]) => "<div><span>" + esc(label2) + "</span><b>" + count + " card" + (count === 1 ? "" : "s") + "</b></div>").join("") + "</div>" : '<p class="fine">Label errors in your notebook to see recurring patterns here.</p>') + '</section><section class="panel pad learning-insights"><h2>Topic performance</h2><p class="fine">Official CGL section labels are the default broad topics. Imported exam topic IDs and your explicitly labelled subtopics remain separate; no topic is guessed. Five answered items minimum for measured evidence. Skips are excluded from accuracy.</p><div class="scroll-table"><table><thead><tr><th>Exam</th><th>Type</th><th>Topic</th><th>Answered / total</th><th>Distinct answered</th><th>Answering attempts</th><th>Accuracy</th><th>Evidence</th></tr></thead><tbody>' + (topics.length ? topics.map((t) => "<tr><td>" + esc(t.examId) + "</td><td>" + esc(t.kind) + "</td><td>" + esc(t.label) + "</td><td>" + t.answered + " / " + t.total + "</td><td>" + t.distinctAnsweredQuestions + "</td><td>" + t.answeredAttempts + "</td><td>" + (t.accuracy === null ? "\u2014" : Math.round(t.accuracy * 100) + "%") + "</td><td>" + (t.evidence === "measured" ? "Observed" : "Insufficient") + "</td></tr>").join("") : '<tr><td colspan="8">Complete an exam to view topic performance.</td></tr>') + '</tbody></table></div><h2>Observed topic consistency</h2><p class="fine">Requires at least two attempts, ten answered observations and five distinct question revisions. Repeated questions are tracked separately; these are descriptive bands, not predictions of mastery.</p><div class="scroll-table"><table><thead><tr><th>Exam</th><th>Topic</th><th>Evidence</th></tr></thead><tbody>' + (progress.length ? progress.map((p) => "<tr><td>" + esc(p.examId) + "</td><td>" + esc(p.topic) + "</td><td>" + esc(p.label) + "</td></tr>").join("") : '<tr><td colspan="3">No completed practice evidence yet.</td></tr>') + '</tbody></table></div><h2>Comparable attempt trends</h2><p class="fine">Only identical frozen paper revisions, including their rules and answer keys, are compared.</p><div class="scroll-table"><table><thead><tr><th>Paper revision</th><th>Attempts</th><th>Accuracy sequence</th><th>Marks sequence</th></tr></thead><tbody>' + (cohorts.length ? cohorts.map((g) => "<tr><td>" + esc(g.label) + "</td><td>" + g.count + "</td><td>" + g.points.map((p) => p.accuracy === null ? "\u2014" : Math.round(p.accuracy * 100) + "%").join(" \u2192 ") + "</td><td>" + g.points.map((p) => p.marks.toFixed(1)).join(" \u2192 ") + "</td></tr>").join("") : '<tr><td colspan="4">Complete the same paper revision twice to see a valid comparison.</td></tr>') + "</tbody></table></div></section>";
@@ -6440,16 +6494,16 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       if (!replacements.length) continue;
       changed++;
       const question = a.frozen.questions.find((q) => q.id === row.questionRevisionId);
-      const key = a.frozen.key.entries.find((e) => e.questionRevisionId === row.questionRevisionId)?.answer;
+      const key2 = a.frozen.key.entries.find((e) => e.questionRevisionId === row.questionRevisionId)?.answer;
       const unsafe = question && ["draft", "invalid", "incomplete-source", "under-review", "superseded"].includes(question.editorial.status);
       const containsClear = events.some((e) => !e.to);
       const first = events[0]?.to, last = row.response;
-      if (unsafe || containsClear || question?.content.kind !== "single-choice" || key?.kind !== "single-choice" || first?.kind !== "single-choice" || last?.kind !== "single-choice" || events[0]?.from !== void 0) {
+      if (unsafe || containsClear || question?.content.kind !== "single-choice" || key2?.kind !== "single-choice" || first?.kind !== "single-choice" || last?.kind !== "single-choice" || events[0]?.from !== void 0) {
         other++;
         continue;
       }
-      if (first.optionId !== key.optionId && last.optionId === key.optionId) rescued++;
-      else if (first.optionId === key.optionId && last.optionId !== key.optionId) lost++;
+      if (first.optionId !== key2.optionId && last.optionId === key2.optionId) rescued++;
+      else if (first.optionId === key2.optionId && last.optionId !== key2.optionId) lost++;
       else other++;
     }
     return { recorded, changed, rescued, lost, other };
@@ -6600,9 +6654,9 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
         for (let index = 0; index < sections.length; index++) {
           const s = sections[index];
           if (s.eligibleMax <= 0) continue;
-          const key = String(index);
-          const prior = aggregate.get(key) ?? { title: s.title, sections: 0, attempted: 0, correct: 0, incorrect: 0, earned: 0, eligibleMax: 0 };
-          aggregate.set(key, {
+          const key2 = String(index);
+          const prior = aggregate.get(key2) ?? { title: s.title, sections: 0, attempted: 0, correct: 0, incorrect: 0, earned: 0, eligibleMax: 0 };
+          aggregate.set(key2, {
             title: s.title,
             sections: prior.sections + 1,
             attempted: prior.attempted + s.attempted,
@@ -6906,6 +6960,200 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     return '<div class="result-coaching"><section class="panel pad" id="g-longest-questions"><h2>Longest recorded question exposure</h2><p class="fine">Five highest cumulative foreground viewing times, including any measured unanswered items. These are not uninterrupted visit durations or evidence of difficulty.</p>' + (longest.length ? '<div class="slow-list">' + longest.map((row) => (allowReview ? '<button type="button" class="slow-link" data-ledger-q="' + esc3(row.id) + '" aria-label="Review question ' + row.paperNumber + '">' : '<div class="slow-link">') + "<span><b>Q" + row.paperNumber + "</b> \xB7 " + esc3(row.section) + " \xB7 " + esc3(row.verdict) + "</span><span>" + duration(row.milliseconds) + (allowReview ? " \xB7 Review \u2192" : "") + "</span>" + (allowReview ? "</button>" : "</div>")).join("") + "</div>" : '<p class="fine">No positive foreground question time was recorded.</p>') + '</section><section class="panel pad" id="g-next-work"><h2>What to work on next</h2><p class="fine">Suggestions are based on answers and measured timing in this attempt, not predictions or diagnoses of why mistakes occurred.</p><ul class="plainlist">' + suggestions.map((t) => "<li>" + esc3(t) + "</li>").join("") + "</ul></section></div>";
   }
 
+  // src/app/bank-import.ts
+  function obj(value, name) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) throw Error(name + " must be an object");
+    return value;
+  }
+  function str(value, name, max = 240) {
+    if (typeof value !== "string" || !value.trim() || value.length > max) throw Error(name + " must be nonempty text (up to " + max + " characters)");
+    return value.trim();
+  }
+  function key(value, name) {
+    const v = str(value, name, 80);
+    if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/.test(v)) throw Error(name + " may contain only letters, numbers, underscores and hyphens");
+    return v;
+  }
+  function number(value, name) {
+    if (typeof value !== "number" || !Number.isFinite(value)) throw Error(name + " must be a finite number");
+    return value;
+  }
+  function maybeNumber(value, name) {
+    return value === void 0 ? void 0 : number(value, name);
+  }
+  function ensure(condition, message) {
+    if (!condition) throw Error(message);
+  }
+  var LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  function importSimpleQuestionBank(value) {
+    const bank = obj(value, "Question bank");
+    ensure(
+      bank["format"] === "practice-desk-bank" && bank["version"] === 1,
+      "Not a Practice Desk simple bank v1"
+    );
+    const bankId = key(bank["bankId"], "bankId");
+    const examId = key(bank["examId"], "examId");
+    const title = str(bank["title"], "title", 200);
+    const revision = bank["revision"] === void 0 ? 1 : number(bank["revision"], "revision");
+    ensure(Number.isSafeInteger(revision) && revision > 0, "revision must be a positive integer");
+    const edition = bank["edition"] ?? "custom";
+    ensure(edition === "custom" || edition === "source" || edition === "reviewed", "Unsupported bank edition");
+    const scoring = obj(bank["scoring"], "scoring");
+    const correctMarks = number(scoring["correctMarks"], "scoring.correctMarks");
+    const fraction = maybeNumber(scoring["negativeFraction"], "scoring.negativeFraction");
+    ensure(
+      fraction === void 0 || fraction >= 0 && fraction <= 1,
+      "negativeFraction must be between 0 and 1"
+    );
+    ensure(
+      fraction === void 0 || scoring["incorrectMarks"] === void 0,
+      "Choose negativeFraction or incorrectMarks, not both"
+    );
+    const incorrectMarks = scoring["incorrectMarks"] !== void 0 ? number(scoring["incorrectMarks"], "scoring.incorrectMarks") : fraction !== void 0 ? -correctMarks * fraction : 0;
+    const unansweredMarks = number(scoring["unansweredMarks"] ?? 0, "scoring.unansweredMarks");
+    ensure(
+      correctMarks >= 0 && incorrectMarks <= correctMarks && unansweredMarks <= correctMarks,
+      "Scoring values are outside supported marking bounds"
+    );
+    const rule = { correctMarks, incorrectMarks, unansweredMarks };
+    const rawQuestions = bank["questions"];
+    if (!Array.isArray(rawQuestions) || rawQuestions.length === 0 || rawQuestions.length > 2e3)
+      throw Error("Bank must have 1\u20132000 questions");
+    const paperId = "bank:" + bankId;
+    const qIds = /* @__PURE__ */ new Set();
+    const sections = /* @__PURE__ */ new Map();
+    const questions = [];
+    const entries = [];
+    const explanations = {};
+    for (let n = 0; n < rawQuestions.length; n++) {
+      const prefix = "questions[" + (n + 1) + "]";
+      const q = obj(rawQuestions[n], prefix);
+      const id = key(q["id"] ?? "q" + (n + 1), prefix + ".id");
+      ensure(!qIds.has(id), "Duplicate question ID " + id);
+      qIds.add(id);
+      const sec = str(q["section"] ?? "General", prefix + ".section", 120);
+      const prompt = str(q["question"] ?? q["prompt"], prefix + ".question", 2e4);
+      const kind = q["type"] ?? "mcq";
+      const qid = paperId + ":q:" + id + ":r" + revision;
+      let content;
+      let answer;
+      if (kind === "mcq" || kind === "single-choice") {
+        const rawOptions = q["options"];
+        if (!Array.isArray(rawOptions) || rawOptions.length < 2 || rawOptions.length > 26)
+          throw Error(prefix + " requires 2\u201326 answer options");
+        const options = rawOptions.map((option, i) => ({
+          id: LETTERS[i],
+          text: str(option, prefix + ".options[" + (i + 1) + "]", 5e3)
+        }));
+        const letter = str(q["answer"], prefix + ".answer", 1).toUpperCase();
+        ensure(
+          LETTERS.indexOf(letter) >= 0 && LETTERS.indexOf(letter) < options.length,
+          prefix + " answer must be one of its option letters"
+        );
+        content = { kind: "single-choice", prompt, options };
+        answer = { kind: "single-choice", optionId: letter };
+      } else if (kind === "nat" || kind === "numeric-entry") {
+        const values = Array.isArray(q["answer"]) ? q["answer"] : [q["answer"]];
+        ensure(values.length >= 1 && values.length <= 20, "NAT needs 1\u201320 accepted numeric answers");
+        const acceptedValues = values.map((v, i) => number(v, prefix + ".answer[" + (i + 1) + "]"));
+        const tolerance = number(q["tolerance"] ?? 0, prefix + ".tolerance");
+        ensure(tolerance >= 0 && tolerance <= 1e6, "NAT tolerance out of range");
+        content = { kind: "numeric-entry", prompt, numericRules: { allowNegative: true } };
+        answer = { kind: "numeric-entry", acceptedValues, absoluteTolerance: tolerance };
+      } else throw Error(prefix + " unsupported simple-bank type: use mcq or nat (full exam JSON supports all six kinds)");
+      const editorial = { status: "verified" };
+      const source = { id: qid, questionId: paperId + ":q:" + id, revision, content, editorial };
+      const question = { ...source, contentHash: questionRevisionHash(source) };
+      questions.push(question);
+      entries.push({ questionRevisionId: question.id, answer });
+      const explanation = q["explanation"];
+      if (explanation !== void 0) explanations[qid] = str(explanation, prefix + ".explanation", 2e4);
+      const group = sections.get(sec) ?? { title: sec, ids: [] };
+      group.ids.push(qid);
+      sections.set(sec, group);
+    }
+    const sectionList = [...sections].map(([name, group], index) => ({
+      id: paperId + ":section:" + (index + 1),
+      title: name,
+      questionRevisionIds: group.ids
+    }));
+    const keyId = paperId + ":key:r" + revision;
+    const answerKey = { id: keyId, paperId, revision, entries, contentHash: answerKeyRevisionHash({ entries }) };
+    const rawTiming = bank["timing"];
+    let timing = { kind: "untimed" };
+    if (rawTiming !== void 0) {
+      const t = obj(rawTiming, "timing");
+      if (t["kind"] === "whole-paper") {
+        const minutes2 = number(t["minutes"], "timing.minutes");
+        ensure(minutes2 > 0 && minutes2 <= 1440, "timing.minutes must be 1\u20131440");
+        timing = { kind: "whole-paper", durationMs: minutes2 * 6e4, pausePolicy: "allowed" };
+      } else ensure(t["kind"] === "untimed", "Simple bank timing must be untimed or whole-paper");
+    }
+    const paperBase = {
+      id: paperId + ":paper:r" + revision,
+      paperId,
+      revision,
+      edition,
+      answerKeyRevisionId: keyId,
+      sections: sectionList,
+      timing,
+      navigation: {
+        questionNavigation: "free",
+        sectionNavigation: "free",
+        allowFlagging: true,
+        allowReview: true
+      },
+      scoring: { defaultRule: rule }
+    };
+    const paper = { ...paperBase, contentHash: paperRevisionHash(paperBase) };
+    const packageValue = {
+      format: "practice-desk-exam",
+      version: 1,
+      examId,
+      title,
+      questions,
+      answerKey,
+      paper,
+      explanations
+    };
+    return validateExamPackage(packageValue);
+  }
+  var APFC_NAT_BANK_TEMPLATE = {
+    format: "practice-desk-bank",
+    version: 1,
+    bankId: "my-apfc-bank",
+    examId: "upsc-epfo-apfc",
+    title: "My APFC practice bank",
+    revision: 1,
+    edition: "custom",
+    scoring: { correctMarks: 2.5, negativeFraction: 1 / 3, unansweredMarks: 0 },
+    timing: { kind: "untimed" },
+    questions: [
+      {
+        id: "q1",
+        section: "Labour and Social Security",
+        type: "mcq",
+        question: "Replace this with a source-verified APFC question.",
+        options: ["First option", "Second option", "Third option", "Fourth option"],
+        answer: "A",
+        explanation: "Replace this explanation with a verified reference."
+      },
+      {
+        id: "q2",
+        section: "Numerical answer practice",
+        type: "nat",
+        question: "Example: find the arithmetic mean of 2, 4 and 6.",
+        answer: 4,
+        tolerance: 0.01,
+        explanation: "(2 + 4 + 6) / 3 = 4."
+      }
+    ]
+  };
+  function importAuthoredExam(value) {
+    if (value && typeof value === "object" && !Array.isArray(value) && value["format"] === "practice-desk-bank") return importSimpleQuestionBank(value);
+    return validateExamPackage(value);
+  }
+
   // src/app/generic-ui.ts
   var escapeText = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
   function readablePracticeMode(mode) {
@@ -7116,11 +7364,14 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     const packages = new Map(builtins.map((p) => [p.paper.id, p]));
     const records = /* @__PURE__ */ new Map();
     let choice = [...packages.values()].reverse().find((p) => p.paper.edition === "reviewed")?.paper.id ?? packages.keys().next().value;
-    let cglMode = "strict", singleSection = 0;
+    let cglMode = "strict", singleSection = 0, untimedPractice = false;
+    let editionView = packages.get(choice)?.paper.edition === "source" ? "source" : "reviewed";
     const storedSelection = readPracticeSelection();
     if (storedSelection) {
       if (packages.has(storedSelection.paperRevisionId)) choice = storedSelection.paperRevisionId;
       cglMode = storedSelection.mode;
+      untimedPractice = storedSelection.untimed ?? false;
+      editionView = storedSelection.edition ?? (packages.get(choice)?.paper.edition === "source" ? "source" : "reviewed");
       singleSection = Math.min(
         storedSelection.section,
         Math.max(0, (packages.get(choice)?.paper.sections.length ?? 1) - 1)
@@ -7128,7 +7379,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     }
     const saveSelection = () => {
       try {
-        writePracticeSelection({ schema: 1, paperRevisionId: choice, mode: cglMode, section: singleSection });
+        writePracticeSelection({ schema: 1, paperRevisionId: choice, mode: cglMode, section: singleSection, untimed: untimedPractice, edition: editionView });
       } catch {
         warning = "Exam setup could not be saved on this device; current selection still works.";
       }
@@ -7582,7 +7833,10 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       const latest = [...complete].sort((a, b) => (b.finishedAt ?? 0) - (a.finishedAt ?? 0) || b.startedAt - a.startedAt).slice(0, 3);
       const selected = packages.get(choice);
       const cgl = selected !== void 0 && builtinPaperIds.has(selected.paper.id);
-      const configured = selected ? cgl ? configureCglPractice(selected, cglMode, singleSection) : selected : null;
+      const configured = selected ? configureUntimedPractice(
+        cgl ? configureCglPractice(selected, cglMode, singleSection) : selected,
+        untimedPractice
+      ) : null;
       const selectedNumbers = new Set(configured?.questions.map((q) => q.questionId.split(":").at(-1)) ?? []);
       const preflight = configured ? examPreflight(configured, {
         builtinCgl: cgl,
@@ -7590,18 +7844,20 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       }) : null;
       const count = selected?.paper.sections.reduce((n, z) => n + z.questionRevisionIds.length, 0) ?? 0;
       const modeLabel = cgl ? cglMode === "strict" ? "Exam simulation" : cglMode === "free" ? "Full paper practice" : "Section practice" : "Custom examination";
-      const time = selected?.paper.timing.kind === "untimed" ? "Untimed" : cgl ? cglMode === "strict" ? "15 min per section" : cglMode === "single" ? "15 minutes" : "60 minutes" : selected?.paper.timing.kind === "whole-paper" ? minutes(selected.paper.timing.durationMs) : "Section timers";
+      const time = configured?.paper.timing.kind === "untimed" ? "Untimed" : cgl ? cglMode === "strict" ? "15 min per section" : cglMode === "single" ? "15 minutes" : "60 minutes" : configured?.paper.timing.kind === "whole-paper" ? minutes(configured.paper.timing.durationMs) : "Section timers";
       const questionCount = cgl && cglMode === "single" ? selected?.paper.sections[singleSection]?.questionRevisionIds.length ?? 0 : count;
       const previewSections = cgl && cglMode === "single" ? 1 : selected?.paper.sections.length ?? 0;
       const previewNavigation = cgl ? cglMode === "free" ? "Free" : cglMode === "single" ? "One section" : "Section locked" : selected?.paper.navigation.sectionNavigation === "free" ? "Free" : "Sequential";
-      const options = [...packages.values()].map((p) => '<option value="' + escapeText(p.paper.id) + '"' + (choice === p.paper.id ? " selected" : "") + ">" + escapeText(p.title) + "</option>").join("");
-      const editions = selected ? [...packages.values()].filter((p) => p.examId === selected.examId && p.paper.paperId === selected.paper.paperId) : [];
-      const paired = editions.some((p) => p.paper.edition === "source") && editions.some((p) => p.paper.edition === "reviewed");
-      return '<div class="generic-heading home-heading"><div><span class="eyebrow">OFFLINE PRACTICE STUDIO</span><h1>Test library</h1><p class="muted">Choose a paper, work in exam conditions and learn from every attempt.</p></div><button class="btn quiet" id="g-history">History & insights \u2192</button></div>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + (pending.length ? '<section class="panel pad pending-panel" id="g-pending-attempts"><div class="row between"><div><span class="eyebrow">PICK UP WHERE YOU LEFT OFF</span><h2>Unfinished attempts</h2><p class="fine">' + pending.length + " saved, resumable test" + (pending.length === 1 ? "" : "s") + ". Section timers follow the frozen exam policy; leaving the app does not pause a running clock.</p></div>" + (pending.length > 5 ? '<button type="button" class="textlink" id="g-pending-history">View all ' + pending.length + " \u2192</button>" : "") + '</div><div class="pending-attempt-list">' + pending.slice(0, 5).map((a) => '<button class="recent-attempt" data-attempt="' + escapeText(a.id) + '" aria-label="Resume ' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + '"><b>' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + "</b><small>" + new Date(a.startedAt).toLocaleString() + " \xB7 " + escapeText(a.frozen.snapshot.mode.replaceAll("-", " ")) + " \xB7 " + a.state.responses.filter((z) => z.response !== void 0).length + " answers \xB7 Resume \u2192</small></button>").join("") + "</div>" + (pending.length > 5 ? '<p class="fine">Showing the five most recent unfinished tests; all others are preserved in History.</p>' : "") + "</section>" : "") + '<div class="generic-layout home-grid"><section class="panel pad home-picker"><h2 class="sr-only">Start a practice session</h2><label class="picker" for="g-papers">Paper</label><select id="g-papers">' + options + "</select>" + (paired ? '<label class="picker" for="g-edition">Edition</label><select id="g-edition" aria-label="Selected paper edition">' + editions.filter((p) => p.paper.edition === "source" || p.paper.edition === "reviewed").map((p) => '<option value="' + escapeText(p.paper.id) + '"' + (choice === p.paper.id ? " selected" : "") + ">" + (p.paper.edition === "source" ? "Original source" : "Reviewed corrections") + "</option>").join("") + "</select>" : "") + (cgl ? '<h3 class="subhead">Practice mode</h3><div class="generic-modes" role="group" aria-label="SSC CGL practice mode">' + [
+      const published = [...packages.values()].filter((p) => p.paper.edition === editionView);
+      const custom = [...packages.values()].filter((p) => p.paper.edition === "custom");
+      const option = (p) => '<option value="' + escapeText(p.paper.id) + '"' + (choice === p.paper.id ? " selected" : "") + ">" + escapeText(p.title) + "</option>";
+      const options = '<optgroup label="' + (editionView === "reviewed" ? "Reviewed papers" : "Original papers") + '">' + published.map(option).join("") + "</optgroup>" + (custom.length ? '<optgroup label="Imported / custom examinations">' + custom.map(option).join("") + "</optgroup>" : "");
+      const hasEditions = [...packages.values()].some((p) => p.paper.edition === "source") && [...packages.values()].some((p) => p.paper.edition === "reviewed");
+      return '<div class="generic-heading home-heading"><div><span class="eyebrow">OFFLINE PRACTICE STUDIO</span><h1>Test library</h1><p class="muted">Choose a paper, work in exam conditions and learn from every attempt.</p></div><button class="btn quiet" id="g-history">History & insights \u2192</button></div>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + (pending.length ? '<section class="panel pad pending-panel" id="g-pending-attempts"><div class="row between"><div><span class="eyebrow">PICK UP WHERE YOU LEFT OFF</span><h2>Unfinished attempts</h2><p class="fine">' + pending.length + " saved, resumable test" + (pending.length === 1 ? "" : "s") + ". Section timers follow the frozen exam policy; leaving the app does not pause a running clock.</p></div>" + (pending.length > 5 ? '<button type="button" class="textlink" id="g-pending-history">View all ' + pending.length + " \u2192</button>" : "") + '</div><div class="pending-attempt-list">' + pending.slice(0, 5).map((a) => '<button class="recent-attempt" data-attempt="' + escapeText(a.id) + '" aria-label="Resume ' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + '"><b>' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + "</b><small>" + new Date(a.startedAt).toLocaleString() + " \xB7 " + escapeText(a.frozen.snapshot.mode.replaceAll("-", " ")) + " \xB7 " + a.state.responses.filter((z) => z.response !== void 0).length + " answers \xB7 Resume \u2192</small></button>").join("") + "</div>" + (pending.length > 5 ? '<p class="fine">Showing the five most recent unfinished tests; all others are preserved in History.</p>' : "") + "</section>" : "") + '<div class="generic-layout home-grid"><section class="panel pad home-picker"><h2 class="sr-only">Start a practice session</h2><label class="picker" for="g-papers">Paper</label><select id="g-papers">' + options + "</select>" + (hasEditions ? '<div class="edition-row"><span class="picker" id="editionLabel">Paper edition</span><div class="edition-toggle" id="g-edition" role="group" aria-labelledby="editionLabel">' + ["reviewed", "source"].map((edition) => '<button type="button" class="edition-choice ' + (editionView === edition ? "active" : "") + '" data-edition="' + edition + '" aria-pressed="' + (editionView === edition) + '">' + (edition === "reviewed" ? "Reviewed &amp; Corrected" : "Original PDF") + "</button>").join("") + '</div><p class="fine edition-note">' + (editionView === "reviewed" ? "Independently reviewed wording and answer keys; disputed items are labelled after submission." : "Original publisher transcription; no independent key changes applied.") + "</p></div>" : "") + (cgl ? '<h3 class="subhead">Practice mode</h3><div class="generic-modes" role="group" aria-label="SSC CGL practice mode">' + [
         ["strict", "Exam simulation", "4 locked sections \xB7 15 minutes each"],
         ["free", "Flexible full paper", "60 minutes \xB7 move between sections"],
         ["single", "Section practice", "25 questions \xB7 15 minutes"]
-      ].map(([key, title, detail]) => '<button type="button" class="mode ' + (cglMode === key ? "on" : "") + '" data-mode="' + key + '" aria-pressed="' + (cglMode === key) + '"><span class="radio-dot"></span><span><strong>' + title + "</strong><small>" + detail + "</small></span></button>").join("") + "</div>" + (cglMode === "single" ? '<label class="picker" for="g-single-section">Choose section</label><select id="g-single-section">' + selected.paper.sections.map((z, i) => '<option value="' + i + '"' + (singleSection === i ? " selected" : "") + ">" + escapeText(z.title) + "</option>").join("") + "</select>" : "") : "") + '<div class="row generic-actions home-start"><button class="btn primary" id="g-start"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + ">Start " + escapeText(modeLabel) + ' \u2192</button><button class="btn" id="g-import"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + '>Import exam JSON</button></div><input type="file" id="g-file" accept=".json,application/json" hidden><p class="fine">Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section><aside class="home-side"><section class="panel pad paper-preview"><span class="eyebrow">SELECTED PAPER</span><h2>' + escapeText(selected?.title ?? "Choose a paper") + '</h2><p class="fine">' + escapeText(selected?.paper.paperId ?? "") + " \xB7 " + escapeText(selected?.paper.edition ?? "") + '</p><div class="preview-metrics"><div><b>' + questionCount + "</b><small>Questions</small></div><div><b>" + escapeText(time) + "</b><small>Time</small></div><div><b>" + escapeText(previewSections) + "</b><small>Sections</small></div><div><b>" + escapeText(previewNavigation) + '</b><small>Navigation</small></div></div><p class="fine">Scoring and timer rules are frozen when you start; later paper edits cannot change a saved result.</p>' + (preflight ? preflightHTML(preflight) : "") + '</section><section class="panel pad recent-panel"><div class="row between"><h2>Recent completed results</h2><button class="textlink" id="g-history-recent">View all \u2192</button></div>' + (latest.length ? latest.map((a) => '<button class="recent-attempt" data-attempt="' + escapeText(a.id) + '"><b>' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + "</b><small>" + new Date(a.finishedAt ?? a.startedAt).toLocaleDateString() + " \xB7 " + escapeText(a.frozen.snapshot.mode.replaceAll("-", " ")) + " \xB7 " + escapeText(frozenScoreSummary(a)?.text ?? "Score unavailable") + "</small></button>").join("") : '<p class="fine">Your three most recent completed results will appear here; unfinished attempts stay in their own Resume area.</p>') + '</section></aside></div><div class="home-utilities"><section class="panel pad learning-entry"><div><span class="eyebrow">REVISE & IMPROVE</span><h2>Learning & revision</h2><p class="fine">Error notebook, FSRS-7 spaced review, source-linked revision tests and topic evidence.</p></div><button class="btn primary" id="g-learning">Open learning desk \u2192</button></section><section class="panel pad backup-home"><div><span class="eyebrow">YOUR DATA</span><h2>Portable offline history</h2><p class="fine">Stored in this browser. Export a backup to protect your history and notes.</p></div><div class="row generic-actions"><button class="btn" id="g-export-history"' + (loading ? " disabled" : "") + '>Export backup</button><button class="btn" id="g-import-history"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + '>Import backup</button></div><input type="file" id="g-history-file" accept=".json,application/json" hidden></section></div><div class="home-stats">' + [["Paper editions", packages.size], ["Completed tests", complete.length], ["Attempts in progress", pending.length], ["Notebook cards", [...records.values()].filter(isLearning).length]].map(([name, value]) => '<div class="home-stat"><small>' + escapeText(name) + "</small><b>" + escapeText(value) + "</b></div>").join("") + "</div>" + (preflight ? examRulesHTML(preflight) : "");
+      ].map(([key2, title, detail]) => '<button type="button" class="mode ' + (cglMode === key2 ? "on" : "") + '" data-mode="' + key2 + '" aria-pressed="' + (cglMode === key2) + '"><span class="radio-dot"></span><span><strong>' + title + "</strong><small>" + detail + "</small></span></button>").join("") + "</div>" + (cglMode === "single" ? '<label class="picker" for="g-single-section">Choose section</label><select id="g-single-section">' + selected.paper.sections.map((z, i) => '<option value="' + i + '"' + (singleSection === i ? " selected" : "") + ">" + escapeText(z.title) + "</option>").join("") + "</select>" : "") : "") + '<label class="untimed-option" for="g-untimed"><input type="checkbox" id="g-untimed"' + (untimedPractice ? " checked" : "") + '><span><strong>Untimed practice</strong><small>No countdown or automatic expiry. Keep the selected navigation and scoring rules; finish when ready.</small></span></label><div class="row generic-actions home-start"><button class="btn primary" id="g-start"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + ">Start " + escapeText(modeLabel) + ' \u2192</button><button class="btn" id="g-import"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + '>Import question bank</button></div><input type="file" id="g-file" accept=".json,application/json" hidden><p class="fine">Start with an editable <button type="button" class="textlink" id="g-bank-template">Download APFC/NAT bank template</button> (JSON). Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section><aside class="home-side"><section class="panel pad paper-preview"><span class="eyebrow">SELECTED PAPER</span><h2>' + escapeText(selected?.title ?? "Choose a paper") + '</h2><p class="fine">' + escapeText(selected?.paper.paperId ?? "") + " \xB7 " + escapeText(selected?.paper.edition ?? "") + '</p><div class="preview-metrics"><div><b>' + questionCount + "</b><small>Questions</small></div><div><b>" + escapeText(time) + "</b><small>Time</small></div><div><b>" + escapeText(previewSections) + "</b><small>Sections</small></div><div><b>" + escapeText(previewNavigation) + '</b><small>Navigation</small></div></div><p class="fine">Scoring and timer rules are frozen when you start; later paper edits cannot change a saved result.</p>' + (preflight ? preflightHTML(preflight) : "") + '</section><section class="panel pad recent-panel"><div class="row between"><h2>Recent completed results</h2><button class="textlink" id="g-history-recent">View all \u2192</button></div>' + (latest.length ? latest.map((a) => '<button class="recent-attempt" data-attempt="' + escapeText(a.id) + '"><b>' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + "</b><small>" + new Date(a.finishedAt ?? a.startedAt).toLocaleDateString() + " \xB7 " + escapeText(a.frozen.snapshot.mode.replaceAll("-", " ")) + " \xB7 " + escapeText(frozenScoreSummary(a)?.text ?? "Score unavailable") + "</small></button>").join("") : '<p class="fine">Your three most recent completed results will appear here; unfinished attempts stay in their own Resume area.</p>') + '</section></aside></div><div class="home-utilities"><section class="panel pad learning-entry"><div><span class="eyebrow">REVISE & IMPROVE</span><h2>Learning & revision</h2><p class="fine">Error notebook, FSRS-7 spaced review, source-linked revision tests and topic evidence.</p></div><button class="btn primary" id="g-learning">Open learning desk \u2192</button></section><section class="panel pad backup-home"><div><span class="eyebrow">YOUR DATA</span><h2>Portable offline history</h2><p class="fine">Stored in this browser. Export a backup to protect your history and notes.</p></div><div class="row generic-actions"><button class="btn" id="g-export-history"' + (loading ? " disabled" : "") + '>Export backup</button><button class="btn" id="g-import-history"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + '>Import backup</button></div><input type="file" id="g-history-file" accept=".json,application/json" hidden></section></div><div class="home-stats">' + [["Paper editions", packages.size], ["Completed tests", complete.length], ["Attempts in progress", pending.length], ["Notebook cards", [...records.values()].filter(isLearning).length]].map(([name, value]) => '<div class="home-stat"><small>' + escapeText(name) + "</small><b>" + escapeText(value) + "</b></div>").join("") + "</div>" + (preflight ? examRulesHTML(preflight) : "");
     }
     function packageForAttempt(saved) {
       return packages.get(saved.packageId) ?? [...packages.values()].find((p) => p.paper.paperId === saved.frozen.paper.paperId && p.paper.edition === saved.frozen.paper.edition);
@@ -7890,16 +8146,26 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
         };
         root2.querySelector("#g-papers").onchange = (e) => {
           choice = e.target.value;
+          const chosen = packages.get(choice);
+          if (chosen?.paper.edition === "source" || chosen?.paper.edition === "reviewed")
+            editionView = chosen.paper.edition;
           singleSection = Math.min(singleSection, Math.max(0, (packages.get(choice)?.paper.sections.length ?? 1) - 1));
           saveSelection();
           draw();
         };
-        const edition = root2.querySelector("#g-edition");
-        if (edition) edition.onchange = () => {
-          choice = edition.value;
+        root2.querySelectorAll("[data-edition]").forEach((button) => button.onclick = () => {
+          const next = button.dataset.edition;
+          if (next !== "source" && next !== "reviewed") return;
+          if (next === editionView) return;
+          const current = packages.get(choice);
+          editionView = next;
+          const same = current ? [...packages.values()].find((p) => p.paper.edition === next && p.examId === current.examId && p.paper.paperId === current.paper.paperId) : void 0;
+          const first = [...packages.values()].find((p) => p.paper.edition === next);
+          choice = (same ?? first ?? current)?.paper.id ?? choice;
+          singleSection = Math.min(singleSection, Math.max(0, (packages.get(choice)?.paper.sections.length ?? 1) - 1));
           saveSelection();
           draw();
-        };
+        });
         root2.querySelector("#g-history").onclick = () => {
           view = "history";
           draw();
@@ -7926,6 +8192,11 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
           saveSelection();
           draw();
         });
+        root2.querySelector("#g-untimed").onchange = (e) => {
+          untimedPractice = e.target.checked;
+          saveSelection();
+          draw();
+        };
         const single = root2.querySelector("#g-single-section");
         if (single) single.onchange = () => {
           singleSection = Number(single.value);
@@ -7939,7 +8210,10 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
             "You have " + unfinished.length + " unfinished test" + (unfinished.length === 1 ? "" : "s") + ". Start a separate attempt? Existing attempts will be kept; their timers continue until expiry when resumed or while active."
           )) return;
           const id = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "generic-" + now2() + "-" + Math.random();
-          const configured = p.examId === "ssc-cgl" ? configureCglPractice(p, cglMode, singleSection) : p;
+          const configured = configureUntimedPractice(
+            p.examId === "ssc-cgl" ? configureCglPractice(p, cglMode, singleSection) : p,
+            untimedPractice
+          );
           attempt = startGenericAttempt(configured, id, now2());
           if (configured.paper.edition === "reviewed") {
             const source = [...packages.values()].find((candidate) => candidate.paper.edition === "source" && candidate.paper.paperId === configured.paper.paperId && candidate.examId === configured.examId);
@@ -7959,6 +8233,17 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
           void save(attempt);
         };
         root2.querySelector("#g-import").onclick = () => root2.querySelector("#g-file")?.click();
+        root2.querySelector("#g-bank-template").onclick = () => {
+          const data = new Blob([JSON.stringify(APFC_NAT_BANK_TEMPLATE, null, 2)], { type: "application/json" });
+          const url = URL.createObjectURL(data);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "Practice_Desk_APFC_NAT_Starter.json";
+          document.body.append(link);
+          link.click();
+          link.remove();
+          window.setTimeout(() => URL.revokeObjectURL(url), 2e3);
+        };
         root2.querySelector("#g-export-history").onclick = () => {
           void downloadBackup();
         };
@@ -7980,14 +8265,15 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
             return;
           }
           try {
-            const pkg = validateExamPackage(JSON.parse(await file.text()));
+            const pkg = importAuthoredExam(JSON.parse(await file.text()));
             if (packages.has(pkg.paper.id)) throw new Error("Paper revision ID already exists. Supply a new revision ID.");
             if (!await save({ recordType: "generic-package", id: "generic-package:" + pkg.paper.id, bundle: pkg })) return;
             packages.set(pkg.paper.id, pkg);
             choice = pkg.paper.id;
             singleSection = 0;
+            if (pkg.paper.edition === "source" || pkg.paper.edition === "reviewed") editionView = pkg.paper.edition;
             saveSelection();
-            notice("Package validated and imported.");
+            notice("Question bank validated and imported. Your paper is ready to practise.");
           } catch (error) {
             notice(error instanceof Error ? error.message : "Invalid exam package");
           }
@@ -8279,11 +8565,11 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       }
       const displayPanel2 = document.getElementById("displayPanel");
       if (displayPanel2 && !displayPanel2.hidden) return;
-      const key = event.key.toLowerCase();
-      const arrow = key === "arrowright" || key === "arrowleft";
+      const key2 = event.key.toLowerCase();
+      const arrow = key2 === "arrowright" || key2 === "arrowleft";
       if (event.altKey && !arrow) return;
       if (attempt.state.status === "paused") {
-        if (key !== "m" || event.altKey || event.repeat || !attempt.frozen.paper.navigation.allowFlagging) return;
+        if (key2 !== "m" || event.altKey || event.repeat || !attempt.frozen.paper.navigation.allowFlagging) return;
         event.preventDefault();
         const id2 = attempt.frozen.paper.sections[attempt.state.sectionIndex].questionRevisionIds[attempt.state.questionIndex];
         const marked = attempt.state.responses.find((r) => r.questionRevisionId === id2)?.flagged ?? false;
@@ -8293,7 +8579,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       if (arrow) {
         if (focusedRadio && !event.altKey) return;
         event.preventDefault();
-        const move = key === "arrowright" ? 1 : -1;
+        const move = key2 === "arrowright" ? 1 : -1;
         const target = attempt.state.questionIndex + move;
         const section = attempt.frozen.paper.sections[attempt.state.sectionIndex];
         if (!section?.questionRevisionIds[target] || move < 0 && attempt.frozen.paper.navigation.questionNavigation === "forward-only") return;
@@ -8301,12 +8587,12 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
         return;
       }
       if (event.altKey || event.repeat) return;
-      if (key === "f") {
+      if (key2 === "f") {
         event.preventDefault();
         window.dispatchEvent(new Event("practice-desk:toggle-fullscreen"));
         return;
       }
-      if (key === "m") {
+      if (key2 === "m") {
         if (!attempt.frozen.paper.navigation.allowFlagging) return;
         event.preventDefault();
         const id2 = attempt.frozen.paper.sections[attempt.state.sectionIndex].questionRevisionIds[attempt.state.questionIndex];
@@ -8314,11 +8600,11 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
         dispatch({ type: "FLAG", nowMs: now2(), flagged: !marked });
         return;
       }
-      if (!["a", "b", "c", "d"].includes(key)) return;
+      if (!["a", "b", "c", "d"].includes(key2)) return;
       const id = attempt.frozen.paper.sections[attempt.state.sectionIndex].questionRevisionIds[attempt.state.questionIndex];
       const question = attempt.frozen.questions.find((q) => q.id === id);
       if (question?.content.kind !== "single-choice") return;
-      const option = question.content.options[key.charCodeAt(0) - 97];
+      const option = question.content.options[key2.charCodeAt(0) - 97];
       if (!option) return;
       event.preventDefault();
       dispatch({ type: "ANSWER", nowMs: now2(), response: { kind: "single-choice", optionId: option.id } });
