@@ -1,3 +1,4 @@
+import {chooseModernPaper} from "./paper-select.mjs";
 import {readFile,mkdtemp,rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
@@ -37,7 +38,7 @@ try{
    for(const edition of ["source","reviewed"]){
      const pkg=banks.find(p=>p.paper.paperId===sourcePaper.id&&p.paper.edition===edition);
      assert(pkg,"Missing package "+sourcePaper.id+" / "+edition);
-     await page.locator("#g-papers").selectOption(pkg.paper.id);
+     await chooseModernPaper(page,pkg.paper.id);
      await page.locator('[data-mode="free"]').click();
      assert(await page.locator("#g-papers").inputValue()===pkg.paper.id,
        "Edition selector did not retain chosen version");
@@ -73,7 +74,7 @@ try{
  const oct="cgl-2026-10-06";
  for(const edition of ["source","reviewed"]){
    const pkg=banks.find(p=>p.paper.paperId===oct&&p.paper.edition===edition);
-   await page.locator("#g-papers").selectOption(pkg.paper.id);
+   await chooseModernPaper(page,pkg.paper.id);
    await page.locator('[data-mode="free"]').click();
    await page.locator("#g-start").click();
    await page.locator('[data-section="2"]').click();
