@@ -119,6 +119,19 @@ async function shot(a,scene,{full=false,checks=[]}={}){
  cases.push(rec);screens.push(file);
  fail(!a.errors.length,a.era+" "+scene+" browser errors "+a.errors.join("; "));
  if(a.era==="overhaul"){
+  if(pageState.overflow){
+   const suspects=await p.evaluate(()=>[...document.querySelectorAll("#app *")]
+    .filter(el=>{
+     if(!(el instanceof HTMLElement)||!el.getClientRects().length)return false;
+     const r=el.getBoundingClientRect();
+     return r.right>innerWidth+2||el.scrollWidth>el.clientWidth+3;
+    }).slice(0,12).map(el=>{
+     const r=el.getBoundingClientRect();
+     return {tag:el.tagName,id:el.id,cls:typeof el.className==="string"?el.className.slice(0,85):"",
+      right:Math.round(r.right),scroll:el.scrollWidth,client:el.clientWidth};
+    }));
+   console.log("PASS29 overflow suspects "+a.vp.id+" "+scene+" "+JSON.stringify(suspects));
+  }
   fail(!pageState.overflow,a.vp.id+" "+scene+" horizontal overflow by "+
    (pageState.docWidth-pageState.viewportWidth));
   for(const [key,data] of Object.entries(geometry)){
