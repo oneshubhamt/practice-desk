@@ -643,3 +643,49 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
 }
 /* Tablet/mobile keep the original control dimensions and stacked rows.
    The additional grouping wrapper has no layout influence below 981px. */
+
+/* Pass 27: task-first History and Results, desktop-only (L05/L06).
+   The full analytics, original-key comparison, storage safety and filtered
+   archive remain available beneath the primary record/score view. */
+@media (min-width:981px){
+ main:has(.history-archive),
+ main:has(.results-heading){padding-top:13px}
+ .generic-workspace .page-heading:has(+ .history-archive),
+ .generic-workspace .results-heading{margin:0 0 11px!important;gap:9px}
+ .page-heading:has(+ .history-archive) .eyebrow,
+ .results-heading .eyebrow{margin-bottom:3px}
+ .page-heading:has(+ .history-archive) h1,
+ .results-heading h1{font-size:calc(25px * var(--type-scale));margin-bottom:2px;line-height:1.2}
+ .page-heading:has(+ .history-archive) p,
+ .results-heading p{line-height:1.4;font-size:.86em}
+ .history-archive{padding:15px 19px}
+ .history-archive>.row{gap:10px;align-items:center}
+ .history-archive .generic-actions{gap:7px}
+ .history-archive .generic-actions .btn{min-height:37px;padding:7px 10px}
+ .history-filters{
+  grid-template-columns:minmax(180px,2fr) minmax(160px,1.5fr) minmax(117px,1fr) minmax(117px,1fr);
+  gap:9px;margin:10px 0 7px
+ }
+ .history-filters .filter-label{gap:3px}
+ .history-filters input,.history-filters select{min-height:38px;padding:7px 10px}
+ .archive-entry{gap:10px;padding:7px 0}
+ .archive-entry .history-open{padding:3px 0}
+ .archive-meta,.archive-numbers{margin-top:2px}
+ .history-summary{margin:15px 0 10px;gap:9px}
+ .history-summary .summary-stat{padding:11px 14px}
+ .history-summary .summary-stat b{font-size:21px}
+ .result-tabs{margin:8px 0 11px}
+ .result-tab{padding:9px 14px 10px}
+ .result-pane#result-overview>.panel{margin-bottom:11px}
+ .result-pane#result-overview>.panel:first-child{padding:13px 16px}
+ .result-pane#result-overview .scoregrid{gap:7px;margin:0}
+ .result-pane#result-overview .score{padding:10px 11px;border-radius:9px}
+ .result-pane#result-overview .score b{font-size:calc(23px * var(--type-scale))}
+ .result-pane#result-overview .score small{line-height:1.25}
+ .result-pane#result-overview>.panel:nth-child(2){padding:13px 16px}
+ .result-pane#result-overview>.panel:nth-child(2) h2{margin:0 0 5px}
+ .result-pane#result-overview>.panel:nth-child(2) .fine{margin:0 0 6px;line-height:1.4}
+ .result-pane#result-overview>.panel:nth-child(2) .scroll-table th,
+ .result-pane#result-overview>.panel:nth-child(2) .scroll-table td{padding:7px 9px}
+ .result-pane .result-score-details{padding:15px 19px}
+}
