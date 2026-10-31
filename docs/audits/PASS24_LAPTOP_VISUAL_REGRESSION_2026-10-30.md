@@ -80,7 +80,26 @@ History archive now precedes supplemental metrics, comparable trends and cross-p
 
 **Still OPEN:** **L07, L08, L09, L10** (Display 140% wrapping, genuine answer-key correction metadata, whole-paper versus section timer label, raw practice-mode slug). Pass28 repairs those; Pass29 independent final visual review and physical-device/AT/human signoff remain unverified. **Seven of eleven** original desktop findings have now been source-repaired and browser-verified; this is not full laptop parity/release approval.
 
-## Recommended repair programme — originally all items open (L01–L06 and L11 now automated-repaired)
+## Pass 28 — remaining semantics/display L07–L10 repaired (31 Oct 2026)
+
+**L07 (MEDIUM), L08 (MEDIUM), L09 (MEDIUM), L10 (LOW): AUTOMATED-VERIFIED / REPAIRED.** Exact paper/key facts have been checked against the unchanged `src/content/papers.json` and `src/content/patches.json`. A new real `file://` browser test and source-unit test enforce these four independently:
+
+| Finding | Actual correction | New verification |
+|---|---|---|
+| **L07** Display 140% | Labelled full-width Light/Dark buttons on separate row from retained Toggle theme; narrow Library scoring-preflight grid now wraps instead of growing beyond 195px viewport | No wrap/clipping/horizontal overflow; 100% and 140% at 1366×768, 1440×900, 390×844 and 195×844; theme selection and toggle still work; frozen v11 paired screenshots |
+| **L08** Editorial keys | Built-in CGL review changes now use **effective field differences** (key, wording, options, explanation) from the original source; cannot mark unchanged keys as corrected | Full five-paper source assertions: 131 patch entries, **10 genuine key differences**; 30 Sep Q6 publisher C→reviewed D correctly labelled; Q3 wording-only not key correction; 6 Oct Q62 retained as source-invalid/reviewed-scoreable-caution published B |
+| **L09** Timer label | Distinguishes **Whole-paper timer**, **Section timer**, and **Question coverage** from actual frozen timing policy; accessible progress name matches scope | Real strict/free/single CGL browser tests and untimed generic Node test, unchanged elapsed/score arithmetic |
+| **L10** Exam mode text | Displays human-readable full-paper flexible, exam simulation and single-section practice rather than `full-paper-practice` slug; leaves frozen mode untouched | Browser assertion for each CGL mode and Node test for custom/unknown modes |
+
+Original source key, reviewed patch key, original vs reviewed scoring, frozen record integrity and approved **6 Oct Q62 caution** remain intact. No post-test key/correction information is shown during the exam.
+
+**QA corrections were source-driven, not skipped:** the first new browser run exposed a genuine 9px overflow at 195px/140%; a DOM-element diagnostic traced it to the Library scoring-preflight intrinsic grid, repaired via narrow-screen shrinkable columns and wrapping. The first complete pass of tests later found the separate CI-generated HTML publish was blocked by a concurrent documentation commit. A defensive docs-only reconcile was added with explicit source-change refusal; the initial YAML editing error was corrected before the final successful run. Source/rendering tests were never relaxed to accommodate these failures.
+
+**Final CI:** [41161903751](https://github.com/oneshubhamt/practice-desk/actions/runs/41161903751), **3/3 jobs successful**; [Pass28 v11/current Display screenshots, editorial/mode/timing scenes and measurements](https://github.com/oneshubhamt/practice-desk/actions/runs/41161903751/artifacts/13027786199). Offline single-file distribution rebuilt and published by CI commit `a7ed2aa7`. Scratchpad in [V11 source audit](V11_SOURCE_AUDIT_2026-10-30.md) holds full five-stage worklog, failures, corrections, and Pass29 handoff.
+
+**Current programme:** **11/11** originally recorded L01–L11 laptop findings have source-level repairs with **targeted automated verification** across Passes 25–28. **Pass29 independent, broad, fresh visual/functional review is still required.** Do not label complete v11 laptop parity or release approval before that review. Real physical Safari/mobile, NVDA/VoiceOver, OS-kill/storage loss, human look-and-feel approval, and merge/release remain unverified/unapproved.
+
+## Recommended repair programme — original historical objectives (L01–L11 targeted-repaired; Pass29 open)
 
 **Priority 1:** Reestablish v11-like *compact, action-first CGL UI* for Library and Exam at 1366×768 and 1440×900; keep richer generic engine and optional metrics in expandable/secondary areas rather than above essential controls. Specifically require Start, ordinary Next/Flag and first answer for typical passage items to remain visible to the same degree as v11 in the first viewport. Adopt DOM rectangle assertions, not just screenshot existence/no-overflow checks.
 
