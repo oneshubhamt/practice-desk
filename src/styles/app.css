@@ -711,3 +711,18 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
  display:block;width:100%;min-width:0;margin-top:7px;
  white-space:normal;overflow-wrap:break-word;text-align:center
 }
+
+/* Pass28 narrow-zoom guard: the Library's scoring preflight had an intrinsic
+   183px grid column inside a 153px content box at 195px/140% zoom.
+   Preserve all disclosures and text scaling; let the grid and score wrap. */
+@media(max-width:300px){
+ .paper-preflight{grid-template-columns:minmax(0,1fr);min-width:0}
+ .paper-preflight>*{min-width:0;max-width:100%;overflow-wrap:anywhere}
+ .paper-preflight .preflight-scoreline{
+  width:100%;min-width:0;flex-wrap:wrap;padding:8px 9px
+ }
+ .paper-preflight .preflight-scoreline strong{
+  min-width:0;font-size:calc(20px * var(--type-scale));
+  overflow-wrap:anywhere
+ }
+}
