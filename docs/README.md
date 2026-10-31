@@ -6,6 +6,7 @@
 
 | Need | Canonical location | Type |
 |---|---|---|
+| **Add APFC/NAT question banks and reusable exams** | [Easy authored MCQ/NAT JSON bank guide and exact format](architecture/QUESTION_BANK_AUTHORING.md) | Lightweight hash-free import plus advanced six-kind versioned packages; file:// offline, question scoring and timers unchanged |
 | **Current independent multi-journey visual audit** | [Pass29, 184-screen matrix, 56 paired v11 scenarios, three new findings](audits/PASS29_INDEPENDENT_VISUAL_MATRIX_2026-10-31.md) | Automated 4/4 CI PASS; conditional, manual/physical/AT release gate still open |
 | **Original visual regression and repair history** | [Pass24 laptop source and Passes25–29 repair register](audits/PASS24_LAPTOP_VISUAL_REGRESSION_2026-10-30.md) | 11 original + three newer findings source-fixed and browser-verified |
 | **Final verification / outstanding release gates** | [Pass 23 final independent audit and release report](audits/PASS23_FINAL_INDEPENDENT_REVIEW_2026-10-30.md) | All 25 current finding dispositions, six actual paired score/max checks, full automated CI evidence, explicit physical/AT/manual limitations and conditional status |
