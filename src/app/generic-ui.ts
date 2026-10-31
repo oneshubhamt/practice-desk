@@ -33,6 +33,7 @@ import { addLearningCard, validateLearningCard } from "../learning/learning.ts";
 import type { LearningCard } from "../learning/learning.ts";
 import { readDisplayPreferences, writeDisplayPreferences, SETTINGS_EVENT } from "./preferences.ts";
 import { readPracticeSelection,writePracticeSelection } from "./practice-selection.ts";
+import { importAuthoredExam } from "./bank-import.ts";
 
 const escapeText=(s:unknown):string=>String(s??"").replace(/[&<>"']/g,c=>
   ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" })[c]??c);
@@ -793,7 +794,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
         '<small>No countdown or automatic expiry. Keep the selected navigation and scoring rules; finish when ready.</small></span></label>'+
      '<div class="row generic-actions home-start"><button class="btn primary" id="g-start"'+
       (loading||fallbackConflict||storageFault?' disabled':'')+'>Start '+escapeText(modeLabel)+' →</button>'+
-      '<button class="btn" id="g-import"'+(loading||fallbackConflict||storageFault?' disabled':'')+'>Import exam JSON</button></div>'+
+      '<button class="btn" id="g-import"'+(loading||fallbackConflict||storageFault?' disabled':'')+'>Import question bank</button></div>'+
       '<input type="file" id="g-file" accept=".json,application/json" hidden>'+
       '<p class="fine">Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section>'+
      '<aside class="home-side"><section class="panel pad paper-preview"><span class="eyebrow">SELECTED PAPER</span>'+
@@ -1320,13 +1321,13 @@ sectionPaceHTML(attempt)+analyticHTML+
        const file=(e.target as HTMLInputElement).files?.[0];if(!file)return;
        if(file.size>25*1024*1024){notice("Exam package exceeds the 25 MiB import limit.");return;}
        try{
-         const pkg=validateExamPackage(JSON.parse(await file.text()));
+         const pkg=importAuthoredExam(JSON.parse(await file.text()));
          if(packages.has(pkg.paper.id))throw new Error("Paper revision ID already exists. Supply a new revision ID.");
          if(!await save({recordType:"generic-package",id:"generic-package:"+pkg.paper.id,bundle:pkg}))return;
          packages.set(pkg.paper.id,pkg);choice=pkg.paper.id;singleSection=0;
          if(pkg.paper.edition==="source"||pkg.paper.edition==="reviewed")editionView=pkg.paper.edition;
          saveSelection();
-         notice("Package validated and imported.");
+         notice("Question bank validated and imported. Your paper is ready to practise.");
        }catch(error){notice(error instanceof Error?error.message:"Invalid exam package");}
      };
      root.querySelectorAll<HTMLButtonElement>("[data-delete]").forEach(button=>button.onclick=()=>{
