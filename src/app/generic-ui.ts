@@ -771,6 +771,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       '</div>'+(pending.length>5?'<p class="fine">Showing the five most recent unfinished tests; all others are preserved in History.</p>':"")+
       '</section>':"")+
      '<div class="generic-layout home-grid"><section class="panel pad home-picker"><h2 class="sr-only">Start a practice session</h2>'+
+     '<label class="picker" for="g-papers">Paper</label><select id="g-papers">'+options+'</select>'+
      (hasEditions?'<div class="edition-row"><span class="picker" id="editionLabel">Paper edition</span>'+
        '<div class="edition-toggle" id="g-edition" role="group" aria-labelledby="editionLabel">'+
        (["reviewed","source"] as const).map(edition=>
@@ -781,7 +782,6 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          "Independently reviewed wording and answer keys; disputed items are labelled after submission.":
          "Original publisher transcription; no independent key changes applied.")+
        '</p></div>':"")+
-     '<label class="picker" for="g-papers">Paper</label><select id="g-papers">'+options+'</select>'+
      (cgl?'<h3 class="subhead">Practice mode</h3><div class="generic-modes" role="group" aria-label="SSC CGL practice mode">'+
       ([["strict","Exam simulation","4 locked sections · 15 minutes each"],["free","Flexible full paper","60 minutes · move between sections"],
        ["single","Section practice","25 questions · 15 minutes"]] as const).map(([key,title,detail])=>
