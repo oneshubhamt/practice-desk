@@ -65,7 +65,22 @@ All four modern viewport results were identical for these sampled landmarks; Nex
 
 **L05–L11 remain OPEN** for Passes 27–28, with Pass29 as independent final review. L09 remains a known misleading whole-paper timer label; do not call this programme or overall laptop UI parity complete.
 
-## Recommended repair programme — originally all items open (L01–L04 now automated-repaired)
+## Pass 27 implementation status — History, Results and headings L05/L06/L11 repaired (31 Oct 2026)
+
+**L05 (HIGH), L06 (MEDIUM), L11 (LOW): AUTOMATED-VERIFIED / REPAIRED** at 1280×800, 1366×768, 1440×900 and 1536×864 with actual frozen v11 and overhaul `file://` same-paper (30 Sep reviewed CGL) flexible-mode completed exam and saved record. New `scripts/pass27-history-results.mjs` asserts first record completely in first viewport, section table visible directly below score summary, narrow geometry vs frozen v11, all six History summary metrics and priorities still present, History search/filter/sort and reopening, backup/storage availability, review/timing headings and tab ARIA/focus/keyboard/live announcements, 140%-text/mobile/tablet no-overflow safety.
+
+| 1366×768 top, CSS px | Frozen v11 | Earlier overhaul (Pass24) | Pass27 |
+|---|---:|---:|---:|
+| First saved History record | 604 | 1243 | **326** |
+| Results Overview section table | 476 | 766 | **457** |
+
+History archive now precedes supplemental metrics, comparable trends and cross-paper priorities without deleting them. Results places the genuine section-performance table directly after the frozen score grid; original-source scoring comparison, conservative lower bound and manually assessed written-response distinction still appear below the table, with all other analytics unchanged. Neutral `Attempt analysis` H1 now accurately spans Overview, Question Review and Timing; pane-specific tab labels and live announcements remain.
+
+**Full source and browser CI:** [run 41159414829](https://github.com/oneshubhamt/practice-desk/actions/runs/41159414829) all **3/3** jobs green; [paired screenshot and geometry artifact](https://github.com/oneshubhamt/practice-desk/actions/runs/41159414829/artifacts/13025973770). The original Pass24 baseline table above is archival pre-repair evidence, not live data. Canonical five-stage trace is in [V11 audit scratchpad](V11_SOURCE_AUDIT_2026-10-30.md).
+
+**Still OPEN:** **L07, L08, L09, L10** (Display 140% wrapping, genuine answer-key correction metadata, whole-paper versus section timer label, raw practice-mode slug). Pass28 repairs those; Pass29 independent final visual review and physical-device/AT/human signoff remain unverified. **Seven of eleven** original desktop findings have now been source-repaired and browser-verified; this is not full laptop parity/release approval.
+
+## Recommended repair programme — originally all items open (L01–L06 and L11 now automated-repaired)
 
 **Priority 1:** Reestablish v11-like *compact, action-first CGL UI* for Library and Exam at 1366×768 and 1440×900; keep richer generic engine and optional metrics in expandable/secondary areas rather than above essential controls. Specifically require Start, ordinary Next/Flag and first answer for typical passage items to remain visible to the same degree as v11 in the first viewport. Adopt DOM rectangle assertions, not just screenshot existence/no-overflow checks.
 
