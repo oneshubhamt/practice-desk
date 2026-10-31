@@ -1128,6 +1128,9 @@ sectionPaceHTML(attempt)+analyticHTML+
      saved.frozen.questions,restored.state.responses,new Date().toISOString())}:{})};
  void save(attempt);
    }
+   // Opening a different saved result is a new navigation context. Previous
+   // Review/Timing tab and filter must not carry over from another attempt.
+   if(attempt.finishedAt!==null){resultTab="overview";reviewFilter="all";}
    view=attempt.finishedAt?"result":"exam";draw();
  };
 
