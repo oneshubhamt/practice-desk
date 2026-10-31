@@ -1,3 +1,4 @@
+import {chooseModernPaper} from "./paper-select.mjs";
 // Pass 21 targeted real file:// interactions, not broad paired release QA.
 import {readFile,mkdtemp,rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
@@ -29,7 +30,7 @@ try{
    return options.find(option=>option.value.includes(id)&&option.textContent.includes(label))?.value;
   },[family,edition]);
   ensure(value,edition+" CGL paper absent: "+family);
-  await page.locator("#g-papers").selectOption(value);
+  await chooseModernPaper(page,value);
   await page.locator('[data-mode="free"]').click();
  }
  await choose("cgl-2026-09-30","Reviewed");
