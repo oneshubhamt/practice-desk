@@ -689,3 +689,25 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
  .result-pane#result-overview>.panel:nth-child(2) .scroll-table td{padding:7px 9px}
  .result-pane .result-score-details{padding:15px 19px}
 }
+
+/* Pass 28 L07 — accessible non-wrapping Light/Dark at 100–140% and zoom.
+   Keep all three theme controls, with the toggle on its own full-width row.
+   This does not change the chosen font scale or hide settings on phone. */
+.display-control:has(.display-theme-choices){
+ display:block;padding:11px 0;min-height:0
+}
+.display-control:has(.display-theme-choices)>span{
+ display:block;margin:0 0 8px;line-height:1.35
+}
+.display-control:has(.display-theme-choices) .display-theme-choices{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:7px;width:100%;min-width:0;margin:0
+}
+.display-theme-choices .btn{
+ display:block;width:100%;min-width:0;padding:6px 5px;
+ white-space:nowrap;word-break:normal;overflow-wrap:normal;text-align:center
+}
+.display-control:has(.display-theme-choices) .display-theme{
+ display:block;width:100%;min-width:0;margin-top:7px;
+ white-space:normal;overflow-wrap:break-word;text-align:center
+}
