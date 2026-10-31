@@ -47,6 +47,7 @@ async function capture(page,name){
  await page.screenshot({path:join(out,name+".png"),animations:"disabled"});
 }
 async function setPaper(page,id,reviewed=true){
+ await page.locator('[data-edition="'+(reviewed?"reviewed":"source")+'"]').click();
  const value=await page.locator("#g-papers option").evaluateAll((items,{id,reviewed})=>
   items.find(o=>o.value.includes(id)&&o.value.includes(reviewed?"reviewed":"source"))?.value??"",
   {id,reviewed});
