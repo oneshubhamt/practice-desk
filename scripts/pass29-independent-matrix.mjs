@@ -55,6 +55,7 @@ async function selectCgl(a,paper="cgl-2026-09-30",edition="reviewed",mode="free"
   await p.locator("#paperSelect").selectOption(paper);
   await p.locator('[data-edition="'+(edition==="source"?"original":"reviewed")+'"]').click();
  }else{
+  await p.locator('[data-edition="'+edition+'"]').click();
   const selected=await p.locator("#g-papers option").evaluateAll((xs,args)=>
    xs.find(o=>o.value.includes(args.paper)&&o.value.includes(args.edition))?.value??"",
    {paper,edition});
