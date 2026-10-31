@@ -1,3 +1,4 @@
+import {chooseModernPaper} from "./paper-select.mjs";
 import { readFile, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -78,7 +79,7 @@ try{
  const exceptions=[];page.on("pageerror",e=>exceptions.push(e.message));
  page.setDefaultTimeout(20000);
  await page.goto(url,{waitUntil:"load"});
- await page.locator("#g-papers").selectOption(reviewed.paper.id);
+ await chooseModernPaper(page,reviewed.paper.id);
  await page.locator('[data-mode="free"]').click();
  await page.locator("#g-start").click();
  ok(await page.locator(".source-review").count()===0,"Original key shown in live test");
@@ -186,7 +187,7 @@ try{
   buffer:Buffer.from(JSON.stringify(source))});
  await page.locator("#g-file").setInputFiles({name:"reviewed.json",mimeType:"application/json",
   buffer:Buffer.from(JSON.stringify(target))});
- await page.locator("#g-papers").selectOption(target.paper.id);
+ await chooseModernPaper(page,target.paper.id);
  await page.locator("#g-start").click();
  ok(await page.locator(".source-review").count()===0,"Generic source key leaked during exam");
  await page.locator('input[data-choice]').nth(1).click();
