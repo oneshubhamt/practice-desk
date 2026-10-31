@@ -1,6 +1,6 @@
 import type { SourcePaperBank, ReviewPatchBank, QuestionPatch, ChoiceKey } from "./schema.js";
 import type { PaperRevision } from "../domain/exam.js";
-import type { QuestionRevision } from "../domain/question.js";
+import type { QuestionRevision, EditorialChange } from "../domain/question.js";
 import type { AnswerKeyRevision } from "../domain/answer-key.js";
 import type { AssetId, OptionId, PaperId, PaperRevisionId, QuestionId, QuestionRevisionId, SectionId, AnswerKeyRevisionId, StimulusId } from "../domain/ids.js";
 import { validateAnswerKeyRevision, validatePaperRevision, validateQuestionRevision } from "../domain/validate.ts";
@@ -45,9 +45,22 @@ export function importCglBank(papers: SourcePaperBank, patches: ReviewPatchBank)
         const notes=sourceInvalidCaution
           ? [merged.review,"Editorial caution: the original published answer is retained for scoring; it is disputed and has not been independently corrected."].filter(Boolean).join(" ")
           : merged.review;
+        // Classify only effective differences against the published source.
+        // A patch that repeats the same key is NOT evidence of a key correction;
+        // patch status/review prose is also not proof of any particular change.
+        const changes: EditorialChange[] = [];
+        if (edition === "reviewed") {
+          if (patch.key !== undefined && patch.key !== original.key) changes.push("answer-key");
+          if (patch.stem !== undefined && patch.stem !== original.stem) changes.push("wording");
+          if (patch.opts !== undefined && patch.opts.some((text, i) => text !== original.opts[i]))
+            changes.push("options");
+          if (patch.explanation !== undefined && patch.explanation !== original.explanation)
+            changes.push("explanation");
+        }
         const editorial = { status: editorialStatus as QuestionRevision["editorial"]["status"],
           sourcePage: original.sourcePage,
           ...(notes ? { notes } : {}),
+          ...(changes.length ? { changes } : {}),
           ...(merged.sources?.length ? { sources: merged.sources } : {}) };
         const fingerprint = questionRevisionHash({content,editorial});
         const id = `${stableId}:${edition}:${fingerprint.slice(0,16)}` as QuestionRevisionId;
