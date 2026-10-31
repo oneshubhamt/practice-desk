@@ -1,3 +1,4 @@
+import {chooseModernPaper} from "./paper-select.mjs";
 import { readFile, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -66,7 +67,7 @@ try{
   pkg.paper.id);
  yes(await page.locator("#g-papers").inputValue()===pkg.paper.id,
   "Persisted imported exam selection was lost during asynchronous startup");
- await page.locator("#g-papers").selectOption(reviewed);
+ await chooseModernPaper(page,reviewed);
  await page.waitForFunction(expected=>document.querySelector("#g-papers")?.value===expected,
   reviewed);
  await page.locator('[data-mode="free"]').click();
