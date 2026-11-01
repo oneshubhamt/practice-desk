@@ -70,6 +70,9 @@ async function compareAt(w,h,theme){
     await x.page.locator("#displayTrigger").click();
     await x.page.locator("#themeDark").click();
     await x.page.locator("#displayClose").click();
+    await x.page.mouse.move(2,Math.min(180,h-2));
+    must(await x.page.locator("#displayTrigger").getAttribute("aria-expanded")==="false",
+      "Display trigger remained expanded after close");
    }
   }
   const old=await state(a,"v11-library-"+w+"-"+theme);
