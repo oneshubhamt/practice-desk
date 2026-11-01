@@ -765,8 +765,9 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    // A recent unfinished attempt must not evict an older completed result.
    const latest=[...complete].sort((a,b)=>(b.finishedAt??0)-(a.finishedAt??0)||
      b.startedAt-a.startedAt).slice(0,3);
-   const selected=packages.get(choice);
-   const cgl=selected!==undefined&&builtinPaperIds.has(selected.paper.id);
+   const catalog=families(),family=catalog.find(f=>f.id===selectedFamilyId);
+   const selected=family?.papers.find(p=>p.paper.id===choice);
+   const cgl=selectedFamilyId===BUILTIN_CGL_FAMILY&&Boolean(selected);
    const configured=selected?configureUntimedPractice(
      cgl?configureCglPractice(selected,cglMode,singleSection):selected,untimedPractice):null;
    const selectedNumbers=new Set(configured?.questions.map(q=>q.questionId.split(":").at(-1))??[]);
@@ -785,19 +786,27 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    const previewSections=cgl&&cglMode==="single"?1:selected?.paper.sections.length??0;
    const previewNavigation=cgl?cglMode==="free"?"Free":cglMode==="single"?"One section":"Section locked":
      selected?.paper.navigation.sectionNavigation==="free"?"Free":"Sequential";
-   // The edition switch is a true paper-list filter, not another selector
-   // that leaves original/reviewed variants intermingled. Custom imported
-   // exams remain separately grouped and available from either edition.
-   const published=[...packages.values()].filter(p=>p.paper.edition===editionView);
-   const custom=[...packages.values()].filter(p=>p.paper.edition==="custom");
+   // Edition switches filter only the active family; custom papers remain visible.
+   const available=family?.papers??[];
+   const published=available.filter(p=>p.paper.edition===editionView);
+   const custom=available.filter(p=>p.paper.edition==="custom");
    const option=(p:ExamPackage):string=>'<option value="'+escapeText(p.paper.id)+'"'+
-       (choice===p.paper.id?" selected":"")+'>'+escapeText(p.title)+'</option>';
-   const options='<optgroup label="'+(editionView==="reviewed"?"Reviewed papers":"Original papers")+'">'+
-       published.map(option).join("")+'</optgroup>'+
-       (custom.length?'<optgroup label="Imported / custom examinations">'+
-       custom.map(option).join("")+'</optgroup>':"");
-   const hasEditions=[...packages.values()].some(p=>p.paper.edition==="source")&&
-     [...packages.values()].some(p=>p.paper.edition==="reviewed");
+     (choice===p.paper.id?" selected":"")+'>'+escapeText(p.title)+'</option>';
+   const missing=!selected&&choice?
+     '<option value="'+escapeText(choice)+'" selected disabled>Saved paper unavailable — re-import or choose another</option>':"";
+   const options=missing+
+     (published.length?'<optgroup label="'+(editionView==="reviewed"?"Reviewed papers":"Original papers")+'">'+
+       published.map(option).join("")+'</optgroup>':"")+
+     (custom.length?'<optgroup label="Imported / custom examinations">'+
+       custom.map(option).join("")+'</optgroup>':"")+
+     (!selected&&!missing?'<option value="" selected disabled>Choose a paper</option>':"");
+   const hasEditions=available.some(p=>p.paper.edition==="source")&&
+     available.some(p=>p.paper.edition==="reviewed");
+   const familyOptions=(selectedFamilyId&&!family?
+     '<option value="'+escapeText(selectedFamilyId)+'" selected disabled>Saved exam family unavailable — re-import</option>':"")+
+     catalog.map(f=>'<option value="'+escapeText(f.id)+'"'+
+       (f.id===selectedFamilyId?" selected":"")+'>'+escapeText(f.title)+
+       ' ('+f.papers.length+' paper edition'+(f.papers.length===1?"":"s")+')</option>').join("");
    return '<div class="generic-heading home-heading"><div><span class="eyebrow">OFFLINE PRACTICE STUDIO</span>'+
      '<h1>Test library</h1><p class="muted">Choose a paper, work in exam conditions and learn from every attempt.</p></div>'+
      '<button class="btn quiet" id="g-history">History & insights →</button></div>'+
@@ -816,7 +825,14 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       '</div>'+(pending.length>5?'<p class="fine">Showing the five most recent unfinished tests; all others are preserved in History.</p>':"")+
       '</section>':"")+
      '<div class="generic-layout home-grid"><section class="panel pad home-picker"><h2 class="sr-only">Start a practice session</h2>'+
+     '<label class="picker" for="g-family">Examination family</label>'+
+     '<select id="g-family" aria-label="Examination family">'+familyOptions+'</select>'+
+     '<p class="fine family-provenance">'+(family?.imported?
+       "Imported/user-supplied content; not an official exam bank.":
+       family?"Included SSC CGL papers; original and reviewed versions stay separate.":
+       "Previously selected examination unavailable. Re-import its bank or select another.")+'</p>'+
      '<label class="picker" for="g-papers">Paper</label><select id="g-papers">'+options+'</select>'+
+     (!selected?'<p class="generic-warning" role="status">Saved paper unavailable. Re-import its revision or select an installed paper.</p>':"")+
      (hasEditions?'<div class="edition-row"><span class="picker" id="editionLabel">Paper edition</span>'+
        '<div class="edition-toggle" id="g-edition" role="group" aria-labelledby="editionLabel">'+
        (["reviewed","source"] as const).map(edition=>
@@ -838,7 +854,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
         (untimedPractice?" checked":"")+'><span><strong>Untimed practice</strong>'+
         '<small>No countdown or automatic expiry. Keep the selected navigation and scoring rules; finish when ready.</small></span></label>'+
      '<div class="row generic-actions home-start"><button class="btn primary" id="g-start"'+
-      (loading||fallbackConflict||storageFault?' disabled':'')+'>Start '+escapeText(modeLabel)+' →</button>'+
+      (loading||fallbackConflict||storageFault||!selected?' disabled':'')+'>Start +escapeText(modeLabel)+' →</button>'+
       '<button class="btn" id="g-import"'+(loading||fallbackConflict||storageFault?' disabled':'')+'>Import question bank</button></div>'+
       '<input type="file" id="g-file" accept=".json,application/json" hidden>'+
       '<p class="fine">Start with an editable <button type="button" class="textlink" id="g-bank-template">Download APFC/NAT bank template</button> (JSON). '+
