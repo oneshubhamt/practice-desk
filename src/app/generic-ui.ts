@@ -30,7 +30,8 @@ import { reviewMatch, reviewFiltersHTML, resultTabsHTML, timingLedgerHTML, resul
 import { addLearningCard, validateLearningCard } from "../learning/learning.ts";
 import type { LearningCard } from "../learning/learning.ts";
 import { readDisplayPreferences, writeDisplayPreferences, SETTINGS_EVENT } from "./preferences.ts";
-import { readPracticeSelection,writePracticeSelection } from "./practice-selection.ts";
+import { readPracticeSetups,writePracticeSetups,type PracticeSetups } from "./practice-selection.ts";
+import { examFamilyCatalog,familyIdFor,pairedEdition,BUILTIN_CGL_FAMILY } from "./exam-families.ts";
 import { importAuthoredExam, APFC_NAT_BANK_TEMPLATE } from "./bank-import.ts";
 import { createScreenRenderer } from "./screen-renderer.ts";
 import { createNativeRouter, type AppRoute, type RouteContext, type NativeRouter } from "./navigation.ts";
@@ -354,17 +355,40 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  let choice=[...packages.values()].reverse().find(p=>p.paper.edition==="reviewed")?.paper.id??(packages.keys().next().value as string);
  let cglMode:CglPracticeMode="strict", singleSection=0, untimedPractice=false;
  let editionView:"source"|"reviewed"=packages.get(choice)?.paper.edition==="source"?"source":"reviewed";
- const storedSelection=readPracticeSelection();
- if(storedSelection){
-   if(packages.has(storedSelection.paperRevisionId))choice=storedSelection.paperRevisionId;
-   cglMode=storedSelection.mode;
-   untimedPractice=storedSelection.untimed??false;
-   editionView=storedSelection.edition??(packages.get(choice)?.paper.edition==="source"?"source":"reviewed");
-   singleSection=Math.min(storedSelection.section,
-     Math.max(0,(packages.get(choice)?.paper.sections.length??1)-1));
- }
+ const storedSetups=readPracticeSetups();
+ let selectedFamilyId=BUILTIN_CGL_FAMILY;
+ let setups:PracticeSetups=storedSetups??{
+   schema:2,selectedFamilyId:BUILTIN_CGL_FAMILY,
+   families:{[BUILTIN_CGL_FAMILY]:{
+     paperRevisionId:choice,mode:cglMode,section:singleSection,
+     untimed:untimedPractice,edition:editionView
+   }}
+ };
+ const families=()=>examFamilyCatalog(packages.values(),builtinPaperIds);
+ const applyFamily=(id:string):void=>{
+   selectedFamilyId=id;
+   const previous=setups.families[id];
+   if(previous){
+     choice=previous.paperRevisionId;cglMode=previous.mode;
+     singleSection=previous.section;untimedPractice=previous.untimed;
+     editionView=previous.edition;
+   }else{
+     const family=families().find(f=>f.id===id);
+     const paper=family?.papers.find(p=>p.paper.edition==="reviewed")??family?.papers[0];
+     choice=paper?.paper.id??"";cglMode="strict";singleSection=0;
+     untimedPractice=false;editionView=paper?.paper.edition==="source"?"source":"reviewed";
+   }
+   if(packages.has(choice))
+     singleSection=Math.min(singleSection,Math.max(0,packages.get(choice)!.paper.sections.length-1));
+ };
  const saveSelection=():void=>{
-   try{writePracticeSelection({schema:1,paperRevisionId:choice,mode:cglMode,section:singleSection,untimed:untimedPractice,edition:editionView});}
+   const next:PracticeSetups={schema:2,selectedFamilyId,
+     families:{...setups.families,[selectedFamilyId]:{
+       paperRevisionId:choice,mode:cglMode,section:singleSection,
+       untimed:untimedPractice,edition:editionView
+     }}};
+   setups=next;
+   try{writePracticeSetups(next);}
    catch{warning="Exam setup could not be saved on this device; current selection still works.";}
  };
   let historyFilter:HistoryStatus="all",historySort:HistorySort="newest",historySearch="",historyPaper="all";
@@ -418,7 +442,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      }
      const valid=toExport.map(value=>validateGenericStoredRecord(value));
      const archive=makeBackup(valid as unknown as readonly Record<string,unknown>[],
-       readDisplayPreferences(),new Date().toISOString(),readPracticeSelection());
+       readDisplayPreferences(),new Date().toISOString(),setups);
      const blob=new Blob([JSON.stringify(archive)],{type:"application/json"});
      const url=URL.createObjectURL(blob);
      const link=document.createElement("a");link.href=url;
@@ -462,12 +486,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    try{
      writeDisplayPreferences(archive.preferences);
      window.dispatchEvent(new Event(SETTINGS_EVENT));
-     if(archive.selection&&packages.has(archive.selection.paperRevisionId)){
-       choice=archive.selection.paperRevisionId;
-       cglMode=archive.selection.mode;
-       singleSection=Math.min(archive.selection.section,
-         Math.max(0,(packages.get(choice)?.paper.sections.length??1)-1));
-       saveSelection();
+     if(archive.setups){
+       setups=archive.setups;applyFamily(setups.selectedFamilyId);saveSelection();
      }
      warning="Imported "+incoming.length+" records; available display/exam setup preferences restored.";
    }catch{
@@ -1735,12 +1755,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    }
    // The selected exam may be an imported package, unavailable until the
    // asynchronous IndexedDB/fallback package inventory has finished loading.
-   if(storedSelection&&packages.has(storedSelection.paperRevisionId)){
-     choice=storedSelection.paperRevisionId;
-     cglMode=storedSelection.mode;
-     singleSection=Math.min(storedSelection.section,
-       Math.max(0,(packages.get(choice)?.paper.sections.length??1)-1));
-   }
+   if(storedSetups)applyFamily(storedSetups.selectedFamilyId);
    loading=false;
    routeHydrated=true;hydrationDone();
    if(!disposed){draw();void router.start().catch(error=>notice(
