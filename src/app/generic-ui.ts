@@ -35,7 +35,7 @@ import { readDisplayPreferences, writeDisplayPreferences, SETTINGS_EVENT } from 
 import { readPracticeSelection,writePracticeSelection } from "./practice-selection.ts";
 import { importAuthoredExam, APFC_NAT_BANK_TEMPLATE } from "./bank-import.ts";
 import { createScreenRenderer } from "./screen-renderer.ts";
-import { createNativeRouter, type AppRoute, type RouteContext } from "./navigation.ts";
+import { createNativeRouter, type AppRoute, type RouteContext, type NativeRouter } from "./navigation.ts";
 
 const escapeText=(s:unknown):string=>String(s??"").replace(/[&<>"']/g,c=>
   ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" })[c]??c);
@@ -378,6 +378,17 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  const choiceDrafts=new Map<string,{questionId:string;optionIds:OptionId[];message:string}>();
  // Live-region updates depend on actual route/question changes, not timer ticks.
  const screenRenderer=createScreenRenderer(root);
+ let router:NativeRouter;
+ let activationGeneration=0;
+ let routeHydrated=false;
+ let hydrationDone:()=>void=()=>{};
+ const hydration=new Promise<void>(resolve=>{hydrationDone=resolve;});
+ const go=(target:AppRoute,history:"push"|"replace"="push"):void=>{
+   void router.navigate(target,history).catch(error=>{
+     warning=error instanceof Error?"Navigation failed: "+error.message:"Navigation failed";
+     if(!disposed)draw();
+   });
+ };
  let db:IDBDatabase|null=null, warning="",disposed=false, loading=true, writeQueue=Promise.resolve();
  let lastTimerSave=0;
  let fallbackStamp:string|null=null, fallbackConflict=false, storageFault=false;
@@ -1146,23 +1157,80 @@ sectionPaceHTML(attempt)+analyticHTML+
     (resultTab==="timing"?timingLedgerHTML(attempt,true,revealReview):
       '<section class="result-pane" id="result-timing" role="tabpanel" aria-labelledby="result-tab-timing" hidden></section>');
  }
- const openSaved=(id:string)=>{
-   const saved=records.get(id);if(!isAttempt(saved))return;
-   attempt=saved;
-   if(saved.finishedAt===null){
- const restored=restoreSession(saved.frozen.paper,saved.state,now(),!document.hidden);
- attempt={...saved,state:restored.state,
-   ...(restored.expired?{finishedAt:now(),completionReason:"time-expired" as const,
-     result:scoreAttempt(saved.frozen.paper,saved.frozen.key,
-     saved.frozen.questions,restored.state.responses,new Date().toISOString())}:{})};
- void save(attempt);
-   }
-   // Opening a different saved result is a new navigation context. Previous
-   // Review/Timing tab and filter must not carry over from another attempt.
-   if(attempt.finishedAt!==null){resultTab="overview";reviewFilter="all";}
-   view=attempt.finishedAt?"result":"exam";draw();
+ const openSaved=(id:string):void=>{
+   const saved=records.get(id);
+   if(!isAttempt(saved))return;
+   go(saved.finishedAt===null?{screen:"exam",attemptId:id}:
+     {screen:"result",attemptId:id,tab:"overview"});
  };
-
+ /** The only coordinator allowed to change the visible screen.
+  * URL/history policy lives in navigation.ts, DOM focus lives in the renderer.
+  */
+ async function activateRoute(target:AppRoute,ctx:RouteContext):Promise<void>{
+   const requested=++activationGeneration;
+   if(!routeHydrated)await hydration;
+   if(disposed||ctx.signal?.aborted||requested!==activationGeneration)return;
+   const prevView=view;
+   const previousAttempt=attempt;
+   // Traversals cannot reliably be canceled. Checkpoint first, then display
+   // the destination; question/answer changes never create URL entries.
+   const leavesExam=prevView==="exam"&&previousAttempt?.finishedAt===null&&
+     !(target.screen==="exam"&&target.attemptId===previousAttempt.id);
+   if(leavesExam){
+     try{
+       const next=transitionGenericAttempt(previousAttempt,{
+         type:"VISIBILITY",nowMs:now(),visible:false},
+         new Map(previousAttempt.frozen.questions.map(q=>[q.id,q])));
+       attempt=next;
+       if(next!==previousAttempt)await save(next);
+     }catch(error){
+       warning="Unable to checkpoint the test before leaving: "+
+         (error instanceof Error?error.message:"Unknown error");
+     }
+     if(disposed||ctx.signal?.aborted||requested!==activationGeneration)return;
+   }
+   if(target.screen==="exam"||target.screen==="result"){
+     const saved=records.get(target.attemptId);
+     if(!isAttempt(saved)){
+       warning="The requested attempt is unavailable or has been deleted. Open a saved attempt from the library.";
+       go({screen:"library"},"replace");return;
+     }
+     if(target.screen==="exam"&&saved.finishedAt!==null){
+       go({screen:"result",attemptId:saved.id,tab:"overview"},"replace");return;
+     }
+     if(target.screen==="result"&&saved.finishedAt===null){
+       go({screen:"exam",attemptId:saved.id},"replace");return;
+     }
+     if(target.screen==="result"&&target.tab==="review"&&
+         saved.frozen.paper.navigation.allowReview===false){
+       go({screen:"result",attemptId:saved.id,tab:"overview"},"replace");return;
+     }
+     const switching=attempt?.id!==saved.id||prevView!=="exam";
+     attempt=saved;
+     if(target.screen==="exam"&&switching){
+       const restored=restoreSession(saved.frozen.paper,saved.state,now(),!document.hidden);
+       attempt={...saved,state:restored.state,
+         ...(restored.expired?{finishedAt:now(),completionReason:"time-expired" as const,
+           result:scoreAttempt(saved.frozen.paper,saved.frozen.key,
+             saved.frozen.questions,restored.state.responses,new Date().toISOString())}:{})};
+       if(attempt!==saved)void save(attempt);
+       if(attempt.finishedAt!==null){
+         go({screen:"result",attemptId:attempt.id,tab:"overview"},"replace");return;
+       }
+     }
+     if(target.screen==="result"){
+       if(attempt.id!==previousAttempt?.id||prevView!=="result")reviewFilter="all";
+       resultTab=target.tab;
+     }
+   }
+   view=target.screen;
+   if(disposed||ctx.signal?.aborted||requested!==activationGeneration)return;
+   draw();
+   if(ctx.kind!=="initial"&&(prevView!==view||
+      (view==="result"&&resultTab!==target.screen))) {
+     window.scrollTo({top:0,behavior:"instant"});
+   }
+ }
  function draw():void{
    if(disposed)return;
    const currentSection=attempt?.frozen.paper.sections[attempt.state.sectionIndex];
