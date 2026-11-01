@@ -302,6 +302,18 @@ Use exactly this cycle on **every** future implementation pass; keep a live scra
 
 **One pass may be split into substages only when each has an independent measurable user contract;** use sub-ID `P43-A`, `P43-B` within this file. Do **not** invent a new programme document or claim an arbitrary calendar estimate.
 
+### P43 — Audit and design checkpoint A (2 November 2026; work in progress)
+
+**Starting audited HEAD:** `62e150de504ba4ce3869508d5d63cadfedcfec98`. **Five-step contract:** audit → analyse → implement → reconcile objectives → targeted QA, with normal five-job CI; no P43 functionality is yet claimed in this checkpoint.
+
+**Actual source:** `src/app/generic-ui.ts` maintains a **single** mutable `choice`, CGL `mode`, `singleSection`, `untimedPractice` and `editionView`; `src/app/practice-selection.ts` persists only `selection.v1`; `src/history/backup.ts` v3 stores one optional selection; asynchronous IDB load can restore an imported paper after page startup. Current Library `#g-papers` includes selected-edition CGL and all imported/custom questions in a common selector; `#g-edition` is a real pressed segmented control. Exam scoring freezes the imported paper as written and only transforms built-in CGL for strict/flexible/single; do not change these contracts.
+
+**P43 hazards:** switching between families overwrites the user's CGL mode/section/untimed setup; absent imported revisions may silently select some other paper; family labels risk claiming official exam banks; a source/reviewed imported pair could collide with CGL identity; backing up only global v1 choice loses per-family setup; migrating v1 incorrectly before IDB has populated imports loses the user's previous selected paper. Existing browser suite validates `#g-papers` source/reviewed filtering, APFC/NAT import, exam marks and 195px/140% and must evolve into family-aware tests **without weakening its unique outcomes**.
+
+**Selected approach:** central pure family catalog sorted by source identity, with distinct stable `builtin:ssc-cgl` and `imported:<actual examId>` identifiers; family → edition (only where relevant) → paper → actual mode/start. Add optional versioned `setups.v2` map **by stable family identity**, each with validated paper revision, edition, CGL mode/section and untimed choice; migrate valid `selection.v1` only after actual package inventory loads and keep its old key usable for compatibility. Persist updates to the new map and the legacy active v1 without changing scores. Extend backup v3 **additively** with optional per-family setups checksum-covered by the existing manifest; old backups remain supported. On missing saved revisions show an actionable unavailable state and block Start instead of silently replacing the selected paper. Preserve explicit original/reviewed CGL buttons, generic imported title/author provenance, exact timer and scoring; retain full offline / local browser workflow.
+
+**Verification targets:** pure catalog/validation/migration/restore tests, real two imported family banks plus CGL switch-back persistence, independent per-family mode/untimed, checksum-protected backup round-trip and old v3 compatibility, score/timer/section and no-key-leak, keyboard/aria, narrow 195px+140% and same five-job CI. If a valid prior workflow changes, document its discoverable alternative before marking P43 complete. Physical Safari/AT remain EXTERNAL.
+
 ### P42 — LIVE checkpoint A: source audit and bounded design (2 November 2026; IN PROGRESS)
 
 **Start HEAD:** `de7e0541c17924e313ad2517432075b3538859c6`. **Status:** AUDIT/ANALYSE; not yet a completed P42 pass. No P42 test results should be inferred from P41's green CI. P41 automated verification remains the baseline.
