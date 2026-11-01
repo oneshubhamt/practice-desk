@@ -19,6 +19,11 @@ async function checkRoute(page,screen,id=null,tab=null){
   return (p.get("pd")===x.screen||(x.screen==="library"&&p.get("pd")===null))&&
    (x.id===null||p.get("attempt")===x.id)&&(x.tab===null||p.get("tab")===x.tab);
  },{screen,id,tab});
+ // Navigation API commits the URL before async checkpoint/render finishes.
+ // Assert the destination DOM, not just the URL (and no document reload).
+ const selectors={library:"#g-start",history:".history-archive",learning:"#learning-close",
+   exam:"#g-next",result:"#result-tab-overview"};
+ await page.locator(selectors[screen]).waitFor({state:"visible"});
  assert(await page.evaluate(()=>Boolean(window.__nativeDoc)), "Internal route navigation reloaded document");
 }
 async function capture(page,label){
