@@ -1077,3 +1077,80 @@ body:has(.results-heading) .app-independent-footer b{
 body:has(.results-heading) .app-independent-footer p{
  font-size:.7em;line-height:1.45
 }
+
+/* Pass34 — frozen v11 Aa trigger parity on EVERY screen. Keep the richer
+   overhaul Display behaviour (theme-toggle, persistence, fullscreen fallback)
+   and native route/AT support; do not turn the whole header into a floating
+   control. These final overrides intentionally supersede older sticky-header,
+   Pass33 Results-only and tiny-view rules. */
+header .header-actions{padding-right:53px}
+body:has(.results-heading) header .header-actions{padding-right:0}
+header .display-tools,
+body:has(.results-heading) header .display-tools{
+ position:fixed;z-index:130;top:12px;right:14px;left:auto;bottom:auto;
+ display:block;width:auto;gap:0;line-height:1.4;pointer-events:auto
+}
+header .display-trigger,
+body:has(.results-heading) header .display-trigger{
+ display:grid;place-items:center;flex:none;
+ width:43px;min-width:43px;height:41px;min-height:41px;
+ margin:0;padding:0;border-radius:10px;
+ border:1px solid #abc8e8;background:#ecf3fd;color:#173a66;
+ font:800 16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+ box-shadow:0 4px 16px #0d1e3826;letter-spacing:0
+}
+header .display-trigger:hover,
+header .display-trigger[aria-expanded="true"],
+body:has(.results-heading) header .display-trigger:hover,
+body:has(.results-heading) header .display-trigger[aria-expanded="true"]{
+ background:#d9eaff;border-color:#abc8e8;color:#173a66
+}
+html[data-theme="dark"] header .display-trigger,
+html[data-theme="dark"] body:has(.results-heading) header .display-trigger{
+ background:#273f5d;border-color:#6080a6;color:#fff
+}
+html[data-theme="dark"] header .display-trigger:hover,
+html[data-theme="dark"] header .display-trigger[aria-expanded="true"],
+html[data-theme="dark"] body:has(.results-heading) header .display-trigger:hover,
+html[data-theme="dark"] body:has(.results-heading) header .display-trigger[aria-expanded="true"]{
+ background:#345274;border-color:#83a4c7;color:#fff
+}
+header .display-panel,
+body:has(.results-heading) header .display-panel{
+ position:absolute;z-index:140;top:49px;right:0;left:auto;
+ width:min(310px,calc(100vw - 28px));max-width:none;
+ border:1px solid var(--line);border-radius:14px;
+ background:var(--panel);color:var(--ink);
+ box-shadow:0 14px 44px #061d3c35;padding:14px;
+ max-height:min(620px,calc(100dvh - 74px));
+ overflow-y:auto;overscroll-behavior:contain
+}
+header .display-heading{margin-bottom:8px;padding-bottom:11px}
+header .display-heading strong{font-size:15px}
+header .display-control{min-height:48px}
+header .display-panel .btn{min-height:34px;border-radius:7px}
+header .display-panel #fontReset{min-width:57px;font-size:12px}
+header .display-panel #fontLess,
+header .display-panel #fontMore{min-width:33px;font-size:17px}
+header .display-hint{font-size:11px}
+@media(max-width:500px){
+ header .display-tools,
+ body:has(.results-heading) header .display-tools{top:10px;right:10px}
+ header .display-trigger,
+ body:has(.results-heading) header .display-trigger{
+  width:39px;min-width:39px;height:38px;min-height:38px
+ }
+ header .header-actions{padding-right:45px}
+ body:has(.results-heading) header .header-actions{padding-right:0}
+ header .display-panel,
+ body:has(.results-heading) header .display-panel{
+  top:46px;width:min(310px,calc(100vw - 20px))
+ }
+}
+@media(max-width:250px){
+ header .display-panel,
+ body:has(.results-heading) header .display-panel{
+  position:fixed;top:55px;left:8px;right:8px;
+  width:auto;max-width:none;max-height:calc(100dvh - 65px)
+ }
+}
