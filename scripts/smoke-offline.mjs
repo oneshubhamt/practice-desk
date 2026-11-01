@@ -100,7 +100,9 @@ try{
  fail(await page.locator(".generic-review").filter({hasText:"Source page"}).count()>0,
    "Source document page provenance missing from review");
  await page.locator('[data-result-tab="overview"]').click();
- fail(await page.getByRole("heading",{name:"Section performance"}).count()===1,"Section breakdown absent");
+ fail(await page.getByRole("heading",{name:"Performance overview"}).count()===1&&
+   await page.locator(".result-section-table tbody tr").count()===4,
+   "Section breakdown absent from compact Performance overview");
  const completed=await find(page,x=>x.id===cgl.id&&x.finishedAt!==null);
  fail(completed.result?.items?.length===100,"Frozen CGL score not persisted");
  fail(completed.sourceKeyReference?.entries?.length===100,
