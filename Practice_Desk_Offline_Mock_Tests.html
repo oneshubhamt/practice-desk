@@ -871,6 +871,215 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
   grid-template-columns:minmax(0,1fr) 252px
  }
 }
+
+
+/* Pass33: v11 Results hierarchy and density over the overhaul evidence model.
+   Result-only overrides: Library/History/Exam retain their existing visual systems. */
+body:has(.results-heading) header{
+ position:fixed;top:0;left:0;right:0;height:0;min-height:0;
+ background:transparent;border:0;box-shadow:none;pointer-events:none;overflow:visible
+}
+body:has(.results-heading) header .wrap{
+ max-width:none;min-height:0;height:0;padding:0;display:block
+}
+body:has(.results-heading) header .brand,
+body:has(.results-heading) header .header-offline{display:none}
+body:has(.results-heading) header .header-actions{
+ position:fixed;right:14px;top:12px;display:block;pointer-events:auto
+}
+body:has(.results-heading) header .display-tools{position:relative}
+body:has(.results-heading) header .display-trigger{
+ min-width:43px;width:43px;height:41px;padding:0;border-radius:10px;
+ background:color-mix(in srgb,var(--blue) 18%,var(--panel));
+ border-color:color-mix(in srgb,var(--blue) 50%,var(--line));color:var(--ink);
+ box-shadow:0 4px 16px rgba(13,30,56,.14)
+}
+body:has(.results-heading) header .display-trigger span{display:none}
+body:has(.results-heading) header .display-panel{
+ position:fixed;top:58px;right:14px;left:auto;width:min(320px,calc(100vw - 28px));
+ max-height:calc(100dvh - 72px)
+}
+main:has(.results-heading){max-width:1130px;padding:22px 20px 60px}
+.generic-workspace .results-heading{
+ padding-right:58px;margin:0 0 8px!important;align-items:flex-start;gap:12px
+}
+.results-heading h1{font-size:calc(24px * var(--type-scale))!important;letter-spacing:-.5px!important;margin:0 0 4px!important}
+.results-heading p{font-size:calc(13px * var(--type-scale))!important;margin:0;line-height:1.45!important}
+.results-heading .btn{font-size:13px;min-height:41px;padding:9px 15px}
+
+.result-tabs{
+ display:flex;gap:8px;border-bottom:1px solid var(--border-strong);
+ margin:14px 0 17px;padding-bottom:8px;overflow-x:auto
+}
+.result-tab{
+ border:0;border-radius:8px;padding:9px 15px;background:transparent;
+ color:var(--muted);font-size:13px;font-weight:750;white-space:nowrap
+}
+.result-tab:hover{background:color-mix(in srgb,var(--blue) 8%,var(--panel));color:var(--blue)}
+.result-tab.active{background:color-mix(in srgb,var(--blue) 15%,var(--panel));color:var(--blue)}
+.result-tab.active:after{display:none}
+
+.result-pane#result-overview>.panel{margin-bottom:15px}
+.result-performance-overview{padding:24px}
+.result-overview-heading{align-items:flex-start;margin-bottom:13px}
+.result-overview-heading h2{margin:0 0 5px}
+.result-overview-heading p{margin:0}
+.result-performance-overview .scoregrid{
+ grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:0 0 12px
+}
+.result-performance-overview .score{
+ background:var(--soft);border-radius:9px;padding:12px;border:1px solid var(--line)
+}
+.result-performance-overview .score.standout{
+ background:color-mix(in srgb,var(--blue) 14%,var(--panel));
+ border-color:color-mix(in srgb,var(--blue) 42%,var(--line))
+}
+.result-performance-overview .score b{
+ font-size:calc(20px * var(--type-scale));letter-spacing:-.35px;white-space:nowrap
+}
+.result-performance-overview .score.standout b{color:var(--blue)}
+.result-performance-overview .score small{font-size:calc(11px * var(--type-scale))}
+.score-explainer{margin:6px 0 15px;line-height:1.55}
+.result-section-table{margin-top:5px}
+.result-section-table table{min-width:650px;font-size:calc(12px * var(--type-scale))}
+.result-section-table th,.result-section-table td{padding:9px 10px}
+.result-section-table th{background:var(--soft);font-weight:700;color:var(--muted)}
+.result-scoring-details{
+ border-top:1px solid var(--line);margin-top:13px;padding-top:11px
+}
+.result-scoring-details summary{
+ width:max-content;max-width:100%;cursor:pointer;color:var(--blue);font-size:12px;font-weight:750
+}
+.result-scoring-detail-body{padding:8px 0 0}
+.result-scoring-detail-body .fine{margin:0 0 8px}
+.result-scoring-detail-body .fine:last-child{margin-bottom:0}
+
+.result-insight-grid{
+ display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+ gap:15px;margin:15px 0
+}
+.result-insight-grid>.panel{min-width:0;padding:24px}
+.result-insight-grid h2{margin-bottom:12px}
+.metriclist{display:grid;gap:4px}
+.metriclist>div{
+ display:flex;justify-content:space-between;gap:12px;
+ border-bottom:1px solid var(--line);padding:8px 0;font-size:13px
+}
+.metriclist span{color:var(--muted)}
+.metriclist b{font-variant-numeric:tabular-nums;text-align:right}
+.result-method-note{margin:12px 0 0;line-height:1.6}
+.metric-bar{margin:10px 0 16px}
+.metric-bar:last-child{margin-bottom:0}
+.metric-bar>.row{font-size:12px;align-items:baseline}
+.metric-bar>.row span{color:var(--muted)}
+.metric-bar>.fine{margin:6px 0 0}
+.bartrack{height:7px;border-radius:99px;background:color-mix(in srgb,var(--line) 70%,var(--panel));overflow:hidden;margin:6px 0}
+.bartrack>div{height:100%;background:color-mix(in srgb,var(--blue) 78%,var(--panel))}
+
+.result-opportunities,.result-speed-accuracy,.answer-revision-panel,
+.result-question-speed,#g-next-work{padding:24px}
+.result-opportunities h2,.result-speed-accuracy h2,.answer-revision-panel h2,
+.result-question-speed h2,#g-next-work h2{margin-bottom:9px}
+.coach-cards{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:13px 0
+}
+.coach-card{
+ display:grid;gap:3px;border:1px solid var(--line);border-radius:9px;
+ background:var(--soft);padding:13px;min-width:0
+}
+.coach-card b{font-size:calc(22px * var(--type-scale));font-variant-numeric:tabular-nums;line-height:1.2}
+.coach-card span{font-size:12px;font-weight:750}
+.coach-card small{font-size:11px;color:var(--muted);line-height:1.45}
+.coach-actions{display:flex;gap:8px;flex-wrap:wrap}
+.coach-actions .btn{min-height:35px;padding:6px 11px;font-size:12px}
+
+.result-speed-grid{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:12px 0 14px
+}
+.result-speed-cell{
+ border:1px solid var(--line);border-radius:9px;background:var(--soft);
+ padding:12px;min-width:0
+}
+.result-speed-cell>b{display:block;margin-bottom:7px}
+.result-speed-count{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;font-weight:700}
+.result-speed-cell small{display:block;color:var(--muted);font-size:11px;margin:5px 0}
+.result-speed-cell .textlink{font-size:12px}
+
+.revision-chips{display:flex;gap:9px;flex-wrap:wrap;margin:10px 0 12px}
+.revision-chip{
+ display:inline-flex;align-items:center;min-height:26px;padding:3px 9px;
+ border-radius:6px;background:var(--soft);color:var(--ink);font-size:11px;font-weight:750
+}
+.revision-chip.revision-good{background:color-mix(in srgb,var(--good) 18%,var(--panel));color:var(--good)}
+.revision-chip.revision-bad{background:color-mix(in srgb,var(--bad) 15%,var(--panel));color:var(--bad)}
+.answer-revision-panel .fine{margin:0}
+
+.insight-stats{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:8px 0 14px
+}
+.insight-stats div{
+ border-radius:9px;border:1px solid var(--line);background:var(--soft);padding:12px
+}
+.insight-stats strong{font-size:calc(22px * var(--type-scale));display:block}
+.insight-stats span{font-size:11px;color:var(--muted)}
+.result-question-speed .subhead{margin:18px 0 8px}
+.result-question-speed .slow-list{display:block;border-top:1px solid var(--line);margin-top:0}
+.result-question-speed .slow-link{
+ border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;
+ padding:9px 4px;font-size:12px;color:var(--ink)
+}
+.result-question-speed .slow-link:hover{background:color-mix(in srgb,var(--blue) 5%,var(--panel));color:var(--blue)}
+.result-question-speed .slow-link>span:last-child{color:var(--blue)}
+#g-next-work{margin-bottom:15px}
+#g-next-work .plainlist{margin-bottom:0}
+.result-footer-actions{margin:12px 0 22px}
+
+@media(max-width:800px){
+ .result-insight-grid{grid-template-columns:1fr}
+ .coach-cards,.result-speed-grid{grid-template-columns:1fr}
+}
+@media(max-width:760px){
+ body:has(.results-heading) header .header-actions{right:10px;top:10px}
+ body:has(.results-heading) header .display-panel{right:10px;width:min(320px,calc(100vw - 20px))}
+ main:has(.results-heading){padding:16px 13px 45px}
+ .generic-workspace .results-heading{padding-right:52px;align-items:flex-start}
+ .results-heading>.row{width:100%}
+ .result-performance-overview,.result-insight-grid>.panel,.result-opportunities,
+ .result-speed-accuracy,.answer-revision-panel,.result-question-speed,#g-next-work{padding:18px}
+ .result-performance-overview .scoregrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:500px){
+ .result-performance-overview .scoregrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .result-tabs{gap:5px}
+ .result-tab{padding:8px 11px}
+ .insight-stats{gap:5px}
+ .insight-stats div{padding:9px}
+}
+@media(max-width:300px){
+ body:has(.results-heading) header .display-panel{left:8px;right:8px;width:auto}
+ .result-performance-overview .scoregrid{grid-template-columns:minmax(0,1fr)}
+ .result-performance-overview .score b{white-space:normal;overflow-wrap:anywhere}
+ .result-section-table table{min-width:520px}
+ .metriclist>div{display:grid;gap:2px}
+ .metriclist b{text-align:left}
+ .revision-chips{gap:5px}
+}
+
+.result-device-footer{
+ padding:22px 0 0;color:var(--muted);text-align:center;font-size:11px
+}
+body:has(.results-heading) .app-independent-footer{
+ margin-top:16px;padding:13px 18px
+}
+body:has(.results-heading) .app-independent-footer .wrap{
+ max-width:1130px
+}
+body:has(.results-heading) .app-independent-footer b{
+ font-size:.78em;margin-bottom:3px
+}
+body:has(.results-heading) .app-independent-footer p{
+ font-size:.7em;line-height:1.45
+}
 </style></head>
 <body><header><div class="wrap"><div class="brand"><div class="symbol">P</div><div><b>Practice Desk</b><small>Offline exam practice</small></div></div><div class="header-actions"><span class="header-offline"><span class="offline-dot"></span> Works offline</span><div class="display-tools" aria-label="Display options"><button type="button" id="displayTrigger" class="display-trigger" aria-label="Display settings" aria-haspopup="true" aria-controls="displayPanel" aria-expanded="false">Aa <span>Display</span></button><div id="displayPanel" class="display-panel" hidden><div class="display-heading"><strong>Appearance</strong><button id="displayClose" type="button" class="display-close" aria-label="Close display settings">×</button></div><div class="display-control"><span>Text size</span><div class="display-size"><button id="fontLess" type="button" class="btn" aria-label="Decrease text size">−</button><button id="fontReset" type="button" class="btn" aria-label="Reset text size">100%</button><button id="fontMore" type="button" class="btn" aria-label="Increase text size">+</button></div></div><div class="display-control"><span>Color theme</span><div class="display-theme-choices" role="group" aria-label="Color theme"><button id="themeLight" class="btn" type="button" aria-pressed="true">Light</button><button id="themeDark" class="btn" type="button" aria-pressed="false">Dark</button></div><button id="themeToggle" class="btn display-theme" type="button" aria-pressed="false">Toggle theme</button></div><button id="displayFullscreen" type="button" class="btn display-fullscreen" aria-pressed="false">Enter full screen</button><p class="fine display-hint">Saved on this device. Full screen is optional.</p><p class="fine" id="preferences-warning" role="status"></p></div></div></div></div></header>
 <div id="screen-announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -3600,7 +3809,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     if (correct < 0) throw new Error(path + ".correctMarks: must be non-negative");
     if (incorrect > 0) throw new Error(path + ".incorrectMarks: must be non-positive");
     if (unanswered > correct || unanswered < incorrect) throw new Error(path + ".unansweredMarks: must lie between incorrectMarks and correctMarks");
-    if ([correct, incorrect, unanswered].some((mark) => Math.abs(mark) > 1e6))
+    if ([correct, incorrect, unanswered].some((mark2) => Math.abs(mark2) > 1e6))
       throw new Error(path + ": mark magnitudes must not exceed 1000000");
     if (rule["partialCredit"] !== void 0) {
       const partial = record(rule["partialCredit"], path + ".partialCredit");
@@ -6554,33 +6763,6 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     } };
   }
 
-  // src/learning/answer-revisions.ts
-  function answerRevisionEvidence(a) {
-    if (!a.result || a.finishedAt === null) return { recorded: 0, changed: 0, rescued: 0, lost: 0, other: 0 };
-    let recorded = 0, changed = 0, rescued = 0, lost = 0, other = 0;
-    for (const row of a.state.responses) {
-      const events = row.answerEvents;
-      if (!events?.length) continue;
-      recorded++;
-      const replacements = events.filter((e) => e.from && e.to && JSON.stringify(e.from) !== JSON.stringify(e.to));
-      if (!replacements.length) continue;
-      changed++;
-      const question = a.frozen.questions.find((q) => q.id === row.questionRevisionId);
-      const key2 = a.frozen.key.entries.find((e) => e.questionRevisionId === row.questionRevisionId)?.answer;
-      const unsafe = question && ["draft", "invalid", "incomplete-source", "under-review", "superseded"].includes(question.editorial.status);
-      const containsClear = events.some((e) => !e.to);
-      const first = events[0]?.to, last = row.response;
-      if (unsafe || containsClear || question?.content.kind !== "single-choice" || key2?.kind !== "single-choice" || first?.kind !== "single-choice" || last?.kind !== "single-choice" || events[0]?.from !== void 0) {
-        other++;
-        continue;
-      }
-      if (first.optionId !== key2.optionId && last.optionId === key2.optionId) rescued++;
-      else if (first.optionId === key2.optionId && last.optionId !== key2.optionId) lost++;
-      else other++;
-    }
-    return { recorded, changed, rescued, lost, other };
-  }
-
   // src/learning/question-analytics.ts
   function questionSpeed(a, id) {
     const item = a.result?.items.find((row) => row.questionRevisionId === id);
@@ -6977,12 +7159,40 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     return '<details class="panel pad help-rules" id="g-exam-rules"><summary>Full exam rules, shortcuts, source audit & offline storage</summary><div class="help-rules-body"><h3>Exam clock and sections</h3>' + list(p.timingRules) + "<h3>Questions, review and navigation</h3>" + list(p.navigationRules) + "<h3>Scoring for this selection</h3><p>" + escapeHTML(p.ruleSummary) + ". Maximum eligible automated marks: <b>" + escapeHTML(p.maximum.toFixed(p.decimals)) + "</b>. Excluded items are omitted; written/manual questions are self-assessed separately.</p><h3>Exam keyboard shortcuts</h3><p>During a running exam, A\u2013D answer a single-choice question; left/right arrows navigate between questions except when a native answer radio is focused. On a focused radio, unmodified arrows select answer options; Alt+left/right navigates questions instead. M toggles a flag if permitted, including while paused; F toggles full-screen/focus layout. Answer and navigation shortcuts do not operate while paused or in text entry or an open Display panel. Use ordinary Tab, Enter and Space to navigate controls.</p><h3>Source and editorial independence</h3><p>" + escapeHTML(p.provenance) + " No answer key, solution, dispute details or correction comparison is disclosed before permitted post-test review.</p><h3>Offline data and backups</h3><p>This is a standalone offline tool, not a synchronised account. Attempts and display choices are kept in the current browser profile; storage can be cleared or evicted. Export checksum-verified backups from History, store them outside this device, and keep a separate copy before deleting. Imported backups merge additively; existing saved records are not silently replaced. Fullscreen depends on browser support and may use a focus-layout fallback.</p></div></details>";
   }
 
+  // src/learning/answer-revisions.ts
+  function answerRevisionEvidence(a) {
+    if (!a.result || a.finishedAt === null) return { recorded: 0, changed: 0, rescued: 0, lost: 0, other: 0 };
+    let recorded = 0, changed = 0, rescued = 0, lost = 0, other = 0;
+    for (const row of a.state.responses) {
+      const events = row.answerEvents;
+      if (!events?.length) continue;
+      recorded++;
+      const replacements = events.filter((e) => e.from && e.to && JSON.stringify(e.from) !== JSON.stringify(e.to));
+      if (!replacements.length) continue;
+      changed++;
+      const question = a.frozen.questions.find((q) => q.id === row.questionRevisionId);
+      const key2 = a.frozen.key.entries.find((e) => e.questionRevisionId === row.questionRevisionId)?.answer;
+      const unsafe = question && ["draft", "invalid", "incomplete-source", "under-review", "superseded"].includes(question.editorial.status);
+      const containsClear = events.some((e) => !e.to);
+      const first = events[0]?.to, last = row.response;
+      if (unsafe || containsClear || question?.content.kind !== "single-choice" || key2?.kind !== "single-choice" || first?.kind !== "single-choice" || last?.kind !== "single-choice" || events[0]?.from !== void 0) {
+        other++;
+        continue;
+      }
+      if (first.optionId !== key2.optionId && last.optionId === key2.optionId) rescued++;
+      else if (first.optionId === key2.optionId && last.optionId !== key2.optionId) lost++;
+      else other++;
+    }
+    return { recorded, changed, rescued, lost, other };
+  }
+
   // src/app/result-presentation.ts
   var esc3 = (x) => String(x ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
   var duration = (ms) => {
     const t = Math.ceil(Math.max(0, ms) / 1e3);
     return String(Math.floor(t / 60)).padStart(2, "0") + ":" + String(t % 60).padStart(2, "0");
   };
+  var mark = (a, value) => value.toFixed(a.frozen.paper.scoring.decimalPlaces ?? 2);
   function reviewMatch(a, item, filter) {
     if (filter === "all") return true;
     if (["correct", "incorrect", "unanswered", "excluded", "pending"].includes(filter)) return item.verdict === filter;
@@ -6994,7 +7204,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     return filter === "fastwrong" ? speed === "Fast" : filter === "slowwrong" ? speed === "Slow" : filter === "typicalwrong" && speed === "Typical";
   }
   function resultTabsHTML(active, allowReview = true) {
-    return '<nav class="result-tabs" role="tablist" aria-label="Result views">' + ["overview", "review", "timing"].filter((id) => id !== "review" || allowReview).map((id) => '<button id="result-tab-' + id + '" type="button" role="tab" tabindex="' + (id === active ? "0" : "-1") + '" class="result-tab ' + (id === active ? "active" : "") + '" aria-controls="result-' + id + '" aria-selected="' + (id === active) + '" data-result-tab="' + id + '">' + { overview: "Insights", review: "Question review", timing: "Time ledger" }[id] + "</button>").join("") + "</nav>";
+    return '<nav class="result-tabs" role="tablist" aria-label="Result views">' + ["overview", "review", "timing"].filter((id) => id !== "review" || allowReview).map((id) => '<button id="result-tab-' + id + '" type="button" role="tab" tabindex="' + (id === active ? "0" : "-1") + '" class="result-tab ' + (id === active ? "active" : "") + '" aria-controls="result-' + id + '" aria-selected="' + (id === active) + '" data-result-tab="' + id + '">' + { overview: "Insights", review: "Answer review", timing: "Question times" }[id] + "</button>").join("") + "</nav>";
   }
   function reviewFiltersHTML(active) {
     return '<label class="filter-label" for="g-review-filter">Show questions<select id="g-review-filter">' + [
@@ -7021,15 +7231,60 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       return "<tr><td>" + (i + 1) + "</td><td>" + esc3(section?.title ?? "\u2014") + '</td><td><span class="verdict ' + esc3(x.verdict) + '">' + esc3(x.verdict) + "</span></td><td>" + duration(response?.timeSpentMs ?? 0) + '</td><td><span class="tag speed-' + speed.toLowerCase().replace(/[^a-z]+/g, "-") + '">' + esc3(speed) + "</span></td><td>" + (a.state.questionVisits === void 0 ? "Not recorded" : visit ?? 0) + "</td><td>" + (response?.answerChangeCount ?? 0) + "</td><td>" + (allowReview ? '<button class="textlink" data-ledger-q="' + esc3(x.questionRevisionId) + '" aria-label="Review question ' + (i + 1) + '">Review \u2192</button>' : "Not released") + "</td></tr>";
     }).join("") + "</tbody></table></div></section>";
   }
-  function sectionPaceHTML(a) {
+  function resultPacingHTML(a) {
+    const evidence = attemptEvidence(a);
+    if (!evidence || !a.result) return "";
+    const scored = a.result.snapshot.correctCount + a.result.snapshot.incorrectCount;
+    const accuracy = scored ? a.result.snapshot.correctCount / scored : null;
+    return '<div class="insight-grid result-insight-grid"><section class="panel pad result-time-pacing"><h2>Time &amp; pacing</h2><div class="metriclist"><div><span>Test timer used</span><b>' + duration(evidence.timing.elapsedMs) + "</b></div><div><span>Median per answered question</span><b>" + (evidence.timing.overallMedianAnsweredMs === null ? "Not recorded" : duration(evidence.timing.overallMedianAnsweredMs)) + "</b></div><div><span>Question time captured</span><b>" + duration(evidence.timing.questionMeasuredMs) + "</b></div><div><span>Attempt rate</span><b>" + (evidence.timing.attemptRate === null ? "\u2014" : Math.round(evidence.timing.attemptRate * 100) + "%") + "</b></div><div><span>Accuracy (valid attempts)</span><b>" + (accuracy === null ? "\u2014" : Math.round(accuracy * 100) + "%") + '</b></div></div><p class="fine result-method-note">Timer time follows the frozen exam policy. Per-question time is foreground exposure while a question was displayed; time away from the page is not attributed to a question.</p></section><section class="panel pad result-section-diagnostics"><h2>Section diagnostics</h2>' + evidence.sections.map((e) => {
+      const eligible = Math.max(0, e.total - e.excluded);
+      const attempted = e.answered + e.pending;
+      const coverage = eligible ? attempted / eligible : 0;
+      const sectionIndex = a.frozen.paper.sections.findIndex((s) => s.id === e.sectionId);
+      const timer = sectionTimerDuration(a.state, sectionIndex);
+      return '<div class="metric-bar"><div class="row between"><b>' + esc3(e.title) + "</b><span>" + attempted + "/" + eligible + " attempted \xB7 " + (e.accuracy === null ? "\u2014" : Math.round(e.accuracy * 100) + "% accuracy") + '</span></div><div class="bartrack" role="progressbar" aria-label="' + esc3(e.title) + ' coverage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + Math.round(coverage * 100) + '"><div style="width:' + Math.round(coverage * 100) + '%"></div></div><p class="fine">Section time: ' + (timer === null ? "Not recorded" : duration(timer)) + " \xB7 Foreground: " + duration(e.foregroundMs) + "</p></div>";
+    }).join("") + "</section></div>";
+  }
+  function scoreOpportunityHTML(a, allowReview = true) {
     const evidence = attemptEvidence(a);
     if (!evidence) return "";
-    return '<section class="panel pad section-bars"><h2>Section pacing & coverage</h2><p class="fine">Section progress is based on scoreable questions. Timer time is recorded only for sequentially closed sections; question foreground exposure is a different measurement.</p>' + evidence.sections.map((e) => '<div class="pace-row"><div class="row between"><b>' + esc3(e.title) + '</b><span class="fine">' + e.answered + " answered \xB7 " + (e.accuracy === null ? "\u2014" : Math.round(e.accuracy * 100) + "% accuracy") + " \xB7 Timer: " + (sectionTimerDuration(a.state, a.frozen.paper.sections.findIndex((s) => s.id === e.sectionId)) === null ? "Not recorded" : duration(sectionTimerDuration(a.state, a.frozen.paper.sections.findIndex((s) => s.id === e.sectionId)))) + " \xB7 Foreground: " + duration(e.foregroundMs) + '</span></div><div class="progress-track"><span style="width:' + Math.round(100 * e.coverage) + '%"></span></div></div>').join("") + "</section>";
+    const penalty = evidence.opportunity.observedPenalty;
+    const actions = [
+      evidence.opportunity.countWrong && allowReview ? '<button class="btn" data-review-preset="incorrect">Review ' + evidence.opportunity.countWrong + " incorrect \u2192</button>" : "",
+      evidence.opportunity.countSkipped && allowReview ? '<button class="btn" data-review-preset="unanswered">Review ' + evidence.opportunity.countSkipped + " skipped \u2192</button>" : ""
+    ].filter(Boolean).join("");
+    return '<section class="panel pad result-opportunities"><h2>Score improvement opportunities</h2><p class="fine">Exact marking arithmetic from this frozen paper, not predictions of future performance. Excluded items are omitted.</p><div class="coach-cards"><div class="coach-card"><b>' + (penalty > 0 ? "\u2212" + mark(a, penalty) : mark(a, 0)) + "</b><span>Negative marks incurred</span><small>" + evidence.opportunity.countWrong + " incorrect scored item" + (evidence.opportunity.countWrong === 1 ? "" : "s") + '</small></div><div class="coach-card"><b>+' + mark(a, evidence.opportunity.wrongToCorrect) + "</b><span>If every wrong answer became correct</span><small>Hypothetical turnaround across " + evidence.opportunity.countWrong + " item" + (evidence.opportunity.countWrong === 1 ? "" : "s") + '</small></div><div class="coach-card"><b>+' + mark(a, evidence.opportunity.skippedToCorrect) + "</b><span>If every unanswered valid item were correct</span><small>Hypothetical opportunity across " + evidence.opportunity.countSkipped + " item" + (evidence.opportunity.countSkipped === 1 ? "" : "s") + "</small></div></div>" + (actions ? '<div class="coach-actions">' + actions + "</div>" : "") + "</section>";
+  }
+  function speedAccuracyHTML(a, allowReview = true) {
+    const evidence = attemptEvidence(a);
+    if (!evidence) return "";
+    if (evidence.speed.classified < 5) {
+      return '<section class="panel pad result-speed-accuracy"><h2>Speed \xD7 accuracy</h2><p class="fine">Five or more measurable answered responses in a section are needed to classify relative speed. Continue practising to unlock reliable labels.</p></section>';
+    }
+    return '<section class="panel pad result-speed-accuracy"><h2>Speed \xD7 accuracy</h2><p class="fine">Speed is relative to each section\u2019s own median, not a universal ideal. Use it to distinguish quick mistakes from time-consuming ones.</p><div class="result-speed-grid">' + evidence.speed.buckets.map((bucket) => {
+      const accuracy = bucket.items ? Math.round(100 * bucket.correct / bucket.items) : null;
+      const preset = bucket.label === "Fast" ? "fastwrong" : bucket.label === "Slow" ? "slowwrong" : "typicalwrong";
+      return '<div class="result-speed-cell"><b>' + esc3(bucket.label) + '</b><div class="result-speed-count"><span>' + bucket.correct + " correct</span><span>" + bucket.incorrect + " wrong</span></div><small>" + (accuracy === null ? "No classified answers" : accuracy + "% accuracy") + "</small>" + (bucket.incorrect && allowReview ? '<button class="textlink" data-review-preset="' + preset + '">Review ' + bucket.incorrect + " " + bucket.label.toLowerCase() + " miss" + (bucket.incorrect === 1 ? "" : "es") + " \u2192</button>" : "") + "</div>";
+    }).join("") + '</div><p class="fine">' + (evidence.speed.measured - evidence.speed.classified) + " measured answer" + (evidence.speed.measured - evidence.speed.classified === 1 ? "" : "s") + " remain unclassified because their section did not meet the evidence threshold.</p></section>";
+  }
+  function answerRevisionHTML(a) {
+    const revisions = answerRevisionEvidence(a);
+    if (!revisions.recorded) {
+      return '<section class="panel pad answer-revision-panel"><h2>Answer revisions</h2><p class="fine">No saved answer-revision sequence is available for this attempt.</p></section>';
+    }
+    return '<section class="panel pad answer-revision-panel"><h2>Answer revisions</h2><div class="revision-chips"><span class="revision-chip">' + revisions.changed + ' revised</span><span class="revision-chip revision-good">' + revisions.rescued + ' ended correct after an initial wrong answer</span><span class="revision-chip revision-bad">' + revisions.lost + " ended wrong after an initial correct answer</span>" + (revisions.other ? '<span class="revision-chip">' + revisions.other + " other change" + (revisions.other === 1 ? "" : "s") + "</span>" : "") + '</div><p class="fine">Tracks recorded successive single-choice replacements. Clear-and-reselect and unverified items are not classified as rescued/lost; these are observed changes, not proof that revision caused improvement.</p></section>';
   }
   function questionCoachingHTML(a, allowReview = true) {
+    const evidence = attemptEvidence(a);
     const longest = longestQuestionExposure(a);
     const suggestions = studySuggestions(a);
-    return '<div class="result-coaching"><section class="panel pad" id="g-longest-questions"><h2>Longest recorded question exposure</h2><p class="fine">Five highest cumulative foreground viewing times, including any measured unanswered items. These are not uninterrupted visit durations or evidence of difficulty.</p>' + (longest.length ? '<div class="slow-list">' + longest.map((row) => (allowReview ? '<button type="button" class="slow-link" data-ledger-q="' + esc3(row.id) + '" aria-label="Review question ' + row.paperNumber + '">' : '<div class="slow-link">') + "<span><b>Q" + row.paperNumber + "</b> \xB7 " + esc3(row.section) + " \xB7 " + esc3(row.verdict) + "</span><span>" + duration(row.milliseconds) + (allowReview ? " \xB7 Review \u2192" : "") + "</span>" + (allowReview ? "</button>" : "</div>")).join("") + "</div>" : '<p class="fine">No positive foreground question time was recorded.</p>') + '</section><section class="panel pad" id="g-next-work"><h2>What to work on next</h2><p class="fine">Suggestions are based on answers and measured timing in this attempt, not predictions or diagnoses of why mistakes occurred.</p><ul class="plainlist">' + suggestions.map((t) => "<li>" + esc3(t) + "</li>").join("") + "</ul></section></div>";
+    const fast = evidence?.speed.buckets.find((x) => x.label === "Fast")?.items ?? 0;
+    const slow = evidence?.speed.buckets.find((x) => x.label === "Slow")?.items ?? 0;
+    const measured = evidence?.speed.measured ?? 0;
+    return '<section class="panel pad result-question-speed" id="g-longest-questions"><div class="row between"><h2>Question-speed insights</h2><span class="fine">Relative to each section\u2019s median</span></div><div class="insight-stats"><div><strong>' + slow + "</strong><span>Slow responses</span></div><div><strong>" + fast + "</strong><span>Fast responses</span></div><div><strong>" + measured + '</strong><span>Timed answers</span></div></div><p class="fine">Speed labels appear only when a section has enough measured, valid answers. These are relative signals, not fixed ideal times.</p>' + (longest.length ? '<h3 class="subhead">Longest question visits</h3><div class="slow-list">' + longest.map((row) => (allowReview ? '<button type="button" class="slow-link" data-ledger-q="' + esc3(row.id) + '" aria-label="Review question ' + row.paperNumber + '">' : '<div class="slow-link">') + "<span><b>Q" + row.paperNumber + "</b> \xB7 " + esc3(row.section) + " \xB7 " + esc3(row.verdict) + "</span><span>" + duration(row.milliseconds) + (allowReview ? " \xB7 Review \u2192" : "") + "</span>" + (allowReview ? "</button>" : "</div>")).join("") + "</div>" : '<p class="fine">No positive foreground question time was recorded.</p>') + '</section><section class="panel pad" id="g-next-work"><h2>What to work on next</h2><p class="fine">Suggestions use answers and measured timing from this attempt; they are not predictions or diagnoses of why mistakes occurred.</p><ul class="plainlist">' + suggestions.map((t) => "<li>" + esc3(t) + "</li>").join("") + "</ul></section>";
+  }
+  function resultInsightsHTML(a, allowReview = true) {
+    return resultPacingHTML(a) + scoreOpportunityHTML(a, allowReview) + speedAccuracyHTML(a, allowReview) + answerRevisionHTML(a) + questionCoachingHTML(a, allowReview);
   }
 
   // src/app/bank-import.ts
@@ -7224,6 +7479,192 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
   function importAuthoredExam(value) {
     if (value && typeof value === "object" && !Array.isArray(value) && value["format"] === "practice-desk-bank") return importSimpleQuestionBank(value);
     return validateExamPackage(value);
+  }
+
+  // src/app/screen-renderer.ts
+  function createScreenRenderer(root2) {
+    let lastScreenKey = "";
+    let lastView = null;
+    let lastPane = "overview";
+    return { render(p, learning) {
+      const previous = document.activeElement;
+      const focusKey = previous instanceof HTMLElement && root2.contains(previous) ? { id: previous.id, attributes: [
+        "data-choice",
+        "data-bool",
+        "data-match",
+        "data-q",
+        "data-section",
+        "data-attempt",
+        "data-result-tab"
+      ].filter((name) => previous.hasAttribute(name)).map((name) => [name, previous.getAttribute(name)]) } : null;
+      root2.classList.add("generic-workspace");
+      const priorView = lastView, priorPane = lastPane;
+      if (p.screen === "learning") {
+        lastView = "learning";
+        lastPane = p.resultPane;
+        const entering = lastScreenKey !== "learning";
+        lastScreenKey = "learning";
+        learning.show();
+        if (entering) {
+          const announcement = document.getElementById("screen-announcement");
+          if (announcement) announcement.textContent = p.announcement;
+          const heading = root2.querySelector("h1");
+          if (heading) {
+            heading.tabIndex = -1;
+            heading.focus({ preventScroll: true });
+          }
+        }
+        return;
+      }
+      learning.hide();
+      root2.innerHTML = p.html();
+      if (lastScreenKey !== p.screenKey) {
+        lastScreenKey = p.screenKey;
+        const announcer = document.getElementById("screen-announcement");
+        if (announcer) announcer.textContent = p.announcement;
+      }
+      lastView = p.screen;
+      lastPane = p.resultPane;
+      if (focusKey) {
+        const controls = [...root2.querySelectorAll("button,input,select,textarea")];
+        const target = focusKey.id ? controls.find((item) => item.id === focusKey.id) : controls.find((item) => focusKey.attributes.some(([name, value]) => item.hasAttribute(name) && item.getAttribute(name) === value));
+        if (target && !("disabled" in target && target.disabled)) {
+          target.focus({ preventScroll: true });
+          if (target instanceof HTMLInputElement && previous instanceof HTMLInputElement && target.type === "search" && previous.type === "search") {
+            try {
+              target.setSelectionRange(
+                previous.selectionStart ?? target.value.length,
+                previous.selectionEnd ?? target.value.length
+              );
+            } catch {
+            }
+          }
+        }
+      }
+      if (priorView !== null && priorView !== p.screen) {
+        const heading = root2.querySelector("h1");
+        if (heading) {
+          heading.tabIndex = -1;
+          heading.focus({ preventScroll: true });
+        }
+      } else if (p.screen === "result" && priorView === "result" && priorPane !== p.resultPane) {
+        root2.querySelector("#result-tab-" + p.resultPane)?.focus({ preventScroll: true });
+      }
+    } };
+  }
+
+  // src/app/navigation.ts
+  var SCREENS = /* @__PURE__ */ new Set(["library", "history", "learning", "exam", "result"]);
+  var TABS = /* @__PURE__ */ new Set(["overview", "review", "timing"]);
+  var ATTEMPT_MAX = 256;
+  var isAttemptId = (s) => typeof s === "string" && s.length > 0 && s.length <= ATTEMPT_MAX && !/[\u0000-\u001f\u007f]/.test(s);
+  function parseAppRoute(url) {
+    let parsed;
+    try {
+      parsed = new URL(url);
+    } catch {
+      return null;
+    }
+    const params = parsed.searchParams;
+    const screens = params.getAll("pd");
+    if (screens.length !== 1 || !SCREENS.has(screens[0] ?? "")) return null;
+    const screen = screens[0];
+    if (screen === "library" || screen === "history" || screen === "learning") {
+      if (params.has("attempt") || params.has("tab")) return null;
+      return { screen };
+    }
+    const ids = params.getAll("attempt");
+    if (ids.length !== 1 || !isAttemptId(ids[0] ?? null)) return null;
+    const attemptId = ids[0];
+    if (screen === "exam") {
+      if (params.has("tab")) return null;
+      return { screen: "exam", attemptId };
+    }
+    const tabs = params.getAll("tab");
+    if (tabs.length > 1 || !TABS.has(tabs[0] ?? "overview")) return null;
+    return { screen: "result", attemptId, tab: tabs[0] ?? "overview" };
+  }
+  function routeHref(baseHref, route) {
+    const url = new URL(baseHref);
+    url.hash = "";
+    url.searchParams.delete("pd");
+    url.searchParams.delete("attempt");
+    url.searchParams.delete("tab");
+    url.searchParams.set("pd", route.screen);
+    if (route.screen === "exam" || route.screen === "result")
+      url.searchParams.set("attempt", route.attemptId);
+    if (route.screen === "result") url.searchParams.set("tab", route.tab);
+    return url.href;
+  }
+  function sameDocumentPath(currentHref, targetHref) {
+    try {
+      const a = new URL(currentHref), b = new URL(targetHref);
+      return a.protocol === b.protocol && a.host === b.host && a.pathname === b.pathname && a.username === b.username && a.password === b.password;
+    } catch {
+      return false;
+    }
+  }
+  function createNativeRouter(onRoute, options) {
+    const win = options?.window ?? window;
+    const nav = win.navigation;
+    if (!nav || typeof nav.navigate !== "function" || typeof nav.addEventListener !== "function") {
+      throw new Error("Practice Desk requires the modern browser Navigation API.");
+    }
+    let disposed = false, generation = 0, started = false;
+    const listener = (raw) => {
+      if (disposed) return;
+      const event = raw;
+      if (!event.canIntercept || event.navigationType === "reload" || event.downloadRequest !== null) return;
+      if (!sameDocumentPath(win.location.href, event.destination.url)) return;
+      const incoming = new URL(event.destination.url), current = new URL(win.location.href);
+      if (!incoming.searchParams.has("pd") && !current.searchParams.has("pd")) return;
+      const destination = parseAppRoute(event.destination.url) ?? { screen: "library" };
+      event.intercept({
+        focusReset: "manual",
+        scroll: "manual",
+        handler: async () => {
+          const current2 = ++generation;
+          await onRoute(destination, {
+            kind: event.navigationType === "traverse" ? "traverse" : event.navigationType === "replace" ? "replace" : "push",
+            signal: event.signal,
+            generation: current2
+          });
+        }
+      });
+    };
+    nav.addEventListener("navigate", listener);
+    async function navigate(route, history = "push") {
+      if (disposed) throw Error("Navigation controller disposed");
+      const href = routeHref(win.location.href, route);
+      if (href === win.location.href) return;
+      await nav.navigate(href, { history }).finished;
+    }
+    return {
+      navigate,
+      back: async () => {
+        if (nav.canGoBack) await nav.back().finished;
+      },
+      forward: async () => {
+        if (nav.canGoForward) await nav.forward().finished;
+      },
+      get canGoBack() {
+        return nav.canGoBack;
+      },
+      get canGoForward() {
+        return nav.canGoForward;
+      },
+      async start() {
+        if (started || disposed) return;
+        started = true;
+        const initial = parseAppRoute(win.location.href) ?? { screen: "library" };
+        await onRoute(initial, { kind: "initial", signal: void 0, generation: ++generation });
+      },
+      dispose() {
+        if (disposed) return;
+        disposed = true;
+        nav.removeEventListener("navigate", listener);
+      }
+    };
   }
 
   // src/app/generic-ui.ts
@@ -7461,7 +7902,22 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     let reviewFilter = "all";
     let attempt = null, view = "library";
     const choiceDrafts = /* @__PURE__ */ new Map();
-    let lastScreenKey = "", lastDrawView = null, lastResultPane = "overview";
+    const screenRenderer = createScreenRenderer(root2);
+    let router;
+    let activationGeneration = 0;
+    let freshlyStartedAttemptId = null;
+    let routeHydrated = false;
+    let hydrationDone = () => {
+    };
+    const hydration = new Promise((resolve) => {
+      hydrationDone = resolve;
+    });
+    const go = (target, history = "push") => {
+      void router.navigate(target, history).catch((error) => {
+        warning = error instanceof Error ? "Navigation failed: " + error.message : "Navigation failed";
+        if (!disposed) draw();
+      });
+    };
     let db = null, warning = "", disposed = false, loading = true, writeQueue = Promise.resolve();
     let lastTimerSave = 0;
     let fallbackStamp = null, fallbackConflict = false, storageFault = false;
@@ -7636,7 +8092,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
           warning = e.message + "; changes in this tab were not saved. Reopen before editing.";
           if (isAttempt(versioned) && attempt?.id === versioned.id) {
             attempt = null;
-            view = "library";
+            go({ screen: "library" }, "replace");
           }
           try {
             localStorage.removeItem(mirrorKey);
@@ -7729,7 +8185,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
         }
         if (attempt?.id === id) {
           attempt = null;
-          view = "library";
+          go({ screen: "library" }, "replace");
         }
         warning = intent === "discard-unfinished" ? "Unfinished test discarded. Other saved work was preserved." : intent === "completed" ? "Completed result deleted." : "Learning card deleted.";
         draw();
@@ -7842,19 +8298,16 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
           const generated = { ...startGenericAttempt(paper, id, now2()), notebookLineage: createNotebookLineage(selected) };
           if (!await save(generated)) return false;
           attempt = generated;
-          view = "exam";
+          freshlyStartedAttemptId = generated.id;
           warning = "Untimed notebook revision \xB7 +1 correct, 0 incorrect. This is not a source-exam score.";
-          draw();
+          go({ screen: "exam", attemptId: generated.id });
           return true;
         } catch (error) {
           notice(error instanceof Error ? error.message : "Cannot create revision test");
           return false;
         }
       },
-      close: () => {
-        view = "library";
-        draw();
-      }
+      close: () => go({ screen: "library" })
     });
     const addNotebookCard = (source, id) => {
       if (records.has("learning-card:" + id)) return;
@@ -7888,9 +8341,9 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
         attempt = transitionGenericAttempt(attempt, event, ids);
         if (attempt !== before) void save(attempt);
         if (attempt.finishedAt !== null) {
-          view = "result";
-          resultTab = "overview";
           reviewFilter = "all";
+          go({ screen: "result", attemptId: attempt.id, tab: "overview" }, "replace");
+          return;
         }
         warning = "";
       } catch (error) {
@@ -8043,13 +8496,15 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       const markLabel = (value) => value.toFixed(scorePrecision);
       const eligibleMax = resultTab === "overview" ? scoreableMaximum(paper, attempt.frozen.key, attempt.frozen.questions) : 0;
       const conservativeFloor = resultTab === "overview" ? scoreableLowerBound(paper, attempt.frozen.key, attempt.frozen.questions) : 0;
-      const paperSectionRows = resultTab === "overview" ? sectionScoreSummaries(attempt, s).map((row) => "<tr><td>" + escapeText(row.title) + "</td><td>" + row.attempted + "/" + (row.questions - row.excluded) + "</td><td>" + row.correct + "</td><td>" + row.incorrect + "</td><td>" + escapeText(markLabel(row.marks)) + " / " + escapeText(markLabel(row.eligibleMax)) + "</td><td>" + (row.timerMs === null ? "Not recorded" : minutes(row.timerMs) + (row.timerReason === "time-expired" ? " \xB7 Expired" : " \xB7 Submitted")) + "</td><td>" + minutes(row.foregroundMs) + "</td></tr>").join("") : "";
-      const evidence = resultTab === "overview" ? attemptEvidence(attempt) : null;
-      const revisions = resultTab === "overview" ? answerRevisionEvidence(attempt) : null;
-      const analyticHTML = evidence ? '<section class="panel pad" id="g-attempt-evidence"><h2>Timing, accuracy & marks evidence</h2><p class="fine">Elapsed is consumed test timer time (including hidden intervals, excluding permitted pauses and expired waiting). Question exposure is measured only in the visible foreground. The global median uses measured scored answers; hypothetical opportunities are not predicted marks.</p><div class="learning-metric-grid" id="g-overall-pacing"><div class="learning-metric"><strong>Test timer used</strong><b>' + minutes(evidence.timing.elapsedMs) + '</b><small>Consumed active exam clock</small></div><div class="learning-metric"><strong>Attempt rate</strong><b>' + (evidence.timing.attemptRate === null ? "\u2014" : (100 * evidence.timing.attemptRate).toFixed(1) + "%") + "</b><small>" + evidence.timing.attemptedEligible + " / " + evidence.timing.eligibleQuestions + ' non-excluded questions answered (includes manual pending)</small></div><div class="learning-metric"><strong>Median answered time</strong><b>' + (evidence.timing.overallMedianAnsweredMs === null ? "Not recorded" : minutes(evidence.timing.overallMedianAnsweredMs)) + "</b><small>" + evidence.timing.measuredAnswered + ' measured scored answers, foreground only</small></div><div class="learning-metric"><strong>Foreground question exposure</strong><b>' + minutes(evidence.timing.questionMeasuredMs) + '</b><small>Not equivalent to timer time</small></div></div><div class="scroll-table"><table><thead><tr><th>Section</th><th>Answered</th><th>Coverage</th><th>Accuracy</th><th>Median answered time</th><th>Positive</th><th>Penalty</th></tr></thead><tbody>' + evidence.sections.map((e) => "<tr><td>" + escapeText(e.title) + "</td><td>" + e.answered + "</td><td>" + Math.round(e.coverage * 100) + "%</td><td>" + (e.accuracy === null ? "\u2014" : Math.round(e.accuracy * 100) + "%") + "</td><td>" + (e.medianAnsweredMs === null ? "\u2014" : Math.round(e.medianAnsweredMs / 1e3) + "s") + "</td><td>" + e.positive.toFixed(2) + "</td><td>" + e.penalties.toFixed(2) + "</td></tr>").join("") + '</tbody></table></div><div class="row generic-actions"><span class="tag">Foreground ' + minutes(evidence.timing.foregroundMs) + '</span><span class="tag">Question exposure ' + minutes(evidence.timing.questionMeasuredMs) + '</span><span class="tag">Answers changed ' + evidence.timing.changedAnswers + `</span></div><h3>Section-relative speed \xD7 accuracy</h3><p class="fine">Only sections with at least 5 measured answered responses are classified; fast is under 0.75\xD7 and slow over 1.5\xD7 that section's median.</p><div class="learning-metric-grid">` + evidence.speed.buckets.map((e) => '<div class="learning-metric"><strong>' + e.label + "</strong><b>" + e.correct + " correct \xB7 " + e.incorrect + " incorrect</b><small>" + e.items + ' classified answers</small><button class="textlink" data-review-preset="' + (e.label === "Fast" ? "fastwrong" : e.label === "Slow" ? "slowwrong" : "typicalwrong") + '"' + (e.incorrect && revealReview ? "" : " disabled") + ' aria-label="Review ' + e.label.toLowerCase() + ' incorrect questions">Review ' + e.incorrect + " " + e.label.toLowerCase() + " mistakes \u2192</button></div>").join("") + '</div><p class="fine">' + evidence.speed.classified + " of " + evidence.speed.measured + ' measurable answers classified; insufficient section samples remain unclassified.</p><h3>Marks decomposition and hypothetical opportunities</h3><div class="learning-metric-grid"><div class="learning-metric"><strong>Observed negative marks</strong><b>' + evidence.opportunity.observedPenalty.toFixed(2) + '</b><small>Actual penalty magnitude</small></div><div class="learning-metric"><strong>Wrong \u2192 correct</strong><b>+' + evidence.opportunity.wrongToCorrect.toFixed(2) + "</b><small>Hypothetical, " + evidence.opportunity.countWrong + " incorrect scored items</small>" + (revealReview ? '<button class="textlink" data-review-preset="incorrect">Review incorrect \u2192</button>' : "") + '</div><div class="learning-metric"><strong>Skipped \u2192 correct</strong><b>+' + evidence.opportunity.skippedToCorrect.toFixed(2) + "</b><small>Hypothetical, " + evidence.opportunity.countSkipped + " unanswered scored items</small>" + (revealReview ? '<button class="textlink" data-review-preset="unanswered">Review skips \u2192</button>' : "") + "</div></div></section>" : "";
-      return '<div class="generic-heading results-heading"><div><span class="eyebrow">FROZEN EXAM RECORD</span><h1>Attempt analysis</h1><p class="muted">' + escapeText(paper.paperId) + " \xB7 " + escapeText(paper.edition) + " \xB7 " + (attempt.finishedAt ? new Date(attempt.finishedAt).toLocaleString() : "") + "</p>" + (attempt.completionReason ? '<span class="tag">' + escapeText(
-        attempt.completionReason === "time-expired" ? "Time expired" : attempt.completionReason === "section-submitted" ? "Submitted early" : "Submitted by user"
-      ) + "</span>" : "") + '</div><div class="row"><button class="btn quiet" id="g-history-results">History & insights</button><button class="btn" id="g-library">Library</button></div></div>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + resultTabsHTML(resultTab, revealReview) + (resultTab === "overview" ? '<div class="result-pane" id="result-overview" role="tabpanel" aria-labelledby="result-tab-overview"><section class="panel pad"><div class="scoregrid"><div class="score standout"><b>' + escapeText(markLabel(s.snapshot.earnedMarks)) + " <small>/ " + escapeText(markLabel(eligibleMax)) + '</small></b><small>Audit-adjusted automated marks</small></div><div class="score"><b>' + s.snapshot.correctCount + '</b><small>Correct</small></div><div class="score"><b>' + s.snapshot.incorrectCount + '</b><small>Incorrect</small></div><div class="score"><b>' + s.snapshot.unansweredCount + '</b><small>Unanswered</small></div><div class="score"><b>' + s.snapshot.excludedCount + '</b><small>Excluded</small></div></div></section><section class="panel pad"><h2>Section performance</h2><p class="fine">Eligible maximum excludes editorially unscored and manually assessed questions. Section timer is actual consumed time for sequential timed sections; foreground exposure is separate. Older records and unrestricted multi-section navigation show Not recorded rather than invented section time.</p><div class="scroll-table"><table><thead><tr><th>Section</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Marks / eligible max</th><th>Section timer</th><th>Question foreground</th></tr></thead><tbody>' + paperSectionRows + '</tbody></table></div></section><section class="panel pad result-score-details">' + (originalKey ? '<p class="fine"><b>Original-source key (unadjusted):</b> ' + escapeText(originalKey.marks.toFixed(1)) + " / " + escapeText(originalKey.maxMarks.toFixed(1)) + " marks \xB7 " + originalKey.correct + " correct \xB7 " + originalKey.incorrect + " incorrect \xB7 " + originalKey.unanswered + " unanswered. Uses the source key frozen at test start, including questions excluded from the reviewed score. This is a comparison, not an official score.</p>" : "") + '<p class="fine"><b>Scoring envelope:</b> nominal full-credit ceiling ' + escapeText(markLabel(eligibleMax)) + "; conservative lower bound " + escapeText(markLabel(conservativeFloor)) + ". The lower bound need not be attainable; written responses are assessed separately.</p>" + (!revealReview ? '<p class="fine"><b>Detailed answers withheld:</b> this exam permits numerical results and timing feedback but does not release its question-by-question answer key or worked solutions after submission.</p>' : "") + (grades2.graded || grades2.pending ? '<p class="fine"><b>Separate self-assessment:</b> ' + escapeText(grades2.graded) + " of " + escapeText(grades2.graded + grades2.pending) + " written responses marked; self-assessed total " + escapeText(selfAssessed.toFixed(2)) + ". Original automated score above remains unchanged.</p>" : '<p class="fine">Automated marks reflect only scoreable questions.</p>') + "</section>" + sectionPaceHTML(attempt) + analyticHTML + questionCoachingHTML(attempt, revealReview) + '<section class="panel pad answer-revision-panel"><h2>Answer revisions</h2>' + (revisions?.recorded ? '<div class="learning-metric-grid">' + [["Modified answers", revisions.changed], ["Wrong \u2192 correct", revisions.rescued], ["Correct \u2192 wrong", revisions.lost], ["Other changes", revisions.other]].map(([label2, value]) => '<div class="learning-metric"><strong>' + escapeText(label2) + "</strong><b>" + escapeText(value) + "</b></div>").join("") + "</div>" : '<p class="fine">No saved answer-revision sequence is available for this attempt.</p>') + '<p class="fine">Based only on recorded successive single-choice selections. Clear-and-reselect and unverified items are not classified as rescued/lost. A changed answer may coincide with better marks; this is not evidence that revision caused improvement.</p></section></div>' : '<div class="result-pane" id="result-overview" role="tabpanel" aria-labelledby="result-tab-overview" hidden></div>') + (revealReview && resultTab === "review" ? '<section class="panel pad result-pane" id="result-review" role="tabpanel" aria-labelledby="result-tab-review"><div class="row between"><h2>Question review</h2><div class="row"><button class="btn" id="g-review-top">Top \u2191</button><button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div></div>' + reviewFiltersHTML(reviewFilter) + '<p class="fine">Review frozen questions, actual responses, solutions and foreground time. Mock scores never become FSRS ratings.</p><p class="fine">' + s.items.filter((it) => reviewMatch(attempt, it, reviewFilter)).length + " of " + s.items.length + " items</p>" + s.items.filter((it) => reviewMatch(attempt, it, reviewFilter)).map((it, i) => {
+      const resultPackage = packageForAttempt(attempt);
+      const resultName = resultPackage?.title ?? paper.paperId;
+      const resultDate = attempt.finishedAt ? new Date(attempt.finishedAt).toLocaleString() : "";
+      const resultMeta = escapeText(resultName) + " \xB7 " + escapeText(readablePracticeMode(attempt.frozen.snapshot.mode)) + (resultDate ? " \xB7 " + escapeText(resultDate) : "");
+      const paperSectionRows = resultTab === "overview" ? sectionScoreSummaries(attempt, s).map((row) => "<tr><td>" + escapeText(row.title) + "</td><td>" + row.attempted + "/" + (row.questions - row.excluded) + "</td><td>" + row.correct + "</td><td>" + row.incorrect + "</td><td>" + escapeText(markLabel(row.marks)) + " / " + escapeText(markLabel(row.eligibleMax)) + "</td><td>" + (row.timerMs === null ? "Not recorded" : minutes(row.timerMs) + (row.timerReason === "time-expired" ? " \xB7 Expired" : " \xB7 Submitted")) + "</td></tr>").join("") : "";
+      const completionLabel = attempt.completionReason ? attempt.completionReason === "time-expired" ? "Time expired" : attempt.completionReason === "section-submitted" ? "Submitted early" : "Submitted by user" : "";
+      const scoreExplainer = resultTab === "overview" ? '<p class="fine score-explainer">+' + escapeText(markLabel(s.snapshot.positiveMarks)) + " positive marks \xB7 \u2212" + escapeText(markLabel(s.snapshot.penaltyMarks)) + " penalties \xB7 adjusted score " + escapeText(markLabel(s.snapshot.earnedMarks)) + " / " + escapeText(markLabel(eligibleMax)) + (originalKey ? " \xB7 Original-source key comparison: " + escapeText(originalKey.marks.toFixed(1)) + " / " + escapeText(originalKey.maxMarks.toFixed(1)) : "") + ".</p>" : "";
+      const scoringDetails = resultTab === "overview" ? '<details class="result-scoring-details"><summary>Scoring details</summary><div class="result-scoring-detail-body">' + (originalKey ? '<p class="fine"><b>Original-source key (unadjusted):</b> ' + escapeText(originalKey.marks.toFixed(1)) + " / " + escapeText(originalKey.maxMarks.toFixed(1)) + " marks \xB7 " + originalKey.correct + " correct \xB7 " + originalKey.incorrect + " incorrect \xB7 " + originalKey.unanswered + " unanswered. Uses the source key frozen at test start, including questions excluded from the reviewed score. This comparison is not an official score.</p>" : "") + '<p class="fine"><b>Scoring envelope:</b> nominal full-credit ceiling ' + escapeText(markLabel(eligibleMax)) + "; conservative lower bound " + escapeText(markLabel(conservativeFloor)) + ". The lower bound need not be attainable; written responses are assessed separately.</p>" + (!revealReview ? '<p class="fine"><b>Detailed answers withheld:</b> this exam releases numerical results and timing feedback but not its question-by-question answer key or worked solutions.</p>' : "") + (grades2.graded || grades2.pending ? '<p class="fine"><b>Separate self-assessment:</b> ' + escapeText(grades2.graded) + " of " + escapeText(grades2.graded + grades2.pending) + " written responses marked; self-assessed total " + escapeText(selfAssessed.toFixed(2)) + ". The automated score above remains unchanged.</p>" : '<p class="fine">Automated marks reflect only scoreable questions.</p>') + "</div></details>" : "";
+      return '<div class="generic-heading results-heading"><div><h1>Attempt analysis</h1><p class="muted">' + resultMeta + '</p></div><div class="row"><button class="btn quiet" id="g-history-results">History</button><button class="btn" id="g-library">Library</button></div></div>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + resultTabsHTML(resultTab, revealReview) + (resultTab === "overview" ? '<div class="result-pane" id="result-overview" role="tabpanel" aria-labelledby="result-tab-overview"><section class="panel pad result-performance-overview"><div class="row between result-overview-heading"><div><h2>Performance overview</h2><p class="fine">' + resultMeta + "</p></div>" + (completionLabel ? '<span class="tag">' + escapeText(completionLabel) + "</span>" : "") + '</div><div class="scoregrid"><div class="score standout"><b>' + escapeText(markLabel(s.snapshot.earnedMarks)) + " <small>/ " + escapeText(markLabel(eligibleMax)) + '</small></b><small>Audit-adjusted automated marks</small></div><div class="score"><b>' + s.snapshot.correctCount + '</b><small>Correct</small></div><div class="score"><b>' + s.snapshot.incorrectCount + '</b><small>Incorrect</small></div><div class="score"><b>' + s.snapshot.unansweredCount + '</b><small>Unanswered</small></div><div class="score"><b>' + s.snapshot.excludedCount + "</b><small>Excluded</small></div></div>" + scoreExplainer + '<div class="scroll-table result-section-table"><table><thead><tr><th>Section</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Marks</th><th>Time used</th></tr></thead><tbody>' + paperSectionRows + "</tbody></table></div>" + scoringDetails + "</section>" + resultInsightsHTML(attempt, revealReview) + '<div class="row result-footer-actions">' + (revealReview ? '<button class="btn" id="g-view-question-review">View question-by-question review \u2192</button>' : "") + '<button class="btn" id="g-result-library">Test library</button></div></div>' : '<div class="result-pane" id="result-overview" role="tabpanel" aria-labelledby="result-tab-overview" hidden></div>') + (revealReview && resultTab === "review" ? '<section class="panel pad result-pane" id="result-review" role="tabpanel" aria-labelledby="result-tab-review"><div class="row between"><h2>Question review</h2><div class="row"><button class="btn" id="g-review-top">Top \u2191</button><button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div></div>' + reviewFiltersHTML(reviewFilter) + '<p class="fine">Review frozen questions, actual responses, solutions and foreground time. Mock scores never become FSRS ratings.</p><p class="fine">' + s.items.filter((it) => reviewMatch(attempt, it, reviewFilter)).length + " of " + s.items.length + " items</p>" + s.items.filter((it) => reviewMatch(attempt, it, reviewFilter)).map((it, i) => {
         const q = qs.get(it.questionRevisionId);
         const response = attempt.state.responses.find((r) => r.questionRevisionId === it.questionRevisionId)?.response;
         const answer = attempt.frozen.key.entries.find((e) => e.questionRevisionId === it.questionRevisionId)?.answer;
@@ -8063,108 +8518,121 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
         const provenance = q.editorial.sources ?? [];
         const origin = attempt.notebookLineage?.entries.find((x) => x.questionRevisionId === q.id);
         return '<article class="generic-review" data-review-id="' + escapeText(q.id) + '" data-verdict="' + escapeText(it.verdict) + '"><strong>' + (paper.sections.flatMap((z) => z.questionRevisionIds).indexOf(q.id) + 1) + ". " + escapeText(q.content.prompt) + '</strong><p class="fine editorial-meta"><span class="editorial-status editorial-status-' + escapeText(q.editorial.status) + '">' + escapeText(editorialStatusLabel(q.editorial)) + "</span>" + (q.editorial.sourcePage ? " \xB7 Source page " + q.editorial.sourcePage : "") + " \xB7 " + minutes(seconds) + " foreground exposure \xB7 Speed: " + escapeText(speed) + " \xB7 Visits: " + (attempt.state.questionVisits === void 0 ? "Not recorded" : visitCount ?? 0) + "</p>" + frozenReviewMedia(attempt, q, response, answer, it.verdict) + (origin ? '<p class="fine">Notebook source: ' + escapeText(origin.sourcePaperId) + " \xB7 " + escapeText(origin.sourcePaperEdition) + " \xB7 " + escapeText(origin.sourceSectionTitle) + " \xB7 source attempt " + escapeText(origin.sourceAttemptId) + "</p>" : "") + '<p class="fine"><span class="verdict ' + escapeText(it.verdict) + '">' + escapeText(it.verdict) + "</span> \xB7 " + it.marks + ' automated marks</p><p class="fine">Your answer: ' + escapeText(readableAnswer(q, response)) + '</p><p class="fine">' + (it.verdict === "excluded" ? "Frozen answer key (not scored): " : it.verdict === "pending" ? "Manual assessment: " : "Expected: ") + escapeText(readableAnswer(q, answer)) + "</p>" + (q.editorial.notes ? '<p class="fine">Editorial note: ' + escapeText(q.editorial.notes) + "</p>" : "") + (explanation ? '<details class="worked-solution"' + (it.verdict === "incorrect" || it.verdict === "unanswered" ? " open" : "") + "><summary>" + (q.content.assetIds?.length || (q.content.kind === "single-choice" || q.content.kind === "multiple-select") && q.content.options.some((o) => o.assetIds?.length) ? "Visual solving method" : "Solving approach & worked reasoning") + '</summary><div class="worked-solution-body">' + escapeText(explanation) + "</div></details>" : "") + sourceReviewHTML(attempt, q, reviewSource) + (provenance.length ? '<p class="fine">Sources: ' + provenance.map((source) => '<a href="' + escapeText(source.url) + '" target="_blank" rel="noopener noreferrer">' + escapeText(source.title) + "</a>").join(" \xB7 ") + "</p>" : "") + (limit !== null ? '<div class="generic-manual-grade"><p class="fine">Written response requires explicit human assessment. Self-marked results are separate from exam scores.</p><label>Self-assessed marks (0\u2013' + limit + ')<input type="number" step="0.01" min="0" max="' + limit + '" data-manual-marks="' + escapeText(q.id) + '" value="' + escapeText(prior?.marks ?? "") + '"></label><label>Assessment note (optional)<textarea maxlength="2000" rows="2" data-manual-note="' + escapeText(q.id) + '">' + escapeText(prior?.note ?? "") + '</textarea></label><button class="btn" data-manual-save="' + escapeText(q.id) + '">Save self-assessment</button></div>' : "") + '<button class="btn" data-add-card="' + escapeText(q.id) + '"' + (records.has("learning-card:" + q.id) ? " disabled" : "") + ">" + (records.has("learning-card:" + q.id) ? "In notebook" : "Add to notebook") + "</button></article>";
-      }).join("") + "</section>" : revealReview ? '<section class="result-pane" id="result-review" role="tabpanel" aria-labelledby="result-tab-review" hidden></section>' : "") + (resultTab === "timing" ? timingLedgerHTML(attempt, true, revealReview) : '<section class="result-pane" id="result-timing" role="tabpanel" aria-labelledby="result-tab-timing" hidden></section>');
+      }).join("") + "</section>" : revealReview ? '<section class="result-pane" id="result-review" role="tabpanel" aria-labelledby="result-tab-review" hidden></section>' : "") + (resultTab === "timing" ? timingLedgerHTML(attempt, true, revealReview) : '<section class="result-pane" id="result-timing" role="tabpanel" aria-labelledby="result-tab-timing" hidden></section>') + '<footer class="result-device-footer">Saved on this device \xB7 Review, export and manage your data from History</footer>';
     }
     const openSaved = (id) => {
       const saved = records.get(id);
       if (!isAttempt(saved)) return;
-      attempt = saved;
-      if (saved.finishedAt === null) {
-        const restored = restoreSession(saved.frozen.paper, saved.state, now2(), !document.hidden);
-        attempt = {
-          ...saved,
-          state: restored.state,
-          ...restored.expired ? {
-            finishedAt: now2(),
-            completionReason: "time-expired",
-            result: scoreAttempt(
-              saved.frozen.paper,
-              saved.frozen.key,
-              saved.frozen.questions,
-              restored.state.responses,
-              (/* @__PURE__ */ new Date()).toISOString()
-            )
-          } : {}
-        };
-        void save(attempt);
-      }
-      if (attempt.finishedAt !== null) {
-        resultTab = "overview";
-        reviewFilter = "all";
-      }
-      view = attempt.finishedAt ? "result" : "exam";
-      draw();
+      go(saved.finishedAt === null ? { screen: "exam", attemptId: id } : { screen: "result", attemptId: id, tab: "overview" });
     };
-    function draw() {
-      if (disposed) return;
-      const previous = document.activeElement;
-      const focusKey = previous instanceof HTMLElement && root2.contains(previous) ? { id: previous.id, attributes: ["data-choice", "data-bool", "data-match", "data-q", "data-section", "data-attempt", "data-result-tab"].filter((name) => previous.hasAttribute(name)).map((name) => [name, previous.getAttribute(name)]) } : null;
-      root2.classList.add("generic-workspace");
-      if (view === "learning") {
-        const entering = lastScreenKey !== "learning";
-        lastScreenKey = "learning";
-        lastDrawView = "learning";
-        learningDesk.show();
-        if (entering) {
-          const status = document.getElementById("screen-announcement");
-          if (status) status.textContent = "Learning and spaced revision.";
-          const heading = root2.querySelector("h1");
-          if (heading) {
-            heading.tabIndex = -1;
-            heading.focus({ preventScroll: true });
+    async function activateRoute(target, ctx) {
+      const requested = ++activationGeneration;
+      if (!routeHydrated) await hydration;
+      if (disposed || ctx.signal?.aborted || requested !== activationGeneration) return;
+      const prevView = view;
+      const previousTab = resultTab;
+      const previousAttempt = attempt;
+      const leavesExam = prevView === "exam" && previousAttempt?.finishedAt === null && !(target.screen === "exam" && target.attemptId === previousAttempt.id);
+      if (leavesExam) {
+        try {
+          const next = transitionGenericAttempt(
+            previousAttempt,
+            {
+              type: "VISIBILITY",
+              nowMs: now2(),
+              visible: false
+            },
+            new Map(previousAttempt.frozen.questions.map((q) => [q.id, q]))
+          );
+          attempt = next;
+          if (next !== previousAttempt) await save(next);
+        } catch (error) {
+          warning = "Unable to checkpoint the test before leaving: " + (error instanceof Error ? error.message : "Unknown error");
+        }
+        if (disposed || ctx.signal?.aborted || requested !== activationGeneration) return;
+      }
+      if (target.screen === "exam" || target.screen === "result") {
+        const saved = records.get(target.attemptId);
+        if (!isAttempt(saved)) {
+          warning = "The requested attempt is unavailable or has been deleted. Open a saved attempt from the library.";
+          go({ screen: "library" }, "replace");
+          return;
+        }
+        if (target.screen === "exam" && saved.finishedAt !== null) {
+          go({ screen: "result", attemptId: saved.id, tab: "overview" }, "replace");
+          return;
+        }
+        if (target.screen === "result" && saved.finishedAt === null) {
+          go({ screen: "exam", attemptId: saved.id }, "replace");
+          return;
+        }
+        if (target.screen === "result" && target.tab === "review" && saved.frozen.paper.navigation.allowReview === false) {
+          go({ screen: "result", attemptId: saved.id, tab: "overview" }, "replace");
+          return;
+        }
+        const fresh = target.screen === "exam" && saved.id === freshlyStartedAttemptId;
+        if (fresh) freshlyStartedAttemptId = null;
+        const switching = !fresh && (attempt?.id !== saved.id || prevView !== "exam");
+        attempt = saved;
+        if (target.screen === "exam" && switching) {
+          const restored = restoreSession(saved.frozen.paper, saved.state, now2(), !document.hidden);
+          attempt = {
+            ...saved,
+            state: restored.state,
+            ...restored.expired ? {
+              finishedAt: now2(),
+              completionReason: "time-expired",
+              result: scoreAttempt(
+                saved.frozen.paper,
+                saved.frozen.key,
+                saved.frozen.questions,
+                restored.state.responses,
+                (/* @__PURE__ */ new Date()).toISOString()
+              )
+            } : {}
+          };
+          if (attempt !== saved) void save(attempt);
+          if (attempt.finishedAt !== null) {
+            go({ screen: "result", attemptId: attempt.id, tab: "overview" }, "replace");
+            return;
           }
         }
-        return;
+        if (target.screen === "result") {
+          if (attempt.id !== previousAttempt?.id || prevView !== "result") reviewFilter = "all";
+          resultTab = target.tab;
+        }
       }
-      learningDesk.hide();
-      const priorView = lastDrawView, priorPane = lastResultPane;
-      root2.innerHTML = view === "library" ? listHTML() : view === "history" ? historyHTML(
-        [...records.values()].filter(isAttempt),
-        packages,
-        { status: historyFilter, sort: historySort, search: historySearch, paperRevisionId: historyPaper },
-        loading,
-        fallbackConflict || storageFault,
-        warning,
-        db ? "indexeddb" : "fallback"
-      ) : view === "exam" ? examHTML() : resultHTML();
+      view = target.screen;
+      if (disposed || ctx.signal?.aborted || requested !== activationGeneration) return;
+      draw();
+      if (ctx.kind !== "initial" && (prevView !== view || view === "result" && resultTab !== previousTab)) {
+        window.scrollTo({ top: 0, behavior: "instant" });
+      }
+    }
+    function draw() {
+      if (disposed) return;
       const currentSection = attempt?.frozen.paper.sections[attempt.state.sectionIndex];
       const currentQuestion = attempt?.state.questionIndex;
       const screenKey = view === "exam" ? "exam|" + attempt?.id + "|" + attempt?.state.sectionIndex + "|" + currentQuestion : view === "result" ? "result|" + attempt?.id + "|" + resultTab : view;
-      if (lastScreenKey !== screenKey) {
-        lastScreenKey = screenKey;
-        const text2 = view === "exam" ? "Exam. " + (currentSection?.title ?? "Section") + ", question " + ((currentQuestion ?? 0) + 1) + " of " + (currentSection?.questionRevisionIds.length ?? 0) + "." : view === "result" ? "Results. " + (resultTab === "overview" ? "Performance overview" : resultTab === "review" ? "Question review" : "Question timing ledger") + "." : view === "history" ? "History and insights." : "Test library.";
-        const announcer = document.getElementById("screen-announcement");
-        if (announcer) announcer.textContent = text2;
-      }
-      lastDrawView = view;
-      lastResultPane = resultTab;
-      if (focusKey) {
-        const controls = [...root2.querySelectorAll("button,input,select,textarea")];
-        const target = focusKey.id ? controls.find((item) => item.id === focusKey.id) : controls.find((item) => focusKey.attributes.some(([name, value]) => item.getAttribute(name) === value && item.hasAttribute(name)));
-        if (target && !("disabled" in target && target.disabled)) {
-          target.focus({ preventScroll: true });
-          if (target instanceof HTMLInputElement && previous instanceof HTMLInputElement && target.type === "search" && previous.type === "search") {
-            try {
-              target.setSelectionRange(previous.selectionStart ?? target.value.length, previous.selectionEnd ?? target.value.length);
-            } catch {
-            }
-          }
-        }
-      }
-      if (priorView !== null && priorView !== view) {
-        const heading = root2.querySelector("h1");
-        if (heading) {
-          heading.tabIndex = -1;
-          heading.focus({ preventScroll: true });
-        }
-      } else if (view === "result" && priorView === "result" && priorPane !== resultTab) {
-        root2.querySelector("#result-tab-" + resultTab)?.focus({ preventScroll: true });
-      }
+      const announcement = view === "exam" ? "Exam. " + (currentSection?.title ?? "Section") + ", question " + ((currentQuestion ?? 0) + 1) + " of " + (currentSection?.questionRevisionIds.length ?? 0) + "." : view === "result" ? "Results. " + (resultTab === "overview" ? "Performance overview" : resultTab === "review" ? "Question review" : "Question timing ledger") + "." : view === "history" ? "History and insights." : view === "learning" ? "Learning and spaced revision." : "Test library.";
+      screenRenderer.render({
+        screen: view,
+        screenKey,
+        announcement,
+        resultPane: resultTab,
+        html: () => view === "library" ? listHTML() : view === "history" ? historyHTML(
+          [...records.values()].filter(isAttempt),
+          packages,
+          { status: historyFilter, sort: historySort, search: historySearch, paperRevisionId: historyPaper },
+          loading,
+          fallbackConflict || storageFault,
+          warning,
+          db ? "indexeddb" : "fallback"
+        ) : view === "exam" ? examHTML() : resultHTML()
+      }, learningDesk);
+      if (view === "learning") return;
       if (view === "history") {
-        root2.querySelector("#g-library").onclick = () => {
-          view = "library";
-          draw();
-        };
+        root2.querySelector("#g-library").onclick = () => go({ screen: "library" });
         root2.querySelector("#g-filter").onchange = (e) => {
           historyFilter = e.target.value;
           draw();
@@ -8212,10 +8680,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
         return;
       }
       if (view === "library") {
-        root2.querySelector("#g-learning").onclick = () => {
-          view = "learning";
-          draw();
-        };
+        root2.querySelector("#g-learning").onclick = () => go({ screen: "learning" });
         root2.querySelector("#g-papers").onchange = (e) => {
           choice = e.target.value;
           const chosen = packages.get(choice);
@@ -8238,17 +8703,13 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
           saveSelection();
           draw();
         });
-        root2.querySelector("#g-history").onclick = () => {
-          view = "history";
-          draw();
-        };
+        root2.querySelector("#g-history").onclick = () => go({ screen: "history" });
         root2.querySelector("#g-history-recent").onclick = () => {
           historyFilter = "complete";
           historyPaper = "all";
           historySearch = "";
           historySort = "newest";
-          view = "history";
-          draw();
+          go({ screen: "history" });
         };
         const pendingHistory = root2.querySelector("#g-pending-history");
         if (pendingHistory) pendingHistory.onclick = () => {
@@ -8256,8 +8717,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
           historyPaper = "all";
           historySearch = "";
           historySort = "newest";
-          view = "history";
-          draw();
+          go({ screen: "history" });
         };
         root2.querySelectorAll("[data-mode]").forEach((button) => button.onclick = () => {
           cglMode = button.dataset.mode;
@@ -8287,6 +8747,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
             untimedPractice
           );
           attempt = startGenericAttempt(configured, id, now2());
+          freshlyStartedAttemptId = attempt.id;
           if (configured.paper.edition === "reviewed") {
             const source = [...packages.values()].find((candidate) => candidate.paper.edition === "source" && candidate.paper.paperId === configured.paper.paperId && candidate.examId === configured.examId);
             if (source) {
@@ -8300,9 +8761,8 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
             }
           }
           warning = "";
-          view = "exam";
-          draw();
           void save(attempt);
+          go({ screen: "exam", attemptId: attempt.id });
         };
         root2.querySelector("#g-import").onclick = () => root2.querySelector("#g-file")?.click();
         root2.querySelector("#g-bank-template").onclick = () => {
@@ -8364,34 +8824,23 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       root2.querySelector("#g-library").onclick = () => {
         if (view === "exam" && attempt?.finishedAt === null) {
           if (!confirm("Return to library? Your test timer will keep running and the attempt can be resumed.")) return;
-          const current = attempt;
-          attempt = transitionGenericAttempt(
-            current,
-            { type: "VISIBILITY", nowMs: now2(), visible: false },
-            new Map(current.frozen.questions.map((question) => [question.id, question]))
-          );
-          void save(attempt);
         }
-        view = "library";
-        draw();
+        go({ screen: "library" });
       };
       if (view === "result" && attempt) {
-        root2.querySelector("#g-history-results").onclick = () => {
-          view = "history";
-          draw();
-        };
+        root2.querySelector("#g-history-results").onclick = () => go({ screen: "history" });
+        const resultLibrary = root2.querySelector("#g-result-library");
+        if (resultLibrary) resultLibrary.onclick = () => go({ screen: "library" });
+        const viewReview = root2.querySelector("#g-view-question-review");
+        if (viewReview) viewReview.onclick = () => go({ screen: "result", attemptId: attempt.id, tab: "review" });
         const tabs = [...root2.querySelectorAll("[data-result-tab]")];
         tabs.forEach((button, index) => {
-          button.onclick = () => {
-            resultTab = button.dataset.resultTab;
-            draw();
-          };
+          button.onclick = () => go({ screen: "result", attemptId: attempt.id, tab: button.dataset.resultTab });
           button.onkeydown = (event) => {
             if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
             event.preventDefault();
             const next = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : (index + (event.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length;
-            resultTab = tabs[next].dataset.resultTab;
-            draw();
+            go({ screen: "result", attemptId: attempt.id, tab: tabs[next].dataset.resultTab });
           };
         });
         const reviewFilterControl = root2.querySelector("#g-review-filter");
@@ -8402,17 +8851,19 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
         root2.querySelectorAll("[data-review-preset]").forEach((button) => button.onclick = () => {
           if (!attempt?.frozen.paper.navigation.allowReview) return;
           reviewFilter = button.dataset.reviewPreset ?? "all";
-          resultTab = "review";
-          draw();
+          if (resultTab === "review") draw();
+          else go({ screen: "result", attemptId: attempt.id, tab: "review" });
         });
         root2.querySelectorAll("[data-ledger-q]").forEach((button) => button.onclick = () => {
           if (!attempt?.frozen.paper.navigation.allowReview) return;
           const question = button.dataset.ledgerQ;
-          resultTab = "review";
           reviewFilter = "all";
-          draw();
-          const target = [...root2.querySelectorAll("[data-review-id]")].find((node) => node.dataset.reviewId === question);
-          target?.scrollIntoView({ block: "start" });
+          void router.navigate({ screen: "result", attemptId: attempt.id, tab: "review" }).then(() => {
+            if (disposed) return;
+            if (resultTab === "review") draw();
+            const target = [...root2.querySelectorAll("[data-review-id]")].find((node) => node.dataset.reviewId === question);
+            target?.scrollIntoView({ block: "start" });
+          }).catch((error) => notice(error instanceof Error ? error.message : "Review navigation failed"));
         });
         const revisionSet = root2.querySelector("#g-revision-set");
         if (revisionSet) revisionSet.onclick = () => {
@@ -8585,11 +9036,9 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
         }
         if (next.finishedAt !== null) {
           if (view === "exam") {
-            view = "result";
-            resultTab = "overview";
             reviewFilter = "all";
-          }
-          draw();
+            go({ screen: "result", attemptId: attempt.id, tab: "overview" }, "replace");
+          } else draw();
           return;
         }
         if ((changedSection || original.state.status !== next.state.status) && view === "exam") {
@@ -8619,9 +9068,9 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       );
       void save(attempt);
       if (attempt.finishedAt !== null && view === "exam") {
-        view = "result";
-        resultTab = "overview";
         reviewFilter = "all";
+        go({ screen: "result", attemptId: attempt.id, tab: "overview" }, "replace");
+        return;
       }
       draw();
     }
@@ -8704,11 +9153,12 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       fallbackConflict = true;
       warning = "Fallback history changed in another tab. Reopen the file before continuing.";
       attempt = null;
-      view = "library";
+      go({ screen: "library" }, "replace");
       if (!disposed) draw();
     };
     window.addEventListener("storage", storage);
     function cleanup() {
+      router.dispose();
       learningDesk.dispose();
       disposed = true;
       window.clearInterval(timer);
@@ -8719,6 +9169,7 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       void writeQueue.finally(() => db?.close());
       root2.classList.remove("generic-workspace");
     }
+    router = createNativeRouter(activateRoute);
     draw();
     (async () => {
       try {
@@ -8809,7 +9260,14 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
         );
       }
       loading = false;
-      if (!disposed) draw();
+      routeHydrated = true;
+      hydrationDone();
+      if (!disposed) {
+        draw();
+        void router.start().catch((error) => notice(
+          error instanceof Error ? "Navigation startup failed: " + error.message : "Navigation startup failed"
+        ));
+      }
     })();
     return cleanup;
   }
