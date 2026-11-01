@@ -23,6 +23,7 @@ jobs:
       # Additive modern capability-based offline acceptance; legacy gates remain
       # until verified scenario migration and the coordinated AGENTS handoff.
       - run: node scripts/acceptance-critical.mjs
+      - run: node scripts/acceptance-recovery.mjs
       - run: node scripts/acceptance-ui.mjs
       - run: node scripts/acceptance-stress.mjs
       - run: node scripts/acceptance-platform.mjs chromium
