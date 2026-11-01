@@ -825,13 +825,11 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       '</div>'+(pending.length>5?'<p class="fine">Showing the five most recent unfinished tests; all others are preserved in History.</p>':"")+
       '</section>':"")+
      '<div class="generic-layout home-grid"><section class="panel pad home-picker"><h2 class="sr-only">Start a practice session</h2>'+
-     '<label class="picker" for="g-family">Examination family</label>'+
-     '<select id="g-family" aria-label="Examination family">'+familyOptions+'</select>'+
-     '<p class="fine family-provenance">'+(family?.imported?
-       "Imported/user-supplied content; not an official exam bank.":
-       family?"Included SSC CGL papers; original and reviewed versions stay separate.":
-       "Previously selected examination unavailable. Re-import its bank or select another.")+'</p>'+
-     '<label class="picker" for="g-papers">Paper</label><select id="g-papers">'+options+'</select>'+
+     '<div class="family-paper-row">'+
+     '<div class="family-field"><label class="picker" for="g-family">Examination family</label>'+
+     '<select id="g-family" aria-label="Examination family">'+familyOptions+'</select></div>'+
+     '<div class="paper-field"><label class="picker" for="g-papers">Paper</label>'+
+     '<select id="g-papers">'+options+'</select></div></div>'+
      (!selected?'<p class="generic-warning" role="status">Saved paper unavailable. Re-import its revision or select an installed paper.</p>':"")+
      (hasEditions?'<div class="edition-row"><span class="picker" id="editionLabel">Paper edition</span>'+
        '<div class="edition-toggle" id="g-edition" role="group" aria-labelledby="editionLabel">'+
@@ -861,6 +859,10 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       'Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section>'+
      '<aside class="home-side"><section class="panel pad paper-preview"><span class="eyebrow">SELECTED PAPER</span>'+
       '<h2>'+escapeText(selected?.title??"Choose a paper")+'</h2>'+
+      '<p class="fine family-provenance">'+(family?.imported?
+        "Imported/user-supplied content; not an official exam bank.":
+        family?"Included SSC CGL papers. Original and reviewed versions remain distinct.":
+        "Saved examination unavailable. Re-import the bank or select another.")+'</p>'+
       '<p class="fine">'+escapeText(selected?.paper.paperId??"")+' · '+escapeText(selected?.paper.edition??"")+'</p>'+
       '<div class="preview-metrics"><div><b>'+questionCount+'</b><small>Questions</small></div>'+
       '<div><b>'+escapeText(time)+'</b><small>Time</small></div><div><b>'+escapeText(previewSections)+'</b><small>Sections</small></div>'+
