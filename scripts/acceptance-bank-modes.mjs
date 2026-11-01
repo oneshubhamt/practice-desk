@@ -113,6 +113,18 @@ for(const v of [
   check((await page.locator(".paper-preview .preview-metrics").innerText()).includes("60 minutes"),
    v.name+" timed policy not restored");
   const bank=await starterBank();
+  if(v.name==="laptop1366"){
+   const before=(await records(page)).filter(x=>x.recordType==="generic-package").length;
+   const hostile=structuredClone(bank);
+   hostile.questions[0].question="X".repeat(20001);
+   await page.locator("#g-file").setInputFiles({name:"oversized-bank.json",
+     mimeType:"application/json",buffer:Buffer.from(JSON.stringify(hostile))});
+   check((await page.locator(".generic-warning").allTextContents()).some(x=>
+     /20,000 characters|up to .* characters|Invalid/.test(x)),
+     "Oversized imported question must produce visible rejection");
+   check((await records(page)).filter(x=>x.recordType==="generic-package").length===before,
+     "Rejected bank must not modify saved package records");
+  }
   await page.locator("#g-file").setInputFiles({name:"apfc-nat.json",mimeType:"application/json",
    buffer:Buffer.from(JSON.stringify(bank))});
   await page.waitForFunction(()=>document.querySelector("#g-papers")?.value==="bank:apfc-starter-demo:paper:r1");
