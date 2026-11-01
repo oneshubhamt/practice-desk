@@ -283,8 +283,9 @@ async function modeJourney(mode,edition,paper,vp){
   await paired(o,n,"library-"+mode+"-"+edition,["paper","start"]);
   for(const a of pair)await a.page.locator(a.era==="v11"?"#start":"#g-start").click();
   await paired(o,n,"exam-"+mode+"-"+edition,["question","firstOption","next"]);
-  const timer=await n.page.locator(".exam-progress").innerText();
-  fail(timer.includes(mode==="strict"?"Section timer":"Whole-paper timer"),"Wrong "+mode+" timer");
+  const timer=await n.page.locator(".exam-time-progress").getAttribute("aria-valuetext");
+  fail(timer?.startsWith(mode==="strict"?"Section timer ":"Whole-paper timer "),
+    "Wrong "+mode+" timer scope in accessible progress bar");
   fail((await n.page.locator(".exam-header").innerText()).includes(mode==="strict"?"Exam simulation":
     mode==="single"?"Single-section practice":"Full paper"),"Mode heading not human-friendly");
   if(mode!=="strict"){
