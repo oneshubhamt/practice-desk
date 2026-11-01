@@ -89,6 +89,19 @@ try{
    await page.reload({waitUntil:"load"});
    await page.locator("#result-tab-review").waitFor();
    assert(await page.locator("#result-tab-review").getAttribute("aria-selected")==="true","Review deep link lost after reload");
+   // An invalid/deleted local attempt ID must never display another saved record.
+   // Exercise native replacement, including a browser-owned Back entry.
+   await page.evaluate(()=>window.__nativeDoc=true);
+   await page.evaluate(async()=>{
+     const url=new URL(location.href);
+     url.searchParams.set("pd","exam");url.searchParams.set("attempt","missing-practice-record");
+     url.searchParams.delete("tab");
+     try{await navigation.navigate(url.href).finished;}catch{/* redirect may abort the stale destination */}
+   });
+   await checkRoute(page,"library");
+   assert((await page.locator(".generic-warning").innerText()).includes("unavailable"),
+     "Unknown deep-linked attempt must explain recovery without exposing an exam");
+   await capture(page,vp.name+"-missing-attempt-recovery");
    assert(!errors.length,"Runtime error: "+errors.join("; "));
    console.log("PASS32 native offline navigation "+vp.name);
   }finally{await ctx.close();}
