@@ -14,6 +14,16 @@
 
 **Baseline verified at authoring:** `60ec07c60bed3497d077d5d2246bf972a6bf8dcc` on `overhaul`; [Pass40 CI 41321335800](https://github.com/oneshubhamt/practice-desk/actions/runs/41321335800) **5/5 jobs**, **176/176 Node registrations**, **13 capability-based browser suites**, actual offline Chromium plus Firefox/WebKit platform/fallback; no routine v11 screenshots; generated HTML published only after gates. **This is a test-suite baseline, not a certification that all 28 October recommendations were built.**
 
+### Binding user decision: no-regression, targeted QA, deployment flexibility (1 November 2026)
+
+**Hardline: zero regressions in all existing supported workflows and independently verified contracts.** Every new pass must preserve scores, frozen questions/history, persistence/backups, exam timing, navigation, accessibility and current import/source rules, demonstrated through impact-mapped tests. A necessary incompatible choice requires an *advance* written case, affected-user/data migration and rollback plan, and **explicit user approval**; never hide failure by deleting a meaningful assertion.
+
+**Fifth step is targeted QA:** audit → analyse → implement → reconcile every objective → **targeted QA** (positive, negative/adversarial, frozen-reopen and directly affected browser tests), together with existing CI. A **fresh comprehensive independent full-app QA** runs at P48 after the programme; an earlier broad audit is permissible only for a documented cross-cutting risk, dependency or failure. Preserve existing CI baseline; do not bring back v11 screenshot warehouses.
+
+**`file://` is the current supported default, not an inviolable design limitation.** An alternative origin/distribution may be justified by browser/storage reliability, security, maintainability or new requirements, following user approval, migration, privacy/offline and rollback checks. Until then all current offline contracts and tests remain in effect. No unannounced account/cloud/telemetry migration.
+
+**Documentation map:** the comprehensive uploaded 28 October assessment is already preserved in [archived baseline architecture audit](history/BASELINE_V11_ARCHITECTURE.md)—avoid duplication. [Current architecture](architecture/CURRENT_ARCHITECTURE.md) describes the actual implementation, [data contracts](architecture/DATA_CONTRACTS.md) preserve invariants, [decision register](decisions/POLICY_REGISTER.md) holds binding choices, [QA handbook](QA_CURRENT.md) gives current test gates, and **this one programme** contains all live passes and scratchpad entries.
+
 ### Status vocabulary — evidence, not aspiration
 
 | Label | Exact meaning |
@@ -113,7 +123,7 @@ The 28 October document is a **target vision**, not a claim that every optional 
 **CLEAR:** Clean · Lean · Efficient · Elegant · Reliable. Prefer a few strong invariants over elaborate abstractions, repeated one-off wrappers or dozens of new tests that merely check the same behaviour.
 
 1. **One six-kind engine and immutable policies:** `src/domain/*`, `src/engine/*`, `src/history/frozen.ts`, not a second CGL-only path. SSC constants may remain **only in its CGL adapter**, not the generic engine.
-2. **Single offline file:** generate from modular TS/CSS/content; `file://` double-click, no localhost required, no fetch/runtime CDN, no hosted fonts/telemetry or unexpected network. Never hand-edit distributable HTML.
+2. **Current distribution default:** generate offline `file://` HTML from modular TS/CSS/content with no remote dependencies or telemetry, never hand-edit output. Alternate delivery is possible only under the binding user-approved evidence/migration/non-regression decision above.
 3. **Editorial integrity:** original/reviewed independent; no silent option-ID semantic mapping, no new score certifications, no answer/editorial/explanation leaks until submission; Q62 D02/D03 untouched. Preserve prior original data and all completed attempt scores.
 4. **State and time:** deterministic transitions, monotonic live time, honest recovered wall-time uncertainty, real not fabricated section timing, no late response after locked expiry, no double submission.
 5. **Storage:** single-writer CAS/revision or stronger, atomic durable writes, frozen question/key/media/scoring, additive no-overwrite backup v3, export unfinished and Learning cards, explicit **failure/unsaved** messages. New schema complexity only after measured need; no live user-data migration burden was approved for the old v11 baseline, **but current `overhaul` may now have user test data**, so never silently discard it.
@@ -257,7 +267,7 @@ Use exactly this cycle on **every** future implementation pass; keep a live scra
 | **2. ANALYSE** | Examine at least two feasible approaches if material, select the cleanest scoped fix, anticipate scoring/timing/storage/history/UX regressions, decide policy/compatibility and validation. | Alternatives and rejected tradeoffs; invariant map, success/negative scenarios, rollback. |
 | **3. IMPLEMENT** | Make coherent small changes on `overhaul`, with strict types, defensive validation, no generated-HTML hand edits; add/adjust owned tests. | Commit SHA, exact file diff, new/retired tests with assertion mapping. |
 | **4. OBJECTIVE RECONCILIATION** | Walk **every acceptance ID** and check actual source/DOM/Math against requirement. A green unrelated test does not mean an objective is done. Fix incomplete work before continuing. | `ID → VERIFIED / PARTIAL / BLOCKED` and direct evidence; intentional differences labelled. |
-| **5. TARGETED QA & RELEASE GATES** | Run affected Node fixtures, relevant real `file://` Chromium journeys, negative/adversarial cases; full Node24/Chromium/Firefox/WebKit/publisher CI when cross-cutting or at pass closure. Verify output and durable saved content. | Exact commands/run links, logs/test counts, failed seeds, regression results, manual limits, stop/go. |
+| **5. TARGETED QA & RELEASE GATES** | Run affected Node fixtures, relevant real `file://` Chromium journeys, negative/adversarial cases; existing mandatory commit CI; a new comprehensive full-app QA belongs at P48 unless cross-cutting evidence justifies earlier breadth. Verify output and durable saved content. | Exact commands/run links, logs/test counts, failed seeds, regression results, manual limits, stop/go. |
 
 **Hard stopping rules:** after a red test do not jump to the next pass; after a missing device claim mark EXTERNAL; after a source/answer change request get user editorial permission; after a scope shift update this programme first; no repeated 20+ passes to compensate for partial implementations. A task is **DONE** only when its full objective/negative/rollback evidence is recorded, not because files compiled or test counts were preserved.
 
@@ -291,6 +301,46 @@ Use exactly this cycle on **every** future implementation pass; keep a live scra
 | **P48** | I11/I20/I21/I22 independent audit/release | **OPEN; EXTERNAL subgates** | exact CI/environment matrix + human/manual limitation register |
 
 **One pass may be split into substages only when each has an independent measurable user contract;** use sub-ID `P43-A`, `P43-B` within this file. Do **not** invent a new programme document or claim an arbitrary calendar estimate.
+
+### P41 — LIVE audit checkpoint A (1 Nov 2026; NOT IMPLEMENTED)
+
+**HEAD inspected:** `33c59037ff9b2ea8c76d740bb9af80cac18bf090` (source unchanged during documentation pass). **AUDIT complete for the reported data defect:** parsed real `src/content/papers.json` and `patches.json`: exactly **25** option-changing patches; **21** change text at the original correct option, **4** leave that option text but change another option. All **25** are conservatively noncomparable without verified option correspondence; even a same-key-letter match is not semantic proof. A changed stem/prompt can independently defeat comparability; the next source-level audit must check changes to wording, passage and media too.
+
+| Changed-option paper/question | Original key | Source-correct-position text | Stem changed? | Conservative treatment |
+|---|---|---|---|---|
+| 09-30 Q81 | B | Changed at original key | Yes | **Unavailable until individually source-mapped** |
+| 10-05 Q14 | C | Changed at original key | Yes | **Unavailable until individually source-mapped** |
+| 10-05 Q32 | B | Changed at original key | Yes | **Unavailable until individually source-mapped** |
+| 10-05 Q50 | A | Changed at original key | Yes | **Unavailable until individually source-mapped** |
+| 10-05 Q56 | A | Same at key; other option changed | No | **Unavailable until individually source-mapped** |
+| 10-05 Q77 | D | Changed at original key | No | **Unavailable until individually source-mapped** |
+| 10-05 Q78 | B | Same at key; other option changed | Yes | **Unavailable until individually source-mapped** |
+| 10-05 Q81 | C | Changed at original key | Yes | **Unavailable until individually source-mapped** |
+| 10-05 Q92 | D | Changed at original key | Yes | **Unavailable until individually source-mapped** |
+| 10-06 Q21 | B | Same at key; other option changed | Yes | **Unavailable until individually source-mapped** |
+| 10-06 Q41 | A | Changed at original key | Yes | **Unavailable until individually source-mapped** |
+| 10-06 Q87 | A | Changed at original key | Yes | **Unavailable until individually source-mapped** |
+| 10-06 Q100 | B | Changed at original key | No | **Unavailable until individually source-mapped** |
+| 10-07 Q8 | D | Changed at original key | Yes | **Unavailable until individually source-mapped** |
+| 10-07 Q29 | B | Changed at original key | Yes | **Unavailable until individually source-mapped** |
+| 10-07 Q46 | B | Changed at original key | Yes | **Unavailable until individually source-mapped** |
+| 10-07 Q79 | A | Changed at original key | Yes | **Unavailable until individually source-mapped** |
+| 10-07 Q83 | C | Changed at original key | No | **Unavailable until individually source-mapped** |
+| 10-08 Q7 | D | Changed at original key | Yes | **Unavailable until individually source-mapped** |
+| 10-08 Q23 | B | Changed at original key | No | **Unavailable until individually source-mapped** |
+| 10-08 Q54 | D | Changed at original key | No | **Unavailable until individually source-mapped** |
+| 10-08 Q79 | A | Same at key; other option changed | Yes | **Unavailable until individually source-mapped** |
+| 10-08 Q86 | A | Changed at original key | Yes | **Unavailable until individually source-mapped** |
+| 10-08 Q93 | D | Changed at original key | Yes | **Unavailable until individually source-mapped** |
+| 10-08 Q100 | D | Changed at original key | No | **Unavailable until individually source-mapped** |
+
+**Reproduction:** 5 Oct Q32's original source B means *“Most targets were met, except agricultural output due to famine.”*; reviewed B instead says *“Actual GDP growth exceeded the Plan’s targeted rate, although estimates vary by method”*. Both have positional `q:option:b`. `src/content/import-cgl.ts` manufactures A–D positional IDs, and `src/engine/source-comparison.ts` currently equates the same IDs with the same answer meaning; `sourceKeyScore()` consequently presents a potentially false full-paper aggregate in `src/app/generic-ui.ts`.
+
+**Consumers and frozen data:** `GenericAttempt.sourceKeyReference` (`src/app/exam-package.ts`), `validateSourceKeyReference()` on stored records, `validateSourceReviewReference()` cross-checking actual publisher key, `src/history/backup.ts` v3 payload, cached source fallback for older Results, current editorial tests and `scripts/acceptance-editorial-provenance.mjs`. Preserve unchanged `papers.json`/`patches.json`/`solutions.json`, CGL Q62 scoreable reviewed caution versus excluded original, and already-frozen actual attempt marks.
+
+**Analysis / proposed safe direction (not yet implemented):** introduce **versioned** per-item source-comparability evidence for new attempts, distinguishing original publisher key for *provenance* from an eligible hypothetical comparison. Without documented and verified option identity across versions, **exclude an item from this comparison**, never pretend to know what its letter means. Do not re-score any frozen reviewed attempt. Treat legacy positional-only source comparison as **unverified** rather than silently reinterpreting it. Display only a clearly labelled comparable subset with truthful counts/denominators, or omit the aggregate when none. Test same-letter-different-meaning, reordered-identical options, punctuation edits, Q32, Q62, original/reviewed ten edition invariants, backup/reopen and actual browser Results. This is a design proposal requiring code/tests and independent verification; **P41 remains OPEN**.
+
+**QA status:** DATA AUDIT ONLY. No implementation, targeted test, CI or manual device success claimed in this checkpoint.
 
 ### Live pass entry template (copy/append directly beneath this section)
 
