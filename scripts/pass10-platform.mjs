@@ -46,11 +46,15 @@ try{
  assert(!download.suggestedFilename().includes("UNSAVED_RECOVERY"),
   "Browser failed to commit answered attempt before export");
  await page.reload({waitUntil:"load"});
- // Native Navigation API deep links intentionally restore the History screen
- // on reload, rather than forcing an implicit Library redirect.
- if(await page.locator("#g-history").count())await page.locator("#g-history").click();
- else assert(await page.locator(".history-archive").count()===1,
-   "History route did not restore after reload");
+ // Native Navigation API deep links intentionally restore the History screen.
+ // URL commitment precedes async hydration/render; do not click a transient
+ // Library control that may disappear while the route handler finishes.
+ if(new URL(await page.evaluate(()=>location.href)).searchParams.get("pd")==="history"){
+   await page.locator(".history-archive").waitFor({state:"visible"});
+ }else{
+   await page.locator("#g-history").click();
+   await page.locator(".history-archive").waitFor({state:"visible"});
+ }
  await page.locator('[data-attempt="'+saved.id+'"]').first().click();
  // The URL commits before the native handler completes its asynchronous
  // frozen-session restoration. Wait for the answer UI, not merely a click.
