@@ -14,22 +14,22 @@ export interface PracticeSetups {
  readonly families:Readonly<Record<string,FamilySetup>>;
 }
 export const PRACTICE_SETUPS_KEY="practiceDesk.overhaul.setups.v2";
-const validId=(s:unknown,max=300):s is string=>
+const validId=(s:unknown,max=600):s is string=>
  typeof s==="string"&&Boolean(s.trim())&&s.length<=max&&
  s!=="__proto__"&&s!=="constructor"&&s!=="prototype";
 
 export function validatePracticeSetups(value:unknown):PracticeSetups{
  if(!value||typeof value!=="object"||Array.isArray(value))throw Error("Invalid exam family setups");
  const raw=value as Record<string,unknown>;
- if(raw.schema!==2||!validId(raw.selectedFamilyId,200)||
+ if(raw.schema!==2||!validId(raw.selectedFamilyId,600)||
    !raw.families||typeof raw.families!=="object"||Array.isArray(raw.families))
    throw Error("Invalid exam family setups");
  const entries=Object.entries(raw.families);
- if(!entries.length||entries.length>100||!Object.hasOwn(raw.families,raw.selectedFamilyId))
+ if(!entries.length||entries.length>1000||!Object.hasOwn(raw.families,raw.selectedFamilyId))
    throw Error("Invalid exam family setups");
  const families:Record<string,FamilySetup>={};
  for(const [familyId,entry] of entries){
-   if(!validId(familyId,200)||!entry||typeof entry!=="object"||Array.isArray(entry))
+   if(!validId(familyId,600)||!entry||typeof entry!=="object"||Array.isArray(entry))
      throw Error("Invalid exam family setup");
    const v=entry as Record<string,unknown>;
    if(!validId(v.paperRevisionId)||!["strict","free","single"].includes(String(v.mode))||
