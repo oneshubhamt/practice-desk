@@ -109,7 +109,12 @@ export interface NativeRouter{
 export function fragmentRouteHref(baseHref:string,route:AppRoute):string{
   const base=new URL(baseHref);
   const routed=new URL(routeHref(baseHref,route));
-  base.hash="#"+routed.searchParams.toString();
+  const routeParams=new URLSearchParams();
+  for(const key of ["pd","attempt","tab"] as const){
+    const value=routed.searchParams.get(key);
+    if(value!==null)routeParams.set(key,value);
+  }
+  base.hash="#"+routeParams.toString();
   return base.href;
 }
 export function parseFragmentRoute(href:string):AppRoute|null{
