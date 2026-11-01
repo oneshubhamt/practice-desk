@@ -205,6 +205,12 @@ In `src/app/generic-ui.ts`, checkbox changes below `minSelections` show a warnin
 
 **Five-step cycle:** `AUDIT → ANALYZE → IMPLEMENT → OBJECTIVE RECONCILIATION → TARGETED QA`. Corrections uncovered at step 4 loop back to implementation **before** step 5; this is the intended repeated implementation/check sequence. Avoid pass-level approval solely from green CI.
 
+### Pass 37 — aggressive test consolidation / documented handoff (1 Nov 2026)
+
+**Completed and independently verified:** 36 baseline Node `.test.mjs` files, 177 cases, consolidated via `b7af806` and `b9c1dd8` into **eight** capability suites (including required unchanged `tests/pass30-bank.test.mjs`), **177/177 cases preserved**. Source/body assertions and test-module fixture bindings are preserved in labelled lexical sections. **No application source, frozen content, browser scripts or CI were modified by Pass37's consolidation commit.** All 4 GitHub CI jobs green in [run 41288913824](https://github.com/oneshubhamt/practice-desk/actions/runs/41288913824), including Chromium, Firefox, WebKit and historical Pass29. Node24 reported 177/177 in about 3.50 seconds (a single observed run, not a fixed performance promise).
+
+**Detailed audit, alternatives, 31→8 source mapping, exact individual test names, independent objective reconciliation, CI and Phase-II handoff:** see the [sole active Test-Suite Re-engineering Plan & Scratchpad](TEST_SUITE_REENGINEERING_PLAN_2026-11-01.md). **Pass38 next:** browser-script harness and modern journeys, retaining old gates until demonstrated replacements. Original Section G F/G findings and editorial policy remain intact; physical device/AT and user release approval remain open.
+
 ### Pass 36 — test-system re-engineering handoff to dedicated scratchpad (1 Nov 2026)
 
 **Audit before code:** Read this Section G, mandatory AGENTS, current source/consumers and test/CI inventory. Starting HEAD `d2da82ae3313a3eab66f42b37fc77a01186a126b`. This programme addresses **TS-01/02/03/04/05/06/10/14/15**, not historical source finding F/G closure. Detailed five-stage audit, 156 named original cases, 25 browser-script inventory, new tests, corrections and CI evidence reside in the **single active [Test-Suite Re-engineering Plan and Live Scratchpad](TEST_SUITE_REENGINEERING_PLAN_2026-11-01.md#6-live-pass-ledger-update-throughout-implementation)**. Keep this original Section G as a concise historical-index/policy pointer rather than running competing narratives.
