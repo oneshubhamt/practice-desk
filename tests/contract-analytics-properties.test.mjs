@@ -55,7 +55,7 @@ test("seeded six-kind frozen analytics retain denominators, pending essays and h
    const section=i<3?0:1,questionIndex=i%3;
    attempt=transitionGenericAttempt(attempt,{type:"NAVIGATE",nowMs:++now,
     sectionIndex:section,questionIndex},lookup);
-   if(selections[i]!==2||i===5&&selections[i]===1){
+   if(i===5?selections[i]===1:selections[i]!==2){
     attempt=transitionGenericAttempt(attempt,{type:"ANSWER",nowMs:++now,
      response:selections[i]===0?bad[i]:good[i]},lookup);
    }
