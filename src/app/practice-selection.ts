@@ -27,7 +27,7 @@ export function validatePracticeSetups(value:unknown):PracticeSetups{
  const entries=Object.entries(raw.families);
  if(!entries.length||entries.length>100||!Object.hasOwn(raw.families,raw.selectedFamilyId))
    throw Error("Invalid exam family setups");
- const families:Record<string,FamilySetup>=Object.create(null);
+ const families:Record<string,FamilySetup>={};
  for(const [familyId,entry] of entries){
    if(!validId(familyId,200)||!entry||typeof entry!=="object"||Array.isArray(entry))
      throw Error("Invalid exam family setup");
