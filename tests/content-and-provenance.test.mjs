@@ -54,7 +54,7 @@ const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",im
 const solutions=JSON.parse(await readFile(new URL("../src/content/solutions.json",import.meta.url)));
 const editions=builtinCglPackages(papers,patches,solutions);
 
-test("independent v11 edition parity: all five CGL papers preserve 500 original published keys, and reviewed patches",()=>{
+test("all five CGL paper families preserve independently pinned original and reviewed keys, editorial changes and content",()=>{
  assert.equal(Object.keys(papers).length,5);
  assert.equal(editions.length,10);
  let corrected=0,caution=0;
@@ -63,6 +63,13 @@ test("independent v11 edition parity: all five CGL papers preserve 500 original 
    const reviewed=editions.find(p=>p.paper.paperId===original.id&&p.paper.edition==="reviewed");
    assert.ok(source&&reviewed);
    assert.equal(source.questions.length,100);assert.equal(reviewed.questions.length,100);
+   for(const variant of [source,reviewed]){
+     assert.equal(variant.paper.sections.length,4);
+     assert.equal(variant.paper.sections.reduce((n,section)=>n+section.questionRevisionIds.length,0),100);
+     assert.equal(variant.paper.answerKeyRevisionId,variant.answerKey.id,
+       "Paper revision must pin its precise source/reviewed answer key");
+     assert.equal(variant.answerKey.entries.length,100);
+   }
    assert.deepEqual(source.paper.sections.map(s=>s.questionRevisionIds.length),[25,25,25,25]);
    const keySource=new Map(source.answerKey.entries.map(e=>[e.questionRevisionId,e.answer]));
    const keyReviewed=new Map(reviewed.answerKey.entries.map(e=>[e.questionRevisionId,e.answer]));
@@ -181,16 +188,6 @@ const papers = JSON.parse(await readFile(new URL("../src/content/papers.json", i
 const patches = JSON.parse(await readFile(new URL("../src/content/patches.json", import.meta.url)));
 const library = importCglBank(papers, patches);
 
-test("imports all five CGL source and reviewed editions with revision-pinned keys", () => {
-  assert.equal(library.length, 10);
-  assert.equal(library.reduce((n, p) => n + p.questions.length, 0), 1000);
-  for (const entry of library) {
-    assert.equal(entry.paper.sections.length, 4);
-    assert.equal(entry.paper.sections.reduce((n, s) => n + s.questionRevisionIds.length, 0), 100);
-    assert.equal(entry.paper.answerKeyRevisionId, entry.key.id);
-    assert.equal(entry.key.entries.length, 100);
-  }
-});
 
 test("v11-reviewed editorial policy: source invalid without a patch is scored as caution", () => {
   for (let i = 0; i < library.length; i += 2) {

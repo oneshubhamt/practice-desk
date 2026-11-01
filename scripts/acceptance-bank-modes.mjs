@@ -33,6 +33,38 @@ for(const v of [
    xs.find(el=>el.value.includes("cgl-2026-09-30")&&el.value.includes("reviewed"))?.value??"");
   check(Boolean(cgl),v.name+" reviewed CGL missing");
   await chooseModernPaper(page,cgl);
+  if(v.name==="laptop1366"){
+   check(await page.locator("#g-preflight").count()===1&&
+     await page.locator("#g-exam-rules").count()===1,
+    "active CGL must show a selected-scoring preview and operative rules");
+   check((await page.locator(".app-independent-footer").innerText()).includes("Not affiliated"),
+    "independent educational attribution missing from Library");
+   await page.locator('[data-mode="strict"]').click();
+   const strict=(await page.locator("#g-preflight").innerText());
+   check(strict.includes("200.00")&&strict.includes("Correct +2")&&
+     strict.includes("Incorrect -0.5")&&strict.includes("not official SSC answer keys")&&
+     strict.includes("reviewed changes"),
+    "strict CGL selected policy/max/provenance must be truthful");
+   await page.locator("#g-exam-rules summary").click();
+   const strictHelp=await page.locator("#g-exam-rules").innerText();
+   check(["Unused minutes do not carry","15 min","A–D","backup"].every(x=>strictHelp.includes(x)),
+    "strict rules omit consequential timer, shortcuts or offline backup");
+   await page.locator('[data-mode="single"]').click();
+   check((await page.locator("#g-preflight").innerText()).includes("50.00"),
+    "single-section maximum must be 50");
+   await page.locator('[data-mode="free"]').click();
+   await page.locator("#g-exam-rules summary").click();
+   const freeHelp=await page.locator("#g-exam-rules").innerText();
+   check(freeHelp.includes("One shared 60 min paper timer")&&
+     freeHelp.includes("Pause control is available"),
+    "flexible CGL rules must describe actual shared timer and pause");
+   await page.locator('[data-edition="source"]').click();
+   const sourcePreflight=await page.locator("#g-preflight").innerText();
+   check(sourcePreflight.includes("publisher-provided")&&sourcePreflight.includes("excluded"),
+    "original-source preview must disclose publisher provenance and excluded items");
+   await page.locator('[data-edition="reviewed"]').click();
+   await chooseModernPaper(page,cgl);
+  }
   await page.locator("#g-untimed").check();
   await page.reload({waitUntil:"load"});
   check(await page.locator("#g-untimed").isChecked(),v.name+" untimed preference lost on reload");
@@ -98,9 +130,11 @@ for(const v of [
   await page.locator("#g-submit").click();await route(page,"result");
   check(await page.locator(".score.standout").count()===1,
    v.name+" APFC authored result missing");
-  check((await records(page)).some(x=>x.recordType==="generic-attempt"&&
-   x.frozen.paper.paperId==="bank:apfc-starter-demo"&&x.result?.items.length===3),
-   v.name+" bank did not freeze three questions");
+  const apfcAttempt=(await records(page)).find(x=>x.recordType==="generic-attempt"&&
+   x.frozen.paper.paperId==="bank:apfc-starter-demo"&&x.result?.items.length===3);
+  check(Boolean(apfcAttempt),v.name+" bank did not freeze three questions");
+  check(Math.abs(apfcAttempt.result.snapshot.earnedMarks-5)<1e-8,
+   v.name+" exact APFC/NAT +2.5×2 and blank-0 score must equal 5/7.5");
   await assertNoOverflow(page,v.name+" APFC/NAT Results at "+(v.name==="narrow195"?"140%":"100%")+" text");
   check(errors.length===0,v.name+" uncaught browser errors "+errors.join("; "));
   scenes.push({viewport:v.name,editions:2,modes:3,untimedReload:true,

@@ -34,6 +34,7 @@ test("generic importer retains all 500 questions in 10 existing editions",()=>{
  assert.equal(packages.reduce((n,p)=>n+p.questions.length,0),1000);
  for(const p of packages) {
    assert.equal(validateExamPackage(p),p);
+   assert.equal(p.questions.length,100,"Each original and reviewed paper has 100 validated question revisions");
    assert.equal(p.paper.sections.length,4);
  }
 });
@@ -69,10 +70,6 @@ const papers=JSON.parse(await readFile(new URL("../src/content/papers.json",impo
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
 const solutions=JSON.parse(await readFile(new URL("../src/content/solutions.json",import.meta.url)));
 const all=builtinCglPackages(papers,patches,solutions);
-test("all original and reviewed editions use one validated question model",()=>{
- assert.equal(all.length,10);
- for(const p of all){assert.equal(validateExamPackage(p),p);assert.equal(p.questions.length,100);}
-});
 test("one engine supports strict, flexible and single CGL policies",()=>{
  const standard=all[0];
  const strict=configureCglPractice(standard,"strict");

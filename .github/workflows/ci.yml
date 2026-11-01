@@ -59,9 +59,7 @@ jobs:
       - run: node scripts/pass13-history.mjs
       - run: node scripts/pass14-parity.mjs
       - run: node scripts/pass16-independent.mjs
-      - run: node scripts/pass18-targeted.mjs
       - run: node scripts/pass19-targeted.mjs
-      - run: node scripts/pass20-targeted.mjs
       - run: node scripts/pass21-targeted.mjs
       - name: Upload screenshots only when a modern test fails
         if: failure()

@@ -40,12 +40,16 @@ async function checkDisplay(page,label){
   "Aa is missing accessible name");
  await page.locator("#displayTrigger").click();
  check(await page.locator("#displayPanel").isVisible(),"Aa popover inaccessible");
+ check(await page.locator("#displayFullscreen").isVisible(),
+  "fullscreen/immersive mode control clipped from Display popover "+label);
  check(await page.locator("#displayTrigger").getAttribute("aria-expanded")==="true",
   "Aa aria-expanded not synchronized");
  const panel=await page.locator("#displayPanel").boundingBox();
  const width=await page.evaluate(()=>innerWidth);
- check(panel&&panel.x>=-1&&panel.x+panel.width<=width+1,
-  "Aa popover exceeds viewport");
+ const height=await page.evaluate(()=>innerHeight);
+ check(panel&&panel.x>=-1&&panel.x+panel.width<=width+1&&
+   panel.y>=-1&&panel.y+panel.height<=height+1,
+  "Aa popover exceeds viewport dimensions "+label);
  check(await page.locator("#themeLight").getAttribute("aria-pressed")!==null,
   "theme Light lacks toggle state");
  check(await page.locator("#themeDark").getAttribute("aria-pressed")!==null,
@@ -117,6 +121,8 @@ try{
   const {page,errors,context}=await h.open({viewport,reducedMotion:"reduce"});
   try{
    await inspect(page,name+"-library");
+   const independent=await page.locator(".app-independent-footer").innerText();
+   check(independent.includes("Not affiliated"),"independent educational footer missing "+name);
    await semanticAudit(page,name+"-library");
    check(await page.locator("#g-papers").isEnabled(),"library question picker disabled "+name);
    if(name==="laptop"){
@@ -154,6 +160,10 @@ try{
    await page.evaluate(()=>window.scrollTo({top:0,behavior:"instant"}));
    await page.locator("#g-history").click();await route(page,"history");
    await inspect(page,name+"-history");
+   const historyAttribution=await page.locator(".app-independent-footer").innerText();
+   check(historyAttribution.includes("Not affiliated")&&
+    historyAttribution.toLowerCase().includes("imported"),
+    "History independent/imported educational attribution missing "+name);
    await page.locator("#g-library").click();await route(page,"library");
    await page.locator("#g-learning").click();await route(page,"learning");
    await inspect(page,name+"-learning");
@@ -182,6 +192,13 @@ try{
    await page.locator("#g-exam-full").click();
    await page.locator("#g-submit").click();await route(page,"result");
    const result=await inspect(page,name+"-results-low-evidence",{result:true});
+   await page.evaluate(()=>window.scrollTo({top:document.body.scrollHeight,behavior:"instant"}));
+   await page.waitForFunction(()=>window.scrollY>350);
+   const scrolledResult=await inspect(page,name+"-results-scrolled",{result:true});
+   check(Math.abs(scrolledResult.aa.top-(viewport.width<=500?10:12))<=2,
+    "floating Aa became inaccessible on long Results "+name);
+   await checkDisplay(page,name+"-scrolled-results");
+   await page.evaluate(()=>window.scrollTo({top:0,behavior:"instant"}));
    check(await page.locator(".result-performance-overview .score").count()===5,
     "five primary metrics missing "+name);
    check(await page.locator(".result-scoring-details").evaluate(x=>!x.open),
@@ -195,6 +212,11 @@ try{
    check(await page.locator("#result-review .generic-review").count()===0,
     "hidden result review rendered eagerly "+name);
    await page.locator("#result-tab-review").click();await page.locator("#result-review").waitFor({state:"visible"});
+   await page.evaluate(()=>window.scrollTo({top:document.body.scrollHeight,behavior:"instant"}));
+   await page.waitForFunction(()=>window.scrollY>350);
+   await inspect(page,name+"-review-scrolled",{result:true});
+   await checkDisplay(page,name+"-scrolled-review");
+   await page.evaluate(()=>window.scrollTo({top:0,behavior:"instant"}));
    await semanticAudit(page,name+"-review");
    const tabs=page.locator("#result-tab-review");
    await tabs.focus();await page.keyboard.press("ArrowRight");

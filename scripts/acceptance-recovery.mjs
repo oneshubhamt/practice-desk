@@ -1,10 +1,14 @@
-/** Modern-safe destructive intent, validated backup restore and storage fallback.
- * Focused current-app contracts; legacy Pass13/18 and smoke remain live until Pass39.
+/** Current-app destructive confirmations, frozen strict timer evidence, backup/restore,
+ * invalid routes and IDB-denied fallback. Supersedes the distinct Pass18 guards.
  */
 import {readFile} from "node:fs/promises";
 import {openHarness,offlineUrl,records,saved,check,route,assertNoOverflow} from "./browser/fixtures.mjs";
 const h=await openHarness({artifactDir:"artifacts/acceptance-modern"});
-const {page,context,errors}=await h.open();
+let deletionAction="accept",dialogMessages=[];
+const {page,context,errors}=await h.open({onDialog:dialog=>{
+ dialogMessages.push(dialog.message());
+ void (deletionAction==="dismiss"?dialog.dismiss():dialog.accept());
+}});
 try{
  await page.locator('[data-mode="free"]').click();
  await page.locator("#g-start").click();await route(page,"exam");
@@ -16,9 +20,20 @@ try{
   "unfinished must expose Discard, not completed Delete");
  check(await page.locator('[data-delete="'+draftId+'"]').count()===0,
   "unfinished mistakenly exposes completed deletion");
+ deletionAction="dismiss";
  await page.locator('[data-discard="'+draftId+'"]').click();
+ check((await records(page)).some(x=>x.id===draftId),
+  "Cancel on unfinished Discard must preserve the saved attempt");
+ deletionAction="accept";dialogMessages=[];
+ await page.locator('[data-discard="'+draftId+'"]').click();
+ await page.locator("#g-start").waitFor({state:"visible"});
+ check(dialogMessages.length===2&&dialogMessages.some(x=>x.includes("UNFINISHED")),
+  "Unfinished Discard must require a specific warning and second final confirmation");
  check(!(await records(page)).some(x=>x.id===draftId),
   "confirmed unfinished Discard did not persist");
+ const mirror=await page.evaluate(()=>localStorage.getItem("practiceDesk.overhaul.active.v1"));
+ check(!mirror||JSON.parse(mirror).id!==draftId,
+  "Discard left a resumable emergency active-attempt mirror");
  await page.locator('[data-mode="single"]').click();
  await page.locator("#g-single-section").selectOption("0");
  await page.locator("#g-start").click();await route(page,"exam");
@@ -42,7 +57,10 @@ try{
   "export is not an integrity-verified v3 complete backup");
  check(archive.records.some(x=>x.id===resultId&&x.result.snapshot.earnedMarks===
   original.result.snapshot.earnedMarks),"backup omitted frozen result");
+ dialogMessages=[];
  await resultDelete.click();
+ check(dialogMessages.length===1&&dialogMessages[0].includes("COMPLETED"),
+  "Completed Delete must use its own one-step confirmation, not unfinished Discard flow");
  check(!(await records(page)).some(x=>x.id===resultId),
   "completed Delete did not remove the result");
  await page.locator("#g-history-file").setInputFiles({name:"backup.json",mimeType:"application/json",
@@ -98,9 +116,33 @@ try{
   x.recordType==="generic-attempt"&&x.state.responses.some(r=>r.response)),
   "fallback export did not include saved answers");
  check(!fallbackErrors.length,"fallback page errors "+fallbackErrors.join("; "));
+ // Former Pass18 unique result/timer contract: a real four-section strict
+ // attempt must persist each section duration and disclose time/evidence.
+ await page.locator('[data-mode="strict"]').click();
+ await page.locator("#g-start").click();await route(page,"exam");
+ const strictId=new URL(await page.url()).searchParams.get("attempt");
+ check(Boolean(strictId),"strict test identity missing");
+ for(let i=0;i<4;i++)await page.locator("#g-submit").click();
+ await route(page,"result");
+ const timerText=await page.locator("#result-overview").innerText();
+ check(["Test timer used","Attempt rate","Median per answered question","Section time"]
+    .every(x=>timerText.includes(x)),
+  "strict Results omit truthful used time, response rate, median or section diagnostics");
+ let completedStrict;
+ for(let i=0;i<45&&!completedStrict;i++){
+  const record=(await records(page)).find(x=>x.id===strictId);
+  if(record?.finishedAt!==null&&record?.state.completedSectionTimings?.length===4)
+   completedStrict=record;
+  else await page.waitForTimeout(75);
+ }
+ check(Boolean(completedStrict),"four-section strict completion was not durable");
+ check(completedStrict.state.completedSectionTimings.every(x=>Number.isFinite(x.durationMs)),
+  "completed strict attempt has invalid or missing section durations");
  check(!errors.length,"runtime errors "+errors.join("; "));
- await h.evidence("recovery-summary",{discardedDraft:true,deletedAndRestored:true,
-  additiveReimport:true,invalidDeepLinkRecovered:true,localStorageFallbackExport:true});
- console.log("MODERN RECOVERY PASS: Discard/Delete distinction, v3 restore, idempotent import, invalid link, fallback");
+ await h.evidence("recovery-summary",{discardCancelPreserved:true,discardTwoStageConfirmed:true,
+  emergencyMirrorRemoved:true,completedDeleteSingleStage:true,deletedAndRestored:true,
+  additiveReimport:true,invalidDeepLinkRecovered:true,localStorageFallbackExport:true,
+  strictFourSectionTimerEvidence:true});
+ console.log("MODERN RECOVERY PASS: two-stage Discard/cancel/mirror, one-stage Delete, strict timer, v3 restore, invalid route, fallback");
 }catch(e){await h.diagnose("recovery",page,e);throw e;}
 finally{await context.close();await h.finish();}

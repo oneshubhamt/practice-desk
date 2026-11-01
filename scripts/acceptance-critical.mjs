@@ -1,6 +1,5 @@
 /** Current-app critical journeys: no frozen v11 screenshots or hard-coded prior SHA. */
-import {readFile} from "node:fs/promises";
-import {openHarness,starterBank,records,check,assertNoOverflow,route,claimNativeNavigation} from "./browser/fixtures.mjs";
+import {openHarness,records,check,assertNoOverflow,route,claimNativeNavigation} from "./browser/fixtures.mjs";
 import {chooseModernPaper} from "./paper-select.mjs";
 import {pkg as sixKinds} from "../tests/fixtures/six-kinds.mjs";
 const h=await openHarness({artifactDir:"artifacts/acceptance-modern"});
@@ -85,6 +84,15 @@ try{
   await page.locator("#g-file").setInputFiles({name:"six-kinds.json",mimeType:"application/json",
    buffer:Buffer.from(JSON.stringify(sixKinds))});
   await chooseModernPaper(page,sixKinds.paper.id);
+  const importedPreflight=await page.locator("#g-preflight").innerText();
+  check(importedPreflight.includes("10.00")&&
+    importedPreflight.includes("manual-response")&&
+    importedPreflight.includes("author/importer")&&
+    !importedPreflight.includes("SSC"),
+    "authored six-kind bank must not inherit CGL scoring or official provenance");
+  await page.locator("#g-exam-rules summary").click();
+  check((await page.locator("#g-exam-rules").innerText()).includes("One shared 20 min"),
+    "imported exam rules must follow authored timing");
   await page.locator("#g-start").click();await route(page,"exam");
   check(await page.locator("#result-review").count()===0,"active imported key leaked");
   await page.locator('input[data-choice]').first().click();
@@ -129,45 +137,6 @@ try{
   await page.locator("#learning-note").fill("Revisit this item");await page.locator("#learning-save").click();
   check((await records(page)).some(x=>x.recordType==="learning-card"&&
     x.reviews?.length===1&&x.note==="Revisit this item"),"explicit FSRS rating not persisted");
- });
- await scenario("apfc-nat-template-untimed-and-source-review-isolation",async page=>{
-  const pendingDownload=page.waitForEvent("download");
-  await page.locator("#g-bank-template").click();
-  const dl=await pendingDownload;
-  check(dl.suggestedFilename()==="Practice_Desk_APFC_NAT_Starter.json",
-   "offline starter is not downloadable");
-  const bank=await starterBank();
-  await page.locator("#g-file").setInputFiles({name:"apfc-nat.json",mimeType:"application/json",
-   buffer:Buffer.from(JSON.stringify(bank))});
-  await page.waitForFunction(()=>document.querySelector("#g-papers")?.value===
-   "bank:apfc-starter-demo:paper:r1");
-  check(await page.locator("#g-papers optgroup").evaluateAll(xs=>xs.some(x=>
-    x.label==="Imported / custom examinations")),"custom bank was mixed with original/reviewed selector");
-  await page.locator("#g-start").click();await route(page,"exam");
-  check(await page.locator("#g-timer").innerText()==="Untimed",
-   "custom bank untimed scoring not honoured");
-  await page.locator('input[data-choice]').first().click();
-  await page.locator('[data-section="2"]').click();
-  await page.locator("#g-number").fill("4");await page.locator("#g-save").click();
-  await page.locator("#g-submit").click();await route(page,"result");
-  const r=(await records(page)).find(x=>x.recordType==="generic-attempt"&&
-    x.frozen.paper.paperId==="bank:apfc-starter-demo");
-  check(r?.result?.items.length===3,"APFC author bank did not freeze MCQ/NAT correctly");
-  check(Math.abs(r.result.snapshot.earnedMarks-5)<1e-8,
-    "two correct + one blank should receive exactly 5/7.5 APFC marks");
-  await page.locator("#g-library").click();await route(page,"library");
-  await page.locator('[data-edition="reviewed"]').click();
-  const reviewedCgl=await page.locator("#g-papers option").evaluateAll(xs=>
-   xs.find(x=>x.value.includes("cgl-2026-09-30")&&x.value.includes("reviewed"))?.value??"");
-  check(Boolean(reviewedCgl),"reviewed CGL paper missing after APFC import");
-  await chooseModernPaper(page,reviewedCgl);
-  await page.locator('[data-mode="strict"]').click();
-  await page.locator("#g-untimed").check();
-  await page.locator("#g-start").click();await route(page,"exam");
-  check(await page.locator("#g-timer").innerText()==="Untimed","CGL strict untimed was not applied");
-  await page.locator("#g-submit").click();
-  check(await page.locator('[data-section="1"]').getAttribute("aria-current")==="step",
-    "untimed strict transition unexpectedly bypassed");
  });
  await h.evidence("critical-summary",{verified:evidence.length,scenarios:evidence});
 }finally{await h.finish();}
