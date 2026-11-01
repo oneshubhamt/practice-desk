@@ -205,6 +205,12 @@ In `src/app/generic-ui.ts`, checkbox changes below `minSelections` show a warnin
 
 **Five-step cycle:** `AUDIT → ANALYZE → IMPLEMENT → OBJECTIVE RECONCILIATION → TARGETED QA`. Corrections uncovered at step 4 loop back to implementation **before** step 5; this is the intended repeated implementation/check sequence. Avoid pass-level approval solely from green CI.
 
+### Pass 36 — test-system re-engineering handoff to dedicated scratchpad (1 Nov 2026)
+
+**Audit before code:** Read this Section G, mandatory AGENTS, current source/consumers and test/CI inventory. Starting HEAD `d2da82ae3313a3eab66f42b37fc77a01186a126b`. This programme addresses **TS-01/02/03/04/05/06/10/14/15**, not historical source finding F/G closure. Detailed five-stage audit, 156 named original cases, 25 browser-script inventory, new tests, corrections and CI evidence reside in the **single active [Test-Suite Re-engineering Plan and Live Scratchpad](TEST_SUITE_REENGINEERING_PLAN_2026-11-01.md#6-live-pass-ledger-update-throughout-implementation)**. Keep this original Section G as a concise historical-index/policy pointer rather than running competing narratives.
+
+**Source-level objective:** No source/content/feature change or old-test retirement in Pass36; five added seeded property/model suites; original QA/Pass29/Pass30 maintained. One false test assertion demanding unique hashes for identical content was replaced with identity/key completeness checks after CI failure. **Status:** IMPLEMENTED — final unchanged legacy browser CI still pending at time of this checkpoint; independent matrix, Firefox and WebKit previously passed core checks. No claim of full QA verification until latest complete run is green.
+
 ### Pass register — never infer implementation from this schedule
 
 | Pass | Assigned IDs | Status | Evidence / handoff |
