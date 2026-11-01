@@ -222,6 +222,150 @@ Keep the test cases that encode real behaviour. Map each **named original case**
 
 **Subtotals:** 64 named original cases across 15 files. Every item above remains covered by its original runnable test; no deletion or renaming in Pass36. The Pass37 migration disposition will annotate successor paths at the individual-case level.
 
+### Pass36 immutable test-case inventory — originals 16–31 of 31
+
+**tests/pass16-independent.test.mjs** (5 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/pass16-independent.test.mjs#1` independent v11 edition parity: all five CGL papers preserve 500 original published keys, and reviewed patches
+- `tests/pass16-independent.test.mjs#2` October 6 Q62: published b disputed; original excluded, reviewed caution remains scored against b
+- `tests/pass16-independent.test.mjs#3` imported generic multiple-select cannot earn above declared max through excessive component awards
+- `tests/pass16-independent.test.mjs#4` imported generic matching partial response cannot exceed nominal full credit
+- `tests/pass16-independent.test.mjs#5` standard CGL marking and nominal denominator are unchanged by generic cap
+
+**tests/pass17-contracts.test.mjs** (12 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/pass17-contracts.test.mjs#1` G01: whole-paper locked sections have explicit one-way progress and cannot submit unseen later sections
+- `tests/pass17-contracts.test.mjs#2` G01: untimed sequentially locked sections are reachable but cannot be skipped
+- `tests/pass17-contracts.test.mjs#3` G01/G02: sectional clocks reject a contradictory free section-navigation promise
+- `tests/pass17-contracts.test.mjs#4` G01 adjacent: a whole-paper lock cannot bypass the global deadline
+- `tests/pass17-contracts.test.mjs#5` G02: manual expiry freezes answers and elapsed time until an explicit continuation
+- `tests/pass17-contracts.test.mjs#6` G02 adjacent: automatic sectional expiry still advances across overshoot; early submission works
+- `tests/pass17-contracts.test.mjs#7` G02 extra: no-deadline sectional sections can always be finished explicitly
+- `tests/pass17-contracts.test.mjs#8` G04: imported multi-select key is constrained by actual candidate selection bounds
+- `tests/pass17-contracts.test.mjs#9` G05: imported matching keys cannot reuse left or right endpoints
+- `tests/pass17-contracts.test.mjs#10` G03/G09: blank reward cannot exceed correct; worse-than-wrong blank is rejected across overrides
+- `tests/pass17-contracts.test.mjs#11` G09: unusual partial penalties have honest conservative lower bound and capped full maximum
+- `tests/pass17-contracts.test.mjs#12` G06: withholding detailed post-test review does not disable exam navigation or summary/timing tabs
+
+**tests/pass18-timing-deletion.test.mjs** (8 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/pass18-timing-deletion.test.mjs#1` F01: automatic multi-section clock stores exactly one closure each, split across a late background tick
+- `tests/pass18-timing-deletion.test.mjs#2` F01: early-submitted sequential section and final section preserve timer durations, not response exposure
+- `tests/pass18-timing-deletion.test.mjs#3` F01: manual expiry freezes waiting interval through persistence and restore
+- `tests/pass18-timing-deletion.test.mjs#4` F01: locked whole-paper sections have consumable section time; free multi-section does not
+- `tests/pass18-timing-deletion.test.mjs#5` F01: older stored attempt lacks section timer evidence, and imported false claims are rejected
+- `tests/pass18-timing-deletion.test.mjs#6` F09: elapsed timer, actual answer attempt-rate and global median exclude editorially unscored items
+- `tests/pass18-timing-deletion.test.mjs#7` F13: status-specific destructive intent rejects cross-type and wrong-lifecycle requests
+- `tests/pass18-timing-deletion.test.mjs#8` F13: archive renders completed Delete and unfinished Discard as non-interchangeable controls
+
+**tests/pass19-history.test.mjs** (6 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/pass19-history.test.mjs#1` F03: rank frozen adjusted marks, not accuracy, across two real compatible full CGL papers
+- `tests/pass19-history.test.mjs#2` F03: eight newest qualifying full-paper records limit cohort; single and unrelated modes excluded
+- `tests/pass19-history.test.mjs#3` F03: separate exam identities and differently structured papers cannot produce false cross-paper groups
+- `tests/pass19-history.test.mjs#4` F03: negative earned marks stay visible while progress width can be clamped for display
+- `tests/pass19-history.test.mjs#5` F04: archive uses attempt's frozen eligible maximum, not nominal 100-paper marks
+- `tests/pass19-history.test.mjs#6` F05 adjacent: archive status filters retain separate complete and progress workflows
+
+**tests/pass20-preflight.test.mjs** (7 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/pass20-preflight.test.mjs#1` F02: reviewed CGL strict, free, single are calculated on their actual executable policy
+- `tests/pass20-preflight.test.mjs#2` F02/F15: source edition reports excluded publisher items; reviewed is scoreable caution, not official SSC
+- `tests/pass20-preflight.test.mjs#3` F02: a custom exam uses frozen eligible max and plainly labels manual questions
+- `tests/pass20-preflight.test.mjs#4` F02: effective per-item and per-section overrides are disclosed without key answers
+- `tests/pass20-preflight.test.mjs#5` F02: a paper with only manually graded and excluded items never invents an automated maximum
+- `tests/pass20-preflight.test.mjs#6` F06: generic timing/section, forward navigation, review and pause policies are explained
+- `tests/pass20-preflight.test.mjs#7` F15: independently imported editions cannot inherit built-in SSC provenance
+
+**tests/pass21-contracts.test.mjs** (6 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/pass21-contracts.test.mjs#1` F07: built-in CGL question/option media carries exact contextual alt descriptions in both editions
+- `tests/pass21-contracts.test.mjs#2` F07: generic author alt survives exactly; option without alt gets contextual fallback
+- `tests/pass21-contracts.test.mjs#3` F07: actual question screen inherits source context rather than generic image label
+- `tests/pass21-contracts.test.mjs#4` F08: all eight statuses have explicit meaningful labels; change types avoid false key-correction claims
+- `tests/pass21-contracts.test.mjs#5` F10: paused marking changes only the flag; time, response, cursor and visit counts remain frozen
+- `tests/pass21-contracts.test.mjs#6` F10: cannot flag when disabled, after expiry or after completion
+
+**tests/pass22-response.test.mjs** (3 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/pass22-response.test.mjs#1` G07: under-minimum and over-maximum selections are clearly unsaved; legal selections are not drafts
+- `tests/pass22-response.test.mjs#2` G07: explicit draft renders visible selected options and a live status without altering saved engine response
+- `tests/pass22-response.test.mjs#3` G08: report each duplicate right value once; blanks and distinct right choices are legal
+
+**tests/pass23-independent.test.mjs** (9 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/pass23-independent.test.mjs#1` SOURCE A/V01/V05/V19: original three content banks byte-identical with frozen baseline v11
+- `tests/pass23-independent.test.mjs#2` V02/V07/F02/F06: all 10 paper editions have derived full/section marks, no hardcoded ceiling
+- `tests/pass23-independent.test.mjs#3` V05/V07/F08/Q62: same published B remains reviewed scoreable caution, original excluded
+- `tests/pass23-independent.test.mjs#4` G01/G02/F01/F09: locked shared paper, manual expiry and frozen truthful section timers
+- `tests/pass23-independent.test.mjs#5` G03/G09: imported marks have honest ceiling/floor and forbid worse-than-wrong blanks
+- `tests/pass23-independent.test.mjs#6` G04/G05: reject answer keys candidates cannot legally reproduce
+- `tests/pass23-independent.test.mjs#7` G06/V06/V10: no-review edition keeps results but never exposes answer tab
+- `tests/pass23-independent.test.mjs#8` G07/G08: drafts explicitly nonpersistent, duplicate matching targets deterministic
+- `tests/pass23-independent.test.mjs#9` F13/G10: delete lifecycle cannot bypass unfinished status; v11 backup intentionally unsupported
+
+**tests/pass28-semantics.test.mjs** (3 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/pass28-semantics.test.mjs#1` L08: classified changes match actual source/patch field differences
+- `tests/pass28-semantics.test.mjs#2` L08: 30 Sep Q6 C to D, wording-only Q3, and disputed 6 Oct Q62 unchanged
+- `tests/pass28-semantics.test.mjs#3` L09/L10: timing type and frozen mode have accurate labels, untimed included
+
+**tests/pass30-bank.test.mjs** (4 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/pass30-bank.test.mjs#1` easy APFC/NAT author bank generates a strict validated immutable exam package
+- `tests/pass30-bank.test.mjs#2` simple-bank input rejects malformed keys, excess questions, invalid marks and NAT tolerance
+- `tests/pass30-bank.test.mjs#3` untimed option derives new validated frozen policy for every built-in mode and generic package
+- `tests/pass30-bank.test.mjs#4` existing selection v1 survives optional new edition and untimed fields
+
+**tests/pass32-navigation.test.mjs** (3 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/pass32-navigation.test.mjs#1` native-only query codec round-trips every routable screen on file URL
+- `tests/pass32-navigation.test.mjs#2` native codec rejects ambiguous, malformed or answer-bearing route schema
+- `tests/pass32-navigation.test.mjs#3` routeHref clears old route parameters without destroying unrelated query
+
+**tests/pass6-integrity.test.mjs** (5 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/pass6-integrity.test.mjs#1` canonical hashes prevent unreviewed edits to question, answer key or paper
+- `tests/pass6-integrity.test.mjs#2` stimuli and assets reject unsupported fields, missing images, bad media and malformed tables
+- `tests/pass6-integrity.test.mjs#3` frozen attempt and learning notebook retain media after original package is unavailable
+- `tests/pass6-integrity.test.mjs#4` stored result rejects tampered item verdict even with untouched totals
+- `tests/pass6-integrity.test.mjs#5` display preferences are validated and round-trip through storage
+
+**tests/pass7-engine.test.mjs** (9 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/pass7-engine.test.mjs#1` strict section submission policy is an engine invariant, not a disabled button
+- `tests/pass7-engine.test.mjs#2` delayed submit cannot accidentally finish the next section after a timeout
+- `tests/pass7-engine.test.mjs#3` pause and flag policies hold in pure transitions, including clock rollback
+- `tests/pass7-engine.test.mjs#4` all four attempt modes are pinned with their actual CGL policy or custom package
+- `tests/pass7-engine.test.mjs#5` built-in source page and independently supplied references survive reviewed import
+- `tests/pass7-engine.test.mjs#6` written response can be explicitly self-assessed without modifying frozen automated results
+- `tests/pass7-engine.test.mjs#7` source-key comparison pins original answer references independently of reviewed revisions
+- `tests/pass7-engine.test.mjs#8` draft and editorial-unsafe questions are excluded rather than treated as correct
+- `tests/pass7-engine.test.mjs#9` live timer uses nondecreasing monotonic elapsed time even if wall clock moves
+
+**tests/pass8-learning.test.mjs** (6 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/pass8-learning.test.mjs#1` generated notebook revision is a real validated attempt, not a copied note
+- `tests/pass8-learning.test.mjs#2` revision selection rejects duplicates, unsafe statuses, mixed exams and impossible sizes
+- `tests/pass8-learning.test.mjs#3` media from notebook remains in generated paper even if source package disappears
+- `tests/pass8-learning.test.mjs#4` pace, speed relative to a section median and marking opportunities are exact
+- `tests/pass8-learning.test.mjs#5` evidence progression requires independent attempts and distinct questions
+- `tests/pass8-learning.test.mjs#6` speed classification uses a sufficient section median and distinguishes fast mistakes
+
+**tests/pass9-ui.test.mjs** (5 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/pass9-ui.test.mjs#1` dedicated history filters/sorts completed and in-progress records without mutating source
+- `tests/pass9-ui.test.mjs#2` history is a genuinely separate panel with faithful evidence disclaimers and native actions
+- `tests/pass9-ui.test.mjs#3` result tabs and time ledger keep frozen verdicts, timings and accessible controls separate
+- `tests/pass9-ui.test.mjs#4` restored exam shell exposes progress, timer and navigator while withholding answer keys
+- `tests/pass9-ui.test.mjs#5` answer changes preserve actual events and distinguish rescued from lost answers
+
+**tests/storage-concurrency.test.mjs** (1 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/storage-concurrency.test.mjs#1` new records cannot be overwritten and concurrent revisions conflict
+
+**Subtotals:** 92 named original cases across 16 files. **Total legacy inventory: 64 + 92 = 156**, all currently retained. They are the immutable baseline for Pass37 assertion-by-assertion migration, not a claim that the new property cases passed CI.
+
 ## 3. Migration ledger: browser scripts (Phase II)
 
 Every script below must have a disposal decision tied to real capability assertions **before deletion**. “Remove from mandatory CI” and “delete source file” are separate decisions. Preserve the historical commit/artifact URL in final docs; never commit large screenshot archives to the repo.
