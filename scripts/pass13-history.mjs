@@ -152,7 +152,9 @@ try{
  yes((await dbRecords(page)).filter(x=>x.recordType==="generic-attempt"&&x.finishedAt!==null).length===2,
   "Competing version allowed partial completed-history deletion");
  await page.reload({waitUntil:"load"});
- await page.locator("#g-history").click();
+ // Native deep links keep History selected across a document reload.
+ if(await page.locator("#g-history").count())await page.locator("#g-history").click();
+ else await page.locator("#g-delete-completed").waitFor({state:"visible"});
  prompts.length=0;
  await page.locator("#g-delete-completed").click();
  await page.waitForFunction(()=>document.querySelector("#g-delete-completed")?.disabled===true);
