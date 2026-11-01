@@ -1356,11 +1356,12 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          ". Start a separate attempt? Existing attempts will be kept; their timers continue until expiry when resumed or while active."))return;
        const id=typeof crypto!=="undefined"&&crypto.randomUUID?crypto.randomUUID():"generic-"+now()+"-"+Math.random();
        const configured=configureUntimedPractice(
-         p.examId==="ssc-cgl"?configureCglPractice(p,cglMode,singleSection):p,untimedPractice);
+         selectedFamilyId===BUILTIN_CGL_FAMILY?configureCglPractice(p,cglMode,singleSection):p,untimedPractice);
        attempt=startGenericAttempt(configured,id,now());
        freshlyStartedAttemptId=attempt.id;
        if(configured.paper.edition==="reviewed"){
          const source=[...packages.values()].find(candidate=>candidate.paper.edition==="source"&&
+           familyIdFor(candidate,builtinPaperIds)===selectedFamilyId&&
            candidate.paper.paperId===configured.paper.paperId&&candidate.examId===configured.examId);
          if(source){
            const original= createSourceKeyReference(configured,source);
