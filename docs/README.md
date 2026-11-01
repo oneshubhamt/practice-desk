@@ -4,6 +4,16 @@
 
 **Current testing policy (1 November 2026):** `overhaul` is the sole development branch. The old `baseline/v11` UI/feature parity exercise is **finished** and its reports remain archived references, not a design ceiling or recurring CI requirement. See [AGENTS current policy](../AGENTS.md) and [active test/CI migration scratchpad](audits/TEST_SUITE_REENGINEERING_PLAN_2026-11-01.md). Modern CI prioritises source integrity, score/frozen-revision correctness, six-kind/APFC/NAT/untimed UX, native/offline browser behaviour, responsive layout and failure-only diagnostics. **No routine screenshot comparisons.** Mac/iOS/Android/AT/manual approval are separate and not claimed by simulated browser tests.
 
+## Current engineering and verification
+
+- [**Current QA commands, all 13 browser capabilities, CI policy and open manual release gates**](QA_CURRENT.md)
+- [Architecture and browser-compatibility design](architecture/CURRENT_ARCHITECTURE.md)
+- [Immutable scoring, content, backup and storage contracts](architecture/DATA_CONTRACTS.md)
+- [Current user-approved rules and exceptions](decisions/POLICY_REGISTER.md)
+- [Active source-first Pass36–40 engineering scratchpad and complete eight-script retirement map](audits/TEST_SUITE_REENGINEERING_PLAN_2026-11-01.md)
+
+**Pass40 complete (1 November 2026):** After adding independent current-app session, editorial/source, History, storage-failure and Learning/revision browser journeys, all eight remaining `passNN-*` / `smoke-offline` scripts have been deleted from source and CI, not renamed or disabled. No routine paired v11 screenshot comparisons remain. [Final 5-job verified workflow 41321335800](https://github.com/oneshubhamt/practice-desk/actions/runs/41321335800): **176/176 Node tests** plus actual offline Chromium, Firefox, WebKit test jobs and gated publisher passed. The physical macOS Safari/AT/device/human release gates remain open.
+
 ## Historical parity and original feature audit (completed)
 
 **Reference:** frozen `baseline/v11` · **implementation:** `overhaul`. **Pass29 (31 Oct): Independent expanded visual/use-case journey matrix PASS** — **184 screenshots/measured scenes, 56 direct frozen-v11 paired CGL comparisons, 7 viewport sizes**, strict/free/single CGL modes, original/reviewed and disputed-key scenarios, 100/140% theme, figure/passage, Results/History and full generic six-kind/FSRS Learning journeys. The broader matrix found and verified **three additional repairs**: History saved-result reopen state (F29-01), zoomed History text overflow (F29-02), zoomed Learning text overflow (F29-03), beyond the 11 original L01–L11 fixes. [Current independent Pass29 report](audits/PASS29_INDEPENDENT_VISUAL_MATRIX_2026-10-31.md) · [full CI 4/4 success](https://github.com/oneshubhamt/practice-desk/actions/runs/41164616047) · [downloadable scene/geometry/image artifact](https://github.com/oneshubhamt/practice-desk/actions/runs/41164616047/artifacts/13028401081). **Conditional automated acceptance ONLY**: human screenshot appraisal, physical macOS Safari/mobile, NVDA/VoiceOver, device-kill/storage, arbitrary/stress imports and explicit merge/release approval are not established. [Pass23 source/scoring report](audits/PASS23_FINAL_INDEPENDENT_REVIEW_2026-10-30.md) remains authoritative for its original source findings.

@@ -1,5 +1,8 @@
 # Data contracts, invariants and supported exam rules
 
+**Current independent verification (1 Nov 2026):** [QA guide](../QA_CURRENT.md) and [Pass40 full CI](https://github.com/oneshubhamt/practice-desk/actions/runs/41321335800) protect immutable original/reviewed CGL source/key/editorials, especially 6 Oct Q62 source exclusion vs reviewed caution +2/−0.5, six-kind and APFC/NAT scoring, exact partial cap, frozen marks, attempted/section time, additive v3 backup, concurrency, FSRS and result/no-key-leak. **176/176 Node tests** and 13 current `file://` browser capabilities passed. The earlier Pass23-v11 paired screenshot/scoring evidence described below is a **historical completed programme**, not an active current CI oracle. Production score/content/storage source was not modified by Pass40. Browser data eviction, device/AT behaviour and deterministic dependency installation without a committed lockfile remain open.
+
+
 **Read with:** [architecture](CURRENT_ARCHITECTURE.md), [policy decisions](../decisions/POLICY_REGISTER.md), and [source audit](../audits/V11_SOURCE_AUDIT_2026-10-30.md). This is the **current-source contract**; historical schema decisions remain in [Passes 4–16](../history/PASSES_04_16.md).
 
 ## Immutable content
