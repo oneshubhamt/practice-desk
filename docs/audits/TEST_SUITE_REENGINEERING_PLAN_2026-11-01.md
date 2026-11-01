@@ -542,6 +542,43 @@ Every implementation pass follows **five mandatory stages**; the scratchpad is u
 
 **Implementation status at checkpoint A:** no source/tests/scripts/CI changed; scratchpad update only. Next: add seeded maths/session/persistence/import tests, verify CI and reconcile findings independently.
 
+### Pass 38 — migration crosswalk: 26 legacy browser QA scripts to modern contracts
+
+**Purpose and verification standard:** This is a **source-ownership and scenario disposition** map (NOT a claim of assertion-by-assertion equivalence). “Historical-only” pertains to pixel comparisons or historical SHA baselines, **not all checks in that file**. Pass39 must validate each unique guard before disabling/deleting a script; under current AGENTS the independent Pass29 and the Pass30 bank/test paths require a coordinated final policy/CI handoff in Pass40. The earlier inventory listed 25 browser QA scripts; `pass36-library-spacing.mjs` added since then makes **26**. Helpers `scripts/build.mjs` and `scripts/paper-select.mjs` are not QA suites.
+
+| Existing browser script | Direct new capability owner(s) | Retain/historical-only or distinct contract remaining |
+|---|---|---|
+| `scripts/smoke-offline.mjs` | critical, platform, recovery, stress; FSRS and manual grade | Advanced two-tab race, read-failure fallback still unique: retain until separately verified |
+| `scripts/pass10-platform.mjs` | platform Chromium/Firefox/WebKit, stress 80-record History | New cross-browser Back handling explicitly reports engine support limits |
+| `scripts/pass11-parity.mjs` | critical, UI, platform; Node session model | Clock/background and browser shortcut details retained in original until crosswalk |
+| `scripts/pass12-parity.mjs` | critical; Node content/provenance and frozen media | Original media/source provenance browser details retained pending direct audit |
+| `scripts/pass13-history.mjs` | recovery, platform; Node persistence | Bulk atomic stale-tab deletion and specific quota prompts retained pending direct audit |
+| `scripts/pass14-parity.mjs` | critical, UI; Node learning/analytics | Long-question drill-down and audit filter details retained |
+| `scripts/pass15-visual.mjs` | UI measured first fold, contrast/semantics/overflow | Paired v11 pixel geometry **historical-only**; retain specific contrast assertions until confirmed |
+| `scripts/pass16-independent.mjs` | critical; Node ten-edition/content/Q62 contracts | Source-key/caution media checks preserved in Node and original browser |
+| `scripts/pass18-targeted.mjs` | recovery Discard/Delete, frozen result, invalid link | Specific two-stage Discard confirmation/cancellation remains old guarded |
+| `scripts/pass19-targeted.mjs` | critical History, Node cross-paper marks | Multiple resumables and comparative saved-result presentation remain guarded |
+| `scripts/pass20-targeted.mjs` | critical preflight; UI responsive/Aa/keyboard | Source disclaimer and mode details guarded by original |
+| `scripts/pass21-targeted.mjs` | UI semantic/keyboard; Node content | Individual radio/mark/focus/figure-a11y paths retained where unique |
+| `scripts/pass22-targeted.mjs` | stress lazy 100-review/timing DOM, critical six kinds | Invalid multi-select drafts / duplicate matching browser controls retain original |
+| `scripts/pass23-independent.mjs` | critical; Node independent content and scoring | Frozen-v11 visual comparison historical-only |
+| `scripts/pass25-library.mjs` | UI Library first fold and responsive geometry | Exact v11 paired screenshot comparison historical-only |
+| `scripts/pass26-exam.mjs` | UI exam/navigator responsive geometry | Exact v11 paired screenshot comparison historical-only |
+| `scripts/pass27-history-results.mjs` | UI History/Results, critical saved reopen | Exact v11 paired screenshot comparison historical-only |
+| `scripts/pass28-semantics.mjs` | UI Aa/labels, Node editorial/clock semantics | Frozen v11 geometry historical-only |
+| `scripts/pass29-independent-matrix.mjs` | critical + UI + platform + stress + recovery; Node content | Mandatory 184 scenes/56 old-v11 pairs until synchronized AGENTS Pass40 handoff |
+| `scripts/pass30-ui.mjs` | critical APFC/NAT, CGL original/reviewed, untimed | Legacy 3-mode untimed/195px journey remains mandatory per AGENTS until Pass40 |
+| `scripts/pass31-ui.mjs` | UI current compact layout, question navigator | Old v11 geometry historical-only; distinct mark states guarded |
+| `scripts/pass32-native-navigation.mjs` | platform native Back/Forward, recovery bad deep link | Browser-specific native-history availability must be disclosed, not silently shimmed |
+| `scripts/pass33-results-parity.mjs` | UI low-evidence Results and stress lazy panes | Pixel-parity baseline historical-only |
+| `scripts/pass34-v11-display.mjs` | UI Aa themes/focus/nonsticky header | Old frozen-v11 fixed-toolbar geometry historical-only |
+| `scripts/pass35-detached-display.mjs` | UI fixed direct-body Aa + normal-flow header | Current product behaviour directly guarded |
+| `scripts/pass36-library-spacing.mjs` | UI zero-card/pending-card 18px gap without screenshot | Exact visual state moved into measured invariant; old screenshots unnecessary |
+
+**Replacement suite entry points and planned CI:** `scripts/acceptance-critical.mjs`, `acceptance-recovery.mjs`, `acceptance-ui.mjs`, `acceptance-platform.mjs chromium|firefox|webkit`, `acceptance-stress.mjs`; shared `scripts/browser/fixtures.mjs`. CI runs these **additively** in the main and cross-browser jobs without removing any legacy job. Every new script uses the **current generated offline app**; no frozen v11 SHA or paired screenshot capture. Modern UI captures lightweight measured state only and the harness captures screenshots **on failure** for debugging. A sole 18px conditional gap measurement was added in `d88e8d0` to supersede that unique Pass36 screenshot behaviour.
+
+**Migration-blocking distinctions:** Last-column unported but legitimate user-visible behaviours are **not authorised for deletion by this map**. Retain the old code as a gate or port the assertion into modern tests in Pass39; in particular confirm two-tab stale write conflict, cancellation/atomic bulk-delete, multi-select draft, original/reviewed Q62 post-submit presentation, keyboard/focus, and source media. Modern FF/WebKit support for native Back is engine-dependent: journal verified vs unsupported on real file:// runs (no shim). Accessibility semantic spot checks are not a complete rules engine/AT/WCAG certification, and 195px CSS simulated zoom does not prove physical device usability.
+
 ### Pass 38 — live checkpoint B: additive modern scripts and iterative CI (2026-11-01)
 
 **Implementation started:** On `overhaul`, atomic commit `bdca4efa` added a reusable modern headless `file://` harness `scripts/browser/fixtures.mjs` plus `acceptance-critical.mjs` (original/reviewed CGL, frozen results/History, six response kinds/manual grading/FSRS, APFC/NAT), `acceptance-ui.mjs` (modern-only layout/a11y/keyboard/Aa, no routine screenshots), `acceptance-platform.mjs` (Chromium/Firefox/WebKit save/reload/backup/native navigation support reporting), `acceptance-stress.mjs` (80-record History, 100-question lazy Results), and **additive** CI invocation. Then `3c0a296` added `acceptance-recovery.mjs` (Discard versus Delete, backup v3 restore/idempotence, invalid deep link and IDB denied fallback) with its additive CI step. Every original QA script and old screenshot CI invocation remains intact by Pass38 policy; obsolete visual artifacts are **not generated** by the new suites (UI stores compact metrics and failure-only screenshot diagnostic).
