@@ -719,6 +719,16 @@ Regression reconciliation intentionally moved old assertions rather than droppin
 
 **FIVE STEP:** [x] AUDIT [x] ANALYZE [x] IMPLEMENT [x] OBJECTIVE RECONCILIATION [x] TARGETED QA + FULL CI. **TARGETS:** F35-01 VERIFIED · F35-02 VERIFIED · F35-03 VERIFIED · F35-04 VERIFIED in tested browser/viewport scenarios · F35-05 VERIFIED 4/4 CI. Manual aesthetic appraisal, physical-device Safari/mobile and AT remain external release checks; automated evidence does not certify those.
 
+### Pass 36 — Library pending-card spacing (1 November 2026)
+
+**START HEAD:** `37d300ee0e4f50b01a5f8ead9307bfb02d63e2a1` on `overhaul`. **USER EVIDENCE:** uploaded 1440px dark Library screenshot shows the *Unfinished attempts* card visually touching the two-column *Paper / Selected paper* panels, with no separation between their bordered edges.
+
+**AUDIT:** `generic-ui.ts` renders `<section class="panel pad pending-panel" id="g-pending-attempts">…</section>` conditionally when saved unfinished attempts exist. It is immediately followed by `<div class="generic-layout home-grid">…`. Existing Library CSS supplies a ~17–18px gap **between** the two columns in `.home-grid`, but no explicit separation **before** the grid after the `.pending-panel`; hence adjacent panel borders meet. Screens with no pending attempt do not have this node. Header, Aa, scoring, source edition and app/records are unrelated.
+
+**DECISION:** Add a narrowly scoped adjacent-sibling spacing rule for `.pending-panel + .home-grid`, using **18px** to match Library column gutter. It must apply only if a pending card is present, leave internal panel padding unchanged, maintain equal top alignment of Paper and Selected paper, and avoid extra space when no pending exists. Add actual file:// Chromium geometry/screenshot regression for 1366 dark, 390 mobile and 195px zoom-equivalent, plus 140% where feasible. Preserve all existing tests.
+
+**FIVE STEPS:** [x] AUDIT [x] ANALYSE [ ] IMPLEMENT [ ] OBJECTIVES CHECK [ ] TARGETED QA. **OBJECTIVES:** F36-01 measurable 18px separation; F36-02 selected/paper top alignment; F36-03 absent pending/no extra whitespace; F36-04 390/195/no overflow/140%; F36-05 all CI green. No score/route/persistence code changes planned.
+
 ### Per-pass worklog template — copy beneath this section at pass start
 
 ```text
