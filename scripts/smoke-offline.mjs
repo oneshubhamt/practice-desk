@@ -296,7 +296,8 @@ try{
  await page.locator("#g-library").click();
  await page.locator('[data-attempt="'+revision.id+'"]').first().click();
  await page.locator('[data-result-tab="overview"]').click();
- fail(await page.locator("#g-attempt-evidence").count()===1,
+ fail(await page.locator(".result-time-pacing").count()===1&&
+   await page.locator(".result-opportunities").count()===1,
    "Generated revision Overview was not available in persisted attempt history");
  const unchangedCard=await find(page,x=>x.id===firstLearning.id);
  fail(unchangedCard.reviews.length===1,
