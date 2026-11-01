@@ -2,7 +2,7 @@
  * Focused current-app contracts; legacy Pass13/18 and smoke remain live until Pass39.
  */
 import {readFile} from "node:fs/promises";
-import {openHarness,offlineUrl,records,check,route,assertNoOverflow} from "./browser/fixtures.mjs";
+import {openHarness,offlineUrl,records,saved,check,route,assertNoOverflow} from "./browser/fixtures.mjs";
 const h=await openHarness({artifactDir:"artifacts/acceptance-modern"});
 const {page,context,errors}=await h.open();
 try{
@@ -47,10 +47,18 @@ try{
   "completed Delete did not remove the result");
  await page.locator("#g-history-file").setInputFiles({name:"backup.json",mimeType:"application/json",
   buffer:Buffer.from(JSON.stringify(archive))});
- await page.locator('[data-delete="'+resultId+'"]').waitFor({state:"visible"});
- const restored=(await records(page)).find(x=>x.id===resultId);
+ const restored=await saved(page,x=>x.id===resultId,resultId);
  check(restored?.result?.snapshot?.earnedMarks===original.result.snapshot.earnedMarks,
   "restored immutable marks differ from exported frozen result");
+ // A restored record can commit before its History route rerenders. Refresh
+ // using actual navigation, rather than treating an old DOM snapshot as storage.
+ if(await page.locator("#g-library").count()){
+  await page.locator("#g-library").click();await route(page,"library");
+ }
+ if(await page.locator("#g-history").count()){
+  await page.locator("#g-history").click();await route(page,"history");
+ }
+ await page.locator('[data-delete="'+resultId+'"]').waitFor({state:"visible"});
  await page.locator("#g-history-file").setInputFiles({name:"backup-again.json",mimeType:"application/json",
   buffer:Buffer.from(JSON.stringify(archive))});
  check((await records(page)).filter(x=>x.id===resultId).length===1,
