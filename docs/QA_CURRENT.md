@@ -4,6 +4,12 @@
 
 **Updated 1 November 2026 · Development branch `overhaul` · Status: automated source/build/browser gates verified, not human/device release approval.** The old v11 parity programme is *completed and historical*. Nothing in this document requires new features, geometry, or styling to match the v11 baseline.
 
+## Binding user decision: no regression, focused pass QA and final independent QA
+
+Every P41–P47 pass must demonstrate **no regression** in existing supported capabilities. Step 5 is **targeted QA**, including affected Node tests, negative/malformed cases, persisted history/reopen and real affected browser journeys. Existing CI remains a required engineering safety gate; a newly executed comprehensive full-product and manual release audit belongs at P48, not at every intermediate pass. Earlier broader QA is warranted only for documented cross-cutting risk.
+
+Current self-contained `file://` distribution remains supported and regression-tested, but its *future* deployment contract may be reconsidered when evidence justifies another origin, with explicit user approval and proven data/privacy/offline compatibility. It is not an unconditional architectural red line.
+
 ## Scope and reproducible commands
 
 - **Required runtime:** Node.js 24, local checkout of `overhaul`, `npm install --no-audit --no-fund`. `package.json` pins direct dependencies but **no committed `package-lock.json` exists**; therefore npm transitive resolution is *not* guaranteed reproducible and `npm ci` is unsupported. Address as a separate intentional dependency-lock decision.
