@@ -1,8 +1,8 @@
 import { sha256 } from "../domain/hash.ts";
 import { validateDisplayPreferences } from "../app/preferences.ts";
 import type { DisplayPreferences } from "../app/preferences.ts";
-import { validatePracticeSelection } from "../app/practice-selection.ts";
-import type { PracticeSelection } from "../app/practice-selection.ts";
+import { validatePracticeSetups } from "../app/practice-selection.ts";
+import type { PracticeSetups } from "../app/practice-selection.ts";
 
 export interface BackupV3 {
  readonly format:"practice-desk-backup";
@@ -10,8 +10,8 @@ export interface BackupV3 {
  readonly exportedAt:string;
  readonly records:readonly Record<string,unknown>[];
  readonly preferences:DisplayPreferences;
- /** Optional validated last-used exam setup. Old v3 archives omit this safely. */
- readonly selection?:PracticeSelection;
+ /** Portable, checksum-covered per-family setup preferences. */
+ readonly setups?:PracticeSetups;
  readonly manifest:{
    readonly algorithm:"sha256";
    readonly digest:string;
@@ -24,13 +24,13 @@ const digest=(core:Core):string=>sha256(JSON.stringify(core));
 
 export function makeBackup(
  records:readonly Record<string,unknown>[],preferences:DisplayPreferences,exportedAt:string,
- selection?:PracticeSelection|null
+ setups?:PracticeSetups|null
 ):BackupV3{
  if(!Number.isFinite(Date.parse(exportedAt)))throw new Error("Invalid export timestamp");
  const validated=validateDisplayPreferences(preferences);
- const savedSelection=selection?validatePracticeSelection(selection):null;
+ const savedSetups=setups?validatePracticeSetups(setups):null;
  const core=clone({format:"practice-desk-backup" as const,version:3 as const,exportedAt,records,
-   preferences:validated,...(savedSelection?{selection:savedSelection}:{})});
+   preferences:validated,...(savedSetups?{setups:savedSetups}:{})});
  return {...core,manifest:{algorithm:"sha256",digest:digest(core),recordCount:core.records.length}};
 }
 export function verifyBackup(raw:unknown):BackupV3{
@@ -45,7 +45,7 @@ export function verifyBackup(raw:unknown):BackupV3{
  if(!manifest||manifest.algorithm!=="sha256"||manifest.recordCount!==b.records.length||
     manifest.digest!==digest(core as Core))throw new Error("Backup integrity check failed");
  validateDisplayPreferences(b.preferences);
- if(b.selection!==undefined)validatePracticeSelection(b.selection);
+ if(b.setups!==undefined)validatePracticeSetups(b.setups);
  return b as BackupV3;
 }
 export function planBackupMerge<T extends {readonly id:string}>(
