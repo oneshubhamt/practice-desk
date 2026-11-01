@@ -1029,6 +1029,19 @@ main:has(.results-heading){max-width:1130px;padding:22px 20px 60px}
  .metriclist>div{display:grid;gap:2px}
  .metriclist b{text-align:left}
  .revision-chips{gap:5px}
+ /* Fit Results at 195px CSS viewport combined with 140% in-app type scale.
+    Allow headings, explanatory copy and nested rows to break long words
+    without hiding overflowing content or changing local scrollable tables. */
+ #result-overview>.panel,
+ #result-overview .result-insight-grid,
+ #result-overview .result-insight-grid>.panel,
+ #result-overview .result-overview-heading,
+ #result-overview .result-overview-heading>*,
+ #result-overview .row,
+ #result-overview h2,
+ #result-overview p{min-width:0;max-width:100%;overflow-wrap:anywhere}
+ #result-overview .result-insight-grid{grid-template-columns:minmax(0,1fr)}
+ #result-overview .result-section-table{max-width:100%;overflow-x:auto}
 }
 
 .result-device-footer{
@@ -7631,13 +7644,93 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       return false;
     }
   }
+  function fragmentRouteHref(baseHref, route) {
+    const base = new URL(baseHref);
+    const routed = new URL(routeHref(baseHref, route));
+    const routeParams = new URLSearchParams();
+    for (const key2 of ["pd", "attempt", "tab"]) {
+      const value = routed.searchParams.get(key2);
+      if (value !== null) routeParams.set(key2, value);
+    }
+    base.hash = "#" + routeParams.toString();
+    return base.href;
+  }
+  function parseFragmentRoute(href) {
+    let url;
+    try {
+      url = new URL(href);
+    } catch {
+      return null;
+    }
+    if (!url.hash.startsWith("#pd=")) return null;
+    const fromHash = new URL(url.href);
+    fromHash.hash = "";
+    fromHash.searchParams.delete("pd");
+    fromHash.searchParams.delete("attempt");
+    fromHash.searchParams.delete("tab");
+    for (const [key2, value] of new URLSearchParams(url.hash.slice(1)))
+      fromHash.searchParams.append(key2, value);
+    return parseAppRoute(fromHash.href);
+  }
+  function createFragmentRouter(onRoute, win) {
+    let disposed = false, started = false, generation = 0, lastDeliveredHref = win.location.href;
+    const current = () => parseFragmentRoute(win.location.href) ?? parseAppRoute(win.location.href) ?? { screen: "library" };
+    async function deliver(route, kind) {
+      if (disposed) return;
+      await onRoute(route, { kind, signal: void 0, generation: ++generation });
+    }
+    const onHash = () => {
+      if (disposed || lastDeliveredHref === win.location.href) return;
+      lastDeliveredHref = win.location.href;
+      void deliver(current(), "traverse").catch((error) => {
+        win.dispatchEvent(new CustomEvent("practice-desk:route-error", { detail: String(error) }));
+      });
+    };
+    win.addEventListener("hashchange", onHash);
+    return {
+      async start() {
+        if (started || disposed) return;
+        started = true;
+        lastDeliveredHref = win.location.href;
+        await deliver(current(), "initial");
+      },
+      async navigate(route, history = "push") {
+        if (disposed) throw Error("Navigation controller disposed");
+        const target = fragmentRouteHref(win.location.href, route);
+        if (target === win.location.href) return;
+        if (history === "replace") win.location.replace(target);
+        else win.location.hash = new URL(target).hash;
+        if (win.location.href !== target) throw Error("Browser prevented same-document fragment routing");
+        lastDeliveredHref = target;
+        await deliver(route, history);
+      },
+      back: async () => {
+        if (win.history.length > 1) win.history.back();
+      },
+      forward: async () => {
+        win.history.forward();
+      },
+      get canGoBack() {
+        return win.history.length > 1;
+      },
+      get canGoForward() {
+        return false;
+      },
+      // History API cannot reliably expose this state.
+      dispose() {
+        if (disposed) return;
+        disposed = true;
+        win.removeEventListener("hashchange", onHash);
+      }
+    };
+  }
   function createNativeRouter(onRoute, options) {
     const win = options?.window ?? window;
     const nav = win.navigation;
-    if (!nav || typeof nav.navigate !== "function" || typeof nav.addEventListener !== "function") {
-      throw new Error("Practice Desk requires the modern browser Navigation API.");
-    }
+    if (!nav || typeof nav.navigate !== "function" || typeof nav.addEventListener !== "function")
+      return createFragmentRouter(onRoute, win);
     let disposed = false, generation = 0, started = false;
+    let compat = null;
     const listener = (raw) => {
       if (disposed) return;
       const event = raw;
@@ -7664,32 +7757,46 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       if (disposed) throw Error("Navigation controller disposed");
       const href = routeHref(win.location.href, route);
       if (href === win.location.href) return;
-      await nav.navigate(href, { history }).finished;
+      if (compat) {
+        await compat.navigate(route, history);
+        return;
+      }
+      try {
+        await nav.navigate(href, { history }).finished;
+      } catch (error) {
+        if (win.location.protocol !== "file:") throw error;
+        nav.removeEventListener("navigate", listener);
+        compat = createFragmentRouter(onRoute, win);
+        await compat.navigate(route, history);
+      }
     }
     return {
       navigate,
       back: async () => {
-        if (nav.canGoBack) await nav.back().finished;
+        if (compat) await compat.back();
+        else if (nav.canGoBack) await nav.back().finished;
       },
       forward: async () => {
-        if (nav.canGoForward) await nav.forward().finished;
+        if (compat) await compat.forward();
+        else if (nav.canGoForward) await nav.forward().finished;
       },
       get canGoBack() {
-        return nav.canGoBack;
+        return compat?.canGoBack ?? nav.canGoBack;
       },
       get canGoForward() {
-        return nav.canGoForward;
+        return compat?.canGoForward ?? nav.canGoForward;
       },
       async start() {
         if (started || disposed) return;
         started = true;
-        const initial = parseAppRoute(win.location.href) ?? { screen: "library" };
+        const initial = parseFragmentRoute(win.location.href) ?? parseAppRoute(win.location.href) ?? { screen: "library" };
         await onRoute(initial, { kind: "initial", signal: void 0, generation: ++generation });
       },
       dispose() {
         if (disposed) return;
         disposed = true;
         nav.removeEventListener("navigate", listener);
+        compat?.dispose();
       }
     };
   }
