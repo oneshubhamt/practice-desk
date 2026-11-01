@@ -854,7 +854,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
         (untimedPractice?" checked":"")+'><span><strong>Untimed practice</strong>'+
         '<small>No countdown or automatic expiry. Keep the selected navigation and scoring rules; finish when ready.</small></span></label>'+
      '<div class="row generic-actions home-start"><button class="btn primary" id="g-start"'+
-      (loading||fallbackConflict||storageFault||!selected?' disabled':'')+'>Start +escapeText(modeLabel)+' →</button>'+
+      (loading||fallbackConflict||storageFault||!selected?' disabled':'')+'>Start '+escapeText(modeLabel)+' →</button>'+
       '<button class="btn" id="g-import"'+(loading||fallbackConflict||storageFault?' disabled':'')+'>Import question bank</button></div>'+
       '<input type="file" id="g-file" accept=".json,application/json" hidden>'+
       '<p class="fine">Start with an editable <button type="button" class="textlink" id="g-bank-template">Download APFC/NAT bank template</button> (JSON). '+
