@@ -836,10 +836,13 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        (["reviewed","source"] as const).map(edition=>
          '<button type="button" class="edition-choice '+(editionView===edition?"active":"")+
          '" data-edition="'+edition+'" aria-pressed="'+(editionView===edition)+'">'+
-         (edition==="reviewed"?"Reviewed &amp; Corrected":"Original PDF")+'</button>').join("")+
-       '</div><p class="fine edition-note">'+(editionView==="reviewed"?
-         "Independently reviewed wording and answer keys; disputed items are labelled after submission.":
-         "Original publisher transcription; no independent key changes applied.")+
+         (cgl?(edition==="reviewed"?"Reviewed &amp; Corrected":"Original PDF"):
+           edition==="reviewed"?"Imported reviewed":"Imported source")+'</button>').join("")+
+       '</div><p class="fine edition-note">'+(family?.imported?
+         "User-supplied edition; Practice Desk does not certify its questions or keys.":
+         editionView==="reviewed"?
+           "Independently reviewed wording and answer keys; disputed items are labelled after submission.":
+           "Original publisher transcription; no independent key changes applied.")+
        '</p></div>':"")+
      (cgl?'<h3 class="subhead">Practice mode</h3><div class="generic-modes" role="group" aria-label="SSC CGL practice mode">'+
       ([["strict","Exam simulation","4 locked sections · 15 minutes each"],["free","Flexible full paper","60 minutes · move between sections"],
