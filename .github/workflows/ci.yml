@@ -51,6 +51,7 @@ jobs:
       - run: node scripts/acceptance-ui.mjs
       - run: node scripts/acceptance-stress.mjs
       - run: node scripts/acceptance-platform.mjs chromium
+      - run: node scripts/acceptance-safari-fallback.mjs chromium
       # Still valuable behavioural tests, no screenshots or frozen-v11 runs.
       - run: node scripts/smoke-offline.mjs
       - run: node scripts/pass11-parity.mjs
@@ -90,6 +91,7 @@ jobs:
       - run: node node_modules/playwright-core/cli.js install --with-deps ${{ matrix.browser }}
       - run: npm run build
       - run: node scripts/acceptance-platform.mjs ${{ matrix.browser }}
+      - run: node scripts/acceptance-safari-fallback.mjs ${{ matrix.browser }}
       # WebKit native Back after file:// reload remains explicitly unsupported.
 
   publish:

@@ -137,7 +137,10 @@ export async function route(page,name){
  const selectors={library:"#g-start",exam:"#g-next",result:".result-performance-overview",
   history:".history-archive",learning:"#learning-close"};
  await page.waitForFunction(expected=>{
-  const actual=new URL(location.href).searchParams.get("pd")??"library";
+  const current=new URL(location.href);
+  const fromFragment=current.hash.startsWith("#pd=")?
+    new URLSearchParams(current.hash.slice(1)).get("pd"):null;
+  const actual=fromFragment??current.searchParams.get("pd")??"library";
   return actual===expected;
  },name);
  await page.locator(selectors[name]).waitFor({state:"visible"});

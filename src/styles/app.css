@@ -1026,6 +1026,19 @@ main:has(.results-heading){max-width:1130px;padding:22px 20px 60px}
  .metriclist>div{display:grid;gap:2px}
  .metriclist b{text-align:left}
  .revision-chips{gap:5px}
+ /* Fit Results at 195px CSS viewport combined with 140% in-app type scale.
+    Allow headings, explanatory copy and nested rows to break long words
+    without hiding overflowing content or changing local scrollable tables. */
+ #result-overview>.panel,
+ #result-overview .result-insight-grid,
+ #result-overview .result-insight-grid>.panel,
+ #result-overview .result-overview-heading,
+ #result-overview .result-overview-heading>*,
+ #result-overview .row,
+ #result-overview h2,
+ #result-overview p{min-width:0;max-width:100%;overflow-wrap:anywhere}
+ #result-overview .result-insight-grid{grid-template-columns:minmax(0,1fr)}
+ #result-overview .result-section-table{max-width:100%;overflow-x:auto}
 }
 
 .result-device-footer{

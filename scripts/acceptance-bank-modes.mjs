@@ -46,14 +46,8 @@ for(const v of [
     "140% narrow text scaling unavailable");
    await page.locator("#displayClose").click();
    await assertNoOverflow(page,v.name+" zoom-equivalent Library at 140%");
-   // Two independent stress levels: 195px (~200% browser zoom) and 140% in-app
-   // text were combined unintentionally. The historical Results contract is
-   // 195px at normal in-app scale; report 195px+140% as a separate UI edge case.
-   await page.locator("#displayTrigger").click();
-   await page.locator("#fontReset").click();
-   check(await page.locator("#fontReset").innerText()==="100%",
-    "narrow mode text scale failed to reset");
-   await page.locator("#displayClose").click();
+   // Run exam, Results and imported APFC/NAT at *both* 195px viewport
+   // and 140% in-app text scaling; the previously failing case is now a gate.
   }
   for(const mode of ["strict","free","single"]){
    await page.locator('[data-mode="'+mode+'"]').click();
@@ -77,7 +71,7 @@ for(const v of [
     await page.locator("#g-submit").click();await route(page,"result");
     check(await page.locator(".score.standout").count()===1,
      v.name+" "+mode+" did not score");
-    await assertNoOverflow(page,v.name+" "+mode+" Results");
+    await assertNoOverflow(page,v.name+" "+mode+" Results at "+(v.name==="narrow195"?"140%":"100%")+" text");
    }
    await page.locator("#g-library").click();await route(page,"library");
    await chooseModernPaper(page,cgl);
@@ -107,7 +101,7 @@ for(const v of [
   check((await records(page)).some(x=>x.recordType==="generic-attempt"&&
    x.frozen.paper.paperId==="bank:apfc-starter-demo"&&x.result?.items.length===3),
    v.name+" bank did not freeze three questions");
-  await assertNoOverflow(page,v.name+" APFC/NAT narrow Results");
+  await assertNoOverflow(page,v.name+" APFC/NAT Results at "+(v.name==="narrow195"?"140%":"100%")+" text");
   check(errors.length===0,v.name+" uncaught browser errors "+errors.join("; "));
   scenes.push({viewport:v.name,editions:2,modes:3,untimedReload:true,
    template:true,apfcMcqNat:true,screenComparison:false});

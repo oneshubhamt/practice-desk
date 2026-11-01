@@ -473,3 +473,43 @@ test("routeHref clears old route parameters without destroying unrelated query",
  assert.equal(sameDocumentPath(file,"https://example.com/test?pd=history"),false);
 });
 }
+
+
+// User-reported Mac Safari compatibility: deterministic file:// fragment codec.
+// Real Back/Forward, persistence and reloading are covered by acceptance-safari-fallback.
+{
+const test=__suite_dep_0["default"];
+const assert=__suite_dep_1["default"];
+const fragmentRouteHref=__suite_dep_13["fragmentRouteHref"];
+const parseFragmentRoute=__suite_dep_13["parseFragmentRoute"];
+const sameDocumentPath=__suite_dep_13["sameDocumentPath"];
+test("Safari fallback encodes every route in same-file fragments without changing pathname",()=>{
+ const base="file:///Users/example/Practice_Desk_Offline_Mock_Tests.html?mode=demo";
+ const routes=[
+  {screen:"library"},{screen:"history"},{screen:"learning"},
+  {screen:"exam",attemptId:"saved+test id"},
+  {screen:"result",attemptId:"saved+test id",tab:"overview"},
+  {screen:"result",attemptId:"saved+test id",tab:"review"},
+  {screen:"result",attemptId:"saved+test id",tab:"timing"}
+ ];
+ for(const route of routes){
+  const href=fragmentRouteHref(base,route);
+  assert(sameDocumentPath(base,href),JSON.stringify(route));
+  assert.equal(new URL(href).searchParams.get("mode"),"demo");
+  assert.deepEqual(parseFragmentRoute(href),route);
+ }
+});
+test("Safari fallback rejects malformed and duplicate deep-link routes without executing content",()=>{
+ const base="file:///Users/example/practice.html";
+ for(const hash of [
+  "#pd=exam","#pd=results&attempt=foo",
+  "#pd=exam&attempt=a&attempt=b",
+  "#pd=history&pd=exam",
+  "#pd=exam&attempt=a&tab=review",
+  "#pd=result&attempt=a&tab=solutions",
+  "#pd=exam&attempt=%00"
+ ])assert.equal(parseFragmentRoute(base+hash),null,hash);
+ assert.equal(parseFragmentRoute(base),null);
+ assert.equal(parseFragmentRoute("not a url"),null);
+});
+}
