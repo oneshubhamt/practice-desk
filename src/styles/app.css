@@ -861,3 +861,10 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
  background:color-mix(in srgb,#e5ad45 32%,var(--panel));
  border-color:#a6782a
 }
+
+/* v11 full-screen keeps a genuinely narrow fixed navigator, too. */
+@media(min-width:981px){
+ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{
+  grid-template-columns:minmax(0,1fr) 252px
+ }
+}
