@@ -1064,9 +1064,11 @@ header .header-actions{padding-right:53px}
 html[data-theme="dark"] .display-trigger{
  background:#273f5d;border-color:#6080a6;color:#fff
 }
+/* Frozen v11 retains the same navy Aa fill while hovered/open in dark
+   mode; its higher-specificity dark selector overrides the hover rule. */
 html[data-theme="dark"] .display-trigger:hover,
 html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
- background:#345274;border-color:#83a4c7;color:#fff
+ background:#273f5d;border-color:#6080a6;color:#fff
 }
 .display-panel{
  position:absolute;z-index:140;top:49px;right:0;left:auto;
