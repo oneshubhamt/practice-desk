@@ -296,7 +296,7 @@ export function renderModelExam(
      '<div class="row generic-actions exam-nav-actions"><button class="btn" id="g-prev"'+(state.status!=="running"||!state.questionIndex||paper.navigation.questionNavigation==="forward-only"?" disabled":"")+'>← Previous</button>'+
      '<button class="btn primary" id="g-next"'+(state.status!=="running"||state.questionIndex===section.questionRevisionIds.length-1?" disabled":"")+'>Next →</button></div>'+
      '<div class="row generic-actions exam-answer-actions"><button class="btn" id="g-clear"'+(!response||state.status!=="running"?" disabled":"")+'>Clear</button>'+
-     '<button class="btn" id="g-flag" aria-pressed="'+Boolean(responsesById.get(q.id)?.flagged)+'"'+(!paper.navigation.allowFlagging||expired?" disabled":"")+'>Flag</button></div>'+
+     '<button class="btn review-toggle" id="g-flag" aria-pressed="'+Boolean(responsesById.get(q.id)?.flagged)+'"'+(!paper.navigation.allowFlagging||expired?" disabled":"")+'>'+(responsesById.get(q.id)?.flagged?"Unmark":"Mark for review")+'</button></div>'+
      '</div>'+
      '<div class="row generic-actions exam-submit-actions">'+
      (paper.timing.kind!=="untimed"&&paper.timing.pausePolicy==="allowed"?
