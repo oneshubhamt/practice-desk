@@ -129,8 +129,10 @@ try{
    "Review filter did not match frozen incorrect count");
  await page.locator("#g-review-filter").selectOption("all");
  await page.locator('[data-result-tab="overview"]').click();
- fail(await page.locator("#g-attempt-evidence").isVisible(),
-   "Performance analytics not visible in insights");
+ fail(await page.locator(".result-time-pacing").isVisible()&&
+   await page.locator(".result-section-diagnostics").isVisible()&&
+   await page.locator(".result-opportunities").isVisible(),
+   "Performance analytics not visible in compact insights");
  fail(await page.locator(".answer-revision-panel").isVisible(),
    "Actual answer change evidence missing from v11-grade insights");
  await page.locator('[data-review-preset="incorrect"]').click();
