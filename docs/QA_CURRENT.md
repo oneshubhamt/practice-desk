@@ -1,6 +1,6 @@
 # Practice Desk — Current test, release and compatibility contract
 
-**Programme ownership:** [Consolidated P41–P48 engineering programme](ENGINEERING_PROGRAMME.md) governs future work and pass-specific quality gates. This document remains the authoritative current **executable test/CI guide**. Historical Pass36–40 QA plans have no future-work authority. P41 publisher-key comparison has **not** yet been fixed by current green CI.
+**Programme ownership:** [Consolidated P41–P48 engineering programme](ENGINEERING_PROGRAMME.md) governs future work and pass-specific quality gates. This document remains the authoritative current **executable test/CI guide**. Historical Pass36–40 QA plans have no future-work authority. P41 source-semantic publisher-key comparison is **automated verified** in [5-job CI 41336695608](https://github.com/oneshubhamt/practice-desk/actions/runs/41336695608); P42 is next, while independent P48 full-product and physical-device release gates remain OPEN.
 
 **Updated 1 November 2026 · Development branch `overhaul` · Status: automated source/build/browser gates verified, not human/device release approval.** The old v11 parity programme is *completed and historical*. Nothing in this document requires new features, geometry, or styling to match the v11 baseline.
 
@@ -13,10 +13,12 @@ Current self-contained `file://` distribution remains supported and regression-t
 ## Scope and reproducible commands
 
 - **Required runtime:** Node.js 24, local checkout of `overhaul`, `npm install --no-audit --no-fund`. `package.json` pins direct dependencies but **no committed `package-lock.json` exists**; therefore npm transitive resolution is *not* guaranteed reproducible and `npm ci` is unsupported. Address as a separate intentional dependency-lock decision.
-- **Fast source and Node verification:** `npm run check` = strict `tsc --noEmit`, `npm run build`, `node --test tests/*.test.mjs`. Current independently observed result: **176/176** Node tests across **8 capability files** (2026-11-01).
+- **Fast source and Node verification:** `npm run check` = strict `tsc --noEmit`, `npm run build`, `node --test tests/*.test.mjs`. Current independently observed result: **179/179** Node tests across **8 capability files** (P41 full CI 41336695608, 2026-11-01).
 - **Generated artifact:** `Practice_Desk_Offline_Mock_Tests.html`, produced from `src/app/bootstrap.ts` and `src/template.html` by `scripts/build.mjs`. Open with `file://`; no live server is required. Never hand-edit the generated output or republish a build that did not pass the required tests.
 - **Chromium:** an installed `google-chrome` / `chromium` binary is required. Run `npm run build` then any `node scripts/acceptance-<capability>.mjs` below. These use a real offline origin, separate browser contexts, actual IndexedDB or explicitly induced fallback, and failure-only diagnostic screenshots (where supported by the harness).
 - **Firefox/WebKit:** `node node_modules/playwright-core/cli.js install --with-deps firefox` or `webkit` on supported CI Linux, followed by `node scripts/acceptance-platform.mjs firefox` and `node scripts/acceptance-safari-fallback.mjs firefox` (similarly `webkit`). These verify browser-engine behaviour; **Playwright WebKit is not a claim of physically tested Safari on macOS**.
+
+**P41 targeted browser check:** `acceptance-editorial-provenance.mjs` now verifies that a reviewed CGL result shows an explicitly labelled comparable original-source subset rather than a misleading complete publisher-key score. Existing source/reviewed Q62, 10 edition, history, backup and offline paths remain covered. The fresh final all-app manual review is reserved for P48.
 
 ## Current mandatory browser suites
 
