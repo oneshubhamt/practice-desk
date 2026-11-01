@@ -99,7 +99,8 @@ test("generic six-kind frozen timing classifications, accurate filters, longest 
  assert.match(html,/Typical/);assert.match(html,/Not classified/);
  assert.match(html,/Review question 1/);
  const overview=questionCoachingHTML(a);
- assert.match(overview,/Longest recorded question exposure/);
+ assert.match(overview,/Question-speed insights/);
+ assert.match(overview,/Longest question visits/);
  assert.match(overview,/What to work on next/);
  assert.match(overview,/data-ledger-q="rev-4"/);
  const filters=reviewFiltersHTML("typicalwrong");
