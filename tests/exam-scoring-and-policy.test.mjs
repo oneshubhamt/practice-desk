@@ -821,3 +821,29 @@ testP41("publisher comparison preserves identical contexts but rejects reordered
  media.questions[0].content.assetIds=["unmatched-media"];
  testAssert.equal(__suite_dep_9.createSourceKeyReference(media,source).entries[0].comparable,false);
 });
+
+testP41("frozen source evidence blocks forged comparability; v1 legacy never yields a certified score",async()=>{
+ const all=__suite_dep_5.builtinCglPackages(p41papers,p41patches);
+ const source=all.find(x=>x.paper.paperId==="cgl-2026-10-05"&&x.paper.edition==="source");
+ const revised=all.find(x=>x.paper.paperId==="cgl-2026-10-05"&&x.paper.edition==="reviewed");
+ const ref=__suite_dep_9.createSourceKeyReference(revised,source);
+ const attempt={...__suite_dep_5.startGenericAttempt(revised,"p41-legacy",1000),
+   finishedAt:1100,sourceKeyReference:ref};
+ const subtotal=__suite_dep_9.sourceKeyScore(attempt);
+ testAssert.ok(subtotal.unavailable>0);
+ testAssert.equal(subtotal.comparable+subtotal.unavailable,100);
+ const hash=(await import("../src/domain/hash.ts")).hashJson;
+ const forged=structuredClone(attempt);
+ forged.sourceKeyReference.entries.find(x=>!x.comparable).comparable=true;
+ const {contentHash:ignored,...core}=forged.sourceKeyReference;
+ forged.sourceKeyReference.contentHash=hash(core);
+ testAssert.throws(()=>__suite_dep_9.validateSourceKeyReference(forged),/semantic correspondence/);
+ const legacyEntries=ref.entries.map(({questionRevisionId,originalOptionId,markingRule})=>
+   ({questionRevisionId,originalOptionId,markingRule}));
+ const legacyCore={schema:1,paperId:ref.paperId,
+   sourcePaperRevisionId:ref.sourcePaperRevisionId,
+   sourceAnswerKeyRevisionId:ref.sourceAnswerKeyRevisionId,entries:legacyEntries};
+ const legacy={...attempt,sourceKeyReference:{...legacyCore,contentHash:hash(legacyCore)}};
+ __suite_dep_9.validateSourceKeyReference(legacy);
+ testAssert.equal(__suite_dep_9.sourceKeyScore(legacy),null);
+});
