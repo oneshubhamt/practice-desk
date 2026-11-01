@@ -68,8 +68,10 @@ test("L09/L10: timing type and frozen mode have accurate labels, untimed include
   [configureCglPractice(p,"strict"),"Exam simulation","Section timer","Section time used"],
   [configureCglPractice(p,"single",1),"Single-section practice","Whole-paper timer","Whole-paper time used"]]){
   const a=startGenericAttempt(configured,mode,0),html=renderModelExam(a,configured);
-  assert.ok(html.includes("EXAM IN PROGRESS · "+mode));
-  assert.ok(html.includes(scope+" · "),scope+" missing");
+  assert.ok(html.includes('<p class="muted">'+mode+' · '),
+   "Human-readable frozen exam mode must remain visible beneath the compact title");
+  assert.ok(html.includes('aria-valuetext="'+scope+' '),
+   scope+" must remain available to screen readers in the compact progress bar");
   assert.ok(html.includes('aria-label="'+aria+'"'),aria+" missing");
   assert.ok(!html.includes("Key corrected"),"Pre-submit editorial key leaked");
  }
@@ -77,9 +79,9 @@ test("L09/L10: timing type and frozen mode have accurate labels, untimed include
  const untimed={...source,frozen:{...source.frozen,paper:{
   ...source.frozen.paper,timing:{kind:"untimed"}}}};
  const html=renderModelExam(untimed,p);
- assert.ok(html.includes("Question coverage · "));
+ assert.ok(html.includes('aria-valuetext="Question coverage '));
  assert.ok(html.includes('aria-label="Questions answered"'));
- assert.ok(!html.includes("Section timer · "));
+ assert.ok(!html.includes('aria-valuetext="Section timer '));
  assert.equal(readablePracticeMode("custom-practice"),"Custom practice");
  assert.equal(readablePracticeMode("author-defined-mode"),"author defined mode");
 });
