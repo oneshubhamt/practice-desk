@@ -90,7 +90,11 @@ async function responseTest(){
   ensure(await page.locator('[data-choice="y"]').isChecked(),
     "G07: draft should survive in-tab question navigation");
   await page.reload({waitUntil:"load"});
-  await page.locator("#g-pending-attempts .recent-attempt").first().click();
+  // Native exam deep links resume the saved attempt directly after reload.
+  // Library-only resume entry is still valid for a non-routed initial page.
+  if(await page.locator("#g-pending-attempts .recent-attempt").count())
+    await page.locator("#g-pending-attempts .recent-attempt").first().click();
+  else await page.locator("#g-next").waitFor({state:"visible"});
   await page.locator('[data-q="1"]').click();
   ensure(!(await page.locator('[data-choice="y"]').isChecked()),
     "G07: volatile draft was misleadingly persisted through reload");
