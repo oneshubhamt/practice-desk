@@ -1,5 +1,7 @@
 # Independent V11 → Overhaul source audit — 30 October 2026
 
+> **HISTORICAL SOURCE/IMPLEMENTATION EVIDENCE.** The 30 Oct audit and Section G Pass17–35 diary are **closed** as an operational programme. Original F/G findings, Q62 decisions and implementation/QA evidence remain inspectable; do not repeat frozen-v11 comparisons or treat dated OPEN items as today's backlog. **Only forward roadmap and P41–P48 live ledger:** [Consolidated Engineering Programme](../ENGINEERING_PROGRAMME.md). Current exceptions: [decision register](../decisions/POLICY_REGISTER.md). P41 publisher-key semantic comparison is explicitly open.
+
 **Verdict: broader capabilities and stronger engineering, but V11 practical functionality/UX superset NOT YET DEMONSTRATED; release signoff not approved.**
 
 - Baseline source branch: `baseline/v11` at `e661822d865927e89a837790c1c6bc1cfc2562a6`.

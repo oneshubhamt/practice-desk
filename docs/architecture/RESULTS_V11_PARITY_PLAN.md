@@ -1,5 +1,7 @@
 # Practice Desk — Results UI parity programme
 
+> **ARCHIVED / COMPLETED.** Dated v11 Results presentation programme implemented/verified in Pass33–35. Mandatory v11 screenshots and exact geometry are **not future-development gates**. Preserve actual Result/Review/Timing clarity and score/source correctness; future design may improve independently. See [Consolidated Engineering Programme](../ENGINEERING_PROGRAMME.md) and [current QA](../QA_CURRENT.md). Original design retained below as historical evidence.
+
 **1 November 2026 · `overhaul` only · IMPLEMENTED + AUTOMATED VERIFIED**
 
 Pre-implementation contract was committed before source work. Final automated evidence: [CI 41276303881](https://github.com/oneshubhamt/practice-desk/actions/runs/41276303881) **4/4 green**; [Pass33 artifact 13071368653](https://github.com/oneshubhamt/practice-desk/actions/runs/41276303881/artifacts/13071368653) contains seven measured/screenshotted result states. CI refreshed the verified offline HTML in commit `f2a4472179c419cf69b6bd7291a75045efb7c4c2`. Physical-device/AT/human aesthetic signoff remains separate.

@@ -1,5 +1,7 @@
 # Practice Desk documentation — canonical map
 
+**SINGLE FORWARD WORK PROGRAMME — [Consolidated Engineering Programme](ENGINEERING_PROGRAMME.md).** The only active backlog, priority register and live scratchpad for **P41–P48**. It reconciles the 28 Oct architecture audit and 1 Nov gap analysis with completed P01–P40 and the decision register. Earlier feature-parity, native-only navigation, Results design and test-suite plans are historical evidence, not competing TODO lists. **P41 original-key comparison remains OPEN**. This is a documentation consolidation, not an app fix.
+
 **Mac/offline compatibility update (1 November 2026):** Modern Navigation API primary, feature-detected `#pd=` hash router on older Safari/WebKit or rejected file navigation; Chromium/Firefox/WebKit no-API Back/Forward/save/reload tested. Extreme combined **195px CSS width + 140% app text** Results overflow repaired and tested with no screenshot oracle. [Verified full CI](https://github.com/oneshubhamt/practice-desk/actions/runs/41303947780). Historical native-only Pass32 description below is archived, not the current browser requirement. Actual physical Mac testing pending.
 
 **Current testing policy (1 November 2026):** `overhaul` is the sole development branch. The old `baseline/v11` UI/feature parity exercise is **finished** and its reports remain archived references, not a design ceiling or recurring CI requirement. See [AGENTS current policy](../AGENTS.md) and [active test/CI migration scratchpad](audits/TEST_SUITE_REENGINEERING_PLAN_2026-11-01.md). Modern CI prioritises source integrity, score/frozen-revision correctness, six-kind/APFC/NAT/untimed UX, native/offline browser behaviour, responsive layout and failure-only diagnostics. **No routine screenshot comparisons.** Mac/iOS/Android/AT/manual approval are separate and not claimed by simulated browser tests.
@@ -10,7 +12,8 @@
 - [Architecture and browser-compatibility design](architecture/CURRENT_ARCHITECTURE.md)
 - [Immutable scoring, content, backup and storage contracts](architecture/DATA_CONTRACTS.md)
 - [Current user-approved rules and exceptions](decisions/POLICY_REGISTER.md)
-- [Active source-first Pass36–40 engineering scratchpad and complete eight-script retirement map](audits/TEST_SUITE_REENGINEERING_PLAN_2026-11-01.md)
+- [**Single active P41–P48 programme, issue register and live ledger**](ENGINEERING_PROGRAMME.md)
+- [**Archived** Pass36–40 source-first test migration and eight-script retirement evidence](audits/TEST_SUITE_REENGINEERING_PLAN_2026-11-01.md)
 
 **Pass40 complete (1 November 2026):** After adding independent current-app session, editorial/source, History, storage-failure and Learning/revision browser journeys, all eight remaining `passNN-*` / `smoke-offline` scripts have been deleted from source and CI, not renamed or disabled. No routine paired v11 screenshot comparisons remain. [Final 5-job verified workflow 41321335800](https://github.com/oneshubhamt/practice-desk/actions/runs/41321335800): **176/176 Node tests** plus actual offline Chromium, Firefox, WebKit test jobs and gated publisher passed. The physical macOS Safari/AT/device/human release gates remain open.
 

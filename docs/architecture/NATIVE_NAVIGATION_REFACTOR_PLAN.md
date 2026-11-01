@@ -1,5 +1,7 @@
 # Practice Desk — native Navigation API architecture and implementation contract
 
+> **ARCHIVED / SUPERSEDED.** Original Pass32 native-only design; later production has feature-detected same-document `#pd=` hash fallback for missing/rejected `file://` Navigation API on Safari/WebKit. **Never restore the obsolete no-fallback requirement.** [Current architecture](CURRENT_ARCHITECTURE.md) and [QA](../QA_CURRENT.md) describe the implementation; [Consolidated Programme](../ENGINEERING_PROGRAMME.md) owns all future work. Remaining text is original dated design history.
+
 **1 November 2026 · `overhaul` only · initial audited HEAD `1b971f2ea7bf5464549328e99b2622dc3d2c2ddd` · status: DESIGN FROZEN BEFORE IMPLEMENTATION**
 
 ## Decision

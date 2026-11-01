@@ -1,5 +1,7 @@
 # Data contracts, invariants and supported exam rules
 
+**Forward work:** [Consolidated Engineering Programme](../ENGINEERING_PROGRAMME.md) is the sole active P41–P48 backlog. **P41 OPEN:** positional CGL option IDs do not establish semantic identity if source and reviewed option meanings differ; the separate hypothetical publisher-key comparison must become honest without altering actual frozen reviewed scores or the D02/D03 Q62 exception. Current green tests do not prove that mapping correct.
+
 **Current independent verification (1 Nov 2026):** [QA guide](../QA_CURRENT.md) and [Pass40 full CI](https://github.com/oneshubhamt/practice-desk/actions/runs/41321335800) protect immutable original/reviewed CGL source/key/editorials, especially 6 Oct Q62 source exclusion vs reviewed caution +2/−0.5, six-kind and APFC/NAT scoring, exact partial cap, frozen marks, attempted/section time, additive v3 backup, concurrency, FSRS and result/no-key-leak. **176/176 Node tests** and 13 current `file://` browser capabilities passed. The earlier Pass23-v11 paired screenshot/scoring evidence described below is a **historical completed programme**, not an active current CI oracle. Production score/content/storage source was not modified by Pass40. Browser data eviction, device/AT behaviour and deterministic dependency installation without a committed lockfile remain open.
 
 

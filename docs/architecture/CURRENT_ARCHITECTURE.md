@@ -1,5 +1,7 @@
 # Current architecture — Practice Desk `overhaul`
 
+**Current versus planned:** this document describes the app **as built**, not the full set of 28 Oct requested advanced features. The **single active P41–P48 programme** and P0 publisher-key semantic comparison defect are in [Consolidated Engineering Programme](../ENGINEERING_PROGRAMME.md). Older Pass32 native-only / v11 parity paragraphs below are dated design records.
+
 **Current testing architecture (1 Nov 2026, Pass40 verified):** [Reproducible commands and support matrix](../QA_CURRENT.md). One generated offline HTML, strict TypeScript six-kind engine and validated source/frozen marks remain the production architecture. **13 capability-based current-app browser suites plus 8 Node suite files / 176 registered tests** replace all historical screenshot matrices and chronological `passNN` Chromium scripts. The final independent [CI 41321335800](https://github.com/oneshubhamt/practice-desk/actions/runs/41321335800) is **5/5 green** for source build, actual Chromium, Firefox and WebKit engines and guarded HTML publisher. Current navigation is native Navigation API if supported, with feature-detected `#pd=` fragment fallback on a missing/rejected Safari `file://` API; old "native only" Pass32 prose below is dated historical design, **not** the executable current architecture. No runtime content changes from test migration; native WebKit Back after reload, manual macOS Safari, physical mobile/AT and release signoff remain open.
 
 

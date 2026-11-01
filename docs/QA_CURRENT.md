@@ -1,5 +1,7 @@
 # Practice Desk — Current test, release and compatibility contract
 
+**Programme ownership:** [Consolidated P41–P48 engineering programme](ENGINEERING_PROGRAMME.md) governs future work and pass-specific quality gates. This document remains the authoritative current **executable test/CI guide**. Historical Pass36–40 QA plans have no future-work authority. P41 publisher-key comparison has **not** yet been fixed by current green CI.
+
 **Updated 1 November 2026 · Development branch `overhaul` · Status: automated source/build/browser gates verified, not human/device release approval.** The old v11 parity programme is *completed and historical*. Nothing in this document requires new features, geometry, or styling to match the v11 baseline.
 
 ## Scope and reproducible commands

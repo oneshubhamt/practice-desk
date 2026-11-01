@@ -1,4 +1,6 @@
-# Practice Desk — Test-Suite Re-engineering Programme and Live Scratchpad
+# Practice Desk — Archived Test-Suite Re-engineering Programme and Pass36–40 Evidence
+
+> **ARCHIVED COMPLETED WORK.** Passes36–40 independently verified by [five-job CI 41321335800](https://github.com/oneshubhamt/practice-desk/actions/runs/41321335800). Historical v11 screenshot comparisons and chronological browser scripts are retired. This remains evidence and old→new assertion traceability, **not a future live scratchpad**. [Consolidated Engineering Programme](../ENGINEERING_PROGRAMME.md) is the **only** active P41–P48 scope/status/ledger. Intermediate red runs and earlier counts below are dated records, not active mandates.
 
 **Status:** **PASSES 36–40 IMPLEMENTED AND INDEPENDENTLY CI VERIFIED (1 November 2026)**; physical macOS Safari, real-device/AT, dependency-lock and release approval remain explicitly OPEN.  
 **Prepared:** 1 November 2026  
