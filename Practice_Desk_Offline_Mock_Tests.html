@@ -134,6 +134,9 @@ select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-vis
 .ongoing-banner h2{margin:0 0 5px;font-size:18px}.ongoing-banner p{margin:0;color:var(--muted);font-size:12px}
 .ongoing-banner .btn{white-space:nowrap}
 .generic-workspace .home-grid{grid-template-columns:minmax(0,1.58fr) minmax(295px,1fr);align-items:start;gap:18px}
+/* The resume panel is a separate Library section. Match the 18px gutter
+   between Paper and Selected paper; no spacing change without saved attempts. */
+.generic-workspace #g-pending-attempts + .home-grid{margin-top:18px}
 .home-side{display:grid;gap:18px;min-width:0}
 .home-picker .section-header{margin-bottom:22px;border-bottom:1px solid var(--line);padding-bottom:13px}
 .home-picker .section-header h2{font-size:22px;margin:0}
