@@ -76,6 +76,9 @@ export function validateExamImportBudget(value:unknown):void{
       walk(item,depth+1,key);
     }
   }
+  // Reuse of one immutable subobject in different fields is legal; only
+  // cycles on the active recursion path are rejected.
+  seen.delete(v);
  };
  walk(value,0,"");
 }
