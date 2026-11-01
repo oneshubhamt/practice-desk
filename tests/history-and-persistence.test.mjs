@@ -192,10 +192,10 @@ test("F05 adjacent: archive status filters retain separate complete and progress
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
-const readPracticeSelection = __suite_dep_10["readPracticeSelection"];
-const writePracticeSelection = __suite_dep_10["writePracticeSelection"];
-const validatePracticeSelection = __suite_dep_10["validatePracticeSelection"];
-const PRACTICE_SELECTION_KEY = __suite_dep_10["PRACTICE_SELECTION_KEY"];
+const readPracticeSetups = __suite_dep_10["readPracticeSetups"];
+const writePracticeSetups = __suite_dep_10["writePracticeSetups"];
+const validatePracticeSetups = __suite_dep_10["validatePracticeSetups"];
+const PRACTICE_SETUPS_KEY = __suite_dep_10["PRACTICE_SETUPS_KEY"];
 const adjustedHistoryMetrics = __suite_dep_11["adjustedHistoryMetrics"];
 const comparableScoreTrends = __suite_dep_11["comparableScoreTrends"];
 const filteredHistory = __suite_dep_7["filteredHistory"];
@@ -217,19 +217,25 @@ const ended=(p,id,time)=>{
   new Map(p.questions.map(q=>[q.id,q])));
 };
 
-test("device-local exam choice validates arbitrary exam revisions and survives corrupt storage",()=>{
+test("P43 one per-family selection map validates independent paper and timing preferences",()=>{
  const store=new Map();
- const adapter={getItem:key=>store.get(key)??null,setItem:(key,v)=>store.set(key,v)};
- const selection={schema:1,paperRevisionId:"external:exam:2026:v3",mode:"single",section:12};
- assert.deepEqual(writePracticeSelection(selection,adapter),selection);
- assert.deepEqual(readPracticeSelection(adapter),selection);
- assert.equal(store.has(PRACTICE_SELECTION_KEY),true);
- for(const value of [{...selection,section:-1},{...selection,mode:"random"},
-  {...selection,paperRevisionId:""},{...selection,section:Infinity}]){
-   assert.throws(()=>validatePracticeSelection(value),/Invalid/);
- }
- store.set(PRACTICE_SELECTION_KEY,"{invalid");
- assert.equal(readPracticeSelection(adapter),null);
+ const adapter={getItem:key=>store.get(key)??null,setItem:(key,value)=>store.set(key,value)};
+ const settings={schema:2,selectedFamilyId:"imported:upsc-epfo-apfc",families:{
+   "builtin:ssc-cgl":{paperRevisionId:"cgl:r10",mode:"single",section:2,untimed:true,edition:"reviewed"},
+   "imported:upsc-epfo-apfc":{paperRevisionId:"apfc:r1",mode:"strict",section:0,untimed:false,edition:"reviewed"},
+   "imported:my-six-kinds":{paperRevisionId:"six:r2",mode:"free",section:0,untimed:true,edition:"source"}
+ }};
+ assert.deepEqual(writePracticeSetups(settings,adapter),settings);
+ assert.deepEqual(readPracticeSetups(adapter),settings);
+ assert.equal(store.has(PRACTICE_SETUPS_KEY),true);
+ for(const value of [
+   {...settings,selectedFamilyId:"not-present"},
+   {...settings,families:{"builtin:ssc-cgl":{...settings.families["builtin:ssc-cgl"],section:-1}}},
+   {...settings,families:{"builtin:ssc-cgl":{...settings.families["builtin:ssc-cgl"],mode:"random"}}},
+   {...settings,families:{"builtin:ssc-cgl":{...settings.families["builtin:ssc-cgl"],paperRevisionId:""}}}
+ ])assert.throws(()=>validatePracticeSetups(value),/Invalid/);
+ store.set(PRACTICE_SETUPS_KEY,"{invalid");
+ assert.equal(readPracticeSetups(adapter),null);
 });
 test("exact frozen paper edition filtering combines with free text and status",()=>{
  const a=ended(configureCglPractice(source,"free"),"original",1000),
@@ -268,19 +274,21 @@ test("adjusted score trends require exact frozen key, revision and practice mode
  assert.match(page,/Repeat the same frozen paper, key and mode/);
 });
 
-test("old v3 backups remain compatible and optional exam setup is checksum-covered",async()=>{
- const { makeBackup,verifyBackup }=await import("../src/history/backup.ts");
- const prefs={schema:1,dark:false,scale:100};
- const old=makeBackup([],prefs,"2026-10-30T00:00:00.000Z");
- assert.equal(old.version,3);
- assert.equal(verifyBackup(old).selection,undefined);
- const selection={schema:1,paperRevisionId:"source-revision:x",mode:"single",section:2};
- const newer=makeBackup([],prefs,"2026-10-30T00:00:00.000Z",selection);
- assert.deepEqual(verifyBackup(newer).selection,selection);
- const damaged=structuredClone(newer);
- damaged.selection.section=3;
- assert.throws(()=>verifyBackup(damaged),/integrity/i);
+test("P43 portable family setups survive backup v3 with checksum protection",async()=>{
+ const {makeBackup,verifyBackup}=await import("../src/history/backup.ts");
+ const preferences={schema:1,dark:false,scale:100};
+ const setups={schema:2,selectedFamilyId:"builtin:ssc-cgl",families:{
+   "builtin:ssc-cgl":{paperRevisionId:"cgl:r1",mode:"single",section:2,untimed:true,edition:"reviewed"},
+   "imported:apfc":{paperRevisionId:"apfc:r1",mode:"strict",section:0,untimed:false,edition:"reviewed"}
+ }};
+ const backup=makeBackup([],preferences,"2026-10-30T00:00:00.000Z",setups);
+ assert.equal(backup.version,3);
+ assert.deepEqual(verifyBackup(backup).setups,setups);
+ const modified=structuredClone(backup);
+ modified.setups.families["builtin:ssc-cgl"].section=1;
+ assert.throws(()=>verifyBackup(modified),/integrity/i);
 });
+
 }
 
 // === Legacy suite: tests/persistence-backup-and-concurrency.test.mjs — 9 unchanged test registrations ===
