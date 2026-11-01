@@ -1360,6 +1360,10 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    };
    if(view==="result"&&attempt){
      root.querySelector<HTMLButtonElement>("#g-history-results")!.onclick=()=>go({screen:"history"});
+     const resultLibrary=root.querySelector<HTMLButtonElement>("#g-result-library");
+     if(resultLibrary)resultLibrary.onclick=()=>go({screen:"library"});
+     const viewReview=root.querySelector<HTMLButtonElement>("#g-view-question-review");
+     if(viewReview)viewReview.onclick=()=>go({screen:"result",attemptId:attempt!.id,tab:"review"});
      const tabs=[...root.querySelectorAll<HTMLButtonElement>("[data-result-tab]")];
      tabs.forEach((button,index)=>{
        button.onclick=()=>go({screen:"result",attemptId:attempt!.id,tab:button.dataset.resultTab as ResultTab});
