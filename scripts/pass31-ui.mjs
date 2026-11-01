@@ -119,10 +119,28 @@ try{
    check(!(await now.page.locator(".exam-header").innerText()).includes("answered"),
     "Exam header still repeats answered totals");
    await stats(now.page,0,25,0,25);
+   check(await now.page.locator("#g-flag").innerText()==="Mark for review",
+    "Unmarked review action must use v11 label");
    await now.page.locator(".exam-question input[data-choice]").first().click();
    await stats(now.page,1,24,0,25);
    await now.page.locator("#g-flag").click();
    await stats(now.page,1,24,1,25);
+   check(await now.page.locator("#g-flag").innerText()==="Unmark"&&
+     await now.page.locator("#g-flag").getAttribute("aria-pressed")==="true",
+     "Marked review action must say Unmark and expose pressed state");
+   check(await now.page.locator('[data-q="0"]').evaluate(el=>el.classList.contains("marked")),
+     "Navigator palette did not reflect marked question");
+   const reviewTone=await now.page.locator("#g-flag").evaluate(el=>{
+     const active=getComputedStyle(el),clone=el.cloneNode(true);
+     clone.setAttribute("aria-pressed","false");el.parentElement.append(clone);
+     const idle=getComputedStyle(clone);
+     const result={activeBg:active.backgroundColor,idleBg:idle.backgroundColor,
+       activeBorder:active.borderTopColor,idleBorder:idle.borderTopColor};
+     clone.remove();return result;
+   });
+   check(reviewTone.activeBg!==reviewTone.idleBg&&
+    reviewTone.activeBorder!==reviewTone.idleBorder,
+    "Review action is not visually highlighted "+JSON.stringify(reviewTone));
    check(await now.page.locator('[data-q="0"]').getAttribute("aria-current")==="step",
     "Current question not represented in palette");
    await capture(now.page,"overhaul-"+vp.name+"-single-answered-flagged");
@@ -132,6 +150,12 @@ try{
    await now.page.locator('[data-q="0"]').click();
    check(await now.page.locator(".exam-question input[data-choice]").first().isChecked(),
     "Answer lost on returning to first question");
+   await now.page.locator("#g-flag").click();
+   check(await now.page.locator("#g-flag").innerText()==="Mark for review",
+    "Unmark did not restore original label");
+   await stats(now.page,1,24,0,25);
+   check(!(await now.page.locator('[data-q="0"]').evaluate(el=>el.classList.contains("marked"))),
+    "Unmark failed to clear navigator review highlight");
    await now.page.locator(".navigator-help summary").click();
    check(await now.page.locator(".navigator-help").evaluate(x=>x.open),
     "Keyboard help not operable by native details");
