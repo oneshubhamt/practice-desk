@@ -229,11 +229,25 @@ Every implementation pass follows **five mandatory stages**; the scratchpad is u
 
 | Pass | Phase | Status | Finding IDs | Code commits | Assertion migrations / scripts | Targeted QA + CI evidence | Remaining risks |
 |---|---|---|---|---|---|---|---|
-| 36 | Tests hardening | NOT STARTED | TS-01–06,10,14,15 | — | — | — | Test baseline and independent oracle |
+| 36 | Tests hardening | IN PROGRESS — AUDIT/ANALYSE | TS-01–06,10,14,15 | — | — | — | Test baseline and independent oracle |
 | 37 | Tests organisation | NOT STARTED | TS-01,06,14 | — | — | — | Phase-I exit with full old CI green |
 | 38 | Browser scripts | NOT STARTED | TS-05,07–10,12,14,15 | — | — | — | Cross-browser/visual/stress replacement |
 | 39 | Scripts + CI | NOT STARTED | TS-07,08,11,12,14,15 | — | — | — | CI safety; Pass29/30 temporarily mandated |
 | 40 | Docs + final acceptance | NOT STARTED | TS-08,11,13,14 | — | — | — | Policy/CI synchronized final handoff |
+
+### Pass 36 — LIVE checkpoint A: audit and analysis (2026-11-01)
+
+**Starting branch HEAD:** `d2da82ae3313a3eab66f42b37fc77a01186a126b`. Only `overhaul`. **Finding IDs:** TS-01, TS-02, TS-03, TS-04, TS-05, TS-06, TS-10, TS-14, TS-15. Old Pass29/30 and all existing CI jobs remain mandatory.
+
+**Source and consumers actually inspected:** `src/engine/{scoring,score-ceiling,session}.ts`, `src/domain/{question,exam,scoring}.ts`, `src/history/{concurrency,backup}.ts`, `src/app/bank-import.ts`, `src/learning/question-analytics.ts`; source references and all named tests in the 31 existing Node suites; `AGENTS.md`, original Section G, current architecture, CI and working plan. Existing browser-script inventory in Section 3 is provisional at scenario level pending assert-by-assert browser migration in Pass38.
+
+**Baseline enumeration:** 31 Node `.test.mjs` files, **156 statically declared named `test(...)` cases** (64 cases across the first 15 files + 92 across the remaining 16); one shared six-kind fixture; 25 browser QA scripts plus build/helper scripts. The tree and actual declarations were read through the GitHub connector. Existing run 41283842614 measured ~7 sec core checks and ~4m22s workflow wall; this is prior run, **not a Pass36 QA result**.
+
+**Test ownership decision:** Add `tests/contract-*.test.mjs` hardening suites with stable explicit seeds and independent arithmetic/state oracles. Retain all 156 original cases and existing old browser gates in Pass36. Reorganising old tests belongs to Pass37. No new dependency (Node 24 native `node:test`), no production code changes unless a reproducible failing invariant proves a defect. Direct scoring API tests and separately validated package/import tests each test their own level; do not pretend a direct unvalidated `scoreAttempt` call proves importer validation. Floating-point equality uses mathematically motivated approximate comparisons and exact binary-fraction boundary fixtures. Synthetic session clocks, no sleeps.
+
+**Pre-existing risk / rejected alternatives:** large property-based library adds unneeded dependency and lock complexity for this pass; fixed-seed xorshift generator with scenario/seed in failure output is smaller, inspectable and reproducible. Rejected identical implementation-as-oracle. Pure tests cannot establish actual `file://`, browser quota denial or a11y; those remain Pass38 browser commitments. No assertion deletions before Pass37 migration mapping.
+
+**Implementation status at checkpoint A:** no source/tests/scripts/CI changed; scratchpad update only. Next: add seeded maths/session/persistence/import tests, verify CI and reconcile findings independently.
 
 **Initial checkpoint — 2026-11-01:** Original 15-pass planning document condensed into five substantial milestones after user feedback. No production code, tests, browser scripts or workflow have changed as part of the planning revision. Existing AGENTS and Pass29/30 requirements remain active. **Next action: Pass36 assertion inventory and stronger tests.**
 
