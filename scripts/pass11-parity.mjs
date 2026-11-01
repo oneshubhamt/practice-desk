@@ -91,14 +91,15 @@ try{
  await page.waitForFunction(()=>document.documentElement.classList.contains("immersive"));
  assert(await page.locator("#g-exam-full").getAttribute("aria-pressed")==="true",
    "Fullscreen fallback button state was not updated");
- // Pass 20 retains a compact, sticky Display-only strip in immersion.
- // Hiding the entire header would strand appearance controls on long exams.
- const headerBox=await page.locator("header").boundingBox();
- assert(await page.locator("header").isVisible()&&
+ // Aa now lives outside the header, and the normal masthead scrolls
+ // away or hides in immersive mode. Focus/appearance controls must remain
+ // visible and viewport-fixed even when the header is absent.
+ assert(await page.locator("header").isHidden()&&
    await page.locator("#displayTrigger").isVisible()&&
-   await page.locator("header .brand").evaluate(e=>getComputedStyle(e).display)==="none"&&
-   headerBox!==null&&headerBox.height<=60,
-   "Fullscreen fallback must hide brand chrome without hiding global Display");
+   await page.locator("#displayTrigger").evaluate(el=>
+     el.parentElement?.parentElement===document.body&&
+     getComputedStyle(el.parentElement).position==="fixed"),
+   "Fullscreen fallback must hide brand chrome while detached Aa stays fixed");
  await page.keyboard.press("f");
  await page.waitForFunction(()=>!document.documentElement.classList.contains("immersive"));
  await page.locator("#g-exam-full").click();
