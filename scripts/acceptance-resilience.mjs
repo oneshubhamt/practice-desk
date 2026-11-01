@@ -75,6 +75,10 @@ try{
  console.log("MODERN RESILIENCE PASS concurrent localStorage fallback and recovery export");
  // An IndexedDB object-store failure after opening must switch to durable fallback.
  const readFailure=await context.newPage();
+ // The previous fallback tab left an unfinished attempt in shared localStorage:
+ // explicitly accept the app's start-new confirmation, never let Playwright
+ // silently dismiss a legitimate warning and misdiagnose it as no exam UI.
+ readFailure.on("dialog",d=>void d.accept());
  await readFailure.addInitScript(()=>{
   IDBObjectStore.prototype.getAll=function(){throw Error("Injected failed initial IndexedDB read");};
  });
