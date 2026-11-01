@@ -1,5 +1,5 @@
 import type { ExamPackage,GenericAttempt } from "../app/exam-package.ts";
-import type { QuestionRevision,StimulusDefinition,ImageAsset } from "../domain/question.js";
+import type { QuestionRevision } from "../domain/question.js";
 import type { QuestionRevisionId,OptionId,PaperId,PaperRevisionId,AnswerKeyRevisionId } from "../domain/ids.js";
 import type { MarkingRule } from "../domain/scoring.js";
 import { hashJson } from "../domain/hash.ts";
