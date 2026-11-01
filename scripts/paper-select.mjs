@@ -4,6 +4,8 @@
 export async function chooseModernPaper(page,id){
  const available=()=>page.locator("#g-papers option").evaluateAll((opts,want)=>
   opts.some(o=>o.value===want),id);
+ if(!await available()&&id.includes("cgl-"))
+   await page.locator("#g-family").selectOption("builtin:ssc-cgl");
  if(!await available()){
   for(const edition of ["source","reviewed"]){
    await page.locator('[data-edition="'+edition+'"]').click();
@@ -14,6 +16,8 @@ export async function chooseModernPaper(page,id){
  await page.locator("#g-papers").selectOption(id);
 }
 export async function findModernPaper(page,edition,predicate){
+ if(!(await page.locator('[data-edition="'+edition+'"]').count()))
+   await page.locator("#g-family").selectOption("builtin:ssc-cgl");
  await page.locator('[data-edition="'+edition+'"]').click();
  const options=await page.locator("#g-papers option").evaluateAll(opts=>
   opts.map(o=>({value:o.value,text:o.textContent??""})));
