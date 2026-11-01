@@ -799,6 +799,78 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
  }
  #result-overview>.panel{min-width:0;max-width:100%}
 }
+
+/* Pass31: compact v11 exam shell, retaining the overhaul's generic runtime,
+   responsive targets, progressbar, theme/Display controls and shortcut help.
+   The Library/History/Results content widths are intentionally unchanged. */
+@media (min-width:981px){
+ header .wrap{max-width:1130px;min-height:68px;padding:12px 23px}
+ header .brand{gap:12px}
+ header .symbol{width:36px;height:36px}
+ header .brand b{font-size:18px}
+ header .header-actions{gap:15px}
+ main:has(.exam-grid){max-width:1130px;padding-left:20px;padding-right:20px}
+ .generic-workspace .exam-header h1{font-size:calc(17px * var(--type-scale));line-height:1.28;margin:0 0 3px;letter-spacing:-.25px}
+ .exam-header .muted{font-size:calc(12px * var(--type-scale));line-height:1.4;margin:0}
+ .generic-workspace .exam-header{padding-bottom:6px;margin-bottom:10px!important}
+ .exam-progress{margin:0 0 11px}
+ .exam-time-progress{height:5px}
+ .generic-workspace .exam-grid{grid-template-columns:minmax(0,1fr) 240px;gap:16px}
+ .generic-workspace .exam-sidebar{padding:16px}
+ .generic-workspace .exam-sidebar .generic-palette{gap:8px!important;margin:12px 0}
+ .exam-sidebar .generic-palette .num{min-height:35px}
+}
+/* v11's three compact local status tiles replace redundant counters
+   above the paper. All totals are calculated for the active section. */
+.exam-sidebar h3{margin:0 0 6px}
+.exam-sidebar .navigator-intro{margin:0;font-size:calc(12px * var(--type-scale));line-height:1.55}
+.navigator-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:15px 0 8px}
+.navigator-stats>div{min-width:0;padding:8px 5px;text-align:center;border:1px solid var(--line);border-radius:8px;background:var(--soft);overflow-wrap:anywhere}
+.navigator-stats b{display:block;font-size:calc(18px * var(--type-scale));font-variant-numeric:tabular-nums;line-height:1.25;color:var(--blue)}
+.navigator-stats b span{font-size:calc(11px * var(--type-scale));color:var(--muted);font-weight:600}
+.navigator-stats small{display:block;font-size:calc(10px * var(--type-scale));line-height:1.35;color:var(--muted)}
+.exam-sidebar .palette-legend{display:flex;flex-wrap:wrap;gap:6px 8px;margin:12px 0 0;padding-top:12px}
+.exam-sidebar .palette-legend span{display:inline-flex;gap:4px;font-size:calc(11px * var(--type-scale));white-space:nowrap}
+.exam-sidebar .palette-legend .legend-dot{width:9px;height:9px}
+.exam-sidebar .palette-legend .legend-dot.empty{background:var(--soft);border-color:var(--border-strong)}
+.exam-sidebar .navigator-status{font-size:calc(12px * var(--type-scale));line-height:1.6;margin:13px 0 0}
+.exam-sidebar .navigator-help{margin-top:10px}
+.exam-sidebar .navigator-help summary{font-size:calc(11px * var(--type-scale));font-weight:650;color:var(--muted);cursor:pointer}
+.exam-sidebar .navigator-help summary:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.exam-sidebar .navigator-help p{font-size:calc(11px * var(--type-scale));line-height:1.6;margin:7px 0 0;overflow-wrap:anywhere}
+/* Clear v11-style green/amber/slate button states, while preserving the
+   blue current-question outline and full aria-current/aria-label semantics. */
+.exam-sidebar .generic-palette .num{background:var(--soft);border-color:var(--border-strong)}
+.exam-sidebar .generic-palette .num.answered{background:color-mix(in srgb,var(--good) 18%,var(--panel));border-color:var(--good);color:var(--ink)}
+.exam-sidebar .generic-palette .num.marked{background:color-mix(in srgb,#e5ad45 27%,var(--panel));border-color:#b48939;color:var(--ink);box-shadow:none}
+@media(max-width:300px){
+ .navigator-stats{gap:4px}
+ .navigator-stats>div{padding:7px 2px}
+ .navigator-stats b{font-size:calc(15px * var(--type-scale))}
+ .navigator-stats b span{font-size:calc(9px * var(--type-scale))}
+ .navigator-stats small{font-size:calc(9px * var(--type-scale))}
+ .exam-sidebar .palette-legend span{white-space:normal}
+}
+
+/* Pass31: v11's explicit review action and amber review state.
+   The review marker is independent of whether a response is answered. */
+.exam-answer-actions #g-flag[aria-pressed="true"]{
+ background:color-mix(in srgb,#e5ad45 24%,var(--panel));
+ border-color:#b48939;
+ color:var(--ink);
+ box-shadow:inset 0 0 0 1px color-mix(in srgb,#b48939 20%,transparent)
+}
+.exam-answer-actions #g-flag[aria-pressed="true"]:hover:not(:disabled){
+ background:color-mix(in srgb,#e5ad45 32%,var(--panel));
+ border-color:#a6782a
+}
+
+/* v11 full-screen keeps a genuinely narrow fixed navigator, too. */
+@media(min-width:981px){
+ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{
+  grid-template-columns:minmax(0,1fr) 252px
+ }
+}
 </style></head>
 <body><header><div class="wrap"><div class="brand"><div class="symbol">P</div><div><b>Practice Desk</b><small>Offline exam practice</small></div></div><div class="header-actions"><span class="header-offline"><span class="offline-dot"></span> Works offline</span><div class="display-tools" aria-label="Display options"><button type="button" id="displayTrigger" class="display-trigger" aria-label="Display settings" aria-haspopup="true" aria-controls="displayPanel" aria-expanded="false">Aa <span>Display</span></button><div id="displayPanel" class="display-panel" hidden><div class="display-heading"><strong>Appearance</strong><button id="displayClose" type="button" class="display-close" aria-label="Close display settings">×</button></div><div class="display-control"><span>Text size</span><div class="display-size"><button id="fontLess" type="button" class="btn" aria-label="Decrease text size">−</button><button id="fontReset" type="button" class="btn" aria-label="Reset text size">100%</button><button id="fontMore" type="button" class="btn" aria-label="Increase text size">+</button></div></div><div class="display-control"><span>Color theme</span><div class="display-theme-choices" role="group" aria-label="Color theme"><button id="themeLight" class="btn" type="button" aria-pressed="true">Light</button><button id="themeDark" class="btn" type="button" aria-pressed="false">Dark</button></div><button id="themeToggle" class="btn display-theme" type="button" aria-pressed="false">Toggle theme</button></div><button id="displayFullscreen" type="button" class="btn display-fullscreen" aria-pressed="false">Enter full screen</button><p class="fine display-hint">Saved on this device. Full screen is optional.</p><p class="fine" id="preferences-warning" role="status"></p></div></div></div></div></header>
 <div id="screen-announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -7313,8 +7385,6 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     const remaining = examTimeRemaining(paper, state);
     const total = paper.sections.reduce((n, section2) => n + section2.questionRevisionIds.length, 0);
     const answered = state.responses.filter((record3) => record3.response).length;
-    const flagged = state.responses.filter((record3) => record3.flagged).length;
-    const visited = state.responses.filter((record3) => record3.timeSpentMs > 0).length;
     const timeLimit = paper.timing.kind === "whole-paper" ? paper.timing.durationMs : paper.timing.kind === "sectional" ? paper.timing.sectionLimits.find((t) => t.sectionId === section.id)?.durationMs ?? null : null;
     const elapsed = paper.timing.kind === "sectional" ? state.sectionElapsedMs : state.elapsedMs;
     const expired = state.status === "section-expired";
@@ -7328,6 +7398,8 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
     const focused = typeof document !== "undefined" && Boolean(
       document.fullscreenElement || document.documentElement.classList.contains("immersive")
     );
+    const sectionAnswered = section.questionRevisionIds.filter((qid) => Boolean(responsesById.get(qid)?.response)).length;
+    const sectionFlagged = section.questionRevisionIds.filter((qid) => Boolean(responsesById.get(qid)?.flagged)).length;
     const assets = {
       format: "practice-desk-exam",
       version: 1,
@@ -7339,16 +7411,16 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
       stimuli: attempt.frozen.stimuli,
       assets: attempt.frozen.assets
     };
-    return '<div class="generic-heading exam-header"><div><span class="eyebrow">EXAM IN PROGRESS \xB7 ' + escapeText(readablePracticeMode(attempt.frozen.snapshot.mode)) + "</span><h1>" + escapeText(bundle?.title ?? paper.paperId) + '</h1><p class="muted">' + escapeText(section.title) + " \xB7 Section " + (state.sectionIndex + 1) + " of " + paper.sections.length + '</p></div><div class="row exam-header-actions"><div class="exam-clock ' + (isLow ? "low" : "") + '"><strong class="generic-timer" id="g-timer" role="timer">' + (remaining === null ? "Untimed" : minutes(remaining)) + "</strong><small>" + (remaining === null ? "PRACTICE" : "TIME REMAINING") + '</small></div><button class="btn quiet" id="g-library">\u2190 Library</button><button class="btn" type="button" id="g-exam-full" aria-label="Toggle full-screen test view" aria-pressed="' + focused + '">' + (focused ? "\u26F6 Exit full screen" : "\u26F6 Full screen") + '</button></div></div><p id="g-fullscreen-status" role="status"></p>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + (expired ? '<p class="generic-warning" role="status">Section time has expired. Answers are locked. Select Continue to advance without using extra time.</p>' : "") + '<section class="exam-progress"><div class="row between"><span class="fine">' + answered + " / " + total + " answered \xB7 " + visited + " viewed \xB7 " + flagged + ' flagged</span><span class="fine">' + progressScope + " \xB7 " + Math.round(progressValue) + '%</span></div><div class="progress-track exam-time-progress" role="progressbar" aria-valuenow="' + Math.round(progressValue) + '" aria-valuemin="0" aria-valuemax="100" aria-label="' + progressAccessibleName + '"><span style="width:' + progressValue.toFixed(1) + '%"></span></div></section><div class="generic-sections" role="group" aria-label="Exam sections">' + paper.sections.map((s, i) => {
+    return '<div class="generic-heading exam-header"><div><h1>' + escapeText(bundle?.title ?? paper.paperId) + '</h1><p class="muted">' + escapeText(readablePracticeMode(attempt.frozen.snapshot.mode)) + " \xB7 " + escapeText(section.title) + " \xB7 Section " + (state.sectionIndex + 1) + " of " + paper.sections.length + '</p></div><div class="row exam-header-actions"><div class="exam-clock ' + (isLow ? "low" : "") + '"><strong class="generic-timer" id="g-timer" role="timer">' + (remaining === null ? "Untimed" : minutes(remaining)) + "</strong><small>" + (remaining === null ? "UNTIMED PRACTICE" : paper.timing.kind === "sectional" ? "SECTION TIME LEFT" : "PAPER TIME LEFT") + '</small></div><button class="btn quiet" id="g-library">\u2190 Library</button><button class="btn" type="button" id="g-exam-full" aria-label="Toggle full-screen test view" aria-pressed="' + focused + '">' + (focused ? "\u26F6 Exit full screen" : "\u26F6 Full screen") + '</button></div></div><p id="g-fullscreen-status" role="status"></p>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + (expired ? '<p class="generic-warning" role="status">Section time has expired. Answers are locked. Select Continue to advance without using extra time.</p>' : "") + '<section class="exam-progress"><div class="progress-track exam-time-progress" role="progressbar" aria-valuenow="' + Math.round(progressValue) + '" aria-valuemin="0" aria-valuemax="100" aria-label="' + progressAccessibleName + '" aria-valuetext="' + escapeText(progressScope) + " " + Math.round(progressValue) + '%"><span style="width:' + progressValue.toFixed(1) + '%"></span></div></section><div class="generic-sections" role="group" aria-label="Exam sections">' + paper.sections.map((s, i) => {
       const locked = state.status !== "running" || state.completedSections.includes(i) || (paper.timing.kind === "sectional" || paper.navigation.sectionNavigation === "sequential-locked") && i !== state.sectionIndex;
       const filled = s.questionRevisionIds.filter((qid) => Boolean(responsesById.get(qid)?.response)).length;
       const status = state.completedSections.includes(i) ? "Closed" : locked ? "Locked" : filled + " / " + s.questionRevisionIds.length + " answered";
       return '<button class="btn exam-section-tab ' + (i === state.sectionIndex ? "primary" : "") + '" data-section="' + i + '" aria-current="' + (i === state.sectionIndex ? "step" : "false") + '"' + (locked ? " disabled" : "") + "><b>" + escapeText(s.title) + "</b><small>" + status + "</small></button>";
-    }).join("") + '</div><div class="generic-layout exam-grid"><section class="panel pad exam-question"><p class="eyebrow">' + escapeText(section.title) + " \xB7 Question " + (state.questionIndex + 1) + " of " + section.questionRevisionIds.length + (attempt.frozen.snapshot.examId === "ssc-cgl" ? " \xB7 Paper Q" + escapeText(q.questionId.split(":").at(-1)) : "") + "</p>" + stimulusHTML(assets, q) + '<h2 class="generic-prompt">' + escapeText(q.content.prompt) + "</h2>" + assetHTML(assets, q.content.assetIds, "Figure for question " + (state.questionIndex + 1)) + '<fieldset class="generic-response-group"' + (state.status !== "running" ? " disabled" : "") + ">" + renderGenericControls(assets, q, currentDraft ? { kind: "multiple-select", optionIds: currentDraft.optionIds } : response) + (currentDraft ? '<p class="generic-inline-warning" role="status">' + escapeText(currentDraft.message) + "</p>" : "") + '</fieldset><div class="exam-question-controls"><div class="row generic-actions exam-nav-actions"><button class="btn" id="g-prev"' + (state.status !== "running" || !state.questionIndex || paper.navigation.questionNavigation === "forward-only" ? " disabled" : "") + '>\u2190 Previous</button><button class="btn primary" id="g-next"' + (state.status !== "running" || state.questionIndex === section.questionRevisionIds.length - 1 ? " disabled" : "") + '>Next \u2192</button></div><div class="row generic-actions exam-answer-actions"><button class="btn" id="g-clear"' + (!response || state.status !== "running" ? " disabled" : "") + '>Clear</button><button class="btn" id="g-flag" aria-pressed="' + Boolean(responsesById.get(q.id)?.flagged) + '"' + (!paper.navigation.allowFlagging || expired ? " disabled" : "") + '>Flag</button></div></div><div class="row generic-actions exam-submit-actions">' + (paper.timing.kind !== "untimed" && paper.timing.pausePolicy === "allowed" ? '<button class="btn" id="g-pause"' + (expired ? " disabled" : "") + ">" + (state.status === "paused" ? "Resume timer" : "Pause timer") + "</button>" : "") + '<button class="btn danger" id="g-submit"' + (state.status === "paused" || paper.timing.kind === "sectional" && !paper.timing.allowEarlySubmit && !expired && !untimedSection ? " disabled" : "") + ">" + (expired ? hasNextSection ? "Continue to next section" : "Finish expired exam" : paper.timing.kind === "sectional" ? untimedSection ? "Finish untimed section" : "Submit section" : lockedWhole && hasNextSection ? "Finish section \u2192" : "Submit exam") + '</button></div></section><aside class="panel pad exam-sidebar"><div class="row between"><h3>Question navigator</h3><span class="fine">' + section.questionRevisionIds.length + ' questions</span></div><p class="fine">Select a question number to navigate within the current section.</p><div class="generic-palette">' + section.questionRevisionIds.map((qid, i) => {
+    }).join("") + '</div><div class="generic-layout exam-grid"><section class="panel pad exam-question"><p class="eyebrow">' + escapeText(section.title) + " \xB7 Question " + (state.questionIndex + 1) + " of " + section.questionRevisionIds.length + (attempt.frozen.snapshot.examId === "ssc-cgl" ? " \xB7 Paper Q" + escapeText(q.questionId.split(":").at(-1)) : "") + "</p>" + stimulusHTML(assets, q) + '<h2 class="generic-prompt">' + escapeText(q.content.prompt) + "</h2>" + assetHTML(assets, q.content.assetIds, "Figure for question " + (state.questionIndex + 1)) + '<fieldset class="generic-response-group"' + (state.status !== "running" ? " disabled" : "") + ">" + renderGenericControls(assets, q, currentDraft ? { kind: "multiple-select", optionIds: currentDraft.optionIds } : response) + (currentDraft ? '<p class="generic-inline-warning" role="status">' + escapeText(currentDraft.message) + "</p>" : "") + '</fieldset><div class="exam-question-controls"><div class="row generic-actions exam-nav-actions"><button class="btn" id="g-prev"' + (state.status !== "running" || !state.questionIndex || paper.navigation.questionNavigation === "forward-only" ? " disabled" : "") + '>\u2190 Previous</button><button class="btn primary" id="g-next"' + (state.status !== "running" || state.questionIndex === section.questionRevisionIds.length - 1 ? " disabled" : "") + '>Next \u2192</button></div><div class="row generic-actions exam-answer-actions"><button class="btn" id="g-clear"' + (!response || state.status !== "running" ? " disabled" : "") + '>Clear</button><button class="btn review-toggle" id="g-flag" aria-pressed="' + Boolean(responsesById.get(q.id)?.flagged) + '"' + (!paper.navigation.allowFlagging || expired ? " disabled" : "") + ">" + (responsesById.get(q.id)?.flagged ? "Unmark" : "Mark for review") + '</button></div></div><div class="row generic-actions exam-submit-actions">' + (paper.timing.kind !== "untimed" && paper.timing.pausePolicy === "allowed" ? '<button class="btn" id="g-pause"' + (expired ? " disabled" : "") + ">" + (state.status === "paused" ? "Resume timer" : "Pause timer") + "</button>" : "") + '<button class="btn danger" id="g-submit"' + (state.status === "paused" || paper.timing.kind === "sectional" && !paper.timing.allowEarlySubmit && !expired && !untimedSection ? " disabled" : "") + ">" + (expired ? hasNextSection ? "Continue to next section" : "Finish expired exam" : paper.timing.kind === "sectional" ? untimedSection ? "Finish untimed section" : "Submit section" : lockedWhole && hasNextSection ? "Finish section \u2192" : "Submit exam") + '</button></div></section><aside class="panel pad exam-sidebar" aria-label="Question navigator"><h3>Question navigator</h3><p class="fine navigator-intro">Jump to a question in this section</p><div class="generic-palette">' + section.questionRevisionIds.map((qid, i) => {
       const r = responsesById.get(qid);
       const locked = state.status !== "running" || paper.navigation.questionNavigation === "forward-only" && i < state.questionIndex;
       return '<button class="num ' + (i === state.questionIndex ? "here " : "") + (r?.response ? "answered " : "") + (r?.flagged ? "marked" : "") + '" data-q="' + i + '" aria-current="' + (i === state.questionIndex ? "step" : "false") + '" aria-label="Question ' + (i + 1) + (r?.response ? ", answered" : "") + (r?.flagged ? ", flagged" : "") + '"' + (locked ? " disabled" : "") + ">" + (i + 1) + "</button>";
-    }).join("") + '</div><div class="palette-legend"><span><i class="legend-dot answered"></i>Answered</span><span><i class="legend-dot marked"></i>Flagged</span><span><i class="legend-dot current"></i>Current</span><span><i class="legend-dot empty"></i>Unanswered</span></div><p class="fine">' + (paper.navigation.questionNavigation === "forward-only" ? "Questions cannot be revisited in this exam." : "Navigate freely where the paper permits.") + " Shortcuts: A\u2013D answer single-choice questions; \u2190 / \u2192 navigate unless an answer radio is focused (where they select options); Alt + \u2190 / \u2192 navigates while a radio is focused. M toggles a flag even while paused; F enters full screen. Answer/navigation shortcuts are disabled while paused or typing.</p></aside></div>";
+    }).join("") + '</div><div class="navigator-stats" role="group" aria-label="Current section answer counts"><div><b>' + sectionAnswered + "<span> / " + section.questionRevisionIds.length + "</span></b><small>Answered</small></div><div><b>" + (section.questionRevisionIds.length - sectionAnswered) + "</b><small>Not answered</small></div><div><b>" + sectionFlagged + '</b><small>Flagged</small></div></div><div class="palette-legend"><span><i class="legend-dot answered"></i>Answered</span><span><i class="legend-dot marked"></i>Review</span><span><i class="legend-dot empty"></i>Not answered</span></div><p class="fine navigator-status">' + (paper.navigation.sectionNavigation === "sequential-locked" ? "Answers remain hidden until the exam finishes. Submitting a section locks it." : "Answers remain hidden until you submit.") + '</p><details class="navigator-help"><summary>Keyboard shortcuts</summary><p class="fine">' + (paper.navigation.questionNavigation === "forward-only" ? "Questions cannot be revisited in this exam." : "Navigate freely where the paper permits.") + " A\u2013D answer single-choice questions. \u2190 / \u2192 navigate except when a radio is focused; Alt + \u2190 / \u2192 navigates while focused. M marks/unmarks for review even while paused; F enters full screen. Answer/navigation shortcuts are disabled while paused or typing.</p></details></aside></div>";
   }
   var builtinCache = null;
   function cachedCglPackages(sources2, patches2, solutions2) {
