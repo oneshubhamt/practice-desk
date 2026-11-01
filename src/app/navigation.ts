@@ -119,9 +119,11 @@ export function createNativeRouter(
     if(!event.canIntercept||event.navigationType==="reload"||
       event.downloadRequest!==null)return;
     if(!sameDocumentPath(win.location.href,event.destination.url))return;
-    // Intercept only internal application destinations. External navigations
-    // are never swallowed by our SPA controller.
-    if(!new URL(event.destination.url).searchParams.has("pd"))return;
+    // The initial Library entry has no routing query. Back to that entry
+    // must remain same-document and activate Library; never reload the HTML.
+    // Unrelated external/download/cross-file navigations remain untouched.
+    const incoming=new URL(event.destination.url),current=new URL(win.location.href);
+    if(!incoming.searchParams.has("pd")&&!current.searchParams.has("pd"))return;
     const destination=parseAppRoute(event.destination.url)??{screen:"library"} as const;
     event.intercept({
       focusReset:"manual",scroll:"manual",
@@ -151,12 +153,11 @@ export function createNativeRouter(
     async start(){
       if(started||disposed)return;
       started=true;
-      const initial=parseAppRoute(win.location.href);
-      if(initial){
-        await onRoute(initial,{kind:"initial",signal:undefined,generation:++generation});
-      }else{
-        await navigate({screen:"library"},"replace");
-      }
+      // The Navigation API emits no navigate event on the first load. Render
+      // directly without racing an unnecessary replace against a Start click.
+      // This is still native-only: every subsequent transition is intercepted.
+      const initial=parseAppRoute(win.location.href)??{screen:"library"} as const;
+      await onRoute(initial,{kind:"initial",signal:undefined,generation:++generation});
     },
     dispose(){if(disposed)return;disposed=true;nav.removeEventListener("navigate",listener);}
   };
