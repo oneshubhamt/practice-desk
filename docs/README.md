@@ -1,6 +1,6 @@
 # Practice Desk documentation — canonical map
 
-**SINGLE FORWARD WORK PROGRAMME — [Consolidated Engineering Programme](ENGINEERING_PROGRAMME.md).** The only active backlog, priority register and live scratchpad for **P41–P48**. It reconciles the 28 Oct architecture audit and 1 Nov gap analysis with completed P01–P40 and the decision register. Earlier feature-parity, native-only navigation, Results design and test-suite plans are historical evidence, not competing TODO lists. **P41 and P42 AUTOMATED VERIFIED** (183/183 Node, all five CI jobs green); **P43 is next**. See the [live P41 audit, source-map and acceptance evidence](ENGINEERING_PROGRAMME.md#p41--final-implementation--objectives--targeted-qa-1-november-2026).
+**SINGLE FORWARD WORK PROGRAMME — [Consolidated Engineering Programme](ENGINEERING_PROGRAMME.md).** The only active backlog, priority register and live scratchpad for **P41–P48**. It reconciles the 28 Oct architecture audit and 1 Nov gap analysis with completed P01–P40 and the decision register. Earlier feature-parity, native-only navigation, Results design and test-suite plans are historical evidence, not competing TODO lists. **P41–P43 AUTOMATED VERIFIED** ([184/184 Node, all five CI jobs green](https://github.com/oneshubhamt/practice-desk/actions/runs/41341849541)); **P44 is next**. P43 uses one current family setup map with no legacy preference migration, as explicitly requested. See the [live P41 audit, source-map and acceptance evidence](ENGINEERING_PROGRAMME.md#p41--final-implementation--objectives--targeted-qa-1-november-2026).
 
 **Mac/offline compatibility update (1 November 2026):** Modern Navigation API primary, feature-detected `#pd=` hash router on older Safari/WebKit or rejected file navigation; Chromium/Firefox/WebKit no-API Back/Forward/save/reload tested. Extreme combined **195px CSS width + 140% app text** Results overflow repaired and tested with no screenshot oracle. [Verified full CI](https://github.com/oneshubhamt/practice-desk/actions/runs/41303947780). Historical native-only Pass32 description below is archived, not the current browser requirement. Actual physical Mac testing pending.
 
@@ -40,7 +40,7 @@
 | **All future feature passes, priorities, dependencies and live status** | **[Consolidated P41–P48 Engineering Programme](ENGINEERING_PROGRAMME.md)** | **Sole active implementation programme** |
 | Branch, source and five-step working discipline | [AGENTS](../AGENTS.md) | Binding |
 | Actual supported exam/data/scoring invariants | [Current architecture](architecture/CURRENT_ARCHITECTURE.md) and [data contracts](architecture/DATA_CONTRACTS.md) | Current as-built reference |
-| User-approved decisions and editorial exceptions | [Policy register](decisions/POLICY_REGISTER.md) | Binding D01–D33 |
+| User-approved decisions and editorial exceptions | [Policy register](decisions/POLICY_REGISTER.md) | Binding D01–D35 |
 | Run tests, browser acceptance and release checks | [QA and release guide](QA_CURRENT.md) | Current executable commands; manual gates open |
 | Import CGL/APFC/NAT or advanced six-kind banks | [Authoring guide](architecture/QUESTION_BANK_AUTHORING.md) | Current usage |
 | Original starting architecture audit (28 Oct) | [Baseline v11 architecture](history/BASELINE_V11_ARCHITECTURE.md) | Historical vision, P41–P48 gaps reconciled in new plan |
@@ -81,7 +81,7 @@ docs/
 
 ## Evidence and status precedence
 
-1. **Actual current source and passing named tests** establish what works in the tested environment. **P41 and P42 are AUTOMATED VERIFIED**, with [183/183 Node tests, 5/5 CI and Chromium/Firefox/WebKit](https://github.com/oneshubhamt/practice-desk/actions/runs/41339299849); **P43 is next**. The final P48 comprehensive independent QA and real Mac/device/AT outcomes remain OPEN.
+1. **Actual current source and passing named tests** establish what works in the tested environment. **P41–P43 are AUTOMATED VERIFIED**, with [184/184 Node tests, 5/5 CI and Chromium/Firefox/WebKit](https://github.com/oneshubhamt/practice-desk/actions/runs/41341849541); **P44 is next**. P43's clean-break preference policy is binding D34 and the source-aware family contract is D35. The final P48 comprehensive independent QA and real Mac/device/AT outcomes remain OPEN.
 2. **Explicit user decisions** control exceptions and release permission. The D02/D03 disputed 6 Oct CGL Q62 policy remains binding unless the user changes it.
 3. **[The consolidated engineering programme](ENGINEERING_PROGRAMME.md)** controls future scope, unique issue IDs, pass sequencing, verification standards and live status; **the QA guide** controls executable CI/real-browser commands.
 4. Historical screenshots, source-audit findings, pass diaries and earlier CI runs are timestamped evidence, **never fresh release or acceptance proof**. Do not infer physical Safari, iOS/Android or screen-reader compatibility from CI.
