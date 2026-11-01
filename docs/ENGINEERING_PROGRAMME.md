@@ -416,7 +416,7 @@ MANUAL: TESTED / NOT TESTED; environment and evidence
 HANDOFF: next dependency, remaining issue IDs, STOP/GO
 ```
 
-**P41 source implementation and verification recorded above.** P42 is next and remains OPEN. The mandatory independent comprehensive P48 QA and physical device/manual release authorisation remain future work; CI success does not imply public release approval.
+**P41 and P42 implementation and automated verification are recorded above.** P43 is the next open implementation pass. P48 independent full-product QA and external physical-device/manual release approval remain future work; green CI alone is not public release authorization.
 
 ## 12. Maintenance and audit-quality rules
 
