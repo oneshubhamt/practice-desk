@@ -90,7 +90,8 @@ try{
   },count);
   const started=Date.now();
   await page.reload({waitUntil:"load"});
-  await page.locator("#g-history").click();
+  if(await page.locator("#g-history").count())await page.locator("#g-history").click();
+  else await page.locator(".history-archive").waitFor({state:"visible"});
   await page.locator('[data-attempt="pass10-stress-79"]').waitFor();
   const elapsed=Date.now()-started;
   assert(elapsed<30000,"80-record history exceeded 30-second startup/render budget: "+elapsed+"ms");
