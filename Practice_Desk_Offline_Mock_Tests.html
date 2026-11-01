@@ -465,42 +465,26 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
 .generic-workspace h2{font-size:calc(19px * var(--type-scale))}
 .generic-workspace h3{font-size:calc(15px * var(--type-scale))}
 
-/* Pass 20: non-obstructing global Display access, including scroll-heavy result and
-   history routes. A sticky header consumes layout space rather than covering
-   question text as a fixed floating pill would. The existing focusable popover
-   remains anchored to the trigger and scrolls inside short viewports. */
-header{position:sticky;top:0;z-index:100}
-html{scroll-padding-top:96px}
-header .display-tools{position:relative}
-header .display-panel{max-height:min(620px,calc(100dvh - 105px));
- overflow-y:auto;overscroll-behavior:contain}
-html.immersive:has(#g-exam-full) header{display:block}
-html.immersive:has(#g-exam-full) header .wrap{min-height:45px;padding:4px 12px;justify-content:flex-end}
-html.immersive:has(#g-exam-full) header .brand,
-html.immersive:has(#g-exam-full) header .header-offline{display:none}
+/* Pass35: the header is a normal-flow landmark, never a sticky container.
+   Its independent Aa sibling remains viewport-fixed across all routes.
+   Immersive Exam hides the unused brand header, not the detached controls. */
+header{position:static;z-index:auto}
+html{scroll-padding-top:0}
+html.immersive:has(#g-exam-full) header{display:none}
 @media(max-width:430px){
  header .wrap{min-height:54px;padding:8px 11px;gap:7px}
  header .header-offline{display:none}
  header .brand small{display:none}
  header .symbol{width:32px;height:32px}
  header .brand b{font-size:16px}
- header .display-panel{max-height:calc(100dvh - 92px)}
 }
 @media(max-width:300px){
- header .display-panel{left:auto;right:0;max-width:calc(100vw - 20px)}
  header .brand{gap:6px}
- header .display-trigger{padding:6px 8px;gap:5px}
- header .display-trigger span{font-size:11px}
 }
-/* At 200% phone zoom the logical viewport can be only ~195px. Anchor the
-   expanded popover to the viewport instead of the wrapped flex child: the
-   content must remain on screen even when the header's brand cannot fit. */
 @media(max-width:250px){
  header .brand{display:none}
  header .wrap{justify-content:flex-end;min-width:0}
  header .header-actions{margin-left:auto;min-width:0}
- header .display-panel{position:fixed;top:55px;left:8px;right:8px;
-   width:auto;max-width:none;max-height:calc(100dvh - 65px)}
 }
 .paper-preflight{border-top:1px solid var(--line);margin-top:17px;padding-top:16px;display:grid;gap:9px}
 .paper-preflight h3{margin:0}
@@ -875,30 +859,9 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
 
 /* Pass33: v11 Results hierarchy and density over the overhaul evidence model.
    Result-only overrides: Library/History/Exam retain their existing visual systems. */
-body:has(.results-heading) header{
- position:fixed;top:0;left:0;right:0;height:0;min-height:0;
- background:transparent;border:0;box-shadow:none;pointer-events:none;overflow:visible
-}
-body:has(.results-heading) header .wrap{
- max-width:none;min-height:0;height:0;padding:0;display:block
-}
-body:has(.results-heading) header .brand,
-body:has(.results-heading) header .header-offline{display:none}
-body:has(.results-heading) header .header-actions{
- position:fixed;right:14px;top:12px;display:block;pointer-events:auto
-}
-body:has(.results-heading) header .display-tools{position:relative}
-body:has(.results-heading) header .display-trigger{
- min-width:43px;width:43px;height:41px;padding:0;border-radius:10px;
- background:color-mix(in srgb,var(--blue) 18%,var(--panel));
- border-color:color-mix(in srgb,var(--blue) 50%,var(--line));color:var(--ink);
- box-shadow:0 4px 16px rgba(13,30,56,.14)
-}
-body:has(.results-heading) header .display-trigger span{display:none}
-body:has(.results-heading) header .display-panel{
- position:fixed;top:58px;right:14px;left:auto;width:min(320px,calc(100vw - 28px));
- max-height:calc(100dvh - 72px)
-}
+/* Results intentionally omit the brand header entirely, but the Aa sibling
+   is unaffected and remains usable when the page is scrolled. */
+body:has(.results-heading) header{display:none}
 main:has(.results-heading){max-width:1130px;padding:22px 20px 60px}
 .generic-workspace .results-heading{
  padding-right:58px;margin:0 0 8px!important;align-items:flex-start;gap:12px
@@ -1081,20 +1044,15 @@ body:has(.results-heading) .app-independent-footer p{
  font-size:.7em;line-height:1.45
 }
 
-/* Pass34 — frozen v11 Aa trigger parity on EVERY screen. Keep the richer
-   overhaul Display behaviour (theme-toggle, persistence, fullscreen fallback)
-   and native route/AT support; do not turn the whole header into a floating
-   control. These final overrides intentionally supersede older sticky-header,
-   Pass33 Results-only and tiny-view rules. */
+/* Pass35: Aa is independent of the header in the DOM and CSS.
+   Match the frozen v11 fixed trigger, preserve the overhaul-only controls
+   and correctly constrain the popover at narrow zoom sizes. */
 header .header-actions{padding-right:53px}
-body:has(.results-heading) header .header-actions{padding-right:0}
-header .display-tools,
-body:has(.results-heading) header .display-tools{
+.display-tools{
  position:fixed;z-index:130;top:12px;right:14px;left:auto;bottom:auto;
  display:block;width:auto;gap:0;line-height:1.4;pointer-events:auto
 }
-header .display-trigger,
-body:has(.results-heading) header .display-trigger{
+.display-trigger{
  display:grid;place-items:center;flex:none;
  width:43px;min-width:43px;height:41px;min-height:41px;
  margin:0;padding:0;border-radius:10px;
@@ -1102,24 +1060,20 @@ body:has(.results-heading) header .display-trigger{
  font:800 16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
  box-shadow:0 4px 16px #0d1e3826;letter-spacing:0
 }
-header .display-trigger:hover,
-header .display-trigger[aria-expanded="true"],
-body:has(.results-heading) header .display-trigger:hover,
-body:has(.results-heading) header .display-trigger[aria-expanded="true"]{
+.display-trigger:hover,
+.display-trigger[aria-expanded="true"]{
  background:#d9eaff;border-color:#abc8e8;color:#173a66
 }
-html[data-theme="dark"] header .display-trigger,
-html[data-theme="dark"] body:has(.results-heading) header .display-trigger{
+html[data-theme="dark"] .display-trigger{
  background:#273f5d;border-color:#6080a6;color:#fff
 }
-html[data-theme="dark"] header .display-trigger:hover,
-html[data-theme="dark"] header .display-trigger[aria-expanded="true"],
-html[data-theme="dark"] body:has(.results-heading) header .display-trigger:hover,
-html[data-theme="dark"] body:has(.results-heading) header .display-trigger[aria-expanded="true"]{
- background:#345274;border-color:#83a4c7;color:#fff
+/* Frozen v11 retains the same navy Aa fill while hovered/open in dark
+   mode; its higher-specificity dark selector overrides the hover rule. */
+html[data-theme="dark"] .display-trigger:hover,
+html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
+ background:#273f5d;border-color:#6080a6;color:#fff
 }
-header .display-panel,
-body:has(.results-heading) header .display-panel{
+.display-panel{
  position:absolute;z-index:140;top:49px;right:0;left:auto;
  width:min(310px,calc(100vw - 28px));max-width:none;
  border:1px solid var(--line);border-radius:14px;
@@ -1128,37 +1082,30 @@ body:has(.results-heading) header .display-panel{
  max-height:min(620px,calc(100dvh - 74px));
  overflow-y:auto;overscroll-behavior:contain
 }
-header .display-heading{margin-bottom:8px;padding-bottom:11px}
-header .display-heading strong{font-size:15px}
-header .display-control{min-height:48px}
-header .display-panel .btn{min-height:34px;border-radius:7px}
-header .display-panel #fontReset{min-width:57px;font-size:12px}
-header .display-panel #fontLess,
-header .display-panel #fontMore{min-width:33px;font-size:17px}
-header .display-hint{font-size:11px}
+.display-heading{margin-bottom:8px;padding-bottom:11px}
+.display-heading strong{font-size:15px}
+.display-control{min-height:48px}
+.display-panel .btn{min-height:34px;border-radius:7px}
+.display-panel #fontReset{min-width:57px;font-size:12px}
+.display-panel #fontLess,
+.display-panel #fontMore{min-width:33px;font-size:17px}
+.display-hint{font-size:11px}
 @media(max-width:500px){
- header .display-tools,
- body:has(.results-heading) header .display-tools{top:10px;right:10px}
- header .display-trigger,
- body:has(.results-heading) header .display-trigger{
-  width:39px;min-width:39px;height:38px;min-height:38px
- }
+ .display-tools{top:10px;right:10px}
+ .display-trigger{width:39px;min-width:39px;height:38px;min-height:38px}
  header .header-actions{padding-right:45px}
- body:has(.results-heading) header .header-actions{padding-right:0}
- header .display-panel,
- body:has(.results-heading) header .display-panel{
-  top:46px;width:min(310px,calc(100vw - 20px))
- }
+ .display-panel{top:46px;width:min(310px,calc(100vw - 20px))}
 }
 @media(max-width:250px){
- header .display-panel,
- body:has(.results-heading) header .display-panel{
+ .display-panel{
   position:fixed;top:55px;left:8px;right:8px;
   width:auto;max-width:none;max-height:calc(100dvh - 65px)
  }
 }
 </style></head>
-<body><header><div class="wrap"><div class="brand"><div class="symbol">P</div><div><b>Practice Desk</b><small>Offline exam practice</small></div></div><div class="header-actions"><span class="header-offline"><span class="offline-dot"></span> Works offline</span><div class="display-tools" aria-label="Display options"><button type="button" id="displayTrigger" class="display-trigger" aria-label="Display settings" aria-haspopup="true" aria-controls="displayPanel" aria-expanded="false">Aa</button><div id="displayPanel" class="display-panel" hidden><div class="display-heading"><strong>Display</strong><button id="displayClose" type="button" class="display-close" aria-label="Close display settings">×</button></div><div class="display-control"><span>Text size</span><div class="display-size"><button id="fontLess" type="button" class="btn" aria-label="Decrease text size">−</button><button id="fontReset" type="button" class="btn" aria-label="Reset text size">100%</button><button id="fontMore" type="button" class="btn" aria-label="Increase text size">+</button></div></div><div class="display-control"><span>Color theme</span><div class="display-theme-choices" role="group" aria-label="Color theme"><button id="themeLight" class="btn" type="button" aria-pressed="true">Light</button><button id="themeDark" class="btn" type="button" aria-pressed="false">Dark</button></div><button id="themeToggle" class="btn display-theme" type="button" aria-pressed="false">Toggle theme</button></div><button id="displayFullscreen" type="button" class="btn display-fullscreen" aria-pressed="false">Enter full screen</button><p class="fine display-hint">Saved on this device. Full screen is optional.</p><p class="fine" id="preferences-warning" role="status"></p></div></div></div></div></header>
+<body><header><div class="wrap"><div class="brand"><div class="symbol">P</div><div><b>Practice Desk</b><small>Offline exam practice</small></div></div><div class="header-actions"><span class="header-offline"><span class="offline-dot"></span> Works offline</span></div></div></header>
+<div class="display-tools" aria-label="Display options"><button type="button" id="displayTrigger" class="display-trigger" aria-label="Display settings" aria-haspopup="true" aria-controls="displayPanel" aria-expanded="false">Aa</button><div id="displayPanel" class="display-panel" hidden><div class="display-heading"><strong>Display</strong><button id="displayClose" type="button" class="display-close" aria-label="Close display settings">×</button></div><div class="display-control"><span>Text size</span><div class="display-size"><button id="fontLess" type="button" class="btn" aria-label="Decrease text size">−</button><button id="fontReset" type="button" class="btn" aria-label="Reset text size">100%</button><button id="fontMore" type="button" class="btn" aria-label="Increase text size">+</button></div></div><div class="display-control"><span>Color theme</span><div class="display-theme-choices" role="group" aria-label="Color theme"><button id="themeLight" class="btn" type="button" aria-pressed="true">Light</button><button id="themeDark" class="btn" type="button" aria-pressed="false">Dark</button></div><button id="themeToggle" class="btn display-theme" type="button" aria-pressed="false">Toggle theme</button></div><button id="displayFullscreen" type="button" class="btn display-fullscreen" aria-pressed="false">Enter full screen</button><p class="fine display-hint">Saved on this device. Full screen is optional.</p><p class="fine" id="preferences-warning" role="status"></p></div></div>
+
 <div id="screen-announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 <main id="app" class="generic-workspace"></main>
 <footer class="app-independent-footer" role="contentinfo"><div class="wrap"><b>Practice Desk · Independent educational practice</b><p>Not affiliated with, operated by, endorsed by or an official service of an examining organisation or publisher. Paper provenance and corrections are described in the selected exam's preflight; imported content is author supplied. Results and answers are for personal practice, not official examinations.</p></div></footer>
