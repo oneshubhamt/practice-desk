@@ -5,9 +5,9 @@
 **Branch:** overhaul only  
 **Audited base:** 12f2156d5967f73eabd74b0443bcc28f789167da  
 **Baseline successful workflow:** [CI 41283842614](https://github.com/oneshubhamt/practice-desk/actions/runs/41283842614)  
-**Scope/order:** **Tests first (Passes 36–42) → browser scripts and CI second (Passes 43–49) → documentation and final acceptance last (Pass 50).**
+**Scope/order:** **Five substantial engineering passes: tests (36–37) → browser scripts (38) → browser scripts/CI (39) → documentation and final signoff (40).** These are completion milestones, not atomic tickets; carry smaller work items inside each pass.
 
-> This file is the programme's **sole evolving implementation plan, traceability register and work scratchpad**. Update it *during* each pass: audit, alternatives/decision, change ledger, objective-by-objective check, actual targeted QA and remaining uncertainty. Do not rely on chat history as the source of truth. Existing [AGENTS.md](../../AGENTS.md), [Section G of the original source audit](V11_SOURCE_AUDIT_2026-10-30.md), [decision register](../decisions/POLICY_REGISTER.md) and historical audit artifacts remain controlling for existing product/source/editorial contracts until the final documentation reconciliation. This new programme does not reopen v11 feature-parity decisions or authorise feature regressions.
+> This file is the programme's **sole evolving implementation plan, traceability register and work scratchpad**. Update it *during* each pass: audit, alternatives/decision, change ledger, objective-by-objective check, actual targeted QA and remaining uncertainty. Do not rely on chat history as the source of truth. Existing [AGENTS.md](../../AGENTS.md), [Section G of the original source audit](V11_SOURCE_AUDIT_2026-10-30.md), [decision register](../decisions/POLICY_REGISTER.md) and historical audit artifacts remain controlling for existing product/source/editorial contracts until Pass40 final documentation reconciliation. This new programme does not reopen v11 feature-parity decisions or authorise feature regressions.
 
 ## 0. Scope, intent, hard constraints
 
@@ -19,8 +19,8 @@ The objective is **better assurance per maintained test and per CI minute**, not
 4. **No storage/data loss:** immutable attempts, compare-and-swap revision safety, stale-tab rejection, quota/fallback/error handling, additive checked v3 backup import, no silent replacement or v11-history migration.
 5. **No architecture rollback:** native Navigation API only (no compatibility/router shims), modular typed source, a single six-kind engine, one generated self-contained HTML. Never hand-edit generated HTML.
 6. **Only overhaul changes; no merge to main or baseline/v11.** CI-generated HTML publication remains gated on successful verification, with safe source drift detection.
-7. **Preserve old CI gates until replacements demonstrably pass.** Do not remove Pass29 or another mandatory legacy check just because it looks redundant; prove the mapped modern test(s) and documented acceptance before retiring it. Current AGENTS.md mandates Pass29 and Pass30, so its update/override is part of Pass50; before that, use additive checks and preserve legacy gates.
-8. **Phase discipline:** Passes 36–42 may edit test files, fixtures, test-only dependencies and the minimum test discovery/config needed; avoid changing existing browser scripts or CI. Passes 43–49 may edit scripts/test-runner/CI and remove superseded scripts only after coverage migration. Existing README, AGENTS, architecture/docs-index and historic audit prose are updated in Pass50 only; this plan/scratchpad is the explicit planning exception.
+7. **Preserve old CI gates until replacements demonstrably pass.** Do not remove Pass29 or another mandatory legacy check just because it looks redundant; prove the mapped modern test(s) and documented acceptance before retiring it. Current AGENTS.md mandates Pass29 and Pass30, so their coordinated policy/CI retirement occurs in Pass40; before that, use additive checks and preserve those mandatory gates.
+8. **Phase discipline:** Passes 36–37 are test-side (new correctness tests then consolidation), avoiding browser scripts and CI changes except necessary test discovery. Pass38 builds replacement modern browser scripts and shared fixtures while all old gates continue. Pass39 optimises scripts/CI and retires *non-mandated* redundant scripts after proof; AGENTS-mandated Pass29/Pass30 remain until final handoff. Pass40 updates AGENTS, README, architecture/docs and performs the coordinated last CI handoff and final verification. This plan/scratchpad is the only documentation permitted to evolve before Pass40.
 9. **Production defects found by stronger tests:** record a finding, reproduce with a red test, inspect source consumers, fix the smallest valid source area if needed, and prove no collateral regression. Do not relax the test, invent unsupported product policy, or silently redefine scoring to get green CI.
 10. **Evidence honesty:** headless Playwright is not real-device, human aesthetic, or NVDA/VoiceOver certification. Do not label an area certified merely because simulated states pass.
 
@@ -44,25 +44,25 @@ These measurements are **specific to 1 November 2026 CI**. Remeasure the same me
 
 ## 1. Finding register and non-negotiable acceptance coverage
 
-Use these stable IDs in pass logs, commits and objective checks.
+All 15 findings from the audit remain in scope, but **they are work items grouped within five passes**, not 15 independent milestones. Track each ID independently in the scratchpad.
 
-| ID | Priority | Problem / contract to fix | Scheduled pass(es) |
+| ID | Priority | Problem / contract to fix | Pass |
 |---|---|---|---|
-| TS-01 | High | Historical pass-number test files obscure feature ownership and produce overlap | 36, 42 |
-| TS-02 | High | Mathematical tests are example-heavy; independent property and boundary oracles missing | 37, 38, 39 |
-| TS-03 | High | NAT/relative tolerance, decimal precision and scoring bounds need deeper adversarial coverage | 37, 39 |
-| TS-04 | High | State-machine interleavings, resume timing, stale tabs and data integrity need stronger generated checks | 38, 40 |
-| TS-05 | High | Generic exam import, large-but-valid and malicious input boundaries have limited assurance | 39, 41, 47 |
-| TS-06 | Medium | Learning, stats/analytics and UI-state contracts are scattered across passes | 41, 42 |
-| TS-07 | High | Many independently launched overlapping E2E scripts and fixtures | 43–45 |
-| TS-08 | High | Frozen-v11 paired screenshots and exact historical geometry overstay their migration purpose | 45, 49 |
-| TS-09 | High | Multi-browser breadth misses modern critical user journeys; native API support must be tested truthfully | 46 |
-| TS-10 | Medium | Accessibility audit lacks a rules-based semantic gate and realistic keyboard/zoom route coverage | 41, 45, 46 |
-| TS-11 | High | CI repeatedly runs core checks; browser orchestration, artifacts and write permissions are oversized | 43, 48 |
-| TS-12 | Medium | Historical Pass21-versus-Pass22 DOM benchmark remains a live regression gate | 47, 49 |
-| TS-13 | High | Old AGENTS and doc index mandate an obsolete future acceptance structure | 50 |
-| TS-14 | Medium | No explicit one-to-one legacy-check → durable contract migration ledger | 36 and every later pass |
-| TS-15 | Medium | Flakiness, deterministic fixtures, artifacts, runner/browser/dependency reproducibility need explicit policy | 36, 43, 46, 48 |
+| TS-01 | High | Historical pass-number Node tests obscure feature ownership and overlap | 36–37 |
+| TS-02 | High | Example-heavy scoring/state testing; property/model-based oracles missing | 36 |
+| TS-03 | High | NAT tolerance, precision and scoring boundary cases need adversarial coverage | 36 |
+| TS-04 | High | Time/state interleavings, stale tabs, backup and recovery model limits | 36 |
+| TS-05 | High | Generic import, stress and hostile input boundaries | 36, 38 |
+| TS-06 | Medium | Learning, analytics and UI-state tests spread across passes | 36–37 |
+| TS-07 | High | Independently launched overlapping E2E scripts | 38–39 |
+| TS-08 | High | Historical v11 screenshot/pixel checks retained as CI gates | 38–40 |
+| TS-09 | High | Cross-browser matrix too narrow for modern features | 38 |
+| TS-10 | Medium | No automated rules-based a11y gate / deeper interaction audit | 36, 38 |
+| TS-11 | High | Duplicated CI checks, excessive artifacts and broad write permissions | 39–40 |
+| TS-12 | Medium | Historical Pass21→Pass22 SHA/DOM benchmark gate | 38–39 |
+| TS-13 | High | AGENTS and docs prescribe old pass-number gates | 40 |
+| TS-14 | Medium | No assertion-by-assertion old→new coverage disposition | 36–40 |
+| TS-15 | Medium | Runner, browser, dependency, fixture determinism and flakiness policy | 36, 38–39 |
 
 ### Product contract matrix — never delete its last independent check
 
@@ -93,21 +93,21 @@ Use these stable IDs in pass logs, commits and objective checks.
 
 ## 2. Migration ledger: ordinary tests (Phase I)
 
-The target is capability ownership, not a fixed number of target files. Do not remove the last test for a unique behaviour. Names below describe **intended ownership**, not a command to mechanically concatenate.
+Keep the test cases that encode real behaviour. Map each **named original case** to a retained, migrated, merged or historical-only outcome before deleting anything. This table groups ownership, not mandated file count.
 
-| Planned owner | Current test files (substantive cases to map) | Primary pass |
+| Planned capability owner | Current test files (substantive cases to preserve) | Pass |
 |---|---|---|
-| Content and provenance | content.test, import-cgl.test, cgl-practice.test, pass16-independent, pass23-independent | 36, 42 |
-| Schema and generic import | domain.test, exam-package.test, generic-exam-flow.test, pass12-review, pass17-contracts, pass30-bank | 39, 42 |
-| Scoring and numerical policy | engine.test, pass16-independent, pass17-contracts, pass20-preflight, pass23-independent, pass30-bank | 37, 42 |
-| Session/timing/navigation semantics | engine.test, pass7-engine, pass17-contracts, pass18-timing-deletion, pass32-navigation | 38, 42 |
-| Persistence/recovery/history | backup.test, storage-concurrency.test, history.test, pass6-integrity, pass13-history, pass18-timing-deletion, pass19-history | 40, 42 |
-| Results/evidence/analytics | pass9-ui, pass14-analytics, pass19-history, pass20-preflight, pass21-contracts, pass22-response, pass28-semantics | 41, 42 |
-| Learning and review lineage | learning.test, pass8-learning, pass12-review, pass14-analytics | 41, 42 |
-| UI model/markup and security | build.test, generic-ui.test, pass9-ui, pass21-contracts, pass22-response, pass28-semantics | 41, 42 |
-| Shared fixtures | tests/fixtures/six-kinds.mjs and inline reconstructed states | 36–42 |
+| Source content, integrity and provenance | content.test, import-cgl.test, cgl-practice.test, pass16-independent, pass23-independent | 36–37 |
+| Generic packages / question bank | domain.test, exam-package.test, generic-exam-flow.test, pass12-review, pass17-contracts, pass30-bank | 36–37 |
+| Scoring / bounds / precision | engine.test, pass16-independent, pass17-contracts, pass20-preflight, pass23-independent, pass30-bank | 36–37 |
+| Session / clock / navigation state | engine.test, pass7-engine, pass17-contracts, pass18-timing-deletion, pass32-navigation | 36–37 |
+| Persistence / backups / history | backup.test, storage-concurrency.test, history.test, pass6-integrity, pass13-history, pass18-timing-deletion, pass19-history | 36–37 |
+| Results / evidence / analytics | pass9-ui, pass14-analytics, pass19-history, pass20-preflight, pass21-contracts, pass22-response, pass28-semantics | 36–37 |
+| Learning / review lineage | learning.test, pass8-learning, pass12-review, pass14-analytics | 36–37 |
+| UI models / markup / source security | build.test, generic-ui.test, pass9-ui, pass21-contracts, pass22-response, pass28-semantics | 36–37 |
+| Shared deterministic fixtures | tests/fixtures/six-kinds.mjs and locally reconstructed states | 36–37 |
 
-**Implementation rule:** for *each* original test case (not merely each file), mark **retained unchanged / migrated / merged into a stronger test / historical-only / intentionally removed**; supply replacement path and assertion identity for anything merged/removed. Source-hash and Q62 explicit cases are permanent. Keep test discovery accurate throughout (current package script uses tests/*.test.mjs, so either preserve flat file discoverability until deliberate script changes, or prove nested discovery before moving).
+**Test discoverability:** currently `node --test tests/*.test.mjs`. Preserve discovery through changes; verify any new subdirectory glob explicitly. Source-hash/Q62 editorial assertions must not be mechanically merged away.
 
 ## 3. Migration ledger: browser scripts (Phase II)
 
@@ -143,123 +143,71 @@ Every script below must have a disposal decision tied to real capability asserti
 
 **Known overlap clusters:** Pass15 + Pass24 + Pass25–29 + Pass31 + Pass33–35 (screens/geometry); smoke + Pass11–16 + Pass18–23 (flow); Pass22 + Pass33 (Results lazy rendering); Pass34 + Pass35 (Display, with newer intentional nonsticky header). Do not automatically assume all assertions are duplicates: use the per-scenario ledger.
 
-## 4. Pass-by-pass implementation plan
+## 4. Implementation programme — five passes, tests → scripts → docs
 
-### Phase I — tests first, current browser scripts/CI remain unchanged
+The previous 15-pass outline oversplit individual test topics into standalone milestones. **This replaces it with five coherent deliverables** while retaining every substantive requirement. Each pass can contain internal checklist items and incremental commits; **do not create another named pass** just because one item needs a second round of QA. Finish and reconcile all objectives within the current pass before advancing.
 
-**Pass 36 — Baseline, assertion-level map and test architecture**
+### Pass 36 — Strengthen tests and establish an independent coverage baseline
+**Phase: tests.** No existing browser-script/CI retirement.
 
-- **Audit:** record current HEAD, exact Node test enumeration/count, test/fixture imports, all 25 browser scripts and active CI steps, timings and artifacts; read relevant source consumers and legacy Section G.
-- **Analyze:** mark invariant vs historical acceptance vs duplicates; produce explicit **assertion-level** migration map and classify essential, useful, optional evidence; choose target test folder/fixture convention, discovery strategy and deterministic generator approach.
-- **Implement (test-side only):** create/refine shared pure fixtures and test helpers if justified; establish named contract inventory so future file moves cannot silently drop a scenario; do **not** remove tests.
-- **Objective reconciliation:** each existing named Node case and each browser-script capability has a registered owner; baseline measurements reproducible; no source/data drift.
-- **Targeted QA:** npm run check, test discovery listing, and relevant fixture consumers. Old full CI remains active. **Gate to P37:** inventory 100% mapped, unresolved scenarios explicitly marked.
+**Audit and inventory**
+- Enumerate existing Node test cases, fixtures, browser assertions and CI steps; record their owners, unique failure modes, existing source consumers and current benchmark metrics.
+- Make the old→new **assertion-level** mapping for all named Node cases and 25 browser scripts; classify essential, useful overlapping, or historical evidence. Do not confuse screenshot quantity with contract coverage.
+- Choose deterministic seeded/property testing or a compact equivalent with independent oracles, reproducible failure seeds and simple shrinking. Keep readable examples for important regressions.
 
-**Pass 37 — Mathematical scoring and precision properties**
+**Implement test hardening**
+- Mathematical scoring invariants: marks sums, positive−penalty, floor/ceiling, no double count, section/question/kind overrides, pending/excluded/blank, partial cap and scoreable denominators; APFC exact configured −5/6 (floating tolerance), CGL +2/−0.5, negative totals, presentation rounding and negative zero.
+- NAT/answer-kind boundaries: zero/negative and multiple accepted values, absolute versus relative tolerance exactly on/outside boundary, floating rounding; matching cardinality/uniqueness, multi-select validity, authored bank advanced six-kind and APFC/NAT importer; reject malformed and near-limit hostile input safely.
+- State model: seeded event sequences with TICK, ANSWER, PAUSE, RESUME, SECTION_SUBMIT, ATTEMPT_SUBMIT, restore and navigation; sectional timing, overshoot, rollback, terminal immutability and no pre-submit key leakage.
+- Data/persistence: stale-tab compare-and-swap interleavings, frozen attempts, crash/reload, quota/fallback, checked additive backup/ID collisions/deletion; no v11 data migration.
+- Analytics/learning: frozen eligible totals, visits, sufficiency/median/speed, explicit FSRS ratings, notebook/media lineage, no unsupported mastery or invented timing; pure accessibility/DOM semantics where feasible.
+- Use small fast pure test data for boundary tests; reserve heavyweight browser stress for Pass38. If stronger tests expose source defects, reproduce and make a narrow justified product fix with exact regression proofs—never weaken a test to make CI green.
 
-- Add reproducible adversarial/property tests covering all six scoring kinds, default/kind/section/question overrides, blanks, negatives, excluded/pending, partial cap/floor, correct + incorrect component combinations, maximum/lower bound and precision.
-- Maintain a small independent oracle; test APFC 2.5/−5/6 and aggregate rounding only at presentation; CGL +2/−0.5; negative totals; no hidden double counting; numeric display extremes and negative zero.
-- Validate unusually generous/harsh partial-credit rules and impossible configurations, not only normal examples.
-- **Gate:** all scoring properties pass with recorded seeds; trace existing scoring cases to retained or stronger cases; production fixes only for genuine red-test bugs; no scoring/data changes without demonstrated cause.
+**Objective reconciliation / gate**
+- Assertions have explicit independent expected results, seed and deterministic fixtures; essential behaviours mapped; unchanged old browser jobs continue to pass.
+- Targeted tests during work, full `npm run check` after integrated hardening. Record actual cases/seeds/CI evidence in Section 6. **Do not advance if new tests are only nominal wrappers or duplicate the production oracle.**
 
-**Pass 38 — Session, timing and navigation model-based tests**
+### Pass 37 — Consolidate and organise the Node test suite
+**Phase: tests.** This is the second and final test-side pass.
 
-- Build deterministic state-machine sequences that exercise legal/illegal events and asynchronous-looking orderings (TICK/ANSWER/NAVIGATE/SUBMIT_SECTION/PAUSE/RESUME/background/restore), multiple timers and huge time jumps.
-- Use an independent reference ledger for accounted elapsed and sectional closures; verify pause, expired/terminal immutability, rollback, overshoot and no duplicate time.
-- Preserve native Navigation API codec route tests and non-disclosure of answer keys on active routes.
-- **Gate:** every existing timer/lock regression maps to a named invariant; property/model suites reproduce seeds and can minimise failures.
+- Relocate/rename chronological pass-number tests into capability owners: source/content integrity, schema/import, scoring, exam/session, persistence/history, analytics/results, learning/review, navigation/UI model and shared fixtures.
+- Remove only genuinely duplicated examples after proving equivalent or stronger assertions; preserve documented exact editorial/source hashes and independent regression signals.
+- Keep one discoverable test runner and correct package scripts; no dropped tests from changing `tests/*.test.mjs` discovery.
+- Audit test output quality and deterministic diagnostics; minimise redundant fixture setup and test code without hiding failures.
+- **Acceptance:** every old named case has a disposition and replacement assertion/path; pure tests and old full CI green; source and frozen content unchanged except explicitly reproduced bug fixes. **No browser/CI rearchitecture yet.**
 
-**Pass 39 — Numeric entry, answer validity, generic bank and importer boundaries**
+### Pass 38 — Replace historical browser scripts with modern capability-based journeys
+**Phase: scripts.** Old browser gates stay live in parallel during this pass.
 
-- Explicit NAT tests: exactly on/outside absolute tolerance, relative tolerance, zero/negative expected values, combined tolerance, multiple accepted values, representable/nonrepresentable floating boundaries, candidate min/max and nonfinite rejection.
-- Test six-kind answer schema and user-reproducibility of keys, multiple-select cardinality, matching right/left uniqueness, manually graded writing and draft unsaved semantics.
-- Add fast pure near-limit imports, malformed/adversarial keys, caps and revision-hash/data validation; compare author-friendly APFC/NAT converter output against independent expected policy. Do not make every 2,000-item case a browser test.
-- **Gate:** no importer silently truncates or mis-scores; large/invalid inputs fail safely and deterministically; old simple-bank + advanced-package tests still pass.
+- Build one common file:// browser harness with repeatable profiles, fixtures, browser lifecycle, selectable editions/modes/question banks, controlled browser versions, failure snapshots/traces only when useful and stable synchronisation (no arbitrary sleeps).
+- Implement coherent, independent current-app E2E user journeys covering Library→Exam→Results→History/Resume, source versus reviewed, CGL strict/flexible/single, untimed, generic six kinds, writing/manual grading, APFC/NAT bank/template, Learning/FSRS, storage restart/quota/stale tab, backup/recovery and delete/discard.
+- Test real native Navigation API Back/Forward/deep links; no compatibility shims. Protect edited Q62 policy, source provenance and pre-submit answer protection.
+- Test current **UI contract** without frozen v11 render: Library and Exam first-fold usability, Results hierarchy, low-evidence card suppression/lazy pane DOM, History, Learning, display Aa detached and fixed while regular header scrolls, focus/popover, keyboard, ARIA, overflow and reduced motion.
+- Representative laptop/phone/tablet, light/dark and 195px narrow/zoom-equivalent scenarios; curate only a small useful modern screenshot set. Add a meaningful automated accessibility-rules audit when suitable, noting it is not AT certification.
+- Run critical journeys in Chromium, Firefox and WebKit, preserving prior platform persistence checks and disclosing any unsupported native API accurately; no hidden skip/fallback means “passed”.
+- Add bounded large-bank/long-history/backup stress and replace historical Pass22 vs Pass21 DOM benchmark with current lazy-render/performance invariants, with measured, nonflaky thresholds.
+- **Acceptance:** scenario-level map from every old smoke/Pass script to a new direct contract or documented historical-only disposition; all old mandatory gates and all new suites green. **Do not retire legacy scripts during this pass.**
 
-**Pass 40 — Persistence, frozen records, conflicts and backup integrity**
+### Pass 39 — Consolidate browser scripts, optimise CI and prove retirement safety
+**Phase: scripts/CI.** Documentation other than this scratchpad remains untouched.
 
-- Expand deterministic interleaving tests for stale-tab writes, revision collision, active/completed mirror precedence, crash/reload checkpoints and reject-invalid record paths.
-- Exercise checksum and merge laws (idempotent, additive, non-destructive, no existing-record overwrite); preserve no-migration policy; ensure deletion/discard lifecycle separation; test backup payload attacks and edge counts.
-- Preserve duration/accounted evidence when records reload or move between compatible storage paths.
-- **Gate:** immutable saved results and integrity invariants hold; reference source state machine independently where feasible; pure tests remain fast.
+- Audit all 25 legacy script scenarios against the replacement suite. Retire old scripts/CI runs **only after** proof that each unique behaviour has a modern successor or is strictly historical evidence. Preserve archival links and commits; do not import large screenshot binaries into Git.
+- Phase out v11 two-app screenshot/pixel parity, including duplicated Pass15/24, Pass25–28, Pass31/33/34, the 56 paired scenes of Pass29 and SHA-specific Pass22 benchmark. Keep independent content/score/editorial invariants and modern Pass35 detached-Aa behaviour.
+- Keep **AGENTS-mandated Pass29 and Pass30 executable and running** until Pass40 coordinated policy handoff; the other obsolete scripts may be retired once their coverage is proven.
+- CI structure: shared core typecheck/build/Node once; offline Chromium critical journeys; selective cross-browser; optional/release visual/stress; targeted artifacts and no duplicate 30-day screenshot warehouses.
+- Check publication/security: tests read-only; minimum `contents:write` only for verified HTML publishing, with correct upstream `needs` dependencies and safe source-drift/rebase checks. Test push/PR/docs-only/source/CI change classes and failure-to-publish cases.
+- Improve reproducibility with a controlled browser install and justified lockfile/npm ci decision; retain Node 24 and verified self-contained file:// distribution.
+- **Acceptance:** new mandatory CI is green **alongside the temporarily retained Pass29/30 gates**, no unique contract lost, all pending policy changes recorded for Pass40, timings captured. Intermediate CI may not yet show full runtime savings while the two legacy requirements still run.
 
-**Pass 41 — Analytics, Learning, UI-state/a11y contracts, lightweight stress**
+### Pass 40 — Documentation, coordinated legacy-gate handoff and final independent acceptance
+**Phase: docs last and final release engineering.** No main merge.
 
-- Consolidate mathematical metrics: frozen denominators, exact section totals, visit counting, timing/median, sufficiency thresholds, negative marks, evidence progression and no unsupported mastery claims.
-- Preserve FSRS explicit ratings, notebook source identity, media and revision-test integrity; test non-CGL subject/edition separation.
-- Add pure DOM/UI model assertions: display controls/accessibility labels, no pre-submit answer leakage, results conditional cards and review policy; accessible markup checks that can be done without browser are not a substitute for browser audit in Phase II.
-- Add deterministic pure maximum-size and hostile content boundaries in memory/runtime budgets.
-- **Gate:** stats/learning results have independent expected values; no unsupported historical data is fabricated.
-
-**Pass 42 — Test consolidation and Phase-I exit**
-
-- Merge/rename pass-numbered Node suites into capability files; eliminate *semantically duplicated* examples **only after** comparing assertions and strengthening independent tests. Keep clear fixtures and one test framework.
-- Refresh the test-case migration ledger with before/after counts, coverage families and uncovered items; ensure Node runner discovers every migrated test.
-- **Targeted QA:** affected capability suites per edit; **full npm run check and unchanged four-job CI** once at the Phase-I exit (not after every case move); report any failures and remedies.
-- **Hard gate to Phase II:** no loss of a unique essential assertion, no remaining opaque pass-number Node suite without documented reason, no product/regression drift, old E2E CI green. Do not retire old browser scripts yet.
-
-### Phase II — browser scripts and CI; preserve old gates until replacement coverage is proven
-
-**Pass 43 — Common browser runner, fixtures and measured execution model**
-
-- Establish one maintainable browser acceptance runner (may use Playwright runner or a small shared orchestrator—justify choice), fixtures for file:// distribution, browser creation, isolated profile/storage, exam selection, source/review selection, stable input, viewport, error capture and evidence on failure.
-- Pin Playwright-managed browser revisions or clearly documented browser versions; avoid geometry assertions against an uncontrolled system Chrome. No network required by application under test.
-- Keep tests independent with clean contexts, avoid timing sleeps and brittle global state; purposeful test sharding/parallelism only when deterministic.
-- **Gate:** common runner reproduces representative existing journeys; new and old checks pass before script deletion.
-
-**Pass 44 — Consolidated offline critical E2E journeys**
-
-- Implement coherent **modern app** journeys for Library → Exam → Results → History → Resume, CGL strict/flexible/single plus optional untimed; original/review source; generic six kinds, writing manual grade and review policy; APFC/NAT author import, scoring and offline template.
-- Add backup/restore, storage fallback/quota, interruption/stale-tab/delete safety, FSRS revision/learning journey as targeted flows where browser interaction adds value. Reuse pure tests rather than repeating calculations needlessly.
-- Explicitly exercise source-review caution/invalid and prevent answer disclosure before submitting.
-- **Gate:** mapping ledger proves each unique flow from smoke/Pass11–23/Pass30 has a new home; run old and new journeys with actual file:// before retiring old ones.
-
-**Pass 45 — Modern-only UI, visual and accessibility acceptance**
-
-- Replace v11 visual comparators with **current product contracts**: Library first-fold Start; compact Exam navigator and response actions; Results hierarchy and conditional empty/sufficient-data views; History/Learning; fixed body-sibling Aa while ordinary header scrolls away; popover/focus; no document horizontal overflow.
-- Sample purposeful viewports: representative laptop 1366×768 (and 1440 if distinct), phone 390, tablet 768, narrow 195 CSS-px zoom-equivalent; light/dark and 100/140% where meaningful. Add keyboard/aria/focus and a rules-based accessibility audit if tooling is justified.
-- Avoid arbitrary pixel lock to v11: test measurable task success, content order, max widths/containment and explicit intentional UI design properties. If a screenshot is necessary, keep a small curated modern-only set and upload mainly on failure or explicit visual review.
-- **Gate:** modern-only assertions independently catch known L01–L11, F29-01–03, Pass33/34/35 regressions; prove with targeted test mutations or known failing states where safe; old Pass29 still runs at this point.
-
-**Pass 46 — Cross-browser critical-path coverage**
-
-- Establish real Chromium/Firefox/WebKit smoke paths for load/import/answer/save/reload/result/navigation/Display using each engine's real support envelope. Never silently claim native Navigation API support from an unrelated fallback, and never insert a compatibility shim merely to satisfy a test.
-- When a browser lacks required modern platform support, capture an **explicit product-support decision / unsupported test outcome** rather than false-pass, accidental skip, or downgrading native-only architecture.
-- Add semantic accessibility checks in browser where appropriate, plus keyboard/zoom/focus and reduced-motion; do not claim physical devices or screen readers are certified.
-- **Gate:** cross-browser matrix accurately identifies supported vs blocked journeys and failures; no narrower regression assurance than current Firefox/WebKit persistence coverage.
-
-**Pass 47 — Stress/performance boundaries and historical benchmark replacement**
-
-- Test near-limit generic bank load, max-size key/media and large attempt/history/backup operations using fixed capped fixtures; separate pure stress and slower release stress from always-on critical paths.
-- Replace Pass22 Pass21-SHA DOM-node comparison with **current invariants**: only active Results pane materialises its heavy content; no 100-question hidden review/timing rendering; acceptable bounded DOM and practical performance under a representative history. Use measured distributions rather than unstable single elapsed milliseconds.
-- Establish honest thresholds on same CI environment only after measurements; no arbitrary unexplained budgets.
-- **Gate:** performance meaningfully guarded without any historical app executable; resource budgets are observed and documented, no flaky wall-clock gate.
-
-**Pass 48 — CI orchestration, permissions and artifacts**
-
-- Design narrow stages: core validation/build exactly once; critical offline Chromium suite; targeted cross-browser matrix; optional/release visual/stress job triggered by explicit events or relevant changes. Source/data changes still run consequential score, import, integrity and critical offline E2E checks.
-- Ensure generated HTML publication happens **only after all required jobs pass**, and a docs-only commit never needs a full historical screenshot matrix. Separate read-only tests from minimal contents:write publishing permission. Preserve safe rebase/drift logic.
-- Avoid a change-based filter that silently skips a necessary product gate; document trigger policy and test it with representative paths (source, CSS, content JSON, package config, docs, CI and generated artifact).
-- Improve reproducibility: review introduction of lockfile + npm ci and controlled Playwright engine revisions; preserve Node 24 and pinned dependencies; avoid installing browsers unused by a job.
-- Retain failure artifacts only when useful; avoid numerous duplicate 30-day screenshot uploads. Measure CI runner-minutes and wall time before/after.
-- **Gate:** full new workflow green; all mandatory invariants covered; document-only and failed-build/publish safety paths demonstrated; deployment never publishes unverified generated HTML.
-
-**Pass 49 — Browser-script retirement and independent migration audit**
-
-- For all 25 legacy QA scripts, finish a **scenario/assertion-by-assertion** disposition table with exact replacement tests and pass logs. Retire non-mandated scripts only if each distinct assertion has a verified successor or is explicitly historical-only. **Do not yet turn off AGENTS-mandated Pass29/Pass30 runs**; prepare their validated replacement and a single coordinated final transition for Pass50.
-- Archive frozen-v11 screenshot methodology, Pass15/24 and Pass29 evidence, per-commit benchmark rationale as *Git history + provenance links*, not live executables or enormous Git blobs. Unmodified baseline/v11 remains accessible.
-- Check no accidental imports, package scripts or workflow references point to removed code. Keep AGENTS-mandated Pass29/Pass30 executables and CI invocations working until Pass50 atomically reconciles AGENTS and CI; do not leave an interim state that contradicts the currently mandatory engineering contract.
-- Perform independent full new-stack automated acceptance, plus targeted source/branch diff review and simulated failure path. **Gate:** non-mandated legacy scripts retired from active CI without reducing essential coverage; mandated old gates proved replaceable but still operational pending Pass50; final editorial/content/history contracts unchanged. Provisional Phase-II runtime may include those retained legacy gates, so assess final savings after P50.
-
-### Phase III — documentation last, full programme closure
-
-**Pass 50 — Documentation, governance and final independent QA**
-
-- Only after Phases I and II are green, update AGENTS.md, root README.md, docs/README.md, CURRENT_ARCHITECTURE.md, DATA_CONTRACTS.md and relevant policy/QA guidance to reflect **current capability-based suites**, not chronological pass gates. Existing historic reports remain accurate and labelled historical, not rewritten as if they never existed.
-- **Coordinated final policy/CI switch:** update AGENTS text requiring Pass29/Pass30 old filenames to modern equivalent **contract requirements**, then remove their old required CI invocations and any remaining legacy executables in the same reviewed final transition; rerun the full new workflow. Do not create a commit/CI checkpoint in which old mandatory gates are silently absent while the old policy still claims they run. Archive Section G as legacy feature audit and make this file the completed, indexed test-reengineering programme record. Keep one clear active scratchpad for future work.
-- Document commands and CI triggers for fast local core, modern offline E2E, cross-browser, full release visual/stress, evidence retention, deterministic reproduction, failure triage, user signoff.
-- Independent final audit: exact coverage/register reconciliation, no orphaned or skipped essential assertions, current-source checks, full new CI, browser support caveats, artifact publication safety, manual/physical/AT outstanding list. Compare measured wall/runner cost, build size and QA maintenance size honestly.
-- **Programme exit:** tests organised by capability; mathematical/property assurance stronger; real offline browser critical paths and Firefox/WebKit coverage truthful; no active frozen-v11 UI comparison dependence; no obsolete historical SHA performance gates; concise CI with limited artifacts; all legitimate product guarantees intact; docs accurate. **No main merge or product release without express user approval.**
+- Update `AGENTS.md`, root README, docs index, current architecture/data contracts, decisions/QA guide, and references so capability-based tests are the **permanent** contract; earlier feature-parity reports remain properly identified historical records.
+- **Coordinate policy and executable switch:** after Pass39 replacements are proven, change outdated AGENTS mandates for Pass29/30 and remove their old CI invocations/executables in the same reviewed handoff. Never produce an interim commit where mandatory instructions promise a script that CI silently omits.
+- Publish commands for fast test suite, offline browser critical path, cross-browser acceptance, explicit release visual/stress, seeded reproduction, supported/unsupported engine matrix, useful evidence retention and human/manual/AT signoff.
+- Independent final audit of all finding IDs and scenario dispositions, source/content hashes, Q62, generic exam/score policy, build output, frozen storage safety, no pre-submit leaks, CI publish/drift safety and all three browser engines.
+- Compare actual CI wall/runner minutes, maintained QA footprint and flakiness before/after. Document unresolved accessibility, real-device, OS-kill/storage eviction and hostile-large-input limitations **without claiming certification**.
+- **Programme gate:** no required v11 live UI oracle or historical SHA benchmark; no unused gate references; measured improvement without reduced assurance; final CI green, programme worklog complete, and **no product release/merge absent user approval**.
 
 ## 5. Decision protocol, independence and acceptance rules
 
@@ -277,39 +225,21 @@ Every implementation pass follows **five mandatory stages**; the scratchpad is u
 
 **Runtime goals are directional, not release acceptance by fiat:** lower current ~4m22s wall and runner-minute cost substantially, aim for roughly half or better *if attained without weaker gates*. Measure paired runs with the same baseline configuration, including CI setup and browser install; do not claim success from estimates or trimmed coverage.
 
-## 6. Live pass ledger (update during implementation)
+## 6. Live pass ledger (update **throughout** implementation)
 
-| Pass | Phase | Status | Finding IDs | Source commit(s) | New/retired tests/scripts | QA/CI evidence | Open items |
+| Pass | Phase | Status | Finding IDs | Code commits | Assertion migrations / scripts | Targeted QA + CI evidence | Remaining risks |
 |---|---|---|---|---|---|---|---|
-| 36 | Tests | NOT STARTED | TS-01,14,15 | — | — | — | Assertion-level inventory |
-| 37 | Tests | NOT STARTED | TS-02,03 | — | — | — | Independent scoring oracle |
-| 38 | Tests | NOT STARTED | TS-02,04 | — | — | — | Model-based session events |
-| 39 | Tests | NOT STARTED | TS-03,05 | — | — | — | NAT/generic boundary |
-| 40 | Tests | NOT STARTED | TS-04 | — | — | — | Data & concurrency |
-| 41 | Tests | NOT STARTED | TS-05,06,10 | — | — | — | Analytics/learning/UI pure |
-| 42 | Tests | NOT STARTED | TS-01,06,14 | — | — | — | Phase-I consolidation gate |
-| 43 | Scripts | NOT STARTED | TS-07,11,15 | — | — | — | Shared browser harness |
-| 44 | Scripts | NOT STARTED | TS-07 | — | — | — | Durable journeys |
-| 45 | Scripts | NOT STARTED | TS-08,10 | — | — | — | Modern-only UI/visual |
-| 46 | Scripts | NOT STARTED | TS-09,10,15 | — | — | — | Cross-browser/platform |
-| 47 | Scripts | NOT STARTED | TS-05,12 | — | — | — | Stress/performance |
-| 48 | Scripts/CI | NOT STARTED | TS-11,15 | — | — | — | CI orchestration/publish |
-| 49 | Scripts | NOT STARTED | TS-07,08,12,14 | — | — | — | Historical retirement gate |
-| 50 | Docs/final | NOT STARTED | TS-13,14 | — | — | — | Documentation & final QA |
+| 36 | Tests hardening | NOT STARTED | TS-01–06,10,14,15 | — | — | — | Test baseline and independent oracle |
+| 37 | Tests organisation | NOT STARTED | TS-01,06,14 | — | — | — | Phase-I exit with full old CI green |
+| 38 | Browser scripts | NOT STARTED | TS-05,07–10,12,14,15 | — | — | — | Cross-browser/visual/stress replacement |
+| 39 | Scripts + CI | NOT STARTED | TS-07,08,11,12,14,15 | — | — | — | CI safety; Pass29/30 temporarily mandated |
+| 40 | Docs + final acceptance | NOT STARTED | TS-08,11,13,14 | — | — | — | Policy/CI synchronized final handoff |
 
-### Current working checkpoint — append per pass, don't overwrite historical checkpoints
+**Initial checkpoint — 2026-11-01:** Original 15-pass planning document condensed into five substantial milestones after user feedback. No production code, tests, browser scripts or workflow have changed as part of the planning revision. Existing AGENTS and Pass29/30 requirements remain active. **Next action: Pass36 assertion inventory and stronger tests.**
 
-**P36 preflight (2026-11-01):** Audit-only baseline verified, no tests/scripts/CI changed. Existing AGENTS source-first and Pass29 mandatory wording remains in effect. No pass is complete. Next action: enumerate all existing Node assertions and browser scenarios; build exact contract mapping before modifying test files.
+For every pass, log (1) date, starting/current HEAD and status; (2) the source/consumer/tests actually audited; (3) alternatives and chosen invariants; (4) every changed path/commit and old→new assertion IDs; (5) objective-by-objective PASS/FAIL/BLOCKED and remediation; (6) exact targeted commands/results, seeds, browser versions and workflow run links; (7) residual risks and next gate. Maintain these **during** implementation, not retroactively.
 
-Use this structure for **each** future pass checkpoint:
-
-- **Pass / date / starting HEAD / current status:**
-- **Audit:** source and test consumers actually read; objective IDs; contradictions or pre-existing defects.
-- **Reasoned decision:** alternatives and chosen invariant/migration scope; no unsupported assumptions.
-- **Implementation ledger:** changed paths; commits; old → new assertion mapping; production fixes, if any.
-- **Objective reconciliation:** each objective PASS/FAIL/BLOCKED with source path and evidence; iterate as needed.
-- **Targeted QA:** exact commands and results; failing seeds; browser engine/version; CI run URL when executed; no invented measurements.
-- **Risk / leftovers / next pass gate:**
+**Do not equate a pass with a single commit.** Multiple focused commits, checklists, and fixes belong to one substantive pass. Only explicitly reopened unsatisfied objectives can keep a pass incomplete.
 
 ## 7. Source pointers
 
