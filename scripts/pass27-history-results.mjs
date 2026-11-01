@@ -69,7 +69,7 @@ async function beginPair(old,newer){
  await old.locator("#finish").click();
  await newer.locator("#g-submit").click();
  await old.locator("[data-tab='insights']").waitFor();
- await newer.locator("#result-overview > .panel:nth-child(2) table").waitFor();
+ await newer.locator(".result-section-table table").waitFor();
 }
 async function validatePair(v){
  const old=await openFile(oldHtml,v),current=await openFile(newHtml,v);
@@ -78,7 +78,7 @@ async function validatePair(v){
   await capture(old.page,"v11-"+v.name+"-results.png");
   await capture(current.page,"overhaul-"+v.name+"-results.png");
   const tableOld=await geometry(old.page,"#resultContent table");
-  const tableNew=await geometry(current.page,"#result-overview > .panel:nth-child(2) table");
+  const tableNew=await geometry(current.page,".result-section-table table");
   const scoreNew=await geometry(current.page,"#result-overview .scoregrid");
   check(tableNew.y<=tableOld.y+80,
    v.name+" section table is too low vs v11: old "+tableOld.y+" new "+tableNew.y);
@@ -88,9 +88,11 @@ async function validatePair(v){
    "Table must come after score summary");
   check((await current.page.locator("#result-overview .scoregrid").innerText()).includes("Audit-adjusted"),
    "Frozen automated marks missing");
-  check(await current.page.locator(".result-score-details").count()===1,
+  check(await current.page.locator(".result-scoring-details").count()===1,
    "Source score and conservative bounds have been discarded");
-  const details=await current.page.locator(".result-score-details").innerText();
+  const detailBox=current.page.locator(".result-scoring-details");
+  check(await detailBox.evaluate(x=>!x.open),"Advanced scoring evidence should default collapsed");
+  const details=await detailBox.innerText();
   check(details.includes("Original-source key")&&details.includes("Scoring envelope"),
    "Frozen source-key comparison or conservative score bounds missing");
   const header=()=>current.page.locator(".results-heading h1").innerText();
