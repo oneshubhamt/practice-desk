@@ -520,7 +520,7 @@ Every implementation pass follows **five mandatory stages**; the scratchpad is u
 
 | Pass | Phase | Status | Finding IDs | Code commits | Assertion migrations / scripts | Targeted QA + CI evidence | Remaining risks |
 |---|---|---|---|---|---|---|---|
-| 36 | Tests hardening | IN PROGRESS — AUDIT/ANALYSE | TS-01–06,10,14,15 | — | — | — | Test baseline and independent oracle |
+| 36 | Tests hardening | **VERIFIED — full CI 4/4** | TS-01–06,10,14,15 | `78f65b1` through `ec4decb` | 5 new suites, 21 named cases; 156 originals retained | [CI 41287019774](https://github.com/oneshubhamt/practice-desk/actions/runs/41287019774) — 177/177 Node, Firefox/WebKit/independent/Chromium green | Deeper browser assertions, automated a11y, real-device and stress/browser coverage intentionally P38 |
 | 37 | Tests organisation | NOT STARTED | TS-01,06,14 | — | — | — | Phase-I exit with full old CI green |
 | 38 | Browser scripts | NOT STARTED | TS-05,07–10,12,14,15 | — | — | — | Cross-browser/visual/stress replacement |
 | 39 | Scripts + CI | NOT STARTED | TS-07,08,11,12,14,15 | — | — | — | CI safety; Pass29/30 temporarily mandated |
@@ -541,6 +541,40 @@ Every implementation pass follows **five mandatory stages**; the scratchpad is u
 **Implementation checkpoint B (2026-11-01, test-side only):** Added five native Node test suites: `contract-scoring-properties` (seeded overrides/marks/ceilings/partial/NAT/APFC); `contract-session-model` (160 seeded event streams + sectional overshoot/expiry/tamper); `contract-persistence-properties` (250 stale-tab interleavings, 200 additive merges, backup tamper/5000 boundary); `contract-import-boundaries` (75 seeded banks, full 2000-question limit, unsafe inputs, six-kind response validation); `contract-analytics-properties` (300 progression datasets, 90 frozen six-kind attempts). Old 156 named tests, all 25 browser scripts, CI, production sources, content JSON and generated HTML unchanged. Commits: `78f65b1`, `7f9e751`, `b93dc21`, `b9e2483`, `13eb9ff` plus fixture-expectation corrections. Initial on-commit CI (run 41286606569) failed a newly asserted **false hash uniqueness property**; distinct IDs may share the same semantic content hash, so corrected only the test to check distinct IDs and complete key mapping in commit `bcd3e14`. **This is not a production bug.** Wait for a green full CI on the corrected head before marking Pass36 verified. Browser and semantics gating still remains legacy-mandated.
 
 **Implementation status at checkpoint A:** no source/tests/scripts/CI changed; scratchpad update only. Next: add seeded maths/session/persistence/import tests, verify CI and reconcile findings independently.
+
+### Pass 36 — LIVE checkpoint C: objective reconciliation, targeted QA and closure (1 Nov 2026)
+
+**Status: VERIFIED; no production changes.** Starting HEAD `d2da82ae3`; final substantive test commit `ec4decbb27bcf80abf94163329a2eea2d4c91ee3`, followed only by scratchpad/index documentation commits. **Successful final [GitHub Actions run 41287019774](https://github.com/oneshubhamt/practice-desk/actions/runs/41287019774)** from exact test commit: **four jobs successful**, including independent v11/current 184-scene matrix, Firefox, WebKit and full unchanged Chromium checks.
+
+**Actually executed QA:** CI's `npm run check` runs `npm run typecheck`, build and `node --test tests/*.test.mjs`; independent job raw output: **177 tests, 177 passed, 0 failed, 6,994 ms Node-test duration** (177 = 156 unchanged original + **21 new cases** across five files). Browser CI ran existing `smoke-offline`, Pass10–16, Pass18–23, Pass25–35 (including Pass15 twice and Pass29 separately); four jobs report success. No claim of manually running Node24/Chromium on a local checkout or physical device; the verified runner is GitHub Actions.
+
+**Five new suite owners / specific assertions:**
+
+- [`tests/contract-scoring-properties.test.mjs`](../../tests/contract-scoring-properties.test.mjs): 200 seeded multi-section override/policy/ceiling/ledger sequences with independent arithmetic; six-kind/manual pending; component cap/floor; absolute+relative NAT boundaries, zero/negative/multiple accepted values; APFC `−5/6` unrounded aggregate and explicit negative-zero/presentation case. Six named tests.
+- [`tests/contract-session-model.test.mjs`](../../tests/contract-session-model.test.mjs): 160 seeded ×120 event state-model streams (pause/visibility/rollback/navigation/expiry/terminal), 100 seeded automatic sectional split tests, manual expiry and fraudulent timing-evidence rejection. Four named tests.
+- [`tests/contract-persistence-properties.test.mjs`](../../tests/contract-persistence-properties.test.mjs): 250 seeded ×150 stale-tab CAS interleavings, 200 additive-merge cases, backup integrity/tamper at 0/1/7/101/5,000 records, overflow and collision rejection. Four named tests.
+- [`tests/contract-import-boundaries.test.mjs`](../../tests/contract-import-boundaries.test.mjs): 75 seeded authored banks, a successful exactly 2,000-question import retaining 2,000 IDs/keys and 10 sections, overflow/malformed data, all six engine response kinds and writing manual-pending. Five named tests.
+- [`tests/contract-analytics-properties.test.mjs`](../../tests/contract-analytics-properties.test.mjs): 300 seeded learning progression classifications and 90 six-kind frozen attempts with exact answered/blank/pending accounting, eligible denominator and insufficient speed-data honesty. Two named tests.
+
+**Objective-by-objective source/QA reconciliation:**
+
+| Finding | Result | Direct evidence and boundary |
+|---|---|---|
+| TS-01 | **VERIFIED for Pass36** | Exact 156 existing test names indexed individually in this file (31 suites); their capability-based rename/merge remains Pass37 by design |
+| TS-02 | **VERIFIED** | Independent scoring arithmetic oracle + seeded transition state model, broad generated valid policies/events, no production helper used to derive expected results |
+| TS-03 | **VERIFIED** | Multiple accepted NAT values, zero/negative, exact binary-fraction tolerance boundaries, relative+absolute envelopes, APFC fraction, negative zero, display decimals, full partial-credit caps |
+| TS-04 | **VERIFIED for pure layer** | 160 session event streams, 100 sectional expiry variants and 250 simulated stale-tab/CAS sequences; browser OS kill/eviction deferred |
+| TS-05 | **VERIFIED for pure importer layer** | 2,000-question success/no-truncation, 2,001 rejection, 75 generated banks and adversarial answers/prompts; heavyweight browser import stress deferred to Pass38 |
+| TS-06 | **VERIFIED** | 300 progression and 90 saved six-kind evidence samples; all old FSRS/learning and analytics regressions retained and green |
+| TS-10 | **ACCEPTED PHASE BOUNDARY** | Existing pure UI/keyboard/ARIA tests unchanged and green; rules-based browser a11y and screen-reader/real-device review not claimed, scheduled Pass38 |
+| TS-14 | **VERIFIED for inventory** | All 156 original Node test cases individually recorded, preserved and executable; 25/25 browser scripts listed with ownership/disposition; exact per-browser-assertion replacement proof required during Pass38 before any retirement |
+| TS-15 | **VERIFIED for pure test determinism** | Stable xorshift seeds, explicit seed/event in assertions, no sleeps/third-party property dependency; browser version pinning and CI fixture deduplication scheduled Pass38/39 |
+
+**Observed QA correction:** First new CI failure in [run 41286606569](https://github.com/oneshubhamt/practice-desk/actions/runs/41286606569) came from an *incorrect test oracle* requiring unique content hashes for semantically identical questions. Corrected to assert **unique question revision IDs, unique answer-key references and valid digest presence**; same content is allowed to share a hash. That is not an app regression, and the corrected full run is green. A mistaken draft essay-blank branch in newly added seeded analytics was corrected before the final successful CI. No source change was warranted.
+
+**Scope/diff reconciliation:** Compared with base `d2da82ae3`, only five `tests/contract-*.test.mjs` files and two existing scratchpad docs changed. **Zero changes** to `src/`, `scripts/`, `.github/`, `package.json`, content JSON or generated offline HTML. No test, script, CI gate, historical editorial assertion or v11 baseline was deleted. The original Section G carries a cross-reference to this dedicated active ledger.
+
+**Remaining risks / next gate:** Pure tests cannot certify browser a11y, real device/AT, browser storage eviction, large full UI import throughput or semantic visual quality. Exact browser assertion-by-assertion migration is only partially enumerated (script sources and scenario owner are inventoried); it must be completed in Pass38 **before** deleting scripts. **Pass37** may now consolidate/rename chronological Node tests one assertion at a time against the 156-case immutable inventory while old Chromium, Firefox, WebKit and Pass29/30 continue to run.
 
 **Initial checkpoint — 2026-11-01:** Original 15-pass planning document condensed into five substantial milestones after user feedback. No production code, tests, browser scripts or workflow have changed as part of the planning revision. Existing AGENTS and Pass29/30 requirements remain active. **Next action: Pass36 assertion inventory and stronger tests.**
 
@@ -563,4 +597,4 @@ For every pass, log (1) date, starting/current HEAD and status; (2) the source/c
 - [Current architecture](../architecture/CURRENT_ARCHITECTURE.md)
 - [Results UI design contract](../architecture/RESULTS_V11_PARITY_PLAN.md)
 
-**Document status:** This is a plan and active scratchpad, not evidence that any pass or new test was executed. All implementation statuses remain NOT STARTED until recorded source changes and passing QA exist.
+**Document status:** Pass36 implemented and independently CI verified (run 41287019774); Passes37–40 remain NOT STARTED. Historic plan baselines remain intact. Keep the active ledger current during subsequent passes.
