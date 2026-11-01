@@ -475,6 +475,12 @@ try{
  });
  await denied.locator("#g-start").click();
  await denied.locator(".generic-warning").filter({hasText:"SAVE FAILED"}).waitFor();
+ console.log("PASS32 quota probe",await denied.evaluate(()=>({
+   url:location.href,hasLibrary:!!document.querySelector("#g-library"),
+   hasExam:!!document.querySelector(".exam-grid"),hasStart:!!document.querySelector("#g-start"),
+   warnings:[...document.querySelectorAll(".generic-warning")].map(x=>x.textContent?.slice(0,220)),
+   currentEntry:navigation.currentEntry?.url,appTitle:document.querySelector("#app h1")?.textContent
+ })));
  await denied.locator("#g-library").click();
  const emergencyDownload=denied.waitForEvent("download");
  await denied.locator("#g-export-history").click();
