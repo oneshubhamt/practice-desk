@@ -88,8 +88,12 @@ try{
   });}finally{db.close();}
  },latest.id);
  await page.reload({waitUntil:"load"});
- await page.locator("#g-history").click();
- await page.locator('[data-attempt="'+latest.id+'"]').first().click();
+ // A results deep link restores its saved result directly. Older browsers
+ // are not targeted; the native route is the single source of truth.
+ if(await page.locator("#g-history").count()){
+   await page.locator("#g-history").click();
+   await page.locator('[data-attempt="'+latest.id+'"]').first().click();
+ }else await page.locator("#result-tab-timing").waitFor({state:"visible"});
  await page.locator('[data-result-tab="timing"]').click();
  ensure((await page.locator("#result-timing").innerText()).includes("Not recorded"),
   "Legacy visit counters were fabricated on historical reopen");
