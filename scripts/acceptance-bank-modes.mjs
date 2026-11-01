@@ -148,6 +148,20 @@ for(const v of [
   check(Math.abs(apfcAttempt.result.snapshot.earnedMarks-5)<1e-8,
    v.name+" exact APFC/NAT +2.5×2 and blank-0 score must equal 5/7.5");
   await assertNoOverflow(page,v.name+" APFC/NAT Results at "+(v.name==="narrow195"?"140%":"100%")+" text");
+  await page.locator("#g-library").click();await route(page,"library");
+  check(await page.locator("#g-family").inputValue()==="imported:upsc-epfo-apfc",
+    v.name+" imported APFC family not selected");
+  check((await page.locator(".family-provenance").innerText()).includes("not an official"),
+    v.name+" imported content not labelled user supplied");
+  const six=(await import("../tests/fixtures/six-kinds.mjs")).pkg;
+  await page.locator("#g-file").setInputFiles({name:"six-kinds.json",
+    mimeType:"application/json",buffer:Buffer.from(JSON.stringify(six))});
+  await page.waitForFunction(()=>document.querySelector("#g-family")?.value==="imported:example-exam");
+  check(await page.locator("#g-papers option").count()===1,
+    v.name+" imported exam families mixed paper lists");
+  await page.locator("#g-family").selectOption("builtin:ssc-cgl");
+  check(await page.locator("#g-papers option").count()===5,
+    v.name+" CGL papers mixed with imported banks");
   check(errors.length===0,v.name+" uncaught browser errors "+errors.join("; "));
   scenes.push({viewport:v.name,editions:2,modes:3,untimedReload:true,
    template:true,apfcMcqNat:true,screenComparison:false});
