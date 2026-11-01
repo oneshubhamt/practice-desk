@@ -52,6 +52,11 @@ jobs:
       - run: node scripts/acceptance-stress.mjs
       - run: node scripts/acceptance-platform.mjs chromium
       - run: node scripts/acceptance-safari-fallback.mjs chromium
+      - run: node scripts/acceptance-session-policy.mjs
+      - run: node scripts/acceptance-editorial-provenance.mjs
+      - run: node scripts/acceptance-history-evidence.mjs
+      - run: node scripts/acceptance-resilience.mjs
+      - run: node scripts/acceptance-learning-lifecycle.mjs
       # Still valuable behavioural tests, no screenshots or frozen-v11 runs.
       - run: node scripts/smoke-offline.mjs
       - run: node scripts/pass11-parity.mjs
