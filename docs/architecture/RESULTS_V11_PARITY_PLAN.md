@@ -1,6 +1,8 @@
 # Practice Desk — Results UI parity programme
 
-**1 November 2026 · `overhaul` only · source implementation may begin only after this plan is committed**
+**1 November 2026 · `overhaul` only · IMPLEMENTED + AUTOMATED VERIFIED**
+
+Pre-implementation contract was committed before source work. Final automated evidence: [CI 41276303881](https://github.com/oneshubhamt/practice-desk/actions/runs/41276303881) **4/4 green**; [Pass33 artifact 13071368653](https://github.com/oneshubhamt/practice-desk/actions/runs/41276303881/artifacts/13071368653) contains seven measured/screenshotted result states. CI refreshed the verified offline HTML in commit `f2a4472179c419cf69b6bd7291a75045efb7c4c2`. Physical-device/AT/human aesthetic signoff remains separate.
 
 ## Goal
 
@@ -152,15 +154,24 @@ Keep Pass29 matrix, Pass31 compact exam shell, Pass32 native navigation, cross-b
 
 ## Acceptance criteria
 
-- [ ] Result first fold is recognisably v11-like in hierarchy and density.
-- [ ] 1130px-ish desktop result shell; no unnecessary persistent analytical chrome.
-- [ ] Performance overview is one named primary panel.
-- [ ] Time/pacing and section diagnostics use compact two-column composition.
-- [ ] Score opportunities are compact and generic-arithmetic correct.
-- [ ] Insufficient speed evidence renders a short state, not zero cards.
-- [ ] Revision zero state is compact.
-- [ ] Longest exposure remains actionable via Review links.
-- [ ] All overhaul-only evidence remains accessible.
-- [ ] Native result routes, six-kind exams, manual grades, source/reviewed provenance and no-review policy show no functional regression.
-- [ ] New targeted browser suite + existing mandatory CI are green.
+- [x] Result first fold is recognisably v11-like in hierarchy and density.
+- [x] 1130px-ish desktop result shell; no unnecessary persistent analytical chrome.
+- [x] Performance overview is one named primary panel.
+- [x] Time/pacing and section diagnostics use compact two-column composition.
+- [x] Score opportunities are compact and generic-arithmetic correct.
+- [x] Insufficient speed evidence renders a short state, not zero cards.
+- [x] Revision zero state is compact.
+- [x] Longest exposure remains actionable via Review links.
+- [x] All overhaul-only evidence remains accessible.
+- [x] Native result routes, six-kind exams, manual grades, source/reviewed provenance and no-review policy show no functional regression.
+- [x] New targeted browser suite + existing mandatory CI are green.
+
+## Final automated evidence
+
+- Frozen-v11/current desktop geometry at both 1366×768 and 1440×900: **1090px content width inside a 1130px main shell** in both. Result tab height is **47.1px** in both; heading→tabs and tabs→Performance relative spacing remains within the 6px parity gate after intentionally removing the persistent v11 masthead from the user-preferred result composition. Performance overview measured **341.8px v11 vs 351.7px overhaul** in the representative low-data state.
+- Pass33 verifies low-data suppression (no empty Fast/Typical/Slow machinery), reviewed sufficient-evidence speed cells, compact revision state, scoring-details disclosure, direct opportunity→review routing, floating Display access, and no document overflow at 390px and 195px.
+- Existing Pass29 expanded matrix remained green, as did Pass32 native Navigation API journeys, source/scoring suites, and Firefox/WebKit offline acceptance.
+- Preserved evidence includes eligible maxima, excluded/defective handling, original-source comparison, conservative scoring bounds, manual self-assessment, timer vs foreground distinction, source/reviewed provenance, no-review policy, generic six-kind exams and APFC/NAT imports.
+
+**Non-inference:** automated screenshot geometry and browser flows do not constitute human aesthetic approval, physical-device certification or NVDA/VoiceOver signoff.
 
