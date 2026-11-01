@@ -271,7 +271,13 @@ try{
     tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);
    });}finally{db.close();}
   },id);
-  await page.reload({waitUntil:"load"});await route(page,"result");
+  await page.reload({waitUntil:"load"});
+  // A record with pre-visit-schema evidence may re-open through Library;
+  // do not assume native file:// navigation can preserve Results on reload.
+  if(await page.locator("#g-history").count()){
+   await page.locator("#g-history").click();await route(page,"history");
+   await page.locator('[data-attempt="'+id+'"]').first().click();await route(page,"result");
+  }else await page.locator("#result-tab-timing").waitFor({state:"visible"});
   await page.locator("#result-tab-timing").click();
   check((await page.locator("#result-timing").innerText()).includes("Not recorded"),
    "Old saved attempts falsely attributed unsaved visit counts");
