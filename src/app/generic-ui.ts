@@ -1173,6 +1173,7 @@ sectionPaceHTML(attempt)+analyticHTML+
    if(!routeHydrated)await hydration;
    if(disposed||ctx.signal?.aborted||requested!==activationGeneration)return;
    const prevView=view;
+   const previousTab=resultTab;
    const previousAttempt=attempt;
    // Traversals cannot reliably be canceled. Checkpoint first, then display
    // the destination; question/answer changes never create URL entries.
@@ -1229,7 +1230,7 @@ sectionPaceHTML(attempt)+analyticHTML+
    if(disposed||ctx.signal?.aborted||requested!==activationGeneration)return;
    draw();
    if(ctx.kind!=="initial"&&(prevView!==view||
-      (view==="result"&&resultTab!==target.screen))) {
+      (view==="result"&&resultTab!==previousTab))) {
      window.scrollTo({top:0,behavior:"instant"});
    }
  }
