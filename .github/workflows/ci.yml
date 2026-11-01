@@ -36,6 +36,15 @@ jobs:
       - run: node scripts/pass32-native-navigation.mjs
       - run: node scripts/pass33-results-parity.mjs
       - run: node scripts/pass34-v11-display.mjs
+      - run: node scripts/pass35-detached-display.mjs
+      - name: Save detached Aa and scrolling-header browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pass35-detached-aa-nonsticky-header
+          path: artifacts/pass35-detached-display/
+          if-no-files-found: warn
+          retention-days: 30
       - name: Save frozen v11 Aa light-dark, scroll and cross-screen parity evidence
         if: always()
         uses: actions/upload-artifact@v4
