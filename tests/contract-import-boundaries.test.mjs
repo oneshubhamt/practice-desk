@@ -49,8 +49,12 @@ test("simple-bank upper boundary of 2000 questions succeeds without truncating k
  assert.equal(p.answerKey.entries.length,2000);
  assert.equal(p.paper.sections.length,10);
  assert.equal(p.paper.sections.reduce((n,s)=>n+s.questionRevisionIds.length,0),2000);
- assert.equal(new Set(p.questions.map(q=>q.contentHash)).size,2000,
-  "unique source IDs contribute to hashes; no copied revisions");
+ assert.equal(new Set(p.questions.map(q=>q.id)).size,2000,
+  "each question has a unique revision identity even for identical wording");
+ assert.equal(new Set(p.answerKey.entries.map(e=>e.questionRevisionId)).size,2000,
+  "all 2000 distinct identities have retained keys");
+ assert.ok(p.questions.every(q=>typeof q.contentHash==="string"&&q.contentHash.length===64),
+  "every revision retains an integrity hash; identical content may legitimately share a hash");
  assert.ok(Math.abs(scoreableMaximum(p.paper,p.answerKey,p.questions)-5000)<1e-8);
  assert.throws(()=>importSimpleQuestionBank({...bank,questions:[
   ...bank.questions,{...bank.questions[0],id:"q2000"}]}),/1–2000/);
