@@ -542,6 +542,28 @@ Every implementation pass follows **five mandatory stages**; the scratchpad is u
 
 **Implementation status at checkpoint A:** no source/tests/scripts/CI changed; scratchpad update only. Next: add seeded maths/session/persistence/import tests, verify CI and reconcile findings independently.
 
+### Pass 37 — LIVE checkpoint C: aggressive implementation and independent file/case inventory (2026-11-01)
+
+**Implementation commits:** initial 36→31 file renaming/selected merges in `b7af806c79b01402ad47017ed75cbdd357caa24d`; complete 31→**8** physical suite reduction in `b9c1dd8e00c0c019fadbbfd82cd1f50ead5ae66d`. No source/product/CI/browser script/HTML changes. 30 old intermediate suites were removed in the same atomic commit that introduced **7** expanded capability suites. `tests/pass30-bank.test.mjs` is retained intact as the eighth suite per `AGENTS.md`.
+
+**Losslessness methodology:** in each new capability suite, the old module's original body (including its test registrations, assertions, local fixtures and helper functions) is preserved as a labelled lexical block. All original static ESM imports are converted to explicit shared namespace imports plus *block-local* const bindings; cross-suite lexical identifier collisions are thereby avoided. The files are truly consolidated (no hidden wrappers/dynamic importing old test modules). Import specifiers and file-to-`src/`/fixture relative location remain unchanged because all files still live immediately under `tests/`. No old test declaration was dropped, modified for “equivalence”, or skipped. Test runner remains unchanged: `node --test tests/*.test.mjs`.
+
+**Exact case-by-case migration owner at the pre-implementation suite granularity:** The legacy inventory in Section 2 records all original 156 individual named tests; the 21 Pass36 new names remained exact. Every originating suite is labelled directly above its unchanged registration body, so individual case name → destination suite → source block mapping is inspectable. The matrix below reconciles **all 31 old intermediate suites to 8 new suites and 177 named registrations**.
+
+| Final runnable test suite | Named cases retained | Exact predecessor suite(s) (count) |
+|---|---:|---|
+| `tests/content-and-provenance.test.mjs` | 36 | content-cgl-edition-parity (5), content-cgl-import-and-scoring (4), content-editorial-and-timing-labels (3), content-frozen-legacy-integrity (9), content-source-review-and-frozen-media (6), content-validation-and-build (4), integrity-hash-and-media (5) |
+| `tests/exam-package-and-import.test.mjs` | 21 | exam-packages-and-cgl-modes (5), exam-schema-validation (6), exam-six-kind-lifecycle (5), import-boundary-properties (5) |
+| `tests/exam-scoring-and-policy.test.mjs` | 34 | exam-policy-manual-grading-and-timing (9), exam-preflight-and-policy-disclosure (7), scoring-and-section-policy (12), scoring-property-model (6) |
+| `tests/session-and-timing.test.mjs` | 17 | session-and-scoring-basics (5), session-property-model (4), session-timing-and-deletion (8) |
+| `tests/history-and-persistence.test.mjs` | 26 | history-cross-paper-marks (6), history-selection-filtering-and-backup (4), persistence-backup-and-concurrency (9), persistence-session-recovery (7) |
+| `tests/learning-and-analytics.test.mjs` | 17 | analytics-property-model (2), analytics-visits-and-speed-evidence (5), learning-fsrs-and-cards (4), learning-notebook-and-evidence (6) |
+| `tests/ui-and-navigation.test.mjs` | 22 | ui-history-and-results (5), ui-media-editorial-and-paused-controls (6), ui-question-controls-and-drafts (8), navigation-native-routes (3) |
+| `tests/pass30-bank.test.mjs` | 4 | pass30-bank (4; reserved filename under current AGENTS mandatory policy) |
+| **Total** | **177** | **31/31** |
+
+**Implementation source inspection:** confirmed GitHub `overhaul` tree now contains the eight exact `.test.mjs` files above; checked each suite's static named-test case count and labelled predecessor block counts, totalling 177. Confirmed `scripts/` and `.github/workflows/ci.yml` remain outside this work. CI run [41288797199](https://github.com/oneshubhamt/practice-desk/actions/runs/41288797199) was queued at this checkpoint. **Do not mark Pass37 verified until independent Node24 and all old browser CI jobs are green.** If shared fixture module caching creates test interference, reproduce and repair without dropping any original check.
+
 ### Pass 37 — LIVE checkpoint B: user-directed aggressive consolidation (2026-11-01)
 
 **Interruption and revised requirement:** User expressly requested **aggressive consolidation** after intermediate capability renames/merges. That intermediate change `b7af806c79b01402ad47017ed75cbdd357caa24d` reduced 36 to 31 .test.mjs files, which is not a sufficient final outcome. **This intermediate commit is not Pass37 acceptance.**
