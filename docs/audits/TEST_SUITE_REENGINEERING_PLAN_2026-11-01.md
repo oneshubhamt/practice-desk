@@ -109,6 +109,119 @@ Keep the test cases that encode real behaviour. Map each **named original case**
 
 **Test discoverability:** currently `node --test tests/*.test.mjs`. Preserve discovery through changes; verify any new subdirectory glob explicitly. Source-hash/Q62 editorial assertions must not be mechanically merged away.
 
+### Pass36 immutable test-case inventory — originals 1–15 of 31
+
+**tests/backup.test.mjs** (4 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/backup.test.mjs#1` SHA-256 standard vectors and UTF-8
+- `tests/backup.test.mjs#2` complete backup v3 preserves records and preferences
+- `tests/backup.test.mjs#3` preferences import validates range and type
+- `tests/backup.test.mjs#4` backup merge is additive and preserves active and completed IDs
+
+**tests/build.test.mjs** (1 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/build.test.mjs#1` single-file release contains a complete inline app
+
+**tests/cgl-practice.test.mjs** (2 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/cgl-practice.test.mjs#1` all original and reviewed editions use one validated question model
+- `tests/cgl-practice.test.mjs#2` one engine supports strict, flexible and single CGL policies
+
+**tests/content.test.mjs** (3 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/content.test.mjs#1` current library satisfies schema and all cross-bank references
+- `tests/content.test.mjs#2` validator rejects duplicate question numbers and invalid answer keys
+- `tests/content.test.mjs#3` validator rejects orphaned patches, missing stimuli and unknown fields
+
+**tests/domain.test.mjs** (6 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/domain.test.mjs#1` accepts a valid question, paper revision and matching answer key
+- `tests/domain.test.mjs#2` rejects duplicate option identities and malformed hashes
+- `tests/domain.test.mjs#3` rejects incompatible answer kinds and unknown option IDs
+- `tests/domain.test.mjs#4` rejects duplicate section membership and missing sectional limits
+- `tests/domain.test.mjs#5` rejects scoring rules with a positive wrong-answer penalty
+- `tests/domain.test.mjs#6` rejects an answer key that omits a question in the paper
+
+**tests/engine.test.mjs** (5 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/engine.test.mjs#1` visibility change commits the preceding visible interval exactly once
+- `tests/engine.test.mjs#2` overshoot splits sectional timing and closes sections without double counting
+- `tests/engine.test.mjs#3` pause freezes countdown; resume rebases; completion is terminal
+- `tests/engine.test.mjs#4` locked navigation, early section submission and answer clearing
+- `tests/engine.test.mjs#5` scoring uses explicit rules and excludes invalid questions
+
+**tests/exam-package.test.mjs** (3 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/exam-package.test.mjs#1` generic importer retains all 500 questions in 10 existing editions
+- `tests/exam-package.test.mjs#2` a package rejects missing questions, unknown media and malformed keys
+- `tests/exam-package.test.mjs#3` generic attempt uses validated responses and frozen revisions
+
+**tests/generic-exam-flow.test.mjs** (5 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/generic-exam-flow.test.mjs#1` a non-CGL paper completes all six response types through the same engine
+- `tests/generic-exam-flow.test.mjs#2` invalid numeric value, underspecified selections and duplicate matches are rejected
+- `tests/generic-exam-flow.test.mjs#3` forward-only navigation restrictions are respected for non-CGL papers
+- `tests/generic-exam-flow.test.mjs#4` generic attempts and imported packages survive a verified history backup round trip
+- `tests/generic-exam-flow.test.mjs#5` completed generic scores cannot be silently rewritten in stored history
+
+**tests/generic-ui.test.mjs** (5 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/generic-ui.test.mjs#1` six exam question response kinds render editable, escaped controls
+- `tests/generic-ui.test.mjs#2` timer display derives from paper policy, not CGL constants
+- `tests/generic-ui.test.mjs#3` review answers resolve human labels for all six question kinds
+- `tests/generic-ui.test.mjs#4` generic history rejects malformed stored records before import
+- `tests/generic-ui.test.mjs#5` shared renderer enforces paused, forward-only and no-early-submit policies
+
+**tests/history.test.mjs** (7 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/history.test.mjs#1` frozen attempt survives a later changed key, paper or editorial state
+- `tests/history.test.mjs#2` saved strict session expires while app is closed, without fictitious foreground viewing
+- `tests/history.test.mjs#3` paused flexible attempt does not consume offline wall time
+- `tests/history.test.mjs#4` recover from clock rollback without assigning negative time
+- `tests/history.test.mjs#5` completed record always defeats stale active mirror
+- `tests/history.test.mjs#6` revision-aware recovery cannot revive an older tab's emergency mirror
+- `tests/history.test.mjs#7` an older completed mirror cannot supersede a newer in-progress revision
+
+**tests/import-cgl.test.mjs** (4 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/import-cgl.test.mjs#1` imports all five CGL source and reviewed editions with revision-pinned keys
+- `tests/import-cgl.test.mjs#2` v11-reviewed editorial policy: source invalid without a patch is scored as caution
+- `tests/import-cgl.test.mjs#3` rejects unknown options and out-of-bounds responses
+- `tests/import-cgl.test.mjs#4` generic scoring matches CGL configured marking rules
+
+**tests/learning.test.mjs** (4 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/learning.test.mjs#1` learning cards are created from completed immutable answers, not active test keys
+- `tests/learning.test.mjs#2` FSRS-7 from stable ts-fsrs 6.0.0 schedules only explicit review ratings
+- `tests/learning.test.mjs#3` topic evidence and trends never compare different paper revisions
+- `tests/learning.test.mjs#4` backup preserves notes and FSRS review logs with strict integrity checks
+
+**tests/pass12-review.test.mjs** (6 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/pass12-review.test.mjs#1` CGL original wording, options, source key and media are frozen at reviewed test start
+- `tests/pass12-review.test.mjs#2` edited single-section CGL preserves only its changed question subset and adjusted max
+- `tests/pass12-review.test.mjs#3` non-CGL exam source/review snapshots support six response types and arbitrary marking
+- `tests/pass12-review.test.mjs#4` source-review snapshots detect passage-only edits without forcing a new question kind
+- `tests/pass12-review.test.mjs#5` corrected published keys are compared by semantic source option ID, not display index
+- `tests/pass12-review.test.mjs#6` time expiration and voluntary finishing have separate durable source-independent reasons
+
+**tests/pass13-history.test.mjs** (4 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/pass13-history.test.mjs#1` device-local exam choice validates arbitrary exam revisions and survives corrupt storage
+- `tests/pass13-history.test.mjs#2` exact frozen paper edition filtering combines with free text and status
+- `tests/pass13-history.test.mjs#3` adjusted score trends require exact frozen key, revision and practice mode
+- `tests/pass13-history.test.mjs#4` old v3 backups remain compatible and optional exam setup is checksum-covered
+
+**tests/pass14-analytics.test.mjs** (5 cases) — *Pass36 retain, Pass37 ownership review*
+
+- `tests/pass14-analytics.test.mjs#1` visits reflect cursor entries, never answering, flags, repeated cursor or clock ticks
+- `tests/pass14-analytics.test.mjs#2` section auto-advance records a new section's first question once
+- `tests/pass14-analytics.test.mjs#3` generic six-kind frozen timing classifications, accurate filters, longest links and conservative suggestions
+- `tests/pass14-analytics.test.mjs#4` historic visits and insufficient speed samples are disclosed, not manufactured
+- `tests/pass14-analytics.test.mjs#5` negative marking, manual-pending and excluded questions stay separate from pace classification
+
+**Subtotals:** 64 named original cases across 15 files. Every item above remains covered by its original runnable test; no deletion or renaming in Pass36. The Pass37 migration disposition will annotate successor paths at the individual-case level.
+
 ## 3. Migration ledger: browser scripts (Phase II)
 
 Every script below must have a disposal decision tied to real capability assertions **before deletion**. “Remove from mandatory CI” and “delete source file” are separate decisions. Preserve the historical commit/artifact URL in final docs; never commit large screenshot archives to the repo.
