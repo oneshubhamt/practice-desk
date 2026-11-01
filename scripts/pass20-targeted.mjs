@@ -103,8 +103,13 @@ try{
    const rect=await trigger.boundingBox();
    ensure(rect&&inside(rect,width,height),
      "Display trigger scrolled away or overflowed at "+width+"px");
-   const position=await page.locator("header").evaluate(el=>getComputedStyle(el).position);
-   ensure(position==="sticky","Header is not a non-obscuring sticky Display access path");
+   const shell=await page.locator("header").evaluate(el=>({
+     position:getComputedStyle(el).position,
+     height:el.getBoundingClientRect().height,
+     brand:getComputedStyle(el.querySelector(".brand")).display
+   }));
+   ensure(shell.position==="fixed"&&shell.height===0&&shell.brand==="none",
+     "Compact Results must use v11-like floating Display access without persistent masthead");
    await trigger.click();
    const panel=page.locator("#displayPanel");
    ensure(await panel.isVisible(),"Display popover failed to open while scrolled");
