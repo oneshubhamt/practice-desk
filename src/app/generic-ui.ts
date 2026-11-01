@@ -20,15 +20,13 @@ import { assertDeletionAllowed, deletionWarning, type DeletionIntent } from "../
 import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
 import { createLearningDesk } from "./learning-ui.ts";
 import { makeRevisionPackage,createNotebookLineage,validateNotebookLineage } from "../learning/revision-test.ts";
-import { attemptEvidence } from "../learning/attempt-evidence.ts";
-import { answerRevisionEvidence } from "../learning/answer-revisions.ts";
 import { questionSpeed } from "../learning/question-analytics.ts";
 import { historyHTML, type HistorySort, type HistoryStatus } from "./history-page.ts";
 import { frozenScoreSummary } from "./history-score.ts";
 import { editorialStatusLabel } from "./editorial-labels.ts";
 import { multipleDraftMessage,duplicateMatchingTargets } from "./response-drafts.ts";
 import { examPreflight,preflightHTML,examRulesHTML } from "./exam-preflight.ts";
-import { reviewMatch, reviewFiltersHTML, resultTabsHTML, sectionPaceHTML, timingLedgerHTML, questionCoachingHTML, type ResultTab, type ReviewFilter } from "./result-presentation.ts";
+import { reviewMatch, reviewFiltersHTML, resultTabsHTML, timingLedgerHTML, resultInsightsHTML, type ResultTab, type ReviewFilter } from "./result-presentation.ts";
 import { addLearningCard, validateLearningCard } from "../learning/learning.ts";
 import type { LearningCard } from "../learning/learning.ts";
 import { readDisplayPreferences, writeDisplayPreferences, SETTINGS_EVENT } from "./preferences.ts";
@@ -998,107 +996,69 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    const markLabel=(value:number)=>value.toFixed(scorePrecision);
    const eligibleMax=resultTab==="overview"?scoreableMaximum(paper,attempt.frozen.key,attempt.frozen.questions):0;
    const conservativeFloor=resultTab==="overview"?scoreableLowerBound(paper,attempt.frozen.key,attempt.frozen.questions):0;
+   const resultPackage=packageForAttempt(attempt);
+   const resultName=resultPackage?.title??paper.paperId;
+   const resultDate=attempt.finishedAt?new Date(attempt.finishedAt).toLocaleString():"";
+   const resultMeta=escapeText(resultName)+' · '+escapeText(readablePracticeMode(attempt.frozen.snapshot.mode))+
+     (resultDate?' · '+escapeText(resultDate):"");
    const paperSectionRows=resultTab==="overview"?sectionScoreSummaries(attempt,s).map(row=>
      '<tr><td>'+escapeText(row.title)+'</td><td>'+row.attempted+'/'+
        (row.questions-row.excluded)+'</td><td>'+row.correct+'</td><td>'+row.incorrect+
        '</td><td>'+escapeText(markLabel(row.marks))+' / '+
        escapeText(markLabel(row.eligibleMax))+'</td><td>'+
        (row.timerMs===null?"Not recorded":minutes(row.timerMs)+
-         (row.timerReason==="time-expired"?" · Expired":" · Submitted"))+'</td><td>'+
-       minutes(row.foregroundMs)+'</td></tr>').join(""):"";
-   const evidence=resultTab==="overview"?attemptEvidence(attempt):null;
-   const revisions=resultTab==="overview"?answerRevisionEvidence(attempt):null;
-   const analyticHTML=evidence?'<section class="panel pad" id="g-attempt-evidence">'+
-     '<h2>Timing, accuracy & marks evidence</h2>'+
-     '<p class="fine">Elapsed is consumed test timer time (including hidden intervals, excluding permitted pauses and expired waiting). Question exposure is measured only in the visible foreground. The global median uses measured scored answers; hypothetical opportunities are not predicted marks.</p>'+
-     '<div class="learning-metric-grid" id="g-overall-pacing">'+
-     '<div class="learning-metric"><strong>Test timer used</strong><b>'+minutes(evidence.timing.elapsedMs)+'</b><small>Consumed active exam clock</small></div>'+
-     '<div class="learning-metric"><strong>Attempt rate</strong><b>'+
-      (evidence.timing.attemptRate===null?"—":(100*evidence.timing.attemptRate).toFixed(1)+"%")+
-      '</b><small>'+evidence.timing.attemptedEligible+' / '+evidence.timing.eligibleQuestions+
-      ' non-excluded questions answered (includes manual pending)</small></div>'+
-     '<div class="learning-metric"><strong>Median answered time</strong><b>'+
-      (evidence.timing.overallMedianAnsweredMs===null?"Not recorded":minutes(evidence.timing.overallMedianAnsweredMs))+
-      '</b><small>'+evidence.timing.measuredAnswered+' measured scored answers, foreground only</small></div>'+
-     '<div class="learning-metric"><strong>Foreground question exposure</strong><b>'+
-      minutes(evidence.timing.questionMeasuredMs)+'</b><small>Not equivalent to timer time</small></div></div>'+
-     '<div class="scroll-table"><table><thead><tr><th>Section</th><th>Answered</th><th>Coverage</th><th>Accuracy</th><th>Median answered time</th><th>Positive</th><th>Penalty</th></tr></thead><tbody>'+
-     evidence.sections.map(e=>'<tr><td>'+escapeText(e.title)+'</td><td>'+e.answered+'</td><td>'+
-       Math.round(e.coverage*100)+'%</td><td>'+(e.accuracy===null?"—":Math.round(e.accuracy*100)+"%")+
-       '</td><td>'+(e.medianAnsweredMs===null?"—":Math.round(e.medianAnsweredMs/1000)+"s")+
-       '</td><td>'+e.positive.toFixed(2)+'</td><td>'+e.penalties.toFixed(2)+'</td></tr>').join("")+'</tbody></table></div>'+
-     '<div class="row generic-actions"><span class="tag">Foreground '+minutes(evidence.timing.foregroundMs)+'</span>'+
-       '<span class="tag">Question exposure '+minutes(evidence.timing.questionMeasuredMs)+'</span>'+
-       '<span class="tag">Answers changed '+evidence.timing.changedAnswers+'</span></div>'+
-     '<h3>Section-relative speed × accuracy</h3>'+
-     '<p class="fine">Only sections with at least 5 measured answered responses are classified; fast is under 0.75× and slow over 1.5× that section\'s median.</p>'+
-     '<div class="learning-metric-grid">'+evidence.speed.buckets.map(e=>'<div class="learning-metric">'+
-       '<strong>'+e.label+'</strong><b>'+e.correct+' correct · '+e.incorrect+' incorrect</b>'+
-       '<small>'+e.items+' classified answers</small>'+
-       '<button class="textlink" data-review-preset="'+
-         (e.label==="Fast"?"fastwrong":e.label==="Slow"?"slowwrong":"typicalwrong")+
-         '"'+(e.incorrect&&revealReview?"":" disabled")+' aria-label="Review '+e.label.toLowerCase()+
-         ' incorrect questions">Review '+e.incorrect+' '+e.label.toLowerCase()+
-         ' mistakes →</button></div>').join("")+'</div>'+
-     '<p class="fine">'+evidence.speed.classified+' of '+evidence.speed.measured+
-       ' measurable answers classified; insufficient section samples remain unclassified.</p>'+
-     '<h3>Marks decomposition and hypothetical opportunities</h3>'+
-     '<div class="learning-metric-grid"><div class="learning-metric"><strong>Observed negative marks</strong><b>'+
-        evidence.opportunity.observedPenalty.toFixed(2)+'</b><small>Actual penalty magnitude</small></div>'+
-     '<div class="learning-metric"><strong>Wrong → correct</strong><b>+'+
-        evidence.opportunity.wrongToCorrect.toFixed(2)+'</b><small>Hypothetical, '+
-        evidence.opportunity.countWrong+' incorrect scored items</small>'+
-        (revealReview?'<button class="textlink" data-review-preset="incorrect">Review incorrect →</button>':"")+'</div>'+
-     '<div class="learning-metric"><strong>Skipped → correct</strong><b>+'+
-        evidence.opportunity.skippedToCorrect.toFixed(2)+'</b><small>Hypothetical, '+
-        evidence.opportunity.countSkipped+' unanswered scored items</small>'+
-        (revealReview?'<button class="textlink" data-review-preset="unanswered">Review skips →</button>':"")+'</div></div>'+
-     '</section>':"";
-   return '<div class="generic-heading results-heading"><div><span class="eyebrow">FROZEN EXAM RECORD</span>'+
-     '<h1>Attempt analysis</h1><p class="muted">'+escapeText(paper.paperId)+' · '+escapeText(paper.edition)+
-     ' · '+(attempt.finishedAt?new Date(attempt.finishedAt).toLocaleString():"")+'</p>'+
-     (attempt.completionReason?'<span class="tag">'+escapeText(
-       attempt.completionReason==="time-expired"?"Time expired":
-       attempt.completionReason==="section-submitted"?"Submitted early":"Submitted by user")+'</span>':"")+
-     '</div>'+
-     '<div class="row"><button class="btn quiet" id="g-history-results">History & insights</button>'+
+         (row.timerReason==="time-expired"?" · Expired":" · Submitted"))+'</td></tr>').join(""):"";
+   const completionLabel=attempt.completionReason?
+     attempt.completionReason==="time-expired"?"Time expired":
+     attempt.completionReason==="section-submitted"?"Submitted early":"Submitted by user":"";
+   const scoreExplainer=resultTab==="overview"?
+     '<p class="fine score-explainer">+'+escapeText(markLabel(s.snapshot.positiveMarks))+
+       ' positive marks · −'+escapeText(markLabel(s.snapshot.penaltyMarks))+
+       ' penalties · adjusted score '+escapeText(markLabel(s.snapshot.earnedMarks))+
+       ' / '+escapeText(markLabel(eligibleMax))+
+       (originalKey?' · Original-source key comparison: '+escapeText(originalKey.marks.toFixed(1))+
+        ' / '+escapeText(originalKey.maxMarks.toFixed(1)):"")+'.</p>':"";
+   const scoringDetails=resultTab==="overview"?'<details class="result-scoring-details">'+
+     '<summary>Scoring details</summary><div class="result-scoring-detail-body">'+
+     (originalKey?'<p class="fine"><b>Original-source key (unadjusted):</b> '+
+       escapeText(originalKey.marks.toFixed(1))+' / '+escapeText(originalKey.maxMarks.toFixed(1))+
+       ' marks · '+originalKey.correct+' correct · '+originalKey.incorrect+' incorrect · '+
+       originalKey.unanswered+' unanswered. Uses the source key frozen at test start, including questions excluded from the reviewed score. This comparison is not an official score.</p>':"")+
+     '<p class="fine"><b>Scoring envelope:</b> nominal full-credit ceiling '+
+       escapeText(markLabel(eligibleMax))+'; conservative lower bound '+
+       escapeText(markLabel(conservativeFloor))+
+       '. The lower bound need not be attainable; written responses are assessed separately.</p>'+
+     (!revealReview?'<p class="fine"><b>Detailed answers withheld:</b> this exam releases numerical results and timing feedback but not its question-by-question answer key or worked solutions.</p>':"")+
+     (grades.graded||grades.pending?'<p class="fine"><b>Separate self-assessment:</b> '+escapeText(grades.graded)+
+       ' of '+escapeText(grades.graded+grades.pending)+' written responses marked; self-assessed total '+
+       escapeText(selfAssessed.toFixed(2))+'. The automated score above remains unchanged.</p>':
+       '<p class="fine">Automated marks reflect only scoreable questions.</p>')+
+     '</div></details>':"";
+   return '<div class="generic-heading results-heading"><div>'+
+     '<h1>Attempt analysis</h1><p class="muted">'+resultMeta+'</p></div>'+
+     '<div class="row"><button class="btn quiet" id="g-history-results">History</button>'+
      '<button class="btn" id="g-library">Library</button></div></div>'+
     (warning?'<p class="generic-warning" role="status">'+escapeText(warning)+'</p>':"")+
     resultTabsHTML(resultTab,revealReview)+
     (resultTab==="overview"?'<div class="result-pane" id="result-overview" role="tabpanel" aria-labelledby="result-tab-overview">'+
-    '<section class="panel pad"><div class="scoregrid"><div class="score standout"><b>'+
+    '<section class="panel pad result-performance-overview"><div class="row between result-overview-heading"><div>'+
+     '<h2>Performance overview</h2><p class="fine">'+resultMeta+'</p></div>'+
+     (completionLabel?'<span class="tag">'+escapeText(completionLabel)+'</span>':"")+'</div>'+
+    '<div class="scoregrid"><div class="score standout"><b>'+
      escapeText(markLabel(s.snapshot.earnedMarks))+
      ' <small>/ '+escapeText(markLabel(eligibleMax))+'</small></b>'+
      '<small>Audit-adjusted automated marks</small></div><div class="score"><b>'+s.snapshot.correctCount+
     '</b><small>Correct</small></div><div class="score"><b>'+s.snapshot.incorrectCount+
     '</b><small>Incorrect</small></div><div class="score"><b>'+s.snapshot.unansweredCount+
     '</b><small>Unanswered</small></div><div class="score"><b>'+s.snapshot.excludedCount+
-    '</b><small>Excluded</small></div></div></section>'+
-    '<section class="panel pad"><h2>Section performance</h2>'+
-    '<p class="fine">Eligible maximum excludes editorially unscored and manually assessed questions. Section timer is actual consumed time for sequential timed sections; foreground exposure is separate. Older records and unrestricted multi-section navigation show Not recorded rather than invented section time.</p>'+
-    '<div class="scroll-table"><table><thead><tr><th>Section</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Marks / eligible max</th><th>Section timer</th><th>Question foreground</th></tr></thead><tbody>'+
-     paperSectionRows+'</tbody></table></div></section>'+    '<section class="panel pad result-score-details">'+
-    (originalKey?'<p class="fine"><b>Original-source key (unadjusted):</b> '+
-      escapeText(originalKey.marks.toFixed(1))+' / '+escapeText(originalKey.maxMarks.toFixed(1))+
-      ' marks · '+originalKey.correct+' correct · '+originalKey.incorrect+' incorrect · '+
-      originalKey.unanswered+' unanswered. Uses the source key frozen at test start, including questions excluded from the reviewed score. This is a comparison, not an official score.</p>':"")+
-    '<p class="fine"><b>Scoring envelope:</b> nominal full-credit ceiling '+
-      escapeText(markLabel(eligibleMax))+'; conservative lower bound '+
-      escapeText(markLabel(conservativeFloor))+
-      '. The lower bound need not be attainable; written responses are assessed separately.</p>'+
-    (!revealReview?'<p class="fine"><b>Detailed answers withheld:</b> this exam permits numerical results and timing feedback but does not release its question-by-question answer key or worked solutions after submission.</p>':"")+
-    (grades.graded||grades.pending?'<p class="fine"><b>Separate self-assessment:</b> '+escapeText(grades.graded)+
-      ' of '+escapeText(grades.graded+grades.pending)+' written responses marked; self-assessed total '+
-      escapeText(selfAssessed.toFixed(2))+'. Original automated score above remains unchanged.</p>':
-      '<p class="fine">Automated marks reflect only scoreable questions.</p>')+'</section>'+
-sectionPaceHTML(attempt)+analyticHTML+
-     questionCoachingHTML(attempt,revealReview)+
-    '<section class="panel pad answer-revision-panel"><h2>Answer revisions</h2>'+
-    (revisions?.recorded?'<div class="learning-metric-grid">'+
-      [['Modified answers',revisions.changed],['Wrong → correct',revisions.rescued],['Correct → wrong',revisions.lost],['Other changes',revisions.other]]
-       .map(([label,value])=>'<div class="learning-metric"><strong>'+escapeText(label)+'</strong><b>'+escapeText(value)+'</b></div>').join("")+
-      '</div>':'<p class="fine">No saved answer-revision sequence is available for this attempt.</p>')+
-    '<p class="fine">Based only on recorded successive single-choice selections. Clear-and-reselect and unverified items are not classified as rescued/lost. A changed answer may coincide with better marks; this is not evidence that revision caused improvement.</p></section></div>':
+    '</b><small>Excluded</small></div></div>'+
+    scoreExplainer+
+    '<div class="scroll-table result-section-table"><table><thead><tr><th>Section</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Marks</th><th>Time used</th></tr></thead><tbody>'+
+     paperSectionRows+'</tbody></table></div>'+scoringDetails+'</section>'+
+     resultInsightsHTML(attempt,revealReview)+
+    '<div class="row result-footer-actions">'+
+      (revealReview?'<button class="btn" id="g-view-question-review">View question-by-question review →</button>':"")+
+      '<button class="btn" id="g-result-library">Test library</button></div></div>':
     '<div class="result-pane" id="result-overview" role="tabpanel" aria-labelledby="result-tab-overview" hidden></div>')+
     (revealReview&&resultTab==="review"?'<section class="panel pad result-pane" id="result-review" role="tabpanel" aria-labelledby="result-tab-review">'+
     '<div class="row between"><h2>Question review</h2>'+
