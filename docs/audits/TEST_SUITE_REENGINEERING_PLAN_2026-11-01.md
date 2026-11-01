@@ -1,6 +1,6 @@
 # Practice Desk — Test-Suite Re-engineering Programme and Live Scratchpad
 
-**Status:** PLAN APPROVED FOR PREPARATION; IMPLEMENTATION NOT STARTED  
+**Status:** IMPLEMENTATION PLAN PREPARED; IMPLEMENTATION NOT STARTED  
 **Prepared:** 1 November 2026  
 **Branch:** overhaul only  
 **Audited base:** 12f2156d5967f73eabd74b0443bcc28f789167da  
