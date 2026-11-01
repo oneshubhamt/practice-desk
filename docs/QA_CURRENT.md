@@ -46,6 +46,23 @@ All **13** files above are active capability tests; **zero** historical `passNN-
 
 **Independent verified 1 November 2026 full CI:** [run 41321335800](https://github.com/oneshubhamt/practice-desk/actions/runs/41321335800), **5/5 successful jobs, 176/176 Node**, browser contracts for all three engines, gated artifact publisher; elapsed **137 seconds**. Earlier screenshot-heavy [Pass38 run 41296469053](https://github.com/oneshubhamt/practice-desk/actions/runs/41296469053) elapsed **302 seconds**; these are different coverage matrices and not a controlled speed benchmark. Immediately preceding pre-retirement [run 41306573542](https://github.com/oneshubhamt/practice-desk/actions/runs/41306573542) elapsed **129 seconds**; replacing more distinct tests with modern coverage added roughly eight observed seconds, not an unqualified speedup.
 
+## P42 physical macOS Safari acceptance checklist — awaiting real-device evidence
+
+**This is a manual reproducibility procedure, NOT a claim of completion.** Run with the **latest CI-verified standalone HTML** downloaded from `overhaul`; record macOS version, Safari version, HTML SHA-256, file location, local date/time and whether the URL uses `?pd=` native routes or `#pd=` fallback routes. Keep an exported backup before conducting any restore tests.
+
+1. Open the HTML **from Finder** in Safari with internet disabled (no localhost). Confirm Library loads, preflight rules render, no unexpected remote requests, and the floating Aa control works while the header scrolls away.
+2. Choose an **original SSC CGL** paper; start a strict timed attempt, answer and flag a question, navigate to another question, and return. Confirm the saved choice, timer and flag match the previous state.
+3. Use **Safari Back, Forward and Reload** from Exam → Library → History and back to the saved attempt. After each route, verify that the correct attempt and screen return, no duplicate attempt is started, and the answer persists. Record the exact route/URL where a failure occurs.
+4. Close the Safari tab and reopen the **same file at the same path**. Check storage permissions and saved attempt persistence; do not interpret a new Downloads filename/origin as proof that the old origin's IndexedDB data was lost.
+5. Finish one attempt, inspect Results → Answer review → Question times → History, then use Back/Forward again, including after reload. Confirm stable frozen marks and proper source/reviewed provenance (including the Q62 caution where applicable).
+6. Import a valid APFC MCQ/NAT bank and confirm start, scoring and History. Try an invalid or oversized JSON bank and verify a visible rejection without a saved bogus package.
+7. At a narrow window and **140% app text**, visit Library, Exam, Results, History and Learning; inspect text wrapping, focus, scrolling, and image rendering. Toggle dark/light, keyboard controls and Aa.
+8. Create or inspect one FSRS Learning card, export a **backup v3**, reopen the file, import the same backup and confirm it is **additive (no duplicate existing IDs or lost pending attempts)**.
+9. If Safari supports the native Navigation API and Back after a `file://` reload fails, document the exact step and URL, test whether forced hash fallback is available, and mark this scenario **FAIL/UNVERIFIED**. Playwright WebKit success is not evidence of Mac-native history correctness.
+10. Record **PASS / FAIL / NOT TESTED for each step**, plus screenshots/log snippets only for failures. Do not report physical Safari, VoiceOver, iOS/Android or actual OS eviction as certified without their own manual evidence.
+
+**P42 completion boundary:** issue this exact procedure and preserve the browser-emulator caveat. Actual Mac results are **EXTERNAL / NOT TESTED** until supplied; the definitive physical-device release matrix remains P48.
+
 ## Manual and release gates — OPEN
 
 - **Actual macOS Safari:** launch the freshly generated/downloaded HTML, check Library → Test → History → Results → Learning; Back/Forward and deep-link reload before/after saving answers, retaining attempts, appearance and imported banks. Browser-native WebKit Back after a `file://` reload was **not** verified, even though the absent-API hash fallback passes. Record the exact Safari/macOS version and route where any issue persists. Never report simulated WebKit as a physical Mac pass.
