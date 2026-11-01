@@ -426,3 +426,61 @@ test("validated advanced six-kind package still retains manual grading separatio
  assert.equal(scoreableMaximum(pkg.paper,pkg.answerKey,questions),10);
 });
 }
+
+
+// P42: adversarial imported-data envelopes; keep these beside the existing
+// import/package capability tests rather than adding a chronological suite.
+{
+const test=__suite_dep_0.default,assert=__suite_dep_1.default;
+const {pkg}=__suite_dep_6;
+const {validateExamPackage,validateExamImportBudget}=__suite_dep_3;
+const {importAuthoredExam}=__suite_dep_9;
+const {makeBackup,verifyBackup}=__suite_dep_8;
+const clone=()=>structuredClone(pkg);
+
+test("P42 rejects oversized authored text and IDs before any revision hashes are trusted",()=>{
+ const oversized=clone();
+ oversized.questions[0].content.prompt="q".repeat(20001);
+ assert.throws(()=>validateExamPackage(oversized),/20,000 characters/);
+ const hugeId=clone();
+ hugeId.questions[0].questionId="q".repeat(513);
+ assert.throws(()=>validateExamPackage(hugeId),/identifier too long/);
+ const hugeTitle=clone();
+ hugeTitle.title="z".repeat(32*1024*1024+1);
+ assert.throws(()=>validateExamImportBudget(hugeTitle),/32 MiB text budget/);
+});
+
+test("P42 rejects deep, cyclic and oversized question inventories; allows shared immutable objects",()=>{
+ const deep={};let cursor=deep;
+ for(let i=0;i<50;i++){cursor.child={};cursor=cursor.child;}
+ assert.throws(()=>validateExamImportBudget(deep),/nesting limit/);
+ const cyclic={};cyclic.loop=cyclic;
+ assert.throws(()=>validateExamImportBudget(cyclic),/cyclic object/);
+ const shared=clone();
+ shared.questions[0].editorial=shared.questions[1].editorial;
+ assert.equal(validateExamPackage(shared),shared);
+ const source=JSON.parse("{\n  \"format\": \"practice-desk-bank\",\n  \"version\": 1,\n  \"bankId\": \"apfc-starter-demo\",\n  \"examId\": \"upsc-epfo-apfc\",\n  \"title\": \"APFC Sample — Labour, Accountancy & NAT\",\n  \"revision\": 1,\n  \"edition\": \"custom\",\n  \"scoring\": {\n    \"correctMarks\": 2.5,\n    \"negativeFraction\": 0.3333333333333333,\n    \"unansweredMarks\": 0\n  },\n  \"timing\": {\n    \"kind\": \"untimed\"\n  },\n  \"questions\": [\n    {\n      \"id\": \"labour-1\",\n      \"section\": \"Labour and Social Security\",\n      \"type\": \"mcq\",\n      \"question\": \"For EPFO APFC, which type of question is shown in this example?\",\n      \"options\": [\n        \"Multiple-choice question\",\n        \"Only a writing task\",\n        \"An audio task\",\n        \"An image-editing task\"\n      ],\n      \"answer\": \"A\",\n      \"explanation\": \"Demonstration item for a user-authored four-option MCQ. Replace with a source-verified APFC question before real study.\"\n    },\n    {\n      \"id\": \"accounts-1\",\n      \"section\": \"Accountancy\",\n      \"type\": \"mcq\",\n      \"question\": \"In double-entry accounting, each transaction has:\",\n      \"options\": [\n        \"One entry only\",\n        \"Equal debits and credits in total\",\n        \"No ledger impact\",\n        \"Only cash impact\"\n      ],\n      \"answer\": \"B\",\n      \"explanation\": \"Basic example; replace with source-backed APFC material for a real practice bank.\"\n    },\n    {\n      \"id\": \"nat-1\",\n      \"section\": \"Elementary Statistics / NAT\",\n      \"type\": \"nat\",\n      \"question\": \"Find the arithmetic mean of 3, 4 and 5.\",\n      \"answer\": 4,\n      \"tolerance\": 0.01,\n      \"explanation\": \"(3 + 4 + 5) / 3 = 4.\"\n    }\n  ]\n}");
+ source.questions=Array.from({length:2001},(_,i)=>({...source.questions[0],id:"q"+i}));
+ assert.throws(()=>importAuthoredExam(source),/2000 questions/);
+});
+
+test("P42 rejects unsupported source schemes, oversized media and invalid media digest",()=>{
+ const source=clone();
+ source.questions[0].editorial.sources=[{title:"Unsafe source",url:"javascript:alert(1)"}];
+ assert.throws(()=>validateExamPackage(source),/only http\(s\)/);
+ const oversizedMedia=clone();
+ oversizedMedia.assets=[{id:"file",mediaType:"image/png",dataUri:"data:image/png;base64,"+"A".repeat(14*1024*1024+1),contentHash:"0".repeat(64)}];
+ assert.throws(()=>validateExamPackage(oversizedMedia),/image data URI too large/);
+ const tampered=clone();
+ tampered.assets=[{id:"asset",mediaType:"image/png",dataUri:"data:image/png;base64,AA==",contentHash:"0".repeat(64)}];
+ assert.throws(()=>validateExamPackage(tampered),/digest mismatch/);
+});
+
+test("P42 corrupted backup fails closed without altering legitimate v3 payloads",()=>{
+ const backup=makeBackup([{id:"one"}],{schema:1,dark:false,scale:100},"2026-11-02T00:00:00Z");
+ assert.deepEqual(verifyBackup(structuredClone(backup)),backup);
+ const damaged=structuredClone(backup);
+ damaged.records[0].id="tampered";
+ assert.throws(()=>verifyBackup(damaged),/integrity/);
+});
+}
