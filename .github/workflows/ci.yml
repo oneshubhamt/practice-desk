@@ -37,6 +37,15 @@ jobs:
       - run: node scripts/pass33-results-parity.mjs
       - run: node scripts/pass34-v11-display.mjs
       - run: node scripts/pass35-detached-display.mjs
+      - run: node scripts/pass36-library-spacing.mjs
+      - name: Save conditional resume-to-paper spacing evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pass36-library-pending-spacing
+          path: artifacts/pass36-library-spacing/
+          if-no-files-found: warn
+          retention-days: 30
       - name: Save detached Aa and scrolling-header browser evidence
         if: always()
         uses: actions/upload-artifact@v4
