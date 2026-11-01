@@ -92,7 +92,7 @@ function landmarks(era,scene){
   next:old?"#next":"#g-next",flag:old?"#mark":"#g-flag",
   timer:old?"#timer":"#g-timer",submit:old?"#finish":"#g-submit"};
  if(scene.startsWith("result"))return {score:old?".score.standout":".score.standout",
-  table:old?"#resultContent table":"#result-overview > .panel:nth-child(2) table",
+  table:old?"#resultContent table":".result-section-table table",
   tabs:old?".viewtabs":".result-tabs",heading:"#app h1"};
  if(scene.startsWith("history"))return {first:old?".attempt-row":".archive-entry",
   filter:old?"#historyFilter":"#g-filter",heading:"#app h1"};
