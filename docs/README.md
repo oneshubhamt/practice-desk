@@ -40,7 +40,7 @@
 | **All future feature passes, priorities, dependencies and live status** | **[Consolidated P41–P48 Engineering Programme](ENGINEERING_PROGRAMME.md)** | **Sole active implementation programme** |
 | Branch, source and five-step working discipline | [AGENTS](../AGENTS.md) | Binding |
 | Actual supported exam/data/scoring invariants | [Current architecture](architecture/CURRENT_ARCHITECTURE.md) and [data contracts](architecture/DATA_CONTRACTS.md) | Current as-built reference |
-| User-approved decisions and editorial exceptions | [Policy register](decisions/POLICY_REGISTER.md) | Binding D01–D32 |
+| User-approved decisions and editorial exceptions | [Policy register](decisions/POLICY_REGISTER.md) | Binding D01–D33 |
 | Run tests, browser acceptance and release checks | [QA and release guide](QA_CURRENT.md) | Current executable commands; manual gates open |
 | Import CGL/APFC/NAT or advanced six-kind banks | [Authoring guide](architecture/QUESTION_BANK_AUTHORING.md) | Current usage |
 | Original starting architecture audit (28 Oct) | [Baseline v11 architecture](history/BASELINE_V11_ARCHITECTURE.md) | Historical vision, P41–P48 gaps reconciled in new plan |
