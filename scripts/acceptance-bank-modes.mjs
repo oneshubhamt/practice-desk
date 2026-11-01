@@ -3,6 +3,7 @@
  */
 import {openHarness,starterBank,check,records,route,assertNoOverflow} from "./browser/fixtures.mjs";
 import {chooseModernPaper} from "./paper-select.mjs";
+import {readFile} from "node:fs/promises";
 const h=await openHarness({artifactDir:"artifacts/acceptance-modern"});
 const scenes=[];
 for(const v of [
@@ -188,6 +189,24 @@ for(const v of [
   check(!(await page.locator("#g-untimed").isChecked()),
     v.name+" independent six-kind preset did not survive reload");
   if(v.name==="narrow195")await assertNoOverflow(page,v.name+" three exam families at 140% text");
+  if(v.name==="laptop1366"){
+   await page.locator("#g-family").selectOption("builtin:ssc-cgl");
+   const before=(await records(page)).map(r=>r.id).sort();
+   const downloadPromise=page.waitForEvent("download");
+   await page.locator("#g-export-history").click();
+   const archive=JSON.parse(await readFile(await (await downloadPromise).path(),"utf8"));
+   check(archive.setups?.selectedFamilyId==="builtin:ssc-cgl"&&
+     archive.setups.families["builtin:ssc-cgl"]?.untimed===true&&
+     archive.setups.families["imported:upsc-epfo-apfc"]?.untimed===true,
+     "Backup must contain all current per-family setups");
+   await page.locator("#g-untimed").uncheck();
+   await page.locator("#g-history-file").setInputFiles({name:"family-backup.json",
+     mimeType:"application/json",buffer:Buffer.from(JSON.stringify(archive))});
+   await page.waitForFunction(()=>document.querySelector("#g-untimed")?.checked===true);
+   check(await page.locator("#g-family").inputValue()==="builtin:ssc-cgl"&&
+     (await records(page)).map(r=>r.id).sort().join("|")===before.join("|"),
+     "Backup preferences must restore without overwriting or duplicating records");
+  }
   if(v.name==="laptop1366"){
    await page.evaluate(()=>{
      const key="practiceDesk.overhaul.setups.v2";
