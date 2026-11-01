@@ -4732,7 +4732,49 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
   }
 
   // src/app/exam-package.ts
+  function validateExamImportBudget(value) {
+    const MAX_TOTAL_CHARS = 32 * 1024 * 1024;
+    const MAX_NODES = 15e4;
+    const MAX_DEPTH = 48;
+    const seen = /* @__PURE__ */ new WeakSet();
+    let chars = 0, nodes = 0;
+    const walk = (v, depth, field) => {
+      if (++nodes > MAX_NODES) throw Error("Exam import exceeds structural complexity limit");
+      if (depth > MAX_DEPTH) throw Error("Exam import exceeds nesting limit");
+      if (typeof v === "string") {
+        chars += v.length;
+        if (chars > MAX_TOTAL_CHARS) throw Error("Exam import exceeds 32 MiB text budget");
+        if (field === "dataUri") {
+          if (v.length > 14 * 1024 * 1024) throw Error("Exam import image data URI too large");
+        } else if (v.length > 2e4) {
+          throw Error("Exam import text field exceeds 20,000 characters");
+        }
+        if (/(?:^id$|Id$|^bankId$|^examId$|^optionId$|^rubricId$|^questionRevisionIds$)/.test(field) && v.length > 512)
+          throw Error("Exam import identifier too long");
+        return;
+      }
+      if (v === null || typeof v !== "object") return;
+      if (seen.has(v)) throw Error("Exam import contains repeated/cyclic object references");
+      seen.add(v);
+      if (Array.isArray(v)) {
+        if (v.length > MAX_NODES) throw Error("Exam import array is too large");
+        for (const item of v) walk(item, depth + 1, field);
+      } else {
+        const pairs = Object.entries(v);
+        if (pairs.length > MAX_NODES) throw Error("Exam import object is too large");
+        for (const [key2, item] of pairs) {
+          if (key2.length > 512) throw Error("Exam import field name too long");
+          chars += key2.length;
+          if (chars > MAX_TOTAL_CHARS) throw Error("Exam import exceeds 32 MiB text budget");
+          walk(item, depth + 1, key2);
+        }
+      }
+      seen.delete(v);
+    };
+    walk(value, 0, "");
+  }
   function validateExamPackage(value) {
+    validateExamImportBudget(value);
     if (!value || typeof value !== "object") throw new Error("Exam package must be an object");
     const raw = value;
     if (raw.format !== "practice-desk-exam" || raw.version !== 1 || typeof raw.examId !== "string" || !raw.examId.trim() || typeof raw.title !== "string" || !raw.title.trim() || !Array.isArray(raw.questions) || raw.questions.length > 2e3)
@@ -7408,6 +7450,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
   }
   var LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   function importSimpleQuestionBank(value) {
+    validateExamImportBudget(value);
     const bank = obj(value, "Question bank");
     ensure(
       bank["format"] === "practice-desk-bank" && bank["version"] === 1,
