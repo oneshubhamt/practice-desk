@@ -1,12 +1,12 @@
 # Practice Desk — Consolidated Engineering Programme
 
-**Canonical forward-looking implementation plan | Created 1 November 2026 | Branch `overhaul` | Status: PLAN APPROVED FOR ENGINEERING REFERENCE, NO FEATURE PASS IMPLEMENTED BY THIS DOCUMENT**
+**Canonical forward-looking implementation plan | Created 1 November 2026 | Branch `overhaul` | Status: P41 AUTOMATED-VERIFIED; P42 NEXT; FINAL P48 CROSS-PRODUCT QA AND MANUAL RELEASE OPEN**
 
 > **Single source of future work.** This programme consolidates the open recommendations of the **28 October 2026 architecture audit**, the **1 November source-verification/gap analysis**, the completed original-v11 feature-parity and visual programmes, the earlier architecture/state/data passes, and Passes 36–40 test-suite consolidation. **Historical reports remain preserved as evidence; they are not active development queues.** No change to application source, the question banks, the generated HTML, or `main` / `baseline/v11` is authorized merely by writing this plan.
 
 ## 0. Fast handoff — what to read and do next
 
-1. Read **this file** for all OPEN work, ordered passes, decisions, risk and release gates. Next pass is **P41: make source-versus-reviewed original-key comparison mathematically honest**. Do not start other feature passes before its targeted numerical audit.
+1. Read **this file** for all OPEN work, ordered passes, decisions, risk and release gates. **P41 completed with source-level and browser regression verification. Next is P42**, dependency/security and import-hardening work. Do not skip P42's audit and targeted QA.
 2. For an assigned pass, inspect the **current actual `overhaul` HEAD** and relevant `src/`, the [active binding decisions](decisions/POLICY_REGISTER.md), [data contracts](architecture/DATA_CONTRACTS.md) and [QA commands](QA_CURRENT.md). Past claims cannot supersede current source.
 3. Use the **five-step cycle** in `9 and record audit → analysis → implementation → objective reconciliation → targeted QA **in the live ledger in `11, not in a new chronological Markdown document**. Any discovered issue receives a stable ID.
 4. Don't call a pass verified until changed-source inspection and all required CI jobs are green. Keep manual Mac/AT/device checks separate from automated simulation.
@@ -89,7 +89,7 @@ The 28 October document is a **target vision**, not a claim that every optional 
 
 | ID / priority | Requirement or concern | Baseline classification | Source owner / next action |
 |---|---|---|---|
-| **I01 / P0** | Original-publisher-key comparison must not equate changed options merely because A/B/C/D IDs match | **OPEN correctness bug**; 25 changed-option patches, 21 change the text at the old correct option; see 5 Oct Q32 | `source-comparison.ts`, `import-cgl.ts`, Results and frozen snapshots → **P41** |
+| **I01 / P0** | Original-publisher-key comparison must not equate changed options merely because A/B/C/D IDs match | **VERIFIED P41** for conservative exact rendered-content comparison and unavailable/legacy handling; 25 option changes, 21 source-answer-text changes | `source-comparison.ts`, Results, frozen records, unit/browser proof [CI 41336695608](https://github.com/oneshubhamt/practice-desk/actions/runs/41336695608) |
 | **I02 / P0** | Preserve CGL verified result and frozen historical source/Q62 editorial status while fixing I01 | **VERIFIED invariant** requiring regression protection | `review-source.ts`, `scoring.ts`, Q62 docs/tests → **P41** |
 | **I03 / P1** | Dependency versions reproducible; deterministic CI installs | **OPEN** (no lockfile; uses `npm install`) | `package.json`, CI, lockfile and vulnerability/licence review → **P42** |
 | **I04 / P1** | Exam-family navigation and hierarchical Library that scales beyond CGL | **PARTIAL** (one paper selector, edition toggle and custom optgroup) | `generic-ui.ts`, catalogue service/selector, accessible family list → **P43** |
@@ -291,8 +291,8 @@ Use exactly this cycle on **every** future implementation pass; keep a live scra
 
 | Pass | Issue ownership | Initial status | Exit artifact and authority |
 |---|---|---|---|
-| **P41** | I01/I02 source/publisher-key semantics | **OPEN — NEXT** | tested comparable/unavailable policy + frozen source score, source Q32/Q62 table |
-| **P42** | I03/I11/I22 dependency, security and manual Mac test plan | **OPEN** | lockfile/`npm ci`/adversarial import gate, device matrix opened |
+| **P41** | I01/I02 source/publisher-key semantics | **AUTOMATED VERIFIED — DONE** | [Five-job green CI 41336695608](https://github.com/oneshubhamt/practice-desk/actions/runs/41336695608), 179/179 Node, source semantic v2, old v1 score disabled |
+| **P42** | I03/I11/I22 dependency, security and manual Mac test plan | **OPEN — NEXT** | lockfile/`npm ci`/adversarial import gate, device matrix opened |
 | **P43** | I04/I05/I26 family Library, per-exam preset preferences | **OPEN** | full modern exam switching/restore/imported no-mislabel journey |
 | **P44** | I06/I07 custom subset/practice configuration | **OPEN** | deterministic frozen selection, seed, count, policy tests |
 | **P45** | I08/I09/I23 storage stress and health | **OPEN/CONDITIONAL** | measured keep-or-refactor decision, diagnostics and nonloss proof |
@@ -342,6 +342,29 @@ Use exactly this cycle on **every** future implementation pass; keep a live scra
 
 **QA status:** DATA AUDIT ONLY. No implementation, targeted test, CI or manual device success claimed in this checkpoint.
 
+
+### P41 — FINAL implementation / objectives / targeted QA (1 November 2026)
+
+**Status: AUTOMATED VERIFIED; all six P41 acceptance conditions met in tested environments.** Starting source HEAD: `33c59037ff9b2ea8c76d740bb9af80cac18bf090`. Verified implementation and test HEAD: [`2b358c66`](https://github.com/oneshubhamt/practice-desk/commit/2b358c66946b925e27a5fd6da50ea5d6a9a51b79). [Five-job green CI 41336695608](https://github.com/oneshubhamt/practice-desk/actions/runs/41336695608): **179/179 Node tests; current-app Chromium journeys, Firefox, WebKit and guarded HTML publication all SUCCESS.**
+
+**1. AUDIT:** Source and reviewed CGL data were parsed from checked-in `papers.json`/`patches.json`, independently establishing all 25 changed-option items and 21 altered texts at the publisher-correct position (table above). Source 5 October Q32 shows why positional B cannot be treated as the same answer. Inspected `import-cgl.ts`, `source-comparison.ts`, `review-source.ts`, `generic-ui.ts`, stored attempt validator, backup and editorial browser test consumers.
+
+**2. ANALYSE:** Considered restoring legacy full-paper scores by letter (unsafe), heuristic text similarity (not defensible for subtle meaning changes), and **exact equality of rendered question content plus referenced stimulus/media** (selected). Equality must include option text/identity/order, question prompt and referenced stimulus/asset hashes. Even punctuation-only changes are marked unavailable unless separately source-audited; no unsupported semantic equivalence is inferred. Historical v1 snapshots remain loadable but their positional aggregate is **unverified and hidden**. Revised actual scores are neither recalculated nor altered. Source-key hypothetical scores now cover **only an explicitly denominated comparable subset**; source originals and editorial notes remain preserved separately for post-submit provenance.
+
+**3. IMPLEMENT:** `src/engine/source-comparison.ts` now issues source semantic fingerprinted schema v2 entries with per-item `comparable`; validates those claims against the frozen reviewed question and media on load, and excludes unavailable questions from hypothetical totals. Legacy schema v1 records validate without producing a certified numeric comparison. `src/app/generic-ui.ts` distinguishes full/partial/none/legacy source-key states and keeps the actual frozen score unchanged. Source banks, scoring rules, result snapshots and Q62 policy untouched. Expanded `tests/exam-scoring-and-policy.test.mjs` (25/21 census; Q32 identical-letter changed-meaning; reordered options; punctuation, media; positive exact identity; forged hash-recomputed comparability; old v1) and `scripts/acceptance-editorial-provenance.mjs` (actual `file://` Results partial-subset clarity).
+
+**4. OBJECTIVE RECONCILIATION:**
+- **P41-01 VERIFIED:** 25-case table above, independent test inventory; 5 Oct Q32 B is unavailable in source-score comparison.
+- **P41-02 VERIFIED:** versioned semantic fingerprint, frozen target validation, import/stored reference verification, adversarial rehashed false-comparability rejection. Future source changes cannot relabel a frozen target response.
+- **P41-03 VERIFIED:** source `papers.json`, `patches.json`, `solutions.json` are **unchanged** in [baseline→P41 source comparison](https://github.com/oneshubhamt/practice-desk/compare/33c59037ff9b2ea8c76d740bb9af80cac18bf090...2b358c66946b925e27a5fd6da50ea5d6a9a51b79); all 10 CGL editions, original Q62 exclusion / reviewed publisher-B caution +2 and existing assessed marks protected by Node/browser tests.
+- **P41-04 VERIFIED:** no new pre-submit disclosure; Results labels "comparable subset only" with subset marks and counts, or "unavailable" for legacy/none; reviewed actual marks are separate and unchanged. Offline Chromium end-to-end check passed.
+- **P41-05 VERIFIED:** independent changed-letter, reorder, punctuation, altered-media, unchanged-positive, legacy schema and adversarial reference tests; **179/179 Node**, real offline Chromium plus independent Firefox/WebKit platform checks green.
+- **P41-06 VERIFIED:** compare diff changes only `AGENTS.md`, active docs/decision/QA, `source-comparison.ts`, `generic-ui.ts`, and the targeted tests. No source content bank, imported scoring rule, historical actual result or protected branch altered.
+
+**5. TARGETED QA:** source semantic unit/adversarial tests, real Chromium `acceptance-editorial-provenance` with source/reviewed Q62, CGL all-edition score and post-submit source key, existing persistence/navigation/regression suites; full *mandatory automated CI* 5/5 passed as an additional safety gate. This is **not** the new comprehensive final independent P48 product/device QA. Physical macOS Safari/iOS/Android, assistive technology and OS eviction remain **EXTERNAL / NOT TESTED**, not silently certified.
+
+**Rollback:** restore the previous green comparison/Results code and retain frozen v2 snapshots; do not retroactively score them with the unsafe v1 positional assumption. Any backwards-incompatible storage change would require an explicit migration. **P42 next**: dependency reproducibility, import threat model, and physical Mac manual reproduction procedure.
+
 ### Live pass entry template (copy/append directly beneath this section)
 
 ```text
@@ -357,7 +380,7 @@ MANUAL: TESTED / NOT TESTED; environment and evidence
 HANDOFF: next dependency, remaining issue IDs, STOP/GO
 ```
 
-**No implementation-pass completion has been claimed in this new programme.** Creating this document consolidates requirements only. If the user requests the next pass, begin P41 by reading the current source and adding its first AUDIT/ANALYSE entry here **before** modifying code.
+**P41 source implementation and verification recorded above.** P42 is next and remains OPEN. The mandatory independent comprehensive P48 QA and physical device/manual release authorisation remain future work; CI success does not imply public release approval.
 
 ## 12. Maintenance and audit-quality rules
 
