@@ -133,7 +133,7 @@ async function modernScreenJourneys(){
   await p.locator("#g-learning").click();
   s=await state(b,"overhaul-learning");
   must(s.position==="fixed"&&s.trigger.y===12,"Aa did not float on Learning");
-  await p.locator("#g-library").click();
+  await p.locator("#learning-close").click();
   const id=await p.locator("#g-papers option").evaluateAll(xs=>
    xs.find(x=>x.value.includes("cgl-2026-09-30")&&x.value.includes("reviewed"))?.value??"");
   must(Boolean(id),"Expected reviewed CGL option");
