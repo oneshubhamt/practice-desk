@@ -1,7 +1,7 @@
 import {chooseModernPaper} from "./paper-select.mjs";
 // Pass 20 focused offline browser acceptance, not full release QA.
 // Challenges actual selected-policy scoring, editorial preflight, help,
-// independent attribution, sticky Display on long pages and tiny screens.
+// independent attribution, floating Aa with non-sticky header and tiny screens.
 import {mkdtemp,rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
@@ -84,8 +84,10 @@ try{
  await page.locator('[data-mode="strict"]').click();
  await page.locator("#g-start").click();
  await page.locator("#g-exam-full").click();
- ensure(await page.locator("header").isVisible(),
-   "Display header hidden in immersive exam view");
+ ensure(await page.locator("header").isHidden()&&
+        await page.locator("#displayTrigger").isVisible()&&
+        await page.locator("#displayTrigger").evaluate(el=>!el.closest("header")),
+   "Immersive exam must hide the redundant header but keep independent Aa access");
  await page.locator("#displayTrigger").click();
  ensure(await page.locator("#displayPanel").isVisible(),
    "Display popover unavailable in immersive mode");
@@ -105,11 +107,12 @@ try{
      "Display trigger scrolled away or overflowed at "+width+"px");
    const shell=await page.locator("header").evaluate(el=>({
      position:getComputedStyle(el).position,
-     height:el.getBoundingClientRect().height,
-     brand:getComputedStyle(el.querySelector(".brand")).display
+     display:getComputedStyle(el).display,
+     height:el.getBoundingClientRect().height
    }));
-   ensure(shell.position==="fixed"&&shell.height===0&&shell.brand==="none",
-     "Compact Results must use v11-like floating Display access without persistent masthead");
+   ensure(shell.display==="none"&&shell.height===0&&
+          await trigger.evaluate(el=>el.parentElement?.parentElement===document.body),
+     "Results header must be hidden, and Aa must be structurally detached into body");
    await trigger.click();
    const panel=page.locator("#displayPanel");
    ensure(await panel.isVisible(),"Display popover failed to open while scrolled");
