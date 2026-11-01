@@ -46,6 +46,7 @@ async function eventuallySaved(page,condition,label){
  }
  throw Error("Timed out waiting for durable "+label);
 }
+// Sidebar counts belong to the active three-question section of this six-kind paper.
 async function responseTest(){
  const ctx=await browser.newContext();
  const page=await ctx.newPage();page.setDefaultTimeout(14000);
@@ -64,12 +65,12 @@ async function responseTest(){
     "G07: first checkbox selection was immediately lost");
   ensure((await page.locator(".generic-response-group [role=status]").innerText()).includes("Unsaved draft"),
     "G07: incomplete selection not explicitly marked unsaved");
-  ensure(!(await page.locator(".navigator-stats b").first().innerText()).replace(/\s+/g," ").trim()==="1 / 6",
+  ensure(!(await page.locator(".navigator-stats b").first().innerText()).replace(/\s+/g," ").trim()==="1 / 3",
     "G07: incomplete checkbox selection incorrectly scored");
   await page.locator('[data-choice="y"]').check();
   ensure(await page.locator(".generic-response-group [role=status]").count()===0,
     "G07: valid 2-option selection still reports unscored draft");
-  ensure((await page.locator(".navigator-stats b").first().innerText()).replace(/\s+/g," ").trim()==="1 / 6",
+  ensure((await page.locator(".navigator-stats b").first().innerText()).replace(/\s+/g," ").trim()==="1 / 3",
     "G07: valid two-option answer not committed");
   await eventuallySaved(page,rows=>rows.some(a=>a.state.responses.some(x=>
     x.questionRevisionId==="rev-1"&&x.response?.kind==="multiple-select"&&x.response.optionIds.length===2)),
@@ -79,7 +80,7 @@ async function responseTest(){
     "G07: partial edit was not preserved visibly");
   ensure((await page.locator(".generic-response-group [role=status]").innerText()).includes("not saved to your attempt"),
     "G07: partial edit is not disclosed as transient");
-  ensure((await page.locator(".navigator-stats b").first().innerText()).replace(/\s+/g," ").trim()==="0 / 6",
+  ensure((await page.locator(".navigator-stats b").first().innerText()).replace(/\s+/g," ").trim()==="0 / 3",
     "G07: outdated previously saved answer still counts");
   await eventuallySaved(page,rows=>rows.some(a=>a.state.responses.some(x=>
     x.questionRevisionId==="rev-1"&&x.response===undefined)),
@@ -93,7 +94,7 @@ async function responseTest(){
   await page.locator('[data-q="1"]').click();
   ensure(!(await page.locator('[data-choice="y"]').isChecked()),
     "G07: volatile draft was misleadingly persisted through reload");
-  ensure((await page.locator(".navigator-stats b").first().innerText()).replace(/\s+/g," ").trim()==="0 / 6",
+  ensure((await page.locator(".navigator-stats b").first().innerText()).replace(/\s+/g," ").trim()==="0 / 3",
     "G07: reload revived old previously saved selection");
   await page.locator('[data-section="1"]').click();
   await page.locator('[data-q="1"]').click();
