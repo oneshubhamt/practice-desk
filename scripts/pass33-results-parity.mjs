@@ -159,7 +159,7 @@ try{
  }finally{await zoom.context.close();}
  const enough=await make("overhaul",1366,768);
  try{
-  await setDark(enough);await chooseSingle(enough);
+  await setDark(enough);await chooseSingle(enough,"reviewed");
   for(let i=0;i<6;i++){
    await enough.page.waitForTimeout(120);
    await enough.page.locator(".exam-question input[data-choice]").first().click();
