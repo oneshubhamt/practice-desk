@@ -1118,6 +1118,18 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
   width:auto;max-width:none;max-height:calc(100dvh - 65px)
  }
 }
+
+/* P43: two-step exam selection occupies the same desktop first-fold height
+   as the former paper picker. At mobile widths both inputs stay full-width. */
+.home-picker .family-paper-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  align-items:end;gap:12px;min-width:0}
+.home-picker .family-field,.home-picker .paper-field{min-width:0}
+.home-picker .family-paper-row select{min-width:0;max-width:100%}
+.home-picker .family-paper-row .picker{margin:10px 0 6px}
+.paper-preview .family-provenance{margin:6px 0 4px;font-size:12px}
+@media(max-width:600px){
+ .home-picker .family-paper-row{grid-template-columns:minmax(0,1fr);gap:5px}
+}
 </style></head>
 <body><header><div class="wrap"><div class="brand"><div class="symbol">P</div><div><b>Practice Desk</b><small>Offline exam practice</small></div></div><div class="header-actions"><span class="header-offline"><span class="offline-dot"></span> Works offline</span></div></div></header>
 <div class="display-tools" aria-label="Display options"><button type="button" id="displayTrigger" class="display-trigger" aria-label="Display settings" aria-haspopup="true" aria-controls="displayPanel" aria-expanded="false">Aa</button><div id="displayPanel" class="display-panel" hidden><div class="display-heading"><strong>Display</strong><button id="displayClose" type="button" class="display-close" aria-label="Close display settings">×</button></div><div class="display-control"><span>Text size</span><div class="display-size"><button id="fontLess" type="button" class="btn" aria-label="Decrease text size">−</button><button id="fontReset" type="button" class="btn" aria-label="Reset text size">100%</button><button id="fontMore" type="button" class="btn" aria-label="Increase text size">+</button></div></div><div class="display-control"><span>Color theme</span><div class="display-theme-choices" role="group" aria-label="Color theme"><button id="themeLight" class="btn" type="button" aria-pressed="true">Light</button><button id="themeDark" class="btn" type="button" aria-pressed="false">Dark</button></div><button id="themeToggle" class="btn display-theme" type="button" aria-pressed="false">Toggle theme</button></div><button id="displayFullscreen" type="button" class="btn display-fullscreen" aria-pressed="false">Enter full screen</button><p class="fine display-hint">Saved on this device. Full screen is optional.</p><p class="fine" id="preferences-warning" role="status"></p></div></div>
@@ -5362,49 +5374,61 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
   }
 
   // src/app/practice-selection.ts
-  var PRACTICE_SELECTION_KEY = "practiceDesk.overhaul.selection.v1";
-  function validatePracticeSelection(value) {
-    if (!value || typeof value !== "object" || Array.isArray(value)) throw Error("Invalid saved exam selection");
-    const p = value;
-    if (p.schema !== 1 || typeof p.paperRevisionId !== "string" || !p.paperRevisionId.trim() || p.paperRevisionId.length > 300 || !["strict", "free", "single"].includes(p.mode ?? "") || !Number.isSafeInteger(p.section) || p.section < 0 || p.section > 1999 || p.untimed !== void 0 && typeof p.untimed !== "boolean" || p.edition !== void 0 && p.edition !== "source" && p.edition !== "reviewed")
-      throw Error("Invalid saved exam selection");
-    return {
-      schema: 1,
-      paperRevisionId: p.paperRevisionId,
-      mode: p.mode,
-      section: p.section,
-      ...p.untimed !== void 0 ? { untimed: p.untimed } : {},
-      ...p.edition !== void 0 ? { edition: p.edition } : {}
-    };
+  var PRACTICE_SETUPS_KEY = "practiceDesk.overhaul.setups.v2";
+  var validId = (s, max = 600) => typeof s === "string" && Boolean(s.trim()) && s.length <= max && s !== "__proto__" && s !== "constructor" && s !== "prototype";
+  function validatePracticeSetups(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) throw Error("Invalid exam family setups");
+    const raw = value;
+    if (raw.schema !== 2 || !validId(raw.selectedFamilyId, 600) || !raw.families || typeof raw.families !== "object" || Array.isArray(raw.families))
+      throw Error("Invalid exam family setups");
+    const entries = Object.entries(raw.families);
+    if (!entries.length || entries.length > 1e3 || !Object.hasOwn(raw.families, raw.selectedFamilyId))
+      throw Error("Invalid exam family setups");
+    const families = {};
+    for (const [familyId, entry] of entries) {
+      if (!validId(familyId, 600) || !entry || typeof entry !== "object" || Array.isArray(entry))
+        throw Error("Invalid exam family setup");
+      const v = entry;
+      if (!validId(v.paperRevisionId) || !["strict", "free", "single"].includes(String(v.mode)) || !Number.isSafeInteger(v.section) || Number(v.section) < 0 || Number(v.section) > 1999 || typeof v.untimed !== "boolean" || !["source", "reviewed"].includes(String(v.edition)))
+        throw Error("Invalid exam family setup");
+      families[familyId] = {
+        paperRevisionId: v.paperRevisionId,
+        mode: v.mode,
+        section: v.section,
+        untimed: v.untimed,
+        edition: v.edition
+      };
+    }
+    return { schema: 2, selectedFamilyId: raw.selectedFamilyId, families };
   }
-  function readPracticeSelection(storage = localStorage) {
+  function readPracticeSetups(storage = localStorage) {
     try {
-      const data = storage.getItem(PRACTICE_SELECTION_KEY);
-      return data ? validatePracticeSelection(JSON.parse(data)) : null;
+      const raw = storage.getItem(PRACTICE_SETUPS_KEY);
+      return raw ? validatePracticeSetups(JSON.parse(raw)) : null;
     } catch {
       return null;
     }
   }
-  function writePracticeSelection(p, storage = localStorage) {
-    const valid = validatePracticeSelection(p);
-    storage.setItem(PRACTICE_SELECTION_KEY, JSON.stringify(valid));
+  function writePracticeSetups(value, storage = localStorage) {
+    const valid = validatePracticeSetups(value);
+    storage.setItem(PRACTICE_SETUPS_KEY, JSON.stringify(valid));
     return valid;
   }
 
   // src/history/backup.ts
   var clone = (v) => JSON.parse(JSON.stringify(v));
   var digest = (core) => sha256(JSON.stringify(core));
-  function makeBackup(records, preferences, exportedAt, selection) {
+  function makeBackup(records, preferences, exportedAt, setups) {
     if (!Number.isFinite(Date.parse(exportedAt))) throw new Error("Invalid export timestamp");
     const validated = validateDisplayPreferences(preferences);
-    const savedSelection = selection ? validatePracticeSelection(selection) : null;
+    const savedSetups = setups ? validatePracticeSetups(setups) : null;
     const core = clone({
       format: "practice-desk-backup",
       version: 3,
       exportedAt,
       records,
       preferences: validated,
-      ...savedSelection ? { selection: savedSelection } : {}
+      ...savedSetups ? { setups: savedSetups } : {}
     });
     return { ...core, manifest: { algorithm: "sha256", digest: digest(core), recordCount: core.records.length } };
   }
@@ -5417,7 +5441,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     const { manifest, ...core } = b;
     if (!manifest || manifest.algorithm !== "sha256" || manifest.recordCount !== b.records.length || manifest.digest !== digest(core)) throw new Error("Backup integrity check failed");
     validateDisplayPreferences(b.preferences);
-    if (b.selection !== void 0) validatePracticeSelection(b.selection);
+    if (b.setups !== void 0) validatePracticeSetups(b.setups);
     return b;
   }
   function planBackupMerge(existing, incoming, activeId) {
@@ -7424,6 +7448,37 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     return resultPacingHTML(a) + scoreOpportunityHTML(a, allowReview) + speedAccuracyHTML(a, allowReview) + answerRevisionHTML(a) + questionCoachingHTML(a, allowReview);
   }
 
+  // src/app/exam-families.ts
+  var BUILTIN_CGL_FAMILY = "builtin:ssc-cgl";
+  function familyIdFor(bundle, builtinPaperIds) {
+    return builtinPaperIds.has(bundle.paper.id) && bundle.examId === "ssc-cgl" ? BUILTIN_CGL_FAMILY : "imported:" + bundle.examId;
+  }
+  function examFamilyCatalog(packages, builtinPaperIds) {
+    const families = /* @__PURE__ */ new Map();
+    for (const p of packages) {
+      const id = familyIdFor(p, builtinPaperIds);
+      let f = families.get(id);
+      if (!f) {
+        const builtin = id === BUILTIN_CGL_FAMILY;
+        f = {
+          id,
+          title: builtin ? "SSC CGL \xB7 included papers" : "Imported \xB7 " + p.examId,
+          imported: !builtin,
+          examId: p.examId,
+          papers: []
+        };
+        families.set(id, f);
+      }
+      f.papers.push(p);
+    }
+    const result = [...families.values()].sort((a, b) => Number(a.imported) - Number(b.imported) || a.examId.localeCompare(b.examId));
+    for (const f of result) f.papers.sort((a, b) => a.paper.paperId.localeCompare(b.paper.paperId) || a.paper.revision - b.paper.revision || a.paper.edition.localeCompare(b.paper.edition));
+    return result;
+  }
+  function pairedEdition(family, paper, edition) {
+    return family.papers.find((p) => p.examId === paper.examId && p.paper.paperId === paper.paper.paperId && p.paper.edition === edition);
+  }
+
   // src/app/bank-import.ts
   function obj(value, name) {
     if (!value || typeof value !== "object" || Array.isArray(value)) throw Error(name + " must be an object");
@@ -8111,20 +8166,56 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     let choice = [...packages.values()].reverse().find((p) => p.paper.edition === "reviewed")?.paper.id ?? packages.keys().next().value;
     let cglMode = "strict", singleSection = 0, untimedPractice = false;
     let editionView = packages.get(choice)?.paper.edition === "source" ? "source" : "reviewed";
-    const storedSelection = readPracticeSelection();
-    if (storedSelection) {
-      if (packages.has(storedSelection.paperRevisionId)) choice = storedSelection.paperRevisionId;
-      cglMode = storedSelection.mode;
-      untimedPractice = storedSelection.untimed ?? false;
-      editionView = storedSelection.edition ?? (packages.get(choice)?.paper.edition === "source" ? "source" : "reviewed");
-      singleSection = Math.min(
-        storedSelection.section,
-        Math.max(0, (packages.get(choice)?.paper.sections.length ?? 1) - 1)
-      );
-    }
+    const storedSetups = readPracticeSetups();
+    let selectedFamilyId = BUILTIN_CGL_FAMILY;
+    let setups = storedSetups ?? {
+      schema: 2,
+      selectedFamilyId: BUILTIN_CGL_FAMILY,
+      families: { [BUILTIN_CGL_FAMILY]: {
+        paperRevisionId: choice,
+        mode: cglMode,
+        section: singleSection,
+        untimed: untimedPractice,
+        edition: editionView
+      } }
+    };
+    const families = () => examFamilyCatalog(packages.values(), builtinPaperIds);
+    const applyFamily = (id) => {
+      selectedFamilyId = id;
+      const previous = setups.families[id];
+      if (previous) {
+        choice = previous.paperRevisionId;
+        cglMode = previous.mode;
+        singleSection = previous.section;
+        untimedPractice = previous.untimed;
+        editionView = previous.edition;
+      } else {
+        const family = families().find((f) => f.id === id);
+        const paper = family?.papers.find((p) => p.paper.edition === "reviewed") ?? family?.papers[0];
+        choice = paper?.paper.id ?? "";
+        cglMode = "strict";
+        singleSection = 0;
+        untimedPractice = false;
+        editionView = paper?.paper.edition === "source" ? "source" : "reviewed";
+      }
+      if (packages.has(choice))
+        singleSection = Math.min(singleSection, Math.max(0, packages.get(choice).paper.sections.length - 1));
+    };
     const saveSelection = () => {
+      const next = {
+        schema: 2,
+        selectedFamilyId,
+        families: { ...setups.families, [selectedFamilyId]: {
+          paperRevisionId: choice,
+          mode: cglMode,
+          section: singleSection,
+          untimed: untimedPractice,
+          edition: editionView
+        } }
+      };
+      setups = next;
       try {
-        writePracticeSelection({ schema: 1, paperRevisionId: choice, mode: cglMode, section: singleSection, untimed: untimedPractice, edition: editionView });
+        writePracticeSetups(next);
       } catch {
         warning = "Exam setup could not be saved on this device; current selection still works.";
       }
@@ -8181,7 +8272,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
           valid,
           readDisplayPreferences(),
           (/* @__PURE__ */ new Date()).toISOString(),
-          readPracticeSelection()
+          setups
         );
         const blob = new Blob([JSON.stringify(archive)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
@@ -8235,13 +8326,9 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       try {
         writeDisplayPreferences(archive.preferences);
         window.dispatchEvent(new Event(SETTINGS_EVENT));
-        if (archive.selection && packages.has(archive.selection.paperRevisionId)) {
-          choice = archive.selection.paperRevisionId;
-          cglMode = archive.selection.mode;
-          singleSection = Math.min(
-            archive.selection.section,
-            Math.max(0, (packages.get(choice)?.paper.sections.length ?? 1) - 1)
-          );
+        if (archive.setups) {
+          setups = archive.setups;
+          applyFamily(setups.selectedFamilyId);
           saveSelection();
         }
         warning = "Imported " + incoming.length + " records; available display/exam setup preferences restored.";
@@ -8588,8 +8675,9 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       const complete = all.filter((a) => a.finishedAt !== null);
       const pending = all.filter((a) => a.finishedAt === null);
       const latest = [...complete].sort((a, b) => (b.finishedAt ?? 0) - (a.finishedAt ?? 0) || b.startedAt - a.startedAt).slice(0, 3);
-      const selected = packages.get(choice);
-      const cgl = selected !== void 0 && builtinPaperIds.has(selected.paper.id);
+      const catalog = families(), family = catalog.find((f) => f.id === selectedFamilyId);
+      const selected = family?.papers.find((p) => p.paper.id === choice);
+      const cgl = selectedFamilyId === BUILTIN_CGL_FAMILY && Boolean(selected);
       const configured = selected ? configureUntimedPractice(
         cgl ? configureCglPractice(selected, cglMode, singleSection) : selected,
         untimedPractice
@@ -8605,16 +8693,19 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       const questionCount = cgl && cglMode === "single" ? selected?.paper.sections[singleSection]?.questionRevisionIds.length ?? 0 : count;
       const previewSections = cgl && cglMode === "single" ? 1 : selected?.paper.sections.length ?? 0;
       const previewNavigation = cgl ? cglMode === "free" ? "Free" : cglMode === "single" ? "One section" : "Section locked" : selected?.paper.navigation.sectionNavigation === "free" ? "Free" : "Sequential";
-      const published = [...packages.values()].filter((p) => p.paper.edition === editionView);
-      const custom = [...packages.values()].filter((p) => p.paper.edition === "custom");
+      const available = family?.papers ?? [];
+      const published = available.filter((p) => p.paper.edition === editionView);
+      const custom = available.filter((p) => p.paper.edition === "custom");
       const option = (p) => '<option value="' + escapeText(p.paper.id) + '"' + (choice === p.paper.id ? " selected" : "") + ">" + escapeText(p.title) + "</option>";
-      const options = '<optgroup label="' + (editionView === "reviewed" ? "Reviewed papers" : "Original papers") + '">' + published.map(option).join("") + "</optgroup>" + (custom.length ? '<optgroup label="Imported / custom examinations">' + custom.map(option).join("") + "</optgroup>" : "");
-      const hasEditions = [...packages.values()].some((p) => p.paper.edition === "source") && [...packages.values()].some((p) => p.paper.edition === "reviewed");
-      return '<div class="generic-heading home-heading"><div><span class="eyebrow">OFFLINE PRACTICE STUDIO</span><h1>Test library</h1><p class="muted">Choose a paper, work in exam conditions and learn from every attempt.</p></div><button class="btn quiet" id="g-history">History & insights \u2192</button></div>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + (pending.length ? '<section class="panel pad pending-panel" id="g-pending-attempts"><div class="row between"><div><span class="eyebrow">PICK UP WHERE YOU LEFT OFF</span><h2>Unfinished attempts</h2><p class="fine">' + pending.length + " saved, resumable test" + (pending.length === 1 ? "" : "s") + ". Section timers follow the frozen exam policy; leaving the app does not pause a running clock.</p></div>" + (pending.length > 5 ? '<button type="button" class="textlink" id="g-pending-history">View all ' + pending.length + " \u2192</button>" : "") + '</div><div class="pending-attempt-list">' + pending.slice(0, 5).map((a) => '<button class="recent-attempt" data-attempt="' + escapeText(a.id) + '" aria-label="Resume ' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + '"><b>' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + "</b><small>" + new Date(a.startedAt).toLocaleString() + " \xB7 " + escapeText(a.frozen.snapshot.mode.replaceAll("-", " ")) + " \xB7 " + a.state.responses.filter((z) => z.response !== void 0).length + " answers \xB7 Resume \u2192</small></button>").join("") + "</div>" + (pending.length > 5 ? '<p class="fine">Showing the five most recent unfinished tests; all others are preserved in History.</p>' : "") + "</section>" : "") + '<div class="generic-layout home-grid"><section class="panel pad home-picker"><h2 class="sr-only">Start a practice session</h2><label class="picker" for="g-papers">Paper</label><select id="g-papers">' + options + "</select>" + (hasEditions ? '<div class="edition-row"><span class="picker" id="editionLabel">Paper edition</span><div class="edition-toggle" id="g-edition" role="group" aria-labelledby="editionLabel">' + ["reviewed", "source"].map((edition) => '<button type="button" class="edition-choice ' + (editionView === edition ? "active" : "") + '" data-edition="' + edition + '" aria-pressed="' + (editionView === edition) + '">' + (edition === "reviewed" ? "Reviewed &amp; Corrected" : "Original PDF") + "</button>").join("") + '</div><p class="fine edition-note">' + (editionView === "reviewed" ? "Independently reviewed wording and answer keys; disputed items are labelled after submission." : "Original publisher transcription; no independent key changes applied.") + "</p></div>" : "") + (cgl ? '<h3 class="subhead">Practice mode</h3><div class="generic-modes" role="group" aria-label="SSC CGL practice mode">' + [
+      const missing = !selected && choice ? '<option value="' + escapeText(choice) + '" selected disabled>Saved paper unavailable \u2014 re-import or choose another</option>' : "";
+      const options = missing + (published.length ? '<optgroup label="' + (editionView === "reviewed" ? "Reviewed papers" : "Original papers") + '">' + published.map(option).join("") + "</optgroup>" : "") + (custom.length ? '<optgroup label="Imported / custom examinations">' + custom.map(option).join("") + "</optgroup>" : "") + (!selected && !missing ? '<option value="" selected disabled>Choose a paper</option>' : "");
+      const hasEditions = available.some((p) => p.paper.edition === "source") && available.some((p) => p.paper.edition === "reviewed");
+      const familyOptions = (selectedFamilyId && !family ? '<option value="' + escapeText(selectedFamilyId) + '" selected disabled>Saved exam family unavailable \u2014 re-import</option>' : "") + catalog.map((f) => '<option value="' + escapeText(f.id) + '"' + (f.id === selectedFamilyId ? " selected" : "") + ">" + escapeText(f.title) + " (" + f.papers.length + " paper edition" + (f.papers.length === 1 ? "" : "s") + ")</option>").join("");
+      return '<div class="generic-heading home-heading"><div><span class="eyebrow">OFFLINE PRACTICE STUDIO</span><h1>Test library</h1><p class="muted">Choose a paper, work in exam conditions and learn from every attempt.</p></div><button class="btn quiet" id="g-history">History & insights \u2192</button></div>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + (pending.length ? '<section class="panel pad pending-panel" id="g-pending-attempts"><div class="row between"><div><span class="eyebrow">PICK UP WHERE YOU LEFT OFF</span><h2>Unfinished attempts</h2><p class="fine">' + pending.length + " saved, resumable test" + (pending.length === 1 ? "" : "s") + ". Section timers follow the frozen exam policy; leaving the app does not pause a running clock.</p></div>" + (pending.length > 5 ? '<button type="button" class="textlink" id="g-pending-history">View all ' + pending.length + " \u2192</button>" : "") + '</div><div class="pending-attempt-list">' + pending.slice(0, 5).map((a) => '<button class="recent-attempt" data-attempt="' + escapeText(a.id) + '" aria-label="Resume ' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + '"><b>' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + "</b><small>" + new Date(a.startedAt).toLocaleString() + " \xB7 " + escapeText(a.frozen.snapshot.mode.replaceAll("-", " ")) + " \xB7 " + a.state.responses.filter((z) => z.response !== void 0).length + " answers \xB7 Resume \u2192</small></button>").join("") + "</div>" + (pending.length > 5 ? '<p class="fine">Showing the five most recent unfinished tests; all others are preserved in History.</p>' : "") + "</section>" : "") + '<div class="generic-layout home-grid"><section class="panel pad home-picker"><h2 class="sr-only">Start a practice session</h2><div class="family-paper-row"><div class="family-field"><label class="picker" for="g-family">Examination family</label><select id="g-family" aria-label="Examination family">' + familyOptions + '</select></div><div class="paper-field"><label class="picker" for="g-papers">Paper</label><select id="g-papers">' + options + "</select></div></div>" + (!selected ? '<p class="generic-warning" role="status">Saved paper unavailable. Re-import its revision or select an installed paper.</p>' : "") + (hasEditions ? '<div class="edition-row"><span class="picker" id="editionLabel">Paper edition</span><div class="edition-toggle" id="g-edition" role="group" aria-labelledby="editionLabel">' + ["reviewed", "source"].map((edition) => '<button type="button" class="edition-choice ' + (editionView === edition ? "active" : "") + '" data-edition="' + edition + '" aria-pressed="' + (editionView === edition) + '">' + (cgl ? edition === "reviewed" ? "Reviewed &amp; Corrected" : "Original PDF" : edition === "reviewed" ? "Imported reviewed" : "Imported source") + "</button>").join("") + '</div><p class="fine edition-note">' + (family?.imported ? "User-supplied edition; Practice Desk does not certify its questions or keys." : editionView === "reviewed" ? "Independently reviewed wording and answer keys; disputed items are labelled after submission." : "Original publisher transcription; no independent key changes applied.") + "</p></div>" : "") + (cgl ? '<h3 class="subhead">Practice mode</h3><div class="generic-modes" role="group" aria-label="SSC CGL practice mode">' + [
         ["strict", "Exam simulation", "4 locked sections \xB7 15 minutes each"],
         ["free", "Flexible full paper", "60 minutes \xB7 move between sections"],
         ["single", "Section practice", "25 questions \xB7 15 minutes"]
-      ].map(([key2, title, detail]) => '<button type="button" class="mode ' + (cglMode === key2 ? "on" : "") + '" data-mode="' + key2 + '" aria-pressed="' + (cglMode === key2) + '"><span class="radio-dot"></span><span><strong>' + title + "</strong><small>" + detail + "</small></span></button>").join("") + "</div>" + (cglMode === "single" ? '<label class="picker" for="g-single-section">Choose section</label><select id="g-single-section">' + selected.paper.sections.map((z, i) => '<option value="' + i + '"' + (singleSection === i ? " selected" : "") + ">" + escapeText(z.title) + "</option>").join("") + "</select>" : "") : "") + '<label class="untimed-option" for="g-untimed"><input type="checkbox" id="g-untimed"' + (untimedPractice ? " checked" : "") + '><span><strong>Untimed practice</strong><small>No countdown or automatic expiry. Keep the selected navigation and scoring rules; finish when ready.</small></span></label><div class="row generic-actions home-start"><button class="btn primary" id="g-start"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + ">Start " + escapeText(modeLabel) + ' \u2192</button><button class="btn" id="g-import"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + '>Import question bank</button></div><input type="file" id="g-file" accept=".json,application/json" hidden><p class="fine">Start with an editable <button type="button" class="textlink" id="g-bank-template">Download APFC/NAT bank template</button> (JSON). Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section><aside class="home-side"><section class="panel pad paper-preview"><span class="eyebrow">SELECTED PAPER</span><h2>' + escapeText(selected?.title ?? "Choose a paper") + '</h2><p class="fine">' + escapeText(selected?.paper.paperId ?? "") + " \xB7 " + escapeText(selected?.paper.edition ?? "") + '</p><div class="preview-metrics"><div><b>' + questionCount + "</b><small>Questions</small></div><div><b>" + escapeText(time) + "</b><small>Time</small></div><div><b>" + escapeText(previewSections) + "</b><small>Sections</small></div><div><b>" + escapeText(previewNavigation) + '</b><small>Navigation</small></div></div><p class="fine">Scoring and timer rules are frozen when you start; later paper edits cannot change a saved result.</p>' + (preflight ? preflightHTML(preflight) : "") + '</section><section class="panel pad recent-panel"><div class="row between"><h2>Recent completed results</h2><button class="textlink" id="g-history-recent">View all \u2192</button></div>' + (latest.length ? latest.map((a) => '<button class="recent-attempt" data-attempt="' + escapeText(a.id) + '"><b>' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + "</b><small>" + new Date(a.finishedAt ?? a.startedAt).toLocaleDateString() + " \xB7 " + escapeText(a.frozen.snapshot.mode.replaceAll("-", " ")) + " \xB7 " + escapeText(frozenScoreSummary(a)?.text ?? "Score unavailable") + "</small></button>").join("") : '<p class="fine">Your three most recent completed results will appear here; unfinished attempts stay in their own Resume area.</p>') + '</section></aside></div><div class="home-utilities"><section class="panel pad learning-entry"><div><span class="eyebrow">REVISE & IMPROVE</span><h2>Learning & revision</h2><p class="fine">Error notebook, FSRS-7 spaced review, source-linked revision tests and topic evidence.</p></div><button class="btn primary" id="g-learning">Open learning desk \u2192</button></section><section class="panel pad backup-home"><div><span class="eyebrow">YOUR DATA</span><h2>Portable offline history</h2><p class="fine">Stored in this browser. Export a backup to protect your history and notes.</p></div><div class="row generic-actions"><button class="btn" id="g-export-history"' + (loading ? " disabled" : "") + '>Export backup</button><button class="btn" id="g-import-history"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + '>Import backup</button></div><input type="file" id="g-history-file" accept=".json,application/json" hidden></section></div><div class="home-stats">' + [["Paper editions", packages.size], ["Completed tests", complete.length], ["Attempts in progress", pending.length], ["Notebook cards", [...records.values()].filter(isLearning).length]].map(([name, value]) => '<div class="home-stat"><small>' + escapeText(name) + "</small><b>" + escapeText(value) + "</b></div>").join("") + "</div>" + (preflight ? examRulesHTML(preflight) : "");
+      ].map(([key2, title, detail]) => '<button type="button" class="mode ' + (cglMode === key2 ? "on" : "") + '" data-mode="' + key2 + '" aria-pressed="' + (cglMode === key2) + '"><span class="radio-dot"></span><span><strong>' + title + "</strong><small>" + detail + "</small></span></button>").join("") + "</div>" + (cglMode === "single" ? '<label class="picker" for="g-single-section">Choose section</label><select id="g-single-section">' + selected.paper.sections.map((z, i) => '<option value="' + i + '"' + (singleSection === i ? " selected" : "") + ">" + escapeText(z.title) + "</option>").join("") + "</select>" : "") : "") + '<label class="untimed-option" for="g-untimed"><input type="checkbox" id="g-untimed"' + (untimedPractice ? " checked" : "") + '><span><strong>Untimed practice</strong><small>No countdown or automatic expiry. Keep the selected navigation and scoring rules; finish when ready.</small></span></label><div class="row generic-actions home-start"><button class="btn primary" id="g-start"' + (loading || fallbackConflict || storageFault || !selected ? " disabled" : "") + ">Start " + escapeText(modeLabel) + ' \u2192</button><button class="btn" id="g-import"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + '>Import question bank</button></div><input type="file" id="g-file" accept=".json,application/json" hidden><p class="fine">Start with an editable <button type="button" class="textlink" id="g-bank-template">Download APFC/NAT bank template</button> (JSON). Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section><aside class="home-side"><section class="panel pad paper-preview"><span class="eyebrow">SELECTED PAPER</span><h2>' + escapeText(selected?.title ?? "Choose a paper") + '</h2><p class="fine family-provenance">' + (family?.imported ? "Imported/user-supplied content; not an official exam bank." : family ? "Included SSC CGL papers. Original and reviewed versions remain distinct." : "Saved examination unavailable. Re-import the bank or select another.") + '</p><p class="fine">' + escapeText(selected?.paper.paperId ?? "") + " \xB7 " + escapeText(selected?.paper.edition ?? "") + '</p><div class="preview-metrics"><div><b>' + questionCount + "</b><small>Questions</small></div><div><b>" + escapeText(time) + "</b><small>Time</small></div><div><b>" + escapeText(previewSections) + "</b><small>Sections</small></div><div><b>" + escapeText(previewNavigation) + '</b><small>Navigation</small></div></div><p class="fine">Scoring and timer rules are frozen when you start; later paper edits cannot change a saved result.</p>' + (preflight ? preflightHTML(preflight) : "") + '</section><section class="panel pad recent-panel"><div class="row between"><h2>Recent completed results</h2><button class="textlink" id="g-history-recent">View all \u2192</button></div>' + (latest.length ? latest.map((a) => '<button class="recent-attempt" data-attempt="' + escapeText(a.id) + '"><b>' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + "</b><small>" + new Date(a.finishedAt ?? a.startedAt).toLocaleDateString() + " \xB7 " + escapeText(a.frozen.snapshot.mode.replaceAll("-", " ")) + " \xB7 " + escapeText(frozenScoreSummary(a)?.text ?? "Score unavailable") + "</small></button>").join("") : '<p class="fine">Your three most recent completed results will appear here; unfinished attempts stay in their own Resume area.</p>') + '</section></aside></div><div class="home-utilities"><section class="panel pad learning-entry"><div><span class="eyebrow">REVISE & IMPROVE</span><h2>Learning & revision</h2><p class="fine">Error notebook, FSRS-7 spaced review, source-linked revision tests and topic evidence.</p></div><button class="btn primary" id="g-learning">Open learning desk \u2192</button></section><section class="panel pad backup-home"><div><span class="eyebrow">YOUR DATA</span><h2>Portable offline history</h2><p class="fine">Stored in this browser. Export a backup to protect your history and notes.</p></div><div class="row generic-actions"><button class="btn" id="g-export-history"' + (loading ? " disabled" : "") + '>Export backup</button><button class="btn" id="g-import-history"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + '>Import backup</button></div><input type="file" id="g-history-file" accept=".json,application/json" hidden></section></div><div class="home-stats">' + [["Paper editions", packages.size], ["Completed tests", complete.length], ["Attempts in progress", pending.length], ["Notebook cards", [...records.values()].filter(isLearning).length]].map(([name, value]) => '<div class="home-stat"><small>' + escapeText(name) + "</small><b>" + escapeText(value) + "</b></div>").join("") + "</div>" + (preflight ? examRulesHTML(preflight) : "");
     }
     function packageForAttempt(saved) {
       return packages.get(saved.packageId) ?? [...packages.values()].find((p) => p.paper.paperId === saved.frozen.paper.paperId && p.paper.edition === saved.frozen.paper.edition);
@@ -8915,6 +9006,13 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       }
       if (view === "library") {
         root2.querySelector("#g-learning").onclick = () => go({ screen: "learning" });
+        root2.querySelector("#g-family").onchange = (e) => {
+          const id = e.target.value;
+          if (!families().some((f) => f.id === id)) return;
+          applyFamily(id);
+          saveSelection();
+          draw();
+        };
         root2.querySelector("#g-papers").onchange = (e) => {
           choice = e.target.value;
           const chosen = packages.get(choice);
@@ -8930,8 +9028,9 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
           if (next === editionView) return;
           const current = packages.get(choice);
           editionView = next;
-          const same = current ? [...packages.values()].find((p) => p.paper.edition === next && p.examId === current.examId && p.paper.paperId === current.paper.paperId) : void 0;
-          const first = [...packages.values()].find((p) => p.paper.edition === next);
+          const family = families().find((f) => f.id === selectedFamilyId);
+          const same = current && family ? pairedEdition(family, current, next) : void 0;
+          const first = family?.papers.find((p) => p.paper.edition === next);
           choice = (same ?? first ?? current)?.paper.id ?? choice;
           singleSection = Math.min(singleSection, Math.max(0, (packages.get(choice)?.paper.sections.length ?? 1) - 1));
           saveSelection();
@@ -8970,20 +9069,20 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
         };
         root2.querySelector("#g-start").onclick = () => {
           const p = packages.get(choice);
-          if (!p) return;
+          if (!p || familyIdFor(p, builtinPaperIds) !== selectedFamilyId) return;
           const unfinished = [...records.values()].filter((row) => isAttempt(row) && row.finishedAt === null);
           if (unfinished.length && !confirm(
             "You have " + unfinished.length + " unfinished test" + (unfinished.length === 1 ? "" : "s") + ". Start a separate attempt? Existing attempts will be kept; their timers continue until expiry when resumed or while active."
           )) return;
           const id = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "generic-" + now2() + "-" + Math.random();
           const configured = configureUntimedPractice(
-            p.examId === "ssc-cgl" ? configureCglPractice(p, cglMode, singleSection) : p,
+            selectedFamilyId === BUILTIN_CGL_FAMILY ? configureCglPractice(p, cglMode, singleSection) : p,
             untimedPractice
           );
           attempt = startGenericAttempt(configured, id, now2());
           freshlyStartedAttemptId = attempt.id;
           if (configured.paper.edition === "reviewed") {
-            const source = [...packages.values()].find((candidate) => candidate.paper.edition === "source" && candidate.paper.paperId === configured.paper.paperId && candidate.examId === configured.examId);
+            const source = [...packages.values()].find((candidate) => candidate.paper.edition === "source" && familyIdFor(candidate, builtinPaperIds) === selectedFamilyId && candidate.paper.paperId === configured.paper.paperId && candidate.examId === configured.examId);
             if (source) {
               const original = createSourceKeyReference(configured, source);
               const review = createSourceReviewReference(configured, source);
@@ -9035,6 +9134,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
             if (packages.has(pkg.paper.id)) throw new Error("Paper revision ID already exists. Supply a new revision ID.");
             if (!await save({ recordType: "generic-package", id: "generic-package:" + pkg.paper.id, bundle: pkg })) return;
             packages.set(pkg.paper.id, pkg);
+            applyFamily(familyIdFor(pkg, builtinPaperIds));
             choice = pkg.paper.id;
             singleSection = 0;
             if (pkg.paper.edition === "source" || pkg.paper.edition === "reviewed") editionView = pkg.paper.edition;
@@ -9485,14 +9585,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
           warning = "Browser storage is unavailable; attempts may not survive a reload.";
         }
       }
-      if (storedSelection && packages.has(storedSelection.paperRevisionId)) {
-        choice = storedSelection.paperRevisionId;
-        cglMode = storedSelection.mode;
-        singleSection = Math.min(
-          storedSelection.section,
-          Math.max(0, (packages.get(choice)?.paper.sections.length ?? 1) - 1)
-        );
-      }
+      if (storedSetups) applyFamily(storedSetups.selectedFamilyId);
       loading = false;
       routeHydrated = true;
       hydrationDone();
