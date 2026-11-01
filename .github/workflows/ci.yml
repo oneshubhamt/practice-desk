@@ -33,6 +33,15 @@ jobs:
       - run: node scripts/pass28-semantics.mjs
       - run: node scripts/pass30-ui.mjs
       - run: node scripts/pass31-ui.mjs
+      - run: node scripts/pass32-native-navigation.mjs
+      - name: Save native Navigation API file-scheme/deep-link evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pass32-native-navigation-browser-journeys
+          path: artifacts/pass32-native-navigation/
+          if-no-files-found: warn
+          retention-days: 30
       - name: Save paired v11 compact header, navigator and responsive interactions
         if: always()
         uses: actions/upload-artifact@v4
