@@ -20,6 +20,20 @@ jobs:
           package-manager-cache: false
       # No committed lockfile yet. npm ci is not supported until one exists.
       - run: npm install --no-audit --no-fund
+      - name: P42 temporary lockfile and dependency evidence (remove after capture)
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "P42_NODE=$(node --version) NPM=$(npm --version)"
+          test -s package-lock.json
+          echo P42_LOCK_BEGIN
+          base64 -w0 package-lock.json
+          echo
+          echo P42_LOCK_END
+          npm ls --all --json > .tmp-p42-dependencies.json || true
+          node -e 'const d=require("./.tmp-p42-dependencies.json");console.log("P42_DEP_TREE", JSON.stringify(Object.keys(d.dependencies??{})))'
+          npm audit --json > .tmp-p42-audit.json || true
+          node -e 'const a=require("./.tmp-p42-audit.json");console.log("P42_AUDIT",JSON.stringify({metadata:a.metadata?.vulnerabilities,packages:Object.keys(a.vulnerabilities??{})}))'
       - run: npm run check
       - name: Save source-verified standalone HTML
         if: github.event_name == 'push' && github.ref == 'refs/heads/overhaul'
