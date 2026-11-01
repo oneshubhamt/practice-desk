@@ -992,6 +992,12 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    const grades=resultTab==="overview"?manualGradeSummary(attempt):{graded:0,pending:0,total:0};
    const selfAssessed=s.snapshot.earnedMarks+grades.total;
    const originalKey=resultTab==="overview"?sourceKeyScore(attempt):null;
+   const legacySourceKey=resultTab==="overview"&&attempt.sourceKeyReference?.schema===1;
+   const sourceKeyText=originalKey&&originalKey.comparable>0?
+     (originalKey.unavailable>0?"Comparable original-source subset only":"Original-source key comparison")+
+     ": "+originalKey.marks.toFixed(1)+" / "+originalKey.maxMarks.toFixed(1)+
+     " marks ("+originalKey.comparable+" of "+originalKey.total+" comparable; "+
+     originalKey.unavailable+" unavailable)":null;
    const scorePrecision=paper.scoring.decimalPlaces??2;
    const markLabel=(value:number)=>value.toFixed(scorePrecision);
    const eligibleMax=resultTab==="overview"?scoreableMaximum(paper,attempt.frozen.key,attempt.frozen.questions):0;
@@ -1016,14 +1022,23 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        ' positive marks · −'+escapeText(markLabel(s.snapshot.penaltyMarks))+
        ' penalties · adjusted score '+escapeText(markLabel(s.snapshot.earnedMarks))+
        ' / '+escapeText(markLabel(eligibleMax))+
-       (originalKey?' · Original-source key comparison: '+escapeText(originalKey.marks.toFixed(1))+
-        ' / '+escapeText(originalKey.maxMarks.toFixed(1)):"")+'.</p>':"";
+       (sourceKeyText?' · '+escapeText(sourceKeyText):"")+'.</p>':"";
    const scoringDetails=resultTab==="overview"?'<details class="result-scoring-details">'+
      '<summary>Scoring details</summary><div class="result-scoring-detail-body">'+
-     (originalKey?'<p class="fine"><b>Original-source key (unadjusted):</b> '+
-       escapeText(originalKey.marks.toFixed(1))+' / '+escapeText(originalKey.maxMarks.toFixed(1))+
-       ' marks · '+originalKey.correct+' correct · '+originalKey.incorrect+' incorrect · '+
-       originalKey.unanswered+' unanswered. Uses the source key frozen at test start, including questions excluded from the reviewed score. This comparison is not an official score.</p>':"")+
+     (legacySourceKey?
+       '<p class="fine"><b>Original-source key comparison unavailable:</b> This older saved attempt has a positional-only publisher-key snapshot. When revised options change meaning, matching answer letters are not proof of an equivalent answer. Its actual frozen result remains unchanged; original key and wording remain available for provenance.</p>':
+       originalKey&&originalKey.comparable>0?
+       '<p class="fine"><b>'+escapeText(originalKey.unavailable?
+         "Original-source key — comparable subset only":"Original-source key comparison")+
+       ':</b> '+escapeText(originalKey.marks.toFixed(1))+' / '+
+       escapeText(originalKey.maxMarks.toFixed(1))+' marks · '+
+       originalKey.correct+' correct · '+originalKey.incorrect+' incorrect · '+
+       originalKey.unanswered+' unanswered · '+originalKey.comparable+' of '+
+       originalKey.total+' questions comparable; '+originalKey.unavailable+
+       ' unavailable. Only source/reviewed questions with identical verified wording, option identities and media are included; this subset is not a full-paper or official score. The actual reviewed score above is unchanged.</p>':
+       originalKey&&originalKey.total>0?
+       '<p class="fine"><b>Original-source key comparison unavailable:</b> None of the '+
+       originalKey.total+' source/reviewed questions had defensible comparable semantics. Original text and key remain as post-test provenance; your actual frozen score is unchanged.</p>':"")+
      '<p class="fine"><b>Scoring envelope:</b> nominal full-credit ceiling '+
        escapeText(markLabel(eligibleMax))+'; conservative lower bound '+
        escapeText(markLabel(conservativeFloor))+
