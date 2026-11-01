@@ -53,7 +53,7 @@ test("F01: early-submitted sequential section and final section preserve timer d
  const rows=sectionScoreSummaries(attempt,attempt.result);
  assert.deepEqual(rows.map(x=>x.timerMs),[125,225]);
  assert.deepEqual(rows.map(x=>x.timerReason),["submitted","submitted"]);
- assert.match(sectionPaceHTML(attempt),/Timer: 00:01/);
+ assert.match(sectionPaceHTML(attempt),/Section time: 00:01/);
 });
 
 test("F01: manual expiry freezes waiting interval through persistence and restore",()=>{
