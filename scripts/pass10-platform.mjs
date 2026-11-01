@@ -52,6 +52,9 @@ try{
  else assert(await page.locator(".history-archive").count()===1,
    "History route did not restore after reload");
  await page.locator('[data-attempt="'+saved.id+'"]').first().click();
+ // The URL commits before the native handler completes its asynchronous
+ // frozen-session restoration. Wait for the answer UI, not merely a click.
+ await page.locator('input[data-choice]:checked').first().waitFor({state:"visible"});
  assert(await page.locator('input[data-choice]:checked').count()===1,
   "Same-profile file:// restart lost saved answer");
  await page.locator("#g-library").click();
