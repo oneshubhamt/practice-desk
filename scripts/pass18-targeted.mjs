@@ -83,7 +83,7 @@ try{
    "A section timer value is missing or invalid");
  const resultsText=await page.locator("#result-overview").innerText();
  ensure(resultsText.includes("Test timer used")&&resultsText.includes("Attempt rate")&&
-   resultsText.includes("Median answered time")&&resultsText.includes("Section timer"),
+   resultsText.includes("Median per answered question")&&resultsText.includes("Section time"),
    "F01/F09 result visibility missing");
  await page.locator("#g-history-results").click();
  ensure(await page.locator('[data-delete="'+completed.id+'"]').count()===1,
