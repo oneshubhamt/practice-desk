@@ -4,7 +4,7 @@ import {readFile} from "node:fs/promises";
 import {importAuthoredExam,importSimpleQuestionBank} from "../src/app/bank-import.ts";
 import {validateExamPackage,builtinCglPackages,configureCglPractice,
  configureUntimedPractice,startGenericAttempt,transitionGenericAttempt} from "../src/app/exam-package.ts";
-import {validatePracticeSelection} from "../src/app/practice-selection.ts";
+import {validatePracticeSetups} from "../src/app/practice-selection.ts";
 const starter=JSON.parse(await readFile(new URL("../examples/apfc-mcq-nat-starter.json",import.meta.url),"utf8"));
 const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url),"utf8"));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url),"utf8"));
@@ -71,11 +71,14 @@ test("untimed option derives new validated frozen policy for every built-in mode
  assert.equal(unlocked.paper.edition,"custom");
  assert.equal(validateExamPackage(unlocked),unlocked);
 });
-test("existing selection v1 survives optional new edition and untimed fields",()=>{
- const old={schema:1,paperRevisionId:"paper-x",mode:"free",section:2};
- assert.deepEqual(validatePracticeSelection(old),old);
- const modern={...old,edition:"source",untimed:true};
- assert.deepEqual(validatePracticeSelection(modern),modern);
- assert.throws(()=>validatePracticeSelection({...modern,untimed:"yes"}));
- assert.throws(()=>validatePracticeSelection({...modern,edition:"corrupt"}));
+test("P43 per-family selection rejects invalid mode, edition and untimed values",()=>{
+ const valid={schema:2,selectedFamilyId:"builtin:ssc-cgl",families:{
+   "builtin:ssc-cgl":{paperRevisionId:"paper-x",mode:"free",section:2,untimed:true,edition:"source"}
+ }};
+ assert.equal(validatePracticeSetups(valid).selectedFamilyId,"builtin:ssc-cgl");
+ for(const [field,invalid] of [["untimed","yes"],["edition","corrupt"],["section",-1],["mode","other"]]){
+   const copy=structuredClone(valid);
+   copy.families["builtin:ssc-cgl"][field]=invalid;
+   assert.throws(()=>validatePracticeSetups(copy),/Invalid/);
+ }
 });
