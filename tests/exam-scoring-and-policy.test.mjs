@@ -777,3 +777,27 @@ test("negative-zero policy never creates phantom marks or a negative aggregate",
  assert.ok(result.snapshot.earnedMarks<=scoreableMaximum(paper,key,[question]));
 });
 }
+
+const testP41=__suite_dep_0.default,testAssert=__suite_dep_1.default;
+
+testP41("source comparison refuses unchanged-letter identities when option meaning changes",async()=>{
+ const papers=JSON.parse(await __suite_dep_2.readFile(new URL("../src/content/papers.json",import.meta.url)));
+ const patches=JSON.parse(await __suite_dep_2.readFile(new URL("../src/content/patches.json",import.meta.url)));
+ const all=__suite_dep_5.builtinCglPackages(papers,patches);
+ let changes=0,correctTextChanges=0;
+ for(const [paperId,modified] of Object.entries(patches)){
+  const src=all.find(x=>x.paper.paperId===paperId&&x.paper.edition==="source");
+  const reviewed=all.find(x=>x.paper.paperId===paperId&&x.paper.edition==="reviewed");
+  const ref=__suite_dep_9.createSourceKeyReference(reviewed,src);
+  for(const [number,patch] of Object.entries(modified)){
+   const q=papers[paperId].questions.find(x=>x.n===Number(number));
+   if(!patch.opts||patch.opts.every((text,i)=>text===q.opts[i]))continue;
+   changes++;
+   if(q.opts["abcd".indexOf(q.key)]!==patch.opts["abcd".indexOf(q.key)])correctTextChanges++;
+   const reviewQuestion=reviewed.questions.find(x=>x.questionId.endsWith(":q:"+number));
+   testAssert.equal(ref.entries.find(x=>x.questionRevisionId===reviewQuestion.id).comparable,false);
+  }
+ }
+ testAssert.equal(changes,25);
+ testAssert.equal(correctTextChanges,21);
+});
