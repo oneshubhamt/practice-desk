@@ -45,7 +45,15 @@ for(const v of [
    check(await page.locator("#fontReset").innerText()==="140%",
     "140% narrow text scaling unavailable");
    await page.locator("#displayClose").click();
-   await assertNoOverflow(page,v.name+" zoom-equivalent Library");
+   await assertNoOverflow(page,v.name+" zoom-equivalent Library at 140%");
+   // Two independent stress levels: 195px (~200% browser zoom) and 140% in-app
+   // text were combined unintentionally. The historical Results contract is
+   // 195px at normal in-app scale; report 195px+140% as a separate UI edge case.
+   await page.locator("#displayTrigger").click();
+   await page.locator("#fontReset").click();
+   check(await page.locator("#fontReset").innerText()==="100%",
+    "narrow mode text scale failed to reset");
+   await page.locator("#displayClose").click();
   }
   for(const mode of ["strict","free","single"]){
    await page.locator('[data-mode="'+mode+'"]').click();
