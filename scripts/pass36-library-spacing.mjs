@@ -72,8 +72,13 @@ try{
    const gap=(measured.grid?.top??0)-(measured.pending?.bottom??0);
    check(Math.abs(gap-18)<=1,scene.name+" pending-to-Paper/Selected paper gap must be 18px, got "+
      gap+"px "+JSON.stringify(measured));
-   check(Math.abs((measured.picker?.top??0)-(measured.preview?.top??0))<=1,
-     scene.name+" Paper and Selected paper tops no longer align");
+   if(scene.width>=981){
+    check(Math.abs((measured.picker?.top??0)-(measured.preview?.top??0))<=1,
+      scene.name+" desktop Paper and Selected paper tops no longer align");
+   }else{
+    check((measured.preview?.top??0)>=(measured.picker?.bottom??0),
+      scene.name+" responsive Paper/Selected paper stack overlaps");
+   }
    check(measured.scrollWidth<=measured.width+2,
      scene.name+" new spacing introduced horizontal document overflow");
    check(await page.locator("#g-pending-attempts [data-attempt]").count()===1,
