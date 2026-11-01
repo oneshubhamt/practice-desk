@@ -1,39 +1,53 @@
 import type { CglPracticeMode } from "./exam-package.ts";
 
-/** Device-local setup choice, separate from display theme and portable backup v3. */
-export interface PracticeSelection {
- readonly schema:1;
+/** The single current user-setup schema. No migration or dual-write path. */
+export interface FamilySetup {
  readonly paperRevisionId:string;
  readonly mode:CglPracticeMode;
  readonly section:number;
- readonly untimed?:boolean;
- readonly edition?: "source" | "reviewed";
+ readonly untimed:boolean;
+ readonly edition:"source"|"reviewed";
 }
-export const PRACTICE_SELECTION_KEY="practiceDesk.overhaul.selection.v1";
-export function validatePracticeSelection(value:unknown):PracticeSelection{
- if(!value||typeof value!=="object"||Array.isArray(value))throw Error("Invalid saved exam selection");
- const p=value as Partial<PracticeSelection>;
- if(p.schema!==1||typeof p.paperRevisionId!=="string"||!p.paperRevisionId.trim()||
-    p.paperRevisionId.length>300||
-    !["strict","free","single"].includes(p.mode??"")||
-    !Number.isSafeInteger(p.section)||p.section!<0||p.section!>1999 ||
-    (p.untimed!==undefined&&typeof p.untimed!=="boolean") ||
-    (p.edition!==undefined&&p.edition!=="source"&&p.edition!=="reviewed"))
-   throw Error("Invalid saved exam selection");
- // Old v1 settings remain byte-for-byte equivalent; new optional fields
- // are present only when the user actually saves these preferences.
- return {schema:1,paperRevisionId:p.paperRevisionId,mode:p.mode!,section:p.section!,
-   ...(p.untimed!==undefined?{untimed:p.untimed}:{}),
-   ...(p.edition!==undefined?{edition:p.edition}:{})};
+export interface PracticeSetups {
+ readonly schema:2;
+ readonly selectedFamilyId:string;
+ readonly families:Readonly<Record<string,FamilySetup>>;
 }
-export function readPracticeSelection(storage:Pick<Storage,"getItem">=localStorage):PracticeSelection|null{
- try{
-   const data=storage.getItem(PRACTICE_SELECTION_KEY);
-   return data?validatePracticeSelection(JSON.parse(data)):null;
+export const PRACTICE_SETUPS_KEY="practiceDesk.overhaul.setups.v2";
+const validId=(s:unknown,max=300):s is string=>
+ typeof s==="string"&&Boolean(s.trim())&&s.length<=max&&
+ s!=="__proto__"&&s!=="constructor"&&s!=="prototype";
+
+export function validatePracticeSetups(value:unknown):PracticeSetups{
+ if(!value||typeof value!=="object"||Array.isArray(value))throw Error("Invalid exam family setups");
+ const raw=value as Record<string,unknown>;
+ if(raw.schema!==2||!validId(raw.selectedFamilyId,200)||
+   !raw.families||typeof raw.families!=="object"||Array.isArray(raw.families))
+   throw Error("Invalid exam family setups");
+ const entries=Object.entries(raw.families);
+ if(!entries.length||entries.length>100||!Object.hasOwn(raw.families,raw.selectedFamilyId))
+   throw Error("Invalid exam family setups");
+ const families:Record<string,FamilySetup>=Object.create(null);
+ for(const [familyId,entry] of entries){
+   if(!validId(familyId,200)||!entry||typeof entry!=="object"||Array.isArray(entry))
+     throw Error("Invalid exam family setup");
+   const v=entry as Record<string,unknown>;
+   if(!validId(v.paperRevisionId)||!["strict","free","single"].includes(String(v.mode))||
+     !Number.isSafeInteger(v.section)||Number(v.section)<0||Number(v.section)>1999||
+     typeof v.untimed!=="boolean"||!["source","reviewed"].includes(String(v.edition)))
+     throw Error("Invalid exam family setup");
+   families[familyId]={paperRevisionId:v.paperRevisionId,mode:v.mode as CglPracticeMode,
+     section:v.section as number,untimed:v.untimed,edition:v.edition as "source"|"reviewed"};
+ }
+ return {schema:2,selectedFamilyId:raw.selectedFamilyId,families};
+}
+export function readPracticeSetups(storage:Pick<Storage,"getItem">=localStorage):PracticeSetups|null{
+ try{const raw=storage.getItem(PRACTICE_SETUPS_KEY);
+   return raw?validatePracticeSetups(JSON.parse(raw)):null;
  }catch{return null;}
 }
-export function writePracticeSelection(p:unknown,storage:Pick<Storage,"setItem">=localStorage):PracticeSelection{
- const valid=validatePracticeSelection(p);
- storage.setItem(PRACTICE_SELECTION_KEY,JSON.stringify(valid));
+export function writePracticeSetups(value:unknown,storage:Pick<Storage,"setItem">=localStorage):PracticeSetups{
+ const valid=validatePracticeSetups(value);
+ storage.setItem(PRACTICE_SETUPS_KEY,JSON.stringify(valid));
  return valid;
 }
