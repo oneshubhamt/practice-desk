@@ -1061,3 +1061,19 @@ main:has(.results-heading){max-width:1130px;padding:22px 20px 60px}
  .metriclist b{text-align:left}
  .revision-chips{gap:5px}
 }
+
+.result-device-footer{
+ padding:22px 0 0;color:var(--muted);text-align:center;font-size:11px
+}
+body:has(.results-heading) .app-independent-footer{
+ margin-top:16px;padding:13px 18px
+}
+body:has(.results-heading) .app-independent-footer .wrap{
+ max-width:1130px
+}
+body:has(.results-heading) .app-independent-footer b{
+ font-size:.78em;margin-bottom:3px
+}
+body:has(.results-heading) .app-independent-footer p{
+ font-size:.7em;line-height:1.45
+}
