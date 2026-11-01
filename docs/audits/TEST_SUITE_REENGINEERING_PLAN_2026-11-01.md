@@ -542,6 +542,14 @@ Every implementation pass follows **five mandatory stages**; the scratchpad is u
 
 **Implementation status at checkpoint A:** no source/tests/scripts/CI changed; scratchpad update only. Next: add seeded maths/session/persistence/import tests, verify CI and reconcile findings independently.
 
+### Pass 37 — LIVE checkpoint B: user-directed aggressive consolidation (2026-11-01)
+
+**Interruption and revised requirement:** User expressly requested **aggressive consolidation** after intermediate capability renames/merges. That intermediate change `b7af806c79b01402ad47017ed75cbdd357caa24d` reduced 36 to 31 .test.mjs files, which is not a sufficient final outcome. **This intermediate commit is not Pass37 acceptance.**
+
+**Revised decision:** Target **eight** broad coherent capability suites rather than 31 fine-grained ones: (1) content/provenance, (2) exam package/schema/import, (3) exam scoring/policy, (4) session/timing, (5) history/persistence, (6) learning/analytics, (7) UI/navigation, and (8) required `pass30-bank.test.mjs`. Preserve all **177 case names, predicates, fixture setup and exceptions**; no deletion or risk-prone “equivalence” claims. Inline each old module's body in its own lexical block, normalize imports to shared namespace imports, and mark provenance with the old filename. This is physical file consolidation, not delegating old tests through wrappers or hiding them in undiscovered directories. The flat `tests/*.test.mjs` runner and old CI remain unchanged. Repeated imports are once-per-suite and fixture collisions remain lexically scoped. CI will verify whether previously independent suites sharing an ESM process uncover genuine state coupling; do not obscure failures.
+
+**QA gate:** Independent source-name-to-new-name inventory must prove the original 177 registration names are still present; `npm run check` and all old required CI jobs must succeed; no changes to product source/scripts/workflow/HTML, no pre-submit key exposure, source hash and Q62 editorial checks remain separate direct assertions. If a merged suite introduces mutable-fixture coupling, repair by isolating fixture state rather than dropping assertions. Preserve exact mandatory `pass30-bank.test.mjs` through Pass40 policy handoff.
+
 ### Pass 37 — LIVE checkpoint A: source audit, design and objective allocation (2026-11-01)
 
 **Starting HEAD:** `ecd98c2c9dc36d529fb56a24b5e9694d019a300e` on `overhaul`. **Assigned TS-01 (chronological names), TS-06 (capability ownership), TS-14 (all original cases mapped), TS-15 (test discovery/determinism).** Read mandatory AGENTS and original Section G, README/docs index, current plan, package.json, CI workflow and 36 current Node test-module headings/imports. Pass36 source/CI establishes 177 passing tests across 36 .test.mjs files (156 original + 21 seeded hardening). Existing `tests/*.test.mjs` glob is deliberate. Browser scripts and CI are excluded from changes this pass.
