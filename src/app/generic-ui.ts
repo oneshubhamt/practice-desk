@@ -1121,7 +1121,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
     }).join("")+'</section>':revealReview?
        '<section class="result-pane" id="result-review" role="tabpanel" aria-labelledby="result-tab-review" hidden></section>':"")+
     (resultTab==="timing"?timingLedgerHTML(attempt,true,revealReview):
-      '<section class="result-pane" id="result-timing" role="tabpanel" aria-labelledby="result-tab-timing" hidden></section>');
+      '<section class="result-pane" id="result-timing" role="tabpanel" aria-labelledby="result-tab-timing" hidden></section>')+
+    '<footer class="result-device-footer">Saved on this device · Review, export and manage your data from History</footer>';
  }
  const openSaved=(id:string):void=>{
    const saved=records.get(id);
