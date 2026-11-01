@@ -171,9 +171,12 @@ try{
    }finally{db.close();}
  },{id:archiveId,sourceId:oldRecord.id});
  await page.reload({waitUntil:"load"});
- // Native deep link reload restores History directly, instead of always opening Library.
- if(await page.locator("#g-history").count())await page.locator("#g-history").click();
- else await page.locator(".history-archive").waitFor({state:"visible"});
+ // This reload occurs from a saved Result review route. Native navigation must
+ // restore that result first; use its History action before opening the injected
+ // older record rather than assuming every reload lands in the archive.
+ await page.locator("#result-review").waitFor({state:"visible"});
+ await page.locator("#g-history-results").click();
+ await page.locator(".history-archive").waitFor({state:"visible"});
  await page.locator('[data-attempt="'+archiveId+'"]').first().click();
  await page.locator('[data-result-tab="review"]').click();
  const restoredOlder=page.locator('[data-review-id="'+q.id+'"] details.source-review');
