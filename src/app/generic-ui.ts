@@ -380,6 +380,9 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  const screenRenderer=createScreenRenderer(root);
  let router:NativeRouter;
  let activationGeneration=0;
+ // A newly created frozen session is already foreground/clock-initialized.
+ // Do not restore or persist it a second time while its first save is pending.
+ let freshlyStartedAttemptId:string|null=null;
  let routeHydrated=false;
  let hydrationDone:()=>void=()=>{};
  const hydration=new Promise<void>(resolve=>{hydrationDone=resolve;});
@@ -697,7 +700,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          "attempt-"+now()+"-"+Math.floor(Math.random()*100000);
        const generated={...startGenericAttempt(paper,id,now()),notebookLineage:createNotebookLineage(selected)};
        if(!await save(generated))return false;
-       attempt=generated;warning="Untimed notebook revision · +1 correct, 0 incorrect. This is not a source-exam score.";
+       attempt=generated;freshlyStartedAttemptId=generated.id;
+       warning="Untimed notebook revision · +1 correct, 0 incorrect. This is not a source-exam score.";
        go({screen:"exam",attemptId:generated.id});return true;
      }catch(error){notice(error instanceof Error?error.message:"Cannot create revision test");return false;}
    },
@@ -1208,7 +1212,9 @@ sectionPaceHTML(attempt)+analyticHTML+
          saved.frozen.paper.navigation.allowReview===false){
        go({screen:"result",attemptId:saved.id,tab:"overview"},"replace");return;
      }
-     const switching=attempt?.id!==saved.id||prevView!=="exam";
+     const fresh=target.screen==="exam"&&saved.id===freshlyStartedAttemptId;
+     if(fresh)freshlyStartedAttemptId=null;
+     const switching=!fresh&&(attempt?.id!==saved.id||prevView!=="exam");
      attempt=saved;
      if(target.screen==="exam"&&switching){
        const restored=restoreSession(saved.frozen.paper,saved.state,now(),!document.hidden);
@@ -1334,6 +1340,7 @@ sectionPaceHTML(attempt)+analyticHTML+
        const configured=configureUntimedPractice(
          p.examId==="ssc-cgl"?configureCglPractice(p,cglMode,singleSection):p,untimedPractice);
        attempt=startGenericAttempt(configured,id,now());
+       freshlyStartedAttemptId=attempt.id;
        if(configured.paper.edition==="reviewed"){
          const source=[...packages.values()].find(candidate=>candidate.paper.edition==="source"&&
            candidate.paper.paperId===configured.paper.paperId&&candidate.examId===configured.examId);
