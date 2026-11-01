@@ -11,6 +11,7 @@ try{
  await page.locator('input[data-choice]').first().click();
  const draftId=new URL(await page.url()).searchParams.get("attempt");
  await page.locator("#g-library").click();await route(page,"library");
+ await page.locator("#g-history").click();await route(page,"history");
  check(await page.locator('[data-discard="'+draftId+'"]').count()===1,
   "unfinished must expose Discard, not completed Delete");
  check(await page.locator('[data-delete="'+draftId+'"]').count()===0,
