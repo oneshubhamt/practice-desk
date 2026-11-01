@@ -18,23 +18,19 @@ jobs:
         with:
           node-version: '24'
           package-manager-cache: false
-      # No committed lockfile yet. npm ci is not supported until one exists.
-      - run: npm install --no-audit --no-fund
-      - name: P42 temporary lockfile and dependency evidence (remove after capture)
+      # Node 24 + npm 11; committed lockfile fixes direct and transitive resolution.
+      - run: npm ci --no-audit --no-fund
+      - run: npm run check
+      - name: Prove clean locked dependency graph and deterministic HTML rebuild
         shell: bash
         run: |
           set -euo pipefail
-          echo "P42_NODE=$(node --version) NPM=$(npm --version)"
-          test -s package-lock.json
-          echo P42_LOCK_BEGIN
-          base64 -w0 package-lock.json
-          echo
-          echo P42_LOCK_END
-          npm ls --all --json > .tmp-p42-dependencies.json || true
-          node -e 'const d=require("./.tmp-p42-dependencies.json");console.log("P42_DEP_TREE", JSON.stringify(Object.keys(d.dependencies??{})))'
-          npm audit --json > .tmp-p42-audit.json || true
-          node -e 'const a=require("./.tmp-p42-audit.json");console.log("P42_AUDIT",JSON.stringify({metadata:a.metadata?.vulnerabilities,packages:Object.keys(a.vulnerabilities??{})}))'
-      - run: npm run check
+          npm ls --all --parseable > /dev/null
+          before=$(sha256sum Practice_Desk_Offline_Mock_Tests.html | cut -d' ' -f1)
+          npm run build
+          after=$(sha256sum Practice_Desk_Offline_Mock_Tests.html | cut -d' ' -f1)
+          test "$before" = "$after" || { echo "::error::Non-reproducible HTML build"; exit 1; }
+          echo "P42 verified deterministic HTML SHA-256 $after"
       - name: Save source-verified standalone HTML
         if: github.event_name == 'push' && github.ref == 'refs/heads/overhaul'
         uses: actions/upload-artifact@v4
@@ -56,7 +52,7 @@ jobs:
         with:
           node-version: '24'
           package-manager-cache: false
-      - run: npm install --no-audit --no-fund
+      - run: npm ci --no-audit --no-fund
       - run: npm run build
       - run: node scripts/acceptance-history-evidence.mjs
       - run: node scripts/acceptance-resilience.mjs
@@ -96,7 +92,7 @@ jobs:
         with:
           node-version: '24'
           package-manager-cache: false
-      - run: npm install --no-audit --no-fund
+      - run: npm ci --no-audit --no-fund
       - run: node node_modules/playwright-core/cli.js install --with-deps ${{ matrix.browser }}
       - run: npm run build
       - run: node scripts/acceptance-platform.mjs ${{ matrix.browser }}
