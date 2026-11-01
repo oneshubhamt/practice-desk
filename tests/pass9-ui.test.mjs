@@ -62,7 +62,9 @@ test("result tabs and time ledger keep frozen verdicts, timings and accessible c
  assert.equal(a.result.items.filter(row=>reviewMatch(a,row,"incorrect")).length,0);
  assert.equal(a.result.items.filter(row=>reviewMatch(a,row,"unanswered")).length,6);
  assert.equal(a.result.items.filter(row=>reviewMatch(a,row,"fastwrong")).length,0);
- assert.equal(sectionPaceHTML(a).includes("Section pacing & coverage"),true);
+ const pacing=sectionPaceHTML(a);
+ assert.match(pacing,/Time &amp; pacing/);
+ assert.match(pacing,/Section diagnostics/);
 });
 test("restored exam shell exposes progress, timer and navigator while withholding answer keys",()=>{
  const a=startGenericAttempt(bundle,"exam",1000);
