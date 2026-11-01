@@ -8,7 +8,7 @@ Practice Desk is a single-file offline exam application with a typed six-kind ge
 
 ## Next development: consolidated architecture programme
 
-**[One authoritative engineering programme — requirements, priorities, P41–P48 passes, acceptance tests, risk register and live ledger](docs/ENGINEERING_PROGRAMME.md).** It consolidates the 28 October architecture audit, 1 November gap verification, historical feature-parity and test migration programmes, and remaining generic-exam, learning, storage and UI work. **P41 now verified:** reviewed-versus-original hypothetical marks no longer equate different answers by letter; only a frozen, semantically identical subset is compared and legacy positional snapshots show unavailable. [Five green CI jobs and 179/179 Node](https://github.com/oneshubhamt/practice-desk/actions/runs/41336695608). **P42 next:** dependency reproducibility and import hardening; later P43–P48 implement remaining generic-exam/learning work. The no-regression hardline, targeted QA per pass, final full-product QA at P48 and justified `file://` flexibility are binding in [the programme](docs/ENGINEERING_PROGRAMME.md).
+**[One authoritative engineering programme — requirements, priorities, P41–P48 passes, acceptance tests, risk register and live ledger](docs/ENGINEERING_PROGRAMME.md).** It consolidates the 28 October architecture audit, 1 November gap verification, historical feature-parity and test migration programmes, and remaining generic-exam, learning, storage and UI work. **P41 now verified:** reviewed-versus-original hypothetical marks no longer equate different answers by letter; only a frozen, semantically identical subset is compared and legacy positional snapshots show unavailable. [Five green CI jobs and 179/179 Node](https://github.com/oneshubhamt/practice-desk/actions/runs/41336695608). **P42 also verified:** Node 24/npm lockfile and clean `npm ci`, deterministic artifact, hardened import budgets and negative browser tests. [Full 5-job CI 41339299849](https://github.com/oneshubhamt/practice-desk/actions/runs/41339299849): **183/183 Node tests** and Chromium/Firefox/WebKit passed. **P43 next:** exam-family Library and per-exam presets; physical Mac Safari remains unverified. The no-regression hardline, targeted QA per pass, final full-product QA at P48 and justified `file://` flexibility are binding in [the programme](docs/ENGINEERING_PROGRAMME.md).
 
 ## Current testing and future development (1 November 2026)
 
@@ -44,11 +44,11 @@ Practice Desk is **one typed six-kind generic examination engine**; it does not 
 Requires Node.js 24.x; this is an offline **`file://`** app with no account, analytics or runtime server.
 
 ```bash
-npm install --no-audit --no-fund
+npm ci --no-audit --no-fund
 npm run check
-node scripts/smoke-offline.mjs
-node scripts/pass16-independent.mjs
-node scripts/pass23-independent.mjs
+node scripts/acceptance-critical.mjs
+node scripts/acceptance-bank-modes.mjs
+node scripts/acceptance-editorial-provenance.mjs
 ```
 
 Generated distribution: `Practice_Desk_Offline_Mock_Tests.html` (do **not** hand edit). Code: `src/content/` published original banks/patches; `src/domain/` schema and integrity; `src/engine/` timing and scoring; `src/history/` frozen records/backup; `src/learning/` FSRS and evidence; `src/app/` UI controller and history/results; `src/styles/` CSS and `src/template.html`.
