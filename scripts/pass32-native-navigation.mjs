@@ -16,7 +16,8 @@ const records=[];
 async function checkRoute(page,screen,id=null,tab=null){
  await page.waitForFunction(x=>{
   const p=new URL(location.href).searchParams;
-  return p.get("pd")===x.screen&&(x.id===null||p.get("attempt")===x.id)&&(x.tab===null||p.get("tab")===x.tab);
+  return (p.get("pd")===x.screen||(x.screen==="library"&&p.get("pd")===null))&&
+   (x.id===null||p.get("attempt")===x.id)&&(x.tab===null||p.get("tab")===x.tab);
  },{screen,id,tab});
  assert(await page.evaluate(()=>Boolean(window.__nativeDoc)), "Internal route navigation reloaded document");
 }
@@ -37,7 +38,8 @@ try{
   try{
    await page.goto(file,{waitUntil:"load"});
    await page.locator("#g-papers").waitFor();
-   await page.waitForFunction(()=>new URL(location.href).searchParams.get("pd")==="library");
+   // Initial Library is deliberately rendered without a needless URL rewrite.
+   assert(await page.locator("#g-start").count()===1,"Library startup incomplete");
    await page.evaluate(()=>window.__nativeDoc=true);
    assert(await page.evaluate(()=>Boolean(navigation&&typeof navigation.navigate==="function")),"Navigation API missing");
    await capture(page,vp.name+"-library");
