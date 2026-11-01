@@ -152,6 +152,11 @@ try{
  check(wrongIx>=0,"No visible wrong-answer option in modified CGL item");
  await page.locator("input[data-choice]").nth(wrongIx).check();
  await finishNow();
+ const comparisonDetails=await page.locator(".result-scoring-details").textContent();
+ check(comparisonDetails.includes("comparable subset only")&&
+   comparisonDetails.includes("unavailable")&&
+   !comparisonDetails.includes("100 of 100 questions comparable"),
+   "P41 must not present a misleading full-paper publisher-key comparison");
  check((await page.locator(".result-performance-overview").innerText()).includes("Submitted by user"),
    "Explicit voluntary completion reason omitted");
  check(await page.locator(".result-section-table th").filter({hasText:"Marks"}).count()>0,
