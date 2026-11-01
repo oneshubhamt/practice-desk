@@ -65,7 +65,7 @@ async function responseTest(){
     "G07: first checkbox selection was immediately lost");
   ensure((await page.locator(".generic-response-group [role=status]").innerText()).includes("Unsaved draft"),
     "G07: incomplete selection not explicitly marked unsaved");
-  ensure(!(await page.locator(".navigator-stats b").first().innerText()).replace(/\s+/g," ").trim()==="1 / 3",
+  ensure((await page.locator(".navigator-stats b").first().innerText()).replace(/\s+/g," ").trim()==="0 / 3",
     "G07: incomplete checkbox selection incorrectly scored");
   await page.locator('[data-choice="y"]').check();
   ensure(await page.locator(".generic-response-group [role=status]").count()===0,
