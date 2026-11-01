@@ -20,6 +20,12 @@ jobs:
           package-manager-cache: false
       - run: npm install --no-audit --no-fund
       - run: npm run check
+      # Additive modern capability-based offline acceptance; legacy gates remain
+      # until verified scenario migration and the coordinated AGENTS handoff.
+      - run: node scripts/acceptance-critical.mjs
+      - run: node scripts/acceptance-ui.mjs
+      - run: node scripts/acceptance-stress.mjs
+      - run: node scripts/acceptance-platform.mjs chromium
       - run: node scripts/smoke-offline.mjs
       - run: node scripts/pass18-targeted.mjs
       - run: node scripts/pass19-targeted.mjs
@@ -38,6 +44,14 @@ jobs:
       - run: node scripts/pass34-v11-display.mjs
       - run: node scripts/pass35-detached-display.mjs
       - run: node scripts/pass36-library-spacing.mjs
+      - name: Modern acceptance failure diagnostics (no routine screenshots)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: modern-acceptance-failure
+          path: artifacts/acceptance-modern/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Save conditional resume-to-paper spacing evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -209,6 +223,7 @@ jobs:
       - run: node node_modules/playwright-core/cli.js install --with-deps ${{ matrix.browser }}
       - run: npm run check
       - run: node scripts/pass10-platform.mjs ${{ matrix.browser }}
+      - run: node scripts/acceptance-platform.mjs ${{ matrix.browser }}
 
   independent-journey-matrix:
     name: Independent expanded laptop & use-case visual matrix
