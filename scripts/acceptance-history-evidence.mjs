@@ -46,7 +46,7 @@ try{
    await page.locator('[data-mode="single"]').getAttribute("aria-pressed")==="true"&&
    await page.locator("#g-single-section").inputValue()==="2",
    "Selected original/reviewed, mode or section did not persist");
-  await page.evaluate(()=>localStorage.setItem("practiceDesk.overhaul.selection.v1","{bad"));
+  await page.evaluate(()=>localStorage.setItem("practiceDesk.overhaul.setups.v2","{bad"));
   await page.reload({waitUntil:"load"});await route(page,"library");
   check(await page.locator("#g-start").count()===1,"Bad selection storage broke offline boot");
   await page.locator("#g-file").setInputFiles({name:"six-kinds.json",mimeType:"application/json",
@@ -97,7 +97,8 @@ try{
   check(exported.format==="practice-desk-backup"&&exported.version===3&&
    exported.manifest.recordCount===exported.records.length,
    "Integrity-checked exported v3 format wrong");
-  check(exported.selection?.paperRevisionId===initial&&exported.selection?.mode==="free",
+  check(exported.setups?.families?.["builtin:ssc-cgl"]?.paperRevisionId===initial&&
+   exported.setups?.families?.["builtin:ssc-cgl"]?.mode==="free",
    "Complete backup lacks verified exam selection");
   decision("dismiss");
   await page.locator("#g-delete-completed").click();
