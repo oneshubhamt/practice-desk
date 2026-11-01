@@ -34,13 +34,6 @@ try{
  await page.locator("#g-start").click();
  await page.locator('input[data-choice]').first().click();
  await page.locator("#g-library").click();
- console.log(name+" native route probe",await page.evaluate(()=>({
-  href:location.href,hasHistory:!!document.querySelector("#g-history"),
-  hasLibrary:!!document.querySelector("#g-library"),
-  hasStart:!!document.querySelector("#g-start"),
-  title:document.querySelector("#app h1")?.textContent,
-  nav:typeof window.navigation?.navigate,entry:window.navigation?.currentEntry?.url
- })));
  await page.locator("#g-history").click();
  await page.locator('[data-attempt]').first().waitFor();
  const pending=page.waitForEvent("download");
@@ -53,7 +46,11 @@ try{
  assert(!download.suggestedFilename().includes("UNSAVED_RECOVERY"),
   "Browser failed to commit answered attempt before export");
  await page.reload({waitUntil:"load"});
- await page.locator("#g-history").click();
+ // Native Navigation API deep links intentionally restore the History screen
+ // on reload, rather than forcing an implicit Library redirect.
+ if(await page.locator("#g-history").count())await page.locator("#g-history").click();
+ else assert(await page.locator(".history-archive").count()===1,
+   "History route did not restore after reload");
  await page.locator('[data-attempt="'+saved.id+'"]').first().click();
  assert(await page.locator('input[data-choice]:checked').count()===1,
   "Same-profile file:// restart lost saved answer");
