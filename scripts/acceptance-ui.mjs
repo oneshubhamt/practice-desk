@@ -158,8 +158,21 @@ try{
    check(scrolled.header.bottom<0&&Math.abs(scrolled.aa.top-(viewport.width<=500?10:12))<=2,
     "header must scroll while Aa floats "+name);
    await page.evaluate(()=>window.scrollTo({top:0,behavior:"instant"}));
+   check(await page.locator(".home-stats .home-stat").count()===4,
+    "Library summary lost four independent dashboard metrics "+name);
    await page.locator("#g-history").click();await route(page,"history");
    await inspect(page,name+"-history");
+   check(await page.locator(".history-summary .summary-stat").count()===6&&
+    (await page.locator(".history-summary").innerText()).includes("Papers practised")&&
+    (await page.locator(".history-summary").innerText()).includes("Best adjusted %"),
+    "History missing real adjusted performance indicators "+name);
+   await page.locator("#g-filter").selectOption("progress");
+   await page.locator("#g-history-sort").selectOption("oldest");
+   await page.locator("#g-history-search").fill("unlikely paper search sentinel");
+   check(await page.locator(".history-entries").count()===0,
+    "History exact text search failed to filter nonmatching attempts "+name);
+   await page.locator("#g-history-search").fill("");
+   await page.locator("#g-filter").selectOption("all");
    const historyAttribution=await page.locator(".app-independent-footer").innerText();
    check(historyAttribution.includes("Not affiliated")&&
     historyAttribution.toLowerCase().includes("imported"),

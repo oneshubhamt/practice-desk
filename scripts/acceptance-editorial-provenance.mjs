@@ -83,6 +83,8 @@ try{
      "Wrong edition-specific eligible maximum "+paperId+"/"+edition);
    await page.locator("#result-tab-review").click();
    const item=page.locator('[data-review-id="'+q.id+'"]');
+   check(await page.locator(".generic-review").count()===100,
+    "Full CGL publication edition failed complete 100-item frozen review "+paperId+"/"+edition);
    check(await item.count()===1&&
     ((await item.innerText()).toLowerCase().includes("correct")||q.editorial.status==="invalid"),
     "Frozen answer missing or wrong in review "+paperId+"/"+edition);
@@ -195,8 +197,12 @@ try{
  const savedId=new URL(await page.url()).searchParams.get("attempt");
  const originalSaved=await persisted(savedId,x=>x.finishedAt!==null&&
   x.sourceReviewReference?.entries.length===ref.entries.length);
- check(originalSaved.sourceReviewReference.entries.length===ref.entries.length,
-  "Review/source comparison not durably persisted");
+ check(originalSaved.sourceReviewReference.entries.length===ref.entries.length&&
+  originalSaved.sourceKeyReference?.entries?.length===100,
+  "Reviewed CGL did not durably pin both edited questions and all 100 original source keys");
+ check(await page.locator("#g-review-top").count()===1&&
+   await page.locator(".generic-review").filter({hasText:"Source page"}).count()>0,
+   "Completed CGL review missing jump-to-top or original published page provenance");
  await page.locator("#g-library").click();await route(page,"library");
  await page.locator("#g-history").click();await route(page,"history");
  await page.locator('[data-attempt="'+savedId+'"]').first().click();await route(page,"result");

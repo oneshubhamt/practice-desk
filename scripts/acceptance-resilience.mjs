@@ -1,7 +1,11 @@
 /** Current offline persistence under two-tab races, unavailable IndexedDB,
  * failing first reads and quota-denied writes. No historical screenshot or v11.
  */
-import {readFile} from "node:fs/promises";
+import {readFile,mkdtemp,rm} from "node:fs/promises";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
+import {spawnSync} from "node:child_process";
+import {chromium} from "playwright-core";
 import {openHarness,offlineUrl,records,check,route} from "./browser/fixtures.mjs";
 const h=await openHarness({artifactDir:"artifacts/acceptance-modern"});
 async function until(fn,label,n=65){
@@ -120,9 +124,51 @@ try{
   await quota.locator(".generic-warning").filter({hasText:"Emergency recovery file"}).count()===1,
   "Quota failure lost attempted record or failed to explain emergency backup");
  await quota.close();
+ // Persist across an actual complete Chrome process/profile restart, not
+ // merely a page.reload() or a fresh isolated in-memory browser context.
+ const executable=["google-chrome","google-chrome-stable","chromium","chromium-browser"]
+  .map(cmd=>({cmd,version:spawnSync(cmd,["--version"],{encoding:"utf8"})}))
+  .find(x=>x.version.status===0)?.cmd;
+ check(Boolean(executable),"No installed Chromium for real profile restart");
+ const binary=spawnSync("which",[executable],{encoding:"utf8"}).stdout.trim();
+ const profile=await mkdtemp(join(tmpdir(),"practice-resilience-persistent-"));
+ let persistent;
+ try{
+  const opts={headless:true,executablePath:binary,
+   args:["--no-sandbox","--disable-dev-shm-usage","--disable-background-networking"]};
+  persistent=await chromium.launchPersistentContext(profile,opts);
+  let originalPage=persistent.pages()[0]??await persistent.newPage();
+  originalPage.on("dialog",d=>void d.accept());
+  await originalPage.goto(offlineUrl,{waitUntil:"load"});
+  await originalPage.locator('[data-mode="single"]').click();
+  await originalPage.locator("#g-start").click();await route(originalPage,"exam");
+  const persistedId=new URL(await originalPage.url()).searchParams.get("attempt");
+  await originalPage.locator("input[data-choice]").first().click();
+  await originalPage.locator("#g-submit").click();await route(originalPage,"result");
+  await originalPage.locator("#result-tab-review").click();
+  await originalPage.locator("[data-add-card]").first().click();
+  await until(async()=>{
+   const x=await records(originalPage);
+   return x.some(y=>y.id===persistedId&&y.finishedAt!==null)&&
+     x.some(y=>y.recordType==="learning-card"&&y.sourceAttemptId===persistedId);
+  },"durably committed result/card before process exit");
+  await persistent.close();persistent=null;
+  persistent=await chromium.launchPersistentContext(profile,opts);
+  const restored=persistent.pages()[0]??await persistent.newPage();
+  restored.on("dialog",d=>void d.accept());
+  await restored.goto(offlineUrl,{waitUntil:"load"});
+  await restored.locator("#g-history").click();await route(restored,"history");
+  check(await restored.locator('[data-attempt="'+persistedId+'"]').count()===1,
+   "Offline profile restart lost frozen result");
+  await restored.locator("#g-library").click();await route(restored,"library");
+  await restored.locator("#g-learning").click();await route(restored,"learning");
+  check((await records(restored)).some(x=>x.recordType==="learning-card"&&
+   x.sourceAttemptId===persistedId),
+   "Offline profile restart lost separately saved FSRS learning card");
+ }finally{await persistent?.close();await rm(profile,{recursive:true,force:true});}
  check(errors.length===0,"Main browser exceptions "+errors.join("; "));
  await h.evidence("resilience",{idbStaleRejected:true,localStorageRace:true,
-  initialReadFallback:true,quotaUnsavedRecovery:true});
- console.log("MODERN RESILIENCE PASS IDB CAS, localStorage conflict, failed read and quota recovery");
+  initialReadFallback:true,quotaUnsavedRecovery:true,realProfileProcessRestart:true});
+ console.log("MODERN RESILIENCE PASS IDB CAS, localStorage conflict, failed read, quota recovery and real Chrome profile restart");
 }catch(e){await h.diagnose("resilience",page,e);throw e;}
 finally{await context.close();await h.finish();}
