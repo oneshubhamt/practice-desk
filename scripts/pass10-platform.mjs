@@ -34,6 +34,13 @@ try{
  await page.locator("#g-start").click();
  await page.locator('input[data-choice]').first().click();
  await page.locator("#g-library").click();
+ console.log(name+" native route probe",await page.evaluate(()=>({
+  href:location.href,hasHistory:!!document.querySelector("#g-history"),
+  hasLibrary:!!document.querySelector("#g-library"),
+  hasStart:!!document.querySelector("#g-start"),
+  title:document.querySelector("#app h1")?.textContent,
+  nav:typeof window.navigation?.navigate,entry:window.navigation?.currentEntry?.url
+ })));
  await page.locator("#g-history").click();
  await page.locator('[data-attempt]').first().waitFor();
  const pending=page.waitForEvent("download");
