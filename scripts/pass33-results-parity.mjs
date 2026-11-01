@@ -34,6 +34,12 @@ async function make(era,width,height,colorScheme="dark"){
  await page.locator(era==="v11"?"#paperSelect":"#g-papers").waitFor();
  return {era,page,context,errors,width,height};
 }
+async function setDark(a){
+ const p=a.page;
+ await p.locator("#displayTrigger").click();
+ await p.locator("#themeDark").click();
+ await p.locator("#displayClose").click();
+}
 async function chooseSingle(a,edition="source"){
  const p=a.page,old=a.era==="v11";
  if(old){
@@ -86,6 +92,7 @@ try{
  for(const vp of [{name:"laptop1366",width:1366,height:768},{name:"laptop1440",width:1440,height:900}]){
   const old=await make("v11",vp.width,vp.height),now=await make("overhaul",vp.width,vp.height);
   try{
+   await setDark(old);await setDark(now);
    await chooseSingle(old);await chooseSingle(now);
    await answerFourAndFinish(old);await answerFourAndFinish(now);
    const a=await geometry(old,"v11-"+vp.name+"-result-low-data");
@@ -126,7 +133,7 @@ try{
  }
  const phone=await make("overhaul",390,844);
  try{
-  await chooseSingle(phone);await answerFourAndFinish(phone);
+  await setDark(phone);await chooseSingle(phone);await answerFourAndFinish(phone);
   await geometry(phone,"overhaul-phone390-result-low-data");
   check(await phone.page.locator(".result-performance-overview").count()===1,"Phone overview missing");
   check(await phone.page.locator(".result-insight-grid").evaluate(x=>getComputedStyle(x).gridTemplateColumns.split(" ").length===1),
@@ -135,10 +142,27 @@ try{
  }finally{await phone.context.close();}
  const zoom=await make("overhaul",195,844);
  try{
-  await chooseSingle(zoom);await answerFourAndFinish(zoom);
+  await setDark(zoom);await chooseSingle(zoom);await answerFourAndFinish(zoom);
   await geometry(zoom,"overhaul-zoom195-result-low-data");
   check(!zoom.errors.length,"195px runtime errors "+zoom.errors.join("; "));
  }finally{await zoom.context.close();}
+ const enough=await make("overhaul",1366,768);
+ try{
+  await setDark(enough);await chooseSingle(enough);
+  for(let i=0;i<6;i++){
+   await enough.page.waitForTimeout(120);
+   await enough.page.locator(".exam-question input[data-choice]").first().click();
+   if(i<5)await enough.page.locator("#g-next").click();
+  }
+  await enough.page.locator("#g-submit").click();
+  await enough.page.locator(".result-tabs").waitFor({state:"visible"});
+  await geometry(enough,"overhaul-laptop1366-result-speed-evidence");
+  check(await enough.page.locator(".result-speed-grid .result-speed-cell").count()===3,
+    "Sufficient measured answers did not unlock compact speed × accuracy cells");
+  check(!(await enough.page.locator(".result-speed-accuracy").innerText()).includes("Continue practising to unlock"),
+    "Sufficient speed evidence incorrectly remained in empty state");
+  check(!enough.errors.length,"Sufficient-data runtime errors "+enough.errors.join("; "));
+ }finally{await enough.context.close();}
  await writeFile(join(out,"pass33-evidence.json"),JSON.stringify({
   title:"Pass33 v11 Results parity with overhaul evidence preservation",sceneCount:evidence.length,evidence
  },null,2));
