@@ -55,7 +55,10 @@ async function state(a,label){
    docWidth:document.documentElement.scrollWidth,viewport:innerWidth,
    scrollY,headerHeight:document.querySelector("header").getBoundingClientRect().height};
  });
- must(state.docWidth<=state.viewport+2,label+" page overflow "+JSON.stringify(state));
+ // Frozen v11 itself overflows at 195 CSS px; preserve its screenshot
+ // honestly, but require the updated app to avoid that known baseline defect.
+ if(a.era==="overhaul")must(state.docWidth<=state.viewport+2,
+  label+" page overflow "+JSON.stringify(state));
  if(label){
   const file=label+".png";await p.screenshot({path:join(out,file),animations:"disabled"});
   scenes.push({label,file,...state});
