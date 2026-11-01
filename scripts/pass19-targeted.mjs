@@ -58,6 +58,12 @@ try{
    await page.locator("#g-start").click();
    await page.locator("#g-library").click();
  }
+ console.log("PASS32 multi-resume probe",await page.evaluate(()=>({
+   url:location.href,visible:document.querySelector("#g-pending-attempts")?.querySelectorAll(".recent-attempt").length,
+   text:document.querySelector("#g-pending-attempts")?.textContent?.slice(0,200),
+   warning:document.querySelector(".generic-warning")?.textContent,
+   title:document.querySelector("#app h1")?.textContent
+ })));
  ensure(await page.locator("#g-pending-attempts .recent-attempt").count()===5,
    "Multi-resume panel did not show five most recent pending tests");
  ensure(await page.locator("#g-pending-history").count()===1,
