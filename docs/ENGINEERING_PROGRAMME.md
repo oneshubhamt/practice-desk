@@ -302,6 +302,20 @@ Use exactly this cycle on **every** future implementation pass; keep a live scra
 
 **One pass may be split into substages only when each has an independent measurable user contract;** use sub-ID `P43-A`, `P43-B` within this file. Do **not** invent a new programme document or claim an arbitrary calendar estimate.
 
+### P42 — LIVE checkpoint A: source audit and bounded design (2 November 2026; IN PROGRESS)
+
+**Start HEAD:** `de7e0541c17924e313ad2517432075b3538859c6`. **Status:** AUDIT/ANALYSE; not yet a completed P42 pass. No P42 test results should be inferred from P41's green CI. P41 automated verification remains the baseline.
+
+**Inspected exact paths:** `package.json` (4 exact direct packages; Node >=24), `.github/workflows/ci.yml` (four `npm install` sites; guarded publisher checks branch/source SHA), `.gitignore` (no excluded committed lock), `scripts/build.mjs` (bundles local code/content without external runtime), `src/app/generic-ui.ts` (`file.size` 25MiB bank / 75MiB backup limits, actionable save/read fallback warnings, atomic writes, no silent replacement), `src/app/exam-package.ts`, `src/app/bank-import.ts`, `src/domain/validate.ts` and `src/domain/media.ts` (kind/count/media/hash/scoring checks), `src/history/backup.ts` (versioned digest/additive import), and [current QA](QA_CURRENT.md).
+
+**Verified baseline gaps:** no committed package-lock or clean `npm ci` path; direct versions pinned but transitive installs can drift. Imported advanced packages reject >2,000 questions and malformed hashes/media; URL references are constrained to http(s), but some authored text/ID fields lack explicit bounds until hashing. Browser import caps exist; direct programmatic validators should also reject oversized textual envelopes. A separate physical Mac Safari native history/back-reload result does **not** exist. There is no requirement to add network permissions or cloud deployment.
+
+**Chosen limited approach:** (A) generate and commit npm lockfile using actual Node24/npm CI, then adopt `npm ci` consistently and check deterministic standalone build; assess executable dependency tree and security findings separately, without speculative upgrades; (B) add bounded source-level validation for untrusted imported textual data and hostile cases, preserving real CGL content, original/reviewed sources, scoring/historical snapshots; (C) test unsupported schemes, oversize text/IDs/question counts, media digest mismatch, corrupt backups and existing read/write recovery via isolated Node and targeted `file://` browser suites; (D) document exact manual macOS Safari test steps and mark NOT TESTED until physical evidence.
+
+**Alternatives rejected:** hand-written unsourced `integrity` hashes; broad npm major upgrades just to be current; replacing the offline file format; changing IDB schema or existing backup v3; inventing Mac Safari pass based on WebKit automation.
+
+**Non-regression:** preserve every CGL source/key/Q62 decision, six-kind scoring/FSRS, frozen attempts/history, backup v3, browser fallback and 195px+140% responsive journeys. Every change requires the stated five-step process and targeted QA plus existing CI. **Rollback:** revert only P42 source/tooling changes if a real failure is found; do not overwrite existing user's records. Keep P42 OPEN until all acceptance requirements and CI are evidenced.
+
 ### P41 — LIVE audit checkpoint A (1 Nov 2026; NOT IMPLEMENTED)
 
 **HEAD inspected:** `33c59037ff9b2ea8c76d740bb9af80cac18bf090` (source unchanged during documentation pass). **AUDIT complete for the reported data defect:** parsed real `src/content/papers.json` and `patches.json`: exactly **25** option-changing patches; **21** change text at the original correct option, **4** leave that option text but change another option. All **25** are conservatively noncomparable without verified option correspondence; even a same-key-letter match is not semantic proof. A changed stem/prompt can independently defeat comparability; the next source-level audit must check changes to wording, passage and media too.
