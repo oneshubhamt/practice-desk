@@ -13,7 +13,7 @@
 
 - **Branch:** only commit to `overhaul`; never modify `main` or `baseline/v11`; do not merge without explicit user approval.
 - **Product:** the historical v11 parity programme is complete. Future development is **forward-looking**, improving a generic, multi-exam offline study application beyond v11. Protect current supported user workflows and regression contracts; do not treat historical v11 layout, styling or pixel geometry as a design ceiling or a required comparison oracle.
-- **Artifact:** one generated self-contained offline `file://` HTML, no runtime internet, analytics, remote scripts/fonts or account. Never edit generated HTML directly.
+- **Distribution:** a self-contained offline `file://` HTML remains the tested default, but alternative origins may be considered when justified, with explicit user approval, privacy and data-migration safeguards. Never edit generated HTML directly.
 - **Engineering:** typed, modular strict TypeScript, one six-kind exam runtime, no untyped parallel v11 implementation or casual `any`/`@ts-ignore`/`@ts-nocheck`.
 - **Integrity:** immutable content-hashed paper/question/key/media snapshots, original/reviewed provenance; scoring and answer events validated and frozen; race-safe `saveRevision`, checked additive backup v3, explicit self-assessed writing marks and FSRS ratings; no pre-submit key disclosure.
 - **Editorial:** user-approved reviewed CGL `caution` fallback retains published key B in disputed 6 Oct Q62 and scores it (+2/−0.5), while original source invalid is excluded. Dispute is disclosed clearly only after submission. The real paper/key JSON must remain unchanged.
