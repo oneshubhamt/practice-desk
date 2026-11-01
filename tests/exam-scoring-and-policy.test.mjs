@@ -147,8 +147,10 @@ test("source-key comparison pins original answer references independently of rev
    response:{kind:"single-choice",optionId:reviewed.questions[0].content.options[0].id}},qm);
  for(let i=0;i<4;i++)a=transitionGenericAttempt(a,{type:"SUBMIT_SECTION",nowMs:1010+i},qm);
  const comparison=sourceKeyScore(a);
- assert.equal(comparison.correct+comparison.incorrect+comparison.unanswered,100);
- assert.equal(comparison.maxMarks,200);
+ assert.equal(comparison.correct+comparison.incorrect+comparison.unanswered,comparison.comparable);
+ assert.equal(comparison.comparable+comparison.unavailable,100);
+ assert.ok(comparison.unavailable>0);
+ assert.equal(comparison.maxMarks,2*comparison.comparable);
  assert.equal(validateGenericStoredRecord(JSON.parse(JSON.stringify(a))).sourceKeyReference.contentHash,original.contentHash);
  const malicious=structuredClone(a);
  malicious.sourceKeyReference.entries[0].originalOptionId="tampered";
