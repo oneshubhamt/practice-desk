@@ -236,8 +236,6 @@ export function renderModelExam(
    const remaining=examTimeRemaining(paper,state);
    const total=paper.sections.reduce((n,section)=>n+section.questionRevisionIds.length,0);
    const answered=state.responses.filter(record=>record.response).length;
-   const flagged=state.responses.filter(record=>record.flagged).length;
-   const visited=state.responses.filter(record=>record.timeSpentMs>0).length;
    const timeLimit=paper.timing.kind==="whole-paper"?paper.timing.durationMs:
      paper.timing.kind==="sectional"?paper.timing.sectionLimits.find(t=>t.sectionId===section.id)?.durationMs??null:null;
    const elapsed=paper.timing.kind==="sectional"?state.sectionElapsedMs:state.elapsedMs;
@@ -255,12 +253,14 @@ export function renderModelExam(
    const isLow=remaining!==null&&remaining<=60000;
    const focused=typeof document!=="undefined"&&Boolean(
      document.fullscreenElement||document.documentElement.classList.contains("immersive"));
+   const sectionAnswered=section.questionRevisionIds.filter(qid=>Boolean(responsesById.get(qid)?.response)).length;
+   const sectionFlagged=section.questionRevisionIds.filter(qid=>Boolean(responsesById.get(qid)?.flagged)).length;
 
    const assets:ExamPackage={format:"practice-desk-exam",version:1,
      examId:attempt.frozen.snapshot.examId,title:bundle?.title??"",paper,answerKey:attempt.frozen.key,
      questions:attempt.frozen.questions,stimuli:attempt.frozen.stimuli,assets:attempt.frozen.assets};
-   return '<div class="generic-heading exam-header"><div><span class="eyebrow">EXAM IN PROGRESS · '+escapeText(readablePracticeMode(attempt.frozen.snapshot.mode))+'</span>'+
-     '<h1>'+escapeText(bundle?.title??paper.paperId)+'</h1><p class="muted">'+
+   return '<div class="generic-heading exam-header"><div><h1>'+escapeText(bundle?.title??paper.paperId)+'</h1>'+
+     '<p class="muted">'+escapeText(readablePracticeMode(attempt.frozen.snapshot.mode))+' · '+
      escapeText(section.title)+' · Section '+(state.sectionIndex+1)+' of '+paper.sections.length+'</p></div>'+
      '<div class="row exam-header-actions"><div class="exam-clock '+(isLow?"low":"")+'"><strong class="generic-timer" id="g-timer" role="timer">'+
        (remaining===null?"Untimed":minutes(remaining))+'</strong><small>'+(remaining===null?"PRACTICE":"TIME REMAINING")+'</small></div>'+
@@ -270,10 +270,9 @@ export function renderModelExam(
      '<p id="g-fullscreen-status" role="status"></p>'+
      (warning?'<p class="generic-warning" role="status">'+escapeText(warning)+'</p>':"")+
      (expired?'<p class="generic-warning" role="status">Section time has expired. Answers are locked. Select Continue to advance without using extra time.</p>':"")+
-     '<section class="exam-progress"><div class="row between"><span class="fine">'+answered+' / '+total+' answered · '+visited+' viewed · '+flagged+' flagged</span>'+
-       '<span class="fine">'+progressScope+' · '+Math.round(progressValue)+'%</span></div>'+
-       '<div class="progress-track exam-time-progress" role="progressbar" aria-valuenow="'+Math.round(progressValue)+
-        '" aria-valuemin="0" aria-valuemax="100" aria-label="'+progressAccessibleName+'">'+
+     '<section class="exam-progress"><div class="progress-track exam-time-progress" role="progressbar" aria-valuenow="'+Math.round(progressValue)+
+        '" aria-valuemin="0" aria-valuemax="100" aria-label="'+progressAccessibleName+
+        '" aria-valuetext="'+escapeText(progressScope)+' '+Math.round(progressValue)+'%">'+
          '<span style="width:'+progressValue.toFixed(1)+'%"></span></div></section>'+
      '<div class="generic-sections" role="group" aria-label="Exam sections">'+paper.sections.map((s,i)=>{
        const locked=state.status!=="running"||state.completedSections.includes(i)||
@@ -307,21 +306,29 @@ export function renderModelExam(
       (expired?(hasNextSection?"Continue to next section":"Finish expired exam"):
         paper.timing.kind==="sectional"?(untimedSection?"Finish untimed section":"Submit section"):
         lockedWhole&&hasNextSection?"Finish section →":"Submit exam")+'</button></div></section>'+
-     '<aside class="panel pad exam-sidebar"><div class="row between"><h3>Question navigator</h3><span class="fine">'+
-       section.questionRevisionIds.length+' questions</span></div>'+
-      '<p class="fine">Select a question number to navigate within the current section.</p><div class="generic-palette">'+
+     '<aside class="panel pad exam-sidebar" aria-label="Question navigator"><h3>Question navigator</h3>'+
+     '<p class="fine navigator-intro">Jump to a question in this section</p><div class="generic-palette">'+
       section.questionRevisionIds.map((qid,i)=>{
         const r=responsesById.get(qid);
         const locked=state.status!=="running"||(paper.navigation.questionNavigation==="forward-only"&&i<state.questionIndex);
         return '<button class="num '+(i===state.questionIndex?"here ":"")+(r?.response?"answered ":"")+
         (r?.flagged?"marked":"")+'" data-q="'+i+'" aria-current="'+(i===state.questionIndex?"step":"false")+'" aria-label="Question '+(i+1)+
         (r?.response?", answered":"")+(r?.flagged?", flagged":"")+'"'+(locked?" disabled":"")+'>'+(i+1)+'</button>';
-      }).join("")+'</div><div class="palette-legend"><span><i class="legend-dot answered"></i>Answered</span>'+
-       '<span><i class="legend-dot marked"></i>Flagged</span>'+
-       '<span><i class="legend-dot current"></i>Current</span>'+
-       '<span><i class="legend-dot empty"></i>Unanswered</span></div><p class="fine">'+(paper.navigation.questionNavigation==="forward-only"?
+      }).join("")+'</div>'+
+      '<div class="navigator-stats" role="group" aria-label="Current section answer counts">'+
+       '<div><b>'+sectionAnswered+'<span> / '+section.questionRevisionIds.length+'</span></b><small>Answered</small></div>'+
+       '<div><b>'+(section.questionRevisionIds.length-sectionAnswered)+'</b><small>Not answered</small></div>'+
+       '<div><b>'+sectionFlagged+'</b><small>Flagged</small></div></div>'+
+      '<div class="palette-legend"><span><i class="legend-dot answered"></i>Answered</span>'+
+       '<span><i class="legend-dot marked"></i>Review</span>'+
+       '<span><i class="legend-dot empty"></i>Not answered</span></div>'+
+      '<p class="fine navigator-status">'+(paper.navigation.sectionNavigation==="sequential-locked"?
+        "Answers remain hidden until the exam finishes. Submitting a section locks it.":
+        "Answers remain hidden until you submit.")+'</p>'+
+      '<details class="navigator-help"><summary>Keyboard shortcuts</summary>'+
+       '<p class="fine">'+(paper.navigation.questionNavigation==="forward-only"?
         "Questions cannot be revisited in this exam.":"Navigate freely where the paper permits.")+
-      ' Shortcuts: A–D answer single-choice questions; ← / → navigate unless an answer radio is focused (where they select options); Alt + ← / → navigates while a radio is focused. M toggles a flag even while paused; F enters full screen. Answer/navigation shortcuts are disabled while paused or typing.</p></aside></div>';
+       ' A–D answer single-choice questions. ← / → navigate except when a radio is focused; Alt + ← / → navigates while focused. M flags even while paused; F enters full screen. Answer/navigation shortcuts are disabled while paused or typing.</p></details></aside></div>';
  }
 
 
