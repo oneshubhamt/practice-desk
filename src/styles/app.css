@@ -796,3 +796,55 @@ html.immersive:has(#g-exam-full) header .header-offline{display:none}
  }
  #result-overview>.panel{min-width:0;max-width:100%}
 }
+
+/* Pass31: compact v11 exam shell, retaining the overhaul's generic runtime,
+   responsive targets, progressbar, theme/Display controls and shortcut help.
+   The Library/History/Results content widths are intentionally unchanged. */
+@media (min-width:981px){
+ header .wrap{max-width:1130px;min-height:68px;padding:12px 23px}
+ header .brand{gap:12px}
+ header .symbol{width:36px;height:36px}
+ header .brand b{font-size:18px}
+ header .header-actions{gap:15px}
+ main:has(.exam-grid){max-width:1130px;padding-left:20px;padding-right:20px}
+ .generic-workspace .exam-header h1{font-size:calc(17px * var(--type-scale));line-height:1.28;margin:0 0 3px;letter-spacing:-.25px}
+ .exam-header .muted{font-size:calc(12px * var(--type-scale));line-height:1.4;margin:0}
+ .generic-workspace .exam-header{padding-bottom:6px;margin-bottom:10px!important}
+ .exam-progress{margin:0 0 11px}
+ .exam-time-progress{height:5px}
+ .generic-workspace .exam-grid{grid-template-columns:minmax(0,1fr) 240px;gap:16px}
+ .generic-workspace .exam-sidebar{padding:16px}
+ .generic-workspace .exam-sidebar .generic-palette{gap:8px!important;margin:12px 0}
+ .exam-sidebar .generic-palette .num{min-height:35px}
+}
+/* v11's three compact local status tiles replace redundant counters
+   above the paper. All totals are calculated for the active section. */
+.exam-sidebar h3{margin:0 0 6px}
+.exam-sidebar .navigator-intro{margin:0;font-size:calc(12px * var(--type-scale));line-height:1.55}
+.navigator-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:15px 0 8px}
+.navigator-stats>div{min-width:0;padding:8px 5px;text-align:center;border:1px solid var(--line);border-radius:8px;background:var(--soft);overflow-wrap:anywhere}
+.navigator-stats b{display:block;font-size:calc(18px * var(--type-scale));font-variant-numeric:tabular-nums;line-height:1.25;color:var(--blue)}
+.navigator-stats b span{font-size:calc(11px * var(--type-scale));color:var(--muted);font-weight:600}
+.navigator-stats small{display:block;font-size:calc(10px * var(--type-scale));line-height:1.35;color:var(--muted)}
+.exam-sidebar .palette-legend{display:flex;flex-wrap:wrap;gap:6px 8px;margin:12px 0 0;padding-top:12px}
+.exam-sidebar .palette-legend span{display:inline-flex;gap:4px;font-size:calc(11px * var(--type-scale));white-space:nowrap}
+.exam-sidebar .palette-legend .legend-dot{width:9px;height:9px}
+.exam-sidebar .palette-legend .legend-dot.empty{background:var(--soft);border-color:var(--border-strong)}
+.exam-sidebar .navigator-status{font-size:calc(12px * var(--type-scale));line-height:1.6;margin:13px 0 0}
+.exam-sidebar .navigator-help{margin-top:10px}
+.exam-sidebar .navigator-help summary{font-size:calc(11px * var(--type-scale));font-weight:650;color:var(--muted);cursor:pointer}
+.exam-sidebar .navigator-help summary:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.exam-sidebar .navigator-help p{font-size:calc(11px * var(--type-scale));line-height:1.6;margin:7px 0 0;overflow-wrap:anywhere}
+/* Clear v11-style green/amber/slate button states, while preserving the
+   blue current-question outline and full aria-current/aria-label semantics. */
+.exam-sidebar .generic-palette .num{background:var(--soft);border-color:var(--border-strong)}
+.exam-sidebar .generic-palette .num.answered{background:color-mix(in srgb,var(--good) 18%,var(--panel));border-color:var(--good);color:var(--ink)}
+.exam-sidebar .generic-palette .num.marked{background:color-mix(in srgb,#e5ad45 27%,var(--panel));border-color:#b48939;color:var(--ink);box-shadow:none}
+@media(max-width:300px){
+ .navigator-stats{gap:4px}
+ .navigator-stats>div{padding:7px 2px}
+ .navigator-stats b{font-size:calc(15px * var(--type-scale))}
+ .navigator-stats b span{font-size:calc(9px * var(--type-scale))}
+ .navigator-stats small{font-size:calc(9px * var(--type-scale))}
+ .exam-sidebar .palette-legend span{white-space:normal}
+}
