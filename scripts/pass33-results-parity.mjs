@@ -80,7 +80,7 @@ async function geometry(a,label){
    score:box(".scoregrid"),display:box("#displayTrigger"),header:box("header"),
    docWidth:document.documentElement.scrollWidth,viewport:innerWidth,
    h1:document.querySelector("#app h1")?.textContent?.trim()??"",
-   visibleBrand:Boolean(document.querySelector("header .brand")&&getComputedStyle(document.querySelector("header .brand")).display!=="none")
+   visibleBrand:Boolean(document.querySelector("header .brand")?.getClientRects().length)
   };
  },a.era==="v11");
  check(state.docWidth<=state.viewport+2,label+" horizontal overflow "+JSON.stringify(state));
