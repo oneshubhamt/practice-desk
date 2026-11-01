@@ -103,8 +103,17 @@ try{
    check(!b.visibleBrand,"Large Practice Desk masthead remains visible on Results");
    check(b.display&&b.display.w>0,"Floating Display access lost on compact Results");
    console.log("PASS33 geometry "+vp.name+" "+JSON.stringify({v11:{heading:a.heading,tabs:a.tabs,performance:a.performance,main:a.main},overhaul:{heading:b.heading,tabs:b.tabs,performance:b.performance,main:b.main}}));
-   check(b.tabs&&a.tabs&&Math.abs(b.tabs.y-a.tabs.y)<=24,
-     "Result tabs no longer occupy v11-like top hierarchy "+JSON.stringify({viewport:vp.name,v11:a.tabs,current:b.tabs}));
+   const v11HeadingTabGap=a.tabs&&a.heading?a.tabs.y-a.heading.bottom:null;
+   const currentHeadingTabGap=b.tabs&&b.heading?b.tabs.y-b.heading.bottom:null;
+   const v11TabPerformanceGap=a.performance&&a.tabs?a.performance.y-a.tabs.bottom:null;
+   const currentTabPerformanceGap=b.performance&&b.tabs?b.performance.y-b.tabs.bottom:null;
+   check(v11HeadingTabGap!==null&&currentHeadingTabGap!==null&&
+       Math.abs(currentHeadingTabGap-v11HeadingTabGap)<=6&&
+       v11TabPerformanceGap!==null&&currentTabPerformanceGap!==null&&
+       Math.abs(currentTabPerformanceGap-v11TabPerformanceGap)<=6,
+     "Result content rhythm diverges from v11 after intentional masthead removal "+
+       JSON.stringify({viewport:vp.name,v11HeadingTabGap,currentHeadingTabGap,
+         v11TabPerformanceGap,currentTabPerformanceGap}));
    check(b.performance&&b.performance.h<520,"Performance overview is too tall for compact first-fold hierarchy "+b.performance.h);
    check(await now.page.locator(".result-performance-overview h2").innerText()==="Performance overview","Named performance overview missing");
    check(await now.page.locator(".result-performance-overview .score").count()===5,"Five primary score metrics missing");
