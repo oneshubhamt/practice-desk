@@ -188,6 +188,25 @@ for(const v of [
   check(!(await page.locator("#g-untimed").isChecked()),
     v.name+" independent six-kind preset did not survive reload");
   if(v.name==="narrow195")await assertNoOverflow(page,v.name+" three exam families at 140% text");
+  if(v.name==="laptop1366"){
+   await page.evaluate(()=>{
+     const key="practiceDesk.overhaul.setups.v2";
+     const data=JSON.parse(localStorage.getItem(key));
+     data.selectedFamilyId="imported:unavailable";
+     data.families["imported:unavailable"]={paperRevisionId:"missing-revision",
+       mode:"strict",section:0,untimed:false,edition:"reviewed"};
+     localStorage.setItem(key,JSON.stringify(data));
+   });
+   await page.reload({waitUntil:"load"});
+   check(await page.locator("#g-start").isDisabled()&&
+     await page.locator("#g-family").inputValue()==="imported:unavailable"&&
+     (await page.locator(".generic-warning").allTextContents()).some(t=>t.includes("unavailable")),
+     "Absent saved family/paper must block Start with actionable warning");
+   await page.locator("#g-family").selectOption("builtin:ssc-cgl");
+   check(await page.locator("#g-start").isEnabled()&&
+     await page.locator("#g-untimed").isChecked(),
+     "Explicit family choice must recover intact CGL preferences");
+  }
   check(errors.length===0,v.name+" uncaught browser errors "+errors.join("; "));
   scenes.push({viewport:v.name,editions:2,modes:3,untimedReload:true,
    template:true,apfcMcqNat:true,screenComparison:false});
