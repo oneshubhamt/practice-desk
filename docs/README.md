@@ -1,6 +1,6 @@
 # Practice Desk documentation — canonical map
 
-**SINGLE FORWARD WORK PROGRAMME — [Consolidated Engineering Programme](ENGINEERING_PROGRAMME.md).** The only active backlog, priority register and live scratchpad for **P41–P48**. It reconciles the 28 Oct architecture audit and 1 Nov gap analysis with completed P01–P40 and the decision register. Earlier feature-parity, native-only navigation, Results design and test-suite plans are historical evidence, not competing TODO lists. **P41 original-key comparison remains OPEN**. This is a documentation consolidation, not an app fix.
+**SINGLE FORWARD WORK PROGRAMME — [Consolidated Engineering Programme](ENGINEERING_PROGRAMME.md).** The only active backlog, priority register and live scratchpad for **P41–P48**. It reconciles the 28 Oct architecture audit and 1 Nov gap analysis with completed P01–P40 and the decision register. Earlier feature-parity, native-only navigation, Results design and test-suite plans are historical evidence, not competing TODO lists. **P41 now AUTOMATED VERIFIED** (179/179 Node, all five CI jobs green); **P42 is next**. See the [live P41 audit, source-map and acceptance evidence](ENGINEERING_PROGRAMME.md#p41--final-implementation--objectives--targeted-qa-1-november-2026).
 
 **Mac/offline compatibility update (1 November 2026):** Modern Navigation API primary, feature-detected `#pd=` hash router on older Safari/WebKit or rejected file navigation; Chromium/Firefox/WebKit no-API Back/Forward/save/reload tested. Extreme combined **195px CSS width + 140% app text** Results overflow repaired and tested with no screenshot oracle. [Verified full CI](https://github.com/oneshubhamt/practice-desk/actions/runs/41303947780). Historical native-only Pass32 description below is archived, not the current browser requirement. Actual physical Mac testing pending.
 
@@ -40,7 +40,7 @@
 | **All future feature passes, priorities, dependencies and live status** | **[Consolidated P41–P48 Engineering Programme](ENGINEERING_PROGRAMME.md)** | **Sole active implementation programme** |
 | Branch, source and five-step working discipline | [AGENTS](../AGENTS.md) | Binding |
 | Actual supported exam/data/scoring invariants | [Current architecture](architecture/CURRENT_ARCHITECTURE.md) and [data contracts](architecture/DATA_CONTRACTS.md) | Current as-built reference |
-| User-approved decisions and editorial exceptions | [Policy register](decisions/POLICY_REGISTER.md) | Binding D01–D30 |
+| User-approved decisions and editorial exceptions | [Policy register](decisions/POLICY_REGISTER.md) | Binding D01–D32 |
 | Run tests, browser acceptance and release checks | [QA and release guide](QA_CURRENT.md) | Current executable commands; manual gates open |
 | Import CGL/APFC/NAT or advanced six-kind banks | [Authoring guide](architecture/QUESTION_BANK_AUTHORING.md) | Current usage |
 | Original starting architecture audit (28 Oct) | [Baseline v11 architecture](history/BASELINE_V11_ARCHITECTURE.md) | Historical vision, P41–P48 gaps reconciled in new plan |
@@ -81,7 +81,7 @@ docs/
 
 ## Evidence and status precedence
 
-1. **Actual current source and passing named tests** establish what works in the tested environment. The new P41 publisher-key comparison gap is explicitly **OPEN** even though the last 176-test suite is green.
+1. **Actual current source and passing named tests** establish what works in the tested environment. P41's publisher-key semantics are now **AUTOMATED VERIFIED** with 179/179 Node tests and a green 5-job browser/publisher CI; P42–P48 remain to be executed.
 2. **Explicit user decisions** control exceptions and release permission. The D02/D03 disputed 6 Oct CGL Q62 policy remains binding unless the user changes it.
 3. **[The consolidated engineering programme](ENGINEERING_PROGRAMME.md)** controls future scope, unique issue IDs, pass sequencing, verification standards and live status; **the QA guide** controls executable CI/real-browser commands.
 4. Historical screenshots, source-audit findings, pass diaries and earlier CI runs are timestamped evidence, **never fresh release or acceptance proof**. Do not infer physical Safari, iOS/Android or screen-reader compatibility from CI.
