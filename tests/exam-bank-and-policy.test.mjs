@@ -82,3 +82,25 @@ test("P43 per-family selection rejects invalid mode, edition and untimed values"
    assert.throws(()=>validatePracticeSetups(copy),/Invalid/);
  }
 });
+
+test("P43 catalog keeps imported families distinct, sorted and never claims official CGL identity",async()=>{
+ const {examFamilyCatalog,BUILTIN_CGL_FAMILY,pairedEdition,familyIdFor}=
+   await import("../src/app/exam-families.ts");
+ const originals=builtinCglPackages(sources,patches);
+ const builtins=new Set(originals.map(p=>p.paper.id));
+ const apfc=importAuthoredExam(starter);
+ const imposter=importAuthoredExam({...starter,examId:"ssc-cgl",bankId:"user-supplied-cgl",title:"Unverified SSC labelled bank"});
+ const catalog=examFamilyCatalog([...originals,imposter,apfc],builtins);
+ assert.deepEqual(catalog.map(f=>f.id),
+   [BUILTIN_CGL_FAMILY,"imported:ssc-cgl","imported:upsc-epfo-apfc"]);
+ assert.equal(catalog[0].papers.length,10);
+ assert.equal(catalog[1].imported,true);
+ assert.equal(catalog[1].papers.length,1);
+ assert.equal(familyIdFor(imposter,builtins),"imported:ssc-cgl");
+ const reviewed=catalog[0].papers.find(p=>p.paper.edition==="reviewed");
+ const original=pairedEdition(catalog[0],reviewed,"source");
+ assert.equal(original?.paper.paperId,reviewed.paper.paperId);
+ assert.equal(pairedEdition(catalog[1],imposter,"source"),undefined);
+ assert.equal(imposter.paper.timing.kind,"untimed");
+ assert.equal(apfc.paper.scoring.defaultRule.correctMarks,2.5);
+});
