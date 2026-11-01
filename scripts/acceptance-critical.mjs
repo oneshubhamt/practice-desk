@@ -157,6 +157,10 @@ try{
     "two correct + one blank should receive exactly 5/7.5 APFC marks");
   await page.locator("#g-library").click();await route(page,"library");
   await page.locator('[data-edition="reviewed"]').click();
+  const reviewedCgl=await page.locator("#g-papers option").evaluateAll(xs=>
+   xs.find(x=>x.value.includes("cgl-2026-09-30")&&x.value.includes("reviewed"))?.value??"");
+  check(Boolean(reviewedCgl),"reviewed CGL paper missing after APFC import");
+  await chooseModernPaper(page,reviewedCgl);
   await page.locator('[data-mode="strict"]').click();
   await page.locator("#g-untimed").check();
   await page.locator("#g-start").click();await route(page,"exam");
