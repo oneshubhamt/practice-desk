@@ -526,7 +526,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      storageFault=true;
      if(conflict){
        warning=e.message+"; changes in this tab were not saved. Reopen before editing.";
-       if(isAttempt(versioned)&&attempt?.id===versioned.id){attempt=null;view="library";}
+       if(isAttempt(versioned)&&attempt?.id===versioned.id){attempt=null;go({screen:"library"},"replace");}
        try{localStorage.removeItem(mirrorKey);}catch{}
        records.delete(versioned.id);
        try{
@@ -601,7 +601,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        const raw=localStorage.getItem(mirrorKey);
        if(raw&&JSON.parse(raw)?.id===id)localStorage.removeItem(mirrorKey);
      }catch(error){console.warn("Could not clear the discarded attempt mirror",error);}
-     if(attempt?.id===id){attempt=null;view="library";}
+     if(attempt?.id===id){attempt=null;go({screen:"library"},"replace");}
      warning=intent==="discard-unfinished"?"Unfinished test discarded. Other saved work was preserved.":
        intent==="completed"?"Completed result deleted.":"Learning card deleted.";
      draw();
@@ -697,11 +697,11 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          "attempt-"+now()+"-"+Math.floor(Math.random()*100000);
        const generated={...startGenericAttempt(paper,id,now()),notebookLineage:createNotebookLineage(selected)};
        if(!await save(generated))return false;
-       attempt=generated;view="exam";warning="Untimed notebook revision · +1 correct, 0 incorrect. This is not a source-exam score.";
-       draw();return true;
+       attempt=generated;warning="Untimed notebook revision · +1 correct, 0 incorrect. This is not a source-exam score.";
+       go({screen:"exam",attemptId:generated.id});return true;
      }catch(error){notice(error instanceof Error?error.message:"Cannot create revision test");return false;}
    },
-   close:()=>{view="library";draw();}
+   close:()=>go({screen:"library"})
  });
  const addNotebookCard=(source:GenericAttempt,id:string):void=>{
    if(records.has("learning-card:"+id))return;
@@ -728,7 +728,9 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      const before=attempt;
      attempt=transitionGenericAttempt(attempt,event,ids);
      if(attempt!==before)void save(attempt);
-     if(attempt.finishedAt!==null){view="result";resultTab="overview";reviewFilter="all";}
+     if(attempt.finishedAt!==null){
+       reviewFilter="all";go({screen:"result",attemptId:attempt.id,tab:"overview"},"replace");return;
+     }
      warning="";
    }catch(error){warning=error instanceof Error?error.message:"Invalid response";}
    draw();
@@ -1255,7 +1257,7 @@ sectionPaceHTML(attempt)+analyticHTML+
    },learningDesk);
    if(view==="learning")return;
    if(view==="history"){
-     root.querySelector<HTMLButtonElement>("#g-library")!.onclick=()=>{view="library";draw();};
+     root.querySelector<HTMLButtonElement>("#g-library")!.onclick=()=>go({screen:"library"});
      root.querySelector<HTMLSelectElement>("#g-filter")!.onchange=e=>{historyFilter=(e.target as HTMLSelectElement).value as HistoryStatus;draw();};
      root.querySelector<HTMLSelectElement>("#g-history-paper")!.onchange=e=>{
        historyPaper=(e.target as HTMLSelectElement).value;draw();
@@ -1280,7 +1282,7 @@ sectionPaceHTML(attempt)+analyticHTML+
      return;
    }
    if(view==="library"){
-     root.querySelector<HTMLButtonElement>("#g-learning")!.onclick=()=>{view="learning";draw();};
+     root.querySelector<HTMLButtonElement>("#g-learning")!.onclick=()=>go({screen:"learning"});
      root.querySelector<HTMLSelectElement>("#g-papers")!.onchange=e=>{
        choice=(e.target as HTMLSelectElement).value;
        const chosen=packages.get(choice);
@@ -1302,15 +1304,15 @@ sectionPaceHTML(attempt)+analyticHTML+
        singleSection=Math.min(singleSection,Math.max(0,(packages.get(choice)?.paper.sections.length??1)-1));
        saveSelection();draw();
      });
-     root.querySelector<HTMLButtonElement>("#g-history")!.onclick=()=>{view="history";draw();};
+     root.querySelector<HTMLButtonElement>("#g-history")!.onclick=()=>go({screen:"history"});
      root.querySelector<HTMLButtonElement>("#g-history-recent")!.onclick=()=>{
        historyFilter="complete";historyPaper="all";historySearch="";historySort="newest";
-       view="history";draw();
+       go({screen:"history"});
      };
      const pendingHistory=root.querySelector<HTMLButtonElement>("#g-pending-history");
      if(pendingHistory)pendingHistory.onclick=()=>{
        historyFilter="progress";historyPaper="all";historySearch="";historySort="newest";
-       view="history";draw();
+       go({screen:"history"});
      };
      root.querySelectorAll<HTMLButtonElement>("[data-mode]").forEach(button=>button.onclick=()=>{
        cglMode=button.dataset.mode as CglPracticeMode;saveSelection();draw();
@@ -1342,7 +1344,7 @@ sectionPaceHTML(attempt)+analyticHTML+
              ...(review?{sourceReviewReference:review}:{})};
          }
        }
-       warning="";view="exam";draw();void save(attempt);
+       warning="";void save(attempt);go({screen:"exam",attemptId:attempt.id});
      };
      root.querySelector<HTMLButtonElement>("#g-import")!.onclick=()=>root.querySelector<HTMLInputElement>("#g-file")?.click();
      root.querySelector<HTMLButtonElement>("#g-bank-template")!.onclick=()=>{
@@ -1385,24 +1387,20 @@ sectionPaceHTML(attempt)+analyticHTML+
    root.querySelector<HTMLButtonElement>("#g-library")!.onclick=()=>{
      if(view==="exam"&&attempt?.finishedAt===null){
        if(!confirm("Return to library? Your test timer will keep running and the attempt can be resumed."))return;
-       const current=attempt;
-       attempt=transitionGenericAttempt(current,{type:"VISIBILITY",nowMs:now(),visible:false},
-         new Map(current.frozen.questions.map(question=>[question.id,question])));
-       void save(attempt);
      }
-     view="library";draw();
+     go({screen:"library"});
    };
    if(view==="result"&&attempt){
-     root.querySelector<HTMLButtonElement>("#g-history-results")!.onclick=()=>{view="history";draw();};
+     root.querySelector<HTMLButtonElement>("#g-history-results")!.onclick=()=>go({screen:"history"});
      const tabs=[...root.querySelectorAll<HTMLButtonElement>("[data-result-tab]")];
      tabs.forEach((button,index)=>{
-       button.onclick=()=>{resultTab=button.dataset.resultTab as ResultTab;draw();};
+       button.onclick=()=>go({screen:"result",attemptId:attempt!.id,tab:button.dataset.resultTab as ResultTab});
        button.onkeydown=event=>{
          if(!["ArrowLeft","ArrowRight","Home","End"].includes(event.key))return;
          event.preventDefault();
          const next=event.key==="Home"?0:event.key==="End"?tabs.length-1:
            (index+(event.key==="ArrowRight"?1:tabs.length-1))%tabs.length;
-         resultTab=tabs[next]!.dataset.resultTab as ResultTab;draw();
+         go({screen:"result",attemptId:attempt!.id,tab:tabs[next]!.dataset.resultTab as ResultTab});
        };
      });
      const reviewFilterControl=root.querySelector<HTMLSelectElement>("#g-review-filter");
@@ -1411,13 +1409,19 @@ sectionPaceHTML(attempt)+analyticHTML+
      };
      root.querySelectorAll<HTMLButtonElement>("[data-review-preset]").forEach(button=>button.onclick=()=>{
        if(!attempt?.frozen.paper.navigation.allowReview)return;
-       reviewFilter=(button.dataset.reviewPreset??"all") as ReviewFilter;resultTab="review";draw();
+       reviewFilter=(button.dataset.reviewPreset??"all") as ReviewFilter;
+       if(resultTab==="review")draw();
+       else go({screen:"result",attemptId:attempt!.id,tab:"review"});
      });
      root.querySelectorAll<HTMLButtonElement>("[data-ledger-q]").forEach(button=>button.onclick=()=>{
        if(!attempt?.frozen.paper.navigation.allowReview)return;
-       const question=button.dataset.ledgerQ;resultTab="review";reviewFilter="all";draw();
-       const target=[...root.querySelectorAll<HTMLElement>("[data-review-id]")].find(node=>node.dataset.reviewId===question);
-       target?.scrollIntoView({block:"start"});
+       const question=button.dataset.ledgerQ;reviewFilter="all";
+       void router.navigate({screen:"result",attemptId:attempt!.id,tab:"review"}).then(()=>{
+         if(disposed)return;
+         if(resultTab==="review")draw();
+         const target=[...root.querySelectorAll<HTMLElement>("[data-review-id]")].find(node=>node.dataset.reviewId===question);
+         target?.scrollIntoView({block:"start"});
+       }).catch(error=>notice(error instanceof Error?error.message:"Review navigation failed"));
      });
      const revisionSet=root.querySelector<HTMLButtonElement>("#g-revision-set");
      if(revisionSet)revisionSet.onclick=()=>{void addResultCards(attempt!);};
@@ -1569,8 +1573,10 @@ sectionPaceHTML(attempt)+analyticHTML+
        void save(attempt);lastTimerSave=now();
      }
      if(next.finishedAt!==null){
-       if(view==="exam"){view="result";resultTab="overview";reviewFilter="all";}
-       draw();return;
+       if(view==="exam"){
+         reviewFilter="all";go({screen:"result",attemptId:attempt.id,tab:"overview"},"replace");
+       }else draw();
+       return;
      }
      if((changedSection||original.state.status!==next.state.status)&&view==="exam"){draw();return;}
    }
@@ -1590,7 +1596,9 @@ sectionPaceHTML(attempt)+analyticHTML+
    attempt=transitionGenericAttempt(current,{type:"VISIBILITY",nowMs:now(),visible},
      new Map(current.frozen.questions.map(q=>[q.id,q])));
    void save(attempt);
-   if(attempt.finishedAt!==null&&view==="exam"){view="result";resultTab="overview";reviewFilter="all";}
+   if(attempt.finishedAt!==null&&view==="exam"){
+     reviewFilter="all";go({screen:"result",attemptId:attempt.id,tab:"overview"},"replace");return;
+   }
    draw();
  }
  document.addEventListener("visibilitychange",visibility);
@@ -1673,13 +1681,14 @@ sectionPaceHTML(attempt)+analyticHTML+
    if(db||event.key!==storageKey||event.newValue===fallbackStamp)return;
    fallbackConflict=true;
    warning="Fallback history changed in another tab. Reopen the file before continuing.";
-   attempt=null;view="library";
+   attempt=null;go({screen:"library"},"replace");
    if(!disposed)draw();
  };
  window.addEventListener("storage",storage);
- function cleanup(){learningDesk.dispose();disposed=true;window.clearInterval(timer);document.removeEventListener("visibilitychange",visibility);
+ function cleanup(){router.dispose();learningDesk.dispose();disposed=true;window.clearInterval(timer);document.removeEventListener("visibilitychange",visibility);
    window.removeEventListener("pagehide",pagehide);window.removeEventListener("storage",storage);
    window.removeEventListener("keydown",keyboard);void writeQueue.finally(()=>db?.close());root.classList.remove("generic-workspace");}
+ router=createNativeRouter(activateRoute);
  draw();
  (async()=>{
    try{
@@ -1745,7 +1754,9 @@ sectionPaceHTML(attempt)+analyticHTML+
        Math.max(0,(packages.get(choice)?.paper.sections.length??1)-1));
    }
    loading=false;
-   if(!disposed)draw();
+   routeHydrated=true;hydrationDone();
+   if(!disposed){draw();void router.start().catch(error=>notice(
+     error instanceof Error?"Navigation startup failed: "+error.message:"Navigation startup failed"));}
  })();
  return cleanup;
 }
