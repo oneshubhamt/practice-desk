@@ -69,6 +69,9 @@ try{
    await capture(page,vp.name+"-exam-back");
    await page.reload({waitUntil:"load"});
    await page.locator("#g-next").waitFor({state:"visible"});
+   // A deliberate browser reload creates a new Document; internal navigations
+   // after this point must continue preserving that new Document.
+   await page.evaluate(()=>window.__nativeDoc=true);
    assert(new URL(await page.evaluate(()=>location.href)).searchParams.get("attempt")===id,"Reload lost deep-link ID");
    assert(await page.locator('[data-q="0"]').evaluate(el=>el.classList.contains("marked")),"Reload lost flag");
    await page.locator("#g-submit").click();
