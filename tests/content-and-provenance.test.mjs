@@ -1,5 +1,5 @@
-// Pass37 lossless capability suite. Each lexical block preserves the original
-// independent fixtures and test body, identified for assertion-level traceability.
+// Capability suite with source-verified consolidation. Original fixture blocks
+// remain traceable; overlapping Q62 status/marks checks now have one owner.
 // Imports are module namespaces to avoid collisions between former suites.
 import * as __suite_dep_0 from "node:test";
 import * as __suite_dep_1 from "node:assert/strict";
@@ -48,6 +48,7 @@ const sectionScoreSummaries = __suite_dep_6["sectionScoreSummaries"];
 const paperRevisionHash = __suite_dep_7["paperRevisionHash"];
 const validateGenericStoredRecord = __suite_dep_8["validateGenericStoredRecord"];
 const createSourceReviewReference = __suite_dep_9["createSourceReviewReference"];
+const editorialStatusLabel = __suite_dep_12["editorialStatusLabel"];
 const papers=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
 const solutions=JSON.parse(await readFile(new URL("../src/content/solutions.json",import.meta.url)));
@@ -92,6 +93,7 @@ test("October 6 Q62: published b disputed; original excluded, reviewed caution r
  const original=source.questions[index],changed=reviewed.questions[index];
  assert.equal(original.editorial.status,"invalid");
  assert.equal(changed.editorial.status,"caution");
+ assert.match(editorialStatusLabel(changed.editorial),/not certified/);
  assert.match(changed.editorial.notes,/published answer is retained for scoring/i);
  assert.match(changed.editorial.notes,/disputed/i);
  assert.equal(changed.content.options[1].text,"Both 1 and 2, but not 3");
@@ -102,6 +104,7 @@ test("October 6 Q62: published b disputed; original excluded, reviewed caution r
  const sourceResult=scoreAttempt(source.paper,source.answerKey,source.questions,
   [{questionRevisionId:original.id,response:{kind:"single-choice",optionId:original.content.options[1].id},flagged:false,timeSpentMs:0,answerChangeCount:0}],submittedAt);
  assert.equal(sourceResult.items[index].verdict,"excluded");
+ assert.equal(sourceResult.items[index].marks,0);
  const answer=(optionId)=>[{questionRevisionId:changed.id,
    response:{kind:"single-choice",optionId},flagged:false,timeSpentMs:0,answerChangeCount:0}];
  const right=scoreAttempt(reviewed.paper,reviewed.answerKey,reviewed.questions,
@@ -431,31 +434,7 @@ test("V02/V07/F02/F06: all 10 paper editions have derived full/section marks, no
  }
 });
 
-test("V05/V07/F08/Q62: same published B remains reviewed scoreable caution, original excluded",()=>{
- const id="cgl-2026-10-06";
- const source=banks.find(x=>x.paper.paperId===id&&x.paper.edition==="source");
- const reviewed=banks.find(x=>x.paper.paperId===id&&x.paper.edition==="reviewed");
- assert.ok(source&&reviewed);
- const orig=source.questions.find(q=>q.questionId.endsWith(":62"));
- const fix=reviewed.questions.find(q=>q.questionId.endsWith(":62"));
- assert.ok(orig&&fix);
- assert.equal(orig.editorial.status,"invalid");
- assert.equal(fix.editorial.status,"caution");
- assert.match(editorialStatusLabel(fix.editorial),/not certified/);
- const oi=source.answerKey.entries.find(x=>x.questionRevisionId===orig.id);
- const ri=reviewed.answerKey.entries.find(x=>x.questionRevisionId===fix.id);
- const so=orig.content.options[1].id,sr=fix.content.options[1].id;
- assert.equal(oi.answer.optionId,so);
- assert.equal(ri.answer.optionId,sr);
- const candidate={questionRevisionId:fix.id,response:{kind:"single-choice",optionId:sr},flagged:false,timeSpentMs:0,answerChangeCount:0};
- const scored=scoreAttempt(reviewed.paper,reviewed.answerKey,reviewed.questions,[candidate],new Date(0).toISOString());
- const item=scored.items.find(x=>x.questionRevisionId===fix.id);
- assert.equal(item.verdict,"correct");assert.equal(item.marks,2);
- const originalScored=scoreAttempt(source.paper,source.answerKey,source.questions,
- [{...candidate,questionRevisionId:orig.id,response:{kind:"single-choice",optionId:so}}],new Date(0).toISOString());
- const originalItem=originalScored.items.find(x=>x.questionRevisionId===orig.id);
- assert.equal(originalItem.verdict,"excluded");assert.equal(originalItem.marks,0);
-});
+
 
 test("G01/G02/F01/F09: locked shared paper, manual expiry and frozen truthful section timers",()=>{
  const locked=rehash({...pkg.paper,navigation:{...pkg.paper.navigation,sectionNavigation:"sequential-locked"}});

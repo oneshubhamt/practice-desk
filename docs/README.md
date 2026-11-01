@@ -1,5 +1,7 @@
 # Practice Desk documentation — canonical map
 
+**Mac/offline compatibility update (1 November 2026):** Modern Navigation API primary, feature-detected `#pd=` hash router on older Safari/WebKit or rejected file navigation; Chromium/Firefox/WebKit no-API Back/Forward/save/reload tested. Extreme combined **195px CSS width + 140% app text** Results overflow repaired and tested with no screenshot oracle. [Verified full CI](https://github.com/oneshubhamt/practice-desk/actions/runs/41303947780). Historical native-only Pass32 description below is archived, not the current browser requirement. Actual physical Mac testing pending.
+
 **Current testing policy (1 November 2026):** `overhaul` is the sole development branch. The old `baseline/v11` UI/feature parity exercise is **finished** and its reports remain archived references, not a design ceiling or recurring CI requirement. See [AGENTS current policy](../AGENTS.md) and [active test/CI migration scratchpad](audits/TEST_SUITE_REENGINEERING_PLAN_2026-11-01.md). Modern CI prioritises source integrity, score/frozen-revision correctness, six-kind/APFC/NAT/untimed UX, native/offline browser behaviour, responsive layout and failure-only diagnostics. **No routine screenshot comparisons.** Mac/iOS/Android/AT/manual approval are separate and not claimed by simulated browser tests.
 
 ## Historical parity and original feature audit (completed)
