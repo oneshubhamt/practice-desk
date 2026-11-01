@@ -118,7 +118,17 @@ export async function assertNoOverflow(page,label){
  const state=await page.evaluate(()=>({
   width:innerWidth,scroll:document.documentElement.scrollWidth,
   nav:typeof window.navigation?.navigate==="function",
-  viewport:{width:innerWidth,height:innerHeight}
+  viewport:{width:innerWidth,height:innerHeight},
+  offenders:document.documentElement.scrollWidth>innerWidth+2?
+   [...document.querySelectorAll("#app *")].filter(x=>{
+    if(!(x instanceof HTMLElement)||!x.getClientRects().length)return false;
+    const r=x.getBoundingClientRect();
+    return r.right>innerWidth+2&&!x.closest(".scroll-table,.result-tabs,.generic-stimulus");
+   }).slice(0,12).map(x=>{
+    const r=x.getBoundingClientRect();
+    return {tag:x.tagName,id:x.id,className:typeof x.className==="string"?x.className.slice(0,75):"",
+     right:Math.round(r.right),left:Math.round(r.left),scroll:x.scrollWidth,client:x.clientWidth};
+   }):[]
  }));
  check(state.scroll<=state.width+2,label+" document overflow "+JSON.stringify(state));
  return state;
