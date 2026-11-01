@@ -3,7 +3,7 @@
  * This adapter never treats user-supplied editorial or scoring as official.
  */
 import type { ExamPackage } from "./exam-package.ts";
-import { validateExamPackage } from "./exam-package.ts";
+import { validateExamPackage,validateExamImportBudget } from "./exam-package.ts";
 import type { QuestionRevision } from "../domain/question.js";
 import type { AnswerKeyEntry } from "../domain/answer-key.js";
 import type { SectionDefinition, PaperEdition, PaperRevision } from "../domain/exam.js";
@@ -34,6 +34,7 @@ function maybeNumber(value:unknown,name:string):number|undefined{
 function ensure(condition:boolean,message:string):void{if(!condition)throw Error(message)}
 const LETTERS="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 export function importSimpleQuestionBank(value:unknown):ExamPackage{
+ validateExamImportBudget(value);
  const bank=obj(value,"Question bank");
  ensure(bank["format"]==="practice-desk-bank"&&bank["version"]===1,
    "Not a Practice Desk simple bank v1");
