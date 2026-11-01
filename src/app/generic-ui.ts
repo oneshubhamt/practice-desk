@@ -1302,6 +1302,11 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    }
    if(view==="library"){
      root.querySelector<HTMLButtonElement>("#g-learning")!.onclick=()=>go({screen:"learning"});
+     root.querySelector<HTMLSelectElement>("#g-family")!.onchange=e=>{
+       const id=(e.target as HTMLSelectElement).value;
+       if(!families().some(f=>f.id===id))return;
+       applyFamily(id);saveSelection();draw();
+     };
      root.querySelector<HTMLSelectElement>("#g-papers")!.onchange=e=>{
        choice=(e.target as HTMLSelectElement).value;
        const chosen=packages.get(choice);
@@ -1316,9 +1321,9 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        if(next===editionView)return;
        const current=packages.get(choice);
        editionView=next;
-       const same=current?[...packages.values()].find(p=>p.paper.edition===next&&
-         p.examId===current.examId&&p.paper.paperId===current.paper.paperId):undefined;
-       const first=[...packages.values()].find(p=>p.paper.edition===next);
+       const family=families().find(f=>f.id===selectedFamilyId);
+       const same=current&&family?pairedEdition(family,current,next):undefined;
+       const first=family?.papers.find(p=>p.paper.edition===next);
        choice=(same??first??current)?.paper.id??choice;
        singleSection=Math.min(singleSection,Math.max(0,(packages.get(choice)?.paper.sections.length??1)-1));
        saveSelection();draw();
@@ -1342,7 +1347,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      const single=root.querySelector<HTMLSelectElement>("#g-single-section");
      if(single)single.onchange=()=>{singleSection=Number(single.value);saveSelection();};
      root.querySelector<HTMLButtonElement>("#g-start")!.onclick=()=>{
-       const p=packages.get(choice);if(!p)return;
+       const p=packages.get(choice);
+       if(!p||familyIdFor(p,builtinPaperIds)!==selectedFamilyId)return;
        const unfinished=[...records.values()].filter((row):row is GenericAttempt=>
          isAttempt(row)&&row.finishedAt===null);
        if(unfinished.length&&!confirm(
@@ -1387,7 +1393,9 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          const pkg=importAuthoredExam(JSON.parse(await file.text()));
          if(packages.has(pkg.paper.id))throw new Error("Paper revision ID already exists. Supply a new revision ID.");
          if(!await save({recordType:"generic-package",id:"generic-package:"+pkg.paper.id,bundle:pkg}))return;
-         packages.set(pkg.paper.id,pkg);choice=pkg.paper.id;singleSection=0;
+         packages.set(pkg.paper.id,pkg);
+         applyFamily(familyIdFor(pkg,builtinPaperIds));
+         choice=pkg.paper.id;singleSection=0;
          if(pkg.paper.edition==="source"||pkg.paper.edition==="reviewed")editionView=pkg.paper.edition;
          saveSelection();
          notice("Question bank validated and imported. Your paper is ready to practise.");
