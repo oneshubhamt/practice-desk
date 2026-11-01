@@ -98,6 +98,21 @@ try{
     check(start&&start.y+start.height<=viewport.height,"Start not in laptop first fold");
    }
    await checkDisplay(page,name);
+   // Replace the historical Pass36 screenshot suite with a measurable
+   // product invariant: the 18px conditional gap only when a resume card exists.
+   check(await page.locator("#g-pending-attempts").count()===0,
+    "fresh Library unexpectedly shows unfinished-attempt panel "+name);
+   await page.locator("#g-start").click();await route(page,"exam");
+   await page.locator("#g-library").click();await route(page,"library");
+   await page.locator("#g-pending-attempts").waitFor({state:"visible"});
+   const resumeSpacing=await page.evaluate(()=>{
+    const pending=document.querySelector("#g-pending-attempts")?.getBoundingClientRect();
+    const papers=document.querySelector(".home-grid")?.getBoundingClientRect();
+    return pending&&papers?papers.top-pending.bottom:null;
+   });
+   check(resumeSpacing!==null&&Math.abs(resumeSpacing-18)<=1,
+    "pending-to-paper selector gap should remain 18px "+name+", observed "+resumeSpacing);
+   scenes.push({label:name+"-resume-spacing",pixels:resumeSpacing});
    await page.addStyleTag({content:"body{min-height:3100px!important}"});
    await page.evaluate(()=>window.scrollTo({top:700,behavior:"instant"}));
    await page.waitForFunction(()=>window.scrollY>350);
