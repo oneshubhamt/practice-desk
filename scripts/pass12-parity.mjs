@@ -170,7 +170,9 @@ try{
    }finally{db.close();}
  },{id:archiveId,sourceId:oldRecord.id});
  await page.reload({waitUntil:"load"});
- await page.locator("#g-history").click();
+ // Native deep link reload restores History directly, instead of always opening Library.
+ if(await page.locator("#g-history").count())await page.locator("#g-history").click();
+ else await page.locator(".history-archive").waitFor({state:"visible"});
  await page.locator('[data-attempt="'+archiveId+'"]').first().click();
  await page.locator('[data-result-tab="review"]').click();
  const restoredOlder=page.locator('[data-review-id="'+q.id+'"] details.source-review');
