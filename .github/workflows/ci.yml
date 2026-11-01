@@ -1,213 +1,79 @@
 name: CI
-concurrency:
-  group: practice-desk-${{ github.ref }}
-  cancel-in-progress: true
 on:
   push:
   pull_request:
+concurrency:
+  group: practice-desk-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
-  contents: write
+  contents: read
+
 jobs:
-  checks:
+  core:
+    name: Strict TypeScript, build and Node contracts
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          fetch-depth: 0  # Pass 15 renders the frozen baseline/v11 single-file artifact.
+          node-version: '24'
+          package-manager-cache: false
+      # No committed lockfile yet. npm ci is not supported until one exists.
+      - run: npm install --no-audit --no-fund
+      - run: npm run check
+      - name: Save source-verified standalone HTML
+        if: github.event_name == 'push' && github.ref == 'refs/heads/overhaul'
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-verified-offline-html
+          path: Practice_Desk_Offline_Mock_Tests.html
+          if-no-files-found: error
+          retention-days: 2
+          compression-level: 0
+
+  chromium:
+    name: Modern offline browser journeys and unique safety checks
+    needs: core
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
           package-manager-cache: false
       - run: npm install --no-audit --no-fund
-      - run: npm run check
-      # Additive modern capability-based offline acceptance; legacy gates remain
-      # until verified scenario migration and the coordinated AGENTS handoff.
+      - run: npm run build
       - run: node scripts/acceptance-critical.mjs
+      - run: node scripts/acceptance-bank-modes.mjs
+      - run: node scripts/acceptance-drafts.mjs
       - run: node scripts/acceptance-recovery.mjs
       - run: node scripts/acceptance-ui.mjs
       - run: node scripts/acceptance-stress.mjs
       - run: node scripts/acceptance-platform.mjs chromium
+      # Still valuable behavioural tests, no screenshots or frozen-v11 runs.
       - run: node scripts/smoke-offline.mjs
-      - run: node scripts/pass18-targeted.mjs
-      - run: node scripts/pass19-targeted.mjs
-      - run: node scripts/pass20-targeted.mjs
-      - run: node scripts/pass21-targeted.mjs
-      - run: node scripts/pass22-targeted.mjs
-      - run: node scripts/pass23-independent.mjs
-      - run: node scripts/pass25-library.mjs
-      - run: node scripts/pass26-exam.mjs
-      - run: node scripts/pass27-history-results.mjs
-      - run: node scripts/pass28-semantics.mjs
-      - run: node scripts/pass30-ui.mjs
-      - run: node scripts/pass31-ui.mjs
-      - run: node scripts/pass32-native-navigation.mjs
-      - run: node scripts/pass33-results-parity.mjs
-      - run: node scripts/pass34-v11-display.mjs
-      - run: node scripts/pass35-detached-display.mjs
-      - run: node scripts/pass36-library-spacing.mjs
-      - name: Modern acceptance failure diagnostics (no routine screenshots)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: modern-acceptance-failure
-          path: artifacts/acceptance-modern/
-          if-no-files-found: ignore
-          retention-days: 7
-      - name: Save conditional resume-to-paper spacing evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pass36-library-pending-spacing
-          path: artifacts/pass36-library-spacing/
-          if-no-files-found: warn
-          retention-days: 30
-      - name: Save detached Aa and scrolling-header browser evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pass35-detached-aa-nonsticky-header
-          path: artifacts/pass35-detached-display/
-          if-no-files-found: warn
-          retention-days: 30
-      - name: Save frozen v11 Aa light-dark, scroll and cross-screen parity evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pass34-v11-floating-display-parity
-          path: artifacts/pass34-v11-display/
-          if-no-files-found: warn
-          retention-days: 30
-      - name: Save frozen-v11 Results hierarchy and responsive evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pass33-v11-results-parity
-          path: artifacts/pass33-results/
-          if-no-files-found: warn
-          retention-days: 30
-      - name: Save native Navigation API file-scheme/deep-link evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pass32-native-navigation-browser-journeys
-          path: artifacts/pass32-native-navigation/
-          if-no-files-found: warn
-          retention-days: 30
-      - name: Save paired v11 compact header, navigator and responsive interactions
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pass31-v11-compact-header-and-navigator
-          path: artifacts/pass31-ui/
-          if-no-files-found: warn
-          retention-days: 30
-      - name: Save edition split, universal untimed and APFC/NAT bank snapshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pass30-edition-untimed-apfc-nat-journeys
-          path: artifacts/pass30-ui/
-          if-no-files-found: warn
-          retention-days: 30
-      - name: Save v11/overhaul Display snapshots and live editorial/timer proof
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pass28-display-editorial-timer-mode-evidence
-          path: artifacts/pass28-semantics/
-          if-no-files-found: warn
-          retention-days: 30
-      - name: Save paired v11 and overhaul History/Results laptop landmarks
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pass27-history-results-first-fold
-          path: artifacts/pass27-history-results/
-          if-no-files-found: warn
-          retention-days: 30
-      - name: Save v11 versus overhaul laptop Exam geometry and screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pass26-exam-first-fold-screenshots
-          path: artifacts/pass26-exam/
-          if-no-files-found: warn
-          retention-days: 30
-      - name: Save v11 versus overhaul laptop Library geometry evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pass25-library-action-first-screenshots
-          path: artifacts/pass25-library/
-          if-no-files-found: warn
-          retention-days: 30
       - run: node scripts/pass11-parity.mjs
       - run: node scripts/pass12-parity.mjs
       - run: node scripts/pass13-history.mjs
       - run: node scripts/pass14-parity.mjs
-      - run: node scripts/pass15-visual.mjs
-      - name: Capture independent laptop-size v11 / overhaul screenshots and landmarks
-        env:
-          PASS15_OUTPUT: artifacts/pass24-laptop/
-          PASS15_VIEWPORTS: '[{"name":"laptop1366","width":1366,"height":768},{"name":"laptop1440","width":1440,"height":900},{"name":"laptop1536","width":1536,"height":864}]'
-        run: node scripts/pass15-visual.mjs
-      - name: Save laptop screenshot comparison evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pass24-laptop-v11-overhaul-visual-evidence
-          path: artifacts/pass24-laptop/
-          if-no-files-found: warn
-          retention-days: 30
-      - name: Save visual comparison evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pass15-v11-overhaul-visual-evidence
-          path: artifacts/pass15-visual/
-          if-no-files-found: warn
-          retention-days: 30
       - run: node scripts/pass16-independent.mjs
-      - run: node scripts/pass10-platform.mjs chromium
-      # On the development branch, publish the generated single-file distribution
-      # only after all tests pass. main and baseline/v11 are never written.
-      - name: Commit verified offline distribution
-        if: github.event_name == 'push' && github.ref == 'refs/heads/overhaul'
-        run: |
-          if ! git diff --quiet -- Practice_Desk_Offline_Mock_Tests.html; then
-            # This artifact was built and tested from the verified checkout.
-            # Reconcile docs-only remote changes; reject source or HTML drift.
-            verified_head=$(git rev-parse HEAD)
-            git config user.name 'github-actions[bot]'
-            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git add Practice_Desk_Offline_Mock_Tests.html
-            git commit -m 'build: refresh verified offline HTML [skip ci]'
-            for attempt in 1 2 3; do
-              git fetch origin overhaul
-              remote_head=$(git rev-parse FETCH_HEAD)
-              if ! git merge-base --is-ancestor "$verified_head" "$remote_head"; then
-                echo "::error::Overhaul diverged from verified source; rebuild required."
-                exit 1
-              fi
-              source_changes=$(git diff --name-only "$verified_head" "$remote_head" | grep -vE '\.md$' || true)
-              if [ -n "$source_changes" ]; then
-                echo "::error::Source or built HTML changed while CI ran; rerun checks."
-                printf '%s\n' "$source_changes"
-                exit 1
-              fi
-              git rebase "$remote_head"
-              if git push origin HEAD:overhaul; then
-                exit 0
-              fi
-              echo "Docs-only branch advance during push; retrying safe reconciliation."
-            done
-            echo "::error::Verified distribution publish could not complete safely."
-            exit 1
-          fi
-      - run: git diff --exit-code -- Practice_Desk_Offline_Mock_Tests.html
+      - run: node scripts/pass18-targeted.mjs
+      - run: node scripts/pass19-targeted.mjs
+      - run: node scripts/pass20-targeted.mjs
+      - run: node scripts/pass21-targeted.mjs
+      - name: Upload screenshots only when a modern test fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-failure-diagnostics
+          path: artifacts/acceptance-modern/
+          if-no-files-found: ignore
+          retention-days: 7
 
   cross-browser:
-    name: Offline acceptance (${{ matrix.browser }})
+    name: Offline persistence and navigation (${{ matrix.browser }})
+    needs: core
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -222,30 +88,61 @@ jobs:
           package-manager-cache: false
       - run: npm install --no-audit --no-fund
       - run: node node_modules/playwright-core/cli.js install --with-deps ${{ matrix.browser }}
-      - run: npm run check
-      - run: node scripts/pass10-platform.mjs ${{ matrix.browser }}
+      - run: npm run build
       - run: node scripts/acceptance-platform.mjs ${{ matrix.browser }}
+      # WebKit native Back after file:// reload remains explicitly unsupported.
 
-  independent-journey-matrix:
-    name: Independent expanded laptop & use-case visual matrix
+  publish:
+    name: Publish only after all current-app gates pass
+    if: github.event_name == 'push' && github.ref == 'refs/heads/overhaul'
+    needs: [core, chromium, cross-browser]
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v7
+      - uses: actions/download-artifact@v4
         with:
-          node-version: '24'
-          package-manager-cache: false
-      - run: npm install --no-audit --no-fund
-      - run: npm run check
-      - run: node scripts/pass29-independent-matrix.mjs
-      - name: Upload paired journeys, scene measurements and review index
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pass29-independent-expanded-journey-matrix
-          path: artifacts/pass29-independent/
-          if-no-files-found: warn
-          retention-days: 30
+          name: source-verified-offline-html
+          path: .verified-build
+      - name: Reject source drift and publish the tested HTML if needed
+        shell: bash
+        run: |
+          set -euo pipefail
+          verified_head="$GITHUB_SHA"
+          test "$(git rev-parse HEAD)" = "$verified_head"
+          test -s .verified-build/Practice_Desk_Offline_Mock_Tests.html
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin overhaul
+          remote_head=$(git rev-parse FETCH_HEAD)
+          git merge-base --is-ancestor "$verified_head" "$remote_head" || {
+            echo "::error::Branch diverged from tested source"; exit 1;
+          }
+          source_changes=$(git diff --name-only "$verified_head" "$remote_head" | grep -vE '\.md$' || true)
+          test -z "$source_changes" || {
+            echo "::error::Source, CI or artifact changed after testing: $source_changes"; exit 1;
+          }
+          cp .verified-build/Practice_Desk_Offline_Mock_Tests.html Practice_Desk_Offline_Mock_Tests.html
+          if git diff --quiet -- Practice_Desk_Offline_Mock_Tests.html; then
+            echo "Verified build matches committed offline HTML."
+            exit 0
+          fi
+          git add Practice_Desk_Offline_Mock_Tests.html
+          git commit -m 'build: refresh verified offline HTML [skip ci]'
+          for attempt in 1 2 3; do
+            git fetch origin overhaul
+            remote_head=$(git rev-parse FETCH_HEAD)
+            git merge-base --is-ancestor "$verified_head" "$remote_head" || {
+              echo "::error::Branch diverged after testing"; exit 1;
+            }
+            source_changes=$(git diff --name-only "$verified_head" "$remote_head" | grep -vE '\.md$' || true)
+            test -z "$source_changes" || {
+              echo "::error::Unverified branch changes: $source_changes"; exit 1;
+            }
+            git rebase "$remote_head"
+            if git push origin HEAD:overhaul; then exit 0; fi
+          done
+          echo "::error::Could not safely publish tested HTML"; exit 1

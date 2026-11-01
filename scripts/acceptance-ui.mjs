@@ -65,6 +65,32 @@ async function checkDisplay(page,label){
    await page.evaluate(()=>document.activeElement?.id)==="displayTrigger",
    "Escape failed to close popover and restore focus");
 }
+/** Direct computed-token colour contrasts, not frozen v11 pixel equality. */
+async function assertContrast(page,label){
+ const ratios=await page.evaluate(()=>{
+  const style=getComputedStyle(document.documentElement);
+  const hex=name=>{
+   let v=style.getPropertyValue(name).trim().replace("#","");
+   if(/^[a-f0-9]{3}$/i.test(v))v=[...v].map(x=>x+x).join("");
+   if(!/^[a-f0-9]{6}$/i.test(v))throw Error("Bad CSS colour token "+name);
+   return [0,2,4].map(i=>parseInt(v.slice(i,i+2),16)/255);
+  };
+  const luminance=rgb=>rgb.reduce((sum,x,i)=>{
+   const l=x<=.04045?x/12.92:((x+.055)/1.055)**2.4;
+   return sum+l*[.2126,.7152,.0722][i];
+  },0);
+  const ratio=(a,b)=>{
+   const x=luminance(hex(a)),y=luminance(hex(b));
+   return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);
+  };
+  return {foreground:ratio("--ink","--bg"),secondary:ratio("--muted","--panel"),
+   correct:ratio("--good","--panel"),incorrect:ratio("--bad","--panel")};
+ });
+ check(Object.values(ratios).every(x=>x>=4.5),
+  "Insufficient current-app palette contrast "+label+" "+JSON.stringify(ratios));
+ scenes.push({label:label+"-contrast",ratios});
+}
+
 /** Narrow, focused automated semantic rules; NOT full WCAG/AT certification. */
 async function semanticAudit(page,label){
  const issues=await page.evaluate(()=>{
@@ -97,7 +123,13 @@ try{
     const start=await page.locator("#g-start").boundingBox();
     check(start&&start.y+start.height<=viewport.height,"Start not in laptop first fold");
    }
+   await assertContrast(page,name+" light");
    await checkDisplay(page,name);
+   await page.locator("#displayTrigger").click();
+   await page.locator("#themeDark").click();
+   await assertContrast(page,name+" dark");
+   await page.locator("#themeLight").click();
+   await page.keyboard.press("Escape");
    // Replace the historical Pass36 screenshot suite with a measurable
    // product invariant: the 18px conditional gap only when a resume card exists.
    check(await page.locator("#g-pending-attempts").count()===0,
@@ -129,7 +161,18 @@ try{
    await page.locator('[data-mode="single"]').click();
    await page.locator("#g-single-section").selectOption("0");
    await page.locator("#g-start").click();await route(page,"exam");
+   check(await page.locator(".navigator-help summary").innerText()==="Keyboard shortcuts",
+    "Navigator keyboard controls missing "+name);
+   check(await page.locator("#g-flag").getAttribute("aria-pressed")==="false",
+    "Unmarked flag unexpectedly active "+name);
    await page.locator(".exam-question input[data-choice]").first().click();
+   await page.locator("#g-flag").click();
+   check(await page.locator("#g-flag").getAttribute("aria-pressed")==="true"&&
+     await page.locator('[data-q="0"]').evaluate(el=>el.classList.contains("marked")),
+    "Mark-for-review state lost "+name);
+   await page.locator("#g-flag").click();
+   check(await page.locator("#g-flag").getAttribute("aria-pressed")==="false",
+    "Mark-for-review toggle failed "+name);
    await inspect(page,name+"-exam");
    check(await page.locator(".exam-question input[data-choice]:checked").count()===1,
     "semantic answer control lost "+name);
@@ -141,6 +184,12 @@ try{
    const result=await inspect(page,name+"-results-low-evidence",{result:true});
    check(await page.locator(".result-performance-overview .score").count()===5,
     "five primary metrics missing "+name);
+   check(await page.locator(".result-scoring-details").evaluate(x=>!x.open),
+    "Scoring details not initially collapsed "+name);
+   check(await page.locator(".result-opportunities .coach-card").count()===3,
+    "Results coaching cards missing "+name);
+   check(await page.locator("#g-next-work").count()===1,
+    "Next-work coaching action lost "+name);
    check(await page.locator(".result-speed-grid").count()===0,
     "unsupported speed classification shown on one answered item "+name);
    check(await page.locator("#result-review .generic-review").count()===0,
