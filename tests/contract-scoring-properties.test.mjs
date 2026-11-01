@@ -188,3 +188,21 @@ test("APFC one-third deduction is accumulated unrounded, blanks score zero",()=>
  approx(scoreableMaximum(p,key,qs),300,"APFC 120×2.5 working denominator");
  assert.ok(Math.abs(unrounded-(60*2.5-40*.83))>0.1,"do not round penalty per incorrect item");
 });
+
+test("negative-zero policy never creates phantom marks or a negative aggregate",()=>{
+ const question={id:"zero-q",editorial:{status:"verified"},
+  content:{kind:"single-choice",prompt:"Neg-zero",options:[{id:"a",text:"A"},{id:"b",text:"B"}]}};
+ const paper={id:"pr",paperId:"p",answerKeyRevisionId:"key",
+  sections:[{id:"s",questionRevisionIds:["zero-q"]}],
+  scoring:{defaultRule:{correctMarks:2,incorrectMarks:-0,unansweredMarks:0},decimalPlaces:2}};
+ const key={id:"key",paperId:"p",entries:[
+  {questionRevisionId:"zero-q",answer:{kind:"single-choice",optionId:"a"}}]};
+ const result=scoreAttempt(paper,key,[question],[
+  {questionRevisionId:"zero-q",response:{kind:"single-choice",optionId:"b"}}],"T");
+ assert.equal(result.items[0].verdict,"incorrect");
+ assert.equal(result.snapshot.earnedMarks,0);
+ assert.equal(result.snapshot.positiveMarks,0);
+ assert.equal(result.snapshot.penaltyMarks,0);
+ assert.equal(result.snapshot.earnedMarks.toFixed(paper.scoring.decimalPlaces),"0.00");
+ assert.ok(result.snapshot.earnedMarks<=scoreableMaximum(paper,key,[question]));
+});
