@@ -400,6 +400,40 @@ Every script below must have a disposal decision tied to real capability asserti
 
 **Known overlap clusters:** Pass15 + Pass24 + Pass25–29 + Pass31 + Pass33–35 (screens/geometry); smoke + Pass11–16 + Pass18–23 (flow); Pass22 + Pass33 (Results lazy rendering); Pass34 + Pass35 (Display, with newer intentional nonsticky header). Do not automatically assume all assertions are duplicates: use the per-scenario ledger.
 
+### Pass36 baseline browser-script census — 25/25 files inspected
+
+The 25 sources were read on `overhaul`; **no browser script changed**. Each row's behavioural owner and historical/disposition proposal are in the migration table above. The count below is only a **textual search for `assert(`, `check(`, `ensure(`, or `fail(`**; it is **not an exhaustive assertion count**, since scripts have other helper names, conditional branches and indirect checks. A zero does **not** mean the script has zero validations. For each script Pass38 must still create an explicit scenario-by-scenario old→new trace before retirement.
+
+| Browser script `scripts/*.mjs` | Direct recognised guard call sites (approx.) | Loads frozen Git baseline/old SHA |
+|---|---:|---|
+| `smoke-offline.mjs` | 95 | no |
+| `pass10-platform.mjs` | 5 | no |
+| `pass11-parity.mjs` | 28 | no |
+| `pass12-parity.mjs` | 0 | no |
+| `pass13-history.mjs` | 0 | no |
+| `pass14-parity.mjs` | 19 | no |
+| `pass15-visual.mjs` | 25 | yes |
+| `pass16-independent.mjs` | 23 | no |
+| `pass18-targeted.mjs` | 17 | no |
+| `pass19-targeted.mjs` | 21 | no |
+| `pass20-targeted.mjs` | 28 | no |
+| `pass21-targeted.mjs` | 28 | no |
+| `pass22-targeted.mjs` | 33 | yes |
+| `pass23-independent.mjs` | 36 | yes |
+| `pass25-library.mjs` | 26 | yes |
+| `pass26-exam.mjs` | 26 | yes |
+| `pass27-history-results.mjs` | 36 | yes |
+| `pass28-semantics.mjs` | 21 | yes |
+| `pass29-independent-matrix.mjs` | 38 | yes |
+| `pass30-ui.mjs` | 25 | no |
+| `pass31-ui.mjs` | 33 | yes |
+| `pass32-native-navigation.mjs` | 15 | no |
+| `pass33-results-parity.mjs` | 32 | yes |
+| `pass34-v11-display.mjs` | 0 | yes |
+| `pass35-detached-display.mjs` | 14 | no |
+
+**Script inventory reconciliation:** 25/25 named browser scripts inventoried and matched to the Section 3 candidate successor ownership. Old tests/scripts remain fully operational; unique interactive checks will be cross-walked against real new `file://` journeys in Pass38 *before deletion*. Source hash/editorial checks remain in Node suites independent of old visual evidence.
+
 ## 4. Implementation programme — five passes, tests → scripts → docs
 
 The previous 15-pass outline oversplit individual test topics into standalone milestones. **This replaces it with five coherent deliverables** while retaining every substantive requirement. Each pass can contain internal checklist items and incremental commits; **do not create another named pass** just because one item needs a second round of QA. Finish and reconcile all objectives within the current pass before advancing.
