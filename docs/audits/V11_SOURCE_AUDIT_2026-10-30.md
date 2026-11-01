@@ -697,6 +697,16 @@ Regression reconciliation intentionally moved old assertions rather than droppin
 
 **FIVE STEP:** [x] AUDIT [x] ANALYZE [x] IMPLEMENT [x] OBJECTIVES RECONCILE [x] TARGETED QA + FULL CI. **OBJECTIVES:** F34-01 VERIFIED AUTOMATED · F34-02 VERIFIED AUTOMATED · F34-03 VERIFIED AUTOMATED · F34-04 VERIFIED for tested viewports/theme/scroll/focus, actual mobile/AT unverified · F34-05 VERIFIED AUTOMATED. **RELEASE STATUS:** automated checks green; human visual appraisal, physical iOS/Android/macOS Safari and NVDA/VoiceOver remain external. `main` and `baseline/v11` untouched; no merge requested.
 
+### Pass 35 — detach floating Aa from header, release header scroll (1 November 2026)
+
+**START HEAD:** `6d94bfe9a278acfbc94dc9cbd9619be147f550be`; `overhaul` only, frozen `baseline/v11` and `main` untouched.
+
+**AUDIT:** `src/template.html` still nests `div.display-tools` INSIDE `header .header-actions`, despite Pass34's CSS `position:fixed` on the control. `src/styles/app.css:469` keeps the **entire** header `position:sticky;top:0;z-index:100`. Thus the blue brand/offline masthead persists down Library/History/Exam/Learning, contrary to user intent. Pass33 masks Results header via a fixed zero-height overlay but does not solve global header persistence. Immersive mode has two contradictory header rules: an earlier `display:none` later overridden by `display:block` to retain nested Aa, producing a redundant blank bar. Both are unnecessary after Aa is independent. `bootstrap.ts` attaches controls by IDs, not DOM position; moving DOM alone must preserve event handling, storage, focus and theme/fullscreen. Pass20 browser acceptance currently requires a visible immersive header and a fixed zero-height Results header; those must become assertions for detached Aa and absent Results/immersive header. Pass34 frozen-v11 browser comparison tests button and panel geometry, dark/light states, responsive width and all screens; keep this unchanged and green.
+
+**DECISION / IMPLEMENTATION CONTRACT:** Lift the **single original** `div.display-tools` subtree from `header .header-actions` and place it as a direct sibling **immediately after closing `</header>`**. Make header a **normal-flow static header**; no sticky/fixed header anywhere, including when scrolling. Hide header on Results and immersive Exam because only Aa needed to stay visible. Style Aa via *independent `.display-tools` selectors*, not `header .display-tools` selectors; preserve v11 visual geometry, theme/hover/open, 310px popup and 195px viewport guard. Keep header layout/brand and disclaimer; preserve `bootstrap.ts`, app state and frozen exam data.
+
+**FIVE STEP:** [x] AUDIT [x] ANALYZE [ ] IMPLEMENT [ ] OBJECTIVE RECONCILIATION [ ] TARGETED QA. **TARGETS:** F35-01 Aa DOM sibling and unique accessible IDs; F35-02 header scrolls normally Library/History/Learning/Exam; F35-03 Aa fixed above scrolled content and interactive, including Results and immersive; F35-04 v11 visual geometry light/dark, 390/195 and keyboard + all settings intact; F35-05 Pass20/Pass34/new Pass35 + all CI 4/4 green. Physical-device/AT/human aesthetic approval remain external.
+
 ### Per-pass worklog template — copy beneath this section at pass start
 
 ```text
