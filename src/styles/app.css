@@ -1115,3 +1115,15 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
   width:auto;max-width:none;max-height:calc(100dvh - 65px)
  }
 }
+
+/* P43: two-step exam selection occupies the same desktop first-fold height
+   as the former paper picker. At mobile widths both inputs stay full-width. */
+.home-picker .family-paper-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  align-items:end;gap:12px;min-width:0}
+.home-picker .family-field,.home-picker .paper-field{min-width:0}
+.home-picker .family-paper-row select{min-width:0;max-width:100%}
+.home-picker .family-paper-row .picker{margin:10px 0 6px}
+.paper-preview .family-provenance{margin:6px 0 4px;font-size:12px}
+@media(max-width:600px){
+ .home-picker .family-paper-row{grid-template-columns:minmax(0,1fr);gap:5px}
+}
