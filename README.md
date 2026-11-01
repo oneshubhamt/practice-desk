@@ -1,8 +1,14 @@
 # Practice Desk — offline examination studio
 
-**Development branch:** `overhaul` · **frozen comparison:** `baseline/v11`.
+**Development branch:** `overhaul` · **historical reference only:** `baseline/v11` (parity programme completed).
 
 Practice Desk is a single-file offline exam application with a typed six-kind generic engine, built-in original/reviewed SSC CGL papers, imported exams, frozen source/answer-key revisions, configurable scoring and timing, post-submit corrections, detailed history, validated backup v3, learning notebook, FSRS-7 and evidence-based practice.
+
+## Current testing and future development (1 November 2026)
+
+The historical v11 feature/UI parity programme is **complete**. Further work is forward-looking: preserve the current multi-exam product contracts while adding capabilities beyond v11. **Do not run routine v11 visual comparisons or generate screenshot warehouses.** Current automated gates comprise Node24 strict TypeScript/build and **177 Node tests**, modern `file://` Chromium journeys (including independently verified source/reviewed CGL, APFC/NAT bank import, strict/free/single untimed, six question kinds, manual grading, Learning/FSRS, backup/recovery, responsive UI and bounded history/Results stress), and Firefox/WebKit persistence/navigation. The remaining screenshot-free historical script names are temporary substantive safety checks, **not** active v11 parity oracles. Screenshots are saved only for failures or an explicitly requested visual review. See [current engineering policy](AGENTS.md) and [migration/verification scratchpad](docs/audits/TEST_SUITE_REENGINEERING_PLAN_2026-11-01.md). Physical-device, assistive-technology and human visual approval remain distinct.
+
+**Historical reports below describe earlier milestones; their screenshot artifacts are archival, not today's mandatory CI.**
 
 ## Documentation and source audit
 
