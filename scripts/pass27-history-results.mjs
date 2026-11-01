@@ -92,7 +92,7 @@ async function validatePair(v){
    "Source score and conservative bounds have been discarded");
   const detailBox=current.page.locator(".result-scoring-details");
   check(await detailBox.evaluate(x=>!x.open),"Advanced scoring evidence should default collapsed");
-  const details=await detailBox.innerText();
+  const details=await detailBox.textContent();
   check(details.includes("Original-source key")&&details.includes("Scoring envelope"),
    "Frozen source-key comparison or conservative score bounds missing");
   const header=()=>current.page.locator(".results-heading h1").innerText();
