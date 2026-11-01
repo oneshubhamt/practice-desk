@@ -135,13 +135,17 @@ try{
   ]){
    await a.page.locator('[data-mode="'+mode.id+'"]').click();
    await a.page.locator("#g-start").click();
-   assert((await a.page.locator(".exam-header .eyebrow").innerText()).includes(mode.human),
+   assert((await a.page.locator(".exam-header .muted").innerText()).includes(mode.human),
     "Mode slug leaked "+mode.id);
-   const scopeText=await a.page.locator(".exam-progress .row").innerText();
-   assert(scopeText.includes(mode.scope)&&!scopeText.includes("full-paper-practice"),
+   const scopeText=await a.page.locator(".exam-time-progress").getAttribute("aria-valuetext");
+   assert(scopeText?.startsWith(mode.scope+" ")&&
+    !scopeText.includes("full-paper-practice"),
     "Wrong progress scope "+mode.id+": "+scopeText);
-   assert(await a.page.locator(".exam-progress [role=progressbar]").getAttribute("aria-label")===mode.aria,
+   assert(await a.page.locator(".exam-time-progress").getAttribute("aria-label")===mode.aria,
     "Timer accessible name wrong "+mode.id);
+   const clockLabel=await a.page.locator(".exam-clock small").innerText();
+   assert(clockLabel.includes(mode.id==="strict"?"SECTION TIME":"PAPER TIME"),
+    "Timer scope must also remain visible in the compact clock");
    if(mode.id==="free")assert(!scopeText.includes("Section timer"),
     "Whole paper mislabeled section");
    await capture(a.page,"overhaul-"+mode.id+"-exam");
