@@ -5003,6 +5003,24 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
   }
 
   // src/engine/source-comparison.ts
+  function semanticHash(question, resources) {
+    const c = question.content;
+    const stimulus = c.stimulusId ? (resources.stimuli ?? []).find((s) => s.id === c.stimulusId) : void 0;
+    const assetIds = [
+      ...c.assetIds ?? [],
+      ...c.kind === "single-choice" || c.kind === "multiple-select" ? c.options.flatMap((o) => o.assetIds ?? []) : []
+    ];
+    if (stimulus) {
+      if ("assetIds" in stimulus) assetIds.push(...stimulus.assetIds ?? []);
+      if ("assetId" in stimulus) assetIds.push(stimulus.assetId);
+    }
+    const byAsset = new Map((resources.assets ?? []).map((a) => [a.id, a]));
+    const media = assetIds.map((id) => {
+      const asset = byAsset.get(id);
+      return { id, contentHash: asset?.contentHash ?? null, mediaType: asset?.mediaType ?? null };
+    });
+    return hashJson({ content: c, stimulus: stimulus ?? null, media });
+  }
   function createSourceKeyReference(target, source) {
     if (target.paper.edition !== "reviewed" || source.paper.edition !== "source" || target.examId !== source.examId || target.paper.paperId !== source.paper.paperId) return null;
     const byQuestion = new Map(source.questions.map((q) => [q.questionId, q]));
@@ -5015,12 +5033,19 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       const entry = byEntry.get(sourceQ.id), section = sections.get(sourceQ.id);
       if (!entry || entry.answer.kind !== "single-choice" || !section) return null;
       const originalOptionId = entry.answer.optionId;
-      if (!q.content.options.some((o) => o.id === originalOptionId)) return null;
+      const sourceSemanticHash = semanticHash(sourceQ, source);
+      const comparable = sourceSemanticHash === semanticHash(q, target) && q.content.options.some((o) => o.id === originalOptionId);
       const rule = entry.scoringOverride ?? section.scoringOverride ?? source.paper.scoring.byQuestionKind?.["single-choice"] ?? source.paper.scoring.defaultRule;
-      entries.push({ questionRevisionId: q.id, originalOptionId, markingRule: structuredClone(rule) });
+      entries.push({
+        questionRevisionId: q.id,
+        originalOptionId,
+        markingRule: structuredClone(rule),
+        sourceSemanticHash,
+        comparable
+      });
     }
     const core = {
-      schema: 1,
+      schema: 2,
       paperId: target.paper.paperId,
       sourcePaperRevisionId: source.paper.id,
       sourceAnswerKeyRevisionId: source.answerKey.id,
@@ -5031,9 +5056,16 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
   function validateSourceKeyReference(attempt) {
     const reference = attempt.sourceKeyReference;
     if (!reference) return;
-    if (reference.schema !== 1 || reference.paperId !== attempt.frozen.paper.paperId || typeof reference.sourcePaperRevisionId !== "string" || typeof reference.sourceAnswerKeyRevisionId !== "string" || !Array.isArray(reference.entries) || reference.entries.length !== attempt.frozen.questions.length) throw Error("Invalid original source-key comparison");
-    const core = {
-      schema: reference.schema,
+    if (reference.schema !== 1 && reference.schema !== 2 || reference.paperId !== attempt.frozen.paper.paperId || typeof reference.sourcePaperRevisionId !== "string" || typeof reference.sourceAnswerKeyRevisionId !== "string" || !Array.isArray(reference.entries) || reference.entries.length !== attempt.frozen.questions.length)
+      throw Error("Invalid original source-key comparison");
+    const core = reference.schema === 1 ? {
+      schema: 1,
+      paperId: reference.paperId,
+      sourcePaperRevisionId: reference.sourcePaperRevisionId,
+      sourceAnswerKeyRevisionId: reference.sourceAnswerKeyRevisionId,
+      entries: reference.entries
+    } : {
+      schema: 2,
       paperId: reference.paperId,
       sourcePaperRevisionId: reference.sourcePaperRevisionId,
       sourceAnswerKeyRevisionId: reference.sourceAnswerKeyRevisionId,
@@ -5044,18 +5076,32 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     const seen = /* @__PURE__ */ new Set();
     for (const entry of reference.entries) {
       const q = allowed.get(entry.questionRevisionId);
-      if (!q || q.content.kind !== "single-choice" || seen.has(q.id) || !q.content.options.some((o) => o.id === entry.originalOptionId) || !Number.isFinite(entry.markingRule.correctMarks) || !Number.isFinite(entry.markingRule.incorrectMarks) || !Number.isFinite(entry.markingRule.unansweredMarks) || entry.markingRule.correctMarks < 0 || entry.markingRule.incorrectMarks > 0)
+      if (!q || q.content.kind !== "single-choice" || seen.has(q.id) || !Number.isFinite(entry.markingRule.correctMarks) || !Number.isFinite(entry.markingRule.incorrectMarks) || !Number.isFinite(entry.markingRule.unansweredMarks) || entry.markingRule.correctMarks < 0 || entry.markingRule.incorrectMarks > 0)
         throw Error("Invalid original source-key answer entry");
       seen.add(q.id);
+      if (reference.schema === 1) {
+        if (!q.content.options.some((o) => o.id === entry.originalOptionId))
+          throw Error("Invalid legacy source-key answer option");
+      } else {
+        const v2 = entry;
+        if (!/^[0-9a-f]{64}$/.test(v2.sourceSemanticHash) || typeof v2.comparable !== "boolean" || v2.comparable && (!q.content.options.some((o) => o.id === entry.originalOptionId) || v2.sourceSemanticHash !== semanticHash(q, {
+          stimuli: attempt.frozen.stimuli,
+          assets: attempt.frozen.assets
+        })))
+          throw Error("Invalid source-key semantic correspondence");
+      }
     }
   }
   function sourceKeyScore(attempt) {
     const ref = attempt.sourceKeyReference;
     if (!ref || attempt.finishedAt === null) return null;
     validateSourceKeyReference(attempt);
+    if (ref.schema === 1) return null;
     const responses = new Map(attempt.state.responses.map((row) => [row.questionRevisionId, row.response]));
-    let marks = 0, maxMarks = 0, correct = 0, incorrect = 0, unanswered = 0;
+    let marks = 0, maxMarks = 0, correct = 0, incorrect = 0, unanswered = 0, comparable = 0;
     for (const entry of ref.entries) {
+      if (!entry.comparable) continue;
+      comparable++;
       const r = responses.get(entry.questionRevisionId);
       const rule = entry.markingRule;
       maxMarks += rule.correctMarks;
@@ -5070,7 +5116,16 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
         marks += rule.incorrectMarks;
       }
     }
-    return { marks, maxMarks, correct, incorrect, unanswered };
+    return {
+      marks,
+      maxMarks,
+      correct,
+      incorrect,
+      unanswered,
+      comparable,
+      unavailable: ref.entries.length - comparable,
+      total: ref.entries.length
+    };
   }
 
   // src/engine/review-source.ts
@@ -8626,6 +8681,8 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       const grades2 = resultTab === "overview" ? manualGradeSummary(attempt) : { graded: 0, pending: 0, total: 0 };
       const selfAssessed = s.snapshot.earnedMarks + grades2.total;
       const originalKey = resultTab === "overview" ? sourceKeyScore(attempt) : null;
+      const legacySourceKey = resultTab === "overview" && attempt.sourceKeyReference?.schema === 1;
+      const sourceKeyText = originalKey && originalKey.comparable > 0 ? (originalKey.unavailable > 0 ? "Comparable original-source subset only" : "Original-source key comparison") + ": " + originalKey.marks.toFixed(1) + " / " + originalKey.maxMarks.toFixed(1) + " marks (" + originalKey.comparable + " of " + originalKey.total + " comparable; " + originalKey.unavailable + " unavailable)" : null;
       const scorePrecision = paper.scoring.decimalPlaces ?? 2;
       const markLabel = (value) => value.toFixed(scorePrecision);
       const eligibleMax = resultTab === "overview" ? scoreableMaximum(paper, attempt.frozen.key, attempt.frozen.questions) : 0;
@@ -8636,8 +8693,8 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       const resultMeta = escapeText(resultName) + " \xB7 " + escapeText(readablePracticeMode(attempt.frozen.snapshot.mode)) + (resultDate ? " \xB7 " + escapeText(resultDate) : "");
       const paperSectionRows = resultTab === "overview" ? sectionScoreSummaries(attempt, s).map((row) => "<tr><td>" + escapeText(row.title) + "</td><td>" + row.attempted + "/" + (row.questions - row.excluded) + "</td><td>" + row.correct + "</td><td>" + row.incorrect + "</td><td>" + escapeText(markLabel(row.marks)) + " / " + escapeText(markLabel(row.eligibleMax)) + "</td><td>" + (row.timerMs === null ? "Not recorded" : minutes(row.timerMs) + (row.timerReason === "time-expired" ? " \xB7 Expired" : " \xB7 Submitted")) + "</td></tr>").join("") : "";
       const completionLabel = attempt.completionReason ? attempt.completionReason === "time-expired" ? "Time expired" : attempt.completionReason === "section-submitted" ? "Submitted early" : "Submitted by user" : "";
-      const scoreExplainer = resultTab === "overview" ? '<p class="fine score-explainer">+' + escapeText(markLabel(s.snapshot.positiveMarks)) + " positive marks \xB7 \u2212" + escapeText(markLabel(s.snapshot.penaltyMarks)) + " penalties \xB7 adjusted score " + escapeText(markLabel(s.snapshot.earnedMarks)) + " / " + escapeText(markLabel(eligibleMax)) + (originalKey ? " \xB7 Original-source key comparison: " + escapeText(originalKey.marks.toFixed(1)) + " / " + escapeText(originalKey.maxMarks.toFixed(1)) : "") + ".</p>" : "";
-      const scoringDetails = resultTab === "overview" ? '<details class="result-scoring-details"><summary>Scoring details</summary><div class="result-scoring-detail-body">' + (originalKey ? '<p class="fine"><b>Original-source key (unadjusted):</b> ' + escapeText(originalKey.marks.toFixed(1)) + " / " + escapeText(originalKey.maxMarks.toFixed(1)) + " marks \xB7 " + originalKey.correct + " correct \xB7 " + originalKey.incorrect + " incorrect \xB7 " + originalKey.unanswered + " unanswered. Uses the source key frozen at test start, including questions excluded from the reviewed score. This comparison is not an official score.</p>" : "") + '<p class="fine"><b>Scoring envelope:</b> nominal full-credit ceiling ' + escapeText(markLabel(eligibleMax)) + "; conservative lower bound " + escapeText(markLabel(conservativeFloor)) + ". The lower bound need not be attainable; written responses are assessed separately.</p>" + (!revealReview ? '<p class="fine"><b>Detailed answers withheld:</b> this exam releases numerical results and timing feedback but not its question-by-question answer key or worked solutions.</p>' : "") + (grades2.graded || grades2.pending ? '<p class="fine"><b>Separate self-assessment:</b> ' + escapeText(grades2.graded) + " of " + escapeText(grades2.graded + grades2.pending) + " written responses marked; self-assessed total " + escapeText(selfAssessed.toFixed(2)) + ". The automated score above remains unchanged.</p>" : '<p class="fine">Automated marks reflect only scoreable questions.</p>') + "</div></details>" : "";
+      const scoreExplainer = resultTab === "overview" ? '<p class="fine score-explainer">+' + escapeText(markLabel(s.snapshot.positiveMarks)) + " positive marks \xB7 \u2212" + escapeText(markLabel(s.snapshot.penaltyMarks)) + " penalties \xB7 adjusted score " + escapeText(markLabel(s.snapshot.earnedMarks)) + " / " + escapeText(markLabel(eligibleMax)) + (sourceKeyText ? " \xB7 " + escapeText(sourceKeyText) : "") + ".</p>" : "";
+      const scoringDetails = resultTab === "overview" ? '<details class="result-scoring-details"><summary>Scoring details</summary><div class="result-scoring-detail-body">' + (legacySourceKey ? '<p class="fine"><b>Original-source key comparison unavailable:</b> This older saved attempt has a positional-only publisher-key snapshot. When revised options change meaning, matching answer letters are not proof of an equivalent answer. Its actual frozen result remains unchanged; original key and wording remain available for provenance.</p>' : originalKey && originalKey.comparable > 0 ? '<p class="fine"><b>' + escapeText(originalKey.unavailable ? "Original-source key \u2014 comparable subset only" : "Original-source key comparison") + ":</b> " + escapeText(originalKey.marks.toFixed(1)) + " / " + escapeText(originalKey.maxMarks.toFixed(1)) + " marks \xB7 " + originalKey.correct + " correct \xB7 " + originalKey.incorrect + " incorrect \xB7 " + originalKey.unanswered + " unanswered \xB7 " + originalKey.comparable + " of " + originalKey.total + " questions comparable; " + originalKey.unavailable + " unavailable. Only source/reviewed questions with identical verified wording, option identities and media are included; this subset is not a full-paper or official score. The actual reviewed score above is unchanged.</p>" : originalKey && originalKey.total > 0 ? '<p class="fine"><b>Original-source key comparison unavailable:</b> None of the ' + originalKey.total + " source/reviewed questions had defensible comparable semantics. Original text and key remain as post-test provenance; your actual frozen score is unchanged.</p>" : "") + '<p class="fine"><b>Scoring envelope:</b> nominal full-credit ceiling ' + escapeText(markLabel(eligibleMax)) + "; conservative lower bound " + escapeText(markLabel(conservativeFloor)) + ". The lower bound need not be attainable; written responses are assessed separately.</p>" + (!revealReview ? '<p class="fine"><b>Detailed answers withheld:</b> this exam releases numerical results and timing feedback but not its question-by-question answer key or worked solutions.</p>' : "") + (grades2.graded || grades2.pending ? '<p class="fine"><b>Separate self-assessment:</b> ' + escapeText(grades2.graded) + " of " + escapeText(grades2.graded + grades2.pending) + " written responses marked; self-assessed total " + escapeText(selfAssessed.toFixed(2)) + ". The automated score above remains unchanged.</p>" : '<p class="fine">Automated marks reflect only scoreable questions.</p>') + "</div></details>" : "";
       return '<div class="generic-heading results-heading"><div><h1>Attempt analysis</h1><p class="muted">' + resultMeta + '</p></div><div class="row"><button class="btn quiet" id="g-history-results">History</button><button class="btn" id="g-library">Library</button></div></div>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + resultTabsHTML(resultTab, revealReview) + (resultTab === "overview" ? '<div class="result-pane" id="result-overview" role="tabpanel" aria-labelledby="result-tab-overview"><section class="panel pad result-performance-overview"><div class="row between result-overview-heading"><div><h2>Performance overview</h2><p class="fine">' + resultMeta + "</p></div>" + (completionLabel ? '<span class="tag">' + escapeText(completionLabel) + "</span>" : "") + '</div><div class="scoregrid"><div class="score standout"><b>' + escapeText(markLabel(s.snapshot.earnedMarks)) + " <small>/ " + escapeText(markLabel(eligibleMax)) + '</small></b><small>Audit-adjusted automated marks</small></div><div class="score"><b>' + s.snapshot.correctCount + '</b><small>Correct</small></div><div class="score"><b>' + s.snapshot.incorrectCount + '</b><small>Incorrect</small></div><div class="score"><b>' + s.snapshot.unansweredCount + '</b><small>Unanswered</small></div><div class="score"><b>' + s.snapshot.excludedCount + "</b><small>Excluded</small></div></div>" + scoreExplainer + '<div class="scroll-table result-section-table"><table><thead><tr><th>Section</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Marks</th><th>Time used</th></tr></thead><tbody>' + paperSectionRows + "</tbody></table></div>" + scoringDetails + "</section>" + resultInsightsHTML(attempt, revealReview) + '<div class="row result-footer-actions">' + (revealReview ? '<button class="btn" id="g-view-question-review">View question-by-question review \u2192</button>' : "") + '<button class="btn" id="g-result-library">Test library</button></div></div>' : '<div class="result-pane" id="result-overview" role="tabpanel" aria-labelledby="result-tab-overview" hidden></div>') + (revealReview && resultTab === "review" ? '<section class="panel pad result-pane" id="result-review" role="tabpanel" aria-labelledby="result-tab-review"><div class="row between"><h2>Question review</h2><div class="row"><button class="btn" id="g-review-top">Top \u2191</button><button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div></div>' + reviewFiltersHTML(reviewFilter) + '<p class="fine">Review frozen questions, actual responses, solutions and foreground time. Mock scores never become FSRS ratings.</p><p class="fine">' + s.items.filter((it) => reviewMatch(attempt, it, reviewFilter)).length + " of " + s.items.length + " items</p>" + s.items.filter((it) => reviewMatch(attempt, it, reviewFilter)).map((it, i) => {
         const q = qs.get(it.questionRevisionId);
         const response = attempt.state.responses.find((r) => r.questionRevisionId === it.questionRevisionId)?.response;
