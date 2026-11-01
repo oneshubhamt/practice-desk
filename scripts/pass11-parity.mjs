@@ -113,6 +113,7 @@ try{
  assert(before,"Active attempt absent");
  page.once("dialog",dialog=>dialog.accept());
  await page.locator("#g-library").click();
+ await page.locator("#g-start").waitFor({state:"visible"});
  assert(await page.locator("#g-start").count()===1,"Confirmed leave did not return to library");
  const departed=await saved(page,before.id);
  assert(departed.state.visible===false,"Background attempt remained foreground-visible");
@@ -120,6 +121,7 @@ try{
  const spent=departed.state.responses.find(x=>x.questionRevisionId===questionId)?.timeSpentMs??0;
  await page.waitForTimeout(1500);
  await page.locator('[data-attempt="'+before.id+'"]').first().click();
+ await page.locator("#g-timer").waitFor({state:"visible"});
  const resumed=await saved(page,before.id,row=>
    row.state.visible===true&&row.state.elapsedMs>departed.state.elapsedMs+800);
  assert(resumed.state.elapsedMs>departed.state.elapsedMs+800,
@@ -128,12 +130,14 @@ try{
    "Library time was incorrectly added to foreground question time");
  page.once("dialog",dialog=>dialog.accept());
  await page.locator("#g-library").click();
+ await page.locator("#g-start").waitFor({state:"visible"});
  // Starting while another attempt is pending must ask, and cancellation must work.
  page.once("dialog",dialog=>dialog.dismiss());
  await page.locator("#g-start").click();
  assert(await page.locator("#g-start").count()===1,"Cancelled new attempt unexpectedly began");
  page.once("dialog",dialog=>dialog.accept());
  await page.locator("#g-start").click();
+ await page.locator("#g-timer").waitFor({state:"visible"});
  assert(await page.locator("#g-timer").count()===1,"Confirmed parallel attempt did not begin");
  await page.waitForFunction(async()=>{
    const request=indexedDB.open("practiceDesk.overhaul.v1",1);
