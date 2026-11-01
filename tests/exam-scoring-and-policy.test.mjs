@@ -801,3 +801,23 @@ testP41("source comparison refuses unchanged-letter identities when option meani
  testAssert.equal(changes,25);
  testAssert.equal(correctTextChanges,21);
 });
+
+const p41papers=JSON.parse(await __suite_dep_2.readFile(new URL("../src/content/papers.json",import.meta.url)));
+const p41patches=JSON.parse(await __suite_dep_2.readFile(new URL("../src/content/patches.json",import.meta.url)));
+
+testP41("publisher comparison preserves identical contexts but rejects reordered options and punctuation",()=>{
+ const source=__suite_dep_5.builtinCglPackages(
+  p41papers,p41patches).find(x=>x.paper.edition==="source");
+ const same=structuredClone(source);same.paper.edition="reviewed";
+ const original=__suite_dep_9.createSourceKeyReference(same,source);
+ testAssert.ok(original.entries.every(x=>x.comparable));
+ const changed=structuredClone(same);
+ changed.questions[0].content.options.reverse();
+ testAssert.equal(__suite_dep_9.createSourceKeyReference(changed,source).entries[0].comparable,false);
+ const punct=structuredClone(same);
+ punct.questions[0].content.prompt+=".";
+ testAssert.equal(__suite_dep_9.createSourceKeyReference(punct,source).entries[0].comparable,false);
+ const media=structuredClone(same);
+ media.questions[0].content.assetIds=["unmatched-media"];
+ testAssert.equal(__suite_dep_9.createSourceKeyReference(media,source).entries[0].comparable,false);
+});
