@@ -162,6 +162,32 @@ for(const v of [
   await page.locator("#g-family").selectOption("builtin:ssc-cgl");
   check(await page.locator("#g-papers option").count()===5,
     v.name+" CGL papers mixed with imported banks");
+  await page.locator('[data-mode="single"]').click();
+  await page.locator("#g-single-section").selectOption("2");
+  await page.locator("#g-untimed").check();
+  await page.locator("#g-family").selectOption("imported:upsc-epfo-apfc");
+  check(!(await page.locator("#g-untimed").isChecked()),
+    v.name+" CGL untimed policy leaked to imported APFC");
+  await page.locator("#g-untimed").check();
+  await page.locator("#g-family").selectOption("imported:example-exam");
+  check(!(await page.locator("#g-untimed").isChecked()),
+    v.name+" APFC untimed policy leaked to independent six-kind exam");
+  await page.locator("#g-family").selectOption("builtin:ssc-cgl");
+  check(await page.locator("#g-untimed").isChecked()&&
+    await page.locator('[data-mode="single"]').getAttribute("aria-pressed")==="true"&&
+    await page.locator("#g-single-section").inputValue()==="2",
+    v.name+" SSC CGL mode/section/untimed presets overwritten");
+  await page.reload({waitUntil:"load"});
+  check(await page.locator("#g-family").inputValue()==="builtin:ssc-cgl"&&
+    await page.locator("#g-single-section").inputValue()==="2",
+    v.name+" selected family/paper did not survive reload");
+  await page.locator("#g-family").selectOption("imported:upsc-epfo-apfc");
+  check(await page.locator("#g-untimed").isChecked(),
+    v.name+" APFC preset did not survive reload");
+  await page.locator("#g-family").selectOption("imported:example-exam");
+  check(!(await page.locator("#g-untimed").isChecked()),
+    v.name+" independent six-kind preset did not survive reload");
+  if(v.name==="narrow195")await assertNoOverflow(page,v.name+" three exam families at 140% text");
   check(errors.length===0,v.name+" uncaught browser errors "+errors.join("; "));
   scenes.push({viewport:v.name,editions:2,modes:3,untimedReload:true,
    template:true,apfcMcqNat:true,screenComparison:false});
