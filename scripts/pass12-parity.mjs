@@ -90,13 +90,14 @@ try{
  page.once("dialog",d=>d.accept());
  await page.locator("#g-submit").click();
  await page.locator("#result-overview").waitFor();
- ok((await page.locator(".results-heading").innerText()).includes("Submitted by user"),
+ ok((await page.locator(".result-performance-overview").innerText()).includes("Submitted by user"),
    "Explicit early completion reason is not visible");
  const max=scoreableMaximum(reviewed.paper,reviewed.answerKey,reviewed.questions);
  ok((await page.locator(".score.standout").innerText()).includes("/ "+max.toFixed(2)),
   "CGL adjusted score max missing");
- ok(await page.locator("th").filter({hasText:"Marks / eligible max"}).count()>0,
-  "Section score maximum not presented");
+ ok(await page.locator(".result-section-table th").filter({hasText:"Marks"}).count()>0&&
+   (await page.locator(".result-section-table tbody").innerText()).includes(" / "),
+  "Section earned / eligible maximum not presented");
  await page.locator('[data-result-tab="review"]').click();
  const article=page.locator('[data-review-id="'+q.id+'"]');
  ok(await article.count()===1,"Frozen patched CGL question absent");
