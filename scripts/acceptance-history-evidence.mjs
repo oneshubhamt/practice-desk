@@ -3,6 +3,7 @@
  * panels and per-question visit evidence. No historical screen comparisons.
  */
 import {readFile} from "node:fs/promises";
+import {gzipSync} from "node:zlib";
 import {openHarness,records,check,route} from "./browser/fixtures.mjs";
 import {chooseModernPaper} from "./paper-select.mjs";
 import {pkg} from "../tests/fixtures/six-kinds.mjs";
@@ -78,6 +79,11 @@ try{
     (await page.locator(".history-summary").innerText()).includes("Papers practised")&&
     (await page.locator(".history-trend").innerText()).includes("Adjusted score progression"),
     "History storage and adjusted progression evidence missing");
+  check((await page.locator("#g-storage-health").innerText()).includes("No writes pending")&&
+    !(await page.locator("#g-storage-last-commit").innerText()).includes("none observed")&&
+    (await page.locator("#g-storage-last-failure").innerText()).includes("none reported")&&
+    (await page.locator("#g-storage-records").innerText()).includes(before.length+" records"),
+    "P45 History health must disclose actual loaded records, completed saves and no inferred error");
   await page.locator("#g-history-paper").selectOption(pending.frozen.paper.id);
   check(await page.locator(".archive-entry").count()===3,"Frozen paper-revision filter missed attempts");
   await page.locator("#g-history-paper").selectOption("all");
@@ -143,6 +149,21 @@ try{
   const restored=await settle(page,x=>x.filter(y=>y.recordType==="generic-attempt"&&y.finishedAt!==null).length===2,"additive restore");
   check(restored.find(x=>x.id===pending.id)?.saveRevision===pendingRevision,
    "Additive backup overwrote pending newer revision");
+  // P45: gzip is only a file wrapper around the same checksum-verified v3
+  // document; re-import cannot overwrite an existing newer record.
+  const compressed=gzipSync(Buffer.from(JSON.stringify(exported)));
+  await page.locator("#g-history-file").setInputFiles({name:"backup.json.gz",
+    mimeType:"application/gzip",buffer:compressed});
+  await page.waitForFunction(()=>document.querySelector(".generic-warning")?.textContent?.includes("Imported 0 records"));
+  check((await records(page)).find(x=>x.id===pending.id)?.saveRevision===pendingRevision,
+    "Gzip backup import rewrote the newer unfinished attempt");
+  const corrupted=structuredClone(exported);
+  corrupted.records[0].startedAt+=1000;
+  await page.locator("#g-history-file").setInputFiles({name:"tampered.json.gz",
+    mimeType:"application/gzip",buffer:gzipSync(Buffer.from(JSON.stringify(corrupted)))});
+  await page.waitForFunction(()=>document.querySelector(".generic-warning")?.textContent?.includes("Backup integrity check failed"));
+  check((await records(page)).find(x=>x.id===pending.id)?.saveRevision===pendingRevision,
+    "Invalid gzip backup modified history despite checksum failure");
   // Real fallback storage bulk deletion must remain atomic on quota errors.
   const fallback=await context.newPage();
   const e=[];fallback.on("pageerror",x=>e.push(String(x)));
