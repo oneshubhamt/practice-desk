@@ -191,7 +191,18 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
        first<0||pre<0||first>row.timeSpentMs||pre>row.timeSpentMs||
        !Number.isSafeInteger(first)||!Number.isSafeInteger(pre)))
      throw new Error("Invalid saved question timing phase evidence");
+   if(row.firstAnsweredAt!==undefined&&
+      (typeof row.firstAnsweredAt!=="string"||
+       !Number.isFinite(Date.parse(row.firstAnsweredAt))||
+       Date.parse(row.firstAnsweredAt)<value.startedAt||
+       Date.parse(row.firstAnsweredAt)>value.updatedAt))
+     throw new Error("Invalid saved first-answer timing");
    if(row.response)validateResponse(questionMap.get(row.questionRevisionId)!,row.response);
+   if(value.state.timingEvidenceVersion===1&&row.firstAnsweredAt!==undefined&&row.answerEvents?.length){
+     const firstCommit=row.answerEvents.find(x=>x.to!==undefined);
+     if(!firstCommit||firstCommit.at!==row.firstAnsweredAt)
+       throw new Error("Inconsistent saved first-answer timing");
+   }
    if(row.answerEvents!==undefined){
      if(!Array.isArray(row.answerEvents)||row.answerEvents.length>1000)
        throw new Error("Invalid saved answer revision history");
