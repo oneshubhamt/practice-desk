@@ -22,6 +22,13 @@ type StoredRecord=SlimAttempt|{readonly id:string;readonly recordType:string;
  readonly saveRevision?:number;readonly [key:string]:unknown};
 
 const bodyCache=new WeakMap<FrozenAttemptContent,SharedSnapshot>();
+// Only complete, content-verified snapshots reconstructed in this process
+// are trusted for repeated attempts. Every attempt's state/marks is still
+// independently validated by the app's runtime validator.
+const verifiedReconstructed=new WeakSet<FrozenAttemptContent>();
+export function isVerifiedSharedFrozen(frozen:FrozenAttemptContent):boolean{
+ return verifiedReconstructed.has(frozen)&&Number.isFinite(Date.parse(frozen.frozenAt));
+}
 export function sharedSnapshot(frozen:FrozenAttemptContent):SharedSnapshot {
  const cached=bodyCache.get(frozen);
  if(cached)return cached;
@@ -71,6 +78,8 @@ export function reconstructRecords(rows:readonly unknown[],
    if(!isSharedAttempt(row))return row;
    const snapshot=byId.get(row.frozenRef);
    if(!snapshot)throw Error("Stored attempt references a missing immutable snapshot");
-   return expandAttempt(row,snapshot);
+   const expanded=expandAttempt(row,snapshot);
+   verifiedReconstructed.add(expanded.frozen);
+   return expanded;
  });
 }
