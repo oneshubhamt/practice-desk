@@ -182,6 +182,19 @@ try{
  await page.locator("#g-learning").click();await route(page,"learning");
  check(await page.getByText("First-answer and revisit durations are unavailable:",{exact:false}).count()===1,
   "Missing honest pacing evidence limitation");
+ // Independent current-app extreme zoom gate for the *new* P46 form, not v11 pixels.
+ await page.setViewportSize({width:195,height:760});
+ await page.locator("#displayTrigger").click();
+ for(let n=0;n<10&&(await page.locator("#fontReset").innerText())!=="140%";n++)
+   await page.locator("#fontMore").click();
+ check((await page.locator("#fontReset").innerText())==="140%",
+  "Could not establish 140% in-app Learning typography");
+ await page.locator("#displayClose").click();
+ check(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1),
+  "P46 Learning evidence builder creates document overflow at 195px / 140% font size");
+ check(await page.locator("#learning-evidence-count").count()===1&&
+  await page.locator("#learning-build-evidence").count()===1,
+  "P46 evidence form disappeared at extreme zoom");
  check(errors.length===0,"Browser errors: "+errors.join("; "));
  await h.evidence("learning-lifecycle",{sixKinds:true,manualGrades:true,explicitFSRS:true,
   notebookRevision:true,backupCrossRecords:true,reload:true});
