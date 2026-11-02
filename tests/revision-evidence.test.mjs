@@ -118,8 +118,11 @@ test("P46 pacing evidence does not invent first-answer or revisit timestamps",()
  const inspected=revisionInventory([a],[],new Set(),source.examId,["wrong"]);
  assert.equal(inspected.selected[0].visits,1);
  assert.ok(inspected.selected[0].measuredForegroundMs>=0);
- assert.equal("firstAnswerMs" in inspected.selected[0],false);
- assert.equal("revisitMs" in inspected.selected[0],false);
+ assert.equal("firstAnswerMs" in inspected.selected[0],false,
+  "Raw wall-clock answer dwell must not be invented");
+ assert.equal(inspected.selected[0].revisitMs,0,
+  "A single recorded first visit cannot be called a revisit");
+ assert.equal(inspected.selected[0].firstVisitMs,inspected.selected[0].measuredForegroundMs);
 });
 
 test("P46 explicitly assigned broad APFC syllabus heading becomes a separate measured topic row",()=>{

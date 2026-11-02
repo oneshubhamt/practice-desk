@@ -180,8 +180,16 @@ try{
   "Evidence practice changed FSRS rating or result item count");
  await page.locator("#g-library").click();await route(page,"library");
  await page.locator("#g-learning").click();await route(page,"learning");
- check(await page.getByText("First-answer and revisit durations are unavailable:",{exact:false}).count()===1,
-  "Missing honest pacing evidence limitation");
+ check(await page.getByText("New sessions record first-visit, revisit and pre-first-answer foreground exposure.",{exact:false}).count()===1,
+  "New phase timing policy or honest missing-data disclosure absent");
+ await page.locator("#learning-close").click();await route(page,"library");
+ await page.locator('[data-attempt="'+custom.id+'"]').first().click();await route(page,"result");
+ await page.locator("#result-tab-timing").click();
+ check(await page.locator("#result-timing th").allTextContents().then(x=>
+   x.includes("First visit")&&x.includes("Revisits")&&x.includes("Before first answer")),
+  "P46-B timing ledger did not expose first-visit and revisit columns");
+ await page.locator("#g-library").click();await route(page,"library");
+ await page.locator("#g-learning").click();await route(page,"learning");
  // Independent current-app extreme zoom gate for the *new* P46 form, not v11 pixels.
  await page.setViewportSize({width:195,height:760});
  await page.locator("#displayTrigger").click();

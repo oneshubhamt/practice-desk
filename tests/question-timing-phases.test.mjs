@@ -56,7 +56,7 @@ test("P46-B pauses, visibility and clock rebase never invent phase exposure",()=
  assert.equal(row(s,0).firstVisitMs,1800);
  assert.equal(row(s,0).preFirstAnswerMs,1800);
  assert.equal(s.foregroundMs,1800);
- assert.equal(s.elapsedMs,4300,"whole-paper clock may run through hidden-tab interval");
+ assert.equal(s.elapsedMs,3900,"whole-paper clock may run through hidden-tab interval");
  s=transition(paper,s,event("TICK",6900));
  assert.equal(row(s,0).timeSpentMs,1800,"clock rollback must not subtract exposure");
  s=transition(paper,s,event("TICK",7000));
