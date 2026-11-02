@@ -1403,6 +1403,23 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        builderDetails.ontoggle=()=>{
          if(composeOpen!==builderDetails.open){composeOpen=builderDetails.open;draw();}
        };
+       // Preserve in-progress field edits if an asynchronous details toggle
+       // triggers a Library redraw before the Preview/Start click.
+       root.querySelector<HTMLInputElement>("#g-compose-seed")!.oninput=e=>{
+         composeSeed=(e.target as HTMLInputElement).value;
+       };
+       root.querySelector<HTMLInputElement>("#g-compose-count")!.oninput=e=>{
+         composeCount=Number((e.target as HTMLInputElement).value);
+       };
+       for(const [id,assign] of [
+         ["#g-compose-section",(v:string)=>{composeSection=v;}],
+         ["#g-compose-topic",(v:string)=>{composeTopic=v;}],
+         ["#g-compose-difficulty",(v:string)=>{composeDifficulty=v;}]
+       ] as const){
+         root.querySelector<HTMLSelectElement>(id)!.onchange=e=>{
+           assign((e.target as HTMLSelectElement).value);
+         };
+       }
        const capture=()=>{
          composeSection=root.querySelector<HTMLSelectElement>("#g-compose-section")!.value;
          composeTopic=root.querySelector<HTMLSelectElement>("#g-compose-topic")!.value;
@@ -1429,7 +1446,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
            composePreview=manifest.selectedQuestionRevisionIds.length+" selected from "+
              manifest.eligibleCount+" eligible · maximum "+pf.maximum.toFixed(pf.decimals)+
              " marks · "+(bundle.paper.timing.kind==="untimed"?"untimed":bundle.paper.timing.kind)+
-             " · "+bundle.paper.sections.length+" sections. Seed and source revision are frozen.";
+             " · "+bundle.paper.sections.length+" sections · seed "+composeSeed+". Source revision is frozen.";
            composeError="";
          }catch(error){
            composePreview="";composeError=error instanceof Error?error.message:"Invalid custom set";
