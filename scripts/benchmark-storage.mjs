@@ -5,6 +5,7 @@
  */
 import {performance} from "node:perf_hooks";
 import {readFile} from "node:fs/promises";
+import {gunzipSync} from "node:zlib";
 import {openHarness,records,route,starterBank,check} from "./browser/fixtures.mjs";
 import {addLearningCard} from "../src/learning/learning.ts";
 
@@ -116,8 +117,10 @@ async function profile(count,data){
    const download=page.waitForEvent("download",{timeout:120000});
    await page.locator("#g-export-history").click();
    const file=await download;
-   const json=await readFile(await file.path(),"utf8");
-   backups.push(elapsed()-z);exportBytes=json.length;
+   const raw=await readFile(await file.path());
+   backups.push(elapsed()-z);exportBytes=raw.byteLength;
+   const json=file.suggestedFilename().endsWith(".gz")?
+     gunzipSync(raw).toString("utf8"):raw.toString("utf8");
    const archive=JSON.parse(json);
    check(archive.manifest.recordCount===count,"P45 backup record count changed");
    await page.locator("#g-library").click();await route(page,"library");
