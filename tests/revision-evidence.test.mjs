@@ -9,6 +9,7 @@ import {makeRevisionPackage,createNotebookLineage,validateNotebookLineage} from 
 import {validateGenericStoredRecord} from "../src/app/generic-ui.ts";
 import {makeBackup,verifyBackup} from "../src/history/backup.ts";
 import {paperRevisionHash,questionRevisionHash} from "../src/domain/integrity.ts";
+import {hashJson} from "../src/domain/hash.ts";
 import {adjustedHistoryMetrics} from "../src/app/history-metrics.ts";
 import {scoreAttempt} from "../src/engine/scoring.ts";
 import {historyHTML} from "../src/app/history-page.ts";
@@ -79,6 +80,9 @@ test("P46 selection filters are authenticated and mock trends exclude revision r
  const forged=structuredClone(opened);
  forged.notebookLineage.selection.reasons[0]="due";
  assert.throws(()=>validateNotebookLineage(forged),/hash mismatch/);
+ const nullable={...opened,notebookLineage:{...lineage,selection:null,
+   contentHash:hashJson({schema:1,entries:lineage.entries})}};
+ assert.throws(()=>validateNotebookLineage(nullable),/Invalid frozen revision selection/);
  assert.throws(()=>createNotebookLineage(picked.map(x=>x.card),{...provenance,selectedQuestionIds:["other"]}),/Invalid/);
  const completed=transitionGenericAttempt(opened,{type:"SUBMIT_ATTEMPT",nowMs:2100},
   new Map(paper.questions.map(q=>[q.id,q])));
