@@ -1,0 +1,175 @@
+/** P45 reproducible storage/History measurement, NOT a device-wide performance claim.
+ * Run after npm run build: node scripts/benchmark-storage.mjs
+ * Real self-contained file:// Chrome, real frozen records, real IndexedDB and backup UI.
+ * No screenshots or production schema changes.
+ */
+import {performance} from "node:perf_hooks";
+import {readFile} from "node:fs/promises";
+import {openHarness,records,route,starterBank,check} from "./browser/fixtures.mjs";
+import {addLearningCard} from "../src/learning/learning.ts";
+
+const sizes=[0,100,1000,1600];
+const repeats=2;
+const h=await openHarness({artifactDir:"artifacts/p45-profile"});
+const observations=[];
+const now=Date.now();
+const percentile=(a)=>({min:Math.round(Math.min(...a)),median:Math.round([...a].sort((x,y)=>x-y)[Math.floor(a.length/2)]),max:Math.round(Math.max(...a))});
+const elapsed=()=>performance.now();
+
+async function templates(){
+ const {page,context,errors}=await h.open();
+ try{
+  await page.locator('[data-mode="strict"]').click();
+  await page.locator("#g-start").click();await route(page,"exam");
+  for(let i=0;i<4;i++)await page.locator("#g-submit").click();
+  await route(page,"result");
+  const complete=(await records(page)).find(x=>x.recordType==="generic-attempt"&&x.finishedAt);
+  check(complete?.frozen.questions.length===100,"P45 completed 100Q CGL fixture unavailable");
+  const stamp=new Date(now).toISOString();
+  const cards=complete.frozen.questions.slice(0,80).map(q=>
+   addLearningCard(complete,q.id,stamp));
+  // Explicit scheduled-review fixtures, never counted as exam marks.
+  const reviews=cards.map((c,i)=>({...c,reviews:i%2?[{rating:3,at:stamp}]:[],
+   bookmarked:i%9===0,customTopic:i%8===0?"self-authored-topic":"",note:i%7===0?"Review definition.":""}));
+  await page.locator("#g-library").click();await route(page,"library");
+  await page.locator("#g-start").click();await route(page,"exam");
+  const pending=(await records(page)).find(x=>x.recordType==="generic-attempt"&&x.finishedAt===null);
+  check(Boolean(pending),"P45 in-progress fixture unavailable");
+  await page.locator("#g-library").click();await route(page,"library");
+  const bank=await starterBank();
+  await page.locator("#g-file").setInputFiles({name:"p45-bank.json",
+   mimeType:"application/json",buffer:Buffer.from(JSON.stringify(bank))});
+  await page.waitForFunction(()=>document.querySelector("#g-family")?.value==="imported:upsc-epfo-apfc");
+  await page.locator("#g-start").click();await route(page,"exam");
+  await page.locator("#g-submit").click();await route(page,"result");
+  const all=await records(page);
+  const apfc=all.find(x=>x.recordType==="generic-attempt"&&
+    x.frozen.snapshot.examId==="upsc-epfo-apfc"&&x.finishedAt!==null);
+  const imported=all.find(x=>x.recordType==="generic-package");
+  check(Boolean(apfc&&imported),"P45 imported author bank/attempt fixture missing");
+  check(errors.length===0,"P45 fixture uncaught errors "+errors.join(";"));
+  return {complete,pending,apfc,imported,cards:reviews};
+ }finally{await context.close();}
+}
+async function seed(page,data,n){
+ return page.evaluate(async({data,n})=>{
+  const r=indexedDB.open("practiceDesk.overhaul.v1",1);
+  const db=await new Promise((resolve,reject)=>{r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
+  try{
+   const fixtures=[];
+   const cards=Math.min(80,Math.floor(n*.10));
+   const attempts=n-cards-(n>0?1:0);
+   if(n>0)fixtures.push({...data.imported});
+   for(let i=0;i<attempts;i++){
+    const template=i%5===0?data.apfc:i%3===0?data.pending:data.complete;
+    fixtures.push({...template,id:"p45-archive-"+String(i).padStart(5,"0"),
+      startedAt:template.startedAt+i*1000,updatedAt:template.updatedAt+i*1000,
+      ...(template.finishedAt===null?{}:{finishedAt:template.finishedAt+i*1000}),
+      saveRevision:1});
+   }
+   for(let i=0;i<cards;i++)fixtures.push({...data.cards[i],saveRevision:1});
+   if(fixtures.length!==n)throw Error("P45 fixture count mismatch");
+   const t=performance.now();
+   await new Promise((resolve,reject)=>{
+    const tx=db.transaction("attempts","readwrite"),store=tx.objectStore("attempts");
+    for(const row of fixtures)store.add(row);
+    tx.oncomplete=resolve;tx.onabort=()=>reject(tx.error);tx.onerror=()=>reject(tx.error);
+   });
+   return {writeMs:performance.now()-t,records:fixtures.length,
+    estimatedJsonBytes:fixtures.reduce((sum,row)=>sum+JSON.stringify(row).length,0),
+    classes:{completed:fixtures.filter(x=>x.recordType==="generic-attempt"&&x.finishedAt!==null).length,
+      unfinished:fixtures.filter(x=>x.recordType==="generic-attempt"&&x.finishedAt===null).length,
+      learning:fixtures.filter(x=>x.recordType==="learning-card").length,
+      imported:fixtures.filter(x=>x.recordType==="generic-package").length}};
+  }finally{db.close();}
+ },{data,n});
+}
+async function profile(count,data){
+ const {page,context,errors}=await h.open();
+ page.setDefaultTimeout(120000);
+ try{
+  const seeded=await seed(page,data,count);
+  const startup=[],history=[],filter=[],sort=[],backups=[],save=[];
+  let exportBytes=0,heapBytes=null;
+  for(let rep=0;rep<repeats;rep++){
+   const start=elapsed();
+   await page.reload({waitUntil:"load",timeout:120000});
+   await page.waitForFunction(()=>document.querySelector("#g-import")?.disabled===false,null,{timeout:120000});
+   startup.push(elapsed()-start);
+   const begin=elapsed();
+   await page.locator("#g-history").click();await route(page,"history");
+   await page.locator(".history-archive .fine").first().waitFor();
+   history.push(elapsed()-begin);
+   check((await page.locator(".history-archive").innerText()).includes(count+" records shown"),
+     "P45 History count not authoritative at "+count);
+   const x=elapsed();
+   await page.locator("#g-history-search").fill("p45-archive-000");
+   filter.push(elapsed()-x);
+   check(await page.locator(".history-entries .archive-entry").count()===Math.min(10,count>0?count-1:0),
+     "P45 filter count incorrect at "+count);
+   const y=elapsed();
+   await page.locator("#g-history-sort").selectOption(rep%2?"newest":"oldest");
+   sort.push(elapsed()-y);
+   const z=elapsed();
+   const download=page.waitForEvent("download",{timeout:120000});
+   await page.locator("#g-export-history").click();
+   const file=await download;
+   const json=await readFile(await file.path(),"utf8");
+   backups.push(elapsed()-z);exportBytes=json.length;
+   const archive=JSON.parse(json);
+   check(archive.manifest.recordCount===count,"P45 backup record count changed");
+   await page.locator("#g-library").click();await route(page,"library");
+  }
+  const rows=await records(page);
+  check(rows.length===count,"P45 source records were lost across reloads");
+  const sample=rows.find(r=>r.recordType==="generic-attempt"&&r.finishedAt!==null);
+  if(count)check(Boolean(sample?.result?.snapshot),"P45 lost completed frozen marks");
+  const t=elapsed();
+  await page.evaluate(async()=>{
+   const db=await new Promise((resolve,reject)=>{
+    const r=indexedDB.open("practiceDesk.overhaul.v1",1);
+    r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
+   });
+   const tx=db.transaction("attempts","readwrite");
+   const store=tx.objectStore("attempts");
+   const row=await new Promise((resolve,reject)=>{
+    const r=store.get("p45-archive-00000");
+    r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
+   });
+   if(row){store.put({...row,saveRevision:2});}
+   await new Promise((resolve,reject)=>{tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});
+   db.close();
+  });
+  save.push(elapsed()-t);
+  if(count>0){
+   await page.reload({waitUntil:"load",timeout:120000});
+   await page.waitForFunction(()=>document.querySelector("#g-import")?.disabled===false,null,{timeout:120000});
+   const after=await records(page);
+   check(after.length===count,"P45 after-save count changed");
+   check(after.some(r=>r.id==="p45-archive-00000"&&r.saveRevision===2),
+     "P45 single-record update not durable");
+  }
+  try{
+   const session=await context.newCDPSession(page);
+   const m=await session.send("Performance.getMetrics");
+   heapBytes=m.metrics.find(m=>m.name==="JSHeapUsedSize")?.value??null;
+   await session.detach();
+  }catch{/* CDP memory measurement is optional, not a synthetic estimate */}
+  const result={count,repeats,seeded,
+   coldOpenMs:percentile(startup),historyMs:percentile(history),
+   filterMs:percentile(filter),sortMs:percentile(sort),backupMs:percentile(backups),
+   backupBytes:exportBytes,oneRecordWriteMs:percentile(save),heapBytes,errors};
+  check(!errors.length,"P45 browser errors "+errors.join(";"));
+  console.log("P45 PROFILE "+JSON.stringify(result));observations.push(result);
+ }catch(error){await h.diagnose("profile-"+count,page,error);throw error;}
+ finally{await context.close();}
+}
+try{
+ const data=await templates();
+ for(const n of sizes)await profile(n,data);
+ const report={at:new Date().toISOString(),platform:process.platform,arch:process.arch,
+   node:process.version,browser:"installed Chrome via Playwright core, offline file://",
+   sizes,repeats,observations};
+ await h.evidence("storage-profile",report);
+ console.log("P45 PROFILE COMPLETE "+JSON.stringify({sizes,repeats}));
+}finally{await h.finish();}
