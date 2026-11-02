@@ -73,8 +73,17 @@ export function makeRevisionPackage(cards:readonly LearningCard[],paperNonce:str
 /** A verifiable trail from each revision item to the completed original attempt.
  * Source attempts may subsequently be deleted: identifiers/labels remain frozen.
  */
+export interface RevisionSelectionProvenance {
+ readonly schema:1;
+ readonly examId:string;
+ readonly reasons:readonly ("wrong"|"blank"|"slow"|"repeated"|"flagged"|"bookmarked"|"due")[];
+ readonly eligibleCount:number;
+ readonly selectedQuestionIds:readonly string[];
+}
 export interface NotebookLineage{
  readonly schema:1;
+ /** Authenticated selection criteria for evidence-assembled revision tests. */
+ readonly selection?:RevisionSelectionProvenance;
  readonly entries:readonly {
    readonly cardId:string;
    readonly questionRevisionId:string;
@@ -85,7 +94,7 @@ export interface NotebookLineage{
  }[];
  readonly contentHash:string;
 }
-export function createNotebookLineage(cards:readonly LearningCard[]):NotebookLineage{
+export function createNotebookLineage(cards:readonly LearningCard[],selection?:RevisionSelectionProvenance):NotebookLineage{
  if(!cards.length||cards.length>REVISION_MAX_QUESTIONS)
    throw Error("Invalid revision source selection");
  const entries=cards.map(value=>{
@@ -95,7 +104,17 @@ export function createNotebookLineage(cards:readonly LearningCard[]):NotebookLin
  });
  if(new Set(entries.map(x=>x.questionRevisionId)).size!==entries.length)
    throw Error("Duplicate notebook source question");
- return {schema:1,entries,contentHash:hashJson({schema:1,entries})};
+ if(selection){
+   if(selection.schema!==1||selection.examId!==cards[0]?.examId||
+     !Number.isSafeInteger(selection.eligibleCount)||selection.eligibleCount<entries.length||
+     !Array.isArray(selection.reasons)||selection.reasons.length<1||
+     new Set(selection.reasons).size!==selection.reasons.length||
+     selection.reasons.some(x=>!["wrong","blank","slow","repeated","flagged","bookmarked","due"].includes(x))||
+     JSON.stringify(selection.selectedQuestionIds)!==JSON.stringify(entries.map(x=>x.questionRevisionId)))
+     throw Error("Invalid evidence-based revision selection");
+ }
+ return {schema:1,entries,...(selection?{selection}:{}),
+   contentHash:hashJson({schema:1,entries,...(selection?{selection}:{})})};
 }
 export function validateNotebookLineage(attempt:GenericAttempt):void{
  const lineage=attempt.notebookLineage;
@@ -115,6 +134,17 @@ export function validateNotebookLineage(attempt:GenericAttempt):void{
      throw Error("Invalid notebook revision lineage entry");
    seen.add(entry.questionRevisionId);
  }
- if(lineage.contentHash!==hashJson({schema:1,entries:lineage.entries}))
+ if(lineage.selection){
+   const x=lineage.selection;
+   if(x.schema!==1||x.examId!==attempt.frozen.snapshot.examId||
+     !Number.isSafeInteger(x.eligibleCount)||x.eligibleCount<lineage.entries.length||
+     !Array.isArray(x.reasons)||x.reasons.length<1||
+     new Set(x.reasons).size!==x.reasons.length||
+     x.reasons.some(r=>!["wrong","blank","slow","repeated","flagged","bookmarked","due"].includes(r))||
+     JSON.stringify(x.selectedQuestionIds)!==JSON.stringify(lineage.entries.map(e=>e.questionRevisionId)))
+     throw Error("Invalid frozen revision selection evidence");
+ }
+ if(lineage.contentHash!==hashJson({schema:1,entries:lineage.entries,
+   ...(lineage.selection?{selection:lineage.selection}:{})}))
    throw Error("Notebook revision lineage hash mismatch");
 }
