@@ -587,3 +587,32 @@ p45test("P45 one-pass backup serialization remains byte-identical to v3 for ever
    p45assert.deepEqual(verifyBackup(JSON.parse(onePass)),JSON.parse(original));
  }
 });
+
+p45test("P45-B identical frozen exam content uses one SHA-addressed snapshot across attempts",async()=>{
+ const {compactAttempt,expandAttempt,reconstructRecords,sharedSnapshot,verifiedSnapshot}=await import("../src/history/shared-store.ts");
+ const {builtinCglPackages}=await import("../src/app/exam-package.ts");
+ const {readFile}=await import("node:fs/promises");
+ const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url),"utf8"));
+ const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url),"utf8"));
+ const pkg=builtinCglPackages(sources,patches)[0];
+ const {startGenericAttempt}=await import("../src/app/exam-package.ts");
+ const first=startGenericAttempt(pkg,"s1",1730000000000);
+ const second=startGenericAttempt(pkg,"s2",1730000001000);
+ const a=compactAttempt(first),b=compactAttempt(second);
+ p45assert.equal(a.snapshot.id,b.snapshot.id);
+ p45assert.ok(!("frozen" in a.row),"Attempt should never repeat stored frozen source");
+ p45assert.equal(a.row.frozenAt,first.frozen.frozenAt);
+ p45assert.equal(verifiedSnapshot(a.snapshot),a.snapshot);
+ const restored=reconstructRecords([a.row,b.row],[a.snapshot]);
+ p45assert.equal(restored.length,2);
+ p45assert.equal(restored[0].frozen.questions,restored[1].frozen.questions,
+   "Reconstructed repeated revisions must share one physical immutable question graph");
+ p45assert.equal(restored[0].frozen.frozenAt,first.frozen.frozenAt);
+ p45assert.equal(restored[1].frozen.frozenAt,second.frozen.frozenAt);
+ const {validateGenericStoredRecord}=await import("../src/app/generic-ui.ts");
+ for(const rec of restored)p45assert.equal(validateGenericStoredRecord(rec),rec);
+ const corrupted=structuredClone(a.snapshot);
+ corrupted.body.questions[0].content.prompt="altered";
+ p45assert.throws(()=>verifiedSnapshot(corrupted),/SHA-256 mismatch/);
+ p45assert.throws(()=>reconstructRecords([a.row],[]),/missing immutable snapshot/);
+});
