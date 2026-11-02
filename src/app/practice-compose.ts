@@ -118,7 +118,8 @@ export function composePracticeSet(source:ExamPackage,request:PracticeRequest):{
    throw Error("Only "+pool.length+" eligible question"+(pool.length===1?"":"s")+
      " available for these filters; requested "+request.count+". Reduce the count or change the filters.");
  const sourceFingerprint=hashJson({paper:source.paper.id,paperHash:source.paper.contentHash,
-   key:source.answerKey.id,keyHash:source.answerKey.contentHash,seed:request.seed,filters:f,count:request.count});
+   key:source.answerKey.id,keyHash:source.answerKey.contentHash,
+   questions:source.questions.map(q=>[q.id,q.contentHash]),seed:request.seed,filters:f,count:request.count});
  const picked=draw(pool,sourceFingerprint).slice(0,request.count);
  const ids=picked.map(c=>c.question.id);
  if(new Set(ids).size!==ids.length)throw Error("Duplicate question revisions in selection");
@@ -174,6 +175,14 @@ export function validatePracticeComposition(attempt:GenericAttempt):void{
     c.selectedQuestionRevisionIds.length<1||
     c.selectedQuestionRevisionIds.length!==attempt.frozen.questions.length||
     c.selectedQuestionHashes.length!==attempt.frozen.questions.length||
+    ![c.sourceExamId,c.sourcePaperRevisionId,c.sourceAnswerKeyRevisionId]
+      .every(v=>typeof v==="string"&&v.length>0&&v.length<=512)||
+    ![c.sourcePaperHash,c.sourceAnswerKeyHash].every(v=>
+      typeof v==="string"&&/^[a-f0-9]{64}$/.test(v))||
+    !c.filters||typeof c.filters!=="object"||Array.isArray(c.filters)||
+    Object.keys(c.filters).some(k=>!["sectionId","topicId","difficulty"].includes(k))||
+    Object.values(c.filters).some(v=>typeof v!=="string"||!v||v.length>512)||
+    c.eligibleCount>2000||
     c.sourceExamId!==attempt.frozen.snapshot.examId||
     c.generatedPaperRevisionId!==attempt.frozen.paper.id||
     c.generatedAnswerKeyRevisionId!==attempt.frozen.key.id||
