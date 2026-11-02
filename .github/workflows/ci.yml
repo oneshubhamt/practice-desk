@@ -67,6 +67,16 @@ jobs:
       - run: node scripts/acceptance-stress.mjs
       - name: Profile real frozen storage at 0, 100, 1000 and 1600 records
         run: node scripts/benchmark-storage.mjs
+      - name: P47-0 reproducible UI/focus/DOM baseline (diagnostic; no speed thresholds)
+        run: node scripts/benchmark-ui-coordinator.mjs
+      - name: Preserve P47-0 machine-readable baseline
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p47-0-ui-baseline
+          path: artifacts/p47-baseline/*.json
+          if-no-files-found: ignore
+          retention-days: 14
       - run: node scripts/acceptance-platform.mjs chromium
       - run: node scripts/acceptance-safari-fallback.mjs chromium
       # All current browser functional contracts live in the capability suites.
