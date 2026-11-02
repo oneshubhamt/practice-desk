@@ -162,7 +162,7 @@ test("P44 imported APFC custom subset freezes exact policies and graded outcomes
  assert.throws(()=>composePracticeSet(authored,request),/Only 1 eligible/);
  const selection=composePracticeSet(authored,{...request,count:1});
  assert.equal(selection.bundle.paper.scoring.defaultRule.correctMarks,2.5);
- assert.equal(selection.bundle.paper.scoring.defaultRule.incorrectMarks,-5/6);
+ assert.ok(Math.abs(selection.bundle.paper.scoring.defaultRule.incorrectMarks-(-5/6))<1e-12);
  assert.equal(selection.bundle.paper.timing.kind,"untimed");
  const started={...startGenericAttempt(selection.bundle,"p44-apfc",1000),
    practiceComposition:selection.manifest};
