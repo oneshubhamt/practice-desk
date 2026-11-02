@@ -85,7 +85,12 @@ try{
     (await page.locator("#g-storage-records").innerText()).includes(before.length+" records"),
     "P45 History health must disclose actual loaded records, completed saves and no inferred error");
   await page.locator("#g-history-paper").selectOption(pending.frozen.paper.id);
-  check(await page.locator(".archive-entry").count()===4,"Frozen paper-revision filter missed attempts");
+  const expectedPaperRows=before.filter(x=>x.recordType==="generic-attempt"&&
+    x.frozen.paper.id===pending.frozen.paper.id).length;
+  const observedPaperRows=await page.locator(".archive-entry").count();
+  check(observedPaperRows===expectedPaperRows,
+    "Frozen paper-revision filter missed attempts: expected "+expectedPaperRows+
+    " from persisted IDs, got "+observedPaperRows);
   await page.locator("#g-history-paper").selectOption("all");
   await page.locator("#g-filter").selectOption("complete");
   check(await page.locator(".archive-entry").count()===2,"Completed History filter incorrect");
