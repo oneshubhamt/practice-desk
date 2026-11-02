@@ -525,3 +525,42 @@ test("an older completed mirror cannot supersede a newer in-progress revision",(
  assert.equal(chooseRecovered(saved,mirror),saved);
 });
 }
+
+const p45test=__suite_dep_0.default;
+const p45assert=__suite_dep_1.default;
+
+p45test("P45 History health distinguishes pending, locked, failure and browser eviction",()=>{
+ const {healthSummary,historyHTML}=__suite_dep_7;
+ const base={pendingWrites:0,lastCommittedAt:null,lastFailure:null,locked:false,loading:false,inMemoryRecords:0};
+ p45assert.match(healthSummary({...base,loading:true}),/Loading stored records/);
+ p45assert.match(healthSummary({...base,pendingWrites:2}),/2 writes pending/);
+ p45assert.match(healthSummary({...base,locked:true}),/Writes locked/);
+ p45assert.match(healthSummary(base),/can still be cleared or evicted/);
+ const html=historyHTML([],new Map(),{status:"all",sort:"newest",search:""},false,false,"",
+   "indexeddb",{...base,lastFailure:"<unknown&failure>",inMemoryRecords:17,lastCommittedAt:1730500000000});
+ for(const id of ["g-storage-health","g-storage-last-failure","g-storage-last-commit",
+   "g-storage-records","g-storage-backend"])p45assert.ok(html.includes('id="'+id+'"'));
+ p45assert.ok(html.includes("17 records"));
+ p45assert.ok(html.includes("&lt;unknown&amp;failure&gt;"),"Last error must remain escaped");
+ p45assert.ok(!html.includes("<unknown&failure>"),"Untrusted error text must never become HTML");
+ p45assert.ok(html.includes("No automatic or verified external backup is tracked"));
+});
+
+p45test("P45 compressed backup keeps v3 checksum and resists malformed gzip",async()=>{
+ const {backupDownload,readBackupFile,PLAIN_BACKUP_LIMIT}=await import("../src/history/backup-file.ts");
+ const {makeBackup,verifyBackup}=__suite_dep_13;
+ const {defaultDisplayPreferences}=await import("../src/app/preferences.ts");
+ const preferences=defaultDisplayPreferences();
+ const archive=makeBackup([] ,preferences,"2026-11-02T00:00:00.000Z");
+ const raw=JSON.stringify(archive);
+ const small=await backupDownload(raw);
+ p45assert.equal(small.extension,".json");
+ p45assert.deepEqual(verifyBackup(await readBackupFile(new File([small.blob],"backup.json"))),archive);
+ const gz=await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream("gzip"))).blob();
+ p45assert.deepEqual(verifyBackup(await readBackupFile(new File([gz],"backup.json.gz"))),archive);
+ await p45assert.rejects(readBackupFile(new File(["not gzip"],"broken.json.gz")),/incorrect|invalid|gzip|header|compressed|decompression/i);
+ const big=await backupDownload(JSON.stringify({data:"z".repeat(40*1024*1024+500)}));
+ p45assert.equal(big.extension,".json.gz");
+ p45assert.ok(big.blob.size<100000,"Highly repetitive large JSON should compress");
+ p45assert.ok(PLAIN_BACKUP_LIMIT>big.blob.size);
+});
