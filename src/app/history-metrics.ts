@@ -34,7 +34,8 @@ export function adjustedHistoryMetrics(attempts:readonly GenericAttempt[]):{
  const papersPractised=new Set(complete
    .filter(a=>!a.frozen.paper.paperId.startsWith("notebook-revision:"))
    .map(a=>a.frozen.snapshot.examId+"|"+a.frozen.paper.paperId)).size;
- const scores=complete.map(a=>{
+ const scores=complete.filter(a=>!a.notebookLineage&&
+   !a.frozen.paper.paperId.startsWith("notebook-revision:")).map(a=>{
    const max=scoreableMaximum(a.frozen.paper,a.frozen.key,a.frozen.questions);
    return max>0?100*a.result!.snapshot.earnedMarks/max:null;
  }).filter((n):n is number=>n!==null);
