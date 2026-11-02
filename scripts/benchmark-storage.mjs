@@ -1,7 +1,7 @@
 /** P45 reproducible storage/History measurement, NOT a device-wide performance claim.
  * Run after npm run build: node scripts/benchmark-storage.mjs
  * Real self-contained file:// Chrome, real frozen records, real IndexedDB and backup UI.
- * No screenshots or production schema changes.
+ * Clean shared-snapshot schema; 1600 attempt rows must reuse <=3 immutable graphs.
  */
 import {performance} from "node:perf_hooks";
 import {readFile} from "node:fs/promises";
