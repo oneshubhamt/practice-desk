@@ -780,7 +780,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    attempts:()=>[...records.values()].filter(isAttempt),
    save:(item)=>save(item),
    remove:(id)=>removeSavedAttempt(id,"learning-card"),
-   startRevision:async selected=>{
+   startRevision:async (selected,selection)=>{
      if(storageFault||fallbackConflict||loading){notice("Storage unavailable; cannot start a revision exam.");return false;}
      try{
        const nonce=typeof crypto!=="undefined"&&crypto.randomUUID?crypto.randomUUID():
@@ -788,7 +788,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        const paper=makeRevisionPackage(selected,nonce);
        const id=typeof crypto!=="undefined"&&crypto.randomUUID?crypto.randomUUID():
          "attempt-"+now()+"-"+Math.floor(Math.random()*100000);
-       const generated={...startGenericAttempt(paper,id,now()),notebookLineage:createNotebookLineage(selected)};
+       const generated={...startGenericAttempt(paper,id,now()),notebookLineage:createNotebookLineage(selected,selection)};
        if(!await save(generated))return false;
        attempt=generated;freshlyStartedAttemptId=generated.id;
        warning="Untimed notebook revision · +1 correct, 0 incorrect. This is not a source-exam score.";
