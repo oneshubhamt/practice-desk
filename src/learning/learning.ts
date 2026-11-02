@@ -7,7 +7,6 @@ import type { QuestionRevisionId } from "../domain/ids.js";
 import type { DefaultScheduler, Grade } from "ts-fsrs";
 import { validateQuestionRevision, validateAnswerKeyRevision } from "../domain/validate.ts";
 import { syllabusHeading } from "./syllabus-taxonomy.ts";
-import { isRevisionAttempt } from "./revision-selection.ts";
 
 export const ERROR_LABELS=["conceptual","calculation","interpretation","time-pressure","guessing","careless","knowledge-gap","other"] as const;
 export type ErrorLabel=typeof ERROR_LABELS[number];
@@ -123,7 +122,7 @@ export function topicMetrics(attempts:readonly GenericAttempt[],cards:readonly L
  const distinct=new Map<string,Set<string>>(),independent=new Map<string,Set<string>>();
  const answeredDistinct=new Map<string,Set<string>>(),answeredIndependent=new Map<string,Set<string>>();
  for(const attempt of attempts){
-   if(!attempt.result||attempt.finishedAt===null||isRevisionAttempt(attempt))continue;
+   if(!attempt.result||attempt.finishedAt===null||Boolean(attempt.notebookLineage)||attempt.frozen.paper.paperId.startsWith("notebook-revision:"))continue;
    const sections=attempt.frozen.paper.sections;
    const questions=new Map(attempt.frozen.questions.map(q=>[q.id,q]));
    for(const item of attempt.result.items){
@@ -184,7 +183,7 @@ export interface ComparableTrend {paperRevisionId:string;label:string;count:numb
 export function comparableTrends(attempts:readonly GenericAttempt[]):ComparableTrend[]{
  const groups=new Map<string,ComparableTrend>();
  for(const a of attempts){
-   if(!a.result||a.finishedAt===null||isRevisionAttempt(a))continue;
+   if(!a.result||a.finishedAt===null||Boolean(a.notebookLineage)||a.frozen.paper.paperId.startsWith("notebook-revision:"))continue;
    // Exact revision: same questions, edition, scoring, timing and navigation. Never blend unrelated exams.
    const id=a.frozen.paper.id;
    const group=groups.get(id)??{paperRevisionId:id,label:a.frozen.paper.paperId+" · "+a.frozen.paper.edition,count:0,points:[]};
