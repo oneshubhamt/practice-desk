@@ -42,6 +42,14 @@ try{
   x.packageId===pkg.paper.id&&x.finishedAt!==null,"finished generic result");
  check(custom.result.snapshot.correctCount===5,
   "Generic automated marks must not include pending self-assessed essay");
+ const measured=custom.state.responses.find(x=>x.questionRevisionId==="rev-0");
+ check(custom.state.timingEvidenceVersion===1&&measured&&
+   Number.isSafeInteger(measured.firstVisitMs)&&
+   Number.isSafeInteger(measured.preFirstAnswerMs)&&
+   measured.firstVisitMs>=0&&measured.firstVisitMs<=measured.timeSpentMs&&
+   measured.preFirstAnswerMs>=0&&measured.preFirstAnswerMs<=measured.timeSpentMs&&
+   Boolean(measured.firstAnsweredAt),
+   "P46-B new live exam did not durably preserve measured first visit and first answer");
  await page.locator('[data-manual-marks="rev-5"]').fill("1.5");
  await page.locator('[data-manual-note="rev-5"]').fill("Rubric checked independently");
  await page.locator('[data-manual-save="rev-5"]').click();
@@ -140,6 +148,13 @@ try{
   await page.locator("#fontReset").innerText()==="105%",
   "Imported backup did not restore explicitly saved theme/font preference");
  await page.reload({waitUntil:"load"});await route(page,"history");
+ const restoredPhase=(await records(page)).find(x=>x.id===custom.id)?.state?.responses
+   ?.find(x=>x.questionRevisionId==="rev-0");
+ check(restoredPhase?.firstVisitMs===measured.firstVisitMs&&
+   restoredPhase?.preFirstAnswerMs===measured.preFirstAnswerMs&&
+   restoredPhase?.timeSpentMs===measured.timeSpentMs&&
+   Boolean(restoredPhase?.firstAnsweredAt),
+   "P46-B phase timings did not survive backup deletion, import and browser reload");
  await page.locator('[data-attempt="'+custom.id+'"]').first().click();await route(page,"result");
  await page.locator("#result-tab-review").click();
  check(await page.locator('[data-manual-marks="rev-5"]').inputValue()==="1.5",
