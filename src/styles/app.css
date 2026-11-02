@@ -1127,3 +1127,15 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
 @media(max-width:600px){
  .home-picker .family-paper-row{grid-template-columns:minmax(0,1fr);gap:5px}
 }
+
+/* P44: optional builder follows primary start/preview, never consumes the
+   laptop first fold. On small devices every source filter remains usable. */
+.practice-builder{margin:16px 0}
+.practice-builder details>summary{cursor:pointer;font-weight:750;line-height:1.5}
+.practice-builder details[open]>summary{margin-bottom:12px}
+.practice-compose-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:12px 0}
+.practice-compose-fields label{display:block;min-width:0;color:var(--muted);font-size:12px;font-weight:700}
+.practice-compose-fields select,.practice-compose-fields input{display:block;min-width:0;width:100%;margin-top:6px}
+.practice-builder .generic-warning,.practice-builder .compose-preview{overflow-wrap:anywhere}
+@media(max-width:760px){.practice-compose-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:430px){.practice-compose-fields{grid-template-columns:minmax(0,1fr)}}
