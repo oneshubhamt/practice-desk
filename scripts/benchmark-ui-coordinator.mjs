@@ -79,7 +79,7 @@ async function profile(count){
   sortSamples.push(await actionSample("#g-history-sort",i%2?"oldest":"newest","change"));
  }
  // Real keyboard-style user input and caret preservation, not just synthetic dispatch.
- await input.fill("CG");await input.press("End");await input.press("l");
+ await input.fill("CG");await input.press("End");await input.press("Shift+L");
  const caret=await page.evaluate(()=>{
   const x=document.getElementById("g-history-search");
   return {value:x?.value,active:document.activeElement===x,
@@ -147,10 +147,12 @@ async function examine100Questions(){
  check(Boolean(id),"P47-0 completed attempt missing");
  const overviewNodes=await page.locator("#app *").count();
  const review=await actionSample("#result-tab-review",undefined,"click");
+ await page.locator("#result-review .generic-review").first().waitFor({state:"visible"});
  const reviewCount=await page.locator("#result-review .generic-review").count();
  check(reviewCount===100,"P47-0 100-question review incomplete");
  const reviewNodes=await page.locator("#app *").count();
  const timing=await actionSample("#result-tab-timing",undefined,"click");
+ await page.locator("#result-timing tbody tr").first().waitFor({state:"visible"});
  const timingRows=await page.locator("#result-timing tbody tr").count();
  check(timingRows===100,"P47-0 100-question timing incomplete");
  const result={examNavigation:samples[0],media,overviewNodes,review:{...review,rows:reviewCount,domNodes:reviewNodes},
