@@ -226,6 +226,72 @@ for(const v of [
      await page.locator("#g-untimed").isChecked(),
      "Explicit family choice must recover intact CGL preferences");
   }
+  // P44: Custom composition builds only from the selected source revision.
+  if(v.name==="laptop1366"||v.name==="narrow195"){
+   await page.locator("#g-family").selectOption("imported:upsc-epfo-apfc");
+   await page.locator("#g-compose-details summary").click();
+   await page.locator("#g-compose-count").fill("4");
+   await page.locator("#g-compose-seed").fill("p44-repeatable");
+   await page.locator("#g-compose-preview").click();
+   check((await page.locator("#g-compose").innerText()).includes("Only 3 eligible"),
+     v.name+" insufficient-inventory response was not explicit");
+   await page.locator("#g-compose-count").fill("2");
+   await page.locator("#g-compose-preview").click();
+   check((await page.locator(".compose-preview").innerText()).includes("2 selected from 3 eligible"),
+     v.name+" custom draw count/available preview missing");
+   check(!(await page.locator("#g-compose").innerText()).includes("First option"),
+     v.name+" composer leaked a key/answer before starting");
+   await assertNoOverflow(page,v.name+" open custom builder");
+   if(v.name==="laptop1366"){
+    await page.locator("#g-compose-start").click();await route(page,"exam");
+    const active=(await records(page)).find(x=>x.recordType==="generic-attempt"&&
+      x.practiceComposition?.seed==="p44-repeatable");
+    check(Boolean(active)&&active.frozen.questions.length===2&&
+      active.frozen.key.entries.length===2&&active.practiceComposition.eligibleCount===3,
+      "Custom draw did not freeze exactly two source-linked questions and keys");
+    await page.locator("#g-submit").click();await route(page,"result");
+    await page.locator(".result-scoring-details summary").click();
+    check((await page.locator(".result-scoring-details").innerText()).includes("p44-repeatable"),
+      "Completed result lacks source/seed provenance");
+    const finished=(await records(page)).find(x=>x.id===active.id);
+    check(finished.finishedAt!==null&&finished.result.items.length===2,
+      "Custom result did not score the exact frozen two-question subset");
+    await page.locator("#g-library").click();await route(page,"library");
+    const downloaded=page.waitForEvent("download");
+    await page.locator("#g-export-history").click();
+    const backup=JSON.parse(await readFile(await (await downloaded).path(),"utf8"));
+    check(backup.records.some(x=>x.id===active.id&&
+      x.practiceComposition?.contentHash===active.practiceComposition.contentHash),
+      "Portable checksum backup omitted custom selection manifest");
+    const imported=await h.open();
+    await imported.page.locator("#g-history-file").setInputFiles({
+      name:"practice-p44.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(backup))
+    });
+    await imported.page.waitForFunction(id=>document.querySelector('[data-attempt="'+id+'"]'),active.id);
+    const portable=(await records(imported.page)).find(x=>x.id===active.id);
+    check(portable?.finishedAt!==null&&portable.frozen.questions.length===2,
+      "Other offline browser profile did not restore frozen custom exam score");
+    await imported.context.close();
+    // Remove the imported source package, but never the frozen result.
+    await page.evaluate(async paperId=>{
+      const db=await new Promise((resolve,reject)=>{
+        const open=indexedDB.open("practiceDesk.overhaul.v1",1);
+        open.onsuccess=()=>resolve(open.result);open.onerror=()=>reject(open.error);
+      });
+      await new Promise((resolve,reject)=>{
+        const tx=db.transaction("attempts","readwrite");
+        tx.objectStore("attempts").delete("generic-package:"+paperId);
+        tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
+      });
+      db.close();
+    },"bank:apfc-starter-demo:paper:r1");
+    await page.reload({waitUntil:"load"});
+    await page.locator("#g-history").click();await route(page,"history");
+    await page.locator('[data-attempt="'+active.id+'"]').first().click();await route(page,"result");
+    check((await page.locator(".result-scoring-details").count())===1,
+      "Deleting source bank made frozen custom result unavailable");
+   }
+  }
   check(errors.length===0,v.name+" uncaught browser errors "+errors.join("; "));
   scenes.push({viewport:v.name,editions:2,modes:3,untimedReload:true,
    template:true,apfcMcqNat:true,screenComparison:false});
