@@ -388,6 +388,23 @@ Use exactly this cycle on **every** future implementation pass; keep a live scra
 | **Presentation/media** | Read-only view models, trusted local image refs and author alt | escaped HTML, updated subtree/panes, focus and zoom dialog | persistence, navigation policy, scoring or source-data inference |
 | **Keyboard/modal coordinator** | route/status, active modal and focus context | one shortcut priority map, close/restore, command dispatch | direct state mutation, key hijacking in input/native radio, global handler leaks |
 
+**Exhaustive controller-state reconciliation checklist for the full rewrite (from audited `mountExamWorkspace` closure; P47-0 design, NOT IMPLEMENTED):**
+
+| Existing mutable state / external resources | Sole proposed owner after P47-6 | Required source-to-target invariant |
+|---|---|---|
+| `builtins`, `builtinPaperIds`, `packages`, family catalogue | App immutable catalogue | Built-in vs imported identity, edition pairing and frozen source hashes, no fabricated exam families |
+| `choice`, `cglMode`, `singleSection`, `untimedPractice`, `editionView`, `selectedFamilyId`, `setups` | Library selection controller | Per-family setup persistence, real paper rules, correct starting frozen attempt |
+| `composeOpen`, `composeSection`, `composeTopic`, `composeDifficulty`, `composeCount`, `composeSeed`, `composePreview`, `composeError` | Library practice composer | Selected source scope, supplied tags only, deterministic seed, exact frozen policy and preview |
+| `historyFilter`, `historySort`, `historySearch`, `historyPaper` | History query controller | Add exam/mode/local-date composition; preserve orphan archives, result counts, search caret |
+| `resultTab`, `reviewFilter` and manual-mark UI | Result controller | No automation rescore, review permission, independent manual grades, lazy inactive panes |
+| `attempt`, `choiceDrafts`, `lastTimerSave`, `freshlyStartedAttemptId` | Exam session controller, with route handshake | One exact immutable frozen attempt and current-draft authority, no double fresh restore, correct P46-B timing |
+| `records`, `storedSnapshots`, `db`, `writeQueue`, `fallbackStamp`, `fallbackConflict`, `storageFault`, `pendingWrites`, `lastCommittedAt`, `lastStorageFailure`, `loading` | Persistence and recovery service | Atomic current two-store saves, CAS, fail-closed recovery, checked compact backup v4 and clear health |
+| `view`, `router`, `activationGeneration`, `routeHydrated`, `hydration`, `hydrationDone`, `warning`, `disposed` | Thin app coordinator / router integration | Generation cancellation, deep link/reload/Back-Forward, one error/status channel, disposed teardown |
+| `screenRenderer`, `learningDesk` | Screen presentation and Learning bridge | One root, explicit focus/announcements, unchanged FSRS source isolation, no duplicate card or scores |
+| `timer` interval, `visibilitychange`, `pagehide`, `keydown`, storage event, fullscreen events | One lifecycle/keyboard host that registers and disposes handlers exactly once | No leaked listeners, duplicate session checkpoints, accidental shortcut through modal, or loss of emergency mirror |
+
+**Required P47-6 exit accounting:** every mutable value, closure function, render template, DOM event and global listener in the old coordinator has an explicit new owner; each old branch must be either moved with independent tests or deliberately deleted with a successor test. No stranded old `mountExamWorkspace` half-implementation, giant opaque context bag, untyped event bus or duplicate read/write state. Test each user command as a state-machine transition and a real `file://` UI journey. High-volume History/filter redraw should be re-profiled with the exact P47-0 workload; distinguish render cost from CI/wall-clock latency.
+
 **Seam constraints:** `src/app/navigation.ts` remains the route engine, `screen-renderer.ts` is an existing independent primitive to evolve, `src/engine/session.ts` and scoring remain the only deterministic exam logic, `src/history/shared-store.ts` remains the only stored immutable content authority. Completely replace the old `mountExamWorkspace` coordinator orchestration **after** proper feature extraction; avoid dual implementation while replacing it. Every closure variable, external subscription, timer and user event must have exactly one new owner and one disposer; track old→new to prevent regressions. This map is architectural design, not implemented modules.
 
 **5. Targeted QA status:** new baseline script and workflow wired. **Do not label P47-0 verified before the run and exact evidence values are inspected.** Other P47 stages not started; mathematical rendering deferred outside P47. Physical real devices and independent P48 audit remain open.
