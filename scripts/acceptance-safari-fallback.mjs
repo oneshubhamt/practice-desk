@@ -18,6 +18,9 @@ try{
  check(await page.evaluate(()=>typeof window.navigation?.navigate!=="function"),
   engine+" Navigation API absence was not reproduced");
  await page.locator("#g-papers").waitFor({state:"visible"});
+ // Visible selectors can render before asynchronous two-store hydration finishes.
+ // Wait for genuine readiness, not merely a pre-hydration placeholder.
+ await page.waitForFunction(()=>document.querySelector("#g-start")?.disabled===false);
  check(await page.locator("#g-start").isEnabled(),engine+" fallback failed to boot Library");
  await page.locator('[data-mode="free"]').click();
  await page.locator("#g-start").click();await route(page,"exam");
