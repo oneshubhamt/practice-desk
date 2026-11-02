@@ -104,3 +104,101 @@ test("P43 catalog keeps imported families distinct, sorted and never claims offi
  assert.equal(imposter.paper.timing.kind,"untimed");
  assert.equal(apfc.paper.scoring.defaultRule.correctMarks,2.5);
 });
+
+test("P44 seeded composition is exact, reproducible, editorial-safe and preserves source policy",async()=>{
+ const {composePracticeSet,practiceInventory}=await import("../src/app/practice-compose.ts");
+ const {scoreableMaximum}=await import("../src/engine/score-ceiling.ts");
+ const all=builtinCglPackages(sources,patches);
+ const source=all.find(p=>p.paper.edition==="source"&&p.paper.paperId==="cgl-2026-10-06");
+ const reviewed=all.find(p=>p.paper.edition==="reviewed"&&p.paper.paperId===source.paper.paperId);
+ assert.ok(source&&reviewed);
+ const request={count:12,seed:"P44-fixed",filters:{}};
+ const a=composePracticeSet(reviewed,request),b=composePracticeSet(reviewed,request);
+ assert.deepEqual(a,b);
+ assert.equal(a.bundle.questions.length,12);
+ assert.equal(a.bundle.answerKey.entries.length,12);
+ assert.equal(new Set(a.bundle.questions.map(q=>q.id)).size,12);
+ assert.equal(a.bundle.paper.sections.flatMap(s=>s.questionRevisionIds).length,12);
+ assert.equal(a.manifest.selectedQuestionRevisionIds.length,12);
+ assert.equal(a.bundle.paper.timing.kind,reviewed.paper.timing.kind);
+ assert.deepEqual(a.bundle.paper.navigation,reviewed.paper.navigation);
+ assert.deepEqual(a.bundle.paper.scoring,reviewed.paper.scoring);
+ assert.equal(validateExamPackage(a.bundle),a.bundle);
+ assert.ok(a.bundle.questions.every(q=>["verified","corrected","caution"].includes(q.editorial.status)));
+ assert.ok(a.bundle.paper.sections.every(s=>source.paper.sections.some(parent=>
+   parent.id===s.id&&JSON.stringify(s.scoringOverride)===JSON.stringify(parent.scoringOverride))));
+ const original=composePracticeSet(source,request);
+ assert.ok(original.bundle.questions.every(q=>q.editorial.status!=="invalid"));
+ assert.equal(original.bundle.questions.length,12);
+ const alternate=composePracticeSet(reviewed,{...request,seed:"P44-other"});
+ assert.notDeepEqual(alternate.manifest.selectedQuestionRevisionIds,a.manifest.selectedQuestionRevisionIds);
+ assert.ok(Number.isFinite(scoreableMaximum(a.bundle.paper,a.bundle.answerKey,a.bundle.questions)));
+ assert.equal(practiceInventory(reviewed).eligible,a.manifest.eligibleCount);
+});
+
+test("P44 refuses invented tags, unavailable inventory and misleading counts",async()=>{
+ const {composePracticeSet,practiceInventory}=await import("../src/app/practice-compose.ts");
+ const all=builtinCglPackages(sources,patches);
+ const source=all.find(p=>p.paper.edition==="source");
+ const inventory=practiceInventory(source);
+ const total=source.questions.length;
+ assert.equal(inventory.eligible+inventory.excluded,total);
+ assert.equal(inventory.difficulties.length,0,"No invented difficulty metadata in built-in CGL");
+ assert.throws(()=>composePracticeSet(source,{count:total+1,seed:"fixed",filters:{}}),
+   /Only \d+ eligible questions/);
+ assert.throws(()=>composePracticeSet(source,{count:1,seed:"fixed",filters:{topicId:"invented-topic"}}),
+   /Only 0 eligible/);
+ assert.throws(()=>composePracticeSet(source,{count:1,seed:"fixed",filters:{difficulty:"hard"}}),
+   /Only 0 eligible/);
+ assert.throws(()=>composePracticeSet(source,{count:2.5,seed:"fixed",filters:{}}),/1–2000/);
+ assert.throws(()=>composePracticeSet(source,{count:1,seed:"invalid seed",filters:{}}),/seed/);
+});
+
+test("P44 imported APFC custom subset freezes exact policies and graded outcomes",async()=>{
+ const {composePracticeSet,validatePracticeComposition}=await import("../src/app/practice-compose.ts");
+ const {scoreAttempt}=await import("../src/engine/scoring.ts");
+ const authored=importAuthoredExam(starter);
+ const request={count:2,seed:"APFC-1",filters:{sectionId:authored.paper.sections[0].id}};
+ assert.throws(()=>composePracticeSet(authored,request),/Only 1 eligible/);
+ const selection=composePracticeSet(authored,{...request,count:1});
+ assert.equal(selection.bundle.paper.scoring.defaultRule.correctMarks,2.5);
+ assert.equal(selection.bundle.paper.scoring.defaultRule.incorrectMarks,-5/6);
+ assert.equal(selection.bundle.paper.timing.kind,"untimed");
+ const started={...startGenericAttempt(selection.bundle,"p44-apfc",1000),
+   practiceComposition:selection.manifest};
+ validatePracticeComposition(started);
+ const completed=transitionGenericAttempt(started,{type:"SUBMIT_ATTEMPT",nowMs:1100},
+   new Map(selection.bundle.questions.map(q=>[q.id,q])));
+ assert.equal(completed.result.snapshot.unansweredCount,1);
+ assert.equal(completed.result.snapshot.earnedMarks,0);
+ const tampered=structuredClone(started);
+ tampered.practiceComposition.selectedQuestionRevisionIds[0]="forged";
+ assert.throws(()=>validatePracticeComposition(tampered),/hash mismatch/);
+ const rehashed=structuredClone(started);
+ rehashed.practiceComposition.selectedQuestionRevisionIds[0]="forged";
+ const {hashJson}=await import("../src/domain/hash.ts");
+ const {contentHash:ignored,...core}=rehashed.practiceComposition;
+ rehashed.practiceComposition.contentHash=hashJson(core);
+ assert.throws(()=>validatePracticeComposition(rehashed),/frozen content/);
+});
+
+test("P44 explicit topic and difficulty metadata work without guessing or changing full source",async()=>{
+ const {composePracticeSet,practiceInventory}=await import("../src/app/practice-compose.ts");
+ const {questionRevisionHash}=await import("../src/domain/integrity.ts");
+ const authored=importAuthoredExam(starter);
+ const decorated=structuredClone(authored);
+ const q=decorated.questions[0];
+ q.content.topicIds=["labour-code-verified"];
+ q.content.tags=["difficulty:medium"];
+ q.contentHash=questionRevisionHash(q);
+ const snapshot=JSON.stringify(decorated);
+ const inventory=practiceInventory(decorated);
+ assert.deepEqual(inventory.topics.map(x=>x.id),["labour-code-verified"]);
+ assert.deepEqual(inventory.difficulties.map(x=>x.id),["medium"]);
+ const selected=composePracticeSet(decorated,{count:1,seed:"topic-1",
+   filters:{topicId:"labour-code-verified",difficulty:"medium"}});
+ assert.equal(selected.bundle.questions[0].id,q.id);
+ assert.equal(selected.manifest.eligibleCount,1);
+ assert.equal(JSON.stringify(decorated),snapshot,"No mutation of original bank");
+ assert.equal(validateExamPackage(selected.bundle),selected.bundle);
+});
