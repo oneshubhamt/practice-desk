@@ -556,6 +556,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    const previous=records.get(record.id);
    const expected=previous?previous.saveRevision??0:null;
    const versioned={...record,saveRevision:nextWriteVersion(expected)};
+   const packed=isAttempt(versioned)?compactAttempt(versioned):null;
    records.set(record.id,versioned);
    if(isAttempt(versioned)){
      if(attempt?.id===versioned.id)attempt=versioned;
@@ -575,17 +576,29 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        return;
      }
      try{
-       const tx=db.transaction("attempts","readwrite");
-       const store=tx.objectStore("attempts");
+       const tx=db.transaction([ATTEMPTS_STORE,SNAPSHOTS_STORE],"readwrite");
+       const store=tx.objectStore(ATTEMPTS_STORE);
+       const snapshotsStore=tx.objectStore(SNAPSHOTS_STORE);
        let conflict:Error|null=null;
        const read=store.get(record.id);
        read.onsuccess=()=>{
          try{
            assertWriteVersion(read.result as RecordItem|undefined,expected);
-           store.put(structuredClone(versioned));
+           if(packed){
+             const existing=snapshotsStore.get(packed.snapshot.id);
+             existing.onsuccess=()=>{
+               try{
+                 if(!existing.result)snapshotsStore.add(packed.snapshot);
+                 store.put(packed.row);
+               }catch(error){conflict=error as Error;tx.abort();}
+             };
+           }else store.put(versioned);
          }catch(error){conflict=error as Error;tx.abort();}
        };
-       tx.oncomplete=()=>resolve();
+       tx.oncomplete=()=>{
+         if(packed)storedSnapshots.set(packed.snapshot.id,packed.snapshot);
+         resolve();
+       };
        tx.onerror=()=>reject(conflict??tx.error??new Error("Write failed"));
        tx.onabort=()=>reject(conflict??tx.error??new Error("Write aborted"));
      }catch(error){reject(error);}
@@ -603,10 +616,14 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        try{
          let latest:unknown;
          if(db){
-           const req=db.transaction("attempts","readonly").objectStore("attempts").get(versioned.id);
+           const req=db.transaction(ATTEMPTS_STORE,"readonly").objectStore(ATTEMPTS_STORE).get(versioned.id);
            latest=await new Promise<unknown>((resolve,reject)=>{
              req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
            });
+           if(isSharedAttempt(latest)){
+             const snap=storedSnapshots.get(latest.frozenRef);
+             latest=snap?expandAttempt(latest,snap):undefined;
+           }
          }else{
            fallbackConflict=true;
            const stored=JSON.parse(localStorage.getItem(storageKey)??"[]") as unknown[];
@@ -644,8 +661,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        throw Error("Record was updated while confirming deletion. Reopen and try again.");
      if(db){
        await new Promise<void>((resolve,reject)=>{
-         const tx=db!.transaction("attempts","readwrite");
-         const store=tx.objectStore("attempts");
+         const tx=db!.transaction(ATTEMPTS_STORE,"readwrite");
+         const store=tx.objectStore(ATTEMPTS_STORE);
          let conflict:Error|null=null;
          const request=store.get(id);
          request.onsuccess=()=>{
@@ -690,16 +707,16 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      if(storageFault||fallbackConflict)throw Error("Storage changed during deletion; reopen before editing.");
      if(db){
        await new Promise<void>((resolve,reject)=>{
-         const tx=db!.transaction("attempts","readwrite");
-         const store=tx.objectStore("attempts");
+         const tx=db!.transaction(ATTEMPTS_STORE,"readwrite");
+         const store=tx.objectStore(ATTEMPTS_STORE);
          let conflict:Error|null=null;
          for(const saved of completed){
            const request=store.get(saved.id);
            request.onsuccess=()=>{
              try{
-               const current=request.result as RecordItem|undefined;
+               const current=request.result as SlimAttempt|undefined;
                assertWriteVersion(current,saved.saveRevision??0);
-               if(!isAttempt(current)||current.finishedAt===null)
+               if(!isSharedAttempt(current)||current.finishedAt===null)
                  throw Error("Completed status changed in another tab; deletion cancelled");
                store.delete(saved.id);
              }catch(error){conflict=error as Error;tx.abort();}
@@ -1900,18 +1917,22 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      db=await new Promise<IDBDatabase>((resolve,reject)=>{
        const request=indexedDB.open(dbName,1);
        request.onupgradeneeded=()=>{
-         if(!request.result.objectStoreNames.contains("attempts"))
-           request.result.createObjectStore("attempts",{keyPath:"id"});
+         request.result.createObjectStore(ATTEMPTS_STORE,{keyPath:"id"});
+         request.result.createObjectStore(SNAPSHOTS_STORE,{keyPath:"id"});
        };
        request.onsuccess=()=>resolve(request.result);
        request.onerror=()=>reject(request.error);
        request.onblocked=()=>reject(new Error("Database blocked"));
      });
-     const all=await new Promise<unknown[]>((resolve,reject)=>{
-       const req=db!.transaction("attempts","readonly").objectStore("attempts").getAll();
-       req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+     const {all,snapshots}=await new Promise<{all:unknown[];snapshots:SharedSnapshot[]}>((resolve,reject)=>{
+       const tx=db!.transaction([ATTEMPTS_STORE,SNAPSHOTS_STORE],"readonly");
+       const rows=tx.objectStore(ATTEMPTS_STORE).getAll();
+       const contents=tx.objectStore(SNAPSHOTS_STORE).getAll();
+       tx.oncomplete=()=>resolve({all:rows.result as unknown[],snapshots:contents.result as SharedSnapshot[]});
+       tx.onerror=()=>reject(tx.error);
      });
-     for(const record of all){
+     for(const snap of snapshots)storedSnapshots.set(snap.id,verifiedSnapshot(snap));
+     for(const record of reconstructRecords(all,snapshots)){
        if(isPackage(record)){try{
          const valid=validateExamPackage(record.bundle);
          if(!packages.has(valid.paper.id)){packages.set(valid.paper.id,valid);records.set(record.id,record);}
