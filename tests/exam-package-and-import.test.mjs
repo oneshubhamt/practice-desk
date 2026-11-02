@@ -275,8 +275,11 @@ test("generic attempts and imported packages survive a verified history backup r
  const backup=makeBackup(contents,{schema:1,dark:false,scale:100},"2026-10-28T00:00:00Z");
  const reloaded=verifyBackup(JSON.parse(JSON.stringify(backup)));
  assert.equal(reloaded.records.length,3);
- for(const record of reloaded.records) assert.doesNotThrow(()=>validateGenericStoredRecord(record));
- assert.deepEqual(planBackupMerge([completed],reloaded.records,"completed").map(x=>x.id),
+ assert.equal(reloaded.snapshots.length,1,"Two same-paper attempts share one snapshot");
+ const {reconstructRecords}=await import("../src/history/shared-store.ts");
+ const full=reconstructRecords(reloaded.records,reloaded.snapshots);
+ for(const record of full) assert.doesNotThrow(()=>validateGenericStoredRecord(record));
+ assert.deepEqual(planBackupMerge([completed],full,"completed").map(x=>x.id),
   [importedPackage.id,unfinished.id]);
  assert.throws(()=>verifyBackup({...reloaded,records:reloaded.records.slice(1)}),/integrity/);
 });
