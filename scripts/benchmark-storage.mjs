@@ -104,10 +104,11 @@ async function profile(count,data){
    check((await page.locator(".history-archive").innerText()).includes(attemptCount+" records shown"),
      "P45 History attempt count not authoritative at "+count+" total records");
    const x=elapsed();
-   await page.locator("#g-history-search").fill("p45-archive-0000");
+   await page.locator("#g-history-search").fill("cgl-");
    filter.push(elapsed()-x);
-   check(await page.locator(".history-entries .archive-entry").count()===Math.min(10,count>0?count-1:0),
-     "P45 filter count incorrect at "+count);
+   const expectedCgl=attemptCount-Math.ceil(attemptCount/5);
+   check(await page.locator(".history-entries .archive-entry").count()===expectedCgl,
+     "P45 CGL source-paper filter count incorrect at "+count);
    const y=elapsed();
    await page.locator("#g-history-sort").selectOption(rep%2?"newest":"oldest");
    sort.push(elapsed()-y);
