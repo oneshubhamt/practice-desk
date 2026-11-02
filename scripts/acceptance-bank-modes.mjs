@@ -244,6 +244,21 @@ for(const v of [
    await assertNoOverflow(page,v.name+" open custom builder");
    if(v.name==="laptop1366"){
     await page.locator("#g-compose-start").click();await route(page,"exam");
+    await page.waitForFunction(async()=>{
+      const db=await new Promise((resolve,reject)=>{
+        const r=indexedDB.open("practiceDesk.overhaul.v1",1);
+        r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
+      });
+      try{
+        const rows=await new Promise((resolve,reject)=>{
+          const tx=db.transaction("attempts","readonly");
+          const r=tx.objectStore("attempts").getAll();
+          r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
+        });
+        return rows.some(x=>x.recordType==="generic-attempt"&&
+          x.practiceComposition?.seed==="p44-repeatable");
+      }finally{db.close();}
+    });
     const active=(await records(page)).find(x=>x.recordType==="generic-attempt"&&
       x.practiceComposition?.seed==="p44-repeatable");
     check(Boolean(active)&&active.frozen.questions.length===2&&
