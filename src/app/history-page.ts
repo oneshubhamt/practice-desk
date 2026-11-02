@@ -98,7 +98,7 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
   '<section class="panel pad history-archive"><div class="row between"><div><h2>Saved attempts</h2><p class="fine">'+visible.length+' of '+pCount+' records shown</p></div>'+
   '<div class="row generic-actions"><button class="btn" id="g-export-history"'+(loading?" disabled":"")+'>Export backup</button>'+
   '<button class="btn" id="g-import-history"'+(loading||storageLocked?" disabled":"")+'>Import backup</button></div></div>'+
-  '<input type="file" id="g-history-file" accept=".json,application/json" hidden>'+
+  '<input type="file" id="g-history-file" accept=".json,.gz,application/json,application/gzip" hidden>'+
   '<div class="history-filters"><label class="filter-label" for="g-history-search">Find a paper'+
     '<input type="search" id="g-history-search" placeholder="Search paper, mode or edition" value="'+esc(query.search)+'"></label>'+
   '<label class="filter-label" for="g-history-paper">Paper / edition<select id="g-history-paper">'+
@@ -195,7 +195,7 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
   '<p id="g-storage-persist-status" class="fine" role="status"></p>'+
   '<button class="btn" id="g-storage-persist" type="button">Protect stored data</button>'+
   '</section><section class="panel pad"><h2>Backup & management</h2>'+
-  '<p class="fine">Backup v3 imports are checksum-verified and additive only. Matching records are never overwritten; export before deleting.</p>'+
+  '<p class="fine">Backup v3 imports are checksum-verified and additive only. Large backups download as .json.gz (offline gzip), without changing the backup's internal format. Existing records are never overwritten; export before deleting.</p>'+
   '<button class="btn danger" id="g-delete-completed" type="button"'+
   (done.length===0||loading||storageLocked?" disabled":"")+
   '>Delete all '+done.length+' completed attempts</button>'+
