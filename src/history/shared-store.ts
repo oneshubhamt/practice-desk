@@ -35,7 +35,9 @@ export function isVerifiedSharedFrozen(frozen:FrozenAttemptContent):boolean{
 export function sharedSnapshot(attempt:GenericAttempt):SharedSnapshot {
  const frozen=attempt.frozen;
  const cached=bodyCache.get(frozen);
- if(cached)return cached;
+ if(cached&&cached.body.sourceKeyReference===attempt.sourceKeyReference&&
+    cached.body.sourceReviewReference===attempt.sourceReviewReference&&
+    cached.body.explanations===attempt.explanations)return cached;
  const {frozenAt:_,...frozenBody}=frozen;
  // The publisher/source reference and explanation maps are also immutable
  // question-specific material, commonly identical across hundreds of attempts.
