@@ -435,7 +435,8 @@ test("generated notebook revision is a real validated attempt, not a copied note
  assert.equal(attempt.result.snapshot.unansweredCount,2);
  assert.equal(validateGenericStoredRecord(JSON.parse(JSON.stringify(attempt))).id,"revision-attempt");
  const backed=verifyBackup(makeBackup([attempt],{schema:1,dark:false,scale:100},"2026-10-29T20:00:00Z"));
- assert.equal(backed.records[0].frozen.questions.length,3);
+ assert.equal(backed.snapshots.length,1);
+ assert.equal(backed.snapshots[0].body.questions.length,3);
  assert.equal(backed.records[0].notebookLineage.entries[0].cardId,selected[0].id);
  assert.equal(selected[0].sourceAttemptId,"completed-source");
  const otherPaper={...card(1),paperId:"another-paper-revision",paperEdition:"source"};
