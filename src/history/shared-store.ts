@@ -83,3 +83,31 @@ export function reconstructRecords(rows:readonly unknown[],
    return expanded;
  });
 }
+
+/** Reclaim content no longer referenced by any saved attempt.
+ * Uses one serializable IDB transaction: another tab's attempt write will
+ * re-add a missing digest atomically before committing that attempt. */
+export async function pruneSharedSnapshots(db:IDBDatabase):Promise<readonly string[]>{
+ const removed:string[]=[];
+ await new Promise<void>((resolve,reject)=>{
+  const tx=db.transaction([ATTEMPTS_STORE,SNAPSHOTS_STORE],"readwrite");
+  const rows=tx.objectStore(ATTEMPTS_STORE).getAll();
+  rows.onsuccess=()=>{
+   const referenced=new Set((rows.result as unknown[]).filter(isSharedAttempt)
+     .map(row=>row.frozenRef));
+   const cursor=tx.objectStore(SNAPSHOTS_STORE).openCursor();
+   cursor.onsuccess=()=>{
+    const current=cursor.result;
+    if(!current)return;
+    if(typeof current.key==="string"&&!referenced.has(current.key)){
+     removed.push(current.key);current.delete();
+    }
+    current.continue();
+   };
+  };
+  tx.oncomplete=()=>resolve();
+  tx.onerror=()=>reject(tx.error??Error("Snapshot cleanup failed"));
+  tx.onabort=()=>reject(tx.error??Error("Snapshot cleanup aborted"));
+ });
+ return removed;
+}
