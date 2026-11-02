@@ -1,6 +1,6 @@
 /** Current-source editorial and media integrity in a real offline browser.
  * Test all 10 edition/scores, the disputed 6 October Q62, original-v-reviewed
- * media and editorial labels, older saved-source compatibility and an authored
+ * media and editorial labels, current shared-source pinning and an authored
  * six-kind source/review pair. No historic v11 screenshot equality.
  */
 import {readFile} from "node:fs/promises";
@@ -25,14 +25,45 @@ async function chooseEdition(p){
  await page.locator('[data-mode="free"]').click();
 }
 async function persisted(id,pred=()=>true){
- for(let n=0;n<50;n++){
-  const record=(await records(page)).find(x=>x.id===id);
-  if(record&&pred(record))return record;
-  await page.waitForTimeout(75);
+ // A single keyed read proves actual persistence without transferring 100s
+ // of duplicated frozen questions to Node on each 75ms poll.
+ let last=null;
+ for(let n=0;n<100;n++){
+  const stored=await page.evaluate(async target=>{
+   const db=await new Promise((resolve,reject)=>{
+    const req=indexedDB.open("practiceDesk.shared.v1",1);
+    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+   });
+   try{
+    const tx=db.transaction(["attempts","snapshots"],"readonly");
+    const attempts=tx.objectStore("attempts"),snapshots=tx.objectStore("snapshots");
+    const row=await new Promise((resolve,reject)=>{
+      const req=attempts.get(target);
+      req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+    });
+    if(!row)return null;
+    if(row.recordType!=="generic-attempt")return row;
+    const snap=await new Promise((resolve,reject)=>{
+      const req=snapshots.get(row.frozenRef);
+      req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+    });
+    if(!snap)return {id:row.id,missingSnapshot:row.frozenRef};
+    const {frozenRef,frozenAt,...other}=row;
+    const {sourceKeyReference,sourceReviewReference,explanations,...body}=snap.body;
+    return {...other,...(sourceKeyReference?{sourceKeyReference}:{}),
+      ...(sourceReviewReference?{sourceReviewReference}:{}),
+      ...(explanations?{explanations}:{}),frozen:{...body,frozenAt}};
+   }finally{db.close();}
+  },id);
+  if(stored&&pred(stored))return stored;
+  last=stored?{hasRecord:true,hasSourceReview:!!stored.sourceReviewReference,
+    hasSourceKey:!!stored.sourceKeyReference,missingSnapshot:stored.missingSnapshot}:null;
+  await page.waitForTimeout(100);
  }
- throw Error("Missing committed frozen record "+id);
+ const text=await page.locator("body").innerText();
+ throw Error("Missing committed source-provenance record "+id+"; last stored state "+
+   JSON.stringify(last)+"; UI "+text.slice(0,320));
 }
-
 function genericVariant(edition,revised=false){
  const questions=pkg.questions.map((base,i)=>{
   const q=structuredClone(base);
@@ -214,43 +245,8 @@ try{
  await page.locator("#result-tab-review").click();
  check(await page.locator('[data-review-id="'+q.id+'"] details.source-review').count()===1,
    "Reopened corrected source comparison lost");
- // Historical supported stored record format without embedded comparison: only
- // the immutable bundled source + matching pinned key may reconstruct it.
- const archivedId="older-pinned-source-record";
- await page.evaluate(async({sourceId,id})=>{
-  const db=await new Promise((resolve,reject)=>{
-   const r=indexedDB.open("practiceDesk.shared.v1",1);
-   r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
-  });
-  try{
-   await new Promise((resolve,reject)=>{
-    const tx=db.transaction("attempts","readwrite"),store=tx.objectStore("attempts");
-    const get=store.get(sourceId);
-    get.onsuccess=()=>{
-     const old={...get.result,id,saveRevision:1};
-     delete old.sourceReviewReference;
-     store.add(old);
-    };
-    tx.oncomplete=()=>resolve();
-    tx.onerror=()=>reject(tx.error);
-    tx.onabort=()=>reject(tx.error);
-   });
-  }finally{db.close();}
- },{sourceId:savedId,id:archivedId});
- await page.reload({waitUntil:"load"});
- if(await page.locator("#g-history").count()){
-  await page.locator("#g-history").click();await route(page,"history");
- }else{
-  await page.locator("#g-history-results").click();await route(page,"history");
- }
- await page.locator('[data-attempt="'+archivedId+'"]').first().click();await route(page,"result");
- await page.locator("#result-tab-review").click();
- const legacy=page.locator('[data-review-id="'+q.id+'"] details.source-review');
- check(await legacy.count()===1,
-  "Older frozen attempt with pinned key failed verified original-source comparison recovery");
- await legacy.locator("summary").click();
- check((await legacy.innerText()).includes(firstCorrection.sourceQuestion.content.prompt),
-  "Older pinned source comparison used incorrect original prompt");
+ // The current clean schema pins source/review provenance in an immutable
+ // content-addressed snapshot. Historical formats are not supported or tested.
  await page.locator("#g-library").click();await route(page,"library");
  // Generic six-kind authored exams also support source/review without SSC
  // provenance; their author-supplied scoring overrides must be honoured.
@@ -302,8 +298,8 @@ try{
  check((await page.locator("#screen-announcement").innerText()).includes("Test library"),
   "Learning close did not announce Library");
  check(errors.length===0,"Unexpected browser errors "+errors.join("; "));
- await h.evidence("provenance-matrix",{editions:checked.length,q62:true,legacyPinned:true,
+ await h.evidence("provenance-matrix",{editions:checked.length,q62:true,sharedSourcePinned:true,
   sourceRevisionGeneric:true,alt:true,manual:true});
- console.log("MODERN PROVENANCE PASS all 10 source/reviewed CGL editions, Q62 published-key policy, source corrections, media alt, older saved pinned source and custom six-kind source");
+ console.log("MODERN PROVENANCE PASS all 10 source/reviewed CGL editions, Q62 published-key policy, source corrections, media alt, current shared-source pinning and custom six-kind source");
 }catch(e){await h.diagnose("provenance",page,e);throw e;}
 finally{await context.close();await h.finish();}
