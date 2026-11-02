@@ -243,7 +243,18 @@ for(const v of [
      v.name+" custom draw preview must reflect the edited count and seed: "+shownPreview);
    check(!(await page.locator("#g-compose").innerText()).includes("First option"),
      v.name+" composer leaked a key/answer before starting");
-   await assertNoOverflow(page,v.name+" open custom builder");
+   try{await assertNoOverflow(page,v.name+" open custom builder");}
+   catch(error){
+     const diag=await page.evaluate(()=>[...document.querySelectorAll("#app *")].filter(el=>
+       el instanceof HTMLElement&&el.getClientRects().length&&
+       el.scrollWidth>el.clientWidth+2).slice(0,35).map(el=>{
+         const box=el.getBoundingClientRect(),style=getComputedStyle(el);
+         return {tag:el.tagName,id:el.id,cls:String(el.className).slice(0,55),
+           cw:el.clientWidth,sw:el.scrollWidth,x:box.x,right:box.right,
+           width:box.width,white:style.whiteSpace,overflowX:style.overflowX};
+       }));
+     throw Error(String(error)+"; intrinsic overflows "+JSON.stringify(diag));
+   }
    if(v.name==="laptop1366"){
     await page.locator("#g-compose-start").click();await route(page,"exam");
     await page.waitForFunction(async()=>{
