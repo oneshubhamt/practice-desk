@@ -1388,6 +1388,63 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      };
      const single=root.querySelector<HTMLSelectElement>("#g-single-section");
      if(single)single.onchange=()=>{singleSection=Number(single.value);saveSelection();};
+     const builderDetails=root.querySelector<HTMLDetailsElement>("#g-compose-details");
+     if(builderDetails){
+       builderDetails.ontoggle=()=>{composeOpen=builderDetails.open;};
+       const capture=()=>{
+         composeSection=root.querySelector<HTMLSelectElement>("#g-compose-section")!.value;
+         composeTopic=root.querySelector<HTMLSelectElement>("#g-compose-topic")!.value;
+         composeDifficulty=root.querySelector<HTMLSelectElement>("#g-compose-difficulty")!.value;
+         composeCount=Number(root.querySelector<HTMLInputElement>("#g-compose-count")!.value);
+         composeSeed=root.querySelector<HTMLInputElement>("#g-compose-seed")!.value.trim();
+       };
+       const make=()=>{
+         capture();
+         const p=packages.get(choice);
+         if(!p||familyIdFor(p,builtinPaperIds)!==selectedFamilyId)throw Error("Selected paper unavailable");
+         const base=configureUntimedPractice(
+           selectedFamilyId===BUILTIN_CGL_FAMILY?
+             configureCglPractice(p,cglMode,singleSection):p,untimedPractice);
+         return composePracticeSet(base,{count:composeCount,seed:composeSeed,
+           filters:{...(composeSection?{sectionId:composeSection}:{}),
+             ...(composeTopic?{topicId:composeTopic}:{}),
+             ...(composeDifficulty?{difficulty:composeDifficulty}:{})}});
+       };
+       root.querySelector<HTMLButtonElement>("#g-compose-preview")!.onclick=()=>{
+         try{
+           const {bundle,manifest}=make();
+           const pf=examPreflight(bundle,{builtinCgl:selectedFamilyId===BUILTIN_CGL_FAMILY});
+           composePreview=manifest.selectedQuestionRevisionIds.length+" selected from "+
+             manifest.eligibleCount+" eligible · maximum "+pf.maximum.toFixed(pf.decimals)+
+             " marks · "+(bundle.paper.timing.kind==="untimed"?"untimed":bundle.paper.timing.kind)+
+             " · "+bundle.paper.sections.length+" sections. Seed and source revision are frozen.";
+           composeError="";
+         }catch(error){
+           composePreview="";composeError=error instanceof Error?error.message:"Invalid custom set";
+         }
+         composeOpen=true;draw();
+       };
+       root.querySelector<HTMLButtonElement>("#g-compose-start")!.onclick=()=>{
+         if(loading||fallbackConflict||storageFault)return;
+         try{
+           const {bundle,manifest}=make();
+           const unfinished=[...records.values()].filter((row):row is GenericAttempt=>
+             isAttempt(row)&&row.finishedAt===null);
+           if(unfinished.length&&!confirm("You have "+unfinished.length+
+             " unfinished tests. Start a separate custom attempt? Existing attempts remain saved."))return;
+           const id=typeof crypto!=="undefined"&&crypto.randomUUID?
+             crypto.randomUUID():"custom-"+now()+"-"+Math.random();
+           attempt={...startGenericAttempt(bundle,id,now()),practiceComposition:manifest};
+           freshlyStartedAttemptId=attempt.id;
+           composeError="";composePreview="";warning="";
+           void save(attempt);go({screen:"exam",attemptId:attempt.id});
+         }catch(error){
+           composeOpen=true;composePreview="";
+           composeError=error instanceof Error?error.message:"Cannot create custom practice";
+           draw();
+         }
+       };
+     }
      root.querySelector<HTMLButtonElement>("#g-start")!.onclick=()=>{
        const p=packages.get(choice);
        if(!p||familyIdFor(p,builtinPaperIds)!==selectedFamilyId)return;
