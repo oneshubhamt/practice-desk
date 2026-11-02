@@ -1390,7 +1390,9 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      if(single)single.onchange=()=>{singleSection=Number(single.value);saveSelection();};
      const builderDetails=root.querySelector<HTMLDetailsElement>("#g-compose-details");
      if(builderDetails){
-       builderDetails.ontoggle=()=>{composeOpen=builderDetails.open;};
+       builderDetails.ontoggle=()=>{
+         if(composeOpen!==builderDetails.open){composeOpen=builderDetails.open;draw();}
+       };
        const capture=()=>{
          composeSection=root.querySelector<HTMLSelectElement>("#g-compose-section")!.value;
          composeTopic=root.querySelector<HTMLSelectElement>("#g-compose-topic")!.value;
