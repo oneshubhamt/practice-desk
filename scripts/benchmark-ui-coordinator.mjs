@@ -134,13 +134,25 @@ async function examine100Questions(){
  await page.locator("#g-start").click();await route(page,"exam");
  const samples=[];
  samples.push(await actionSample("#g-next",undefined,"click"));
+ // Select a genuinely image-bearing CGL question instead of assuming the next
+ // item has media. The built-in source has figures in all first sections.
+ let figureQuestion=null;
+ for(let i=0;i<25;i++){
+  await page.locator('[data-q="'+i+'"]').click();
+  if(await page.locator(".exam-question .generic-figure").count()){
+   figureQuestion=i+1;break;
+  }
+ }
+ check(figureQuestion!==null,"P47-0 unable to find an authored figure in first CGL section");
  const media=await page.evaluate(()=>({
-  images:document.querySelectorAll("#app .generic-figure").length,
+  images:document.querySelectorAll(".exam-question .generic-figure").length,
+  imageAlt:[...document.querySelectorAll(".exam-question .generic-figure")].map(x=>x.alt),
   appNodes:document.querySelectorAll("#app *").length,
   radio:document.querySelectorAll("#app input[type=radio]").length,
   focused:document.activeElement?.id??null,
   actualWidths:{document:document.documentElement.scrollWidth,viewport:innerWidth}
  }));
+ media.figureQuestion=figureQuestion;
  for(let s=0;s<4;s++)await page.locator("#g-submit").click();
  await route(page,"result");
  const id=new URL(page.url()).searchParams.get("attempt");
