@@ -195,7 +195,7 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
   '<p id="g-storage-persist-status" class="fine" role="status"></p>'+
   '<button class="btn" id="g-storage-persist" type="button">Protect stored data</button>'+
   '</section><section class="panel pad"><h2>Backup & management</h2>'+
-  '<p class="fine">Backup v3 imports are checksum-verified and additive only. Large backups download as .json.gz (offline gzip), without changing the internal backup format. Existing records are never overwritten; export before deleting.</p>'+
+  '<p class="fine">Backup v4 imports are checksum-verified and additive only. Large backups download as .json.gz (offline gzip), without changing the internal backup format. Existing records are never overwritten; export before deleting.</p>'+
   '<button class="btn danger" id="g-delete-completed" type="button"'+
   (done.length===0||loading||storageLocked?" disabled":"")+
   '>Delete all '+done.length+' completed attempts</button>'+
