@@ -40,7 +40,7 @@
 | **All future feature passes, priorities, dependencies and live status** | **[Consolidated P41–P48 Engineering Programme](ENGINEERING_PROGRAMME.md)** | **Sole active implementation programme** |
 | Branch, source and five-step working discipline | [AGENTS](../AGENTS.md) | Binding |
 | Actual supported exam/data/scoring invariants | [Current architecture](architecture/CURRENT_ARCHITECTURE.md) and [data contracts](architecture/DATA_CONTRACTS.md) | Current as-built reference |
-| User-approved decisions and editorial exceptions | [Policy register](decisions/POLICY_REGISTER.md) | Binding D01–D37 |
+| User-approved decisions and editorial exceptions | [Policy register](decisions/POLICY_REGISTER.md) | Binding D01–D38 |
 | Run tests, browser acceptance and release checks | [QA and release guide](QA_CURRENT.md) | Current executable commands; manual gates open |
 | Import CGL/APFC/NAT or advanced six-kind banks | [Authoring guide](architecture/QUESTION_BANK_AUTHORING.md) | Current usage |
 | Original starting architecture audit (28 Oct) | [Baseline v11 architecture](history/BASELINE_V11_ARCHITECTURE.md) | Historical vision, P41–P48 gaps reconciled in new plan |
@@ -81,7 +81,7 @@ docs/
 
 ## Evidence and status precedence
 
-1. **Actual current source and passing named tests** establish what works in the tested environment. **P41–P45 are AUTOMATED VERIFIED**, with [191/191 Node tests, 5/5 CI and Chromium/Firefox/WebKit](https://github.com/oneshubhamt/practice-desk/actions/runs/41389136495); **P46 is next**. P45 verified 0/100/1000/1600 frozen storage profiles, same-checksum v3 gzip and actual storage-health diagnostics, retaining the single store. High memory on large physical devices remains an unresolved P48 question. P43's clean-break preference policy is binding D34 and the source-aware family contract is D35. The final P48 comprehensive independent QA and real Mac/device/AT outcomes remain OPEN.
+1. **Actual current source and passing named tests** establish what works in the tested environment. **P41–P45 are AUTOMATED VERIFIED**, with [191/191 Node tests, 5/5 CI and Chromium/Firefox/WebKit](https://github.com/oneshubhamt/practice-desk/actions/runs/41389136495); **P45 storage architecture reassessment precedes P46 (D38)**. P45's tested functionality remains verified, but **legacy storage/backup compatibility and migration are not requirements anywhere in the app**; its high cold-start/memory observations reopen the one-store design choice. P45 verified 0/100/1000/1600 frozen storage profiles, same-checksum v3 gzip and actual storage-health diagnostics, retaining the single store. High memory on large physical devices remains an unresolved P48 question. P43's clean-break preference policy is binding D34 and the source-aware family contract is D35. The final P48 comprehensive independent QA and real Mac/device/AT outcomes remain OPEN.
 2. **Explicit user decisions** control exceptions and release permission. The D02/D03 disputed 6 Oct CGL Q62 policy remains binding unless the user changes it.
 3. **[The consolidated engineering programme](ENGINEERING_PROGRAMME.md)** controls future scope, unique issue IDs, pass sequencing, verification standards and live status; **the QA guide** controls executable CI/real-browser commands.
 4. Historical screenshots, source-audit findings, pass diaries and earlier CI runs are timestamped evidence, **never fresh release or acceptance proof**. Do not infer physical Safari, iOS/Android or screen-reader compatibility from CI.
