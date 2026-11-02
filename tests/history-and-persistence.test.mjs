@@ -549,8 +549,7 @@ p45test("P45 History health distinguishes pending, locked, failure and browser e
 p45test("P45 compressed backup keeps v3 checksum and resists malformed gzip",async()=>{
  const {backupDownload,readBackupFile,PLAIN_BACKUP_LIMIT}=await import("../src/history/backup-file.ts");
  const {makeBackup,verifyBackup}=__suite_dep_13;
- const {defaultDisplayPreferences}=await import("../src/app/preferences.ts");
- const preferences=defaultDisplayPreferences();
+ const {DEFAULT_PREFERENCES:preferences}=await import("../src/app/preferences.ts");
  const archive=makeBackup([] ,preferences,"2026-11-02T00:00:00.000Z");
  const raw=JSON.stringify(archive);
  const small=await backupDownload(raw);
