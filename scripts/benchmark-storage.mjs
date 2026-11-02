@@ -114,9 +114,15 @@ async function profile(count,data){
    await page.locator("#g-history-sort").selectOption(rep%2?"newest":"oldest");
    sort.push(elapsed()-y);
    const z=elapsed();
-   const download=page.waitForEvent("download",{timeout:120000});
+   const exportTimeout=count>=1600?180000:120000;
+   const download=page.waitForEvent("download",{timeout:exportTimeout});
+   const exportError=page.locator(".generic-warning").filter({hasText:"Backup failed:"})
+     .waitFor({timeout:exportTimeout}).then(async()=>{
+       throw Error("P45 export rejected at "+count+" records: "+
+         await page.locator(".generic-warning").filter({hasText:"Backup failed:"}).innerText());
+     });
    await page.locator("#g-export-history").click();
-   const file=await download;
+   const file=await Promise.race([download,exportError]);
    const raw=await readFile(await file.path());
    backups.push(elapsed()-z);exportBytes=raw.byteLength;
    const json=file.suggestedFilename().endsWith(".gz")?
