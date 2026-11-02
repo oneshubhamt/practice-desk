@@ -108,7 +108,10 @@ export async function records(page,store="attempts"){
      const {frozenRef,frozenAt,...fields}=row;
      const body=hashes.get(frozenRef);
      if(!body)throw Error("Unresolved current snapshot "+frozenRef);
-     return {...fields,frozen:{...body,frozenAt}};
+     const {sourceKeyReference,sourceReviewReference,explanations,...frozenBody}=body;
+     return {...fields,...(sourceKeyReference?{sourceKeyReference}:{}),
+       ...(sourceReviewReference?{sourceReviewReference}:{}),
+       ...(explanations?{explanations}:{}),frozen:{...frozenBody,frozenAt}};
    });
   }finally{db.close();}
  },store);
