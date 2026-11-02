@@ -79,7 +79,7 @@ async function profile(count){
   sortSamples.push(await actionSample("#g-history-sort",i%2?"oldest":"newest","change"));
  }
  // Real keyboard-style user input and caret preservation, not just synthetic dispatch.
- await input.fill("CG");await input.press("End");await input.press("KeyL");
+ await input.fill("CG");await input.press("End");await input.press("l");
  const caret=await page.evaluate(()=>{
   const x=document.getElementById("g-history-search");
   return {value:x?.value,active:document.activeElement===x,
