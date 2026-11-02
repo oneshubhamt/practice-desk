@@ -134,6 +134,8 @@ export function validateNotebookLineage(attempt:GenericAttempt):void{
      throw Error("Invalid notebook revision lineage entry");
    seen.add(entry.questionRevisionId);
  }
+ if(Object.prototype.hasOwnProperty.call(lineage,"selection")&&!lineage.selection)
+   throw Error("Invalid frozen revision selection evidence");
  if(lineage.selection){
    const x=lineage.selection;
    if(x.schema!==1||x.examId!==attempt.frozen.snapshot.examId||
