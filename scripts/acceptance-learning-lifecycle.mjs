@@ -190,7 +190,22 @@ try{
  check((await page.locator("#fontReset").innerText())==="140%",
   "Could not establish 140% in-app Learning typography");
  await page.locator("#displayClose").click();
- check(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1),
+ const zoomScan=await page.evaluate(()=>({
+    width:innerWidth,documentWidth:document.documentElement.scrollWidth,
+    offenders:[...document.querySelectorAll("body *")].filter(el=>{
+      const r=el.getBoundingClientRect();
+      return r.right>innerWidth+1&&!el.closest(".scroll-table")&&
+        !el.closest(".learning-evidence-preview")&&getComputedStyle(el).position!=="fixed";
+    }).slice(0,30).map(el=>({
+      tag:el.tagName,id:el.id,classes:el.className?.toString().slice(0,100),
+      right:Math.round(el.getBoundingClientRect().right),
+      width:Math.round(el.getBoundingClientRect().width),
+      scroll:el.scrollWidth,text:(el.textContent??"").slice(0,65)
+    }))
+  }));
+ if(zoomScan.documentWidth>zoomScan.width+1)
+   console.log("P46 ZOOM OVERFLOW DIAGNOSTIC "+JSON.stringify(zoomScan));
+ check(zoomScan.documentWidth<=zoomScan.width+1,
   "P46 Learning evidence builder creates document overflow at 195px / 140% font size");
  check(await page.locator("#learning-evidence-count").count()===1&&
   await page.locator("#learning-build-evidence").count()===1,
