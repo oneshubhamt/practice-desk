@@ -10,11 +10,14 @@ export const SHARED_DB_NAME="practiceDesk.shared.v1";
 export const ATTEMPTS_STORE="attempts";
 export const SNAPSHOTS_STORE="snapshots";
 
+type SharedBody=Omit<FrozenAttemptContent,"frozenAt"> &
+ Pick<GenericAttempt,"sourceKeyReference"|"sourceReviewReference"|"explanations">;
 export interface SharedSnapshot {
  readonly id:string;
- readonly body:Omit<FrozenAttemptContent,"frozenAt">;
+ readonly body:SharedBody;
 }
-export interface SlimAttempt extends Omit<GenericAttempt,"frozen"> {
+export interface SlimAttempt extends Omit<GenericAttempt,
+ "frozen"|"sourceKeyReference"|"sourceReviewReference"|"explanations"> {
  readonly frozenRef:string;
  readonly frozenAt:string;
 }
@@ -29,10 +32,17 @@ const verifiedReconstructed=new WeakSet<FrozenAttemptContent>();
 export function isVerifiedSharedFrozen(frozen:FrozenAttemptContent):boolean{
  return verifiedReconstructed.has(frozen)&&Number.isFinite(Date.parse(frozen.frozenAt));
 }
-export function sharedSnapshot(frozen:FrozenAttemptContent):SharedSnapshot {
+export function sharedSnapshot(attempt:GenericAttempt):SharedSnapshot {
+ const frozen=attempt.frozen;
  const cached=bodyCache.get(frozen);
  if(cached)return cached;
- const {frozenAt:_,...body}=frozen;
+ const {frozenAt:_,...frozenBody}=frozen;
+ // The publisher/source reference and explanation maps are also immutable
+ // question-specific material, commonly identical across hundreds of attempts.
+ const body:SharedBody={...frozenBody,
+   ...(attempt.sourceKeyReference?{sourceKeyReference:attempt.sourceKeyReference}:{}),
+   ...(attempt.sourceReviewReference?{sourceReviewReference:attempt.sourceReviewReference}:{}),
+   ...(attempt.explanations?{explanations:attempt.explanations}:{})};
  const id="snapshot:"+hashJson(body);
  const value={id,body};
  bodyCache.set(frozen,value);
@@ -45,8 +55,8 @@ export function isSharedAttempt(value:unknown):value is SlimAttempt {
 export function compactAttempt(attempt:GenericAttempt):{
  readonly row:SlimAttempt;readonly snapshot:SharedSnapshot;
 }{
- const snapshot=sharedSnapshot(attempt.frozen);
- const {frozen,...other}=attempt;
+ const snapshot=sharedSnapshot(attempt);
+ const {frozen,sourceKeyReference:_,sourceReviewReference:__,explanations:___,...other}=attempt;
  return {row:{...other,frozenRef:snapshot.id,frozenAt:frozen.frozenAt},snapshot};
 }
 export function expandAttempt(row:SlimAttempt,snapshot:SharedSnapshot):GenericAttempt{
@@ -55,7 +65,12 @@ export function expandAttempt(row:SlimAttempt,snapshot:SharedSnapshot):GenericAt
  if(!Number.isFinite(Date.parse(row.frozenAt)))
    throw Error("Invalid frozen timestamp");
  const {frozenRef:_,frozenAt,...other}=row;
- return {...other,frozen:{...snapshot.body,frozenAt}};
+ const {sourceKeyReference,sourceReviewReference,explanations,...frozenBody}=snapshot.body;
+ return {...other,
+   ...(sourceKeyReference?{sourceKeyReference}:{}),
+   ...(sourceReviewReference?{sourceReviewReference}:{}),
+   ...(explanations?{explanations}:{}),
+   frozen:{...frozenBody,frozenAt}};
 }
 /** Validate each immutable body once, then reuse its objects across many
  * attempts. The scored state of EVERY attempt is validated independently. */
