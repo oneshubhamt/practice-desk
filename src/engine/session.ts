@@ -16,6 +16,8 @@ export interface SessionState {
    * Previous attempts stay absent: duration/answer changes cannot reconstruct visits.
    */
   readonly questionVisits?: readonly { readonly questionRevisionId:QuestionRevisionId;readonly count:number }[];
+  /** Only versioned sessions have complete phase instrumentation. */
+  readonly timingEvidenceVersion?:1;
   readonly completedSections: readonly number[];
   /** Observed consumed timer time for each finished sequential section.
    * Absent on older saved attempts; never reconstruct from question exposure.
@@ -49,6 +51,7 @@ function questionId(paper: PaperRevision, state: SessionState): QuestionRevision
 function record(state: SessionState, id: QuestionRevisionId): AttemptResponseRecord {
   return state.responses.find(r => r.questionRevisionId === id) ?? {
     questionRevisionId: id, flagged: false, timeSpentMs: 0, answerChangeCount: 0,
+    ...(state.timingEvidenceVersion===1?{firstVisitMs:0,preFirstAnswerMs:0}:{}),
   };
 }
 function put(state: SessionState, value: AttemptResponseRecord): SessionState {
@@ -59,7 +62,7 @@ export function startSession(paper: PaperRevision, nowMs: number): SessionState 
   return {
     status: "running", sectionIndex: 0, questionIndex: 0, elapsedMs: 0,
     sectionElapsedMs: 0, foregroundMs: 0, responses: [], completedSections: [], completedSectionTimings: [],
-    visible: true, clockMs: nowMs,
+    visible: true, clockMs: nowMs, timingEvidenceVersion:1,
     questionVisits:[{questionRevisionId:paper.sections[0]!.questionRevisionIds[0]!,count:1}],
   };
 }
@@ -122,7 +125,16 @@ function checkpoint(paper: PaperRevision, state: SessionState, nowMs: number): S
       if (next.visible) {
         const id = questionId(paper, next);
         const previous = record(next, id);
-        next = put(next, { ...previous, timeSpentMs: previous.timeSpentMs + spent });
+        // The checkpoint's measured foreground interval is the only timing
+        // source: it excludes paused, hidden, expired and process-offline time.
+        const visit=next.questionVisits?.find(v=>v.questionRevisionId===id)?.count;
+        next = put(next,{
+          ...previous,timeSpentMs:previous.timeSpentMs+spent,
+          ...(next.timingEvidenceVersion===1?{
+            firstVisitMs:(previous.firstVisitMs??0)+(visit===1?spent:0),
+            preFirstAnswerMs:(previous.preFirstAnswerMs??0)+(previous.firstAnsweredAt===undefined?spent:0)
+          }:{})
+        });
       }
     }
     remaining -= spent;

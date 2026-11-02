@@ -166,6 +166,8 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
  }
  const questionMap=new Map(value.frozen.questions.map(q=>[q.id,q]));
  const allowed=new Set(paper.sections.flatMap(section=>section.questionRevisionIds));
+ if(value.state.timingEvidenceVersion!==undefined&&value.state.timingEvidenceVersion!==1)
+   throw new Error("Invalid question timing evidence version");
  if(value.state.questionVisits!==undefined){
    const visits=value.state.questionVisits;
    if(!Array.isArray(visits)||visits.length===0||visits.length>allowed.size||
@@ -182,6 +184,13 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
       !Number.isInteger(row.answerChangeCount)||row.answerChangeCount<0)
      throw new Error("Invalid saved response");
    seen.add(row.questionRevisionId);
+   const first=row.firstVisitMs,pre=row.preFirstAnswerMs;
+   if((first!==undefined||pre!==undefined)&&
+      (value.state.timingEvidenceVersion!==1||first===undefined||pre===undefined||
+       !Number.isFinite(first)||!Number.isFinite(pre)||
+       first<0||pre<0||first>row.timeSpentMs||pre>row.timeSpentMs||
+       !Number.isSafeInteger(first)||!Number.isSafeInteger(pre)))
+     throw new Error("Invalid saved question timing phase evidence");
    if(row.response)validateResponse(questionMap.get(row.questionRevisionId)!,row.response);
    if(row.answerEvents!==undefined){
      if(!Array.isArray(row.answerEvents)||row.answerEvents.length>1000)

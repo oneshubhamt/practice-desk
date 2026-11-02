@@ -5,6 +5,31 @@ import { attemptEvidence } from "./attempt-evidence.ts";
 
 export type QuestionSpeed="Fast"|"Typical"|"Slow"|"Not classified";
 
+/** Cumulative foreground phases, never inferred from wall-clock timestamps.
+ * The first-answer phase can span multiple cursor visits and remains immutable
+ * after response edits or clearing.
+ */
+export interface QuestionTimingPhases {
+ readonly firstVisitMs:number;
+ readonly revisitMs:number;
+ readonly beforeFirstAnswerMs:number|null;
+ readonly totalMs:number;
+ readonly visits:number;
+}
+export function questionTimingPhases(a:GenericAttempt,id:QuestionRevisionId):QuestionTimingPhases|null{
+ if(a.state.timingEvidenceVersion!==1)return null;
+ const row=a.state.responses.find(x=>x.questionRevisionId===id);
+ const visits=a.state.questionVisits?.find(x=>x.questionRevisionId===id)?.count;
+ if(!row||visits===undefined||row.firstVisitMs===undefined||
+    row.preFirstAnswerMs===undefined||!Number.isFinite(row.firstVisitMs)||
+    !Number.isFinite(row.preFirstAnswerMs)||row.firstVisitMs<0||
+    row.preFirstAnswerMs<0||row.firstVisitMs>row.timeSpentMs||
+    row.preFirstAnswerMs>row.timeSpentMs)return null;
+ return {firstVisitMs:row.firstVisitMs,revisitMs:row.timeSpentMs-row.firstVisitMs,
+   beforeFirstAnswerMs:row.firstAnsweredAt===undefined?null:row.preFirstAnswerMs,
+   totalMs:row.timeSpentMs,visits};
+}
+
 /** One speed policy for review, ledger and coaching: section median, n >= 5. */
 export function questionSpeed(a:GenericAttempt, id:QuestionRevisionId):QuestionSpeed{
  const item=a.result?.items.find(row=>row.questionRevisionId===id);

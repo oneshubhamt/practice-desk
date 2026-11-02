@@ -37,6 +37,10 @@ export interface AttemptResponseRecord {
   readonly flagged: boolean;
   /** Cumulative foreground time for this question, in milliseconds. */
   readonly timeSpentMs: number;
+  /** Accumulated foreground milliseconds on the first cursor visit. */
+  readonly firstVisitMs?:number;
+  /** Foreground time across visits before the first committed answer. */
+  readonly preFirstAnswerMs?:number;
   readonly firstViewedAt?: string;
   readonly firstAnsweredAt?: string;
   readonly answerChangeCount: number;
