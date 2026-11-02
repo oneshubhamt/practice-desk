@@ -5,6 +5,22 @@ import { comparableScoreTrends,adjustedHistoryMetrics } from "./history-metrics.
 import { crossPaperMarksPriorities } from "./history-priorities.ts";
 import { frozenScoreSummary } from "./history-score.ts";
 
+export interface StorageHealth {
+ readonly pendingWrites:number;
+ readonly lastCommittedAt:number|null;
+ readonly lastFailure:string|null;
+ readonly locked:boolean;
+ readonly loading:boolean;
+ /** In-memory accepted rows; authoritative only after backend has loaded. */
+ readonly inMemoryRecords:number;
+}
+export function healthSummary(health:StorageHealth):string{
+ if(health.loading)return "Loading stored records; readiness not yet confirmed.";
+ if(health.locked)return "Writes locked — export recovery data and reopen before editing.";
+ if(health.pendingWrites>0)return health.pendingWrites+" write"+(health.pendingWrites===1?"":"s")+
+   " pending; wait for completion before closing the page.";
+ return "No writes pending in this tab. Browser storage can still be cleared or evicted.";
+}
 export type HistoryStatus="all"|"complete"|"progress";
 export type HistorySort="newest"|"oldest";
 export interface HistoryQuery { readonly status:HistoryStatus;readonly sort:HistorySort;readonly search:string;readonly paperRevisionId?:string; }
@@ -51,7 +67,10 @@ function trendSVG(values:readonly number[],description="Comparable attempt accur
 /** A dedicated history route, not a second exam store or a v11 runtime. */
 export function historyHTML(attempts:readonly GenericAttempt[],packages:ReadonlyMap<string,ExamPackage>,
  query:HistoryQuery,loading:boolean,storageLocked:boolean,warning:string,
- backend:"indexeddb"|"fallback"="indexeddb"):string{
+ backend:"indexeddb"|"fallback"="indexeddb",health:StorageHealth={
+   pendingWrites:0,lastCommittedAt:null,lastFailure:null,locked:storageLocked,
+   loading,inMemoryRecords:attempts.length
+ }):string{
  const visible=filteredHistory(attempts,packages,query);
  const done=attempts.filter(a=>a.finishedAt!==null&&a.result);
  const progressing=attempts.filter(a=>a.finishedAt===null);
@@ -164,6 +183,14 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
    (backend==="indexeddb"?"IndexedDB":"localStorage fallback")+'</b>. '+
    (backend==="indexeddb"?"Records are indexed in this browser.":"Fallback capacity is limited; export a backup.")+
    ' Browser data can still be cleared; keep exported backups.</p>'+
+  '<p class="fine" id="g-storage-health" role="status">'+esc(healthSummary(health))+'</p>'+
+  '<p class="fine" id="g-storage-records">Loaded in this tab: '+health.inMemoryRecords+
+    ' records (attempts, imported banks and learning cards). This is not a durable backup count.</p>'+
+  '<p class="fine" id="g-storage-last-commit">Last completed write in this tab: '+
+    esc(health.lastCommittedAt===null?"none observed since opening":stamp(health.lastCommittedAt))+'</p>'+
+  '<p class="fine" id="g-storage-last-failure">Last storage failure in this tab: '+
+    esc(health.lastFailure??"none reported since opening")+'</p>'+
+  '<p class="fine">No automatic or verified external backup is tracked. Export regularly and store copies outside the browser. Private browsing, file:// profiles and browser cleanup can remove local data.</p>'+
   '<p id="g-storage-quota" class="fine" role="status">Checking browser storage estimate…</p>'+
   '<p id="g-storage-persist-status" class="fine" role="status"></p>'+
   '<button class="btn" id="g-storage-persist" type="button">Protect stored data</button>'+
