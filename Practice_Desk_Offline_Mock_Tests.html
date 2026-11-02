@@ -1168,6 +1168,35 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
  .home-picker .home-start .btn{flex:1 1 100%;padding:7px 8px}
  .home-side,.paper-preview,.help-rules-body{min-width:0;max-width:100%}
 }
+
+/* P46: evidence-based short revision sets. Controls reflow at extreme zoom;
+   source prompts and audit provenance must remain visible, never clipped. */
+.learning-evidence-builder{min-width:0;max-width:100%;margin-bottom:18px}
+.learning-evidence-builder h2,.learning-evidence-builder p,
+.learning-evidence-preview li{overflow-wrap:anywhere}
+.learning-evidence-controls{display:flex;flex-wrap:wrap;gap:12px;align-items:end}
+.learning-evidence-controls label{display:flex;flex:1 1 210px;min-width:0;flex-direction:column;gap:5px}
+.learning-evidence-controls select,.learning-evidence-controls input{
+ width:100%;min-width:0;max-width:100%;box-sizing:border-box
+}
+.learning-evidence-reasons{display:flex;flex-wrap:wrap;gap:9px 15px;
+ min-width:0;max-width:100%;margin:14px 0;border:1px solid var(--line);border-radius:9px}
+.learning-evidence-reasons legend{font-size:12px;font-weight:700;padding:0 5px}
+.learning-evidence-reasons label{display:inline-flex;align-items:center;gap:5px;
+ font-size:13px;overflow-wrap:anywhere;min-width:0}
+.learning-evidence-preview{padding-left:21px;margin:12px 0;max-height:265px;overflow-y:auto;
+ overflow-x:hidden}
+.learning-evidence-preview li{margin:6px 0;font-size:13px}
+.learning-evidence-preview small{color:var(--muted)}
+.learning-evidence-builder .btn{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+.learning-layout #learning-syllabus{margin-bottom:11px;min-width:0;max-width:100%}
+@media(max-width:300px){
+ .learning-evidence-builder{padding:12px}
+ .learning-evidence-controls label{flex-basis:100%;overflow-wrap:anywhere}
+ .learning-evidence-reasons{padding:8px;gap:9px}
+ .learning-evidence-reasons label{width:100%}
+ .learning-evidence-preview{padding-left:16px}
+}
 </style></head>
 <body><header><div class="wrap"><div class="brand"><div class="symbol">P</div><div><b>Practice Desk</b><small>Offline exam practice</small></div></div><div class="header-actions"><span class="header-offline"><span class="offline-dot"></span> Works offline</span></div></div></header>
 <div class="display-tools" aria-label="Display options"><button type="button" id="displayTrigger" class="display-trigger" aria-label="Display settings" aria-haspopup="true" aria-controls="displayPanel" aria-expanded="false">Aa</button><div id="displayPanel" class="display-panel" hidden><div class="display-heading"><strong>Display</strong><button id="displayClose" type="button" class="display-close" aria-label="Close display settings">×</button></div><div class="display-control"><span>Text size</span><div class="display-size"><button id="fontLess" type="button" class="btn" aria-label="Decrease text size">−</button><button id="fontReset" type="button" class="btn" aria-label="Reset text size">100%</button><button id="fontMore" type="button" class="btn" aria-label="Increase text size">+</button></div></div><div class="display-control"><span>Color theme</span><div class="display-theme-choices" role="group" aria-label="Color theme"><button id="themeLight" class="btn" type="button" aria-pressed="true">Light</button><button id="themeDark" class="btn" type="button" aria-pressed="false">Dark</button></div><button id="themeToggle" class="btn display-theme" type="button" aria-pressed="false">Toggle theme</button></div><button id="displayFullscreen" type="button" class="btn display-fullscreen" aria-pressed="false">Enter full screen</button><p class="fine display-hint">Saved on this device. Full screen is optional.</p><p class="fine" id="preferences-warning" role="status"></p></div></div>
@@ -6643,13 +6672,38 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     } });
   }
 
+  // src/learning/syllabus-taxonomy.ts
+  var APFC_SYLLABUS_V1 = {
+    id: "apfc-broad",
+    version: 1,
+    examId: "upsc-epfo-apfc",
+    headings: [
+      { id: "english", label: "General English" },
+      { id: "culture", label: "Indian Culture, Heritage and Freedom Movements" },
+      { id: "economy", label: "Developmental Issues and Present Trends in Indian Economy" },
+      { id: "governance", label: "Governance and Constitution of India" },
+      { id: "science-computers", label: "General Science and Basic Knowledge of Computer Applications" },
+      { id: "maths", label: "Elementary Mathematics, Statistics and General Mental Ability" },
+      { id: "labour", label: "Industrial Relations, Labour Codes and Social Security in India" },
+      { id: "accountancy", label: "Principles of Accountancy, Auditing and Insurance" },
+      { id: "current-events", label: "Current Events of National and International Importance" }
+    ]
+  };
+  var SUPPORTED_TAXONOMIES = [APFC_SYLLABUS_V1];
+  function syllabusForExam(examId) {
+    return SUPPORTED_TAXONOMIES.find((t) => t.examId === examId);
+  }
+  function syllabusHeading(examId, headingId) {
+    return syllabusForExam(examId)?.headings.find((h) => h.id === headingId);
+  }
+
   // src/learning/learning.ts
   var ERROR_LABELS = ["conceptual", "calculation", "interpretation", "time-pressure", "guessing", "careless", "knowledge-gap", "other"];
   var validDate = (x) => typeof x === "string" && Number.isFinite(Date.parse(x));
   function validateLearningCard(input) {
     if (!input || typeof input !== "object" || Array.isArray(input)) throw Error("Invalid learning card");
     const raw = input;
-    if (raw.recordType !== "learning-card" || typeof raw.id !== "string" || !raw.id.startsWith("learning-card:") || typeof raw.examId !== "string" || !raw.examId || typeof raw.paperId !== "string" || !raw.paperId || typeof raw.paperEdition !== "string" || typeof raw.sectionTitle !== "string" || typeof raw.sourceTitle !== "string" || typeof raw.sourceAttemptId !== "string" || !raw.sourceAttemptId || raw.sourceAttemptId.length > 200 || typeof raw.note !== "string" || raw.note.length > 8e3 || typeof raw.customTopic !== "string" || raw.customTopic.length > 120 || typeof raw.bookmarked !== "boolean" || !(raw.errorLabel === null || ERROR_LABELS.includes(raw.errorLabel)) || !validDate(raw.createdAt) || !validDate(raw.updatedAt) || raw.explanation !== void 0 && (typeof raw.explanation !== "string" || raw.explanation.length > 2e4) || !Array.isArray(raw.reviews) || raw.reviews.length > 1e4)
+    if (raw.recordType !== "learning-card" || typeof raw.id !== "string" || !raw.id.startsWith("learning-card:") || typeof raw.examId !== "string" || !raw.examId || typeof raw.paperId !== "string" || !raw.paperId || typeof raw.paperEdition !== "string" || typeof raw.sectionTitle !== "string" || typeof raw.sourceTitle !== "string" || typeof raw.sourceAttemptId !== "string" || !raw.sourceAttemptId || raw.sourceAttemptId.length > 200 || typeof raw.note !== "string" || raw.note.length > 8e3 || typeof raw.customTopic !== "string" || raw.customTopic.length > 120 || raw.syllabusTopicId !== void 0 && !syllabusHeading(raw.examId, raw.syllabusTopicId) || typeof raw.bookmarked !== "boolean" || !(raw.errorLabel === null || ERROR_LABELS.includes(raw.errorLabel)) || !validDate(raw.createdAt) || !validDate(raw.updatedAt) || raw.explanation !== void 0 && (typeof raw.explanation !== "string" || raw.explanation.length > 2e4) || !Array.isArray(raw.reviews) || raw.reviews.length > 1e4)
       throw Error("Invalid learning card fields");
     const question = validateQuestionRevision(raw.question);
     if (question.contentHash !== questionRevisionHash(question)) throw Error("Learning card question hash mismatch");
@@ -6717,12 +6771,19 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     return validateLearningCard({ ...item, reviews: [...item.reviews, { rating, at }], updatedAt: at });
   }
   function topicMetrics(attempts, cards = []) {
-    const manual = new Map(cards.filter((c) => c.customTopic.trim()).map((c) => [c.question.id, c.customTopic.trim()]));
+    const manual = new Map(cards.filter((c) => c.customTopic.trim()).map((c) => [
+      c.examId + "|" + c.question.id + "|" + c.question.contentHash,
+      c.customTopic.trim()
+    ]));
+    const mapped = new Map(cards.filter((c) => c.syllabusTopicId).map((c) => [
+      c.examId + "|" + c.question.id + "|" + c.question.contentHash,
+      c.syllabusTopicId
+    ]));
     const rows = /* @__PURE__ */ new Map();
     const distinct = /* @__PURE__ */ new Map(), independent = /* @__PURE__ */ new Map();
     const answeredDistinct = /* @__PURE__ */ new Map(), answeredIndependent = /* @__PURE__ */ new Map();
     for (const attempt of attempts) {
-      if (!attempt.result || attempt.finishedAt === null) continue;
+      if (!attempt.result || attempt.finishedAt === null || Boolean(attempt.notebookLineage) || attempt.frozen.paper.paperId.startsWith("notebook-revision:")) continue;
       const sections = attempt.frozen.paper.sections;
       const questions = new Map(attempt.frozen.questions.map((q) => [q.id, q]));
       for (const item of attempt.result.items) {
@@ -6730,10 +6791,13 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
         const q = questions.get(item.questionRevisionId);
         const section = sections.find((s) => s.questionRevisionIds.includes(item.questionRevisionId));
         if (!q || !section) continue;
+        const annotationKey = attempt.frozen.snapshot.examId + "|" + q.id + "|" + q.contentHash;
+        const heading = mapped.get(annotationKey);
         const labels = [
           { label: section.title, kind: "section" },
           ...(q.content.topicIds ?? []).map((label2) => ({ label: label2, kind: "source-topic" })),
-          ...manual.get(q.id) ? [{ label: manual.get(q.id), kind: "user-topic" }] : []
+          ...manual.get(annotationKey) ? [{ label: manual.get(annotationKey), kind: "user-topic" }] : [],
+          ...heading && syllabusHeading(attempt.frozen.snapshot.examId, heading) ? [{ label: syllabusHeading(attempt.frozen.snapshot.examId, heading).label, kind: "syllabus" }] : []
         ];
         const unique2 = /* @__PURE__ */ new Set();
         for (const { label: label2, kind } of labels) {
@@ -6800,7 +6864,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
   function comparableTrends(attempts) {
     const groups = /* @__PURE__ */ new Map();
     for (const a of attempts) {
-      if (!a.result || a.finishedAt === null) continue;
+      if (!a.result || a.finishedAt === null || Boolean(a.notebookLineage) || a.frozen.paper.paperId.startsWith("notebook-revision:")) continue;
       const id = a.frozen.paper.id;
       const group = groups.get(id) ?? { paperRevisionId: id, label: a.frozen.paper.paperId + " \xB7 " + a.frozen.paper.edition, count: 0, points: [] };
       const s = a.result.snapshot;
@@ -7024,7 +7088,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     };
     return validateExamPackage(packageValue);
   }
-  function createNotebookLineage(cards) {
+  function createNotebookLineage(cards, selection) {
     if (!cards.length || cards.length > REVISION_MAX_QUESTIONS)
       throw Error("Invalid revision source selection");
     const entries = cards.map((value) => {
@@ -7040,7 +7104,16 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     });
     if (new Set(entries.map((x) => x.questionRevisionId)).size !== entries.length)
       throw Error("Duplicate notebook source question");
-    return { schema: 1, entries, contentHash: hashJson({ schema: 1, entries }) };
+    if (selection) {
+      if (selection.schema !== 1 || selection.examId !== cards[0]?.examId || !Number.isSafeInteger(selection.eligibleCount) || selection.eligibleCount < entries.length || !Array.isArray(selection.reasons) || selection.reasons.length < 1 || new Set(selection.reasons).size !== selection.reasons.length || selection.reasons.some((x) => !["wrong", "blank", "slow", "repeated", "flagged", "bookmarked", "due"].includes(x)) || JSON.stringify(selection.selectedQuestionIds) !== JSON.stringify(entries.map((x) => x.questionRevisionId)))
+        throw Error("Invalid evidence-based revision selection");
+    }
+    return {
+      schema: 1,
+      entries,
+      ...selection ? { selection } : {},
+      contentHash: hashJson({ schema: 1, entries, ...selection ? { selection } : {} })
+    };
   }
   function validateNotebookLineage(attempt) {
     const lineage = attempt.notebookLineage;
@@ -7054,8 +7127,177 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
         throw Error("Invalid notebook revision lineage entry");
       seen.add(entry.questionRevisionId);
     }
-    if (lineage.contentHash !== hashJson({ schema: 1, entries: lineage.entries }))
+    if (lineage.selection) {
+      const x = lineage.selection;
+      if (x.schema !== 1 || x.examId !== attempt.frozen.snapshot.examId || !Number.isSafeInteger(x.eligibleCount) || x.eligibleCount < lineage.entries.length || !Array.isArray(x.reasons) || x.reasons.length < 1 || new Set(x.reasons).size !== x.reasons.length || x.reasons.some((r) => !["wrong", "blank", "slow", "repeated", "flagged", "bookmarked", "due"].includes(r)) || JSON.stringify(x.selectedQuestionIds) !== JSON.stringify(lineage.entries.map((e) => e.questionRevisionId)))
+        throw Error("Invalid frozen revision selection evidence");
+    }
+    if (lineage.contentHash !== hashJson({
+      schema: 1,
+      entries: lineage.entries,
+      ...lineage.selection ? { selection: lineage.selection } : {}
+    }))
       throw Error("Notebook revision lineage hash mismatch");
+  }
+
+  // src/learning/question-analytics.ts
+  function questionSpeed(a, id) {
+    const item = a.result?.items.find((row) => row.questionRevisionId === id);
+    if (item?.verdict !== "correct" && item?.verdict !== "incorrect") return "Not classified";
+    const ms = a.state.responses.find((r) => r.questionRevisionId === id)?.timeSpentMs ?? 0;
+    const section = a.frozen.paper.sections.find((s) => s.questionRevisionIds.includes(id));
+    const evidence = attemptEvidence(a)?.sections.find((s) => s.sectionId === section?.id);
+    const median2 = evidence?.medianAnsweredMs;
+    if (ms <= 0 || !median2 || median2 <= 0 || (evidence?.measuredAnswered ?? 0) < 5) return "Not classified";
+    return ms < median2 * 0.75 ? "Fast" : ms > median2 * 1.5 ? "Slow" : "Typical";
+  }
+  function isAuditQuestion(a, id) {
+    const q = a.frozen.questions.find((row) => row.id === id);
+    return Boolean(q && (q.editorial.status !== "verified" || q.editorial.notes?.trim() || q.editorial.changes?.length || a.sourceReviewReference?.entries.some((x) => x.targetQuestionRevisionId === id)));
+  }
+  function longestQuestionExposure(a, limit = 5) {
+    if (!a.result) return [];
+    const rows = new Map(a.state.responses.map((x) => [x.questionRevisionId, x]));
+    const scored = new Map(a.result.items.map((x) => [x.questionRevisionId, x]));
+    const items = a.frozen.paper.sections.flatMap((s) => s.questionRevisionIds.map((id) => ({ id, section: s.title })));
+    return items.map((item, i) => ({
+      id: item.id,
+      paperNumber: i + 1,
+      section: item.section,
+      milliseconds: rows.get(item.id)?.timeSpentMs ?? 0,
+      verdict: scored.get(item.id).verdict
+    })).filter((x) => Number.isFinite(x.milliseconds) && x.milliseconds > 0).sort((x, y) => y.milliseconds - x.milliseconds || x.paperNumber - y.paperNumber).slice(0, Math.max(0, Math.min(5, Math.floor(limit))));
+  }
+  function studySuggestions(a) {
+    const evidence = attemptEvidence(a);
+    if (!a.result || !evidence) return [];
+    const sections = evidence.sections;
+    const valid = sections.reduce((n, s) => n + s.answered + s.unanswered, 0);
+    const answered = sections.reduce((n, s) => n + s.answered, 0);
+    if (!answered) return ["No scored answers were recorded. Review available solutions and complete a practice section to establish a useful baseline."];
+    const notes = [];
+    const weak = sections.filter((s) => s.answered >= 4 && s.incorrect >= 3).sort((x, y) => x.correct / x.answered - y.correct / y.answered || y.answered - x.answered)[0];
+    if (weak) notes.push("Review " + weak.title + ": " + weak.incorrect + " incorrect among " + weak.answered + " scored responses (" + Math.round(weak.correct / weak.answered * 100) + "% observed accuracy).");
+    const fast = evidence.speed.buckets.find((x) => x.label === "Fast")?.incorrect ?? 0;
+    const slow = evidence.speed.buckets.find((x) => x.label === "Slow")?.incorrect ?? 0;
+    if (fast >= 2) notes.push(fast + " incorrect responses had relatively short foreground exposure in their sections. Recheck these questions; timing alone does not explain the errors.");
+    if (slow >= 2) notes.push(slow + " incorrect responses had relatively long foreground exposure in their sections. Review the solving steps and time allocation; timing alone does not establish the cause.");
+    if (valid >= 10 && answered / valid < 0.7) notes.push("You answered " + answered + " of " + valid + " scoreable questions (" + Math.round(100 * answered / valid) + "% coverage). Consider practising question selection and pacing.");
+    if (!notes.length) notes.push("Review incorrect and unanswered scoreable questions against their worked explanations. There is not enough evidence for a more specific study priority.");
+    return notes.slice(0, 3);
+  }
+
+  // src/learning/revision-selection.ts
+  var REVISION_REASONS = ["wrong", "blank", "slow", "repeated", "flagged", "bookmarked", "due"];
+  function isRevisionAttempt(a) {
+    return Boolean(a.notebookLineage) || a.frozen.paper.paperId.startsWith("notebook-revision:");
+  }
+  function mockEvidenceAttempts(attempts) {
+    return attempts.filter((a) => a.finishedAt !== null && a.result && !isRevisionAttempt(a));
+  }
+  function revisionInventory(attempts, cards, dueIds, examId, reasons) {
+    if (!examId || !reasons.length || reasons.some((r) => !REVISION_REASONS.includes(r)))
+      return { examId, reasons: [], eligibleCount: 0, selected: [], insufficient: ["Choose an exam and at least one evidence filter."] };
+    const selectedReasons = [...new Set(reasons)];
+    const observations = /* @__PURE__ */ new Map();
+    const byId = /* @__PURE__ */ new Map();
+    const cardBySignature = new Map(cards.filter((c) => c.examId === examId).map((c) => [c.question.id + "|" + c.question.contentHash + "|" + hashJson(c.answer), c]));
+    const sources2 = mockEvidenceAttempts(attempts).filter((a) => a.frozen.snapshot.examId === examId && a.frozen.paper.navigation.allowReview !== false).sort((a, b) => (b.finishedAt ?? 0) - (a.finishedAt ?? 0) || a.id.localeCompare(b.id));
+    for (const a of sources2) {
+      const scored = new Map(a.result.items.map((i) => [i.questionRevisionId, i]));
+      const responses = new Map(a.state.responses.map((r) => [r.questionRevisionId, r]));
+      const key2 = new Map(a.frozen.key.entries.map((e) => [e.questionRevisionId, e]));
+      for (const q of a.frozen.questions) {
+        if (!["verified", "corrected", "caution"].includes(q.editorial.status)) continue;
+        const item = scored.get(q.id), answer = key2.get(q.id), response = responses.get(q.id);
+        if (!item || !answer || item.verdict === "pending" || item.verdict === "excluded") continue;
+        const signature = q.id + "|" + q.contentHash + "|" + hashJson(answer.answer);
+        let row = observations.get(signature);
+        if (!row) {
+          const card = cardBySignature.get(signature) ?? addLearningCard(a, q.id, new Date(a.finishedAt).toISOString());
+          row = {
+            card,
+            questionId: q.id,
+            questionHash: q.contentHash,
+            sourceAttemptId: a.id,
+            sourcePaperId: a.frozen.paper.paperId,
+            examId,
+            prompt: q.content.prompt,
+            finishedAt: a.finishedAt,
+            reasons: /* @__PURE__ */ new Set(),
+            wrongAttempts: /* @__PURE__ */ new Set(),
+            observedAttempts: /* @__PURE__ */ new Set(),
+            measuredForegroundMs: response?.timeSpentMs ?? null,
+            visits: a.state.questionVisits?.find((v) => v.questionRevisionId === q.id)?.count ?? null
+          };
+          observations.set(signature, row);
+        }
+        row.observedAttempts.add(a.id);
+        if (item.verdict === "incorrect") {
+          row.reasons.add("wrong");
+          row.wrongAttempts.add(a.id);
+        }
+        if (item.verdict === "unanswered") row.reasons.add("blank");
+        if (response?.flagged) row.reasons.add("flagged");
+        if (questionSpeed(a, q.id) === "Slow") row.reasons.add("slow");
+      }
+    }
+    for (const card of cards.filter((c) => c.examId === examId)) {
+      if (!["verified", "corrected", "caution"].includes(card.question.editorial.status)) continue;
+      const signature = card.question.id + "|" + card.question.contentHash + "|" + hashJson(card.answer);
+      let row = observations.get(signature);
+      if (!row) {
+        row = {
+          card,
+          questionId: card.question.id,
+          questionHash: card.question.contentHash,
+          sourceAttemptId: card.sourceAttemptId,
+          sourcePaperId: card.paperId,
+          examId,
+          prompt: card.question.content.prompt,
+          finishedAt: Date.parse(card.updatedAt),
+          reasons: /* @__PURE__ */ new Set(),
+          wrongAttempts: /* @__PURE__ */ new Set(),
+          observedAttempts: /* @__PURE__ */ new Set(),
+          measuredForegroundMs: null,
+          visits: null
+        };
+        observations.set(signature, row);
+      }
+      if (card.bookmarked) row.reasons.add("bookmarked");
+      if (dueIds.has(card.id)) row.reasons.add("due");
+    }
+    for (const row of observations.values()) if (row.wrongAttempts.size >= 2) row.reasons.add("repeated");
+    const matching = [...observations.values()].filter((r) => selectedReasons.some((x) => r.reasons.has(x)));
+    for (const row of matching.sort((a, b) => b.finishedAt - a.finishedAt || a.questionId.localeCompare(b.questionId) || a.questionHash.localeCompare(b.questionHash))) {
+      if (!byId.has(row.questionId)) byId.set(row.questionId, row);
+    }
+    const competing = matching.length - byId.size;
+    const eligible = [...byId.values()].sort((a, b) => b.wrongAttempts.size - a.wrongAttempts.size || b.finishedAt - a.finishedAt || a.questionId.localeCompare(b.questionId));
+    const found = new Set(eligible.flatMap((r) => [...r.reasons]));
+    const insufficient = selectedReasons.filter((r) => !found.has(r)).map((r) => r === "slow" ? "No eligible slow questions have sufficient within-section measured answers." : r === "repeated" ? "Repeated mistakes require at least two independent completed source attempts of the same exact answer revision." : r === "due" ? "No due FSRS cards are available in this exam." : "No eligible " + r + " questions were observed in this exam.");
+    if (competing > 0) insufficient.push(competing + " otherwise eligible conflicting question/key revision(s) share a question ID; only the newest exact frozen source is selected. Their answers are not pooled.");
+    const selected = eligible.map((r) => ({
+      questionId: r.questionId,
+      questionHash: r.questionHash,
+      sourceAttemptId: r.sourceAttemptId,
+      sourcePaperId: r.sourcePaperId,
+      examId: r.examId,
+      prompt: r.prompt,
+      reasons: [...r.reasons].filter((x) => selectedReasons.includes(x)),
+      wrongAttempts: r.wrongAttempts.size,
+      observedAttempts: r.observedAttempts.size,
+      measuredForegroundMs: r.measuredForegroundMs,
+      visits: r.visits,
+      card: r.card
+    }));
+    return { examId, reasons: selectedReasons, eligibleCount: selected.length, selected, insufficient };
+  }
+  function revisionTake(selection, count) {
+    if (!Number.isSafeInteger(count) || count < 1 || count > REVISION_MAX_QUESTIONS)
+      throw Error("Select 1\u2013" + REVISION_MAX_QUESTIONS + " revision questions");
+    if (selection.eligibleCount < count) throw Error("Only " + selection.eligibleCount + " eligible revision questions. Reduce the count or change filters.");
+    return selection.selected.slice(0, count);
   }
 
   // src/app/learning-ui.ts
@@ -7083,6 +7325,8 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     let scheduler = null;
     let selectedId = null, reviewId = null, revealed = false;
     let filter = "all", message = "", closed = false, opened = false;
+    let evidenceExam = "", evidenceCount = 10;
+    let evidenceReasons = ["wrong", "blank"];
     const cache = /* @__PURE__ */ new Map();
     const schedule = (card) => {
       const current = cache.get(card.id);
@@ -7149,13 +7393,54 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       for (const card of all) if (card.errorLabel) reports.set(card.errorLabel, (reports.get(card.errorLabel) ?? 0) + 1);
       const commonReports = [...reports].sort((a, b) => b[1] - a[1]).slice(0, 4);
       const progress = evidenceProgression(topics);
+      const sourceAttempts = mockEvidenceAttempts(done);
+      const availableExams = [.../* @__PURE__ */ new Set([...sourceAttempts.map((a) => a.frozen.snapshot.examId), ...all.map((c) => c.examId)])].sort();
+      if (!availableExams.includes(evidenceExam)) evidenceExam = availableExams[0] ?? "";
+      const assembled = revisionInventory(sourceAttempts, all, new Set(dueNow.map((c) => c.id)), evidenceExam, evidenceReasons);
+      const preview = assembled.selected.slice(0, Math.min(evidenceCount, REVISION_MAX_QUESTIONS));
       const visible = all.filter((c) => filter === "all" || filter === "due" && due(c) || filter === "bookmarked" && c.bookmarked);
       const exam = visible.find((c) => c.id === selectedId)?.examId ?? visible[0]?.examId;
       const candidates2 = visible.filter((c) => c.examId === exam && ["verified", "corrected", "caution"].includes(c.question.editorial.status)).slice(0, REVISION_MAX_QUESTIONS);
-      root2.innerHTML = '<div class="generic-heading"><div><h1>Learning & revision</h1><p class="muted">Error notebook \xB7 FSRS-7 spaced review \xB7 Topic evidence</p></div><button class="btn" id="learning-close">\u2190 Test library</button></div>' + (message ? '<p class="generic-warning" role="status">' + esc(message) + "</p>" : "") + '<div class="learning-summary">' + [["Notebook cards", all.length], ["Due for revision", dueNow.length], ["Reviewed with FSRS", reviewedCount], ["Bookmarked", bookmarkedCount]].map(([label2, value]) => '<div class="summary-stat"><small>' + esc(label2) + "</small><b>" + esc(value) + "</b></div>").join("") + '</div><section class="panel pad learning-revision-callout"><div class="row between"><div><h2>Revision queue</h2><p class="fine">' + all.length + " cards \xB7 " + (scheduler ? dueNow.length + " due now" : "Scheduler initializing") + ' \xB7 Mock results do not automatically count as spaced-repetition reviews</p></div><div class="row generic-actions"><button class="btn primary" id="learning-due"' + (!scheduler || !dueNow.length ? " disabled" : "") + '>Review due cards</button><button class="btn" id="learning-test"' + (!candidates2.length ? " disabled" : "") + ">Start revision test (" + candidates2.length + ')</button></div></div><p class="fine">Practice test uses the selected exam and current notebook filter (up to ' + REVISION_MAX_QUESTIONS + ' eligible cards). Untimed; +1 correct, 0 incorrect/unanswered. It is not the source exam score and does not rate FSRS cards.</p></section><div class="generic-layout learning-layout"><section class="panel pad"><div class="row between"><h2>Error notebook</h2><select id="learning-filter" aria-label="Filter notebook" class="learning-filter">' + [["all", "All cards"], ["due", "Due now"], ["bookmarked", "Bookmarked"]].map(([key2, label2]) => '<option value="' + key2 + '"' + (filter === key2 ? " selected" : "") + ">" + label2 + "</option>").join("") + "</select></div>" + (visible.length ? visible.map((c) => {
+      root2.innerHTML = '<div class="generic-heading"><div><h1>Learning & revision</h1><p class="muted">Error notebook \xB7 FSRS-7 spaced review \xB7 Topic evidence</p></div><button class="btn" id="learning-close">\u2190 Test library</button></div>' + (message ? '<p class="generic-warning" role="status">' + esc(message) + "</p>" : "") + '<div class="learning-summary">' + [["Notebook cards", all.length], ["Due for revision", dueNow.length], ["Reviewed with FSRS", reviewedCount], ["Bookmarked", bookmarkedCount]].map(([label2, value]) => '<div class="summary-stat"><small>' + esc(label2) + "</small><b>" + esc(value) + "</b></div>").join("") + '</div><section class="panel pad learning-revision-callout"><div class="row between"><div><h2>Revision queue</h2><p class="fine">' + all.length + " cards \xB7 " + (scheduler ? dueNow.length + " due now" : "Scheduler initializing") + ' \xB7 Mock results do not automatically count as spaced-repetition reviews</p></div><div class="row generic-actions"><button class="btn primary" id="learning-due"' + (!scheduler || !dueNow.length ? " disabled" : "") + '>Review due cards</button><button class="btn" id="learning-test"' + (!candidates2.length ? " disabled" : "") + ">Start revision test (" + candidates2.length + ')</button></div></div><p class="fine">Practice test uses the selected exam and current notebook filter (up to ' + REVISION_MAX_QUESTIONS + ' eligible cards). Untimed; +1 correct, 0 incorrect/unanswered. It is not the source exam score and does not rate FSRS cards.</p></section><section class="panel pad learning-evidence-builder"><h2>Build a targeted revision test</h2><p class="fine">Select an exam and observed evidence; questions are taken from exact frozen completed sources or your notebook. No guessed syllabus labels, cognitive causes or exam marks. Revision marking is +1 / 0, separate from mock results and FSRS ratings.</p><div class="learning-evidence-controls"><label>Exam <select id="learning-evidence-exam" aria-label="Revision exam">' + availableExams.map((id) => '<option value="' + esc(id) + '"' + (id === evidenceExam ? " selected" : "") + ">" + esc(id) + "</option>").join("") + "</select></label><label>Questions (1\u2013" + REVISION_MAX_QUESTIONS + ') <input id="learning-evidence-count" type="number" min="1" max="' + REVISION_MAX_QUESTIONS + '" value="' + evidenceCount + '"></label></div><fieldset class="learning-evidence-reasons"><legend>Include evidence types</legend>' + REVISION_REASONS.map((reason) => '<label><input type="checkbox" data-evidence-reason="' + reason + '"' + (evidenceReasons.includes(reason) ? " checked" : "") + "> " + esc(reason === "repeated" ? "Repeated wrong" : reason === "blank" ? "Unanswered" : reason === "slow" ? "Measured slow" : reason) + "</label>").join("") + '</fieldset><p class="fine" role="status">' + assembled.eligibleCount + " unique eligible questions \xB7 " + preview.length + " previewed \xB7 " + sourceAttempts.filter((a) => a.frozen.snapshot.examId === evidenceExam).length + " completed source attempts. Reused questions and repeated exposure are not independent difficulty-adjusted evidence.</p>" + (assembled.insufficient.length ? '<p class="fine">' + assembled.insufficient.map(esc).join(" ") + "</p>" : "") + (preview.length ? '<ol class="learning-evidence-preview">' + preview.map((item) => "<li><strong>" + esc(item.reasons.join(", ")) + "</strong> \xB7 " + esc(item.prompt.slice(0, 140)) + " <small>\xB7 " + esc(item.sourcePaperId) + " \xB7 " + item.wrongAttempts + " wrong of " + item.observedAttempts + " observed source attempts" + (item.measuredForegroundMs === null ? "" : ", " + Math.round(item.measuredForegroundMs / 1e3) + "s cumulative foreground") + (item.visits === null ? "" : ", " + item.visits + " visits") + "</small></li>").join("") + "</ol>" : '<p class="fine">No eligible questions for the chosen filters. Try another evidence type or exam.</p>') + '<p class="fine">First-answer and revisit durations are unavailable: saved sessions record cumulative foreground time and visit counts, not event timestamps.</p><button class="btn primary" id="learning-build-evidence"' + (!evidenceReasons.length || assembled.eligibleCount < evidenceCount || evidenceCount < 1 ? " disabled" : "") + ">Start targeted revision (" + Math.min(evidenceCount, assembled.eligibleCount) + ')</button></section><div class="generic-layout learning-layout"><section class="panel pad"><div class="row between"><h2>Error notebook</h2><select id="learning-filter" aria-label="Filter notebook" class="learning-filter">' + [["all", "All cards"], ["due", "Due now"], ["bookmarked", "Bookmarked"]].map(([key2, label2]) => '<option value="' + key2 + '"' + (filter === key2 ? " selected" : "") + ">" + label2 + "</option>").join("") + "</select></div>" + (visible.length ? visible.map((c) => {
         const next = scheduler ? schedule(c) : null;
         return '<button class="generic-history ' + (selected?.id === c.id ? "learning-selected" : "") + '" data-learning-id="' + esc(c.id) + '">' + esc(c.sectionTitle) + " \xB7 " + esc(c.question.content.prompt.slice(0, 92)) + "<small>" + esc(c.errorLabel ?? "Unclassified") + " \xB7 " + (next ? next.dueAt.getTime() <= Date.now() ? "Due now" : "Due " + next.dueAt.toLocaleDateString() : "Unscheduled") + " \xB7 " + c.reviews.length + " ratings</small></button>";
-      }).join("") : '<p class="fine">No cards in this view. Add a question from a completed test result.</p>') + '</section><section class="panel pad"><h2>Notebook detail</h2>' + (selected ? "<h3>" + esc(selected.question.content.prompt) + '</h3><p class="fine">' + esc(selected.paperId) + " \xB7 " + esc(selected.sectionTitle) + " \xB7 captured from completed attempt " + esc(selected.sourceAttemptId) + "</p><p>Expected: <strong>" + esc(readableAnswer(selected.question, selected.answer)) + "</strong></p>" + (selected.explanation ? '<p class="fine">' + esc(selected.explanation) + "</p>" : "") + '<label class="picker" for="learning-error">Error type (self-reported)</label><select id="learning-error"><option value="">Not classified</option>' + ERROR_LABELS.map((label2) => '<option value="' + label2 + '"' + (selected.errorLabel === label2 ? " selected" : "") + ">" + esc(label2) + "</option>").join("") + '</select><label class="picker" for="learning-topic">Specific topic (optional)</label><input id="learning-topic" maxlength="120" value="' + esc(selected.customTopic) + '" placeholder="Your own subtopic label"><label class="picker" for="learning-note">Notes</label><textarea id="learning-note" maxlength="8000" rows="5">' + esc(selected.note) + '</textarea><label class="learning-bookmark"><input id="learning-bookmark" type="checkbox"' + (selected.bookmarked ? " checked" : "") + '> Bookmark</label><div class="row generic-actions"><button class="btn primary" id="learning-save">Save note</button><button class="btn" id="learning-one">Review this card</button><button class="btn danger" id="learning-delete">Delete</button></div>' : '<p class="fine">Select a card from the notebook.</p>') + '</section></div><section class="panel pad learning-reports"><div class="row between"><div><h2>Reported error patterns</h2><p class="fine">Self-labelled notebook observations, not inferred diagnoses.</p></div></div>' + (commonReports.length ? '<div class="learning-report-list">' + commonReports.map(([label2, count]) => "<div><span>" + esc(label2) + "</span><b>" + count + " card" + (count === 1 ? "" : "s") + "</b></div>").join("") + "</div>" : '<p class="fine">Label errors in your notebook to see recurring patterns here.</p>') + '</section><section class="panel pad learning-insights"><h2>Topic performance</h2><p class="fine">Official CGL section labels are the default broad topics. Imported exam topic IDs and your explicitly labelled subtopics remain separate; no topic is guessed. Five answered items minimum for measured evidence. Skips are excluded from accuracy.</p><div class="scroll-table"><table><thead><tr><th>Exam</th><th>Type</th><th>Topic</th><th>Answered / total</th><th>Distinct answered</th><th>Answering attempts</th><th>Accuracy</th><th>Evidence</th></tr></thead><tbody>' + (topics.length ? topics.map((t) => "<tr><td>" + esc(t.examId) + "</td><td>" + esc(t.kind) + "</td><td>" + esc(t.label) + "</td><td>" + t.answered + " / " + t.total + "</td><td>" + t.distinctAnsweredQuestions + "</td><td>" + t.answeredAttempts + "</td><td>" + (t.accuracy === null ? "\u2014" : Math.round(t.accuracy * 100) + "%") + "</td><td>" + (t.evidence === "measured" ? "Observed" : "Insufficient") + "</td></tr>").join("") : '<tr><td colspan="8">Complete an exam to view topic performance.</td></tr>') + '</tbody></table></div><h2>Observed topic consistency</h2><p class="fine">Requires at least two attempts, ten answered observations and five distinct question revisions. Repeated questions are tracked separately; these are descriptive bands, not predictions of mastery.</p><div class="scroll-table"><table><thead><tr><th>Exam</th><th>Topic</th><th>Evidence</th></tr></thead><tbody>' + (progress.length ? progress.map((p) => "<tr><td>" + esc(p.examId) + "</td><td>" + esc(p.topic) + "</td><td>" + esc(p.label) + "</td></tr>").join("") : '<tr><td colspan="3">No completed practice evidence yet.</td></tr>') + '</tbody></table></div><h2>Comparable attempt trends</h2><p class="fine">Only identical frozen paper revisions, including their rules and answer keys, are compared.</p><div class="scroll-table"><table><thead><tr><th>Paper revision</th><th>Attempts</th><th>Accuracy sequence</th><th>Marks sequence</th></tr></thead><tbody>' + (cohorts.length ? cohorts.map((g) => "<tr><td>" + esc(g.label) + "</td><td>" + g.count + "</td><td>" + g.points.map((p) => p.accuracy === null ? "\u2014" : Math.round(p.accuracy * 100) + "%").join(" \u2192 ") + "</td><td>" + g.points.map((p) => p.marks.toFixed(1)).join(" \u2192 ") + "</td></tr>").join("") : '<tr><td colspan="4">Complete the same paper revision twice to see a valid comparison.</td></tr>') + "</tbody></table></div></section>";
+      }).join("") : '<p class="fine">No cards in this view. Add a question from a completed test result.</p>') + '</section><section class="panel pad"><h2>Notebook detail</h2>' + (selected ? "<h3>" + esc(selected.question.content.prompt) + '</h3><p class="fine">' + esc(selected.paperId) + " \xB7 " + esc(selected.sectionTitle) + " \xB7 captured from completed attempt " + esc(selected.sourceAttemptId) + "</p><p>Expected: <strong>" + esc(readableAnswer(selected.question, selected.answer)) + "</strong></p>" + (selected.explanation ? '<p class="fine">' + esc(selected.explanation) + "</p>" : "") + '<label class="picker" for="learning-error">Error type (self-reported)</label><select id="learning-error"><option value="">Not classified</option>' + ERROR_LABELS.map((label2) => '<option value="' + label2 + '"' + (selected.errorLabel === label2 ? " selected" : "") + ">" + esc(label2) + "</option>").join("") + '</select><label class="picker" for="learning-topic">Specific topic (optional)</label><input id="learning-topic" maxlength="120" value="' + esc(selected.customTopic) + '" placeholder="Your own subtopic label">' + (syllabusForExam(selected.examId) ? '<label class="picker" for="learning-syllabus">Broad syllabus heading (optional, manually chosen)</label><select id="learning-syllabus"><option value="">No heading assigned</option>' + syllabusForExam(selected.examId).headings.map((h) => '<option value="' + esc(h.id) + '"' + (selected.syllabusTopicId === h.id ? " selected" : "") + ">" + esc(h.label) + "</option>").join("") + "</select>" : "") + '<label class="picker" for="learning-note">Notes</label><textarea id="learning-note" maxlength="8000" rows="5">' + esc(selected.note) + '</textarea><label class="learning-bookmark"><input id="learning-bookmark" type="checkbox"' + (selected.bookmarked ? " checked" : "") + '> Bookmark</label><div class="row generic-actions"><button class="btn primary" id="learning-save">Save note</button><button class="btn" id="learning-one">Review this card</button><button class="btn danger" id="learning-delete">Delete</button></div>' : '<p class="fine">Select a card from the notebook.</p>') + '</section></div><section class="panel pad learning-reports"><div class="row between"><div><h2>Reported error patterns</h2><p class="fine">Self-labelled notebook observations, not inferred diagnoses.</p></div></div>' + (commonReports.length ? '<div class="learning-report-list">' + commonReports.map(([label2, count]) => "<div><span>" + esc(label2) + "</span><b>" + count + " card" + (count === 1 ? "" : "s") + "</b></div>").join("") + "</div>" : '<p class="fine">Label errors in your notebook to see recurring patterns here.</p>') + '</section><section class="panel pad learning-insights"><h2>Topic performance</h2><p class="fine">Official CGL section labels are the default broad topics. Imported exam topic IDs and your explicitly labelled subtopics remain separate; no topic is guessed. Five answered items minimum for measured evidence. Skips are excluded from accuracy.</p><div class="scroll-table"><table><thead><tr><th>Exam</th><th>Type</th><th>Topic</th><th>Answered / total</th><th>Distinct answered</th><th>Answering attempts</th><th>Accuracy</th><th>Evidence</th></tr></thead><tbody>' + (topics.length ? topics.map((t) => "<tr><td>" + esc(t.examId) + "</td><td>" + esc(t.kind) + "</td><td>" + esc(t.label) + "</td><td>" + t.answered + " / " + t.total + "</td><td>" + t.distinctAnsweredQuestions + "</td><td>" + t.answeredAttempts + "</td><td>" + (t.accuracy === null ? "\u2014" : Math.round(t.accuracy * 100) + "%") + "</td><td>" + (t.evidence === "measured" ? "Observed" : "Insufficient") + "</td></tr>").join("") : '<tr><td colspan="8">Complete an exam to view topic performance.</td></tr>') + '</tbody></table></div><h2>Observed topic consistency</h2><p class="fine">Requires at least two attempts, ten answered observations and five distinct question revisions. Repeated questions are tracked separately; these are descriptive bands, not predictions of mastery.</p><div class="scroll-table"><table><thead><tr><th>Exam</th><th>Topic</th><th>Evidence</th></tr></thead><tbody>' + (progress.length ? progress.map((p) => "<tr><td>" + esc(p.examId) + "</td><td>" + esc(p.topic) + "</td><td>" + esc(p.label) + "</td></tr>").join("") : '<tr><td colspan="3">No completed practice evidence yet.</td></tr>') + '</tbody></table></div><h2>Comparable attempt trends</h2><p class="fine">Only identical frozen paper revisions, including their rules and answer keys, are compared.</p><div class="scroll-table"><table><thead><tr><th>Paper revision</th><th>Attempts</th><th>Accuracy sequence</th><th>Marks sequence</th></tr></thead><tbody>' + (cohorts.length ? cohorts.map((g) => "<tr><td>" + esc(g.label) + "</td><td>" + g.count + "</td><td>" + g.points.map((p) => p.accuracy === null ? "\u2014" : Math.round(p.accuracy * 100) + "%").join(" \u2192 ") + "</td><td>" + g.points.map((p) => p.marks.toFixed(1)).join(" \u2192 ") + "</td></tr>").join("") : '<tr><td colspan="4">Complete the same paper revision twice to see a valid comparison.</td></tr>') + "</tbody></table></div></section>";
+      root2.querySelector("#learning-evidence-exam").onchange = (e) => {
+        evidenceExam = e.target.value;
+        draw2();
+      };
+      root2.querySelector("#learning-evidence-count").onchange = (e) => {
+        const proposed = Number(e.target.value);
+        evidenceCount = Number.isSafeInteger(proposed) ? Math.max(1, Math.min(REVISION_MAX_QUESTIONS, proposed)) : 1;
+        draw2();
+      };
+      root2.querySelectorAll("[data-evidence-reason]").forEach((el) => el.onchange = () => {
+        const reason = el.dataset.evidenceReason;
+        evidenceReasons = el.checked ? [...evidenceReasons, reason] : evidenceReasons.filter((x) => x !== reason);
+        draw2();
+      });
+      root2.querySelector("#learning-build-evidence").onclick = async () => {
+        const button = root2.querySelector("#learning-build-evidence");
+        button.disabled = true;
+        try {
+          const chosen = revisionTake(assembled, evidenceCount);
+          const provenance = {
+            schema: 1,
+            examId: evidenceExam,
+            reasons: [...evidenceReasons],
+            eligibleCount: assembled.eligibleCount,
+            selectedQuestionIds: chosen.map((x) => x.questionId)
+          };
+          const ok = await host.startRevision(chosen.map((x) => x.card), provenance);
+          if (!ok) {
+            message = "Targeted revision could not be durably saved. Verify storage and retry.";
+            draw2();
+          }
+        } catch (error) {
+          message = error instanceof Error ? error.message : "Cannot assemble revision";
+          draw2();
+        }
+      };
       root2.querySelector("#learning-close").onclick = host.close;
       root2.querySelector("#learning-test").onclick = async () => {
         const button = root2.querySelector("#learning-test");
@@ -7185,12 +7470,14 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
         try {
           const note = root2.querySelector("#learning-note").value;
           const customTopic = root2.querySelector("#learning-topic").value.trim();
+          const syllabusTopicId = root2.querySelector("#learning-syllabus")?.value || void 0;
           const errorLabel = root2.querySelector("#learning-error").value;
           const bookmarked = root2.querySelector("#learning-bookmark").checked;
           if (!await host.save(validateLearningCard({
             ...selected,
             note,
             customTopic,
+            ...syllabusForExam(selected.examId) ? { syllabusTopicId } : {},
             errorLabel: errorLabel || null,
             bookmarked,
             updatedAt: now2().toISOString()
@@ -7239,53 +7526,6 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     } };
   }
 
-  // src/learning/question-analytics.ts
-  function questionSpeed(a, id) {
-    const item = a.result?.items.find((row) => row.questionRevisionId === id);
-    if (item?.verdict !== "correct" && item?.verdict !== "incorrect") return "Not classified";
-    const ms = a.state.responses.find((r) => r.questionRevisionId === id)?.timeSpentMs ?? 0;
-    const section = a.frozen.paper.sections.find((s) => s.questionRevisionIds.includes(id));
-    const evidence = attemptEvidence(a)?.sections.find((s) => s.sectionId === section?.id);
-    const median2 = evidence?.medianAnsweredMs;
-    if (ms <= 0 || !median2 || median2 <= 0 || (evidence?.measuredAnswered ?? 0) < 5) return "Not classified";
-    return ms < median2 * 0.75 ? "Fast" : ms > median2 * 1.5 ? "Slow" : "Typical";
-  }
-  function isAuditQuestion(a, id) {
-    const q = a.frozen.questions.find((row) => row.id === id);
-    return Boolean(q && (q.editorial.status !== "verified" || q.editorial.notes?.trim() || q.editorial.changes?.length || a.sourceReviewReference?.entries.some((x) => x.targetQuestionRevisionId === id)));
-  }
-  function longestQuestionExposure(a, limit = 5) {
-    if (!a.result) return [];
-    const rows = new Map(a.state.responses.map((x) => [x.questionRevisionId, x]));
-    const scored = new Map(a.result.items.map((x) => [x.questionRevisionId, x]));
-    const items = a.frozen.paper.sections.flatMap((s) => s.questionRevisionIds.map((id) => ({ id, section: s.title })));
-    return items.map((item, i) => ({
-      id: item.id,
-      paperNumber: i + 1,
-      section: item.section,
-      milliseconds: rows.get(item.id)?.timeSpentMs ?? 0,
-      verdict: scored.get(item.id).verdict
-    })).filter((x) => Number.isFinite(x.milliseconds) && x.milliseconds > 0).sort((x, y) => y.milliseconds - x.milliseconds || x.paperNumber - y.paperNumber).slice(0, Math.max(0, Math.min(5, Math.floor(limit))));
-  }
-  function studySuggestions(a) {
-    const evidence = attemptEvidence(a);
-    if (!a.result || !evidence) return [];
-    const sections = evidence.sections;
-    const valid = sections.reduce((n, s) => n + s.answered + s.unanswered, 0);
-    const answered = sections.reduce((n, s) => n + s.answered, 0);
-    if (!answered) return ["No scored answers were recorded. Review available solutions and complete a practice section to establish a useful baseline."];
-    const notes = [];
-    const weak = sections.filter((s) => s.answered >= 4 && s.incorrect >= 3).sort((x, y) => x.correct / x.answered - y.correct / y.answered || y.answered - x.answered)[0];
-    if (weak) notes.push("Review " + weak.title + ": " + weak.incorrect + " incorrect among " + weak.answered + " scored responses (" + Math.round(weak.correct / weak.answered * 100) + "% observed accuracy).");
-    const fast = evidence.speed.buckets.find((x) => x.label === "Fast")?.incorrect ?? 0;
-    const slow = evidence.speed.buckets.find((x) => x.label === "Slow")?.incorrect ?? 0;
-    if (fast >= 2) notes.push(fast + " incorrect responses had relatively short foreground exposure in their sections. Recheck these questions; timing alone does not explain the errors.");
-    if (slow >= 2) notes.push(slow + " incorrect responses had relatively long foreground exposure in their sections. Review the solving steps and time allocation; timing alone does not establish the cause.");
-    if (valid >= 10 && answered / valid < 0.7) notes.push("You answered " + answered + " of " + valid + " scoreable questions (" + Math.round(100 * answered / valid) + "% coverage). Consider practising question selection and pacing.");
-    if (!notes.length) notes.push("Review incorrect and unanswered scoreable questions against their worked explanations. There is not enough evidence for a more specific study priority.");
-    return notes.slice(0, 3);
-  }
-
   // src/app/history-metrics.ts
   function comparableScoreTrends(attempts) {
     const groups = /* @__PURE__ */ new Map();
@@ -7320,7 +7560,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
   function adjustedHistoryMetrics(attempts) {
     const complete = attempts.filter((a) => a.finishedAt !== null && a.result);
     const papersPractised = new Set(complete.filter((a) => !a.frozen.paper.paperId.startsWith("notebook-revision:")).map((a) => a.frozen.snapshot.examId + "|" + a.frozen.paper.paperId)).size;
-    const scores = complete.map((a) => {
+    const scores = complete.filter((a) => !a.notebookLineage && !a.frozen.paper.paperId.startsWith("notebook-revision:")).map((a) => {
       const max = scoreableMaximum(a.frozen.paper, a.frozen.key, a.frozen.questions);
       return max > 0 ? 100 * a.result.snapshot.earnedMarks / max : null;
     }).filter((n) => n !== null);
@@ -7475,15 +7715,16 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
   }) {
     const visible = filteredHistory(attempts, packages, query);
     const done = attempts.filter((a) => a.finishedAt !== null && a.result);
+    const mockDone = done.filter((a) => !a.notebookLineage && !a.frozen.paper.paperId.startsWith("notebook-revision:"));
     const progressing = attempts.filter((a) => a.finishedAt === null);
-    const accurate = done.reduce((n, a) => n + a.result.snapshot.correctCount, 0);
-    const answered = done.reduce((n, a) => n + a.result.snapshot.correctCount + a.result.snapshot.incorrectCount, 0);
+    const accurate = mockDone.reduce((n, a) => n + a.result.snapshot.correctCount, 0);
+    const answered = mockDone.reduce((n, a) => n + a.result.snapshot.correctCount + a.result.snapshot.incorrectCount, 0);
     const matching = comparableTrends(done).filter((t) => t.points.filter((x) => x.accuracy !== null).length >= 2).sort((a, b) => (b.points.at(-1)?.at ?? 0) - (a.points.at(-1)?.at ?? 0))[0];
     const trendPoints = matching?.points.filter((p) => p.accuracy !== null) ?? [];
-    const priorities = sectionPriorities(done).slice(0, 5);
-    const marksPriorities = crossPaperMarksPriorities(done);
-    const metrics = adjustedHistoryMetrics(done);
-    const scoreTrend = comparableScoreTrends(done).find((x) => x.count >= 2);
+    const priorities = sectionPriorities(mockDone).slice(0, 5);
+    const marksPriorities = crossPaperMarksPriorities(mockDone);
+    const metrics = adjustedHistoryMetrics(mockDone);
+    const scoreTrend = comparableScoreTrends(mockDone).find((x) => x.count >= 2);
     const editionOptions = /* @__PURE__ */ new Map();
     for (const a of attempts) editionOptions.set(
       a.frozen.paper.id,
@@ -7506,8 +7747,8 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       ["In progress", progressing.length],
       ["Papers practised", metrics.papersPractised],
       ["Best adjusted %", metrics.bestAdjustedPercent === null ? "\u2014" : metrics.bestAdjustedPercent.toFixed(1) + "%"],
-      ["Observed accuracy", answered ? Math.round(100 * accurate / answered) + "%" : "\u2014"]
-    ].map(([t, v]) => '<div class="summary-stat"><small>' + esc2(t) + "</small><b>" + esc2(v) + "</b></div>").join("") + '</div><p class="fine">Best adjusted % is the highest observed automated score divided by that attempt\u2019s eligible maximum. Different exams and modes are not equal-difficulty comparisons.</p><div class="history-panels"><section class="panel pad history-trend"><div class="row between"><div><h2>Comparable progression</h2><p class="fine">Most recently repeated exact paper revision \u2014 identical questions, key and policy only.</p></div></div>' + (matching && trendPoints.length >= 2 ? '<div class="history-trend-chart">' + trendSVG(trendPoints.map((p) => 100 * p.accuracy)) + '</div><p class="fine">' + esc2(matching.label) + " \xB7 " + matching.count + " attempts \xB7 " + trendPoints.map((x) => Math.round(x.accuracy * 100) + "%").join(" \u2192 ") + " observed accuracy</p>" : '<p class="empty-state">Complete the same frozen paper twice to unlock a defensible trend. Different papers are not assumed equally difficult.</p>') + (scoreTrend ? '<div class="history-score-trend"><h3>Adjusted score progression</h3><p class="fine">Only the exact same frozen paper revision, key and practice mode are compared; ' + scoreTrend.count + ' attempts.</p><div class="history-trend-chart">' + trendSVG(
+      ["Mock accuracy", answered ? Math.round(100 * accurate / answered) + "%" : "\u2014"]
+    ].map(([t, v]) => '<div class="summary-stat"><small>' + esc2(t) + "</small><b>" + esc2(v) + "</b></div>").join("") + '</div><p class="fine">Mock-style accuracy and best adjusted % exclude notebook and evidence-selected revision tests. Best adjusted % is the highest observed automated score divided by that attempt\u2019s eligible maximum. Different exams and modes are not equal-difficulty comparisons.</p><div class="history-panels"><section class="panel pad history-trend"><div class="row between"><div><h2>Comparable progression</h2><p class="fine">Most recently repeated exact paper revision \u2014 identical questions, key and policy only.</p></div></div>' + (matching && trendPoints.length >= 2 ? '<div class="history-trend-chart">' + trendSVG(trendPoints.map((p) => 100 * p.accuracy)) + '</div><p class="fine">' + esc2(matching.label) + " \xB7 " + matching.count + " attempts \xB7 " + trendPoints.map((x) => Math.round(x.accuracy * 100) + "%").join(" \u2192 ") + " observed accuracy</p>" : '<p class="empty-state">Complete the same frozen paper twice to unlock a defensible trend. Different papers are not assumed equally difficult.</p>') + (scoreTrend ? '<div class="history-score-trend"><h3>Adjusted score progression</h3><p class="fine">Only the exact same frozen paper revision, key and practice mode are compared; ' + scoreTrend.count + ' attempts.</p><div class="history-trend-chart">' + trendSVG(
       scoreTrend.points.map((x) => x.percent),
       "Adjusted score progression, percent of eligible maximum: " + scoreTrend.points.map((x) => x.percent.toFixed(1)).join(", ")
     ) + '</div><p class="fine">' + esc2(scoreTrend.label) + " \xB7 " + scoreTrend.points.map((x) => x.percent.toFixed(1) + "%").join(" \u2192 ") + " of eligible automated maximum</p></div>" : '<p class="fine">Repeat the same frozen paper, key and mode to show adjusted score progression.</p>') + '</section><section class="panel pad history-priorities"><h2>Section priorities</h2><p class="fine">Observed accuracy across completed attempts; repeated questions count as repeated observations, not mastery.</p>' + (priorities.length ? priorities.map((p) => {
@@ -9064,7 +9305,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       attempts: () => [...records.values()].filter(isAttempt),
       save: (item) => save(item),
       remove: (id) => removeSavedAttempt(id, "learning-card"),
-      startRevision: async (selected) => {
+      startRevision: async (selected, selection) => {
         if (storageFault || fallbackConflict || loading) {
           notice("Storage unavailable; cannot start a revision exam.");
           return false;
@@ -9073,7 +9314,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
           const nonce = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "revision-" + now2() + "-" + Math.floor(Math.random() * 1e5);
           const paper = makeRevisionPackage(selected, nonce);
           const id = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "attempt-" + now2() + "-" + Math.floor(Math.random() * 1e5);
-          const generated = { ...startGenericAttempt(paper, id, now2()), notebookLineage: createNotebookLineage(selected) };
+          const generated = { ...startGenericAttempt(paper, id, now2()), notebookLineage: createNotebookLineage(selected, selection) };
           if (!await save(generated)) return false;
           attempt = generated;
           freshlyStartedAttemptId = generated.id;
