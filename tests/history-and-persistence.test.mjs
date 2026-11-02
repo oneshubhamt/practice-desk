@@ -632,3 +632,37 @@ p45test("P45-B identical frozen exam content uses one SHA-addressed snapshot acr
  p45assert.throws(()=>verifiedSnapshot(corrupted),/SHA-256 mismatch/);
  p45assert.throws(()=>reconstructRecords([a.row],[]),/missing immutable snapshot/);
 });
+
+p45test("P45-B shared snapshot also stores publisher keys, source review and explanations once",async()=>{
+ const {compactAttempt,reconstructRecords}=await import("../src/history/shared-store.ts");
+ const {builtinCglPackages,startGenericAttempt}=await import("../src/app/exam-package.ts");
+ const {createSourceKeyReference}=await import("../src/engine/source-comparison.ts");
+ const {createSourceReviewReference}=await import("../src/engine/review-source.ts");
+ const {makeBackup,verifyBackup}=await import("../src/history/backup.ts");
+ const {DEFAULT_PREFERENCES}=await import("../src/app/preferences.ts");
+ const {readFile}=await import("node:fs/promises");
+ const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url),"utf8"));
+ const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url),"utf8"));
+ const all=builtinCglPackages(sources,patches);
+ const reviewed=all.find(x=>x.paper.edition==="reviewed");
+ const source=all.find(x=>x.paper.paperId===reviewed.paper.paperId&&x.paper.edition==="source");
+ p45assert.ok(reviewed&&source);
+ const key=createSourceKeyReference(reviewed,source);
+ const review=createSourceReviewReference(reviewed,source);
+ p45assert.ok(key&&review);
+ const a={...startGenericAttempt(reviewed,"extras-a",1730000000000),
+   sourceKeyReference:key,sourceReviewReference:review};
+ const b={...startGenericAttempt(reviewed,"extras-b",1730000001000),
+   sourceKeyReference:key,sourceReviewReference:review};
+ const x=compactAttempt(a),y=compactAttempt(b);
+ p45assert.equal(x.snapshot.id,y.snapshot.id);
+ p45assert.ok(!("sourceKeyReference" in x.row)&&!("sourceReviewReference" in x.row));
+ p45assert.equal(x.snapshot.body.sourceKeyReference,key);
+ p45assert.equal(x.snapshot.body.sourceReviewReference,review);
+ const archive=verifyBackup(makeBackup([a,b],DEFAULT_PREFERENCES,"2026-11-02T12:00:00.000Z"));
+ p45assert.equal(archive.snapshots.length,1);
+ const hydrated=reconstructRecords(archive.records,archive.snapshots);
+ p45assert.deepEqual(hydrated[0].sourceKeyReference,key);
+ p45assert.deepEqual(hydrated[1].sourceReviewReference,review);
+ p45assert.equal(hydrated[0].frozen.questions,hydrated[1].frozen.questions);
+});
