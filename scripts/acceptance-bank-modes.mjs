@@ -263,7 +263,12 @@ for(const v of [
       x.practiceComposition?.seed==="p44-repeatable");
     check(Boolean(active)&&active.frozen.questions.length===2&&
       active.frozen.key.entries.length===2&&active.practiceComposition.eligibleCount===3,
-      "Custom draw did not freeze exactly two source-linked questions and keys");
+      "Custom draw did not freeze exactly two source-linked questions and keys: "+JSON.stringify({
+        found:Boolean(active),questions:active?.frozen?.questions?.length,
+        keyEntries:active?.frozen?.key?.entries?.length,
+        eligible:active?.practiceComposition?.eligibleCount,
+        seed:active?.practiceComposition?.seed
+      }));
     await page.locator("#g-submit").click();await route(page,"result");
     await page.locator(".result-scoring-details summary").click();
     check((await page.locator(".result-scoring-details").innerText()).includes("p44-repeatable"),
