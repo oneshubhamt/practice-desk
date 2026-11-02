@@ -125,10 +125,25 @@ async function profile(count,data){
    check(archive.manifest.recordCount===count,"P45 backup record count changed");
    await page.locator("#g-library").click();await route(page,"library");
   }
-  const rows=await records(page);
-  check(rows.length===count,"P45 source records were lost across reloads");
-  const sample=rows.find(r=>r.recordType==="generic-attempt"&&r.finishedAt!==null);
-  if(count)check(Boolean(sample?.result?.snapshot),"P45 lost completed frozen marks");
+  // Read a count and one keyed record without serializing hundreds of MiB of
+  // full frozen snapshots across Playwright's process boundary.
+  const inventory=async()=>page.evaluate(async()=>{
+   const db=await new Promise((resolve,reject)=>{
+    const r=indexedDB.open("practiceDesk.overhaul.v1",1);
+    r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
+   });
+   try{
+    const tx=db.transaction("attempts","readonly"),store=tx.objectStore("attempts");
+    const get=req=>new Promise((resolve,reject)=>{
+      req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+    });
+    const [count,sample]=await Promise.all([get(store.count()),get(store.get("p45-archive-00000"))]);
+    return {count,hasScore:Boolean(sample?.result?.snapshot),writeRevision:sample?.saveRevision??null};
+   }finally{db.close();}
+  });
+  const snapshot=await inventory();
+  check(snapshot.count===count,"P45 source records were lost across reloads");
+  if(count)check(snapshot.hasScore,"P45 lost completed frozen marks");
   const t=elapsed();
   await page.evaluate(async()=>{
    const db=await new Promise((resolve,reject)=>{
@@ -149,13 +164,13 @@ async function profile(count,data){
   if(count>0){
    await page.reload({waitUntil:"load",timeout:120000});
    await page.waitForFunction(()=>document.querySelector("#g-import")?.disabled===false,null,{timeout:120000});
-   const after=await records(page);
-   check(after.length===count,"P45 after-save count changed");
-   check(after.some(r=>r.id==="p45-archive-00000"&&r.saveRevision===2),
-     "P45 single-record update not durable");
+   const after=await inventory();
+   check(after.count===count,"P45 after-save count changed");
+   check(after.writeRevision===2,"P45 single-record update not durable");
   }
   try{
    const session=await context.newCDPSession(page);
+   await session.send("Performance.enable");
    const m=await session.send("Performance.getMetrics");
    heapBytes=m.metrics.find(m=>m.name==="JSHeapUsedSize")?.value??null;
    await session.detach();
