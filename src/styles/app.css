@@ -1165,3 +1165,32 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
  .home-picker .home-start .btn{flex:1 1 100%;padding:7px 8px}
  .home-side,.paper-preview,.help-rules-body{min-width:0;max-width:100%}
 }
+
+/* P46: evidence-based short revision sets. Controls reflow at extreme zoom;
+   source prompts and audit provenance must remain visible, never clipped. */
+.learning-evidence-builder{min-width:0;max-width:100%;margin-bottom:18px}
+.learning-evidence-builder h2,.learning-evidence-builder p,
+.learning-evidence-preview li{overflow-wrap:anywhere}
+.learning-evidence-controls{display:flex;flex-wrap:wrap;gap:12px;align-items:end}
+.learning-evidence-controls label{display:flex;flex:1 1 210px;min-width:0;flex-direction:column;gap:5px}
+.learning-evidence-controls select,.learning-evidence-controls input{
+ width:100%;min-width:0;max-width:100%;box-sizing:border-box
+}
+.learning-evidence-reasons{display:flex;flex-wrap:wrap;gap:9px 15px;
+ min-width:0;max-width:100%;margin:14px 0;border:1px solid var(--line);border-radius:9px}
+.learning-evidence-reasons legend{font-size:12px;font-weight:700;padding:0 5px}
+.learning-evidence-reasons label{display:inline-flex;align-items:center;gap:5px;
+ font-size:13px;overflow-wrap:anywhere;min-width:0}
+.learning-evidence-preview{padding-left:21px;margin:12px 0;max-height:265px;overflow-y:auto;
+ overflow-x:hidden}
+.learning-evidence-preview li{margin:6px 0;font-size:13px}
+.learning-evidence-preview small{color:var(--muted)}
+.learning-evidence-builder .btn{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+.learning-layout #learning-syllabus{margin-bottom:11px;min-width:0;max-width:100%}
+@media(max-width:300px){
+ .learning-evidence-builder{padding:12px}
+ .learning-evidence-controls label{flex-basis:100%;overflow-wrap:anywhere}
+ .learning-evidence-reasons{padding:8px;gap:9px}
+ .learning-evidence-reasons label{width:100%}
+ .learning-evidence-preview{padding-left:16px}
+}
