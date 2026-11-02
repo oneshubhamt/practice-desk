@@ -5611,39 +5611,152 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     return valid;
   }
 
+  // src/history/shared-store.ts
+  var SHARED_DB_NAME = "practiceDesk.shared.v1";
+  var ATTEMPTS_STORE = "attempts";
+  var SNAPSHOTS_STORE = "snapshots";
+  var bodyCache = /* @__PURE__ */ new WeakMap();
+  var verifiedReconstructed = /* @__PURE__ */ new WeakSet();
+  function isVerifiedSharedFrozen(frozen) {
+    return verifiedReconstructed.has(frozen) && Number.isFinite(Date.parse(frozen.frozenAt));
+  }
+  function sharedSnapshot(attempt) {
+    const frozen = attempt.frozen;
+    const cached = bodyCache.get(frozen);
+    if (cached && cached.body.sourceKeyReference === attempt.sourceKeyReference && cached.body.sourceReviewReference === attempt.sourceReviewReference && cached.body.explanations === attempt.explanations) return cached;
+    const { frozenAt: _, ...frozenBody } = frozen;
+    const body = {
+      ...frozenBody,
+      ...attempt.sourceKeyReference ? { sourceKeyReference: attempt.sourceKeyReference } : {},
+      ...attempt.sourceReviewReference ? { sourceReviewReference: attempt.sourceReviewReference } : {},
+      ...attempt.explanations ? { explanations: attempt.explanations } : {}
+    };
+    const id = "snapshot:" + hashJson(body);
+    const value = { id, body };
+    bodyCache.set(frozen, value);
+    return value;
+  }
+  function isSharedAttempt(value) {
+    return Boolean(value) && typeof value === "object" && value.recordType === "generic-attempt";
+  }
+  function compactAttempt(attempt) {
+    const snapshot = sharedSnapshot(attempt);
+    const { frozen, sourceKeyReference: _, sourceReviewReference: __, explanations: ___, ...other } = attempt;
+    return { row: { ...other, frozenRef: snapshot.id, frozenAt: frozen.frozenAt }, snapshot };
+  }
+  function expandAttempt(row, snapshot) {
+    if (!row || !snapshot || row.frozenRef !== snapshot.id)
+      throw Error("Shared exam snapshot not found for attempt");
+    if (!Number.isFinite(Date.parse(row.frozenAt)))
+      throw Error("Invalid frozen timestamp");
+    const { frozenRef: _, frozenAt, ...other } = row;
+    const { sourceKeyReference, sourceReviewReference, explanations, ...frozenBody } = snapshot.body;
+    return {
+      ...other,
+      ...sourceKeyReference ? { sourceKeyReference } : {},
+      ...sourceReviewReference ? { sourceReviewReference } : {},
+      ...explanations ? { explanations } : {},
+      frozen: { ...frozenBody, frozenAt }
+    };
+  }
+  function verifiedSnapshot(row) {
+    if (!row || typeof row.id !== "string" || !row.id.startsWith("snapshot:") || row.id !== "snapshot:" + hashJson(row.body))
+      throw Error("Shared snapshot SHA-256 mismatch");
+    assertFrozenContent({ ...row.body, frozenAt: "2026-01-01T00:00:00.000Z" });
+    return row;
+  }
+  function reconstructRecords(rows, snapshots) {
+    const byId = /* @__PURE__ */ new Map();
+    for (const unknownRow of snapshots) {
+      const snapshot = verifiedSnapshot(unknownRow);
+      if (byId.has(snapshot.id)) throw Error("Duplicate snapshot digest");
+      byId.set(snapshot.id, snapshot);
+    }
+    return rows.map((row) => {
+      if (!isSharedAttempt(row)) return row;
+      const snapshot = byId.get(row.frozenRef);
+      if (!snapshot) throw Error("Stored attempt references a missing immutable snapshot");
+      const expanded = expandAttempt(row, snapshot);
+      verifiedReconstructed.add(expanded.frozen);
+      bodyCache.set(expanded.frozen, snapshot);
+      return expanded;
+    });
+  }
+  async function pruneSharedSnapshots(db) {
+    const removed = [];
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction([ATTEMPTS_STORE, SNAPSHOTS_STORE], "readwrite");
+      const rows = tx.objectStore(ATTEMPTS_STORE).getAll();
+      rows.onsuccess = () => {
+        const referenced = new Set(rows.result.filter(isSharedAttempt).map((row) => row.frozenRef));
+        const cursor = tx.objectStore(SNAPSHOTS_STORE).openCursor();
+        cursor.onsuccess = () => {
+          const current = cursor.result;
+          if (!current) return;
+          if (typeof current.key === "string" && !referenced.has(current.key)) {
+            removed.push(current.key);
+            current.delete();
+          }
+          current.continue();
+        };
+      };
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error ?? Error("Snapshot cleanup failed"));
+      tx.onabort = () => reject(tx.error ?? Error("Snapshot cleanup aborted"));
+    });
+    return removed;
+  }
+
   // src/history/backup.ts
   var digest = (core) => sha256(JSON.stringify(core));
-  function serializeVerifiedBackup(records, preferences, exportedAt, setups) {
+  function coreBackup(records, preferences, exportedAt, setups) {
     if (!Number.isFinite(Date.parse(exportedAt))) throw Error("Invalid export timestamp");
     const validated = validateDisplayPreferences(preferences);
     const savedSetups = setups ? validatePracticeSetups(setups) : null;
-    const core = {
+    const snapshots = /* @__PURE__ */ new Map();
+    const rows = records.map((record3) => {
+      if (record3.recordType !== "generic-attempt") return record3;
+      const { row, snapshot } = compactAttempt(record3);
+      snapshots.set(snapshot.id, snapshot);
+      return row;
+    });
+    return {
       format: "practice-desk-backup",
-      version: 3,
+      version: 4,
       exportedAt,
-      records,
+      records: rows,
+      snapshots: [...snapshots.values()],
       preferences: validated,
       ...savedSetups ? { setups: savedSetups } : {}
     };
+  }
+  function serializeVerifiedBackup(records, preferences, exportedAt, setups) {
+    const core = coreBackup(records, preferences, exportedAt, setups);
     const serialized = JSON.stringify(core);
-    if (!serialized.endsWith("}")) throw Error("Cannot serialize backup envelope");
+    if (!serialized.endsWith("}")) throw Error("Cannot serialize backup");
     const manifest = {
       algorithm: "sha256",
       digest: sha256(serialized),
-      recordCount: records.length
+      recordCount: core.records.length,
+      snapshotCount: core.snapshots.length
     };
     return serialized.slice(0, -1) + ',"manifest":' + JSON.stringify(manifest) + "}";
   }
   function verifyBackup(raw) {
-    if (!raw || typeof raw !== "object") throw new Error("Invalid backup");
+    if (!raw || typeof raw !== "object") throw Error("Invalid backup");
     const b = raw;
-    if (b.format !== "practice-desk-backup" || b.version !== 3 || !Array.isArray(b.records) || b.records.length > 5e3 || typeof b.exportedAt !== "string" || !Number.isFinite(Date.parse(b.exportedAt)))
-      throw new Error("Invalid backup format");
-    if (b.records.some((x) => !x || typeof x !== "object" || typeof x.id !== "string" || x.id.length > 200) || new Set(b.records.map((x) => x.id)).size !== b.records.length) throw new Error("Invalid backup records");
+    if (b.format !== "practice-desk-backup" || b.version !== 4 || !Array.isArray(b.records) || !Array.isArray(b.snapshots) || b.records.length > 5e3 || b.snapshots.length > 5e3 || typeof b.exportedAt !== "string" || !Number.isFinite(Date.parse(b.exportedAt)))
+      throw Error("Invalid backup format");
+    if (b.records.some((x) => !x || typeof x !== "object" || typeof x.id !== "string" || x.id.length > 200) || new Set(b.records.map((x) => x.id)).size !== b.records.length)
+      throw Error("Invalid backup records");
     const { manifest, ...core } = b;
-    if (!manifest || manifest.algorithm !== "sha256" || manifest.recordCount !== b.records.length || manifest.digest !== digest(core)) throw new Error("Backup integrity check failed");
+    if (!manifest || manifest.algorithm !== "sha256" || manifest.recordCount !== b.records.length || manifest.snapshotCount !== b.snapshots.length || manifest.digest !== digest(core))
+      throw Error("Backup integrity check failed");
     validateDisplayPreferences(b.preferences);
     if (b.setups !== void 0) validatePracticeSetups(b.setups);
+    reconstructRecords(b.records, b.snapshots);
+    if (b.records.some((x) => x.recordType === "generic-attempt" && (!isSharedAttempt(x) || "frozen" in x)))
+      throw Error("Backup contains noncompact attempt content");
     return b;
   }
   function planBackupMerge(existing, incoming, activeId) {
@@ -7400,7 +7513,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     ) + '</div><p class="fine">' + esc2(scoreTrend.label) + " \xB7 " + scoreTrend.points.map((x) => x.percent.toFixed(1) + "%").join(" \u2192 ") + " of eligible automated maximum</p></div>" : '<p class="fine">Repeat the same frozen paper, key and mode to show adjusted score progression.</p>') + '</section><section class="panel pad history-priorities"><h2>Section priorities</h2><p class="fine">Observed accuracy across completed attempts; repeated questions count as repeated observations, not mastery.</p>' + (priorities.length ? priorities.map((p) => {
       const n = Math.round(100 * p.correct / p.answered);
       return '<div class="priority-line"><div class="row between"><b>' + esc2(p.title) + '</b><span class="fine">' + n + "% \xB7 " + p.answered + ' answers</span></div><div class="progress-track"><span style="width:' + percent(n) + '%"></span></div></div>';
-    }).join("") : '<p class="empty-state">More scored section answers are needed.</p>') + '</section></div><section class="panel pad history-marks-priorities" id="g-cross-paper-priorities"><h2>Cross-paper marks priorities</h2>' + (marksPriorities ? '<p class="fine">Latest ' + marksPriorities.attempts + " compatible full-paper attempt" + (marksPriorities.attempts === 1 ? "" : "s") + " across " + marksPriorities.distinctPapers + " distinct papers \xB7 " + esc2(marksPriorities.examId) + " \xB7 " + esc2(marksPriorities.edition) + " \xB7 " + esc2(marksPriorities.mode.replaceAll("-", " ")) + ". Same exam, section structure, scoring scheme, edition and practice mode. Sections ranked by actual frozen automated marks / eligible maximum (lowest first), not by difficulty-adjusted ability.</p>" + marksPriorities.rows.map((row) => '<div class="priority-line"><div class="row between"><b>' + esc2(row.title) + '</b><span class="fine">' + row.percent.toFixed(1) + "% marks (" + row.earned.toFixed(2) + " / " + row.eligibleMax.toFixed(2) + ") \xB7 " + (row.accuracy === null ? "No scored responses" : row.accuracy.toFixed(0) + "% accuracy") + '</span></div><div class="progress-track"><span style="width:' + percent(row.percent) + '%"></span></div><p class="fine">' + row.sections + " section result" + (row.sections === 1 ? "" : "s") + " \xB7 " + row.attempted + " submitted answers</p></div>").join("") + '<p class="fine">For study direction only. Paper difficulty can differ; repeated attempts are repeated observations, not independent evidence. No rank or percentile inference.</p>' : '<p class="empty-state">Complete at least two different, compatible full papers to unlock marks-based section priorities. Section-only practice, different exam formats, editions, modes and scoring policies are not pooled.</p>') + '</section><div class="history-management-grid"><section class="panel pad" id="g-storage-panel"><h2>Storage & safety</h2><p class="fine">Storage backend: <b id="g-storage-backend">' + (backend === "indexeddb" ? "IndexedDB" : "localStorage fallback") + "</b>. " + (backend === "indexeddb" ? "Records are indexed in this browser." : "Fallback capacity is limited; export a backup.") + ' Browser data can still be cleared; keep exported backups.</p><p class="fine" id="g-storage-health" role="status">' + esc2(healthSummary(health)) + '</p><p class="fine" id="g-storage-records">Loaded in this tab: ' + health.inMemoryRecords + ' records (attempts, imported banks and learning cards). This is not a durable backup count.</p><p class="fine" id="g-storage-last-commit">Last completed write in this tab: ' + esc2(health.lastCommittedAt === null ? "none observed since opening" : stamp(health.lastCommittedAt)) + '</p><p class="fine" id="g-storage-last-failure">Last storage failure in this tab: ' + esc2(health.lastFailure ?? "none reported since opening") + '</p><p class="fine">No automatic or verified external backup is tracked. Export regularly and store copies outside the browser. Private browsing, file:// profiles and browser cleanup can remove local data.</p><p id="g-storage-quota" class="fine" role="status">Checking browser storage estimate\u2026</p><p id="g-storage-persist-status" class="fine" role="status"></p><button class="btn" id="g-storage-persist" type="button">Protect stored data</button></section><section class="panel pad"><h2>Backup & management</h2><p class="fine">Backup v3 imports are checksum-verified and additive only. Large backups download as .json.gz (offline gzip), without changing the internal backup format. Existing records are never overwritten; export before deleting.</p><button class="btn danger" id="g-delete-completed" type="button"' + (done.length === 0 || loading || storageLocked ? " disabled" : "") + ">Delete all " + done.length + ' completed attempts</button><p class="fine">Only finished test records are deleted. In-progress tests, imported papers and learning cards remain untouched.</p></section></div>';
+    }).join("") : '<p class="empty-state">More scored section answers are needed.</p>') + '</section></div><section class="panel pad history-marks-priorities" id="g-cross-paper-priorities"><h2>Cross-paper marks priorities</h2>' + (marksPriorities ? '<p class="fine">Latest ' + marksPriorities.attempts + " compatible full-paper attempt" + (marksPriorities.attempts === 1 ? "" : "s") + " across " + marksPriorities.distinctPapers + " distinct papers \xB7 " + esc2(marksPriorities.examId) + " \xB7 " + esc2(marksPriorities.edition) + " \xB7 " + esc2(marksPriorities.mode.replaceAll("-", " ")) + ". Same exam, section structure, scoring scheme, edition and practice mode. Sections ranked by actual frozen automated marks / eligible maximum (lowest first), not by difficulty-adjusted ability.</p>" + marksPriorities.rows.map((row) => '<div class="priority-line"><div class="row between"><b>' + esc2(row.title) + '</b><span class="fine">' + row.percent.toFixed(1) + "% marks (" + row.earned.toFixed(2) + " / " + row.eligibleMax.toFixed(2) + ") \xB7 " + (row.accuracy === null ? "No scored responses" : row.accuracy.toFixed(0) + "% accuracy") + '</span></div><div class="progress-track"><span style="width:' + percent(row.percent) + '%"></span></div><p class="fine">' + row.sections + " section result" + (row.sections === 1 ? "" : "s") + " \xB7 " + row.attempted + " submitted answers</p></div>").join("") + '<p class="fine">For study direction only. Paper difficulty can differ; repeated attempts are repeated observations, not independent evidence. No rank or percentile inference.</p>' : '<p class="empty-state">Complete at least two different, compatible full papers to unlock marks-based section priorities. Section-only practice, different exam formats, editions, modes and scoring policies are not pooled.</p>') + '</section><div class="history-management-grid"><section class="panel pad" id="g-storage-panel"><h2>Storage & safety</h2><p class="fine">Storage backend: <b id="g-storage-backend">' + (backend === "indexeddb" ? "IndexedDB" : "localStorage fallback") + "</b>. " + (backend === "indexeddb" ? "Records are indexed in this browser." : "Fallback capacity is limited; export a backup.") + ' Browser data can still be cleared; keep exported backups.</p><p class="fine" id="g-storage-health" role="status">' + esc2(healthSummary(health)) + '</p><p class="fine" id="g-storage-records">Loaded in this tab: ' + health.inMemoryRecords + ' records (attempts, imported banks and learning cards). This is not a durable backup count.</p><p class="fine" id="g-storage-last-commit">Last completed write in this tab: ' + esc2(health.lastCommittedAt === null ? "none observed since opening" : stamp(health.lastCommittedAt)) + '</p><p class="fine" id="g-storage-last-failure">Last storage failure in this tab: ' + esc2(health.lastFailure ?? "none reported since opening") + '</p><p class="fine">No automatic or verified external backup is tracked. Export regularly and store copies outside the browser. Private browsing, file:// profiles and browser cleanup can remove local data.</p><p id="g-storage-quota" class="fine" role="status">Checking browser storage estimate\u2026</p><p id="g-storage-persist-status" class="fine" role="status"></p><button class="btn" id="g-storage-persist" type="button">Protect stored data</button></section><section class="panel pad"><h2>Backup & management</h2><p class="fine">Backup v4 imports are checksum-verified and additive only. Large backups download as .json.gz (offline gzip), without changing the internal backup format. Existing records are never overwritten; export before deleting.</p><button class="btn danger" id="g-delete-completed" type="button"' + (done.length === 0 || loading || storageLocked ? " disabled" : "") + ">Delete all " + done.length + ' completed attempts</button><p class="fine">Only finished test records are deleted. In-progress tests, imported papers and learning cards remain untouched.</p></section></div>';
   }
 
   // src/history/backup-file.ts
@@ -8297,7 +8410,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     if (!isAttempt(value)) throw new Error("Unsupported generic history record");
     if (typeof value.id !== "string" || !value.id || value.id.length > 200 || typeof value.packageId !== "string" || !Number.isFinite(value.startedAt) || !Number.isFinite(value.updatedAt) || value.finishedAt !== null && !Number.isFinite(value.finishedAt) || !value.state || !Array.isArray(value.state.responses) || !Number.isFinite(value.state.clockMs) || !Number.isInteger(value.state.sectionIndex) || !Number.isInteger(value.state.questionIndex))
       throw new Error("Invalid generic attempt record");
-    assertFrozenContent(value.frozen);
+    if (!isVerifiedSharedFrozen(value.frozen)) assertFrozenContent(value.frozen);
     const paper = value.frozen.paper;
     if (value.packageId !== paper.id) throw new Error("Attempt references an incorrect revision");
     const current = paper.sections[value.state.sectionIndex]?.questionRevisionIds[value.state.questionIndex];
@@ -8433,6 +8546,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     const builtinPaperIds = new Set(builtins.map((p) => p.paper.id));
     const packages = new Map(builtins.map((p) => [p.paper.id, p]));
     const records = /* @__PURE__ */ new Map();
+    const storedSnapshots = /* @__PURE__ */ new Map();
     let choice = [...packages.values()].reverse().find((p) => p.paper.edition === "reviewed")?.paper.id ?? packages.keys().next().value;
     let cglMode = "strict", singleSection = 0, untimedPractice = false;
     let editionView = packages.get(choice)?.paper.edition === "source" ? "source" : "reviewed";
@@ -8543,7 +8657,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       updateStorageHealth();
     };
     const storageKey = "practiceDesk.overhaul.fallback.v1", mirrorKey = "practiceDesk.overhaul.active.v1";
-    const dbName = "practiceDesk.overhaul.v1";
+    const dbName = SHARED_DB_NAME;
     const downloadBackup = async () => {
       await writeQueue;
       try {
@@ -8551,11 +8665,11 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
         if (db && !storageFault) {
           try {
             const snapshot = await new Promise((resolve, reject) => {
-              const request = db.transaction("attempts", "readonly").objectStore("attempts").getAll();
+              const request = db.transaction(ATTEMPTS_STORE, "readonly").objectStore(ATTEMPTS_STORE).getAll();
               request.onsuccess = () => resolve(request.result);
               request.onerror = () => reject(request.error ?? new Error("Database snapshot failed"));
             });
-            toExport = snapshot.map((value) => validateGenericStoredRecord(value));
+            toExport = reconstructRecords(snapshot, [...storedSnapshots.values()]).map((value) => validateGenericStoredRecord(value));
           } catch (error) {
             storageFault = true;
             recordStorageFailure(error);
@@ -8594,16 +8708,26 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     const importHistory = async (file) => {
       if (storageFault || fallbackConflict) throw new Error("Storage is unavailable or changed in another tab. Reopen before importing.");
       const archive = verifyBackup(await readBackupFile(file));
-      const imported = archive.records.map((record3) => validateGenericStoredRecord(record3));
+      const imported = reconstructRecords(archive.records, archive.snapshots).map((record3) => validateGenericStoredRecord(record3));
       const incoming = planBackupMerge([...records.values()], imported, attempt?.id);
       if (!confirm("Import " + incoming.length + " new saved records and restore available display/exam setup preferences? Existing records will not be overwritten.")) return;
       await writeQueue;
       if (incoming.length) {
         if (db) {
           await new Promise((resolve, reject) => {
-            const transaction = db.transaction("attempts", "readwrite");
-            const store = transaction.objectStore("attempts");
-            for (const record3 of incoming) store.add(structuredClone(record3));
+            const transaction = db.transaction([ATTEMPTS_STORE, SNAPSHOTS_STORE], "readwrite");
+            const store = transaction.objectStore(ATTEMPTS_STORE), snapshotStore = transaction.objectStore(SNAPSHOTS_STORE);
+            const toInsert = /* @__PURE__ */ new Map();
+            for (const record3 of incoming) {
+              if (isAttempt(record3)) {
+                const packed = compactAttempt(record3);
+                store.add(packed.row);
+                toInsert.set(packed.snapshot.id, packed.snapshot);
+              } else store.add(record3);
+            }
+            for (const [id, snapshot] of toInsert) {
+              if (!storedSnapshots.has(id)) snapshotStore.add(snapshot);
+            }
             transaction.oncomplete = () => resolve();
             transaction.onerror = () => reject(transaction.error ?? new Error("Import failed"));
             transaction.onabort = () => reject(transaction.error ?? new Error("Import aborted"));
@@ -8617,6 +8741,10 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
         }
         for (const record3 of incoming) {
           records.set(record3.id, record3);
+          if (isAttempt(record3)) {
+            const sh = compactAttempt(record3).snapshot;
+            storedSnapshots.set(sh.id, sh);
+          }
           if (isPackage(record3) && !packages.has(record3.bundle.paper.id))
             packages.set(record3.bundle.paper.id, record3.bundle);
         }
@@ -8656,6 +8784,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       const previous = records.get(record3.id);
       const expected = previous ? previous.saveRevision ?? 0 : null;
       const versioned = { ...record3, saveRevision: nextWriteVersion(expected) };
+      const packed = isAttempt(versioned) ? compactAttempt(versioned) : null;
       records.set(record3.id, versioned);
       if (isAttempt(versioned)) {
         if (attempt?.id === versioned.id) attempt = versioned;
@@ -8682,20 +8811,35 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
           return;
         }
         try {
-          const tx = db.transaction("attempts", "readwrite");
-          const store = tx.objectStore("attempts");
+          const tx = db.transaction([ATTEMPTS_STORE, SNAPSHOTS_STORE], "readwrite");
+          const store = tx.objectStore(ATTEMPTS_STORE);
+          const snapshotsStore = tx.objectStore(SNAPSHOTS_STORE);
           let conflict = null;
           const read = store.get(record3.id);
           read.onsuccess = () => {
             try {
               assertWriteVersion(read.result, expected);
-              store.put(structuredClone(versioned));
+              if (packed) {
+                const existing = snapshotsStore.get(packed.snapshot.id);
+                existing.onsuccess = () => {
+                  try {
+                    if (!existing.result) snapshotsStore.add(packed.snapshot);
+                    store.put(packed.row);
+                  } catch (error) {
+                    conflict = error;
+                    tx.abort();
+                  }
+                };
+              } else store.put(versioned);
             } catch (error) {
               conflict = error;
               tx.abort();
             }
           };
-          tx.oncomplete = () => resolve();
+          tx.oncomplete = () => {
+            if (packed) storedSnapshots.set(packed.snapshot.id, packed.snapshot);
+            resolve();
+          };
           tx.onerror = () => reject(conflict ?? tx.error ?? new Error("Write failed"));
           tx.onabort = () => reject(conflict ?? tx.error ?? new Error("Write aborted"));
         } catch (error) {
@@ -8725,11 +8869,15 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
           try {
             let latest;
             if (db) {
-              const req = db.transaction("attempts", "readonly").objectStore("attempts").get(versioned.id);
+              const req = db.transaction(ATTEMPTS_STORE, "readonly").objectStore(ATTEMPTS_STORE).get(versioned.id);
               latest = await new Promise((resolve, reject) => {
                 req.onsuccess = () => resolve(req.result);
                 req.onerror = () => reject(req.error);
               });
+              if (isSharedAttempt(latest)) {
+                const snap = storedSnapshots.get(latest.frozenRef);
+                latest = snap ? expandAttempt(latest, snap) : void 0;
+              }
             } else {
               fallbackConflict = true;
               const stored = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
@@ -8776,8 +8924,8 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
           throw Error("Record was updated while confirming deletion. Reopen and try again.");
         if (db) {
           await new Promise((resolve, reject) => {
-            const tx = db.transaction("attempts", "readwrite");
-            const store = tx.objectStore("attempts");
+            const tx = db.transaction(ATTEMPTS_STORE, "readwrite");
+            const store = tx.objectStore(ATTEMPTS_STORE);
             let conflict = null;
             const request = store.get(id);
             request.onsuccess = () => {
@@ -8803,6 +8951,9 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
           fallbackStamp = encoded;
         }
         records.delete(id);
+        if (db && isAttempt(current)) {
+          for (const key2 of await pruneSharedSnapshots(db)) storedSnapshots.delete(key2);
+        }
         try {
           const raw = localStorage.getItem(mirrorKey);
           if (raw && JSON.parse(raw)?.id === id) localStorage.removeItem(mirrorKey);
@@ -8833,8 +8984,8 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
         if (storageFault || fallbackConflict) throw Error("Storage changed during deletion; reopen before editing.");
         if (db) {
           await new Promise((resolve, reject) => {
-            const tx = db.transaction("attempts", "readwrite");
-            const store = tx.objectStore("attempts");
+            const tx = db.transaction(ATTEMPTS_STORE, "readwrite");
+            const store = tx.objectStore(ATTEMPTS_STORE);
             let conflict = null;
             for (const saved of completed) {
               const request = store.get(saved.id);
@@ -8842,7 +8993,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
                 try {
                   const current = request.result;
                   assertWriteVersion(current, saved.saveRevision ?? 0);
-                  if (!isAttempt(current) || current.finishedAt === null)
+                  if (!isSharedAttempt(current) || current.finishedAt === null)
                     throw Error("Completed status changed in another tab; deletion cancelled");
                   store.delete(saved.id);
                 } catch (error) {
@@ -8864,6 +9015,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
           fallbackStamp = updated;
         }
         for (const record3 of completed) records.delete(record3.id);
+        if (db) for (const key2 of await pruneSharedSnapshots(db)) storedSnapshots.delete(key2);
         try {
           const mirror = localStorage.getItem(mirrorKey);
           if (mirror && completed.some((row) => row.id === JSON.parse(mirror)?.id))
@@ -9911,19 +10063,22 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
         db = await new Promise((resolve, reject) => {
           const request = indexedDB.open(dbName, 1);
           request.onupgradeneeded = () => {
-            if (!request.result.objectStoreNames.contains("attempts"))
-              request.result.createObjectStore("attempts", { keyPath: "id" });
+            request.result.createObjectStore(ATTEMPTS_STORE, { keyPath: "id" });
+            request.result.createObjectStore(SNAPSHOTS_STORE, { keyPath: "id" });
           };
           request.onsuccess = () => resolve(request.result);
           request.onerror = () => reject(request.error);
           request.onblocked = () => reject(new Error("Database blocked"));
         });
-        const all = await new Promise((resolve, reject) => {
-          const req = db.transaction("attempts", "readonly").objectStore("attempts").getAll();
-          req.onsuccess = () => resolve(req.result);
-          req.onerror = () => reject(req.error);
+        const { all, snapshots } = await new Promise((resolve, reject) => {
+          const tx = db.transaction([ATTEMPTS_STORE, SNAPSHOTS_STORE], "readonly");
+          const rows = tx.objectStore(ATTEMPTS_STORE).getAll();
+          const contents = tx.objectStore(SNAPSHOTS_STORE).getAll();
+          tx.oncomplete = () => resolve({ all: rows.result, snapshots: contents.result });
+          tx.onerror = () => reject(tx.error);
         });
-        for (const record3 of all) {
+        for (const snap of snapshots) storedSnapshots.set(snap.id, verifiedSnapshot(snap));
+        for (const record3 of reconstructRecords(all, snapshots)) {
           if (isPackage(record3)) {
             try {
               const valid = validateExamPackage(record3.bundle);
