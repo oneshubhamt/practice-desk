@@ -186,11 +186,23 @@ async function responsive(){
   }
   await page.locator("#displayClose").click();
   await page.locator("#g-history").click();await route(page,"history");
-  const layout=await assertNoOverflow(page,"P47-0 history "+viewport.width+"px at 140%");
-  const summary={width:viewport.width,scale:140,scroll:layout.scroll,
-   viewport:layout.width,entries:await page.locator(".archive-entry").count(),
+  const light=await assertNoOverflow(page,"P47-0 light History "+viewport.width+"px at 140%");
+  await page.locator("#displayTrigger").click();
+  await page.locator("#themeDark").click();
+  await page.locator("#displayClose").click();
+  const dark=await assertNoOverflow(page,"P47-0 dark History "+viewport.width+"px at 140%");
+  const reduce=await page.evaluate(()=>matchMedia("(prefers-reduced-motion: reduce)").matches);
+  check(reduce,"P47-0 reduced-motion condition was not actually active");
+  const summary={width:viewport.width,scale:140,lightScroll:light.scroll,
+   darkScroll:dark.scroll,viewport:light.width,
+   darkTheme:await page.evaluate(()=>document.documentElement.dataset.theme==="dark"),
+   reducedMotion:reduce,entries:await page.locator(".archive-entry").count(),
    nodes:await page.locator("#app *").count()};
+  check(summary.darkTheme,"P47-0 dark theme did not apply");
   result.push(summary);
+  await page.locator("#displayTrigger").click();
+  await page.locator("#themeLight").click();
+  await page.locator("#displayClose").click();
   await page.locator("#g-library").click();await route(page,"library");
  }
  return result;
