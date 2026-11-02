@@ -199,7 +199,7 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
      throw new Error("Invalid saved first-answer timing");
    if(row.response)validateResponse(questionMap.get(row.questionRevisionId)!,row.response);
    if(value.state.timingEvidenceVersion===1&&row.firstAnsweredAt!==undefined&&row.answerEvents?.length){
-     const firstCommit=row.answerEvents.find(x=>x.to!==undefined);
+     const firstCommit=row.answerEvents.find((x:{readonly at:string;readonly to?:unknown})=>x.to!==undefined);
      if(!firstCommit||firstCommit.at!==row.firstAnsweredAt)
        throw new Error("Inconsistent saved first-answer timing");
    }
