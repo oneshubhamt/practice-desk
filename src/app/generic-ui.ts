@@ -9,6 +9,7 @@ import { createSessionClock } from "../engine/clock.ts";
 import { scoreAttempt } from "../engine/scoring.ts";
 import { manualGradeLimit, manualGradeSummary, setManualGrade, validateManualGrades } from "../engine/manual-grading.ts";
 import { createSourceKeyReference,sourceKeyScore,validateSourceKeyReference } from "../engine/source-comparison.ts";
+import { composePracticeSet,practiceInventory,validatePracticeComposition } from "./practice-compose.ts";
 import { createSourceReviewReference,validateSourceReviewReference } from "../engine/review-source.ts";
 import { scoreableMaximum, scoreableLowerBound, sectionScoreSummaries } from "../engine/score-ceiling.ts";
 import type { CorrectAnswer } from "../domain/answer-key.js";
@@ -217,6 +218,7 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
      throw new Error("Invalid saved completion provenance");
  }
  validateNotebookLineage(value);
+ validatePracticeComposition(value);
  return value;
 }
 
@@ -392,6 +394,11 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    catch{warning="Exam setup could not be saved on this device; current selection still works.";}
  };
   let historyFilter:HistoryStatus="all",historySort:HistorySort="newest",historySearch="",historyPaper="all";
+  // Builder-only UI state, independent of every exam's saved standard mode.
+  let composeOpen=false,composeSection="",composeTopic="",composeDifficulty="";
+  let composeCount=10,composeSeed="practice-1";
+  let composePreview="";
+  let composeError="";
   let resultTab:ResultTab="overview";
   let reviewFilter:ReviewFilter="all";
  let attempt:GenericAttempt|null=null, view:"library"|"history"|"exam"|"result"|"learning"="library";
