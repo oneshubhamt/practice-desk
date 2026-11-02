@@ -11,7 +11,8 @@ const h=await openHarness({artifactDir:"artifacts/p47-baseline"});
 const {page,context,errors}=await h.open({reducedMotion:"reduce"});
 page.setDefaultTimeout(120000);
 const observations=[];
-const last=(a)=>a.toSorted((x,y)=>x-y)[Math.floor(a.length/2)]??null;
+const median=(a)=>{const x=a.toSorted((u,v)=>u-v),i=Math.floor(x.length/2);
+ return x.length%2?x[i]:(x[i-1]+x[i])/2;};
 const round=(x)=>typeof x==="number"?Math.round(x*100)/100:x;
 
 // Observe the app root itself, rather than monkey-patching application code;
@@ -90,9 +91,9 @@ async function profile(count){
  await input.fill("");
  const summary={count,environment:"headless Linux Chrome / offline file://",
   repeats,coldOpenMs:round(coldOpen),historyEntryMs:round(historyMs),
-  searchSyncJsMedianMs:round(last(searchSamples.map(x=>x.jsMs))),
+  searchSyncJsMedianMs:round(median(searchSamples.map(x=>x.jsMs))),
   searchSyncJsMaxMs:round(Math.max(...searchSamples.map(x=>x.jsMs))),
-  sortSyncJsMedianMs:round(last(sortSamples.map(x=>x.jsMs))),
+  sortSyncJsMedianMs:round(median(sortSamples.map(x=>x.jsMs))),
   rootReplaceEventsPerSearch:searchSamples.map(x=>x.rootReplaceEvents),
   removedRootNodesPerSearch:searchSamples.map(x=>x.rootNodesRemoved),
   domNodes:searchSamples[0].nodeAfter,caret,
