@@ -98,6 +98,8 @@ async function profile(count,data){
  page.setDefaultTimeout(120000);
  try{
   const seeded=await seed(page,data,count);
+  check(seeded.sharedSnapshots<=(count?3:0),
+    "P45-B source dedup failed: "+seeded.sharedSnapshots+" snapshots for "+count+" rows");
   const startup=[],history=[],filter=[],sort=[],backups=[],save=[];
   let exportBytes=0,heapBytes=null;
   for(let rep=0;rep<repeats;rep++){
