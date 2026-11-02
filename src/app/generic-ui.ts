@@ -25,7 +25,7 @@ import { questionSpeed } from "../learning/question-analytics.ts";
 import { historyHTML,healthSummary,type HistorySort,type HistoryStatus,type StorageHealth } from "./history-page.ts";
 import {backupDownload,readBackupFile} from "../history/backup-file.ts";
 import {SHARED_DB_NAME,ATTEMPTS_STORE,SNAPSHOTS_STORE,compactAttempt,expandAttempt,
- isSharedAttempt,verifiedSnapshot,sharedSnapshot,reconstructRecords,isVerifiedSharedFrozen,pruneSharedSnapshots} from "../history/shared-store.ts";
+ isSharedAttempt,verifiedSnapshot,reconstructRecords,isVerifiedSharedFrozen,pruneSharedSnapshots} from "../history/shared-store.ts";
 import type {SharedSnapshot,SlimAttempt} from "../history/shared-store.ts";
 import { frozenScoreSummary } from "./history-score.ts";
 import { editorialStatusLabel } from "./editorial-labels.ts";
@@ -526,7 +526,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      }
      for(const record of incoming){
        records.set(record.id,record);
-       if(isAttempt(record)){const sh=sharedSnapshot(record.frozen);storedSnapshots.set(sh.id,sh);}
+       if(isAttempt(record)){const sh=compactAttempt(record).snapshot;storedSnapshots.set(sh.id,sh);}
        if(isPackage(record)&&!packages.has(record.bundle.paper.id))
          packages.set(record.bundle.paper.id,record.bundle);
      }
