@@ -85,7 +85,7 @@ try{
     (await page.locator("#g-storage-records").innerText()).includes(before.length+" records"),
     "P45 History health must disclose actual loaded records, completed saves and no inferred error");
   await page.locator("#g-history-paper").selectOption(pending.frozen.paper.id);
-  check(await page.locator(".archive-entry").count()===3,"Frozen paper-revision filter missed attempts");
+  check(await page.locator(".archive-entry").count()===4,"Frozen paper-revision filter missed attempts");
   await page.locator("#g-history-paper").selectOption("all");
   await page.locator("#g-filter").selectOption("complete");
   check(await page.locator(".archive-entry").count()===2,"Completed History filter incorrect");
@@ -100,9 +100,9 @@ try{
    "Denied persistence request falsely reported success");
   const download=page.waitForEvent("download");await page.locator("#g-export-history").click();
   const exported=JSON.parse(await readFile(await (await download).path(),"utf8"));
-  check(exported.format==="practice-desk-backup"&&exported.version===3&&
+  check(exported.format==="practice-desk-backup"&&exported.version===4&&
    exported.manifest.recordCount===exported.records.length,
-   "Integrity-checked exported v3 format wrong");
+   "Integrity-checked exported v4 format wrong");
   check(exported.setups?.families?.["builtin:ssc-cgl"]?.paperRevisionId===initial&&
    exported.setups?.families?.["builtin:ssc-cgl"]?.mode==="free",
    "Complete backup lacks verified exam selection");
