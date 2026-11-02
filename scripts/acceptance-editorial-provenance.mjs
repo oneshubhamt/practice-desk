@@ -219,7 +219,7 @@ try{
  const archivedId="older-pinned-source-record";
  await page.evaluate(async({sourceId,id})=>{
   const db=await new Promise((resolve,reject)=>{
-   const r=indexedDB.open("practiceDesk.overhaul.v1",1);
+   const r=indexedDB.open("practiceDesk.shared.v1",1);
    r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
   });
   try{
