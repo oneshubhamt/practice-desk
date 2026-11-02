@@ -23,6 +23,7 @@ import { createLearningDesk } from "./learning-ui.ts";
 import { makeRevisionPackage,createNotebookLineage,validateNotebookLineage } from "../learning/revision-test.ts";
 import { questionSpeed } from "../learning/question-analytics.ts";
 import { historyHTML,healthSummary,type HistorySort,type HistoryStatus,type StorageHealth } from "./history-page.ts";
+import {backupDownload,readBackupFile} from "../history/backup-file.ts";
 import { frozenScoreSummary } from "./history-score.ts";
 import { editorialStatusLabel } from "./editorial-labels.ts";
 import { multipleDraftMessage,duplicateMatchingTargets } from "./response-drafts.ts";
@@ -473,11 +474,11 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      const valid=toExport.map(value=>validateGenericStoredRecord(value));
      const archive=makeBackup(valid as unknown as readonly Record<string,unknown>[],
        readDisplayPreferences(),new Date().toISOString(),setups);
-     const blob=new Blob([JSON.stringify(archive)],{type:"application/json"});
-     const url=URL.createObjectURL(blob);
+     const exportFile=await backupDownload(JSON.stringify(archive));
+     const url=URL.createObjectURL(exportFile.blob);
      const link=document.createElement("a");link.href=url;
      link.download="Practice_Desk_Backup_"+new Date().toISOString().slice(0,10)+
-       (storageFault?"_UNSAVED_RECOVERY":"")+".json";
+       (storageFault?"_UNSAVED_RECOVERY":"")+exportFile.extension;
      document.body.append(link);link.click();link.remove();
      window.setTimeout(()=>URL.revokeObjectURL(url),2000);
      if(storageFault){warning="Emergency recovery file exported. Some records were not committed to browser storage. Keep this file and reopen before editing.";draw();}
@@ -485,8 +486,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  };
  const importHistory=async(file:File)=>{
    if(storageFault||fallbackConflict)throw new Error("Storage is unavailable or changed in another tab. Reopen before importing.");
-   if(file.size>75*1024*1024)throw new Error("History backup exceeds 75 MiB");
-   const archive=verifyBackup(JSON.parse(await file.text()));
+   const archive=verifyBackup(await readBackupFile(file));
    const imported=archive.records.map(record=>validateGenericStoredRecord(record));
    const incoming=planBackupMerge([...records.values()],imported,attempt?.id);
    if(!confirm("Import "+incoming.length+" new saved records and restore available display/exam setup preferences? Existing records will not be overwritten."))return;
@@ -920,7 +920,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      '<div class="row generic-actions home-start"><button class="btn primary" id="g-start"'+
       (loading||fallbackConflict||storageFault||!selected?' disabled':'')+'>Start '+escapeText(modeLabel)+' →</button>'+
       '<button class="btn" id="g-import"'+(loading||fallbackConflict||storageFault?' disabled':'')+'>Import question bank</button></div>'+
-      '<input type="file" id="g-file" accept=".json,application/json" hidden>'+
+      '<input type="file" id="g-file" accept=".json,.gz,application/json,application/gzip" hidden>'+
       '<p class="fine">Start with an editable <button type="button" class="textlink" id="g-bank-template">Download APFC/NAT bank template</button> (JSON). '+
       'Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section>'+
      '<aside class="home-side"><section class="panel pad paper-preview"><span class="eyebrow">SELECTED PAPER</span>'+
@@ -952,7 +952,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        '<p class="fine">Stored in this browser. Export a backup to protect your history and notes.</p></div>'+
        '<div class="row generic-actions"><button class="btn" id="g-export-history"'+(loading?" disabled":"")+'>Export backup</button>'+
        '<button class="btn" id="g-import-history"'+(loading||fallbackConflict||storageFault?" disabled":"")+'>Import backup</button></div>'+
-       '<input type="file" id="g-history-file" accept=".json,application/json" hidden></section></div>'+
+       '<input type="file" id="g-history-file" accept=".json,.gz,application/json,application/gzip" hidden></section></div>'+
        // At desktop widths the user should see the exam setup, not four
        // dashboard totals, first. Retain all counts after primary workflows.
      '<div class="home-stats">'+
@@ -1868,6 +1868,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    if(db||event.key!==storageKey||event.newValue===fallbackStamp)return;
    fallbackConflict=true;
    warning="Fallback history changed in another tab. Reopen the file before continuing.";
+   recordStorageFailure(new Error("Concurrent fallback history change detected; writes blocked"));
    attempt=null;go({screen:"library"},"replace");
    if(!disposed)draw();
  };
