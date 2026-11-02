@@ -274,7 +274,7 @@ test("adjusted score trends require exact frozen key, revision and practice mode
  assert.match(page,/Repeat the same frozen paper, key and mode/);
 });
 
-test("P43 portable family setups survive backup v3 with checksum protection",async()=>{
+test("P43 portable family setups survive backup v4 with checksum protection",async()=>{
  const {makeBackup,verifyBackup}=await import("../src/history/backup.ts");
  const preferences={schema:1,dark:false,scale:100};
  const setups={schema:2,selectedFamilyId:"builtin:ssc-cgl",families:{
@@ -282,7 +282,7 @@ test("P43 portable family setups survive backup v3 with checksum protection",asy
    "imported:apfc":{paperRevisionId:"apfc:r1",mode:"strict",section:0,untimed:false,edition:"reviewed"}
  }};
  const backup=makeBackup([],preferences,"2026-10-30T00:00:00.000Z",setups);
- assert.equal(backup.version,3);
+ assert.equal(backup.version,4);
  assert.deepEqual(verifyBackup(backup).setups,setups);
  const modified=structuredClone(backup);
  modified.setups.families["builtin:ssc-cgl"].section=1;
@@ -309,8 +309,8 @@ test("SHA-256 standard vectors and UTF-8",()=>{
  assert.equal(sha256(""),"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
  assert.equal(sha256("The quick brown fox jumps over the lazy dog"),"d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592");
 });
-test("complete backup v3 preserves records and preferences",()=>{
- const rows=[{id:"unfinished",recordType:"generic-attempt",finishedAt:null},
+test("complete backup v4 preserves records and preferences",()=>{
+ const rows=[{id:"opaque-note",recordType:"generic-note",finishedAt:null},
   {id:"paper",recordType:"generic-package"},{id:"learn",recordType:"learning-card"}];
  const backup=makeBackup(rows,preferences,"2026-10-29T11:00:00Z");
  assert.deepEqual(verifyBackup(JSON.parse(JSON.stringify(backup))),backup);
@@ -405,7 +405,7 @@ test("generated additive merge is deterministic, idempotent, ordered and non-des
  }
 });
 
-test("backup v3 checksum covers records and preferences; size, IDs and timestamp are bounded",()=>{
+test("backup v4 checksum covers records and preferences; size, IDs and timestamp are bounded",()=>{
  for(let count of [0,1,7,101,5000]){
   const records=Array.from({length:count},(_,i)=>({id:"r"+i,recordType:"opaque",answer:i%4}));
   const b=makeBackup(records,preferences,at);
@@ -546,7 +546,7 @@ p45test("P45 History health distinguishes pending, locked, failure and browser e
  p45assert.ok(html.includes("No automatic or verified external backup is tracked"));
 });
 
-p45test("P45 compressed backup keeps v3 checksum and resists malformed gzip",async()=>{
+p45test("P45 compressed backup keeps v4 checksum and resists malformed gzip",async()=>{
  const {backupDownload,readBackupFile,PLAIN_BACKUP_LIMIT}=await import("../src/history/backup-file.ts");
  const {makeBackup,verifyBackup}=__suite_dep_13;
  const {DEFAULT_PREFERENCES:preferences}=await import("../src/app/preferences.ts");
@@ -568,8 +568,8 @@ p45test("P45 one-pass backup serialization remains byte-identical to v3 for ever
  const {makeBackup,serializeVerifiedBackup,verifyBackup}=await import("../src/history/backup.ts");
  const {DEFAULT_PREFERENCES}=await import("../src/app/preferences.ts");
  const stamp="2026-11-02T11:11:00.000Z";
- const rows=[{id:"attempt-one",recordType:"generic-attempt",saveRevision:7,
-   frozen:{questions:[{id:"q1",content:{prompt:"IPC § & Unicode क",options:["A","B"]}}]},
+ const rows=[{id:"opaque-note",recordType:"generic-note",saveRevision:7,
+   content:{prompt:"IPC § & Unicode क",options:["A","B"]},
    result:{earnedMarks:2.5,sectionMarks:[0,2.5]}},
  {id:"learning-one",recordType:"learning-card",dueAt:stamp,
    note:"Quoted \"escaped\""}];
@@ -583,7 +583,7 @@ p45test("P45 one-pass backup serialization remains byte-identical to v3 for ever
  ]){
    const original=JSON.stringify(makeBackup(records,preferences,stamp,setups));
    const onePass=serializeVerifiedBackup(records,preferences,stamp,setups);
-   p45assert.equal(onePass,original,"P45 export format must be exact v3 bytes");
+   p45assert.equal(onePass,original,"P45 export format must be exact current-format bytes");
    p45assert.deepEqual(verifyBackup(JSON.parse(onePass)),JSON.parse(original));
  }
 });
@@ -609,6 +609,22 @@ p45test("P45-B identical frozen exam content uses one SHA-addressed snapshot acr
    "Reconstructed repeated revisions must share one physical immutable question graph");
  p45assert.equal(restored[0].frozen.frozenAt,first.frozen.frozenAt);
  p45assert.equal(restored[1].frozen.frozenAt,second.frozen.frozenAt);
+ const {makeBackup,serializeVerifiedBackup,verifyBackup}=await import("../src/history/backup.ts");
+ const {DEFAULT_PREFERENCES}=await import("../src/app/preferences.ts");
+ const archive=makeBackup([first,second],DEFAULT_PREFERENCES,
+   "2026-11-02T11:00:00.000Z");
+ p45assert.equal(archive.version,4);
+ p45assert.equal(archive.snapshots.length,1,"Backup must contain exactly one shared frozen source");
+ p45assert.equal(archive.records.length,2);
+ p45assert.ok(archive.records.every(r=>!("frozen" in r)));
+ p45assert.equal(verifyBackup(archive),archive);
+ p45assert.equal(serializeVerifiedBackup([first,second],DEFAULT_PREFERENCES,
+   "2026-11-02T11:00:00.000Z"),JSON.stringify(archive));
+ const importRows=reconstructRecords(archive.records,archive.snapshots);
+ p45assert.equal(importRows[0].frozen.questions,importRows[1].frozen.questions);
+ const forged=structuredClone(archive);
+ forged.snapshots[0].body.questions[0].contentHash="0".repeat(64);
+ p45assert.throws(()=>verifyBackup(forged),/Backup integrity/);
  const {validateGenericStoredRecord}=await import("../src/app/generic-ui.ts");
  for(const rec of restored)p45assert.equal(validateGenericStoredRecord(rec),rec);
  const corrupted=structuredClone(a.snapshot);
