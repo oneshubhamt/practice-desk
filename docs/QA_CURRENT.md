@@ -4,6 +4,9 @@
 
 **Updated 1 November 2026 · Development branch `overhaul` · Status: automated source/build/browser gates verified, not human/device release approval.** The old v11 parity programme is *completed and historical*. Nothing in this document requires new features, geometry, or styling to match the v11 baseline.
 
+
+**P46 integration (2 Nov 2026; source implemented, final CI pending):** `src/learning/syllabus-taxonomy.ts`, `revision-selection.ts`, `learning-ui.ts` and frozen `notebookLineage.selection` add explicit APFC broad-heading assignment and wrong/blank/slow/repeated/flagged/bookmarked/due selection with source-scoped counts. `tests/revision-evidence.test.mjs` covers bounded selection, collisions, due card after source deletion, no-review, mocked-source exclusion, syllabus validity, compact-v4 backup and truthful unavailable timing; `acceptance-learning-lifecycle.mjs` exercises the new builder in actual offline Chromium and verifies no answer/FSRS leakage. History accuracy/best scores exclude revision practice; archive retains it. Keep mandatory 13 browser suites and current Node tests; physical Safari and assistive technology still require P48. **Final CI execution is necessary before upgrading this status to VERIFIED.**
+
 ## Binding user decision: no regression, focused pass QA and final independent QA
 
 Every P41–P47 pass must demonstrate **no regression** in existing supported capabilities. Step 5 is **targeted QA**, including affected Node tests, negative/malformed cases, persisted history/reopen and real affected browser journeys. Existing CI remains a required engineering safety gate; a newly executed comprehensive full-product and manual release audit belongs at P48, not at every intermediate pass. Earlier broader QA is warranted only for documented cross-cutting risk.
@@ -69,7 +72,7 @@ All **13** files above are active capability tests; **zero** historical `passNN-
 5. Finish one attempt, inspect Results → Answer review → Question times → History, then use Back/Forward again, including after reload. Confirm stable frozen marks and proper source/reviewed provenance (including the Q62 caution where applicable).
 6. Import a valid APFC MCQ/NAT bank and confirm start, scoring and History. Try an invalid or oversized JSON bank and verify a visible rejection without a saved bogus package.
 7. At a narrow window and **140% app text**, visit Library, Exam, Results, History and Learning; inspect text wrapping, focus, scrolling, and image rendering. Toggle dark/light, keyboard controls and Aa.
-8. Create or inspect one FSRS Learning card, export a **backup v3**, reopen the file, import the same backup and confirm it is **additive (no duplicate existing IDs or lost pending attempts)**.
+8. Create or inspect one FSRS Learning card, export a **backup v4**, reopen the file, import the same backup and confirm it is **additive (no duplicate existing IDs or lost pending attempts)**.
 9. If Safari supports the native Navigation API and Back after a `file://` reload fails, document the exact step and URL, test whether forced hash fallback is available, and mark this scenario **FAIL/UNVERIFIED**. Playwright WebKit success is not evidence of Mac-native history correctness.
 10. Record **PASS / FAIL / NOT TESTED for each step**, plus screenshots/log snippets only for failures. Do not report physical Safari, VoiceOver, iOS/Android or actual OS eviction as certified without their own manual evidence.
 
