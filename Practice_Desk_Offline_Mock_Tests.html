@@ -5612,21 +5612,27 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
   }
 
   // src/history/backup.ts
-  var clone = (v) => JSON.parse(JSON.stringify(v));
   var digest = (core) => sha256(JSON.stringify(core));
-  function makeBackup(records, preferences, exportedAt, setups) {
-    if (!Number.isFinite(Date.parse(exportedAt))) throw new Error("Invalid export timestamp");
+  function serializeVerifiedBackup(records, preferences, exportedAt, setups) {
+    if (!Number.isFinite(Date.parse(exportedAt))) throw Error("Invalid export timestamp");
     const validated = validateDisplayPreferences(preferences);
     const savedSetups = setups ? validatePracticeSetups(setups) : null;
-    const core = clone({
+    const core = {
       format: "practice-desk-backup",
       version: 3,
       exportedAt,
       records,
       preferences: validated,
       ...savedSetups ? { setups: savedSetups } : {}
-    });
-    return { ...core, manifest: { algorithm: "sha256", digest: digest(core), recordCount: core.records.length } };
+    };
+    const serialized = JSON.stringify(core);
+    if (!serialized.endsWith("}")) throw Error("Cannot serialize backup envelope");
+    const manifest = {
+      algorithm: "sha256",
+      digest: sha256(serialized),
+      recordCount: records.length
+    };
+    return serialized.slice(0, -1) + ',"manifest":' + JSON.stringify(manifest) + "}";
   }
   function verifyBackup(raw) {
     if (!raw || typeof raw !== "object") throw new Error("Invalid backup");
@@ -7311,6 +7317,12 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
   }
 
   // src/app/history-page.ts
+  function healthSummary(health) {
+    if (health.loading) return "Loading stored records; readiness not yet confirmed.";
+    if (health.locked) return "Writes locked \u2014 export recovery data and reopen before editing.";
+    if (health.pendingWrites > 0) return health.pendingWrites + " write" + (health.pendingWrites === 1 ? "" : "s") + " pending; wait for completion before closing the page.";
+    return "No writes pending in this tab. Browser storage can still be cleared or evicted.";
+  }
   var esc2 = (x) => String(x ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
   var percent = (n) => Math.max(0, Math.min(100, n));
   var stamp = (ms) => new Date(ms).toLocaleString();
@@ -7340,7 +7352,14 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     const path = points.map(([x, y], i) => (i ? "L " : "M ") + x.toFixed(1) + " " + y.toFixed(1)).join(" ");
     return '<svg class="history-sparkline" viewBox="0 0 600 105" role="img" aria-label="' + esc2(description) + '"><path d="' + path + '" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' + points.map(([x, y]) => '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="4" fill="currentColor"/>').join("") + "</svg>";
   }
-  function historyHTML(attempts, packages, query, loading, storageLocked, warning, backend = "indexeddb") {
+  function historyHTML(attempts, packages, query, loading, storageLocked, warning, backend = "indexeddb", health = {
+    pendingWrites: 0,
+    lastCommittedAt: null,
+    lastFailure: null,
+    locked: storageLocked,
+    loading,
+    inMemoryRecords: attempts.length
+  }) {
     const visible = filteredHistory(attempts, packages, query);
     const done = attempts.filter((a) => a.finishedAt !== null && a.result);
     const progressing = attempts.filter((a) => a.finishedAt === null);
@@ -7361,7 +7380,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       editionOptions.set(p.paper.id, p.paper.paperId + " \xB7 " + p.paper.edition);
     const pCount = attempts.length;
     return '<div class="generic-heading page-heading"><div><span class="eyebrow">ATTEMPT ARCHIVE</span><h1>History & insights</h1><p class="muted">Review your work, compare like-for-like papers and safeguard offline records.</p></div><button class="btn quiet" id="g-library">\u2190 Test library</button></div>' + (warning ? '<p role="status" class="generic-warning">' + esc2(warning) + "</p>" : "") + // Primary History task first: keep archive filters, records and backups together.
-    '<section class="panel pad history-archive"><div class="row between"><div><h2>Saved attempts</h2><p class="fine">' + visible.length + " of " + pCount + ' records shown</p></div><div class="row generic-actions"><button class="btn" id="g-export-history"' + (loading ? " disabled" : "") + '>Export backup</button><button class="btn" id="g-import-history"' + (loading || storageLocked ? " disabled" : "") + '>Import backup</button></div></div><input type="file" id="g-history-file" accept=".json,application/json" hidden><div class="history-filters"><label class="filter-label" for="g-history-search">Find a paper<input type="search" id="g-history-search" placeholder="Search paper, mode or edition" value="' + esc2(query.search) + '"></label><label class="filter-label" for="g-history-paper">Paper / edition<select id="g-history-paper"><option value="all">All paper editions</option>' + [...editionOptions.entries()].sort((a, b) => a[1].localeCompare(b[1])).map(([id, label2]) => '<option value="' + esc2(id) + '"' + ((query.paperRevisionId ?? "all") === id ? " selected" : "") + ">" + esc2(label2) + "</option>").join("") + '</select></label><label class="filter-label" for="g-filter">Status<select id="g-filter">' + [["all", "All attempts"], ["progress", "In progress"], ["complete", "Completed"]].map(([id, t]) => '<option value="' + id + '"' + (query.status === id ? " selected" : "") + ">" + t + "</option>").join("") + '</select></label><label class="filter-label" for="g-history-sort">Order<select id="g-history-sort">' + [["newest", "Newest first"], ["oldest", "Oldest first"]].map(([id, t]) => '<option value="' + id + '"' + (query.sort === id ? " selected" : "") + ">" + t + "</option>").join("") + "</select></label></div>" + (visible.length ? '<div class="history-entries">' + visible.map((a) => {
+    '<section class="panel pad history-archive"><div class="row between"><div><h2>Saved attempts</h2><p class="fine">' + visible.length + " of " + pCount + ' records shown</p></div><div class="row generic-actions"><button class="btn" id="g-export-history"' + (loading ? " disabled" : "") + '>Export backup</button><button class="btn" id="g-import-history"' + (loading || storageLocked ? " disabled" : "") + '>Import backup</button></div></div><input type="file" id="g-history-file" accept=".json,.gz,application/json,application/gzip" hidden><div class="history-filters"><label class="filter-label" for="g-history-search">Find a paper<input type="search" id="g-history-search" placeholder="Search paper, mode or edition" value="' + esc2(query.search) + '"></label><label class="filter-label" for="g-history-paper">Paper / edition<select id="g-history-paper"><option value="all">All paper editions</option>' + [...editionOptions.entries()].sort((a, b) => a[1].localeCompare(b[1])).map(([id, label2]) => '<option value="' + esc2(id) + '"' + ((query.paperRevisionId ?? "all") === id ? " selected" : "") + ">" + esc2(label2) + "</option>").join("") + '</select></label><label class="filter-label" for="g-filter">Status<select id="g-filter">' + [["all", "All attempts"], ["progress", "In progress"], ["complete", "Completed"]].map(([id, t]) => '<option value="' + id + '"' + (query.status === id ? " selected" : "") + ">" + t + "</option>").join("") + '</select></label><label class="filter-label" for="g-history-sort">Order<select id="g-history-sort">' + [["newest", "Newest first"], ["oldest", "Oldest first"]].map(([id, t]) => '<option value="' + id + '"' + (query.sort === id ? " selected" : "") + ">" + t + "</option>").join("") + "</select></label></div>" + (visible.length ? '<div class="history-entries">' + visible.map((a) => {
       const s = a.result?.snapshot;
       const score = frozenScoreSummary(a);
       const count = a.frozen.paper.sections.reduce((n, z) => n + z.questionRevisionIds.length, 0);
@@ -7381,7 +7400,61 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     ) + '</div><p class="fine">' + esc2(scoreTrend.label) + " \xB7 " + scoreTrend.points.map((x) => x.percent.toFixed(1) + "%").join(" \u2192 ") + " of eligible automated maximum</p></div>" : '<p class="fine">Repeat the same frozen paper, key and mode to show adjusted score progression.</p>') + '</section><section class="panel pad history-priorities"><h2>Section priorities</h2><p class="fine">Observed accuracy across completed attempts; repeated questions count as repeated observations, not mastery.</p>' + (priorities.length ? priorities.map((p) => {
       const n = Math.round(100 * p.correct / p.answered);
       return '<div class="priority-line"><div class="row between"><b>' + esc2(p.title) + '</b><span class="fine">' + n + "% \xB7 " + p.answered + ' answers</span></div><div class="progress-track"><span style="width:' + percent(n) + '%"></span></div></div>';
-    }).join("") : '<p class="empty-state">More scored section answers are needed.</p>') + '</section></div><section class="panel pad history-marks-priorities" id="g-cross-paper-priorities"><h2>Cross-paper marks priorities</h2>' + (marksPriorities ? '<p class="fine">Latest ' + marksPriorities.attempts + " compatible full-paper attempt" + (marksPriorities.attempts === 1 ? "" : "s") + " across " + marksPriorities.distinctPapers + " distinct papers \xB7 " + esc2(marksPriorities.examId) + " \xB7 " + esc2(marksPriorities.edition) + " \xB7 " + esc2(marksPriorities.mode.replaceAll("-", " ")) + ". Same exam, section structure, scoring scheme, edition and practice mode. Sections ranked by actual frozen automated marks / eligible maximum (lowest first), not by difficulty-adjusted ability.</p>" + marksPriorities.rows.map((row) => '<div class="priority-line"><div class="row between"><b>' + esc2(row.title) + '</b><span class="fine">' + row.percent.toFixed(1) + "% marks (" + row.earned.toFixed(2) + " / " + row.eligibleMax.toFixed(2) + ") \xB7 " + (row.accuracy === null ? "No scored responses" : row.accuracy.toFixed(0) + "% accuracy") + '</span></div><div class="progress-track"><span style="width:' + percent(row.percent) + '%"></span></div><p class="fine">' + row.sections + " section result" + (row.sections === 1 ? "" : "s") + " \xB7 " + row.attempted + " submitted answers</p></div>").join("") + '<p class="fine">For study direction only. Paper difficulty can differ; repeated attempts are repeated observations, not independent evidence. No rank or percentile inference.</p>' : '<p class="empty-state">Complete at least two different, compatible full papers to unlock marks-based section priorities. Section-only practice, different exam formats, editions, modes and scoring policies are not pooled.</p>') + '</section><div class="history-management-grid"><section class="panel pad" id="g-storage-panel"><h2>Storage & safety</h2><p class="fine">Storage backend: <b id="g-storage-backend">' + (backend === "indexeddb" ? "IndexedDB" : "localStorage fallback") + "</b>. " + (backend === "indexeddb" ? "Records are indexed in this browser." : "Fallback capacity is limited; export a backup.") + ' Browser data can still be cleared; keep exported backups.</p><p id="g-storage-quota" class="fine" role="status">Checking browser storage estimate\u2026</p><p id="g-storage-persist-status" class="fine" role="status"></p><button class="btn" id="g-storage-persist" type="button">Protect stored data</button></section><section class="panel pad"><h2>Backup & management</h2><p class="fine">Backup v3 imports are checksum-verified and additive only. Matching records are never overwritten; export before deleting.</p><button class="btn danger" id="g-delete-completed" type="button"' + (done.length === 0 || loading || storageLocked ? " disabled" : "") + ">Delete all " + done.length + ' completed attempts</button><p class="fine">Only finished test records are deleted. In-progress tests, imported papers and learning cards remain untouched.</p></section></div>';
+    }).join("") : '<p class="empty-state">More scored section answers are needed.</p>') + '</section></div><section class="panel pad history-marks-priorities" id="g-cross-paper-priorities"><h2>Cross-paper marks priorities</h2>' + (marksPriorities ? '<p class="fine">Latest ' + marksPriorities.attempts + " compatible full-paper attempt" + (marksPriorities.attempts === 1 ? "" : "s") + " across " + marksPriorities.distinctPapers + " distinct papers \xB7 " + esc2(marksPriorities.examId) + " \xB7 " + esc2(marksPriorities.edition) + " \xB7 " + esc2(marksPriorities.mode.replaceAll("-", " ")) + ". Same exam, section structure, scoring scheme, edition and practice mode. Sections ranked by actual frozen automated marks / eligible maximum (lowest first), not by difficulty-adjusted ability.</p>" + marksPriorities.rows.map((row) => '<div class="priority-line"><div class="row between"><b>' + esc2(row.title) + '</b><span class="fine">' + row.percent.toFixed(1) + "% marks (" + row.earned.toFixed(2) + " / " + row.eligibleMax.toFixed(2) + ") \xB7 " + (row.accuracy === null ? "No scored responses" : row.accuracy.toFixed(0) + "% accuracy") + '</span></div><div class="progress-track"><span style="width:' + percent(row.percent) + '%"></span></div><p class="fine">' + row.sections + " section result" + (row.sections === 1 ? "" : "s") + " \xB7 " + row.attempted + " submitted answers</p></div>").join("") + '<p class="fine">For study direction only. Paper difficulty can differ; repeated attempts are repeated observations, not independent evidence. No rank or percentile inference.</p>' : '<p class="empty-state">Complete at least two different, compatible full papers to unlock marks-based section priorities. Section-only practice, different exam formats, editions, modes and scoring policies are not pooled.</p>') + '</section><div class="history-management-grid"><section class="panel pad" id="g-storage-panel"><h2>Storage & safety</h2><p class="fine">Storage backend: <b id="g-storage-backend">' + (backend === "indexeddb" ? "IndexedDB" : "localStorage fallback") + "</b>. " + (backend === "indexeddb" ? "Records are indexed in this browser." : "Fallback capacity is limited; export a backup.") + ' Browser data can still be cleared; keep exported backups.</p><p class="fine" id="g-storage-health" role="status">' + esc2(healthSummary(health)) + '</p><p class="fine" id="g-storage-records">Loaded in this tab: ' + health.inMemoryRecords + ' records (attempts, imported banks and learning cards). This is not a durable backup count.</p><p class="fine" id="g-storage-last-commit">Last completed write in this tab: ' + esc2(health.lastCommittedAt === null ? "none observed since opening" : stamp(health.lastCommittedAt)) + '</p><p class="fine" id="g-storage-last-failure">Last storage failure in this tab: ' + esc2(health.lastFailure ?? "none reported since opening") + '</p><p class="fine">No automatic or verified external backup is tracked. Export regularly and store copies outside the browser. Private browsing, file:// profiles and browser cleanup can remove local data.</p><p id="g-storage-quota" class="fine" role="status">Checking browser storage estimate\u2026</p><p id="g-storage-persist-status" class="fine" role="status"></p><button class="btn" id="g-storage-persist" type="button">Protect stored data</button></section><section class="panel pad"><h2>Backup & management</h2><p class="fine">Backup v3 imports are checksum-verified and additive only. Large backups download as .json.gz (offline gzip), without changing the internal backup format. Existing records are never overwritten; export before deleting.</p><button class="btn danger" id="g-delete-completed" type="button"' + (done.length === 0 || loading || storageLocked ? " disabled" : "") + ">Delete all " + done.length + ' completed attempts</button><p class="fine">Only finished test records are deleted. In-progress tests, imported papers and learning cards remain untouched.</p></section></div>';
+  }
+
+  // src/history/backup-file.ts
+  var PLAIN_BACKUP_LIMIT = 75 * 1024 * 1024;
+  var GZIP_BACKUP_LIMIT = 128 * 1024 * 1024;
+  var EXPANDED_BACKUP_LIMIT = 320 * 1024 * 1024;
+  var GZIP_BACKUP_THRESHOLD = 40 * 1024 * 1024;
+  var gzipName = (name) => /\.json\.gz$/i.test(name);
+  async function backupDownload(serialized) {
+    const plain = new Blob([serialized], { type: "application/json" });
+    if (plain.size <= GZIP_BACKUP_THRESHOLD)
+      return { blob: plain, extension: ".json", plainBytes: plain.size, compressed: false };
+    if (typeof CompressionStream !== "function")
+      throw Error("This browser cannot compress a large backup. Use an up-to-date browser with offline gzip support; no incomplete export was created.");
+    const encoded = plain.stream().pipeThrough(new CompressionStream("gzip"));
+    const blob = await new Response(encoded).blob();
+    if (blob.size > GZIP_BACKUP_LIMIT)
+      throw Error("Compressed backup exceeds the 128 MiB gzip import ceiling. No incomplete export was created.");
+    return { blob, extension: ".json.gz", plainBytes: plain.size, compressed: true };
+  }
+  async function readBackupFile(file) {
+    const compressed = gzipName(file.name);
+    if (file.size > (compressed ? GZIP_BACKUP_LIMIT : PLAIN_BACKUP_LIMIT))
+      throw Error(compressed ? "Gzip backup exceeds the 128 MiB compressed-file limit" : "Plain backup exceeds 75 MiB. For large archives, use the app's .json.gz export.");
+    if (!compressed) return JSON.parse(await file.text());
+    if (typeof DecompressionStream !== "function")
+      throw Error("This browser cannot read gzip backups. Use an up-to-date browser supporting offline gzip decompression.");
+    const stream = file.stream().pipeThrough(new DecompressionStream("gzip"));
+    const reader = stream.getReader();
+    const parts = [];
+    let total = 0;
+    try {
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        total += value.byteLength;
+        if (total > EXPANDED_BACKUP_LIMIT)
+          throw Error("Decompressed backup exceeds the 320 MiB safety limit");
+        parts.push(value);
+      }
+    } catch (error) {
+      await reader.cancel().catch(() => {
+      });
+      throw error;
+    } finally {
+      reader.releaseLock();
+    }
+    const bytes = new Uint8Array(total);
+    let offset = 0;
+    for (const part of parts) {
+      bytes.set(part, offset);
+      offset += part.byteLength;
+    }
+    return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   }
 
   // src/app/editorial-labels.ts
@@ -8445,6 +8518,30 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     let db = null, warning = "", disposed = false, loading = true, writeQueue = Promise.resolve();
     let lastTimerSave = 0;
     let fallbackStamp = null, fallbackConflict = false, storageFault = false;
+    let pendingWrites = 0, lastCommittedAt = null, lastStorageFailure = null;
+    const storageSnapshot = () => ({
+      pendingWrites,
+      lastCommittedAt,
+      lastFailure: lastStorageFailure,
+      locked: storageFault || fallbackConflict,
+      loading,
+      inMemoryRecords: records.size
+    });
+    const updateStorageHealth = () => {
+      const snapshot = storageSnapshot();
+      const status = root2.querySelector("#g-storage-health");
+      if (status) status.textContent = healthSummary(snapshot);
+      const saved = root2.querySelector("#g-storage-last-commit");
+      if (saved) saved.textContent = "Last completed write in this tab: " + (lastCommittedAt === null ? "none observed since opening" : new Date(lastCommittedAt).toLocaleString());
+      const failed = root2.querySelector("#g-storage-last-failure");
+      if (failed) failed.textContent = "Last storage failure in this tab: " + (lastStorageFailure ?? "none reported since opening");
+      const count = root2.querySelector("#g-storage-records");
+      if (count) count.textContent = "Loaded in this tab: " + records.size + " records (attempts, imported banks and learning cards). This is not a durable backup count.";
+    };
+    const recordStorageFailure = (error) => {
+      lastStorageFailure = String(error instanceof Error ? error.message : error).slice(0, 240);
+      updateStorageHealth();
+    };
     const storageKey = "practiceDesk.overhaul.fallback.v1", mirrorKey = "practiceDesk.overhaul.active.v1";
     const dbName = "practiceDesk.overhaul.v1";
     const downloadBackup = async () => {
@@ -8461,6 +8558,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
             toExport = snapshot.map((value) => validateGenericStoredRecord(value));
           } catch (error) {
             storageFault = true;
+            recordStorageFailure(error);
             console.warn("Cannot read authoritative backup snapshot; exporting working-memory recovery", error);
           }
         } else if (fallbackConflict && !storageFault) {
@@ -8468,18 +8566,18 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
           if (!Array.isArray(latest)) throw new Error("Invalid fallback history");
           toExport = latest.map((value) => validateGenericStoredRecord(value));
         }
-        const valid = toExport.map((value) => validateGenericStoredRecord(value));
-        const archive = makeBackup(
-          valid,
+        if (!db || storageFault) toExport = toExport.map((value) => validateGenericStoredRecord(value));
+        const serialized = serializeVerifiedBackup(
+          toExport,
           readDisplayPreferences(),
           (/* @__PURE__ */ new Date()).toISOString(),
           setups
         );
-        const blob = new Blob([JSON.stringify(archive)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
+        const exportFile = await backupDownload(serialized);
+        const url = URL.createObjectURL(exportFile.blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = "Practice_Desk_Backup_" + (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) + (storageFault ? "_UNSAVED_RECOVERY" : "") + ".json";
+        link.download = "Practice_Desk_Backup_" + (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) + (storageFault ? "_UNSAVED_RECOVERY" : "") + exportFile.extension;
         document.body.append(link);
         link.click();
         link.remove();
@@ -8495,8 +8593,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     };
     const importHistory = async (file) => {
       if (storageFault || fallbackConflict) throw new Error("Storage is unavailable or changed in another tab. Reopen before importing.");
-      if (file.size > 75 * 1024 * 1024) throw new Error("History backup exceeds 75 MiB");
-      const archive = verifyBackup(JSON.parse(await file.text()));
+      const archive = verifyBackup(await readBackupFile(file));
       const imported = archive.records.map((record3) => validateGenericStoredRecord(record3));
       const incoming = planBackupMerge([...records.values()], imported, attempt?.id);
       if (!confirm("Import " + incoming.length + " new saved records and restore available display/exam setup preferences? Existing records will not be overwritten.")) return;
@@ -8564,6 +8661,8 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
         if (attempt?.id === versioned.id) attempt = versioned;
         writeMirror(versioned);
       }
+      pendingWrites++;
+      updateStorageHealth();
       const pending = writeQueue.then(() => new Promise((resolve, reject) => {
         if (storageFault) {
           reject(new Error("A previous storage operation failed"));
@@ -8605,7 +8704,11 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       }));
       writeQueue = pending.catch(() => {
       });
-      return pending.then(() => true).catch(async (e) => {
+      return pending.then(() => {
+        lastCommittedAt = Date.now();
+        return true;
+      }).catch(async (e) => {
+        recordStorageFailure(e);
         const conflict = e instanceof Error && e.message.startsWith("Another tab");
         storageFault = true;
         if (conflict) {
@@ -8642,6 +8745,9 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
         console.warn("Exam workspace save", e);
         if (!disposed) draw2();
         return false;
+      }).finally(() => {
+        pendingWrites--;
+        updateStorageHealth();
       });
     };
     const removeSavedAttempt = async (id, intent = "completed") => {
@@ -8909,7 +9015,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
         ["strict", "Exam simulation", "4 locked sections \xB7 15 minutes each"],
         ["free", "Flexible full paper", "60 minutes \xB7 move between sections"],
         ["single", "Section practice", "25 questions \xB7 15 minutes"]
-      ].map(([key2, title, detail]) => '<button type="button" class="mode ' + (cglMode === key2 ? "on" : "") + '" data-mode="' + key2 + '" aria-pressed="' + (cglMode === key2) + '"><span class="radio-dot"></span><span><strong>' + title + "</strong><small>" + detail + "</small></span></button>").join("") + "</div>" + (cglMode === "single" ? '<label class="picker" for="g-single-section">Choose section</label><select id="g-single-section">' + selected.paper.sections.map((z, i) => '<option value="' + i + '"' + (singleSection === i ? " selected" : "") + ">" + escapeText(z.title) + "</option>").join("") + "</select>" : "") : "") + '<label class="untimed-option" for="g-untimed"><input type="checkbox" id="g-untimed"' + (untimedPractice ? " checked" : "") + '><span><strong>Untimed practice</strong><small>No countdown or automatic expiry. Keep the selected navigation and scoring rules; finish when ready.</small></span></label><div class="row generic-actions home-start"><button class="btn primary" id="g-start"' + (loading || fallbackConflict || storageFault || !selected ? " disabled" : "") + ">Start " + escapeText(modeLabel) + ' \u2192</button><button class="btn" id="g-import"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + '>Import question bank</button></div><input type="file" id="g-file" accept=".json,application/json" hidden><p class="fine">Start with an editable <button type="button" class="textlink" id="g-bank-template">Download APFC/NAT bank template</button> (JSON). Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section><aside class="home-side"><section class="panel pad paper-preview"><span class="eyebrow">SELECTED PAPER</span><h2>' + escapeText(selected?.title ?? "Choose a paper") + '</h2><p class="fine family-provenance">' + (family?.imported ? "Imported/user-supplied content; not an official exam bank." : family ? "Included SSC CGL papers. Original and reviewed versions remain distinct." : "Saved examination unavailable. Re-import the bank or select another.") + '</p><p class="fine">' + escapeText(selected?.paper.paperId ?? "") + " \xB7 " + escapeText(selected?.paper.edition ?? "") + '</p><div class="preview-metrics"><div><b>' + questionCount + "</b><small>Questions</small></div><div><b>" + escapeText(time) + "</b><small>Time</small></div><div><b>" + escapeText(previewSections) + "</b><small>Sections</small></div><div><b>" + escapeText(previewNavigation) + '</b><small>Navigation</small></div></div><p class="fine">Scoring and timer rules are frozen when you start; later paper edits cannot change a saved result.</p>' + (preflight ? preflightHTML(preflight) : "") + '</section><section class="panel pad recent-panel"><div class="row between"><h2>Recent completed results</h2><button class="textlink" id="g-history-recent">View all \u2192</button></div>' + (latest.length ? latest.map((a) => '<button class="recent-attempt" data-attempt="' + escapeText(a.id) + '"><b>' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + "</b><small>" + new Date(a.finishedAt ?? a.startedAt).toLocaleDateString() + " \xB7 " + escapeText(a.frozen.snapshot.mode.replaceAll("-", " ")) + " \xB7 " + escapeText(frozenScoreSummary(a)?.text ?? "Score unavailable") + "</small></button>").join("") : '<p class="fine">Your three most recent completed results will appear here; unfinished attempts stay in their own Resume area.</p>') + "</section></aside></div>" + builder + '<div class="home-utilities"><section class="panel pad learning-entry"><div><span class="eyebrow">REVISE & IMPROVE</span><h2>Learning & revision</h2><p class="fine">Error notebook, FSRS-7 spaced review, source-linked revision tests and topic evidence.</p></div><button class="btn primary" id="g-learning">Open learning desk \u2192</button></section><section class="panel pad backup-home"><div><span class="eyebrow">YOUR DATA</span><h2>Portable offline history</h2><p class="fine">Stored in this browser. Export a backup to protect your history and notes.</p></div><div class="row generic-actions"><button class="btn" id="g-export-history"' + (loading ? " disabled" : "") + '>Export backup</button><button class="btn" id="g-import-history"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + '>Import backup</button></div><input type="file" id="g-history-file" accept=".json,application/json" hidden></section></div><div class="home-stats">' + [["Paper editions", packages.size], ["Completed tests", complete.length], ["Attempts in progress", pending.length], ["Notebook cards", [...records.values()].filter(isLearning).length]].map(([name, value]) => '<div class="home-stat"><small>' + escapeText(name) + "</small><b>" + escapeText(value) + "</b></div>").join("") + "</div>" + (preflight ? examRulesHTML(preflight) : "");
+      ].map(([key2, title, detail]) => '<button type="button" class="mode ' + (cglMode === key2 ? "on" : "") + '" data-mode="' + key2 + '" aria-pressed="' + (cglMode === key2) + '"><span class="radio-dot"></span><span><strong>' + title + "</strong><small>" + detail + "</small></span></button>").join("") + "</div>" + (cglMode === "single" ? '<label class="picker" for="g-single-section">Choose section</label><select id="g-single-section">' + selected.paper.sections.map((z, i) => '<option value="' + i + '"' + (singleSection === i ? " selected" : "") + ">" + escapeText(z.title) + "</option>").join("") + "</select>" : "") : "") + '<label class="untimed-option" for="g-untimed"><input type="checkbox" id="g-untimed"' + (untimedPractice ? " checked" : "") + '><span><strong>Untimed practice</strong><small>No countdown or automatic expiry. Keep the selected navigation and scoring rules; finish when ready.</small></span></label><div class="row generic-actions home-start"><button class="btn primary" id="g-start"' + (loading || fallbackConflict || storageFault || !selected ? " disabled" : "") + ">Start " + escapeText(modeLabel) + ' \u2192</button><button class="btn" id="g-import"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + '>Import question bank</button></div><input type="file" id="g-file" accept=".json,.gz,application/json,application/gzip" hidden><p class="fine">Start with an editable <button type="button" class="textlink" id="g-bank-template">Download APFC/NAT bank template</button> (JSON). Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section><aside class="home-side"><section class="panel pad paper-preview"><span class="eyebrow">SELECTED PAPER</span><h2>' + escapeText(selected?.title ?? "Choose a paper") + '</h2><p class="fine family-provenance">' + (family?.imported ? "Imported/user-supplied content; not an official exam bank." : family ? "Included SSC CGL papers. Original and reviewed versions remain distinct." : "Saved examination unavailable. Re-import the bank or select another.") + '</p><p class="fine">' + escapeText(selected?.paper.paperId ?? "") + " \xB7 " + escapeText(selected?.paper.edition ?? "") + '</p><div class="preview-metrics"><div><b>' + questionCount + "</b><small>Questions</small></div><div><b>" + escapeText(time) + "</b><small>Time</small></div><div><b>" + escapeText(previewSections) + "</b><small>Sections</small></div><div><b>" + escapeText(previewNavigation) + '</b><small>Navigation</small></div></div><p class="fine">Scoring and timer rules are frozen when you start; later paper edits cannot change a saved result.</p>' + (preflight ? preflightHTML(preflight) : "") + '</section><section class="panel pad recent-panel"><div class="row between"><h2>Recent completed results</h2><button class="textlink" id="g-history-recent">View all \u2192</button></div>' + (latest.length ? latest.map((a) => '<button class="recent-attempt" data-attempt="' + escapeText(a.id) + '"><b>' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + "</b><small>" + new Date(a.finishedAt ?? a.startedAt).toLocaleDateString() + " \xB7 " + escapeText(a.frozen.snapshot.mode.replaceAll("-", " ")) + " \xB7 " + escapeText(frozenScoreSummary(a)?.text ?? "Score unavailable") + "</small></button>").join("") : '<p class="fine">Your three most recent completed results will appear here; unfinished attempts stay in their own Resume area.</p>') + "</section></aside></div>" + builder + '<div class="home-utilities"><section class="panel pad learning-entry"><div><span class="eyebrow">REVISE & IMPROVE</span><h2>Learning & revision</h2><p class="fine">Error notebook, FSRS-7 spaced review, source-linked revision tests and topic evidence.</p></div><button class="btn primary" id="g-learning">Open learning desk \u2192</button></section><section class="panel pad backup-home"><div><span class="eyebrow">YOUR DATA</span><h2>Portable offline history</h2><p class="fine">Stored in this browser. Export a backup to protect your history and notes.</p></div><div class="row generic-actions"><button class="btn" id="g-export-history"' + (loading ? " disabled" : "") + '>Export backup</button><button class="btn" id="g-import-history"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + '>Import backup</button></div><input type="file" id="g-history-file" accept=".json,.gz,application/json,application/gzip" hidden></section></div><div class="home-stats">' + [["Paper editions", packages.size], ["Completed tests", complete.length], ["Attempts in progress", pending.length], ["Notebook cards", [...records.values()].filter(isLearning).length]].map(([name, value]) => '<div class="home-stat"><small>' + escapeText(name) + "</small><b>" + escapeText(value) + "</b></div>").join("") + "</div>" + (preflight ? examRulesHTML(preflight) : "");
     }
     function packageForAttempt(saved) {
       return packages.get(saved.packageId) ?? [...packages.values()].find((p) => p.paper.paperId === saved.frozen.paper.paperId && p.paper.edition === saved.frozen.paper.edition);
@@ -9156,7 +9262,8 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
           loading,
           fallbackConflict || storageFault,
           warning,
-          db ? "indexeddb" : "fallback"
+          db ? "indexeddb" : "fallback",
+          storageSnapshot()
         ) : view === "exam" ? examHTML() : resultHTML()
       }, learningDesk);
       if (view === "learning") return;
@@ -9779,6 +9886,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       if (db || event.key !== storageKey || event.newValue === fallbackStamp) return;
       fallbackConflict = true;
       warning = "Fallback history changed in another tab. Reopen the file before continuing.";
+      recordStorageFailure(new Error("Concurrent fallback history change detected; writes blocked"));
       attempt = null;
       go({ screen: "library" }, "replace");
       if (!disposed) draw2();
@@ -9847,6 +9955,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
           console.warn("Invalid emergency session mirror", error);
         }
       } catch (error) {
+        recordStorageFailure(error);
         console.warn("IndexedDB startup failed; switching to local fallback", error);
         try {
           db?.close();
