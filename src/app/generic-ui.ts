@@ -22,7 +22,7 @@ import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
 import { createLearningDesk } from "./learning-ui.ts";
 import { makeRevisionPackage,createNotebookLineage,validateNotebookLineage } from "../learning/revision-test.ts";
 import { questionSpeed } from "../learning/question-analytics.ts";
-import { historyHTML, type HistorySort, type HistoryStatus } from "./history-page.ts";
+import { historyHTML,healthSummary,type HistorySort,type HistoryStatus,type StorageHealth } from "./history-page.ts";
 import { frozenScoreSummary } from "./history-score.ts";
 import { editorialStatusLabel } from "./editorial-labels.ts";
 import { multipleDraftMessage,duplicateMatchingTargets } from "./response-drafts.ts";
@@ -424,6 +424,28 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  let db:IDBDatabase|null=null, warning="",disposed=false, loading=true, writeQueue=Promise.resolve();
  let lastTimerSave=0;
  let fallbackStamp:string|null=null, fallbackConflict=false, storageFault=false;
+ let pendingWrites=0,lastCommittedAt:number|null=null,lastStorageFailure:string|null=null;
+ const storageSnapshot=():StorageHealth=>({pendingWrites,lastCommittedAt,
+   lastFailure:lastStorageFailure,locked:storageFault||fallbackConflict,
+   loading,inMemoryRecords:records.size});
+ const updateStorageHealth=():void=>{
+   const snapshot=storageSnapshot();
+   const status=root.querySelector<HTMLElement>("#g-storage-health");
+   if(status)status.textContent=healthSummary(snapshot);
+   const saved=root.querySelector<HTMLElement>("#g-storage-last-commit");
+   if(saved)saved.textContent="Last completed write in this tab: "+
+     (lastCommittedAt===null?"none observed since opening":new Date(lastCommittedAt).toLocaleString());
+   const failed=root.querySelector<HTMLElement>("#g-storage-last-failure");
+   if(failed)failed.textContent="Last storage failure in this tab: "+
+     (lastStorageFailure??"none reported since opening");
+   const count=root.querySelector<HTMLElement>("#g-storage-records");
+   if(count)count.textContent="Loaded in this tab: "+records.size+
+     " records (attempts, imported banks and learning cards). This is not a durable backup count.";
+ };
+ const recordStorageFailure=(error:unknown):void=>{
+   lastStorageFailure=String(error instanceof Error?error.message:error).slice(0,240);
+   updateStorageHealth();
+ };
  const storageKey="practiceDesk.overhaul.fallback.v1", mirrorKey="practiceDesk.overhaul.active.v1";
  const dbName="practiceDesk.overhaul.v1";
  const downloadBackup=async():Promise<void>=>{
@@ -440,6 +462,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          toExport=snapshot.map(value=>validateGenericStoredRecord(value));
        }catch(error){
          storageFault=true;
+         recordStorageFailure(error);
          console.warn("Cannot read authoritative backup snapshot; exporting working-memory recovery",error);
        }
      }else if(fallbackConflict&&!storageFault){
@@ -521,6 +544,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      if(attempt?.id===versioned.id)attempt=versioned;
      writeMirror(versioned);
    }
+   pendingWrites++;
+   updateStorageHealth();
    const pending=writeQueue.then(()=>new Promise<void>((resolve,reject)=>{
      if(storageFault){reject(new Error("A previous storage operation failed"));return;}
      if(!db){
@@ -549,7 +574,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      }catch(error){reject(error);}
    }));
    writeQueue=pending.catch(()=>{});
-   return pending.then(()=>true).catch(async e=>{
+   return pending.then(()=>{lastCommittedAt=Date.now();return true;}).catch(async e=>{
+     recordStorageFailure(e);
      const conflict=e instanceof Error&&e.message.startsWith("Another tab");
      storageFault=true;
      if(conflict){
@@ -578,7 +604,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      console.warn("Exam workspace save",e);
      if(!disposed)draw();
      return false;
-   });
+   }).finally(()=>{pendingWrites--;updateStorageHealth();});
  };
  const removeSavedAttempt=async(id:string,intent:DeletionIntent="completed"):Promise<void>=>{
    const chosen=records.get(id);
@@ -1323,7 +1349,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      html:()=>view==="library"?listHTML():view==="history"?
        historyHTML([...records.values()].filter(isAttempt),packages,
          {status:historyFilter,sort:historySort,search:historySearch,paperRevisionId:historyPaper},
-         loading,fallbackConflict||storageFault,warning,db?"indexeddb":"fallback"):
+         loading,fallbackConflict||storageFault,warning,db?"indexeddb":"fallback",storageSnapshot()):
        view==="exam"?examHTML():resultHTML()
    },learningDesk);
    if(view==="learning")return;
@@ -1887,6 +1913,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        }
      }catch(error){console.warn("Invalid emergency session mirror",error);}
    }catch(error){
+     recordStorageFailure(error);
      // A failed initial read must not leave an active IndexedDB handle
      // behind while displaying fallback localStorage data.
      console.warn("IndexedDB startup failed; switching to local fallback",error);
