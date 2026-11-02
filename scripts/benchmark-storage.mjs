@@ -100,8 +100,9 @@ async function profile(count,data){
    await page.locator("#g-history").click();await route(page,"history");
    await page.locator(".history-archive .fine").first().waitFor();
    history.push(elapsed()-begin);
-   check((await page.locator(".history-archive").innerText()).includes(count+" records shown"),
-     "P45 History count not authoritative at "+count);
+   const attemptCount=seeded.classes.completed+seeded.classes.unfinished;
+   check((await page.locator(".history-archive").innerText()).includes(attemptCount+" records shown"),
+     "P45 History attempt count not authoritative at "+count+" total records");
    const x=elapsed();
    await page.locator("#g-history-search").fill("p45-archive-0000");
    filter.push(elapsed()-x);
