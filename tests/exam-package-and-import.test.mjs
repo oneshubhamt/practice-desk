@@ -262,7 +262,7 @@ test("forward-only navigation restrictions are respected for non-CGL papers",()=
  assert.equal(back.state.questionIndex,2);
 });
 
-test("generic attempts and imported packages survive a verified history backup round trip",()=>{
+test("generic attempts and imported packages survive a verified history backup round trip",async()=>{
  const bundle=validateExamPackage(pkg);
  const unfinished=startGenericAttempt(bundle,"resumeable",1000);
  let completed=startGenericAttempt(bundle,"completed",1000);
