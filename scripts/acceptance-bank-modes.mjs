@@ -259,7 +259,8 @@ for(const v of [
           x.practiceComposition?.seed==="p44-repeatable");
       }finally{db.close();}
     });
-    const active=(await records(page)).find(x=>x.recordType==="generic-attempt"&&
+    const persisted=await records(page);
+    const active=persisted.find(x=>x.recordType==="generic-attempt"&&
       x.practiceComposition?.seed==="p44-repeatable");
     check(Boolean(active)&&active.frozen.questions.length===2&&
       active.frozen.key.entries.length===2&&active.practiceComposition.eligibleCount===3,
@@ -267,7 +268,9 @@ for(const v of [
         found:Boolean(active),questions:active?.frozen?.questions?.length,
         keyEntries:active?.frozen?.key?.entries?.length,
         eligible:active?.practiceComposition?.eligibleCount,
-        seed:active?.practiceComposition?.seed
+        seed:active?.practiceComposition?.seed,
+        persisted:persisted.map(x=>({recordType:x.recordType,id:x.id,
+          seed:x.practiceComposition?.seed,questions:x.frozen?.questions?.length}))
       }));
     await page.locator("#g-submit").click();await route(page,"result");
     await page.locator(".result-scoring-details summary").click();
