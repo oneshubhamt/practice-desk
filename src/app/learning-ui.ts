@@ -123,7 +123,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   const availableExams=[...new Set([...sourceAttempts.map(a=>a.frozen.snapshot.examId),...all.map(c=>c.examId)])].sort();
   if(!availableExams.includes(evidenceExam))evidenceExam=availableExams[0]??"";
   const assembled=revisionInventory(sourceAttempts,all,new Set(dueNow.map(c=>c.id)),evidenceExam,evidenceReasons);
-  const preview=assembled.selected.slice(0,Math.min(evidenceCount,REVISION_MAX_QUESTIONS));
+  const preview=assembled.selected.slice(0,REVISION_MAX_QUESTIONS);
   const visible=all.filter(c=>filter==="all"||filter==="due"&&due(c)||filter==="bookmarked"&&c.bookmarked);
   const exam=visible.find(c=>c.id===selectedId)?.examId??visible[0]?.examId;
   const candidates=visible.filter(c=>c.examId===exam&&
@@ -151,12 +151,12 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     REVISION_REASONS.map(reason=>'<label><input type="checkbox" data-evidence-reason="'+reason+'"'+
       (evidenceReasons.includes(reason)?' checked':'')+'> '+esc(reason==='repeated'?'Repeated wrong':reason==='blank'?'Unanswered':reason==='slow'?'Measured slow':reason)+
       '</label>').join("")+'</fieldset>'+
-    '<p class="fine" role="status">'+assembled.eligibleCount+' unique eligible questions · '+preview.length+
+    '<p class="fine" id="learning-evidence-summary" role="status">'+assembled.eligibleCount+' unique eligible questions · '+Math.min(evidenceCount,preview.length)+
       ' previewed · '+sourceAttempts.filter(a=>a.frozen.snapshot.examId===evidenceExam).length+
       ' completed source attempts. Reused questions and repeated exposure are not independent difficulty-adjusted evidence.</p>'+
     (assembled.insufficient.length?'<p class="fine">'+assembled.insufficient.map(esc).join(' ')+'</p>':'')+
-    (preview.length?'<ol class="learning-evidence-preview">'+preview.map(item=>
-       '<li><strong>'+esc(item.reasons.join(', '))+'</strong> · '+esc(item.prompt.slice(0,140))+
+    (preview.length?'<ol class="learning-evidence-preview">'+preview.map((item,index)=>
+       '<li'+(index>=evidenceCount?' hidden':'')+'><strong>'+esc(item.reasons.join(', '))+'</strong> · '+esc(item.prompt.slice(0,140))+
        ' <small>· '+esc(item.sourcePaperId)+' · '+item.wrongAttempts+' wrong of '+item.observedAttempts+
        ' observed source attempts'+(item.measuredForegroundMs===null?'':', '+Math.round(item.measuredForegroundMs/1000)+'s cumulative foreground')+
        (item.visits===null?'':', '+item.visits+' visits')+'</small></li>').join("")+'</ol>':
@@ -228,10 +228,25 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   root.querySelector<HTMLSelectElement>("#learning-evidence-exam")!.onchange=e=>{
     evidenceExam=(e.target as HTMLSelectElement).value;draw();
   };
-  root.querySelector<HTMLInputElement>("#learning-evidence-count")!.onchange=e=>{
-    const proposed=Number((e.target as HTMLInputElement).value);
-    evidenceCount=Number.isSafeInteger(proposed)?Math.max(1,Math.min(REVISION_MAX_QUESTIONS,proposed)):1;
-    draw();
+  // Update the preview/eligibility in place: full redraw on blur could swallow Start.
+  root.querySelector<HTMLInputElement>("#learning-evidence-count")!.oninput=e=>{
+    const input=e.target as HTMLInputElement;
+    const proposed=Number(input.value);
+    evidenceCount=input.value!==""&&Number.isSafeInteger(proposed)&&proposed>=1&&
+      proposed<=REVISION_MAX_QUESTIONS?proposed:0;
+    root.querySelectorAll<HTMLLIElement>(".learning-evidence-preview li").forEach((li,i)=>{
+      li.hidden=i>=evidenceCount;
+    });
+    const summary=root.querySelector<HTMLElement>("#learning-evidence-summary");
+    if(summary)summary.textContent=assembled.eligibleCount+" unique eligible questions · "+
+      Math.min(evidenceCount,preview.length)+" previewed · "+
+      sourceAttempts.filter(a=>a.frozen.snapshot.examId===evidenceExam).length+
+      " completed source attempts. Reused questions and repeated exposure are not independent difficulty-adjusted evidence.";
+    const button=root.querySelector<HTMLButtonElement>("#learning-build-evidence");
+    if(button){
+      button.disabled=!evidenceReasons.length||evidenceCount<1||evidenceCount>assembled.eligibleCount;
+      button.textContent="Start targeted revision ("+Math.min(evidenceCount,assembled.eligibleCount)+")";
+    }
   };
   root.querySelectorAll<HTMLInputElement>("[data-evidence-reason]").forEach(el=>el.onchange=()=>{
     const reason=el.dataset.evidenceReason as RevisionReason;
