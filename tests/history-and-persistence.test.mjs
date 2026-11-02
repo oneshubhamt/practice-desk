@@ -563,3 +563,27 @@ p45test("P45 compressed backup keeps v3 checksum and resists malformed gzip",asy
  p45assert.ok(big.blob.size<100000,"Highly repetitive large JSON should compress");
  p45assert.ok(PLAIN_BACKUP_LIMIT>big.blob.size);
 });
+
+p45test("P45 one-pass backup serialization remains byte-identical to v3 for every checked source",async()=>{
+ const {makeBackup,serializeVerifiedBackup,verifyBackup}=await import("../src/history/backup.ts");
+ const {DEFAULT_PREFERENCES}=await import("../src/app/preferences.ts");
+ const stamp="2026-11-02T11:11:00.000Z";
+ const rows=[{id:"attempt-one",recordType:"generic-attempt",saveRevision:7,
+   frozen:{questions:[{id:"q1",content:{prompt:"IPC § & Unicode क",options:["A","B"]}}]},
+   result:{earnedMarks:2.5,sectionMarks:[0,2.5]}},
+ {id:"learning-one",recordType:"learning-card",dueAt:stamp,
+   note:"Quoted \"escaped\""}];
+ const settings={schema:2,selectedFamilyId:"builtin:ssc-cgl",families:{
+   "builtin:ssc-cgl":{paperRevisionId:"p1",mode:"strict",section:0,
+     untimed:false,edition:"reviewed"}}};
+ for(const [records,preferences,setups] of [
+   [[],DEFAULT_PREFERENCES,undefined],
+   [rows,DEFAULT_PREFERENCES,undefined],
+   [rows,DEFAULT_PREFERENCES,settings]
+ ]){
+   const original=JSON.stringify(makeBackup(records,preferences,stamp,setups));
+   const onePass=serializeVerifiedBackup(records,preferences,stamp,setups);
+   p45assert.equal(onePass,original,"P45 export format must be exact v3 bytes");
+   p45assert.deepEqual(verifyBackup(JSON.parse(onePass)),JSON.parse(original));
+ }
+});
