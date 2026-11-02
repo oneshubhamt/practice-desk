@@ -114,7 +114,7 @@ try{
   const competing=(await records(page)).find(x=>x.recordType==="generic-attempt"&&x.finishedAt!==null);
   await page.evaluate(async id=>{
    const db=await new Promise((resolve,reject)=>{
-    const r=indexedDB.open("practiceDesk.overhaul.v1",1);
+    const r=indexedDB.open("practiceDesk.shared.v1",1);
     r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
    });
    try{await new Promise((resolve,reject)=>{
@@ -283,7 +283,7 @@ try{
   // Restore an older record with no visit counters: do not fabricate observations.
   await page.evaluate(async id=>{
    const db=await new Promise((resolve,reject)=>{
-    const r=indexedDB.open("practiceDesk.overhaul.v1",1);
+    const r=indexedDB.open("practiceDesk.shared.v1",1);
     r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
    });
    try{await new Promise((resolve,reject)=>{
