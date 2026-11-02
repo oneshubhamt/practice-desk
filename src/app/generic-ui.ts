@@ -494,7 +494,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  const importHistory=async(file:File)=>{
    if(storageFault||fallbackConflict)throw new Error("Storage is unavailable or changed in another tab. Reopen before importing.");
    const archive=verifyBackup(await readBackupFile(file));
-   const imported=archive.records.map(record=>validateGenericStoredRecord(record));
+   const imported=reconstructRecords(archive.records,archive.snapshots)
+     .map(record=>validateGenericStoredRecord(record));
    const incoming=planBackupMerge([...records.values()],imported,attempt?.id);
    if(!confirm("Import "+incoming.length+" new saved records and restore available display/exam setup preferences? Existing records will not be overwritten."))return;
    await writeQueue;
