@@ -33,6 +33,28 @@ export function makeBackup(
    preferences:validated,...(savedSetups?{setups:savedSetups}:{})});
  return {...core,manifest:{algorithm:"sha256",digest:digest(core),recordCount:core.records.length}};
 }
+/** Serialize the exact v3 envelope once for large offline exports.
+ * The digest covers the same JSON core as makeBackup; file encoding, schema,
+ * field order and integrity semantics are unchanged. Records must already
+ * have passed validateGenericStoredRecord at the call site.
+ * Avoid JSON parse/clone/stringify of a second 100–300 MiB object graph.
+ */
+export function serializeVerifiedBackup(
+ records:readonly Record<string,unknown>[],preferences:DisplayPreferences,
+ exportedAt:string,setups?:PracticeSetups|null
+):string{
+ if(!Number.isFinite(Date.parse(exportedAt)))throw Error("Invalid export timestamp");
+ const validated=validateDisplayPreferences(preferences);
+ const savedSetups=setups?validatePracticeSetups(setups):null;
+ const core:Core={format:"practice-desk-backup",version:3,exportedAt,records,
+   preferences:validated,...(savedSetups?{setups:savedSetups}:{})};
+ const serialized=JSON.stringify(core);
+ if(!serialized.endsWith("}"))throw Error("Cannot serialize backup envelope");
+ const manifest={algorithm:"sha256" as const,digest:sha256(serialized),
+   recordCount:records.length};
+ return serialized.slice(0,-1)+',"manifest":'+JSON.stringify(manifest)+'}';
+}
+
 export function verifyBackup(raw:unknown):BackupV3{
  if(!raw||typeof raw!=="object")throw new Error("Invalid backup");
  const b=raw as Partial<BackupV3>;
