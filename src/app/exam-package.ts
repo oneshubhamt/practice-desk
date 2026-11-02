@@ -18,6 +18,7 @@ import type { ManualGrade } from "../engine/manual-grading.ts";
 import type { SourceKeyReference } from "../engine/source-comparison.ts";
 import type { SourceReviewReference } from "../engine/review-source.ts";
 import type { NotebookLineage } from "../learning/revision-test.ts";
+import type { PracticeComposition } from "./practice-compose.ts";
 
 export interface ExamPackage {
  readonly format: "practice-desk-exam";
@@ -219,6 +220,8 @@ export interface GenericAttempt {
  /** Explicit completion cause, only populated on newly finished attempts. */
  readonly completionReason?: "time-expired" | "submitted" | "section-submitted";
  readonly notebookLineage?: NotebookLineage;
+ /** Hash-covered seed, filter and source revision manifest for an authored custom subset. */
+ readonly practiceComposition?: PracticeComposition;
  readonly explanations?: Readonly<Record<string,string>>;
 }
 export function startGenericAttempt(bundle: ExamPackage, id: string, timestamp: number): GenericAttempt {
