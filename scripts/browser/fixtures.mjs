@@ -85,35 +85,47 @@ export async function openHarness({engine="chromium",artifactDir=null}={}){
  }
  return {engine,browser,open,finish,evidence,diagnose};
 }
-/** Read real IndexedDB rather than trusting the DOM as persistence evidence. */
+/** Authoritative current-schema persistence evidence (no legacy adapters). */
 export async function records(page,store="attempts"){
  return page.evaluate(async storeName=>{
   const db=await new Promise((resolve,reject)=>{
-   const request=indexedDB.open("practiceDesk.overhaul.v1",1);
-   request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);
+   const r=indexedDB.open("practiceDesk.shared.v1",1);
+   r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
   });
   try{
-   return await new Promise((resolve,reject)=>{
-    const tx=db.transaction(storeName,"readonly"),r=tx.objectStore(storeName).getAll();
-    r.onsuccess=()=>resolve(r.result);
-    r.onerror=()=>reject(r.error);
+   const {rows,snapshots}=await new Promise((resolve,reject)=>{
+    const names=storeName==="attempts"?["attempts","snapshots"]:[storeName];
+    const tx=db.transaction(names,"readonly");
+    const a=tx.objectStore(storeName).getAll();
+    const b=storeName==="attempts"?tx.objectStore("snapshots").getAll():null;
+    tx.oncomplete=()=>resolve({rows:a.result,snapshots:b?.result??[]});
+    tx.onerror=()=>reject(tx.error);
+   });
+   if(storeName!=="attempts")return rows;
+   const hashes=new Map(snapshots.map(s=>[s.id,s.body]));
+   return rows.map(row=>{
+     if(row.recordType!=="generic-attempt")return row;
+     const {frozenRef,frozenAt,...fields}=row;
+     const body=hashes.get(frozenRef);
+     if(!body)throw Error("Unresolved current snapshot "+frozenRef);
+     return {...fields,frozen:{...body,frozenAt}};
    });
   }finally{db.close();}
  },store);
 }
 export async function saved(page,predicate,label){
- // Do not race asynchronous IDB checkpoint flushes. Poll only actual persisted data.
  await page.waitForFunction(async needle=>{
   const db=await new Promise((resolve,reject)=>{
-   const req=indexedDB.open("practiceDesk.overhaul.v1",1);
+   const req=indexedDB.open("practiceDesk.shared.v1",1);
    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
   });
   try{
-   const rows=await new Promise((resolve,reject)=>{
-    const tx=db.transaction("attempts","readonly"),req=tx.objectStore("attempts").getAll();
-    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+   const tx=db.transaction("attempts","readonly");
+   const req=tx.objectStore("attempts").get(needle);
+   return await new Promise((resolve,reject)=>{
+     req.onsuccess=()=>resolve(Boolean(req.result));
+     req.onerror=()=>reject(req.error);
    });
-   return rows.some(x=>x.id===needle);
   }finally{db.close();}
  },label);
  return (await records(page)).find(predicate);
