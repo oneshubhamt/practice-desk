@@ -1,4 +1,4 @@
-/** New cross-browser modern critical path; run separately on chromium/firefox/webkit.
+/** New cross-browser modern critical path; validates clean shared-snapshot backup-v4 offline.
  * Requires actual native Navigation API; no router polyfill or silent browser skip.
  */
 import {readFile} from "node:fs/promises";
