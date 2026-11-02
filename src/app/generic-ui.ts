@@ -14,7 +14,7 @@ import { createSourceReviewReference,validateSourceReviewReference } from "../en
 import { scoreableMaximum, scoreableLowerBound, sectionScoreSummaries } from "../engine/score-ceiling.ts";
 import type { CorrectAnswer } from "../domain/answer-key.js";
 import type { Verdict } from "../engine/scoring.ts";
-import { makeBackup, verifyBackup, planBackupMerge } from "../history/backup.ts";
+import { serializeVerifiedBackup, verifyBackup, planBackupMerge } from "../history/backup.ts";
 import { validateResponse } from "../engine/response.ts";
 import { assertWriteVersion, nextWriteVersion } from "../history/concurrency.ts";
 import { assertDeletionAllowed, deletionWarning, type DeletionIntent } from "../history/deletion-policy.ts";
@@ -471,10 +471,12 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        if(!Array.isArray(latest))throw new Error("Invalid fallback history");
        toExport=latest.map(value=>validateGenericStoredRecord(value));
      }
-     const valid=toExport.map(value=>validateGenericStoredRecord(value));
-     const archive=makeBackup(valid as unknown as readonly Record<string,unknown>[],
+     // DB rows above have been validated once. The fallback branch is
+     // verified here; no second full frozen-record copy or parse/stringify.
+     if(!db||storageFault)toExport=toExport.map(value=>validateGenericStoredRecord(value));
+     const serialized=serializeVerifiedBackup(toExport as unknown as readonly Record<string,unknown>[],
        readDisplayPreferences(),new Date().toISOString(),setups);
-     const exportFile=await backupDownload(JSON.stringify(archive));
+     const exportFile=await backupDownload(serialized);
      const url=URL.createObjectURL(exportFile.blob);
      const link=document.createElement("a");link.href=url;
      link.download="Practice_Desk_Backup_"+new Date().toISOString().slice(0,10)+
