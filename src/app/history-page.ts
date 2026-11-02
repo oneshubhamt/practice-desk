@@ -73,16 +73,18 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
  }):string{
  const visible=filteredHistory(attempts,packages,query);
  const done=attempts.filter(a=>a.finishedAt!==null&&a.result);
+ const mockDone=done.filter(a=>!a.notebookLineage&&
+   !a.frozen.paper.paperId.startsWith("notebook-revision:"));
  const progressing=attempts.filter(a=>a.finishedAt===null);
- const accurate=done.reduce((n,a)=>n+a.result!.snapshot.correctCount,0);
- const answered=done.reduce((n,a)=>n+a.result!.snapshot.correctCount+a.result!.snapshot.incorrectCount,0);
+ const accurate=mockDone.reduce((n,a)=>n+a.result!.snapshot.correctCount,0);
+ const answered=mockDone.reduce((n,a)=>n+a.result!.snapshot.correctCount+a.result!.snapshot.incorrectCount,0);
  const matching=comparableTrends(done).filter(t=>t.points.filter(x=>x.accuracy!==null).length>=2)
     .sort((a,b)=>(b.points.at(-1)?.at??0)-(a.points.at(-1)?.at??0))[0];
  const trendPoints=matching?.points.filter(p=>p.accuracy!==null)??[];
- const priorities=sectionPriorities(done).slice(0,5);
- const marksPriorities=crossPaperMarksPriorities(done);
- const metrics=adjustedHistoryMetrics(done);
- const scoreTrend=comparableScoreTrends(done).find(x=>x.count>=2);
+ const priorities=sectionPriorities(mockDone).slice(0,5);
+ const marksPriorities=crossPaperMarksPriorities(mockDone);
+ const metrics=adjustedHistoryMetrics(mockDone);
+ const scoreTrend=comparableScoreTrends(mockDone).find(x=>x.count>=2);
  const editionOptions=new Map<string,string>();
  for(const a of attempts)editionOptions.set(a.frozen.paper.id,
    a.frozen.paper.paperId+" · "+a.frozen.paper.edition+" · "+a.frozen.snapshot.mode);
@@ -135,10 +137,10 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
   [['Total attempts',pCount],['Completed',done.length],['In progress',progressing.length],
    ['Papers practised',metrics.papersPractised],
    ['Best adjusted %',metrics.bestAdjustedPercent===null?"—":metrics.bestAdjustedPercent.toFixed(1)+"%"],
-   ['Observed accuracy',answered?Math.round(100*accurate/answered)+"%":"—"]]
+   ['Mock accuracy',answered?Math.round(100*accurate/answered)+"%":"—"]]
    .map(([t,v])=>'<div class="summary-stat"><small>'+esc(t)+'</small><b>'+esc(v)+'</b></div>').join("")+
   '</div>'+
-  '<p class="fine">Best adjusted % is the highest observed automated score divided by that attempt’s eligible maximum. Different exams and modes are not equal-difficulty comparisons.</p>'+
+  '<p class="fine">Mock-style accuracy and best adjusted % exclude notebook and evidence-selected revision tests. Best adjusted % is the highest observed automated score divided by that attempt’s eligible maximum. Different exams and modes are not equal-difficulty comparisons.</p>'+
   '<div class="history-panels">'+
   '<section class="panel pad history-trend"><div class="row between"><div><h2>Comparable progression</h2>'+
   '<p class="fine">Most recently repeated exact paper revision — identical questions, key and policy only.</p></div></div>'+
