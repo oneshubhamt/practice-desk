@@ -80,6 +80,9 @@ export function reconstructRecords(rows:readonly unknown[],
    if(!snapshot)throw Error("Stored attempt references a missing immutable snapshot");
    const expanded=expandAttempt(row,snapshot);
    verifiedReconstructed.add(expanded.frozen);
+   // Reuse the already authenticated digest whenever this attempt is saved
+   // or exported; never re-hash the same large paper/key/media graph 1600 times.
+   bodyCache.set(expanded.frozen,snapshot);
    return expanded;
  });
 }
