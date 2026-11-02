@@ -65,6 +65,8 @@ jobs:
       - run: node scripts/acceptance-recovery.mjs
       - run: node scripts/acceptance-ui.mjs
       - run: node scripts/acceptance-stress.mjs
+      - name: Profile real frozen storage at 0, 100, 1000 and 1600 records
+        run: node scripts/benchmark-storage.mjs
       - run: node scripts/acceptance-platform.mjs chromium
       - run: node scripts/acceptance-safari-fallback.mjs chromium
       # All current browser functional contracts live in the capability suites.
