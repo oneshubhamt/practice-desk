@@ -814,6 +814,36 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      catalog.map(f=>'<option value="'+escapeText(f.id)+'"'+
        (f.id===selectedFamilyId?" selected":"")+'>'+escapeText(f.title)+
        ' ('+f.papers.length+' paper edition'+(f.papers.length===1?"":"s")+')</option>').join("");
+   const composeInventory=composeOpen&&configured?practiceInventory(configured):null;
+   const filterOption=(value:string,label:string,current:string):string=>
+     '<option value="'+escapeText(value)+'"'+(value===current?" selected":"")+'>'+
+     escapeText(label)+'</option>';
+   const builder=selected?'<section class="panel pad practice-builder" id="g-compose">'+
+     '<details id="g-compose-details"'+(composeOpen?' open':'')+'>'+
+     '<summary>Create a custom practice set from this paper</summary>'+
+     '<p class="fine">Draw from this paper and edition only. Preserve marking, navigation and timers. Excluded questions are not drawn; tags are never inferred.</p>'+
+     '<div class="practice-compose-fields">'+
+     '<label>Section<select id="g-compose-section">'+filterOption("","All sections",composeSection)+
+     (composeInventory?.sectionChoices??[]).map(x=>filterOption(x.id,x.title+" ("+x.count+")",composeSection)).join("")+
+     '</select></label>'+
+     '<label>Source topic<select id="g-compose-topic">'+filterOption("","Any topic",composeTopic)+
+     (composeInventory?.topics??[]).map(x=>filterOption(x.id,x.id+" ("+x.count+")",composeTopic)).join("")+
+     '</select></label>'+
+     '<label>Supplied difficulty<select id="g-compose-difficulty">'+filterOption("","Any difficulty",composeDifficulty)+
+     (composeInventory?.difficulties??[]).map(x=>filterOption(x.id,x.id+" ("+x.count+")",composeDifficulty)).join("")+
+     '</select></label>'+
+     '<label>Questions<input type="number" id="g-compose-count" min="1" max="2000" step="1" value="'+composeCount+'"></label>'+
+     '<label>Repeatable seed<input type="text" id="g-compose-seed" maxlength="80" value="'+escapeText(composeSeed)+'"></label>'+
+     '</div><p class="fine">'+(composeInventory?
+      composeInventory.eligible+' eligible of '+configured!.questions.length+
+      ' questions · '+composeInventory.excluded+' excluded · '+composeInventory.cautions+' caution.':
+      "Expand to inspect source metadata.")+'</p>'+
+     (composePreview?'<p class="fine compose-preview" role="status">'+escapeText(composePreview)+'</p>':"")+
+     (composeError?'<p class="generic-warning" role="alert">'+escapeText(composeError)+'</p>':"")+
+     '<div class="row generic-actions"><button type="button" class="btn" id="g-compose-preview">Preview draw</button>'+
+     '<button type="button" class="btn primary" id="g-compose-start"'+
+     (loading||fallbackConflict||storageFault?" disabled":"")+
+     '>Start custom set</button></div></details></section>':"";
    return '<div class="generic-heading home-heading"><div><span class="eyebrow">OFFLINE PRACTICE STUDIO</span>'+
      '<h1>Test library</h1><p class="muted">Choose a paper, work in exam conditions and learn from every attempt.</p></div>'+
      '<button class="btn quiet" id="g-history">History & insights →</button></div>'+
@@ -888,7 +918,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          escapeText(a.frozen.snapshot.mode.replaceAll("-"," "))+' · '+
          escapeText(frozenScoreSummary(a)?.text??"Score unavailable")+'</small></button>').join(""):
        '<p class="fine">Your three most recent completed results will appear here; unfinished attempts stay in their own Resume area.</p>')+
-      '</section></aside></div>'+
+      '</section></aside></div>'+builder+
       '<div class="home-utilities"><section class="panel pad learning-entry"><div><span class="eyebrow">REVISE & IMPROVE</span>'+
        '<h2>Learning & revision</h2><p class="fine">Error notebook, FSRS-7 spaced review, source-linked revision tests and topic evidence.</p></div>'+
        '<button class="btn primary" id="g-learning">Open learning desk →</button></section>'+
