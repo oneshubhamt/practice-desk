@@ -6,6 +6,8 @@ import type { CorrectAnswer } from "../domain/answer-key.js";
 import type { QuestionRevisionId } from "../domain/ids.js";
 import type { DefaultScheduler, Grade } from "ts-fsrs";
 import { validateQuestionRevision, validateAnswerKeyRevision } from "../domain/validate.ts";
+import { syllabusHeading } from "./syllabus-taxonomy.ts";
+import { isRevisionAttempt } from "./revision-selection.ts";
 
 export const ERROR_LABELS=["conceptual","calculation","interpretation","time-pressure","guessing","careless","knowledge-gap","other"] as const;
 export type ErrorLabel=typeof ERROR_LABELS[number];
@@ -29,6 +31,8 @@ export interface LearningCard {
  readonly note:string;
  readonly errorLabel:ErrorLabel|null;
  readonly customTopic:string;
+ /** Optional explicit broad syllabus heading, never inferred from question text. */
+ readonly syllabusTopicId?:string;
  readonly bookmarked:boolean;
  readonly createdAt:string;
  readonly updatedAt:string;
@@ -46,6 +50,7 @@ export function validateLearningCard(input:unknown):LearningCard{
     typeof raw.sourceAttemptId!=="string"||!raw.sourceAttemptId||raw.sourceAttemptId.length>200||
     typeof raw.note!=="string"||raw.note.length>8000||
     typeof raw.customTopic!=="string"||raw.customTopic.length>120||
+    (raw.syllabusTopicId!==undefined&&(!syllabusHeading(raw.examId!,raw.syllabusTopicId)))||
     typeof raw.bookmarked!=="boolean"||
     !(raw.errorLabel===null||ERROR_LABELS.includes(raw.errorLabel as ErrorLabel))||
     !validDate(raw.createdAt)||!validDate(raw.updatedAt)||
@@ -107,15 +112,18 @@ export interface TopicMetrics {
  id:string;label:string;examId:string;total:number;answered:number;correct:number;incorrect:number;skipped:number;
  accuracy:number|null;coverage:number;evidence:"insufficient"|"measured";
  /** Repeated answers are observations, not additional distinct questions. */
- attempts:number;answeredAttempts:number;distinctQuestions:number;distinctAnsweredQuestions:number;kind:"section"|"source-topic"|"user-topic";
+ attempts:number;answeredAttempts:number;distinctQuestions:number;distinctAnsweredQuestions:number;kind:"section"|"source-topic"|"user-topic"|"syllabus";
 }
 export function topicMetrics(attempts:readonly GenericAttempt[],cards:readonly LearningCard[]=[]):TopicMetrics[]{
- const manual=new Map(cards.filter(c=>c.customTopic.trim()).map(c=>[c.question.id,c.customTopic.trim()]));
+ const manual=new Map(cards.filter(c=>c.customTopic.trim()).map(c=>[
+   c.examId+"|"+c.question.id+"|"+c.question.contentHash,c.customTopic.trim()]));
+ const mapped=new Map(cards.filter(c=>c.syllabusTopicId).map(c=>[
+   c.examId+"|"+c.question.id+"|"+c.question.contentHash,c.syllabusTopicId!]));
  const rows=new Map<string,TopicMetrics>();
  const distinct=new Map<string,Set<string>>(),independent=new Map<string,Set<string>>();
  const answeredDistinct=new Map<string,Set<string>>(),answeredIndependent=new Map<string,Set<string>>();
  for(const attempt of attempts){
-   if(!attempt.result||attempt.finishedAt===null)continue;
+   if(!attempt.result||attempt.finishedAt===null||isRevisionAttempt(attempt))continue;
    const sections=attempt.frozen.paper.sections;
    const questions=new Map(attempt.frozen.questions.map(q=>[q.id,q]));
    for(const item of attempt.result.items){
@@ -123,10 +131,14 @@ export function topicMetrics(attempts:readonly GenericAttempt[],cards:readonly L
      const q=questions.get(item.questionRevisionId);
      const section=sections.find(s=>s.questionRevisionIds.includes(item.questionRevisionId));
      if(!q||!section)continue;
+     const annotationKey=attempt.frozen.snapshot.examId+"|"+q.id+"|"+q.contentHash;
+     const heading=mapped.get(annotationKey);
      const labels:{label:string;kind:TopicMetrics["kind"]}[]=[
        {label:section.title,kind:"section"},
        ...(q.content.topicIds??[]).map(label=>({label,kind:"source-topic" as const})),
-       ...(manual.get(q.id)?[{label:manual.get(q.id)!,kind:"user-topic" as const}]:[])
+       ...(manual.get(annotationKey)?[{label:manual.get(annotationKey)!,kind:"user-topic" as const}]:[]),
+       ...(heading&&syllabusHeading(attempt.frozen.snapshot.examId,heading)?
+         [{label:syllabusHeading(attempt.frozen.snapshot.examId,heading)!.label,kind:"syllabus" as const}]:[])
      ];
      const unique=new Set<string>();
      for(const {label,kind} of labels){
@@ -172,7 +184,7 @@ export interface ComparableTrend {paperRevisionId:string;label:string;count:numb
 export function comparableTrends(attempts:readonly GenericAttempt[]):ComparableTrend[]{
  const groups=new Map<string,ComparableTrend>();
  for(const a of attempts){
-   if(!a.result||a.finishedAt===null)continue;
+   if(!a.result||a.finishedAt===null||isRevisionAttempt(a))continue;
    // Exact revision: same questions, edition, scoring, timing and navigation. Never blend unrelated exams.
    const id=a.frozen.paper.id;
    const group=groups.get(id)??{paperRevisionId:id,label:a.frozen.paper.paperId+" · "+a.frozen.paper.edition,count:0,points:[]};
