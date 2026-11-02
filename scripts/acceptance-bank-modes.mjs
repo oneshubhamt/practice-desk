@@ -237,8 +237,10 @@ for(const v of [
      v.name+" insufficient-inventory response was not explicit");
    await page.locator("#g-compose-count").fill("2");
    await page.locator("#g-compose-preview").click();
-   check((await page.locator(".compose-preview").innerText()).includes("2 selected from 3 eligible"),
-     v.name+" custom draw count/available preview missing");
+   const shownPreview=await page.locator(".compose-preview").innerText();
+   check(shownPreview.includes("2 selected from 3 eligible")&&
+     shownPreview.includes("seed p44-repeatable"),
+     v.name+" custom draw preview must reflect the edited count and seed: "+shownPreview);
    check(!(await page.locator("#g-compose").innerText()).includes("First option"),
      v.name+" composer leaked a key/answer before starting");
    await assertNoOverflow(page,v.name+" open custom builder");
