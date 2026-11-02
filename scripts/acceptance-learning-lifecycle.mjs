@@ -148,6 +148,40 @@ try{
  await page.locator("#g-learning").click();await route(page,"learning");
  check(await page.locator("#learning-note").inputValue()==="Review source fundamentals",
   "File reload lost rated notebook classification/note");
+ // P46: build a NEW evidence-selected attempt from an explicitly bookmarked
+ // frozen card, never from a guessed topic or silently mixed exam pool.
+ check(await page.getByRole("heading",{name:"Build a targeted revision test"}).count()===1,
+  "Evidence-driven revision builder missing from Learning");
+ await page.locator("#learning-bookmark").check();
+ await page.locator("#learning-save").click();
+ await saved(x=>x.id===card.id&&x.bookmarked===true,"bookmarked provenance");
+ await page.locator('[data-evidence-reason="wrong"]').uncheck();
+ await page.locator('[data-evidence-reason="blank"]').uncheck();
+ await page.locator('[data-evidence-reason="bookmarked"]').check();
+ await page.locator("#learning-evidence-count").fill("1");
+ await page.locator("#learning-evidence-count").dispatchEvent("change");
+ check(await page.locator(".learning-evidence-preview li").count()===1,
+  "Explicit bookmarked evidence should preview exactly one question");
+ await page.locator("#learning-build-evidence").click();await route(page,"exam");
+ const targeted=await saved(x=>x.recordType==="generic-attempt"&&x.finishedAt===null&&
+  x.notebookLineage?.selection?.reasons?.includes("bookmarked"),"evidence-selected revision");
+ check(targeted.notebookLineage.selection.eligibleCount===1&&
+  targeted.notebookLineage.selection.selectedQuestionIds[0]===card.question.id&&
+  targeted.frozen.paper.scoring.defaultRule.correctMarks===1&&
+  targeted.frozen.paper.scoring.defaultRule.incorrectMarks===0,
+  "Evidence selection source/marks or hash-covered provenance not frozen");
+ check(await page.locator(".learning-answer").count()===0,
+  "Evidence-generated active exam disclosed solutions");
+ await page.locator("#g-submit").click();await route(page,"result");
+ const targetedFinished=await saved(x=>x.id===targeted.id&&x.finishedAt!==null,
+  "evidence-targeted result");
+ check(targetedFinished.result.items.length===1&&
+  (await records(page)).find(x=>x.id===card.id)?.reviews.length===1,
+  "Evidence practice changed FSRS rating or result item count");
+ await page.locator("#g-library").click();await route(page,"library");
+ await page.locator("#g-learning").click();await route(page,"learning");
+ check(await page.getByText("First-answer and revisit durations are unavailable:",{exact:false}).count()===1,
+  "Missing honest pacing evidence limitation");
  check(errors.length===0,"Browser errors: "+errors.join("; "));
  await h.evidence("learning-lifecycle",{sixKinds:true,manualGrades:true,explicitFSRS:true,
   notebookRevision:true,backupCrossRecords:true,reload:true});
