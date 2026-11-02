@@ -103,7 +103,7 @@ async function profile(count,data){
    check((await page.locator(".history-archive").innerText()).includes(count+" records shown"),
      "P45 History count not authoritative at "+count);
    const x=elapsed();
-   await page.locator("#g-history-search").fill("p45-archive-000");
+   await page.locator("#g-history-search").fill("p45-archive-0000");
    filter.push(elapsed()-x);
    check(await page.locator(".history-entries .archive-entry").count()===Math.min(10,count>0?count-1:0),
      "P45 filter count incorrect at "+count);
