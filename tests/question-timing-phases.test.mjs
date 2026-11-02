@@ -112,11 +112,14 @@ test("P46-B frozen stored attempts reject impossible or forged timing phase clai
    assert.throws(()=>validateGenericStoredRecord(altered(fn)),/timing (?:phase evidence|evidence version)/,description);
  }
  assert.throws(()=>validateGenericStoredRecord(altered(x=>{
-   x.state.responses[0].firstAnsweredAt=new Date(x.updatedAt+1000).toISOString();
+   x.state.responses.find(r=>r.firstAnsweredAt).firstAnsweredAt=new Date(x.updatedAt+1000).toISOString();
  })),/first-answer timing/,"future first-answer timestamp");
  assert.throws(()=>validateGenericStoredRecord(altered(x=>{
-   x.state.responses[0].firstAnsweredAt=new Date(x.startedAt+200).toISOString();
+   x.state.responses.find(r=>r.firstAnsweredAt).firstAnsweredAt=new Date(x.startedAt+200).toISOString();
  })),/first-answer timing/,"first-answer time disagrees with actual first answer event");
+ assert.throws(()=>validateGenericStoredRecord(altered(x=>{
+   delete x.state.responses.find(r=>r.firstAnsweredAt).answerEvents;
+ })),/first-answer timing/,"first-answer timestamp without any recorded first commit");
 });
 test("P46-B exact phases survive compact v4 backup, reopen and remain independent of marks",()=>{
  const a=completed(),summary=a.result.snapshot;
