@@ -105,11 +105,13 @@ export function revisionInventory(
  for(const row of observations.values())if(row.wrongAttempts.size>=2)row.reasons.add("repeated");
  // One frozen answer per question revision ID per revision test. Colliding IDs
  // with different keys are NOT merged; take the newest exact provenance.
- for(const row of [...observations.values()].sort((a,b)=>b.finishedAt-a.finishedAt||
+ const matching=[...observations.values()].filter(r=>selectedReasons.some(x=>r.reasons.has(x)));
+ for(const row of matching.sort((a,b)=>b.finishedAt-a.finishedAt||
    a.questionId.localeCompare(b.questionId)||a.questionHash.localeCompare(b.questionHash))){
    if(!byId.has(row.questionId))byId.set(row.questionId,row);
  }
- const eligible=[...byId.values()].filter(r=>selectedReasons.some(x=>r.reasons.has(x)))
+ const competing=matching.length-byId.size;
+ const eligible=[...byId.values()]
    .sort((a,b)=>b.wrongAttempts.size-a.wrongAttempts.size||b.finishedAt-a.finishedAt||
      a.questionId.localeCompare(b.questionId));
  const found=new Set(eligible.flatMap(r=>[...r.reasons]));
@@ -118,6 +120,7 @@ export function revisionInventory(
    r==="repeated"?"Repeated mistakes require at least two independent completed source attempts of the same exact answer revision.":
    r==="due"?"No due FSRS cards are available in this exam.":
    "No eligible "+r+" questions were observed in this exam.");
+ if(competing>0)insufficient.push(competing+" otherwise eligible conflicting question/key revision(s) share a question ID; only the newest exact frozen source is selected. Their answers are not pooled.");
  const selected=eligible.map(r=>({
    questionId:r.questionId,questionHash:r.questionHash,sourceAttemptId:r.sourceAttemptId,
    sourcePaperId:r.sourcePaperId,examId:r.examId,prompt:r.prompt,
