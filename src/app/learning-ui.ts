@@ -159,9 +159,13 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
        '<li'+(index>=evidenceCount?' hidden':'')+'><strong>'+esc(item.reasons.join(', '))+'</strong> · '+esc(item.prompt.slice(0,140))+
        ' <small>· '+esc(item.sourcePaperId)+' · '+item.wrongAttempts+' wrong of '+item.observedAttempts+
        ' observed source attempts'+(item.measuredForegroundMs===null?'':', '+Math.round(item.measuredForegroundMs/1000)+'s cumulative foreground')+
-       (item.visits===null?'':', '+item.visits+' visits')+'</small></li>').join("")+'</ol>':
+       (item.visits===null?'':', '+item.visits+' visits')+
+       (item.firstVisitMs===null?'':', first visit '+Math.round(item.firstVisitMs/1000)+'s')+
+       (item.revisitMs===null?'':', revisit '+Math.round(item.revisitMs/1000)+'s')+
+       (item.beforeFirstAnswerMs===null?'':', before first answer '+Math.round(item.beforeFirstAnswerMs/1000)+'s')+
+       '</small></li>').join("")+'</ol>':
        '<p class="fine">No eligible questions for the chosen filters. Try another evidence type or exam.</p>')+
-    '<p class="fine">First-answer and revisit durations are unavailable: saved sessions record cumulative foreground time and visit counts, not event timestamps.</p>'+
+    '<p class="fine">New sessions record first-visit, revisit and pre-first-answer foreground exposure. Unmeasured phases remain unavailable. These are not continuous wall-clock intervals or evidence of why an answer changed.</p>'+
     '<button class="btn primary" id="learning-build-evidence"'+(!evidenceReasons.length||assembled.eligibleCount<evidenceCount||evidenceCount<1?' disabled':'')+
       '>Start targeted revision ('+Math.min(evidenceCount,assembled.eligibleCount)+')</button></section>'+
     '<div class="generic-layout learning-layout"><section class="panel pad"><div class="row between"><h2>Error notebook</h2>'+

@@ -1,7 +1,7 @@
 import type {GenericAttempt} from "../app/exam-package.ts";
 import type {LearningCard} from "./learning.ts";
 import {addLearningCard} from "./learning.ts";
-import {questionSpeed} from "./question-analytics.ts";
+import {questionSpeed,questionTimingPhases} from "./question-analytics.ts";
 import {hashJson} from "../domain/hash.ts";
 import {REVISION_MAX_QUESTIONS} from "./revision-test.ts";
 
@@ -20,6 +20,9 @@ export interface RevisionEvidence {
  readonly observedAttempts:number;
  readonly measuredForegroundMs:number|null;
  readonly visits:number|null;
+ readonly firstVisitMs:number|null;
+ readonly revisitMs:number|null;
+ readonly beforeFirstAnswerMs:number|null;
  readonly card:LearningCard;
 }
 export interface RevisionSelection {
@@ -34,6 +37,7 @@ interface MutableEvidence {
  sourcePaperId:string;examId:string;prompt:string;finishedAt:number;
  reasons:Set<RevisionReason>;wrongAttempts:Set<string>;observedAttempts:Set<string>;
  measuredForegroundMs:number|null;visits:number|null;
+ firstVisitMs:number|null;revisitMs:number|null;beforeFirstAnswerMs:number|null;
 }
 export function isRevisionAttempt(a:GenericAttempt):boolean{
  return Boolean(a.notebookLineage)||a.frozen.paper.paperId.startsWith("notebook-revision:");
@@ -69,13 +73,16 @@ export function revisionInventory(
    const signature=q.id+"|"+q.contentHash+"|"+hashJson(answer.answer);
    let row=observations.get(signature);
    if(!row){
+    const phases=questionTimingPhases(a,q.id);
     // Date is used only to construct an ephemeral, exact frozen revision source.
     const card=cardBySignature.get(signature)??addLearningCard(a,q.id,new Date(a.finishedAt!).toISOString());
     row={card,questionId:q.id,questionHash:q.contentHash,sourceAttemptId:a.id,
       sourcePaperId:a.frozen.paper.paperId,examId,prompt:q.content.prompt,finishedAt:a.finishedAt!,
       reasons:new Set(),wrongAttempts:new Set(),observedAttempts:new Set(),
       measuredForegroundMs:response?.timeSpentMs??null,
-      visits:a.state.questionVisits?.find(v=>v.questionRevisionId===q.id)?.count??null};
+      visits:a.state.questionVisits?.find(v=>v.questionRevisionId===q.id)?.count??null,
+      firstVisitMs:phases?.firstVisitMs??null,revisitMs:phases?.revisitMs??null,
+      beforeFirstAnswerMs:phases?.beforeFirstAnswerMs??null};
     observations.set(signature,row);
    }
    row.observedAttempts.add(a.id);
@@ -96,7 +103,7 @@ export function revisionInventory(
      sourceAttemptId:card.sourceAttemptId,sourcePaperId:card.paperId,examId,
      prompt:card.question.content.prompt,finishedAt:Date.parse(card.updatedAt),
      reasons:new Set(),wrongAttempts:new Set(),observedAttempts:new Set(),
-     measuredForegroundMs:null,visits:null};
+     measuredForegroundMs:null,visits:null,firstVisitMs:null,revisitMs:null,beforeFirstAnswerMs:null};
    observations.set(signature,row);
   }
   if(card.bookmarked)row.reasons.add("bookmarked");
@@ -126,7 +133,8 @@ export function revisionInventory(
    sourcePaperId:r.sourcePaperId,examId:r.examId,prompt:r.prompt,
    reasons:[...r.reasons].filter(x=>selectedReasons.includes(x)),wrongAttempts:r.wrongAttempts.size,
    observedAttempts:r.observedAttempts.size,measuredForegroundMs:r.measuredForegroundMs,
-   visits:r.visits,card:r.card
+   visits:r.visits,firstVisitMs:r.firstVisitMs,revisitMs:r.revisitMs,
+   beforeFirstAnswerMs:r.beforeFirstAnswerMs,card:r.card
  }));
  return {examId,reasons:selectedReasons,eligibleCount:selected.length,selected,insufficient};
 }
