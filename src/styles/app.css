@@ -1194,3 +1194,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
  .learning-evidence-reasons label{width:100%}
  .learning-evidence-preview{padding-left:16px}
 }
+
+/* P46 extreme-zoom browser evidence: native text input's intrinsic 276px
+   min-width widened the whole Learning document at 195px + 140% scale. */
+.learning-layout #learning-topic{display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box}
