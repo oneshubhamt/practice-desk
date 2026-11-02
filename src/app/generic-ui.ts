@@ -1081,7 +1081,9 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    const eligibleMax=resultTab==="overview"?scoreableMaximum(paper,attempt.frozen.key,attempt.frozen.questions):0;
    const conservativeFloor=resultTab==="overview"?scoreableLowerBound(paper,attempt.frozen.key,attempt.frozen.questions):0;
    const resultPackage=packageForAttempt(attempt);
-   const resultName=resultPackage?.title??paper.paperId;
+   const resultName=attempt.practiceComposition?
+     "Custom practice · "+attempt.practiceComposition.sourcePaperRevisionId:
+     resultPackage?.title??paper.paperId;
    const resultDate=attempt.finishedAt?new Date(attempt.finishedAt).toLocaleString():"";
    const resultMeta=escapeText(resultName)+' · '+escapeText(readablePracticeMode(attempt.frozen.snapshot.mode))+
      (resultDate?' · '+escapeText(resultDate):"");
@@ -1103,6 +1105,14 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        (sourceKeyText?' · '+escapeText(sourceKeyText):"")+'.</p>':"";
    const scoringDetails=resultTab==="overview"?'<details class="result-scoring-details">'+
      '<summary>Scoring details</summary><div class="result-scoring-detail-body">'+
+     (attempt.practiceComposition?'<p class="fine"><b>Custom selection provenance:</b> source paper '+
+       escapeText(attempt.practiceComposition.sourcePaperRevisionId)+
+       ' · source key '+escapeText(attempt.practiceComposition.sourceAnswerKeyRevisionId)+
+       ' · '+attempt.practiceComposition.selectedQuestionRevisionIds.length+' of '+
+       attempt.practiceComposition.eligibleCount+' eligible · seed '+
+       escapeText(attempt.practiceComposition.seed)+
+       ' · frozen selection '+escapeText(attempt.practiceComposition.contentHash.slice(0,12))+
+       '. Scores use the actual retained source rules; this is not an independent official exam score.</p>':"")+
      (legacySourceKey?
        '<p class="fine"><b>Original-source key comparison unavailable:</b> This older saved attempt has a positional-only publisher-key snapshot. When revised options change meaning, matching answer letters are not proof of an equivalent answer. Its actual frozen result remains unchanged; original key and wording remain available for provenance.</p>':
        originalKey&&originalKey.comparable>0?
