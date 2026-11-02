@@ -8,6 +8,7 @@ import {readFile} from "node:fs/promises";
 import {gunzipSync} from "node:zlib";
 import {openHarness,records,route,starterBank,check} from "./browser/fixtures.mjs";
 import {addLearningCard} from "../src/learning/learning.ts";
+import {compactAttempt} from "../src/history/shared-store.ts";
 
 const sizes=[0,100,1000,1600];
 const repeats=2;
@@ -53,37 +54,44 @@ async function templates(){
  }finally{await context.close();}
 }
 async function seed(page,data,n){
- return page.evaluate(async({data,n})=>{
-  const r=indexedDB.open("practiceDesk.overhaul.v1",1);
+ const fixtures=[],snapshots=new Map();
+ const cards=Math.min(80,Math.floor(n*.10));
+ const attempts=n-cards-(n>0?1:0);
+ if(n>0)fixtures.push({...data.imported});
+ for(let i=0;i<attempts;i++){
+  const template=i%5===0?data.apfc:i%3===0?data.pending:data.complete;
+  const full={...template,id:"p45-archive-"+String(i).padStart(5,"0"),
+    startedAt:template.startedAt+i*1000,updatedAt:template.updatedAt+i*1000,
+    ...(template.finishedAt===null?{}:{finishedAt:template.finishedAt+i*1000}),
+    saveRevision:1};
+  const packed=compactAttempt(full);
+  fixtures.push(packed.row);snapshots.set(packed.snapshot.id,packed.snapshot);
+ }
+ for(let i=0;i<cards;i++)fixtures.push({...data.cards[i],saveRevision:1});
+ if(fixtures.length!==n)throw Error("P45 fixture count mismatch");
+ const bodies=[...snapshots.values()];
+ const estimatedJsonBytes=fixtures.reduce((sum,row)=>sum+JSON.stringify(row).length,0)+
+   bodies.reduce((sum,row)=>sum+JSON.stringify(row).length,0);
+ const writeMs=await page.evaluate(async({rows,shared})=>{
+  const r=indexedDB.open("practiceDesk.shared.v1",1);
   const db=await new Promise((resolve,reject)=>{r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
   try{
-   const fixtures=[];
-   const cards=Math.min(80,Math.floor(n*.10));
-   const attempts=n-cards-(n>0?1:0);
-   if(n>0)fixtures.push({...data.imported});
-   for(let i=0;i<attempts;i++){
-    const template=i%5===0?data.apfc:i%3===0?data.pending:data.complete;
-    fixtures.push({...template,id:"p45-archive-"+String(i).padStart(5,"0"),
-      startedAt:template.startedAt+i*1000,updatedAt:template.updatedAt+i*1000,
-      ...(template.finishedAt===null?{}:{finishedAt:template.finishedAt+i*1000}),
-      saveRevision:1});
-   }
-   for(let i=0;i<cards;i++)fixtures.push({...data.cards[i],saveRevision:1});
-   if(fixtures.length!==n)throw Error("P45 fixture count mismatch");
    const t=performance.now();
    await new Promise((resolve,reject)=>{
-    const tx=db.transaction("attempts","readwrite"),store=tx.objectStore("attempts");
-    for(const row of fixtures)store.add(row);
+    const tx=db.transaction(["attempts","snapshots"],"readwrite");
+    const records=tx.objectStore("attempts"),snapshots=tx.objectStore("snapshots");
+    for(const row of shared)snapshots.add(row);
+    for(const row of rows)records.add(row);
     tx.oncomplete=resolve;tx.onabort=()=>reject(tx.error);tx.onerror=()=>reject(tx.error);
    });
-   return {writeMs:performance.now()-t,records:fixtures.length,
-    estimatedJsonBytes:fixtures.reduce((sum,row)=>sum+JSON.stringify(row).length,0),
+   return performance.now()-t;
+  }finally{db.close();}
+ },{rows:fixtures,shared:bodies});
+ return {writeMs,records:fixtures.length,estimatedJsonBytes,sharedSnapshots:bodies.length,
     classes:{completed:fixtures.filter(x=>x.recordType==="generic-attempt"&&x.finishedAt!==null).length,
       unfinished:fixtures.filter(x=>x.recordType==="generic-attempt"&&x.finishedAt===null).length,
       learning:fixtures.filter(x=>x.recordType==="learning-card").length,
       imported:fixtures.filter(x=>x.recordType==="generic-package").length}};
-  }finally{db.close();}
- },{data,n});
 }
 async function profile(count,data){
  const {page,context,errors}=await h.open();
@@ -135,7 +143,7 @@ async function profile(count,data){
   // full frozen snapshots across Playwright's process boundary.
   const inventory=async()=>page.evaluate(async()=>{
    const db=await new Promise((resolve,reject)=>{
-    const r=indexedDB.open("practiceDesk.overhaul.v1",1);
+    const r=indexedDB.open("practiceDesk.shared.v1",1);
     r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
    });
    try{
@@ -144,7 +152,7 @@ async function profile(count,data){
       req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
     });
     const [count,sample]=await Promise.all([get(store.count()),get(store.get("p45-archive-00000"))]);
-    return {count,hasScore:Boolean(sample?.result?.snapshot),writeRevision:sample?.saveRevision??null};
+    return {count,hasScore:Boolean(sample?.result?.snapshot&&sample?.frozenRef),writeRevision:sample?.saveRevision??null};
    }finally{db.close();}
   });
   const snapshot=await inventory();
@@ -153,7 +161,7 @@ async function profile(count,data){
   const t=elapsed();
   await page.evaluate(async()=>{
    const db=await new Promise((resolve,reject)=>{
-    const r=indexedDB.open("practiceDesk.overhaul.v1",1);
+    const r=indexedDB.open("practiceDesk.shared.v1",1);
     r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
    });
    const tx=db.transaction("attempts","readwrite");
