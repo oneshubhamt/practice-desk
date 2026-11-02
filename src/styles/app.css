@@ -1139,3 +1139,15 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
 .practice-builder .generic-warning,.practice-builder .compose-preview{overflow-wrap:anywhere}
 @media(max-width:760px){.practice-compose-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:430px){.practice-compose-fields{grid-template-columns:minmax(0,1fr)}}
+
+/* Avoid min-content button text widening the entire document at 195px/140%.
+   Allow actual line wrapping; do not mask overflow or clip controls. */
+.practice-builder,.practice-builder details,.practice-compose-fields{min-width:0;max-width:100%}
+.practice-builder summary,.practice-builder label{overflow-wrap:anywhere}
+.practice-builder .generic-actions .btn{
+  min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere;
+}
+@media(max-width:250px){
+ .practice-builder .generic-actions .btn{flex:1 1 100%;padding:7px 8px}
+ .practice-builder select,.practice-builder input{min-width:0;max-width:100%}
+}
