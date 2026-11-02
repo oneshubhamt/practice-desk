@@ -9,7 +9,8 @@ import {makeRevisionPackage,createNotebookLineage,validateNotebookLineage} from 
 import {validateGenericStoredRecord} from "../src/app/generic-ui.ts";
 import {makeBackup,verifyBackup} from "../src/history/backup.ts";
 import {paperRevisionHash,questionRevisionHash} from "../src/domain/integrity.ts";
-import {scoreAttempt} from "../src/engine/scoring.ts";
+import {adjustedHistoryMetrics} from "../src/app/history-metrics.ts";
+import {historyHTML} from "../src/app/history-page.ts";
 
 const source=validateExamPackage(pkg);
 const map=new Map(source.questions.map(q=>[q.id,q]));
@@ -84,6 +85,10 @@ test("P46 selection filters are authenticated and mock trends exclude revision r
  assert.equal(mockEvidenceAttempts([a,completed]).length,1);
  assert.deepEqual(topicMetrics([a,completed]),topicMetrics([a]));
  assert.deepEqual(comparableTrends([a,completed]),comparableTrends([a]));
+ assert.deepEqual(adjustedHistoryMetrics([a,completed]),adjustedHistoryMetrics([a]));
+ const display=historyHTML([a,completed],new Map(),{status:"all",sort:"newest",search:""},false,false,"");
+ assert.match(display,/Mock accuracy/);
+ assert.match(display,/Revision tests/iu);
  const back=verifyBackup(makeBackup([a,completed],{schema:1,dark:false,scale:100},"2026-11-02T12:00:00Z"));
  assert.equal(back.records.find(x=>x.id==="targeted").notebookLineage.selection.reasons[0],"wrong");
 });
