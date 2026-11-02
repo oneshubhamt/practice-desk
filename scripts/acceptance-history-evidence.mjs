@@ -1,5 +1,5 @@
 /** Real offline archive and study evidence: revision-aware atomic deletion,
- * archival v3 restoration, multi-exam cross-paper progress, bounded pending
+ * clean v4 shared-snapshot restoration, cross-paper progress, bounded pending
  * panels and per-question visit evidence. No historical screen comparisons.
  */
 import {readFile} from "node:fs/promises";
