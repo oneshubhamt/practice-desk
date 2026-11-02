@@ -3,7 +3,9 @@ import type { ExamPackage, GenericAttempt } from "./exam-package.ts";
 import { readableAnswer } from "./exam-package.ts";
 import { ERROR_LABELS, comparableTrends, rateLearningCard, scheduledCard, topicMetrics, validateLearningCard } from "../learning/learning.ts";
 import { evidenceProgression } from "../learning/attempt-evidence.ts";
-import { REVISION_MAX_QUESTIONS } from "../learning/revision-test.ts";
+import { REVISION_MAX_QUESTIONS, type RevisionSelectionProvenance } from "../learning/revision-test.ts";
+import { REVISION_REASONS,revisionInventory,revisionTake,mockEvidenceAttempts,type RevisionReason } from "../learning/revision-selection.ts";
+import { syllabusForExam } from "../learning/syllabus-taxonomy.ts";
 import type { ErrorLabel, LearningCard, ReviewGrade } from "../learning/learning.ts";
 
 export interface LearningDeskHost {
@@ -11,7 +13,7 @@ export interface LearningDeskHost {
   attempts:()=>GenericAttempt[];
   save:(record:LearningCard)=>Promise<boolean>;
   remove:(id:string)=>Promise<void>;
-  startRevision:(cards:readonly LearningCard[])=>Promise<boolean>;
+  startRevision:(cards:readonly LearningCard[],selection?:RevisionSelectionProvenance)=>Promise<boolean>;
   close:()=>void;
 }
 const esc=(v:unknown):string=>String(v??"").replace(/[&<>"']/g,c=>
@@ -51,6 +53,8 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
  let scheduler:Scheduler<"FSRS-7">|null=null;
  let selectedId:string|null=null,reviewId:string|null=null,revealed=false;
  let filter:"all"|"due"|"bookmarked"="all",message="",closed=false,opened=false;
+ let evidenceExam="",evidenceCount=10;
+ let evidenceReasons:RevisionReason[]=["wrong","blank"];
  const cache=new Map<string,{record:LearningCard;scheduled:ReturnType<typeof scheduledCard>}>();
  const schedule=(card:LearningCard)=>{
    const current=cache.get(card.id);
@@ -115,6 +119,11 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   for(const card of all)if(card.errorLabel)reports.set(card.errorLabel,(reports.get(card.errorLabel)??0)+1);
   const commonReports=[...reports].sort((a,b)=>b[1]-a[1]).slice(0,4);
   const progress=evidenceProgression(topics);
+  const sourceAttempts=mockEvidenceAttempts(done);
+  const availableExams=[...new Set([...sourceAttempts.map(a=>a.frozen.snapshot.examId),...all.map(c=>c.examId)])].sort();
+  if(!availableExams.includes(evidenceExam))evidenceExam=availableExams[0]??"";
+  const assembled=revisionInventory(sourceAttempts,all,new Set(dueNow.map(c=>c.id)),evidenceExam,evidenceReasons);
+  const preview=assembled.selected.slice(0,Math.min(evidenceCount,REVISION_MAX_QUESTIONS));
   const visible=all.filter(c=>filter==="all"||filter==="due"&&due(c)||filter==="bookmarked"&&c.bookmarked);
   const exam=visible.find(c=>c.id===selectedId)?.examId??visible[0]?.examId;
   const candidates=visible.filter(c=>c.examId===exam&&
@@ -133,6 +142,28 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     '<button class="btn" id="learning-test"'+(!candidates.length?" disabled":"")+'>Start revision test ('+candidates.length+')</button></div></div>'+
     '<p class="fine">Practice test uses the selected exam and current notebook filter (up to '+REVISION_MAX_QUESTIONS+
     ' eligible cards). Untimed; +1 correct, 0 incorrect/unanswered. It is not the source exam score and does not rate FSRS cards.</p></section>'+
+    '<section class="panel pad learning-evidence-builder"><h2>Build a targeted revision test</h2>'+
+    '<p class="fine">Select an exam and observed evidence; questions are taken from exact frozen completed sources or your notebook. No guessed syllabus labels, cognitive causes or exam marks. Revision marking is +1 / 0, separate from mock results and FSRS ratings.</p>'+
+    '<div class="learning-evidence-controls"><label>Exam <select id="learning-evidence-exam" aria-label="Revision exam">'+
+    availableExams.map(id=>'<option value="'+esc(id)+'"'+(id===evidenceExam?' selected':'')+'>'+esc(id)+'</option>').join("")+
+    '</select></label><label>Questions (1–'+REVISION_MAX_QUESTIONS+') <input id="learning-evidence-count" type="number" min="1" max="'+REVISION_MAX_QUESTIONS+'" value="'+evidenceCount+'"></label></div>'+
+    '<fieldset class="learning-evidence-reasons"><legend>Include evidence types</legend>'+
+    REVISION_REASONS.map(reason=>'<label><input type="checkbox" data-evidence-reason="'+reason+'"'+
+      (evidenceReasons.includes(reason)?' checked':'')+'> '+esc(reason==='repeated'?'Repeated wrong':reason==='blank'?'Unanswered':reason==='slow'?'Measured slow':reason)+
+      '</label>').join("")+'</fieldset>'+
+    '<p class="fine" role="status">'+assembled.eligibleCount+' unique eligible questions · '+preview.length+
+      ' previewed · '+sourceAttempts.filter(a=>a.frozen.snapshot.examId===evidenceExam).length+
+      ' completed source attempts. Reused questions and repeated exposure are not independent difficulty-adjusted evidence.</p>'+
+    (assembled.insufficient.length?'<p class="fine">'+assembled.insufficient.map(esc).join(' ')+'</p>':'')+
+    (preview.length?'<ol class="learning-evidence-preview">'+preview.map(item=>
+       '<li><strong>'+esc(item.reasons.join(', '))+'</strong> · '+esc(item.prompt.slice(0,140))+
+       ' <small>· '+esc(item.sourcePaperId)+' · '+item.wrongAttempts+' wrong of '+item.observedAttempts+
+       ' observed source attempts'+(item.measuredForegroundMs===null?'':', '+Math.round(item.measuredForegroundMs/1000)+'s cumulative foreground')+
+       (item.visits===null?'':', '+item.visits+' visits')+'</small></li>').join("")+'</ol>':
+       '<p class="fine">No eligible questions for the chosen filters. Try another evidence type or exam.</p>')+
+    '<p class="fine">First-answer and revisit durations are unavailable: saved sessions record cumulative foreground time and visit counts, not event timestamps.</p>'+
+    '<button class="btn primary" id="learning-build-evidence"'+(!evidenceReasons.length||assembled.eligibleCount<evidenceCount||evidenceCount<1?' disabled':'')+
+      '>Start targeted revision ('+Math.min(evidenceCount,assembled.eligibleCount)+')</button></section>'+
     '<div class="generic-layout learning-layout"><section class="panel pad"><div class="row between"><h2>Error notebook</h2>'+
       '<select id="learning-filter" aria-label="Filter notebook" class="learning-filter">'+
       [["all","All cards"],["due","Due now"],["bookmarked","Bookmarked"]].map(([key,label])=>
@@ -157,6 +188,10 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
          esc(label)+'</option>').join("")+'</select>'+
        '<label class="picker" for="learning-topic">Specific topic (optional)</label>'+
        '<input id="learning-topic" maxlength="120" value="'+esc(selected.customTopic)+'" placeholder="Your own subtopic label">'+
+       (syllabusForExam(selected.examId)?'<label class="picker" for="learning-syllabus">Broad syllabus heading (optional, manually chosen)</label>'+
+         '<select id="learning-syllabus"><option value="">No heading assigned</option>'+
+         syllabusForExam(selected.examId)!.headings.map(h=>'<option value="'+esc(h.id)+'"'+
+           (selected.syllabusTopicId===h.id?' selected':'')+'>'+esc(h.label)+'</option>').join("")+'</select>':'')+
        '<label class="picker" for="learning-note">Notes</label>'+
        '<textarea id="learning-note" maxlength="8000" rows="5">'+esc(selected.note)+'</textarea>'+
        '<label class="learning-bookmark"><input id="learning-bookmark" type="checkbox"'+
@@ -190,6 +225,32 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
        '</td><td>'+g.points.map(p=>p.marks.toFixed(1)).join(" → ")+'</td></tr>').join(""):
        '<tr><td colspan="4">Complete the same paper revision twice to see a valid comparison.</td></tr>')+
     '</tbody></table></div></section>';
+  root.querySelector<HTMLSelectElement>("#learning-evidence-exam")!.onchange=e=>{
+    evidenceExam=(e.target as HTMLSelectElement).value;draw();
+  };
+  root.querySelector<HTMLInputElement>("#learning-evidence-count")!.onchange=e=>{
+    const proposed=Number((e.target as HTMLInputElement).value);
+    evidenceCount=Number.isSafeInteger(proposed)?Math.max(1,Math.min(REVISION_MAX_QUESTIONS,proposed)):1;
+    draw();
+  };
+  root.querySelectorAll<HTMLInputElement>("[data-evidence-reason]").forEach(el=>el.onchange=()=>{
+    const reason=el.dataset.evidenceReason as RevisionReason;
+    evidenceReasons=el.checked?[...evidenceReasons,reason]:
+      evidenceReasons.filter(x=>x!==reason);
+    draw();
+  });
+  root.querySelector<HTMLButtonElement>("#learning-build-evidence")!.onclick=async()=>{
+    const button=root.querySelector<HTMLButtonElement>("#learning-build-evidence")!;
+    button.disabled=true;
+    try{
+      const chosen=revisionTake(assembled,evidenceCount);
+      const provenance:RevisionSelectionProvenance={schema:1,examId:evidenceExam,
+        reasons:[...evidenceReasons],eligibleCount:assembled.eligibleCount,
+        selectedQuestionIds:chosen.map(x=>x.questionId)};
+      const ok=await host.startRevision(chosen.map(x=>x.card),provenance);
+      if(!ok){message="Targeted revision could not be durably saved. Verify storage and retry.";draw();}
+    }catch(error){message=error instanceof Error?error.message:"Cannot assemble revision";draw();}
+  };
   root.querySelector<HTMLButtonElement>("#learning-close")!.onclick=host.close;
   root.querySelector<HTMLButtonElement>("#learning-test")!.onclick=async()=>{
     const button=root.querySelector<HTMLButtonElement>("#learning-test");
@@ -211,9 +272,11 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     try{
       const note=root.querySelector<HTMLTextAreaElement>("#learning-note")!.value;
       const customTopic=root.querySelector<HTMLInputElement>("#learning-topic")!.value.trim();
+      const syllabusTopicId=root.querySelector<HTMLSelectElement>("#learning-syllabus")?.value||undefined;
       const errorLabel=root.querySelector<HTMLSelectElement>("#learning-error")!.value as ErrorLabel|"";
       const bookmarked=root.querySelector<HTMLInputElement>("#learning-bookmark")!.checked;
-      if(!await host.save(validateLearningCard({...selected,note,customTopic,errorLabel:errorLabel||null,
+      if(!await host.save(validateLearningCard({...selected,note,customTopic,
+         ...(syllabusForExam(selected.examId)?{syllabusTopicId}:{}),errorLabel:errorLabel||null,
          bookmarked,updatedAt:now().toISOString()}))){
         message="Notebook changes could not be durably saved. Export a recovery backup.";draw();return;
       }
