@@ -24,6 +24,9 @@ import { makeRevisionPackage,createNotebookLineage,validateNotebookLineage } fro
 import { questionSpeed } from "../learning/question-analytics.ts";
 import { historyHTML,healthSummary,type HistorySort,type HistoryStatus,type StorageHealth } from "./history-page.ts";
 import {backupDownload,readBackupFile} from "../history/backup-file.ts";
+import {SHARED_DB_NAME,ATTEMPTS_STORE,SNAPSHOTS_STORE,compactAttempt,expandAttempt,
+ isSharedAttempt,verifiedSnapshot,sharedSnapshot,reconstructRecords} from "../history/shared-store.ts";
+import type {SharedSnapshot,SlimAttempt} from "../history/shared-store.ts";
 import { frozenScoreSummary } from "./history-score.ts";
 import { editorialStatusLabel } from "./editorial-labels.ts";
 import { multipleDraftMessage,duplicateMatchingTargets } from "./response-drafts.ts";
@@ -355,6 +358,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  const builtinPaperIds=new Set(builtins.map(p=>p.paper.id));
  const packages=new Map<string,ExamPackage>(builtins.map(p=>[p.paper.id,p]));
  const records=new Map<string,RecordItem>();
+ const storedSnapshots=new Map<string,SharedSnapshot>();
  let choice=[...packages.values()].reverse().find(p=>p.paper.edition==="reviewed")?.paper.id??(packages.keys().next().value as string);
  let cglMode:CglPracticeMode="strict", singleSection=0, untimedPractice=false;
  let editionView:"source"|"reviewed"=packages.get(choice)?.paper.edition==="source"?"source":"reviewed";
@@ -448,7 +452,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    updateStorageHealth();
  };
  const storageKey="practiceDesk.overhaul.fallback.v1", mirrorKey="practiceDesk.overhaul.active.v1";
- const dbName="practiceDesk.overhaul.v1";
+ const dbName=SHARED_DB_NAME;
  const downloadBackup=async():Promise<void>=>{
    await writeQueue;
    try{
@@ -456,11 +460,12 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      if(db&&!storageFault){
        try{
          const snapshot=await new Promise<unknown[]>((resolve,reject)=>{
-           const request=db!.transaction("attempts","readonly").objectStore("attempts").getAll();
+           const request=db!.transaction(ATTEMPTS_STORE,"readonly").objectStore(ATTEMPTS_STORE).getAll();
            request.onsuccess=()=>resolve(request.result);
            request.onerror=()=>reject(request.error??new Error("Database snapshot failed"));
          });
-         toExport=snapshot.map(value=>validateGenericStoredRecord(value));
+         toExport=reconstructRecords(snapshot,[...storedSnapshots.values()])
+           .map(value=>validateGenericStoredRecord(value));
        }catch(error){
          storageFault=true;
          recordStorageFailure(error);
@@ -496,9 +501,18 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    if(incoming.length){
      if(db){
        await new Promise<void>((resolve,reject)=>{
-         const transaction=db!.transaction("attempts","readwrite");
-         const store=transaction.objectStore("attempts");
-         for(const record of incoming)store.add(structuredClone(record));
+         const transaction=db!.transaction([ATTEMPTS_STORE,SNAPSHOTS_STORE],"readwrite");
+         const store=transaction.objectStore(ATTEMPTS_STORE),snapshotStore=transaction.objectStore(SNAPSHOTS_STORE);
+         const toInsert=new Map<string,SharedSnapshot>();
+         for(const record of incoming){
+           if(isAttempt(record)){
+             const packed=compactAttempt(record);
+             store.add(packed.row);toInsert.set(packed.snapshot.id,packed.snapshot);
+           }else store.add(record);
+         }
+         for(const [id,snapshot] of toInsert){
+           if(!storedSnapshots.has(id))snapshotStore.add(snapshot);
+         }
          transaction.oncomplete=()=>resolve();
          transaction.onerror=()=>reject(transaction.error??new Error("Import failed"));
          transaction.onabort=()=>reject(transaction.error??new Error("Import aborted"));
@@ -511,6 +525,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      }
      for(const record of incoming){
        records.set(record.id,record);
+       if(isAttempt(record)){const sh=sharedSnapshot(record.frozen);storedSnapshots.set(sh.id,sh);}
        if(isPackage(record)&&!packages.has(record.bundle.paper.id))
          packages.set(record.bundle.paper.id,record.bundle);
      }
