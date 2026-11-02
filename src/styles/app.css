@@ -1151,3 +1151,17 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
  .practice-builder .generic-actions .btn{flex:1 1 100%;padding:7px 8px}
  .practice-builder select,.practice-builder input{min-width:0;max-width:100%}
 }
+
+/* P44 revealed a pre-existing imported-exam overflow at 195px/140%:
+   author-supplied titles, exam rules and the primary Start label could
+   exceed their narrow parent even with the builder itself fitting. Wrap
+   actual content, rather than hiding overflow. */
+.paper-preview h2,.paper-preview .fine,.help-rules-body h3,
+.help-rules-body p,.help-rules-body li{overflow-wrap:anywhere}
+.home-picker .home-start .btn{
+  min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere;
+}
+@media(max-width:250px){
+ .home-picker .home-start .btn{flex:1 1 100%;padding:7px 8px}
+ .home-side,.paper-preview,.help-rules-body{min-width:0;max-width:100%}
+}
