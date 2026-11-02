@@ -25,7 +25,7 @@ import { questionSpeed } from "../learning/question-analytics.ts";
 import { historyHTML,healthSummary,type HistorySort,type HistoryStatus,type StorageHealth } from "./history-page.ts";
 import {backupDownload,readBackupFile} from "../history/backup-file.ts";
 import {SHARED_DB_NAME,ATTEMPTS_STORE,SNAPSHOTS_STORE,compactAttempt,expandAttempt,
- isSharedAttempt,verifiedSnapshot,sharedSnapshot,reconstructRecords} from "../history/shared-store.ts";
+ isSharedAttempt,verifiedSnapshot,sharedSnapshot,reconstructRecords,isVerifiedSharedFrozen} from "../history/shared-store.ts";
 import type {SharedSnapshot,SlimAttempt} from "../history/shared-store.ts";
 import { frozenScoreSummary } from "./history-score.ts";
 import { editorialStatusLabel } from "./editorial-labels.ts";
@@ -145,7 +145,7 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
     !Number.isFinite(value.state.clockMs)||
     !Number.isInteger(value.state.sectionIndex)||!Number.isInteger(value.state.questionIndex))
    throw new Error("Invalid generic attempt record");
- assertFrozenContent(value.frozen);
+ if(!isVerifiedSharedFrozen(value.frozen))assertFrozenContent(value.frozen);
  const paper=value.frozen.paper;
  if(value.packageId!==paper.id)throw new Error("Attempt references an incorrect revision");
  const current=paper.sections[value.state.sectionIndex]?.questionRevisionIds[value.state.questionIndex];
