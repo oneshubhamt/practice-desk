@@ -103,7 +103,7 @@ const fixtureHTML=["<!doctype html><html><head><meta charset=\"utf-8\"><title>P4
  fixtureJS,
  "document.getElementById(\"launch\").onclick=()=>{window.p47Editor=P47BrowserProbe.mount(document.getElementById(\"editor\"));};",
  "document.getElementById(\"close\").onclick=()=>{window.p47Editor?.dom.remove();document.getElementById(\"launch\").focus();};",
- "document.getElementById(\"math\").innerHTML=P47BrowserProbe.math(\\"\\\\frac{a}{b}\\",false);",
+ "document.getElementById('math').innerHTML=P47BrowserProbe.math('x^2+y^2',false);",
  "</script></body></html>"].join("\n");
 await writeFile(join(fixtureDir,"vendor-fixture.html"),fixtureHTML);
 const fontsDir=join(modules,"katex/dist/fonts");
