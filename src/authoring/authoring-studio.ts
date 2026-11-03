@@ -8,6 +8,9 @@ import {QUESTION_KINDS} from "../domain/question.ts";
 import {sha256} from "../domain/hash.ts";
 import {validateMediaInventory} from "../domain/media.ts";
 import type {RichDocument} from "../domain/rich-document.ts";
+import type {ExamPackage} from "../app/exam-package.ts";
+import {compileAuthoringPublication,inspectAuthoringPublication,PublicationValidationError,
+ type PublicationIssue} from "./authoring-publisher.ts";
 import {richDocumentHTML} from "../app/rich-content-view.ts";
 import {mathRenderer} from "../app/math-renderer-provider.ts";
 import {escapeText} from "../app/html-escape.ts";
@@ -82,7 +85,15 @@ function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Field):st
   '<label>Section / topic group<input id="pd-author-section" maxlength="100" value="'+escapeText(current.section)+'"></label>'+
   '<label>Answer key draft<input id="pd-author-answer" maxlength="100" value="'+escapeText(current.answer)+'" aria-describedby="pd-author-answer-help"></label>'+
   '<label>Source / provenance note<input id="pd-author-source" maxlength="500" value="'+escapeText(current.source)+'"></label>'+
-  '</div><p class="fine" id="pd-author-answer-help">Draft answer only. Key and scoring are not published or used by tests. For matching, record pair mappings; for free response, record the marking reference.</p>'+
+  (current.kind==="numeric-entry"?'<label>Absolute answer tolerance<input type="number" id="pd-author-tolerance" min="0" max="1000000" step="any" value="'+current.tolerance+'"></label>':"")+
+  '</div><p class="fine" id="pd-author-answer-help">'+
+  escapeText(current.kind==="single-choice"?"One correct option: A, B, C or D.":
+   current.kind==="multiple-select"?"All correct options: A,C or B,D; no duplicates.":
+   current.kind==="numeric-entry"?"Accepted numeric answers, comma-separated. Set absolute tolerance above.":
+   current.kind==="true-false"?"Enter True or False.":
+   current.kind==="matching"?"Four unique pairs: 1-C,2-A,3-D,4-B (or C,A,D,B).":
+   "Evaluated manually; supply a model answer or worked rubric, not an automatic key.")+
+  '</p>'+
   '<label class="picker" for="pd-author-field">Rich-content field</label>'+
   '<select id="pd-author-field">'+applicable.map(f=>option(f,fieldNames[f],field)).join("")+'</select>';
 }
@@ -132,10 +143,14 @@ export interface AuthoringStudioController{
  beforeRender():void;
  dispose():void;
 }
-export function createQuestionAuthoringStudio():AuthoringStudioController{
+export interface AuthoringPublicationActions{
+ existing():readonly ExamPackage[];
+ publish(bundle:ExamPackage):Promise<void>;
+}
+export function createQuestionAuthoringStudio(actions:AuthoringPublicationActions):AuthoringStudioController{
  let host:HTMLElement|null=null,origin:HTMLElement|null=null,session:EditorSession|null=null;
  let shelf:AuthoringDraftShelf|null=null,questionId="",field:Field=initialField;
- let closed=true,renderSequence=0,lastSaveError="",storageBlocked=false;
+ let closed=true,renderSequence=0,lastSaveError="",storageBlocked=false,publishing=false;
  const active=():AuthoringDraft=>{
   const current=shelf?.drafts.find(d=>d.id===shelf!.activeId);
   if(!current)throw Error("No active authoring draft");
@@ -189,6 +204,7 @@ export function createQuestionAuthoringStudio():AuthoringStudioController{
  const updateDoc=(id:string,key:Field,value:RichDocument):void=>{
   changeDraft(d=>({...d,questions:d.questions.map(q=>q.id===id?updatedField(q,key,value):q)}));
  };
+ const flush=():void=>{if(session)updateDoc(questionId,field,session.getDocument());};
  const capture=():void=>{
   if(!session)return;
   const previous=session;session=null;
@@ -221,7 +237,7 @@ export function createQuestionAuthoringStudio():AuthoringStudioController{
   a.href=objectUrl;a.download="Practice_Desk_Authored_Draft_"+active().id+".json";
   document.body.append(a);a.click();a.remove();
   window.setTimeout(()=>URL.revokeObjectURL(objectUrl),1000);
-  status("Draft exported as JSON. Publishing into exams remains a separate P47-5D validation step.");
+  status("Unpublished draft exported as JSON. Validate and Publish to create a scored paper.");
   void render();
  };
  const parseImage=async(file:File):Promise<ImageAsset>=>{
@@ -264,7 +280,7 @@ export function createQuestionAuthoringStudio():AuthoringStudioController{
    '<div class="row between"><div><span class="eyebrow">QUESTION AUTHORING · LOCAL DRAFT</span>'+
    '<h2 id="pd-author-heading" tabindex="-1">Wordgard authoring studio</h2></div>'+
    '<button class="btn" id="pd-author-close">Close studio</button></div>'+
-   '<p class="fine">All editing is in this Library. Only validated Practice Desk documents are saved; Wordgard internals never become exam content. This draft is local to this browser and is <strong>not in History backups</strong> until publication support in P47-5D.</p>'+
+   '<p class="fine">Edit and preview here. Validate before publishing an immutable examination revision. Drafts stay local and must be separately exported; published papers and their attempts enter History backups.</p>'+
    (lastSaveError?'<p class="generic-warning" role="alert">'+escapeText(lastSaveError)+'</p>':"")+
    '<div class="pd-author-top"><label>Saved draft<select id="pd-author-drafts">'+draftOptions+'</select></label>'+
    '<div class="row"><button class="btn" id="pd-author-new">New draft</button>'+
@@ -296,7 +312,10 @@ export function createQuestionAuthoringStudio():AuthoringStudioController{
    '<button class="btn" id="pd-author-insert-image">Insert figure at cursor</button></fieldset></div>'+
    '<div class="pd-author-actions row"><button class="btn" id="pd-author-preview-toggle">Preview question</button>'+
    '<button class="btn primary" id="pd-author-save">Save draft</button>'+
-   '<button class="btn" id="pd-author-publish" disabled title="Publication requires P47-5D validation">Publish (P47-5D)</button></div>'+
+   '<button class="btn" id="pd-author-validate">Validate paper</button>'+
+   '<button class="btn primary" id="pd-author-publish">Publish to Library</button></div>'+
+   '<label class="pd-author-publish-consent"><input type="checkbox" id="pd-author-confirm"> I have checked the answer key, source notes and exam rules; this paper is user-authored, not officially certified.</label>'+
+   '<div id="pd-author-validation" class="pd-author-validation" hidden aria-live="polite"></div>'+
    '<p class="fine" id="pd-author-status" role="status">Editing locally; changes are saved automatically.</p>'+
    '<div id="pd-author-preview" class="pd-author-preview" hidden></div></section>';
   const find=<T extends HTMLElement>(id:string)=>container.querySelector<T>("#"+id)!;
@@ -357,6 +376,8 @@ export function createQuestionAuthoringStudio():AuthoringStudioController{
     Number(input.value):input.value;
    updateMetadata(key,value);
   };
+  const tolerance=find<HTMLInputElement>("pd-author-tolerance");
+  if(tolerance)tolerance.onchange=e=>updateQuestion("tolerance",Number((e.target as HTMLInputElement).value));
   for(const [id,key] of [["pd-author-section","section"],["pd-author-answer","answer"],
    ["pd-author-source","source"]] as const){
    find<HTMLInputElement>(id).onchange=e=>updateQuestion(key,(e.target as HTMLInputElement).value);
