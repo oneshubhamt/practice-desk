@@ -27,8 +27,8 @@ export function boundedImageOffset(
 ):ImageOffset{
  const extentX=Math.max(0,(fit.width*zoom-viewport.width)/2);
  const extentY=Math.max(0,(fit.height*zoom-viewport.height)/2);
- return {x:Math.max(-extentX,Math.min(extentX,offset.x)),
-   y:Math.max(-extentY,Math.min(extentY,offset.y))};
+ return {x:extentX===0?0:Math.max(-extentX,Math.min(extentX,offset.x)),
+   y:extentY===0?0:Math.max(-extentY,Math.min(extentY,offset.y))};
 }
 export function boundedImageZoom(value:number):number{
  return Number.isFinite(value)?Math.max(IMAGE_MIN_ZOOM,Math.min(IMAGE_MAX_ZOOM,value)):IMAGE_MIN_ZOOM;
