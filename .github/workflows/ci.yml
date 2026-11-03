@@ -54,6 +54,8 @@ jobs:
           package-manager-cache: false
       - run: npm ci --no-audit --no-fund
       - run: npm run build
+      - name: P47-5C integrated Wordgard authoring, visual and offline QA (Chromium)
+        run: node scripts/acceptance-authoring-visual.mjs chromium
       - name: P47-5B actual offline mathematical question/review and font safety (Chromium)
         run: node scripts/acceptance-p47-math.mjs chromium
       - run: node scripts/acceptance-history-evidence.mjs
@@ -66,8 +68,6 @@ jobs:
         run: node scripts/acceptance-image-viewer.mjs
       - name: P47-3B optional local image preparation and authored bank integrity
         run: node scripts/acceptance-image-preparation.mjs
-      - name: P47-5C integrated Wordgard authoring, visual and offline QA (Chromium)
-        run: node scripts/acceptance-authoring-visual.mjs chromium
       - run: node scripts/acceptance-critical.mjs
       - run: node scripts/acceptance-bank-modes.mjs
       - run: node scripts/acceptance-drafts.mjs
@@ -124,6 +124,8 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: node node_modules/playwright-core/cli.js install --with-deps ${{ matrix.browser }}
       - run: npm run build
+      - name: P47-5C Wordgard authoring visual QA (${{ matrix.browser }})
+        run: node scripts/acceptance-authoring-visual.mjs ${{ matrix.browser }}
       - name: P47-5B actual offline mathematical question/review and font safety (${{ matrix.browser }})
         run: node scripts/acceptance-p47-math.mjs ${{ matrix.browser }}
       - run: node scripts/acceptance-platform.mjs ${{ matrix.browser }}
@@ -132,8 +134,6 @@ jobs:
         run: node scripts/acceptance-image-viewer.mjs ${{ matrix.browser }}
       - name: P47-3B offline import image preparation (${{ matrix.browser }})
         run: node scripts/acceptance-image-preparation.mjs ${{ matrix.browser }}
-      - name: P47-5C Wordgard authoring visual QA (${{ matrix.browser }})
-        run: node scripts/acceptance-authoring-visual.mjs ${{ matrix.browser }}
       - name: Preserve targeted authoring screenshots (${{ matrix.browser }})
         if: always()
         uses: actions/upload-artifact@v4
