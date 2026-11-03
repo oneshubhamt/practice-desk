@@ -96,10 +96,11 @@ test("P47-5B source/review presentation supports math only from frozen verified 
  assert.match(html,/katex-mathml/);
  assert.match(html,/Original published answer/);
 });
-test("P47-5B generated release carries only offline WOFF2 and KaTeX MIT notice, no Wordgard",async()=>{
+test("P47-5C release carries only local WOFF2 and both KaTeX/Wordgard MIT notices",async()=>{
  const html=await readFile(new URL("../Practice_Desk_Offline_Mock_Tests.html",import.meta.url),"utf8");
  const size=(await stat(new URL("../Practice_Desk_Offline_Mock_Tests.html",import.meta.url))).size;
  assert.match(html,/KaTeX 0\.19\.1 LICENSE/);
+ assert.match(html,/Wordgard 0\.6\.2 LICENSE/);
  assert.match(html,/data:font\/woff2;base64,/);
  assert.doesNotMatch(html,/url\(["']?(?:\.\/)?fonts\/KaTeX/);
  assert.doesNotMatch(html,/url\([^)]*\.ttf\)/);
