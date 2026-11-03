@@ -148,7 +148,11 @@ try{
  await button.click();await modal.waitFor({state:"visible"});
  await page.setViewportSize({width:390,height:844});
  check((await readModal())?.viewport===390,"P47-3 zoom modal failed responsive resize");
- for(let n=0;n<18;n++)await page.locator(".generic-image-toolbar [aria-label='Zoom in']").click();
+ for(let n=0;n<18;n++){
+  const zoomIn=page.locator(".generic-image-toolbar [aria-label='Zoom in']");
+  if(!await zoomIn.isEnabled())break;
+  await zoomIn.click();
+ }
  check((await page.locator(".generic-image-zoom").innerText())==="800%",
   "P47-3 zoom must stop precisely at 8x");
  const canvas=page.locator(".generic-image-viewport");
