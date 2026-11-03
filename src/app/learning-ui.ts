@@ -7,6 +7,8 @@ import { REVISION_MAX_QUESTIONS, type RevisionSelectionProvenance } from "../lea
 import { REVISION_REASONS,revisionInventory,revisionTake,mockEvidenceAttempts,type RevisionReason } from "../learning/revision-selection.ts";
 import { syllabusForExam } from "../learning/syllabus-taxonomy.ts";
 import type { ErrorLabel, LearningCard, ReviewGrade } from "../learning/learning.ts";
+import type {RichDocument} from "../domain/rich-document.ts";
+import {authoredTextHTML} from "./rich-content-view.ts";
 
 export interface LearningDeskHost {
   cards:()=>LearningCard[];
@@ -24,29 +26,40 @@ function figures(assets:LearningCard["assets"],ids:readonly string[]|undefined):
   return a?'<img class="generic-figure" src="'+esc(a.dataUri)+'" alt="'+esc(a.altText??"Question figure")+'">':"";
  }).join("");
 }
+function learningRich(record:LearningCard,plain:string,rich:RichDocument|undefined):string{
+ return authoredTextHTML(plain,rich,new Set(record.assets.map(a=>a.id)),
+   (id)=>figures(record.assets,[id]));
+}
 function questionHTML(record:LearningCard):string{
  const q=record.question,c=q.content,assets=record.assets;
  const stimulus=record.stimuli.find(s=>s.id===c.stimulusId);
  let stimulusHtml="";
  if(stimulus?.kind==="passage"||stimulus?.kind==="case")
    stimulusHtml='<section class="generic-stimulus"><strong>'+esc(stimulus.title??"Source passage")+
-     '</strong><p>'+esc(stimulus.text)+'</p>'+figures(assets,stimulus.assetIds)+'</section>';
+     '</strong>'+(stimulus.richText?learningRich(record,stimulus.text,stimulus.richText):
+     '<p>'+esc(stimulus.text)+'</p>')+figures(assets,stimulus.assetIds)+'</section>';
  else if(stimulus?.kind==="table")
    stimulusHtml='<section class="generic-stimulus"><strong>'+esc(stimulus.title??"Table")+
-     '</strong><div class="scroll-table"><table><tr>'+stimulus.columns.map(x=>'<th>'+esc(x)+'</th>').join("")+
-     '</tr>'+stimulus.rows.map(row=>'<tr>'+row.map(x=>'<td>'+esc(x)+'</td>').join("")+'</tr>').join("")+
+     '</strong><div class="scroll-table"><table><tr>'+
+     stimulus.columns.map((x,i)=>'<th>'+learningRich(record,x,stimulus.richColumns?.[i])+'</th>').join("")+
+     '</tr>'+stimulus.rows.map((row,i)=>'<tr>'+row.map((x,j)=>'<td>'+
+       learningRich(record,x,stimulus.richRows?.[i]?.[j])+'</td>').join("")+'</tr>').join("")+
      '</table></div></section>';
  else if(stimulus&&(stimulus.kind==="chart"||stimulus.kind==="image"))
    stimulusHtml='<section class="generic-stimulus">'+figures(assets,[stimulus.assetId])+
-     '<p>'+esc(stimulus.caption??stimulus.altText)+'</p></section>';
+     '<p>'+learningRich(record,stimulus.caption??stimulus.altText,stimulus.richCaption)+'</p></section>';
  const choices=(c.kind==="single-choice"||c.kind==="multiple-select")?
    '<div class="generic-choices">'+c.options.map((o,i)=>'<label class="generic-choice"><input type="'+
    (c.kind==="single-choice"?"radio":"checkbox")+'" name="learning-answer"><span>'+
-   String.fromCharCode(65+i)+'. '+esc(o.text)+figures(assets,o.assetIds)+'</span></label>').join("")+'</div>':
+   String.fromCharCode(65+i)+'. '+learningRich(record,o.text,o.richText)+
+   figures(assets,o.assetIds)+'</span></label>').join("")+'</div>':
    c.kind==="true-false"?'<div class="generic-choices"><label><input type="radio" name="learning-true"> True</label> '+
       '<label><input type="radio" name="learning-true"> False</label></div>':
    '<textarea aria-label="Recall your response" rows="3" placeholder="Think through or write your answer before revealing it."></textarea>';
- return stimulusHtml+'<h2 class="generic-prompt">'+esc(c.prompt)+'</h2>'+figures(assets,c.assetIds)+choices;
+ return stimulusHtml+(c.richPrompt?
+   '<div class="generic-prompt" role="heading" aria-level="2">'+learningRich(record,c.prompt,c.richPrompt)+'</div>':
+   '<h2 class="generic-prompt">'+esc(c.prompt)+'</h2>')+
+   figures(assets,c.assetIds)+choices;
 }
 
 export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
@@ -88,7 +101,9 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
        '<button class="btn" id="learning-back">Learning desk</button></div>'+
        '<section class="panel pad">'+questionHTML(item)+
        (revealed?'<div class="learning-answer"><h3>Expected answer</h3><p>'+esc(readableAnswer(item.question,item.answer))+'</p>'+
-         (item.explanation?'<p>'+esc(item.explanation)+'</p>':"")+
+         (item.question.content.richExplanation?
+           learningRich(item,"",item.question.content.richExplanation):
+           item.explanation?'<p>'+esc(item.explanation)+'</p>':"")+
          (item.note?'<p class="fine">Your note: '+esc(item.note)+'</p>':"")+
          '<h3>How well did you recall it?</h3><div class="row generic-actions">'+
          ([[Rating.Again,"Again"],[Rating.Hard,"Hard"],[Rating.Good,"Good"],[Rating.Easy,"Easy"]] as const)
@@ -185,7 +200,9 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
        '<p class="fine">'+esc(selected.paperId)+' · '+esc(selected.sectionTitle)+
          ' · captured from completed attempt '+esc(selected.sourceAttemptId)+'</p>'+
        '<p>Expected: <strong>'+esc(readableAnswer(selected.question,selected.answer))+'</strong></p>'+
-       (selected.explanation?'<p class="fine">'+esc(selected.explanation)+'</p>':"")+
+       (selected.question.content.richExplanation?
+         learningRich(selected,"",selected.question.content.richExplanation):
+         selected.explanation?'<p class="fine">'+esc(selected.explanation)+'</p>':"")+
        '<label class="picker" for="learning-error">Error type (self-reported)</label>'+
        '<select id="learning-error"><option value="">Not classified</option>'+
        ERROR_LABELS.map(label=>'<option value="'+label+'"'+(selected.errorLabel===label?" selected":"")+'>'+
