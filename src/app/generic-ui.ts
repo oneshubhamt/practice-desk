@@ -41,6 +41,7 @@ import { readPracticeSetups,writePracticeSetups,type PracticeSetups } from "./pr
 import { examFamilyCatalog,familyIdFor,pairedEdition,BUILTIN_CGL_FAMILY } from "./exam-families.ts";
 import { importAuthoredExam, APFC_NAT_BANK_TEMPLATE } from "./bank-import.ts";
 import { createScreenRenderer } from "./screen-renderer.ts";
+import { createImageViewer } from "./image-viewer.ts";
 import { createNativeRouter, type AppRoute, type RouteContext, type NativeRouter } from "./navigation.ts";
 
 
@@ -126,6 +127,8 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  const choiceDrafts=new Map<string,{questionId:string;optionIds:OptionId[];message:string}>();
  // Live-region updates depend on actual route/question changes, not timer ticks.
  const screenRenderer=createScreenRenderer(root);
+ // One transient dialog/handler set for the entire mounted workspace.
+ const imageViewer=createImageViewer(root);
  let router:NativeRouter;
  let activationGeneration=0;
  // A newly created frozen session is already foreground/clock-initialized.
@@ -995,6 +998,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  }
  function draw():void{
    if(disposed)return;
+   imageViewer.beforeRender();
    const currentSection=attempt?.frozen.paper.sections[attempt.state.sectionIndex];
    const currentQuestion=attempt?.state.questionIndex;
    const screenKey=view==="exam"?
@@ -1464,6 +1468,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  }
  document.addEventListener("visibilitychange",visibility);
  const keyboard=(event:KeyboardEvent)=>{
+   if(imageViewer.isOpen())return;
    if(disposed||view!=="exam"||!attempt||attempt.finishedAt!==null||
       (attempt.state.status!=="running"&&attempt.state.status!=="paused")||document.hidden||
       event.ctrlKey||event.metaKey||event.shiftKey||event.isComposing)return;
@@ -1547,7 +1552,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    if(!disposed)draw();
  };
  window.addEventListener("storage",storage);
- function cleanup(){router.dispose();learningDesk.dispose();disposed=true;window.clearInterval(timer);document.removeEventListener("visibilitychange",visibility);
+ function cleanup(){imageViewer.dispose();router.dispose();learningDesk.dispose();disposed=true;window.clearInterval(timer);document.removeEventListener("visibilitychange",visibility);
    window.removeEventListener("pagehide",pagehide);window.removeEventListener("storage",storage);
    window.removeEventListener("keydown",keyboard);void writeQueue.finally(()=>db?.close());root.classList.remove("generic-workspace");}
  router=createNativeRouter(activateRoute);
