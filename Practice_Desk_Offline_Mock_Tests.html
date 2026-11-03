@@ -1206,6 +1206,38 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
 /* P46 extreme-zoom browser evidence: native text input's intrinsic 276px
    min-width widened the whole Learning document at 195px + 140% scale. */
 .learning-layout #learning-topic{display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box}
+
+/* P47-3: one native offline modal, no duplicate thumbnail source or saved bitmaps. */
+.generic-media-frame{display:block;min-width:0;max-width:100%;white-space:normal}
+.generic-workspace .generic-media-frame>.generic-figure{max-width:100%;height:auto}
+.generic-image-open{display:inline-flex;align-items:center;justify-content:center;min-height:33px;max-width:100%;padding:5px 10px;margin:0 0 6px;border:1px solid var(--line);border-radius:8px;color:var(--blue);background:var(--panel);font-size:12px;font-weight:750;line-height:1.4;cursor:zoom-in;overflow-wrap:anywhere;user-select:none}
+.generic-image-open:focus-visible{outline:3px solid #85b8e8;outline-offset:2px}
+.generic-workspace .generic-choice-media-row{padding:12px;border:1px solid var(--line);border-radius:10px;min-width:0}
+.generic-choice-media-row>.generic-choice{border:0;padding:0;min-width:0}
+.generic-workspace .generic-choice-media-row:has(input:checked){outline:2px solid var(--blue)}
+.generic-choice-media-row>.generic-choice:has(input:checked){outline:0}
+.generic-choice-media-row .generic-choice-media{padding-left:27px;min-width:0}
+.generic-choice-media-row .generic-figure{max-height:240px}
+.generic-match-media-row{min-width:0}
+.generic-image-dialog{border:1px solid var(--line);border-radius:13px;padding:0;color:var(--ink);background:var(--panel);width:min(980px,calc(100vw - 16px));max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);margin:auto;box-shadow:0 22px 90px #0007;overflow:hidden}
+.generic-image-dialog::backdrop{background:rgba(5,10,20,.82)}
+.generic-image-shell{display:grid;grid-template-rows:auto auto minmax(0,1fr) auto auto;gap:0;width:100%;height:min(90dvh,860px);min-height:0}
+.generic-image-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 13px;border-bottom:1px solid var(--line)}
+.generic-image-title{font-size:15px;font-weight:750}
+.generic-image-dialog .generic-image-close{min-height:38px}
+.generic-image-toolbar{display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;min-width:0;padding:8px;border-bottom:1px solid var(--line)}
+.generic-image-control{min-width:42px;min-height:38px}
+.generic-image-zoom{font-size:14px;font-variant-numeric:tabular-nums;font-weight:760;min-width:53px;text-align:center}
+.generic-image-viewport{position:relative;display:block;width:100%;height:100%;min-height:0;overflow:hidden;touch-action:none;overscroll-behavior:contain;user-select:none;cursor:grab;background:var(--soft)}
+.generic-image-viewport:active{cursor:grabbing}
+.generic-image-viewport:focus-visible{outline:3px solid #85b8e8;outline-offset:-3px}
+.generic-image-large{position:absolute;top:50%;left:50%;display:block;max-width:none;max-height:none;object-fit:contain;transform-origin:center center;translate:-50% -50%;pointer-events:none}
+.generic-image-caption,.generic-image-help{padding:6px 12px;margin:0;text-align:center;overflow-wrap:anywhere;white-space:normal}
+.generic-image-caption{max-height:76px;overflow:auto;font-size:12px;line-height:1.4}
+.generic-image-help{color:var(--muted);font-size:11px;line-height:1.5;padding-bottom:10px}
+@media(max-width:430px){.generic-image-shell{height:calc(100dvh - 20px)}.generic-image-dialog{width:calc(100vw - 12px);max-width:calc(100vw - 12px)}.generic-image-toolbar{gap:4px;padding:5px}.generic-image-control{min-width:38px}.generic-image-help{font-size:10px}}
+@media(max-width:300px){.generic-workspace .generic-choice-media-row{padding:7px}.generic-choice-media-row .generic-choice-media{padding-left:0}.generic-image-head{padding:6px}.generic-image-caption{max-height:55px}.generic-image-help{font-size:9px}.generic-image-dialog .btn{padding:5px}}
+@media(prefers-reduced-motion:reduce){.generic-image-large,.generic-image-dialog{transition:none!important;animation:none!important}}
 </style></head>
 <body><header><div class="wrap"><div class="brand"><div class="symbol">P</div><div><b>Practice Desk</b><small>Offline exam practice</small></div></div><div class="header-actions"><span class="header-offline"><span class="offline-dot"></span> Works offline</span></div></div></header>
 <div class="display-tools" aria-label="Display options"><button type="button" id="displayTrigger" class="display-trigger" aria-label="Display settings" aria-haspopup="true" aria-controls="displayPanel" aria-expanded="false">Aa</button><div id="displayPanel" class="display-panel" hidden><div class="display-heading"><strong>Display</strong><button id="displayClose" type="button" class="display-close" aria-label="Close display settings">×</button></div><div class="display-control"><span>Text size</span><div class="display-size"><button id="fontLess" type="button" class="btn" aria-label="Decrease text size">−</button><button id="fontReset" type="button" class="btn" aria-label="Reset text size">100%</button><button id="fontMore" type="button" class="btn" aria-label="Increase text size">+</button></div></div><div class="display-control"><span>Color theme</span><div class="display-theme-choices" role="group" aria-label="Color theme"><button id="themeLight" class="btn" type="button" aria-pressed="true">Light</button><button id="themeDark" class="btn" type="button" aria-pressed="false">Dark</button></div><button id="themeToggle" class="btn display-theme" type="button" aria-pressed="false">Toggle theme</button></div><button id="displayFullscreen" type="button" class="btn display-fullscreen" aria-pressed="false">Enter full screen</button><p class="fine display-hint">Saved on this device. Full screen is optional.</p><p class="fine" id="preferences-warning" role="status"></p></div></div>
@@ -3765,7 +3797,9 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
   function assetHTML(bundle, ids, fallbackAlt = "Question figure") {
     return (ids ?? []).map((id) => {
       const a = bundle.assets?.find((x) => x.id === id);
-      return a ? '<img class="generic-figure" src="' + escapeText(a.dataUri) + '" alt="' + escapeText(a.altText ?? fallbackAlt) + '">' : "";
+      if (!a) return "";
+      const alt = escapeText(a.altText ?? fallbackAlt);
+      return '<span class="generic-media-frame"><img class="generic-figure" src="' + escapeText(a.dataUri) + '" alt="' + alt + '" decoding="async"><span role="button" tabindex="0" class="generic-image-open" data-image-open aria-label="Enlarge image: ' + alt + '">Enlarge image</span></span>';
     }).join("");
   }
   function renderGenericControls(bundle, q, response) {
@@ -3773,13 +3807,21 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     if (c.kind === "single-choice" || c.kind === "multiple-select") {
       const selected = response?.kind === "single-choice" ? [response.optionId] : response?.kind === "multiple-select" ? response.optionIds : [];
       const kind = c.kind === "single-choice" ? "radio" : "checkbox";
-      return '<fieldset class="generic-choices"><legend>' + (kind === "radio" ? "Select one option" : "Select applicable options") + "</legend>" + c.options.map((o, i) => '<label class="generic-choice"><input type="' + kind + '" name="generic-answer" data-choice="' + escapeText(o.id) + '"' + (selected.includes(o.id) ? " checked" : "") + "><span><b>" + String.fromCharCode(65 + i) + ".</b> " + escapeText(o.text) + assetHTML(bundle, o.assetIds, "Image for option " + String.fromCharCode(65 + i)) + "</span></label>").join("") + "</fieldset>";
+      return '<fieldset class="generic-choices"><legend>' + (kind === "radio" ? "Select one option" : "Select applicable options") + "</legend>" + c.options.map((o, i) => {
+        const media = assetHTML(bundle, o.assetIds, "Image for option " + String.fromCharCode(65 + i));
+        const label = '<label class="generic-choice"><input type="' + kind + '" name="generic-answer" data-choice="' + escapeText(o.id) + '"' + (selected.includes(o.id) ? " checked" : "") + "><span><b>" + String.fromCharCode(65 + i) + ".</b> " + escapeText(o.text) + "</span></label>";
+        return media ? '<div class="generic-choice-media-row">' + label + '<div class="generic-choice-media">' + media + "</div></div>" : label;
+      }).join("") + "</fieldset>";
     }
     if (c.kind === "true-false") return '<fieldset class="generic-choices"><legend>Choose a response</legend>' + [true, false].map((value) => '<label class="generic-choice"><input type="radio" name="generic-boolean" data-bool="' + value + '"' + (response?.kind === "true-false" && response.value === value ? " checked" : "") + "><span>" + (value ? "True" : "False") + "</span></label>").join("") + "</fieldset>";
     if (c.kind === "numeric-entry") return '<label class="picker" for="g-number">Numeric answer</label><input type="number" step="any" id="g-number"' + (c.numericRules.minimum !== void 0 ? ' min="' + c.numericRules.minimum + '"' : "") + (c.numericRules.maximum !== void 0 ? ' max="' + c.numericRules.maximum + '"' : "") + ' value="' + (response?.kind === "numeric-entry" ? escapeText(response.value) : "") + '"><button class="btn primary" id="g-save">Save answer</button>';
     if (c.kind === "free-response") return '<label class="picker" for="g-text">Written response</label><textarea id="g-text" rows="6">' + (response?.kind === "free-response" ? escapeText(response.text) : "") + '</textarea><button class="btn primary" id="g-save">Save response</button>';
     const pairs = response?.kind === "matching" ? response.pairs : [];
-    return '<div class="generic-matches">' + c.leftItems.map((left) => "<label><span>" + escapeText(left.text) + assetHTML(bundle, left.assetIds, "Image for matching item " + left.text) + '</span><select data-match="' + escapeText(left.id) + '"><option value="">Not matched</option>' + c.rightItems.map((right) => '<option value="' + escapeText(right.id) + '"' + (pairs.some((p) => p.leftId === left.id && p.rightId === right.id) ? " selected" : "") + ">" + escapeText(right.text) + "</option>").join("") + "</select></label>").join("") + '</div><p class="generic-inline-warning" id="g-match-feedback" role="status" aria-live="polite" aria-atomic="true"></p><button class="btn primary" id="g-save">Save matches</button>';
+    return '<div class="generic-matches">' + c.leftItems.map((left) => {
+      const media = assetHTML(bundle, left.assetIds, "Image for matching item " + left.text);
+      const label = "<label><span>" + escapeText(left.text) + '</span><select data-match="' + escapeText(left.id) + '"><option value="">Not matched</option>' + c.rightItems.map((right) => '<option value="' + escapeText(right.id) + '"' + (pairs.some((p) => p.leftId === left.id && p.rightId === right.id) ? " selected" : "") + ">" + escapeText(right.text) + "</option>").join("") + "</select></label>";
+      return media ? '<div class="generic-match-media-row">' + label + media + "</div>" : label;
+    }).join("") + '</div><p class="generic-inline-warning" id="g-match-feedback" role="status" aria-live="polite" aria-atomic="true"></p><button class="btn primary" id="g-save">Save matches</button>';
   }
   function stimulusHTML(bundle, q) {
     const stimulus = bundle.stimuli?.find((s) => s.id === q.content.stimulusId);
@@ -8775,6 +8817,322 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     } };
   }
 
+  // src/app/image-viewer.ts
+  var IMAGE_MIN_ZOOM = 1;
+  var IMAGE_MAX_ZOOM = 8;
+  function fittedImage(natural, viewport) {
+    if (!Number.isFinite(natural.width) || !Number.isFinite(natural.height) || natural.width <= 0 || natural.height <= 0 || !Number.isFinite(viewport.width) || !Number.isFinite(viewport.height) || viewport.width <= 0 || viewport.height <= 0) return { width: 0, height: 0 };
+    const ratio = Math.min(1, viewport.width / natural.width, viewport.height / natural.height);
+    return { width: natural.width * ratio, height: natural.height * ratio };
+  }
+  function boundedImageOffset(offset, zoom, fit, viewport) {
+    const extentX = Math.max(0, (fit.width * zoom - viewport.width) / 2);
+    const extentY = Math.max(0, (fit.height * zoom - viewport.height) / 2);
+    return {
+      x: extentX === 0 ? 0 : Math.max(-extentX, Math.min(extentX, offset.x)),
+      y: extentY === 0 ? 0 : Math.max(-extentY, Math.min(extentY, offset.y))
+    };
+  }
+  function boundedImageZoom(value) {
+    return Number.isFinite(value) ? Math.max(IMAGE_MIN_ZOOM, Math.min(IMAGE_MAX_ZOOM, value)) : IMAGE_MIN_ZOOM;
+  }
+  function anchoredImageOffset(previous, oldZoom, nextZoom, anchor) {
+    const ratio = nextZoom / oldZoom;
+    return {
+      x: anchor.x - (anchor.x - previous.x) * ratio,
+      y: anchor.y - (anchor.y - previous.y) * ratio
+    };
+  }
+  function isLocalVerifiedImageUri(uri) {
+    return ["png", "jpeg", "webp", "avif", "gif"].some((type) => uri.startsWith("data:image/" + type + ";base64,"));
+  }
+  var create = (tag, className) => {
+    const element = document.createElement(tag);
+    if (className) element.className = className;
+    return element;
+  };
+  var action = (label, className = "") => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "btn " + className;
+    button.textContent = label;
+    return button;
+  };
+  function createImageViewer(root2) {
+    let active = null, disposed = false;
+    const close = () => {
+      const current = active;
+      if (!current) return;
+      active = null;
+      current.cleanup();
+      if (current.dialog.open) current.dialog.close();
+      current.image.removeAttribute("src");
+      current.dialog.remove();
+      document.body.style.overflow = current.previousOverflow;
+      if (current.trigger.isConnected) current.trigger.focus({ preventScroll: true });
+      else {
+        const heading = root2.querySelector("h1");
+        if (heading) {
+          heading.tabIndex = -1;
+          heading.focus({ preventScroll: true });
+        }
+      }
+    };
+    const update = (state) => {
+      const v = { width: state.viewport.clientWidth, height: state.viewport.clientHeight };
+      const size = fittedImage({ width: state.image.naturalWidth, height: state.image.naturalHeight }, v);
+      state.fit = size;
+      state.pan = boundedImageOffset(state.pan, state.zoom, size, v);
+      state.image.style.width = size.width + "px";
+      state.image.style.height = size.height + "px";
+      state.image.style.transform = "translate(" + state.pan.x + "px, " + state.pan.y + "px) scale(" + state.zoom + ")";
+      state.zoomLabel.textContent = Math.round(state.zoom * 100) + "%";
+      state.zoomOut.disabled = state.zoom <= IMAGE_MIN_ZOOM;
+      state.zoomIn.disabled = state.zoom >= IMAGE_MAX_ZOOM;
+      state.reset.disabled = state.zoom === 1 && state.pan.x === 0 && state.pan.y === 0;
+    };
+    const open = (thumbnail, trigger) => {
+      if (disposed) return;
+      const uri = thumbnail.currentSrc || thumbnail.src;
+      if (!isLocalVerifiedImageUri(uri)) return;
+      close();
+      const dialog = document.createElement("dialog");
+      dialog.className = "generic-image-dialog";
+      dialog.setAttribute("aria-label", "Enlarged examination image");
+      const container = create("div", "generic-image-shell");
+      const header = create("div", "generic-image-head");
+      const label = create("div", "generic-image-title");
+      label.textContent = "Image detail";
+      const closeButton = action("Close", "generic-image-close");
+      closeButton.setAttribute("aria-label", "Close enlarged image");
+      header.append(label, closeButton);
+      const toolbar = create("div", "generic-image-toolbar");
+      const out = action("\u2212", "generic-image-control");
+      out.setAttribute("aria-label", "Zoom out");
+      out.title = "Zoom out (\u2212)";
+      const zoomText = create("output", "generic-image-zoom");
+      zoomText.setAttribute("aria-live", "polite");
+      zoomText.setAttribute("aria-label", "Image zoom");
+      const inside = action("+", "generic-image-control");
+      inside.setAttribute("aria-label", "Zoom in");
+      inside.title = "Zoom in (+)";
+      const reset = action("Fit", "generic-image-control");
+      reset.setAttribute("aria-label", "Reset zoom and position");
+      toolbar.append(out, zoomText, inside, reset);
+      const viewport = create("div", "generic-image-viewport");
+      viewport.tabIndex = 0;
+      viewport.setAttribute("role", "region");
+      viewport.setAttribute("aria-label", "Image canvas. Use plus and minus to zoom, arrow keys to pan, and Escape to close.");
+      const image = document.createElement("img");
+      image.className = "generic-image-large";
+      image.alt = thumbnail.alt;
+      image.draggable = false;
+      image.decoding = "async";
+      viewport.append(image);
+      const caption = create("p", "generic-image-caption");
+      caption.textContent = thumbnail.alt || "Examination image";
+      const help = create("p", "generic-image-help");
+      help.textContent = "Drag or pinch to pan \xB7 scroll to zoom \xB7 double-click to magnify \xB7 arrow keys to pan";
+      container.append(header, toolbar, viewport, caption, help);
+      dialog.append(container);
+      document.body.append(dialog);
+      const state = {
+        dialog,
+        thumbnail,
+        image,
+        viewport,
+        zoomLabel: zoomText,
+        zoomOut: out,
+        zoomIn: inside,
+        reset,
+        trigger,
+        previousOverflow: document.body.style.overflow,
+        zoom: 1,
+        pan: { x: 0, y: 0 },
+        fit: { width: 0, height: 0 },
+        pointers: /* @__PURE__ */ new Map(),
+        cleanup: () => {
+        }
+      };
+      const zoomTo = (next, anchor = { x: 0, y: 0 }) => {
+        const value = boundedImageZoom(next);
+        state.pan = anchoredImageOffset(state.pan, state.zoom, value, anchor);
+        state.zoom = value;
+        update(state);
+      };
+      const resetZoom = () => {
+        state.zoom = 1;
+        state.pan = { x: 0, y: 0 };
+        update(state);
+      };
+      const at = (x, y) => {
+        const r = viewport.getBoundingClientRect();
+        return { x: x - r.left - r.width / 2, y: y - r.top - r.height / 2 };
+      };
+      const onKey = (event) => {
+        event.stopPropagation();
+        if (event.key === "Escape") {
+          event.preventDefault();
+          close();
+          return;
+        }
+        if (event.key === "Tab") {
+          const available = [closeButton, out, inside, reset, viewport].filter((x) => !(x instanceof HTMLButtonElement && x.disabled));
+          const index = available.indexOf(document.activeElement);
+          if (index < 0 || event.shiftKey && index === 0 || !event.shiftKey && index === available.length - 1) {
+            event.preventDefault();
+            available[event.shiftKey ? available.length - 1 : 0]?.focus({ preventScroll: true });
+          }
+          return;
+        }
+        if (event.ctrlKey || event.metaKey || event.altKey) return;
+        const key3 = event.key;
+        if (key3 === "+" || key3 === "=") {
+          event.preventDefault();
+          zoomTo(state.zoom * 1.3);
+        } else if (key3 === "-") {
+          event.preventDefault();
+          zoomTo(state.zoom / 1.3);
+        } else if (key3 === "0") {
+          event.preventDefault();
+          resetZoom();
+        } else if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(key3)) {
+          event.preventDefault();
+          const delta = key3 === "ArrowLeft" ? { x: 50, y: 0 } : key3 === "ArrowRight" ? { x: -50, y: 0 } : key3 === "ArrowUp" ? { x: 0, y: 50 } : { x: 0, y: -50 };
+          state.pan = { x: state.pan.x + delta.x, y: state.pan.y + delta.y };
+          update(state);
+        }
+      };
+      const onCancel = (event) => {
+        event.preventDefault();
+        close();
+      };
+      const onWheel = (event) => {
+        event.preventDefault();
+        zoomTo(state.zoom * Math.exp(-Math.sign(event.deltaY) * 0.16), at(event.clientX, event.clientY));
+      };
+      const onPointerDown = (event) => {
+        if (event.button !== 0 && event.pointerType === "mouse") return;
+        event.preventDefault();
+        state.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        viewport.setPointerCapture(event.pointerId);
+      };
+      const onPointerMove = (event) => {
+        if (!state.pointers.has(event.pointerId)) return;
+        const before = state.pointers.get(event.pointerId);
+        const after = { x: event.clientX, y: event.clientY };
+        const prior = [...state.pointers.values()];
+        state.pointers.set(event.pointerId, after);
+        if (prior.length === 1) {
+          state.pan = { x: state.pan.x + after.x - before.x, y: state.pan.y + after.y - before.y };
+          update(state);
+          return;
+        }
+        if (prior.length === 2) {
+          const now2 = [...state.pointers.values()];
+          const oldDist = Math.hypot(prior[0].x - prior[1].x, prior[0].y - prior[1].y);
+          const newDist = Math.hypot(now2[0].x - now2[1].x, now2[0].y - now2[1].y);
+          const oldMid = { x: (prior[0].x + prior[1].x) / 2, y: (prior[0].y + prior[1].y) / 2 };
+          const newMid = { x: (now2[0].x + now2[1].x) / 2, y: (now2[0].y + now2[1].y) / 2 };
+          state.pan = { x: state.pan.x + newMid.x - oldMid.x, y: state.pan.y + newMid.y - oldMid.y };
+          if (oldDist > 0 && newDist > 0) zoomTo(state.zoom * newDist / oldDist, at(newMid.x, newMid.y));
+          else update(state);
+        }
+      };
+      const endPointer = (event) => {
+        state.pointers.delete(event.pointerId);
+        if (viewport.hasPointerCapture(event.pointerId)) viewport.releasePointerCapture(event.pointerId);
+      };
+      const onResize = () => update(state);
+      state.cleanup = () => {
+        window.removeEventListener("resize", onResize);
+        dialog.removeEventListener("keydown", onKey);
+        dialog.removeEventListener("cancel", onCancel);
+        viewport.removeEventListener("wheel", onWheel);
+        viewport.removeEventListener("pointerdown", onPointerDown);
+        viewport.removeEventListener("pointermove", onPointerMove);
+        viewport.removeEventListener("pointerup", endPointer);
+        viewport.removeEventListener("pointercancel", endPointer);
+        state.pointers.clear();
+      };
+      dialog.addEventListener("keydown", onKey);
+      dialog.addEventListener("cancel", onCancel);
+      viewport.addEventListener("wheel", onWheel, { passive: false });
+      viewport.addEventListener("pointerdown", onPointerDown);
+      viewport.addEventListener("pointermove", onPointerMove);
+      viewport.addEventListener("pointerup", endPointer);
+      viewport.addEventListener("pointercancel", endPointer);
+      window.addEventListener("resize", onResize);
+      closeButton.addEventListener("click", close);
+      out.addEventListener("click", () => zoomTo(state.zoom / 1.3));
+      inside.addEventListener("click", () => zoomTo(state.zoom * 1.3));
+      reset.addEventListener("click", resetZoom);
+      viewport.addEventListener("dblclick", (event) => {
+        event.preventDefault();
+        zoomTo(state.zoom >= 2 ? 1 : 2, at(event.clientX, event.clientY));
+      });
+      try {
+        dialog.showModal();
+      } catch {
+        state.cleanup();
+        dialog.remove();
+        return;
+      }
+      active = state;
+      document.body.style.overflow = "hidden";
+      image.addEventListener("load", () => {
+        if (active === state) update(state);
+      });
+      image.addEventListener("error", () => {
+        if (active === state) {
+          help.textContent = "Image could not be decoded. Close and check the original exam file.";
+          update(state);
+        }
+      });
+      image.src = uri;
+      closeButton.focus({ preventScroll: true });
+      update(state);
+    };
+    const click = (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const hit = target.closest("[data-image-open],img.generic-figure");
+      if (!hit || !root2.contains(hit)) return;
+      const frame = hit.closest(".generic-media-frame");
+      const image = frame?.querySelector("img.generic-figure");
+      if (!image) return;
+      const trigger = frame?.querySelector("[data-image-open]") ?? hit;
+      event.preventDefault();
+      event.stopPropagation();
+      open(image, trigger);
+    };
+    const key2 = (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      const t = event.target;
+      if (!(t instanceof HTMLElement) || !t.matches("[data-image-open]") || !root2.contains(t)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const image = t.closest(".generic-media-frame")?.querySelector("img.generic-figure");
+      if (image) open(image, t);
+    };
+    root2.addEventListener("click", click, true);
+    root2.addEventListener("keydown", key2, true);
+    return {
+      isOpen: () => active !== null,
+      beforeRender: () => {
+        if (active) close();
+      },
+      close,
+      dispose: () => {
+        if (disposed) return;
+        disposed = true;
+        close();
+        root2.removeEventListener("click", click, true);
+        root2.removeEventListener("keydown", key2, true);
+      }
+    };
+  }
+
   // src/app/navigation.ts
   var SCREENS = /* @__PURE__ */ new Set(["library", "history", "learning", "exam", "result"]);
   var TABS = /* @__PURE__ */ new Set(["overview", "review", "timing"]);
@@ -9080,6 +9438,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     let attempt = null, view = "library";
     const choiceDrafts = /* @__PURE__ */ new Map();
     const screenRenderer = createScreenRenderer(root2);
+    const imageViewer = createImageViewer(root2);
     let router;
     let activationGeneration = 0;
     let freshlyStartedAttemptId = null;
@@ -9796,6 +10155,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     }
     function draw2() {
       if (disposed) return;
+      imageViewer.beforeRender();
       const currentSection = attempt?.frozen.paper.sections[attempt.state.sectionIndex];
       const currentQuestion = attempt?.state.questionIndex;
       const screenKey = view === "exam" ? "exam|" + attempt?.id + "|" + attempt?.state.sectionIndex + "|" + currentQuestion : view === "result" ? "result|" + attempt?.id + "|" + resultTab : view;
@@ -10347,6 +10707,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     }
     document.addEventListener("visibilitychange", visibility);
     const keyboard = (event) => {
+      if (imageViewer.isOpen()) return;
       if (disposed || view !== "exam" || !attempt || attempt.finishedAt !== null || attempt.state.status !== "running" && attempt.state.status !== "paused" || document.hidden || event.ctrlKey || event.metaKey || event.shiftKey || event.isComposing) return;
       const focused = event.target;
       const focusedRadio = focused instanceof HTMLInputElement && focused.type === "radio" && root2.contains(focused) && (focused.name === "generic-answer" || focused.name === "generic-boolean");
@@ -10430,6 +10791,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     };
     window.addEventListener("storage", storage);
     function cleanup() {
+      imageViewer.dispose();
       router.dispose();
       learningDesk.dispose();
       disposed = true;
