@@ -53,8 +53,8 @@ export function frozenReviewMedia(saved:GenericAttempt,q:QuestionRevision,
      }).join("")+'</div>':"";
    const matches=content.kind==="matching"?
      '<div class="generic-matches">'+[...content.leftItems,...content.rightItems].map(item=>
-       '<div><span>'+renderAuthoredText(display,item.text,item.richText)+
-       assetHTML(display,item.assetIds,"Image for matching item "+item.text)+'</span></div>').join("")+'</div>':"";
+       '<div><div class="pd-review-choice-content">'+renderAuthoredText(display,item.text,item.richText)+
+       assetHTML(display,item.assetIds,"Image for matching item "+item.text)+'</div></div>').join("")+'</div>':"";
    return passage+promptAssets+options+booleanOptions+matches;
  }
 export function sourceReviewHTML(saved:GenericAttempt,target:QuestionRevision,
@@ -70,9 +70,9 @@ export function sourceReviewHTML(saved:GenericAttempt,target:QuestionRevision,
    const optionLines=content.kind==="single-choice"||content.kind==="multiple-select"?
      '<div class="generic-choices" role="list" aria-label="Original source options">'+
      content.options.map((option,index)=>
-       '<div role="listitem" class="generic-choice"><span><b>'+
+       '<div role="listitem" class="generic-choice"><div class="pd-review-choice-content"><b>'+
        String.fromCharCode(65+index)+'.</b> '+renderAuthoredText(display,option.text,option.richText)+
-       assetHTML(display,option.assetIds)+'</span></div>').join("")+'</div>':"";
+       assetHTML(display,option.assetIds)+'</div></div>').join("")+'</div>':"";
    const matches=content.kind==="matching"?
      '<div class="generic-matches">'+[...content.leftItems,...content.rightItems]
        .map(x=>'<div>'+renderAuthoredText(display,x.text,x.richText)+assetHTML(display,x.assetIds)+'</div>').join("")+'</div>':"";

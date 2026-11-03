@@ -2,7 +2,7 @@
 import type {RichBlock,RichDocument,RichInline,RichMark} from "../domain/rich-document.ts";
 import {validateRichDocument} from "../domain/rich-document.ts";
 import {escapeText} from "./html-escape.ts";
-import {mathRenderer} from "./katex-math-adapter.ts";
+import {mathRenderer} from "./math-renderer-provider.ts";
 type ImageHTML=(assetId:string,alt:string)=>string;
 const tags:Readonly<Record<RichMark,string>>={
  strong:"strong",emphasis:"em",underline:"u",subscript:"sub",superscript:"sup",code:"code"

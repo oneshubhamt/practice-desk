@@ -47,12 +47,12 @@ function questionHTML(record:LearningCard):string{
      '</table></div></section>';
  else if(stimulus&&(stimulus.kind==="chart"||stimulus.kind==="image"))
    stimulusHtml='<section class="generic-stimulus">'+figures(assets,[stimulus.assetId])+
-     '<p>'+learningRich(record,stimulus.caption??stimulus.altText,stimulus.richCaption)+'</p></section>';
+     '<div>'+learningRich(record,stimulus.caption??stimulus.altText,stimulus.richCaption)+'</div></section>';
  const choices=(c.kind==="single-choice"||c.kind==="multiple-select")?
    '<div class="generic-choices">'+c.options.map((o,i)=>'<label class="generic-choice"><input type="'+
-   (c.kind==="single-choice"?"radio":"checkbox")+'" name="learning-answer"><span>'+
+   (c.kind==="single-choice"?"radio":"checkbox")+'" name="learning-answer"><div class="pd-rich-choice-text">'+
    String.fromCharCode(65+i)+'. '+learningRich(record,o.text,o.richText)+
-   figures(assets,o.assetIds)+'</span></label>').join("")+'</div>':
+   figures(assets,o.assetIds)+'</div></label>').join("")+'</div>':
    c.kind==="true-false"?'<div class="generic-choices"><label><input type="radio" name="learning-true"> True</label> '+
       '<label><input type="radio" name="learning-true"> False</label></div>':
    '<textarea aria-label="Recall your response" rows="3" placeholder="Think through or write your answer before revealing it."></textarea>';
