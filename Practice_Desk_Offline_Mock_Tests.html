@@ -3814,6 +3814,25 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
   // src/app/html-escape.ts
   var escapeText = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
 
+  // src/app/exam-shortcuts.ts
+  var EXAM_SHORTCUT_HELP = "A\u2013D answer single-choice; Left/Right navigate except on native radios, where Alt+Left/Right navigates; M marks/unmarks for review even when paused; F toggles full screen. Typing, Display and modal dialogs suspend shortcuts.";
+  function resolveExamShortcut(c) {
+    if (c.blocked || c.editable) return null;
+    const key2 = c.key.toLowerCase(), arrow = key2 === "arrowleft" || key2 === "arrowright";
+    if (c.alt && !arrow) return null;
+    if (c.paused) return key2 === "m" && !c.alt && !c.repeat && c.allowFlagging ? { kind: "flag" } : null;
+    if (arrow) {
+      if (c.focusedRadio && !c.alt) return null;
+      return { kind: "navigate", delta: key2 === "arrowright" ? 1 : -1 };
+    }
+    if (c.alt || c.repeat) return null;
+    if (key2 === "f") return { kind: "fullscreen" };
+    if (key2 === "m") return c.allowFlagging ? { kind: "flag" } : null;
+    if (key2 === "a" || key2 === "b" || key2 === "c" || key2 === "d")
+      return { kind: "answer", index: key2.charCodeAt(0) - 97 };
+    return null;
+  }
+
   // src/app/question-content-view.ts
   function assetHTML(bundle, ids, fallbackAlt = "Question figure") {
     return (ids ?? []).map((id) => {
@@ -3925,7 +3944,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       const r = responsesById.get(qid);
       const locked = state.status !== "running" || paper.navigation.questionNavigation === "forward-only" && i < state.questionIndex;
       return '<button class="num ' + (i === state.questionIndex ? "here " : "") + (r?.response ? "answered " : "") + (r?.flagged ? "marked" : "") + '" data-q="' + i + '" aria-current="' + (i === state.questionIndex ? "step" : "false") + '" aria-label="Question ' + (i + 1) + (r?.response ? ", answered" : "") + (r?.flagged ? ", flagged" : "") + '"' + (locked ? " disabled" : "") + ">" + (i + 1) + "</button>";
-    }).join("") + '</div><div class="navigator-stats" role="group" aria-label="Current section answer counts"><div><b>' + sectionAnswered + "<span> / " + section.questionRevisionIds.length + "</span></b><small>Answered</small></div><div><b>" + (section.questionRevisionIds.length - sectionAnswered) + "</b><small>Not answered</small></div><div><b>" + sectionFlagged + '</b><small>Flagged</small></div></div><div class="palette-legend"><span><i class="legend-dot answered"></i>Answered</span><span><i class="legend-dot marked"></i>Review</span><span><i class="legend-dot empty"></i>Not answered</span></div><p class="fine navigator-status">' + (paper.navigation.sectionNavigation === "sequential-locked" ? "Answers remain hidden until the exam finishes. Submitting a section locks it." : "Answers remain hidden until you submit.") + '</p><details class="navigator-help"><summary>Keyboard shortcuts</summary><p class="fine">' + (paper.navigation.questionNavigation === "forward-only" ? "Questions cannot be revisited in this exam." : "Navigate freely where the paper permits.") + " A\u2013D answer single-choice questions. \u2190 / \u2192 navigate except when a radio is focused; Alt + \u2190 / \u2192 navigates while focused. M marks/unmarks for review even while paused; F enters full screen. Answer/navigation shortcuts are disabled while paused or typing.</p></details></aside></div>";
+    }).join("") + '</div><div class="navigator-stats" role="group" aria-label="Current section answer counts"><div><b>' + sectionAnswered + "<span> / " + section.questionRevisionIds.length + "</span></b><small>Answered</small></div><div><b>" + (section.questionRevisionIds.length - sectionAnswered) + "</b><small>Not answered</small></div><div><b>" + sectionFlagged + '</b><small>Flagged</small></div></div><div class="palette-legend"><span><i class="legend-dot answered"></i>Answered</span><span><i class="legend-dot marked"></i>Review</span><span><i class="legend-dot empty"></i>Not answered</span></div><p class="fine navigator-status">' + (paper.navigation.sectionNavigation === "sequential-locked" ? "Answers remain hidden until the exam finishes. Submitting a section locks it." : "Answers remain hidden until you submit.") + '</p><details class="navigator-help"><summary>Keyboard shortcuts</summary><p class="fine">' + (paper.navigation.questionNavigation === "forward-only" ? "Questions cannot be revisited in this exam." : "Navigate freely where the paper permits.") + " " + EXAM_SHORTCUT_HELP + "</p></details></aside></div>";
   }
 
   // src/domain/validate.ts
@@ -8167,6 +8186,16 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     const path = points.map(([x, y], i) => (i ? "L " : "M ") + x.toFixed(1) + " " + y.toFixed(1)).join(" ");
     return '<svg class="history-sparkline" viewBox="0 0 600 105" role="img" aria-label="' + esc2(description) + '"><path d="' + path + '" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' + points.map(([x, y]) => '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="4" fill="currentColor"/>').join("") + "</svg>";
   }
+  function historyRowsHTML(visible, packages) {
+    return visible.length ? '<div class="history-entries">' + visible.map((a) => {
+      const s = a.result?.snapshot;
+      const score = frozenScoreSummary(a);
+      const count = a.frozen.paper.sections.reduce((n, z) => n + z.questionRevisionIds.length, 0);
+      const answered = a.state.responses.filter((z) => z.response).length;
+      const status = a.finishedAt ? "Completed" : "Resume";
+      return '<div class="archive-entry"><button class="history-open" data-attempt="' + esc2(a.id) + '"><span class="archive-title">' + esc2(historyAttemptLabel(a, packages)) + '</span><span class="archive-meta">' + esc2(stamp(a.startedAt)) + " \xB7 " + esc2(a.frozen.snapshot.mode.replaceAll("-", " ")) + " \xB7 " + count + ' questions</span><span class="archive-numbers">' + (a.finishedAt ? score && s ? esc2(score.text) + " \xB7 " + s.correctCount + " correct" : "Completed \xB7 score unavailable" : answered + "/" + count + " answered \xB7 In progress") + '</span></button><span class="history-status ' + (a.finishedAt ? "complete" : "active") + '">' + status + "</span>" + (a.finishedAt ? '<button class="btn danger generic-delete" data-delete="' + esc2(a.id) + '" aria-label="Delete completed result">Delete</button>' : '<button class="btn danger generic-delete" data-discard="' + esc2(a.id) + '" aria-label="Discard unfinished test and lose its answers">Discard unfinished</button>') + "</div>";
+    }).join("") + "</div>" : '<p class="empty-state">No attempts match these filters. Your saved records have not been deleted.</p>';
+  }
   function historyHTML(attempts, packages, query, loading, storageLocked, warning, backend = "indexeddb", health = {
     pendingWrites: 0,
     lastCommittedAt: null,
@@ -8200,14 +8229,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       editionOptions.set(p.paper.id, p.paper.paperId + " \xB7 " + p.paper.edition);
     const pCount = attempts.length;
     return '<div class="generic-heading page-heading"><div><span class="eyebrow">ATTEMPT ARCHIVE</span><h1>History & insights</h1><p class="muted">Review your work, compare like-for-like papers and safeguard offline records.</p></div><button class="btn quiet" id="g-library">\u2190 Test library</button></div>' + (warning ? '<p role="status" class="generic-warning">' + esc2(warning) + "</p>" : "") + // Primary History task first: keep archive filters, records and backups together.
-    '<section class="panel pad history-archive"><div class="row between"><div><h2>Saved attempts</h2><p class="fine" id="g-history-count" role="status" aria-live="polite">' + visible.length + " of " + pCount + ' records shown</p></div><div class="row generic-actions"><button class="btn" id="g-export-history"' + (loading ? " disabled" : "") + '>Export backup</button><button class="btn" id="g-import-history"' + (loading || storageLocked ? " disabled" : "") + '>Import backup</button></div></div><input type="file" id="g-history-file" accept=".json,.gz,application/json,application/gzip" hidden><div class="history-filters"><label class="filter-label" for="g-history-search">Find a paper<input type="search" id="g-history-search" placeholder="Search paper, mode or edition" value="' + esc2(query.search) + '"></label><label class="filter-label" for="g-history-paper">Paper / edition<select id="g-history-paper"><option value="all">All paper editions</option>' + [...editionOptions.entries()].sort((a, b) => a[1].localeCompare(b[1])).map(([id, label]) => '<option value="' + esc2(id) + '"' + ((query.paperRevisionId ?? "all") === id ? " selected" : "") + ">" + esc2(label) + "</option>").join("") + '</select></label><label class="filter-label" for="g-history-exam">Exam (saved ID)<select id="g-history-exam"><option value="all">All exams</option>' + examIds.map((id) => '<option value="' + esc2(id) + '"' + ((query.examId ?? "all") === id ? " selected" : "") + ">" + esc2(id) + "</option>").join("") + '</select></label><label class="filter-label" for="g-history-mode">Practice mode<select id="g-history-mode"><option value="all">All practice modes</option>' + modes.map((mode) => '<option value="' + esc2(mode) + '"' + ((query.mode ?? "all") === mode ? " selected" : "") + ">" + esc2(mode.replaceAll("-", " ")) + "</option>").join("") + '</select></label><label class="filter-label" for="g-filter">Status<select id="g-filter">' + [["all", "All attempts"], ["progress", "In progress"], ["complete", "Completed"]].map(([id, t]) => '<option value="' + id + '"' + (query.status === id ? " selected" : "") + ">" + t + "</option>").join("") + '</select></label><label class="filter-label" for="g-history-sort">Order<select id="g-history-sort">' + [["newest", "Newest first"], ["oldest", "Oldest first"]].map(([id, t]) => '<option value="' + id + '"' + (query.sort === id ? " selected" : "") + ">" + t + "</option>").join("") + '</select></label><label class="filter-label" for="g-history-from">Started from (local)<input type="date" id="g-history-from" value="' + esc2(query.startedFrom ?? "") + '"></label><label class="filter-label" for="g-history-to">Started through (local)<input type="date" id="g-history-to" value="' + esc2(query.startedTo ?? "") + '"></label></div><div class="history-filter-footer"><p class="fine">' + activeFilterCount + " active filter" + (activeFilterCount === 1 ? "" : "s") + ' \xB7 Dates use the local calendar day when each attempt started; both endpoints are inclusive.</p><button class="btn quiet" type="button" id="g-history-reset"' + (!activeFilterCount && query.sort === "newest" ? " disabled" : "") + ">Reset all filters</button></div>" + (filterError ? '<p class="generic-warning" id="g-history-filter-error" role="alert">' + esc2(filterError) + "</p>" : "") + '<p class="fine">Insights below always cover all saved attempts, regardless of archive filters.</p>' + (visible.length ? '<div class="history-entries">' + visible.map((a) => {
-      const s = a.result?.snapshot;
-      const score = frozenScoreSummary(a);
-      const count = a.frozen.paper.sections.reduce((n, z) => n + z.questionRevisionIds.length, 0);
-      const answered2 = a.state.responses.filter((z) => z.response).length;
-      const status = a.finishedAt ? "Completed" : "Resume";
-      return '<div class="archive-entry"><button class="history-open" data-attempt="' + esc2(a.id) + '"><span class="archive-title">' + esc2(historyAttemptLabel(a, packages)) + '</span><span class="archive-meta">' + esc2(stamp(a.startedAt)) + " \xB7 " + esc2(a.frozen.snapshot.mode.replaceAll("-", " ")) + " \xB7 " + count + ' questions</span><span class="archive-numbers">' + (a.finishedAt ? score && s ? esc2(score.text) + " \xB7 " + s.correctCount + " correct" : "Completed \xB7 score unavailable" : answered2 + "/" + count + " answered \xB7 In progress") + '</span></button><span class="history-status ' + (a.finishedAt ? "complete" : "active") + '">' + status + "</span>" + (a.finishedAt ? '<button class="btn danger generic-delete" data-delete="' + esc2(a.id) + '" aria-label="Delete completed result">Delete</button>' : '<button class="btn danger generic-delete" data-discard="' + esc2(a.id) + '" aria-label="Discard unfinished test and lose its answers">Discard unfinished</button>') + "</div>";
-    }).join("") + "</div>" : '<p class="empty-state">No attempts match these filters. Your saved records have not been deleted.</p>') + '</section><div class="history-summary">' + [
+    '<section class="panel pad history-archive"><div class="row between"><div><h2>Saved attempts</h2><p class="fine" id="g-history-count" role="status" aria-live="polite">' + visible.length + " of " + pCount + ' records shown</p></div><div class="row generic-actions"><button class="btn" id="g-export-history"' + (loading ? " disabled" : "") + '>Export backup</button><button class="btn" id="g-import-history"' + (loading || storageLocked ? " disabled" : "") + '>Import backup</button></div></div><input type="file" id="g-history-file" accept=".json,.gz,application/json,application/gzip" hidden><div class="history-filters"><label class="filter-label" for="g-history-search">Find a paper<input type="search" id="g-history-search" placeholder="Search paper, mode or edition" value="' + esc2(query.search) + '"></label><label class="filter-label" for="g-history-paper">Paper / edition<select id="g-history-paper"><option value="all">All paper editions</option>' + [...editionOptions.entries()].sort((a, b) => a[1].localeCompare(b[1])).map(([id, label]) => '<option value="' + esc2(id) + '"' + ((query.paperRevisionId ?? "all") === id ? " selected" : "") + ">" + esc2(label) + "</option>").join("") + '</select></label><label class="filter-label" for="g-history-exam">Exam (saved ID)<select id="g-history-exam"><option value="all">All exams</option>' + examIds.map((id) => '<option value="' + esc2(id) + '"' + ((query.examId ?? "all") === id ? " selected" : "") + ">" + esc2(id) + "</option>").join("") + '</select></label><label class="filter-label" for="g-history-mode">Practice mode<select id="g-history-mode"><option value="all">All practice modes</option>' + modes.map((mode) => '<option value="' + esc2(mode) + '"' + ((query.mode ?? "all") === mode ? " selected" : "") + ">" + esc2(mode.replaceAll("-", " ")) + "</option>").join("") + '</select></label><label class="filter-label" for="g-filter">Status<select id="g-filter">' + [["all", "All attempts"], ["progress", "In progress"], ["complete", "Completed"]].map(([id, t]) => '<option value="' + id + '"' + (query.status === id ? " selected" : "") + ">" + t + "</option>").join("") + '</select></label><label class="filter-label" for="g-history-sort">Order<select id="g-history-sort">' + [["newest", "Newest first"], ["oldest", "Oldest first"]].map(([id, t]) => '<option value="' + id + '"' + (query.sort === id ? " selected" : "") + ">" + t + "</option>").join("") + '</select></label><label class="filter-label" for="g-history-from">Started from (local)<input type="date" id="g-history-from" value="' + esc2(query.startedFrom ?? "") + '"></label><label class="filter-label" for="g-history-to">Started through (local)<input type="date" id="g-history-to" value="' + esc2(query.startedTo ?? "") + '"></label></div><div class="history-filter-footer"><p class="fine">' + activeFilterCount + " active filter" + (activeFilterCount === 1 ? "" : "s") + ' \xB7 Dates use the local calendar day when each attempt started; both endpoints are inclusive.</p><button class="btn quiet" type="button" id="g-history-reset"' + (!activeFilterCount && query.sort === "newest" ? " disabled" : "") + ">Reset all filters</button></div>" + (filterError ? '<p class="generic-warning" id="g-history-filter-error" role="alert">' + esc2(filterError) + "</p>" : "") + '<p class="fine">Insights below always cover all saved attempts, regardless of archive filters.</p><div id="g-history-records">' + historyRowsHTML(visible, packages) + '</div></section><div class="history-summary">' + [
       ["Total attempts", pCount],
       ["Completed", done.length],
       ["In progress", progressing.length],
@@ -8855,12 +8877,17 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
         const target = focusKey.id ? controls.find((item) => item.id === focusKey.id) : controls.find((item) => focusKey.attributes.some(([name, value]) => item.hasAttribute(name) && item.getAttribute(name) === value));
         if (target && !("disabled" in target && target.disabled)) {
           target.focus({ preventScroll: true });
-          if (target instanceof HTMLInputElement && previous instanceof HTMLInputElement && target.type === "search" && previous.type === "search") {
+          if (target instanceof HTMLInputElement && previous instanceof HTMLInputElement && ["search", "text"].includes(target.type) && target.type === previous.type || target instanceof HTMLTextAreaElement && previous instanceof HTMLTextAreaElement) {
+            const current = target;
+            const former = previous;
             try {
-              target.setSelectionRange(
-                previous.selectionStart ?? target.value.length,
-                previous.selectionEnd ?? target.value.length
+              current.setSelectionRange(
+                former.selectionStart ?? current.value.length,
+                former.selectionEnd ?? current.value.length,
+                former.selectionDirection ?? "none"
               );
+              current.scrollTop = former.scrollTop;
+              current.scrollLeft = former.scrollLeft;
             } catch {
             }
           }
@@ -10611,7 +10638,43 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       if (view === "learning") return;
       if (view === "history") {
         root2.querySelector("#g-library").onclick = () => go({ screen: "library" });
-        const setFilter = (patch) => changeHistoryQuery({ ...historyQuery, ...patch });
+        const bindHistoryRows = () => {
+          root2.querySelectorAll("[data-delete]").forEach((b) => b.onclick = () => {
+            void removeSavedAttempt(b.dataset.delete ?? "", "completed");
+          });
+          root2.querySelectorAll("[data-discard]").forEach((b) => b.onclick = () => {
+            void removeSavedAttempt(b.dataset.discard ?? "", "discard-unfinished");
+          });
+          root2.querySelectorAll("[data-attempt]").forEach((b) => b.onclick = () => openSaved(b.dataset.attempt ?? ""));
+        };
+        const refreshHistoryRows = () => {
+          const attempts = [...records.values()].filter(isAttempt);
+          const visible = filteredHistory(attempts, packages, historyQuery);
+          const results = root2.querySelector("#g-history-records");
+          if (!results) return;
+          results.innerHTML = historyRowsHTML(visible, packages);
+          root2.querySelector("#g-history-count").textContent = visible.length + " of " + attempts.length + " records shown";
+          const count = activeHistoryFilterCount(historyQuery);
+          root2.querySelector(".history-filter-footer .fine").textContent = count + " active filter" + (count === 1 ? "" : "s") + " \xB7 Dates use the local calendar day when each attempt started; both endpoints are inclusive.";
+          root2.querySelector("#g-history-reset").disabled = count === 0 && historyQuery.sort === "newest";
+          const error = historyQueryError(historyQuery);
+          let alert = root2.querySelector("#g-history-filter-error");
+          if (error) {
+            if (!alert) {
+              alert = document.createElement("p");
+              alert.id = "g-history-filter-error";
+              alert.className = "generic-warning";
+              alert.setAttribute("role", "alert");
+              root2.querySelector(".history-filter-footer").after(alert);
+            }
+            alert.textContent = error;
+          } else alert?.remove();
+          bindHistoryRows();
+        };
+        const setFilter = (patch) => {
+          changeHistoryQuery({ ...historyQuery, ...patch }, false);
+          refreshHistoryRows();
+        };
         root2.querySelector("#g-filter").onchange = (e) => setFilter({ status: e.target.value });
         root2.querySelector("#g-history-paper").onchange = (e) => setFilter({ paperRevisionId: e.target.value });
         root2.querySelector("#g-history-exam").onchange = (e) => setFilter({ examId: e.target.value });
@@ -10634,13 +10697,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
             notice(error instanceof Error ? error.message : "History import failed");
           }
         };
-        root2.querySelectorAll("[data-delete]").forEach((button) => button.onclick = () => {
-          void removeSavedAttempt(button.dataset.delete ?? "", "completed");
-        });
-        root2.querySelectorAll("[data-discard]").forEach((button) => button.onclick = () => {
-          void removeSavedAttempt(button.dataset.discard ?? "", "discard-unfinished");
-        });
-        root2.querySelectorAll("[data-attempt]").forEach((button) => button.onclick = () => openSaved(button.dataset.attempt ?? ""));
+        bindHistoryRows();
         root2.querySelector("#g-delete-completed").onclick = () => {
           void deleteAllCompleted();
         };
@@ -11140,57 +11197,46 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     }
     document.addEventListener("visibilitychange", visibility);
     const keyboard = (event) => {
-      if (imageViewer.isOpen()) return;
-      if (disposed || view !== "exam" || !attempt || attempt.finishedAt !== null || attempt.state.status !== "running" && attempt.state.status !== "paused" || document.hidden || event.ctrlKey || event.metaKey || event.shiftKey || event.isComposing) return;
+      if (disposed || view !== "exam" || !attempt || attempt.finishedAt !== null || attempt.state.status !== "running" && attempt.state.status !== "paused" || document.hidden || event.defaultPrevented || event.ctrlKey || event.metaKey || event.shiftKey || event.isComposing) return;
       const focused = event.target;
       const focusedRadio = focused instanceof HTMLInputElement && focused.type === "radio" && root2.contains(focused) && (focused.name === "generic-answer" || focused.name === "generic-boolean");
-      if (focused instanceof HTMLElement) {
-        if (focused.isContentEditable || focused.closest('[contenteditable="true"]')) return;
-        if (focused instanceof HTMLTextAreaElement || focused instanceof HTMLSelectElement) return;
-        if (focused instanceof HTMLInputElement && !focusedRadio) return;
-      }
+      const editable = focused instanceof HTMLElement && (focused.isContentEditable || Boolean(focused.closest('[contenteditable="true"]')) || focused instanceof HTMLTextAreaElement || focused instanceof HTMLSelectElement || focused instanceof HTMLInputElement && !focusedRadio);
       const displayPanel2 = document.getElementById("displayPanel");
-      if (displayPanel2 && !displayPanel2.hidden) return;
-      const key2 = event.key.toLowerCase();
-      const arrow = key2 === "arrowright" || key2 === "arrowleft";
-      if (event.altKey && !arrow) return;
-      if (attempt.state.status === "paused") {
-        if (key2 !== "m" || event.altKey || event.repeat || !attempt.frozen.paper.navigation.allowFlagging) return;
+      const command = resolveExamShortcut({
+        key: event.key,
+        alt: event.altKey,
+        repeat: event.repeat,
+        paused: attempt.state.status === "paused",
+        focusedRadio,
+        editable,
+        blocked: imageViewer.isOpen() || Boolean(document.querySelector("dialog[open]")) || Boolean(displayPanel2 && !displayPanel2.hidden),
+        allowFlagging: attempt.frozen.paper.navigation.allowFlagging
+      });
+      if (!command) return;
+      if (command.kind === "navigate") {
         event.preventDefault();
-        const id2 = attempt.frozen.paper.sections[attempt.state.sectionIndex].questionRevisionIds[attempt.state.questionIndex];
-        const marked = attempt.state.responses.find((r) => r.questionRevisionId === id2)?.flagged ?? false;
-        dispatch({ type: "FLAG", nowMs: now2(), flagged: !marked });
-        return;
-      }
-      if (arrow) {
-        if (focusedRadio && !event.altKey) return;
-        event.preventDefault();
-        const move = key2 === "arrowright" ? 1 : -1;
-        const target = attempt.state.questionIndex + move;
+        const target = attempt.state.questionIndex + command.delta;
         const section = attempt.frozen.paper.sections[attempt.state.sectionIndex];
-        if (!section?.questionRevisionIds[target] || move < 0 && attempt.frozen.paper.navigation.questionNavigation === "forward-only") return;
+        if (!section?.questionRevisionIds[target] || command.delta < 0 && attempt.frozen.paper.navigation.questionNavigation === "forward-only") return;
         dispatch({ type: "NAVIGATE", nowMs: now2(), sectionIndex: attempt.state.sectionIndex, questionIndex: target });
         return;
       }
-      if (event.altKey || event.repeat) return;
-      if (key2 === "f") {
+      if (command.kind === "fullscreen") {
         event.preventDefault();
         window.dispatchEvent(new Event("practice-desk:toggle-fullscreen"));
         return;
       }
-      if (key2 === "m") {
-        if (!attempt.frozen.paper.navigation.allowFlagging) return;
+      if (command.kind === "flag") {
         event.preventDefault();
         const id2 = attempt.frozen.paper.sections[attempt.state.sectionIndex].questionRevisionIds[attempt.state.questionIndex];
         const marked = attempt.state.responses.find((r) => r.questionRevisionId === id2)?.flagged ?? false;
         dispatch({ type: "FLAG", nowMs: now2(), flagged: !marked });
         return;
       }
-      if (!["a", "b", "c", "d"].includes(key2)) return;
       const id = attempt.frozen.paper.sections[attempt.state.sectionIndex].questionRevisionIds[attempt.state.questionIndex];
       const question = attempt.frozen.questions.find((q) => q.id === id);
       if (question?.content.kind !== "single-choice") return;
-      const option = question.content.options[key2.charCodeAt(0) - 97];
+      const option = question.content.options[command.index];
       if (!option) return;
       event.preventDefault();
       dispatch({ type: "ANSWER", nowMs: now2(), response: { kind: "single-choice", optionId: option.id } });
@@ -11466,7 +11512,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     setImmersive(Boolean(document.fullscreenElement));
   });
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && !document.fullscreenElement && document.documentElement.classList.contains("immersive") && (!displayPanel || displayPanel.hidden)) setImmersive(false);
+    if (event.key === "Escape" && !document.fullscreenElement && document.documentElement.classList.contains("immersive") && (!displayPanel || displayPanel.hidden) && !document.querySelector("dialog[open]")) setImmersive(false);
   });
   updateFullscreen();
 })();
