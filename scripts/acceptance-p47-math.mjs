@@ -46,7 +46,7 @@ try{
  await page.waitForFunction(id=>document.querySelector("#g-papers")?.value===id,p.paper.id);
  await page.locator("#g-start").click();await route(page,"exam");
  check(await page.locator(".pd-math .katex-mathml").count()>=2,"Read-only rich question and option maths missing");
- check((await page.locator(".pd-rich-content").innerText()).includes("Question 0 algebra"),
+ check((await page.locator(".pd-rich-prompt .pd-rich-content").innerText()).includes("Question 0 algebra"),
    "Imported authored prompt missing");
  check(!(await page.locator("body").innerText()).includes("P47-SOLUTION-SECRET"),
   "Worked solution leaked before submission");
