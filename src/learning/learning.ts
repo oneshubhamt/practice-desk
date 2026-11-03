@@ -4,7 +4,7 @@ import { questionRevisionHash, answerKeyRevisionHash } from "../domain/integrity
 import { selectDisplayResources, validateMediaInventory, validateQuestionMediaReferences } from "../domain/media.ts";
 import type { CorrectAnswer } from "../domain/answer-key.js";
 import type { QuestionRevisionId } from "../domain/ids.js";
-import type { DefaultScheduler, Grade } from "ts-fsrs";
+import type {RevisionSchedulerPort} from "./revision-scheduler-port.ts";
 import { validateQuestionRevision, validateAnswerKeyRevision } from "../domain/validate.ts";
 import { syllabusHeading } from "./syllabus-taxonomy.ts";
 
@@ -94,17 +94,14 @@ export function addLearningCard(attempt:GenericAttempt,id:QuestionRevisionId,at:
  };
  return validateLearningCard(record);
 }
-export function scheduledCard(item:LearningCard,scheduler:DefaultScheduler){
- let card=scheduler.newCard({cardId:item.id,now:new Date(item.createdAt)});
- for(const review of item.reviews)
-   card=scheduler.review({card,grade:review.rating as Grade,now:new Date(review.at)}).card;
- return card;
+export function scheduledCard(item:LearningCard,scheduler:RevisionSchedulerPort){
+ return scheduler.replay(item.id,item.createdAt,item.reviews);
 }
-export function rateLearningCard(item:LearningCard,rating:ReviewGrade,at:string,scheduler:DefaultScheduler):LearningCard{
+export function rateLearningCard(item:LearningCard,rating:ReviewGrade,at:string,scheduler:RevisionSchedulerPort):LearningCard{
  if(!validDate(at)||Date.parse(at)<Date.parse(item.reviews.at(-1)?.at??item.createdAt))
    throw Error("Review time must be monotonic");
- // Verify that the selected FSRS grade is schedulable before recording it.
- scheduler.review({card:scheduledCard(item,scheduler),grade:rating as Grade,now:new Date(at)});
+ // Only explicit user ratings enter the log. Vendor scheduling stays within its adapter.
+ scheduler.assertCanRate(item.id,item.createdAt,item.reviews,rating,at);
  return validateLearningCard({...item,reviews:[...item.reviews,{rating,at}],updatedAt:at});
 }
 export interface TopicMetrics {

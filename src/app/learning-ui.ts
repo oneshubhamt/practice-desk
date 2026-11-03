@@ -1,4 +1,5 @@
-import { DefaultScheduler, Rating, type DefaultScheduler as Scheduler } from "ts-fsrs";
+import {createRevisionScheduler} from "../learning/fsrs-scheduler-adapter.ts";
+import type {RevisionSchedulerPort} from "../learning/revision-scheduler-port.ts";
 import type { ExamPackage, GenericAttempt } from "./exam-package.ts";
 import { readableAnswer } from "./exam-package.ts";
 import { ERROR_LABELS, comparableTrends, rateLearningCard, scheduledCard, topicMetrics, validateLearningCard } from "../learning/learning.ts";
@@ -63,7 +64,7 @@ function questionHTML(record:LearningCard):string{
 }
 
 export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
- let scheduler:Scheduler<"FSRS-7">|null=null;
+ let scheduler:RevisionSchedulerPort|null=null;
  let selectedId:string|null=null,reviewId:string|null=null,revealed=false;
  let filter:"all"|"due"|"bookmarked"="all",message="",closed=false,opened=false;
  let evidenceExam="",evidenceCount=10;
@@ -81,7 +82,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
    for(const [id,entry] of cache)if(active.get(id)!==entry.record)cache.delete(id);
  };
  const now=()=>new Date();
- const due=(card:LearningCard)=>scheduler?.newCard!==undefined?
+ const due=(card:LearningCard)=>scheduler!==null?
    schedule(card).dueAt.getTime()<=Date.now():false;
  const cards=()=>host.cards().sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
  const dueCards=()=>cards().filter(due).sort((a,b)=>
@@ -106,7 +107,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
            item.explanation?'<p>'+esc(item.explanation)+'</p>':"")+
          (item.note?'<p class="fine">Your note: '+esc(item.note)+'</p>':"")+
          '<h3>How well did you recall it?</h3><div class="row generic-actions">'+
-         ([[Rating.Again,"Again"],[Rating.Hard,"Hard"],[Rating.Good,"Good"],[Rating.Easy,"Easy"]] as const)
+         ([[1,"Again"],[2,"Hard"],[3,"Good"],[4,"Easy"]] as const)
           .map(([grade,label])=>'<button class="btn" data-grade="'+grade+'">'+label+'</button>').join("")+'</div></div>':
          '<button class="btn primary" id="learning-reveal">Reveal answer</button>')+'</section>'+
        (message?'<p role="status" class="generic-warning">'+esc(message)+'</p>':"");
@@ -326,7 +327,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     await host.remove(selected.id);selectedId=null;draw();
   };
  }
- void DefaultScheduler<"FSRS-7">({version:"FSRS-7",desiredRetention:0.9,enableFuzz:false})
+ void createRevisionScheduler()
 .then(value=>{scheduler=value;cache.clear();draw();})
   .catch(e=>{message="FSRS scheduler failed to initialize.";console.error(e);draw();});
  return {show(){opened=true;draw();},hide(){opened=false;},select(id:string){selectedId=id;},dispose(){closed=true}};
