@@ -1203,3 +1203,35 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
 /* P46 extreme-zoom browser evidence: native text input's intrinsic 276px
    min-width widened the whole Learning document at 195px + 140% scale. */
 .learning-layout #learning-topic{display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box}
+
+/* P47-3: one native offline modal, no duplicate thumbnail source or saved bitmaps. */
+.generic-media-frame{display:block;min-width:0;max-width:100%;white-space:normal}
+.generic-workspace .generic-media-frame>.generic-figure{max-width:100%;height:auto}
+.generic-image-open{display:inline-flex;align-items:center;justify-content:center;min-height:33px;max-width:100%;padding:5px 10px;margin:0 0 6px;border:1px solid var(--line);border-radius:8px;color:var(--blue);background:var(--panel);font-size:12px;font-weight:750;line-height:1.4;cursor:zoom-in;overflow-wrap:anywhere;user-select:none}
+.generic-image-open:focus-visible{outline:3px solid #85b8e8;outline-offset:2px}
+.generic-workspace .generic-choice-media-row{padding:12px;border:1px solid var(--line);border-radius:10px;min-width:0}
+.generic-choice-media-row>.generic-choice{border:0;padding:0;min-width:0}
+.generic-workspace .generic-choice-media-row:has(input:checked){outline:2px solid var(--blue)}
+.generic-choice-media-row>.generic-choice:has(input:checked){outline:0}
+.generic-choice-media-row .generic-choice-media{padding-left:27px;min-width:0}
+.generic-choice-media-row .generic-figure{max-height:240px}
+.generic-match-media-row{min-width:0}
+.generic-image-dialog{border:1px solid var(--line);border-radius:13px;padding:0;color:var(--ink);background:var(--panel);width:min(980px,calc(100vw - 16px));max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);margin:auto;box-shadow:0 22px 90px #0007;overflow:hidden}
+.generic-image-dialog::backdrop{background:rgba(5,10,20,.82)}
+.generic-image-shell{display:grid;grid-template-rows:auto auto minmax(0,1fr) auto auto;gap:0;width:100%;height:min(90dvh,860px);min-height:0}
+.generic-image-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 13px;border-bottom:1px solid var(--line)}
+.generic-image-title{font-size:15px;font-weight:750}
+.generic-image-dialog .generic-image-close{min-height:38px}
+.generic-image-toolbar{display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;min-width:0;padding:8px;border-bottom:1px solid var(--line)}
+.generic-image-control{min-width:42px;min-height:38px}
+.generic-image-zoom{font-size:14px;font-variant-numeric:tabular-nums;font-weight:760;min-width:53px;text-align:center}
+.generic-image-viewport{position:relative;display:block;width:100%;height:100%;min-height:0;overflow:hidden;touch-action:none;overscroll-behavior:contain;user-select:none;cursor:grab;background:var(--soft)}
+.generic-image-viewport:active{cursor:grabbing}
+.generic-image-viewport:focus-visible{outline:3px solid #85b8e8;outline-offset:-3px}
+.generic-image-large{position:absolute;top:50%;left:50%;display:block;max-width:none;max-height:none;object-fit:contain;transform-origin:center center;translate:-50% -50%;pointer-events:none}
+.generic-image-caption,.generic-image-help{padding:6px 12px;margin:0;text-align:center;overflow-wrap:anywhere;white-space:normal}
+.generic-image-caption{max-height:76px;overflow:auto;font-size:12px;line-height:1.4}
+.generic-image-help{color:var(--muted);font-size:11px;line-height:1.5;padding-bottom:10px}
+@media(max-width:430px){.generic-image-shell{height:calc(100dvh - 20px)}.generic-image-dialog{width:calc(100vw - 12px);max-width:calc(100vw - 12px)}.generic-image-toolbar{gap:4px;padding:5px}.generic-image-control{min-width:38px}.generic-image-help{font-size:10px}}
+@media(max-width:300px){.generic-workspace .generic-choice-media-row{padding:7px}.generic-choice-media-row .generic-choice-media{padding-left:0}.generic-image-head{padding:6px}.generic-image-caption{max-height:55px}.generic-image-help{font-size:9px}.generic-image-dialog .btn{padding:5px}}
+@media(prefers-reduced-motion:reduce){.generic-image-large,.generic-image-dialog{transition:none!important;animation:none!important}}
