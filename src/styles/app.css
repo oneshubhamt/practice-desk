@@ -1450,3 +1450,33 @@ html[data-theme="dark"] .pd-author-studio .pd-author-preview-content .pd-rich-co
 html[data-theme="dark"] .pd-author-studio .pd-author-preview-choice>span{
  color:var(--ink)!important;
 }
+
+
+/* P47-5D: publication review stays visibly separate from mutable Wordgard
+   editing, but within the same focused Library studio and existing palette. */
+.pd-author-studio label.pd-author-publish-consent{
+ display:flex!important;flex-direction:row!important;align-items:flex-start;
+ gap:10px;line-height:1.5;margin:2px 0 12px;
+ padding:9px 10px;font-size:.88em;font-weight:600;color:var(--ink);
+ min-width:0;max-width:100%;overflow-wrap:anywhere;
+}
+.pd-author-publish-consent input[type=checkbox]{
+ width:18px!important;min-width:18px!important;height:18px!important;
+ min-height:18px!important;margin:2px 0 0!important;flex:none;
+ accent-color:var(--blue)
+}
+.pd-author-validation{min-width:0;max-width:100%;overflow-wrap:anywhere;
+ padding:12px 16px;border:1px solid var(--line);border-left:3px solid var(--blue);
+ border-radius:10px;background:var(--panel);margin:12px 0 17px;color:var(--ink)
+}
+.pd-author-validation[hidden]{display:none!important}
+.pd-author-validation h3{margin:0 0 6px;font-size:1.03em}
+.pd-author-validation p{margin:0}
+.pd-author-validation ol{padding-left:22px;margin:8px 0 0}
+.pd-author-validation li{padding:3px 0 8px;line-height:1.45}
+.pd-author-validation li .textlink{display:inline-block;margin-left:8px;padding:3px 0}
+@media(max-width:420px){
+ .pd-author-validation{padding:10px}
+ .pd-author-validation ol{padding-left:18px}
+ .pd-author-studio label.pd-author-publish-consent{padding:5px 0}
+}
