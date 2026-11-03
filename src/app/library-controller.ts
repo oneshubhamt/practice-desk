@@ -155,7 +155,7 @@ export function renderLibraryHTML(owner:CoordinatorContext):string {
       (owner.loading||owner.fallbackConflict||owner.storageFault||!selected?' disabled':'')+'>Start '+escapeText(modeLabel)+' →</button>'+
       '<button class="btn" id="g-import"'+(owner.loading||owner.fallbackConflict||owner.storageFault?' disabled':'')+'>Import question bank</button>'+
       '<button type="button" class="btn" id="g-image-prep">Prepare image for a bank</button>'+
-      '<button type="button" class="btn" id="g-author-open">Author question bank</button></div>'+
+      '<button type="button" class="btn" id="g-author-open"'+(owner.loading?' disabled':'')+'>Author question bank</button></div>'+
       '<input type="file" id="g-file" accept=".json,.gz,application/json,application/gzip" hidden>'+
       '<p class="fine">Start with an editable <button type="button" class="textlink" id="g-bank-template">Download APFC/NAT bank template</button> (JSON). '+
       'An authored simple bank may include a media array, question imageIds and optionImageIds. Prepare local images first; signed packages are never recompressed. Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section>'+
