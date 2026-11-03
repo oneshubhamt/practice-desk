@@ -120,6 +120,8 @@ try{
  await chooseImage(photograph,"local-photo.png");
  const message=await page.locator("#prep-image-status").innerText();
  const offered=message.includes("Candidate saves");
+ if(engine==="chromium")check(offered,
+   "Chromium must actually offer a vetted smaller WebP for the photographic test fixture: "+message);
  check(!message.includes("Cannot"),"preparation failed rather than retaining the original: "+message);
  if(offered){
   check(await page.locator("#prep-image-approve").isEnabled(),
@@ -127,6 +129,10 @@ try{
   check(await page.locator("button:text-is('Download reviewed WebP image entry')").isDisabled(),
    "WebP was offered before explicit comparison approval");
   await page.locator("#prep-image-scale").selectOption("400");
+  check(await page.locator(".generic-prepare-preview img").first().evaluate(img=>img.style.width==="400%"),
+    "side-by-side high-detail review must actually enlarge original pixels to 400%");
+  check(await page.locator(".generic-prepare-preview img").last().evaluate(img=>img.naturalWidth===960&&img.naturalHeight===620),
+    "candidate conversion changed photographic dimensions or failed to decode");
   await page.locator("#prep-image-id").fill("photo-one");
   await page.locator("#prep-image-alt").fill("Photograph of a physical setup");
   await page.locator("#prep-image-approve").check();
