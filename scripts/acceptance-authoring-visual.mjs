@@ -18,7 +18,9 @@ const open=async()=>{
 };
 try{
  await open();
- check(await page.locator("#pd-author-publish").isDisabled(),"P47-5D publishing must be disabled");
+ check(await page.locator("#pd-author-publish").isEnabled(),"P47-5D publishing action must be enabled for validated drafts");
+ await page.locator("#pd-author-validate").click();
+ check((await page.locator("#pd-author-validation").innerText()).includes("Fix"),"Blank draft must fail publication validation");
  check(await page.locator("wg-content").count()===1,"Wordgard must mount exactly one editor");
  check(await page.locator("#app.pd-author-mode").count()===1,"Authoring did not enter focused Library view");
  check(await page.locator("#g-start:visible").count()===0,"Exam start controls must not compete with authoring");
