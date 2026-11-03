@@ -36,10 +36,10 @@ let html=await read("src/template.html");
 for(const [name,body] of Object.entries(payloads)){
  const marker="<!-- PD:"+name+" -->";
  if(html.split(marker).length!==2)throw new Error("Expected one "+marker);
- html=html.replace(marker,body);
+ //  html=html.replace(marker,body);, $1 etc. inside bundled vendor JS must remain exact source bytes.
+ html=html.replace(marker,()=>body);
 }
-const leftover=html.match(/<!-- PD:[A-Z_]+ -->/g);
-if(leftover){const p=html.indexOf(leftover[0]);throw new Error("Unreplaced marker(s): "+JSON.stringify([...new Set(leftover)])+" around "+JSON.stringify(html.slice(Math.max(0,p-150),p+150)));}
+if(/<!-- PD:[A-Z_]+ -->/.test(html))throw new Error("Unreplaced marker");
 await writeFile(resolve(root,"Practice_Desk_Offline_Mock_Tests.html"),html);
 console.log("Built "+Buffer.byteLength(html)+" bytes (single offline HTML). "+
   "KaTeX: "+katexStyles.woff2Files.length+" WOFF2 families, "+
