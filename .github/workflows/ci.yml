@@ -60,6 +60,8 @@ jobs:
       - run: node scripts/acceptance-learning-lifecycle.mjs
       - run: node scripts/acceptance-session-policy.mjs
       - run: node scripts/acceptance-editorial-provenance.mjs
+      - name: P47-3 real offline modal, answer isolation, pan/zoom and focus (Chromium)
+        run: node scripts/acceptance-image-viewer.mjs
       - run: node scripts/acceptance-critical.mjs
       - run: node scripts/acceptance-bank-modes.mjs
       - run: node scripts/acceptance-drafts.mjs
@@ -110,6 +112,8 @@ jobs:
       - run: npm run build
       - run: node scripts/acceptance-platform.mjs ${{ matrix.browser }}
       - run: node scripts/acceptance-safari-fallback.mjs ${{ matrix.browser }}
+      - name: P47-3 real image dialog (${{ matrix.browser }})
+        run: node scripts/acceptance-image-viewer.mjs ${{ matrix.browser }}
       # WebKit native Back after file:// reload remains explicitly unsupported.
 
   publish:
