@@ -1406,3 +1406,19 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
  .pd-author-studio #pd-author-heading{font-size:1.08em}
  .pd-author-meta{padding:8px}
 }
+
+/* Screenshot-verified WebKit fix: theme changes must invalidate inherited ink
+   explicitly inside mounted authoring UI, not rely on cached body colours. */
+.pd-author-studio{color:var(--ink)}
+html[data-theme="dark"] .pd-author-studio,
+html[data-theme="dark"] .pd-author-studio :is(h2,h3,h4,summary,legend,wg-content,.pd-author-preview-content),
+html[data-theme="dark"] .pd-author-studio .btn:not(.primary):not(.danger){
+ color:var(--ink);
+}
+html[data-theme="dark"] .pd-author-studio :is(input,select,textarea){
+ color:var(--ink);
+ -webkit-text-fill-color:var(--ink);
+}
+html[data-theme="light"] .pd-author-studio :is(input,select,textarea){
+ -webkit-text-fill-color:var(--ink);
+}

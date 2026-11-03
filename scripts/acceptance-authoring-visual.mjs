@@ -50,6 +50,32 @@ try{
  await page.emulateMedia({colorScheme:"dark"});
  await page.evaluate(()=>document.documentElement.setAttribute("data-theme","dark"));
  check(await page.evaluate(()=>document.documentElement.getAttribute("data-theme"))==="dark","Dark screenshot theme not applied");
+ const darkContrast=await page.evaluate(()=>{
+  const rgb=(color)=>{
+   const values=color.match(/[\d.]+/g)?.slice(0,3).map(Number);
+   if(!values||values.length!==3)throw Error("Cannot parse CSS colour "+color);
+   return values.map(v=>{
+    const linear=v/255;
+    return linear<=0.04045?linear/12.92:((linear+0.055)/1.055)**2.4;
+   });
+  };
+  const luminance=triplet=>triplet[0]*0.2126+triplet[1]*0.7152+triplet[2]*0.0722;
+  const ratio=(a,b)=>{
+   const [hi,lo]=[luminance(rgb(a)),luminance(rgb(b))].sort((x,y)=>y-x);
+   return +( (hi+0.05)/(lo+0.05)).toFixed(2);
+  };
+  const style=selector=>getComputedStyle(document.querySelector(selector));
+  const panel=style(".pd-author-studio").backgroundColor;
+  return {
+   heading:ratio(style("#pd-author-heading").color,panel),
+   close:ratio(style("#pd-author-close").color,style("#pd-author-close").backgroundColor),
+   newDraft:ratio(style("#pd-author-new").color,style("#pd-author-new").backgroundColor),
+   editor:ratio(style("#pd-author-editor wg-content").color,style("#pd-author-editor").backgroundColor)
+  };
+ });
+ check(Object.values(darkContrast).every(v=>v>=4.5),
+   "P47-5C dark-theme WCAG contrast failed: "+JSON.stringify(darkContrast));
+
  await assertNoOverflow(page,"P47-5C phone dark authoring");
  await shot("phone-dark");
  await page.setViewportSize({width:195,height:844});
