@@ -73,7 +73,10 @@ try{
  check(Boolean(saved),"Rich mathematical attempt not stored");
  check(saved.frozen.questions[0].content.richPrompt.blocks[0].content[1].tex===TEX,
   "Source math did not remain frozen by exact hash");
- await page.reload({waitUntil:"load"});await route(page,"result");
+ await page.reload({waitUntil:"load"});
+ // Returning directly to the Review tab is valid; the generic route helper
+ // deliberately waits for an Overview-only panel and must not be used here.
+ await page.locator("#result-tab-review").waitFor({state:"visible"});
  await page.locator("#result-tab-review").click();
  check(await page.locator(".pd-math .katex-mathml").count()>=6,
   "Restored frozen mathematical display missing after reload");
