@@ -97,7 +97,7 @@ test("P47-3 module source is transient: no OPFS, IndexedDB, network or object UR
  assert.match(ui,/imageViewer\.dispose\(\)/);
  // The shortcut coordinator must still block every exam command during an image
  // modal; P47-4 moved the decision into the independently tested pure resolver.
- assert.match(ui,/blocked:imageViewer\\.isOpen\\(\\)\\|\\|Boolean\\(document\\.querySelector/);
+ assert.ok(ui.includes('blocked:imageViewer.isOpen()||Boolean(document.querySelector("dialog[open]"))'),"image modal must block exam shortcuts");
  const shortcuts=await readFile(new URL("../src/app/exam-shortcuts.ts",import.meta.url),"utf8");
- assert.match(shortcuts,/if\\(c\\.blocked\\|\\|c\\.editable\\)return null/);
+ assert.ok(shortcuts.includes("if(c.blocked||c.editable)return null;"),"pure shortcut resolver must deny blocked or editable contexts");
 });
