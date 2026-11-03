@@ -2,7 +2,7 @@
 
 **Current build:** Practice Desk overhaul. The app itself runs as one fully offline HTML file; imported banks and attempt records are device-local until exported. This guide describes actual implemented behavior, not a planned feature.
 
-## Planned P47-5A–D: integrated Wordgard Question Authoring Studio (NOT YET IMPLEMENTED)
+## P47-5A neutral authoring foundation verified; Wordgard Library studio remains P47-5C
 
 Approved scope is recorded in the [canonical P47-5 programme](../ENGINEERING_PROGRAMME.md#p47-5-approved-architecture-and-wordgard-archive-audit--abcd-subpasses-3-november-2026); the instructions above describe the AS-BUILT current JSON import and must not be mistaken for WYSIWYG availability.
 
@@ -14,7 +14,7 @@ Approved scope is recorded in the [canonical P47-5 programme](../ENGINEERING_PRO
 
 **Dependency policy:** Use exact versions and audited MIT licence; user-uploaded Wordgard 0.6.2 source is inspection material only (no built dist). No changes to upstream Wordgard code, no stored vendor JSON and no external editor bundle/CDN. One integrated Library UI within the existing single-file HTML; editor instance initialized only when authoring. The scheduler equivalent is the FSRS interface to be formalized during mandatory P47-6, not a change to current FSRS-7 behavior.
 
-**Status:** P47-5A–D are scoped and approved, but the editor, TeX parser, renderer, new rich document AST and publishing UI have NOT been implemented, installed or tested.
+**Status (3 November 2026):** P47-5A compiled and tested app-owned src/authoring/rich-document.ts, vendor-ports.ts and prospective FSRS scheduler-port.ts and measured isolated minified Wordgard 0.6.2 / latest stable KaTeX 0.19.1 code and fonts in all three offline browser engines, [five-job CI 41597961659](https://github.com/oneshubhamt/practice-desk/actions/runs/41597961659), 244/244 Node. None of these are yet wired into published question banks, the real exam, Library or current FSRS. The integrated Wordgard studio, live KaTeX renderer, one-HTML glyph-safe font pipeline and validated rich-content publishing remain P47-5B/C/D; the JSON importer instructions above are the actual supported authoring workflow today.
 
 
 ## Fastest path: MCQs and numerical-answer (NAT) questions
