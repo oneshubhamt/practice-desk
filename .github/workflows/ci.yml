@@ -70,6 +70,15 @@ jobs:
           package-manager-cache: false
       - run: npm ci --no-audit --no-fund
       - run: npm run build
+      # P47-5A isolated browser feasibility; not part of deployed HTML.
+      - name: Probe standalone Wordgard/KaTeX browser lifecycle (chromium)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/p475a"
+          npm install --prefix "$RUNNER_TEMP/p475a" --no-save --ignore-scripts --no-audit --no-fund katex@0.19.1 wordgard@0.6.2
+          node scripts/probe-p47-vendors.mjs "$RUNNER_TEMP/p475a/node_modules" > /dev/null
+          node scripts/acceptance-p47-5a-vendors.mjs chromium
       - run: node scripts/acceptance-history-evidence.mjs
       - run: node scripts/acceptance-history-filters.mjs
       - run: node scripts/acceptance-resilience.mjs
@@ -128,6 +137,15 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: node node_modules/playwright-core/cli.js install --with-deps ${{ matrix.browser }}
       - run: npm run build
+      # P47-5A isolated browser feasibility; not part of deployed HTML.
+      - name: Probe standalone Wordgard/KaTeX browser lifecycle (${{ matrix.browser }})
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/p475a"
+          npm install --prefix "$RUNNER_TEMP/p475a" --no-save --ignore-scripts --no-audit --no-fund katex@0.19.1 wordgard@0.6.2
+          node scripts/probe-p47-vendors.mjs "$RUNNER_TEMP/p475a/node_modules" > /dev/null
+          node scripts/acceptance-p47-5a-vendors.mjs ${{ matrix.browser }}
       - run: node scripts/acceptance-platform.mjs ${{ matrix.browser }}
       - run: node scripts/acceptance-safari-fallback.mjs ${{ matrix.browser }}
       - name: P47-3 real image dialog (${{ matrix.browser }})
