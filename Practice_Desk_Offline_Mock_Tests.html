@@ -1238,6 +1238,27 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
 @media(max-width:430px){.generic-image-shell{height:calc(100dvh - 20px)}.generic-image-dialog{width:calc(100vw - 12px);max-width:calc(100vw - 12px)}.generic-image-toolbar{gap:4px;padding:5px}.generic-image-control{min-width:38px}.generic-image-help{font-size:10px}}
 @media(max-width:300px){.generic-workspace .generic-choice-media-row{padding:7px}.generic-choice-media-row .generic-choice-media{padding-left:0}.generic-image-head{padding:6px}.generic-image-caption{max-height:55px}.generic-image-help{font-size:9px}.generic-image-dialog .btn{padding:5px}}
 @media(prefers-reduced-motion:reduce){.generic-image-large,.generic-image-dialog{transition:none!important;animation:none!important}}
+
+/* P47-3B: image import preparation is separate from the immutable exam viewer.
+   Preview panes scroll at 200/400% so small glyphs/strokes can be compared. */
+.generic-image-preparation{overflow:hidden;max-height:calc(100dvh - 12px)}
+.generic-prepare-shell{display:grid;align-content:start;gap:10px;padding:13px;max-width:100%;max-height:calc(100dvh - 22px);overflow-y:auto;overscroll-behavior:contain}
+.generic-prepare-shell *{box-sizing:border-box;min-width:0}
+.generic-prepare-shell h2{margin:0}
+.generic-prepare-shell h3{font-size:14px;margin:0 0 8px}
+.generic-prepare-shell label{font-size:13px;font-weight:650;overflow-wrap:anywhere}
+.generic-prepare-shell input[type=file],
+.generic-prepare-shell input[type=text],
+.generic-prepare-shell input:not([type]),
+.generic-prepare-shell select{width:100%;max-width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+.generic-prepare-shell input[type=checkbox]{width:auto;vertical-align:middle}
+.generic-prepare-previews{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;min-width:0}
+.generic-prepare-preview{min-width:0;max-width:100%;max-height:250px;overflow:auto;padding:9px;border:1px solid var(--line);border-radius:9px;background:var(--soft)}
+.generic-prepare-preview img{display:block;width:100%;max-width:none;max-height:none;height:auto;object-fit:contain}
+.generic-prepare-shell .row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.generic-prepare-shell .row .btn{flex:1 1 140px;white-space:normal;overflow-wrap:anywhere}
+@media(max-width:640px){.generic-prepare-previews{grid-template-columns:minmax(0,1fr)}.generic-prepare-preview{max-height:180px}}
+@media(max-width:300px){.generic-prepare-shell{padding:7px;gap:6px}.generic-prepare-shell .row .btn{flex:1 1 100%;padding:7px}.generic-prepare-preview{max-height:130px}}
 </style></head>
 <body><header><div class="wrap"><div class="brand"><div class="symbol">P</div><div><b>Practice Desk</b><small>Offline exam practice</small></div></div><div class="header-actions"><span class="header-offline"><span class="offline-dot"></span> Works offline</span></div></div></header>
 <div class="display-tools" aria-label="Display options"><button type="button" id="displayTrigger" class="display-trigger" aria-label="Display settings" aria-haspopup="true" aria-controls="displayPanel" aria-expanded="false">Aa</button><div id="displayPanel" class="display-panel" hidden><div class="display-heading"><strong>Display</strong><button id="displayClose" type="button" class="display-close" aria-label="Close display settings">×</button></div><div class="display-control"><span>Text size</span><div class="display-size"><button id="fontLess" type="button" class="btn" aria-label="Decrease text size">−</button><button id="fontReset" type="button" class="btn" aria-label="Reset text size">100%</button><button id="fontMore" type="button" class="btn" aria-label="Increase text size">+</button></div></div><div class="display-control"><span>Color theme</span><div class="display-theme-choices" role="group" aria-label="Color theme"><button id="themeLight" class="btn" type="button" aria-pressed="true">Light</button><button id="themeDark" class="btn" type="button" aria-pressed="false">Dark</button></div><button id="themeToggle" class="btn display-theme" type="button" aria-pressed="false">Toggle theme</button></div><button id="displayFullscreen" type="button" class="btn display-fullscreen" aria-pressed="false">Enter full screen</button><p class="fine display-hint">Saved on this device. Full screen is optional.</p><p class="fine" id="preferences-warning" role="status"></p></div></div>
@@ -8610,6 +8631,37 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     const rawQuestions = bank["questions"];
     if (!Array.isArray(rawQuestions) || rawQuestions.length === 0 || rawQuestions.length > 2e3)
       throw Error("Bank must have 1\u20132000 questions");
+    const incomingMedia = bank["media"] ?? [];
+    if (!Array.isArray(incomingMedia) || incomingMedia.length > 1e3)
+      throw Error("Simple bank media must be an array of at most 1000 image objects");
+    const assets = incomingMedia.map((value2, i) => {
+      const m = obj(value2, "media[" + (i + 1) + "]");
+      if (Object.keys(m).some((x) => !["id", "dataUri", "altText"].includes(x)))
+        throw Error("Simple bank media objects allow only id, dataUri and altText");
+      const id = key(m["id"], "media[" + (i + 1) + "].id");
+      const uri = str(m["dataUri"], "media[" + (i + 1) + "].dataUri", 14 * 1024 * 1024);
+      const match = /^data:(image\/(?:png|jpeg|webp|avif|gif));base64,([A-Za-z0-9+/]+={0,2})$/.exec(uri);
+      if (!match) throw Error("Unsupported or malformed embedded image in media " + id);
+      const bytes = Uint8Array.from(atob(match[2]), (c) => c.charCodeAt(0));
+      const alt = m["altText"] === void 0 ? void 0 : str(m["altText"], "media[" + (i + 1) + "].altText", 500);
+      return {
+        id,
+        dataUri: uri,
+        mediaType: match[1],
+        contentHash: sha256(bytes),
+        ...alt ? { altText: alt } : {}
+      };
+    });
+    validateMediaInventory([], assets);
+    const mediaIds = new Set(assets.map((a) => a.id));
+    const imageIds = (value2, location) => {
+      if (value2 === void 0) return [];
+      if (!Array.isArray(value2) || value2.length > 100) throw Error(location + " requires an image ID array");
+      const ids = value2.map((id, i) => key(id, location + "[" + (i + 1) + "]"));
+      if (new Set(ids).size !== ids.length || ids.some((id) => !mediaIds.has(id)))
+        throw Error(location + " contains an unknown or repeated image ID");
+      return ids;
+    };
     const paperId = "bank:" + bankId;
     const qIds = /* @__PURE__ */ new Set();
     const sections = /* @__PURE__ */ new Map();
@@ -8626,22 +8678,30 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       const prompt = str(q["question"] ?? q["prompt"], prefix + ".question", 2e4);
       const kind = q["type"] ?? "mcq";
       const qid = paperId + ":q:" + id + ":r" + revision;
+      const questionImages = imageIds(q["imageIds"], prefix + ".imageIds");
       let content;
       let answer;
       if (kind === "mcq" || kind === "single-choice") {
         const rawOptions = q["options"];
         if (!Array.isArray(rawOptions) || rawOptions.length < 2 || rawOptions.length > 26)
           throw Error(prefix + " requires 2\u201326 answer options");
+        const rawOptionImages = q["optionImageIds"];
+        if (rawOptionImages !== void 0 && (!Array.isArray(rawOptionImages) || rawOptionImages.length !== rawOptions.length))
+          throw Error(prefix + ".optionImageIds must align with the answer options");
         const options = rawOptions.map((option, i) => ({
           id: LETTERS[i],
-          text: str(option, prefix + ".options[" + (i + 1) + "]", 5e3)
+          text: str(option, prefix + ".options[" + (i + 1) + "]", 5e3),
+          ...rawOptionImages === void 0 ? {} : { assetIds: imageIds(
+            rawOptionImages[i] ?? [],
+            prefix + ".optionImageIds[" + (i + 1) + "]"
+          ) }
         }));
         const letter = str(q["answer"], prefix + ".answer", 1).toUpperCase();
         ensure(
           LETTERS.indexOf(letter) >= 0 && LETTERS.indexOf(letter) < options.length,
           prefix + " answer must be one of its option letters"
         );
-        content = { kind: "single-choice", prompt, options };
+        content = { kind: "single-choice", prompt, options, ...questionImages.length ? { assetIds: questionImages } : {} };
         answer = { kind: "single-choice", optionId: letter };
       } else if (kind === "nat" || kind === "numeric-entry") {
         const values = Array.isArray(q["answer"]) ? q["answer"] : [q["answer"]];
@@ -8649,7 +8709,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
         const acceptedValues = values.map((v, i) => number(v, prefix + ".answer[" + (i + 1) + "]"));
         const tolerance = number(q["tolerance"] ?? 0, prefix + ".tolerance");
         ensure(tolerance >= 0 && tolerance <= 1e6, "NAT tolerance out of range");
-        content = { kind: "numeric-entry", prompt, numericRules: { allowNegative: true } };
+        content = { kind: "numeric-entry", prompt, numericRules: { allowNegative: true }, ...questionImages.length ? { assetIds: questionImages } : {} };
         answer = { kind: "numeric-entry", acceptedValues, absoluteTolerance: tolerance };
       } else throw Error(prefix + " unsupported simple-bank type: use mcq or nat (full exam JSON supports all six kinds)");
       const editorial = { status: "verified" };
@@ -8705,7 +8765,8 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       questions,
       answerKey,
       paper,
-      explanations
+      explanations,
+      ...assets.length ? { assets } : {}
     };
     return validateExamPackage(packageValue);
   }
@@ -8847,9 +8908,9 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     return ["png", "jpeg", "webp", "avif", "gif"].some((type) => uri.startsWith("data:image/" + type + ";base64,"));
   }
   var create = (tag, className) => {
-    const element = document.createElement(tag);
-    if (className) element.className = className;
-    return element;
+    const element2 = document.createElement(tag);
+    if (className) element2.className = className;
+    return element2;
   };
   var action = (label, className = "") => {
     const button = document.createElement("button");
@@ -9131,6 +9192,375 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
         root2.removeEventListener("keydown", key2, true);
       }
     };
+  }
+
+  // src/app/image-preparation.ts
+  var PREPARE_MAX_FILE_BYTES = 10 * 1024 * 1024;
+  var PREPARE_MAX_COMPARE_PIXELS = 8 * 1024 * 1024;
+  var PREPARE_WEBP_QUALITY = 0.98;
+  function assessRasterCandidate(input) {
+    const { sourceBytes, candidateBytes, width, height, psnrDb, maxChannelError, significantErrorFraction } = input;
+    const smallerBy = sourceBytes > 0 ? 1 - candidateBytes / sourceBytes : 0;
+    const eligible = Number.isFinite(sourceBytes) && Number.isFinite(candidateBytes) && sourceBytes > 0 && candidateBytes > 0 && Number.isSafeInteger(width) && Number.isSafeInteger(height) && width > 0 && height > 0 && width * height <= PREPARE_MAX_COMPARE_PIXELS;
+    const accepted = eligible && smallerBy >= 0.15 && psnrDb >= 38 && maxChannelError <= 64 && significantErrorFraction <= 1e-3;
+    return {
+      ...input,
+      smallerBy,
+      accepted,
+      reason: !eligible ? "Invalid or excessively large raster" : smallerBy < 0.15 ? "WebP does not save at least 15%" : psnrDb < 38 ? "Pixel fidelity is below the conservative threshold" : maxChannelError > 64 || significantErrorFraction > 1e-3 ? "Local contrast or stroke pixels change too much" : "Eligible for manual side-by-side review"
+    };
+  }
+  function imageBytesLabel(bytes) {
+    return bytes >= 1048576 ? (bytes / 1048576).toFixed(2) + " MiB" : (bytes / 1024).toFixed(1) + " KiB";
+  }
+  var element = (tag, cls) => {
+    const node = document.createElement(tag);
+    if (cls) node.className = cls;
+    return node;
+  };
+  var control = (label) => {
+    const button = element("button", "btn");
+    button.type = "button";
+    button.textContent = label;
+    return button;
+  };
+  function blobUrl(blob, links) {
+    const url = URL.createObjectURL(blob);
+    links.add(url);
+    return url;
+  }
+  var readImage = (url) => new Promise((resolve, reject) => {
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(Error("Could not decode this image locally."));
+    img.src = url;
+  });
+  function readAsDataUri(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error ?? Error("Local image conversion failed"));
+      reader.readAsDataURL(file);
+    });
+  }
+  function exportBlob(blob, name) {
+    const url = URL.createObjectURL(blob);
+    const link = element("a");
+    link.href = url;
+    link.download = name;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 2e3);
+  }
+  function calculateFidelity(original, decoded) {
+    if (original.width !== decoded.width || original.height !== decoded.height)
+      return { psnrDb: 0, maxChannelError: 255, significantErrorFraction: 1 };
+    const a = original.data, b = decoded.data;
+    const stride = Math.max(1, Math.floor(a.length / (4 * 8e4)));
+    let squared = 0, seen = 0, significant = 0, maximum = 0;
+    for (let i = 0; i < a.length; i += 4 * stride) {
+      for (let k = 0; k < 4; k++) {
+        const delta = Math.abs(a[i + k] - b[i + k]);
+        squared += delta * delta;
+        seen++;
+        maximum = Math.max(maximum, delta);
+        if (delta > 24) significant++;
+      }
+    }
+    const mean = squared / Math.max(1, seen);
+    return {
+      psnrDb: mean === 0 ? Infinity : 10 * Math.log10(255 * 255 / mean),
+      maxChannelError: maximum,
+      significantErrorFraction: significant / Math.max(1, seen)
+    };
+  }
+  function createImagePreparation() {
+    let dialog = null, opening = null, disposed = false;
+    let links = /* @__PURE__ */ new Set(), operation = 0;
+    const release = () => {
+      for (const url of links) URL.revokeObjectURL(url);
+      links.clear();
+    };
+    const close = () => {
+      if (!dialog) return;
+      operation++;
+      const old = dialog;
+      dialog = null;
+      if (old.open) old.close();
+      old.remove();
+      release();
+      if (opening?.isConnected) opening.focus({ preventScroll: true });
+      opening = null;
+    };
+    const open = (trigger) => {
+      if (disposed) return;
+      close();
+      opening = trigger;
+      const d = element("dialog", "generic-image-dialog generic-image-preparation");
+      dialog = d;
+      d.setAttribute("aria-label", "Prepare examination image before importing a bank");
+      const shell = element("div", "generic-prepare-shell");
+      const heading = element("h2");
+      heading.textContent = "Prepare an exam image";
+      const info = element("p", "fine");
+      info.textContent = "Before creating a question bank: preserve diagrams and equations unchanged. For photographs, compare an optional high-quality WebP with the original at 200\u2013400% before accepting it. No image is uploaded or saved in Practice Desk.";
+      const picker = element("input");
+      picker.type = "file";
+      picker.accept = "image/png,image/jpeg,image/webp";
+      picker.id = "prep-image-file";
+      const pickerLabel = element("label");
+      pickerLabel.textContent = "Choose a local PNG, JPEG or WebP image";
+      pickerLabel.htmlFor = picker.id;
+      const type = element("select");
+      type.id = "prep-image-type";
+      for (const [value, label] of [
+        ["diagram", "Diagram, fine print or mathematics \u2014 preserve original"],
+        ["photo", "Photograph \u2014 consider high-quality WebP"]
+      ]) {
+        const o = element("option");
+        o.value = value;
+        o.textContent = label;
+        type.append(o);
+      }
+      const kindLabel = element("label");
+      kindLabel.htmlFor = type.id;
+      kindLabel.textContent = "Image content";
+      const assetId = element("input");
+      assetId.id = "prep-image-id";
+      assetId.placeholder = "e.g. fig-question-3";
+      assetId.autocomplete = "off";
+      const assetLabel = element("label");
+      assetLabel.htmlFor = assetId.id;
+      assetLabel.textContent = "Authored image ID (letters/numbers/-/_)";
+      const alt = element("input");
+      alt.id = "prep-image-alt";
+      alt.placeholder = "Describe the diagram or photograph";
+      const altLabel = element("label");
+      altLabel.htmlFor = alt.id;
+      altLabel.textContent = "Accessible image description";
+      const status = element("p", "fine");
+      status.id = "prep-image-status";
+      status.setAttribute("role", "status");
+      status.setAttribute("aria-live", "polite");
+      const previews = element("div", "generic-prepare-previews");
+      const original = element("img");
+      original.alt = "Original image preview";
+      const candidate = element("img");
+      candidate.alt = "High-quality WebP candidate preview";
+      const originalWrap = element("div", "generic-prepare-preview");
+      const candidateWrap = element("div", "generic-prepare-preview");
+      const origHead = element("h3");
+      origHead.textContent = "Original (unchanged)";
+      const webpHead = element("h3");
+      webpHead.textContent = "Optimised WebP (when eligible)";
+      originalWrap.append(origHead, original);
+      candidateWrap.append(webpHead, candidate);
+      previews.append(originalWrap, candidateWrap);
+      const scale = element("select");
+      scale.id = "prep-image-scale";
+      for (const value of [100, 200, 400]) {
+        const op = element("option");
+        op.value = String(value);
+        op.textContent = value + "% review zoom";
+        scale.append(op);
+      }
+      const reviewLabel = element("label");
+      reviewLabel.htmlFor = scale.id;
+      reviewLabel.textContent = "Review fine detail";
+      const approval = element("input");
+      approval.type = "checkbox";
+      approval.id = "prep-image-approve";
+      const approvalLabel = element("label");
+      approvalLabel.htmlFor = approval.id;
+      approvalLabel.append(approval, document.createTextNode(
+        " I compared fine text, thin strokes and mathematical symbols at enlarged size; WebP is acceptable."
+      ));
+      const exportOriginal = control("Download original image entry");
+      const exportWebp = control("Download reviewed WebP image entry");
+      const closeButton = control("Close");
+      exportOriginal.disabled = true;
+      exportWebp.disabled = true;
+      approval.disabled = true;
+      const actions = element("div", "row");
+      actions.append(exportOriginal, exportWebp, closeButton);
+      shell.append(
+        heading,
+        info,
+        pickerLabel,
+        picker,
+        kindLabel,
+        type,
+        assetLabel,
+        assetId,
+        altLabel,
+        alt,
+        status,
+        reviewLabel,
+        scale,
+        previews,
+        approvalLabel,
+        actions
+      );
+      d.append(shell);
+      document.body.append(d);
+      let chosenFile = null, optimized = null, reviewEligible = false;
+      let originalUrl = "", candidateUrl = "";
+      const reset = () => {
+        operation++;
+        release();
+        chosenFile = null;
+        optimized = null;
+        reviewEligible = false;
+        original.removeAttribute("src");
+        candidate.removeAttribute("src");
+        exportOriginal.disabled = true;
+        exportWebp.disabled = true;
+        approval.disabled = true;
+        approval.checked = false;
+        candidateWrap.hidden = true;
+        status.textContent = "";
+      };
+      const updateApproval = () => {
+        exportWebp.disabled = !reviewEligible || !approval.checked;
+      };
+      approval.addEventListener("change", updateApproval);
+      scale.addEventListener("change", () => {
+        const width = Number(scale.value);
+        original.style.width = width + "%";
+        candidate.style.width = width + "%";
+      });
+      const prepare = async () => {
+        reset();
+        const run2 = operation;
+        const file = picker.files?.[0];
+        if (!file) return;
+        if (!["image/png", "image/jpeg", "image/webp"].includes(file.type) || file.size <= 0 || file.size > PREPARE_MAX_FILE_BYTES) {
+          status.textContent = "Choose a supported image of no more than 10 MiB.";
+          return;
+        }
+        chosenFile = file;
+        status.textContent = "Reading original image locally\u2026";
+        try {
+          originalUrl = blobUrl(file, links);
+          original.src = originalUrl;
+          const src = await readImage(originalUrl);
+          if (run2 !== operation || dialog !== d) return;
+          const w = src.naturalWidth, height = src.naturalHeight;
+          if (!w || !height) {
+            status.textContent = "No usable image dimensions.";
+            return;
+          }
+          exportOriginal.disabled = false;
+          if (type.value !== "photo") {
+            status.textContent = imageBytesLabel(file.size) + " \xB7 " + w + "\xD7" + height + " \xB7 Original retained. Diagram, text and maths images are not recompressed.";
+            return;
+          }
+          if (w * height > PREPARE_MAX_COMPARE_PIXELS) {
+            status.textContent = "Original retained (" + w + "\xD7" + height + "). This photograph exceeds the safe in-browser fidelity-check budget.";
+            return;
+          }
+          const canvas = element("canvas");
+          canvas.width = w;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d", { willReadFrequently: true });
+          if (!ctx) throw Error("Browser cannot inspect this image safely.");
+          ctx.drawImage(src, 0, 0);
+          const reference = ctx.getImageData(0, 0, w, height);
+          const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", PREPARE_WEBP_QUALITY));
+          if (run2 !== operation || dialog !== d) return;
+          if (!blob || blob.type !== "image/webp") {
+            status.textContent = "This browser cannot encode WebP locally; original retained.";
+            return;
+          }
+          candidateUrl = blobUrl(blob, links);
+          const converted = await readImage(candidateUrl);
+          if (run2 !== operation || dialog !== d) return;
+          if (converted.naturalWidth !== w || converted.naturalHeight !== height) {
+            status.textContent = "WebP dimensions changed; original retained.";
+            return;
+          }
+          const compare2 = element("canvas");
+          compare2.width = w;
+          compare2.height = height;
+          const cc = compare2.getContext("2d", { willReadFrequently: true });
+          if (!cc) throw Error("Browser cannot verify the candidate pixels.");
+          cc.drawImage(converted, 0, 0);
+          const detail = calculateFidelity(reference, cc.getImageData(0, 0, w, height));
+          const verdict = assessRasterCandidate({
+            sourceBytes: file.size,
+            candidateBytes: blob.size,
+            width: w,
+            height,
+            ...detail
+          });
+          if (!verdict.accepted) {
+            status.textContent = "Original retained: " + verdict.reason + ". " + imageBytesLabel(file.size) + " original, " + imageBytesLabel(blob.size) + " candidate.";
+            return;
+          }
+          optimized = blob;
+          reviewEligible = true;
+          candidateWrap.hidden = false;
+          candidate.src = candidateUrl;
+          approval.disabled = false;
+          status.textContent = "Candidate saves " + Math.round(verdict.smallerBy * 100) + "% (" + imageBytesLabel(file.size) + " \u2192 " + imageBytesLabel(blob.size) + "), with measured PSNR " + verdict.psnrDb.toFixed(1) + " dB. Compare small details at 200\u2013400%; acceptance is not automatic.";
+        } catch (error) {
+          status.textContent = error instanceof Error ? error.message : "Cannot prepare image locally.";
+        }
+      };
+      picker.addEventListener("change", () => {
+        void prepare();
+      });
+      type.addEventListener("change", () => {
+        if (picker.files?.length) void prepare();
+      });
+      const exportSnippet = async (optimizedSource) => {
+        const file = optimizedSource ? optimized : chosenFile;
+        if (!file || optimizedSource && (!reviewEligible || !approval.checked)) return;
+        const id = assetId.value.trim();
+        if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}$/.test(id)) {
+          status.textContent = "Provide a valid image ID (letters/numbers/underscores/hyphens, up to 80).";
+          assetId.focus();
+          return;
+        }
+        const description = alt.value.trim();
+        if (!description || description.length > 500) {
+          status.textContent = "Provide a meaningful accessible description (1\u2013500 characters).";
+          alt.focus();
+          return;
+        }
+        const uri = await readAsDataUri(file);
+        if (dialog !== d) return;
+        const snippet = { id, altText: description, dataUri: uri };
+        exportBlob(
+          new Blob([JSON.stringify(snippet, null, 2)], { type: "application/json" }),
+          "practice-desk-media-" + id + ".json"
+        );
+        status.textContent = (optimizedSource ? "Reviewed WebP" : "Original image") + " entry downloaded. Insert it into the simple-bank media array before importing, then reference its ID using question imageIds or optionImageIds. The bank importer computes and verifies the SHA-256 before freezing.";
+      };
+      exportOriginal.addEventListener("click", () => {
+        void exportSnippet(false);
+      });
+      exportWebp.addEventListener("click", () => {
+        void exportSnippet(true);
+      });
+      closeButton.addEventListener("click", close);
+      d.addEventListener("cancel", (event) => {
+        event.preventDefault();
+        close();
+      });
+      try {
+        d.showModal();
+        picker.focus({ preventScroll: true });
+      } catch {
+        close();
+      }
+    };
+    return { open, close, dispose: () => {
+      disposed = true;
+      close();
+    }, beforeRender: close, isOpen: () => Boolean(dialog) };
   }
 
   // src/app/navigation.ts
@@ -9439,6 +9869,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     const choiceDrafts = /* @__PURE__ */ new Map();
     const screenRenderer = createScreenRenderer(root2);
     const imageViewer = createImageViewer(root2);
+    const imagePreparation = createImagePreparation();
     let router;
     let activationGeneration = 0;
     let freshlyStartedAttemptId = null;
@@ -9992,7 +10423,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
         ["strict", "Exam simulation", "4 locked sections \xB7 15 minutes each"],
         ["free", "Flexible full paper", "60 minutes \xB7 move between sections"],
         ["single", "Section practice", "25 questions \xB7 15 minutes"]
-      ].map(([key2, title, detail]) => '<button type="button" class="mode ' + (cglMode === key2 ? "on" : "") + '" data-mode="' + key2 + '" aria-pressed="' + (cglMode === key2) + '"><span class="radio-dot"></span><span><strong>' + title + "</strong><small>" + detail + "</small></span></button>").join("") + "</div>" + (cglMode === "single" ? '<label class="picker" for="g-single-section">Choose section</label><select id="g-single-section">' + selected.paper.sections.map((z, i) => '<option value="' + i + '"' + (singleSection === i ? " selected" : "") + ">" + escapeText(z.title) + "</option>").join("") + "</select>" : "") : "") + '<label class="untimed-option" for="g-untimed"><input type="checkbox" id="g-untimed"' + (untimedPractice ? " checked" : "") + '><span><strong>Untimed practice</strong><small>No countdown or automatic expiry. Keep the selected navigation and scoring rules; finish when ready.</small></span></label><div class="row generic-actions home-start"><button class="btn primary" id="g-start"' + (loading || fallbackConflict || storageFault || !selected ? " disabled" : "") + ">Start " + escapeText(modeLabel) + ' \u2192</button><button class="btn" id="g-import"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + '>Import question bank</button></div><input type="file" id="g-file" accept=".json,.gz,application/json,application/gzip" hidden><p class="fine">Start with an editable <button type="button" class="textlink" id="g-bank-template">Download APFC/NAT bank template</button> (JSON). Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section><aside class="home-side"><section class="panel pad paper-preview"><span class="eyebrow">SELECTED PAPER</span><h2>' + escapeText(selected?.title ?? "Choose a paper") + '</h2><p class="fine family-provenance">' + (family?.imported ? "Imported/user-supplied content; not an official exam bank." : family ? "Included SSC CGL papers. Original and reviewed versions remain distinct." : "Saved examination unavailable. Re-import the bank or select another.") + '</p><p class="fine">' + escapeText(selected?.paper.paperId ?? "") + " \xB7 " + escapeText(selected?.paper.edition ?? "") + '</p><div class="preview-metrics"><div><b>' + questionCount + "</b><small>Questions</small></div><div><b>" + escapeText(time) + "</b><small>Time</small></div><div><b>" + escapeText(previewSections) + "</b><small>Sections</small></div><div><b>" + escapeText(previewNavigation) + '</b><small>Navigation</small></div></div><p class="fine">Scoring and timer rules are frozen when you start; later paper edits cannot change a saved result.</p>' + (preflight ? preflightHTML(preflight) : "") + '</section><section class="panel pad recent-panel"><div class="row between"><h2>Recent completed results</h2><button class="textlink" id="g-history-recent">View all \u2192</button></div>' + (latest.length ? latest.map((a) => '<button class="recent-attempt" data-attempt="' + escapeText(a.id) + '"><b>' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + "</b><small>" + new Date(a.finishedAt ?? a.startedAt).toLocaleDateString() + " \xB7 " + escapeText(a.frozen.snapshot.mode.replaceAll("-", " ")) + " \xB7 " + escapeText(frozenScoreSummary(a)?.text ?? "Score unavailable") + "</small></button>").join("") : '<p class="fine">Your three most recent completed results will appear here; unfinished attempts stay in their own Resume area.</p>') + "</section></aside></div>" + builder + '<div class="home-utilities"><section class="panel pad learning-entry"><div><span class="eyebrow">REVISE & IMPROVE</span><h2>Learning & revision</h2><p class="fine">Error notebook, FSRS-7 spaced review, source-linked revision tests and topic evidence.</p></div><button class="btn primary" id="g-learning">Open learning desk \u2192</button></section><section class="panel pad backup-home"><div><span class="eyebrow">YOUR DATA</span><h2>Portable offline history</h2><p class="fine">Stored in this browser. Export a backup to protect your history and notes.</p></div><div class="row generic-actions"><button class="btn" id="g-export-history"' + (loading ? " disabled" : "") + '>Export backup</button><button class="btn" id="g-import-history"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + '>Import backup</button></div><input type="file" id="g-history-file" accept=".json,.gz,application/json,application/gzip" hidden></section></div><div class="home-stats">' + [["Paper editions", packages.size], ["Completed tests", complete.length], ["Attempts in progress", pending.length], ["Notebook cards", [...records.values()].filter(isLearning).length]].map(([name, value]) => '<div class="home-stat"><small>' + escapeText(name) + "</small><b>" + escapeText(value) + "</b></div>").join("") + "</div>" + (preflight ? examRulesHTML(preflight) : "");
+      ].map(([key2, title, detail]) => '<button type="button" class="mode ' + (cglMode === key2 ? "on" : "") + '" data-mode="' + key2 + '" aria-pressed="' + (cglMode === key2) + '"><span class="radio-dot"></span><span><strong>' + title + "</strong><small>" + detail + "</small></span></button>").join("") + "</div>" + (cglMode === "single" ? '<label class="picker" for="g-single-section">Choose section</label><select id="g-single-section">' + selected.paper.sections.map((z, i) => '<option value="' + i + '"' + (singleSection === i ? " selected" : "") + ">" + escapeText(z.title) + "</option>").join("") + "</select>" : "") : "") + '<label class="untimed-option" for="g-untimed"><input type="checkbox" id="g-untimed"' + (untimedPractice ? " checked" : "") + '><span><strong>Untimed practice</strong><small>No countdown or automatic expiry. Keep the selected navigation and scoring rules; finish when ready.</small></span></label><div class="row generic-actions home-start"><button class="btn primary" id="g-start"' + (loading || fallbackConflict || storageFault || !selected ? " disabled" : "") + ">Start " + escapeText(modeLabel) + ' \u2192</button><button class="btn" id="g-import"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + '>Import question bank</button><button type="button" class="btn" id="g-image-prep">Prepare image for a bank</button></div><input type="file" id="g-file" accept=".json,.gz,application/json,application/gzip" hidden><p class="fine">Start with an editable <button type="button" class="textlink" id="g-bank-template">Download APFC/NAT bank template</button> (JSON). An authored simple bank may include a media array, question imageIds and optionImageIds. Prepare local images first; signed packages are never recompressed. Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section><aside class="home-side"><section class="panel pad paper-preview"><span class="eyebrow">SELECTED PAPER</span><h2>' + escapeText(selected?.title ?? "Choose a paper") + '</h2><p class="fine family-provenance">' + (family?.imported ? "Imported/user-supplied content; not an official exam bank." : family ? "Included SSC CGL papers. Original and reviewed versions remain distinct." : "Saved examination unavailable. Re-import the bank or select another.") + '</p><p class="fine">' + escapeText(selected?.paper.paperId ?? "") + " \xB7 " + escapeText(selected?.paper.edition ?? "") + '</p><div class="preview-metrics"><div><b>' + questionCount + "</b><small>Questions</small></div><div><b>" + escapeText(time) + "</b><small>Time</small></div><div><b>" + escapeText(previewSections) + "</b><small>Sections</small></div><div><b>" + escapeText(previewNavigation) + '</b><small>Navigation</small></div></div><p class="fine">Scoring and timer rules are frozen when you start; later paper edits cannot change a saved result.</p>' + (preflight ? preflightHTML(preflight) : "") + '</section><section class="panel pad recent-panel"><div class="row between"><h2>Recent completed results</h2><button class="textlink" id="g-history-recent">View all \u2192</button></div>' + (latest.length ? latest.map((a) => '<button class="recent-attempt" data-attempt="' + escapeText(a.id) + '"><b>' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + "</b><small>" + new Date(a.finishedAt ?? a.startedAt).toLocaleDateString() + " \xB7 " + escapeText(a.frozen.snapshot.mode.replaceAll("-", " ")) + " \xB7 " + escapeText(frozenScoreSummary(a)?.text ?? "Score unavailable") + "</small></button>").join("") : '<p class="fine">Your three most recent completed results will appear here; unfinished attempts stay in their own Resume area.</p>') + "</section></aside></div>" + builder + '<div class="home-utilities"><section class="panel pad learning-entry"><div><span class="eyebrow">REVISE & IMPROVE</span><h2>Learning & revision</h2><p class="fine">Error notebook, FSRS-7 spaced review, source-linked revision tests and topic evidence.</p></div><button class="btn primary" id="g-learning">Open learning desk \u2192</button></section><section class="panel pad backup-home"><div><span class="eyebrow">YOUR DATA</span><h2>Portable offline history</h2><p class="fine">Stored in this browser. Export a backup to protect your history and notes.</p></div><div class="row generic-actions"><button class="btn" id="g-export-history"' + (loading ? " disabled" : "") + '>Export backup</button><button class="btn" id="g-import-history"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + '>Import backup</button></div><input type="file" id="g-history-file" accept=".json,.gz,application/json,application/gzip" hidden></section></div><div class="home-stats">' + [["Paper editions", packages.size], ["Completed tests", complete.length], ["Attempts in progress", pending.length], ["Notebook cards", [...records.values()].filter(isLearning).length]].map(([name, value]) => '<div class="home-stat"><small>' + escapeText(name) + "</small><b>" + escapeText(value) + "</b></div>").join("") + "</div>" + (preflight ? examRulesHTML(preflight) : "");
     }
     function packageForAttempt(saved) {
       return packages.get(saved.packageId) ?? [...packages.values()].find((p) => p.paper.paperId === saved.frozen.paper.paperId && p.paper.edition === saved.frozen.paper.edition);
@@ -10156,6 +10587,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     function draw2() {
       if (disposed) return;
       imageViewer.beforeRender();
+      imagePreparation.beforeRender();
       const currentSection = attempt?.frozen.paper.sections[attempt.state.sectionIndex];
       const currentQuestion = attempt?.state.questionIndex;
       const screenKey = view === "exam" ? "exam|" + attempt?.id + "|" + attempt?.state.sectionIndex + "|" + currentQuestion : view === "result" ? "result|" + attempt?.id + "|" + resultTab : view;
@@ -10395,6 +10827,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
           go({ screen: "exam", attemptId: attempt.id });
         };
         root2.querySelector("#g-import").onclick = () => root2.querySelector("#g-file")?.click();
+        root2.querySelector("#g-image-prep").onclick = (e) => imagePreparation.open(e.currentTarget);
         root2.querySelector("#g-bank-template").onclick = () => {
           const data = new Blob([JSON.stringify(APFC_NAT_BANK_TEMPLATE, null, 2)], { type: "application/json" });
           const url = URL.createObjectURL(data);
@@ -10571,16 +11004,16 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
         const controls = [...root2.querySelectorAll("[data-match]")];
         const feedback = root2.querySelector("#g-match-feedback");
         const updateConflicts = (dirty) => {
-          const duplicates = duplicateMatchingTargets(controls.map((control) => control.value));
-          for (const control of controls) {
-            const conflict = Boolean(control.value && duplicates.includes(control.value));
-            control.classList.toggle("match-conflict", conflict);
+          const duplicates = duplicateMatchingTargets(controls.map((control2) => control2.value));
+          for (const control2 of controls) {
+            const conflict = Boolean(control2.value && duplicates.includes(control2.value));
+            control2.classList.toggle("match-conflict", conflict);
             if (conflict) {
-              control.setAttribute("aria-invalid", "true");
-              control.setAttribute("aria-describedby", "g-match-feedback");
+              control2.setAttribute("aria-invalid", "true");
+              control2.setAttribute("aria-describedby", "g-match-feedback");
             } else {
-              control.removeAttribute("aria-invalid");
-              control.removeAttribute("aria-describedby");
+              control2.removeAttribute("aria-invalid");
+              control2.removeAttribute("aria-describedby");
             }
           }
           saveButton.disabled = duplicates.length > 0;
@@ -10590,7 +11023,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
           }
           return duplicates;
         };
-        controls.forEach((control) => control.onchange = () => {
+        controls.forEach((control2) => control2.onchange = () => {
           updateConflicts(true);
         });
         updateConflicts(false);
@@ -10609,7 +11042,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
         } else if (q.content.kind === "matching") {
           const matching = q.content;
           const controls = [...root2.querySelectorAll("[data-match]")];
-          const duplicate = duplicateMatchingTargets(controls.map((control) => control.value));
+          const duplicate = duplicateMatchingTargets(controls.map((control2) => control2.value));
           if (duplicate.length) {
             notice("Conflicting right-side matches must be corrected before saving.");
             return;
@@ -10792,6 +11225,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     window.addEventListener("storage", storage);
     function cleanup() {
       imageViewer.dispose();
+      imagePreparation.dispose();
       router.dispose();
       learningDesk.dispose();
       disposed = true;
@@ -10905,9 +11339,9 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
 
   // src/app/bootstrap.ts
   function readEmbedded(id) {
-    const element = document.getElementById(id);
-    if (!element?.textContent) throw new Error("Missing offline exam bank: " + id);
-    return JSON.parse(element.textContent);
+    const element2 = document.getElementById(id);
+    if (!element2?.textContent) throw new Error("Missing offline exam bank: " + id);
+    return JSON.parse(element2.textContent);
   }
   var sources = readEmbedded("paper-bank");
   var patches = readEmbedded("review-patches");
@@ -10925,8 +11359,8 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       theme.setAttribute("aria-pressed", String(settings.dark));
     }
     for (const [id, pressed] of [["themeLight", !settings.dark], ["themeDark", settings.dark]]) {
-      const control = document.getElementById(id);
-      control?.setAttribute("aria-pressed", String(pressed));
+      const control2 = document.getElementById(id);
+      control2?.setAttribute("aria-pressed", String(pressed));
     }
     const size = document.getElementById("fontReset");
     if (size) size.textContent = settings.scale + "%";
