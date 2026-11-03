@@ -70,6 +70,9 @@ try{
    heading:ratio(style("#pd-author-heading").color,panel),
    close:ratio(style("#pd-author-close").color,style("#pd-author-close").backgroundColor),
    closeColor:style("#pd-author-close").color,closeBackground:style("#pd-author-close").backgroundColor,
+   closeInlineStyle:document.querySelector("#pd-author-close")?.getAttribute("style"),
+   closeMatchesTheme:document.querySelector("#pd-author-close")?.matches('html[data-theme="dark"] body .generic-workspace.pd-author-mode .pd-author-studio button.btn:not(.primary)'),
+   closeVarPanel:style("#pd-author-close").getPropertyValue("--panel").trim(),
    newDraft:ratio(style("#pd-author-new").color,style("#pd-author-new").backgroundColor),
    draftColor:style("#pd-author-new").color,draftBackground:style("#pd-author-new").backgroundColor,
    editor:ratio(style("#pd-author-editor wg-content").color,style("#pd-author-editor").backgroundColor)
