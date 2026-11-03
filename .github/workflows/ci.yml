@@ -66,6 +66,8 @@ jobs:
         run: node scripts/acceptance-image-viewer.mjs
       - name: P47-3B optional local image preparation and authored bank integrity
         run: node scripts/acceptance-image-preparation.mjs
+      - name: P47-5C integrated Wordgard authoring, visual and offline QA (Chromium)
+        run: node scripts/acceptance-authoring-visual.mjs chromium
       - run: node scripts/acceptance-critical.mjs
       - run: node scripts/acceptance-bank-modes.mjs
       - run: node scripts/acceptance-drafts.mjs
@@ -87,6 +89,14 @@ jobs:
       - run: node scripts/acceptance-platform.mjs chromium
       - run: node scripts/acceptance-safari-fallback.mjs chromium
       # All current browser functional contracts live in the capability suites.
+      - name: P47-5C reviewable targeted authoring screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p47-5c-visual-qa-chromium
+          path: artifacts/p47-5c-visual/*.png
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Upload screenshots only when a modern test fails
         if: failure()
         uses: actions/upload-artifact@v4
@@ -122,6 +132,16 @@ jobs:
         run: node scripts/acceptance-image-viewer.mjs ${{ matrix.browser }}
       - name: P47-3B offline import image preparation (${{ matrix.browser }})
         run: node scripts/acceptance-image-preparation.mjs ${{ matrix.browser }}
+      - name: P47-5C Wordgard authoring visual QA (${{ matrix.browser }})
+        run: node scripts/acceptance-authoring-visual.mjs ${{ matrix.browser }}
+      - name: Preserve targeted authoring screenshots (${{ matrix.browser }})
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p47-5c-visual-qa-${{ matrix.browser }}
+          path: artifacts/p47-5c-visual/*.png
+          if-no-files-found: ignore
+          retention-days: 7
       # WebKit native Back after file:// reload remains explicitly unsupported.
 
   publish:
