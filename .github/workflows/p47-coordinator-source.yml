@@ -1,0 +1,19 @@
+name: P47 coordinator working source snapshot
+on:
+  push:
+    branches: [overhaul]
+jobs:
+  source-snapshot:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Archive tracked working source
+        run: git archive --format=zip --output=/tmp/p47-coordinator-source.zip HEAD
+      - name: Capture source for local type-safe full-coordinator rewrite
+        uses: actions/upload-artifact@v4
+        with:
+          name: p47-6-working-source
+          path: /tmp/p47-coordinator-source.zip
+          retention-days: 1
