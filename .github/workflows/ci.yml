@@ -63,6 +63,8 @@ jobs:
       - run: node scripts/acceptance-history-evidence.mjs
       - run: node scripts/acceptance-history-filters.mjs
       - run: node scripts/acceptance-resilience.mjs
+      - name: P48 independent damaged IndexedDB partial recovery (Chromium)
+        run: node scripts/acceptance-partial-recovery.mjs chromium
       - run: node scripts/acceptance-learning-lifecycle.mjs
       - run: node scripts/acceptance-session-policy.mjs
       - run: node scripts/acceptance-editorial-provenance.mjs
@@ -141,6 +143,8 @@ jobs:
       - name: P47-5B actual offline mathematical question/review and font safety (${{ matrix.browser }})
         run: node scripts/acceptance-p47-math.mjs ${{ matrix.browser }}
       - run: node scripts/acceptance-platform.mjs ${{ matrix.browser }}
+      - name: P48 independent damaged IndexedDB partial recovery (${{ matrix.browser }})
+        run: node scripts/acceptance-partial-recovery.mjs ${{ matrix.browser }}
       - run: node scripts/acceptance-safari-fallback.mjs ${{ matrix.browser }}
       - name: P47-3 real image dialog (${{ matrix.browser }})
         run: node scripts/acceptance-image-viewer.mjs ${{ matrix.browser }}
