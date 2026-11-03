@@ -39,7 +39,7 @@ test("P47-6 independently owned route, Library, exam, Results, History, persiste
  assert.match(ctx,/export interface CoordinatorContext/);
  assert.match(ctx,/readonly records:Map<string, RecordItem>/);
  assert.match(ctx,/readonly packages:Map<string, ExamPackage>/);
- assert.match(ctx,/readonly attempt/);
+ assert.match(ctx,/\battempt:GenericAttempt \| null/);
  for(const [name,required] of Object.entries(expected)){
   const text=await source("src/app/"+name+".ts");
   assert.match(text,/import type \{CoordinatorContext\}/);
