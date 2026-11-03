@@ -7,7 +7,15 @@ export function assetHTML(bundle:ExamPackage,ids:readonly string[]|undefined,fal
     const a=bundle.assets?.find(x=>x.id===id);
     // Author-supplied descriptions win; context is only a fallback when
     // imported media has no explicit alt text.
-    return a?'<img class="generic-figure" src="'+escapeText(a.dataUri)+'" alt="'+escapeText(a.altText??fallbackAlt)+'">':"";
+    if(!a)return "";
+    const alt=escapeText(a.altText??fallbackAlt);
+    // The URL is serialized exactly once. No extra/base64 thumbnail, asset
+    // copy, on-demand network fetch, or new persisted binary is created.
+    // ARIA launch control stays usable even inside an exam's disabled fieldset.
+    return '<span class="generic-media-frame"><img class="generic-figure" src="'+
+      escapeText(a.dataUri)+'" alt="'+alt+'" decoding="async">'+
+      '<span role="button" tabindex="0" class="generic-image-open" data-image-open '+
+      'aria-label="Enlarge image: '+alt+'">Enlarge image</span></span>';
   }).join("");
 }
 export function renderGenericControls(bundle:ExamPackage,q:QuestionRevision,response?:CandidateResponse):string{
@@ -16,8 +24,15 @@ export function renderGenericControls(bundle:ExamPackage,q:QuestionRevision,resp
     const selected=response?.kind==="single-choice"?[response.optionId]:response?.kind==="multiple-select"?response.optionIds:[];
     const kind=c.kind==="single-choice"?"radio":"checkbox";
     return '<fieldset class="generic-choices"><legend>'+ (kind==="radio"?"Select one option":"Select applicable options")+'</legend>'+
-      c.options.map((o,i)=>'<label class="generic-choice"><input type="'+kind+'" name="generic-answer" data-choice="'+escapeText(o.id)+'"'+
-        (selected.includes(o.id)?" checked":"")+'><span><b>'+String.fromCharCode(65+i)+'.</b> '+escapeText(o.text)+assetHTML(bundle,o.assetIds,"Image for option "+String.fromCharCode(65+i))+'</span></label>').join("")+
+      c.options.map((o,i)=>{
+        const media=assetHTML(bundle,o.assetIds,"Image for option "+String.fromCharCode(65+i));
+        const label='<label class="generic-choice"><input type="'+kind+'" name="generic-answer" data-choice="'+escapeText(o.id)+'"'+
+          (selected.includes(o.id)?" checked":"")+'><span><b>'+String.fromCharCode(65+i)+'.</b> '+escapeText(o.text)+'</span></label>';
+        // No interactive image enlargement control nested inside an answer
+        // label: expanding an option diagram can never select that answer.
+        return media?'<div class="generic-choice-media-row">'+label+
+          '<div class="generic-choice-media">'+media+'</div></div>':label;
+      }).join("")+
       '</fieldset>';
   }
   if(c.kind==="true-false")return '<fieldset class="generic-choices"><legend>Choose a response</legend>'+
@@ -30,10 +45,14 @@ export function renderGenericControls(bundle:ExamPackage,q:QuestionRevision,resp
   if(c.kind==="free-response")return '<label class="picker" for="g-text">Written response</label><textarea id="g-text" rows="6">'+
     (response?.kind==="free-response"?escapeText(response.text):"")+'</textarea><button class="btn primary" id="g-save">Save response</button>';
   const pairs=response?.kind==="matching"?response.pairs:[];
-  return '<div class="generic-matches">'+c.leftItems.map(left=>'<label><span>'+escapeText(left.text)+assetHTML(bundle,left.assetIds,"Image for matching item "+left.text)+'</span><select data-match="'+escapeText(left.id)+'"><option value="">Not matched</option>'+
-    c.rightItems.map(right=>'<option value="'+escapeText(right.id)+'"'+
-      (pairs.some(p=>p.leftId===left.id&&p.rightId===right.id)?" selected":"")+'>'+escapeText(right.text)+'</option>').join("")+
-    '</select></label>').join("")+'</div>'+
+  return '<div class="generic-matches">'+c.leftItems.map(left=>{
+    const media=assetHTML(bundle,left.assetIds,"Image for matching item "+left.text);
+    const label='<label><span>'+escapeText(left.text)+'</span><select data-match="'+escapeText(left.id)+'"><option value="">Not matched</option>'+
+      c.rightItems.map(right=>'<option value="'+escapeText(right.id)+'"'+
+        (pairs.some(p=>p.leftId===left.id&&p.rightId===right.id)?" selected":"")+'>'+escapeText(right.text)+'</option>').join("")+
+      '</select></label>';
+    return media?'<div class="generic-match-media-row">'+label+media+'</div>':label;
+  }).join("")+'</div>'+
     '<p class="generic-inline-warning" id="g-match-feedback" role="status" aria-live="polite" aria-atomic="true"></p>'+
     '<button class="btn primary" id="g-save">Save matches</button>';
 }
