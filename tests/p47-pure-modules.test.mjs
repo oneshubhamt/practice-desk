@@ -96,7 +96,8 @@ test("P47-1 validator is standalone, fail-closed and never modifies the input",(
  assert.ok(isAttempt(a));assert.equal(isLearning(a),false);assert.equal(isPackage(a),false);
  assert.throws(()=>validateGenericStoredRecord({...a,packageId:"another"}),/incorrect revision/);
  assert.throws(()=>validateGenericStoredRecord({...a,saveRevision:-1}),/write revision/);
- assert.throws(()=>validateGenericStoredRecord({...a,frozen:{...a.frozen,answerKeyRevisionId:"forged"}}),/frozen|snapshot|hash|integrity|content/i);
+ const forged=structuredClone(a);forged.frozen.key.entries[0].answer.optionId="b";
+ assert.throws(()=>validateGenericStoredRecord(forged),/frozen|snapshot|hash|integrity|content/i);
 });
 test("P47-1 independent presentation and validation modules have no coordinator or DOM dependency",async()=>{
  for(const file of ["html-escape","question-content-view","exam-view","stored-record-validator","review-media-view"]){
