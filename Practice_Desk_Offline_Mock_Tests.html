@@ -3753,6 +3753,113 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     }
   });
 
+  // src/app/html-escape.ts
+  var escapeText = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
+
+  // src/app/question-content-view.ts
+  function assetHTML(bundle, ids, fallbackAlt = "Question figure") {
+    return (ids ?? []).map((id) => {
+      const a = bundle.assets?.find((x) => x.id === id);
+      return a ? '<img class="generic-figure" src="' + escapeText(a.dataUri) + '" alt="' + escapeText(a.altText ?? fallbackAlt) + '">' : "";
+    }).join("");
+  }
+  function renderGenericControls(bundle, q, response) {
+    const c = q.content;
+    if (c.kind === "single-choice" || c.kind === "multiple-select") {
+      const selected = response?.kind === "single-choice" ? [response.optionId] : response?.kind === "multiple-select" ? response.optionIds : [];
+      const kind = c.kind === "single-choice" ? "radio" : "checkbox";
+      return '<fieldset class="generic-choices"><legend>' + (kind === "radio" ? "Select one option" : "Select applicable options") + "</legend>" + c.options.map((o, i) => '<label class="generic-choice"><input type="' + kind + '" name="generic-answer" data-choice="' + escapeText(o.id) + '"' + (selected.includes(o.id) ? " checked" : "") + "><span><b>" + String.fromCharCode(65 + i) + ".</b> " + escapeText(o.text) + assetHTML(bundle, o.assetIds, "Image for option " + String.fromCharCode(65 + i)) + "</span></label>").join("") + "</fieldset>";
+    }
+    if (c.kind === "true-false") return '<fieldset class="generic-choices"><legend>Choose a response</legend>' + [true, false].map((value) => '<label class="generic-choice"><input type="radio" name="generic-boolean" data-bool="' + value + '"' + (response?.kind === "true-false" && response.value === value ? " checked" : "") + "><span>" + (value ? "True" : "False") + "</span></label>").join("") + "</fieldset>";
+    if (c.kind === "numeric-entry") return '<label class="picker" for="g-number">Numeric answer</label><input type="number" step="any" id="g-number"' + (c.numericRules.minimum !== void 0 ? ' min="' + c.numericRules.minimum + '"' : "") + (c.numericRules.maximum !== void 0 ? ' max="' + c.numericRules.maximum + '"' : "") + ' value="' + (response?.kind === "numeric-entry" ? escapeText(response.value) : "") + '"><button class="btn primary" id="g-save">Save answer</button>';
+    if (c.kind === "free-response") return '<label class="picker" for="g-text">Written response</label><textarea id="g-text" rows="6">' + (response?.kind === "free-response" ? escapeText(response.text) : "") + '</textarea><button class="btn primary" id="g-save">Save response</button>';
+    const pairs = response?.kind === "matching" ? response.pairs : [];
+    return '<div class="generic-matches">' + c.leftItems.map((left) => "<label><span>" + escapeText(left.text) + assetHTML(bundle, left.assetIds, "Image for matching item " + left.text) + '</span><select data-match="' + escapeText(left.id) + '"><option value="">Not matched</option>' + c.rightItems.map((right) => '<option value="' + escapeText(right.id) + '"' + (pairs.some((p) => p.leftId === left.id && p.rightId === right.id) ? " selected" : "") + ">" + escapeText(right.text) + "</option>").join("") + "</select></label>").join("") + '</div><p class="generic-inline-warning" id="g-match-feedback" role="status" aria-live="polite" aria-atomic="true"></p><button class="btn primary" id="g-save">Save matches</button>';
+  }
+  function stimulusHTML(bundle, q) {
+    const stimulus = bundle.stimuli?.find((s) => s.id === q.content.stimulusId);
+    if (!stimulus) return "";
+    if (stimulus.kind === "passage" || stimulus.kind === "case")
+      return '<section class="generic-stimulus" role="region" tabindex="0" aria-label="' + escapeText((stimulus.title || (stimulus.kind === "case" ? "Case study" : "Reading passage")) + " \u2014 scroll to read full text") + '"><b>' + escapeText(stimulus.title || "Reading passage") + "</b><p>" + escapeText(stimulus.text) + "</p>" + assetHTML(bundle, stimulus.assetIds, "Image accompanying " + (stimulus.title || "reading passage")) + "</section>";
+    if (stimulus.kind === "table") return '<section class="generic-stimulus"><b>' + escapeText(stimulus.title || "Table") + '</b><div class="scroll-table"><table><tr>' + stimulus.columns.map((c) => "<th>" + escapeText(c) + "</th>").join("") + "</tr>" + stimulus.rows.map((r) => "<tr>" + r.map((c) => "<td>" + escapeText(c) + "</td>").join("") + "</tr>").join("") + "</table></div></section>";
+    if ("assetId" in stimulus) return '<section class="generic-stimulus">' + assetHTML(bundle, [stimulus.assetId], stimulus.altText) + "<p>" + escapeText(stimulus.caption || stimulus.altText) + "</p></section>";
+    return "";
+  }
+
+  // src/app/exam-view.ts
+  function readablePracticeMode(mode) {
+    switch (mode) {
+      case "exam-simulation":
+        return "Exam simulation";
+      case "full-paper-practice":
+        return "Full paper \xB7 flexible navigation";
+      case "section-practice":
+        return "Single-section practice";
+      case "custom-practice":
+        return "Custom practice";
+      default:
+        return mode.replaceAll("-", " ");
+    }
+  }
+  var minutes = (ms) => {
+    const sec = Math.ceil(Math.max(0, ms) / 1e3);
+    return Math.floor(sec / 60).toString().padStart(2, "0") + ":" + (sec % 60).toString().padStart(2, "0");
+  };
+  function examTimeRemaining(paper, state) {
+    if (paper.timing.kind === "untimed") return null;
+    if (paper.timing.kind === "whole-paper") return Math.max(0, paper.timing.durationMs - state.elapsedMs);
+    const id = paper.sections[state.sectionIndex]?.id;
+    const limit = paper.timing.sectionLimits.find((s) => s.sectionId === id)?.durationMs;
+    return limit == null ? null : Math.max(0, limit - state.sectionElapsedMs);
+  }
+  function renderModelExam(attempt, bundle, warning = "", draft, view = { focused: false }) {
+    const paper = attempt.frozen.paper, state = attempt.state;
+    const section = paper.sections[state.sectionIndex];
+    const id = section?.questionRevisionIds[state.questionIndex];
+    const q = attempt.frozen.questions.find((x) => x.id === id);
+    if (!section || !q) return "<p>Question unavailable</p>";
+    const responsesById = new Map(state.responses.map((row) => [row.questionRevisionId, row]));
+    const response = responsesById.get(q.id)?.response;
+    const currentDraft = draft?.questionId === q.id && q.content.kind === "multiple-select" ? draft : null;
+    const remaining = examTimeRemaining(paper, state);
+    const total = paper.sections.reduce((n, section2) => n + section2.questionRevisionIds.length, 0);
+    const answered = state.responses.filter((record3) => record3.response).length;
+    const timeLimit = paper.timing.kind === "whole-paper" ? paper.timing.durationMs : paper.timing.kind === "sectional" ? paper.timing.sectionLimits.find((t) => t.sectionId === section.id)?.durationMs ?? null : null;
+    const elapsed = paper.timing.kind === "sectional" ? state.sectionElapsedMs : state.elapsedMs;
+    const expired = state.status === "section-expired";
+    const lockedWhole = paper.timing.kind !== "sectional" && paper.navigation.sectionNavigation === "sequential-locked";
+    const hasNextSection = state.sectionIndex < paper.sections.length - 1;
+    const untimedSection = paper.timing.kind === "sectional" && paper.timing.sectionLimits.find((limit) => limit.sectionId === section.id)?.durationMs === null;
+    const progressValue = timeLimit !== null && timeLimit > 0 ? Math.min(100, 100 * elapsed / timeLimit) : Math.min(100, 100 * answered / Math.max(1, total));
+    const progressScope = timeLimit === null ? "Question coverage" : paper.timing.kind === "whole-paper" ? "Whole-paper timer" : "Section timer";
+    const progressAccessibleName = timeLimit === null ? "Questions answered" : paper.timing.kind === "whole-paper" ? "Whole-paper time used" : "Section time used";
+    const isLow = remaining !== null && remaining <= 6e4;
+    const focused = view.focused;
+    const sectionAnswered = section.questionRevisionIds.filter((qid) => Boolean(responsesById.get(qid)?.response)).length;
+    const sectionFlagged = section.questionRevisionIds.filter((qid) => Boolean(responsesById.get(qid)?.flagged)).length;
+    const assets = {
+      format: "practice-desk-exam",
+      version: 1,
+      examId: attempt.frozen.snapshot.examId,
+      title: bundle?.title ?? "",
+      paper,
+      answerKey: attempt.frozen.key,
+      questions: attempt.frozen.questions,
+      stimuli: attempt.frozen.stimuli,
+      assets: attempt.frozen.assets
+    };
+    return '<div class="generic-heading exam-header"><div><h1>' + escapeText(bundle?.title ?? paper.paperId) + '</h1><p class="muted">' + escapeText(readablePracticeMode(attempt.frozen.snapshot.mode)) + " \xB7 " + escapeText(section.title) + " \xB7 Section " + (state.sectionIndex + 1) + " of " + paper.sections.length + '</p></div><div class="row exam-header-actions"><div class="exam-clock ' + (isLow ? "low" : "") + '"><strong class="generic-timer" id="g-timer" role="timer">' + (remaining === null ? "Untimed" : minutes(remaining)) + "</strong><small>" + (remaining === null ? "UNTIMED PRACTICE" : paper.timing.kind === "sectional" ? "SECTION TIME LEFT" : "PAPER TIME LEFT") + '</small></div><button class="btn quiet" id="g-library">\u2190 Library</button><button class="btn" type="button" id="g-exam-full" aria-label="Toggle full-screen test view" aria-pressed="' + focused + '">' + (focused ? "\u26F6 Exit full screen" : "\u26F6 Full screen") + '</button></div></div><p id="g-fullscreen-status" role="status"></p>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + (expired ? '<p class="generic-warning" role="status">Section time has expired. Answers are locked. Select Continue to advance without using extra time.</p>' : "") + '<section class="exam-progress"><div class="progress-track exam-time-progress" role="progressbar" aria-valuenow="' + Math.round(progressValue) + '" aria-valuemin="0" aria-valuemax="100" aria-label="' + progressAccessibleName + '" aria-valuetext="' + escapeText(progressScope) + " " + Math.round(progressValue) + '%"><span style="width:' + progressValue.toFixed(1) + '%"></span></div></section><div class="generic-sections" role="group" aria-label="Exam sections">' + paper.sections.map((s, i) => {
+      const locked = state.status !== "running" || state.completedSections.includes(i) || (paper.timing.kind === "sectional" || paper.navigation.sectionNavigation === "sequential-locked") && i !== state.sectionIndex;
+      const filled = s.questionRevisionIds.filter((qid) => Boolean(responsesById.get(qid)?.response)).length;
+      const status = state.completedSections.includes(i) ? "Closed" : locked ? "Locked" : filled + " / " + s.questionRevisionIds.length + " answered";
+      return '<button class="btn exam-section-tab ' + (i === state.sectionIndex ? "primary" : "") + '" data-section="' + i + '" aria-current="' + (i === state.sectionIndex ? "step" : "false") + '"' + (locked ? " disabled" : "") + "><b>" + escapeText(s.title) + "</b><small>" + status + "</small></button>";
+    }).join("") + '</div><div class="generic-layout exam-grid"><section class="panel pad exam-question"><p class="eyebrow">' + escapeText(section.title) + " \xB7 Question " + (state.questionIndex + 1) + " of " + section.questionRevisionIds.length + (attempt.frozen.snapshot.examId === "ssc-cgl" ? " \xB7 Paper Q" + escapeText(q.questionId.split(":").at(-1)) : "") + "</p>" + stimulusHTML(assets, q) + '<h2 class="generic-prompt">' + escapeText(q.content.prompt) + "</h2>" + assetHTML(assets, q.content.assetIds, "Figure for question " + (state.questionIndex + 1)) + '<fieldset class="generic-response-group"' + (state.status !== "running" ? " disabled" : "") + ">" + renderGenericControls(assets, q, currentDraft ? { kind: "multiple-select", optionIds: currentDraft.optionIds } : response) + (currentDraft ? '<p class="generic-inline-warning" role="status">' + escapeText(currentDraft.message) + "</p>" : "") + '</fieldset><div class="exam-question-controls"><div class="row generic-actions exam-nav-actions"><button class="btn" id="g-prev"' + (state.status !== "running" || !state.questionIndex || paper.navigation.questionNavigation === "forward-only" ? " disabled" : "") + '>\u2190 Previous</button><button class="btn primary" id="g-next"' + (state.status !== "running" || state.questionIndex === section.questionRevisionIds.length - 1 ? " disabled" : "") + '>Next \u2192</button></div><div class="row generic-actions exam-answer-actions"><button class="btn" id="g-clear"' + (!response || state.status !== "running" ? " disabled" : "") + '>Clear</button><button class="btn review-toggle" id="g-flag" aria-pressed="' + Boolean(responsesById.get(q.id)?.flagged) + '"' + (!paper.navigation.allowFlagging || expired ? " disabled" : "") + ">" + (responsesById.get(q.id)?.flagged ? "Unmark" : "Mark for review") + '</button></div></div><div class="row generic-actions exam-submit-actions">' + (paper.timing.kind !== "untimed" && paper.timing.pausePolicy === "allowed" ? '<button class="btn" id="g-pause"' + (expired ? " disabled" : "") + ">" + (state.status === "paused" ? "Resume timer" : "Pause timer") + "</button>" : "") + '<button class="btn danger" id="g-submit"' + (state.status === "paused" || paper.timing.kind === "sectional" && !paper.timing.allowEarlySubmit && !expired && !untimedSection ? " disabled" : "") + ">" + (expired ? hasNextSection ? "Continue to next section" : "Finish expired exam" : paper.timing.kind === "sectional" ? untimedSection ? "Finish untimed section" : "Submit section" : lockedWhole && hasNextSection ? "Finish section \u2192" : "Submit exam") + '</button></div></section><aside class="panel pad exam-sidebar" aria-label="Question navigator"><h3>Question navigator</h3><p class="fine navigator-intro">Jump to a question in this section</p><div class="generic-palette">' + section.questionRevisionIds.map((qid, i) => {
+      const r = responsesById.get(qid);
+      const locked = state.status !== "running" || paper.navigation.questionNavigation === "forward-only" && i < state.questionIndex;
+      return '<button class="num ' + (i === state.questionIndex ? "here " : "") + (r?.response ? "answered " : "") + (r?.flagged ? "marked" : "") + '" data-q="' + i + '" aria-current="' + (i === state.questionIndex ? "step" : "false") + '" aria-label="Question ' + (i + 1) + (r?.response ? ", answered" : "") + (r?.flagged ? ", flagged" : "") + '"' + (locked ? " disabled" : "") + ">" + (i + 1) + "</button>";
+    }).join("") + '</div><div class="navigator-stats" role="group" aria-label="Current section answer counts"><div><b>' + sectionAnswered + "<span> / " + section.questionRevisionIds.length + "</span></b><small>Answered</small></div><div><b>" + (section.questionRevisionIds.length - sectionAnswered) + "</b><small>Not answered</small></div><div><b>" + sectionFlagged + '</b><small>Flagged</small></div></div><div class="palette-legend"><span><i class="legend-dot answered"></i>Answered</span><span><i class="legend-dot marked"></i>Review</span><span><i class="legend-dot empty"></i>Not answered</span></div><p class="fine navigator-status">' + (paper.navigation.sectionNavigation === "sequential-locked" ? "Answers remain hidden until the exam finishes. Submitting a section locks it." : "Answers remain hidden until you submit.") + '</p><details class="navigator-help"><summary>Keyboard shortcuts</summary><p class="fine">' + (paper.navigation.questionNavigation === "forward-only" ? "Questions cannot be revisited in this exam." : "Navigate freely where the paper permits.") + " A\u2013D answer single-choice questions. \u2190 / \u2192 navigate except when a radio is focused; Alt + \u2190 / \u2192 navigates while focused. M marks/unmarks for review even while paused; F enters full screen. Answer/navigation shortcuts are disabled while paused or typing.</p></details></aside></div>";
+  }
+
   // src/domain/validate.ts
   var QUESTION_KINDS = [
     "single-choice",
@@ -5071,18 +5178,310 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     }
   }
 
-  // src/engine/clock.ts
-  function createSessionClock(wallStartMs, monoStartMs, monoNow) {
-    if (!Number.isFinite(wallStartMs) || !Number.isFinite(monoStartMs))
-      throw new Error("Invalid session clock origin");
-    let last = wallStartMs;
-    return () => {
-      const sample = monoNow();
-      if (!Number.isFinite(sample)) throw new Error("Invalid monotonic clock sample");
-      const elapsed = Math.max(0, sample - monoStartMs);
-      last = Math.max(last, wallStartMs + elapsed);
-      return Math.floor(last);
+  // src/learning/syllabus-taxonomy.ts
+  var APFC_SYLLABUS_V1 = {
+    id: "apfc-broad",
+    version: 1,
+    examId: "upsc-epfo-apfc",
+    headings: [
+      { id: "english", label: "General English" },
+      { id: "culture", label: "Indian Culture, Heritage and Freedom Movements" },
+      { id: "economy", label: "Developmental Issues and Present Trends in Indian Economy" },
+      { id: "governance", label: "Governance and Constitution of India" },
+      { id: "science-computers", label: "General Science and Basic Knowledge of Computer Applications" },
+      { id: "maths", label: "Elementary Mathematics, Statistics and General Mental Ability" },
+      { id: "labour", label: "Industrial Relations, Labour Codes and Social Security in India" },
+      { id: "accountancy", label: "Principles of Accountancy, Auditing and Insurance" },
+      { id: "current-events", label: "Current Events of National and International Importance" }
+    ]
+  };
+  var SUPPORTED_TAXONOMIES = [APFC_SYLLABUS_V1];
+  function syllabusForExam(examId) {
+    return SUPPORTED_TAXONOMIES.find((t) => t.examId === examId);
+  }
+  function syllabusHeading(examId, headingId) {
+    return syllabusForExam(examId)?.headings.find((h) => h.id === headingId);
+  }
+
+  // src/learning/learning.ts
+  var ERROR_LABELS = ["conceptual", "calculation", "interpretation", "time-pressure", "guessing", "careless", "knowledge-gap", "other"];
+  var validDate = (x) => typeof x === "string" && Number.isFinite(Date.parse(x));
+  function validateLearningCard(input) {
+    if (!input || typeof input !== "object" || Array.isArray(input)) throw Error("Invalid learning card");
+    const raw = input;
+    if (raw.recordType !== "learning-card" || typeof raw.id !== "string" || !raw.id.startsWith("learning-card:") || typeof raw.examId !== "string" || !raw.examId || typeof raw.paperId !== "string" || !raw.paperId || typeof raw.paperEdition !== "string" || typeof raw.sectionTitle !== "string" || typeof raw.sourceTitle !== "string" || typeof raw.sourceAttemptId !== "string" || !raw.sourceAttemptId || raw.sourceAttemptId.length > 200 || typeof raw.note !== "string" || raw.note.length > 8e3 || typeof raw.customTopic !== "string" || raw.customTopic.length > 120 || raw.syllabusTopicId !== void 0 && !syllabusHeading(raw.examId, raw.syllabusTopicId) || typeof raw.bookmarked !== "boolean" || !(raw.errorLabel === null || ERROR_LABELS.includes(raw.errorLabel)) || !validDate(raw.createdAt) || !validDate(raw.updatedAt) || raw.explanation !== void 0 && (typeof raw.explanation !== "string" || raw.explanation.length > 2e4) || !Array.isArray(raw.reviews) || raw.reviews.length > 1e4)
+      throw Error("Invalid learning card fields");
+    const question = validateQuestionRevision(raw.question);
+    if (question.contentHash !== questionRevisionHash(question)) throw Error("Learning card question hash mismatch");
+    if (!Array.isArray(raw.stimuli) || !Array.isArray(raw.assets)) throw Error("Learning card display media missing");
+    const media = validateMediaInventory(raw.stimuli, raw.assets);
+    validateQuestionMediaReferences([question], media.stimuli, media.assets);
+    if (raw.id !== "learning-card:" + question.id) throw Error("Learning card question identity mismatch");
+    const entries = [{ questionRevisionId: question.id, answer: raw.answer }];
+    validateAnswerKeyRevision({
+      id: "learning-key",
+      paperId: raw.paperId,
+      revision: 1,
+      contentHash: answerKeyRevisionHash({ entries }),
+      entries
+    }, [question]);
+    let previous = Date.parse(raw.createdAt);
+    for (const review of raw.reviews) {
+      if (!review || !validDate(review.at) || ![1, 2, 3, 4].includes(review.rating) || Date.parse(review.at) < previous || Date.parse(review.at) > Date.parse(raw.updatedAt))
+        throw Error("Invalid or unordered learning review history");
+      previous = Date.parse(review.at);
+    }
+    return input;
+  }
+  function addLearningCard(attempt, id, at) {
+    if (attempt.finishedAt === null) throw Error("Learning notebook is available only after submission");
+    if (!validDate(at)) throw Error("Invalid learning-card timestamp");
+    const question = attempt.frozen.questions.find((q) => q.id === id);
+    const key2 = attempt.frozen.key.entries.find((x) => x.questionRevisionId === id);
+    const section = attempt.frozen.paper.sections.find((s) => s.questionRevisionIds.includes(id));
+    if (!question || !key2 || !section) throw Error("Question not in completed exam");
+    const display = selectDisplayResources([question], attempt.frozen.stimuli, attempt.frozen.assets);
+    const record3 = {
+      recordType: "learning-card",
+      id: "learning-card:" + id,
+      examId: attempt.frozen.snapshot.examId,
+      paperId: attempt.frozen.paper.paperId,
+      paperEdition: attempt.frozen.paper.edition,
+      sectionTitle: section.title,
+      sourceTitle: attempt.frozen.paper.paperId,
+      sourceAttemptId: attempt.id,
+      question: structuredClone(question),
+      answer: structuredClone(key2.answer),
+      ...display,
+      note: "",
+      customTopic: "",
+      errorLabel: null,
+      bookmarked: false,
+      ...attempt.explanations?.[id] ? { explanation: attempt.explanations[id] } : {},
+      createdAt: at,
+      updatedAt: at,
+      reviews: []
     };
+    return validateLearningCard(record3);
+  }
+  function scheduledCard(item, scheduler) {
+    let card = scheduler.newCard({ cardId: item.id, now: new Date(item.createdAt) });
+    for (const review of item.reviews)
+      card = scheduler.review({ card, grade: review.rating, now: new Date(review.at) }).card;
+    return card;
+  }
+  function rateLearningCard(item, rating, at, scheduler) {
+    if (!validDate(at) || Date.parse(at) < Date.parse(item.reviews.at(-1)?.at ?? item.createdAt))
+      throw Error("Review time must be monotonic");
+    scheduler.review({ card: scheduledCard(item, scheduler), grade: rating, now: new Date(at) });
+    return validateLearningCard({ ...item, reviews: [...item.reviews, { rating, at }], updatedAt: at });
+  }
+  function topicMetrics(attempts, cards = []) {
+    const manual = new Map(cards.filter((c) => c.customTopic.trim()).map((c) => [
+      c.examId + "|" + c.question.id + "|" + c.question.contentHash,
+      c.customTopic.trim()
+    ]));
+    const mapped = new Map(cards.filter((c) => c.syllabusTopicId).map((c) => [
+      c.examId + "|" + c.question.id + "|" + c.question.contentHash,
+      c.syllabusTopicId
+    ]));
+    const rows = /* @__PURE__ */ new Map();
+    const distinct = /* @__PURE__ */ new Map(), independent = /* @__PURE__ */ new Map();
+    const answeredDistinct = /* @__PURE__ */ new Map(), answeredIndependent = /* @__PURE__ */ new Map();
+    for (const attempt of attempts) {
+      if (!attempt.result || attempt.finishedAt === null || Boolean(attempt.notebookLineage) || attempt.frozen.paper.paperId.startsWith("notebook-revision:")) continue;
+      const sections = attempt.frozen.paper.sections;
+      const questions = new Map(attempt.frozen.questions.map((q) => [q.id, q]));
+      for (const item of attempt.result.items) {
+        if (item.verdict === "excluded" || item.verdict === "pending") continue;
+        const q = questions.get(item.questionRevisionId);
+        const section = sections.find((s) => s.questionRevisionIds.includes(item.questionRevisionId));
+        if (!q || !section) continue;
+        const annotationKey = attempt.frozen.snapshot.examId + "|" + q.id + "|" + q.contentHash;
+        const heading = mapped.get(annotationKey);
+        const labels = [
+          { label: section.title, kind: "section" },
+          ...(q.content.topicIds ?? []).map((label2) => ({ label: label2, kind: "source-topic" })),
+          ...manual.get(annotationKey) ? [{ label: manual.get(annotationKey), kind: "user-topic" }] : [],
+          ...heading && syllabusHeading(attempt.frozen.snapshot.examId, heading) ? [{ label: syllabusHeading(attempt.frozen.snapshot.examId, heading).label, kind: "syllabus" }] : []
+        ];
+        const unique2 = /* @__PURE__ */ new Set();
+        for (const { label: label2, kind } of labels) {
+          if (!label2.trim()) continue;
+          const examId = attempt.frozen.snapshot.examId;
+          const key2 = examId + "|" + kind + "|" + label2;
+          if (unique2.has(key2)) continue;
+          unique2.add(key2);
+          const row = rows.get(key2) ?? {
+            id: key2,
+            label: label2,
+            kind,
+            examId,
+            total: 0,
+            answered: 0,
+            correct: 0,
+            incorrect: 0,
+            skipped: 0,
+            accuracy: null,
+            coverage: 0,
+            evidence: "insufficient",
+            attempts: 0,
+            answeredAttempts: 0,
+            distinctQuestions: 0,
+            distinctAnsweredQuestions: 0
+          };
+          row.total++;
+          if (item.verdict === "correct") {
+            row.correct++;
+            row.answered++;
+          }
+          if (item.verdict === "incorrect") {
+            row.incorrect++;
+            row.answered++;
+          }
+          if (item.verdict === "unanswered") row.skipped++;
+          const distinctIds = distinct.get(key2) ?? /* @__PURE__ */ new Set();
+          distinctIds.add(q.id);
+          distinct.set(key2, distinctIds);
+          const attemptIds = independent.get(key2) ?? /* @__PURE__ */ new Set();
+          attemptIds.add(attempt.id);
+          independent.set(key2, attemptIds);
+          row.distinctQuestions = distinctIds.size;
+          row.attempts = attemptIds.size;
+          if (item.verdict === "correct" || item.verdict === "incorrect") {
+            const answeredIds = answeredDistinct.get(key2) ?? /* @__PURE__ */ new Set();
+            answeredIds.add(q.id);
+            answeredDistinct.set(key2, answeredIds);
+            const answeredAttempts = answeredIndependent.get(key2) ?? /* @__PURE__ */ new Set();
+            answeredAttempts.add(attempt.id);
+            answeredIndependent.set(key2, answeredAttempts);
+          }
+          row.distinctAnsweredQuestions = answeredDistinct.get(key2)?.size ?? 0;
+          row.answeredAttempts = answeredIndependent.get(key2)?.size ?? 0;
+          row.accuracy = row.answered ? row.correct / row.answered : null;
+          row.coverage = row.answered / row.total;
+          row.evidence = row.answered >= 5 ? "measured" : "insufficient";
+          rows.set(key2, row);
+        }
+      }
+    }
+    return [...rows.values()].sort((a, b) => a.examId.localeCompare(b.examId) || a.kind.localeCompare(b.kind) || a.label.localeCompare(b.label));
+  }
+  function comparableTrends(attempts) {
+    const groups = /* @__PURE__ */ new Map();
+    for (const a of attempts) {
+      if (!a.result || a.finishedAt === null || Boolean(a.notebookLineage) || a.frozen.paper.paperId.startsWith("notebook-revision:")) continue;
+      const id = a.frozen.paper.id;
+      const group = groups.get(id) ?? { paperRevisionId: id, label: a.frozen.paper.paperId + " \xB7 " + a.frozen.paper.edition, count: 0, points: [] };
+      const s = a.result.snapshot;
+      const attempted = s.correctCount + s.incorrectCount;
+      const total = attempted + s.unansweredCount;
+      group.count++;
+      group.points.push({
+        at: a.finishedAt,
+        accuracy: attempted ? s.correctCount / attempted : null,
+        coverage: total ? attempted / total : 0,
+        marks: s.earnedMarks
+      });
+      groups.set(id, group);
+    }
+    return [...groups.values()].map((g) => ({ ...g, points: g.points.sort((a, b) => a.at - b.at) })).sort((a, b) => b.count - a.count);
+  }
+
+  // src/history/shared-store.ts
+  var SHARED_DB_NAME = "practiceDesk.shared.v1";
+  var ATTEMPTS_STORE = "attempts";
+  var SNAPSHOTS_STORE = "snapshots";
+  var bodyCache = /* @__PURE__ */ new WeakMap();
+  var verifiedReconstructed = /* @__PURE__ */ new WeakSet();
+  function isVerifiedSharedFrozen(frozen) {
+    return verifiedReconstructed.has(frozen) && Number.isFinite(Date.parse(frozen.frozenAt));
+  }
+  function sharedSnapshot(attempt) {
+    const frozen = attempt.frozen;
+    const cached = bodyCache.get(frozen);
+    if (cached && cached.body.sourceKeyReference === attempt.sourceKeyReference && cached.body.sourceReviewReference === attempt.sourceReviewReference && cached.body.explanations === attempt.explanations) return cached;
+    const { frozenAt: _, ...frozenBody } = frozen;
+    const body = {
+      ...frozenBody,
+      ...attempt.sourceKeyReference ? { sourceKeyReference: attempt.sourceKeyReference } : {},
+      ...attempt.sourceReviewReference ? { sourceReviewReference: attempt.sourceReviewReference } : {},
+      ...attempt.explanations ? { explanations: attempt.explanations } : {}
+    };
+    const id = "snapshot:" + hashJson(body);
+    const value = { id, body };
+    bodyCache.set(frozen, value);
+    return value;
+  }
+  function isSharedAttempt(value) {
+    return Boolean(value) && typeof value === "object" && value.recordType === "generic-attempt";
+  }
+  function compactAttempt(attempt) {
+    const snapshot = sharedSnapshot(attempt);
+    const { frozen, sourceKeyReference: _, sourceReviewReference: __, explanations: ___, ...other } = attempt;
+    return { row: { ...other, frozenRef: snapshot.id, frozenAt: frozen.frozenAt }, snapshot };
+  }
+  function expandAttempt(row, snapshot) {
+    if (!row || !snapshot || row.frozenRef !== snapshot.id)
+      throw Error("Shared exam snapshot not found for attempt");
+    if (!Number.isFinite(Date.parse(row.frozenAt)))
+      throw Error("Invalid frozen timestamp");
+    const { frozenRef: _, frozenAt, ...other } = row;
+    const { sourceKeyReference, sourceReviewReference, explanations, ...frozenBody } = snapshot.body;
+    return {
+      ...other,
+      ...sourceKeyReference ? { sourceKeyReference } : {},
+      ...sourceReviewReference ? { sourceReviewReference } : {},
+      ...explanations ? { explanations } : {},
+      frozen: { ...frozenBody, frozenAt }
+    };
+  }
+  function verifiedSnapshot(row) {
+    if (!row || typeof row.id !== "string" || !row.id.startsWith("snapshot:") || row.id !== "snapshot:" + hashJson(row.body))
+      throw Error("Shared snapshot SHA-256 mismatch");
+    assertFrozenContent({ ...row.body, frozenAt: "2026-01-01T00:00:00.000Z" });
+    return row;
+  }
+  function reconstructRecords(rows, snapshots) {
+    const byId = /* @__PURE__ */ new Map();
+    for (const unknownRow of snapshots) {
+      const snapshot = verifiedSnapshot(unknownRow);
+      if (byId.has(snapshot.id)) throw Error("Duplicate snapshot digest");
+      byId.set(snapshot.id, snapshot);
+    }
+    return rows.map((row) => {
+      if (!isSharedAttempt(row)) return row;
+      const snapshot = byId.get(row.frozenRef);
+      if (!snapshot) throw Error("Stored attempt references a missing immutable snapshot");
+      const expanded = expandAttempt(row, snapshot);
+      verifiedReconstructed.add(expanded.frozen);
+      bodyCache.set(expanded.frozen, snapshot);
+      return expanded;
+    });
+  }
+  async function pruneSharedSnapshots(db) {
+    const removed = [];
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction([ATTEMPTS_STORE, SNAPSHOTS_STORE], "readwrite");
+      const rows = tx.objectStore(ATTEMPTS_STORE).getAll();
+      rows.onsuccess = () => {
+        const referenced = new Set(rows.result.filter(isSharedAttempt).map((row) => row.frozenRef));
+        const cursor = tx.objectStore(SNAPSHOTS_STORE).openCursor();
+        cursor.onsuccess = () => {
+          const current = cursor.result;
+          if (!current) return;
+          if (typeof current.key === "string" && !referenced.has(current.key)) {
+            removed.push(current.key);
+            current.delete();
+          }
+          current.continue();
+        };
+      };
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error ?? Error("Snapshot cleanup failed"));
+      tx.onabort = () => reject(tx.error ?? Error("Snapshot cleanup aborted"));
+    });
+    return removed;
   }
 
   // src/engine/manual-grading.ts
@@ -5263,6 +5662,230 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     };
   }
 
+  // src/engine/review-source.ts
+  function createSourceReviewReference(target, source) {
+    if (target.paper.edition !== "reviewed" || source.paper.edition !== "source" || target.examId !== source.examId || target.paper.paperId !== source.paper.paperId) return null;
+    const byQuestion = new Map(source.questions.map((q) => [q.questionId, q]));
+    const sourceKeys = new Map(source.answerKey.entries.map((e) => [e.questionRevisionId, e.answer]));
+    const targetKeys = new Map(target.answerKey.entries.map((e) => [e.questionRevisionId, e.answer]));
+    const sourceAssets = new Map((source.assets ?? []).map((a) => [a.id, a.contentHash]));
+    const targetAssets = new Map((target.assets ?? []).map((a) => [a.id, a.contentHash]));
+    const sourceStimuli = new Map((source.stimuli ?? []).map((s) => [s.id, s]));
+    const targetStimuli = new Map((target.stimuli ?? []).map((s) => [s.id, s]));
+    const selected = [];
+    for (const question of target.questions) {
+      const original = byQuestion.get(question.questionId);
+      if (!original) continue;
+      const sourceAnswer = sourceKeys.get(original.id), currentAnswer = targetKeys.get(question.id);
+      if (!sourceAnswer || !currentAnswer) continue;
+      const mediaChanged = [
+        ...original.content.assetIds ?? [],
+        ...original.content.kind === "single-choice" || original.content.kind === "multiple-select" ? original.content.options.flatMap((o) => o.assetIds ?? []) : []
+      ].some((id) => sourceAssets.get(id) !== targetAssets.get(id));
+      const oldStim = original.content.stimulusId ? sourceStimuli.get(original.content.stimulusId) : void 0;
+      const newStim = question.content.stimulusId ? targetStimuli.get(question.content.stimulusId) : void 0;
+      const stimulusChanged = JSON.stringify(oldStim ?? null) !== JSON.stringify(newStim ?? null);
+      const stimulusMediaChanged = (oldStim && "assetIds" in oldStim ? oldStim.assetIds ?? [] : oldStim && "assetId" in oldStim ? [oldStim.assetId] : []).some((id) => sourceAssets.get(id) !== targetAssets.get(id));
+      if (original.contentHash === question.contentHash && JSON.stringify(sourceAnswer) === JSON.stringify(currentAnswer) && !mediaChanged && !stimulusChanged && !stimulusMediaChanged) continue;
+      selected.push({
+        targetQuestionRevisionId: question.id,
+        sourceQuestion: structuredClone(original),
+        sourceAnswer: structuredClone(sourceAnswer)
+      });
+    }
+    if (!selected.length) return null;
+    const resources = selectDisplayResources(
+      selected.map((e) => e.sourceQuestion),
+      source.stimuli ?? [],
+      source.assets ?? []
+    );
+    const core = {
+      schema: 1,
+      examId: target.examId,
+      paperId: target.paper.paperId,
+      targetPaperRevisionId: target.paper.id,
+      sourcePaperRevisionId: source.paper.id,
+      sourceAnswerKeyRevisionId: source.answerKey.id,
+      entries: selected,
+      ...resources
+    };
+    return { ...core, contentHash: hashJson(core) };
+  }
+  function validateSourceReviewReference(attempt) {
+    const ref = attempt.sourceReviewReference;
+    if (!ref) return;
+    const frozen = attempt.frozen;
+    if (ref.schema !== 1 || frozen.paper.edition !== "reviewed" || ref.examId !== frozen.snapshot.examId || ref.paperId !== frozen.paper.paperId || ref.targetPaperRevisionId !== frozen.paper.id || typeof ref.sourcePaperRevisionId !== "string" || !ref.sourcePaperRevisionId || typeof ref.sourceAnswerKeyRevisionId !== "string" || !ref.sourceAnswerKeyRevisionId || !Array.isArray(ref.entries) || !ref.entries.length || ref.entries.length > frozen.questions.length || !Array.isArray(ref.stimuli) || !Array.isArray(ref.assets))
+      throw new Error("Invalid frozen source-review reference");
+    const core = {
+      schema: ref.schema,
+      examId: ref.examId,
+      paperId: ref.paperId,
+      targetPaperRevisionId: ref.targetPaperRevisionId,
+      sourcePaperRevisionId: ref.sourcePaperRevisionId,
+      sourceAnswerKeyRevisionId: ref.sourceAnswerKeyRevisionId,
+      entries: ref.entries,
+      stimuli: ref.stimuli,
+      assets: ref.assets
+    };
+    if (ref.contentHash !== hashJson(core)) throw new Error("Frozen source-review hash mismatch");
+    const targets = new Map(frozen.questions.map((q) => [q.id, q]));
+    const seen = /* @__PURE__ */ new Set(), originalQuestions = [];
+    const keyEntries = [];
+    for (const entry of ref.entries) {
+      const target = targets.get(entry.targetQuestionRevisionId);
+      const original = entry.sourceQuestion;
+      if (!target || !original || seen.has(target.id) || original.questionId !== target.questionId)
+        throw new Error("Frozen source-review question identity mismatch");
+      validateQuestionRevision(original);
+      if (questionRevisionHash(original) !== original.contentHash)
+        throw new Error("Frozen source-review question content mismatch");
+      seen.add(target.id);
+      originalQuestions.push(original);
+      keyEntries.push({ questionRevisionId: original.id, answer: entry.sourceAnswer });
+      const aggregate = attempt.sourceKeyReference?.entries.find((e) => e.questionRevisionId === target.id);
+      if (aggregate && entry.sourceAnswer.kind === "single-choice" && aggregate.originalOptionId !== entry.sourceAnswer.optionId)
+        throw new Error("Frozen source-review published key mismatch");
+    }
+    validateAnswerKeyRevision({
+      id: ref.sourceAnswerKeyRevisionId,
+      paperId: ref.paperId,
+      revision: 1,
+      entries: keyEntries,
+      contentHash: answerKeyRevisionHash({ entries: keyEntries })
+    }, originalQuestions);
+    validateMediaInventory(ref.stimuli, ref.assets);
+    validateQuestionMediaReferences(originalQuestions, ref.stimuli, ref.assets);
+  }
+
+  // src/learning/revision-test.ts
+  var REVISION_MAX_QUESTIONS = 25;
+  var REVISION_SCORING = { correctMarks: 1, incorrectMarks: 0, unansweredMarks: 0 };
+  var SCOREABLE_STATUSES = ["verified", "corrected", "caution"];
+  function mergeUnique(items, into, kind) {
+    for (const item of items) {
+      const existing = into.get(item.id);
+      if (existing && JSON.stringify(existing) !== JSON.stringify(item))
+        throw new Error("Conflicting frozen " + kind + " identity: " + item.id);
+      if (!existing) into.set(item.id, item);
+    }
+  }
+  function makeRevisionPackage(cards, paperNonce) {
+    if (!cards.length || cards.length > REVISION_MAX_QUESTIONS)
+      throw new Error("Select 1\u2013" + REVISION_MAX_QUESTIONS + " notebook cards for revision");
+    if (!/^[A-Za-z0-9_-]{1,80}$/.test(paperNonce))
+      throw new Error("Invalid revision-test identity");
+    const validated = cards.map(validateLearningCard);
+    const examId = validated[0].examId;
+    if (validated.some((card) => card.examId !== examId))
+      throw new Error("Revision tests cannot mix different exams");
+    const questions = validated.map((card) => card.question);
+    if (new Set(questions.map((q) => q.id)).size !== questions.length)
+      throw new Error("Duplicate question revisions in revision test");
+    if (questions.some((q) => !SCOREABLE_STATUSES.some((status) => status === q.editorial.status)))
+      throw new Error("A notebook question is no longer editorially eligible for scoring");
+    const images = /* @__PURE__ */ new Map(), stimuli = /* @__PURE__ */ new Map();
+    for (const card of validated) {
+      mergeUnique(card.assets, images, "image");
+      mergeUnique(card.stimuli, stimuli, "stimulus");
+    }
+    const paperId = "notebook-revision:" + paperNonce;
+    const revisionId = paperId + ":paper";
+    const keyId = paperId + ":key";
+    const entries = validated.map((card) => ({ questionRevisionId: card.question.id, answer: card.answer }));
+    const answerKey = {
+      id: keyId,
+      paperId,
+      revision: 1,
+      entries,
+      contentHash: answerKeyRevisionHash({ entries })
+    };
+    const section = {
+      id: paperId + ":section",
+      title: "Notebook revision",
+      questionRevisionIds: questions.map((q) => q.id)
+    };
+    const source = {
+      id: revisionId,
+      paperId,
+      revision: 1,
+      edition: "custom",
+      sections: [section],
+      answerKeyRevisionId: keyId,
+      timing: { kind: "untimed" },
+      navigation: { questionNavigation: "free", sectionNavigation: "free", allowFlagging: true, allowReview: true },
+      scoring: { defaultRule: REVISION_SCORING }
+    };
+    const paper = { ...source, contentHash: paperRevisionHash(source) };
+    const explanations = Object.fromEntries(validated.filter((c) => c.explanation).map((c) => [c.question.id, c.explanation]));
+    const packageValue = {
+      format: "practice-desk-exam",
+      version: 1,
+      examId,
+      title: "Notebook revision \xB7 " + examId,
+      paper,
+      answerKey,
+      questions,
+      stimuli: [...stimuli.values()],
+      assets: [...images.values()],
+      explanations
+    };
+    return validateExamPackage(packageValue);
+  }
+  function createNotebookLineage(cards, selection) {
+    if (!cards.length || cards.length > REVISION_MAX_QUESTIONS)
+      throw Error("Invalid revision source selection");
+    const entries = cards.map((value) => {
+      const c = validateLearningCard(value);
+      return {
+        cardId: c.id,
+        questionRevisionId: c.question.id,
+        sourceAttemptId: c.sourceAttemptId,
+        sourcePaperId: c.paperId,
+        sourcePaperEdition: c.paperEdition,
+        sourceSectionTitle: c.sectionTitle
+      };
+    });
+    if (new Set(entries.map((x) => x.questionRevisionId)).size !== entries.length)
+      throw Error("Duplicate notebook source question");
+    if (selection) {
+      if (selection.schema !== 1 || selection.examId !== cards[0]?.examId || !Number.isSafeInteger(selection.eligibleCount) || selection.eligibleCount < entries.length || !Array.isArray(selection.reasons) || selection.reasons.length < 1 || new Set(selection.reasons).size !== selection.reasons.length || selection.reasons.some((x) => !["wrong", "blank", "slow", "repeated", "flagged", "bookmarked", "due"].includes(x)) || JSON.stringify(selection.selectedQuestionIds) !== JSON.stringify(entries.map((x) => x.questionRevisionId)))
+        throw Error("Invalid evidence-based revision selection");
+    }
+    return {
+      schema: 1,
+      entries,
+      ...selection ? { selection } : {},
+      contentHash: hashJson({ schema: 1, entries, ...selection ? { selection } : {} })
+    };
+  }
+  function validateNotebookLineage(attempt) {
+    const lineage = attempt.notebookLineage;
+    if (!lineage) return;
+    if (lineage.schema !== 1 || !Array.isArray(lineage.entries) || attempt.frozen.paper.edition !== "custom" || !attempt.frozen.paper.paperId.startsWith("notebook-revision:") || lineage.entries.length !== attempt.frozen.questions.length)
+      throw Error("Invalid notebook revision lineage");
+    const eligible = new Set(attempt.frozen.questions.map((x) => x.id));
+    const seen = /* @__PURE__ */ new Set();
+    for (const entry of lineage.entries) {
+      if (!entry || typeof entry.questionRevisionId !== "string" || !eligible.has(entry.questionRevisionId) || seen.has(entry.questionRevisionId) || entry.cardId !== "learning-card:" + entry.questionRevisionId || ![entry.sourceAttemptId, entry.sourcePaperId, entry.sourcePaperEdition, entry.sourceSectionTitle].every((x) => typeof x === "string" && !!x && x.length <= 200))
+        throw Error("Invalid notebook revision lineage entry");
+      seen.add(entry.questionRevisionId);
+    }
+    if (Object.prototype.hasOwnProperty.call(lineage, "selection") && !lineage.selection)
+      throw Error("Invalid frozen revision selection evidence");
+    if (lineage.selection) {
+      const x = lineage.selection;
+      if (x.schema !== 1 || x.examId !== attempt.frozen.snapshot.examId || !Number.isSafeInteger(x.eligibleCount) || x.eligibleCount < lineage.entries.length || !Array.isArray(x.reasons) || x.reasons.length < 1 || new Set(x.reasons).size !== x.reasons.length || x.reasons.some((r) => !["wrong", "blank", "slow", "repeated", "flagged", "bookmarked", "due"].includes(r)) || JSON.stringify(x.selectedQuestionIds) !== JSON.stringify(lineage.entries.map((e) => e.questionRevisionId)))
+        throw Error("Invalid frozen revision selection evidence");
+    }
+    if (lineage.contentHash !== hashJson({
+      schema: 1,
+      entries: lineage.entries,
+      ...lineage.selection ? { selection: lineage.selection } : {}
+    }))
+      throw Error("Notebook revision lineage hash mismatch");
+  }
+
   // src/app/practice-compose.ts
   var PRACTICE_ELIGIBLE_STATUSES = ["verified", "corrected", "caution"];
   function candidates(source, filters) {
@@ -5421,100 +6044,197 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       throw Error("Custom practice question provenance differs from frozen content");
   }
 
-  // src/engine/review-source.ts
-  function createSourceReviewReference(target, source) {
-    if (target.paper.edition !== "reviewed" || source.paper.edition !== "source" || target.examId !== source.examId || target.paper.paperId !== source.paper.paperId) return null;
-    const byQuestion = new Map(source.questions.map((q) => [q.questionId, q]));
-    const sourceKeys = new Map(source.answerKey.entries.map((e) => [e.questionRevisionId, e.answer]));
-    const targetKeys = new Map(target.answerKey.entries.map((e) => [e.questionRevisionId, e.answer]));
-    const sourceAssets = new Map((source.assets ?? []).map((a) => [a.id, a.contentHash]));
-    const targetAssets = new Map((target.assets ?? []).map((a) => [a.id, a.contentHash]));
-    const sourceStimuli = new Map((source.stimuli ?? []).map((s) => [s.id, s]));
-    const targetStimuli = new Map((target.stimuli ?? []).map((s) => [s.id, s]));
-    const selected = [];
-    for (const question of target.questions) {
-      const original = byQuestion.get(question.questionId);
-      if (!original) continue;
-      const sourceAnswer = sourceKeys.get(original.id), currentAnswer = targetKeys.get(question.id);
-      if (!sourceAnswer || !currentAnswer) continue;
-      const mediaChanged = [
-        ...original.content.assetIds ?? [],
-        ...original.content.kind === "single-choice" || original.content.kind === "multiple-select" ? original.content.options.flatMap((o) => o.assetIds ?? []) : []
-      ].some((id) => sourceAssets.get(id) !== targetAssets.get(id));
-      const oldStim = original.content.stimulusId ? sourceStimuli.get(original.content.stimulusId) : void 0;
-      const newStim = question.content.stimulusId ? targetStimuli.get(question.content.stimulusId) : void 0;
-      const stimulusChanged = JSON.stringify(oldStim ?? null) !== JSON.stringify(newStim ?? null);
-      const stimulusMediaChanged = (oldStim && "assetIds" in oldStim ? oldStim.assetIds ?? [] : oldStim && "assetId" in oldStim ? [oldStim.assetId] : []).some((id) => sourceAssets.get(id) !== targetAssets.get(id));
-      if (original.contentHash === question.contentHash && JSON.stringify(sourceAnswer) === JSON.stringify(currentAnswer) && !mediaChanged && !stimulusChanged && !stimulusMediaChanged) continue;
-      selected.push({
-        targetQuestionRevisionId: question.id,
-        sourceQuestion: structuredClone(original),
-        sourceAnswer: structuredClone(sourceAnswer)
-      });
+  // src/app/stored-record-validator.ts
+  var isAttempt = (x) => !!x && typeof x === "object" && x.recordType === "generic-attempt";
+  var isPackage = (x) => !!x && typeof x === "object" && x.recordType === "generic-package";
+  var isLearning = (x) => !!x && typeof x === "object" && x.recordType === "learning-card";
+  function validateGenericStoredRecord(value) {
+    if (value && typeof value === "object" && "saveRevision" in value) {
+      const n = value.saveRevision;
+      if (typeof n !== "number" || !Number.isSafeInteger(n) || n < 0)
+        throw new Error("Invalid stored write revision");
     }
-    if (!selected.length) return null;
-    const resources = selectDisplayResources(
-      selected.map((e) => e.sourceQuestion),
-      source.stimuli ?? [],
-      source.assets ?? []
-    );
-    const core = {
-      schema: 1,
-      examId: target.examId,
-      paperId: target.paper.paperId,
-      targetPaperRevisionId: target.paper.id,
-      sourcePaperRevisionId: source.paper.id,
-      sourceAnswerKeyRevisionId: source.answerKey.id,
-      entries: selected,
-      ...resources
-    };
-    return { ...core, contentHash: hashJson(core) };
+    if (isLearning(value)) return validateLearningCard(value);
+    if (isPackage(value)) {
+      if (typeof value.id !== "string" || value.id !== "generic-package:" + value.bundle?.paper?.id)
+        throw new Error("Invalid imported package record identity");
+      validateExamPackage(value.bundle);
+      return value;
+    }
+    if (!isAttempt(value)) throw new Error("Unsupported generic history record");
+    if (typeof value.id !== "string" || !value.id || value.id.length > 200 || typeof value.packageId !== "string" || !Number.isFinite(value.startedAt) || !Number.isFinite(value.updatedAt) || value.finishedAt !== null && !Number.isFinite(value.finishedAt) || !value.state || !Array.isArray(value.state.responses) || !Number.isFinite(value.state.clockMs) || !Number.isInteger(value.state.sectionIndex) || !Number.isInteger(value.state.questionIndex))
+      throw new Error("Invalid generic attempt record");
+    if (!isVerifiedSharedFrozen(value.frozen)) assertFrozenContent(value.frozen);
+    const paper = value.frozen.paper;
+    if (value.packageId !== paper.id) throw new Error("Attempt references an incorrect revision");
+    const current = paper.sections[value.state.sectionIndex]?.questionRevisionIds[value.state.questionIndex];
+    if (!current) throw new Error("Attempt cursor references an unknown question");
+    if (value.finishedAt !== null && value.state.status !== "completed")
+      throw new Error("Completed attempt has an unfinished session");
+    if (value.finishedAt === null && value.state.status === "completed")
+      throw new Error("Unfinished attempt has a completed session");
+    if (!["running", "paused", "section-expired", "completed"].includes(value.state.status))
+      throw new Error("Invalid saved session status");
+    validateSectionTimingEvidence(paper, value.state);
+    if (value.state.status === "section-expired") {
+      if (paper.timing.kind !== "sectional" || paper.timing.transition !== "manual")
+        throw new Error("Expired-section state requires manual sectional timing");
+      const limit = paper.timing.sectionLimits.find((x) => x.sectionId === paper.sections[value.state.sectionIndex]?.id);
+      if (limit?.durationMs == null || value.state.sectionElapsedMs !== limit.durationMs)
+        throw new Error("Expired-section state must be exactly at its section time limit");
+    }
+    const questionMap = new Map(value.frozen.questions.map((q) => [q.id, q]));
+    const allowed = new Set(paper.sections.flatMap((section) => section.questionRevisionIds));
+    if (value.state.timingEvidenceVersion !== void 0 && value.state.timingEvidenceVersion !== 1)
+      throw new Error("Invalid question timing evidence version");
+    if (value.state.questionVisits !== void 0) {
+      const visits = value.state.questionVisits;
+      if (!Array.isArray(visits) || visits.length === 0 || visits.length > allowed.size || new Set(visits.map((row) => row?.questionRevisionId)).size !== visits.length || visits.some((row) => !row || !allowed.has(row.questionRevisionId) || !Number.isSafeInteger(row.count) || row.count < 1 || row.count > 1e6))
+        throw new Error("Invalid saved question visit history");
+    }
+    const seen = /* @__PURE__ */ new Set();
+    for (const row of value.state.responses) {
+      if (!row || typeof row.questionRevisionId !== "string" || !allowed.has(row.questionRevisionId) || seen.has(row.questionRevisionId) || !Number.isFinite(row.timeSpentMs) || row.timeSpentMs < 0 || !Number.isInteger(row.answerChangeCount) || row.answerChangeCount < 0)
+        throw new Error("Invalid saved response");
+      seen.add(row.questionRevisionId);
+      const first = row.firstVisitMs, pre = row.preFirstAnswerMs;
+      if ((first !== void 0 || pre !== void 0) && (value.state.timingEvidenceVersion !== 1 || first === void 0 || pre === void 0 || !Number.isFinite(first) || !Number.isFinite(pre) || first < 0 || pre < 0 || first > row.timeSpentMs || pre > row.timeSpentMs || !Number.isSafeInteger(first) || !Number.isSafeInteger(pre)))
+        throw new Error("Invalid saved question timing phase evidence");
+      if (row.firstAnsweredAt !== void 0 && (typeof row.firstAnsweredAt !== "string" || !Number.isFinite(Date.parse(row.firstAnsweredAt)) || Date.parse(row.firstAnsweredAt) < value.startedAt || Date.parse(row.firstAnsweredAt) > value.updatedAt))
+        throw new Error("Invalid saved first-answer timing");
+      if (row.response) validateResponse(questionMap.get(row.questionRevisionId), row.response);
+      if (value.state.timingEvidenceVersion === 1 && row.firstAnsweredAt !== void 0) {
+        const firstCommit = row.answerEvents?.find((x) => x.to !== void 0);
+        if (!firstCommit || firstCommit.at !== row.firstAnsweredAt)
+          throw new Error("Inconsistent saved first-answer timing");
+      }
+      if (row.answerEvents !== void 0) {
+        if (!Array.isArray(row.answerEvents) || row.answerEvents.length > 1e3)
+          throw new Error("Invalid saved answer revision history");
+        let previousEvent;
+        let previousTime = value.startedAt;
+        for (const event of row.answerEvents) {
+          if (!event || typeof event.at !== "string" || !Number.isFinite(Date.parse(event.at)) || Date.parse(event.at) < previousTime || Date.parse(event.at) > value.updatedAt || !event.from && !event.to) throw new Error("Invalid saved answer revision event");
+          if (event.from) validateResponse(questionMap.get(row.questionRevisionId), event.from);
+          if (event.to) validateResponse(questionMap.get(row.questionRevisionId), event.to);
+          if (previousEvent && JSON.stringify(previousEvent.to ?? null) !== JSON.stringify(event.from ?? null))
+            throw new Error("Disconnected saved answer revision history");
+          previousTime = Date.parse(event.at);
+          previousEvent = event;
+        }
+        if (previousEvent && JSON.stringify(previousEvent.to ?? null) !== JSON.stringify(row.response ?? null))
+          throw new Error("Saved answer revision does not match final response");
+      }
+    }
+    if (value.finishedAt !== null) {
+      if (!value.result) throw new Error("Completed attempt has no immutable score");
+      const recalculated = scoreAttempt(
+        paper,
+        value.frozen.key,
+        value.frozen.questions,
+        value.state.responses,
+        value.result.snapshot.calculatedAt
+      );
+      const fields = ["earnedMarks", "positiveMarks", "penaltyMarks", "correctCount", "incorrectCount", "unansweredCount", "excludedCount"];
+      if (fields.some((field) => value.result.snapshot[field] !== recalculated.snapshot[field]) || JSON.stringify(value.result.items) !== JSON.stringify(recalculated.items) || typeof value.result.snapshot.calculatedAt !== "string" || !Number.isFinite(Date.parse(value.result.snapshot.calculatedAt)))
+        throw new Error("Completed attempt score does not match its frozen inputs (summary or item verdict)");
+    }
+    validateManualGrades(value);
+    validateSourceKeyReference(value);
+    validateSourceReviewReference(value);
+    if (value.completionReason !== void 0) {
+      if (value.finishedAt === null || !["time-expired", "submitted", "section-submitted"].includes(value.completionReason))
+        throw new Error("Invalid saved completion provenance");
+    }
+    validateNotebookLineage(value);
+    validatePracticeComposition(value);
+    return value;
   }
-  function validateSourceReviewReference(attempt) {
-    const ref = attempt.sourceReviewReference;
-    if (!ref) return;
-    const frozen = attempt.frozen;
-    if (ref.schema !== 1 || frozen.paper.edition !== "reviewed" || ref.examId !== frozen.snapshot.examId || ref.paperId !== frozen.paper.paperId || ref.targetPaperRevisionId !== frozen.paper.id || typeof ref.sourcePaperRevisionId !== "string" || !ref.sourcePaperRevisionId || typeof ref.sourceAnswerKeyRevisionId !== "string" || !ref.sourceAnswerKeyRevisionId || !Array.isArray(ref.entries) || !ref.entries.length || ref.entries.length > frozen.questions.length || !Array.isArray(ref.stimuli) || !Array.isArray(ref.assets))
-      throw new Error("Invalid frozen source-review reference");
-    const core = {
-      schema: ref.schema,
+
+  // src/app/review-media-view.ts
+  function frozenReviewMedia(saved, q, response, answer, verdict) {
+    const frozen = saved.frozen;
+    const display = {
+      format: "practice-desk-exam",
+      version: 1,
+      examId: frozen.snapshot.examId,
+      title: "",
+      paper: frozen.paper,
+      answerKey: frozen.key,
+      questions: frozen.questions,
+      stimuli: frozen.stimuli,
+      assets: frozen.assets
+    };
+    const content = q.content;
+    const passage = stimulusHTML(display, q);
+    const promptAssets = assetHTML(display, content.assetIds, "Figure for reviewed question");
+    const options = content.kind === "single-choice" || content.kind === "multiple-select" ? '<div class="generic-choices" role="list" aria-label="Answer options">' + content.options.map((option, i) => {
+      const chosen = response?.kind === "single-choice" ? response.optionId === option.id : response?.kind === "multiple-select" ? response.optionIds.includes(option.id) : false;
+      const expected = answer?.kind === "single-choice" ? answer.optionId === option.id : answer?.kind === "multiple-select" ? answer.optionIds.includes(option.id) : false;
+      const scored = verdict !== "excluded" && verdict !== "pending";
+      const correct = scored && expected;
+      const wrong = scored && chosen && !expected;
+      const state = correct ? " review-option-correct" : wrong ? " review-option-incorrect" : "";
+      const badges = [
+        ...chosen ? ["Your choice"] : [],
+        ...correct ? ["Correct answer"] : [],
+        ...wrong ? ["Incorrect choice"] : []
+      ];
+      return '<div role="listitem" class="generic-choice review-opt' + state + '"><span><b>' + String.fromCharCode(65 + i) + ".</b> " + escapeText(option.text) + assetHTML(display, option.assetIds, "Image for option " + String.fromCharCode(65 + i)) + (badges.length ? '<span class="review-option-label"> \xB7 ' + escapeText(badges.join(" \xB7 ")) + "</span>" : "") + "</span></div>";
+    }).join("") + "</div>" : "";
+    const booleanOptions = content.kind === "true-false" ? '<div class="generic-choices" role="list" aria-label="True or false answer options">' + [true, false].map((value) => {
+      const chosen = response?.kind === "true-false" && response.value === value;
+      const correct = verdict !== "excluded" && answer?.kind === "true-false" && answer.value === value;
+      const incorrect = verdict !== "excluded" && chosen && !correct;
+      const labels = [
+        ...chosen ? ["Your choice"] : [],
+        ...correct ? ["Correct answer"] : [],
+        ...incorrect ? ["Incorrect choice"] : []
+      ];
+      return '<div role="listitem" class="generic-choice review-opt' + (correct ? " review-option-correct" : incorrect ? " review-option-incorrect" : "") + '"><span><b>' + (value ? "True" : "False") + "</b>" + (labels.length ? '<span class="review-option-label"> \xB7 ' + escapeText(labels.join(" \xB7 ")) + "</span>" : "") + "</span></div>";
+    }).join("") + "</div>" : "";
+    const matches = content.kind === "matching" ? '<div class="generic-matches">' + [...content.leftItems, ...content.rightItems].map((item) => "<div><span>" + escapeText(item.text) + assetHTML(display, item.assetIds, "Image for matching item " + item.text) + "</span></div>").join("") + "</div>" : "";
+    return passage + promptAssets + options + booleanOptions + matches;
+  }
+  function sourceReviewHTML(saved, target, ref) {
+    const entry = ref?.entries.find((item) => item.targetQuestionRevisionId === target.id);
+    if (!ref || !entry) return "";
+    const original = entry.sourceQuestion;
+    const display = {
+      format: "practice-desk-exam",
+      version: 1,
       examId: ref.examId,
-      paperId: ref.paperId,
-      targetPaperRevisionId: ref.targetPaperRevisionId,
-      sourcePaperRevisionId: ref.sourcePaperRevisionId,
-      sourceAnswerKeyRevisionId: ref.sourceAnswerKeyRevisionId,
-      entries: ref.entries,
+      title: "Original source",
+      paper: saved.frozen.paper,
+      answerKey: saved.frozen.key,
+      questions: [original],
       stimuli: ref.stimuli,
       assets: ref.assets
     };
-    if (ref.contentHash !== hashJson(core)) throw new Error("Frozen source-review hash mismatch");
-    const targets = new Map(frozen.questions.map((q) => [q.id, q]));
-    const seen = /* @__PURE__ */ new Set(), originalQuestions = [];
-    const keyEntries = [];
-    for (const entry of ref.entries) {
-      const target = targets.get(entry.targetQuestionRevisionId);
-      const original = entry.sourceQuestion;
-      if (!target || !original || seen.has(target.id) || original.questionId !== target.questionId)
-        throw new Error("Frozen source-review question identity mismatch");
-      validateQuestionRevision(original);
-      if (questionRevisionHash(original) !== original.contentHash)
-        throw new Error("Frozen source-review question content mismatch");
-      seen.add(target.id);
-      originalQuestions.push(original);
-      keyEntries.push({ questionRevisionId: original.id, answer: entry.sourceAnswer });
-      const aggregate = attempt.sourceKeyReference?.entries.find((e) => e.questionRevisionId === target.id);
-      if (aggregate && entry.sourceAnswer.kind === "single-choice" && aggregate.originalOptionId !== entry.sourceAnswer.optionId)
-        throw new Error("Frozen source-review published key mismatch");
-    }
-    validateAnswerKeyRevision({
-      id: ref.sourceAnswerKeyRevisionId,
-      paperId: ref.paperId,
-      revision: 1,
-      entries: keyEntries,
-      contentHash: answerKeyRevisionHash({ entries: keyEntries })
-    }, originalQuestions);
-    validateMediaInventory(ref.stimuli, ref.assets);
-    validateQuestionMediaReferences(originalQuestions, ref.stimuli, ref.assets);
+    const content = original.content;
+    const optionLines = content.kind === "single-choice" || content.kind === "multiple-select" ? '<div class="generic-choices" role="list" aria-label="Original source options">' + content.options.map((option, index) => '<div role="listitem" class="generic-choice"><span><b>' + String.fromCharCode(65 + index) + ".</b> " + escapeText(option.text) + assetHTML(display, option.assetIds) + "</span></div>").join("") + "</div>" : "";
+    const matches = content.kind === "matching" ? '<div class="generic-matches">' + [...content.leftItems, ...content.rightItems].map((x) => "<div>" + escapeText(x.text) + assetHTML(display, x.assetIds) + "</div>").join("") + "</div>" : "";
+    const currentAnswer = saved.frozen.key.entries.find((x) => x.questionRevisionId === target.id)?.answer;
+    const modifications = [
+      ...content.prompt !== target.content.prompt ? ["question wording"] : [],
+      ...JSON.stringify({ ...content, prompt: "" }) !== JSON.stringify({ ...target.content, prompt: "" }) ? ["options, response rules or media"] : [],
+      ...JSON.stringify(entry.sourceAnswer) !== JSON.stringify(currentAnswer) ? ["answer key"] : []
+    ];
+    return '<details class="change-log source-review"><summary>' + (saved.frozen.snapshot.examId === "ssc-cgl" ? "Compare with original PDF version" : "Compare with original source edition") + '</summary><div class="change-body"><p class="fine"><b>Original source revision</b>' + (original.editorial.sourcePage ? " \xB7 Source page " + original.editorial.sourcePage : "") + " \xB7 Published key shown for provenance, not as a score adjustment.</p>" + stimulusHTML(display, original) + '<p class="generic-prompt">' + escapeText(content.prompt) + "</p>" + assetHTML(display, content.assetIds) + optionLines + matches + '<p class="fine"><b>Original published answer:</b> ' + escapeText(readableAnswer(original, entry.sourceAnswer)) + '</p><p class="fine"><b>Changes in reviewed edition:</b> ' + escapeText(modifications.length ? [...new Set(modifications)].join(", ") : "editorial review/status") + "</p></div></details>";
+  }
+
+  // src/engine/clock.ts
+  function createSessionClock(wallStartMs, monoStartMs, monoNow) {
+    if (!Number.isFinite(wallStartMs) || !Number.isFinite(monoStartMs))
+      throw new Error("Invalid session clock origin");
+    let last = wallStartMs;
+    return () => {
+      const sample = monoNow();
+      if (!Number.isFinite(sample)) throw new Error("Invalid monotonic clock sample");
+      const elapsed = Math.max(0, sample - monoStartMs);
+      last = Math.max(last, wallStartMs + elapsed);
+      return Math.floor(last);
+    };
   }
 
   // src/engine/score-ceiling.ts
@@ -5652,102 +6372,6 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     const valid = validatePracticeSetups(value);
     storage.setItem(PRACTICE_SETUPS_KEY, JSON.stringify(valid));
     return valid;
-  }
-
-  // src/history/shared-store.ts
-  var SHARED_DB_NAME = "practiceDesk.shared.v1";
-  var ATTEMPTS_STORE = "attempts";
-  var SNAPSHOTS_STORE = "snapshots";
-  var bodyCache = /* @__PURE__ */ new WeakMap();
-  var verifiedReconstructed = /* @__PURE__ */ new WeakSet();
-  function isVerifiedSharedFrozen(frozen) {
-    return verifiedReconstructed.has(frozen) && Number.isFinite(Date.parse(frozen.frozenAt));
-  }
-  function sharedSnapshot(attempt) {
-    const frozen = attempt.frozen;
-    const cached = bodyCache.get(frozen);
-    if (cached && cached.body.sourceKeyReference === attempt.sourceKeyReference && cached.body.sourceReviewReference === attempt.sourceReviewReference && cached.body.explanations === attempt.explanations) return cached;
-    const { frozenAt: _, ...frozenBody } = frozen;
-    const body = {
-      ...frozenBody,
-      ...attempt.sourceKeyReference ? { sourceKeyReference: attempt.sourceKeyReference } : {},
-      ...attempt.sourceReviewReference ? { sourceReviewReference: attempt.sourceReviewReference } : {},
-      ...attempt.explanations ? { explanations: attempt.explanations } : {}
-    };
-    const id = "snapshot:" + hashJson(body);
-    const value = { id, body };
-    bodyCache.set(frozen, value);
-    return value;
-  }
-  function isSharedAttempt(value) {
-    return Boolean(value) && typeof value === "object" && value.recordType === "generic-attempt";
-  }
-  function compactAttempt(attempt) {
-    const snapshot = sharedSnapshot(attempt);
-    const { frozen, sourceKeyReference: _, sourceReviewReference: __, explanations: ___, ...other } = attempt;
-    return { row: { ...other, frozenRef: snapshot.id, frozenAt: frozen.frozenAt }, snapshot };
-  }
-  function expandAttempt(row, snapshot) {
-    if (!row || !snapshot || row.frozenRef !== snapshot.id)
-      throw Error("Shared exam snapshot not found for attempt");
-    if (!Number.isFinite(Date.parse(row.frozenAt)))
-      throw Error("Invalid frozen timestamp");
-    const { frozenRef: _, frozenAt, ...other } = row;
-    const { sourceKeyReference, sourceReviewReference, explanations, ...frozenBody } = snapshot.body;
-    return {
-      ...other,
-      ...sourceKeyReference ? { sourceKeyReference } : {},
-      ...sourceReviewReference ? { sourceReviewReference } : {},
-      ...explanations ? { explanations } : {},
-      frozen: { ...frozenBody, frozenAt }
-    };
-  }
-  function verifiedSnapshot(row) {
-    if (!row || typeof row.id !== "string" || !row.id.startsWith("snapshot:") || row.id !== "snapshot:" + hashJson(row.body))
-      throw Error("Shared snapshot SHA-256 mismatch");
-    assertFrozenContent({ ...row.body, frozenAt: "2026-01-01T00:00:00.000Z" });
-    return row;
-  }
-  function reconstructRecords(rows, snapshots) {
-    const byId = /* @__PURE__ */ new Map();
-    for (const unknownRow of snapshots) {
-      const snapshot = verifiedSnapshot(unknownRow);
-      if (byId.has(snapshot.id)) throw Error("Duplicate snapshot digest");
-      byId.set(snapshot.id, snapshot);
-    }
-    return rows.map((row) => {
-      if (!isSharedAttempt(row)) return row;
-      const snapshot = byId.get(row.frozenRef);
-      if (!snapshot) throw Error("Stored attempt references a missing immutable snapshot");
-      const expanded = expandAttempt(row, snapshot);
-      verifiedReconstructed.add(expanded.frozen);
-      bodyCache.set(expanded.frozen, snapshot);
-      return expanded;
-    });
-  }
-  async function pruneSharedSnapshots(db) {
-    const removed = [];
-    await new Promise((resolve, reject) => {
-      const tx = db.transaction([ATTEMPTS_STORE, SNAPSHOTS_STORE], "readwrite");
-      const rows = tx.objectStore(ATTEMPTS_STORE).getAll();
-      rows.onsuccess = () => {
-        const referenced = new Set(rows.result.filter(isSharedAttempt).map((row) => row.frozenRef));
-        const cursor = tx.objectStore(SNAPSHOTS_STORE).openCursor();
-        cursor.onsuccess = () => {
-          const current = cursor.result;
-          if (!current) return;
-          if (typeof current.key === "string" && !referenced.has(current.key)) {
-            removed.push(current.key);
-            current.delete();
-          }
-          current.continue();
-        };
-      };
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error ?? Error("Snapshot cleanup failed"));
-      tx.onabort = () => reject(tx.error ?? Error("Snapshot cleanup aborted"));
-    });
-    return removed;
   }
 
   // src/history/backup.ts
@@ -6686,216 +7310,6 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     } });
   }
 
-  // src/learning/syllabus-taxonomy.ts
-  var APFC_SYLLABUS_V1 = {
-    id: "apfc-broad",
-    version: 1,
-    examId: "upsc-epfo-apfc",
-    headings: [
-      { id: "english", label: "General English" },
-      { id: "culture", label: "Indian Culture, Heritage and Freedom Movements" },
-      { id: "economy", label: "Developmental Issues and Present Trends in Indian Economy" },
-      { id: "governance", label: "Governance and Constitution of India" },
-      { id: "science-computers", label: "General Science and Basic Knowledge of Computer Applications" },
-      { id: "maths", label: "Elementary Mathematics, Statistics and General Mental Ability" },
-      { id: "labour", label: "Industrial Relations, Labour Codes and Social Security in India" },
-      { id: "accountancy", label: "Principles of Accountancy, Auditing and Insurance" },
-      { id: "current-events", label: "Current Events of National and International Importance" }
-    ]
-  };
-  var SUPPORTED_TAXONOMIES = [APFC_SYLLABUS_V1];
-  function syllabusForExam(examId) {
-    return SUPPORTED_TAXONOMIES.find((t) => t.examId === examId);
-  }
-  function syllabusHeading(examId, headingId) {
-    return syllabusForExam(examId)?.headings.find((h) => h.id === headingId);
-  }
-
-  // src/learning/learning.ts
-  var ERROR_LABELS = ["conceptual", "calculation", "interpretation", "time-pressure", "guessing", "careless", "knowledge-gap", "other"];
-  var validDate = (x) => typeof x === "string" && Number.isFinite(Date.parse(x));
-  function validateLearningCard(input) {
-    if (!input || typeof input !== "object" || Array.isArray(input)) throw Error("Invalid learning card");
-    const raw = input;
-    if (raw.recordType !== "learning-card" || typeof raw.id !== "string" || !raw.id.startsWith("learning-card:") || typeof raw.examId !== "string" || !raw.examId || typeof raw.paperId !== "string" || !raw.paperId || typeof raw.paperEdition !== "string" || typeof raw.sectionTitle !== "string" || typeof raw.sourceTitle !== "string" || typeof raw.sourceAttemptId !== "string" || !raw.sourceAttemptId || raw.sourceAttemptId.length > 200 || typeof raw.note !== "string" || raw.note.length > 8e3 || typeof raw.customTopic !== "string" || raw.customTopic.length > 120 || raw.syllabusTopicId !== void 0 && !syllabusHeading(raw.examId, raw.syllabusTopicId) || typeof raw.bookmarked !== "boolean" || !(raw.errorLabel === null || ERROR_LABELS.includes(raw.errorLabel)) || !validDate(raw.createdAt) || !validDate(raw.updatedAt) || raw.explanation !== void 0 && (typeof raw.explanation !== "string" || raw.explanation.length > 2e4) || !Array.isArray(raw.reviews) || raw.reviews.length > 1e4)
-      throw Error("Invalid learning card fields");
-    const question = validateQuestionRevision(raw.question);
-    if (question.contentHash !== questionRevisionHash(question)) throw Error("Learning card question hash mismatch");
-    if (!Array.isArray(raw.stimuli) || !Array.isArray(raw.assets)) throw Error("Learning card display media missing");
-    const media = validateMediaInventory(raw.stimuli, raw.assets);
-    validateQuestionMediaReferences([question], media.stimuli, media.assets);
-    if (raw.id !== "learning-card:" + question.id) throw Error("Learning card question identity mismatch");
-    const entries = [{ questionRevisionId: question.id, answer: raw.answer }];
-    validateAnswerKeyRevision({
-      id: "learning-key",
-      paperId: raw.paperId,
-      revision: 1,
-      contentHash: answerKeyRevisionHash({ entries }),
-      entries
-    }, [question]);
-    let previous = Date.parse(raw.createdAt);
-    for (const review of raw.reviews) {
-      if (!review || !validDate(review.at) || ![1, 2, 3, 4].includes(review.rating) || Date.parse(review.at) < previous || Date.parse(review.at) > Date.parse(raw.updatedAt))
-        throw Error("Invalid or unordered learning review history");
-      previous = Date.parse(review.at);
-    }
-    return input;
-  }
-  function addLearningCard(attempt, id, at) {
-    if (attempt.finishedAt === null) throw Error("Learning notebook is available only after submission");
-    if (!validDate(at)) throw Error("Invalid learning-card timestamp");
-    const question = attempt.frozen.questions.find((q) => q.id === id);
-    const key2 = attempt.frozen.key.entries.find((x) => x.questionRevisionId === id);
-    const section = attempt.frozen.paper.sections.find((s) => s.questionRevisionIds.includes(id));
-    if (!question || !key2 || !section) throw Error("Question not in completed exam");
-    const display = selectDisplayResources([question], attempt.frozen.stimuli, attempt.frozen.assets);
-    const record3 = {
-      recordType: "learning-card",
-      id: "learning-card:" + id,
-      examId: attempt.frozen.snapshot.examId,
-      paperId: attempt.frozen.paper.paperId,
-      paperEdition: attempt.frozen.paper.edition,
-      sectionTitle: section.title,
-      sourceTitle: attempt.frozen.paper.paperId,
-      sourceAttemptId: attempt.id,
-      question: structuredClone(question),
-      answer: structuredClone(key2.answer),
-      ...display,
-      note: "",
-      customTopic: "",
-      errorLabel: null,
-      bookmarked: false,
-      ...attempt.explanations?.[id] ? { explanation: attempt.explanations[id] } : {},
-      createdAt: at,
-      updatedAt: at,
-      reviews: []
-    };
-    return validateLearningCard(record3);
-  }
-  function scheduledCard(item, scheduler) {
-    let card = scheduler.newCard({ cardId: item.id, now: new Date(item.createdAt) });
-    for (const review of item.reviews)
-      card = scheduler.review({ card, grade: review.rating, now: new Date(review.at) }).card;
-    return card;
-  }
-  function rateLearningCard(item, rating, at, scheduler) {
-    if (!validDate(at) || Date.parse(at) < Date.parse(item.reviews.at(-1)?.at ?? item.createdAt))
-      throw Error("Review time must be monotonic");
-    scheduler.review({ card: scheduledCard(item, scheduler), grade: rating, now: new Date(at) });
-    return validateLearningCard({ ...item, reviews: [...item.reviews, { rating, at }], updatedAt: at });
-  }
-  function topicMetrics(attempts, cards = []) {
-    const manual = new Map(cards.filter((c) => c.customTopic.trim()).map((c) => [
-      c.examId + "|" + c.question.id + "|" + c.question.contentHash,
-      c.customTopic.trim()
-    ]));
-    const mapped = new Map(cards.filter((c) => c.syllabusTopicId).map((c) => [
-      c.examId + "|" + c.question.id + "|" + c.question.contentHash,
-      c.syllabusTopicId
-    ]));
-    const rows = /* @__PURE__ */ new Map();
-    const distinct = /* @__PURE__ */ new Map(), independent = /* @__PURE__ */ new Map();
-    const answeredDistinct = /* @__PURE__ */ new Map(), answeredIndependent = /* @__PURE__ */ new Map();
-    for (const attempt of attempts) {
-      if (!attempt.result || attempt.finishedAt === null || Boolean(attempt.notebookLineage) || attempt.frozen.paper.paperId.startsWith("notebook-revision:")) continue;
-      const sections = attempt.frozen.paper.sections;
-      const questions = new Map(attempt.frozen.questions.map((q) => [q.id, q]));
-      for (const item of attempt.result.items) {
-        if (item.verdict === "excluded" || item.verdict === "pending") continue;
-        const q = questions.get(item.questionRevisionId);
-        const section = sections.find((s) => s.questionRevisionIds.includes(item.questionRevisionId));
-        if (!q || !section) continue;
-        const annotationKey = attempt.frozen.snapshot.examId + "|" + q.id + "|" + q.contentHash;
-        const heading = mapped.get(annotationKey);
-        const labels = [
-          { label: section.title, kind: "section" },
-          ...(q.content.topicIds ?? []).map((label2) => ({ label: label2, kind: "source-topic" })),
-          ...manual.get(annotationKey) ? [{ label: manual.get(annotationKey), kind: "user-topic" }] : [],
-          ...heading && syllabusHeading(attempt.frozen.snapshot.examId, heading) ? [{ label: syllabusHeading(attempt.frozen.snapshot.examId, heading).label, kind: "syllabus" }] : []
-        ];
-        const unique2 = /* @__PURE__ */ new Set();
-        for (const { label: label2, kind } of labels) {
-          if (!label2.trim()) continue;
-          const examId = attempt.frozen.snapshot.examId;
-          const key2 = examId + "|" + kind + "|" + label2;
-          if (unique2.has(key2)) continue;
-          unique2.add(key2);
-          const row = rows.get(key2) ?? {
-            id: key2,
-            label: label2,
-            kind,
-            examId,
-            total: 0,
-            answered: 0,
-            correct: 0,
-            incorrect: 0,
-            skipped: 0,
-            accuracy: null,
-            coverage: 0,
-            evidence: "insufficient",
-            attempts: 0,
-            answeredAttempts: 0,
-            distinctQuestions: 0,
-            distinctAnsweredQuestions: 0
-          };
-          row.total++;
-          if (item.verdict === "correct") {
-            row.correct++;
-            row.answered++;
-          }
-          if (item.verdict === "incorrect") {
-            row.incorrect++;
-            row.answered++;
-          }
-          if (item.verdict === "unanswered") row.skipped++;
-          const distinctIds = distinct.get(key2) ?? /* @__PURE__ */ new Set();
-          distinctIds.add(q.id);
-          distinct.set(key2, distinctIds);
-          const attemptIds = independent.get(key2) ?? /* @__PURE__ */ new Set();
-          attemptIds.add(attempt.id);
-          independent.set(key2, attemptIds);
-          row.distinctQuestions = distinctIds.size;
-          row.attempts = attemptIds.size;
-          if (item.verdict === "correct" || item.verdict === "incorrect") {
-            const answeredIds = answeredDistinct.get(key2) ?? /* @__PURE__ */ new Set();
-            answeredIds.add(q.id);
-            answeredDistinct.set(key2, answeredIds);
-            const answeredAttempts = answeredIndependent.get(key2) ?? /* @__PURE__ */ new Set();
-            answeredAttempts.add(attempt.id);
-            answeredIndependent.set(key2, answeredAttempts);
-          }
-          row.distinctAnsweredQuestions = answeredDistinct.get(key2)?.size ?? 0;
-          row.answeredAttempts = answeredIndependent.get(key2)?.size ?? 0;
-          row.accuracy = row.answered ? row.correct / row.answered : null;
-          row.coverage = row.answered / row.total;
-          row.evidence = row.answered >= 5 ? "measured" : "insufficient";
-          rows.set(key2, row);
-        }
-      }
-    }
-    return [...rows.values()].sort((a, b) => a.examId.localeCompare(b.examId) || a.kind.localeCompare(b.kind) || a.label.localeCompare(b.label));
-  }
-  function comparableTrends(attempts) {
-    const groups = /* @__PURE__ */ new Map();
-    for (const a of attempts) {
-      if (!a.result || a.finishedAt === null || Boolean(a.notebookLineage) || a.frozen.paper.paperId.startsWith("notebook-revision:")) continue;
-      const id = a.frozen.paper.id;
-      const group = groups.get(id) ?? { paperRevisionId: id, label: a.frozen.paper.paperId + " \xB7 " + a.frozen.paper.edition, count: 0, points: [] };
-      const s = a.result.snapshot;
-      const attempted = s.correctCount + s.incorrectCount;
-      const total = attempted + s.unansweredCount;
-      group.count++;
-      group.points.push({
-        at: a.finishedAt,
-        accuracy: attempted ? s.correctCount / attempted : null,
-        coverage: total ? attempted / total : 0,
-        marks: s.earnedMarks
-      });
-      groups.set(id, group);
-    }
-    return [...groups.values()].map((g) => ({ ...g, points: g.points.sort((a, b) => a.at - b.at) })).sort((a, b) => b.count - a.count);
-  }
-
   // src/learning/attempt-evidence.ts
   function median(values) {
     if (!values.length) return null;
@@ -7026,134 +7440,6 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       const label2 = attempts < 2 || r.answered < 10 ? "insufficient" : distinctQuestions < 5 ? "repeated-items" : accuracy !== null && accuracy >= 0.8 ? "consistently-accurate" : accuracy !== null && accuracy >= 0.6 ? "moderate-observed" : "mixed";
       return { examId: r.examId, topic: r.label, answered: r.answered, attempts, distinctQuestions, accuracy, label: label2 };
     });
-  }
-
-  // src/learning/revision-test.ts
-  var REVISION_MAX_QUESTIONS = 25;
-  var REVISION_SCORING = { correctMarks: 1, incorrectMarks: 0, unansweredMarks: 0 };
-  var SCOREABLE_STATUSES = ["verified", "corrected", "caution"];
-  function mergeUnique(items, into, kind) {
-    for (const item of items) {
-      const existing = into.get(item.id);
-      if (existing && JSON.stringify(existing) !== JSON.stringify(item))
-        throw new Error("Conflicting frozen " + kind + " identity: " + item.id);
-      if (!existing) into.set(item.id, item);
-    }
-  }
-  function makeRevisionPackage(cards, paperNonce) {
-    if (!cards.length || cards.length > REVISION_MAX_QUESTIONS)
-      throw new Error("Select 1\u2013" + REVISION_MAX_QUESTIONS + " notebook cards for revision");
-    if (!/^[A-Za-z0-9_-]{1,80}$/.test(paperNonce))
-      throw new Error("Invalid revision-test identity");
-    const validated = cards.map(validateLearningCard);
-    const examId = validated[0].examId;
-    if (validated.some((card) => card.examId !== examId))
-      throw new Error("Revision tests cannot mix different exams");
-    const questions = validated.map((card) => card.question);
-    if (new Set(questions.map((q) => q.id)).size !== questions.length)
-      throw new Error("Duplicate question revisions in revision test");
-    if (questions.some((q) => !SCOREABLE_STATUSES.some((status) => status === q.editorial.status)))
-      throw new Error("A notebook question is no longer editorially eligible for scoring");
-    const images = /* @__PURE__ */ new Map(), stimuli = /* @__PURE__ */ new Map();
-    for (const card of validated) {
-      mergeUnique(card.assets, images, "image");
-      mergeUnique(card.stimuli, stimuli, "stimulus");
-    }
-    const paperId = "notebook-revision:" + paperNonce;
-    const revisionId = paperId + ":paper";
-    const keyId = paperId + ":key";
-    const entries = validated.map((card) => ({ questionRevisionId: card.question.id, answer: card.answer }));
-    const answerKey = {
-      id: keyId,
-      paperId,
-      revision: 1,
-      entries,
-      contentHash: answerKeyRevisionHash({ entries })
-    };
-    const section = {
-      id: paperId + ":section",
-      title: "Notebook revision",
-      questionRevisionIds: questions.map((q) => q.id)
-    };
-    const source = {
-      id: revisionId,
-      paperId,
-      revision: 1,
-      edition: "custom",
-      sections: [section],
-      answerKeyRevisionId: keyId,
-      timing: { kind: "untimed" },
-      navigation: { questionNavigation: "free", sectionNavigation: "free", allowFlagging: true, allowReview: true },
-      scoring: { defaultRule: REVISION_SCORING }
-    };
-    const paper = { ...source, contentHash: paperRevisionHash(source) };
-    const explanations = Object.fromEntries(validated.filter((c) => c.explanation).map((c) => [c.question.id, c.explanation]));
-    const packageValue = {
-      format: "practice-desk-exam",
-      version: 1,
-      examId,
-      title: "Notebook revision \xB7 " + examId,
-      paper,
-      answerKey,
-      questions,
-      stimuli: [...stimuli.values()],
-      assets: [...images.values()],
-      explanations
-    };
-    return validateExamPackage(packageValue);
-  }
-  function createNotebookLineage(cards, selection) {
-    if (!cards.length || cards.length > REVISION_MAX_QUESTIONS)
-      throw Error("Invalid revision source selection");
-    const entries = cards.map((value) => {
-      const c = validateLearningCard(value);
-      return {
-        cardId: c.id,
-        questionRevisionId: c.question.id,
-        sourceAttemptId: c.sourceAttemptId,
-        sourcePaperId: c.paperId,
-        sourcePaperEdition: c.paperEdition,
-        sourceSectionTitle: c.sectionTitle
-      };
-    });
-    if (new Set(entries.map((x) => x.questionRevisionId)).size !== entries.length)
-      throw Error("Duplicate notebook source question");
-    if (selection) {
-      if (selection.schema !== 1 || selection.examId !== cards[0]?.examId || !Number.isSafeInteger(selection.eligibleCount) || selection.eligibleCount < entries.length || !Array.isArray(selection.reasons) || selection.reasons.length < 1 || new Set(selection.reasons).size !== selection.reasons.length || selection.reasons.some((x) => !["wrong", "blank", "slow", "repeated", "flagged", "bookmarked", "due"].includes(x)) || JSON.stringify(selection.selectedQuestionIds) !== JSON.stringify(entries.map((x) => x.questionRevisionId)))
-        throw Error("Invalid evidence-based revision selection");
-    }
-    return {
-      schema: 1,
-      entries,
-      ...selection ? { selection } : {},
-      contentHash: hashJson({ schema: 1, entries, ...selection ? { selection } : {} })
-    };
-  }
-  function validateNotebookLineage(attempt) {
-    const lineage = attempt.notebookLineage;
-    if (!lineage) return;
-    if (lineage.schema !== 1 || !Array.isArray(lineage.entries) || attempt.frozen.paper.edition !== "custom" || !attempt.frozen.paper.paperId.startsWith("notebook-revision:") || lineage.entries.length !== attempt.frozen.questions.length)
-      throw Error("Invalid notebook revision lineage");
-    const eligible = new Set(attempt.frozen.questions.map((x) => x.id));
-    const seen = /* @__PURE__ */ new Set();
-    for (const entry of lineage.entries) {
-      if (!entry || typeof entry.questionRevisionId !== "string" || !eligible.has(entry.questionRevisionId) || seen.has(entry.questionRevisionId) || entry.cardId !== "learning-card:" + entry.questionRevisionId || ![entry.sourceAttemptId, entry.sourcePaperId, entry.sourcePaperEdition, entry.sourceSectionTitle].every((x) => typeof x === "string" && !!x && x.length <= 200))
-        throw Error("Invalid notebook revision lineage entry");
-      seen.add(entry.questionRevisionId);
-    }
-    if (Object.prototype.hasOwnProperty.call(lineage, "selection") && !lineage.selection)
-      throw Error("Invalid frozen revision selection evidence");
-    if (lineage.selection) {
-      const x = lineage.selection;
-      if (x.schema !== 1 || x.examId !== attempt.frozen.snapshot.examId || !Number.isSafeInteger(x.eligibleCount) || x.eligibleCount < lineage.entries.length || !Array.isArray(x.reasons) || x.reasons.length < 1 || new Set(x.reasons).size !== x.reasons.length || x.reasons.some((r) => !["wrong", "blank", "slow", "repeated", "flagged", "bookmarked", "due"].includes(r)) || JSON.stringify(x.selectedQuestionIds) !== JSON.stringify(lineage.entries.map((e) => e.questionRevisionId)))
-        throw Error("Invalid frozen revision selection evidence");
-    }
-    if (lineage.contentHash !== hashJson({
-      schema: 1,
-      entries: lineage.entries,
-      ...lineage.selection ? { selection: lineage.selection } : {}
-    }))
-      throw Error("Notebook revision lineage hash mismatch");
   }
 
   // src/learning/question-analytics.ts
@@ -8630,214 +8916,6 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
   }
 
   // src/app/generic-ui.ts
-  var escapeText = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
-  function readablePracticeMode(mode) {
-    switch (mode) {
-      case "exam-simulation":
-        return "Exam simulation";
-      case "full-paper-practice":
-        return "Full paper \xB7 flexible navigation";
-      case "section-practice":
-        return "Single-section practice";
-      case "custom-practice":
-        return "Custom practice";
-      default:
-        return mode.replaceAll("-", " ");
-    }
-  }
-  var minutes = (ms) => {
-    const sec = Math.ceil(Math.max(0, ms) / 1e3);
-    return Math.floor(sec / 60).toString().padStart(2, "0") + ":" + (sec % 60).toString().padStart(2, "0");
-  };
-  function examTimeRemaining(paper, state) {
-    if (paper.timing.kind === "untimed") return null;
-    if (paper.timing.kind === "whole-paper") return Math.max(0, paper.timing.durationMs - state.elapsedMs);
-    const id = paper.sections[state.sectionIndex]?.id;
-    const limit = paper.timing.sectionLimits.find((s) => s.sectionId === id)?.durationMs;
-    return limit == null ? null : Math.max(0, limit - state.sectionElapsedMs);
-  }
-  function assetHTML(bundle, ids, fallbackAlt = "Question figure") {
-    return (ids ?? []).map((id) => {
-      const a = bundle.assets?.find((x) => x.id === id);
-      return a ? '<img class="generic-figure" src="' + escapeText(a.dataUri) + '" alt="' + escapeText(a.altText ?? fallbackAlt) + '">' : "";
-    }).join("");
-  }
-  function renderGenericControls(bundle, q, response) {
-    const c = q.content;
-    if (c.kind === "single-choice" || c.kind === "multiple-select") {
-      const selected = response?.kind === "single-choice" ? [response.optionId] : response?.kind === "multiple-select" ? response.optionIds : [];
-      const kind = c.kind === "single-choice" ? "radio" : "checkbox";
-      return '<fieldset class="generic-choices"><legend>' + (kind === "radio" ? "Select one option" : "Select applicable options") + "</legend>" + c.options.map((o, i) => '<label class="generic-choice"><input type="' + kind + '" name="generic-answer" data-choice="' + escapeText(o.id) + '"' + (selected.includes(o.id) ? " checked" : "") + "><span><b>" + String.fromCharCode(65 + i) + ".</b> " + escapeText(o.text) + assetHTML(bundle, o.assetIds, "Image for option " + String.fromCharCode(65 + i)) + "</span></label>").join("") + "</fieldset>";
-    }
-    if (c.kind === "true-false") return '<fieldset class="generic-choices"><legend>Choose a response</legend>' + [true, false].map((value) => '<label class="generic-choice"><input type="radio" name="generic-boolean" data-bool="' + value + '"' + (response?.kind === "true-false" && response.value === value ? " checked" : "") + "><span>" + (value ? "True" : "False") + "</span></label>").join("") + "</fieldset>";
-    if (c.kind === "numeric-entry") return '<label class="picker" for="g-number">Numeric answer</label><input type="number" step="any" id="g-number"' + (c.numericRules.minimum !== void 0 ? ' min="' + c.numericRules.minimum + '"' : "") + (c.numericRules.maximum !== void 0 ? ' max="' + c.numericRules.maximum + '"' : "") + ' value="' + (response?.kind === "numeric-entry" ? escapeText(response.value) : "") + '"><button class="btn primary" id="g-save">Save answer</button>';
-    if (c.kind === "free-response") return '<label class="picker" for="g-text">Written response</label><textarea id="g-text" rows="6">' + (response?.kind === "free-response" ? escapeText(response.text) : "") + '</textarea><button class="btn primary" id="g-save">Save response</button>';
-    const pairs = response?.kind === "matching" ? response.pairs : [];
-    return '<div class="generic-matches">' + c.leftItems.map((left) => "<label><span>" + escapeText(left.text) + assetHTML(bundle, left.assetIds, "Image for matching item " + left.text) + '</span><select data-match="' + escapeText(left.id) + '"><option value="">Not matched</option>' + c.rightItems.map((right) => '<option value="' + escapeText(right.id) + '"' + (pairs.some((p) => p.leftId === left.id && p.rightId === right.id) ? " selected" : "") + ">" + escapeText(right.text) + "</option>").join("") + "</select></label>").join("") + '</div><p class="generic-inline-warning" id="g-match-feedback" role="status" aria-live="polite" aria-atomic="true"></p><button class="btn primary" id="g-save">Save matches</button>';
-  }
-  function stimulusHTML(bundle, q) {
-    const stimulus = bundle.stimuli?.find((s) => s.id === q.content.stimulusId);
-    if (!stimulus) return "";
-    if (stimulus.kind === "passage" || stimulus.kind === "case")
-      return '<section class="generic-stimulus" role="region" tabindex="0" aria-label="' + escapeText((stimulus.title || (stimulus.kind === "case" ? "Case study" : "Reading passage")) + " \u2014 scroll to read full text") + '"><b>' + escapeText(stimulus.title || "Reading passage") + "</b><p>" + escapeText(stimulus.text) + "</p>" + assetHTML(bundle, stimulus.assetIds, "Image accompanying " + (stimulus.title || "reading passage")) + "</section>";
-    if (stimulus.kind === "table") return '<section class="generic-stimulus"><b>' + escapeText(stimulus.title || "Table") + '</b><div class="scroll-table"><table><tr>' + stimulus.columns.map((c) => "<th>" + escapeText(c) + "</th>").join("") + "</tr>" + stimulus.rows.map((r) => "<tr>" + r.map((c) => "<td>" + escapeText(c) + "</td>").join("") + "</tr>").join("") + "</table></div></section>";
-    if ("assetId" in stimulus) return '<section class="generic-stimulus">' + assetHTML(bundle, [stimulus.assetId], stimulus.altText) + "<p>" + escapeText(stimulus.caption || stimulus.altText) + "</p></section>";
-    return "";
-  }
-  var isAttempt = (x) => !!x && typeof x === "object" && x.recordType === "generic-attempt";
-  var isPackage = (x) => !!x && typeof x === "object" && x.recordType === "generic-package";
-  var isLearning = (x) => !!x && typeof x === "object" && x.recordType === "learning-card";
-  function validateGenericStoredRecord(value) {
-    if (value && typeof value === "object" && "saveRevision" in value) {
-      const n = value.saveRevision;
-      if (typeof n !== "number" || !Number.isSafeInteger(n) || n < 0)
-        throw new Error("Invalid stored write revision");
-    }
-    if (isLearning(value)) return validateLearningCard(value);
-    if (isPackage(value)) {
-      if (typeof value.id !== "string" || value.id !== "generic-package:" + value.bundle?.paper?.id)
-        throw new Error("Invalid imported package record identity");
-      validateExamPackage(value.bundle);
-      return value;
-    }
-    if (!isAttempt(value)) throw new Error("Unsupported generic history record");
-    if (typeof value.id !== "string" || !value.id || value.id.length > 200 || typeof value.packageId !== "string" || !Number.isFinite(value.startedAt) || !Number.isFinite(value.updatedAt) || value.finishedAt !== null && !Number.isFinite(value.finishedAt) || !value.state || !Array.isArray(value.state.responses) || !Number.isFinite(value.state.clockMs) || !Number.isInteger(value.state.sectionIndex) || !Number.isInteger(value.state.questionIndex))
-      throw new Error("Invalid generic attempt record");
-    if (!isVerifiedSharedFrozen(value.frozen)) assertFrozenContent(value.frozen);
-    const paper = value.frozen.paper;
-    if (value.packageId !== paper.id) throw new Error("Attempt references an incorrect revision");
-    const current = paper.sections[value.state.sectionIndex]?.questionRevisionIds[value.state.questionIndex];
-    if (!current) throw new Error("Attempt cursor references an unknown question");
-    if (value.finishedAt !== null && value.state.status !== "completed")
-      throw new Error("Completed attempt has an unfinished session");
-    if (value.finishedAt === null && value.state.status === "completed")
-      throw new Error("Unfinished attempt has a completed session");
-    if (!["running", "paused", "section-expired", "completed"].includes(value.state.status))
-      throw new Error("Invalid saved session status");
-    validateSectionTimingEvidence(paper, value.state);
-    if (value.state.status === "section-expired") {
-      if (paper.timing.kind !== "sectional" || paper.timing.transition !== "manual")
-        throw new Error("Expired-section state requires manual sectional timing");
-      const limit = paper.timing.sectionLimits.find((x) => x.sectionId === paper.sections[value.state.sectionIndex]?.id);
-      if (limit?.durationMs == null || value.state.sectionElapsedMs !== limit.durationMs)
-        throw new Error("Expired-section state must be exactly at its section time limit");
-    }
-    const questionMap = new Map(value.frozen.questions.map((q) => [q.id, q]));
-    const allowed = new Set(paper.sections.flatMap((section) => section.questionRevisionIds));
-    if (value.state.timingEvidenceVersion !== void 0 && value.state.timingEvidenceVersion !== 1)
-      throw new Error("Invalid question timing evidence version");
-    if (value.state.questionVisits !== void 0) {
-      const visits = value.state.questionVisits;
-      if (!Array.isArray(visits) || visits.length === 0 || visits.length > allowed.size || new Set(visits.map((row) => row?.questionRevisionId)).size !== visits.length || visits.some((row) => !row || !allowed.has(row.questionRevisionId) || !Number.isSafeInteger(row.count) || row.count < 1 || row.count > 1e6))
-        throw new Error("Invalid saved question visit history");
-    }
-    const seen = /* @__PURE__ */ new Set();
-    for (const row of value.state.responses) {
-      if (!row || typeof row.questionRevisionId !== "string" || !allowed.has(row.questionRevisionId) || seen.has(row.questionRevisionId) || !Number.isFinite(row.timeSpentMs) || row.timeSpentMs < 0 || !Number.isInteger(row.answerChangeCount) || row.answerChangeCount < 0)
-        throw new Error("Invalid saved response");
-      seen.add(row.questionRevisionId);
-      const first = row.firstVisitMs, pre = row.preFirstAnswerMs;
-      if ((first !== void 0 || pre !== void 0) && (value.state.timingEvidenceVersion !== 1 || first === void 0 || pre === void 0 || !Number.isFinite(first) || !Number.isFinite(pre) || first < 0 || pre < 0 || first > row.timeSpentMs || pre > row.timeSpentMs || !Number.isSafeInteger(first) || !Number.isSafeInteger(pre)))
-        throw new Error("Invalid saved question timing phase evidence");
-      if (row.firstAnsweredAt !== void 0 && (typeof row.firstAnsweredAt !== "string" || !Number.isFinite(Date.parse(row.firstAnsweredAt)) || Date.parse(row.firstAnsweredAt) < value.startedAt || Date.parse(row.firstAnsweredAt) > value.updatedAt))
-        throw new Error("Invalid saved first-answer timing");
-      if (row.response) validateResponse(questionMap.get(row.questionRevisionId), row.response);
-      if (value.state.timingEvidenceVersion === 1 && row.firstAnsweredAt !== void 0) {
-        const firstCommit = row.answerEvents?.find((x) => x.to !== void 0);
-        if (!firstCommit || firstCommit.at !== row.firstAnsweredAt)
-          throw new Error("Inconsistent saved first-answer timing");
-      }
-      if (row.answerEvents !== void 0) {
-        if (!Array.isArray(row.answerEvents) || row.answerEvents.length > 1e3)
-          throw new Error("Invalid saved answer revision history");
-        let previousEvent;
-        let previousTime = value.startedAt;
-        for (const event of row.answerEvents) {
-          if (!event || typeof event.at !== "string" || !Number.isFinite(Date.parse(event.at)) || Date.parse(event.at) < previousTime || Date.parse(event.at) > value.updatedAt || !event.from && !event.to) throw new Error("Invalid saved answer revision event");
-          if (event.from) validateResponse(questionMap.get(row.questionRevisionId), event.from);
-          if (event.to) validateResponse(questionMap.get(row.questionRevisionId), event.to);
-          if (previousEvent && JSON.stringify(previousEvent.to ?? null) !== JSON.stringify(event.from ?? null))
-            throw new Error("Disconnected saved answer revision history");
-          previousTime = Date.parse(event.at);
-          previousEvent = event;
-        }
-        if (previousEvent && JSON.stringify(previousEvent.to ?? null) !== JSON.stringify(row.response ?? null))
-          throw new Error("Saved answer revision does not match final response");
-      }
-    }
-    if (value.finishedAt !== null) {
-      if (!value.result) throw new Error("Completed attempt has no immutable score");
-      const recalculated = scoreAttempt(
-        paper,
-        value.frozen.key,
-        value.frozen.questions,
-        value.state.responses,
-        value.result.snapshot.calculatedAt
-      );
-      const fields = ["earnedMarks", "positiveMarks", "penaltyMarks", "correctCount", "incorrectCount", "unansweredCount", "excludedCount"];
-      if (fields.some((field) => value.result.snapshot[field] !== recalculated.snapshot[field]) || JSON.stringify(value.result.items) !== JSON.stringify(recalculated.items) || typeof value.result.snapshot.calculatedAt !== "string" || !Number.isFinite(Date.parse(value.result.snapshot.calculatedAt)))
-        throw new Error("Completed attempt score does not match its frozen inputs (summary or item verdict)");
-    }
-    validateManualGrades(value);
-    validateSourceKeyReference(value);
-    validateSourceReviewReference(value);
-    if (value.completionReason !== void 0) {
-      if (value.finishedAt === null || !["time-expired", "submitted", "section-submitted"].includes(value.completionReason))
-        throw new Error("Invalid saved completion provenance");
-    }
-    validateNotebookLineage(value);
-    validatePracticeComposition(value);
-    return value;
-  }
-  function renderModelExam(attempt, bundle, warning = "", draft) {
-    const paper = attempt.frozen.paper, state = attempt.state;
-    const section = paper.sections[state.sectionIndex];
-    const id = section?.questionRevisionIds[state.questionIndex];
-    const q = attempt.frozen.questions.find((x) => x.id === id);
-    if (!section || !q) return "<p>Question unavailable</p>";
-    const responsesById = new Map(state.responses.map((row) => [row.questionRevisionId, row]));
-    const response = responsesById.get(q.id)?.response;
-    const currentDraft = draft?.questionId === q.id && q.content.kind === "multiple-select" ? draft : null;
-    const remaining = examTimeRemaining(paper, state);
-    const total = paper.sections.reduce((n, section2) => n + section2.questionRevisionIds.length, 0);
-    const answered = state.responses.filter((record3) => record3.response).length;
-    const timeLimit = paper.timing.kind === "whole-paper" ? paper.timing.durationMs : paper.timing.kind === "sectional" ? paper.timing.sectionLimits.find((t) => t.sectionId === section.id)?.durationMs ?? null : null;
-    const elapsed = paper.timing.kind === "sectional" ? state.sectionElapsedMs : state.elapsedMs;
-    const expired = state.status === "section-expired";
-    const lockedWhole = paper.timing.kind !== "sectional" && paper.navigation.sectionNavigation === "sequential-locked";
-    const hasNextSection = state.sectionIndex < paper.sections.length - 1;
-    const untimedSection = paper.timing.kind === "sectional" && paper.timing.sectionLimits.find((limit) => limit.sectionId === section.id)?.durationMs === null;
-    const progressValue = timeLimit !== null && timeLimit > 0 ? Math.min(100, 100 * elapsed / timeLimit) : Math.min(100, 100 * answered / Math.max(1, total));
-    const progressScope = timeLimit === null ? "Question coverage" : paper.timing.kind === "whole-paper" ? "Whole-paper timer" : "Section timer";
-    const progressAccessibleName = timeLimit === null ? "Questions answered" : paper.timing.kind === "whole-paper" ? "Whole-paper time used" : "Section time used";
-    const isLow = remaining !== null && remaining <= 6e4;
-    const focused = typeof document !== "undefined" && Boolean(
-      document.fullscreenElement || document.documentElement.classList.contains("immersive")
-    );
-    const sectionAnswered = section.questionRevisionIds.filter((qid) => Boolean(responsesById.get(qid)?.response)).length;
-    const sectionFlagged = section.questionRevisionIds.filter((qid) => Boolean(responsesById.get(qid)?.flagged)).length;
-    const assets = {
-      format: "practice-desk-exam",
-      version: 1,
-      examId: attempt.frozen.snapshot.examId,
-      title: bundle?.title ?? "",
-      paper,
-      answerKey: attempt.frozen.key,
-      questions: attempt.frozen.questions,
-      stimuli: attempt.frozen.stimuli,
-      assets: attempt.frozen.assets
-    };
-    return '<div class="generic-heading exam-header"><div><h1>' + escapeText(bundle?.title ?? paper.paperId) + '</h1><p class="muted">' + escapeText(readablePracticeMode(attempt.frozen.snapshot.mode)) + " \xB7 " + escapeText(section.title) + " \xB7 Section " + (state.sectionIndex + 1) + " of " + paper.sections.length + '</p></div><div class="row exam-header-actions"><div class="exam-clock ' + (isLow ? "low" : "") + '"><strong class="generic-timer" id="g-timer" role="timer">' + (remaining === null ? "Untimed" : minutes(remaining)) + "</strong><small>" + (remaining === null ? "UNTIMED PRACTICE" : paper.timing.kind === "sectional" ? "SECTION TIME LEFT" : "PAPER TIME LEFT") + '</small></div><button class="btn quiet" id="g-library">\u2190 Library</button><button class="btn" type="button" id="g-exam-full" aria-label="Toggle full-screen test view" aria-pressed="' + focused + '">' + (focused ? "\u26F6 Exit full screen" : "\u26F6 Full screen") + '</button></div></div><p id="g-fullscreen-status" role="status"></p>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + (expired ? '<p class="generic-warning" role="status">Section time has expired. Answers are locked. Select Continue to advance without using extra time.</p>' : "") + '<section class="exam-progress"><div class="progress-track exam-time-progress" role="progressbar" aria-valuenow="' + Math.round(progressValue) + '" aria-valuemin="0" aria-valuemax="100" aria-label="' + progressAccessibleName + '" aria-valuetext="' + escapeText(progressScope) + " " + Math.round(progressValue) + '%"><span style="width:' + progressValue.toFixed(1) + '%"></span></div></section><div class="generic-sections" role="group" aria-label="Exam sections">' + paper.sections.map((s, i) => {
-      const locked = state.status !== "running" || state.completedSections.includes(i) || (paper.timing.kind === "sectional" || paper.navigation.sectionNavigation === "sequential-locked") && i !== state.sectionIndex;
-      const filled = s.questionRevisionIds.filter((qid) => Boolean(responsesById.get(qid)?.response)).length;
-      const status = state.completedSections.includes(i) ? "Closed" : locked ? "Locked" : filled + " / " + s.questionRevisionIds.length + " answered";
-      return '<button class="btn exam-section-tab ' + (i === state.sectionIndex ? "primary" : "") + '" data-section="' + i + '" aria-current="' + (i === state.sectionIndex ? "step" : "false") + '"' + (locked ? " disabled" : "") + "><b>" + escapeText(s.title) + "</b><small>" + status + "</small></button>";
-    }).join("") + '</div><div class="generic-layout exam-grid"><section class="panel pad exam-question"><p class="eyebrow">' + escapeText(section.title) + " \xB7 Question " + (state.questionIndex + 1) + " of " + section.questionRevisionIds.length + (attempt.frozen.snapshot.examId === "ssc-cgl" ? " \xB7 Paper Q" + escapeText(q.questionId.split(":").at(-1)) : "") + "</p>" + stimulusHTML(assets, q) + '<h2 class="generic-prompt">' + escapeText(q.content.prompt) + "</h2>" + assetHTML(assets, q.content.assetIds, "Figure for question " + (state.questionIndex + 1)) + '<fieldset class="generic-response-group"' + (state.status !== "running" ? " disabled" : "") + ">" + renderGenericControls(assets, q, currentDraft ? { kind: "multiple-select", optionIds: currentDraft.optionIds } : response) + (currentDraft ? '<p class="generic-inline-warning" role="status">' + escapeText(currentDraft.message) + "</p>" : "") + '</fieldset><div class="exam-question-controls"><div class="row generic-actions exam-nav-actions"><button class="btn" id="g-prev"' + (state.status !== "running" || !state.questionIndex || paper.navigation.questionNavigation === "forward-only" ? " disabled" : "") + '>\u2190 Previous</button><button class="btn primary" id="g-next"' + (state.status !== "running" || state.questionIndex === section.questionRevisionIds.length - 1 ? " disabled" : "") + '>Next \u2192</button></div><div class="row generic-actions exam-answer-actions"><button class="btn" id="g-clear"' + (!response || state.status !== "running" ? " disabled" : "") + '>Clear</button><button class="btn review-toggle" id="g-flag" aria-pressed="' + Boolean(responsesById.get(q.id)?.flagged) + '"' + (!paper.navigation.allowFlagging || expired ? " disabled" : "") + ">" + (responsesById.get(q.id)?.flagged ? "Unmark" : "Mark for review") + '</button></div></div><div class="row generic-actions exam-submit-actions">' + (paper.timing.kind !== "untimed" && paper.timing.pausePolicy === "allowed" ? '<button class="btn" id="g-pause"' + (expired ? " disabled" : "") + ">" + (state.status === "paused" ? "Resume timer" : "Pause timer") + "</button>" : "") + '<button class="btn danger" id="g-submit"' + (state.status === "paused" || paper.timing.kind === "sectional" && !paper.timing.allowEarlySubmit && !expired && !untimedSection ? " disabled" : "") + ">" + (expired ? hasNextSection ? "Continue to next section" : "Finish expired exam" : paper.timing.kind === "sectional" ? untimedSection ? "Finish untimed section" : "Submit section" : lockedWhole && hasNextSection ? "Finish section \u2192" : "Submit exam") + '</button></div></section><aside class="panel pad exam-sidebar" aria-label="Question navigator"><h3>Question navigator</h3><p class="fine navigator-intro">Jump to a question in this section</p><div class="generic-palette">' + section.questionRevisionIds.map((qid, i) => {
-      const r = responsesById.get(qid);
-      const locked = state.status !== "running" || paper.navigation.questionNavigation === "forward-only" && i < state.questionIndex;
-      return '<button class="num ' + (i === state.questionIndex ? "here " : "") + (r?.response ? "answered " : "") + (r?.flagged ? "marked" : "") + '" data-q="' + i + '" aria-current="' + (i === state.questionIndex ? "step" : "false") + '" aria-label="Question ' + (i + 1) + (r?.response ? ", answered" : "") + (r?.flagged ? ", flagged" : "") + '"' + (locked ? " disabled" : "") + ">" + (i + 1) + "</button>";
-    }).join("") + '</div><div class="navigator-stats" role="group" aria-label="Current section answer counts"><div><b>' + sectionAnswered + "<span> / " + section.questionRevisionIds.length + "</span></b><small>Answered</small></div><div><b>" + (section.questionRevisionIds.length - sectionAnswered) + "</b><small>Not answered</small></div><div><b>" + sectionFlagged + '</b><small>Flagged</small></div></div><div class="palette-legend"><span><i class="legend-dot answered"></i>Answered</span><span><i class="legend-dot marked"></i>Review</span><span><i class="legend-dot empty"></i>Not answered</span></div><p class="fine navigator-status">' + (paper.navigation.sectionNavigation === "sequential-locked" ? "Answers remain hidden until the exam finishes. Submitting a section locks it." : "Answers remain hidden until you submit.") + '</p><details class="navigator-help"><summary>Keyboard shortcuts</summary><p class="fine">' + (paper.navigation.questionNavigation === "forward-only" ? "Questions cannot be revisited in this exam." : "Navigate freely where the paper permits.") + " A\u2013D answer single-choice questions. \u2190 / \u2192 navigate except when a radio is focused; Alt + \u2190 / \u2192 navigates while focused. M marks/unmarks for review even while paused; F enters full screen. Answer/navigation shortcuts are disabled while paused or typing.</p></details></aside></div>";
-  }
   var builtinCache = null;
   function cachedCglPackages(sources2, patches2, solutions2) {
     if (builtinCache && builtinCache.sources === sources2 && builtinCache.patches === patches2 && builtinCache.solutions === solutions2)
@@ -9481,77 +9559,9 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       if (!attempt) return "";
       const qid = attempt.frozen.paper.sections[attempt.state.sectionIndex]?.questionRevisionIds[attempt.state.questionIndex];
       const draft = qid ? choiceDrafts.get(attempt.id + "|" + qid) : void 0;
-      return renderModelExam(attempt, packageForAttempt(attempt), warning, draft);
-    }
-    function frozenReviewMedia(saved, q, response, answer, verdict) {
-      const frozen = saved.frozen;
-      const display = {
-        format: "practice-desk-exam",
-        version: 1,
-        examId: frozen.snapshot.examId,
-        title: "",
-        paper: frozen.paper,
-        answerKey: frozen.key,
-        questions: frozen.questions,
-        stimuli: frozen.stimuli,
-        assets: frozen.assets
-      };
-      const content = q.content;
-      const passage = stimulusHTML(display, q);
-      const promptAssets = assetHTML(display, content.assetIds, "Figure for reviewed question");
-      const options = content.kind === "single-choice" || content.kind === "multiple-select" ? '<div class="generic-choices" role="list" aria-label="Answer options">' + content.options.map((option, i) => {
-        const chosen = response?.kind === "single-choice" ? response.optionId === option.id : response?.kind === "multiple-select" ? response.optionIds.includes(option.id) : false;
-        const expected = answer?.kind === "single-choice" ? answer.optionId === option.id : answer?.kind === "multiple-select" ? answer.optionIds.includes(option.id) : false;
-        const scored = verdict !== "excluded" && verdict !== "pending";
-        const correct = scored && expected;
-        const wrong = scored && chosen && !expected;
-        const state = correct ? " review-option-correct" : wrong ? " review-option-incorrect" : "";
-        const badges = [
-          ...chosen ? ["Your choice"] : [],
-          ...correct ? ["Correct answer"] : [],
-          ...wrong ? ["Incorrect choice"] : []
-        ];
-        return '<div role="listitem" class="generic-choice review-opt' + state + '"><span><b>' + String.fromCharCode(65 + i) + ".</b> " + escapeText(option.text) + assetHTML(display, option.assetIds, "Image for option " + String.fromCharCode(65 + i)) + (badges.length ? '<span class="review-option-label"> \xB7 ' + escapeText(badges.join(" \xB7 ")) + "</span>" : "") + "</span></div>";
-      }).join("") + "</div>" : "";
-      const booleanOptions = content.kind === "true-false" ? '<div class="generic-choices" role="list" aria-label="True or false answer options">' + [true, false].map((value) => {
-        const chosen = response?.kind === "true-false" && response.value === value;
-        const correct = verdict !== "excluded" && answer?.kind === "true-false" && answer.value === value;
-        const incorrect = verdict !== "excluded" && chosen && !correct;
-        const labels = [
-          ...chosen ? ["Your choice"] : [],
-          ...correct ? ["Correct answer"] : [],
-          ...incorrect ? ["Incorrect choice"] : []
-        ];
-        return '<div role="listitem" class="generic-choice review-opt' + (correct ? " review-option-correct" : incorrect ? " review-option-incorrect" : "") + '"><span><b>' + (value ? "True" : "False") + "</b>" + (labels.length ? '<span class="review-option-label"> \xB7 ' + escapeText(labels.join(" \xB7 ")) + "</span>" : "") + "</span></div>";
-      }).join("") + "</div>" : "";
-      const matches = content.kind === "matching" ? '<div class="generic-matches">' + [...content.leftItems, ...content.rightItems].map((item) => "<div><span>" + escapeText(item.text) + assetHTML(display, item.assetIds, "Image for matching item " + item.text) + "</span></div>").join("") + "</div>" : "";
-      return passage + promptAssets + options + booleanOptions + matches;
-    }
-    function sourceReviewHTML(saved, target, ref) {
-      const entry = ref?.entries.find((item) => item.targetQuestionRevisionId === target.id);
-      if (!ref || !entry) return "";
-      const original = entry.sourceQuestion;
-      const display = {
-        format: "practice-desk-exam",
-        version: 1,
-        examId: ref.examId,
-        title: "Original source",
-        paper: saved.frozen.paper,
-        answerKey: saved.frozen.key,
-        questions: [original],
-        stimuli: ref.stimuli,
-        assets: ref.assets
-      };
-      const content = original.content;
-      const optionLines = content.kind === "single-choice" || content.kind === "multiple-select" ? '<div class="generic-choices" role="list" aria-label="Original source options">' + content.options.map((option, index) => '<div role="listitem" class="generic-choice"><span><b>' + String.fromCharCode(65 + index) + ".</b> " + escapeText(option.text) + assetHTML(display, option.assetIds) + "</span></div>").join("") + "</div>" : "";
-      const matches = content.kind === "matching" ? '<div class="generic-matches">' + [...content.leftItems, ...content.rightItems].map((x) => "<div>" + escapeText(x.text) + assetHTML(display, x.assetIds) + "</div>").join("") + "</div>" : "";
-      const currentAnswer = saved.frozen.key.entries.find((x) => x.questionRevisionId === target.id)?.answer;
-      const modifications = [
-        ...content.prompt !== target.content.prompt ? ["question wording"] : [],
-        ...JSON.stringify({ ...content, prompt: "" }) !== JSON.stringify({ ...target.content, prompt: "" }) ? ["options, response rules or media"] : [],
-        ...JSON.stringify(entry.sourceAnswer) !== JSON.stringify(currentAnswer) ? ["answer key"] : []
-      ];
-      return '<details class="change-log source-review"><summary>' + (saved.frozen.snapshot.examId === "ssc-cgl" ? "Compare with original PDF version" : "Compare with original source edition") + '</summary><div class="change-body"><p class="fine"><b>Original source revision</b>' + (original.editorial.sourcePage ? " \xB7 Source page " + original.editorial.sourcePage : "") + " \xB7 Published key shown for provenance, not as a score adjustment.</p>" + stimulusHTML(display, original) + '<p class="generic-prompt">' + escapeText(content.prompt) + "</p>" + assetHTML(display, content.assetIds) + optionLines + matches + '<p class="fine"><b>Original published answer:</b> ' + escapeText(readableAnswer(original, entry.sourceAnswer)) + '</p><p class="fine"><b>Changes in reviewed edition:</b> ' + escapeText(modifications.length ? [...new Set(modifications)].join(", ") : "editorial review/status") + "</p></div></details>";
+      return renderModelExam(attempt, packageForAttempt(attempt), warning, draft, {
+        focused: Boolean(document.fullscreenElement || document.documentElement.classList.contains("immersive"))
+      });
     }
     function resultHTML() {
       if (!attempt) return "";
