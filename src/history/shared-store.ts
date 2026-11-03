@@ -64,6 +64,11 @@ export function compactAttempt(attempt:GenericAttempt):{
 export function expandAttempt(row:SlimAttempt,snapshot:SharedSnapshot):GenericAttempt{
  if(!row||!snapshot||row.frozenRef!==snapshot.id)
    throw Error("Shared exam snapshot not found for attempt");
+ // Immutable content must come only from its content-addressed snapshot.
+ // An untrusted compact row cannot carry overriding source/key/explanations.
+ if(["frozen","sourceKeyReference","sourceReviewReference","explanations"].some(key=>
+   Object.prototype.hasOwnProperty.call(row,key)))
+   throw Error("Compact attempt contains forbidden immutable source fields");
  if(!Number.isFinite(Date.parse(row.frozenAt)))
    throw Error("Invalid frozen timestamp");
  const {frozenRef:_,frozenAt,...other}=row;
@@ -102,6 +107,40 @@ export function reconstructRecords(rows:readonly unknown[],
    bodyCache.set(expanded.frozen,snapshot);
    return expanded;
  });
+}
+
+/** Local IndexedDB recovery must isolate individual damaged entries without
+ * concealing healthy attempts. Portable backup verification remains strict.
+ * Callers must disclose rejections and lock further writes until exported.
+ */
+export function reconstructRecoverableRecords(
+ rows:readonly unknown[],snapshots:readonly unknown[]
+):{
+ readonly records:readonly unknown[];readonly snapshots:readonly SharedSnapshot[];
+ readonly rejectedRows:number;readonly rejectedSnapshots:number;
+}{
+ const byId=new Map<string,SharedSnapshot>();
+ let rejectedSnapshots=0,rejectedRows=0;
+ for(const unknownRow of snapshots){
+   try{
+     const snapshot=verifiedSnapshot(unknownRow as SharedSnapshot);
+     if(byId.has(snapshot.id))throw Error("Duplicate immutable snapshot");
+     byId.set(snapshot.id,snapshot);
+   }catch{rejectedSnapshots++;}
+ }
+ const records:unknown[]=[];
+ for(const row of rows){
+   if(!isSharedAttempt(row)){records.push(row);continue;}
+   try{
+     const snapshot=byId.get(row.frozenRef);
+     if(!snapshot)throw Error("Missing or unverified immutable snapshot");
+     const expanded=expandAttempt(row,snapshot);
+     verifiedReconstructed.add(expanded.frozen);
+     bodyCache.set(expanded.frozen,snapshot);
+     records.push(expanded);
+   }catch{rejectedRows++;}
+ }
+ return {records,snapshots:[...byId.values()],rejectedRows,rejectedSnapshots};
 }
 
 /** Reclaim content no longer referenced by any saved attempt.

@@ -16,7 +16,7 @@ import {assertDeletionAllowed,deletionWarning,type DeletionIntent} from "../hist
 import {healthSummary,type StorageHealth} from "./history-page.ts";
 
 import {backupDownload,readBackupFile} from "../history/backup-file.ts";
-import {ATTEMPTS_STORE,SNAPSHOTS_STORE,compactAttempt,expandAttempt,isSharedAttempt,verifiedSnapshot,reconstructRecords,pruneSharedSnapshots} from "../history/shared-store.ts";
+import {ATTEMPTS_STORE,SNAPSHOTS_STORE,compactAttempt,expandAttempt,isSharedAttempt,reconstructRecords,reconstructRecoverableRecords,pruneSharedSnapshots} from "../history/shared-store.ts";
 import type {SharedSnapshot,SlimAttempt} from "../history/shared-store.ts";
 
 import {readDisplayPreferences,writeDisplayPreferences,SETTINGS_EVENT} from "./preferences.ts";
@@ -395,16 +395,30 @@ export function hydrateWorkspaceStorage(owner:CoordinatorContext):void{
        tx.oncomplete=()=>resolve({all:rows.result as unknown[],snapshots:contents.result as SharedSnapshot[]});
        tx.onerror=()=>reject(tx.error);
      });
-     for(const snap of snapshots)owner.storedSnapshots.set(snap.id,verifiedSnapshot(snap));
-     for(const record of reconstructRecords(all,snapshots)){
+     // Corrupt browser records must not conceal independent healthy records.
+     // Leave the original IndexedDB bytes untouched for later diagnosis.
+     const recovered=reconstructRecoverableRecords(all,snapshots);
+     let rejected=recovered.rejectedRows+recovered.rejectedSnapshots;
+     for(const snap of recovered.snapshots)owner.storedSnapshots.set(snap.id,snap);
+     for(const record of recovered.records){
        if(isPackage(record)){try{
+         validateGenericStoredRecord(record);
          const valid=validateExamPackage(record.bundle);
          if(!owner.packages.has(valid.paper.id)){owner.packages.set(valid.paper.id,valid);owner.records.set(record.id,record);}
-       }catch(error){console.warn("Invalid saved package",error);}}
+       }catch(error){rejected++;console.warn("Invalid saved package",error);}}
        else if(isAttempt(record)||isLearning(record)){
          try{validateGenericStoredRecord(record);owner.records.set(record.id,record);}
-         catch(error){console.warn("Invalid saved practice record",error);}
-       }
+         catch(error){rejected++;console.warn("Invalid saved practice record",error);}
+       }else{rejected++;console.warn("Unsupported saved record",record);}
+     }
+     if(rejected>0){
+       owner.storageFault=true;
+       owner.recordStorageFailure(new Error(rejected+" corrupt or untrusted IndexedDB entries"));
+       owner.warning="STORAGE INTEGRITY WARNING: "+rejected+
+         " damaged storage entr"+(rejected===1?"y was":"ies were")+
+         " quarantined without changing the database. Verifiable records remain readable, but editing is locked. "+
+         "Export an UNSAVED_RECOVERY backup of the healthy records. That file excludes damaged entries; keep the "+
+         "original browser data for diagnosis and do not clear it.";
      }
      try{
        const mirror=JSON.parse(localStorage.getItem(owner.mirrorKey)??"null") as unknown;
@@ -412,7 +426,10 @@ export function hydrateWorkspaceStorage(owner:CoordinatorContext):void{
          validateGenericStoredRecord(mirror);
          const existing=owner.records.get(mirror.id);
          const winner=chooseRecovered(isAttempt(existing)?existing:undefined,mirror);
-         if(winner===mirror)void owner.save(mirror);
+         if(winner===mirror){
+           if(owner.storageFault)owner.records.set(mirror.id,mirror);
+           else void owner.save(mirror);
+         }
        }
      }catch(error){console.warn("Invalid emergency session mirror",error);}
    }catch(error){
