@@ -297,11 +297,6 @@ export function createQuestionAuthoringStudio():AuthoringStudioController{
    '<button class="btn" id="pd-author-publish" disabled title="Publication requires P47-5D validation">Publish (P47-5D)</button></div>'+
    '<p class="fine" id="pd-author-status" role="status">Editing locally; changes are saved automatically.</p>'+
    '<div id="pd-author-preview" class="pd-author-preview" hidden></div></section>';
-  // Wordgard's late-inserted editor styles can override normal authoring button
-  // backgrounds even at higher stylesheet specificity. Inline only our own
-  // secondary buttons, using the theme variable so live theme changes track.
-  container.querySelectorAll<HTMLButtonElement>(".pd-author-studio button.btn:not(.primary)")
-   .forEach(button=>button.style.setProperty("background","var(--panel)","important"));
   const find=<T extends HTMLElement>(id:string)=>container.querySelector<T>("#"+id)!;
   const click=(id:string,handler:()=>void)=>{find<HTMLButtonElement>(id).onclick=handler;};
   click("pd-author-close",()=>close());

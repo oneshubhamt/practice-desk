@@ -50,6 +50,18 @@ try{
  await page.emulateMedia({colorScheme:"dark"});
  await page.evaluate(()=>document.documentElement.setAttribute("data-theme","dark"));
  check(await page.evaluate(()=>document.documentElement.getAttribute("data-theme"))==="dark","Dark screenshot theme not applied");
+ // The global .btn has a 140 ms background transition. Wait for the
+ // completed theme instead of measuring a transient light fill/dark text.
+ await page.waitForFunction(()=>{
+  const studio=document.querySelector(".pd-author-studio");
+  const close=document.querySelector("#pd-author-close");
+  const next=document.querySelector("#pd-author-new");
+  if(!studio||!close||!next)return false;
+  const backdrop=getComputedStyle(studio).backgroundColor;
+  return getComputedStyle(close).backgroundColor===backdrop&&
+   getComputedStyle(next).backgroundColor===backdrop;
+ },null,{timeout:3000});
+
  const darkContrast=await page.evaluate(()=>{
   const rgb=(color)=>{
    const values=color.match(/[\d.]+/g)?.slice(0,3).map(Number);
