@@ -322,6 +322,63 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   const click=(id:string,handler:()=>void)=>{find<HTMLButtonElement>(id).onclick=handler;};
   click("pd-author-close",()=>close());
   click("pd-author-save",()=>{capture();persist();void render();});
+
+  const validationBox=find<HTMLElement>("pd-author-validation");
+  const showIssues=(issues:readonly PublicationIssue[]):void=>{
+   validationBox.hidden=false;
+   if(!issues.length){
+    validationBox.innerHTML='<h3>Ready to publish</h3><p>All question formats, keys and revision identities are valid. Check the confirmation below before publishing.</p>';
+    status("Validation passed for "+active().questions.length+" questions.");
+    return;
+   }
+   validationBox.innerHTML='<h3>Fix '+issues.length+' publication issue'+(issues.length===1?"":"s")+'</h3><ol>'+
+    issues.map(issue=>'<li>'+escapeText(issue.field+": "+issue.reason)+
+      (issue.questionId?'<button type="button" class="textlink" data-author-issue="'+escapeText(issue.questionId)+'">Edit question</button>':"")+
+      '</li>').join("")+'</ol>';
+   validationBox.querySelectorAll<HTMLButtonElement>("[data-author-issue]").forEach(btn=>{
+    btn.onclick=()=>{
+     const id=btn.dataset.authorIssue;
+     if(id&&active().questions.some(q=>q.id===id)){
+      capture();questionId=id;field="prompt";void render();
+     }
+    };
+   });
+   status("Publication blocked: "+issues.length+" issues need attention.",true);
+  };
+  click("pd-author-validate",()=>{
+   try{
+    flush();
+    const report=inspectAuthoringPublication(active(),actions.existing());
+    showIssues(report.issues);
+    validationBox.scrollIntoView({block:"nearest"});
+   }catch(error){status(error instanceof Error?error.message:"Unable to validate draft",true);}
+  });
+  click("pd-author-publish",()=>{void(async()=>{
+   if(publishing)return;
+   publishing=true;
+   const button=find<HTMLButtonElement>("pd-author-publish");
+   button.disabled=true;
+   try{
+    flush();
+    if(storageBlocked||lastSaveError)throw Error("Draft storage is unsafe; export your draft and repair local storage before publishing.");
+    const report=inspectAuthoringPublication(active(),actions.existing());
+    showIssues(report.issues);
+    if(!report.valid){validationBox.scrollIntoView({block:"nearest"});return;}
+    if(!find<HTMLInputElement>("pd-author-confirm").checked)
+      throw Error("Confirm your source, answer keys and marking rules before publishing.");
+    const packageValue=compileAuthoringPublication(active(),actions.existing());
+    await actions.publish(packageValue);
+    // The integrated Library owner refreshes the screen only after a
+    // successfully committed package; do not change anything here afterwards.
+   }catch(error){
+    if(error instanceof PublicationValidationError)showIssues(error.issues);
+    else status(error instanceof Error?error.message:"Publishing failed",true);
+   }finally{
+    publishing=false;
+    if(button.isConnected)button.disabled=false;
+   }
+  })();});
+
   click("pd-author-export",exportDraft);
   click("pd-author-preview-toggle",()=>{
    try{
