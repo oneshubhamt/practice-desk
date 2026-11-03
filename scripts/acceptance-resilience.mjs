@@ -43,14 +43,21 @@ try{
     x.state.responses.some(y=>y.response?.kind==="single-choice"&&y.response.optionId===replacement)?x:null;
  },"durable alternate second-tab answer");
  // The original tab must not silently overwrite a newer revision.
- // Verify that the first tab actually resumed the stale attempt before
- // attempting a real choice; the old optional DOM click could run in Library.
+ // Resuming may itself checkpoint and reject a stale revision BEFORE the
+ // candidate can answer. Both rejection paths are correct; do not demand a
+ // radio click after the view has already been safely locked and redrawn.
  check(await page.locator('[data-attempt="'+attemptId+'"]').count()>0,
    "Stale first tab must expose its saved attempt");
  await page.locator('[data-attempt="'+attemptId+'"]').first().click();
- await route(page,"exam");
- await page.locator("input[data-choice]").nth(2).click();
- await page.locator(".generic-warning").filter({hasText:"Another tab"}).waitFor();
+ await page.waitForFunction(()=>{
+   const conflict=[...document.querySelectorAll(".generic-warning")]
+     .some(node=>node.textContent?.includes("Another tab"));
+   return conflict||Boolean(document.querySelector('input[data-choice]'));
+ });
+ const conflictWarning=page.locator(".generic-warning").filter({hasText:"Another tab"});
+ if(!(await conflictWarning.count()))
+   await page.evaluate(()=>document.querySelectorAll('input[data-choice]')[2]?.click());
+ await conflictWarning.waitFor();
  const authoritative=(await records(other)).find(x=>x.id===attemptId);
  check(authoritative.saveRevision>=updated.saveRevision&&
   authoritative.state.responses.some(x=>x.response?.optionId===replacement),
