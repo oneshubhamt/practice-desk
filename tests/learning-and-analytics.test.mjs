@@ -13,7 +13,7 @@ import * as __suite_dep_8 from "../src/domain/integrity.ts";
 import * as __suite_dep_9_stored_record_validator from "../src/app/stored-record-validator.ts";
 import * as __suite_dep_9_exam_view from "../src/app/exam-view.ts";
 import * as __suite_dep_10 from "../src/app/result-presentation.ts";
-import * as __suite_dep_11 from "ts-fsrs";
+import * as __suite_dep_11 from "../src/learning/fsrs-scheduler-adapter.ts";
 import * as __suite_dep_12 from "../src/learning/learning.ts";
 import * as __suite_dep_13 from "../src/history/backup.ts";
 import * as __suite_dep_14 from "../src/learning/revision-test.ts";
@@ -296,8 +296,8 @@ test("negative marking, manual-pending and excluded questions stay separate from
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
-const DefaultScheduler = __suite_dep_11["DefaultScheduler"];
-const Rating = __suite_dep_11["Rating"];
+const DefaultScheduler = __suite_dep_11["createRevisionScheduler"];
+const Rating = {Again:1,Hard:2,Good:3,Easy:4};
 const pkg = __suite_dep_2["pkg"];
 const validateExamPackage = __suite_dep_3["validateExamPackage"];
 const startGenericAttempt = __suite_dep_3["startGenericAttempt"];
@@ -333,7 +333,7 @@ test("learning cards are created from completed immutable answers, not active te
  assert.throws(()=>validateLearningCard({...item,answer:{kind:"single-choice",optionId:"fake"}}),/unknown option/);
 });
 test("FSRS-7 from stable ts-fsrs 6.0.0 schedules only explicit review ratings",async()=>{
- const scheduler=await DefaultScheduler({version:"FSRS-7",enableFuzz:false});
+ const scheduler=await DefaultScheduler();
  const item=addLearningCard(complete("reviewer"),bundle.questions[0].id,new Date(1030).toISOString());
  assert.equal(scheduledCard(item,scheduler).dueAt.getTime(),1030);
  const graded=rateLearningCard(item,Rating.Good,new Date(2030).toISOString(),scheduler);
@@ -343,7 +343,7 @@ test("FSRS-7 from stable ts-fsrs 6.0.0 schedules only explicit review ratings",a
  assert.equal(next.reps,1);
  assert.ok(next.dueAt.getTime()>2030);
  const reloaded=validateLearningCard(JSON.parse(JSON.stringify(graded)));
- assert.equal(scheduledCard(reloaded,await DefaultScheduler({version:"FSRS-7",enableFuzz:false})).dueAt.getTime(),next.dueAt.getTime());
+ assert.equal(scheduledCard(reloaded,await DefaultScheduler()).dueAt.getTime(),next.dueAt.getTime());
  assert.throws(()=>rateLearningCard(graded,Rating.Again,new Date(1500).toISOString(),scheduler),/monotonic/);
 });
 test("topic evidence and trends never compare different paper revisions",()=>{
@@ -361,7 +361,7 @@ test("topic evidence and trends never compare different paper revisions",()=>{
  assert.equal(comparableTrends([a,different]).length,2);
 });
 test("backup preserves notes and FSRS review logs with strict integrity checks",async()=>{
- const scheduler=await DefaultScheduler({version:"FSRS-7",enableFuzz:false});
+ const scheduler=await DefaultScheduler();
  const a=complete("backup");
  const original=addLearningCard(a,bundle.questions[0].id,new Date(1030).toISOString());
  const rated=rateLearningCard({...original,note:"Review concept carefully",errorLabel:"conceptual",customTopic:"Topic"},
