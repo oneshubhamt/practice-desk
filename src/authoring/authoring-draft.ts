@@ -18,6 +18,8 @@ export type AuthoringQuestion={
  readonly rightItems:readonly RichDocument[];
  readonly explanation:RichDocument;
  readonly answer:string;
+ /** Absolute numeric entry tolerance; zero for exact answers. */
+ readonly tolerance:number;
  readonly source:string;
 };
 export type AuthoringDraft={
@@ -48,7 +50,7 @@ const fresh=()=>plainRichDocument("");
 export function newAuthoringQuestion(kind:QuestionKind="single-choice"):AuthoringQuestion{
  return {id:id(),section:"General",kind,prompt:fresh(),passage:fresh(),
   options:Array.from({length:4},fresh),leftItems:Array.from({length:4},fresh),
-  rightItems:Array.from({length:4},fresh),explanation:fresh(),answer:"",source:""};
+  rightItems:Array.from({length:4},fresh),explanation:fresh(),answer:"",tolerance:0,source:""};
 }
 export function newAuthoringDraft():AuthoringDraft{
  const now=new Date().toISOString();
@@ -91,7 +93,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
  const all=new Set<string>();
  const verified=questions.map(item=>{
   const q=rec(item,"draft question",["id","section","kind","prompt","passage","options","leftItems",
-   "rightItems","explanation","answer","source"]);
+   "rightItems","explanation","answer","tolerance","source"]);
   const questionId=text(q.id,"question ID",128,true);
   if(all.has(questionId))throw Error("Duplicate draft question ID");
   all.add(questionId);
@@ -106,6 +108,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
    kind:kind as QuestionKind,prompt:rich(q.prompt),passage:rich(q.passage),
    options:qOpts.map(rich),leftItems:left.map(rich),rightItems:right.map(rich),
    explanation:rich(q.explanation),answer:text(q.answer,"draft answer",100),
+   tolerance:num(q.tolerance??0,"numeric tolerance",0,1000000),
    source:text(q.source,"source note",500)};
  });
  const edition=p.edition;
