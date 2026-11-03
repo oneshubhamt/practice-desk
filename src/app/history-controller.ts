@@ -3,48 +3,8 @@
 
 import {isAttempt} from "./stored-record-validator.ts";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import {historyRowsHTML} from "./history-page.ts";
 import {DEFAULT_HISTORY_QUERY,filteredHistory,historyQueryError,activeHistoryFilterCount,type HistoryQuery} from "./history-query.ts";
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 import type {CoordinatorContext} from "./coordinator-context.ts";
 

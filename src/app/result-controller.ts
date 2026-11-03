@@ -9,8 +9,6 @@ import type {ExamPackage,GenericAttempt} from "./exam-package.ts";
 import type {QuestionRevision} from "../domain/question.js";
 import type {QuestionRevisionId} from "../domain/ids.js";
 
-
-
 import {scoreAttempt} from "../engine/scoring.ts";
 import {manualGradeLimit,manualGradeSummary,setManualGrade} from "../engine/manual-grading.ts";
 import {sourceKeyScore} from "../engine/source-comparison.ts";
@@ -18,33 +16,12 @@ import {sourceKeyScore} from "../engine/source-comparison.ts";
 import {createSourceReviewReference} from "../engine/review-source.ts";
 import {scoreableMaximum,scoreableLowerBound,sectionScoreSummaries} from "../engine/score-ceiling.ts";
 
-
-
-
-
-
 import {questionSpeed} from "../learning/question-analytics.ts";
-
-
-
-
-
 
 import {editorialStatusLabel} from "./editorial-labels.ts";
 
 
 import {reviewMatch,reviewFiltersHTML,resultTabsHTML,timingLedgerHTML,resultInsightsHTML,type ResultTab,type ReviewFilter} from "./result-presentation.ts";
-
-
-
-
-
-
-
-
-
-
-
 
 import type {CoordinatorContext} from "./coordinator-context.ts";
 

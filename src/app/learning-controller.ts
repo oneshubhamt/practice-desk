@@ -9,42 +9,10 @@ import type {GenericAttempt} from "./exam-package.ts";
 
 import type {QuestionRevisionId} from "../domain/ids.js";
 
-
-
-
-
-
-
-
-
-
-
-
-
 import {createLearningDesk} from "./learning-ui.ts";
 import {makeRevisionPackage,createNotebookLineage} from "../learning/revision-test.ts";
 
-
-
-
-
-
-
-
-
-
-
 import {addLearningCard} from "../learning/learning.ts";
-
-
-
-
-
-
-
-
-
-
 
 import type {CoordinatorContext} from "./coordinator-context.ts";
 

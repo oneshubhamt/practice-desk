@@ -2,49 +2,11 @@
 
 import {renderModelExam} from "./exam-view.ts";
 
-
-
 import {transitionGenericAttempt} from "./exam-package.ts";
-
-
 
 import type {SessionEvent} from "../engine/session.ts";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import {multipleDraftMessage,duplicateMatchingTargets} from "./response-drafts.ts";
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 import type {CoordinatorContext} from "./coordinator-context.ts";
 

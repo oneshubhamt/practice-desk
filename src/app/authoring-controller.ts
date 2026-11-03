@@ -1,47 +1,8 @@
 /** P47-6 module: authoring-controller.ts */
 
-
-
-
-
 import {validateExamPackage} from "./exam-package.ts";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import {familyIdFor} from "./exam-families.ts";
-
-
-
 
 import {createQuestionAuthoringStudio} from "../authoring/authoring-studio.ts";
 

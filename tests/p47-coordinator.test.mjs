@@ -64,6 +64,7 @@ test("P47-6 controller modules do not introduce runtime cycles, mutable parallel
  assert.match(adapter,/from "ts-fsrs"/);
  assert.match(adapter,/desiredRetention:0\.9,enableFuzz:false/);
  const index=await readdir(new URL("../src/learning/",import.meta.url));
+ assert.ok(!index.includes("scheduler-port.ts"),"obsolete P47-5A scheduler prototype must not coexist with P47-6 port");
  for(const file of index.filter(x=>x.endsWith(".ts")&&x!=="fsrs-scheduler-adapter.ts")){
   const text=await source("src/learning/"+file);
   assert.doesNotMatch(text,/from ["']ts-fsrs["']/,"FSRS vendor leaked into "+file);

@@ -3,26 +3,13 @@
 
 import {type RecordItem} from "./stored-record-validator.ts";
 
-
-
 import type {ExamPackage,GenericAttempt,CglPracticeMode} from "./exam-package.ts";
 
 import type {OptionId} from "../domain/ids.js";
 import type {SessionEvent} from "../engine/session.ts";
 
-
-
-
-
-
-
-
-
-
 import {type DeletionIntent} from "../history/deletion-policy.ts";
 import type {SourcePaperBank,ReviewPatchBank} from "../content/schema.js";
-
-
 
 import {type StorageHealth} from "./history-page.ts";
 import {type HistoryQuery} from "./history-query.ts";
@@ -30,20 +17,9 @@ import {type HistoryQuery} from "./history-query.ts";
 
 import type {SharedSnapshot} from "../history/shared-store.ts";
 
-
-
-
 import {type ResultTab,type ReviewFilter} from "./result-presentation.ts";
 
-
-
 import {type PracticeSetups} from "./practice-selection.ts";
-
-
-
-
-
-
 
 import {type AppRoute,type NativeRouter} from "./navigation.ts";
 import type {ExamFamily} from "./exam-families.ts";

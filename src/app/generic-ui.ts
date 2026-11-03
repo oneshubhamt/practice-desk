@@ -12,13 +12,6 @@ import type {SessionEvent} from "../engine/session.ts";
 
 import {createSessionClock} from "../engine/clock.ts";
 
-
-
-
-
-
-
-
 import {type DeletionIntent} from "../history/deletion-policy.ts";
 import type {SourcePaperBank,ReviewPatchBank} from "../content/schema.js";
 import {createLearningDesk} from "./learning-ui.ts";
@@ -30,12 +23,7 @@ import {DEFAULT_HISTORY_QUERY,restoreHistoryQuery,type HistoryQuery} from "./his
 import {SHARED_DB_NAME} from "../history/shared-store.ts";
 import type {SharedSnapshot} from "../history/shared-store.ts";
 
-
-
-
 import {type ResultTab,type ReviewFilter} from "./result-presentation.ts";
-
-
 
 import {readPracticeSetups,type PracticeSetups} from "./practice-selection.ts";
 import {examFamilyCatalog,BUILTIN_CGL_FAMILY} from "./exam-families.ts";

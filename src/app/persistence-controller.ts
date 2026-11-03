@@ -7,22 +7,11 @@ import {validateGenericStoredRecord,isAttempt,isPackage,isLearning,type RecordIt
 import {validateExamPackage} from "./exam-package.ts";
 import type {GenericAttempt} from "./exam-package.ts";
 
-
-
 import {chooseRecovered} from "../history/frozen.ts";
-
-
-
-
-
-
 
 import {serializeVerifiedBackup,verifyBackup,planBackupMerge} from "../history/backup.ts";
 import {assertWriteVersion,nextWriteVersion} from "../history/concurrency.ts";
 import {assertDeletionAllowed,deletionWarning,type DeletionIntent} from "../history/deletion-policy.ts";
-
-
-
 
 import {healthSummary,type StorageHealth} from "./history-page.ts";
 
@@ -30,21 +19,7 @@ import {backupDownload,readBackupFile} from "../history/backup-file.ts";
 import {ATTEMPTS_STORE,SNAPSHOTS_STORE,compactAttempt,expandAttempt,isSharedAttempt,verifiedSnapshot,reconstructRecords,pruneSharedSnapshots} from "../history/shared-store.ts";
 import type {SharedSnapshot,SlimAttempt} from "../history/shared-store.ts";
 
-
-
-
-
-
-
 import {readDisplayPreferences,writeDisplayPreferences,SETTINGS_EVENT} from "./preferences.ts";
-
-
-
-
-
-
-
-
 
 import type {CoordinatorContext} from "./coordinator-context.ts";
 

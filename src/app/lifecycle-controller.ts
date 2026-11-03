@@ -2,47 +2,7 @@
 
 import {minutes,examTimeRemaining} from "./exam-view.ts";
 
-
-
 import {transitionGenericAttempt} from "./exam-package.ts";
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 import {resolveExamShortcut} from "./exam-shortcuts.ts";
 

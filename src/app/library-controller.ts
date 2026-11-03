@@ -7,44 +7,20 @@ import {isAttempt,isLearning} from "./stored-record-validator.ts";
 import {configureCglPractice,configureUntimedPractice,startGenericAttempt} from "./exam-package.ts";
 import type {ExamPackage,GenericAttempt,CglPracticeMode} from "./exam-package.ts";
 
-
-
-
-
-
-
 import {createSourceKeyReference} from "../engine/source-comparison.ts";
 import {composePracticeSet,practiceInventory} from "./practice-compose.ts";
 import {createSourceReviewReference} from "../engine/review-source.ts";
 
-
-
-
-
-
-
-
-
 import {DEFAULT_HISTORY_QUERY} from "./history-query.ts";
-
-
 
 import {frozenScoreSummary} from "./history-score.ts";
 
 
 import {examPreflight,preflightHTML,examRulesHTML} from "./exam-preflight.ts";
 
-
-
-
 import {writePracticeSetups,type PracticeSetups} from "./practice-selection.ts";
 import {familyIdFor,pairedEdition,BUILTIN_CGL_FAMILY} from "./exam-families.ts";
 import {importAuthoredExam,APFC_NAT_BANK_TEMPLATE} from "./bank-import.ts";
-
-
-
-
-
 
 import type {CoordinatorContext} from "./coordinator-context.ts";
 

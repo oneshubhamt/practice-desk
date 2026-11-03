@@ -3,48 +3,7 @@
 
 import {isAttempt} from "./stored-record-validator.ts";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import {historyHTML} from "./history-page.ts";
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 import type {CoordinatorContext} from "./coordinator-context.ts";
 import {bindHistoryScreen} from "./history-controller.ts";

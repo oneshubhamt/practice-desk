@@ -6,44 +6,9 @@ import {isAttempt} from "./stored-record-validator.ts";
 
 import {transitionGenericAttempt} from "./exam-package.ts";
 
-
-
-
 import {restoreSession} from "../history/frozen.ts";
 
 import {scoreAttempt} from "../engine/scoring.ts";
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 import {type AppRoute,type RouteContext} from "./navigation.ts";
 import type {CoordinatorContext} from "./coordinator-context.ts";
