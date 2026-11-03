@@ -4,6 +4,7 @@ import { comparableTrends } from "../learning/learning.ts";
 import { comparableScoreTrends,adjustedHistoryMetrics } from "./history-metrics.ts";
 import { crossPaperMarksPriorities } from "./history-priorities.ts";
 import { frozenScoreSummary } from "./history-score.ts";
+import {filteredHistory,historyQueryError,activeHistoryFilterCount,historyAttemptLabel,type HistoryQuery} from "./history-query.ts";
 
 export interface StorageHealth {
  readonly pendingWrites:number;
@@ -21,24 +22,9 @@ export function healthSummary(health:StorageHealth):string{
    " pending; wait for completion before closing the page.";
  return "No writes pending in this tab. Browser storage can still be cleared or evicted.";
 }
-export type HistoryStatus="all"|"complete"|"progress";
-export type HistorySort="newest"|"oldest";
-export interface HistoryQuery { readonly status:HistoryStatus;readonly sort:HistorySort;readonly search:string;readonly paperRevisionId?:string; }
 const esc=(x:unknown):string=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]??c));
 const percent=(n:number)=>Math.max(0,Math.min(100,n));
 const stamp=(ms:number)=>new Date(ms).toLocaleString();
-const label=(a:GenericAttempt,packages:ReadonlyMap<string,ExamPackage>)=>packages.get(a.packageId)?.title??
- a.frozen.paper.paperId+(a.frozen.paper.edition==="custom"?" · Practice":" · "+a.frozen.paper.edition);
-export function filteredHistory(attempts:readonly GenericAttempt[],packages:ReadonlyMap<string,ExamPackage>,query:HistoryQuery):GenericAttempt[]{
- const search=query.search.trim().toLocaleLowerCase();
- const selected=query.paperRevisionId??"all";
- return attempts.filter(a=>(selected==="all"||a.frozen.paper.id===selected)&&
-  (query.status==="all"||query.status==="complete"&&a.finishedAt!==null||
-  query.status==="progress"&&a.finishedAt===null)&&
-  (!search||[label(a,packages),a.frozen.paper.paperId,a.frozen.snapshot.mode,a.frozen.paper.edition]
-   .some(s=>s.toLocaleLowerCase().includes(search))))
- .sort((a,b)=>query.sort==="oldest"?a.startedAt-b.startedAt:b.startedAt-a.startedAt);
-}
 interface Priority { readonly examId:string; readonly title:string; readonly answered:number;readonly correct:number;readonly attempts:number }
 export function sectionPriorities(attempts:readonly GenericAttempt[]):Priority[]{
  const map=new Map<string,Priority>();
@@ -72,6 +58,10 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
    loading,inMemoryRecords:attempts.length
  }):string{
  const visible=filteredHistory(attempts,packages,query);
+ const filterError=historyQueryError(query);
+ const activeFilterCount=activeHistoryFilterCount(query);
+ const examIds=[...new Set(attempts.map(a=>a.frozen.snapshot.examId))].sort((a,b)=>a.localeCompare(b));
+ const modes=[...new Set(attempts.map(a=>a.frozen.snapshot.mode))].sort((a,b)=>a.localeCompare(b));
  const done=attempts.filter(a=>a.finishedAt!==null&&a.result);
  const mockDone=done.filter(a=>!a.notebookLineage&&
    !a.frozen.paper.paperId.startsWith("notebook-revision:"));
@@ -97,7 +87,8 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
   '<button class="btn quiet" id="g-library">← Test library</button></div>'+
   (warning?'<p role="status" class="generic-warning">'+esc(warning)+'</p>':"")+
   // Primary History task first: keep archive filters, records and backups together.
-  '<section class="panel pad history-archive"><div class="row between"><div><h2>Saved attempts</h2><p class="fine">'+visible.length+' of '+pCount+' records shown</p></div>'+
+  '<section class="panel pad history-archive"><div class="row between"><div><h2>Saved attempts</h2><p class="fine" id="g-history-count" role="status" aria-live="polite">'+
+  visible.length+' of '+pCount+' records shown</p></div>'+
   '<div class="row generic-actions"><button class="btn" id="g-export-history"'+(loading?" disabled":"")+'>Export backup</button>'+
   '<button class="btn" id="g-import-history"'+(loading||storageLocked?" disabled":"")+'>Import backup</button></div></div>'+
   '<input type="file" id="g-history-file" accept=".json,.gz,application/json,application/gzip" hidden>'+
@@ -108,13 +99,32 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
     [...editionOptions.entries()].sort((a,b)=>a[1].localeCompare(b[1])).map(([id,label])=>
       '<option value="'+esc(id)+'"'+((query.paperRevisionId??"all")===id?" selected":"")+'>'+
       esc(label)+'</option>').join("")+'</select></label>'+
+  '<label class="filter-label" for="g-history-exam">Exam (saved ID)<select id="g-history-exam">'+
+    '<option value="all">All exams</option>'+
+    examIds.map(id=>'<option value="'+esc(id)+'"'+((query.examId??"all")===id?" selected":"")+'>'+
+      esc(id)+'</option>').join("")+'</select></label>'+
+  '<label class="filter-label" for="g-history-mode">Practice mode<select id="g-history-mode">'+
+    '<option value="all">All practice modes</option>'+
+    modes.map(mode=>'<option value="'+esc(mode)+'"'+((query.mode??"all")===mode?" selected":"")+'>'+
+      esc(mode.replaceAll("-"," "))+'</option>').join("")+'</select></label>'+
   '<label class="filter-label" for="g-filter">Status<select id="g-filter">'+
   ([["all","All attempts"],["progress","In progress"],["complete","Completed"]] as const)
    .map(([id,t])=>'<option value="'+id+'"'+(query.status===id?" selected":"")+'>'+t+'</option>').join("")+
   '</select></label><label class="filter-label" for="g-history-sort">Order<select id="g-history-sort">'+
   ([["newest","Newest first"],["oldest","Oldest first"]] as const)
    .map(([id,t])=>'<option value="'+id+'"'+(query.sort===id?" selected":"")+'>'+t+'</option>').join("")+
-  '</select></label></div>'+
+  '</select></label>'+
+  '<label class="filter-label" for="g-history-from">Started from (local)<input type="date" id="g-history-from" value="'+esc(query.startedFrom??"")+'"></label>'+
+  '<label class="filter-label" for="g-history-to">Started through (local)<input type="date" id="g-history-to" value="'+esc(query.startedTo??"")+'"></label></div>'+
+  '<div class="history-filter-footer"><p class="fine">'+activeFilterCount+
+  ' active filter'+(activeFilterCount===1?"":"s")+
+  ' · Dates use the local calendar day when each attempt started; both endpoints are inclusive.</p>'+
+  '<button class="btn quiet" type="button" id="g-history-reset"'+
+    (!activeFilterCount&&query.sort==="newest"?" disabled":"")+
+  '>Reset all filters</button></div>'+
+  (filterError?'<p class="generic-warning" id="g-history-filter-error" role="alert">'+
+    esc(filterError)+'</p>':"")+
+  '<p class="fine">Insights below always cover all saved attempts, regardless of archive filters.</p>'+
   (visible.length?'<div class="history-entries">'+visible.map(a=>{
    const s=a.result?.snapshot;
    const score=frozenScoreSummary(a);
@@ -122,7 +132,7 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
    const answered=a.state.responses.filter(z=>z.response).length;
    const status=a.finishedAt?"Completed":"Resume";
    return '<div class="archive-entry"><button class="history-open" data-attempt="'+esc(a.id)+'">'+
-    '<span class="archive-title">'+esc(label(a,packages))+'</span><span class="archive-meta">'+
+    '<span class="archive-title">'+esc(historyAttemptLabel(a,packages))+'</span><span class="archive-meta">'+
     esc(stamp(a.startedAt))+' · '+esc(a.frozen.snapshot.mode.replaceAll("-"," "))+' · '+count+' questions</span>'+
     '<span class="archive-numbers">'+(a.finishedAt?(score&&s?esc(score.text)+' · '+s.correctCount+' correct':'Completed · score unavailable'):
      answered+'/'+count+' answered · In progress')+'</span></button>'+
