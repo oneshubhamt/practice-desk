@@ -38,7 +38,8 @@ for(const [name,body] of Object.entries(payloads)){
  if(html.split(marker).length!==2)throw new Error("Expected one "+marker);
  html=html.replace(marker,body);
 }
-if(/<!-- PD:[A-Z_]+ -->/.test(html))throw new Error("Unreplaced marker");
+const leftover=html.match(/<!-- PD:[A-Z_]+ -->/g);
+if(leftover)throw new Error("Unreplaced marker(s): "+JSON.stringify([...new Set(leftover)]));
 await writeFile(resolve(root,"Practice_Desk_Offline_Mock_Tests.html"),html);
 console.log("Built "+Buffer.byteLength(html)+" bytes (single offline HTML). "+
   "KaTeX: "+katexStyles.woff2Files.length+" WOFF2 families, "+
