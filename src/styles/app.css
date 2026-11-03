@@ -1377,3 +1377,19 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
  .pd-author-actions{display:grid;grid-template-columns:minmax(0,1fr)}
  .pd-author-studio .btn{max-width:100%;overflow-wrap:anywhere}
 }
+
+/* Screenshot-audited focused Library authoring mode (same SPA, same local data). */
+.generic-workspace.pd-author-mode > :not(#pd-authoring-container){display:none!important}
+.generic-workspace.pd-author-mode #pd-authoring-container{margin-top:0;scroll-margin-top:12px}
+.pd-author-paper-settings{border:1px solid var(--line);border-radius:11px;margin:12px 0;background:var(--panel);max-width:100%;overflow:hidden}
+.pd-author-paper-settings>summary{padding:12px 16px;font-weight:700;color:var(--ink);cursor:pointer;list-style-position:inside;overflow-wrap:anywhere}
+.pd-author-paper-settings>summary:hover{background:color-mix(in srgb,var(--panel) 93%,var(--blue))}
+.pd-author-paper-settings[open]>summary{border-bottom:1px solid var(--line)}
+.pd-author-paper-settings>.pd-author-meta{border:0;border-radius:0;margin:0}
+.pd-author-studio>.pd-author-top:first-of-type{border-top:0}
+.pd-author-studio #pd-author-field{margin-bottom:5px}
+.pd-author-studio .pd-author-preview-content .pd-math{max-width:100%}
+@media(max-width:420px){
+ .pd-author-paper-settings>summary{padding:10px}
+ .pd-author-studio .pd-author-top>.row{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
