@@ -39,7 +39,7 @@ for(const [name,body] of Object.entries(payloads)){
  html=html.replace(marker,body);
 }
 const leftover=html.match(/<!-- PD:[A-Z_]+ -->/g);
-if(leftover)throw new Error("Unreplaced marker(s): "+JSON.stringify([...new Set(leftover)]));
+if(leftover){const p=html.indexOf(leftover[0]);throw new Error("Unreplaced marker(s): "+JSON.stringify([...new Set(leftover)])+" around "+JSON.stringify(html.slice(Math.max(0,p-150),p+150)));}
 await writeFile(resolve(root,"Practice_Desk_Offline_Mock_Tests.html"),html);
 console.log("Built "+Buffer.byteLength(html)+" bytes (single offline HTML). "+
   "KaTeX: "+katexStyles.woff2Files.length+" WOFF2 families, "+
