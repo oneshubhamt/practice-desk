@@ -2,6 +2,21 @@
 
 **Current build:** Practice Desk overhaul. The app itself runs as one fully offline HTML file; imported banks and attempt records are device-local until exported. This guide describes actual implemented behavior, not a planned feature.
 
+## Planned P47-5A–D: integrated Wordgard Question Authoring Studio (NOT YET IMPLEMENTED)
+
+Approved scope is recorded in the [canonical P47-5 programme](../ENGINEERING_PROGRAMME.md#p47-5-approved-architecture-and-wordgard-archive-audit--abcd-subpasses-3-november-2026); the instructions above describe the AS-BUILT current JSON import and must not be mistaken for WYSIWYG availability.
+
+**Current distinction:** Question text, option text and explanations are mainly plain strings, with hash-verified image assets and selected structured stimuli stored separately. Practice Desk already has a sophisticated six-kind examination, scoring, History, FSRS and frozen-source engine but does NOT have a graphical question authoring studio or LaTeX renderer.
+
+**Planned user experience (one existing offline application):** Library → Author new paper/Edit unpublished draft; author sections, question kinds, rich question stem, option text, formatted long passages, editable tables, explicit inline/display maths, diagrams and verified image IDs, worked explanations, source/editorial references and paper/timer/scoring metadata. Provide Draft → Preview → Validate → Publish as separate visible steps, with clear field errors, undo/redo, accessible keyboard controls and a real exam-style readonly preview. Creating a source/reviewed counterpart publishes a NEW separately verified frozen edition, not an overwrite of any prior source. No PDF/DOCX autoconversion is implied.
+
+**Application ownership:** Wordgard edits a curated editor document behind an EditorPort; it does not own scoring, keys, persisted question schema, hashes or the app router. The application validates a restricted normalized rich-content AST, with explicit TeX nodes and image asset references, then freezes/publishes the new question/source/key/paper hashes via current importer policy. The exam and Results surfaces render a lightweight **read-only** AST using MathRendererPort and verified image assets; they never create a Wordgard instance or show explanations before authorised submission. No external network or remote images. KaTeX is the first math rendering candidate, with possible MathJax adapter replacement if wide-expression wrapping/accessibility is materially better. Plain CGL question strings remain valid and never magically parsed for TeX.
+
+**Dependency policy:** Use exact versions and audited MIT licence; user-uploaded Wordgard 0.6.2 source is inspection material only (no built dist). No changes to upstream Wordgard code, no stored vendor JSON and no external editor bundle/CDN. One integrated Library UI within the existing single-file HTML; editor instance initialized only when authoring. The scheduler equivalent is the FSRS interface to be formalized during mandatory P47-6, not a change to current FSRS-7 behavior.
+
+**Status:** P47-5A–D are scoped and approved, but the editor, TeX parser, renderer, new rich document AST and publishing UI have NOT been implemented, installed or tested.
+
+
 ## Fastest path: MCQs and numerical-answer (NAT) questions
 
 1. Open the Practice Desk **Test library** and choose **Download APFC/NAT bank template**.
