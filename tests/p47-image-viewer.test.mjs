@@ -93,11 +93,14 @@ test("P47-3 module source is transient: no OPFS, IndexedDB, network or object UR
   assert.ok(!source.includes(term),"image viewer must not introduce a storage/network dependency: "+term);
  }
  const ui=await readFile(new URL("../src/app/generic-ui.ts",import.meta.url),"utf8");
- assert.match(ui,/imageViewer\.beforeRender\(\)/);
- assert.match(ui,/imageViewer\.dispose\(\)/);
- // The shortcut coordinator must still block every exam command during an image
- // modal; P47-4 moved the decision into the independently tested pure resolver.
- assert.ok(ui.includes('blocked:imageViewer.isOpen()||Boolean(document.querySelector("dialog[open]"))'),"image modal must block exam shortcuts");
+ const screen=await readFile(new URL("../src/app/screen-controller.ts",import.meta.url),"utf8");
+ const lifecycle=await readFile(new URL("../src/app/lifecycle-controller.ts",import.meta.url),"utf8");
+ // P47-6 preserves all invariants at the new controller ownership boundaries.
+ assert.match(ui,/drawWorkspaceScreen\(owner\)/);
+ assert.match(ui,/disposeWorkspace\(owner\)/);
+ assert.match(screen,/owner\.imageViewer\.beforeRender\(\)/);
+ assert.match(lifecycle,/owner\.imageViewer\.dispose\(\)/);
+ assert.ok(lifecycle.includes('blocked:owner.imageViewer.isOpen()||Boolean(document.querySelector("dialog[open]"))'),"image modal must block exam shortcuts");
  const shortcuts=await readFile(new URL("../src/app/exam-shortcuts.ts",import.meta.url),"utf8");
  assert.ok(shortcuts.includes("if(c.blocked||c.editable)return null;"),"pure shortcut resolver must deny blocked or editable contexts");
 });
