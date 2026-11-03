@@ -1,148 +1,124 @@
-/** P47-5A: neutral, versioned draft AST, not yet a published QuestionRevision. */
-export type RichMark="strong"|"emphasis"|"underline"|"code"|"subscript"|"superscript";
+/** P47-5A neutral authoring contract; no active QuestionRevision uses this yet. */
+export type RichMark="strong"|"emphasis"|"underline"|"subscript"|"superscript"|"code";
 export type RichInline=
- | {readonly type:"text";readonly text:string;readonly marks?:readonly RichMark[]}
- | {readonly type:"math";readonly tex:string;readonly linearText:string}
- | {readonly type:"image";readonly assetId:string;readonly altText:string};
+  | {type:"text";text:string;marks?:readonly RichMark[]}
+  | {type:"math";tex:string;linearText:string}
+  | {type:"image";assetId:string;altText:string};
 export type RichBlock=
- | {readonly type:"paragraph";readonly content:readonly RichInline[]}
- | {readonly type:"heading";readonly level:2|3;readonly content:readonly RichInline[]}
- | {readonly type:"list";readonly ordered:boolean;readonly items:readonly (readonly RichInline[])[]}
- | {readonly type:"table";readonly rows:readonly (readonly (readonly RichInline[])[])[]}
- | {readonly type:"display-math";readonly tex:string;readonly linearText:string}
- | {readonly type:"image";readonly assetId:string;readonly altText:string};
+  | {type:"paragraph";content:readonly RichInline[]}
+  | {type:"heading";level:2|3;content:readonly RichInline[]}
+  | {type:"list";ordered:boolean;items:readonly (readonly RichInline[])[]}
+  | {type:"table";rows:readonly (readonly (readonly RichInline[])[])[]}
+  | {type:"display-math";tex:string;linearText:string}
+  | {type:"image";assetId:string;altText:string};
 export interface RichDocument{
- readonly format:"practice-desk-rich";
- readonly version:1;
- readonly blocks:readonly RichBlock[];
+  readonly format:"practice-desk-rich";readonly version:1;
+  readonly blocks:readonly RichBlock[];
 }
-export interface RichValidationOptions{
- readonly knownAssetIds?:ReadonlySet<string>;
- readonly requireNonempty?:boolean;
-}
-export const RICH_DOCUMENT_LIMITS=Object.freeze({
- maxBlocks:128,maxNodes:1500,maxCharacters:20000,maxText:5000,
- maxTex:2048,maxAlt:500,maxTableRows:40,maxTableColumns:12,maxListItems:80
+export type RichValidationOptions={readonly knownAssets?:ReadonlySet<string>};
+export const RICH_LIMITS=Object.freeze({
+  blocks:128,nodes:1500,textBytes:20000,eachText:5000,tex:2048,
+  alt:500,tableRows:40,tableColumns:12,listItems:80
 });
-const MARKS:readonly RichMark[]=["strong","emphasis","underline","code","subscript","superscript"];
-const L=RICH_DOCUMENT_LIMITS;
-function obj(v:unknown,keys:readonly string[],label:string):Record<string,unknown>{
- if(!v||typeof v!=="object"||Array.isArray(v)||
-   ![Object.prototype,null].includes(Object.getPrototypeOf(v)))throw Error("Invalid "+label+" object");
- const record=v as Record<string,unknown>;
- for(const k of Object.keys(record))if(!keys.includes(k))throw Error("Unexpected "+label+" property: "+k);
- return record;
+const marks:readonly RichMark[]=["strong","emphasis","underline","subscript","superscript","code"];
+function record(v:unknown,allowed:readonly string[],label:string):Record<string,unknown>{
+  if(!v||typeof v!=="object"||Array.isArray(v)||
+    ![Object.prototype,null].includes(Object.getPrototypeOf(v)))
+    throw Error("Invalid "+label);
+  const r=v as Record<string,unknown>;
+  if(Object.keys(r).some(key=>!allowed.includes(key)))throw Error("Unknown "+label+" field");
+  return r;
 }
-function str(v:unknown,label:string,max:number,required=false):string{
- if(typeof v!=="string"||v.length>max||(required&&!v.trim())||
-   /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/u.test(v))throw Error("Invalid "+label);
- return v;
+function list(v:unknown,max:number):unknown[]{
+  if(!Array.isArray(v)||v.length>max)throw Error("Rich array limit");
+  return v;
 }
-function arr(v:unknown,label:string,max:number):unknown[]{
- if(!Array.isArray(v)||v.length>max)throw Error("Invalid "+label);
- return v;
+function field(v:unknown,max:number,required=false):string{
+  if(typeof v!=="string"||v.length>max||(required&&!v.trim())||
+    /[\u0000-\u001f\u007f]/u.test(v))throw Error("Invalid rich text field");
+  return v;
 }
-function frozen<T>(v:T):T{
- if(v&&typeof v==="object"){
-   for(const child of Object.values(v))frozen(child);
-   Object.freeze(v);
- }
- return v;
+function freezeDeep<T>(v:T):T{
+  if(v&&typeof v==="object"){
+    for(const child of Object.values(v))freezeDeep(child);
+    Object.freeze(v);
+  }
+  return v;
 }
-/** Normalizes, clones and freezes. Rejects every unknown property, HTML and URL. */
-export function validateRichDocument(input:unknown,options:RichValidationOptions={}):RichDocument{
- const source=obj(input,["format","version","blocks"],"rich document");
- if(source.format!=="practice-desk-rich"||source.version!==1)
-   throw Error("Unsupported rich document version");
- const rawBlocks=arr(source.blocks,"rich blocks",L.maxBlocks);
- let nodes=0,characters=0,visible=false;
- const count=(value:string)=>{
-   nodes++;
-   characters+=value.length;
-   if(nodes>L.maxNodes||characters>L.maxCharacters)throw Error("Rich document budget exceeded");
-   if(value.trim())visible=true;
- };
- const localImage=(s:Record<string,unknown>)=>{
-   const assetId=str(s.assetId,"local image ID",128,true);
-   if(!/^[\w.:-]+$/u.test(assetId)||!options.knownAssetIds?.has(assetId))
-     throw Error("Image must reference a verified local asset ID");
-   const altText=str(s.altText,"image alt text",L.maxAlt,true);
-   count(altText);
-   return {assetId,altText};
- };
- const math=(s:Record<string,unknown>)=>{
-   const tex=str(s.tex,"explicit TeX",L.maxTex,true);
-   const linearText=str(s.linearText,"accessible math text",L.maxAlt,true);
-   count(tex);count(linearText);
-   return {tex,linearText};
- };
- const inline=(value:unknown):RichInline=>{
-   const s=obj(value,["type","text","marks","tex","linearText","assetId","altText"],"inline");
-   if(s.type==="text"){
-     obj(value,["type","text","marks"],"text inline");
-     const text=str(s.text,"inline text",L.maxText);
-     const marks=s.marks===undefined?[]:arr(s.marks,"text marks",MARKS.length);
-     if(marks.some(x=>!MARKS.includes(x as RichMark))||new Set(marks).size!==marks.length)
-       throw Error("Unsupported or duplicate text marks");
-     count(text);
-     const normalized=[...marks] as RichMark[];
-     normalized.sort((a,b)=>MARKS.indexOf(a)-MARKS.indexOf(b));
-     return normalized.length?{type:"text",text,marks:normalized}:{type:"text",text};
-   }
-   if(s.type==="math"){
-     obj(value,["type","tex","linearText"],"math inline");
-     return {type:"math",...math(s)};
-   }
-   if(s.type==="image"){
-     obj(value,["type","assetId","altText"],"image inline");
-     return {type:"image",...localImage(s)};
-   }
-   throw Error("Unknown rich inline type");
- };
- const sequence=(value:unknown):readonly RichInline[]=>
-   arr(value,"inline sequence",L.maxNodes).map(inline);
- const blocks=rawBlocks.map(value=>{
-   const s=obj(value,["type","content","level","ordered","items","rows","tex","linearText","assetId","altText"],"block");
-   if(++nodes>L.maxNodes)throw Error("Rich document budget exceeded");
-   switch(s.type){
-     case "paragraph":
-       obj(value,["type","content"],"paragraph");
-       return {type:"paragraph",content:sequence(s.content)};
-     case "heading":
-       obj(value,["type","level","content"],"heading");
-       if(s.level!==2&&s.level!==3)throw Error("Invalid heading level");
-       return {type:"heading",level:s.level,content:sequence(s.content)};
-     case "list":
-       obj(value,["type","ordered","items"],"list");
-       if(typeof s.ordered!=="boolean")throw Error("Invalid list ordering");
-       return {type:"list",ordered:s.ordered,items:
-         arr(s.items,"list items",L.maxListItems).map(sequence)};
-     case "table":{
-       obj(value,["type","rows"],"table");
-       const rows=arr(s.rows,"table rows",L.maxTableRows).map(row=>
-         arr(row,"table cells",L.maxTableColumns).map(sequence));
-       const width=rows[0]?.length??0;
-       if(!width||rows.some(row=>row.length!==width))throw Error("Invalid table rectangle");
-       return {type:"table",rows};
-     }
-     case "display-math":
-       obj(value,["type","tex","linearText"],"display math");
-       return {type:"display-math",...math(s)};
-     case "image":
-       obj(value,["type","assetId","altText"],"block image");
-       return {type:"image",...localImage(s)};
-     default:throw Error("Unknown rich block type");
-   }
- }) as RichBlock[];
- if(options.requireNonempty&&!visible)throw Error("Publishable rich content is empty");
- return frozen({format:"practice-desk-rich",version:1,blocks});
+export function validateRichDocument(input:unknown,opts:RichValidationOptions={}):RichDocument{
+  const r=record(input,["format","version","blocks"],"document");
+  if(r.format!=="practice-desk-rich"||r.version!==1)throw Error("Unsupported rich format");
+  let nodes=0,total=0;
+  const charge=(n:number):void=>{
+    if(++nodes>RICH_LIMITS.nodes||(total+=n)>RICH_LIMITS.textBytes)
+      throw Error("Rich document budget exceeded");
+  };
+  const math=(v:Record<string,unknown>)=>{
+    const tex=field(v.tex,RICH_LIMITS.tex,true);
+    const linearText=field(v.linearText,RICH_LIMITS.alt,true);
+    charge(tex.length+linearText.length);
+    return {tex,linearText};
+  };
+  const asset=(v:Record<string,unknown>)=>{
+    const assetId=field(v.assetId,128,true),altText=field(v.altText,RICH_LIMITS.alt,true);
+    if(!/^[A-Za-z0-9_.:-]+$/u.test(assetId)||!opts.knownAssets?.has(assetId))
+      throw Error("Unverified image asset reference");
+    charge(assetId.length+altText.length);
+    return {assetId,altText};
+  };
+  const inline=(v:unknown):RichInline=>{
+    const i=record(v,["type","text","marks","tex","linearText","assetId","altText"],"inline");
+    if(i.type==="text"){
+      record(v,["type","text","marks"],"text");
+      const text=field(i.text,RICH_LIMITS.eachText);
+      const raw=i.marks===undefined?[]:list(i.marks,marks.length);
+      if(raw.some(m=>!marks.includes(m as RichMark))||new Set(raw).size!==raw.length)
+        throw Error("Invalid text marks");
+      const ordered=(raw as RichMark[]).slice().sort((a,b)=>marks.indexOf(a)-marks.indexOf(b));
+      charge(text.length);
+      return ordered.length?{type:"text",text,marks:ordered}:{type:"text",text};
+    }
+    if(i.type==="math"){record(v,["type","tex","linearText"],"math");return {type:"math",...math(i)};}
+    if(i.type==="image"){record(v,["type","assetId","altText"],"image");return {type:"image",...asset(i)};}
+    throw Error("Unknown inline type");
+  };
+  const content=(v:unknown):RichInline[]=>list(v,RICH_LIMITS.nodes).map(inline);
+  const blocks=list(r.blocks,RICH_LIMITS.blocks).map(value=>{
+    const b=record(value,["type","content","level","ordered","items","rows","tex","linearText","assetId","altText"],"block");
+    charge(0);
+    if(b.type==="paragraph"){record(value,["type","content"],"paragraph");return {type:"paragraph",content:content(b.content)};}
+    if(b.type==="heading"){
+      record(value,["type","level","content"],"heading");
+      if(b.level!==2&&b.level!==3)throw Error("Heading level");
+      return {type:"heading",level:b.level,content:content(b.content)};
+    }
+    if(b.type==="list"){
+      record(value,["type","ordered","items"],"list");
+      if(typeof b.ordered!=="boolean")throw Error("List ordering");
+      return {type:"list",ordered:b.ordered,items:list(b.items,RICH_LIMITS.listItems).map(content)};
+    }
+    if(b.type==="table"){
+      record(value,["type","rows"],"table");
+      const rows=list(b.rows,RICH_LIMITS.tableRows).map(row=>list(row,RICH_LIMITS.tableColumns).map(content));
+      if(!rows[0]?.length||rows.some(row=>row.length!==rows[0]!.length))throw Error("Table shape");
+      return {type:"table",rows};
+    }
+    if(b.type==="display-math"){
+      record(value,["type","tex","linearText"],"display math");
+      return {type:"display-math",...math(b)};
+    }
+    if(b.type==="image"){
+      record(value,["type","assetId","altText"],"block image");
+      return {type:"image",...asset(b)};
+    }
+    throw Error("Unknown rich block");
+  }) as RichBlock[];
+  return freezeDeep({format:"practice-desk-rich",version:1,blocks});
 }
-/** Preserve every literal character, including Unicode and dollar symbols. */
 export function plainRichDocument(text:string):RichDocument{
- return validateRichDocument({format:"practice-desk-rich",version:1,
-   blocks:[{type:"paragraph",content:[{type:"text",text}]}]});
+  return validateRichDocument({format:"practice-desk-rich",version:1,
+    blocks:[{type:"paragraph",content:[{type:"text",text}]}]});
 }
-/** Deterministic serialized candidate for future content-hash construction. */
-export function canonicalRichDocument(input:unknown,options:RichValidationOptions={}):string{
- return JSON.stringify(validateRichDocument(input,options));
+export function canonicalRichDocument(value:unknown,opts:RichValidationOptions={}):string{
+  return JSON.stringify(validateRichDocument(value,opts));
 }

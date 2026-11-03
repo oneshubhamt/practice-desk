@@ -1,31 +1,19 @@
-/** P47-5A: application-owned ports. Vendor packages must not escape adapters. */
+/** Narrow P47-5A application-owned adapter contracts. No vendor imports. */
 import type {RichDocument} from "./rich-document.ts";
 export interface EditorSession{
- readDraft():RichDocument;
- replaceDraft(value:RichDocument):void;
- focus():void;
- dispose():void;
+  getDocument():RichDocument;
+  setDocument(doc:RichDocument):void;
+  focus():void;
+  destroy():void;
 }
 export interface AuthoringEditorPort{
- readonly provider:string;
- mount(options:{
-   readonly host:HTMLElement;
-   readonly draft:RichDocument;
-   readonly imageAssetIds:ReadonlySet<string>;
-   readonly onChange:(draft:RichDocument)=>void;
- }):Promise<EditorSession>;
+  readonly provider:string;
+  mount(target:HTMLElement,draft:RichDocument,
+    onChange:(doc:RichDocument)=>void,knownAssets:ReadonlySet<string>):Promise<EditorSession>;
 }
-export interface MathExpression{
- readonly tex:string;
- readonly linearText:string;
- readonly displayMode:boolean;
-}
-export interface MathRenderResult{
- /** HTML from a strictly configured trusted local renderer, not an author string. */
- readonly html:string;
- readonly accessibleText:string;
-}
+export type MathExpression={readonly tex:string;readonly linearText:string;readonly displayMode:boolean};
+export type MathMarkup={readonly html:string;readonly accessibleText:string};
 export interface MathRendererPort{
- readonly provider:string;
- render(value:MathExpression):MathRenderResult;
+  readonly provider:string;
+  render(input:MathExpression):MathMarkup;
 }
