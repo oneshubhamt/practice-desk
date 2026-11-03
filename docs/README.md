@@ -12,6 +12,8 @@
 
 **P47-5 CAT/PGDBA maths restored to plan, NOT IMPLEMENTED (D44):** [Approved root backlog](../backlog.md). At P47-5 the authoring/rendering/AT/security/size plan will be presented for explicit user approval before coding. No mathematical library installed in P47-2. [P47-0 baseline and complete staged programme](ENGINEERING_PROGRAMME.md#p47--source-audit-and-provisional-staged-refactor-plan-3-november-2026).
 
+**Latest P47-3 and P47-3B viewer/quality gate VERIFIED (3 Nov 2026):** [Five-job CI 41579895137](https://github.com/oneshubhamt/practice-desk/actions/runs/41579895137), **235/235 Node**, standalone source-verified `file://` viewer + WebP/diagram pre-import preparation independently passed in Chromium, Firefox and WebKit. Default diagram/math source bytes stay exact; photo WebP requires size+pixel gates and explicit visual approval before importing a hash-verified author image entry. P47-4 next; P47-5 CAT/PGDBA math design-gated; full P47-6 rewrite mandatory and still pending. [Canonical P47-3B ledger](ENGINEERING_PROGRAMME.md#p47-3b--pre-freeze-image-preparation-and-webp-safeguards-3-november-2026).
+
 ## Current engineering and verification
 
 - [**Current QA commands, all 13 browser capabilities, CI policy and open manual release gates**](QA_CURRENT.md)
