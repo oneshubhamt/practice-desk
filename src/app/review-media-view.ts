@@ -5,7 +5,7 @@ import type {CorrectAnswer} from "../domain/answer-key.js";
 import type {Verdict} from "../engine/scoring.ts";
 import {assetHTML,stimulusHTML} from "./question-content-view.ts";
 import {escapeText} from "./html-escape.ts";
- export function frozenReviewMedia(saved:GenericAttempt,q:QuestionRevision,
+export function frozenReviewMedia(saved:GenericAttempt,q:QuestionRevision,
     response?:CandidateResponse,answer?:CorrectAnswer,verdict?:Verdict):string{
    const frozen=saved.frozen;
    const display:ExamPackage={format:"practice-desk-exam",version:1,
@@ -56,7 +56,7 @@ import {escapeText} from "./html-escape.ts";
        '<div><span>'+escapeText(item.text)+assetHTML(display,item.assetIds,"Image for matching item "+item.text)+'</span></div>').join("")+'</div>':"";
    return passage+promptAssets+options+booleanOptions+matches;
  }
- export function sourceReviewHTML(saved:GenericAttempt,target:QuestionRevision,
+export function sourceReviewHTML(saved:GenericAttempt,target:QuestionRevision,
    ref:NonNullable<GenericAttempt["sourceReviewReference"]>|null):string{
    const entry=ref?.entries.find(item=>item.targetQuestionRevisionId===target.id);
    if(!ref||!entry)return "";

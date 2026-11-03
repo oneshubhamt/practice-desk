@@ -28,8 +28,7 @@ export function examTimeRemaining(paper:ExamPackage["paper"],state:GenericAttemp
 export function renderModelExam(
  attempt:Pick<GenericAttempt,"state"|"frozen"|"packageId">,
  bundle:ExamPackage|undefined,warning="",
- draft?:{readonly questionId:string;readonly optionIds:readonly OptionId[];readonly message:string}
-,
+ draft?:{readonly questionId:string;readonly optionIds:readonly OptionId[];readonly message:string},
  view:Readonly<{focused:boolean}>={focused:false}
 ):string {
    const paper=attempt.frozen.paper, state=attempt.state;

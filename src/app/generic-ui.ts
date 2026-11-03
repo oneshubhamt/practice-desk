@@ -1,6 +1,6 @@
 import {escapeText} from "./html-escape.ts";
 import {minutes,readablePracticeMode,examTimeRemaining,renderModelExam} from "./exam-view.ts";
-import {validateGenericStoredRecord,isAttempt,isPackage,isLearning,type PackageRecord,type RecordItem} from "./stored-record-validator.ts";
+import {validateGenericStoredRecord,isAttempt,isPackage,isLearning,type RecordItem} from "./stored-record-validator.ts";
 import {frozenReviewMedia,sourceReviewHTML} from "./review-media-view.ts";
 import { builtinCglPackages, configureCglPractice, configureUntimedPractice, validateExamPackage, startGenericAttempt, transitionGenericAttempt, readableAnswer } from "./exam-package.ts";
 import type { ExamPackage, GenericAttempt, CglPracticeMode } from "./exam-package.ts";
@@ -41,10 +41,6 @@ import { examFamilyCatalog,familyIdFor,pairedEdition,BUILTIN_CGL_FAMILY } from "
 import { importAuthoredExam, APFC_NAT_BANK_TEMPLATE } from "./bank-import.ts";
 import { createScreenRenderer } from "./screen-renderer.ts";
 import { createNativeRouter, type AppRoute, type RouteContext, type NativeRouter } from "./navigation.ts";
-
-
-
-
 
 
 let builtinCache:{
