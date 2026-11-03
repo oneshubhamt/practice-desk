@@ -301,7 +301,7 @@ export function createQuestionAuthoringStudio():AuthoringStudioController{
   // backgrounds even at higher stylesheet specificity. Inline only our own
   // secondary buttons, using the theme variable so live theme changes track.
   container.querySelectorAll<HTMLButtonElement>(".pd-author-studio button.btn:not(.primary)")
-   .forEach(button=>button.style.setProperty("background-color","var(--panel)","important"));
+   .forEach(button=>button.style.setProperty("background","var(--panel)","important"));
   const find=<T extends HTMLElement>(id:string)=>container.querySelector<T>("#"+id)!;
   const click=(id:string,handler:()=>void)=>{find<HTMLButtonElement>(id).onclick=handler;};
   click("pd-author-close",()=>close());
