@@ -9,6 +9,10 @@ import type { AnswerKeyEntry } from "../domain/answer-key.js";
 import type { SectionDefinition, PaperEdition, PaperRevision } from "../domain/exam.js";
 import type { ExamId, PaperId, PaperRevisionId, QuestionRevisionId, QuestionId, OptionId, SectionId, AnswerKeyRevisionId } from "../domain/ids.js";
 import { questionRevisionHash,answerKeyRevisionHash,paperRevisionHash } from "../domain/integrity.ts";
+import { sha256 } from "../domain/hash.ts";
+import { validateMediaInventory } from "../domain/media.ts";
+import type { ImageAsset } from "../domain/question.js";
+import type { AssetId } from "../domain/ids.js";
 
 type Input=Record<string,unknown>;
 function obj(value:unknown,name:string):Input{
@@ -62,6 +66,35 @@ export function importSimpleQuestionBank(value:unknown):ExamPackage{
  const rawQuestions=bank["questions"];
  if(!Array.isArray(rawQuestions)||rawQuestions.length===0||rawQuestions.length>2000)
    throw Error("Bank must have 1–2000 questions");
+ // Optional authored image inventory. This is an UNHASHED authoring envelope:
+ // calculate the correct asset SHA before building verified question revisions.
+ // Never silently optimize a fully signed/frozen exam package.
+ const incomingMedia=bank["media"]??[];
+ if(!Array.isArray(incomingMedia)||incomingMedia.length>1000)
+   throw Error("Simple bank media must be an array of at most 1000 image objects");
+ const assets:ImageAsset[]=incomingMedia.map((value,i)=>{
+   const m=obj(value,"media["+(i+1)+"]");
+   if(Object.keys(m).some(x=>!["id","dataUri","altText"].includes(x)))
+     throw Error("Simple bank media objects allow only id, dataUri and altText");
+   const id=key(m["id"],"media["+(i+1)+"].id") as AssetId;
+   const uri=str(m["dataUri"],"media["+(i+1)+"].dataUri",14*1024*1024);
+   const match=/^data:(image\/(?:png|jpeg|webp|avif|gif));base64,([A-Za-z0-9+/]+={0,2})$/.exec(uri);
+   if(!match)throw Error("Unsupported or malformed embedded image in media "+id);
+   const bytes=Uint8Array.from(atob(match[2]!),c=>c.charCodeAt(0));
+   const alt=m["altText"]===undefined?undefined:str(m["altText"],"media["+(i+1)+"].altText",500);
+   return {id,dataUri:uri,mediaType:match[1]! as ImageAsset["mediaType"],
+     contentHash:sha256(bytes) as ImageAsset["contentHash"],...(alt?{altText:alt}:{})};
+ });
+ validateMediaInventory([],assets);
+ const mediaIds=new Set(assets.map(a=>a.id as string));
+ const imageIds=(value:unknown,location:string):AssetId[]=>{
+   if(value===undefined)return [];
+   if(!Array.isArray(value)||value.length>100)throw Error(location+" requires an image ID array");
+   const ids=value.map((id,i)=>key(id,location+"["+(i+1)+"]") as AssetId);
+   if(new Set(ids).size!==ids.length||ids.some(id=>!mediaIds.has(id)))
+     throw Error(location+" contains an unknown or repeated image ID");
+   return ids;
+ };
  const paperId=("bank:"+bankId) as PaperId;
  const qIds=new Set<string>();
  const sections=new Map<string,{title:string;ids:QuestionRevisionId[]}>();
@@ -77,18 +110,27 @@ export function importSimpleQuestionBank(value:unknown):ExamPackage{
    const prompt=str(q["question"]??q["prompt"],prefix+".question",20000);
    const kind=q["type"]??"mcq";
    const qid=(paperId+":q:"+id+":r"+revision) as QuestionRevisionId;
+   const questionImages=imageIds(q["imageIds"],prefix+".imageIds");
    let content:QuestionRevision["content"];
    let answer:AnswerKeyEntry["answer"];
    if(kind==="mcq"||kind==="single-choice"){
      const rawOptions=q["options"];
      if(!Array.isArray(rawOptions)||rawOptions.length<2||rawOptions.length>26)
        throw Error(prefix+" requires 2–26 answer options");
+     const rawOptionImages=q["optionImageIds"];
+     if(rawOptionImages!==undefined&&
+       (!Array.isArray(rawOptionImages)||rawOptionImages.length!==rawOptions.length))
+       throw Error(prefix+".optionImageIds must align with the answer options");
      const options=rawOptions.map((option:unknown,i:number)=>({
-       id:LETTERS[i]! as OptionId,text:str(option,prefix+".options["+(i+1)+"]",5000)}));
+       id:LETTERS[i]! as OptionId,text:str(option,prefix+".options["+(i+1)+"]",5000),
+       ...(rawOptionImages===undefined?{}:
+         {assetIds:imageIds((rawOptionImages as unknown[])[i]??[],
+           prefix+".optionImageIds["+(i+1)+"]")})
+     }));
      const letter=str(q["answer"],prefix+".answer",1).toUpperCase();
      ensure(LETTERS.indexOf(letter)>=0&&LETTERS.indexOf(letter)<options.length,
        prefix+" answer must be one of its option letters");
-     content={kind:"single-choice",prompt,options};
+     content={kind:"single-choice",prompt,options,...(questionImages.length?{assetIds:questionImages}:{})};
      answer={kind:"single-choice",optionId:letter as OptionId};
    }else if(kind==="nat"||kind==="numeric-entry"){
      const values=Array.isArray(q["answer"])?q["answer"]:[q["answer"]];
@@ -96,7 +138,7 @@ export function importSimpleQuestionBank(value:unknown):ExamPackage{
      const acceptedValues=values.map((v,i)=>number(v,prefix+".answer["+(i+1)+"]"));
      const tolerance=number(q["tolerance"]??0,prefix+".tolerance");
      ensure(tolerance>=0&&tolerance<=1000000,"NAT tolerance out of range");
-     content={kind:"numeric-entry",prompt,numericRules:{allowNegative:true}};
+     content={kind:"numeric-entry",prompt,numericRules:{allowNegative:true},...(questionImages.length?{assetIds:questionImages}:{})};
      answer={kind:"numeric-entry",acceptedValues,absoluteTolerance:tolerance};
    }else throw Error(prefix+" unsupported simple-bank type: use mcq or nat (full exam JSON supports all six kinds)");
    const editorial={status:"verified" as const};
@@ -133,7 +175,7 @@ export function importSimpleQuestionBank(value:unknown):ExamPackage{
  };
  const paper:PaperRevision={...paperBase,contentHash:paperRevisionHash(paperBase)};
  const packageValue={format:"practice-desk-exam" as const,version:1 as const,
-  examId:examId as ExamId,title,questions,answerKey,paper,explanations};
+  examId:examId as ExamId,title,questions,answerKey,paper,explanations,...(assets.length?{assets}:{})};
  return validateExamPackage(packageValue);
 }
 
