@@ -23,8 +23,8 @@ import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
 import { createLearningDesk } from "./learning-ui.ts";
 import { makeRevisionPackage,createNotebookLineage } from "../learning/revision-test.ts";
 import { questionSpeed } from "../learning/question-analytics.ts";
-import { historyHTML,healthSummary,type StorageHealth } from "./history-page.ts";
-import {DEFAULT_HISTORY_QUERY,restoreHistoryQuery,type HistoryQuery} from "./history-query.ts";
+import { historyHTML,historyRowsHTML,healthSummary,type StorageHealth } from "./history-page.ts";
+import {DEFAULT_HISTORY_QUERY,restoreHistoryQuery,filteredHistory,historyQueryError,activeHistoryFilterCount,type HistoryQuery} from "./history-query.ts";
 import {backupDownload,readBackupFile} from "../history/backup-file.ts";
 import {SHARED_DB_NAME,ATTEMPTS_STORE,SNAPSHOTS_STORE,compactAttempt,expandAttempt,
  isSharedAttempt,verifiedSnapshot,reconstructRecords,pruneSharedSnapshots} from "../history/shared-store.ts";
@@ -1025,8 +1025,38 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    if(view==="learning")return;
    if(view==="history"){
      root.querySelector<HTMLButtonElement>("#g-library")!.onclick=()=>go({screen:"library"});
-     const setFilter=(patch:Partial<HistoryQuery>)=>
-       changeHistoryQuery({...historyQuery,...patch});
+     // Filter edits keep #app, controls, and all-time metrics mounted.
+     const bindHistoryRows=():void=>{
+       root.querySelectorAll<HTMLButtonElement>("[data-delete]").forEach(b=>b.onclick=()=>{void removeSavedAttempt(b.dataset.delete??"","completed");});
+       root.querySelectorAll<HTMLButtonElement>("[data-discard]").forEach(b=>b.onclick=()=>{void removeSavedAttempt(b.dataset.discard??"","discard-unfinished");});
+       root.querySelectorAll<HTMLButtonElement>("[data-attempt]").forEach(b=>b.onclick=()=>openSaved(b.dataset.attempt??""));
+     };
+     const refreshHistoryRows=():void=>{
+       const attempts=[...records.values()].filter(isAttempt);
+       const visible=filteredHistory(attempts,packages,historyQuery);
+       const results=root.querySelector<HTMLElement>("#g-history-records");
+       if(!results)return;
+       results.innerHTML=historyRowsHTML(visible,packages);
+       root.querySelector<HTMLElement>("#g-history-count")!.textContent=
+         visible.length+" of "+attempts.length+" records shown";
+       const count=activeHistoryFilterCount(historyQuery);
+       root.querySelector<HTMLElement>(".history-filter-footer .fine")!.textContent=
+         count+" active filter"+(count===1?"":"s")+
+         " · Dates use the local calendar day when each attempt started; both endpoints are inclusive.";
+       root.querySelector<HTMLButtonElement>("#g-history-reset")!.disabled=
+         count===0&&historyQuery.sort==="newest";
+       const error=historyQueryError(historyQuery);
+       let alert=root.querySelector<HTMLElement>("#g-history-filter-error");
+       if(error){if(!alert){alert=document.createElement("p");alert.id="g-history-filter-error";
+           alert.className="generic-warning";alert.setAttribute("role","alert");
+           root.querySelector(".history-filter-footer")!.after(alert);}
+         alert.textContent=error;
+       }else alert?.remove();
+       bindHistoryRows();
+     };
+     const setFilter=(patch:Partial<HistoryQuery>)=>{
+       changeHistoryQuery({...historyQuery,...patch},false);refreshHistoryRows();
+     };
      root.querySelector<HTMLSelectElement>("#g-filter")!.onchange=e=>
        setFilter({status:(e.target as HTMLSelectElement).value as HistoryQuery["status"]});
      root.querySelector<HTMLSelectElement>("#g-history-paper")!.onchange=e=>
@@ -1051,9 +1081,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        const file=(e.target as HTMLInputElement).files?.[0];if(!file)return;
        try{await importHistory(file);}catch(error){notice(error instanceof Error?error.message:"History import failed");}
      };
-     root.querySelectorAll<HTMLButtonElement>("[data-delete]").forEach(button=>button.onclick=()=>{void removeSavedAttempt(button.dataset.delete??"","completed");});
-     root.querySelectorAll<HTMLButtonElement>("[data-discard]").forEach(button=>button.onclick=()=>{void removeSavedAttempt(button.dataset.discard??"","discard-unfinished");});
-     root.querySelectorAll<HTMLButtonElement>("[data-attempt]").forEach(button=>button.onclick=()=>openSaved(button.dataset.attempt??""));
+     bindHistoryRows();
      root.querySelector<HTMLButtonElement>("#g-delete-completed")!.onclick=()=>{void deleteAllCompleted();};
      root.querySelector<HTMLButtonElement>("#g-storage-persist")!.onclick=()=>{void requestPersistentStorage();};
      void showStorageEstimate();

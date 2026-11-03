@@ -68,7 +68,14 @@ try{
  await page.locator("#g-history-mode").selectOption(importedAttempt.frozen.snapshot.mode);
  await page.locator("#g-filter").selectOption("complete");
  await page.locator("#g-history-paper").selectOption(importedAttempt.frozen.paper.id);
+ await page.evaluate(()=>{window.__p47Search=document.querySelector("#g-history-search");
+   window.__p47Summary=document.querySelector(".history-summary");
+   window.__p47RootChild=document.querySelector("#app")?.firstElementChild;});
  await page.locator("#g-history-search").fill("PGDBA");
+ check(await page.evaluate(()=>document.querySelector("#g-history-search")===window.__p47Search&&
+   document.querySelector(".history-summary")===window.__p47Summary&&
+   document.querySelector("#app")?.firstElementChild===window.__p47RootChild),
+   "Filter edit rebuilt History root or lost search identity");
  check(await count()===1,"composed exam/mode/status/paper/search did not intersect correctly");
  const actualDay=dateLocal(importedAttempt.startedAt);
  await page.locator("#g-history-from").fill(actualDay);
