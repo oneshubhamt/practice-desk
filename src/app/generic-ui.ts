@@ -1,38 +1,39 @@
+import {escapeText} from "./html-escape.ts";
+import {minutes,readablePracticeMode,examTimeRemaining,renderModelExam} from "./exam-view.ts";
+import {validateGenericStoredRecord,isAttempt,isPackage,isLearning,type PackageRecord,type RecordItem} from "./stored-record-validator.ts";
+import {frozenReviewMedia,sourceReviewHTML} from "./review-media-view.ts";
 import { builtinCglPackages, configureCglPractice, configureUntimedPractice, validateExamPackage, startGenericAttempt, transitionGenericAttempt, readableAnswer } from "./exam-package.ts";
 import type { ExamPackage, GenericAttempt, CglPracticeMode } from "./exam-package.ts";
-import type { QuestionRevision, CandidateResponse } from "../domain/question.js";
+import type { QuestionRevision } from "../domain/question.js";
 import type { QuestionRevisionId,OptionId } from "../domain/ids.js";
 import type { SessionEvent } from "../engine/session.ts";
-import { validateSectionTimingEvidence, sectionTimerDuration } from "../engine/session.ts";
-import { restoreSession, chooseRecovered, assertFrozenContent } from "../history/frozen.ts";
+
+import { restoreSession, chooseRecovered } from "../history/frozen.ts";
 import { createSessionClock } from "../engine/clock.ts";
 import { scoreAttempt } from "../engine/scoring.ts";
-import { manualGradeLimit, manualGradeSummary, setManualGrade, validateManualGrades } from "../engine/manual-grading.ts";
-import { createSourceKeyReference,sourceKeyScore,validateSourceKeyReference } from "../engine/source-comparison.ts";
-import { composePracticeSet,practiceInventory,validatePracticeComposition } from "./practice-compose.ts";
-import { createSourceReviewReference,validateSourceReviewReference } from "../engine/review-source.ts";
+import { manualGradeLimit, manualGradeSummary, setManualGrade } from "../engine/manual-grading.ts";
+import { createSourceKeyReference,sourceKeyScore } from "../engine/source-comparison.ts";
+import { composePracticeSet,practiceInventory } from "./practice-compose.ts";
+import { createSourceReviewReference } from "../engine/review-source.ts";
 import { scoreableMaximum, scoreableLowerBound, sectionScoreSummaries } from "../engine/score-ceiling.ts";
-import type { CorrectAnswer } from "../domain/answer-key.js";
-import type { Verdict } from "../engine/scoring.ts";
 import { serializeVerifiedBackup, verifyBackup, planBackupMerge } from "../history/backup.ts";
-import { validateResponse } from "../engine/response.ts";
 import { assertWriteVersion, nextWriteVersion } from "../history/concurrency.ts";
 import { assertDeletionAllowed, deletionWarning, type DeletionIntent } from "../history/deletion-policy.ts";
 import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
 import { createLearningDesk } from "./learning-ui.ts";
-import { makeRevisionPackage,createNotebookLineage,validateNotebookLineage } from "../learning/revision-test.ts";
+import { makeRevisionPackage,createNotebookLineage } from "../learning/revision-test.ts";
 import { questionSpeed } from "../learning/question-analytics.ts";
 import { historyHTML,healthSummary,type HistorySort,type HistoryStatus,type StorageHealth } from "./history-page.ts";
 import {backupDownload,readBackupFile} from "../history/backup-file.ts";
 import {SHARED_DB_NAME,ATTEMPTS_STORE,SNAPSHOTS_STORE,compactAttempt,expandAttempt,
- isSharedAttempt,verifiedSnapshot,reconstructRecords,isVerifiedSharedFrozen,pruneSharedSnapshots} from "../history/shared-store.ts";
+ isSharedAttempt,verifiedSnapshot,reconstructRecords,pruneSharedSnapshots} from "../history/shared-store.ts";
 import type {SharedSnapshot,SlimAttempt} from "../history/shared-store.ts";
 import { frozenScoreSummary } from "./history-score.ts";
 import { editorialStatusLabel } from "./editorial-labels.ts";
 import { multipleDraftMessage,duplicateMatchingTargets } from "./response-drafts.ts";
 import { examPreflight,preflightHTML,examRulesHTML } from "./exam-preflight.ts";
 import { reviewMatch, reviewFiltersHTML, resultTabsHTML, timingLedgerHTML, resultInsightsHTML, type ResultTab, type ReviewFilter } from "./result-presentation.ts";
-import { addLearningCard, validateLearningCard } from "../learning/learning.ts";
+import { addLearningCard } from "../learning/learning.ts";
 import type { LearningCard } from "../learning/learning.ts";
 import { readDisplayPreferences, writeDisplayPreferences, SETTINGS_EVENT } from "./preferences.ts";
 import { readPracticeSetups,writePracticeSetups,type PracticeSetups } from "./practice-selection.ts";
@@ -41,323 +42,9 @@ import { importAuthoredExam, APFC_NAT_BANK_TEMPLATE } from "./bank-import.ts";
 import { createScreenRenderer } from "./screen-renderer.ts";
 import { createNativeRouter, type AppRoute, type RouteContext, type NativeRouter } from "./navigation.ts";
 
-const escapeText=(s:unknown):string=>String(s??"").replace(/[&<>"']/g,c=>
-  ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" })[c]??c);
-/** Human-readable view of a frozen practice mode; do not alter persistence. */
-export function readablePracticeMode(mode:string):string{
- switch(mode){
-  case "exam-simulation": return "Exam simulation";
-  case "full-paper-practice": return "Full paper · flexible navigation";
-  case "section-practice": return "Single-section practice";
-  case "custom-practice": return "Custom practice";
-  default: return mode.replaceAll("-"," ");
- }
-}
-const minutes=(ms:number):string=>{
-  const sec=Math.ceil(Math.max(0,ms)/1000);
-  return Math.floor(sec/60).toString().padStart(2,"0")+":"+(sec%60).toString().padStart(2,"0");
-};
-export function examTimeRemaining(paper:ExamPackage["paper"],state:GenericAttempt["state"]):number|null{
-  if(paper.timing.kind==="untimed")return null;
-  if(paper.timing.kind==="whole-paper")return Math.max(0,paper.timing.durationMs-state.elapsedMs);
-  const id=paper.sections[state.sectionIndex]?.id;
-  const limit=paper.timing.sectionLimits.find(s=>s.sectionId===id)?.durationMs;
-  return limit==null?null:Math.max(0,limit-state.sectionElapsedMs);
-}
-function assetHTML(bundle:ExamPackage,ids:readonly string[]|undefined,fallbackAlt="Question figure"):string{
-  return (ids??[]).map(id=>{
-    const a=bundle.assets?.find(x=>x.id===id);
-    // Author-supplied descriptions win; context is only a fallback when
-    // imported media has no explicit alt text.
-    return a?'<img class="generic-figure" src="'+escapeText(a.dataUri)+'" alt="'+escapeText(a.altText??fallbackAlt)+'">':"";
-  }).join("");
-}
-export function renderGenericControls(bundle:ExamPackage,q:QuestionRevision,response?:CandidateResponse):string{
-  const c=q.content;
-  if(c.kind==="single-choice"||c.kind==="multiple-select"){
-    const selected=response?.kind==="single-choice"?[response.optionId]:response?.kind==="multiple-select"?response.optionIds:[];
-    const kind=c.kind==="single-choice"?"radio":"checkbox";
-    return '<fieldset class="generic-choices"><legend>'+ (kind==="radio"?"Select one option":"Select applicable options")+'</legend>'+
-      c.options.map((o,i)=>'<label class="generic-choice"><input type="'+kind+'" name="generic-answer" data-choice="'+escapeText(o.id)+'"'+
-        (selected.includes(o.id)?" checked":"")+'><span><b>'+String.fromCharCode(65+i)+'.</b> '+escapeText(o.text)+assetHTML(bundle,o.assetIds,"Image for option "+String.fromCharCode(65+i))+'</span></label>').join("")+
-      '</fieldset>';
-  }
-  if(c.kind==="true-false")return '<fieldset class="generic-choices"><legend>Choose a response</legend>'+
-    [true,false].map(value=>'<label class="generic-choice"><input type="radio" name="generic-boolean" data-bool="'+value+'"'+
-     (response?.kind==="true-false"&&response.value===value?" checked":"")+'><span>'+(value?"True":"False")+'</span></label>').join("")+'</fieldset>';
-  if(c.kind==="numeric-entry")return '<label class="picker" for="g-number">Numeric answer</label><input type="number" step="any" id="g-number"'+
-    (c.numericRules.minimum!==undefined?' min="'+c.numericRules.minimum+'"':"")+
-    (c.numericRules.maximum!==undefined?' max="'+c.numericRules.maximum+'"':"")+
-    ' value="'+(response?.kind==="numeric-entry"?escapeText(response.value):"")+'"><button class="btn primary" id="g-save">Save answer</button>';
-  if(c.kind==="free-response")return '<label class="picker" for="g-text">Written response</label><textarea id="g-text" rows="6">'+
-    (response?.kind==="free-response"?escapeText(response.text):"")+'</textarea><button class="btn primary" id="g-save">Save response</button>';
-  const pairs=response?.kind==="matching"?response.pairs:[];
-  return '<div class="generic-matches">'+c.leftItems.map(left=>'<label><span>'+escapeText(left.text)+assetHTML(bundle,left.assetIds,"Image for matching item "+left.text)+'</span><select data-match="'+escapeText(left.id)+'"><option value="">Not matched</option>'+
-    c.rightItems.map(right=>'<option value="'+escapeText(right.id)+'"'+
-      (pairs.some(p=>p.leftId===left.id&&p.rightId===right.id)?" selected":"")+'>'+escapeText(right.text)+'</option>').join("")+
-    '</select></label>').join("")+'</div>'+
-    '<p class="generic-inline-warning" id="g-match-feedback" role="status" aria-live="polite" aria-atomic="true"></p>'+
-    '<button class="btn primary" id="g-save">Save matches</button>';
-}
-function stimulusHTML(bundle:ExamPackage,q:QuestionRevision):string{
- const stimulus=bundle.stimuli?.find(s=>s.id===q.content.stimulusId);
- if(!stimulus)return "";
- if(stimulus.kind==="passage"||stimulus.kind==="case")
-   return '<section class="generic-stimulus" role="region" tabindex="0" aria-label="'+
-     escapeText((stimulus.title||(stimulus.kind==="case"?"Case study":"Reading passage"))+
-       " — scroll to read full text")+'"><b>'+escapeText(stimulus.title||"Reading passage")+
-     '</b><p>'+escapeText(stimulus.text)+'</p>'+
-     assetHTML(bundle,stimulus.assetIds,"Image accompanying "+(stimulus.title||"reading passage"))+'</section>';
- if(stimulus.kind==="table")return '<section class="generic-stimulus"><b>'+escapeText(stimulus.title||"Table")+'</b><div class="scroll-table"><table><tr>'+
-   stimulus.columns.map(c=>'<th>'+escapeText(c)+'</th>').join("")+'</tr>'+
-   stimulus.rows.map(r=>'<tr>'+r.map(c=>'<td>'+escapeText(c)+'</td>').join("")+'</tr>').join("")+'</table></div></section>';
- if ("assetId" in stimulus) return '<section class="generic-stimulus">'+
-    assetHTML(bundle,[stimulus.assetId],stimulus.altText)+'<p>'+escapeText(stimulus.caption||stimulus.altText)+'</p></section>';
-  return "";
-}
-
-type PackageRecord={recordType:"generic-package";id:string;bundle:ExamPackage;saveRevision?:number};
-type RecordItem=PackageRecord|GenericAttempt|LearningCard;
-const isAttempt=(x:unknown):x is GenericAttempt=>!!x&&typeof x==="object"&&(x as GenericAttempt).recordType==="generic-attempt";
-const isPackage=(x:unknown):x is PackageRecord=>!!x&&typeof x==="object"&&(x as PackageRecord).recordType==="generic-package";
-const isLearning=(x:unknown):x is LearningCard=>!!x&&typeof x==="object"&&(x as LearningCard).recordType==="learning-card";
-
-/** Treat browser records and exported JSON as untrusted until their frozen inputs and responses validate. */
-export function validateGenericStoredRecord(value:unknown):RecordItem {
- if(value && typeof value==="object" && "saveRevision" in value){
-   const n=(value as {saveRevision:unknown}).saveRevision;
-   if(typeof n!=="number"||!Number.isSafeInteger(n)||n<0)
-     throw new Error("Invalid stored write revision");
- }
- if(isLearning(value))return validateLearningCard(value);
- if(isPackage(value)){
-   if(typeof value.id!=="string" || value.id!=="generic-package:"+value.bundle?.paper?.id)
-     throw new Error("Invalid imported package record identity");
-   validateExamPackage(value.bundle);
-   return value;
- }
- if(!isAttempt(value))throw new Error("Unsupported generic history record");
- if(typeof value.id!=="string"||!value.id||value.id.length>200||
-    typeof value.packageId!=="string"||
-    !Number.isFinite(value.startedAt)||!Number.isFinite(value.updatedAt)||
-    (value.finishedAt!==null&&!Number.isFinite(value.finishedAt))||
-    !value.state||!Array.isArray(value.state.responses)||
-    !Number.isFinite(value.state.clockMs)||
-    !Number.isInteger(value.state.sectionIndex)||!Number.isInteger(value.state.questionIndex))
-   throw new Error("Invalid generic attempt record");
- if(!isVerifiedSharedFrozen(value.frozen))assertFrozenContent(value.frozen);
- const paper=value.frozen.paper;
- if(value.packageId!==paper.id)throw new Error("Attempt references an incorrect revision");
- const current=paper.sections[value.state.sectionIndex]?.questionRevisionIds[value.state.questionIndex];
- if(!current)throw new Error("Attempt cursor references an unknown question");
- if(value.finishedAt!==null && value.state.status!=="completed")
-   throw new Error("Completed attempt has an unfinished session");
- if(value.finishedAt===null && value.state.status==="completed")
-   throw new Error("Unfinished attempt has a completed session");
- if(!["running","paused","section-expired","completed"].includes(value.state.status))
-   throw new Error("Invalid saved session status");
- validateSectionTimingEvidence(paper,value.state);
- if(value.state.status==="section-expired"){
-   if(paper.timing.kind!=="sectional"||paper.timing.transition!=="manual")
-     throw new Error("Expired-section state requires manual sectional timing");
-   const limit=paper.timing.sectionLimits.find(x=>x.sectionId===paper.sections[value.state.sectionIndex]?.id);
-   if(limit?.durationMs==null||value.state.sectionElapsedMs!==limit.durationMs)
-     throw new Error("Expired-section state must be exactly at its section time limit");
- }
- const questionMap=new Map(value.frozen.questions.map(q=>[q.id,q]));
- const allowed=new Set(paper.sections.flatMap(section=>section.questionRevisionIds));
- if(value.state.timingEvidenceVersion!==undefined&&value.state.timingEvidenceVersion!==1)
-   throw new Error("Invalid question timing evidence version");
- if(value.state.questionVisits!==undefined){
-   const visits=value.state.questionVisits;
-   if(!Array.isArray(visits)||visits.length===0||visits.length>allowed.size||
-      new Set(visits.map(row=>row?.questionRevisionId)).size!==visits.length||
-      visits.some(row=>!row||!allowed.has(row.questionRevisionId)||
-        !Number.isSafeInteger(row.count)||row.count<1||row.count>1000000))
-     throw new Error("Invalid saved question visit history");
- }
- const seen=new Set<string>();
- for(const row of value.state.responses){
-   if(!row || typeof row.questionRevisionId!=="string" ||
-      !allowed.has(row.questionRevisionId) || seen.has(row.questionRevisionId)||
-      !Number.isFinite(row.timeSpentMs)||row.timeSpentMs<0 ||
-      !Number.isInteger(row.answerChangeCount)||row.answerChangeCount<0)
-     throw new Error("Invalid saved response");
-   seen.add(row.questionRevisionId);
-   const first=row.firstVisitMs,pre=row.preFirstAnswerMs;
-   if((first!==undefined||pre!==undefined)&&
-      (value.state.timingEvidenceVersion!==1||first===undefined||pre===undefined||
-       !Number.isFinite(first)||!Number.isFinite(pre)||
-       first<0||pre<0||first>row.timeSpentMs||pre>row.timeSpentMs||
-       !Number.isSafeInteger(first)||!Number.isSafeInteger(pre)))
-     throw new Error("Invalid saved question timing phase evidence");
-   if(row.firstAnsweredAt!==undefined&&
-      (typeof row.firstAnsweredAt!=="string"||
-       !Number.isFinite(Date.parse(row.firstAnsweredAt))||
-       Date.parse(row.firstAnsweredAt)<value.startedAt||
-       Date.parse(row.firstAnsweredAt)>value.updatedAt))
-     throw new Error("Invalid saved first-answer timing");
-   if(row.response)validateResponse(questionMap.get(row.questionRevisionId)!,row.response);
-   if(value.state.timingEvidenceVersion===1&&row.firstAnsweredAt!==undefined){
-     const firstCommit=row.answerEvents?.find((x:{readonly at:string;readonly to?:unknown})=>x.to!==undefined);
-     if(!firstCommit||firstCommit.at!==row.firstAnsweredAt)
-       throw new Error("Inconsistent saved first-answer timing");
-   }
-   if(row.answerEvents!==undefined){
-     if(!Array.isArray(row.answerEvents)||row.answerEvents.length>1000)
-       throw new Error("Invalid saved answer revision history");
-     let previousEvent:typeof row.answerEvents[number]|undefined;
-     let previousTime=value.startedAt;
-     for(const event of row.answerEvents){
-       if(!event||typeof event.at!=="string"||!Number.isFinite(Date.parse(event.at))||
-          Date.parse(event.at)<previousTime||Date.parse(event.at)>value.updatedAt||
-          (!event.from&&!event.to))throw new Error("Invalid saved answer revision event");
-       if(event.from)validateResponse(questionMap.get(row.questionRevisionId)!,event.from);
-       if(event.to)validateResponse(questionMap.get(row.questionRevisionId)!,event.to);
-       if(previousEvent&&JSON.stringify(previousEvent.to??null)!==JSON.stringify(event.from??null))
-         throw new Error("Disconnected saved answer revision history");
-       previousTime=Date.parse(event.at);previousEvent=event;
-     }
-     if(previousEvent&&JSON.stringify(previousEvent.to??null)!==JSON.stringify(row.response??null))
-       throw new Error("Saved answer revision does not match final response");
-   }
- }
- if(value.finishedAt!==null){
-   if(!value.result)throw new Error("Completed attempt has no immutable score");
-   const recalculated=scoreAttempt(paper,value.frozen.key,value.frozen.questions,value.state.responses,
-     value.result.snapshot.calculatedAt);
-   const fields=["earnedMarks","positiveMarks","penaltyMarks","correctCount","incorrectCount","unansweredCount","excludedCount"] as const;
-   if(fields.some(field=>value.result!.snapshot[field]!==recalculated.snapshot[field])||
-      JSON.stringify(value.result.items)!==JSON.stringify(recalculated.items)||
-      typeof value.result.snapshot.calculatedAt!=="string"||
-      !Number.isFinite(Date.parse(value.result.snapshot.calculatedAt)))
-     throw new Error("Completed attempt score does not match its frozen inputs (summary or item verdict)");
- }
- validateManualGrades(value);
- validateSourceKeyReference(value);
- validateSourceReviewReference(value);
- if(value.completionReason!==undefined){
-   if(value.finishedAt===null||
-     !["time-expired","submitted","section-submitted"].includes(value.completionReason))
-     throw new Error("Invalid saved completion provenance");
- }
- validateNotebookLineage(value);
- validatePracticeComposition(value);
- return value;
-}
 
 
-export function renderModelExam(
- attempt:Pick<GenericAttempt,"state"|"frozen"|"packageId">,
- bundle:ExamPackage|undefined,warning="",
- draft?:{readonly questionId:string;readonly optionIds:readonly OptionId[];readonly message:string}
-):string {
-   const paper=attempt.frozen.paper, state=attempt.state;
-   const section=paper.sections[state.sectionIndex];
-   const id=section?.questionRevisionIds[state.questionIndex];
-   const q=attempt.frozen.questions.find(x=>x.id===id);
-   if(!section||!q)return '<p>Question unavailable</p>';
-   const responsesById=new Map(state.responses.map(row=>[row.questionRevisionId,row]));
-   const response=responsesById.get(q.id)?.response;
-   const currentDraft=draft?.questionId===q.id&&q.content.kind==="multiple-select"?draft:null;
-   const remaining=examTimeRemaining(paper,state);
-   const total=paper.sections.reduce((n,section)=>n+section.questionRevisionIds.length,0);
-   const answered=state.responses.filter(record=>record.response).length;
-   const timeLimit=paper.timing.kind==="whole-paper"?paper.timing.durationMs:
-     paper.timing.kind==="sectional"?paper.timing.sectionLimits.find(t=>t.sectionId===section.id)?.durationMs??null:null;
-   const elapsed=paper.timing.kind==="sectional"?state.sectionElapsedMs:state.elapsedMs;
-   const expired=state.status==="section-expired";
-   const lockedWhole=paper.timing.kind!=="sectional"&&paper.navigation.sectionNavigation==="sequential-locked";
-   const hasNextSection=state.sectionIndex < paper.sections.length-1;
-   const untimedSection=paper.timing.kind==="sectional"&&
-     paper.timing.sectionLimits.find(limit=>limit.sectionId===section.id)?.durationMs===null;
-   const progressValue=timeLimit!==null&&timeLimit>0?
-     Math.min(100,100*elapsed/timeLimit):Math.min(100,100*answered/Math.max(1,total));
-   const progressScope=timeLimit===null?"Question coverage":
-     paper.timing.kind==="whole-paper"?"Whole-paper timer":"Section timer";
-   const progressAccessibleName=timeLimit===null?"Questions answered":
-     paper.timing.kind==="whole-paper"?"Whole-paper time used":"Section time used";
-   const isLow=remaining!==null&&remaining<=60000;
-   const focused=typeof document!=="undefined"&&Boolean(
-     document.fullscreenElement||document.documentElement.classList.contains("immersive"));
-   const sectionAnswered=section.questionRevisionIds.filter(qid=>Boolean(responsesById.get(qid)?.response)).length;
-   const sectionFlagged=section.questionRevisionIds.filter(qid=>Boolean(responsesById.get(qid)?.flagged)).length;
 
-   const assets:ExamPackage={format:"practice-desk-exam",version:1,
-     examId:attempt.frozen.snapshot.examId,title:bundle?.title??"",paper,answerKey:attempt.frozen.key,
-     questions:attempt.frozen.questions,stimuli:attempt.frozen.stimuli,assets:attempt.frozen.assets};
-   return '<div class="generic-heading exam-header"><div><h1>'+escapeText(bundle?.title??paper.paperId)+'</h1>'+
-     '<p class="muted">'+escapeText(readablePracticeMode(attempt.frozen.snapshot.mode))+' · '+
-     escapeText(section.title)+' · Section '+(state.sectionIndex+1)+' of '+paper.sections.length+'</p></div>'+
-     '<div class="row exam-header-actions"><div class="exam-clock '+(isLow?"low":"")+'"><strong class="generic-timer" id="g-timer" role="timer">'+
-       (remaining===null?"Untimed":minutes(remaining))+'</strong><small>'+(remaining===null?"UNTIMED PRACTICE":
-        paper.timing.kind==="sectional"?"SECTION TIME LEFT":"PAPER TIME LEFT")+'</small></div>'+
-     '<button class="btn quiet" id="g-library">← Library</button>'+
-     '<button class="btn" type="button" id="g-exam-full" aria-label="Toggle full-screen test view" aria-pressed="'+
-     focused+'">'+(focused?"⛶ Exit full screen":"⛶ Full screen")+'</button></div></div>'+
-     '<p id="g-fullscreen-status" role="status"></p>'+
-     (warning?'<p class="generic-warning" role="status">'+escapeText(warning)+'</p>':"")+
-     (expired?'<p class="generic-warning" role="status">Section time has expired. Answers are locked. Select Continue to advance without using extra time.</p>':"")+
-     '<section class="exam-progress"><div class="progress-track exam-time-progress" role="progressbar" aria-valuenow="'+Math.round(progressValue)+
-        '" aria-valuemin="0" aria-valuemax="100" aria-label="'+progressAccessibleName+
-        '" aria-valuetext="'+escapeText(progressScope)+' '+Math.round(progressValue)+'%">'+
-         '<span style="width:'+progressValue.toFixed(1)+'%"></span></div></section>'+
-     '<div class="generic-sections" role="group" aria-label="Exam sections">'+paper.sections.map((s,i)=>{
-       const locked=state.status!=="running"||state.completedSections.includes(i)||
-         ((paper.timing.kind==="sectional"||paper.navigation.sectionNavigation==="sequential-locked")&&i!==state.sectionIndex);
-       const filled=s.questionRevisionIds.filter(qid=>Boolean(responsesById.get(qid)?.response)).length;
-       const status=state.completedSections.includes(i)?"Closed":
-         locked?"Locked":filled+" / "+s.questionRevisionIds.length+" answered";
-       return '<button class="btn exam-section-tab '+(i===state.sectionIndex?"primary":"")+'" data-section="'+i+'" aria-current="'+(i===state.sectionIndex?"step":"false")+'"'+(locked?" disabled":"")+'>'+
-         '<b>'+escapeText(s.title)+'</b><small>'+status+'</small></button>';
-     }).join("")+'</div><div class="generic-layout exam-grid"><section class="panel pad exam-question"><p class="eyebrow">'+
-     escapeText(section.title)+' · Question '+(state.questionIndex+1)+' of '+section.questionRevisionIds.length+
-     (attempt.frozen.snapshot.examId==="ssc-cgl"?
-       ' · Paper Q'+escapeText(q.questionId.split(":").at(-1)):"")+'</p>'+
-     stimulusHTML(assets,q)+'<h2 class="generic-prompt">'+escapeText(q.content.prompt)+'</h2>'+
-     assetHTML(assets,q.content.assetIds,"Figure for question "+(state.questionIndex+1))+
-     '<fieldset class="generic-response-group"'+(state.status!=="running"?" disabled":"")+'>'
-     +renderGenericControls(assets,q,currentDraft?{kind:"multiple-select",optionIds:currentDraft.optionIds}:response)+
-     (currentDraft?'<p class="generic-inline-warning" role="status">'+escapeText(currentDraft.message)+'</p>':"")+
-     '</fieldset>'+
-     '<div class="exam-question-controls">'+
-     '<div class="row generic-actions exam-nav-actions"><button class="btn" id="g-prev"'+(state.status!=="running"||!state.questionIndex||paper.navigation.questionNavigation==="forward-only"?" disabled":"")+'>← Previous</button>'+
-     '<button class="btn primary" id="g-next"'+(state.status!=="running"||state.questionIndex===section.questionRevisionIds.length-1?" disabled":"")+'>Next →</button></div>'+
-     '<div class="row generic-actions exam-answer-actions"><button class="btn" id="g-clear"'+(!response||state.status!=="running"?" disabled":"")+'>Clear</button>'+
-     '<button class="btn review-toggle" id="g-flag" aria-pressed="'+Boolean(responsesById.get(q.id)?.flagged)+'"'+(!paper.navigation.allowFlagging||expired?" disabled":"")+'>'+(responsesById.get(q.id)?.flagged?"Unmark":"Mark for review")+'</button></div>'+
-     '</div>'+
-     '<div class="row generic-actions exam-submit-actions">'+
-     (paper.timing.kind!=="untimed"&&paper.timing.pausePolicy==="allowed"?
-      '<button class="btn" id="g-pause"'+(expired?" disabled":"")+'>'+(state.status==="paused"?"Resume timer":"Pause timer")+'</button>':"")+
-     '<button class="btn danger" id="g-submit"'+(state.status==="paused"||
-       (paper.timing.kind==="sectional"&&!paper.timing.allowEarlySubmit&&!expired&&!untimedSection)?" disabled":"")+'>'+
-      (expired?(hasNextSection?"Continue to next section":"Finish expired exam"):
-        paper.timing.kind==="sectional"?(untimedSection?"Finish untimed section":"Submit section"):
-        lockedWhole&&hasNextSection?"Finish section →":"Submit exam")+'</button></div></section>'+
-     '<aside class="panel pad exam-sidebar" aria-label="Question navigator"><h3>Question navigator</h3>'+
-     '<p class="fine navigator-intro">Jump to a question in this section</p><div class="generic-palette">'+
-      section.questionRevisionIds.map((qid,i)=>{
-        const r=responsesById.get(qid);
-        const locked=state.status!=="running"||(paper.navigation.questionNavigation==="forward-only"&&i<state.questionIndex);
-        return '<button class="num '+(i===state.questionIndex?"here ":"")+(r?.response?"answered ":"")+
-        (r?.flagged?"marked":"")+'" data-q="'+i+'" aria-current="'+(i===state.questionIndex?"step":"false")+'" aria-label="Question '+(i+1)+
-        (r?.response?", answered":"")+(r?.flagged?", flagged":"")+'"'+(locked?" disabled":"")+'>'+(i+1)+'</button>';
-      }).join("")+'</div>'+
-      '<div class="navigator-stats" role="group" aria-label="Current section answer counts">'+
-       '<div><b>'+sectionAnswered+'<span> / '+section.questionRevisionIds.length+'</span></b><small>Answered</small></div>'+
-       '<div><b>'+(section.questionRevisionIds.length-sectionAnswered)+'</b><small>Not answered</small></div>'+
-       '<div><b>'+sectionFlagged+'</b><small>Flagged</small></div></div>'+
-      '<div class="palette-legend"><span><i class="legend-dot answered"></i>Answered</span>'+
-       '<span><i class="legend-dot marked"></i>Review</span>'+
-       '<span><i class="legend-dot empty"></i>Not answered</span></div>'+
-      '<p class="fine navigator-status">'+(paper.navigation.sectionNavigation==="sequential-locked"?
-        "Answers remain hidden until the exam finishes. Submitting a section locks it.":
-        "Answers remain hidden until you submit.")+'</p>'+
-      '<details class="navigator-help"><summary>Keyboard shortcuts</summary>'+
-       '<p class="fine">'+(paper.navigation.questionNavigation==="forward-only"?
-        "Questions cannot be revisited in this exam.":"Navigate freely where the paper permits.")+
-       ' A–D answer single-choice questions. ← / → navigate except when a radio is focused; Alt + ← / → navigates while focused. M marks/unmarks for review even while paused; F enters full screen. Answer/navigation shortcuts are disabled while paused or typing.</p></details></aside></div>';
- }
 
 
 let builtinCache:{
@@ -1029,102 +716,12 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    const qid=attempt.frozen.paper.sections[attempt.state.sectionIndex]
      ?.questionRevisionIds[attempt.state.questionIndex];
    const draft=qid?choiceDrafts.get(attempt.id+"|"+qid):undefined;
-   return renderModelExam(attempt,packageForAttempt(attempt),warning,draft);
+   return renderModelExam(attempt,packageForAttempt(attempt),warning,draft,{
+     focused:Boolean(document.fullscreenElement||
+       document.documentElement.classList.contains("immersive"))
+   });
  }
  /** Result presentation must use the frozen media, not a mutable current package. */
- function frozenReviewMedia(saved:GenericAttempt,q:QuestionRevision,
-    response?:CandidateResponse,answer?:CorrectAnswer,verdict?:Verdict):string{
-   const frozen=saved.frozen;
-   const display:ExamPackage={format:"practice-desk-exam",version:1,
-     examId:frozen.snapshot.examId,title:"",paper:frozen.paper,answerKey:frozen.key,
-     questions:frozen.questions,stimuli:frozen.stimuli,assets:frozen.assets};
-   const content=q.content;
-   const passage=stimulusHTML(display,q);
-   const promptAssets=assetHTML(display,content.assetIds,"Figure for reviewed question");
-   const options=content.kind==="single-choice"||content.kind==="multiple-select"?
-     '<div class="generic-choices" role="list" aria-label="Answer options">'+
-      content.options.map((option,i)=>{
-       const chosen=response?.kind==="single-choice"?response.optionId===option.id:
-         response?.kind==="multiple-select"?response.optionIds.includes(option.id):false;
-       const expected=answer?.kind==="single-choice"?answer.optionId===option.id:
-         answer?.kind==="multiple-select"?answer.optionIds.includes(option.id):false;
-       const scored=verdict!=="excluded"&&verdict!=="pending";
-       const correct=scored&&expected;
-       const wrong=scored&&chosen&&!expected;
-       const state=correct?" review-option-correct":wrong?" review-option-incorrect":"";
-       const badges=[
-         ...(chosen?["Your choice"]:[]),
-         ...(correct?["Correct answer"]:[]),
-         ...(wrong?["Incorrect choice"]:[])
-       ];
-       return '<div role="listitem" class="generic-choice review-opt'+state+'"><span><b>'+
-         String.fromCharCode(65+i)+'.</b> '+escapeText(option.text)+
-         assetHTML(display,option.assetIds,"Image for option "+String.fromCharCode(65+i))+
-         (badges.length?'<span class="review-option-label"> · '+
-           escapeText(badges.join(" · "))+'</span>':"")+'</span></div>';
-      }).join("")+'</div>':"";
-   const booleanOptions=content.kind==="true-false"?
-     '<div class="generic-choices" role="list" aria-label="True or false answer options">'+
-     [true,false].map(value=>{
-       const chosen=response?.kind==="true-false"&&response.value===value;
-       const correct=verdict!=="excluded"&&answer?.kind==="true-false"&&answer.value===value;
-       const incorrect=verdict!=="excluded"&&chosen&&!correct;
-       const labels=[...(chosen?["Your choice"]:[]),
-         ...(correct?["Correct answer"]:[]),
-         ...(incorrect?["Incorrect choice"]:[])];
-       return '<div role="listitem" class="generic-choice review-opt'+
-         (correct?" review-option-correct":incorrect?" review-option-incorrect":"")+
-         '"><span><b>'+(value?"True":"False")+'</b>'+
-         (labels.length?'<span class="review-option-label"> · '+
-           escapeText(labels.join(" · "))+'</span>':"")+'</span></div>';
-     }).join("")+'</div>':"";
-   const matches=content.kind==="matching"?
-     '<div class="generic-matches">'+[...content.leftItems,...content.rightItems].map(item=>
-       '<div><span>'+escapeText(item.text)+assetHTML(display,item.assetIds,"Image for matching item "+item.text)+'</span></div>').join("")+'</div>':"";
-   return passage+promptAssets+options+booleanOptions+matches;
- }
- function sourceReviewHTML(saved:GenericAttempt,target:QuestionRevision,
-   ref:NonNullable<GenericAttempt["sourceReviewReference"]>|null):string{
-   const entry=ref?.entries.find(item=>item.targetQuestionRevisionId===target.id);
-   if(!ref||!entry)return "";
-   const original=entry.sourceQuestion;
-   const display:ExamPackage={format:"practice-desk-exam",version:1,
-     examId:ref.examId,title:"Original source",paper:saved.frozen.paper,
-     answerKey:saved.frozen.key,questions:[original],
-     stimuli:ref.stimuli,assets:ref.assets};
-   const content=original.content;
-   const optionLines=content.kind==="single-choice"||content.kind==="multiple-select"?
-     '<div class="generic-choices" role="list" aria-label="Original source options">'+
-     content.options.map((option,index)=>
-       '<div role="listitem" class="generic-choice"><span><b>'+
-       String.fromCharCode(65+index)+'.</b> '+escapeText(option.text)+
-       assetHTML(display,option.assetIds)+'</span></div>').join("")+'</div>':"";
-   const matches=content.kind==="matching"?
-     '<div class="generic-matches">'+[...content.leftItems,...content.rightItems]
-       .map(x=>'<div>'+escapeText(x.text)+assetHTML(display,x.assetIds)+'</div>').join("")+'</div>':"";
-   const currentAnswer=saved.frozen.key.entries.find(x=>x.questionRevisionId===target.id)?.answer;
-   const modifications=[
-     ...(content.prompt!==target.content.prompt?["question wording"]:[]),
-     ...(JSON.stringify({...content,prompt:""})!==JSON.stringify({...target.content,prompt:""})?
-       ["options, response rules or media"]:[]),
-     ...(JSON.stringify(entry.sourceAnswer)!==JSON.stringify(currentAnswer)?["answer key"]:[])
-   ];
-   return '<details class="change-log source-review"><summary>'+
-     (saved.frozen.snapshot.examId==="ssc-cgl"?
-       "Compare with original PDF version":"Compare with original source edition")+
-     '</summary>'+
-     '<div class="change-body"><p class="fine"><b>Original source revision</b>'+
-       (original.editorial.sourcePage?' · Source page '+original.editorial.sourcePage:"")+
-       ' · Published key shown for provenance, not as a score adjustment.</p>'+
-     stimulusHTML(display,original)+
-     '<p class="generic-prompt">'+escapeText(content.prompt)+'</p>'+
-     assetHTML(display,content.assetIds)+optionLines+matches+
-     '<p class="fine"><b>Original published answer:</b> '+
-       escapeText(readableAnswer(original,entry.sourceAnswer))+'</p>'+
-     '<p class="fine"><b>Changes in reviewed edition:</b> '+
-       escapeText(modifications.length?[...new Set(modifications)].join(", "):"editorial review/status")+'</p>'+
-     '</div></details>';
- }
  function resultHTML():string {
    if(!attempt)return "";
    const paper=attempt.frozen.paper,s=attempt.result??scoreAttempt(paper,attempt.frozen.key,attempt.frozen.questions,

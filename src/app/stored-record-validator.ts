@@ -1,0 +1,142 @@
+/** Untrusted frozen attempt, learning card and imported package validation. */
+import {validateExamPackage,type GenericAttempt,type ExamPackage} from "./exam-package.ts";
+import {validateLearningCard,type LearningCard} from "../learning/learning.ts";
+import {validateSectionTimingEvidence} from "../engine/session.ts";
+import {assertFrozenContent} from "../history/frozen.ts";
+import {isVerifiedSharedFrozen} from "../history/shared-store.ts";
+import {validateResponse} from "../engine/response.ts";
+import {scoreAttempt} from "../engine/scoring.ts";
+import {validateManualGrades} from "../engine/manual-grading.ts";
+import {validateSourceKeyReference} from "../engine/source-comparison.ts";
+import {validateSourceReviewReference} from "../engine/review-source.ts";
+import {validateNotebookLineage} from "../learning/revision-test.ts";
+import {validatePracticeComposition} from "./practice-compose.ts";
+export type PackageRecord={recordType:"generic-package";id:string;bundle:ExamPackage;saveRevision?:number};
+export type RecordItem=PackageRecord|GenericAttempt|LearningCard;
+export const isAttempt=(x:unknown):x is GenericAttempt=>!!x&&typeof x==="object"&&(x as GenericAttempt).recordType==="generic-attempt";
+export const isPackage=(x:unknown):x is PackageRecord=>!!x&&typeof x==="object"&&(x as PackageRecord).recordType==="generic-package";
+export const isLearning=(x:unknown):x is LearningCard=>!!x&&typeof x==="object"&&(x as LearningCard).recordType==="learning-card";
+
+/** Treat browser records and exported JSON as untrusted until their frozen inputs and responses validate. */
+export function validateGenericStoredRecord(value:unknown):RecordItem {
+ if(value && typeof value==="object" && "saveRevision" in value){
+   const n=(value as {saveRevision:unknown}).saveRevision;
+   if(typeof n!=="number"||!Number.isSafeInteger(n)||n<0)
+     throw new Error("Invalid stored write revision");
+ }
+ if(isLearning(value))return validateLearningCard(value);
+ if(isPackage(value)){
+   if(typeof value.id!=="string" || value.id!=="generic-package:"+value.bundle?.paper?.id)
+     throw new Error("Invalid imported package record identity");
+   validateExamPackage(value.bundle);
+   return value;
+ }
+ if(!isAttempt(value))throw new Error("Unsupported generic history record");
+ if(typeof value.id!=="string"||!value.id||value.id.length>200||
+    typeof value.packageId!=="string"||
+    !Number.isFinite(value.startedAt)||!Number.isFinite(value.updatedAt)||
+    (value.finishedAt!==null&&!Number.isFinite(value.finishedAt))||
+    !value.state||!Array.isArray(value.state.responses)||
+    !Number.isFinite(value.state.clockMs)||
+    !Number.isInteger(value.state.sectionIndex)||!Number.isInteger(value.state.questionIndex))
+   throw new Error("Invalid generic attempt record");
+ if(!isVerifiedSharedFrozen(value.frozen))assertFrozenContent(value.frozen);
+ const paper=value.frozen.paper;
+ if(value.packageId!==paper.id)throw new Error("Attempt references an incorrect revision");
+ const current=paper.sections[value.state.sectionIndex]?.questionRevisionIds[value.state.questionIndex];
+ if(!current)throw new Error("Attempt cursor references an unknown question");
+ if(value.finishedAt!==null && value.state.status!=="completed")
+   throw new Error("Completed attempt has an unfinished session");
+ if(value.finishedAt===null && value.state.status==="completed")
+   throw new Error("Unfinished attempt has a completed session");
+ if(!["running","paused","section-expired","completed"].includes(value.state.status))
+   throw new Error("Invalid saved session status");
+ validateSectionTimingEvidence(paper,value.state);
+ if(value.state.status==="section-expired"){
+   if(paper.timing.kind!=="sectional"||paper.timing.transition!=="manual")
+     throw new Error("Expired-section state requires manual sectional timing");
+   const limit=paper.timing.sectionLimits.find(x=>x.sectionId===paper.sections[value.state.sectionIndex]?.id);
+   if(limit?.durationMs==null||value.state.sectionElapsedMs!==limit.durationMs)
+     throw new Error("Expired-section state must be exactly at its section time limit");
+ }
+ const questionMap=new Map(value.frozen.questions.map(q=>[q.id,q]));
+ const allowed=new Set(paper.sections.flatMap(section=>section.questionRevisionIds));
+ if(value.state.timingEvidenceVersion!==undefined&&value.state.timingEvidenceVersion!==1)
+   throw new Error("Invalid question timing evidence version");
+ if(value.state.questionVisits!==undefined){
+   const visits=value.state.questionVisits;
+   if(!Array.isArray(visits)||visits.length===0||visits.length>allowed.size||
+      new Set(visits.map(row=>row?.questionRevisionId)).size!==visits.length||
+      visits.some(row=>!row||!allowed.has(row.questionRevisionId)||
+        !Number.isSafeInteger(row.count)||row.count<1||row.count>1000000))
+     throw new Error("Invalid saved question visit history");
+ }
+ const seen=new Set<string>();
+ for(const row of value.state.responses){
+   if(!row || typeof row.questionRevisionId!=="string" ||
+      !allowed.has(row.questionRevisionId) || seen.has(row.questionRevisionId)||
+      !Number.isFinite(row.timeSpentMs)||row.timeSpentMs<0 ||
+      !Number.isInteger(row.answerChangeCount)||row.answerChangeCount<0)
+     throw new Error("Invalid saved response");
+   seen.add(row.questionRevisionId);
+   const first=row.firstVisitMs,pre=row.preFirstAnswerMs;
+   if((first!==undefined||pre!==undefined)&&
+      (value.state.timingEvidenceVersion!==1||first===undefined||pre===undefined||
+       !Number.isFinite(first)||!Number.isFinite(pre)||
+       first<0||pre<0||first>row.timeSpentMs||pre>row.timeSpentMs||
+       !Number.isSafeInteger(first)||!Number.isSafeInteger(pre)))
+     throw new Error("Invalid saved question timing phase evidence");
+   if(row.firstAnsweredAt!==undefined&&
+      (typeof row.firstAnsweredAt!=="string"||
+       !Number.isFinite(Date.parse(row.firstAnsweredAt))||
+       Date.parse(row.firstAnsweredAt)<value.startedAt||
+       Date.parse(row.firstAnsweredAt)>value.updatedAt))
+     throw new Error("Invalid saved first-answer timing");
+   if(row.response)validateResponse(questionMap.get(row.questionRevisionId)!,row.response);
+   if(value.state.timingEvidenceVersion===1&&row.firstAnsweredAt!==undefined){
+     const firstCommit=row.answerEvents?.find((x:{readonly at:string;readonly to?:unknown})=>x.to!==undefined);
+     if(!firstCommit||firstCommit.at!==row.firstAnsweredAt)
+       throw new Error("Inconsistent saved first-answer timing");
+   }
+   if(row.answerEvents!==undefined){
+     if(!Array.isArray(row.answerEvents)||row.answerEvents.length>1000)
+       throw new Error("Invalid saved answer revision history");
+     let previousEvent:typeof row.answerEvents[number]|undefined;
+     let previousTime=value.startedAt;
+     for(const event of row.answerEvents){
+       if(!event||typeof event.at!=="string"||!Number.isFinite(Date.parse(event.at))||
+          Date.parse(event.at)<previousTime||Date.parse(event.at)>value.updatedAt||
+          (!event.from&&!event.to))throw new Error("Invalid saved answer revision event");
+       if(event.from)validateResponse(questionMap.get(row.questionRevisionId)!,event.from);
+       if(event.to)validateResponse(questionMap.get(row.questionRevisionId)!,event.to);
+       if(previousEvent&&JSON.stringify(previousEvent.to??null)!==JSON.stringify(event.from??null))
+         throw new Error("Disconnected saved answer revision history");
+       previousTime=Date.parse(event.at);previousEvent=event;
+     }
+     if(previousEvent&&JSON.stringify(previousEvent.to??null)!==JSON.stringify(row.response??null))
+       throw new Error("Saved answer revision does not match final response");
+   }
+ }
+ if(value.finishedAt!==null){
+   if(!value.result)throw new Error("Completed attempt has no immutable score");
+   const recalculated=scoreAttempt(paper,value.frozen.key,value.frozen.questions,value.state.responses,
+     value.result.snapshot.calculatedAt);
+   const fields=["earnedMarks","positiveMarks","penaltyMarks","correctCount","incorrectCount","unansweredCount","excludedCount"] as const;
+   if(fields.some(field=>value.result!.snapshot[field]!==recalculated.snapshot[field])||
+      JSON.stringify(value.result.items)!==JSON.stringify(recalculated.items)||
+      typeof value.result.snapshot.calculatedAt!=="string"||
+      !Number.isFinite(Date.parse(value.result.snapshot.calculatedAt)))
+     throw new Error("Completed attempt score does not match its frozen inputs (summary or item verdict)");
+ }
+ validateManualGrades(value);
+ validateSourceKeyReference(value);
+ validateSourceReviewReference(value);
+ if(value.completionReason!==undefined){
+   if(value.finishedAt===null||
+     !["time-expired","submitted","section-submitted"].includes(value.completionReason))
+     throw new Error("Invalid saved completion provenance");
+ }
+ validateNotebookLineage(value);
+ validatePracticeComposition(value);
+ return value;
+}
