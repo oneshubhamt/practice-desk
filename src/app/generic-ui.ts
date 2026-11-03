@@ -134,7 +134,30 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  // One transient dialog/handler set for the entire mounted workspace.
  const imageViewer=createImageViewer(root);
  const imagePreparation=createImagePreparation();
- const authoringStudio=createQuestionAuthoringStudio();
+ const authoringStudio=createQuestionAuthoringStudio({
+   existing:()=>[...packages.values()],
+   publish:async bundle=>{
+     const signed=validateExamPackage(bundle);
+     if(loading||fallbackConflict||storageFault)
+       throw Error("Library storage is not ready or another tab has changed it. Reopen before publishing.");
+     if(packages.has(signed.paper.id)||records.has("generic-package:"+signed.paper.id))
+       throw Error("This exact paper edition and revision is already published. Increase Revision rather than overwriting it.");
+     // A newly published item uses the SAME source-validated, compare-and-save
+     // path as ordinary imported papers. No separate mutable publication store.
+     const persisted=await save({recordType:"generic-package",
+       id:"generic-package:"+signed.paper.id,bundle:signed});
+     if(!persisted)throw Error("The authenticated paper could not be committed; no new edition is available.");
+     packages.set(signed.paper.id,signed);
+     applyFamily(familyIdFor(signed,builtinPaperIds));
+     choice=signed.paper.id;singleSection=0;
+     if(signed.paper.edition==="source"||signed.paper.edition==="reviewed")
+       editionView=signed.paper.edition;
+     saveSelection();
+     warning="Published "+signed.questions.length+" user-authored questions as a new immutable "+
+       signed.paper.edition+" revision. The paper is ready to practise; existing attempts are unchanged.";
+     draw();
+   }
+ });
  let router:NativeRouter;
  let activationGeneration=0;
  // A newly created frozen session is already foreground/clock-initialized.
