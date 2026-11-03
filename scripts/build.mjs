@@ -1,12 +1,21 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { Script } from "node:vm";
-import { build as bundleJavaScript } from "esbuild";
+import { build as bundleJavaScript,transform as minifySource } from "esbuild";
+import { preparedKaTeXStyles } from "./prepare-katex-css.mjs";
 import { validateContent } from "../src/content/validate.ts";
 const root=resolve(import.meta.dirname,"..");
 const read=file=>readFile(resolve(root,file),"utf8");
+const katexStyles=await preparedKaTeXStyles(root);
+const nativeCss=(await minifySource(await read("src/styles/app.css"),{
+ loader:"css",minify:true,logLevel:"silent"
+})).code;
+const katexLicense=await read("node_modules/katex/LICENSE");
+// The full MIT notice travels in the self-contained user-facing artifact.
+if(katexLicense.includes("*/")||katexLicense.includes("</style"))throw Error("Unsafe vendor license");
 const payloads={
- CSS:"<style>\n"+await read("src/styles/app.css")+"</style>",
+ CSS:"<style>/* KaTeX 0.19.1 LICENSE\n"+katexLicense+"\n*/\n"+
+   nativeCss+"\n"+katexStyles.css+"</style>",
  PAPER_BANK:'<script id="paper-bank" type="application/json">'+(await read("src/content/papers.json")).trim()+"</script>",
  REVIEW_PATCHES:'<script id="review-patches" type="application/json">'+(await read("src/content/patches.json")).trim()+"</script>",
  SOLUTION_BANK:'<script id="solution-bank" type="application/json">'+(await read("src/content/solutions.json")).trim()+"</script>"
@@ -18,7 +27,7 @@ validateContent({
 });
 const compiled=await bundleJavaScript({
  entryPoints:[resolve(root,"src/app/bootstrap.ts")],bundle:true,write:false,
- platform:"browser",format:"iife",target:"es2022",logLevel:"silent"
+ platform:"browser",format:"iife",target:"es2022",logLevel:"silent",minify:true,legalComments:"none"
 });
 const runtime=compiled.outputFiles[0].text;
 new Script(runtime);
@@ -31,4 +40,7 @@ for(const [name,body] of Object.entries(payloads)){
 }
 if(/<!-- PD:[A-Z_]+ -->/.test(html))throw new Error("Unreplaced marker");
 await writeFile(resolve(root,"Practice_Desk_Offline_Mock_Tests.html"),html);
-console.log("Built "+Buffer.byteLength(html)+" bytes (single offline HTML).");
+console.log("Built "+Buffer.byteLength(html)+" bytes (single offline HTML). "+
+  "KaTeX: "+katexStyles.woff2Files.length+" WOFF2 families, "+
+  katexStyles.woff2Bytes+" font bytes inlined as "+
+  katexStyles.inlinedBase64Bytes+" base64 data-URI characters.");
