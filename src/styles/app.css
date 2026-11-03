@@ -1235,3 +1235,24 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
 @media(max-width:430px){.generic-image-shell{height:calc(100dvh - 20px)}.generic-image-dialog{width:calc(100vw - 12px);max-width:calc(100vw - 12px)}.generic-image-toolbar{gap:4px;padding:5px}.generic-image-control{min-width:38px}.generic-image-help{font-size:10px}}
 @media(max-width:300px){.generic-workspace .generic-choice-media-row{padding:7px}.generic-choice-media-row .generic-choice-media{padding-left:0}.generic-image-head{padding:6px}.generic-image-caption{max-height:55px}.generic-image-help{font-size:9px}.generic-image-dialog .btn{padding:5px}}
 @media(prefers-reduced-motion:reduce){.generic-image-large,.generic-image-dialog{transition:none!important;animation:none!important}}
+
+/* P47-3B: image import preparation is separate from the immutable exam viewer.
+   Preview panes scroll at 200/400% so small glyphs/strokes can be compared. */
+.generic-image-preparation{overflow:hidden;max-height:calc(100dvh - 12px)}
+.generic-prepare-shell{display:grid;align-content:start;gap:10px;padding:13px;max-width:100%;max-height:calc(100dvh - 22px);overflow-y:auto;overscroll-behavior:contain}
+.generic-prepare-shell *{box-sizing:border-box;min-width:0}
+.generic-prepare-shell h2{margin:0}
+.generic-prepare-shell h3{font-size:14px;margin:0 0 8px}
+.generic-prepare-shell label{font-size:13px;font-weight:650;overflow-wrap:anywhere}
+.generic-prepare-shell input[type=file],
+.generic-prepare-shell input[type=text],
+.generic-prepare-shell input:not([type]),
+.generic-prepare-shell select{width:100%;max-width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+.generic-prepare-shell input[type=checkbox]{width:auto;vertical-align:middle}
+.generic-prepare-previews{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;min-width:0}
+.generic-prepare-preview{min-width:0;max-width:100%;max-height:250px;overflow:auto;padding:9px;border:1px solid var(--line);border-radius:9px;background:var(--soft)}
+.generic-prepare-preview img{display:block;width:100%;max-width:none;max-height:none;height:auto;object-fit:contain}
+.generic-prepare-shell .row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.generic-prepare-shell .row .btn{flex:1 1 140px;white-space:normal;overflow-wrap:anywhere}
+@media(max-width:640px){.generic-prepare-previews{grid-template-columns:minmax(0,1fr)}.generic-prepare-preview{max-height:180px}}
+@media(max-width:300px){.generic-prepare-shell{padding:7px;gap:6px}.generic-prepare-shell .row .btn{flex:1 1 100%;padding:7px}.generic-prepare-preview{max-height:130px}}
