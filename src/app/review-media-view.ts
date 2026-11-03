@@ -3,7 +3,7 @@ import {readableAnswer,type ExamPackage,type GenericAttempt} from "./exam-packag
 import type {QuestionRevision,CandidateResponse} from "../domain/question.js";
 import type {CorrectAnswer} from "../domain/answer-key.js";
 import type {Verdict} from "../engine/scoring.ts";
-import {assetHTML,stimulusHTML} from "./question-content-view.ts";
+import {assetHTML,stimulusHTML,renderAuthoredText} from "./question-content-view.ts";
 import {escapeText} from "./html-escape.ts";
 export function frozenReviewMedia(saved:GenericAttempt,q:QuestionRevision,
     response?:CandidateResponse,answer?:CorrectAnswer,verdict?:Verdict):string{
@@ -30,11 +30,11 @@ export function frozenReviewMedia(saved:GenericAttempt,q:QuestionRevision,
          ...(correct?["Correct answer"]:[]),
          ...(wrong?["Incorrect choice"]:[])
        ];
-       return '<div role="listitem" class="generic-choice review-opt'+state+'"><span><b>'+
-         String.fromCharCode(65+i)+'.</b> '+escapeText(option.text)+
+       return '<div role="listitem" class="generic-choice review-opt'+state+'"><div class="pd-review-choice-content"><b>'+
+         String.fromCharCode(65+i)+'.</b> '+renderAuthoredText(display,option.text,option.richText)+
          assetHTML(display,option.assetIds,"Image for option "+String.fromCharCode(65+i))+
          (badges.length?'<span class="review-option-label"> · '+
-           escapeText(badges.join(" · "))+'</span>':"")+'</span></div>';
+           escapeText(badges.join(" · "))+'</span>':"")+'</div></div>';
       }).join("")+'</div>':"";
    const booleanOptions=content.kind==="true-false"?
      '<div class="generic-choices" role="list" aria-label="True or false answer options">'+
@@ -53,7 +53,8 @@ export function frozenReviewMedia(saved:GenericAttempt,q:QuestionRevision,
      }).join("")+'</div>':"";
    const matches=content.kind==="matching"?
      '<div class="generic-matches">'+[...content.leftItems,...content.rightItems].map(item=>
-       '<div><span>'+escapeText(item.text)+assetHTML(display,item.assetIds,"Image for matching item "+item.text)+'</span></div>').join("")+'</div>':"";
+       '<div><span>'+renderAuthoredText(display,item.text,item.richText)+
+       assetHTML(display,item.assetIds,"Image for matching item "+item.text)+'</span></div>').join("")+'</div>':"";
    return passage+promptAssets+options+booleanOptions+matches;
  }
 export function sourceReviewHTML(saved:GenericAttempt,target:QuestionRevision,
@@ -70,11 +71,11 @@ export function sourceReviewHTML(saved:GenericAttempt,target:QuestionRevision,
      '<div class="generic-choices" role="list" aria-label="Original source options">'+
      content.options.map((option,index)=>
        '<div role="listitem" class="generic-choice"><span><b>'+
-       String.fromCharCode(65+index)+'.</b> '+escapeText(option.text)+
+       String.fromCharCode(65+index)+'.</b> '+renderAuthoredText(display,option.text,option.richText)+
        assetHTML(display,option.assetIds)+'</span></div>').join("")+'</div>':"";
    const matches=content.kind==="matching"?
      '<div class="generic-matches">'+[...content.leftItems,...content.rightItems]
-       .map(x=>'<div>'+escapeText(x.text)+assetHTML(display,x.assetIds)+'</div>').join("")+'</div>':"";
+       .map(x=>'<div>'+renderAuthoredText(display,x.text,x.richText)+assetHTML(display,x.assetIds)+'</div>').join("")+'</div>':"";
    const currentAnswer=saved.frozen.key.entries.find(x=>x.questionRevisionId===target.id)?.answer;
    const modifications=[
      ...(content.prompt!==target.content.prompt?["question wording"]:[]),
@@ -90,7 +91,7 @@ export function sourceReviewHTML(saved:GenericAttempt,target:QuestionRevision,
        (original.editorial.sourcePage?' · Source page '+original.editorial.sourcePage:"")+
        ' · Published key shown for provenance, not as a score adjustment.</p>'+
      stimulusHTML(display,original)+
-     '<p class="generic-prompt">'+escapeText(content.prompt)+'</p>'+
+     '<div class="generic-prompt">'+renderAuthoredText(display,content.prompt,content.richPrompt)+'</div>'+
      assetHTML(display,content.assetIds)+optionLines+matches+
      '<p class="fine"><b>Original published answer:</b> '+
        escapeText(readableAnswer(original,entry.sourceAnswer))+'</p>'+
