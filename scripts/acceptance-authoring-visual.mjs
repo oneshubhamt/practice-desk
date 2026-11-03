@@ -20,6 +20,8 @@ try{
  await open();
  check(await page.locator("#pd-author-publish").isDisabled(),"P47-5D publishing must be disabled");
  check(await page.locator("wg-content").count()===1,"Wordgard must mount exactly one editor");
+ check(await page.locator("#app.pd-author-mode").count()===1,"Authoring did not enter focused Library view");
+ check(await page.locator("#g-start:visible").count()===0,"Exam start controls must not compete with authoring");
  check((await page.locator("body").innerText()).includes("Wordgard authoring studio"),"Library heading absent");
  await page.locator("wg-content").click();
  await page.keyboard.insertText("Find the value of x in the expression");
@@ -45,6 +47,8 @@ try{
  await assertNoOverflow(page,"P47-5C phone authoring");
  await shot("phone-light");
  await page.emulateMedia({colorScheme:"dark"});
+ await page.evaluate(()=>document.documentElement.setAttribute("data-theme","dark"));
+ check(await page.evaluate(()=>document.documentElement.getAttribute("data-theme"))==="dark","Dark screenshot theme not applied");
  await assertNoOverflow(page,"P47-5C phone dark authoring");
  await shot("phone-dark");
  await page.setViewportSize({width:195,height:844});
@@ -52,11 +56,13 @@ try{
  await assertNoOverflow(page,"P47-5C extreme 195px 140 percent");
  await shot("195px-140pct-dark");
  await page.emulateMedia({colorScheme:"light"});
+ await page.evaluate(()=>document.documentElement.setAttribute("data-theme","light"));
  await assertNoOverflow(page,"P47-5C extreme 195px light");
  await shot("195px-140pct-light");
  const before=await page.evaluate(()=>localStorage.getItem("practiceDesk.authoring.drafts.v1"));
  check(Boolean(before&&before.includes("Find the value")),"Local draft not committed");
  await page.locator("#pd-author-close").click();
+ check(await page.locator("#app.pd-author-mode").count()===0,"Closing studio failed to restore Library");
  check(await page.locator("#pd-author-editor").count()===0,"Editor instance survived close");
  check(await page.locator("wg-content").count()===0,"Wordgard leaked into Library");
  await page.locator("#g-author-open").click();
