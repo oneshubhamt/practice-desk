@@ -6,6 +6,8 @@
 
 **Current testing policy (1 November 2026):** `overhaul` is the sole development branch. The old `baseline/v11` UI/feature parity exercise is **finished** and its reports remain archived references, not a design ceiling or recurring CI requirement. See [AGENTS current policy](../AGENTS.md) and [completed Pass36–40 test migration record](audits/TEST_SUITE_REENGINEERING_PLAN_2026-11-01.md). Modern CI prioritises source integrity, score/frozen-revision correctness, six-kind/APFC/NAT/untimed UX, native/offline browser behaviour, responsive layout and failure-only diagnostics. **No routine screenshot comparisons.** Mac/iOS/Android/AT/manual approval are separate and not claimed by simulated browser tests.
 
+**P47-1 modular extraction VERIFIED (3 Nov 2026):** [Five-job CI 41564613578, 215/215 Node](https://github.com/oneshubhamt/practice-desk/actions/runs/41564613578). Five actual pure HTML/exam/media/validation modules extracted and independently tested, with no stateful coordinator replacement. [P47-1 engineering ledger](ENGINEERING_PROGRAMME.md#p47-1--proper-modular-extraction-five-step-implementation-and-qa-3-november-2026). P47-2–P47-7 remain open; mathematics remains deferred; full coordinator rewrite P47-6 mandatory.
+
 **P47 (3 Nov 2026):** [Approved root backlog](../backlog.md) records user decisions: full coordinator rewrite, proper modular extraction, no math renderer in P47. [P47-0 automated-verified measurement and architecture ownership ledger](ENGINEERING_PROGRAMME.md#p47--source-audit-and-provisional-staged-refactor-plan-3-november-2026) is the canonical executable stage record; subsequent phases not implemented.
 
 ## Current engineering and verification
