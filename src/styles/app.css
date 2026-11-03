@@ -1289,3 +1289,19 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
 /* P47-5B: WebKit fieldset min-content sizing with rich math choices at 195px. */
 .generic-workspace fieldset.generic-choices{min-width:0;min-inline-size:0;max-width:100%;width:100%;grid-template-columns:minmax(0,1fr)}
 .generic-workspace fieldset.generic-choices legend{max-width:100%;max-inline-size:100%;white-space:normal;overflow-wrap:anywhere}
+
+/* WebKit's native legend establishes a minimum inline size on very narrow screens.
+ * Keep it available to assistive technology, while showing an identical real-text
+ * instruction outside the native legend layout on 195px/140% screens. */
+.generic-workspace .generic-choice-narrow-legend{display:none}
+@media(max-width:300px){
+ .generic-workspace fieldset.generic-choices legend{
+  position:absolute!important;width:1px!important;height:1px!important;
+  padding:0!important;margin:-1px!important;overflow:hidden!important;
+  clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important
+ }
+ .generic-workspace .generic-choice-narrow-legend{
+  display:block;min-width:0;max-width:100%;overflow-wrap:anywhere;
+  margin:0 0 8px;font-weight:700
+ }
+}
