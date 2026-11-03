@@ -23,7 +23,8 @@ import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
 import { createLearningDesk } from "./learning-ui.ts";
 import { makeRevisionPackage,createNotebookLineage } from "../learning/revision-test.ts";
 import { questionSpeed } from "../learning/question-analytics.ts";
-import { historyHTML,healthSummary,type HistorySort,type HistoryStatus,type StorageHealth } from "./history-page.ts";
+import { historyHTML,healthSummary,type StorageHealth } from "./history-page.ts";
+import {DEFAULT_HISTORY_QUERY,restoreHistoryQuery,type HistoryQuery} from "./history-query.ts";
 import {backupDownload,readBackupFile} from "../history/backup-file.ts";
 import {SHARED_DB_NAME,ATTEMPTS_STORE,SNAPSHOTS_STORE,compactAttempt,expandAttempt,
  isSharedAttempt,verifiedSnapshot,reconstructRecords,pruneSharedSnapshots} from "../history/shared-store.ts";
@@ -101,7 +102,17 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    try{writePracticeSetups(next);}
    catch{warning="Exam setup could not be saved on this device; current selection still works.";}
  };
-  let historyFilter:HistoryStatus="all",historySort:HistorySort="newest",historySearch="",historyPaper="all";
+  const historyQueryKey="practiceDesk.history.view.v1";
+  let historyQuery:HistoryQuery=(()=>{
+    try{return restoreHistoryQuery(JSON.parse(sessionStorage.getItem(historyQueryKey)??"null"));}
+    catch{return DEFAULT_HISTORY_QUERY;}
+  })();
+  // This is session-only archive UI state, never a frozen attempt or backup.
+  const changeHistoryQuery=(next:HistoryQuery,redraw=true):void=>{
+    historyQuery=next;
+    try{sessionStorage.setItem(historyQueryKey,JSON.stringify(next));}catch{}
+    if(redraw)draw();
+  };
   // Builder-only UI state, independent of every exam's saved standard mode.
   let composeOpen=false,composeSection="",composeTopic="",composeDifficulty="";
   let composeCount=10,composeSeed="practice-1";
@@ -1000,22 +1011,33 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      screen:view,screenKey,announcement,resultPane:resultTab,
      html:()=>view==="library"?listHTML():view==="history"?
        historyHTML([...records.values()].filter(isAttempt),packages,
-         {status:historyFilter,sort:historySort,search:historySearch,paperRevisionId:historyPaper},
+         historyQuery,
          loading,fallbackConflict||storageFault,warning,db?"indexeddb":"fallback",storageSnapshot()):
        view==="exam"?examHTML():resultHTML()
    },learningDesk);
    if(view==="learning")return;
    if(view==="history"){
      root.querySelector<HTMLButtonElement>("#g-library")!.onclick=()=>go({screen:"library"});
-     root.querySelector<HTMLSelectElement>("#g-filter")!.onchange=e=>{historyFilter=(e.target as HTMLSelectElement).value as HistoryStatus;draw();};
-     root.querySelector<HTMLSelectElement>("#g-history-paper")!.onchange=e=>{
-       historyPaper=(e.target as HTMLSelectElement).value;draw();
-     };
-     root.querySelector<HTMLSelectElement>("#g-history-sort")!.onchange=e=>{historySort=(e.target as HTMLSelectElement).value as HistorySort;draw();};
-     root.querySelector<HTMLInputElement>("#g-history-search")!.oninput=e=>{
-       const search=(e.target as HTMLInputElement).value;
-       historySearch=search;draw();
-     };
+     const setFilter=(patch:Partial<HistoryQuery>)=>
+       changeHistoryQuery({...historyQuery,...patch});
+     root.querySelector<HTMLSelectElement>("#g-filter")!.onchange=e=>
+       setFilter({status:(e.target as HTMLSelectElement).value as HistoryQuery["status"]});
+     root.querySelector<HTMLSelectElement>("#g-history-paper")!.onchange=e=>
+       setFilter({paperRevisionId:(e.target as HTMLSelectElement).value});
+     root.querySelector<HTMLSelectElement>("#g-history-exam")!.onchange=e=>
+       setFilter({examId:(e.target as HTMLSelectElement).value});
+     root.querySelector<HTMLSelectElement>("#g-history-mode")!.onchange=e=>
+       setFilter({mode:(e.target as HTMLSelectElement).value});
+     root.querySelector<HTMLInputElement>("#g-history-from")!.onchange=e=>
+       setFilter({startedFrom:(e.target as HTMLInputElement).value});
+     root.querySelector<HTMLInputElement>("#g-history-to")!.onchange=e=>
+       setFilter({startedTo:(e.target as HTMLInputElement).value});
+     root.querySelector<HTMLSelectElement>("#g-history-sort")!.onchange=e=>
+       setFilter({sort:(e.target as HTMLSelectElement).value as HistoryQuery["sort"]});
+     root.querySelector<HTMLInputElement>("#g-history-search")!.oninput=e=>
+       setFilter({search:(e.target as HTMLInputElement).value});
+     root.querySelector<HTMLButtonElement>("#g-history-reset")!.onclick=()=>
+       changeHistoryQuery(DEFAULT_HISTORY_QUERY);
      root.querySelector<HTMLButtonElement>("#g-export-history")!.onclick=()=>{void downloadBackup();};
      root.querySelector<HTMLButtonElement>("#g-import-history")!.onclick=()=>root.querySelector<HTMLInputElement>("#g-history-file")?.click();
      root.querySelector<HTMLInputElement>("#g-history-file")!.onchange=async e=>{
@@ -1060,12 +1082,12 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
      });
      root.querySelector<HTMLButtonElement>("#g-history")!.onclick=()=>go({screen:"history"});
      root.querySelector<HTMLButtonElement>("#g-history-recent")!.onclick=()=>{
-       historyFilter="complete";historyPaper="all";historySearch="";historySort="newest";
+       changeHistoryQuery({...DEFAULT_HISTORY_QUERY,status:"complete"},false);
        go({screen:"history"});
      };
      const pendingHistory=root.querySelector<HTMLButtonElement>("#g-pending-history");
      if(pendingHistory)pendingHistory.onclick=()=>{
-       historyFilter="progress";historyPaper="all";historySearch="";historySort="newest";
+       changeHistoryQuery({...DEFAULT_HISTORY_QUERY,status:"progress"},false);
        go({screen:"history"});
      };
      root.querySelectorAll<HTMLButtonElement>("[data-mode]").forEach(button=>button.onclick=()=>{
