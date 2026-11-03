@@ -110,7 +110,9 @@ function preview(draft:AuthoringDraft,q:AuthoringQuestion):string{
   '<p class="fine">Preview only · no scoring, timer or published paper</p>',
   rich(q.passage),rich(q.prompt)];
  if(q.kind==="single-choice"||q.kind==="multiple-select"){
-  out.push('<fieldset disabled><legend>Answer choices</legend>');
+  // Keep disabled controls, NOT a disabled fieldset: WebKit fades all label text
+  // when the entire fieldset is disabled, making the read-only preview illegible.
+  out.push('<fieldset><legend>Answer choices</legend>');
   for(let i=0;i<4;i++)out.push('<label class="pd-author-preview-choice"><input type="'+
    (q.kind==="single-choice"?"radio":"checkbox")+'" disabled>'+
    '<span>'+letters[i]+' · '+rich(q.options[i]!)+'</span></label>');

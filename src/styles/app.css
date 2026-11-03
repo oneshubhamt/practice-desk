@@ -1439,3 +1439,14 @@ html[data-theme="dark"] .pd-author-studio .btn.danger{
 
 /* Reduced motion: theme changes must never briefly wash out button text. */
 @media (prefers-reduced-motion:reduce){.pd-author-studio .btn{transition:none!important}}
+
+/* P47-5C screenshot inspection (WebKit): a selected Wordgard token and
+   nested read-only rich preview text must retain actual foreground contrast.
+   Do not force arbitrary vendor colours anywhere outside this Library studio. */
+html[data-theme="dark"] .pd-author-studio .pd-author-editor .pd-author-token,
+html[data-theme="dark"] .pd-author-studio .pd-author-math-live,
+html[data-theme="dark"] .pd-author-studio .pd-author-preview-content .pd-rich-content,
+html[data-theme="dark"] .pd-author-studio .pd-author-preview-content .pd-rich-content :where(p,span,strong,em,li,th,td,code),
+html[data-theme="dark"] .pd-author-studio .pd-author-preview-choice>span{
+ color:var(--ink)!important;
+}

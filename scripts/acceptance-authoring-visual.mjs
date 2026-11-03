@@ -87,10 +87,12 @@ try{
    closeVarPanel:style("#pd-author-close").getPropertyValue("--panel").trim(),
    newDraft:ratio(style("#pd-author-new").color,style("#pd-author-new").backgroundColor),
    draftColor:style("#pd-author-new").color,draftBackground:style("#pd-author-new").backgroundColor,
-   editor:ratio(style("#pd-author-editor wg-content").color,style("#pd-author-editor").backgroundColor)
+   editor:ratio(style("#pd-author-editor wg-content").color,style("#pd-author-editor").backgroundColor),
+   previewText:ratio(style("#pd-author-preview .pd-rich-paragraph").color,style("#pd-author-preview").backgroundColor),
+   token:ratio(style("#pd-author-editor .pd-author-token").color,style("#pd-author-editor").backgroundColor)
   };
  });
- check(["heading","close","newDraft","editor"].every(k=>darkContrast[k]>=4.5),
+ check(["heading","close","newDraft","editor","previewText","token"].every(k=>darkContrast[k]>=4.5),
    "P47-5C dark-theme WCAG contrast failed: "+JSON.stringify(darkContrast));
 
  await assertNoOverflow(page,"P47-5C phone dark authoring");
