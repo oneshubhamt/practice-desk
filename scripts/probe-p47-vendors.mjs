@@ -55,7 +55,7 @@ for(const [name,code] of Object.entries(entry)){
   platform:"browser",format:"iife",globalName:"P47VendorProbe",
   target:["es2022"],write:false,logLevel:"silent",metafile:true,legalComments:"none"
  });
- const js=result.outputFiles.find(f=>f.path.endsWith(".js"));
+ const js=result.outputFiles[0]; // esbuild stdin/write:false uses the <stdout> path
  if(!js||!js.contents.length)throw Error("Missing vendor bundle: "+name);
  payloads[name]={rawBytes:js.contents.length,gzipBytes:gzipSync(js.contents).length,
   moduleCount:Object.keys(result.metafile.inputs).length};
