@@ -11,10 +11,13 @@ const nativeCss=(await minifySource(await read("src/styles/app.css"),{
  loader:"css",minify:true,logLevel:"silent"
 })).code;
 const katexLicense=await read("node_modules/katex/LICENSE");
+const wordgardLicense=await read("node_modules/wordgard/LICENSE");
 // The full MIT notice travels in the self-contained user-facing artifact.
-if(katexLicense.includes("*/")||katexLicense.includes("</style"))throw Error("Unsafe vendor license");
+if(katexLicense.includes("*/")||katexLicense.includes("</style")||
+ wordgardLicense.includes("*/")||wordgardLicense.includes("</style"))throw Error("Unsafe vendor license");
 const payloads={
  CSS:"<style>/* KaTeX 0.19.1 LICENSE\n"+katexLicense+"\n*/\n"+
+   "/* Wordgard 0.6.2 LICENSE\n"+wordgardLicense+"\n*/\n"+
    nativeCss+"\n"+katexStyles.css+"</style>",
  PAPER_BANK:'<script id="paper-bank" type="application/json">'+(await read("src/content/papers.json")).trim()+"</script>",
  REVIEW_PATCHES:'<script id="review-patches" type="application/json">'+(await read("src/content/patches.json")).trim()+"</script>",
