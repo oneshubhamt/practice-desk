@@ -76,16 +76,16 @@ test("P47-5B six-kind authored rich math, tables and explanations survive valid 
  assert.match(source,/katex-html/);
  const answerHTML=renderAuthoredText(pack,"",pack.questions[0].content.richExplanation);
  assert.match(answerHTML,/SOLUTION-ONLY-CONTENT/);
- assert.match(stimulusHTML(pack,pack.questions[0]),/pd-rich-table-scroll/);
+ assert.match(stimulusHTML(pack,pack.questions[0]),/scroll-table/);
 });
 test("P47-5B tampering with frozen rich math is rejected by current SHA source contract",()=>{
  const pack=richPack();
  pack.questions[0].content.richPrompt.blocks[0].content[1].tex="\\frac{2}{3}";
  assert.throws(()=>validateExamPackage(pack),/hash|digest|mismatch/i);
  const malformed=richPack();
- malformed.questions[0].content.richPrompt.blocks[0].content[1].tex="x";
+ malformed.questions[0].content.richPrompt.blocks[0].content[1].unsafeHTML="<img src=x onerror=alert(1)>";
  malformed.questions[0].contentHash=questionRevisionHash(malformed.questions[0]);
- assert.throws(()=>validateExamPackage(malformed),/noncanonical|rich|Invalid|source/i);
+ assert.throws(()=>validateExamPackage(malformed),/Unknown|noncanonical|rich|Invalid|source/i);
 });
 test("P47-5B source/review presentation supports math only from frozen verified resources",()=>{
  const pack=richPack(),a=startGenericAttempt(pack,"source-math",Date.now());
