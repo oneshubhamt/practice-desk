@@ -886,7 +886,7 @@ MANUAL: TESTED / NOT TESTED; environment and evidence
 HANDOFF: next dependency, remaining issue IDs, STOP/GO
 ```
 
-**P41–P46 including P46-B implementation and automated verification are recorded above.** **P47 awaits the user's observations and is not started.** P48 independent full-product QA and physical-device/assistive-technology/manual release approval remain future work; automated CI is not public release authorization.
+**P41–P46 including P46-B, and P47-0/1/2/3 including image preparation P47-3B, are source-verified above** ([latest five-job CI 41579895137](https://github.com/oneshubhamt/practice-desk/actions/runs/41579895137), 235/235 Node). **P47-4 is next; P47-5 CAT/PGDBA mathematical typesetting requires a user-reviewed proposal before coding; P47-6 complete stateful coordinator rewrite remains mandatory; P47-7 and P48 independent/physical/manual release approval remain future work.** Automated CI is not physical-device or public release authorisation.
 
 ## 12. Maintenance and audit-quality rules
 
