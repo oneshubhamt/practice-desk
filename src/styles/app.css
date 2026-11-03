@@ -1256,3 +1256,28 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
 .generic-prepare-shell .row .btn{flex:1 1 140px;white-space:normal;overflow-wrap:anywhere}
 @media(max-width:640px){.generic-prepare-previews{grid-template-columns:minmax(0,1fr)}.generic-prepare-preview{max-height:180px}}
 @media(max-width:300px){.generic-prepare-shell{padding:7px;gap:6px}.generic-prepare-shell .row .btn{flex:1 1 100%;padding:7px}.generic-prepare-preview{max-height:130px}}
+
+/* P47-5B: bounded author-supplied math. Use existing type scale and themes. */
+.generic-workspace .pd-rich-content{display:block;min-width:0;max-width:100%;white-space:normal;overflow-wrap:break-word;line-height:1.6}
+.generic-workspace .pd-rich-paragraph{white-space:pre-wrap;margin:0 0 .65em}
+.generic-workspace .pd-rich-content>:last-child{margin-bottom:0}
+.generic-workspace .pd-rich-heading{font:inherit;font-weight:780;margin:.45em 0 .3em}
+.generic-workspace .pd-rich-list{margin:.35em 0 .7em;padding-inline-start:1.6em}
+.generic-workspace .pd-rich-list li{padding:.1em 0}
+.generic-workspace .pd-rich-table-scroll{max-width:100%;overflow-x:auto;scrollbar-width:thin;margin:.65em 0}
+.generic-workspace .pd-rich-table{border-collapse:collapse;min-width:min-content;width:max-content;max-width:none}
+.generic-workspace .pd-rich-table th,.generic-workspace .pd-rich-table td{border:1px solid var(--line);padding:5px 10px;text-align:left}
+.generic-workspace .pd-math{max-width:100%;color:inherit}
+.generic-workspace .pd-math-inline{display:inline-block;max-width:100%;vertical-align:middle;overflow-x:auto;overflow-y:hidden}
+.generic-workspace .pd-math-block{display:block;max-width:100%;overflow-x:auto;overflow-y:hidden;margin:.5em 0;padding-block:.2em}
+.generic-workspace .pd-math-block .katex-display{max-width:100%;min-width:0;margin:0;overflow-x:visible;overflow-y:hidden}
+.generic-workspace .pd-math-fallback{white-space:pre-wrap;word-break:break-all;border-bottom:1px dotted var(--muted);font-family:ui-monospace,monospace}
+.generic-workspace .pd-rich-choice-text,.generic-workspace .pd-review-choice-content{min-width:0;max-width:100%;flex:1;overflow-wrap:anywhere}
+.generic-workspace .pd-rich-choice-text>.pd-rich-content{margin:.25em 0}
+.generic-workspace .pd-review-question{min-width:0;max-width:100%;font-weight:700;line-height:1.5}
+.generic-workspace .pd-review-question .pd-rich-content{font-weight:400}
+.generic-workspace .pd-rich-image{max-width:100%}
+@media print{
+ .generic-workspace .pd-math-block,.generic-workspace .pd-rich-table-scroll{overflow:visible}
+ .generic-workspace .pd-rich-table{width:auto;max-width:100%;page-break-inside:avoid}
+}
