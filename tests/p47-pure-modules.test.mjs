@@ -103,7 +103,8 @@ test("P47-1 independent presentation and validation modules have no coordinator 
  for(const file of ["html-escape","question-content-view","exam-view","stored-record-validator","review-media-view"]){
   const s=await readFile(new URL("../src/app/"+file+".ts",import.meta.url),"utf8");
   assert.doesNotMatch(s,/from ["']\.\/generic-ui\.ts["']|from ["']\.\/bootstrap\.ts["']/);
-  assert.doesNotMatch(s,/\b(?:document|window)\s*\./,
+  // Ignore import paths such as ../domain/rich-document.ts; test executable module body.
+  assert.doesNotMatch(s.replace(/^import .*$/gm,""),/\b(?:document|window)\s*\./,
     file+" must not read application DOM, focus, window or global user state");
  }
  const coordinator=await readFile(new URL("../src/app/generic-ui.ts",import.meta.url),"utf8");
