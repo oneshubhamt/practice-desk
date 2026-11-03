@@ -22,9 +22,11 @@ export type PublicationIssue={
  readonly reason:string;
 };
 export class PublicationValidationError extends Error{
- constructor(readonly issues:readonly PublicationIssue[]){
+ readonly issues:readonly PublicationIssue[];
+ constructor(issues:readonly PublicationIssue[]){
   super(issues.map(i=>(i.questionId?"Question "+i.questionId+" · ":"")+i.field+": "+i.reason).join("\n"));
   this.name="PublicationValidationError";
+  this.issues=issues;
  }
 }
 const letters=["A","B","C","D"] as const;
