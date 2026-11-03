@@ -120,7 +120,7 @@ export function createImagePreparation():ImagePreparation{
   pickerLabel.htmlFor=picker.id;
   const type=element("select");type.id="prep-image-type";
   for(const [value,label] of [["diagram","Diagram, fine print or mathematics — preserve original"],
-    ["photo","Photograph — consider high-quality WebP"]]){
+    ["photo","Photograph — consider high-quality WebP"]] as const){
     const o=element("option");o.value=value;o.textContent=label;type.append(o);
   }
   const kindLabel=element("label");kindLabel.htmlFor=type.id;kindLabel.textContent="Image content";
