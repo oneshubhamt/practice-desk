@@ -1,0 +1,27 @@
+name: Temporary P47-5C locked Wordgard dependency preparation
+on:
+  push:
+    branches: [overhaul]
+    paths: [package.json]
+permissions:
+  contents: write
+jobs:
+  prepare-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Derive exact npm lock from pinned dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm pkg get dependencies.wordgard | grep -q '0.6.2'
+          git diff --quiet -- package-lock.json && exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add package-lock.json
+          git commit -m 'build(P47-5C): lock exact upstream Wordgard 0.6.2 and transitive dependencies [skip ci]'
+          git push origin HEAD:overhaul
