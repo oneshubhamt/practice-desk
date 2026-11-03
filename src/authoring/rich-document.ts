@@ -35,7 +35,7 @@ function list(v:unknown,max:number):unknown[]{
 }
 function field(v:unknown,max:number,required=false):string{
   if(typeof v!=="string"||v.length>max||(required&&!v.trim())||
-    /[\u0000-\u001f\u007f]/u.test(v))throw Error("Invalid rich text field");
+    /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u.test(v))throw Error("Invalid rich text field");
   return v;
 }
 function freezeDeep<T>(v:T):T{
