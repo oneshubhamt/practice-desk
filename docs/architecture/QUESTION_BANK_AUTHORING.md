@@ -4,6 +4,8 @@
 
 ## P47-5D Wordgard Library Studio — authoring, validated publication and examination verified
 
+**P47-6 integration verified:** The Library authoring controller is an independent typed module behind CoordinatorContext; the exam and Results controllers use the same immutable signed package/publication pathway. The Wordgard editor is instantiated only in Library and destroyed on route redraw/dispose; neither FSRS grades nor published answer keys depend on editor internal state. [P47-6 source-verified five-job CI 41656394429](https://github.com/oneshubhamt/practice-desk/actions/runs/41656394429) passed **270/270 Node**, full offline Chromium/Firefox/WebKit and guarded publisher. P47-7/P48 remain the separate final integration/physical QA gates.
+
 Approved scope is recorded in the [canonical P47-5 programme](../ENGINEERING_PROGRAMME.md#p47-5-approved-architecture-and-wordgard-archive-audit--abcd-subpasses-3-november-2026); the instructions above describe the AS-BUILT current JSON import and must not be mistaken for WYSIWYG availability.
 
 **Current distinction:** Question text, option text and explanations are mainly plain strings, with hash-verified image assets and selected structured stimuli stored separately. Practice Desk already has a sophisticated six-kind examination, scoring, History, FSRS and frozen-source engine and now includes a graphical Wordgard Library draft studio and KaTeX 0.19.1 renderer, with publication still gated to P47-5D.
