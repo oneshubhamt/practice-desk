@@ -81,7 +81,7 @@ export const wordgardEditorPort:AuthoringEditorPort={
   };
   view=build(draft);
   const paste=(event:ClipboardEvent)=>{
-   if(!alive||!view.dom.contains(event.target as Node))return;
+   if(!alive||!(event.target instanceof window.Node)||!view.dom.contains(event.target))return;
    // Refuse rich external markup, remote image URLs and arbitrary HTML; text
    // remains pasteable. Wordgard will parse the text without executing HTML.
    if(!event.clipboardData?.types.includes("text/html"))return;

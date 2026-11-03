@@ -3,6 +3,7 @@
  * P47-5D will take these validated drafts through a separate freeze/publish service.
  */
 import type {ImageAsset,QuestionKind} from "../domain/question.ts";
+import type {AssetId,ContentHash} from "../domain/ids.ts";
 import {QUESTION_KINDS} from "../domain/question.ts";
 import {sha256} from "../domain/hash.ts";
 import {validateMediaInventory} from "../domain/media.ts";
@@ -69,7 +70,7 @@ function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Field):st
   '<label>Exam family ID<input id="pd-author-exam" maxlength="80" value="'+escapeText(draft.examId)+'"></label>'+
   '<label>Paper ID<input id="pd-author-paper" maxlength="80" value="'+escapeText(draft.paperId)+'"></label>'+
   '<label>Edition<select id="pd-author-edition">'+
-  [["custom","Custom"],["source","Source transcription"],["reviewed","Reviewed & corrected"]]
+  ([["custom","Custom"],["source","Source transcription"],["reviewed","Reviewed & corrected"]] as const)
     .map(([a,b])=>option(a,b,draft.edition)).join("")+'</select></label>'+
   '<label>Revision<input id="pd-author-revision" type="number" min="1" max="1000000" value="'+draft.revision+'"></label>'+
   '<label>Duration (minutes; 0 = untimed)<input id="pd-author-duration" type="number" min="0" max="600" value="'+draft.durationMinutes+'"></label>'+
@@ -240,8 +241,8 @@ export function createQuestionAuthoringStudio():AuthoringStudioController{
    reader.onerror=()=>reject(reader.error??Error("Cannot read image"));
    reader.readAsDataURL(file);
   });
-  const image:ImageAsset={id,mediaType:file.type as ImageAsset["mediaType"],
-   dataUri:uri,contentHash:sha256(new Uint8Array(await file.arrayBuffer())),
+  const image:ImageAsset={id:id as AssetId,mediaType:file.type as ImageAsset["mediaType"],
+   dataUri:uri,contentHash:sha256(new Uint8Array(await file.arrayBuffer())) as ContentHash,
    altText:(file.name.replace(/\.[^.]+$/,"").replace(/[_-]/g," ").trim()||"Prepared figure").slice(0,500)};
   validateMediaInventory([],[image]);return image;
  };
