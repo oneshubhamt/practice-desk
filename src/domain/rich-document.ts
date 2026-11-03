@@ -1,4 +1,4 @@
-/** P47-5A neutral authoring contract; no active QuestionRevision uses this yet. */
+/** P47-5B canonical source document for authoring and frozen display; no active QuestionRevision uses this yet. */
 export type RichMark="strong"|"emphasis"|"underline"|"subscript"|"superscript"|"code";
 export type RichInline=
   | {type:"text";text:string;marks?:readonly RichMark[]}

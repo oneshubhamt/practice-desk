@@ -1,6 +1,7 @@
 import type { ImageAsset, QuestionRevision, StimulusDefinition } from "./question.js";
 import type { AssetId } from "./ids.js";
 import { sha256 } from "./hash.ts";
+import {validateRichDocument} from "./rich-document.ts";
 
 type Obj=Record<string,unknown>;
 const MAX_ASSET_BYTES=10*1024*1024;
@@ -15,6 +16,11 @@ const txt=(v:unknown,path:string,allowEmpty=false):string=>{
 };
 const only=(o:Obj,keys:readonly string[],path:string)=>{
  for(const key of Object.keys(o))if(!keys.includes(key))throw new Error(path+"."+key+": unsupported field");
+};
+const verifyRich=(value:unknown,allowed:ReadonlySet<string>,path:string):void=>{
+ if(value===undefined)return;
+ const normalized=validateRichDocument(value,{knownAssets:allowed});
+ if(JSON.stringify(value)!==JSON.stringify(normalized))throw Error(path+": noncanonical rich document");
 };
 const stringList=(v:unknown,path:string):string[]=>{
  if(!Array.isArray(v))throw new Error(path+": expected an array");
@@ -56,14 +62,15 @@ export function validateMediaInventory(stimuliInput:unknown,assetsInput:unknown)
    const kind=txt(s.kind,path+".kind");
    if(!["passage","case","table","chart","image"].includes(kind))throw new Error(path+": unsupported stimulus kind");
    if(kind==="passage"||kind==="case"){
-     only(s,["id","kind","title","text","assetIds"],path);
+     only(s,["id","kind","title","text","assetIds","richText"],path);
      if(s.title!==undefined)txt(s.title,path+".title",true);
      txt(s.text,path+".text",true);
      const ids=s.assetIds===undefined?[]:stringList(s.assetIds,path+".assetIds");
      if(new Set(ids).size!==ids.length)throw new Error(path+".assetIds: duplicate asset");
      if(ids.some(x=>!assetIds.has(x)))throw new Error(path+": missing stimulus image");
+     verifyRich(s.richText,new Set(ids),path+".richText");
    }else if(kind==="table"){
-     only(s,["id","kind","title","columns","rows"],path);
+     only(s,["id","kind","title","columns","rows","richColumns","richRows"],path);
      if(s.title!==undefined)txt(s.title,path+".title",true);
      const columns=stringList(s.columns,path+".columns");if(!columns.length)throw new Error(path+": table has no columns");
      if(!Array.isArray(s.rows))throw new Error(path+".rows: expected an array");
@@ -71,12 +78,24 @@ export function validateMediaInventory(stimuliInput:unknown,assetsInput:unknown)
        const cells=stringList(row,path+".rows["+ri+"]");
        if(cells.length!==columns.length)throw new Error(path+": table row width mismatch");
      }
+     if(s.richColumns!==undefined){
+       if(!Array.isArray(s.richColumns)||s.richColumns.length!==columns.length)throw Error(path+": rich header width");
+       s.richColumns.forEach((value:unknown,j:number)=>verifyRich(value,new Set(),path+".richColumns["+j+"]"));
+     }
+     if(s.richRows!==undefined){
+       if(!Array.isArray(s.richRows)||s.richRows.length!==(s.rows as unknown[]).length)throw Error(path+": rich row count");
+       s.richRows.forEach((row:unknown,ri:number)=>{
+         if(!Array.isArray(row)||row.length!==columns.length)throw Error(path+": rich table width");
+         row.forEach((value:unknown,j:number)=>verifyRich(value,new Set(),path+".richRows["+ri+"]["+j+"]"));
+       });
+     }
    }else{
-     only(s,["id","kind","title","assetId","altText","caption"],path);
+     only(s,["id","kind","title","assetId","altText","caption","richCaption"],path);
      if(s.title!==undefined)txt(s.title,path+".title",true);
      const asset=txt(s.assetId,path+".assetId");if(!assetIds.has(asset))throw new Error(path+": missing stimulus image");
      txt(s.altText,path+".altText");
      if(s.caption!==undefined)txt(s.caption,path+".caption",true);
+     verifyRich(s.richCaption,new Set([asset]),path+".richCaption");
    }
    stimulusIds.add(id);
  }

@@ -1,5 +1,5 @@
 /** Narrow P47-5A application-owned adapter contracts. No vendor imports. */
-import type {RichDocument} from "./rich-document.ts";
+import type {RichDocument} from "../domain/rich-document.ts";
 export interface EditorSession{
   getDocument():RichDocument;
   setDocument(doc:RichDocument):void;

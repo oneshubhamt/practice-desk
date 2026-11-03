@@ -1,6 +1,7 @@
 import type { AnswerKeyRevision } from "./answer-key.js";
 import type { ExamDefinition, PaperRevision, SectionDefinition } from "./exam.js";
 import type { QuestionRevision } from "./question.js";
+import {validateRichDocument} from "./rich-document.ts";
 
 const QUESTION_KINDS = [
   "single-choice", "multiple-select", "numeric-entry", "true-false", "matching", "free-response",
@@ -102,6 +103,15 @@ export function validateQuestionRevision(value: unknown): QuestionRevision {
   const content = record(question["content"], "question.content");
   const kind = oneOf(content["kind"], QUESTION_KINDS, "question.content.kind");
   text(content["prompt"], "question.content.prompt");
+  const rich=(value:unknown,assetIds:unknown,path:string):void=>{
+    if(value===undefined)return;
+    const knownAssets=new Set(Array.isArray(assetIds)?
+      assetIds.filter((id):id is string=>typeof id==="string"):[]);
+    const normalized=validateRichDocument(value,{knownAssets});
+    if(JSON.stringify(value)!==JSON.stringify(normalized))throw Error(path+": noncanonical rich document");
+  };
+  rich(content["richPrompt"],content["assetIds"],"question.content.richPrompt");
+  rich(content["richExplanation"],content["assetIds"],"question.content.richExplanation");
   if (content["stimulusId"] !== undefined) text(content["stimulusId"], "question.content.stimulusId");
   for (const field of ["assetIds", "topicIds", "tags"] as const) {
     if (content[field] !== undefined) {
@@ -121,6 +131,7 @@ export function validateQuestionRevision(value: unknown): QuestionRevision {
       const option = record(item, path);
       ids.push(text(option["id"], path + ".id"));
       text(option["text"], path + ".text");
+      rich(option["richText"],option["assetIds"],path+".richText");
       if (option["assetIds"] !== undefined) stringArray(option["assetIds"], path + ".assetIds");
     });
     unique(ids, "question.content.options");
@@ -154,6 +165,7 @@ export function validateQuestionRevision(value: unknown): QuestionRevision {
         const matchItem = record(item, path);
         ids.push(text(matchItem["id"], path + ".id"));
         text(matchItem["text"], path + ".text");
+        rich(matchItem["richText"],matchItem["assetIds"],path+".richText");
       });
       unique(ids, "question.content." + side);
     }

@@ -1,3 +1,4 @@
+import type { RichDocument } from "./rich-document.ts";
 import type {
   AssetId,
   ContentHash,
@@ -53,11 +54,16 @@ export interface QuestionOption {
   /** Stable within the option's semantic identity; never use display position as an ID. */
   readonly id: OptionId;
   readonly text: string;
+  readonly richText?: RichDocument;
   readonly assetIds?: readonly AssetId[];
 }
 
 interface QuestionContentBase {
   readonly prompt: string;
+  /** Opt-in rich author display, plain prompt remains authoritative fallback. */
+  readonly richPrompt?: RichDocument;
+  /** Worked rich solution is rendered only after authorized submission. */
+  readonly richExplanation?: RichDocument;
   /** Shared passage, case, table or chart; kept outside the question to avoid duplication. */
   readonly stimulusId?: StimulusId;
   readonly assetIds?: readonly AssetId[];
@@ -104,6 +110,7 @@ export type QuestionContent =
 export interface MatchItem {
   readonly id: MatchItemId;
   readonly text: string;
+  readonly richText?: RichDocument;
   readonly assetIds?: readonly AssetId[];
 }
 
@@ -124,6 +131,7 @@ export type StimulusDefinition =
       readonly kind: "passage" | "case";
       readonly title?: string;
       readonly text: string;
+      readonly richText?: RichDocument;
       readonly assetIds?: readonly AssetId[];
     }
   | {
@@ -132,6 +140,8 @@ export type StimulusDefinition =
       readonly title?: string;
       readonly columns: readonly string[];
       readonly rows: readonly (readonly string[])[];
+      readonly richColumns?: readonly RichDocument[];
+      readonly richRows?: readonly (readonly RichDocument[])[];
     }
   | {
       readonly id: StimulusId;
@@ -140,6 +150,7 @@ export type StimulusDefinition =
       readonly assetId: AssetId;
       readonly altText: string;
       readonly caption?: string;
+      readonly richCaption?: RichDocument;
     };
 
 export type ImageMediaType =
