@@ -230,7 +230,7 @@ export function compileAuthoringPublication(
   }else if(q.kind==="matching"){
    const items=(docs:readonly RichDocument[],labels:readonly string[])=>docs.map((doc,i)=>{
     const result=item(doc,labels[i]!);
-    return {...result,id:result.id as MatchItemId};
+    return {...result,id:result.id as unknown as MatchItemId};
    });
    content={...baseContent,kind:q.kind,
     leftItems:items(q.leftItems,["L1","L2","L3","L4"]),
