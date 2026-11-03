@@ -1281,3 +1281,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
  .generic-workspace .pd-math-block,.generic-workspace .pd-rich-table-scroll{overflow:visible}
  .generic-workspace .pd-rich-table{width:auto;max-width:100%;page-break-inside:avoid}
 }
+
+/* P47-5B imported long CAT/PGDBA titles must wrap at 195px/140% too. */
+.generic-workspace .exam-header>div:first-child{min-width:0;max-width:100%;flex:1 1 125px}
+.generic-workspace .exam-header h1,.generic-workspace .exam-header .muted{min-width:0;max-width:100%;overflow-wrap:anywhere;word-break:normal}
