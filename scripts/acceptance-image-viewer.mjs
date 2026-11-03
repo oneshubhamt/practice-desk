@@ -123,12 +123,18 @@ try{
  // The launch control is non-form and remains operable when pause disables
  // the answer fieldset. Resuming must not require reopening the question.
  await page.locator("#g-pause").click();
- check(await page.locator("fieldset.generic-response-group").isDisabled(),
-  "P47-3 expected real disabled response while paused");
+ await page.waitForFunction(()=>{
+  const field=document.querySelector("fieldset.generic-response-group");
+  const pause=document.getElementById("g-pause");
+  return field?.hasAttribute("disabled")&&pause?.textContent?.includes("Resume");
+ });
+ check(await page.locator("input[data-choice]").first().isDisabled(),
+  "P47-3 expected actually disabled answer inputs while paused");
  const pausedButton=page.locator(".exam-question .generic-choice-media-row [data-image-open]").first();
  await pausedButton.focus();await page.keyboard.press(" ");
  await modal.waitFor({state:"visible"});
- check(await page.locator("fieldset.generic-response-group").isDisabled(),
+ check(await page.locator("fieldset.generic-response-group").getAttribute("disabled")!==null&&
+  await page.locator("input[data-choice]").first().isDisabled(),
   "P47-3 image enlargement activated paused inputs");
  await page.keyboard.press("Escape");await modal.waitFor({state:"detached"});
  await page.locator("#g-pause").click();
