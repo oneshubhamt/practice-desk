@@ -64,6 +64,7 @@ try{
  await page.locator("#g-submit").click();await route(page,"result");
  await page.locator("#result-tab-review").click();await page.locator("#result-review").waitFor({state:"visible"});
  check(await page.locator(".pd-math .katex-mathml").count()>=6,"Post-submit six-kind math review unavailable");
+ await page.locator(".worked-solution").first().locator("summary").click();
  check((await page.locator(".worked-solution").first().innerText()).includes("P47-SOLUTION-SECRET"),
   "Rich worked explanation absent in authorized Results");
  await assertNoOverflow(page,"P47-5B narrow reviewed maths");
