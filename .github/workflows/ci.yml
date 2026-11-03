@@ -56,6 +56,8 @@ jobs:
       - run: npm run build
       - name: P47-5C integrated Wordgard authoring, visual and offline QA (Chromium)
         run: node scripts/acceptance-authoring-visual.mjs chromium
+      - name: P47-5D authenticated author to exam and frozen review (Chromium)
+        run: node scripts/acceptance-authoring-publication.mjs chromium
       - name: P47-5B actual offline mathematical question/review and font safety (Chromium)
         run: node scripts/acceptance-p47-math.mjs chromium
       - run: node scripts/acceptance-history-evidence.mjs
@@ -89,6 +91,14 @@ jobs:
       - run: node scripts/acceptance-platform.mjs chromium
       - run: node scripts/acceptance-safari-fallback.mjs chromium
       # All current browser functional contracts live in the capability suites.
+      - name: P47-5D reviewable author → publish → review screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p47-5d-publish-qa-chromium
+          path: artifacts/p47-5d-publish/*.png
+          if-no-files-found: ignore
+          retention-days: 7
       - name: P47-5C reviewable targeted authoring screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -126,6 +136,8 @@ jobs:
       - run: npm run build
       - name: P47-5C Wordgard authoring visual QA (${{ matrix.browser }})
         run: node scripts/acceptance-authoring-visual.mjs ${{ matrix.browser }}
+      - name: P47-5D full author publishing and review (${{ matrix.browser }})
+        run: node scripts/acceptance-authoring-publication.mjs ${{ matrix.browser }}
       - name: P47-5B actual offline mathematical question/review and font safety (${{ matrix.browser }})
         run: node scripts/acceptance-p47-math.mjs ${{ matrix.browser }}
       - run: node scripts/acceptance-platform.mjs ${{ matrix.browser }}
@@ -134,6 +146,14 @@ jobs:
         run: node scripts/acceptance-image-viewer.mjs ${{ matrix.browser }}
       - name: P47-3B offline import image preparation (${{ matrix.browser }})
         run: node scripts/acceptance-image-preparation.mjs ${{ matrix.browser }}
+      - name: P47-5D publish/review screenshots (${{ matrix.browser }})
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p47-5d-publish-qa-${{ matrix.browser }}
+          path: artifacts/p47-5d-publish/*.png
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Preserve targeted authoring screenshots (${{ matrix.browser }})
         if: always()
         uses: actions/upload-artifact@v4
