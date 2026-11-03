@@ -293,7 +293,7 @@ Use exactly this cycle on **every** future implementation pass; keep a live scra
 
 ### Master pass register (created 1 November 2026)
 
-| Pass | Issue ownership | Initial status | Exit artifact and authority |
+| Pass | Issue ownership | Current status | Exit artifact and authority |
 |---|---|---|---|
 | **P41** | I01/I02 source/publisher-key semantics | **AUTOMATED VERIFIED — DONE** | [Five-job green CI 41336695608](https://github.com/oneshubhamt/practice-desk/actions/runs/41336695608), 179/179 Node, source semantic v2, old v1 score disabled |
 | **P42** | I03/I11/I22 dependency, security and manual Mac test plan | **AUTOMATED VERIFIED — DONE; physical Mac EXTERNAL** | [5-job CI 41339299849](https://github.com/oneshubhamt/practice-desk/actions/runs/41339299849), 183/183 Node, clean lock, hostile-import tests, Safari checklist |
@@ -301,7 +301,7 @@ Use exactly this cycle on **every** future implementation pass; keep a live scra
 | **P44** | I06/I07 custom subset/practice configuration | **AUTOMATED VERIFIED — DONE** | [5 green CI jobs, 188/188 Node](https://github.com/oneshubhamt/practice-desk/actions/runs/41379756028), APFC/195px/backup/reopen |
 | **P45** | I08/I09/I23 storage stress and health | **APPROACH B AUTOMATED VERIFIED — DONE** | [Five green CI jobs / 193/193 Node](https://github.com/oneshubhamt/practice-desk/actions/runs/41411795115); 0/100/1000/1600 ×2, shared snapshot IDB and clean v4 backup, no legacy reader |
 | **P46** | I07/I10/I12 taxonomy, revision targeting, measured pacing | **AUTOMATED VERIFIED — DONE (P46-A + P46-B)** | [latest five-job successful P46-B CI 41490514191](https://github.com/oneshubhamt/practice-desk/actions/runs/41490514191), **208/208 Node**, offline Chromium/Firefox/WebKit, guarded standalone build; D40/D41 |
-| **P47** | I13–I17 History/media/keyboard/full coordinator rewrite; P47-5 CAT/PGDBA math planned | **P47-0/1/2/3/4 AND P47-5A/B/C/D + P47-6 AUTOMATED VERIFIED; P47-7 AUTOMATED VERIFIED — DONE** | [User-approved backlog](../backlog.md); P47-0 [five-job CI 41512273478](https://github.com/oneshubhamt/practice-desk/actions/runs/41512273478), 208/208 Node, reproducible profile JSON artifact and 0/100/1000/1600 measurements; [source audit and staged design below](#p47--source-audit-and-provisional-staged-refactor-plan-3-november-2026) |
+| **P47** | I13–I17 History/media/keyboard/full coordinator rewrite; P47-5 CAT/PGDBA math planned | **P47-0/1/2/3/4 AND P47-5A/B/C/D + P47-6 AUTOMATED VERIFIED; P47-7 AUTOMATED VERIFIED — DONE** | [User-approved backlog](../backlog.md); P47-0 [five-job CI 41512273478](https://github.com/oneshubhamt/practice-desk/actions/runs/41512273478) baseline; **P47-7 [five-job CI 41671688685](https://github.com/oneshubhamt/practice-desk/actions/runs/41671688685) 5/5 green, 270/270 Node**, full offline browser and publisher; [final P47 objective crosswalk](#p47-7--final-p47-source-to-objective-reconciliation-and-qa-3-november-2026) |
 | **P48** | I11/I20/I21/I22 independent audit/release | **OPEN; EXTERNAL subgates** | exact CI/environment matrix + human/manual limitation register |
 
 **One pass may be split into substages only when each has an independent measurable user contract;** use sub-ID `P43-A`, `P43-B` within this file. Do **not** invent a new programme document or claim an arbitrary calendar estimate.
