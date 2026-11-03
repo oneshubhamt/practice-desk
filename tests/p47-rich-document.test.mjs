@@ -45,7 +45,7 @@ test("P47-5A rejects budget overflow and prototype-inherited metadata",()=>{
   assert.throws(()=>validateRichDocument(Object.assign(Object.create({unsafe:1}),doc([]))));
 });
 test("P47-5A app-owned ports do not import vendors, persist data or mutate application engines",async()=>{
-  for(const path of ["src/authoring/vendor-ports.ts","src/learning/scheduler-port.ts","src/domain/rich-document.ts"]){
+  for(const path of ["src/authoring/vendor-ports.ts","src/learning/revision-scheduler-port.ts","src/domain/rich-document.ts"]){
     const content=await readFile(new URL("../"+path,import.meta.url),"utf8");
     for(const vendor of ["from \"wordgard","from \"katex","from \"ts-fsrs"])
       assert.ok(!content.includes(vendor),path+" imports vendor "+vendor);
