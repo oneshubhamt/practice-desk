@@ -17,6 +17,8 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci
+      - name: Isolated TypeScript compiler API for one-time AST refactor
+        run: npm install --prefix /tmp/p47-6-codegen --no-audit --no-fund --ignore-scripts --no-package-lock typescript@5.8.3
       - name: Execute symbol-checked, deterministic module extraction
         run: node scripts/p47-6-one-time-refactor.mjs
       - name: Strict typed structural acceptance

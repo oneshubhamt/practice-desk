@@ -2,7 +2,7 @@
  * The validated scoring, timing, storage and DOM semantics are not rewritten:
  * every captured mutable value remains owned by one typed coordinator context.
  */
-import ts from 'typescript';
+import ts from '/tmp/p47-6-codegen/node_modules/typescript/lib/typescript.js';
 import {readFileSync,writeFileSync} from 'node:fs';
 const path='src/app/generic-ui.ts',src=readFileSync(path,'utf8');
 const cfg=ts.readConfigFile('tsconfig.json',ts.sys.readFile);
