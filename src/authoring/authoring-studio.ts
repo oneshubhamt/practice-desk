@@ -9,6 +9,7 @@ import {sha256} from "../domain/hash.ts";
 import {validateMediaInventory} from "../domain/media.ts";
 import type {RichDocument} from "../domain/rich-document.ts";
 import {richDocumentHTML} from "../app/rich-content-view.ts";
+import {mathRenderer} from "../app/math-renderer-provider.ts";
 import {escapeText} from "../app/html-escape.ts";
 import {wordgardEditorPort} from "./wordgard-adapter.ts";
 import type {EditorSession,AuthoringEditCommand} from "./vendor-ports.ts";
@@ -282,13 +283,15 @@ export function createQuestionAuthoringStudio():AuthoringStudioController{
    '<label>LaTeX<input id="pd-author-tex" placeholder="\\frac{a}{b}" maxlength="2048"></label>'+
    '<label>Accessible spoken/text description<input id="pd-author-math-alt" maxlength="500" placeholder="a divided by b"></label>'+
    '<label class="pd-author-check"><input type="checkbox" id="pd-author-display-math"> Display equation as a separate block</label>'+
+   '<div class="pd-author-math-live" id="pd-author-math-live" role="status">Enter LaTeX above to see its actual mathematical typesetting.</div>'+
    '<button class="btn" id="pd-author-math-insert">Insert maths</button></fieldset>'+
    '<fieldset><legend>Local verified figures</legend>'+
    '<p class="fine">Use a small prepared PNG/WebP or a JSON entry from Prepare image for a bank. Original image bytes are never recompressed here.</p>'+
    '<input type="file" id="pd-author-image-file" accept=".json,image/png,image/jpeg,image/webp,image/avif,image/gif">'+
    '<label>Available figure<select id="pd-author-assets">'+
     '<option value="">Choose verified image</option>'+d.assets.map(a=>option(a.id,a.id+" · "+(a.altText??""),"")).join("")+
-   '</select></label><button class="btn" id="pd-author-insert-image">Insert figure at cursor</button></fieldset></div>'+
+   '</select></label><label>Figure description (required)<input id="pd-author-image-alt" maxlength="500" placeholder="Describe the figure for screen readers"></label>'+
+   '<button class="btn" id="pd-author-insert-image">Insert figure at cursor</button></fieldset></div>'+
    '<div class="pd-author-actions row"><button class="btn" id="pd-author-preview-toggle">Preview question</button>'+
    '<button class="btn primary" id="pd-author-save">Save draft</button>'+
    '<button class="btn" id="pd-author-publish" disabled title="Publication requires P47-5D validation">Publish (P47-5D)</button></div>'+
@@ -407,6 +410,17 @@ export function createQuestionAuthoringStudio():AuthoringStudioController{
     status("2 × 3 editable table inserted. Use Tab to move between cells.");
    }catch(error){status(error instanceof Error?error.message:"Table insertion failed",true);}
   });
+  const showMathPreview=()=>{
+   const tex=find<HTMLInputElement>("pd-author-tex").value;
+   const el=find<HTMLElement>("pd-author-math-live");
+   if(!tex.trim()){el.textContent="Enter LaTeX above to see its actual mathematical typesetting.";return;}
+   el.innerHTML=mathRenderer.render({tex,linearText:
+    find<HTMLInputElement>("pd-author-math-alt").value||"Mathematical preview",
+    displayMode:find<HTMLInputElement>("pd-author-display-math").checked}).html;
+  };
+  find<HTMLInputElement>("pd-author-tex").oninput=showMathPreview;
+  find<HTMLInputElement>("pd-author-math-alt").oninput=showMathPreview;
+  find<HTMLInputElement>("pd-author-display-math").onchange=showMathPreview;
   click("pd-author-math-insert",()=>{
    try{
     const tex=find<HTMLInputElement>("pd-author-tex").value;
@@ -427,12 +441,18 @@ export function createQuestionAuthoringStudio():AuthoringStudioController{
     void render();
    }catch(error){status(error instanceof Error?error.message:"Cannot add image",true);}
   };
+  find<HTMLSelectElement>("pd-author-assets").onchange=e=>{
+   const a=active().assets.find(a=>a.id===(e.target as HTMLSelectElement).value);
+   find<HTMLInputElement>("pd-author-image-alt").value=a?.altText??"";
+  };
   click("pd-author-insert-image",()=>{
    try{
     const id=find<HTMLSelectElement>("pd-author-assets").value;
     const a=active().assets.find(a=>a.id===id);
     if(!a)throw Error("Choose a verified local figure");
-    if(!session?.execute({type:"insert-image",assetId:a.id,altText:a.altText??"Prepared figure"}))
+    const altText=find<HTMLInputElement>("pd-author-image-alt").value.trim();
+    if(!altText)throw Error("Enter a descriptive text alternative for this figure");
+    if(!session?.execute({type:"insert-image",assetId:a.id,altText}))
      throw Error("Cannot insert image");
     status("Verified local image reference added. Image data is not duplicated per question.");
    }catch(error){status(error instanceof Error?error.message:"Image insertion failed",true);}
@@ -463,5 +483,5 @@ export function createQuestionAuthoringStudio():AuthoringStudioController{
  };
 }
 function draftsOptions(shelf:AuthoringDraftShelf):string{
- return shelf.drafts.map(d=>option(d.id,d.title+" ("+d.questions.length+" questions)",shelf.activeId)).join("");
+ return shelf.drafts.map(d=>option(d.id,d.title+" ("+d.questions.length+" question"+(d.questions.length===1?"":"s")+")",shelf.activeId)).join("");
 }

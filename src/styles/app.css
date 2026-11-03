@@ -1393,3 +1393,16 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
  .pd-author-paper-settings>summary{padding:10px}
  .pd-author-studio .pd-author-top>.row{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* P47-5C screenshot review: actual equation preview and very narrow controls. */
+.pd-author-math-live{margin:10px 0 13px;padding:10px 12px;border:1px solid var(--line);
+ border-radius:9px;background:var(--panel);min-height:44px;max-width:100%;
+ font-size:.92em;overflow-x:auto;overflow-y:hidden;overscroll-behavior-inline:contain}
+.pd-author-math-live .katex-display{max-width:100%;margin:.3em 0;overflow-x:auto}
+@media(max-width:260px){
+ .pd-author-studio .pd-author-top>.row{grid-template-columns:minmax(0,1fr)}
+ .pd-author-studio .pd-author-top>.row>.btn{width:100%;text-align:center}
+ .pd-author-toolbar>.btn{font-size:.75em;padding:5px 7px}
+ .pd-author-studio #pd-author-heading{font-size:1.08em}
+ .pd-author-meta{padding:8px}
+}

@@ -29,6 +29,7 @@ try{
  check((await page.locator("wg-content").innerText()).includes("Find the value"),"Live Wordgard text editing failed");
  await page.locator("#pd-author-tex").fill("\\frac{x^2-1}{x-1}");
  await page.locator("#pd-author-math-alt").fill("x squared minus one divided by x minus one");
+ check(await page.locator("#pd-author-math-live .katex-mathml").count()===1,"Authoring lacks actual live KaTeX preview");
  await page.locator("#pd-author-math-insert").click();
  await page.locator("#pd-author-field").selectOption("A");
  await page.locator("wg-content").click();
