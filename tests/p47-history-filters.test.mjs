@@ -125,9 +125,11 @@ test("P47-2 filtering cannot affect all-time metrics or immutable attempt scores
  const subset=historyHTML(attempts,new Map(),{...DEFAULT_HISTORY_QUERY,examId:"pgdba"},
    false,false,"");
  const metrics=html=>{
-  const matched=html.match(/<div class="history-summary">([\\s\\S]*?)<\\/div><p class="fine">Mock-style/);
-  assert.ok(matched,"complete current-summary block must be present");
-  return matched[1];
+  const marker='<div class="history-summary">';
+  const start=html.indexOf(marker);
+  const finish=html.indexOf('</div><p class="fine">Mock-style',start);
+  assert.ok(start>=0&&finish>start,"complete current-summary block must be present");
+  return html.slice(start,finish);
  };
  assert.equal(metrics(all),metrics(subset),
   "archive filters must not change the all-time metrics, denominators or score values");
