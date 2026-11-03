@@ -21,6 +21,22 @@ jobs:
       # Node 24 + npm 11; committed lockfile fixes direct and transitive resolution.
       - run: npm ci --no-audit --no-fund
       - run: npm run check
+      # P47-5A only: vendors are NOT shipped or added to the production lock.
+      # The isolated experiment uses exact direct versions and reports payload.
+      - name: Probe selective Wordgard 0.6.2 and latest KaTeX 0.19.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/p475a"
+          npm install --prefix "$RUNNER_TEMP/p475a" --no-save --ignore-scripts --no-audit --no-fund katex@0.19.1 wordgard@0.6.2
+          node scripts/probe-p47-vendors.mjs "$RUNNER_TEMP/p475a/node_modules" | tee p47-vendor-footprint.json
+      - name: Preserve P47-5A non-production footprint measurement
+        uses: actions/upload-artifact@v4
+        with:
+          name: p47-5a-vendor-footprint
+          path: p47-vendor-footprint.json
+          retention-days: 14
+          if-no-files-found: error
       - name: Prove clean locked dependency graph and deterministic HTML rebuild
         shell: bash
         run: |
