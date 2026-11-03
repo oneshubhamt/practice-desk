@@ -1435,3 +1435,17 @@ html[data-theme="dark"] .pd-author-studio .btn:not(.primary){
 html[data-theme="dark"] .pd-author-studio .btn.danger{
  color:#ffb4b4;
 }
+
+
+/* P47-5C: vendor/editor style injection can leave white button fills after a
+   live theme switch. An explicit, narrowly scoped final cascade wins over
+   generic injected button rules while leaving the vendor source untouched. */
+html[data-theme="dark"] body .generic-workspace.pd-author-mode .pd-author-studio button.btn:not(.primary){
+ background-color:var(--panel)!important;
+ background-image:none!important;
+ color:var(--ink)!important;
+ border-color:var(--line);
+}
+html[data-theme="dark"] body .generic-workspace.pd-author-mode .pd-author-studio button.btn.danger{
+ color:#ffb4b4!important;
+}
