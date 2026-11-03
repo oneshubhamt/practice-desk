@@ -188,7 +188,12 @@ select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-vis
 .history-archive h2{margin-bottom:4px}.history-archive .generic-actions{margin:0}
 .history-filters{display:grid;grid-template-columns:minmax(0,2fr) minmax(135px,1fr) minmax(135px,1fr);gap:14px;margin:20px 0 14px}
 .filter-label{display:grid;gap:7px;font-size:11px;min-width:0}
-.filter-label input,.filter-label select{width:100%;min-width:0;font-size:13px;letter-spacing:0;text-transform:none;font-weight:500}
+.filter-label input,.filter-label select{width:100%;min-width:0;max-width:100%;box-sizing:border-box;font-size:13px;letter-spacing:0;text-transform:none;font-weight:500}
+.history-filters input[type=date]{min-height:41px;border:1px solid var(--border-strong);border-radius:10px;background:var(--panel);color:var(--ink);font:inherit;font-size:13px;padding:6px;min-width:0;max-width:100%;box-sizing:border-box}
+.history-filter-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:7px;margin:0 0 8px;min-width:0}
+.history-filter-footer .fine{margin:0;min-width:0;overflow-wrap:anywhere;flex:1 1 220px}
+.history-filter-footer .btn{flex:0 1 auto;max-width:100%;white-space:normal;overflow-wrap:anywhere}
+@media(max-width:300px){.history-filters input[type=date]{font-size:12px;padding:4px 2px}.history-filter-footer .btn{width:100%}}
 .history-entries{border-top:1px solid var(--line)}
 .archive-entry{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
 .history-open{text-align:left;border:0;background:transparent;padding:5px 0;cursor:pointer;min-width:0}
@@ -5301,20 +5306,20 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
         const heading = mapped.get(annotationKey);
         const labels = [
           { label: section.title, kind: "section" },
-          ...(q.content.topicIds ?? []).map((label2) => ({ label: label2, kind: "source-topic" })),
+          ...(q.content.topicIds ?? []).map((label) => ({ label, kind: "source-topic" })),
           ...manual.get(annotationKey) ? [{ label: manual.get(annotationKey), kind: "user-topic" }] : [],
           ...heading && syllabusHeading(attempt.frozen.snapshot.examId, heading) ? [{ label: syllabusHeading(attempt.frozen.snapshot.examId, heading).label, kind: "syllabus" }] : []
         ];
         const unique2 = /* @__PURE__ */ new Set();
-        for (const { label: label2, kind } of labels) {
-          if (!label2.trim()) continue;
+        for (const { label, kind } of labels) {
+          if (!label.trim()) continue;
           const examId = attempt.frozen.snapshot.examId;
-          const key2 = examId + "|" + kind + "|" + label2;
+          const key2 = examId + "|" + kind + "|" + label;
           if (unique2.has(key2)) continue;
           unique2.add(key2);
           const row = rows.get(key2) ?? {
             id: key2,
-            label: label2,
+            label,
             kind,
             examId,
             total: 0,
@@ -7437,8 +7442,8 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     return rows.map((r) => {
       const attempts = r.answeredAttempts ?? r.attempts ?? 0, distinctQuestions = r.distinctAnsweredQuestions ?? r.distinctQuestions ?? 0;
       const accuracy = r.answered > 0 ? r.correct / r.answered : null;
-      const label2 = attempts < 2 || r.answered < 10 ? "insufficient" : distinctQuestions < 5 ? "repeated-items" : accuracy !== null && accuracy >= 0.8 ? "consistently-accurate" : accuracy !== null && accuracy >= 0.6 ? "moderate-observed" : "mixed";
-      return { examId: r.examId, topic: r.label, answered: r.answered, attempts, distinctQuestions, accuracy, label: label2 };
+      const label = attempts < 2 || r.answered < 10 ? "insufficient" : distinctQuestions < 5 ? "repeated-items" : accuracy !== null && accuracy >= 0.8 ? "consistently-accurate" : accuracy !== null && accuracy >= 0.6 ? "moderate-observed" : "mixed";
+      return { examId: r.examId, topic: r.label, answered: r.answered, attempts, distinctQuestions, accuracy, label };
     });
   }
 
@@ -7680,7 +7685,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
           reviewId = null;
           revealed = false;
         } else {
-          root2.innerHTML = '<div class="generic-heading"><div><h1>Spaced revision</h1><p class="muted">' + esc(item.sectionTitle) + ' \xB7 FSRS-7 \xB7 rate your recall, not your exam mark</p></div><button class="btn" id="learning-back">Learning desk</button></div><section class="panel pad">' + questionHTML(item) + (revealed ? '<div class="learning-answer"><h3>Expected answer</h3><p>' + esc(readableAnswer(item.question, item.answer)) + "</p>" + (item.explanation ? "<p>" + esc(item.explanation) + "</p>" : "") + (item.note ? '<p class="fine">Your note: ' + esc(item.note) + "</p>" : "") + '<h3>How well did you recall it?</h3><div class="row generic-actions">' + [[Rating.Again, "Again"], [Rating.Hard, "Hard"], [Rating.Good, "Good"], [Rating.Easy, "Easy"]].map(([grade, label2]) => '<button class="btn" data-grade="' + grade + '">' + label2 + "</button>").join("") + "</div></div>" : '<button class="btn primary" id="learning-reveal">Reveal answer</button>') + "</section>" + (message ? '<p role="status" class="generic-warning">' + esc(message) + "</p>" : "");
+          root2.innerHTML = '<div class="generic-heading"><div><h1>Spaced revision</h1><p class="muted">' + esc(item.sectionTitle) + ' \xB7 FSRS-7 \xB7 rate your recall, not your exam mark</p></div><button class="btn" id="learning-back">Learning desk</button></div><section class="panel pad">' + questionHTML(item) + (revealed ? '<div class="learning-answer"><h3>Expected answer</h3><p>' + esc(readableAnswer(item.question, item.answer)) + "</p>" + (item.explanation ? "<p>" + esc(item.explanation) + "</p>" : "") + (item.note ? '<p class="fine">Your note: ' + esc(item.note) + "</p>" : "") + '<h3>How well did you recall it?</h3><div class="row generic-actions">' + [[Rating.Again, "Again"], [Rating.Hard, "Hard"], [Rating.Good, "Good"], [Rating.Easy, "Easy"]].map(([grade, label]) => '<button class="btn" data-grade="' + grade + '">' + label + "</button>").join("") + "</div></div>" : '<button class="btn primary" id="learning-reveal">Reveal answer</button>') + "</section>" + (message ? '<p role="status" class="generic-warning">' + esc(message) + "</p>" : "");
           root2.querySelector("#learning-back").onclick = () => {
             reviewId = null;
             revealed = false;
@@ -7726,10 +7731,10 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       const visible = all.filter((c) => filter === "all" || filter === "due" && due(c) || filter === "bookmarked" && c.bookmarked);
       const exam = visible.find((c) => c.id === selectedId)?.examId ?? visible[0]?.examId;
       const candidates2 = visible.filter((c) => c.examId === exam && ["verified", "corrected", "caution"].includes(c.question.editorial.status)).slice(0, REVISION_MAX_QUESTIONS);
-      root2.innerHTML = '<div class="generic-heading"><div><h1>Learning & revision</h1><p class="muted">Error notebook \xB7 FSRS-7 spaced review \xB7 Topic evidence</p></div><button class="btn" id="learning-close">\u2190 Test library</button></div>' + (message ? '<p class="generic-warning" role="status">' + esc(message) + "</p>" : "") + '<div class="learning-summary">' + [["Notebook cards", all.length], ["Due for revision", dueNow.length], ["Reviewed with FSRS", reviewedCount], ["Bookmarked", bookmarkedCount]].map(([label2, value]) => '<div class="summary-stat"><small>' + esc(label2) + "</small><b>" + esc(value) + "</b></div>").join("") + '</div><section class="panel pad learning-revision-callout"><div class="row between"><div><h2>Revision queue</h2><p class="fine">' + all.length + " cards \xB7 " + (scheduler ? dueNow.length + " due now" : "Scheduler initializing") + ' \xB7 Mock results do not automatically count as spaced-repetition reviews</p></div><div class="row generic-actions"><button class="btn primary" id="learning-due"' + (!scheduler || !dueNow.length ? " disabled" : "") + '>Review due cards</button><button class="btn" id="learning-test"' + (!candidates2.length ? " disabled" : "") + ">Start revision test (" + candidates2.length + ')</button></div></div><p class="fine">Practice test uses the selected exam and current notebook filter (up to ' + REVISION_MAX_QUESTIONS + ' eligible cards). Untimed; +1 correct, 0 incorrect/unanswered. It is not the source exam score and does not rate FSRS cards.</p></section><section class="panel pad learning-evidence-builder"><h2>Build a targeted revision test</h2><p class="fine">Select an exam and observed evidence; questions are taken from exact frozen completed sources or your notebook. No guessed syllabus labels, cognitive causes or exam marks. Revision marking is +1 / 0, separate from mock results and FSRS ratings.</p><div class="learning-evidence-controls"><label>Exam <select id="learning-evidence-exam" aria-label="Revision exam">' + availableExams.map((id) => '<option value="' + esc(id) + '"' + (id === evidenceExam ? " selected" : "") + ">" + esc(id) + "</option>").join("") + "</select></label><label>Questions (1\u2013" + REVISION_MAX_QUESTIONS + ') <input id="learning-evidence-count" type="number" min="1" max="' + REVISION_MAX_QUESTIONS + '" value="' + evidenceCount + '"></label></div><fieldset class="learning-evidence-reasons"><legend>Include evidence types</legend>' + REVISION_REASONS.map((reason) => '<label><input type="checkbox" data-evidence-reason="' + reason + '"' + (evidenceReasons.includes(reason) ? " checked" : "") + "> " + esc(reason === "repeated" ? "Repeated wrong" : reason === "blank" ? "Unanswered" : reason === "slow" ? "Measured slow" : reason) + "</label>").join("") + '</fieldset><p class="fine" id="learning-evidence-summary" role="status">' + assembled.eligibleCount + " unique eligible questions \xB7 " + Math.min(evidenceCount, preview.length) + " previewed \xB7 " + sourceAttempts.filter((a) => a.frozen.snapshot.examId === evidenceExam).length + " completed source attempts. Reused questions and repeated exposure are not independent difficulty-adjusted evidence.</p>" + (assembled.insufficient.length ? '<p class="fine">' + assembled.insufficient.map(esc).join(" ") + "</p>" : "") + (preview.length ? '<ol class="learning-evidence-preview">' + preview.map((item, index) => "<li" + (index >= evidenceCount ? " hidden" : "") + "><strong>" + esc(item.reasons.join(", ")) + "</strong> \xB7 " + esc(item.prompt.slice(0, 140)) + " <small>\xB7 " + esc(item.sourcePaperId) + " \xB7 " + item.wrongAttempts + " wrong of " + item.observedAttempts + " observed source attempts" + (item.measuredForegroundMs === null ? "" : ", " + Math.round(item.measuredForegroundMs / 1e3) + "s cumulative foreground") + (item.visits === null ? "" : ", " + item.visits + " visits") + (item.firstVisitMs === null ? "" : ", first visit " + Math.round(item.firstVisitMs / 1e3) + "s") + (item.revisitMs === null ? "" : ", revisit " + Math.round(item.revisitMs / 1e3) + "s") + (item.beforeFirstAnswerMs === null ? "" : ", before first answer " + Math.round(item.beforeFirstAnswerMs / 1e3) + "s") + "</small></li>").join("") + "</ol>" : '<p class="fine">No eligible questions for the chosen filters. Try another evidence type or exam.</p>') + '<p class="fine">New sessions record first-visit, revisit and pre-first-answer foreground exposure. Unmeasured phases remain unavailable. These are not continuous wall-clock intervals or evidence of why an answer changed.</p><button class="btn primary" id="learning-build-evidence"' + (!evidenceReasons.length || assembled.eligibleCount < evidenceCount || evidenceCount < 1 ? " disabled" : "") + ">Start targeted revision (" + Math.min(evidenceCount, assembled.eligibleCount) + ')</button></section><div class="generic-layout learning-layout"><section class="panel pad"><div class="row between"><h2>Error notebook</h2><select id="learning-filter" aria-label="Filter notebook" class="learning-filter">' + [["all", "All cards"], ["due", "Due now"], ["bookmarked", "Bookmarked"]].map(([key2, label2]) => '<option value="' + key2 + '"' + (filter === key2 ? " selected" : "") + ">" + label2 + "</option>").join("") + "</select></div>" + (visible.length ? visible.map((c) => {
+      root2.innerHTML = '<div class="generic-heading"><div><h1>Learning & revision</h1><p class="muted">Error notebook \xB7 FSRS-7 spaced review \xB7 Topic evidence</p></div><button class="btn" id="learning-close">\u2190 Test library</button></div>' + (message ? '<p class="generic-warning" role="status">' + esc(message) + "</p>" : "") + '<div class="learning-summary">' + [["Notebook cards", all.length], ["Due for revision", dueNow.length], ["Reviewed with FSRS", reviewedCount], ["Bookmarked", bookmarkedCount]].map(([label, value]) => '<div class="summary-stat"><small>' + esc(label) + "</small><b>" + esc(value) + "</b></div>").join("") + '</div><section class="panel pad learning-revision-callout"><div class="row between"><div><h2>Revision queue</h2><p class="fine">' + all.length + " cards \xB7 " + (scheduler ? dueNow.length + " due now" : "Scheduler initializing") + ' \xB7 Mock results do not automatically count as spaced-repetition reviews</p></div><div class="row generic-actions"><button class="btn primary" id="learning-due"' + (!scheduler || !dueNow.length ? " disabled" : "") + '>Review due cards</button><button class="btn" id="learning-test"' + (!candidates2.length ? " disabled" : "") + ">Start revision test (" + candidates2.length + ')</button></div></div><p class="fine">Practice test uses the selected exam and current notebook filter (up to ' + REVISION_MAX_QUESTIONS + ' eligible cards). Untimed; +1 correct, 0 incorrect/unanswered. It is not the source exam score and does not rate FSRS cards.</p></section><section class="panel pad learning-evidence-builder"><h2>Build a targeted revision test</h2><p class="fine">Select an exam and observed evidence; questions are taken from exact frozen completed sources or your notebook. No guessed syllabus labels, cognitive causes or exam marks. Revision marking is +1 / 0, separate from mock results and FSRS ratings.</p><div class="learning-evidence-controls"><label>Exam <select id="learning-evidence-exam" aria-label="Revision exam">' + availableExams.map((id) => '<option value="' + esc(id) + '"' + (id === evidenceExam ? " selected" : "") + ">" + esc(id) + "</option>").join("") + "</select></label><label>Questions (1\u2013" + REVISION_MAX_QUESTIONS + ') <input id="learning-evidence-count" type="number" min="1" max="' + REVISION_MAX_QUESTIONS + '" value="' + evidenceCount + '"></label></div><fieldset class="learning-evidence-reasons"><legend>Include evidence types</legend>' + REVISION_REASONS.map((reason) => '<label><input type="checkbox" data-evidence-reason="' + reason + '"' + (evidenceReasons.includes(reason) ? " checked" : "") + "> " + esc(reason === "repeated" ? "Repeated wrong" : reason === "blank" ? "Unanswered" : reason === "slow" ? "Measured slow" : reason) + "</label>").join("") + '</fieldset><p class="fine" id="learning-evidence-summary" role="status">' + assembled.eligibleCount + " unique eligible questions \xB7 " + Math.min(evidenceCount, preview.length) + " previewed \xB7 " + sourceAttempts.filter((a) => a.frozen.snapshot.examId === evidenceExam).length + " completed source attempts. Reused questions and repeated exposure are not independent difficulty-adjusted evidence.</p>" + (assembled.insufficient.length ? '<p class="fine">' + assembled.insufficient.map(esc).join(" ") + "</p>" : "") + (preview.length ? '<ol class="learning-evidence-preview">' + preview.map((item, index) => "<li" + (index >= evidenceCount ? " hidden" : "") + "><strong>" + esc(item.reasons.join(", ")) + "</strong> \xB7 " + esc(item.prompt.slice(0, 140)) + " <small>\xB7 " + esc(item.sourcePaperId) + " \xB7 " + item.wrongAttempts + " wrong of " + item.observedAttempts + " observed source attempts" + (item.measuredForegroundMs === null ? "" : ", " + Math.round(item.measuredForegroundMs / 1e3) + "s cumulative foreground") + (item.visits === null ? "" : ", " + item.visits + " visits") + (item.firstVisitMs === null ? "" : ", first visit " + Math.round(item.firstVisitMs / 1e3) + "s") + (item.revisitMs === null ? "" : ", revisit " + Math.round(item.revisitMs / 1e3) + "s") + (item.beforeFirstAnswerMs === null ? "" : ", before first answer " + Math.round(item.beforeFirstAnswerMs / 1e3) + "s") + "</small></li>").join("") + "</ol>" : '<p class="fine">No eligible questions for the chosen filters. Try another evidence type or exam.</p>') + '<p class="fine">New sessions record first-visit, revisit and pre-first-answer foreground exposure. Unmeasured phases remain unavailable. These are not continuous wall-clock intervals or evidence of why an answer changed.</p><button class="btn primary" id="learning-build-evidence"' + (!evidenceReasons.length || assembled.eligibleCount < evidenceCount || evidenceCount < 1 ? " disabled" : "") + ">Start targeted revision (" + Math.min(evidenceCount, assembled.eligibleCount) + ')</button></section><div class="generic-layout learning-layout"><section class="panel pad"><div class="row between"><h2>Error notebook</h2><select id="learning-filter" aria-label="Filter notebook" class="learning-filter">' + [["all", "All cards"], ["due", "Due now"], ["bookmarked", "Bookmarked"]].map(([key2, label]) => '<option value="' + key2 + '"' + (filter === key2 ? " selected" : "") + ">" + label + "</option>").join("") + "</select></div>" + (visible.length ? visible.map((c) => {
         const next = scheduler ? schedule(c) : null;
         return '<button class="generic-history ' + (selected?.id === c.id ? "learning-selected" : "") + '" data-learning-id="' + esc(c.id) + '">' + esc(c.sectionTitle) + " \xB7 " + esc(c.question.content.prompt.slice(0, 92)) + "<small>" + esc(c.errorLabel ?? "Unclassified") + " \xB7 " + (next ? next.dueAt.getTime() <= Date.now() ? "Due now" : "Due " + next.dueAt.toLocaleDateString() : "Unscheduled") + " \xB7 " + c.reviews.length + " ratings</small></button>";
-      }).join("") : '<p class="fine">No cards in this view. Add a question from a completed test result.</p>') + '</section><section class="panel pad"><h2>Notebook detail</h2>' + (selected ? "<h3>" + esc(selected.question.content.prompt) + '</h3><p class="fine">' + esc(selected.paperId) + " \xB7 " + esc(selected.sectionTitle) + " \xB7 captured from completed attempt " + esc(selected.sourceAttemptId) + "</p><p>Expected: <strong>" + esc(readableAnswer(selected.question, selected.answer)) + "</strong></p>" + (selected.explanation ? '<p class="fine">' + esc(selected.explanation) + "</p>" : "") + '<label class="picker" for="learning-error">Error type (self-reported)</label><select id="learning-error"><option value="">Not classified</option>' + ERROR_LABELS.map((label2) => '<option value="' + label2 + '"' + (selected.errorLabel === label2 ? " selected" : "") + ">" + esc(label2) + "</option>").join("") + '</select><label class="picker" for="learning-topic">Specific topic (optional)</label><input id="learning-topic" maxlength="120" value="' + esc(selected.customTopic) + '" placeholder="Your own subtopic label">' + (syllabusForExam(selected.examId) ? '<label class="picker" for="learning-syllabus">Broad syllabus heading (optional, manually chosen)</label><select id="learning-syllabus"><option value="">No heading assigned</option>' + syllabusForExam(selected.examId).headings.map((h) => '<option value="' + esc(h.id) + '"' + (selected.syllabusTopicId === h.id ? " selected" : "") + ">" + esc(h.label) + "</option>").join("") + "</select>" : "") + '<label class="picker" for="learning-note">Notes</label><textarea id="learning-note" maxlength="8000" rows="5">' + esc(selected.note) + '</textarea><label class="learning-bookmark"><input id="learning-bookmark" type="checkbox"' + (selected.bookmarked ? " checked" : "") + '> Bookmark</label><div class="row generic-actions"><button class="btn primary" id="learning-save">Save note</button><button class="btn" id="learning-one">Review this card</button><button class="btn danger" id="learning-delete">Delete</button></div>' : '<p class="fine">Select a card from the notebook.</p>') + '</section></div><section class="panel pad learning-reports"><div class="row between"><div><h2>Reported error patterns</h2><p class="fine">Self-labelled notebook observations, not inferred diagnoses.</p></div></div>' + (commonReports.length ? '<div class="learning-report-list">' + commonReports.map(([label2, count]) => "<div><span>" + esc(label2) + "</span><b>" + count + " card" + (count === 1 ? "" : "s") + "</b></div>").join("") + "</div>" : '<p class="fine">Label errors in your notebook to see recurring patterns here.</p>') + '</section><section class="panel pad learning-insights"><h2>Topic performance</h2><p class="fine">Official CGL section labels are the default broad topics. Imported exam topic IDs and your explicitly labelled subtopics remain separate; no topic is guessed. Five answered items minimum for measured evidence. Skips are excluded from accuracy.</p><div class="scroll-table"><table><thead><tr><th>Exam</th><th>Type</th><th>Topic</th><th>Answered / total</th><th>Distinct answered</th><th>Answering attempts</th><th>Accuracy</th><th>Evidence</th></tr></thead><tbody>' + (topics.length ? topics.map((t) => "<tr><td>" + esc(t.examId) + "</td><td>" + esc(t.kind) + "</td><td>" + esc(t.label) + "</td><td>" + t.answered + " / " + t.total + "</td><td>" + t.distinctAnsweredQuestions + "</td><td>" + t.answeredAttempts + "</td><td>" + (t.accuracy === null ? "\u2014" : Math.round(t.accuracy * 100) + "%") + "</td><td>" + (t.evidence === "measured" ? "Observed" : "Insufficient") + "</td></tr>").join("") : '<tr><td colspan="8">Complete an exam to view topic performance.</td></tr>') + '</tbody></table></div><h2>Observed topic consistency</h2><p class="fine">Requires at least two attempts, ten answered observations and five distinct question revisions. Repeated questions are tracked separately; these are descriptive bands, not predictions of mastery.</p><div class="scroll-table"><table><thead><tr><th>Exam</th><th>Topic</th><th>Evidence</th></tr></thead><tbody>' + (progress.length ? progress.map((p) => "<tr><td>" + esc(p.examId) + "</td><td>" + esc(p.topic) + "</td><td>" + esc(p.label) + "</td></tr>").join("") : '<tr><td colspan="3">No completed practice evidence yet.</td></tr>') + '</tbody></table></div><h2>Comparable attempt trends</h2><p class="fine">Only identical frozen paper revisions, including their rules and answer keys, are compared.</p><div class="scroll-table"><table><thead><tr><th>Paper revision</th><th>Attempts</th><th>Accuracy sequence</th><th>Marks sequence</th></tr></thead><tbody>' + (cohorts.length ? cohorts.map((g) => "<tr><td>" + esc(g.label) + "</td><td>" + g.count + "</td><td>" + g.points.map((p) => p.accuracy === null ? "\u2014" : Math.round(p.accuracy * 100) + "%").join(" \u2192 ") + "</td><td>" + g.points.map((p) => p.marks.toFixed(1)).join(" \u2192 ") + "</td></tr>").join("") : '<tr><td colspan="4">Complete the same paper revision twice to see a valid comparison.</td></tr>') + "</tbody></table></div></section>";
+      }).join("") : '<p class="fine">No cards in this view. Add a question from a completed test result.</p>') + '</section><section class="panel pad"><h2>Notebook detail</h2>' + (selected ? "<h3>" + esc(selected.question.content.prompt) + '</h3><p class="fine">' + esc(selected.paperId) + " \xB7 " + esc(selected.sectionTitle) + " \xB7 captured from completed attempt " + esc(selected.sourceAttemptId) + "</p><p>Expected: <strong>" + esc(readableAnswer(selected.question, selected.answer)) + "</strong></p>" + (selected.explanation ? '<p class="fine">' + esc(selected.explanation) + "</p>" : "") + '<label class="picker" for="learning-error">Error type (self-reported)</label><select id="learning-error"><option value="">Not classified</option>' + ERROR_LABELS.map((label) => '<option value="' + label + '"' + (selected.errorLabel === label ? " selected" : "") + ">" + esc(label) + "</option>").join("") + '</select><label class="picker" for="learning-topic">Specific topic (optional)</label><input id="learning-topic" maxlength="120" value="' + esc(selected.customTopic) + '" placeholder="Your own subtopic label">' + (syllabusForExam(selected.examId) ? '<label class="picker" for="learning-syllabus">Broad syllabus heading (optional, manually chosen)</label><select id="learning-syllabus"><option value="">No heading assigned</option>' + syllabusForExam(selected.examId).headings.map((h) => '<option value="' + esc(h.id) + '"' + (selected.syllabusTopicId === h.id ? " selected" : "") + ">" + esc(h.label) + "</option>").join("") + "</select>" : "") + '<label class="picker" for="learning-note">Notes</label><textarea id="learning-note" maxlength="8000" rows="5">' + esc(selected.note) + '</textarea><label class="learning-bookmark"><input id="learning-bookmark" type="checkbox"' + (selected.bookmarked ? " checked" : "") + '> Bookmark</label><div class="row generic-actions"><button class="btn primary" id="learning-save">Save note</button><button class="btn" id="learning-one">Review this card</button><button class="btn danger" id="learning-delete">Delete</button></div>' : '<p class="fine">Select a card from the notebook.</p>') + '</section></div><section class="panel pad learning-reports"><div class="row between"><div><h2>Reported error patterns</h2><p class="fine">Self-labelled notebook observations, not inferred diagnoses.</p></div></div>' + (commonReports.length ? '<div class="learning-report-list">' + commonReports.map(([label, count]) => "<div><span>" + esc(label) + "</span><b>" + count + " card" + (count === 1 ? "" : "s") + "</b></div>").join("") + "</div>" : '<p class="fine">Label errors in your notebook to see recurring patterns here.</p>') + '</section><section class="panel pad learning-insights"><h2>Topic performance</h2><p class="fine">Official CGL section labels are the default broad topics. Imported exam topic IDs and your explicitly labelled subtopics remain separate; no topic is guessed. Five answered items minimum for measured evidence. Skips are excluded from accuracy.</p><div class="scroll-table"><table><thead><tr><th>Exam</th><th>Type</th><th>Topic</th><th>Answered / total</th><th>Distinct answered</th><th>Answering attempts</th><th>Accuracy</th><th>Evidence</th></tr></thead><tbody>' + (topics.length ? topics.map((t) => "<tr><td>" + esc(t.examId) + "</td><td>" + esc(t.kind) + "</td><td>" + esc(t.label) + "</td><td>" + t.answered + " / " + t.total + "</td><td>" + t.distinctAnsweredQuestions + "</td><td>" + t.answeredAttempts + "</td><td>" + (t.accuracy === null ? "\u2014" : Math.round(t.accuracy * 100) + "%") + "</td><td>" + (t.evidence === "measured" ? "Observed" : "Insufficient") + "</td></tr>").join("") : '<tr><td colspan="8">Complete an exam to view topic performance.</td></tr>') + '</tbody></table></div><h2>Observed topic consistency</h2><p class="fine">Requires at least two attempts, ten answered observations and five distinct question revisions. Repeated questions are tracked separately; these are descriptive bands, not predictions of mastery.</p><div class="scroll-table"><table><thead><tr><th>Exam</th><th>Topic</th><th>Evidence</th></tr></thead><tbody>' + (progress.length ? progress.map((p) => "<tr><td>" + esc(p.examId) + "</td><td>" + esc(p.topic) + "</td><td>" + esc(p.label) + "</td></tr>").join("") : '<tr><td colspan="3">No completed practice evidence yet.</td></tr>') + '</tbody></table></div><h2>Comparable attempt trends</h2><p class="fine">Only identical frozen paper revisions, including their rules and answer keys, are compared.</p><div class="scroll-table"><table><thead><tr><th>Paper revision</th><th>Attempts</th><th>Accuracy sequence</th><th>Marks sequence</th></tr></thead><tbody>' + (cohorts.length ? cohorts.map((g) => "<tr><td>" + esc(g.label) + "</td><td>" + g.count + "</td><td>" + g.points.map((p) => p.accuracy === null ? "\u2014" : Math.round(p.accuracy * 100) + "%").join(" \u2192 ") + "</td><td>" + g.points.map((p) => p.marks.toFixed(1)).join(" \u2192 ") + "</td></tr>").join("") : '<tr><td colspan="4">Complete the same paper revision twice to see a valid comparison.</td></tr>') + "</tbody></table></div></section>";
       root2.querySelector("#learning-evidence-exam").onchange = (e) => {
         evidenceExam = e.target.value;
         draw2();
@@ -8004,6 +8009,71 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     };
   }
 
+  // src/app/history-query.ts
+  var DEFAULT_HISTORY_QUERY = Object.freeze({
+    status: "all",
+    sort: "newest",
+    search: "",
+    paperRevisionId: "all",
+    examId: "all",
+    mode: "all",
+    startedFrom: "",
+    startedTo: ""
+  });
+  function localAttemptDate(timestamp) {
+    const d = new Date(timestamp);
+    return String(d.getFullYear()).padStart(4, "0") + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  var validDate2 = (value) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+    const [year, month, day] = value.split("-").map(Number);
+    if (!year || !month || !day || month > 12 || day > 31) return false;
+    const d = /* @__PURE__ */ new Date(0);
+    d.setUTCFullYear(year, month - 1, day);
+    return d.getUTCFullYear() === year && d.getUTCMonth() === month - 1 && d.getUTCDate() === day;
+  };
+  function historyQueryError(query) {
+    if (query.startedFrom && !validDate2(query.startedFrom)) return "Invalid From date. Use a valid calendar date.";
+    if (query.startedTo && !validDate2(query.startedTo)) return "Invalid To date. Use a valid calendar date.";
+    if (query.startedFrom && query.startedTo && query.startedFrom > query.startedTo)
+      return "From date must not be later than To date.";
+    return null;
+  }
+  function activeHistoryFilterCount(query) {
+    return Number(query.status !== "all") + Number(Boolean(query.search.trim())) + Number(Boolean(query.paperRevisionId && query.paperRevisionId !== "all")) + Number(Boolean(query.examId && query.examId !== "all")) + Number(Boolean(query.mode && query.mode !== "all")) + Number(Boolean(query.startedFrom)) + Number(Boolean(query.startedTo));
+  }
+  function historyAttemptLabel(a, packages) {
+    return packages.get(a.packageId)?.title ?? a.frozen.paper.paperId + (a.frozen.paper.edition === "custom" ? " \xB7 Practice" : " \xB7 " + a.frozen.paper.edition);
+  }
+  function filteredHistory(attempts, packages, query) {
+    if (historyQueryError(query)) return [];
+    const search = query.search.trim().toLocaleLowerCase();
+    const paper = query.paperRevisionId ?? "all", exam = query.examId ?? "all", mode = query.mode ?? "all";
+    return attempts.filter((a) => (paper === "all" || a.frozen.paper.id === paper) && (exam === "all" || a.frozen.snapshot.examId === exam) && (mode === "all" || a.frozen.snapshot.mode === mode) && (query.status === "all" || query.status === "complete" && a.finishedAt !== null || query.status === "progress" && a.finishedAt === null) && (!query.startedFrom || localAttemptDate(a.startedAt) >= query.startedFrom) && (!query.startedTo || localAttemptDate(a.startedAt) <= query.startedTo) && (!search || [
+      historyAttemptLabel(a, packages),
+      a.frozen.paper.paperId,
+      a.frozen.snapshot.mode,
+      a.frozen.paper.edition
+    ].some((t) => t.toLocaleLowerCase().includes(search)))).sort((a, b) => (query.sort === "oldest" ? a.startedAt - b.startedAt : b.startedAt - a.startedAt) || a.id.localeCompare(b.id));
+  }
+  function restoreHistoryQuery(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return DEFAULT_HISTORY_QUERY;
+    const raw = value;
+    if (!["all", "complete", "progress"].includes(raw.status) || !["newest", "oldest"].includes(raw.sort) || typeof raw.search !== "string" || raw.search.length > 200 || ["paperRevisionId", "examId", "mode", "startedFrom", "startedTo"].some((key2) => raw[key2] !== void 0 && (typeof raw[key2] !== "string" || raw[key2].length > 256)))
+      return DEFAULT_HISTORY_QUERY;
+    const q = {
+      status: raw.status,
+      sort: raw.sort,
+      search: raw.search,
+      paperRevisionId: typeof raw.paperRevisionId === "string" ? raw.paperRevisionId : "all",
+      examId: typeof raw.examId === "string" ? raw.examId : "all",
+      mode: typeof raw.mode === "string" ? raw.mode : "all",
+      startedFrom: typeof raw.startedFrom === "string" ? raw.startedFrom : "",
+      startedTo: typeof raw.startedTo === "string" ? raw.startedTo : ""
+    };
+    return historyQueryError(q) ? DEFAULT_HISTORY_QUERY : q;
+  }
+
   // src/app/history-page.ts
   function healthSummary(health) {
     if (health.loading) return "Loading stored records; readiness not yet confirmed.";
@@ -8014,12 +8084,6 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
   var esc2 = (x) => String(x ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
   var percent = (n) => Math.max(0, Math.min(100, n));
   var stamp = (ms) => new Date(ms).toLocaleString();
-  var label = (a, packages) => packages.get(a.packageId)?.title ?? a.frozen.paper.paperId + (a.frozen.paper.edition === "custom" ? " \xB7 Practice" : " \xB7 " + a.frozen.paper.edition);
-  function filteredHistory(attempts, packages, query) {
-    const search = query.search.trim().toLocaleLowerCase();
-    const selected = query.paperRevisionId ?? "all";
-    return attempts.filter((a) => (selected === "all" || a.frozen.paper.id === selected) && (query.status === "all" || query.status === "complete" && a.finishedAt !== null || query.status === "progress" && a.finishedAt === null) && (!search || [label(a, packages), a.frozen.paper.paperId, a.frozen.snapshot.mode, a.frozen.paper.edition].some((s) => s.toLocaleLowerCase().includes(search)))).sort((a, b) => query.sort === "oldest" ? a.startedAt - b.startedAt : b.startedAt - a.startedAt);
-  }
   function sectionPriorities(attempts) {
     const map = /* @__PURE__ */ new Map();
     for (const a of attempts) {
@@ -8049,6 +8113,10 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     inMemoryRecords: attempts.length
   }) {
     const visible = filteredHistory(attempts, packages, query);
+    const filterError = historyQueryError(query);
+    const activeFilterCount = activeHistoryFilterCount(query);
+    const examIds = [...new Set(attempts.map((a) => a.frozen.snapshot.examId))].sort((a, b) => a.localeCompare(b));
+    const modes = [...new Set(attempts.map((a) => a.frozen.snapshot.mode))].sort((a, b) => a.localeCompare(b));
     const done = attempts.filter((a) => a.finishedAt !== null && a.result);
     const mockDone = done.filter((a) => !a.notebookLineage && !a.frozen.paper.paperId.startsWith("notebook-revision:"));
     const progressing = attempts.filter((a) => a.finishedAt === null);
@@ -8069,13 +8137,13 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       editionOptions.set(p.paper.id, p.paper.paperId + " \xB7 " + p.paper.edition);
     const pCount = attempts.length;
     return '<div class="generic-heading page-heading"><div><span class="eyebrow">ATTEMPT ARCHIVE</span><h1>History & insights</h1><p class="muted">Review your work, compare like-for-like papers and safeguard offline records.</p></div><button class="btn quiet" id="g-library">\u2190 Test library</button></div>' + (warning ? '<p role="status" class="generic-warning">' + esc2(warning) + "</p>" : "") + // Primary History task first: keep archive filters, records and backups together.
-    '<section class="panel pad history-archive"><div class="row between"><div><h2>Saved attempts</h2><p class="fine">' + visible.length + " of " + pCount + ' records shown</p></div><div class="row generic-actions"><button class="btn" id="g-export-history"' + (loading ? " disabled" : "") + '>Export backup</button><button class="btn" id="g-import-history"' + (loading || storageLocked ? " disabled" : "") + '>Import backup</button></div></div><input type="file" id="g-history-file" accept=".json,.gz,application/json,application/gzip" hidden><div class="history-filters"><label class="filter-label" for="g-history-search">Find a paper<input type="search" id="g-history-search" placeholder="Search paper, mode or edition" value="' + esc2(query.search) + '"></label><label class="filter-label" for="g-history-paper">Paper / edition<select id="g-history-paper"><option value="all">All paper editions</option>' + [...editionOptions.entries()].sort((a, b) => a[1].localeCompare(b[1])).map(([id, label2]) => '<option value="' + esc2(id) + '"' + ((query.paperRevisionId ?? "all") === id ? " selected" : "") + ">" + esc2(label2) + "</option>").join("") + '</select></label><label class="filter-label" for="g-filter">Status<select id="g-filter">' + [["all", "All attempts"], ["progress", "In progress"], ["complete", "Completed"]].map(([id, t]) => '<option value="' + id + '"' + (query.status === id ? " selected" : "") + ">" + t + "</option>").join("") + '</select></label><label class="filter-label" for="g-history-sort">Order<select id="g-history-sort">' + [["newest", "Newest first"], ["oldest", "Oldest first"]].map(([id, t]) => '<option value="' + id + '"' + (query.sort === id ? " selected" : "") + ">" + t + "</option>").join("") + "</select></label></div>" + (visible.length ? '<div class="history-entries">' + visible.map((a) => {
+    '<section class="panel pad history-archive"><div class="row between"><div><h2>Saved attempts</h2><p class="fine" id="g-history-count" role="status" aria-live="polite">' + visible.length + " of " + pCount + ' records shown</p></div><div class="row generic-actions"><button class="btn" id="g-export-history"' + (loading ? " disabled" : "") + '>Export backup</button><button class="btn" id="g-import-history"' + (loading || storageLocked ? " disabled" : "") + '>Import backup</button></div></div><input type="file" id="g-history-file" accept=".json,.gz,application/json,application/gzip" hidden><div class="history-filters"><label class="filter-label" for="g-history-search">Find a paper<input type="search" id="g-history-search" placeholder="Search paper, mode or edition" value="' + esc2(query.search) + '"></label><label class="filter-label" for="g-history-paper">Paper / edition<select id="g-history-paper"><option value="all">All paper editions</option>' + [...editionOptions.entries()].sort((a, b) => a[1].localeCompare(b[1])).map(([id, label]) => '<option value="' + esc2(id) + '"' + ((query.paperRevisionId ?? "all") === id ? " selected" : "") + ">" + esc2(label) + "</option>").join("") + '</select></label><label class="filter-label" for="g-history-exam">Exam (saved ID)<select id="g-history-exam"><option value="all">All exams</option>' + examIds.map((id) => '<option value="' + esc2(id) + '"' + ((query.examId ?? "all") === id ? " selected" : "") + ">" + esc2(id) + "</option>").join("") + '</select></label><label class="filter-label" for="g-history-mode">Practice mode<select id="g-history-mode"><option value="all">All practice modes</option>' + modes.map((mode) => '<option value="' + esc2(mode) + '"' + ((query.mode ?? "all") === mode ? " selected" : "") + ">" + esc2(mode.replaceAll("-", " ")) + "</option>").join("") + '</select></label><label class="filter-label" for="g-filter">Status<select id="g-filter">' + [["all", "All attempts"], ["progress", "In progress"], ["complete", "Completed"]].map(([id, t]) => '<option value="' + id + '"' + (query.status === id ? " selected" : "") + ">" + t + "</option>").join("") + '</select></label><label class="filter-label" for="g-history-sort">Order<select id="g-history-sort">' + [["newest", "Newest first"], ["oldest", "Oldest first"]].map(([id, t]) => '<option value="' + id + '"' + (query.sort === id ? " selected" : "") + ">" + t + "</option>").join("") + '</select></label><label class="filter-label" for="g-history-from">Started from (local)<input type="date" id="g-history-from" value="' + esc2(query.startedFrom ?? "") + '"></label><label class="filter-label" for="g-history-to">Started through (local)<input type="date" id="g-history-to" value="' + esc2(query.startedTo ?? "") + '"></label></div><div class="history-filter-footer"><p class="fine">' + activeFilterCount + " active filter" + (activeFilterCount === 1 ? "" : "s") + ' \xB7 Dates use the local calendar day when each attempt started; both endpoints are inclusive.</p><button class="btn quiet" type="button" id="g-history-reset"' + (!activeFilterCount && query.sort === "newest" ? " disabled" : "") + ">Reset all filters</button></div>" + (filterError ? '<p class="generic-warning" id="g-history-filter-error" role="alert">' + esc2(filterError) + "</p>" : "") + '<p class="fine">Insights below always cover all saved attempts, regardless of archive filters.</p>' + (visible.length ? '<div class="history-entries">' + visible.map((a) => {
       const s = a.result?.snapshot;
       const score = frozenScoreSummary(a);
       const count = a.frozen.paper.sections.reduce((n, z) => n + z.questionRevisionIds.length, 0);
       const answered2 = a.state.responses.filter((z) => z.response).length;
       const status = a.finishedAt ? "Completed" : "Resume";
-      return '<div class="archive-entry"><button class="history-open" data-attempt="' + esc2(a.id) + '"><span class="archive-title">' + esc2(label(a, packages)) + '</span><span class="archive-meta">' + esc2(stamp(a.startedAt)) + " \xB7 " + esc2(a.frozen.snapshot.mode.replaceAll("-", " ")) + " \xB7 " + count + ' questions</span><span class="archive-numbers">' + (a.finishedAt ? score && s ? esc2(score.text) + " \xB7 " + s.correctCount + " correct" : "Completed \xB7 score unavailable" : answered2 + "/" + count + " answered \xB7 In progress") + '</span></button><span class="history-status ' + (a.finishedAt ? "complete" : "active") + '">' + status + "</span>" + (a.finishedAt ? '<button class="btn danger generic-delete" data-delete="' + esc2(a.id) + '" aria-label="Delete completed result">Delete</button>' : '<button class="btn danger generic-delete" data-discard="' + esc2(a.id) + '" aria-label="Discard unfinished test and lose its answers">Discard unfinished</button>') + "</div>";
+      return '<div class="archive-entry"><button class="history-open" data-attempt="' + esc2(a.id) + '"><span class="archive-title">' + esc2(historyAttemptLabel(a, packages)) + '</span><span class="archive-meta">' + esc2(stamp(a.startedAt)) + " \xB7 " + esc2(a.frozen.snapshot.mode.replaceAll("-", " ")) + " \xB7 " + count + ' questions</span><span class="archive-numbers">' + (a.finishedAt ? score && s ? esc2(score.text) + " \xB7 " + s.correctCount + " correct" : "Completed \xB7 score unavailable" : answered2 + "/" + count + " answered \xB7 In progress") + '</span></button><span class="history-status ' + (a.finishedAt ? "complete" : "active") + '">' + status + "</span>" + (a.finishedAt ? '<button class="btn danger generic-delete" data-delete="' + esc2(a.id) + '" aria-label="Delete completed result">Delete</button>' : '<button class="btn danger generic-delete" data-discard="' + esc2(a.id) + '" aria-label="Discard unfinished test and lose its answers">Discard unfinished</button>') + "</div>";
     }).join("") + "</div>" : '<p class="empty-state">No attempts match these filters. Your saved records have not been deleted.</p>') + '</section><div class="history-summary">' + [
       ["Total attempts", pCount],
       ["Completed", done.length],
@@ -8270,8 +8338,8 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
     };
   }
   function preflightHTML(p) {
-    const label2 = (n) => n.toFixed(p.decimals);
-    return '<section id="g-preflight" class="paper-preflight" aria-label="Pre-test scoring and editorial information"><h3>Scoring & source audit</h3><div class="preflight-scoreline"><strong>' + escapeHTML(label2(p.maximum)) + '</strong><span>eligible automated marks</span></div><p class="fine">Computed for this selected practice mode and edition; not the unadjusted printed maximum.</p><p class="preflight-rule"><b>Marking:</b> ' + escapeHTML(p.ruleSummary) + "</p>" + (p.hasComponentScoring ? `<p class="fine">Component-based partial credit applies where configured, capped at each question's full marks.</p>` : "") + '<p class="fine">Question status: ' + plural(p.eligibleQuestions, "automatically scoreable") + "; " + plural(p.excludedQuestions, "excluded") + "; " + plural(p.manualQuestions, "manual-response") + "; " + plural(p.cautionQuestions, "editorial caution") + "; " + plural(p.correctedQuestions, "corrected") + "." + (p.patchCount === null ? "" : " Independently reviewed changes in this built-in edition: " + p.patchCount + ".") + '</p><p class="preflight-provenance"><b>Source & independence:</b> ' + escapeHTML(p.provenance) + '</p><p class="fine">Exact key choices, editorial disputes, worked solutions and original-versus-reviewed answer comparisons remain hidden until permitted after completion.</p></section>';
+    const label = (n) => n.toFixed(p.decimals);
+    return '<section id="g-preflight" class="paper-preflight" aria-label="Pre-test scoring and editorial information"><h3>Scoring & source audit</h3><div class="preflight-scoreline"><strong>' + escapeHTML(label(p.maximum)) + '</strong><span>eligible automated marks</span></div><p class="fine">Computed for this selected practice mode and edition; not the unadjusted printed maximum.</p><p class="preflight-rule"><b>Marking:</b> ' + escapeHTML(p.ruleSummary) + "</p>" + (p.hasComponentScoring ? `<p class="fine">Component-based partial credit applies where configured, capped at each question's full marks.</p>` : "") + '<p class="fine">Question status: ' + plural(p.eligibleQuestions, "automatically scoreable") + "; " + plural(p.excludedQuestions, "excluded") + "; " + plural(p.manualQuestions, "manual-response") + "; " + plural(p.cautionQuestions, "editorial caution") + "; " + plural(p.correctedQuestions, "corrected") + "." + (p.patchCount === null ? "" : " Independently reviewed changes in this built-in edition: " + p.patchCount + ".") + '</p><p class="preflight-provenance"><b>Source & independence:</b> ' + escapeHTML(p.provenance) + '</p><p class="fine">Exact key choices, editorial disputes, worked solutions and original-versus-reviewed answer comparisons remain hidden until permitted after completion.</p></section>';
   }
   function examRulesHTML(p) {
     const list = (items) => "<ul>" + items.map((item) => "<li>" + escapeHTML(item) + "</li>").join("") + "</ul>";
@@ -8338,7 +8406,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       ["fastwrong", "Fast incorrect"],
       ["typicalwrong", "Typical-speed incorrect"],
       ["slowwrong", "Slow incorrect"]
-    ].map(([id, label2]) => '<option value="' + id + '"' + (id === active ? " selected" : "") + ">" + label2 + "</option>").join("") + "</select></label>";
+    ].map(([id, label]) => '<option value="' + id + '"' + (id === active ? " selected" : "") + ">" + label + "</option>").join("") + "</select></label>";
   }
   function timingLedgerHTML(a, active, allowReview = true) {
     if (!a.result) return "";
@@ -8987,7 +9055,22 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
         warning = "Exam setup could not be saved on this device; current selection still works.";
       }
     };
-    let historyFilter = "all", historySort = "newest", historySearch = "", historyPaper = "all";
+    const historyQueryKey = "practiceDesk.history.view.v1";
+    let historyQuery = (() => {
+      try {
+        return restoreHistoryQuery(JSON.parse(sessionStorage.getItem(historyQueryKey) ?? "null"));
+      } catch {
+        return DEFAULT_HISTORY_QUERY;
+      }
+    })();
+    const changeHistoryQuery = (next, redraw = true) => {
+      historyQuery = next;
+      try {
+        sessionStorage.setItem(historyQueryKey, JSON.stringify(next));
+      } catch {
+      }
+      if (redraw) draw2();
+    };
     let composeOpen = false, composeSection = "", composeTopic = "", composeDifficulty = "";
     let composeCount = 10, composeSeed = "practice-1";
     let composePreview = "";
@@ -9544,7 +9627,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       const hasEditions = available.some((p) => p.paper.edition === "source") && available.some((p) => p.paper.edition === "reviewed");
       const familyOptions = (selectedFamilyId && !family ? '<option value="' + escapeText(selectedFamilyId) + '" selected disabled>Saved exam family unavailable \u2014 re-import</option>' : "") + catalog.map((f) => '<option value="' + escapeText(f.id) + '"' + (f.id === selectedFamilyId ? " selected" : "") + ">" + escapeText(f.title) + " (" + f.papers.length + " paper edition" + (f.papers.length === 1 ? "" : "s") + ")</option>").join("");
       const composeInventory = composeOpen && configured ? practiceInventory(configured) : null;
-      const filterOption = (value, label2, current) => '<option value="' + escapeText(value) + '"' + (value === current ? " selected" : "") + ">" + escapeText(label2) + "</option>";
+      const filterOption = (value, label, current) => '<option value="' + escapeText(value) + '"' + (value === current ? " selected" : "") + ">" + escapeText(label) + "</option>";
       const builder = selected ? '<section class="panel pad practice-builder" id="g-compose"><details id="g-compose-details"' + (composeOpen ? " open" : "") + '><summary>Create a custom practice set from this paper</summary><p class="fine">Draw from this paper and edition only. Preserve marking, navigation and timers. Excluded questions are not drawn; tags are never inferred.</p><div class="practice-compose-fields"><label>Section<select id="g-compose-section">' + filterOption("", "All sections", composeSection) + (composeInventory?.sectionChoices ?? []).map((x) => filterOption(x.id, x.title + " (" + x.count + ")", composeSection)).join("") + '</select></label><label>Source topic<select id="g-compose-topic">' + filterOption("", "Any topic", composeTopic) + (composeInventory?.topics ?? []).map((x) => filterOption(x.id, x.id + " (" + x.count + ")", composeTopic)).join("") + '</select></label><label>Supplied difficulty<select id="g-compose-difficulty">' + filterOption("", "Any difficulty", composeDifficulty) + (composeInventory?.difficulties ?? []).map((x) => filterOption(x.id, x.id + " (" + x.count + ")", composeDifficulty)).join("") + '</select></label><label>Questions<input type="number" id="g-compose-count" min="1" max="2000" step="1" value="' + composeCount + '"></label><label>Repeatable seed<input type="text" id="g-compose-seed" maxlength="80" value="' + escapeText(composeSeed) + '"></label></div><p class="fine">' + (composeInventory ? composeInventory.eligible + " eligible of " + configured.questions.length + " questions \xB7 " + composeInventory.excluded + " excluded \xB7 " + composeInventory.cautions + " caution." : "Expand to inspect source metadata.") + "</p>" + (composePreview ? '<p class="fine compose-preview" role="status">' + escapeText(composePreview) + "</p>" : "") + (composeError ? '<p class="generic-warning" role="alert">' + escapeText(composeError) + "</p>" : "") + '<div class="row generic-actions"><button type="button" class="btn" id="g-compose-preview">Preview draw</button><button type="button" class="btn primary" id="g-compose-start"' + (loading || fallbackConflict || storageFault ? " disabled" : "") + ">Start custom set</button></div></details></section>" : "";
       return '<div class="generic-heading home-heading"><div><span class="eyebrow">OFFLINE PRACTICE STUDIO</span><h1>Test library</h1><p class="muted">Choose a paper, work in exam conditions and learn from every attempt.</p></div><button class="btn quiet" id="g-history">History & insights \u2192</button></div>' + (warning ? '<p class="generic-warning" role="status">' + escapeText(warning) + "</p>" : "") + (pending.length ? '<section class="panel pad pending-panel" id="g-pending-attempts"><div class="row between"><div><span class="eyebrow">PICK UP WHERE YOU LEFT OFF</span><h2>Unfinished attempts</h2><p class="fine">' + pending.length + " saved, resumable test" + (pending.length === 1 ? "" : "s") + ". Section timers follow the frozen exam policy; leaving the app does not pause a running clock.</p></div>" + (pending.length > 5 ? '<button type="button" class="textlink" id="g-pending-history">View all ' + pending.length + " \u2192</button>" : "") + '</div><div class="pending-attempt-list">' + pending.slice(0, 5).map((a) => '<button class="recent-attempt" data-attempt="' + escapeText(a.id) + '" aria-label="Resume ' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + '"><b>' + escapeText(packages.get(a.packageId)?.title ?? a.frozen.paper.paperId) + "</b><small>" + new Date(a.startedAt).toLocaleString() + " \xB7 " + escapeText(a.frozen.snapshot.mode.replaceAll("-", " ")) + " \xB7 " + a.state.responses.filter((z) => z.response !== void 0).length + " answers \xB7 Resume \u2192</small></button>").join("") + "</div>" + (pending.length > 5 ? '<p class="fine">Showing the five most recent unfinished tests; all others are preserved in History.</p>' : "") + "</section>" : "") + '<div class="generic-layout home-grid"><section class="panel pad home-picker"><h2 class="sr-only">Start a practice session</h2><div class="family-paper-row"><div class="family-field"><label class="picker" for="g-family">Examination family</label><select id="g-family" aria-label="Examination family">' + familyOptions + '</select></div><div class="paper-field"><label class="picker" for="g-papers">Paper</label><select id="g-papers">' + options + "</select></div></div>" + (!selected ? '<p class="generic-warning" role="status">Saved paper unavailable. Re-import its revision or select an installed paper.</p>' : "") + (hasEditions ? '<div class="edition-row"><span class="picker" id="editionLabel">Paper edition</span><div class="edition-toggle" id="g-edition" role="group" aria-labelledby="editionLabel">' + ["reviewed", "source"].map((edition) => '<button type="button" class="edition-choice ' + (editionView === edition ? "active" : "") + '" data-edition="' + edition + '" aria-pressed="' + (editionView === edition) + '">' + (cgl ? edition === "reviewed" ? "Reviewed &amp; Corrected" : "Original PDF" : edition === "reviewed" ? "Imported reviewed" : "Imported source") + "</button>").join("") + '</div><p class="fine edition-note">' + (family?.imported ? "User-supplied edition; Practice Desk does not certify its questions or keys." : editionView === "reviewed" ? "Independently reviewed wording and answer keys; disputed items are labelled after submission." : "Original publisher transcription; no independent key changes applied.") + "</p></div>" : "") + (cgl ? '<h3 class="subhead">Practice mode</h3><div class="generic-modes" role="group" aria-label="SSC CGL practice mode">' + [
         ["strict", "Exam simulation", "4 locked sections \xB7 15 minutes each"],
@@ -9725,7 +9808,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
         html: () => view === "library" ? listHTML() : view === "history" ? historyHTML(
           [...records.values()].filter(isAttempt),
           packages,
-          { status: historyFilter, sort: historySort, search: historySearch, paperRevisionId: historyPaper },
+          historyQuery,
           loading,
           fallbackConflict || storageFault,
           warning,
@@ -9736,23 +9819,16 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
       if (view === "learning") return;
       if (view === "history") {
         root2.querySelector("#g-library").onclick = () => go({ screen: "library" });
-        root2.querySelector("#g-filter").onchange = (e) => {
-          historyFilter = e.target.value;
-          draw2();
-        };
-        root2.querySelector("#g-history-paper").onchange = (e) => {
-          historyPaper = e.target.value;
-          draw2();
-        };
-        root2.querySelector("#g-history-sort").onchange = (e) => {
-          historySort = e.target.value;
-          draw2();
-        };
-        root2.querySelector("#g-history-search").oninput = (e) => {
-          const search = e.target.value;
-          historySearch = search;
-          draw2();
-        };
+        const setFilter = (patch) => changeHistoryQuery({ ...historyQuery, ...patch });
+        root2.querySelector("#g-filter").onchange = (e) => setFilter({ status: e.target.value });
+        root2.querySelector("#g-history-paper").onchange = (e) => setFilter({ paperRevisionId: e.target.value });
+        root2.querySelector("#g-history-exam").onchange = (e) => setFilter({ examId: e.target.value });
+        root2.querySelector("#g-history-mode").onchange = (e) => setFilter({ mode: e.target.value });
+        root2.querySelector("#g-history-from").onchange = (e) => setFilter({ startedFrom: e.target.value });
+        root2.querySelector("#g-history-to").onchange = (e) => setFilter({ startedTo: e.target.value });
+        root2.querySelector("#g-history-sort").onchange = (e) => setFilter({ sort: e.target.value });
+        root2.querySelector("#g-history-search").oninput = (e) => setFilter({ search: e.target.value });
+        root2.querySelector("#g-history-reset").onclick = () => changeHistoryQuery(DEFAULT_HISTORY_QUERY);
         root2.querySelector("#g-export-history").onclick = () => {
           void downloadBackup();
         };
@@ -9816,18 +9892,12 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
         });
         root2.querySelector("#g-history").onclick = () => go({ screen: "history" });
         root2.querySelector("#g-history-recent").onclick = () => {
-          historyFilter = "complete";
-          historyPaper = "all";
-          historySearch = "";
-          historySort = "newest";
+          changeHistoryQuery({ ...DEFAULT_HISTORY_QUERY, status: "complete" }, false);
           go({ screen: "history" });
         };
         const pendingHistory = root2.querySelector("#g-pending-history");
         if (pendingHistory) pendingHistory.onclick = () => {
-          historyFilter = "progress";
-          historyPaper = "all";
-          historySearch = "";
-          historySort = "newest";
+          changeHistoryQuery({ ...DEFAULT_HISTORY_QUERY, status: "progress" }, false);
           go({ screen: "history" });
         };
         root2.querySelectorAll("[data-mode]").forEach((button) => button.onclick = () => {
