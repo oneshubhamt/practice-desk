@@ -55,6 +55,7 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm run build
       - run: node scripts/acceptance-history-evidence.mjs
+      - run: node scripts/acceptance-history-filters.mjs
       - run: node scripts/acceptance-resilience.mjs
       - run: node scripts/acceptance-learning-lifecycle.mjs
       - run: node scripts/acceptance-session-policy.mjs
