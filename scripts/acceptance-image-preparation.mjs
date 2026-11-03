@@ -119,6 +119,7 @@ try{
  const photograph=await imageData({photograph:true});
  await chooseImage(photograph,"local-photo.png");
  const message=await page.locator("#prep-image-status").innerText();
+ let convertedMedia=null;
  const offered=message.includes("Candidate saves");
  if(engine==="chromium")check(offered,
    "Chromium must actually offer a vetted smaller WebP for the photographic test fixture: "+message);
@@ -137,6 +138,7 @@ try{
   await page.locator("#prep-image-alt").fill("Photograph of a physical setup");
   await page.locator("#prep-image-approve").check();
   const converted=await downloadEntry("button:text-is('Download reviewed WebP image entry')");
+  convertedMedia=converted;
   check(converted.dataUri.startsWith("data:image/webp;base64,"),
    "WebP converter did not produce a standard importable image");
   check(converted.dataUri.length<photograph.length*.85,
@@ -148,6 +150,30 @@ try{
   "photo preparation mutated an already frozen diagram");
  await page.locator("dialog.generic-image-preparation button:text-is('Close')").click();
  await modal.waitFor({state:"detached"});
+ if(convertedMedia){
+  const photographicBank={
+   format:"practice-desk-bank",version:1,bankId:"pgdba-photo-prepared",
+   examId:"pgdba",title:"PGDBA pre-frozen photo verification",revision:1,
+   scoring:{correctMarks:3,incorrectMarks:-1,unansweredMarks:0},
+   media:[convertedMedia],
+   questions:[{id:"q-photo",section:"Data Interpretation",type:"mcq",
+    question:"Inspect the photographic dataset.",imageIds:["photo-one"],
+    options:["First","Second","Third","Fourth"],answer:"A"}]
+  };
+  await page.locator("#g-file").setInputFiles({
+   name:"pgdba-prepared-webp.json",mimeType:"application/json",
+   buffer:Buffer.from(JSON.stringify(photographicBank))
+  });
+  await page.waitForFunction(()=>document.querySelector("#g-papers")?.value==="bank:pgdba-photo-prepared:paper:r1");
+  const stored=(await records(page)).find(x=>x.recordType==="generic-package"&&
+    x.bundle?.paper?.paperId==="bank:pgdba-photo-prepared");
+  check(stored?.bundle?.assets?.length===1&&
+    stored.bundle.assets[0].mediaType==="image/webp"&&
+    stored.bundle.assets[0].contentHash?.length===64,
+    "reviewed WebP did not import as a separately authenticated frozen bank asset");
+  check(stored.bundle.assets[0].dataUri===convertedMedia.dataUri,
+    "WebP import altered or recompressed an approved candidate");
+ }
  await page.setViewportSize({width:195,height:844});
  await page.locator("#displayTrigger").click();
  while((await page.locator("#fontReset").innerText()).trim()!=="140%"){
