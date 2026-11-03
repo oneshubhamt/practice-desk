@@ -124,8 +124,14 @@ test("P47-2 filtering cannot affect all-time metrics or immutable attempt scores
  const all=historyHTML(attempts,new Map(),DEFAULT_HISTORY_QUERY,false,false,"");
  const subset=historyHTML(attempts,new Map(),{...DEFAULT_HISTORY_QUERY,examId:"pgdba"},
    false,false,"");
- const metrics=html=>html.slice(html.indexOf('<div class="history-summary">'),html.indexOf('</div>',html.indexOf('</div>',html.indexOf('<div class="history-summary">')+6)+6));
- // More reliable comparison: compare all-time totals rendered in the same panels.
+ const metrics=html=>{
+  const matched=html.match(/<div class="history-summary">([\\s\\S]*?)<\\/div><p class="fine">Mock-style/);
+  assert.ok(matched,"complete current-summary block must be present");
+  return matched[1];
+ };
+ assert.equal(metrics(all),metrics(subset),
+  "archive filters must not change the all-time metrics, denominators or score values");
+ // In addition to exact totals, check the labels and the separately filtered archive count.
  for(const phrase of ['Total attempts','Completed','In progress','Papers practised','Best adjusted %','Mock accuracy']){
   assert.ok(all.includes(phrase)&&subset.includes(phrase),phrase);
  }
