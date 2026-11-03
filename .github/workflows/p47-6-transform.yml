@@ -1,0 +1,29 @@
+name: One-time P47-6 semantic coordinator rewrite
+on:
+  push:
+    branches: [overhaul]
+permissions:
+  contents: write
+jobs:
+  refactor:
+    if: contains(github.event.head_commit.message, 'build(P47-6): apply symbol-safe coordinator split')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Execute symbol-checked, deterministic module extraction
+        run: node scripts/p47-6-one-time-refactor.mjs
+      - name: Strict typed structural acceptance
+        run: npm run typecheck
+      - name: Retire one-time mechanical refactor and source-snapshot helpers
+        run: |
+          git rm scripts/p47-6-one-time-refactor.mjs .github/workflows/p47-6-transform.yml .github/workflows/p47-coordinator-source.yml
+          git add src/app/
+          git -c user.name='practice-desk-ci' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'refactor(P47-6): typed screen, storage, route, exam and learning controllers'
+          git push origin HEAD:overhaul
