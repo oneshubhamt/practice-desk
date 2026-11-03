@@ -42,6 +42,7 @@ import { examFamilyCatalog,familyIdFor,pairedEdition,BUILTIN_CGL_FAMILY } from "
 import { importAuthoredExam, APFC_NAT_BANK_TEMPLATE } from "./bank-import.ts";
 import { createScreenRenderer } from "./screen-renderer.ts";
 import { createImageViewer } from "./image-viewer.ts";
+import { createImagePreparation } from "./image-preparation.ts";
 import { createNativeRouter, type AppRoute, type RouteContext, type NativeRouter } from "./navigation.ts";
 
 
@@ -129,6 +130,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  const screenRenderer=createScreenRenderer(root);
  // One transient dialog/handler set for the entire mounted workspace.
  const imageViewer=createImageViewer(root);
+ const imagePreparation=createImagePreparation();
  let router:NativeRouter;
  let activationGeneration=0;
  // A newly created frozen session is already foreground/clock-initialized.
@@ -675,10 +677,11 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
         '<small>No countdown or automatic expiry. Keep the selected navigation and scoring rules; finish when ready.</small></span></label>'+
      '<div class="row generic-actions home-start"><button class="btn primary" id="g-start"'+
       (loading||fallbackConflict||storageFault||!selected?' disabled':'')+'>Start '+escapeText(modeLabel)+' →</button>'+
-      '<button class="btn" id="g-import"'+(loading||fallbackConflict||storageFault?' disabled':'')+'>Import question bank</button></div>'+
+      '<button class="btn" id="g-import"'+(loading||fallbackConflict||storageFault?' disabled':'')+'>Import question bank</button>'+
+      '<button type="button" class="btn" id="g-image-prep">Prepare image for a bank</button></div>'+
       '<input type="file" id="g-file" accept=".json,.gz,application/json,application/gzip" hidden>'+
       '<p class="fine">Start with an editable <button type="button" class="textlink" id="g-bank-template">Download APFC/NAT bank template</button> (JSON). '+
-      'Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section>'+
+      'An authored simple bank may include a media array, question imageIds and optionImageIds. Prepare local images first; signed packages are never recompressed. Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section>'+
      '<aside class="home-side"><section class="panel pad paper-preview"><span class="eyebrow">SELECTED PAPER</span>'+
       '<h2>'+escapeText(selected?.title??"Choose a paper")+'</h2>'+
       '<p class="fine family-provenance">'+(family?.imported?
@@ -998,7 +1001,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  }
  function draw():void{
    if(disposed)return;
-   imageViewer.beforeRender();
+   imageViewer.beforeRender();imagePreparation.beforeRender();
    const currentSection=attempt?.frozen.paper.sections[attempt.state.sectionIndex];
    const currentQuestion=attempt?.state.questionIndex;
    const screenKey=view==="exam"?
@@ -1206,6 +1209,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
        warning="";void save(attempt);go({screen:"exam",attemptId:attempt.id});
      };
      root.querySelector<HTMLButtonElement>("#g-import")!.onclick=()=>root.querySelector<HTMLInputElement>("#g-file")?.click();
+     root.querySelector<HTMLButtonElement>("#g-image-prep")!.onclick=e=>imagePreparation.open(e.currentTarget as HTMLElement);
      root.querySelector<HTMLButtonElement>("#g-bank-template")!.onclick=()=>{
        const data=new Blob([JSON.stringify(APFC_NAT_BANK_TEMPLATE,null,2)],{type:"application/json"});
        const url=URL.createObjectURL(data);
@@ -1552,7 +1556,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
    if(!disposed)draw();
  };
  window.addEventListener("storage",storage);
- function cleanup(){imageViewer.dispose();router.dispose();learningDesk.dispose();disposed=true;window.clearInterval(timer);document.removeEventListener("visibilitychange",visibility);
+ function cleanup(){imageViewer.dispose();imagePreparation.dispose();router.dispose();learningDesk.dispose();disposed=true;window.clearInterval(timer);document.removeEventListener("visibilitychange",visibility);
    window.removeEventListener("pagehide",pagehide);window.removeEventListener("storage",storage);
    window.removeEventListener("keydown",keyboard);void writeQueue.finally(()=>db?.close());root.classList.remove("generic-workspace");}
  router=createNativeRouter(activateRoute);
