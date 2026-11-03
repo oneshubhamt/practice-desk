@@ -6,7 +6,7 @@ import {addLearningCard,validateLearningCard,topicMetrics,comparableTrends} from
 import {revisionInventory,revisionTake,mockEvidenceAttempts,isRevisionAttempt} from "../src/learning/revision-selection.ts";
 import {APFC_SYLLABUS_V1,syllabusForExam} from "../src/learning/syllabus-taxonomy.ts";
 import {makeRevisionPackage,createNotebookLineage,validateNotebookLineage} from "../src/learning/revision-test.ts";
-import {validateGenericStoredRecord} from "../src/app/generic-ui.ts";
+import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
 import {makeBackup,verifyBackup} from "../src/history/backup.ts";
 import {paperRevisionHash,questionRevisionHash} from "../src/domain/integrity.ts";
 import {hashJson} from "../src/domain/hash.ts";

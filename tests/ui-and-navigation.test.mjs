@@ -5,7 +5,9 @@ import * as __suite_dep_0 from "node:test";
 import * as __suite_dep_1 from "node:assert/strict";
 import * as __suite_dep_2 from "./fixtures/six-kinds.mjs";
 import * as __suite_dep_3 from "../src/app/exam-package.ts";
-import * as __suite_dep_4 from "../src/app/generic-ui.ts";
+import * as __suite_dep_4_exam_view from "../src/app/exam-view.ts";
+import * as __suite_dep_4_stored_record_validator from "../src/app/stored-record-validator.ts";
+import * as __suite_dep_4_question_content_view from "../src/app/question-content-view.ts";
 import * as __suite_dep_5 from "../src/app/history-page.ts";
 import * as __suite_dep_6 from "../src/app/result-presentation.ts";
 import * as __suite_dep_7 from "../src/learning/answer-revisions.ts";
@@ -24,7 +26,7 @@ const pkg = __suite_dep_2["pkg"];
 const validateExamPackage = __suite_dep_3["validateExamPackage"];
 const startGenericAttempt = __suite_dep_3["startGenericAttempt"];
 const transitionGenericAttempt = __suite_dep_3["transitionGenericAttempt"];
-const renderModelExam = __suite_dep_4["renderModelExam"];
+const renderModelExam = __suite_dep_4_exam_view["renderModelExam"];
 const filteredHistory = __suite_dep_5["filteredHistory"];
 const historyHTML = __suite_dep_5["historyHTML"];
 const sectionPriorities = __suite_dep_5["sectionPriorities"];
@@ -34,7 +36,7 @@ const reviewFiltersHTML = __suite_dep_6["reviewFiltersHTML"];
 const timingLedgerHTML = __suite_dep_6["timingLedgerHTML"];
 const sectionPaceHTML = __suite_dep_6["sectionPaceHTML"];
 const answerRevisionEvidence = __suite_dep_7["answerRevisionEvidence"];
-const validateGenericStoredRecord = __suite_dep_4["validateGenericStoredRecord"];
+const validateGenericStoredRecord = __suite_dep_4_stored_record_validator["validateGenericStoredRecord"];
 const bundle=validateExamPackage(pkg);
 const questionMap=new Map(bundle.questions.map(q=>[q.id,q]));
 function completed(id="complete",at=1000){
@@ -146,8 +148,8 @@ const pkg = __suite_dep_2["pkg"];
 const builtinCglPackages = __suite_dep_3["builtinCglPackages"];
 const configureCglPractice = __suite_dep_3["configureCglPractice"];
 const startGenericAttempt = __suite_dep_3["startGenericAttempt"];
-const renderGenericControls = __suite_dep_4["renderGenericControls"];
-const renderModelExam = __suite_dep_4["renderModelExam"];
+const renderGenericControls = __suite_dep_4_question_content_view["renderGenericControls"];
+const renderModelExam = __suite_dep_4_exam_view["renderModelExam"];
 const editorialStatusLabel = __suite_dep_9["editorialStatusLabel"];
 const startSession = __suite_dep_10["startSession"];
 const transition = __suite_dep_10["transition"];
@@ -293,10 +295,10 @@ test("F10: cannot flag when disabled, after expiry or after completion",()=>{
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
-const renderGenericControls = __suite_dep_4["renderGenericControls"];
-const renderModelExam = __suite_dep_4["renderModelExam"];
-const examTimeRemaining = __suite_dep_4["examTimeRemaining"];
-const validateGenericStoredRecord = __suite_dep_4["validateGenericStoredRecord"];
+const renderGenericControls = __suite_dep_4_question_content_view["renderGenericControls"];
+const renderModelExam = __suite_dep_4_exam_view["renderModelExam"];
+const examTimeRemaining = __suite_dep_4_exam_view["examTimeRemaining"];
+const validateGenericStoredRecord = __suite_dep_4_stored_record_validator["validateGenericStoredRecord"];
 const readableAnswer = __suite_dep_3["readableAnswer"];
 const paperRevisionHash = __suite_dep_11["paperRevisionHash"];
 const pkg = __suite_dep_2["pkg"];
@@ -349,7 +351,7 @@ test("generic history rejects malformed stored records before import",()=>{
 });
 
 test("shared renderer enforces paused, forward-only and no-early-submit policies",async()=>{
- const {renderModelExam}=await import("../src/app/generic-ui.ts");
+ const {renderModelExam}=await import("../src/app/exam-view.ts");
  const {validateExamPackage,startGenericAttempt,transitionGenericAttempt}=await import("../src/app/exam-package.ts");
  const {pkg}=await import("./fixtures/six-kinds.mjs");
  const forwardPaper={...pkg.paper,navigation:{...pkg.paper.navigation,questionNavigation:"forward-only"}};

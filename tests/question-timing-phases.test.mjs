@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {pkg} from "./fixtures/six-kinds.mjs";
 import {startSession,transition,rebaseSession} from "../src/engine/session.ts";
 import {startGenericAttempt,transitionGenericAttempt} from "../src/app/exam-package.ts";
-import {validateGenericStoredRecord} from "../src/app/generic-ui.ts";
+import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
 import {questionTimingPhases} from "../src/learning/question-analytics.ts";
 import {timingLedgerHTML,resultPacingHTML} from "../src/app/result-presentation.ts";
 import {revisionInventory} from "../src/learning/revision-selection.ts";

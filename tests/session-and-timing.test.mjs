@@ -8,7 +8,7 @@ import * as __suite_dep_3 from "../src/engine/scoring.ts";
 import * as __suite_dep_4 from "./fixtures/six-kinds.mjs";
 import * as __suite_dep_5 from "../src/domain/integrity.ts";
 import * as __suite_dep_6 from "../src/app/exam-package.ts";
-import * as __suite_dep_7 from "../src/app/generic-ui.ts";
+import * as __suite_dep_7_stored_record_validator from "../src/app/stored-record-validator.ts";
 import * as __suite_dep_8 from "../src/engine/score-ceiling.ts";
 import * as __suite_dep_9 from "../src/learning/attempt-evidence.ts";
 import * as __suite_dep_10 from "../src/history/frozen.ts";
@@ -268,7 +268,7 @@ const validateSectionTimingEvidence = __suite_dep_2["validateSectionTimingEviden
 const validateExamPackage = __suite_dep_6["validateExamPackage"];
 const startGenericAttempt = __suite_dep_6["startGenericAttempt"];
 const transitionGenericAttempt = __suite_dep_6["transitionGenericAttempt"];
-const validateGenericStoredRecord = __suite_dep_7["validateGenericStoredRecord"];
+const validateGenericStoredRecord = __suite_dep_7_stored_record_validator["validateGenericStoredRecord"];
 const sectionScoreSummaries = __suite_dep_8["sectionScoreSummaries"];
 const attemptEvidence = __suite_dep_9["attemptEvidence"];
 const restoreSession = __suite_dep_10["restoreSession"];
