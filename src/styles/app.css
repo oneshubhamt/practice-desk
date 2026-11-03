@@ -1422,3 +1422,16 @@ html[data-theme="dark"] .pd-author-studio :is(input,select,textarea){
 html[data-theme="light"] .pd-author-studio :is(input,select,textarea){
  -webkit-text-fill-color:var(--ink);
 }
+
+
+/* P47-5C screenshot and measured-contrast repair: all secondary authoring
+   buttons use one coherent theme pair, not a light global .btn fill with
+   inherited dark-mode white ink. Keep native focus treatment unchanged. */
+html[data-theme="dark"] .pd-author-studio .btn:not(.primary){
+ background:var(--panel);
+ color:var(--ink);
+ border-color:var(--line);
+}
+html[data-theme="dark"] .pd-author-studio .btn.danger{
+ color:#ffb4b4;
+}
