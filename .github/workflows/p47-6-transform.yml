@@ -6,7 +6,7 @@ permissions:
   contents: write
 jobs:
   refactor:
-    if: contains(github.event.head_commit.message, 'build(P47-6): apply symbol-safe coordinator split')
+    if: contains(github.event.head_commit.message, 'symbol-safe coordinator split')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
