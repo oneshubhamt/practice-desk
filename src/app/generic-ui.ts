@@ -2,6 +2,7 @@ import {escapeText} from "./html-escape.ts";
 import {minutes,readablePracticeMode,examTimeRemaining,renderModelExam} from "./exam-view.ts";
 import {validateGenericStoredRecord,isAttempt,isPackage,isLearning,type RecordItem} from "./stored-record-validator.ts";
 import {frozenReviewMedia,sourceReviewHTML} from "./review-media-view.ts";
+import {renderAuthoredText} from "./question-content-view.ts";
 import { builtinCglPackages, configureCglPractice, configureUntimedPractice, validateExamPackage, startGenericAttempt, transitionGenericAttempt, readableAnswer } from "./exam-package.ts";
 import type { ExamPackage, GenericAttempt, CglPracticeMode } from "./exam-package.ts";
 import type { QuestionRevision } from "../domain/question.js";
@@ -871,6 +872,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       const response=attempt!.state.responses.find(r=>r.questionRevisionId===it.questionRevisionId)?.response;
       const answer=attempt!.frozen.key.entries.find(e=>e.questionRevisionId===it.questionRevisionId)?.answer;
       const explanation=attempt!.explanations?.[it.questionRevisionId];
+      const richExplanation=q?.content.richExplanation;
       const seconds=attempt!.state.responses.find(r=>r.questionRevisionId===it.questionRevisionId)?.timeSpentMs??0;
       const visitCount=attempt!.state.questionVisits?.find(r=>r.questionRevisionId===it.questionRevisionId)?.count;
       const speed=questionSpeed(attempt!,it.questionRevisionId);
@@ -879,8 +881,9 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
       const limit=manualGradeLimit(attempt!,q.id);
       const provenance=q.editorial.sources??[];
       const origin=attempt!.notebookLineage?.entries.find(x=>x.questionRevisionId===q.id);
-      return '<article class="generic-review" data-review-id="'+escapeText(q.id)+'" data-verdict="'+escapeText(it.verdict)+'"><strong>'+
-       (paper.sections.flatMap(z=>z.questionRevisionIds).indexOf(q.id)+1)+'. '+escapeText(q.content.prompt)+'</strong>'+
+      return '<article class="generic-review" data-review-id="'+escapeText(q.id)+'" data-verdict="'+escapeText(it.verdict)+'"><div class="pd-review-question"><strong>'+
+       (paper.sections.flatMap(z=>z.questionRevisionIds).indexOf(q.id)+1)+'.</strong> '+
+       renderAuthoredText(frozenTarget,q.content.prompt,q.content.richPrompt)+'</div>'+
        '<p class="fine editorial-meta"><span class="editorial-status editorial-status-'+escapeText(q.editorial.status)+'">'+
          escapeText(editorialStatusLabel(q.editorial))+'</span>'+
          (q.editorial.sourcePage?' · Source page '+q.editorial.sourcePage:"")+
@@ -897,14 +900,14 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
          it.verdict==="pending"?"Manual assessment: ":"Expected: ")+
          escapeText(readableAnswer(q,answer))+'</p>'+
        (q.editorial.notes?'<p class="fine">Editorial note: '+escapeText(q.editorial.notes)+'</p>':"")+
-       (explanation?'<details class="worked-solution"'+
+       (explanation||richExplanation?'<details class="worked-solution"'+
          (it.verdict==="incorrect"||it.verdict==="unanswered"?" open":"")+'>'+
          '<summary>'+((q.content.assetIds?.length||(
           (q.content.kind==="single-choice"||q.content.kind==="multiple-select")&&
           q.content.options.some(o=>o.assetIds?.length)))?
           "Visual solving method":"Solving approach & worked reasoning")+
          '</summary><div class="worked-solution-body">'+
-         escapeText(explanation)+'</div></details>':"")+
+         renderAuthoredText(frozenTarget,explanation??"",richExplanation)+'</div></details>':"")+
        sourceReviewHTML(attempt!,q,reviewSource)+
        (provenance.length?'<p class="fine">Sources: '+provenance.map(source=>
          '<a href="'+escapeText(source.url)+'" target="_blank" rel="noopener noreferrer">'+
