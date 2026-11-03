@@ -3,7 +3,7 @@ import { EXAM_SHORTCUT_HELP } from "./exam-shortcuts.ts";
 import type {ExamPackage,GenericAttempt} from "./exam-package.ts";
 import type {OptionId} from "../domain/ids.js";
 import {escapeText} from "./html-escape.ts";
-import {assetHTML,stimulusHTML,renderGenericControls} from "./question-content-view.ts";
+import {assetHTML,stimulusHTML,renderGenericControls,renderQuestionPrompt} from "./question-content-view.ts";
 /** Human-readable view of a frozen practice mode; do not alter persistence. */
 export function readablePracticeMode(mode:string):string{
  switch(mode){
@@ -93,7 +93,7 @@ export function renderModelExam(
      escapeText(section.title)+' · Question '+(state.questionIndex+1)+' of '+section.questionRevisionIds.length+
      (attempt.frozen.snapshot.examId==="ssc-cgl"?
        ' · Paper Q'+escapeText(q.questionId.split(":").at(-1)):"")+'</p>'+
-     stimulusHTML(assets,q)+'<h2 class="generic-prompt">'+escapeText(q.content.prompt)+'</h2>'+
+     stimulusHTML(assets,q)+renderQuestionPrompt(assets,q)+
      assetHTML(assets,q.content.assetIds,"Figure for question "+(state.questionIndex+1))+
      '<fieldset class="generic-response-group"'+(state.status!=="running"?" disabled":"")+'>'
      +renderGenericControls(assets,q,currentDraft?{kind:"multiple-select",optionIds:currentDraft.optionIds}:response)+

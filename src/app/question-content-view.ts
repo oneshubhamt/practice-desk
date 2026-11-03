@@ -1,6 +1,8 @@
 /** Inert HTML for frozen question media, stimuli and all six response kinds. */
 import type {ExamPackage} from "./exam-package.ts";
 import type {QuestionRevision,CandidateResponse} from "../domain/question.js";
+import type {RichDocument} from "../domain/rich-document.ts";
+import {authoredTextHTML} from "./rich-content-view.ts";
 import {escapeText} from "./html-escape.ts";
 export function assetHTML(bundle:ExamPackage,ids:readonly string[]|undefined,fallbackAlt="Question figure"):string{
   return (ids??[]).map(id=>{
@@ -18,6 +20,18 @@ export function assetHTML(bundle:ExamPackage,ids:readonly string[]|undefined,fal
       'aria-label="Enlarge image: '+alt+'">Enlarge image</span></span>';
   }).join("");
 }
+/** Only explicit normalized rich content is interpreted; plain strings remain inert. */
+export function renderAuthoredText(bundle:ExamPackage,plain:string,rich?:RichDocument):string{
+ const knownAssets=new Set(bundle.assets?.map(asset=>asset.id)??[]);
+ return authoredTextHTML(plain,rich,knownAssets,(id,alt)=>assetHTML(bundle,[id],alt));
+}
+export function renderQuestionPrompt(bundle:ExamPackage,q:QuestionRevision):string{
+ const content=q.content;
+ return content.richPrompt?
+   '<div class="generic-prompt pd-rich-prompt" role="heading" aria-level="2">'+
+     renderAuthoredText(bundle,content.prompt,content.richPrompt)+'</div>':
+   '<h2 class="generic-prompt">'+escapeText(content.prompt)+'</h2>';
+}
 export function renderGenericControls(bundle:ExamPackage,q:QuestionRevision,response?:CandidateResponse):string{
   const c=q.content;
   if(c.kind==="single-choice"||c.kind==="multiple-select"){
@@ -26,8 +40,11 @@ export function renderGenericControls(bundle:ExamPackage,q:QuestionRevision,resp
     return '<fieldset class="generic-choices"><legend>'+ (kind==="radio"?"Select one option":"Select applicable options")+'</legend>'+
       c.options.map((o,i)=>{
         const media=assetHTML(bundle,o.assetIds,"Image for option "+String.fromCharCode(65+i));
+        const text=o.richText?'<div class="pd-rich-choice-text"><b>'+String.fromCharCode(65+i)+'.</b> '+
+           renderAuthoredText(bundle,o.text,o.richText)+'</div>':
+           '<span><b>'+String.fromCharCode(65+i)+'.</b> '+escapeText(o.text)+'</span>';
         const label='<label class="generic-choice"><input type="'+kind+'" name="generic-answer" data-choice="'+escapeText(o.id)+'"'+
-          (selected.includes(o.id)?" checked":"")+'><span><b>'+String.fromCharCode(65+i)+'.</b> '+escapeText(o.text)+'</span></label>';
+          (selected.includes(o.id)?" checked":"")+'>'+text+'</label>';
         // No interactive image enlargement control nested inside an answer
         // label: expanding an option diagram can never select that answer.
         return media?'<div class="generic-choice-media-row">'+label+
@@ -47,7 +64,9 @@ export function renderGenericControls(bundle:ExamPackage,q:QuestionRevision,resp
   const pairs=response?.kind==="matching"?response.pairs:[];
   return '<div class="generic-matches">'+c.leftItems.map(left=>{
     const media=assetHTML(bundle,left.assetIds,"Image for matching item "+left.text);
-    const label='<label><span>'+escapeText(left.text)+'</span><select data-match="'+escapeText(left.id)+'"><option value="">Not matched</option>'+
+    const label='<label>'+(left.richText?'<div class="pd-rich-choice-text">'+renderAuthoredText(bundle,left.text,left.richText)+'</div>':
+      '<span>'+escapeText(left.text)+'</span>')+
+      '<select data-match="'+escapeText(left.id)+'"><option value="">Not matched</option>'+
       c.rightItems.map(right=>'<option value="'+escapeText(right.id)+'"'+
         (pairs.some(p=>p.leftId===left.id&&p.rightId===right.id)?" selected":"")+'>'+escapeText(right.text)+'</option>').join("")+
       '</select></label>';
@@ -63,12 +82,15 @@ export function stimulusHTML(bundle:ExamPackage,q:QuestionRevision):string{
    return '<section class="generic-stimulus" role="region" tabindex="0" aria-label="'+
      escapeText((stimulus.title||(stimulus.kind==="case"?"Case study":"Reading passage"))+
        " — scroll to read full text")+'"><b>'+escapeText(stimulus.title||"Reading passage")+
-     '</b><p>'+escapeText(stimulus.text)+'</p>'+
+     '</b>'+(stimulus.richText?renderAuthoredText(bundle,stimulus.text,stimulus.richText):
+       '<p>'+escapeText(stimulus.text)+'</p>')+
      assetHTML(bundle,stimulus.assetIds,"Image accompanying "+(stimulus.title||"reading passage"))+'</section>';
  if(stimulus.kind==="table")return '<section class="generic-stimulus"><b>'+escapeText(stimulus.title||"Table")+'</b><div class="scroll-table"><table><tr>'+
-   stimulus.columns.map(c=>'<th>'+escapeText(c)+'</th>').join("")+'</tr>'+
-   stimulus.rows.map(r=>'<tr>'+r.map(c=>'<td>'+escapeText(c)+'</td>').join("")+'</tr>').join("")+'</table></div></section>';
+   stimulus.columns.map((c,i)=>'<th>'+renderAuthoredText(bundle,c,stimulus.richColumns?.[i])+'</th>').join("")+'</tr>'+
+   stimulus.rows.map((r,i)=>'<tr>'+r.map((c,j)=>'<td>'+
+     renderAuthoredText(bundle,c,stimulus.richRows?.[i]?.[j])+'</td>').join("")+'</tr>').join("")+'</table></div></section>';
  if ("assetId" in stimulus) return '<section class="generic-stimulus">'+
-    assetHTML(bundle,[stimulus.assetId],stimulus.altText)+'<p>'+escapeText(stimulus.caption||stimulus.altText)+'</p></section>';
+    assetHTML(bundle,[stimulus.assetId],stimulus.altText)+
+    '<div>'+renderAuthoredText(bundle,stimulus.caption||stimulus.altText,stimulus.richCaption)+'</div></section>';
   return "";
 }
