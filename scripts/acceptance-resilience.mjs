@@ -43,9 +43,13 @@ try{
     x.state.responses.some(y=>y.response?.kind==="single-choice"&&y.response.optionId===replacement)?x:null;
  },"durable alternate second-tab answer");
  // The original tab must not silently overwrite a newer revision.
- if(await page.locator('[data-attempt="'+attemptId+'"]').count())
-  await page.locator('[data-attempt="'+attemptId+'"]').first().click();
- await page.evaluate(()=>document.querySelectorAll('input[data-choice]')[2]?.click());
+ // Verify that the first tab actually resumed the stale attempt before
+ // attempting a real choice; the old optional DOM click could run in Library.
+ check(await page.locator('[data-attempt="'+attemptId+'"]').count()>0,
+   "Stale first tab must expose its saved attempt");
+ await page.locator('[data-attempt="'+attemptId+'"]').first().click();
+ await route(page,"exam");
+ await page.locator("input[data-choice]").nth(2).click();
  await page.locator(".generic-warning").filter({hasText:"Another tab"}).waitFor();
  const authoritative=(await records(other)).find(x=>x.id===attemptId);
  check(authoritative.saveRevision>=updated.saveRevision&&
