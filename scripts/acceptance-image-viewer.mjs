@@ -167,6 +167,80 @@ try{
   !moved.imageTransform.includes("NaN")&&!moved.imageTransform.includes("Infinity"),
   "P47-3 pointer pan/zoom created invalid transform");
  await page.locator(".generic-image-close").click();await modal.waitFor({state:"detached"});
+
+ // A deterministic high-resolution optical-chart fixture tests actual pan
+ // translation and two-point touch input independent of the CGL image dimensions.
+ // It exists in the DOM only during QA; it is NOT imported into or written to
+ // any verified frozen paper, IndexedDB snapshot or answer.
+ await page.evaluate(()=>{
+  const c=document.createElement("canvas");
+  c.width=1600;c.height=1200;
+  const g=c.getContext("2d");
+  g.fillStyle="#fff";g.fillRect(0,0,c.width,c.height);
+  g.fillStyle="#111";g.font="bold 56px Arial";
+  g.fillText("High-resolution chart — original pixels",55,120);
+  g.lineWidth=4;
+  for(let i=0;i<18;i++){
+   g.beginPath();g.moveTo(80+i*70,180);g.lineTo(80+i*70,1080);g.stroke();
+  }
+  const frame=document.createElement("span");frame.className="generic-media-frame";
+  frame.id="p47-diagnostic-image";
+  const img=document.createElement("img");
+  img.className="generic-figure";img.alt="Diagnostic chart at 1600 by 1200 pixels";
+  img.src=c.toDataURL("image/png");
+  const open=document.createElement("span");
+  open.className="generic-image-open";open.setAttribute("role","button");
+  open.tabIndex=0;open.dataset.imageOpen="";open.textContent="Enlarge diagnostic image";
+  frame.append(img,open);
+  document.querySelector(".exam-question")?.append(frame);
+ });
+ await page.locator("#p47-diagnostic-image [data-image-open]").click();
+ await modal.waitFor({state:"visible"});
+ await page.waitForFunction(()=>document.querySelector(".generic-image-large")?.naturalWidth===1600);
+ const diagnostic=await readModal();
+ check(diagnostic?.naturalWidth===1600&&diagnostic?.naturalHeight===1200,
+  "P47-3 viewer changed image dimensions before any zoom");
+ for(let n=0;n<18;n++){
+  const plus=page.locator(".generic-image-toolbar [aria-label='Zoom in']");
+  if(!await plus.isEnabled())break;
+  await plus.click();
+ }
+ check((await page.locator(".generic-image-zoom").innerText())==="800%",
+  "P47-3 full-resolution diagnostic did not reach 800%");
+ const dragArea=await canvas.boundingBox();
+ check(Boolean(dragArea),"P47-3 diagnostic canvas not rendered");
+ const beforePan=(await readModal())?.imageTransform;
+ const center={x:dragArea.x+dragArea.width/2,y:dragArea.y+dragArea.height/2};
+ await page.mouse.move(center.x,center.y);
+ await page.mouse.down();
+ await page.mouse.move(center.x+75,center.y+45,{steps:6});
+ await page.mouse.up();
+ const afterPan=(await readModal())?.imageTransform;
+ check(afterPan!==beforePan&&/translate\([1-9]/.test(afterPan??""),
+  "P47-3 drag did not translate large diagram or was clamped unexpectedly");
+
+ if(engine==="chromium"){
+  // Chrome DevTools sends a real two-finger touch stream; PointerEvents and
+  // setPointerCapture are exercised by the browser, not synthetic JS events.
+  await page.locator(".generic-image-toolbar [aria-label='Reset zoom and position']").click();
+  const cdp=await context.newCDPSession(page);
+  const at=await canvas.boundingBox();
+  const x=Math.round(at.x+at.width/2),y=Math.round(at.y+at.height/2);
+  try{
+   await cdp.send("Emulation.setTouchEmulationEnabled",{enabled:true,maxTouchPoints:2});
+   await cdp.send("Input.dispatchTouchEvent",{type:"touchStart",touchPoints:[
+    {x:x-35,y,id:1},{x:x+35,y,id:2}]});
+   await cdp.send("Input.dispatchTouchEvent",{type:"touchMove",touchPoints:[
+    {x:x-90,y,id:1},{x:x+90,y,id:2}]});
+   await cdp.send("Input.dispatchTouchEvent",{type:"touchEnd",touchPoints:[]});
+   check(Number.parseInt(await page.locator(".generic-image-zoom").innerText())>100,
+    "P47-3 Chrome two-pointer touch pinch did not zoom the real dialog");
+  }finally{
+   await cdp.send("Emulation.setTouchEmulationEnabled",{enabled:false}).catch(()=>{});
+   await cdp.detach();
+  }
+ }
+ await page.keyboard.press("Escape");await modal.waitFor({state:"detached"});
  await page.setViewportSize({width:1366,height:768});
  const savedBefore=await mediaSnapshot(id);
  check(savedBefore.responses.every(x=>x.response==null),"P47-3 visual interaction persisted a response");
