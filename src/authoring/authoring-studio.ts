@@ -65,7 +65,7 @@ function option(value:string,label:string,selected:string):string{
 function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Field):string{
  const applicable=fields(current.kind);
  const kinds=QUESTION_KINDS.map(k=>option(k,labels[k],current.kind)).join("");
- return '<div class="pd-author-meta">'+
+ return '<details class="pd-author-paper-settings"><summary>Paper settings · '+escapeText(draft.title)+'</summary><div class="pd-author-meta">'+
   '<label>Paper title<input id="pd-author-title" maxlength="180" value="'+escapeText(draft.title)+'"></label>'+
   '<label>Exam family ID<input id="pd-author-exam" maxlength="80" value="'+escapeText(draft.examId)+'"></label>'+
   '<label>Paper ID<input id="pd-author-paper" maxlength="80" value="'+escapeText(draft.paperId)+'"></label>'+
@@ -76,7 +76,7 @@ function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Field):st
   '<label>Duration (minutes; 0 = untimed)<input id="pd-author-duration" type="number" min="0" max="600" value="'+draft.durationMinutes+'"></label>'+
   '<label>Correct marks<input id="pd-author-correct" type="number" step="any" value="'+draft.marksCorrect+'"></label>'+
   '<label>Incorrect marks<input id="pd-author-wrong" type="number" max="0" step="any" value="'+draft.marksIncorrect+'"></label>'+
-  '</div><div class="pd-author-meta">'+
+  '</div></details><div class="pd-author-meta">'+
   '<label>Question kind<select id="pd-author-kind">'+kinds+'</select></label>'+
   '<label>Section / topic group<input id="pd-author-section" maxlength="100" value="'+escapeText(current.section)+'"></label>'+
   '<label>Answer key draft<input id="pd-author-answer" maxlength="100" value="'+escapeText(current.answer)+'" aria-describedby="pd-author-answer-help"></label>'+
@@ -193,6 +193,7 @@ export function createQuestionAuthoringStudio():AuthoringStudioController{
  };
  const close=(returnFocus=true)=>{
   renderSequence++;capture();
+  host?.parentElement?.classList.remove("pd-author-mode");
   host?.replaceChildren();
   if(host)host.hidden=true;
   host=null;closed=true;
@@ -265,13 +266,13 @@ export function createQuestionAuthoringStudio():AuthoringStudioController{
    '<button class="btn" id="pd-author-export">Export draft JSON</button>'+
    '<button class="btn" id="pd-author-import">Import draft JSON</button>'+
    '<input type="file" id="pd-author-import-file" accept=".json,application/json" hidden></div></div>'+
-   controls(d,q,field)+
    '<div class="pd-author-top"><label>Question<select id="pd-author-questions">'+questionOptions+'</select></label>'+
    '<div class="row"><button class="btn" id="pd-author-add-question">Add question</button>'+
    '<button class="btn" id="pd-author-copy-question">Duplicate</button>'+
    '<button class="btn" id="pd-author-up">Move up</button>'+
    '<button class="btn" id="pd-author-down">Move down</button>'+
    '<button class="btn danger" id="pd-author-delete-question">Delete question</button></div></div>'+
+   controls(d,q,field)+
    toolbar()+
    '<div id="pd-author-editor" class="pd-author-editor" role="group" aria-label="Edit '+escapeText(fieldNames[field])+'"></div>'+
    '<div class="pd-author-insert"><fieldset><legend>Insert equation</legend>'+
@@ -445,6 +446,7 @@ export function createQuestionAuthoringStudio():AuthoringStudioController{
   async open(target,trigger){
    if(!closed)return;
    host=target;origin=trigger;closed=false;
+   target.parentElement?.classList.add("pd-author-mode");
    load();await render();
    host?.scrollIntoView({block:"start",behavior:"instant"});
    host?.querySelector<HTMLElement>("#pd-author-heading")?.focus({preventScroll:true});
