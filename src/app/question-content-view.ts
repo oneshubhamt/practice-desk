@@ -37,7 +37,9 @@ export function renderGenericControls(bundle:ExamPackage,q:QuestionRevision,resp
   if(c.kind==="single-choice"||c.kind==="multiple-select"){
     const selected=response?.kind==="single-choice"?[response.optionId]:response?.kind==="multiple-select"?response.optionIds:[];
     const kind=c.kind==="single-choice"?"radio":"checkbox";
-    return '<fieldset class="generic-choices"><legend>'+ (kind==="radio"?"Select one option":"Select applicable options")+'</legend>'+
+    const legend=kind==="radio"?"Select one option":"Select applicable options";
+    return '<fieldset class="generic-choices"><legend>'+legend+'</legend>'+ 
+      '<p class="generic-choice-narrow-legend" aria-hidden="true">'+legend+'</p>'+
       c.options.map((o,i)=>{
         const media=assetHTML(bundle,o.assetIds,"Image for option "+String.fromCharCode(65+i));
         const text=o.richText?'<div class="pd-rich-choice-text"><b>'+String.fromCharCode(65+i)+'.</b> '+
