@@ -92,6 +92,9 @@ try{
  await page.locator(".generic-image-toolbar [aria-label='Zoom in']").click();
  await page.locator(".generic-image-viewport").hover();
  await page.mouse.wheel(0,-250);
+ // Firefox can dispatch wheel asynchronously after Playwright resolves mouse.wheel.
+ // Preserve the numerical zoom contract, but observe the completed event state.
+ await page.waitForFunction(()=>Number.parseInt(document.querySelector(".generic-image-zoom")?.textContent??"0")>130,{timeout:3000}).catch(()=>{});
  check(Number.parseInt(await page.locator(".generic-image-zoom").innerText())>130,
   "P47-3 wheel zoom did not advance on the canvas");
  await page.locator(".generic-image-toolbar [aria-label='Reset zoom and position']").click();
