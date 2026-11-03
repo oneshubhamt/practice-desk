@@ -132,7 +132,7 @@ export interface AuthoringStudioController{
 export function createQuestionAuthoringStudio():AuthoringStudioController{
  let host:HTMLElement|null=null,origin:HTMLElement|null=null,session:EditorSession|null=null;
  let shelf:AuthoringDraftShelf|null=null,questionId="",field:Field=initialField;
- let closed=true,renderSequence=0,lastSaveError="",localUpdate=0;
+ let closed=true,renderSequence=0,lastSaveError="",storageBlocked=false;
  const active=():AuthoringDraft=>{
   const current=shelf?.drafts.find(d=>d.id===shelf!.activeId);
   if(!current)throw Error("No active authoring draft");
@@ -151,8 +151,9 @@ export function createQuestionAuthoringStudio():AuthoringStudioController{
   try{
    const value=localStorage.getItem(AUTHORING_KEY);
    shelf=value?validateAuthoringShelf(JSON.parse(value)):defaultAuthoringShelf();
-   lastSaveError="";
+   lastSaveError="";storageBlocked=false;
   }catch(error){
+   storageBlocked=true;
    // Never overwrite malformed saved data automatically.
    shelf=defaultAuthoringShelf();
    lastSaveError="Existing local drafts could not be read: "+
@@ -163,6 +164,7 @@ export function createQuestionAuthoringStudio():AuthoringStudioController{
  };
  const persist=():void=>{
   if(!shelf)return;
+  if(storageBlocked){status("Damaged saved draft data remains untouched. Export your current draft or explicitly reset damaged storage.",true);return;}
   try{
    shelf=validateAuthoringShelf(shelf);
    localStorage.setItem(AUTHORING_KEY,JSON.stringify(shelf));
@@ -265,6 +267,7 @@ export function createQuestionAuthoringStudio():AuthoringStudioController{
    '<div class="row"><button class="btn" id="pd-author-new">New draft</button>'+
    '<button class="btn" id="pd-author-export">Export draft JSON</button>'+
    '<button class="btn" id="pd-author-import">Import draft JSON</button>'+
+   (storageBlocked?'<button class="btn danger" id="pd-author-reset-corrupt">Reset damaged draft storage</button>':"")+
    '<input type="file" id="pd-author-import-file" accept=".json,application/json" hidden></div></div>'+
    '<div class="pd-author-top"><label>Question<select id="pd-author-questions">'+questionOptions+'</select></label>'+
    '<div class="row"><button class="btn" id="pd-author-add-question">Add question</button>'+
@@ -320,6 +323,10 @@ export function createQuestionAuthoringStudio():AuthoringStudioController{
    questionId=active().questions[0]!.id;field=initialField;persist();void render();
   };
   click("pd-author-import",()=>find<HTMLInputElement>("pd-author-import-file").click());
+  if(storageBlocked)click("pd-author-reset-corrupt",()=>{
+   if(!confirm("Replace unreadable local authoring data? Export your current draft first. This action cannot be undone."))return;
+   storageBlocked=false;lastSaveError="";persist();void render();
+  });
   find<HTMLInputElement>("pd-author-import-file").onchange=async e=>{
    const file=(e.target as HTMLInputElement).files?.[0];if(!file)return;
    try{
