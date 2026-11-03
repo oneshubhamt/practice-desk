@@ -33,7 +33,7 @@ I independently inspected the **current production source** in `src/app/`, `src/
 | **I14** | Offline contextual figure dialog, zoom/pan/focus + safe pre-freeze image sizing | `src/app/image-viewer.ts:83–311` native dialog, local image URI, bounded up-to-8× pan and focus return; `src/app/image-preparation.ts:23–35,110–274` explicit diagram preservation, optional WebP at 0.98, ≥15% savings + fidelity/approval. | **SOURCE-CONFIRMED** code; actual device touch/AT and human figure readability still EXTERNAL |
 | **I15** | Offline math, source-owned rich AST, Wordgard Library editing, immutable publication | `src/domain/rich-document.ts:48–123`, `src/app/katex-math-adapter.ts:7–37`, `src/authoring/vendor-ports.ts`, `wordgard-adapter.ts`, `authoring-studio.ts:150–568`, `authoring-publisher.ts:122–282`. Vendor authority is isolated from hashes/papers; signed-content claims mean **unkeyed SHA digests**, not publisher identity authentication. Draft shelf is separate from History backup. | **SOURCE-CONFIRMED** renderer/authoring; **LIMITS** separate draft export, manual math speech/IME and provenance |
 | **I16** | Safe shortcuts, keyboard/focus priority, optionally configurable mappings | `src/app/exam-shortcuts.ts:9–26` fixed A–D/Alt-arrow/M/F; `src/app/lifecycle-controller.ts:32–77` modal/form/radio priority. **No user-editable shortcut mapping** or real NVDA/VoiceOver/TalkBack evidence. | **PARTIAL** for configuration; remapping **CONDITIONAL** not an approved mandatory feature; AT **EXTERNAL** |
-| **I17** | Replace UI monolith with real typed controllers and eliminate fragile redraw | `src/app/generic-ui.ts:63–270` `270-line composition; `coordinator-context.ts:31–123` shared typed owner; real route/library/exam/result/history/learning/persistence controllers. **But** `src/app/screen-renderer.ts:43` still reconstructs the whole root with `innerHTML` for ordinary redraws; `src/app/learning-ui.ts:100,147~ replaces learning root. Targeted History filters avoid wholesale redraw. | **PARTIAL**: genuine modular stateful extraction **done**, but ordinary full DOM-replacement/focus churn remains; treat any "no whole-screen redraws" claim as incorrect |
+| **I17** | Replace UI monolith with real typed controllers and eliminate fragile redraw | `src/app/generic-ui.ts:63–270` ~270-line composition; `src/app/coordinator-context.ts:31–123` shared typed owner; real route/library/exam/result/history/learning/persistence controllers. **But** `src/app/screen-renderer.ts:43` still reconstructs the whole root with `innerHTML` for ordinary redraws; `src/app/learning-ui.ts:100,147` replaces learning root. Targeted History filters avoid wholesale redraw. | **PARTIAL**: genuine modular stateful extraction **done**, but ordinary full DOM-replacement/focus churn remains; treat any "no whole-screen redraws" claim as incorrect |
 | **I18** | Per-question/calendar deadlines | `src/domain/exam.ts:45–60` supports untimed/whole-paper/sectional only; no question-calendar deadline state, intentionally outside approved scope. | **DEFERRED optional**, not a P48 failure |
 | **I19** | Dedicated unscored survey | `src/domain/question.ts:14–23` six examination response kinds only; no survey-specific nonexam workflow. | **DEFERRED optional** |
 | **I20** | Actual Android/iOS, touch, assistive technology, reboot/OS eviction | Source has touch handlers and ARIA, but cannot prove device/browser/OS outcomes. No physical device, AT report, true storage eviction/reboot record. | **EXTERNAL — NOT TESTED**, release gate |
@@ -45,6 +45,40 @@ I independently inspected the **current production source** in `src/app/`, `src/
 | **I26** | Honest official vs user/imported labels and actual selected rules | `src/app/exam-families.ts:14–48` trusted bundled ID; `src/app/exam-preflight.ts:43–140` correct selected max, timing/section mode and external-source disclaimer; `src/template.html:9` global non-affiliation. | **SOURCE-CONFIRMED** distinction; no official APFC publication claim |
 
 **Mandatory versus conditional:** I08 paged loading, I16 user remapping and I23 normalized stores are not automatically required rewrites: accepted direction is evidence-led, narrow and clean. **I11/I20 cannot be marked tested without a real device**. I21 cannot be manufactured by an engineering audit. I18/I19/I24 are explicit user-deferred features.
+
+### Independent direct-JSON source-option audit (NOT the historical test fixture)
+
+Read current `src/content/papers.json` and `src/content/patches.json` directly, matched patch numbers to each actual question, compared the **entire A–D option arrays**, the publisher's answer-letter text at the same position, and source vs reviewed letters. This is an independent source inventory, **not** a semantic adjudication of which option is truly correct. Five papers ×100 = **500** source items; **131** edited patch entries; **25** patches alter options; in **21/25** the source key's **same-letter option text changes**; **10** patch keys differ across *all* 131 patches (only **3** coincide with altered-options cases). Even among the four same-letter-text-retained cases, a changed option context could alter choice semantics: **no automatic "comparable" score is warranted**. A differently worded reviewed source may be educationally better without certifying the original key. The live comparator conservatively marks changed contexts unavailable.
+
+| CGL paper (2026) | Question | Published → reviewed key | Text at published key letter | Original-key comparison |
+|---|---:|:---:|---|---|
+| 09-30 | 81 | B → B | Changed | **Unavailable**: altered option context, no certified semantic mapping |
+| 10-05 | 14 | C → C | Changed | **Unavailable**: altered option context, no certified semantic mapping |
+| 10-05 | 32 | B → B | Changed | **Unavailable**: altered option context, no certified semantic mapping |
+| 10-05 | 50 | A → B | Changed | **Unavailable**: altered option context, no certified semantic mapping |
+| 10-05 | 56 | A → A | Retained | **Unavailable**: altered option context, no certified semantic mapping |
+| 10-05 | 77 | D → D | Changed | **Unavailable**: altered option context, no certified semantic mapping |
+| 10-05 | 78 | B → B | Retained | **Unavailable**: altered option context, no certified semantic mapping |
+| 10-05 | 81 | C → C | Changed | **Unavailable**: altered option context, no certified semantic mapping |
+| 10-05 | 92 | D → D | Changed | **Unavailable**: altered option context, no certified semantic mapping |
+| 10-06 | 21 | B → B | Retained | **Unavailable**: altered option context, no certified semantic mapping |
+| 10-06 | 41 | A → A | Changed | **Unavailable**: altered option context, no certified semantic mapping |
+| 10-06 | 87 | A → A | Changed | **Unavailable**: altered option context, no certified semantic mapping |
+| 10-06 | 100 | B → B | Changed | **Unavailable**: altered option context, no certified semantic mapping |
+| 10-07 | 8 | D → A | Changed | **Unavailable**: altered option context, no certified semantic mapping |
+| 10-07 | 29 | B → B | Changed | **Unavailable**: altered option context, no certified semantic mapping |
+| 10-07 | 46 | B → B | Changed | **Unavailable**: altered option context, no certified semantic mapping |
+| 10-07 | 79 | A → A | Changed | **Unavailable**: altered option context, no certified semantic mapping |
+| 10-07 | 83 | C → C | Changed | **Unavailable**: altered option context, no certified semantic mapping |
+| 10-08 | 7 | D → D | Changed | **Unavailable**: altered option context, no certified semantic mapping |
+| 10-08 | 23 | B → B | Changed | **Unavailable**: altered option context, no certified semantic mapping |
+| 10-08 | 54 | D → D | Changed | **Unavailable**: altered option context, no certified semantic mapping |
+| 10-08 | 79 | A → B | Retained | **Unavailable**: altered option context, no certified semantic mapping |
+| 10-08 | 86 | A → A | Changed | **Unavailable**: altered option context, no certified semantic mapping |
+| 10-08 | 93 | D → D | Changed | **Unavailable**: altered option context, no certified semantic mapping |
+| 10-08 | 100 | D → D | Changed | **Unavailable**: altered option context, no certified semantic mapping |
+
+**Adversarial mandatory item:** 5 October Q32 retains **B** as the published and reviewed letter, but the original published B (“Most targets were met, except agricultural output due to famine”) and reviewed B (“Actual GDP growth exceeded the Plan’s targeted rate...”) have different meanings. `src/engine/source-comparison.ts:78–80` must mark it **unavailable**, not score letter B as semantically identical. **Q62:** 6 October Q62 remains *source invalid/excluded*; absence of a reviewed patch is interpreted by `src/content/import-cgl.ts:32–46` as reviewed scoreable **caution**, retaining publisher key **B** without falsely calling it a verified official correction. Counts are calculated from the actual checked-in JSON at the audit snapshot. They do **not** certify their external accuracy.
 
 ## 3. Original F01–F15 — individual present-source implementation crosswalk
 
@@ -152,7 +186,7 @@ I independently inspected the **current production source** in `src/app/`, `src/
 
 | Pass/contract | Current implementation trace | Re-audit judgement / what is not established |
 |---|---|---|
-| P41-01–06 comparator/25 altered options/Q32, preserve key and 10 editions | `source-comparison.ts:44–162`, `import-cgl.ts`, `content/papers.json`, `patches.json`, `result-controller.ts:42–125` | Software conservative exact matching present. **A fresh independent case-by-case table for the 25 historical patches was NOT recalculated in this re-audit**; original source content is not thereby substantively re-certified |
+| P41-01–06 comparator/25 altered options/Q32, preserve key and 10 editions | `source-comparison.ts:44–162`, `import-cgl.ts`, `content/papers.json`, `patches.json`, `result-controller.ts:42–125` | Software conservative exact matching present. **The 25 altered-option patches were independently enumerated from the checked-in JSON above**, but the original answers were not externally re-certified; original source content is not thereby substantively re-certified |
 | P42 pinned tools/hostile import/release limitations | `package.json`, `package-lock.json`, CI, `exam-package.ts:42–115`, `domain/media.ts:37–102` | Build/source gates exist; **current CSP and unknown-field policy require security decision**; real OS/supply-chain sweep not executed |
 | P43 independent family setup + source/reviewed selector | `exam-families.ts`, `practice-selection.ts`, `library-controller.ts`, `backup.ts` | Code path present, not proof of a ready-to-use full CAT/APFC content bank |
 | P44 immutable selection/source manifest/deterministic seed | `practice-compose.ts:50–164`, `library-controller.ts:81–106,300–351` | Present for compatible one-paper source; mixing exams appropriately refused |
