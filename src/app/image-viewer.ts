@@ -169,6 +169,20 @@ export function createImageViewer(root:HTMLElement):ImageViewer{
      // must never run while the modal has focus.
      event.stopPropagation();
      if(event.key==="Escape"){event.preventDefault();close();return;}
+     if(event.key==="Tab"){
+       // Some file:// browser engines do not keep a native dialog's focus
+       // fully cyclic at the viewport edge. Close, toolbar and canvas form
+       // a deterministic focus loop without relying on that engine detail.
+       const available=[closeButton,out,inside,reset,viewport].filter(x=>
+         !(x instanceof HTMLButtonElement&&x.disabled));
+       const index=available.indexOf(document.activeElement as HTMLElement);
+       if(index<0||(event.shiftKey&&index===0)||
+         (!event.shiftKey&&index===available.length-1)){
+         event.preventDefault();
+         available[event.shiftKey?available.length-1:0]?.focus({preventScroll:true});
+       }
+       return;
+     }
      if(event.ctrlKey||event.metaKey||event.altKey)return;
      const key=event.key;
      if(key==="+"||key==="="){event.preventDefault();zoomTo(state.zoom*1.3);}
