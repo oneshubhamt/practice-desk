@@ -111,6 +111,7 @@ document.addEventListener("fullscreenchange",()=>{
 document.addEventListener("keydown",event=>{
  if(event.key==="Escape"&&!document.fullscreenElement&&
     document.documentElement.classList.contains("immersive")&&
-    (!displayPanel||displayPanel.hidden))setImmersive(false);
+    (!displayPanel||displayPanel.hidden)&&
+    !document.querySelector("dialog[open]"))setImmersive(false);
 });
 updateFullscreen();

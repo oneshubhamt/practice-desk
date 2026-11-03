@@ -43,6 +43,7 @@ import { importAuthoredExam, APFC_NAT_BANK_TEMPLATE } from "./bank-import.ts";
 import { createScreenRenderer } from "./screen-renderer.ts";
 import { createImageViewer } from "./image-viewer.ts";
 import { createImagePreparation } from "./image-preparation.ts";
+import { resolveExamShortcut } from "./exam-shortcuts.ts";
 import { createNativeRouter, type AppRoute, type RouteContext, type NativeRouter } from "./navigation.ts";
 
 
@@ -1500,65 +1501,46 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  }
  document.addEventListener("visibilitychange",visibility);
  const keyboard=(event:KeyboardEvent)=>{
-   if(imageViewer.isOpen())return;
    if(disposed||view!=="exam"||!attempt||attempt.finishedAt!==null||
       (attempt.state.status!=="running"&&attempt.state.status!=="paused")||document.hidden||
-      event.ctrlKey||event.metaKey||event.shiftKey||event.isComposing)return;
+      event.defaultPrevented||event.ctrlKey||event.metaKey||event.shiftKey||event.isComposing)return;
    const focused=event.target;
    const focusedRadio=focused instanceof HTMLInputElement&&focused.type==="radio"&&
      root.contains(focused)&&(focused.name==="generic-answer"||focused.name==="generic-boolean");
-   if(focused instanceof HTMLElement){
-     if(focused.isContentEditable||focused.closest('[contenteditable="true"]'))return;
-     if(focused instanceof HTMLTextAreaElement||focused instanceof HTMLSelectElement)return;
-     // Radios own unmodified arrows; Alt+arrows navigate, A–D still select
-     // single-choice answers, and text/numeric/select widgets are not hijacked.
-     if(focused instanceof HTMLInputElement&&!focusedRadio)return;
-   }
+   const editable=focused instanceof HTMLElement&&(
+     focused.isContentEditable||Boolean(focused.closest('[contenteditable="true"]'))||
+     focused instanceof HTMLTextAreaElement||focused instanceof HTMLSelectElement||
+     (focused instanceof HTMLInputElement&&!focusedRadio));
    const displayPanel=document.getElementById("displayPanel");
-   if(displayPanel&&!displayPanel.hidden)return;
-   const key=event.key.toLowerCase();
-   const arrow=key==="arrowright"||key==="arrowleft";
-   if(event.altKey&&!arrow)return;
-   if(attempt.state.status==="paused"){
-     if(key!=="m"||event.altKey||event.repeat||
-       !attempt.frozen.paper.navigation.allowFlagging)return;
+   const command=resolveExamShortcut({key:event.key,alt:event.altKey,repeat:event.repeat,
+     paused:attempt.state.status==="paused",focusedRadio,editable,
+     blocked:imageViewer.isOpen()||Boolean(document.querySelector("dialog[open]"))||
+       Boolean(displayPanel&&!displayPanel.hidden),
+     allowFlagging:attempt.frozen.paper.navigation.allowFlagging});
+   if(!command)return;
+   if(command.kind==="navigate"){
      event.preventDefault();
-     const id=attempt.frozen.paper.sections[attempt.state.sectionIndex]!
-       .questionRevisionIds[attempt.state.questionIndex]!;
-     const marked=attempt.state.responses.find(r=>r.questionRevisionId===id)?.flagged??false;
-     dispatch({type:"FLAG",nowMs:now(),flagged:!marked});return;
-   }
-   if(arrow){
-     if(focusedRadio&&!event.altKey)return; // native radio selection
-     event.preventDefault();
-     const move=key==="arrowright"?1:-1;
-     const target=attempt.state.questionIndex+move;
+     const target=attempt.state.questionIndex+command.delta;
      const section=attempt.frozen.paper.sections[attempt.state.sectionIndex];
      if(!section?.questionRevisionIds[target]||
-        (move<0&&attempt.frozen.paper.navigation.questionNavigation==="forward-only"))return;
-     dispatch({type:"NAVIGATE",nowMs:now(),sectionIndex:attempt.state.sectionIndex,questionIndex:target});
-     return;
+       (command.delta<0&&attempt.frozen.paper.navigation.questionNavigation==="forward-only"))return;
+     dispatch({type:"NAVIGATE",nowMs:now(),sectionIndex:attempt.state.sectionIndex,questionIndex:target});return;
    }
-   if(event.altKey||event.repeat)return;
-   if(key==="f"){
-     event.preventDefault();
-     window.dispatchEvent(new Event("practice-desk:toggle-fullscreen"));return;
+   if(command.kind==="fullscreen"){
+     event.preventDefault();window.dispatchEvent(new Event("practice-desk:toggle-fullscreen"));return;
    }
-   if(key==="m"){
-     if(!attempt.frozen.paper.navigation.allowFlagging)return;
+   if(command.kind==="flag"){
      event.preventDefault();
      const id=attempt.frozen.paper.sections[attempt.state.sectionIndex]!
        .questionRevisionIds[attempt.state.questionIndex]!;
      const marked=attempt.state.responses.find(r=>r.questionRevisionId===id)?.flagged??false;
      dispatch({type:"FLAG",nowMs:now(),flagged:!marked});return;
    }
-   if(!["a","b","c","d"].includes(key))return;
    const id=attempt.frozen.paper.sections[attempt.state.sectionIndex]!
      .questionRevisionIds[attempt.state.questionIndex]!;
    const question=attempt.frozen.questions.find(q=>q.id===id);
    if(question?.content.kind!=="single-choice")return;
-   const option=question.content.options[key.charCodeAt(0)-97];
-   if(!option)return;
+   const option=question.content.options[command.index];if(!option)return;
    event.preventDefault();
    dispatch({type:"ANSWER",nowMs:now(),response:{kind:"single-choice",optionId:option.id}});
  };

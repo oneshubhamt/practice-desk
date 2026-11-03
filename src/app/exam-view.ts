@@ -1,3 +1,4 @@
+import { EXAM_SHORTCUT_HELP } from "./exam-shortcuts.ts";
 /** Read-only exam display; fullscreen state is supplied, not read from the DOM. */
 import type {ExamPackage,GenericAttempt} from "./exam-package.ts";
 import type {OptionId} from "../domain/ids.js";
@@ -134,5 +135,5 @@ export function renderModelExam(
       '<details class="navigator-help"><summary>Keyboard shortcuts</summary>'+
        '<p class="fine">'+(paper.navigation.questionNavigation==="forward-only"?
         "Questions cannot be revisited in this exam.":"Navigate freely where the paper permits.")+
-       ' A–D answer single-choice questions. ← / → navigate except when a radio is focused; Alt + ← / → navigates while focused. M marks/unmarks for review even while paused; F enters full screen. Answer/navigation shortcuts are disabled while paused or typing.</p></details></aside></div>';
+       ' '+EXAM_SHORTCUT_HELP+'</p></details></aside></div>';
  }

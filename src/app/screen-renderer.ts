@@ -54,11 +54,16 @@ export function createScreenRenderer(root:HTMLElement):ScreenRenderer{
           item.hasAttribute(name)&&item.getAttribute(name)===value));
       if(target&&!("disabled" in target&&target.disabled)){
         target.focus({preventScroll:true});
-        if(target instanceof HTMLInputElement&&previous instanceof HTMLInputElement&&
-            target.type==="search"&&previous.type==="search"){
-          try{target.setSelectionRange(previous.selectionStart??target.value.length,
-            previous.selectionEnd??target.value.length);}
-          catch{/* Search input may not expose selection ranges. */}
+        // Preserve edit cursor and scroll, never stale values from earlier state.
+        if((target instanceof HTMLInputElement&&previous instanceof HTMLInputElement&&
+            ["search","text"].includes(target.type)&&target.type===previous.type)||
+           (target instanceof HTMLTextAreaElement&&previous instanceof HTMLTextAreaElement)){
+          const current=target as HTMLInputElement|HTMLTextAreaElement;
+          const former=previous as HTMLInputElement|HTMLTextAreaElement;
+          try{current.setSelectionRange(former.selectionStart??current.value.length,
+            former.selectionEnd??current.value.length,former.selectionDirection??"none");
+            current.scrollTop=former.scrollTop;current.scrollLeft=former.scrollLeft;
+          }catch{/* Unsupported input selection must not interrupt redraw. */}
         }
       }
     }

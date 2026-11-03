@@ -29,6 +29,12 @@ try{
  check(await page.locator('input[data-choice]').first().isChecked(),"A shortcut failed from focused radio");
  await page.keyboard.press("b");
  check(await page.locator('input[data-choice]').nth(1).isChecked(),"B shortcut failed");
+ await page.locator("#displayTrigger").click();
+ await page.keyboard.press("m");await page.keyboard.press("a");
+ check(await page.locator("#g-flag").getAttribute("aria-pressed")==="false"&&
+   await page.locator('input[data-choice]').nth(1).isChecked(),
+   "Display popover leaked shortcuts into the exam");
+ await page.locator("#displayClose").click();
  await page.keyboard.press("m");
  check(await page.locator("#g-flag").getAttribute("aria-pressed")==="true","M shortcut did not mark");
  await page.locator('input[data-choice]').nth(1).focus();
