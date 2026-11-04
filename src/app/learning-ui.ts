@@ -69,6 +69,9 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
  let selectedId:string|null=null,reviewId:string|null=null,revealed=false;
  let filter:"all"|"due"|"bookmarked"="all",message="",closed=false,opened=false;
  let previousLearningView="";
+ type NotebookDraft={note:string;customTopic:string;customSubtopic:string;
+   syllabusTopicId:string;errorLabel:string;bookmarked:boolean};
+ const notebookDrafts=new Map<string,NotebookDraft>();
  const present=(html:string,identity:string)=>{
    if(previousLearningView===identity)reconcileSameExamQuestion(root,html);
    else root.innerHTML=html;
@@ -99,6 +102,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   const all=cards();
   invalidate(all);
   const selected=all.find(c=>c.id===selectedId)??all[0];
+  const selectedDraft=selected?notebookDrafts.get(selected.id):undefined;
   const dueNow=dueCards();
   if(reviewId){
     const item=all.find(c=>c.id===reviewId);
@@ -214,21 +218,22 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
          selected.explanation?'<p class="fine">'+esc(selected.explanation)+'</p>':"")+
        '<label class="picker" for="learning-error">Error type (self-reported)</label>'+
        '<select id="learning-error"><option value="">Not classified</option>'+
-       ERROR_LABELS.map(label=>'<option value="'+label+'"'+(selected.errorLabel===label?" selected":"")+'>'+
+       ERROR_LABELS.map(label=>'<option value="'+label+'"'+((selectedDraft?.errorLabel??selected.errorLabel)===label?" selected":"")+'>'+
          esc(label)+'</option>').join("")+'</select>'+
        '<label class="picker" for="learning-topic">Topic (your own label, optional)</label>'+
-       '<input id="learning-topic" maxlength="120" value="'+esc(selected.customTopic)+'" placeholder="e.g. Labour Codes">'+
+       '<input id="learning-topic" maxlength="120" value="'+esc(selectedDraft?.customTopic??selected.customTopic)+'" placeholder="e.g. Labour Codes">'+
        '<label class="picker" for="learning-subtopic">Subtopic (optional; requires Topic)</label>'+
-       '<input id="learning-subtopic" maxlength="120" value="'+esc(selected.customSubtopic??"")+'" placeholder="e.g. Wage definitions">'+
+       '<input id="learning-subtopic" maxlength="120" value="'+esc(selectedDraft?.customSubtopic??selected.customSubtopic??"")+'" placeholder="e.g. Wage definitions">'+
        (syllabusForExam(selected.examId)?'<label class="picker" for="learning-syllabus">Subject / broad syllabus heading (optional, manually chosen)</label>'+
          '<select id="learning-syllabus"><option value="">No heading assigned</option>'+
          syllabusForExam(selected.examId)!.headings.map(h=>'<option value="'+esc(h.id)+'"'+
-           (selected.syllabusTopicId===h.id?' selected':'')+'>'+esc(h.label)+'</option>').join("")+'</select>':'')+
+           ((selectedDraft?.syllabusTopicId??selected.syllabusTopicId)===h.id?' selected':'')+'>'+esc(h.label)+'</option>').join("")+'</select>':'')+
        '<label class="picker" for="learning-note">Notes</label>'+
-       '<textarea id="learning-note" maxlength="8000" rows="5">'+esc(selected.note)+'</textarea>'+
+       '<textarea id="learning-note" maxlength="8000" rows="5">'+esc(selectedDraft?.note??selected.note)+'</textarea>'+
        '<label class="learning-bookmark"><input id="learning-bookmark" type="checkbox"'+
-         (selected.bookmarked?" checked":"")+'> Bookmark</label>'+
-       '<div class="row generic-actions"><button class="btn primary" id="learning-save">Save note</button>'+
+         ((selectedDraft?.bookmarked??selected.bookmarked)?" checked":"")+'> Bookmark</label>'+
+       (selectedDraft?'<p class="fine" role="status">Unsaved notebook edits · saved only when you select Save note.</p>':"")+
+        '<div class="row generic-actions"><button class="btn primary" id="learning-save">Save note</button>'+
        '<button class="btn" id="learning-one">Review this card</button>'+
        '<button class="btn danger" id="learning-delete">Delete</button></div>':
        '<p class="fine">Select a card from the notebook.</p>')+'</section></div>'+
@@ -316,6 +321,25 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     selectedId=b.dataset.learningId??null;draw();
   });
   if(!selected)return;
+  const captureNotebook=()=>{
+    const value:NotebookDraft={
+      note:root.querySelector<HTMLTextAreaElement>("#learning-note")!.value,
+      customTopic:root.querySelector<HTMLInputElement>("#learning-topic")!.value,
+      customSubtopic:root.querySelector<HTMLInputElement>("#learning-subtopic")!.value,
+      syllabusTopicId:root.querySelector<HTMLSelectElement>("#learning-syllabus")?.value??"",
+      errorLabel:root.querySelector<HTMLSelectElement>("#learning-error")!.value,
+      bookmarked:root.querySelector<HTMLInputElement>("#learning-bookmark")!.checked
+    };
+    notebookDrafts.set(selected.id,value);
+    const button=root.querySelector<HTMLButtonElement>("#learning-save");
+    if(button)button.textContent="Save note · unsaved changes";
+  };
+  for(const id of ["learning-note","learning-topic","learning-subtopic"])
+    (root.querySelector<HTMLInputElement|HTMLTextAreaElement>("#"+id)!).oninput=captureNotebook;
+  for(const id of ["learning-syllabus","learning-error","learning-bookmark"]){
+    const field=root.querySelector<HTMLInputElement|HTMLSelectElement>("#"+id);
+    if(field)field.onchange=captureNotebook;
+  }
   root.querySelector<HTMLButtonElement>("#learning-save")!.onclick=async()=>{
     try{
       const note=root.querySelector<HTMLTextAreaElement>("#learning-note")!.value;
@@ -329,6 +353,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
          bookmarked,updatedAt:now().toISOString()}))){
         message="Notebook changes could not be durably saved. Export a recovery backup.";draw();return;
       }
+      notebookDrafts.delete(selected.id);
       message="Notebook saved.";draw();
     }catch(e){message=e instanceof Error?e.message:"Cannot save notebook";draw();}
   };
@@ -336,12 +361,15 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     reviewId=selected.id;revealed=false;message="";draw();
   };
   root.querySelector<HTMLButtonElement>("#learning-delete")!.onclick=async()=>{
-    await host.remove(selected.id);selectedId=null;draw();
+    await host.remove(selected.id);
+    if(!host.cards().some(c=>c.id===selected.id))notebookDrafts.delete(selected.id);
+    selectedId=null;draw();
   };
  }
  void createRevisionScheduler()
 .then(value=>{scheduler=value;cache.clear();draw();})
   .catch(e=>{message="FSRS scheduler failed to initialize.";console.error(e);draw();});
  return {show(){opened=true;draw();},hide(){opened=false;previousLearningView="";},
-  select(id:string){selectedId=id;},dispose(){closed=true;previousLearningView="";}};
+  select(id:string){selectedId=id;},
+   dispose(){closed=true;previousLearningView="";notebookDrafts.clear();}};
 }
