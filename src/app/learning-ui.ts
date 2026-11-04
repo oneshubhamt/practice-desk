@@ -67,7 +67,7 @@ function questionHTML(record:LearningCard):string{
 export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
  let scheduler:RevisionSchedulerPort|null=null;
  let selectedId:string|null=null,reviewId:string|null=null,revealed=false;
- let filter:"all"|"due"|"bookmarked"="all",message="",closed=false,opened=false;
+ let filter:"all"|"due"|"bookmarked"="all",hierarchyRoot="",message="",closed=false,opened=false;
  let previousLearningView="";
  type NotebookDraft={note:string;customSubject:string;customTopic:string;customSubtopic:string;
    syllabusTopicId:string;errorLabel:string;bookmarked:boolean};
@@ -156,6 +156,10 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   }
   const done=host.attempts().filter(a=>a.finishedAt!==null&&a.result);
   const topics=topicMetrics(done,all),cohorts=comparableTrends(done).filter(x=>x.count>=2);
+  const subjectRoots=topics.filter(t=>t.kind==="hierarchy"&&t.depth===1);
+  if(hierarchyRoot&&!subjectRoots.some(t=>t.id===hierarchyRoot))hierarchyRoot="";
+  const shownTopics=hierarchyRoot?topics.filter(t=>t.kind==="hierarchy"&&
+    (t.id===hierarchyRoot||t.id.startsWith(hierarchyRoot+"/"))):topics;
   const reviewedCount=all.filter(c=>c.reviews.length>0).length;
   const bookmarkedCount=all.filter(c=>c.bookmarked).length;
   const reports=new Map<string,number>();
@@ -260,13 +264,21 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
         '<div><span>'+esc(label)+'</span><b>'+count+' card'+(count===1?"":"s")+'</b></div>').join("")+'</div>':
         '<p class="fine">Label errors in your notebook to see recurring patterns here.</p>')+'</section>'+
     '<section class="panel pad learning-insights"><h2>Topic performance</h2>'+
+    '<label class="picker" for="learning-hierarchy-root">Explore subject and descendants</label>'+
+    '<select id="learning-hierarchy-root"><option value="">All sections, source tags and subjects</option>'+
+    subjectRoots.map(t=>'<option value="'+esc(t.id)+'"'+(hierarchyRoot===t.id?" selected":"")+'>'+
+      esc(t.examId+" · "+t.label)+" ("+t.distinctQuestions+" underlying questions)"+'</option>').join("")+
+    '</select>'+
     '<p class="fine">Section, source tags and user-assigned Subject › Topic › Subtopic paths are displayed separately. Parent levels roll up observed answers; sibling labels in different subjects remain distinct. Five answered observations minimum for measured evidence; no topic is inferred from text and no proficiency is assumed. Skips are excluded from accuracy.</p>'+
-    '<div class="scroll-table"><table><thead><tr><th>Exam</th><th>Type</th><th>Topic</th><th>Answered / total</th><th>Distinct answered</th><th>Answering attempts</th><th>Accuracy</th><th>Evidence</th></tr></thead><tbody>'+
-     (topics.length?topics.map(t=>'<tr><td>'+esc(t.examId)+'</td><td>'+esc(t.kind)+'</td><td>'+esc(t.label)+'</td><td>'+
-       t.answered+' / '+t.total+'</td><td>'+t.distinctAnsweredQuestions+'</td><td>'+t.answeredAttempts+
+    '<div class="scroll-table"><table><thead><tr><th>Exam</th><th>Type</th><th>Topic</th><th>Answered / total</th><th>Distinct underlying answered</th><th>Answered revisions</th><th>Answering attempts</th><th>Accuracy</th><th>Evidence</th></tr></thead><tbody>'+
+     (shownTopics.length?shownTopics.map(t=>'<tr><td>'+esc(t.examId)+'</td><td>'+esc(t.kind)+'</td><td>'+
+      (t.kind==="hierarchy"?'<span class="learning-hierarchy-level" data-depth="'+t.depth+'" title="'+esc(t.label)+'">'+
+        esc(t.label)+'</span>':esc(t.label))+'</td><td>'+
+       t.answered+' / '+t.total+'</td><td>'+t.distinctAnsweredQuestions+'</td><td>'+
+        t.distinctAnsweredRevisions+'</td><td>'+t.answeredAttempts+
        '</td><td>'+(t.accuracy===null?"—":Math.round(t.accuracy*100)+"%")+
        '</td><td>'+(t.evidence==="measured"?"Observed":"Insufficient")+'</td></tr>').join(""):
-       '<tr><td colspan="8">Complete an exam to view topic performance.</td></tr>')+'</tbody></table></div>'+
+       '<tr><td colspan="9">Complete an exam to view topic performance.</td></tr>')+'</tbody></table></div>'+
     '<h2>Observed topic consistency</h2><p class="fine">Requires at least two attempts, ten answered observations and five distinct question revisions. Repeated questions are tracked separately; these are descriptive bands, not predictions of mastery.</p>'+
     '<div class="scroll-table"><table><thead><tr><th>Exam</th><th>Topic</th><th>Evidence</th></tr></thead><tbody>'+
       (progress.length?progress.map(p=>'<tr><td>'+esc(p.examId)+'</td><td>'+esc(p.topic)+'</td><td>'+esc(p.label)+'</td></tr>').join(""):
@@ -280,6 +292,9 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
        '<tr><td colspan="4">Complete the same paper revision twice to see a valid comparison.</td></tr>')+
     '</tbody></table></div></section>';
   present(html,"main:"+(selected?.id??"none"));
+  root.querySelector<HTMLSelectElement>("#learning-hierarchy-root")!.onchange=e=>{
+    hierarchyRoot=(e.target as HTMLSelectElement).value;draw();
+  };
   root.querySelector<HTMLSelectElement>("#learning-evidence-exam")!.onchange=e=>{
     evidenceExam=(e.target as HTMLSelectElement).value;draw();
   };
