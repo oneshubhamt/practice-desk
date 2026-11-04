@@ -1,4 +1,7 @@
 import { mountExamWorkspace } from "./generic-ui.ts";
+import {SHORTCUT_FIELDS,SHORTCUT_KEY_CHOICES,DEFAULT_SHORTCUTS,
+ readShortcutBindings,writeShortcutBindings,shortcutKeyLabel,
+ type ShortcutBindings} from "./exam-shortcuts.ts";
 import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
 import { readDisplayPreferences, writeDisplayPreferences, SETTINGS_EVENT } from "./preferences.ts";
 import type { DisplayPreferences } from "./preferences.ts";
@@ -62,6 +65,52 @@ document.addEventListener("pointerdown",event=>{
 document.addEventListener("keydown",event=>{
  if(event.key==="Escape"&&displayPanel&&!displayPanel.hidden){setDisplayOpen(false);displayTrigger?.focus();}
 });
+/** Configure only validated local UI bindings, never frozen exam rules. */
+const shortcutRoot=document.getElementById("shortcut-bindings");
+const shortcutStatus=document.getElementById("shortcut-status");
+function showShortcutSettings():void{
+ if(!shortcutRoot)return;
+ const saved=readShortcutBindings();
+ shortcutRoot.replaceChildren();
+ for(const [name,label] of SHORTCUT_FIELDS){
+  const field=document.createElement("label");
+  field.className="shortcut-binding-field";
+  field.textContent=label;
+  const select=document.createElement("select");
+  select.id="shortcut-"+name;
+  select.setAttribute("aria-label","Key for "+label);
+  for(const key of SHORTCUT_KEY_CHOICES){
+   if(name.startsWith("answer")&&(key==="arrowleft"||key==="arrowright"))continue;
+   const item=document.createElement("option");
+   item.value=key;item.textContent=shortcutKeyLabel(key);
+   select.appendChild(item);
+  }
+  select.value=saved[name];
+  field.appendChild(select);
+  shortcutRoot.appendChild(field);
+ }
+}
+function persistShortcutSettings(value:unknown):void{
+ try{
+  writeShortcutBindings(value);
+  if(shortcutStatus)shortcutStatus.textContent="Keyboard mapping saved for this device.";
+  showShortcutSettings();
+  window.dispatchEvent(new Event("practice-desk:shortcuts-changed"));
+ }catch(error){
+  if(shortcutStatus)shortcutStatus.textContent=error instanceof Error?error.message:
+    "Could not save shortcut preferences";
+ }
+}
+document.getElementById("shortcut-apply")?.addEventListener("click",()=>{
+ const edited:Record<string,string>={};
+ for(const [name] of SHORTCUT_FIELDS)
+  edited[name]=(document.getElementById("shortcut-"+name) as HTMLSelectElement|null)?.value??"";
+ persistShortcutSettings(edited as unknown as ShortcutBindings);
+});
+document.getElementById("shortcut-reset")?.addEventListener("click",()=>
+ persistShortcutSettings(DEFAULT_SHORTCUTS));
+showShortcutSettings();
+
 const fullButton=document.getElementById("displayFullscreen") as HTMLButtonElement|null;
 const isFullscreen=()=>Boolean(document.fullscreenElement||
  document.documentElement.classList.contains("immersive"));
