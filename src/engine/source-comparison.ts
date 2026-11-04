@@ -6,10 +6,8 @@ import { hashJson } from "../domain/hash.ts";
 
 /**
  * Source-key comparison is hypothetical, never a replacement for frozen audited
- * marks. V1 positional letters cannot prove identical answer semantics; accept
- * their archived records but do not certify/score them. V2 freezes a fingerprint
- * of the complete original rendered question context and compares only when it
- * equals the reviewed question's context at the moment the attempt was frozen.
+ * marks. Only clean-break schema 2 is supported. It compares immutable
+ * rendered source/reviewed contexts, not positional A–D answer letters.
  */
 interface CommonReference {
  readonly paperId:PaperId;
@@ -22,10 +20,6 @@ interface CommonEntry {
  readonly originalOptionId:OptionId;
  readonly markingRule:MarkingRule;
 }
-export interface LegacySourceKeyReference extends CommonReference {
- readonly schema:1;
- readonly entries:readonly CommonEntry[];
-}
 export interface VerifiedSourceKeyReference extends CommonReference {
  readonly schema:2;
  readonly entries:readonly (CommonEntry & {
@@ -35,8 +29,7 @@ export interface VerifiedSourceKeyReference extends CommonReference {
   readonly comparable:boolean;
  })[];
 }
-export type SourceKeyReference=LegacySourceKeyReference|VerifiedSourceKeyReference;
-type V1Core=Omit<LegacySourceKeyReference,"contentHash">;
+export type SourceKeyReference=VerifiedSourceKeyReference;
 type V2Core=Omit<VerifiedSourceKeyReference,"contentHash">;
 
 type Resources=Pick<ExamPackage,"stimuli"|"assets">;
@@ -91,22 +84,17 @@ export function createSourceKeyReference(
 export function validateSourceKeyReference(attempt:GenericAttempt):void{
  const reference=attempt.sourceKeyReference;
  if(!reference)return;
- if((reference.schema!==1&&reference.schema!==2)||
+ if(reference.schema!==2||
     reference.paperId!==attempt.frozen.paper.paperId||
     typeof reference.sourcePaperRevisionId!=="string"||
     typeof reference.sourceAnswerKeyRevisionId!=="string"||
     !Array.isArray(reference.entries)||
     reference.entries.length!==attempt.frozen.questions.length)
     throw Error("Invalid original source-key comparison");
- const core=reference.schema===1?
-   {schema:1 as const,paperId:reference.paperId,
-     sourcePaperRevisionId:reference.sourcePaperRevisionId,
-     sourceAnswerKeyRevisionId:reference.sourceAnswerKeyRevisionId,
-     entries:reference.entries}:
-   {schema:2 as const,paperId:reference.paperId,
-     sourcePaperRevisionId:reference.sourcePaperRevisionId,
-     sourceAnswerKeyRevisionId:reference.sourceAnswerKeyRevisionId,
-     entries:reference.entries};
+ const core:V2Core={schema:2,paperId:reference.paperId,
+    sourcePaperRevisionId:reference.sourcePaperRevisionId,
+    sourceAnswerKeyRevisionId:reference.sourceAnswerKeyRevisionId,
+    entries:reference.entries};
  if(reference.contentHash!==hashJson(core))throw Error("Original source-key reference hash mismatch");
  const allowed=new Map(attempt.frozen.questions.map(q=>[q.id,q]));
  const seen=new Set<string>();
@@ -119,24 +107,17 @@ export function validateSourceKeyReference(attempt:GenericAttempt):void{
     entry.markingRule.correctMarks<0||entry.markingRule.incorrectMarks>0)
     throw Error("Invalid original source-key answer entry");
   seen.add(q.id);
-  if(reference.schema===1){
-   // Retain stored legacy data as-is; its same-letter comparison is unverified.
-   if(!q.content.options.some(o=>o.id===entry.originalOptionId))
-     throw Error("Invalid legacy source-key answer option");
-  }else{
-   const v2=entry as VerifiedSourceKeyReference["entries"][number];
-   if(!/^[0-9a-f]{64}$/.test(v2.sourceSemanticHash)||
-      typeof v2.comparable!=="boolean"||
-      (v2.comparable&&(!q.content.options.some(o=>o.id===entry.originalOptionId)||
-        v2.sourceSemanticHash!==semanticHash(q,{
-          stimuli:attempt.frozen.stimuli,assets:attempt.frozen.assets
-        }))))
-     throw Error("Invalid source-key semantic correspondence");
-  }
+  if(!/^[0-9a-f]{64}$/.test(entry.sourceSemanticHash)||
+     typeof entry.comparable!=="boolean"||
+     (entry.comparable&&(!q.content.options.some(o=>o.id===entry.originalOptionId)||
+       entry.sourceSemanticHash!==semanticHash(q,{
+         stimuli:attempt.frozen.stimuli,assets:attempt.frozen.assets
+       }))))
+    throw Error("Invalid source-key semantic correspondence");
  }
 }
 
-/** Returns only the defensibly comparable subset; V1 positional history is unavailable. */
+/** Returns only the defensibly comparable frozen semantic subset. */
 export function sourceKeyScore(attempt:GenericAttempt):{
  marks:number;maxMarks:number;correct:number;incorrect:number;unanswered:number;
  comparable:number;unavailable:number;total:number;
@@ -144,7 +125,6 @@ export function sourceKeyScore(attempt:GenericAttempt):{
  const ref=attempt.sourceKeyReference;
  if(!ref||attempt.finishedAt===null)return null;
  validateSourceKeyReference(attempt);
- if(ref.schema===1)return null;
  const responses=new Map(attempt.state.responses.map(row=>[row.questionRevisionId,row.response]));
  let marks=0,maxMarks=0,correct=0,incorrect=0,unanswered=0,comparable=0;
  for(const entry of ref.entries){
