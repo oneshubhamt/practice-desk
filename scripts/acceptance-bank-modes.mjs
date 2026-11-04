@@ -54,7 +54,11 @@ for(const v of [
    check((await page.locator("#g-preflight").innerText()).includes("50.00"),
     "single-section maximum must be 50");
    await page.locator('[data-mode="free"]').click();
-   await page.locator("#g-exam-rules summary").click();
+   // P48-3 deliberately retains an expanded native details panel across
+   // a same-Library mode change, so users can compare revised policies.
+   // Do not toggle the already-open panel closed while checking its text.
+   check(await page.locator("#g-exam-rules").evaluate(el=>el.open),
+     "changing mode unexpectedly collapsed open exam rules");
    const freeHelp=await page.locator("#g-exam-rules").innerText();
    check(freeHelp.includes("One shared 60 min paper timer")&&
      freeHelp.includes("Pause control is available"),
