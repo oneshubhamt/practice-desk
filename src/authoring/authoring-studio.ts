@@ -543,13 +543,39 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    catch(error){status(error instanceof Error?error.message:"Invalid heading",true);}
    refreshSubjectSummary();
   };
-  for(const [id,key] of [["pd-author-section","section"],["pd-author-answer","answer"],
+  // A question's actual exam-section assignment is independent of subject.
+  // Reuse the target section's single timer, rather than introducing a
+  // per-question discrepancy when an existing section is selected.
+  find<HTMLInputElement>("pd-author-section").onchange=e=>{
+   try{
+    const title=(e.target as HTMLInputElement).value;
+    changeDraft(d=>assignAuthoringQuestionSection(d,questionId,title));
+    void render();
+   }catch(error){status(error instanceof Error?error.message:"Invalid exam section",true);}
+  };
+  for(const [id,key] of [["pd-author-answer","answer"],
    ["pd-author-source","source"],["pd-author-topic","topic"],
    ["pd-author-subtopic","subtopic"],["pd-author-difficulty","difficulty"]] as const){
    find<HTMLInputElement>(id).onchange=e=>updateQuestion(key,(e.target as HTMLInputElement).value);
   }
-  for(const [id,key] of [["pd-author-section-minutes","sectionMinutes"],
-    ["pd-author-min-choices","minSelections"],["pd-author-max-choices","maxSelections"],
+  const changeSectionTimer=(title:string,minutes:number)=>{
+   try{
+    changeDraft(d=>setAuthoringSectionMinutes(d,title,minutes));
+    // No remount is needed to reflect one section-wide changed value:
+    // keep active Wordgard cursor/IME and any unrelated source edits.
+    for(const field of container.querySelectorAll<HTMLInputElement>("[data-author-section-timer]"))
+     if(field.dataset.authorSectionTimer===title)field.value=String(minutes);
+    if(question().section===title)
+     find<HTMLInputElement>("pd-author-section-minutes").value=String(minutes);
+    status("Set section "+title+" to "+minutes+" minutes across every assigned question.");
+   }catch(error){status(error instanceof Error?error.message:"Invalid section timer",true);}
+  };
+  find<HTMLInputElement>("pd-author-section-minutes").onchange=e=>
+   changeSectionTimer(question().section,Number((e.target as HTMLInputElement).value));
+  container.querySelectorAll<HTMLInputElement>("[data-author-section-timer]").forEach(input=>{
+   input.onchange=()=>changeSectionTimer(input.dataset.authorSectionTimer??"",Number(input.value));
+  });
+  for(const [id,key] of [["pd-author-min-choices","minSelections"],["pd-author-max-choices","maxSelections"],
     ["pd-author-partial-credit","partialCreditEach"],
     ["pd-author-partial-penalty","partialPenaltyEach"]] as const){
     const input=container.querySelector<HTMLInputElement>("#"+id);
