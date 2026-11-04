@@ -1516,6 +1516,7 @@ html[data-theme="dark"] .pd-author-studio .pd-author-preview-choice>span{
 .pd-author-preview-controls :is(input,textarea,select,button){pointer-events:none}
 .pd-author-preview-controls .generic-choices{min-width:0;max-width:100%}
 .pd-author-effective-rules{min-width:0;max-width:100%;margin-top:12px;overflow-wrap:anywhere}
+.pd-author-effective-rules .scroll-table{display:block;width:100%;max-width:100%;min-width:0;overflow-x:auto;overscroll-behavior-inline:contain}
 .pd-author-effective-rules table{width:100%;border-collapse:collapse}
 .pd-author-effective-rules :is(th,td){padding:7px;border-bottom:1px solid var(--line);text-align:left}
 .pd-author-effective-rules ul,.pd-author-partial-examples ul{padding-inline-start:1.4rem}

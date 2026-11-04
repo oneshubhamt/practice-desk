@@ -70,6 +70,7 @@ test("P54 real six-kind preview uses frozen question controls, never index-pairs
   const html=authoringPublishedPreview(pkg,q.id);
   assert.match(html,/pd-author-preview-content/);
   assert.match(html,/inert/);
+  assert.match(html,/role="region" tabindex="0" aria-label="Published section timing and question counts"/);
   if(q.content.kind==="matching"){
    assert.match(html,/data-match="L1"/);
    assert.match(html,/value="C"/);

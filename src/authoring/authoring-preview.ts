@@ -51,7 +51,7 @@ const main=(pkg:ExamPackage,q:QuestionRevision,authorValidated:boolean):string=>
    metadata.timingRules.map(s=>'<li>'+escapeText(s)+'</li>').join("")+'</ul>'+
    '<h5>Navigation and solution release</h5><ul>'+
    metadata.navigationRules.map(s=>'<li>'+escapeText(s)+'</li>').join("")+'</ul>'+
-   '<h5>Actual section budget</h5><table><thead><tr><th>Section</th><th>Questions</th><th>Time</th></tr></thead><tbody>'+
+   '<h5>Actual section budget</h5><div class="scroll-table" role="region" tabindex="0" aria-label="Published section timing and question counts"><table><thead><tr><th>Section</th><th>Questions</th><th>Time</th></tr></thead><tbody>'+
    pkg.paper.sections.map(s=>{
     const t=pkg.paper.timing;
     const ms=t.kind==="sectional"?t.sectionLimits.find(x=>x.sectionId===s.id)?.durationMs:
@@ -59,7 +59,7 @@ const main=(pkg:ExamPackage,q:QuestionRevision,authorValidated:boolean):string=>
     return '<tr><td>'+escapeText(s.title)+'</td><td>'+s.questionRevisionIds.length+
       '</td><td>'+(ms===null||ms===undefined?"Untimed":ms/60000+" min")+
       (t.kind==="whole-paper"?" (shared paper budget)":"")+'</td></tr>';
-   }).join("")+'</tbody></table>'+
+   }).join("")+'</tbody></table></div>'+
    (metadata.hasComponentScoring?
     '<p class="fine">Component-based partial scoring is evaluated by the same actual scorer; incorrect component totals are floored and capped by the frozen marking rule.</p>':"")+
    '</section>');

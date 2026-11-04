@@ -148,8 +148,24 @@ try{
  await shot("validated-written-phone");
  await page.setViewportSize({width:195,height:844});
  await page.evaluate(()=>document.documentElement.style.setProperty("--type-scale","1.4"));
- await assertNoOverflow(page,engine+" P54 195px at 140% authoring and real preview");
  await shot("validated-written-195px");
+ const narrow=await page.evaluate(()=>{
+  const width=innerWidth,scroll=document.documentElement.scrollWidth;
+  if(scroll<=width+2)return {width,scroll};
+  const beyond=[...document.body.querySelectorAll("*")].filter(e=>{
+   if(!(e instanceof HTMLElement)||!e.getClientRects().length)return false;
+   const r=e.getBoundingClientRect();
+   return r.right>width+2||r.left< -2;
+  }).slice(0,25).map(e=>{
+   const r=e.getBoundingClientRect(),style=getComputedStyle(e);
+   return {tag:e.tagName,id:e.id,className:typeof e.className==="string"?e.className.slice(0,75):"",
+    left:Math.round(r.left),right:Math.round(r.right),scroll:e.scrollWidth,
+    client:e.clientWidth,overflowX:style.overflowX,position:style.position};
+  });
+  return {width,scroll,beyond};
+ });
+ if(narrow.scroll>narrow.width+2)console.error("P54 195px overflow diagnostic: "+JSON.stringify(narrow));
+ await assertNoOverflow(page,engine+" P54 195px at 140% authoring and real preview");
  await page.evaluate(()=>document.documentElement.style.removeProperty("--type-scale"));
  await page.setViewportSize({width:1280,height:850});
  await page.locator("#pd-author-confirm").check();
