@@ -2,6 +2,22 @@ import type { CandidateResponse, QuestionRevision } from "../domain/question.js"
 
 /** Reject invalid candidate input at the engine boundary, independently of UI controls. */
 export function validateResponse(question: QuestionRevision, response: CandidateResponse): void {
+  // The same validator protects active UI events and untrusted persisted
+  // candidate responses. No extra keys may hide unsigned response metadata.
+  if(!response||typeof response!=="object"||Array.isArray(response)||
+     ![Object.prototype,null].includes(Object.getPrototypeOf(response)))
+    throw new Error("Invalid candidate response object");
+  const allowed:Record<CandidateResponse["kind"],readonly string[]>={
+    "single-choice":["kind","optionId"],
+    "multiple-select":["kind","optionIds"],
+    "numeric-entry":["kind","value"],
+    "true-false":["kind","value"],
+    "matching":["kind","pairs"],
+    "free-response":["kind","text"]
+  };
+  const fields=allowed[response.kind];
+  if(!fields||Object.keys(response).some(key=>!fields.includes(key)))
+    throw new Error("Candidate response: unsupported field or kind");
   const content = question.content;
   if (response.kind !== content.kind) throw new Error("Response kind does not match question");
   switch (content.kind) {
@@ -31,7 +47,12 @@ export function validateResponse(question: QuestionRevision, response: Candidate
       break;
     }
     case "matching": {
-      if (response.kind !== "matching" || new Set(response.pairs.map(p => p.leftId)).size !== response.pairs.length ||
+      if(response.kind !== "matching"||!Array.isArray(response.pairs)||
+         response.pairs.some(pair=>!pair||typeof pair!=="object"||Array.isArray(pair)||
+           ![Object.prototype,null].includes(Object.getPrototypeOf(pair))||
+           Object.keys(pair).some(key=>!["leftId","rightId"].includes(key))))
+        throw new Error("Invalid matching response pair fields");
+      if (new Set(response.pairs.map(p => p.leftId)).size !== response.pairs.length ||
           new Set(response.pairs.map(p => p.rightId)).size !== response.pairs.length ||
           response.pairs.some(p => !content.leftItems.some(i => i.id === p.leftId) ||
             !content.rightItems.some(i => i.id === p.rightId))) throw new Error("Invalid matching response");
