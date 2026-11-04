@@ -21,12 +21,12 @@ import {DEFAULT_SHORTCUTS,resolveExamShortcut,readShortcutBindings,
 const P=x=>plainRichDocument(x);
 function paper(){
  const a=newAuthoringDraft();
- const a1={...newAuthoringQuestion("multiple-select"),section:"Economy",topic:"Inflation",
+ const a1={...newAuthoringQuestion("multiple-select"),section:"Economy",subject:"Economy",topic:"Inflation",
   subtopic:"CPI",difficulty:"medium",sectionMinutes:15,minSelections:2,maxSelections:3,
   partialCreditEach:1,partialPenaltyEach:0.5,
   prompt:P("Select two correct statements"),options:["A","B","C","D"].map(P),
   answer:"A,C",explanation:P("Detailed source evidence")};
- const a2={...newAuthoringQuestion("single-choice"),section:"Polity",topic:"Parliament",
+ const a2={...newAuthoringQuestion("single-choice"),section:"Polity",subject:"Polity",topic:"Parliament",
   subtopic:"Committees",difficulty:"easy",sectionMinutes:10,
   prompt:P("What is the answer?"),options:["A","B","C","D"].map(P),answer:"B"};
  return {...a,examId:"upsc-epfo-apfc",paperId:"hierarchical-check",
@@ -46,7 +46,9 @@ test("P49 topic paths have stable ancestors and never collapse same label across
  for(const item of [[],["Economy","","CPI"],["Economy","Inflation","CPI","extra"],["x\n"]])
   assert.throws(()=>topicPathId(item));
  assert.throws(()=>attributedTopicPath("upsc-epfo-apfc","General","labour","","Wages"));
- assert.deepEqual(attributedTopicPath("upsc-epfo-apfc","General","labour","Labour Codes","Wages"),
+ assert.throws(()=>attributedTopicPath("upsc-epfo-apfc","General","labour","Labour Codes","Wages"),
+  /either an official/);
+ assert.deepEqual(attributedTopicPath("upsc-epfo-apfc","","labour","Labour Codes","Wages"),
   ["Industrial Relations, Labour Codes and Social Security in India","Labour Codes","Wages"]);
 });
 test("P50 authored sectional paper freezes exact navigation, source topic hierarchy and difficulty",()=>{
