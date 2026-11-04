@@ -302,12 +302,24 @@ try{
    });}finally{db.close();}
   },id);
   await page.reload({waitUntil:"load"});
-  // A record with pre-visit-schema evidence may re-open through Library;
-  // do not assume native file:// navigation can preserve Results on reload.
-  if(await page.locator("#g-history").count()){
-   await page.locator("#g-history").click();await route(page,"history");
+  // Initial Library HTML is provisional during asynchronous hydration. Wait
+  // for the actual URL route AND its final mounted controls before deciding
+  // whether a manually restored older record needs to be opened via History.
+  await page.waitForFunction(()=>{
+   const url=new URL(location.href);
+   const fromHash=url.hash.startsWith("#pd=")?
+     new URLSearchParams(url.hash.slice(1)).get("pd"):null;
+   const screen=fromHash??url.searchParams.get("pd")??"library";
+   if(screen==="result")return Boolean(document.querySelector("#result-tab-timing"));
+   if(screen==="history")return Boolean(document.querySelector(".history-archive"));
+   return screen==="library"&&document.querySelector("#g-import")?.disabled===false;
+  });
+  if(await page.locator("#result-tab-timing").count()===0){
+   if(await page.locator(".history-archive").count()===0){
+    await page.locator("#g-history").click();await route(page,"history");
+   }
    await page.locator('[data-attempt="'+id+'"]').first().click();await route(page,"result");
-  }else await page.locator("#result-tab-timing").waitFor({state:"visible"});
+  }
   await page.locator("#result-tab-timing").click();
   check((await page.locator("#result-timing").innerText()).includes("Not recorded"),
    "Old saved attempts falsely attributed unsaved visit counts");
