@@ -103,6 +103,8 @@ test("P53: distinct underlying question counts cannot inflate with authored revi
 test("P53: notebook subject is a separate explicit annotation, not exam section",()=>{
  const pkg=compileAuthoringPublication(paper()),finished=complete(pkg,"p53-notebook",0);
  const item=addLearningCard(finished,pkg.questions[0].id,new Date(Date.UTC(2026,10,5)).toISOString());
+ assert.throws(()=>validateLearningCard({...item,customTopic:"Labour"+String.fromCharCode(10)+"Codes"}),
+   /Invalid learning card/,"untrusted newline must not crash later metrics");
  const card=validateLearningCard({...item,customSubject:"Industrial Relations",
   customTopic:"Trade Unions",customSubtopic:"Recognition",syllabusTopicId:undefined});
  const m=topicMetrics([finished],[card]);
