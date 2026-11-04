@@ -76,6 +76,9 @@ try{
    paths[0][0].includes("Industrial")&&paths[1][0].includes("Developmental"),
    engine+" source subject-only and nested taxonomy tags not frozen correctly");
  await page.locator("#g-compose-details summary").click();
+ // Details toggling intentionally redraws the Library asynchronously. Inspect
+ // the populated list, not the transient closed-builder placeholder.
+ await page.locator("#g-compose-topic optgroup").first().waitFor({state:"attached"});
  const chooser=page.locator("#g-compose-topic");
  check(await chooser.locator("optgroup").count()>=2,
    engine+" practice filtering has no navigable subject groups");
