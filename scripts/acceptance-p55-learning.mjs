@@ -26,10 +26,11 @@ async function assertP55Narrow(label){
     text:(el.textContent??"").slice(0,80),
     ancestors:[el,...Array.from((function*(){let p=el.parentElement;while(p&&p.id!=="app"){yield p;p=p.parentElement;}})())]
       .slice(0,7).map(e=>e.tagName.toLowerCase()+(e.id?"#"+e.id:"")+
-        (typeof e.className==="string"?"."+e.className.trim().replace(/\\s+/g,".").slice(0,90):""))
+        (typeof e.className==="string"?"."+e.className.trim().replace(/\s+/g,".").slice(0,90):""))
   }))};
  });
  if(diagnostics.overflow>2)console.error("P55 NARROW ACTUAL DOM "+label+" "+JSON.stringify(diagnostics));
+ check(diagnostics.overflow<=2,label+" first layout overflow "+JSON.stringify(diagnostics));
  return assertNoOverflow(page,label);
 }
 async function waitCard(id){
@@ -171,6 +172,22 @@ try{
   await page.locator("#learning-error").inputValue()==="conceptual"&&
   await page.locator("#learning-bookmark").isChecked(),
   engine+" card-specific full unsaved editor state did not survive A-B-A switch");
+ // A changed DOM row order must be corrected by immutable card keys, without
+ // discarding any survivor, its live button or the active editor's dirty data.
+ const reordering=await page.evaluate(()=>{
+  const list=document.querySelector("[data-learning-list]");
+  const prior=[...list.querySelectorAll("[data-learning-id]")];
+  const intended=prior.map(x=>x.dataset.learningId);
+  list.appendChild(prior[0]); // Simulate a temporarily shuffled live DOM.
+  document.querySelector('[data-evidence-reason="bookmarked"]').click();
+  const after=[...document.querySelectorAll("[data-learning-list] [data-learning-id]")];
+  return {restored:after.every((node,i)=>node===prior[i]&&node.dataset.learningId===intended[i]),
+   listRetained:list===document.querySelector("[data-learning-list]"),
+   draft:document.querySelector("#learning-note")?.value};
+ });
+ check(reordering.restored&&reordering.listRetained&&
+  reordering.draft==="First card unsaved note; keep all edit controls.",
+  engine+" reordered Learning items were not reconciled by card identity: "+JSON.stringify(reordering));
  // Simulated composition transition during a background Learning redraw.
  const composing=await page.evaluate(()=>{
   const note=document.querySelector("#learning-note");
