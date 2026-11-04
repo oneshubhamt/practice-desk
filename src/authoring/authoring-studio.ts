@@ -15,6 +15,7 @@ import {richDocumentHTML} from "../app/rich-content-view.ts";
 import {mathRenderer} from "../app/math-renderer-provider.ts";
 import {escapeText} from "../app/html-escape.ts";
 import {wordgardEditorPort} from "./wordgard-adapter.ts";
+import {syllabusForExam,syllabusHeading,UNCLASSIFIED_SUBJECT} from "../learning/syllabus-taxonomy.ts";
 import type {EditorSession,AuthoringEditCommand} from "./vendor-ports.ts";
 import {AUTHORING_KEY,AUTHORING_MAX_BYTES,defaultAuthoringShelf,newAuthoringDraft,
  newAuthoringQuestion,validateAuthoringDraft,validateAuthoringShelf,
@@ -101,7 +102,18 @@ function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Field):st
   '<label>Incorrect marks<input id="pd-author-wrong" type="number" max="0" step="any" value="'+draft.marksIncorrect+'"></label>'+
   '</div></details><div class="pd-author-meta">'+
   '<label>Question kind<select id="pd-author-kind">'+kinds+'</select></label>'+
-  '<label>Section / subject<input id="pd-author-section" maxlength="100" value="'+escapeText(current.section)+'"></label>'+
+  '<label>Actual exam section (controls timing and navigation)<input id="pd-author-section" maxlength="100" value="'+escapeText(current.section)+'"></label>'+
+  '<label>Academic subject (custom, not an exam section)<input id="pd-author-subject" maxlength="120" value="'+escapeText(current.subject??"")+'" placeholder="Leave blank for Unclassified"></label>'+
+  (syllabusForExam(draft.examId)?
+    '<label>Official broad syllabus subject (author-chosen)<select id="pd-author-syllabus-heading">'+
+      option("","Custom subject / Unclassified",current.syllabusHeadingId??"")+
+      syllabusForExam(draft.examId)!.headings.map(h=>option(h.id,h.label,current.syllabusHeadingId??"")).join("")+
+    '</select></label>':"")+
+  '<p class="fine pd-author-taxonomy-summary">Classification: '+
+    escapeText(current.syllabusHeadingId?
+      syllabusHeading(draft.examId,current.syllabusHeadingId)?.label??"Unknown heading":
+      current.subject?.trim()||UNCLASSIFIED_SUBJECT)+
+    '. Section timers and subjects are independent; no classification is inferred.</p>'+
   '<label>Topic (author supplied)<input id="pd-author-topic" maxlength="120" value="'+escapeText(current.topic??"")+'"></label>'+
   '<label>Subtopic (needs Topic)<input id="pd-author-subtopic" maxlength="120" value="'+escapeText(current.subtopic??"")+'"></label>'+
   '<label>Difficulty tag<select id="pd-author-difficulty">'+
@@ -307,7 +319,9 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   const version=++renderSequence,container=host,d=active(),q=question();
   if(!fields(q.kind).includes(field))field=initialField;
   container.hidden=false;
-  const questionOptions=d.questions.map((q,i)=>option(q.id,(i+1)+". "+q.section+" · "+labels[q.kind],questionId)).join("");
+  const questionOptions=d.questions.map((q,i)=>option(q.id,(i+1)+". "+q.section+
+    " · "+(q.syllabusHeadingId?syllabusHeading(d.examId,q.syllabusHeadingId)?.label:
+      q.subject?.trim()||UNCLASSIFIED_SUBJECT)+" · "+labels[q.kind],questionId)).join("");
   const draftOptions=draftsOptions(shelf);
   container.innerHTML='<section class="panel pad pd-author-studio" aria-labelledby="pd-author-heading">'+
    '<div class="row between"><div><span class="eyebrow">QUESTION AUTHORING · LOCAL DRAFT</span>'+
@@ -478,6 +492,24 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
       updateMetadata(key,(e.target as HTMLInputElement).checked);
   const tolerance=find<HTMLInputElement>("pd-author-tolerance");
   if(tolerance)tolerance.onchange=e=>updateQuestion("tolerance",Number((e.target as HTMLInputElement).value));
+  // Timed examination sections and syllabus subjects are unrelated dimensions.
+  find<HTMLInputElement>("pd-author-subject").onchange=e=>{
+   const subject=(e.target as HTMLInputElement).value;
+   const heading=container.querySelector<HTMLSelectElement>("#pd-author-syllabus-heading");
+   if(subject.trim()&&heading)heading.value="";
+   try{changeDraft(d=>({...d,questions:d.questions.map(q=>q.id===questionId?
+     {...q,subject,syllabusHeadingId:subject.trim()?"":q.syllabusHeadingId}:q)}));}
+   catch(error){status(error instanceof Error?error.message:"Invalid subject",true);}
+  };
+  const heading=container.querySelector<HTMLSelectElement>("#pd-author-syllabus-heading");
+  if(heading)heading.onchange=e=>{
+   const id=(e.target as HTMLSelectElement).value;
+   const subject=find<HTMLInputElement>("pd-author-subject");
+   if(id)subject.value="";
+   try{changeDraft(d=>({...d,questions:d.questions.map(q=>q.id===questionId?
+     {...q,syllabusHeadingId:id,subject:id?"":q.subject}:q)}));}
+   catch(error){status(error instanceof Error?error.message:"Invalid heading",true);}
+  };
   for(const [id,key] of [["pd-author-section","section"],["pd-author-answer","answer"],
    ["pd-author-source","source"],["pd-author-topic","topic"],
    ["pd-author-subtopic","subtopic"],["pd-author-difficulty","difficulty"]] as const){
