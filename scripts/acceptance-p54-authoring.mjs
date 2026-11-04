@@ -65,6 +65,8 @@ try{
  await page.locator("#pd-author-section-manager summary").click();
  check(await page.locator("[data-author-section-timer]").count()===2,
    engine+" no consolidated section-level duration editor");
+ check(await page.locator('[data-author-section-timer][aria-label^="Timer for "]').count()===2,
+   engine+" section timer inputs lost their directly associated accessible names");
  check(await page.locator("#pd-author-duration").isDisabled()&&
    await page.locator("#pd-author-section-transition").isEnabled(),
    engine+" irrelevant whole-paper duration is editable during sectional policy");

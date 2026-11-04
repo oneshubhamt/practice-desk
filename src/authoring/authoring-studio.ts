@@ -190,8 +190,8 @@ function sectionManager(draft:AuthoringDraft,expanded:boolean):string{
     '<th>Exam section</th><th>Questions</th><th>Minutes (0 = untimed)</th></tr></thead><tbody>'+
    sections.map(section=>'<tr><th scope="row">'+escapeText(section.name)+'</th><td>'+
       section.count+'</td><td><label class="pd-author-section-time-label">'+
-      '<span class="sr-only">Timer for '+escapeText(section.name)+'</span>'+
-      '<input type="number" min="0" max="600" step="1" data-author-section-timer="'+escapeText(section.name)+
+      '<input aria-label="Timer for '+escapeText(section.name)+
+      '" type="number" min="0" max="600" step="1" data-author-section-timer="'+escapeText(section.name)+
       '" value="'+(section.conflict?"":section.minutes)+'"'+
       (section.conflict?' placeholder="Conflict: choose one value" aria-invalid="true"':"")+
       '></label></td></tr>').join("")+

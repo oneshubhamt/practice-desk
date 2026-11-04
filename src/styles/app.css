@@ -1505,7 +1505,7 @@ html[data-theme="dark"] .pd-author-studio .pd-author-preview-choice>span{
  * Keep table overflow inside its scroll region, never on the 195px document. */
 .pd-author-section-manager{margin:12px 0;border:1px solid var(--line);border-radius:11px;padding:10px;min-width:0;max-width:100%}
 .pd-author-section-manager summary{font-weight:750;cursor:pointer;overflow-wrap:anywhere}
-.pd-author-section-manager .scroll-table{max-width:100%;min-width:0;overflow-x:auto}
+.pd-author-section-manager .scroll-table{position:relative;max-width:100%;min-width:0;overflow-x:auto}
 .pd-author-section-table{width:100%;min-width:0}
 .pd-author-section-table :is(td,th){padding:9px 10px;text-align:left;vertical-align:middle;overflow-wrap:anywhere}
 .pd-author-studio .pd-author-section-time-label{display:block;min-width:74px;max-width:150px}
