@@ -7,6 +7,133 @@
 **Authority:** [Consolidated engineering programme](../ENGINEERING_PROGRAMME.md) and binding [decision register](../decisions/POLICY_REGISTER.md). This is an *evidence annex*, not a competing future programme.  
 **Reason for reopening:** The first P48 ledger largely audited/repaired IndexedDB corruption, added four Node cases and one browser journey, and cited a full pre-existing CI suite. That did **not** establish a fresh code-level crosswalk for all previously committed architecture, features, data contracts and nonregression obligations. A green test is not proof of an uninspected requirement.
 
+## 0A. P48-4 independent fresh-source challenge — 4 November 2026
+
+**Authority and separation.** This is a **new current-source assessment**, not a promotion of the 3 November snapshot's historical statuses or a claim that tests alone prove requirements. The earlier inventory below remains dated evidence. Read its original I/F/G/L/TS/QB/DOC criteria alongside this current verdict; any earlier `getAll`/CSP/Wordgard/21-suite assertions are historical and superseded here. Source baseline before challenge: `5eb7aae45fae78e15c9ceb4929f76bf51526fb23`; first failing independent Node run [41797993416](https://github.com/oneshubhamt/practice-desk/actions/runs/41797993416). This pass changed **only** `src/app/stored-record-validator.ts`, `src/engine/response.ts`, and the new `tests/p48-independent-record-invariants.test.mjs` in app logic/tests. The current artefact and final CI evidence are entered in the master programme's P48-4 live five-step ledger. The new audit found a real gap **R48-15**; it was not listed or covered by the earlier one-issue P48 closeout.
+
+### A. All I01–I26 — present source owners and independent disposition
+
+| Requirement | Rechecked implementation or absence in current source | P48-4 disposition |
+|---|---|---|
+| I01 source-vs-review semantic equivalence | `src/engine/source-comparison.ts` `semanticHash`, `createSourceKeyReference`, `sourceKeyScore`: original A–D letters **not** assumed comparable if option/stimulus/media/wording differs | **SOURCE VERIFIED**; hypothetical subset only |
+| I02 frozen publisher editions/Q62 | Read `papers.json`, `patches.json`, `src/content/import-cgl.ts`, `src/engine/scoring.ts` directly: 500 original CGL questions, 5 papers × 2 editions, 131 patches, 25 altered option arrays, 21 altered source-answer-text options, 10 changed keys, 119 changed stems. Oct 6 Q62 source invalid, original option B retained, reviewed caution scoreable; **no Q62 patch** | **SOURCE VERIFIED AS POLICY**, NOT external key certification |
+| I03 deterministic pinned builds | `scripts/build.mjs` esbuild local JS/CSS, KaTeX fonts, two vendor MIT notices, exact runtime SHA hash CSP; `package-lock.json`, Node24 `npm ci`, SHA-checked publisher in `.github/workflows/ci.yml` | **SOURCE VERIFIED**, supply-chain/OS not absolutely certified |
+| I04 flexible exam family | `exam-families.ts` `familyIdFor`/catalogue, `library-controller.ts` family-scoped published/reviewed/custom edition options | **SOURCE VERIFIED** |
+| I05 stored family setup | `practice-selection.ts` schema 2; `library-controller.ts` per-family selection; `history/backup.ts` optional validated setups in v4 | **SOURCE VERIFIED**; no obsolete migration |
+| I06 custom seeded selection | `practice-compose.ts` eligible status, actual topic/difficulty metadata, deterministic source revision/key hash and frozen subset manifest | **SOURCE VERIFIED** one compatible source paper |
+| I07 evidence-targeted revision | `revision-selection.ts` wrong/blank/slow/repeated/flagged/bookmarked/due, hash-bound source revision, truthful missing evidence; `revision-test.ts` separate paper and lineage | **SOURCE VERIFIED**, no invented cognitive cause |
+| I08 scalable stored history | `history/shared-store.ts` content-hash shared snapshots, compact rows, `record-cursor-reader.ts` *one atomic* IDB cursor transaction, `pruneSharedSnapshots` cursors | **VERIFIED scoped**; no lazy/paged History, conditional future work |
+| I09 recovery and health | `persistence-controller.ts` CAS, queued writes, strict backup vs local quarantine, explicit read-only failure and healthy-only export | **SOURCE VERIFIED scoped**; physical eviction and damaged-byte recovery **OPEN** |
+| I10 APFC topics | `syllabus-taxonomy.ts` explicit nine broad headings; `learning.ts` user-entered topic and statistics | **PARTIAL**; no formal hierarchical subtopics |
+| I11 actual Safari on Mac | `navigation.ts` native Navigation API with file:// fragment fallback, reload handling and typed URLs | **EXTERNAL NOT TESTED** on physical Mac |
+| I12 question timing phases | `engine/session.ts` visible checkpoint and first answer/visit evidence; `question-analytics.ts` derived timing only when present | **SOURCE VERIFIED**; new R48-15 closes trust gap on imported totals |
+| I13 archive filters | `history-query.ts` AND predicates and inclusive local attempt-start dates; `history-controller.ts` rows-only updates | **SOURCE VERIFIED** |
+| I14 local figures | `image-viewer.ts` local-only dialog, bounded zoom/pan/keyboard/focus, `image-preparation.ts` manual-approved lossy candidate quality threshold | **SOURCE VERIFIED**; real touch and optical legibility **EXTERNAL** |
+| I15 math and authoring | `rich-document.ts` strict source-owned AST, KaTeX local font, Wordgard port/editor, published hash/key/source validation | **SOURCE VERIFIED**, hardware IME/spoken-math **EXTERNAL** |
+| I16 shortcuts/AT | `exam-shortcuts.ts`, `lifecycle-controller.ts` native radio/dialog priority, fixed shortcuts | **PARTIAL**: configurable remap conditional, actual AT **NOT TESTED** |
+| I17 typed modularity/no redraw | `generic-ui.ts` ~270-line one-owner composition, `coordinator-context.ts`, specialised controllers, `screen-renderer.ts` stable Exam/Library/Result reconciliation | **SOURCE VERIFIED modularity**; Learning inner `root.innerHTML` remains, whole-app DOM diff not claimed |
+| I18 per-question deadline | `domain/exam.ts` only untimed/whole/sectional policies | **DEFERRED optional**, not implemented |
+| I19 dedicated surveys | `domain/question.ts` six question/response kinds | **DEFERRED optional** |
+| I20 physical mobile and AT/OS | No hardware, accessibility-tool transcript, browser-origin reboot/eviction | **EXTERNAL NOT TESTED** |
+| I21 official diverse bank content | `content/papers.json` is five bundled CGL papers; `bank-import.ts` APFC/NAT template has two samples; authoring/import accepts externally supplied papers | **PARTIAL CONTENT**; no verified complete APFC/CAT/UPSC/RBI bank |
+| I22 hostile import/privacy | `domain/validate.ts` strict known fields, `media.ts` per-asset/total digest, `exam-package.ts` depth/node/text budgets; `scripts/build.mjs` runtime-hash CSP; `stored-record-validator.ts` plus `engine/response.ts` newly enforce exact mutable fields/timing | **SOURCE VERIFIED with P48-4 R48-15 repair**; live OS and supply-chain external |
+| I23 five-store/event-index design | Current **two** IndexedDB stores `attempts`/`snapshots`, no event store or pagination; historical decision D38/D39 rejects gratuitous migration | **CONDITIONAL NOT IMPLEMENTED**; no mandatory rewrite |
+| I24 PWA/cloud/AI national rank | Generated single file:// HTML, local-first data, no account/network | **USER-DEFERRED** |
+| I25 one engine/single owner | `engine/{session,scoring,response,score-ceiling}.ts` six kinds; typed controllers; no debug timer override located | **SOURCE VERIFIED engine**, coordinator mutable by deliberate design |
+| I26 truthful exam provenance | `exam-preflight.ts` frozen rules/max, `exam-families.ts` actual bundled identity, `template.html` independence disclaimer | **SOURCE VERIFIED**; importer labels do not certify official status |
+
+### B. F01–F15 and G01–G10 — fresh source cross-check
+
+| ID | Direct current code path / distinct contract | P48-4 |
+|---|---|---|
+| F01 | `session.ts` `closeSection`/`completedSectionTimings` actual measured time | VERIFIED |
+| F02 | `exam-preflight.ts` score ceiling + audit status before start, no key disclosure | VERIFIED |
+| F03 | `history-priorities.ts` compatible cohort by rules/section/timing, adjusted marks | VERIFIED |
+| F04 | `history-score.ts` exact frozen earned/eligible denominator | VERIFIED |
+| F05 | `library-controller.ts` pending/resume area distinct from newest completed | VERIFIED |
+| F06 | `exam-preflight.ts` selected timer/navigation/pause/score rule disclosure | VERIFIED |
+| F07 | `exam-package.ts` and `question-content-view.ts` source/option figure alternatives | SOURCE VERIFIED; AT EXTERNAL |
+| F08 | `import-cgl.ts`, `editorial-labels.ts` correction vs caution provenance | VERIFIED |
+| F09 | `result-presentation.ts`, `question-analytics.ts` measured pacing vs unavailable | VERIFIED |
+| F10 | `session.ts` paused FLAG transition permitted, other edits prohibited | VERIFIED |
+| F11 | `lifecycle-controller.ts` respects focused native radio and keyboard priority | VERIFIED |
+| F12 | `result-controller.ts` only selected Results pane heavy content | VERIFIED |
+| F13 | `deletion-policy.ts`, `persistence-controller.ts` unfinished discard and CAS | VERIFIED |
+| F14 | `bootstrap.ts`, `template.html`, `app.css` independent floating Aa | SOURCE VERIFIED; device EXTERNAL |
+| F15 | `template.html` + `exam-preflight.ts` clear non-affiliation and source status | VERIFIED |
+| G01 | `session.ts` locked whole-paper `SUBMIT_SECTION` advances | VERIFIED |
+| G02 | `session.ts` expired manual sectional state cannot answer/skip | VERIFIED |
+| G03 | `validate.ts` wrong ≤ blank ≤ correct marks | VERIFIED |
+| G04 | `validate.ts` validates multiple-selection key bounds; `response.ts` responses | VERIFIED |
+| G05 | `validate.ts`, `response.ts` matching IDs/right-target uniqueness | VERIFIED |
+| G06 | `route-controller.ts`, `result-controller.ts` withhold Review when `allowReview=false` | VERIFIED user-visible; local bytes never encrypted |
+| G07 | `exam-controller.ts` incomplete multi-selection is transient and clears stale committed score | VERIFIED |
+| G08 | `exam-controller.ts` matching duplicates invalid/Save disabled | VERIFIED |
+| G09 | `scoring.ts` caps partial ≤ full; `score-ceiling.ts` honest max/floor | VERIFIED |
+| G10 | `backup.ts` clean v4 only, `source-comparison.ts` clean schema 2; D38 no migration | VERIFIED under approved no-compat policy |
+
+### C. L01–L11 / F29-01–03 — code path and unclaimed human/device outcomes
+
+| ID group | Current-source inspection | Disposition |
+|---|---|---|
+| L01, L02 | `library-controller.ts` primary paper/start and `exam-view.ts` visible navigation/Flag | SOURCE VERIFIED; subjective first-fold EXTERNAL |
+| L03, L04 | `question-content-view.ts` bounded scrollable passage, contextual figures, `image-viewer.ts` local enlargement | SOURCE VERIFIED; actual figure readability EXTERNAL |
+| L05, L06 | `history-page.ts` records ahead of analytics; `result-controller.ts` section performance above lower diagnostic panels | SOURCE VERIFIED |
+| L07, F29-02, F29-03 | `app.css`, `bootstrap.ts` light/dark & 195px+140% sizing, actual browser overflow gates | BROWSER-VERIFIED dimensions, human comfort/device EXTERNAL |
+| L08 | `import-cgl.ts` marks key correction only on effective source/key change | SOURCE VERIFIED |
+| L09, L10 | `exam-view.ts` distinct whole/section clock labels, friendly CGL modes | SOURCE VERIFIED |
+| L11, F29-01 | `result-controller.ts` stable heading, `route-controller.ts` result-tab/filter reset on new attempt | SOURCE VERIFIED |
+
+### D. 28 original architecture sections, eight layers, test engineering, authoring and documents
+
+**Original Oct 28 architecture sections individually mapped (fresh current owner, not an unproved completion claim):** 1 audit summary → this matrix; 2 snapshot/current runtime → actual git HEAD + file owners; 3 generic engine → `domain/question.ts`/`exam-package.ts`; 4 formal session → `session.ts`; 5 timer/foreground → `clock.ts`/`session.ts` and new record invariant; 6 scoring/comparison → `scoring.ts`/`source-comparison.ts`; 7 immutable revisions → `integrity.ts`/`frozen.ts`; 8 editorial → `import-cgl.ts`/Q62; 9 storage design → `shared-store.ts` two-store/cursors, pagination conditional; 10 recovery → `persistence-controller.ts` strict read-only quarantine and backup; 11 separate data entities → `domain`/`history`/`learning`; 12 six response kinds → `question.ts`/`response.ts`; 13 exam-family hierarchy → `exam-families.ts`; 14 independent presets → `practice-selection.ts`; 15 history diagnostics → `history-metrics.ts`; 16 immediate/topic/error analytics → `learning.ts`/`result-presentation.ts`; 17 richer evidence → `question-analytics.ts`; 18 sourced revision → `revision-selection.ts`/`revision-test.ts`; 19 preserve baseline UX without pixel parity → `app.css`/`screen-renderer.ts`; 20 Library/History/Exam/Results improvements → feature controllers; 21 payload/media/scale → `build.mjs`/`image-preparation.ts`/cursors; 22 hostile source/privacy → `validate.ts`/`stored-record-validator.ts`/CSP; 23 current QA/release support → `ci.yml`/manual matrix; 24 eight conceptual layers → next sentence; 25 generic example contract → six-kind imported test paper; 26 five-phase implementation → P41–48 live ledger; 27 retain/redesign/remove → D38/D39/feature-controller extraction; 28 offline local-first target → generated self-contained HTML. **Not all aspirational items (paged history, tree taxonomy, physical test) are implemented; see I table.**
+
+**Eight conceptual layers, independently linked to their implementation:** presentation `app/{screen-renderer,library-controller,exam-controller,result-controller,history-page,learning-ui}.ts`; configuration `domain/{exam,validate}.ts`; question bank `domain/{question,answer-key,integrity,media}.ts`; session `engine/{session,clock,response}.ts`; scoring `engine/{scoring,score-ceiling,manual-grading}.ts`; persistence `history/{shared-store,backup,concurrency,frozen}.ts` plus `app/persistence-controller.ts`; analytics/learning `learning/{learning,revision-selection,revision-test,fsrs-scheduler-adapter}.ts`; application service `app/{generic-ui,coordinator-context,route-controller}.ts`. Ownership is real, not a guarantee of perfectly independent coupling: broad mutable `CoordinatorContext` and Learning redraw remain.
+
+| Group | Every former requirement ID accounted for against current source | Disposition |
+|---|---|---|
+| TS01–03 | Capability-named suites (not chronological Pass scripts), independent scorer/model tests and NAT boundaries in `tests/{exam-scoring-and-policy,session-and-timing}.test.mjs` | VERIFIED topology, new adversarial regression added |
+| TS04–06 | `history-and-persistence`, `p48-recovery-integrity`, `exam-package-and-import`, `learning-and-analytics` test owners; negative CAS and partial corruption | VERIFIED in scoped CI; physical OS EXTERNAL |
+| TS07–09 | One `scripts/browser/fixtures.mjs`, no `scripts/passNN*.mjs`, no mandatory v11 pixel comparator, three real offline browser engine jobs in `ci.yml` | VERIFIED |
+| TS10 | Focus/ARIA/contrast rules in `acceptance-ui.mjs`; no full WCAG/axe/NVDA/VoiceOver/TalkBack certification | PARTIAL/EXTERNAL |
+| TS11–12 | Guarded publisher tests exact source SHA, deterministic generated file; profiling informational not v11 parity | VERIFIED |
+| TS13–15 | Current docs/test counts reconciled; archived old→new assertion mapping exists; pinned lockfile, deterministic assertions. Individual old assertions were not all manually replayed independently | VERIFIED CURRENT MAPPING; comprehensive coverage proof LIMITED |
+| QB01–04 | `bank-import.ts` simple MCQ/NAT; `exam-package.ts` six kind; `authoring-studio.ts` real UI; `rich-document.ts` app-owned vendor-independent AST | VERIFIED |
+| QB05–07 | `katex-math-adapter.ts`, `image-preparation.ts`, `wordgard-adapter.ts` maths/images/tables/commands | SOURCE VERIFIED; screen reader/IME/quality EXTERNAL |
+| QB08–10 | `authoring-publisher.ts` validated immutable publication, source/reviewed separation, `result-controller.ts` answer disclosure post-submit | VERIFIED |
+| QB11 | Unpublished draft shelf in localStorage and separately downloadable JSON, **not** main History v4 export | PARTIAL DATA PROTECTION by explicit design |
+| QB12 | Basic authoring policies in Studio, advanced sectional/partial credit in full-package import only | PARTIAL authoring breadth |
+| QB13 | Automatic PDF/DOCX/CSV question extraction absent; not approved | DEFERRED |
+| QB14 | `build.mjs` tree-shaken vendor bundle, pinned KaTeX/Wordgard and MIT notice embedded offline; no CDN | SOURCE VERIFIED; external supply-chain audit separate |
+| DOC01–04 | One authoritative programme, historical docs preserved, source-only Q62, real counts **23 Node test files and 24 browser scripts**, **286 Node tests** after new five-test P48-4 case (final CI required) | RECONCILED; earlier snapshot counts historical |
+| DOC05–07 | Authoring guide current WYSIWYG publishing; coordinator documented as typed composition; unkeyed SHA not an author signature | VERIFIED current docs |
+| DOC08–10 | Physical/manual gate maintained, D38 no migration, strict import/CSP and new saved-state field guard | VERIFIED current claims; external NOT TESTED |
+
+### E. New independent negative finding and exact risk disposition
+
+**R48-15 — REPRODUCED IN ACTUAL SOURCE; REPAIRED IN P48-4, NOT A REWRITE:** `stored-record-validator.ts` originally bounded the session cursor and optional completed-section evidence but allowed a saved record with negative/nonfinite `elapsedMs`, impossible `foregroundMs`, accumulated per-question exposure larger than the saved total, nonboolean visibility, or undeclared authority/override fields in mutable attempts, response rows and session objects. `engine/response.ts` also accepted extra properties in candidate response objects and nested matching pairs. These are integrity/forensic-trust risks on **untrusted browser or backup records**, not evidence of malicious script execution or a change to correct frozen scores. New `tests/p48-independent-record-invariants.test.mjs` derives a genuine six-kind source fixture; the first independent [red CI 41797993416](https://github.com/oneshubhamt/practice-desk/actions/runs/41797993416) proved three invalid-data cases admitted; an additional test [red CI 41799081885](https://github.com/oneshubhamt/practice-desk/actions/runs/41799081885) independently challenged response/pair unknown fields. Minimal code repair: validate exact allowed mutable record/session/score/response metadata, finite nonnegative clock/foreground totals and actual paper timing bounds; explicitly disallow matching-pair extra keys at engine response boundary. This does **not** change the live clock, CGL source/editorial key, grading formula, answer IDs, FSRS algorithm, the two IndexedDB stores or v4 backup schema. An archive with a recalculated ordinary SHA remains **untrusted**, so the per-record validation is necessary. P48-4 final green CI and publisher SHA will be appended after all jobs complete.
+
+### F. Remaining R48-01–14 and manual stop conditions, individually triaged
+
+| Gap | Current disposition (not an invented software pass) |
+|---|---|
+| R48-01 | Physical Mac Safari `file://`, Back/Forward/reload: **NOT TESTED**, release-blocking human/device gate |
+| R48-02 | Previous premature closure: **independent requirement inventory and fresh source challenge performed**; P48-4 CI + exact doc signoff still required |
+| R48-03 | Atomic cursor hydrate/export and orphan GC VERIFIED P48-2; paged indexed History and representative physical-memory stress **CONDITIONAL** |
+| R48-04 | Formal hierarchical APFC topic tree **NOT IMPLEMENTED**, broad nine headings and custom user label only; explicit opt-in needed |
+| R48-05 | Configurable shortcut remap **OPTIONAL NOT IMPLEMENTED**; fixed shortcuts source verified |
+| R48-06 | Stable Exam/Library/Results retained DOM verified P48-2/3; Learning full rerender and all-screen virtual diff **NOT IMPLEMENTED**; physical IME/AT gate |
+| R48-07 | P48-1 exact runtime-hash CSP + strict import source verified; real OS origin/security test **NOT TESTED** |
+| R48-08 | Plain SHA integrity vs identity/signature language corrected; **NOT authenticated author** |
+| R48-09 | Old source-comparison v1 reader removed P48-1; current schema-2 only; no migration by D38 |
+| R48-10 | Damaged rows quarantined, healthy-only archive; genuine damaged bytes/evicted origin recovery **NOT IMPLEMENTED**, warning explicit |
+| R48-11 | Unpublished Wordgard shelf outside standard History backup; explicit separate JSON export; consolidated backup **OPTIONAL** |
+| R48-12 | Complete verified APFC/CAT/UPSC/RBI content banks **NOT PROVIDED**, separate editorial work |
+| R48-13 | Browser screenshots and overflow measured P48-3; actual current laptop/mobile ergonomics and user approval **NOT APPROVED** |
+| R48-14 | Active documentation corrected P48-3, new P48-4 counts/source boundary to update; archival prior passages retain historical labels |
+
+**External release matrix (all remain untested/held):** physical Mac Safari version and Finder file route, iOS/Android native touch/zoom and storage, real VoiceOver/NVDA/TalkBack and math speech, hardware IME, browser OS-kill/reboot/eviction/quota, actual user visual approval, and any merge to `main`/change to `baseline/v11`. Automated WebKit does **not** certify physical Safari. No source artifact publication is a public release authorization.
+
 ## 1. Scope, methodology and status discipline
 
 I independently inspected the **current production source** in `src/app/`, `src/engine/`, `src/domain/`, `src/history/`, `src/learning/`, `src/authoring/`, `src/content/`, `src/styles/`, `src/template.html`, `scripts/build.mjs`, the current CI YAML and the linked programme, baseline, architecture, contracts, authoring, QA and historical finding documents. References below are **repository-root source paths and approximate 1-based line ranges at the frozen snapshot**, not quotations from older pass-completion diaries. Cross-read the listed consumer(s) when assessing an implementation; code presence alone is not successful device acceptance.
