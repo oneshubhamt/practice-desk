@@ -14,6 +14,24 @@ const {page,errors}=await h.open({viewport:{width:1280,height:850}});
 const idA="learning-card:rev-0",idB="learning-card:rev-1";
 const median=values=>{const a=[...values].sort((x,y)=>x-y);return a[Math.floor(a.length/2)];};
 const percentile=(values,p)=>{const a=[...values].sort((x,y)=>x-y);return a[Math.min(a.length-1,Math.ceil(a.length*p)-1)];};
+async function assertP55Narrow(label){
+ const diagnostics=await page.evaluate(()=>{
+  const overflow=document.documentElement.scrollWidth-innerWidth;
+  return {overflow,items:[...document.querySelectorAll("#app *")].filter(el=>{
+   if(!(el instanceof HTMLElement)||!el.getClientRects().length)return false;
+   const rect=el.getBoundingClientRect();
+   return rect.right>innerWidth+2&&!el.closest(".scroll-table,.result-tabs,.generic-stimulus");
+  }).slice(0,8).map(el=>({
+    tag:el.tagName,html:el.outerHTML.slice(0,310),
+    text:(el.textContent??"").slice(0,80),
+    ancestors:[el,...Array.from((function*(){let p=el.parentElement;while(p&&p.id!=="app"){yield p;p=p.parentElement;}})())]
+      .slice(0,7).map(e=>e.tagName.toLowerCase()+(e.id?"#"+e.id:"")+
+        (typeof e.className==="string"?"."+e.className.trim().replace(/\\s+/g,".").slice(0,90):""))
+  }))};
+ });
+ if(diagnostics.overflow>2)console.error("P55 NARROW ACTUAL DOM "+label+" "+JSON.stringify(diagnostics));
+ return assertNoOverflow(page,label);
+}
 async function waitCard(id){
  await page.waitForFunction(async id=>{
   const db=await new Promise((resolve,reject)=>{const r=indexedDB.open("practiceDesk.shared.v1",1);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
@@ -210,11 +228,11 @@ try{
   measurements.push(await measure(500));
   await page.setViewportSize({width:195,height:844});
   await page.evaluate(()=>document.documentElement.style.setProperty("--type-scale","1.4"));
-  await assertNoOverflow(page,"P55 500-card Learning at 195px + 140% type");
+  await assertP55Narrow("P55 500-card Learning at 195px + 140% type");
  }else{
   await page.setViewportSize({width:195,height:844});
   await page.evaluate(()=>document.documentElement.style.setProperty("--type-scale","1.4"));
-  await assertNoOverflow(page,"P55 two-card Learning at 195px + 140% type");
+  await assertP55Narrow("P55 two-card Learning at 195px + 140% type");
  }
  check(errors.length===0,engine+" uncaught browser exceptions "+errors.join("; "));
  await h.evidence("p55-"+engine,{engine,measurements,passed:true});
