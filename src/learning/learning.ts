@@ -170,7 +170,7 @@ export function topicMetrics(attempts:readonly GenericAttempt[],cards:readonly L
        ...(heading&&syllabusHeading(attempt.frozen.snapshot.examId,heading)?
          [{label:syllabusHeading(attempt.frozen.snapshot.examId,heading)!.label,kind:"syllabus" as const}]:[]),
        ...hierarchy.map(node=>({label:node.path.join(" › "),
-         kind:"hierarchy" as const,sourceId:node.id,parentId:node.parentId??undefined,
+         kind:"hierarchy" as const,sourceId:node.id,...(node.parentId?{parentId:node.parentId}:{}),
          depth:node.depth}))
      ];
      const unique=new Set<string>();
