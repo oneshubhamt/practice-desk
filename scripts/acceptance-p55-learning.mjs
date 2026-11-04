@@ -191,9 +191,9 @@ try{
  await select(idB);
  check(await page.locator("#learning-note").inputValue()==="Second card draft must stay on B only",
   engine+" temporary filtered-out draft was lost on return");
- // Browser reload discards unsaved B while preserving explicitly saved A.
- await page.reload({waitUntil:"load"});await route(page,"library");
- await page.locator("#g-learning").click();await route(page,"learning");
+ // A file:// refresh on Learning must restore the Learning route itself.
+ // Uncommitted B draft is lost, but the explicitly saved A note persists.
+ await page.reload({waitUntil:"load"});await route(page,"learning");
  await select(idB);
  check(await page.locator("#learning-note").inputValue()==="",
   engine+" tab-only uncommitted B edit was silently saved");
