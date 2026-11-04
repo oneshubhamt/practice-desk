@@ -69,7 +69,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
  let selectedId:string|null=null,reviewId:string|null=null,revealed=false;
  let filter:"all"|"due"|"bookmarked"="all",message="",closed=false,opened=false;
  let previousLearningView="";
- type NotebookDraft={note:string;customTopic:string;customSubtopic:string;
+ type NotebookDraft={note:string;customSubject:string;customTopic:string;customSubtopic:string;
    syllabusTopicId:string;errorLabel:string;bookmarked:boolean};
  const notebookDrafts=new Map<string,NotebookDraft>();
  const present=(html:string,identity:string)=>{
@@ -235,6 +235,8 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
        '<select id="learning-error"><option value="">Not classified</option>'+
        ERROR_LABELS.map(label=>'<option value="'+label+'"'+((selectedDraft?.errorLabel??selected.errorLabel)===label?" selected":"")+'>'+
          esc(label)+'</option>').join("")+'</select>'+
+       '<label class="picker" for="learning-subject">Academic subject (optional; independent of the exam section)</label>'+
+       '<input id="learning-subject" maxlength="120" value="'+esc(selectedDraft?.customSubject??selected.customSubject??"")+'" placeholder="Leave blank for Unclassified">'+
        '<label class="picker" for="learning-topic">Topic (your own label, optional)</label>'+
        '<input id="learning-topic" maxlength="120" value="'+esc(selectedDraft?.customTopic??selected.customTopic)+'" placeholder="e.g. Labour Codes">'+
        '<label class="picker" for="learning-subtopic">Subtopic (optional; requires Topic)</label>'+
@@ -339,6 +341,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   const captureNotebook=()=>{
     const value:NotebookDraft={
       note:root.querySelector<HTMLTextAreaElement>("#learning-note")!.value,
+      customSubject:root.querySelector<HTMLInputElement>("#learning-subject")!.value,
       customTopic:root.querySelector<HTMLInputElement>("#learning-topic")!.value,
       customSubtopic:root.querySelector<HTMLInputElement>("#learning-subtopic")!.value,
       syllabusTopicId:root.querySelector<HTMLSelectElement>("#learning-syllabus")?.value??"",
@@ -351,19 +354,32 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   };
   for(const id of ["learning-note","learning-topic","learning-subtopic"])
     (root.querySelector<HTMLInputElement|HTMLTextAreaElement>("#"+id)!).oninput=captureNotebook;
-  for(const id of ["learning-syllabus","learning-error","learning-bookmark"]){
+  root.querySelector<HTMLInputElement>("#learning-subject")!.oninput=()=>{
+    if(root.querySelector<HTMLInputElement>("#learning-subject")!.value.trim()){
+      const heading=root.querySelector<HTMLSelectElement>("#learning-syllabus");
+      if(heading)heading.value="";
+    }
+    captureNotebook();
+  };
+  const officialHeading=root.querySelector<HTMLSelectElement>("#learning-syllabus");
+  if(officialHeading)officialHeading.onchange=()=>{
+    if(officialHeading.value)root.querySelector<HTMLInputElement>("#learning-subject")!.value="";
+    captureNotebook();
+  };
+  for(const id of ["learning-error","learning-bookmark"]){
     const field=root.querySelector<HTMLInputElement|HTMLSelectElement>("#"+id);
     if(field)field.onchange=captureNotebook;
   }
   root.querySelector<HTMLButtonElement>("#learning-save")!.onclick=async()=>{
     try{
       const note=root.querySelector<HTMLTextAreaElement>("#learning-note")!.value;
+      const customSubject=root.querySelector<HTMLInputElement>("#learning-subject")!.value.trim();
       const customTopic=root.querySelector<HTMLInputElement>("#learning-topic")!.value.trim();
       const customSubtopic=root.querySelector<HTMLInputElement>("#learning-subtopic")!.value.trim();
       const syllabusTopicId=root.querySelector<HTMLSelectElement>("#learning-syllabus")?.value||undefined;
       const errorLabel=root.querySelector<HTMLSelectElement>("#learning-error")!.value as ErrorLabel|"";
       const bookmarked=root.querySelector<HTMLInputElement>("#learning-bookmark")!.checked;
-      if(!await host.save(validateLearningCard({...selected,note,customTopic,customSubtopic,
+      if(!await host.save(validateLearningCard({...selected,note,customSubject,customTopic,customSubtopic,
          ...(syllabusForExam(selected.examId)?{syllabusTopicId}:{}),errorLabel:errorLabel||null,
          bookmarked,updatedAt:now().toISOString()}))){
         message="Notebook changes could not be durably saved. Export a recovery backup.";draw();return;
