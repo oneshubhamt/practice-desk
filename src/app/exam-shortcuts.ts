@@ -75,13 +75,14 @@ export function examShortcutHelp(bindings:ShortcutBindings=readShortcutBindings(
 export function resolveExamShortcut(c:ShortcutContext,bindings:ShortcutBindings=DEFAULT_SHORTCUTS):ShortcutCommand|null{
  if(c.blocked||c.editable)return null;
  const key=c.key.toLowerCase();
+ // Paused exams cannot navigate, even through an Alt-modified mapping.
+ if(c.paused)return !c.alt&&!c.repeat&&key===bindings.flag&&c.allowFlagging?{kind:"flag"}:null;
  // The focused native radio keeps unmodified arrows for its own semantics.
  if(key===bindings.previous||key===bindings.next){
    if(c.focusedRadio&&!c.alt)return null;
    return {kind:"navigate",delta:key===bindings.next?1:-1};
  }
  if(c.alt||c.repeat)return null;
- if(c.paused)return key===bindings.flag&&c.allowFlagging?{kind:"flag"}:null;
  if(key===bindings.fullscreen)return {kind:"fullscreen"};
  if(key===bindings.flag)return c.allowFlagging?{kind:"flag"}:null;
  const i=[bindings.answerA,bindings.answerB,bindings.answerC,bindings.answerD].indexOf(key);
