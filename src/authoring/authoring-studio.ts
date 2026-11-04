@@ -325,6 +325,8 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
  };
  const render=async():Promise<void>=>{
   if(closed||!host||!shelf)return;
+  const before=host.querySelector<HTMLDetailsElement>("#pd-author-section-manager");
+  if(before)sectionManagerExpanded=before.open;
   capture();
   const version=++renderSequence,container=host,d=active(),q=question();
   if(!fields(q.kind).includes(field))field=initialField;
@@ -351,7 +353,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    '<button class="btn" id="pd-author-up">Move up</button>'+
    '<button class="btn" id="pd-author-down">Move down</button>'+
    '<button class="btn danger" id="pd-author-delete-question">Delete question</button></div></div>'+
-   controls(d,q,field)+
+   controls(d,q,field)+sectionManager(d,sectionManagerExpanded)+
    toolbar()+
    '<div id="pd-author-editor" class="pd-author-editor" role="group" aria-label="Edit '+escapeText(fieldNames[field])+'"></div>'+
    '<div class="pd-author-insert"><fieldset><legend>Insert equation</legend>'+
@@ -384,7 +386,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   const showIssues=(issues:readonly PublicationIssue[]):void=>{
    validationBox.hidden=false;
    if(!issues.length){
-    validationBox.innerHTML='<h3>Ready to publish</h3><p>All question formats, keys and revision identities are valid. Check the confirmation below before publishing.</p>';
+    validationBox.innerHTML='<h3>Ready to publish</h3><p>The exact immutable paper, key, timing, response controls, assets and marking rules have been compiled and validated. Check confirmation before publishing.</p>';
     status("Validation passed for "+active().questions.length+" questions.");
     return;
    }
@@ -423,7 +425,8 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
     if(!report.valid){validationBox.scrollIntoView({block:"nearest"});return;}
     if(!find<HTMLInputElement>("pd-author-confirm").checked)
       throw Error("Confirm your source, answer keys and marking rules before publishing.");
-    const packageValue=compileAuthoringPublication(active(),actions.existing());
+    const packageValue=report.compiled;
+    if(!packageValue)throw Error("Authoritative validation did not return the compiled publication");
     await actions.publish(packageValue);
     // The integrated Library owner refreshes the screen only after a
     // successfully committed package; do not change anything here afterwards.
@@ -440,12 +443,12 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   click("pd-author-preview-toggle",()=>{
    try{
     capture();const dest=find<HTMLElement>("pd-author-preview");
-    dest.innerHTML=preview(active(),question());dest.hidden=false;
+    dest.innerHTML=preview(active(),question(),actions.existing());dest.hidden=false;
     dest.scrollIntoView({block:"nearest"});
     // The editing session is remounted so preview never hijacks editable DOM.
     void render().then(()=>{
      const box=host?.querySelector<HTMLElement>("#pd-author-preview");
-     if(box){box.innerHTML=preview(active(),question());box.hidden=false;}
+     if(box){box.innerHTML=preview(active(),question(),actions.existing());box.hidden=false;}
     });
    }catch(error){status(error instanceof Error?error.message:"Cannot preview document",true);}
   });
