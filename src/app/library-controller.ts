@@ -9,6 +9,7 @@ import type {ExamPackage,GenericAttempt,CglPracticeMode} from "./exam-package.ts
 
 import {createSourceKeyReference} from "../engine/source-comparison.ts";
 import {composePracticeSet,practiceInventory} from "./practice-compose.ts";
+import {parseTopicPathId} from "../learning/syllabus-taxonomy.ts";
 import {createSourceReviewReference} from "../engine/review-source.ts";
 
 import {DEFAULT_HISTORY_QUERY} from "./history-query.ts";
@@ -78,6 +79,25 @@ export function renderLibraryHTML(owner:CoordinatorContext):string {
    const filterOption=(value:string,label:string,current:string):string=>
      '<option value="'+escapeText(value)+'"'+(value===current?" selected":"")+'>'+
      escapeText(label)+'</option>';
+   const topicGroups=new Map<string,{id:string;count:number;path:readonly string[]}[]>();
+   const rawTopics:{id:string;count:number}[]=[];
+   for(const entry of composeInventory?.topics??[]){
+     const path=parseTopicPathId(entry.id);
+     if(!path){rawTopics.push(entry);continue;}
+     const group=topicGroups.get(path[0]!)??[];
+     group.push({...entry,path});
+     topicGroups.set(path[0]!,group);
+   }
+   const topicOptions=[...topicGroups.entries()].sort(([a],[b])=>a.localeCompare(b))
+     .map(([subject,items])=>'<optgroup label="'+escapeText(subject)+'">'+
+       items.sort((a,b)=>a.path.length-b.path.length||a.id.localeCompare(b.id))
+         .map(entry=>filterOption(entry.id,
+           (entry.path.length===1?"Entire subject":"  ".repeat(entry.path.length-1)+
+             entry.path.slice(1).join(" › "))+" ("+entry.count+")",owner.composeTopic)).join("")+
+       '</optgroup>').join("")+
+     (rawTopics.length?'<optgroup label="Source-supplied topic tags">'+
+       rawTopics.map(entry=>filterOption(entry.id,entry.id+" ("+entry.count+")",owner.composeTopic)).join("")+
+       '</optgroup>':"");
    const builder=selected?'<section class="panel pad practice-builder" id="g-compose">'+
      '<details id="g-compose-details"'+(owner.composeOpen?' open':'')+'>'+
      '<summary>Create a custom practice set from this paper</summary>'+
@@ -86,8 +106,8 @@ export function renderLibraryHTML(owner:CoordinatorContext):string {
      '<label>Section<select id="g-compose-section">'+filterOption("","All sections",owner.composeSection)+
      (composeInventory?.sectionChoices??[]).map(x=>filterOption(x.id,x.title+" ("+x.count+")",owner.composeSection)).join("")+
      '</select></label>'+
-     '<label>Source topic<select id="g-compose-topic">'+filterOption("","Any topic",owner.composeTopic)+
-     (composeInventory?.topics??[]).map(x=>filterOption(x.id,x.id+" ("+x.count+")",owner.composeTopic)).join("")+
+     '<label>Source topic / subject<select id="g-compose-topic">'+filterOption("","Any subject or topic",owner.composeTopic)+
+     topicOptions+
      '</select></label>'+
      '<label>Supplied difficulty<select id="g-compose-difficulty">'+filterOption("","Any difficulty",owner.composeDifficulty)+
      (composeInventory?.difficulties??[]).map(x=>filterOption(x.id,x.id+" ("+x.count+")",owner.composeDifficulty)).join("")+
