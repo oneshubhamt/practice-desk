@@ -181,18 +181,27 @@ export async function pruneSharedSnapshots(db:IDBDatabase):Promise<readonly stri
  const removed:string[]=[];
  await new Promise<void>((resolve,reject)=>{
   const tx=db.transaction([ATTEMPTS_STORE,SNAPSHOTS_STORE],"readwrite");
-  const rows=tx.objectStore(ATTEMPTS_STORE).getAll();
+  const referenced=new Set<string>();
+  // Scan compact rows without cloning the full History array. The cleanup
+  // stays one serializable readwrite transaction: every competing tab's
+  // attempt/snapshot write is ordered before or after this transaction.
+  const rows=tx.objectStore(ATTEMPTS_STORE).openCursor();
   rows.onsuccess=()=>{
-   const referenced=new Set((rows.result as unknown[]).filter(isSharedAttempt)
-     .map(row=>row.frozenRef));
+   const current=rows.result;
+   if(current){
+    if(isSharedAttempt(current.value)&&typeof current.value.frozenRef==="string")
+      referenced.add(current.value.frozenRef);
+    current.continue();
+    return;
+   }
    const cursor=tx.objectStore(SNAPSHOTS_STORE).openCursor();
    cursor.onsuccess=()=>{
-    const current=cursor.result;
-    if(!current)return;
-    if(typeof current.key==="string"&&!referenced.has(current.key)){
-     removed.push(current.key);current.delete();
+    const existing=cursor.result;
+    if(!existing)return;
+    if(typeof existing.key==="string"&&!referenced.has(existing.key)){
+     removed.push(existing.key);existing.delete();
     }
-    current.continue();
+    existing.continue();
    };
   };
   tx.oncomplete=()=>resolve();
