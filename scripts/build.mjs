@@ -1,6 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { Script } from "node:vm";
+import { createHash } from "node:crypto";
 import { build as bundleJavaScript,transform as minifySource } from "esbuild";
 import { preparedKaTeXStyles } from "./prepare-katex-css.mjs";
 import { validateContent } from "../src/content/validate.ts";
@@ -34,7 +35,27 @@ const compiled=await bundleJavaScript({
 });
 const runtime=compiled.outputFiles[0].text;
 new Script(runtime);
-payloads.APPLICATION="<script>\n"+runtime.trimEnd()+"\n</script>";
+// CSP: the only executable script is this exact compiler output, not any
+// later injected script. A new build regenerates its hash deterministically.
+// Keep the original self-contained file:// distribution and local data/fonts.
+const inlineScript="\\n"+runtime.trimEnd()+"\\n";
+const scriptHash=createHash("sha256").update(inlineScript,"utf8").digest("base64");
+const csp=[
+  "default-src 'none'",
+  "script-src 'sha256-"+scriptHash+"'",
+  "script-src-attr 'none'",
+  "style-src 'unsafe-inline'",
+  "img-src data: blob:",
+  "font-src data:",
+  "connect-src 'none'",
+  "object-src 'none'",
+  "base-uri 'none'",
+  "form-action 'none'",
+  "frame-src 'none'",
+  "worker-src 'none'"
+].join("; ");
+payloads.CSP='<meta http-equiv="Content-Security-Policy" content="'+csp+'">';
+payloads.APPLICATION="<script>"+inlineScript+"</script>";
 let html=await read("src/template.html");
 for(const [name,body] of Object.entries(payloads)){
  const marker="<!-- PD:"+name+" -->";
