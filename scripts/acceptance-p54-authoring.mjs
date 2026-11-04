@@ -58,6 +58,13 @@ try{
  await page.locator("#pd-author-section-manager summary").click();
  check(await page.locator("[data-author-section-timer]").count()===2,
    engine+" no consolidated section-level duration editor");
+ check(await page.locator("#pd-author-duration").isDisabled()&&
+   await page.locator("#pd-author-section-transition").isEnabled(),
+   engine+" irrelevant whole-paper duration is editable during sectional policy");
+ await page.locator('[data-author-section-timer="Specialised"]').fill("");
+ await page.locator('[data-author-section-timer="Specialised"]').blur();
+ check((await page.locator("#pd-author-status").innerText()).includes("Enter a section duration"),
+   engine+" empty section timer silently coerced to untimed zero");
  await page.locator('[data-author-section-timer="Specialised"]').fill("16");
  await page.locator('[data-author-section-timer="Specialised"]').blur();
  check(await page.locator("#pd-author-section-minutes").inputValue()==="16",
@@ -69,6 +76,19 @@ try{
  check(shelf?.questions?.slice(0,2).every(q=>q.sectionMinutes===16)&&
    shelf?.questions?.slice(2).every(q=>q.sectionMinutes===10),
    engine+" section-wide timer edit left inconsistent per-question metadata");
+ await page.locator("#pd-author-add-question").click();
+ check(await page.locator("#pd-author-questions option").count()===7,
+   engine+" add question did not preserve editable section structure");
+ const inherited=await page.evaluate(()=>{
+   const raw=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts.v1")??"null");
+   return raw?.drafts?.find(d=>d.id===raw.activeId)?.questions?.at(-1);
+ });
+ check(inherited?.section==="Specialised"&&inherited.sectionMinutes===16,
+   engine+" newly authored question reintroduced a conflicting timer");
+ page.once("dialog",async dialog=>dialog.accept());
+ await page.locator("#pd-author-delete-question").click();
+ check(await page.locator("#pd-author-questions option").count()===6,
+   engine+" temporary inheriting question not removed");
  await page.locator("#pd-author-validate").click();
  check((await page.locator("#pd-author-validation").innerText()).includes("Ready to publish"),
    engine+" exact six-kind authoring draft did not validate through publisher");
