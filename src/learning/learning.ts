@@ -6,7 +6,7 @@ import type { CorrectAnswer } from "../domain/answer-key.js";
 import type { QuestionRevisionId } from "../domain/ids.js";
 import type {RevisionSchedulerPort} from "./revision-scheduler-port.ts";
 import { validateQuestionRevision, validateAnswerKeyRevision } from "../domain/validate.ts";
-import { syllabusHeading } from "./syllabus-taxonomy.ts";
+import { syllabusHeading,attributedTopicPath,topicAncestors,parseTopicPathId } from "./syllabus-taxonomy.ts";
 
 export const ERROR_LABELS=["conceptual","calculation","interpretation","time-pressure","guessing","careless","knowledge-gap","other"] as const;
 export type ErrorLabel=typeof ERROR_LABELS[number];
@@ -30,6 +30,8 @@ export interface LearningCard {
  readonly note:string;
  readonly errorLabel:ErrorLabel|null;
  readonly customTopic:string;
+ /** User-entered third-level topic, only meaningful beneath a named topic. */
+ readonly customSubtopic?:string;
  /** Optional explicit broad syllabus heading, never inferred from question text. */
  readonly syllabusTopicId?:string;
  readonly bookmarked:boolean;
@@ -49,6 +51,10 @@ export function validateLearningCard(input:unknown):LearningCard{
     typeof raw.sourceAttemptId!=="string"||!raw.sourceAttemptId||raw.sourceAttemptId.length>200||
     typeof raw.note!=="string"||raw.note.length>8000||
     typeof raw.customTopic!=="string"||raw.customTopic.length>120||
+    (raw.customSubtopic!==undefined&&
+     (typeof raw.customSubtopic!=="string"||raw.customSubtopic.length>120||
+      Boolean(raw.customSubtopic.trim()&&!raw.customTopic.trim())||
+      /[\u0000-\u001f\u007f]/u.test(raw.customSubtopic)))||
     (raw.syllabusTopicId!==undefined&&(!syllabusHeading(raw.examId!,raw.syllabusTopicId)))||
     typeof raw.bookmarked!=="boolean"||
     !(raw.errorLabel===null||ERROR_LABELS.includes(raw.errorLabel as ErrorLabel))||
@@ -108,13 +114,16 @@ export interface TopicMetrics {
  id:string;label:string;examId:string;total:number;answered:number;correct:number;incorrect:number;skipped:number;
  accuracy:number|null;coverage:number;evidence:"insufficient"|"measured";
  /** Repeated answers are observations, not additional distinct questions. */
- attempts:number;answeredAttempts:number;distinctQuestions:number;distinctAnsweredQuestions:number;kind:"section"|"source-topic"|"user-topic"|"syllabus";
+ attempts:number;answeredAttempts:number;distinctQuestions:number;distinctAnsweredQuestions:number;
+ kind:"section"|"source-topic"|"user-topic"|"syllabus"|"hierarchy";
 }
 export function topicMetrics(attempts:readonly GenericAttempt[],cards:readonly LearningCard[]=[]):TopicMetrics[]{
  const manual=new Map(cards.filter(c=>c.customTopic.trim()).map(c=>[
    c.examId+"|"+c.question.id+"|"+c.question.contentHash,c.customTopic.trim()]));
  const mapped=new Map(cards.filter(c=>c.syllabusTopicId).map(c=>[
    c.examId+"|"+c.question.id+"|"+c.question.contentHash,c.syllabusTopicId!]));
+ const annotated=new Map(cards.map(c=>[
+   c.examId+"|"+c.question.id+"|"+c.question.contentHash,c] as const));
  const rows=new Map<string,TopicMetrics>();
  const distinct=new Map<string,Set<string>>(),independent=new Map<string,Set<string>>();
  const answeredDistinct=new Map<string,Set<string>>(),answeredIndependent=new Map<string,Set<string>>();
@@ -129,12 +138,25 @@ export function topicMetrics(attempts:readonly GenericAttempt[],cards:readonly L
      if(!q||!section)continue;
      const annotationKey=attempt.frozen.snapshot.examId+"|"+q.id+"|"+q.contentHash;
      const heading=mapped.get(annotationKey);
+     const annotatedCard=annotated.get(annotationKey);
+     const sourceTags=q.content.topicIds??[];
+     const sourcePaths=sourceTags.map(parseTopicPathId)
+       .filter((path):path is readonly string[]=>path!==null);
+     const manualPath=annotatedCard&&
+       (annotatedCard.syllabusTopicId||annotatedCard.customTopic.trim())?
+       attributedTopicPath(attempt.frozen.snapshot.examId,section.title,
+         annotatedCard.syllabusTopicId,annotatedCard.customTopic,
+         annotatedCard.customSubtopic??""):null;
+     const hierarchy=[...sourcePaths,...(manualPath?[manualPath]:[])]
+       .flatMap(path=>topicAncestors(path));
      const labels:{label:string;kind:TopicMetrics["kind"]}[]=[
        {label:section.title,kind:"section"},
-       ...(q.content.topicIds??[]).map(label=>({label,kind:"source-topic" as const})),
+       ...sourceTags.filter(label=>!parseTopicPathId(label))
+         .map(label=>({label,kind:"source-topic" as const})),
        ...(manual.get(annotationKey)?[{label:manual.get(annotationKey)!,kind:"user-topic" as const}]:[]),
        ...(heading&&syllabusHeading(attempt.frozen.snapshot.examId,heading)?
-         [{label:syllabusHeading(attempt.frozen.snapshot.examId,heading)!.label,kind:"syllabus" as const}]:[])
+         [{label:syllabusHeading(attempt.frozen.snapshot.examId,heading)!.label,kind:"syllabus" as const}]:[]),
+       ...hierarchy.map(node=>({label:node.path.join(" › "),kind:"hierarchy" as const}))
      ];
      const unique=new Set<string>();
      for(const {label,kind} of labels){
