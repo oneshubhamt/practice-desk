@@ -823,7 +823,7 @@ testP41("publisher comparison preserves identical contexts but rejects reordered
  testAssert.equal(__suite_dep_9.createSourceKeyReference(media,source).entries[0].comparable,false);
 });
 
-testP41("frozen source evidence blocks forged comparability; v1 legacy never yields a certified score",async()=>{
+testP41("frozen source evidence rejects forged comparability and unsupported v1 snapshots",async()=>{
  const all=__suite_dep_5.builtinCglPackages(p41papers,p41patches);
  const source=all.find(x=>x.paper.paperId==="cgl-2026-10-05"&&x.paper.edition==="source");
  const revised=all.find(x=>x.paper.paperId==="cgl-2026-10-05"&&x.paper.edition==="reviewed");
@@ -845,6 +845,7 @@ testP41("frozen source evidence blocks forged comparability; v1 legacy never yie
    sourcePaperRevisionId:ref.sourcePaperRevisionId,
    sourceAnswerKeyRevisionId:ref.sourceAnswerKeyRevisionId,entries:legacyEntries};
  const legacy={...attempt,sourceKeyReference:{...legacyCore,contentHash:hash(legacyCore)}};
- __suite_dep_9.validateSourceKeyReference(legacy);
- testAssert.equal(__suite_dep_9.sourceKeyScore(legacy),null);
+ testAssert.throws(()=>__suite_dep_9.validateSourceKeyReference(legacy),
+   /Invalid original source-key comparison/,
+   "Clean-break app must reject unprovable old positional answer-key snapshots");
 });
