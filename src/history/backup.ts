@@ -70,11 +70,11 @@ export function verifyBackup(raw:unknown):BackupV4{
  // part of the versioned format and must not slip into additive restores.
  const validFields=["format","version","exportedAt","records","snapshots","preferences","setups","manifest"];
  if(Object.keys(b).some(key=>!validFields.includes(key)))
-   throw Error("Backup contains unsupported envelope fields");
+   throw Error("Invalid backup: unsupported envelope fields");
  const manifestFields=["algorithm","digest","recordCount","snapshotCount"];
  if(!b.manifest||typeof b.manifest!=="object"||Array.isArray(b.manifest)||
    Object.keys(b.manifest).some(key=>!manifestFields.includes(key)))
-   throw Error("Backup contains unsupported manifest fields");
+   throw Error("Invalid backup: unsupported manifest fields");
  if(b.format!=="practice-desk-backup"||b.version!==4||
    !Array.isArray(b.records)||!Array.isArray(b.snapshots)||
    b.records.length>5000||b.snapshots.length>5000||
