@@ -232,7 +232,7 @@ export function compileAuthoringPublication(
       .map(n=>n.id):[];
   const baseContent={
    prompt:publicationPlainText(prompt).slice(0,20000),
-   ...(hierarchy.length?{topicIds:hierarchy as QuestionContent["topicIds"]}:{}),
+   ...(hierarchy.length?{topicIds:hierarchy as unknown as NonNullable<QuestionContent["topicIds"]>}:{}),
    ...(q.difficulty?{tags:["difficulty:"+q.difficulty]}:{}),
    richPrompt:prompt,
    ...(hasContent(explanation)?{richExplanation:explanation}:{}),
