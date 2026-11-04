@@ -1,4 +1,5 @@
 import {createRevisionScheduler} from "../learning/fsrs-scheduler-adapter.ts";
+import {reconcileSameExamQuestion} from "./exam-dom-reconcile.ts";
 import type {RevisionSchedulerPort} from "../learning/revision-scheduler-port.ts";
 import type { ExamPackage, GenericAttempt } from "./exam-package.ts";
 import { readableAnswer } from "./exam-package.ts";
@@ -67,6 +68,12 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
  let scheduler:RevisionSchedulerPort|null=null;
  let selectedId:string|null=null,reviewId:string|null=null,revealed=false;
  let filter:"all"|"due"|"bookmarked"="all",message="",closed=false,opened=false;
+ let previousLearningView="";
+ const present=(html:string,identity:string)=>{
+   if(previousLearningView===identity)reconcileSameExamQuestion(root,html);
+   else root.innerHTML=html;
+   previousLearningView=identity;
+ };
  let evidenceExam="",evidenceCount=10;
  let evidenceReasons:RevisionReason[]=["wrong","blank"];
  const cache=new Map<string,{record:LearningCard;scheduled:ReturnType<typeof scheduledCard>}>();
@@ -97,7 +104,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     const item=all.find(c=>c.id===reviewId);
     if(!item){reviewId=null;revealed=false;}
     else{
-     root.innerHTML='<div class="generic-heading"><div><h1>Spaced revision</h1><p class="muted">'+
+     const html='<div class="generic-heading"><div><h1>Spaced revision</h1><p class="muted">'+
        esc(item.sectionTitle)+' · FSRS-7 · rate your recall, not your exam mark</p></div>'+
        '<button class="btn" id="learning-back">Learning desk</button></div>'+
        '<section class="panel pad">'+questionHTML(item)+
@@ -111,6 +118,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
           .map(([grade,label])=>'<button class="btn" data-grade="'+grade+'">'+label+'</button>').join("")+'</div></div>':
          '<button class="btn primary" id="learning-reveal">Reveal answer</button>')+'</section>'+
        (message?'<p role="status" class="generic-warning">'+esc(message)+'</p>':"");
+     present(html,"review:"+item.id);
      root.querySelector<HTMLButtonElement>("#learning-back")!.onclick=()=>{reviewId=null;revealed=false;draw();};
      root.querySelector<HTMLButtonElement>("#learning-reveal")?.addEventListener("click",()=>{revealed=true;draw();});
      root.querySelectorAll<HTMLButtonElement>("[data-grade]").forEach(button=>button.onclick=async()=>{
@@ -144,7 +152,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   const exam=visible.find(c=>c.id===selectedId)?.examId??visible[0]?.examId;
   const candidates=visible.filter(c=>c.examId===exam&&
     ["verified","corrected","caution"].includes(c.question.editorial.status)).slice(0,REVISION_MAX_QUESTIONS);
-  root.innerHTML='<div class="generic-heading"><div><h1>Learning & revision</h1><p class="muted">Error notebook · FSRS-7 spaced review · Topic evidence</p></div>'+
+  const html='<div class="generic-heading"><div><h1>Learning & revision</h1><p class="muted">Error notebook · FSRS-7 spaced review · Topic evidence</p></div>'+
     '<button class="btn" id="learning-close">← Test library</button></div>'+
     (message?'<p class="generic-warning" role="status">'+esc(message)+'</p>':"")+
     '<div class="learning-summary">'+
@@ -196,7 +204,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
           (next?(next.dueAt.getTime()<=Date.now()?"Due now":"Due "+next.dueAt.toLocaleDateString()):"Unscheduled")+
           ' · '+c.reviews.length+' ratings</small></button>';
     }).join(""):'<p class="fine">No cards in this view. Add a question from a completed test result.</p>')+'</section>'+
-    '<section class="panel pad"><h2>Notebook detail</h2>'+
+    '<section class="panel pad" data-learning-card="'+esc(selected?.id??"none")+'"><h2>Notebook detail</h2>'+
      (selected?'<h3>'+esc(selected.question.content.prompt)+'</h3>'+
        '<p class="fine">'+esc(selected.paperId)+' · '+esc(selected.sectionTitle)+
          ' · captured from completed attempt '+esc(selected.sourceAttemptId)+'</p>'+
@@ -249,6 +257,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
        '</td><td>'+g.points.map(p=>p.marks.toFixed(1)).join(" → ")+'</td></tr>').join(""):
        '<tr><td colspan="4">Complete the same paper revision twice to see a valid comparison.</td></tr>')+
     '</tbody></table></div></section>';
+  present(html,"main");
   root.querySelector<HTMLSelectElement>("#learning-evidence-exam")!.onchange=e=>{
     evidenceExam=(e.target as HTMLSelectElement).value;draw();
   };
@@ -333,5 +342,6 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
  void createRevisionScheduler()
 .then(value=>{scheduler=value;cache.clear();draw();})
   .catch(e=>{message="FSRS scheduler failed to initialize.";console.error(e);draw();});
- return {show(){opened=true;draw();},hide(){opened=false;},select(id:string){selectedId=id;},dispose(){closed=true}};
+ return {show(){opened=true;draw();},hide(){opened=false;previousLearningView="";},
+  select(id:string){selectedId=id;},dispose(){closed=true;previousLearningView="";}};
 }
