@@ -200,10 +200,10 @@ try{
   engine+" saved A edit did not survive physical file reload");
  const measurements=[];
  if(engine==="chromium"){
-  await notebook(); // reset to Library only through the public controls
+  await page.locator("#learning-close").click();await route(page,"library");
   await seedCards(0,100);
   measurements.push(await measure(100));
-  await notebook();
+  await page.locator("#learning-close").click();await route(page,"library");
   await seedCards(100,500);
   measurements.push(await measure(500));
   await page.setViewportSize({width:195,height:844});
