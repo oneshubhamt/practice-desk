@@ -19,6 +19,9 @@ try{
  check(Boolean(attemptId),"P48-2 exam attempt URL missing");
  check(await page.locator('input[data-choice]').count()===4,
    engine+" expected actual built-in four-choice question");
+ await page.locator("details.navigator-help summary").click();
+ check(await page.locator("details.navigator-help").evaluate(el=>el.open),
+   engine+" could not expand native keyboard shortcut help");
  await page.evaluate(()=>{
    window.__p48ExamInput=document.querySelector('input[data-choice]');
    window.__p48ExamHeading=document.querySelector(".generic-heading");
@@ -35,6 +38,8 @@ try{
  check(answer.preservedInput&&answer.preservedHeading&&answer.preservedQuestion&&
    answer.inputActive&&answer.checked,
    engine+" same-question ANSWER redrew/disconnected focused content: "+JSON.stringify(answer));
+ check(await page.locator("details.navigator-help").evaluate(el=>el.open),
+   engine+" exam redraw collapsed expanded shortcut help despite preserving the question");
  await page.locator("#g-flag").click();
  const flag=await page.evaluate(()=>({
    preservedInput:window.__p48ExamInput===document.querySelector('input[data-choice]'),
