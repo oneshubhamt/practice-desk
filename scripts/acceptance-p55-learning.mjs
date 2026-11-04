@@ -156,9 +156,11 @@ try{
  // Simulated composition transition during a background Learning redraw.
  const composing=await page.evaluate(()=>{
   const note=document.querySelector("#learning-note");
-  note.focus();note.setSelectionRange(4,4);
+  note.focus();
   note.dispatchEvent(new CompositionEvent("compositionstart",{bubbles:true,data:"श"}));
-  note.value="Composing श",note.dispatchEvent(new InputEvent("input",{bubbles:true,data:"श",inputType:"insertCompositionText",isComposing:true}));
+  note.value="Composing श";
+  note.dispatchEvent(new InputEvent("input",{bubbles:true,data:"श",inputType:"insertCompositionText",isComposing:true}));
+  note.setSelectionRange(4,4); // Establish the measurable caret AFTER synthetic composition text insertion.
   document.querySelector('[data-evidence-reason="slow"]').click();
   const after=document.querySelector("#learning-note");
   after.dispatchEvent(new CompositionEvent("compositionend",{bubbles:true,data:"श"}));
