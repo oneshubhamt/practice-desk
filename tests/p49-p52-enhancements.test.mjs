@@ -143,5 +143,5 @@ test("P52 local keyboard remapping rejects conflicts, reserved keys and phantom 
 
 test("P52 pure Exam presenter resolves default shortcuts without browser localStorage",()=>{
  assert.deepEqual(readShortcutBindings(),DEFAULT_SHORTCUTS);
- assert.match(examShortcutHelp(),/A\\/B\\/C\\/D/);
+ assert.ok(examShortcutHelp().includes("A/B/C/D"));
 });
