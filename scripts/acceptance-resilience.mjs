@@ -95,7 +95,9 @@ try{
  // silently dismiss a legitimate warning and misdiagnose it as no exam UI.
  readFailure.on("dialog",d=>void d.accept());
  await readFailure.addInitScript(()=>{
-  IDBObjectStore.prototype.getAll=function(){throw Error("Injected failed initial IndexedDB read");};
+  // P48-2 startup reads a cursor rather than getAll. Inject the actual
+  // IDB API failure so the same durable fallback contract remains tested.
+  IDBObjectStore.prototype.openCursor=function(){throw Error("Injected failed initial IndexedDB cursor read");};
  });
  await readFailure.goto(offlineUrl,{waitUntil:"load"});
  await readFailure.locator(".generic-warning").filter({hasText:"IndexedDB unavailable"}).waitFor();
@@ -107,7 +109,7 @@ try{
   JSON.parse(localStorage.getItem("practiceDesk.overhaul.fallback.v1")??"[]").length>old,before);
  check(await readFailure.evaluate(old=>
   JSON.parse(localStorage.getItem("practiceDesk.overhaul.fallback.v1")??"[]").length>old,before),
-  "Failed IDB initial getAll did not persist subsequent exam in fallback store");
+  "Failed IDB initial cursor read did not persist subsequent exam in fallback store");
  await readFailure.close();
  console.log("MODERN RESILIENCE PASS failed initial IndexedDB read fallback");
  // A refused IDB put must disclose data loss risk and provide an unsaved
