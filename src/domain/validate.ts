@@ -14,7 +14,13 @@ function record(value: unknown, path: string): RecordValue {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new Error(path + ": expected an object");
   }
+  if(![Object.prototype,null].includes(Object.getPrototypeOf(value)))
+    throw new Error(path+": unsupported object prototype");
   return value as RecordValue;
+}
+function only(value:RecordValue,fields:readonly string[],path:string):void{
+  for(const name of Object.keys(value))
+    if(!fields.includes(name))throw new Error(path+"."+name+": unsupported field");
 }
 
 function text(value: unknown, path: string): string {
@@ -65,6 +71,7 @@ function validateSourceReferences(value: unknown, path: string): void {
   if (!Array.isArray(value)) throw new Error(path + ": expected an array");
   value.forEach((item, index) => {
     const source = record(item, path + "[" + index + "]");
+    only(source,["title","url"],path + "[" + index + "]");
     text(source["title"], path + "[" + index + "].title");
     const url = text(source["url"], path + "[" + index + "].url");
     let parsed: URL;
@@ -85,6 +92,7 @@ const EDITORIAL_CHANGES = [
 
 export function validateExamDefinition(value: unknown): ExamDefinition {
   const exam = record(value, "exam");
+  only(exam,["id","title","description"],"exam");
   text(exam["id"], "exam.id");
   text(exam["title"], "exam.title");
   if (exam["description"] !== undefined && typeof exam["description"] !== "string") {
@@ -95,6 +103,7 @@ export function validateExamDefinition(value: unknown): ExamDefinition {
 
 export function validateQuestionRevision(value: unknown): QuestionRevision {
   const question = record(value, "question");
+  only(question,["id","questionId","revision","contentHash","content","editorial"],"question");
   text(question["id"], "question.id");
   text(question["questionId"], "question.questionId");
   positiveInteger(question["revision"], "question.revision");
@@ -102,6 +111,16 @@ export function validateQuestionRevision(value: unknown): QuestionRevision {
 
   const content = record(question["content"], "question.content");
   const kind = oneOf(content["kind"], QUESTION_KINDS, "question.content.kind");
+  const baseFields=["kind","prompt","richPrompt","richExplanation","stimulusId","assetIds","topicIds","tags"];
+  const kindFields:Record<typeof kind,readonly string[]>={
+    "single-choice":["options"],
+    "multiple-select":["options","minSelections","maxSelections"],
+    "numeric-entry":["numericRules"],
+    "true-false":[],
+    "matching":["leftItems","rightItems"],
+    "free-response":["responseRules"]
+  };
+  only(content,[...baseFields,...kindFields[kind]],"question.content");
   text(content["prompt"], "question.content.prompt");
   const rich=(value:unknown,assetIds:unknown,path:string):void=>{
     if(value===undefined)return;
@@ -129,6 +148,7 @@ export function validateQuestionRevision(value: unknown): QuestionRevision {
     options.forEach((item, index) => {
       const path = "question.content.options[" + index + "]";
       const option = record(item, path);
+      only(option,["id","text","richText","assetIds"],path);
       ids.push(text(option["id"], path + ".id"));
       text(option["text"], path + ".text");
       rich(option["richText"],option["assetIds"],path+".richText");
@@ -142,6 +162,7 @@ export function validateQuestionRevision(value: unknown): QuestionRevision {
     }
   } else if (kind === "numeric-entry") {
     const rules = record(content["numericRules"], "question.content.numericRules");
+    only(rules,["minimum","maximum","decimalPlaces","allowNegative"],"question.content.numericRules");
     for (const field of ["minimum", "maximum"] as const) {
       if (rules[field] !== undefined) finite(rules[field], "question.content.numericRules." + field);
     }
@@ -163,14 +184,17 @@ export function validateQuestionRevision(value: unknown): QuestionRevision {
       items.forEach((item, index) => {
         const path = "question.content." + side + "[" + index + "]";
         const matchItem = record(item, path);
+        only(matchItem,["id","text","richText","assetIds"],path);
         ids.push(text(matchItem["id"], path + ".id"));
         text(matchItem["text"], path + ".text");
         rich(matchItem["richText"],matchItem["assetIds"],path+".richText");
+        if(matchItem["assetIds"]!==undefined)stringArray(matchItem["assetIds"],path+".assetIds");
       });
       unique(ids, "question.content." + side);
     }
   } else if (kind === "free-response") {
     const rules = record(content["responseRules"], "question.content.responseRules");
+    only(rules,["minWords","maxWords"],"question.content.responseRules");
     for (const field of ["minWords", "maxWords"] as const) {
       if (rules[field] !== undefined) positiveInteger(rules[field], "question.content.responseRules." + field);
     }
@@ -180,6 +204,7 @@ export function validateQuestionRevision(value: unknown): QuestionRevision {
   }
 
   const editorial = record(question["editorial"], "question.editorial");
+  only(editorial,["status","notes","sourcePage","changes","sources"],"question.editorial");
   oneOf(editorial["status"], EDITORIAL_STATUSES, "question.editorial.status");
   if (editorial["notes"] !== undefined && typeof editorial["notes"] !== "string") throw new Error("question.editorial.notes: expected a string");
   if (editorial["changes"] !== undefined) {
@@ -193,6 +218,7 @@ export function validateQuestionRevision(value: unknown): QuestionRevision {
 
 function validateMarkingRule(value: unknown, path: string): MarkingRule {
   const rule = record(value, path);
+  only(rule,["correctMarks","incorrectMarks","unansweredMarks","partialCredit"],path);
   const correct = finite(rule["correctMarks"], path + ".correctMarks");
   const incorrect = finite(rule["incorrectMarks"], path + ".incorrectMarks");
   const unanswered = finite(rule["unansweredMarks"], path + ".unansweredMarks");
@@ -206,6 +232,7 @@ function validateMarkingRule(value: unknown, path: string): MarkingRule {
     throw new Error(path + ": mark magnitudes must not exceed 1000000");
   if (rule["partialCredit"] !== undefined) {
     const partial = record(rule["partialCredit"], path + ".partialCredit");
+    only(partial,["kind","marksPerCorrectComponent","penaltyPerIncorrectComponent","floorAtZero"],path+".partialCredit");
     oneOf(partial["kind"], ["per-correct-component"] as const, path + ".partialCredit.kind");
     const component = finite(partial["marksPerCorrectComponent"], path + ".partialCredit.marksPerCorrectComponent");
     if (component < 0 || component > 1000000) {
@@ -225,6 +252,7 @@ function validateMarkingRule(value: unknown, path: string): MarkingRule {
 
 function validateScoringPolicy(value: unknown, path: string): ScoringPolicy {
   const policy = record(value, path);
+  only(policy,["defaultRule","byQuestionKind","decimalPlaces"],path);
   validateMarkingRule(policy["defaultRule"], path + ".defaultRule");
   if (policy["byQuestionKind"] !== undefined) {
     const overrides = record(policy["byQuestionKind"], path + ".byQuestionKind");
@@ -245,6 +273,7 @@ export function validateAnswerKeyRevision(
   questions: readonly QuestionRevision[],
 ): AnswerKeyRevision {
   const key = record(value, "answerKey");
+  only(key,["id","paperId","revision","contentHash","entries"],"answerKey");
   text(key["id"], "answerKey.id");
   text(key["paperId"], "answerKey.paperId");
   positiveInteger(key["revision"], "answerKey.revision");
@@ -256,6 +285,7 @@ export function validateAnswerKeyRevision(
   key["entries"].forEach((rawEntry, index) => {
     const path = "answerKey.entries[" + index + "]";
     const entry = record(rawEntry, path);
+    only(entry,["questionRevisionId","answer","scoringOverride"],path);
     const questionRevisionId = text(entry["questionRevisionId"], path + ".questionRevisionId");
     const question = questionByRevision.get(questionRevisionId);
     if (!question) throw new Error(path + ": references an unknown question revision");
@@ -264,6 +294,13 @@ export function validateAnswerKeyRevision(
     const answer = record(entry["answer"], path + ".answer");
     const expectedKind = question.content.kind;
     if (answer["kind"] !== expectedKind) throw new Error(path + ".answer.kind: does not match question kind");
+    const answerFields:Record<typeof expectedKind,readonly string[]>={
+      "single-choice":["optionId"],"multiple-select":["optionIds"],
+      "numeric-entry":["acceptedValues","absoluteTolerance","relativeTolerance"],
+      "true-false":["value"],"matching":["pairs"],
+      "free-response":["evaluation","rubricId"]
+    };
+    only(answer,["kind",...answerFields[expectedKind]],path+".answer");
     if (expectedKind === "single-choice") {
       const optionIds = question.content.kind === "single-choice" ? question.content.options.map(option => option.id as string) : [];
       if (!optionIds.includes(text(answer["optionId"], path + ".answer.optionId"))) throw new Error(path + ".answer.optionId: unknown option");
@@ -295,6 +332,7 @@ export function validateAnswerKeyRevision(
       const seenLeft: string[] = [], seenRight: string[] = [];
       pairs.forEach((rawPair, pairIndex) => {
         const pair = record(rawPair, path + ".answer.pairs[" + pairIndex + "]");
+        only(pair,["leftId","rightId"],path+".answer.pairs["+pairIndex+"]");
         const l = text(pair["leftId"], path + ".answer.pairs[" + pairIndex + "].leftId");
         const r = text(pair["rightId"], path + ".answer.pairs[" + pairIndex + "].rightId");
         if (!left.has(l) || !right.has(r)) {
@@ -320,6 +358,7 @@ export function validatePaperRevision(
   answerKey?: AnswerKeyRevision,
 ): PaperRevision {
   const paper = record(value, "paperRevision");
+  only(paper,["id","paperId","revision","contentHash","edition","sections","answerKeyRevisionId","timing","navigation","scoring","createdAt"],"paperRevision");
   text(paper["id"], "paperRevision.id");
   const paperId = text(paper["paperId"], "paperRevision.paperId");
   positiveInteger(paper["revision"], "paperRevision.revision");
@@ -334,6 +373,7 @@ export function validatePaperRevision(
   paper["sections"].forEach((rawSection, index) => {
     const path = "paperRevision.sections[" + index + "]";
     const section = record(rawSection, path);
+    only(section,["id","title","questionRevisionIds","scoringOverride"],path);
     sectionIds.push(text(section["id"], path + ".id"));
     text(section["title"], path + ".title");
     const ids = stringArray(section["questionRevisionIds"], path + ".questionRevisionIds");
@@ -350,6 +390,9 @@ export function validatePaperRevision(
 
   const timing = record(paper["timing"], "paperRevision.timing");
   const timingKind = oneOf(timing["kind"], ["untimed", "whole-paper", "sectional"] as const, "paperRevision.timing.kind");
+  only(timing,timingKind==="untimed"?["kind"]:timingKind==="whole-paper"?
+    ["kind","durationMs","pausePolicy"]:
+    ["kind","sectionLimits","transition","allowEarlySubmit","pausePolicy"],"paperRevision.timing");
   if (timingKind === "whole-paper") {
     positiveInteger(timing["durationMs"], "paperRevision.timing.durationMs");
     oneOf(timing["pausePolicy"], ["allowed", "forbidden"] as const, "paperRevision.timing.pausePolicy");
@@ -362,6 +405,7 @@ export function validatePaperRevision(
     timing["sectionLimits"].forEach((rawLimit, index) => {
       const path = "paperRevision.timing.sectionLimits[" + index + "]";
       const limit = record(rawLimit, path);
+      only(limit,["sectionId","durationMs"],path);
       const sectionId = text(limit["sectionId"], path + ".sectionId");
       if (limits.has(sectionId)) throw new Error(path + ": duplicate section time limit");
       if (limit["durationMs"] !== null) positiveInteger(limit["durationMs"], path + ".durationMs");
@@ -373,6 +417,7 @@ export function validatePaperRevision(
   }
 
   const navigation = record(paper["navigation"], "paperRevision.navigation");
+  only(navigation,["questionNavigation","sectionNavigation","allowFlagging","allowReview"],"paperRevision.navigation");
   oneOf(navigation["questionNavigation"], ["free", "forward-only"] as const, "paperRevision.navigation.questionNavigation");
   oneOf(navigation["sectionNavigation"], ["free", "sequential-locked"] as const, "paperRevision.navigation.sectionNavigation");
   // A sectional clock is bound to one active section at a time. Free
