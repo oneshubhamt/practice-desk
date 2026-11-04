@@ -78,7 +78,7 @@ try{
    engine+" preview lacks compiled, effective scoring/navigation/section budget");
  const rules=await page.locator("#pd-author-preview .pd-author-effective-rules").innerText();
  check(rules.includes("16 min")&&rules.includes("10 min")&&
-   rules.includes("sequential")&&rules.includes("partial"),
+   rules.includes("locked in sequence")&&rules.includes("partial"),
    engine+" preview did not describe actual frozen exam rules: "+rules.slice(0,550));
  check(await page.locator("#pd-author-preview .pd-author-preview-controls[inert] input[type=checkbox]").count()===4,
    engine+" multiple-select preview does not reuse inert actual candidate controls");
