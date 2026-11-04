@@ -116,6 +116,10 @@ try{
  // recovery copy including the current in-memory attempt.
  const quota=await context.newPage();quota.on("dialog",d=>void d.accept());
  await quota.goto(offlineUrl,{waitUntil:"load"});
+ // The injected failed put must occur AFTER async IndexedDB hydration and
+ // emergency-mirror reconciliation, not sabotage the test's own startup.
+ await quota.waitForFunction(()=>document.querySelector("#g-start")?.disabled===false,
+   null,{timeout:30000});
  const initiallySaved=new Set((await records(quota)).map(x=>x.id));
  await quota.evaluate(()=>{
   window.__originalPut=IDBObjectStore.prototype.put;
