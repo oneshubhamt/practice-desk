@@ -89,6 +89,17 @@ export function validateExamPackage(value: unknown): ExamPackage {
  validateExamImportBudget(value);
  if (!value || typeof value !== "object") throw new Error("Exam package must be an object");
  const raw = value as Record<string, unknown>;
+ if(![Object.prototype,null].includes(Object.getPrototypeOf(value)))
+   throw new Error("Exam package must be a plain object");
+ // SHA-256 revision hashes cover known domain fields, not an arbitrary
+ // caller's envelope metadata. Reject any unmatched field before persistence.
+ const fields=["format","version","examId","title","paper","answerKey","questions",
+   "stimuli","assets","explanations","practiceMode"];
+ for(const field of Object.keys(raw))
+   if(!fields.includes(field))throw new Error("Exam package."+field+": unsupported field");
+ if(raw.practiceMode!==undefined&&
+   (raw.examId!=="ssc-cgl"||!["strict","free","single"].includes(String(raw.practiceMode))))
+   throw new Error("Exam package: invalid runtime practice mode");
  if (raw.format !== "practice-desk-exam" || raw.version !== 1 ||
     typeof raw.examId !== "string" || !raw.examId.trim() ||
     typeof raw.title !== "string" || !raw.title.trim() ||
