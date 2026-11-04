@@ -1,13 +1,13 @@
-/** P48-2: retained-element reconciliation for repeated renders of ONE exam
- * question. Navigation between questions/screens keeps the existing full
- * replace + accessibility focus policy.
+/** P48-2/P48-3: retain native controls when the screen identity is unchanged.
+ * New questions, Result panes, and route transitions still replace markup;
  *
  * HTML comes only from the same escaped, validated exam presenter used by
  * screen-renderer. This is not an HTML sanitizer and must not be used for
  * unvalidated external markup.
  */
 const identityFields=["id","data-choice","data-bool","data-match",
-  "data-q","data-section","data-attempt"] as const;
+  "data-q","data-section","data-attempt","data-review-id",
+  "data-manual-marks","data-manual-note","data-manual-save","data-add-card"] as const;
 function sameIdentity(a:Element,b:Element):boolean{
  if(a.localName!==b.localName||a.namespaceURI!==b.namespaceURI)return false;
  if(a instanceof HTMLInputElement&&b instanceof HTMLInputElement&&a.type!==b.type)
@@ -32,11 +32,20 @@ function reconcile(a:Node,b:Node):void{
        a.removeAttribute(old.name);
    for(const next of Array.from(b.attributes))
      if(a.getAttribute(next.name)!==next.value)a.setAttribute(next.name,next.value);
-   const oldNodes=Array.from(a.childNodes),newNodes=Array.from(b.childNodes);
-   const common=Math.min(oldNodes.length,newNodes.length);
-   for(let i=0;i<common;i++)reconcile(oldNodes[i]!,newNodes[i]!);
-   for(let i=common;i<oldNodes.length;i++)oldNodes[i]!.remove();
-   for(let i=common;i<newNodes.length;i++)a.appendChild(newNodes[i]!);
+   const newNodes=Array.from(b.childNodes);
+   // Reuse a Result article by frozen question revision ID across filters.
+   for(let i=0;i<newNodes.length;i++){
+     const next=newNodes[i]!;
+     if(a.id==="result-review"&&next instanceof Element&&next.hasAttribute("data-review-id")){
+       const id=next.getAttribute("data-review-id");
+       const existing=Array.from(a.children).find(el=>el.getAttribute("data-review-id")===id);
+       if(existing&&existing!==a.childNodes[i])a.insertBefore(existing,a.childNodes[i]??null);
+     }
+     const current=a.childNodes[i];
+     if(current)reconcile(current,next);
+     else a.appendChild(next);
+   }
+   while(a.childNodes.length>newNodes.length)a.lastChild?.remove();
    // HTML form control properties can diverge from HTML attributes through
    // browser actions. Apply *scored model* check states, without replacing
    // focused inputs or discarding unsaved text/IME composition.

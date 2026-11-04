@@ -14,6 +14,9 @@ export const reportWorkspaceNotice=(owner:CoordinatorContext,s:string)=>{owner.w
 
 export function drawWorkspaceScreen(owner:CoordinatorContext,):void{
    if(owner.disposed)return;
+   // Do not destroy a live Wordgard editor for a background state notification.
+   // Manual close or successful publication refreshes Library explicitly.
+   if(owner.view==="library"&&owner.authoringStudio.isOpen())return;
    owner.imageViewer.beforeRender();owner.imagePreparation.beforeRender();owner.authoringStudio.beforeRender();
    const currentSection=owner.attempt?.frozen.paper.sections[owner.attempt.state.sectionIndex];
    const currentQuestion=owner.attempt?.state.questionIndex;

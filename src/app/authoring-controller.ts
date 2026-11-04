@@ -11,6 +11,7 @@ import type {CoordinatorContext} from "./coordinator-context.ts";
 
 export function createWorkspaceAuthoringStudio(owner:CoordinatorContext):ReturnType<typeof createQuestionAuthoringStudio>{return createQuestionAuthoringStudio({
    existing:()=>[...owner.packages.values()],
+   onClose:()=>{if(!owner.disposed&&owner.view==="library")owner.draw();},
    publish:async bundle=>{
      const signed=validateExamPackage(bundle);
      if(owner.loading||owner.fallbackConflict||owner.storageFault)
@@ -30,6 +31,7 @@ export function createWorkspaceAuthoringStudio(owner:CoordinatorContext):ReturnT
      owner.saveSelection();
      owner.warning="Published "+signed.questions.length+" user-authored questions as a new immutable "+
        signed.paper.edition+" revision. The paper is ready to practise; existing attempts are unchanged.";
+     owner.authoringStudio.beforeRender();
      owner.draw();
    }
  });}

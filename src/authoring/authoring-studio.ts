@@ -141,11 +141,13 @@ function preview(draft:AuthoringDraft,q:AuthoringQuestion):string{
 export interface AuthoringStudioController{
  open(host:HTMLElement,trigger:HTMLElement):Promise<void>;
  beforeRender():void;
+ isOpen():boolean;
  dispose():void;
 }
 export interface AuthoringPublicationActions{
  existing():readonly ExamPackage[];
  publish(bundle:ExamPackage):Promise<void>;
+ onClose?():void;
 }
 export function createQuestionAuthoringStudio(actions:AuthoringPublicationActions):AuthoringStudioController{
  let host:HTMLElement|null=null,origin:HTMLElement|null=null,session:EditorSession|null=null;
@@ -220,6 +222,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   host=null;closed=true;
   if(returnFocus&&origin?.isConnected)origin.focus({preventScroll:true});
   origin=null;
+  if(returnFocus)actions.onClose?.();
  };
  const updateMetadata=(key:keyof AuthoringDraft,value:unknown)=>{
   try{changeDraft(d=>({...d,[key]:value}));}
@@ -559,6 +562,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    host?.querySelector<HTMLElement>("#pd-author-heading")?.focus({preventScroll:true});
   },
   beforeRender(){if(!closed)close(false);},
+  isOpen(){return !closed;},
   dispose(){close(false);}
  };
 }

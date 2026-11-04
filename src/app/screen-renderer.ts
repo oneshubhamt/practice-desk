@@ -23,7 +23,8 @@ export function createScreenRenderer(root:HTMLElement):ScreenRenderer{
     const previous=document.activeElement;
     const focusKey=previous instanceof HTMLElement&&root.contains(previous)?
       {id:previous.id,attributes:["data-choice","data-bool","data-match","data-q",
-        "data-section","data-attempt","data-result-tab"].filter(name=>previous.hasAttribute(name))
+        "data-section","data-attempt","data-result-tab","data-manual-marks",
+        "data-manual-note","data-manual-save","data-add-card"].filter(name=>previous.hasAttribute(name))
         .map(name=>[name,previous.getAttribute(name)] as const)}:null;
     root.classList.add("generic-workspace");
     const priorView=lastView,priorPane=lastPane;
@@ -41,10 +42,11 @@ export function createScreenRenderer(root:HTMLElement):ScreenRenderer{
       return;
     }
     learning.hide();
-    // Keep active DOM nodes and native focus for repeated events on the SAME
-    // exam question (answer, flag, pause). New questions/screens retain the
-    // existing predictable full replacement and heading-focus behavior.
-    if(p.screen==="exam"&&lastView==="exam"&&lastScreenKey===p.screenKey)
+    // Retain controls/focus on the same Exam question, Result pane or Library.
+    // Route changes still use the heading-focus/full-replacement policy.
+    // Active Wordgard sessions suspend background Library redraws.
+    if(lastView===p.screen&&lastScreenKey===p.screenKey&&
+       (p.screen==="exam"||p.screen==="result"||p.screen==="library"))
       reconcileSameExamQuestion(root,p.html());
     else root.innerHTML=p.html();
     if(lastScreenKey!==p.screenKey){
