@@ -1,0 +1,82 @@
+/** P48-1 independent hostile-input, strict v1/v4 schemas and compiler CSP tests.
+ * Inputs are rebuilt from real domain fixtures, not prior CI success labels.
+ */
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFile} from "node:fs/promises";
+import {createHash} from "node:crypto";
+import {pkg} from "./fixtures/six-kinds.mjs";
+import {validateExamPackage} from "../src/app/exam-package.ts";
+import {importSimpleQuestionBank,APFC_NAT_BANK_TEMPLATE} from "../src/app/bank-import.ts";
+import {makeBackup,verifyBackup} from "../src/history/backup.ts";
+
+const mutate=(fn)=>{const copy=structuredClone(pkg);fn(copy);return copy;};
+
+test("P48-1 existing six-kind authored package stays importable under the strict schema",()=>{
+ assert.equal(validateExamPackage(structuredClone(pkg)).paper.id,pkg.paper.id);
+ assert.equal(importSimpleQuestionBank(structuredClone(APFC_NAT_BANK_TEMPLATE)).questions.length,2);
+});
+
+test("P48-1 unknown unsigned fields are rejected at every exam/key/paper nested boundary",()=>{
+ const invalid=[
+  ["envelope",p=>p.silentPayload={canExecute:"never"}],
+  ["question",p=>p.questions[0].secretOverride="A"],
+  ["question content",p=>p.questions[0].content.shadowAnswer="B"],
+  ["option",p=>p.questions[0].content.options[0].surplus="secret"],
+  ["editorial",p=>p.questions[0].editorial.sourceSignature="false"],
+  ["key",p=>p.answerKey.claimedIssuer="official"],
+  ["answer entry",p=>p.answerKey.entries[0].forged="value"],
+  ["answer body",p=>p.answerKey.entries[0].answer.injected="<img onerror=alert(1)>"],
+  ["paper",p=>p.paper.hiddenTimer=999],
+  ["section",p=>p.paper.sections[0].unknownSectionRule=true],
+  ["timing",p=>p.paper.timing.unrecognizedPause=true],
+  ["navigation",p=>p.paper.navigation.skipPolicy=true],
+  ["scoring",p=>p.paper.scoring.hiddenMark=true],
+  ["marking",p=>p.paper.scoring.defaultRule.unboundedCredit=100],
+  ["partial credit",p=>{p.paper.scoring.defaultRule.partialCredit={
+    kind:"per-correct-component",marksPerCorrectComponent:1,shadowMark:5};}],
+  ["numeric rules",p=>p.questions[2].content.numericRules.unverifiedBias=12],
+  ["response rules",p=>p.questions[5].content.responseRules.injectedMax=100],
+  ["matching item",p=>p.questions[4].content.leftItems[0].answerHint="bogus"]
+ ];
+ for(const [name,fn] of invalid)
+   assert.throws(()=>validateExamPackage(mutate(fn)),/unsupported field/,name);
+});
+test("P48-1 simple authoring envelopes cannot launder undeclared metadata",()=>{
+ const tests=[
+  [bank=>bank.certificate="government", "root"],
+  [bank=>bank.scoring.overrideKey="B","scoring"],
+  [bank=>bank.questions[0].candidateScript="<svg onload=alert(1)>","question"],
+  [bank=>bank.timing.unapprovedMode="strict","timing"],
+  [bank=>bank.media=[{id:"a",dataUri:"data:image/png;base64,AA==",altText:"x",unauthorized:true}],"media"]
+ ];
+ for(const [fn,label] of tests){
+   const copy=structuredClone(APFC_NAT_BANK_TEMPLATE);
+   fn(copy);
+   assert.throws(()=>importSimpleQuestionBank(copy),/unsupported|only id, dataUri and altText/,label);
+ }
+});
+test("P48-1 backup v4 refuses arbitrary envelope or manifest fields even with a matching canonical digest",()=>{
+ const original=makeBackup([],{schema:1,dark:false,scale:100},"2026-11-04T03:15:00.000Z");
+ assert.equal(verifyBackup(structuredClone(original)).version,4);
+ assert.throws(()=>verifyBackup({...original,issuerSignature:"nonexistent"}),/unsupported envelope/);
+ assert.throws(()=>verifyBackup({...original,manifest:{...original.manifest,privileged:true}}),/unsupported manifest/);
+});
+test("P48-1 generated offline HTML restricts execution to its exact compiled runtime SHA-256",async()=>{
+ const html=await readFile(new URL("../Practice_Desk_Offline_Mock_Tests.html",import.meta.url),"utf8");
+ const meta=html.match(/<meta http-equiv="Content-Security-Policy" content="([^"]+)">/);
+ assert.ok(meta,"CSP must be embedded before script tags");
+ const script=html.match(/<script>([\s\S]*?)<\/script>/);
+ assert.ok(script,"exactly one executable inline runtime required");
+ assert.equal((html.match(/<script>/g)||[]).length,1);
+ const hash=createHash("sha256").update(script[1],"utf8").digest("base64");
+ assert.ok(meta[1].includes("script-src 'sha256-"+hash+"'"),"digest must bind actual JS source bytes");
+ for(const directive of ["default-src 'none'","connect-src 'none'","object-src 'none'",
+   "base-uri 'none'","form-action 'none'","frame-src 'none'","worker-src 'none'",
+   "font-src data:","img-src data: blob:","script-src-attr 'none'"]){
+   assert.ok(meta[1].includes(directive),"Missing offline CSP boundary: "+directive);
+ }
+ assert.ok(!meta[1].includes("script-src 'unsafe-inline'")&&!meta[1].includes("unsafe-eval"));
+ assert.ok(html.indexOf('http-equiv="Content-Security-Policy"')<html.indexOf("<script>"),
+  "CSP must be parsed before executable bundle");
+});
