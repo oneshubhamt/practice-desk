@@ -36,7 +36,7 @@ test("P48-4 reject impossible clock/timer snapshots before History or backup imp
  for(const [name,change] of cases){
   const candidate=structuredClone(fresh());
   change(candidate.state);
-  assert.throws(()=>validateGenericStoredRecord(candidate),/Invalid|invalid|duration|time|clock|elapsed|visible|unsupported/,name);
+  assert.throws(()=>validateGenericStoredRecord(candidate),/invalid|duration|time|clock|elapsed|visible|unsupported/i,name);
  }
 });
 
