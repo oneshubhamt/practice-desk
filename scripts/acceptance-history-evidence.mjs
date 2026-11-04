@@ -135,8 +135,11 @@ try{
   check((await records(page)).filter(x=>x.recordType==="generic-attempt"&&x.finishedAt!==null).length===2,
    "Stale-revision bulk Delete partially erased completed attempts");
   await page.reload({waitUntil:"load"});
-  if(await page.locator("#g-history").count())await page.locator("#g-history").click();
-  else await page.locator("#g-delete-completed").waitFor({state:"visible"});
+  // The current route is already History: await its completed hydration and
+  // route activation, not a transient Library button during the initial draw.
+  // A failed History restore must fail this test instead of being bypassed.
+  await route(page,"history");
+  await page.locator("#g-delete-completed").waitFor({state:"visible"});
   resetPrompts();
   await page.locator("#g-delete-completed").click();
   await page.waitForFunction(()=>document.querySelector("#g-delete-completed")?.disabled===true);
