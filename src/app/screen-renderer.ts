@@ -19,6 +19,7 @@ export function createScreenRenderer(root:HTMLElement):ScreenRenderer{
   let lastScreenKey="";
   let lastView:DisplayScreen|null=null;
   let lastPane:ResultPane="overview";
+  let lastAnnouncement="";
   return {render(p,learning){
     const previous=document.activeElement;
     const focusKey=previous instanceof HTMLElement&&root.contains(previous)?
@@ -49,8 +50,9 @@ export function createScreenRenderer(root:HTMLElement):ScreenRenderer{
        (p.screen==="exam"||p.screen==="result"||p.screen==="library"))
       reconcileSameExamQuestion(root,p.html());
     else root.innerHTML=p.html();
-    if(lastScreenKey!==p.screenKey){
+    if(lastScreenKey!==p.screenKey||lastAnnouncement!==p.announcement){
       lastScreenKey=p.screenKey;
+      lastAnnouncement=p.announcement;
       const announcer=document.getElementById("screen-announcement");
       if(announcer)announcer.textContent=p.announcement;
     }
