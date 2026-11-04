@@ -4,6 +4,34 @@
 
 > **Single source of future work.** This programme consolidates the open recommendations of the **28 October 2026 architecture audit**, the **1 November source-verification/gap analysis**, the completed original-v11 feature-parity and visual programmes, the earlier architecture/state/data passes, and Passes 36–40 test-suite consolidation. **Historical reports remain preserved as evidence; they are not active development queues.** No change to application source, the question banks, the generated HTML, or `main` / `baseline/v11` is authorized merely by writing this plan.
 
+## 0A. User-approved post-P48 useful enhancements — P49–P52 (4 November 2026)
+
+**Approval:** implement four *software* improvements on `overhaul`; **explicitly exclude** new validated APFC/CAT/UPSC/RBI content banks and physical Mac/iOS/Android, real screen-reader/IME, operating-system recovery, human visual signoff and release/merge. This is the single active programme for the newly approved work; P41–P48 retain their tested status, and `main`/`baseline/v11` remain untouched.
+
+**No regressions:** preserve 500 checked-in CGL source questions, all 10 editions, Oct 6 Q62 D02/D03, source/reviewed semantics, frozen score/key/content, single-file `file://` CSP, FSRS-7 and user observations, exact six-kind inputs and manual grading, transactional two-store IDB v4 backup/CAS, intentional narrow UI 195px + 140%, Wordgard editing, keyboard/AT semantics, and pagehide/reload. No old-version migrations or compatibility machinery required by D38; do not silently destroy currently valid saved drafts.
+
+**P49 — hierarchical topic taxonomy / learning, authoring linkage.**
+1. Audit `syllabus-taxonomy.ts`, `learning.ts`, `learning-ui.ts`, `revision-selection.ts`, authoring question source topics and historical topic metrics; reject invented automatic syllabus assignments.
+2. Implement **user-attributed** subject → topic → subtopic paths, stable IDs, parent roll-up and subtree evidence with independent distinct-question/attempt counts; retain broad APFC nine official headings **only** as authoring aids, and accommodate non-APFC exam sections without inventing official topics. Enable real notebook selection/editing and meaningful authored question metadata.
+3. Negative validations for malformed paths, disconnected parent, unsupported syllabus ID, accidental CGL/APFC blending, duplicate counts or false “mastery.” QA learning/authoring/History restore and FSRS isolation.
+
+**P50 — richer graphical authoring.**
+1. Audit Wordgard draft→publisher boundaries and supported engine rules.
+2. Add meaningful per-question topic/subtopic/difficulty and explicit paper/section navigation, timing and review policies; only expose rules the existing six-kind scorer/timer can faithfully execute. Validate conflicting section times, partial/boundary cases before publication; match frozen published rules to actual preview/preflight. Existing advanced JSON import remains.
+3. Browser `file://` full draft→validate→publish→launch→answer→review with invalid cases, source/reviewed isolation, image/math and stable draft editing. Do not accidentally label user-authored rules as official.
+
+**P51 — granular current-view rendering.**
+1. Audit `screen-renderer.ts`, `exam-dom-reconcile.ts`, `learning-ui.ts`, event bindings and native navigation.
+2. Reconcile *keyed* Exam sections and stable shell across question changes; retain History filter controls and Learning notebook editing/focus without replacing unaffected nodes. Preserve native values, selection, IME and task-specific state, but reset actual exam answer controls to the new question, never carry stale private answers or model state. Retain separate full replacement for route/new attempt or other genuine identity change.
+3. Browser DOM identity/focus tests for current view and question transitions, select/textarea/radio, result filter reorder, authoring editor, blocked/paused state and screen-reader announcements. Avoid wholesale virtual-DOM infrastructure.
+
+**P52 — configurable, safe keyboard shortcuts.**
+1. Audit `exam-shortcuts.ts`, `lifecycle-controller.ts`, `exam-view.ts` and existing Display controls.
+2. Provide explicit per-device user-editable remapping with validated unique keys; visible editable help + reset, persisted only as preferences, never paper rules/backup/FSRS. Always respect inputs/contenteditable, native focused radio keys, dialogs, IME, Ctrl/Meta/Shift, pause and section navigation locks. Reject conflicts and reserved browser controls.
+3. Pure resolver tests + actual offline keyboard UI/mapping/reload/invalid-field/regression tests. No duplicate listeners.
+
+**Process:** for each pass: (1) fresh source audit → (2) analyse edge cases and acceptance → (3) implementation → (4) reconcile every objective → (5) targeted tests, with a **final** full Node24, TypeScript and Chromium/Firefox/WebKit file:// CI, reproducible guarded HTML publisher. Record actual measured outcomes and unresolved defects here; do not declare verified until CI green. Physical/manual/release hold remains deliberately OUTSIDE this programme.
+
 ## 0. Fast handoff — what to read and do next
 
 **Latest verified handoff:** P48-4 [five-job CI 41799137480](https://github.com/oneshubhamt/practice-desk/actions/runs/41799137480) **5/5 SUCCESS, 286/286 Node**, complete offline Chromium/Firefox/WebKit and guarded deterministic **2,304,474-byte** HTML. Independent [source requirement-by-requirement crosswalk](audits/P48_REQUIREMENT_BY_REQUIREMENT_SOURCE_REAUDIT_2026-11-03.md#0a-p48-4-independent-fresh-source-challenge--4-november-2026) checked I/F/G/L/F29/TS/QB/DOC, 28 October architecture sections, 8 layers and risks R48-01–15, **and exposed a real R48-15 saved-session/mutable answer validation defect**. Tested source `8c31ed368f1e428c06b28dfb09e4de259a725472`; publisher `dc3fb81e128aaa4f758c5c5848f489048d31ac32`. **P48-4 software audit scope CLOSED; physical Mac/iOS/Android/AT/IME/OS, visual approval and user's release/merge authorization remain OPEN.** [P48-4 five-step record](#p48-4--independent-whole-programme-source-challenge-and-untrusted-record-invariants-4-november-2026).
