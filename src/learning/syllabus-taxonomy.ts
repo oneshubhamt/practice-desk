@@ -68,15 +68,26 @@ export function topicAncestors(input:readonly string[]):readonly TopicPathNode[]
      label,path:prefix,depth:index+1};
  });
 }
-/** Broad APFC heading is user-chosen; for all other exams an explicit
- * section/source label supplies the root. No model-assigned subject. */
-export function attributedTopicPath(examId:string,sectionTitle:string,
+/** Author- or learner-attributed semantic classification, NOT an exam section.
+ * An empty subject is honestly marked "Unclassified"; an official heading is
+ * used only after explicit choice, and is not inferred from section or text.
+ * The canonical label path is published in the frozen question metadata.
+ */
+export const UNCLASSIFIED_SUBJECT="Unclassified";
+export function attributedTopicPath(examId:string,subject:string,
  headingId:string|undefined,topic:string,subtopic:string):readonly string[]{
+ if(typeof subject!=="string"||typeof topic!=="string"||
+    typeof subtopic!=="string")throw Error("Invalid topic classification");
  if(subtopic.trim()&&!topic.trim())throw Error("Choose a topic before a subtopic");
  const heading=headingId?syllabusHeading(examId,headingId):undefined;
  if(headingId&&!heading)throw Error("Unknown syllabus heading");
- const root=heading?.label??sectionTitle.trim();
- const result=[root,...(topic.trim()?[topic.trim()]:[]),
-   ...(subtopic.trim()?[subtopic.trim()]:[])];
- return validateTopicPath(result);
+ if(heading&&subject.trim())throw Error("Choose either an official syllabus heading or a custom subject");
+ const root=heading?.label??subject.trim()||UNCLASSIFIED_SUBJECT;
+ return validateTopicPath([root,...(topic.trim()?[topic.trim()]:[]),
+   ...(subtopic.trim()?[subtopic.trim()]:[])]);
+}
+/** Display nested topic nodes without revealing opaque encoded storage IDs. */
+export function topicPathLabel(id:string):string{
+ const path=parseTopicPathId(id);
+ return path?path.join(" › "):id;
 }
