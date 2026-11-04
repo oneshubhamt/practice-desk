@@ -84,6 +84,8 @@ jobs:
       - run: node scripts/acceptance-stress.mjs
       - name: Profile real frozen storage at 0, 100, 1000 and 1600 records
         run: node scripts/benchmark-storage.mjs
+      - name: P48-2 heterogeneous image-bearing multi-paper startup, cursor-vs-getAll and History profile
+        run: node scripts/benchmark-p48-heterogeneous.mjs
       - name: P47-0 reproducible UI/focus/DOM baseline (diagnostic; no speed thresholds)
         run: node scripts/benchmark-ui-coordinator.mjs
       - name: Preserve P47-0 machine-readable baseline
