@@ -30,6 +30,8 @@ export interface LearningCard {
  readonly note:string;
  readonly errorLabel:ErrorLabel|null;
  readonly customTopic:string;
+ /** Independently chosen semantic subject: not an exam section. */
+ readonly customSubject?:string;
  /** User-entered third-level topic, only meaningful beneath a named topic. */
  readonly customSubtopic?:string;
  /** Optional explicit broad syllabus heading, never inferred from question text. */
@@ -51,6 +53,10 @@ export function validateLearningCard(input:unknown):LearningCard{
     typeof raw.sourceAttemptId!=="string"||!raw.sourceAttemptId||raw.sourceAttemptId.length>200||
     typeof raw.note!=="string"||raw.note.length>8000||
     typeof raw.customTopic!=="string"||raw.customTopic.length>120||
+    (raw.customSubject!==undefined&&
+      (typeof raw.customSubject!=="string"||raw.customSubject.length>120||
+       /[\u0000-\u001f\u007f]/u.test(raw.customSubject)||
+       Boolean(raw.customSubject.trim()&&raw.syllabusTopicId)))||
     (raw.customSubtopic!==undefined&&
      (typeof raw.customSubtopic!=="string"||raw.customSubtopic.length>120||
       Boolean(raw.customSubtopic.trim()&&!raw.customTopic.trim())||
@@ -113,8 +119,11 @@ export function rateLearningCard(item:LearningCard,rating:ReviewGrade,at:string,
 export interface TopicMetrics {
  id:string;label:string;examId:string;total:number;answered:number;correct:number;incorrect:number;skipped:number;
  accuracy:number|null;coverage:number;evidence:"insufficient"|"measured";
- /** Repeated answers are observations, not additional distinct questions. */
+ /** Repeated answers and revised editions are observations, not new items. */
  attempts:number;answeredAttempts:number;distinctQuestions:number;distinctAnsweredQuestions:number;
+ distinctRevisions:number;distinctAnsweredRevisions:number;
+ /** Optional semantic hierarchy, independent of exam's navigation sections. */
+ parentId?:string;depth?:number;
  kind:"section"|"source-topic"|"user-topic"|"syllabus"|"hierarchy";
 }
 export function topicMetrics(attempts:readonly GenericAttempt[],cards:readonly LearningCard[]=[]):TopicMetrics[]{
@@ -126,7 +135,9 @@ export function topicMetrics(attempts:readonly GenericAttempt[],cards:readonly L
    c.examId+"|"+c.question.id+"|"+c.question.contentHash,c] as const));
  const rows=new Map<string,TopicMetrics>();
  const distinct=new Map<string,Set<string>>(),independent=new Map<string,Set<string>>();
+ const revisions=new Map<string,Set<string>>();
  const answeredDistinct=new Map<string,Set<string>>(),answeredIndependent=new Map<string,Set<string>>();
+ const answeredRevisions=new Map<string,Set<string>>();
  for(const attempt of attempts){
    if(!attempt.result||attempt.finishedAt===null||Boolean(attempt.notebookLineage)||attempt.frozen.paper.paperId.startsWith("notebook-revision:"))continue;
    const sections=attempt.frozen.paper.sections;
@@ -143,23 +154,27 @@ export function topicMetrics(attempts:readonly GenericAttempt[],cards:readonly L
      const sourcePaths=sourceTags.map(parseTopicPathId)
        .filter((path):path is readonly string[]=>path!==null);
      const manualPath=annotatedCard&&
-       (annotatedCard.syllabusTopicId||annotatedCard.customTopic.trim())?
-       attributedTopicPath(attempt.frozen.snapshot.examId,section.title,
-         annotatedCard.syllabusTopicId,annotatedCard.customTopic,
-         annotatedCard.customSubtopic??""):null;
+       (annotatedCard.syllabusTopicId||annotatedCard.customSubject?.trim()||
+        annotatedCard.customTopic.trim())?
+       attributedTopicPath(attempt.frozen.snapshot.examId,
+         annotatedCard.customSubject??"",annotatedCard.syllabusTopicId,
+         annotatedCard.customTopic,annotatedCard.customSubtopic??""):null;
      const hierarchy=[...sourcePaths,...(manualPath?[manualPath]:[])]
        .flatMap(path=>topicAncestors(path));
-     const labels:{label:string;kind:TopicMetrics["kind"];sourceId?:string}[]=[
+     const labels:{label:string;kind:TopicMetrics["kind"];sourceId?:string;
+       parentId?:string;depth?:number}[]=[
        {label:section.title,kind:"section"},
        ...sourceTags.filter(label=>!parseTopicPathId(label))
          .map(label=>({label,kind:"source-topic" as const})),
        ...(manual.get(annotationKey)?[{label:manual.get(annotationKey)!,kind:"user-topic" as const}]:[]),
        ...(heading&&syllabusHeading(attempt.frozen.snapshot.examId,heading)?
          [{label:syllabusHeading(attempt.frozen.snapshot.examId,heading)!.label,kind:"syllabus" as const}]:[]),
-       ...hierarchy.map(node=>({label:node.path.join(" › "),kind:"hierarchy" as const,sourceId:node.id}))
+       ...hierarchy.map(node=>({label:node.path.join(" › "),
+         kind:"hierarchy" as const,sourceId:node.id,parentId:node.parentId??undefined,
+         depth:node.depth}))
      ];
      const unique=new Set<string>();
-     for(const {label,kind,sourceId} of labels){
+     for(const {label,kind,sourceId,parentId,depth} of labels){
        if(!label.trim())continue;
        const examId=attempt.frozen.snapshot.examId;
        const key=examId+"|"+kind+"|"+(sourceId??label);
@@ -167,24 +182,33 @@ export function topicMetrics(attempts:readonly GenericAttempt[],cards:readonly L
        unique.add(key);
        const row:TopicMetrics=rows.get(key)??{id:key,label,kind,examId,total:0,answered:0,correct:0,
          incorrect:0,skipped:0,accuracy:null,coverage:0,evidence:"insufficient",
-         attempts:0,answeredAttempts:0,distinctQuestions:0,distinctAnsweredQuestions:0};
+         attempts:0,answeredAttempts:0,distinctQuestions:0,distinctAnsweredQuestions:0,
+         distinctRevisions:0,distinctAnsweredRevisions:0,
+         ...(parentId?{parentId:examId+"|hierarchy|"+parentId}:{}),
+         ...(depth?{depth}:{})};
        row.total++;
        if(item.verdict==="correct"){row.correct++;row.answered++;}
        if(item.verdict==="incorrect"){row.incorrect++;row.answered++;}
        if(item.verdict==="unanswered")row.skipped++;
        const distinctIds=distinct.get(key)??new Set<string>();
-       distinctIds.add(q.id);distinct.set(key,distinctIds);
+       distinctIds.add(q.questionId);distinct.set(key,distinctIds);
+       const revisionIds=revisions.get(key)??new Set<string>();
+       revisionIds.add(q.id);revisions.set(key,revisionIds);
+       row.distinctRevisions=revisionIds.size;
        const attemptIds=independent.get(key)??new Set<string>();
        attemptIds.add(attempt.id);independent.set(key,attemptIds);
        row.distinctQuestions=distinctIds.size;
        row.attempts=attemptIds.size;
        if(item.verdict==="correct"||item.verdict==="incorrect"){
          const answeredIds=answeredDistinct.get(key)??new Set<string>();
-         answeredIds.add(q.id);answeredDistinct.set(key,answeredIds);
+         answeredIds.add(q.questionId);answeredDistinct.set(key,answeredIds);
+         const scoredRevisions=answeredRevisions.get(key)??new Set<string>();
+         scoredRevisions.add(q.id);answeredRevisions.set(key,scoredRevisions);
          const answeredAttempts=answeredIndependent.get(key)??new Set<string>();
          answeredAttempts.add(attempt.id);answeredIndependent.set(key,answeredAttempts);
        }
        row.distinctAnsweredQuestions=answeredDistinct.get(key)?.size??0;
+       row.distinctAnsweredRevisions=answeredRevisions.get(key)?.size??0;
        row.answeredAttempts=answeredIndependent.get(key)?.size??0;
        row.accuracy=row.answered?row.correct/row.answered:null;
        row.coverage=row.answered/row.total;
