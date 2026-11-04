@@ -75,6 +75,14 @@ jobs:
         run: node scripts/acceptance-p49-p52-enhancements.mjs chromium
       - name: P53 actual mixed-subject authoring and filtered exam (Chromium)
         run: node scripts/acceptance-p53-taxonomy.mjs chromium
+      - name: Preserve P53 authored hierarchy visual evidence (Chromium)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p53-taxonomy-ui-chromium
+          path: artifacts/p53-taxonomy/chromium-*.png
+          if-no-files-found: ignore
+          retention-days: 14
       - run: node scripts/acceptance-learning-lifecycle.mjs
       - run: node scripts/acceptance-session-policy.mjs
       - run: node scripts/acceptance-editorial-provenance.mjs
@@ -175,6 +183,14 @@ jobs:
         run: node scripts/acceptance-p49-p52-enhancements.mjs ${{ matrix.browser }}
       - name: P53 mixed-subject source taxonomy and practice builder (${{ matrix.browser }})
         run: node scripts/acceptance-p53-taxonomy.mjs ${{ matrix.browser }}
+      - name: Preserve P53 authored hierarchy visual evidence (${{ matrix.browser }})
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p53-taxonomy-ui-${{ matrix.browser }}
+          path: artifacts/p53-taxonomy/${{ matrix.browser }}-*.png
+          if-no-files-found: ignore
+          retention-days: 14
       - run: node scripts/acceptance-safari-fallback.mjs ${{ matrix.browser }}
       - name: P48-3 current UI screenshots (${{ matrix.browser }})
         if: always()
