@@ -9,9 +9,10 @@ import {sha256} from "../domain/hash.ts";
 import {validateMediaInventory} from "../domain/media.ts";
 import type {RichDocument} from "../domain/rich-document.ts";
 import type {ExamPackage} from "../app/exam-package.ts";
-import {compileAuthoringPublication,inspectAuthoringPublication,PublicationValidationError,
+import {inspectAuthoringPublication,PublicationValidationError,
  type PublicationIssue} from "./authoring-publisher.ts";
-import {richDocumentHTML} from "../app/rich-content-view.ts";
+import {authoringSections,setAuthoringSectionMinutes,assignAuthoringQuestionSection} from "./authoring-sections.ts";
+import {authoringPublishedPreview,authoringDraftPreview} from "./authoring-preview.ts";
 import {mathRenderer} from "../app/math-renderer-provider.ts";
 import {escapeText} from "../app/html-escape.ts";
 import {wordgardEditorPort} from "./wordgard-adapter.ts";
@@ -119,7 +120,9 @@ function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Field):st
   '<label>Difficulty tag<select id="pd-author-difficulty">'+
     ([["","Not assigned"],["easy","Easy"],["medium","Medium"],["hard","Hard"]] as const)
       .map(([value,label])=>option(value,label,current.difficulty??"")).join("")+'</select></label>'+
-  '<label>Section timer (minutes; 0 = untimed; sectional mode only)<input id="pd-author-section-minutes" type="number" min="0" max="600" step="1" value="'+(current.sectionMinutes??15)+'"></label>'+
+  '<label>Active section timer (minutes; affects every question in this section; 0 = untimed)<input id="pd-author-section-minutes" type="number" min="0" max="600" step="1" value="'+
+   (authoringSections(draft).find(s=>s.name===current.section)?.conflict?"":current.sectionMinutes??15)+'"'+
+   (authoringSections(draft).find(s=>s.name===current.section)?.conflict?' placeholder="Conflicting values — enter one time"':"")+'></label>'+
   '<label>Answer key draft<input id="pd-author-answer" maxlength="100" value="'+escapeText(current.answer)+'" aria-describedby="pd-author-answer-help"></label>'+
   '<label>Source / provenance note<input id="pd-author-source" maxlength="500" value="'+escapeText(current.source)+'"></label>'+
   (current.kind==="numeric-entry"?'<label>Absolute answer tolerance<input type="number" id="pd-author-tolerance" min="0" max="1000000" step="any" value="'+current.tolerance+'"></label>':"")+
@@ -151,34 +154,41 @@ function toolbar():string{
   buttons.map(([action,label])=>'<button type="button" class="btn" data-author-command="'+action+'">'+label+'</button>').join("")+
   '<button type="button" class="btn" id="pd-author-add-table">Insert table</button></div>';
 }
-function preview(draft:AuthoringDraft,q:AuthoringQuestion):string{
- const known=new Set(draft.assets.map(a=>a.id));
- const image=(id:string,alt:string)=>{
-  const found=draft.assets.find(a=>a.id===id);
-  if(!found)throw Error("Preview image missing");
-  return '<img src="'+escapeText(found.dataUri)+'" alt="'+escapeText(alt)+'" loading="lazy">';
- };
- const rich=(doc:RichDocument)=>richDocumentHTML(doc,known,image);
- const out=['<div class="pd-author-preview-content"><h3>Read-only exam-style preview</h3>',
-  '<p class="fine">Preview only · no scoring, timer or published paper</p>',
-  rich(q.passage),rich(q.prompt)];
- if(q.kind==="single-choice"||q.kind==="multiple-select"){
-  // Keep disabled controls, NOT a disabled fieldset: WebKit fades all label text
-  // when the entire fieldset is disabled, making the read-only preview illegible.
-  out.push('<fieldset><legend>Answer choices</legend>');
-  for(let i=0;i<4;i++)out.push('<label class="pd-author-preview-choice"><input type="'+
-   (q.kind==="single-choice"?"radio":"checkbox")+'" disabled>'+
-   '<span>'+letters[i]+' · '+rich(q.options[i]!)+'</span></label>');
-  out.push("</fieldset>");
- }else if(q.kind==="matching"){
-  out.push("<h4>Match the following</h4><div class=\"pd-author-match-preview\">");
-  for(let i=0;i<4;i++)out.push('<div>'+rich(q.leftItems[i]!)+
-   ' — '+rich(q.rightItems[i]!)+'</div>');
-  out.push("</div>");
- }else out.push('<p class="fine">Response type: '+escapeText(labels[q.kind])+'</p>');
- out.push('<details class="pd-author-worked"><summary>Author-only worked explanation</summary>'+
-  rich(q.explanation)+'</details></div>');
- return out.join("");
+/** Real six-kind response renderer for both validated publications and
+ * unfinished drafts. The rule summary is shown only for exact compiled data. */
+function preview(draft:AuthoringDraft,q:AuthoringQuestion,
+ existing:readonly ExamPackage[]):string{
+ const report=inspectAuthoringPublication(draft,existing);
+ if(!report.valid||!report.compiled)return authoringDraftPreview(draft,q);
+ const revision=report.compiled.questions[draft.questions.findIndex(row=>row.id===q.id)];
+ if(!revision)throw Error("Preview question not in compiled publication");
+ return authoringPublishedPreview(report.compiled,revision.id);
+}
+function sectionManager(draft:AuthoringDraft,expanded:boolean):string{
+ const sections=authoringSections(draft);
+ return '<details id="pd-author-section-manager" class="pd-author-section-manager"'+
+  (expanded?" open":"")+'><summary>Manage actual exam sections · '+sections.length+
+   ' section'+(sections.length===1?"":"s")+
+   (sections.some(s=>s.conflict)?" · conflicting section timers":"")+'</summary>'+
+   '<p class="fine">Exam sections control timing and navigation independently of academic subjects. '+
+    'Assign questions using their Actual exam section field; enter a new name to create a section. '+
+    'Changing a timer here updates every question assigned to the section. '+
+    'Conflicting values in an imported draft must be corrected before publishing.</p>'+
+   '<div class="scroll-table"><table class="pd-author-section-table"><thead><tr>'+
+    '<th>Exam section</th><th>Questions</th><th>Minutes (0 = untimed)</th></tr></thead><tbody>'+
+   sections.map(section=>'<tr><th scope="row">'+escapeText(section.name)+'</th><td>'+
+      section.count+'</td><td><label class="pd-author-section-time-label">'+
+      '<span class="sr-only">Timer for '+escapeText(section.name)+'</span>'+
+      '<input type="number" min="0" max="600" step="1" data-author-section-timer="'+escapeText(section.name)+
+      '" value="'+(section.conflict?"":section.minutes)+'"'+
+      (section.conflict?' placeholder="Conflict: choose one value" aria-invalid="true"':"")+
+      '></label></td></tr>').join("")+
+   '</tbody></table></div>'+
+   '<p class="fine" id="pd-author-section-policy">'+
+    (draft.timingKind==="sectional"?
+      'Sectional mode uses these section budgets; zero means no countdown for that section.':
+      'These budgets are saved for future sectional mode; the current timing policy does not use them.')+
+   '</p></details>';
 }
 export interface AuthoringStudioController{
  open(host:HTMLElement,trigger:HTMLElement):Promise<void>;
@@ -194,7 +204,7 @@ export interface AuthoringPublicationActions{
 export function createQuestionAuthoringStudio(actions:AuthoringPublicationActions):AuthoringStudioController{
  let host:HTMLElement|null=null,origin:HTMLElement|null=null,session:EditorSession|null=null;
  let shelf:AuthoringDraftShelf|null=null,questionId="",field:Field=initialField;
- let closed=true,renderSequence=0,lastSaveError="",storageBlocked=false,publishing=false;
+ let closed=true,renderSequence=0,lastSaveError="",storageBlocked=false,publishing=false,sectionManagerExpanded=false;
  const active=():AuthoringDraft=>{
   const current=shelf?.drafts.find(d=>d.id===shelf!.activeId);
   if(!current)throw Error("No active authoring draft");
