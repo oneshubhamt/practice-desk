@@ -3,9 +3,14 @@
  * taxonomy builder and a frozen filtered attempt in each browser engine.
  */
 import {openHarness,route,check,records,assertNoOverflow} from "./browser/fixtures.mjs";
+import {mkdir} from "node:fs/promises";
 const engine=process.argv[2]??"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
 const {page,errors}=await h.open({viewport:{width:1280,height:840}});
+const images="artifacts/p53-taxonomy";
+await mkdir(images,{recursive:true});
+const shot=async(label)=>page.screenshot({path:images+"/"+engine+"-"+label+".png",
+ animations:"disabled",fullPage:true});
 async function input(id,value){
  const field=page.locator(id);
  await field.fill(value);
@@ -55,8 +60,10 @@ try{
  await page.locator("#pd-author-validate").click();
  check((await page.locator("#pd-author-validation").innerText()).includes("Ready to publish"),
    engine+" semantically distinct subject paths did not validate");
+ await shot("authoring-desktop");
  await page.setViewportSize({width:195,height:844});
  await assertNoOverflow(page,engine+" P53 195px Wordgard semantic classification");
+ await shot("authoring-195px");
  await page.setViewportSize({width:1280,height:840});
  await page.locator("#pd-author-confirm").check();
  await page.locator("#pd-author-publish").click();
