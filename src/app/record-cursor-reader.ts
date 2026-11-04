@@ -1,53 +1,64 @@
-/** P48-2 atomic, cursor-based cold hydration.
- * Read immutable snapshots first and then saved rows in ONE IDB transaction.
- * This avoids the extra two getAll() arrays and immediate structured clones
- * of every stored object, while still materializing the valid History records
- * the application actually requires. It is not pagination.
+/** P48-2: atomic cursor reads of current shared-snapshot storage.
+ * Immutable snapshots precede attempts within ONE IDB read transaction.
+ * Never await between cursor continuations (IDB would auto-commit).
  *
- * Individual damaged entries are quarantined only by the local collector;
- * do not use this relaxed reader for portable backup verification.
+ * Local startup uses quarantining recovery; authoritative backup export uses
+ * a separate fail-closed collector. Both avoid temporary getAll() arrays,
+ * but still retain the records required by History and user-visible exports.
  */
-import {ATTEMPTS_STORE,SNAPSHOTS_STORE,createRecoverableRecordCollector} from "../history/shared-store.ts";
+import {ATTEMPTS_STORE,SNAPSHOTS_STORE,createRecoverableRecordCollector,
+  createStrictRecordCollector} from "../history/shared-store.ts";
 
-export function readRecoverableWorkspace(db:IDBDatabase):
- ReturnType<ReturnType<typeof createRecoverableRecordCollector>["result"]> extends infer R ? Promise<R> : never {
- const collector=createRecoverableRecordCollector();
+type Collector<Result>={
+ acceptSnapshot(value:unknown):void;
+ acceptRow(value:unknown):void;
+ result():Result;
+};
+
+function readAtomicByCursor<Result>(db:IDBDatabase,collector:Collector<Result>):Promise<Result>{
  return new Promise((resolve,reject)=>{
-   let settled=false;
-   const fail=(error:unknown)=>{
-     if(settled)return;
-     settled=true;
-     reject(error instanceof Error?error:new Error("IndexedDB cold read failed"));
+  let settled=false;
+  const fail=(error:unknown)=>{
+   if(settled)return;
+   settled=true;
+   reject(error instanceof Error?error:new Error("IndexedDB cursor read failed"));
+  };
+  let tx:IDBTransaction;
+  try{tx=db.transaction([ATTEMPTS_STORE,SNAPSHOTS_STORE],"readonly");}
+  catch(error){fail(error);return;}
+  tx.oncomplete=()=>{if(!settled){settled=true;resolve(collector.result());}};
+  tx.onerror=()=>fail(tx.error??new Error("IndexedDB cursor read failed"));
+  tx.onabort=()=>fail(tx.error??new Error("IndexedDB cursor read aborted"));
+  const scanRows=()=>{
+   const request=tx.objectStore(ATTEMPTS_STORE).openCursor();
+   request.onerror=()=>fail(request.error??new Error("IndexedDB row cursor failed"));
+   request.onsuccess=()=>{
+    try{
+     const item=request.result;
+     if(!item)return;
+     collector.acceptRow(item.value);
+     item.continue();
+    }catch(error){fail(error);try{tx.abort();}catch{}}
    };
-   let tx:IDBTransaction;
-   try{tx=db.transaction([ATTEMPTS_STORE,SNAPSHOTS_STORE],"readonly");}
-   catch(error){fail(error);return;}
-   tx.oncomplete=()=>{if(!settled){settled=true;resolve(collector.result());}};
-   tx.onerror=()=>fail(tx.error??new Error("IndexedDB cold read failed"));
-   tx.onabort=()=>fail(tx.error??new Error("IndexedDB cold read aborted"));
-   // All requests must be queued from active cursor success handlers. Awaiting
-   // a Promise between requests would allow the transaction to auto-commit.
-   const scanRows=()=>{
-     const rows=tx.objectStore(ATTEMPTS_STORE).openCursor();
-     rows.onerror=()=>fail(rows.error??new Error("Attempt cursor failed"));
-     rows.onsuccess=()=>{
-       try{
-         const current=rows.result;
-         if(!current)return;
-         collector.acceptRow(current.value);
-         current.continue();
-       }catch(error){fail(error);try{tx.abort();}catch{}}
-     };
-   };
-   const snapshots=tx.objectStore(SNAPSHOTS_STORE).openCursor();
-   snapshots.onerror=()=>fail(snapshots.error??new Error("Snapshot cursor failed"));
-   snapshots.onsuccess=()=>{
-     try{
-       const current=snapshots.result;
-       if(!current){scanRows();return;}
-       collector.acceptSnapshot(current.value);
-       current.continue();
-     }catch(error){fail(error);try{tx.abort();}catch{}}
-   };
+  };
+  const request=tx.objectStore(SNAPSHOTS_STORE).openCursor();
+  request.onerror=()=>fail(request.error??new Error("IndexedDB snapshot cursor failed"));
+  request.onsuccess=()=>{
+   try{
+    const item=request.result;
+    if(!item){scanRows();return;}
+    collector.acceptSnapshot(item.value);
+    item.continue();
+   }catch(error){fail(error);try{tx.abort();}catch{}}
+  };
  });
+}
+/** Only for local startup; corrupted rows are counted and excluded. */
+export function readRecoverableWorkspace(db:IDBDatabase){
+ return readAtomicByCursor(db,createRecoverableRecordCollector());
+}
+/** Export must verify ALL persisted source snapshots and records, atomically.
+ * Unlike local recovery, ANY integrity violation throws and aborts export. */
+export function readVerifiedWorkspace(db:IDBDatabase){
+ return readAtomicByCursor(db,createStrictRecordCollector());
 }
