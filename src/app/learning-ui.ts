@@ -73,23 +73,53 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
    syllabusTopicId:string;errorLabel:string;bookmarked:boolean};
  const notebookDrafts=new Map<string,NotebookDraft>();
  const present=(html:string,identity:string)=>{
-   // Native textarea.value is a dirty property, distinct from its underlying
-   // text node/defaultValue. A keyed DOM diff can change the text node while
-   // retaining the textarea element and inadvertently reset the live value.
-   // Preserve the real unsaved note only for the SAME selected notebook card.
-   // A different card, a review screen or a new route must not inherit it.
    const same=previousLearningView===identity;
-   const note=same&&identity.startsWith("main:")?
-     root.querySelector<HTMLTextAreaElement>("#learning-note"):null;
-   const liveNote=note?.value;
-   const focused=note!==null&&document.activeElement===note;
-   const start=focused?note.selectionStart:0,end=focused?note.selectionEnd:0;
+   // Keep a selected card's native dirty fields when unrelated Learning
+   // evidence/filter state changes. Card-to-card transitions deliberately
+   // replace the detail editor, never transferring A's values into B.
+   const oldDetail=same&&identity==="main"?
+     root.querySelector<HTMLElement>("[data-learning-card]"):null;
+   const cardId=oldDetail?.dataset.learningCard;
+   const active=document.activeElement;
+   const activeEdit=active instanceof HTMLElement&&oldDetail?.contains(active)&&
+     ["learning-note","learning-subject","learning-topic","learning-subtopic",
+       "learning-error","learning-syllabus","learning-bookmark"].includes(active.id);
+   const preserve=oldDetail&&cardId&&(notebookDrafts.has(cardId)||activeEdit);
+   type NativeField=HTMLInputElement|HTMLTextAreaElement|HTMLSelectElement;
+   const editor=preserve?Array.from(oldDetail.querySelectorAll<NativeField>(
+     "input[id],textarea[id],select[id]")).filter(el=>el.id.startsWith("learning-")).map(el=>({
+       element:el,id:el.id,value:el.value,
+       checked:el instanceof HTMLInputElement?el.checked:null,
+       focused:active===el,
+       start:el instanceof HTMLTextAreaElement||
+         el instanceof HTMLInputElement&&["text","search"].includes(el.type)?
+         el.selectionStart:null,
+       end:el instanceof HTMLTextAreaElement||
+         el instanceof HTMLInputElement&&["text","search"].includes(el.type)?
+         el.selectionEnd:null,
+       scrollTop:el.scrollTop,scrollLeft:el.scrollLeft
+     })):[];
+
    if(same)reconcileSameExamQuestion(root,html);
    else root.innerHTML=html;
-   if(note&&note.isConnected&&liveNote!==undefined&&note.value!==liveNote){
-     note.value=liveNote;
-     if(focused)note.setSelectionRange(start,end);
-   }
+
+   if(oldDetail?.isConnected&&root.querySelector("[data-learning-card]")===oldDetail)
+     for(const prior of editor){
+       const el=oldDetail.querySelector<NativeField>("#"+prior.id);
+       if(el!==prior.element)continue;
+       if(el.value!==prior.value)el.value=prior.value;
+       if(prior.checked!==null&&el instanceof HTMLInputElement)
+         el.checked=prior.checked;
+       if(prior.focused){
+         el.focus({preventScroll:true});
+         try{
+           if(prior.start!==null&&prior.end!==null&&
+             (el instanceof HTMLInputElement||el instanceof HTMLTextAreaElement))
+             el.setSelectionRange(prior.start,prior.end);
+         }catch{/* Native selection on incompatible inputs must not break redraw. */}
+         el.scrollTop=prior.scrollTop;el.scrollLeft=prior.scrollLeft;
+       }
+     }
    previousLearningView=identity;
  };
  let evidenceExam="",evidenceCount=10;
@@ -116,9 +146,13 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   if(closed||!opened)return;
   const all=cards();
   invalidate(all);
-  const selected=all.find(c=>c.id===selectedId)??all[0];
-  const selectedDraft=selected?notebookDrafts.get(selected.id):undefined;
   const dueNow=dueCards();
+  const visible=all.filter(c=>filter==="all"||filter==="due"&&due(c)||
+    filter==="bookmarked"&&c.bookmarked);
+  // Selection never displays an invisible card from another list filter.
+  // Any unfinished edit is still held by its immutable card ID in this tab.
+  const selected=visible.find(c=>c.id===selectedId)??visible[0];
+  const selectedDraft=selected?notebookDrafts.get(selected.id):undefined;
   if(reviewId){
     const item=all.find(c=>c.id===reviewId);
     if(!item){reviewId=null;revealed=false;}
@@ -171,13 +205,13 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   if(!availableExams.includes(evidenceExam))evidenceExam=availableExams[0]??"";
   const assembled=revisionInventory(sourceAttempts,all,new Set(dueNow.map(c=>c.id)),evidenceExam,evidenceReasons);
   const preview=assembled.selected.slice(0,REVISION_MAX_QUESTIONS);
-  const visible=all.filter(c=>filter==="all"||filter==="due"&&due(c)||filter==="bookmarked"&&c.bookmarked);
   const exam=visible.find(c=>c.id===selectedId)?.examId??visible[0]?.examId;
   const candidates=visible.filter(c=>c.examId===exam&&
     ["verified","corrected","caution"].includes(c.question.editorial.status)).slice(0,REVISION_MAX_QUESTIONS);
   const html='<div class="generic-heading"><div><h1>Learning & revision</h1><p class="muted">Error notebook · FSRS-7 spaced review · Topic evidence</p></div>'+
     '<button class="btn" id="learning-close">← Test library</button></div>'+
-    (message?'<p class="generic-warning" role="status">'+esc(message)+'</p>':"")+
+    '<p class="generic-warning" role="status" id="learning-message"'+
+      (message?'':' hidden')+'>'+esc(message)+'</p>'+
     '<div class="learning-summary">'+
     [['Notebook cards',all.length],['Due for revision',dueNow.length],['Reviewed with FSRS',reviewedCount],['Bookmarked',bookmarkedCount]]
       .map(([label,value])=>'<div class="summary-stat"><small>'+esc(label)+'</small><b>'+esc(value)+'</b></div>').join("")+
@@ -219,15 +253,19 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
       '<select id="learning-filter" aria-label="Filter notebook" class="learning-filter">'+
       [["all","All cards"],["due","Due now"],["bookmarked","Bookmarked"]].map(([key,label])=>
        '<option value="'+key+'"'+(filter===key?" selected":"")+'>'+label+'</option>').join("")+'</select></div>'+
+    '<div class="learning-card-list" data-learning-list>'+
     (visible.length?visible.map(c=>{
       const next=scheduler?schedule(c):null;
-      return '<button class="generic-history '+(selected?.id===c.id?"learning-selected":"")+
-        '" data-learning-id="'+esc(c.id)+'">'+esc(c.sectionTitle)+' · '+esc(c.question.content.prompt.slice(0,92))+
+      return '<button type="button" class="generic-history '+(selected?.id===c.id?"learning-selected":"")+
+        '" data-learning-id="'+esc(c.id)+'" aria-controls="learning-notebook-detail" aria-pressed="'+
+        String(selected?.id===c.id)+'">'+esc(c.sectionTitle)+' · '+esc(c.question.content.prompt.slice(0,92))+
         '<small>'+esc(c.errorLabel??"Unclassified")+' · '+
           (next?(next.dueAt.getTime()<=Date.now()?"Due now":"Due "+next.dueAt.toLocaleDateString()):"Unscheduled")+
           ' · '+c.reviews.length+' ratings</small></button>';
-    }).join(""):'<p class="fine">No cards in this view. Add a question from a completed test result.</p>')+'</section>'+
-    '<section class="panel pad" data-learning-card="'+esc(selected?.id??"none")+'"><h2>Notebook detail</h2>'+
+    }).join(""):'<p class="fine">No cards in this view. Add a question from a completed test result.</p>')+
+    '</div></section>'+
+    '<section class="panel pad" id="learning-notebook-detail" aria-label="Notebook detail" data-learning-card="'+
+      esc(selected?.id??"none")+'"><h2>Notebook detail</h2>'+
      (selected?'<h3>'+esc(selected.question.content.prompt)+'</h3>'+
        '<p class="fine">'+esc(selected.paperId)+' · '+esc(selected.sectionTitle)+
          ' · captured from completed attempt '+esc(selected.sourceAttemptId)+'</p>'+
@@ -257,7 +295,10 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
         '<div class="row generic-actions"><button class="btn primary" id="learning-save">Save note</button>'+
        '<button class="btn" id="learning-one">Review this card</button>'+
        '<button class="btn danger" id="learning-delete">Delete</button></div>':
-       '<p class="fine">Select a card from the notebook.</p>')+'</section></div>'+
+       '<p class="fine">No card matches the current notebook filter.</p>')+'</section></div>'+
+    '<p id="learning-selection-status" class="sr-only" role="status" aria-live="polite">'+
+    (selected?'Selected notebook card: '+esc(selected.question.content.prompt.slice(0,140)):
+      'No notebook cards in this filter')+'</p>'+
     '<section class="panel pad learning-reports"><div class="row between"><div><h2>Reported error patterns</h2>'+
       '<p class="fine">Self-labelled notebook observations, not inferred diagnoses.</p></div></div>'+
       (commonReports.length?'<div class="learning-report-list">'+commonReports.map(([label,count])=>
@@ -291,7 +332,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
        '</td><td>'+g.points.map(p=>p.marks.toFixed(1)).join(" → ")+'</td></tr>').join(""):
        '<tr><td colspan="4">Complete the same paper revision twice to see a valid comparison.</td></tr>')+
     '</tbody></table></div></section>';
-  present(html,"main:"+(selected?.id??"none"));
+  present(html,"main");
   root.querySelector<HTMLSelectElement>("#learning-hierarchy-root")!.onchange=e=>{
     hierarchyRoot=(e.target as HTMLSelectElement).value;draw();
   };
