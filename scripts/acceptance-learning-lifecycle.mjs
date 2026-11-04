@@ -75,12 +75,25 @@ try{
  await page.locator("#learning-note").waitFor({state:"visible"});
  await page.locator("#learning-error").selectOption("conceptual");
  await page.locator("#learning-topic").fill("Independently labelled topic");
+ await page.locator("#learning-subtopic").fill("Specific recorded subtopic");
  await page.locator("#learning-note").fill("Review source fundamentals");
+ await page.evaluate(()=>{
+   window.__p51LearningSummary=document.querySelector(".learning-summary");
+   window.__p51NotebookInput=document.querySelector("#learning-note");
+ });
+ await page.locator('[data-evidence-reason="flagged"]').check();
+ check(await page.evaluate(()=>window.__p51LearningSummary===document.querySelector(".learning-summary")&&
+   window.__p51NotebookInput===document.querySelector("#learning-note")),
+   "P51 Learning filter redraw replaced unaffected summary or live notebook input");
+ check(await page.locator("#learning-note").inputValue()==="Review source fundamentals"&&
+   await page.locator("#learning-subtopic").inputValue()==="Specific recorded subtopic",
+   "P51 unsaved notebook edits vanished during unrelated Learning redraw");
  await page.locator("#learning-save").click();
  const rated=await saved(x=>x.id===card.id&&x.reviews?.length===1&&
    x.note==="Review source fundamentals","explicit FSRS-rated notebook");
  check(rated.errorLabel==="conceptual"&&
-  rated.customTopic==="Independently labelled topic",
+  rated.customTopic==="Independently labelled topic"&&
+  rated.customSubtopic==="Specific recorded subtopic",
   "Notebook user error-type/topic annotations did not persist");
  check(await page.getByRole("heading",{name:"Topic performance"}).count()===1,
   "Learning topic performance not accessible");
