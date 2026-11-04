@@ -62,8 +62,19 @@ export function serializeVerifiedBackup(records:readonly Record<string,unknown>[
  return serialized.slice(0,-1)+',"manifest":'+JSON.stringify(manifest)+'}';
 }
 export function verifyBackup(raw:unknown):BackupV4{
- if(!raw||typeof raw!=="object")throw Error("Invalid backup");
+ if(!raw||typeof raw!=="object"||Array.isArray(raw)||
+   ![Object.prototype,null].includes(Object.getPrototypeOf(raw)))
+   throw Error("Invalid backup");
  const b=raw as Partial<BackupV4>;
+ // A SHA-256 checksum is NOT a publisher signature. Unknown fields are not
+ // part of the versioned format and must not slip into additive restores.
+ const validFields=["format","version","exportedAt","records","snapshots","preferences","setups","manifest"];
+ if(Object.keys(b).some(key=>!validFields.includes(key)))
+   throw Error("Backup contains unsupported envelope fields");
+ const manifestFields=["algorithm","digest","recordCount","snapshotCount"];
+ if(!b.manifest||typeof b.manifest!=="object"||Array.isArray(b.manifest)||
+   Object.keys(b.manifest).some(key=>!manifestFields.includes(key)))
+   throw Error("Backup contains unsupported manifest fields");
  if(b.format!=="practice-desk-backup"||b.version!==4||
    !Array.isArray(b.records)||!Array.isArray(b.snapshots)||
    b.records.length>5000||b.snapshots.length>5000||
@@ -80,7 +91,7 @@ export function verifyBackup(raw:unknown):BackupV4{
    throw Error("Backup integrity check failed");
  validateDisplayPreferences(b.preferences);
  if(b.setups!==undefined)validatePracticeSetups(b.setups);
- // An authenticated container still needs internally valid source and no
+ // A checksum-matched (not authenticated) archive still needs valid source and no
  // dangling references. This is independent of any installed source bank.
  reconstructRecords(b.records,b.snapshots);
  if(b.records.some(x=>x.recordType==="generic-attempt"&&
