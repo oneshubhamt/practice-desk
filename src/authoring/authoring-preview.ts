@@ -72,6 +72,9 @@ const main=(pkg:ExamPackage,q:QuestionRevision,authorValidated:boolean):string=>
  parts.push('<details class="pd-author-worked"><summary>Author-only answer key and worked explanation</summary>'+
   (entry?'<p><b>Author-only answer key:</b> '+escapeText(answerDescription(entry.answer))+'</p>':
     '<p>Answer key not yet validated.</p>')+
+  (q.content.kind==="free-response"&&pkg.explanations?.[q.id]?
+    '<p><b>Author-provided written model/rubric:</b> '+
+      escapeText(pkg.explanations[q.id])+'</p>':"")+
   (q.content.richExplanation?
    // The same safe question-rich HTML renderer used by the exam.
    '<div class="pd-author-worked-text">'+
