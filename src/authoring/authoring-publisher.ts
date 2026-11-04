@@ -8,7 +8,7 @@ import type {AuthoringDraft,AuthoringQuestion} from "./authoring-draft.ts";
 import {validateAuthoringDraft} from "./authoring-draft.ts";
 import type {CorrectAnswer,AnswerKeyEntry,AnswerKeyRevision} from "../domain/answer-key.ts";
 import type {PaperRevision,SectionDefinition,TimingPolicy} from "../domain/exam.ts";
-import {topicAncestors} from "../learning/syllabus-taxonomy.ts";
+import {attributedTopicPath,topicAncestors} from "../learning/syllabus-taxonomy.ts";
 import type {QuestionContent,QuestionRevision,QuestionKind,StimulusDefinition,ImageAsset} from "../domain/question.ts";
 import type {RichBlock,RichDocument,RichInline} from "../domain/rich-document.ts";
 import {validateRichDocument} from "../domain/rich-document.ts";
@@ -227,12 +227,11 @@ export function compileAuthoringPublication(
   const prompt=normalized(q.prompt),explanation=normalized(q.explanation),passage=normalized(q.passage);
   const stemRefs=[...new Set([...resources(prompt),...resources(explanation)])];
   addRefs(stemRefs);
-  const hierarchy=q.topic?.trim()?
-    topicAncestors([q.section.trim(),q.topic.trim(),...(q.subtopic?.trim()?[q.subtopic.trim()]:[])])
-      .map(n=>n.id):[];
+  const hierarchy=topicAncestors(attributedTopicPath(d.examId,q.subject??"",
+    q.syllabusHeadingId||undefined,q.topic??"",q.subtopic??"")).map(n=>n.id);
   const baseContent={
    prompt:publicationPlainText(prompt).slice(0,20000),
-   ...(hierarchy.length?{topicIds:hierarchy as unknown as NonNullable<QuestionContent["topicIds"]>}:{}),
+   topicIds:hierarchy as unknown as NonNullable<QuestionContent["topicIds"]>,
    ...(q.difficulty?{tags:["difficulty:"+q.difficulty]}:{}),
    richPrompt:prompt,
    ...(hasContent(explanation)?{richExplanation:explanation}:{}),
