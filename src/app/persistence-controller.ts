@@ -16,7 +16,8 @@ import {assertDeletionAllowed,deletionWarning,type DeletionIntent} from "../hist
 import {healthSummary,type StorageHealth} from "./history-page.ts";
 
 import {backupDownload,readBackupFile} from "../history/backup-file.ts";
-import {ATTEMPTS_STORE,SNAPSHOTS_STORE,compactAttempt,expandAttempt,isSharedAttempt,reconstructRecords,reconstructRecoverableRecords,pruneSharedSnapshots} from "../history/shared-store.ts";
+import {ATTEMPTS_STORE,SNAPSHOTS_STORE,compactAttempt,expandAttempt,isSharedAttempt,reconstructRecords,pruneSharedSnapshots} from "../history/shared-store.ts";
+import {readRecoverableWorkspace} from "./record-cursor-reader.ts";
 import type {SharedSnapshot,SlimAttempt} from "../history/shared-store.ts";
 
 import {readDisplayPreferences,writeDisplayPreferences,SETTINGS_EVENT} from "./preferences.ts";
@@ -388,16 +389,14 @@ export function hydrateWorkspaceStorage(owner:CoordinatorContext):void{
        request.onerror=()=>reject(request.error);
        request.onblocked=()=>reject(new Error("Database blocked"));
      });
-     const {all,snapshots}=await new Promise<{all:unknown[];snapshots:SharedSnapshot[]}>((resolve,reject)=>{
-       const tx=owner.db!.transaction([ATTEMPTS_STORE,SNAPSHOTS_STORE],"readonly");
-       const rows=tx.objectStore(ATTEMPTS_STORE).getAll();
-       const contents=tx.objectStore(SNAPSHOTS_STORE).getAll();
-       tx.oncomplete=()=>resolve({all:rows.result as unknown[],snapshots:contents.result as SharedSnapshot[]});
-       tx.onerror=()=>reject(tx.error);
-     });
+     // One atomic read-only transaction streams snapshots first, then rows.
+     // The collector validates individual immutable bodies and reconstructs
+     // valid records without two temporary unbounded getAll() arrays.
+     // This is not lazy History pagination: valid records remain available
+     // for cross-paper analytics, resuming tests and exact additive backups.
+     const recovered=await readRecoverableWorkspace(owner.db!);
      // Corrupt browser records must not conceal independent healthy records.
      // Leave the original IndexedDB bytes untouched for later diagnosis.
-     const recovered=reconstructRecoverableRecords(all,snapshots);
      let rejected=recovered.rejectedRows+recovered.rejectedSnapshots;
      for(const snap of recovered.snapshots)owner.storedSnapshots.set(snap.id,snap);
      for(const record of recovered.records){
