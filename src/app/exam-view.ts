@@ -89,7 +89,7 @@ export function renderModelExam(
          locked?"Locked":filled+" / "+s.questionRevisionIds.length+" answered";
        return '<button class="btn exam-section-tab '+(i===state.sectionIndex?"primary":"")+'" data-section="'+i+'" aria-current="'+(i===state.sectionIndex?"step":"false")+'"'+(locked?" disabled":"")+'>'+
          '<b>'+escapeText(s.title)+'</b><small>'+status+'</small></button>';
-     }).join("")+'</div><div class="generic-layout exam-grid"><section class="panel pad exam-question"><p class="eyebrow">'+
+     }).join("")+'</div><div class="generic-layout exam-grid"><section class="panel pad exam-question" data-active-question="'+escapeText(q.id)+'"><p class="eyebrow">'+
      escapeText(section.title)+' · Question '+(state.questionIndex+1)+' of '+section.questionRevisionIds.length+
      (attempt.frozen.snapshot.examId==="ssc-cgl"?
        ' · Paper Q'+escapeText(q.questionId.split(":").at(-1)):"")+'</p>'+
