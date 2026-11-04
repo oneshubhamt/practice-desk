@@ -17,7 +17,13 @@ import type { AssetId } from "../domain/ids.js";
 type Input=Record<string,unknown>;
 function obj(value:unknown,name:string):Input{
  if(!value||typeof value!=="object"||Array.isArray(value))throw Error(name+" must be an object");
+ if(![Object.prototype,null].includes(Object.getPrototypeOf(value)))
+   throw Error(name+" must be a plain object");
  return value as Input;
+}
+function only(value:Input,fields:readonly string[],name:string):void{
+ for(const field of Object.keys(value))
+   if(!fields.includes(field))throw Error(name+"."+field+": unsupported field");
 }
 function str(value:unknown,name:string,max=240):string{
  if(typeof value!=="string"||!value.trim()||value.length>max)throw Error(name+" must be nonempty text (up to "+max+" characters)");
@@ -40,6 +46,8 @@ const LETTERS="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 export function importSimpleQuestionBank(value:unknown):ExamPackage{
  validateExamImportBudget(value);
  const bank=obj(value,"Question bank");
+ only(bank,["format","version","bankId","examId","title","revision","edition",
+   "scoring","timing","questions","media"],"Question bank");
  ensure(bank["format"]==="practice-desk-bank"&&bank["version"]===1,
    "Not a Practice Desk simple bank v1");
  const bankId=key(bank["bankId"],"bankId");
@@ -50,6 +58,7 @@ export function importSimpleQuestionBank(value:unknown):ExamPackage{
  const edition=bank["edition"]??"custom";
  ensure(edition==="custom"||edition==="source"||edition==="reviewed","Unsupported bank edition");
  const scoring=obj(bank["scoring"],"scoring");
+ only(scoring,["correctMarks","negativeFraction","incorrectMarks","unansweredMarks"],"scoring");
  const correctMarks=number(scoring["correctMarks"],"scoring.correctMarks");
  const fraction=maybeNumber(scoring["negativeFraction"],"scoring.negativeFraction");
  ensure(fraction===undefined||(fraction>=0&&fraction<=1),
@@ -104,6 +113,8 @@ export function importSimpleQuestionBank(value:unknown):ExamPackage{
  for(let n=0;n<rawQuestions.length;n++){
    const prefix="questions["+(n+1)+"]";
    const q=obj(rawQuestions[n],prefix);
+   only(q,["id","section","question","prompt","type","options","answer",
+     "explanation","imageIds","optionImageIds","tolerance"],prefix);
    const id=key(q["id"]??"q"+(n+1),prefix+".id");
    ensure(!qIds.has(id),"Duplicate question ID "+id);qIds.add(id);
    const sec=str(q["section"]??"General",prefix+".section",120);
@@ -160,6 +171,7 @@ export function importSimpleQuestionBank(value:unknown):ExamPackage{
  let timing:ExamPackage["paper"]["timing"]={kind:"untimed"};
  if(rawTiming!==undefined){
    const t=obj(rawTiming,"timing");
+   only(t,t["kind"]==="untimed"?["kind"]:["kind","minutes"],"timing");
    if(t["kind"]==="whole-paper"){
      const minutes=number(t["minutes"],"timing.minutes");
      ensure(minutes>0&&minutes<=1440,"timing.minutes must be 1–1440");
