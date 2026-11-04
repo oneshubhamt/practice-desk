@@ -109,38 +109,53 @@ export function reconstructRecords(rows:readonly unknown[],
  });
 }
 
-/** Local IndexedDB recovery must isolate individual damaged entries without
- * concealing healthy attempts. Portable backup verification remains strict.
- * Callers must disclose rejections and lock further writes until exported.
+/** Recover one damaged local row at a time while preserving all independent
+ * valid records. The accumulator accepts cursor values directly, avoiding an
+ * additional getAll() clone of every full stored row/snapshot at startup.
+ * Portable backup verification must keep using strict reconstructRecords().
+ */
+export function createRecoverableRecordCollector(){
+ const byId=new Map<string,SharedSnapshot>();
+ const records:unknown[]=[];
+ let rejectedSnapshots=0,rejectedRows=0;
+ return {
+  acceptSnapshot(unknownRow:unknown):void{
+   try{
+    const snapshot=verifiedSnapshot(unknownRow as SharedSnapshot);
+    if(byId.has(snapshot.id))throw Error("Duplicate immutable snapshot");
+    byId.set(snapshot.id,snapshot);
+   }catch{rejectedSnapshots++;}
+  },
+  acceptRow(row:unknown):void{
+   if(!isSharedAttempt(row)){records.push(row);return;}
+   try{
+    const snapshot=byId.get(row.frozenRef);
+    if(!snapshot)throw Error("Missing or unverified immutable snapshot");
+    const expanded=expandAttempt(row,snapshot);
+    verifiedReconstructed.add(expanded.frozen);
+    bodyCache.set(expanded.frozen,snapshot);
+    records.push(expanded);
+   }catch{rejectedRows++;}
+  },
+  result():{
+   readonly records:readonly unknown[];readonly snapshots:readonly SharedSnapshot[];
+   readonly rejectedRows:number;readonly rejectedSnapshots:number
+  }{
+   return {records,snapshots:[...byId.values()],rejectedRows,rejectedSnapshots};
+  }
+ };
+}
+/** Local recovery quarantines individual corrupted entries but leaves the
+ * original IndexedDB bytes untouched and locks writes. Backup import remains
+ * strict/fail-closed and does not use this helper.
  */
 export function reconstructRecoverableRecords(
  rows:readonly unknown[],snapshots:readonly unknown[]
-):{
- readonly records:readonly unknown[];readonly snapshots:readonly SharedSnapshot[];
- readonly rejectedRows:number;readonly rejectedSnapshots:number;
-}{
- const byId=new Map<string,SharedSnapshot>();
- let rejectedSnapshots=0,rejectedRows=0;
- for(const unknownRow of snapshots){
-   try{
-     const snapshot=verifiedSnapshot(unknownRow as SharedSnapshot);
-     if(byId.has(snapshot.id))throw Error("Duplicate immutable snapshot");
-     byId.set(snapshot.id,snapshot);
-   }catch{rejectedSnapshots++;}
- }
- const records:unknown[]=[];
- for(const row of rows){
-   if(!isSharedAttempt(row)){records.push(row);continue;}
-   try{
-     const snapshot=byId.get(row.frozenRef);
-     if(!snapshot)throw Error("Missing or unverified immutable snapshot");
-     const expanded=expandAttempt(row,snapshot);
-     verifiedReconstructed.add(expanded.frozen);
-     bodyCache.set(expanded.frozen,snapshot);
-     records.push(expanded);
-   }catch{rejectedRows++;}
- }
- return {records,snapshots:[...byId.values()],rejectedRows,rejectedSnapshots};
+):ReturnType<ReturnType<typeof createRecoverableRecordCollector>["result"]>{
+ const collector=createRecoverableRecordCollector();
+ for(const snapshot of snapshots)collector.acceptSnapshot(snapshot);
+ for(const row of rows)collector.acceptRow(row);
+ return collector.result();
 }
 
 /** Reclaim content no longer referenced by any saved attempt.
