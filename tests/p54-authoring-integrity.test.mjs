@@ -77,7 +77,7 @@ test("P54 real six-kind preview uses frozen question controls, never index-pairs
    assert.match(html,/Author-only answer key/);
   }else if(q.content.kind==="numeric-entry")assert.match(html,/id="g-number"/);
   else if(q.content.kind==="true-false")assert.match(html,/data-bool="true"/);
-  else if(q.content.kind==="free-response")assert.match(html,/id="g-text"/);
+  else if(q.content.kind==="free-response"){assert.match(html,/id="g-text"/);assert.match(html,/Author-provided written model\/rubric/);}
   else assert.match(html,/data-choice/);
  }
 });
