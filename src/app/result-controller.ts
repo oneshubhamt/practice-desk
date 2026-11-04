@@ -13,7 +13,6 @@ import {scoreAttempt} from "../engine/scoring.ts";
 import {manualGradeLimit,manualGradeSummary,setManualGrade} from "../engine/manual-grading.ts";
 import {sourceKeyScore} from "../engine/source-comparison.ts";
 
-import {createSourceReviewReference} from "../engine/review-source.ts";
 import {scoreableMaximum,scoreableLowerBound,sectionScoreSummaries} from "../engine/score-ceiling.ts";
 
 import {questionSpeed} from "../learning/question-analytics.ts";
@@ -39,28 +38,13 @@ export function renderCurrentResultHTML(owner:CoordinatorContext):string {
    // not question navigation during the attempt or numerical score visibility.
    const revealReview=paper.navigation.allowReview!==false;
    if(!revealReview&&owner.resultTab==="review")owner.resultTab="overview";
-   // New attempts carry a frozen original-text/media snapshot. For older
-   // overhaul CGL attempts only, permit a read-only comparison if the immutable
-   // bundled source paper AND source key revision exactly match the previously
-   // saved original-key reference. Never fabricate or persist this fallback.
-   const originalReference=owner.attempt.sourceKeyReference;
-   const pinnedOriginal= owner.resultTab==="review"&&!owner.attempt.sourceReviewReference&&
-     owner.attempt.frozen.snapshot.examId==="ssc-cgl"&&originalReference?
-       owner.builtins.find(p=>
-         p.paper.edition==="source"&&p.paper.id===originalReference.sourcePaperRevisionId&&
-         p.answerKey.id===originalReference.sourceAnswerKeyRevisionId&&
-         p.paper.paperId===owner.attempt!.frozen.paper.paperId):undefined;
-   const frozenTarget:ExamPackage={format:"practice-desk-exam",version:1,
-     examId:owner.attempt.frozen.snapshot.examId,title:"Frozen reviewed attempt",
-     paper:owner.attempt.frozen.paper,answerKey:owner.attempt.frozen.key,
-     questions:owner.attempt.frozen.questions,stimuli:owner.attempt.frozen.stimuli,
-     assets:owner.attempt.frozen.assets};
+   // Current attempts pin source review data at attempt creation. Never
+   // reconstruct evidence from a mutable Library at result render time.
    const reviewSource=owner.resultTab==="review"?
-     (owner.attempt.sourceReviewReference??(pinnedOriginal?createSourceReviewReference(frozenTarget,pinnedOriginal):null)):null;
+     owner.attempt.sourceReviewReference??null:null;
    const grades=owner.resultTab==="overview"?manualGradeSummary(owner.attempt):{graded:0,pending:0,total:0};
    const selfAssessed=s.snapshot.earnedMarks+grades.total;
    const originalKey=owner.resultTab==="overview"?sourceKeyScore(owner.attempt):null;
-   const legacySourceKey=owner.resultTab==="overview"&&owner.attempt.sourceKeyReference?.schema===1;
    const sourceKeyText=originalKey&&originalKey.comparable>0?
      (originalKey.unavailable>0?"Comparable original-source subset only":"Original-source key comparison")+
      ": "+originalKey.marks.toFixed(1)+" / "+originalKey.maxMarks.toFixed(1)+
@@ -103,9 +87,7 @@ export function renderCurrentResultHTML(owner:CoordinatorContext):string {
        escapeText(owner.attempt.practiceComposition.seed)+
        ' · frozen selection '+escapeText(owner.attempt.practiceComposition.contentHash.slice(0,12))+
        '. Scores use the actual retained source rules; this is not an independent official exam score.</p>':"")+
-     (legacySourceKey?
-       '<p class="fine"><b>Original-source key comparison unavailable:</b> This older saved attempt has a positional-only publisher-key snapshot. When revised options change meaning, matching answer letters are not proof of an equivalent answer. Its actual frozen result remains unchanged; original key and wording remain available for provenance.</p>':
-       originalKey&&originalKey.comparable>0?
+     (originalKey&&originalKey.comparable>0?
        '<p class="fine"><b>'+escapeText(originalKey.unavailable?
          "Original-source key — comparable subset only":"Original-source key comparison")+
        ':</b> '+escapeText(originalKey.marks.toFixed(1))+' / '+
