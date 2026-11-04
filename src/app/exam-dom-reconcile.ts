@@ -7,7 +7,8 @@
  */
 const identityFields=["id","data-choice","data-bool","data-match",
   "data-q","data-section","data-attempt","data-review-id",
-  "data-manual-marks","data-manual-note","data-manual-save","data-add-card"] as const;
+  "data-manual-marks","data-manual-note","data-manual-save","data-add-card",
+  "data-active-question","data-learning-card","data-learning-id"] as const;
 function sameIdentity(a:Element,b:Element):boolean{
  if(a.localName!==b.localName||a.namespaceURI!==b.namespaceURI)return false;
  if(a instanceof HTMLInputElement&&b instanceof HTMLInputElement&&a.type!==b.type)
