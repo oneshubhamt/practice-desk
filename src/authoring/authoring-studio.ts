@@ -77,15 +77,45 @@ function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Field):st
   ([["custom","Custom"],["source","Source transcription"],["reviewed","Reviewed & corrected"]] as const)
     .map(([a,b])=>option(a,b,draft.edition)).join("")+'</select></label>'+
   '<label>Revision<input id="pd-author-revision" type="number" min="1" max="1000000" value="'+draft.revision+'"></label>'+
-  '<label>Duration (minutes; 0 = untimed)<input id="pd-author-duration" type="number" min="0" max="600" value="'+draft.durationMinutes+'"></label>'+
+  '<label>Timing policy<select id="pd-author-timing-kind">'+
+    ([["untimed","Untimed"],["whole-paper","Whole-paper countdown"],["sectional","Section-by-section countdown"]] as const)
+      .map(([value,label])=>option(value,label,draft.timingKind??(draft.durationMinutes?"whole-paper":"untimed"))).join("")+'</select></label>'+
+  '<label>Whole-paper duration (minutes)<input id="pd-author-duration" type="number" min="0" max="600" value="'+draft.durationMinutes+'"></label>'+
+  '<label>Pause policy<select id="pd-author-pause">'+
+    ([["allowed","Allow pause"],["forbidden","No pause"]] as const)
+      .map(([value,label])=>option(value,label,draft.pausePolicy??"allowed")).join("")+'</select></label>'+
+  '<label>Question navigation<select id="pd-author-question-nav">'+
+    ([["free","Free movement"],["forward-only","Forward only"]] as const)
+      .map(([value,label])=>option(value,label,draft.questionNavigation??"free")).join("")+'</select></label>'+
+  '<label>Section navigation<select id="pd-author-section-nav">'+
+    ([["free","Free section movement"],["sequential-locked","Sequential locked"]] as const)
+      .map(([value,label])=>option(value,label,draft.sectionNavigation??"free")).join("")+'</select></label>'+
+  '<label>Section expiry<select id="pd-author-section-transition">'+
+    ([["manual","Stop and continue manually"],["automatic","Advance automatically"]] as const)
+      .map(([value,label])=>option(value,label,draft.sectionTransition??"manual")).join("")+'</select></label>'+
+  '<label class="pd-author-check"><input type="checkbox" id="pd-author-early-submit"'+
+    (draft.allowEarlySubmit!==false?" checked":"")+'> Permit early section submission</label>'+
+  '<label class="pd-author-check"><input type="checkbox" id="pd-author-allow-review"'+
+    (draft.allowReview!==false?" checked":"")+'> Release detailed answers after submission</label>'+
   '<label>Correct marks<input id="pd-author-correct" type="number" step="any" value="'+draft.marksCorrect+'"></label>'+
   '<label>Incorrect marks<input id="pd-author-wrong" type="number" max="0" step="any" value="'+draft.marksIncorrect+'"></label>'+
   '</div></details><div class="pd-author-meta">'+
   '<label>Question kind<select id="pd-author-kind">'+kinds+'</select></label>'+
-  '<label>Section / topic group<input id="pd-author-section" maxlength="100" value="'+escapeText(current.section)+'"></label>'+
+  '<label>Section / subject<input id="pd-author-section" maxlength="100" value="'+escapeText(current.section)+'"></label>'+
+  '<label>Topic (author supplied)<input id="pd-author-topic" maxlength="120" value="'+escapeText(current.topic??"")+'"></label>'+
+  '<label>Subtopic (needs Topic)<input id="pd-author-subtopic" maxlength="120" value="'+escapeText(current.subtopic??"")+'"></label>'+
+  '<label>Difficulty tag<select id="pd-author-difficulty">'+
+    ([["","Not assigned"],["easy","Easy"],["medium","Medium"],["hard","Hard"]] as const)
+      .map(([value,label])=>option(value,label,current.difficulty??"")).join("")+'</select></label>'+
+  '<label>Section timer (minutes; 0 = untimed; sectional mode only)<input id="pd-author-section-minutes" type="number" min="0" max="600" step="1" value="'+(current.sectionMinutes??15)+'"></label>'+
   '<label>Answer key draft<input id="pd-author-answer" maxlength="100" value="'+escapeText(current.answer)+'" aria-describedby="pd-author-answer-help"></label>'+
   '<label>Source / provenance note<input id="pd-author-source" maxlength="500" value="'+escapeText(current.source)+'"></label>'+
   (current.kind==="numeric-entry"?'<label>Absolute answer tolerance<input type="number" id="pd-author-tolerance" min="0" max="1000000" step="any" value="'+current.tolerance+'"></label>':"")+
+  (current.kind==="multiple-select"?'<label>Minimum choices<input id="pd-author-min-choices" type="number" min="1" max="4" step="1" value="'+(current.minSelections??1)+'"></label>'+
+    '<label>Maximum choices<input id="pd-author-max-choices" type="number" min="1" max="4" step="1" value="'+(current.maxSelections??4)+'"></label>':"")+
+  (current.kind==="multiple-select"||current.kind==="matching"?
+    '<label>Partial marks per correct component (0 = all-or-nothing)<input id="pd-author-partial-credit" type="number" min="0" max="1000" step="any" value="'+(current.partialCreditEach??0)+'"></label>'+
+    '<label>Partial penalty per incorrect component<input id="pd-author-partial-penalty" type="number" min="0" max="1000" step="any" value="'+(current.partialPenaltyEach??0)+'"></label>':"")+
   '</div><p class="fine" id="pd-author-answer-help">'+
   escapeText(current.kind==="single-choice"?"One correct option: A, B, C or D.":
    current.kind==="multiple-select"?"All correct options: A,C or B,D; no duplicates.":
@@ -427,20 +457,38 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   const metadata=[
    ["pd-author-title","title"],["pd-author-exam","examId"],["pd-author-paper","paperId"],
    ["pd-author-edition","edition"],["pd-author-revision","revision"],
-   ["pd-author-duration","durationMinutes"],["pd-author-correct","marksCorrect"],
-   ["pd-author-wrong","marksIncorrect"]
+   ["pd-author-duration","durationMinutes"],["pd-author-timing-kind","timingKind"],
+   ["pd-author-pause","pausePolicy"],["pd-author-question-nav","questionNavigation"],
+   ["pd-author-section-nav","sectionNavigation"],
+   ["pd-author-section-transition","sectionTransition"],
+   ["pd-author-correct","marksCorrect"],["pd-author-wrong","marksIncorrect"]
   ] as const;
   for(const [id,key] of metadata)find<HTMLInputElement|HTMLSelectElement>(id).onchange=e=>{
    const input=e.target as HTMLInputElement;
    const value=["revision","durationMinutes","marksCorrect","marksIncorrect"].includes(key)?
     Number(input.value):input.value;
-   updateMetadata(key,value);
+   if(key==="timingKind"&&value==="sectional"){
+     changeDraft(d=>({...d,timingKind:"sectional",sectionNavigation:"sequential-locked"}));
+     void render();
+   }else updateMetadata(key,value);
   };
+  for(const [id,key] of [["pd-author-early-submit","allowEarlySubmit"],
+    ["pd-author-allow-review","allowReview"]] as const)
+    find<HTMLInputElement>(id).onchange=e=>
+      updateMetadata(key,(e.target as HTMLInputElement).checked);
   const tolerance=find<HTMLInputElement>("pd-author-tolerance");
   if(tolerance)tolerance.onchange=e=>updateQuestion("tolerance",Number((e.target as HTMLInputElement).value));
   for(const [id,key] of [["pd-author-section","section"],["pd-author-answer","answer"],
-   ["pd-author-source","source"]] as const){
+   ["pd-author-source","source"],["pd-author-topic","topic"],
+   ["pd-author-subtopic","subtopic"],["pd-author-difficulty","difficulty"]] as const){
    find<HTMLInputElement>(id).onchange=e=>updateQuestion(key,(e.target as HTMLInputElement).value);
+  }
+  for(const [id,key] of [["pd-author-section-minutes","sectionMinutes"],
+    ["pd-author-min-choices","minSelections"],["pd-author-max-choices","maxSelections"],
+    ["pd-author-partial-credit","partialCreditEach"],
+    ["pd-author-partial-penalty","partialPenaltyEach"]] as const){
+    const input=container.querySelector<HTMLInputElement>("#"+id);
+    if(input)input.onchange=e=>updateQuestion(key,Number((e.target as HTMLInputElement).value));
   }
   find<HTMLSelectElement>("pd-author-kind").onchange=e=>{
    updateQuestion("kind",(e.target as HTMLSelectElement).value as QuestionKind);
