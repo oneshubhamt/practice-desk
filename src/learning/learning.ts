@@ -149,20 +149,20 @@ export function topicMetrics(attempts:readonly GenericAttempt[],cards:readonly L
          annotatedCard.customSubtopic??""):null;
      const hierarchy=[...sourcePaths,...(manualPath?[manualPath]:[])]
        .flatMap(path=>topicAncestors(path));
-     const labels:{label:string;kind:TopicMetrics["kind"]}[]=[
+     const labels:{label:string;kind:TopicMetrics["kind"];sourceId?:string}[]=[
        {label:section.title,kind:"section"},
        ...sourceTags.filter(label=>!parseTopicPathId(label))
          .map(label=>({label,kind:"source-topic" as const})),
        ...(manual.get(annotationKey)?[{label:manual.get(annotationKey)!,kind:"user-topic" as const}]:[]),
        ...(heading&&syllabusHeading(attempt.frozen.snapshot.examId,heading)?
          [{label:syllabusHeading(attempt.frozen.snapshot.examId,heading)!.label,kind:"syllabus" as const}]:[]),
-       ...hierarchy.map(node=>({label:node.path.join(" › "),kind:"hierarchy" as const}))
+       ...hierarchy.map(node=>({label:node.path.join(" › "),kind:"hierarchy" as const,sourceId:node.id}))
      ];
      const unique=new Set<string>();
-     for(const {label,kind} of labels){
+     for(const {label,kind,sourceId} of labels){
        if(!label.trim())continue;
        const examId=attempt.frozen.snapshot.examId;
-       const key=examId+"|"+kind+"|"+label;
+       const key=examId+"|"+kind+"|"+(sourceId??label);
        if(unique.has(key))continue;
        unique.add(key);
        const row:TopicMetrics=rows.get(key)??{id:key,label,kind,examId,total:0,answered:0,correct:0,
