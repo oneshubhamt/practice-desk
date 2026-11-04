@@ -88,25 +88,41 @@ export function verifiedSnapshot(row:SharedSnapshot):SharedSnapshot{
  assertFrozenContent({...row.body,frozenAt:"2026-01-01T00:00:00.000Z"});
  return row;
 }
-export function reconstructRecords(rows:readonly unknown[],
- snapshots:readonly unknown[]):unknown[]{
+/** Fail-closed stream consumer for authoritative backup export/import.
+ * Unlike local recovery, no corrupt, missing or duplicate immutable digest
+ * is quarantined: the operation aborts before producing a portable archive.
+ */
+export function createStrictRecordCollector(){
  const byId=new Map<string,SharedSnapshot>();
- for(const unknownRow of snapshots){
+ const records:unknown[]=[];
+ return {
+  acceptSnapshot(unknownRow:unknown):void{
    const snapshot=verifiedSnapshot(unknownRow as SharedSnapshot);
    if(byId.has(snapshot.id))throw Error("Duplicate snapshot digest");
    byId.set(snapshot.id,snapshot);
- }
- return rows.map(row=>{
-   if(!isSharedAttempt(row))return row;
+  },
+  acceptRow(row:unknown):void{
+   if(!isSharedAttempt(row)){records.push(row);return;}
    const snapshot=byId.get(row.frozenRef);
    if(!snapshot)throw Error("Stored attempt references a missing immutable snapshot");
    const expanded=expandAttempt(row,snapshot);
    verifiedReconstructed.add(expanded.frozen);
-   // Reuse the already authenticated digest whenever this attempt is saved
-   // or exported; never re-hash the same large paper/key/media graph 1600 times.
    bodyCache.set(expanded.frozen,snapshot);
-   return expanded;
- });
+   records.push(expanded);
+  },
+  result():{readonly records:readonly unknown[];readonly snapshots:readonly SharedSnapshot[]}{
+   return {records,snapshots:[...byId.values()]};
+  }
+ };
+}
+/** Portable backup verification is strict. It must not silently discard
+ * damaged records under the same policy used for local emergency recovery. */
+export function reconstructRecords(rows:readonly unknown[],
+ snapshots:readonly unknown[]):unknown[]{
+ const collector=createStrictRecordCollector();
+ for(const snapshot of snapshots)collector.acceptSnapshot(snapshot);
+ for(const row of rows)collector.acceptRow(row);
+ return [...collector.result().records];
 }
 
 /** Recover one damaged local row at a time while preserving all independent
