@@ -34,6 +34,25 @@ function reconcile(a:Node,b:Node):void{
    for(const next of Array.from(b.attributes))
      if(a.getAttribute(next.name)!==next.value)a.setAttribute(next.name,next.value);
    const newNodes=Array.from(b.childNodes);
+   // Learning notebook cards have stable record identities, not positional
+   // identities. Reuse live buttons across selection, filtering and reorder.
+   // This is deliberately scoped to this list: never reuse answer controls
+   // across different exam questions or notebook-detail card identities.
+   if(a.hasAttribute("data-learning-list")&&b.hasAttribute("data-learning-list")){
+     const oldById=new Map(Array.from(a.children)
+       .filter(el=>el.hasAttribute("data-learning-id"))
+       .map(el=>[el.getAttribute("data-learning-id")!,el]));
+     for(let i=0;i<newNodes.length;i++){
+       const next=newNodes[i]!;
+       const key=next instanceof Element?next.getAttribute("data-learning-id"):null;
+       const prior=key?oldById.get(key):undefined;
+       const live=prior&&next instanceof Element&&sameIdentity(prior,next)?prior:next;
+       if(live===prior)reconcile(prior!,next);
+       if(a.childNodes[i]!==live)a.insertBefore(live,a.childNodes[i]??null);
+     }
+     while(a.childNodes.length>newNodes.length)a.lastChild?.remove();
+     return;
+   }
    // Reuse a Result article by frozen question revision ID across filters.
    for(let i=0;i<newNodes.length;i++){
      const next=newNodes[i]!;
