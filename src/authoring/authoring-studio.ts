@@ -570,10 +570,25 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
     status("Set section "+title+" to "+minutes+" minutes across every assigned question.");
    }catch(error){status(error instanceof Error?error.message:"Invalid section timer",true);}
   };
+  const commitSectionTimer=(title:string,input:HTMLInputElement)=>{
+   if(!input.value.trim()){
+    input.setAttribute("aria-invalid","true");
+    status("Enter a section duration explicitly. Use 0 only when you intend an untimed section.",true);
+    return;
+   }
+   const parsed=Number(input.value);
+   if(!Number.isSafeInteger(parsed)||parsed<0||parsed>600){
+    input.setAttribute("aria-invalid","true");
+    status("Section duration must be a whole number from 0 to 600.",true);
+    return;
+   }
+   input.removeAttribute("aria-invalid");
+   changeSectionTimer(title,parsed);
+  };
   find<HTMLInputElement>("pd-author-section-minutes").onchange=e=>
-   changeSectionTimer(question().section,Number((e.target as HTMLInputElement).value));
+   commitSectionTimer(question().section,e.target as HTMLInputElement);
   container.querySelectorAll<HTMLInputElement>("[data-author-section-timer]").forEach(input=>{
-   input.onchange=()=>changeSectionTimer(input.dataset.authorSectionTimer??"",Number(input.value));
+   input.onchange=()=>commitSectionTimer(input.dataset.authorSectionTimer??"",input);
   });
   for(const [id,key] of [["pd-author-min-choices","minSelections"],["pd-author-max-choices","maxSelections"],
     ["pd-author-partial-credit","partialCreditEach"],
@@ -592,7 +607,13 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    capture();field=(e.target as HTMLSelectElement).value as Field;void render();
   };
   click("pd-author-add-question",()=>{
-   capture();const fresh=newAuthoringQuestion();
+   capture();const current=question(),freshBase=newAuthoringQuestion();
+   // Default new questions to the current *physical* section and its timer.
+   // Otherwise a new question in an existing section silently re-introduces
+   // conflicting per-question duration values.
+   const inherited=authoringSections(active()).find(s=>s.name===current.section);
+   const fresh={...freshBase,section:current.section,
+     sectionMinutes:inherited?.minutes??current.sectionMinutes??15};
    changeDraft(d=>({...d,questions:[...d.questions,fresh]}));
    questionId=fresh.id;field=initialField;void render();
   });
