@@ -25,7 +25,11 @@ function reconcile(a:Node,b:Node):void{
    // active focus, caret, scroll positions and attached native state.
    if(a.isEqualNode(b))return;
    for(const old of Array.from(a.attributes))
-     if(!b.hasAttribute(old.name))a.removeAttribute(old.name);
+     // <details open> is transient, explicitly user-controlled state. Do not
+     // collapse keyboard help simply because an answer/flag was saved.
+     if(!b.hasAttribute(old.name)&&
+       !(a instanceof HTMLDetailsElement&&old.name==="open"))
+       a.removeAttribute(old.name);
    for(const next of Array.from(b.attributes))
      if(a.getAttribute(next.name)!==next.value)a.setAttribute(next.name,next.value);
    const oldNodes=Array.from(a.childNodes),newNodes=Array.from(b.childNodes);
