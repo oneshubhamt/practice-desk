@@ -39,7 +39,15 @@ function reconcile(a:Node,b:Node):void{
      if(a.id==="result-review"&&next instanceof Element&&next.hasAttribute("data-review-id")){
        const id=next.getAttribute("data-review-id");
        const existing=Array.from(a.children).find(el=>el.getAttribute("data-review-id")===id);
-       if(existing&&existing!==a.childNodes[i])a.insertBefore(existing,a.childNodes[i]??null);
+       if(existing){
+         if(existing!==a.childNodes[i])a.insertBefore(existing,a.childNodes[i]??null);
+         reconcile(existing,next);
+       }else{
+         // Insert new filtered-in articles before still-live keyed siblings;
+         // replacing by index would discard those siblings' native drafts.
+         a.insertBefore(next,a.childNodes[i]??null);
+       }
+       continue;
      }
      const current=a.childNodes[i];
      if(current)reconcile(current,next);
