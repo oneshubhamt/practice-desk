@@ -17,6 +17,82 @@ export const isAttempt=(x:unknown):x is GenericAttempt=>!!x&&typeof x==="object"
 export const isPackage=(x:unknown):x is PackageRecord=>!!x&&typeof x==="object"&&(x as PackageRecord).recordType==="generic-package";
 export const isLearning=(x:unknown):x is LearningCard=>!!x&&typeof x==="object"&&(x as LearningCard).recordType==="learning-card";
 
+/** P48-4: saved browser and backup records are untrusted, including mutable
+ * session clocks and annotations outside the independently hashed paper/key.
+ * Do not permit undeclared fields to masquerade as certified evidence.
+ */
+function onlyFields(value:unknown,fields:readonly string[],location:string):void{
+ if(!value||typeof value!=="object"||Array.isArray(value)||
+    ![Object.prototype,null].includes(Object.getPrototypeOf(value)))
+   throw Error("Invalid "+location+" object");
+ for(const key of Object.keys(value))
+   if(!fields.includes(key))throw Error(location+"."+key+": unsupported field");
+}
+function validateSavedSessionEvidence(attempt:GenericAttempt):void{
+ const state=attempt.state,paper=attempt.frozen.paper;
+ onlyFields(state,["status","sectionIndex","questionIndex","elapsedMs","sectionElapsedMs",
+  "foregroundMs","responses","questionVisits","timingEvidenceVersion","completedSections",
+  "completedSectionTimings","visible","clockMs"],"saved session");
+ const validTime=(n:unknown):n is number=>typeof n==="number"&&Number.isFinite(n)&&n>=0;
+ if(!validTime(state.elapsedMs)||!validTime(state.sectionElapsedMs)||
+    !validTime(state.foregroundMs)||!Number.isFinite(state.clockMs)||
+    typeof state.visible!=="boolean"||
+    state.sectionElapsedMs>state.elapsedMs+0.001||
+    state.foregroundMs>state.elapsedMs+0.001)
+   throw Error("Invalid saved session clock/timing totals");
+ if(paper.timing.kind==="whole-paper"&&state.elapsedMs>paper.timing.durationMs+0.001)
+   throw Error("Invalid saved whole-paper timer duration");
+ if(paper.timing.kind==="sectional"){
+   const sectionId=paper.sections[state.sectionIndex]?.id;
+   const limit=paper.timing.sectionLimits.find(item=>item.sectionId===sectionId);
+   if(!limit||limit.durationMs!==null&&state.sectionElapsedMs>limit.durationMs+0.001)
+     throw Error("Invalid saved sectional timer duration");
+ }
+ if(!Array.isArray(state.completedSections)||state.completedSections.length>paper.sections.length||
+    state.completedSections.some((n,i)=>n!==i))
+   throw Error("Invalid saved completed-section sequence");
+ if(state.status==="paused"&&(paper.timing.kind==="untimed"||
+     paper.timing.pausePolicy==="forbidden"))
+   throw Error("Invalid saved paused exam policy");
+ if(state.questionVisits!==undefined)
+   for(const entry of state.questionVisits)
+     onlyFields(entry,["questionRevisionId","count"],"saved question visit");
+ if(state.completedSectionTimings!==undefined)
+   for(const entry of state.completedSectionTimings)
+     onlyFields(entry,["sectionId","sectionIndex","durationMs","reason"],"saved section timing");
+ let accumulated=0;
+ for(const row of state.responses){
+   onlyFields(row,["questionRevisionId","response","flagged","timeSpentMs",
+     "firstVisitMs","preFirstAnswerMs","firstViewedAt","firstAnsweredAt",
+     "answerChangeCount","answerEvents"],"saved response row");
+   if(typeof row.flagged!=="boolean")
+     throw Error("Invalid saved response flag");
+   accumulated+=row.timeSpentMs;
+   if(row.answerEvents!==undefined)
+     for(const event of row.answerEvents)
+       onlyFields(event,["at","from","to"],"saved answer change");
+ }
+ if(!Number.isFinite(accumulated)||accumulated>state.foregroundMs+0.001)
+   throw Error("Invalid saved foreground question-time total");
+ if(attempt.explanations!==undefined){
+   onlyFields(attempt.explanations,
+     paper.sections.flatMap(section=>section.questionRevisionIds),"saved explanations");
+   for(const explanation of Object.values(attempt.explanations))
+     if(typeof explanation!=="string"||explanation.length>20000)
+       throw Error("Invalid saved explanation text");
+ }
+ if(attempt.manualGrades!==undefined)
+   for(const grade of attempt.manualGrades)
+     onlyFields(grade,["questionRevisionId","marks","note","gradedAt"],"saved manual grade");
+ if(attempt.result!==undefined){
+   onlyFields(attempt.result,["items","snapshot"],"saved score");
+   onlyFields(attempt.result.snapshot,["earnedMarks","positiveMarks","penaltyMarks",
+    "correctCount","incorrectCount","unansweredCount","excludedCount","calculatedAt"],
+    "saved score snapshot");
+ }
+}
+
+
 /** Treat browser records and exported JSON as untrusted until their frozen inputs and responses validate. */
 export function validateGenericStoredRecord(value:unknown):RecordItem {
  if(value && typeof value==="object" && "saveRevision" in value){
@@ -24,14 +100,25 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
    if(typeof n!=="number"||!Number.isSafeInteger(n)||n<0)
      throw new Error("Invalid stored write revision");
  }
- if(isLearning(value))return validateLearningCard(value);
+ if(isLearning(value)){
+   onlyFields(value,["recordType","id","saveRevision","question","answer","stimuli","assets",
+     "examId","paperId","paperEdition","sectionTitle","sourceTitle","sourceAttemptId",
+     "explanation","note","errorLabel","customTopic","syllabusTopicId","bookmarked",
+     "createdAt","updatedAt","reviews"],"learning card");
+   return validateLearningCard(value);
+ }
  if(isPackage(value)){
+   onlyFields(value,["recordType","id","bundle","saveRevision"],"saved package");
    if(typeof value.id!=="string" || value.id!=="generic-package:"+value.bundle?.paper?.id)
      throw new Error("Invalid imported package record identity");
    validateExamPackage(value.bundle);
    return value;
  }
  if(!isAttempt(value))throw new Error("Unsupported generic history record");
+ onlyFields(value,["recordType","saveRevision","id","packageId","startedAt","updatedAt",
+   "finishedAt","frozen","state","result","manualGrades","sourceKeyReference",
+   "sourceReviewReference","completionReason","notebookLineage","practiceComposition",
+   "explanations"],"saved attempt");
  if(typeof value.id!=="string"||!value.id||value.id.length>200||
     typeof value.packageId!=="string"||
     !Number.isFinite(value.startedAt)||!Number.isFinite(value.updatedAt)||
@@ -43,6 +130,7 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
  if(!isVerifiedSharedFrozen(value.frozen))assertFrozenContent(value.frozen);
  const paper=value.frozen.paper;
  if(value.packageId!==paper.id)throw new Error("Attempt references an incorrect revision");
+ validateSavedSessionEvidence(value);
  const current=paper.sections[value.state.sectionIndex]?.questionRevisionIds[value.state.questionIndex];
  if(!current)throw new Error("Attempt cursor references an unknown question");
  if(value.finishedAt!==null && value.state.status!=="completed")
