@@ -21,7 +21,7 @@ export function drawWorkspaceScreen(owner:CoordinatorContext,):void{
    const currentSection=owner.attempt?.frozen.paper.sections[owner.attempt.state.sectionIndex];
    const currentQuestion=owner.attempt?.state.questionIndex;
    const screenKey=owner.view==="exam"?
-     "exam|"+owner.attempt?.id+"|"+owner.attempt?.state.sectionIndex+"|"+currentQuestion:
+     "exam|"+owner.attempt?.id:
      owner.view==="result"?"result|"+owner.attempt?.id+"|"+owner.resultTab:owner.view;
    const announcement=owner.view==="exam"?
      "Exam. "+(currentSection?.title??"Section")+", question "+((currentQuestion??0)+1)+
