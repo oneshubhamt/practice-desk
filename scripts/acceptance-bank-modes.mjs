@@ -217,6 +217,11 @@ for(const v of [
      localStorage.setItem(key,JSON.stringify(data));
    });
    await page.reload({waitUntil:"load"});
+   // The first Library markup is provisional until IDB/family hydration
+   // completes. Assert the *final* unavailable selection, not a transient
+   // startup-disabled Start button paired with an old/default family.
+   await page.waitForFunction(()=>document.querySelector("#g-import")?.disabled===false&&
+     document.querySelector("#g-family")?.value==="imported:unavailable");
    check(await page.locator("#g-start").isDisabled()&&
      await page.locator("#g-family").inputValue()==="imported:unavailable"&&
      (await page.locator(".generic-warning").allTextContents()).some(t=>t.includes("unavailable")),
