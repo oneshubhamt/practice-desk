@@ -194,13 +194,35 @@ function issuesFor(d:AuthoringDraft,existing:readonly ExamPackage[]):Publication
  }
  return issues;
 }
-/** This report has no side effects and cannot publish any draft or answer key. */
+/** Authoritative dry-run: a green readiness report includes the EXACT compiled,
+ * domain-validated immutable package that Publish will submit. An invalid draft
+ * or a latent compiler/domain error can never be labelled "Ready to publish".
+ * No persistent write, question-bank mutation or external effect is performed.
+ */
 export function inspectAuthoringPublication(
  draft:unknown,existing:readonly ExamPackage[]=[]
-):{readonly valid:boolean;readonly issues:readonly PublicationIssue[];readonly estimatedQuestions:number}{
- const d=validateAuthoringDraft(draft);
+):{readonly valid:boolean;readonly issues:readonly PublicationIssue[];
+ readonly estimatedQuestions:number;readonly compiled?:ExamPackage}{
+ let d:AuthoringDraft;
+ try{d=validateAuthoringDraft(draft);}
+ catch(error){
+  const reason=error instanceof Error?error.message:"Invalid authoring draft";
+  return {valid:false,issues:[{field:"Draft structure",reason}],estimatedQuestions:0};
+ }
  const issues=issuesFor(d,existing);
- return {valid:issues.length===0,issues,estimatedQuestions:d.questions.length};
+ if(issues.length)return {valid:false,issues,estimatedQuestions:d.questions.length};
+ try{
+  // Deliberately invoke the identical publisher (including exact frozen hash,
+  // question, key, paper, media and rule validation) that the Publish action uses.
+  const compiled=compileAuthoringPublication(d,existing);
+  return {valid:true,issues:[],estimatedQuestions:d.questions.length,compiled};
+ }catch(error){
+  if(error instanceof PublicationValidationError)
+   return {valid:false,issues:error.issues,estimatedQuestions:d.questions.length};
+  return {valid:false,issues:[{field:"Publication integrity",
+    reason:error instanceof Error?error.message:"Compiled package rejected"}],
+    estimatedQuestions:d.questions.length};
+ }
 }
 /** Generate content-addressed, SHA-256-validated exam data from the app-owned draft.
  * An unkeyed digest cannot authenticate the author or certify an exam source. */
