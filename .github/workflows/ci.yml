@@ -71,6 +71,8 @@ jobs:
         run: node scripts/acceptance-p48-architecture.mjs chromium
       - name: P48-3 retained Library/Result controls and manual draft safety (Chromium)
         run: node scripts/acceptance-p48-ux.mjs chromium
+      - name: P49–P52 hierarchical authoring, focused Exam DOM and remappable shortcuts (Chromium)
+        run: node scripts/acceptance-p49-p52-enhancements.mjs chromium
       - run: node scripts/acceptance-learning-lifecycle.mjs
       - run: node scripts/acceptance-session-policy.mjs
       - run: node scripts/acceptance-editorial-provenance.mjs
@@ -167,6 +169,8 @@ jobs:
         run: node scripts/acceptance-p48-architecture.mjs ${{ matrix.browser }}
       - name: P48-3 current-view retention and assessment safety (${{ matrix.browser }})
         run: node scripts/acceptance-p48-ux.mjs ${{ matrix.browser }}
+      - name: P49–P52 current advanced authoring and granular keyboard/Exam UX (${{ matrix.browser }})
+        run: node scripts/acceptance-p49-p52-enhancements.mjs ${{ matrix.browser }}
       - run: node scripts/acceptance-safari-fallback.mjs ${{ matrix.browser }}
       - name: P48-3 current UI screenshots (${{ matrix.browser }})
         if: always()
