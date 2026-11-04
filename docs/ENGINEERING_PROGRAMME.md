@@ -1,12 +1,14 @@
 # Practice Desk — Consolidated Engineering Programme
 
-**Canonical forward-looking implementation plan | Created 1 November 2026 | Branch `overhaul` | Status: P41–P46 + P47-0/1/2/3/4 AUTOMATED VERIFIED — DONE; P47-5A/5B/5C/5D + P47-6 AUTOMATED VERIFIED; P47-7 AUTOMATED VERIFIED — DONE; P48-1/2/3/4 + P52 AUTOMATED VERIFIED; P49/P50/P51 PREVIOUS CI GREEN BUT SOURCE-CORRECTNESS REOPENED; PHYSICAL/HUMAN RELEASE GATES OPEN; RELEASE HOLD**
+**Canonical forward-looking implementation plan | Created 1 November 2026 | Branch `overhaul` | Status: P41–P46 + P47-0/1/2/3/4 AUTOMATED VERIFIED — DONE; P47-5A/5B/5C/5D + P47-6 AUTOMATED VERIFIED; P47-7 AUTOMATED VERIFIED — DONE; P48-1/2/3/4 + P52 + P53 AUTOMATED VERIFIED; P49 GAPS ADDRESSED BY P53; P50/P51 REFINEMENT REMAINS OPEN; PHYSICAL/HUMAN RELEASE GATES OPEN; RELEASE HOLD**
 
 > **Single source of future work.** This programme consolidates the open recommendations of the **28 October 2026 architecture audit**, the **1 November source-verification/gap analysis**, the completed original-v11 feature-parity and visual programmes, the earlier architecture/state/data passes, and Passes 36–40 test-suite consolidation. **Historical reports remain preserved as evidence; they are not active development queues.** No change to application source, the question banks, the generated HTML, or `main` / `baseline/v11` is authorized merely by writing this plan.
 
+**Current verified handoff:** P53 source `666a628`, guarded standalone publisher `c054474`, [five-job CI 41864597927](https://github.com/oneshubhamt/practice-desk/actions/runs/41864597927) **5/5 success, 302/302 Node, 2,326,395-byte deterministic offline HTML**. P53 architecture/mapping corrections DONE; P50/P51 design gaps deliberately remain, plus excluded physical/human signoff. This supersedes the older P49–P52 handoff below; the earlier outcome remains valid as historical evidence.
+
 ## 0D. P53 — semantic taxonomy separation, accurate evidence and meaningful selectors (4 November 2026)
 
-**User authorization:** implement **P53 only**, not P54–P56, new question-bank content or physical/manual release. `overhaul` only. **Status at start:** production implementation committed; full post-change QA not yet verified. [Independent audit](audits/P49_P50_P51_INDEPENDENT_SOURCE_REAUDIT_2026-11-04.md) R49-1 through R49-5 is the source authority.
+**User authorization:** implement **P53 only**, not P54–P56, new question-bank content or physical/manual release. `overhaul` only. **Status: COMPLETE AND AUTOMATED VERIFIED (4 Nov 2026, D67).** Tested complete P53 application source `666a6284b5909bcabe0deeb36ef31bb61424dee6`, [source-gated five-job CI 41864597927](https://github.com/oneshubhamt/practice-desk/actions/runs/41864597927) **5/5 success, 302/302 Node, TypeScript, actual offline Chromium/Firefox/WebKit**. Guarded HTML publisher commit `c054474f5ab4ee2ca2b86baf3f29242a1923c42b` modifies *only* `Practice_Desk_Offline_Mock_Tests.html`. Standalone HTML **2,326,395 bytes**, deterministic SHA-256 `3cc7effb3a8142117adfa7ccbdffebf0ebe1b0dd7668d002bed9d32e544c5a06`. [Independent audit](audits/P49_P50_P51_INDEPENDENT_SOURCE_REAUDIT_2026-11-04.md) R49-1 through R49-5 is the source authority.
 
 | Five-step discipline | Source-led work and actual proof |
 |---|---|
@@ -18,7 +20,7 @@
 
 **Latest-source QA reconciliation (4 Nov):** CI [41843879906](https://github.com/oneshubhamt/practice-desk/actions/runs/41843879906) achieved 302/302 Node and green Chromium, Firefox and WebKit browser jobs, but the guarded publisher refused because an additional hardening patch to `src/learning/learning.ts` and a negative test landed after its tested source SHA. Those additions reject imported control characters before topic aggregation. This is an **untested-source guard, not a browser test failure**; rerun the entire 5-job matrix against the latest source before completion. No P54–P56, content, or physical manual release work is included.
 
-**Pass completion decision:** Pending actual new-source green CI; do not mark complete from the prior P49–52 run or `[skip ci]` commits. Do not silently expand into P54/P55.
+**Pass completion decision: P53 CLOSED to its exact source-tested scope.** 302/302 Node tests and strict TypeScript; all P53 offline authoring→publish→one actual exam section with Labour+Economy→topicless root→readable subject-filter→frozen exam browser journeys passed on Chromium, Firefox and WebKit. Existing P49/P50/P51/CGL/Q62/FSRS/backup-v4/195px+140% tests also passed. Guarded HTML publisher succeeded **only** after latest-source five-job rerun; the preceding `41843879906` remained failed because publisher properly detected a post-test source change. [CI 41864597927](https://github.com/oneshubhamt/practice-desk/actions/runs/41864597927) is the authoritative current source evidence, not the old 296-test run. **P54 (real Wordgard preview and section authoring), P55 (Learning DOM refinement), P56 (independent re-audit) stay OPEN/unimplemented; user-deferred banks/manual devices/release/merge still HOLD.**
 
 ## 0C. P49/P50/P51 independent source re-audit — reopened 4 November 2026
 
