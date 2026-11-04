@@ -95,6 +95,27 @@ test("P49 published labels roll up to subject/topic/subtopic without inventing m
  assert.deepEqual(paths,[["Economy"],["Economy","Inflation"],["Economy","Inflation","CPI"]]);
  assert.equal(a.frozen.questions[0].content.topicIds.length,3);
 });
+test("P49 real completed attempts aggregate full author and self-labelled paths separately",()=>{
+ const pkg=compileAuthoringPublication(paper()),start=Date.UTC(2026,10,4,8);
+ const attempt=startGenericAttempt(pkg,"p49-timed",start);
+ const finished=transitionGenericAttempt(attempt,{type:"TICK",nowMs:start+30*60*1000},
+  new Map(pkg.questions.map(q=>[q.id,q])));
+ assert.notEqual(finished.finishedAt,null,"actual sectional expiry must finish both sections");
+ const original=addLearningCard(finished,pkg.questions[0].id,new Date(start+30*60*1000).toISOString());
+ const card=validateLearningCard({...original,syllabusTopicId:"labour",
+  customTopic:"Labour Codes",customSubtopic:"Wages"});
+ const metrics=topicMetrics([finished],[card]).filter(x=>x.kind==="hierarchy");
+ const label=x=>metrics.find(m=>m.label===x);
+ assert.equal(label("Economy")?.total,1);
+ assert.equal(label("Economy › Inflation")?.total,1);
+ assert.equal(label("Economy › Inflation › CPI")?.total,1);
+ const root="Industrial Relations, Labour Codes and Social Security in India";
+ assert.equal(label(root+" › Labour Codes › Wages")?.total,1);
+ assert.equal(label(root)?.total,1);
+ assert.notEqual(label("Economy › Inflation › CPI")?.id,label(root+" › Labour Codes › Wages")?.id);
+ assert.equal(label("Economy › Inflation › CPI")?.evidence,"insufficient");
+ assert.throws(()=>validateLearningCard({...original,customSubtopic:"Wages"}),/Invalid learning card/);
+});
 const context={key:"a",alt:false,repeat:false,paused:false,
  focusedRadio:false,editable:false,blocked:false,allowFlagging:true};
 const C=(key,b,extra={})=>resolveExamShortcut({...context,key,...extra},b);
