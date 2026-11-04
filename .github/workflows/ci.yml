@@ -67,6 +67,8 @@ jobs:
         run: node scripts/acceptance-partial-recovery.mjs chromium
       - name: P48-1 actual offline CSP and injection rejection (Chromium)
         run: node scripts/acceptance-p48-security.mjs chromium
+      - name: P48-2 same-question retained DOM and cursor-only cold hydration (Chromium)
+        run: node scripts/acceptance-p48-architecture.mjs chromium
       - run: node scripts/acceptance-learning-lifecycle.mjs
       - run: node scripts/acceptance-session-policy.mjs
       - run: node scripts/acceptance-editorial-provenance.mjs
@@ -149,6 +151,8 @@ jobs:
         run: node scripts/acceptance-partial-recovery.mjs ${{ matrix.browser }}
       - name: P48-1 actual offline CSP and injection rejection (${{ matrix.browser }})
         run: node scripts/acceptance-p48-security.mjs ${{ matrix.browser }}
+      - name: P48-2 same-question DOM and cursor hydration (${{ matrix.browser }})
+        run: node scripts/acceptance-p48-architecture.mjs ${{ matrix.browser }}
       - run: node scripts/acceptance-safari-fallback.mjs ${{ matrix.browser }}
       - name: P47-3 real image dialog (${{ matrix.browser }})
         run: node scripts/acceptance-image-viewer.mjs ${{ matrix.browser }}
