@@ -1,6 +1,7 @@
 # Authoring and importing examination question banks
 
 **Current build:** Practice Desk overhaul. The app itself runs as one fully offline HTML file; imported banks and attempt records are device-local until exported. This guide describes actual implemented behavior, not a planned feature.
+
 **P48-1 import/authoring assurance, 4 Nov 2026:** [P48-1 five-job source-verified CI 41756480372](https://github.com/oneshubhamt/practice-desk/actions/runs/41756480372) **5/5 green, 280 Node**, all actual offline Chromium/Firefox/WebKit flows. The integrated Wordgard Publisher and strict simple-bank JSON importer now **reject unrecognised fields**; current SHA-256/contentHashes protect identity of frozen data against accidental changes but are not cryptographic user/publisher signatures. Real offline single-file CSP is hashed against the exact compiled inline runtime and blocks unrelated injected scripts/handlers. No bank content, authored source keys or six-kind/exam scoring policy changed. Unpublished Wordgard shelf still needs independent JSON export; the standard History backup does not include drafts. [Five-step security record](../ENGINEERING_PROGRAMME.md#p48-1--source-led-security-content-integrity-recovery-and-lean-legacy-closure-4-november-2026); physical Safari/mobile/IME/AT and overall P48 release unverified.
 
 ## P47-5D Wordgard Library Studio — authoring, validated publication and examination verified
