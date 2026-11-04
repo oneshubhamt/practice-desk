@@ -516,7 +516,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    const heading=container.querySelector<HTMLSelectElement>("#pd-author-syllabus-heading");
    if(subject.trim()&&heading)heading.value="";
    try{changeDraft(d=>({...d,questions:d.questions.map(q=>q.id===questionId?
-     {...q,subject,syllabusHeadingId:subject.trim()?"":q.syllabusHeadingId}:q)}));}
+     {...q,subject,syllabusHeadingId:subject.trim()?"":q.syllabusHeadingId??""}:q)}));}
    catch(error){status(error instanceof Error?error.message:"Invalid subject",true);}
    refreshSubjectSummary();
   };
@@ -526,7 +526,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    const subject=find<HTMLInputElement>("pd-author-subject");
    if(id)subject.value="";
    try{changeDraft(d=>({...d,questions:d.questions.map(q=>q.id===questionId?
-     {...q,syllabusHeadingId:id,subject:id?"":q.subject}:q)}));}
+     {...q,syllabusHeadingId:id,subject:id?"":q.subject??""}:q)}));}
    catch(error){status(error instanceof Error?error.message:"Invalid heading",true);}
    refreshSubjectSummary();
   };
