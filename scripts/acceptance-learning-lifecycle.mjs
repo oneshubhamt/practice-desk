@@ -85,6 +85,8 @@ try{
  check(await page.evaluate(()=>window.__p51LearningSummary===document.querySelector(".learning-summary")&&
    window.__p51NotebookInput===document.querySelector("#learning-note")),
    "P51 Learning filter redraw replaced unaffected summary or live notebook input");
+ const observed=await page.evaluate(()=>({note:document.querySelector("#learning-note")?.value,subtopic:document.querySelector("#learning-subtopic")?.value,topic:document.querySelector("#learning-topic")?.value}));
+ console.log("LEARNING-DRAFT-DIAG",JSON.stringify(observed));
  check(await page.locator("#learning-note").inputValue()==="Review source fundamentals"&&
    await page.locator("#learning-subtopic").inputValue()==="Specific recorded subtopic",
    "P51 unsaved notebook edits vanished during unrelated Learning redraw");
