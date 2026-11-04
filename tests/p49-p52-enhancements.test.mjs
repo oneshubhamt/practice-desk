@@ -11,6 +11,10 @@ import {validateExamPackage,startGenericAttempt,transitionGenericAttempt} from "
 import {scoreAttempt} from "../src/engine/scoring.ts";
 import {topicAncestors,topicPathId,parseTopicPathId,attributedTopicPath} from "../src/learning/syllabus-taxonomy.ts";
 import {addLearningCard,topicMetrics,validateLearningCard} from "../src/learning/learning.ts";
+import {makeBackup,verifyBackup} from "../src/history/backup.ts";
+import {reconstructRecords} from "../src/history/shared-store.ts";
+import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
+import {DEFAULT_PREFERENCES} from "../src/app/preferences.ts";
 import {DEFAULT_SHORTCUTS,resolveExamShortcut,readShortcutBindings,
  validateShortcutBindings,writeShortcutBindings,examShortcutHelp} from "../src/app/exam-shortcuts.ts";
 
@@ -151,4 +155,28 @@ test("P49 full-path IDs stay distinct even for visually identical joined labels"
  const b=topicAncestors(["Economy","Inflation"])[1];
  assert.equal(a.path.join(" › "),b.path.join(" › "));
  assert.notEqual(a.id,b.id);
+});
+
+test("P49 hierarchical Learning note and subtopic survive strict v4 backup and import",()=>{
+ const pkg=compileAuthoringPublication(paper());
+ const start=Date.UTC(2026,10,4,8,0);
+ const frozen=startGenericAttempt(pkg,"p49-roundtrip",start);
+ const completed=transitionGenericAttempt(frozen,{type:"TICK",nowMs:start+1800000},
+   new Map(pkg.questions.map(q=>[q.id,q])));
+ assert.notEqual(completed.finishedAt,null);
+ const base=addLearningCard(completed,pkg.questions[0].id,
+   new Date(start+1800000).toISOString());
+ const card=validateLearningCard({...base,
+   customTopic:"Labour Codes",customSubtopic:"Wage definitions",
+   syllabusTopicId:"labour",note:"Retain independently authored explanation"});
+ assert.doesNotThrow(()=>validateGenericStoredRecord(card));
+ const archive=makeBackup([completed,card],DEFAULT_PREFERENCES,
+   new Date(start+1900000).toISOString());
+ const checked=verifyBackup(JSON.parse(JSON.stringify(archive)));
+ const imported=reconstructRecords(checked.records,checked.snapshots);
+ const restored=imported.find(row=>row?.id===card.id);
+ assert.equal(validateGenericStoredRecord(restored).customSubtopic,"Wage definitions");
+ assert.equal(restored.note,"Retain independently authored explanation");
+ assert.throws(()=>validateGenericStoredRecord({...card,certifiedExamAuthority:true}),
+   /unsupported field/);
 });
