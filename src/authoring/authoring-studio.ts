@@ -104,11 +104,11 @@ function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Field):st
   '<label>Question kind<select id="pd-author-kind">'+kinds+'</select></label>'+
   '<label>Actual exam section (controls timing and navigation)<input id="pd-author-section" maxlength="100" value="'+escapeText(current.section)+'"></label>'+
   '<label>Academic subject (custom, not an exam section)<input id="pd-author-subject" maxlength="120" value="'+escapeText(current.subject??"")+'" placeholder="Leave blank for Unclassified"></label>'+
-  (syllabusForExam(draft.examId)?
-    '<label>Official broad syllabus subject (author-chosen)<select id="pd-author-syllabus-heading">'+
-      option("","Custom subject / Unclassified",current.syllabusHeadingId??"")+
-      syllabusForExam(draft.examId)!.headings.map(h=>option(h.id,h.label,current.syllabusHeadingId??"")).join("")+
-    '</select></label>':"")+
+  '<label>Official broad syllabus subject (author-chosen)<select id="pd-author-syllabus-heading"'+
+    (!syllabusForExam(draft.examId)?' disabled':'')+'>'+
+    option("",syllabusForExam(draft.examId)?"Custom subject / Unclassified":"No official catalogue for this exam",current.syllabusHeadingId??"")+
+    (syllabusForExam(draft.examId)?.headings??[]).map(h=>option(h.id,h.label,current.syllabusHeadingId??"")).join("")+
+    '</select></label>'+
   '<p class="fine pd-author-taxonomy-summary">Classification: '+
     escapeText(current.syllabusHeadingId?
       syllabusHeading(draft.examId,current.syllabusHeadingId)?.label??"Unknown heading":
@@ -485,6 +485,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
      changeDraft(d=>({...d,timingKind:"sectional",sectionNavigation:"sequential-locked"}));
      void render();
    }else updateMetadata(key,value);
+   if(key==="examId")refreshOfficialHeadingChoices();
   };
   for(const [id,key] of [["pd-author-early-submit","allowEarlySubmit"],
     ["pd-author-allow-review","allowReview"]] as const)
@@ -492,6 +493,23 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
       updateMetadata(key,(e.target as HTMLInputElement).checked);
   const tolerance=find<HTMLInputElement>("pd-author-tolerance");
   if(tolerance)tolerance.onchange=e=>updateQuestion("tolerance",Number((e.target as HTMLInputElement).value));
+  const refreshOfficialHeadingChoices=()=>{
+   const select=find<HTMLSelectElement>("pd-author-syllabus-heading");
+   const catalogue=syllabusForExam(active().examId);
+   const selected=question().syllabusHeadingId??"";
+   select.innerHTML=option("",catalogue?"Custom subject / Unclassified":"No official catalogue for this exam",selected)+
+     (catalogue?.headings??[]).map(h=>option(h.id,h.label,selected)).join("");
+   select.disabled=!catalogue;
+  };
+  const refreshSubjectSummary=()=>{
+   const q=question();
+   const value=q.syllabusHeadingId?
+     syllabusHeading(active().examId,q.syllabusHeadingId)?.label??"Unknown heading":
+     q.subject?.trim()||UNCLASSIFIED_SUBJECT;
+   const line=container.querySelector<HTMLElement>(".pd-author-taxonomy-summary");
+   if(line)line.textContent="Classification: "+value+
+     ". Section timers and subjects are independent; no classification is inferred.";
+  };
   // Timed examination sections and syllabus subjects are unrelated dimensions.
   find<HTMLInputElement>("pd-author-subject").onchange=e=>{
    const subject=(e.target as HTMLInputElement).value;
@@ -500,6 +518,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    try{changeDraft(d=>({...d,questions:d.questions.map(q=>q.id===questionId?
      {...q,subject,syllabusHeadingId:subject.trim()?"":q.syllabusHeadingId}:q)}));}
    catch(error){status(error instanceof Error?error.message:"Invalid subject",true);}
+   refreshSubjectSummary();
   };
   const heading=container.querySelector<HTMLSelectElement>("#pd-author-syllabus-heading");
   if(heading)heading.onchange=e=>{
@@ -509,6 +528,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    try{changeDraft(d=>({...d,questions:d.questions.map(q=>q.id===questionId?
      {...q,syllabusHeadingId:id,subject:id?"":q.subject}:q)}));}
    catch(error){status(error instanceof Error?error.message:"Invalid heading",true);}
+   refreshSubjectSummary();
   };
   for(const [id,key] of [["pd-author-section","section"],["pd-author-answer","answer"],
    ["pd-author-source","source"],["pd-author-topic","topic"],
