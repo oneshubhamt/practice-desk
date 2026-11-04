@@ -67,7 +67,7 @@ test("P53: exact source subject selection is validated; unknown APFC or orphaned
  ]}),/heading|syllabus/i);
  assert.throws(()=>validateAuthoringDraft({...paper(),questions:[
   {...paper().questions[0],topic:"",subtopic:"Wages"}
- ]}),/Subtopic/);
+ ]}),/subtopic/i);
  assert.throws(()=>validateAuthoringDraft({...paper(),questions:[
   {...paper().questions[0],subject:"Labour\\nCodes",syllabusHeadingId:""}
  ]}),/Invalid|topic/i);
