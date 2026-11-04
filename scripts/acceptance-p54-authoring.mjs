@@ -111,8 +111,11 @@ try{
    engine+" preview did not describe actual frozen exam rules: "+rules.slice(0,550));
  check(await page.locator("#pd-author-preview .pd-author-preview-controls[inert] input[type=checkbox]").count()===4,
    engine+" multiple-select preview does not reuse inert actual candidate controls");
- check((await page.locator("#pd-author-preview .pd-author-partial-examples").innerText()).includes("0.5 marks"),
-   engine+" partial marks not demonstrated from actual scoring");
+ const actualPartialExample=await page.locator("#pd-author-preview .pd-author-partial-examples").innerText();
+ check(actualPartialExample.includes("Select A, B, C (2 correct, 1 incorrect components)")&&
+   actualPartialExample.includes("1.5 marks"),
+   engine+" published scorer's 2 × 1 − 1 × 0.5 partial example differs from the actual preview: "+
+    actualPartialExample.slice(0,500));
  await shot("validated-multiple-desktop");
  for(const [i,[kind]] of answers.entries()){
   await page.locator("#pd-author-questions").selectOption(d.questions[i].id);
