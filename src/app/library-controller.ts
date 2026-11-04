@@ -158,7 +158,7 @@ export function renderLibraryHTML(owner:CoordinatorContext):string {
       '<button type="button" class="btn" id="g-author-open"'+(owner.loading?' disabled':'')+'>Author question bank</button></div>'+
       '<input type="file" id="g-file" accept=".json,.gz,application/json,application/gzip" hidden>'+
       '<p class="fine">Start with an editable <button type="button" class="textlink" id="g-bank-template">Download APFC/NAT bank template</button> (JSON). '+
-      'An authored simple bank may include a media array, question imageIds and optionImageIds. Prepare local images first; signed packages are never recompressed. Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section>'+
+      'An authored simple bank may include a media array, question imageIds and optionImageIds. Prepare local images first; content-hash-verified exam packages are never recompressed. Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section>'+
      '<aside class="home-side"><section class="panel pad paper-preview"><span class="eyebrow">SELECTED PAPER</span>'+
       '<h2>'+escapeText(selected?.title??"Choose a paper")+'</h2>'+
       '<p class="fine family-provenance">'+(family?.imported?

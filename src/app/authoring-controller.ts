@@ -21,7 +21,7 @@ export function createWorkspaceAuthoringStudio(owner:CoordinatorContext):ReturnT
      // path as ordinary imported papers. No separate mutable publication store.
      const persisted=await owner.save({recordType:"generic-package",
        id:"generic-package:"+signed.paper.id,bundle:signed});
-     if(!persisted)throw Error("The authenticated paper could not be committed; no new edition is available.");
+     if(!persisted)throw Error("The validated paper could not be saved; no new edition is available.");
      owner.packages.set(signed.paper.id,signed);
      owner.applyFamily(familyIdFor(signed,owner.builtinPaperIds));
      owner.choice=signed.paper.id;owner.singleSection=0;

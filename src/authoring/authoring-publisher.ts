@@ -176,7 +176,8 @@ export function inspectAuthoringPublication(
  const issues=issuesFor(d,existing);
  return {valid:issues.length===0,issues,estimatedQuestions:d.questions.length};
 }
-/** Generate authenticated exam content using only the app-owned draft contract. */
+/** Generate content-addressed, SHA-256-validated exam data from the app-owned draft.
+ * An unkeyed digest cannot authenticate the author or certify an exam source. */
 export function compileAuthoringPublication(
  input:unknown,existing:readonly ExamPackage[]=[]
 ):ExamPackage{

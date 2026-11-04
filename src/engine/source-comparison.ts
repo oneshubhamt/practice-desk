@@ -84,6 +84,15 @@ export function createSourceKeyReference(
 export function validateSourceKeyReference(attempt:GenericAttempt):void{
  const reference=attempt.sourceKeyReference;
  if(!reference)return;
+ if(typeof reference!=="object"||Array.isArray(reference)||
+    Object.keys(reference).some(key=>!["schema","paperId","sourcePaperRevisionId",
+      "sourceAnswerKeyRevisionId","contentHash","entries"].includes(key)))
+   throw Error("Invalid original source-key comparison fields");
+ if(!Array.isArray(reference.entries)||reference.entries.some(entry=>
+      !entry||typeof entry!=="object"||
+      Object.keys(entry).some(key=>!["questionRevisionId","originalOptionId",
+        "markingRule","sourceSemanticHash","comparable"].includes(key))))
+   throw Error("Invalid original source-key entry fields");
  if(reference.schema!==2||
     reference.paperId!==attempt.frozen.paper.paperId||
     typeof reference.sourcePaperRevisionId!=="string"||

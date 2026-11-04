@@ -77,7 +77,16 @@ export function createSourceReviewReference(
 
 export function validateSourceReviewReference(attempt:GenericAttempt):void{
  const ref=attempt.sourceReviewReference;
- if(!ref)return; // Pre-Pass-12 records stay valid; never backfill from a mutable library.
+ if(!ref)return; // Source/custom or unchanged reviewed papers have no source comparison.
+ if(typeof ref!=="object"||Array.isArray(ref)||
+   Object.keys(ref).some(key=>!["schema","examId","paperId","targetPaperRevisionId",
+     "sourcePaperRevisionId","sourceAnswerKeyRevisionId","entries",
+     "stimuli","assets","contentHash"].includes(key)))
+   throw Error("Invalid source-review reference fields");
+ if(!Array.isArray(ref.entries)||ref.entries.some(entry=>
+   !entry||typeof entry!=="object"||
+   Object.keys(entry).some(key=>!["targetQuestionRevisionId","sourceQuestion","sourceAnswer"].includes(key))))
+   throw Error("Invalid source-review entry fields");
  const frozen=attempt.frozen;
  if(ref.schema!==1||frozen.paper.edition!=="reviewed"||
     ref.examId!==frozen.snapshot.examId||ref.paperId!==frozen.paper.paperId||
