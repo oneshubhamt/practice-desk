@@ -1202,7 +1202,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
 
 /* P46 extreme-zoom browser evidence: native text input's intrinsic 276px
    min-width widened the whole Learning document at 195px + 140% scale. */
-.learning-layout #learning-topic,.learning-layout #learning-subtopic{display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box}
+.learning-layout #learning-subject,.learning-layout #learning-topic,.learning-layout #learning-subtopic{display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box}
 
 /* P47-3: one native offline modal, no duplicate thumbnail source or saved bitmaps. */
 .generic-media-frame{display:block;min-width:0;max-width:100%;white-space:normal}
