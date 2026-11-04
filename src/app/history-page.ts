@@ -207,11 +207,12 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
   '<p class="fine" id="g-storage-last-failure">Last storage failure in this tab: '+
     esc(health.lastFailure??"none reported since opening")+'</p>'+
   '<p class="fine">No automatic or verified external backup is tracked. Export regularly and store copies outside the browser. Private browsing, file:// profiles and browser cleanup can remove local data.</p>'+
+  (storageLocked?'<p class="generic-warning" role="status"><b>Read-only recovery:</b> Export a backup of the verified records visible here. Retain the original browser profile/data for investigation: the file may exclude damaged or unreadable entries. Inspect and test a restore in a separate clean browser profile before any cleanup. Do not import into this locked database.</p>':"")+
   '<p id="g-storage-quota" class="fine" role="status">Checking browser storage estimate…</p>'+
   '<p id="g-storage-persist-status" class="fine" role="status"></p>'+
   '<button class="btn" id="g-storage-persist" type="button">Protect stored data</button>'+
   '</section><section class="panel pad"><h2>Backup & management</h2>'+
-  '<p class="fine">Backup v4 imports are checksum-verified and additive only. Large backups download as .json.gz (offline gzip), without changing the internal backup format. Existing records are never overwritten; export before deleting.</p>'+
+  '<p class="fine">Backup v4 uses an unkeyed SHA-256 corruption checksum (not a publisher signature) and additive-only imports. Large backups download as .json.gz (offline gzip), without changing the internal backup format. Existing records are never overwritten; export before deleting.</p>'+
   '<button class="btn danger" id="g-delete-completed" type="button"'+
   (done.length===0||loading||storageLocked?" disabled":"")+
   '>Delete all '+done.length+' completed attempts</button>'+
