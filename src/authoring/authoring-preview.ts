@@ -98,18 +98,18 @@ export function authoringDraftPreview(d:AuthoringDraft,q:AuthoringQuestion):stri
  let content:QuestionContent;
  if(q.kind==="single-choice"||q.kind==="multiple-select"){
   const options=q.options.map((doc,i)=>option(doc,letters[i]!));
-  content=q.kind==="single-choice"?{...base,kind:"single-choice",options} as QuestionContent:
+  content=q.kind==="single-choice"?{...base,kind:"single-choice",options} as unknown as QuestionContent:
    {...base,kind:"multiple-select",options,minSelections:q.minSelections??1,
-      maxSelections:q.maxSelections??4} as QuestionContent;
+      maxSelections:q.maxSelections??4} as unknown as QuestionContent;
  }else if(q.kind==="matching"){
   content={...base,kind:"matching",
     leftItems:q.leftItems.map((doc,i)=>option(doc,"L"+(i+1))),
-    rightItems:q.rightItems.map((doc,i)=>option(doc,letters[i]!))} as QuestionContent;
+    rightItems:q.rightItems.map((doc,i)=>option(doc,letters[i]!))} as unknown as QuestionContent;
  }else if(q.kind==="numeric-entry")content={...base,kind:"numeric-entry",numericRules:{allowNegative:true}};
  else if(q.kind==="true-false")content={...base,kind:"true-false"};
  else content={...base,kind:"free-response",responseRules:{minWords:1,maxWords:10000}};
  if(publicationPlainText(q.passage))content={...content,
-   stimulusId:"author-preview-stimulus"} as QuestionContent;
+   stimulusId:"author-preview-stimulus"} as unknown as QuestionContent;
  const revision={id:"author-preview-question",content} as QuestionRevision;
  const pkg={assets:d.assets,questions:[revision],answerKey:{entries:[]},
   paper:{sections:[{title:q.section,questionRevisionIds:[revision.id]}],
@@ -164,7 +164,7 @@ export function authoringPartialCreditExamples(pkg:ExamPackage):AuthoringPartial
   }
   if(!response)continue;
   const scored=scoreAttempt(pkg.paper,pkg.answerKey,pkg.questions,[{
-   questionRevisionId:q.id,timeSpentMs:0,answerChangeCount:0,response
+   questionRevisionId:q.id,timeSpentMs:0,answerChangeCount:0,flagged:false,response
   }],"2026-11-04T00:00:00.000Z").items.find(item=>item.questionRevisionId===q.id);
   if(scored)results.push({questionRevisionId:q.id,response,verdict:scored.verdict,
     marks:scored.marks,description});
