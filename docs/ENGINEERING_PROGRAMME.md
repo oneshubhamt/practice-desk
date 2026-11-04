@@ -6,6 +6,8 @@
 
 ## 0A. User-approved post-P48 useful enhancements — P49–P52 (4 November 2026)
 
+**Verification note:** Node24 strict TypeScript and 295 registered Node tests passed on 4 November. Chromium Learning UI and WebKit native collapsed-details cases were found by new cross-browser assertions; correcting the real Learning draft-state discrepancy and the test's explicit details opening precedes final P49–P52 signoff.
+
 **Implementation under source QA:** P49 explicit three-level topic paths in notebook/source analytics, P50 Wordgard metadata/sectional rules/partial-credit publication, P51 same-attempt keyed Exam shell and retained Learning controls, P52 local eight-action shortcut editor and safe resolver are committed with new Node and offline cross-browser tests. These are NOT yet declared verified; full CI is the gate. Prior failed TypeScript runs are intentionally recorded and corrected rather than changing compiler strictness.
 
 **Approval:** implement four *software* improvements on `overhaul`; **explicitly exclude** new validated APFC/CAT/UPSC/RBI content banks and physical Mac/iOS/Android, real screen-reader/IME, operating-system recovery, human visual signoff and release/merge. This is the single active programme for the newly approved work; P41–P48 retain their tested status, and `main`/`baseline/v11` remain untouched.
