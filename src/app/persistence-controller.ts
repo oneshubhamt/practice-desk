@@ -58,7 +58,7 @@ export const downloadHistoryBackup=async (owner:CoordinatorContext):Promise<void
        (owner.storageFault?"_UNSAVED_RECOVERY":"")+exportFile.extension;
      document.body.append(link);link.click();link.remove();
      window.setTimeout(()=>URL.revokeObjectURL(url),2000);
-     if(owner.storageFault){owner.warning="Recovery file exported: it contains only currently accessible, validated records. Damaged or unreadable entries may be absent. Preserve the original browser profile and verify restoration in a separate clean profile before any cleanup.";owner.draw();}
+     if(owner.storageFault){owner.warning="Emergency recovery file exported: only currently accessible, validated records are included. Damaged or unreadable entries may be absent. Preserve the original browser profile and verify restoration in a separate clean profile before any cleanup.";owner.draw();}
    }catch(error){owner.warning=error instanceof Error?"Backup failed: "+error.message:"Backup failed";owner.draw();}
  };
 
