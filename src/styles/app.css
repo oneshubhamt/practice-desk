@@ -1492,3 +1492,11 @@ html[data-theme="dark"] .pd-author-studio .pd-author-preview-choice>span{
 .display-shortcuts .generic-actions{gap:6px;flex-wrap:wrap;margin-top:12px}
 #shortcut-status{min-height:1.4em;overflow-wrap:anywhere}
 @media(max-width:260px){.shortcut-bindings{grid-template-columns:minmax(0,1fr)}}
+
+/* P53: explicit semantic subject filters are narrow-view safe; nested hierarchy
+ * sits in the existing horizontally scrollable metrics table, not in body. */
+.learning-layout #learning-hierarchy-root,.learning-insights #learning-hierarchy-root{display:block;max-width:100%;width:100%;min-width:0;box-sizing:border-box;margin-bottom:12px}
+.learning-hierarchy-level[data-depth="2"]{padding-inline-start:0.65rem}
+.learning-hierarchy-level[data-depth="3"]{padding-inline-start:1.3rem}
+.pd-author-taxonomy-summary{grid-column:1/-1;overflow-wrap:anywhere}
+.pd-author-meta #pd-author-subject,.pd-author-meta #pd-author-syllabus-heading{min-width:0;max-width:100%;width:100%;box-sizing:border-box}
