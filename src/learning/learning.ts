@@ -53,6 +53,7 @@ export function validateLearningCard(input:unknown):LearningCard{
     typeof raw.sourceAttemptId!=="string"||!raw.sourceAttemptId||raw.sourceAttemptId.length>200||
     typeof raw.note!=="string"||raw.note.length>8000||
     typeof raw.customTopic!=="string"||raw.customTopic.length>120||
+    /[\u0000-\u001f\u007f]/u.test(raw.customTopic)||
     (raw.customSubject!==undefined&&
       (typeof raw.customSubject!=="string"||raw.customSubject.length>120||
        /[\u0000-\u001f\u007f]/u.test(raw.customSubject)||
