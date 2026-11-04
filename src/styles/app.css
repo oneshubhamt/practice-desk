@@ -1480,3 +1480,15 @@ html[data-theme="dark"] .pd-author-studio .pd-author-preview-choice>span{
  .pd-author-validation ol{padding-left:18px}
  .pd-author-studio label.pd-author-publish-consent{padding:5px 0}
 }
+
+/* P52: keyboard map stays inside the floating panel's own scrollport. */
+.display-panel{max-height:min(78vh,720px);overflow-y:auto;overscroll-behavior:contain}
+.display-shortcuts{margin-top:12px;padding:9px 0;border-top:1px solid var(--line)}
+.display-shortcuts>summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--ink)}
+.display-shortcuts>.fine{font-size:11px;line-height:1.45}
+.shortcut-bindings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.shortcut-binding-field{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:650;min-width:0}
+.shortcut-binding-field select{max-width:100%;min-width:0;padding:7px;border:1px solid var(--border-strong);border-radius:7px;background:var(--panel);color:var(--ink);font-size:12px}
+.display-shortcuts .generic-actions{gap:6px;flex-wrap:wrap;margin-top:12px}
+#shortcut-status{min-height:1.4em;overflow-wrap:anywhere}
+@media(max-width:260px){.shortcut-bindings{grid-template-columns:minmax(0,1fr)}}
