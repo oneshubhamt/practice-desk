@@ -1500,3 +1500,23 @@ html[data-theme="dark"] .pd-author-studio .pd-author-preview-choice>span{
 .learning-hierarchy-level[data-depth="3"]{padding-inline-start:1.3rem}
 .pd-author-taxonomy-summary{grid-column:1/-1;overflow-wrap:anywhere}
 .pd-author-meta #pd-author-subject,.pd-author-meta #pd-author-syllabus-heading{min-width:0;max-width:100%;width:100%;box-sizing:border-box}
+
+/* P54: one section-wide authoring timer, meaningful real controls in preview.
+ * Keep table overflow inside its scroll region, never on the 195px document. */
+.pd-author-section-manager{margin:12px 0;border:1px solid var(--line);border-radius:11px;padding:10px;min-width:0;max-width:100%}
+.pd-author-section-manager summary{font-weight:750;cursor:pointer;overflow-wrap:anywhere}
+.pd-author-section-manager .scroll-table{max-width:100%;min-width:0;overflow-x:auto}
+.pd-author-section-table{width:100%;min-width:0}
+.pd-author-section-table :is(td,th){padding:9px 10px;text-align:left;vertical-align:middle;overflow-wrap:anywhere}
+.pd-author-studio .pd-author-section-time-label{display:block;min-width:74px;max-width:150px}
+.pd-author-studio .pd-author-section-time-label input{width:100%;max-width:100%;box-sizing:border-box}
+.pd-author-preview-question{border:1px solid var(--line);border-radius:10px;padding:clamp(8px,2vw,16px);min-width:0}
+.pd-author-preview-controls[inert]{cursor:default;opacity:1}
+.pd-author-preview-controls .generic-response-group{border:0;padding:0;min-width:0}
+.pd-author-preview-controls :is(input,textarea,select,button){pointer-events:none}
+.pd-author-preview-controls .generic-choices{min-width:0;max-width:100%}
+.pd-author-effective-rules{min-width:0;max-width:100%;margin-top:12px;overflow-wrap:anywhere}
+.pd-author-effective-rules table{width:100%;border-collapse:collapse}
+.pd-author-effective-rules :is(th,td){padding:7px;border-bottom:1px solid var(--line);text-align:left}
+.pd-author-effective-rules ul,.pd-author-partial-examples ul{padding-inline-start:1.4rem}
+.pd-author-preview-content .pd-author-worked-text{max-width:100%;min-width:0}
