@@ -7,7 +7,8 @@ import {validateExamPackage} from "../app/exam-package.ts";
 import type {AuthoringDraft,AuthoringQuestion} from "./authoring-draft.ts";
 import {validateAuthoringDraft} from "./authoring-draft.ts";
 import type {CorrectAnswer,AnswerKeyEntry,AnswerKeyRevision} from "../domain/answer-key.ts";
-import type {PaperRevision,SectionDefinition} from "../domain/exam.ts";
+import type {PaperRevision,SectionDefinition,TimingPolicy} from "../domain/exam.ts";
+import {topicAncestors} from "../learning/syllabus-taxonomy.ts";
 import type {QuestionContent,QuestionRevision,QuestionKind,StimulusDefinition,ImageAsset} from "../domain/question.ts";
 import type {RichBlock,RichDocument,RichInline} from "../domain/rich-document.ts";
 import {validateRichDocument} from "../domain/rich-document.ts";
@@ -130,8 +131,20 @@ function issuesFor(d:AuthoringDraft,existing:readonly ExamPackage[]):Publication
   put("Paper ID","Replace the placeholder with a stable ID using letters, digits, _ or -");
  if(/^untitled question bank$/i.test(d.title.trim()))
   put("Paper title","Give this bank a meaningful title");
- if(d.durationMinutes!==0&&!Number.isSafeInteger(d.durationMinutes))
-  put("Duration","Use whole minutes (0 for untimed)");
+ const timingKind=d.timingKind??(d.durationMinutes?"whole-paper":"untimed");
+ if(timingKind==="whole-paper"&&
+    (!d.durationMinutes||!Number.isSafeInteger(d.durationMinutes)))
+  put("Duration","Whole-paper timing requires positive whole minutes");
+ if(timingKind==="sectional"&&d.sectionNavigation!=="sequential-locked")
+  put("Section navigation","Sectional timers require sequential-locked sections");
+ const sectionTimes=new Map<string,number>();
+ for(const q of d.questions){
+  if(timingKind!=="sectional")break;
+  const duration=q.sectionMinutes??15;
+  if(sectionTimes.has(q.section)&&sectionTimes.get(q.section)!==duration)
+    put("Sectional timing","All questions in section "+q.section+" must have the same duration");
+  sectionTimes.set(q.section,duration);
+ }
  if(d.revision!==Math.trunc(d.revision))put("Revision","Revision must be a positive integer");
  const fullId=revisionId(d);
  if(existing.some(x=>x.paper.id===fullId))
@@ -151,6 +164,19 @@ function issuesFor(d:AuthoringDraft,existing:readonly ExamPackage[]):Publication
    q.leftItems.forEach((o,i)=>{if(!hasContent(o))item("Left "+(i+1),"Matching item cannot be blank");});
    q.rightItems.forEach((o,i)=>{if(!hasContent(o))item("Right "+letters[i],"Matching item cannot be blank");});
   }
+  if(q.kind==="multiple-select"){
+   try{
+    const key=keyFrom(q);
+    if(key.kind==="multiple-select"&&
+       (key.optionIds.length<(q.minSelections??1)||
+        key.optionIds.length>(q.maxSelections??4)))
+       item("Answer key","Correct option count must respect the published selection bounds");
+   }catch{/* Separate answer-key error below has exact input details. */}
+  }
+  if((q.partialCreditEach??0)>0&&q.kind!=="multiple-select"&&q.kind!=="matching")
+   item("Partial credit","Only matching and multiple-select support per-component credit");
+  if((q.partialPenaltyEach??0)>0&&!q.partialCreditEach)
+   item("Partial credit","A component penalty requires a positive partial-credit award");
   if(q.kind==="free-response"&&!hasContent(q.explanation)&&!q.answer.trim())
    item("Manual rubric","Supply an explanation or written model answer for manual evaluation");
   try{keyFrom(q);}catch(e){item("Answer key",e instanceof Error?e.message:"Invalid answer");}
@@ -201,8 +227,13 @@ export function compileAuthoringPublication(
   const prompt=normalized(q.prompt),explanation=normalized(q.explanation),passage=normalized(q.passage);
   const stemRefs=[...new Set([...resources(prompt),...resources(explanation)])];
   addRefs(stemRefs);
+  const hierarchy=q.topic?.trim()?
+    topicAncestors([q.section.trim(),q.topic.trim(),...(q.subtopic?.trim()?[q.subtopic.trim()]:[])])
+      .map(n=>n.id):[];
   const baseContent={
    prompt:publicationPlainText(prompt).slice(0,20000),
+   ...(hierarchy.length?{topicIds:hierarchy as QuestionContent["topicIds"]}:{}),
+   ...(q.difficulty?{tags:["difficulty:"+q.difficulty]}:{}),
    richPrompt:prompt,
    ...(hasContent(explanation)?{richExplanation:explanation}:{}),
    ...(stemRefs.length?{assetIds:stemRefs}:{}),
@@ -225,7 +256,8 @@ export function compileAuthoringPublication(
   if(q.kind==="single-choice"||q.kind==="multiple-select"){
    const options=q.options.map((doc,i)=>item(doc,letters[i]!));
    content=q.kind==="single-choice"?{...baseContent,kind:q.kind,options}:
-    {...baseContent,kind:q.kind,options,minSelections:1,maxSelections:4};
+    {...baseContent,kind:q.kind,options,
+      minSelections:q.minSelections??1,maxSelections:q.maxSelections??4};
   }else if(q.kind==="numeric-entry"){
    content={...baseContent,kind:q.kind,numericRules:{allowNegative:true}};
   }else if(q.kind==="true-false"){
@@ -248,7 +280,14 @@ export function compileAuthoringPublication(
   };
   const signed={id:revisionId,questionId,revision:d.revision,content,editorial};
   questions.push({...signed,contentHash:questionRevisionHash(signed)});
-  entries.push({questionRevisionId:revisionId,answer:keyFrom(q)});
+  const partialCredit=q.partialCreditEach??0;
+  entries.push({questionRevisionId:revisionId,answer:keyFrom(q),
+    ...(partialCredit>0&&["multiple-select","matching"].includes(q.kind)?{
+      scoringOverride:{correctMarks:d.marksCorrect,incorrectMarks:d.marksIncorrect,
+        unansweredMarks:0,partialCredit:{kind:"per-correct-component" as const,
+          marksPerCorrectComponent:partialCredit,
+          penaltyPerIncorrectComponent:q.partialPenaltyEach??0,floorAtZero:true}}
+    }:{})});
   if(hasContent(explanation)||q.kind==="free-response"){
    const plain=hasContent(explanation)?publicationPlainText(explanation):q.answer.trim();
    if(plain)explanationTexts[revisionId]=plain.slice(0,20000);
@@ -260,13 +299,23 @@ export function compileAuthoringPublication(
  }));
  const answerBase={id:keyId,paperId,revision:d.revision,entries};
  const answerKey:AnswerKeyRevision={...answerBase,contentHash:answerKeyRevisionHash(answerBase)};
+ const kind=d.timingKind??(d.durationMinutes?"whole-paper":"untimed");
+ const sectionTimes=new Map(d.questions.map(q=>[q.section,q.sectionMinutes??15]));
+ const timing:TimingPolicy=kind==="sectional"?{
+   kind:"sectional",sectionLimits:sections.map(section=>({
+     sectionId:section.id,durationMs:(sectionTimes.get(section.title)??15)*60000||null
+   })),transition:d.sectionTransition??"manual",
+   allowEarlySubmit:d.allowEarlySubmit??true,pausePolicy:d.pausePolicy??"allowed"
+ }:kind==="whole-paper"?{
+   kind:"whole-paper",durationMs:d.durationMinutes*60000,pausePolicy:d.pausePolicy??"allowed"
+ }:{kind:"untimed"};
  const paperBase={
   id:base as PaperRevisionId,paperId,revision:d.revision,edition:d.edition,sections,
   answerKeyRevisionId:answerKey.id,
-  timing:d.durationMinutes?{kind:"whole-paper" as const,durationMs:d.durationMinutes*60000,
-   pausePolicy:"allowed" as const}:{kind:"untimed" as const},
-  navigation:{questionNavigation:"free" as const,sectionNavigation:"free" as const,
-   allowFlagging:true,allowReview:true},
+  timing,
+  navigation:{questionNavigation:d.questionNavigation??"free",
+   sectionNavigation:d.sectionNavigation??"free",
+   allowFlagging:true,allowReview:d.allowReview??true},
   scoring:{defaultRule:{correctMarks:d.marksCorrect,incorrectMarks:d.marksIncorrect,
    unansweredMarks:0}}
  };
