@@ -208,9 +208,11 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
        '<select id="learning-error"><option value="">Not classified</option>'+
        ERROR_LABELS.map(label=>'<option value="'+label+'"'+(selected.errorLabel===label?" selected":"")+'>'+
          esc(label)+'</option>').join("")+'</select>'+
-       '<label class="picker" for="learning-topic">Specific topic (optional)</label>'+
-       '<input id="learning-topic" maxlength="120" value="'+esc(selected.customTopic)+'" placeholder="Your own subtopic label">'+
-       (syllabusForExam(selected.examId)?'<label class="picker" for="learning-syllabus">Broad syllabus heading (optional, manually chosen)</label>'+
+       '<label class="picker" for="learning-topic">Topic (your own label, optional)</label>'+
+       '<input id="learning-topic" maxlength="120" value="'+esc(selected.customTopic)+'" placeholder="e.g. Labour Codes">'+
+       '<label class="picker" for="learning-subtopic">Subtopic (optional; requires Topic)</label>'+
+       '<input id="learning-subtopic" maxlength="120" value="'+esc(selected.customSubtopic??"")+'" placeholder="e.g. Wage definitions">'+
+       (syllabusForExam(selected.examId)?'<label class="picker" for="learning-syllabus">Subject / broad syllabus heading (optional, manually chosen)</label>'+
          '<select id="learning-syllabus"><option value="">No heading assigned</option>'+
          syllabusForExam(selected.examId)!.headings.map(h=>'<option value="'+esc(h.id)+'"'+
            (selected.syllabusTopicId===h.id?' selected':'')+'>'+esc(h.label)+'</option>').join("")+'</select>':'')+
@@ -228,7 +230,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
         '<div><span>'+esc(label)+'</span><b>'+count+' card'+(count===1?"":"s")+'</b></div>').join("")+'</div>':
         '<p class="fine">Label errors in your notebook to see recurring patterns here.</p>')+'</section>'+
     '<section class="panel pad learning-insights"><h2>Topic performance</h2>'+
-    '<p class="fine">Official CGL section labels are the default broad topics. Imported exam topic IDs and your explicitly labelled subtopics remain separate; no topic is guessed. Five answered items minimum for measured evidence. Skips are excluded from accuracy.</p>'+
+    '<p class="fine">Section, source tags and user-assigned Subject › Topic › Subtopic paths are displayed separately. Parent levels roll up observed answers; sibling labels in different subjects remain distinct. Five answered observations minimum for measured evidence; no topic is inferred from text and no proficiency is assumed. Skips are excluded from accuracy.</p>'+
     '<div class="scroll-table"><table><thead><tr><th>Exam</th><th>Type</th><th>Topic</th><th>Answered / total</th><th>Distinct answered</th><th>Answering attempts</th><th>Accuracy</th><th>Evidence</th></tr></thead><tbody>'+
      (topics.length?topics.map(t=>'<tr><td>'+esc(t.examId)+'</td><td>'+esc(t.kind)+'</td><td>'+esc(t.label)+'</td><td>'+
        t.answered+' / '+t.total+'</td><td>'+t.distinctAnsweredQuestions+'</td><td>'+t.answeredAttempts+
@@ -309,10 +311,11 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     try{
       const note=root.querySelector<HTMLTextAreaElement>("#learning-note")!.value;
       const customTopic=root.querySelector<HTMLInputElement>("#learning-topic")!.value.trim();
+      const customSubtopic=root.querySelector<HTMLInputElement>("#learning-subtopic")!.value.trim();
       const syllabusTopicId=root.querySelector<HTMLSelectElement>("#learning-syllabus")?.value||undefined;
       const errorLabel=root.querySelector<HTMLSelectElement>("#learning-error")!.value as ErrorLabel|"";
       const bookmarked=root.querySelector<HTMLInputElement>("#learning-bookmark")!.checked;
-      if(!await host.save(validateLearningCard({...selected,note,customTopic,
+      if(!await host.save(validateLearningCard({...selected,note,customTopic,customSubtopic,
          ...(syllabusForExam(selected.examId)?{syllabusTopicId}:{}),errorLabel:errorLabel||null,
          bookmarked,updatedAt:now().toISOString()}))){
         message="Notebook changes could not be durably saved. Export a recovery backup.";draw();return;
