@@ -69,6 +69,8 @@ jobs:
         run: node scripts/acceptance-p48-security.mjs chromium
       - name: P48-2 same-question retained DOM and cursor-only cold hydration (Chromium)
         run: node scripts/acceptance-p48-architecture.mjs chromium
+      - name: P48-3 retained Library/Result controls and manual draft safety (Chromium)
+        run: node scripts/acceptance-p48-ux.mjs chromium
       - run: node scripts/acceptance-learning-lifecycle.mjs
       - run: node scripts/acceptance-session-policy.mjs
       - run: node scripts/acceptance-editorial-provenance.mjs
@@ -98,6 +100,14 @@ jobs:
           retention-days: 14
       - run: node scripts/acceptance-platform.mjs chromium
       - run: node scripts/acceptance-safari-fallback.mjs chromium
+      - name: P48-3 current UI screenshots (chromium)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p48-3-ux-chromium
+          path: artifacts/p48-3-ux/*.png
+          if-no-files-found: ignore
+          retention-days: 14
       # All current browser functional contracts live in the capability suites.
       - name: P47-5D reviewable author → publish → review screenshots
         if: always()
@@ -155,7 +165,17 @@ jobs:
         run: node scripts/acceptance-p48-security.mjs ${{ matrix.browser }}
       - name: P48-2 same-question DOM and cursor hydration (${{ matrix.browser }})
         run: node scripts/acceptance-p48-architecture.mjs ${{ matrix.browser }}
+      - name: P48-3 current-view retention and assessment safety (${{ matrix.browser }})
+        run: node scripts/acceptance-p48-ux.mjs ${{ matrix.browser }}
       - run: node scripts/acceptance-safari-fallback.mjs ${{ matrix.browser }}
+      - name: P48-3 current UI screenshots (${{ matrix.browser }})
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p48-3-ux-${{ matrix.browser }}
+          path: artifacts/p48-3-ux/*.png
+          if-no-files-found: ignore
+          retention-days: 14
       - name: P47-3 real image dialog (${{ matrix.browser }})
         run: node scripts/acceptance-image-viewer.mjs ${{ matrix.browser }}
       - name: P47-3B offline import image preparation (${{ matrix.browser }})
