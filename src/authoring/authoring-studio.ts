@@ -579,7 +579,10 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
      if(field.dataset.authorSectionTimer===title)field.value=String(minutes);
     if(question().section===title)
      find<HTMLInputElement>("pd-author-section-minutes").value=String(minutes);
-    status("Set section "+title+" to "+minutes+" minutes across every assigned question.");
+    if(storageBlocked||lastSaveError)
+     status("Section updated in memory but NOT saved: "+(lastSaveError||"damaged local draft storage")+
+      ". Export a recovery copy before closing.",true);
+    else status("Set section "+title+" to "+minutes+" minutes across every assigned question.");
    }catch(error){status(error instanceof Error?error.message:"Invalid section timer",true);}
   };
   const commitSectionTimer=(title:string,input:HTMLInputElement)=>{
