@@ -4,7 +4,7 @@ import {minutes,examTimeRemaining} from "./exam-view.ts";
 
 import {transitionGenericAttempt} from "./exam-package.ts";
 
-import {resolveExamShortcut} from "./exam-shortcuts.ts";
+import {resolveExamShortcut,readShortcutBindings} from "./exam-shortcuts.ts";
 
 import type {CoordinatorContext} from "./coordinator-context.ts";
 
@@ -45,7 +45,7 @@ export const handleWorkspaceKeyboard=(owner:CoordinatorContext,event:KeyboardEve
      paused:owner.attempt.state.status==="paused",focusedRadio,editable,
      blocked:owner.imageViewer.isOpen()||Boolean(document.querySelector("dialog[open]"))||
        Boolean(displayPanel&&!displayPanel.hidden),
-     allowFlagging:owner.attempt.frozen.paper.navigation.allowFlagging});
+     allowFlagging:owner.attempt.frozen.paper.navigation.allowFlagging},readShortcutBindings());
    if(!command)return;
    if(command.kind==="navigate"){
      event.preventDefault();
