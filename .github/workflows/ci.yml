@@ -75,6 +75,8 @@ jobs:
         run: node scripts/acceptance-p49-p52-enhancements.mjs chromium
       - name: P53 actual mixed-subject authoring and filtered exam (Chromium)
         run: node scripts/acceptance-p53-taxonomy.mjs chromium
+      - name: P54 authoritative six-kind Wordgard, section timing and real partial-credit exam (Chromium)
+        run: node scripts/acceptance-p54-authoring.mjs chromium
       - name: Preserve P53 authored hierarchy visual evidence (Chromium)
         if: always()
         uses: actions/upload-artifact@v4
@@ -183,6 +185,16 @@ jobs:
         run: node scripts/acceptance-p49-p52-enhancements.mjs ${{ matrix.browser }}
       - name: P53 mixed-subject source taxonomy and practice builder (${{ matrix.browser }})
         run: node scripts/acceptance-p53-taxonomy.mjs ${{ matrix.browser }}
+      - name: P54 exact authoring preflight, true six-kind preview and scored advanced exam (${{ matrix.browser }})
+        run: node scripts/acceptance-p54-authoring.mjs ${{ matrix.browser }}
+      - name: Preserve actual P54 Wordgard desktop, phone and 195px screenshots (${{ matrix.browser }})
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p54-wordgard-ui-${{ matrix.browser }}
+          path: artifacts/p54-authoring/${{ matrix.browser }}-*.png
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Preserve P53 authored hierarchy visual evidence (${{ matrix.browser }})
         if: always()
         uses: actions/upload-artifact@v4
