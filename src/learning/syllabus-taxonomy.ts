@@ -82,7 +82,7 @@ export function attributedTopicPath(examId:string,subject:string,
  const heading=headingId?syllabusHeading(examId,headingId):undefined;
  if(headingId&&!heading)throw Error("Unknown syllabus heading");
  if(heading&&subject.trim())throw Error("Choose either an official syllabus heading or a custom subject");
- const root=heading?.label??subject.trim()||UNCLASSIFIED_SUBJECT;
+ const root=heading?.label??(subject.trim()||UNCLASSIFIED_SUBJECT);
  return validateTopicPath([root,...(topic.trim()?[topic.trim()]:[]),
    ...(subtopic.trim()?[subtopic.trim()]:[])]);
 }
