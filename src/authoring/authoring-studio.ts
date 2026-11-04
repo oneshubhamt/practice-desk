@@ -70,6 +70,7 @@ function option(value:string,label:string,selected:string):string{
 }
 function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Field):string{
  const applicable=fields(current.kind);
+ const timingKind=draft.timingKind??(draft.durationMinutes?"whole-paper":"untimed");
  const kinds=QUESTION_KINDS.map(k=>option(k,labels[k],current.kind)).join("");
  return '<details class="pd-author-paper-settings"><summary>Paper settings · '+escapeText(draft.title)+'</summary><div class="pd-author-meta">'+
   '<label>Paper title<input id="pd-author-title" maxlength="180" value="'+escapeText(draft.title)+'"></label>'+
@@ -81,9 +82,11 @@ function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Field):st
   '<label>Revision<input id="pd-author-revision" type="number" min="1" max="1000000" value="'+draft.revision+'"></label>'+
   '<label>Timing policy<select id="pd-author-timing-kind">'+
     ([["untimed","Untimed"],["whole-paper","Whole-paper countdown"],["sectional","Section-by-section countdown"]] as const)
-      .map(([value,label])=>option(value,label,draft.timingKind??(draft.durationMinutes?"whole-paper":"untimed"))).join("")+'</select></label>'+
-  '<label>Whole-paper duration (minutes)<input id="pd-author-duration" type="number" min="0" max="600" value="'+draft.durationMinutes+'"></label>'+
-  '<label>Pause policy<select id="pd-author-pause">'+
+      .map(([value,label])=>option(value,label,timingKind)).join("")+'</select></label>'+
+  '<label>Whole-paper duration (minutes)<input id="pd-author-duration" type="number" min="0" max="600" value="'+draft.durationMinutes+'"'+
+   (timingKind==="whole-paper"?"":' disabled title="Only used in whole-paper mode"')+'></label>'+
+  '<label>Pause policy<select id="pd-author-pause"'+
+   (timingKind==="untimed"?' disabled title="No timer to pause in untimed mode"':"")+'>'+
     ([["allowed","Allow pause"],["forbidden","No pause"]] as const)
       .map(([value,label])=>option(value,label,draft.pausePolicy??"allowed")).join("")+'</select></label>'+
   '<label>Question navigation<select id="pd-author-question-nav">'+
@@ -92,16 +95,25 @@ function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Field):st
   '<label>Section navigation<select id="pd-author-section-nav">'+
     ([["free","Free section movement"],["sequential-locked","Sequential locked"]] as const)
       .map(([value,label])=>option(value,label,draft.sectionNavigation??"free")).join("")+'</select></label>'+
-  '<label>Section expiry<select id="pd-author-section-transition">'+
+  '<label>Section expiry<select id="pd-author-section-transition"'+
+   (timingKind==="sectional"?"":' disabled title="Only used in sectional countdown mode"')+'>'+
     ([["manual","Stop and continue manually"],["automatic","Advance automatically"]] as const)
       .map(([value,label])=>option(value,label,draft.sectionTransition??"manual")).join("")+'</select></label>'+
   '<label class="pd-author-check"><input type="checkbox" id="pd-author-early-submit"'+
-    (draft.allowEarlySubmit!==false?" checked":"")+'> Permit early section submission</label>'+
+    (draft.allowEarlySubmit!==false?" checked":"")+
+     (timingKind==="sectional"?"":' disabled title="Only used in sectional countdown mode"')+
+     '> Permit early section submission</label>'+
   '<label class="pd-author-check"><input type="checkbox" id="pd-author-allow-review"'+
     (draft.allowReview!==false?" checked":"")+'> Release detailed answers after submission</label>'+
   '<label>Correct marks<input id="pd-author-correct" type="number" step="any" value="'+draft.marksCorrect+'"></label>'+
   '<label>Incorrect marks<input id="pd-author-wrong" type="number" max="0" step="any" value="'+draft.marksIncorrect+'"></label>'+
-  '</div></details><div class="pd-author-meta">'+
+  '</div><p class="fine pd-author-effective-policy-note" role="note">'+
+   (timingKind==="sectional"?
+     'Section timers, expiry and early-submission policies are active. Section movement must remain sequentially locked.':
+     timingKind==="whole-paper"?
+     'One shared whole-paper timer covers all sections. Their individual timers and expiry settings are saved but inactive.':
+     'Untimed mode has no countdown. Pause, expiry, section budgets and early-submission settings are inactive.')+
+   '</p></details><div class="pd-author-meta">'+
   '<label>Question kind<select id="pd-author-kind">'+kinds+'</select></label>'+
   '<label>Actual exam section (controls timing and navigation)<input id="pd-author-section" maxlength="100" value="'+escapeText(current.section)+'"></label>'+
   '<label>Academic subject (custom, not an exam section)<input id="pd-author-subject" maxlength="120" value="'+escapeText(current.subject??"")+'" placeholder="Leave blank for Unclassified"></label>'+
