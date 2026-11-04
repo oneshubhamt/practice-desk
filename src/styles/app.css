@@ -1204,6 +1204,14 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
    min-width widened the whole Learning document at 195px + 140% scale. */
 .learning-layout #learning-subject,.learning-layout #learning-topic,.learning-layout #learning-subtopic{display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box}
 
+/* P55: at 195px/140% the report panel's 160px minimum track exceeds
+ * its usable inner width. Keep the whole card readable in a minmax(0,1fr)
+ * track instead of clipping the page or hiding the report. */
+@media(max-width:300px){
+  .learning-report-list{grid-template-columns:minmax(0,1fr);min-width:0;max-width:100%}
+  .learning-report-list>div{min-width:0;overflow-wrap:anywhere}
+}
+
 /* P47-3: one native offline modal, no duplicate thumbnail source or saved bitmaps. */
 .generic-media-frame{display:block;min-width:0;max-width:100%;white-space:normal}
 .generic-workspace .generic-media-frame>.generic-figure{max-width:100%;height:auto}
