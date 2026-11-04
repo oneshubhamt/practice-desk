@@ -1,3 +1,4 @@
+import {reconcileSameExamQuestion} from "./exam-dom-reconcile.ts";
 /** Presentation-only screen renderer.
  * No URL/history, persistent storage, exam policy or navigation decisions.
  */
@@ -40,7 +41,12 @@ export function createScreenRenderer(root:HTMLElement):ScreenRenderer{
       return;
     }
     learning.hide();
-    root.innerHTML=p.html();
+    // Keep active DOM nodes and native focus for repeated events on the SAME
+    // exam question (answer, flag, pause). New questions/screens retain the
+    // existing predictable full replacement and heading-focus behavior.
+    if(p.screen==="exam"&&lastView==="exam"&&lastScreenKey===p.screenKey)
+      reconcileSameExamQuestion(root,p.html());
+    else root.innerHTML=p.html();
     if(lastScreenKey!==p.screenKey){
       lastScreenKey=p.screenKey;
       const announcer=document.getElementById("screen-announcement");
