@@ -125,9 +125,15 @@ try{
   if(kind==="matching"){
    check(await within.locator('select[data-match]').count()===4,
     engine+" matching did not show true exam dropdowns");
-   const content=await page.locator("#pd-author-preview").innerText();
-   check(!content.includes("Left one — Right A")&&content.includes("1-C"),
-    engine+" misleading positional matching preview / missing author-only answer key");
+   const worked=page.locator("#pd-author-preview .pd-author-worked");
+   check(await worked.getAttribute("open")===null,
+    engine+" author-only matching key should remain collapsed until requested");
+   await worked.locator("summary").click();
+   const content=await worked.innerText();
+   check(content.includes("Author-only answer key: 1-C, 2-A, 3-D, 4-B")&&
+     !content.includes("Left one — Right A"),
+    engine+" matching preview disclosed a misleading pair or lost the author-only key: "+
+     content.slice(0,350));
   }else if(kind==="numeric-entry")check(await within.locator("#g-number").count()===1,
    engine+" numeric preview does not use actual exam control");
   else if(kind==="true-false")check(await within.locator("[data-bool]").count()===2,
