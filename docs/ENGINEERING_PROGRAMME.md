@@ -6,6 +6,8 @@
 
 ## 0A. User-approved post-P48 useful enhancements — P49–P52 (4 November 2026)
 
+**Implementation under source QA:** P49 explicit three-level topic paths in notebook/source analytics, P50 Wordgard metadata/sectional rules/partial-credit publication, P51 same-attempt keyed Exam shell and retained Learning controls, P52 local eight-action shortcut editor and safe resolver are committed with new Node and offline cross-browser tests. These are NOT yet declared verified; full CI is the gate. Prior failed TypeScript runs are intentionally recorded and corrected rather than changing compiler strictness.
+
 **Approval:** implement four *software* improvements on `overhaul`; **explicitly exclude** new validated APFC/CAT/UPSC/RBI content banks and physical Mac/iOS/Android, real screen-reader/IME, operating-system recovery, human visual signoff and release/merge. This is the single active programme for the newly approved work; P41–P48 retain their tested status, and `main`/`baseline/v11` remain untouched.
 
 **No regressions:** preserve 500 checked-in CGL source questions, all 10 editions, Oct 6 Q62 D02/D03, source/reviewed semantics, frozen score/key/content, single-file `file://` CSP, FSRS-7 and user observations, exact six-kind inputs and manual grading, transactional two-store IDB v4 backup/CAS, intentional narrow UI 195px + 140%, Wordgard editing, keyboard/AT semantics, and pagehide/reload. No old-version migrations or compatibility machinery required by D38; do not silently destroy currently valid saved drafts.
