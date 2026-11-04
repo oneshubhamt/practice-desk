@@ -1,5 +1,7 @@
 # Practice Desk — offline examination studio
 
+**P48-3 current verified handoff (4 November 2026; D63):** [Five-job CI 41790738425](https://github.com/oneshubhamt/practice-desk/actions/runs/41790738425) **5/5 successful, 281/281 Node**, offline Chromium, Firefox, WebKit and guarded **2,300,186-byte** standalone HTML (tested source `883c9f3`, publisher `503735b`). Current source retains live controls on same-question Exam, same-view Library and same-pane Results; filtered Result question articles are keyed to their frozen IDs; unsaved self-assessment stays **tab-local until explicit successful Save**, never altering automated marks. Active Wordgard editor survives background Library redraw and closes on explicit Close/Publish. [P48-3 source ledger](docs/ENGINEERING_PROGRAMME.md#p48-3--stable-libraryresults-ux-and-protected-wordgard-editing-4-november-2026). **Next: P48-4 independent source audit; physical Mac/mobile/AT/IME/OS tests and human release approval OPEN.**
+
 **Development branch:** `overhaul` · **historical reference only:** `baseline/v11` (parity programme completed).
 
 Practice Desk is a single-file offline exam application with a typed six-kind generic engine, built-in original/reviewed SSC CGL papers, imported exams, frozen source/answer-key revisions, configurable scoring and timing, post-submit corrections, detailed history, validated shared-snapshot backup v4, learning notebook, FSRS-7 and evidence-based practice.
