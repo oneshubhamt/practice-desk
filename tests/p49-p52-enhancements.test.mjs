@@ -145,3 +145,10 @@ test("P52 pure Exam presenter resolves default shortcuts without browser localSt
  assert.deepEqual(readShortcutBindings(),DEFAULT_SHORTCUTS);
  assert.ok(examShortcutHelp().includes("A/B/C/D"));
 });
+
+test("P49 full-path IDs stay distinct even for visually identical joined labels",()=>{
+ const a=topicAncestors(["Economy › Inflation"])[0];
+ const b=topicAncestors(["Economy","Inflation"])[1];
+ assert.equal(a.path.join(" › "),b.path.join(" › "));
+ assert.notEqual(a.id,b.id);
+});
