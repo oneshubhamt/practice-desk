@@ -17,7 +17,7 @@ import {healthSummary,type StorageHealth} from "./history-page.ts";
 
 import {backupDownload,readBackupFile} from "../history/backup-file.ts";
 import {ATTEMPTS_STORE,SNAPSHOTS_STORE,compactAttempt,expandAttempt,isSharedAttempt,reconstructRecords,pruneSharedSnapshots} from "../history/shared-store.ts";
-import {readRecoverableWorkspace} from "./record-cursor-reader.ts";
+import {readRecoverableWorkspace,readVerifiedWorkspace} from "./record-cursor-reader.ts";
 import type {SharedSnapshot,SlimAttempt} from "../history/shared-store.ts";
 
 import {readDisplayPreferences,writeDisplayPreferences,SETTINGS_EVENT} from "./preferences.ts";
@@ -30,13 +30,11 @@ export const downloadHistoryBackup=async (owner:CoordinatorContext):Promise<void
      let toExport:RecordItem[]=[...owner.records.values()];
      if(owner.db&&!owner.storageFault){
        try{
-         const snapshot=await new Promise<unknown[]>((resolve,reject)=>{
-           const request=owner.db!.transaction(ATTEMPTS_STORE,"readonly").objectStore(ATTEMPTS_STORE).getAll();
-           request.onsuccess=()=>resolve(request.result);
-           request.onerror=()=>reject(request.error??new Error("Database snapshot failed"));
-         });
-         toExport=reconstructRecords(snapshot,[...owner.storedSnapshots.values()])
-           .map(value=>validateGenericStoredRecord(value));
+         // Strict export loads both stores atomically. Another tab may have
+         // committed a different immutable snapshot since we opened; using
+         // only the local snapshot cache would reject those valid new rows.
+         const snapshot=await readVerifiedWorkspace(owner.db!);
+         toExport=snapshot.records.map(value=>validateGenericStoredRecord(value));
        }catch(error){
          owner.storageFault=true;
          owner.recordStorageFailure(error);
