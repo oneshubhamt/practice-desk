@@ -3,6 +3,7 @@
  * An IDB getAll() tripwire proves cold startup uses streaming cursors.
  */
 import {openHarness,check,route,records} from "./browser/fixtures.mjs";
+import {pkg as sixKinds} from "../tests/fixtures/six-kinds.mjs";
 
 const engine=process.argv[2]??"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
@@ -45,6 +46,38 @@ try{
  await page.locator("#g-prev").click();
  check(await page.locator('input[data-choice]:checked').count()===1,
    engine+" response lost when returning from a new question");
+ await page.locator("#g-library").click();await route(page,"library");
+
+ // Exercise a different authored exam family and the free-response editor.
+ // A programmatic flag event while the textarea owns focus simulates the
+ // same-question redraw without claiming real hardware IME certification.
+ await page.locator("#g-file").setInputFiles({name:"p48-six-kinds.json",
+   mimeType:"application/json",buffer:Buffer.from(JSON.stringify(sixKinds))});
+ await page.waitForFunction(id=>document.querySelector("#g-papers")?.value===id,
+   sixKinds.paper.id);
+ await page.locator("#g-start").click();await route(page,"exam");
+ await page.locator('[data-section="1"]').click();
+ await page.locator('[data-q="2"]').click();
+ await page.locator("#g-text").waitFor({state:"visible"});
+ const draft=await page.evaluate(()=>{
+   const textarea=document.querySelector("#g-text");
+   textarea.value="Unsaved composed answer for this test.";
+   textarea.focus();textarea.setSelectionRange(7,7);
+   window.__p48Draft=textarea;
+   document.querySelector("#g-flag").click();
+   return {
+     same:document.querySelector("#g-text")===window.__p48Draft,
+     connected:textarea.isConnected,
+     focus:document.activeElement===textarea,
+     value:textarea.value,
+     caret:textarea.selectionStart,
+     flagged:document.querySelector('[data-q="2"]')?.classList.contains("marked")
+   };
+ });
+ check(draft.same&&draft.connected&&draft.focus&&draft.caret===7&&
+   draft.value==="Unsaved composed answer for this test."&&draft.flagged,
+   engine+" same-question retained DOM lost unsaved authored text/caret: "+JSON.stringify(draft));
+ await page.locator("#g-save").click();
  await page.locator("#g-library").click();await route(page,"library");
 
  const persisted=(await records(page)).find(record=>record.id===attemptId);
