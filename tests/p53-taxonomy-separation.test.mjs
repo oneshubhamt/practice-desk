@@ -69,7 +69,7 @@ test("P53: exact source subject selection is validated; unknown APFC or orphaned
   {...paper().questions[0],topic:"",subtopic:"Wages"}
  ]}),/subtopic/i);
  assert.throws(()=>validateAuthoringDraft({...paper(),questions:[
-  {...paper().questions[0],subject:"Labour\\nCodes",syllabusHeadingId:""}
+  {...paper().questions[0],subject:"Labour"+String.fromCharCode(10)+"Codes",syllabusHeadingId:""}
  ]}),/Invalid|topic/i);
 });
 test("P53: source-root totals include topicless questions and child subtree filters select correct questions",()=>{
