@@ -48,15 +48,19 @@ export function validateShortcutBindings(input:unknown):ShortcutBindings{
    throw Error("Shortcut conflict: assign a different key to every action");
  return Object.fromEntries(SHORTCUT_FIELDS.map(([name])=>[name,data[name]])) as ShortcutBindings;
 }
-export function readShortcutBindings(storage:Pick<Storage,"getItem">=localStorage):ShortcutBindings{
+export function readShortcutBindings(storage?:Pick<Storage,"getItem">):ShortcutBindings{
  try{
-  const raw=storage.getItem(SHORTCUTS_KEY);
+  const target=storage??(typeof localStorage==="undefined"?null:localStorage);
+  if(!target)return DEFAULT_SHORTCUTS; // Pure renderer also runs in Node.
+  const raw=target.getItem(SHORTCUTS_KEY);
   return raw?validateShortcutBindings(JSON.parse(raw)):DEFAULT_SHORTCUTS;
  }catch{return DEFAULT_SHORTCUTS;}
 }
-export function writeShortcutBindings(value:unknown,storage:Pick<Storage,"setItem">=localStorage):ShortcutBindings{
+export function writeShortcutBindings(value:unknown,storage?:Pick<Storage,"setItem">):ShortcutBindings{
  const valid=validateShortcutBindings(value);
- storage.setItem(SHORTCUTS_KEY,JSON.stringify(valid));
+ const target=storage??(typeof localStorage==="undefined"?null:localStorage);
+ if(!target)throw Error("Local shortcut storage unavailable");
+ target.setItem(SHORTCUTS_KEY,JSON.stringify(valid));
  return valid;
 }
 export const shortcutKeyLabel=(key:string):string=>key==="arrowleft"?"←":
