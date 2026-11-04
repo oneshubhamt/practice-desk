@@ -6,10 +6,15 @@ import {QUESTION_KINDS} from "../domain/question.ts";
 import type {RichDocument} from "../domain/rich-document.ts";
 import {plainRichDocument,validateRichDocument} from "../domain/rich-document.ts";
 import {validateMediaInventory} from "../domain/media.ts";
+import {attributedTopicPath,validateTopicPath} from "../learning/syllabus-taxonomy.ts";
 
 export type AuthoringQuestion={
  readonly id:string;
  readonly section:string;
+ /** Semantic syllabus classification, unrelated to navigable/timed exam section. */
+ readonly subject?:string;
+ /** Only an explicitly chosen official heading for the currently selected exam. */
+ readonly syllabusHeadingId?:string;
  /** Explicit author tags; never inferred or certified as official content. */
  readonly topic?:string;
  readonly subtopic?:string;
@@ -68,7 +73,8 @@ const id=():string=>typeof crypto!=="undefined"&&crypto.randomUUID?crypto.random
   "draft-"+Date.now()+"-"+Math.floor(Math.random()*1000000);
 const fresh=()=>plainRichDocument("");
 export function newAuthoringQuestion(kind:QuestionKind="single-choice"):AuthoringQuestion{
- return {id:id(),section:"General",topic:"",subtopic:"",difficulty:"",
+ return {id:id(),section:"General",subject:"",syllabusHeadingId:"",
+  topic:"",subtopic:"",difficulty:"",
   sectionMinutes:15,minSelections:1,maxSelections:4,
   partialCreditEach:0,partialPenaltyEach:0,
   kind,prompt:fresh(),passage:fresh(),
@@ -122,7 +128,8 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
  const verified=questions.map(item=>{
   const q=rec(item,"draft question",["id","section","kind","prompt","passage","options","leftItems",
    "rightItems","explanation","answer","tolerance","source",
-   "topic","subtopic","difficulty","sectionMinutes","minSelections","maxSelections",
+   "subject","syllabusHeadingId","topic","subtopic","difficulty",
+    "sectionMinutes","minSelections","maxSelections",
    "partialCreditEach","partialPenaltyEach"]);
   const questionId=text(q.id,"question ID",128,true);
   if(all.has(questionId))throw Error("Duplicate draft question ID");
@@ -134,9 +141,15 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
     right=list(q.rightItems,4,"matching right");
   if(qOpts.length!==4||left.length!==4||right.length!==4)
    throw Error("Draft has invalid option/item count");
+  const section=text(q.section,"section",100,true).trim();
+  validateTopicPath([section]);
+  const subject=text(q.subject??"","subject",120).trim();
+  const syllabusHeadingId=text(q.syllabusHeadingId??"","syllabus heading ID",80).trim();
   const topic=text(q.topic??"","topic",120).trim();
   const subtopic=text(q.subtopic??"","subtopic",120).trim();
-  if(subtopic&&!topic)throw Error("Subtopic requires a named topic");
+  // A genuine syllabus root is a user choice, not the navigation section.
+  attributedTopicPath(text(p.examId,"exam ID",80,true),subject,
+    syllabusHeadingId||undefined,topic,subtopic);
   const difficulty=q.difficulty??"";
   if(!["","easy","medium","hard"].includes(String(difficulty)))
     throw Error("Invalid authored difficulty");
@@ -146,7 +159,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
      minSelections>maxSelections)throw Error("Invalid selection bounds");
   const sectionMinutes=num(q.sectionMinutes??15,"section minutes",0,600);
   if(!Number.isInteger(sectionMinutes))throw Error("Section minutes must be whole numbers");
-  return {id:questionId,section:text(q.section,"section",100,true),
+  return {id:questionId,section,subject,syllabusHeadingId,
    topic,subtopic,difficulty:difficulty as ""|"easy"|"medium"|"hard",
    sectionMinutes,minSelections,maxSelections,
    partialCreditEach:num(q.partialCreditEach??0,"partial-credit component",0,1000),
