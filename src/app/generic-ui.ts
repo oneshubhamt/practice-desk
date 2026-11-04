@@ -161,11 +161,16 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  document.addEventListener("visibilitychange",visibility);
  const keyboard=(event:KeyboardEvent)=>handleWorkspaceKeyboard(owner,event);
  window.addEventListener("keydown",keyboard);
+ const shortcutSettingsChanged=()=>{if(!disposed&&view==="exam")draw();};
+ window.addEventListener("practice-desk:shortcuts-changed",shortcutSettingsChanged);
  const pagehide=()=>checkpointWorkspacePagehide(owner);
  window.addEventListener("pagehide",pagehide);
  const storage=(event:StorageEvent)=>detectConcurrentStorageChange(owner,event);
  window.addEventListener("storage",storage);
- function cleanup():void{return disposeWorkspace(owner);}
+ function cleanup():void{
+   window.removeEventListener("practice-desk:shortcuts-changed",shortcutSettingsChanged);
+   return disposeWorkspace(owner);
+ }
 
  const owner:CoordinatorContext={
  get activationGeneration(){return activationGeneration;},set activationGeneration(value){activationGeneration=value;},
