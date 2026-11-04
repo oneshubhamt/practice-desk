@@ -40,7 +40,9 @@ export interface CoordinatorContext{
  cglMode:CglPracticeMode;
  readonly changeHistoryQuery:(next: HistoryQuery, redraw?: boolean) => void;
  choice:string;
- readonly choiceDrafts:Map<string, { questionId: string; optionIds: OptionId[]; message: string; }>;
+ readonly choiceDrafts:Map<string, { questionId: string; optionIds: OptionId[]; message: string; }>; 
+ /** Unsaved self-assessment notes and marks are tab-local, never part of the frozen attempt. */
+ readonly manualGradeDrafts:Map<string,{marks:string;note:string}>;
  composeCount:number;
  composeDifficulty:string;
  composeError:string;

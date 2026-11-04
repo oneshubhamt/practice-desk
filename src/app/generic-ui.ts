@@ -100,6 +100,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  // Transient incomplete multi-select selections are NEVER part of the scored
  // response; saved answers are cleared when a draft becomes invalid.
  const choiceDrafts=new Map<string,{questionId:string;optionIds:OptionId[];message:string}>();
+ const manualGradeDrafts=new Map<string,{marks:string;note:string}>();
  // Live-region updates depend on actual route/question changes, not timer ticks.
  const screenRenderer=createScreenRenderer(root);
  // One transient dialog/handler set for the entire mounted workspace.
@@ -179,6 +180,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  get changeHistoryQuery(){return changeHistoryQuery;},
  get choice(){return choice;},set choice(value){choice=value;},
  get choiceDrafts(){return choiceDrafts;},
+ get manualGradeDrafts(){return manualGradeDrafts;},
  get composeCount(){return composeCount;},set composeCount(value){composeCount=value;},
  get composeDifficulty(){return composeDifficulty;},set composeDifficulty(value){composeDifficulty=value;},
  get composeError(){return composeError;},set composeError(value){composeError=value;},

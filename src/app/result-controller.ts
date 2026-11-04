@@ -158,6 +158,7 @@ export function renderCurrentResultHTML(owner:CoordinatorContext):string {
       const speed=questionSpeed(owner.attempt!,it.questionRevisionId);
       if(!q)return "";
       const prior=owner.attempt!.manualGrades?.find(g=>g.questionRevisionId===q.id);
+      const draft=owner.manualGradeDrafts.get(owner.attempt!.id+"|"+q.id);
       const limit=manualGradeLimit(owner.attempt!,q.id);
       const provenance=q.editorial.sources??[];
       const origin=owner.attempt!.notebookLineage?.entries.find(x=>x.questionRevisionId===q.id);
@@ -192,9 +193,10 @@ export function renderCurrentResultHTML(owner:CoordinatorContext):string {
        (provenance.length?'<p class="fine">Sources: '+provenance.map(source=>
          '<a href="'+escapeText(source.url)+'" target="_blank" rel="noopener noreferrer">'+
          escapeText(source.title)+'</a>').join(' · ')+'</p>':"")+
-       (limit!==null?'<div class="generic-manual-grade"><p class="fine">Written response requires explicit human assessment. Self-marked results are separate from exam scores.</p>'+
-          '<label>Self-assessed marks (0–'+limit+')<input type="number" step="0.01" min="0" max="'+limit+'" data-manual-marks="'+escapeText(q.id)+'" value="'+escapeText(prior?.marks??"")+'"></label>'+
-          '<label>Assessment note (optional)<textarea maxlength="2000" rows="2" data-manual-note="'+escapeText(q.id)+'">'+escapeText(prior?.note??"")+'</textarea></label>'+
+       (limit!==null?'<div class="generic-manual-grade"><p class="fine">Written response requires explicit human assessment. Self-marked results are separate from exam scores. Unsaved drafts stay in this tab only and are not included in backups.</p>'+ 
+          '<p class="fine" data-manual-status="'+escapeText(q.id)+'" role="status">'+(draft?"Unsaved changes — select Save self-assessment to commit.":"No unsaved assessment changes.")+'</p>'+
+          '<label>Self-assessed marks (0–'+limit+')<input type="number" step="0.01" min="0" max="'+limit+'" data-manual-marks="'+escapeText(q.id)+'" value="'+escapeText(draft?.marks??prior?.marks??"")+'"></label>'+
+          '<label>Assessment note (optional)<textarea maxlength="2000" rows="2" data-manual-note="'+escapeText(q.id)+'">'+escapeText(draft?.note??prior?.note??"")+'</textarea></label>'+
           '<button class="btn" data-manual-save="'+escapeText(q.id)+'">Save self-assessment</button></div>':"")+
        '<button class="btn" data-add-card="'+escapeText(q.id)+'"'+
          (owner.records.has("learning-card:"+q.id)?" disabled":"")+'>'
@@ -252,6 +254,21 @@ export function bindResultScreen(owner:CoordinatorContext):void{
        document.getElementById("result-tab-review")?.focus({preventScroll:true});
        window.scrollTo({top:0,behavior:"smooth"});
      };
+     const captureManualDraft=(id:string):void=>{
+       if(!owner.attempt)return;
+       const marks=[...owner.root.querySelectorAll<HTMLInputElement>("[data-manual-marks]")].find(x=>x.dataset.manualMarks===id);
+       const note=[...owner.root.querySelectorAll<HTMLTextAreaElement>("[data-manual-note]")].find(x=>x.dataset.manualNote===id);
+       if(!marks||!note)return;
+       owner.manualGradeDrafts.set(owner.attempt.id+"|"+id,{marks:marks.value,note:note.value});
+       const status=[...owner.root.querySelectorAll<HTMLElement>("[data-manual-status]")].find(x=>x.dataset.manualStatus===id);
+       if(status)status.textContent="Unsaved changes — select Save self-assessment to commit.";
+     };
+     owner.root.querySelectorAll<HTMLInputElement>("[data-manual-marks]").forEach(node=>{
+       node.oninput=()=>captureManualDraft(node.dataset.manualMarks??"");
+     });
+     owner.root.querySelectorAll<HTMLTextAreaElement>("[data-manual-note]").forEach(node=>{
+       node.oninput=()=>captureManualDraft(node.dataset.manualNote??"");
+     });
      owner.root.querySelectorAll<HTMLButtonElement>("[data-manual-save]").forEach(button=>button.onclick=async()=>{
        if(!owner.attempt||owner.storageFault)return;
        const id=button.dataset.manualSave as QuestionRevisionId|undefined;
@@ -261,7 +278,11 @@ export function bindResultScreen(owner:CoordinatorContext):void{
        if(!marksField?.value||!Number.isFinite(marksField.valueAsNumber)){owner.notice("Enter a finite assessment mark.");return;}
        try{
          const assessed=setManualGrade(owner.attempt,id,marksField.valueAsNumber,noteField?.value??"",new Date(owner.now()).toISOString());
-         if(await owner.save(assessed)){owner.warning="Self-assessment committed separately from original exam score.";owner.draw();}
+         if(await owner.save(assessed)){
+           owner.manualGradeDrafts.delete(assessed.id+"|"+id);
+           owner.warning="Self-assessment committed separately from original exam score.";
+           owner.draw();
+         }
        }catch(error){owner.notice(error instanceof Error?error.message:"Invalid manual assessment");}
      });
      owner.root.querySelectorAll<HTMLButtonElement>("[data-add-card]").forEach(button=>button.onclick=()=>{
