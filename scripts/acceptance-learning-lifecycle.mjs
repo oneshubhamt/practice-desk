@@ -74,6 +74,7 @@ try{
  await page.locator('[data-grade="3"]').click();
  await page.locator("#learning-note").waitFor({state:"visible"});
  await page.locator("#learning-error").selectOption("conceptual");
+ await page.locator("#learning-subject").fill("Clinical Science");
  await page.locator("#learning-topic").fill("Independently labelled topic");
  await page.locator("#learning-subtopic").fill("Specific recorded subtopic");
  await page.locator("#learning-note").fill("Review source fundamentals");
@@ -94,10 +95,19 @@ try{
  const rated=await saved(x=>x.id===card.id&&x.reviews?.length===1&&
    x.note==="Review source fundamentals","explicit FSRS-rated notebook");
  check(rated.errorLabel==="conceptual"&&
+  rated.customSubject==="Clinical Science"&&
   rated.customTopic==="Independently labelled topic"&&
   rated.customSubtopic==="Specific recorded subtopic",
   "Notebook user error-type/topic annotations did not persist");
- check(await page.getByRole("heading",{name:"Topic performance"}).count()===1,
+ const subjectOptions=await page.locator("#learning-hierarchy-root option").evaluateAll(items=>
+   items.map(el=>({value:el.value,label:el.textContent??""})));
+ const subject=subjectOptions.find(x=>x.label.includes("Clinical Science"));
+ check(Boolean(subject),"P53 named notebook subject not selectable in Learning hierarchy drilldown");
+ await page.locator("#learning-hierarchy-root").selectOption(subject.value);
+ check((await page.locator(".learning-insights .scroll-table").first().innerText()).includes("Clinical Science"),
+   "P53 subject drilldown did not display the selected underlying question evidence");
+ await page.locator("#learning-hierarchy-root").selectOption("");
+  check(await page.getByRole("heading",{name:"Topic performance"}).count()===1,
   "Learning topic performance not accessible");
  await page.locator("#learning-close").click();await route(page,"library");
  await page.locator("#g-learning").click();await route(page,"learning");
