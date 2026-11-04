@@ -4,6 +4,10 @@
  */
 import {openHarness,check,route,records} from "./browser/fixtures.mjs";
 import {pkg as sixKinds} from "../tests/fixtures/six-kinds.mjs";
+import {readFile} from "node:fs/promises";
+import {importSimpleQuestionBank,APFC_NAT_BANK_TEMPLATE} from "../src/app/bank-import.ts";
+import {startGenericAttempt} from "../src/app/exam-package.ts";
+import {compactAttempt} from "../src/history/shared-store.ts";
 
 const engine=process.argv[2]??"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
@@ -84,6 +88,44 @@ try{
  check(persisted?.recordType==="generic-attempt"&&
    persisted.state.responses.some(row=>row.response?.kind==="single-choice"),
    engine+" source-based compact attempt not saved");
+
+ // Simulate a genuinely separate browser tab committing a new immutable
+ // paper snapshot and attempt after this Library originally hydrated.
+ // The current tab's in-memory snapshot cache MUST be stale; a valid backup
+ // must capture both source stores atomically rather than exporting only
+ // what this tab already knew.
+ const externalBank=structuredClone(APFC_NAT_BANK_TEMPLATE);
+ externalBank.bankId="p48-independent-tab-paper";
+ externalBank.title="Simulated external-tab source revision";
+ const independent=importSimpleQuestionBank(externalBank);
+ const foreign=compactAttempt(startGenericAttempt(independent,
+   "p48-other-tab-attempt",Date.UTC(2026,10,4,2,0,0)));
+ await page.evaluate(async({row,snapshot})=>{
+   const open=indexedDB.open("practiceDesk.shared.v1",1);
+   const db=await new Promise((resolve,reject)=>{
+     open.onsuccess=()=>resolve(open.result);open.onerror=()=>reject(open.error);
+   });
+   try{
+     await new Promise((resolve,reject)=>{
+       const tx=db.transaction(["attempts","snapshots"],"readwrite");
+       tx.objectStore("snapshots").add(snapshot);
+       tx.objectStore("attempts").add(row);
+       tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
+       tx.onabort=()=>reject(tx.error);
+     });
+   }finally{db.close();}
+ },foreign);
+ await page.locator("#g-history").click();await route(page,"history");
+ const expectedDownload=page.waitForEvent("download");
+ await page.locator("#g-export-history").click();
+ const archiveFile=await expectedDownload;
+ const archive=JSON.parse(await readFile(await archiveFile.path(),"utf8"));
+ check(archive.records.some(r=>r.id==="p48-other-tab-attempt")&&
+   archive.snapshots.some(s=>s.id===foreign.snapshot.id),
+   engine+" strict atomic backup omitted a later other-tab immutable source");
+ check(archive.records.some(r=>r.id===attemptId),
+   engine+" other-tab backup dropped the earlier CGL attempt");
+ await page.locator("#g-library").click();await route(page,"library");
 
  // This JavaScript is a test-only pre-page-init tripwire. It does not persist
  // into the user's compiled HTML or interfere with post-start user export.
