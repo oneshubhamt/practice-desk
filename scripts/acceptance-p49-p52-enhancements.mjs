@@ -19,7 +19,7 @@ try{
   engine+" shortcut settings not persisted");
  await page.locator("#displayClose").click();
  await page.locator("#g-start").click();await route(page,"exam");
- check((await page.locator(".navigator-help").innerText()).includes("1/2/3/4"),
+ check((await page.locator(".navigator-help").textContent()).includes("1/2/3/4"),
   engine+" keyboard help does not reflect actual configured choices");
  await page.locator(".navigator-help summary").click();
  await page.evaluate(()=>{
