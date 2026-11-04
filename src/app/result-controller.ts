@@ -42,6 +42,11 @@ export function renderCurrentResultHTML(owner:CoordinatorContext):string {
    // reconstruct evidence from a mutable Library at result render time.
    const reviewSource=owner.resultTab==="review"?
      owner.attempt.sourceReviewReference??null:null;
+   const frozenTarget:ExamPackage={format:"practice-desk-exam",version:1,
+     examId:owner.attempt.frozen.snapshot.examId,title:"Frozen attempt",
+     paper:owner.attempt.frozen.paper,answerKey:owner.attempt.frozen.key,
+     questions:owner.attempt.frozen.questions,stimuli:owner.attempt.frozen.stimuli,
+     assets:owner.attempt.frozen.assets};
    const grades=owner.resultTab==="overview"?manualGradeSummary(owner.attempt):{graded:0,pending:0,total:0};
    const selfAssessed=s.snapshot.earnedMarks+grades.total;
    const originalKey=owner.resultTab==="overview"?sourceKeyScore(owner.attempt):null;
