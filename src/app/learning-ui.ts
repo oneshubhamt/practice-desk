@@ -73,8 +73,23 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
    syllabusTopicId:string;errorLabel:string;bookmarked:boolean};
  const notebookDrafts=new Map<string,NotebookDraft>();
  const present=(html:string,identity:string)=>{
-   if(previousLearningView===identity)reconcileSameExamQuestion(root,html);
+   // Native textarea.value is a dirty property, distinct from its underlying
+   // text node/defaultValue. A keyed DOM diff can change the text node while
+   // retaining the textarea element and inadvertently reset the live value.
+   // Preserve the real unsaved note only for the SAME selected notebook card.
+   // A different card, a review screen or a new route must not inherit it.
+   const same=previousLearningView===identity;
+   const note=same&&identity.startsWith("main:")?
+     root.querySelector<HTMLTextAreaElement>("#learning-note"):null;
+   const liveNote=note?.value;
+   const focused=note!==null&&document.activeElement===note;
+   const start=focused?note.selectionStart:0,end=focused?note.selectionEnd:0;
+   if(same)reconcileSameExamQuestion(root,html);
    else root.innerHTML=html;
+   if(note&&note.isConnected&&liveNote!==undefined&&note.value!==liveNote){
+     note.value=liveNote;
+     if(focused)note.setSelectionRange(start,end);
+   }
    previousLearningView=identity;
  };
  let evidenceExam="",evidenceCount=10;
@@ -262,7 +277,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
        '</td><td>'+g.points.map(p=>p.marks.toFixed(1)).join(" → ")+'</td></tr>').join(""):
        '<tr><td colspan="4">Complete the same paper revision twice to see a valid comparison.</td></tr>')+
     '</tbody></table></div></section>';
-  present(html,"main");
+  present(html,"main:"+(selected?.id??"none"));
   root.querySelector<HTMLSelectElement>("#learning-evidence-exam")!.onchange=e=>{
     evidenceExam=(e.target as HTMLSelectElement).value;draw();
   };
