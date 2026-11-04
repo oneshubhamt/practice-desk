@@ -18,12 +18,14 @@ try{
  await page.locator("#g-text").fill("Original written response");
  await page.locator("#g-save").click();
  await page.locator("#g-submit").click();
- console.log("P48-3 SUBMIT DEBUG",JSON.stringify(await page.evaluate(()=>({href:location.href,screen:document.querySelector("#app")?.innerText?.slice(0,1200),warning:document.querySelector(".generic-warning")?.textContent??"",overview:Boolean(document.querySelector(".result-performance-overview")),review:Boolean(document.querySelector("#result-review"))}))));
  await route(page,"result");
  const attempt=(await records(page)).find(x=>x.packageId===sixKinds.paper.id&&x.finishedAt);
  check(Boolean(attempt),engine+" missing frozen written attempt");
  const originalScore=attempt.result.snapshot.earnedMarks;
- await page.locator("#result-tab-review").click();await route(page,"result");
+ await page.locator("#result-tab-review").click();
+ await page.locator("#result-review").waitFor({state:"visible"});
+ check(new URL(await page.url()).searchParams.get("tab")==="review",
+   engine+" review URL did not select the requested result pane");
  await page.locator('[data-manual-marks="rev-5"]').fill("1.25");
  await page.locator('[data-manual-note="rev-5"]').fill("Unsaved P48-3 rubric note");
  await page.evaluate(()=>{
