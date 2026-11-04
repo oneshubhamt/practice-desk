@@ -46,6 +46,8 @@ try{
  check(!(await page.locator("input[data-choice]").first().isChecked()),
   engine+" answer selection from prior question leaked into the next question");
  await page.locator("#displayTrigger").click();
+ if(await page.locator("#shortcut-settings").getAttribute("open")===null)
+  await page.locator("#shortcut-settings summary").click();
  await page.locator("#shortcut-reset").click();
  check((await page.locator("#shortcut-next").inputValue())==="arrowright",
   engine+" shortcut reset did not restore defaults");
