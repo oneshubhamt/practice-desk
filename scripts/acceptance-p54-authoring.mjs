@@ -200,7 +200,11 @@ try{
    engine+" real exam did not apply the actual two partial-credit policies: "+
     JSON.stringify(result.result.items.slice(0,2)));
  await page.locator("#result-tab-review").click();
- check(await page.locator(".generic-review").count()===6,
+ // Result tabs navigate asynchronously; wait for the *actual* frozen review
+ // subtree instead of racing a different browser engine's first paint.
+ await page.waitForFunction(()=>document.querySelector("#result-review:not([hidden])")?.querySelectorAll(".generic-review").length===6,
+  null,{timeout:8000});
+ check(await page.locator("#result-review:not([hidden]) .generic-review").count()===6,
    engine+" authorised detailed review of six-kind finished paper missing");
  await page.reload({waitUntil:"load"});
  await page.locator("#result-tab-review").waitFor({state:"visible"});
