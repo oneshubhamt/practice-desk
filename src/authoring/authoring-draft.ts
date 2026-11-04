@@ -147,7 +147,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   const sectionMinutes=num(q.sectionMinutes??15,"section minutes",0,600);
   if(!Number.isInteger(sectionMinutes))throw Error("Section minutes must be whole numbers");
   return {id:questionId,section:text(q.section,"section",100,true),
-   topic,subtopic,difficulty:difficulty as AuthoringQuestion["difficulty"],
+   topic,subtopic,difficulty:difficulty as ""|"easy"|"medium"|"hard",
    sectionMinutes,minSelections,maxSelections,
    partialCreditEach:num(q.partialCreditEach??0,"partial-credit component",0,1000),
    partialPenaltyEach:num(q.partialPenaltyEach??0,"partial penalty",0,1000),
