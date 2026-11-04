@@ -38,7 +38,7 @@ new Script(runtime);
 // CSP: the only executable script is this exact compiler output, not any
 // later injected script. A new build regenerates its hash deterministically.
 // Keep the original self-contained file:// distribution and local data/fonts.
-const inlineScript="\\n"+runtime.trimEnd()+"\\n";
+const inlineScript="\n"+runtime.trimEnd()+"\n";
 const scriptHash=createHash("sha256").update(inlineScript,"utf8").digest("base64");
 const csp=[
   "default-src 'none'",
