@@ -54,6 +54,10 @@ try{
    buffer:Buffer.from(JSON.stringify(pkg))});
   await page.waitForFunction(id=>document.querySelector("#g-papers")?.value===id,pkg.paper.id);
   await page.reload({waitUntil:"load"});
+  // Library hydration after a full file:// load is asynchronous. Assert
+  // eventual restoration of the exact imported paper, not first-paint state.
+  await page.waitForFunction(id=>document.querySelector("#g-papers")?.value===id,
+   pkg.paper.id,{timeout:8000});
   check(await page.locator("#g-papers").inputValue()===pkg.paper.id,
    "Authored exam selection not restored");
   await chooseModernPaper(page,initial);
