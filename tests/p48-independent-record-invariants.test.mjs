@@ -59,3 +59,17 @@ test("P48-4 genuinely accrued foreground question time must not exceed saved tot
  candidate.state.foregroundMs=0;
  assert.throws(()=>validateGenericStoredRecord(candidate),/Invalid|time|foreground/);
 });
+
+test("P48-4 candidate answer and pair objects must reject unsigned extra keys",()=>{
+ const choice=structuredClone(savedResponse());
+ choice.state.responses[0].response.officialIssuer="invented";
+ assert.throws(()=>validateGenericStoredRecord(choice),/unsupported field|Invalid/,
+   "exact candidate response shape");
+ const matching=structuredClone(fresh());
+ matching.state.responses=[{
+  questionRevisionId:"rev-4",flagged:false,timeSpentMs:0,answerChangeCount:0,
+  response:{kind:"matching",pairs:[{leftId:"l1",rightId:"r1",privilegedMatch:true}]}
+ }];
+ assert.throws(()=>validateGenericStoredRecord(matching),/unsupported field|Invalid/,
+   "matching endpoint must not contain shadow fields");
+});
