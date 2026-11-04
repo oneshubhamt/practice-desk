@@ -8,7 +8,14 @@ import {newAuthoringDraft,newAuthoringQuestion} from "../src/authoring/authoring
 import {plainRichDocument} from "../src/domain/rich-document.ts";
 const engine=process.argv[2]??"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
-const {page,context,errors}=await h.open({viewport:{width:1280,height:850},colorScheme:"light"});
+const authorDialogs=[];
+const {page,context,errors}=await h.open({
+ viewport:{width:1280,height:850},colorScheme:"light",
+ onDialog:dialog=>{
+  authorDialogs.push({type:dialog.type(),message:dialog.message()});
+  void dialog.accept();
+ }
+});
 const dir="artifacts/p54-authoring";await mkdir(dir,{recursive:true});
 const shot=async(label)=>page.screenshot({path:dir+"/"+engine+"-"+label+".png",animations:"disabled",fullPage:true});
 const P=s=>plainRichDocument(s);
@@ -85,8 +92,10 @@ try{
  });
  check(inherited?.section==="Specialised"&&inherited.sectionMinutes===16,
    engine+" newly authored question reintroduced a conflicting timer");
- page.once("dialog",async dialog=>dialog.accept());
  await page.locator("#pd-author-delete-question").click();
+ check(authorDialogs.length===1&&authorDialogs[0].type==="confirm"&&
+   authorDialogs[0].message.includes("Delete this unpublished draft question"),
+   engine+" did not require the real destructive-action confirmation");
  check(await page.locator("#pd-author-questions option").count()===6,
    engine+" temporary inheriting question not removed");
  await page.locator("#pd-author-validate").click();
