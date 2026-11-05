@@ -420,7 +420,17 @@ export function bindLibraryScreen(owner:CoordinatorContext):void{
        const file=(e.target as HTMLInputElement).files?.[0];if(!file)return;
        if(file.size>25*1024*1024){owner.notice("Exam package exceeds the 25 MiB import limit.");return;}
        try{
-         const pkg=importAuthoredExam(JSON.parse(await file.text()));
+         const source=JSON.parse(await file.text());
+         if(source&&typeof source==="object"&&!Array.isArray(source)&&
+           source.format==="practice-desk-authoring"){
+           const target=owner.root.querySelector<HTMLElement>("#pd-authoring-container");
+           const trigger=owner.root.querySelector<HTMLElement>("#g-author-open");
+           if(!target||!trigger)throw Error("Authoring studio unavailable");
+           await owner.authoringStudio.open(target,trigger);
+           await owner.authoringStudio.stageFiles([file]);
+           return; // AI source is staged, never silently published.
+         }
+         const pkg=importAuthoredExam(source);
          if(owner.packages.has(pkg.paper.id))throw new Error("Paper revision ID already exists. Supply a new revision ID.");
          if(!await owner.save({recordType:"generic-package",id:"generic-package:"+pkg.paper.id,bundle:pkg}))return;
          owner.packages.set(pkg.paper.id,pkg);
