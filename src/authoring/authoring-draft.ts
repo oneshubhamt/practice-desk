@@ -1,7 +1,7 @@
 /** P47-5C: unpublished local-only question-authoring drafts.
  * Never reuse a saved draft as an executable paper, attempt, answer key or score.
  */
-import type {QuestionKind,ImageAsset} from "../domain/question.ts";
+import type {QuestionKind,ImageAsset,StimulusDefinition} from "../domain/question.ts";
 import {QUESTION_KINDS} from "../domain/question.ts";
 import type {RichDocument} from "../domain/rich-document.ts";
 import {plainRichDocument,validateRichDocument} from "../domain/rich-document.ts";
@@ -38,6 +38,8 @@ export type AuthoringQuestion={
  /** Absolute numeric entry tolerance; zero for exact answers. */
  readonly tolerance:number;
  readonly source:string;
+ /** Optional shared passage/table/chart; never an in-question copy. */
+ readonly stimulusRef?:string;
 };
 export type AuthoringDraft={
  readonly schema:1;
@@ -60,6 +62,8 @@ export type AuthoringDraft={
  readonly marksIncorrect:number;
  readonly updatedAt:string;
  readonly assets:readonly ImageAsset[];
+ /** Authoring-only shared stimuli, referenced by question stimulusRef. */
+ readonly stimuli?:readonly StimulusDefinition[];
  readonly questions:readonly AuthoringQuestion[];
 };
 export type AuthoringDraftShelf={
@@ -116,10 +120,12 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
  const p=rec(value,"authoring draft",["schema","id","examId","paperId","title","edition",
   "revision","durationMinutes","timingKind","pausePolicy","questionNavigation",
   "sectionNavigation","sectionTransition","allowEarlySubmit","allowReview",
-  "marksCorrect","marksIncorrect","updatedAt","assets","questions"]);
+  "marksCorrect","marksIncorrect","updatedAt","assets","stimuli","questions"]);
  if(p.schema!==1)throw Error("Unsupported draft schema");
  const assets=structuredClone(list(p.assets,100,"images") as ImageAsset[]);
- validateMediaInventory([],assets);
+ const stimuli=structuredClone(list(p.stimuli??[],200,"stimuli") as StimulusDefinition[]);
+ validateMediaInventory(stimuli,assets);
+ const stimulusIds=new Set(stimuli.map(s=>s.id as string));
  const known=new Set(assets.map(a=>a.id));
  const rich=(x:unknown)=>validateRichDocument(x,{knownAssets:known});
  const questions=list(p.questions,200,"questions");
@@ -130,7 +136,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
    "rightItems","explanation","answer","tolerance","source",
    "subject","syllabusHeadingId","topic","subtopic","difficulty",
     "sectionMinutes","minSelections","maxSelections",
-   "partialCreditEach","partialPenaltyEach"]);
+   "partialCreditEach","partialPenaltyEach","stimulusRef"]);
   const questionId=text(q.id,"question ID",128,true);
   if(all.has(questionId))throw Error("Duplicate draft question ID");
   all.add(questionId);
@@ -142,6 +148,8 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   if(qOpts.length!==4||left.length!==4||right.length!==4)
    throw Error("Draft has invalid option/item count");
   const section=text(q.section,"section",100,true).trim();
+  const stimulusRef=q.stimulusRef===undefined?undefined:text(q.stimulusRef,"stimulus reference",128,true);
+  if(stimulusRef&&!stimulusIds.has(stimulusRef))throw Error("Unknown shared stimulus "+stimulusRef);
   validateTopicPath([section]);
   const subject=text(q.subject??"","subject",120).trim();
   const syllabusHeadingId=text(q.syllabusHeadingId??"","syllabus heading ID",80).trim();
@@ -168,7 +176,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
    options:qOpts.map(rich),leftItems:left.map(rich),rightItems:right.map(rich),
    explanation:rich(q.explanation),answer:text(q.answer,"draft answer",100),
    tolerance:num(q.tolerance??0,"numeric tolerance",0,1000000),
-   source:text(q.source,"source note",500)};
+   source:text(q.source,"source note",500),...(stimulusRef?{stimulusRef}:{})};
  });
  const edition=p.edition;
  if(edition!=="custom"&&edition!=="source"&&edition!=="reviewed")
@@ -197,7 +205,8 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   allowEarlySubmit:p.allowEarlySubmit??true,allowReview:p.allowReview??true,
   marksCorrect:num(p.marksCorrect,"positive marks",0.01,1000),
   marksIncorrect:num(p.marksIncorrect,"negative marks",-1000,0),
-  updatedAt:text(p.updatedAt,"updated time",100,true),assets,questions:verified
+  updatedAt:text(p.updatedAt,"updated time",100,true),assets,
+  ...(stimuli.length?{stimuli}:{}),questions:verified
  };
  const bytes=JSON.stringify(draft).length;
  if(bytes>AUTHORING_MAX_BYTES)throw Error("Draft size exceeds local storage budget; export and reduce images");
