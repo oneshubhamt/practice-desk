@@ -393,7 +393,7 @@ export function inspectExternalQuestionBank(value:unknown,existing:readonly Exam
    }catch(error){return err("comparisons["+i+"]",error instanceof Error?error.message:"Invalid comparison source");}
   });
   const bankId=key((value as {bankId?:unknown}).bankId,"$.bankId");
-  const quality=inspectExternalQuality(draft,check.compiled,bankId,comparisons);
+  const quality=inspectExternalQuality(draft,check.compiled,bankId,comparisons,value);
   return {valid:quality.summary.errors===0,questionCount:draft.questions.length,
    issues:quality.issues,quality,editorialStatus:"caution",
    factualVerification:"not-performed",
