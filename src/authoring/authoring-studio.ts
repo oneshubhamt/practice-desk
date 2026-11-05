@@ -471,15 +471,30 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   click("pd-author-save",()=>{capture();persist();void render();});
 
   const validationBox=find<HTMLElement>("pd-author-validation");
-  const showIssues=(issues:readonly PublicationIssue[]):void=>{
+  const inspectPublication=()=>{
+   const report=inspectAuthoringPublication(active(),actions.existing());
+   const quality=report.compiled&&active().id.startsWith("stage:")?
+    inspectExternalQuality(active(),report.compiled,active().id):null;
+   const errors:PublicationIssue[]=[...report.issues,
+    ...(quality?.issues.filter(i=>i.severity==="error").map(i=>({
+     field:i.path,reason:i.code+": "+i.message,...(i.questionId?{questionId:i.questionId}:{})
+    }))??[])];
+   const warnings=quality?.issues.filter(i=>i.severity==="warning")??[];
+   return {report,errors,warnings};
+  };
+  const showIssues=(issues:readonly PublicationIssue[],warnings:readonly QualityIssue[]=[]):void=>{
    validationBox.hidden=false;
-   if(!issues.length){
-    validationBox.innerHTML='<h3>Ready to publish</h3><p>The exact immutable paper, key, timing, response controls, assets and marking rules have been compiled and validated. Check confirmation before publishing.</p>';
+   if(!issues.length&&!warnings.length){
+    validationBox.innerHTML='<h3>Ready to publish</h3><p>Exact immutable paper, answer key, timing, assets and scoring rules passed. Sources and factual claims remain unverified.</p>';
     status("Validation passed for "+active().questions.length+" questions.");
     return;
    }
-   validationBox.innerHTML='<h3>Fix '+issues.length+' publication issue'+(issues.length===1?"":"s")+'</h3><ol>'+
-    issues.map(issue=>'<li>'+escapeText(issue.field+": "+issue.reason)+
+   validationBox.innerHTML='<h3>'+issues.length+' errors · '+warnings.length+' warnings</h3>'+
+    (issues.length?'<p>Publication is blocked until the errors are corrected.</p>':
+     '<p>Only warnings remain. Review them and explicitly acknowledge if publishing.</p>')+
+    '<ol>'+[...issues.map(i=>({field:i.field,reason:i.reason,questionId:i.questionId})),
+    ...warnings.map(i=>({field:i.path,reason:i.code+": "+i.message,questionId:i.questionId}))].
+     map(issue=>'<li>'+escapeText(issue.field+": "+issue.reason)+
       (issue.questionId?'<button type="button" class="textlink" data-author-issue="'+escapeText(issue.questionId)+'">Edit question</button>':"")+
       '</li>').join("")+'</ol>';
    validationBox.querySelectorAll<HTMLButtonElement>("[data-author-issue]").forEach(btn=>{
@@ -490,13 +505,13 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
      }
     };
    });
-   status("Publication blocked: "+issues.length+" issues need attention.",true);
+   status(issues.length?"Publication blocked: "+issues.length+" errors":"Remaining unverified QA warnings: "+warnings.length,Boolean(issues.length));
   };
   click("pd-author-validate",()=>{
    try{
     flush();
-    const report=inspectAuthoringPublication(active(),actions.existing());
-    showIssues(report.issues);
+    const result=inspectPublication();
+    showIssues(result.errors,result.warnings);
     validationBox.scrollIntoView({block:"nearest"});
    }catch(error){status(error instanceof Error?error.message:"Unable to validate draft",true);}
   });
@@ -508,9 +523,11 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    try{
     flush();
     if(storageBlocked||lastSaveError)throw Error("Draft storage is unsafe; export your draft and repair local storage before publishing.");
-    const report=inspectAuthoringPublication(active(),actions.existing());
-    showIssues(report.issues);
-    if(!report.valid){validationBox.scrollIntoView({block:"nearest"});return;}
+    const {report,errors,warnings}=inspectPublication();
+    showIssues(errors,warnings);
+    if(!report.valid||errors.length){validationBox.scrollIntoView({block:"nearest"});return;}
+    if(warnings.length&&!find<HTMLInputElement>("pd-author-accept-warnings")?.checked)
+      throw Error("Explicitly acknowledge all remaining QA warnings for this staged draft before publication.");
     if(!find<HTMLInputElement>("pd-author-confirm").checked)
       throw Error("Confirm your source, answer keys and marking rules before publishing.");
     const packageValue=report.compiled;
