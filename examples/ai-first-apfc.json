@@ -1,0 +1,98 @@
+{
+  "format": "practice-desk-authoring",
+  "version": 1,
+  "bankId": "apfc-schema-example",
+  "examId": "upsc-epfo-apfc",
+  "paperId": "apfc-schema-example",
+  "title": "APFC AI-first schema demonstration (illustrative)",
+  "edition": "custom",
+  "revision": 1,
+  "scoring": {
+    "correctMarks": 2.5,
+    "incorrectMarks": -0.8333333333333334
+  },
+  "timing": {
+    "kind": "whole-paper",
+    "minutes": 10,
+    "pausePolicy": "allowed"
+  },
+  "navigation": {
+    "questionNavigation": "free",
+    "sectionNavigation": "free",
+    "allowReview": true
+  },
+  "sections": [
+    {
+      "id": "combined",
+      "title": "Combined Examination"
+    }
+  ],
+  "questions": [
+    {
+      "id": "labour-01",
+      "examSection": "combined",
+      "syllabusHeadingId": "labour",
+      "topic": "Illustrative labour principles",
+      "kind": "single-choice",
+      "prompt": "Which letter comes second in the alphabet?",
+      "options": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "answer": "B",
+      "explanation": "B is second. This placeholder is not a labour-law question.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Demonstration only; no legal proposition"
+      },
+      "qa": {
+        "status": "unchecked"
+      }
+    },
+    {
+      "id": "economy-01",
+      "examSection": "combined",
+      "syllabusHeadingId": "economy",
+      "kind": "single-choice",
+      "prompt": "How many days are there in a conventional seven-day week?",
+      "options": [
+        "5",
+        "6",
+        "7",
+        "8"
+      ],
+      "answer": "C",
+      "explanation": "A conventional week has seven days.",
+      "provenance": {
+        "kind": "ai-original"
+      },
+      "qa": {
+        "status": "unchecked"
+      }
+    },
+    {
+      "id": "account-01",
+      "examSection": "combined",
+      "syllabusHeadingId": "accountancy",
+      "topic": "Practice examples",
+      "kind": "single-choice",
+      "prompt": "What is 2 + 2?",
+      "options": [
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "answer": "C",
+      "explanation": "2 + 2 = 4.",
+      "provenance": {
+        "kind": "ai-original"
+      },
+      "qa": {
+        "status": "unchecked"
+      }
+    }
+  ]
+}
