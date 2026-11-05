@@ -8,6 +8,7 @@ import type {AuthoringDraft,AuthoringQuestion} from "./authoring-draft.ts";
 import {validateAuthoringDraft} from "./authoring-draft.ts";
 import {inspectAuthoringPublication,publicationPlainText} from "./authoring-publisher.ts";
 import type {ImageAsset,QuestionKind,StimulusDefinition} from "../domain/question.ts";
+import type {AssetId} from "../domain/ids.ts";
 import {QUESTION_KINDS} from "../domain/question.ts";
 import type {RichDocument} from "../domain/rich-document.ts";
 import {plainRichDocument,validateRichDocument} from "../domain/rich-document.ts";
@@ -95,6 +96,19 @@ const rich=(value:unknown,path:string,known:ReadonlySet<string>):RichDocument=>{
  }
 };
 const empty=()=>plainRichDocument("");
+const assetRefs=(doc:RichDocument):AssetId[]=>{
+ const ids=new Set<string>();
+ const row=(items:readonly import("../domain/rich-document.ts").RichInline[])=>{
+  for(const item of items)if(item.type==="image")ids.add(item.assetId);
+ };
+ for(const block of doc.blocks){
+  if(block.type==="paragraph"||block.type==="heading")row(block.content);
+  else if(block.type==="list")block.items.forEach(row);
+  else if(block.type==="table")block.rows.forEach(cells=>cells.forEach(row));
+  else if(block.type==="image")ids.add(block.assetId);
+ }
+ return [...ids] as AssetId[];
+};
 const four=(items:unknown,path:string,known:ReadonlySet<string>):RichDocument[]=>
  array(items,path,4,4).map((v,i)=>rich(v,path+"["+i+"]",known));
 function media(value:unknown):ImageAsset[]{
@@ -135,8 +149,9 @@ function sharedStimuli(value:unknown,known:ReadonlySet<string>):StimulusDefiniti
    const document=rich(row.text,path+".text",known);
    const fallback=publicationPlainText(document);
    if(!fallback)err(path+".text","Shared passage must not be empty");
+   const assetIds=assetRefs(document);
    return {id:id as StimulusDefinition["id"],kind:row.kind,...head,
-    text:fallback,richText:document};
+    text:fallback,richText:document,...(assetIds.length?{assetIds}:{})};
   }
   if(row.kind==="table"){
    const columns=array(row.columns,path+".columns",12,1).map((x,j)=>
@@ -168,7 +183,7 @@ function toAnswer(value:unknown,kind:QuestionKind,path:string):string{
   if(value!=="True"&&value!=="False")return err(path,"Use true/false or True/False");
   return value;
  }
- return text(value,path,100,kind!=="free-response");
+ return text(kind==="free-response"&&value===undefined?"":value,path,100,kind!=="free-response");
 }
 export function toAuthoringDraft(value:unknown):AuthoringDraft {
  validateExamImportBudget(value);
@@ -306,7 +321,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
   if(!["","easy","medium","hard"].includes(String(difficulty)))
    err(path+".difficulty","Invalid difficulty label");
   return {id,section:section!.title,subject,syllabusHeadingId,
-   topic,subtopic,difficulty:difficulty as AuthoringQuestion["difficulty"],
+   topic,subtopic,difficulty:difficulty as NonNullable<AuthoringQuestion["difficulty"]>,
    sectionMinutes:section!.minutes,minSelections,maxSelections,
    partialCreditEach,partialPenaltyEach,
    kind:questionKind,prompt,passage,options,leftItems,rightItems,explanation,
@@ -314,7 +329,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
    ...(stimulusRef?{stimulusRef}:{}),
    provenance:{kind:provenance.kind as NonNullable<AuthoringQuestion["provenance"]>["kind"],
      ...(sourceNote===undefined?{}:{sourceNote})},
-   qa:{status:qa.status}};
+   qa:{status:qa.status as NonNullable<AuthoringQuestion["qa"]>["status"]}};
  });
  const draft:AuthoringDraft={schema:1,id:"agent:"+bankId,examId,paperId,title,
   edition:"custom",revision,durationMinutes,
