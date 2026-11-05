@@ -1,0 +1,137 @@
+{
+  "format": "practice-desk-authoring",
+  "version": 1,
+  "bankId": "cat-schema-example",
+  "examId": "cat",
+  "paperId": "cat-schema-example",
+  "title": "CAT AI-first schema demonstration (illustrative)",
+  "edition": "custom",
+  "revision": 1,
+  "scoring": {
+    "correctMarks": 3,
+    "incorrectMarks": -1
+  },
+  "timing": {
+    "kind": "sectional",
+    "pausePolicy": "forbidden",
+    "sectionTransition": "automatic",
+    "allowEarlySubmit": true
+  },
+  "navigation": {
+    "questionNavigation": "free",
+    "sectionNavigation": "sequential-locked",
+    "allowReview": true
+  },
+  "sections": [
+    {
+      "id": "varc",
+      "title": "Verbal Ability",
+      "minutes": 40
+    },
+    {
+      "id": "dilr",
+      "title": "Data Interpretation",
+      "minutes": 40
+    },
+    {
+      "id": "qa",
+      "title": "Quantitative Aptitude",
+      "minutes": 40
+    }
+  ],
+  "stimuli": [
+    {
+      "id": "rc-one",
+      "kind": "passage",
+      "title": "Illustrative RC passage",
+      "text": "A hypothetical library replaces paper catalogues with a local database. The passage contains no real-world claims."
+    },
+    {
+      "id": "dilr-one",
+      "kind": "table",
+      "title": "Fictional quantities",
+      "columns": [
+        "Item",
+        "Count"
+      ],
+      "rows": [
+        [
+          "P",
+          "2"
+        ],
+        [
+          "Q",
+          "4"
+        ]
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": "rc-1",
+      "examSection": "varc",
+      "subject": "Reading Comprehension",
+      "topic": "Main idea",
+      "kind": "single-choice",
+      "prompt": "Which summary best matches the illustrative passage?",
+      "stimulusRef": "rc-one",
+      "options": [
+        "A library replaces its catalogue.",
+        "Libraries close permanently.",
+        "Reading is prohibited.",
+        "No catalogue exists."
+      ],
+      "answer": "A",
+      "explanation": "The passage concerns a hypothetical catalogue replacement.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Synthetic example; not a past paper"
+      },
+      "qa": {
+        "status": "unchecked"
+      }
+    },
+    {
+      "id": "dilr-1",
+      "examSection": "dilr",
+      "subject": "Data Interpretation",
+      "kind": "numeric-entry",
+      "prompt": "What is P + Q?",
+      "stimulusRef": "dilr-one",
+      "answer": [
+        6
+      ],
+      "tolerance": 0,
+      "explanation": "2 + 4 = 6.",
+      "provenance": {
+        "kind": "ai-original"
+      },
+      "qa": {
+        "status": "unchecked"
+      }
+    },
+    {
+      "id": "qa-1",
+      "examSection": "qa",
+      "subject": "Quantitative Aptitude",
+      "kind": "multiple-select",
+      "prompt": "Which values are even?",
+      "options": [
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "answer": "A,C",
+      "minSelections": 1,
+      "maxSelections": 2,
+      "explanation": "2 and 4 are even.",
+      "provenance": {
+        "kind": "ai-original"
+      },
+      "qa": {
+        "status": "unchecked"
+      }
+    }
+  ]
+}
