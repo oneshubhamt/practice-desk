@@ -158,6 +158,59 @@ function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Field):st
   '<label class="picker" for="pd-author-field">Rich-content field</label>'+
   '<select id="pd-author-field">'+applicable.map(f=>option(f,fieldNames[f],field)).join("")+'</select>';
 }
+/** Author-supplied evidence is editable, but never automatically authenticated.
+ * Keep strict calendar/HTTPS and review invalidation in validateAuthoringDraft.
+ */
+function evidenceEditor(q:AuthoringQuestion):string{
+ const p=q.provenance,sources=p?.sources??[];
+ const fields=[["publisher","Publisher / issuing body",180],
+  ["title","Document title",240],["url","HTTPS URL",2048],
+  ["section","Section / chapter",180],["page","Page",80],
+  ["provision","Provision / section of law",140],
+  ["publicationDate","Publication date (YYYY-MM-DD)",10],
+  ["asOfDate","As-of date (YYYY-MM-DD)",10]] as const;
+ const review=q.qa?.review;
+ return '<details class="pd-author-section-manager" id="pd-author-evidence">'+
+  '<summary>Source evidence and question QA · '+sources.length+' citation(s) · '+
+  escapeText(q.qa?.status??"unchecked")+'</summary>'+
+  '<p class="fine">All citations, origin labels and review names are author-entered claims. Offline QA does not fetch documents, authenticate exam PYQs or certify current laws. Changing evidence invalidates an earlier reviewer acknowledgement.</p>'+
+  '<div class="pd-author-meta"><label>Claimed question origin<select id="pd-author-origin-kind">'+
+   ([["manual","Manual"],["ai-original","AI original"],["reconstruction","Reconstruction"],["official-pyq","Claimed official PYQ"]] as const)
+   .map(([value,label])=>option(value,label,p?.kind??"manual")).join("")+
+   '</select></label><label>Claimed exam year (optional)<input id="pd-author-origin-year" type="number" min="1900" max="2100" step="1" value="'+
+   escapeText(p?.examYear===undefined?"":String(p.examYear))+'"></label>'+
+   '<label>QA status (never certified)<select id="pd-author-qa-status">'+
+   ([["unchecked","Unchecked"],["needs-review","Needs review"]] as const)
+   .map(([value,label])=>option(value,label,q.qa?.status??"unchecked")).join("")+'</select></label></div>'+
+  sources.map((source,i)=>'<fieldset class="pd-author-evidence-source">'+
+   '<legend>Author-supplied citation '+(i+1)+'</legend><div class="pd-author-meta">'+
+   fields.map(([field,label,max])=>'<label>'+label+'<input data-author-source-index="'+i+
+    '" data-author-source-field="'+field+'" maxlength="'+max+'" value="'+
+    escapeText(source[field]??"")+'"></label>').join("")+
+   '<label>Author-assigned stance<select data-author-source-index="'+i+
+    '" data-author-source-field="stance">'+
+    option("","Unspecified",source.stance??"")+
+    option("supports","Supports",source.stance??"")+
+    option("disputes","Disputes",source.stance??"")+
+   '</select></label></div>'+
+   '<button type="button" class="btn danger" data-author-source-remove="'+i+'">Remove citation '+(i+1)+'</button>'+
+   '</fieldset>').join("")+
+  '<fieldset><legend>Add structured source</legend><div class="pd-author-meta">'+
+   '<label>Publisher / issuing body<input id="pd-author-source-new-publisher" maxlength="180" placeholder="Required"></label>'+
+   '<label>Document title<input id="pd-author-source-new-title" maxlength="240" placeholder="Required"></label></div>'+
+   '<button type="button" class="btn" id="pd-author-source-add"'+
+   (sources.length>=12?' disabled':'')+'>Add source citation</button></fieldset>'+
+  '<fieldset><legend>Optional independently attributed review claim</legend>'+
+   '<p class="fine">This records what a named reviewer is claimed to have checked. Identity and factual findings are NOT authenticated.</p>'+
+   '<div class="pd-author-meta"><label>Reviewer name<input id="pd-author-qa-reviewer" maxlength="120" value="'+
+    escapeText(review?.reviewer??"")+'"></label><label>Review/evidence note<input id="pd-author-qa-review-note" maxlength="500" value="'+
+    escapeText(review?.note??"")+'"></label></div>'+
+   (review?'<p class="fine">Claimed review: '+escapeText(review.reviewedAt)+
+    '. Accepted QA warning codes: '+escapeText(review.acceptedWarningCodes.join(", ")||"none")+'.</p>':"")+
+   '<button type="button" class="btn" id="pd-author-qa-record">Record author-attributed review</button>'+
+   (review?'<button type="button" class="btn danger" id="pd-author-qa-clear">Clear review record</button>':"")+
+  '</fieldset></details>';
+}
 function toolbar():string{
  const buttons=[
   ["strong","Bold"],["emphasis","Italic"],["underline","Underline"],
@@ -478,7 +531,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    '<button class="btn" id="pd-author-up">Move up</button>'+
    '<button class="btn" id="pd-author-down">Move down</button>'+
    '<button class="btn danger" id="pd-author-delete-question">Delete question</button></div></div>'+
-   controls(d,q,field)+sectionManager(d,sectionManagerExpanded)+
+   controls(d,q,field)+evidenceEditor(q)+sectionManager(d,sectionManagerExpanded)+
    toolbar()+
    '<div id="pd-author-editor" class="pd-author-editor" role="group" aria-label="Edit '+escapeText(fieldNames[field])+'"></div>'+
    '<div class="pd-author-insert"><fieldset><legend>Insert equation</legend>'+
