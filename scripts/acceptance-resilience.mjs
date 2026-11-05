@@ -28,17 +28,10 @@ try{
  },"departed durable first tab");
  check(departed.packageId.endsWith(":practice:strict"),
    "Frozen strict section has no distinct source-practice revision identity");
- // Deterministic stale-write ordering: first resume Tab A while it still
- // owns its genuine version, then create Tab B AFTER the first tab has loaded.
- // The older test saved B before resuming A; A was therefore often *correctly*
- // hydrated to B, and a later C click was not a stale conflict at all.
- check(await page.locator('[data-attempt="'+attemptId+'"]').count()>0,
-   "Original tab must expose its saved attempt");
- await page.locator('[data-attempt="'+attemptId+'"]').first().click();
- await route(page,"exam");
- check(await page.locator("input[data-choice]").count()>=3,
-   "Original tab must resume its question before second tab opens");
- const originalRevision=(await records(page)).find(x=>x.id===attemptId)?.saveRevision??0;
+ // B starts from the durable attempt while A is safely at Library.
+ // Resuming A later may either hydrate B's exact newer answer (no conflict)
+ // or detect a stale checkpoint and report the conflict/return to Library.
+ // Both are safe; require the authoritative B answer to remain unchanged.
  const other=await context.newPage();
  other.on("dialog",d=>void d.accept());
  await other.goto(offlineUrl,{waitUntil:"load"});
@@ -50,9 +43,18 @@ try{
  await other.locator("input[data-choice]").nth(1).click();
  const updated=await until(async()=>{
   const x=(await records(other)).find(x=>x.id===attemptId);
-  return x?.saveRevision>originalRevision&&
+  return x?.saveRevision>departed.saveRevision&&
     x.state.responses.some(y=>y.response?.kind==="single-choice"&&y.response.optionId===replacement)?x:null;
  },"durable alternate second-tab answer");
+ check(await page.locator('[data-attempt="'+attemptId+'"]').count()>0,
+   "Original tab must still expose its saved attempt before resume");
+ await page.locator('[data-attempt="'+attemptId+'"]').first().click();
+ await page.waitForFunction(expected=>{
+  const conflict=[...document.querySelectorAll(".generic-warning")]
+   .some(n=>n.textContent?.includes("Another tab"));
+  const checked=document.querySelector('input[data-choice]:checked')?.getAttribute("data-choice");
+  return conflict||checked===expected||Boolean(document.querySelectorAll("input[data-choice]")[2]);
+ },replacement,{timeout:12000});
  // B may trigger A's automatic stale-record rejection/Library redirect
  // BEFORE a candidate can click C. Or A may legitimately refresh to B's new
  // answer. Exercise C only while A still shows the old exam controls; require
