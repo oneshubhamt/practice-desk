@@ -223,6 +223,8 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
  let shelf:AuthoringDraftShelf|null=null,questionId="",field:Field=initialField;
  let closed=true,renderSequence=0,lastSaveError="",storageBlocked=false,publishing=false,sectionManagerExpanded=false;
  let stage:StagingWorkspace|null=null,stageFilter="all",stageBlocked=false,stageError="";
+ // Current per-open bytes serve as a local compare-and-set stamp.
+ let lastShelfBytes:string|null=null,lastStageBytes:string|null=null,stageConflict=false;
  const active=():AuthoringDraft=>{
   const current=shelf?.drafts.find(d=>d.id===shelf!.activeId);
   if(!current)throw Error("No active authoring draft");
@@ -237,9 +239,24 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   const el=host?.querySelector<HTMLElement>("#pd-author-status");
   if(el){el.textContent=message;el.setAttribute("role",alert?"alert":"status");}
  };
+ const onExternalStorage=(event:StorageEvent):void=>{
+  if(closed||!host)return;
+  if((event.key===AUTHORING_KEY||event.key===null)&&
+     localStorage.getItem(AUTHORING_KEY)!==lastShelfBytes){
+   lastSaveError="Another tab changed authoring drafts. Your edits are UNSAVED; export the draft and reopen.";
+   status("Not saved: "+lastSaveError,true);
+  }
+  if((event.key===STAGING_KEY||event.key===null)&&
+     localStorage.getItem(STAGING_KEY)!==lastStageBytes){
+   stageConflict=true;
+   stageError="Another tab changed AI staging. Export work and reopen.";
+   status(stageError,true);
+  }
+ };
  const load=():void=>{
   try{
    const value=localStorage.getItem(AUTHORING_KEY);
+   lastShelfBytes=value;
    shelf=value?validateAuthoringShelf(JSON.parse(value)):defaultAuthoringShelf();
    lastSaveError="";storageBlocked=false;
   }catch(error){
@@ -253,35 +270,45 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   questionId=active().questions[0]!.id;field=initialField;
   try{
    const staged=localStorage.getItem(STAGING_KEY);
+   lastStageBytes=staged;
    stage=staged?validateStagingWorkspace(JSON.parse(staged)):null;
-   stageBlocked=false;stageError="";
+   stageBlocked=false;stageConflict=false;stageError="";
   }catch(error){
    stage=null;stageBlocked=true;
    stageError="Staging storage is unreadable; its original bytes are preserved. "+
     (error instanceof Error?error.message:"Invalid staged data");
   }
  };
- const persist=():void=>{
-  if(!shelf)return;
-  if(storageBlocked){status("Damaged saved draft data remains untouched. Export your current draft or explicitly reset damaged storage.",true);return;}
+ const persist=():boolean=>{
+  if(!shelf)return false;
+  if(storageBlocked){status("Damaged saved draft data remains untouched. Export your current draft or explicitly reset damaged storage.",true);return false;}
   try{
    shelf=validateAuthoringShelf(shelf);
-   localStorage.setItem(AUTHORING_KEY,JSON.stringify(shelf));
+   // Synchronous compare-and-set against bytes loaded in this tab.
+   if(localStorage.getItem(AUTHORING_KEY)!==lastShelfBytes)
+    throw Error("Another tab changed authoring drafts; export unsaved changes and reopen.");
+   const bytes=JSON.stringify(shelf);
+   localStorage.setItem(AUTHORING_KEY,bytes);lastShelfBytes=bytes;
    lastSaveError="";
    status("Draft saved locally on this device · "+new Date().toLocaleTimeString());
+   return true;
   }catch(error){
    lastSaveError=error instanceof Error?error.message:"Local draft could not be saved";
    status("Not saved: "+lastSaveError+". Export the draft before leaving.",true);
+   return false;
   }
  };
  const persistStage=(next:StagingWorkspace|null):void=>{
   if(stageBlocked)throw Error("Existing staged files are unreadable. Reset damaged staging explicitly.");
+  if(stageConflict||localStorage.getItem(STAGING_KEY)!==lastStageBytes){
+   stageConflict=true;
+   throw Error("Another tab changed AI staging; export work and reopen without overwriting.");
+  }
   if(next){
-   const validated=validateStagingWorkspace(next);
-   localStorage.setItem(STAGING_KEY,JSON.stringify(validated));
-   stage=validated;
+   const validated=validateStagingWorkspace(next),bytes=JSON.stringify(validated);
+   localStorage.setItem(STAGING_KEY,bytes);lastStageBytes=bytes;stage=validated;
   }else{
-   localStorage.removeItem(STAGING_KEY);stage=null;
+   localStorage.removeItem(STAGING_KEY);lastStageBytes=null;stage=null;
   }
  };
  const stageFiles=async(files:readonly File[]):Promise<void>=>{
@@ -326,6 +353,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
  };
  const close=(returnFocus=true)=>{
   renderSequence++;capture();
+  window.removeEventListener("storage",onExternalStorage);
   host?.parentElement?.classList.remove("pd-author-mode");
   host?.replaceChildren();
   if(host)host.hidden=true;
@@ -436,6 +464,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    '<div class="row"><button class="btn" id="pd-stage-add">Stage AI bank files</button>'+
    '<input type="file" multiple accept=".json,application/json" id="pd-stage-input" hidden></div>'+
    stagePanel+
+   (stageConflict?'<p class="generic-warning" role="alert">'+escapeText(stageError)+'</p>':"")+
    (lastSaveError?'<p class="generic-warning" role="alert">'+escapeText(lastSaveError)+'</p>':"")+
    '<div class="pd-author-top"><label>Saved draft<select id="pd-author-drafts">'+draftOptions+'</select></label>'+
    '<div class="row"><button class="btn" id="pd-author-new">New draft</button>'+
@@ -620,7 +649,10 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   };
   if(stageBlocked)click("pd-stage-recover",()=>{
    if(!confirm("Discard unreadable staging bytes? Recover or export original data first."))return;
-   try{localStorage.removeItem(STAGING_KEY);stageBlocked=false;stageError="";stage=null;void render();}
+   try{if(localStorage.getItem(STAGING_KEY)!==lastStageBytes)
+      throw Error("Another tab changed AI staging; reopen before resetting.");
+     localStorage.removeItem(STAGING_KEY);lastStageBytes=null;
+     stageBlocked=false;stageConflict=false;stageError="";stage=null;void render();}
    catch(error){status(error instanceof Error?error.message:"Unable to reset staging",true);}
   });
   if(stage&&staged){
@@ -656,8 +688,13 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
       throw Error("This stage already has a Wordgard draft. Open the saved draft to preserve its edits. Staged files cannot overwrite it.");
      capture();
      const next=validateAuthoringShelf({schema:1,activeId:incoming.id,drafts:[...shelf!.drafts,incoming]});
-     localStorage.setItem(AUTHORING_KEY,JSON.stringify(next));
-     shelf=next;lastSaveError="";questionId=incoming.questions[0]!.id;field=initialField;
+     const oldShelf=shelf!;
+     shelf=next;
+     if(!persist()){
+      shelf=oldShelf;
+      throw Error("Staged handoff was not saved: "+lastSaveError);
+     }
+     questionId=incoming.questions[0]!.id;field=initialField;
      void render();
     }catch(error){status(error instanceof Error?error.message:"Staged handoff failed",true);}
    });
@@ -943,7 +980,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    if(!closed)return;
    host=target;origin=trigger;closed=false;
    target.parentElement?.classList.add("pd-author-mode");
-   load();await render();
+   load();window.addEventListener("storage",onExternalStorage);await render();
    host?.scrollIntoView({block:"start",behavior:"instant"});
    host?.querySelector<HTMLElement>("#pd-author-heading")?.focus({preventScroll:true});
   },
