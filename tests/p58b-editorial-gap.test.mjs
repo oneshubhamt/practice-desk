@@ -62,5 +62,13 @@ test("P58-B F08 red: independently generated shared media IDs get deterministic 
  const reverse=stagedToAuthoringDraft(addStagedFiles(blank,[
   {name:"b.json",source:second},{name:"a.json",source:first}
  ]));
+ assert.equal(merged.id,reverse.id,"Source file order should not fork a selected paper");
  assert.deepEqual(merged.assets.map(x=>x.id).sort(),reverse.assets.map(x=>x.id).sort());
+ const sameDigest=structuredClone(second);
+ sameDigest.media[0].dataUri=first.media[0].dataUri;
+ const sameMerged=stagedToAuthoringDraft(addStagedFiles(blank,[
+  {name:"a.json",source:first},{name:"b.json",source:sameDigest}
+ ]));
+ assert.equal(sameMerged.assets.length,2,"Same bytes from different banks retain explicit source namespaces");
+ assert.equal(sameMerged.assets[0].contentHash,sameMerged.assets[1].contentHash);
 });
