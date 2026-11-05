@@ -401,8 +401,8 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
       ' · Subjects: '+escapeText(staged.topicCounts.map(x=>x.label+' ('+x.count+')').join('; '))+
       ' · Kinds: '+escapeText(staged.kinds.map(x=>x.label+' ('+x.count+')').join('; '))+'</p>'+
       '<div class="row"><label>Filter<select id="pd-stage-filter">'+
-       [["all","All questions"],["errors","QA errors"],["warnings","Warnings"],
-        ["selected","Selected"],["unselected","Not selected"]].map(([value,label])=>option(value,label,stageFilter)).join('')+
+       ([["all","All questions"],["errors","QA errors"],["warnings","Warnings"],
+        ["selected","Selected"],["unselected","Not selected"]] as const).map(([value,label])=>option(value,label,stageFilter)).join('')+
       '</select></label><button class="btn" id="pd-stage-handoff">Edit selected in Wordgard</button>'+
       '<button class="btn" id="pd-stage-export">Export QA report</button>'+
       '<button class="btn danger" id="pd-stage-clear">Discard staging</button></div>'+
