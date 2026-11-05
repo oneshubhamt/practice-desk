@@ -1,3 +1,15 @@
+## 0I. P57-B — deterministic QA, evidence and duplicate triage (5 November 2026)
+
+**Authority:** User expressly approved P57-B as the next pass. **Implementation commit pending full exact-source CI**; no P57-C permission and no release/merge permission.
+
+| Step | Source-led work and proof |
+| --- | --- |
+| 1. Inspect | Checked current `external-bank.ts`, authoring draft/publisher, real `scoreAttempt`, current P57-A tests, source examples and five-job CI. Gap: structural validation was strong but had no per-question source evidence, duplicate screen, explicit arithmetic oracle, or actionable review summary. |
+| 2. Design | Preserve one source schema, canonical publisher, content hashes and all historical scoring. New **pure bounded QA** in `external-bank-qa.ts`, invoked by the existing source inspector (also used by CLI and browser); warnings vs deterministic fatal errors. No network or automatic source trust. Unverified/source-disagreement findings remain review work. |
+| 3. Implement | Add source citation metadata with real calendar/HTTPS validation; citation texts are author-claimed and published with caution. Per-question checked/unverified matrix, exact/near duplicate candidates across files, duplicate distractor and narrow arithmetic contradiction blocks, explicit-key/explanation warning, legal currentness and claimed PYQ warnings, engine-based correct-answer oracle. Add `qa-bank` and `--against` CLI mode. No UI staging/editor overhaul. |
+| 4. Reconcile | Existing compiler remains the sole authority; duplicate candidates never delete questions. Shared passage is not a duplicate key. Absence of source corroboration is reported as **unverified**, not pass. QA blocks compilation only for deterministic errors; warnings are inspectable. Metadata/source integrity remains content-addressed; historical frozen attempts are untouched. |
+| 5. Test | New adversarial P57-B Node tests and existing five-job CI, source-matched HTML reproducibility and real offline browser regression are the required closure evidence. **Record run ID and exact result only after successful checks**. Physical Mac/iOS, manual factual corroboration, real AT/IME/OS loss, human UI signoff, P57-C and release still open. |
+
 # Practice Desk — Consolidated Engineering Programme
 
 **P57-A IMPLEMENTED AND SOURCE-VERIFIED (5 November 2026) — FULL FIVE-JOB AUTOMATED CI PASS; RELEASE HOLD.** Unified external AI/human CAT/APFC question bank source, canonical Wordgard draft/publisher, offline CLI and native Library import are tracked in [P57-A engineering five-step ledger](#0h-p57-a--unified-ai-first-external-format-and-deterministic-compiler-5-november-2026) and [as-built authoring guide](architecture/QUESTION_BANK_AUTHORING.md). P57-B evidence/duplicates and P57-C staging/Wordgard bulk correction **not authorized**; release remains on HOLD. The prior plan was explicitly authorized for P57-A in this session.

@@ -14,20 +14,17 @@ import type {RichDocument} from "../domain/rich-document.ts";
 import {plainRichDocument,validateRichDocument} from "../domain/rich-document.ts";
 import {validateMediaInventory} from "../domain/media.ts";
 import {sha256} from "../domain/hash.ts";
+import {inspectExternalQuality} from "./external-bank-qa.ts";
+import type {QualityIssue,QualityResult} from "./external-bank-qa.ts";
 
-export interface ExternalBankIssue {
- readonly path:string;
- readonly code:"source-invalid"|"publication-invalid";
- readonly severity:"error";
- readonly message:string;
- readonly questionId?:string;
-}
+export type ExternalBankIssue=QualityIssue;
 export interface ExternalBankReport {
  readonly valid:boolean;
  readonly questionCount:number;
  readonly issues:readonly ExternalBankIssue[];
  readonly editorialStatus:"caution";
  readonly factualVerification:"not-performed";
+ readonly quality?:QualityResult;
  readonly compiled?:ExamPackage;
 }
 export class ExternalBankError extends Error {
@@ -301,11 +298,37 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
   if(!["multiple-select","matching"].includes(questionKind)&&
      (q.partialCreditEach!==undefined||q.partialPenaltyEach!==undefined))
    err(path+".partialCreditEach","Component marks belong to multiple/matching");
-  const provenance=object(q.provenance,path+".provenance",["kind","sourceNote"]);
+  const provenance=object(q.provenance,path+".provenance",["kind","sourceNote","examYear","sources"]);
   if(!["ai-original","manual","reconstruction","official-pyq"].includes(String(provenance.kind)))
    err(path+".provenance.kind","Provenance must name an author-supplied origin");
   const sourceNote=provenance.sourceNote===undefined?undefined:
    text(provenance.sourceNote,path+".provenance.sourceNote",300,false);
+  const examYear=provenance.examYear===undefined?undefined:
+   num(provenance.examYear,path+".provenance.examYear",1900,2100,true);
+  const sources=provenance.sources===undefined?undefined:
+   array(provenance.sources,path+".provenance.sources",12).map((v,k)=>{
+    const at=path+".provenance.sources["+k+"]";
+    const s=object(v,at,["publisher","title","url","section","page","provision",
+     "publicationDate","asOfDate","stance"]);
+    const clean:Record<string,string>={publisher:text(s.publisher,at+".publisher",180),
+     title:text(s.title,at+".title",240)};
+    for(const field of ["url","section","page","provision","publicationDate","asOfDate","stance"]){
+     if(s[field]!==undefined)clean[field]=text(s[field],at+"."+field,
+      field==="url"?2048:field==="page"?80:field.includes("Date")?10:180);
+    }
+    if(clean.url!==undefined&&!/^https:\/\/[^\s/@]+(?:\:[0-9]+)?(?:\/[^\s]*)?$/iu.test(clean.url))
+     err(at+".url","Use only HTTPS URLs with a host and no embedded credentials");
+    for(const field of ["publicationDate","asOfDate"]){
+     const date=clean[field];
+     if(date!==undefined&&(!/^\d{4}-\d{2}-\d{2}$/.test(date)||
+       Number.isNaN(Date.parse(date+"T00:00:00.000Z"))||
+       new Date(date+"T00:00:00.000Z").toISOString().slice(0,10)!==date))
+      err(at+"."+field,"Use a real ISO calendar date YYYY-MM-DD");
+    }
+    if(clean.stance!==undefined&&!["supports","disputes"].includes(clean.stance))
+     err(at+".stance","Use supports or disputes, as an unverified author claim");
+    return clean as NonNullable<NonNullable<AuthoringQuestion["provenance"]>["sources"]>[number];
+   });
   const qa=object(q.qa,path+".qa",["status"]);
   if(qa.status!=="unchecked"&&qa.status!=="needs-review")
    err(path+".qa.status","Only unchecked or needs-review are accepted; no self-certification");
@@ -328,7 +351,8 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
    answer,tolerance,source:sourceNote??"",
    ...(stimulusRef?{stimulusRef}:{}),
    provenance:{kind:provenance.kind as NonNullable<AuthoringQuestion["provenance"]>["kind"],
-     ...(sourceNote===undefined?{}:{sourceNote})},
+     ...(sourceNote===undefined?{}:{sourceNote}),
+     ...(examYear===undefined?{}:{examYear}),...(sources===undefined?{}:{sources})},
    qa:{status:qa.status as NonNullable<AuthoringQuestion["qa"]>["status"]}};
  });
  const draft:AuthoringDraft={schema:1,id:"agent:"+bankId,examId,paperId,title,
@@ -343,7 +367,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
  try{return validateAuthoringDraft(draft);}
  catch(error){return err("$",error instanceof Error?error.message:"Invalid canonical authoring draft");}
 }
-export function inspectExternalQuestionBank(value:unknown,existing:readonly ExamPackage[]=[]):ExternalBankReport {
+export function inspectExternalQuestionBank(value:unknown,existing:readonly ExamPackage[]=[],comparisonSources:readonly unknown[]=[]):ExternalBankReport {
  const questionCount=Array.isArray((value as {questions?:unknown}|null)?.questions)?
   ((value as {questions:unknown[]}).questions.length):0;
  try{
@@ -360,8 +384,20 @@ export function inspectExternalQuestionBank(value:unknown,existing:readonly Exam
      message:issue.reason,...(issue.questionId?{questionId:issue.questionId}:{})
     }))};
   }
-  return {valid:true,questionCount:draft.questions.length,issues:[],
-   editorialStatus:"caution",factualVerification:"not-performed",compiled:check.compiled};
+  const comparisons=comparisonSources.map((raw,i)=>{
+   try{
+    const source=raw as {bankId?:unknown;revision?:unknown};
+    const bankId=key(source?.bankId,"comparisons["+i+"].bankId");
+    const revision=num(source?.revision,"comparisons["+i+"].revision",1,1000000,true);
+    return {bankId,revision,draft:toAuthoringDraft(raw)};
+   }catch(error){return err("comparisons["+i+"]",error instanceof Error?error.message:"Invalid comparison source");}
+  });
+  const bankId=key((value as {bankId?:unknown}).bankId,"$.bankId");
+  const quality=inspectExternalQuality(draft,check.compiled,bankId,comparisons);
+  return {valid:quality.summary.errors===0,questionCount:draft.questions.length,
+   issues:quality.issues,quality,editorialStatus:"caution",
+   factualVerification:"not-performed",
+   ...(quality.summary.errors===0?{compiled:check.compiled}:{})};
  }catch(error){
   const issues=error instanceof ExternalBankError?error.issues:[{
    path:"$",code:"source-invalid" as const,severity:"error" as const,
@@ -371,8 +407,8 @@ export function inspectExternalQuestionBank(value:unknown,existing:readonly Exam
    factualVerification:"not-performed"};
  }
 }
-export function compileExternalQuestionBank(value:unknown,existing:readonly ExamPackage[]=[]):ExamPackage {
- const report=inspectExternalQuestionBank(value,existing);
+export function compileExternalQuestionBank(value:unknown,existing:readonly ExamPackage[]=[],comparisonSources:readonly unknown[]=[]):ExamPackage {
+ const report=inspectExternalQuestionBank(value,existing,comparisonSources);
  if(!report.valid||!report.compiled)throw new ExternalBankError(report.issues);
  return report.compiled;
 }

@@ -315,9 +315,17 @@ export function compileAuthoringPublication(
   }
   const editorial={
    status:"caution" as const,
+   ...(q.provenance?.sources?.some(s=>s.url)?{sources:q.provenance.sources.filter(
+    (s):s is typeof s & {url:string}=>typeof s.url==="string")
+     .map(s=>({title:s.publisher+" — "+s.title,url:s.url}))}:{}),
    notes:"User-authored "+d.edition+" question; answer and source have not been independently certified."+
     (q.provenance?" Claimed origin: "+q.provenance.kind+" (not authenticated).":"")+
     (q.qa?" Author QA state: "+q.qa.status+".":"")+
+    (q.provenance?.examYear?" Claimed exam year: "+q.provenance.examYear+".":"")+
+    (q.provenance?.sources?.length?" Author-supplied citations: "+
+       q.provenance.sources.map(s=>s.publisher+" / "+s.title+
+        (s.provision?" / "+s.provision:"")+(s.asOfDate?" as of "+s.asOfDate:"")).join("; ")+
+       " (NOT independently fetched or verified).":"")+
     (q.source.trim()?" Source/reference: "+q.source.trim():"")
   };
   const signed={id:revisionId,questionId,revision:d.revision,content,editorial};

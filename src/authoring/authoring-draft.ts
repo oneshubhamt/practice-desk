@@ -41,7 +41,12 @@ export type AuthoringQuestion={
  /** Optional shared passage/table/chart; never an in-question copy. */
  readonly stimulusRef?:string;
  /** Claims remain unverified until separate P57-B evidence review. */
- readonly provenance?:{readonly kind:"ai-original"|"manual"|"reconstruction"|"official-pyq";readonly sourceNote?:string};
+ readonly provenance?:{readonly kind:"ai-original"|"manual"|"reconstruction"|"official-pyq";readonly sourceNote?:string;
+ readonly examYear?:number;
+ readonly sources?:readonly {readonly publisher:string;readonly title:string;readonly url?:string;
+  readonly section?:string;readonly page?:string;readonly provision?:string;
+  readonly publicationDate?:string;readonly asOfDate?:string;
+  readonly stance?:"supports"|"disputes"}[];};
  readonly qa?:{readonly status:"unchecked"|"needs-review"};
 };
 export type AuthoringDraft={
@@ -145,11 +150,38 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   all.add(questionId);
   let provenance:AuthoringQuestion["provenance"];
   if(q.provenance!==undefined){
-   const source=rec(q.provenance,"provenance",["kind","sourceNote"]);
+   const source=rec(q.provenance,"provenance",["kind","sourceNote","examYear","sources"]);
    if(!["ai-original","manual","reconstruction","official-pyq"].includes(String(source.kind)))
     throw Error("Invalid provenance origin");
    provenance={kind:source.kind as NonNullable<AuthoringQuestion["provenance"]>["kind"],
-     ...(source.sourceNote===undefined?{}:{sourceNote:text(source.sourceNote,"source note",300)})};
+     ...(source.sourceNote===undefined?{}:{sourceNote:text(source.sourceNote,"source note",300)}),
+     ...(source.examYear===undefined?{}:{examYear:num(source.examYear,"exam year",1900,2100)}),
+     ...(source.sources===undefined?{}:{sources:list(source.sources,12,"evidence sources").map((v,i)=>{
+      const citation=rec(v,"source "+i,["publisher","title","url","section","page",
+       "provision","publicationDate","asOfDate","stance"]);
+      const out={
+       publisher:text(citation.publisher,"source publisher",180,true),
+       title:text(citation.title,"source title",240,true),
+       ...(citation.url===undefined?{}:{url:text(citation.url,"source URL",2048,true)}),
+       ...(citation.section===undefined?{}:{section:text(citation.section,"source section",180)}),
+       ...(citation.page===undefined?{}:{page:text(citation.page,"source page",80)}),
+       ...(citation.provision===undefined?{}:{provision:text(citation.provision,"source provision",140)}),
+       ...(citation.publicationDate===undefined?{}:{publicationDate:text(citation.publicationDate,"source publication date",10,true)}),
+       ...(citation.asOfDate===undefined?{}:{asOfDate:text(citation.asOfDate,"source as-of date",10,true)}),
+       ...(citation.stance===undefined?{}:{stance:citation.stance})
+      };
+      if(out.url!==undefined&&!/^https:\/\/[^\s@]+$/iu.test(out.url))
+       throw Error("Source URL must be HTTPS with no embedded credentials");
+      for(const date of [out.publicationDate,out.asOfDate]){
+       if(date!==undefined&&(!/^\d{4}-\d{2}-\d{2}$/.test(date)||
+        Number.isNaN(Date.parse(date+"T00:00:00.000Z"))||
+        new Date(date+"T00:00:00.000Z").toISOString().slice(0,10)!==date))
+        throw Error("Invalid source calendar date");
+      }
+      if(out.stance!==undefined&&out.stance!=="supports"&&out.stance!=="disputes")
+       throw Error("Invalid claimed source stance");
+      return out;
+     })})};
   }
   let qa:AuthoringQuestion["qa"];
   if(q.qa!==undefined){
