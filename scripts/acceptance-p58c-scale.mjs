@@ -38,6 +38,27 @@ const screenshot=async(name)=>{
  await page.screenshot({path:"artifacts/p58c-scale/"+engine+"-"+name+".png",
   animations:"disabled",fullPage:false});
 };
+const diagnoseNarrowLayout=async(name)=>{
+ const report=await page.evaluate(()=>{
+  const width=document.documentElement.clientWidth,scroll=document.documentElement.scrollWidth;
+  if(scroll<=width)return null;
+  const offenders=[...document.querySelectorAll("h1,h2,h3,p,button,section")].filter(el=>
+   el.getBoundingClientRect().right>width+1&&el.getBoundingClientRect().left>=0).slice(0,6);
+  return {width,scroll,offenders:offenders.map(el=>{
+   const chain=[];
+   for(let node=el;node&&node!==document.body&&chain.length<7;node=node.parentElement){
+    const css=getComputedStyle(node),r=node.getBoundingClientRect();
+    chain.push({tag:node.tagName,id:node.id,classes:String(node.className).slice(0,100),
+     text:(node.children.length?node.querySelector("h1,h2,h3")?.textContent:node.textContent)?.trim().slice(0,72),
+     left:Math.round(r.left),right:Math.round(r.right),width:Math.round(r.width),
+     minWidth:css.minWidth,display:css.display,grid:css.gridTemplateColumns,
+     overflowWrap:css.overflowWrap,whiteSpace:css.whiteSpace});
+   }
+   return chain;
+  })};
+ });
+ if(report)console.log("P58-C "+engine+" narrow "+name+" computed geometry "+JSON.stringify(report));
+};
 try{
  await page.locator("#g-author-open").click();
  await measure("stageEightFiles400",async()=>{
@@ -167,6 +188,7 @@ try{
   engine+" synthetic source appears falsely official");
 
  await page.setViewportSize({width:195,height:844});
+ await diagnoseNarrowLayout("Library");
  await assertNoOverflow(page,engine+" high-volume Library 195px/140%");
  await screenshot("library-200-195");
  await page.setViewportSize({width:1280,height:850});
@@ -190,6 +212,7 @@ try{
  await page.locator("#g-library").click();await route(page,"library");
  await page.locator("#g-learning").click();await route(page,"learning");
  await page.setViewportSize({width:195,height:844});
+ await diagnoseNarrowLayout("Learning");
  await assertNoOverflow(page,engine+" high-volume Learning 195px/140%");
  await screenshot("learning-200-195");
  check(errors.length===0,engine+" browser exceptions "+errors.join("; "));
