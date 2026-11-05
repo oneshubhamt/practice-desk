@@ -23,7 +23,7 @@ export function makeP58cSources({files=8,each=50,duplicates=false,media=true}={}
    sections:[{id:"general",title:"Mixed sections"}],
    ...(media?{media:images,stimuli:stimulus}:{}),
    questions:Array.from({length:each},(_,i)=>{
-    const kind=P58C_KINDS[(i+bank)%6];
+    const kind=duplicates&&bank===0&&i<42?"single-choice":P58C_KINDS[(i+bank)%6];
     const id="q"+bank+"_"+String(i).padStart(3,"0");
     const stem=duplicates&&bank===0&&i<42?
       "The same synthetic premise is intentionally repeated to test the five hundred candidate duplicate cap.":
