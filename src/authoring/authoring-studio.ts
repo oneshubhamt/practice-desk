@@ -12,6 +12,7 @@ import type {ExamPackage} from "../app/exam-package.ts";
 import {inspectAuthoringPublication,publicationPlainText,PublicationValidationError,
  type PublicationIssue} from "./authoring-publisher.ts";
 import {inspectExternalQuality,type QualityIssue} from "./external-bank-qa.ts";
+import {createDraftExchange,isDraftExchange,readDraftExchange} from "./authoring-exchange.ts";
 import {STAGING_KEY,addStagedFiles,validateStagingWorkspace,inspectStagingWorkspace,
  stagedToAuthoringDraft,updateStagedSelection,type StagingWorkspace,type StagedFile}
  from "./authoring-staging.ts";
@@ -523,7 +524,8 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    '<div class="pd-author-top"><label>Saved draft<select id="pd-author-drafts">'+draftOptions+'</select></label>'+
    '<div class="row"><button class="btn" id="pd-author-new">New draft</button>'+
    '<button class="btn" id="pd-author-export">Export draft JSON</button>'+
-   '<button class="btn" id="pd-author-import">Import draft JSON</button>'+
+   '<button class="btn" id="pd-author-exchange">Export versioned exchange</button>'+
+   '<button class="btn" id="pd-author-import">Import draft / exchange JSON</button>'+
    (storageBlocked?'<button class="btn danger" id="pd-author-reset-corrupt">Reset damaged draft storage</button>':"")+
    '<input type="file" id="pd-author-import-file" accept=".json,application/json" hidden></div></div>'+
    '<div class="pd-author-top"><label>Question<select id="pd-author-questions">'+questionOptions+'</select></label>'+
@@ -754,6 +756,18 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    });
   }
   click("pd-author-export",exportDraft);
+  click("pd-author-exchange",()=>{
+   capture();
+   try{
+    const source=JSON.stringify(createDraftExchange(active()),null,2);
+    const url=URL.createObjectURL(new Blob([source],{type:"application/json"}));
+    const link=document.createElement("a");
+    link.href=url;link.download="Practice_Desk_Draft_Exchange_"+active().id+".json";
+    document.body.append(link);link.click();link.remove();
+    window.setTimeout(()=>URL.revokeObjectURL(url),1000);
+    status("Versioned lossless unpublished Wordgard exchange exported; no source authentication claimed.");
+   }catch(error){status(error instanceof Error?error.message:"Unable to export draft exchange",true);}
+  });
   click("pd-author-preview-toggle",()=>{
    try{
     capture();const dest=find<HTMLElement>("pd-author-preview");
@@ -786,13 +800,20 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    const file=(e.target as HTMLInputElement).files?.[0];if(!file)return;
    try{
     if(file.size>AUTHORING_MAX_BYTES)throw Error("Draft file too large");
-    const imported=validateAuthoringDraft(JSON.parse(await file.text()));
+    const input=JSON.parse(await file.text());
+    const imported=isDraftExchange(input)?readDraftExchange(input):validateAuthoringDraft(input);
     if(!shelf)throw Error("No draft shelf");
     if(shelf.drafts.some(d=>d.id===imported.id))
      throw Error("Draft ID already exists. Export or change the source draft ID before importing.");
     capture();
-    shelf=validateAuthoringShelf({schema:1,activeId:imported.id,drafts:[...shelf.drafts,imported]});
-    questionId=imported.questions[0]!.id;field=initialField;persist();void render();
+    const previous=shelf;
+    const next=validateAuthoringShelf({schema:1,activeId:imported.id,drafts:[...shelf.drafts,imported]});
+    shelf=next;
+    if(!persist()){
+     shelf=previous;
+     throw Error("Imported draft not saved: "+lastSaveError);
+    }
+    questionId=imported.questions[0]!.id;field=initialField;void render();
    }catch(error){status(error instanceof Error?error.message:"Cannot import draft",true);}
   };
   const metadata=[
