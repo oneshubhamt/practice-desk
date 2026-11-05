@@ -40,6 +40,9 @@ export type AuthoringQuestion={
  readonly source:string;
  /** Optional shared passage/table/chart; never an in-question copy. */
  readonly stimulusRef?:string;
+ /** Claims remain unverified until separate P57-B evidence review. */
+ readonly provenance?:{readonly kind:"ai-original"|"manual"|"reconstruction"|"official-pyq";readonly sourceNote?:string};
+ readonly qa?:{readonly status:"unchecked"|"needs-review"};
 };
 export type AuthoringDraft={
  readonly schema:1;
@@ -136,10 +139,25 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
    "rightItems","explanation","answer","tolerance","source",
    "subject","syllabusHeadingId","topic","subtopic","difficulty",
     "sectionMinutes","minSelections","maxSelections",
-   "partialCreditEach","partialPenaltyEach","stimulusRef"]);
+   "partialCreditEach","partialPenaltyEach","stimulusRef","provenance","qa"]);
   const questionId=text(q.id,"question ID",128,true);
   if(all.has(questionId))throw Error("Duplicate draft question ID");
   all.add(questionId);
+  let provenance:AuthoringQuestion["provenance"];
+  if(q.provenance!==undefined){
+   const source=rec(q.provenance,"provenance",["kind","sourceNote"]);
+   if(!["ai-original","manual","reconstruction","official-pyq"].includes(String(source.kind)))
+    throw Error("Invalid provenance origin");
+   provenance={kind:source.kind as NonNullable<AuthoringQuestion["provenance"]>["kind"],
+     ...(source.sourceNote===undefined?{}:{sourceNote:text(source.sourceNote,"source note",300)})};
+  }
+  let qa:AuthoringQuestion["qa"];
+  if(q.qa!==undefined){
+   const checking=rec(q.qa,"QA metadata",["status"]);
+   if(checking.status!=="unchecked"&&checking.status!=="needs-review")
+    throw Error("Unsupported unverified QA status");
+   qa={status:checking.status};
+  }
   const kind=q.kind;
   if(typeof kind!=="string"||!QUESTION_KINDS.includes(kind as QuestionKind))
    throw Error("Unsupported question kind");
@@ -176,7 +194,8 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
    options:qOpts.map(rich),leftItems:left.map(rich),rightItems:right.map(rich),
    explanation:rich(q.explanation),answer:text(q.answer,"draft answer",100),
    tolerance:num(q.tolerance??0,"numeric tolerance",0,1000000),
-   source:text(q.source,"source note",500),...(stimulusRef?{stimulusRef}:{})};
+   source:text(q.source,"source note",500),...(stimulusRef?{stimulusRef}:{}),
+   ...(provenance?{provenance}:{}),...(qa?{qa}:{})};
  });
  const edition=p.edition;
  if(edition!=="custom"&&edition!=="source"&&edition!=="reviewed")
