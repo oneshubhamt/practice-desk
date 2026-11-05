@@ -81,6 +81,8 @@ jobs:
         run: node scripts/acceptance-p55-learning.mjs chromium
       - name: P56 adversarial concurrent shared snapshot backup restoration (Chromium)
         run: node scripts/acceptance-p56-integration.mjs chromium
+      - name: Shared four-state review palette across all six answer kinds (Chromium)
+        run: node scripts/acceptance-flag-palette.mjs chromium
       - name: Preserve P53 authored hierarchy visual evidence (Chromium)
         if: always()
         uses: actions/upload-artifact@v4
@@ -195,6 +197,8 @@ jobs:
         run: node scripts/acceptance-p55-learning.mjs ${{ matrix.browser }}
       - name: P56 independent concurrent snapshot import and corrupt digest (${{ matrix.browser }})
         run: node scripts/acceptance-p56-integration.mjs ${{ matrix.browser }}
+      - name: Shared four-state review palette, light/dark and narrow (${{ matrix.browser }})
+        run: node scripts/acceptance-flag-palette.mjs ${{ matrix.browser }}
       - name: Preserve actual P54 Wordgard desktop, phone and 195px screenshots (${{ matrix.browser }})
         if: always()
         uses: actions/upload-artifact@v4

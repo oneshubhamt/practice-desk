@@ -103,7 +103,9 @@ export function renderModelExam(
      '<div class="row generic-actions exam-nav-actions"><button class="btn" id="g-prev"'+(state.status!=="running"||!state.questionIndex||paper.navigation.questionNavigation==="forward-only"?" disabled":"")+'>← Previous</button>'+
      '<button class="btn primary" id="g-next"'+(state.status!=="running"||state.questionIndex===section.questionRevisionIds.length-1?" disabled":"")+'>Next →</button></div>'+
      '<div class="row generic-actions exam-answer-actions"><button class="btn" id="g-clear"'+(!response||state.status!=="running"?" disabled":"")+'>Clear</button>'+
-     '<button class="btn review-toggle" id="g-flag" aria-pressed="'+Boolean(responsesById.get(q.id)?.flagged)+'"'+(!paper.navigation.allowFlagging||expired?" disabled":"")+'>'+(responsesById.get(q.id)?.flagged?"Unmark":"Mark for review")+'</button></div>'+
+     '<button class="btn review-toggle '+(response?"review-answered":"review-unanswered")+'" id="g-flag" aria-pressed="'+Boolean(responsesById.get(q.id)?.flagged)+'" aria-label="'+
+     (responsesById.get(q.id)?.flagged?"Unmark review":"Mark for review")+' ('+(response?"answered":"unanswered")+')"'+
+     (!paper.navigation.allowFlagging||expired?" disabled":"")+'>'+(responsesById.get(q.id)?.flagged?"Unmark":"Mark for review")+'</button></div>'+
      '</div>'+
      '<div class="row generic-actions exam-submit-actions">'+
      (paper.timing.kind!=="untimed"&&paper.timing.pausePolicy==="allowed"?
@@ -120,14 +122,15 @@ export function renderModelExam(
         const locked=state.status!=="running"||(paper.navigation.questionNavigation==="forward-only"&&i<state.questionIndex);
         return '<button class="num '+(i===state.questionIndex?"here ":"")+(r?.response?"answered ":"")+
         (r?.flagged?"marked":"")+'" data-q="'+i+'" aria-current="'+(i===state.questionIndex?"step":"false")+'" aria-label="Question '+(i+1)+
-        (r?.response?", answered":"")+(r?.flagged?", flagged":"")+'"'+(locked?" disabled":"")+'>'+(i+1)+'</button>';
+        (r?.response?", answered":", unanswered")+(r?.flagged?", marked for review":"")+'"'+(locked?" disabled":"")+'>'+(i+1)+'</button>';
       }).join("")+'</div>'+
       '<div class="navigator-stats" role="group" aria-label="Current section answer counts">'+
        '<div><b>'+sectionAnswered+'<span> / '+section.questionRevisionIds.length+'</span></b><small>Answered</small></div>'+
        '<div><b>'+(section.questionRevisionIds.length-sectionAnswered)+'</b><small>Not answered</small></div>'+
        '<div><b>'+sectionFlagged+'</b><small>Flagged</small></div></div>'+
       '<div class="palette-legend"><span><i class="legend-dot answered"></i>Answered</span>'+
-       '<span><i class="legend-dot marked"></i>Review</span>'+
+       '<span><i class="legend-dot marked-unanswered"></i>Unanswered · review</span>'+ 
+       '<span><i class="legend-dot marked-answered"></i>Answered · review</span>'+
        '<span><i class="legend-dot empty"></i>Not answered</span></div>'+
       '<p class="fine navigator-status">'+(paper.navigation.sectionNavigation==="sequential-locked"?
         "Answers remain hidden until the exam finishes. Submitting a section locks it.":
