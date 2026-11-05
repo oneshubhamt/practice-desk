@@ -175,6 +175,31 @@ await run("F07-two-tab-unpublished-draft-conflict",async()=>{
  return page;
 });
 
+await run("F07-staged-selection-cross-tab-conflict",async()=>{
+ const {page,context}=await h.open();
+ const source=JSON.parse(await readFile(new URL("../examples/ai-first-apfc.json",import.meta.url),"utf8"));
+ await page.locator("#g-author-open").click();
+ await page.locator("#pd-stage-input").setInputFiles({
+  name:"p58a-stage.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(source))
+ });
+ await page.waitForFunction(()=>document.querySelectorAll("[data-stage-key]").length===3);
+ const keys=await page.locator("[data-stage-key]").evaluateAll(nodes=>nodes.map(node=>node.getAttribute("data-stage-key")));
+ const second=await context.newPage();
+ await second.goto(offlineUrl,{waitUntil:"load"});
+ await second.locator("#g-author-open").click();
+ await second.locator("[data-stage-key]").first().waitFor({state:"visible"});
+ await page.locator('[data-stage-key="'+keys[0]+'"]').uncheck();
+ await second.locator('[data-stage-key="'+keys[1]+'"]').uncheck();
+ const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem("practiceDesk.authoring.staging.v1")));
+ const message=await second.locator("#pd-author-status").innerText();
+ check(!saved.selected.includes(keys[0])&&saved.selected.includes(keys[1]),
+  engine+" F07 stale tab silently overwrote an independently changed staging selection");
+ check(/another tab|conflict|changed elsewhere/i.test(message),
+  engine+" F07 staging conflict not visibly reported: "+message);
+ await second.close();
+ return page;
+});
+
 await h.finish();
 if(failures.length)throw Error("P58-A EXPECTED RED on unfixed source ("+engine+"):\n"+failures.join("\n"));
-console.log("P58-A "+engine+" GREEN: renamed AI QA, immutable SHA normal save, two-tab draft isolation");
+console.log("P58-A "+engine+" GREEN: renamed AI QA, immutable SHA normal save, two-tab draft and staging isolation");
