@@ -258,6 +258,7 @@ async function main(){
   const report=inspectExternalQuestionBank(next);
   if(!report.valid||!report.compiled){
    output({format:"practice-desk-agent-patch-report",version:1,valid:false,
+    code:"agent-validation-failed",
     ...issueError(report),factualVerification:"not-performed",
     message:"Patch rejected. No output source was written."});
    process.exitCode=1;return;
