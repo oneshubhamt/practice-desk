@@ -4,6 +4,7 @@
  */
 import {toAuthoringDraft,inspectExternalQuestionBank} from "./external-bank.ts";
 import type {ExternalBankIssue} from "./external-bank.ts";
+import type {QuestionQuality,DuplicateCandidate} from "./external-bank-qa.ts";
 import {validateAuthoringDraft,AUTHORING_MAX_BYTES} from "./authoring-draft.ts";
 import type {AuthoringDraft,AuthoringQuestion} from "./authoring-draft.ts";
 import {sha256} from "../domain/hash.ts";
@@ -13,11 +14,20 @@ import type {StimulusId,AssetId} from "../domain/ids.ts";
 export const STAGING_KEY="practiceDesk.authoring.staging.v1";
 export const STAGING_MAX_BYTES=1700000;
 export type StagedFile={readonly name:string;readonly source:unknown};
+export type StagedTriage={
+ readonly key:string;
+ /** Reviewer decision is a claim, never an authenticated verdict. */
+ readonly decision:"needs-review"|"distinct"|"potential-duplicate";
+ readonly note:string;
+ readonly reviewer?:string;
+ readonly updatedAt:string;
+};
 export type StagingWorkspace={
  readonly schema:1;
  readonly files:readonly StagedFile[];
  /** Empty means everything deliberately excluded, not "select all". */
  readonly selected:readonly string[];
+ readonly triage?:readonly StagedTriage[];
 };
 export type StagedQuestion={
  readonly key:string;
@@ -26,6 +36,9 @@ export type StagedQuestion={
  readonly question:AuthoringQuestion;
  readonly issues:readonly ExternalBankIssue[];
  readonly selected:boolean;
+ readonly quality?:QuestionQuality;
+ readonly duplicates:readonly DuplicateCandidate[];
+ readonly triage?:StagedTriage;
 };
 export type StagingInspection={
  readonly questions:readonly StagedQuestion[];
@@ -79,7 +92,7 @@ const config=(d:AuthoringDraft)=>JSON.stringify([
 export function validateStagingWorkspace(value:unknown):StagingWorkspace{
  if(!value||typeof value!=="object"||Array.isArray(value))throw Error("Invalid staging workspace");
  const raw=value as Record<string,unknown>;
- if(Object.keys(raw).some(k=>!["schema","files","selected"].includes(k))||raw.schema!==1||
+ if(Object.keys(raw).some(k=>!["schema","files","selected","triage"].includes(k))||raw.schema!==1||
   !Array.isArray(raw.files)||raw.files.length>8||!Array.isArray(raw.selected))
   throw Error("Unsupported staged-source collection");
  const files:StagedFile[]=[];
@@ -117,7 +130,31 @@ export function validateStagingWorkspace(value:unknown):StagingWorkspace{
  if(selected.length>400||selected.some(x=>typeof x!=="string"||!selections.has(x))||
   new Set(selected).size!==selected.length)
   throw Error("Staged selection references unknown or repeated questions");
- const state:StagingWorkspace={schema:1,files,selected:selected as string[]};
+ const triageRaw=raw.triage??[];
+ if(!Array.isArray(triageRaw)||triageRaw.length>400)
+  throw Error("Invalid staged triage entries");
+ const triage:StagedTriage[]=[],usedTriage=new Set<string>();
+ for(const item of triageRaw){
+  if(!item||typeof item!=="object"||Array.isArray(item))throw Error("Invalid staged triage");
+  const row=item as Record<string,unknown>;
+  if(Object.keys(row).some(k=>!["key","decision","note","reviewer","updatedAt"].includes(k))||
+   typeof row.key!=="string"||!selections.has(row.key)||usedTriage.has(row.key)||
+   !["needs-review","distinct","potential-duplicate"].includes(String(row.decision))||
+   typeof row.note!=="string"||row.note.length>500||
+   (row.decision!=="needs-review"&&!row.note.trim())||
+   (row.reviewer!==undefined&&(typeof row.reviewer!=="string"||row.reviewer.length>120||!row.reviewer.trim()))||
+   typeof row.updatedAt!=="string"||
+   !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$/.test(row.updatedAt)||
+   Number.isNaN(Date.parse(row.updatedAt))||
+   new Date(row.updatedAt).toISOString()!==row.updatedAt)
+    throw Error("Invalid staged triage decision or attribution");
+  usedTriage.add(row.key);
+  triage.push({key:row.key,decision:row.decision as StagedTriage["decision"],
+   note:row.note,updatedAt:row.updatedAt,
+   ...(row.reviewer?{reviewer:row.reviewer as string}:{})});
+ }
+ const state:StagingWorkspace={schema:1,files,selected:selected as string[],
+  ...(raw.triage===undefined?{}:{triage})};
  if(JSON.stringify(state).length>STAGING_MAX_BYTES)
   throw Error("Staging exceeds the safe local storage budget; split or reduce media");
  return state;
@@ -127,7 +164,7 @@ export function addStagedFiles(
 ):StagingWorkspace{
  if(!files.length)return validateStagingWorkspace(prior);
  const fresh=files.flatMap(f=>draftFor(f.source).questions.map(q=>itemKey(bankId(f.source),q.id)));
- return validateStagingWorkspace({schema:1,files:[...prior.files,...files],
+ return validateStagingWorkspace({...prior,files:[...prior.files,...files],
   selected:[...prior.selected,...fresh]});
 }
 export function updateStagedSelection(
@@ -136,6 +173,14 @@ export function updateStagedSelection(
  const selected=new Set(state.selected);
  if(enabled)selected.add(key);else selected.delete(key);
  return validateStagingWorkspace({...state,selected:[...selected]});
+}
+export function updateStagedTriage(state:StagingWorkspace,key:string,
+ decision:StagedTriage["decision"],note:string,reviewer=""):StagingWorkspace{
+ const current=validateStagingWorkspace(state);
+ const other=(current.triage??[]).filter(t=>t.key!==key);
+ const candidate={key,decision,note,updatedAt:new Date().toISOString(),
+  ...(reviewer.trim()?{reviewer:reviewer.trim()}:{})};
+ return validateStagingWorkspace({...current,triage:[...other,candidate]});
 }
 export function inspectStagingWorkspace(state:StagingWorkspace):StagingInspection{
  const valid=validateStagingWorkspace(state),rows:StagedQuestion[]=[],issues:ExternalBankIssue[]=[];
@@ -157,8 +202,15 @@ export function inspectStagingWorkspace(state:StagingWorkspace):StagingInspectio
   duplicatePairsPossible+=report.quality?.summary.duplicatePairsPossible??0;
   for(const q of draft.questions){
    const key=itemKey(id,q.id),picked=selected.has(key);
+   const related=report.quality?.duplicates.filter(candidate=>
+    (candidate.first.bankId===id&&candidate.first.questionId===q.id)||
+    (candidate.second.bankId===id&&candidate.second.questionId===q.id))??[];
+   const quality=report.quality?.questions.find(result=>result.questionId===q.id);
+   const triage=valid.triage?.find(row=>row.key===key);
    rows.push({key,bankId:id,id:q.id,question:q,
-    issues:assigned.filter(issue=>issue.questionId===key),selected:picked});
+    issues:assigned.filter(issue=>issue.questionId===key),
+    selected:picked,duplicates:related,
+    ...(quality?{quality}:{}),...(triage?{triage}:{})});
    if(picked){
     const topic=q.syllabusHeadingId||q.subject||"Unclassified";
     subjects.set(topic,(subjects.get(topic)??0)+1);
@@ -199,8 +251,19 @@ export function stagedToAuthoringDraft(state:StagingWorkspace):AuthoringDraft{
    const idStable="q_"+sha256(id+"|"+q.id).slice(0,28);
    const stimulusRef=q.stimulusRef?
     "s_"+sha256(id+"|"+q.stimulusRef).slice(0,28):undefined;
+   const triage=valid.triage?.find(row=>row.key===itemKey(id,q.id));
+   const attributed=triage&&triage.decision!=="needs-review"?{
+    status:"needs-review" as const,review:{
+     reviewer:triage.reviewer??"Author (unverified)",
+     reviewedAt:triage.updatedAt,
+     note:"AI staging duplicate triage — author decision "+triage.decision+
+      ": "+triage.note+"; identity and factual findings NOT authenticated.",
+     acceptedWarningCodes:[] as string[]
+    }
+   }:undefined;
    questions.push({...remapMediaRefs(q,mediaIds),id:idStable,
-    ...(stimulusRef?{stimulusRef}:{})});
+    ...(stimulusRef?{stimulusRef}:{}),
+    ...(attributed?{qa:attributed}:{})});
   }
   for(const s of draft.stimuli??[]){
    if(!chosen.some(q=>q.stimulusRef===s.id))continue;
