@@ -355,7 +355,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
      ...(examYear===undefined?{}:{examYear}),...(sources===undefined?{}:{sources})},
    qa:{status:qa.status as NonNullable<AuthoringQuestion["qa"]>["status"]}};
  });
- const draft:AuthoringDraft={schema:1,id:"agent:"+bankId,examId,paperId,title,
+ const draft:AuthoringDraft={schema:1,id:"agent:"+bankId,ingestionMode:"external-source",examId,paperId,title,
   edition:"custom",revision,durationMinutes,
   timingKind:timing.kind as NonNullable<AuthoringDraft["timingKind"]>,
   pausePolicy:pausePolicy as NonNullable<AuthoringDraft["pausePolicy"]>,
