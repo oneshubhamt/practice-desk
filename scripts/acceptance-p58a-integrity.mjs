@@ -93,7 +93,7 @@ await run("F02-corrupt-snapshot-normal-save",async()=>{
  const raw=(await records(page,"attempts")).find(x=>x.recordType==="generic-attempt");
  const source=(await records(page,"snapshots"));
  check(Boolean(raw)&&source.length>0,engine+" F02 cannot establish saved source");
- const row=await readStoredRow(page,raw.id);
+ let row=await readStoredRow(page,raw.id);
  const snapshot=source.find(s=>s.id===row.frozenRef);
  check(Boolean(snapshot),engine+" F02 frozenRef not in snapshot store");
  const corrupted=structuredClone(snapshot);
@@ -115,6 +115,13 @@ await run("F02-corrupt-snapshot-normal-save",async()=>{
   }finally{db.close();}
  },corrupted);
  await other.close();
+ // Capture the authoritative pre-action revision after both earlier startup
+ // and first-flag writes have settled; the adversarial save begins below.
+ row=await readStoredRow(page,raw.id);
+ check(row.frozenRef===snapshot.id,engine+" F02 attempt switched immutable snapshot before autosave");
+ const preSecondSnapshot=(await records(page,"snapshots")).find(s=>s.id===snapshot.id);
+ check(preSecondSnapshot?.body.paper.revision===corrupted.body.paper.revision,
+  engine+" F02 second-tab injection did not persist before the normal save");
  // Tab A hydrated a GOOD snapshot before tab B corrupted persisted bytes.
  // Flag toggles are ordinary autosaves and use the same production persistence path.
  await page.locator("#g-flag").click();
@@ -136,8 +143,12 @@ await run("F02-corrupt-snapshot-normal-save",async()=>{
  },{id:row.id,revision:row.saveRevision??0},{timeout:15000});
  const afterward=await readStoredRow(page,row.id);
  const msg=await page.locator("#app").innerText();
+ const latestSnapshot=(await records(page,"snapshots")).find(s=>s.id===snapshot.id);
  check(afterward.saveRevision===row.saveRevision,
-  engine+" F02 corrupted same-ID snapshot was reused by ordinary save");
+  engine+" F02 corrupted same-ID snapshot was reused by ordinary save: "+JSON.stringify({
+   before:row.saveRevision,after:afterward.saveRevision,beforeRef:row.frozenRef,
+   afterRef:afterward.frozenRef,storedRevision:latestSnapshot?.body.paper.revision,
+   warning:msg.slice(0,350)}));
  check(/SAVE FAILED|SHA-256 mismatch/i.test(msg),
   engine+" F02 corruption rejected without visible failure notice");
  const afterSnapshot=(await records(page,"snapshots")).find(s=>s.id===snapshot.id);
@@ -189,7 +200,7 @@ await run("F07-staged-selection-cross-tab-conflict",async()=>{
  await second.locator("#g-author-open").click();
  await second.locator("[data-stage-key]").first().waitFor({state:"visible"});
  await page.locator('[data-stage-key="'+keys[0]+'"]').uncheck();
- await second.locator('[data-stage-key="'+keys[1]+'"]').uncheck();
+ await second.locator('[data-stage-key="'+keys[1]+'"]').click(); // handler intentionally restores checked state on conflict
  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem("practiceDesk.authoring.staging.v1")));
  const message=await second.locator("#pd-author-status").innerText();
  check(!saved.selected.includes(keys[0])&&saved.selected.includes(keys[1]),
