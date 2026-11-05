@@ -310,6 +310,8 @@ export function compileAuthoringPublication(
   const editorial={
    status:"caution" as const,
    notes:"User-authored "+d.edition+" question; answer and source have not been independently certified."+
+    (q.provenance?" Claimed origin: "+q.provenance.kind+" (not authenticated).":"")+
+    (q.qa?" Author QA state: "+q.qa.status+".":"")+
     (q.source.trim()?" Source/reference: "+q.source.trim():"")
   };
   const signed={id:revisionId,questionId,revision:d.revision,content,editorial};
