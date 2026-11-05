@@ -718,11 +718,18 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
        const codes=[...new Set(warnings.filter(issue=>
         issue.questionId===q.id||(!issue.questionId&&i===0)).map(issue=>issue.code))];
        if(!codes.length&&!claimedReviewer)return q;
+       const previous=q.qa?.review;
+       const warningNote="Author acknowledges displayed QA warnings; factual and source verification were NOT performed.";
+       const nextNote=reviewNote||warningNote;
+       // Do not silently replace an earlier, separately attributed per-item
+       // staging decision when later publication warnings are acknowledged.
+       const priorLine=previous?"Earlier attributed review by "+previous.reviewer+
+        " ("+previous.reviewedAt+"): "+previous.note+"; ":"";
        return {...q,qa:{status:q.qa?.status??"needs-review",review:{
-        reviewer:claimedReviewer||"Author",
+        reviewer:claimedReviewer||previous?.reviewer||"Author",
         reviewedAt:acceptedAt,
-        note:reviewNote||"Author acknowledges the displayed QA warnings; factual and source verification were not performed.",
-        acceptedWarningCodes:codes
+        note:(priorLine+nextNote).slice(0,500),
+        acceptedWarningCodes:[...new Set([...(previous?.acceptedWarningCodes??[]),...codes])]
        }}};
       })}));
       if(lastSaveError)throw Error("Could not persist the author-attributed QA acknowledgement");
