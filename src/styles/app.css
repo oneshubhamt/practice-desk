@@ -1196,6 +1196,15 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
  .home-side>.paper-preview{min-width:0;max-width:100%;width:100%}
  .paper-preview .preview-metrics{grid-template-columns:minmax(0,1fr)}
  .paper-preview .preview-metrics small{overflow-wrap:anywhere}
+ /* P58-C independent 8/400→200 red tests found 195px flex min-content
+    overflow in the RECENT-results H2 (155px inside a 99px row) and in
+    Learning's introductory flex child (216px inside a 141px heading).
+    Keep actual text accessible by wrapping, not clipping. */
+ .recent-panel>.row>h2{min-width:0;max-width:100%;overflow-wrap:anywhere}
+ .generic-workspace .generic-heading>div{min-width:0;max-width:100%;overflow-wrap:anywhere}
+ .generic-workspace .generic-heading>div :is(h1,p){
+  min-width:0;max-width:100%;overflow-wrap:anywhere
+ }
 }
 
 /* P46: evidence-based short revision sets. Controls reflow at extreme zoom;
