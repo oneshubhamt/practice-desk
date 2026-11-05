@@ -470,7 +470,9 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    '<button class="btn" id="pd-author-validate">Validate paper</button>'+
    '<button class="btn primary" id="pd-author-publish">Publish to Library</button></div>'+
    '<label class="pd-author-publish-consent"><input type="checkbox" id="pd-author-confirm"> I have checked the answer key, source notes and exam rules; this paper is user-authored, not officially certified.</label>'+
-   (d.id.startsWith("stage:")?'<label class="pd-author-publish-consent"><input type="checkbox" id="pd-author-accept-warnings"> I explicitly accept remaining QA warnings for this selected draft; no external source was independently checked.</label>':'')+
+   (d.id.startsWith("stage:")?'<label class="pd-author-publish-consent"><input type="checkbox" id="pd-author-accept-warnings"> I explicitly accept remaining QA warnings for this selected draft; no external source was independently checked.</label>'+
+    '<div class="pd-author-meta"><label>Reviewer name (optional author claim)<input id="pd-author-reviewer" maxlength="120" placeholder="Name, not identity-verified"></label>'+
+    '<label>Review evidence or warning note (optional)<input id="pd-author-review-note" maxlength="500" placeholder="What was checked and which doubts remain"></label></div>':'')+
    '<div id="pd-author-validation" class="pd-author-validation" hidden aria-live="polite"></div>'+
    '<p class="fine" id="pd-author-status" role="status">Editing locally; changes are saved automatically.</p>'+
    '<div id="pd-author-preview" class="pd-author-preview" hidden></div></section>';
@@ -541,8 +543,33 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
       throw Error("Explicitly acknowledge all remaining QA warnings for this staged draft before publication.");
     if(!find<HTMLInputElement>("pd-author-confirm").checked)
       throw Error("Confirm your source, answer keys and marking rules before publishing.");
-    const packageValue=report.compiled;
+    let packageValue=report.compiled;
     if(!packageValue)throw Error("Authoritative validation did not return the compiled publication");
+    if(active().id.startsWith("stage:")){
+     const claimedReviewer=find<HTMLInputElement>("pd-author-reviewer")?.value.trim()??"";
+     const reviewNote=find<HTMLInputElement>("pd-author-review-note")?.value.trim()??"";
+     if(Boolean(claimedReviewer)!==Boolean(reviewNote))
+      throw Error("To attribute an independent review, provide both a reviewer name and an evidence note.");
+     if(warnings.length||claimedReviewer){
+      const acceptedAt=new Date().toISOString();
+      changeDraft(d=>({...d,questions:d.questions.map((q,i)=>{
+       const codes=[...new Set(warnings.filter(issue=>
+        issue.questionId===q.id||(!issue.questionId&&i===0)).map(issue=>issue.code))];
+       if(!codes.length&&!claimedReviewer)return q;
+       return {...q,qa:{status:q.qa?.status??"needs-review",review:{
+        reviewer:claimedReviewer||"Author",
+        reviewedAt:acceptedAt,
+        note:reviewNote||"Author acknowledges the displayed QA warnings; factual and source verification were not performed.",
+        acceptedWarningCodes:codes
+       }}};
+      })}));
+      if(lastSaveError)throw Error("Could not persist the author-attributed QA acknowledgement");
+      const checked=inspectPublication();
+      if(!checked.report.valid||checked.errors.length||!checked.report.compiled)
+       throw Error("Publication invalid after review evidence was attached");
+      packageValue=checked.report.compiled;
+     }
+    }
     await actions.publish(packageValue);
     // The integrated Library owner refreshes the screen only after a
     // successfully committed package; do not change anything here afterwards.
