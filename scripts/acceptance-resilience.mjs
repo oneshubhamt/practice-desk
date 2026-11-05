@@ -53,11 +53,29 @@ try{
   return x?.saveRevision>originalRevision&&
     x.state.responses.some(y=>y.response?.kind==="single-choice"&&y.response.optionId===replacement)?x:null;
  },"durable alternate second-tab answer");
- // A still has its pre-B session; a C edit MUST reject at the immutable
- // expected-version CAS boundary. Do not weaken this to a generic warning.
+ // B may trigger A's automatic stale-record rejection/Library redirect
+ // BEFORE a candidate can click C. Or A may legitimately refresh to B's new
+ // answer. Exercise C only while A still shows the old exam controls; require
+ // either a visible fail-closed warning or a confirmed synchronized B state.
  const conflictWarning=page.locator(".generic-warning").filter({hasText:"Another tab"});
- await page.locator("input[data-choice]").nth(2).click();
- await conflictWarning.waitFor({timeout:12000});
+ const view=async()=>page.evaluate(()=>({
+  conflict:[...document.querySelectorAll(".generic-warning")]
+   .some(n=>n.textContent?.includes("Another tab")),
+  checked:document.querySelector('input[data-choice]:checked')?.getAttribute("data-choice")??null,
+  hasThird:Boolean(document.querySelectorAll("input[data-choice]")[2])
+ }));
+ const before=await view();
+ if(!before.conflict&&before.checked!==replacement&&before.hasThird)
+   await page.evaluate(()=>document.querySelectorAll("input[data-choice]")[2]?.click());
+ await page.waitForFunction(expected=>{
+  const conflict=[...document.querySelectorAll(".generic-warning")]
+   .some(n=>n.textContent?.includes("Another tab"));
+  const checked=document.querySelector('input[data-choice]:checked')?.getAttribute("data-choice");
+  return conflict||checked===expected;
+ },replacement,{timeout:12000});
+ const after=await view();
+ check(after.conflict||after.checked===replacement,
+   "Original tab neither displayed its conflict nor synchronized to the authoritative second-tab answer");
  const authoritative=(await records(other)).find(x=>x.id===attemptId);
  check(authoritative.saveRevision>=updated.saveRevision&&
   authoritative.state.responses.some(x=>x.response?.optionId===replacement),
