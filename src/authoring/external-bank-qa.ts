@@ -103,7 +103,8 @@ const arithmetic=(stem:string):number|undefined=>{
 };
 const locate=(id:string,field:string)=>"$.questions[id="+id+"]."+field;
 export function inspectExternalQuality(
- draft:AuthoringDraft,compiled:ExamPackage,bankId:string,comparisons:readonly CompareBatch[]=[]
+ draft:AuthoringDraft,compiled:ExamPackage,bankId:string,
+ comparisons:readonly CompareBatch[]=[],original?:unknown
 ):QualityResult{
  const issues:QualityIssue[]=[];
  const add=(code:string,severity:QualityIssue["severity"],message:string,
@@ -112,6 +113,16 @@ export function inspectExternalQuality(
   issues.push({path:id?locate(id,field):"$."+field,code,severity,message,basis,
    ...(id?{questionId:id}:{}),...(evidence?{evidence}:{}),...(suggestion?{suggestion}:{})});
  };
+ const source=original as {sections?:readonly {id:string;title:string}[];
+   questions?:readonly {examSection:string}[]}|undefined;
+ if(source?.sections&&source.questions){
+  const used=new Set(source.questions.map(q=>q.examSection));
+  for(const section of source.sections)if(!used.has(section.id))
+   add("empty-exam-section","error",
+    "Declared physical exam section contains no questions and would disappear on publication",
+    undefined,"sections[id="+section.id+"]","deterministic",section.title,
+    "Remove the unused section or assign at least one question to it");
+ }
  const all:Item[]=[...draft.questions.map(q=>({bankId,revision:draft.revision,q,
   stem:wording(q),options:options(q),tokens:grams(wording(q))})),
   ...comparisons.flatMap(b=>b.draft.questions.map(q=>({
@@ -157,6 +168,16 @@ export function inspectExternalQuality(
   const explanation=publicationPlainText(q.explanation).trim();
   const src=q.provenance?.sources??[];
   sourcesCount+=src.length;
+  if(draft.examId.toLowerCase()==="apfc"&&!q.syllabusHeadingId)
+   add("apfc-heading-missing","error",
+    "APFC question requires an explicitly assigned official broad syllabus heading",
+    q.id,"syllabusHeadingId","deterministic",undefined,
+    "Select one of the nine already supported APFC heading IDs; do not infer it from section");
+  else if(!q.syllabusHeadingId&&!q.subject)
+   add("subject-unattributed","warning",
+    "Academic subject is missing; it is not equivalent to the exam section",
+    q.id,"subject","unverified",undefined,
+    "Supply an explicit subject or applicable official syllabus heading");
   if(["single-choice","multiple-select"].includes(q.kind)){
    const labels=q.options.map(o=>compact(publicationPlainText(o)));
    for(let x=0;x<labels.length;x++)if(!labels[x])
@@ -169,6 +190,32 @@ export function inspectExternalQuality(
      " have equivalent text",q.id,"options["+x+"]","deterministic",
      labels[x],"Replace the duplicate distractor with a distinct defensible option");
     else seen.set(labels[x]!,x);
+   }
+  }
+  if(q.kind==="matching"){
+   for(const [field,items] of [["leftItems",q.leftItems],["rightItems",q.rightItems]] as const){
+    const seen=new Set<string>();
+    for(const [n,doc] of items.entries()){
+     const text=compact(publicationPlainText(doc));
+     if(!text||seen.has(text))
+      add("duplicate-matching-label","error",
+       "Matching labels must be present and distinguishable",
+       q.id,field+"["+n+"]","deterministic",text,
+       "Use distinct left and right labels and verify each key pair");
+     seen.add(text);
+    }
+   }
+  }
+  if(q.kind==="numeric-entry"){
+   const answer=compiled.answerKey.entries[i]!.answer;
+   if(answer.kind==="numeric-entry"&&answer.acceptedValues.length>1){
+    const tolerance=answer.absoluteTolerance??0;
+    const overlap=answer.acceptedValues.some((n,k)=>answer.acceptedValues.slice(k+1)
+     .some(other=>Math.abs(other-n)<=2*tolerance));
+    if(overlap)add("numeric-alternatives-overlap","warning",
+     "Numeric alternatives are repeated or accepted tolerance intervals overlap",
+     q.id,"answer","deterministic",undefined,
+     "Keep only purposeful alternatives; review the published tolerance");
    }
   }
   if(!explanation&&q.kind!=="free-response")
