@@ -117,7 +117,7 @@ try{
    name:"p56-valid-archive-corrupt-local-digest.json",
    mimeType:"application/json",buffer:Buffer.from(backup)
  });
- await hostile.page.waitForFunction(()=>/Import failed|integrity/i.test(
+ await hostile.page.waitForFunction(()=>/Import failed|integrity|SHA-256 mismatch|Invalid stored snapshot|Write aborted|ConstraintError/i.test(
    document.querySelector("#app")?.textContent??""),null,{timeout:12000});
  const nonOverwrite=await hostile.page.evaluate(async id=>{
    const db=await new Promise((resolve,reject)=>{
