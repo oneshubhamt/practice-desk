@@ -321,6 +321,10 @@ export function compileAuthoringPublication(
    notes:"User-authored "+d.edition+" question; answer and source have not been independently certified."+
     (q.provenance?" Claimed origin: "+q.provenance.kind+" (not authenticated).":"")+
     (q.qa?" Author QA state: "+q.qa.status+".":"")+
+    (q.qa?.review?" Author-entered review/QA acknowledgement (identity NOT authenticated): "+
+      "claimed reviewer "+q.qa.review.reviewer+"; timestamp "+q.qa.review.reviewedAt+
+      "; accepted warning codes "+(q.qa.review.acceptedWarningCodes.join(", ")||"none")+
+      "; author's note: "+q.qa.review.note+".":"")+
     (q.provenance?.examYear?" Claimed exam year: "+q.provenance.examYear+".":"")+
     (q.provenance?.sources?.length?" Author-supplied citations: "+
        q.provenance.sources.map(s=>s.publisher+" / "+s.title+
