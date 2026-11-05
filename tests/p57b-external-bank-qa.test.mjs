@@ -132,3 +132,37 @@ test("P57-B CLI qa-bank and against source emit JSON; deterministic fatal exit a
   assert.ok(report.issues.some(i=>i.code==="math-answer-conflict"));
  }finally{await rm(dir,{recursive:true,force:true});}
 });
+
+test("P57-B do not silently discard zero-question physical exam sections",async()=>{
+ const s=await load("cat");
+ s.sections.push({id:"declared-empty",title:"Declared but empty",minutes:40});
+ const r=inspect(s);
+ assert.equal(r.valid,false);
+ assert.ok(r.issues.some(i=>i.code==="empty-exam-section"&&
+  i.path.includes("declared-empty")));
+ assert.equal(r.compiled,undefined);
+});
+test("P57-B APFC academic syllabus attribution is mandatory and never inferred from physical section",async()=>{
+ const s=await load("apfc");
+ delete s.questions[1].syllabusHeadingId;
+ const r=inspect(s);
+ assert.equal(r.valid,false);
+ assert.ok(r.issues.some(i=>i.code==="apfc-heading-missing"&&i.questionId==="economy-01"));
+});
+test("P57-B distinct matching labels and redundant numeric-answer tolerance trigger appropriate severity",async()=>{
+ const cat=await load("cat");
+ cat.questions[1].answer=[6,6];
+ let r=inspect(cat);
+ assert.equal(r.valid,true,JSON.stringify(r.issues));
+ assert.ok(r.issues.some(i=>i.code==="numeric-alternatives-overlap"&&i.severity==="warning"));
+ const matching={id:"pairs",examSection:"qa",subject:"Reasoning",
+  kind:"matching",prompt:"Match the labels",
+  leftItems:["L1","L1","L3","L4"],rightItems:["R1","R2","R3","R4"],
+  answer:"1-A,2-B,3-C,4-D",explanation:"Synthetic example.",
+  provenance:{kind:"ai-original"},qa:{status:"unchecked"}};
+ cat.questions.push(matching);
+ r=inspect(cat);
+ assert.equal(r.valid,false);
+ assert.ok(r.issues.some(i=>i.code==="duplicate-matching-label"&&
+  i.questionId==="pairs"&&i.severity==="error"));
+});
