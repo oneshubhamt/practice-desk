@@ -83,6 +83,8 @@ jobs:
         run: node scripts/acceptance-p56-integration.mjs chromium
       - name: P57-A AI-first CAT/APFC immutable offline import (Chromium)
         run: node scripts/acceptance-p57a-bank.mjs chromium
+      - name: P58-A RED-first actual offline integrity tests (Chromium)
+        run: node scripts/acceptance-p58a-integrity.mjs chromium
       - name: Shared four-state review palette across all six answer kinds (Chromium)
         run: node scripts/acceptance-flag-palette.mjs chromium
       - name: Preserve P53 authored hierarchy visual evidence (Chromium)
@@ -201,6 +203,8 @@ jobs:
         run: node scripts/acceptance-p56-integration.mjs ${{ matrix.browser }}
       - name: P57-A AI-first CAT/APFC immutable offline import (${{ matrix.browser }})
         run: node scripts/acceptance-p57a-bank.mjs ${{ matrix.browser }}
+      - name: P58-A RED-first actual offline integrity tests (${{ matrix.browser }})
+        run: node scripts/acceptance-p58a-integrity.mjs ${{ matrix.browser }}
       - name: Shared four-state review palette, light/dark and narrow (${{ matrix.browser }})
         run: node scripts/acceptance-flag-palette.mjs ${{ matrix.browser }}
       - name: Preserve actual P54 Wordgard desktop, phone and 195px screenshots (${{ matrix.browser }})
