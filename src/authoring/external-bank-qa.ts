@@ -48,6 +48,12 @@ export type QualitySummary={
  readonly infos:number;
  readonly questionsNeedingReview:number;
  readonly duplicateCandidates:number;
+ /** The list contains at most 500 candidates. Never imply the scan completed
+  * when the next candidate would exceed this bounded review budget. */
+ readonly duplicateTruncated:boolean;
+ readonly duplicateCandidateLimit:500;
+ readonly duplicatePairsInspected:number;
+ readonly duplicatePairsPossible:number;
  readonly sourceReferences:number;
  readonly mathSolutionsChecked:number;
  readonly externalSourceFetches:0;
@@ -130,10 +136,15 @@ export function inspectExternalQuality(
   })))];
  const own=all.slice(0,draft.questions.length);
  const duplicates:DuplicateCandidate[]=[];
- // Bound all comparisons to 1,800 questions total, including source batch.
+ // Bounded candidate display, with an explicit incomplete result if a 501st
+ // is discovered. Count examined comparisons, not just accepted candidates.
  if(all.length>1800)throw Error("QA comparison exceeds 1,800 questions");
- for(let i=0;i<own.length&&duplicates.length<500;i++)
-  for(let j=i+1;j<all.length&&duplicates.length<500;j++){
+ const duplicatePairsPossible=own.length*(own.length-1)/2+
+  own.length*(all.length-own.length);
+ let duplicatePairsInspected=0,duplicateTruncated=false;
+ scan: for(let i=0;i<own.length;i++)
+  for(let j=i+1;j<all.length;j++){
+  duplicatePairsInspected++;
   const a=own[i]!,b=all[j]!;
   if(a.q.kind!==b.q.kind||!a.stem||!b.stem)continue;
   const same=a.stem===b.stem;
@@ -144,6 +155,7 @@ export function inspectExternalQuality(
     a.stem.length>=55&&b.stem.length>=55&&
     unigramScore>=0.78&&bigramScore>=0.62?unigramScore:0;
   if(score<0.78)continue;
+  if(duplicates.length>=500){duplicateTruncated=true;break scan;}
   const exact=same&&JSON.stringify(a.options)===JSON.stringify(b.options);
   const classification=exact?"exact":same?"same-stem":"near";
   duplicates.push({
@@ -310,7 +322,9 @@ export function inspectExternalQuality(
   warnings:issues.filter(x=>x.severity==="warning").length,
   infos:issues.filter(x=>x.severity==="info").length,
   questionsNeedingReview:results.filter(x=>x.recommendedStatus==="needs-review").length,
-  duplicateCandidates:duplicates.length,sourceReferences:sourcesCount,
+  duplicateCandidates:duplicates.length,duplicateTruncated,
+  duplicateCandidateLimit:500,duplicatePairsInspected,duplicatePairsPossible,
+  sourceReferences:sourcesCount,
   mathSolutionsChecked:checked,externalSourceFetches:0,factualVerification:"not-performed"
  };
  return {issues,questions:results,duplicates,summary};
