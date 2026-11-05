@@ -153,6 +153,10 @@ try{
  await fresh.page.locator("#pd-author-shelf-file").setInputFiles({
   name:"bad-shelf.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(invalid))
  });
+ // File.text() and the input change handler are asynchronous in WebKit;
+ // wait for the *same* visible fail-closed message rather than reading too early.
+ await fresh.page.locator("#pd-author-status").filter({hasText:"NOT restored"})
+  .waitFor({state:"visible"});
  check((await fresh.page.locator("#pd-author-status").innerText()).includes("NOT restored"),
   engine+" unsafe draft shelf import did not visibly fail");
  check(await fresh.page.locator("#pd-author-drafts").inputValue()===nextId,
