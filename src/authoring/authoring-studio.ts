@@ -301,7 +301,16 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   const draft=active(),changed=validateAuthoringDraft({
    ...fn(draft),updatedAt:new Date().toISOString()
   });
-  shelf={...shelf,drafts:shelf.drafts.map(d=>d.id===draft.id?changed:d)};
+  // Review acceptance belongs to the exact content checked. Any later edit
+  // invalidates its previously attributed warning/reviewer evidence.
+  const reviewed=new Map(draft.questions.filter(q=>q.qa?.review).map(q=>
+   [q.id,JSON.stringify({...q,qa:undefined})]));
+  const current=reviewed.size?validateAuthoringDraft({...changed,questions:changed.questions.map(q=>{
+   const prior=reviewed.get(q.id);
+   return prior&&prior!==JSON.stringify({...q,qa:undefined})?
+    {...q,qa:{status:q.qa?.status??"needs-review"}}:q;
+  })}):changed;
+  shelf={...shelf,drafts:shelf.drafts.map(d=>d.id===draft.id?current:d)};
   persist();
  };
  const updateDoc=(id:string,key:Field,value:RichDocument):void=>{
