@@ -527,6 +527,55 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    }
   })();});
 
+  click("pd-stage-add",()=>find<HTMLInputElement>("pd-stage-input").click());
+  find<HTMLInputElement>("pd-stage-input").onchange=e=>{
+   const files=Array.from((e.target as HTMLInputElement).files??[]);
+   void stageFiles(files).catch(error=>status(error instanceof Error?error.message:"Staging failed",true));
+  };
+  if(stageBlocked)click("pd-stage-recover",()=>{
+   if(!confirm("Discard unreadable staging bytes? Recover or export original data first."))return;
+   try{localStorage.removeItem(STAGING_KEY);stageBlocked=false;stageError="";stage=null;void render();}
+   catch(error){status(error instanceof Error?error.message:"Unable to reset staging",true);}
+  });
+  if(stage&&staged){
+   find<HTMLSelectElement>("pd-stage-filter").onchange=e=>{
+    stageFilter=(e.target as HTMLSelectElement).value;void render();
+   };
+   container.querySelectorAll<HTMLInputElement>("[data-stage-key]").forEach(input=>{
+    input.onchange=()=>{
+     try{persistStage(updateStagedSelection(stage!,input.dataset.stageKey!,input.checked));void render();}
+     catch(error){input.checked=!input.checked;status(error instanceof Error?error.message:"Selection not saved",true);}
+    };
+   });
+   click("pd-stage-clear",()=>{
+    if(!confirm("Discard unpublished staged sources? Saved Wordgard drafts and published papers stay intact."))return;
+    try{persistStage(null);void render();}
+    catch(error){status(error instanceof Error?error.message:"Staging not discarded",true);}
+   });
+   click("pd-stage-export",()=>{
+    const report=inspectStagingWorkspace(stage!);
+    const blob=new Blob([JSON.stringify({schema:1,factualVerification:"not-performed",...report},null,2)],
+     {type:"application/json"});
+    const url=URL.createObjectURL(blob),link=document.createElement("a");
+    link.href=url;link.download="Practice_Desk_AI_Staging_QA.json";
+    document.body.append(link);link.click();link.remove();
+    window.setTimeout(()=>URL.revokeObjectURL(url),1000);
+   });
+   click("pd-stage-handoff",()=>{
+    try{
+     if(storageBlocked||lastSaveError)throw Error("Draft storage unsafe; repair it before import.");
+     if(shelf!.drafts.length>=20)throw Error("20 local drafts already exist. Export and clear an older draft.");
+     const incoming=stagedToAuthoringDraft(stage!);
+     if(shelf!.drafts.some(d=>d.id===incoming.id))
+      throw Error("This stage already has a Wordgard draft. Open the saved draft to preserve its edits. Staged files cannot overwrite it.");
+     capture();
+     const next=validateAuthoringShelf({schema:1,activeId:incoming.id,drafts:[...shelf!.drafts,incoming]});
+     localStorage.setItem(AUTHORING_KEY,JSON.stringify(next));
+     shelf=next;lastSaveError="";questionId=incoming.questions[0]!.id;field=initialField;
+     void render();
+    }catch(error){status(error instanceof Error?error.message:"Staged handoff failed",true);}
+   });
+  }
   click("pd-author-export",exportDraft);
   click("pd-author-preview-toggle",()=>{
    try{
