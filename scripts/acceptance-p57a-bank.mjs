@@ -25,6 +25,18 @@ try{
  check((await page.locator(".generic-warning").allTextContents()).some(x=>
   /Answer key|Enter one correct option|unsupported|answer/i.test(x)),
   engine+" malformed external answer had no visible rejection");
+ // P57-B: a structurally four-option bank with equivalent distractors
+ // must be rejected by the same offline import boundary, without a partial save.
+ const qaInvalid=structuredClone(apfc);qaInvalid.questions[0].options[2]=" B ";
+ await page.locator("#g-file").setInputFiles({
+  name:"p57b-qa-duplicate-options.json",mimeType:"application/json",
+  buffer:Buffer.from(JSON.stringify(qaInvalid))
+ });
+ check((await records(page)).length===initial,
+  engine+" P57-B duplicate-option authoring source was persisted");
+ check((await page.locator(".generic-warning").allTextContents()).some(x=>
+  /duplicate|equivalent|options/i.test(x)),
+  engine+" P57-B deterministic QA failure was not visible");
  const apfcId=await add(apfc,"p57-apfc");
  const bundled=(await records(page)).find(r=>r.recordType==="generic-package"&&r.bundle?.paper?.id===apfcId);
  check(Boolean(bundled),engine+" APFC external bank not stored");
@@ -69,6 +81,6 @@ try{
  check((await records(page)).some(r=>r.recordType==="generic-attempt"&&r.frozen.paper.id===apfcId),
   engine+" external CAT import overwrote prior APFC History");
  check(errors.length===0,engine+" unexpected page errors "+errors.join("; "));
- console.log("P57-A "+engine+" PASS: offline external JSON rejection, multi-subject APFC immutable scored History, CAT shared stimuli and section timing, responsive 195px/140%");
+ console.log("P57-A/B "+engine+" PASS: offline external JSON rejection, multi-subject APFC immutable scored History, CAT shared stimuli and section timing, responsive 195px/140%");
 }catch(error){await h.diagnose("p57a-"+engine,page,error);throw error;}
 finally{await h.finish();}
