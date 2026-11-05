@@ -133,6 +133,7 @@ try{
  await page.setViewportSize({width:195,height:844});
  await maxScale();
  await assertNoOverflow(page,engine+" 8/400 staging at 195px/140%");
+ await page.locator(".pd-stage-question-detail").first().scrollIntoViewIfNeeded();
  await screenshot("stage-400-195");
  await measure("handoff200",async()=>{
   await page.locator("#pd-stage-handoff").click();
@@ -142,12 +143,26 @@ try{
  });
  check(await page.locator("#pd-author-questions option").count()===200,
   engine+" Wordgard did not retain all 200 selected questions");
- await assertNoOverflow(page,engine+" 200-question Wordgard 195px/140%");
+ // A maximum-sized authoring draft must support a *real* correction, not
+ // just a 200-item transfer. The synthetic second question starts keyed B;
+ // correct that key to D without altering the original staged source bytes.
+ await page.locator("#pd-author-questions").selectOption({index:1});
+ await page.locator("#pd-author-answer").fill("D");
+ await page.locator("#pd-author-answer").blur();
+ await page.waitForFunction(()=>{
+  const shelf=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts.v1")??"null");
+  return shelf?.drafts?.find(d=>d.id===shelf.activeId)?.questions?.[1]?.answer==="D";
+ },undefined,{timeout:95000});
+ check(sources[0].questions[1].answer==="B",engine+" high-volume correction mutated the source fixture");
+ await page.locator("#pd-author-questions").selectOption({index:0});
+ await assertNoOverflow(page,engine+" edited 200-question Wordgard 195px/140%");
+ await page.locator("#pd-author-questions").scrollIntoViewIfNeeded();
  await screenshot("wordgard-200-195");
 
  const draftExchange=await downloadJson("#pd-author-exchange");
- check(draftExchange.draft.questions.length===200&&draftExchange.draft.assets.length===4,
-  engine+" 200-question corrected exchange omitted questions/media");
+ check(draftExchange.draft.questions.length===200&&draftExchange.draft.assets.length===4&&
+  draftExchange.draft.questions[1].answer==="D",
+  engine+" 200-question corrected exchange omitted questions/media or lost live author edit");
  const fullShelf=await downloadJson("#pd-author-shelf-export");
  check(fullShelf.shelf.drafts.some(d=>d.id===draftExchange.draft.id&&d.questions.length===200),
   engine+" archive omitted the 200-question unpublished Wordgard work");
@@ -182,8 +197,9 @@ try{
  const publishedId="authored:upsc-epfo-apfc:p58c-synthetic-apfc:r1:custom";
  const saved=(await records(page)).find(r=>r.recordType==="generic-package"&&
   r.bundle?.paper?.id===publishedId);
- check(Boolean(saved)&&saved.bundle.questions.length===200,
-  engine+" 200-question publication lost immutable package");
+ check(Boolean(saved)&&saved.bundle.questions.length===200&&
+  saved.bundle.answerKey.entries[1].answer.optionId==="D",
+  engine+" 200-question publication lost immutable package or corrected key");
  check(saved.bundle.questions.every(q=>q.editorial.status==="caution"),
   engine+" synthetic source appears falsely official");
 
