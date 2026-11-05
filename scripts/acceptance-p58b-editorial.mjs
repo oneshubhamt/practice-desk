@@ -113,6 +113,17 @@ try{
  check(validation.includes("source-disagreement")&&validation.includes("0 errors"),
    engine+" corrected source disagreement was hidden or counted as authenticated: "+validation.slice(0,500));
 
+ // Targeted actual Wordgard evidence UI at the narrow 195px + 140% setting.
+ await page.setViewportSize({width:195,height:844});
+ await page.locator("#displayTrigger").click();
+ for(let i=0;i<8;i++)await page.locator("#fontMore").click();
+ await page.locator("#displayClose").click();
+ await assertNoOverflow(page,engine+" P58-B Wordgard evidence editor 195px/140%");
+ await mkdir("artifacts/p58b-editorial",{recursive:true});
+ await page.screenshot({path:"artifacts/p58b-editorial/"+engine+"-source-evidence-195.png",
+  animations:"disabled",fullPage:true});
+ await page.setViewportSize({width:1280,height:850});
+
  // Per-draft exchange is distinct from AI source v1; every field round-trips.
  const exchange=await download("#pd-author-exchange");
  check(exchange.format==="practice-desk-draft-exchange"&&exchange.version===1&&
