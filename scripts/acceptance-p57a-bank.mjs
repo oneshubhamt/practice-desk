@@ -15,7 +15,6 @@ async function stage(source,label){
 }
 async function clearStage(){
  if(await page.locator("#pd-stage-clear").count()){
-  page.once("dialog",dialog=>void dialog.accept());
   await page.locator("#pd-stage-clear").click();
   await page.locator("#pd-stage-clear").waitFor({state:"detached"});
  }
@@ -45,7 +44,6 @@ try{
  const invalid=structuredClone(apfc);invalid.questions[2].answer="B";
  await stage(invalid,"p57b-wrong-key");
  check((await page.locator("#pd-stage-filter").count())===1,engine+" staging panel absent");
- check((await page.locator("#pd-author-studio").count())===0||true,""); // stage is not the published Library
  check((await page.locator("#pd-stage-handoff").count())===1,engine+" QA stage did not load");
  check((await page.locator(".pd-author-section-manager").allTextContents()).some(x=>
   /math-answer-conflict|arithmetic does not agree/i.test(x)),
