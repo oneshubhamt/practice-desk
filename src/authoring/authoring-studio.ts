@@ -493,10 +493,41 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    const warnings=quality?.issues.filter(i=>i.severity==="warning")??[];
    return {report,errors,warnings};
   };
+  const dryRun=():string=>{
+   if(!active().id.startsWith("stage:"))return "";
+   const compiled=inspectAuthoringPublication(active(),actions.existing()).compiled;
+   if(!compiled)return "";
+   const draft=active(),count=compiled.questions.length;
+   const coverage=new Map<string,number>(),kinds=new Map<string,number>();
+   for(const q of draft.questions){
+    const label=q.syllabusHeadingId||q.subject||"Unclassified";
+    coverage.set(label,(coverage.get(label)??0)+1);
+    kinds.set(q.kind,(kinds.get(q.kind)??0)+1);
+   }
+   const list=(items:Map<string,number>)=>escapeText([...items].map(([name,n])=>name+" ("+n+")").join("; "));
+   const duration=compiled.paper.timing.kind==="whole-paper"?
+    compiled.paper.timing.durationMs/60000+" min":compiled.paper.timing.kind==="untimed"?
+    "Untimed":"Per-section timers";
+   const sources=draft.questions.reduce((n,q)=>n+(q.provenance?.sources?.length??0),0);
+   return '<details class="pd-author-section-manager"><summary>Exact publication dry-run · '+
+    count+' questions · '+escapeText(compiled.title)+'</summary>'+
+    '<p class="fine">Paper '+escapeText(compiled.paper.paperId)+' · edition '+
+    escapeText(compiled.paper.edition)+' · revision '+compiled.paper.revision+
+    ' · sections '+compiled.paper.sections.length+' · correct-answer ceiling '+
+    (count*draft.marksCorrect)+' marks · wrong answer '+draft.marksIncorrect+
+    ' marks · '+escapeText(duration)+'</p>'+
+    '<p class="fine">Physical sections: '+
+    escapeText(compiled.paper.sections.map(section=>section.title+' ('+
+      section.questionRevisionIds.length+')').join('; '))+'</p>'+
+    '<p class="fine">Academic coverage: '+list(coverage)+
+    ' · types: '+list(kinds)+' · author-submitted references: '+sources+
+    ' · author editorial status: caution. Source factual corroboration: NOT performed.</p>'+
+    '</details>';
+  };
   const showIssues=(issues:readonly PublicationIssue[],warnings:readonly QualityIssue[]=[]):void=>{
    validationBox.hidden=false;
    if(!issues.length&&!warnings.length){
-    validationBox.innerHTML='<h3>Ready to publish</h3><p>Exact immutable paper, answer key, timing, assets and scoring rules passed. Sources and factual claims remain unverified.</p>';
+    validationBox.innerHTML='<h3>Ready to publish</h3><p>Exact immutable paper, answer key, timing, assets and scoring rules passed. Sources and factual claims remain unverified.</p>'+dryRun();
     status("Validation passed for "+active().questions.length+" questions.");
     return;
    }
@@ -509,7 +540,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
     ...warnings.map(i=>({field:i.path,reason:i.code+": "+i.message,questionId:i.questionId}))].
      map(issue=>'<li>'+escapeText(issue.field+": "+issue.reason)+
       (issue.questionId?'<button type="button" class="textlink" data-author-issue="'+escapeText(issue.questionId)+'">Edit question</button>':"")+
-      '</li>').join("")+'</ol>';
+      '</li>').join("")+'</ol>'+dryRun();
    validationBox.querySelectorAll<HTMLButtonElement>("[data-author-issue]").forEach(btn=>{
     btn.onclick=()=>{
      const id=btn.dataset.authorIssue;
