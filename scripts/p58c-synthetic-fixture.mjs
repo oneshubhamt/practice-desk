@@ -51,7 +51,7 @@ export function makeP58cSources({files=8,each=50,duplicates=false,media=true}={}
 }
 export function stageOf(sources,selectedCount=200){
  const files=sources.map((source,i)=>({name:"source-"+(i+1)+".json",source}));
- const ids=sources.flatMap(source=>source.questions.map(q=>source.bankId+":"+q.id));
+ const ids=sources.flatMap(source=>source.questions.map(q=>source.bankId+"::"+q.id));
  if(selectedCount>ids.length||selectedCount<0)throw Error("Invalid selected count");
  return {schema:1,files,selected:ids.slice(0,selectedCount)};
 }
