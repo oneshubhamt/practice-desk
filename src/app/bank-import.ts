@@ -3,6 +3,7 @@
  * This adapter never treats user-supplied editorial or scoring as official.
  */
 import type { ExamPackage } from "./exam-package.ts";
+import {compileExternalQuestionBank} from "../authoring/external-bank.ts";
 import { validateExamPackage,validateExamImportBudget } from "./exam-package.ts";
 import type { QuestionRevision } from "../domain/question.js";
 import type { AnswerKeyEntry } from "../domain/answer-key.js";
@@ -152,7 +153,8 @@ export function importSimpleQuestionBank(value:unknown):ExamPackage{
      content={kind:"numeric-entry",prompt,numericRules:{allowNegative:true},...(questionImages.length?{assetIds:questionImages}:{})};
      answer={kind:"numeric-entry",acceptedValues,absoluteTolerance:tolerance};
    }else throw Error(prefix+" unsupported simple-bank type: use mcq or nat (full exam JSON supports all six kinds)");
-   const editorial={status:"verified" as const};
+   const editorial={status:"caution" as const,
+     notes:"User-imported simple bank; answer and provenance have not been independently certified."};
    const source={id:qid,questionId:(paperId+":q:"+id) as QuestionId,revision,content,editorial};
    const question={...source,contentHash:questionRevisionHash(source)};
    questions.push(question);
@@ -211,7 +213,9 @@ export const APFC_NAT_BANK_TEMPLATE={
 
 /** Autodetect the intentionally simpler bank envelope without weakening full-package validation. */
 export function importAuthoredExam(value:unknown):ExamPackage{
- if(value&&typeof value==="object"&&!Array.isArray(value)&&
-    (value as Input)["format"]==="practice-desk-bank")return importSimpleQuestionBank(value);
+ if(value&&typeof value==="object"&&!Array.isArray(value)){
+   if((value as Input)["format"]==="practice-desk-authoring")return compileExternalQuestionBank(value);
+   if((value as Input)["format"]==="practice-desk-bank")return importSimpleQuestionBank(value);
+ }
  return validateExamPackage(value);
 }
