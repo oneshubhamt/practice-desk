@@ -168,7 +168,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
        ...(citation.provision===undefined?{}:{provision:text(citation.provision,"source provision",140)}),
        ...(citation.publicationDate===undefined?{}:{publicationDate:text(citation.publicationDate,"source publication date",10,true)}),
        ...(citation.asOfDate===undefined?{}:{asOfDate:text(citation.asOfDate,"source as-of date",10,true)}),
-       ...(citation.stance===undefined?{}:{stance:citation.stance})
+       ...(citation.stance===undefined?{}:{stance:citation.stance as "supports"|"disputes"})
       };
       if(out.url!==undefined&&!/^https:\/\/[^\s@]+$/iu.test(out.url))
        throw Error("Source URL must be HTTPS with no embedded credentials");
