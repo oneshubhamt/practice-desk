@@ -326,9 +326,18 @@ export function compileAuthoringPublication(
       "; accepted warning codes "+(q.qa.review.acceptedWarningCodes.join(", ")||"none")+
       "; author's note: "+q.qa.review.note+".":"")+
     (q.provenance?.examYear?" Claimed exam year: "+q.provenance.examYear+".":"")+
+    (q.sourceOrigin?" Original AI input identity (author-attributed): bank "+
+      q.sourceOrigin.bankId+", question "+q.sourceOrigin.questionId+
+      (q.sourceOrigin.stimulusId?", stimulus "+q.sourceOrigin.stimulusId:"")+".":"")+
     (q.provenance?.sources?.length?" Author-supplied citations: "+
        q.provenance.sources.map(s=>s.publisher+" / "+s.title+
-        (s.provision?" / "+s.provision:"")+(s.asOfDate?" as of "+s.asOfDate:"")).join("; ")+
+        (s.url?" / URL "+s.url:"")+
+        (s.section?" / section "+s.section:"")+
+        (s.page?" / page "+s.page:"")+
+        (s.provision?" / provision "+s.provision:"")+
+        (s.publicationDate?" / published "+s.publicationDate:"")+
+        (s.asOfDate?" / as of "+s.asOfDate:"")+
+        (s.stance?" / author stance "+s.stance:"")).join("; ")+
        " (NOT independently fetched or verified).":"")+
     (q.source.trim()?" Source/reference: "+q.source.trim():"")
   };
