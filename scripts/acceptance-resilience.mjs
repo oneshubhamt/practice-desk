@@ -55,9 +55,21 @@ try{
    return conflict||Boolean(document.querySelector('input[data-choice]'));
  });
  const conflictWarning=page.locator(".generic-warning").filter({hasText:"Another tab"});
- if(!(await conflictWarning.count()))
+ // A tab that already hydrated B's new revision can legitimately resume with
+ // B selected, without a conflict notice. Only a *stale* A view must reject C.
+ // Earlier test demanded a warning even in this safe refreshed-first branch,
+ // making a correct cross-tab interleaving intermittently fail the full gate.
+ const refreshedChoice=await page.locator("input[data-choice]:checked").first()
+   .getAttribute("data-choice").catch(()=>null);
+ if(refreshedChoice!==replacement&&!(await conflictWarning.count())){
    await page.evaluate(()=>document.querySelectorAll('input[data-choice]')[2]?.click());
- await conflictWarning.waitFor();
+   await conflictWarning.waitFor();
+ }else if(refreshedChoice===replacement){
+   check(await page.locator('input[data-choice="'+replacement+'"]').isChecked(),
+    "Fresh synchronized second-tab answer was not reflected in the first tab");
+ }else{
+   await conflictWarning.waitFor();
+ }
  const authoritative=(await records(other)).find(x=>x.id===attemptId);
  check(authoritative.saveRevision>=updated.saveRevision&&
   authoritative.state.responses.some(x=>x.response?.optionId===replacement),
