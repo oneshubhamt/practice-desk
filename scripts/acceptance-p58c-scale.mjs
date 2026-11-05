@@ -74,7 +74,9 @@ try{
     [...document.querySelectorAll("[data-stage-key]")].filter(el=>el.checked).length===200;
   },undefined,{timeout:95000});
  });
- await second.locator('[data-stage-key]').first().uncheck();
+ // A correctly refused stale write restores the checkbox. Use click(),
+ // not Playwright uncheck() which incorrectly expects it to remain unchecked.
+ await second.locator('[data-stage-key]').first().click();
  check((await second.locator("#pd-author-status").innerText()).includes("Another tab"),
   engine+" stale large-stage tab overwrote fresh selection without warning");
  check(await second.locator('[data-stage-key]').first().isChecked(),
