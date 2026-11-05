@@ -79,6 +79,8 @@ jobs:
         run: node scripts/acceptance-p54-authoring.mjs chromium
       - name: P55 Learning keyed cards, unsaved drafts and bounded redraw measurement (Chromium)
         run: node scripts/acceptance-p55-learning.mjs chromium
+      - name: P56 adversarial concurrent shared snapshot backup restoration (Chromium)
+        run: node scripts/acceptance-p56-integration.mjs chromium
       - name: Preserve P53 authored hierarchy visual evidence (Chromium)
         if: always()
         uses: actions/upload-artifact@v4
