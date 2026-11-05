@@ -1188,6 +1188,14 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
 @media(max-width:250px){
  .home-picker .home-start .btn{flex:1 1 100%;padding:7px 8px}
  .home-side,.paper-preview,.help-rules-body{min-width:0;max-width:100%}
+ /* P58-C RED (8 AI sources → 200-question imported paper, 195px at 140%):
+    1fr has an automatic min-content floor; the preview's metadata/metrics
+    expanded the grid to 203px despite a 195px document. Keep the grid
+    minmax(0,1fr) and stack metrics, not hidden clipped content. */
+ .generic-workspace .home-grid .home-side{grid-template-columns:minmax(0,1fr)}
+ .home-side>.paper-preview{min-width:0;max-width:100%;width:100%}
+ .paper-preview .preview-metrics{grid-template-columns:minmax(0,1fr)}
+ .paper-preview .preview-metrics small{overflow-wrap:anywhere}
 }
 
 /* P46: evidence-based short revision sets. Controls reflow at extreme zoom;
