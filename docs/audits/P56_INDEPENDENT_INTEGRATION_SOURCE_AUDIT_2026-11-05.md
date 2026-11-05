@@ -62,6 +62,41 @@
 | Original architecture §§1–28 and TS01–TS15 | `app/generic-ui.ts` orchestrates typed feature controllers, `engine/` and `history/` pure ownership, `tests/*.test.mjs`, `scripts/acceptance-*.mjs`, source-gated `ci.yml` | Single owner, no duplicated coordinator/scorer/publisher, deterministic HTML and representative source-backed tests. No claim every historical old screenshot regression was individually recreated; versioned historical audits are preserved |
 | QB01–QB14 and DOC01–DOC10 | `authoring/*`, `app/{bank-import,question-content-view}.ts`, `scripts/build.mjs`, docs and decision register | Vendor-neutral AST + Wordgard/KaTeX, local figures, author publication, content integrity; unpublished drafts still separately exported (not inside History v4), PDF/DOCX extraction unsupported; official bank writing separate. Existing docs must be updated with exact P56 metrics and new defect |
 
+### Original 28 October architecture audit — 28 discrete source dispositions
+
+This is a *second* audit-to-current-module reconciliation, not a declaration that every optional design proposal is implemented. The original 28-section requirement register is preserved in [the P48 audit](P48_REQUIREMENT_BY_REQUIREMENT_SOURCE_REAUDIT_2026-11-03.md#6-original-28-october-architecture-audit-sections-128-accounted-for-explicitly).
+
+| Original § | Fresh as-built P56 examination | Disposition |
+|---|---|---|
+| 1 Executive assessment | Current modules and red P56-R1 demonstrate tests did not previously cover all boundaries | Updated verdict; not a feature |
+| 2 Source/runtime audit | Re-read production modules plus generated-only CI and frozen content | Inspected; physical/human exclusions explicit |
+| 3 Remove CGL-only engine | `exam-package.ts` handles imported generic six-kind papers; CGL adapter in `content/import-cgl.ts` | Implemented generic engine, CGL bank unchanged |
+| 4 Formal session machine | `engine/session.ts:startSession/transition/checkpoint` | Implemented policy; continuous new interleaving challenges needed |
+| 5 Time accounting | `engine/clock.ts`, `session.ts`, `history/frozen.ts`, visited/exposure fields | Measured foreground distinct from wall clock; physical sleep/reboot unverified |
+| 6 Scoring policy / source comparison | `engine/scoring.ts`, `engine/source-comparison.ts`, `exam-preflight.ts` | Policy-driven source-frozen; P56 multi-kind partial/numeric test |
+| 7 Immutable revisions | `domain/integrity.ts`, `history/frozen.ts`, `shared-store.ts` | Distinct question/key/paper hash; hash not authorship |
+| 8 Editorial provenance | `content/import-cgl.ts`, `app/editorial-labels.ts` | Original/reviewed/caution Q62 untouched; external verification excluded |
+| 9 IndexedDB design | `shared-store.ts`, `record-cursor-reader.ts`, `persistence-controller.ts` | Two stores with atomic cursor hydration; no page index/migration; P56-R1 repaired |
+| 10 Recovery/backup | `history/{backup,concurrency}.ts`, `persistence-controller.ts` | Exact clean v4, CAS, quarantine, new concurrent digest challenge; OS eviction unverified |
+| 11 Data separation | `domain/*`, `history/shared-store.ts`, `learning/learning.ts` | Question, attempt and learning card separate, shared frozen source |
+| 12 Question types | `domain/question.ts`, `engine/response.ts`, `question-content-view.ts` | Six live kinds; surveys optional/deferred |
+| 13 Exam-paper edition hierarchy | `app/exam-families.ts`, `exam-package.ts` | Current imported and built-in revision/edition semantics |
+| 14 Saved family presets | `app/practice-selection.ts`, `history/backup.ts` | Family setup saved; portable v4 optional setup |
+| 15 Analytics quality | `app/question-analytics.ts`, `learning/attempt-evidence.ts` | No inferred evidence when no recorded phases; time context explicit |
+| 16 Immediate/topic/longitudinal evidence | `result-presentation.ts`, `learning.ts:topicMetrics`, `history-metrics.ts` | Topic hierarchy counts stable question vs revision, comparable same-source trends |
+| 17 Evidence before predictions | `revision-selection.ts`, `question-analytics.ts` | Only observed reason filters; rankings/predictions deliberately not added |
+| 18 Notebook and retest | `learning.ts`, `revision-test.ts`, `fsrs-scheduler-adapter.ts` | +1/0 practice vs explicit FSRS rating, no source exam marks pollution |
+| 19 Preserve legacy strengths | `app/library-controller.ts`, `exam-view.ts`, `result-controller.ts` | Source/test baseline functional requirements retained, no claimed pixel identity |
+| 20 Refined Library/History/exam UI | `app/history-controller.ts`, `screen-renderer.ts`, `learning-ui.ts`, CSS | Keyed current-view, result pane lazy, 195px first-pass checks; real ergonomics manual |
+| 21 Media/payload/performance | `scripts/build.mjs`, `image-preparation.ts`, `image-viewer.ts`, shared snapshots | Local minimised distribution and bounded benchmarks; 100/500/1600 diagnostic, no physical speed guarantee |
+| 22 Security/privacy/import | `validateExamPackage`, `stored-record-validator.ts`, `backup.ts`, build CSP | Hash/CSP/import rejection; P56-R1 valid digest reuse and corrupt fail-closed |
+| 23 Real regression suite | `tests/*.test.mjs`, `scripts/acceptance-*.mjs`, `ci.yml` | 3 actual offline browser engines and current Node24, not real mobile/Mac/AT |
+| 24 Separation of eight conceptual layers | Presentation `app/*view`; exam `domain/exam`; bank `content`/authoring; session `engine/session`; scoring `engine/scoring`; persistence `history`; Learning `learning`; services `app/*controller` | Module ownership explicit; one mutable coordinator, not unbounded rearchitecture |
+| 25 Generic example | `src/app/bank-import.ts` and `examples/apfc-mcq-nat-starter.json` | Example only, NOT official verified APFC/UPSC bank |
+| 26 Staged upgrade programme | `docs/ENGINEERING_PROGRAMME.md` P41–P56; independent defect register | Incremental actual code changes and gates, source-first P56 independent check |
+| 27 Retain/redesign/remove | `generic-ui.ts`, `navigation.ts`, `screen-renderer.ts`, two-store persistence | No obsolete debug timer/migration wrapper, retained core CGL semantics |
+| 28 Generic offline local-first direction | `scripts/build.mjs` standalone, `src/engine`, hashed local `src/history` | Software direction implemented; PWA/cloud, certified banks and release not implied |
+
 ## 5. Threat model, quality and release boundaries
 
 - **Integrity:** Domain validators reject unsigned extra fields, malformed keys, misleading marks, imported clock totals, forged question/source hashes; complete score re-computed from frozen state. Portable v4 SHA-256 is corruption evidence, *not proof of origin*. Newly discovered same-SHA concurrent import must reuse independently verified existing digest; an invalid digest must abort without write.
@@ -80,4 +115,4 @@ P56 is a *verification programme*; the only demonstrated production repair is P5
 - Deterministically built standalone HTML matching tested exact source; the guarded publisher must change **only** generated HTML. Documentation-only commits after this publisher must be inspected for source consistency.
 - Update `docs/ENGINEERING_PROGRAMME.md`, `docs/QA_CURRENT.md`, architecture, README, `AGENTS.md`, backlog and decision log. Explicitly list failed/red runs and resolved vs unresolved risks; keep human/device/content/release hold.
 
-**QA status:** OPEN until the exact-source full CI and guarded standalone publisher succeed. Never equate a green previous P55 run or the first proof-of-bug red CI with P56 closure.
+**P56 source-gated QA closure (5 November 2026):** [exact-source CI 41957996370](https://github.com/oneshubhamt/practice-desk/actions/runs/41957996370) **5/5 SUCCESS** (strict TypeScript; **312/312 Node tests**; full offline Chromium/Firefox/WebKit including new two-tab shared-snapshot reuse and corrupted-same-ID reject/no-partial-import/reload, P53/P54/P55, CGL Q62/source-reviewed, backup/CAS, CSP, responsive layout and storage benchmarks). Tested source `9f1d2b97f61f7c6fec2a4acb09be4c067febb989`; protected publisher `489069071a057087ed11fad62f30bb7ad5dc0565` changed **only** generated `Practice_Desk_Offline_Mock_Tests.html`, deterministic **2,341,265 bytes**, SHA-256 `962fa5cc93d181ddc8fd2177eb5a83a952d51f51e1b73f645acce168f766dd87`. Independent P56 production change is **only** the atomic import fix `src/app/persistence-controller.ts`; no scoring/source/FSRS/editorial/library data touched. All 28 old architecture sections are individually mapped above, along with original I01–I26/F01–F15/G01–G10/L/F29/TS/QB/DOC families. **Verdict: P56 complete for its approved source and automated software scope; release remains HOLD.** No new banks, PWA, Mac/iOS/Android physical Safari, human visual signoff, assistive technology/hardware IME, OS eviction/reboot recovery or distribution/merge has been performed.
