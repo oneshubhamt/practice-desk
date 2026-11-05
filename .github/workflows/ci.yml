@@ -83,6 +83,16 @@ jobs:
         run: node scripts/acceptance-p56-integration.mjs chromium
       - name: P57-A AI-first CAT/APFC immutable offline import (Chromium)
         run: node scripts/acceptance-p57a-bank.mjs chromium
+      - name: P58-C 8-bank 400-question cross-boundary stress and 195px UI (Chromium)
+        run: node scripts/acceptance-p58c-scale.mjs chromium
+      - name: Preserve P58-C actual 400/200 scale UI and measured runner data (Chromium)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p58c-scale-chromium
+          path: artifacts/p58c-scale/chromium-*
+          if-no-files-found: ignore
+          retention-days: 14
       - name: P58-B editable citations, triage, archival recovery and immutable publication (Chromium)
         run: node scripts/acceptance-p58b-editorial.mjs chromium
       - name: Preserve P58-B narrow source-editor screenshot (Chromium)
@@ -213,6 +223,16 @@ jobs:
         run: node scripts/acceptance-p56-integration.mjs ${{ matrix.browser }}
       - name: P57-A AI-first CAT/APFC immutable offline import (${{ matrix.browser }})
         run: node scripts/acceptance-p57a-bank.mjs ${{ matrix.browser }}
+      - name: P58-C 8-bank 400-question cross-boundary stress and 195px UI (${{ matrix.browser }})
+        run: node scripts/acceptance-p58c-scale.mjs ${{ matrix.browser }}
+      - name: Preserve P58-C actual 400/200 scale UI and measured runner data (${{ matrix.browser }})
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p58c-scale-${{ matrix.browser }}
+          path: artifacts/p58c-scale/${{ matrix.browser }}-*
+          if-no-files-found: ignore
+          retention-days: 14
       - name: P58-B editable citations, triage, archival recovery and immutable publication (${{ matrix.browser }})
         run: node scripts/acceptance-p58b-editorial.mjs ${{ matrix.browser }}
       - name: Preserve P58-B narrow source-editor screenshot (${{ matrix.browser }})
