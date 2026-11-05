@@ -156,6 +156,7 @@ function issuesFor(d:AuthoringDraft,existing:readonly ExamPackage[]):Publication
   const prefix=name(index+1),questionId=q.id;
   const item=(field:string,reason:string)=>put(prefix+" · "+field,reason,questionId);
   if(!hasContent(q.prompt))item("Question stem","Write a nonempty question or explicit equation");
+  if(q.stimulusRef&&hasContent(q.passage))item("Shared stimulus","Choose a shared stimulus or a private passage, not both");
   if(d.edition!=="custom"&&q.source.trim().length<6)
    item("Provenance","Provide a source/reference note for each Source or Reviewed question");
   if(["single-choice","multiple-select"].includes(q.kind))
@@ -236,7 +237,11 @@ export function compileAuthoringPublication(
  const known=new Set(d.assets.map(a=>a.id));
  const questions:QuestionRevision[]=[];
  const entries:AnswerKeyEntry[]=[];
- const stimuli:StimulusDefinition[]=[];
+ const stimuli:StimulusDefinition[]=(d.stimuli??[]).map(s=>({
+   ...s,id:id("stimulus",sourceId(d)+":"+s.id+":"+JSON.stringify(s)) as StimulusId
+ }));
+ const sharedStimuli=new Map((d.stimuli??[]).map((s,i)=>[s.id,stimuli[i]!]));
+ const usedStimuli=new Set<string>();
  const explanationTexts:Record<string,string>={};
  const groups=new Map<string,QuestionRevisionId[]>();
  const referenced=new Set<string>();
@@ -251,6 +256,12 @@ export function compileAuthoringPublication(
   addRefs(stemRefs);
   const hierarchy=topicAncestors(attributedTopicPath(d.examId,q.subject??"",
     q.syllabusHeadingId||undefined,q.topic??"",q.subtopic??"")).map(n=>n.id);
+  const shared=q.stimulusRef?sharedStimuli.get(q.stimulusRef):undefined;
+  if(shared){
+   usedStimuli.add(shared.id);
+   if(shared.kind==="passage"||shared.kind==="case")addRefs(shared.assetIds??[]);
+   else if(shared.kind==="image"||shared.kind==="chart")addRefs([shared.assetId]);
+  }
   const baseContent={
    prompt:publicationPlainText(prompt).slice(0,20000),
    topicIds:hierarchy as unknown as NonNullable<QuestionContent["topicIds"]>,
@@ -258,11 +269,13 @@ export function compileAuthoringPublication(
    richPrompt:prompt,
    ...(hasContent(explanation)?{richExplanation:explanation}:{}),
    ...(stemRefs.length?{assetIds:stemRefs}:{}),
-   ...(hasContent(passage)?{stimulusId:(revisionId+":stimulus") as StimulusId}:{})
+   ...(shared?{stimulusId:shared.id}:
+      hasContent(passage)?{stimulusId:(revisionId+":stimulus") as StimulusId}:{})
   };
-  if(hasContent(passage)){
+  if(hasContent(passage)&&!shared){
    const assetIds=resources(passage);
    addRefs(assetIds);
+   usedStimuli.add((revisionId+":stimulus") as StimulusId);
    stimuli.push({id:(revisionId+":stimulus") as StimulusId,kind:"passage",
      text:publicationPlainText(passage).slice(0,20000),richText:passage,
      ...(assetIds.length?{assetIds}:{})});
@@ -342,10 +355,11 @@ export function compileAuthoringPublication(
  };
  const paper:PaperRevision={...paperBase,contentHash:paperRevisionHash(paperBase)};
  const assets:ImageAsset[]=d.assets.filter(x=>referenced.has(x.id));
+ const includedStimuli=stimuli.filter(s=>usedStimuli.has(s.id));
  const compiled:ExamPackage={
   format:"practice-desk-exam",version:1,examId:d.examId as ExamId,
   title:d.title,questions,answerKey,paper,
-  ...(stimuli.length?{stimuli}:{}),...(assets.length?{assets}:{}),
+  ...(includedStimuli.length?{stimuli:includedStimuli}:{}),...(assets.length?{assets}:{}),
   ...(Object.keys(explanationTexts).length?{explanations:explanationTexts}:{})
  };
  return validateExamPackage(compiled);
