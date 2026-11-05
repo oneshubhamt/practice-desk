@@ -9,6 +9,19 @@ const engine=process.argv[2]??"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
 const {page,errors}=await h.open({viewport:{width:1100,height:790}});
 async function status(index,answered){
+ // Reconciliation commits the new model synchronously, but a browser may
+ // still be interpolating the previous CSS colour in the same animation
+ // frame (including under reduced-motion). Assert the settled paint.
+ await page.waitForFunction(({index,answered})=>{
+  const el=document.querySelector('[data-q="'+index+'"]'),flag=document.querySelector("#g-flag");
+  if(!el||!flag||!el.classList.contains("marked")||
+     el.classList.contains("answered")!==answered)return false;
+  const legend=document.querySelector(".legend-dot."+(answered?"marked-answered":"marked-unanswered"));
+  if(!legend)return false;
+  const expected=getComputedStyle(legend).backgroundColor;
+  return getComputedStyle(el).backgroundColor===expected &&
+    getComputedStyle(flag).backgroundColor===expected;
+ },{index,answered},{timeout:7000,polling:"raf"});
  const s=await page.locator('[data-q="'+index+'"]').evaluate(el=>{
   const flag=document.querySelector("#g-flag");
   const legend=document.querySelector(".legend-dot."+
