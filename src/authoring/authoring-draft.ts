@@ -38,6 +38,9 @@ export type AuthoringQuestion={
  /** Absolute numeric entry tolerance; zero for exact answers. */
  readonly tolerance:number;
  readonly source:string;
+ /** Attribution-only original AI source identity, not verified publisher truth. */
+ readonly sourceOrigin?:{readonly bankId:string;readonly questionId:string;
+  readonly stimulusId?:string};
  /** Optional shared passage/table/chart; never an in-question copy. */
  readonly stimulusRef?:string;
  /** Claims remain unverified until separate P57-B evidence review. */
@@ -151,10 +154,24 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
    "rightItems","explanation","answer","tolerance","source",
    "subject","syllabusHeadingId","topic","subtopic","difficulty",
     "sectionMinutes","minSelections","maxSelections",
-   "partialCreditEach","partialPenaltyEach","stimulusRef","provenance","qa"]);
+   "partialCreditEach","partialPenaltyEach","stimulusRef","sourceOrigin","provenance","qa"]);
   const questionId=text(q.id,"question ID",128,true);
   if(all.has(questionId))throw Error("Duplicate draft question ID");
   all.add(questionId);
+  let sourceOrigin:AuthoringQuestion["sourceOrigin"];
+  if(q.sourceOrigin!==undefined){
+   const origin=rec(q.sourceOrigin,"source origin",["bankId","questionId","stimulusId"]);
+   const stable=(v:unknown,label:string,max:number)=>{
+    const x=text(v,label,max,true);
+    if(!/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(x))throw Error("Invalid "+label);
+    return x;
+   };
+   sourceOrigin={
+    bankId:stable(origin.bankId,"origin bank ID",128),
+    questionId:stable(origin.questionId,"origin question ID",128),
+    ...(origin.stimulusId===undefined?{}:{stimulusId:stable(origin.stimulusId,"origin stimulus ID",128)})
+   };
+  }
   let provenance:AuthoringQuestion["provenance"];
   if(q.provenance!==undefined){
    const source=rec(q.provenance,"provenance",["kind","sourceNote","examYear","sources"]);
@@ -250,6 +267,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
    explanation:rich(q.explanation),answer:text(q.answer,"draft answer",100),
    tolerance:num(q.tolerance??0,"numeric tolerance",0,1000000),
    source:text(q.source,"source note",500),...(stimulusRef?{stimulusRef}:{}),
+   ...(sourceOrigin?{sourceOrigin}:{}),
    ...(provenance?{provenance}:{}),...(qa?{qa}:{})};
  });
  const edition=p.edition;
