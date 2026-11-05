@@ -74,6 +74,8 @@ await run("F02-corrupt-snapshot-normal-save",async()=>{
  await page.locator('[data-mode="free"]').click();
  await page.locator("#g-start").click();await route(page,"exam");
  await page.locator("#g-flag").click();
+ // Wait for the FIRST flag autosave to commit, not merely the initial
+ // new-attempt row; otherwise its late write can masquerade as F02 reuse.
  await page.waitForFunction(async()=>{
   const db=await new Promise((resolve,reject)=>{
    const r=indexedDB.open("practiceDesk.shared.v1",1);
@@ -83,7 +85,7 @@ await run("F02-corrupt-snapshot-normal-save",async()=>{
    return await new Promise((resolve,reject)=>{
     const tx=db.transaction("attempts","readonly");
     const r=tx.objectStore("attempts").getAll();
-    r.onsuccess=()=>resolve(r.result.some(x=>x.recordType==="generic-attempt"));
+    r.onsuccess=()=>resolve(r.result.some(x=>x.recordType==="generic-attempt"&&x.state?.responses?.some(q=>q.flagged===true)));
     r.onerror=()=>reject(r.error);
    });
   }finally{db.close();}
