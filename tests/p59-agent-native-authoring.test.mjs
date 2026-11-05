@@ -106,6 +106,8 @@ test("P59: guarded delta edits preserve original, validate canonical publisher, 
  assert.equal(next.questions[0].answer,"C");
  assert.equal(next.questions[0].prompt,update.updates[0].set.prompt);
  assert.equal(next.questions[0].provenance.kind,"ai-original");
+ assert.equal(next.questions[0].qa.status,"needs-review",
+  "Any substantive AI key/solution correction must be queued for renewed review");
  assert.deepEqual(next.questions[1],JSON.parse(before).questions[1],"unchanged questions survive exactly");
  const publisher=inspectExternalQuestionBank(next);
  assert.equal(publisher.valid,true);
@@ -239,4 +241,37 @@ test("P59: 200-question ordinary agent inspection uses much smaller output than 
  console.log("P59 agent context proxy, 200 questions: concise "+compact.stdout.length+
   " UTF-8 JS characters vs full machine QA "+old.stdout.length+
   " JS characters; this is not a measured model token count");
+}));
+
+
+test("P59: editing an alleged official PYQ cannot silently retain its provenance or suppress correction review",async()=>inTemp(async dir=>{
+ const source=JSON.parse(await readFile(apfc,"utf8"));
+ source.questions[0].provenance={kind:"official-pyq",examYear:2025,
+  sourceNote:"Synthetic, unverified label added for this negative test only"};
+ const input=join(dir,"unverified.json"),ops=join(dir,"patch.json"),output=join(dir,"corrected.json");
+ await writeFile(input,JSON.stringify(source));
+ const baseSha256=exec("inspect",input).data.sourceSha256;
+ const expectedQuestionSha256=exec("show",input,"labour-01").data.questionSha256;
+ const set={prompt:"Which letter comes third in the English alphabet?",
+  answer:"C",explanation:"C comes third in this synthetic practice example."};
+ const patch={
+  format:"practice-desk-agent-patch",version:1,baseSha256,
+  updates:[{id:"labour-01",expectedQuestionSha256,set}]
+ };
+ await writeFile(ops,JSON.stringify(patch));
+ const denied=exec("patch",input,ops,output);
+ assert.notEqual(denied.status,0);
+ assert.match(denied.data.message,/official-PYQ|provenance/i);
+ await assert.rejects(()=>readFile(output));
+ patch.updates[0].set.provenance={
+  kind:"reconstruction",sourceNote:"Edited from a hypothetical, UNVERIFIED source claim"
+ };
+ await writeFile(ops,JSON.stringify(patch));
+ const allowed=exec("patch",input,ops,output);
+ assert.equal(allowed.status,0,allowed.stderr);
+ const corrected=JSON.parse(await readFile(output,"utf8"));
+ assert.equal(corrected.questions[0].provenance.kind,"reconstruction");
+ assert.equal(corrected.questions[0].qa.status,"needs-review");
+ assert.equal(inspectExternalQuestionBank(corrected).factualVerification,"not-performed");
+ assert.equal(JSON.parse(await readFile(input,"utf8")).questions[0].provenance.kind,"official-pyq");
 }));
