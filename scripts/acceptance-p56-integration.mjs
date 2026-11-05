@@ -93,8 +93,53 @@ try{
  await page.locator("#g-history").click();await route(page,"history");
  check((await records(page)).filter(x=>x.id.startsWith("p56-")).length===2,
    engine+" P56 imported completed attempts did not survive actual file reload");
+ // Independent fail-closed case in a fresh browser profile. A pre-existing
+ // same-ID digest with DIFFERENT content must never be overwritten or
+ // legitimised by a checksum-correct incoming portable archive.
+ const hostile=await h.open({viewport:{width:1280,height:850}});
+ await route(hostile.page,"library");
+ const distorted=structuredClone(packed.snapshot);
+ distorted.body.paper.revision=distorted.body.paper.revision+1;
+ await hostile.page.evaluate(async snapshot=>{
+   const db=await new Promise((resolve,reject)=>{
+     const r=indexedDB.open("practiceDesk.shared.v1",1);
+     r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
+   });
+   try{
+     await new Promise((resolve,reject)=>{
+       const tx=db.transaction("snapshots","readwrite");
+       tx.objectStore("snapshots").add(snapshot);
+       tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
+     });
+   }finally{db.close();}
+ },distorted);
+ await hostile.page.locator("#g-history-file").setInputFiles({
+   name:"p56-valid-archive-corrupt-local-digest.json",
+   mimeType:"application/json",buffer:Buffer.from(backup)
+ });
+ await hostile.page.waitForFunction(()=>/Import failed|integrity/i.test(
+   document.querySelector("#app")?.textContent??""),null,{timeout:12000});
+ const nonOverwrite=await hostile.page.evaluate(async id=>{
+   const db=await new Promise((resolve,reject)=>{
+     const r=indexedDB.open("practiceDesk.shared.v1",1);
+     r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
+   });
+   try{
+     return await new Promise((resolve,reject)=>{
+       const tx=db.transaction(["attempts","snapshots"],"readonly");
+       const a=tx.objectStore("attempts").get("p56-additive-restored");
+       const b=tx.objectStore("snapshots").get(id);
+       tx.oncomplete=()=>resolve({attempt:a.result,snapshot:b.result});
+       tx.onerror=()=>reject(tx.error);
+     });
+   }finally{db.close();}
+ },packed.snapshot.id);
+ check(!nonOverwrite.attempt&&nonOverwrite.snapshot.body.paper.revision===
+   distorted.body.paper.revision,
+   engine+" P56 mutated stored digest was silently repaired or imported anyway");
+ check(!hostile.errors.length,engine+" hostile profile browser exceptions "+hostile.errors.join("; "));
  check(errors.length===0,engine+" P56 browser exception: "+errors.join("; "));
- console.log("P56 "+engine+" PASS: additive backup reuses concurrent immutable digest with no overwrite and survives reload");
+ console.log("P56 "+engine+" PASS: concurrent immutable digest reused, corrupted digest rejected without overwrite, reloaded original");
  await h.evidence("p56-"+engine,{pass:true,records:identity.rows.length,
    sharedSnapshots:identity.snapshots.length,concurrent:packed.snapshot.id});
 }catch(error){await h.diagnose("p56-"+engine,page,error);throw error;}
