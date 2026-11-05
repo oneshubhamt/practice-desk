@@ -121,7 +121,7 @@ function media(value:unknown):ImageAsset[]{
   ids.add(id);
   const dataUri=text(row.dataUri,path+".dataUri",14*1024*1024);
   const type=/^data:(image\/(?:png|jpeg|webp|avif|gif));base64,([A-Za-z0-9+/]+={0,2})$/u.exec(dataUri);
-  if(!type)err(path+".dataUri","Use an embedded data:image/...;base64 URI, never a remote URL");
+  if(!type)return err(path+".dataUri","Use an embedded data:image/...;base64 URI, never a remote URL");
   let bytes:Uint8Array;
   try{bytes=Uint8Array.from(atob(type[2]!),c=>c.charCodeAt(0));}
   catch{return err(path+".dataUri","Invalid base64 image");}
@@ -334,7 +334,10 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
  const draft:AuthoringDraft={schema:1,id:"agent:"+bankId,examId,paperId,title,
   edition:"custom",revision,durationMinutes,
   timingKind:timing.kind as NonNullable<AuthoringDraft["timingKind"]>,
-  pausePolicy,questionNavigation,sectionNavigation,sectionTransition,
+  pausePolicy:pausePolicy as NonNullable<AuthoringDraft["pausePolicy"]>,
+  questionNavigation:questionNavigation as NonNullable<AuthoringDraft["questionNavigation"]>,
+  sectionNavigation:sectionNavigation as NonNullable<AuthoringDraft["sectionNavigation"]>,
+  sectionTransition:sectionTransition as NonNullable<AuthoringDraft["sectionTransition"]>,
   allowEarlySubmit,allowReview,marksCorrect,marksIncorrect,
   updatedAt:"1970-01-01T00:00:00.000Z",assets,stimuli,questions};
  try{return validateAuthoringDraft(draft);}
@@ -346,9 +349,11 @@ export function inspectExternalQuestionBank(value:unknown,existing:readonly Exam
  try{
   const draft=toAuthoringDraft(value);
   const check=inspectAuthoringPublication(draft,existing);
-  if(!check.valid){
+  if(!check.valid||!check.compiled){
    return {valid:false,questionCount:draft.questions.length,editorialStatus:"caution",
-    factualVerification:"not-performed",issues:check.issues.map(issue=>({
+    factualVerification:"not-performed",issues:(check.issues.length?check.issues:[{
+     field:"Publication integrity",reason:"Publisher returned no compiled package"
+    }]).map(issue=>({
      path:issue.questionId?"$.questions[id="+issue.questionId+"]."+issue.field:
       "$."+issue.field,
      code:"publication-invalid" as const,severity:"error" as const,
