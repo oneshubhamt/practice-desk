@@ -99,6 +99,54 @@ try{
  await page.waitForFunction(id=>document.querySelector("#g-papers")?.value===id,catId);
  check((await records(page)).some(r=>r.recordType==="generic-attempt"&&r.frozen.paper.id===apfcId),
   engine+" CAT publication modified earlier APFC history");
+ // P57-C: a second, overlapping APFC revision arrives in two files.
+ // The bad arithmetic key must be corrected in Wordgard before publication.
+ const second=structuredClone(apfc);second.revision=2;second.questions[2].answer="B";
+ const overlap=structuredClone(apfc);overlap.revision=2;overlap.bankId="second-source-p57c";
+ overlap.questions=overlap.questions.map(q=>({...q,id:"copy-"+q.id}));
+ await page.locator("#g-author-open").click();
+ await page.locator("#pd-stage-input").setInputFiles([
+  {name:"p57c-main.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(second))},
+  {name:"p57c-overlap.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(overlap))}
+ ]);
+ await page.waitForFunction(()=>document.querySelectorAll("[data-stage-key]").length===6);
+ const stageText=await page.locator(".pd-author-section-manager").first().innerText();
+ check(stageText.includes("math-answer-conflict")&&stageText.includes("duplicate-candidate"),
+  engine+" multi-file QA did not identify bad key and overlap");
+ await page.locator("#pd-stage-filter").selectOption("errors");
+ check(await page.locator("[data-stage-key]").count()>0,engine+" QA error filter empty");
+ await page.locator("#pd-stage-filter").selectOption("all");
+ await page.locator('[data-stage-key="second-source-p57c::copy-'+apfc.questions[2].id+'"]').uncheck();
+ await page.locator("#pd-stage-handoff").click();
+ await page.waitForFunction(()=>document.querySelector("#pd-author-drafts")?.value.startsWith("stage:"));
+ check(await page.locator("#pd-author-questions option").count()===5,
+  engine+" selected source questions did not transfer to Wordgard");
+ await page.locator("#pd-author-validate").click();
+ check((await page.locator("#pd-author-validation").innerText()).includes("math-answer-conflict"),
+  engine+" bad key bypassed Wordgard QA");
+ const wrong=await page.locator("#pd-author-questions option").nth(2).getAttribute("value");
+ await page.locator("#pd-author-questions").selectOption(wrong);
+ await page.locator("#pd-author-answer").fill(apfc.questions[2].answer);
+ await page.locator("#pd-author-answer").blur();
+ await page.locator("#pd-author-validate").click();
+ const corrected=await page.locator("#pd-author-validation").innerText();
+ check(corrected.includes("0 errors")&&corrected.includes("Exact publication dry-run"),
+  engine+" corrected staged questions lacked a passing dry run: "+corrected.slice(0,500));
+ await page.locator("#pd-stage-clear").click(); // Harness accepts confirmation exactly once.
+ await page.locator("#pd-author-reviewer").fill("Reader named by author");
+ await page.locator("#pd-author-review-note").fill("Manually corrected arithmetic; sources and remaining duplicates are not independently authenticated.");
+ await page.locator("#pd-author-confirm").check();
+ await page.locator("#pd-author-accept-warnings").check();
+ await page.locator("#pd-author-publish").click();
+ const revised="authored:"+apfc.examId+":"+apfc.paperId+":r2:custom";
+ await page.waitForFunction(id=>document.querySelector("#g-papers")?.value===id,revised);
+ const revision2=(await records(page)).find(r=>r.recordType==="generic-package"&&r.bundle?.paper.id===revised);
+ check(Boolean(revision2)&&revision2.bundle.questions.length===5,
+  engine+" two-batch selective revision was not saved as one immutable paper");
+ check(revision2.bundle.questions.some(q=>q.editorial.notes.includes("Author-entered review/QA acknowledgement")),
+  engine+" author-attributed warning acceptance not frozen with the revision");
+ check((await records(page)).some(r=>r.recordType==="generic-attempt"&&r.frozen.paper.id===apfcId),
+  engine+" revision 2 modified the original APFC score/history");
  check(errors.length===0,engine+" unexpected page errors "+errors.join("; "));
  console.log("P57-A/B/C "+engine+" PASS: bounded staging and QA errors, Wordgard handoff, two immutable CAT/APFC publications, scored history, 195px/140%");
 }catch(error){await h.diagnose("p57a-"+engine,page,error);throw error;}
