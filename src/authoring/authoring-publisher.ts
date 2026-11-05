@@ -245,7 +245,8 @@ export function compileAuthoringPublication(
   return {...s,id:id("stimulus",sourceId(d)+":"+s.id+":"+
     JSON.stringify(s)+":"+JSON.stringify(linkedMedia)) as StimulusId};
  });
- const sharedStimuli=new Map((d.stimuli??[]).map((s,i)=>[s.id,stimuli[i]!]));
+ const sharedStimuli=new Map<string,StimulusDefinition>((d.stimuli??[]).map(
+  (s,i):[string,StimulusDefinition]=>[s.id,stimuli[i]!]));
  const usedStimuli=new Set<string>();
  const explanationTexts:Record<string,string>={};
  const groups=new Map<string,QuestionRevisionId[]>();
