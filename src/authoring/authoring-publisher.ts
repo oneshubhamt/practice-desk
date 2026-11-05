@@ -237,9 +237,14 @@ export function compileAuthoringPublication(
  const known=new Set(d.assets.map(a=>a.id));
  const questions:QuestionRevision[]=[];
  const entries:AnswerKeyEntry[]=[];
- const stimuli:StimulusDefinition[]=(d.stimuli??[]).map(s=>({
-   ...s,id:id("stimulus",sourceId(d)+":"+s.id+":"+JSON.stringify(s)) as StimulusId
- }));
+ const mediaDigests=new Map(d.assets.map(a=>[a.id,a.contentHash]));
+ const stimuli:StimulusDefinition[]=(d.stimuli??[]).map(s=>{
+  const mediaRefs=s.kind==="passage"||s.kind==="case"?(s.assetIds??[]):
+   s.kind==="image"||s.kind==="chart"?[s.assetId]:[];
+  const linkedMedia=mediaRefs.map(ref=>[ref,mediaDigests.get(ref)]);
+  return {...s,id:id("stimulus",sourceId(d)+":"+s.id+":"+
+    JSON.stringify(s)+":"+JSON.stringify(linkedMedia)) as StimulusId};
+ });
  const sharedStimuli=new Map((d.stimuli??[]).map((s,i)=>[s.id,stimuli[i]!]));
  const usedStimuli=new Set<string>();
  const explanationTexts:Record<string,string>={};
