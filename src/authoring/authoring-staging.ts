@@ -183,7 +183,8 @@ export function stagedToAuthoringDraft(state:StagingWorkspace):AuthoringDraft{
   }
  }
  const draft:AuthoringDraft={...base,
-  id:"stage:"+sha256(valid.files.map(f=>bankId(f.source)).sort().join("|")).slice(0,24),
+  id:"stage:"+sha256(base.examId+"|"+base.paperId+"|"+base.revision+"|"+
+   valid.files.map(f=>bankId(f.source)).sort().join("|")).slice(0,24),
   updatedAt:new Date().toISOString(),questions,stimuli,assets};
  if(JSON.stringify(draft).length>AUTHORING_MAX_BYTES)
   throw Error("Selected draft exceeds local authoring budget; reduce source images or questions");
