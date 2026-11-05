@@ -89,8 +89,19 @@ try{
  await page.locator("#displayTrigger").click();
  await page.locator("#themeDark").click();
  await page.keyboard.press("Escape");
+ // The theme switch can animate independently of answer/flag reconciliation.
+ // Wait for both the dark theme token and its actual painted swatches.
+ await page.waitForFunction(light=>{
+  const root=document.documentElement;
+  const swatch=document.querySelector(".legend-dot.marked-answered");
+  return root.getAttribute("data-theme")==="dark"&&
+    getComputedStyle(root).getPropertyValue("--review-answered-bg").trim()==="#633f25"&&
+    swatch&&getComputedStyle(swatch).backgroundColor!==light;
+ },completed,{timeout:7000,polling:"raf"});
  const darkDone=await status(2,true);
- check(darkDone!==completed,engine+" dark theme must have own review palette");
+ check(darkDone!==completed,engine+" dark theme must have own review palette: "+JSON.stringify({
+  light:completed,dark:darkDone,theme:await page.locator("html").getAttribute("data-theme")
+ }));
  await page.locator("#g-clear").click();await status(2,false);
  await page.setViewportSize({width:195,height:844});
  await page.evaluate(()=>document.documentElement.style.setProperty("--type-scale","1.4"));
