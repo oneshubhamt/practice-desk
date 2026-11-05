@@ -88,7 +88,7 @@ test("P57-A all six response kinds, safe rich math, image assets and genuine mix
    {type:"text",text:"Compute "},{type:"math",tex:"2+2",linearText:"two plus two"}]}]};
  const extra=[
   {id:"tf-1",examSection:"qa",subject:"Quantitative Aptitude",kind:"true-false",
-   prompt:"2 + 2 = 4.",answer:true,explanation:"Elementary arithmetic.",
+   prompt:"2 + 2 = 4.",stimulusRef:"chart-one",answer:true,explanation:"Elementary arithmetic.",
    provenance:{kind:"manual"},qa:{status:"needs-review"}},
   {id:"matching-1",examSection:"qa",subject:"Quantitative Aptitude",kind:"matching",
    prompt:"Match each number with its label.",
