@@ -175,7 +175,11 @@ export const saveWorkspaceRecord=(owner:CoordinatorContext,record:RecordItem):Pr
              const existing=snapshotsStore.get(packed.snapshot.id);
              existing.onsuccess=()=>{
                try{
-                 if(!existing.result)snapshotsStore.add(packed.snapshot);
+                 // The presence of a digest key is not proof its stored body still
+                 // matches. Validate the actual persisted bytes in this write
+                 // transaction, just as additive backup import already does.
+                 if(existing.result)verifiedSnapshot(existing.result as SharedSnapshot);
+                 else snapshotsStore.add(packed.snapshot);
                  store.put(packed.row);
                }catch(error){conflict=error as Error;tx.abort();}
              };
