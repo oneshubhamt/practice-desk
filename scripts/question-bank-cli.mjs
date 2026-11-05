@@ -2,6 +2,7 @@
 /** P57-A/B headless compiler and deterministic QA (no API, browser or LLM). */
 import {readFile,writeFile} from "node:fs/promises";
 import {inspectExternalQuestionBank} from "../src/authoring/external-bank.ts";
+import {isDraftExchange,inspectDraftExchange} from "../src/authoring/authoring-exchange.ts";
 const [command,input,...rest]=process.argv.slice(2);
 const compiling=command==="compile-bank";
 const output=compiling?rest[0]:undefined;
@@ -12,7 +13,8 @@ if(!["validate-bank","compile-bank","qa-bank"].includes(command)||!input||!flagO
   (compiling&&!output)){
  process.stderr.write("Usage: node scripts/question-bank-cli.mjs validate-bank <source.json> [--against prior.json]...\n"+
   "       node scripts/question-bank-cli.mjs qa-bank <source.json> [--against prior.json]...\n"+
-  "       node scripts/question-bank-cli.mjs compile-bank <source.json> <compiled.json> [--against prior.json]...\n");
+  "       node scripts/question-bank-cli.mjs compile-bank <source.json> <compiled.json> [--against prior.json]...\n"+
+  "Both AI source v1 and the versioned Wordgard draft exchange are accepted; --against applies to source v1 only.\n");
  process.exitCode=2;
 }else{
  try{
@@ -24,7 +26,11 @@ if(!["validate-bank","compile-bank","qa-bank"].includes(command)||!input||!flagO
    if(Buffer.byteLength(contents,"utf8")>25*1024*1024)throw Error("Comparison JSON exceeds 25 MiB");
    comparisonSources.push(JSON.parse(contents));
   }
-  const report=inspectExternalQuestionBank(JSON.parse(raw),[],comparisonSources);
+  const source=JSON.parse(raw);
+  if(isDraftExchange(source)&&comparisonSources.length)
+   throw Error("Draft exchanges do not accept --against; import the original AI source for cross-bank comparisons");
+  const report=isDraftExchange(source)?
+   inspectDraftExchange(source):inspectExternalQuestionBank(source,[],comparisonSources);
   const {compiled,...publicReport}=report;
   if(!report.valid||!compiled){
    process.stdout.write(JSON.stringify({...publicReport,compiled:false},null,2)+"\n");
