@@ -177,7 +177,8 @@ function evidenceEditor(q:AuthoringQuestion):string{
   '<div class="pd-author-meta"><label>Claimed question origin<select id="pd-author-origin-kind">'+
    ([["manual","Manual"],["ai-original","AI original"],["reconstruction","Reconstruction"],["official-pyq","Claimed official PYQ"]] as const)
    .map(([value,label])=>option(value,label,p?.kind??"manual")).join("")+
-   '</select></label><label>Claimed exam year (optional)<input id="pd-author-origin-year" type="number" min="1900" max="2100" step="1" value="'+
+   '</select></label><label>Author provenance note<input id="pd-author-origin-note" maxlength="300" value="'+
+   escapeText(p?.sourceNote??"")+'"></label><label>Claimed exam year (optional)<input id="pd-author-origin-year" type="number" min="1900" max="2100" step="1" value="'+
    escapeText(p?.examYear===undefined?"":String(p.examYear))+'"></label>'+
    '<label>QA status (never certified)<select id="pd-author-qa-status">'+
    ([["unchecked","Unchecked"],["needs-review","Needs review"]] as const)
@@ -817,6 +818,95 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
     ["pd-author-allow-review","allowReview"]] as const)
     find<HTMLInputElement>(id).onchange=e=>
       updateMetadata(key,(e.target as HTMLInputElement).checked);
+  const editCurrentEvidence=(fn:(q:AuthoringQuestion)=>AuthoringQuestion):boolean=>{
+   try{
+    changeDraft(d=>({...d,questions:d.questions.map(q=>q.id===questionId?fn(q):q)}));
+    if(lastSaveError)throw Error(lastSaveError);
+    status("Question evidence saved locally; factual authenticity is NOT verified.");
+    return true;
+   }catch(error){
+    status("Evidence NOT saved: "+(error instanceof Error?error.message:"Invalid source metadata"),true);
+    return false;
+   }
+  };
+  const currentProvenance=(q:AuthoringQuestion)=>
+   q.provenance??{kind:"manual" as const,sources:[]};
+  find<HTMLSelectElement>("pd-author-origin-kind").onchange=e=>{
+   const kind=(e.target as HTMLSelectElement).value as NonNullable<AuthoringQuestion["provenance"]>["kind"];
+   editCurrentEvidence(q=>({...q,provenance:{...currentProvenance(q),kind}}));
+  };
+  find<HTMLInputElement>("pd-author-origin-note").onchange=e=>{
+   const note=(e.target as HTMLInputElement).value;
+   editCurrentEvidence(q=>({...q,provenance:{...currentProvenance(q),sourceNote:note}}));
+  };
+  find<HTMLInputElement>("pd-author-origin-year").onchange=e=>{
+   const value=(e.target as HTMLInputElement).value;
+   editCurrentEvidence(q=>{
+    const provenance={...currentProvenance(q)};
+    if(value.trim())return {...q,provenance:{...provenance,examYear:Number(value)}};
+    const {examYear:_,...withoutYear}=provenance;
+    return {...q,provenance:withoutYear};
+   });
+  };
+  find<HTMLSelectElement>("pd-author-qa-status").onchange=e=>{
+   const state=(e.target as HTMLSelectElement).value as "unchecked"|"needs-review";
+   editCurrentEvidence(q=>({...q,qa:{...q.qa,status:state}}));
+  };
+  container.querySelectorAll<HTMLInputElement|HTMLSelectElement>("[data-author-source-field]").forEach(input=>{
+   input.onchange=()=>{
+    const index=Number(input.dataset.authorSourceIndex);
+    const field=input.dataset.authorSourceField!;
+    const value=input.value.trim();
+    editCurrentEvidence(q=>{
+     const provenance=currentProvenance(q),sources=[...(provenance.sources??[])];
+     const ref=sources[index];if(!ref)throw Error("Source citation no longer exists");
+     const next:Record<string,string>={...ref};
+     if(!value&&field!=="publisher"&&field!=="title")delete next[field];
+     else next[field]=value;
+     sources[index]=next as NonNullable<NonNullable<AuthoringQuestion["provenance"]>["sources"]>[number];
+     return {...q,provenance:{...provenance,sources}};
+    });
+   };
+  });
+  container.querySelectorAll<HTMLButtonElement>("[data-author-source-remove]").forEach(button=>{
+   button.onclick=()=>{
+    const index=Number(button.dataset.authorSourceRemove);
+    if(!confirm("Remove this author-entered citation from the unpublished draft?"))return;
+    if(editCurrentEvidence(q=>{
+     const provenance=currentProvenance(q),sources=[...(provenance.sources??[])];
+     if(!sources[index])throw Error("Citation no longer exists");
+     sources.splice(index,1);
+     return {...q,provenance:{...provenance,sources}};
+    }))void render();
+   };
+  });
+  click("pd-author-source-add",()=>{
+   const publisher=find<HTMLInputElement>("pd-author-source-new-publisher").value.trim();
+   const title=find<HTMLInputElement>("pd-author-source-new-title").value.trim();
+   if(!publisher||!title){
+    status("Both publisher and document title are required before adding a source.",true);return;
+   }
+   if(editCurrentEvidence(q=>{
+    const p=currentProvenance(q);
+    const sources=[...(p.sources??[])];
+    if(sources.length>=12)throw Error("At most twelve source citations per question");
+    sources.push({publisher,title});
+    return {...q,provenance:{...p,sources}};
+   }))void render();
+  });
+  click("pd-author-qa-record",()=>{
+   const reviewer=find<HTMLInputElement>("pd-author-qa-reviewer").value.trim();
+   const note=find<HTMLInputElement>("pd-author-qa-review-note").value.trim();
+   if(!reviewer||!note){status("Provide both a named reviewer and an evidence note; identity is not authenticated.",true);return;}
+   if(editCurrentEvidence(q=>({...q,qa:{status:"needs-review",review:{
+    reviewer,reviewedAt:new Date().toISOString(),note,
+    acceptedWarningCodes:q.qa?.review?.acceptedWarningCodes??[]
+   }}})))void render();
+  });
+  const clearReview=container.querySelector<HTMLButtonElement>("#pd-author-qa-clear");
+  if(clearReview)clearReview.onclick=()=>{
+   if(editCurrentEvidence(q=>({...q,qa:{status:q.qa?.status??"needs-review"}})))void render();
+  };
   const tolerance=find<HTMLInputElement>("pd-author-tolerance");
   if(tolerance)tolerance.onchange=e=>updateQuestion("tolerance",Number((e.target as HTMLInputElement).value));
   const refreshOfficialHeadingChoices=()=>{
