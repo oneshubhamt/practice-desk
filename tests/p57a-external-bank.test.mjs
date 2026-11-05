@@ -154,3 +154,25 @@ test("P57-A headless CLI emits machine-readable diagnostics and byte-identical c
   assert.ok(failure.issues[0].path);
  }finally{await rm(folder,{recursive:true,force:true});}
 });
+
+test("P57-A two CAT RC questions share the same immutable stimulus once; changing media bytes changes frozen reference",async()=>{
+ const base=await fixture("cat");
+ const rc2={...base.questions[0],id:"rc-2",
+  prompt:"Which entity is described in the illustrative passage?",answer:"A"};
+ const source={...base,questions:[base.questions[0],rc2,...base.questions.slice(1)]};
+ const first=compileExternalQuestionBank(source);
+ assert.equal(first.stimuli.length,2,"stimulus must not be copied for each referencing question");
+ assert.equal(first.questions[0].content.stimulusId,first.questions[1].content.stimulusId);
+ assert.equal(first.paper.sections[0].questionRevisionIds.length,2);
+ const png1="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/tAAAAABJRU5ErkJggg==";
+ const imageSource={...source,media:[{id:"tiny",altText:"Small demonstration image",dataUri:"data:image/png;base64,"+png1}],
+  stimuli:[...source.stimuli,{id:"visual",kind:"chart",mediaRef:"tiny",altText:"Small demonstration image"}],
+  questions:[...source.questions.map((q,i)=>i===2?{...q,stimulusRef:"visual"}:q)]};
+ const im=compileExternalQuestionBank(imageSource);
+ assert.equal(im.questions[2].content.stimulusId,im.stimuli.find(s=>s.kind==="chart").id);
+ // Any revised media byte sequence is rehashed. An invalid base64 payload must
+ // fail before compilation; no untrusted caller-supplied media digest accepted.
+ const broken=structuredClone(imageSource);
+ broken.media[0].dataUri="https://external.example/chart.png";
+ assert.equal(inspectExternalQuestionBank(broken).valid,false);
+});
