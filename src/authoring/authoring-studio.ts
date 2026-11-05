@@ -489,7 +489,9 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
     status("Validation passed for "+active().questions.length+" questions.");
     return;
    }
-   validationBox.innerHTML='<h3>'+issues.length+' errors · '+warnings.length+' warnings</h3>'+
+   validationBox.innerHTML='<h3>'+(active().id.startsWith("stage:")?
+    issues.length+' errors · '+warnings.length+' warnings':
+    'Fix '+issues.length+' publication issue'+(issues.length===1?'':'s'))+'</h3>'+
     (issues.length?'<p>Publication is blocked until the errors are corrected.</p>':
      '<p>Only warnings remain. Review them and explicitly acknowledge if publishing.</p>')+
     '<ol>'+[...issues.map(i=>({field:i.field,reason:i.reason,questionId:i.questionId})),
