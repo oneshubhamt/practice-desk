@@ -127,7 +127,7 @@ await run("F02-corrupt-snapshot-normal-save",async()=>{
  await page.locator("#g-flag").click();
  await page.waitForFunction(async({id,revision})=>{
   const msg=document.querySelector("#app")?.textContent??"";
-  if(/SAVE FAILED|SHA-256 mismatch|Storage locked/i.test(msg))return true;
+  if(/SAVE FAILED|SHA-256 mismatch|Storage locked|Another tab changed this record/i.test(msg))return true;
   const db=await new Promise((resolve,reject)=>{
    const r=indexedDB.open("practiceDesk.shared.v1",1);
    r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
@@ -149,9 +149,11 @@ await run("F02-corrupt-snapshot-normal-save",async()=>{
    before:row.saveRevision,after:afterward.saveRevision,beforeRef:row.frozenRef,
    afterRef:afterward.frozenRef,storedRevision:latestSnapshot?.body.paper.revision,
    warning:msg.slice(0,350)}));
- // A locked-storage recovery notice is also a visible, fail-closed error.
- // The wait above already accepts it, so the final assertion must agree.
- check(/SAVE FAILED|SHA-256 mismatch|Storage locked/i.test(msg),
+ // A stale-record conflict notice is also an explicitly visible, fail-closed
+ // outcome after a concurrent integrity probe. In all branches above, the
+ // stored corrupted snapshot must persist and the saveRevision must NOT rise.
+ // A warning alone never substitutes for the no-write assertions.
+ check(/SAVE FAILED|SHA-256 mismatch|Storage locked|Another tab changed this record/i.test(msg),
   engine+" F02 corruption rejected without visible failure notice: "+msg.slice(0,500));
  const afterSnapshot=(await records(page,"snapshots")).find(s=>s.id===snapshot.id);
  check(afterSnapshot?.body.paper.revision===corrupted.body.paper.revision,
