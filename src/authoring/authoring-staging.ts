@@ -144,7 +144,7 @@ export function validateStagingWorkspace(value:unknown):StagingWorkspace{
    (row.decision!=="needs-review"&&!row.note.trim())||
    (row.reviewer!==undefined&&(typeof row.reviewer!=="string"||row.reviewer.length>120||!row.reviewer.trim()))||
    typeof row.updatedAt!=="string"||
-   !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$/.test(row.updatedAt)||
+   !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(row.updatedAt)||
    Number.isNaN(Date.parse(row.updatedAt))||
    new Date(row.updatedAt).toISOString()!==row.updatedAt)
     throw Error("Invalid staged triage decision or attribution");
