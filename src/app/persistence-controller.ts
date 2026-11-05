@@ -16,7 +16,7 @@ import {assertDeletionAllowed,deletionWarning,type DeletionIntent} from "../hist
 import {healthSummary,type StorageHealth} from "./history-page.ts";
 
 import {backupDownload,readBackupFile} from "../history/backup-file.ts";
-import {ATTEMPTS_STORE,SNAPSHOTS_STORE,compactAttempt,expandAttempt,isSharedAttempt,reconstructRecords,pruneSharedSnapshots} from "../history/shared-store.ts";
+import {ATTEMPTS_STORE,SNAPSHOTS_STORE,compactAttempt,expandAttempt,isSharedAttempt,reconstructRecords,pruneSharedSnapshots,verifiedSnapshot} from "../history/shared-store.ts";
 import {readRecoverableWorkspace,readVerifiedWorkspace} from "./record-cursor-reader.ts";
 import type {SharedSnapshot,SlimAttempt} from "../history/shared-store.ts";
 
@@ -81,12 +81,28 @@ export const importHistoryBackup=async (owner:CoordinatorContext,file:File)=>{
              store.add(packed.row);toInsert.set(packed.snapshot.id,packed.snapshot);
            }else store.add(record);
          }
+         // The importing tab's snapshot cache may be stale: another tab can
+         // commit an identical immutable digest after this tab hydrated.
+         // Check the ACTUAL store inside the same readwrite transaction as
+         // the imported records, not the cached key set. Keep add-only
+         // semantics and reject corrupt existing digests instead of silently
+         // overwriting or "repairing" their original storage bytes.
+         let conflict:Error|null=null;
          for(const [id,snapshot] of toInsert){
-           if(!owner.storedSnapshots.has(id))snapshotStore.add(snapshot);
+           const request=snapshotStore.get(id);
+           request.onsuccess=()=>{
+             try{
+               if(request.result)verifiedSnapshot(request.result as SharedSnapshot);
+               else snapshotStore.add(snapshot);
+             }catch(error){
+               conflict=error instanceof Error?error:new Error("Invalid stored snapshot");
+               transaction.abort();
+             }
+           };
          }
          transaction.oncomplete=()=>resolve();
-         transaction.onerror=()=>reject(transaction.error??new Error("Import failed"));
-         transaction.onabort=()=>reject(transaction.error??new Error("Import aborted"));
+         transaction.onerror=()=>reject(conflict??transaction.error??new Error("Import failed"));
+         transaction.onabort=()=>reject(conflict??transaction.error??new Error("Import aborted"));
        });
      }else{
        if(localStorage.getItem(owner.storageKey)!==owner.fallbackStamp)
