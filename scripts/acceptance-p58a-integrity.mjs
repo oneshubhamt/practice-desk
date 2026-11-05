@@ -149,8 +149,10 @@ await run("F02-corrupt-snapshot-normal-save",async()=>{
    before:row.saveRevision,after:afterward.saveRevision,beforeRef:row.frozenRef,
    afterRef:afterward.frozenRef,storedRevision:latestSnapshot?.body.paper.revision,
    warning:msg.slice(0,350)}));
- check(/SAVE FAILED|SHA-256 mismatch/i.test(msg),
-  engine+" F02 corruption rejected without visible failure notice");
+ // A locked-storage recovery notice is also a visible, fail-closed error.
+ // The wait above already accepts it, so the final assertion must agree.
+ check(/SAVE FAILED|SHA-256 mismatch|Storage locked/i.test(msg),
+  engine+" F02 corruption rejected without visible failure notice: "+msg.slice(0,500));
  const afterSnapshot=(await records(page,"snapshots")).find(s=>s.id===snapshot.id);
  check(afterSnapshot?.body.paper.revision===corrupted.body.paper.revision,
   engine+" F02 corrupted snapshot was overwritten/quietly repaired");
