@@ -168,9 +168,24 @@ function patchSource(source,shape,sha256){
    if(Object.hasOwn(set,field))fail("Cannot set and unset "+field+" simultaneously");
   }
   if(new Set(unset).size!==unset.length)fail("Duplicate unset fields for "+id);
+  // A correction is new unverified work, not a continuation of an earlier
+  // review claim. Always make a substantive changed key/stem/solution visible
+  // in the app's QA queue, even when the incoming source had unchecked status.
+  const materialFields=["kind","prompt","options","answer","explanation",
+   "leftItems","rightItems","tolerance","minSelections","maxSelections",
+   "partialCreditEach","partialPenaltyEach","provenance"];
+  const material=materialFields.some(k=>Object.hasOwn(set,k)||unset.includes(k));
+  const sourceWordingChanged=["kind","prompt","options","answer","leftItems","rightItems"]
+   .some(k=>Object.hasOwn(set,k)||unset.includes(k));
+  if(before.provenance?.kind==="official-pyq"&&sourceWordingChanged&&
+     !Object.hasOwn(set,"provenance"))
+   fail("Edited official-PYQ wording/key requires an explicit source-origin/provenance update, not silent retention of the PYQ claim");
+  if(material&&set.qa?.status==="unchecked")
+   fail("A material question correction cannot opt out of needs-review; omit qa or set needs-review");
   const target=next.questions.find(q=>q.id===id);
   Object.assign(target,set);
   unset.forEach(key=>{delete target[key];});
+  if(material)target.qa={status:"needs-review"};
   updated.push(id);
  }
  for(const item of additions){
