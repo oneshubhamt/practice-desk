@@ -55,6 +55,8 @@ export type AuthoringQuestion={
 export type AuthoringDraft={
  readonly schema:1;
  readonly id:string;
+ /** Validated workflow provenance, independent of mutable draft IDs. */
+ readonly ingestionMode?:"manual"|"external-source";
  readonly examId:string;
  readonly paperId:string;
  readonly title:string;
@@ -98,7 +100,7 @@ export function newAuthoringQuestion(kind:QuestionKind="single-choice"):Authorin
 }
 export function newAuthoringDraft():AuthoringDraft{
  const now=new Date().toISOString();
- return {schema:1,id:id(),examId:"new-exam",paperId:"new-paper",title:"Untitled question bank",
+ return {schema:1,id:id(),ingestionMode:"manual",examId:"new-exam",paperId:"new-paper",title:"Untitled question bank",
   edition:"custom",revision:1,durationMinutes:120,timingKind:"whole-paper",
   pausePolicy:"allowed",questionNavigation:"free",sectionNavigation:"free",
   sectionTransition:"manual",allowEarlySubmit:true,allowReview:true,
@@ -128,11 +130,13 @@ const list=(value:unknown,max:number,label:string):unknown[]=>{
  return value;
 };
 export function validateAuthoringDraft(value:unknown):AuthoringDraft{
- const p=rec(value,"authoring draft",["schema","id","examId","paperId","title","edition",
+ const p=rec(value,"authoring draft",["schema","id","ingestionMode","examId","paperId","title","edition",
   "revision","durationMinutes","timingKind","pausePolicy","questionNavigation",
   "sectionNavigation","sectionTransition","allowEarlySubmit","allowReview",
   "marksCorrect","marksIncorrect","updatedAt","assets","stimuli","questions"]);
  if(p.schema!==1)throw Error("Unsupported draft schema");
+ if(p.ingestionMode!==undefined&&p.ingestionMode!=="manual"&&p.ingestionMode!=="external-source")
+  throw Error("Invalid authoring ingestion mode");
  const assets=structuredClone(list(p.assets,100,"images") as ImageAsset[]);
  const stimuli=structuredClone(list(p.stimuli??[],200,"stimuli") as StimulusDefinition[]);
  validateMediaInventory(stimuli,assets);
@@ -263,7 +267,9 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
      (p.allowReview!==undefined&&typeof p.allowReview!=="boolean"))
     throw Error("Invalid authored timing or navigation settings");
  const draft:AuthoringDraft={
-  schema:1,id:text(p.id,"draft ID",128,true),examId:text(p.examId,"exam ID",80,true),
+  schema:1,id:text(p.id,"draft ID",128,true),
+  ...(p.ingestionMode===undefined?{}:{ingestionMode:p.ingestionMode as "manual"|"external-source"}),
+  examId:text(p.examId,"exam ID",80,true),
   paperId:text(p.paperId,"paper ID",80,true),title:text(p.title,"paper title",180,true),
   edition,revision:num(p.revision,"revision",1,1000000),
   durationMinutes:num(p.durationMinutes,"duration",0,600),
@@ -297,4 +303,12 @@ export function validateAuthoringShelf(value:unknown):AuthoringDraftShelf{
 export function defaultAuthoringShelf():AuthoringDraftShelf{
  const draft=newAuthoringDraft();
  return {schema:1,activeId:draft.id,drafts:[draft]};
+}
+
+/** An ID is author-editable, not a security boundary. An external workflow or
+ * imported per-question provenance requires deterministic offline QA even when
+ * the identifier has been renamed. Existing plain manual drafts remain manual.
+ */
+export function requiresExternalQuality(draft:AuthoringDraft):boolean{
+ return draft.ingestionMode==="external-source"||draft.questions.some(q=>q.provenance!==undefined);
 }
