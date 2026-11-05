@@ -384,11 +384,49 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
     " · "+(q.syllabusHeadingId?syllabusHeading(d.examId,q.syllabusHeadingId)?.label:
       q.subject?.trim()||UNCLASSIFIED_SUBJECT)+" · "+labels[q.kind],questionId)).join("");
   const draftOptions=draftsOptions(shelf);
+  const staged=stage?inspectStagingWorkspace(stage):null;
+  const shown=staged?.questions.filter(item=>stageFilter==="errors"?
+    item.issues.some(i=>i.severity==="error"):
+    stageFilter==="warnings"?item.issues.some(i=>i.severity==="warning"):
+    stageFilter==="selected"?item.selected:stageFilter==="unselected"?!item.selected:true)??[];
+  const stagePanel=stageBlocked?
+    '<p class="generic-warning" role="alert">'+escapeText(stageError)+
+    ' <button class="btn danger" id="pd-stage-recover">Reset unreadable staging</button></p>':
+    staged?'<details class="pd-author-section-manager" open><summary>AI staging · '+
+      staged.selectedCount+' of '+staged.questions.length+' selected · '+
+      staged.errorCount+' errors · '+staged.warningCount+' warnings</summary>'+
+      '<p class="fine">Sources are unpublished. Offline checks cannot authenticate facts, PYQs, legislation or reviewer claims. Select no more than 200 questions to correct in Wordgard.</p>'+
+      '<p class="fine">Files: '+stage!.files.map(f=>escapeText(f.name)).join(', ')+
+      ' · References: '+staged.sourceCount+' · Duplicate candidates: '+staged.duplicateCandidates+
+      ' · Subjects: '+escapeText(staged.topicCounts.map(x=>x.label+' ('+x.count+')').join('; '))+
+      ' · Kinds: '+escapeText(staged.kinds.map(x=>x.label+' ('+x.count+')').join('; '))+'</p>'+
+      '<div class="row"><label>Filter<select id="pd-stage-filter">'+
+       [["all","All questions"],["errors","QA errors"],["warnings","Warnings"],
+        ["selected","Selected"],["unselected","Not selected"]].map(([value,label])=>option(value,label,stageFilter)).join('')+
+      '</select></label><button class="btn" id="pd-stage-handoff">Edit selected in Wordgard</button>'+
+      '<button class="btn" id="pd-stage-export">Export QA report</button>'+
+      '<button class="btn danger" id="pd-stage-clear">Discard staging</button></div>'+
+      '<div class="scroll-table" style="max-height:300px;overflow:auto"><table class="pd-author-section-table"><thead><tr>'+
+      '<th>Include</th><th>Question</th><th>Flagged QA</th></tr></thead><tbody>'+
+      shown.map(item=>'<tr><td><input type="checkbox" data-stage-key="'+escapeText(item.key)+'"'+
+        (item.selected?' checked':'')+' aria-label="Include '+escapeText(item.key)+'"></td>'+
+        '<td><b>'+escapeText(item.bankId+'/'+item.id)+'</b> · '+
+        escapeText(publicationPlainText(item.question.prompt).slice(0,140))+'</td><td>'+
+        (item.issues.length?item.issues.map(issue=>
+          '<p class="fine">'+escapeText(issue.severity.toUpperCase()+': '+issue.code+' — '+issue.message)+'</p>').join(''):'No flagged issues')+
+        '</td></tr>').join('')+'</tbody></table></div>'+
+      (staged.issues.some(i=>!i.questionId)?
+       '<p class="generic-warning">Section-level problems: '+
+        escapeText(staged.issues.filter(i=>!i.questionId).map(i=>i.message).join('; '))+'</p>':'')+
+      '</details>':'';
   container.innerHTML='<section class="panel pad pd-author-studio" aria-labelledby="pd-author-heading">'+
    '<div class="row between"><div><span class="eyebrow">QUESTION AUTHORING · LOCAL DRAFT</span>'+
    '<h2 id="pd-author-heading" tabindex="-1">Wordgard authoring studio</h2></div>'+
    '<button class="btn" id="pd-author-close">Close studio</button></div>'+
    '<p class="fine">Edit and preview here. Validate before publishing an immutable examination revision. Drafts stay local and must be separately exported; published papers and their attempts enter History backups.</p>'+
+   '<div class="row"><button class="btn" id="pd-stage-add">Stage AI bank files</button>'+
+   '<input type="file" multiple accept=".json,application/json" id="pd-stage-input" hidden></div>'+
+   stagePanel+
    (lastSaveError?'<p class="generic-warning" role="alert">'+escapeText(lastSaveError)+'</p>':"")+
    '<div class="pd-author-top"><label>Saved draft<select id="pd-author-drafts">'+draftOptions+'</select></label>'+
    '<div class="row"><button class="btn" id="pd-author-new">New draft</button>'+
@@ -423,6 +461,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    '<button class="btn" id="pd-author-validate">Validate paper</button>'+
    '<button class="btn primary" id="pd-author-publish">Publish to Library</button></div>'+
    '<label class="pd-author-publish-consent"><input type="checkbox" id="pd-author-confirm"> I have checked the answer key, source notes and exam rules; this paper is user-authored, not officially certified.</label>'+
+   (d.id.startsWith("stage:")?'<label class="pd-author-publish-consent"><input type="checkbox" id="pd-author-accept-warnings"> I explicitly accept remaining QA warnings for this selected draft; no external source was independently checked.</label>':'')+
    '<div id="pd-author-validation" class="pd-author-validation" hidden aria-live="polite"></div>'+
    '<p class="fine" id="pd-author-status" role="status">Editing locally; changes are saved automatically.</p>'+
    '<div id="pd-author-preview" class="pd-author-preview" hidden></div></section>';
