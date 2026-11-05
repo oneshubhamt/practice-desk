@@ -47,7 +47,10 @@ export type AuthoringQuestion={
   readonly section?:string;readonly page?:string;readonly provision?:string;
   readonly publicationDate?:string;readonly asOfDate?:string;
   readonly stance?:"supports"|"disputes"}[];};
- readonly qa?:{readonly status:"unchecked"|"needs-review"};
+ readonly qa?:{readonly status:"unchecked"|"needs-review";
+  /** Author-entered, unverified review/acceptance, never source authentication. */
+  readonly review?:{readonly reviewer:string;readonly reviewedAt:string;readonly note:string;
+   readonly acceptedWarningCodes:readonly string[]};};
 };
 export type AuthoringDraft={
  readonly schema:1;
@@ -185,10 +188,26 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   }
   let qa:AuthoringQuestion["qa"];
   if(q.qa!==undefined){
-   const checking=rec(q.qa,"QA metadata",["status"]);
+   const checking=rec(q.qa,"QA metadata",["status","review"]);
    if(checking.status!=="unchecked"&&checking.status!=="needs-review")
     throw Error("Unsupported unverified QA status");
-   qa={status:checking.status};
+   let review:NonNullable<NonNullable<AuthoringQuestion["qa"]>["review"]>|undefined;
+   if(checking.review!==undefined){
+    const value=rec(checking.review,"authored review",["reviewer","reviewedAt","note","acceptedWarningCodes"]);
+    const reviewedAt=text(value.reviewedAt,"review date",35,true);
+    if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(reviewedAt)||
+       Number.isNaN(Date.parse(reviewedAt))||new Date(reviewedAt).toISOString().slice(0,10)!==reviewedAt.slice(0,10))
+     throw Error("Invalid author-entered review date");
+    const codes=list(value.acceptedWarningCodes,50,"accepted QA codes").map((code,i)=>{
+     const named=text(code,"warning code "+i,100,true);
+     if(!/^[a-z][a-z0-9-]*$/.test(named))throw Error("Invalid QA warning code");
+     return named;
+    });
+    if(new Set(codes).size!==codes.length)throw Error("Duplicate accepted QA warning code");
+    review={reviewer:text(value.reviewer,"reviewer claim",120,true),
+     reviewedAt,note:text(value.note,"review note",500,true),acceptedWarningCodes:codes};
+   }
+   qa={status:checking.status,...(review?{review}:{})};
   }
   const kind=q.kind;
   if(typeof kind!=="string"||!QUESTION_KINDS.includes(kind as QuestionKind))
