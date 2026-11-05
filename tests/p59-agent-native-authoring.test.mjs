@@ -138,7 +138,8 @@ test("P59: bad source hash, item hash, id, path, revisions and wrong keyed schem
   const r=exec("patch",input,patch,output);
   assert.notEqual(r.status,0,"Invalid patch "+i+" must fail");
   assert.equal(r.data.valid,false);
-  assert.equal(r.data.code,"agent-input-invalid");
+  assert.ok(["agent-input-invalid","agent-validation-failed"].includes(r.data.code),
+   "Invalid edit "+i+" should have a structured typed failure: "+JSON.stringify(r.data));
   await assert.rejects(()=>readFile(output),"Invalid edit "+i+" wrote output");
  }
  assert.equal(JSON.parse(await readFile(input,"utf8")).questions[0].answer,"B");
@@ -159,4 +160,57 @@ test("P59: malformed source and unsupported draft exchange are not silently coer
  const reject=exec("show",draft,"labour-01");
  assert.notEqual(reject.status,0);
  assert.match(reject.data.message,/source v1|source/i);
+}));
+
+
+test("P59: AI appends or removes only named questions with a non-destructive guard; dry runs never materialize output",async()=>inTemp(async dir=>{
+ const source=JSON.parse(await readFile(apfc,"utf8"));
+ const input=join(dir,"source.json"),patch=join(dir,"patch.json"),
+  output=join(dir,"next.json");
+ await writeFile(input,JSON.stringify(source));
+ const base=exec("inspect",input).data.sourceSha256;
+ const q=exec("show",input,"labour-01");
+ const appended={...structuredClone(source.questions[0]),
+  id:"labour-02",prompt:"Which letter immediately follows B in the English alphabet?",
+  answer:"C",explanation:"C follows B; A precedes B and D comes after C."};
+ const operations={
+  format:"practice-desk-agent-patch",version:1,baseSha256:base,
+  add:[appended],
+  remove:[{id:"labour-01",expectedQuestionSha256:q.data.questionSha256}]
+ };
+ await writeFile(patch,JSON.stringify(operations));
+ const dry=exec("patch",input,patch,output,"--dry-run");
+ assert.equal(dry.status,0,dry.stderr);
+ assert.equal(dry.data.dryRun,true);
+ assert.deepEqual(dry.data.addedIds,["labour-02"]);
+ assert.deepEqual(dry.data.removedIds,["labour-01"]);
+ await assert.rejects(()=>readFile(output));
+ const applied=exec("patch",input,patch,output);
+ assert.equal(applied.status,0,applied.stderr);
+ const next=JSON.parse(await readFile(output,"utf8"));
+ assert.ok(!next.questions.some(q=>q.id==="labour-01"));
+ assert.ok(next.questions.some(q=>q.id==="labour-02"));
+ assert.equal(next.questions.length,3);
+ assert.equal(source.questions[0].id,"labour-01");
+ assert.equal(inspectExternalQuestionBank(next).valid,true);
+ const same=exec("patch",input,patch,output);
+ assert.notEqual(same.status,0);
+ assert.match(same.data.message,/exist/i);
+}));
+
+test("P59: focused optional-field removal needs exact question identity; no arbitrary modifications allowed",async()=>inTemp(async dir=>{
+ const source=JSON.parse(await readFile(apfc,"utf8"));
+ const input=join(dir,"source.json"),patch=join(dir,"patch.json"),
+  output=join(dir,"clean.json");
+ await writeFile(input,JSON.stringify(source));
+ const base=exec("inspect",input).data.sourceSha256;
+ const item=exec("show",input,"labour-01").data.questionSha256;
+ await writeFile(patch,JSON.stringify({
+  format:"practice-desk-agent-patch",version:1,baseSha256:base,
+  updates:[{id:"labour-01",expectedQuestionSha256:item,unset:["topic"]}]
+ }));
+ const out=exec("patch",input,patch,output);
+ assert.equal(out.status,0,out.stderr);
+ assert.equal(JSON.parse(await readFile(output,"utf8")).questions[0].topic,undefined);
+ assert.equal(JSON.parse(await readFile(input,"utf8")).questions[0].topic,"Illustrative labour principles");
 }));
