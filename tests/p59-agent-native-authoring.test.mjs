@@ -214,3 +214,29 @@ test("P59: focused optional-field removal needs exact question identity; no arbi
  assert.equal(JSON.parse(await readFile(output,"utf8")).questions[0].topic,undefined);
  assert.equal(JSON.parse(await readFile(input,"utf8")).questions[0].topic,"Illustrative labour principles");
 }));
+
+
+test("P59: 200-question ordinary agent inspection uses much smaller output than full QA without concealing truncation",async()=>inTemp(async dir=>{
+ const {makeP58cSources}=await import("../scripts/p58c-synthetic-fixture.mjs");
+ const source=makeP58cSources({files:1,each:200,media:false})[0];
+ const input=join(dir,"200-questions.json");
+ await writeFile(input,JSON.stringify(source));
+ const compact=exec("inspect",input);
+ assert.equal(compact.status,0,compact.stderr);
+ assert.equal(compact.data.questionCount,200);
+ assert.equal(compact.data.issues.limit,12);
+ assert.ok(compact.data.issues.items.length<=12);
+ assert.equal(compact.data.factualVerification,"not-performed");
+ const legacy=fileURLToPath(new URL("../scripts/question-bank-cli.mjs",import.meta.url));
+ const old=spawnSync(process.execPath,[legacy,"qa-bank",input],{
+  encoding:"utf8",timeout:30000,maxBuffer:2*1024*1024
+ });
+ assert.equal(old.status,0,old.stderr);
+ assert.ok(compact.stdout.length<8000,
+  "200-question compact report must not print all 200 question checks");
+ assert.ok(compact.stdout.length*5<old.stdout.length,
+  "Compact authoring diagnostics should consume at most a fifth of legacy QA characters");
+ console.log("P59 agent context proxy, 200 questions: concise "+compact.stdout.length+
+  " UTF-8 JS characters vs full machine QA "+old.stdout.length+
+  " JS characters; this is not a measured model token count");
+}));
