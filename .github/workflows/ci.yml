@@ -85,6 +85,14 @@ jobs:
         run: node scripts/acceptance-p57a-bank.mjs chromium
       - name: P58-B editable citations, triage, archival recovery and immutable publication (Chromium)
         run: node scripts/acceptance-p58b-editorial.mjs chromium
+      - name: Preserve P58-B narrow source-editor screenshot (Chromium)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p58b-source-editor-195-chromium
+          path: artifacts/p58b-editorial/chromium-*.png
+          if-no-files-found: ignore
+          retention-days: 14
       - name: P58-A RED-first actual offline integrity tests (Chromium)
         run: node scripts/acceptance-p58a-integrity.mjs chromium
       - name: Shared four-state review palette across all six answer kinds (Chromium)
@@ -207,6 +215,14 @@ jobs:
         run: node scripts/acceptance-p57a-bank.mjs ${{ matrix.browser }}
       - name: P58-B editable citations, triage, archival recovery and immutable publication (${{ matrix.browser }})
         run: node scripts/acceptance-p58b-editorial.mjs ${{ matrix.browser }}
+      - name: Preserve P58-B narrow source-editor screenshot (${{ matrix.browser }})
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p58b-source-editor-195-${{ matrix.browser }}
+          path: artifacts/p58b-editorial/${{ matrix.browser }}-*.png
+          if-no-files-found: ignore
+          retention-days: 14
       - name: P58-A RED-first actual offline integrity tests (${{ matrix.browser }})
         run: node scripts/acceptance-p58a-integrity.mjs ${{ matrix.browser }}
       - name: Shared four-state review palette, light/dark and narrow (${{ matrix.browser }})
