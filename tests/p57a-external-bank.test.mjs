@@ -79,3 +79,78 @@ test("P57-A simple legacy authoring imports remain supported but are never autom
  const pkg=importSimpleQuestionBank(legacy);
  assert.equal(pkg.questions[0].editorial.status,"caution");
 });
+
+test("P57-A all six response kinds, safe rich math, image assets and genuine mixed scoring use one published engine",async()=>{
+ const original=await fixture("cat");
+ const png="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/tAAAAABJRU5ErkJggg==";
+ const richMath={format:"practice-desk-rich",version:1,
+  blocks:[{type:"paragraph",content:[
+   {type:"text",text:"Compute "},{type:"math",tex:"2+2",linearText:"two plus two"}]}]};
+ const extra=[
+  {id:"tf-1",examSection:"qa",subject:"Quantitative Aptitude",kind:"true-false",
+   prompt:"2 + 2 = 4.",answer:true,explanation:"Elementary arithmetic.",
+   provenance:{kind:"manual"},qa:{status:"needs-review"}},
+  {id:"matching-1",examSection:"qa",subject:"Quantitative Aptitude",kind:"matching",
+   prompt:"Match each number with its label.",
+   leftItems:["One","Two","Three","Four"],rightItems:["Two","Four","One","Three"],
+   answer:"1-C,2-A,3-D,4-B",partialCreditEach:0.5,partialPenaltyEach:0.1,
+   explanation:"Pair each word with the matching number.",provenance:{kind:"ai-original"},qa:{status:"unchecked"}},
+  {id:"written-1",examSection:"qa",subject:"Quantitative Aptitude",kind:"free-response",
+   prompt:richMath,answer:"A model explanation of arithmetic",explanation:"2 + 2 = 4.",
+   provenance:{kind:"ai-original"},qa:{status:"unchecked"}}
+ ];
+ const source={...original,media:[{id:"tiny",dataUri:"data:image/png;base64,"+png,altText:"Illustrative one-pixel icon"}],
+  stimuli:[...original.stimuli,{id:"chart-one",kind:"image",mediaRef:"tiny",altText:"Illustrative one-pixel icon"}],
+  questions:[...original.questions,...extra]};
+ const packageValue=compileExternalQuestionBank(source);
+ assert.equal(packageValue.questions.length,6);
+ assert.deepEqual(packageValue.questions.map(q=>q.content.kind),
+  ["single-choice","numeric-entry","multiple-select","true-false","matching","free-response"]);
+ assert.equal(packageValue.assets.length,1);
+ assert.equal(packageValue.questions[5].content.richPrompt.blocks[0].content[1].tex,"2+2");
+ assert.equal(packageValue.answerKey.entries[4].answer.pairs[0].rightId,"C");
+ assert.equal(packageValue.answerKey.entries[3].answer.value,true);
+ assert.equal(packageValue.answerKey.entries[5].answer.evaluation,"manual");
+ const q=packageValue.questions;
+ const responses=[
+  {questionRevisionId:q[0].id,response:{kind:"single-choice",optionId:"A"}},
+  {questionRevisionId:q[1].id,response:{kind:"numeric-entry",value:6}},
+  {questionRevisionId:q[2].id,response:{kind:"multiple-select",optionIds:["A","C"]}},
+  {questionRevisionId:q[3].id,response:{kind:"true-false",value:true}},
+  {questionRevisionId:q[4].id,response:{kind:"matching",pairs:[
+   {leftId:"L1",rightId:"C"},{leftId:"L2",rightId:"A"},
+   {leftId:"L3",rightId:"D"},{leftId:"L4",rightId:"B"}]}},
+  {questionRevisionId:q[5].id,response:{kind:"free-response",text:"2+2 is four"}}
+ ].map(x=>({...x,timeSpentMs:0,answerChangeCount:0}));
+ const scored=scoreAttempt(packageValue.paper,packageValue.answerKey,packageValue.questions,
+  responses,new Date().toISOString());
+ assert.deepEqual(scored.items.map(x=>x.verdict),
+  ["correct","correct","correct","correct","correct","pending"]);
+});
+test("P57-A headless CLI emits machine-readable diagnostics and byte-identical compiled JSON without network",async()=>{
+ const {mkdtemp,readFile:read,rm}=await import("node:fs/promises");
+ const {tmpdir}=await import("node:os");
+ const {join}=await import("node:path");
+ const {spawnSync}=await import("node:child_process");
+ const folder=await mkdtemp(join(tmpdir(),"p57a-"));
+ try{
+  const input=new URL("../examples/ai-first-apfc.json",import.meta.url).pathname;
+  const out=join(folder,"compiled.json");
+  const cli=new URL("../scripts/question-bank-cli.mjs",import.meta.url).pathname;
+  const validate=spawnSync(process.execPath,[cli,"validate-bank",input],{encoding:"utf8"});
+  assert.equal(validate.status,0,validate.stderr);
+  assert.equal(JSON.parse(validate.stdout).valid,true);
+  const compiled=spawnSync(process.execPath,[cli,"compile-bank",input,out],{encoding:"utf8"});
+  assert.equal(compiled.status,0,compiled.stderr);
+  assert.deepEqual(JSON.parse(await read(out,"utf8")),compileExternalQuestionBank(await fixture("apfc")));
+  const rejected=spawnSync(process.execPath,[cli,"compile-bank",input,out],{encoding:"utf8"});
+  assert.notEqual(rejected.status,0,"must not overwrite previous immutable compiler output");
+  const malformed=join(folder,"bad.json");await (await import("node:fs/promises")).writeFile(malformed,
+   '{"format":"practice-desk-authoring","version":1,"questions":[]}');
+  const bad=spawnSync(process.execPath,[cli,"validate-bank",malformed],{encoding:"utf8"});
+  assert.equal(bad.status,1);
+  const failure=JSON.parse(bad.stdout);
+  assert.equal(failure.valid,false);
+  assert.ok(failure.issues[0].path);
+ }finally{await rm(folder,{recursive:true,force:true});}
+});
