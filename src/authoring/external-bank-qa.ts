@@ -121,14 +121,18 @@ export function inspectExternalQuality(
  const duplicates:DuplicateCandidate[]=[];
  // Bound all comparisons to 1,800 questions total, including source batch.
  if(all.length>1800)throw Error("QA comparison exceeds 1,800 questions");
- for(let i=0;i<own.length;i++)for(let j=i+1;j<all.length;j++){
+ for(let i=0;i<own.length&&duplicates.length<500;i++)
+  for(let j=i+1;j<all.length&&duplicates.length<500;j++){
   const a=own[i]!,b=all[j]!;
   if(a.q.kind!==b.q.kind||!a.stem||!b.stem)continue;
   const same=a.stem===b.stem;
   // Candidate similarity does not rely on duplicated RC/DILR shared context.
+  const bigramScore=jaccard(a.tokens,b.tokens);
+  const unigramScore=jaccard(new Set(a.stem.split(" ")),new Set(b.stem.split(" ")));
   const score=same?1:
-    a.stem.length>=55&&b.stem.length>=55?jaccard(a.tokens,b.tokens):0;
-  if(score<0.86)continue;
+    a.stem.length>=55&&b.stem.length>=55&&
+    unigramScore>=0.78&&bigramScore>=0.62?unigramScore:0;
+  if(score<0.78)continue;
   const exact=same&&JSON.stringify(a.options)===JSON.stringify(b.options);
   const classification=exact?"exact":same?"same-stem":"near";
   duplicates.push({
@@ -144,13 +148,11 @@ export function inspectExternalQuality(
    " duplicate; inspect both question IDs before accepting",a.q.id,"prompt",
    "heuristic",b.bankId+"/r"+b.revision+"/"+b.q.id,
    "Review provenance and both keys; do not automatically remove either question");
-  if(duplicates.length>=500)break;
  }
  const results:QuestionQuality[]=[];
  let checked=0,sourcesCount=0;
  for(let i=0;i<draft.questions.length;i++){
   const q=draft.questions[i]!;
-  const initial=issues.length;
   const prompt=publicationPlainText(q.prompt).trim();
   const explanation=publicationPlainText(q.explanation).trim();
   const src=q.provenance?.sources??[];
@@ -244,11 +246,10 @@ export function inspectExternalQuality(
      "Canonical scorer did not award full credit to the exact published key",
      q.id,"answer","deterministic");
   }
-  const concerning=issues.slice(initial).some(x=>
-   x.questionId===q.id&&x.severity!=="info");
+  const concerning=issues.some(x=>x.questionId===q.id&&x.severity!=="info");
   results.push({questionId:q.id,sourceCount:src.length,
    checks:{schema_valid:"pass",
-    key_consistent:issues.slice(initial).some(x=>x.severity==="error"&&x.questionId===q.id)?"issue":"pass",
+    key_consistent:issues.some(x=>x.severity==="error"&&x.questionId===q.id)?"issue":"pass",
     solution_checked:math,source_corroborated:"unverified",human_reviewed:"unverified"},
    recommendedStatus:concerning||q.qa?.status==="needs-review"?"needs-review":"unchecked"});
  }
