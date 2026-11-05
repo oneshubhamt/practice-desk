@@ -71,6 +71,7 @@ await run("F01-AI-renamed-draft-QA",async()=>{
 
 await run("F02-corrupt-snapshot-normal-save",async()=>{
  const {page,context}=await h.open();
+ await page.locator('[data-mode="free"]').click();
  await page.locator("#g-start").click();await route(page,"exam");
  await page.locator("#g-save").click();
  await page.waitForFunction(async()=>{
