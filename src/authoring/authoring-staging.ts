@@ -8,7 +8,7 @@ import {validateAuthoringDraft,AUTHORING_MAX_BYTES} from "./authoring-draft.ts";
 import type {AuthoringDraft,AuthoringQuestion} from "./authoring-draft.ts";
 import {sha256} from "../domain/hash.ts";
 import type {StimulusDefinition,ImageAsset} from "../domain/question.ts";
-import type {StimulusId} from "../domain/ids.ts";
+import type {StimulusId,AssetId} from "../domain/ids.ts";
 
 export const STAGING_KEY="practiceDesk.authoring.staging.v1";
 export const STAGING_MAX_BYTES=1700000;
@@ -34,6 +34,9 @@ export type StagingInspection={
  readonly errorCount:number;
  readonly warningCount:number;
  readonly duplicateCandidates:number;
+ readonly duplicateTruncated:boolean;
+ readonly duplicatePairsInspected:number;
+ readonly duplicatePairsPossible:number;
  readonly topicCounts:readonly {label:string;count:number}[];
  readonly kinds:readonly {label:string;count:number}[];
  readonly sourceCount:number;
@@ -46,6 +49,28 @@ const bankId=(source:unknown):string=>{
 };
 const itemKey=(bank:string,id:string)=>bank+"::"+id;
 const draftFor=(source:unknown)=>toAuthoringDraft(source);
+/** Rewrite image references only, never source text, maths, figures or alt text.
+ * Every source bank receives a deterministic namespace (even same digest media).
+ * The canonical validator verifies all references and embedded SHA digests.
+ */
+function remapMediaRefs<T>(value:T,map:ReadonlyMap<string,string>):T{
+ return JSON.parse(JSON.stringify(value),(key,entry:unknown)=>{
+  if(key==="assetId"&&typeof entry==="string"){
+   const renamed=map.get(entry);
+   if(!renamed)throw Error("Unknown staged media asset reference "+entry);
+   return renamed;
+  }
+  if(key==="assetIds"&&Array.isArray(entry)){
+   return entry.map(id=>{
+    const renamed=map.get(String(id));
+    if(!renamed)throw Error("Unknown staged media asset reference "+String(id));
+    return renamed;
+   });
+  }
+  return entry;
+ }) as T;
+}
+
 const config=(d:AuthoringDraft)=>JSON.stringify([
  d.examId,d.paperId,d.edition,d.revision,d.marksCorrect,d.marksIncorrect,
  d.durationMinutes,d.timingKind,d.pausePolicy,d.questionNavigation,
@@ -115,7 +140,8 @@ export function updateStagedSelection(
 export function inspectStagingWorkspace(state:StagingWorkspace):StagingInspection{
  const valid=validateStagingWorkspace(state),rows:StagedQuestion[]=[],issues:ExternalBankIssue[]=[];
  const subjects=new Map<string,number>(),kinds=new Map<string,number>();
- let duplicates=0,sourceCount=0;
+ let duplicates=0,sourceCount=0,duplicateTruncated=false;
+ let duplicatePairsInspected=0,duplicatePairsPossible=0;
  const selected=new Set(valid.selected);
  for(const file of valid.files){
   const id=bankId(file.source),draft=draftFor(file.source);
@@ -126,6 +152,9 @@ export function inspectStagingWorkspace(state:StagingWorkspace):StagingInspectio
    ...(issue.questionId?{questionId:itemKey(id,issue.questionId)}:{})}));
   issues.push(...assigned);
   duplicates+=report.quality?.duplicates.length??0;
+  duplicateTruncated ||= report.quality?.summary.duplicateTruncated??false;
+  duplicatePairsInspected+=report.quality?.summary.duplicatePairsInspected??0;
+  duplicatePairsPossible+=report.quality?.summary.duplicatePairsPossible??0;
   for(const q of draft.questions){
    const key=itemKey(id,q.id),picked=selected.has(key);
    rows.push({key,bankId:id,id:q.id,question:q,
@@ -143,7 +172,9 @@ export function inspectStagingWorkspace(state:StagingWorkspace):StagingInspectio
  return {questions:rows,issues,selectedCount:valid.selected.length,
   errorCount:issues.filter(i=>i.severity==="error").length,
   warningCount:issues.filter(i=>i.severity==="warning").length,
-  duplicateCandidates:duplicates,topicCounts:sorted(subjects),kinds:sorted(kinds),sourceCount};
+  duplicateCandidates:duplicates,duplicateTruncated,
+  duplicatePairsInspected,duplicatePairsPossible,
+  topicCounts:sorted(subjects),kinds:sorted(kinds),sourceCount};
 }
 /** Handoff to *unpublished* Wordgard. A wrong answer key can be corrected there.
  * The selected paper must still pass full publisher + P57-B QA before publication.
@@ -156,35 +187,39 @@ export function stagedToAuthoringDraft(state:StagingWorkspace):AuthoringDraft{
  const base=draftFor(valid.files[0]!.source);
  const selected=new Set(valid.selected);
  const questions:AuthoringQuestion[]=[],stimuli:StimulusDefinition[]=[],assets:ImageAsset[]=[];
- const assetIds=new Map<string,string>();
+ const assetIds=new Set<string>();
  const stimulusIds=new Set<string>();
  for(const file of valid.files){
   const draft=draftFor(file.source),id=bankId(file.source);
   const chosen=draft.questions.filter(q=>selected.has(itemKey(id,q.id)));
   if(!chosen.length)continue;
+  const mediaIds=new Map(draft.assets.map(a=>[String(a.id),
+   "m_"+sha256(id+"|"+a.id).slice(0,28)]));
   for(const q of chosen){
    const idStable="q_"+sha256(id+"|"+q.id).slice(0,28);
    const stimulusRef=q.stimulusRef?
     "s_"+sha256(id+"|"+q.stimulusRef).slice(0,28):undefined;
-   questions.push({...q,id:idStable,...(stimulusRef?{stimulusRef}:{})});
+   questions.push({...remapMediaRefs(q,mediaIds),id:idStable,
+    ...(stimulusRef?{stimulusRef}:{})});
   }
   for(const s of draft.stimuli??[]){
    if(!chosen.some(q=>q.stimulusRef===s.id))continue;
    const renamed=("s_"+sha256(id+"|"+s.id).slice(0,28)) as StimulusId;
    if(stimulusIds.has(renamed))throw Error("Staged stimulus identity collision");
-   stimulusIds.add(renamed);stimuli.push({...s,id:renamed} as StimulusDefinition);
+   stimulusIds.add(renamed);
+   stimuli.push({...remapMediaRefs(s,mediaIds),id:renamed} as StimulusDefinition);
   }
   for(const a of draft.assets){
-   const previous=assetIds.get(a.id);
-   const encoded=JSON.stringify(a);
-   if(previous&&previous!==encoded)
-    throw Error("Media asset ID collides across staged sources: "+a.id);
-   if(!previous){assetIds.set(a.id,encoded);assets.push(a);}
+   const renamed=mediaIds.get(a.id)! as AssetId;
+   if(assetIds.has(renamed))throw Error("Staged media namespace collision");
+   assetIds.add(renamed);
+   assets.push({...a,id:renamed});
   }
  }
  const draft:AuthoringDraft={...base,
   id:"stage:"+sha256(base.examId+"|"+base.paperId+"|"+base.revision+"|"+
-   valid.files.map(f=>bankId(f.source)).sort().join("|")).slice(0,24),
+   valid.files.map(f=>bankId(f.source)).sort().join("|")+"|"+
+   [...valid.selected].sort().join("|")).slice(0,24),
   updatedAt:new Date().toISOString(),questions,stimuli,assets};
  if(JSON.stringify(draft).length>AUTHORING_MAX_BYTES)
   throw Error("Selected draft exceeds local authoring budget; reduce source images or questions");
