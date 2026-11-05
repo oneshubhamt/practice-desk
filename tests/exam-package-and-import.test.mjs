@@ -334,7 +334,8 @@ test("author-friendly MCQ/NAT adapter retains full fractions, unique identities 
   assert.deepEqual(importAuthoredExam(structuredClone(bank)),pkg,
    "seed="+seed+" stable identities and hashes");
   assert.equal(new Set(pkg.questions.map(q=>q.id)).size,count);
-  assert.ok(pkg.questions.every(q=>q.editorial.status==="verified"));
+  assert.ok(pkg.questions.every(q=>q.editorial.status==="caution"&&
+    q.editorial.notes.includes("not been independently certified")));
   assert.ok(pkg.answerKey.entries.every(e=>e.answer.kind==="single-choice"||e.answer.kind==="numeric-entry"));
   const maximum=scoreableMaximum(pkg.paper,pkg.answerKey,pkg.questions);
   assert.ok(Math.abs(maximum-2.5*count)<1e-8,"seed="+seed+" nominal maximum");
