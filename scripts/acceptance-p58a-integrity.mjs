@@ -73,7 +73,7 @@ await run("F02-corrupt-snapshot-normal-save",async()=>{
  const {page,context}=await h.open();
  await page.locator('[data-mode="free"]').click();
  await page.locator("#g-start").click();await route(page,"exam");
- await page.locator("#g-save").click();
+ await page.locator("#g-flag").click();
  await page.waitForFunction(async()=>{
   const db=await new Promise((resolve,reject)=>{
    const r=indexedDB.open("practiceDesk.shared.v1",1);
@@ -113,8 +113,9 @@ await run("F02-corrupt-snapshot-normal-save",async()=>{
   }finally{db.close();}
  },corrupted);
  await other.close();
- // Tab A hydrated a GOOD snapshot before tab B corrupted the persisted bytes.
- await page.locator("#g-save").click();
+ // Tab A hydrated a GOOD snapshot before tab B corrupted persisted bytes.
+ // Flag toggles are ordinary autosaves and use the same production persistence path.
+ await page.locator("#g-flag").click();
  await page.waitForFunction(async({id,revision})=>{
   const msg=document.querySelector("#app")?.textContent??"";
   if(/SAVE FAILED|SHA-256 mismatch|Storage locked/i.test(msg))return true;
