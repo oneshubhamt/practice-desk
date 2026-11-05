@@ -64,8 +64,8 @@ try{
   checked:document.querySelector('input[data-choice]:checked')?.getAttribute("data-choice")??null,
   hasThird:Boolean(document.querySelectorAll("input[data-choice]")[2])
  }));
- const before=await view();
- if(!before.conflict&&before.checked!==replacement&&before.hasThird)
+ const preConflictView=await view();
+ if(!preConflictView.conflict&&preConflictView.checked!==replacement&&preConflictView.hasThird)
    await page.evaluate(()=>document.querySelectorAll("input[data-choice]")[2]?.click());
  await page.waitForFunction(expected=>{
   const conflict=[...document.querySelectorAll(".generic-warning")]
