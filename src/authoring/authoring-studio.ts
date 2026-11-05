@@ -745,7 +745,9 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   })();});
 
   const downloadAuthoringJson=(payload:unknown,filename:string):void=>{
-   const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}));
+   // Compact archival exports remain within the same character budget as
+   // their validated payload, even for large 8-file staged source collections.
+   const url=URL.createObjectURL(new Blob([JSON.stringify(payload)],{type:"application/json"}));
    const link=document.createElement("a");link.href=url;link.download=filename;
    document.body.append(link);link.click();link.remove();
    window.setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -754,7 +756,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   find<HTMLInputElement>("pd-stage-archive-file").onchange=async e=>{
    const file=(e.target as HTMLInputElement).files?.[0];if(!file)return;
    try{
-    if(file.size>STAGING_MAX_BYTES+512)throw Error("Staging archive exceeds safe local budget");
+    if(file.size>4*(STAGING_MAX_BYTES+512))throw Error("Staging archive exceeds safe local budget");
     const restored=readStagingArchive(JSON.parse(await file.text()));
     if(stage&&!confirm("Replace existing unpublished staged sources? Export the current staging backup first."))return;
     persistStage(restored);stageFilter="all";void render();
@@ -856,7 +858,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   find<HTMLInputElement>("pd-author-shelf-file").onchange=async e=>{
    const file=(e.target as HTMLInputElement).files?.[0];if(!file)return;
    try{
-    if(file.size>AUTHORING_MAX_BYTES+512)throw Error("Draft shelf archive exceeds size limit");
+    if(file.size>4*(AUTHORING_MAX_BYTES+512))throw Error("Draft shelf archive exceeds size limit");
     const restored=readDraftShelfArchive(JSON.parse(await file.text()));
     if(!confirm("Replace ALL unpublished Wordgard drafts with this validated backup? Export the current draft shelf first. This does not change published History."))return;
     capture();
@@ -909,7 +911,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   find<HTMLInputElement>("pd-author-import-file").onchange=async e=>{
    const file=(e.target as HTMLInputElement).files?.[0];if(!file)return;
    try{
-    if(file.size>AUTHORING_MAX_BYTES)throw Error("Draft file too large");
+    if(file.size>4*(AUTHORING_MAX_BYTES+512))throw Error("Draft file too large");
     const input=JSON.parse(await file.text());
     const imported=isDraftExchange(input)?readDraftExchange(input):validateAuthoringDraft(input);
     if(!shelf)throw Error("No draft shelf");
