@@ -1,3 +1,5 @@
+# Practice Desk — Consolidated Engineering Programme
+
 ## 0I. P57-B — deterministic QA, evidence and duplicate triage (5 November 2026)
 
 **Authority:** User expressly approved P57-B as the next pass. **Implementation commit pending full exact-source CI**; no P57-C permission and no release/merge permission.
@@ -10,9 +12,7 @@
 | 4. Reconcile | Existing compiler remains the sole authority; duplicate candidates never delete questions. Shared passage is not a duplicate key. Absence of source corroboration is reported as **unverified**, not pass. QA blocks compilation only for deterministic errors; warnings are inspectable. Metadata/source integrity remains content-addressed; historical frozen attempts are untouched. |
 | 5. Test | New adversarial P57-B Node tests and existing five-job CI, source-matched HTML reproducibility and real offline browser regression are the required closure evidence. **Record run ID and exact result only after successful checks**. Physical Mac/iOS, manual factual corroboration, real AT/IME/OS loss, human UI signoff, P57-C and release still open. |
 
-# Practice Desk — Consolidated Engineering Programme
-
-**P57-A IMPLEMENTED AND SOURCE-VERIFIED (5 November 2026) — FULL FIVE-JOB AUTOMATED CI PASS; RELEASE HOLD.** Unified external AI/human CAT/APFC question bank source, canonical Wordgard draft/publisher, offline CLI and native Library import are tracked in [P57-A engineering five-step ledger](#0h-p57-a--unified-ai-first-external-format-and-deterministic-compiler-5-november-2026) and [as-built authoring guide](architecture/QUESTION_BANK_AUTHORING.md). P57-B evidence/duplicates and P57-C staging/Wordgard bulk correction **not authorized**; release remains on HOLD. The prior plan was explicitly authorized for P57-A in this session.
+**P57-A IMPLEMENTED AND SOURCE-VERIFIED (5 November 2026) — FULL FIVE-JOB AUTOMATED CI PASS; RELEASE HOLD.** Unified external AI/human CAT/APFC question bank source, canonical Wordgard draft/publisher, offline CLI and native Library import are tracked in [P57-A engineering five-step ledger](#0h-p57-a--unified-ai-first-external-format-and-deterministic-compiler-5-november-2026) and [as-built authoring guide](architecture/QUESTION_BANK_AUTHORING.md). P57-B deterministic source QA/evidence/duplicates **implemented; exact CI pending**, and P57-C staging/Wordgard bulk correction **not authorized**; release remains on HOLD. The prior plan was explicitly authorized for P57-A in this session.
 
 
 ## 0H. P57-A — unified AI-first external format and deterministic compiler (5 November 2026)
