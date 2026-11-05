@@ -350,6 +350,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
    kind:questionKind,prompt,passage,options,leftItems,rightItems,explanation,
    answer,tolerance,source:sourceNote??"",
    ...(stimulusRef?{stimulusRef}:{}),
+   sourceOrigin:{bankId,questionId:id,...(stimulusRef?{stimulusId:stimulusRef}:{})},
    provenance:{kind:provenance.kind as NonNullable<AuthoringQuestion["provenance"]>["kind"],
      ...(sourceNote===undefined?{}:{sourceNote}),
      ...(examYear===undefined?{}:{examYear}),...(sources===undefined?{}:{sources})},
