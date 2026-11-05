@@ -28,6 +28,17 @@ try{
  },"departed durable first tab");
  check(departed.packageId.endsWith(":practice:strict"),
    "Frozen strict section has no distinct source-practice revision identity");
+ // Deterministic stale-write ordering: first resume Tab A while it still
+ // owns its genuine version, then create Tab B AFTER the first tab has loaded.
+ // The older test saved B before resuming A; A was therefore often *correctly*
+ // hydrated to B, and a later C click was not a stale conflict at all.
+ check(await page.locator('[data-attempt="'+attemptId+'"]').count()>0,
+   "Original tab must expose its saved attempt");
+ await page.locator('[data-attempt="'+attemptId+'"]').first().click();
+ await route(page,"exam");
+ check(await page.locator("input[data-choice]").count()>=3,
+   "Original tab must resume its question before second tab opens");
+ const originalRevision=(await records(page)).find(x=>x.id===attemptId)?.saveRevision??0;
  const other=await context.newPage();
  other.on("dialog",d=>void d.accept());
  await other.goto(offlineUrl,{waitUntil:"load"});
@@ -39,37 +50,14 @@ try{
  await other.locator("input[data-choice]").nth(1).click();
  const updated=await until(async()=>{
   const x=(await records(other)).find(x=>x.id===attemptId);
-  return x?.saveRevision>departed.saveRevision&&
+  return x?.saveRevision>originalRevision&&
     x.state.responses.some(y=>y.response?.kind==="single-choice"&&y.response.optionId===replacement)?x:null;
  },"durable alternate second-tab answer");
- // The original tab must not silently overwrite a newer revision.
- // Resuming may itself checkpoint and reject a stale revision BEFORE the
- // candidate can answer. Both rejection paths are correct; do not demand a
- // radio click after the view has already been safely locked and redrawn.
- check(await page.locator('[data-attempt="'+attemptId+'"]').count()>0,
-   "Stale first tab must expose its saved attempt");
- await page.locator('[data-attempt="'+attemptId+'"]').first().click();
- await page.waitForFunction(()=>{
-   const conflict=[...document.querySelectorAll(".generic-warning")]
-     .some(node=>node.textContent?.includes("Another tab"));
-   return conflict||Boolean(document.querySelector('input[data-choice]'));
- });
+ // A still has its pre-B session; a C edit MUST reject at the immutable
+ // expected-version CAS boundary. Do not weaken this to a generic warning.
  const conflictWarning=page.locator(".generic-warning").filter({hasText:"Another tab"});
- // A tab that already hydrated B's new revision can legitimately resume with
- // B selected, without a conflict notice. Only a *stale* A view must reject C.
- // Earlier test demanded a warning even in this safe refreshed-first branch,
- // making a correct cross-tab interleaving intermittently fail the full gate.
- const refreshedChoice=await page.locator("input[data-choice]:checked").first()
-   .getAttribute("data-choice").catch(()=>null);
- if(refreshedChoice!==replacement&&!(await conflictWarning.count())){
-   await page.evaluate(()=>document.querySelectorAll('input[data-choice]')[2]?.click());
-   await conflictWarning.waitFor();
- }else if(refreshedChoice===replacement){
-   check(await page.locator('input[data-choice="'+replacement+'"]').isChecked(),
-    "Fresh synchronized second-tab answer was not reflected in the first tab");
- }else{
-   await conflictWarning.waitFor();
- }
+ await page.locator("input[data-choice]").nth(2).click();
+ await conflictWarning.waitFor({timeout:12000});
  const authoritative=(await records(other)).find(x=>x.id===attemptId);
  check(authoritative.saveRevision>=updated.saveRevision&&
   authoritative.state.responses.some(x=>x.response?.optionId===replacement),
