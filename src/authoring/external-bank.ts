@@ -316,7 +316,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
      if(s[field]!==undefined)clean[field]=text(s[field],at+"."+field,
       field==="url"?2048:field==="page"?80:field.includes("Date")?10:180);
     }
-    if(clean.url!==undefined&&!/^https:\/\/[^\s/@]+(?:\:[0-9]+)?(?:\/[^\s]*)?$/iu.test(clean.url))
+    if(clean.url!==undefined&&!/^https:\/\/[^\s/@]+(?::[0-9]+)?(?:\/[^\s]*)?$/iu.test(clean.url))
      err(at+".url","Use only HTTPS URLs with a host and no embedded credentials");
     for(const field of ["publicationDate","asOfDate"]){
      const date=clean[field];
