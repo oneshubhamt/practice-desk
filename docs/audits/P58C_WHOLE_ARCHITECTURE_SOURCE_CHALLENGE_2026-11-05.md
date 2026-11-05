@@ -104,3 +104,138 @@ These are **independently sampled current source owners** and the [itemized hist
 **External/product HOLD — never inferred from software green:** real user-owned macOS Safari from Finder under `file://`, Back/Forward/reload and browser Origin persistence; real Android/iOS touch/zoom; VoiceOver/NVDA/TalkBack and spoken TeX; native hardware IME and keyboard; actual OS kill/eviction/quota/reboot and tested disaster recovery; external authentication of every official PYQ/statute/source/reviewer claim for any deployed new bank; end-user visual signoff, distribution and merge. Unpublished drafts/staging require explicit *separate* archives, not History backup v4. The contents here are synthetic fixtures, not complete verified APFC/CAT/UPSC/RBI question banks. Deliberately optional PWA/cloud, survey, extra storage normalization, all-history paging and exact distributed localStorage CAS remain deferred/conditional rather than being falsely marked implemented.
 
 **Independent software conclusion:** All explicitly authorized P58-A, P58-B and P58-C **automated source/contract/CI gates are closed**. The broader conceptual architecture is source-present with the documented intentional deferrals and device/content/human-release HOLD gates; the earlier historical statement “P57-C and P58 incomplete” is superseded for this bounded software scope only.
+
+## 6. One-to-one original requirement register — independent current-source disposition
+
+This is the *itemized* owner/disposition check behind §3's grouped summary. It does not turn a particular source function's existence into a real-device or exhaustive behavioral certification. For each old requirement, source ownership was re-read against the current module or current built-gate code rather than accepting the old P48 completion field; the complete [CI 42063617352](https://github.com/oneshubhamt/practice-desk/actions/runs/42063617352) then exercised the retained automated journeys. **PRESENT** means current implementation source and relevant regression exist, not proof of factual content accuracy; **CONDITIONAL/EXTERNAL/DEFERRED** are real limitations, not quietly dismissed gaps.
+
+### I01–I26 — source, data and core product architecture
+
+| ID | Rechecked current source owner / actual target | Independent current status and qualification |
+| --- | --- | --- |
+| I01 | engine/source-comparison.ts, domain/integrity.ts | **PRESENT:** compare original/reviewed key only on exact immutable displayed context; letter-only matching is not sufficient |
+| I02 | content/import-cgl.ts, content/papers.json/patches.json, scoring.ts | **PRESENT:** five original/five reviewed, 6 Oct Q62 original invalid and reviewed caution; no key rewrite |
+| I03 | package-lock.json, scripts/build.mjs, CI core/publisher | **PRESENT:** pinned Node dependencies, reproducible HTML/CSP SHA, guarded publish with drift rejection |
+| I04 | app/exam-families.ts, library-controller.ts | **PRESENT:** true exam-family/paper/edition selection, custom import not official by default |
+| I05 | app/practice-selection.ts, history/backup.ts | **PRESENT:** one family-scoped setups.v2 preference, current v4 backup preservation |
+| I06 | app/practice-compose.ts | **PRESENT:** deterministic eligible subset from one frozen source paper and real authored tags |
+| I07 | learning/revision-selection.ts, revision-test.ts | **PRESENT:** evidence-based wrong/blank/slow/flagged/due review and distinct frozen revision result |
+| I08 | app/record-cursor-reader.ts, history/shared-store.ts | **PARTIAL / conditional:** atomic cursor reads and shared immutable snapshot compression; not full lazy pagination or proof of low peak memory |
+| I09 | app/persistence-controller.ts, history/backup.ts, stored-record-validator.ts | **PRESENT within local contract; EXTERNAL recovery limit:** atomic CAS, strict v4 import and quarantine; true OS eviction cannot be reconstructed |
+| I10 | learning/syllabus-taxonomy.ts, learning.ts; authored subject/topic/subtopic | **PRESENT within defined scope:** APFC nine broad roots, explicit author/user hierarchy and root rollup; not a factually authenticated detailed syllabus taxonomy |
+| I11 | app/navigation.ts, bootstrap.ts and browser fallback suites | **EXTERNAL:** Linux Playwright WebKit not actual macOS Safari/Finder Origin/back-forward persistence |
+| I12 | engine/session.ts, learning/question-analytics.ts | **PRESENT:** recorded foreground visit/answer timing phases; unobserved time not invented |
+| I13 | app/history-query.ts, history-controller.ts, history-page.ts | **PRESENT:** inclusive local-date and source/mode/status/search filter semantics |
+| I14 | app/image-viewer.ts, image-preparation.ts, domain/media.ts | **PRESENT:** bounded local figure zoom/pan, preparation and alt; physical gesture/clarity still human gate |
+| I15 | domain/rich-document.ts, authoring/vendor-ports.ts, wordgard-adapter.ts, app/katex-math-adapter.ts | **PRESENT:** canonical AST, isolated vendors, math linear alternatives; spoken math/IME quality EXTERNAL |
+| I16 | app/exam-shortcuts.ts, lifecycle-controller.ts, template.html | **PRESENT and corrected versus old audit:** persisted configurable key remaps with native radio/editable priority |
+| I17 | app/generic-ui.ts, coordinator-context.ts, screen-renderer.ts, exam-dom-reconcile.ts | **PARTIAL by design:** typed modular controllers and targeted keyed updates; whole-root replacement remains in some transitions, no global VDOM |
+| I18 | domain/exam.ts | **DEFERRED optional:** untimed/whole-paper/sectional supported; no calendar/per-question deadlines |
+| I19 | domain/question.ts and engine/scoring.ts | **DEFERRED optional:** six examination response types, not a separate unscored survey product |
+| I20 | mobile layout/ARIA in CSS and view modules | **EXTERNAL:** actual Android/iOS, touch, AT, OS restart/storage loss not executed |
+| I21 | content/papers.json, app/bank-import.ts, question-bank CLI | **CONTENT NOT DONE:** bundled CGL and synthetic APFC/NAT examples; verified full APFC/CAT/UPSC/RBI banks not supplied |
+| I22 | scripts/build.mjs, domain/validate.ts, rich-document.ts, media.ts | **PRESENT bounded CSP/import controls, independent full threat-model OPEN:** build substitutes the CSP placeholder with exact runtime hash; untrusted boundaries remain limited, not certified against all attacks |
+| I23 | history/shared-store.ts, record-cursor-reader.ts | **CONDITIONAL accepted design:** current two-store compact model, not proposed five-store/event/paged DB redesign |
+| I24 | template.html, build.mjs | **DEFERRED:** offline standalone without PWA/cloud/rank telemetry; no implicit hosted-origin migration |
+| I25 | domain/validate.ts and engine/session/scoring.ts; app/generic-ui.ts | **PRESENT engine; scoped UI coupling:** one six-kind engine and no debug time cheat; composition root still coordinates UI |
+| I26 | app/exam-families.ts, exam-preflight.ts, template non-affiliation footer | **PRESENT:** truthful source/custom labelling and actual selected policy/score disclosure |
+
+### F01–F15 and G01–G10 — earlier behavior/correctness defects
+
+| ID | Current source owner | Independent disposition |
+| --- | --- | --- |
+| F01 | engine/session.ts, history/frozen.ts | **PRESENT:** recorded section clock consumption, not inferred missing events |
+| F02 | app/exam-preflight.ts, engine/score-ceiling.ts | **PRESENT:** ceiling and editorial exclusions disclosed before test |
+| F03 | app/history-priorities.ts, history-score.ts | **PRESENT:** source-compatible denominator/marks priorities, not fictitious difficulty normalization |
+| F04 | app/history-page.ts, history-score.ts | **PRESENT:** frozen earned/eligible denominators |
+| F05 | app/library-controller.ts | **PRESENT:** unfinished attempts shown separately from completed |
+| F06 | app/exam-preflight.ts | **PRESENT:** timing, review, pause and score rules are from actual paper |
+| F07 | app/exam-package.ts, question-content-view.ts | **PRESENT:** source/author figure context and validated alt; AT experience external |
+| F08 | content/import-cgl.ts, editorial-labels.ts | **PRESENT:** key corrected only where actual source key differs; caution distinct |
+| F09 | app/result-presentation.ts, learning/question-analytics.ts | **PRESENT:** evidence-backed pace and measured time, honest unavailability |
+| F10 | engine/session.ts, app/exam-shortcuts.ts | **PRESENT:** flag during pause is permitted, scoring response changes not |
+| F11 | app/lifecycle-controller.ts, exam-shortcuts.ts | **PRESENT:** native focused radio/navigation and edit-box keyboard priority |
+| F12 | app/result-controller.ts | **PRESENT:** active Results pane lazy materialization |
+| F13 | history/deletion-policy.ts, app/persistence-controller.ts | **PRESENT:** unfinished deletion confirmation and CAS protection |
+| F14 | template.html, bootstrap.ts, styles/app.css | **PRESENT:** persistent floating Aa/display control; physical zoom still untested |
+| F15 | template.html, exam-preflight.ts | **PRESENT:** independent educational/non-affiliation claims |
+| G01 | engine/session.ts | **PRESENT:** sequential locked whole-paper section progression |
+| G02 | engine/session.ts | **PRESENT:** manual sectional expiry keeps section locked until transition |
+| G03 | domain/validate.ts | **PRESENT:** blank reward cannot exceed full correctness ceiling |
+| G04 | domain/validate.ts, engine/response.ts | **PRESENT:** multiple-select key respects min/max selection |
+| G05 | domain/validate.ts | **PRESENT:** matching key unique endpoints in fixed inventory |
+| G06 | app/route-controller.ts, result-controller.ts | **PRESENT:** disabled review does not expose detailed post-test review in UI |
+| G07 | app/exam-controller.ts | **PRESENT:** below-minimum multiple-select draft not silently committed |
+| G08 | app/exam-controller.ts | **PRESENT:** duplicate matching right-hand values blocked/announced |
+| G09 | engine/scoring.ts, score-ceiling.ts | **PRESENT:** component score clamp and conservative bounds |
+| G10 | history/backup.ts, engine/source-comparison.ts | **ACCEPTED no installed-user migration:** current v4 only; retained historical comparison reader is a minor conditional seam |
+
+### L01–L11 and F29-01–03 — layout and labeling
+
+| ID | Current source owner | Independent disposition |
+| --- | --- | --- |
+| L01 | app/library-controller.ts, styles/app.css | **PRESENT software layout:** paper and Start prioritized; actual Mac fold requires human signoff |
+| L02 | app/exam-view.ts, styles/app.css | **PRESENT:** compact exam controls, Next and review state |
+| L03 | app/question-content-view.ts, styles/app.css | **PRESENT:** passage scroll region; small real devices untested |
+| L04 | app/question-content-view.ts, image-viewer.ts | **PRESENT:** local figure controls/alt; physical perceptual clarity external |
+| L05 | app/history-page.ts | **PRESENT:** saved rows before secondary charts |
+| L06 | app/result-controller.ts | **PRESENT:** section marks/overview near top |
+| L07 | template.html, styles/app.css, bootstrap.ts | **PRESENT:** light/dark and Aa line-wrap; 195px screenshots visually cramped |
+| L08 | content/import-cgl.ts, editorial-labels.ts | **PRESENT:** actual changed-key badge only |
+| L09 | app/exam-view.ts | **PRESENT:** whole-paper timer labelled whole-paper |
+| L10 | app/exam-view.ts, exam-preflight.ts | **PRESENT:** friendly paper/practice labels |
+| L11 | app/result-controller.ts | **PRESENT:** stable attempt-analysis heading across panes; extreme narrow text may wrap |
+| F29-01 | app/route-controller.ts, result-controller.ts | **PRESENT:** reopened Result pane/filter derives from current selected record |
+| F29-02 | styles/app.css, history-page.ts | **PRESENT automated geometry, physical HOLD:** no 195px/140% horizontal scroll in current browser tests |
+| F29-03 | styles/app.css, learning-ui.ts | **PRESENT automated geometry, physical HOLD:** P58-C red-first narrow Learning heading repair plus three-browser no-scroll |
+
+### TS01–TS15 — test engineering
+
+| ID | Present source/evidence | Independent disposition |
+| --- | --- | --- |
+| TS01 | tests/*.test.mjs, scripts/acceptance-*.mjs | **PRESENT:** capability-oriented Node/browser tests, not frozen v11 screenshot parity |
+| TS02 | tests/exam-scoring-and-policy.test.mjs, session-and-timing.test.mjs | **PRESENT:** independent scorer/model oracles; not mathematical proof of all states |
+| TS03 | tests/exam-scoring-and-policy.test.mjs | **PRESENT:** numeric tolerance/precision boundaries |
+| TS04 | acceptance-resilience/partial-recovery/P56/P58A tests | **PRESENT:** red-reproduced concurrent write/corrupt SHA/adversarial backups; OS kill external |
+| TS05 | exam-package-and-import.test.mjs, acceptance-stress.mjs, benchmark-storage.mjs | **PRESENT:** bounded hostile-import and 0–1600 historical records test/measurements |
+| TS06 | learning-and-analytics tests, revision-evidence suites | **PRESENT:** evidence/learning/selector-specific checks |
+| TS07 | scripts/browser/fixtures.mjs | **PRESENT:** shared browser harness; legacy numbered scripts retired |
+| TS08 | actual screenshots for Wordgard/retained UX gates | **PRESENT:** feature-specific image QA only, no mandatory v11 pixel parity |
+| TS09 | .github/workflows/ci.yml | **PRESENT:** actual Chromium/Firefox/WebKit full tests; WebKit Linux ≠ native Safari |
+| TS10 | keyboard/ARIA/focus tests, P58-C screenshots | **PARTIAL:** no systematic rule-based WCAG suite or real screen reader/AT |
+| TS11 | CI core/browser/publish jobs, checkout/write guard | **PRESENT:** five-job guarded publisher and exact tested source drift check |
+| TS12 | benchmark-ui-coordinator.mjs, benchmark-storage.mjs | **PRESENT:** diagnostics are informational; no ungrounded v11 speed gate |
+| TS13 | AGENTS.md, engineering programme, docs/README, QA_CURRENT | **PRESENT active documentation:** P58-C exact-source status supersedes old pass-only labels |
+| TS14 | docs/audits/TEST_SUITE_REENGINEERING_PLAN_2026-11-01.md | **PARTIAL historical trace:** old→new unique assertion mapping exists; this P58-C reran current suites, not every old retired assertion in isolation |
+| TS15 | package-lock.json, npm ci, scripts/build.mjs, CI logs | **PRESENT reproducibility; intermittent CI installer caveat:** canceled Firefox install run 42061691640 not falsely counted; final 42063617352 5/5 succeeded |
+
+### QB01–QB14 and DOC01–DOC10 — editable bank source and document truthfulness
+
+| ID | Current source owner / requirement | Independent disposition |
+| --- | --- | --- |
+| QB01 | app/bank-import.ts, external-bank.ts, question-bank-cli.mjs | **PRESENT:** simple MCQ/NAT and AI author format, hashes computed by app |
+| QB02 | domain/question.ts, validate.ts, engine/scoring.ts | **PRESENT:** six scored kinds and advanced imports share one engine |
+| QB03 | app/authoring-controller.ts, authoring/authoring-studio.ts | **PRESENT:** in-Library Wordgard authoring UI and preflight |
+| QB04 | domain/rich-document.ts, authoring/document bridge | **PRESENT:** canonical structured AST, no vendor HTML as paper truth |
+| QB05 | app/katex-math-adapter.ts, rich-content-view.ts | **PRESENT:** inline/display mathematical markup plus text alternative; spoken AT untested |
+| QB06 | authoring-studio.ts, domain/media.ts, image-preparation.ts | **PRESENT:** bounded image hash/alt and source preparation |
+| QB07 | authoring/wordgard-adapter.ts, authoring-studio.ts | **PRESENT:** editing commands and preview; hardware IME/undo fidelity remains a human/device gate |
+| QB08 | authoring-publisher.ts, app/authoring-controller.ts | **PRESENT:** publish only validated immutable candidate/review revision, no direct staging score |
+| QB09 | authoring-publisher.ts, app/exam-families.ts | **PRESENT:** separate original/reviewed/paper identity and explicit caution |
+| QB10 | app/exam-view.ts, result-controller.ts, history/frozen.ts | **PRESENT:** no UI pre-submit key disclosure; local JSON bytes not cryptographically secret |
+| QB11 | authoring-exchange.ts, authoring-staging.ts, authoring-studio.ts | **PRESENT qualified:** strict separate unpublished draft/shelf + staged archives; History v4 intentionally excludes them; actual OS loss may still erase unexported data |
+| QB12 | authoring-publisher.ts, authoring-sections.ts, authoring-studio.ts | **PRESENT within P50/P54 scope:** custom sections, six-kind component rules and preflight; no CA actuarial product |
+| QB13 | app/bank-import.ts and source guide | **DEFERRED:** no automatic general PDF/DOCX/CSV/OCR question conversion |
+| QB14 | scripts/build.mjs, vendor-ports.ts, package-lock.json | **PRESENT:** untouched vendor sources, selectively bundled standalone CSS/fonts/JS and licenses |
+| DOC01 | docs/ENGINEERING_PROGRAMME.md | **PRESENT:** one active programme and evidence ledger |
+| DOC02 | docs/history/, docs/audits/ | **PRESENT, dated:** historical reports remain archived and are labelled earlier-state evidence |
+| DOC03 | content/import-cgl.ts, docs/decisions/POLICY_REGISTER.md | **PRESENT:** CGL Q62 source-invalid/reviewed-caution accurately reflected |
+| DOC04 | docs/QA_CURRENT.md, actual exact source CI 42063617352 | **PRESENT:** current 362 Node/5 jobs, never historical 238/274 |
+| DOC05 | docs/architecture/QUESTION_BANK_AUTHORING.md | **PRESENT current-first:** Wordgard/P58-B versioned exchange and high-volume acceptance explicitly documented |
+| DOC06 | docs/architecture/CURRENT_ARCHITECTURE.md | **PRESENT current-first:** typed bounded composition and remaining root redraw stated |
+| DOC07 | domain/hash.ts, contracts/authoring guides | **PRESENT cautious labels:** unkeyed SHA proves byte consistency, not official source authentication |
+| DOC08 | docs/QA_CURRENT.md and release gate | **EXTERNAL OPEN:** no physical device, AT, OS loss or user visual signoff invented |
+| DOC09 | decisions D38/D73, history/backup.ts | **PRESENT:** old internal migration explicitly waived; current strict v4 and separate unpublished archives |
+| DOC10 | scripts/build.mjs, template CSP injection, domain validators | **PRESENT bounded CSP/inputs; independent threat-model OPEN:** template marker replaced with runtime-hash CSP, no blanket all-attacks certification |
+
+**Residual obligations are not buried:** the real Mac/mobile/AT/IME/OS tests, sourced APFC/CAT/UPSC/RBI content accuracy, 195px cosmetic wrapping, optional advanced storage design and human release approval remain the explicit HOLD/DEFERRED items in §5 and D73. This annex does not convert EXTERNAL or DEFERRED to DONE merely by enumerating them.
