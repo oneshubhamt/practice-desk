@@ -744,6 +744,24 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    }
   })();});
 
+  const downloadAuthoringJson=(payload:unknown,filename:string):void=>{
+   const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}));
+   const link=document.createElement("a");link.href=url;link.download=filename;
+   document.body.append(link);link.click();link.remove();
+   window.setTimeout(()=>URL.revokeObjectURL(url),1000);
+  };
+  click("pd-stage-archive-import",()=>find<HTMLInputElement>("pd-stage-archive-file").click());
+  find<HTMLInputElement>("pd-stage-archive-file").onchange=async e=>{
+   const file=(e.target as HTMLInputElement).files?.[0];if(!file)return;
+   try{
+    if(file.size>STAGING_MAX_BYTES+512)throw Error("Staging archive exceeds safe local budget");
+    const restored=readStagingArchive(JSON.parse(await file.text()));
+    if(stage&&!confirm("Replace existing unpublished staged sources? Export the current staging backup first."))return;
+    persistStage(restored);stageFilter="all";void render();
+    status("Staging archive restored without publishing any questions.");
+   }catch(error){status("Archive NOT restored: "+(error instanceof Error?error.message:"Invalid archive"),true);}
+   finally{(e.target as HTMLInputElement).value="";}
+  };
   click("pd-stage-add",()=>find<HTMLInputElement>("pd-stage-input").click());
   find<HTMLInputElement>("pd-stage-input").onchange=e=>{
    const files=Array.from((e.target as HTMLInputElement).files??[]);
@@ -771,6 +789,31 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
     if(!confirm("Discard unpublished staged sources? Saved Wordgard drafts and published papers stay intact."))return;
     try{persistStage(null);void render();}
     catch(error){status(error instanceof Error?error.message:"Staging not discarded",true);}
+   });
+   click("pd-stage-archive-export",()=>{
+    try{
+     downloadAuthoringJson(createStagingArchive(stage!),"Practice_Desk_Staging_Source_Backup.json");
+     status("Staged original source files, selection and triage exported separately from History backup.");
+    }catch(error){status(error instanceof Error?error.message:"Staging archive export failed",true);}
+   });
+   container.querySelectorAll<HTMLButtonElement>("[data-stage-triage-save]").forEach(button=>{
+    button.onclick=()=>{
+     const key=button.dataset.stageTriageSave!;
+     const value=<T extends HTMLInputElement|HTMLSelectElement>(selector:string):T=>{
+      const input=[...container.querySelectorAll<T>(selector)].find(node=>
+       Object.values(node.dataset).includes(key));
+      if(!input)throw Error("Staging triage input no longer exists");
+      return input;
+     };
+     try{
+      const decision=value<HTMLSelectElement>("[data-stage-triage-decision]").value as
+       "needs-review"|"distinct"|"potential-duplicate";
+      const note=value<HTMLInputElement>("[data-stage-triage-note]").value.trim();
+      const reviewer=value<HTMLInputElement>("[data-stage-triage-reviewer]").value.trim();
+      persistStage(updateStagedTriage(stage!,key,decision,note,reviewer));
+      void render();status("Author-attributed triage saved; this is NOT independent content verification.");
+     }catch(error){status(error instanceof Error?error.message:"Triage not saved",true);}
+    };
    });
    click("pd-stage-export",()=>{
     const report=inspectStagingWorkspace(stage!);
@@ -802,6 +845,27 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    });
   }
   click("pd-author-export",exportDraft);
+  click("pd-author-shelf-export",()=>{
+   capture();
+   try{
+    downloadAuthoringJson(createDraftShelfArchive(shelf!),"Practice_Desk_Unpublished_Draft_Shelf_Backup.json");
+    status("All unpublished Wordgard drafts exported separately. Also back up staged sources.");
+   }catch(error){status(error instanceof Error?error.message:"Draft shelf backup failed",true);}
+  });
+  click("pd-author-shelf-import",()=>find<HTMLInputElement>("pd-author-shelf-file").click());
+  find<HTMLInputElement>("pd-author-shelf-file").onchange=async e=>{
+   const file=(e.target as HTMLInputElement).files?.[0];if(!file)return;
+   try{
+    if(file.size>AUTHORING_MAX_BYTES+512)throw Error("Draft shelf archive exceeds size limit");
+    const restored=readDraftShelfArchive(JSON.parse(await file.text()));
+    if(!confirm("Replace ALL unpublished Wordgard drafts with this validated backup? Export the current draft shelf first. This does not change published History."))return;
+    capture();
+    const previous=shelf;shelf=restored;
+    if(!persist()){shelf=previous;throw Error("Draft shelf NOT restored: "+lastSaveError);}
+    questionId=active().questions[0]!.id;field=initialField;void render();
+   }catch(error){status("Draft shelf NOT restored: "+(error instanceof Error?error.message:"Invalid archive"),true);}
+   finally{(e.target as HTMLInputElement).value="";}
+  };
   click("pd-author-exchange",()=>{
    capture();
    try{
