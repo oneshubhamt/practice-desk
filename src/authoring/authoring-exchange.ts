@@ -3,13 +3,32 @@
  * No publisher hash, source authenticity or reviewer identity is implied.
  */
 import {AUTHORING_MAX_BYTES,requiresExternalQuality,validateAuthoringDraft,
- type AuthoringDraft} from "./authoring-draft.ts";
+ validateAuthoringShelf,type AuthoringDraft,type AuthoringDraftShelf} from "./authoring-draft.ts";
 import {inspectAuthoringPublication} from "./authoring-publisher.ts";
 import {inspectExternalQuality} from "./external-bank-qa.ts";
 import type {ExternalBankReport,ExternalBankIssue} from "./external-bank.ts";
 import type {ExamPackage} from "../app/exam-package.ts";
 
 export const DRAFT_EXCHANGE_FORMAT="practice-desk-draft-exchange";
+export const DRAFT_SHELF_ARCHIVE_FORMAT="practice-desk-draft-shelf-archive";
+/** Optional separate backup for all unpublished Wordgard drafts, never History. */
+export function createDraftShelfArchive(shelf:AuthoringDraftShelf){
+ return {format:DRAFT_SHELF_ARCHIVE_FORMAT,version:1 as const,
+  factualVerification:"not-performed" as const,shelf:validateAuthoringShelf(shelf)};
+}
+export function readDraftShelfArchive(value:unknown):AuthoringDraftShelf{
+ if(!value||typeof value!=="object"||Array.isArray(value)||
+  ![Object.prototype,null].includes(Object.getPrototypeOf(value)))
+  throw Error("Invalid draft shelf archive");
+ const raw=value as Record<string,unknown>;
+ if(Object.keys(raw).some(k=>!["format","version","factualVerification","shelf"].includes(k))||
+  raw.format!==DRAFT_SHELF_ARCHIVE_FORMAT||raw.version!==1||
+  raw.factualVerification!=="not-performed"||
+  JSON.stringify(value).length>AUTHORING_MAX_BYTES+512)
+  throw Error("Invalid, unsupported or oversized draft shelf archive");
+ return validateAuthoringShelf(raw.shelf);
+}
+
 export type DraftExchange={
  readonly format:typeof DRAFT_EXCHANGE_FORMAT;
  readonly version:1;
