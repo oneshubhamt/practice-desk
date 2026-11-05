@@ -13,6 +13,9 @@ import type {StimulusId,AssetId} from "../domain/ids.ts";
 
 export const STAGING_KEY="practiceDesk.authoring.staging.v1";
 export const STAGING_MAX_BYTES=1700000;
+/** Separate, strictly validated unpublished source backup; NOT History v4. */
+export const STAGING_ARCHIVE_FORMAT="practice-desk-staging-archive";
+
 export type StagedFile={readonly name:string;readonly source:unknown};
 export type StagedTriage={
  readonly key:string;
@@ -158,6 +161,22 @@ export function validateStagingWorkspace(value:unknown):StagingWorkspace{
  if(JSON.stringify(state).length>STAGING_MAX_BYTES)
   throw Error("Staging exceeds the safe local storage budget; split or reduce media");
  return state;
+}
+export function createStagingArchive(value:StagingWorkspace){
+ return {format:STAGING_ARCHIVE_FORMAT,version:1 as const,
+  factualVerification:"not-performed" as const,workspace:validateStagingWorkspace(value)};
+}
+export function readStagingArchive(value:unknown):StagingWorkspace{
+ if(!value||typeof value!=="object"||Array.isArray(value)||
+  ![Object.prototype,null].includes(Object.getPrototypeOf(value)))
+  throw Error("Invalid staging archive envelope");
+ const row=value as Record<string,unknown>;
+ if(Object.keys(row).some(k=>!["format","version","factualVerification","workspace"].includes(k))||
+  row.format!==STAGING_ARCHIVE_FORMAT||row.version!==1||
+  row.factualVerification!=="not-performed"||
+  JSON.stringify(value).length>STAGING_MAX_BYTES+512)
+  throw Error("Invalid, unsupported or oversized staging archive");
+ return validateStagingWorkspace(row.workspace);
 }
 export function addStagedFiles(
  prior:StagingWorkspace,files:readonly StagedFile[]
