@@ -25,6 +25,10 @@ export type QualityCheck="pass"|"issue"|"unverified";
 export type QuestionQuality={
  readonly questionId:string;
  readonly sourceCount:number;
+ /** Author-supplied full citation/date fields for inspectable QA exports.
+  * The checks below must never treat these as externally corroborated.
+  */
+ readonly citations:NonNullable<NonNullable<AuthoringQuestion["provenance"]>["sources"]>;
  readonly checks:{
   readonly schema_valid:QualityCheck;
   readonly key_consistent:QualityCheck;
@@ -307,6 +311,7 @@ export function inspectExternalQuality(
   }
   const concerning=issues.some(x=>x.questionId===q.id&&x.severity!=="info");
   results.push({questionId:q.id,sourceCount:src.length,
+   citations:src,
    checks:{schema_valid:"pass",
     key_consistent:issues.some(x=>x.severity==="error"&&x.questionId===q.id)?"issue":"pass",
     solution_checked:math,source_corroborated:"unverified",human_reviewed:"unverified"},
