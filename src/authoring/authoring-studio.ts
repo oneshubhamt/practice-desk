@@ -23,7 +23,7 @@ import {wordgardEditorPort} from "./wordgard-adapter.ts";
 import {syllabusForExam,syllabusHeading,UNCLASSIFIED_SUBJECT} from "../learning/syllabus-taxonomy.ts";
 import type {EditorSession,AuthoringEditCommand} from "./vendor-ports.ts";
 import {AUTHORING_KEY,AUTHORING_MAX_BYTES,defaultAuthoringShelf,newAuthoringDraft,
- newAuthoringQuestion,validateAuthoringDraft,validateAuthoringShelf,
+ newAuthoringQuestion,validateAuthoringDraft,validateAuthoringShelf,requiresExternalQuality,
  type AuthoringDraft,type AuthoringDraftShelf,type AuthoringQuestion} from "./authoring-draft.ts";
 
 const labels:Record<QuestionKind,string>={
@@ -470,7 +470,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    '<button class="btn" id="pd-author-validate">Validate paper</button>'+
    '<button class="btn primary" id="pd-author-publish">Publish to Library</button></div>'+
    '<label class="pd-author-publish-consent"><input type="checkbox" id="pd-author-confirm"> I have checked the answer key, source notes and exam rules; this paper is user-authored, not officially certified.</label>'+
-   (d.id.startsWith("stage:")?'<label class="pd-author-publish-consent"><input type="checkbox" id="pd-author-accept-warnings"> I explicitly accept remaining QA warnings for this selected draft; no external source was independently checked.</label>'+
+   (requiresExternalQuality(d)?'<label class="pd-author-publish-consent"><input type="checkbox" id="pd-author-accept-warnings"> I explicitly accept remaining QA warnings for this selected draft; no external source was independently checked.</label>'+
     '<div class="pd-author-meta"><label>Reviewer name (optional author claim)<input id="pd-author-reviewer" maxlength="120" placeholder="Name, not identity-verified"></label>'+
     '<label>Review evidence or warning note (optional)<input id="pd-author-review-note" maxlength="500" placeholder="What was checked and which doubts remain"></label></div>':'')+
    '<div id="pd-author-validation" class="pd-author-validation" hidden aria-live="polite"></div>'+
@@ -484,7 +484,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   const validationBox=find<HTMLElement>("pd-author-validation");
   const inspectPublication=()=>{
    const report=inspectAuthoringPublication(active(),actions.existing());
-   const quality=report.compiled&&active().id.startsWith("stage:")?
+   const quality=report.compiled&&requiresExternalQuality(active())?
     inspectExternalQuality(active(),report.compiled,active().id):null;
    const errors:PublicationIssue[]=[...report.issues,
     ...(quality?.issues.filter(i=>i.severity==="error").map(i=>({
@@ -494,7 +494,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    return {report,errors,warnings};
   };
   const dryRun=():string=>{
-   if(!active().id.startsWith("stage:"))return "";
+   if(!requiresExternalQuality(active()))return "";
    const compiled=inspectAuthoringPublication(active(),actions.existing()).compiled;
    if(!compiled)return "";
    const draft=active(),count=compiled.questions.length;
@@ -576,7 +576,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
       throw Error("Confirm your source, answer keys and marking rules before publishing.");
     let packageValue=report.compiled;
     if(!packageValue)throw Error("Authoritative validation did not return the compiled publication");
-    if(active().id.startsWith("stage:")){
+    if(requiresExternalQuality(active())){
      const claimedReviewer=find<HTMLInputElement>("pd-author-reviewer")?.value.trim()??"";
      const reviewNote=find<HTMLInputElement>("pd-author-review-note")?.value.trim()??"";
      if(Boolean(claimedReviewer)!==Boolean(reviewNote))
