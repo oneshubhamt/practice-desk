@@ -116,7 +116,8 @@ try{
  // Targeted actual Wordgard evidence UI at the narrow 195px + 140% setting.
  await page.setViewportSize({width:195,height:844});
  await page.locator("#displayTrigger").click();
- for(let i=0;i<8;i++)await page.locator("#fontMore").click();
+ for(let i=0;i<8&&await page.locator("#fontMore").isEnabled();i++)await page.locator("#fontMore").click();
+ check(!(await page.locator("#fontMore").isEnabled()),engine+" display scale did not reach 140% cap");
  await page.locator("#displayClose").click();
  await assertNoOverflow(page,engine+" P58-B Wordgard evidence editor 195px/140%");
  await mkdir("artifacts/p58b-editorial",{recursive:true});
@@ -182,7 +183,8 @@ try{
 
  await page.setViewportSize({width:195,height:844});
  await page.locator("#displayTrigger").click();
- for(let i=0;i<8;i++)await page.locator("#fontMore").click();
+ for(let i=0;i<8&&await page.locator("#fontMore").isEnabled();i++)await page.locator("#fontMore").click();
+ check(!(await page.locator("#fontMore").isEnabled()),engine+" display scale did not reach 140% cap");
  await page.locator("#displayClose").click();
  await assertNoOverflow(page,engine+" P58-B published library 195px/140%");
  check(errors.length===0,engine+" source browser exceptions: "+errors.join("; "));
