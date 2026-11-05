@@ -12,9 +12,12 @@ import type {ExamPackage} from "../app/exam-package.ts";
 import {inspectAuthoringPublication,publicationPlainText,PublicationValidationError,
  type PublicationIssue} from "./authoring-publisher.ts";
 import {inspectExternalQuality,type QualityIssue} from "./external-bank-qa.ts";
-import {createDraftExchange,isDraftExchange,readDraftExchange} from "./authoring-exchange.ts";
-import {STAGING_KEY,addStagedFiles,validateStagingWorkspace,inspectStagingWorkspace,
- stagedToAuthoringDraft,updateStagedSelection,type StagingWorkspace,type StagedFile}
+import {createDraftExchange,isDraftExchange,readDraftExchange,
+ createDraftShelfArchive,readDraftShelfArchive} from "./authoring-exchange.ts";
+import {STAGING_KEY,STAGING_MAX_BYTES,addStagedFiles,validateStagingWorkspace,inspectStagingWorkspace,
+ stagedToAuthoringDraft,updateStagedSelection,updateStagedTriage,
+ createStagingArchive,readStagingArchive,
+ type StagingWorkspace,type StagedFile,type StagedQuestion}
  from "./authoring-staging.ts";
 import {authoringSections,setAuthoringSectionMinutes,assignAuthoringQuestionSection} from "./authoring-sections.ts";
 import {authoringPublishedPreview,authoringDraftPreview} from "./authoring-preview.ts";
@@ -212,6 +215,38 @@ function evidenceEditor(q:AuthoringQuestion):string{
    '<button type="button" class="btn" id="pd-author-qa-record">Record author-attributed review</button>'+
    (review?'<button type="button" class="btn danger" id="pd-author-qa-clear">Clear review record</button>':"")+
   '</fieldset></details>';
+}
+function stagedDetail(item:StagedQuestion):string{
+ const quality=item.quality,sources=item.question.provenance?.sources??[];
+ const checks=quality?Object.entries(quality.checks).map(([key,value])=>
+  key.replaceAll("_"," ")+": "+value).join(" · "):"Unavailable pending valid publication preflight";
+ const candidates=item.duplicates.map(candidate=>{
+  const other=candidate.first.bankId===item.bankId&&candidate.first.questionId===item.id?
+   candidate.second:candidate.first;
+  return '<p class="fine">Candidate '+escapeText(candidate.classification)+
+   ' with '+escapeText(other.bankId+'/'+other.questionId)+
+   ' · similarity '+candidate.similarity+' · '+escapeText(candidate.evidence)+
+   ' · human decision required</p>';
+ }).join("");
+ const triage=item.triage;
+ return '<details class="pd-stage-question-detail" data-stage-detail="'+escapeText(item.key)+'">'+
+  '<summary>QA checks / source evidence / duplicate decision</summary>'+
+  '<p class="fine">Checks: '+escapeText(checks)+
+   '. Recommended status: '+escapeText(quality?.recommendedStatus??"not-checked")+'</p>'+
+  (sources.length?sources.map(ref=>'<p class="fine">Author citation: '+escapeText(ref.publisher+
+   ' / '+ref.title+(ref.url?' / '+ref.url:'')+(ref.provision?' / '+ref.provision:'')+
+   (ref.asOfDate?' / as of '+ref.asOfDate:''))+'</p>').join(""):
+    '<p class="fine">No structured source citation submitted.</p>')+
+  (candidates||'<p class="fine">No candidate duplicate linked in this bounded scan.</p>')+
+  '<div class="pd-author-meta"><label>Author triage decision<select data-stage-triage-decision="'+escapeText(item.key)+'">'+
+   ([["needs-review","Needs independent review"],["distinct","Author judged distinct"],["potential-duplicate","Author flagged potential duplicate"]] as const)
+     .map(([v,label])=>option(v,label,triage?.decision??"needs-review")).join("")+
+  '</select></label><label>Reason / evidence note<input data-stage-triage-note="'+escapeText(item.key)+
+   '" maxlength="500" value="'+escapeText(triage?.note??"")+'"></label>'+
+  '<label>Reviewer (optional unverified claim)<input data-stage-triage-reviewer="'+escapeText(item.key)+
+   '" maxlength="120" value="'+escapeText(triage?.reviewer??"")+'"></label></div>'+
+  '<button type="button" class="btn" data-stage-triage-save="'+escapeText(item.key)+
+   '">Save author triage</button></details>';
 }
 function toolbar():string{
  const buttons=[
@@ -489,14 +524,20 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
       staged.errorCount+' errors · '+staged.warningCount+' warnings</summary>'+
       '<p class="fine">Sources are unpublished. Offline checks cannot authenticate facts, PYQs, legislation or reviewer claims. Select no more than 200 questions to correct in Wordgard.</p>'+
       '<p class="fine">Files: '+stage!.files.map(f=>escapeText(f.name)).join(', ')+
-      ' · References: '+staged.sourceCount+' · Duplicate candidates: '+staged.duplicateCandidates+
+      ' · References: '+staged.sourceCount+' · Duplicate candidates reported: '+staged.duplicateCandidates+
       ' · Subjects: '+escapeText(staged.topicCounts.map(x=>x.label+' ('+x.count+')').join('; '))+
       ' · Kinds: '+escapeText(staged.kinds.map(x=>x.label+' ('+x.count+')').join('; '))+'</p>'+
+      '<p class="'+(staged.duplicateTruncated?'generic-warning':'fine')+'">Duplicate scan examined '+
+       staged.duplicatePairsInspected+' / '+staged.duplicatePairsPossible+
+       ' candidate pairs across source comparisons'+
+       (staged.duplicateTruncated?'; INCOMPLETE — at least one 500-candidate cap was reached. Split/review separately.':
+        '; reporting complete within configured bounds.')+'</p>'+
       '<div class="row"><label>Filter<select id="pd-stage-filter">'+
        ([["all","All questions"],["errors","QA errors"],["warnings","Warnings"],
         ["selected","Selected"],["unselected","Not selected"]] as const).map(([value,label])=>option(value,label,stageFilter)).join('')+
       '</select></label><button class="btn" id="pd-stage-handoff">Edit selected in Wordgard</button>'+
       '<button class="btn" id="pd-stage-export">Export QA report</button>'+
+      '<button class="btn" id="pd-stage-archive-export">Export staged source backup</button>'+
       '<button class="btn danger" id="pd-stage-clear">Discard staging</button></div>'+
       '<div class="scroll-table" style="max-height:300px;overflow:auto"><table class="pd-author-section-table"><thead><tr>'+
       '<th>Include</th><th>Question</th><th>Flagged QA</th></tr></thead><tbody>'+
@@ -506,7 +547,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
         escapeText(publicationPlainText(item.question.prompt).slice(0,140))+'</td><td>'+
         (item.issues.length?item.issues.map(issue=>
           '<p class="fine">'+escapeText(issue.severity.toUpperCase()+': '+issue.code+' — '+issue.message)+'</p>').join(''):'No flagged issues')+
-        '</td></tr>').join('')+'</tbody></table></div>'+
+        stagedDetail(item)+'</td></tr>').join('')+'</tbody></table></div>'+
       (staged.issues.some(i=>!i.questionId)?
        '<p class="generic-warning">Section-level problems: '+
         escapeText(staged.issues.filter(i=>!i.questionId).map(i=>i.message).join('; '))+'</p>':'')+
@@ -515,8 +556,10 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    '<div class="row between"><div><span class="eyebrow">QUESTION AUTHORING · LOCAL DRAFT</span>'+
    '<h2 id="pd-author-heading" tabindex="-1">Wordgard authoring studio</h2></div>'+
    '<button class="btn" id="pd-author-close">Close studio</button></div>'+
-   '<p class="fine">Edit and preview here. Validate before publishing an immutable examination revision. Drafts stay local and must be separately exported; published papers and their attempts enter History backups.</p>'+
+   '<p class="fine">Edit and preview here. Before clearing browser storage export BOTH your draft shelf and staged-source backup; History v4 does NOT include unpublished work. Restore either file explicitly. Only published papers and scored attempts enter History.</p>'+
    '<div class="row"><button class="btn" id="pd-stage-add">Stage AI bank files</button>'+
+   '<button class="btn" id="pd-stage-archive-import">Restore staged source backup</button>'+
+   '<input type="file" id="pd-stage-archive-file" accept=".json,application/json" hidden>'+
    '<input type="file" multiple accept=".json,application/json" id="pd-stage-input" hidden></div>'+
    stagePanel+
    (stageConflict?'<p class="generic-warning" role="alert">'+escapeText(stageError)+'</p>':"")+
@@ -525,6 +568,9 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    '<div class="row"><button class="btn" id="pd-author-new">New draft</button>'+
    '<button class="btn" id="pd-author-export">Export draft JSON</button>'+
    '<button class="btn" id="pd-author-exchange">Export versioned exchange</button>'+
+   '<button class="btn" id="pd-author-shelf-export">Back up all unpublished drafts</button>'+
+   '<button class="btn" id="pd-author-shelf-import">Restore draft shelf backup</button>'+
+   '<input type="file" id="pd-author-shelf-file" accept=".json,application/json" hidden>'+
    '<button class="btn" id="pd-author-import">Import draft / exchange JSON</button>'+
    (storageBlocked?'<button class="btn danger" id="pd-author-reset-corrupt">Reset damaged draft storage</button>':"")+
    '<input type="file" id="pd-author-import-file" accept=".json,application/json" hidden></div></div>'+
@@ -616,7 +662,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
     status("Validation passed for "+active().questions.length+" questions.");
     return;
    }
-   validationBox.innerHTML='<h3>'+(active().id.startsWith("stage:")?
+   validationBox.innerHTML='<h3>'+(requiresExternalQuality(active())?
     issues.length+' errors · '+warnings.length+' warnings':
     'Fix '+issues.length+' publication issue'+(issues.length===1?'':'s'))+'</h3>'+
     (issues.length?'<p>Publication is blocked until the errors are corrected.</p>':
