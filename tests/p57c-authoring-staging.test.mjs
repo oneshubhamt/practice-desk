@@ -105,3 +105,21 @@ test("P57-C stable semantic identities survive corrected revisions and never rep
  assert.equal(v1.questions[0].editorial.status,"caution");
  assert.equal(v2.questions[0].editorial.status,"caution");
 });
+
+test("P57-C attributed, unverified reviewer warning acceptance remains in exact immutable editorial evidence",async()=>{
+ const source=await load("apfc"),draft=stagedToAuthoringDraft(staged(source));
+ const reviewed={...draft,questions:draft.questions.map((q,i)=>i? q:{...q,qa:{
+  status:"needs-review",review:{reviewer:"Independent reader (author-claimed)",
+   reviewedAt:"2026-11-05T08:00:00.000Z",note:"Arithmetic and source references compared manually; independent verification not claimed.",
+   acceptedWarningCodes:["missing-explanation","legal-currentness-unverified"]}
+ }})};
+ const report=inspectAuthoringPublication(reviewed);
+ assert.equal(report.valid,true,JSON.stringify(report.issues));
+ const notes=report.compiled.questions[0].editorial.notes;
+ assert.match(notes,/Author-entered review\/QA acknowledgement/);
+ assert.match(notes,/identity NOT authenticated/);
+ assert.match(notes,/missing-explanation/);
+ assert.equal(report.compiled.questions[0].editorial.status,"caution");
+ const bad=structuredClone(reviewed);bad.questions[0].qa.review.reviewedAt="2026-02-30T08:00:00.000Z";
+ assert.equal(inspectAuthoringPublication(bad).valid,false);
+});
