@@ -9,8 +9,12 @@ import {sha256} from "../domain/hash.ts";
 import {validateMediaInventory} from "../domain/media.ts";
 import type {RichDocument} from "../domain/rich-document.ts";
 import type {ExamPackage} from "../app/exam-package.ts";
-import {inspectAuthoringPublication,PublicationValidationError,
+import {inspectAuthoringPublication,publicationPlainText,PublicationValidationError,
  type PublicationIssue} from "./authoring-publisher.ts";
+import {inspectExternalQuality,type QualityIssue} from "./external-bank-qa.ts";
+import {STAGING_KEY,addStagedFiles,validateStagingWorkspace,inspectStagingWorkspace,
+ stagedToAuthoringDraft,updateStagedSelection,type StagingWorkspace,type StagedFile}
+ from "./authoring-staging.ts";
 import {authoringSections,setAuthoringSectionMinutes,assignAuthoringQuestionSection} from "./authoring-sections.ts";
 import {authoringPublishedPreview,authoringDraftPreview} from "./authoring-preview.ts";
 import {mathRenderer} from "../app/math-renderer-provider.ts";
@@ -204,6 +208,7 @@ function sectionManager(draft:AuthoringDraft,expanded:boolean):string{
 }
 export interface AuthoringStudioController{
  open(host:HTMLElement,trigger:HTMLElement):Promise<void>;
+ stageFiles(files:readonly File[]):Promise<void>;
  beforeRender():void;
  isOpen():boolean;
  dispose():void;
@@ -217,6 +222,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
  let host:HTMLElement|null=null,origin:HTMLElement|null=null,session:EditorSession|null=null;
  let shelf:AuthoringDraftShelf|null=null,questionId="",field:Field=initialField;
  let closed=true,renderSequence=0,lastSaveError="",storageBlocked=false,publishing=false,sectionManagerExpanded=false;
+ let stage:StagingWorkspace|null=null,stageFilter="all",stageBlocked=false,stageError="";
  const active=():AuthoringDraft=>{
   const current=shelf?.drafts.find(d=>d.id===shelf!.activeId);
   if(!current)throw Error("No active authoring draft");
@@ -245,6 +251,15 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
     ". Export or recover the original storage before overwriting it.";
   }
   questionId=active().questions[0]!.id;field=initialField;
+  try{
+   const staged=localStorage.getItem(STAGING_KEY);
+   stage=staged?validateStagingWorkspace(JSON.parse(staged)):null;
+   stageBlocked=false;stageError="";
+  }catch(error){
+   stage=null;stageBlocked=true;
+   stageError="Staging storage is unreadable; its original bytes are preserved. "+
+    (error instanceof Error?error.message:"Invalid staged data");
+  }
  };
  const persist=():void=>{
   if(!shelf)return;
@@ -258,6 +273,28 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    lastSaveError=error instanceof Error?error.message:"Local draft could not be saved";
    status("Not saved: "+lastSaveError+". Export the draft before leaving.",true);
   }
+ };
+ const persistStage=(next:StagingWorkspace|null):void=>{
+  if(stageBlocked)throw Error("Existing staged files are unreadable. Reset damaged staging explicitly.");
+  if(next){
+   const validated=validateStagingWorkspace(next);
+   localStorage.setItem(STAGING_KEY,JSON.stringify(validated));
+   stage=validated;
+  }else{
+   localStorage.removeItem(STAGING_KEY);stage=null;
+  }
+ };
+ const stageFiles=async(files:readonly File[]):Promise<void>=>{
+  if(!files.length)return;
+  const inputs:StagedFile[]=[];
+  for(const file of files){
+   if(file.size>1700000)throw Error(file.name+" is too large for a safely staged source; split the bank");
+   inputs.push({name:file.name,source:JSON.parse(await file.text())});
+  }
+  persistStage(addStagedFiles(stage??{schema:1,files:[],selected:[]},inputs));
+  stageFilter="all";
+  await render();
+  status("Staged "+files.length+" AI source file(s) without publishing any questions.");
  };
  const changeDraft=(fn:(draft:AuthoringDraft)=>AuthoringDraft):void=>{
   if(!shelf)return;
@@ -736,6 +773,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    host?.scrollIntoView({block:"start",behavior:"instant"});
    host?.querySelector<HTMLElement>("#pd-author-heading")?.focus({preventScroll:true});
   },
+  async stageFiles(files){await stageFiles(files);},
   beforeRender(){if(!closed)close(false);},
   isOpen(){return !closed;},
   dispose(){close(false);}
