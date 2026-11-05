@@ -168,7 +168,7 @@ export function inspectExternalQuality(
   const explanation=publicationPlainText(q.explanation).trim();
   const src=q.provenance?.sources??[];
   sourcesCount+=src.length;
-  if(draft.examId.toLowerCase()==="apfc"&&!q.syllabusHeadingId)
+  if(/(?:^|[-_])apfc$/iu.test(draft.examId)&&!q.syllabusHeadingId)
    add("apfc-heading-missing","error",
     "APFC question requires an explicitly assigned official broad syllabus heading",
     q.id,"syllabusHeadingId","deterministic",undefined,
