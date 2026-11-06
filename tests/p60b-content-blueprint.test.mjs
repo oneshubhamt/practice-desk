@@ -176,7 +176,7 @@ test("P60-B: canonical compiler optionally gates exact single-source publication
  await assert.rejects(readFile(join(dir,"blocked.json"),"utf8"));
  const old=compile("validate-bank",source);
  assert.equal(old.status,0,"Legacy no-plan workflow remains usable");
-});
+}));
 
 test("P60-B: parent-child allocation contradictions are rejected at plan time, not silently audited",()=>temp(async dir=>{
  for(const mut of [
@@ -188,7 +188,7 @@ test("P60-B: parent-child allocation contradictions are rejected at plan time, n
   const r=run("validate",await write(dir,"contradiction-"+Math.random()+".json",p));
   assert.notEqual(r.status,0);
  }
-});
+}));
 
 test("P60-B: explicitly requested paper rules must match actual scoring, timers and navigation",()=>temp(async dir=>{
  const p=mkPlan();const src=JSON.parse(await readFile(example,"utf8"));
@@ -200,4 +200,4 @@ test("P60-B: explicitly requested paper rules must match actual scoring, timers 
  const wrong=run("audit",await write(dir,"wrong.json",p),example);
  assert.notEqual(wrong.status,0);
  assert.ok(wrong.data.issues.items.some(x=>x.code==="paper-policy-mismatch"));
-});
+}));
