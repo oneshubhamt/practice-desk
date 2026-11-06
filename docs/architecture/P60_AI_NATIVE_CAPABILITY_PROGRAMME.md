@@ -114,7 +114,7 @@ Measure existing P59 vs improved workflows on matched tasks: model-input/output 
 | **P60-E** | External AI PDF ingest protocol, originals, review, traceable structured export | Mixed PDF page, figure, mathematics and disputed key represented with uncertainty, without silent transcription change |
 | **P60-F** | Cohesive agent integration + full independently measured QA | End-to-end new/PYQ generation→review→import→score→Learn, small agent context, regression-free offline |
 
-P60-A, P60-B and P60-C have passed their applicable automated gates after sequential user authorization; P60-D–F remain unimplemented. Even a P60-C automated green gate cannot authenticate external facts, hardware acceptance, reviewer independence or release permission. Later stages require explicit authorization.
+P60-A, P60-B and P60-C have passed their applicable automated gates after sequential user authorization; P60-D is source implemented and undergoing full CI; P60-E/F remain unimplemented. Even a P60-C automated green gate cannot authenticate external facts, hardware acceptance, reviewer independence or release permission. Later stages require explicit authorization.
 
 ## 9. Engineering discipline (binding, same as existing programme)
 
