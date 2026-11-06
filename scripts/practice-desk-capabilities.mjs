@@ -30,7 +30,9 @@ if(!["summary","list","show","operations"].includes(command)||
     ids:data.capabilities.map(c=>c.id),
     guide:data.discovery.appGuide,quickstart:data.discovery.lowContextEntry,
     programme:data.discovery.programme,
-    warning:"Current capabilities only; later P60-B–F are not implemented. Factual verification is external."});
+    warning:"Current capabilities only; planned programme: "+(data.plannedProgramme.length?
+      data.plannedProgramme.map(x=>x.id).join(", "):"no unimplemented P60 stages declared")+
+     ". Factual/PYQ authentication and direct device access are not provided."});
   }else if(command==="list"){
    emit({format:"practice-desk-capability-list",version:1,
     capabilities:data.capabilities.map(c=>({id:c.id,status:c.status,summary:c.summary})),

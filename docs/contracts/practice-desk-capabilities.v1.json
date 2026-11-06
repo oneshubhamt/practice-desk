@@ -1,7 +1,7 @@
 {
   "format": "practice-desk-agent-capabilities",
   "version": 1,
-  "contractStatus": "P60-A/B/C/D previously verified; P60-E external-agent PDF intake automated software VERIFIED by 5/5 exact-source CI 42188234511 (419 Node, real offline Chromium/Firefox/WebKit, guarded unchanged HTML) on 36f8b993f751687e1b4d176690cc7f18dd2093e7; actual PDF text/key/PYQ/reviewer/human/device/release HOLD; P60-F planned.",
+  "contractStatus": "P60-A/B/C/D/E previous automated gates verified; P60-F bounded local agent handoff, cross-browser explicit import and independent synthetic-workflow measurements implemented, final exact-source full CI pending. No authenticated PDF/PYQ/factual/reviewer claims, learner/device access, physical hardware, merge or release.",
   "product": {
     "name": "Practice Desk",
     "purpose": "Offline examination authoring, practice, scoring, history, analytics and spaced revision",
@@ -23,6 +23,7 @@
     "recommendedSequence": [
       "Read short quickstart",
       "Run read-only capability list or show one named capability",
+      "For multi-gate publish, run node scripts/agent-handoff.mjs actions; assess source-bound single, paired or PDF before a separately authorized create-only publication",
       "For supplied PDF papers, have an external authorized agent interpret original document and use P60-E source-bound intake audit before reviewed publication",
       "Read one relevant authoring example/task contract",
       "Translate user coverage and source constraints to a v1 content blueprint and validate it before creating question batches",
@@ -143,6 +144,18 @@
       "command": "node scripts/pdf-ingest.mjs compile <intake.json> <original.json> <paper.pdf> <reviewed.json> <decisions.json> <NEW-directory> --quality-review <review.json> [--key-document key.pdf] [--blueprint plan.json]",
       "privilege": "create-new-file",
       "effect": "Delegate strictly to P60-D canonical original/reviewed publisher, add provenance sidecar in fresh directory; no browser import"
+    },
+    {
+      "operation": "assess-agent-handoff",
+      "command": "node scripts/agent-handoff.mjs assess <single|paired|pdf> <mode-inputs...> --quality-review <review.json> [--blueprint plan.json]",
+      "privilege": "read-only",
+      "effect": "One bounded, answer-private source/edition/PDF and independent-review/coverage gate; canonical tools reused, no browser/History access"
+    },
+    {
+      "operation": "publish-agent-handoff",
+      "command": "node scripts/agent-handoff.mjs publish <single|paired|pdf> <mode-inputs...> <NEW-file-or-directory> --quality-review <review.json> --allow-create",
+      "privilege": "create-new-file",
+      "effect": "Require explicit create-only consent; canonical signed files and digests; no overwrite, no direct browser upload"
     }
   ],
   "trustBoundaries": [
@@ -507,12 +520,35 @@
         "scripts/question-quality.mjs",
         "scripts/content-blueprint.mjs"
       ]
+    },
+    {
+      "id": "agent-integration",
+      "status": "implemented-with-limits",
+      "summary": "P60-F model-agnostic low-context local handoff combines existing strict source, review, original/reviewed, document provenance and coverage gates into explicit read-only assess or create-only publication.",
+      "provides": [
+        "Discover agent actions and privileges without source-tree scans or backend access",
+        "Read-only single/paired/PDF assessment with SHA-bound review and optional exact blueprint",
+        "Mandatory reviewed-quality sidecar, explicit --allow-create for new-only canonical package writes, compact diagnostics without answer/media dumps",
+        "Existing immutable source/reviewed package importer and actual offline exam, scoring and FSRS lifecycle exercised with externally generated files",
+        "Matched baseline-vs-integrated CLI call count, output bytes and wall-clock observations with independently checked elementary synthetic answers"
+      ],
+      "agentUse": "Read docs/architecture/P60F_AGENT_INTEGRATION_AND_VERIFICATION.md only for a multi-gate workflow. Use agent-handoff.mjs actions, then assess single|paired|pdf with a current P60-C review and optional P60-B plan; publish only to a new path with --allow-create. User imports manually into offline Library.",
+      "limitations": [
+        "A local CLI flag is not an authenticated remote permission grant; OS sandbox and user-operated file choice remain binding",
+        "No direct cloud/local-app, browser or History/learning/performance access and no agent-to-device synchronization",
+        "No verified external PDF/PYQ/legal factual truth, source verification or reviewer independence from hashes or passed checklists",
+        "Benchmark counts external CLI calls, emitted JSON bytes, process elapsed time and simple fixture oracles only; not model tokens, real-exam accuracy or user learning benefit",
+        "No replacement of Wordgard, scorer, immutable original/reviewed, FSRS, or manual final import; no public release"
+      ],
+      "sourcePaths": [
+        "scripts/agent-handoff.mjs",
+        "scripts/benchmark-p60f-agent.mjs",
+        "scripts/question-bank-cli.mjs",
+        "scripts/editorial-editions.mjs",
+        "scripts/pdf-ingest.mjs",
+        "scripts/acceptance-p57a-bank.mjs"
+      ]
     }
   ],
-  "plannedProgramme": [
-    {
-      "id": "P60-F",
-      "name": "Permission-scoped agent interaction and measured end-to-end QA"
-    }
-  ]
+  "plannedProgramme": []
 }
