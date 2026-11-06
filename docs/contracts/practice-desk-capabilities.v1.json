@@ -1,7 +1,7 @@
 {
   "format": "practice-desk-agent-capabilities",
   "version": 1,
-  "contractStatus": "P60-A/B/C verified; P60-D generic source/reviewed external pair compilation, editorial lineage and browser pairing under exact-source CI verification on Satyam; P60-E/F planned and external factual/release gates HOLD.",
+  "contractStatus": "P60-A/B/C verified; P60-D generic source/reviewed paired compilation, lineage and real three-browser workflow verified by exact-source 5/5 CI 42179668770 (412 Node) on Satyam; P60-E/F planned and external factual/release gates HOLD.",
   "product": {
     "name": "Practice Desk",
     "purpose": "Offline examination authoring, practice, scoring, history, analytics and spaced revision",
