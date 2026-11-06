@@ -208,14 +208,37 @@ export function auditQuestionQuality(source,sourceRaw,reviewRaw=undefined,{offse
     add("review-check-unresolved","Quality checklist not satisfied: "+c.id,q.id,"reviewer-claimed");
   }
   // These are *claims* of source consultation, never proof the URL was fetched.
-  for(const name of ["factual-correctness","temporal-correctness","pyq-fidelity"]){
-   const check=map.get(name);
-   if(check?.status!=="pass"||check.basis!=="source-consulted")continue;
+  // An editorial "pass" is not evidence of source consultation.
+  const visibleStem=publicationPlainText(q.prompt)+" "+publicationPlainText(q.explanation);
+  const timeSensitive=/(?:\b(?:Act|Code|Rules|Regulations|Gazette|notification)\s*(?:of\s*)?\d{4}\b|\b(?:commenc(?:ed|ement)|amend(?:ed|ment)|section\s+\d+|effective\s+(?:from|on))\b)/iu.test(visibleStem);
+  const facts=map.get("factual-correctness"),temporal=map.get("temporal-correctness"),
+   pyq=map.get("pyq-fidelity"),visual=map.get("candidate-view-integrity");
+  const consulted=(name,check)=>{
+   if(check?.status!=="pass")return;
+   if(check.basis!=="source-consulted")
+    add("source-check-basis-invalid","Source-backed pass requires source-consulted basis: "+name,q.id,"reviewer-claimed");
    if(!item.evidence?.length)
-    add("review-evidence-missing","Source consultation claimed without a recorded, locatable extract: "+name,q.id,"reviewer-claimed");
-  }
-  if(q.provenance?.kind==="official-pyq"&&!item.evidence?.length)
-   add("pyq-evidence-missing","Official-PYQ author claim lacks recorded source review evidence",q.id,"reviewer-claimed");
+    add("review-evidence-missing","No locatable source extract recorded: "+name,q.id,"reviewer-claimed");
+  };
+  if(facts?.status==="pass"&&!["mathematical-proof","source-consulted"].includes(facts.basis))
+   add("factual-basis-invalid","Factual correctness requires source consultation or mathematical proof",q.id,"reviewer-claimed");
+  if(facts?.status==="pass"&&facts.basis==="source-consulted"&&!item.evidence?.length)
+   add("review-evidence-missing","No source extract recorded for factual correctness",q.id,"reviewer-claimed");
+  if(timeSensitive){
+   if(facts?.status==="pass"&&facts.basis!=="source-consulted")
+    add("legal-source-required","A time-sensitive legal assertion needs source corroboration",q.id,"reviewer-claimed");
+   if(temporal?.status!=="pass")
+    add("temporal-check-required","Time-sensitive legal question needs currentness review",q.id,"reviewer-claimed");
+   consulted("temporal-correctness",temporal);
+   if(!item.evidence?.some(e=>e.asOfDate))
+    add("legal-asof-evidence-required","Legal review must record an as-of date",q.id,"reviewer-claimed");
+  }else if(temporal?.status==="pass"&&temporal.basis==="source-consulted")consulted("temporal-correctness",temporal);
+  if(q.provenance?.kind==="official-pyq"){
+   if(pyq?.status!=="pass")add("pyq-source-check-required","Official PYQ claim requires affirmative source review",q.id,"reviewer-claimed");
+   consulted("pyq-fidelity",pyq);
+  }else if(pyq?.status==="pass"&&pyq.basis==="source-consulted")consulted("pyq-fidelity",pyq);
+  if(visual?.status==="pass"&&visual.basis!=="rendered-claim")
+   add("candidate-render-claim-required","Candidate-view integrity needs an actual-render inspection claim",q.id,"reviewer-claimed");
  }
  if(review)for(const record of review.records){
   if(!projections.has(record.questionId))
