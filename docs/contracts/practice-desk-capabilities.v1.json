@@ -503,7 +503,6 @@
       ],
       "sourcePaths": [
         "scripts/pdf-ingest.mjs",
-        "tests/p60e-pdf-ingest.test.mjs",
         "scripts/editorial-editions.mjs",
         "scripts/question-quality.mjs",
         "scripts/content-blueprint.mjs"
