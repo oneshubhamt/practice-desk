@@ -12,6 +12,9 @@ import {attributedTopicPath,topicAncestors} from "../learning/syllabus-taxonomy.
 import type {QuestionContent,QuestionRevision,QuestionKind,StimulusDefinition,ImageAsset} from "../domain/question.ts";
 import type {RichBlock,RichDocument,RichInline} from "../domain/rich-document.ts";
 import {validateRichDocument} from "../domain/rich-document.ts";
+import {publicationPlainText} from "./plain-rich-text.ts";
+import {inspectCandidateIntegrity} from "./candidate-integrity.ts";
+export {publicationPlainText} from "./plain-rich-text.ts";
 import type {AssetId,QuestionRevisionId,QuestionId,OptionId,MatchItemId,
  ExamId,PaperId,PaperRevisionId,SectionId,StimulusId,AnswerKeyRevisionId} from "../domain/ids.ts";
 import {sha256} from "../domain/hash.ts";
@@ -35,26 +38,6 @@ const id=(label:string,value:string)=>label+":"+sha256(value).slice(0,24);
 const shell=(doc:RichDocument):RichDocument=>validateRichDocument(doc,{
  knownAssets:new Set([...collectAssets(doc)])
 });
-const inlinePlain=(item:RichInline):string=>{
- switch(item.type){
-  case "text":return item.text;
-  case "math":return item.linearText;
-  case "image":return item.altText;
- }
-};
-const rowPlain=(row:readonly RichInline[]):string=>row.map(inlinePlain).join("");
-export function publicationPlainText(doc:RichDocument):string{
- const blocks=doc.blocks.map(block=>{
-  switch(block.type){
-   case "paragraph":case "heading":return rowPlain(block.content);
-   case "list":return block.items.map(row=>rowPlain(row)).join("\n");
-   case "table":return block.rows.map(row=>row.map(rowPlain).join(" | ")).join("\n");
-   case "display-math":return block.linearText;
-   case "image":return block.altText;
-  }
- });
- return blocks.join("\n").trim();
-}
 function collectAssets(doc:RichDocument):Set<string>{
  const ids=new Set<string>();
  const row=(items:readonly RichInline[])=>{for(const item of items)if(item.type==="image")ids.add(item.assetId);};
@@ -152,6 +135,10 @@ function issuesFor(d:AuthoringDraft,existing:readonly ExamPackage[]):Publication
  if(d.edition==="reviewed"&&!existing.some(x=>
   x.paper.paperId===sourceId(d)&&x.paper.edition==="source"))
   put("Edition","Publish a corresponding user-supplied Source transcription first; Reviewed must have an existing source counterpart");
+ // The Wordgard/manual publisher must obey the same candidate-visible
+ // explicit-answer leak blockers as AI source import, including rich stimuli.
+ for(const issue of inspectCandidateIntegrity(d))
+  if(issue.severity==="error")put("Candidate view · "+issue.field,issue.message,issue.questionId);
  for(const [index,q] of d.questions.entries()){
   const prefix=name(index+1),questionId=q.id;
   const item=(field:string,reason:string)=>put(prefix+" · "+field,reason,questionId);

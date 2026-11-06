@@ -7,7 +7,9 @@ import {join} from "node:path";
 import {tmpdir} from "node:os";
 import {fileURLToPath} from "node:url";
 import {createHash} from "node:crypto";
-import {inspectExternalQuestionBank} from "../src/authoring/external-bank.ts";
+import {inspectExternalQuestionBank,toAuthoringDraft} from "../src/authoring/external-bank.ts";
+import {inspectCandidateIntegrity} from "../src/authoring/candidate-integrity.ts";
+import {inspectAuthoringPublication} from "../src/authoring/authoring-publisher.ts";
 
 const tool=fileURLToPath(new URL("../scripts/question-quality.mjs",import.meta.url));
 const cli=fileURLToPath(new URL("../scripts/question-bank-cli.mjs",import.meta.url));
@@ -24,6 +26,33 @@ const command=(script,...args)=>{
 const temp=async f=>{const dir=await mkdtemp(join(tmpdir(),"pd-p60c-"));try{return await f(dir);}finally{await rm(dir,{recursive:true,force:true});}};
 const write=async(dir,name,data)=>{const path=join(dir,name);await writeFile(path,JSON.stringify(data));return path;};
 
+test("P60-C: all authoring paths block explicit answers hidden in private rich passages or shared rich media text",async()=>{
+ const source=JSON.parse(await readFile(cat,"utf8"));
+ const draft=structuredClone(toAuthoringDraft(source));
+ const textBlock=t=>({schema:1,blocks:[{type:"paragraph",content:[{type:"text",text:t}]}]});
+ // Direct Wordgard authoring may supply a private passage rather than a v1 stimulus.
+ draft.questions[0].passage=textBlock("Correct answer: A");
+ let issues=inspectCandidateIntegrity(draft);
+ assert.ok(issues.some(x=>x.code==="candidate-answer-leak"&&x.field==="passage"));
+ const denied=inspectAuthoringPublication(draft);
+ assert.equal(denied.valid,false);
+ assert.ok(denied.issues.some(x=>x.field.includes("Candidate view")&&x.reason.includes("explicit answer")));
+ draft.questions[0].passage=textBlock("Unrelated passage.");
+ // The rendered rich text, not only its plain-text fallback, can contain a leak.
+ const passage=draft.stimuli.find(x=>x.kind==="passage"||x.kind==="case");
+ assert.ok(passage);
+ passage.text="Visible fallback contains no answer labels";
+ passage.richText=textBlock("Correct answer: A");
+ issues=inspectCandidateIntegrity(draft);
+ assert.ok(issues.some(x=>x.code==="candidate-answer-leak"&&x.field==="stimulus.richText"));
+ assert.equal(inspectAuthoringPublication(draft).valid,false);
+ // Shared Wordgard tables and rich chart captions must also be inspected.
+ draft.questions[0].stimulusRef="table-rich";
+ draft.stimuli.push({id:"table-rich",kind:"table",columns:["Safe heading"],rows:[["Safe cell"]],
+  richColumns:[textBlock("Correct answer: A")],richRows:[[textBlock("Unrelated cell")]]});
+ issues=inspectCandidateIntegrity(draft);
+ assert.ok(issues.some(x=>x.code==="candidate-answer-leak"&&x.field.startsWith("stimulus.richColumns")));
+});
 test("P60-C RED: explicit answer labels in actual candidate stems fail canonical existing publisher",async()=>{
  const src=JSON.parse(await readFile(apfc,"utf8"));
  src.questions[0].prompt="Which letter is second? Correct answer: B";

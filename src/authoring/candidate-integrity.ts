@@ -4,7 +4,7 @@
  */
 import type {AuthoringDraft,AuthoringQuestion} from "./authoring-draft.ts";
 import type {RichDocument} from "../domain/rich-document.ts";
-import {publicationPlainText} from "./authoring-publisher.ts";
+import {publicationPlainText} from "./plain-rich-text.ts";
 
 export type CandidateIntegrityIssue={
  readonly questionId:string;
@@ -39,6 +39,7 @@ export function candidateFields(draft:AuthoringDraft,q:AuthoringQuestion):readon
   for(const id of referencedAssets(doc))assets.add(id);
  };
  append("prompt",q.prompt);
+ if(q.passage)append("passage",q.passage);
  if(q.kind==="single-choice"||q.kind==="multiple-select")
   q.options.forEach((v,i)=>append("options["+i+"]",v));
  if(q.kind==="matching"){
@@ -49,15 +50,28 @@ export function candidateFields(draft:AuthoringDraft,q:AuthoringQuestion):readon
  if(stimulus){
   if(stimulus.title)out.push({field:"stimulus.title",text:stimulus.title});
   if(stimulus.kind==="passage"||stimulus.kind==="case"){
-   out.push({field:"stimulus.text",text:stimulus.text});
+   out.push({field:stimulus.richText?"stimulus.richText":"stimulus.text",
+    text:stimulus.richText?visible(stimulus.richText):stimulus.text});
    if(stimulus.richText)for(const id of referencedAssets(stimulus.richText))assets.add(id);
   }else if(stimulus.kind==="table"){
-   stimulus.columns.forEach((v,i)=>out.push({field:"stimulus.columns["+i+"]",text:v}));
-   stimulus.rows.forEach((row,i)=>row.forEach((v,j)=>
-    out.push({field:"stimulus.rows["+i+"]["+j+"]",text:v})));
+   stimulus.columns.forEach((v,i)=>{
+    const rich=stimulus.richColumns?.[i];
+    out.push({field:rich?"stimulus.richColumns["+i+"]":"stimulus.columns["+i+"]",
+     text:rich?visible(rich):v});
+    if(rich)for(const id of referencedAssets(rich))assets.add(id);
+   });
+   stimulus.rows.forEach((row,i)=>row.forEach((v,j)=>{
+    const rich=stimulus.richRows?.[i]?.[j];
+    out.push({field:rich?"stimulus.richRows["+i+"]["+j+"]":"stimulus.rows["+i+"]["+j+"]",
+     text:rich?visible(rich):v});
+    if(rich)for(const id of referencedAssets(rich))assets.add(id);
+   }));
   }else if(stimulus.kind==="image"||stimulus.kind==="chart"){
    out.push({field:"stimulus.altText",text:stimulus.altText});
-   if(stimulus.caption)out.push({field:"stimulus.caption",text:stimulus.caption});
+   if(stimulus.richCaption){
+    out.push({field:"stimulus.richCaption",text:visible(stimulus.richCaption)});
+    for(const id of referencedAssets(stimulus.richCaption))assets.add(id);
+   }else if(stimulus.caption)out.push({field:"stimulus.caption",text:stimulus.caption});
    assets.add(stimulus.assetId);
   }
  }
