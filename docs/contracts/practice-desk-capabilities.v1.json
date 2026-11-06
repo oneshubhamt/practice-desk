@@ -1,7 +1,7 @@
 {
   "format": "practice-desk-agent-capabilities",
   "version": 1,
-  "contractStatus": "P60-A/B/C/D automated verified on Satyam; P60-E source-bound external-agent PDF intake implemented, full exact-source CI pending; actual PDF content, PYQ/reviewer authentication, hardware/human and release HOLD; P60-F not implemented.",
+  "contractStatus": "P60-A/B/C/D previously verified; P60-E external-agent PDF intake automated software VERIFIED by 5/5 exact-source CI 42188234511 (419 Node, real offline Chromium/Firefox/WebKit, guarded unchanged HTML) on 36f8b993f751687e1b4d176690cc7f18dd2093e7; actual PDF text/key/PYQ/reviewer/human/device/release HOLD; P60-F planned.",
   "product": {
     "name": "Practice Desk",
     "purpose": "Offline examination authoring, practice, scoring, history, analytics and spaced revision",
