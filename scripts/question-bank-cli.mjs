@@ -3,30 +3,34 @@
 import {readFile,writeFile} from "node:fs/promises";
 import {createHash} from "node:crypto";
 import {validateBlueprint,auditBlueprint} from "./content-blueprint.mjs";
+import {auditQuestionQuality} from "./question-quality.mjs";
 import {inspectExternalQuestionBank} from "../src/authoring/external-bank.ts";
 import {isDraftExchange,inspectDraftExchange} from "../src/authoring/authoring-exchange.ts";
 const [command,input,...rest]=process.argv.slice(2);
 const compiling=command==="compile-bank";
 const output=compiling?rest[0]:undefined;
 const flags=compiling?rest.slice(1):rest;
-const flagOk=flags.length<=18&&flags.length%2===0&&
- flags.every((v,i)=>i%2===1||v==="--against"||v==="--blueprint")&&
- flags.filter((v,i)=>i%2===0&&v==="--blueprint").length<=1;
+const flagOk=flags.length<=20&&flags.length%2===0&&
+ flags.every((v,i)=>i%2===1||v==="--against"||v==="--blueprint"||v==="--quality-review")&&
+ flags.filter((v,i)=>i%2===0&&v==="--blueprint").length<=1&&
+ flags.filter((v,i)=>i%2===0&&v==="--quality-review").length<=1;
 if(!["validate-bank","compile-bank","qa-bank"].includes(command)||!input||!flagOk||
   (compiling&&!output)){
  process.stderr.write("Usage: node scripts/question-bank-cli.mjs validate-bank <source.json> [--against prior.json]...\n"+
   "       node scripts/question-bank-cli.mjs qa-bank <source.json> [--against prior.json]...\n"+
   "       node scripts/question-bank-cli.mjs compile-bank <source.json> <compiled.json> [--against prior.json]...\n"+
   "Both AI source v1 and the versioned Wordgard draft exchange are accepted; --against applies to source v1 only.\n"+
-  "Optional --blueprint <plan.json> is an exact single-source publication preflight; for multi-batch use content-blueprint.mjs audit.\n");
+  "Optional --blueprint <plan.json> is an exact single-source publication preflight; for multi-batch use content-blueprint.mjs audit.\n"+
+  "Optional --quality-review <review.json> requires complete P60-C SHA-bound independent review records; no source fact authentication.\n");
  process.exitCode=2;
 }else{
  try{
   const raw=await readFile(input,"utf8");
   if(Buffer.byteLength(raw,"utf8")>25*1024*1024)throw Error("Source JSON exceeds 25 MiB");
-  const comparisonSources=[];let blueprintPath=null;
+  const comparisonSources=[];let blueprintPath=null,qualityReviewPath=null;
   for(let i=0;i<flags.length;i+=2){
    if(flags[i]==="--blueprint"){blueprintPath=flags[i+1];continue;}
+   if(flags[i]==="--quality-review"){qualityReviewPath=flags[i+1];continue;}
    const contents=await readFile(flags[i+1],"utf8");
    if(Buffer.byteLength(contents,"utf8")>25*1024*1024)throw Error("Comparison JSON exceeds 25 MiB");
    comparisonSources.push(JSON.parse(contents));
@@ -37,6 +41,14 @@ if(!["validate-bank","compile-bank","qa-bank"].includes(command)||!input||!flagO
   const report=isDraftExchange(source)?
    inspectDraftExchange(source):inspectExternalQuestionBank(source,[],comparisonSources);
   const {compiled,...publicReport}=report;
+  let qualityAudit=null;
+  if(qualityReviewPath){
+   if(isDraftExchange(source))
+    throw Error("Quality-review guard applies to external practice-desk-authoring v1 source only");
+   const reviewRaw=await readFile(qualityReviewPath,"utf8");
+   if(Buffer.byteLength(reviewRaw,"utf8")>3*1024*1024)throw Error("Quality review exceeds 3 MiB");
+   qualityAudit=auditQuestionQuality(source,raw,JSON.parse(reviewRaw));
+  }
   let blueprintAudit=null;
   if(blueprintPath){
    if(isDraftExchange(source))
@@ -47,10 +59,13 @@ if(!["validate-bank","compile-bank","qa-bank"].includes(command)||!input||!flagO
    const digest=createHash("sha256").update(raw).digest("hex");
    blueprintAudit=auditBlueprint(plan,[{value:source,digest}],undefined);
   }
-  if(!report.valid||!compiled||blueprintAudit?.valid===false){
+  if(!report.valid||!compiled||blueprintAudit?.valid===false||qualityAudit?.readyForPublication===false){
    process.stdout.write(JSON.stringify({...publicReport,compiled:false,
     ...(blueprintAudit?{blueprint:{valid:blueprintAudit.valid,requestedCount:blueprintAudit.requestedCount,
-      actualCount:blueprintAudit.actualCount,issues:blueprintAudit.issues,coverage:blueprintAudit.coverage}}:{})},null,2)+"\n");
+      actualCount:blueprintAudit.actualCount,issues:blueprintAudit.issues,coverage:blueprintAudit.coverage}}:{}),
+    ...(qualityAudit?{qualityReview:{readyForPublication:qualityAudit.readyForPublication,
+      factualVerification:"not-performed",reviewAssurance:qualityAudit.reviewAssurance,
+      issues:qualityAudit.issues,questionsMissingReview:qualityAudit.questionsMissingReview}}:{})},null,2)+"\n");
    process.exitCode=1;
   }else{
    if(compiling){
@@ -59,6 +74,8 @@ if(!["validate-bank","compile-bank","qa-bank"].includes(command)||!input||!flagO
    }
    process.stdout.write(JSON.stringify({...publicReport,
     compiled:compiling,...(blueprintAudit?{blueprint:{valid:true,requestedCount:blueprintAudit.requestedCount,actualCount:blueprintAudit.actualCount}}:{}),
+    ...(qualityAudit?{qualityReview:{readyForPublication:true,factualVerification:"not-performed",
+      reviewAssurance:qualityAudit.reviewAssurance}}:{}),
     ...(output?{output}:{})},null,2)+"\n");
   }
  }catch(error){
