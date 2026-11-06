@@ -158,10 +158,10 @@ test("P60-F RED: one strict handoff also handles agent-transcribed PDF and prese
  const x=await files(dir,{asDocument:true});
  // Minimal private synthetic PDF byte source; page text truth is not checked by this software.
  const document=await put(dir,"fixture.pdf",Buffer.from(
-  "%PDF-1.4\\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\\n"+
-  "2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\\n"+
-  "3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 300 300] >> endobj\\n"+
-  "trailer << /Root 1 0 R >>\\n%%EOF\\n"));
+  "%PDF-1.4\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n"+
+  "2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n"+
+  "3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 300 300] >> endobj\n"+
+  "trailer << /Root 1 0 R >>\n%%EOF\n"));
  const tool=fileURLToPath(new URL("../scripts/pdf-ingest.mjs",import.meta.url));
  const template=run(tool,"template",x.original,document);
  assert.equal(template.status,0,JSON.stringify(template.data));
@@ -202,4 +202,4 @@ test("P60-F RED: one strict handoff also handles agent-transcribed PDF and prese
   join(dir,"not-written"),"--quality-review",x.reviewFile,"--allow-create");
  assert.notEqual(blocked.status,0);
  await assert.rejects(access(join(dir,"not-written")));
-});
+}));
