@@ -80,7 +80,9 @@ test("P60-A: agent can inspect exactly one capability and concrete operation sep
  assert.equal(ops.json.operations.length,18);
  assert.ok(ops.json.operations.every(x=>["read-only","create-new-file"].includes(x.privilege)));
  assert.ok(!ops.stdout.includes("IndexedDB"));
- const intake=cli("show","agent-pdf-intake");\n assert.equal(intake.status,0,intake.stderr);\n assert.equal(intake.json.capability.id,"agent-pdf-intake");
+ const intake=cli("show","agent-pdf-intake");
+ assert.equal(intake.status,0,intake.stderr);
+ assert.equal(intake.json.capability.id,"agent-pdf-intake");
 });
 
 test("P60-A: unsupported or ambiguous commands fail closed without app/history access",()=>{
