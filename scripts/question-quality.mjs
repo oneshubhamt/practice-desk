@@ -318,7 +318,7 @@ async function prepareReviewWorkspace(value,raw,outputDir){
  await mkdir(directory); // Exclusive: never replace an existing review directory.
  try{
   for(const [name,data] of files)await writeFile(join(directory,name),
-   JSON.stringify(data,null,2)+"\\n",{flag:"wx",mode:0o600});
+   JSON.stringify(data,null,2)+"\n",{flag:"wx",mode:0o600});
  }catch(error){await rm(directory,{recursive:true,force:true});throw error;}
  return {format:"practice-desk-review-workspace",version:1,
   readyForPublication:false,reviewComplete:false,sourceSha256:sha(raw),
