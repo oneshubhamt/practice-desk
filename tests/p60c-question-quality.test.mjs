@@ -241,3 +241,17 @@ test("P60-C: direct named-answer and worked-solution labels are blocked in GK st
  assert.equal(inspectExternalQuestionBank(privateExplanation).valid,true,
   "Author-only solution text must not be mistaken for candidate-visible leaked hints");
 });
+
+
+test("P60-C: bounded quality audit exposes heuristic candidate-hint warnings instead of hiding them behind aggregate counts",()=>temp(async dir=>{
+ const src=JSON.parse(await readFile(apfc,"utf8"));
+ src.questions[0].prompt="A series follows the pattern of consecutive squares: 1, 4, 9, 16. What comes next?";
+ const file=await write(dir,"hinted.json",src);
+ const r=command(tool,"audit",file,"--limit","20");
+ assert.equal(r.status,1,"Review is still absent");
+ assert.ok(r.data.issues.items.some(x=>x.code==="canonical-candidate-unintended-clue"&&x.severity==="warning"));
+ assert.ok(r.data.issues.items.some(x=>x.code==="review-missing"&&x.severity==="error"));
+ assert.ok(r.data.warningIssueCount>=1);
+ assert.ok(r.data.blockingIssueCount>=1);
+ assert.equal(r.data.factualVerification,"not-performed");
+}));
