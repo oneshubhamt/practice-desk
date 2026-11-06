@@ -1,5 +1,7 @@
 # Practice Desk — offline examination studio
 
+**P60-B implementation on `Satyam`:** [Versioned Content Blueprint](docs/architecture/P60B_CONTENT_BLUEPRINT.md), [APFC](examples/p60b-apfc-blueprint.json)/[CAT](examples/p60b-cat-blueprint.json) illustrative plans, read-only `scripts/content-blueprint.mjs validate/audit` across source batches, and optional `--blueprint` enforcement in `question-bank-cli.mjs` for a single bank. Tests cover requested counts, parent/child subject-topic quotas, skills/format allocations, source origin, nonverified cognitive sidecar, false claims and mismatched paper rules. **Academic classification is author-attributed, not factual verification.** The offline browser remains separately controlled. P60-C–F are not implemented.
+
 **P60 programme on `Satyam` (6 Nov 2026):** The [complete approved P60 target architecture and five-stage discipline](docs/architecture/P60_AI_NATIVE_CAPABILITY_PROGRAMME.md) is recorded. P60-A has a source-backed [agent capability catalogue](docs/contracts/practice-desk-capabilities.v1.json), [AI application guide](docs/AI_APPLICATION_GUIDE.md) and bounded read-only `scripts/practice-desk-capabilities.mjs` commands; **full CI/evidence remains pending**. P60-B–F (blueprint enforcement, rigorous editorial/factual QA, generic original/reviewed, AI PDF extraction and integrated agent workflows) are **planned, not implemented**. The existing P59 QA does not authenticate content; no release or merge approval.
 
 
