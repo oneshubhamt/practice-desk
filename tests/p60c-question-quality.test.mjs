@@ -216,7 +216,7 @@ test("P60-C: complete keyed answer repeated in question prompt is highlighted as
 
 test("P60-C: literal check-mark symbol as an answer choice is not falsely blocked as an editorial badge",async()=>{
  const source=JSON.parse(await readFile(cat,"utf8"));
- source.questions[0].options=["✓","✗","□","○"];
+ source.questions[0].options=["Tick mark (✓)","Cross mark (✗)","Empty square (□)","Empty circle (○)"];
  const report=inspectExternalQuestionBank(source);
  assert.equal(report.valid,true,JSON.stringify(report.issues));
  assert.ok(!report.issues.some(x=>x.code==="candidate-answer-leak"));
