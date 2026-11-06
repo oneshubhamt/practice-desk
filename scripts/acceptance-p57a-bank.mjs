@@ -50,6 +50,17 @@ try{
   engine+" P57-B math/key inconsistency was not displayed in staging");
  check((await records(page)).length===initial,engine+" invalid bank modified scored records");
  await clearStage();
+ // P60-C: actual offline browser intake must reject answer leakage that the
+ // source author incorrectly placed inside the candidate-visible question.
+ const leaking=structuredClone(apfc);
+ leaking.questions[0].prompt+=" Correct answer: B";
+ await stage(leaking,"p60c-candidate-answer-leak");
+ check((await page.locator(".pd-author-section-manager").allTextContents()).some(x=>
+  /candidate-answer-leak|Candidate-visible content contains an explicit answer/i.test(x)),
+  engine+" P60-C stem answer leak bypassed real source staging");
+ check((await records(page)).length===initial,
+  engine+" P60-C unsafe answer-leak source changed persisted exams");
+ await clearStage();
  const duplicates=structuredClone(apfc);duplicates.questions[0].options[2]=" B ";
  await stage(duplicates,"p57b-equivalent-options");
  check((await page.locator(".pd-author-section-manager").allTextContents()).some(x=>
@@ -69,6 +80,10 @@ try{
  await page.locator("#g-start").click();await route(page,"exam");
  check((await page.locator(".exam-question").innerText()).includes("letter comes second"),
   engine+" first APFC stem is missing");
+ const candidateBeforeSubmission=await page.locator(".exam-question").innerText();
+ check(!candidateBeforeSubmission.includes("B is second.")&&
+  !candidateBeforeSubmission.includes("Correct answer: B"),
+  engine+" P60-C actual exam view leaked protected explanation/key before submission");
  await page.locator('input[data-choice="B"]').click();
  await page.locator("#g-submit").click();await route(page,"result");
  const result=(await records(page)).find(r=>r.recordType==="generic-attempt"&&
