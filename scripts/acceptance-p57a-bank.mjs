@@ -213,6 +213,34 @@ try{
    decisions,review);
   check(editionPair.valid,engine+" P60-D editorial preflight failed: "+
    editionPair.issues.map(x=>x.code+":"+x.message).join("; "));
+  // P60-F: use the *actual external agent handoff* to publish the reviewed
+  // pair. Import exact signed output files through the user's offline Library.
+  const originalPath=join(temp,"original.json"),decisionsPath=join(temp,"decisions.json");
+  const reviewPath=join(temp,"review.json"),outputPath=join(temp,"approved-pair");
+  await writeFile(originalPath,originalRaw);
+  await writeFile(decisionsPath,JSON.stringify(decisions));
+  await writeFile(reviewPath,JSON.stringify(review));
+  const handoffCommand=fileURLToPath(new URL("./agent-handoff.mjs",import.meta.url));
+  const preflight=JSON.parse(execFileSync(process.execPath,
+   [handoffCommand,"assess","paired",originalPath,path,decisionsPath,
+    "--quality-review",reviewPath],
+   {encoding:"utf8",timeout:30000}));
+  check(preflight.readyForPublication===true&&preflight.factualVerification==="not-performed"&&
+   preflight.appAccess==="none",
+   engine+" P60-F external agent handoff incorrectly certified source truth or failed strict review");
+  const result=JSON.parse(execFileSync(process.execPath,
+   [handoffCommand,"publish","paired",originalPath,path,decisionsPath,outputPath,
+    "--quality-review",reviewPath,"--allow-create"],
+   {encoding:"utf8",timeout:30000}));
+  check(result.published===true&&result.writtenFiles?.length===5&&
+    result.externalAuthenticatedReview===false,
+   engine+" P60-F permission-scoped publication did not yield exact five-file handoff");
+  editionPair.packages={
+   sourcePkg:JSON.parse(await readFile(join(outputPath,"source.exam.json"),"utf8")),
+   reviewedPkg:JSON.parse(await readFile(join(outputPath,"reviewed.exam.json"),"utf8"))
+  };
+  check((await readFile(join(outputPath,"original-source.json"),"utf8"))===originalRaw,
+   engine+" P60-F external handoff altered immutable source bytes");
  }finally{await rm(temp,{recursive:true,force:true});}
  const sourceEdition=editionPair.packages.sourcePkg,reviewedEdition=editionPair.packages.reviewedPkg;
  const importEdition=async(bundle,name)=>{
@@ -245,7 +273,38 @@ try{
  check(Boolean(completed?.sourceReviewReference)&&
   completed.result?.items[0]?.verdict==="correct",
   engine+" P60-D reviewed score/history did not freeze separate published correction");
+ // P60-F independent end-to-end: reviewed source package → frozen marks →
+ // explicit Result→Learning card → deliberate FSRS rating → reload preserved.
+ await page.locator("#result-tab-review").click();
+ check(await page.locator(".generic-review").count()===3,
+  engine+" P60-F reviewed candidate output cannot be reviewed after scoring");
+ await page.locator("[data-add-card]").first().click();
+ const cards=await records(page);
+ const card=cards.find(x=>x.recordType==="learning-card"&&x.sourceAttemptId===completed.id);
+ check(Boolean(card)&&card.reviews?.length===0,
+  engine+" P60-F card not derived from frozen reviewed source or FSRS was silently graded");
+ await page.locator("#g-library").click();await route(page,"library");
+ await page.locator("#g-learning").click();await route(page,"learning");
+ await page.locator("#learning-due").click();
+ check(await page.locator(".learning-answer").count()===0,
+  engine+" P60-F user Learning answer leaked before reveal");
+ await page.locator("#learning-reveal").click();
+ await page.locator('[data-grade="3"]').click();
+ await page.locator("#learning-note").waitFor({state:"visible"});
+ await page.locator("#learning-note").fill("P60-F externally authored reviewed APFC correction");
+ await page.locator("#learning-save").click();
+ const afterReview=(await records(page)).find(x=>x.id===card.id);
+ check(afterReview?.reviews?.length===1&&
+  afterReview.note==="P60-F externally authored reviewed APFC correction",
+  engine+" P60-F explicit FSRS rating/learning note was not persisted");
+ await page.reload({waitUntil:"load"});
+ const restored=await records(page);
+ check(restored.some(x=>x.id===completed.id&&
+   x.result.snapshot.earnedMarks===completed.result.snapshot.earnedMarks)&&
+  restored.some(x=>x.id===card.id&&x.reviews.length===1)&&
+  restored.some(x=>x.recordType==="generic-package"&&x.bundle?.paper.id===sourceEdition.paper.id),
+  engine+" P60-F reload changed independently frozen source, grade or FSRS evidence");
  check(errors.length===0,engine+" unexpected page errors "+errors.join("; "));
- console.log("P57-A/B/C + P60-D "+engine+" PASS: bounded staging and QA errors, Wordgard handoff, two immutable CAT/APFC publications, scored history, 195px/140%");
+ console.log("P57-A/B/C + P60-D/F "+engine+" PASS: bounded staging, strict agent handoff, separate original/reviewed exam, frozen score and FSRS Learning lifecycle");
 }catch(error){await h.diagnose("p57a-"+engine,page,error);throw error;}
 finally{await h.finish();}
