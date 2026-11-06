@@ -99,7 +99,7 @@ export function auditPdfIntake(manifest,original,raw,documentBytes,{keyBytes=nul
  const issues=[],add=(code,message,questionId)=>{
   issues.push({code,severity:"error",message,...(questionId?{questionId}:{})});};
  let sourceCount=0;
- obj(manifest,"intake",["format","version","document","keyDocument","original","questions","stimuli","media","documentInventoryStatus","externalVerification","note"]);
+ obj(manifest,"intake",["format","version","document","keyDocument","original","questions","stimuli","media","documentInventoryStatus","externalVerification","inspector","note"]);
  if(manifest.format!==FORMAT||manifest.version!==1)throw Error("Unsupported PDF intake version");
  validateDocumentMetadata(manifest.document,"document");
  if(manifest.keyDocument)validateDocumentMetadata(manifest.keyDocument,"keyDocument");
