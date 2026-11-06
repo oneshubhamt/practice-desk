@@ -1,6 +1,6 @@
 # P60 — AI-native Practice Desk capability, content integrity and agent interaction programme
 
-**Authority:** User-approved target capability, 6 November 2026. **Branch:** `Satyam`. **Implementation status:** P60-A initiated; P60-B–F proposed, **not implemented or authorized as completed**. The existing P57–P59 software is the baseline, not a substitute for the new P60 acceptance gates. This document describes both the target and its boundaries; a passing import or CI run does not establish content truthfulness.
+**Authority:** User-approved target capability, 6 November 2026. **Branch:** `Satyam`. **Implementation status:** P60-A applicable CI green (publisher skipped on Satyam); P60-B source implementation underway with exact-head CI pending; P60-C–F proposed, **not implemented or authorized as completed**. The existing P57–P59 software is the baseline, not a substitute for the new P60 acceptance gates. This document describes both the target and its boundaries; a passing import or CI run does not establish content truthfulness.
 
 ## 1. Product objective and design constraints
 
