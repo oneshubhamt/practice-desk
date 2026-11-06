@@ -45,6 +45,10 @@ For ordinary question generation, **read only the one-page quickstart, one relev
 | **Rich content** | Shared RC/DILR passages, cases, tables, charts, image media with alt text; canonical rich/math AST and KaTeX. | Avoid duplicated stimuli; source figures and math must be checked before publication. |
 | **Offline storage** | Local persistence, frozen history/answer snapshots and explicit backup v4; separate unpublished staging/draft archives. | No direct user-device access, silent sync, recovery after missing backups or remote API. |
 
+## P60-B — planned coverage before content creation
+
+For nontrivial question banks, use the [Content Production Blueprint](architecture/P60B_CONTENT_BLUEPRINT.md) to record exact targets, source origin, paper rules and required classification; run read-only `content-blueprint.mjs validate/audit` or enforce `--blueprint` in the existing single-source compiler. This prevents silently missing user-requested quotas, but does **not** establish semantic syllabus accuracy or factual truth. The guide remains low-context: only fetch the blueprint contract and one source example for authoring; avoid reading the exam engine implementation. Multi-batch audits must not be misrepresented as an in-browser publication gate.
+
 ## Recommended task routes
 
 **Generate new questions:** Read [authoring quickstart](AGENT_AUTHORING_QUICKSTART.md) + **one** [APFC](../examples/ai-first-apfc.json) or [CAT](../examples/ai-first-cat.json) example → research the syllabus and sources → author ~10–30 genuine questions in the existing `practice-desk-authoring` v1 source → check each key/distractor independently → run compact `inspect`/full `qa-bank` and targeted `show`/SHA patch → generate a new validated file → import into the offline Library. Respect source-count and user specifications, even though full formal P60-B quota enforcement is not yet available.
