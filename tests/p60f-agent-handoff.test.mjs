@@ -71,6 +71,46 @@ test("P60-F RED: discover concise versioned actions and privilege limits, withou
  assert.equal(r.data.agentDeviceBridge,false);
  assert.ok(!r.stdout.includes("IndexedDB")&&!r.stdout.includes("correctMarks"));
 });
+test("P60-H: sourced APFC/CAT items prepare as a complete blind packet, compile cautiously and require real review for strict publication",()=>scoped(async dir=>{
+ const compiler=fileURLToPath(new URL("../scripts/question-bank-cli.mjs",import.meta.url));
+ for(const filename of ["source-grounded-apfc-2023.json","source-grounded-cat-2024.json"]){
+  const input=fileURLToPath(new URL("../examples/"+filename,import.meta.url));
+  const raw=await readFile(input,"utf8"),source=JSON.parse(raw);
+  const reviewDir=join(dir,source.bankId+"-review");
+  const prepared=run(script,"prepare",input,reviewDir,"--allow-create");
+  assert.equal(prepared.status,0,prepared.stderr);
+  assert.equal(prepared.data.readyForPublication,false);
+  assert.equal(prepared.data.questionCount,2);
+  const blind=JSON.parse(await readFile(join(reviewDir,"blind-candidates.json"),"utf8"));
+  const review=JSON.parse(await readFile(join(reviewDir,"review.json"),"utf8"));
+  assert.equal(blind.items.length,source.questions.length);
+  assert.equal(review.records.length,source.questions.length);
+  assert.deepEqual(blind.items.map(x=>x.questionId),source.questions.map(q=>q.id));
+  for(const [index,q] of source.questions.entries()){
+   assert.equal(blind.items[index].answer,undefined);
+   assert.equal(blind.items[index].explanation,undefined);
+   assert.ok(!JSON.stringify(blind.items[index]).includes(q.explanation));
+   assert.equal(review.records[index].independentSolution.blindClaim,false);
+   assert.equal(review.records[index].checks.length,20);
+   assert.ok(review.records[index].checks.every(check=>check.status==="not-reviewed"));
+  }
+  const notReviewed=run(quality,"audit",input,"--review",join(reviewDir,"review.json"));
+  assert.notEqual(notReviewed.status,0,"An unreviewed real source must not pass the strict editorial gate");
+  const blockedOutput=join(dir,source.bankId+"-blocked.exam.json");
+  const blocked=run(script,"publish","single",input,blockedOutput,
+   "--quality-review",join(reviewDir,"review.json"),"--allow-create");
+  assert.notEqual(blocked.status,0);
+  await assert.rejects(access(blockedOutput));
+  // The canonical authoring pathway can still emit a clearly caution-labelled
+  // package; this is NOT a P60-C reviewed or factually authenticated publication.
+  const cautionOutput=join(dir,source.bankId+"-caution.exam.json");
+  const compiled=run(compiler,"compile-bank",input,cautionOutput);
+  assert.equal(compiled.status,0,JSON.stringify(compiled.data));
+  const bundle=validateExamPackage(JSON.parse(await readFile(cautionOutput,"utf8")));
+  assert.equal(bundle.questions.length,2);
+  assert.ok(bundle.questions.every(q=>q.editorial.status==="caution"));
+ }
+}));
 test("P60-F RED: single mode converges source + P60-C into bounded answer-private readiness",()=>scoped(async dir=>{
  const x=await files(dir);
  const result=run(script,"assess","single",x.corrected,"--quality-review",x.reviewFile);
