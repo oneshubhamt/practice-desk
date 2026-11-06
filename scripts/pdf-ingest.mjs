@@ -66,8 +66,11 @@ async function sourceBytes(path,type){
 }
 const sourceParts=v=>({stimuli:v.stimuli??[],media:v.media??[],questions:v.questions??[]});
 const hasMath=q=>{
- const s=JSON.stringify(q);
- return s.includes('"type":"math"')||/(?:\\\\[A-Za-z]+|\\\\\\(|\\\\\\[|\\$[^\\$]+\\$)/u.test(s);
+ const s=JSON.stringify(q),slashPair=String.fromCharCode(92,92);
+ return s.includes('"type":"math"')||
+  ["frac","sqrt","sum","int","begin","alpha","beta","times","cdot","(","["]
+   .some(name=>s.includes(slashPair+name))||
+  (s.includes("$")&&s.indexOf("$")!==s.lastIndexOf("$"));
 };
 export function buildPdfIntakeTemplate(original,raw,document,bytes,keyDocument=null,keyBytes=null){
  toAuthoringDraft(original);
