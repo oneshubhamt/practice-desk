@@ -123,7 +123,10 @@ test("P60-E missing page, duplicate numbering and cropped/uncertain maths or fig
   m=>{m.questions[1].pages=[3];},
   m=>{m.questions[0].explanationOrigin="unverified";},
   m=>{m.inspector.id="";},
-  m=>{m.questions[0].pages=[2];}
+  m=>{m.questions[0].pages=[2];},
+  m=>{m.inspector.kind="human";},
+  m=>{m.document.title="REPLACE WITH EXACT DOCUMENT TITLE";},
+  m=>{m.stimuli[0].mathStatus="unchecked";}
  ]){
   const x=structuredClone(fresh);mutate(x.manifest);
   try{assert.equal((await audit(x)).valid,false);}
@@ -228,4 +231,59 @@ test("P60-E strict compile delegates P60-D without rewriting original, and canno
   stalePath,notCreated,"--quality-review",reviewPath);
  assert.equal(rejected.status,1);
  await assert.rejects(access(notCreated));
+}));
+
+
+test("P60-E source-page tokens do not accept page 10 as citation of page 1; shared TeX must be compared",async()=>{
+ const x=await fixture();
+ x.bank.questions[0].provenance.sourceNote="Synthetic transcription on printed item 1 of page 10.";
+ x.raw=JSON.stringify(x.bank);
+ x.manifest.original.sourceSha256=sha(x.raw);
+ x.manifest.questions[0].sha256=sha(JSON.stringify(x.bank.questions[0]));
+ const report=await audit(x);
+ assert.equal(report.valid,false);
+ assert.ok(report.issues.items.some(e=>e.code==="source-note-page-mismatch"),JSON.stringify(report.issues));
+ const y=await fixture();
+ y.bank.stimuli[0].text={format:"practice-desk-rich",version:1,blocks:[
+  {type:"paragraph",content:[{type:"text",text:"Source text "},{type:"math",tex:"x^2+1",linearText:"x squared plus one"}]}]};
+ y.raw=JSON.stringify(y.bank);
+ y.manifest.original.sourceSha256=sha(y.raw);
+ y.manifest.stimuli[0].sha256=sha(JSON.stringify(y.bank.stimuli[0]));
+ const result=await audit(y);
+ assert.equal(result.valid,false);
+ assert.ok(result.issues.items.some(e=>e.code==="stimulus-math-unverified"),JSON.stringify(result.issues));
+});
+test("P60-E actual separate printed-key bytes and image document mode require explicit source/key identity",()=>sandbox(async dir=>{
+ const x=await fixture(),original=await save(dir,"original.json",x.raw),
+  source=await save(dir,"paper.pdf",x.doc);
+ const separateKey=await save(dir,"printed-key.pdf",pdf(["Synthetic paper key A B C D"]));
+ const templated=run(tool,"template",original,source,"--key-document",separateKey);
+ assert.equal(templated.status,0,templated.stderr);
+ assert.equal(templated.data.keyDocument.type,"pdf");
+ assert.equal(templated.data.keyDocument.sha256,sha(await readFile(separateKey)));
+ const manifest=structuredClone(x.manifest);
+ manifest.keyDocument={...templated.data.keyDocument,title:"Synthetic separately printed key",
+  pageCount:1,inspectedPages:[1],missingPages:[],identityNote:"Synthetic test key from a separate document"};
+ for(const q of manifest.questions){q.keyOrigin="key-document";q.keyPages=[1];}
+ const input=await save(dir,"separate-intake.json",manifest);
+ const accepted=run(tool,"audit",input,original,source,"--key-document",separateKey);
+ assert.equal(accepted.status,0,JSON.stringify(accepted.data));
+ assert.equal(accepted.data.valid,true);
+ const missingKey=run(tool,"audit",input,original,source);
+ assert.equal(missingKey.status,1);
+ assert.ok(missingKey.data.issues.items.some(e=>e.code==="key-file-required"));
+ const corruptKey=await save(dir,"altered-key.pdf",pdf(["An entirely different printed key"]));
+ const mismatch=run(tool,"audit",input,original,source,"--key-document",corruptKey);
+ assert.equal(mismatch.status,1);
+ assert.ok(mismatch.data.issues.items.some(e=>e.code==="document-digest-mismatch"));
+ const png=Buffer.from(x.bank.media[0].dataUri.split(",")[1],"base64");
+ const image=await save(dir,"scan.png",png);
+ const imageTemplate=run(tool,"template",original,image,"--document-type","image");
+ assert.equal(imageTemplate.status,0,JSON.stringify(imageTemplate.data));
+ assert.equal(imageTemplate.data.document.type,"image");
+ assert.equal(imageTemplate.data.document.sha256,sha(png));
+ const fakeRiff=await save(dir,"bad.webp",Buffer.from("RIFFjunkjunk"));
+ const rejected=run(tool,"template",original,fakeRiff,"--document-type","image");
+ assert.equal(rejected.status,2);
+ assert.ok(rejected.data.message.includes("signature"));
 }));
