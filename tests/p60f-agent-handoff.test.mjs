@@ -119,6 +119,60 @@ test("P60 final: reject paired comparison options that cannot be applied without
  assert.match(r.data.message,/--against requires --blueprint/);
  assert.equal(r.data.readyForPublication,false);
 }));
+test("P60 full QA: source-attributed APFC/CAT end-to-end review record, strict publication, integrity and stale refusal",()=>scoped(async dir=>{
+ for(const file of ["source-grounded-apfc-2023.json","source-grounded-cat-2024.json"]){
+  const input=fileURLToPath(new URL("../examples/"+file,import.meta.url));
+  const source=JSON.parse(await readFile(input,"utf8"));
+  const reviewDir=join(dir,source.bankId+"-full-review");
+  const prepared=run(script,"prepare",input,reviewDir,"--allow-create");
+  assert.equal(prepared.status,0,prepared.stderr);
+  const review=JSON.parse(await readFile(join(reviewDir,"review.json"),"utf8"));
+  // These reviewer and evidence declarations are synthetic contract checks,
+  // NOT an independent blind fact check, source fetch or PYQ authentication.
+  review.records=review.records.map((record,i)=>{
+   const q=source.questions[i],math=file.startsWith("source-grounded-cat");
+   return {...record,reviewer:{id:"synthetic-p60-e2e",kind:"ai"},
+    independentSolution:{blindClaim:true,answer:String(q.answer),
+     reasoning:"Synthetic software-acceptance replay of the authored answer. No independent research or blinding occurred."},
+    checks:record.checks.map(check=>({id:check.id,
+     status:check.id==="pyq-fidelity"||check.id==="temporal-correctness"||
+      (check.id==="mathematical-correctness"&&!math)?"not-applicable":"pass",
+     basis:check.id==="candidate-view-integrity"?"rendered-claim":
+      check.id==="factual-correctness"?(math?"mathematical-proof":"source-consulted"):
+      check.id==="mathematical-correctness"&&math?"mathematical-proof":"independent-editorial",
+     rationale:"Synthetic acceptance record only. Editorial and source claims remain unauthenticated."})),
+    evidence:[{publisher:"Synthetic acceptance",title:"Source-grounded example only",
+     locator:q.id,retrievedAt:"2026-11-06",excerpt:"Software regression: source was not independently authenticated."}]};
+  });
+  const reviewFile=await put(dir,source.bankId+"-completed-review.json",review);
+  const assessed=run(script,"assess","single",input,"--quality-review",reviewFile);
+  assert.equal(assessed.status,0,JSON.stringify(assessed.data));
+  assert.equal(assessed.data.readyForPublication,true);
+  assert.equal(assessed.data.externalAuthenticatedReview,false);
+  assert.equal(assessed.data.factualVerification,"not-performed");
+  const destination=join(dir,source.bankId+"-strict.exam.json");
+  const published=run(script,"publish","single",input,destination,
+   "--quality-review",reviewFile,"--allow-create");
+  assert.equal(published.status,0,JSON.stringify(published.data));
+  assert.equal(published.data.writtenFiles[0].file,destination);
+  assert.equal(published.data.writtenFiles[0].sha256,sha(await readFile(destination)));
+  const pkg=validateExamPackage(JSON.parse(await readFile(destination,"utf8")));
+  assert.equal(pkg.questions.length,2);
+  assert.equal(pkg.answerKey.entries.length,2);
+  assert.ok(pkg.questions.every(q=>q.editorial.status==="caution"));
+  const twice=run(script,"publish","single",input,destination,
+   "--quality-review",reviewFile,"--allow-create");
+  assert.notEqual(twice.status,0,"Create-only publication cannot overwrite a verified package");
+  const modified=structuredClone(source);
+  modified.questions[0].answer=modified.questions[0].answer==="A"?"B":"A";
+  const changedInput=await put(dir,source.bankId+"-changed.json",modified);
+  const staleFile=join(dir,source.bankId+"-stale-do-not-write.json");
+  const stale=run(script,"publish","single",changedInput,staleFile,
+   "--quality-review",reviewFile,"--allow-create");
+  assert.notEqual(stale.status,0);
+  await assert.rejects(access(staleFile));
+ }
+}));
 test("P60-F RED: single mode converges source + P60-C into bounded answer-private readiness",()=>scoped(async dir=>{
  const x=await files(dir);
  const result=run(script,"assess","single",x.corrected,"--quality-review",x.reviewFile);
@@ -141,6 +195,7 @@ test("P60-F RED: single mode converges source + P60-C into bounded answer-privat
  const yes=run(script,"publish","single",x.corrected,noOutput,"--quality-review",x.reviewFile,"--allow-create");
  assert.equal(yes.status,0,JSON.stringify(yes.data));
  assert.equal(yes.data.writtenFiles.length,1);
+ assert.equal(yes.data.writtenFiles[0].file,noOutput);
  assert.equal(yes.data.writtenFiles[0].sha256,sha(await readFile(noOutput)));
  const pkg=validateExamPackage(JSON.parse(await readFile(noOutput,"utf8")));
  assert.equal(pkg.questions.length,3);
@@ -164,6 +219,9 @@ test("P60-F RED: paired original/reviewed only publishes with complete SHA-bound
   "--quality-review",x.reviewFile,"--allow-create");
  assert.equal(yes.status,0,JSON.stringify(yes.data));
  assert.equal(yes.data.writtenFiles.length,5);
+ assert.deepEqual(yes.data.writtenFiles.map(x=>x.file).sort(),
+  ["editorial-lineage.json","original-source.json","reviewed-source.json","reviewed.exam.json","source.exam.json"]
+   .map(x=>join(output,x)).sort(),"Published bundle reports usable full output paths");
  assert.equal(await readFile(join(output,"original-source.json"),"utf8"),await readFile(x.original,"utf8"));
  assert.equal(await readFile(join(output,"reviewed-source.json"),"utf8"),await readFile(x.corrected,"utf8"));
  const source=validateExamPackage(JSON.parse(await readFile(join(output,"source.exam.json"),"utf8")));

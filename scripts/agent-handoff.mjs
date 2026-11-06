@@ -203,7 +203,7 @@ async function perform(task){
    (await readdir(stagedOutput)).map(name=>join(stagedOutput,name)).sort();
   if(!stagedFiles.length)throw Error("Canonical publication returned no output files");
   const writtenFiles=await Promise.all(stagedFiles.map(async path=>({
-   file:task.mode==="single"?target:path.slice(stagedOutput.length+1),
+   file:task.mode==="single"?target:join(target,path.slice(stagedOutput.length+1)),
    sha256:await inputHash(path)})));
   if((await Promise.all(allInput.map(inputHash))).some((v,i)=>v!==digests[i]))
    return failure("stale-input-after-publication");

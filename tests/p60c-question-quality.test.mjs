@@ -53,6 +53,18 @@ test("P60-C: all authoring paths block explicit answers hidden in private rich p
  issues=inspectCandidateIntegrity(draft);
  assert.ok(issues.some(x=>x.code==="candidate-answer-leak"&&x.field.startsWith("stimulus.richColumns")));
 });
+test("P60 full QA: explicit choice/answer markers are blocked but legitimate checkmark symbols remain choices",async()=>{
+ const original=JSON.parse(await readFile(apfc,"utf8"));
+ const marked=structuredClone(original);
+ marked.questions[0].options[0]+=" (correct)";
+ assert.ok(inspectExternalQuestionBank(marked).issues.some(x=>x.code==="candidate-answer-leak"));
+ const exposed=structuredClone(original);
+ exposed.questions[0].prompt="Correct choice: B";
+ assert.ok(inspectExternalQuestionBank(exposed).issues.some(x=>x.code==="candidate-answer-leak"));
+ const legitimate=structuredClone(original);
+ legitimate.questions[0].options[0]="A check mark (✓)";
+ assert.ok(!inspectExternalQuestionBank(legitimate).issues.some(x=>x.code==="candidate-answer-leak"));
+});
 test("P60-C RED: explicit answer labels in actual candidate stems fail canonical existing publisher",async()=>{
  const src=JSON.parse(await readFile(apfc,"utf8"));
  src.questions[0].prompt="Which letter is second? Correct answer: B";
