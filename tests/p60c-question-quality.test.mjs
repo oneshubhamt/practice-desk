@@ -138,3 +138,57 @@ test("P60-C RED: malformed, fabricated, duplicate and undisclosed review records
   assert.equal(r.data.readyForPublication,false);
  }
 }));
+
+
+test("P60-C: actual candidate exam renderer with an unpublished answer key never prints solution or editorial key",async()=>{
+ const {compileExternalQuestionBank}=await import("../src/authoring/external-bank.ts");
+ const {startGenericAttempt}=await import("../src/app/exam-package.ts");
+ const {renderModelExam}=await import("../src/app/exam-view.ts");
+ const source=JSON.parse(await readFile(apfc,"utf8"));
+ const pkg=compileExternalQuestionBank(source);
+ const attempt=startGenericAttempt(pkg,"p60c-render-frozen",1000);
+ const html=renderModelExam(attempt,pkg);
+ assert.match(html,/Which letter comes second/);
+ assert.ok(!html.includes("B is second. This placeholder"),"Premature worked solution leaked");
+ assert.ok(!html.includes("Correct answer: B"),"Premature explicit key leaked");
+ assert.ok(!html.includes("not been independently certified"),"Editorial notes leaked before submission");
+});
+
+test("P60-C: referenced image alt text can leak a key without any incorrect answer field",async()=>{
+ const source=JSON.parse(await readFile(cat,"utf8"));
+ const png="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/tAAAAABJRU5ErkJggg==";
+ source.media=[{id:"image-one",dataUri:"data:image/png;base64,"+png,altText:"Correct answer: A"}];
+ source.stimuli.push({id:"picture-question",kind:"image",mediaRef:"image-one",
+  altText:"Diagram used for a question"});
+ source.questions[0].stimulusRef="picture-question";
+ const report=inspectExternalQuestionBank(source);
+ assert.equal(report.valid,false);
+ assert.ok(report.issues.some(x=>x.code==="candidate-answer-leak"&&x.path.includes("media.altText")));
+});
+
+test("P60-C: review templates are intentionally incomplete and do not contain hidden source keys or explanations",()=>temp(async dir=>{
+ const src=JSON.parse(await readFile(apfc,"utf8"));
+ const input=await write(dir,"source.json",src);
+ const r=command(tool,"template",input,"--limit","1");
+ assert.equal(r.status,0,r.stderr);
+ assert.equal(r.data.format,"practice-desk-quality-review");
+ assert.equal(r.data.templateIncomplete,true);
+ assert.equal(r.data.records.length,1);
+ assert.equal(r.data.records[0].checks.length,20);
+ assert.equal(r.data.records[0].independentSolution.blindClaim,false);
+ assert.ok(!r.stdout.includes("B is second. This placeholder"));
+ assert.ok(!r.stdout.includes("data:image/"));
+ const check=command(tool,"audit",input,"--review",await write(dir,"unfinished-review.json",{
+  format:r.data.format,version:r.data.version,bankId:r.data.bankId,
+  sourceSha256:r.data.sourceSha256,records:r.data.records
+ }));
+ assert.equal(check.status,1);
+ assert.equal(check.data.readyForPublication,false);
+}));
+
+test("P60-C: complete keyed answer repeated in question prompt is highlighted as untrusted semantic clue",async()=>{
+ const source=JSON.parse(await readFile(cat,"utf8"));
+ source.questions[0].prompt="A library replaces its catalogue. A library replaces its catalogue. Which statement is correct?";
+ const q=inspectExternalQuestionBank(source);
+ assert.ok(q.issues.some(x=>x.code==="candidate-unintended-clue"&&x.severity==="warning"));
+});
