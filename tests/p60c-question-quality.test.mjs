@@ -227,3 +227,17 @@ test("P60-C: literal check-mark symbol as an answer choice is not falsely blocke
  assert.equal(report.valid,true,JSON.stringify(report.issues));
  assert.ok(!report.issues.some(x=>x.code==="candidate-answer-leak"));
 });
+
+
+test("P60-C: direct named-answer and worked-solution labels are blocked in GK stems, without touching private explanations",async()=>{
+ const base=JSON.parse(await readFile(apfc,"utf8"));
+ const exposed=structuredClone(base);
+ exposed.questions[0].prompt="Which city is India's capital? Correct answer: New Delhi.";
+ const report=inspectExternalQuestionBank(exposed);
+ assert.equal(report.valid,false);
+ assert.ok(report.issues.some(x=>x.code==="candidate-answer-leak"));
+ const privateExplanation=structuredClone(base);
+ privateExplanation.questions[0].explanation="Correct answer: New Delhi. This is a synthetic explanation, not an examination fact claim.";
+ assert.equal(inspectExternalQuestionBank(privateExplanation).valid,true,
+  "Author-only solution text must not be mistaken for candidate-visible leaked hints");
+});
