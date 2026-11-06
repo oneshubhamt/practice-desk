@@ -26,7 +26,7 @@ test("P60-A: source-backed capability catalogue is versioned, unique, nonempty a
  assert.equal(doc.product.embeddedLLM,false);
  assert.equal(doc.product.automaticCloudSync,false);
  assert.equal(doc.product.agentDeviceBridge,false);
- assert.equal(doc.capabilities.length,12);
+ assert.equal(doc.capabilities.length,13);
  const ids=new Set();
  for(const cap of doc.capabilities){
   assert.match(cap.id,/^[a-z0-9-]+$/);
@@ -43,7 +43,7 @@ test("P60-A: source-backed capability catalogue is versioned, unique, nonempty a
    await access(resolve(root,src));
   }
  }
- assert.deepEqual(new Set(doc.plannedProgramme.map(x=>x.id)),new Set(["P60-C","P60-D","P60-E","P60-F"]));
+ assert.deepEqual(new Set(doc.plannedProgramme.map(x=>x.id)),new Set(["P60-D","P60-E","P60-F"]));
  assert.ok(doc.trustBoundaries.some(x=>x.includes("does not authenticate")));
  await access(resolve(root,doc.discovery.lowContextEntry));
  await access(resolve(root,doc.discovery.appGuide));
@@ -55,14 +55,14 @@ test("P60-A: default summary and list are bounded, source-private, machine-reada
  assert.equal(s.status,0,s.stderr);
  assert.equal(s.json.format,"practice-desk-capability-summary");
  assert.equal(s.json.version,1);
- assert.equal(s.json.capabilityCount,12);
+ assert.equal(s.json.capabilityCount,13);
  assert.equal(s.json.product.runtime.includes("offline"),true);
  assert.ok(s.stdout.length<5500,"Summary should not dump whole contract");
  assert.ok(!s.stdout.includes("sourcePaths"),"Summary should not dump source code paths");
  const list=cli("list");
  assert.equal(list.status,0,list.stderr);
  assert.equal(list.json.format,"practice-desk-capability-list");
- assert.equal(list.json.capabilities.length,12);
+ assert.equal(list.json.capabilities.length,13);
  assert.ok(list.stdout.length<7500);
  assert.ok(!list.stdout.includes("sourcePaths"),"List should not dump source references");
  assert.ok(!list.stdout.includes("correctMarks"),"List should not expose paper/answer data");
@@ -77,7 +77,7 @@ test("P60-A: agent can inspect exactly one capability and concrete operation sep
  assert.ok(!f.stdout.includes("Exam source and answer-key integrity maintained"));
  const ops=cli("operations");
  assert.equal(ops.status,0,ops.stderr);
- assert.equal(ops.json.operations.length,8);
+ assert.equal(ops.json.operations.length,12);
  assert.ok(ops.json.operations.every(x=>["read-only","create-new-file"].includes(x.privilege)));
  assert.ok(!ops.stdout.includes("IndexedDB"));
 });
@@ -95,7 +95,7 @@ test("P60-A: documentation truth table excludes claims that later P60 work alrea
  const raw=await readFile(contract,"utf8");
  const contractDoc=JSON.parse(raw);
  const plannedIds=contractDoc.plannedProgramme.map(x=>x.id);
- assert.deepEqual(plannedIds,["P60-C","P60-D","P60-E","P60-F"]);
+ assert.deepEqual(plannedIds,["P60-D","P60-E","P60-F"]);
  assert.ok(contractDoc.capabilities.some(x=>x.id==="editorial-source"&&x.limitations.some(y=>y.includes("P60-D"))));
  assert.ok(contractDoc.capabilities.some(x=>x.id==="rich-media"&&x.limitations.some(y=>y.includes("PDF"))));
  assert.ok(contractDoc.capabilities.some(x=>x.id==="ai-authoring"&&x.limitations.some(y=>y.includes("authenticate"))));
