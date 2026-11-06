@@ -88,7 +88,7 @@ test("P60-D RED: source-preserving paired publication uses existing scorer/revie
  const packets=run(qualityTool,"candidate",reviewedPath,"--limit","10");
  const reviewPath=await file(dir,"review.json",reviewFor(reviewed,packets.data));
  const preview=run(tool,"audit",originalPath,reviewedPath,decisionsPath,"--quality-review",reviewPath);
- assert.equal(preview.status,0,preview.stderr);
+ assert.equal(preview.status,0,JSON.stringify(preview.data));
  assert.equal(preview.data.readyForPublication,true);
  assert.equal(preview.data.sourceKeyComparison.comparable,2);
  assert.equal(preview.data.sourceKeyComparison.total,3);
@@ -158,7 +158,7 @@ test("P60-D RED: missing or stale decisions, undeclared corrections and invented
  const stale=fillDecisions(t.data);stale.originalSha256="0".repeat(64);
  const bad=run(tool,"audit",originalPath,reviewedPath,await file(dir,"stale.json",stale));
  assert.equal(bad.status,1);
- assert.ok(bad.data.issues.items.some(x=>x.code==="stale-decisions"));
+ assert.ok(bad.data.issues?.items?.some(x=>x.code==="stale-decisions"),JSON.stringify(bad.data));
  const official=structuredClone(reviewed);
  official.questions[0].provenance.kind="official-pyq";
  const officiallyAlteredPath=await file(dir,"official.json",official);
