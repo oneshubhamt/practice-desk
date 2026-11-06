@@ -198,7 +198,7 @@ test("P60-C: review templates are intentionally incomplete and do not contain hi
  const r=command(tool,"template",input,"--limit","1");
  assert.equal(r.status,0,r.stderr);
  assert.equal(r.data.format,"practice-desk-quality-review");
- assert.equal(r.data.templateIncomplete,true);
+ assert.equal("templateIncomplete" in r.data,false,"Fillable review must match exact v1 schema");
  assert.equal(r.data.records.length,1);
  assert.equal(r.data.records[0].checks.length,20);
  assert.equal(r.data.records[0].independentSolution.blindClaim,false);
