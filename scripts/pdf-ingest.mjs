@@ -65,7 +65,10 @@ async function sourceBytes(path,type){
  return {byteLength:bytes.length,sha256:digest(bytes)};
 }
 const sourceParts=v=>({stimuli:v.stimuli??[],media:v.media??[],questions:v.questions??[]});
-const hasMath=q=>/\\\\(?:frac|sqrt|sum|int|begin|\(|\[)|\\u0024[^\\u0024]+\\u0024|"type"\s*:\s*"math"/u.test(JSON.stringify(q));
+const hasMath=q=>{
+ const s=JSON.stringify(q);
+ return s.includes('"type":"math"')||/(?:\\\\[A-Za-z]+|\\\\\\(|\\\\\\[|\\$[^\\$]+\\$)/u.test(s);
+};
 export function buildPdfIntakeTemplate(original,raw,document,bytes,keyDocument=null,keyBytes=null){
  toAuthoringDraft(original);
  const parts=sourceParts(original);
@@ -81,10 +84,10 @@ export function buildPdfIntakeTemplate(original,raw,document,bytes,keyDocument=n
   original:{sourceSha256:digest(raw),bankId:original.bankId,questionCount:parts.questions.length,
    expectedPrintedCount:parts.questions.length,omissions:[]},
   questions:parts.questions.map(q=>({...item(q),printedNumber:"",
-   keyOrigin:"unavailable",keyPages:[],mathStatus:hasMath(q)?"unchecked":"not-applicable"})),
+   keyOrigin:"unavailable",keyPages:[],mathStatus:hasMath(q)?"unchecked":"not-applicable",\n   explanationOrigin:"unverified"})),
   stimuli:parts.stimuli.map(s=>item(s)),
   media:parts.media.map(m=>({...item(m),visualStatus:"unchecked"})),
-  documentInventoryStatus:"unchecked",externalVerification:"not-performed",
+  documentInventoryStatus:"unchecked",externalVerification:"not-performed",\n  inspector:{kind:"agent",id:"REPLACE_INSPECTOR",method:"REPLACE SOURCE COMPARISON METHOD",reviewedAt:"2026-11-06"},
   note:"Template is incomplete. SHA proves byte identity only. Never fill missing questions/keys by invention."};
 }
 export function auditPdfIntake(manifest,original,raw,documentBytes,{keyBytes=null,pair=null,blueprint=null}={}){
@@ -122,6 +125,12 @@ export function auditPdfIntake(manifest,original,raw,documentBytes,{keyBytes=nul
  if(src.omissions.length)add("unresolved-omissions","Some printed questions have no recoverable transcription");
  if(manifest.documentInventoryStatus!=="checked-against-source")
   add("document-inventory-unchecked","Document/page/numbering completeness has not been source-compared");
+ const inspector=obj(manifest.inspector,"inspector",["kind","id","method","reviewedAt"]);
+ if(!["human","agent"].includes(inspector.kind))add("inspector-kind-invalid","Name the type of source comparer");
+ string(inspector.id,"inspector.id",120);string(inspector.method,"inspector.method",500);
+ if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(inspector.reviewedAt)||
+    new Date(inspector.reviewedAt+"T00:00:00Z").toISOString().slice(0,10)!==inspector.reviewedAt)
+  add("inspector-date-invalid","Use actual source inspection ISO date");
  if(manifest.externalVerification!=="recorded-agent-check"&&
     manifest.externalVerification!=="recorded-human-check")
   add("transcription-unverified","Record who actually compared transcription against the supplied document");
@@ -137,7 +146,7 @@ export function auditPdfIntake(manifest,original,raw,documentBytes,{keyBytes=nul
   const byId=new Map(),seen=new Set();
   for(const entry of entries){
    obj(entry,field+" entry",field==="questions"?
-    ["id","sha256","pages","status","uncertainties","notes","printedNumber","keyOrigin","keyPages","mathStatus"]:
+    ["id","sha256","pages","status","uncertainties","notes","printedNumber","keyOrigin","keyPages","mathStatus","explanationOrigin"]:
     field==="media"?["id","sha256","pages","status","uncertainties","notes","visualStatus"]:
     ["id","sha256","pages","status","uncertainties","notes"]);
    if(!ID.test(entry.id)||seen.has(entry.id))add("duplicate-or-invalid-item",field+" has duplicate/invalid ID");
@@ -268,7 +277,7 @@ async function main(){
    process.stdout.write(JSON.stringify({...report,compiled:false},null,2)+"\n");process.exitCode=1;return;
   }
   const script=fileURLToPath(new URL("./editorial-editions.mjs",import.meta.url));
-  const result=spawnSync(process.execPath,[script,"compile",args[2-1],args[3],args[4],args[5],
+  const result=spawnSync(process.execPath,[script,"compile",args[1],args[3],args[4],args[5],
    "--quality-review",opts["--quality-review"]],{encoding:"utf8",maxBuffer:1024*1024});
   if(result.status!==0)throw Error("Canonical P60-D compilation failed: "+(result.stderr||result.stdout).slice(0,1500));
   await writeFile(join(resolve(args[5]),"pdf-intake-provenance.json"),
