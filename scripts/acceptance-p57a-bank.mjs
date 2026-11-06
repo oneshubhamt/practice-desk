@@ -220,7 +220,7 @@ try{
    buffer:Buffer.from(JSON.stringify(bundle))});
   await page.waitForFunction(id=>document.querySelector("#g-papers")?.value===id,bundle.paper.id);
  };
- await page.locator("#g-library").click();await route(page,"library");
+ await route(page,"library"); // Already in Library after Wordgard publish; #g-library exists only on other screens.
  await importEdition(sourceEdition,"p60d-original.exam.json");
  await importEdition(reviewedEdition,"p60d-reviewed.exam.json");
  check(await page.locator('#g-edition [data-edition="source"]').count()===1&&
