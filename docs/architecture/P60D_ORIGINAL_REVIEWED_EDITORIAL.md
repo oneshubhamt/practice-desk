@@ -1,6 +1,6 @@
 # P60-D — generalized original/reviewed editorial system
 
-**Branch:** `Satyam`. **Authorization:** user approved P60-D after verified P60-C (6 November 2026). **Implementation state:** source under test; do not claim complete until exact-source five-job CI passes. **Authority:** [P60 target architecture](P60_AI_NATIVE_CAPABILITY_PROGRAMME.md), [P60-C content-review protocol](P60C_QUESTION_QUALITY_ASSURANCE.md). P60-E PDF extraction and P60-F agent/app bridging are **not implemented by this pass**.
+**Branch:** `Satyam`. **Authorization:** user approved P60-D after verified P60-C (6 November 2026). **Implementation state:** source/QA **CLOSED** for automated scope, [5/5 exact-source CI 42179668770](https://github.com/oneshubhamt/practice-desk/actions/runs/42179668770) on `dd10979c211717583ba87eb2a9715b32738e278a` (412/412 Node, strict TS, offline Chromium/Firefox/WebKit, guarded publisher). HTML SHA-256 `1900846adda793e224c3e63ef2fbec6bafdd0b3b2acd3ecc89d5d6a3bbdc541e` unchanged; external factual/PYQ/device/human release remains HOLD. **Authority:** [P60 target architecture](P60_AI_NATIVE_CAPABILITY_PROGRAMME.md), [P60-C content-review protocol](P60C_QUESTION_QUALITY_ASSURANCE.md). P60-E PDF extraction and P60-F agent/app bridging are **not implemented by this pass**.
 
 ## Objective
 
@@ -63,3 +63,7 @@ node scripts/editorial-editions.mjs compile original.json reviewed.json decision
 5. **Exact SHA CI:** strict TypeScript, all Node tests, deterministic offline HTML, Chromium/Firefox/Linux WebKit, guarded HTML publisher; then independently recheck changed source and document test/sha/holds. **Do not claim completed before evidence.** CGL Q62, prior frozen history, original key, academic content truth and human release approval are non-regression boundaries.
 
 **Next stage P60-E:** AI reading PDFs and producing faithful source + reviewed banks using this system; not part of P60-D.
+
+## Completion evidence
+
+The [independent P60-D source crosswalk](../audits/P60D_ORIGINAL_REVIEWED_SOURCE_CROSSWALK_2026-11-06.md) maps every target invariant to current source and tests. [GitHub Actions run 42179668770](https://github.com/oneshubhamt/practice-desk/actions/runs/42179668770) passed **all five jobs**, with **412/412 Node tests** and actual Source→Reviewed offline browser import in all three engines; guarded publisher verified no HTML change was needed. Source SHA: `dd10979c211717583ba87eb2a9715b32738e278a`. The stage is complete for automated software, **not** for authentic-source content verification, physical-device testing, human editorial/visual approval or release. P60-E/F have not been implemented.
