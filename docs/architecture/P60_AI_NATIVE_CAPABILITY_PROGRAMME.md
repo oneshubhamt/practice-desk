@@ -1,6 +1,6 @@
 # P60 — AI-native Practice Desk capability, content integrity and agent interaction programme
 
-**Authority:** User-approved target capability, 6 November 2026. **Branch:** `Satyam`. **Implementation status:** P60-A applicable CI green (publisher skipped on Satyam); P60-B source implementation underway with exact-head CI pending; P60-C–F proposed, **not implemented or authorized as completed**. The existing P57–P59 software is the baseline, not a substitute for the new P60 acceptance gates. This document describes both the target and its boundaries; a passing import or CI run does not establish content truthfulness.
+**Authority:** User-approved target capability, 6 November 2026. **Branch:** `Satyam`. **Implementation status:** P60-A applicable CI green (publisher skipped on Satyam); P60-B bounded automated implementation verified by applicable [CI 42159449898](https://github.com/oneshubhamt/practice-desk/actions/runs/42159449898) (392 Node and Chromium/Firefox/WebKit; publisher skipped on Satyam); P60-C–F proposed, **not implemented or authorized as completed**. The existing P57–P59 software is the baseline, not a substitute for the new P60 acceptance gates. This document describes both the target and its boundaries; a passing import or CI run does not establish content truthfulness.
 
 ## 1. Product objective and design constraints
 
@@ -114,7 +114,7 @@ Measure existing P59 vs improved workflows on matched tasks: model-input/output 
 | **P60-E** | External AI PDF ingest protocol, originals, review, traceable structured export | Mixed PDF page, figure, mathematics and disputed key represented with uncertainty, without silent transcription change |
 | **P60-F** | Cohesive agent integration + full independently measured QA | End-to-end new/PYQ generation→review→import→score→Learn, small agent context, regression-free offline |
 
-P60-A groundwork does **not** mean P60-B–F are done; at most the P60-A contract/guide/discovery and their tests can be marked complete once exact-source checks finish. Later work requires explicit stage authorization.
+P60-A and P60-B have been separately authorized and verified for their defined applicable automated scopes. This does **not** establish P60-C–F completion, factual correctness, hardware acceptance or release permission. Later stages require explicit authorization.
 
 ## 9. Engineering discipline (binding, same as existing programme)
 
