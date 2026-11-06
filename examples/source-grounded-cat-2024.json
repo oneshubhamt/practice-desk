@@ -1,0 +1,102 @@
+{
+  "format": "practice-desk-authoring",
+  "version": 1,
+  "bankId": "cat-2024-source-grounded-qa",
+  "examId": "cat",
+  "paperId": "cat-2024-source-grounded-qa",
+  "title": "CAT 2024 Slot 1 QA reconstructions — sourced, not official transcriptions",
+  "edition": "custom",
+  "revision": 1,
+  "scoring": {
+    "correctMarks": 3,
+    "incorrectMarks": -1
+  },
+  "timing": {
+    "kind": "whole-paper",
+    "minutes": 40,
+    "pausePolicy": "forbidden"
+  },
+  "navigation": {
+    "questionNavigation": "free",
+    "sectionNavigation": "free",
+    "allowReview": true
+  },
+  "sections": [
+    {
+      "id": "qa",
+      "title": "Quantitative Ability"
+    }
+  ],
+  "questions": [
+    {
+      "id": "cat-2024-slot1-q47",
+      "examSection": "qa",
+      "subject": "Quantitative Ability",
+      "topic": "Combinatorics",
+      "subtopic": "Surjective functions",
+      "difficulty": "hard",
+      "kind": "single-choice",
+      "prompt": "How many onto functions exist from a set of six distinct elements to a set of three distinct elements?",
+      "options": [
+        "665",
+        "667",
+        "537",
+        "540"
+      ],
+      "answer": "D",
+      "explanation": "Use inclusion-exclusion. Total functions: 3^6 = 729. Subtract mappings omitting one of three codomain values: 3 x 2^6 = 192. Restore the three constant mappings removed twice: 3 x 1^6 = 3. Thus 729 - 192 + 3 = 540; the other choices are inconsistent with surjectivity.",
+      "provenance": {
+        "kind": "reconstruction",
+        "examYear": 2024,
+        "sourceNote": "Concept-preserving paraphrase of CAT 2024 Slot 1 QA Q47 published by Cracku; no independent official response-sheet authentication.",
+        "sources": [
+          {
+            "publisher": "Cracku",
+            "title": "CAT 2024 Slot 1 Quant Question Paper",
+            "url": "https://cracku.in/cat-2024-slot-1-quant-question-paper-solved",
+            "section": "Q47",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "unchecked"
+      }
+    },
+    {
+      "id": "cat-2024-slot1-q52",
+      "examSection": "qa",
+      "subject": "Quantitative Ability",
+      "topic": "Number theory",
+      "subtopic": "Modular arithmetic",
+      "difficulty": "medium",
+      "kind": "single-choice",
+      "prompt": "Determine the remainder when 10 raised to the power 100 is divided by 7.",
+      "options": [
+        "3",
+        "4",
+        "1",
+        "6"
+      ],
+      "answer": "B",
+      "explanation": "Since 10 is congruent to 3 modulo 7, and 3^6 is congruent to 1 modulo 7, reduce 100 modulo 6 to obtain 4. Then 3^4 = 81 is congruent to 4 modulo 7. Therefore B (4) is correct; 3, 1 and 6 do not equal the remainder.",
+      "provenance": {
+        "kind": "reconstruction",
+        "examYear": 2024,
+        "sourceNote": "Concept-preserving paraphrase of CAT 2024 Slot 1 QA Q52 published by Cracku; not authenticated to an official CAT response sheet.",
+        "sources": [
+          {
+            "publisher": "Cracku",
+            "title": "CAT 2024 Slot 1 Quant Question Paper",
+            "url": "https://cracku.in/cat-2024-slot-1-quant-question-paper-solved",
+            "section": "Q52",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "unchecked"
+      }
+    }
+  ]
+}
