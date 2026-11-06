@@ -84,10 +84,12 @@ export function buildPdfIntakeTemplate(original,raw,document,bytes,keyDocument=n
   original:{sourceSha256:digest(raw),bankId:original.bankId,questionCount:parts.questions.length,
    expectedPrintedCount:parts.questions.length,omissions:[]},
   questions:parts.questions.map(q=>({...item(q),printedNumber:"",
-   keyOrigin:"unavailable",keyPages:[],mathStatus:hasMath(q)?"unchecked":"not-applicable",\n   explanationOrigin:"unverified"})),
+   keyOrigin:"unavailable",keyPages:[],mathStatus:hasMath(q)?"unchecked":"not-applicable",
+   explanationOrigin:"unverified"})),
   stimuli:parts.stimuli.map(s=>item(s)),
   media:parts.media.map(m=>({...item(m),visualStatus:"unchecked"})),
-  documentInventoryStatus:"unchecked",externalVerification:"not-performed",\n  inspector:{kind:"agent",id:"REPLACE_INSPECTOR",method:"REPLACE SOURCE COMPARISON METHOD",reviewedAt:"2026-11-06"},
+  documentInventoryStatus:"unchecked",externalVerification:"not-performed",
+  inspector:{kind:"agent",id:"REPLACE_INSPECTOR",method:"REPLACE SOURCE COMPARISON METHOD",reviewedAt:"2026-11-06"},
   note:"Template is incomplete. SHA proves byte identity only. Never fill missing questions/keys by invention."};
 }
 export function auditPdfIntake(manifest,original,raw,documentBytes,{keyBytes=null,pair=null,blueprint=null}={}){
@@ -128,7 +130,7 @@ export function auditPdfIntake(manifest,original,raw,documentBytes,{keyBytes=nul
  const inspector=obj(manifest.inspector,"inspector",["kind","id","method","reviewedAt"]);
  if(!["human","agent"].includes(inspector.kind))add("inspector-kind-invalid","Name the type of source comparer");
  string(inspector.id,"inspector.id",120);string(inspector.method,"inspector.method",500);
- if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(inspector.reviewedAt)||
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(inspector.reviewedAt)||
     new Date(inspector.reviewedAt+"T00:00:00Z").toISOString().slice(0,10)!==inspector.reviewedAt)
   add("inspector-date-invalid","Use actual source inspection ISO date");
  if(manifest.externalVerification!=="recorded-agent-check"&&
@@ -189,8 +191,14 @@ export function auditPdfIntake(manifest,original,raw,documentBytes,{keyBytes=nul
     if(!["not-applicable","source-compared"].includes(entry.mathStatus)||
       (hasMath(value)&&entry.mathStatus!=="source-compared"))
      add("math-not-reviewed","Equations/TeX require visual character-by-character comparison",value.id);
-    if(!value.provenance?.sourceNote||value.provenance.sourceNote.trim().length<12)
+    const sourceNote=value.provenance?.sourceNote;
+    if(!sourceNote||sourceNote.trim().length<12)
      add("source-note-required","Frozen question must carry a meaningful document/page provenance note",value.id);
+    else if(!entry.pages.some(p=>sourceNote.toLowerCase().includes("page "+p)||
+       sourceNote.toLowerCase().includes("p. "+p)))
+     add("source-note-page-mismatch","Frozen question note must cite one of the recorded source pages",value.id);
+    if(!["printed-source","editorial-not-in-source"].includes(entry.explanationOrigin))
+     add("explanation-origin-unresolved","Distinguish printed explanations from editorial additions",value.id);
     if(value.provenance?.kind==="official-pyq"&&!manifest.document.publisherClaim)
      add("official-origin-not-substantiated","Claimed PYQ has no attributed publisher; claim is not proof",value.id);
    }
