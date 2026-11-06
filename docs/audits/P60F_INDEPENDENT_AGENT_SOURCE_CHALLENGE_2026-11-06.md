@@ -1,0 +1,49 @@
+# P60-F — independent agent integration source audit and evidence ledger
+
+**Date/branch:** 6 November 2026 / `Satyam`. **Authorized:** full bounded P60-F, not release/merge or external device access. **Baseline:** latest prior P60-E documentation commit `8067799a80c4b03afceb032776bf0d9d13cd05c8`; known verified P60-E software SHA `36f8b993f751687e1b4d176690cc7f18dd2093e7` [5/5 CI 42188234511](https://github.com/oneshubhamt/practice-desk/actions/runs/42188234511). **Final exact-source P60-F CI acceptance:** pending final run after documentation reconciliation, not inferred from previous CI.
+
+## Step 1: directly inspected source, alternatives, and uncovered gap
+
+- `src/authoring/external-bank.ts`, `src/app/bank-import.ts` and `scripts/question-bank-cli.mjs`: already have strict v1 source, deterministic QA, canonical compile, rich content and immutable source key; **must not replace**.
+- `scripts/question-bank-agent.mjs`: already supplies P59 SHA-guarded inspect/show/patch with paged issues. `scripts/practice-desk-capabilities.mjs`: read-only discoverable feature catalogue, but it previously contained a stale hardcoded future-stage warning.
+- `scripts/content-blueprint.mjs`: P60-B exact plan; `scripts/question-quality.mjs`: P60-C answer-hidden independent-review sidecars; `scripts/editorial-editions.mjs`: P60-D source/reviewed correction decisions, conservative source-key scoring and exclusive output; `scripts/pdf-ingest.mjs`: P60-E PDF/page original-source checks. All already work independently.
+- `src/engine/source-comparison.ts`, `src/engine/review-source.ts`, `src/app/exam-families.ts`, `src/app/library-controller.ts`, `src/app/learning-ui.ts`, `src/history/backup.ts`, `src/app/persistence-controller.ts`: existing frozen score/source/FSRS, explicit user import and offline local state. No new agent History access needed.
+- `scripts/acceptance-p57a-bank.mjs`, `scripts/acceptance-learning-lifecycle.mjs`, `scripts/acceptance-editorial-provenance.mjs`, `.github/workflows/ci.yml`: actual offline runtime regression and guarded HTML publisher; neither PDF parsing nor untrusted remote agent operation is present.
+- **Actual integration gap:** one source-bound, permission-explicit QA-to-publication handoff rather than user/agent manually stitching many CLI calls. A server/websocket/device connector or new question schema would add permissions/context and violate offline rules; selected a thin Node-only wrapper that delegates all canonical work.
+
+## Step 2: P60-F contract and negative acceptance oracles
+
+| ID | Verified software contract | Negative/assertion basis |
+| --- | --- | --- |
+| F-01 | Low-context `actions` returns 3 modes, 2 actual operations, version/privileges and no answer/source/media | `tests/p60f-agent-handoff.test.mjs`: bounded discovery/no History/device |
+| F-02 | Strict P60-C source-bound reviewer required in **every** `assess` and `publish` | Missing/stale review, unsupported flags, unauthorized output are blocked |
+| F-03 | Single AI bank produces exact canonical signed package without overwrites | Compiled package `validateExamPackage`, SHA return, caution not verified |
+| F-04 | Original/reviewed separate source keys, archives and conservative comparability | Synthetic changed key B→A with explanation: one unavailable original-key comparison; original-source exact byte check |
+| F-05 | PDF source/printed key/page and uncertainty cannot be bypassed | Original source-bound manifest, no-key mutation, extra `pdf-intake-provenance.json`; no self-certified OCR claims |
+| F-06 | Explicit create-only permission; no direct local browser/history authority | `--allow-create` mandatory; read-only assessor rejects create flag; OS permission remains binding |
+| F-07 | Optional exact blueprint and no fabricated distribution | Unmet quota/invalid plan blocks; tagged subject and difficulty still author claims |
+| F-08 | No candidate answer leakage or self-verified fact promotion | Bounded issue code/path only, `externalAuthenticatedReview:false`, `factualVerification:not-performed`, no returned explanations |
+| F-09 | Real offline Source/Reviewed and Learning student journey | `scripts/acceptance-p57a-bank.mjs` extended to use **actual external P60-F CLI** then import signed files, score reviewed, create card and explicitly grade FSRS/reload in Chromium/Firefox/WebKit |
+| F-10 | Matched workflow measurements and independent **limited** oracle | `scripts/benchmark-p60f-agent.mjs` + test: APFC/CAT, 3 repeats; 5/5 elementary source-answer checks; false second-letter key detected, not an authentic PYQ oracle |
+| F-11 | Nonregression and no new runtime permissions | Code diff should touch only P60-F Node scripts/tests, existing browser acceptance script and source-backed docs; built HTML SHA should be unchanged |
+| F-12 | No direct `inspect-performance` or agent device control | Unsupported operation explicitly rejected; no IndexedDB, backup, OS account, network or token authentication |
+
+## Step 3: implemented source boundaries
+
+New `scripts/agent-handoff.mjs`: `actions` discovery, `assess` read-only, `publish` with explicit `--allow-create`; modes `single` (P57+P60-C optional B), `paired` (P60-D+C optional B), `pdf` (P60-E+D+C optional B). Uses allowlisted command argument arrays; bounded 12-code diagnostics and compact SHA/conservative-comparison metadata, never raw question/key/passage/figure dumps. Input files hashed before and after publication, canonical create-exclusive paths. **It does not independently solve any question** or certify source claims. New `scripts/benchmark-p60f-agent.mjs` measures on actual Node runners, never guesses LLM token cost.
+
+Modified the **existing** `scripts/acceptance-p57a-bank.mjs` for browser integration rather than adding a parallel UI. It now generates a synthetic P60-C reviewed record and P60-D decisions, uses the actual external handoff to publish to a fresh directory, imports separately through normal Library, scores, reviews, creates a Learning card, rates FSRS only after explicit reveal and confirms frozen source, marks and card through reload. No scorer or UI engine change.
+
+Source-backed `practice-desk-capabilities.v1.json` and tests add one P60-F capability and two real operations, remove P60-F from `plannedProgramme`, correct discovery's previously obsolete warning. No model-specific HTTP API, account connection, in-browser auto-import or permission escalation.
+
+## Step 4: measured results (source-level facts, not general quality claims)
+
+**First available green source/Node stage** [CI 42191458543](https://github.com/oneshubhamt/practice-desk/actions/runs/42191458543), source `536e4f9c8025dd9bf972b134815223982199d655`: **426/426 Node tests**, TypeScript, deterministic HTML SHA-256 `1900846adda793e224c3e63ef2fbec6bafdd0b3b2acd3ecc89d5d6a3bbdc541e`; it was superseded/cancelled before all browsers completed by later source commits. This is **not a full successful CI claim**. Browser and final docs/contract commit must be verified independently.
+
+Matched **APFC** baseline 3 local agent-visible calls vs P60-F 1, median reported wall time **861 ms vs 374 ms**, emitted JSON **6,373 vs 960 bytes**. Matched **CAT** baseline 3 vs 1, median **890 ms vs 369 ms**, JSON **6,350 vs 960 bytes**. Environment: GitHub Actions Ubuntu/Node24 runner, **three samples per fixture**; real child-process elapsed/wall times, not model generation latency or controlled cross-machine speedups. Same source bank and synthetic review file on both paths. Five simple synthetic answers independently checked from source text/table arithmetic, parity, ordinals and 7-day week (5/5). Deliberately wrong alphabet answer detected by independent oracle (2/3 APFC fixture answers correct after tamper), illustrating that an AI-signed P60-C record can be **wrong despite passing structural checks**. CAT RC semantic answer, APFC legal facts (sample is placeholder), genuine official PYQs, source reliability, candidate difficulty, human/AI reviewer independence, authentic-source accuracy, source retrieval, model token counts, correction workload, actual student learning improvement and true end-to-end agent research effort are **NOT MEASURED**. This explicitly limits the observed benefit to workflow friction and software regression, **not educational quality**.
+
+## Step 5: required full acceptance / external hold
+
+Before automated software closure, verify one exact source commit and **all five jobs**: strict TS, all Node, deterministic HTML hash, offline Chromium, Firefox, WebKit, guarded source-verified publisher. Recheck actual diff since baseline, `Satyam` only, and no modifications to SSC CGL Q62 original/reviewed content, source-comparison, scoring, frozen attempts, History, FSRS, Wordgard, backup or generated runtime. Resolve new browser journey defects from live CI rather than claiming old P57/P60-D checks suffice.
+
+**External HOLD (cannot be concluded from automated suites):** actual official-source/PYQ PDF transcription and key accuracy, fact and statutory currentness checking with primary sources, examiner/distractor quality on real content, genuine independent blind reviewers, user/agent token costs, learner outcomes, physical macOS Safari/iOS/Android/AT/IME/OS eviction, manual visual acceptance, any merge/distribution or direct device connector. No user consent for those actions is inferred.
