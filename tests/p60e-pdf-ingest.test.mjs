@@ -100,7 +100,7 @@ test("P60-E extracted mixed page, shared passage/table, TeX and embedded figure 
  assert.equal(r.readyForPublication,false,"No reviewed P60-C/D gate supplied");
  assert.equal(r.stage,"transcription-only");
  assert.equal(r.questionCount,4);
- assert.equal(r.sourceElementsChecked,7);
+ assert.equal(r.sourceElementsChecked,8);
  assert.equal(r.factualVerification,"not-performed");
  assert.equal(r.actualPdfTextComparison,"not-performed-by-software");
  assert.ok(!JSON.stringify(r).includes("data:image"));
