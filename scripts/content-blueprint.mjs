@@ -5,7 +5,10 @@
  */
 import {readFile} from "node:fs/promises";
 import {createHash} from "node:crypto";
-import {inspectExternalQuestionBank,toAuthoringDraft} from "../src/authoring/external-bank.ts";
+import {isDeepStrictEqual} from "node:util";
+import {fileURLToPath} from "node:url";
+import {resolve} from "node:path";
+import {inspectExternalQuestionBank} from "../src/authoring/external-bank.ts";
 import {publicationPlainText} from "../src/authoring/authoring-publisher.ts";
 import {syllabusHeading} from "../src/learning/syllabus-taxonomy.ts";
 
@@ -50,7 +53,6 @@ const sourceKey=(q)=>q.syllabusHeadingId?"heading:"+q.syllabusHeadingId:
 const topicKey=(s,t)=>JSON.stringify([s,t]);
 const subtopicKey=(s,t,u)=>JSON.stringify([s,t,u]);
 const normalize=(x)=>typeof x==="string"?x.normalize("NFKC").toLocaleLowerCase("en").replace(/[^\p{L}\p{N}]+/gu," ").trim().replace(/\s+/g," "):"";
-const stable=(x)=>JSON.stringify(x,Object.keys(x).sort());
 async function load(path,max,label){
  const raw=await readFile(path,"utf8");
  if(Buffer.byteLength(raw)>max)fail(label+" exceeds byte limit "+max);
@@ -129,6 +131,27 @@ function validateBlueprint(value){
   if(exhaustive&&total!==b.targetCount)fail(group+" exhaustive quotas must sum to targetCount");
  }
  if(r.requireSubtopic&&!r.requireTopic)fail("requireSubtopic requires requireTopic");
+ // Parent quota cannot be smaller than one of its child allocations.
+ const mapped=g=>new Map((quotas[g]?.targets??[]).map(x=>[g==="topics"?topicKey(x.subjectKey,x.topic):
+  g==="subtopics"?subtopicKey(x.subjectKey,x.topic,x.subtopic):x.key,x.count]));
+ const roots=mapped("subjects"),topics=mapped("topics");
+ for(const x of quotas.topics?.targets??[]){
+  if(roots.has(x.subjectKey)&&x.count>roots.get(x.subjectKey))
+   fail("Topic quota exceeds its parent subject quota: "+x.topic);
+  if(quotas.subjects?.exhaustive&&!roots.has(x.subjectKey))
+   fail("Topic quota references an unallocated exhaustive subject: "+x.subjectKey);
+ }
+ for(const x of quotas.subtopics?.targets??[]){
+  const parent=topicKey(x.subjectKey,x.topic);
+  if(roots.has(x.subjectKey)&&x.count>roots.get(x.subjectKey))
+   fail("Subtopic quota exceeds subject quota: "+x.subtopic);
+  if(topics.has(parent)&&x.count>topics.get(parent))
+   fail("Subtopic quota exceeds its parent topic quota: "+x.subtopic);
+  if(quotas.subjects?.exhaustive&&!roots.has(x.subjectKey))
+   fail("Subtopic quota references an unallocated exhaustive subject: "+x.subjectKey);
+  if(quotas.topics?.exhaustive&&!topics.has(parent))
+   fail("Subtopic quota references an unallocated exhaustive topic: "+x.topic);
+ }
  return b;
 }
 function audit(plan,sources,tagDoc){
@@ -144,10 +167,10 @@ function audit(plan,sources,tagDoc){
   bankIds.add(bankId);
   if(source.examId!==plan.examId||source.paperId!==plan.paperId||source.revision!==plan.revision)
    add("paper-mismatch","Paper examId/paperId/revision does not match blueprint",at);
-  if(JSON.stringify(source.scoring)!==JSON.stringify(head.scoring)||
-    JSON.stringify(source.timing)!==JSON.stringify(head.timing)||
-    JSON.stringify(source.navigation)!==JSON.stringify(head.navigation)||
-    JSON.stringify(source.sections)!==JSON.stringify(head.sections))
+  if(!isDeepStrictEqual(source.scoring,head.scoring)||
+    !isDeepStrictEqual(source.timing,head.timing)||
+    !isDeepStrictEqual(source.navigation,head.navigation)||
+    !isDeepStrictEqual(source.sections,head.sections))
    add("paper-rules-mismatch","Batches have different scoring/timing/navigation/physical sections",at);
   const check=inspectExternalQuestionBank(source);
   if(!check.valid)add("source-invalid","Canonical P57/P59 source QA failed for "+bankId,at);
@@ -257,12 +280,17 @@ function audit(plan,sources,tagDoc){
  }
  const issueCount=issues.length;
  const countsByGroup=Object.fromEntries(GROUPS.map(g=>[g,counts[g].size]));
+ const observed=Object.fromEntries(GROUPS.map(g=>{
+  const sorted=[...counts[g].entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
+  return [g,{totalCategories:sorted.length,shown:sorted.slice(0,12).map(([key,count])=>({key,count})),
+   remainingCategories:Math.max(0,sorted.length-12)}];
+ }));
  return {format:"practice-desk-blueprint-audit",version:1,valid:issueCount===0,
   readyForPublication:issueCount===0,partialDeliveryAllowed:plan.allowPartial===true,
   blueprintId:plan.id,examId:plan.examId,paperId:plan.paperId,revision:plan.revision,
   requestedCount:plan.targetCount,actualCount,sourceCount:sources.length,sourceHashes,
   factualVerification:"not-performed",cognitiveVerification:tagDoc?"author-attributed-not-independently-verified":"not-performed",
-  coverage,categoryCardinality:countsByGroup,answerPositionCounts:answerPositions,batches,
+  coverage,observed,categoryCardinality:countsByGroup,answerPositionCounts:answerPositions,batches,
   issues:{offset:0,limit:12,total:issueCount,remaining:Math.max(0,issueCount-12),items:issues.slice(0,12)}};
 }
 function limitIssues(report,limit){
@@ -312,4 +340,7 @@ async function main(){
  emit(result);
  if(!result.valid)process.exitCode=1;
 }
-try{await main();}catch(e){failure(e instanceof Error?e.message:"Unknown failure");}
+export {validateBlueprint,audit as auditBlueprint};
+if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
+ try{await main();}catch(e){failure(e instanceof Error?e.message:"Unknown failure");}
+}
