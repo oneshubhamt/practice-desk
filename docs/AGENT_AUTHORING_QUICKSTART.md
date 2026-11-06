@@ -1,5 +1,10 @@
 # Practice Desk — 1-page AI question-bank agent quickstart
 
+## App functionality without reading its source
+
+Practice Desk is an **offline examination, scoring, results, history and spaced-revision application**, not simply a JSON importer. To discover **current supported capabilities**, run `node scripts/practice-desk-capabilities.mjs summary` and, only for a relevant task, `list`, `show <capability-id>` or `operations`. The [compact AI application guide](AI_APPLICATION_GUIDE.md) explains how authoring, exams, analytics and learning work together; the [versioned machine contract](contracts/practice-desk-capabilities.v1.json) distinguishes implemented features from planned P60 improvements. These read-only commands do **not** connect an agent to the user's offline browser/History. For ordinary question creation, continue below with this quickstart and one exam example. Do not load all architecture documents merely to write questions.
+
+
 **Read this instead of the whole application repository.** This is the external AI authoring interface, not an LLM embedded in Practice Desk. For exact valid source shapes, read just one small relevant example: [APFC](../examples/ai-first-apfc.json) or [CAT](../examples/ai-first-cat.json). The broader [agent-native rationale and quality policy](architecture/P59_AGENT_NATIVE_QUESTION_AUTHORING.md) is optional on ordinary authoring turns.
 
 ## Agent workflow: low context, high integrity
