@@ -1,7 +1,7 @@
 {
   "format": "practice-desk-agent-capabilities",
   "version": 1,
-  "contractStatus": "P60-A discovery verified for applicable CI; P60-B source blueprint and coverage audit implemented on Satyam; P60-C–F planned",
+  "contractStatus": "P60-A and P60-B verified for applicable CI; P60-C source QA, blind review evidence and strict gate implemented on Satyam, exact-source verification pending; P60-D–F planned",
   "product": {
     "name": "Practice Desk",
     "purpose": "Offline examination authoring, practice, scoring, history, analytics and spaced revision",
@@ -27,6 +27,7 @@
       "Translate user coverage and source constraints to a v1 content blueprint and validate it before creating question batches",
       "Research facts outside app",
       "Generate only requested question batch",
+      "For important questions issue blinded candidate packets and collect independent solver, adversarial, source and actual-render review evidence",
       "Audit all planned source batches against the exact blueprint; do not treat authored classification as factual truth",
       "Run canonical QA/compile and targeted corrections",
       "Import explicitly into offline Library"
@@ -80,6 +81,30 @@
       "command": "node scripts/question-bank-cli.mjs compile-bank <bank.json> <NEW-output.json> --blueprint <plan.json>",
       "privilege": "create-new-file",
       "effect": "Single-bank canonical compiler refuses publication output when explicit content quotas fail"
+    },
+    {
+      "operation": "blind-question-review",
+      "command": "node scripts/question-quality.mjs candidate <bank.json> [--offset N --limit N]",
+      "privilege": "read-only",
+      "effect": "One bounded candidate-only page with source/candidate digest; hides keyed solution and media bytes"
+    },
+    {
+      "operation": "quality-review-template",
+      "command": "node scripts/question-quality.mjs template <bank.json> [--offset N --limit N]",
+      "privilege": "read-only",
+      "effect": "Incomplete-by-default 20-check review records bound to question and candidate hashes; no keys"
+    },
+    {
+      "operation": "audit-question-quality",
+      "command": "node scripts/question-quality.mjs audit <bank.json> [--review review.json] [--offset N --limit N]",
+      "privilege": "read-only",
+      "effect": "Check canonical source, recorded independent answer, checklist, evidence basis and SHA freshness; never authenticates factual claims"
+    },
+    {
+      "operation": "compile-with-quality-review",
+      "command": "node scripts/question-bank-cli.mjs compile-bank <bank.json> <NEW-paper.json> --quality-review <review.json>",
+      "privilege": "create-new-file",
+      "effect": "Enforce completed source-bound record gate alongside canonical compiler; still caution/unverified source status"
     }
   ],
   "trustBoundaries": [
@@ -87,7 +112,7 @@
     "Preserve candidate-facing content separately from answers, rubrics and editorial notes until authorized result review",
     "User-local history and learning data are not accessible to the external agent by default",
     "Do not promise direct app UI or database mutation from the Node source CLI",
-    "P60-B offers explicit source metadata quotas; it does not authenticate source factual correctness, learner cognition or actual curriculum coverage. P60-C through P60-F remain planned."
+    "P60-C source-bound review and leakage checks are available but cannot authenticate facts or independent reviewers; P60-D through P60-F remain planned."
   ],
   "statusVocabulary": [
     "implemented",
@@ -356,13 +381,38 @@
         "scripts/content-blueprint.mjs",
         "scripts/question-bank-cli.mjs"
       ]
+    },
+    {
+      "id": "question-quality",
+      "status": "implemented-with-limits",
+      "summary": "P60-C candidate-facing hint detection, 20-check attributed editorial review sidecars, blind question packets, stale-source checks and opt-in publication gate.",
+      "provides": [
+        "Automatic blocking of explicit candidate-visible answer labels across prompts, options, shared stimuli and referenced image alt text",
+        "Heuristic warnings for prematurely revealed reasoning patterns and literal keyed-answer echoes",
+        "Answer-free, source-bound blind solver packets and deliberately incomplete review templates",
+        "Twenty quality dimensions with evidence/rationale status and per-item source/candidate SHA fingerprints",
+        "Independent answer comparison to authored key for automatically scorable response kinds",
+        "Fail-closed stale source/review, unsupported evidence and missing-check detection",
+        "Temporal source claims require an evidence as-of date and official PYQ claims demand locatable original evidence",
+        "Optional --quality-review gate for canonical source validate and compile"
+      ],
+      "agentUse": "Read docs/architecture/P60C_QUESTION_QUALITY_ASSURANCE.md after the P59 quickstart; send candidate packet only to independent solver, research sources with externally connected tools, fill separate 20-check records, audit bounded issues and compile with --quality-review when records are complete.",
+      "limitations": [
+        "No offline network fetch, independent citation/PYQ authentication or provable agent identity/blinding",
+        "Self-attested reviewer/source/rendered UI claims are never certificates of factual accuracy",
+        "Legacy local browser import remains caution-labelled and is not automatically required to supply the external review sidecar",
+        "Candidate-only text/alt packet does not replace looking at actual image pixels or device-rendered question UI",
+        "P60-D immutable generic original/reviewed corrections and P60-E PDF extraction are future work"
+      ],
+      "sourcePaths": [
+        "src/authoring/candidate-integrity.ts",
+        "src/authoring/external-bank-qa.ts",
+        "scripts/question-quality.mjs",
+        "scripts/question-bank-cli.mjs"
+      ]
     }
   ],
   "plannedProgramme": [
-    {
-      "id": "P60-C",
-      "name": "Independent semantic, source-grounded and answer-leakage QA"
-    },
     {
       "id": "P60-D",
       "name": "Universal immutable original/reviewed editions"
