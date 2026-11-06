@@ -1,5 +1,17 @@
 # Practice Desk — Consolidated Engineering Programme
 
+## 0V. P60-G/H — corrective implementation and real-source agent authoring (6 November 2026; Satyam)
+
+**Authority:** User approved two concentrated implementation efforts, not six more passes; fix real defects, reduce agent context, use actual APFC/CAT source material, and do not treat passing fixtures as factual verification. No release, protected branch changes or app/learner-store access.
+
+**P60-G implemented:** `scripts/question-quality.mjs` mandatory-check applicability and one-to-one numeric keys; `scripts/content-blueprint.mjs` partial-delivery accounting, subset paper rules, cognitive and prior-bank duplicate comparisons (with warning classification); `scripts/question-bank-cli.mjs` and `scripts/pdf-ingest.mjs` flag forwarding; `scripts/editorial-editions.mjs` distinct correction status, resource-scoped change lineage, evidence locators; `scripts/agent-handoff.mjs` staged create-only publication and stale cleanup. Earlier existing assertions for now-approved partial deliveries and correction status were reconciled without dropping the blocking safety rules.
+
+**P60-H implemented:** `question-quality prepare` and `agent-handoff prepare <source.json> <NEW-review-dir> --allow-create` create a complete blind-candidate packet and **exact fillable review-v1** sidecar in one call (no keys/explanations in candidate packet, 20 reviews initially incomplete). Editorial decision template now omits invalid extra template-only fields. `docs/AGENT_AUTHORING_QUICKSTART.md` reduced from 16,234 to 5,481 characters (~66%). Added **source-attributed, not official-authenticated** APFC 2023 vocabulary and CAT 2024 mathematics reconstructions (`examples/source-grounded-*.json`); Cambridge definitions and directly derived CAT answers corroborate limited claims. Secondary reproductions are not proof of exact original PYQs.
+
+**Actual acceptance limits:** The source-grounded 2+2 example questions were fed through the real CLI: complete blind packet, valid but deliberately incomplete review, correctly **blocked** strict agent publication with no output, and successfully produced existing canonical signed **caution-labelled** packages via the non-strict authoring compiler. The narrow actual-source Node exercise and entire existing Node suite passed **427/427** (run 42215281292 source `7b8ccb904e45c66a4e91f8022e6c8f032f5a1a62`; browser jobs cancelled after subsequent source update); exact current run available in GitHub Actions. Do **not** describe this as a completed blind independent factual review, authenticated official-PYQ transcription, strict independently reviewed publication, live PDF byte-to-page comparison, or real-agent token efficiency benchmark. These remain unverified, as do physical Mac/mobile/AT and user release approval.
+
+---
+
 ## 0U. P60-F — coherent external agent handoff and independently bounded verification (6 November 2026; Satyam)
 
 **Authorization:** User explicitly approved P60-F on `Satyam` after P60-E; no public distribution, protected branch change, direct device bridge or background model. **Status: AUTOMATED SOFTWARE VERIFIED — [five-job exact-source CI 42194153793](https://github.com/oneshubhamt/practice-desk/actions/runs/42194153793) PASS 5/5, source `784a31e145855329cb4388a520ca8e92a95ee7d6`; external content/human/device/release HARD HOLD.** [Current contract](architecture/P60F_AGENT_INTEGRATION_AND_VERIFICATION.md) · [independent source challenge and measured evidence](audits/P60F_INDEPENDENT_AGENT_SOURCE_CHALLENGE_2026-11-06.md).
