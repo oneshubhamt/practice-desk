@@ -26,7 +26,7 @@ const MAX_SOURCE_BYTES=25*1024*1024,MAX_DECISIONS_BYTES=2*1024*1024,
 const CHOICE_FIELDS=["answer","explanation","prompt","options","kind",
  "leftItems","rightItems","stimulusRef","tolerance","minSelections",
  "maxSelections","partialCreditEach","partialPenaltyEach","provenance",
- "subject","syllabusHeadingId","topic","subtopic","difficulty","examSection"];
+ "subject","syllabusHeadingId","topic","subtopic","difficulty","examSection","qa"];
 const BAD_INPUT="editorial-pair-input-invalid";
 const plain=(value,name,keys)=>{
  if(!value||typeof value!=="object"||Array.isArray(value)||
@@ -64,13 +64,33 @@ function assertPair(original,reviewed){
  if(ids.length<1||ids.length>MAX_QUESTIONS)throw Error("Only 1..200 questions per paired source are supported");
  return {a,b};
 }
-function derivedChanges(original,reviewed,originalHash,reviewedHash){
- const sameMedia=isDeepStrictEqual(original.media??[],reviewed.media??[]);
- const sameStimuli=isDeepStrictEqual(original.stimuli??[],reviewed.stimuli??[]);
+// A shared-media change affects only questions that actually reference that resource.
+const indexed=items=>new Map((items??[]).map(x=>[x.id,x]));
+const changedIds=(a,b)=>{
+ const prior=indexed(a),next=indexed(b);
+ return new Set([...new Set([...prior.keys(),...next.keys()])].filter(id=>
+  !isDeepStrictEqual(prior.get(id),next.get(id))));
+};
+const assetRefs=(value,into=new Set())=>{
+ if(Array.isArray(value)){for(const x of value)assetRefs(x,into);return into;}
+ if(value&&typeof value==="object")
+  for(const [key,v] of Object.entries(value)){
+   if((key==="assetId"||key==="mediaRef")&&typeof v==="string")into.add(v);
+   else assetRefs(v,into);
+  }
+ return into;
+};
+function derivedChanges(original,reviewed){
+ const alteredStimuli=changedIds(original.stimuli,reviewed.stimuli),
+  alteredMedia=changedIds(original.media,reviewed.media);
+ const oldStimuli=indexed(original.stimuli),newStimuli=indexed(reviewed.stimuli);
  return original.questions.map((q,i)=>{
   const other=reviewed.questions[i],fields=CHOICE_FIELDS.filter(f=>!isDeepStrictEqual(q[f],other[f]));
-  if(!sameStimuli)fields.push("stimuli");
-  if(!sameMedia)fields.push("media");
+  const refs=new Set([q.stimulusRef,other.stimulusRef].filter(Boolean));
+  if([...refs].some(id=>alteredStimuli.has(id)))fields.push("stimuli");
+  const assets=assetRefs(q);assetRefs(other,assets);
+  for(const id of refs){assetRefs(oldStimuli.get(id),assets);assetRefs(newStimuli.get(id),assets);}
+  if([...assets].some(id=>alteredMedia.has(id)))fields.push("media");
   return {questionId:q.id,changedFields:fields,
    originalQuestionSha256:sha(JSON.stringify(q)),
    reviewedQuestionSha256:sha(JSON.stringify(other))};
@@ -177,15 +197,17 @@ function annotateReviewed(bundle,rawReviewed,decisionMap,changes){
    explanation:"explanation",provenance:"source-correction",tolerance:"answer-key",
    minSelections:"answer-key",maxSelections:"answer-key",partialCreditEach:"answer-key",
    partialPenaltyEach:"answer-key",subject:"formatting",syllabusHeadingId:"formatting",
-   topic:"formatting",subtopic:"formatting",difficulty:"formatting",examSection:"formatting"
+   topic:"formatting",subtopic:"formatting",difficulty:"formatting",examSection:"formatting",qa:"source-correction"
   };
   const types=[...new Set(change.changedFields.map(x=>kindMap[x]??"source-correction"))];
+  const evidence=decision.evidence.map(e=>[e.publisher,e.title,e.locator,e.url??"",
+   e.asOfDate?"as-of "+e.asOfDate:"",e.sourceNote??""].filter(Boolean).join(" | ")).join("; ");
   const notes=(q.editorial.notes??"")+
-    " Reviewed-edition change (author/reviewer-attributed, not authenticated): "+
-    decision.reason+" Original source and printed answer key are preserved independently; "+
-    "disposition "+decision.disposition+". Recorded evidence count "+decision.evidence.length+
-    " (source correctness not independently checked by this application).";
-  const editorial={...q.editorial,status:decision.disposition==="exclude"?"invalid":"caution",
+   " Reviewed-edition change (author/reviewer-attributed, not authenticated): "+
+   decision.reason+" Original source and printed answer key are preserved independently; "+
+   "disposition "+decision.disposition+". Evidence (not independently checked): "+(evidence||"none")+".";
+  const editorial={...q.editorial,status:decision.disposition==="exclude"?"invalid":
+   decision.disposition==="corrected"?"corrected":"caution",
    changes:types,notes:notes.slice(0,20000)};
   const signed={...q,editorial};
   return {...signed,contentHash:questionRevisionHash(signed)};
