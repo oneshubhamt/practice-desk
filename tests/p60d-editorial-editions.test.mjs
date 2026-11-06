@@ -110,7 +110,9 @@ test("P60-D RED: source-preserving paired publication uses existing scorer/revie
  assert.notEqual(source.paper.id,target.paper.id);
  assert.equal(source.answerKey.entries[0].answer.optionId,"B");
  assert.equal(target.answerKey.entries[0].answer.optionId,"A");
- assert.equal(target.questions[0].editorial.status,"caution","Author claims never self-certify correction");
+ assert.equal(target.questions[0].editorial.status,"corrected","Correction disposition must remain distinct");
+ assert.match(target.questions[0].editorial.notes,/not authenticated/,
+  "Status corrected is descriptive and never an assertion of official authentication");
  assert.ok(target.questions[0].editorial.changes.includes("answer-key"));
  assert.ok(target.questions[0].editorial.notes.includes("Synthetic deliberately disputed"));
  const lineage=JSON.parse(await readFile(join(out,"editorial-lineage.json"),"utf8"));
