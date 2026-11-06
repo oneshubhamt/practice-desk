@@ -15,7 +15,7 @@ export type CandidateIntegrityIssue={
  readonly suggestion:string;
 };
 const explicitAnswer=/(?:^|[.!?;:\n\s])(?:the\s+)?(?:(?:correct|right)\s+)?(?:answer|option|key)\s*(?:is|=|:|→)\s*(?:(?:option|choice)\s*)?(?:[A-D](?![A-Za-z])|true\b|false\b|\d+(?:\.\d+)?\b)/iu;
-const correctMarker=/(?:^\s*[✓✔✅☑]|\[(?:correct|answer|key)\]|\((?:correct\s+answer|correct\s+option)\)|\banswer\s+key\s*:\s*[A-D]\b)/iu;
+const correctMarker=/(?:^\s*[✓✔✅☑]\s+\S|\[(?:correct|answer|key)\]|\((?:correct\s+answer|correct\s+option)\)|\banswer\s+key\s*:\s*[A-D]\b)/iu;
 const unintendedClue=/\b(?:follows?\s+(?:the\s+)?pattern\s+of|(?:the\s+)?pattern\s+is|(?:each|every)\s+(?:successive\s+)?term\s+(?:is\s+)?(?:obtained|formed)\s+by|since\s+the\s+(?:answer|correct\s+option)\s+is)\b/iu;
 const visible=(doc:RichDocument):string=>publicationPlainText(doc);
 function referencedAssets(doc:RichDocument):Set<string>{
