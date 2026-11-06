@@ -196,7 +196,7 @@
       "agentUse": "Inspect actual source inventory before promising user question counts or distribution.",
       "limitations": [
         "Composition operates on one source paper at a time; not arbitrary cross-exam combining",
-        "P60-B exact multi-topic content blueprints and audits are not yet implemented"
+        "P60-B source-level coverage audits are available, but the local browser's practice composer is still single-paper and does not enforce blueprints automatically"
       ],
       "sourcePaths": [
         "src/app/practice-compose.ts",
