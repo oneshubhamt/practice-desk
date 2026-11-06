@@ -1,6 +1,6 @@
 # P60 — AI-native Practice Desk capability, content integrity and agent interaction programme
 
-**Authority:** User-approved target capability, 6 November 2026. **Branch:** `Satyam`. **Implementation status:** P60-A applicable CI green (publisher skipped on Satyam); P60-B bounded automated implementation verified by applicable [CI 42159449898](https://github.com/oneshubhamt/practice-desk/actions/runs/42159449898) (392 Node and Chromium/Firefox/WebKit; publisher skipped on Satyam); P60-C user-authorized and source implementation under verification; P60-D–F proposed and **not implemented or authorized as completed**. The existing P57–P59 software is the baseline, not a substitute for the new P60 acceptance gates. This document describes both the target and its boundaries; a passing import or CI run does not establish content truthfulness.
+**Authority:** User-approved target capability, 6 November 2026. **Branch:** `Satyam`. **Implementation status:** P60-A applicable CI green (publisher skipped on Satyam); P60-B bounded automated implementation verified by applicable [CI 42159449898](https://github.com/oneshubhamt/practice-desk/actions/runs/42159449898) (392 Node and Chromium/Firefox/WebKit; publisher skipped on Satyam); P60-C user-authorized and software VERIFIED by [5/5 exact-source CI 42165301894](https://github.com/oneshubhamt/practice-desk/actions/runs/42165301894), **406/406 Node** and offline Chromium/Firefox/WebKit plus source-guarded HTML publication; P60-D–F proposed and **not implemented or authorized as completed**. The existing P57–P59 software is the baseline, not a substitute for the new P60 acceptance gates. This document describes both the target and its boundaries; a passing import or CI run does not establish content truthfulness.
 
 ## 1. Product objective and design constraints
 
@@ -114,7 +114,7 @@ Measure existing P59 vs improved workflows on matched tasks: model-input/output 
 | **P60-E** | External AI PDF ingest protocol, originals, review, traceable structured export | Mixed PDF page, figure, mathematics and disputed key represented with uncertainty, without silent transcription change |
 | **P60-F** | Cohesive agent integration + full independently measured QA | End-to-end new/PYQ generation→review→import→score→Learn, small agent context, regression-free offline |
 
-P60-A and P60-B have passed their applicable automated gates. P60-C has been separately authorized and is under source/QA development; P60-D–F remain unimplemented. Even a P60-C automated green gate cannot authenticate external facts, hardware acceptance, reviewer independence or release permission. Later stages require explicit authorization.
+P60-A, P60-B and P60-C have passed their applicable automated gates after sequential user authorization; P60-D–F remain unimplemented. Even a P60-C automated green gate cannot authenticate external facts, hardware acceptance, reviewer independence or release permission. Later stages require explicit authorization.
 
 ## 9. Engineering discipline (binding, same as existing programme)
 
