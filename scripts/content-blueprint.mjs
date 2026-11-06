@@ -258,7 +258,7 @@ function audit(plan,sources,tagDoc,{offset=0,limit=12,priorSources=[]}={}){
    if(!stem)continue;
    const name=source.bankId+"/"+q.id;
    if(!stems.has(stem))stems.set(stem,name);
-   if(stem.length>=55)nearSeen.push({bankId:source.bankId,name,prior:true,words:tokenSet(stem),grams:bigrams(stem)});
+   if(stem.length>=55)nearSeen.push({bankId:source.bankId,name,kind:q.kind,prior:true,words:tokenSet(stem),grams:bigrams(stem)});
   }
  }
  const cognitiveRequired=Boolean(plan.quotas?.cognitive);
@@ -305,7 +305,8 @@ function audit(plan,sources,tagDoc,{offset=0,limit=12,priorSources=[]}={}){
    if(stem.length>=55){
     const words=tokenSet(stem),grams=bigrams(stem);
     for(const prior of nearSeen){
-     if((prior.bankId===bankId&&!prior.prior)||Math.abs(prior.words.size-words.size)>Math.max(prior.words.size,words.size)*0.25)continue;
+     if(prior.kind!==q.kind||(prior.bankId===bankId&&!prior.prior)||
+      Math.abs(prior.words.size-words.size)>Math.max(prior.words.size,words.size)*0.25)continue;
      if(similarity(words,prior.words)>=0.78&&similarity(grams,prior.grams)>=0.62){
       if(nearDuplicateCandidates<200)
        add("near-duplicate-candidate","Possible near-duplicate "+name+" and "+prior.name+"; independently resolve before publishing","questions["+name+"]","warning");
@@ -313,7 +314,7 @@ function audit(plan,sources,tagDoc,{offset=0,limit=12,priorSources=[]}={}){
       nearDuplicateCandidates++;
      }
     }
-    nearSeen.push({bankId,name,words,grams});
+    nearSeen.push({bankId,name,kind:q.kind,words,grams});
    }
   }
   if(q.kind==="single-choice"&&"ABCD".includes(q.answer)&&q.answer.length===1)answerPositions[q.answer]++;
