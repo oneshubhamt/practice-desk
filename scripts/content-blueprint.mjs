@@ -78,10 +78,16 @@ function validateBlueprint(value){
  if(b.paperRules!==undefined){
   const policy=obj(b.paperRules,"paperRules",["scoring","timing","navigation","sections"]);
   if(!Object.keys(policy).length)fail("paperRules cannot be empty");
-  for(const k of ["scoring","timing","navigation"]){
-   if(policy[k]!==undefined)obj(policy[k],"paperRules."+k,Object.keys(policy[k]??{}));
+  const legal={scoring:["correctMarks","incorrectMarks"],
+   timing:["kind","minutes","pausePolicy","sectionTransition","allowEarlySubmit"],
+   navigation:["questionNavigation","sectionNavigation","allowReview"]};
+  for(const k of Object.keys(legal)){
+   if(policy[k]!==undefined)obj(policy[k],"paperRules."+k,legal[k]);
   }
-  if(policy.sections!==undefined)list(policy.sections,"paperRules.sections",40,1);
+  if(policy.sections!==undefined){
+   for(const entry of list(policy.sections,"paperRules.sections",40,1))
+    obj(entry,"paperRules.sections[]",["id","title","minutes"]);
+  }
  }
  const s=obj(b.syllabus,"syllabus",["basis","asOfDate","reference"]);
  if(!["user-defined","official-source-attributed","inferred-practice"].includes(s.basis))
@@ -143,6 +149,17 @@ function validateBlueprint(value){
  const mapped=g=>new Map((quotas[g]?.targets??[]).map(x=>[g==="topics"?topicKey(x.subjectKey,x.topic):
   g==="subtopics"?subtopicKey(x.subjectKey,x.topic,x.subtopic):x.key,x.count]));
  const roots=mapped("subjects"),topics=mapped("topics");
+ const bySubject=new Map(),byTopic=new Map();
+ for(const x of quotas.topics?.targets??[])
+  bySubject.set(x.subjectKey,(bySubject.get(x.subjectKey)??0)+x.count);
+ for(const x of quotas.subtopics?.targets??[]){
+  const p=topicKey(x.subjectKey,x.topic);
+  byTopic.set(p,(byTopic.get(p)??0)+x.count);
+ }
+ for(const [root,total] of bySubject)if(roots.has(root)&&total>roots.get(root))
+  fail("Combined topic allocations exceed parent subject quota: "+root);
+ for(const [p,total] of byTopic)if(topics.has(p)&&total>topics.get(p))
+  fail("Combined subtopic allocations exceed parent topic quota: "+p);
  for(const x of quotas.topics?.targets??[]){
   if(roots.has(x.subjectKey)&&x.count>roots.get(x.subjectKey))
    fail("Topic quota exceeds its parent subject quota: "+x.topic);
@@ -250,7 +267,9 @@ function audit(plan,sources,tagDoc){
   if(originAllowed&&!originAllowed.includes(q.provenance?.kind))
    add("origin-not-allowed","Source origin is outside requested policy on "+name,"questions["+name+"]");
   if(excluded.has(topicKey(root,topic)))add("excluded-topic","Excluded topic present on "+name,"questions["+name+"]");
-  const stem=normalize(typeof q.prompt==="string"?q.prompt:"");
+  let visibleStem="";
+  try{visibleStem=typeof q.prompt==="string"?q.prompt:publicationPlainText(q.prompt);}catch{}
+  const stem=normalize(visibleStem);
   if(stem){
    const earlier=stems.get(stem);
    if(earlier)add("duplicate-stem","Repeated normalized question stem "+name+" and "+earlier,"questions["+name+"]");
@@ -347,6 +366,7 @@ async function main(){
  for(const path of files)sources.push(await load(path,MAX_SOURCE,"Source"));
  const tags=tagPath?(await load(tagPath,MAX_PLAN,"Cognitive tags")).value:undefined;
  const result=limitIssues(audit(plan,sources,tags),limit);
+ result.blueprintSha256=planFile.digest;
  emit(result);
  if(!result.valid)process.exitCode=1;
 }
