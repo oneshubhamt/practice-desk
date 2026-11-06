@@ -3,7 +3,7 @@
  * No OCR, PDF parser, AI runtime, browser access or alternative publication path.
  * File digests and source-bound assertions are NOT independent transcription proof.
  */
-import {readFile,stat,writeFile} from "node:fs/promises";
+import {readFile,stat,writeFile,rm} from "node:fs/promises";
 import {createHash} from "node:crypto";
 import {resolve,join} from "node:path";
 import {fileURLToPath} from "node:url";
@@ -92,7 +92,7 @@ export function buildPdfIntakeTemplate(original,raw,document,bytes,keyDocument=n
   stimuli:parts.stimuli.map(s=>item(s)),
   media:parts.media.map(m=>({...item(m),visualStatus:"unchecked"})),
   documentInventoryStatus:"unchecked",externalVerification:"not-performed",
-  inspector:{kind:"agent",id:"REPLACE_INSPECTOR",method:"REPLACE SOURCE COMPARISON METHOD",reviewedAt:"2026-11-06"},
+  inspector:{kind:"agent",id:"REPLACE_INSPECTOR",method:"REPLACE SOURCE COMPARISON METHOD",reviewedAt:"REPLACE_DATE"},
   note:"Template is incomplete. SHA proves byte identity only. Never fill missing questions/keys by invention."};
 }
 export function auditPdfIntake(manifest,original,raw,documentBytes,{keyBytes=null,pair=null,blueprint=null}={}){
@@ -265,7 +265,7 @@ async function main(){
  const key=opts["--key-document"]?await sourceBytes(opts["--key-document"],
   intake?.value?.keyDocument?.type??"pdf"):null;
  if(command==="template"){
-  process.stdout.write(JSON.stringify(buildPdfIntakeTemplate(data,original.raw,null,doc,null,key),null,2)+"\n");return;
+  process.stdout.write(JSON.stringify(buildPdfIntakeTemplate(data,original.raw,null,doc,Boolean(key),key),null,2)+"\n");return;
  }
  let pair=null;
  if(command==="compile"){
@@ -291,10 +291,16 @@ async function main(){
   const result=spawnSync(process.execPath,[script,"compile",args[1],args[3],args[4],args[5],
    "--quality-review",opts["--quality-review"]],{encoding:"utf8",maxBuffer:1024*1024});
   if(result.status!==0)throw Error("Canonical P60-D compilation failed: "+(result.stderr||result.stdout).slice(0,1500));
-  await writeFile(join(resolve(args[5]),"pdf-intake-provenance.json"),
-   JSON.stringify({...intake.value,sourceDocumentFile:"external-original-document-not-copied",
-    originalSourceFile:"original-source.json",factualVerification:"not-performed"},null,2)+"\n",
-   {flag:"wx"});
+  try{
+   await writeFile(join(resolve(args[5]),"pdf-intake-provenance.json"),
+    JSON.stringify({...intake.value,sourceDocumentFile:"external-original-document-not-copied",
+     originalSourceFile:"original-source.json",factualVerification:"not-performed"},null,2)+"\n",
+    {flag:"wx"});
+  }catch(error){
+   // The target was exclusively created by this invocation; avoid half-bundles.
+   await rm(resolve(args[5]),{recursive:true,force:true});
+   throw error;
+  }
   process.stdout.write(JSON.stringify({...report,compiled:true,directory:resolve(args[5]),
    canonicalPublication:"P60-D editorial-editions.mjs",extraFile:"pdf-intake-provenance.json"},null,2)+"\n");return;
  }
