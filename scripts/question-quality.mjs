@@ -156,8 +156,12 @@ export function auditQuestionQuality(source,sourceRaw,reviewRaw=undefined,{offse
  const add=(code,message,questionId=undefined,basis="deterministic")=>
   issues.push({code,severity:"error",basis,message,...(questionId?{questionId}:{})});
  const qualityIssues=report.issues??[];
- for(const q of qualityIssues.filter(x=>x.severity==="error"))
-  add("canonical-"+q.code,q.message,q.questionId);
+ for(const q of qualityIssues){
+  if(q.severity==="error")add("canonical-"+q.code,q.message,q.questionId);
+  else if(q.severity==="warning")
+   issues.push({code:"canonical-"+q.code,severity:"warning",
+    basis:q.basis??"heuristic",message:q.message,...(q.questionId?{questionId:q.questionId}:{})});
+ }
  const validSource=Boolean(report.valid);
  if(!validSource&&(!Array.isArray(source?.questions)||!source.questions.length)){
   return {format:"practice-desk-question-quality-audit",version:1,valid:false,readyForPublication:false,
@@ -244,11 +248,14 @@ export function auditQuestionQuality(source,sourceRaw,reviewRaw=undefined,{offse
   if(!projections.has(record.questionId))
    add("review-unknown-question","Review references a question absent from the audited source",record.questionId);
  }
- const ready=validSource&&review!==null&&missing===0&&issues.length===0;
+ const blockingIssueCount=issues.filter(x=>x.severity==="error").length;
+ const warningIssueCount=issues.length-blockingIssueCount;
+ const ready=validSource&&review!==null&&missing===0&&blockingIssueCount===0;
  const count=issues.length;
  return {format:"practice-desk-question-quality-audit",version:1,valid:ready,
   readyForPublication:ready,sourceSha256:sourceHash,bankId,
   questionCount:draft.questions.length,questionsMissingReview:missing,assertedReviews:asserted,
+  blockingIssueCount,warningIssueCount,
   reviewAssurance:review?"recorded-self-attestation-not-authenticated":"not-performed",
   factualVerification:"not-performed",externalSourceFetches:0,
   sourceEvidenceClaims:reportedEvidence,
