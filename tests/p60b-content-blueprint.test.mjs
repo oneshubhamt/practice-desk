@@ -125,17 +125,19 @@ test("P60-B RED: requirements, audited metadata, quota enforcement and honest no
  assert.equal(r.data.readyForPublication,false);
 }));
 
-test("P60-B RED: conditional partial batches remain incomplete, missing quota never silently passes",()=>temp(async dir=>{
+test("P60-B: explicitly permitted partial batches disclose remaining targets without pretending complete coverage",()=>temp(async dir=>{
  const planObj=mkPlan();planObj.targetCount=4;planObj.allowPartial=true;
  planObj.quotas.subjects.exhaustive=false;planObj.quotas.kinds.exhaustive=false;
  const plan=await write(dir,"partial.json",planObj);
  const p=run("validate",plan);
  assert.equal(p.status,0,p.stderr);
  const r=run("audit",plan,example);
- assert.notEqual(r.status,0);
- assert.equal(r.data.readyForPublication,false);
+ assert.equal(r.status,0,r.stderr);
+ assert.equal(r.data.readyForPublication,true);
  assert.equal(r.data.actualCount,3);
  assert.equal(r.data.partialDeliveryAllowed,true);
+ assert.equal(r.data.partialDelivery,true);
+ assert.equal(r.data.remainingCount,1);
 }));
 
 test("P60-B RED: audit reports no keys/base64 and rejects unsupported input/flags",()=>temp(async dir=>{
