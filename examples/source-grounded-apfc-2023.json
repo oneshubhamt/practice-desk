@@ -1,0 +1,104 @@
+{
+  "format": "practice-desk-authoring",
+  "version": 1,
+  "bankId": "apfc-2023-source-grounded-vocab",
+  "examId": "upsc-epfo-apfc",
+  "paperId": "apfc-2023-source-grounded-vocab",
+  "title": "APFC 2023 vocabulary reconstructions — sourced, not official transcriptions",
+  "edition": "custom",
+  "revision": 1,
+  "scoring": {
+    "correctMarks": 2.5,
+    "incorrectMarks": -0.8333333333333334
+  },
+  "timing": {
+    "kind": "whole-paper",
+    "minutes": 10,
+    "pausePolicy": "allowed"
+  },
+  "navigation": {
+    "questionNavigation": "free",
+    "sectionNavigation": "free",
+    "allowReview": true
+  },
+  "sections": [
+    {
+      "id": "paper",
+      "title": "General English"
+    }
+  ],
+  "questions": [
+    {
+      "id": "vocab-2023-q06",
+      "examSection": "paper",
+      "syllabusHeadingId": "english",
+      "topic": "Vocabulary in context",
+      "subtopic": "Precision of meaning",
+      "difficulty": "medium",
+      "kind": "single-choice",
+      "prompt": "A poet evokes beauty so profound that words cannot adequately describe it. Which adjective best captures this quality?",
+      "options": [
+        "Unknown",
+        "Proscribed",
+        "Intangible",
+        "Ineffable"
+      ],
+      "answer": "D",
+      "explanation": "Ineffable means too great or intense to be expressed in words. Unknown means not known; proscribed means forbidden; intangible means unable to be touched, not necessarily beyond verbal description.",
+      "provenance": {
+        "kind": "reconstruction",
+        "examYear": 2023,
+        "sourceNote": "Source-grounded paraphrase of APFC 2023 Q6, EduTap reproduction printed page 1. Not independently authenticated as exact official wording or key.",
+        "sources": [
+          {
+            "publisher": "EduTap",
+            "title": "UPSC EPFO APFC 2023 Previous Year Papers With Answer Key",
+            "url": "https://edutap.in/wp-content/uploads/2026/05/UPSC-EPFO-APFC-2023-PYQ-Book.pdf",
+            "page": "1",
+            "section": "Q6",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "unchecked"
+      }
+    },
+    {
+      "id": "vocab-2023-q09",
+      "examSection": "paper",
+      "syllabusHeadingId": "english",
+      "topic": "Vocabulary in context",
+      "subtopic": "Attitudes and outlook",
+      "difficulty": "medium",
+      "kind": "single-choice",
+      "prompt": "A commentator ignores wider national concerns and concentrates on narrow local interests. Which word most specifically characterises this outlook?",
+      "options": [
+        "Unilateral",
+        "Illiberal",
+        "Parochial",
+        "Limited"
+      ],
+      "answer": "C",
+      "explanation": "Parochial denotes a narrow, locally confined outlook. Unilateral means one-sided; illiberal concerns intolerance or restriction of freedom; limited is too general to capture the specific local narrowness.",
+      "provenance": {
+        "kind": "reconstruction",
+        "examYear": 2023,
+        "sourceNote": "Source-grounded paraphrase of APFC 2023 Q9, EduTap reproduction printed page 1. Not independently authenticated as exact official wording or key.",
+        "sources": [
+          {
+            "publisher": "EduTap",
+            "title": "UPSC EPFO APFC 2023 Previous Year Papers With Answer Key",
+            "url": "https://edutap.in/wp-content/uploads/2026/05/UPSC-EPFO-APFC-2023-PYQ-Book.pdf",
+            "page": "1",
+            "section": "Q9",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "unchecked"
+      }
+    }
+  ]
+}
