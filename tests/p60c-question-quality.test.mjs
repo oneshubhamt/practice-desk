@@ -103,6 +103,26 @@ test("P60-C RED: external review must be SHA-bound, complete, independently solv
  assert.equal(out.data.reviewAssurance,"recorded-self-attestation-not-authenticated");
  assert.equal(out.data.factualVerification,"not-performed");
  assert.equal(out.data.externalSourceFetches,0);
+ const compiled=command(cli,"compile-bank",input,join(dir,"quality-reviewed-exam.json"),
+  "--quality-review",review);
+ assert.equal(compiled.status,0,compiled.stderr);
+ assert.equal(compiled.data.qualityReview.readyForPublication,true);
+ assert.equal(compiled.data.qualityReview.factualVerification,"not-performed");
+ const compiledPkg=JSON.parse(await readFile(join(dir,"quality-reviewed-exam.json"),"utf8"));
+ assert.equal(compiledPkg.questions[0].editorial.status,"caution",
+  "An asserted review does not automatically upgrade editorial source authenticity");
+ const legal=structuredClone(src);
+ legal.questions[0].prompt="Under the Code on Wages 2019, which letter is second?";
+ const legalPath=await write(dir,"legal.json",legal);
+ const legalPacket=command(tool,"candidate",legalPath);
+ const legalReview=structuredClone(report);
+ legalReview.sourceSha256=legalPacket.data.sourceSha256;
+ legalReview.records[0].questionSha256=sha(JSON.stringify(legal.questions[0]));
+ legalReview.records[0].candidateSha256=legalPacket.data.items[0].candidateSha256;
+ const lawResult=command(tool,"audit",legalPath,"--review",
+  await write(dir,"legal-review.json",legalReview));
+ assert.equal(lawResult.status,1);
+ assert.ok(lawResult.data.issues.items.some(x=>x.code==="legal-asof-evidence-required"));
  const bad=structuredClone(report);bad.records[0].independentSolution.answer="D";
  const wrong=command(tool,"audit",input,"--review",await write(dir,"wrong.json",bad));
  assert.equal(wrong.status,1);
