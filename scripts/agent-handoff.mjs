@@ -12,6 +12,7 @@ import {fileURLToPath} from "node:url";
 const FORMAT="practice-desk-agent-handoff", VERSION=1,MAX_BUFFER=6*1024*1024;
 const MODES={single:{inputs:1},paired:{inputs:3},pdf:{inputs:5}};
 const COMMANDS=Object.freeze([
+ {name:"prepare",privilege:"create-only-with-explicit-consent",description:"Create a complete candidate-blind review packet and exact fillable review-v1 template for an entire bank; no key/media in output"},
  {name:"assess",privilege:"read-only",description:"Evaluate existing independent-review, source/edition and optional coverage contracts; no answers or full media returned"},
  {name:"publish",privilege:"create-only-with-explicit-consent",description:"Requires --allow-create, an independently recorded current quality review and canonical signed source publication; no browser/device import"}
 ]);
@@ -238,13 +239,37 @@ async function perform(task){
 }
 async function main(){
  const argv=process.argv.slice(2);
+ if(argv[0]==="prepare"){
+  if(argv.length!==4||argv[3]!=="--allow-create")
+   throw Error("Usage: agent-handoff.mjs prepare <source.json> <NEW-directory> --allow-create");
+  const input=argv[1],destination=argv[2];
+  const originalSha=await inputHash(input);
+  const generated=invoke("question-quality.mjs",["prepare",input,destination]);
+  if(!generated.ok){
+   fail(generated.body.code??"review-preparation-rejected",
+    "Review packet could not be prepared; source or output path invalid.",1);return;
+  }
+  if(await inputHash(input)!==originalSha){
+   await rm(resolve(destination),{recursive:true,force:true});
+   return failure("stale-input-after-review-preparation");
+  }
+  emit({format:FORMAT,version:VERSION,mode:"single",stage:"prepare",
+   valid:true,readyForPublication:false,reviewComplete:false,
+   inputSha256:originalSha,bankId:generated.body.bankId??null,
+   questionCount:generated.body.questionCount??null,
+   directory:generated.body.directory,files:generated.body.files,
+   factualVerification:"not-performed",externalAuthenticatedReview:false,appAccess:"none",
+   note:"Prepared review is empty and cannot be published: blind reviewer must solve, record genuine evidence and complete every applicable check."});
+  return;
+ }
  if(argv.length===1&&argv[0]==="actions"){
   emit({format:"practice-desk-agent-handoff-actions",version:1,
    modes:["single","paired","pdf"],commands:COMMANDS,
    appAccess:"none",agentDeviceBridge:false,externalSourceFetches:0,
    input:"Existing practice-desk-authoring v1, P60-C review, P60-D decisions and optional P60-B plan / P60-E intake",
    examples:[
-    "node scripts/agent-handoff.mjs assess single bank.json --quality-review review.json [--blueprint plan.json]",
+    "node scripts/agent-handoff.mjs prepare bank.json NEW-review-dir --allow-create",
+     "node scripts/agent-handoff.mjs assess single bank.json --quality-review review.json [--blueprint plan.json]",
     "node scripts/agent-handoff.mjs publish single bank.json NEW.exam.json --quality-review review.json --allow-create",
     "node scripts/agent-handoff.mjs assess paired original.json reviewed.json decisions.json --quality-review review.json",
     "node scripts/agent-handoff.mjs publish paired original.json reviewed.json decisions.json NEW-directory --quality-review review.json --allow-create",
