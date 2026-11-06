@@ -238,3 +238,18 @@ test("P60-B: actual category inventory remains paged and available even without 
  assert.equal(out.data.observed.subjects.shown.length,3);
  assert.equal(out.data.factualVerification,"not-performed");
 }));
+
+
+test("P60-B: same versioned blueprint contract works for CAT's separate physical sections and semantic subjects",()=>{
+ const catPlan=fileURLToPath(new URL("../examples/p60b-cat-blueprint.json",import.meta.url));
+ const catSource=fileURLToPath(new URL("../examples/ai-first-cat.json",import.meta.url));
+ const v=run("validate",catPlan);
+ assert.equal(v.status,0,v.stderr);
+ const r=run("audit",catPlan,catSource);
+ assert.equal(r.status,0,r.stderr);
+ assert.equal(r.data.actualCount,3);
+ assert.equal(r.data.coverage.subjects.length,3);
+ assert.equal(r.data.coverage.sections.length,3);
+ assert.equal(r.data.coverage.kinds.length,3);
+ assert.equal(r.data.factualVerification,"not-performed");
+});
