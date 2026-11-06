@@ -1,0 +1,78 @@
+{
+  "format": "practice-desk-content-blueprint",
+  "version": 1,
+  "id": "apfc-three-synthetic-example",
+  "examId": "upsc-epfo-apfc",
+  "paperId": "apfc-schema-example",
+  "revision": 1,
+  "targetCount": 3,
+  "allowPartial": false,
+  "syllabus": {
+    "basis": "user-defined",
+    "asOfDate": "2026-11-06",
+    "reference": "Illustrative allocations only; not an official 2026 question distribution"
+  },
+  "paperRules": {
+    "scoring": {
+      "correctMarks": 2.5,
+      "incorrectMarks": -0.8333333333333334
+    },
+    "timing": {
+      "kind": "whole-paper",
+      "minutes": 10,
+      "pausePolicy": "allowed"
+    },
+    "navigation": {
+      "questionNavigation": "free",
+      "sectionNavigation": "free",
+      "allowReview": true
+    }
+  },
+  "requirements": {
+    "requireTopic": false,
+    "requireDifficulty": false,
+    "requireExplanation": true,
+    "minCitations": 0,
+    "allowedOrigins": [
+      "ai-original"
+    ],
+    "maxTopicSharePercent": 100
+  },
+  "quotas": {
+    "subjects": {
+      "exhaustive": true,
+      "targets": [
+        {
+          "key": "heading:labour",
+          "count": 1
+        },
+        {
+          "key": "heading:economy",
+          "count": 1
+        },
+        {
+          "key": "heading:accountancy",
+          "count": 1
+        }
+      ]
+    },
+    "kinds": {
+      "exhaustive": true,
+      "targets": [
+        {
+          "key": "single-choice",
+          "count": 3
+        }
+      ]
+    },
+    "origins": {
+      "exhaustive": true,
+      "targets": [
+        {
+          "key": "ai-original",
+          "count": 3
+        }
+      ]
+    }
+  }
+}
