@@ -1,7 +1,7 @@
 {
   "format": "practice-desk-agent-capabilities",
   "version": 1,
-  "contractStatus": "P60-A initial source-backed catalogue; not a security authorization or factual content certificate",
+  "contractStatus": "P60-A discovery verified for applicable CI; P60-B source blueprint and coverage audit implemented on Satyam; P60-C–F planned",
   "product": {
     "name": "Practice Desk",
     "purpose": "Offline examination authoring, practice, scoring, history, analytics and spaced revision",
@@ -24,8 +24,10 @@
       "Read short quickstart",
       "Run read-only capability list or show one named capability",
       "Read one relevant authoring example/task contract",
+      "Translate user coverage and source constraints to a v1 content blueprint and validate it before creating question batches",
       "Research facts outside app",
       "Generate only requested question batch",
+      "Audit all planned source batches against the exact blueprint; do not treat authored classification as factual truth",
       "Run canonical QA/compile and targeted corrections",
       "Import explicitly into offline Library"
     ]
@@ -60,6 +62,24 @@
       "command": "node scripts/question-bank-cli.mjs compile-bank <source.json> <NEW-output.json>",
       "privilege": "create-new-file",
       "effect": "Canonical validated publication package; explicit offline browser import remains necessary"
+    },
+    {
+      "operation": "validate-content-blueprint",
+      "command": "node scripts/content-blueprint.mjs validate <plan.json>",
+      "privilege": "read-only",
+      "effect": "Check versioned plan, exact integer quotas, parent contradictions, source and paper-rule policy syntax; no content generation"
+    },
+    {
+      "operation": "audit-content-coverage",
+      "command": "node scripts/content-blueprint.mjs audit <plan.json> <bank1.json> [bank2.json ...] [--cognitive tags.json] [--limit N]",
+      "privilege": "read-only",
+      "effect": "Bounded cross-batch count/metadata/QA audit; not factual truth; no keys or media bytes in output"
+    },
+    {
+      "operation": "compile-with-blueprint",
+      "command": "node scripts/question-bank-cli.mjs compile-bank <bank.json> <NEW-output.json> --blueprint <plan.json>",
+      "privilege": "create-new-file",
+      "effect": "Single-bank canonical compiler refuses publication output when explicit content quotas fail"
     }
   ],
   "trustBoundaries": [
@@ -67,7 +87,7 @@
     "Preserve candidate-facing content separately from answers, rubrics and editorial notes until authorized result review",
     "User-local history and learning data are not accessible to the external agent by default",
     "Do not promise direct app UI or database mutation from the Node source CLI",
-    "No P60-B blueprint, P60-C factual verification, P60-D universal original/reviewed, P60-E automatic PDF ingestion or P60-F agent app-control API is currently implemented"
+    "P60-B offers explicit source metadata quotas; it does not authenticate source factual correctness, learner cognition or actual curriculum coverage. P60-C through P60-F remain planned."
   ],
   "statusVocabulary": [
     "implemented",
@@ -311,13 +331,34 @@
         "src/app/bank-import.ts",
         "src/app/exam-package.ts"
       ]
+    },
+    {
+      "id": "content-blueprint",
+      "status": "implemented-with-limits",
+      "summary": "P60-B versioned content production blueprint, bounded multi-batch quota audit and optional exact canonical compiler preflight.",
+      "provides": [
+        "Validate user-authored exam, paper, subject and topic targets before content generation",
+        "Enforce exhaustive or partial exact counts across subject, topic, subtopic, difficulty, kind, origin and physical section",
+        "Optional explicit user marking, timer and navigation constraints",
+        "Unverified author-attributed cognitive-level sidecar and counts",
+        "Detect source ID duplicates, repeated stems, missing explanations/citations, excluded topics and topic overconcentration",
+        "Compact requested-versus-actual coverage and observed category inventories without question text",
+        "Optional --blueprint guard for exact single-source canonical validate or compile"
+      ],
+      "agentUse": "Start from docs/architecture/P60B_CONTENT_BLUEPRINT.md plus one exam blueprint example; validate the user-defined plan, generate batches, audit entire intended composition before importing; use --blueprint on one-file compilation.",
+      "limitations": [
+        "No automatic syllabus truth, cognitive calibration, fact verification or source authentication",
+        "The current offline browser can import without a blueprint; CLI enforcement requires an explicit --blueprint flag or content-blueprint audit",
+        "Multi-file aggregate audit is not a new 400-item in-app staging interface or cross-paper engine",
+        "Author cognitive labels require a separate explicit sidecar and are not independently assessed"
+      ],
+      "sourcePaths": [
+        "scripts/content-blueprint.mjs",
+        "scripts/question-bank-cli.mjs"
+      ]
     }
   ],
   "plannedProgramme": [
-    {
-      "id": "P60-B",
-      "name": "Enforced blueprint and bank coverage"
-    },
     {
       "id": "P60-C",
       "name": "Independent semantic, source-grounded and answer-leakage QA"
