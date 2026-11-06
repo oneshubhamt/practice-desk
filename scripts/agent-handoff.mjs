@@ -4,9 +4,9 @@
  * Never infer source authentication or reviewer independence from self-attestation.
  */
 import {spawnSync} from "node:child_process";
-import {readFile,readdir,stat,access} from "node:fs/promises";
+import {readFile,readdir,stat,access,mkdtemp,rm,link,rename,mkdir,rmdir} from "node:fs/promises";
 import {createHash} from "node:crypto";
-import {join,resolve} from "node:path";
+import {join,resolve,dirname} from "node:path";
 import {fileURLToPath} from "node:url";
 
 const FORMAT="practice-desk-agent-handoff", VERSION=1,MAX_BUFFER=6*1024*1024;
@@ -48,7 +48,7 @@ function options(argv){
    if(Object.hasOwn(flags,key))throw Error("Duplicate permission flag");
    flags[key]=true;continue;
   }
-  if(!["--quality-review","--blueprint","--key-document"].includes(key)||
+  if(!["--quality-review","--blueprint","--key-document","--cognitive","--against"].includes(key)||
       i+1===args.length||Object.hasOwn(flags,key))throw Error("Invalid or duplicate flag "+String(key));
   flags[key]=args[++i];
  }
@@ -56,6 +56,7 @@ function options(argv){
  if(action==="publish"&&!flags["--allow-create"])throw Error("Explicit --allow-create required for new-file publication");
  if(action==="assess"&&flags["--allow-create"])throw Error("Read-only assessment cannot request publication privilege");
  if(mode!=="pdf"&&flags["--key-document"])throw Error("Separate key document is only for PDF ingestion mode");
+ if(flags["--cognitive"]&&!flags["--blueprint"])throw Error("--cognitive requires --blueprint");
  return {action,mode,inputs,output,flags};
 }
 function cleanIssues(result){
@@ -86,7 +87,9 @@ function invoke(script,args){
  catch{return {ok:false,body:{valid:false,code:"downstream-output-invalid"}};}
  return {ok:result.status===0,body};
 }
-function planArgs(flags){return flags["--blueprint"]?["--blueprint",flags["--blueprint"]]:[];}
+function planArgs(flags){return [...(flags["--blueprint"]?["--blueprint",flags["--blueprint"]]:[]),
+ ...(flags["--cognitive"]?["--cognitive",flags["--cognitive"]]:[]),
+ ...(flags["--against"]?["--against",flags["--against"]]:[])];}
 function qualityArgs(flags){return ["--quality-review",flags["--quality-review"]];}
 function auditCall(task){
  const {mode,inputs,flags}=task;
@@ -104,7 +107,9 @@ function auditCall(task){
 }
 function coverageCheck(task){
  if(task.mode!=="paired"||!task.flags["--blueprint"])return null;
- return invoke("content-blueprint.mjs",["audit",task.flags["--blueprint"],task.inputs[1]]);
+ return invoke("content-blueprint.mjs",["audit",task.flags["--blueprint"],task.inputs[1],
+  ...(task.flags["--cognitive"]?["--cognitive",task.flags["--cognitive"]]:[]),
+  ...(task.flags["--against"]?["--against",task.flags["--against"]]:[])]);
 }
 function publicationCall(task){
  const {mode,inputs,flags,output}=task;
@@ -159,7 +164,8 @@ function report(task,primary,coverage,inputsSha){
 }
 async function perform(task){
  const allInput=[...task.inputs,task.flags["--quality-review"],
-   task.flags["--blueprint"],task.flags["--key-document"]].filter(Boolean);
+   task.flags["--blueprint"],task.flags["--key-document"],task.flags["--cognitive"],
+   task.flags["--against"]].filter(Boolean);
  const digests=await Promise.all(allInput.map(inputHash));
  if(task.action==="publish"){
   try{await access(task.output);return failure("output-already-exists");}
@@ -172,25 +178,55 @@ async function perform(task){
  if(task.action==="assess"){emit(base);return;}
  if((await Promise.all(allInput.map(inputHash))).some((v,i)=>v!==digests[i]))
   return failure("stale-input-before-publication");
- const created=publicationCall(task);
- if(!created.ok||created.body.valid===false){
-  emit({...base,stage:"publish",valid:false,readyForPublication:false,
-   published:false,issues:{total:1,shown:1,remaining:0,
-    items:[{code:created.body.code??"canonical-publication-rejected",severity:"error"}]}});
-  process.exitCode=1;return;
+ // Downstream compilers write only into a hidden, exclusive staging directory.
+ // Any stale input detected after compilation leaves no published output behind.
+ const target=resolve(task.output);
+ const staging=await mkdtemp(join(dirname(target),".practice-desk-stage-"));
+ const stagedOutput=join(staging,task.mode==="single"?"compiled.exam.json":"bundle");
+ let published=false,reservedDirectory=false;
+ try{
+  const created=publicationCall({...task,output:stagedOutput});
+  if(!created.ok||created.body.valid===false){
+   emit({...base,stage:"publish",valid:false,readyForPublication:false,
+    published:false,issues:{total:1,shown:1,remaining:0,
+     items:[{code:created.body.code??"canonical-publication-rejected",severity:"error"}]}});
+   process.exitCode=1;return;
+  }
+  const stagedFiles=task.mode==="single"?[stagedOutput]:
+   (await readdir(stagedOutput)).map(name=>join(stagedOutput,name)).sort();
+  if(!stagedFiles.length)throw Error("Canonical publication returned no output files");
+  const writtenFiles=await Promise.all(stagedFiles.map(async path=>({
+   file:task.mode==="single"?target:path.slice(stagedOutput.length+1),
+   sha256:await inputHash(path)})));
+  if((await Promise.all(allInput.map(inputHash))).some((v,i)=>v!==digests[i]))
+   return failure("stale-input-after-publication");
+  // Exclusive hard-link for a file; directory reservation prevents replacing
+  // any pre-existing bundle, then same-parent rename publishes completed files.
+  if(task.mode==="single")await link(stagedOutput,target);
+  else{
+   await mkdir(target);
+   reservedDirectory=true;
+   await rename(stagedOutput,target);
+   reservedDirectory=false;
+  }
+  published=true;
+  // Reject even a mutation that races the short final commit interval.
+  if((await Promise.all(allInput.map(inputHash))).some((v,i)=>v!==digests[i])){
+   await rm(target,{recursive:true,force:true});
+   published=false;
+   return failure("stale-input-after-publication");
+  }
+  emit({...base,stage:"publish",published:true,writtenFiles,
+   importInstruction:task.mode==="single"?
+    "Explicitly import the signed compiled file into the offline Library; no automatic user-device access.":
+    "Explicitly import source.exam.json first and reviewed.exam.json second into the offline Library; retain external source/sidecars."});
+ }finally{
+  if(reservedDirectory&&!published){
+   // Only clear our own still-empty reservation; never remove third-party data.
+   try{if((await readdir(target)).length===0)await rmdir(target);}catch{}
+  }
+  await rm(staging,{recursive:true,force:true});
  }
- const files=task.mode==="single"?[task.output]:
-  (await readdir(task.output)).map(name=>join(task.output,name)).sort();
- const writtenFiles=await Promise.all(files.map(async path=>({
-  file:task.mode==="single"?resolve(path):path.slice(resolve(task.output).length+1),
-  sha256:await inputHash(path)})));
- if((await Promise.all(allInput.map(inputHash))).some((v,i)=>v!==digests[i]))
-  return failure("stale-input-after-publication");
- emit({...base,stage:"publish",published:true,
-  writtenFiles,
-  importInstruction:task.mode==="single"?
-   "Explicitly import the signed compiled file into the offline Library; no automatic user-device access.":
-   "Explicitly import source.exam.json first and reviewed.exam.json second into the offline Library; retain external source/sidecars."});
 }
 async function main(){
  const argv=process.argv.slice(2);
