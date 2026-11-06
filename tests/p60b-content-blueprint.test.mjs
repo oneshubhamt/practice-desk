@@ -149,3 +149,55 @@ test("P60-B RED: audit reports no keys/base64 and rejects unsupported input/flag
  assert.equal(r.status,0);
  assert.equal(r.data.issues.limit,1);
 }));
+
+
+test("P60-B: canonical compiler optionally gates exact single-source publication, preserving old paths",()=>temp(async dir=>{
+ const plan=await write(dir,"plan.json",mkPlan());
+ const source=await write(dir,"source.json",JSON.parse(await readFile(example,"utf8")));
+ const out=join(dir,"compiled.json");
+ const cli=fileURLToPath(new URL("../scripts/question-bank-cli.mjs",import.meta.url));
+ const compile=(...args)=>{
+  const x=spawnSync(process.execPath,[cli,...args],{encoding:"utf8",timeout:30000,maxBuffer:250000});
+  assert.equal(x.error,undefined,String(x.error));
+  return {...x,data:JSON.parse(x.stdout||x.stderr)};
+ };
+ const ok=compile("compile-bank",source,out,"--blueprint",plan);
+ assert.equal(ok.status,0,ok.stderr);
+ assert.equal(ok.data.blueprint.valid,true);
+ const frozen=JSON.parse(await readFile(out,"utf8"));
+ assert.equal(frozen.format,"practice-desk-exam");
+ const badPlan=mkPlan();badPlan.quotas.subjects.targets[0].count=0;
+ badPlan.quotas.subjects.exhaustive=false;
+ const badFile=await write(dir,"bad.json",badPlan);
+ const blocked=compile("compile-bank",source,join(dir,"blocked.json"),"--blueprint",badFile);
+ assert.notEqual(blocked.status,0);
+ assert.equal(blocked.data.compiled,false);
+ assert.equal(blocked.data.blueprint.valid,false);
+ await assert.rejects(readFile(join(dir,"blocked.json"),"utf8"));
+ const old=compile("validate-bank",source);
+ assert.equal(old.status,0,"Legacy no-plan workflow remains usable");
+});
+
+test("P60-B: parent-child allocation contradictions are rejected at plan time, not silently audited",()=>temp(async dir=>{
+ for(const mut of [
+  p=>{p.quotas.topics={targets:[{subjectKey:"heading:labour",topic:"A",count:2}]};},
+  p=>{p.quotas.subtopics={targets:[{subjectKey:"heading:labour",topic:"A",subtopic:"B",count:2}]};},
+  p=>{p.quotas.topics={exhaustive:true,targets:[{subjectKey:"heading:labour",topic:"A",count:3}]};}
+ ]){
+  const p=mkPlan();mut(p);
+  const r=run("validate",await write(dir,"contradiction-"+Math.random()+".json",p));
+  assert.notEqual(r.status,0);
+ }
+});
+
+test("P60-B: explicitly requested paper rules must match actual scoring, timers and navigation",()=>temp(async dir=>{
+ const p=mkPlan();const src=JSON.parse(await readFile(example,"utf8"));
+ p.paperRules={scoring:structuredClone(src.scoring),timing:structuredClone(src.timing),
+  navigation:structuredClone(src.navigation)};
+ const plan=await write(dir,"plan.json",p);
+ assert.equal(run("audit",plan,example).status,0);
+ p.paperRules.scoring.correctMarks=100;
+ const wrong=run("audit",await write(dir,"wrong.json",p),example);
+ assert.notEqual(wrong.status,0);
+ assert.ok(wrong.data.issues.items.some(x=>x.code==="paper-policy-mismatch"));
+});
