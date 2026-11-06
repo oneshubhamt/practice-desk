@@ -10,6 +10,7 @@ import type {CandidateResponse} from "../domain/question.ts";
 import type {CorrectAnswer} from "../domain/answer-key.ts";
 import type {AttemptResponseRecord} from "../domain/attempt.ts";
 import {sha256} from "../domain/hash.ts";
+import {inspectCandidateIntegrity} from "./candidate-integrity.ts";
 
 export type QualityIssue={
  readonly path:string;
@@ -123,6 +124,11 @@ export function inspectExternalQuality(
   issues.push({path:id?locate(id,field):"$."+field,code,severity,message,basis,
    ...(id?{questionId:id}:{}),...(evidence?{evidence}:{}),...(suggestion?{suggestion}:{})});
  };
+ // P60-C: apply high-confidence answer leaks to every source import/publication,
+ // not solely to the opt-in external review sidecar.
+ for(const hint of inspectCandidateIntegrity(draft))
+  add(hint.code,hint.severity,hint.message,hint.questionId,hint.field,
+   hint.severity==="error"?"deterministic":"heuristic",undefined,hint.suggestion);
  const source=original as {sections?:readonly {id:string;title:string}[];
    questions?:readonly {examSection:string}[]}|undefined;
  if(source?.sections&&source.questions){
