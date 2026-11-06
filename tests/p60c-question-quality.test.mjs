@@ -29,7 +29,7 @@ const write=async(dir,name,data)=>{const path=join(dir,name);await writeFile(pat
 test("P60-C: all authoring paths block explicit answers hidden in private rich passages or shared rich media text",async()=>{
  const source=JSON.parse(await readFile(cat,"utf8"));
  const draft=structuredClone(toAuthoringDraft(source));
- const textBlock=t=>({schema:1,blocks:[{type:"paragraph",content:[{type:"text",text:t}]}]});
+ const textBlock=t=>({format:"practice-desk-rich",version:1,blocks:[{type:"paragraph",content:[{type:"text",text:t}]}]});
  // Direct Wordgard authoring may supply a private passage rather than a v1 stimulus.
  draft.questions[0].passage=textBlock("Correct answer: A");
  let issues=inspectCandidateIntegrity(draft);
