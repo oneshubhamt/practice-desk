@@ -192,7 +192,7 @@ function validateBlueprint(value){
  }
  return b;
 }
-function audit(plan,sources,tagDoc,{offset=0,limit=12}={}){
+function audit(plan,sources,tagDoc,{offset=0,limit=12,priorSources=[]}={}){
  const issues=[],all=[],batches=[],sourceHashes=[],bankIds=new Set(),questionIds=new Set();
  const add=(code,message,path="$",severity="error")=>issues.push({code,severity,basis:severity==="warning"?"heuristic":"deterministic",path,message});
  const first=sources[0]?.value,head=first?{scoring:first.scoring,timing:first.timing,navigation:first.navigation,sections:first.sections}:null;
@@ -247,6 +247,20 @@ function audit(plan,sources,tagDoc,{offset=0,limit=12}={}){
  const tick=(g,key)=>counts[g].set(key,(counts[g].get(key)??0)+1);
  const stems=new Map(),nearSeen=[],topicShare=new Map(),answerPositions={A:0,B:0,C:0,D:0};
  let nearDuplicateCandidates=0,nearDuplicateScanTruncated=false;
+ // Prior banks are for deduplication only: never counted against delivery quotas.
+ for(const prior of priorSources){
+  const source=prior.value??prior;
+  const check=inspectExternalQuestionBank(source);
+  if(!check.valid){add("comparison-source-invalid","Prior comparison bank failed canonical QA");continue;}
+  if(source.examId!==plan.examId){add("comparison-exam-mismatch","Prior bank must belong to the same examination");continue;}
+  for(const q of source.questions){
+   const stem=normalize(typeof q.prompt==="string"?q.prompt:publicationPlainText(q.prompt));
+   if(!stem)continue;
+   const name=source.bankId+"/"+q.id;
+   if(!stems.has(stem))stems.set(stem,name);
+   if(stem.length>=55)nearSeen.push({bankId:source.bankId,name,words:tokenSet(stem),grams:bigrams(stem)});
+  }
+ }
  const cognitiveRequired=Boolean(plan.quotas?.cognitive);
  if(cognitiveRequired&&!tagDoc)add("cognitive-tags-missing","Cognitive quotas require explicit attributed tag sidecar");
  const originAllowed=plan.requirements.allowedOrigins;
@@ -373,7 +387,7 @@ const failure=message=>{
 };
 async function main(){
  const [command,...args]=process.argv.slice(2);
- if(!["validate","audit"].includes(command))fail("Usage: content-blueprint.mjs validate <plan.json> | audit <plan.json> <source.json>... [--cognitive tags.json] [--offset N] [--limit 1..50]");
+ if(!["validate","audit"].includes(command))fail("Usage: content-blueprint.mjs validate <plan.json> | audit <plan.json> <source.json>... [--cognitive tags.json] [--against prior-bank.json]... [--offset N] [--limit 1..50]");
  if(command==="validate"&&args.length!==1)fail("validate takes only one blueprint file");
  if(command==="audit"&&args.length<2)fail("audit needs blueprint and at least one source");
  const planFile=await load(args[0],MAX_PLAN,"Blueprint");
@@ -386,12 +400,14 @@ async function main(){
    factualVerification:"not-performed",note:"A valid blueprint does not authenticate the curriculum or prove question quality."});
   return;
  }
- const files=[];let tagPath=null,limit=12,offset=0;
+ const files=[],priorPaths=[];let tagPath=null,limit=12,offset=0;
  for(let i=1;i<args.length;i++){
-  if(args[i]==="--cognitive"||args[i]==="--limit"||args[i]==="--offset"){
+  if(args[i]==="--cognitive"||args[i]==="--limit"||args[i]==="--offset"||args[i]==="--against"){
    if(i+1>=args.length)fail("Missing argument after "+args[i]);
    if(args[i]==="--cognitive"){
     if(tagPath)fail("Duplicate --cognitive");tagPath=args[++i];
+   }else if(args[i]==="--against"){
+    priorPaths.push(args[++i]);
    }else if(args[i]==="--limit"){
     const num=Number(args[++i]);
     if(!Number.isSafeInteger(num)||num<1||num>50)fail("Limit must be 1..50");
@@ -408,7 +424,10 @@ async function main(){
  const sources=[];
  for(const path of files)sources.push(await load(path,MAX_SOURCE,"Source"));
  const tags=tagPath?(await load(tagPath,MAX_PLAN,"Cognitive tags")).value:undefined;
- const result=audit(plan,sources,tags,{limit,offset});
+ if(priorPaths.length>MAX_FILES)fail("Too many comparison banks");
+ const priorSources=[];
+ for(const path of priorPaths)priorSources.push(await load(path,MAX_SOURCE,"Prior comparison source"));
+ const result=audit(plan,sources,tags,{limit,offset,priorSources});
  result.blueprintSha256=planFile.digest;
  emit(result);
  if(!result.valid)process.exitCode=1;
