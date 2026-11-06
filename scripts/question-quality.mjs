@@ -210,7 +210,7 @@ export function auditQuestionQuality(source,sourceRaw,reviewRaw=undefined,{offse
   // These are *claims* of source consultation, never proof the URL was fetched.
   // An editorial "pass" is not evidence of source consultation.
   const visibleStem=publicationPlainText(q.prompt)+" "+publicationPlainText(q.explanation);
-  const timeSensitive=/(?:\b(?:Act|Code|Rules|Regulations|Gazette|notification)\s*(?:of\s*)?\d{4}\b|\b(?:commenc(?:ed|ement)|amend(?:ed|ment)|section\s+\d+|effective\s+(?:from|on))\b)/iu.test(visibleStem);
+  const timeSensitive=/(?:\b(?:Act|Code|Rules|Regulations|Gazette|Notification)\b(?:\s+[A-Za-z&\x27-]+){0,8}\s*,?\s*(?:19|20)\d{2}\b|\b(?:commenc(?:ed|ement)|amend(?:ed|ment)|section\s+\d+|effective\s+(?:from|on))\b)/iu.test(visibleStem);
   const facts=map.get("factual-correctness"),temporal=map.get("temporal-correctness"),
    pyq=map.get("pyq-fidelity"),visual=map.get("candidate-view-integrity");
   const consulted=(name,check)=>{
