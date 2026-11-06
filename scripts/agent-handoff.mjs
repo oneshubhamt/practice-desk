@@ -58,6 +58,8 @@ function options(argv){
  if(action==="assess"&&flags["--allow-create"])throw Error("Read-only assessment cannot request publication privilege");
  if(mode!=="pdf"&&flags["--key-document"])throw Error("Separate key document is only for PDF ingestion mode");
  if(flags["--cognitive"]&&!flags["--blueprint"])throw Error("--cognitive requires --blueprint");
+ if(flags["--against"]&&mode!=="single"&&!flags["--blueprint"])
+  throw Error("--against requires --blueprint for paired/PDF modes; without coverage it would be ignored");
  return {action,mode,inputs,output,flags};
 }
 function cleanIssues(result){

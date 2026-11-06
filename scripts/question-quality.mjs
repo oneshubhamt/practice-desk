@@ -43,12 +43,11 @@ const allowedChecks=new Set(["pass","fail","not-reviewed","not-applicable"]);
 // N/A is valid only for a genuinely inapplicable construct; mandatory checks require PASS.
 const CONDITIONAL_CHECKS=new Set(["option-distinctness","distractor-quality",
  "mathematical-correctness","temporal-correctness","pyq-fidelity"]);
-const requiresCheck=(id,q,timeSensitive)=>{
+const requiresCheck=(id,q,timeSensitive,hasMathematics)=>{
  if(!CONDITIONAL_CHECKS.has(id))return true;
  if(id==="option-distinctness")return ["single-choice","multiple-select","matching"].includes(q.kind);
  if(id==="distractor-quality")return ["single-choice","multiple-select"].includes(q.kind);
- if(id==="mathematical-correctness")return q.kind==="numeric-entry"||
-  /(?:\\(?:frac|sqrt|sum|int)|\b(?:calculate|evaluate|compute|percent|ratio|equation)\b|[+×÷=])/iu.test(publicationPlainText(q.prompt));
+ if(id==="mathematical-correctness")return hasMathematics;
  if(id==="temporal-correctness")return timeSensitive;
  if(id==="pyq-fidelity")return q.provenance?.kind==="official-pyq";
  return true;
@@ -223,12 +222,16 @@ export function auditQuestionQuality(source,sourceRaw,reviewRaw=undefined,{offse
    add("independent-key-disagreement","Blind-review answer disagrees with authored key",q.id,"reviewer-claimed");
   // Reviewer claims are validated for applicability before they can permit publication.
   const visibleStem=publicationPlainText(q.prompt)+" "+publicationPlainText(q.explanation);
+   const relatedStimulus=(draft.stimuli??[]).find(s=>s.id===q.stimulusRef);
+   const mathematicalText=visibleStem+" "+(relatedStimulus?JSON.stringify(relatedStimulus):"");
+   const hasMathematics=q.kind==="numeric-entry"||
+    /(?:\\(?:frac|sqrt|sum|int)|\b(?:calculate|evaluate|compute|percent|ratio|equation|remainder|multiply|divide)\b|\b\d+\s*[+×÷/=−-]\s*\d+\b)/iu.test(mathematicalText);
   const timeSensitive=/(?:\b(?:Act|Code|Rules|Regulations|Gazette|Notification)\b(?:\s+[A-Za-z&\x27-]+){0,8}\s*,?\s*(?:19|20)\d{2}\b|\b(?:commenc(?:ed|ement)|amend(?:ed|ment)|section\s+\d+|effective\s+(?:from|on)|as[- ]of\s+\d{4}|latest|current\s+(?:rate|rule|law|figure))\b)/iu.test(visibleStem);
   const map=new Map(item.checks.map(x=>[x.id,x]));
   for(const c of QUALITY_CHECKLIST){
    const check=map.get(c.id);
    if(!check||check.status==="fail"||check.status==="not-reviewed"||
-    (check.status==="not-applicable"&&requiresCheck(c.id,q,timeSensitive)))
+    (check.status==="not-applicable"&&requiresCheck(c.id,q,timeSensitive,hasMathematics)))
     add("review-check-unresolved","Quality checklist not satisfied: "+c.id,q.id,"reviewer-claimed");
   }
   // All evidence, sources and independent solving remain reviewer-attributed, not authenticated.
@@ -243,7 +246,9 @@ export function auditQuestionQuality(source,sourceRaw,reviewRaw=undefined,{offse
   };
   if(facts?.status==="pass"&&!["mathematical-proof","source-consulted"].includes(facts.basis))
    add("factual-basis-invalid","Factual correctness requires source consultation or mathematical proof",q.id,"reviewer-claimed");
-  if(facts?.status==="pass"&&facts.basis==="source-consulted"&&!item.evidence?.length)
+  if(facts?.status==="pass"&&facts.basis==="mathematical-proof"&&!hasMathematics)
+    add("factual-proof-basis-invalid","Non-mathematical facts need actually consulted sources, not a mathematics-proof label",q.id,"reviewer-claimed");
+   if(facts?.status==="pass"&&facts.basis==="source-consulted"&&!item.evidence?.length)
    add("review-evidence-missing","No source extract recorded for factual correctness",q.id,"reviewer-claimed");
   if(timeSensitive){
    if(facts?.status==="pass"&&facts.basis!=="source-consulted")

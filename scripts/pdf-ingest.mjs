@@ -307,6 +307,8 @@ async function main(){
    qualityReview:await sourceJson(opts["--quality-review"],3*1024*1024,"Quality review")};
  }
  if(opts["--cognitive"]&&!opts["--blueprint"])throw Error("--cognitive requires --blueprint");
+ if(opts["--against"]&&!opts["--blueprint"])
+  throw Error("--against requires --blueprint for PDF intake; otherwise comparison would be ignored");
  const blueprint=opts["--blueprint"]?await sourceJson(opts["--blueprint"],1024*1024,"Blueprint"):null;
  const cognitiveTags=opts["--cognitive"]?(await sourceJson(opts["--cognitive"],1024*1024,"Cognitive tags")).value:null;
  const comparisonSources=opts["--against"]?[(await sourceJson(opts["--against"],MAX_SOURCE,"Prior source")).value]:[];
