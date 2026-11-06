@@ -70,11 +70,19 @@ function validateSubject(examId,s){
 }
 function validateBlueprint(value){
  const b=obj(value,"blueprint",["format","version","id","examId","paperId","revision",
-  "targetCount","allowPartial","syllabus","requirements","quotas"]);
+  "targetCount","allowPartial","syllabus","requirements","quotas","paperRules"]);
  if(b.format!==FORMAT||b.version!==1)fail("Expected "+FORMAT+" v1");
  str(b.id,"id",80);str(b.examId,"examId",80);str(b.paperId,"paperId",80);
  int(b.revision,"revision",1,1000000);int(b.targetCount,"targetCount",1,MAX_TOTAL);
  if(b.allowPartial!==undefined)bool(b.allowPartial,"allowPartial");
+ if(b.paperRules!==undefined){
+  const policy=obj(b.paperRules,"paperRules",["scoring","timing","navigation","sections"]);
+  if(!Object.keys(policy).length)fail("paperRules cannot be empty");
+  for(const k of ["scoring","timing","navigation"]){
+   if(policy[k]!==undefined)obj(policy[k],"paperRules."+k,Object.keys(policy[k]??{}));
+  }
+  if(policy.sections!==undefined)list(policy.sections,"paperRules.sections",40,1);
+ }
  const s=obj(b.syllabus,"syllabus",["basis","asOfDate","reference"]);
  if(!["user-defined","official-source-attributed","inferred-practice"].includes(s.basis))
   fail("Syllabus basis is attribution only: user-defined, official-source-attributed or inferred-practice");
@@ -158,6 +166,8 @@ function audit(plan,sources,tagDoc){
  const issues=[],all=[],batches=[],sourceHashes=[],bankIds=new Set(),questionIds=new Set();
  const add=(code,message,path="$")=>issues.push({code,severity:"error",basis:"deterministic",path,message});
  const first=sources[0]?.value,head=first?{scoring:first.scoring,timing:first.timing,navigation:first.navigation,sections:first.sections}:null;
+ for(const [k,expected] of Object.entries(plan.paperRules??{}))
+  if(first&&!isDeepStrictEqual(first[k],expected))add("paper-policy-mismatch","Authored "+k+" does not match user blueprint paperRules."+k,"paperRules."+k);
  for(const {value:source,digest} of sources){
   sourceHashes.push(digest);
   const at="banks["+(batches.length)+"]";
