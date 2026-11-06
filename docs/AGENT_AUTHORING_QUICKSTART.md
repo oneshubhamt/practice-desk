@@ -7,6 +7,10 @@ Practice Desk is an **offline examination, scoring, results, history and spaced-
 
 **Read this instead of the whole application repository.** This is the external AI authoring interface, not an LLM embedded in Practice Desk. For exact valid source shapes, read just one small relevant example: [APFC](../examples/ai-first-apfc.json) or [CAT](../examples/ai-first-cat.json). The broader [agent-native rationale and quality policy](architecture/P59_AGENT_NATIVE_QUESTION_AUTHORING.md) is optional on ordinary authoring turns.
 
+## P60-G — source-level defect corrections (6 November 2026)
+
+Use `--blueprint plan.json --cognitive tags.json` together when the plan specifies cognitive quotas. Add `--against prior-bank.json` to check current questions against an explicitly supplied earlier source; standalone multi-bank coverage also supports repeated `--against` flags. A blueprint with `allowPartial: true` may accept **shortfalls only**, never hidden oversupply or an unallocated category; audits disclose `partialDelivery`, `remainingCount` and quota deficits. These flags work through the canonical compiler, PDF intake and agent handoff. Publication now stages outputs until SHA-bound inputs remain stable; a rejected stale publication must not leave a compiled output. Editorial `corrected` and `caution` are distinct, evidence locators accompany corrections, and shared asset changes are recorded only for affected questions. Mandatory reviewer checks cannot be bypassed by `not-applicable`; mathematical/numeric answers use one-to-one comparisons. All source references and reviewer claims remain unverified until actual independent research.
+
 ## P60-F — one low-context, explicit-permission agent handoff
 
 **Automated software verified:** [exact-source five-job CI 42194153793](https://github.com/oneshubhamt/practice-desk/actions/runs/42194153793), source `784a31e145855329cb4388a520ca8e92a95ee7d6`, **426/426 Node, all three offline browsers, guarded publication 5/5 PASS**, unchanged standalone HTML. External original/PYQ/factual/reviewer/device authentication remains separate.
