@@ -250,7 +250,7 @@ export function inspectExternalQuality(
    if(!src.length)add("pyq-primary-source-missing","warning",
     "Official PYQ identity has no cited source",q.id,"provenance.sources","unverified");
   }
-  const law=/(?:\b(?:Act|Code|Rules|Regulations|Gazette|notification)\s*(?:of\s*)?\d{4}\b|\b(?:commenc(?:ed|ement)|amend(?:ed|ment)|section\s+\d+|effective\s+(?:from|on))\b)/iu
+  const law=/(?:\b(?:Act|Code|Rules|Regulations|Gazette|Notification)\b(?:\s+[A-Za-z&\x27-]+){0,8}\s*,?\s*(?:19|20)\d{2}\b|\b(?:commenc(?:ed|ement)|amend(?:ed|ment)|section\s+\d+|effective\s+(?:from|on))\b)/iu
     .test(prompt+" "+explanation);
   if(law){
    if(!src.some(s=>s.asOfDate&&s.provision))
