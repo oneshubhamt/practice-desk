@@ -224,6 +224,10 @@ async function perform(task){
    importInstruction:task.mode==="single"?
     "Explicitly import the signed compiled file into the offline Library; no automatic user-device access.":
     "Explicitly import source.exam.json first and reviewed.exam.json second into the offline Library; retain external source/sidecars."});
+ }catch(error){
+  // A failed post-commit operation must not strand a newly created publication.
+  if(published){await rm(target,{recursive:true,force:true});published=false;}
+  throw error;
  }finally{
   if(reservedDirectory&&!published){
    // Only clear our own still-empty reservation; never remove third-party data.
