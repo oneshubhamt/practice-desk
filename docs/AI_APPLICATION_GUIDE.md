@@ -85,4 +85,4 @@ For nontrivial question banks, use the [Content Production Blueprint](architectu
 - **Precise existing authoring types:** [`architecture/QUESTION_BANK_AUTHORING.md`](architecture/QUESTION_BANK_AUTHORING.md).
 - **P60 future capabilities, engineering gates and limitations:** [`architecture/P60_AI_NATIVE_CAPABILITY_PROGRAMME.md`](architecture/P60_AI_NATIVE_CAPABILITY_PROGRAMME.md).
 
-**Maintenance rule:** The capability catalogue, this guide, its tests and the source implementation must stay aligned. When a feature is introduced/changed/removed, update the capability entry with source ownership, current status and limits. P60-B blueprint validate/audit are active external source commands; P60-C–F remain proposed.
+**Maintenance rule:** The capability catalogue, this guide, its tests and the source implementation must stay aligned. When a feature is introduced/changed/removed, update the capability entry with source ownership, current status and limits. P60-B content blueprints, P60-C editorial QA and P60-D original/reviewed pairing are active external source commands, while P60-E/F remain future proposals.
