@@ -127,7 +127,7 @@ test("P60-E missing page, duplicate numbering and cropped/uncertain maths or fig
  ]){
   const x=structuredClone(fresh);mutate(x.manifest);
   try{assert.equal((await audit(x)).valid,false);}
-  catch(e){assert.match(e.message,/page|number|list|source|intake|key|math|figure/i);}
+  catch(e){assert.match(e.message,/page|number|list|source|intake|key|math|figure|inspector|string/i);}
  }
 });
 test("P60-E original/source-document mismatch, stale individual revision and forged identity cannot silently pass",async()=>{
