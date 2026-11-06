@@ -1,7 +1,7 @@
 {
   "format": "practice-desk-agent-capabilities",
   "version": 1,
-  "contractStatus": "P60-A and P60-B verified for applicable CI; P60-C source QA, blind review evidence and strict gate implemented on Satyam, exact-source verification pending; P60-D–F planned",
+  "contractStatus": "P60-A and P60-B verified for applicable CI; P60-C source QA, blind review evidence and strict gate implemented and 5/5 software CI verified on Satyam (406 Node, offline Chromium/Firefox/WebKit and guarded artifact), unverified external factual/editorial content remains HOLD; P60-D–F planned",
   "product": {
     "name": "Practice Desk",
     "purpose": "Offline examination authoring, practice, scoring, history, analytics and spaced revision",
