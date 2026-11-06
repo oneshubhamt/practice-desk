@@ -237,7 +237,7 @@ export function auditQuestionQuality(source,sourceRaw,reviewRaw=undefined,{offse
   issues:{offset,limit,total:count,nextOffset:offset+limit<count?offset+limit:null,
    remaining:Math.max(0,count-offset-limit),items:issues.slice(offset,offset+limit)}};
 }
-const usage="Usage: question-quality.mjs checklist | candidate <source.json> [--offset N --limit 1..20] | audit <source.json> [--review <review.json>] [--offset N --limit 1..50]";
+const usage="Usage: question-quality.mjs checklist | candidate <source.json> [--offset N --limit 1..20] | template <source.json> [--offset N --limit 1..20] | audit <source.json> [--review <review.json>] [--offset N --limit 1..50]";
 const throwResult=(e)=>{
  process.stderr.write(JSON.stringify({valid:false,readyForPublication:false,code:"quality-input-invalid",
   message:e instanceof Error?e.message:"Unknown error"},null,2)+"\n");
@@ -251,9 +251,9 @@ async function main(){
    note:"AI editorial judgments are not source-authenticated by this offline checker."});
   return;
  }
- if(!["candidate","audit"].includes(op)||!args.length)fail(usage);
+ if(!["candidate","template","audit"].includes(op)||!args.length)fail(usage);
  const sourceFile=args[0],flags=args.slice(1);
- let offset=0,limit=op==="candidate"?10:12,reviewPath=null;
+ let offset=0,limit=op==="audit"?12:10,reviewPath=null;
  for(let i=0;i<flags.length;i+=2){
   const k=flags[i],v=flags[i+1];
   if(v===undefined)fail(usage);
@@ -262,19 +262,36 @@ async function main(){
    reviewPath=v;
   }else if(k==="--offset"||k==="--limit"){
    const n=Number(v);
-   if(!Number.isSafeInteger(n)||(k==="--offset"?(n<0||n>500):(n<1||n>(op==="candidate"?20:50))))
+   if(!Number.isSafeInteger(n)||(k==="--offset"?(n<0||n>500):(n<1||n>(op==="audit"?50:20))))
     fail("Invalid "+k+" value");
    if(k==="--offset")offset=n;else limit=n;
   }else fail(usage);
  }
  const {raw,value}=await parseFile(sourceFile,MAX_SOURCE,"Source");
- if(op==="candidate"){
+ if(op==="candidate"||op==="template"){
   // Canonical v1 parser, without requiring a question already to pass all QA.
   const draft=toAuthoringDraft(value);
   const items=draft.questions.slice(offset,offset+limit).map(q=>{
    const item=candidateProjection(draft,q);
    return {...item,questionSha256:sha(JSON.stringify(value.questions.find(x=>x.id===q.id)))};
   });
+  if(op==="template"){
+   emit({format:"practice-desk-quality-review",version:1,
+    bankId:value.bankId,sourceSha256:sha(raw),
+    records:items.map(item=>({
+     questionId:item.questionId,questionSha256:item.questionSha256,
+     candidateSha256:item.candidateSha256,
+     reviewer:{id:"REPLACE_REVIEWER",kind:"ai"},
+     independentSolution:{blindClaim:false,answer:"",
+      reasoning:"Pending blind independent solution"},
+     checks:QUALITY_CHECKLIST.map(x=>({id:x.id,status:"not-reviewed",
+      basis:"independent-editorial",rationale:"Pending independent assessment"})),
+     evidence:[]
+    })),
+    templateIncomplete:true,offset,limit,
+    warning:"Incomplete template; never self-certifies review. Merge fully assessed records for all source questions, after blinded solving and actual source research."});
+   return;
+  }
   emit({format:"practice-desk-blind-candidates",version:1,bankId:value.bankId,
    sourceSha256:sha(raw),total:draft.questions.length,offset,limit,
    nextOffset:offset+limit<draft.questions.length?offset+limit:null,items,
