@@ -23,7 +23,7 @@ const run=(program,...args)=>{
 };
 const scoped=async fn=>{const root=await mkdtemp(join(tmpdir(),"pd-p60f-"));
  try{return await fn(root);}finally{await rm(root,{recursive:true,force:true});}};
-const put=async(dir,name,data)=>{const path=join(dir,name);await writeFile(path,typeof data==="string"?data:JSON.stringify(data));return path;};
+const put=async(dir,name,data)=>{const path=join(dir,name);await writeFile(path,typeof data==="string"||Buffer.isBuffer(data)?data:JSON.stringify(data));return path;};
 async function files(dir,{asDocument=false}={}){
  const source=JSON.parse(await readFile(new URL("../examples/ai-first-apfc.json",import.meta.url),"utf8"));
  if(asDocument)source.questions=source.questions.map((q,i)=>({...q,
