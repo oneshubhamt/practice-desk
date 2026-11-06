@@ -1,7 +1,7 @@
 {
   "format": "practice-desk-agent-capabilities",
   "version": 1,
-  "contractStatus": "P60-A/B/C verified; P60-D generic source/reviewed paired compilation, lineage and real three-browser workflow verified by exact-source 5/5 CI 42179668770 (412 Node) on Satyam; P60-E/F planned and external factual/release gates HOLD.",
+  "contractStatus": "P60-A/B/C/D automated verified on Satyam; P60-E source-bound external-agent PDF intake implemented, full exact-source CI pending; actual PDF content, PYQ/reviewer authentication, hardware/human and release HOLD; P60-F not implemented.",
   "product": {
     "name": "Practice Desk",
     "purpose": "Offline examination authoring, practice, scoring, history, analytics and spaced revision",
@@ -23,6 +23,7 @@
     "recommendedSequence": [
       "Read short quickstart",
       "Run read-only capability list or show one named capability",
+      "For supplied PDF papers, have an external authorized agent interpret original document and use P60-E source-bound intake audit before reviewed publication",
       "Read one relevant authoring example/task contract",
       "Translate user coverage and source constraints to a v1 content blueprint and validate it before creating question batches",
       "Research facts outside app",
@@ -124,6 +125,24 @@
       "command": "node scripts/editorial-editions.mjs compile <original.json> <reviewed.json> <decisions.json> <NEW-directory> --quality-review <review.json>",
       "privilege": "create-new-file",
       "effect": "Create exact raw original/reviewed archives, separately signed Source and Reviewed exams and audit ledger; no overwrite or browser publication"
+    },
+    {
+      "operation": "pdf-intake-template",
+      "command": "node scripts/pdf-ingest.mjs template <original.json> <paper.pdf> [--key-document key.pdf]",
+      "privilege": "read-only",
+      "effect": "Incomplete SHA-bound source/file/page manifest; no actual PDF text recognition"
+    },
+    {
+      "operation": "pdf-intake-audit",
+      "command": "node scripts/pdf-ingest.mjs audit <intake.json> <original.json> <paper.pdf> [--key-document key.pdf] [--reviewed reviewed.json --decisions decisions.json --quality-review review.json] [--blueprint plan.json]",
+      "privilege": "read-only",
+      "effect": "Fail-closed document/item/page/key/visual provenance and optional independently recorded P60-C/D/B review; bounded answer-free output"
+    },
+    {
+      "operation": "pdf-intake-compile",
+      "command": "node scripts/pdf-ingest.mjs compile <intake.json> <original.json> <paper.pdf> <reviewed.json> <decisions.json> <NEW-directory> --quality-review <review.json> [--key-document key.pdf] [--blueprint plan.json]",
+      "privilege": "create-new-file",
+      "effect": "Delegate strictly to P60-D canonical original/reviewed publisher, add provenance sidecar in fresh directory; no browser import"
     }
   ],
   "trustBoundaries": [
@@ -424,7 +443,7 @@
         "Self-attested reviewer/source/rendered UI claims are never certificates of factual accuracy",
         "Legacy local browser import remains caution-labelled and is not automatically required to supply the external review sidecar",
         "Candidate-only text/alt packet does not replace looking at actual image pixels or device-rendered question UI",
-        "P60-D source/reviewed pairing is implemented externally with caution only; P60-E PDF extraction remains future work."
+        "P60-D source/reviewed pairing is implemented externally with caution only; P60-E external-agent source-bound intake is implemented, but automatic PDF extraction is not."
       ],
       "sourcePaths": [
         "src/authoring/candidate-integrity.ts",
@@ -452,7 +471,7 @@
         "Requires structurally publishable original with no explicit candidate answer leak; unreadable historical scans stay outside executable Source.",
         "No automatic transactional two-file browser import or cloud/device bridge; externally generated raw sources and lineage require independent backups.",
         "Source-key scoring remains intentionally conservative and may not compare changed explanation/metadata semantics; never regrades saved attempts.",
-        "P60-E PDF extraction and P60-F direct agent app control remain future phases."
+        "P60-E external-agent PDF intake is implemented; P60-F direct app control remains future."
       ],
       "sourcePaths": [
         "scripts/editorial-editions.mjs",
@@ -461,13 +480,37 @@
         "src/authoring/authoring-publisher.ts",
         "src/app/library-controller.ts"
       ]
+    },
+    {
+      "id": "agent-pdf-intake",
+      "status": "implemented-with-limits",
+      "summary": "P60-E external-agent supplied-PDF intake with actual file identity and per-item page/SHA provenance sidecar; no automatic PDF comprehension.",
+      "provides": [
+        "Explicit incomplete template, SHA-bound real PDF and optional printed-key file",
+        "Page census, missing page and question-omission rejection, printed numbering, question/stimulus/image SHA ledger",
+        "Math/diagram and source-key page checks, attributed inspector and printed-versus-editorial explanation provenance",
+        "Fail-closed bounded answer-free audit, with canonical source and existing P60-C/D/B review/coverage gates",
+        "Existing P60-D source/reviewed signed immutable paired exams, exact raw source archives and extra PDF provenance sidecar",
+        "No browser/app access without the user's explicit offline import"
+      ],
+      "agentUse": "Read docs/architecture/P60E_AGENT_PDF_INGESTION.md only for a supplied document; transcribe externally and preserve bytes, template, source-inspect, audit, independently review the corrected edition, compile into a new directory.",
+      "limitations": [
+        "No PDF text parsing/OCR/image recognition, no independently verified document page count or content fidelity",
+        "Actual source-key/PYQ/source publisher/reviewer identity and factual verification cannot follow from a SHA or model declaration",
+        "Unknown original printed key and unresolved pages/figures prevent a publishable paired Source edition",
+        "PDF file remains external: imported browser examination records do not store the PDF or its full intake sidecar",
+        "No P60-F agent-to-device control, cloud, sync or release authorization"
+      ],
+      "sourcePaths": [
+        "scripts/pdf-ingest.mjs",
+        "tests/p60e-pdf-ingest.test.mjs",
+        "scripts/editorial-editions.mjs",
+        "scripts/question-quality.mjs",
+        "scripts/content-blueprint.mjs"
+      ]
     }
   ],
   "plannedProgramme": [
-    {
-      "id": "P60-E",
-      "name": "External AI PDF extraction and ingestion"
-    },
     {
       "id": "P60-F",
       "name": "Permission-scoped agent interaction and measured end-to-end QA"
