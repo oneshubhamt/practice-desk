@@ -15,6 +15,7 @@ import {plainRichDocument,validateRichDocument} from "../domain/rich-document.ts
 import {validateMediaInventory} from "../domain/media.ts";
 import {sha256} from "../domain/hash.ts";
 import {inspectExternalQuality} from "./external-bank-qa.ts";
+import {inspectCandidateIntegrity} from "./candidate-integrity.ts";
 import type {QualityIssue,QualityResult} from "./external-bank-qa.ts";
 
 export type ExternalBankIssue=QualityIssue;
@@ -373,6 +374,14 @@ export function inspectExternalQuestionBank(value:unknown,existing:readonly Exam
   ((value as {questions:unknown[]}).questions.length):0;
  try{
   const draft=toAuthoringDraft(value);
+  // Preserve the precise candidate-answer-leak issue code even when the
+  // shared Wordgard publisher now rejects that same defect before compilation.
+  const explicitLeaks=inspectCandidateIntegrity(draft).filter(x=>x.severity==="error");
+  if(explicitLeaks.length)return {valid:false,questionCount:draft.questions.length,
+   editorialStatus:"caution",factualVerification:"not-performed",
+   issues:explicitLeaks.map(x=>({path:"$.questions[id="+x.questionId+"]."+x.field,
+    code:x.code,severity:x.severity,message:x.message,questionId:x.questionId,
+    basis:"deterministic" as const,suggestion:x.suggestion}))};
   const check=inspectAuthoringPublication(draft,existing);
   if(!check.valid||!check.compiled){
    return {valid:false,questionCount:draft.questions.length,editorialStatus:"caution",
