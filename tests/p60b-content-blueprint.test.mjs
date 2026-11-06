@@ -253,3 +253,29 @@ test("P60-B: same versioned blueprint contract works for CAT's separate physical
  assert.equal(r.data.coverage.kinds.length,3);
  assert.equal(r.data.factualVerification,"not-performed");
 });
+
+
+test("P60-B: agents can page errors without loading 200 questions and coverage output is bounded",()=>temp(async dir=>{
+ const p=mkPlan();
+ p.requirements.requireTopic=true;
+ p.requirements.requireDifficulty=true;
+ p.requirements.minCitations=1;
+ p.quotas.topics={exhaustive:false,targets:Array.from({length:20},(_,i)=>({
+  subjectKey:"heading:labour",topic:"Synthetic unrequested "+i,count:0
+ }))};
+ const plan=await write(dir,"pages.json",p);
+ const first=run("audit",plan,example,"--offset","0","--limit","1");
+ const second=run("audit",plan,example,"--offset","1","--limit","1");
+ assert.notEqual(first.status,0);
+ assert.notEqual(second.status,0);
+ assert.equal(first.data.issues.total,second.data.issues.total);
+ assert.equal(first.data.issues.nextOffset,1);
+ assert.equal(second.data.issues.offset,1);
+ assert.notDeepEqual(first.data.issues.items,second.data.issues.items);
+ assert.equal(first.data.coverage.topics.length,12);
+ assert.equal(first.data.coverageSummary.topics.remainingTargets,8);
+ assert.ok(first.stdout.length<18000,"metadata-only audit should remain small");
+ const bad=run("audit",plan,example,"--offset","-1");
+ assert.notEqual(bad.status,0);
+ assert.equal(bad.data.code,"blueprint-input-invalid");
+}));
