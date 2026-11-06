@@ -64,9 +64,10 @@ test("P60-F RED: discover concise versioned actions and privilege limits, withou
  assert.equal(r.data.format,"practice-desk-agent-handoff-actions");
  assert.equal(r.data.version,1);
  assert.deepEqual(r.data.modes,["single","paired","pdf"]);
- assert.deepEqual(r.data.commands.map(x=>x.name),["assess","publish"]);
- assert.equal(r.data.commands[0].privilege,"read-only");
- assert.equal(r.data.commands[1].privilege,"create-only-with-explicit-consent");
+ assert.deepEqual(r.data.commands.map(x=>x.name),["prepare","assess","publish"]);
+ assert.equal(r.data.commands[0].privilege,"create-only-with-explicit-consent");
+ assert.equal(r.data.commands[1].privilege,"read-only");
+ assert.equal(r.data.commands[2].privilege,"create-only-with-explicit-consent");
  assert.equal(r.data.agentDeviceBridge,false);
  assert.ok(!r.stdout.includes("IndexedDB")&&!r.stdout.includes("correctMarks"));
 });
