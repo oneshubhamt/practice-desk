@@ -201,3 +201,40 @@ test("P60-B: explicitly requested paper rules must match actual scoring, timers 
  assert.notEqual(wrong.status,0);
  assert.ok(wrong.data.issues.items.some(x=>x.code==="paper-policy-mismatch"));
 }));
+
+
+test("P60-B: separate coherent source batches meet an exact aggregate blueprint without flattening exam sections",()=>temp(async dir=>{
+ const raw=JSON.parse(await readFile(example,"utf8"));
+ const a=structuredClone(raw),b=structuredClone(raw);
+ a.bankId="apfc-first-batch";a.questions=raw.questions.slice(0,2);
+ b.bankId="apfc-next-batch";b.questions=raw.questions.slice(2);
+ const plan=await write(dir,"plan.json",mkPlan());
+ const r=run("audit",plan,await write(dir,"batch-a.json",a),await write(dir,"batch-b.json",b));
+ assert.equal(r.status,0,r.stderr);
+ assert.equal(r.data.actualCount,3);
+ assert.equal(r.data.sourceCount,2);
+ assert.equal(r.data.batches.length,2);
+ assert.equal(r.data.readyForPublication,true);
+ assert.equal(r.data.coverage.subjects.every(x=>x.actual===x.target),true);
+ assert.ok(r.data.blueprintSha256?.length===64);
+}));
+
+test("P60-B: combined sibling topic targets cannot exceed a parent allocation",()=>temp(async dir=>{
+ const p=mkPlan();
+ p.quotas.topics={targets:[{subjectKey:"heading:labour",topic:"Wages",count:1},
+  {subjectKey:"heading:labour",topic:"Disputes",count:1}]};
+ const bad=run("validate",await write(dir,"parent.json",p));
+ assert.notEqual(bad.status,0);
+ assert.match(bad.data.message,/Combined topic allocations exceed/);
+}));
+
+test("P60-B: actual category inventory remains paged and available even without exact quotas",()=>temp(async dir=>{
+ const p=mkPlan();
+ delete p.quotas.subjects;
+ const plan=await write(dir,"plan.json",p);
+ const out=run("audit",plan,example);
+ assert.equal(out.status,0,out.stderr);
+ assert.equal(out.data.observed.subjects.totalCategories,3);
+ assert.equal(out.data.observed.subjects.shown.length,3);
+ assert.equal(out.data.factualVerification,"not-performed");
+}));
