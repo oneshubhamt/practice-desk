@@ -95,7 +95,7 @@ export function buildPdfIntakeTemplate(original,raw,documentType,bytes,keyType=n
   inspector:{kind:"agent",id:"REPLACE_INSPECTOR",method:"REPLACE SOURCE COMPARISON METHOD",reviewedAt:"REPLACE_DATE"},
   note:"Template is incomplete. SHA proves byte identity only. Never fill missing questions/keys by invention."};
 }
-export function auditPdfIntake(manifest,original,raw,documentBytes,{keyBytes=null,pair=null,blueprint=null}={}){
+export function auditPdfIntake(manifest,original,raw,documentBytes,{keyBytes=null,pair=null,blueprint=null,cognitiveTags=null,comparisonSources=[]}={}){
  const issues=[],add=(code,message,questionId)=>{
   issues.push({code,severity:"error",message,...(questionId?{questionId}:{})});};
  let sourceCount=0;
@@ -243,7 +243,7 @@ export function auditPdfIntake(manifest,original,raw,documentBytes,{keyBytes=nul
  }
  if(blueprint){
   const plan=validateBlueprint(blueprint.value);
-  coverage=auditBlueprint(plan,[{value:pair?pair.reviewed.value:original,digest:pair?pair.reviewed.sha256:digest(raw)}],undefined,{limit:12});
+  coverage=auditBlueprint(plan,[{value:pair?pair.reviewed.value:original,digest:pair?pair.reviewed.sha256:digest(raw)}],cognitiveTags,{limit:12,priorSources:comparisonSources});
   if(!coverage.valid)for(const e of coverage.issues.items.slice(0,12))
    add("blueprint-"+e.code,e.message);
  }
@@ -260,7 +260,7 @@ export function auditPdfIntake(manifest,original,raw,documentBytes,{keyBytes=nul
   issues:{total:issues.length,blocking:issues.length,offset:0,limit:12,
    nextOffset:issues.length>12?12:null,items:issues.slice(0,12)}};
 }
-const usage="Usage: pdf-ingest.mjs template <original.json> <source.pdf> [--document-type pdf|image|other-document] [--key-document key.pdf --key-type pdf|image|other-document] | audit <intake.json> <original.json> <source.pdf> [--key-document key.pdf] [--reviewed reviewed.json --decisions decisions.json --quality-review quality.json] [--blueprint plan.json] | compile <intake.json> <original.json> <source.pdf> <reviewed.json> <decisions.json> <NEW-directory> --quality-review quality.json [--key-document key.pdf] [--blueprint plan.json]";
+const usage="Usage: pdf-ingest.mjs template <original.json> <source.pdf> [--document-type pdf|image|other-document] [--key-document key.pdf --key-type pdf|image|other-document] | audit <intake.json> <original.json> <source.pdf> [--key-document key.pdf] [--reviewed reviewed.json --decisions decisions.json --quality-review quality.json] [--blueprint plan.json --cognitive tags.json --against prior.json] | compile <intake.json> <original.json> <source.pdf> <reviewed.json> <decisions.json> <NEW-directory> --quality-review quality.json [--key-document key.pdf] [--blueprint plan.json]";
 async function main(){
  const [command,...args]=process.argv.slice(2);
  if(!["template","audit","compile"].includes(command))throw Error(usage);
@@ -269,7 +269,7 @@ async function main(){
  const flags=args.slice(mandatory),opts={};
  for(let i=0;i<flags.length;i+=2){
   const k=flags[i],v=flags[i+1];
-  if(!["--key-document","--key-type","--document-type","--reviewed","--decisions","--quality-review","--blueprint"].includes(k)||
+  if(!["--key-document","--key-type","--document-type","--reviewed","--decisions","--quality-review","--blueprint","--cognitive","--against"].includes(k)||
     !v||Object.hasOwn(opts,k))throw Error(usage);
   opts[k]=v;
  }
@@ -305,8 +305,11 @@ async function main(){
    decisions:await sourceJson(opts["--decisions"],2*1024*1024,"Decisions"),
    qualityReview:await sourceJson(opts["--quality-review"],3*1024*1024,"Quality review")};
  }
+ if(opts["--cognitive"]&&!opts["--blueprint"])throw Error("--cognitive requires --blueprint");
  const blueprint=opts["--blueprint"]?await sourceJson(opts["--blueprint"],1024*1024,"Blueprint"):null;
- const report=auditPdfIntake(intake.value,data,original.raw,doc,{keyBytes:key,pair,blueprint});
+ const cognitiveTags=opts["--cognitive"]?(await sourceJson(opts["--cognitive"],1024*1024,"Cognitive tags")).value:null;
+ const comparisonSources=opts["--against"]?[(await sourceJson(opts["--against"],MAX_SOURCE,"Prior source")).value]:[];
+ const report=auditPdfIntake(intake.value,data,original.raw,doc,{keyBytes:key,pair,blueprint,cognitiveTags,comparisonSources});
  if(command==="compile"){
   if(!report.readyForPublication){
    process.stdout.write(JSON.stringify({...report,compiled:false},null,2)+"\n");process.exitCode=1;return;
