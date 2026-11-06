@@ -1,0 +1,140 @@
+/** P60-C RED: candidate-visible hint leakage and externally performed quality evidence. */
+import test from "node:test";
+import assert from "node:assert/strict";
+import {spawnSync} from "node:child_process";
+import {readFile,writeFile,mkdtemp,rm,access} from "node:fs/promises";
+import {join} from "node:path";
+import {tmpdir} from "node:os";
+import {fileURLToPath} from "node:url";
+import {createHash} from "node:crypto";
+import {inspectExternalQuestionBank} from "../src/authoring/external-bank.ts";
+
+const tool=fileURLToPath(new URL("../scripts/question-quality.mjs",import.meta.url));
+const cli=fileURLToPath(new URL("../scripts/question-bank-cli.mjs",import.meta.url));
+const apfc=fileURLToPath(new URL("../examples/ai-first-apfc.json",import.meta.url));
+const cat=fileURLToPath(new URL("../examples/ai-first-cat.json",import.meta.url));
+const sha=s=>createHash("sha256").update(s).digest("hex");
+const command=(script,...args)=>{
+ const result=spawnSync(process.execPath,[script,...args],{encoding:"utf8",timeout:30000,maxBuffer:1024*1024});
+ assert.equal(result.error,undefined,String(result.error));
+ let data;try{data=JSON.parse(result.stdout||result.stderr);}
+ catch{assert.fail(result.stdout+" "+result.stderr);}
+ return {...result,data};
+};
+const temp=async f=>{const dir=await mkdtemp(join(tmpdir(),"pd-p60c-"));try{return await f(dir);}finally{await rm(dir,{recursive:true,force:true});}};
+const write=async(dir,name,data)=>{const path=join(dir,name);await writeFile(path,JSON.stringify(data));return path;};
+
+test("P60-C RED: explicit answer labels in actual candidate stems fail canonical existing publisher",async()=>{
+ const src=JSON.parse(await readFile(apfc,"utf8"));
+ src.questions[0].prompt="Which letter is second? Correct answer: B";
+ const report=inspectExternalQuestionBank(src);
+ assert.equal(report.valid,false);
+ assert.ok(report.issues.some(x=>x.code==="candidate-answer-leak"&&x.severity==="error"));
+ const answerInExplanation=JSON.parse(await readFile(apfc,"utf8"));
+ answerInExplanation.questions[0].explanation="The correct answer is B; A and C are wrong.";
+ assert.equal(inspectExternalQuestionBank(answerInExplanation).valid,true,"Author-only explanations are allowed");
+});
+test("P60-C RED: misleading option markers, shared stimulus leakage and answer-giving alt metadata fail",async()=>{
+ const catSource=JSON.parse(await readFile(cat,"utf8"));
+ catSource.questions[0].options[0]="✓ A library replaces its catalogue.";
+ assert.ok(inspectExternalQuestionBank(catSource).issues.some(x=>x.code==="candidate-answer-leak"));
+ const stimulus=JSON.parse(await readFile(cat,"utf8"));
+ stimulus.stimuli[0].text+=" Correct answer: A";
+ assert.ok(inspectExternalQuestionBank(stimulus).issues.some(x=>x.code==="candidate-answer-leak"));
+ const subtle=JSON.parse(await readFile(apfc,"utf8"));
+ subtle.questions[0].prompt="A number series follows the pattern of consecutive squares: 1, 4, 9, 16. What is the next number?";
+ const qa=inspectExternalQuestionBank(subtle);
+ assert.ok(qa.issues.some(x=>x.code==="candidate-unintended-clue"&&x.severity==="warning"));
+});
+test("P60-C RED: blinded review packet exposes single candidate-only question, never key/explanation/source QA",()=>temp(async dir=>{
+ const src=JSON.parse(await readFile(apfc,"utf8"));
+ const input=await write(dir,"source.json",src);
+ const r=command(tool,"candidate",input,"--limit","1");
+ assert.equal(r.status,0,r.stderr);
+ assert.equal(r.data.format,"practice-desk-blind-candidates");
+ assert.equal(r.data.items.length,1);
+ assert.equal(r.data.items[0].questionId,"labour-01");
+ assert.ok(/^[a-f0-9]{64}$/.test(r.data.items[0].candidateSha256));
+ assert.ok(/^[a-f0-9]{64}$/.test(r.data.sourceSha256));
+ const body=JSON.stringify(r.data.items[0]);
+ for(const field of ["answer","explanation","provenance","sourceNote","correctOption","qa"])
+  assert.ok(!Object.hasOwn(r.data.items[0],field),"Protected field leaked: "+field);
+ assert.ok(!body.includes("This placeholder is not a labour-law question."));
+ assert.ok(!body.includes("data:image/"));
+ assert.ok(!r.stdout.includes("What is 2 + 2?"));
+ assert.ok(r.stdout.length<9000);
+}));
+test("P60-C RED: QA reports 20 mandatory checks, unverified by default and never claims internet retrieval",()=>temp(async dir=>{
+ const input=await write(dir,"apfc.json",JSON.parse(await readFile(apfc,"utf8")));
+ const r=command(tool,"audit",input);
+ assert.equal(r.status,1,"Independent assessment absent is not a completed quality gate");
+ assert.equal(r.data.format,"practice-desk-question-quality-audit");
+ assert.equal(r.data.readyForPublication,false);
+ assert.equal(r.data.factualVerification,"not-performed");
+ assert.equal(r.data.externalSourceFetches,0);
+ assert.equal(r.data.checklist.length,20);
+ assert.equal(r.data.questionsMissingReview,3);
+ assert.ok(r.data.issues.total>=3);
+ assert.ok(!r.stdout.includes("B is second. This placeholder"));
+ assert.ok(!r.stdout.includes("data:image/"));
+}));
+test("P60-C RED: external review must be SHA-bound, complete, independently solved; a matching self-assertion is NOT authenticated",()=>temp(async dir=>{
+ const src=JSON.parse(await readFile(apfc,"utf8"));
+ const input=await write(dir,"source.json",src);
+ const pack=command(tool,"candidate",input,"--limit","10");
+ assert.equal(pack.status,0,pack.stderr);
+ const checks=Array.from({length:20},(_,i)=>({id:command(tool,"checklist").data.checklist[i].id,
+  status:"pass",basis:i===11||i===12||i===13?"source-consulted":"independent-editorial",
+  rationale:"Synthetic test assertion only, no authentic source verification"}));
+ const report={format:"practice-desk-quality-review",version:1,bankId:src.bankId,sourceSha256:pack.data.sourceSha256,
+  records:pack.data.items.map((q,i)=>({questionId:q.questionId,questionSha256:sha(JSON.stringify(src.questions[i])),
+   candidateSha256:q.candidateSha256,
+   reviewer:{id:"synthetic-reviewer",kind:"ai"},
+   independentSolution:{blindClaim:true,answer:src.questions[i].answer,
+    reasoning:"Synthetic fixture reasoning, not independently established"},
+   checks:structuredClone(checks),
+   evidence:[{publisher:"Fixture",title:"Illustrative only",locator:"test",retrievedAt:"2026-11-06",
+    excerpt:"Synthetic example; source not authenticated"}]
+  }))};
+ const review=await write(dir,"review.json",report);
+ const out=command(tool,"audit",input,"--review",review);
+ assert.equal(out.status,0,out.stderr);
+ assert.equal(out.data.readyForPublication,true);
+ assert.equal(out.data.reviewAssurance,"recorded-self-attestation-not-authenticated");
+ assert.equal(out.data.factualVerification,"not-performed");
+ assert.equal(out.data.externalSourceFetches,0);
+ const bad=structuredClone(report);bad.records[0].independentSolution.answer="D";
+ const wrong=command(tool,"audit",input,"--review",await write(dir,"wrong.json",bad));
+ assert.equal(wrong.status,1);
+ assert.ok(wrong.data.issues.items.some(x=>x.code==="independent-key-disagreement"));
+ const stale=structuredClone(report);stale.records[0].candidateSha256="0".repeat(64);
+ const staleResult=command(tool,"audit",input,"--review",await write(dir,"stale.json",stale));
+ assert.equal(staleResult.status,1);
+ assert.ok(staleResult.data.issues.items.some(x=>x.code==="review-stale"));
+}));
+test("P60-C RED: strict compiler refuses incomplete review and never writes compiled output",()=>temp(async dir=>{
+ const src=JSON.parse(await readFile(apfc,"utf8"));
+ const input=await write(dir,"source.json",src);
+ const incomplete={format:"practice-desk-quality-review",version:1,bankId:src.bankId,
+  sourceSha256:sha(JSON.stringify(src)),records:[]};
+ const review=await write(dir,"review.json",incomplete),output=join(dir,"blocked.json");
+ const blocked=command(cli,"compile-bank",input,output,"--quality-review",review);
+ assert.notEqual(blocked.status,0);
+ await assert.rejects(access(output));
+ const legacy=command(cli,"validate-bank",input);
+ assert.equal(legacy.status,0,"Legacy unreviewed source remains caution-compatible");
+}));
+test("P60-C RED: malformed, fabricated, duplicate and undisclosed review records fail closed",()=>temp(async dir=>{
+ const input=await write(dir,"source.json",JSON.parse(await readFile(cat,"utf8")));
+ const source=JSON.parse(await readFile(input,"utf8"));
+ for(const review of [
+  {format:"practice-desk-quality-review",version:1,bankId:source.bankId,sourceSha256:"0".repeat(64),records:[]},
+  {format:"practice-desk-quality-review",version:1,bankId:source.bankId,sourceSha256:sha(JSON.stringify(source)),records:[{questionId:"x",extra:"trusted"}]},
+  {format:"practice-desk-quality-review",version:1,bankId:source.bankId,sourceSha256:sha(JSON.stringify(source)),records:[]}
+ ]){
+  const p=await write(dir,"broken-"+Math.random()+".json",review);
+  const r=command(tool,"audit",input,"--review",p);
+  assert.notEqual(r.status,0);
+  assert.equal(r.data.readyForPublication,false);
+ }
+}));
