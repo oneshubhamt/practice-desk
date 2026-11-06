@@ -1,0 +1,338 @@
+{
+  "format": "practice-desk-agent-capabilities",
+  "version": 1,
+  "contractStatus": "P60-A initial source-backed catalogue; not a security authorization or factual content certificate",
+  "product": {
+    "name": "Practice Desk",
+    "purpose": "Offline examination authoring, practice, scoring, history, analytics and spaced revision",
+    "runtime": "Standalone offline HTML with local device storage; external Node 24 authoring CLI",
+    "sourceBranch": "Satyam",
+    "asOfDate": "2026-11-06",
+    "embeddedLLM": false,
+    "automaticCloudSync": false,
+    "agentDeviceBridge": false
+  },
+  "discovery": {
+    "lowContextEntry": "docs/AGENT_AUTHORING_QUICKSTART.md",
+    "appGuide": "docs/AI_APPLICATION_GUIDE.md",
+    "programme": "docs/architecture/P60_AI_NATIVE_CAPABILITY_PROGRAMME.md",
+    "examples": [
+      "examples/ai-first-apfc.json",
+      "examples/ai-first-cat.json"
+    ],
+    "recommendedSequence": [
+      "Read short quickstart",
+      "Run read-only capability list or show one named capability",
+      "Read one relevant authoring example/task contract",
+      "Research facts outside app",
+      "Generate only requested question batch",
+      "Run canonical QA/compile and targeted corrections",
+      "Import explicitly into offline Library"
+    ]
+  },
+  "existingAgentOperations": [
+    {
+      "operation": "inspect-bank",
+      "command": "node scripts/question-bank-agent.mjs inspect <source.json> [--offset N --limit N]",
+      "privilege": "read-only",
+      "effect": "Bounded metadata/QA issues; no entire question set"
+    },
+    {
+      "operation": "show-question",
+      "command": "node scripts/question-bank-agent.mjs show <source.json> <question-id>",
+      "privilege": "read-only",
+      "effect": "One source question + shared context; image bytes omitted"
+    },
+    {
+      "operation": "patch-bank",
+      "command": "node scripts/question-bank-agent.mjs patch <source.json> <patch.json> <NEW-output.json> [--dry-run]",
+      "privilege": "create-new-file",
+      "effect": "SHA-guarded edits; no original overwrite; material edits reopen review"
+    },
+    {
+      "operation": "qa-bank",
+      "command": "node scripts/question-bank-cli.mjs qa-bank <source.json> [--against prior.json]",
+      "privilege": "read-only",
+      "effect": "Full deterministic/heuristic QA report, not fact checking"
+    },
+    {
+      "operation": "compile-bank",
+      "command": "node scripts/question-bank-cli.mjs compile-bank <source.json> <NEW-output.json>",
+      "privilege": "create-new-file",
+      "effect": "Canonical validated publication package; explicit offline browser import remains necessary"
+    }
+  ],
+  "trustBoundaries": [
+    "A claim, link, SHA hash, second-model agreement or structurally valid package does not authenticate answers/PYQs/sources",
+    "Preserve candidate-facing content separately from answers, rubrics and editorial notes until authorized result review",
+    "User-local history and learning data are not accessible to the external agent by default",
+    "Do not promise direct app UI or database mutation from the Node source CLI",
+    "No P60-B blueprint, P60-C factual verification, P60-D universal original/reviewed, P60-E automatic PDF ingestion or P60-F agent app-control API is currently implemented"
+  ],
+  "statusVocabulary": [
+    "implemented",
+    "implemented-with-limits",
+    "planned",
+    "not-supported"
+  ],
+  "capabilities": [
+    {
+      "id": "exam-catalog",
+      "status": "implemented",
+      "summary": "Separate built-in SSC CGL sources from imported exam families and paper/revision/edition selections.",
+      "provides": [
+        "Browse available families and paper editions",
+        "Distinguish source/reviewed/custom and source identities",
+        "Effective exam rules derive from selected frozen paper"
+      ],
+      "agentUse": "Choose examId/paperId explicitly; never infer official status from a name or user-imported bank.",
+      "limitations": [
+        "Imported content is not automatically certified official",
+        "New exam bank content is not shipped merely because the engine supports its exam"
+      ],
+      "sourcePaths": [
+        "src/app/exam-families.ts",
+        "src/app/library-controller.ts",
+        "src/app/exam-preflight.ts"
+      ]
+    },
+    {
+      "id": "question-and-scoring",
+      "status": "implemented",
+      "summary": "One generic six-kind question engine with frozen answer key, marking rules and bounded partial/manual evaluation.",
+      "provides": [
+        "single-choice",
+        "multiple-select",
+        "numeric-entry",
+        "true-false",
+        "matching",
+        "free-response",
+        "Correct/incorrect/blank/excluded/pending outcomes",
+        "Optional component partial-credit for matching and multiple-select",
+        "Exact frozen marks and source snapshots"
+      ],
+      "agentUse": "Author in the existing external v1 format; validate using canonical compiler and score oracle, never create independent marks in the bank tool.",
+      "limitations": [
+        "Free response needs separate manual grading; do not label it auto-scored",
+        "A valid published key is not proof that the answer is factually correct"
+      ],
+      "sourcePaths": [
+        "src/domain/question.ts",
+        "src/engine/scoring.ts",
+        "src/app/exam-package.ts"
+      ]
+    },
+    {
+      "id": "timing-navigation",
+      "status": "implemented",
+      "summary": "Untimed, whole-paper and section-timed examination policies, navigation/review restrictions and an offline-safe route controller.",
+      "provides": [
+        "Authored timed/untimed sections and pause rules",
+        "Sequential-locked or free movement per validated policies",
+        "Question flags and review behavior according to the paper",
+        "Offline Navigation API with file/fragment fallback"
+      ],
+      "agentUse": "Declare timing and navigation in the authored paper; avoid inferring CAT/APFC rules from examId.",
+      "limitations": [
+        "No universal arbitrary custom timer or live cloud scheduling interface",
+        "Linux WebKit browser tests are not physical Mac Safari certification"
+      ],
+      "sourcePaths": [
+        "src/app/navigation.ts",
+        "src/app/exam-view.ts",
+        "src/app/exam-preflight.ts"
+      ]
+    },
+    {
+      "id": "taxonomy",
+      "status": "implemented",
+      "summary": "Semantic academic Subject → Topic → Subtopic independent of physical exam sections, with nine APFC broad syllabus headings.",
+      "provides": [
+        "Author-supplied subject/topic/subtopic",
+        "APFC official broad syllabus root IDs",
+        "Topic ancestor rollups and unclassified handling",
+        "Exam-specific filters and learning attribution"
+      ],
+      "agentUse": "Distinguish one physical APFC exam section from multiple academic syllabus headings; never invent subtopic authority.",
+      "limitations": [
+        "Detailed verified syllabi, topic quotas and automatically calibrated difficulty are not supplied",
+        "User metadata is not automatically official"
+      ],
+      "sourcePaths": [
+        "src/learning/syllabus-taxonomy.ts",
+        "src/app/practice-compose.ts",
+        "src/authoring/external-bank.ts"
+      ]
+    },
+    {
+      "id": "practice-builder",
+      "status": "implemented",
+      "summary": "Deterministic selection from one validated frozen source paper, with available section/topic/difficulty filters.",
+      "provides": [
+        "Seeded reproducible question selection",
+        "Real inventory and insufficient-stock error",
+        "Source and answer-key integrity maintained"
+      ],
+      "agentUse": "Inspect actual source inventory before promising user question counts or distribution.",
+      "limitations": [
+        "Composition operates on one source paper at a time; not arbitrary cross-exam combining",
+        "P60-B exact multi-topic content blueprints and audits are not yet implemented"
+      ],
+      "sourcePaths": [
+        "src/app/practice-compose.ts",
+        "src/app/practice-selection.ts"
+      ]
+    },
+    {
+      "id": "history-results",
+      "status": "implemented",
+      "summary": "Saved graded attempts, per-item outcomes, time/evidence analytics, results views and source-immutable history.",
+      "provides": [
+        "Marks, correct/incorrect/blank/excluded or pending verdicts",
+        "Measured response time and visit evidence where recorded",
+        "Source/mode-aware history filters and protected snapshots"
+      ],
+      "agentUse": "Use only reported measurements, never estimate unseen time, rank, percentile or cross-paper normalization.",
+      "limitations": [
+        "There is no remote agent API to user device History",
+        "History data is device-local and must be explicitly exported/authorized before use"
+      ],
+      "sourcePaths": [
+        "src/app/result-controller.ts",
+        "src/app/history-query.ts",
+        "src/history/backup.ts"
+      ]
+    },
+    {
+      "id": "learning-revision",
+      "status": "implemented",
+      "summary": "Learning cards, notebook classifications, FSRS-based explicit review scheduling and evidence-backed revision selections.",
+      "provides": [
+        "User-authored notes, error labels, bookmarks and topic assignments",
+        "Wrong, blank, slow, repeated, flagged, bookmarked and due revision reasons",
+        "Frozen source and answer lineage; user review grades separated from exam marks"
+      ],
+      "agentUse": "Suggest revision from evidence and learner authorization, not a medical/cognitive diagnosis or automatic regrade.",
+      "limitations": [
+        "Revision reasons do not prove why a learner got an answer wrong",
+        "No built-in external AI agent access to private learning cards"
+      ],
+      "sourcePaths": [
+        "src/learning/learning.ts",
+        "src/learning/revision-selection.ts",
+        "src/learning/revision-test.ts"
+      ]
+    },
+    {
+      "id": "editorial-source",
+      "status": "implemented-with-limits",
+      "summary": "Built-in SSC CGL original/reviewed source, caution/invalid flags, source-key comparison and immutable editorial records.",
+      "provides": [
+        "Source vs reviewed comparison where semantic correspondence is valid",
+        "Preserved SSC CGL answer-key correction decisions and caution labels",
+        "Editorial/provenance fields in question revisions"
+      ],
+      "agentUse": "Preserve original and corrected identities; use caution for unattributed imported claims.",
+      "limitations": [
+        "Universal P60-D original/reviewed lineage for any imported/PYQ/AI bank does not yet exist",
+        "An attributed official PYQ URL is not independently authenticated"
+      ],
+      "sourcePaths": [
+        "src/content/import-cgl.ts",
+        "src/engine/source-comparison.ts",
+        "src/domain/question.ts"
+      ]
+    },
+    {
+      "id": "ai-authoring",
+      "status": "implemented",
+      "summary": "P57–P59 external AI source format, strict deterministic compiler and QA, compact inspect/show/patch and offline Wordgard staging/publishing.",
+      "provides": [
+        "practice-desk-authoring v1 source, versioned source IDs",
+        "Headless inspect (paged issues) and show (single item, no image bytes)",
+        "Guarded create-new patch/add/update/unset/remove",
+        "Cross-bank duplicate candidates and source-metadata warnings",
+        "Wordgard manual correction, lossless distinct draft exchange, immutable caution publication"
+      ],
+      "agentUse": "Read docs/AGENT_AUTHORING_QUICKSTART.md plus one example; research externally; compile and import via Library.",
+      "limitations": [
+        "No embedded LLM, automatic cloud/device sync or direct browser agent bridge",
+        "Structural/scorer QA does not authenticate factual truth, official PYQs, reviewer or legal commencement",
+        "Staging accepts at most 8 source files/400 staged questions; max 200 selected in Wordgard"
+      ],
+      "sourcePaths": [
+        "scripts/question-bank-agent.mjs",
+        "scripts/question-bank-cli.mjs",
+        "src/authoring/external-bank.ts",
+        "src/authoring/external-bank-qa.ts",
+        "src/authoring/authoring-exchange.ts"
+      ]
+    },
+    {
+      "id": "rich-media",
+      "status": "implemented",
+      "summary": "Shared case/passage/table/chart/image stimuli, image references, canonical rich text and KaTeX mathematical display.",
+      "provides": [
+        "Shared stimuli cited once by question ID",
+        "Rich question content with linear math alternatives",
+        "Embedded validated image inventory and zoom/pan display",
+        "Conservative optional image preparation workflow"
+      ],
+      "agentUse": "Use one shared stimulus for CAT DILR/RC; use image asset IDs and alt text without placing base64 data into agent inspection results.",
+      "limitations": [
+        "PDF/image extraction is external AI work; not an offline app PDF ingestion feature",
+        "Actual tactile/assistive math or image quality on physical hardware requires user verification"
+      ],
+      "sourcePaths": [
+        "src/authoring/external-bank.ts",
+        "src/app/image-viewer.ts",
+        "src/app/katex-math-adapter.ts",
+        "src/domain/question.ts"
+      ]
+    },
+    {
+      "id": "offline-data-recovery",
+      "status": "implemented-with-limits",
+      "summary": "Local offline single HTML, immutable SHA-covered exam/source history, shared snapshot backup v4 and separate unpublished staging/draft archives.",
+      "provides": [
+        "Strict checked exam package imports",
+        "Snapshot-deduplicated saved attempt backup and recovery",
+        "Separate export/import of unpublished author drafts and staging",
+        "Cross-tab stale-change protections within documented limits"
+      ],
+      "agentUse": "Do not touch local storage directly; instruct explicit export/import and preserve independent backups of unpublished work.",
+      "limitations": [
+        "History v4 backup does not include unpublished draft/staging archives",
+        "No cross-device sync or restoration after all local data and backups are lost",
+        "Browser-origin/physical OS storage loss not guaranteed"
+      ],
+      "sourcePaths": [
+        "src/history/backup.ts",
+        "src/app/bank-import.ts",
+        "src/app/exam-package.ts"
+      ]
+    }
+  ],
+  "plannedProgramme": [
+    {
+      "id": "P60-B",
+      "name": "Enforced blueprint and bank coverage"
+    },
+    {
+      "id": "P60-C",
+      "name": "Independent semantic, source-grounded and answer-leakage QA"
+    },
+    {
+      "id": "P60-D",
+      "name": "Universal immutable original/reviewed editions"
+    },
+    {
+      "id": "P60-E",
+      "name": "External AI PDF extraction and ingestion"
+    },
+    {
+      "id": "P60-F",
+      "name": "Permission-scoped agent interaction and measured end-to-end QA"
+    }
+  ]
+}
