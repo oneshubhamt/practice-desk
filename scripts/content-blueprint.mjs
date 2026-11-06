@@ -52,7 +52,20 @@ const sourceKey=(q)=>q.syllabusHeadingId?"heading:"+q.syllabusHeadingId:
  "subject:"+(q.subject||"Unclassified");
 const topicKey=(s,t)=>JSON.stringify([s,t]);
 const subtopicKey=(s,t,u)=>JSON.stringify([s,t,u]);
-const normalize=(x)=>typeof x==="string"?x.normalize("NFKC").toLocaleLowerCase("en").replace(/[^\p{L}\p{N}]+/gu," ").trim().replace(/\s+/g," "):"";
+const normalize=(x)=>typeof x==="string"?x.normalize("NFKC").toLocaleLowerCase("en").replace(/^\s*(?:q(?:uestion)?\s*)?\d+[.)\s]+/iu,"").replace(/[^\p{L}\p{N}]+/gu," ").trim().replace(/\s+/g," "):"";
+const matchesSpecified=(actual,expected)=>{
+ if(Array.isArray(expected))return Array.isArray(actual)&&actual.length===expected.length&&
+  expected.every((v,i)=>matchesSpecified(actual[i],v));
+ if(expected!==null&&typeof expected==="object")return actual!==null&&typeof actual==="object"&&
+  Object.entries(expected).every(([key,val])=>matchesSpecified(actual[key],val));
+ return isDeepStrictEqual(actual,expected);
+};
+const tokenSet=stem=>new Set(stem.split(" ").filter(Boolean));
+const bigrams=stem=>{const words=stem.split(" ").filter(Boolean),out=new Set();
+ for(let i=0;i<words.length-1;i++)out.add(words[i]+" "+words[i+1]);return out;};
+const similarity=(a,b)=>{if(!a.size||!b.size)return 0;
+ let common=0;for(const word of a)if(b.has(word))common++;
+ return common/(a.size+b.size-common);};
 async function load(path,max,label){
  const raw=await readFile(path,"utf8");
  if(Buffer.byteLength(raw)>max)fail(label+" exceeds byte limit "+max);
@@ -181,10 +194,10 @@ function validateBlueprint(value){
 }
 function audit(plan,sources,tagDoc,{offset=0,limit=12}={}){
  const issues=[],all=[],batches=[],sourceHashes=[],bankIds=new Set(),questionIds=new Set();
- const add=(code,message,path="$")=>issues.push({code,severity:"error",basis:"deterministic",path,message});
+ const add=(code,message,path="$",severity="error")=>issues.push({code,severity,basis:severity==="warning"?"heuristic":"deterministic",path,message});
  const first=sources[0]?.value,head=first?{scoring:first.scoring,timing:first.timing,navigation:first.navigation,sections:first.sections}:null;
  for(const [k,expected] of Object.entries(plan.paperRules??{}))
-  if(first&&!isDeepStrictEqual(first[k],expected))add("paper-policy-mismatch","Authored "+k+" does not match user blueprint paperRules."+k,"paperRules."+k);
+  if(first&&!matchesSpecified(first[k],expected))add("paper-policy-mismatch","Authored "+k+" does not match user blueprint paperRules."+k,"paperRules."+k);
  for(const {value:source,digest} of sources){
   sourceHashes.push(digest);
   const at="banks["+(batches.length)+"]";
@@ -232,7 +245,8 @@ function audit(plan,sources,tagDoc,{offset=0,limit=12}={}){
  }
  const counts=Object.fromEntries(GROUPS.map(g=>[g,new Map()]));
  const tick=(g,key)=>counts[g].set(key,(counts[g].get(key)??0)+1);
- const stems=new Map(),topicShare=new Map(),answerPositions={A:0,B:0,C:0,D:0};
+ const stems=new Map(),nearSeen=[],topicShare=new Map(),answerPositions={A:0,B:0,C:0,D:0};
+ let nearDuplicateCandidates=0,nearDuplicateScanTruncated=false;
  const cognitiveRequired=Boolean(plan.quotas?.cognitive);
  if(cognitiveRequired&&!tagDoc)add("cognitive-tags-missing","Cognitive quotas require explicit attributed tag sidecar");
  const originAllowed=plan.requirements.allowedOrigins;
@@ -274,6 +288,19 @@ function audit(plan,sources,tagDoc,{offset=0,limit=12}={}){
    const earlier=stems.get(stem);
    if(earlier)add("duplicate-stem","Repeated normalized question stem "+name+" and "+earlier,"questions["+name+"]");
    else stems.set(stem,name);
+   if(stem.length>=55){
+    const words=tokenSet(stem),grams=bigrams(stem);
+    for(const prior of nearSeen){
+     if(prior.bankId===bankId||Math.abs(prior.words.size-words.size)>Math.max(prior.words.size,words.size)*0.25)continue;
+     if(similarity(words,prior.words)>=0.78&&similarity(grams,prior.grams)>=0.62){
+      if(nearDuplicateCandidates<200)
+       add("near-duplicate-candidate","Possible near-duplicate "+name+" and "+prior.name+"; independently resolve before publishing","questions["+name+"]","warning");
+      else nearDuplicateScanTruncated=true;
+      nearDuplicateCandidates++;
+     }
+    }
+    nearSeen.push({bankId,name,words,grams});
+   }
   }
   if(q.kind==="single-choice"&&"ABCD".includes(q.answer)&&q.answer.length===1)answerPositions[q.answer]++;
  }
@@ -282,7 +309,9 @@ function audit(plan,sources,tagDoc,{offset=0,limit=12}={}){
    add("cognitive-tag-unknown","Tag does not correspond to an audited source question","cognitive");
  }
  const actualCount=all.length;
- if(actualCount!==plan.targetCount)add("target-count","Actual "+actualCount+" vs requested "+plan.targetCount);
+ const partialDelivery=plan.allowPartial===true&&actualCount<plan.targetCount;
+ if(actualCount>plan.targetCount||(!partialDelivery&&actualCount!==plan.targetCount))
+  add("target-count","Actual "+actualCount+" vs requested "+plan.targetCount);
  const coverage={};
  for(const group of GROUPS){
   const targets=plan.quotas?.[group]?.targets??[];
@@ -292,8 +321,9 @@ function audit(plan,sources,tagDoc,{offset=0,limit=12}={}){
    const actual=counts[group].get(k)??0;
    return {key:k,target:x.count,actual,difference:actual-x.count};
   });
-  for(const row of coverage[group])if(row.difference!==0)
+  for(const row of coverage[group])if(row.difference>0||(row.difference<0&&!partialDelivery))
    add("quota-mismatch",group+" "+row.key+": expected "+row.target+", found "+row.actual,"quotas."+group);
+  // Explicit partial delivery discloses deficits; oversupply and unallocated items still block.
   if(plan.quotas?.[group]?.exhaustive){
    const specified=new Set(coverage[group].map(x=>x.key));
    let outside=0;
@@ -307,7 +337,9 @@ function audit(plan,sources,tagDoc,{offset=0,limit=12}={}){
   for(const [topic,n] of map)if(total>0&&n*100>maxShare*total)
    add("topic-overconcentration",root+"/"+topic+" covers "+n+" of "+total+" questions (> "+maxShare+"%)","requirements.maxTopicSharePercent");
  }
- const issueCount=issues.length;
+ if(nearDuplicateScanTruncated)
+  add("near-duplicate-report-truncated","More than 200 cross-batch candidates; inspect the entire source set","questions","warning");
+ const issueCount=issues.length,blockingCount=issues.filter(x=>x.severity==="error").length;
  const coverageSummary={};
  for(const group of GROUPS){
   const rows=coverage[group];
@@ -322,13 +354,16 @@ function audit(plan,sources,tagDoc,{offset=0,limit=12}={}){
   return [g,{totalCategories:sorted.length,shown:sorted.slice(0,12).map(([key,count])=>({key,count})),
    remainingCategories:Math.max(0,sorted.length-12)}];
  }));
- return {format:"practice-desk-blueprint-audit",version:1,valid:issueCount===0,
-  readyForPublication:issueCount===0,partialDeliveryAllowed:plan.allowPartial===true,
+ return {format:"practice-desk-blueprint-audit",version:1,valid:blockingCount===0,
+  readyForPublication:blockingCount===0,partialDeliveryAllowed:plan.allowPartial===true,
+  partialDelivery,remainingCount:Math.max(0,plan.targetCount-actualCount),
+  nearDuplicateCandidates,nearDuplicateScanTruncated,
   blueprintId:plan.id,examId:plan.examId,paperId:plan.paperId,revision:plan.revision,
   requestedCount:plan.targetCount,actualCount,sourceCount:sources.length,sourceHashes,
   factualVerification:"not-performed",cognitiveVerification:tagDoc?"author-attributed-not-independently-verified":"not-performed",
   coverage,coverageSummary,observed,categoryCardinality:countsByGroup,answerPositionCounts:answerPositions,batches,
-  issues:{offset,limit,total:issueCount,nextOffset:offset+limit<issueCount?offset+limit:null,
+  issues:{offset,limit,total:issueCount,blocking:blockingCount,warnings:issueCount-blockingCount,
+   nextOffset:offset+limit<issueCount?offset+limit:null,
    remaining:Math.max(0,issueCount-offset-limit),items:issues.slice(offset,offset+limit)}};
 }
 const emit=v=>process.stdout.write(JSON.stringify(v,null,2)+"\n");
