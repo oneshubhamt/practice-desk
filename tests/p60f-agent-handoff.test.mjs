@@ -111,6 +111,14 @@ test("P60-H: sourced APFC/CAT items prepare as a complete blind packet, compile 
   assert.ok(bundle.questions.every(q=>q.editorial.status==="caution"));
  }
 }));
+test("P60 final: reject paired comparison options that cannot be applied without a blueprint",()=>scoped(async dir=>{
+ const x=await files(dir);
+ const r=run(script,"assess","paired",x.original,x.corrected,x.decisions,
+  "--quality-review",x.reviewFile,"--against",x.original);
+ assert.notEqual(r.status,0);
+ assert.match(r.data.message,/--against requires --blueprint/);
+ assert.equal(r.data.readyForPublication,false);
+}));
 test("P60-F RED: single mode converges source + P60-C into bounded answer-private readiness",()=>scoped(async dir=>{
  const x=await files(dir);
  const result=run(script,"assess","single",x.corrected,"--quality-review",x.reviewFile);

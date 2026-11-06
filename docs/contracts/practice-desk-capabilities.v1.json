@@ -102,8 +102,8 @@
     {
       "operation": "prepare-blind-review",
       "command": "node scripts/agent-handoff.mjs prepare <source.json> <NEW-review-dir> --allow-create",
-      "privilege": "create-new-files-with-explicit-consent",
-      "effect": "One complete key-hidden candidate review packet plus matching incomplete 20-check reviewer sidecar; never authenticates sources or approves publication"
+      "privilege": "create-new-file",
+      "effect": "One complete key-hidden candidate review packet plus matching incomplete 20-check reviewer sidecar; never authenticates sources or approves publication Explicit --allow-create required."
     },
     {
       "operation": "audit-question-quality",

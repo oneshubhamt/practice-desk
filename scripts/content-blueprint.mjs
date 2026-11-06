@@ -352,7 +352,10 @@ function audit(plan,sources,tagDoc,{offset=0,limit=12,priorSources=[]}={}){
   // Partial batches need not yet have their final topic mix. Assess the
   // maximum share against the requested final count, but never allow a topic
   // to exceed what could be repaired by remaining questions.
-  const denominator=partialDelivery?plan.targetCount:total;
+  // When a subject allocation exists, the final denominator is that
+  // subject's planned count, not the entire paper.
+  const subjectTarget=plan.quotas?.subjects?.targets?.find(x=>x.key===root)?.count;
+  const denominator=partialDelivery?(subjectTarget??plan.targetCount):total;
   for(const [topic,n] of map)if(denominator>0&&n*100>maxShare*denominator)
    add("topic-overconcentration",root+"/"+topic+" covers "+n+
     " questions (> "+maxShare+"% of "+denominator+"-question "+
