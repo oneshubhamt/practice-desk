@@ -179,7 +179,7 @@ function validateBlueprint(value){
  }
  return b;
 }
-function audit(plan,sources,tagDoc){
+function audit(plan,sources,tagDoc,{offset=0,limit=12}={}){
  const issues=[],all=[],batches=[],sourceHashes=[],bankIds=new Set(),questionIds=new Set();
  const add=(code,message,path="$")=>issues.push({code,severity:"error",basis:"deterministic",path,message});
  const first=sources[0]?.value,head=first?{scoring:first.scoring,timing:first.timing,navigation:first.navigation,sections:first.sections}:null;
@@ -308,6 +308,14 @@ function audit(plan,sources,tagDoc){
    add("topic-overconcentration",root+"/"+topic+" covers "+n+" of "+total+" questions (> "+maxShare+"%)","requirements.maxTopicSharePercent");
  }
  const issueCount=issues.length;
+ const coverageSummary={};
+ for(const group of GROUPS){
+  const rows=coverage[group];
+  const mismatches=rows.filter(x=>x.difference!==0);
+  coverageSummary[group]={totalTargets:rows.length,mismatches:mismatches.length,
+   shown:Math.min(12,rows.length),remainingTargets:Math.max(0,rows.length-12)};
+  coverage[group]=[...mismatches,...rows.filter(x=>x.difference===0)].slice(0,12);
+ }
  const countsByGroup=Object.fromEntries(GROUPS.map(g=>[g,counts[g].size]));
  const observed=Object.fromEntries(GROUPS.map(g=>{
   const sorted=[...counts[g].entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
@@ -319,13 +327,9 @@ function audit(plan,sources,tagDoc){
   blueprintId:plan.id,examId:plan.examId,paperId:plan.paperId,revision:plan.revision,
   requestedCount:plan.targetCount,actualCount,sourceCount:sources.length,sourceHashes,
   factualVerification:"not-performed",cognitiveVerification:tagDoc?"author-attributed-not-independently-verified":"not-performed",
-  coverage,observed,categoryCardinality:countsByGroup,answerPositionCounts:answerPositions,batches,
-  issues:{offset:0,limit:12,total:issueCount,remaining:Math.max(0,issueCount-12),items:issues.slice(0,12)}};
-}
-function limitIssues(report,limit){
- report.issues.limit=limit;report.issues.items=report.issues.items.slice(0,limit);
- report.issues.remaining=report.issues.total-report.issues.items.length;
- return report;
+  coverage,coverageSummary,observed,categoryCardinality:countsByGroup,answerPositionCounts:answerPositions,batches,
+  issues:{offset,limit,total:issueCount,nextOffset:offset+limit<issueCount?offset+limit:null,
+   remaining:Math.max(0,issueCount-offset-limit),items:issues.slice(offset,offset+limit)}};
 }
 const emit=v=>process.stdout.write(JSON.stringify(v,null,2)+"\n");
 const failure=message=>{
@@ -334,7 +338,7 @@ const failure=message=>{
 };
 async function main(){
  const [command,...args]=process.argv.slice(2);
- if(!["validate","audit"].includes(command))fail("Usage: content-blueprint.mjs validate <plan.json> | audit <plan.json> <source.json>... [--cognitive tags.json] [--limit 1..50]");
+ if(!["validate","audit"].includes(command))fail("Usage: content-blueprint.mjs validate <plan.json> | audit <plan.json> <source.json>... [--cognitive tags.json] [--offset N] [--limit 1..50]");
  if(command==="validate"&&args.length!==1)fail("validate takes only one blueprint file");
  if(command==="audit"&&args.length<2)fail("audit needs blueprint and at least one source");
  const planFile=await load(args[0],MAX_PLAN,"Blueprint");
@@ -347,16 +351,20 @@ async function main(){
    factualVerification:"not-performed",note:"A valid blueprint does not authenticate the curriculum or prove question quality."});
   return;
  }
- const files=[];let tagPath=null,limit=12;
+ const files=[];let tagPath=null,limit=12,offset=0;
  for(let i=1;i<args.length;i++){
-  if(args[i]==="--cognitive"||args[i]==="--limit"){
+  if(args[i]==="--cognitive"||args[i]==="--limit"||args[i]==="--offset"){
    if(i+1>=args.length)fail("Missing argument after "+args[i]);
    if(args[i]==="--cognitive"){
     if(tagPath)fail("Duplicate --cognitive");tagPath=args[++i];
-   }else{
+   }else if(args[i]==="--limit"){
     const num=Number(args[++i]);
     if(!Number.isSafeInteger(num)||num<1||num>50)fail("Limit must be 1..50");
     limit=num;
+   }else{
+    const num=Number(args[++i]);
+    if(!Number.isSafeInteger(num)||num<0||num>1000000)fail("Offset must be 0..1000000");
+    offset=num;
    }
   }else if(args[i].startsWith("--"))fail("Unknown flag "+args[i]);
   else files.push(args[i]);
@@ -365,7 +373,7 @@ async function main(){
  const sources=[];
  for(const path of files)sources.push(await load(path,MAX_SOURCE,"Source"));
  const tags=tagPath?(await load(tagPath,MAX_PLAN,"Cognitive tags")).value:undefined;
- const result=limitIssues(audit(plan,sources,tags),limit);
+ const result=audit(plan,sources,tags,{limit,offset});
  result.blueprintSha256=planFile.digest;
  emit(result);
  if(!result.valid)process.exitCode=1;
