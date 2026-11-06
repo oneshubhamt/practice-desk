@@ -301,9 +301,14 @@ try{
  await page.locator("#learning-note").waitFor({state:"visible"});
  await page.locator("#learning-note").fill("P60-F externally authored reviewed APFC correction");
  await page.locator("#learning-save").click();
- const afterReview=(await records(page)).find(x=>x.id===card.id);
- check(afterReview?.reviews?.length===1&&
-  afterReview.note==="P60-F externally authored reviewed APFC correction",
+ let afterReview;
+ for(let i=0;i<55;i++){
+  afterReview=(await records(page)).find(x=>x.id===card.id&&x.reviews?.length===1&&
+   x.note==="P60-F externally authored reviewed APFC correction");
+  if(afterReview)break;
+  await page.waitForTimeout(75);
+ }
+ check(Boolean(afterReview),
   engine+" P60-F explicit FSRS rating/learning note was not persisted");
  await page.reload({waitUntil:"load"});
  const restored=await records(page);
