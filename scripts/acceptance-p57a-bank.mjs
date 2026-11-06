@@ -279,7 +279,7 @@ try{
  // This review panel is rendered asynchronously; WebKit may complete the tab
  // event before the lazy question renderer inserts its three review rows.
  await page.waitForFunction(()=>document.querySelectorAll(".generic-review").length===3,
-  {timeout:10000});
+  undefined,{timeout:10000});
  check(await page.locator(".generic-review").count()===3,
   engine+" P60-F reviewed candidate output cannot be reviewed after scoring");
  await page.locator("[data-add-card]").first().click();
