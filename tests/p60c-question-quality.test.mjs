@@ -84,7 +84,7 @@ test("P60-C RED: external review must be SHA-bound, complete, independently solv
  const pack=command(tool,"candidate",input,"--limit","10");
  assert.equal(pack.status,0,pack.stderr);
  const checks=Array.from({length:20},(_,i)=>({id:command(tool,"checklist").data.checklist[i].id,
-  status:"pass",basis:i===11||i===12||i===13?"source-consulted":"independent-editorial",
+  status:"pass",basis:i===11||i===12||i===13?"source-consulted":i===19?"rendered-claim":"independent-editorial",
   rationale:"Synthetic test assertion only, no authentic source verification"}));
  const report={format:"practice-desk-quality-review",version:1,bankId:src.bankId,sourceSha256:pack.data.sourceSha256,
   records:pack.data.items.map((q,i)=>({questionId:q.questionId,questionSha256:sha(JSON.stringify(src.questions[i])),
