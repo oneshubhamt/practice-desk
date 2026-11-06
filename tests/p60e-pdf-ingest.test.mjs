@@ -83,9 +83,12 @@ async function fixture(){
   identityNote:"Test-produced synthetic document; not a PYQ or institutional publisher"});
  manifest.documentInventoryStatus="checked-against-source";
  manifest.externalVerification="recorded-agent-check";
+ manifest.inspector={kind:"agent",id:"synthetic-regression-agent",
+  method:"Synthetic test compares page references, not independently verified PDF wording",
+  reviewedAt:"2026-11-06"};
  manifest.questions.forEach((q,i)=>Object.assign(q,{
   pages:[i<2?1:2],status:"source-compared",printedNumber:String(i+1),
-  keyOrigin:"source-document",keyPages:[2],mathStatus:"source-compared",
+  keyOrigin:"source-document",keyPages:[2],mathStatus:"source-compared",explanationOrigin:"editorial-not-in-source",
   notes:"Synthetic fixture comparison claim; no actual OCR or source proof"}));
  manifest.stimuli.forEach((s,i)=>Object.assign(s,{pages:[i===0?1:i===1?1:2],
   status:"source-compared",notes:"Synthetic fixture page-linked stimulus"}));
@@ -117,7 +120,10 @@ test("P60-E missing page, duplicate numbering and cropped/uncertain maths or fig
   m=>{m.questions[0].keyOrigin="unavailable";},
   m=>{m.original.omissions=["item-5"];},
   m=>{m.documentInventoryStatus="unchecked";},
-  m=>{m.questions[1].pages=[3];}
+  m=>{m.questions[1].pages=[3];},
+  m=>{m.questions[0].explanationOrigin="unverified";},
+  m=>{m.inspector.id="";},
+  m=>{m.questions[0].pages=[2];}
  ]){
   const x=structuredClone(fresh);mutate(x.manifest);
   try{assert.equal((await audit(x)).valid,false);}
