@@ -60,7 +60,7 @@ async function sourceBytes(path,type){
   throw Error("Source PDF lacks minimal PDF header/trailer; document is corrupt or wrong file");
  if(type==="image"&&!(bytes.subarray(0,4).toString("hex")==="89504e47"||
    bytes.subarray(0,3).toString("hex")==="ffd8ff"||
-   bytes.subarray(0,4).toString("ascii")==="RIFF"))
+   (bytes.subarray(0,4).toString("ascii")==="RIFF"&&bytes.subarray(8,12).toString("ascii")==="WEBP")))
   throw Error("Source image does not have a supported PNG/JPEG/WebP signature");
  return {byteLength:bytes.length,sha256:digest(bytes)};
 }
@@ -72,16 +72,16 @@ const hasMath=q=>{
    .some(name=>s.includes(slashPair+name))||
   (s.includes("$")&&s.indexOf("$")!==s.lastIndexOf("$"));
 };
-export function buildPdfIntakeTemplate(original,raw,document,bytes,keyDocument=null,keyBytes=null){
+export function buildPdfIntakeTemplate(original,raw,documentType,bytes,keyType=null,keyBytes=null){
  toAuthoringDraft(original);
  const parts=sourceParts(original);
  const item=(x,extra={})=>({id:x.id,sha256:digest(JSON.stringify(x)),
   pages:[],status:"unchecked",uncertainties:[],notes:"Pending page-by-page comparison",...extra});
  return {format:FORMAT,version:1,document:{
-  title:"REPLACE WITH EXACT DOCUMENT TITLE",type:"pdf",sha256:bytes.sha256,
+  title:"REPLACE WITH EXACT DOCUMENT TITLE",type:documentType??"pdf",sha256:bytes.sha256,
   byteLength:bytes.byteLength,pageCount:1,inspectedPages:[],missingPages:[],
   identityNote:"Record publisher, examination, year, edition, and where the document came from"
- },...(keyDocument?{keyDocument:{title:"REPLACE KEY DOCUMENT TITLE",type:"pdf",sha256:keyBytes.sha256,
+ },...(keyType?{keyDocument:{title:"REPLACE KEY DOCUMENT TITLE",type:keyType,sha256:keyBytes.sha256,
   byteLength:keyBytes.byteLength,pageCount:1,inspectedPages:[],missingPages:[],
   identityNote:"Identify the separate printed key without asserting it is official"}}:{}),
   original:{sourceSha256:digest(raw),bankId:original.bankId,questionCount:parts.questions.length,
@@ -89,7 +89,7 @@ export function buildPdfIntakeTemplate(original,raw,document,bytes,keyDocument=n
   questions:parts.questions.map(q=>({...item(q),printedNumber:"",
    keyOrigin:"unavailable",keyPages:[],mathStatus:hasMath(q)?"unchecked":"not-applicable",
    explanationOrigin:"unverified"})),
-  stimuli:parts.stimuli.map(s=>item(s)),
+  stimuli:parts.stimuli.map(s=>({...item(s),mathStatus:hasMath(s)?"unchecked":"not-applicable"})),
   media:parts.media.map(m=>({...item(m),visualStatus:"unchecked"})),
   documentInventoryStatus:"unchecked",externalVerification:"not-performed",
   inspector:{kind:"agent",id:"REPLACE_INSPECTOR",method:"REPLACE SOURCE COMPARISON METHOD",reviewedAt:"REPLACE_DATE"},
@@ -102,7 +102,15 @@ export function auditPdfIntake(manifest,original,raw,documentBytes,{keyBytes=nul
  obj(manifest,"intake",["format","version","document","keyDocument","original","questions","stimuli","media","documentInventoryStatus","externalVerification","inspector","note"]);
  if(manifest.format!==FORMAT||manifest.version!==1)throw Error("Unsupported PDF intake version");
  validateDocumentMetadata(manifest.document,"document");
- if(manifest.keyDocument)validateDocumentMetadata(manifest.keyDocument,"keyDocument");
+ if(manifest.document.title.startsWith("REPLACE")||
+    manifest.document.identityNote.startsWith("Record publisher"))
+  add("document-identity-unfilled","Replace original document title/identity placeholders");
+ if(manifest.keyDocument){
+  validateDocumentMetadata(manifest.keyDocument,"keyDocument");
+  if(manifest.keyDocument.title.startsWith("REPLACE")||
+     manifest.keyDocument.identityNote.startsWith("Identify the separate"))
+   add("key-identity-unfilled","Replace separate key document identity placeholders");
+ }
  if(Boolean(manifest.keyDocument)!==Boolean(keyBytes))
   add("key-file-required","Separate key metadata and --key-document must both be present");
  for(const [name,d,bytes] of [["document",manifest.document,documentBytes],
@@ -133,6 +141,11 @@ export function auditPdfIntake(manifest,original,raw,documentBytes,{keyBytes=nul
  const inspector=obj(manifest.inspector,"inspector",["kind","id","method","reviewedAt"]);
  if(!["human","agent"].includes(inspector.kind))add("inspector-kind-invalid","Name the type of source comparer");
  string(inspector.id,"inspector.id",120);string(inspector.method,"inspector.method",500);
+ if(inspector.id.startsWith("REPLACE")||inspector.method.startsWith("REPLACE"))
+  add("inspector-unfilled","Replace template inspector placeholders with real attributed source comparison details");
+ if((inspector.kind==="agent"&&manifest.externalVerification==="recorded-human-check")||
+    (inspector.kind==="human"&&manifest.externalVerification==="recorded-agent-check"))
+  add("inspector-claim-mismatch","Inspector type must match the declared source comparison");
  if(!/^\d{4}-\d{2}-\d{2}$/.test(inspector.reviewedAt)||
     new Date(inspector.reviewedAt+"T00:00:00Z").toISOString().slice(0,10)!==inspector.reviewedAt)
   add("inspector-date-invalid","Use actual source inspection ISO date");
@@ -153,7 +166,7 @@ export function auditPdfIntake(manifest,original,raw,documentBytes,{keyBytes=nul
    obj(entry,field+" entry",field==="questions"?
     ["id","sha256","pages","status","uncertainties","notes","printedNumber","keyOrigin","keyPages","mathStatus","explanationOrigin"]:
     field==="media"?["id","sha256","pages","status","uncertainties","notes","visualStatus"]:
-    ["id","sha256","pages","status","uncertainties","notes"]);
+    ["id","sha256","pages","status","uncertainties","notes","mathStatus"]);
    if(!ID.test(entry.id)||seen.has(entry.id))add("duplicate-or-invalid-item",field+" has duplicate/invalid ID");
    seen.add(entry.id);byId.set(entry.id,entry);
   }
@@ -197,14 +210,19 @@ export function auditPdfIntake(manifest,original,raw,documentBytes,{keyBytes=nul
     const sourceNote=value.provenance?.sourceNote;
     if(!sourceNote||sourceNote.trim().length<12)
      add("source-note-required","Frozen question must carry a meaningful document/page provenance note",value.id);
-    else if(!entry.pages.some(p=>sourceNote.toLowerCase().includes("page "+p)||
-       sourceNote.toLowerCase().includes("p. "+p)))
-     add("source-note-page-mismatch","Frozen question note must cite one of the recorded source pages",value.id);
+    else {
+     const noted=new Set([...sourceNote.matchAll(/\b(?:page|p\.)\s*(\d+)\b/giu)].map(m=>Number(m[1])));
+     if(!entry.pages.some(p=>noted.has(p)))
+      add("source-note-page-mismatch","Frozen question note must cite the exact printed source page number",value.id);
+    }
     if(!["printed-source","editorial-not-in-source"].includes(entry.explanationOrigin))
      add("explanation-origin-unresolved","Distinguish printed explanations from editorial additions",value.id);
     if(value.provenance?.kind==="official-pyq"&&!manifest.document.publisherClaim)
      add("official-origin-not-substantiated","Claimed PYQ has no attributed publisher; claim is not proof",value.id);
    }
+   if(field==="stimuli"&&(!["not-applicable","source-compared"].includes(entry.mathStatus)||
+     (hasMath(value)&&entry.mathStatus!=="source-compared")))
+    add("stimulus-math-unverified","Math within shared stimuli requires a source-character comparison claim",value.id);
    if(field==="media"&&entry.visualStatus!=="source-compared")
     add("figure-not-reviewed","Image/diagram pixel fidelity has not been source-compared",value.id);
   }
@@ -242,7 +260,7 @@ export function auditPdfIntake(manifest,original,raw,documentBytes,{keyBytes=nul
   issues:{total:issues.length,blocking:issues.length,offset:0,limit:12,
    nextOffset:issues.length>12?12:null,items:issues.slice(0,12)}};
 }
-const usage="Usage: pdf-ingest.mjs template <original.json> <source.pdf> [--key-document key.pdf] | audit <intake.json> <original.json> <source.pdf> [--key-document key.pdf] [--reviewed reviewed.json --decisions decisions.json --quality-review quality.json] [--blueprint plan.json] | compile <intake.json> <original.json> <source.pdf> <reviewed.json> <decisions.json> <NEW-directory> --quality-review quality.json [--key-document key.pdf] [--blueprint plan.json]";
+const usage="Usage: pdf-ingest.mjs template <original.json> <source.pdf> [--document-type pdf|image|other-document] [--key-document key.pdf --key-type pdf|image|other-document] | audit <intake.json> <original.json> <source.pdf> [--key-document key.pdf] [--reviewed reviewed.json --decisions decisions.json --quality-review quality.json] [--blueprint plan.json] | compile <intake.json> <original.json> <source.pdf> <reviewed.json> <decisions.json> <NEW-directory> --quality-review quality.json [--key-document key.pdf] [--blueprint plan.json]";
 async function main(){
  const [command,...args]=process.argv.slice(2);
  if(!["template","audit","compile"].includes(command))throw Error(usage);
@@ -251,21 +269,27 @@ async function main(){
  const flags=args.slice(mandatory),opts={};
  for(let i=0;i<flags.length;i+=2){
   const k=flags[i],v=flags[i+1];
-  if(!["--key-document","--reviewed","--decisions","--quality-review","--blueprint"].includes(k)||
+  if(!["--key-document","--key-type","--document-type","--reviewed","--decisions","--quality-review","--blueprint"].includes(k)||
     !v||Object.hasOwn(opts,k))throw Error(usage);
   opts[k]=v;
  }
- if(command==="template"&&Object.keys(opts).some(k=>k!=="--key-document"))
-  throw Error("Template accepts only --key-document");
+ if(command==="template"&&Object.keys(opts).some(k=>!["--key-document","--key-type","--document-type"].includes(k)))
+  throw Error("Template accepts only --key-document/--key-type/--document-type");
+ if(command!=="template"&&(opts["--key-type"]||opts["--document-type"]))
+  throw Error("Audit and compile read exact source/key document types from intake manifest");
+ if(opts["--key-type"]&&!opts["--key-document"])
+  throw Error("Key type requires --key-document");
+ for(const type of [opts["--key-type"],opts["--document-type"]].filter(Boolean))
+  if(!["pdf","image","other-document"].includes(type))throw Error("Unsupported document type");
  const original=await sourceJson(args[command==="template"?0:1],MAX_SOURCE,"Original JSON");
  const data=original.value;toAuthoringDraft(data);
  const intake=command==="template"?null:await sourceJson(args[0],MAX_INTAKE,"Intake manifest");
- const mainType=intake?.value?.document?.type??"pdf";
+ const mainType=command==="template"?(opts["--document-type"]??"pdf"):(intake?.value?.document?.type??"pdf");
  const doc=await sourceBytes(args[command==="template"?1:2],mainType);
- const key=opts["--key-document"]?await sourceBytes(opts["--key-document"],
-  intake?.value?.keyDocument?.type??"pdf"):null;
+ const keyType=command==="template"?(opts["--key-type"]??"pdf"):(intake?.value?.keyDocument?.type??"pdf");
+ const key=opts["--key-document"]?await sourceBytes(opts["--key-document"],keyType):null;
  if(command==="template"){
-  process.stdout.write(JSON.stringify(buildPdfIntakeTemplate(data,original.raw,null,doc,Boolean(key),key),null,2)+"\n");return;
+  process.stdout.write(JSON.stringify(buildPdfIntakeTemplate(data,original.raw,mainType,doc,key?keyType:null,key),null,2)+"\n");return;
  }
  let pair=null;
  if(command==="compile"){
