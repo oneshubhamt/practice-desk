@@ -7,6 +7,23 @@ Practice Desk is an **offline examination, scoring, results, history and spaced-
 
 **Read this instead of the whole application repository.** This is the external AI authoring interface, not an LLM embedded in Practice Desk. For exact valid source shapes, read just one small relevant example: [APFC](../examples/ai-first-apfc.json) or [CAT](../examples/ai-first-cat.json). The broader [agent-native rationale and quality policy](architecture/P59_AGENT_NATIVE_QUESTION_AUTHORING.md) is optional on ordinary authoring turns.
 
+## P60-F — one low-context, explicit-permission agent handoff
+
+Use the **existing** P59 inspect/show/patch for individual questions; use [P60-F's focused contract](architecture/P60F_AGENT_INTEGRATION_AND_VERIFICATION.md) when coordinating full source+review+coverage+publication. There is **no** cloud agent or app/History access. Agents can discover actual operations with `node scripts/agent-handoff.mjs actions`. All three modes require a separately completed **P60-C SHA-bound `--quality-review review.json`**, with optional explicit **P60-B `--blueprint plan.json`**:
+
+```bash
+node scripts/agent-handoff.mjs assess single bank.json --quality-review review.json
+node scripts/agent-handoff.mjs publish single bank.json NEW.exam.json --quality-review review.json --allow-create
+
+node scripts/agent-handoff.mjs assess paired original.json reviewed.json decisions.json --quality-review review.json
+node scripts/agent-handoff.mjs publish paired original.json reviewed.json decisions.json NEW-directory --quality-review review.json --allow-create
+
+node scripts/agent-handoff.mjs assess pdf intake.json original.json paper.pdf reviewed.json decisions.json --quality-review review.json
+node scripts/agent-handoff.mjs publish pdf intake.json original.json paper.pdf reviewed.json decisions.json NEW-directory --quality-review review.json --allow-create
+```
+
+`assess` is read-only, one concise response with only issue codes/metadata, no answer keys/media. `publish` requires explicit `--allow-create`, will not overwrite an existing file/directory, and delegates to the same original P57/P60-D/E compiler. For a separate printed key add `--key-document key.pdf` to PDF mode. **Import compiled files into the offline Library manually**; for paired PDF/printed source, import **Source then Reviewed**. Review/checklist declarations, file hashes, source-key claims and P60-F success are **not** independent factual or authentic-PYQ proof. Real facts, statutory dates and original PDF meaning still require external human/research verification. The benchmark measures actual CLI calls/bytes/timing only; no model token or learner-outcome improvement claim.
+
 ## P60-E — ingest supplied PDFs through an external AI agent
 
 External agents interpret the actual PDF; **no OCR/PDF understanding engine runs inside Practice Desk**. Preserve the original document bytes and transcribe the exact question/number/options/passages/tables/images/TeX into `practice-desk-authoring` v1. Run `node scripts/pdf-ingest.mjs template original.json paper.pdf > intake.json` (optional `--key-document printed-key.pdf`; for image/document sources use `--document-type image|other-document` and optionally `--key-type image|other-document`). Fill the incomplete-by-default SHA-bound page, printed key, source question/stimulus/media, math/figure, inspector and editorial-explanation provenance checks after actually inspecting the pages. Run `node scripts/pdf-ingest.mjs audit intake.json original.json paper.pdf`. Missing pages/keys/cropped maths and unreviewed diagrams **must remain blocked**, never invented. An original-only intake check is not publication-ready. Keep the original unchanged, independently review a separate `reviewed.json` with P60-C, record P60-D decisions, optionally audit P60-B blueprint, then run `node scripts/pdf-ingest.mjs compile intake.json original.json paper.pdf reviewed.json decisions.json NEW-directory --quality-review review.json`. This **delegates** paired publication to existing P60-D and adds a provenance sidecar; explicitly import Source then Reviewed into the offline Library. Source hashes and model-asserted inspections do **not** authenticate question fidelity, PYQ or true reviewer independence. Read [the focused PDF intake contract](architecture/P60E_AGENT_PDF_INGESTION.md) only when needed. **P60-E automated software 5/5 CI verified [42188234511](https://github.com/oneshubhamt/practice-desk/actions/runs/42188234511), 419 Node; real source/document truth still external.** P60-F agent-to-device control is not implemented.
