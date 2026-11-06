@@ -32,7 +32,7 @@ jobs:
           test "$before" = "$after" || { echo "::error::Non-reproducible HTML build"; exit 1; }
           echo "P42 verified deterministic HTML SHA-256 $after"
       - name: Save source-verified standalone HTML
-        if: github.event_name == 'push' && github.ref == 'refs/heads/overhaul'
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/overhaul' || github.ref == 'refs/heads/Satyam')
         uses: actions/upload-artifact@v4
         with:
           name: source-verified-offline-html
@@ -296,7 +296,7 @@ jobs:
 
   publish:
     name: Publish only after all current-app gates pass
-    if: github.event_name == 'push' && github.ref == 'refs/heads/overhaul'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/overhaul' || github.ref == 'refs/heads/Satyam')
     needs: [core, chromium, cross-browser]
     runs-on: ubuntu-latest
     permissions:
@@ -318,7 +318,12 @@ jobs:
           test -s .verified-build/Practice_Desk_Offline_Mock_Tests.html
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git fetch origin overhaul
+          target_branch="${GITHUB_REF_NAME}"
+          case "$target_branch" in
+            overhaul|Satyam) ;;
+            *) echo "::error::Unauthorized guarded publisher branch"; exit 1 ;;
+          esac
+          git fetch origin "$target_branch"
           remote_head=$(git rev-parse FETCH_HEAD)
           git merge-base --is-ancestor "$verified_head" "$remote_head" || {
             echo "::error::Branch diverged from tested source"; exit 1;
@@ -335,7 +340,7 @@ jobs:
           git add Practice_Desk_Offline_Mock_Tests.html
           git commit -m 'build: refresh verified offline HTML [skip ci]'
           for attempt in 1 2 3; do
-            git fetch origin overhaul
+            git fetch origin "$target_branch"
             remote_head=$(git rev-parse FETCH_HEAD)
             git merge-base --is-ancestor "$verified_head" "$remote_head" || {
               echo "::error::Branch diverged after testing"; exit 1;
@@ -345,6 +350,6 @@ jobs:
               echo "::error::Unverified branch changes: $source_changes"; exit 1;
             }
             git rebase "$remote_head"
-            if git push origin HEAD:overhaul; then exit 0; fi
+            if git push origin "HEAD:$target_branch"; then exit 0; fi
           done
           echo "::error::Could not safely publish tested HTML"; exit 1
