@@ -29,6 +29,10 @@ node scripts/question-bank-cli.mjs compile-bank NEW-bank.json NEW-paper.json
 
 For ordinary question generation, **read only the one-page quickstart, one relevant APFC or CAT example and the specific capability/task slice**. Query `show` for one question when repairing. Do not ingest every application file, history record or entire bank by default. Shared table/passage/image content should be referenced rather than redundantly repeated.
 
+## P60-E — external AI document/PDF intake
+
+An external authorized agent—not Practice Desk's offline app—visually interprets the supplied PDF, preserving source bytes, printed question numbers, options, passages, tables, images, keys and math. [The narrow P60-E task contract](architecture/P60E_AGENT_PDF_INGESTION.md) records SHA-bound source/page, original/reviewed and key-document provenance in a separate sidecar. `scripts/pdf-ingest.mjs template` creates an incomplete ledger, `audit` fails closed on gaps, `compile` invokes existing P60-D paired publication only with P60-C reviewed quality evidence and optional P60-B coverage. Import both signed editions explicitly into offline Library. It does **not** read PDF page text or diagrams, certify PYQ/source/reviewer truth, or reach local browser storage.
+
 ## How its features work together
 
 | Area | Current actual functionality | Agent implication |
