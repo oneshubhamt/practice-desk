@@ -4,9 +4,9 @@
  * Recorded AI/human review is an unverified assertion of work performed.
  * Canonical schema/scorer/candidate leak defects still come from P57/P60-C QA.
  */
-import {readFile} from "node:fs/promises";
+import {readFile,writeFile,mkdir,rm} from "node:fs/promises";
 import {createHash} from "node:crypto";
-import {resolve} from "node:path";
+import {resolve,join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {inspectExternalQuestionBank,toAuthoringDraft} from "../src/authoring/external-bank.ts";
 import {candidateFields} from "../src/authoring/candidate-integrity.ts";
@@ -284,7 +284,49 @@ export function auditQuestionQuality(source,sourceRaw,reviewRaw=undefined,{offse
   issues:{offset,limit,total:count,nextOffset:offset+limit<count?offset+limit:null,
    remaining:Math.max(0,count-offset-limit),items:issues.slice(offset,offset+limit)}};
 }
-const usage="Usage: question-quality.mjs checklist | candidate <source.json> [--offset N --limit 1..20] | template <source.json> [--offset N --limit 1..20] | audit <source.json> [--review <review.json>] [--offset N --limit 1..50]";
+// The output is an exact, fillable review-v1 contract; no extra template-only
+// properties requiring agents to repair JSON before running the validator.
+function reviewTemplate(value,sourceRaw,items){
+ return {format:"practice-desk-quality-review",version:1,
+  bankId:value.bankId,sourceSha256:sha(sourceRaw),
+  records:items.map(item=>({
+   questionId:item.questionId,questionSha256:item.questionSha256,
+   candidateSha256:item.candidateSha256,
+   reviewer:{id:"REPLACE_REVIEWER",kind:"ai"},
+   independentSolution:{blindClaim:false,answer:"",
+    reasoning:"Pending independent blind solution"},
+   checks:QUALITY_CHECKLIST.map(x=>({id:x.id,status:"not-reviewed",
+    basis:"independent-editorial",rationale:"Pending independent assessment"})),
+   evidence:[]
+  }))};
+}
+async function prepareReviewWorkspace(value,raw,outputDir){
+ // Build the complete blind packet and the corresponding empty review source
+ // locally; stdout carries no question/answer/media content.
+ const draft=toAuthoringDraft(value);
+ const items=draft.questions.map(q=>{
+  const item=candidateProjection(draft,q);
+  return {...item,questionSha256:sha(JSON.stringify(value.questions.find(x=>x.id===q.id)))};
+ });
+ const packets={format:"practice-desk-blind-candidates",version:1,bankId:value.bankId,
+  sourceSha256:sha(raw),total:items.length,items,
+  factualVerification:"not-performed",
+  warning:"Text/alt only: independently inspect original source, images, equations and real candidate rendering."};
+ const template=reviewTemplate(value,raw,items);
+ const files=[["blind-candidates.json",packets],["review.json",template]];
+ const directory=resolve(outputDir);
+ await mkdir(directory); // Exclusive: never replace an existing review directory.
+ try{
+  for(const [name,data] of files)await writeFile(join(directory,name),
+   JSON.stringify(data,null,2)+"\\n",{flag:"wx",mode:0o600});
+ }catch(error){await rm(directory,{recursive:true,force:true});throw error;}
+ return {format:"practice-desk-review-workspace",version:1,
+  readyForPublication:false,reviewComplete:false,sourceSha256:sha(raw),
+  bankId:value.bankId,questionCount:items.length,directory,
+  files:files.map(([name])=>name),
+  note:"Review is initially incomplete and cannot authorize publication; solve the blind packet without keys, inspect primary sources, record evidence, then fill review.json."};
+}
+const usage="Usage: question-quality.mjs checklist | candidate <source.json> [--offset N --limit 1..20] | template <source.json> [--offset N --limit 1..20] | prepare <source.json> <NEW-directory> | audit <source.json> [--review <review.json>] [--offset N --limit 1..50]";
 const throwResult=(e)=>{
  process.stderr.write(JSON.stringify({valid:false,readyForPublication:false,code:"quality-input-invalid",
   message:e instanceof Error?e.message:"Unknown error"},null,2)+"\n");
@@ -298,8 +340,9 @@ async function main(){
    note:"AI editorial judgments are not source-authenticated by this offline checker."});
   return;
  }
- if(!["candidate","template","audit"].includes(op)||!args.length)fail(usage);
- const sourceFile=args[0],flags=args.slice(1);
+ if(!["candidate","template","prepare","audit"].includes(op)||!args.length)fail(usage);
+ const sourceFile=args[0],flags=op==="prepare"?[]:args.slice(1);
+ if(op==="prepare"&&args.length!==2)fail(usage);
  let offset=0,limit=op==="audit"?12:10,reviewPath=null;
  for(let i=0;i<flags.length;i+=2){
   const k=flags[i],v=flags[i+1];
@@ -315,6 +358,9 @@ async function main(){
   }else fail(usage);
  }
  const {raw,value}=await parseFile(sourceFile,MAX_SOURCE,"Source");
+ if(op==="prepare"){
+  emit(await prepareReviewWorkspace(value,raw,args[1]));return;
+ }
  if(op==="candidate"||op==="template"){
   // Canonical v1 parser, without requiring a question already to pass all QA.
   const draft=toAuthoringDraft(value);
@@ -323,20 +369,7 @@ async function main(){
    return {...item,questionSha256:sha(JSON.stringify(value.questions.find(x=>x.id===q.id)))};
   });
   if(op==="template"){
-   emit({format:"practice-desk-quality-review",version:1,
-    bankId:value.bankId,sourceSha256:sha(raw),
-    records:items.map(item=>({
-     questionId:item.questionId,questionSha256:item.questionSha256,
-     candidateSha256:item.candidateSha256,
-     reviewer:{id:"REPLACE_REVIEWER",kind:"ai"},
-     independentSolution:{blindClaim:false,answer:"",
-      reasoning:"Pending blind independent solution"},
-     checks:QUALITY_CHECKLIST.map(x=>({id:x.id,status:"not-reviewed",
-      basis:"independent-editorial",rationale:"Pending independent assessment"})),
-     evidence:[]
-    })),
-    templateIncomplete:true,offset,limit,
-    warning:"Incomplete template; never self-certifies review. Merge fully assessed records for all source questions, after blinded solving and actual source research."});
+   emit(reviewTemplate(value,raw,items));
    return;
   }
   emit({format:"practice-desk-blind-candidates",version:1,bankId:value.bankId,
