@@ -108,7 +108,7 @@ function validateDecisions(input,expected,source,reviewed){
  let rows=[];
  try{
   const d=plain(input,"decisions",["format","version","originalSha256","reviewedSha256",
-   "entries"]);
+   "entries","note"]);
   if(d.format!==FORMAT||d.version!==1)throw Error("Unexpected decision format/version");
   if(!SHA.test(d.originalSha256)||!SHA.test(d.reviewedSha256))
    throw Error("Decision source hashes must be SHA-256 digests");
