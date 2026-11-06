@@ -75,7 +75,7 @@ test("P60-D RED: machine-readable template derives exact changed fields without 
  assert.equal(r.data.entries.length,1);
  assert.equal(r.data.entries[0].questionId,"labour-01");
  assert.deepEqual(r.data.entries[0].changedFields,["answer","explanation"]);
- assert.equal(r.data.templateIncomplete,true);
+ assert.equal("templateIncomplete" in r.data,false,"Fillable editorial template must be exact v1 schema");
  assert.match(r.data.originalSha256,/^[a-f0-9]{64}$/);
  assert.match(r.data.reviewedSha256,/^[a-f0-9]{64}$/);
  assert.ok(!r.stdout.includes("B is second."));

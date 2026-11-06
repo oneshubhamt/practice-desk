@@ -100,7 +100,7 @@ function template(original,reviewed,originalHash,reviewedHash){
  const changes=derivedChanges(original,reviewed,originalHash,reviewedHash);
  return {format:FORMAT,version:1,originalSha256:originalHash,reviewedSha256:reviewedHash,
   entries:changes.map(x=>({...x,disposition:"needs-review",reason:"",
-   evidence:[]})),templateIncomplete:true,
+   evidence:[]})),
   note:"Template is incomplete. A correction claim, timestamp, URL or reviewer identity is NOT independently authenticated."};
 }
 function validateEvidence(raw,kind){
