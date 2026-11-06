@@ -110,7 +110,7 @@ test("P60-E missing page, duplicate numbering and cropped/uncertain maths or fig
  const fresh=await fixture();
  for(const mutate of [
   m=>{m.document.inspectedPages=[1];m.document.missingPages=[2];},
-  m=>{m.questions[1].printedNumber="1";},
+  m=>{m.questions[3].printedNumber="3";},
   m=>{m.questions[2].mathStatus="not-applicable";},
   m=>{m.media[0].visualStatus="unchecked";},
   m=>{m.stimuli[1].uncertainties=["Table header cropped"];},
@@ -186,7 +186,7 @@ test("P60-E strict compile delegates P60-D without rewriting original, and canno
    return {questionId:q.id,questionSha256:sha(JSON.stringify(q)),
     candidateSha256:row.candidateSha256,
     reviewer:{id:"synthetic-agent-reviewer",kind:"ai"},
-    independentSolution:{blindClaim:true,answer:q.answer,
+    independentSolution:{blindClaim:true,answer:String(q.answer),
      reasoning:"Synthetic review assertion for software tests, not external proof."},
     checks:checklist.data.checklist.map((c,i)=>({id:c.id,status:"pass",
       basis:[11,12,13].includes(i)?"source-consulted":i===19?"rendered-claim":"independent-editorial",
