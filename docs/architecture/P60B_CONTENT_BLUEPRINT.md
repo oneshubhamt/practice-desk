@@ -34,14 +34,14 @@ node scripts/content-blueprint.mjs audit examples/p60b-apfc-blueprint.json examp
 node scripts/content-blueprint.mjs audit plan.json batch-01.json batch-02.json batch-03.json
 
 # Self-attributed cognitive-level classifications (only when needed)
-node scripts/content-blueprint.mjs audit plan.json batch-01.json --cognitive cognitive-tags.json --limit 12
+node scripts/content-blueprint.mjs audit plan.json batch-01.json --cognitive cognitive-tags.json --offset 0 --limit 12
 
 # Enforce an exact ONE-BANK blueprint in the *existing* canonical publisher CLI
 node scripts/question-bank-cli.mjs validate-bank bank.json --blueprint plan.json
 node scripts/question-bank-cli.mjs compile-bank bank.json compiled.json --blueprint plan.json
 ```
 
-The audit checks the actual P57–P59 parser and publisher QA for each source and returns a **compact** record: `readyForPublication`, `requestedCount` vs `actualCount`, requested versus actual quota counts, limited actual category inventory (top 12 per category, remaining counts disclosed), per-source validity/warning counts, key-position histogram (without keys), source SHA references, up to 12 errors by default (`--limit 1..50`) and total error count. It distinguishes deterministic classifications from independent source truth, always reporting `factualVerification:not-performed`. It detects repeated source bank/question identifiers, exact normalized repeated stems, paper policy mismatches, missing required metadata/explanations/citations, excluded topics, excessive concentration, unassigned cognitive tags, conflicting/exhaustive quota allocations and under/oversupply. Unknown/invalid fields fail closed.
+The audit checks the actual P57–P59 parser and publisher QA for each source and returns a **compact** record: `readyForPublication`, `requestedCount` vs `actualCount`, requested versus actual quota counts, limited actual category inventory (top 12 per category, remaining counts disclosed), per-source validity/warning counts, key-position histogram (without keys), source SHA references, up to 12 errors by default (`--offset N --limit 1..50`) with next-page cursor and total error count. It distinguishes deterministic classifications from independent source truth, always reporting `factualVerification:not-performed`. It detects repeated source bank/question identifiers, exact normalized repeated stems, paper policy mismatches, missing required metadata/explanations/citations, excluded topics, excessive concentration, unassigned cognitive tags, conflicting/exhaustive quota allocations and under/oversupply. Unknown/invalid fields fail closed.
 
 **There is no automatic quota inference from a paper's exam name.** A plausible distribution is still an **author-selected assumption** until the user chooses it or a true official instruction is independently verified. Exact allocations must not be silently relaxed to meet volume; a failed or incomplete result is **not a publication-ready bank** even when `allowPartial:true`.
 
