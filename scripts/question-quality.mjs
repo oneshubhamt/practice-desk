@@ -40,6 +40,19 @@ const MAX_SOURCE=25*1024*1024,MAX_REVIEW=3*1024*1024,MAX_ROWS=200;
 const idPattern=/^[A-Za-z0-9][A-Za-z0-9_-]*$/;
 const hashPattern=/^[a-f0-9]{64}$/;
 const allowedChecks=new Set(["pass","fail","not-reviewed","not-applicable"]);
+// N/A is valid only for a genuinely inapplicable construct; mandatory checks require PASS.
+const CONDITIONAL_CHECKS=new Set(["option-distinctness","distractor-quality",
+ "mathematical-correctness","temporal-correctness","pyq-fidelity"]);
+const requiresCheck=(id,q,timeSensitive)=>{
+ if(!CONDITIONAL_CHECKS.has(id))return true;
+ if(id==="option-distinctness")return ["single-choice","multiple-select","matching"].includes(q.kind);
+ if(id==="distractor-quality")return ["single-choice","multiple-select"].includes(q.kind);
+ if(id==="mathematical-correctness")return q.kind==="numeric-entry"||
+  /(?:\\(?:frac|sqrt|sum|int)|\b(?:calculate|evaluate|compute|percent|ratio|equation)\b|[+×÷=])/iu.test(publicationPlainText(q.prompt));
+ if(id==="temporal-correctness")return timeSensitive;
+ if(id==="pyq-fidelity")return q.provenance?.kind==="official-pyq";
+ return true;
+};
 const allowedBasis=new Set(["independent-editorial","mathematical-proof","source-consulted","rendered-claim","human-claim"]);
 const emit=x=>process.stdout.write(JSON.stringify(x,null,2)+"\n");
 const fail=message=>{throw Error(message);};
@@ -91,9 +104,12 @@ function keyEquals(kind,proposed,actual,tolerance=0){
  if(typeof proposed!=="string"||typeof actual!=="string")return false;
  if(kind==="free-response")return false;
  if(kind==="numeric-entry"){
-  const a=proposed.split(",").map(Number),b=actual.split(",").map(Number);
-  return a.length===b.length&&a.every(x=>Number.isFinite(x))&&
-   a.every(x=>b.some(y=>Math.abs(x-y)<=tolerance));
+  const tokens=s=>s.split(",").map(x=>x.trim());
+  const left=tokens(proposed),right=tokens(actual);
+  if(left.length!==right.length||left.some(x=>!x)||right.some(x=>!x))return false;
+  const a=left.map(Number).sort((x,y)=>x-y),b=right.map(Number).sort((x,y)=>x-y);
+  return a.every(Number.isFinite)&&b.every(Number.isFinite)&&
+   a.every((x,i)=>Math.abs(x-b[i])<=tolerance);
  }
  if(kind==="multiple-select")return proposed.replace(/[\s,;+]/g,"").toUpperCase().split("").sort().join("")===
   actual.replace(/[\s,;+]/g,"").toUpperCase().split("").sort().join("");
@@ -205,16 +221,17 @@ export function auditQuestionQuality(source,sourceRaw,reviewRaw=undefined,{offse
   asserted++;reportedEvidence+=item.evidence?.length??0;
   if(q.kind!=="free-response"&&!keyEquals(q.kind,item.independentSolution.answer,q.answer,q.tolerance??0))
    add("independent-key-disagreement","Blind-review answer disagrees with authored key",q.id,"reviewer-claimed");
+  // Reviewer claims are validated for applicability before they can permit publication.
+  const visibleStem=publicationPlainText(q.prompt)+" "+publicationPlainText(q.explanation);
+  const timeSensitive=/(?:\b(?:Act|Code|Rules|Regulations|Gazette|Notification)\b(?:\s+[A-Za-z&\x27-]+){0,8}\s*,?\s*(?:19|20)\d{2}\b|\b(?:commenc(?:ed|ement)|amend(?:ed|ment)|section\s+\d+|effective\s+(?:from|on)|as[- ]of\s+\d{4}|latest|current\s+(?:rate|rule|law|figure))\b)/iu.test(visibleStem);
   const map=new Map(item.checks.map(x=>[x.id,x]));
   for(const c of QUALITY_CHECKLIST){
    const check=map.get(c.id);
-   if(!check||check.status==="fail"||check.status==="not-reviewed")
+   if(!check||check.status==="fail"||check.status==="not-reviewed"||
+    (check.status==="not-applicable"&&requiresCheck(c.id,q,timeSensitive)))
     add("review-check-unresolved","Quality checklist not satisfied: "+c.id,q.id,"reviewer-claimed");
   }
-  // These are *claims* of source consultation, never proof the URL was fetched.
-  // An editorial "pass" is not evidence of source consultation.
-  const visibleStem=publicationPlainText(q.prompt)+" "+publicationPlainText(q.explanation);
-  const timeSensitive=/(?:\b(?:Act|Code|Rules|Regulations|Gazette|Notification)\b(?:\s+[A-Za-z&\x27-]+){0,8}\s*,?\s*(?:19|20)\d{2}\b|\b(?:commenc(?:ed|ement)|amend(?:ed|ment)|section\s+\d+|effective\s+(?:from|on))\b)/iu.test(visibleStem);
+  // All evidence, sources and independent solving remain reviewer-attributed, not authenticated.
   const facts=map.get("factual-correctness"),temporal=map.get("temporal-correctness"),
    pyq=map.get("pyq-fidelity"),visual=map.get("candidate-view-integrity");
   const consulted=(name,check)=>{
