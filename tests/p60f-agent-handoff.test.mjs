@@ -24,8 +24,10 @@ const run=(program,...args)=>{
 const scoped=async fn=>{const root=await mkdtemp(join(tmpdir(),"pd-p60f-"));
  try{return await fn(root);}finally{await rm(root,{recursive:true,force:true});}};
 const put=async(dir,name,data)=>{const path=join(dir,name);await writeFile(path,typeof data==="string"?data:JSON.stringify(data));return path;};
-async function files(dir){
+async function files(dir,{asDocument=false}={}){
  const source=JSON.parse(await readFile(new URL("../examples/ai-first-apfc.json",import.meta.url),"utf8"));
+ if(asDocument)source.questions=source.questions.map((q,i)=>({...q,
+  provenance:{kind:"reconstruction",sourceNote:"Synthetic examination document, page 1 item "+(i+1)+"; not an authentic PYQ"}}));
  const original=await put(dir,"original.json",source);
  const reviewed=structuredClone(source);reviewed.questions[0].answer="A";
  reviewed.questions[0].explanation="Synthetic disputed editorial key; never a checked historical or legal fact.";
@@ -151,3 +153,53 @@ test("P60-F RED: unknown modes/flags and local private-performance request fail 
   assert.equal(r.data.valid,false);
  }
 }));
+
+test("P60-F RED: one strict handoff also handles agent-transcribed PDF and preserves original/key lineage",()=>scoped(async dir=>{
+ const x=await files(dir,{asDocument:true});
+ // Minimal private synthetic PDF byte source; page text truth is not checked by this software.
+ const document=await put(dir,"fixture.pdf",Buffer.from(
+  "%PDF-1.4\\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\\n"+
+  "2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\\n"+
+  "3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 300 300] >> endobj\\n"+
+  "trailer << /Root 1 0 R >>\\n%%EOF\\n"));
+ const tool=fileURLToPath(new URL("../scripts/pdf-ingest.mjs",import.meta.url));
+ const template=run(tool,"template",x.original,document);
+ assert.equal(template.status,0,JSON.stringify(template.data));
+ const intake=structuredClone(template.data);
+ intake.document.title="Synthetic paper with original questions and printed key";
+ intake.document.identityNote="Synthetic fixture, original page and key only, not a real institutional paper";
+ intake.document.inspectedPages=[1];
+ intake.inspector={kind:"agent",id:"test-pdf-agent",method:"Synthetic page comparison only",
+  reviewedAt:"2026-11-06"};
+ intake.documentInventoryStatus="checked-against-source";
+ intake.externalVerification="recorded-agent-check";
+ for(const [i,row] of intake.questions.entries())Object.assign(row,{pages:[1],
+  status:"source-compared",printedNumber:String(i+1),keyOrigin:"source-document",
+  keyPages:[1],mathStatus:"source-compared",explanationOrigin:"editorial-not-in-source",
+  notes:"Synthetic source comparison assertion is not independently authenticated."});
+ const intakePath=await put(dir,"intake.json",intake);
+ const yes=run(script,"assess","pdf",intakePath,x.original,document,x.corrected,x.decisions,
+  "--quality-review",x.reviewFile);
+ assert.equal(yes.status,0,JSON.stringify(yes.data));
+ assert.equal(yes.data.readyForPublication,true);
+ assert.equal(yes.data.externalAuthenticatedReview,false);
+ const out=join(dir,"pdf-handoff");
+ const publish=run(script,"publish","pdf",intakePath,x.original,document,x.corrected,x.decisions,out,
+  "--quality-review",x.reviewFile,"--allow-create");
+ assert.equal(publish.status,0,JSON.stringify(publish.data));
+ assert.equal(publish.data.writtenFiles.length,6);
+ assert.deepEqual((await readdir(out)).sort(),["editorial-lineage.json","original-source.json",
+  "pdf-intake-provenance.json","reviewed-source.json","reviewed.exam.json","source.exam.json"]);
+ const manifest=JSON.parse(await readFile(join(out,"pdf-intake-provenance.json"),"utf8"));
+ assert.equal(manifest.document.sha256,sha(await readFile(document)));
+ const source=JSON.parse(await readFile(join(out,"source.exam.json"),"utf8"));
+ assert.equal(source.paper.edition,"source");
+ assert.equal(await readFile(join(out,"original-source.json"),"utf8"),
+  await readFile(x.original,"utf8"));
+ intake.questions[0].keyOrigin="unavailable";
+ const invalid=await put(dir,"intake-stale-key.json",intake);
+ const blocked=run(script,"publish","pdf",invalid,x.original,document,x.corrected,x.decisions,
+  join(dir,"not-written"),"--quality-review",x.reviewFile,"--allow-create");
+ assert.notEqual(blocked.status,0);
+ await assert.rejects(access(join(dir,"not-written")));
+});
