@@ -2,7 +2,14 @@
  * immutable frozen APFC/CAT attempts and real cross-browser responsive rendering.
  */
 import {openHarness,route,check,records,assertNoOverflow} from "./browser/fixtures.mjs";
-import {readFile} from "node:fs/promises";
+import {readFile,writeFile,mkdtemp,rm} from "node:fs/promises";
+import {createHash} from "node:crypto";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
+import {execFileSync} from "node:child_process";
+import {fileURLToPath} from "node:url";
+import {editorialDecisionTemplate,inspectEditorialPair} from "./editorial-editions.mjs";
+import {QUALITY_CHECKLIST} from "./question-quality.mjs";
 const engine=process.argv[2]??"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
 const {page,errors}=await h.open({viewport:{width:1280,height:840}});
@@ -162,7 +169,83 @@ try{
   engine+" author-attributed warning acceptance not frozen with the revision");
  check((await records(page)).some(r=>r.recordType==="generic-attempt"&&r.frozen.paper.id===apfcId),
   engine+" revision 2 modified the original APFC score/history");
+ // P60-D end-to-end: generate a corrected version of an independent,
+ // unmodified Source, then import both through the normal offline Library.
+ // The test review is intentionally synthetic and never authenticates facts.
+ const originalBank=structuredClone(apfc),reviewedBank=structuredClone(apfc);
+ reviewedBank.questions[0].answer="A";
+ reviewedBank.questions[0].explanation="Synthetic proposed answer change (not an authentic source correction).";
+ const digest=x=>createHash("sha256").update(x).digest("hex");
+ const originalRaw=JSON.stringify(originalBank),reviewedRaw=JSON.stringify(reviewedBank);
+ const temp=await mkdtemp(join(tmpdir(),"pd-p60d-ui-"));
+ let editionPair;
+ try{
+  const path=join(temp,"reviewed.json");
+  await writeFile(path,reviewedRaw);
+  const command=fileURLToPath(new URL("./question-quality.mjs",import.meta.url));
+  const packet=JSON.parse(execFileSync(process.execPath,[command,"candidate",path,"--limit","10"],
+   {encoding:"utf8",timeout:30000}));
+  const decisions=editorialDecisionTemplate(originalBank,reviewedBank,digest(originalRaw),digest(reviewedRaw));
+  delete decisions.templateIncomplete;
+  decisions.entries=decisions.entries.map(row=>({...row,
+   disposition:"corrected",
+   reason:"Synthetic example: retain printed source key and separately record the disputed proposed reviewed key.",
+   evidence:[{publisher:"Fixture",title:"Synthetic editorial decision",locator:"P60-D browser test",
+    sourceNote:"Test-only user-attributed note; independent factual correctness not asserted"}]
+  }));
+  const review={format:"practice-desk-quality-review",version:1,bankId:reviewedBank.bankId,
+   sourceSha256:packet.sourceSha256,records:packet.items.map(entry=>{
+    const question=reviewedBank.questions.find(q=>q.id===entry.questionId);
+    return {questionId:entry.questionId,questionSha256:digest(JSON.stringify(question)),
+      candidateSha256:entry.candidateSha256,reviewer:{id:"regression-only",kind:"ai"},
+      independentSolution:{blindClaim:true,answer:question.answer,
+       reasoning:"Synthetic software-fixture assertion, not a checked external answer."},
+      checks:QUALITY_CHECKLIST.map((x,i)=>({id:x.id,status:"pass",
+       basis:[11,12,13].includes(i)?"source-consulted":i===19?"rendered-claim":"independent-editorial",
+       rationale:"Synthetic regression fixture, verification not authenticated."})),
+      evidence:[{publisher:"Fixture",title:"P60-D browser QA",locator:"question:"+question.id,
+       retrievedAt:"2026-11-06",excerpt:"Only tests code contracts; not factual source verification."}]
+    };
+   })};
+  editionPair=inspectEditorialPair(
+   {data:originalBank,raw:originalRaw,sha256:digest(originalRaw)},
+   {data:reviewedBank,raw:reviewedRaw,sha256:digest(reviewedRaw)},
+   decisions,review);
+  check(editionPair.valid,engine+" P60-D editorial preflight failed: "+
+   editionPair.issues.map(x=>x.code+":"+x.message).join("; "));
+ }finally{await rm(temp,{recursive:true,force:true});}
+ const sourceEdition=editionPair.packages.sourcePkg,reviewedEdition=editionPair.packages.reviewedPkg;
+ const importEdition=async(bundle,name)=>{
+  await page.locator("#g-file").setInputFiles({name,mimeType:"application/json",
+   buffer:Buffer.from(JSON.stringify(bundle))});
+  await page.waitForFunction(id=>document.querySelector("#g-papers")?.value===id,bundle.paper.id);
+ };
+ await page.locator("#g-library").click();await route(page,"library");
+ await importEdition(sourceEdition,"p60d-original.exam.json");
+ await importEdition(reviewedEdition,"p60d-reviewed.exam.json");
+ check(await page.locator('#g-edition [data-edition="source"]').count()===1&&
+  await page.locator('#g-edition [data-edition="reviewed"]').count()===1,
+  engine+" P60-D source/reviewed switch not visible in imported family");
+ check((await records(page)).some(r=>r.recordType==="generic-package"&&
+  r.bundle.paper.id===sourceEdition.paper.id&&r.bundle.answerKey.entries[0].answer.optionId==="B"),
+  engine+" P60-D corrected review overwrote frozen original answer");
+ check((await records(page)).some(r=>r.recordType==="generic-package"&&
+  r.bundle.paper.id===reviewedEdition.paper.id&&r.bundle.answerKey.entries[0].answer.optionId==="A"),
+  engine+" P60-D reviewed correction was not separately saved");
+ await page.locator("#g-start").click();await route(page,"exam");
+ const pairAttempt=(await records(page)).find(r=>r.recordType==="generic-attempt"&&
+  r.frozen.paper.id===reviewedEdition.paper.id&&r.finishedAt===null);
+ check(Boolean(pairAttempt?.sourceReviewReference)&&
+  pairAttempt?.sourceKeyReference?.entries.filter(x=>x.comparable).length===2,
+  engine+" P60-D source/reviewed comparison was not frozen at attempt start");
+ await page.locator('input[data-choice="A"]').click();
+ await page.locator("#g-submit").click();await route(page,"result");
+ const completed=(await records(page)).find(r=>r.recordType==="generic-attempt"&&
+  r.frozen.paper.id===reviewedEdition.paper.id&&r.finishedAt!==null);
+ check(Boolean(completed?.sourceReviewReference)&&
+  completed.result?.items[0]?.verdict==="correct",
+  engine+" P60-D reviewed score/history did not freeze separate published correction");
  check(errors.length===0,engine+" unexpected page errors "+errors.join("; "));
- console.log("P57-A/B/C "+engine+" PASS: bounded staging and QA errors, Wordgard handoff, two immutable CAT/APFC publications, scored history, 195px/140%");
+ console.log("P57-A/B/C + P60-D "+engine+" PASS: bounded staging and QA errors, Wordgard handoff, two immutable CAT/APFC publications, scored history, 195px/140%");
 }catch(error){await h.diagnose("p57a-"+engine,page,error);throw error;}
 finally{await h.finish();}
