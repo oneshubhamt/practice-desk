@@ -61,7 +61,7 @@ export function candidateFields(draft:AuthoringDraft,q:AuthoringQuestion):readon
   }
  }
  for(const asset of draft.assets){
-  if(assets.has(asset.id))out.push({field:"media.altText["+asset.id+"]",text:asset.altText});
+  if(assets.has(asset.id))out.push({field:"media.altText["+asset.id+"]",text:asset.altText??""});
  }
  return out;
 }
