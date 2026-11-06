@@ -1,0 +1,75 @@
+{
+  "format": "practice-desk-content-blueprint",
+  "version": 1,
+  "id": "cat-three-synthetic-example",
+  "examId": "cat",
+  "paperId": "cat-schema-example",
+  "revision": 1,
+  "targetCount": 3,
+  "allowPartial": false,
+  "syllabus": {
+    "basis": "user-defined",
+    "asOfDate": "2026-11-06",
+    "reference": "Illustrative CAT source-schema example; not an official CAT section allocation"
+  },
+  "requirements": {
+    "requireExplanation": true,
+    "minCitations": 0,
+    "allowedOrigins": [
+      "ai-original"
+    ]
+  },
+  "quotas": {
+    "subjects": {
+      "exhaustive": true,
+      "targets": [
+        {
+          "key": "subject:Reading Comprehension",
+          "count": 1
+        },
+        {
+          "key": "subject:Data Interpretation",
+          "count": 1
+        },
+        {
+          "key": "subject:Quantitative Aptitude",
+          "count": 1
+        }
+      ]
+    },
+    "sections": {
+      "exhaustive": true,
+      "targets": [
+        {
+          "key": "varc",
+          "count": 1
+        },
+        {
+          "key": "dilr",
+          "count": 1
+        },
+        {
+          "key": "qa",
+          "count": 1
+        }
+      ]
+    },
+    "kinds": {
+      "exhaustive": true,
+      "targets": [
+        {
+          "key": "single-choice",
+          "count": 1
+        },
+        {
+          "key": "numeric-entry",
+          "count": 1
+        },
+        {
+          "key": "multiple-select",
+          "count": 1
+        }
+      ]
+    }
+  }
+}
