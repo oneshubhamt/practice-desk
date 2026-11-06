@@ -108,6 +108,12 @@ test("P60-C RED: external review must be SHA-bound, complete, independently solv
  assert.equal(compiled.status,0,compiled.stderr);
  assert.equal(compiled.data.qualityReview.readyForPublication,true);
  assert.equal(compiled.data.qualityReview.factualVerification,"not-performed");
+ const plan=fileURLToPath(new URL("../examples/p60b-apfc-blueprint.json",import.meta.url));
+ const both=command(cli,"compile-bank",input,join(dir,"blueprint-and-reviewed.json"),
+  "--blueprint",plan,"--quality-review",review);
+ assert.equal(both.status,0,both.stderr);
+ assert.equal(both.data.blueprint.valid,true);
+ assert.equal(both.data.qualityReview.readyForPublication,true);
  const compiledPkg=JSON.parse(await readFile(join(dir,"quality-reviewed-exam.json"),"utf8"));
  assert.equal(compiledPkg.questions[0].editorial.status,"caution",
   "An asserted review does not automatically upgrade editorial source authenticity");
