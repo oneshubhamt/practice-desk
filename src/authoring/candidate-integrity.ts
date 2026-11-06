@@ -68,6 +68,19 @@ export function candidateFields(draft:AuthoringDraft,q:AuthoringQuestion):readon
 export function inspectCandidateIntegrity(draft:AuthoringDraft):readonly CandidateIntegrityIssue[]{
  const issues:CandidateIntegrityIssue[]=[];
  for(const q of draft.questions){
+  // An exact copy of the keyed choice inside the stem is a possible
+  // giveaway, but may be a legitimate quoted example: warning only.
+  if(q.kind==="single-choice"&&/^[A-D]$/i.test(q.answer.trim())){
+   const index="ABCD".indexOf(q.answer.trim().toUpperCase());
+   const keyed=visible(q.options[index]!);
+   const stem=visible(q.prompt);
+   if(keyed.trim().length>=12&&stem.toLocaleLowerCase("en")
+      .includes(keyed.trim().toLocaleLowerCase("en"))){
+    issues.push({questionId:q.id,field:"prompt",code:"candidate-unintended-clue",
+     severity:"warning",message:"Question stem repeats the entire keyed response text, which may unintentionally reveal the answer.",
+     suggestion:"Ask a blind reviewer whether the keyed phrase belongs in the stimulus; revise if it bypasses the intended reasoning."});
+   }
+  }
   for(const {field,text} of candidateFields(draft,q)){
    if(explicitAnswer.test(text)||(field.startsWith("options")&&correctMarker.test(text))){
     issues.push({questionId:q.id,field,code:"candidate-answer-leak",severity:"error",
