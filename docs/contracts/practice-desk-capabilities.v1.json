@@ -1,7 +1,7 @@
 {
   "format": "practice-desk-agent-capabilities",
   "version": 1,
-  "contractStatus": "P60-A and P60-B verified for applicable CI; P60-C source QA, blind review evidence and strict gate implemented and 5/5 software CI verified on Satyam (406 Node, offline Chromium/Firefox/WebKit and guarded artifact), unverified external factual/editorial content remains HOLD; P60-D–F planned",
+  "contractStatus": "P60-A/B/C verified; P60-D generic source/reviewed external pair compilation, editorial lineage and browser pairing under exact-source CI verification on Satyam; P60-E/F planned and external factual/release gates HOLD.",
   "product": {
     "name": "Practice Desk",
     "purpose": "Offline examination authoring, practice, scoring, history, analytics and spaced revision",
@@ -28,6 +28,7 @@
       "Research facts outside app",
       "Generate only requested question batch",
       "For important questions issue blinded candidate packets and collect independent solver, adversarial, source and actual-render review evidence",
+      "When reviewing an authentic source or AI-original, preserve the original as a separate file and create a reviewed source via P59 guarded patch; compare with editorial-editions.mjs template/audit/compile.",
       "Audit all planned source batches against the exact blueprint; do not treat authored classification as factual truth",
       "Run canonical QA/compile and targeted corrections",
       "Import explicitly into offline Library"
@@ -105,6 +106,24 @@
       "command": "node scripts/question-bank-cli.mjs compile-bank <bank.json> <NEW-paper.json> --quality-review <review.json>",
       "privilege": "create-new-file",
       "effect": "Enforce completed source-bound record gate alongside canonical compiler; still caution/unverified source status"
+    },
+    {
+      "operation": "editorial-decision-template",
+      "command": "node scripts/editorial-editions.mjs template <original.json> <reviewed.json>",
+      "privilege": "read-only",
+      "effect": "Return SHA-bound changed-fields decision template without exposing either answer key"
+    },
+    {
+      "operation": "audit-editorial-editions",
+      "command": "node scripts/editorial-editions.mjs audit <original.json> <reviewed.json> <decisions.json> [--quality-review <review.json>]",
+      "privilege": "read-only",
+      "effect": "Check stable question IDs, corrected fields, proof locators, current review and conservative source-key comparability"
+    },
+    {
+      "operation": "compile-editorial-editions",
+      "command": "node scripts/editorial-editions.mjs compile <original.json> <reviewed.json> <decisions.json> <NEW-directory> --quality-review <review.json>",
+      "privilege": "create-new-file",
+      "effect": "Create exact raw original/reviewed archives, separately signed Source and Reviewed exams and audit ledger; no overwrite or browser publication"
     }
   ],
   "trustBoundaries": [
@@ -112,7 +131,7 @@
     "Preserve candidate-facing content separately from answers, rubrics and editorial notes until authorized result review",
     "User-local history and learning data are not accessible to the external agent by default",
     "Do not promise direct app UI or database mutation from the Node source CLI",
-    "P60-C source-bound review and leakage checks are available but cannot authenticate facts or independent reviewers; P60-D through P60-F remain planned."
+    "P60-D supplies original/reviewed source-preserving external editorial pairing, without certifying printed keys or reviewer identity; P60-E and P60-F remain planned."
   ],
   "statusVocabulary": [
     "implemented",
@@ -271,21 +290,24 @@
     {
       "id": "editorial-source",
       "status": "implemented-with-limits",
-      "summary": "Built-in SSC CGL original/reviewed source, caution/invalid flags, source-key comparison and immutable editorial records.",
+      "summary": "SSC CGL original/reviewed source-key semantics plus P60-D generic external original/reviewed pairing with source-preserving archives and correction lineage.",
       "provides": [
         "Source vs reviewed comparison where semantic correspondence is valid",
         "Preserved SSC CGL answer-key correction decisions and caution labels",
-        "Editorial/provenance fields in question revisions"
+        "Editorial/provenance fields in question revisions",
+        "P60-D source-preserving external editorial decision/lineage records, source and reviewed package outputs, and explicit unchanged source keys."
       ],
-      "agentUse": "Preserve original and corrected identities; use caution for unattributed imported claims.",
+      "agentUse": "For any exam, preserve an exact original practice-desk-authoring source, create the reviewed source separately, derive decisions with editorial-editions.mjs, complete P60-C independent review, and import the two signed packages Source first then Reviewed. Existing Library/source-reference features handle comparison.",
       "limitations": [
-        "Universal P60-D original/reviewed lineage for any imported/PYQ/AI bank does not yet exist",
-        "An attributed official PYQ URL is not independently authenticated"
+        "An attributed official PYQ URL is not independently authenticated",
+        "Current P60-D workflow writes two separately imported signed exam files, not a transactional in-browser pair import.",
+        "An original printed key remains a caution-labelled source key; reviewer proof and publisher authenticity are not authenticated."
       ],
       "sourcePaths": [
         "src/content/import-cgl.ts",
         "src/engine/source-comparison.ts",
-        "src/domain/question.ts"
+        "src/domain/question.ts",
+        "scripts/editorial-editions.mjs"
       ]
     },
     {
@@ -402,7 +424,7 @@
         "Self-attested reviewer/source/rendered UI claims are never certificates of factual accuracy",
         "Legacy local browser import remains caution-labelled and is not automatically required to supply the external review sidecar",
         "Candidate-only text/alt packet does not replace looking at actual image pixels or device-rendered question UI",
-        "P60-D immutable generic original/reviewed corrections and P60-E PDF extraction are future work"
+        "P60-D source/reviewed pairing is implemented externally with caution only; P60-E PDF extraction remains future work."
       ],
       "sourcePaths": [
         "src/authoring/candidate-integrity.ts",
@@ -410,13 +432,38 @@
         "scripts/question-quality.mjs",
         "scripts/question-bank-cli.mjs"
       ]
+    },
+    {
+      "id": "editorial-editions",
+      "status": "implemented-with-limits",
+      "summary": "P60-D source-preserving pair adapter creates separate immutable Original and Reviewed exam packages with a SHA-bound per-question correction ledger.",
+      "provides": [
+        "Derive a low-context correction-decision template from source/reviewed v1 banks without showing answers",
+        "Require exact source/reviewed SHA, per-question and changed-field correspondence plus recorded reasons/evidence",
+        "Run existing P60-C source-bound independent review gate on reviewed content before paired compilation",
+        "Archive exact original and reviewed source bytes along with source/reviewed signed exam packages and lineage",
+        "Report conservative source-key score comparability, preserving altered wording and media as unavailable",
+        "Use current Library paired edition/source review/frozen key modules without duplicating scorer or History",
+        "Exclude explicitly unresolved reviewed questions from scoring under existing invalid editorial status"
+      ],
+      "agentUse": "Read docs/architecture/P60D_ORIGINAL_REVIEWED_EDITORIAL.md. Use existing P59 patches to make a separate reviewed file; run editorial-editions.mjs template, fill decisions, independently review P60-C, audit then compile into a new directory; import source.exam.json before reviewed.exam.json.",
+      "limitations": [
+        "Does not authenticate official PYQs, original publishers, external evidence or reviewer independence.",
+        "Requires structurally publishable original with no explicit candidate answer leak; unreadable historical scans stay outside executable Source.",
+        "No automatic transactional two-file browser import or cloud/device bridge; externally generated raw sources and lineage require independent backups.",
+        "Source-key scoring remains intentionally conservative and may not compare changed explanation/metadata semantics; never regrades saved attempts.",
+        "P60-E PDF extraction and P60-F direct agent app control remain future phases."
+      ],
+      "sourcePaths": [
+        "scripts/editorial-editions.mjs",
+        "src/engine/source-comparison.ts",
+        "src/engine/review-source.ts",
+        "src/authoring/authoring-publisher.ts",
+        "src/app/library-controller.ts"
+      ]
     }
   ],
   "plannedProgramme": [
-    {
-      "id": "P60-D",
-      "name": "Universal immutable original/reviewed editions"
-    },
     {
       "id": "P60-E",
       "name": "External AI PDF extraction and ingestion"
