@@ -155,6 +155,10 @@ function report(task,primary,coverage,inputsSha){
     unavailable:comparison.unavailable??null}:null}),
   reviewAssurance:p.reviewAssurance??p.qualityReview?.reviewAssurance??"not-performed",
   coverageValid:coverage?c.valid===true:mode==="pdf"?p.coverageValid??null:null,
+  partialDelivery:mode==="single"?p.blueprint?.partialDelivery??null:
+   mode==="paired"?c?.partialDelivery??null:p.coveragePartial??null,
+  remainingCount:mode==="single"?p.blueprint?.remainingCount??null:
+   mode==="paired"?c?.remainingCount??null:p.coverageRemaining??null,
   factualVerification:"not-performed",externalAuthenticatedReview:false,externalSourceFetches:0,
   appAccess:"none",userImport:"explicit-offline-library",
   permissions:{operation:action==="assess"?"read-only":"create-new-files-only",
