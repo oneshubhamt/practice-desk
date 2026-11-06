@@ -45,6 +45,10 @@ For ordinary question generation, **read only the one-page quickstart, one relev
 | **Rich content** | Shared RC/DILR passages, cases, tables, charts, image media with alt text; canonical rich/math AST and KaTeX. | Avoid duplicated stimuli; source figures and math must be checked before publication. |
 | **Offline storage** | Local persistence, frozen history/answer snapshots and explicit backup v4; separate unpublished staging/draft archives. | No direct user-device access, silent sync, recovery after missing backups or remote API. |
 
+## P60-C — source-bound quality assurance and blind independent solving
+
+External agent authoring can use `scripts/question-quality.mjs` to obtain candidate-only question pages, incomplete review templates, and a 20-dimension editorial checklist. Record independently solved answers and actual source research in a separate `practice-desk-quality-review` v1 sidecar, then audit it against current source and optionally enforce `--quality-review` during canonical compilation. Shared candidate-visible keys are rejected by the P57/P60-C publisher; probable solution hints require independent semantic review. An agent cannot infer actual factual verification from a citation string or a claimed human/editorial pass; the offline tool never fetches sources or authenticates reviewers. See [the task-specific P60-C guide](architecture/P60C_QUESTION_QUALITY_ASSURANCE.md) only when working on content review.
+
 ## P60-B — planned coverage before content creation
 
 For nontrivial question banks, use the [Content Production Blueprint](architecture/P60B_CONTENT_BLUEPRINT.md) to record exact targets, source origin, paper rules and required classification; run read-only `content-blueprint.mjs validate/audit` or enforce `--blueprint` in the existing single-source compiler. This prevents silently missing user-requested quotas, but does **not** establish semantic syllabus accuracy or factual truth. The guide remains low-context: only fetch the blueprint contract and one source example for authoring; avoid reading the exam engine implementation. Multi-batch audits must not be misrepresented as an in-browser publication gate.
