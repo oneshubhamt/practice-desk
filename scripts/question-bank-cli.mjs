@@ -11,26 +11,28 @@ const compiling=command==="compile-bank";
 const output=compiling?rest[0]:undefined;
 const flags=compiling?rest.slice(1):rest;
 const flagOk=flags.length<=20&&flags.length%2===0&&
- flags.every((v,i)=>i%2===1||v==="--against"||v==="--blueprint"||v==="--quality-review")&&
+ flags.every((v,i)=>i%2===1||v==="--against"||v==="--blueprint"||v==="--quality-review"||v==="--cognitive")&&
  flags.filter((v,i)=>i%2===0&&v==="--blueprint").length<=1&&
- flags.filter((v,i)=>i%2===0&&v==="--quality-review").length<=1;
+ flags.filter((v,i)=>i%2===0&&v==="--quality-review").length<=1&&
+ flags.filter((v,i)=>i%2===0&&v==="--cognitive").length<=1;
 if(!["validate-bank","compile-bank","qa-bank"].includes(command)||!input||!flagOk||
   (compiling&&!output)){
  process.stderr.write("Usage: node scripts/question-bank-cli.mjs validate-bank <source.json> [--against prior.json]...\n"+
   "       node scripts/question-bank-cli.mjs qa-bank <source.json> [--against prior.json]...\n"+
   "       node scripts/question-bank-cli.mjs compile-bank <source.json> <compiled.json> [--against prior.json]...\n"+
   "Both AI source v1 and the versioned Wordgard draft exchange are accepted; --against applies to source v1 only.\n"+
-  "Optional --blueprint <plan.json> is an exact single-source publication preflight; for multi-batch use content-blueprint.mjs audit.\n"+
+  "Optional --blueprint <plan.json> with --cognitive <tags.json> checks a scoped single-source or explicitly approved partial delivery; for multi-batch use content-blueprint.mjs audit.\n"+
   "Optional --quality-review <review.json> requires complete P60-C SHA-bound independent review records; no source fact authentication.\n");
  process.exitCode=2;
 }else{
  try{
   const raw=await readFile(input,"utf8");
   if(Buffer.byteLength(raw,"utf8")>25*1024*1024)throw Error("Source JSON exceeds 25 MiB");
-  const comparisonSources=[];let blueprintPath=null,qualityReviewPath=null;
+  const comparisonSources=[];let blueprintPath=null,qualityReviewPath=null,cognitivePath=null;
   for(let i=0;i<flags.length;i+=2){
    if(flags[i]==="--blueprint"){blueprintPath=flags[i+1];continue;}
    if(flags[i]==="--quality-review"){qualityReviewPath=flags[i+1];continue;}
+   if(flags[i]==="--cognitive"){cognitivePath=flags[i+1];continue;}
    const contents=await readFile(flags[i+1],"utf8");
    if(Buffer.byteLength(contents,"utf8")>25*1024*1024)throw Error("Comparison JSON exceeds 25 MiB");
    comparisonSources.push(JSON.parse(contents));
@@ -50,6 +52,7 @@ if(!["validate-bank","compile-bank","qa-bank"].includes(command)||!input||!flagO
    qualityAudit=auditQuestionQuality(source,raw,JSON.parse(reviewRaw));
   }
   let blueprintAudit=null;
+  if(cognitivePath&&!blueprintPath)throw Error("--cognitive requires --blueprint");
   if(blueprintPath){
    if(isDraftExchange(source))
     throw Error("Blueprint guard supports original practice-desk-authoring v1; use content-blueprint.mjs audit for source batches");
@@ -57,12 +60,19 @@ if(!["validate-bank","compile-bank","qa-bank"].includes(command)||!input||!flagO
    if(Buffer.byteLength(rawPlan,"utf8")>1024*1024)throw Error("Blueprint exceeds 1 MiB");
    const plan=validateBlueprint(JSON.parse(rawPlan));
    const digest=createHash("sha256").update(raw).digest("hex");
-   blueprintAudit=auditBlueprint(plan,[{value:source,digest}],undefined);
+   let cognitiveTags;
+   if(cognitivePath){
+    const tagged=await readFile(cognitivePath,"utf8");
+    if(Buffer.byteLength(tagged,"utf8")>1024*1024)throw Error("Cognitive tags exceed 1 MiB");
+    cognitiveTags=JSON.parse(tagged);
+   }
+   blueprintAudit=auditBlueprint(plan,[{value:source,digest}],cognitiveTags,{priorSources:comparisonSources});
   }
   if(!report.valid||!compiled||blueprintAudit?.valid===false||qualityAudit?.readyForPublication===false){
    process.stdout.write(JSON.stringify({...publicReport,compiled:false,
     ...(blueprintAudit?{blueprint:{valid:blueprintAudit.valid,requestedCount:blueprintAudit.requestedCount,
-      actualCount:blueprintAudit.actualCount,issues:blueprintAudit.issues,coverage:blueprintAudit.coverage}}:{}),
+      actualCount:blueprintAudit.actualCount,partialDelivery:blueprintAudit.partialDelivery,
+       remainingCount:blueprintAudit.remainingCount,issues:blueprintAudit.issues,coverage:blueprintAudit.coverage}}:{}),
     ...(qualityAudit?{qualityReview:{readyForPublication:qualityAudit.readyForPublication,
       factualVerification:"not-performed",reviewAssurance:qualityAudit.reviewAssurance,
       issues:qualityAudit.issues,questionsMissingReview:qualityAudit.questionsMissingReview}}:{})},null,2)+"\n");
@@ -73,7 +83,9 @@ if(!["validate-bank","compile-bank","qa-bank"].includes(command)||!input||!flagO
     await writeFile(output,JSON.stringify(compiled,null,2)+"\n",{flag:"wx"});
    }
    process.stdout.write(JSON.stringify({...publicReport,
-    compiled:compiling,...(blueprintAudit?{blueprint:{valid:true,requestedCount:blueprintAudit.requestedCount,actualCount:blueprintAudit.actualCount}}:{}),
+    compiled:compiling,...(blueprintAudit?{blueprint:{valid:true,requestedCount:blueprintAudit.requestedCount,actualCount:blueprintAudit.actualCount,
+      partialDelivery:blueprintAudit.partialDelivery,remainingCount:blueprintAudit.remainingCount,
+      nearDuplicateCandidates:blueprintAudit.nearDuplicateCandidates}}:{}),
     ...(qualityAudit?{qualityReview:{readyForPublication:true,factualVerification:"not-performed",
       reviewAssurance:qualityAudit.reviewAssurance}}:{}),
     ...(output?{output}:{})},null,2)+"\n");
