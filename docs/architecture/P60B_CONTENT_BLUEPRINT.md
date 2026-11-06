@@ -1,5 +1,8 @@
 # P60-B — Content Blueprint and Production Contract (agent handbook)
 
+**Automated source verification (6 Nov 2026):** [Exact-source CI 42159449898](https://github.com/oneshubhamt/practice-desk/actions/runs/42159449898) passed TypeScript, 392/392 Node and all actual offline Chromium/Firefox/Linux WebKit jobs on `1dce52f8d4e5a2d12af1abfa8fad8a9342e6c741`; unchanged built HTML SHA-256 `b69a0796d58391342ae9776cba282373036e1a0e96ecd1a8643940cb8fdd953b`. The branch-specific guarded publisher **skipped**, not passed. Source/PYQ authenticity, semantic topic fidelity, physical devices, accessibility, human visual approval and release remain HOLD.
+
+
 **Branch:** `Satyam`; **scope:** external source-only AI authoring + audit. **Executable authority:** `scripts/content-blueprint.mjs` (version 1). **Does not authenticate questions.** Keep the P57–P59 `practice-desk-authoring` v1 question format and existing Wordgard compiler/scorer; this is a separate, optional-to-legacy, **mandatory when the user requests exact coverage** production preflight.
 
 ## Purpose
