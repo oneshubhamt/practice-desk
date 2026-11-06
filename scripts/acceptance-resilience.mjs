@@ -69,15 +69,22 @@ try{
  const preConflictView=await view();
  if(!preConflictView.conflict&&preConflictView.checked!==replacement&&preConflictView.hasThird)
    await page.evaluate(()=>document.querySelectorAll("input[data-choice]")[2]?.click());
- await page.waitForFunction(expected=>{
+ // Preserve actual observed conflict/synchronisation as a test witness.
+ // A valid stale-record redirect may remove the transient warning and exam
+ // controls immediately afterwards. Re-sampling the DOM is not a valid proof
+ // that the fail-closed state was never displayed.
+ const witness=await page.waitForFunction(expected=>{
   const conflict=[...document.querySelectorAll(".generic-warning")]
    .some(n=>n.textContent?.includes("Another tab"));
   const checked=document.querySelector('input[data-choice]:checked')?.getAttribute("data-choice");
-  return conflict||checked===expected;
+  return conflict?"visible-conflict":checked===expected?"synchronized-answer":false;
  },replacement,{timeout:12000});
- const after=await view();
- check(after.conflict||after.checked===replacement,
-   "Original tab neither displayed its conflict nor synchronized to the authoritative second-tab answer");
+ const observed=await witness.jsonValue();
+ check(observed==="visible-conflict"||observed==="synchronized-answer",
+   "Original tab neither visibly rejected stale write nor synchronized to the authoritative answer");
+ // A witnessed banner alone is not proof of stored correctness: give pending
+ // transactions time to settle and check the second tab's durable record.
+ await page.waitForTimeout(250);
  const authoritative=(await records(other)).find(x=>x.id===attemptId);
  check(authoritative.saveRevision>=updated.saveRevision&&
   authoritative.state.responses.some(x=>x.response?.optionId===replacement),
