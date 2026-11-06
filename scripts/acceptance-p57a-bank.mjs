@@ -276,11 +276,19 @@ try{
  // P60-F independent end-to-end: reviewed source package → frozen marks →
  // explicit Result→Learning card → deliberate FSRS rating → reload preserved.
  await page.locator("#result-tab-review").click();
+ // This review panel is rendered asynchronously; WebKit may complete the tab
+ // event before the lazy question renderer inserts its three review rows.
+ await page.waitForFunction(()=>document.querySelectorAll(".generic-review").length===3,
+  {timeout:10000});
  check(await page.locator(".generic-review").count()===3,
   engine+" P60-F reviewed candidate output cannot be reviewed after scoring");
  await page.locator("[data-add-card]").first().click();
- const cards=await records(page);
- const card=cards.find(x=>x.recordType==="learning-card"&&x.sourceAttemptId===completed.id);
+ let card;
+ for(let i=0;i<55;i++){
+  card=(await records(page)).find(x=>x.recordType==="learning-card"&&x.sourceAttemptId===completed.id);
+  if(card)break;
+  await page.waitForTimeout(75);
+ }
  check(Boolean(card)&&card.reviews?.length===0,
   engine+" P60-F card not derived from frozen reviewed source or FSRS was silently graded");
  await page.locator("#g-library").click();await route(page,"library");
