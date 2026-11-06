@@ -9,6 +9,8 @@ Practice Desk is an **offline examination, scoring, results, history and spaced-
 
 ## P60-F — one low-context, explicit-permission agent handoff
 
+**Automated software verified:** [exact-source five-job CI 42194153793](https://github.com/oneshubhamt/practice-desk/actions/runs/42194153793), source `784a31e145855329cb4388a520ca8e92a95ee7d6`, **426/426 Node, all three offline browsers, guarded publication 5/5 PASS**, unchanged standalone HTML. External original/PYQ/factual/reviewer/device authentication remains separate.
+
 Use the **existing** P59 inspect/show/patch for individual questions; use [P60-F's focused contract](architecture/P60F_AGENT_INTEGRATION_AND_VERIFICATION.md) when coordinating full source+review+coverage+publication. There is **no** cloud agent or app/History access. Agents can discover actual operations with `node scripts/agent-handoff.mjs actions`. All three modes require a separately completed **P60-C SHA-bound `--quality-review review.json`**, with optional explicit **P60-B `--blueprint plan.json`**:
 
 ```bash

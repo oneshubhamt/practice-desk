@@ -1,7 +1,7 @@
 {
   "format": "practice-desk-agent-capabilities",
   "version": 1,
-  "contractStatus": "P60-A/B/C/D/E previous automated gates verified; P60-F bounded local agent handoff, cross-browser explicit import and independent synthetic-workflow measurements implemented, final exact-source full CI pending. No authenticated PDF/PYQ/factual/reviewer claims, learner/device access, physical hardware, merge or release.",
+  "contractStatus": "P60-A/B/C/D/E and P60-F approved automated software scope VERIFIED. P60-F exact-source five-job CI 42194153793 succeeded on 784a31e145855329cb4388a520ca8e92a95ee7d6 (426/426 Node, strict TypeScript, reproducible unchanged offline HTML SHA-256 1900846adda793e224c3e63ef2fbec6bafdd0b3b2acd3ecc89d5d6a3bbdc541e, Chromium/Firefox/WebKit and guarded publication). External PDF/PYQ/factual/reviewer authentication, real LLM token/educational outcomes, physical devices, user human validation and release HOLD. No direct app/History/device agent bridge.",
   "product": {
     "name": "Practice Desk",
     "purpose": "Offline examination authoring, practice, scoring, history, analytics and spaced revision",

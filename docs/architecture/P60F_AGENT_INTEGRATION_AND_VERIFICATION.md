@@ -1,6 +1,6 @@
 # P60-F — model-agnostic agent handoff and independent software verification
 
-**Authorized:** 6 November 2026; `Satyam` only. **Implementation:** external Node/CLI integration and matched synthetic verification. **Status:** implementation/tests committed, full exact-source 5-job CI and independent source audit required for automated acceptance; real external source truth, physical devices, human visual review, public release and merge remain HOLD. [Binding P60 programme](P60_AI_NATIVE_CAPABILITY_PROGRAMME.md).
+**Authorized:** 6 November 2026; `Satyam` only. **Implementation:** external Node/CLI integration and matched synthetic verification. **Status:** approved automated software acceptance **VERIFIED** by [five-job exact-source CI 42194153793](https://github.com/oneshubhamt/practice-desk/actions/runs/42194153793) on `784a31e145855329cb4388a520ca8e92a95ee7d6` (426 Node, strict TS, deterministic unchanged HTML, full Chromium/Firefox/WebKit and guarded publisher), independently source-audited. Actual PDF/PYQ/factual/reviewer truth, physical Mac/mobile/AT/human approval, release and merge remain HOLD. [Binding P60 programme](P60_AI_NATIVE_CAPABILITY_PROGRAMME.md).
 
 ## Decision and source-level reuse
 
