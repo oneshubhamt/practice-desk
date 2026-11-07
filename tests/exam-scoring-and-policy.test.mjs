@@ -659,6 +659,81 @@ test("seeded independent scoring reference: precedence, marks ledger, verdicts, 
 
 
 
+/** Cross-kind property: independently calculate the six original verdicts,
+ * then bijectively rename all candidate/key IDs and reorder *input arrays*.
+ * Unlike the legacy scorer's 200-seed policy model, this exercises all kinds.
+ */
+test("P61-H six-kind independent ledger survives answer-ID bijections and input permutations",()=>{
+ const stamp="2026-11-08T00:00:00Z";
+ const relabel={
+  a:"alpha",b:"beta",x:"xi",y:"upsilon",z:"zeta",
+  l1:"left-first",l2:"left-second",r1:"right-first",r2:"right-second"
+ };
+ const mapId=id=>relabel[id]??id;
+ const rename=value=>{
+  switch(value.kind){
+   case "single-choice":return {...value,optionId:mapId(value.optionId)};
+   case "multiple-select":return {...value,optionIds:value.optionIds.map(mapId)};
+   case "matching":return {...value,pairs:value.pairs.map(pair=>({
+    leftId:mapId(pair.leftId),rightId:mapId(pair.rightId)}))};
+   default:return {...value};
+  }
+ };
+ const renamedQuestions=questions.map(q=>{
+  const content=q.content;
+  if(content.kind==="single-choice"||content.kind==="multiple-select")
+   return {...q,content:{...content,options:content.options.map(o=>({...o,id:mapId(o.id)}))}};
+  if(content.kind==="matching")
+   return {...q,content:{...content,
+    leftItems:content.leftItems.map(o=>({...o,id:mapId(o.id)})),
+    rightItems:content.rightItems.map(o=>({...o,id:mapId(o.id)}))}};
+  return structuredClone(q);
+ });
+ const renamedKey={...pkg.answerKey,entries:pkg.answerKey.entries.map(e=>({
+  ...e,answer:rename(e.answer)})).reverse()};
+ for(let seed=1;seed<=128;seed++){
+  const rand=rng(0x61a11^seed);
+  const one=["a","b"][rand(2)];
+  const multi=[["x","z"],["x","y"],["y","z"],["x","y","z"]][rand(4)];
+  const number=[3.5,3.495,3.505,3.6][rand(4)];
+  const bool=[true,false][rand(2)];
+  const isMatch=rand(2)===0;
+  const pairList=isMatch?
+   [{leftId:"l1",rightId:"r1"},{leftId:"l2",rightId:"r2"}]:
+   [{leftId:"l1",rightId:"r2"},{leftId:"l2",rightId:"r1"}];
+  const raw=[
+   {kind:"single-choice",optionId:one},
+   {kind:"multiple-select",optionIds:multi},
+   {kind:"numeric-entry",value:number},
+   {kind:"true-false",value:bool},
+   {kind:"matching",pairs:pairList},
+   {kind:"free-response",text:"Candidate's independent explanation "+seed}
+  ];
+  const expected=[
+   one==="a",multi.length===2&&multi.includes("x")&&multi.includes("z"),
+   Math.abs(number-3.5)<=0.01,bool===true,isMatch
+  ].map(ok=>ok?"correct":"incorrect").concat("pending");
+  const responses=questions.map((q,i)=>({questionRevisionId:q.id,response:raw[i]}));
+  const before=structuredClone(responses);
+  const actual=scoreAttempt(pkg.paper,pkg.answerKey,questions,responses,stamp);
+  const correct=expected.filter(x=>x==="correct").length;
+  const wrong=expected.filter(x=>x==="incorrect").length;
+  assert.deepEqual(actual.items.map(x=>x.verdict),expected,"seed="+seed+" verdict");
+  for(let i=0;i<6;i++)approx(actual.items[i].marks,
+   i===5?0:expected[i]==="correct"?2:-0.5,"seed="+seed+" item="+i);
+  approx(actual.snapshot.earnedMarks,correct*2-wrong*0.5,"seed="+seed+" net");
+  assert.equal(actual.snapshot.correctCount,correct,"seed="+seed+" correct");
+  assert.equal(actual.snapshot.incorrectCount,wrong,"seed="+seed+" incorrect");
+  assert.equal(actual.snapshot.unansweredCount,0,"seed="+seed+" blank");
+  assert.equal(actual.items[5].verdict,"pending","seed="+seed+" manual");
+  const transformed=responses.map(r=>({...r,response:rename(r.response)})).reverse();
+  const mapped=scoreAttempt(pkg.paper,renamedKey,
+   renamedQuestions.slice().reverse(),transformed,stamp);
+  assert.deepEqual(mapped,actual,"seed="+seed+" simultaneous ID relabel/reorder changed grading");
+  assert.deepEqual(responses,before,"seed="+seed+" scoring mutated candidate responses");
+ }
+});
+
 test("partial-credit cap and conservative penalty floor hold under adversarial component rules",()=>{
  const section={id:"s",questionRevisionIds:["rev-1","rev-4"]};
  const options=[

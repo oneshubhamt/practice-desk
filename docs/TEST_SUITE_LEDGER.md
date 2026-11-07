@@ -277,3 +277,14 @@ P61-F can be marked **closed**. Further reductions remain an evidence-driven pro
 **Detected and repaired blind spot:** the first P61-G run, [42375118704](https://github.com/oneshubhamt/practice-desk/actions/runs/42375118704) on pre-fix commit `eaaa1367440226e0991045f65a34884d69fd8b11`, correctly **failed** because the original rich-text property allowed a deliberately introduced `trim()` defect to survive. We did **not** remove that mutant. Instead, the existing authoring property gained explicit leading/trailing-whitespace sentinels and four deterministic boundary variants for each of 128 generated strings, then all six mutations were killed on rerun. This is concrete evidence that the mutation gate improved test sensitivity.
 
 **P61-G status: COMPLETE.** This pass improves confidence in selected contracts, not a measured global mutation score. Further semantic reductions should preserve unique source, PDF, FSRS, recovery, browser and statutory-content safeguards. No merger into `overhaul` was performed.
+
+## P61-H — independent coverage and mutation-sensitivity audit (8 November 2026)
+
+**Status:** Pending changed-source CI verification. The authoritative 12-contract audit is [P61-H independent coverage matrix](audits/P61_H_INDEPENDENT_COVERAGE_AUDIT_2026-11-08.md); do not duplicate its source/case crosswalk here.
+
+- Reinspected surviving 41 Node suite files, production contracts and the 32/20/20 browser manifest. **No further mass deletion is justified** by test-name similarity: PDF intake, source review and revised-edition lineage protect different stages; the same applies to scoring vs signed package vs browser, and backup checksum vs snapshot vs corrupt-sibling quarantine.
+- Found the 200-seed independent scorer model is **single-choice only**. Added a 128-seed six-kind independent reference with bijective answer-ID remapping and input permutations (expected Node 407→408); this is additive, not a replacement for integration tests.
+- Expanded six baseline semantic mutations to **ten named source-isolated faults**, adding exact multi-select set matching, v4 backup SHA, actual corrupt-PDF EOF recognition and explicit FSRS rating preservation. Only named baseline-green and mutated assertion-fail outcomes count.
+- Recorded unresolved **P60-01/02/03/04/05/07**, non-independent PDF transcription/authenticity, actual Mac Safari/mobile/assistive tech and human UI approval as separate release/content work.
+- Corrected stale Satyam-only authorization in `AGENTS.md` and outdated CI-per-script descriptions in `docs/TEST_STRATEGY.md`; current scope is user-authorized `overhaul`.
+- **Mandatory closure:** changed SHA with strict TypeScript/rebuild, 408/408 Node tests, 10/10 named mutants killed, all 72 three-engine journeys executed, and protected publishing. P61-I remains for final programme-wide source/ledger reconciliation.

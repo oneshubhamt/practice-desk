@@ -1,7 +1,7 @@
 /** P61-G: isolated mutation-sensitivity witnesses for crucial domain contracts.
  * Never edits the working tree. Only a temporary copy holds mutated sources.
  * Each targeted test must PASS unchanged, then FAIL as a named assertion.
- * Six chosen mutants do not establish a global mutation score.
+ * Ten chosen mutants do not establish a global mutation score.
  */
 import {cp,mkdtemp,readFile,rm,symlink,writeFile} from "node:fs/promises";
 import {spawnSync} from "node:child_process";
@@ -59,6 +59,38 @@ const mutants=[
   replace:'r.answered<100?"insufficient":',
   testFile:"tests/learning-and-analytics.test.mjs",
   testName:"seeded evidence classifications require independent sample size and question diversity"
+ },
+ {
+  id:"six-kind-multi-select-matches-on-overlap-instead-of-exact-set",
+  path:"src/engine/scoring.ts",
+  find:'a.optionIds.every(id => b.optionIds.includes(id))',
+  replace:'a.optionIds.some(id => b.optionIds.includes(id))',
+  testFile:"tests/exam-scoring-and-policy.test.mjs",
+  testName:"P61-H six-kind independent ledger survives answer-ID bijections and input permutations"
+ },
+ {
+  id:"backup-sha256-payload-integrity-skipped",
+  path:"src/history/backup.ts",
+  find:'manifest.digest!==digest(core as Core))',
+  replace:'false)',
+  testFile:"tests/history-and-persistence.test.mjs",
+  testName:"backup v4 checksum covers records and preferences; size, IDs and timestamp are bounded"
+ },
+ {
+  id:"pdf-eof-signature-check-skipped",
+  path:"scripts/pdf-ingest.mjs",
+  find:'!bytes.subarray(-2048).toString("ascii").includes("%%EOF")',
+  replace:'false',
+  testFile:"tests/p60e-pdf-ingest.test.mjs",
+  testName:"P60-E CLI template is explicitly incomplete and does not reveal keys, audit uses byte-bound source, safe on corrupt PDFs"
+ },
+ {
+  id:"fsrs-ratings-silently-rewritten",
+  path:"src/learning/learning.ts",
+  find:'reviews:[...item.reviews,{rating,at}],updatedAt:at}',
+  replace:'reviews:[...item.reviews,{rating:1,at}],updatedAt:at}',
+  testFile:"tests/learning-and-analytics.test.mjs",
+  testName:"FSRS-7 from stable ts-fsrs 6.0.0 schedules only explicit review ratings"
  }
 ];
 const sandbox=await mkdtemp(join(tmpdir(),"practice-desk-mutant-"));
