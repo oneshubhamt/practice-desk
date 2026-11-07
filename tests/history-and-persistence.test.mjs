@@ -382,6 +382,12 @@ test("generated additive merge is deterministic, idempotent, ordered and non-des
 });
 
 test("backup v4 checksum covers records and preferences; size, IDs and timestamp are bounded",()=>{
+ // Authenticated checksum alone must not launder unsupported v4 privileges.
+ const unsigned=makeBackup([],{schema:1,dark:false,scale:100},"2026-11-04T03:15:00.000Z");
+ assert.equal(verifyBackup(structuredClone(unsigned)).version,4);
+ assert.throws(()=>verifyBackup({...unsigned,issuerSignature:"nonexistent"}),/unsupported envelope/);
+ assert.throws(()=>verifyBackup({...unsigned,manifest:{...unsigned.manifest,privileged:true}}),/unsupported manifest/);
+
  // The reference property also verifies unlike record types in one v4 archive.
  // This replaces the separate three-record illustrative backup test.
  const heterogeneous=[

@@ -221,3 +221,44 @@ This pass removes duplicated illustrative tests and makes recovery coverage more
 - GitHub exact-source compare shows **only seven `tests/` files and two `docs/` files changed** from P61-E baseline [`bee1f838`](https://github.com/oneshubhamt/practice-desk/tree/bee1f838361c0383227a056d67a32992a60e30f8); **zero** production `src/`, question bank, acceptance-script, CI, build or release changes.
 
 P61-F can be marked **closed**. Further reductions remain an evidence-driven programme, not an instruction to delete uniquely valuable test bodies for a lower count. Native Mac Safari, mobile/assistive technology, and deferred P60 application defects were not assessed here.
+
+## P61-G — assertion ownership and real mutation-sensitivity gate (7 November 2026)
+
+**Pre-P61-G source:** [`3bfd7dc2d97e7c74c2d93289b6648fc716118b50`](https://github.com/oneshubhamt/practice-desk/tree/3bfd7dc2d97e7c74c2d93289b6648fc716118b50); [P61-F five-job green CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42373176697), with **411 Node tests / 72 browser journeys**. This is **not yet a completed/verified pass** until the exact changed SHA passes CI.
+
+### Semantic duplicate dispositions
+
+| Retired registration | Preserved original assertions and stronger live owner |
+|---|---|
+| `content-and-provenance`: `rejects unknown options and out-of-bounds responses` | `exam-package-and-import` has an independent six-kind validation matrix: accepted single choice and five other kinds, unknown choice, under/over-selected multi-choice, finite/numeric bounds and duplicate pair endpoints |
+| `content-and-provenance`: `generic scoring matches CGL configured marking rules` | `October 6 Q62` source-vs-reviewed witness asserts **+2 for correct, −0.5 for wrong and exclusion in original**, with all five frozen source/reviewed families pinned. The 200-seed scoring model independently checks per-item ledger arithmetic |
+| `p48-security-integrity`: `existing six-kind authored package stays importable under the strict schema` | Both positive controls (valid six-kind schema and the 2-question APFC/NAT simple-bank import) **moved verbatim** into the retained 18-boundary unsigned-field adversarial test; neither validator's acceptance behavior was deleted |
+| `p48-security-integrity`: `backup v4 refuses arbitrary envelope or manifest fields even with a matching canonical digest` | Exact success control and envelope/manifest rejection assertions **moved verbatim** into the `history-and-persistence` 0/1/7/101/5000-record SHA/size/id/timestamp backup reference test |
+
+**Net:** 4 narrower standalone Node registrations retired, both positive fixture cases and exact backup unauthorized-field cases retained inside stronger tests. Expected **411 → 407 Node tests**. No original test behavior retired without a source-mapped living check. User-visible app/production TypeScript is unchanged.
+
+### New executable mutation-sensitivity guard, not merely a static audit
+
+`scripts/mutation-sensitivity.mjs` runs in the CI **core gate after the full Node test suite**. It creates a disposable copy of `src/`, `tests/`, `scripts/`, `examples/` and `package.json`, with a symlink to installed dependencies. For **each of six independent semantic mutants**, it:
+
+1. Checks the expected production-source string occurs **exactly once**, then executes precisely one named **unmodified baseline test**, requiring one PASS and zero FAIL.
+2. Injects **one** defect into the *temporary copied source only*, reruns that same named test and requires a **named assertion failure** (not missing module, syntax/load failure, exit signal, skipped test or unrelated test).
+3. Restores the original sandbox bytes in `finally`, checks their SHA-256, and removes the entire sandbox even on error. All mutants must be killed; any escape is a mandatory CI failure.
+
+| Domain | Deliberate test-only mutation | Detection contract |
+|---|---|---|
+| Scoring | Unanswered item accidentally receives incorrect-answer marks | 200-seed independent scoring reference |
+| Persistence/recovery | Equal stored and mirror revisions no longer protect persisted record | 576-combination independent recovery oracle |
+| Persistence/CAS | Next save revision increments by two | Seeded 250×150 tab-interleaving state model |
+| Authoring | Published correct-answer value silently inflated by 0.5 | Authenticated six-kind publication→actual scoring |
+| Rich content | Plain literal text silently trimmed | Explicit Unicode/HTML/dollar sentinels + 128-input rich-document property |
+| Learning | “Insufficient” answered-count threshold erroneously increased tenfold | 300-seed independent progression classification model |
+
+**Interpretation:** a future regression that makes any one of those six test witnesses insensitive to the chosen fault breaks CI. This verifies **six selected faults**, not a full mutation score, proves no outside factual accuracy, and does not validate all code lines. Never claim the new gate is green until it has genuinely run on GitHub.
+
+### Unchanged hard boundaries
+
+- CI must still pass the existing strict TypeScript, reproducible build, 407 Node cases (expected), **32 Chromium + 20 Firefox + 20 Linux WebKit real offline journeys**, and guarded source-verified HTML publishing.
+- No changes under `src/`, `examples/`, exam bank files, source vendor code, browser acceptance scripts or public app output; only 3 Node-test files, one new isolated mutation runner, CI wiring and docs.
+- Mutation harness is an **additional correctness gate** and may increase core-job wall time; do not confuse it with CI speed optimization.
+- Unique tests (PDF extraction, independent scale, FSRS, provenance/privacy, source-content integrity, three-browser journeys) remain intact; physical Safari/assistive-device and deferred P60 defects stay out of scope.

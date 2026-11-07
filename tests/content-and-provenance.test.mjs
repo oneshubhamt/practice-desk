@@ -204,21 +204,9 @@ test("v11-reviewed editorial policy: source invalid without a patch is scored as
   }
 });
 
-test("rejects unknown options and out-of-bounds responses", () => {
-  const q = library[0].questions[0];
-  assert.throws(() => validateResponse(q, { kind: "single-choice", optionId: "invalid" }), /Unknown option/);
-  assert.doesNotThrow(() => validateResponse(q, { kind: "single-choice", optionId: q.content.options[0].id }));
-});
 
-test("generic scoring matches CGL configured marking rules", () => {
-  const entry = library[0];
-  const id = entry.questions[0].id;
-  const correct = entry.key.entries[0].answer.optionId;
-  const result = scoreAttempt(entry.paper, entry.key, entry.questions,
-    [{ questionRevisionId: id, response: { kind: "single-choice", optionId: correct } }], "2026-10-28T00:00:00Z");
-  assert.equal(result.items[0].verdict, "correct");
-  assert.equal(result.items[0].marks, 2);
-});
+
+
 }
 
 // === Legacy suite: tests/content-editorial-and-timing-labels.test.mjs — 3 unchanged test registrations ===

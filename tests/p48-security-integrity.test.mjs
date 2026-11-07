@@ -15,12 +15,13 @@ import {createSourceReviewReference,validateSourceReviewReference} from "../src/
 
 const mutate=(fn)=>{const copy=structuredClone(pkg);fn(copy);return copy;};
 
-test("P48-1 existing six-kind authored package stays importable under the strict schema",()=>{
- assert.equal(validateExamPackage(structuredClone(pkg)).paper.id,pkg.paper.id);
- assert.equal(importSimpleQuestionBank(structuredClone(APFC_NAT_BANK_TEMPLATE)).questions.length,2);
-});
+
 
 test("P48-1 unknown unsigned fields are rejected at every exam/key/paper nested boundary",()=>{
+ // Control: valid pre-existing six-kind and APFC/NAT source remain importable.
+ assert.equal(validateExamPackage(structuredClone(pkg)).paper.id,pkg.paper.id);
+ assert.equal(importSimpleQuestionBank(structuredClone(APFC_NAT_BANK_TEMPLATE)).questions.length,2);
+
  const invalid=[
   ["envelope",p=>p.silentPayload={canExecute:"never"}],
   ["question",p=>p.questions[0].secretOverride="A"],
@@ -59,12 +60,7 @@ test("P48-1 simple authoring envelopes cannot launder undeclared metadata",()=>{
    assert.throws(()=>importSimpleQuestionBank(copy),/unsupported|only id, dataUri and altText/,label);
  }
 });
-test("P48-1 backup v4 refuses arbitrary envelope or manifest fields even with a matching canonical digest",()=>{
- const original=makeBackup([],{schema:1,dark:false,scale:100},"2026-11-04T03:15:00.000Z");
- assert.equal(verifyBackup(structuredClone(original)).version,4);
- assert.throws(()=>verifyBackup({...original,issuerSignature:"nonexistent"}),/unsupported envelope/);
- assert.throws(()=>verifyBackup({...original,manifest:{...original.manifest,privileged:true}}),/unsupported manifest/);
-});
+
 test("P48-1 frozen CGL source review references reject unsigned extra metadata without losing valid Q32 provenance",async()=>{
  const base=new URL("../src/content/",import.meta.url);
  const papers=JSON.parse(await readFile(new URL("papers.json",base),"utf8"));
