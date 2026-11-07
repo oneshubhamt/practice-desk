@@ -1,98 +1,30 @@
-# Practice Desk — AI application guide (P60-A, current capabilities)
+# Practice Desk — current AI application guide
 
-**Audience:** ChatGPT, Claude, Codex and other external agents; vendor-neutral. **Read after the [short authoring quickstart](AGENT_AUTHORING_QUICKSTART.md) only when the task needs application understanding.** This is a truthful description of the existing offline app, **not** a promise that agents can remotely operate a user's local copy.
+Practice Desk is an **offline examination application**, not an embedded LLM, PDF OCR service, or remote device agent. External AI/human agents can prepare and validate structured question-bank source on a computer with access to the repository; **the user explicitly imports** published JSON into Library. Neither an agent CLI nor GitHub access grants browser History, FSRS, local bank/device data or cloud permissions.
 
-## What Practice Desk does
+## Minimum-context workflow
+1. Read [the agent quickstart](AGENT_AUTHORING_QUICKSTART.md), one matching [APFC](../examples/ai-first-apfc.json) or [CAT](../examples/ai-first-cat.json) source example, and the task-specific slice of [the pipeline contract](architecture/AGENT_CONTENT_PIPELINE.md).
+2. Discover machine capabilities without source dumping:
+   `node scripts/practice-desk-capabilities.mjs summary`;
+   `... list`, `... show ai-authoring`, or `... operations`.
+3. Research questions externally. Use the strict `practice-desk-authoring` v1 source with declared exam rules, taxonomy, answers, explanation and source/evidence claims.
+4. `node scripts/question-bank-agent.mjs inspect my-bank.json`, `show my-bank.json question-id`, `patch my-bank.json ops.json NEW-bank.json --dry-run`.
+5. Validate/compile with `node scripts/question-bank-cli.mjs qa-bank my-bank.json` and `compile-bank my-bank.json NEW-paper.json`. Add coverage blueprint, blind review, paired Source/Reviewed or PDF provenance checks as needed.
+6. In Library use the file import control. No automatic agent-to-app import, cloud sync or learner-data extraction is built in.
 
-Practice Desk is a **standalone offline examination and learning studio**. It can hold separate examination families and authored papers, conduct practice/exams with actual frozen paper rules, evaluate six question kinds, preserve detailed historical attempts, help learners inspect results, build evidence-based practice and manage learning/revision cards with an FSRS-based explicit review scheduler. The same application offers an editable Wordgard authoring workflow, source/correction editorial labels and a strict external AI-question-bank import pipeline.
+## Available task-specific external CLI contracts
+| Job | Implementation |
+|---|---|
+| Content coverage and quota planning | `scripts/content-blueprint.mjs`; stage B of [pipeline](architecture/AGENT_CONTENT_PIPELINE.md) |
+| Candidate-only blind packet and attributed 20-check review | `scripts/question-quality.mjs`; stage C |
+| Immutable original + separate reviewed edition | `scripts/editorial-editions.mjs`; stage D |
+| Supplied PDF interpreted by an external agent, SHA/page/key provenance | `scripts/pdf-ingest.mjs`; stage E; **no automatic OCR/text/image understanding** |
+| Bounded local prepare/assess/publish cross-gate | `scripts/agent-handoff.mjs actions`; stage F; explicit new-file permission |
+| Rich graphical manual editing and staging | In-app Wordgard; draft backup is separate from History v4 |
 
-The **student** uses Library → Exam → Results/History → Learning/Revision. The **content author** uses external source-grounded AI → `practice-desk-authoring` JSON → deterministic QA/compile → optional staging/Wordgard corrections → explicit Library publication. A **source auditor** checks factual claims and source-key consistency outside the app and records documented editorial revisions. A **software engineering agent** may read actual source, but content-authoring agents should not need to.
+## Crucial epistemic and candidate limits
+A source hash proves consistent bytes, **not** original paper authenticity or factual truth. Citations, labels like `verified`, filled review records, reviewer names or audit success are not independent verification. Current statutes, PYQs, worked solutions, math/figures and correct distractors require genuine independent research. Never expose a key/solution, explanation-only image or editorial dispute during candidate assessment. Do not infer difficulty or mastery solely from authored metadata.
 
-**Do not mistake the infrastructure for content**: the engine can represent APFC, CAT, UPSC and RBI exams, but complete independently fact-checked banks are not automatically bundled. Current built-in source/reviewed content is SSC CGL. The app has no embedded model or cloud connection.
+The P60 static audit has deferred correctness findings recorded in [backlog](../backlog.md). This guide reflects available commands, **not** closure of those findings, human review, real agent-token benchmarking, physical device testing or release approval.
 
-## The correct low-context starting point
-
-```bash
-# Current read-only discovery interface: JSON output, no browser/DB access
-node scripts/practice-desk-capabilities.mjs summary
-node scripts/practice-desk-capabilities.mjs list
-node scripts/practice-desk-capabilities.mjs show ai-authoring
-node scripts/practice-desk-capabilities.mjs operations
-
-# Current authoring and correction tools (P57–P59)
-node scripts/question-bank-agent.mjs inspect my-bank.json
-node scripts/question-bank-agent.mjs show my-bank.json question-01
-node scripts/question-bank-agent.mjs patch my-bank.json patch.json NEW-bank.json --dry-run
-node scripts/question-bank-cli.mjs qa-bank NEW-bank.json
-node scripts/question-bank-cli.mjs compile-bank NEW-bank.json NEW-paper.json
-```
-
-For ordinary question generation, **read only the one-page quickstart, one relevant APFC or CAT example and the specific capability/task slice**. Query `show` for one question when repairing. Do not ingest every application file, history record or entire bank by default. Shared table/passage/image content should be referenced rather than redundantly repeated.
-
-## P60-E — external AI document/PDF intake
-
-An external authorized agent—not Practice Desk's offline app—visually interprets the supplied PDF, preserving source bytes, printed question numbers, options, passages, tables, images, keys and math. [The narrow P60-E task contract](architecture/P60E_AGENT_PDF_INGESTION.md) records SHA-bound source/page, original/reviewed and key-document provenance in a separate sidecar. `scripts/pdf-ingest.mjs template` creates an incomplete ledger, `audit` fails closed on gaps, `compile` invokes existing P60-D paired publication only with P60-C reviewed quality evidence and optional P60-B coverage. Import both signed editions explicitly into offline Library. It does **not** read PDF page text or diagrams, certify PYQ/source/reviewer truth, or reach local browser storage.
-
-## P60-F — agent integration and independent verification boundaries
-
-For a full review-and-publication operation, agents can now use the local Node `node scripts/agent-handoff.mjs actions` followed by `prepare` (full-bank blind packet), `assess` and `publish` in [P60-F's focused contract](architecture/P60F_AGENT_INTEGRATION_AND_VERIFICATION.md). This is a *thin permissioned orchestration of current authoring/quality/edition/document workflows*, not an LLM embedded in the offline app. It supports source `single`, original/reviewed `paired` and externally transcribed `pdf`. Publication requires a complete SHA-bound P60-C reviewed source, any supplied P60-B blueprint, all relevant P60-D or P60-E provenance/edition guards and explicit `--allow-create` for a new file/directory. Only the user imports the packages into the offline Library. Full reports are bounded and answer-private; no History or FSRS data leave the browser. It does **not** authenticate PYQ/citations/reviewer identity, read unshared files, directly operate the user's application or grant network/cloud permissions.
-
-The [matched synthetic source benchmark](audits/P60F_INDEPENDENT_AGENT_SOURCE_CHALLENGE_2026-11-06.md) measures three agent-visible CLI calls versus one, emitted JSON byte totals, process elapsed time and five independent elementary key checks. It does **not** measure real LLM tokens, human source research, official PYQ truth, real-exam cognitive quality or learner outcomes. Genuine evidence-based educational verification remains an external human/AI research responsibility. The standalone application and its scorer/backup/FSRS engine are unchanged.
-
-## How its features work together
-
-| Area | Current actual functionality | Agent implication |
-| --- | --- | --- |
-| **Exam Library** | Built-in CGL and imported families separated; source/reviewed/custom papers and revisions. | Keep `examId`, paper, edition and revision identities honest; importing does not mean official. |
-| **Exam engine** | Single-choice, multiple-select, numeric, true/false, matching and free response; real scorer, optional matching/multiple-select component marks, manual free-response outcome. | One key per single-choice, correct response format for other kinds; do not create a second scoring algorithm. |
-| **Timing and navigation** | Untimed, whole-paper and section-timed policies, restricted/free navigation, pause/review as authored; offline-safe app navigation. | Declare executable paper rules explicitly. Don't infer an exam's official timing from its title. |
-| **Taxonomy** | Academic Subject → Topic → Subtopic independent of physical sections; nine APFC broad syllabus roots. | A single APFC paper can have one physical section yet contain many subjects; subject is not an exam-section ID. |
-| **Custom practice** | Selects genuine eligible items from one frozen source with seeded section/topic/difficulty filters. | Check available inventory before promising a particular custom set. Cross-paper universal blueprints are planned, not implemented. |
-| **Results and History** | Real scores, response outcomes, measured timing and attempt records, frozen answer/source identity; mode/source-aware history. | Report measured evidence only; no invented percentile, rank or time. History is local to the user's device. |
-| **Learning and revision** | Notebook, error tags, bookmarks, student notes, explicit FSRS ratings, evidence-backed wrong/blank/slow/flagged/due revision choices. | Do not convert marks into assumed mastery or user grades, and do not regrade immutable attempts. |
-| **Source and corrections** | Existing SSC CGL source vs reviewed comparison only when semantics justify it; caution/invalid question flags. | Preserve source key and reviewed correction separately; P60-D universal editorial workflow is still planned. |
-| **AI authoring** | Strict external v1 JSON, paged `inspect`, one-question `show`, guarded `patch`, duplicate/arithmetic/structure QA, staging, Wordgard, immutable publication. | External reasoning must fact-check; a valid package and SHA are *not* proof of true facts. |
-| **Rich content** | Shared RC/DILR passages, cases, tables, charts, image media with alt text; canonical rich/math AST and KaTeX. | Avoid duplicated stimuli; source figures and math must be checked before publication. |
-| **Offline storage** | Local persistence, frozen history/answer snapshots and explicit backup v4; separate unpublished staging/draft archives. | No direct user-device access, silent sync, recovery after missing backups or remote API. |
-
-## P60-D — original versus reviewed editions across examinations
-
-Use [P60-D paired editorial workflow](architecture/P60D_ORIGINAL_REVIEWED_EDITORIAL.md) when a supplied previous-year or AI-original question requires correction. Keep the original v1 source byte-exact, derive a separate reviewed v1 source via existing P59 guarded patch, inspect the compact changed-fields template, record review rationale and evidence, and complete the P60-C blind/source review. Headless `editorial-editions.mjs audit/compile` produces **two distinct signed Source and Reviewed exam packages**, exact raw source archives and an attribution-only correction lineage. Import the packages one at a time into Library **Source first**. The existing application recognizes paired editions and freezes an original-source review reference when starting a reviewed exam, while conservative source-key comparisons never override the user's frozen marks. This is not automatic PDF ingestion or transactional device sync; claimed official provenance and independent facts remain external. The quickstart remains the default.
-
-## P60-C — source-bound quality assurance and blind independent solving
-
-External agent authoring can use `scripts/question-quality.mjs` to obtain candidate-only question pages, incomplete review templates, and a 20-dimension editorial checklist. Record independently solved answers and actual source research in a separate `practice-desk-quality-review` v1 sidecar, then audit it against current source and optionally enforce `--quality-review` during canonical compilation. Shared candidate-visible keys are rejected by the P57/P60-C publisher; probable solution hints require independent semantic review. An agent cannot infer actual factual verification from a citation string or a claimed human/editorial pass; the offline tool never fetches sources or authenticates reviewers. See [the task-specific P60-C guide](architecture/P60C_QUESTION_QUALITY_ASSURANCE.md) only when working on content review.
-
-## P60-B — planned coverage before content creation
-
-For nontrivial question banks, use the [Content Production Blueprint](architecture/P60B_CONTENT_BLUEPRINT.md) to record exact targets, source origin, paper rules and required classification; run read-only `content-blueprint.mjs validate/audit` or enforce `--blueprint` in the existing single-source compiler. This prevents silently missing user-requested quotas, but does **not** establish semantic syllabus accuracy or factual truth. The guide remains low-context: only fetch the blueprint contract and one source example for authoring; avoid reading the exam engine implementation. Multi-batch audits must not be misrepresented as an in-browser publication gate.
-
-## Recommended task routes
-
-**Generate new questions:** Read [authoring quickstart](AGENT_AUTHORING_QUICKSTART.md) + **one** [APFC](../examples/ai-first-apfc.json) or [CAT](../examples/ai-first-cat.json) example → research the syllabus and sources → author ~10–30 genuine questions in the existing `practice-desk-authoring` v1 source → check each key/distractor independently → run compact `inspect`/full `qa-bank` and targeted `show`/SHA patch → generate a new validated file → import into the offline Library. Respect source-count and user specifications, even though full formal P60-B quota enforcement is not yet available.
-
-**Repair one item:** `inspect` for issues → `show` for exact question, digest and linked stimulus → inspect actual factual documents → create a delta `patch` → `--dry-run` → new versioned source → repeat QA. Material changes reopen `needs-review`; an author-claimed official PYQ cannot silently retain that claim after key/stem/option edits. A citation record is not a verification result.
-
-**Work with a previous-year PDF:** An external AI must independently read and transcribe the PDF, preserve original page/number/key/figures, flag uncertainty, review sources/solutions and emit the same structured format. The offline app **does not currently** offer automatic PDF intake. Generalized source-vs-reviewed storage and independent factual QA are P60-D/C targets, not present features.
-
-**Support learner revision:** Read the relevant `learning-revision` and `history-results` capability entries, then only authorized exported learner evidence; recommend revision cards based on observed mistakes and due status. No automatic external agent connection to device-local History or Learning exists.
-
-**Software/app functionality development:** Use engineering sources and [P60 programme](architecture/P60_AI_NATIVE_CAPABILITY_PROGRAMME.md); implement new capabilities behind versioned contracts, preserve scoring/backups/old CGL and publish only after real regression evidence. Current guide describes functionality for content agents; it is not a substitute for source inspection when changing code.
-
-## Limits, evidence and quality policies
-
-- **Factual accuracy:** offline QA detects structural issues, duplicate candidates, a narrow class of arithmetic mistakes and author-citation presence. It does **not** check statutory commencement, primary-source authenticity, PYQ identity, source claims or semantic answer quality. Any actual-source check must state which text/date/page was read and what remains uncertain.
-- **Candidate-view safety:** questions and stimuli shown before permitted submission/review must not leak the answer, a hidden reasoning hint, explanation, editorial note or flagged official-key dispute. This must be assessed against real rendered exam UI as well as text, without pretending offline client code offers cryptographic secrecy.
-- **Source preservation:** never silently rewrite original wording, diagrams or published answer keys. Keep reviewed changes separately with reasons and ambiguity warnings; only compare scores for genuinely semantically comparable material. Full generic P60-D lineage is still a proposal.
-- **Privacy and writes:** the capabilities CLI is read-only, handles only repository documentation, and does not open the browser, History, IndexedDB or any cloud account. `patch` creates **new** source files. Library import/publication remains a separate user action.
-- **Operational limits:** external source files max 200 questions; staging max 8 files/400 items and Wordgard max 200 selected; pending drafts and staging require separate backups from History v4. Media and local persistence have their own validated budgets.
-- **Release boundaries:** CI in Chromium/Firefox/Linux WebKit does not establish actual Mac Safari, iOS/Android, screen reader/IME, OS eviction, authentic content verification or human UI approval.
-
-## Where to look next — only if needed
-
-- **Machine contract:** [`contracts/practice-desk-capabilities.v1.json`](contracts/practice-desk-capabilities.v1.json).
-- **One-page authoring and command contract:** [`AGENT_AUTHORING_QUICKSTART.md`](AGENT_AUTHORING_QUICKSTART.md).
-- **Precise existing authoring types:** [`architecture/QUESTION_BANK_AUTHORING.md`](architecture/QUESTION_BANK_AUTHORING.md).
-- **P60 future capabilities, engineering gates and limitations:** [`architecture/P60_AI_NATIVE_CAPABILITY_PROGRAMME.md`](architecture/P60_AI_NATIVE_CAPABILITY_PROGRAMME.md).
-
-**Maintenance rule:** The capability catalogue, this guide, its tests and the source implementation must stay aligned. When a feature is introduced/changed/removed, update the capability entry with source ownership, current status and limits. P60-B content blueprints, P60-C editorial QA and P60-D original/reviewed pairing are active external source commands, while P60-E/F remain future proposals.
+When building new app features, read [AGENTS](../AGENTS.md), [architecture](architecture/CURRENT_ARCHITECTURE.md), [data contracts](architecture/DATA_CONTRACTS.md) and current source; do not use this AI-user guide as a substitute for a source audit.

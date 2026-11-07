@@ -1,0 +1,34 @@
+# Lean, reasoning-first test-bench redesign — PROPOSAL ONLY
+
+**Status:** Design document, 7 November 2026. No test, browser script, benchmark, source file, CI step or publisher has been changed or approved for retirement.
+
+## Diagnosis at inspected baseline
+`Satyam` holds 45 entries in `tests/` (one fixture), 34 browser acceptance scripts and 52 `scripts/` files overall. The Node suite includes broad consolidated legacy suites plus many additional chronology-named `p47...`–`p60...` files. CI invokes many browser scripts separately, sometimes across all three engines; it also routinely uploads several screenshot/benchmark artifacts. This can make maintenance and feedback expensive. **It does not follow from counts alone that the tests are redundant or weak.** Many already use independent scoring oracles and actual multi-step journeys. First measure overlap and unique value.
+
+## Design criteria (in priority order)
+1. **Contract coverage:** enumerate user-important invariants and failure modes in one traceability matrix: content provenance, scoring, frozen History, transactional backup, answer secrecy, authored publication, FSRS, navigation, accessibility, offline/CLI safety. Each P0 contract needs independent positive and adversarial witnesses.
+2. **Strong oracles:** choose a mathematically independent reference scorer for all six kinds; model event-state transitions rather than repeating implementation outputs. Use exact rational arithmetic for credit/penalty boundaries when appropriate. Assert conservation, bounds and invariance—not one hard-coded sample.
+3. **Metamorphic/property tests:** e.g. reordering answer option labels with corresponding key remapping preserves marks; splitting a score ledger into items sums to the same total; blank/invalid answer never earns an unearned correct mark; changing only explanation metadata never changes a candidate-facing question; export→import preserves frozen marks and source IDs. Seed all generators for reproducible shrinking/replay. A test must fail for a meaningful violating counterexample.
+4. **State-machine and adversarial tests:** attempt lifecycle with pause/resume/expiry, rejected illegal events, double submission, cross-tab compare-and-swap, quota failure, corrupted snapshots, restore, deletion. Enumerate state preconditions; explicitly verify non-events and forbidden transitions.
+5. **Journey-based browser acceptance:** 5–8 coherent, domain-owned journeys rather than many chronological click scripts: (a) import/author → publish → take → result, (b) Source/Reviewed provenance and no key before finish, (c) strict/free/section timing, (d) suspend/crash/restore/backup/History, (e) Learning/FSRS/revision, (f) accessibility/keyboard/Navigation API fallback, (g) narrow/media/rich-editor, (h) agent-created package import. Journey assertions target durable user outcomes, not button presence alone. Keep isolated contexts and explicit failure diagnostics.
+6. **Risk-based browser matrix:** one fast local smoke and Node/property tier; real Chromium journeys on changes; Firefox/WebKit for cross-engine risks and representative contracts, with a scheduled/full pre-merge tier for deeper cross-browser coverage. Do not weaken current protected branch CI without validated replacements and explicit approval.
+7. **Minimal visual evidence:** targeted viewport/overflow/semantics assertions; screenshot on unexpected failure or intentional visual acceptance, not routine old-v11 pixels.
+8. **No cargo-cult benchmarks:** separate performance probes from correctness gates, measure realistic frozen records and distribution with reproducible conditions; avoid hard-coding flaky wall-time cutoffs.
+9. **Test independence:** avoid assertions of source strings, same function computed twice, self-asserted SHA as external truth, silent no-op mocks, or fixtures pre-tailored to code paths. Keep a small number of focused unit tests for genuinely complex logic; journey tests do not replace all unit or property tests.
+10. **Lean ownership:** group by enduring domain (`scoring`, `attempts`, `imports`, `authoring`, `review`, `storage`, `learning`, `UI`), not by project pass number. Separate production CLIs, verification harnesses and optional diagnostic benchmarks; do not delete production tools as “test bloat”.
+
+## Mandatory migration protocol — only if authorized later
+1. Inventory every test case and browser script, actual assertions, fixtures, run cost and CI engine coverage. Categorize **unique**, **overlap**, **fragile**, **obsolete by explicit decision**, **indirect/weak**, or **benchmark-only**; inspect actual code. Output old → new assertion IDs.
+2. Build a contract×risk×test matrix, with exact gaps and adversarial counterexamples. Establish baseline full CI and execution durations before altering anything.
+3. Add replacement independent invariants/property/reference-model oracles **before** deleting redundant cases. Where useful, mutation-test scorer/session/backup/authoring security to show replacements detect realistic faulty changes; report mutation operators and surviving mutants rather than an invented percentage.
+4. Consolidate Node tests into durable thematic suites with shared narrow fixtures; browser scripts into journey suites and reusable scenario helpers. Never hide one journey's failure behind a catch or soft assert. Keep script CLI commands predictable.
+5. Remove originals only after every assertion is mapped to an equal-or-stronger successor or a justified explicit retirement; retain exact Git SHA in evidence ledger. Execute full current-gated three-engine CI and compare missing/wrong/replayed content, artefact hashes, runtime and flakiness.
+6. Simplify CI/screenshot uploads only after coverage proof. Keep source-verified HTML publishing guarded by exact tested source SHA and with release/device/content truth still held.
+
+## Acceptance / measurement
+- **Zero unmapped unique P0/P1 contracts;** green substantive negative-path and exact-score oracles; provenance and pre-submission answer secrecy explicitly challenged.
+- Measurably lower **file count, total test LoC, browser process startup cost, repeated fixture setup and CI latency**, but only alongside equal/better contract coverage and detection strength. The final optimal number of files or tests is deliberately **not guessed**.
+- Stable seeded fixtures, interpretable assertion names, failure locality, real offline browser rehydration, representative 195px/140% and three engines.
+- No artificial claim of question factual verification, genuine PDF source fidelity, accessibility certification or human release approval.
+
+The prior extensive Pass36–40 test-consolidation plan is available in [the pinned historical index](HISTORY_INDEX.md). This document supersedes it **as a proposal**, not as implemented changes.
