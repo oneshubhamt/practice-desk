@@ -2,7 +2,7 @@
 
 **Date:** 8 November 2026 · **Baseline source:** [`92e85085ac2169eb25d8587b8d788ec30834b6a2`](https://github.com/oneshubhamt/practice-desk/tree/92e85085ac2169eb25d8587b8d788ec30834b6a2) on `overhaul`.
 **Scope:** inspect production contract owners, the 41 surviving `tests/*.test.mjs` suites, browser suite manifest, mutation runner, and prior P61 evidence. **Not** an independent verification of actual exam facts, PDF visual transcription, physical devices or release accessibility.
-**Status:** P61-H code/CI verification is pending until the exact changed SHA passes the five-job protected workflow.
+**Status: VERIFIED AND COMPLETE.** [Exact-source five-job GitHub Actions CI run 42410337888](https://github.com/oneshubhamt/practice-desk/actions/runs/42410337888) succeeded at source commit [`12e7ba7e83b64a53914b85fcb98434564cb0dccb`](https://github.com/oneshubhamt/practice-desk/commit/12e7ba7e83b64a53914b85fcb98434564cb0dccb). All 408 Node tests, ten targeted mutations, 72 distinct browser journeys and guarded publishing passed.
 
 ## Method and disposition
 
@@ -40,7 +40,7 @@
 
 **P61-G baseline:** `scripts/mutation-sensitivity.mjs` demonstrated six hand-picked semantic faults, requiring baseline named PASS then same named test assertion FAIL in a temporary source copy. The harness restores and SHA-checks source bytes and removes the sandbox; CI fails closed. **Limits:** selected one-at-a-time mutants only, exact-text mutation anchors can drift, named tests do not constitute a global mutation score, the sandbox shares installed dependencies, and the gate by itself cannot establish PDF transcription or legal factual truth.
 
-**P61-H expansion:** four additional named mutants, all to be verified by actual CI:
+**P61-H expansion:** four additional named mutants, each verified against actual CI:
 1. Single/multiple-choice scorer incorrectly accepts overlapping rather than exactly matching selected options → new 128-seed six-kind independent reference.
 2. Backup v4 skips SHA-256 core-payload comparison → pre-existing 0–5000-record checksum property must detect.
 3. PDF CLI ignores missing `%%EOF` trailer → pre-existing corrupt-PDF end-to-end CLI test must detect.
@@ -48,11 +48,23 @@
 
 **New property:** 128 seeded experiments jointly cover all six question kinds, independent verdicts/marks and caps, and the metamorphic requirement that a bijective rename of candidate/key option and matching IDs plus order permutations **must not change scored outcomes**. This is an additional registration, not a removal or substitute for validated authoring.
 
-If any mutant survives, fix the **test witness**, not by removing the mutant or editing production scoring; if a case exposes a real product defect, log separately and do not declare P61-H closed until scope is reconciled.
+All four new mutants were detected by named assertion failures while the corresponding unmodified targeted tests passed. A future surviving mutant must be treated as a test failure, not silently retired or used to justify production changes.
 
 ## Delivery and open items
 
-- **Target:** keep the 41 existing Node test modules, **407 → 408 test cases** (one new six-kind model), and **72 unchanged browser journeys** across Chromium/Firefox/Linux WebKit; grow selected mutations **6 → 10**.
+- **Verified:** retained 41 existing Node suite modules, **407 → 408 test cases** (one new six-kind model), and **72 unchanged browser journeys** across Chromium/Firefox/Linux WebKit; selected semantic mutants **6 → 10**.
 - No production `src/` changes and no blanket test retirements. Correct stale branch/CI descriptions in current guidance.
 - Remaining P61-I is the **final independent source-to-ledger reconciliation, release-gate regression, and documentation closure**, not permission to skip physical Safari, accessibility or source-authenticity reviews.
-- Pending P60-01/02/03/04/05/07 findings, actual PYQ/statuory content checks and real user/device verification remain explicitly out of scope.
+- Pending P60-01/02/03/04/05/07 findings, actual PYQ/statutory content checks and real user/device verification remain explicitly out of scope.
+
+## Independently observed execution evidence
+
+Source SHA: `12e7ba7e83b64a53914b85fcb98434564cb0dccb`. [GitHub Actions run 42410337888](https://github.com/oneshubhamt/practice-desk/actions/runs/42410337888), five jobs **SUCCESS**, 232 s created→updated. Logs inspected:
+- Strict TypeScript, deterministic build and Node contracts: **408 tests passed, zero failed**.
+- Isolated mutation witness runner: **10/10 selected mutations killed**, each with a baseline-green target and mutated **named assertion failure**. New four: multi-select overlap, v4 digest bypass, PDF missing `%%EOF`, and FSRS Good→Again rewrite all killed.
+- Browser source-mapped journey logs: **32 unique Chromium, 20 unique Firefox, 20 unique Linux WebKit** scenarios. No scenario removed or silently skipped; all three engine runs passed.
+- Guarded publisher: **SUCCESS** after core and all browsers.
+- Production files under `src/`, exam/example banks and user-facing HTML unchanged. Exact-SHA Git comparison shows only one Node test file, one test-only mutation script, and audit/current engineering guidance.
+- Actual CI wall **232 s**, compared with merged baseline run 42381748128; hosted runner timing is observational, not controlled throughput proof.
+
+**Disposition:** No further unconditional test deletions in P61-H. Complementary safety cases are retained. The **only remaining planned P61 pass is P61-I**, final programme-wide consistency and closure, after which independently verified content and physical device/release constraints remain external.

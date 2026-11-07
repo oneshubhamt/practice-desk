@@ -1,6 +1,6 @@
 # Lean, reasoning-first test-bench redesign — ACTIVE, GATED
 
-**Status:** P61-A–G completed and source-verified, including semantic test retirement, seeded reference models, pooled three-engine execution, opt-in screenshots and six targeted isolated mutations. The user-authorized independent audit **P61-H** is being implemented on `overhaul`; exact-SHA full CI remains mandatory before it can be marked complete. See [implementation ledger](TEST_SUITE_LEDGER.md) and [independent coverage audit](audits/P61_H_INDEPENDENT_COVERAGE_AUDIT_2026-11-08.md).
+**Status:** P61-A–G completed and source-verified, including semantic test retirement, seeded reference models, pooled three-engine execution, opt-in screenshots and six targeted isolated mutations. The user-authorized independent audit **P61-H** was independently source-verified (408 Node tests, 10 mutations, 72 browser journeys) on `overhaul`; **P61-I final closure** remains pending. See [implementation ledger](TEST_SUITE_LEDGER.md) and [independent coverage audit](audits/P61_H_INDEPENDENT_COVERAGE_AUDIT_2026-11-08.md).
 
 ## Diagnosis — historical baseline versus current tested state
 

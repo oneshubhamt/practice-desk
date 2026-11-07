@@ -280,7 +280,7 @@ P61-F can be marked **closed**. Further reductions remain an evidence-driven pro
 
 ## P61-H — independent coverage and mutation-sensitivity audit (8 November 2026)
 
-**Status:** Pending changed-source CI verification. The authoritative 12-contract audit is [P61-H independent coverage matrix](audits/P61_H_INDEPENDENT_COVERAGE_AUDIT_2026-11-08.md); do not duplicate its source/case crosswalk here.
+**Status: independently verified and complete.** The authoritative 12-contract audit is [P61-H independent coverage matrix](audits/P61_H_INDEPENDENT_COVERAGE_AUDIT_2026-11-08.md); do not duplicate its source/case crosswalk here.
 
 - Reinspected surviving 41 Node suite files, production contracts and the 32/20/20 browser manifest. **No further mass deletion is justified** by test-name similarity: PDF intake, source review and revised-edition lineage protect different stages; the same applies to scoring vs signed package vs browser, and backup checksum vs snapshot vs corrupt-sibling quarantine.
 - Found the 200-seed independent scorer model is **single-choice only**. Added a 128-seed six-kind independent reference with bijective answer-ID remapping and input permutations (expected Node 407→408); this is additive, not a replacement for integration tests.
@@ -288,3 +288,7 @@ P61-F can be marked **closed**. Further reductions remain an evidence-driven pro
 - Recorded unresolved **P60-01/02/03/04/05/07**, non-independent PDF transcription/authenticity, actual Mac Safari/mobile/assistive tech and human UI approval as separate release/content work.
 - Corrected stale Satyam-only authorization in `AGENTS.md` and outdated CI-per-script descriptions in `docs/TEST_STRATEGY.md`; current scope is user-authorized `overhaul`.
 - **Mandatory closure:** changed SHA with strict TypeScript/rebuild, 408/408 Node tests, 10/10 named mutants killed, all 72 three-engine journeys executed, and protected publishing. P61-I remains for final programme-wide source/ledger reconciliation.
+
+### P61-H full exact-source QA — PASS
+
+[GitHub Actions five-job run 42410337888](https://github.com/oneshubhamt/practice-desk/actions/runs/42410337888) passed at `12e7ba7e83b64a53914b85fcb98434564cb0dccb`. Independently checked raw logs: **408/408 Node tests; 10/10 source-isolated, named-test-detected semantic mutations; 32/32 Chromium + 20/20 Firefox + 20/20 Linux WebKit** source-mapped journeys; guarded source-verified HTML publishing. Observed 232 s full workflow; no controlled claim of performance improvement. Unlike earlier passes, **zero tests were deleted**: the audit justified keeping existing distinct high-value cases and adding a six-kind 128-seed reference model. The [dedicated audit](audits/P61_H_INDEPENDENT_COVERAGE_AUDIT_2026-11-08.md) records each safety contract, exact source owner, residual P60/PDF/device limits and mutation operators. **P61-H closed; P61-I remains.**
