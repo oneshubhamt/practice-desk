@@ -462,7 +462,12 @@ test("P58-A F01: genuine manual drafts preserve existing publication validation 
    "√(a²+b²) $x+1$ <script>alert(1)</script>",
    "<img src=x onerror=alert(1)>",
    "price $5 and genuine LaTeX-looking \\frac{x}{2}",
-   "हिंदी < & > \u00a0 ₨"
+   "हिंदी < & > \u00a0 ₨",
+   " leading authored space",
+   "trailing authored space ",
+   "  both edges  ",
+   "\tindented authored line\n",
+   "  \u00a0  "
   ]){
    const validated=validateRichDocument(plainRichDocument(raw));
    assert.equal(validated.blocks[0].content[0].text,raw);
@@ -475,12 +480,17 @@ test("P58-A F01: genuine manual drafts preserve existing publication validation 
    const size=1+(random()%120);
    let original="";
    for(let j=0;j<size;j++)original+=alphabet[random()%alphabet.length];
-   const rich=plainRichDocument(original);
-   const checked=validateRichDocument(rich);
-   assert.equal(checked.blocks.length,1,"case "+i+" inserted an extra paragraph");
-   assert.equal(checked.blocks[0].content[0].text,original,"case "+i+" changed candidate text");
-   assert.equal(canonicalRichDocument(checked),canonicalRichDocument(rich),"case "+i+" changed representation");
-   assert.equal(canonicalRichDocument(validateRichDocument(checked)),canonicalRichDocument(checked),"case "+i+" not idempotent");
+   // Boundary whitespace is a source fact, not formatting to normalize.
+   // This catches trim regressions even when a PRNG rarely chooses whitespace
+   // for the first or final character.
+   for(const literal of [original," "+original,original+" "," "+original+" "]){
+    const rich=plainRichDocument(literal);
+    const checked=validateRichDocument(rich);
+    assert.equal(checked.blocks.length,1,"case "+i+" inserted an extra paragraph");
+    assert.equal(checked.blocks[0].content[0].text,literal,"case "+i+" changed candidate text");
+    assert.equal(canonicalRichDocument(checked),canonicalRichDocument(rich),"case "+i+" changed representation");
+    assert.equal(canonicalRichDocument(validateRichDocument(checked)),canonicalRichDocument(checked),"case "+i+" not idempotent");
+   }
   }
  });
 }
