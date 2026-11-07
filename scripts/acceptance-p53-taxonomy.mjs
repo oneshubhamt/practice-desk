@@ -3,14 +3,12 @@
  * taxonomy builder and a frozen filtered attempt in each browser engine.
  */
 import {openHarness,route,check,records,assertNoOverflow} from "./browser/fixtures.mjs";
-import {mkdir} from "node:fs/promises";
+import {captureVisualEvidence} from "./browser/visual-evidence.mjs";
 const engine=process.argv[2]??"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
 const {page,errors}=await h.open({viewport:{width:1280,height:840}});
 const images="artifacts/p53-taxonomy";
-await mkdir(images,{recursive:true});
-const shot=async(label)=>page.screenshot({path:images+"/"+engine+"-"+label+".png",
- animations:"disabled",fullPage:true});
+const shot=async(label)=>captureVisualEvidence(page,images+"/"+engine+"-"+label+".png",{fullPage:true});
 async function input(id,value){
  const field=page.locator(id);
  await field.fill(value);

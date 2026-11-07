@@ -45,18 +45,6 @@ function completed(id="complete",at=1000){
    {type:"SUBMIT_ATTEMPT",nowMs:at+1000},questionMap);
 }
 const packages=new Map([[bundle.paper.id,bundle]]);
-test("dedicated history filters/sorts completed and in-progress records without mutating source",()=>{
- const a=completed("first"),b=completed("second",5000),live=startGenericAttempt(bundle,"active",7000);
- const original=[a,b,live];
- const query={status:"all",sort:"newest",search:""};
- assert.deepEqual(filteredHistory(original,packages,query).map(x=>x.id),["active","second","first"]);
- assert.equal(filteredHistory(original,packages,{...query,status:"progress"}).length,1);
- assert.equal(filteredHistory(original,packages,{...query,status:"complete"}).length,2);
- assert.equal(filteredHistory(original,packages,{...query,sort:"oldest"})[0].id,"first");
- assert.equal(filteredHistory(original,packages,{...query,search:"NOT FOUND"}).length,0);
- assert.equal(filteredHistory(original,packages,{...query,search:bundle.paper.paperId})[0].id,"active");
- assert.deepEqual(original.map(x=>x.id),["first","second","active"]);
-});
 test("history is a genuinely separate panel with faithful evidence disclaimers and native actions",()=>{
  const a=completed("first"),b=completed("second");
  const html=historyHTML([a,b],packages,{status:"all",sort:"newest",search:""},false,false,"");

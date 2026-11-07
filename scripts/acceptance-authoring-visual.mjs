@@ -1,17 +1,15 @@
 /** P47-5C screenshot-first, offline user-facing Library editor journey.
  * Targeted screenshots are diagnostic evidence, not v11 parity fixtures.
  */
-import {mkdir} from "node:fs/promises";
+import {captureVisualEvidence} from "./browser/visual-evidence.mjs";
 import {openHarness,check,assertNoOverflow} from "./browser/fixtures.mjs";
 const engine=process.argv[2]??"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
-const output="artifacts/p47-5c-visual";await mkdir(output,{recursive:true});
+const output="artifacts/p47-5c-visual";
 const {page,errors}=await h.open({viewport:{width:1366,height:900},colorScheme:"light"});
 const external=[];
 page.on("request",r=>{if(/^https?:/i.test(r.url()))external.push(r.url());});
-const shot=async name=>{
- await page.screenshot({path:output+"/"+engine+"-"+name+".png",animations:"disabled",fullPage:true});
-};
+const shot=async name=>captureVisualEvidence(page,output+"/"+engine+"-"+name+".png",{fullPage:true});
 const open=async()=>{
  await page.locator("#g-author-open").click();
  await page.locator("#pd-author-editor wg-content").waitFor({state:"visible",timeout:18000});

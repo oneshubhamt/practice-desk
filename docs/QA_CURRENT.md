@@ -37,3 +37,20 @@ Screenshots only on failure or focused visual-review request; avoid legacy v11 p
 Use one source-mapped real browser runner per engine: **32 Chromium, 20 Firefox, 20 WebKit** original acceptance scripts, each in independently closed contexts. The common test harness pools the browser process but not the page/IndexedDB profile; every failure is fatal and yields a per-scenario report. The static syntax test still checks each underlying script. Diagnostic benchmarks (`node scripts/benchmark-storage.mjs`, `node scripts/benchmark-p48-heterogeneous.mjs`, `node scripts/benchmark-ui-coordinator.mjs`) are intentionally **manual**, not gating verification. P61-C changes no product source or user-facing app contracts. See [source→scenario trace](TEST_SUITE_LEDGER.md). Actual CI job timings must be added only after the exact-source run.
 
 **Measured P61-C verification (7 Nov 2026):** [five-job exact-source run 42331170060](https://github.com/oneshubhamt/practice-desk/actions/runs/42331170060) successful at `619a2671d86ea588ba9f0a34ee8ec9b24d34c01a`. Full suite execution: 32 Chromium + 20 Firefox + 20 Linux WebKit retained, one pooled browser per engine; source-verified publishing succeeded. Previous 351-second workflow ran in 305 seconds (single-run 13.1% improvement). See [P61 implementation ledger](TEST_SUITE_LEDGER.md) for per-job timings, caveats and remaining 400/200 WebKit scale bottleneck.
+
+## P61-D scenario and visual QA commands
+
+The History filter suite now uses an independent 128-query reference model (24 distinct frozen metadata combinations). Browser journeys still run all 72 scenarios and retain failure screenshots.
+
+Normal CI/local run (no routine successful image captures):
+```bash
+npm run check
+node scripts/acceptance-suite.mjs chromium
+```
+
+For intentional visual review only:
+```bash
+PRACTICE_DESK_VISUAL_REVIEW=1 node scripts/acceptance-suite.mjs chromium
+```
+
+The historical vendor feasibility probe scripts are archived at the pre-P61-D commit; they were not current-app CI gates. The standalone diagnostic benchmarks remain explicit/manual. Full evidence and de-duplication mapping are in [TEST_SUITE_LEDGER.md](TEST_SUITE_LEDGER.md).

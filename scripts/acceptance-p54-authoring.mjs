@@ -2,7 +2,7 @@
  * → one-section-at-a-time timer editing→publish→partial-mark exam→result.
  * Not a screenshot-only or localStorage-field-only acceptance.
  */
-import {mkdir} from "node:fs/promises";
+import {captureVisualEvidence} from "./browser/visual-evidence.mjs";
 import {openHarness,route,check,records,assertNoOverflow} from "./browser/fixtures.mjs";
 import {newAuthoringDraft,newAuthoringQuestion} from "../src/authoring/authoring-draft.ts";
 import {plainRichDocument} from "../src/domain/rich-document.ts";
@@ -16,8 +16,8 @@ const {page,context,errors}=await h.open({
   void dialog.accept();
  }
 });
-const dir="artifacts/p54-authoring";await mkdir(dir,{recursive:true});
-const shot=async(label)=>page.screenshot({path:dir+"/"+engine+"-"+label+".png",animations:"disabled",fullPage:true});
+const dir="artifacts/p54-authoring";
+const shot=async(label)=>captureVisualEvidence(page,dir+"/"+engine+"-"+label+".png",{fullPage:true});
 const P=s=>plainRichDocument(s);
 const answers=[
  ["multiple-select","A,C","Specialised"],

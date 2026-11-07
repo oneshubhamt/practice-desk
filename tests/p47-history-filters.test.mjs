@@ -22,21 +22,61 @@ const base=()=>[
  mk("cat-earlier","cat",Date.UTC(2026,10,2,18,1),true),
 ];
 const ids=(list)=>list.map(x=>x.id);
-test("P47-2 combines exam ID, exact mode, frozen paper, status, search and sort with AND",()=>{
- const attempts=base();
- const clone={...attempts[2],id:"variant-mode",frozen:{...attempts[2].frozen,
-   snapshot:{...attempts[2].frozen.snapshot,mode:"full-paper-practice"}}};
- const all=[...attempts,clone],pack=new Map();
- const q={...DEFAULT_HISTORY_QUERY,examId:"upsc-epfo-apfc",mode:"custom-practice",
-   paperRevisionId:clone.frozen.paper.id,status:"progress",search:"paper"};
- // Plain fixture paper ID is 'paper'; text-search searches frozen paperId, not synthetic ID.
- assert.deepEqual(ids(filteredHistory(all,pack,q)),["apfc"]);
- assert.deepEqual(ids(filteredHistory(all,pack,{...q,mode:"full-paper-practice"})),["variant-mode"]);
- assert.deepEqual(filteredHistory(all,pack,{...q,examId:"cat"}),[]);
- assert.deepEqual(ids(filteredHistory(all,pack,{...DEFAULT_HISTORY_QUERY,status:"complete",sort:"oldest"})),
-   ["cat-earlier","cat","pgdba"]);
- assert.deepEqual(ids(filteredHistory(all,pack,{...DEFAULT_HISTORY_QUERY,search:"never-matched"})),[]);
+
+/** Reference model: 128 seeded conjunctions over frozen exam/mode/paper/status
+ * values. The expected filter and comparator are independently coded rather
+ * than calling production helpers. Each case is reproducible by iteration.
+ */
+test("History model: 128 seeded combinations preserve AND semantics, exact identity, stable order and records",()=>{
+ let seed=0x47a71c2d;
+ const next=n=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed%n;};
+ const exams=["cat","upsc-epfo-apfc","pgdba"],modes=["custom-practice","full-paper-practice"];
+ const papers=["frozen-paper-1","frozen-paper-2"];
+ const attempts=[];
+ const questionMap=new Map(pkg.questions.map(q=>[q.id,q]));
+ for(let i=0;i<24;i++){
+  const examId=exams[i%exams.length],bundle={...pkg,examId};
+  const startedAt=Date.UTC(2026,10,3,12,0)+Math.floor(i/2)*60000;
+  let attempt=startGenericAttempt(bundle,"model-"+String(23-i).padStart(2,"0"),startedAt);
+  if(Math.floor(i/12)===0)attempt=transitionGenericAttempt(attempt,
+   {type:"SUBMIT_ATTEMPT",nowMs:startedAt+1000},questionMap);
+  attempt={...attempt,frozen:{...attempt.frozen,
+   paper:{...attempt.frozen.paper,id:papers[Math.floor(i/6)%2],paperId:"practice-paper-"+(Math.floor(i/6)%2)},
+   snapshot:{...attempt.frozen.snapshot,examId,mode:modes[Math.floor(i/3)%2]}
+  }};
+  attempts.push(attempt);
+ }
+ const baseline=structuredClone(attempts);
+ const combinations=new Set(attempts.map(a=>[a.frozen.snapshot.examId,a.frozen.snapshot.mode,
+  a.frozen.paper.id,a.finishedAt!==null].join("|"));
+ assert.equal(combinations.size,24,"the model must span the full exam×mode×paper×status product");
+ const packages=new Map(); // removed package: frozen metadata must be authoritative
+ const terms=["","practice","paper","custom","source","never-found","r1"];
+ for(let iteration=0;iteration<128;iteration++){
+  const examId=next(5)===0?"all":exams[next(exams.length)];
+  const mode=next(4)===0?"all":modes[next(modes.length)];
+  const paperRevisionId=next(4)===0?"all":papers[next(papers.length)];
+  const status=["all","complete","progress"][next(3)];
+  const sort=next(2)===0?"newest":"oldest";
+  const search=terms[next(terms.length)];
+  const query={...DEFAULT_HISTORY_QUERY,examId,mode,paperRevisionId,status,sort,search};
+  const actual=filteredHistory(attempts,packages,query);
+  const expected=attempts.filter(a=>{
+   const f=a.frozen,completed=a.finishedAt!==null;
+   const text=(f.paper.paperId+" · Practice "+f.snapshot.mode+" "+f.paper.edition).toLowerCase();
+   return (paperRevisionId==="all"||f.paper.id===paperRevisionId)
+     &&(examId==="all"||f.snapshot.examId===examId)
+     &&(mode==="all"||f.snapshot.mode===mode)
+     &&(status==="all"||completed===(status==="complete"))
+     &&(!search||text.includes(search));
+  }).sort((a,b)=>(
+   sort==="oldest"?a.startedAt-b.startedAt:b.startedAt-a.startedAt
+  )||a.id.localeCompare(b.id));
+  assert.deepEqual(ids(actual),ids(expected),"model iteration "+iteration+" / "+JSON.stringify(query));
+ }
+ assert.deepEqual(attempts,baseline,"History queries modified source, signed keys or scores");
 });
+
 test("P47-2 frozen exam/mode filter survives removal of its imported package",()=>{
  const records=base(),pack=new Map();
  assert.deepEqual(ids(filteredHistory(records,pack,{...DEFAULT_HISTORY_QUERY,examId:"pgdba"})),["pgdba"]);
@@ -85,14 +125,6 @@ test("P47-2 leap day, noncalendar dates, malformed strings and reversed ranges f
  const html=historyHTML(base(),new Map(),reversed,false,false,"");
  assert.match(html,/id="g-history-filter-error" role="alert"/);
  assert.match(html,/0 of 4 records shown/);
-});
-test("P47-2 stable same-start ordering and no input mutation",()=>{
- const records=base();
- const same=records.map((x,i)=>({...x,startedAt:123456,id:["z","c","a","d"][i]}));
- const original=structuredClone(same);
- assert.deepEqual(ids(filteredHistory(same,new Map(),DEFAULT_HISTORY_QUERY)),["a","c","d","z"]);
- assert.deepEqual(ids(filteredHistory(same,new Map(),{...DEFAULT_HISTORY_QUERY,sort:"oldest"})),["a","c","d","z"]);
- assert.deepEqual(same,original);
 });
 test("P47-2 Reset and active count distinguish sort order from limiting filters",()=>{
  assert.equal(activeHistoryFilterCount(DEFAULT_HISTORY_QUERY),0);

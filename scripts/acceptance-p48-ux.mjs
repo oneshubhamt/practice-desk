@@ -2,13 +2,12 @@
 import {openHarness,check,route,records,assertNoOverflow} from "./browser/fixtures.mjs";
 import {chooseModernPaper} from "./paper-select.mjs";
 import {pkg as sixKinds} from "../tests/fixtures/six-kinds.mjs";
-import {mkdir} from "node:fs/promises";
+import {captureVisualEvidence} from "./browser/visual-evidence.mjs";
 const engine=process.argv[2]??"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/p48-3-ux"});
 const {page,context,errors}=await h.open({viewport:{width:1366,height:900}});
 const out="artifacts/p48-3-ux";
 try{
- await mkdir(out,{recursive:true});
  await page.locator("#g-file").setInputFiles({name:"p48-six-kinds.json",
   mimeType:"application/json",buffer:Buffer.from(JSON.stringify(sixKinds))});
  await chooseModernPaper(page,sixKinds.paper.id);
@@ -60,10 +59,10 @@ try{
     saved.result.snapshot.earnedMarks===originalScore,
     engine+" manual draft not safely committed separately from frozen score");
  await assertNoOverflow(page,engine+" result desktop");
- await page.screenshot({path:out+"/"+engine+"-result-desktop.png",fullPage:true,animations:"disabled"});
+ await captureVisualEvidence(page,out+"/"+engine+"-result-desktop.png",{fullPage:true});
  await page.setViewportSize({width:390,height:844});
  await assertNoOverflow(page,engine+" result phone");
- await page.screenshot({path:out+"/"+engine+"-result-phone.png",fullPage:true,animations:"disabled"});
+ await captureVisualEvidence(page,out+"/"+engine+"-result-phone.png",{fullPage:true});
  await page.locator("#g-library").click();await route(page,"library");
  await page.evaluate(()=>{window.__p48Picker=document.querySelector(".home-picker");});
  await page.locator("#g-untimed").check();
@@ -83,13 +82,13 @@ try{
    await page.locator("#g-author-open").count()===1,
    engine+" closing Wordgard did not restore Library");
  await assertNoOverflow(page,engine+" Library phone");
- await page.screenshot({path:out+"/"+engine+"-library-phone.png",fullPage:true,animations:"disabled"});
+ await captureVisualEvidence(page,out+"/"+engine+"-library-phone.png",{fullPage:true});
  await page.setViewportSize({width:195,height:844});
  await page.locator("#displayTrigger").click();
  for(let i=0;i<8;i++)await page.locator("#fontMore").click();
  await page.keyboard.press("Escape");
  await assertNoOverflow(page,engine+" narrow 195px/140% Library");
- await page.screenshot({path:out+"/"+engine+"-library-narrow.png",fullPage:true,animations:"disabled"});
+ await captureVisualEvidence(page,out+"/"+engine+"-library-narrow.png",{fullPage:true});
  check(errors.length===0,engine+" browser errors "+errors.join("; "));
  console.log("P48-3 UX "+engine+" PASS: retained Result/Library, transient/manual grade, Wordgard lifecycle, no overflow");
 }catch(error){await h.diagnose("p48-3-ux-"+engine,page,error);throw error;}

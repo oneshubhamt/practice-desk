@@ -6,6 +6,7 @@
 import {openHarness,route,check,records,assertNoOverflow} from "./browser/fixtures.mjs";
 import {makeP58cSources,stageOf,P58C_KINDS} from "./p58c-synthetic-fixture.mjs";
 import {readFile,mkdir,writeFile} from "node:fs/promises";
+import {captureVisualEvidence} from "./browser/visual-evidence.mjs";
 import {performance} from "node:perf_hooks";
 const engine=process.argv[2]??"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/p58c-scale"});
@@ -33,11 +34,7 @@ async function maxScale(){
   engine+" did not reach 140% in-app text limit");
  await page.locator("#displayClose").click();
 }
-const screenshot=async(name)=>{
- await mkdir("artifacts/p58c-scale",{recursive:true});
- await page.screenshot({path:"artifacts/p58c-scale/"+engine+"-"+name+".png",
-  animations:"disabled",fullPage:false});
-};
+const screenshot=async(name)=>captureVisualEvidence(page,"artifacts/p58c-scale/"+engine+"-"+name+".png",{fullPage:false});
 const diagnoseNarrowLayout=async(name)=>{
  const report=await page.evaluate(()=>{
   const width=document.documentElement.clientWidth,scroll=document.documentElement.scrollWidth;

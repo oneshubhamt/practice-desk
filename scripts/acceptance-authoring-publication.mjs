@@ -1,15 +1,15 @@
 /** P47-5D actual file:// Library author → validate → immutable publish → score → review.
  * Captures focused, user-facing screenshots, not v11 parity images.
  */
-import {mkdir} from "node:fs/promises";
+import {captureVisualEvidence} from "./browser/visual-evidence.mjs";
 import {openHarness,route,check,assertNoOverflow,records} from "./browser/fixtures.mjs";
 const engine=process.argv[2]??"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
-const dir="artifacts/p47-5d-publish";await mkdir(dir,{recursive:true});
+const dir="artifacts/p47-5d-publish";
 const {page,errors}=await h.open({viewport:{width:1280,height:830},colorScheme:"light"});
 const requestUrls=[];
 page.on("request",r=>{if(/^https?:/i.test(r.url()))requestUrls.push(r.url());});
-const shot=async name=>page.screenshot({path:dir+"/"+engine+"-"+name+".png",animations:"disabled",fullPage:true});
+const shot=async name=>captureVisualEvidence(page,dir+"/"+engine+"-"+name+".png",{fullPage:true});
 async function fillField(field,text){
  await page.locator("#pd-author-field").selectOption(field);
  await page.locator("#pd-author-editor wg-content").waitFor({state:"visible"});

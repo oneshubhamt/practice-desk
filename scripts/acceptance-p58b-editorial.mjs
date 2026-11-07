@@ -2,7 +2,8 @@
  * iterative selection, lossless fresh import and separately recoverable backups.
  */
 import {openHarness,route,check,records,assertNoOverflow} from "./browser/fixtures.mjs";
-import {readFile,mkdir} from "node:fs/promises";
+import {readFile} from "node:fs/promises";
+import {captureVisualEvidence} from "./browser/visual-evidence.mjs";
 const engine=process.argv[2]??"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/p58b-editorial"});
 const {page,errors}=await h.open({viewport:{width:1280,height:850}});
@@ -120,9 +121,7 @@ try{
  check(!(await page.locator("#fontMore").isEnabled()),engine+" display scale did not reach 140% cap");
  await page.locator("#displayClose").click();
  await assertNoOverflow(page,engine+" P58-B Wordgard evidence editor 195px/140%");
- await mkdir("artifacts/p58b-editorial",{recursive:true});
- await page.screenshot({path:"artifacts/p58b-editorial/"+engine+"-source-evidence-195.png",
-  animations:"disabled",fullPage:true});
+ await captureVisualEvidence(page,"artifacts/p58b-editorial/"+engine+"-source-evidence-195.png",{fullPage:true});
  await page.setViewportSize({width:1280,height:850});
 
  // Per-draft exchange is distinct from AI source v1; every field round-trips.

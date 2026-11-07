@@ -93,3 +93,35 @@ Both original scenario bodies, page-level assertions, URL identity, save/reload/
 These are **two observed CI runs**, not a controlled benchmark or proof of steady-state percentage improvement. In the successful WebKit run, the 400-staged/200-published `acceptance-p58c-scale` scenario alone took about 64 seconds, and is now the clearest remaining critical-path bottleneck. It retains distinct cross-browser scale, export/restore, editing, concurrent-tab, scoring and 195px/140% user-interface assertions: **do not silently drop it just to improve a dashboard percentage**. A follow-on re-engineering pass would need an independently mapped Node+browser oracle, real WebKit coverage and measurable performance proof before adjusting its scope or sharding.
 
 **Next evidence-driven work (NOT implemented by P61-C):** (a) claim-by-claim duplicate test classification to retire only genuinely redundant assertions; (b) review the unused `acceptance-p47-5a-vendors.mjs` and standalone `probe-p47-vendors.mjs` as historical vendor feasibility tools, checking whether current *real app* editor/KaTeX suites supersede their unique checks; (c) gate success-only screenshots behind deliberate visual-review mode while retaining automatic failure images; (d) decide whether heavy WebKit scale needs smarter orchestration rather than lower coverage. Source files under `src/`, scoring, original questions, backup, local histories, P60 unresolved issues, physical-device/release gates and branch merges remain untouched.
+
+## P61-D — independent History reference model and lean visual evidence (7 November 2026)
+
+**Status:** Changes committed for CI; do not mark verified until exact-source five-job workflow is green.
+
+### Semantic assertion migration, not mere file concatenation
+
+Three narrower overlapping tests were retired:
+- tests/ui-and-navigation.test.mjs: dedicated history filters/sorts completed and in-progress records without mutating source
+- tests/p47-history-filters.test.mjs: combines exam ID, exact mode, frozen paper, status, search and sort with AND
+- tests/p47-history-filters.test.mjs: stable same-start ordering and no input mutation
+
+**Successor:** `tests/p47-history-filters.test.mjs` now contains a **128-query deterministic model oracle** against an independently written reference predicate/sorter. It constructs all **24 combinations** of three exam IDs × two modes × two immutable paper IDs × two completion states, including identical timestamps that test stable ID tie-breaking. The oracle compares returned attempt IDs with independently selected/sorted records and asserts the entire frozen input is unchanged. Original focused tests for inclusive time-zone-sensitive dates, invalid dates, restored-session rejection, missing imported packages, reset/filter counts and aggregate History metrics remain separate. The existing `history-and-persistence.test.mjs` still exercises Source/Reviewed distinctions and HTML-backed storage indicators.
+
+**Original source:** [baseline commit `e7cdd844a6e009fb5710098234345b3b711323d5`](https://github.com/oneshubhamt/practice-desk/tree/e7cdd844a6e009fb5710098234345b3b711323d5); no source test bodies are permanently lost from Git history. This removes three narrow test registrations and adds one stronger model (net −2 registrations), while preserving all distinct P0/P1 invariants.
+
+### Browser screenshots: correct default behaviour
+
+Seven existing real-browser journey scripts previously generated **25 routine screenshots at seven scripts' call sites per engine** without pixel assertions; none were necessary for the green CI gate, which no longer uploads routine success images. Their capture calls now route through the test-only `scripts/browser/visual-evidence.mjs`. Default: **zero green screenshots**. `PRACTICE_DESK_VISUAL_REVIEW=1 node scripts/acceptance-suite.mjs chromium` explicitly enables the same intended manual review snapshots. Geometry, 195px/140% responsive, contrast, editor, score, frozen data and other assertions remain always-on. Existing per-scenario `h.diagnose()` still captures unexpected failures. Two Node tests independently verify the opt-in gate, no default capture and a real opt-in screenshot mock path. No changes to the app's own image handling.
+
+### Historical vendor feasibility retirement (not production QA)
+
+- `scripts/probe-p47-vendors.mjs` was a one-off bundle-size/vendor feasibility experiment and explicitly not production inclusion.
+- `scripts/acceptance-p47-5a-vendors.mjs` was an **unused**, never-CI-invoked disposable browser probe, requiring its separately generated HTML fixture. It tested a raw vendor editor, **not** the actual Practice Desk authoring UI. The vendor-only undo-button experiment is intentionally archival, **not** claimed as a live application undo test. Live app Wordgard, table creation, TeX/MathML, mount/unmount and offline flows are covered by the existing real-browser `acceptance-authoring-visual`, `acceptance-authoring-publication`, `acceptance-p47-math`, and `acceptance-p54-authoring` suites.
+- Both programs remain fully available at the [immutable baseline](https://github.com/oneshubhamt/practice-desk/tree/e7cdd844a6e009fb5710098234345b3b711323d5) for a future opt-in vendor microbenchmark if needed. **No executed CI scenario or application feature was removed.**
+
+### Exact-source acceptance criteria
+
+- 40 prior root Node tests plus new visual evidence test: 41 files in `tests/` ending `.test.mjs`; three retired registrations plus one History reference-model and two visual-evidence tests = net unchanged test registrations overall, with stronger oracle and fewer redundant test cases.
+- Browser runner still validates and executes **32 Chromium + 20 Firefox + 20 WebKit = 72 mandatory real-browser scenarios**. Its auto-discovery excludes the historical vendor probe already, so removing it is not a silent test skip.
+- Test-only screenshots must default to off and opt in exactly when requested; on unexpected browser failure `h.diagnose()` remains enabled.
+- Compare against previous [full-green P61-C run](https://github.com/oneshubhamt/practice-desk/actions/runs/42331170060), overall **305 s**; browser job times Chromium **161 s**, Firefox **104 s**, WebKit **243 s**. Do not claim any new speedup before a fresh exact-SHA run.
