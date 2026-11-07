@@ -163,3 +163,15 @@ Compared with the earlier P61-B [351-second baseline](https://github.com/oneshub
 - In the five changed modules, expected source length falls by about **5.8 KB**. The authoring-to-scoring publication and learning-to-revision fixtures now execute only **once** each instead of constructing two equivalent source records; exact original assertions remain in the surviving tests. The 200-case scoring oracle, 250×150 CAS model, 200-case merge reference, 128-case rich validation, and actual three-engine browser witnesses stay intact.
 - No changes to application code (`src/`), production import/authoring rules, FSRS, frozen records, exams, historical banks, CI thresholds, or guarded publication. Existing **32 Chromium + 20 Firefox + 20 Linux WebKit** acceptance journeys remain the regression gate.
 - QA claim must be supported by exact-commit GitHub Actions result: strict Node/TypeScript/build, 422/422 Node tests (if all pass), 72/72 real browser journeys, guarded source-verified HTML publication. If a moved assertion fails, fix the test or reject the consolidation, **not** the production logic or a distinct invariant.
+
+### P61-E final exact-source QA — PASS
+
+**[GitHub Actions run 42370584683](https://github.com/oneshubhamt/practice-desk/actions/runs/42370584683)** independently ran the five-job gate for [`741c19d257c2c6254810a43d0cb85dd7102c8426`](https://github.com/oneshubhamt/practice-desk/commit/741c19d257c2c6254810a43d0cb85dd7102c8426).
+
+- Node 24 TypeScript, reproducible build and Node contracts: **422/422 passed**. Verified in the job log.
+- Real offline browser assertion journeys: **32/32 Chromium**, **20/20 Firefox**, **20/20 Linux WebKit**, each with one pooled browser launch and explicit per-scenario PASS records in the respective logs (72/72 total).
+- Guarded publisher: **PASS**, after all other jobs succeeded.
+- Whole workflow wall time: **261 seconds**; baseline previous P61-D 267 seconds. One-run difference **6 seconds (2.2%)**, not a trustworthy steady-state latency claim. The meaningful improvement in this pass is **ten genuinely overlapping case registrations retired and reused integration fixtures**, not advertised CI speed.
+- Git compare from P61-D source `24831f7bd475e042cfa8b12529b6c462201022d8` to `741c19d257c2c6254810a43d0cb85dd7102c8426` confirmed changes only to **five `tests/` files and two documentation files**: zero changes to `src/`, question content, CI, scripts, compiled HTML or releases.
+
+**Residual programme:** P61-E is closed with measurable duplicate retirement. The overall semantic test-bench consolidation remains iterative: remaining domain tests must be mapped case by case before further retirement; distinct browser/real PDF/full-scale/recovery/FSRS/safety coverage must never be removed for a lower suite count. Current pass does not claim to solve any deferred P60 application defects or actual physical Safari/accessibility verification.

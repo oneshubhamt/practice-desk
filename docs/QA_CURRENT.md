@@ -60,3 +60,5 @@ The historical vendor feasibility probe scripts are archived at the pre-P61-D co
 ### P61-E semantic coverage pass (pending exact-source verification)
 
 Working focus is retiring 10 genuinely overlapping examples, retaining the stronger 200-seed independent scoring oracle, 250×150 CAS model, 200-seed storage merge reference, 128-case rich text model and both the published/scored and measured/revision integration contracts. See [evidence map](TEST_SUITE_LEDGER.md). Full strict+3-engine CI and guarded source publisher are required before the P61-E pass may be called green. No production source code changed.
+
+**Verified P61-E:** [CI 42370584683](https://github.com/oneshubhamt/practice-desk/actions/runs/42370584683) passed on source commit `741c19d257c2c6254810a43d0cb85dd7102c8426`: 422/422 Node tests; full 32 Chromium/20 Firefox/20 Linux WebKit browser journeys; guarded source publisher. See [assertion-retirement map](TEST_SUITE_LEDGER.md) for the ten retired examples and stronger replacements. Full workflow 261 s versus P61-D 267 s (individual run observations; no performance guarantee). No production code changes.
