@@ -471,17 +471,7 @@ test("G02: manual expiry freezes answers and elapsed time until an explicit cont
  assert.doesNotThrow(()=>validateGenericStoredRecord(a));
 });
 
-test("G02 adjacent: automatic sectional expiry still advances across overshoot; early submission works",()=>{
- const b=bundleWith({timing:{kind:"sectional",transition:"automatic",allowEarlySubmit:true,pausePolicy:"forbidden",
-  sectionLimits:[{sectionId:"s1",durationMs:100},{sectionId:"s2",durationMs:200}]}});
- let s=transition(b.paper,startSession(b.paper,0),evt("TICK",150));
- assert.equal(s.status,"running");
- assert.equal(s.sectionIndex,1);
- assert.equal(s.elapsedMs,150);
- s=transition(b.paper,s,evt("SUBMIT_SECTION",151));
- assert.equal(s.status,"completed");
- assert.equal(s.elapsedMs,151);
-});
+
 
 test("G02 extra: no-deadline sectional sections can always be finished explicitly",()=>{
  const b=bundleWith({timing:{kind:"sectional",transition:"automatic",allowEarlySubmit:false,pausePolicy:"forbidden",
@@ -667,24 +657,7 @@ test("seeded independent scoring reference: precedence, marks ledger, verdicts, 
  }
 });
 
-test("all six answer kinds and written pending have a frozen automated ceiling",()=>{
- const typed=[
-  {kind:"single-choice",optionId:"a"},
-  {kind:"multiple-select",optionIds:["x","z"]},
-  {kind:"numeric-entry",value:3.5},
-  {kind:"true-false",value:true},
-  {kind:"matching",pairs:[{leftId:"l1",rightId:"r1"},{leftId:"l2",rightId:"r2"}]},
-  {kind:"free-response",text:"An assessable explanation."},
- ];
- const response=typed.map((row,i)=>({questionRevisionId:questions[i].id,response:row}));
- const result=scoreAttempt(pkg.paper,pkg.answerKey,questions,response,"2026-11-01T00:00:00Z");
- assert.deepEqual(result.items.map(row=>row.verdict),
-  ["correct","correct","correct","correct","correct","pending"]);
- approx(result.snapshot.earnedMarks,10,"five automatically marked answers");
- approx(scoreableMaximum(pkg.paper,pkg.answerKey,questions),10,"exclude pending writing from maximum");
- assert.equal(result.snapshot.correctCount,5);
- assert.equal(result.items[5].marks,0);
-});
+
 
 test("partial-credit cap and conservative penalty floor hold under adversarial component rules",()=>{
  const section={id:"s",questionRevisionIds:["rev-1","rev-4"]};

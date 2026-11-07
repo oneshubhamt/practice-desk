@@ -420,15 +420,7 @@ test("engine response validator gates six kinds independently from UI controls",
   validateResponse(negative,{kind:"numeric-entry",value}),undefined,"boundary NAT "+value);
 });
 
-test("validated advanced six-kind package still retains manual grading separation",()=>{
- assert.equal(validateExamPackage(pkg),pkg);
- const response=[{questionRevisionId:"rev-5",response:{kind:"free-response",text:"Essay"}}];
- const result=scoreAttempt(pkg.paper,pkg.answerKey,questions,response,"T");
- assert.equal(result.items[5].verdict,"pending");
- assert.equal(result.items[5].marks,0);
- assert.equal(result.snapshot.unansweredCount,5);
- assert.equal(scoreableMaximum(pkg.paper,pkg.answerKey,questions),10);
-});
+
 }
 
 

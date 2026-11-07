@@ -310,18 +310,7 @@ test("SHA-256 standard vectors and UTF-8",()=>{
  assert.equal(sha256(""),"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
  assert.equal(sha256("The quick brown fox jumps over the lazy dog"),"d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592");
 });
-test("complete backup v4 preserves records and preferences",()=>{
- const rows=[{id:"opaque-note",recordType:"generic-note",finishedAt:null},
-  {id:"paper",recordType:"generic-package"},{id:"learn",recordType:"learning-card"}];
- const backup=makeBackup(rows,preferences,"2026-10-29T11:00:00Z");
- assert.deepEqual(verifyBackup(JSON.parse(JSON.stringify(backup))),backup);
- assert.equal(backup.records.length,3);
- assert.deepEqual(backup.preferences,preferences);
- const corrupt=JSON.parse(JSON.stringify(backup));corrupt.records[0].finishedAt=999;
- assert.throws(()=>verifyBackup(corrupt),/integrity/);
- assert.throws(()=>verifyBackup({...backup,records:backup.records.slice(1)}),/integrity/);
- assert.throws(()=>verifyBackup(makeBackup([{id:"x"},{id:"x"}],preferences,backup.exportedAt)),/records/);
-});
+
 test("preferences import validates range and type",()=>{
  assert.deepEqual(validateDisplayPreferences(preferences),preferences);
  assert.throws(()=>validateDisplayPreferences({schema:1,dark:false,scale:999}),/preferences/);
@@ -393,6 +382,21 @@ test("generated additive merge is deterministic, idempotent, ordered and non-des
 });
 
 test("backup v4 checksum covers records and preferences; size, IDs and timestamp are bounded",()=>{
+ // The reference property also verifies unlike record types in one v4 archive.
+ // This replaces the separate three-record illustrative backup test.
+ const heterogeneous=[
+  {id:"opaque-note",recordType:"generic-note",finishedAt:null},
+  {id:"paper",recordType:"generic-package"},
+  {id:"learn",recordType:"learning-card"}
+ ];
+ const mixed=makeBackup(heterogeneous,preferences,"2026-10-29T11:00:00Z");
+ assert.deepEqual(verifyBackup(JSON.parse(JSON.stringify(mixed))),mixed);
+ assert.deepEqual(mixed.records,heterogeneous);
+ assert.deepEqual(mixed.preferences,preferences);
+ const changed=structuredClone(mixed);
+ changed.records[0].finishedAt=999;
+ assert.throws(()=>verifyBackup(changed),/integrity/);
+
  for(let count of [0,1,7,101,5000]){
   const records=Array.from({length:count},(_,i)=>({id:"r"+i,recordType:"opaque",answer:i%4}));
   const b=makeBackup(records,preferences,at);
@@ -490,27 +494,60 @@ test("recover from clock rollback without assigning negative time",()=>{
  assert.equal(restored.state.elapsedMs,0);
  assert.equal(restored.state.clockMs,4000);
 });
-test("completed record always defeats stale active mirror",()=>{
+
+
+
+
+
+
+/** Independent, exhaustive cross-product reference for the saved-vs-mirror
+ * precedence contract. The original three hand-picked checks are retained
+ * at the end as deterministic historical boundary witnesses.
+ */
+test("Recovery reference: 576 persisted/mirror precedence combinations, missing IDs, terminal and revision boundaries",()=>{
+ const revisions=[undefined,0,8,9],finished=[null,90],timestamps=[null,100,200];
+ let checked=0;
+ for(const sr of revisions)for(const mr of revisions)
+ for(const sf of finished)for(const mf of finished)
+ for(const st of timestamps)for(const mt of timestamps){
+  const stored={id:"same",startedAt:1,finishedAt:sf,updatedAt:st,saveRevision:sr};
+  const mirror={id:"same",startedAt:1,finishedAt:mf,updatedAt:mt,saveRevision:mr};
+  const savedBefore=structuredClone(stored),mirrorBefore=structuredClone(mirror);
+  // Separate reference matrix: protected persisted revision wins first;
+  // otherwise terminality wins; a timestamp is only a final tiebreaker.
+  let expected;
+  if(Number.isSafeInteger(sr)&&Number.isSafeInteger(mr)&&sr>=mr)
+   expected=stored;
+  else{
+   const terminal=Number(Boolean(sf))-Number(Boolean(mf));
+   if(terminal!==0)expected=terminal>0?stored:mirror;
+   else expected=(mt??0)>(st??0)?mirror:stored;
+  }
+  const actual=chooseRecovered(stored,mirror);
+  assert.equal(actual,expected,JSON.stringify({sr,mr,sf,mf,st,mt}));
+  assert.deepEqual(stored,savedBefore,"source record mutated");
+  assert.deepEqual(mirror,mirrorBefore,"emergency mirror mutated");
+  checked++;
+ }
+ assert.equal(checked,576);
  const stored={id:"a",startedAt:1,updatedAt:100,finishedAt:90};
  const mirror={id:"a",startedAt:1,updatedAt:110,finishedAt:null};
  assert.equal(chooseRecovered(stored,mirror),stored);
  assert.equal(chooseRecovered(mirror,stored),stored);
  assert.equal(chooseRecovered(stored,{...stored,updatedAt:120}).updatedAt,120);
-});
-
-test("revision-aware recovery cannot revive an older tab's emergency mirror",()=>{
  const persisted={id:"same",startedAt:10,updatedAt:200,finishedAt:null,saveRevision:8};
  const stale={...persisted,updatedAt:300,saveRevision:7};
  assert.equal(chooseRecovered(persisted,stale),persisted);
  assert.equal(chooseRecovered(persisted,{...stale,saveRevision:8}),persisted);
  assert.equal(chooseRecovered(persisted,{...stale,saveRevision:9}).saveRevision,9);
+ const saved={id:"a",startedAt:1,finishedAt:null,updatedAt:120,saveRevision:9};
+ const older={...saved,finishedAt:100,updatedAt:200,saveRevision:8};
+ assert.equal(chooseRecovered(saved,older),saved);
+ assert.equal(chooseRecovered(undefined,mirror),mirror);
+ assert.equal(chooseRecovered(stored,undefined),stored);
+ assert.equal(chooseRecovered(stored,{...mirror,id:"different"}),stored);
 });
 
-test("an older completed mirror cannot supersede a newer in-progress revision",()=>{
- const saved={id:"a",startedAt:1,finishedAt:null,updatedAt:120,saveRevision:9};
- const mirror={...saved,finishedAt:100,updatedAt:200,saveRevision:8};
- assert.equal(chooseRecovered(saved,mirror),saved);
-});
 }
 
 const p45test=__suite_dep_0.default;

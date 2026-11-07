@@ -53,15 +53,7 @@ test("visibility change commits the preceding visible interval exactly once", ()
   assert.equal(s.responses[0].timeSpentMs, 13000);
 });
 
-test("overshoot splits sectional timing and closes sections without double counting", () => {
-  const p = paper();
-  const s = transition(p, startSession(p, 0), evt("TICK", 5000));
-  assert.equal(s.status, "completed");
-  assert.equal(s.elapsedMs, 3000);
-  assert.deepEqual(s.completedSections, [0, 1]);
-  assert.equal(s.responses.find(r => r.questionRevisionId === "q1").timeSpentMs, 1000);
-  assert.equal(s.responses.find(r => r.questionRevisionId === "q2").timeSpentMs, 2000);
-});
+
 
 test("pause freezes countdown; resume rebases; completion is terminal", () => {
   const p = paper({ kind: "whole-paper", durationMs: 5000, pausePolicy: "allowed" });
@@ -89,16 +81,7 @@ test("locked navigation, early section submission and answer clearing", () => {
   assert.deepEqual(s.completedSections, [0]);
 });
 
-test("scoring uses explicit rules and excludes invalid questions", () => {
-  const p = paper();
-  const result = scoreAttempt(p, key, [q("q1"), q("q2", "single-choice", "invalid")], [
-    { questionRevisionId: "q1", response: { kind: "single-choice", optionId: "b" } },
-    { questionRevisionId: "q2", response: { kind: "single-choice", optionId: "b" } },
-  ], "2026-10-28T00:00:00Z");
-  assert.equal(result.snapshot.earnedMarks, -0.5);
-  assert.equal(result.snapshot.excludedCount, 1);
-  assert.equal(result.snapshot.incorrectCount, 1);
-});
+
 }
 
 // === Legacy suite: tests/session-property-model.test.mjs — 4 unchanged test registrations ===

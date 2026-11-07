@@ -17,10 +17,7 @@ const savedResponse=()=>{
   response:{kind:"single-choice",optionId:"a"}},qs);
 };
 
-test("P48-4 current legitimate timer and response rows still validate",()=>{
- assert.doesNotThrow(()=>validateGenericStoredRecord(fresh()));
- assert.doesNotThrow(()=>validateGenericStoredRecord(savedResponse()));
-});
+
 
 test("P48-4 reject impossible clock/timer snapshots before History or backup import",()=>{
  const cases=[
@@ -38,6 +35,10 @@ test("P48-4 reject impossible clock/timer snapshots before History or backup imp
   change(candidate.state);
   assert.throws(()=>validateGenericStoredRecord(candidate),/invalid|duration|time|clock|elapsed|visible|unsupported/i,name);
  }
+ // Preserve a legitimate control before checking malformed snapshots.
+ assert.doesNotThrow(()=>validateGenericStoredRecord(fresh()));
+ assert.doesNotThrow(()=>validateGenericStoredRecord(savedResponse()));
+
 });
 
 test("P48-4 reject undeclared mutable-row and session metadata irrespective of SHA source hashes",()=>{

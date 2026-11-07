@@ -175,3 +175,37 @@ Compared with the earlier P61-B [351-second baseline](https://github.com/oneshub
 - Git compare from P61-D source `24831f7bd475e042cfa8b12529b6c462201022d8` to `741c19d257c2c6254810a43d0cb85dd7102c8426` confirmed changes only to **five `tests/` files and two documentation files**: zero changes to `src/`, question content, CI, scripts, compiled HTML or releases.
 
 **Residual programme:** P61-E is closed with measurable duplicate retirement. The overall semantic test-bench consolidation remains iterative: remaining domain tests must be mapped case by case before further retirement; distinct browser/real PDF/full-scale/recovery/FSRS/safety coverage must never be removed for a lower suite count. Current pass does not claim to solve any deferred P60 application defects or actual physical Safari/accessibility verification.
+
+## P61-F — four-domain assertion ownership, property-based recovery and fixture deduplication (7 November 2026)
+
+**Pinned baseline:** [P61-E final branch commit](https://github.com/oneshubhamt/practice-desk/tree/bee1f838361c0383227a056d67a32992a60e30f8), [P61-E exact-source full-green CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42370584683): **422 Node cases** and **72 actual browser journey executions**. Original retired test bodies can be inspected at this immutable Git SHA; no information depends on descriptive deletion claims alone.
+
+### Assertion-by-assertion disposition
+
+| Domain / prior registration (exact title abbreviated) | Independent retained owner or migrated evidence | Treatment |
+|---|---|---|
+| Session: `overshoot splits sectional timing and closes sections without double counting` | `seeded sectional automatic overshoot splits exact limits and closes each section once`; `F01: automatic multi-section clock stores exactly one closure` | Retired short smoke; keep independent elapsed/response/section conservation reference |
+| Scoring: `scoring uses explicit rules and excludes invalid questions` | `seeded independent scoring reference: precedence, marks ledger, verdicts, exclusions and bounds` (200 reproducible seeds) | Retired three-assertion example; seed model checks invalid/under-review, wrong, marks, counts and bounds |
+| Session: `G02 adjacent: automatic sectional expiry still advances across overshoot; early submission works` | Seeded automatic sectional state model plus `delayed submit cannot accidentally finish the next section after a timeout` | Retired overlapping integration example; distinct manual-expiry and no-early-submit tests retained |
+| Six-kind scoring: `all six answer kinds and written pending have a frozen automated ceiling` | `a non-CGL paper completes all six response types through the same engine`, P47-5D published/scored six kinds and 90-seed six-kind analytics denominator (10 automatic marks, pending free-response, blank count) | Retired direct duplicate; kept executable engine journey and scoreable max proof |
+| Package import: `validated advanced six-kind package still retains manual grading separation` | Same actual six-kind engine journey and analytics model, plus P47-5D manual pending | Retired second direct pending/ceiling smoke |
+| Storage validation: `P48-4 current legitimate timer and response rows still validate` | Added both original positive controls to `P48-4 reject impossible clock/timer snapshots` before its negative adversarial matrix | Retired redundant standalone setup, no safety check removed |
+| Authoring: `P47-5D rejects tampered already-published mathematical/source/key hashes` | Moved all three exact negative checks into the **existing real six-kind publication** test; added a six-kind mutation loop tampering independently with each published question's prompt and asserting the authentic source is unchanged | Retired separate compilation, materially strengthened content integrity |
+| Learning: `evidence progression requires independent attempts and distinct questions` | 300-seed independent `evidenceProgression` model covers classifications/thresholds; the specific two attempts/one question, unanswered topic metrics assertions moved into `topic evidence and trends never compare different paper revisions` | Retired duplicate fixture and preserved all topic counters |
+| Storage: `complete backup v4 preserves records and preferences` | Moved exact heterogeneous note/package/learning record controls into existing 0,1,7,101,5000-record SHA-bound backup property, including modified-field rejection; duplicate IDs already checked there | Retired separate backup creation |
+| Recovery: `completed record always defeats stale active mirror` | New independent **576-combination** reference/selection contract, retaining old fixed examples verbatim | Replaced |
+| Recovery: `revision-aware recovery cannot revive an older tab's emergency mirror` | Same exhaustive model tests missing, equal, older and newer save revisions vs all terminal and updated timestamps; exact old examples retained | Replaced |
+| Recovery: `an older completed mirror cannot supersede a newer in-progress revision` | Same reference model verifies protected stored revision before completed-older mirror; original directed check retained | Replaced |
+
+The three recovery unit tests become **one property/reference-model test**. Its cross-product comprises 4 save-revision states × 4 mirror revisions × 2 completion states × 2 mirror completion states × 3 stored timestamps × 3 mirror timestamps = **576 deterministic cases**. Every case checks returned object identity and nonmutation of both inputs; the original directed boundaries plus absent/mismatched IDs remain explicit. The reference model is coded in the test and does not invoke production `chooseRecovered` to derive its expected result.
+
+### Measured static scope and mandatory evidence
+
+- **12 original individual test registrations removed, one new property test introduced**: expected Node total **422 → 411 (−11)**. Six affected Node modules in four requested domains plus `history-and-persistence`; ordinary and adversarial retained tests remain individually registered.
+- No path under `src/`, question packages, release HTML, browser runner, CI workflow or browser acceptance scripts is changed. **32 Chromium + 20 Firefox + 20 Linux WebKit** real offline journeys remain mandatory.
+- Keep the existing independent **200-seed scoring reference**, **250×150 two-tab CAS model**, **200-seed additive backup model**, **128-rich-input Unicode model** and **300-seed learning evidence progression model**. Prevent inadvertent weakening of those established guards.
+- **Verification status: pending the exact changed-commit CI**. Required evidence: 411/411 Node cases, strict TypeScript/build, all 72 source-mapped actual browser journeys and guarded verified source publisher. Only a green run may close P61-F; if model assumptions prove incorrect, repair the test oracle from real domain contract, not by suppressing checks or modifying production source.
+
+### Limitations
+
+This pass removes duplicated illustrative tests and makes recovery coverage more exhaustive; it **does not demonstrate mutation-testing percentage** or validate real Mac Safari, assistive technology or physical-device storage. Do not equate lower Node case count with stronger overall quality without comparing surviving assertion contracts. Deferred P60 product defects remain outside this programme.

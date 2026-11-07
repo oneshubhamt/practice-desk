@@ -210,6 +210,26 @@ test("P47-5D all six kinds publish as source-validated frozen rich package, with
  assert.equal(result.snapshot.incorrectCount,1);
  assert.deepEqual(result.items.map(x=>x.verdict),["correct","correct","correct","incorrect","correct","pending"]);
  assert.ok(Math.abs(result.snapshot.earnedMarks-(4*2.5-5/6))<1e-10);
+ // Six independent authored question-kind prompts must all be hash-bound:
+ // a type-specific edit can never reuse another question or key's signature.
+ const publishedBytes=JSON.stringify(pkg);
+ for(let i=0;i<pkg.questions.length;i++){
+  const edited=structuredClone(pkg);
+  edited.questions[i].content.prompt+=" [unapproved editor alteration]";
+  assert.throws(()=>validateExamPackage(edited),/hash mismatch/,
+   "authored kind="+pkg.questions[i].content.kind);
+ }
+ assert.equal(JSON.stringify(pkg),publishedBytes,"failed tamper attempts mutated signed publisher output");
+ // A single authentic publication covers all three signed-change tamper attacks.
+
+ const bad=structuredClone(pkg);
+ bad.questions[0].content.richPrompt.blocks[0].content[1].tex="\\wrongCommand";
+ assert.throws(()=>validateExamPackage(bad),/hash mismatch/);
+ const key=structuredClone(pkg);key.answerKey.entries[0].answer.optionId="D";
+ assert.throws(()=>validateExamPackage(key),/hash mismatch/);
+ const rules=structuredClone(pkg);rules.paper.scoring.defaultRule.correctMarks=100;
+ assert.throws(()=>validateExamPackage(rules),/hash mismatch/);
+
 });
 test("P47-5D authored rich fallback preserves math alt/table/image semantics without TeX parsing of literal dollars",()=>{
  const text=publicationPlainText(rich("Read $5"));
@@ -282,16 +302,7 @@ test("P47-5D authenticated local image references include only used assets",()=>
  const tampered=structuredClone(compiled);tampered.assets[0].contentHash="0".repeat(64);
  assert.throws(()=>validateExamPackage(tampered),/digest mismatch/);
 });
-test("P47-5D rejects tampered already-published mathematical/source/key hashes",()=>{
- const pkg=compileAuthoringPublication(readyDraft());
- const bad=structuredClone(pkg);
- bad.questions[0].content.richPrompt.blocks[0].content[1].tex="\\wrongCommand";
- assert.throws(()=>validateExamPackage(bad),/hash mismatch/);
- const key=structuredClone(pkg);key.answerKey.entries[0].answer.optionId="D";
- assert.throws(()=>validateExamPackage(key),/hash mismatch/);
- const rules=structuredClone(pkg);rules.paper.scoring.defaultRule.correctMarks=100;
- assert.throws(()=>validateExamPackage(rules),/hash mismatch/);
-});
+
 test("P47-5D publisher depends on domain hashes and validated packages, never editor or storage",async()=>{
  const {readFile}=await import("node:fs/promises");
  const s=await readFile(new URL("../src/authoring/authoring-publisher.ts",import.meta.url),"utf8");

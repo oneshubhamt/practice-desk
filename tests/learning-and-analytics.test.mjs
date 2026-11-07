@@ -360,6 +360,20 @@ test("topic evidence and trends never compare different paper revisions",()=>{
  assert.equal(trend[0].points.length,2);
  const different={...b,frozen:{...b.frozen,paper:{...b.frozen.paper,id:"another-revision"}}};
  assert.equal(comparableTrends([a,different]).length,2);
+ // Preserve the exact two-independent-attempt / one-question, unanswered
+ // user-topic counter case without creating a separate learning suite fixture.
+ const once=complete("topic-once"),twice={...once,id:"topic-second",startedAt:9000,finishedAt:10000};
+ const sameQuestion=addLearningCard(once,bundle.questions[0].id,new Date(1030).toISOString());
+ const topicRows=topicMetrics([once,twice],[{...sameQuestion,customTopic:"Mechanics"}]);
+ const topic=topicRows.find(x=>x.kind==="user-topic"&&x.label==="Mechanics");
+ assert.equal(topic.attempts,2);
+ assert.equal(topic.distinctQuestions,1);
+ assert.equal(topic.total,2);
+ assert.equal(topic.answered,0);
+ assert.equal(topic.answeredAttempts,0);
+ assert.equal(topic.distinctAnsweredQuestions,0);
+ assert.ok(topicRows.some(x=>x.kind==="section"));
+
 });
 test("backup preserves notes and FSRS review logs with strict integrity checks",async()=>{
  const scheduler=await DefaultScheduler();
@@ -504,26 +518,7 @@ test("pace, speed relative to a section median and marking opportunities are exa
  assert.equal(attemptEvidence(startGenericAttempt(bundle,"active",1000)),null);
 });
 
-test("evidence progression requires independent attempts and distinct questions",()=>{
- const repeated=evidenceProgression([{examId:"x",label:"Algebra",answered:20,correct:19,attempts:3,distinctQuestions:1}]);
- assert.equal(repeated[0].label,"repeated-items");
- const qualified=evidenceProgression([{examId:"x",label:"Algebra",answered:20,correct:17,attempts:3,distinctQuestions:12}]);
- assert.equal(qualified[0].label,"consistently-accurate");
- const weak=evidenceProgression([{examId:"x",label:"Algebra",answered:6,correct:6,attempts:1,distinctQuestions:6}]);
- assert.equal(weak[0].label,"insufficient");
- const base=complete("once");
- const twice={...base,id:"second",startedAt:9000,finishedAt:10000};
- const noted={...card(0),customTopic:"Mechanics"};
- const topics=topicMetrics([base,twice],[noted]);
- const topic=topics.find(x=>x.kind==="user-topic"&&x.label==="Mechanics");
- assert.equal(topic.attempts,2);
- assert.equal(topic.distinctQuestions,1);
- assert.equal(topic.total,2);
- assert.equal(topic.answered,0);
- assert.equal(topic.answeredAttempts,0);
- assert.equal(topic.distinctAnsweredQuestions,0);
- assert.ok(topics.some(x=>x.kind==="section"));
-});
+
 
 test("speed classification uses a sufficient section median and distinguishes fast mistakes",()=>{
  const group={...bundle.paper.sections[0],questionRevisionIds:bundle.questions.map(q=>q.id)};
