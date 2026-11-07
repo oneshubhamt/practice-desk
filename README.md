@@ -17,4 +17,4 @@ For agents creating banks, read [quickstart](docs/AGENT_AUTHORING_QUICKSTART.md)
 - [QA instructions](docs/QA_CURRENT.md) and [proposed lean test strategy](docs/TEST_STRATEGY.md)
 - [Historic original engineering/audit documents](docs/HISTORY_INDEX.md) retained at an immutable source commit
 
-**Status:** Existing automated software checks have historical green runs, but those runs do not prove independent question truth, actual Mac/mobile/assistive-technology use or user release approval. Current branch for this documentation-only cleanup: `Satyam`. Do not modify `main` or `baseline/v11` without authorization.
+**Status:** Existing automated software checks have historical green runs, but those runs do not prove independent question truth, actual Mac/mobile/assistive-technology use or user release approval. Current authorized P61 test-bench consolidation branch: `Satyam`. Do not modify `main` or `baseline/v11` without authorization.

@@ -1,6 +1,6 @@
-# Lean, reasoning-first test-bench redesign — PROPOSAL ONLY
+# Lean, reasoning-first test-bench redesign — ACTIVE, GATED
 
-**Status:** First source-safe implementation pass P61-A underway on 7 November 2026: five authoring-domain Node suites consolidated with exact case preservation and one additional metamorphic oracle. See [implementation ledger](TEST_SUITE_LEDGER.md). Broader browser/script/CI changes remain proposed only.
+**Status:** P61-A and P61-B implement a bounded authoring-domain Node consolidation and a native/fallback shared-browser journey; direct assertions remain mapped in [implementation ledger](TEST_SUITE_LEDGER.md). Broader duplicate-retirement, model-based test enhancement and CI performance changes remain proposed. Require exact-SHA full CI before marking each pass verified.
 
 ## Diagnosis at inspected baseline
 `Satyam` holds 45 entries in `tests/` (one fixture), 34 browser acceptance scripts and 52 `scripts/` files overall. The Node suite includes broad consolidated legacy suites plus many additional chronology-named `p47...`–`p60...` files. CI invokes many browser scripts separately, sometimes across all three engines; it also routinely uploads several screenshot/benchmark artifacts. This can make maintenance and feedback expensive. **It does not follow from counts alone that the tests are redundant or weak.** Many already use independent scoring oracles and actual multi-step journeys. First measure overlap and unique value.

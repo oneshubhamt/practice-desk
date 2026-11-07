@@ -142,8 +142,7 @@ jobs:
           path: artifacts/p47-baseline/*.json
           if-no-files-found: ignore
           retention-days: 14
-      - run: node scripts/acceptance-platform.mjs chromium
-      - run: node scripts/acceptance-safari-fallback.mjs chromium
+      - run: node scripts/acceptance-navigation.mjs chromium
       - name: P48-3 current UI screenshots (chromium)
         if: always()
         uses: actions/upload-artifact@v4
@@ -202,7 +201,7 @@ jobs:
         run: node scripts/acceptance-authoring-publication.mjs ${{ matrix.browser }}
       - name: P47-5B actual offline mathematical question/review and font safety (${{ matrix.browser }})
         run: node scripts/acceptance-p47-math.mjs ${{ matrix.browser }}
-      - run: node scripts/acceptance-platform.mjs ${{ matrix.browser }}
+      - run: node scripts/acceptance-navigation.mjs ${{ matrix.browser }}
       - name: P48 independent damaged IndexedDB partial recovery (${{ matrix.browser }})
         run: node scripts/acceptance-partial-recovery.mjs ${{ matrix.browser }}
       - name: P48-1 actual offline CSP and injection rejection (${{ matrix.browser }})
@@ -263,7 +262,6 @@ jobs:
           path: artifacts/p53-taxonomy/${{ matrix.browser }}-*.png
           if-no-files-found: ignore
           retention-days: 14
-      - run: node scripts/acceptance-safari-fallback.mjs ${{ matrix.browser }}
       - name: P48-3 current UI screenshots (${{ matrix.browser }})
         if: always()
         uses: actions/upload-artifact@v4

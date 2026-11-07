@@ -20,7 +20,7 @@ Mechanically combined the following five root test modules into [`tests/authorin
 
 Added **one new seeded 128-input metamorphic property test** asserting that literal content—including HTML-like, Unicode and math-like text—survives `plainRichDocument → validateRichDocument` without reinterpretation and validates idempotently. This tests a property, not a second copy of the implementation's expected object.
 
-**Expected structure after this pass:** 40 total `tests/` entries (39 Node `*.test.mjs` + one fixture); 34 acceptance scripts unchanged. Existing 27 test names and body assertions retained. CI confirmation must be recorded **only after** the exact changed SHA run succeeds.
+**Actual structure after P61-A:** 41 total `tests/` entries (40 Node `*.test.mjs` + one fixture); 34 acceptance scripts unchanged in P61-A. Core TypeScript/build/Node CI passed on commit [`c6dd448`](https://github.com/oneshubhamt/practice-desk/commit/c6dd44817a838ea2f75ec9d9c2c9b77df5f6552d). Existing 27 test names and body assertions retained. CI confirmation must be recorded **only after** the exact changed SHA run succeeds.
 
 ## Whole-suite coverage inventory and migration priorities
 | Contract area | Existing representative Node files | Browser witnesses | Priority |
@@ -44,3 +44,17 @@ Added **one new seeded 128-input metamorphic property test** asserting that lite
 4. **P61-E:** independent source/CI reconciliation, mutation-detection spot checks, measured runtime and coverage report; no hardware/accessibility/content truth claim.
 
 **Truth boundary:** A green test cannot independently authenticate an official PYQ, actual PDF page fidelity, legal answer key, publisher identity or physical Safari/screen-reader behaviour. Previous P60 findings remain deferred.
+
+## P61-B — one browser launch for native + absent-API routing
+
+Replaced the two formerly independent scripts below by [`scripts/acceptance-navigation.mjs`](../scripts/acceptance-navigation.mjs):
+
+| Prior browser script | Source blob | Preserved direct `check()` calls |
+|---|---|---|
+| [`acceptance-platform.mjs`](https://github.com/oneshubhamt/practice-desk/blob/c6dd44817a838ea2f75ec9d9c2c9b77df5f6552d/scripts/acceptance-platform.mjs) | `b77e7a5f64f95b1d3ac26638393da94d9ebf29ea` | 10 |
+| [`acceptance-safari-fallback.mjs`](https://github.com/oneshubhamt/practice-desk/blob/c6dd44817a838ea2f75ec9d9c2c9b77df5f6552d/scripts/acceptance-safari-fallback.mjs) | `0263b81b2a889c62a8cfcb5c3a0dfe0634be82b2` | 14 |
+| **Total** | | **24** |
+
+Both original scenario bodies, page-level assertions, URL identity, save/reload/backup, actual native browser Back/Forward and forced-absent Navigation API fallback checks are retained. Two separately isolated contexts now share one browser launch. The standalone browser is closed only after both journeys (or on failure). Old script paths are removed from the three-engine CI commands, replaced by one `acceptance-navigation.mjs <engine>` invocation per engine. No branch release/production app code is changed. **CI must pass the exact new SHA** before declaring P61-B browser verified.
+
+**Expected structure:** 40 Node test files + one fixture, 33 browser acceptance scripts, 51 scripts total; no old production CLI or genuinely distinct acceptance contract retired.
