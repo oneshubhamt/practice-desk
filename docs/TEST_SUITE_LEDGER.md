@@ -125,3 +125,18 @@ Seven existing real-browser journey scripts previously generated **25 routine sc
 - Browser runner still validates and executes **32 Chromium + 20 Firefox + 20 WebKit = 72 mandatory real-browser scenarios**. Its auto-discovery excludes the historical vendor probe already, so removing it is not a silent test skip.
 - Test-only screenshots must default to off and opt in exactly when requested; on unexpected browser failure `h.diagnose()` remains enabled.
 - Compare against previous [full-green P61-C run](https://github.com/oneshubhamt/practice-desk/actions/runs/42331170060), overall **305 s**; browser job times Chromium **161 s**, Firefox **104 s**, WebKit **243 s**. Do not claim any new speedup before a fresh exact-SHA run.
+
+### P61-D exact-source verification — PASS
+
+**[All five CI jobs succeeded — run 42361411781](https://github.com/oneshubhamt/practice-desk/actions/runs/42361411781)** for source commit [`337f1c7789a38b8cfdbcd86561b9488f2fd1fcc1`](https://github.com/oneshubhamt/practice-desk/commit/337f1c7789a38b8cfdbcd86561b9488f2fd1fcc1). Node.js 24 strict TypeScript/build/contract gate: **432/432 Node test cases green**, including the 128-query independent History model and exact screenshot opt-in contract. Three actual offline browser engines: Chromium **32/32**, Firefox **20/20**, Linux WebKit **20/20** original scenario executions green; each pool reported one browser launch with independent contexts. Guarded source-verified HTML publication green.
+
+| Observed metric | P61-C (run 42331170060) | P61-D (run 42361411781) | Change |
+|---|---:|---:|---:|
+| Full workflow created→updated | 305 s | **267 s** | **12.5% faster** |
+| Chromium job | 161 s | **141 s** | 12.4% faster |
+| Firefox job | 104 s | **98 s** | 5.8% faster |
+| Linux WebKit job | 243 s | **193 s** | 20.6% faster |
+| Mandatory browser scenarios | 72 | **72** | no loss |
+| Node test cases | — | **432 passed** | property replacement/visual opt-in verified |
+
+Compared with the earlier P61-B [351-second baseline](https://github.com/oneshubhamt/practice-desk/actions/runs/42330017407), P61-D's 267 seconds is a **23.9% one-run reduction** through P61-C+D combined. These are observations from GitHub-hosted runners under nonidentical conditions, **not controlled repeatable performance benchmarks or guarantees**. Passing runs no longer generate 25 full screenshot captures per engine; human opt-in screenshots remain supported but full real-browser opt-in image review has not separately been performed. This is real execution and storage/I/O improvement, although **the majority of test case bodies are deliberately preserved**. More genuinely redundant tests may be retired only with explicit assertion-level evidence and adversarial/model equivalents.
