@@ -209,3 +209,15 @@ The three recovery unit tests become **one property/reference-model test**. Its 
 ### Limitations
 
 This pass removes duplicated illustrative tests and makes recovery coverage more exhaustive; it **does not demonstrate mutation-testing percentage** or validate real Mac Safari, assistive technology or physical-device storage. Do not equate lower Node case count with stronger overall quality without comparing surviving assertion contracts. Deferred P60 product defects remain outside this programme.
+
+### P61-F independently verified completion — PASS
+
+**[Five-job exact-source run 42373176697](https://github.com/oneshubhamt/practice-desk/actions/runs/42373176697)**, source commit [`56a10e7cf754e90f3499ef1994bc872591d92a8f`](https://github.com/oneshubhamt/practice-desk/commit/56a10e7cf754e90f3499ef1994bc872591d92a8f), completed successfully. Read **raw execution logs**, not only UI badges:
+
+- **411/411 Node 24 tests passed**, zero failures; including the new 576-case saved/mirror reference property, six-kind authenticated publication/tamper checks, strict TypeScript and deterministic build.
+- Browser journey log entries: **Chromium 32 unique /32 expected**, **Firefox 20 unique /20 expected**, **Linux WebKit 20 unique /20 expected**. Each runner reported one shared browser launch with independent contexts. Total **72/72 actual source-mapped scenarios passed**, unchanged from P61-E.
+- Guarded source-verified standalone offline HTML publication: **passed**.
+- Raw GitHub workflow duration created→updated: **251 s**; P61-E's 261 s previously, single-run difference **10 s (~3.8%)**. Job durations: core 40 s, Chromium 169 s, Firefox 132 s, WebKit 196 s, publish 6 s. Browser process timings vary with shared GitHub runners, so do not claim reliable speed improvement; the **substantive effect** is stronger reference coverage and 11 fewer overlapping test registrations.
+- GitHub exact-source compare shows **only seven `tests/` files and two `docs/` files changed** from P61-E baseline [`bee1f838`](https://github.com/oneshubhamt/practice-desk/tree/bee1f838361c0383227a056d67a32992a60e30f8); **zero** production `src/`, question bank, acceptance-script, CI, build or release changes.
+
+P61-F can be marked **closed**. Further reductions remain an evidence-driven programme, not an instruction to delete uniquely valuable test bodies for a lower count. Native Mac Safari, mobile/assistive technology, and deferred P60 application defects were not assessed here.
