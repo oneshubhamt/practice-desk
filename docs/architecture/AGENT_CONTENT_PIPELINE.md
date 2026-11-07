@@ -1,0 +1,37 @@
+# AI-first content pipeline — P57/P59/P60 consolidated task contract
+
+**Audience:** external AI agents and maintainers; start with [the compact quickstart](../AGENT_AUTHORING_QUICKSTART.md). **Runtime boundary:** local Node CLIs operate on explicitly provided source paths and emit files/JSON. They do not provide embedded models, authenticated external sources, browser/device controls, cloud sync or silent Library import. The user's local History/FSRS remains private.
+
+## Stage routing
+| Need | Script and handoff | Primary invariants |
+|---|---|---|
+| AI/human source authoring | `question-bank-cli.mjs validate-bank / qa-bank / compile-bank` | One strict `practice-desk-authoring` v1 source, caution-labelled; compile via existing canonical publisher |
+| Small-context corrections | `question-bank-agent.mjs inspect / show / patch` | Paged issues, one-question retrieval, SHA preconditions, create-new-file, no whole-bank dump |
+| Planned syllabus distribution (P60-B) | `content-blueprint.mjs validate / audit`, compiler `--blueprint` | Versioned quotas, distinct exam subjects/sections/cognitive tags, explicit partial delivery; compiler cannot certify semantic syllabus correctness |
+| Independent editorial/answer-key challenge (P60-C) | `question-quality.mjs prepare / audit`, optional compiler `--quality-review` | Candidate-only blind packet, separate answer and attributed 20-dimension review sidecar, source-hash freshness, no pre-submit key leakage |
+| Exact Source and separately corrected Reviewed editions (P60-D) | `editorial-editions.mjs template / audit / compile` | Preserve original source bytes/key; explain all changes, keep lineage/identities, import Source then Reviewed |
+| Supplied document/PDF (P60-E) | `pdf-ingest.mjs template / audit / compile` | External agent actually reads pages, math and diagrams; bind PDF/key bytes and per-item source provenance; no internal OCR |
+| One scoped handoff for the above (P60-F) | `agent-handoff.mjs actions / prepare / assess / publish` | Read-only assessment; new-file publication requires explicit `--allow-create`; SHA-stale reviews/decisions block strict export |
+
+For ordinary one-file authoring, the shorter workflow avoids loading every stage into model context. A P60-F `prepare` creates a *blank/unapproved* review sidecar; this cannot demonstrate independent factual checking until genuinely completed and externally researched. A file can be structurally valid while educationally wrong. Source citations, date claims, checkmarks and reviewer labels are not source proof.
+
+## Example: strict reviewed publication
+```bash
+node scripts/agent-handoff.mjs actions
+node scripts/agent-handoff.mjs prepare bank.json NEW-review-dir --allow-create
+# A truly independent solver inspects candidate-only packet, actual sources, answers and figures.
+# Fill the current review.json with supported evidence and all required checks.
+node scripts/agent-handoff.mjs assess single bank.json --quality-review NEW-review-dir/review.json
+node scripts/agent-handoff.mjs publish single bank.json NEW.exam.json --quality-review NEW-review-dir/review.json --allow-create
+```
+For original/reviewed, first derive a decision template using `editorial-editions.mjs template original.json reviewed.json`, fill evidence and reviewed QA, then `agent-handoff.mjs assess paired ...` and `publish paired ...`. For supplied documents, transcribe/source-check outside Practice Desk, fill the `pdf-ingest.mjs template` manifest, then assess/publish `pdf` with document, original source, reviewed corrections, decisions and QA sidecar. Use exact command usage in the quickstart.
+
+## Publication is not content authentication
+- A source PDF SHA validates the referenced bytes, but the tool does **not** verify each PDF page/image against transcription, original PYQ authenticity or printed key.
+- Factual/temporal/legal assertions and real distractor quality must be checked against actual authoritative sources; source location recorded rather than invented.
+- Revisions to prompt, image, key or explanation may invalidate earlier review/hash records. No candidate-answer exposure is allowed.
+- `allowPartial` quota batches are not necessarily a complete programme; independent readiness/coverage must be checked for the finished target.
+- Original/source comparison has conservative comparability; unresolved P60 static-source findings are tracked in [backlog](../../backlog.md), not fixed by this documentation edit.
+- Source/Reviewed are explicit *two* Library imports, not atomic remote synchronization. Retain original source/PDF and sidecars outside browser History as appropriate.
+
+**References:** [source authoring](QUESTION_BANK_AUTHORING.md) · [AI guide](../AI_APPLICATION_GUIDE.md) · [machine capability contract](../contracts/practice-desk-capabilities.v1.json). Original individual P60-A–F design documents remain losslessly accessible in [the pinned history](../HISTORY_INDEX.md).

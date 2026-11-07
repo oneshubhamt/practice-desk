@@ -42,6 +42,5 @@ A published `NEW.exam.json` is imported **manually** into Practice Desk's offlin
 
 ## Focused references (open only when needed)
 
-- [Source authoring contract](architecture/QUESTION_BANK_AUTHORING.md), [blueprint/quotas](architecture/P60B_CONTENT_BLUEPRINT.md), [20-point review](architecture/P60C_QUESTION_QUALITY_ASSURANCE.md)
-- [Original/reviewed corrections](architecture/P60D_ORIGINAL_REVIEWED_EDITORIAL.md), [PDF transcription](architecture/P60E_AGENT_PDF_INGESTION.md), [agent handoff scope](architecture/P60F_AGENT_INTEGRATION_AND_VERIFICATION.md)
-- **Real-source caveat:** the [EduTap APFC 2023 reproduction](https://edutap.in/wp-content/uploads/2026/05/UPSC-EPFO-APFC-2023-PYQ-Book.pdf) places the *ineffable* item at **Q6**, while [a separate quiz page](https://www.yourmocktest.com/pyq/upsc-epfo/upsc-epfo-apfc-official-paper-held-on-02-jul-2023-previous-year-paper) labels that item Q1. The [CAT 2024 Q47/Q52 reproduction](https://cracku.in/cat-2024-slot-1-quant-question-paper-solved) is also third-party. **Do not silently certify original question numbers, official answer keys or exact wording from secondary reproductions.**
+- [One consolidated content pipeline](architecture/AGENT_CONTENT_PIPELINE.md) for coverage quotas, source-bound independent reviews, Source/Reviewed editions, supplied PDF evidence and agent handoff; [source authoring schema](architecture/QUESTION_BANK_AUTHORING.md) only when needed.
+- Historical APFC/CAT reconstructions in `examples/source-grounded-*.json` are secondary-source traces, **not** authenticated exact official PYQs/answers or primary source certifiers. Never infer official question number or law from them.
