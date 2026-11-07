@@ -75,3 +75,21 @@ Both original scenario bodies, page-level assertions, URL identity, save/reload/
 2. Every standalone scenario runs in a fresh, fully closed browser context. Browser engine-specific assertions must execute on actual Chromium/Firefox/Linux WebKit; actual physical Mac Safari remains a separate unverified gate.
 3. Runner reports executed count, per-journey duration/outcome and **one** shared browser launch per engine; benchmark scripts are explicitly not correctness tests.
 4. **Verify against exact changed SHA** with strict Node/typecheck/build, all 72 real offline journey executions (32+20+20), guarded source-verified publishing. Record GitHub Actions job wall times against 351s baseline only after that run finishes; environment variance limits comparability. A faster result with skipped cases is invalid.
+
+### P61-C final independent exact-source verification — PASS
+
+**[Five-job source-verified GitHub Actions run 42331170060](https://github.com/oneshubhamt/practice-desk/actions/runs/42331170060)** at `619a2671d86ea588ba9f0a34ee8ec9b24d34c01a`: strict TypeScript, deterministic standalone HTML build and Node suites PASS; all 32 Chromium, 20 Firefox and 20 Linux WebKit original acceptance scenarios PASS through the pooled runner; guarded HTML publisher PASS. The runner reports **one pooled browser launch for each engine**, with separate contexts per scenario. The independent Chrome persistent-profile restart inside the Chromium resilience test continues to launch/close its own process; it is not counted as a pooled harness launch.
+
+| Metric | Prior full-green P61-B (run 42330017407) | New P61-C full-green (run 42331170060) | Observed change |
+|---|---:|---:|---:|
+| Whole workflow wall time (created → updated) | 351 s | 305 s | 13.1% reduction |
+| Chromium job | 283 s | 161 s | 43.1% reduction |
+| Firefox job | 129 s | 104 s | 19.4% reduction |
+| Linux WebKit job | 263 s | 243 s | 7.6% reduction |
+| Number of mandatory acceptance scenario executions | 72 | 72 | No loss |
+| Mandatory browser-runner shell commands | 72 | 3 | 69 fewer |
+| CI workflow lines | 354 | 172 | 51.4% fewer |
+
+These are **two observed CI runs**, not a controlled benchmark or proof of steady-state percentage improvement. In the successful WebKit run, the 400-staged/200-published `acceptance-p58c-scale` scenario alone took about 64 seconds, and is now the clearest remaining critical-path bottleneck. It retains distinct cross-browser scale, export/restore, editing, concurrent-tab, scoring and 195px/140% user-interface assertions: **do not silently drop it just to improve a dashboard percentage**. A follow-on re-engineering pass would need an independently mapped Node+browser oracle, real WebKit coverage and measurable performance proof before adjusting its scope or sharding.
+
+**Next evidence-driven work (NOT implemented by P61-C):** (a) claim-by-claim duplicate test classification to retire only genuinely redundant assertions; (b) review the unused `acceptance-p47-5a-vendors.mjs` and standalone `probe-p47-vendors.mjs` as historical vendor feasibility tools, checking whether current *real app* editor/KaTeX suites supersede their unique checks; (c) gate success-only screenshots behind deliberate visual-review mode while retaining automatic failure images; (d) decide whether heavy WebKit scale needs smarter orchestration rather than lower coverage. Source files under `src/`, scoring, original questions, backup, local histories, P60 unresolved issues, physical-device/release gates and branch merges remain untouched.
