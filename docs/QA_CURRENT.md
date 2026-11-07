@@ -8,8 +8,9 @@ npm run build
 npm test
 # or: npm run check   # typecheck + build + all Node tests
 node scripts/acceptance-critical.mjs
-node scripts/acceptance-navigation.mjs chromium
-node scripts/acceptance-navigation.mjs webkit
+node scripts/acceptance-suite.mjs chromium
+node scripts/acceptance-suite.mjs firefox
+node scripts/acceptance-suite.mjs webkit
 ```
 Node.js 24. The browser harness requires installed Playwright browser binaries; CI installs them. `npm test` builds and invokes `node --test tests/*.test.mjs`. The complete existing browser matrix and guarded HTML publisher are controlled by [.github/workflows/ci.yml](../.github/workflows/ci.yml), not by the shorter examples above.
 
@@ -30,3 +31,7 @@ Use [TEST_STRATEGY.md](TEST_STRATEGY.md). Build a **contract-to-assertion map fi
 - **Human release:** independently inspect device/OS, accessibility, real source truth, UI and content. Green CI is insufficient.
 
 Screenshots only on failure or focused visual-review request; avoid legacy v11 parity, routine pixel-golden matrices, giant stored screenshot warehouses. P61 is authorized to consolidate tests/browser harnesses with exact assertion mapping and CI gates. The previous P60 app defects, production CLIs and user data remain out of scope.
+
+## Current P61-C CI contract
+
+Use one source-mapped real browser runner per engine: **32 Chromium, 20 Firefox, 20 WebKit** original acceptance scripts, each in independently closed contexts. The common test harness pools the browser process but not the page/IndexedDB profile; every failure is fatal and yields a per-scenario report. The static syntax test still checks each underlying script. Diagnostic benchmarks (`node scripts/benchmark-storage.mjs`, `node scripts/benchmark-p48-heterogeneous.mjs`, `node scripts/benchmark-ui-coordinator.mjs`) are intentionally **manual**, not gating verification. P61-C changes no product source or user-facing app contracts. See [source→scenario trace](TEST_SUITE_LEDGER.md). Actual CI job timings must be added only after the exact-source run.

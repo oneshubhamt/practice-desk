@@ -31,6 +31,28 @@ function chromePath(){
  }
  throw Error("Chromium acceptance requires installed Chrome; refusing browser fallback");
 }
+
+/** A process-scoped browser pool for serial, independently isolated acceptance journeys.
+ * All page/storage isolation remains per scenario via new browser contexts.
+ * This is a test-harness optimization only; production app code is untouched.
+ */
+let activeSuite=null;
+export function beginAcceptanceSuite(engine){
+ check(!activeSuite,"nested acceptance suites are forbidden");
+ check(["chromium","firefox","webkit"].includes(engine),"unsupported pooled engine");
+ activeSuite={engine,browser:null,launches:0,contextStarts:0};
+}
+export async function endAcceptanceSuite(){
+ const current=activeSuite;
+ check(current!==null,"no acceptance suite to close");
+ activeSuite=null;
+ const leftovers=current.browser?.contexts().length??0;
+ if(current.browser)await current.browser.close();
+ check(leftovers===0,"isolation failure: "+leftovers+" context(s) survived completed journey");
+ check(current.launches===1,"expected exactly one browser launch; observed "+current.launches);
+ return {browserLaunches:current.launches,contextStarts:current.contextStarts};
+}
+
 export async function openHarness({engine="chromium",artifactDir=null}={}){
  check(["chromium","firefox","webkit"].includes(engine),"unknown browser engine "+engine);
  const selected={chromium,firefox,webkit}[engine];
@@ -39,7 +61,14 @@ export async function openHarness({engine="chromium",artifactDir=null}={}){
   options.executablePath=chromePath();
   options.args=["--no-sandbox","--disable-dev-shm-usage","--disable-background-networking"];
  }
- const browser=await selected.launch(options);
+
+ if(activeSuite&&activeSuite.engine!==engine)throw Error("Pooled browser mismatch: "+engine);
+ const browser=activeSuite
+  ? activeSuite.browser??(activeSuite.browser=await selected.launch(options),
+      activeSuite.launches++,activeSuite.browser)
+  : await selected.launch(options);
+ if(activeSuite)activeSuite.contextStarts++;
+
  const pages=[];
  async function open({viewport=viewports.laptop,colorScheme="light",reducedMotion="reduce",
   onDialog=null}={}){
@@ -65,7 +94,15 @@ export async function openHarness({engine="chromium",artifactDir=null}={}){
     engine+" uncaught browser errors: "+p.errors.join("; "));
   }finally{
    for(const p of pages.reverse())await p.context.close().catch(()=>{});
-   await browser.close();
+
+   if(activeSuite){
+    // Standalone harnesses close the browser; pooled journeys close every
+    // context, including any directly created on h.browser, between scripts.
+    for(const context of browser.contexts())
+     await context.close().catch(()=>{});
+    check(browser.contexts().length===0,"browser context leaked between journeys");
+   }else await browser.close();
+
   }
  }
  async function evidence(label,data){

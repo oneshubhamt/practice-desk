@@ -58,3 +58,20 @@ Replaced the two formerly independent scripts below by [`scripts/acceptance-navi
 Both original scenario bodies, page-level assertions, URL identity, save/reload/backup, actual native browser Back/Forward and forced-absent Navigation API fallback checks are retained. Two separately isolated contexts now share one browser launch. The standalone browser is closed only after both journeys (or on failure). Old script paths are removed from the three-engine CI commands, replaced by one `acceptance-navigation.mjs <engine>` invocation per engine. No branch release/production app code is changed. **CI must pass the exact new SHA** before declaring P61-B browser verified.
 
 **Expected structure:** 40 Node test files + one fixture, 33 browser acceptance scripts, 51 scripts total; no old production CLI or genuinely distinct acceptance contract retired.
+
+## P61-C — actual browser-process consolidation and CI simplification
+
+**Baseline exact-SHA green:** [P61-B run 42330017407](https://github.com/oneshubhamt/practice-desk/actions/runs/42330017407), five jobs, old runner. Observed CI overall elapsed 351 seconds; Chromium job 283 s; Firefox 129 s; WebKit 263 s. These are point-in-time runner measurements, not a controlled performance claim.
+
+### Mechanism
+- **Before:** CI spawned each of 32 Chromium and 20 Firefox/20 WebKit acceptance scripts in an independent Node process. Every script called `openHarness` and launched its own Playwright browser process.
+- **After:** one `node scripts/acceptance-suite.mjs chromium|firefox|webkit` per engine, executing the **same script bodies sequentially** via dynamic ESM import with their existing source-resolved imports, every existing assertion and real offline context. The test-only `scripts/browser/fixtures.mjs` pools exactly one engine-specific browser per suite. Each original harness `finish()` must close **all** contexts before running the next journey, preventing shared browser session state, IndexedDB or OS profile from contaminating subsequent tests. Fatal failures stop the run; the machine report lists every executed scenario and never prints an incomplete suite as passed.
+- **Manifest:** four domain groupings (authoring/content, candidate/editorial, History/recovery/learning, media/scale/navigation). Chromium still runs 32, Firefox and WebKit still run 20 each. The unused legacy vendor feasibility probe remains outside these suites and was not silently counted.
+- **CI and artifacts:** the historical 52 separately named acceptance shell commands become three engine runner commands, with the same `core`, Chromium, Firefox/WebKit and guarded `publish` gating. Three *diagnostic-only* performance scripts (`benchmark-storage`, `benchmark-p48-heterogeneous`, `benchmark-ui-coordinator`) are no longer blocking every push; they remain manually runnable as written. Success screenshots are not routinely uploaded; on failure relevant evidence and the source/attempt-level JSON runner report are uploaded. The only obligatory successful artifact is the exact-source verified standalone HTML.
+- **No production app or content change:** source CGL, scorer, auth/FSRS, build, import, History/backup, and device/agent boundaries unchanged.
+
+### Contract-level acceptance
+1. Existing original script files remain in the repo and are **executed, not skipped**; the runner enumerates and fails closed on missing or duplicate scenarios.
+2. Every standalone scenario runs in a fresh, fully closed browser context. Browser engine-specific assertions must execute on actual Chromium/Firefox/Linux WebKit; actual physical Mac Safari remains a separate unverified gate.
+3. Runner reports executed count, per-journey duration/outcome and **one** shared browser launch per engine; benchmark scripts are explicitly not correctness tests.
+4. **Verify against exact changed SHA** with strict Node/typecheck/build, all 72 real offline journey executions (32+20+20), guarded source-verified publishing. Record GitHub Actions job wall times against 351s baseline only after that run finishes; environment variance limits comparability. A faster result with skipped cases is invalid.

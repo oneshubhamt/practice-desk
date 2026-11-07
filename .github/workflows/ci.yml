@@ -42,10 +42,10 @@ jobs:
           compression-level: 0
 
   chromium:
-    name: Modern offline browser journeys and unique safety checks
+    name: Complete offline Chromium candidate journeys
     needs: core
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -54,134 +54,30 @@ jobs:
           package-manager-cache: false
       - run: npm ci --no-audit --no-fund
       - run: npm run build
-      - name: P47-5C integrated Wordgard authoring, visual and offline QA (Chromium)
-        run: node scripts/acceptance-authoring-visual.mjs chromium
-      - name: P47-5D authenticated author to exam and frozen review (Chromium)
-        run: node scripts/acceptance-authoring-publication.mjs chromium
-      - name: P47-5B actual offline mathematical question/review and font safety (Chromium)
-        run: node scripts/acceptance-p47-math.mjs chromium
-      - run: node scripts/acceptance-history-evidence.mjs
-      - run: node scripts/acceptance-history-filters.mjs
-      - run: node scripts/acceptance-resilience.mjs
-      - name: P48 independent damaged IndexedDB partial recovery (Chromium)
-        run: node scripts/acceptance-partial-recovery.mjs chromium
-      - name: P48-1 actual offline CSP and injection rejection (Chromium)
-        run: node scripts/acceptance-p48-security.mjs chromium
-      - name: P48-2 same-question retained DOM and cursor-only cold hydration (Chromium)
-        run: node scripts/acceptance-p48-architecture.mjs chromium
-      - name: P48-3 retained Library/Result controls and manual draft safety (Chromium)
-        run: node scripts/acceptance-p48-ux.mjs chromium
-      - name: P49–P52 hierarchical authoring, focused Exam DOM and remappable shortcuts (Chromium)
-        run: node scripts/acceptance-p49-p52-enhancements.mjs chromium
-      - name: P53 actual mixed-subject authoring and filtered exam (Chromium)
-        run: node scripts/acceptance-p53-taxonomy.mjs chromium
-      - name: P54 authoritative six-kind Wordgard, section timing and real partial-credit exam (Chromium)
-        run: node scripts/acceptance-p54-authoring.mjs chromium
-      - name: P55 Learning keyed cards, unsaved drafts and bounded redraw measurement (Chromium)
-        run: node scripts/acceptance-p55-learning.mjs chromium
-      - name: P56 adversarial concurrent shared snapshot backup restoration (Chromium)
-        run: node scripts/acceptance-p56-integration.mjs chromium
-      - name: P57-A AI-first CAT/APFC immutable offline import (Chromium)
-        run: node scripts/acceptance-p57a-bank.mjs chromium
-      - name: P58-C 8-bank 400-question cross-boundary stress and 195px UI (Chromium)
-        run: node scripts/acceptance-p58c-scale.mjs chromium
-      - name: Preserve P58-C actual 400/200 scale UI and measured runner data (Chromium)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: p58c-scale-chromium
-          path: artifacts/p58c-scale/chromium-*
-          if-no-files-found: ignore
-          retention-days: 14
-      - name: P58-B editable citations, triage, archival recovery and immutable publication (Chromium)
-        run: node scripts/acceptance-p58b-editorial.mjs chromium
-      - name: Preserve P58-B narrow source-editor screenshot (Chromium)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: p58b-source-editor-195-chromium
-          path: artifacts/p58b-editorial/chromium-*.png
-          if-no-files-found: ignore
-          retention-days: 14
-      - name: P58-A RED-first actual offline integrity tests (Chromium)
-        run: node scripts/acceptance-p58a-integrity.mjs chromium
-      - name: Shared four-state review palette across all six answer kinds (Chromium)
-        run: node scripts/acceptance-flag-palette.mjs chromium
-      - name: Preserve P53 authored hierarchy visual evidence (Chromium)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: p53-taxonomy-ui-chromium
-          path: artifacts/p53-taxonomy/chromium-*.png
-          if-no-files-found: ignore
-          retention-days: 14
-      - run: node scripts/acceptance-learning-lifecycle.mjs
-      - run: node scripts/acceptance-session-policy.mjs
-      - run: node scripts/acceptance-editorial-provenance.mjs
-      - name: P47-3 real offline modal, answer isolation, pan/zoom and focus (Chromium)
-        run: node scripts/acceptance-image-viewer.mjs
-      - name: P47-3B optional local image preparation and authored bank integrity
-        run: node scripts/acceptance-image-preparation.mjs
-      - run: node scripts/acceptance-critical.mjs
-      - run: node scripts/acceptance-bank-modes.mjs
-      - run: node scripts/acceptance-drafts.mjs
-      - run: node scripts/acceptance-recovery.mjs
-      - run: node scripts/acceptance-ui.mjs
-      - run: node scripts/acceptance-stress.mjs
-      - name: Profile real frozen storage at 0, 100, 1000 and 1600 records
-        run: node scripts/benchmark-storage.mjs
-      - name: P48-2 heterogeneous image-bearing multi-paper startup, cursor-vs-getAll and History profile
-        run: node scripts/benchmark-p48-heterogeneous.mjs
-      - name: P47-0 reproducible UI/focus/DOM baseline (diagnostic; no speed thresholds)
-        run: node scripts/benchmark-ui-coordinator.mjs
-      - name: Preserve P47-0 machine-readable baseline
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: p47-0-ui-baseline
-          path: artifacts/p47-baseline/*.json
-          if-no-files-found: ignore
-          retention-days: 14
-      - run: node scripts/acceptance-navigation.mjs chromium
-      - name: P48-3 current UI screenshots (chromium)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: p48-3-ux-chromium
-          path: artifacts/p48-3-ux/*.png
-          if-no-files-found: ignore
-          retention-days: 14
-      # All current browser functional contracts live in the capability suites.
-      - name: P47-5D reviewable author → publish → review screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: p47-5d-publish-qa-chromium
-          path: artifacts/p47-5d-publish/*.png
-          if-no-files-found: ignore
-          retention-days: 7
-      - name: P47-5C reviewable targeted authoring screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: p47-5c-visual-qa-chromium
-          path: artifacts/p47-5c-visual/*.png
-          if-no-files-found: ignore
-          retention-days: 7
-      - name: Upload screenshots only when a modern test fails
+      - name: All 32 source-mapped journeys in one browser process
+        run: node scripts/acceptance-suite.mjs chromium
+      - name: Upload failures only, including runner's per-journey report
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: browser-failure-diagnostics
-          path: artifacts/acceptance-modern/
+          name: chromium-failure-evidence
+          path: |
+            artifacts/acceptance-modern/
+            artifacts/p58a-integrity/
+            artifacts/p58b-editorial/
+            artifacts/p58c-scale/
+            artifacts/p47-5c-visual/
+            artifacts/p47-5d-publish/
+            artifacts/p54-authoring/
+            artifacts/p53-taxonomy/
           if-no-files-found: ignore
           retention-days: 7
 
   cross-browser:
-    name: Offline persistence and navigation (${{ matrix.browser }})
+    name: Complete offline Firefox/WebKit candidate journeys (${{ matrix.browser }})
     needs: core
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
@@ -195,102 +91,24 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: node node_modules/playwright-core/cli.js install --with-deps ${{ matrix.browser }}
       - run: npm run build
-      - name: P47-5C Wordgard authoring visual QA (${{ matrix.browser }})
-        run: node scripts/acceptance-authoring-visual.mjs ${{ matrix.browser }}
-      - name: P47-5D full author publishing and review (${{ matrix.browser }})
-        run: node scripts/acceptance-authoring-publication.mjs ${{ matrix.browser }}
-      - name: P47-5B actual offline mathematical question/review and font safety (${{ matrix.browser }})
-        run: node scripts/acceptance-p47-math.mjs ${{ matrix.browser }}
-      - run: node scripts/acceptance-navigation.mjs ${{ matrix.browser }}
-      - name: P48 independent damaged IndexedDB partial recovery (${{ matrix.browser }})
-        run: node scripts/acceptance-partial-recovery.mjs ${{ matrix.browser }}
-      - name: P48-1 actual offline CSP and injection rejection (${{ matrix.browser }})
-        run: node scripts/acceptance-p48-security.mjs ${{ matrix.browser }}
-      - name: P48-2 same-question DOM and cursor hydration (${{ matrix.browser }})
-        run: node scripts/acceptance-p48-architecture.mjs ${{ matrix.browser }}
-      - name: P48-3 current-view retention and assessment safety (${{ matrix.browser }})
-        run: node scripts/acceptance-p48-ux.mjs ${{ matrix.browser }}
-      - name: P49–P52 current advanced authoring and granular keyboard/Exam UX (${{ matrix.browser }})
-        run: node scripts/acceptance-p49-p52-enhancements.mjs ${{ matrix.browser }}
-      - name: P53 mixed-subject source taxonomy and practice builder (${{ matrix.browser }})
-        run: node scripts/acceptance-p53-taxonomy.mjs ${{ matrix.browser }}
-      - name: P54 exact authoring preflight, true six-kind preview and scored advanced exam (${{ matrix.browser }})
-        run: node scripts/acceptance-p54-authoring.mjs ${{ matrix.browser }}
-      - name: P55 Learning keyed cards, unsaved editor and composition (${{ matrix.browser }})
-        run: node scripts/acceptance-p55-learning.mjs ${{ matrix.browser }}
-      - name: P56 independent concurrent snapshot import and corrupt digest (${{ matrix.browser }})
-        run: node scripts/acceptance-p56-integration.mjs ${{ matrix.browser }}
-      - name: P57-A AI-first CAT/APFC immutable offline import (${{ matrix.browser }})
-        run: node scripts/acceptance-p57a-bank.mjs ${{ matrix.browser }}
-      - name: P58-C 8-bank 400-question cross-boundary stress and 195px UI (${{ matrix.browser }})
-        run: node scripts/acceptance-p58c-scale.mjs ${{ matrix.browser }}
-      - name: Preserve P58-C actual 400/200 scale UI and measured runner data (${{ matrix.browser }})
-        if: always()
+      - name: All 20 source-mapped journeys in one browser process
+        run: node scripts/acceptance-suite.mjs ${{ matrix.browser }}
+      - name: Upload failures only, including runner's per-journey report
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: p58c-scale-${{ matrix.browser }}
-          path: artifacts/p58c-scale/${{ matrix.browser }}-*
-          if-no-files-found: ignore
-          retention-days: 14
-      - name: P58-B editable citations, triage, archival recovery and immutable publication (${{ matrix.browser }})
-        run: node scripts/acceptance-p58b-editorial.mjs ${{ matrix.browser }}
-      - name: Preserve P58-B narrow source-editor screenshot (${{ matrix.browser }})
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: p58b-source-editor-195-${{ matrix.browser }}
-          path: artifacts/p58b-editorial/${{ matrix.browser }}-*.png
-          if-no-files-found: ignore
-          retention-days: 14
-      - name: P58-A RED-first actual offline integrity tests (${{ matrix.browser }})
-        run: node scripts/acceptance-p58a-integrity.mjs ${{ matrix.browser }}
-      - name: Shared four-state review palette, light/dark and narrow (${{ matrix.browser }})
-        run: node scripts/acceptance-flag-palette.mjs ${{ matrix.browser }}
-      - name: Preserve actual P54 Wordgard desktop, phone and 195px screenshots (${{ matrix.browser }})
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: p54-wordgard-ui-${{ matrix.browser }}
-          path: artifacts/p54-authoring/${{ matrix.browser }}-*.png
-          if-no-files-found: ignore
-          retention-days: 14
-      - name: Preserve P53 authored hierarchy visual evidence (${{ matrix.browser }})
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: p53-taxonomy-ui-${{ matrix.browser }}
-          path: artifacts/p53-taxonomy/${{ matrix.browser }}-*.png
-          if-no-files-found: ignore
-          retention-days: 14
-      - name: P48-3 current UI screenshots (${{ matrix.browser }})
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: p48-3-ux-${{ matrix.browser }}
-          path: artifacts/p48-3-ux/*.png
-          if-no-files-found: ignore
-          retention-days: 14
-      - name: P47-3 real image dialog (${{ matrix.browser }})
-        run: node scripts/acceptance-image-viewer.mjs ${{ matrix.browser }}
-      - name: P47-3B offline import image preparation (${{ matrix.browser }})
-        run: node scripts/acceptance-image-preparation.mjs ${{ matrix.browser }}
-      - name: P47-5D publish/review screenshots (${{ matrix.browser }})
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: p47-5d-publish-qa-${{ matrix.browser }}
-          path: artifacts/p47-5d-publish/*.png
+          name: ${{ matrix.browser }}-failure-evidence
+          path: |
+            artifacts/acceptance-modern/
+            artifacts/p58a-integrity/
+            artifacts/p58b-editorial/
+            artifacts/p58c-scale/
+            artifacts/p47-5c-visual/
+            artifacts/p47-5d-publish/
+            artifacts/p54-authoring/
+            artifacts/p53-taxonomy/
           if-no-files-found: ignore
           retention-days: 7
-      - name: Preserve targeted authoring screenshots (${{ matrix.browser }})
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: p47-5c-visual-qa-${{ matrix.browser }}
-          path: artifacts/p47-5c-visual/*.png
-          if-no-files-found: ignore
-          retention-days: 7
-      # WebKit native Back after file:// reload remains explicitly unsupported.
 
   publish:
     name: Publish only after all current-app gates pass

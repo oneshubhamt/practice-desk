@@ -30,3 +30,7 @@ For detailed historical pass ledgers, exact historical CI SHA counts, and origin
 ## P61 — lean test bench, source-first migration (authorized 7 November 2026)
 
 See [implementation ledger](TEST_SUITE_LEDGER.md): P61-A retains 27 original authoring test registrations and adds one deterministic text property check; P61-B preserves both native/fallback navigation scenarios and 24 explicit browser checks while sharing one browser launch. All proposed further test deletions, broad journey rewrites, screenshot/benchmark pruning and CI frequency changes require their own assertion mapping and exact-source verification. The pending P60 product findings and calendar/survey features remain deferred.
+
+## P61-C — substantive runner optimization (7 Nov 2026)
+
+The previous 32+20+20 standalone browser processes are routed through three independently isolated single-browser engine runs without removing any existing journey assertions; diagnostic-only benchmarks and success screenshot warehouses are no longer required CI steps. See [ledger](TEST_SUITE_LEDGER.md) for baseline and the strict, exact-source verification gate. Do not claim completion or performance improvements before a green changed-SHA CI run.
