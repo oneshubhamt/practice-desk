@@ -27,10 +27,7 @@ const {validateRichDocument,plainRichDocument,canonicalRichDocument,RICH_LIMITS}
 const doc=blocks=>({format:"practice-desk-rich",version:1,blocks});
 const txt=(text,marks)=>({type:"text",text,...(marks?{marks}:{})});
 const assets={knownAssets:new Set(["fig-1"])};
-test("P47-5A legacy text stays literal, including dollar notation and HTML",()=>{
-  const s="√(a²+b²) $x+1$ <script>alert(1)</script>";
-  assert.deepEqual(plainRichDocument(s).blocks,[{type:"paragraph",content:[txt(s)]}]);
-});
+
 test("P47-5A canonical immutable normalized marks and explicit math",()=>{
   const a=doc([{type:"paragraph",content:[txt("P",["emphasis","strong"])]},
     {type:"display-math",tex:"\\frac12",linearText:"one half"}]);
@@ -195,17 +192,8 @@ test("P47-5D all six kinds publish as source-validated frozen rich package, with
  assert.equal(pkg.answerKey.entries[4].answer.pairs[0].rightId,"C");
  assert.equal(pkg.answerKey.entries[5].answer.evaluation,"manual");
  assert.match(pkg.questions[0].editorial.notes,/not been independently certified/);
-});
-test("P47-5D authored rich fallback preserves math alt/table/image semantics without TeX parsing of literal dollars",()=>{
- const text=publicationPlainText(rich("Read $5"));
- assert.match(text,/Read \$5/);
- assert.match(text,/x divided by two/);
- assert.match(text,/Value/);
- assert.match(text,/x squared/);
- assert.doesNotMatch(text,/\\frac/);
-});
-test("P47-5D existing scorer observes correct, incorrect, numeric tolerance, matching and pending manual",()=>{
- const pkg=compileAuthoringPublication(readyDraft());
+ // Same authenticated six-kind publisher output is the scorer oracle; one compile.
+
  const ids=pkg.questions.map(q=>q.id);
  const responses=[
   {questionRevisionId:ids[0],response:{kind:"single-choice",optionId:"B"}},
@@ -223,6 +211,15 @@ test("P47-5D existing scorer observes correct, incorrect, numeric tolerance, mat
  assert.deepEqual(result.items.map(x=>x.verdict),["correct","correct","correct","incorrect","correct","pending"]);
  assert.ok(Math.abs(result.snapshot.earnedMarks-(4*2.5-5/6))<1e-10);
 });
+test("P47-5D authored rich fallback preserves math alt/table/image semantics without TeX parsing of literal dollars",()=>{
+ const text=publicationPlainText(rich("Read $5"));
+ assert.match(text,/Read \$5/);
+ assert.match(text,/x divided by two/);
+ assert.match(text,/Value/);
+ assert.match(text,/x squared/);
+ assert.doesNotMatch(text,/\\frac/);
+});
+
 test("P47-5D rejects incomplete paper, missing keys and every kind's malformed answer",()=>{
  for(const kind of kinds){
   const a=readyDraft();
@@ -449,6 +446,19 @@ test("P58-A F01: genuine manual drafts preserve existing publication validation 
  test("Authoring property: literal Unicode/math/HTML-like strings survive rich validation unchanged",()=>{
   let state=0x5A17D1;
   const alphabet=["a","Z"," ","<",">","&","$","\\","/","{","}","'","\"","0","9","²","√","∑","न","\\n"];
+  // Explicit copyright/source-text sentinels replace the retired single-case smoke.
+  for(const raw of [
+   "√(a²+b²) $x+1$ <script>alert(1)</script>",
+   "<img src=x onerror=alert(1)>",
+   "price $5 and genuine LaTeX-looking \\frac{x}{2}",
+   "हिंदी < & > \u00a0 ₨"
+  ]){
+   const validated=validateRichDocument(plainRichDocument(raw));
+   assert.equal(validated.blocks[0].content[0].text,raw);
+   assert.equal(canonicalRichDocument(validated),
+     canonicalRichDocument(validateRichDocument(validated)));
+  }
+
   const random=()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state;};
   for(let i=0;i<128;i++){
    const size=1+(random()%120);

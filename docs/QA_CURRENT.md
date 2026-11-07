@@ -56,3 +56,7 @@ PRACTICE_DESK_VISUAL_REVIEW=1 node scripts/acceptance-suite.mjs chromium
 The historical vendor feasibility probe scripts are archived at the pre-P61-D commit; they were not current-app CI gates. The standalone diagnostic benchmarks remain explicit/manual. Full evidence and de-duplication mapping are in [TEST_SUITE_LEDGER.md](TEST_SUITE_LEDGER.md).
 
 **P61-D current verified gate:** [run 42361411781](https://github.com/oneshubhamt/practice-desk/actions/runs/42361411781) passed at `337f1c7789a38b8cfdbcd86561b9488f2fd1fcc1`: 432/432 Node tests; 32 Chromium + 20 Firefox + 20 Linux WebKit browser journeys; guarded standalone HTML publisher. Running all five jobs took 267 s versus 305 s in P61-C (two hosted-runner measurements, not a benchmark). Passing screenshots remain opt-in through `PRACTICE_DESK_VISUAL_REVIEW=1`; failure diagnostics are always active. See [ledger](TEST_SUITE_LEDGER.md).
+
+### P61-E semantic coverage pass (pending exact-source verification)
+
+Working focus is retiring 10 genuinely overlapping examples, retaining the stronger 200-seed independent scoring oracle, 250×150 CAS model, 200-seed storage merge reference, 128-case rich text model and both the published/scored and measured/revision integration contracts. See [evidence map](TEST_SUITE_LEDGER.md). Full strict+3-engine CI and guarded source publisher are required before the P61-E pass may be called green. No production source code changed.

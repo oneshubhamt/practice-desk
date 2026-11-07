@@ -142,25 +142,4 @@ test("P46 explicitly assigned broad APFC syllabus heading becomes a separate mea
  assert.ok(rows.some(x=>x.kind==="section"));
  assert.equal(rows.filter(x=>x.kind==="source-topic").length,0,"Never infer unavailable topic IDs");
 });
-test("P46 positive slow eligibility requires five actually measured scored answers in one section",()=>{
- const section={...source.paper.sections[0],questionRevisionIds:source.questions.map(q=>q.id)};
- const raw={...source.paper,sections:[section]};
- const paper={...raw,contentHash:paperRevisionHash(raw)};
- const same=validateExamPackage({...source,paper});
- const responses=[
-  {questionRevisionId:"rev-0",response:{kind:"single-choice",optionId:"a"},timeSpentMs:1000,flagged:false,answerChangeCount:0},
-  {questionRevisionId:"rev-1",response:{kind:"multiple-select",optionIds:["x","z"]},timeSpentMs:2000,flagged:false,answerChangeCount:0},
-  {questionRevisionId:"rev-2",response:{kind:"numeric-entry",value:3.5},timeSpentMs:3000,flagged:false,answerChangeCount:0},
-  {questionRevisionId:"rev-3",response:{kind:"true-false",value:true},timeSpentMs:6000,flagged:false,answerChangeCount:0},
-  {questionRevisionId:"rev-4",response:{kind:"matching",pairs:[{leftId:"l1",rightId:"r1"},{leftId:"l2",rightId:"r2"}]},timeSpentMs:10000,flagged:false,answerChangeCount:0}
- ];
- const start=startGenericAttempt(same,"five-measured",1000);
- const graded=scoreAttempt(start.frozen.paper,start.frozen.key,start.frozen.questions,
-  responses,"2026-11-02T12:00:00Z");
- const a={...start,finishedAt:2000,state:{...start.state,status:"completed",responses,foregroundMs:22000},
-  result:graded};
- const selected=revisionInventory([a],[],new Set(),source.examId,["slow"]);
- assert.deepEqual(selected.selected.map(x=>x.questionId).sort(),["rev-3","rev-4"]);
- assert.equal(selected.selected[0].observedAttempts,1);
- assert.equal(selected.selected[0].wrongAttempts,0);
-});
+

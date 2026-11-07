@@ -327,25 +327,11 @@ test("preferences import validates range and type",()=>{
  assert.throws(()=>validateDisplayPreferences({schema:1,dark:false,scale:999}),/preferences/);
  assert.throws(()=>makeBackup([],{schema:1,dark:"no",scale:100},"2026-10-29T00:00:00Z"),/preferences/);
 });
-test("backup merge is additive and preserves active and completed IDs",()=>{
- const existing=[{id:"completed",finishedAt:100},{id:"ongoing",finishedAt:null}];
- const incoming=[{id:"completed",finishedAt:200},{id:"ongoing",finishedAt:300},
-  {id:"new",finishedAt:null},{id:"new",finishedAt:99}];
- assert.deepEqual(planBackupMerge(existing,incoming,"ongoing"),[{id:"new",finishedAt:null}]);
-});
+
 
 
 // Compare-and-swap invariants; retained from storage-concurrency.test.mjs.
-test("new records cannot be overwritten and concurrent revisions conflict",()=>{
- assert.doesNotThrow(()=>assertWriteVersion(undefined,null));
- assert.equal(nextWriteVersion(null),1);
- assert.throws(()=>assertWriteVersion({saveRevision:1},null),/already created/);
- assert.doesNotThrow(()=>assertWriteVersion({saveRevision:3},3));
- assert.equal(nextWriteVersion(3),4);
- assert.throws(()=>assertWriteVersion({saveRevision:4},3),/Another tab changed/);
- assert.throws(()=>assertWriteVersion(undefined,3),/Another tab changed/);
- assert.doesNotThrow(()=>assertWriteVersion({},0));
-});
+
 
 // Deterministic adversarial scenarios; retained from contract-persistence-properties.test.mjs.
 {

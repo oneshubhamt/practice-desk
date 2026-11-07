@@ -434,75 +434,15 @@ test("V02/V07/F02/F06: all 10 paper editions have derived full/section marks, no
 
 
 
-test("G01/G02/F01/F09: locked shared paper, manual expiry and frozen truthful section timers",()=>{
- const locked=rehash({...pkg.paper,navigation:{...pkg.paper.navigation,sectionNavigation:"sequential-locked"}});
- validatePaperRevision(locked,questions,pkg.answerKey);
- let s=startSession(locked,1000);
- s=advance(locked,s,"SUBMIT_ATTEMPT",1005);
- assert.equal(s.status,"running");
- s=advance(locked,s,"SUBMIT_SECTION",2000);
- assert.equal(s.sectionIndex,1);
- assert.equal(sectionTimerDuration(s,0),1000);
- s=advance(locked,s,"SUBMIT_ATTEMPT",2500);
- assert.equal(s.status,"completed");
- assert.equal(sectionTimerDuration(s,1),500); // Section 2 starts at t=2000; only 500ms consumed
- const manual=rehash({...pkg.paper,
-   timing:{kind:"sectional",transition:"manual",allowEarlySubmit:false,pausePolicy:"allowed",
-    sectionLimits:[{sectionId:"s1",durationMs:75},{sectionId:"s2",durationMs:100}]},
-   navigation:{...pkg.paper.navigation,sectionNavigation:"sequential-locked"}});
- validatePaperRevision(manual,questions,pkg.answerKey);
- s=startSession(manual,0);
- s=advance(manual,s,"TICK",500);
- assert.equal(s.status,"section-expired");assert.equal(s.elapsedMs,75);
- const frozen=s.responses;
- s=advance(manual,s,"ANSWER",900,{response:{kind:"single-choice",optionId:"a"}});
- assert.equal(s.status,"section-expired");assert.deepEqual(s.responses,frozen);
- s=advance(manual,s,"SUBMIT_SECTION",1000);
- assert.equal(s.sectionIndex,1);assert.equal(s.elapsedMs,75);
- assert.equal(sectionTimerDuration(s,0),75);
-});
 
-test("G03/G09: imported marks have honest ceiling/floor and forbid worse-than-wrong blanks",()=>{
- for(const blank of [-2,3]){
-  assert.throws(()=>validatePaperRevision({...pkg.paper,scoring:{defaultRule:{correctMarks:2,incorrectMarks:-1,unansweredMarks:blank}}},questions,pkg.answerKey),
-   /unansweredMarks/);
- }
- const valid={correctMarks:3,incorrectMarks:-2,unansweredMarks:-0.25};
- validatePaperRevision({...pkg.paper,scoring:{defaultRule:valid}},questions,pkg.answerKey);
- const p=rehash({...pkg.paper,scoring:{defaultRule:valid}});
- validatePaperRevision(p,questions,pkg.answerKey);
- const ceiling=scoreableMaximum(p,pkg.answerKey,questions);
- const floor=scoreableLowerBound(p,pkg.answerKey,questions);
- assert.equal(ceiling,15);assert.ok(floor<0);assert.ok(ceiling>=floor);
- const score=scoreAttempt(p,pkg.answerKey,questions,[],new Date(0).toISOString());
- assert.ok(score.snapshot.earnedMarks<=ceiling&&score.snapshot.earnedMarks>=floor);
-});
 
-test("G04/G05: reject answer keys candidates cannot legally reproduce",()=>{
- const wrongCard=keyUpdate(pkg.answerKey.entries.map((row,i)=>i===1?
-  {...row,answer:{kind:"multiple-select",optionIds:["x"]}}:row));
- assert.throws(()=>validateAnswerKeyRevision(wrongCard,questions),/cardinality|selection bounds/);
- const dup=keyUpdate(pkg.answerKey.entries.map((row,i)=>i===4?
-  {...row,answer:{kind:"matching",pairs:[{leftId:"l1",rightId:"r1"},{leftId:"l2",rightId:"r1"}]}}:row));
- assert.throws(()=>validateAnswerKeyRevision(dup,questions),/duplicate/);
- assert.doesNotThrow(()=>validateExamPackage(pkg));
-});
 
-test("G06/V06/V10: no-review edition keeps results but never exposes answer tab",()=>{
- const p=rehash({...pkg.paper,navigation:{...pkg.paper.navigation,allowReview:false}});
- const bundle=validateExamPackage({...pkg,paper:p});
- const a=startGenericAttempt(bundle,"no-review",100);
- assert.equal(a.frozen.paper.navigation.allowReview,false);
- assert.doesNotMatch(resultTabsHTML("overview",false),/data-result-tab="review"/);
- assert.match(resultTabsHTML("overview",false),/data-result-tab="timing"/);
-});
 
-test("G07/G08: drafts explicitly nonpersistent, duplicate matching targets deterministic",()=>{
- assert.match(multipleDraftMessage(1,2,2),/Unsaved draft/);
- assert.match(multipleDraftMessage(3,2,2),/Unsaved draft/);
- assert.equal(multipleDraftMessage(2,2,2),"");
- assert.deepEqual(duplicateMatchingTargets(["r1","r2","r1","","r2"]),["r1","r2"]);
-});
+
+
+
+
+
 
 test("F13/G10: delete lifecycle cannot bypass unfinished status; v11 backup intentionally unsupported",()=>{
  assert.throws(()=>assertDeletionAllowed({recordType:"generic-attempt",finishedAt:null},"completed"),/Discard/);

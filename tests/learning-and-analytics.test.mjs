@@ -19,6 +19,7 @@ import * as __suite_dep_13 from "../src/history/backup.ts";
 import * as __suite_dep_14 from "../src/learning/revision-test.ts";
 import * as __suite_dep_15 from "../src/engine/scoring.ts";
 import * as __suite_dep_16 from "../src/domain/hash.ts";
+import {revisionInventory as independentRevisionInventory} from "../src/learning/revision-selection.ts";
 
 // === Legacy suite: tests/analytics-property-model.test.mjs — 2 unchanged test registrations ===
 {
@@ -546,5 +547,15 @@ test("speed classification uses a sufficient section median and distinguishes fa
  assert.deepEqual(rows.speed.buckets.map(x=>x.items),[2,1,2]);
  assert.equal(rows.speed.buckets[0].incorrect+rows.speed.buckets[1].incorrect+rows.speed.buckets[2].incorrect,
    scores.snapshot.incorrectCount);
+ // The same *measured* frozen evidence must drive actual revision eligibility,
+ // not a duplicate separately manufactured fixture.
+ const selected=independentRevisionInventory([completed],[],new Set(),combined.examId,["slow"]);
+ assert.deepEqual(selected.selected.map(x=>x.questionId).sort(),["rev-3","rev-4"]);
+ const slowWrong=selected.selected.find(x=>x.questionId==="rev-3");
+ const slowCorrect=selected.selected.find(x=>x.questionId==="rev-4");
+ assert.equal(slowWrong.observedAttempts,1);
+ assert.equal(slowWrong.wrongAttempts,1,"slow/incorrect is not excluded from revision");
+ assert.equal(slowCorrect.observedAttempts,1);
+ assert.equal(slowCorrect.wrongAttempts,0,"slow/correct still qualifies for revision");
 });
 }
