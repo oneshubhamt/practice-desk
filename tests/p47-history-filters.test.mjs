@@ -48,7 +48,7 @@ test("History model: 128 seeded combinations preserve AND semantics, exact ident
  }
  const baseline=structuredClone(attempts);
  const combinations=new Set(attempts.map(a=>[a.frozen.snapshot.examId,a.frozen.snapshot.mode,
-  a.frozen.paper.id,a.finishedAt!==null].join("|"));
+  a.frozen.paper.id,a.finishedAt!==null].join("|")));
  assert.equal(combinations.size,24,"the model must span the full exam×mode×paper×status product");
  const packages=new Map(); // removed package: frozen metadata must be authoritative
  const terms=["","practice","paper","custom","source","never-found","r1"];
