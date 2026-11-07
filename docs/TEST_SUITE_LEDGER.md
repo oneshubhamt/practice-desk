@@ -224,7 +224,7 @@ P61-F can be marked **closed**. Further reductions remain an evidence-driven pro
 
 ## P61-G — assertion ownership and real mutation-sensitivity gate (7 November 2026)
 
-**Pre-P61-G source:** [`3bfd7dc2d97e7c74c2d93289b6648fc716118b50`](https://github.com/oneshubhamt/practice-desk/tree/3bfd7dc2d97e7c74c2d93289b6648fc716118b50); [P61-F five-job green CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42373176697), with **411 Node tests / 72 browser journeys**. This is **not yet a completed/verified pass** until the exact changed SHA passes CI.
+**Pre-P61-G source:** [`3bfd7dc2d97e7c74c2d93289b6648fc716118b50`](https://github.com/oneshubhamt/practice-desk/tree/3bfd7dc2d97e7c74c2d93289b6648fc716118b50); [P61-F five-job green CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42373176697), with **411 Node tests / 72 browser journeys**. **Verification:** completed at the exact changed source SHA and CI run recorded below.
 
 ### Semantic duplicate dispositions
 
@@ -262,3 +262,18 @@ P61-F can be marked **closed**. Further reductions remain an evidence-driven pro
 - No changes under `src/`, `examples/`, exam bank files, source vendor code, browser acceptance scripts or public app output; only 3 Node-test files, one new isolated mutation runner, CI wiring and docs.
 - Mutation harness is an **additional correctness gate** and may increase core-job wall time; do not confuse it with CI speed optimization.
 - Unique tests (PDF extraction, independent scale, FSRS, provenance/privacy, source-content integrity, three-browser journeys) remain intact; physical Safari/assistive-device and deferred P60 defects stay out of scope.
+
+### P61-G exact-source verification — PASS
+
+**[Five-job GitHub Actions run 42375387122](https://github.com/oneshubhamt/practice-desk/actions/runs/42375387122)** finished **successfully** at code commit [`eeecdd51331ff2a847b63f8f0c52e9ad9a354fa2`](https://github.com/oneshubhamt/practice-desk/commit/eeecdd51331ff2a847b63f8f0c52e9ad9a354fa2). This was independently checked against original job logs.
+
+- **407/407 Node tests passed**, no failures, with TypeScript/build/determinism gate green. The four redundant test registrations were removed, while the positive six-kind and APFC/NAT package controls and the malicious v4-backup envelope/manifest rejection were migrated unchanged into stronger surviving matrices.
+- **Six of six selected semantic mutations were detected by assertion failures**, after each mutated test also passed against the unmodified source. The gate tests actual temporary mutated implementations, not whether a test file contains expected words; every temp source file was hash-restored.
+- Browser execution logs report **Chromium 32/32 unique named journeys, Firefox 20/20, Linux WebKit 20/20**. Each engine retained one pooled browser launch and independent per-journey context. Total **72/72 real browser scenario executions**.
+- Guarded source-verified offline HTML publisher: **PASS**, after core and all three browser engines.
+- Observed GitHub workflow elapsed **244 s**, compared with P61-F **251 s**; this is a **single pair of hosted-runner observations**, not controlled performance improvement. Core job took **53 s** versus prior **40 s**, incorporating the extra mutation gate; Chromium **173 s**, Firefox **104 s**, WebKit **160 s**, publisher **8 s**.
+- GitHub comparison from original P61-F closing docs to exact tested commit contains only three amended test modules, one amended authoring property test, one new isolated mutation script, two docs and a two-line workflow addition. **No production source (`src/`), exam content, browser scenario, published application build contract or release logic changed.**
+
+**Detected and repaired blind spot:** the first P61-G run, [42375118704](https://github.com/oneshubhamt/practice-desk/actions/runs/42375118704) on pre-fix commit `eaaa1367440226e0991045f65a34884d69fd8b11`, correctly **failed** because the original rich-text property allowed a deliberately introduced `trim()` defect to survive. We did **not** remove that mutant. Instead, the existing authoring property gained explicit leading/trailing-whitespace sentinels and four deterministic boundary variants for each of 128 generated strings, then all six mutations were killed on rerun. This is concrete evidence that the mutation gate improved test sensitivity.
+
+**P61-G status: COMPLETE.** This pass improves confidence in selected contracts, not a measured global mutation score. Further semantic reductions should preserve unique source, PDF, FSRS, recovery, browser and statutory-content safeguards. No merger into `overhaul` was performed.
