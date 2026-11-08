@@ -6,15 +6,20 @@ This is the current backlog, **not** a programme/pass diary. Every finding below
 
 | ID | Finding to examine | Primary owner | Priority |
 |---|---|---|---|
-| P60-01 | Explanation-only media may be exposed in resources accessible before candidate submission | `src/authoring/authoring-publisher.ts`; `src/app/exam-view.ts` | High: candidate secrecy |
-| P60-02 | Partially fulfilled blueprint quotas may be labeled fully publication-ready | `scripts/content-blueprint.mjs`; `scripts/question-bank-cli.mjs` | High: completion integrity |
 | P60-03 | Reviewed edition may pair with an incorrect original revision among multiple versions | `src/app/library-controller.ts`; `src/app/exam-families.ts` | High: lineage |
 | P60-04 | One unsupported question kind may suppress other valid original-key comparisons | `src/engine/source-comparison.ts` | Medium–high: comparison integrity |
 | P60-05 | Taxonomy/explanation metadata may be conflated with answer-semantic comparability | `src/engine/source-comparison.ts` | Medium: false mismatch |
 | P60-06 | Earlier AI guide versions contradicted deployed capabilities | Active guides consolidated; reverify CLI/source when designing new agent work | Documentation follow-up |
 | P60-07 | Agent-supplied citations and quality/temporal labels cannot independently verify factual truth | `scripts/question-quality.mjs`; external primary-source review | High: content trust |
 
-These are **prior static-source concerns**, not a claim that all seven have been reproduced or fixed. They remain separate from P61's verified *test-bench* scope.
+These are unresolved concerns requiring new source-level evidence; they are separate from P61's test-bench work.
+
+## P62-A addressed (8 November 2026)
+
+- **P60-01 — Candidate media exposure:** The publisher now distinguishes candidate `assetIds` from signed solution-only `explanationAssetIds`. Both remain available in frozen resources, but the examination renderer uses only candidate-visible references. This is UI-level secrecy, **not** a claim that offline package bytes are inaccessible to a technically capable user.
+- **P60-02 — Partial blueprint readiness:** Partial batches may be `valid:true` but cannot be `readyForPublication:true` until the requested count and allocations are satisfied. Compiler, paired-agent/PDF handoff and publish gates reject incomplete plans; read-only assessments can continue.
+
+Evidence: [source fix](https://github.com/oneshubhamt/practice-desk/commit/bd8a9e6dd378e3d757313dd2c6deb0b2d14a05a6) · [passing CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42484839413) (TypeScript, Node contracts, mutation tests, Chromium, Firefox, WebKit, guarded HTML). Real source authentication remains separately open.
 
 ## Independent verification and release gates
 

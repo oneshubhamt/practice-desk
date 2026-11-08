@@ -16,6 +16,8 @@ See [architecture](architecture/CURRENT_ARCHITECTURE.md), [data contracts](archi
 
 The P61 test-bench programme is **closed**, following a source audit and [exact-commit CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42433146976). The current required gate comprises **408 Node test cases; ten selected semantic mutations; 32 Chromium, 20 Firefox and 20 Linux WebKit real browser journeys; and guarded source-verified HTML publishing**. Source-code test coverage and CI outcomes do not independently validate question content or physical devices.
 
+P62-A closed two P60 integrity defects on `overhaul`: solution-only media are excluded from candidate figure references while preserved in frozen review, and incomplete blueprints are structurally valid but cannot pass final publication gates. [Verified CI for tested source commit](https://github.com/oneshubhamt/practice-desk/actions/runs/42484839413) passed all five required jobs. Remaining source-trust and editorial findings stay in the active backlog.
+
 Current documentation is deliberately architecture-first. Detailed P04–P61 implementation records and original audit evidence remain recoverable through [pinned Git history](HISTORY_INDEX.md); they are not current work instructions. No product code, question-bank data or release policy was changed during this documentation restructuring.
 
 ## What is not closed
