@@ -1,6 +1,6 @@
 # Lean, reasoning-first test-bench strategy — implemented with documented limits
 
-**Status:** P61-A–H are independently source-verified. P61-I has reconciled the original objectives and current source; **final exact-commit CI is pending** before closure. The [final audit](audits/P61_I_FINAL_PROGRAMME_SOURCE_AUDIT_2026-11-08.md) explicitly records achieved and intentionally *unmet* optimisation criteria. All new reductions need task-specific authorization; no more cases should be deleted merely to hit counts. See the [pass-by-pass ledger](TEST_SUITE_LEDGER.md).
+**Status:** P61-A–H are independently source-verified. P61-I has reconciled the original objectives and current source; **final exact-commit CI passed** [run 42432646892](https://github.com/oneshubhamt/practice-desk/actions/runs/42432646892); programme closed. The [final audit](audits/P61_I_FINAL_PROGRAMME_SOURCE_AUDIT_2026-11-08.md) explicitly records achieved and intentionally *unmet* optimisation criteria. All new reductions need task-specific authorization; no more cases should be deleted merely to hit counts. See the [pass-by-pass ledger](TEST_SUITE_LEDGER.md).
 
 ## Final source-reconciled inventory
 

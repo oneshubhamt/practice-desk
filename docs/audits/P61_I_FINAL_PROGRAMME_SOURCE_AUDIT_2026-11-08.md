@@ -4,7 +4,7 @@
 **Repository/authorized branch:** [`oneshubhamt/practice-desk` / `overhaul`](https://github.com/oneshubhamt/practice-desk/tree/overhaul)  
 **Source baseline before P61:** [`807d01060fc6c2350873f19f4442ffbae73f4f2c`](https://github.com/oneshubhamt/practice-desk/tree/807d01060fc6c2350873f19f4442ffbae73f4f2c)  
 **Final prior verified P61-H documentation baseline:** [`d5948e1d8bd9bef6050a43c3f32ca3f5e792ac1b`](https://github.com/oneshubhamt/practice-desk/tree/d5948e1d8bd9bef6050a43c3f32ca3f5e792ac1b), [five-job CI 42410827277](https://github.com/oneshubhamt/practice-desk/actions/runs/42410827277).  
-**Status:** source reconciliation complete; **P61-I formal closure is pending successful full CI on this audit's exact final commit**. Do not treat drafting this report as the final CI result.
+**Status: P61-I COMPLETE AND SOURCE-VERIFIED.** [All five exact-source GitHub Actions jobs passed](https://github.com/oneshubhamt/practice-desk/actions/runs/42432646892) at implementation/audit SHA [`8783cc9751c654e9ea75a3b4570b93257fcb0aff`](https://github.com/oneshubhamt/practice-desk/commit/8783cc9751c654e9ea75a3b4570b93257fcb0aff). The completed test programme is closed with the accepted deviations and independent release/content limits below.
 
 ## 1. Independent source and execution methods
 
@@ -51,7 +51,7 @@ This report reconciles the original P61 baseline tree and actual current `overha
 | **P61-F** | Retired 12 registrations and added 576-case recovery reference; net −11 | [`56a10e7cf754`](https://github.com/oneshubhamt/practice-desk/commit/56a10e7cf754e90f3499ef1994bc872591d92a8f), [run 42373176697](https://github.com/oneshubhamt/practice-desk/actions/runs/42373176697) |
 | **P61-G** | Retired 4 redundant registrations; six live semantic mutants, detected and fixed genuine rich-text test blind spot | [`eeecdd51331f`](https://github.com/oneshubhamt/practice-desk/commit/eeecdd51331ff2a847b63f8f0c52e9ad9a354fa2), [run 42375387122](https://github.com/oneshubhamt/practice-desk/actions/runs/42375387122) |
 | **P61-H** | Independent 12-contract audit; 128-seed six-kind scorer; total ten selected mutation checks; no unique test retired | [`12e7ba7e83b6`](https://github.com/oneshubhamt/practice-desk/commit/12e7ba7e83b64a53914b85fcb98434564cb0dccb), [run 42410337888](https://github.com/oneshubhamt/practice-desk/actions/runs/42410337888); later docs-only [run 42410827277](https://github.com/oneshubhamt/practice-desk/actions/runs/42410827277) |
-| **P61-I** | Source/CI/manifest/contract/metric reconciliation; correct current guides and ten-mutant CI label; reject unsupported claims | **Await final exact-commit five-job CI; do not invent a run link or completion status.** |
+| **P61-I** | Source/CI/manifest/contract/metric reconciliation; correct current guides and ten-mutant CI label; reject unsupported claims | [`8783cc9751c6`](https://github.com/oneshubhamt/practice-desk/commit/8783cc9751c654e9ea75a3b4570b93257fcb0aff), [five-job CI 42432646892](https://github.com/oneshubhamt/practice-desk/actions/runs/42432646892) **PASS** |
 
 The P61 code diff from original baseline to current is wholly **test, harness, CI and documentation-only**. All deleted individual tests/probes remain available at their pinned Git commits through [the implementation ledger](../TEST_SUITE_LEDGER.md).
 
@@ -68,7 +68,7 @@ The P61 code diff from original baseline to current is wholly **test, harness, C
 
 ## 5. Closure rule and handoff
 
-P61-I is **eligible to close** when exact changed-SHA full protected CI logs confirm:
+P61-I **closed** after the changed-SHA full protected CI logs confirmed:
 1. Node 24 strict typecheck, build, deterministic HTML and **408/408 Node tests**;
 2. **10/10** distinct *baseline-green, assertion-killed* source-isolated mutants;
 3. **32/32 Chromium + 20/20 Firefox + 20/20 Linux WebKit**, with each original script executed and a fully closed browser pool;
@@ -76,3 +76,13 @@ P61-I is **eligible to close** when exact changed-SHA full protected CI logs con
 5. current docs, guide/index, backlog and CI mutation label accurately mark P61 completed and retain deferred P60/device/content risks.
 
 The current test bench should stay intact unless a **new, specifically approved scope** is supported by assertion-level counterexamples and real regression verification. Never resume mass test deletion merely to satisfy count/LoC targets. **P61 closure does not authorize P60 fixes, branch merges, public release, physical-device certification or question-bank authenticity claims.**
+
+## 6. P61-I formally verified closure
+
+- **Source commit:** [`8783cc9751c654e9ea75a3b4570b93257fcb0aff`](https://github.com/oneshubhamt/practice-desk/commit/8783cc9751c654e9ea75a3b4570b93257fcb0aff); **GitHub Actions:** [run 42432646892](https://github.com/oneshubhamt/practice-desk/actions/runs/42432646892) — **SUCCESS**, all five jobs. The source-independent exact-commit check is not merely a citation to the earlier P61-H CI.
+- Core logs: 408/408 Node test registrations passed, 0 failed; each of 10 semantic mutants was baseline-green then killed by a targeted named assertion. Locked dependency tree and deterministic rebuild accepted.
+- Browser logs: **32/32 unique Chromium, 20/20 unique Firefox, 20/20 unique Linux WebKit** source-mapped scenarios independently executed and passed; candidate, authoring, history, offline/navigation and media/scale witnesses retained.
+- Exact-source standalone HTML guarded publisher: **PASS** following core and all three browser jobs.
+- Finalized source reconciliation: no application `src/`, exam `examples/`, runtime `package.json` or published offline HTML changes from the initial P61 baseline. Current branch is **`overhaul`**, not `Satyam`.
+- No further in-scope P61 pass, unresolved mapped test-retirement safety defect or unverified claim is carried as completed. **Scope caveat:** aspirational reductions in source LoC, overall script count and physical browser scenario scripts were not delivered and are explicitly recorded as accepted deviations—not mislabeled as completed objectives. Deferred P60 issues, genuine PDF/PYQ fact verification, real-device/accessibility validation and user release approval remain separate.
+- This closure entry is a **documentation-only follow-up** to the above fully green tested commit; the repository's protected CI will independently rerun for the closure documentation SHA.
