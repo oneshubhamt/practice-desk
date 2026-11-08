@@ -1,0 +1,49 @@
+name: P62-D live published-source evidence
+on:
+  push:
+    branches: [overhaul]
+    paths:
+      - scripts/p62d-live-check.mjs
+      - .github/workflows/p62d-live-evidence.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - run: npm ci --no-audit --no-fund
+      - name: Install PDF text and page inspectors if absent
+        shell: bash
+        run: |
+          if ! command -v pdfinfo >/dev/null || ! command -v pdftotext >/dev/null || ! command -v pdfseparate >/dev/null || ! command -v pdfunite >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq poppler-utils
+          fi
+      - name: Fetch published PDF sources for actual, ephemeral analysis
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .p62d-live
+          curl -fLSs --retry 2 --max-time 90 -A 'Mozilla/5.0' \
+            'https://online.2iim.com/CAT-question-paper-pdf/CAT%202024%20QUANT%20Slot-1.pdf' \
+            -o .p62d-live/cat-2024-quant.pdf
+          curl -fLSs --retry 2 --max-time 90 -A 'Mozilla/5.0' \
+            'https://edutap.in/wp-content/uploads/2026/05/UPSC-EPFO-APFC-2023-PYQ-Book.pdf' \
+            -o .p62d-live/apfc-2023-reproduction.pdf
+      - name: Source-derived fidelity and real-PDF handoff measurements
+        run: node scripts/p62d-live-check.mjs .p62d-live
+      - name: Save only measured evidence, not copyrighted full PDFs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p62d-live-verification
+          path: .p62d-live/report.json
+          if-no-files-found: warn
+          retention-days: 7
