@@ -14,9 +14,11 @@ See [architecture](architecture/CURRENT_ARCHITECTURE.md), [data contracts](archi
 
 ## Verified engineering state
 
-The P61 test-bench programme is **closed**, following a source audit and [exact-commit CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42433146976). The current required gate comprises **408 Node test cases; ten selected semantic mutations; 32 Chromium, 20 Firefox and 20 Linux WebKit real browser journeys; and guarded source-verified HTML publishing**. Source-code test coverage and CI outcomes do not independently validate question content or physical devices.
+The P61 test-bench programme is **closed**, following a source audit and [exact-commit CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42433146976). The P61 baseline comprised **408 Node test cases**, ten semantic mutations, 32 Chromium and 20 each Firefox/WebKit journeys, and guarded HTML publication. The P62-B source commit passed the current **414 Node tests**, the same mutation gate, all required browser journeys and guarded publication. Source-code test coverage and CI outcomes do not independently validate question content or physical devices.
 
 P62-A closed two P60 integrity defects on `overhaul`: solution-only media are excluded from candidate figure references while preserved in frozen review, and incomplete blueprints are structurally valid but cannot pass final publication gates. [Verified CI for tested source commit](https://github.com/oneshubhamt/practice-desk/actions/runs/42484839413) passed all five required jobs. Remaining source-trust and editorial findings stay in the active backlog.
+
+P62-B closed three editorial correctness findings: Reviewed papers now carry hash-bound exact Source paper/key IDs into the Library, new comparison schema 3 retains eligible MCQ comparisons in mixed-type papers and excludes explanation/taxonomy-only changes from candidate-semantic equality. Existing frozen schema-2 snapshots remain supported. [Exact-commit passing CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42498768267) includes the end-to-end Source import and frozen-history journey. Unauthenticated original-source claims remain outside software certification.
 
 Current documentation is deliberately architecture-first. Detailed P04–P61 implementation records and original audit evidence remain recoverable through [pinned Git history](HISTORY_INDEX.md); they are not current work instructions. No product code, question-bank data or release policy was changed during this documentation restructuring.
 
