@@ -209,3 +209,136 @@ test("P60-D RED: absent independent review or old review after edited question c
  assert.notEqual(bad.status,0);
  assert.equal(await readFile(inUse,"utf8"),"KEEP THIS");
 }));
+
+// P62-B: a reviewed file carries signed original IDs even when another
+// plausible Source revision is imported earlier in the library.
+test("P62-B exact revision pairing survives multiple originals and missing files",()=>temp(async dir=>{
+ const {originalPath,reviewedPath,reviewed}=await pairs(dir);
+ const t=run(tool,"template",originalPath,reviewedPath);
+ const decisions=await file(dir,"decisions.json",fillDecisions(t.data));
+ const candidates=run(qualityTool,"candidate",reviewedPath,"--limit","10");
+ const review=await file(dir,"review.json",reviewFor(reviewed,candidates.data));
+ const out=join(dir,"p62-lineage");
+ const built=run(tool,"compile",originalPath,reviewedPath,decisions,out,"--quality-review",review);
+ assert.equal(built.status,0,JSON.stringify(built.data));
+ const source=validateExamPackage(JSON.parse(await readFile(join(out,"source.exam.json"),"utf8")));
+ const target=validateExamPackage(JSON.parse(await readFile(join(out,"reviewed.exam.json"),"utf8")));
+ const lineage=JSON.parse(await readFile(join(out,"editorial-lineage.json"),"utf8"));
+ assert.equal(target.paper.sourcePaperRevisionId,lineage.sourcePaperRevisionId);
+ assert.equal(target.paper.sourceAnswerKeyRevisionId,lineage.sourceAnswerKeyRevisionId);
+ const other=structuredClone(source);
+ other.paper.id=source.paper.id+":another-revision";
+ other.paper.revision++;
+ other.answerKey.id=source.answerKey.id+":another-revision";
+ other.answerKey.revision++;
+ other.paper.answerKeyRevisionId=other.answerKey.id;
+ other.paper.contentHash=paperRevisionHash(other.paper);
+ validateExamPackage(other);
+ const family=examFamilyCatalog([other,target,source],new Set())[0];
+ assert.equal(pairedEdition(family,target,"source")?.paper.id,source.paper.id);
+ assert.equal(createSourceKeyReference(target,other),null);
+ assert.equal(createSourceReviewReference(target,other),null);
+ assert.equal(pairedEdition(examFamilyCatalog([other,target],new Set())[0],target,"source"),undefined,
+  "A different original must not replace the pinned source");
+ const unbound=structuredClone(target);
+ delete unbound.paper.sourcePaperRevisionId;
+ delete unbound.paper.sourceAnswerKeyRevisionId;
+ unbound.paper.contentHash=paperRevisionHash(unbound.paper);
+ validateExamPackage(unbound);
+ assert.equal(pairedEdition(family,unbound,"source"),undefined,
+  "Unbound multi-revision imports must not silently choose the first candidate");
+ const tampered=structuredClone(target);
+ tampered.paper.sourcePaperRevisionId=other.paper.id;
+ assert.throws(()=>validateExamPackage(tampered),/hash mismatch/);
+ const frozen={...startGenericAttempt(target,"reviewed-immutable",1000),
+  sourceKeyReference:createSourceKeyReference(target,source)};
+ validateSourceKeyReference(frozen);
+ assert.equal(frozen.frozen.paper.sourcePaperRevisionId,source.paper.id);
+}));
+
+test("P62-B nineteen MCQs remain comparable beside one numerical question",()=>{
+ const png="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/tAAAAABJRU5ErkJggg==";
+ const input=(edition,revision)=>({format:"practice-desk-bank",version:1,
+  bankId:"p62-mixed",examId:"upsc-epfo-apfc",title:"Mixed P62 synthetic test",
+  edition,revision,scoring:{correctMarks:2.5,incorrectMarks:-5/6,unansweredMarks:0},
+  timing:{kind:"untimed"},
+  media:[{id:"diagram",dataUri:"data:image/png;base64,"+png,altText:"Diagram context"}],
+  questions:Array.from({length:20},(_,i)=>i===19?
+   {id:"q20",section:"General",type:"nat",question:"Numeric example",answer:5}:
+   {id:"q"+(i+1),section:"General",type:"mcq",question:"MCQ "+(i+1),
+    options:["Alpha","Beta","Gamma","Delta"],answer:"B",
+    ...(i===0?{imageIds:["diagram"]}:{})})});
+ const source=importSimpleQuestionBank(input("source",1));
+ const reviewed=importSimpleQuestionBank(input("reviewed",2));
+ const ref=createSourceKeyReference(reviewed,source);
+ assert.equal(ref.schema,3);
+ assert.equal(ref.entries.length,20);
+ assert.equal(ref.entries.filter(x=>x.comparable).length,19);
+ assert.deepEqual(ref.entries[19],{kind:"unavailable",
+   questionRevisionId:reviewed.questions[19].id,comparable:false,reason:"unsupported-kind"});
+ const attempt={...startGenericAttempt(reviewed,"mixed-attempt",1000),
+  sourceKeyReference:ref,finishedAt:2000};
+ validateSourceKeyReference(attempt);
+ const score=sourceKeyScore(attempt);
+ assert.equal(score.total,20);
+ assert.equal(score.comparable,19);
+ assert.equal(score.unavailable,1);
+ assert.equal(score.maxMarks,47.5);
+ const metadataOnly=structuredClone(reviewed);
+ const q=metadataOnly.questions[1];
+ q.content.richExplanation=plainRichDocument("Revised private solution");
+ q.content.topicIds=["source:topic"];
+ q.content.tags=["difficulty:hard"];
+ q.contentHash=questionRevisionHash(q);
+ validateExamPackage(metadataOnly);
+ assert.equal(createSourceKeyReference(metadataOnly,source).entries.filter(x=>x.comparable).length,19,
+  "Explanation-only and taxonomy edits cannot suppress an equivalent MCQ");
+ const changedStem=structuredClone(metadataOnly);
+ changedStem.questions[1].content.prompt="Changed candidate question";
+ changedStem.questions[1].contentHash=questionRevisionHash(changedStem.questions[1]);
+ validateExamPackage(changedStem);
+ assert.equal(createSourceKeyReference(changedStem,source).entries.filter(x=>x.comparable).length,18);
+ const changedOptions=structuredClone(metadataOnly);
+ changedOptions.questions[1].content.options[0].text="Rewritten candidate option";
+ changedOptions.questions[1].contentHash=questionRevisionHash(changedOptions.questions[1]);
+ validateExamPackage(changedOptions);
+ assert.equal(createSourceKeyReference(changedOptions,source).entries.filter(x=>x.comparable).length,18);
+ const changedMedia=structuredClone(metadataOnly);
+ changedMedia.assets[0].altText="Altered candidate diagram description";
+ validateExamPackage(changedMedia);
+ assert.equal(createSourceKeyReference(changedMedia,source).entries.filter(x=>x.comparable).length,18);
+ const sourcePassage=structuredClone(source),targetPassage=structuredClone(reviewed);
+ for(const pkg of [sourcePassage,targetPassage]){
+   pkg.stimuli=[{id:"shared-passage",kind:"passage",text:"Same candidate passage"}];
+   pkg.questions[1].content.stimulusId="shared-passage";
+   pkg.questions[1].contentHash=questionRevisionHash(pkg.questions[1]);
+   validateExamPackage(pkg);
+ }
+ assert.equal(createSourceKeyReference(targetPassage,sourcePassage).entries.filter(x=>x.comparable).length,19);
+ targetPassage.stimuli[0].text="New candidate passage";
+ validateExamPackage(targetPassage);
+ assert.equal(createSourceKeyReference(targetPassage,sourcePassage).entries.filter(x=>x.comparable).length,18);
+}));
+
+// Old schema-2 source-key comparisons were already frozen in local History.
+test("P62-B reads original schema-2 snapshots without changing their digest",()=>{
+ const bank=(edition,revision)=>({format:"practice-desk-bank",version:1,
+  bankId:"p62-legacy",examId:"upsc-epfo-apfc",title:"Legacy test",edition,revision,
+  scoring:{correctMarks:2.5,incorrectMarks:-5/6,unansweredMarks:0},
+  questions:[{id:"q1",type:"mcq",section:"General",question:"Legacy question",
+   options:["A","B","C","D"],answer:"B"}]});
+ const source=importSimpleQuestionBank(bank("source",1));
+ const reviewed=importSimpleQuestionBank(bank("reviewed",2));
+ const legacySourceHash=hashJson({content:source.questions[0].content,stimulus:null,media:[]});
+ const core={schema:2,paperId:reviewed.paper.paperId,sourcePaperRevisionId:source.paper.id,
+   sourceAnswerKeyRevisionId:source.answerKey.id,
+   entries:[{questionRevisionId:reviewed.questions[0].id,
+    originalOptionId:"B",markingRule:source.paper.scoring.defaultRule,
+    sourceSemanticHash:legacySourceHash,comparable:true}]};
+ const reference={...core,contentHash:hashJson(core)};
+ const attempt={...startGenericAttempt(reviewed,"legacy-snapshot",1000),
+  sourceKeyReference:reference,finishedAt:2000};
+ validateSourceKeyReference(attempt);
+ assert.equal(sourceKeyScore(attempt).comparable,1);
+ assert.equal(sourceKeyScore(attempt).maxMarks,2.5);
+});
