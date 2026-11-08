@@ -34,6 +34,12 @@ Evidence: [implementation and browser assertion](https://github.com/oneshubhamt/
 
 Evidence: [P62-C source and regression tests](https://github.com/oneshubhamt/practice-desk/commit/dd20f02acd1e3660e72974d819d37647e1f67621) · [passing CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42504775263) (416 Node tests, mutation checks, Chromium, Firefox, WebKit, guarded publication). Software tests do not prove source accuracy.
 
+## P62-D focused independent verification (8 November 2026)
+
+- **Six original defects:** five deliberately reused test cases cover solution-image secrecy, incomplete blueprint blocking, exact Source revision pairing, mixed-kind comparability, candidate-semantic changes and author-declared unkeyworded statutory applicability. [Five focused checks passed](https://github.com/oneshubhamt/practice-desk/actions/runs/42508271893); [protected five-job CI passed](https://github.com/oneshubhamt/practice-desk/actions/runs/42508271948) on source commit `0a571a01443d`.
+- **Real-source workflow:** a two-page excerpt of a published CAT 2024 quantitative paper with mathematical notation passed PDF intake, authoring QA, Source/Reviewed compilation and candidate secrecy; two APFC 2023 vocabulary items were separately compiled. Independent mathematical/lexical oracles matched **4/4** answers within this curated, third-party reproduced sample. A genuine math-option bug (minus sign lost during duplicate checking) was discovered and repaired.
+- **Evidence limitations retained:** the PDF source and secondary key were not authenticated original IIM/UPSC documents; mathematical notation was incompletely recovered by text extraction, and reviewer-stated image/text fidelity is not programmatically authenticated. Eight CLI calls cost **1.293 s** excluding human/model work; **4,664 bytes** of candidate packets versus **4,981 bytes** of small authored sources were observed, but **model tokens and comparable baseline efficiency were not measured**. Difficulty, distractor validity and broad factual accuracy were not established. See [the QA evidence and metrics](docs/QA_CURRENT.md).
+
 ## Independent verification and release gates
 
 - Authenticate imported/external exam papers and key claims against original source documents. Check mathematics, figures, citations, explanations and current statutes with independent reviewers. Supplied-PDF digests and page maps are not visual transcription verification.
