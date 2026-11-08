@@ -166,3 +166,16 @@ test("P57-B distinct matching labels and redundant numeric-answer tolerance trig
  assert.ok(r.issues.some(i=>i.code==="duplicate-matching-label"&&
   i.questionId==="pairs"&&i.severity==="error"));
 });
+
+test("P62-D math option fingerprint distinguishes signed fractions and decimals",async()=>{
+ const bank=await load("apfc");
+ bank.questions[0].options=["2/3","-2/3","4/3","-4/3"];
+ let report=inspect(bank);
+ assert.equal(report.valid,true,JSON.stringify(report.issues));
+ bank.questions[0].options=["1.2","12","-0.5","0.5"];
+ report=inspect(bank);
+ assert.equal(report.valid,true,JSON.stringify(report.issues));
+ bank.questions[0].options[3]="-0.5";
+ report=inspect(bank);
+ assert.ok(report.issues.some(x=>x.code==="duplicate-option"&&x.questionId==="labour-01"));
+});
