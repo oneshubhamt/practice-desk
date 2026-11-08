@@ -32,7 +32,7 @@ Evidence: [implementation and browser assertion](https://github.com/oneshubhamt/
 - New review sidecars are v2; previous v1 files cannot authorize strict publication without re-review. The optional quality gate does not modify authored keys, frozen attempts or History.
 - **P60-07 remains open as a factual-trust limitation:** a reviewer can misclassify an unrecognized question or report inaccurate evidence. Recorded attestations are not independently fetched/authenticated by the offline software.
 
-Evidence: [P62-C source and regression tests](https://github.com/oneshubhamt/practice-desk/commit/dd20f02acd1e3660e72974d819d37647e1f67621). CI status must be checked separately; review accuracy is not established by software tests.
+Evidence: [P62-C source and regression tests](https://github.com/oneshubhamt/practice-desk/commit/dd20f02acd1e3660e72974d819d37647e1f67621) · [passing CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42504775263) (416 Node tests, mutation checks, Chromium, Firefox, WebKit, guarded publication). Software tests do not prove source accuracy.
 
 ## Independent verification and release gates
 

@@ -20,6 +20,8 @@ P62-A closed two P60 integrity defects on `overhaul`: solution-only media are ex
 
 P62-B closed three editorial correctness findings: Reviewed papers now carry hash-bound exact Source paper/key IDs into the Library, new comparison schema 3 retains eligible MCQ comparisons in mixed-type papers and excludes explanation/taxonomy-only changes from candidate-semantic equality. Existing frozen schema-2 snapshots remain supported. [Exact-commit passing CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42498768267) includes the end-to-end Source import and frozen-history journey. Unauthenticated original-source claims remain outside software certification.
 
+P62-C retained the 20-point review checklist and introduced explicit mathematical/legal/time-sensitive applicability in v2 quality-review sidecars, with supplementary heuristic contradiction checks, as-of dates and locatable evidence for law/time-sensitive items. [Verified CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42504775263) passed 416 Node tests, mutation checks, Chromium, Firefox, WebKit and guarded publication. Reviewer claims remain unauthenticated; that trust limitation is still open in the backlog.
+
 Current documentation is deliberately architecture-first. Detailed P04–P61 implementation records and original audit evidence remain recoverable through [pinned Git history](HISTORY_INDEX.md); they are not current work instructions. No product code, question-bank data or release policy was changed during this documentation restructuring.
 
 ## What is not closed
