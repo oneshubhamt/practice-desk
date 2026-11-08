@@ -129,7 +129,7 @@ export function validateSourceReviewReference(attempt:GenericAttempt):void{
    // When the separate aggregate source-key snapshot exists, its published
    // single-choice key must agree with the original item-level snapshot.
    const aggregate=attempt.sourceKeyReference?.entries.find(e=>e.questionRevisionId===target.id);
-   if(aggregate&&entry.sourceAnswer.kind==="single-choice"&&
+   if(aggregate&&"originalOptionId" in aggregate&&entry.sourceAnswer.kind==="single-choice"&&
       aggregate.originalOptionId!==entry.sourceAnswer.optionId)
      throw new Error("Frozen source-review published key mismatch");
  }

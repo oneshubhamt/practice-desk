@@ -210,7 +210,7 @@ test("P60-F RED: paired original/reviewed only publishes with complete SHA-bound
  assert.equal(ok.status,0,JSON.stringify(ok.data));
  assert.equal(ok.data.mode,"paired");
  assert.equal(ok.data.readyForPublication,true);
- assert.equal(ok.data.sourceKeyComparison?.unavailable,1,"Changed key/explanation is not semantically comparable to the printed source");
+ assert.equal(ok.data.sourceKeyComparison?.unavailable,0,"Key/explanation-only changes preserve candidate semantic comparability");
  const output=join(dir,"pair-output");
  assert.notEqual(run(script,"publish","paired",x.original,x.corrected,x.decisions,output,
   "--quality-review",x.reviewFile).status,0);

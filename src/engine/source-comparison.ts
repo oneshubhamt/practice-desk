@@ -70,7 +70,7 @@ function candidateSemanticHash(question:QuestionRevision,resources:Resources):st
   if("assetIds" in stimulus)for(const id of stimulus.assetIds??[])ids.add(id);
   if("assetId" in stimulus)ids.add(stimulus.assetId);
  }
- const mediaIndex=new Map((resources.assets??[]).map(a=>[a.id,a]));
+ const mediaIndex=new Map<string,NonNullable<Resources["assets"]>[number]>((resources.assets??[]).map(a=>[a.id,a]));
  const media=[...ids].sort().map(id=>{
   const asset=mediaIndex.get(id);
   return {id,contentHash:asset?.contentHash??null,
@@ -201,7 +201,7 @@ export function sourceKeyScore(attempt:GenericAttempt):{
  if(!ref||attempt.finishedAt===null)return null;
  validateSourceKeyReference(attempt);
  const responses=new Map(attempt.state.responses.map(row=>[row.questionRevisionId,row.response]));
- let marks=0,maxMarks=0,correct=0,incorrect=0,unanswered=0;
+ let marks=0,maxMarks=0,correct=0,incorrect=0,unanswered=0,comparable=0;
  for(const entry of ref.entries){
   if(!entry.comparable)continue;
   comparable++;
