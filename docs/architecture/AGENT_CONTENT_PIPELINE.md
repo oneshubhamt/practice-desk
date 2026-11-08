@@ -30,7 +30,7 @@ For original/reviewed, first derive a decision template using `editorial-edition
 - A source PDF SHA validates the referenced bytes, but the tool does **not** verify each PDF page/image against transcription, original PYQ authenticity or printed key.
 - Factual/temporal/legal assertions and real distractor quality must be checked against actual authoritative sources; source location recorded rather than invented.
 - Revisions to prompt, image, key or explanation may invalidate earlier review/hash records. No candidate-answer exposure is allowed.
-- `allowPartial` quota batches are not necessarily a complete programme; independent readiness/coverage must be checked for the finished target.
+- `allowPartial` batches can be structurally `valid:true` for continued authoring while `readyForPublication:false` until the total count and required quotas are fulfilled. The compiler and agent publish path reject incomplete plans; read-only audits/assessments can succeed without mislabeling readiness.
 - Original/source comparison has conservative comparability; unresolved P60 static-source findings are tracked in [backlog](../../backlog.md), not fixed by this documentation edit.
 - Source/Reviewed are explicit *two* Library imports, not atomic remote synchronization. Retain original source/PDF and sidecars outside browser History as appropriate.
 

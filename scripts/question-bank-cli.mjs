@@ -68,9 +68,14 @@ if(!["validate-bank","compile-bank","qa-bank"].includes(command)||!input||!flagO
    }
    blueprintAudit=auditBlueprint(plan,[{value:source,digest}],cognitiveTags,{priorSources:comparisonSources});
   }
-  if(!report.valid||!compiled||blueprintAudit?.valid===false||qualityAudit?.readyForPublication===false){
-   process.stdout.write(JSON.stringify({...publicReport,compiled:false,
-    ...(blueprintAudit?{blueprint:{valid:blueprintAudit.valid,requestedCount:blueprintAudit.requestedCount,
+  // A partial blueprint can be valid for continued authoring, but must not
+  // produce a signed, final exam package until all requested quotas are met.
+  const readyForPublication=report.valid&&Boolean(compiled)&&
+   blueprintAudit?.readyForPublication!==false&&qualityAudit?.readyForPublication!==false;
+  if(!report.valid||!compiled||blueprintAudit?.valid===false||
+     (compiling&&!readyForPublication)||qualityAudit?.readyForPublication===false){
+   process.stdout.write(JSON.stringify({...publicReport,readyForPublication,compiled:false,
+    ...(blueprintAudit?{blueprint:{valid:blueprintAudit.valid,readyForPublication:blueprintAudit.readyForPublication,requestedCount:blueprintAudit.requestedCount,
       actualCount:blueprintAudit.actualCount,partialDelivery:blueprintAudit.partialDelivery,
        remainingCount:blueprintAudit.remainingCount,issues:blueprintAudit.issues,coverage:blueprintAudit.coverage}}:{}),
     ...(qualityAudit?{qualityReview:{readyForPublication:qualityAudit.readyForPublication,
@@ -82,8 +87,8 @@ if(!["validate-bank","compile-bank","qa-bank"].includes(command)||!input||!flagO
     // Atomic create-new in the same folder; no destructive overwrite of a prior output.
     await writeFile(output,JSON.stringify(compiled,null,2)+"\n",{flag:"wx"});
    }
-   process.stdout.write(JSON.stringify({...publicReport,
-    compiled:compiling,...(blueprintAudit?{blueprint:{valid:true,requestedCount:blueprintAudit.requestedCount,actualCount:blueprintAudit.actualCount,
+   process.stdout.write(JSON.stringify({...publicReport,readyForPublication,
+    compiled:compiling,...(blueprintAudit?{blueprint:{valid:true,readyForPublication:blueprintAudit.readyForPublication,requestedCount:blueprintAudit.requestedCount,actualCount:blueprintAudit.actualCount,
       partialDelivery:blueprintAudit.partialDelivery,remainingCount:blueprintAudit.remainingCount,
       nearDuplicateCandidates:blueprintAudit.nearDuplicateCandidates}}:{}),
     ...(qualityAudit?{qualityReview:{readyForPublication:true,factualVerification:"not-performed",

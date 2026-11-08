@@ -133,7 +133,8 @@ test("P60-B: explicitly permitted partial batches disclose remaining targets wit
  assert.equal(p.status,0,p.stderr);
  const r=run("audit",plan,example);
  assert.equal(r.status,0,r.stderr);
- assert.equal(r.data.readyForPublication,true);
+ assert.equal(r.data.valid,true);
+ assert.equal(r.data.readyForPublication,false);
  assert.equal(r.data.actualCount,3);
  assert.equal(r.data.partialDeliveryAllowed,true);
  assert.equal(r.data.partialDelivery,true);
@@ -281,3 +282,32 @@ test("P60-B: agents can page errors without loading 200 questions and coverage o
  assert.notEqual(bad.status,0);
  assert.equal(bad.data.code,"blueprint-input-invalid");
 }));
+
+// P62-A: structural partial validity must not be confused with a final compiled bank.
+test("P62-A partial blueprint passes read-only validation but blocks final compiler output",()=>temp(async dir=>{
+ const p=mkPlan();p.targetCount=4;p.allowPartial=true;
+ p.quotas.subjects.exhaustive=false;p.quotas.kinds.exhaustive=false;
+ const plan=await write(dir,"partial-p62.json",p);
+ const source=await write(dir,"source-p62.json",JSON.parse(await readFile(example,"utf8")));
+ const cli=fileURLToPath(new URL("../scripts/question-bank-cli.mjs",import.meta.url));
+ const exec=(...args)=>{
+  const r=spawnSync(process.execPath,[cli,...args],{encoding:"utf8",timeout:30000});
+  assert.equal(r.error,undefined,String(r.error));
+  return {...r,data:JSON.parse(r.stdout||r.stderr)};
+ };
+ const reviewed=exec("validate-bank",source,"--blueprint",plan);
+ assert.equal(reviewed.status,0,reviewed.stderr);
+ assert.equal(reviewed.data.valid,true);
+ assert.equal(reviewed.data.readyForPublication,false);
+ assert.equal(reviewed.data.blueprint.valid,true);
+ assert.equal(reviewed.data.blueprint.readyForPublication,false);
+ const out=join(dir,"MUST-NOT-EXIST.exam.json");
+ const published=exec("compile-bank",source,out,"--blueprint",plan);
+ assert.notEqual(published.status,0);
+ assert.equal(published.data.valid,true);
+ assert.equal(published.data.readyForPublication,false);
+ assert.equal(published.data.compiled,false);
+ assert.equal(published.data.blueprint.valid,true);
+ assert.equal(published.data.blueprint.readyForPublication,false);
+ await assert.rejects(readFile(out,"utf8"));
+});

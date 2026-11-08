@@ -310,3 +310,36 @@ test("P60-F RED: one strict handoff also handles agent-transcribed PDF and prese
  assert.notEqual(blocked.status,0);
  await assert.rejects(access(join(dir,"not-written")));
 }));
+
+// P62-A: the agent can assess a partial bank, but cannot publish it or its reviewed pair.
+test("P62-A agent assessment preserves valid partial status and rejects incomplete publication",()=>scoped(async dir=>{
+ const x=await files(dir);
+ const plan=JSON.parse(await readFile(new URL("../examples/p60b-apfc-blueprint.json",import.meta.url),"utf8"));
+ plan.allowPartial=true;plan.targetCount=4;
+ for(const quota of Object.values(plan.quotas))quota.exhaustive=false;
+ const planFile=await put(dir,"partial-p62-blueprint.json",plan);
+ const assessed=run(script,"assess","single",x.corrected,
+   "--quality-review",x.reviewFile,"--blueprint",planFile);
+ assert.equal(assessed.status,0,JSON.stringify(assessed.data));
+ assert.equal(assessed.data.valid,true);
+ assert.equal(assessed.data.readyForPublication,false);
+ assert.equal(assessed.data.partialDelivery,true);
+ assert.equal(assessed.data.remainingCount,1);
+ const output=join(dir,"blocked-partial.exam.json");
+ const publication=run(script,"publish","single",x.corrected,output,
+   "--quality-review",x.reviewFile,"--blueprint",planFile,"--allow-create");
+ assert.notEqual(publication.status,0);
+ assert.equal(publication.data.valid,true);
+ assert.equal(publication.data.readyForPublication,false);
+ await assert.rejects(access(output));
+ const paired=run(script,"assess","paired",x.original,x.corrected,x.decisions,
+   "--quality-review",x.reviewFile,"--blueprint",planFile);
+ assert.equal(paired.status,0,JSON.stringify(paired.data));
+ assert.equal(paired.data.valid,true);
+ assert.equal(paired.data.readyForPublication,false);
+ const folder=join(dir,"blocked-pair");
+ const pairedPublication=run(script,"publish","paired",x.original,x.corrected,x.decisions,folder,
+   "--quality-review",x.reviewFile,"--blueprint",planFile,"--allow-create");
+ assert.notEqual(pairedPublication.status,0);
+ await assert.rejects(access(folder));
+});

@@ -494,3 +494,57 @@ test("P58-A F01: genuine manual drafts preserve existing publication validation 
   }
  });
 }
+
+// P62-A: package-level solution media must survive for review but never enter
+// the media list or alt text rendered in an active examination.
+{
+const test=__dep_0.default,assert=__dep_1.default;
+const {newAuthoringDraft,newAuthoringQuestion}=__dep_4;
+const {plainRichDocument}=__dep_3;
+const {compileAuthoringPublication}=__dep_6;
+const {validateExamPackage}=__dep_7;
+const {sha256}=__dep_10;
+test("P62-A candidate view excludes explanation-only image and alt text, review retains both",async()=>{
+ const {renderQuestionPrompt,renderGenericControls,assetHTML,renderAuthoredText}=
+   await import("../src/app/question-content-view.ts");
+ const png="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/tAAAAABJRU5ErkJggg==";
+ const dataUri="data:image/png;base64,"+png;
+ const bytes=Uint8Array.from(atob(png),c=>c.charCodeAt(0));
+ const asset=(id,altText)=>({id,mediaType:"image/png",dataUri,contentHash:sha256(bytes),altText});
+ const doc=(id,label)=>({format:"practice-desk-rich",version:1,blocks:[
+  {type:"paragraph",content:[{type:"text",text:label},
+    {type:"image",assetId:id,altText:label}]}
+ ]});
+ const draft=newAuthoringDraft(),q=newAuthoringQuestion("single-choice");
+ const authored={...q,prompt:doc("stem-figure","Candidate-safe chart"),
+   explanation:doc("solution-figure","SOLUTION ONLY correct option B"),
+   source:"P62-A synthetic media regression",
+   options:["One","Two","Three","Four"].map(plainRichDocument),answer:"B"};
+ const input={...draft,examId:"upsc-epfo-apfc",paperId:"p62-explanation-media",
+   title:"P62-A isolated solution image regression",
+   assets:[asset("stem-figure","Candidate-safe chart"),
+     asset("solution-figure","SOLUTION ONLY correct option B")],questions:[authored]};
+ const pkg=compileAuthoringPublication(input);
+ assert.equal(validateExamPackage(pkg),pkg);
+ assert.deepEqual(pkg.questions[0].content.assetIds,["stem-figure"]);
+ assert.deepEqual(pkg.assets.map(x=>x.id),["stem-figure","solution-figure"]);
+ const question=pkg.questions[0];
+ const candidate=renderQuestionPrompt(pkg,question)+
+   assetHTML(pkg,question.content.assetIds)+renderGenericControls(pkg,question);
+ assert.match(candidate,/Candidate-safe chart/);
+ assert.doesNotMatch(candidate,/SOLUTION ONLY|solution-figure/);
+ const solution=renderAuthoredText(pkg,"",question.content.richExplanation);
+ assert.match(solution,/SOLUTION ONLY correct option B/);
+ const onlyExplanation={...input,paperId:"p62-explanation-only",
+   assets:[asset("solution-figure","SOLUTION ONLY correct option B")],
+   questions:[{...authored,prompt:plainRichDocument("Which option is correct?")}]};
+ const package2=compileAuthoringPublication(onlyExplanation);
+ assert.equal(package2.questions[0].content.assetIds,undefined);
+ assert.deepEqual(package2.assets.map(x=>x.id),["solution-figure"]);
+ const candidate2=renderQuestionPrompt(package2,package2.questions[0])+
+  assetHTML(package2,package2.questions[0].content.assetIds);
+ assert.doesNotMatch(candidate2,/SOLUTION ONLY|solution-figure/);
+ assert.match(renderAuthoredText(package2,"",
+  package2.questions[0].content.richExplanation),/SOLUTION ONLY correct option B/);
+});
+}

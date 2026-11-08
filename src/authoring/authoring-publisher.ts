@@ -245,8 +245,11 @@ export function compileAuthoringPublication(
   const questionId=(paperId+":"+suffix) as QuestionId;
   const normalized=(doc:RichDocument)=>validateRichDocument(doc,{knownAssets:known});
   const prompt=normalized(q.prompt),explanation=normalized(q.explanation),passage=normalized(q.passage);
-  const stemRefs=[...new Set([...resources(prompt),...resources(explanation)])];
+  // Only prompt figures belong to the candidate-visible assetIds field.
+  // Explanation figures remain in the signed package for post-submit review.
+  const stemRefs=[...new Set(resources(prompt))];
   addRefs(stemRefs);
+  addRefs(resources(explanation));
   const hierarchy=topicAncestors(attributedTopicPath(d.examId,q.subject??"",
     q.syllabusHeadingId||undefined,q.topic??"",q.subtopic??"")).map(n=>n.id);
   const shared=q.stimulusRef?sharedStimuli.get(q.stimulusRef):undefined;

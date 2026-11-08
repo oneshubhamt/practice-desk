@@ -134,7 +134,11 @@ function report(task,primary,coverage,inputsSha){
  const supported=primary.ok&&p.valid!==false&&
   (mode==="single"?p.qualityReview?.readyForPublication===true:
     mode==="paired"?p.readyForPublication===true:p.readyForPublication===true);
- const ready=supported&&(!coverage||coverage.ok&&c.valid===true);
+ // Assessment validity and final publication readiness are separate:
+ // accepted partial batches remain valid but cannot be published.
+ const valid=supported&&(!coverage||coverage.ok&&c.valid===true);
+ const ready=valid&&p.readyForPublication!==false&&
+  (!coverage||c.readyForPublication===true);
  const issues=cleanIssues(p);
  if(coverage&&!coverage.ok){
   const extra=cleanIssues(c);issues.total+=Math.max(1,extra.total);
@@ -144,13 +148,14 @@ function report(task,primary,coverage,inputsSha){
  }
  if(!ready&&!issues.total){
   issues.total=1;issues.shown=1;
-  issues.items=[{code:String(!primary.ok?(p.code||"canonical-guard-rejected"):
-     "review-or-coverage-incomplete").slice(0,70).replace(/[^a-z0-9-]/gi,""),severity:"error"}];
+  issues.items=[{code:String(valid?"blueprint-incomplete":
+     !primary.ok?(p.code||"canonical-guard-rejected"):"review-or-coverage-incomplete")
+     .slice(0,70).replace(/[^a-z0-9-]/gi,""),severity:"error"}];
  }
  const comparison=p.sourceKeyComparison??null;
  return {format:FORMAT,version:VERSION,
   mode,stage:action==="assess"?"assess":"prepublish",
-  valid:ready,readyForPublication:ready,
+  valid,readyForPublication:ready,
   inputSha256:inputsSha,
   ...(mode==="single"?{bankId:p.bankId??null,questionCount:p.questionCount??null}:{
    sourceKeyComparison:comparison&&typeof comparison==="object"?{
@@ -181,7 +186,12 @@ async function perform(task){
  const primary=auditCall(task);
  const coverage=coverageCheck(task);
  const base=report(task,primary,coverage,digests);
- if(!base.readyForPublication){emit(base);process.exitCode=1;return;}
+ if(!base.readyForPublication){
+  emit(base);
+  // Read-only assessment of an otherwise valid partial batch is successful;
+  // publication must always fail closed without creating an output artifact.
+  process.exitCode=task.action==="assess"&&base.valid?0:1;return;
+ }
  if(task.action==="assess"){emit(base);return;}
  if((await Promise.all(allInput.map(inputHash))).some((v,i)=>v!==digests[i]))
   return failure("stale-input-before-publication");

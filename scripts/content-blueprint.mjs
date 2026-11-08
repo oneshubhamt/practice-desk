@@ -379,7 +379,7 @@ function audit(plan,sources,tagDoc,{offset=0,limit=12,priorSources=[]}={}){
    remainingCategories:Math.max(0,sorted.length-12)}];
  }));
  return {format:"practice-desk-blueprint-audit",version:1,valid:blockingCount===0,
-  readyForPublication:blockingCount===0,partialDeliveryAllowed:plan.allowPartial===true,
+  readyForPublication:blockingCount===0&&!partialDelivery,partialDeliveryAllowed:plan.allowPartial===true,
   partialDelivery,remainingCount:Math.max(0,plan.targetCount-actualCount),
   nearDuplicateCandidates,nearDuplicateScanTruncated,
   comparisonSourceCount:priorSources.length,

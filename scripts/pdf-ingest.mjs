@@ -249,12 +249,14 @@ export function auditPdfIntake(manifest,original,raw,documentBytes,{keyBytes=nul
  }
  const valid=issues.length===0;
  return {format:"practice-desk-pdf-intake-audit",version:1,valid,
-  readyForPublication:valid&&Boolean(pair),stage:pair?"intake-and-editorial":"transcription-only",
+  readyForPublication:valid&&Boolean(pair)&&coverage?.readyForPublication!==false,
+  stage:pair?"intake-and-editorial":"transcription-only",
   bankId:original.bankId,sourcePdfSha256:documentBytes.sha256,
   originalSha256:digest(raw),questionCount:original.questions?.length??0,
   sourceElementsChecked:sourceCount,reviewAssurance:editorial?.reviewAssurance??"not-performed",
   editorialComparable:editorial?.comparison?.comparable??null,
-  coverageValid:coverage?.valid??null,coveragePartial:coverage?.partialDelivery??null,
+  coverageValid:coverage?.valid??null,coverageReadyForPublication:coverage?.readyForPublication??null,
+  coveragePartial:coverage?.partialDelivery??null,
   coverageRemaining:coverage?.remainingCount??null,factualVerification:"not-performed",
   externalSourceFetches:0,actualPdfTextComparison:"not-performed-by-software",
   sourceInspection:"attributed-agent-or-human-claim-not-authenticated",
