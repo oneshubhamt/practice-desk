@@ -300,3 +300,117 @@ test("P60-C: bounded quality audit exposes heuristic candidate-hint warnings ins
  assert.ok(r.data.blockingIssueCount>=1);
  assert.equal(r.data.factualVerification,"not-performed");
 }));
+
+// P62-C: applicability is an explicit reviewer assertion; the scanner cannot
+// infer that an innocuously worded example is about a statutory contribution.
+test("P62-C unscanned contribution rate still requires reviewer-declared as-of and identifiable source",()=>temp(async dir=>{
+ const src=JSON.parse(await readFile(apfc,"utf8"));
+ src.questions[0].prompt="For Plan Z, which contribution share is assigned to the employer?";
+ const input=await write(dir,"opaque-statutory.json",src);
+ const pack=command(tool,"candidate",input,"--limit","10");
+ const checklist=command(tool,"checklist").data.checklist;
+ const review={format:"practice-desk-quality-review",version:2,bankId:src.bankId,
+  sourceSha256:pack.data.sourceSha256,
+  records:pack.data.items.map(item=>{
+   const q=src.questions.find(q=>q.id===item.questionId),math=q.id==="account-01";
+   return {questionId:q.id,questionSha256:sha(JSON.stringify(q)),
+    candidateSha256:item.candidateSha256,
+    applicability:{mathematical:math?"yes":"no",legal:q.id==="labour-01"?"yes":"no",
+     timeSensitive:"no",asOfDate:null},
+    reviewer:{kind:"ai",id:"synthetic-software-regression"},
+    independentSolution:{blindClaim:true,answer:q.answer,
+     reasoning:"Synthetic asserted answer to an imaginary scheme; no statutory facts authenticated."},
+    checks:checklist.map(check=>({id:check.id,status:"pass",
+     basis:check.id==="mathematical-correctness"?"mathematical-proof":
+      ["factual-correctness","temporal-correctness","pyq-fidelity"].includes(check.id)?"source-consulted":
+      check.id==="candidate-view-integrity"?"rendered-claim":"independent-editorial",
+     rationale:"Regression-only assertion; source content not authenticated."})),
+    evidence:[{publisher:"Synthetic fixture",title:"Imaginary Plan Z note",
+     locator:"appendix-z-17",retrievedAt:"2026-11-06",
+     excerpt:"Imaginary contribution schedule, only a regression fixture."}]};
+  })};
+ const verify=async(name,review)=>{
+  const path=await write(dir,name+".json",review);
+  return command(tool,"audit",input,"--review",path,"--limit","50");
+ };
+ const absent=await verify("no-asof",review);
+ assert.equal(absent.status,1);
+ assert.ok(absent.data.issues.items.some(x=>x.code==="applicability-asof-required"),JSON.stringify(absent.data.issues));
+ assert.ok(absent.data.issues.items.some(x=>x.code==="legal-asof-evidence-required"));
+ // Missing matching source evidence is not cured merely by declaring a date.
+ review.records[0].applicability.asOfDate="2026-11-06";
+ const wrongEvidence=await verify("date-without-source",review);
+ assert.equal(wrongEvidence.status,1);
+ assert.ok(wrongEvidence.data.issues.items.some(x=>x.code==="legal-asof-evidence-required"));
+ review.records[0].evidence[0].asOfDate="2026-11-06";
+ const accepted=await verify("supported-attestation",review);
+ assert.equal(accepted.status,0,JSON.stringify(accepted.data.issues));
+ assert.equal(accepted.data.readyForPublication,true);
+ assert.equal(accepted.data.factualVerification,"not-performed");
+ assert.equal(accepted.data.reviewAssurance,"recorded-self-attestation-not-authenticated");
+ const unsupported=structuredClone(review);
+ unsupported.records[0].checks.find(x=>x.id==="temporal-correctness").basis="independent-editorial";
+ assert.ok((await verify("wrong-temporal-basis",unsupported)).data.issues.items.some(
+  x=>x.code==="source-check-basis-invalid"));
+ const notLegal=structuredClone(review);
+ notLegal.records[0].applicability.legal="no";
+ // No lexical match is guaranteed: the explicit classification is necessary.
+ assert.equal((await verify("false-unscanned-declaration",notLegal)).status,0);
+}));
+
+test("P62-C mathematical declarations, pending status and keyword conflicts fail closed",()=>temp(async dir=>{
+ const src=JSON.parse(await readFile(apfc,"utf8"));
+ const input=await write(dir,"math.json",src);
+ const packet=command(tool,"candidate",input,"--limit","10");
+ const template=command(tool,"template",input,"--limit","10");
+ const checks=command(tool,"checklist").data.checklist;
+ const review=structuredClone(template.data);
+ for(const row of review.records){
+  const q=src.questions.find(q=>q.id===row.questionId);
+  row.applicability={mathematical:q.id==="account-01"?"yes":"no",legal:"no",timeSensitive:"no",asOfDate:null};
+  row.reviewer={id:"synthetic-qa",kind:"ai"};
+  row.independentSolution={blindClaim:true,answer:q.answer,
+   reasoning:"Synthetic reviewer assertion for a software classification test."};
+  row.checks=checks.map(c=>({id:c.id,status:"pass",
+   basis:c.id==="mathematical-correctness"?"mathematical-proof":
+    ["factual-correctness","temporal-correctness","pyq-fidelity"].includes(c.id)?"source-consulted":
+    c.id==="candidate-view-integrity"?"rendered-claim":"independent-editorial",
+   rationale:"This record is synthetic and cannot establish independent factual truth."}));
+  row.evidence=[{publisher:"Test fixture",title:"Fictional calculation note",locator:"item:"+q.id,
+   retrievedAt:"2026-11-06",excerpt:"Only proves that schema gates work."}];
+ }
+ const inspect=async(label,value,sourcePath=input)=>{
+  const p=await write(dir,label+".json",value);
+  return command(tool,"audit",sourcePath,"--review",p,"--limit","50");
+ };
+ assert.equal((await inspect("valid",review)).status,0);
+ const missing=structuredClone(review);
+ delete missing.records[0].applicability;
+ assert.ok((await inspect("missing",missing)).data.issues.items.some(x=>x.code==="review-invalid"));
+ const pending=structuredClone(review);
+ pending.records[0].applicability.legal="pending";
+ assert.ok((await inspect("pending",pending)).data.issues.items.some(x=>x.code==="applicability-unresolved"));
+ const failedMath=structuredClone(review);
+ failedMath.records[2].checks.find(x=>x.id==="mathematical-correctness").status="not-applicable";
+ assert.ok((await inspect("math-na",failedMath)).data.issues.items.some(x=>x.code==="mathematics-review-required"));
+ const unsupportedMath=structuredClone(review);
+ unsupportedMath.records[2].checks.find(x=>x.id==="mathematical-correctness").basis="independent-editorial";
+ assert.ok((await inspect("math-without-proof",unsupportedMath)).data.issues.items.some(x=>x.code==="mathematics-proof-required"));
+ const contradiction=structuredClone(review);
+ contradiction.records[2].applicability.mathematical="no";
+ assert.ok((await inspect("math-heuristic-conflict",contradiction)).data.issues.items.some(x=>x.code==="applicability-heuristic-conflict"));
+ const prior=structuredClone(review);
+ prior.version=1;
+ assert.ok((await inspect("old-format",prior)).data.issues.items.some(x=>x.code==="review-invalid"),
+  "Old sidecar format must not bypass the explicit declarations");
+ const legal=structuredClone(src);
+ legal.questions[0].prompt="Under the Code on Wages 2019, which letter is second?";
+ const legalFile=await write(dir,"legal-heuristic.json",legal);
+ const legalPacket=command(tool,"candidate",legalFile,"--limit","10");
+ const underClaim=structuredClone(review);
+ underClaim.sourceSha256=legalPacket.data.sourceSha256;
+ underClaim.records[0].questionSha256=sha(JSON.stringify(legal.questions[0]));
+ underClaim.records[0].candidateSha256=legalPacket.data.items[0].candidateSha256;
+ assert.ok((await inspect("legal-heuristic-conflict",underClaim,legalFile)).data.issues.items.some(
+  x=>x.code==="applicability-heuristic-conflict"));
+}));
