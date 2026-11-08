@@ -11,9 +11,12 @@ export function answerKeyRevisionHash(value:Pick<AnswerKeyRevision,"entries">):C
  return hashJson(value.entries) as ContentHash;
 }
 export function paperRevisionHash(value:Pick<PaperRevision,
- "sections"|"timing"|"navigation"|"scoring"|"answerKeyRevisionId"|"edition">):ContentHash{
+ "sections"|"timing"|"navigation"|"scoring"|"answerKeyRevisionId"|"edition"|
+ "sourcePaperRevisionId"|"sourceAnswerKeyRevisionId">):ContentHash{
  return hashJson({sections:value.sections,timing:value.timing,navigation:value.navigation,
-   scoring:value.scoring,answerKeyRevisionId:value.answerKeyRevisionId,edition:value.edition}) as ContentHash;
+   scoring:value.scoring,answerKeyRevisionId:value.answerKeyRevisionId,edition:value.edition,
+   ...(value.sourcePaperRevisionId?{sourcePaperRevisionId:value.sourcePaperRevisionId,
+     sourceAnswerKeyRevisionId:value.sourceAnswerKeyRevisionId}:{})}) as ContentHash;
 }
 export function assertRevisionHashes(
  questions:readonly QuestionRevision[],key:AnswerKeyRevision,paper:PaperRevision

@@ -81,6 +81,9 @@ export interface PaperRevision {
   readonly sections: readonly SectionDefinition[];
   /** Pins the exact key used to score attempts on this paper revision. */
   readonly answerKeyRevisionId: AnswerKeyRevisionId;
+  /** Exact original revision embedded in and hash-bound to an editorial Reviewed paper. */
+  readonly sourcePaperRevisionId?: PaperRevisionId;
+  readonly sourceAnswerKeyRevisionId?: AnswerKeyRevisionId;
   readonly timing: TimingPolicy;
   readonly navigation: NavigationPolicy;
   readonly scoring: ScoringPolicy;

@@ -384,9 +384,8 @@ export function bindLibraryScreen(owner:CoordinatorContext):void{
        owner.attempt=startGenericAttempt(configured,id,owner.now());
        owner.freshlyStartedAttemptId=owner.attempt.id;
        if(configured.paper.edition==="reviewed"){
-         const source=[...owner.packages.values()].find(candidate=>candidate.paper.edition==="source"&&
-           familyIdFor(candidate,owner.builtinPaperIds)===owner.selectedFamilyId&&
-           candidate.paper.paperId===configured.paper.paperId&&candidate.examId===configured.examId);
+         const family=owner.families().find(f=>f.id===owner.selectedFamilyId);
+         const source=family?pairedEdition(family,configured,"source"):undefined;
          if(source){
            const original= createSourceKeyReference(configured,source);
            const review= createSourceReviewReference(configured,source);

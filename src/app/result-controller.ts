@@ -50,7 +50,9 @@ export function renderCurrentResultHTML(owner:CoordinatorContext):string {
    const grades=owner.resultTab==="overview"?manualGradeSummary(owner.attempt):{graded:0,pending:0,total:0};
    const selfAssessed=s.snapshot.earnedMarks+grades.total;
    const originalKey=owner.resultTab==="overview"?sourceKeyScore(owner.attempt):null;
-   const sourceKeyText=originalKey&&originalKey.comparable>0?
+   const sourceKeyText=paper.edition==="reviewed"&&!owner.attempt.sourceKeyReference?
+     "Original-source comparison unavailable: no unambiguous original revision was frozen at attempt start":
+     originalKey&&originalKey.comparable>0?
      (originalKey.unavailable>0?"Comparable original-source subset only":"Original-source key comparison")+
      ": "+originalKey.marks.toFixed(1)+" / "+originalKey.maxMarks.toFixed(1)+
      " marks ("+originalKey.comparable+" of "+originalKey.total+" comparable; "+

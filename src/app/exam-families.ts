@@ -38,10 +38,25 @@ export function examFamilyCatalog(
  return result;
 }
 
-/** Find the available pairing only within the same exam/source identity. */
+/** Resolve the *exact* published original when the reviewed paper binds lineage.
+ * Legacy/unbound packages can pair only if there is exactly one candidate.
+ * This never chooses an arbitrary revision from a multi-version family. */
 export function pairedEdition(
  family:ExamFamily,paper:ExamPackage,edition:"source"|"reviewed"
 ):ExamPackage|undefined{
- return family.papers.find(p=>p.examId===paper.examId&&p.paper.paperId===paper.paper.paperId&&
-   p.paper.edition===edition);
+ const candidates=family.papers.filter(p=>p.examId===paper.examId&&
+   p.paper.paperId===paper.paper.paperId&&p.paper.edition===edition);
+ if(paper.paper.edition==="reviewed"&&edition==="source"&&
+    paper.paper.sourcePaperRevisionId!==undefined){
+   return candidates.find(p=>p.paper.id===paper.paper.sourcePaperRevisionId&&
+     p.answerKey.id===paper.paper.sourceAnswerKeyRevisionId);
+ }
+ if(paper.paper.edition==="source"&&edition==="reviewed"){
+   const pinned=candidates.filter(p=>p.paper.sourcePaperRevisionId===paper.paper.id&&
+     p.paper.sourceAnswerKeyRevisionId===paper.answerKey.id);
+   if(pinned.length)return pinned.length===1?pinned[0]:undefined;
+   const legacy=candidates.filter(p=>p.paper.sourcePaperRevisionId===undefined);
+   return legacy.length===1?legacy[0]:undefined;
+ }
+ return candidates.length===1?candidates[0]:undefined;
 }

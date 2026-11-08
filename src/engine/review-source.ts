@@ -34,7 +34,10 @@ export function createSourceReviewReference(
  target:ExamPackage, source:ExamPackage
 ):SourceReviewReference|null{
  if(target.paper.edition!=="reviewed"||source.paper.edition!=="source"||
-    target.examId!==source.examId||target.paper.paperId!==source.paper.paperId)return null;
+    target.examId!==source.examId||target.paper.paperId!==source.paper.paperId||
+    (target.paper.sourcePaperRevisionId!==undefined&&
+      (target.paper.sourcePaperRevisionId!==source.paper.id||
+       target.paper.sourceAnswerKeyRevisionId!==source.answerKey.id)))return null;
  const byQuestion=new Map(source.questions.map(q=>[q.questionId,q]));
  const sourceKeys=new Map(source.answerKey.entries.map(e=>[e.questionRevisionId,e.answer]));
  const targetKeys=new Map(target.answerKey.entries.map(e=>[e.questionRevisionId,e.answer]));
@@ -91,6 +94,12 @@ export function validateSourceReviewReference(attempt:GenericAttempt):void{
  if(ref.schema!==1||frozen.paper.edition!=="reviewed"||
     ref.examId!==frozen.snapshot.examId||ref.paperId!==frozen.paper.paperId||
     ref.targetPaperRevisionId!==frozen.paper.id||
+    (frozen.paper.sourcePaperRevisionId!==undefined&&
+     (ref.sourcePaperRevisionId!==frozen.paper.sourcePaperRevisionId||
+      ref.sourceAnswerKeyRevisionId!==frozen.paper.sourceAnswerKeyRevisionId))||
+    (attempt.sourceKeyReference!==undefined&&
+     (ref.sourcePaperRevisionId!==attempt.sourceKeyReference.sourcePaperRevisionId||
+      ref.sourceAnswerKeyRevisionId!==attempt.sourceKeyReference.sourceAnswerKeyRevisionId))||
     typeof ref.sourcePaperRevisionId!=="string"||!ref.sourcePaperRevisionId||
     typeof ref.sourceAnswerKeyRevisionId!=="string"||!ref.sourceAnswerKeyRevisionId||
     !Array.isArray(ref.entries)||!ref.entries.length||
