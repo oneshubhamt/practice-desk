@@ -5,6 +5,9 @@ on:
     paths:
       - scripts/p62d-live-check.mjs
       - .github/workflows/p62d-live-evidence.yml
+      - src/authoring/external-bank-qa.ts
+      - src/authoring/external-bank.ts
+      - scripts/question-quality.mjs
   workflow_dispatch:
 permissions:
   contents: read
@@ -26,6 +29,13 @@ jobs:
             sudo apt-get update -qq
             sudo apt-get install -y -qq poppler-utils
           fi
+      - name: Reuse only five focused regressions covering six original defects
+        run: |
+          node --test --test-name-pattern='P62-A candidate view|P62-A partial blueprint|P62-B exact revision pairing|P62-B nineteen MCQs|P62-C unscanned contribution' \
+            tests/authoring-domain.test.mjs \
+            tests/p60b-content-blueprint.test.mjs \
+            tests/p60d-editorial-editions.test.mjs \
+            tests/p60c-question-quality.test.mjs
       - name: Fetch published PDF sources for actual, ephemeral analysis
         shell: bash
         run: |
