@@ -75,9 +75,16 @@ type Item={bankId:string;revision:number;q:AuthoringQuestion;stem:string;options
 const compact=(s:string):string=>s.normalize("NFKC").toLowerCase()
  .replace(/^\s*(?:q(?:uestion)?\s*)?\d+[.)\s]+/iu,"")
  .replace(/[^\p{L}\p{N}]+/gu," ").trim().replace(/\s+/gu," ");
+/** Option identity must preserve mathematical signs and decimal points.
+ * The bag-of-words stem normalizer is intentionally lossy and must never
+ * decide whether +2/3 and -2/3 (or 1.2 and 12) are duplicate answers. */
+const optionSignature=(value:string):string=>value.normalize("NFKC").toLocaleLowerCase("en")
+ .replace(/[\u2212\u2010-\u2015]/gu,"-")
+ .replace(/[^\p{L}\p{N}+\-×÷/*^%=<>().]+/gu," ")
+ .replace(/\s+/gu," ").trim();
 const wording=(q:AuthoringQuestion)=>compact(publicationPlainText(q.prompt));
 const options=(q:AuthoringQuestion)=>q.kind==="single-choice"||q.kind==="multiple-select"?
- q.options.map(o=>compact(publicationPlainText(o))).sort():[];
+ q.options.map(o=>optionSignature(publicationPlainText(o))).sort():[];
 const grams=(stem:string):Set<string>=>{
  const words=stem.split(" ").filter(Boolean);
  const values=new Set<string>();
@@ -201,7 +208,7 @@ export function inspectExternalQuality(
     q.id,"subject","unverified",undefined,
     "Supply an explicit subject or applicable official syllabus heading");
   if(["single-choice","multiple-select"].includes(q.kind)){
-   const labels=q.options.map(o=>compact(publicationPlainText(o)));
+   const labels=q.options.map(o=>optionSignature(publicationPlainText(o)));
    for(let x=0;x<labels.length;x++)if(!labels[x])
     add("empty-option","error","An answer option has no readable text",q.id,"options["+x+"]");
    const seen=new Map<string,number>();
