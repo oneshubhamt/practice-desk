@@ -37,6 +37,9 @@ jobs:
           curl -fLSs --retry 2 --max-time 90 -A 'Mozilla/5.0' \
             'https://edutap.in/wp-content/uploads/2026/05/UPSC-EPFO-APFC-2023-PYQ-Book.pdf' \
             -o .p62d-live/apfc-2023-reproduction.pdf
+          curl -fLSs --retry 2 --max-time 90 -A 'Mozilla/5.0' \
+            'https://www.oswaal360.com/pluginfile.php/10939/mod_folder/content/0/CAT/1-Inner%2BPaper%20%28CAT%2025%20Yrs%20CW%20%20TW%20SP%29%20Pg%201-64.pdf' \
+            -o .p62d-live/cat-2024-secondary-key.pdf
       - name: Source-derived fidelity and real-PDF handoff measurements
         run: node scripts/p62d-live-check.mjs .p62d-live
       - name: Save only measured evidence, not copyrighted full PDFs
