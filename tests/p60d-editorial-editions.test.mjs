@@ -53,16 +53,18 @@ const fillDecisions=(template)=>{
 };
 const reviewFor=(source,candidates)=>{
  const c=run(qualityTool,"checklist");assert.equal(c.status,0);
- return {format:"practice-desk-quality-review",version:1,bankId:source.bankId,
+ return {format:"practice-desk-quality-review",version:2,bankId:source.bankId,
   sourceSha256:candidates.sourceSha256,
   records:candidates.items.map((entry,index)=>{
    const q=source.questions.find(x=>x.id===entry.questionId);
    return {questionId:q.id,questionSha256:sha(JSON.stringify(q)),
-    candidateSha256:entry.candidateSha256,reviewer:{id:"fictional-test-operator",kind:"ai"},
+    candidateSha256:entry.candidateSha256,
+    applicability:{mathematical:q.id==="account-01"?"yes":"no",legal:"no",timeSensitive:"no",asOfDate:null},
+    reviewer:{id:"fictional-test-operator",kind:"ai"},
     independentSolution:{blindClaim:true,answer:q.answer,
      reasoning:"Test-only assertion of independent solution, no external source was checked."},
     checks:c.data.checklist.map((check,i)=>({id:check.id,status:"pass",
-     basis:[11,12,13].includes(i)?"source-consulted":i===19?"rendered-claim":"independent-editorial",
+     basis:i===9?"mathematical-proof":[11,12,13].includes(i)?"source-consulted":i===19?"rendered-claim":"independent-editorial",
      rationale:"Synthetic QA record, not authenticated independent reasoning."})),
     evidence:[{publisher:"Fixture",title:"Synthetic QA record",locator:"test:"+q.id,
       retrievedAt:"2026-11-06",excerpt:"This is only a software regression fixture, not evidence of factual truth."}]

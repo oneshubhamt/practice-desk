@@ -34,15 +34,17 @@ async function files(dir,{asDocument=false}={}){
  const corrected=await put(dir,"reviewed.json",reviewed);
  const packet=run(quality,"candidate",corrected,"--limit","10");
  assert.equal(packet.status,0,packet.stderr);
- const review={format:"practice-desk-quality-review",version:1,bankId:reviewed.bankId,
+ const review={format:"practice-desk-quality-review",version:2,bankId:reviewed.bankId,
   sourceSha256:packet.data.sourceSha256,records:packet.data.items.map(candidate=>{
    const q=reviewed.questions.find(x=>x.id===candidate.questionId);
    return {questionId:q.id,questionSha256:sha(JSON.stringify(q)),
-    candidateSha256:candidate.candidateSha256,reviewer:{kind:"ai",id:"synthetic-independent-check"},
+    candidateSha256:candidate.candidateSha256,
+    applicability:{mathematical:q.id==="account-01"?"yes":"no",legal:"no",timeSensitive:"no",asOfDate:null},
+    reviewer:{kind:"ai",id:"synthetic-independent-check"},
     independentSolution:{blindClaim:true,answer:String(q.answer),
      reasoning:"Synthetic QA check record; no source has been authenticated."},
     checks:QUALITY_CHECKLIST.map((ck,i)=>({id:ck.id,status:"pass",
-     basis:[11,12,13].includes(i)?"source-consulted":i===19?"rendered-claim":"independent-editorial",
+     basis:i===9?"mathematical-proof":[11,12,13].includes(i)?"source-consulted":i===19?"rendered-claim":"independent-editorial",
      rationale:"Synthetic software fixture, never factual source certification."})),
     evidence:[{publisher:"Synthetic",title:"Fixture only",locator:"test:"+q.id,
       retrievedAt:"2026-11-06",excerpt:"No independent source consultation was actually performed."}]};
@@ -131,7 +133,7 @@ test("P60 full QA: source-attributed APFC/CAT end-to-end review record, strict p
   // NOT an independent blind fact check, source fetch or PYQ authentication.
   review.records=review.records.map((record,i)=>{
    const q=source.questions[i],math=file.startsWith("source-grounded-cat");
-   return {...record,reviewer:{id:"synthetic-p60-e2e",kind:"ai"},
+   return {...record,applicability:{mathematical:math?"yes":"no",legal:"no",timeSensitive:"no",asOfDate:null},reviewer:{id:"synthetic-p60-e2e",kind:"ai"},
     independentSolution:{blindClaim:true,answer:String(q.answer),
      reasoning:"Synthetic software-acceptance replay of the authored answer. No independent research or blinding occurred."},
     checks:record.checks.map(check=>({id:check.id,

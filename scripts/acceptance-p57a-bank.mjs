@@ -193,15 +193,17 @@ try{
    evidence:[{publisher:"Fixture",title:"Synthetic editorial decision",locator:"P60-D browser test",
     sourceNote:"Test-only user-attributed note; independent factual correctness not asserted"}]
   }));
-  const review={format:"practice-desk-quality-review",version:1,bankId:reviewedBank.bankId,
+  const review={format:"practice-desk-quality-review",version:2,bankId:reviewedBank.bankId,
    sourceSha256:packet.sourceSha256,records:packet.items.map(entry=>{
     const question=reviewedBank.questions.find(q=>q.id===entry.questionId);
     return {questionId:entry.questionId,questionSha256:digest(JSON.stringify(question)),
-      candidateSha256:entry.candidateSha256,reviewer:{id:"regression-only",kind:"ai"},
+      candidateSha256:entry.candidateSha256,
+      applicability:{mathematical:question.id==="account-01"?"yes":"no",legal:"no",timeSensitive:"no",asOfDate:null},
+      reviewer:{id:"regression-only",kind:"ai"},
       independentSolution:{blindClaim:true,answer:question.answer,
        reasoning:"Synthetic software-fixture assertion, not a checked external answer."},
       checks:QUALITY_CHECKLIST.map((x,i)=>({id:x.id,status:"pass",
-       basis:[11,12,13].includes(i)?"source-consulted":i===19?"rendered-claim":"independent-editorial",
+       basis:i===9?"mathematical-proof":[11,12,13].includes(i)?"source-consulted":i===19?"rendered-claim":"independent-editorial",
        rationale:"Synthetic regression fixture, verification not authenticated."})),
       evidence:[{publisher:"Fixture",title:"P60-D browser QA",locator:"question:"+question.id,
        retrievedAt:"2026-11-06",excerpt:"Only tests code contracts; not factual source verification."}]

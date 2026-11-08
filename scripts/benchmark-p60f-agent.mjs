@@ -27,16 +27,18 @@ function call(script,args){
 const median=x=>[...x].sort((a,b)=>a-b)[Math.floor(x.length/2)];
 function reviewFor(source,raw,packet){
  const questions=new Map(source.questions.map(q=>[q.id,q]));
- return {format:"practice-desk-quality-review",version:1,
+ return {format:"practice-desk-quality-review",version:2,
   bankId:source.bankId,sourceSha256:packet.sourceSha256,
   records:packet.items.map(item=>{
    const q=questions.get(item.questionId);
    return {questionId:q.id,questionSha256:sha(JSON.stringify(q)),
-    candidateSha256:item.candidateSha256,reviewer:{id:"synthetic-benchmark-claim",kind:"ai"},
+    candidateSha256:item.candidateSha256,
+    applicability:{mathematical:["account-01","dilr-1","qa-1"].includes(q.id)?"yes":"no",legal:"no",timeSensitive:"no",asOfDate:null},
+    reviewer:{id:"synthetic-benchmark-claim",kind:"ai"},
     independentSolution:{blindClaim:true,answer:Array.isArray(q.answer)?String(q.answer[0]):String(q.answer),
      reasoning:"Synthetic review assertion for measuring workflow, not genuine blinded verification."},
     checks:QUALITY_CHECKLIST.map((x,i)=>({id:x.id,status:"pass",
-     basis:[11,12,13].includes(i)?"source-consulted":i===19?"rendered-claim":"independent-editorial",
+     basis:i===9?"mathematical-proof":[11,12,13].includes(i)?"source-consulted":i===19?"rendered-claim":"independent-editorial",
      rationale:"Synthetic attributed assertion; external source not fetched or checked."})),
     evidence:[{publisher:"Synthetic fixture",title:"Not a real source",locator:"question:"+q.id,
      retrievedAt:"2026-11-06",excerpt:"Only measured workflow; not real evidence."}]

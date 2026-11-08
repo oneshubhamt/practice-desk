@@ -125,11 +125,12 @@ test("P60-C RED: external review must be SHA-bound, complete, independently solv
  const pack=command(tool,"candidate",input,"--limit","10");
  assert.equal(pack.status,0,pack.stderr);
  const checks=Array.from({length:20},(_,i)=>({id:command(tool,"checklist").data.checklist[i].id,
-  status:"pass",basis:i===11||i===12||i===13?"source-consulted":i===19?"rendered-claim":"independent-editorial",
+  status:"pass",basis:i===9?"mathematical-proof":i===11||i===12||i===13?"source-consulted":i===19?"rendered-claim":"independent-editorial",
   rationale:"Synthetic test assertion only, no authentic source verification"}));
- const report={format:"practice-desk-quality-review",version:1,bankId:src.bankId,sourceSha256:pack.data.sourceSha256,
+ const report={format:"practice-desk-quality-review",version:2,bankId:src.bankId,sourceSha256:pack.data.sourceSha256,
   records:pack.data.items.map((q,i)=>({questionId:q.questionId,questionSha256:sha(JSON.stringify(src.questions[i])),
    candidateSha256:q.candidateSha256,
+   applicability:{mathematical:src.questions[i].id==="account-01"?"yes":"no",legal:"no",timeSensitive:"no",asOfDate:null},
    reviewer:{id:"synthetic-reviewer",kind:"ai"},
    independentSolution:{blindClaim:true,answer:src.questions[i].answer,
     reasoning:"Synthetic fixture reasoning, not independently established"},
@@ -166,6 +167,7 @@ test("P60-C RED: external review must be SHA-bound, complete, independently solv
  legalReview.sourceSha256=legalPacket.data.sourceSha256;
  legalReview.records[0].questionSha256=sha(JSON.stringify(legal.questions[0]));
  legalReview.records[0].candidateSha256=legalPacket.data.items[0].candidateSha256;
+ legalReview.records[0].applicability={mathematical:"no",legal:"yes",timeSensitive:"yes",asOfDate:null};
  const lawResult=command(tool,"audit",legalPath,"--review",
   await write(dir,"legal-review.json",legalReview));
  assert.equal(lawResult.status,1);
@@ -182,7 +184,7 @@ test("P60-C RED: external review must be SHA-bound, complete, independently solv
 test("P60-C RED: strict compiler refuses incomplete review and never writes compiled output",()=>temp(async dir=>{
  const src=JSON.parse(await readFile(apfc,"utf8"));
  const input=await write(dir,"source.json",src);
- const incomplete={format:"practice-desk-quality-review",version:1,bankId:src.bankId,
+ const incomplete={format:"practice-desk-quality-review",version:2,bankId:src.bankId,
   sourceSha256:sha(JSON.stringify(src)),records:[]};
  const review=await write(dir,"review.json",incomplete),output=join(dir,"blocked.json");
  const blocked=command(cli,"compile-bank",input,output,"--quality-review",review);
@@ -195,9 +197,9 @@ test("P60-C RED: malformed, fabricated, duplicate and undisclosed review records
  const input=await write(dir,"source.json",JSON.parse(await readFile(cat,"utf8")));
  const source=JSON.parse(await readFile(input,"utf8"));
  for(const review of [
-  {format:"practice-desk-quality-review",version:1,bankId:source.bankId,sourceSha256:"0".repeat(64),records:[]},
-  {format:"practice-desk-quality-review",version:1,bankId:source.bankId,sourceSha256:sha(JSON.stringify(source)),records:[{questionId:"x",extra:"trusted"}]},
-  {format:"practice-desk-quality-review",version:1,bankId:source.bankId,sourceSha256:sha(JSON.stringify(source)),records:[]}
+  {format:"practice-desk-quality-review",version:2,bankId:source.bankId,sourceSha256:"0".repeat(64),records:[]},
+  {format:"practice-desk-quality-review",version:2,bankId:source.bankId,sourceSha256:sha(JSON.stringify(source)),records:[{questionId:"x",extra:"trusted"}]},
+  {format:"practice-desk-quality-review",version:2,bankId:source.bankId,sourceSha256:sha(JSON.stringify(source)),records:[]}
  ]){
   const p=await write(dir,"broken-"+Math.random()+".json",review);
   const r=command(tool,"audit",input,"--review",p);
@@ -239,7 +241,9 @@ test("P60-C: review templates are intentionally incomplete and do not contain hi
  const r=command(tool,"template",input,"--limit","1");
  assert.equal(r.status,0,r.stderr);
  assert.equal(r.data.format,"practice-desk-quality-review");
- assert.equal("templateIncomplete" in r.data,false,"Fillable review must match exact v1 schema");
+ assert.equal("templateIncomplete" in r.data,false,"Fillable review must match exact v2 schema");
+ assert.equal(r.data.version,2);
+ assert.deepEqual(r.data.records[0].applicability,{mathematical:"pending",legal:"pending",timeSensitive:"pending",asOfDate:null});
  assert.equal(r.data.records.length,1);
  assert.equal(r.data.records[0].checks.length,20);
  assert.equal(r.data.records[0].independentSolution.blindClaim,false);

@@ -189,16 +189,17 @@ test("P60-E strict compile delegates P60-D without rewriting original, and canno
  const candidate=run(quality,"candidate",reviewedPath);
  assert.equal(candidate.status,0,candidate.stderr);
  const checklist=run(quality,"checklist");
- const review={format:"practice-desk-quality-review",version:1,bankId:reviewed.bankId,
+ const review={format:"practice-desk-quality-review",version:2,bankId:reviewed.bankId,
   sourceSha256:candidate.data.sourceSha256,records:candidate.data.items.map(row=>{
    const q=reviewed.questions.find(q=>q.id===row.questionId);
    return {questionId:q.id,questionSha256:sha(JSON.stringify(q)),
     candidateSha256:row.candidateSha256,
+    applicability:{mathematical:["dilr-1","qa-1"].includes(q.id)?"yes":"no",legal:"no",timeSensitive:"no",asOfDate:null},
     reviewer:{id:"synthetic-agent-reviewer",kind:"ai"},
     independentSolution:{blindClaim:true,answer:String(q.answer),
      reasoning:"Synthetic review assertion for software tests, not external proof."},
     checks:checklist.data.checklist.map((c,i)=>({id:c.id,status:"pass",
-      basis:[11,12,13].includes(i)?"source-consulted":i===19?"rendered-claim":"independent-editorial",
+      basis:i===9?"mathematical-proof":[11,12,13].includes(i)?"source-consulted":i===19?"rendered-claim":"independent-editorial",
       rationale:"Synthetic QA statement for a regression fixture, not source certification."})),
     evidence:[{publisher:"Fixture",title:"Synthetic sample",
       locator:"paper page 1",retrievedAt:"2026-11-06",
