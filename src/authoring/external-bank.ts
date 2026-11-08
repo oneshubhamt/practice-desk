@@ -330,7 +330,26 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
      err(at+".stance","Use supports or disputes, as an unverified author claim");
     return clean as NonNullable<NonNullable<AuthoringQuestion["provenance"]>["sources"]>[number];
    });
-  const qa=object(q.qa,path+".qa",["status"]);
+  const qa=object(q.qa,path+".qa",["status","applicability"]);
+  // The author can declare applicability before review. This is a separate,
+  // source-hash-bound assertion, never a fact-verified certification.
+  if(qa.applicability!==undefined){
+   const flags=object(qa.applicability,path+".qa.applicability",
+    ["mathematical","legal","timeSensitive","asOfDate"]);
+   for(const field of ["mathematical","legal","timeSensitive"]){
+    if(typeof flags[field]!=="boolean")
+     err(path+".qa.applicability."+field,"Explicit boolean applicability required");
+   }
+   if(flags.asOfDate!==null&&flags.asOfDate!==undefined){
+    const asOfDate=text(flags.asOfDate,path+".qa.applicability.asOfDate",10);
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(asOfDate)||
+       !Number.isFinite(Date.parse(asOfDate+"T00:00:00Z"))||
+       new Date(asOfDate+"T00:00:00Z").toISOString().slice(0,10)!==asOfDate)
+      err(path+".qa.applicability.asOfDate","Use a real ISO date");
+   }
+   if((flags.legal||flags.timeSensitive)&&!flags.asOfDate)
+    err(path+".qa.applicability.asOfDate","Applicable source law/data must declare an as-of date");
+  }
   if(qa.status!=="unchecked"&&qa.status!=="needs-review")
    err(path+".qa.status","Only unchecked or needs-review are accepted; no self-certification");
   const stimulusRef=q.stimulusRef===undefined?undefined:key(q.stimulusRef,path+".stimulusRef");

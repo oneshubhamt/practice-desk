@@ -352,10 +352,31 @@ test("P62-C unscanned contribution rate still requires reviewer-declared as-of a
  unsupported.records[0].checks.find(x=>x.id==="temporal-correctness").basis="independent-editorial";
  assert.ok((await verify("wrong-temporal-basis",unsupported)).data.issues.items.some(
   x=>x.code==="source-check-basis-invalid"));
- const notLegal=structuredClone(review);
- notLegal.records[0].applicability.legal="no";
- // No lexical match is guaranteed: the explicit classification is necessary.
- assert.equal((await verify("false-unscanned-declaration",notLegal)).status,0);
+ // Independent author-side classification makes this same keyword-free
+ // statutory question impossible to downgrade silently in a quality review.
+ const authorTagged=structuredClone(src);
+ authorTagged.questions[0].qa.applicability={
+  mathematical:false,legal:true,timeSensitive:true,asOfDate:"2026-11-06"};
+ const authorFile=await write(dir,"opaque-statutory-author-declared.json",authorTagged);
+ const authorPack=command(tool,"candidate",authorFile,"--limit","10");
+ const wrongTag=structuredClone(review);
+ wrongTag.sourceSha256=authorPack.data.sourceSha256;
+ wrongTag.records[0].questionSha256=sha(JSON.stringify(authorTagged.questions[0]));
+ wrongTag.records[0].candidateSha256=authorPack.data.items[0].candidateSha256;
+ wrongTag.records[0].applicability.legal="no";
+ wrongTag.records[0].applicability.timeSensitive="no";
+ const wrongTagFile=await write(dir,"false-unscanned-declaration.json",wrongTag);
+ const blocked=command(tool,"audit",authorFile,"--review",wrongTagFile,"--limit","50");
+ assert.equal(blocked.status,1);
+ assert.ok(blocked.data.issues.items.some(x=>x.code==="source-applicability-conflict"));
+ // Mismatched dates are also rejected, despite intact reviewer evidence.
+ wrongTag.records[0].applicability.legal="yes";
+ wrongTag.records[0].applicability.timeSensitive="yes";
+ wrongTag.records[0].applicability.asOfDate="2025-11-06";
+ const wrongDate=command(tool,"audit",authorFile,"--review",
+  await write(dir,"wrong-date.json",wrongTag),"--limit","50");
+ assert.equal(wrongDate.status,1);
+ assert.ok(wrongDate.data.issues.items.some(x=>x.code==="source-asof-conflict"));
 }));
 
 test("P62-C mathematical declarations, pending status and keyword conflicts fail closed",()=>temp(async dir=>{

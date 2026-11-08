@@ -248,12 +248,22 @@ export function auditQuestionQuality(source,sourceRaw,reviewRaw=undefined,{offse
   // Explicit declarations cover questions missed by text heuristics.
   // Contradictory negative assertions are blocking; detectors stay protective.
   const declared=item.applicability,inferred=inferredApplicability(q,draft);
-  const flags={mathematical:declared.mathematical==="yes"||inferred.mathematical,
-   legal:declared.legal==="yes"||inferred.legal,
-   timeSensitive:declared.timeSensitive==="yes"||inferred.timeSensitive};
+  const author=sourceQuestion.qa?.applicability;
+  const flags={mathematical:declared.mathematical==="yes"||inferred.mathematical||
+      author?.mathematical===true,
+   legal:declared.legal==="yes"||inferred.legal||author?.legal===true,
+   timeSensitive:declared.timeSensitive==="yes"||inferred.timeSensitive||
+      author?.timeSensitive===true};
+  if(author&&(author.legal||author.timeSensitive)&&
+      declared.asOfDate!==author.asOfDate)
+   add("source-asof-conflict",
+    "Reviewer as-of date conflicts with author-declared applicable date",q.id,"reviewer-claimed");
   for(const key of ["mathematical","legal","timeSensitive"]){
    if(declared[key]==="pending")
     add("applicability-unresolved","Reviewer must explicitly classify "+key+" applicability",q.id,"reviewer-claimed");
+   if(author?.[key]===true&&declared[key]!=="yes")
+    add("source-applicability-conflict","Reviewer must affirm author-declared "+key+
+     " applicability even without any keyword cue",q.id,"reviewer-claimed");
    if(inferred[key]&&declared[key]==="no")
     add("applicability-heuristic-conflict","Reviewer declared "+key+
      " not applicable but a supplementary detector found relevant material",q.id,"heuristic");
