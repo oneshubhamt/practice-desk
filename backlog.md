@@ -26,6 +26,14 @@ Evidence: [source fix](https://github.com/oneshubhamt/practice-desk/commit/bd8a9
 
 Evidence: [implementation and browser assertion](https://github.com/oneshubhamt/practice-desk/commit/f5b6a259247f35b66864db3540283c6a48daf40c) · [passing CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42498768267) (414 Node, mutation checks, Chromium, Firefox, WebKit and guarded build). Independent source authenticity remains open.
 
+## P62-C enforcement (8 November 2026)
+
+- P60-C quality review keeps the **20 existing checks** and now requires explicit `mathematical`, `legal` and `timeSensitive` declarations per question. A positive category enforces the relevant checks; legal/temporal assertions additionally require a matching as-of date and identifiable, reviewer-attributed source evidence. Heuristics still flag contradictions, including omitted math/legal cues.
+- New review sidecars are v2; previous v1 files cannot authorize strict publication without re-review. The optional quality gate does not modify authored keys, frozen attempts or History.
+- **P60-07 remains open as a factual-trust limitation:** a reviewer can misclassify an unrecognized question or report inaccurate evidence. Recorded attestations are not independently fetched/authenticated by the offline software.
+
+Evidence: [P62-C source and regression tests](https://github.com/oneshubhamt/practice-desk/commit/dd20f02acd1e3660e72974d819d37647e1f67621). CI status must be checked separately; review accuracy is not established by software tests.
+
 ## Independent verification and release gates
 
 - Authenticate imported/external exam papers and key claims against original source documents. Check mathematics, figures, citations, explanations and current statutes with independent reviewers. Supplied-PDF digests and page maps are not visual transcription verification.
