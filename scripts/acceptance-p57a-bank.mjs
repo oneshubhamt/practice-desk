@@ -264,8 +264,12 @@ try{
  const pairAttempt=(await records(page)).find(r=>r.recordType==="generic-attempt"&&
   r.frozen.paper.id===reviewedEdition.paper.id&&r.finishedAt===null);
  check(Boolean(pairAttempt?.sourceReviewReference)&&
-  pairAttempt?.sourceKeyReference?.entries.filter(x=>x.comparable).length===2,
-  engine+" P60-D source/reviewed comparison was not frozen at attempt start");
+  pairAttempt?.frozen.paper.sourcePaperRevisionId===sourceEdition.paper.id&&
+  pairAttempt?.frozen.paper.sourceAnswerKeyRevisionId===sourceEdition.answerKey.id&&
+  pairAttempt?.sourceKeyReference?.sourcePaperRevisionId===sourceEdition.paper.id&&
+  pairAttempt?.sourceKeyReference?.sourceAnswerKeyRevisionId===sourceEdition.answerKey.id&&
+  pairAttempt?.sourceKeyReference?.entries.filter(x=>x.comparable).length===3,
+  engine+" P62-B source/reviewed original revision was not frozen exactly at attempt start");
  await page.locator('input[data-choice="A"]').click();
  await page.locator("#g-submit").click();await route(page,"result");
  const completed=(await records(page)).find(r=>r.recordType==="generic-attempt"&&
