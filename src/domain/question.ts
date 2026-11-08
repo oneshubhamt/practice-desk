@@ -64,6 +64,8 @@ interface QuestionContentBase {
   readonly richPrompt?: RichDocument;
   /** Worked rich solution is rendered only after authorized submission. */
   readonly richExplanation?: RichDocument;
+  /** Signed solution-only assets: never render as candidate prompt figures. */
+  readonly explanationAssetIds?: readonly AssetId[];
   /** Shared passage, case, table or chart; kept outside the question to avoid duplication. */
   readonly stimulusId?: StimulusId;
   readonly assetIds?: readonly AssetId[];

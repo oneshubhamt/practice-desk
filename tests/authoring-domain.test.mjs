@@ -527,6 +527,7 @@ test("P62-A candidate view excludes explanation-only image and alt text, review 
  const pkg=compileAuthoringPublication(input);
  assert.equal(validateExamPackage(pkg),pkg);
  assert.deepEqual(pkg.questions[0].content.assetIds,["stem-figure"]);
+ assert.deepEqual(pkg.questions[0].content.explanationAssetIds,["solution-figure"]);
  assert.deepEqual(pkg.assets.map(x=>x.id),["stem-figure","solution-figure"]);
  const question=pkg.questions[0];
  const candidate=renderQuestionPrompt(pkg,question)+
@@ -540,6 +541,7 @@ test("P62-A candidate view excludes explanation-only image and alt text, review 
    questions:[{...authored,prompt:plainRichDocument("Which option is correct?")}]};
  const package2=compileAuthoringPublication(onlyExplanation);
  assert.equal(package2.questions[0].content.assetIds,undefined);
+ assert.deepEqual(package2.questions[0].content.explanationAssetIds,["solution-figure"]);
  assert.deepEqual(package2.assets.map(x=>x.id),["solution-figure"]);
  const candidate2=renderQuestionPrompt(package2,package2.questions[0])+
   assetHTML(package2,package2.questions[0].content.assetIds);

@@ -310,4 +310,4 @@ test("P62-A partial blueprint passes read-only validation but blocks final compi
  assert.equal(published.data.blueprint.valid,true);
  assert.equal(published.data.blueprint.readyForPublication,false);
  await assert.rejects(readFile(out,"utf8"));
-});
+}));

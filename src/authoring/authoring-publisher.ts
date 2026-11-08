@@ -248,8 +248,9 @@ export function compileAuthoringPublication(
   // Only prompt figures belong to the candidate-visible assetIds field.
   // Explanation figures remain in the signed package for post-submit review.
   const stemRefs=[...new Set(resources(prompt))];
+  const explanationRefs=[...new Set(resources(explanation))];
   addRefs(stemRefs);
-  addRefs(resources(explanation));
+  addRefs(explanationRefs);
   const hierarchy=topicAncestors(attributedTopicPath(d.examId,q.subject??"",
     q.syllabusHeadingId||undefined,q.topic??"",q.subtopic??"")).map(n=>n.id);
   const shared=q.stimulusRef?sharedStimuli.get(q.stimulusRef):undefined;
@@ -265,6 +266,7 @@ export function compileAuthoringPublication(
    richPrompt:prompt,
    ...(hasContent(explanation)?{richExplanation:explanation}:{}),
    ...(stemRefs.length?{assetIds:stemRefs}:{}),
+   ...(explanationRefs.length?{explanationAssetIds:explanationRefs}:{}),
    ...(shared?{stimulusId:shared.id}:
       hasContent(passage)?{stimulusId:(revisionId+":stimulus") as StimulusId}:{})
   };

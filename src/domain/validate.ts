@@ -111,7 +111,7 @@ export function validateQuestionRevision(value: unknown): QuestionRevision {
 
   const content = record(question["content"], "question.content");
   const kind = oneOf(content["kind"], QUESTION_KINDS, "question.content.kind");
-  const baseFields=["kind","prompt","richPrompt","richExplanation","stimulusId","assetIds","topicIds","tags"];
+  const baseFields=["kind","prompt","richPrompt","richExplanation","stimulusId","assetIds","explanationAssetIds","topicIds","tags"];
   const kindFields:Record<typeof kind,readonly string[]>={
     "single-choice":["options"],
     "multiple-select":["options","minSelections","maxSelections"],
@@ -130,9 +130,9 @@ export function validateQuestionRevision(value: unknown): QuestionRevision {
     if(JSON.stringify(value)!==JSON.stringify(normalized))throw Error(path+": noncanonical rich document");
   };
   rich(content["richPrompt"],content["assetIds"],"question.content.richPrompt");
-  rich(content["richExplanation"],content["assetIds"],"question.content.richExplanation");
+  rich(content["richExplanation"],content["explanationAssetIds"],"question.content.richExplanation");
   if (content["stimulusId"] !== undefined) text(content["stimulusId"], "question.content.stimulusId");
-  for (const field of ["assetIds", "topicIds", "tags"] as const) {
+  for (const field of ["assetIds", "explanationAssetIds", "topicIds", "tags"] as const) {
     if (content[field] !== undefined) {
       const values = stringArray(content[field], "question.content." + field);
       if (field !== "tags") unique(values, "question.content." + field);

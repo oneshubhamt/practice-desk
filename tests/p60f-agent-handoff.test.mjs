@@ -342,4 +342,4 @@ test("P62-A agent assessment preserves valid partial status and rejects incomple
    "--quality-review",x.reviewFile,"--blueprint",planFile,"--allow-create");
  assert.notEqual(pairedPublication.status,0);
  await assert.rejects(access(folder));
-});
+}));

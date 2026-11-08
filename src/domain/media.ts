@@ -102,7 +102,7 @@ export function validateMediaInventory(stimuliInput:unknown,assetsInput:unknown)
  return {stimuli:stimuliInput as StimulusDefinition[],assets:assetsInput as ImageAsset[]};
 }
 function referencedAssets(question:QuestionRevision):string[]{
- const c=question.content,ids=[...(c.assetIds??[])];
+ const c=question.content,ids=[...(c.assetIds??[]),...(c.explanationAssetIds??[])];
  if(c.kind==="single-choice"||c.kind==="multiple-select")for(const o of c.options)ids.push(...(o.assetIds??[]));
  if(c.kind==="matching")for(const item of [...c.leftItems,...c.rightItems])ids.push(...(item.assetIds??[]));
  return ids;
