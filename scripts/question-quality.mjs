@@ -43,12 +43,12 @@ const allowedChecks=new Set(["pass","fail","not-reviewed","not-applicable"]);
 // N/A is valid only for a genuinely inapplicable construct; mandatory checks require PASS.
 const CONDITIONAL_CHECKS=new Set(["option-distinctness","distractor-quality",
  "mathematical-correctness","temporal-correctness","pyq-fidelity"]);
-const requiresCheck=(id,q,timeSensitive,hasMathematics)=>{
+const requiresCheck=(id,q,flags)=>{
  if(!CONDITIONAL_CHECKS.has(id))return true;
  if(id==="option-distinctness")return ["single-choice","multiple-select","matching"].includes(q.kind);
  if(id==="distractor-quality")return ["single-choice","multiple-select"].includes(q.kind);
- if(id==="mathematical-correctness")return hasMathematics;
- if(id==="temporal-correctness")return timeSensitive;
+ if(id==="mathematical-correctness")return flags.mathematical;
+ if(id==="temporal-correctness")return flags.legal||flags.timeSensitive;
  if(id==="pyq-fidelity")return q.provenance?.kind==="official-pyq";
  return true;
 };
@@ -118,13 +118,38 @@ function keyEquals(kind,proposed,actual,tolerance=0){
  }
  return proposed.trim().toUpperCase()===actual.trim().toUpperCase();
 }
+
+// Heuristics are corroborative only. Every reviewer explicitly classifies
+// applicability; source URLs and these classifications are not authenticated.
+function inferredApplicability(q,draft){
+ const text=publicationPlainText(q.prompt)+" "+publicationPlainText(q.explanation);
+ const stimulus=(draft.stimuli??[]).find(s=>s.id===q.stimulusRef);
+ const context=text+" "+(stimulus?JSON.stringify(stimulus):"");
+ return {
+  mathematical:q.kind==="numeric-entry"||
+   /(?:\\(?:frac|sqrt|sum|int)|\b(?:calculate|evaluate|compute|percent|ratio|equation|remainder|multiply|divide)\b|\b\d+\s*[+×÷/=−-]\s*\d+\b)/iu.test(context),
+  legal:/\b(?:Act|Code|Rules|Regulations|Gazette|Notification|statutory|statute|legislation|section\s+\d+|rule\s+\d+)\b/iu.test(context),
+  timeSensitive:/(?:\b(?:Act|Code|Rules|Regulations|Gazette|Notification)\b(?:\s+[A-Za-z&'-]+){0,8}\s*,?\s*(?:19|20)\d{2}\b|\b(?:commenc(?:ed|ement)|amend(?:ed|ment)|section\s+\d+|effective\s+(?:from|on)|as[- ]of\s+\d{4}|latest|current\s+(?:rate|rule|law|figure))\b)/iu.test(context)
+ };
+}
+const DECLARATION_VALUES=new Set(["yes","no","pending"]);
+function parseApplicability(raw){
+ const a=object(raw,"review applicability",["mathematical","legal","timeSensitive","asOfDate"]);
+ for(const key of ["mathematical","legal","timeSensitive"])
+  if(!DECLARATION_VALUES.has(a[key]))fail("review applicability."+key+": declare yes, no or pending");
+ if(!Object.hasOwn(a,"asOfDate"))fail("review applicability.asOfDate: explicit null or ISO date required");
+ if(a.asOfDate!==null)date(a.asOfDate,"review applicability.asOfDate");
+ return a;
+}
+
 function parseReview(raw){
  const r=object(raw,"review",["format","version","bankId","sourceSha256","records"]);
- if(r.format!=="practice-desk-quality-review"||r.version!==1)fail("Expected practice-desk-quality-review v1");
+ if(r.format!=="practice-desk-quality-review"||r.version!==2)fail("Expected practice-desk-quality-review v2 with explicit applicability declarations");
  string(r.bankId,"review.bankId",80);digest(r.sourceSha256,"review.sourceSha256");
  const seen=new Set();
  for(const entry of array(r.records,"review.records")){
-  object(entry,"review record",["questionId","questionSha256","candidateSha256","reviewer","independentSolution","checks","evidence"]);
+  object(entry,"review record",["questionId","questionSha256","candidateSha256","reviewer","independentSolution","applicability","checks","evidence"]);
+  parseApplicability(entry.applicability);
   string(entry.questionId,"questionId",80);
   if(!idPattern.test(entry.questionId))fail("Invalid question ID");
   if(seen.has(entry.questionId))fail("Duplicate review question ID");
@@ -220,18 +245,24 @@ export function auditQuestionQuality(source,sourceRaw,reviewRaw=undefined,{offse
   asserted++;reportedEvidence+=item.evidence?.length??0;
   if(q.kind!=="free-response"&&!keyEquals(q.kind,item.independentSolution.answer,q.answer,q.tolerance??0))
    add("independent-key-disagreement","Blind-review answer disagrees with authored key",q.id,"reviewer-claimed");
-  // Reviewer claims are validated for applicability before they can permit publication.
-  const visibleStem=publicationPlainText(q.prompt)+" "+publicationPlainText(q.explanation);
-   const relatedStimulus=(draft.stimuli??[]).find(s=>s.id===q.stimulusRef);
-   const mathematicalText=visibleStem+" "+(relatedStimulus?JSON.stringify(relatedStimulus):"");
-   const hasMathematics=q.kind==="numeric-entry"||
-    /(?:\\(?:frac|sqrt|sum|int)|\b(?:calculate|evaluate|compute|percent|ratio|equation|remainder|multiply|divide)\b|\b\d+\s*[+×÷/=−-]\s*\d+\b)/iu.test(mathematicalText);
-  const timeSensitive=/(?:\b(?:Act|Code|Rules|Regulations|Gazette|Notification)\b(?:\s+[A-Za-z&\x27-]+){0,8}\s*,?\s*(?:19|20)\d{2}\b|\b(?:commenc(?:ed|ement)|amend(?:ed|ment)|section\s+\d+|effective\s+(?:from|on)|as[- ]of\s+\d{4}|latest|current\s+(?:rate|rule|law|figure))\b)/iu.test(visibleStem);
+  // Explicit declarations cover questions missed by text heuristics.
+  // Contradictory negative assertions are blocking; detectors stay protective.
+  const declared=item.applicability,inferred=inferredApplicability(q,draft);
+  const flags={mathematical:declared.mathematical==="yes"||inferred.mathematical,
+   legal:declared.legal==="yes"||inferred.legal,
+   timeSensitive:declared.timeSensitive==="yes"||inferred.timeSensitive};
+  for(const key of ["mathematical","legal","timeSensitive"]){
+   if(declared[key]==="pending")
+    add("applicability-unresolved","Reviewer must explicitly classify "+key+" applicability",q.id,"reviewer-claimed");
+   if(inferred[key]&&declared[key]==="no")
+    add("applicability-heuristic-conflict","Reviewer declared "+key+
+     " not applicable but a supplementary detector found relevant material",q.id,"heuristic");
+  }
   const map=new Map(item.checks.map(x=>[x.id,x]));
   for(const c of QUALITY_CHECKLIST){
    const check=map.get(c.id);
    if(!check||check.status==="fail"||check.status==="not-reviewed"||
-    (check.status==="not-applicable"&&requiresCheck(c.id,q,timeSensitive,hasMathematics)))
+    (check.status==="not-applicable"&&requiresCheck(c.id,q,flags)))
     add("review-check-unresolved","Quality checklist not satisfied: "+c.id,q.id,"reviewer-claimed");
   }
   // All evidence, sources and independent solving remain reviewer-attributed, not authenticated.
@@ -246,18 +277,29 @@ export function auditQuestionQuality(source,sourceRaw,reviewRaw=undefined,{offse
   };
   if(facts?.status==="pass"&&!["mathematical-proof","source-consulted"].includes(facts.basis))
    add("factual-basis-invalid","Factual correctness requires source consultation or mathematical proof",q.id,"reviewer-claimed");
-  if(facts?.status==="pass"&&facts.basis==="mathematical-proof"&&!hasMathematics)
+  if(facts?.status==="pass"&&facts.basis==="mathematical-proof"&&!flags.mathematical)
     add("factual-proof-basis-invalid","Non-mathematical facts need actually consulted sources, not a mathematics-proof label",q.id,"reviewer-claimed");
    if(facts?.status==="pass"&&facts.basis==="source-consulted"&&!item.evidence?.length)
    add("review-evidence-missing","No source extract recorded for factual correctness",q.id,"reviewer-claimed");
-  if(timeSensitive){
+  const mathCheck=map.get("mathematical-correctness");
+  if(flags.mathematical&&mathCheck?.status!=="pass")
+   add("mathematics-review-required","Applicable mathematics requires a passed mathematical-correctness check",q.id,"reviewer-claimed");
+  if(flags.mathematical&&mathCheck?.status==="pass"&&
+    !["mathematical-proof","source-consulted"].includes(mathCheck.basis))
+   add("mathematics-proof-required","Mathematical correctness needs a recorded proof or source consultation",q.id,"reviewer-claimed");
+  if(flags.legal||flags.timeSensitive){
    if(facts?.status==="pass"&&facts.basis!=="source-consulted")
-    add("legal-source-required","A time-sensitive legal assertion needs source corroboration",q.id,"reviewer-claimed");
+    add("legal-source-required","Legal or time-sensitive facts require source-consulted evidence",q.id,"reviewer-claimed");
    if(temporal?.status!=="pass")
-    add("temporal-check-required","Time-sensitive legal question needs currentness review",q.id,"reviewer-claimed");
+    add("temporal-check-required","Legal or time-sensitive question needs an affirmative currentness review",q.id,"reviewer-claimed");
    consulted("temporal-correctness",temporal);
-   if(!item.evidence?.some(e=>e.asOfDate))
-    add("legal-asof-evidence-required","Legal review must record an as-of date",q.id,"reviewer-claimed");
+   if(!declared.asOfDate)
+    add("applicability-asof-required","Declare a question-specific as-of date for applicable law/data",q.id,"reviewer-claimed");
+   if(!item.evidence?.some(e=>e.asOfDate&&e.asOfDate===declared.asOfDate&&
+      e.publisher&&e.title&&e.locator.length>=6&&e.excerpt))
+    add("legal-asof-evidence-required",
+     "Record an identifiable source (publisher, title, precise locator and extract) supporting the declared as-of date",
+     q.id,"reviewer-claimed");
   }else if(temporal?.status==="pass"&&temporal.basis==="source-consulted")consulted("temporal-correctness",temporal);
   if(q.provenance?.kind==="official-pyq"){
    if(pyq?.status!=="pass")add("pyq-source-check-required","Official PYQ claim requires affirmative source review",q.id,"reviewer-claimed");
@@ -292,11 +334,12 @@ export function auditQuestionQuality(source,sourceRaw,reviewRaw=undefined,{offse
 // The output is an exact, fillable review-v1 contract; no extra template-only
 // properties requiring agents to repair JSON before running the validator.
 function reviewTemplate(value,sourceRaw,items){
- return {format:"practice-desk-quality-review",version:1,
+ return {format:"practice-desk-quality-review",version:2,
   bankId:value.bankId,sourceSha256:sha(sourceRaw),
   records:items.map(item=>({
    questionId:item.questionId,questionSha256:item.questionSha256,
    candidateSha256:item.candidateSha256,
+   applicability:{mathematical:"pending",legal:"pending",timeSensitive:"pending",asOfDate:null},
    reviewer:{id:"REPLACE_REVIEWER",kind:"ai"},
    independentSolution:{blindClaim:false,answer:"",
     reasoning:"Pending independent blind solution"},
@@ -329,7 +372,7 @@ async function prepareReviewWorkspace(value,raw,outputDir){
   readyForPublication:false,reviewComplete:false,sourceSha256:sha(raw),
   bankId:value.bankId,questionCount:items.length,directory,
   files:files.map(([name])=>name),
-  note:"Review is initially incomplete and cannot authorize publication; solve the blind packet without keys, inspect primary sources, record evidence, then fill review.json."};
+  note:"Review is incomplete: explicitly classify mathematics, law and time sensitivity, supply dated supporting evidence where applicable, solve blind, then complete 20 checks. These remain reviewer claims."};
 }
 const usage="Usage: question-quality.mjs checklist | candidate <source.json> [--offset N --limit 1..20] | template <source.json> [--offset N --limit 1..20] | prepare <source.json> <NEW-directory> | audit <source.json> [--review <review.json>] [--offset N --limit 1..50]";
 const throwResult=(e)=>{
