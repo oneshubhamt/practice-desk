@@ -1,6 +1,6 @@
 # Practice Desk — nonduplicated historical source index
 
-**Original full documentation snapshot:** [commit `a10ac8917b39`](https://github.com/oneshubhamt/practice-desk/tree/a10ac8917b39b5febd228dc825487aeb1d0dba8d). This pinned commit remains in the direct ancestry of the working `Satyam` branch, so original texts, dates, original links and audits are recoverable without copying ~2 MB into the active document tree. Do not read these by default when authoring questions or making focused source changes. Read only the exact historical record needed.
+**Original full documentation snapshot:** [commit `a10ac8917b39`](https://github.com/oneshubhamt/practice-desk/tree/a10ac8917b39b5febd228dc825487aeb1d0dba8d). This pinned commit remains in the direct ancestry of the working `overhaul` branch (the user-authorized fast-forward from `Satyam` completed 7 November 2026), so original texts, dates, original links and audits are recoverable without copying ~2 MB into the active document tree. Do not read these by default when authoring questions or making focused source changes. Read only the exact historical record needed.
 
 Current concise docs intentionally supersede these as navigation/working instructions. The pinned originals are historical evidence—not claims of unresolved defects being repaired or passed tests rerun.
 

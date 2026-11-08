@@ -4,7 +4,7 @@ Read only what the task needs: [repository overview](README.md), [current docume
 
 ## Authority and scope
 - Current actual source and executable contracts outrank dated status claims. Historical notes are preserved at [the pinned pre-consolidation commit](docs/HISTORY_INDEX.md); old completion labels do not prove current correctness.
-- Work only on the explicitly authorized branch. Following the user-authorized, five-job-verified fast-forward of `Satyam` into `overhaul` (7 November 2026), **P61-H/I development is explicitly authorized on `overhaul`**. Never edit `main` or `baseline/v11`, merge another branch, distribute, or change release policy without new permission. Check the live branch before any write.
+- Work only on the explicitly authorized branch. Following the user-authorized, verified fast-forward of `Satyam` into `overhaul` (7 November 2026), **P61-A–I is being formally closed on `overhaul`** after the final protected CI audit. Further changes require task-specific user authorization on the correct live branch; completed P61 is not blanket permission for a new programme. Never edit `main` or `baseline/v11`, merge another branch, distribute, or change release policy without new permission. Check the live branch before any write.
 - Keep source, generated standalone HTML and data separate. Never hand-edit `Practice_Desk_Offline_Mock_Tests.html`; produce it using `npm run build`.
 - Preserve a single typed six-kind examination engine, the offline `file://` build, untrusted import limits, source/reviewed distinction and immutable historical attempts. No v11 data migration or deprecated-format compatibility is required.
 

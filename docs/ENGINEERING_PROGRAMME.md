@@ -1,12 +1,11 @@
 # Practice Desk — current engineering programme
 
-**As-of:** 7 November 2026. **Current authorized scope:** P61 test/script-bench consolidation on `Satyam`, following documentation cleanup. P61-A groups authoring-domain Node contracts; P61-B groups native/fallback offline navigation in one real-browser journey, both source-gated in [test implementation ledger](TEST_SUITE_LEDGER.md). No P60 app-defect repairs, production feature changes, branch merges or release. Approved history of P04–P60 and detailed phase-by-phase evidence is retained at [the pinned pre-cleanup commit](HISTORY_INDEX.md), rather than repeated in current instructions.
-
+**As-of:** 8 November 2026. **Current authorized work:** P61-I final independent audit and programme closure on `overhaul`; source and tests from P61-H were independently verified, and the final documentation/CI label correction must pass another exact-SHA five-job pipeline. The user-authorized `Satyam` → `overhaul` fast-forward was successfully CI-verified. **No P60 defect repair, new application feature, question-bank import, public release or new branch merge** is included. For final results, boundaries and accepted test-volume/runner trade-offs, read the [P61-I audit](audits/P61_I_FINAL_PROGRAMME_SOURCE_AUDIT_2026-11-08.md); historical P04–P60 files remain recoverable via the [pinned history index](HISTORY_INDEX.md).
 ## Product state (source-backed orientation, not a new CI claim)
 - Strict TypeScript domain, six response kinds, deterministic bundled offline HTML, native-navigation/fragment fallback, local IndexedDB with snapshot deduplication, additive v4 backup, frozen results and FSRS.
 - Built-in SSC CGL original/reviewed data; external source import and Wordgard authoring; hierarchical subjects and custom practice.
 - External agent-facing v1 source, compact inspection/patch, source-bound review and blueprint, original/reviewed paired export, supplied-PDF provenance ledger, thin permission-scoped CLI handoff. These are **local software capabilities**, not an embedded model or guarantee of real fact verification.
-- Historic automated gates may have passed in earlier CI. Current documentation-cleanup status must not be represented as fresh verification of the application or educational content.
+- Current P61-H automated application-contract checks **did** pass exact-source CI: [run 42410827277](https://github.com/oneshubhamt/practice-desk/actions/runs/42410827277), with 408 Node tests, 10 targeted mutations, 72 actual browser journeys and guarded publishing. This is not independent evidence of educational content authenticity, device accessibility or release approval.
 
 ## Requirements and evidence rules
 1. Inspect source/consumers before claiming any function is complete.
@@ -40,3 +39,7 @@ The previous 32+20+20 standalone browser processes are routed through three inde
 ## P61-H — independent coverage audit (8 Nov 2026)
 
 Following the user-authorized and green-tested fast-forward to `overhaul`, current P61-H test work is on that branch. The [P61-H audit](audits/P61_H_INDEPENDENT_COVERAGE_AUDIT_2026-11-08.md) reviews 12 risk contracts, preserves all unique PDF/storage/scoring/authoring/learning/browser witnesses, records P60/content/device exclusions and challenges the mutation gate with four additional faults. One independent six-kind 128-seed scoring property is additive. P61-H is **COMPLETE**, verified by [five-job CI 42410337888](https://github.com/oneshubhamt/practice-desk/actions/runs/42410337888) at `12e7ba7e83b64a53914b85fcb98434564cb0dccb`: 408 Node cases, 10 targeted mutations killed, all 72 offline browser journeys and guarded publishing passed. P61-I is the separate final whole-programme reconciliation.
+
+## P61-I — whole-programme source audit and closure (8 November 2026)
+
+See the [independent P61-I final audit](audits/P61_I_FINAL_PROGRAMME_SOURCE_AUDIT_2026-11-08.md). Historical P61-A–H source SHA and all five-job CI runs were reconciled against the initial 44 Node test files / 431 cases and current 41 files / 408 cases; 72 three-browser scenario executions and the expanded ten-mutant gate remain protected. The audit explicitly records the **unmet source-line, total script-count and 5–8 physical browser-journey reduction aspirations** as deliberate coverage-preserving deviations. **Final closure is pending the exact commit's five-job CI.** Separate P60/content/hardware and public-release gates are unaffected.

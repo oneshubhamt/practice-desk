@@ -14,7 +14,7 @@ For agents creating banks, read [quickstart](docs/AGENT_AUTHORING_QUICKSTART.md)
 - [Documentation index](docs/README.md)
 - [Current architecture](docs/architecture/CURRENT_ARCHITECTURE.md) and [data contracts](docs/architecture/DATA_CONTRACTS.md)
 - [Current programme and deferred findings](docs/ENGINEERING_PROGRAMME.md)
-- [QA instructions](docs/QA_CURRENT.md) and [proposed lean test strategy](docs/TEST_STRATEGY.md)
+- [QA instructions](docs/QA_CURRENT.md), [test strategy and documented deviations](docs/TEST_STRATEGY.md), and [P61 final audit](docs/audits/P61_I_FINAL_PROGRAMME_SOURCE_AUDIT_2026-11-08.md)
 - [Historic original engineering/audit documents](docs/HISTORY_INDEX.md) retained at an immutable source commit
 
-**Status:** Existing automated software checks have historical green runs, but those runs do not prove independent question truth, actual Mac/mobile/assistive-technology use or user release approval. Current authorized P61 test-bench consolidation branch: `Satyam`. Do not modify `main` or `baseline/v11` without authorization.
+**Status:** P61 test-bench re-engineering has passed its independent source audit; formal P61-I closure is gated by the final exact-commit five-job CI. The authorized engineering branch is `overhaul` after the verified `Satyam` fast-forward. Prior [green CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42410827277) does not prove independent question truth, actual Mac/mobile/assistive-technology use or user release approval. Do not modify `main` or `baseline/v11` without authorization.

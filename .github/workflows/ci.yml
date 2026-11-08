@@ -21,7 +21,7 @@ jobs:
       # Node 24 + npm 11; committed lockfile fixes direct and transitive resolution.
       - run: npm ci --no-audit --no-fund
       - run: npm run check
-      - name: Prove retained tests detect six isolated semantic mutations
+      - name: Verify retained tests detect each targeted isolated semantic mutation
         run: node scripts/mutation-sensitivity.mjs
       - name: Prove clean locked dependency graph and deterministic HTML rebuild
         shell: bash

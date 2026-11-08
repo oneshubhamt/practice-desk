@@ -1,5 +1,7 @@
 # Test/script consolidation — implementation evidence ledger
 
+**Current status (8 Nov 2026):** P61-A–H source-verified; [P61-I whole-programme final audit](audits/P61_I_FINAL_PROGRAMME_SOURCE_AUDIT_2026-11-08.md) completed and pending its own exact-commit five-job CI before formal closure. Early sections below are **dated historical snapshots**, not current commands or unfinished pass requests. Source branch after the authorized Satyam fast-forward is **`overhaul`**.
+
 ## Baseline and branch
 - Authorization: user requests smaller, stronger test/script bench, beginning now; **P61-A** is a narrow first migration, not overall completion.
 - Source branch: `Satyam`, source baseline [`807d01060fc6c2350873f19f4442ffbae73f4f2c`](https://github.com/oneshubhamt/practice-desk/tree/807d01060fc6c2350873f19f4442ffbae73f4f2c); earlier [full CI success](https://github.com/oneshubhamt/practice-desk/actions/runs/42326635746) confirms the documentation-only baseline, not this new change.
@@ -292,3 +294,9 @@ P61-F can be marked **closed**. Further reductions remain an evidence-driven pro
 ### P61-H full exact-source QA — PASS
 
 [GitHub Actions five-job run 42410337888](https://github.com/oneshubhamt/practice-desk/actions/runs/42410337888) passed at `12e7ba7e83b64a53914b85fcb98434564cb0dccb`. Independently checked raw logs: **408/408 Node tests; 10/10 source-isolated, named-test-detected semantic mutations; 32/32 Chromium + 20/20 Firefox + 20/20 Linux WebKit** source-mapped journeys; guarded source-verified HTML publishing. Observed 232 s full workflow; no controlled claim of performance improvement. Unlike earlier passes, **zero tests were deleted**: the audit justified keeping existing distinct high-value cases and adding a six-kind 128-seed reference model. The [dedicated audit](audits/P61_H_INDEPENDENT_COVERAGE_AUDIT_2026-11-08.md) records each safety contract, exact source owner, residual P60/PDF/device limits and mutation operators. **P61-H closed; P61-I remains.**
+
+## P61-I — final objective-to-source reconciliation and closure gate (8 Nov 2026)
+
+Read [P61-I independent final audit](audits/P61_I_FINAL_PROGRAMME_SOURCE_AUDIT_2026-11-08.md) for the complete source crosswalk, pass A–H implementation SHAs, exact-CI links, emitted browser reports, active release limits and objective exceptions. The net measured changes versus original baseline: **44→41 root Node test modules; 431→408 Node registrations; 34→33 acceptance-prefixed files (33 includes the pooled runner); 52→52 overall scripts; original 72 real browser journeys preserved**. Test-source bytes **increased 1,087** and changed lines **net +121**; a 5–8-physical-browser-script ambition was not achieved. These are **accepted, explicit compromises** to protect unique safety assertions, not missing tests silently declared implemented.
+
+**Source checks:** no `src/`, `examples/`, `package.json` or user-facing offline HTML change in the full P61 baseline-to-current Git diff. P61-H prior exact CI [42410827277](https://github.com/oneshubhamt/practice-desk/actions/runs/42410827277) passed 408/408 Node, 10/10 selected mutations, all 72 real browser journeys and source-verified publisher. P61-I changes only current engineering/QA documentation and corrects an outdated CI *step label* that still described six rather than ten mutants; no actual CI gate is weakened. **Formal closure requires the final edited SHA's own five-job CI success.** P60-01–07, Mac Safari/mobile/AT, source PDF/PYQ authentication, opt-in manual visual signoff and release remain independently gated.

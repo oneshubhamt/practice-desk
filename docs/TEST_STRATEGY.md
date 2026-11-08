@@ -1,10 +1,12 @@
-# Lean, reasoning-first test-bench redesign — ACTIVE, GATED
+# Lean, reasoning-first test-bench strategy — implemented with documented limits
 
-**Status:** P61-A–G completed and source-verified, including semantic test retirement, seeded reference models, pooled three-engine execution, opt-in screenshots and six targeted isolated mutations. The user-authorized independent audit **P61-H** was independently source-verified (408 Node tests, 10 mutations, 72 browser journeys) on `overhaul`; **P61-I final closure** remains pending. See [implementation ledger](TEST_SUITE_LEDGER.md) and [independent coverage audit](audits/P61_H_INDEPENDENT_COVERAGE_AUDIT_2026-11-08.md).
+**Status:** P61-A–H are independently source-verified. P61-I has reconciled the original objectives and current source; **final exact-commit CI is pending** before closure. The [final audit](audits/P61_I_FINAL_PROGRAMME_SOURCE_AUDIT_2026-11-08.md) explicitly records achieved and intentionally *unmet* optimisation criteria. All new reductions need task-specific authorization; no more cases should be deleted merely to hit counts. See the [pass-by-pass ledger](TEST_SUITE_LEDGER.md).
 
-## Diagnosis — historical baseline versus current tested state
+## Final source-reconciled inventory
 
-**Original P61 baseline (historical, not current):** Satyam then had 45 `tests/` entries and 34 acceptance scripts, separately launched browser instances, and routine screenshot/benchmark CI work. **Current P61-H audited baseline** (commit `92e85085ac2169eb25d8587b8d788ec30834b6a2` on `overhaul`) has **41 Node suite files**, **407 registered Node tests**, **72 mandatory scenario executions across three pooled browser engines**, and **six targeted source-isolated semantic mutants**. There are no routine successful screenshot warehouses. Similar test names do **not** prove duplicated assertions: the [P61-H coverage matrix](audits/P61_H_INDEPENDENT_COVERAGE_AUDIT_2026-11-08.md) separates unique, complementary and verified replacement checks.
+**Original P61 source tree** `807d0106`: 44 Node `*.test.mjs` modules + one fixture, 431 Node cases, 34 acceptance-prefixed scripts and 52 total scripts. **P61-H verified source** `d5948e1d`: 41 Node test modules + one fixture, 408 Node cases, 33 acceptance-prefixed scripts *including the pooled runner*, 52 total scripts, 72 unchanged browser scenario executions (32 Chromium, 20 Firefox, 20 Linux WebKit) and ten targeted mutations killed. The 200-seed scoring policy model remains single-choice, complemented by a new 128-seed six-kind metamorphic test.
+
+Original test-source bytes **552,067 → 553,154 (+1,087)** and net changed test lines **+121**, while registered test cases fell by 23. Overall script count did **not** fall. A physical 5–8-script browser programme was **not** implemented; instead, four logical groups retain the 32 unique browser journeys and share one browser launch per engine. This explicit prioritization of correctness over superficial file/LoC goals is documented in the [final audit](audits/P61_I_FINAL_PROGRAMME_SOURCE_AUDIT_2026-11-08.md).
 
 ## Design criteria (in priority order)
 1. **Contract coverage:** enumerate user-important invariants and failure modes in one traceability matrix: content provenance, scoring, frozen History, transactional backup, answer secrecy, authored publication, FSRS, navigation, accessibility, offline/CLI safety. Each P0 contract needs independent positive and adversarial witnesses.
@@ -18,7 +20,7 @@
 9. **Test independence:** avoid assertions of source strings, same function computed twice, self-asserted SHA as external truth, silent no-op mocks, or fixtures pre-tailored to code paths. Keep a small number of focused unit tests for genuinely complex logic; journey tests do not replace all unit or property tests.
 10. **Lean ownership:** group by enduring domain (`scoring`, `attempts`, `imports`, `authoring`, `review`, `storage`, `learning`, `UI`), not by project pass number. Separate production CLIs, verification harnesses and optional diagnostic benchmarks; do not delete production tools as “test bloat”.
 
-## Mandatory migration protocol — only if authorized later
+## Mandatory protocol for any separately authorized future test reduction
 1. Inventory every test case and browser script, actual assertions, fixtures, run cost and CI engine coverage. Categorize **unique**, **overlap**, **fragile**, **obsolete by explicit decision**, **indirect/weak**, or **benchmark-only**; inspect actual code. Output old → new assertion IDs.
 2. Build a contract×risk×test matrix, with exact gaps and adversarial counterexamples. Establish baseline full CI and execution durations before altering anything.
 3. Add replacement independent invariants/property/reference-model oracles **before** deleting redundant cases. Where useful, mutation-test scorer/session/backup/authoring security to show replacements detect realistic faulty changes; report mutation operators and surviving mutants rather than an invented percentage.
@@ -32,4 +34,4 @@
 - Stable seeded fixtures, interpretable assertion names, failure locality, real offline browser rehydration, representative 195px/140% and three engines.
 - No artificial claim of question factual verification, genuine PDF source fidelity, accessibility certification or human release approval.
 
-The prior extensive Pass36–40 test-consolidation plan is available in [the pinned historical index](HISTORY_INDEX.md). This document supersedes it **as a proposal**, not as implemented changes.
+The prior Pass36–40 consolidation plan remains available via [pinned historical index](HISTORY_INDEX.md). P61-A–I delivered the specific audited changes in [the implementation ledger](TEST_SUITE_LEDGER.md); the idealized options in this strategy that were not implemented remain **future proposals requiring separate permission**, not incomplete P61 work.
