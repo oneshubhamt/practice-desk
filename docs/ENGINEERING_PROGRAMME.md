@@ -1,45 +1,29 @@
-# Practice Desk — current engineering programme
+# Practice Desk — current engineering status
 
-**As-of:** 8 November 2026. **Current status:** P61-A–I test-bench programme **complete on `overhaul`**, independently verified by [five-job CI 42432646892](https://github.com/oneshubhamt/practice-desk/actions/runs/42432646892); future development is not authorized merely by this closure. The user-authorized `Satyam` → `overhaul` fast-forward was successfully CI-verified. **No P60 defect repair, new application feature, question-bank import, public release or new branch merge** is included. For final results, boundaries and accepted test-volume/runner trade-offs, read the [P61-I audit](audits/P61_I_FINAL_PROGRAMME_SOURCE_AUDIT_2026-11-08.md); historical P04–P60 files remain recoverable via the [pinned history index](HISTORY_INDEX.md).
-## Product state (source-backed orientation, not a new CI claim)
-- Strict TypeScript domain, six response kinds, deterministic bundled offline HTML, native-navigation/fragment fallback, local IndexedDB with snapshot deduplication, additive v4 backup, frozen results and FSRS.
-- Built-in SSC CGL original/reviewed data; external source import and Wordgard authoring; hierarchical subjects and custom practice.
-- External agent-facing v1 source, compact inspection/patch, source-bound review and blueprint, original/reviewed paired export, supplied-PDF provenance ledger, thin permission-scoped CLI handoff. These are **local software capabilities**, not an embedded model or guarantee of real fact verification.
-- Current P61-H automated application-contract checks **did** pass exact-source CI: [run 42410827277](https://github.com/oneshubhamt/practice-desk/actions/runs/42410827277), with 408 Node tests, 10 targeted mutations, 72 actual browser journeys and guarded publishing. This is not independent evidence of educational content authenticity, device accessibility or release approval.
+**As of 8 November 2026 | Working branch: `overhaul`**
 
-## Requirements and evidence rules
-1. Inspect source/consumers before claiming any function is complete.
-2. Separate implemented, partially implemented, proposed, explicitly unsupported and independently verified.
-3. Preserve exact user-approved exam/scoring/editorial/history constraints in [AGENTS](../AGENTS.md) and [policy](decisions/POLICY_REGISTER.md).
-4. Prefer the smallest change with explicit invariant/edge-case reasoning; verify affected workflows, then required CI. Declare untested physical/accessibility/source-authenticity limits.
-5. Do not use historical pass-numbered diaries as the live backlog. Track new work only in [backlog](../backlog.md), with source links, acceptance criteria and evidence.
+## Product baseline
 
-## Current scope checklist
-- [x] Replace duplicated active docs with one slim hierarchy and preserve originals at pinned Git commit.
-- [x] Keep one AI quickstart and one current agent-content pipeline reference.
-- [x] Reconcile stale feature/status language without claiming P60 audit bugs resolved.
-- [x] Inventory test/script bloat and record domain-based migration design.
-- [x] Verify documentation links and machine contract; existing documentation cleanup CI was green. [Current P61 implementation/verification](TEST_SUITE_LEDGER.md) remains a separate gate.
+Practice Desk is a modular strict-TypeScript application distributed as one deterministic, offline `file://` HTML file. The existing architecture includes:
 
-## Deferred
-**P60-01–07** prior source-level findings and **calendar/survey-based** enhancement questions are registered in [backlog](../backlog.md). No code work here. Authentic APFC/CAT content checks, external PDF human comparison, physical device/AT, actual usability review and public release remain independently gated.
+- A single six-kind examination engine with explicit timing, navigation, marking and immutable paper/key revisions.
+- Library, Wordgard authoring, results, original/reviewed source comparison, local IndexedDB History, SHA-checked additive backup v4 and learning/FSRS.
+- A separate external-agent content pipeline for versioned source, syllabus blueprints, blind quality review, original/reviewed editorial versions, externally interpreted PDFs and permission-scoped file handoff.
 
-For detailed historical pass ledgers, exact historical CI SHA counts, and original wording, follow [HISTORY_INDEX.md](HISTORY_INDEX.md); Git history is the nonduplicated archive.
+See [architecture](architecture/CURRENT_ARCHITECTURE.md), [data contracts](architecture/DATA_CONTRACTS.md) and [content pipeline](architecture/AGENT_CONTENT_PIPELINE.md) for design and supported interfaces. The application does not embed an AI model, remotely access learner data or independently authenticate sources.
 
-## P61 — lean test bench, source-first migration (authorized 7 November 2026)
+## Verified engineering state
 
-See [implementation ledger](TEST_SUITE_LEDGER.md): P61-A retains 27 original authoring test registrations and adds one deterministic text property check; P61-B preserves both native/fallback navigation scenarios and 24 explicit browser checks while sharing one browser launch. All proposed further test deletions, broad journey rewrites, screenshot/benchmark pruning and CI frequency changes require their own assertion mapping and exact-source verification. The pending P60 product findings and calendar/survey features remain deferred.
+The P61 test-bench programme is **closed**, following a source audit and [exact-commit CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42433146976). The current required gate comprises **408 Node test cases; ten selected semantic mutations; 32 Chromium, 20 Firefox and 20 Linux WebKit real browser journeys; and guarded source-verified HTML publishing**. Source-code test coverage and CI outcomes do not independently validate question content or physical devices.
 
-## P61-C — substantive runner optimization (7 Nov 2026)
+Current documentation is deliberately architecture-first. Detailed P04–P61 implementation records and original audit evidence remain recoverable through [pinned Git history](HISTORY_INDEX.md); they are not current work instructions. No product code, question-bank data or release policy was changed during this documentation restructuring.
 
-The previous 32+20+20 standalone browser processes are routed through three independently isolated single-browser engine runs without removing any existing journey assertions; diagnostic-only benchmarks and success screenshot warehouses are no longer required CI steps. See [ledger](TEST_SUITE_LEDGER.md) for baseline and the strict, exact-source verification gate. Do not claim completion or performance improvements before a green changed-SHA CI run.
+## What is not closed
 
-**P61-C full CI closure:** [Five-job exact-source success 42331170060](https://github.com/oneshubhamt/practice-desk/actions/runs/42331170060), source `619a2671d86ea588ba9f0a34ee8ec9b24d34c01a`: all 72 browser scenarios and the previous Node gate passed, verified offline HTML publisher passed; whole-workflow measured 351→305 s (13.1% in two CI runs), Chromium 283→161 s. This pass optimised browser launches/CI orchestration, **not** the substantive number of test cases or the remaining high-cost Linux WebKit 400/200 scale assertion. The deeper semantic test-retirement programme remains open.
+The [active backlog](../backlog.md) is the **single list of unresolved product risks and proposed work**, including P60 source-audit findings, independently sourced exam-content verification and real Mac/mobile/accessibility/storage-recovery testing. An existing architecture or passing synthetic fixture does not convert these into completed capabilities.
 
-## P61-H — independent coverage audit (8 Nov 2026)
+## Engineering discipline
 
-Following the user-authorized and green-tested fast-forward to `overhaul`, current P61-H test work is on that branch. The [P61-H audit](audits/P61_H_INDEPENDENT_COVERAGE_AUDIT_2026-11-08.md) reviews 12 risk contracts, preserves all unique PDF/storage/scoring/authoring/learning/browser witnesses, records P60/content/device exclusions and challenges the mutation gate with four additional faults. One independent six-kind 128-seed scoring property is additive. P61-H is **COMPLETE**, verified by [five-job CI 42410337888](https://github.com/oneshubhamt/practice-desk/actions/runs/42410337888) at `12e7ba7e83b64a53914b85fcb98434564cb0dccb`: 408 Node cases, 10 targeted mutations killed, all 72 offline browser journeys and guarded publishing passed. P61-I is the separate final whole-programme reconciliation.
+For a newly authorized task: (1) inspect the actual source and affected consumers; (2) define the contract and a concrete failing counterexample; (3) change only the agreed scope, preserving offline, scoring, provenance and privacy invariants; (4) run independent Node/property and realistic browser journeys; (5) report the exact tested commit, limits and any residual risks. Do not weaken unique safety tests to lower counts, invent review authenticity or merge to `main`/`baseline/v11` without permission.
 
-## P61-I — whole-programme source audit and closure (8 November 2026)
-
-See the [independent P61-I final audit](audits/P61_I_FINAL_PROGRAMME_SOURCE_AUDIT_2026-11-08.md). Historical P61-A–H source SHA and all five-job CI runs were reconciled against the initial 44 Node test files / 431 cases and current 41 files / 408 cases; 72 three-browser scenario executions and the expanded ten-mutant gate remain protected. The audit explicitly records the **unmet source-line, total script-count and 5–8 physical browser-journey reduction aspirations** as deliberate coverage-preserving deviations. **Final closure verified:** [source SHA `8783cc9751c654e9ea75a3b4570b93257fcb0aff` and all five jobs passed](https://github.com/oneshubhamt/practice-desk/actions/runs/42432646892). Separate P60/content/hardware and public-release gates are unaffected.
+**Authority:** [AGENTS](../AGENTS.md) → [binding policy](decisions/POLICY_REGISTER.md) → actual source/validators → [QA](QA_CURRENT.md). Historical pass reports are background, not authority for current completion.

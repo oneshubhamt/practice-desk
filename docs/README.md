@@ -1,17 +1,20 @@
-# Practice Desk documentation
+# Practice Desk — documentation map
 
-Read **only the section you need**. Current source outranks all dated historical status claims.
+**Read only the document needed for the task.** The active source and executable validators take precedence over prose. This directory describes **current architecture and decisions**; old implementation passes are archived rather than reproduced.
 
-| Task | Read |
-|---|---|
-| Build/use the offline application | [Root README](../README.md) |
-| Develop or inspect source | [AGENTS](../AGENTS.md) → [architecture](architecture/CURRENT_ARCHITECTURE.md) → [data contracts](architecture/DATA_CONTRACTS.md) |
-| Understand user decisions and current scope | [policy register](decisions/POLICY_REGISTER.md) → [engineering programme](ENGINEERING_PROGRAMME.md) → [backlog](../backlog.md) |
-| Create AI-supported APFC/CAT or other question banks | [one-page quickstart](AGENT_AUTHORING_QUICKSTART.md) → [AI guide](AI_APPLICATION_GUIDE.md) → [content pipeline](architecture/AGENT_CONTENT_PIPELINE.md) |
-| Manually author/import questions | [question-bank authoring](architecture/QUESTION_BANK_AUTHORING.md) |
-| Run, audit or consolidate tests/scripts | [QA guide](QA_CURRENT.md) → [test strategy](TEST_STRATEGY.md) → [P61 final audit](audits/P61_I_FINAL_PROGRAMME_SOURCE_AUDIT_2026-11-08.md) → [implementation ledger](TEST_SUITE_LEDGER.md) |
-| Access prior P04–P60 plans, research and audit evidence | [pinned historical source index](HISTORY_INDEX.md) |
+| Task | Primary reference | When to read more |
+|---|---|---|
+| Run the offline application | [README](../README.md) | [Architecture](architecture/CURRENT_ARCHITECTURE.md) for limitations |
+| Engineer or review application changes | [AGENTS](../AGENTS.md) → [Architecture](architecture/CURRENT_ARCHITECTURE.md) | [Data contracts](architecture/DATA_CONTRACTS.md), actual source |
+| Understand accepted decisions | [Policy register](decisions/POLICY_REGISTER.md) | [Current programme](ENGINEERING_PROGRAMME.md) and [backlog](../backlog.md) |
+| AI-assisted question generation | [Agent quickstart](AGENT_AUTHORING_QUICKSTART.md) | [Content pipeline](architecture/AGENT_CONTENT_PIPELINE.md) for advanced source review |
+| Edit or compile an exam bank | [Question-bank authoring](architecture/QUESTION_BANK_AUTHORING.md) | [Data contracts](architecture/DATA_CONTRACTS.md) |
+| Test or investigate regression | [QA and test strategy](QA_CURRENT.md) | Actual tests, runner and CI workflow |
+| Discover machine-readable operations | [Capability contract](contracts/practice-desk-capabilities.v1.json) | CLI `practice-desk-capabilities.mjs` |
+| Retrieve old designs, audits or pass-by-pass details | [Historical source index](HISTORY_INDEX.md) | Pinned original Git commits only |
 
-**Authority:** TypeScript/Node source and current validated contracts → this current documentation → dated Git-history evidence. A green fixture establishes a scoped software check, not authenticated source material, publisher identity, physical device compliance or release approval.
+## Current programme boundary
 
-**P61 closed:** The independent [P61-I source audit](audits/P61_I_FINAL_PROGRAMME_SOURCE_AUDIT_2026-11-08.md) records delivered capabilities, preserved tests, accepted trade-offs, immutable CI evidence and deferred limits. The [final exact-source five-job CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42432646892) passed; no additional P61 implementation passes remain. Work is on `overhaul` after the user-authorized `Satyam` fast-forward; no production application logic, banks, P60 deferred functionality or public release changed in P61.
+P61's test-bench consolidation is **complete** on `overhaul` and has a [fully green five-job CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42433146976). Past programme names are **not** active implementation instructions. Unresolved P60 issues, factual/PDF checking and device/release gates are in the [backlog](../backlog.md).
+
+**Trust model:** a SHA proves byte consistency, a passing test proves a scoped software assertion, and a filled review form records an attributed claim. None alone establishes a genuine official paper, current law, independent reviewer or accessible physical-device experience.

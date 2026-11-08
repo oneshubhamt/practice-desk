@@ -1,33 +1,46 @@
-# Practice Desk — current data and correctness contracts
+# Practice Desk — domain and trust contracts
 
-This is the concise owner-level contract. **The actual TypeScript validators and frozen source records decide exact accepted fields**; do not invent JSON attributes based on a guide. A saved source hash is an unkeyed content-integrity witness, not authentication.
+This guide expresses **stable design invariants**. Use the source TypeScript validators, schemas and current machine capability contract for exact fields and numeric bounds. Never manufacture fields from examples or infer examination law from an exam title.
 
-## Question/answer/paper
-- `src/domain/question.ts`: `single-choice`, `multiple-select`, `numeric-entry`, `true-false`, `matching`, `free-response`. Revisions have stable question identities and content hashes; stimuli/media are independently identified and validated.
-- `src/domain/exam.ts`, `answer-key.ts`, `scoring.ts`, `validate.ts`: paper sections, per-paper/per-item timing, navigation, grading, score bounds and key/answer schema. Only candidate-selectable and valid answer keys are admitted.
-- Partial multiple-select/matching marks are bounded by full question credit, correct/incorrect/blank definitions are controlled by the authored policy, and unsupported free-text self-assessment is **not** silently auto-graded.
-- Physical exam sections and semantic taxonomy are separate. Subject root → optional topic → optional subtopic; the same parent may have many question revisions without counting each as a distinct underlying question.
+## Question, answer and paper
 
-## Start, attempt and completion
-1. Select and validate a package/edition, freeze exact question/key/stimulus/media/policy revisions and source/original reference where applicable.
-2. Accept only legal events for current state (answer/clear/flag/navigate/pause/resume/submit/expiry), using nondecreasing clock evidence; don't credit background time to a specific item without measurements.
-3. Protect candidate view from unpublished answers, worked explanations, source-key disputes and reviewer-only metadata. `allowReview` gates detailed post-test explanations.
-4. Completed scoring is frozen; History/timing display is derived from persisted evidence. Separate learner self-assessments and FSRS grades do not rewrite frozen marks.
-5. A Source/Reviewed comparison is hypothetical and display-only. Never override the actual scored attempt; only semantically comparable, correctly paired original answers may be compared.
+- Six validated kinds: `single-choice`, `multiple-select`, `numeric-entry`, `true-false`, `matching` and `free-response`. Keys and allowed responses must match their declared type. Single/multiple options, numeric tolerances, matching cardinality/uniqueness and rich/media references are constrained.
+- An exam package identifies the paper, source/edition, underlying questions and immutable revisions, keys, section policies, time/nav rules and stimuli. The executable paper must retain exactly what the candidate attempted.
+- Scores use the **declared paper/key policy**; correct, incorrect, unanswered and partial components obey bounds. Partial score cannot exceed a fully correct question, and a manually assessed written answer is **not silently machine-graded**.
+- The printer/original `Source` and editorial `Reviewed` editions have distinct identities and changes. A Source comparison is advisory/display-only, cannot silently override frozen history and must require supported semantic comparability. **6 Oct CGL Q62:** original invalid/excluded, reviewed caution scores publisher B.
+- A conceptual question ID may have multiple revisions; do not equate a question revision count with underlying distinct-question count.
 
-## Persistence, recovery and trust
-- `practiceDesk.shared.v1`: compact attempts and deduplicated immutable snapshots in IndexedDB; version/revision-checked transactions and fallback paths. Do not treat in-memory or fallback copies as authenticated sources of truth.
-- `practice-desk-backup` v4: SHA-checked compact attempts/snapshots, additive conflict-checked restore, separate archive of user-authored drafts/staging. No old v11/v3 backup migration is promised.
-- Explicit deletion/discard guards; corrupted or dangling data must be surfaced or quarantined, never repaired by guessing an answer or silently resetting a scored record.
-- Content hashes verify consistency of bytes, not official PYQ source, legal effective date, reviewer identity or PDF visual fidelity.
+## Exam lifecycle and candidate-facing security
 
-## External authoring formats
-- **AI/manual source:** `practice-desk-authoring` v1; see [authoring](QUESTION_BANK_AUTHORING.md).
-- **Compiled exam:** `practice-desk-exam` v1; only use canonical compiler/validator for immutable IDs, hashes and policy.
-- **Simplified import:** `practice-desk-bank` for MCQ/NAT where supported.
-- **Review/pairing/PDF:** distinct review, original/reviewed and document-provenance sidecars; they are not alternate question-key schemas. External CLI artifacts are not auto-imported into a user's browser.
-- **Capability discovery:** versioned `docs/contracts/practice-desk-capabilities.v1.json`, read by `scripts/practice-desk-capabilities.mjs`; descriptions cannot overrule actual source.
+1. Validate and preflight the source package; freeze paper/key/media/policy/edition and source-reference IDs **at start**, not on post-submit rendering.
+2. Accept legal `answer`, `clear`, `flag`, `navigate`, `pause`, `resume`, `submit` and `expiry` events for the selected navigation/timer policy. Prevent late submissions, double counting, clock rollback and illegal cross-section responses.
+3. Candidate content is narrower than reviewer/answer-key data. Solutions, explanations, editorial disputes, answer-only media and privileged annotations must not leak before the permitted review boundary.
+4. On completion, store the exact result/ledger. A later correction or notebook rating must not modify those frozen marks.
+5. Preserve raw measured timing/event evidence; do not assign invented per-question time or mastery merely because an item was opened.
 
-**Non-negotiable editorial case:** original 6 October SSC CGL Q62 invalid/excluded; reviewed caution against publisher B remains scoreable without pretest answer exposure. New imported material remains author-claimed, not officially authenticated.
+## Subject hierarchy and sections
 
-Other contracts: [AGENTS](../../AGENTS.md) · [architecture](CURRENT_ARCHITECTURE.md) · [content pipeline](AGENT_CONTENT_PIPELINE.md) · [policy](../decisions/POLICY_REGISTER.md).
+- An **exam section** can have timing/navigation limits and includes many unrelated subjects.
+- **Subject → Topic → Subtopic** are semantic labels; permitted parent-only classifications must count, without fabricated topic defaults. Stable underlying IDs and proper path ancestry are needed for roll-ups, revision evidence and duplicate controls.
+- Source-provided tags and learner notebook labels have different attribution. Keep them explicit and exam-scoped; do not conflate derived mastery with verified syllabus classification.
+
+## Local persistence, revision safety and backups
+
+- `practiceDesk.shared.v1` stores compact attempts plus deduplicated immutable snapshot bodies. Transactions verify both source identity and revision where applicable.
+- CAS/optimistic concurrency distinguishes missing record, zero revision and stale sibling tab; terminal results cannot be revived by an older emergency mirror.
+- `practice-desk-backup` v4 is SHA-checked, bounded, additive and conflict-aware. It cannot authenticate a maliciously authored backup: strictly validate records, fields, structural hashes and snapshots on restore.
+- Corrupted or missing snapshot references should be surfaced or quarantined, not silently replaced with newly computed key/marks. Explicit deletion/discard, stable archive IDs and recovery precedence apply.
+- Drafts/staging and local browser History are **separate export lifecycles**; do not promise v11/v3 migration or implicit remote synchronization.
+
+## Authoring and external sources
+
+- AI/human source: `practice-desk-authoring` v1, with explicit origins, section/subject differentiation, stable question IDs, author-supplied explanations, question-kind keys and declared scoring. Canonical compiler emits `practice-desk-exam` v1; supported simpler MCQ/NAT import uses `practice-desk-bank` where validated.
+- Source can be staged in bounded batches and selectively authored/published (maximum published/draft question count is enforced by validators; large imports must be split). Publication must be atomic with valid hashes, keys, source-hash-bound provenance and candidate-only separation.
+- Blind quality review, quota blueprint, original/reviewed editorial mapping and supplied-document/PDF manifests have their own versioned sidecars and source-bound freshness. **They do not override answer key schemas or act as independently authenticated official sources.**
+- External agents can read provided files and create new outputs with permission, but cannot read private IndexedDB, fetch authenticated laws inside the offline app or auto-import into Library.
+
+## Truth and evidence boundaries
+
+Hashes establish **internal consistency, not publisher identity**; a PDF page census or printed-key claim is an agent assertion until independently checked. Current law, primary-source provenance, figures, formulae and answer accuracy require real external evidence. FSRS scheduling and scored attempts are separate; revision cards do not revise History results. Physical Safari/mobile/assistive technology is not proved by cross-platform emulation alone.
+
+**Source orientation:** `src/domain/` for validated schema, `src/engine/` for rules and state, `src/history/` for persistence, `src/learning/` for evidence and FSRS, `src/authoring/` and `scripts/` for content pathways. See [architecture](CURRENT_ARCHITECTURE.md), [source authoring](QUESTION_BANK_AUTHORING.md), [pipeline](AGENT_CONTENT_PIPELINE.md), [policy](../decisions/POLICY_REGISTER.md) and [backlog](../../backlog.md).

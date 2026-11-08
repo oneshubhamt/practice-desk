@@ -1,21 +1,22 @@
-# Practice Desk — binding decisions (current concise register)
+# Practice Desk — binding design and product decisions
 
-This register consolidates the *currently relevant* rules; the complete verbatim numbered D01–D80 chronological decision table, exceptions and linked CI evidence remain at [the pinned pre-cleanup register](https://github.com/oneshubhamt/practice-desk/blob/a10ac8917b39b5febd228dc825487aeb1d0dba8d/docs/decisions/POLICY_REGISTER.md). Do not silently reverse a prior user decision because it has been abbreviated here. Inspect actual source for implementation claims.
+These are the **current cross-programme rules**, not an implementation diary. The original chronological D01–D80 record and programme audits are permanently retrievable via [pinned Git history](../HISTORY_INDEX.md). Never reinterpret an abbreviated decision as permission to violate an earlier binding constraint; consult current source and ask for authorization before materially changing policy.
 
-| Domain | Binding direction |
+| Area | Binding decision |
 |---|---|
-| Branch & release | The explicitly authorized branch only; present documentation cleanup is `Satyam`. Protect `main` and `baseline/v11`. No merge, public release or unapproved distribution. |
-| Architecture | One typed six-kind generic engine, modular ownership, single generated offline HTML; no parallel v11 scorer or hand-editing generated output. |
-| Compatibility | This is a new application. No v11 or retired backup-schema migration/dual writer requirements. Preserve current functional behaviour and data integrity. |
-| Scoring | Correct/blank/wrong bounds, partial-credit ceiling, matching uniqueness, multi-select constraints, numeric tolerance and written manual assessment are substantive safety contracts. |
-| Source and editorial | Preserve original published source/key and distinct later Reviewed corrections, immutable frozen exam answers. **6 Oct CGL Q62:** original excluded, reviewed caution scores published B. Dispute shown after, not during, exam. |
-| Provenance | Source SHA means internal consistency; not official PYQ, correct legal status, reviewer signature or factual correctness. Explicit source attribution and corrections; no invented official status. |
-| Storage | Race-safe saved attempts, immutable deduplicated snapshots, checked additive v4 backup, deletion/recovery safety, separate authoring drafts, no silent data loss. |
-| Navigation and accessibility | Use supported native Navigation API with tested `file://` fragment fallback. Preserve keyboard/focus, native radio semantics, no horizontal overflow at 195px/140%. Physical Safari/AT not certified. |
-| Learning | FSRS ratings are explicit and separate from scored attempts. Evidence-based topic/revision analytics; do not invent time, mastery or difficulty adjustments. |
-| Authoring | AI agents typically write narrow versioned source; Wordgard serves manual correction; one canonical validator/publisher. External PDF reading and fact review remain external. No direct device/History agent control. |
-| QA | Source-first five-step discipline, exact-source CI, real failure cases, independent oracles and bounded screenshot use. Replace obsolete tests only with documented equal-or-stronger substantive successors. |
-| Ethics/privacy | No pre-submit answer leakage; no unauthorized network/device transfer; content cannot be certified solely by code and CI. |
-| Current scope | Documentation consolidation and a test/scripts plan only. All pending P60 source defects, calendar/survey design, test implementation, user data/bank updates and release are deferred. |
+| Branch/release | Work on the explicitly approved branch; current branch is **`overhaul`**. Do not alter `main` / `baseline/v11` or release without user authorization. |
+| Architecture | Modular strict TypeScript, one canonical six-kind exam/score engine, one built standalone `file://` HTML, one canonical authoring publisher; no shadow v11 system. |
+| Compatibility | This is a new application; do not add retired v11/v3 migration or dual-write compatibility without a new decision. Current user state integrity remains mandatory. |
+| Grading | Explicit paper/key marking policy; valid negative and unanswered bounds, capped partial credit, exact multi-select/matching constraints, numeric tolerance and manual written-response assessment. |
+| Content editions | Frozen printed **Source** and separately corrected **Reviewed** records; never silently overwrite an original paper/key or existing completed result. **6 Oct CGL Q62:** original invalid/excluded, reviewed caution scores published B. |
+| Candidate privacy | No pre-submit solution, answer key, explanation-only asset or reviewer-only information. Source SHA checks byte consistency, not authorship, accuracy or official provenance. |
+| Taxonomy | Physical paper sections govern timers/navigation; semantic Subject → Topic → Subtopic governs grouping. Keep stable question identity and correct roll-ups across revisions. |
+| Storage | Local transactional attempts, deduplicated immutable snapshots, compare-and-swap, checked additive backup v4, explicit deletion/recovery/quarantine and separately exported authoring drafts. |
+| UI/navigation | Native Navigation API with reliable fragment fallback, focus/keyboard semantics, responsive narrow layouts including 195px at 140% scale. No claim of physical Mac/AT certification. |
+| Learning | FSRS ratings and notebook self-assessment cannot rewrite historical scores. Recommendations and difficulty must be grounded in observed, correctly scoped evidence. |
+| Authoring and agents | Wordgard manual authoring and compact external AI-first `practice-desk-authoring` v1; versioned staged sources, separate blind QA/editorial/PDF sidecars, explicit create-new-file permission; no embedded LLM or automatic browser import. |
+| QA | Source-level review, independent/adversarial oracles, all required real browser journeys, no removal of unique safety coverage for cosmetic count reduction, guarded source-verified HTML publishing. |
+| Truth and ethics | No fabricated legal/PYQ verification, reviewer independence, temporal certainty, device permissions or ability to access local learner data. |
+| Unresolved work | [Backlog](../../backlog.md) records deferred P60 correctness, independent content/PDF and physical-device/release checks. A closed test programme does not resolve product findings. |
 
-For current source details see [AGENTS](../../AGENTS.md), [data contracts](../architecture/DATA_CONTRACTS.md), [programme](../ENGINEERING_PROGRAMME.md) and [backlog](../../backlog.md).
+**For technical detail:** [architecture](../architecture/CURRENT_ARCHITECTURE.md), [data contracts](../architecture/DATA_CONTRACTS.md), [current programme](../ENGINEERING_PROGRAMME.md), [backlog](../../backlog.md).

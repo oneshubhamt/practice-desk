@@ -34,4 +34,4 @@ For original/reviewed, first derive a decision template using `editorial-edition
 - Original/source comparison has conservative comparability; unresolved P60 static-source findings are tracked in [backlog](../../backlog.md), not fixed by this documentation edit.
 - Source/Reviewed are explicit *two* Library imports, not atomic remote synchronization. Retain original source/PDF and sidecars outside browser History as appropriate.
 
-**References:** [source authoring](QUESTION_BANK_AUTHORING.md) · [AI guide](../AI_APPLICATION_GUIDE.md) · [machine capability contract](../contracts/practice-desk-capabilities.v1.json). Original individual P60-A–F design documents remain losslessly accessible in [the pinned history](../HISTORY_INDEX.md).
+**References:** [source authoring](QUESTION_BANK_AUTHORING.md) · [agent quickstart](../AGENT_AUTHORING_QUICKSTART.md) · [machine capability contract](../contracts/practice-desk-capabilities.v1.json). Original individual P60-A–F design documents remain losslessly accessible in [the pinned history](../HISTORY_INDEX.md).

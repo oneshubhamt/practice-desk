@@ -5,7 +5,7 @@
 ## Start here
 
 1. Read this file and **one** relevant source shape: [APFC](../examples/ai-first-apfc.json) or [CAT](../examples/ai-first-cat.json). Two source-traced **reconstructions**, not authenticated official PYQs: [APFC 2023 vocabulary](../examples/source-grounded-apfc-2023.json) and [CAT 2024 QA](../examples/source-grounded-cat-2024.json).
-2. To discover app features (not needed for ordinary bank writing), run `node scripts/practice-desk-capabilities.mjs summary`; for available agent operations, run `node scripts/agent-handoff.mjs actions`. Refer to [AI application guide](AI_APPLICATION_GUIDE.md) only for feature-specific details.
+2. To discover app features (not needed for ordinary bank writing), run `node scripts/practice-desk-capabilities.mjs summary`; for available agent operations, run `node scripts/agent-handoff.mjs actions`. For one-question corrections use `node scripts/question-bank-agent.mjs inspect bank.json`, `show bank.json QUESTION-ID` and `patch bank.json ops.json NEW-bank.json --dry-run`; always write a new source revision.
 3. Research **actual** syllabus, source PDF/HTML, dates, current law, original item numbers and answer rationale. Draft a `practice-desk-authoring` v1 JSON with real, distinct distractors, explanations, stable IDs, explicit origin and source locators. Label paraphrases `reconstruction`; only independently authenticated exact original paper items qualify as `official-pyq`.
 
 ## One-command complete blind review preparation
