@@ -318,7 +318,7 @@ test("P62-B nineteen MCQs remain comparable beside one numerical question",()=>{
  targetPassage.stimuli[0].text="New candidate passage";
  validateExamPackage(targetPassage);
  assert.equal(createSourceKeyReference(targetPassage,sourcePassage).entries.filter(x=>x.comparable).length,18);
-}));
+});
 
 // Old schema-2 source-key comparisons were already frozen in local History.
 test("P62-B reads original schema-2 snapshots without changing their digest",()=>{

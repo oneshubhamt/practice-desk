@@ -142,7 +142,7 @@ export function validateSourceKeyReference(attempt:GenericAttempt):void{
     Object.keys(ref).some(key=>!["schema","paperId","sourcePaperRevisionId",
      "sourceAnswerKeyRevisionId","contentHash","entries"].includes(key)))
    throw Error("Invalid original source-key comparison fields");
- if(ref.schema!==2&&ref.schema!==3)throw Error("Unsupported original source-key comparison schema");
+ if(ref.schema!==2&&ref.schema!==3)throw Error("Invalid original source-key comparison schema");
  if(ref.paperId!==frozen.paper.paperId||
    typeof ref.sourcePaperRevisionId!=="string"||!ref.sourcePaperRevisionId||
    typeof ref.sourceAnswerKeyRevisionId!=="string"||!ref.sourceAnswerKeyRevisionId||
@@ -156,6 +156,18 @@ export function validateSourceKeyReference(attempt:GenericAttempt):void{
    sourceAnswerKeyRevisionId:ref.sourceAnswerKeyRevisionId,entries:ref.entries}:
   {schema:3 as const,paperId:ref.paperId,sourcePaperRevisionId:ref.sourcePaperRevisionId,
    sourceAnswerKeyRevisionId:ref.sourceAnswerKeyRevisionId,entries:ref.entries};
+ // Reject unexpected nested fields before digest validation, retaining the
+ // strict historical rejection contract for forged frozen review metadata.
+ for(const item of ref.entries){
+  if(!item||typeof item!=="object")throw Error("Invalid source-key entry fields");
+  const allowed=ref.schema===3&&"kind" in item&&item.kind==="unavailable"?
+   ["kind","questionRevisionId","comparable","reason"]:
+   ref.schema===3?["kind","questionRevisionId","originalOptionId","markingRule",
+      "sourceSemanticHash","comparable"]:
+     ["questionRevisionId","originalOptionId","markingRule","sourceSemanticHash","comparable"];
+  if(Object.keys(item).some(field=>!allowed.includes(field)))
+   throw Error("Invalid source-key entry fields");
+ }
  if(ref.contentHash!==hashJson(core))throw Error("Original source-key reference hash mismatch");
  const questions=new Map(frozen.questions.map(q=>[q.id,q]));
  const seen=new Set<string>();
