@@ -110,6 +110,14 @@ export function addLearningCard(attempt:GenericAttempt,id:QuestionRevisionId,at:
 export function scheduledCard(item:LearningCard,scheduler:RevisionSchedulerPort){
  return scheduler.replay(item.id,item.createdAt,item.reviews);
 }
+export function inspectLearningCard(item:LearningCard,at:string,scheduler:RevisionSchedulerPort){
+ if(!validDate(at))throw Error("Invalid learning-card inspection timestamp");
+ return scheduler.inspect(item.id,item.createdAt,item.reviews,at);
+}
+export function previewLearningCard(item:LearningCard,at:string,scheduler:RevisionSchedulerPort){
+ if(!validDate(at))throw Error("Invalid learning-card preview timestamp");
+ return scheduler.preview(item.id,item.createdAt,item.reviews,at);
+}
 export function rateLearningCard(item:LearningCard,rating:ReviewGrade,at:string,scheduler:RevisionSchedulerPort):LearningCard{
  if(!validDate(at)||Date.parse(at)<Date.parse(item.reviews.at(-1)?.at??item.createdAt))
    throw Error("Review time must be monotonic");
