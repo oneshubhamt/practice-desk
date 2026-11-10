@@ -1229,6 +1229,14 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
 .learning-evidence-builder .btn{max-width:100%;white-space:normal;overflow-wrap:anywhere}
 /* FSRS policy actions use long accessible labels; let flex items shrink/wrap under the
    existing 195px/140% stress viewport instead of widening the document. */
+.learning-scheduler-policy{
+ min-width:0;max-width:100%;overflow-wrap:anywhere
+}
+.learning-scheduler-policy :is(h2,h3,p,label,code){
+ min-width:0;max-width:100%;overflow-wrap:anywhere
+}
+.learning-scheduler-policy code{white-space:normal;word-break:break-word}
+.learning-scheduler-policy .learning-evidence-controls{min-width:0;max-width:100%}
 .learning-scheduler-policy .generic-actions .btn{
  min-width:0;max-width:100%;box-sizing:border-box;white-space:normal;overflow-wrap:anywhere
 }
