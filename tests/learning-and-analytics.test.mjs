@@ -19,6 +19,8 @@ import * as __suite_dep_13 from "../src/history/backup.ts";
 import * as __suite_dep_14 from "../src/learning/revision-test.ts";
 import * as __suite_dep_15 from "../src/engine/scoring.ts";
 import * as __suite_dep_16 from "../src/domain/hash.ts";
+import * as __suite_dep_17 from "../src/learning/revision-settings.ts";
+import * as __suite_dep_18 from "../src/learning/fsrs-optimizer.ts";
 import {revisionInventory as independentRevisionInventory} from "../src/learning/revision-selection.ts";
 
 // === Legacy suite: tests/analytics-property-model.test.mjs — 2 unchanged test registrations ===
@@ -335,43 +337,73 @@ test("learning cards are created from completed immutable answers, not active te
  assert.throws(()=>validateLearningCard({...item,id:"learning-card:bad"}),/identity/);
  assert.throws(()=>validateLearningCard({...item,answer:{kind:"single-choice",optionId:"fake"}}),/unknown option/);
 });
-test("stable ts-fsrs 6.0.0 runs explicit FSRS-7 with dual traces, previews and retrievability",async()=>{
+test("stable ts-fsrs 6.0.0 runs explicit FSRS-7 with evidence-rich replay, previews and retrievability",async()=>{
  const scheduler=await DefaultScheduler();
  assert.equal(scheduler.provider,"ts-fsrs@6.0.0/FSRS-7");
  assert.equal(scheduler.configuration.model,"FSRS-7");
  assert.equal(scheduler.configuration.packageVersion,"6.0.0");
+ assert.equal(scheduler.configuration.retentionPolicy,"fixed");
  assert.equal(scheduler.configuration.desiredRetention,0.9);
  assert.equal(scheduler.configuration.enableShortTerm,true);
  assert.deepEqual(scheduler.configuration.learningSteps,["1m","10m"]);
  assert.deepEqual(scheduler.configuration.relearningSteps,["10m"]);
  assert.equal(scheduler.configuration.allowModelOverride,true);
  assert.equal(scheduler.configuration.enableFuzz,true);
+ assert.equal(scheduler.configuration.leechAction,"remediate");
  const item=addLearningCard(complete("reviewer"),bundle.questions[0].id,new Date(1030).toISOString());
+ assert.equal(item.revisionDisposition,"active");
  const initial=scheduledCard(item,scheduler);
  assert.equal(initial.dueAt.getTime(),1030);
- assert.equal(initial.stability,0);
- assert.equal(initial.stabilityFast,0);
+ assert.equal(initial.stability,0);assert.equal(initial.stabilityFast,0);
  const previews=previewLearningCard(item,new Date(2030).toISOString(),scheduler);
  assert.deepEqual(previews.map(x=>x.rating),[1,2,3,4]);
  assert.ok(previews.every(x=>x.dueAt.getTime()>=2030&&x.scheduledDays>=0));
- assert.ok(previews.some(x=>x.scheduledDays>0&&x.scheduledDays<1),
-   "FSRS-7/default learning policy must retain fractional-day scheduling");
- const graded=rateLearningCard(item,Rating.Good,new Date(2030).toISOString(),scheduler);
- assert.equal(graded.reviews.length,1);
- assert.equal(graded.reviews[0].rating,Rating.Good);
- const next=scheduledCard(graded,scheduler);
- assert.equal(next.reps,1);
- assert.ok(next.stability>0);
- assert.ok(next.stabilityFast>0);
- assert.ok(next.dueAt.getTime()>2030);
+ assert.ok(previews.some(x=>x.scheduledDays>0&&x.scheduledDays<1));
+ const graded=rateLearningCard(item,Rating.Good,new Date(2030).toISOString(),725,scheduler);
+ assert.equal(graded.reviews[0].rating,Rating.Good);assert.equal(graded.reviews[0].durationMs,725);
+ assert.equal(graded.reviews[0].state,"new");
+ const next=scheduledCard(graded,scheduler);assert.equal(next.reps,1);assert.ok(next.stability>0);assert.ok(next.stabilityFast>0);
  const inspected=inspectLearningCard(graded,new Date(2030+12*60*60*1000).toISOString(),scheduler);
  assert.ok(inspected.retrievability!==null&&inspected.retrievability>0&&inspected.retrievability<=1);
- const reloaded=validateLearningCard(JSON.parse(JSON.stringify(graded)));
- const replayed=scheduledCard(reloaded,await DefaultScheduler());
- assert.equal(replayed.dueAt.getTime(),next.dueAt.getTime(),
-   "card-id/review-count fuzzing must remain reproducible under authoritative-log replay");
- assert.equal(replayed.stabilityFast,next.stabilityFast);
- assert.throws(()=>rateLearningCard(graded,Rating.Again,new Date(1500).toISOString(),scheduler),/monotonic/);
+ const reloaded=validateLearningCard(JSON.parse(JSON.stringify(graded))),replayed=scheduledCard(reloaded,await DefaultScheduler());
+ assert.equal(replayed.dueAt.getTime(),next.dueAt.getTime());assert.equal(replayed.stabilityFast,next.stabilityFast);
+ assert.throws(()=>rateLearningCard(graded,Rating.Again,new Date(1500).toISOString(),20,scheduler),/monotonic/);
+});
+test("Cost-ADR is an alternative FSRS-7 policy and leeches remediate or suspend without rewriting review evidence",async()=>{
+ const scheduler=await DefaultScheduler({retentionPolicy:"cost-adr",costAdrGoalWeight:64,leechThreshold:1,leechAction:"remediate"});
+ assert.equal(scheduler.configuration.retentionPolicy,"cost-adr");assert.equal(scheduler.configuration.costAdrGoalWeight,64);
+ const seed=addLearningCard(complete("cost-adr"),bundle.questions[0].id,new Date(1030).toISOString());
+ assert.deepEqual(previewLearningCard(seed,new Date(2030).toISOString(),scheduler).map(x=>x.rating),[1,2,3,4]);
+ let card=seed;
+ for(let i=0;i<8&&scheduledCard(card,scheduler).state!=="review";i++){
+   const current=scheduledCard(card,scheduler),last=Date.parse(card.reviews.at(-1)?.at??card.createdAt);
+   card=rateLearningCard(card,Rating.Good,new Date(Math.max(last+1,current.dueAt.getTime()+1)).toISOString(),500,scheduler);
+ }
+ assert.equal(scheduledCard(card,scheduler).state,"review");
+ const current=scheduledCard(card,scheduler),last=Date.parse(card.reviews.at(-1).at);
+ card=rateLearningCard(card,Rating.Again,new Date(Math.max(last+1,current.dueAt.getTime()+1)).toISOString(),650,scheduler);
+ assert.equal(scheduledCard(card,scheduler).lapses,1);assert.equal(scheduledCard(card,scheduler).leechStatus,"remediation");
+ const suspended=await DefaultScheduler({retentionPolicy:"cost-adr",costAdrGoalWeight:64,leechThreshold:1,leechAction:"suspend"});
+ assert.equal(scheduledCard(card,suspended).leechStatus,"suspended");assert.equal(card.reviews.at(-1).state,"review");
+});
+test("optimizer evidence and evaluated profiles are portable without persisting vendor scheduler state",async()=>{
+ const scheduler=await DefaultScheduler();
+ let card=addLearningCard(complete("optimizer"),bundle.questions[0].id,new Date(1030).toISOString());
+ card=rateLearningCard(card,Rating.Good,new Date(2030).toISOString(),810,scheduler);
+ const csv=__suite_dep_18.fsrsOptimizerCsv([card]);
+ assert.match(csv,/^review_time,card_id,review_rating,review_duration,review_state\n/);assert.match(csv,/,3,810,0\n$/);
+ assert.deepEqual(__suite_dep_18.optimizerEvidenceSummary([card]),{cards:1,reviews:1});
+ const profile=__suite_dep_18.validateFsrsOptimizerProfile({
+  schema:"practice-desk-fsrs-profile/v1",model:"FSRS-7",bindingVersion:"0.6.0",trainedAt:"2026-11-10T00:00:00.000Z",
+  sourceSha256:"a".repeat(64),evidenceItems:12,weights:Array(34).fill(0.5),evaluation:{logLoss:0.42,rmseBins:0.08},
+  training:{enableShortTerm:true,enableSchedPenalties:true,numRelearningSteps:1,nextDayStartsAt:4,timezone:"Asia/Kolkata"}
+ });
+ const settings=__suite_dep_17.validateRevisionSettings({...__suite_dep_17.DEFAULT_REVISION_SETTINGS,
+  optimizerProfile:profile,retentionPolicy:"cost-adr"});
+ const options=__suite_dep_17.revisionSchedulerOptions(settings);assert.equal(options.retentionPolicy,"cost-adr");assert.equal(options.weights.length,34);
+ const storage=new Map(),fake={getItem:key=>storage.get(key)??null,setItem:(key,value)=>storage.set(key,value)};
+ __suite_dep_17.writeRevisionSettings(settings,fake);assert.deepEqual(__suite_dep_17.readRevisionSettings(fake),settings);
+ assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,evaluation:null}),/evaluation/);
 });
 test("topic evidence and trends never compare different paper revisions",()=>{
  const a=complete("one",true),b=complete("two",false);
@@ -406,13 +438,13 @@ test("backup preserves notes and FSRS review logs with strict integrity checks",
  const a=complete("backup");
  const original=addLearningCard(a,bundle.questions[0].id,new Date(1030).toISOString());
  const rated=rateLearningCard({...original,note:"Review concept carefully",errorLabel:"conceptual",customTopic:"Topic"},
- Rating.Again,new Date(2030).toISOString(),scheduler);
+ Rating.Again,new Date(2030).toISOString(),900,scheduler);
  const archived=verifyBackup(makeBackup([a,rated],{schema:1,dark:false,scale:100},"2026-10-29T10:00:00Z"));
  assert.equal(archived.records.length,2);
  const card=validateLearningCard(archived.records.find(x=>x.recordType==="learning-card"));
  assert.equal(card.note,"Review concept carefully");
- assert.equal(card.reviews.length,1);
- assert.throws(()=>validateLearningCard({...card,reviews:[{rating:9,at:card.updatedAt}]}),/history/);
+ assert.equal(card.reviews.length,1);assert.equal(card.reviews[0].durationMs,900);assert.equal(card.reviews[0].state,"new");
+ assert.throws(()=>validateLearningCard({...card,reviews:[{rating:9,at:card.updatedAt,durationMs:1,state:"new"}]}),/history/);
  assert.throws(()=>verifyBackup({...archived,records:archived.records.slice(1)}),/integrity/);
 });
 }

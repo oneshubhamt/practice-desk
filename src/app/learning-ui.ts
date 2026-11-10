@@ -1,4 +1,8 @@
 import {createRevisionScheduler} from "../learning/fsrs-scheduler-adapter.ts";
+import {DEFAULT_REVISION_SETTINGS,readRevisionSettings,revisionSchedulerOptions,
+ validateRevisionSettings,writeRevisionSettings} from "../learning/revision-settings.ts";
+import {fsrsOptimizerCsv,optimizerEvidenceSummary,serializeFsrsOptimizerProfile,
+ validateFsrsOptimizerProfile} from "../learning/fsrs-optimizer.ts";
 import {reconcileSameExamQuestion} from "./exam-dom-reconcile.ts";
 import type {RevisionSchedulerPort} from "../learning/revision-scheduler-port.ts";
 import type { ExamPackage, GenericAttempt } from "./exam-package.ts";
@@ -30,6 +34,10 @@ const fsrsInterval=(days:number):string=>{
  if(days<30)return (days<10?Number(days.toFixed(1)):Math.round(days))+"d";
  if(days<365)return Math.round(days/30.4375)+"mo";
  return Number((days/365.25).toFixed(days<730?1:0))+"y";
+};
+const downloadText=(name:string,text:string,type:string):void=>{
+ const url=URL.createObjectURL(new Blob([text],{type})),link=document.createElement("a");
+ link.href=url;link.download=name;link.click();window.setTimeout(()=>URL.revokeObjectURL(url),0);
 };
 function figures(assets:LearningCard["assets"],ids:readonly string[]|undefined):string{
  return (ids??[]).map(id=>{
@@ -74,12 +82,12 @@ function questionHTML(record:LearningCard):string{
 }
 
 export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
- let scheduler:RevisionSchedulerPort|null=null;
- let selectedId:string|null=null,reviewId:string|null=null,revealed=false;
- let filter:"all"|"due"|"bookmarked"="all",hierarchyRoot="",message="",closed=false,opened=false;
+ let scheduler:RevisionSchedulerPort|null=null,revisionSettings=readRevisionSettings();
+ let selectedId:string|null=null,reviewId:string|null=null,revealed=false,revealedStartedAt:number|null=null;
+ let filter:"all"|"due"|"remediation"|"bookmarked"="all",hierarchyRoot="",message="",closed=false,opened=false;
  let previousLearningView="";
  type NotebookDraft={note:string;customSubject:string;customTopic:string;customSubtopic:string;
-   syllabusTopicId:string;errorLabel:string;bookmarked:boolean};
+   syllabusTopicId:string;errorLabel:string;bookmarked:boolean;revisionDisposition:"active"|"suspended"};
  const notebookDrafts=new Map<string,NotebookDraft>();
  const present=(html:string,identity:string)=>{
    const same=previousLearningView===identity;
@@ -92,7 +100,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
    const active=document.activeElement;
    const activeEdit=active instanceof HTMLElement&&oldDetail?.contains(active)&&
      ["learning-note","learning-subject","learning-topic","learning-subtopic",
-       "learning-error","learning-syllabus","learning-bookmark"].includes(active.id);
+       "learning-error","learning-syllabus","learning-bookmark","learning-suspend"].includes(active.id);
    const preserve=oldDetail&&cardId&&(notebookDrafts.has(cardId)||activeEdit);
    type NativeField=HTMLInputElement|HTMLTextAreaElement|HTMLSelectElement;
    const editor=preserve?Array.from(oldDetail.querySelectorAll<NativeField>(
@@ -145,19 +153,24 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
    const active=new Map(all.map(card=>[card.id,card]));
    for(const [id,entry] of cache)if(active.get(id)!==entry.record)cache.delete(id);
  };
- const now=()=>new Date();
- const due=(card:LearningCard)=>scheduler!==null?
-   schedule(card).dueAt.getTime()<=Date.now():false;
+ const now=()=>new Date(),clock=()=>typeof performance!=="undefined"?performance.now():Date.now();
  const cards=()=>host.cards().sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
- const dueCards=()=>cards().filter(due).sort((a,b)=>
-   schedule(a).dueAt.getTime()-schedule(b).dueAt.getTime());
+ const effectiveStatus=(card:LearningCard)=>card.revisionDisposition==="suspended"?"suspended":schedule(card).leechStatus;
+ const due=(card:LearningCard)=>scheduler!==null&&effectiveStatus(card)!=="suspended"&&schedule(card).dueAt.getTime()<=Date.now();
+ const dueCards=()=>cards().filter(due).sort((a,b)=>{
+   const aa=schedule(a),bb=schedule(b),ap=effectiveStatus(a)==="remediation"?0:1,bp=effectiveStatus(b)==="remediation"?0:1;
+   return ap-bp||aa.dueAt.getTime()-bb.dueAt.getTime();
+ });
+ const policySummary=()=>!scheduler?"Scheduler initializing":scheduler.configuration.retentionPolicy==="fixed"
+   ?Math.round(scheduler.configuration.desiredRetention*100)+"% fixed retention"
+   :"Cost-ADR · cost weight "+scheduler.configuration.costAdrGoalWeight;
  function draw(){
   if(closed||!opened)return;
   const all=cards();
   invalidate(all);
   const dueNow=dueCards();
   const visible=all.filter(c=>filter==="all"||filter==="due"&&due(c)||
-    filter==="bookmarked"&&c.bookmarked);
+    filter==="remediation"&&scheduler!==null&&effectiveStatus(c)==="remediation"||filter==="bookmarked"&&c.bookmarked);
   // Selection never displays an invisible card from another list filter.
   // Any unfinished edit is still held by its immutable card ID in this tab.
   const selected=visible.find(c=>c.id===selectedId)??visible[0];
@@ -170,12 +183,17 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
      const snapshot=scheduler&&revealed?inspectLearningCard(item,inspectionAt,scheduler):null;
      const previews=scheduler&&revealed?previewLearningCard(item,inspectionAt,scheduler):[];
      const previewByRating=new Map(previews.map(value=>[value.rating,value]));
+     const reviewStatus=scheduler?effectiveStatus(item):"normal";
      const fsrsDetail=snapshot&&scheduler?
-       '<p class="fine"><strong>FSRS-7 memory</strong> · target '+Math.round(scheduler.configuration.desiredRetention*100)+
-       '% · '+(scheduler.configuration.enableFuzz?'reproducible fuzz on':'fuzz off')+
+       '<p class="fine"><strong>FSRS-7 memory</strong> · '+esc(policySummary())+' · '+
+       (scheduler.configuration.weights==="FSRS-7-custom"?'personalized 34-weight model':'default 34-weight model')+
+       ' · '+(scheduler.configuration.enableFuzz?'reproducible fuzz on':'fuzz off')+
        ' · state '+esc(snapshot.state)+(snapshot.retrievability===null?'':' · recall now '+Math.round(snapshot.retrievability*1000)/10+'%')+
        ' · stability '+Number(snapshot.stability.toFixed(2))+'d · fast '+Number(snapshot.stabilityFast.toFixed(2))+
-       'd · difficulty '+Number(snapshot.difficulty.toFixed(2))+' · '+snapshot.reps+' reviews · '+snapshot.lapses+' lapses</p>':"";
+       'd · difficulty '+Number(snapshot.difficulty.toFixed(2))+' · '+snapshot.reps+' reviews · '+snapshot.lapses+' lapses</p>'+
+       (reviewStatus==="normal"?'':'<p class="generic-warning"><strong>Persistent weakness:</strong> '+
+        (reviewStatus==="remediation"?'prioritized for remediation':'suspended from the automatic queue')+
+        (item.errorLabel?' · self-reported error: '+esc(item.errorLabel):'')+(item.note?' · review your saved note below':'')+'.</p>'):"";
      const html='<div class="generic-heading"><div><h1>Spaced revision</h1><p class="muted">'+
        esc(item.sectionTitle)+' · '+esc(scheduler?.provider??"FSRS-7")+' · rate your recall, not your exam mark</p></div>'+
        '<button class="btn" id="learning-back">Learning desk</button></div>'+
@@ -195,17 +213,17 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
          '<button class="btn primary" id="learning-reveal">Reveal answer</button>')+'</section>'+
        (message?'<p role="status" class="generic-warning">'+esc(message)+'</p>':"");
      present(html,"review:"+item.id);
-     root.querySelector<HTMLButtonElement>("#learning-back")!.onclick=()=>{reviewId=null;revealed=false;draw();};
-     root.querySelector<HTMLButtonElement>("#learning-reveal")?.addEventListener("click",()=>{revealed=true;draw();});
+     root.querySelector<HTMLButtonElement>("#learning-back")!.onclick=()=>{reviewId=null;revealed=false;revealedStartedAt=null;draw();};
+     root.querySelector<HTMLButtonElement>("#learning-reveal")?.addEventListener("click",()=>{revealedStartedAt=clock();revealed=true;draw();});
      root.querySelectorAll<HTMLButtonElement>("[data-grade]").forEach(button=>button.onclick=async()=>{
        if(!revealed||!scheduler)return;
        try{
-         if(!await host.save(rateLearningCard(item,Number(button.dataset.grade) as ReviewGrade,now().toISOString(),scheduler))){
+         const durationMs=revealedStartedAt===null?0:Math.max(0,Math.round(clock()-revealedStartedAt));
+         if(!await host.save(rateLearningCard(item,Number(button.dataset.grade) as ReviewGrade,now().toISOString(),durationMs,scheduler))){
            message="Review not durably saved. Export a recovery backup from the library.";draw();return;
          }
          message="Review recorded. The next due date is scheduled by FSRS-7.";
-         reviewId=dueCards().find(c=>c.id!==item.id)?.id??null;
-         revealed=false;draw();
+         reviewId=dueCards().find(c=>c.id!==item.id)?.id??null;revealed=false;revealedStartedAt=null;draw();
        }catch(error){message=error instanceof Error?error.message:"Scheduling failed";draw();}
      });
      return;
@@ -219,6 +237,9 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     (t.id===hierarchyRoot||t.id.startsWith(hierarchyRoot+"/"))):topics;
   const reviewedCount=all.filter(c=>c.reviews.length>0).length;
   const bookmarkedCount=all.filter(c=>c.bookmarked).length;
+  const remediationCount=scheduler?all.filter(c=>effectiveStatus(c)==="remediation").length:0;
+  const suspendedCount=scheduler?all.filter(c=>effectiveStatus(c)==="suspended").length:0;
+  const optimizerEvidence=optimizerEvidenceSummary(all);
   const reports=new Map<string,number>();
   for(const card of all)if(card.errorLabel)reports.set(card.errorLabel,(reports.get(card.errorLabel)??0)+1);
   const commonReports=[...reports].sort((a,b)=>b[1]-a[1]).slice(0,4);
@@ -236,12 +257,35 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     '<p class="generic-warning" role="status" id="learning-message"'+
       (message?'':' hidden')+'>'+esc(message)+'</p>'+
     '<div class="learning-summary">'+
-    [['Notebook cards',all.length],['Due for revision',dueNow.length],['Reviewed with FSRS',reviewedCount],['Bookmarked',bookmarkedCount]]
+    [['Notebook cards',all.length],['Due for revision',dueNow.length],['Remediation',remediationCount],['Suspended',suspendedCount],
+      ['Reviewed with FSRS',reviewedCount],['Bookmarked',bookmarkedCount]]
       .map(([label,value])=>'<div class="summary-stat"><small>'+esc(label)+'</small><b>'+esc(value)+'</b></div>').join("")+
     '</div>'+
+    '<section class="panel pad learning-scheduler-policy"><h2>FSRS-7 scheduling policy</h2>'+
+    '<p class="fine">Fixed retention remains the default. Cost-ADR is an explicit alternative. Repeated review lapses become leeches; remediation is the default response and automatic suspension is optional.</p>'+
+    '<div class="learning-evidence-controls"><label>Retention policy <select id="learning-retention-policy">'+
+    '<option value="fixed"'+(revisionSettings.retentionPolicy==="fixed"?' selected':'')+'>Fixed retention</option>'+
+    '<option value="cost-adr"'+(revisionSettings.retentionPolicy==="cost-adr"?' selected':'')+'>Cost-adaptive retention (Cost-ADR)</option></select></label>'+
+    '<label>Fixed target <input id="learning-retention-target" type="number" min="0.01" max="0.99" step="0.01" value="'+revisionSettings.desiredRetention+'"></label>'+
+    '<label>Cost-ADR goal weight <input id="learning-cost-adr-weight" type="number" min="0" max="1024" step="1" value="'+revisionSettings.costAdrGoalWeight+'"></label>'+
+    '<label>Leech threshold <input id="learning-leech-threshold" type="number" min="1" max="1000" step="1" value="'+revisionSettings.leechThreshold+'"></label>'+
+    '<label>Leech action <select id="learning-leech-action"><option value="remediate"'+(revisionSettings.leechAction==="remediate"?' selected':'')+'>Prioritize remediation</option>'+
+    '<option value="suspend"'+(revisionSettings.leechAction==="suspend"?' selected':'')+'>Suspend automatically</option></select></label></div>'+
+    '<div class="row generic-actions"><button class="btn primary" id="learning-policy-apply">Apply scheduling policy</button></div>'+
+    '<h3>Personalized FSRS-7 weights</h3><p class="fine">'+(revisionSettings.optimizerProfile?
+      'Active evaluated profile · trained '+esc(new Date(revisionSettings.optimizerProfile.trainedAt).toLocaleDateString())+
+      ' · '+revisionSettings.optimizerProfile.evidenceItems+' optimizer items · log loss '+Number(revisionSettings.optimizerProfile.evaluation.logLoss.toFixed(4))+
+      ' · RMSE bins '+Number(revisionSettings.optimizerProfile.evaluation.rmseBins.toFixed(4)):'Using upstream FSRS-7 default weights.')+
+    ' Raw evidence: '+optimizerEvidence.reviews+' reviews across '+optimizerEvidence.cards+' cards.</p>'+
+    '<p class="fine">Beta optimizer training runs outside the main file:// UI via <code>tools/fsrs-optimizer</code>. Imported 34-weight profiles require evaluation metadata and scheduler validation.</p>'+
+    '<div class="row generic-actions"><button class="btn" id="learning-optimizer-export"'+(optimizerEvidence.reviews?'':' disabled')+'>Export optimizer evidence</button>'+
+    '<button class="btn" id="learning-optimizer-import">Import evaluated profile</button><input id="learning-optimizer-file" type="file" accept="application/json,.json" hidden>'+
+    '<button class="btn" id="learning-optimizer-export-profile"'+(revisionSettings.optimizerProfile?'':' disabled')+'>Export active profile</button>'+
+    '<button class="btn" id="learning-optimizer-reset"'+(revisionSettings.optimizerProfile?'':' disabled')+'>Use default weights</button></div></section>'+
     '<section class="panel pad learning-revision-callout"><div class="row between"><div><h2>Revision queue</h2>'+
     '<p class="fine">'+all.length+' cards · '+(scheduler?dueNow.length+" due now":"Scheduler initializing")+
-      (scheduler?' · '+esc(scheduler.provider)+' · '+Math.round(scheduler.configuration.desiredRetention*100)+'% target retention':'')+
+      (scheduler?' · '+esc(scheduler.provider)+' · '+esc(policySummary())+' · '+
+       (scheduler.configuration.weights==="FSRS-7-custom"?'personalized weights':'default weights'):'')+
       ' · Mock results do not automatically count as spaced-repetition reviews</p></div>'+
     '<div class="row generic-actions"><button class="btn primary" id="learning-due"'+(!scheduler||!dueNow.length?" disabled":"")+'>Review due cards</button>'+
     '<button class="btn" id="learning-test"'+(!candidates.length?" disabled":"")+'>Start revision test ('+candidates.length+')</button></div></div>'+
@@ -275,17 +319,17 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
       '>Start targeted revision ('+Math.min(evidenceCount,assembled.eligibleCount)+')</button></section>'+
     '<div class="generic-layout learning-layout"><section class="panel pad"><div class="row between"><h2>Error notebook</h2>'+
       '<select id="learning-filter" aria-label="Filter notebook" class="learning-filter">'+
-      [["all","All cards"],["due","Due now"],["bookmarked","Bookmarked"]].map(([key,label])=>
+      [["all","All cards"],["due","Due now"],["remediation","Remediation"],["bookmarked","Bookmarked"]].map(([key,label])=>
        '<option value="'+key+'"'+(filter===key?" selected":"")+'>'+label+'</option>').join("")+'</select></div>'+
     '<div class="learning-card-list" data-learning-list>'+
     (visible.length?visible.map(c=>{
-      const next=scheduler?schedule(c):null;
+      const next=scheduler?schedule(c):null,status=scheduler?effectiveStatus(c):"normal";
       return '<button type="button" class="generic-history '+(selected?.id===c.id?"learning-selected":"")+
-        '" data-learning-id="'+esc(c.id)+'" aria-controls="learning-notebook-detail" aria-pressed="'+
-        String(selected?.id===c.id)+'">'+esc(c.sectionTitle)+' · '+esc(c.question.content.prompt.slice(0,92))+
-        '<small>'+esc(c.errorLabel??"Unclassified")+' · '+
-          (next?(next.dueAt.getTime()<=Date.now()?"Due now":"Due "+next.dueAt.toLocaleDateString()):"Unscheduled")+
-          ' · '+c.reviews.length+' ratings</small></button>';
+        '" data-learning-id="'+esc(c.id)+'" aria-controls="learning-notebook-detail" aria-pressed="'+String(selected?.id===c.id)+'">'+
+        esc(c.sectionTitle)+' · '+esc(c.question.content.prompt.slice(0,92))+'<small>'+esc(c.errorLabel??"Unclassified")+' · '+
+        (status==="suspended"?"Suspended":status==="remediation"?"Remediation priority":
+         next?(next.dueAt.getTime()<=Date.now()?"Due now":"Due "+next.dueAt.toLocaleDateString()):"Unscheduled")+
+        ' · '+c.reviews.length+' ratings</small></button>';
     }).join(""):'<p class="fine">No cards in this view. Add a question from a completed test result.</p>')+
     '</div></section>'+
     '<section class="panel pad" id="learning-notebook-detail" aria-label="Notebook detail" data-learning-card="'+
@@ -315,6 +359,9 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
        '<textarea id="learning-note" maxlength="8000" rows="5">'+esc(selectedDraft?.note??selected.note)+'</textarea>'+
        '<label class="learning-bookmark"><input id="learning-bookmark" type="checkbox"'+
          ((selectedDraft?.bookmarked??selected.bookmarked)?" checked":"")+'> Bookmark</label>'+
+       '<label class="learning-bookmark"><input id="learning-suspend" type="checkbox"'+
+         ((selectedDraft?.revisionDisposition??selected.revisionDisposition)==="suspended"?" checked":"")+
+         '> Suspend this card from automatic revision queues</label>'+
        (selectedDraft?'<p class="fine" role="status">Unsaved notebook edits · saved only when you select Save note.</p>':"")+
         '<div class="row generic-actions"><button class="btn primary" id="learning-save">Save note</button>'+
        '<button class="btn" id="learning-one">Review this card</button>'+
@@ -357,6 +404,43 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
        '<tr><td colspan="4">Complete the same paper revision twice to see a valid comparison.</td></tr>')+
     '</tbody></table></div></section>';
   present(html,"main");
+  root.querySelector<HTMLButtonElement>("#learning-policy-apply")!.onclick=async()=>{
+    try{
+      const next=validateRevisionSettings({...revisionSettings,
+       retentionPolicy:root.querySelector<HTMLSelectElement>("#learning-retention-policy")!.value,
+       desiredRetention:Number(root.querySelector<HTMLInputElement>("#learning-retention-target")!.value),
+       costAdrGoalWeight:Number(root.querySelector<HTMLInputElement>("#learning-cost-adr-weight")!.value),
+       leechThreshold:Number(root.querySelector<HTMLInputElement>("#learning-leech-threshold")!.value),
+       leechAction:root.querySelector<HTMLSelectElement>("#learning-leech-action")!.value});
+      const nextScheduler=await createRevisionScheduler(revisionSchedulerOptions(next));
+      revisionSettings=writeRevisionSettings(next);scheduler=nextScheduler;cache.clear();message="FSRS-7 scheduling policy applied.";draw();
+    }catch(error){message=error instanceof Error?error.message:"Invalid scheduling policy";draw();}
+  };
+  root.querySelector<HTMLButtonElement>("#learning-optimizer-export")!.onclick=()=>downloadText(
+    "practice-desk-fsrs-reviews.csv",fsrsOptimizerCsv(all),"text/csv;charset=utf-8");
+  const optimizerFile=root.querySelector<HTMLInputElement>("#learning-optimizer-file")!;
+  root.querySelector<HTMLButtonElement>("#learning-optimizer-import")!.onclick=()=>optimizerFile.click();
+  optimizerFile.onchange=async()=>{
+    const file=optimizerFile.files?.[0];optimizerFile.value="";if(!file)return;
+    try{
+      const profile=validateFsrsOptimizerProfile(JSON.parse(await file.text()));
+      const next=validateRevisionSettings({...revisionSettings,optimizerProfile:profile});
+      const nextScheduler=await createRevisionScheduler(revisionSchedulerOptions(next));
+      revisionSettings=writeRevisionSettings(next);scheduler=nextScheduler;cache.clear();
+      message="Evaluated personalized FSRS-7 profile imported and activated.";draw();
+    }catch(error){message=error instanceof Error?error.message:"Invalid optimizer profile";draw();}
+  };
+  root.querySelector<HTMLButtonElement>("#learning-optimizer-export-profile")!.onclick=()=>{
+    if(revisionSettings.optimizerProfile)downloadText("practice-desk-fsrs-profile.json",
+      serializeFsrsOptimizerProfile(revisionSettings.optimizerProfile),"application/json;charset=utf-8");
+  };
+  root.querySelector<HTMLButtonElement>("#learning-optimizer-reset")!.onclick=async()=>{
+    try{
+      const next=validateRevisionSettings({...revisionSettings,optimizerProfile:null});
+      const nextScheduler=await createRevisionScheduler(revisionSchedulerOptions(next));
+      revisionSettings=writeRevisionSettings(next);scheduler=nextScheduler;cache.clear();message="Upstream FSRS-7 default weights restored.";draw();
+    }catch(error){message=error instanceof Error?error.message:"Could not restore default weights";draw();}
+  };
   root.querySelector<HTMLSelectElement>("#learning-hierarchy-root")!.onchange=e=>{
     hierarchyRoot=(e.target as HTMLSelectElement).value;draw();
   };
@@ -409,7 +493,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     if(!ok){message="Revision exam was not saved. Check storage and retry.";draw();}
   };
   root.querySelector<HTMLButtonElement>("#learning-due")!.onclick=()=>{
-    reviewId=dueCards()[0]?.id??null;revealed=false;message="";draw();
+    reviewId=dueCards()[0]?.id??null;revealed=false;revealedStartedAt=null;message="";draw();
   };
   root.querySelector<HTMLSelectElement>("#learning-filter")!.onchange=e=>{
     filter=(e.target as HTMLSelectElement).value as typeof filter;draw();
@@ -426,7 +510,8 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
       customSubtopic:root.querySelector<HTMLInputElement>("#learning-subtopic")!.value,
       syllabusTopicId:root.querySelector<HTMLSelectElement>("#learning-syllabus")?.value??"",
       errorLabel:root.querySelector<HTMLSelectElement>("#learning-error")!.value,
-      bookmarked:root.querySelector<HTMLInputElement>("#learning-bookmark")!.checked
+      bookmarked:root.querySelector<HTMLInputElement>("#learning-bookmark")!.checked,
+      revisionDisposition:root.querySelector<HTMLInputElement>("#learning-suspend")!.checked?"suspended":"active"
     };
     notebookDrafts.set(selected.id,value);
     const button=root.querySelector<HTMLButtonElement>("#learning-save");
@@ -446,7 +531,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     if(officialHeading.value)root.querySelector<HTMLInputElement>("#learning-subject")!.value="";
     captureNotebook();
   };
-  for(const id of ["learning-error","learning-bookmark"]){
+  for(const id of ["learning-error","learning-bookmark","learning-suspend"]){
     const field=root.querySelector<HTMLInputElement|HTMLSelectElement>("#"+id);
     if(field)field.onchange=captureNotebook;
   }
@@ -459,9 +544,10 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
       const syllabusTopicId=root.querySelector<HTMLSelectElement>("#learning-syllabus")?.value||undefined;
       const errorLabel=root.querySelector<HTMLSelectElement>("#learning-error")!.value as ErrorLabel|"";
       const bookmarked=root.querySelector<HTMLInputElement>("#learning-bookmark")!.checked;
+      const revisionDisposition=root.querySelector<HTMLInputElement>("#learning-suspend")!.checked?"suspended" as const:"active" as const;
       if(!await host.save(validateLearningCard({...selected,note,customSubject,customTopic,customSubtopic,
          ...(syllabusForExam(selected.examId)?{syllabusTopicId}:{}),errorLabel:errorLabel||null,
-         bookmarked,updatedAt:now().toISOString()}))){
+         bookmarked,revisionDisposition,updatedAt:now().toISOString()}))){
         message="Notebook changes could not be durably saved. Export a recovery backup.";draw();return;
       }
       notebookDrafts.delete(selected.id);
@@ -469,7 +555,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     }catch(e){message=e instanceof Error?e.message:"Cannot save notebook";draw();}
   };
   root.querySelector<HTMLButtonElement>("#learning-one")!.onclick=()=>{
-    reviewId=selected.id;revealed=false;message="";draw();
+    reviewId=selected.id;revealed=false;revealedStartedAt=null;message="";draw();
   };
   root.querySelector<HTMLButtonElement>("#learning-delete")!.onclick=async()=>{
     await host.remove(selected.id);
@@ -477,9 +563,15 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     selectedId=null;draw();
   };
  }
- void createRevisionScheduler()
+ void createRevisionScheduler(revisionSchedulerOptions(revisionSettings))
 .then(value=>{scheduler=value;cache.clear();draw();})
-  .catch(e=>{message="FSRS scheduler failed to initialize.";console.error(e);draw();});
+  .catch(async e=>{
+    console.error(e);
+    try{
+      revisionSettings=DEFAULT_REVISION_SETTINGS;scheduler=await createRevisionScheduler(revisionSchedulerOptions(revisionSettings));
+      cache.clear();message="Saved FSRS settings were invalid; safe defaults were restored.";draw();
+    }catch(fallback){message="FSRS scheduler failed to initialize.";console.error(fallback);draw();}
+  });
  return {show(){opened=true;draw();},hide(){opened=false;previousLearningView="";},
   select(id:string){selectedId=id;},
    dispose(){closed=true;previousLearningView="";notebookDrafts.clear();}};

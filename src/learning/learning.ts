@@ -4,13 +4,16 @@ import { questionRevisionHash, answerKeyRevisionHash } from "../domain/integrity
 import { selectDisplayResources, validateMediaInventory, validateQuestionMediaReferences } from "../domain/media.ts";
 import type { CorrectAnswer } from "../domain/answer-key.js";
 import type { QuestionRevisionId } from "../domain/ids.js";
-import type {RevisionSchedulerPort} from "./revision-scheduler-port.ts";
+import type {RevisionMemoryState,RevisionSchedulerPort} from "./revision-scheduler-port.ts";
 import { validateQuestionRevision, validateAnswerKeyRevision } from "../domain/validate.ts";
 import { syllabusHeading,attributedTopicPath,topicAncestors,parseTopicPathId } from "./syllabus-taxonomy.ts";
 
 export const ERROR_LABELS=["conceptual","calculation","interpretation","time-pressure","guessing","careless","knowledge-gap","other"] as const;
 export type ErrorLabel=typeof ERROR_LABELS[number];
 export type ReviewGrade=1|2|3|4;
+export interface LearningReview {
+ readonly at:string;readonly rating:ReviewGrade;readonly durationMs:number;readonly state:RevisionMemoryState;
+}
 export interface LearningCard {
  readonly recordType:"learning-card";
  readonly id:string;
@@ -37,10 +40,11 @@ export interface LearningCard {
  /** Optional explicit broad syllabus heading, never inferred from question text. */
  readonly syllabusTopicId?:string;
  readonly bookmarked:boolean;
+ readonly revisionDisposition:"active"|"suspended";
  readonly createdAt:string;
  readonly updatedAt:string;
- /** Explicit user ratings. Replay on FSRS-7 instead of storing Date objects or derived scheduling state. */
- readonly reviews:readonly {at:string;rating:ReviewGrade}[];
+ /** Rating/time are replay truth; duration and pre-review state are optimizer evidence only. */
+ readonly reviews:readonly LearningReview[];
 }
 const validDate=(x:unknown):x is string=>typeof x==="string"&&Number.isFinite(Date.parse(x));
 export function validateLearningCard(input:unknown):LearningCard{
@@ -64,6 +68,7 @@ export function validateLearningCard(input:unknown):LearningCard{
       /[\u0000-\u001f\u007f]/u.test(raw.customSubtopic)))||
     (raw.syllabusTopicId!==undefined&&(!syllabusHeading(raw.examId!,raw.syllabusTopicId)))||
     typeof raw.bookmarked!=="boolean"||
+    raw.revisionDisposition!=="active"&&raw.revisionDisposition!=="suspended"||
     !(raw.errorLabel===null||ERROR_LABELS.includes(raw.errorLabel as ErrorLabel))||
     !validDate(raw.createdAt)||!validDate(raw.updatedAt)||
     (raw.explanation!==undefined&&(typeof raw.explanation!=="string"||raw.explanation.length>20000))||
@@ -82,6 +87,8 @@ export function validateLearningCard(input:unknown):LearningCard{
  let previous=Date.parse(raw.createdAt);
  for(const review of raw.reviews){
    if(!review||!validDate(review.at)||!([1,2,3,4] as readonly number[]).includes(review.rating)||
+      !Number.isSafeInteger(review.durationMs)||review.durationMs<0||review.durationMs>0xffffffff||
+      !["new","learning","review","relearning"].includes(review.state)||
       Date.parse(review.at)<previous||Date.parse(review.at)>Date.parse(raw.updatedAt))
      throw Error("Invalid or unordered learning review history");
    previous=Date.parse(review.at);
@@ -102,6 +109,7 @@ export function addLearningCard(attempt:GenericAttempt,id:QuestionRevisionId,at:
    paperEdition:attempt.frozen.paper.edition,sectionTitle:section.title,
    sourceTitle:attempt.frozen.paper.paperId,sourceAttemptId:attempt.id,question:structuredClone(question),
    answer:structuredClone(key.answer),...display,note:"",customTopic:"",errorLabel:null,bookmarked:false,
+   revisionDisposition:"active",
    ...(attempt.explanations?.[id]?{explanation:attempt.explanations[id]}:{}),
    createdAt:at,updatedAt:at,reviews:[]
  };
@@ -118,12 +126,15 @@ export function previewLearningCard(item:LearningCard,at:string,scheduler:Revisi
  if(!validDate(at))throw Error("Invalid learning-card preview timestamp");
  return scheduler.preview(item.id,item.createdAt,item.reviews,at);
 }
-export function rateLearningCard(item:LearningCard,rating:ReviewGrade,at:string,scheduler:RevisionSchedulerPort):LearningCard{
+export function rateLearningCard(item:LearningCard,rating:ReviewGrade,at:string,durationMs:number,
+ scheduler:RevisionSchedulerPort):LearningCard{
  if(!validDate(at)||Date.parse(at)<Date.parse(item.reviews.at(-1)?.at??item.createdAt))
    throw Error("Review time must be monotonic");
- // Only explicit user ratings enter the log. Vendor scheduling stays within its adapter.
+ if(!Number.isSafeInteger(durationMs)||durationMs<0||durationMs>0xffffffff)
+   throw Error("Review duration must be a non-negative 32-bit millisecond value");
+ const state=scheduler.inspect(item.id,item.createdAt,item.reviews,at).state;
  scheduler.assertCanRate(item.id,item.createdAt,item.reviews,rating,at);
- return validateLearningCard({...item,reviews:[...item.reviews,{rating,at}],updatedAt:at});
+ return validateLearningCard({...item,reviews:[...item.reviews,{rating,at,durationMs,state}],updatedAt:at});
 }
 export interface TopicMetrics {
  id:string;label:string;examId:string;total:number;answered:number;correct:number;incorrect:number;skipped:number;

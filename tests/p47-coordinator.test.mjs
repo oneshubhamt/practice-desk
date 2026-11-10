@@ -67,6 +67,9 @@ test("P47-6 controller modules do not introduce runtime cycles, mutable parallel
  assert.match(adapter,/learningSteps:\["1m","10m"\]/);
  assert.match(adapter,/relearningSteps:\["10m"\]/);
  assert.match(adapter,/allowModelOverride:true/);
+ assert.match(adapter,/schedulerCostAdrMiddleware/);
+ assert.match(adapter,/retentionPolicy===\"cost-adr\"/);
+ assert.match(adapter,/checkFSRS7Parameters/);
  assert.match(adapter,/const enableFuzz=options\.enableFuzz\?\?true/);
  const index=await readdir(new URL("../src/learning/",import.meta.url));
  assert.ok(!index.includes("scheduler-port.ts"),"obsolete P47-5A scheduler prototype must not coexist with P47-6 port");
