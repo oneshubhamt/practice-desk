@@ -90,7 +90,7 @@ const mutants=[
   find:'reviews:[...item.reviews,{rating,at}],updatedAt:at}',
   replace:'reviews:[...item.reviews,{rating:1,at}],updatedAt:at}',
   testFile:"tests/learning-and-analytics.test.mjs",
-  testName:"FSRS-7 from stable ts-fsrs 6.0.0 schedules only explicit review ratings"
+  testName:"stable ts-fsrs 6.0.0 runs explicit FSRS-7 with dual traces, previews and retrievability"
  }
 ];
 const sandbox=await mkdtemp(join(tmpdir(),"practice-desk-mutant-"));
