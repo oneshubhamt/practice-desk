@@ -1227,6 +1227,11 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
 .learning-evidence-preview li{margin:6px 0;font-size:13px}
 .learning-evidence-preview small{color:var(--muted)}
 .learning-evidence-builder .btn{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+/* FSRS policy actions use long accessible labels; let flex items shrink/wrap under the
+   existing 195px/140% stress viewport instead of widening the document. */
+.learning-scheduler-policy .generic-actions .btn{
+ min-width:0;max-width:100%;box-sizing:border-box;white-space:normal;overflow-wrap:anywhere
+}
 .learning-layout #learning-syllabus{margin-bottom:11px;min-width:0;max-width:100%}
 @media(max-width:300px){
  .learning-evidence-builder{padding:12px}
