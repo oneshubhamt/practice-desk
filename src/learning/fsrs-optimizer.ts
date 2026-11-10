@@ -45,7 +45,7 @@ export function validateFsrsOptimizerProfile(value:unknown):FsrsOptimizerProfile
    !(typeof z==="string"&&z.length>0&&z.length<=120||typeof z==="number"&&Number.isFinite(z)&&z>=-1440&&z<=1440))
   throw Error("Invalid FSRS optimizer training metadata");
  return {schema:FSRS_OPTIMIZER_PROFILE_SCHEMA,model:"FSRS-7",bindingVersion:FSRS_OPTIMIZER_BINDING_VERSION,
-  trainedAt:p.trainedAt,sourceSha256:p.sourceSha256,evidenceItems:p.evidenceItems,weights:[...p.weights],
+  trainedAt:p.trainedAt,sourceSha256:p.sourceSha256,evidenceItems:p.evidenceItems!,weights:[...p.weights],
   evaluation:{logLoss:e.logLoss,rmseBins:e.rmseBins},
   training:{enableShortTerm:true,enableSchedPenalties:true,numRelearningSteps:1,nextDayStartsAt:t.nextDayStartsAt,timezone:z}};
 }

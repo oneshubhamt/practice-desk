@@ -24,7 +24,7 @@ export function validateRevisionSettings(value:unknown):RevisionSettings{
   !Number.isSafeInteger(p.leechThreshold)||p.leechThreshold!<1||p.leechThreshold!>1000||
   p.leechAction!=="remediate"&&p.leechAction!=="suspend")throw Error("Invalid revision settings");
  return {schema:1,retentionPolicy:p.retentionPolicy,desiredRetention:p.desiredRetention,
-  costAdrGoalWeight:p.costAdrGoalWeight,leechThreshold:p.leechThreshold,leechAction:p.leechAction,
+  costAdrGoalWeight:p.costAdrGoalWeight,leechThreshold:p.leechThreshold!,leechAction:p.leechAction,
   optimizerProfile:p.optimizerProfile===null?null:validateFsrsOptimizerProfile(p.optimizerProfile)};
 }
 export function readRevisionSettings(storage:Pick<Storage,"getItem">=localStorage):RevisionSettings{
