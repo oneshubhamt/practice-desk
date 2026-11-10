@@ -104,7 +104,7 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
    onlyFields(value,["recordType","id","saveRevision","question","answer","stimuli","assets",
      "examId","paperId","paperEdition","sectionTitle","sourceTitle","sourceAttemptId",
      "explanation","note","errorLabel","customSubject","customTopic","customSubtopic","syllabusTopicId","bookmarked",
-     "createdAt","updatedAt","reviews"],"learning card");
+     "revisionDisposition","createdAt","updatedAt","reviews"],"learning card");
    return validateLearningCard(value);
  }
  if(isPackage(value)){
