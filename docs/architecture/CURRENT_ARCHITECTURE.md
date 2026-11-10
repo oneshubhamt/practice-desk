@@ -36,6 +36,8 @@ Author-supplied source / built-in edition / Wordgard draft
    → explicit notebook and FSRS grading → scoped revision practice
 ```
 
+**FSRS-7 scheduling:** Learning cards persist only the learner's explicit Again/Hard/Good/Easy observations; the schedule is derived by replay through the single vendor adapter. That adapter pins `ts-fsrs@6.0.0`, explicitly selects FSRS-7, uses its fractional-day dual-stability model, 90% desired retention, standard 1m/10m learning and 10m relearning steps, model override, reproducible interval fuzzing, review/lapse statistics and the 36,500-day cap. It also exposes FSRS-7 retrievability and four-rating previews through application-owned types, while retaining a boundary for future 34-weight FSRS-7 parameter optimization. Vendor state is not persisted as a second source of truth.
+
 **Important data boundaries:**
 
 - **Question identity vs revision:** one underlying question can have several immutable content/key revisions. IDs, source signatures, per-attempt evidence and corrections must not be conflated; old scored attempts remain immutable.
