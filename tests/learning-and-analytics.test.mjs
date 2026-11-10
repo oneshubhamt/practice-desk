@@ -306,6 +306,8 @@ const transitionGenericAttempt = __suite_dep_3["transitionGenericAttempt"];
 const addLearningCard = __suite_dep_12["addLearningCard"];
 const validateLearningCard = __suite_dep_12["validateLearningCard"];
 const scheduledCard = __suite_dep_12["scheduledCard"];
+const inspectLearningCard = __suite_dep_12["inspectLearningCard"];
+const previewLearningCard = __suite_dep_12["previewLearningCard"];
 const rateLearningCard = __suite_dep_12["rateLearningCard"];
 const topicMetrics = __suite_dep_12["topicMetrics"];
 const comparableTrends = __suite_dep_12["comparableTrends"];
@@ -333,18 +335,42 @@ test("learning cards are created from completed immutable answers, not active te
  assert.throws(()=>validateLearningCard({...item,id:"learning-card:bad"}),/identity/);
  assert.throws(()=>validateLearningCard({...item,answer:{kind:"single-choice",optionId:"fake"}}),/unknown option/);
 });
-test("FSRS-7 from stable ts-fsrs 6.0.0 schedules only explicit review ratings",async()=>{
+test("stable ts-fsrs 6.0.0 runs explicit FSRS-7 with dual traces, previews and retrievability",async()=>{
  const scheduler=await DefaultScheduler();
+ assert.equal(scheduler.provider,"ts-fsrs@6.0.0/FSRS-7");
+ assert.equal(scheduler.configuration.model,"FSRS-7");
+ assert.equal(scheduler.configuration.packageVersion,"6.0.0");
+ assert.equal(scheduler.configuration.desiredRetention,0.9);
+ assert.equal(scheduler.configuration.enableShortTerm,true);
+ assert.deepEqual(scheduler.configuration.learningSteps,["1m","10m"]);
+ assert.deepEqual(scheduler.configuration.relearningSteps,["10m"]);
+ assert.equal(scheduler.configuration.allowModelOverride,true);
+ assert.equal(scheduler.configuration.enableFuzz,true);
  const item=addLearningCard(complete("reviewer"),bundle.questions[0].id,new Date(1030).toISOString());
- assert.equal(scheduledCard(item,scheduler).dueAt.getTime(),1030);
+ const initial=scheduledCard(item,scheduler);
+ assert.equal(initial.dueAt.getTime(),1030);
+ assert.equal(initial.stability,0);
+ assert.equal(initial.stabilityFast,0);
+ const previews=previewLearningCard(item,new Date(2030).toISOString(),scheduler);
+ assert.deepEqual(previews.map(x=>x.rating),[1,2,3,4]);
+ assert.ok(previews.every(x=>x.dueAt.getTime()>=2030&&x.scheduledDays>=0));
+ assert.ok(previews.some(x=>x.scheduledDays>0&&x.scheduledDays<1),
+   "FSRS-7/default learning policy must retain fractional-day scheduling");
  const graded=rateLearningCard(item,Rating.Good,new Date(2030).toISOString(),scheduler);
  assert.equal(graded.reviews.length,1);
  assert.equal(graded.reviews[0].rating,Rating.Good);
  const next=scheduledCard(graded,scheduler);
  assert.equal(next.reps,1);
+ assert.ok(next.stability>0);
+ assert.ok(next.stabilityFast>0);
  assert.ok(next.dueAt.getTime()>2030);
+ const inspected=inspectLearningCard(graded,new Date(2030+12*60*60*1000).toISOString(),scheduler);
+ assert.ok(inspected.retrievability!==null&&inspected.retrievability>0&&inspected.retrievability<=1);
  const reloaded=validateLearningCard(JSON.parse(JSON.stringify(graded)));
- assert.equal(scheduledCard(reloaded,await DefaultScheduler()).dueAt.getTime(),next.dueAt.getTime());
+ const replayed=scheduledCard(reloaded,await DefaultScheduler());
+ assert.equal(replayed.dueAt.getTime(),next.dueAt.getTime(),
+   "card-id/review-count fuzzing must remain reproducible under authoritative-log replay");
+ assert.equal(replayed.stabilityFast,next.stabilityFast);
  assert.throws(()=>rateLearningCard(graded,Rating.Again,new Date(1500).toISOString(),scheduler),/monotonic/);
 });
 test("topic evidence and trends never compare different paper revisions",()=>{
