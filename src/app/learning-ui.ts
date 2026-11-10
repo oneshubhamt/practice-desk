@@ -3,7 +3,7 @@ import {reconcileSameExamQuestion} from "./exam-dom-reconcile.ts";
 import type {RevisionSchedulerPort} from "../learning/revision-scheduler-port.ts";
 import type { ExamPackage, GenericAttempt } from "./exam-package.ts";
 import { readableAnswer } from "./exam-package.ts";
-import { ERROR_LABELS, comparableTrends, rateLearningCard, scheduledCard, topicMetrics, validateLearningCard } from "../learning/learning.ts";
+import { ERROR_LABELS, comparableTrends, inspectLearningCard, previewLearningCard, rateLearningCard, scheduledCard, topicMetrics, validateLearningCard } from "../learning/learning.ts";
 import { evidenceProgression } from "../learning/attempt-evidence.ts";
 import { REVISION_MAX_QUESTIONS, type RevisionSelectionProvenance } from "../learning/revision-test.ts";
 import { REVISION_REASONS,revisionInventory,revisionTake,mockEvidenceAttempts,type RevisionReason } from "../learning/revision-selection.ts";
@@ -22,6 +22,15 @@ export interface LearningDeskHost {
 }
 const esc=(v:unknown):string=>String(v??"").replace(/[&<>"']/g,c=>
   ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]??c));
+const fsrsInterval=(days:number):string=>{
+ const seconds=Math.max(0,Math.round(days*86400));
+ if(seconds<60)return seconds+"s";
+ if(seconds<3600)return Math.round(seconds/60)+"m";
+ if(seconds<86400)return Math.round(seconds/3600)+"h";
+ if(days<30)return (days<10?Number(days.toFixed(1)):Math.round(days))+"d";
+ if(days<365)return Math.round(days/30.4375)+"mo";
+ return Number((days/365.25).toFixed(days<730?1:0))+"y";
+};
 function figures(assets:LearningCard["assets"],ids:readonly string[]|undefined):string{
  return (ids??[]).map(id=>{
   const a=assets.find(x=>x.id===id);
@@ -157,18 +166,32 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     const item=all.find(c=>c.id===reviewId);
     if(!item){reviewId=null;revealed=false;}
     else{
+     const inspectionAt=now().toISOString();
+     const snapshot=scheduler&&revealed?inspectLearningCard(item,inspectionAt,scheduler):null;
+     const previews=scheduler&&revealed?previewLearningCard(item,inspectionAt,scheduler):[];
+     const previewByRating=new Map(previews.map(value=>[value.rating,value]));
+     const fsrsDetail=snapshot&&scheduler?
+       '<p class="fine"><strong>FSRS-7 memory</strong> · target '+Math.round(scheduler.configuration.desiredRetention*100)+
+       '% · '+(scheduler.configuration.enableFuzz?'reproducible fuzz on':'fuzz off')+
+       ' · state '+esc(snapshot.state)+(snapshot.retrievability===null?'':' · recall now '+Math.round(snapshot.retrievability*1000)/10+'%')+
+       ' · stability '+Number(snapshot.stability.toFixed(2))+'d · fast '+Number(snapshot.stabilityFast.toFixed(2))+
+       'd · difficulty '+Number(snapshot.difficulty.toFixed(2))+' · '+snapshot.reps+' reviews · '+snapshot.lapses+' lapses</p>':"";
      const html='<div class="generic-heading"><div><h1>Spaced revision</h1><p class="muted">'+
-       esc(item.sectionTitle)+' · FSRS-7 · rate your recall, not your exam mark</p></div>'+
+       esc(item.sectionTitle)+' · '+esc(scheduler?.provider??"FSRS-7")+' · rate your recall, not your exam mark</p></div>'+
        '<button class="btn" id="learning-back">Learning desk</button></div>'+
        '<section class="panel pad">'+questionHTML(item)+
        (revealed?'<div class="learning-answer"><h3>Expected answer</h3><p>'+esc(readableAnswer(item.question,item.answer))+'</p>'+
          (item.question.content.richExplanation?
            learningRich(item,"",item.question.content.richExplanation):
            item.explanation?'<p>'+esc(item.explanation)+'</p>':"")+
-         (item.note?'<p class="fine">Your note: '+esc(item.note)+'</p>':"")+
+         (item.note?'<p class="fine">Your note: '+esc(item.note)+'</p>':"")+fsrsDetail+
          '<h3>How well did you recall it?</h3><div class="row generic-actions">'+
          ([[1,"Again"],[2,"Hard"],[3,"Good"],[4,"Easy"]] as const)
-          .map(([grade,label])=>'<button class="btn" data-grade="'+grade+'">'+label+'</button>').join("")+'</div></div>':
+          .map(([grade,label])=>{
+            const projected=previewByRating.get(grade);
+            return '<button class="btn" data-grade="'+grade+'">'+label+
+              (projected?' · '+esc(fsrsInterval(projected.scheduledDays)):'')+'</button>';
+          }).join("")+'</div></div>':
          '<button class="btn primary" id="learning-reveal">Reveal answer</button>')+'</section>'+
        (message?'<p role="status" class="generic-warning">'+esc(message)+'</p>':"");
      present(html,"review:"+item.id);
@@ -218,6 +241,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     '</div>'+
     '<section class="panel pad learning-revision-callout"><div class="row between"><div><h2>Revision queue</h2>'+
     '<p class="fine">'+all.length+' cards · '+(scheduler?dueNow.length+" due now":"Scheduler initializing")+
+      (scheduler?' · '+esc(scheduler.provider)+' · '+Math.round(scheduler.configuration.desiredRetention*100)+'% target retention':'')+
       ' · Mock results do not automatically count as spaced-repetition reviews</p></div>'+
     '<div class="row generic-actions"><button class="btn primary" id="learning-due"'+(!scheduler||!dueNow.length?" disabled":"")+'>Review due cards</button>'+
     '<button class="btn" id="learning-test"'+(!candidates.length?" disabled":"")+'>Start revision test ('+candidates.length+')</button></div></div>'+
