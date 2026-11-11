@@ -1586,10 +1586,10 @@ html[data-theme="dark"] .pd-author-studio .pd-author-preview-choice>span{
 .calc-title{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:2px 3px 9px;border-bottom:1px solid var(--line)}
 .calc-title strong{font-size:13px}.calc-close{border:0;background:transparent;color:var(--muted);font-size:22px;line-height:1;padding:3px 7px;border-radius:6px}
 .calc-display{display:block;width:100%;min-height:47px;margin:10px 0;padding:7px 9px;border:1px solid var(--border-strong);border-radius:7px;background:var(--soft);text-align:right;font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;overflow:hidden}
-.calc-memory{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin-bottom:5px}.calc-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.calc-memory{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin-bottom:5px}.calc-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-auto-flow:row;gap:5px}
 .calc-key{min-width:0;min-height:36px;padding:5px 2px;border:1px solid var(--border-strong);border-radius:6px;background:var(--panel);font-weight:650;font-variant-numeric:tabular-nums}
 .calc-key:hover{border-color:var(--blue);background:var(--soft-blue)}.calc-memory .calc-key{min-height:30px;font-size:11px;color:var(--muted)}
 .calc-function{background:var(--soft)}.calc-operator{background:var(--soft-blue);color:var(--blue);font-weight:750}.calc-clear{background:color-mix(in srgb,var(--bad) 8%,var(--panel));color:var(--bad)}
-.calc-equals{grid-column:span 3;background:var(--blue);border-color:var(--blue);color:#fff}.calc-equals:hover{background:var(--blue);filter:brightness(.94)}
+.calc-backspace,.calc-zero{grid-column:span 2}.calc-equals{grid-row:span 2;background:var(--blue);border-color:var(--blue);color:#fff}.calc-equals:hover{background:var(--blue);filter:brightness(.94)}
 @media(max-width:430px){.exam-calculator{top:76px;left:50%;right:auto;transform:translateX(-50%);width:min(330px,calc(100vw - 16px));max-height:calc(100dvh - 88px);padding:9px}.calc-key{min-height:35px}}
 @media(max-width:230px){.exam-calculator{top:66px;width:calc(100vw - 16px);padding:8px}.calc-title strong{font-size:12px}.calc-display{font-size:19px;min-height:41px}.calc-key{font-size:13px;min-height:31px}.calc-memory .calc-key{font-size:10px;padding-inline:0}}
