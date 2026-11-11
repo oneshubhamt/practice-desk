@@ -289,7 +289,8 @@ test("P47-5D source/reviewed editions require provenance and a real source count
  assert.equal(review.paper.paperId,signed.paper.paperId);
  assert.equal(review.questions[0].questionId,signed.questions[0].questionId);
  assert.equal(review.answerKey.entries[0].answer.optionId,"A");
- const missing={...source,questions:[{...source.questions[0],source:""}]};
+ const missing={...source,sections:[source.sections[0]],
+  questions:[{...source.questions[0],source:""}]};
  assert.ok(inspectAuthoringPublication(missing).issues.some(x=>/Provenance/.test(x.field)));
 });
 test("P47-5D authenticated local image references include only used assets",()=>{
@@ -300,7 +301,8 @@ test("P47-5D authenticated local image references include only used assets",()=>
  const richImage={format:"practice-desk-rich",version:1,blocks:[
   {type:"paragraph",content:[{type:"text",text:"Find the marked figure"},{type:"image",assetId:"fig1",altText:figure.altText}]}
  ]};
- const qa={...a,assets:[figure],questions:[{...a.questions[0],prompt:richImage}]};
+ const qa={...a,assets:[figure],sections:[a.sections[0]],
+  questions:[{...a.questions[0],prompt:richImage}]};
  const compiled=compileAuthoringPublication(qa);
  assert.equal(compiled.assets.length,1);
  assert.deepEqual(compiled.questions[0].content.assetIds,["fig1"]);
