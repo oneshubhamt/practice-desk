@@ -10,7 +10,7 @@ import { questionRevisionHash, answerKeyRevisionHash, paperRevisionHash } from "
 const optionId = (question: string, letter: string): OptionId => `${question}:option:${letter}` as OptionId;
 const sectionNames = ["Reasoning", "General Awareness", "Quantitative Aptitude", "English"] as const;
 
-/** Source-bank importer: no changes to the published JSON or v11 runtime. */
+/** Source-bank importer into the canonical runtime model. */
 export function importCglBank(papers: SourcePaperBank, patches: ReviewPatchBank) {
   const results: { paper: PaperRevision; key: AnswerKeyRevision; questions: QuestionRevision[] }[] = [];
   for (const source of Object.values(papers)) {
@@ -35,7 +35,7 @@ export function importCglBank(papers: SourcePaperBank, patches: ReviewPatchBank)
           ? original.status === "ok" ? "verified" : original.status
           : patch.status === "corrected" ? "corrected"
             : patch.status === "caution" ? "caution"
-              // v11 policy: an unpatched source-invalid/caution item remains
+              // Canonical policy: an unpatched source-invalid/caution item remains
               // scoreable in reviewed edition, marked as editorial caution.
               // Never silently change the published key or source edition.
               : original.status === "invalid" || original.status === "caution" ? "caution" : "verified";

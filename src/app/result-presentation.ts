@@ -61,7 +61,7 @@ export function timingLedgerHTML(a:GenericAttempt,active:boolean,allowReview=tru
   }).join("")+'</tbody></table></div></section>';
 }
 
-/** v11-like pacing composition backed by the overhaul's frozen evidence model. */
+/** Pacing composition backed by the canonical frozen evidence model. */
 export function resultPacingHTML(a:GenericAttempt):string{
  const evidence=attemptEvidence(a);
  if(!evidence||!a.result)return "";
@@ -100,7 +100,7 @@ export function resultPacingHTML(a:GenericAttempt):string{
   '</section></div>';
 }
 
-/** Generic arithmetic, presented in the compact v11 opportunity pattern. */
+/** Generic arithmetic presented as a compact opportunity summary. */
 export function scoreOpportunityHTML(a:GenericAttempt,allowReview=true):string{
  const evidence=attemptEvidence(a);
  if(!evidence)return "";
@@ -159,7 +159,7 @@ export function answerRevisionHTML(a:GenericAttempt):string{
   '</div><p class="fine">Tracks recorded successive single-choice replacements. Clear-and-reselect and unverified items are not classified as rescued/lost; these are observed changes, not proof that revision caused improvement.</p></section>';
 }
 
-/** Compact v11-like question-speed and coaching presentation, retaining direct review links. */
+/** Compact question-speed and coaching presentation retaining direct review links. */
 export function questionCoachingHTML(a:GenericAttempt,allowReview=true):string{
  const evidence=attemptEvidence(a);
  const longest=longestQuestionExposure(a);

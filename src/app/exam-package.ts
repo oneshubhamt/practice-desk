@@ -171,7 +171,7 @@ export function configureCglPractice(base: ExamPackage, mode:CglPracticeMode, se
  if(base.examId!=="ssc-cgl")return base;
  if(mode==="strict"){
    // The raw editorial/source package is an immutable document with a manual
-   // transition declaration. The actual v11-like exam simulation must instead
+   // transition declaration. The actual exam simulation must instead
    // explicitly freeze an AUTOMATIC 15-minute section policy; otherwise a
    // correctly implemented manual expiry would strand the strict exam.
    if(base.paper.timing.kind!=="sectional")throw new Error("Strict CGL requires sectional timing");
