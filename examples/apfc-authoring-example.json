@@ -82,7 +82,7 @@
     {
       "id": "nat-1",
       "examSection": "statistics",
-      "syllabusHeadingId": "math-stats-reasoning",
+      "syllabusHeadingId": "maths",
       "kind": "numeric-entry",
       "prompt": "Find the arithmetic mean of 3, 4 and 5.",
       "answer": [
