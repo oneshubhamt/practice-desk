@@ -82,7 +82,8 @@ try{
  check(authored.draft?.timingKind==="sectional"&&
   authored.draft?.sectionNavigation==="sequential-locked"&&
   authored.q?.topic==="Economy"&&authored.q?.subtopic==="Inflation"&&
-  authored.q?.difficulty==="medium"&&authored.q?.sectionMinutes===17,
+  authored.q?.difficulty==="medium"&&
+  authored.draft?.sections?.find(s=>s.name===authored.q?.section)?.minutes===17,
   engine+" rich authoring controls not stored in validated local draft");
  await page.locator("#pd-author-close").click();
  check(errors.length===0,engine+" browser errors "+errors.join("; "));
