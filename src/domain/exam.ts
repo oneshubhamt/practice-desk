@@ -8,7 +8,8 @@ import type {
   SectionId,
   SourceReference,
 } from "./ids.js";
-import type { ScoringPolicy, MarkingRule } from "./scoring.js";\nimport type {CalculatorProfile} from "./calculator.ts";
+import type { ScoringPolicy, MarkingRule } from "./scoring.js";
+import type {CalculatorProfile} from "./calculator.ts";
 
 export interface ExamDefinition {
   readonly id: ExamId;
