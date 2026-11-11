@@ -454,7 +454,8 @@ test("backup preserves notes and FSRS review logs with strict integrity checks",
  const original=addLearningCard(a,bundle.questions[0].id,new Date(1030).toISOString());
  const rated=rateLearningCard({...original,note:"Review concept carefully",errorLabel:"conceptual",customTopic:"Topic"},
  Rating.Again,new Date(2030).toISOString(),900,scheduler);
- const archived=verifyBackup(makeBackup([a,rated],{schema:1,dark:false,scale:100},"2026-10-29T10:00:00Z"));
+ const archived=verifyBackup(makeBackup([{...a,saveRevision:1},{...rated,saveRevision:1}],
+   {schema:1,dark:false,scale:100},"2026-10-29T10:00:00Z"));
  assert.equal(archived.records.length,2);
  const card=validateLearningCard(archived.records.find(x=>x.recordType==="learning-card"));
  assert.equal(card.note,"Review concept carefully");
@@ -523,7 +524,8 @@ test("generated notebook revision is a real validated attempt, not a copied note
  assert.equal(attempt.result.snapshot.correctCount,1);
  assert.equal(attempt.result.snapshot.unansweredCount,2);
  assert.equal(validateGenericStoredRecord(JSON.parse(JSON.stringify(attempt))).id,"revision-attempt");
- const backed=verifyBackup(makeBackup([attempt],{schema:1,dark:false,scale:100},"2026-10-29T20:00:00Z"));
+ const backed=verifyBackup(makeBackup([{...attempt,saveRevision:1}],
+   {schema:1,dark:false,scale:100},"2026-10-29T20:00:00Z"));
  assert.equal(backed.snapshots.length,1);
  assert.equal(backed.snapshots[0].body.questions.length,3);
  assert.equal(backed.records[0].notebookLineage.entries[0].cardId,selected[0].id);
