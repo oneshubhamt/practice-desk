@@ -22,6 +22,7 @@ import * as __suite_dep_16 from "../src/domain/hash.ts";
 import * as __suite_dep_17 from "../src/learning/revision-settings.ts";
 import * as __suite_dep_18 from "../src/learning/fsrs-optimizer.ts";
 import {revisionInventory as independentRevisionInventory} from "../src/learning/revision-selection.ts";
+import * as __suite_dep_19 from "ts-fsrs/models/fsrs-7";
 
 // === Legacy suite: tests/analytics-property-model.test.mjs — 2 unchanged test registrations ===
 {
@@ -398,15 +399,16 @@ test("optimizer evidence and evaluated profiles are portable without persisting 
  assert.match(csv,/^review_time,card_id,review_rating,review_duration,review_state\n/);assert.match(csv,/,3,810,0\n$/);
  assert.deepEqual(__suite_dep_18.optimizerEvidenceSummary([card]),{cards:1,reviews:1});
  const profile=__suite_dep_18.validateFsrsOptimizerProfile({
-  schema:"practice-desk-fsrs-profile/v2",model:"FSRS-7",bindingVersion:"0.6.1",trainedAt:"2026-11-10T00:00:00.000Z",
-  sourceSha256:"a".repeat(64),evidenceItems:384,weights:Array(34).fill(0.5),
+  schema:"practice-desk-fsrs-profile/v3",model:"FSRS-7",bindingVersion:"0.6.1",trainedAt:"2026-11-10T00:00:00.000Z",
+  sourceSha256:"a".repeat(64),evidenceItems:384,weights:[...__suite_dep_19.FSRS7_DEFAULT_WEIGHTS],
   evaluation:{
    crossValidation:{logLoss:0.39,rmseBins:0.07},
    holdout:{strategy:"final-sixth",trainItems:320,holdoutItems:64,holdoutCards:16,
     minimumTrainItems:64,minimumHoldoutItems:64,minimumHoldoutCards:16,
     default:{logLoss:0.42,rmseBins:0.08},personalized:{logLoss:0.40,rmseBins:0.08},gate:"passed"}
   },
-  training:{enableShortTerm:true,enableSchedPenalties:true,numRelearningSteps:1,nextDayStartsAt:4,timezone:"Asia/Kolkata",
+  training:{enableShortTerm:true,enableSchedPenalties:true,numRelearningSteps:1,chronology:"elapsed-24h",
+   converterFixedUtcOffsetMinutes:0,converterRolloverHour:0,
    validationCandidateTrainedItems:320,finalRetrainedOnAllEvidence:true}
  });
  const settings=__suite_dep_17.validateRevisionSettings({...__suite_dep_17.DEFAULT_REVISION_SETTINGS,
@@ -417,7 +419,10 @@ test("optimizer evidence and evaluated profiles are portable without persisting 
  assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,evaluation:null}),/evaluation/);
  assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,evaluation:{...profile.evaluation,
   holdout:{...profile.evaluation.holdout,personalized:{logLoss:0.43,rmseBins:0.07}}}}),/non-regression/);
- assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,training:{...profile.training,timezone:""}}),/training metadata/);
+ const badWeights=[...profile.weights];badWeights[23]=0.9;
+ assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,weights:badWeights}),/weights/);
+ assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,schema:"practice-desk-fsrs-profile/v2"}),/profile/);
+ assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,training:{...profile.training,chronology:"zoned-study-day"}}),/training metadata/);
 });
 test("topic evidence and trends never compare different paper revisions",()=>{
  const a=complete("one",true),b=complete("two",false);

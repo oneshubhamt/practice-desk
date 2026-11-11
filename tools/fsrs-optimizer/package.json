@@ -9,7 +9,8 @@
   "scripts": {
     "optimize": "node optimize.mjs",
     "analyze-steps": "node analyze-steps.mjs",
-    "smoke": "node smoke.mjs"
+    "smoke": "node smoke.mjs",
+    "parity": "node parity.mjs"
   },
   "dependencies": {
     "@emnapi/core": "2.0.0-beta.3",
