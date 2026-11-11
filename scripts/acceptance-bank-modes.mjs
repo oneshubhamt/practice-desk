@@ -4,6 +4,7 @@
 import {openHarness,starterBank,check,records,route,assertNoOverflow} from "./browser/fixtures.mjs";
 import {chooseModernPaper} from "./paper-select.mjs";
 import {readFile} from "node:fs/promises";
+import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
 const h=await openHarness({artifactDir:"artifacts/acceptance-modern"});
 const scenes=[];
 for(const v of [
@@ -13,11 +14,8 @@ for(const v of [
 ]){
  const {page,context,errors}=await h.open({viewport:{width:v.width,height:v.height}});
  try{
-  const starter=page.waitForEvent("download");
-  await page.locator("#g-bank-template").click();
-  const download=await starter;
-  check(download.suggestedFilename()==="Practice_Desk_APFC_NAT_Starter.json",
-   v.name+" offline APFC/NAT template changed");
+  check(await page.locator("#g-bank-template").count()===0,
+   v.name+" retired simple-bank template control must not exist");
   check(await page.locator('#g-edition select').count()===0,
    v.name+" edition unexpectedly regressed to dropdown");
   for(const edition of ["reviewed","source"]){
@@ -118,25 +116,29 @@ for(const v of [
   check((await page.locator(".paper-preview .preview-metrics").innerText()).includes("60 minutes"),
    v.name+" timed policy not restored");
   const bank=await starterBank();
+  const validPackage=compileExternalQuestionBank(bank);
   if(v.name==="laptop1366"){
    const before=(await records(page)).filter(x=>x.recordType==="generic-package").length;
-   const hostile=structuredClone(bank);
-   hostile.questions[0].question="X".repeat(20001);
-   await page.locator("#g-file").setInputFiles({name:"oversized-bank.json",
+   const hostile=structuredClone(validPackage);
+   hostile.questions[0].content.prompt="X".repeat(20001);
+   await page.locator("#g-file").setInputFiles({name:"oversized-package.json",
      mimeType:"application/json",buffer:Buffer.from(JSON.stringify(hostile))});
    check((await page.locator(".generic-warning").allTextContents()).some(x=>
-     /20,000 characters|up to .* characters|Invalid/.test(x)),
-     "Oversized imported question must produce visible rejection");
+     /20,000 characters|Invalid/.test(x)),
+     "Oversized imported package must produce visible rejection");
    check((await records(page)).filter(x=>x.recordType==="generic-package").length===before,
-     "Rejected bank must not modify saved package records");
+     "Rejected package must not modify saved package records");
   }
-  const calculatorBank={...bank,bankId:"cat-calculator-demo",examId:"cat",
-    title:"CAT calculator demo",tools:{calculator:"basic-v1"}};
+  const catSource={...bank,bankId:"cat-calculator-demo",paperId:"cat-calculator-demo",examId:"cat",
+    title:"CAT calculator demo",tools:{calculator:"basic-v1"},
+    questions:bank.questions.map(q=>{const {syllabusHeadingId:_,...rest}=q;
+      return {...rest,subject:"Quantitative Aptitude"};})};
+  const calculatorBank=compileExternalQuestionBank(catSource);
   await page.locator("#g-file").setInputFiles({name:"cat-calculator.json",mimeType:"application/json",
     buffer:Buffer.from(JSON.stringify(calculatorBank))});
-  await page.waitForFunction(()=>document.querySelector("#g-papers")?.value==="bank:cat-calculator-demo:paper:r1");
+  await page.waitForFunction(id=>document.querySelector("#g-papers")?.value===id,calculatorBank.paper.id);
   check(await page.locator('#g-family option[value="imported:cat"]').count()===1,
-    v.name+" calculator bank family was not registered");
+    v.name+" calculator package family was not registered");
   await page.locator("#g-start").click();await route(page,"exam");
   check(await page.locator("#g-calculator").count()===1,
     v.name+" calculator-enabled paper did not expose calculator");
