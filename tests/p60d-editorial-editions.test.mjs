@@ -14,7 +14,7 @@ import {createSourceKeyReference,validateSourceKeyReference,sourceKeyScore} from
 import {questionRevisionHash,paperRevisionHash} from "../src/domain/integrity.ts";
 import {hashJson} from "../src/domain/hash.ts";
 import {plainRichDocument} from "../src/domain/rich-document.ts";
-import {importSimpleQuestionBank} from "../src/app/bank-import.ts";
+import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
 import {createSourceReviewReference} from "../src/engine/review-source.ts";
 import {familyIdFor,pairedEdition,examFamilyCatalog} from "../src/app/exam-families.ts";
 
@@ -30,6 +30,11 @@ const run=(script,...args)=>{
  assert.equal(x.error,undefined,String(x.error));
  let data;try{data=JSON.parse(x.stdout||x.stderr)}catch{assert.fail("Expected machine JSON:\n"+x.stdout+"\n"+x.stderr)}
  return {...x,data};
+};
+const asSource=candidate=>{
+ const paperBase={...candidate.paper,edition:"source"};
+ return validateExamPackage({...candidate,
+  paper:{...paperBase,contentHash:paperRevisionHash(paperBase)}});
 };
 const bindReviewed=(source,candidate)=>{
  const paperBase={...candidate.paper,edition:"reviewed",
@@ -265,18 +270,25 @@ test("P62-B exact revision pairing survives multiple originals and missing files
 
 test("P62-B nineteen MCQs remain comparable beside one numerical question",()=>{
  const png="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/tAAAAABJRU5ErkJggg==";
- const input=(edition,revision)=>({format:"practice-desk-bank",version:1,
-  bankId:"p62-mixed",examId:"upsc-epfo-apfc",title:"Mixed P62 synthetic test",
-  edition,revision,scoring:{correctMarks:2.5,incorrectMarks:-5/6,unansweredMarks:0},
-  timing:{kind:"untimed"},
+ const input=revision=>({format:"practice-desk-authoring",version:1,
+  bankId:"p62-mixed",examId:"upsc-epfo-apfc",paperId:"p62-mixed",
+  title:"Mixed P62 synthetic test",edition:"custom",revision,
+  scoring:{correctMarks:2.5,incorrectMarks:-5/6},
+  timing:{kind:"untimed",pausePolicy:"allowed"},
+  navigation:{questionNavigation:"free",sectionNavigation:"free",allowReview:true},
+  sections:[{id:"general",title:"General"}],
   media:[{id:"diagram",dataUri:"data:image/png;base64,"+png,altText:"Diagram context"}],
   questions:Array.from({length:20},(_,i)=>i===19?
-   {id:"q20",section:"General",type:"nat",question:"Numeric example",answer:5}:
-   {id:"q"+(i+1),section:"General",type:"mcq",question:"MCQ "+(i+1),
+   {id:"q20",examSection:"general",kind:"numeric-entry",prompt:"Numeric example",answer:[5],
+    provenance:{kind:"ai-original"},qa:{status:"unchecked"}}:
+   {id:"q"+(i+1),examSection:"general",kind:"single-choice",
+    prompt:i===0?{format:"practice-desk-rich",version:1,blocks:[
+      {type:"paragraph",content:[{type:"text",text:"MCQ 1"}]},
+      {type:"image",assetId:"diagram",altText:"Diagram context"}]}:"MCQ "+(i+1),
     options:["Alpha","Beta","Gamma","Delta"],answer:"B",
-    ...(i===0?{imageIds:["diagram"]}:{})})});
- const source=importSimpleQuestionBank(input("source",1));
- const reviewed=bindReviewed(source,importSimpleQuestionBank(input("source",2)));
+    provenance:{kind:"ai-original"},qa:{status:"unchecked"}})});
+ const source=asSource(compileExternalQuestionBank(input(1)));
+ const reviewed=bindReviewed(source,compileExternalQuestionBank(input(2)));
  const ref=createSourceKeyReference(reviewed,source);
  assert.equal(ref.schema,3);
  assert.equal(ref.entries.length,20);
@@ -328,13 +340,17 @@ test("P62-B nineteen MCQs remain comparable beside one numerical question",()=>{
 });
 
 test("P62-B rejects noncanonical schema-2 source-key snapshots",()=>{
- const bank=(revision)=>({format:"practice-desk-bank",version:1,
-  bankId:"p62-schema-reject",examId:"upsc-epfo-apfc",title:"Schema rejection test",edition:"source",revision,
-  scoring:{correctMarks:2.5,incorrectMarks:-5/6,unansweredMarks:0},
-  questions:[{id:"q1",type:"mcq",section:"General",question:"Canonical question",
-   options:["A","B","C","D"],answer:"B"}]});
- const source=importSimpleQuestionBank(bank(1));
- const reviewed=bindReviewed(source,importSimpleQuestionBank(bank(2)));
+ const bank=revision=>({format:"practice-desk-authoring",version:1,
+  bankId:"p62-schema-reject",examId:"upsc-epfo-apfc",paperId:"p62-schema-reject",
+  title:"Schema rejection test",edition:"custom",revision,
+  scoring:{correctMarks:2.5,incorrectMarks:-5/6},
+  timing:{kind:"untimed",pausePolicy:"allowed"},
+  navigation:{questionNavigation:"free",sectionNavigation:"free",allowReview:true},
+  sections:[{id:"general",title:"General"}],
+  questions:[{id:"q1",examSection:"general",kind:"single-choice",prompt:"Canonical question",
+   options:["A","B","C","D"],answer:"B",provenance:{kind:"ai-original"},qa:{status:"unchecked"}}]});
+ const source=asSource(compileExternalQuestionBank(bank(1)));
+ const reviewed=bindReviewed(source,compileExternalQuestionBank(bank(2)));
  const sourceHash=hashJson({content:source.questions[0].content,stimulus:null,media:[]});
  const core={schema:2,paperId:reviewed.paper.paperId,sourcePaperRevisionId:source.paper.id,
    sourceAnswerKeyRevisionId:source.answerKey.id,
