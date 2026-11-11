@@ -4,6 +4,7 @@
 import {type RecordItem} from "./stored-record-validator.ts";
 
 import type {ExamPackage,GenericAttempt,CglPracticeMode} from "./exam-package.ts";
+import type {ExamCalculatorState} from "./exam-calculator.ts";
 
 import type {OptionId} from "../domain/ids.js";
 import type {SessionEvent} from "../engine/session.ts";
@@ -37,6 +38,7 @@ export interface CoordinatorContext{
  readonly authoringStudio:AuthoringStudioController;
  readonly builtinPaperIds:Set<PaperRevisionId>;
  readonly builtins:ExamPackage[];
+ readonly calculatorStates:Map<string,ExamCalculatorState>;
  cglMode:CglPracticeMode;
  readonly changeHistoryQuery:(next: HistoryQuery, redraw?: boolean) => void;
  choice:string;
