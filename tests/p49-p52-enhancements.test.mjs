@@ -172,7 +172,7 @@ test("P49 hierarchical Learning note and subtopic survive strict v4 backup and i
    customTopic:"Labour Codes",customSubtopic:"Wage definitions",
    syllabusTopicId:"labour",note:"Retain independently authored explanation"});
  assert.doesNotThrow(()=>validateGenericStoredRecord(card));
- const archive=makeBackup([completed,card],DEFAULT_PREFERENCES,
+ const archive=makeBackup([{...completed,saveRevision:1},{...card,saveRevision:1}],DEFAULT_PREFERENCES,
    new Date(start+1900000).toISOString());
  const checked=verifyBackup(JSON.parse(JSON.stringify(archive)));
  const imported=reconstructRecords(checked.records,checked.snapshots);
