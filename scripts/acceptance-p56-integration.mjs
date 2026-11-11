@@ -38,7 +38,7 @@ try{
  // Only tab B commits. Tab A's in-memory storedSnapshots is now stale.
  await other.evaluate(async ({row,snapshot})=>{
    const db=await new Promise((resolve,reject)=>{
-     const req=indexedDB.open("practiceDesk.shared.v1",1);
+     const req=indexedDB.open("practiceDesk.history",1);
      req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
    });
    try{
@@ -72,7 +72,7 @@ try{
    engine+" P56 R1 import overwrote concurrent original record");
  const identity=await page.evaluate(async ()=>{
    const db=await new Promise((resolve,reject)=>{
-     const req=indexedDB.open("practiceDesk.shared.v1",1);
+     const req=indexedDB.open("practiceDesk.history",1);
      req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
    });
    try{
@@ -102,7 +102,7 @@ try{
  distorted.body.paper.revision=distorted.body.paper.revision+1;
  await hostile.page.evaluate(async snapshot=>{
    const db=await new Promise((resolve,reject)=>{
-     const r=indexedDB.open("practiceDesk.shared.v1",1);
+     const r=indexedDB.open("practiceDesk.history",1);
      r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
    });
    try{
@@ -121,7 +121,7 @@ try{
    document.querySelector("#app")?.textContent??""),null,{timeout:12000});
  const nonOverwrite=await hostile.page.evaluate(async id=>{
    const db=await new Promise((resolve,reject)=>{
-     const r=indexedDB.open("practiceDesk.shared.v1",1);
+     const r=indexedDB.open("practiceDesk.history",1);
      r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
    });
    try{

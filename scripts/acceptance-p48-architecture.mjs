@@ -108,7 +108,7 @@ try{
  const foreign=compactAttempt({...startGenericAttempt(independent,
    "p48-other-tab-attempt",Date.UTC(2026,10,4,2,0,0)),saveRevision:1});
  await page.evaluate(async({row,snapshot})=>{
-   const open=indexedDB.open("practiceDesk.shared.v1",1);
+   const open=indexedDB.open("practiceDesk.history",1);
    const db=await new Promise((resolve,reject)=>{
      open.onsuccess=()=>resolve(open.result);open.onerror=()=>reject(open.error);
    });

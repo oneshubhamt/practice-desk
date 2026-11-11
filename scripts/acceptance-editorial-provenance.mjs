@@ -31,7 +31,7 @@ async function persisted(id,pred=()=>true){
  for(let n=0;n<100;n++){
   const stored=await page.evaluate(async target=>{
    const db=await new Promise((resolve,reject)=>{
-    const req=indexedDB.open("practiceDesk.shared.v1",1);
+    const req=indexedDB.open("practiceDesk.history",1);
     req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
    });
    try{

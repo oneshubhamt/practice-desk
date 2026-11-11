@@ -117,7 +117,7 @@ try{
  // Simulate a deleted imported package. Its completed frozen result must survive.
  await page.evaluate(async id=>{
   const db=await new Promise((resolve,reject)=>{
-   const req=indexedDB.open("practiceDesk.shared.v1",1);
+   const req=indexedDB.open("practiceDesk.history",1);
    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
   });
   try{

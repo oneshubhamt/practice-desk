@@ -35,7 +35,7 @@ async function assertP55Narrow(label){
 }
 async function waitCard(id){
  await page.waitForFunction(async id=>{
-  const db=await new Promise((resolve,reject)=>{const r=indexedDB.open("practiceDesk.shared.v1",1);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
+  const db=await new Promise((resolve,reject)=>{const r=indexedDB.open("practiceDesk.history",1);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
   try{
    const record=await new Promise((resolve,reject)=>{const r=db.transaction("attempts","readonly").objectStore("attempts").get(id);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
    return record?.recordType==="learning-card";
@@ -65,7 +65,7 @@ async function seedCards(from,to){
   cards.push(card);
  }
  await page.evaluate(async cards=>{
-  const db=await new Promise((resolve,reject)=>{const r=indexedDB.open("practiceDesk.shared.v1",1);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
+  const db=await new Promise((resolve,reject)=>{const r=indexedDB.open("practiceDesk.history",1);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
   try{
    await new Promise((resolve,reject)=>{
     const tx=db.transaction("attempts","readwrite");

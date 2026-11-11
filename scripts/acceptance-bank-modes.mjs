@@ -343,7 +343,7 @@ for(const v of [
     await page.locator("#g-compose-start").click();await route(page,"exam");
     await page.waitForFunction(async()=>{
       const db=await new Promise((resolve,reject)=>{
-        const r=indexedDB.open("practiceDesk.shared.v1",1);
+        const r=indexedDB.open("practiceDesk.history",1);
         r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
       });
       try{
@@ -395,7 +395,7 @@ for(const v of [
     // Remove the imported source package, but never the frozen result.
     await page.evaluate(async paperId=>{
       const db=await new Promise((resolve,reject)=>{
-        const open=indexedDB.open("practiceDesk.shared.v1",1);
+        const open=indexedDB.open("practiceDesk.history",1);
         open.onsuccess=()=>resolve(open.result);open.onerror=()=>reject(open.error);
       });
       await new Promise((resolve,reject)=>{
