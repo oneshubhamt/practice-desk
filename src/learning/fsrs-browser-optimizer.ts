@@ -7,7 +7,6 @@ export interface BrowserFsrsOptimizerRun{
  cancel():void;
 }
 export interface BrowserFsrsOptimizerOptions{
- readonly timezone:string|number;readonly nextDayStartsAt:number;
  readonly timeoutMs?:number;readonly onProgress?:(progress:BrowserFsrsOptimizerProgress)=>void;
 }
 export class FsrsOptimizerRejectedError extends Error{
@@ -29,31 +28,10 @@ export function browserFsrsOptimizerAvailability():BrowserFsrsOptimizerAvailabil
    return {available:false,reason:"Web Crypto is unavailable; use HTTPS or localhost."};
  return {available:true,reason:"FSRS-7 WebAssembly optimizer available in a dedicated Worker."};
 }
-export function detectedFsrsOptimizerTimezone():string{
- try{return Intl.DateTimeFormat().resolvedOptions().timeZone||"";}catch{return "";}
-}
-export function normalizeFsrsOptimizerTimezone(value:string|number):string|number{
- if(typeof value==="number"){
-  if(!Number.isFinite(value)||value<-1440||value>1440)throw Error("Timezone offset must be between -1440 and 1440 minutes");
-  return value;
- }
- const trimmed=value.trim();
- if(!trimmed)throw Error("Timezone is required for FSRS-7 optimization");
- const numeric=Number(trimmed);
- if(Number.isFinite(numeric)){
-  if(numeric<-1440||numeric>1440)throw Error("Timezone offset must be between -1440 and 1440 minutes");
-  return numeric;
- }
- return trimmed;
-}
-export function startBrowserFsrsOptimizer(csv:string,options:BrowserFsrsOptimizerOptions):BrowserFsrsOptimizerRun{
+export function startBrowserFsrsOptimizer(csv:string,options:BrowserFsrsOptimizerOptions={}):BrowserFsrsOptimizerRun{
  const availability=browserFsrsOptimizerAvailability();
  if(!availability.available)throw Error(availability.reason);
  if(!csv.trim())throw Error("Optimizer evidence is empty");
- const nextDayStartsAt=options.nextDayStartsAt;
- if(!Number.isSafeInteger(nextDayStartsAt)||nextDayStartsAt<0||nextDayStartsAt>23)
-   throw Error("Next-day rollover must be an integer from 0 to 23");
- const timezone=normalizeFsrsOptimizerTimezone(options.timezone);
  const requestId=globalThis.crypto?.randomUUID?.()??"fsrs-"+Date.now()+"-"+Math.random().toString(36).slice(2);
  const worker=new Worker(new URL("./fsrs-optimizer.worker.js",document.baseURI),{type:"module",name:"practice-desk-fsrs-optimizer"});
  let settled=false;
@@ -89,7 +67,7 @@ export function startBrowserFsrsOptimizer(csv:string,options:BrowserFsrsOptimize
    }
   });
   worker.addEventListener("error",event=>finishReject(new Error(event.message||"FSRS optimizer Worker crashed")));
-  worker.postMessage({type:"optimize",requestId,csv,timezone,nextDayStartsAt});
+  worker.postMessage({type:"optimize",requestId,csv});
  });
  return {promise,cancel(){finishReject(new DOMException("FSRS optimization cancelled","AbortError"));}};
 }

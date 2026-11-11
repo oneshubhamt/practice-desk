@@ -3,9 +3,8 @@ import {DEFAULT_REVISION_SETTINGS,readRevisionSettings,revisionSchedulerOptions,
  validateRevisionSettings,writeRevisionSettings} from "../learning/revision-settings.ts";
 import {fsrsOptimizerCsv,optimizerEvidenceSummary,serializeFsrsOptimizerProfile,
  validateFsrsOptimizerProfile,type FsrsOptimizerProfile} from "../learning/fsrs-optimizer.ts";
-import {browserFsrsOptimizerAvailability,detectedFsrsOptimizerTimezone,FsrsOptimizerRejectedError,
- startBrowserFsrsOptimizer,type BrowserFsrsOptimizerProgress,type BrowserFsrsOptimizerRun}
- from "../learning/fsrs-browser-optimizer.ts";
+import {browserFsrsOptimizerAvailability,FsrsOptimizerRejectedError,startBrowserFsrsOptimizer,
+ type BrowserFsrsOptimizerProgress,type BrowserFsrsOptimizerRun} from "../learning/fsrs-browser-optimizer.ts";
 import {reconcileSameExamQuestion} from "./exam-dom-reconcile.ts";
 import type {RevisionSchedulerPort} from "../learning/revision-scheduler-port.ts";
 import type { ExamPackage, GenericAttempt } from "./exam-package.ts";
@@ -90,9 +89,6 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
  let filter:"all"|"due"|"remediation"|"bookmarked"="all",hierarchyRoot="",message="",closed=false,opened=false;
  let previousLearningView="";
  const optimizerAvailability=browserFsrsOptimizerAvailability();
- let optimizerTimezone=typeof revisionSettings.optimizerProfile?.training.timezone==="string"?
-   revisionSettings.optimizerProfile.training.timezone:detectedFsrsOptimizerTimezone();
- let optimizerRollover=revisionSettings.optimizerProfile?.training.nextDayStartsAt??4;
  let optimizerStatus=optimizerAvailability.reason;
  let optimizerRun:BrowserFsrsOptimizerRun|null=null;
  const optimizerProgress=(progress:BrowserFsrsOptimizerProgress)=>{
@@ -297,9 +293,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
       ' · cross-validation log loss '+Number(revisionSettings.optimizerProfile.evaluation.crossValidation.logLoss.toFixed(4)):
       'Using upstream FSRS-7 default weights.')+
     ' Raw evidence: '+optimizerEvidence.reviews+' reviews across '+optimizerEvidence.cards+' cards.</p>'+
-    '<p class="fine">The static Practice Desk build can train FSRS-7 locally in a dedicated WebAssembly Worker; no optimizer backend or review-log upload is used. Timezone and day rollover are mandatory. Personalized weights activate only after a later chronological holdout beats stock FSRS-7 on log loss without RMSE-bins regression; final 34 weights are then retrained on all evidence. The Node optimizer remains the native CI/reference path. <code>computeOptimalSteps</code> remains advisory only because upstream does not consider its single-decay fit FSRS-7 model-consistent.</p>'+
-    '<div class="learning-evidence-controls"><label>Optimizer timezone <input id="learning-optimizer-timezone" type="text" value="'+esc(optimizerTimezone)+'" placeholder="Asia/Kolkata or 330"></label>'+
-    '<label>Next study day starts <input id="learning-optimizer-rollover" type="number" min="0" max="23" step="1" value="'+optimizerRollover+'"></label></div>'+
+    '<p class="fine">The static Practice Desk build can train FSRS-7 locally in a dedicated WebAssembly Worker; no optimizer backend or review-log upload is used. Optimizer intervals use explicit fixed elapsed 24-hour days, matching the runtime <code>dateChrono</code> scheduler; timezone/DST study-day normalization is intentionally not used. Personalized weights activate only after a later chronological holdout beats stock FSRS-7 on log loss without RMSE-bins regression; final 34 weights are then retrained on all evidence. The 64/64/16 evidence floors are reliability guards, not a claim of statistical significance. The Node optimizer remains the native CI/reference path. <code>computeOptimalSteps</code> remains advisory only because upstream does not consider its single-decay fit FSRS-7 model-consistent.</p>'+
     '<p class="fine" id="learning-optimizer-status" role="status">'+esc(optimizerStatus)+'</p>'+
     '<div class="row generic-actions"><button class="btn primary" id="learning-optimizer-run"'+
       (!optimizerAvailability.available||!optimizerEvidence.reviews||optimizerRun?' disabled':'')+'>Optimize FSRS-7 locally</button>'+
@@ -447,22 +441,14 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     const nextScheduler=await createRevisionScheduler(revisionSchedulerOptions(next));
     revisionSettings=writeRevisionSettings(next);scheduler=nextScheduler;cache.clear();
   };
-  const timezoneField=root.querySelector<HTMLInputElement>("#learning-optimizer-timezone")!;
-  const rolloverField=root.querySelector<HTMLInputElement>("#learning-optimizer-rollover")!;
-  timezoneField.oninput=()=>{optimizerTimezone=timezoneField.value;};
-  rolloverField.oninput=()=>{optimizerRollover=Number(rolloverField.value);};
   root.querySelector<HTMLButtonElement>("#learning-optimizer-run")!.onclick=async()=>{
     if(optimizerRun)return;
-    optimizerTimezone=timezoneField.value.trim();optimizerRollover=Number(rolloverField.value);
     try{
       optimizerStatus="Preparing FSRS-7 optimizer evidence…";
-      optimizerRun=startBrowserFsrsOptimizer(fsrsOptimizerCsv(all),{
-        timezone:optimizerTimezone,nextDayStartsAt:optimizerRollover,onProgress:optimizerProgress
-      });
+      optimizerRun=startBrowserFsrsOptimizer(fsrsOptimizerCsv(all),{onProgress:optimizerProgress});
       draw();
       const profile=await optimizerRun.promise;
       await activateOptimizerProfile(profile);
-      optimizerTimezone=String(profile.training.timezone);optimizerRollover=profile.training.nextDayStartsAt;
       optimizerStatus="Personalized FSRS-7 passed the later holdout gate and is active.";
       message="Held-out-validated personalized FSRS-7 weights trained locally and activated.";
     }catch(error){
@@ -485,8 +471,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     try{
       const profile=validateFsrsOptimizerProfile(JSON.parse(await file.text()));
       await activateOptimizerProfile(profile);
-      optimizerTimezone=String(profile.training.timezone);optimizerRollover=profile.training.nextDayStartsAt;
-      optimizerStatus="Imported profile passed Practice Desk's v2 holdout validation.";
+      optimizerStatus="Imported profile passed Practice Desk's v3 chronology and holdout validation.";
       message="Held-out-validated personalized FSRS-7 profile imported and activated.";draw();
     }catch(error){message=error instanceof Error?error.message:"Invalid optimizer profile";draw();}
   };

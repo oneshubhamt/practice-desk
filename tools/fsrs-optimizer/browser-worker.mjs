@@ -1,6 +1,7 @@
 import {createInstance} from "@open-spaced-repetition/binding-wasm32-wasip1/workerd";
 import {
  HOLDOUT_STRATEGY,MIN_HOLDOUT_CARDS,MIN_HOLDOUT_ITEMS,MIN_TRAIN_ITEMS,
+ OPTIMIZER_CHRONOLOGY,OPTIMIZER_FIXED_UTC_OFFSET_MINUTES,OPTIMIZER_ROLLOVER_HOUR,
  evaluateHoldoutGate,splitChronologicalHoldout
 } from "./optimizer-policy.mjs";
 
@@ -38,18 +39,18 @@ const options=(requestId,cardIds,stage)=>({
  modelVersion:"FSRS-7",enableShortTerm:true,enableSchedPenalties:true,numRelearningSteps:1,
  cardIds,progress:progress(requestId,stage)
 });
-async function convert(binding,csv,timezone,nextDayStartsAt){
+async function convert(binding,csv){
  const bytes=new TextEncoder().encode(csv);
  const sourceSha256=hex(await crypto.subtle.digest("SHA-256",bytes));
- const converted=await Promise.resolve(binding.convertCsvToFsrsItemsWithCardIds(bytes,nextDayStartsAt,timezone,"FSRS-7"));
+ const converted=await Promise.resolve(binding.convertCsvToFsrsItemsWithCardIds(
+  bytes,OPTIMIZER_ROLLOVER_HOUR,OPTIMIZER_FIXED_UTC_OFFSET_MINUTES,"FSRS-7"
+ ));
  return {bytes,sourceSha256,...converted};
 }
 async function optimize(binding,request){
- const {requestId,csv,timezone,nextDayStartsAt}=request;
+ const {requestId,csv}=request;
  if(typeof csv!=="string"||!csv.trim())throw Error("Optimizer evidence is empty");
- if(!Number.isSafeInteger(nextDayStartsAt)||nextDayStartsAt<0||nextDayStartsAt>23)
-  throw Error("Next-day rollover must be an integer from 0 to 23");
- const {sourceSha256,items,cardIds}=await convert(binding,csv,timezone,nextDayStartsAt);
+ const {sourceSha256,items,cardIds}=await convert(binding,csv);
  if(items.length<1)throw Error("Review evidence did not produce any FSRS-7 optimizer items");
  const split=splitChronologicalHoldout(items,cardIds);
  if(split.trainCount<MIN_TRAIN_ITEMS||split.holdoutCount<MIN_HOLDOUT_ITEMS||split.holdoutCards<MIN_HOLDOUT_CARDS){
@@ -79,23 +80,27 @@ async function optimize(binding,request){
   "Time-series cross-validation"
  );
  send({type:"result",requestId,profile:{
-  schema:"practice-desk-fsrs-profile/v2",model:"FSRS-7",bindingVersion:"0.6.1",
+  schema:"practice-desk-fsrs-profile/v3",model:"FSRS-7",bindingVersion:"0.6.1",
   trainedAt:new Date().toISOString(),sourceSha256,evidenceItems:items.length,weights,
   evaluation:{crossValidation,holdout:{
    strategy:HOLDOUT_STRATEGY,trainItems:split.trainCount,holdoutItems:split.holdoutCount,holdoutCards:split.holdoutCards,
    minimumTrainItems:MIN_TRAIN_ITEMS,minimumHoldoutItems:MIN_HOLDOUT_ITEMS,minimumHoldoutCards:MIN_HOLDOUT_CARDS,
    default:gate.baseline,personalized:gate.personalized,gate:"passed"
   }},
-  training:{enableShortTerm:true,enableSchedPenalties:true,numRelearningSteps:1,nextDayStartsAt,timezone,
+  training:{enableShortTerm:true,enableSchedPenalties:true,numRelearningSteps:1,
+   chronology:OPTIMIZER_CHRONOLOGY,
+   converterFixedUtcOffsetMinutes:OPTIMIZER_FIXED_UTC_OFFSET_MINUTES,
+   converterRolloverHour:OPTIMIZER_ROLLOVER_HOUR,
    validationCandidateTrainedItems:split.trainCount,finalRetrainedOnAllEvidence:true}
  }});
 }
 async function probe(binding,request){
- const {requestId,csv,timezone,nextDayStartsAt}=request;
- const {items,cardIds}=await convert(binding,csv,timezone,nextDayStartsAt);
+ const {requestId,csv}=request;
+ const {items,cardIds}=await convert(binding,csv);
  if(items.length<1)throw Error("Probe evidence produced no optimizer items");
  const metrics=finiteMetrics(new binding.FSRSBinding().evaluate(items,cardIds),"Browser optimizer probe");
- send({type:"probe-result",requestId,items:items.length,cards:new Set(cardIds).size,metrics});
+ send({type:"probe-result",requestId,items:items.length,cards:new Set(cardIds).size,metrics,
+  chronology:OPTIMIZER_CHRONOLOGY});
 }
 self.addEventListener("message",event=>{
  const request=event.data;

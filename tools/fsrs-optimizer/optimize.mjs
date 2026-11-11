@@ -6,27 +6,19 @@ import {
 } from "@open-spaced-repetition/binding";
 import {
  HOLDOUT_STRATEGY,MIN_HOLDOUT_CARDS,MIN_HOLDOUT_ITEMS,MIN_TRAIN_ITEMS,
+ OPTIMIZER_CHRONOLOGY,OPTIMIZER_FIXED_UTC_OFFSET_MINUTES,OPTIMIZER_ROLLOVER_HOUR,
  evaluateHoldoutGate,splitChronologicalHoldout
 } from "./optimizer-policy.mjs";
 
 const args=process.argv.slice(2);
-const [input,output,timezoneArg,rolloverArg,...flagArgs]=args;
-if(!input||!output||!timezoneArg||rolloverArg===undefined){
- console.error("Usage: npm run optimize -- <reviews.csv> <profile.json> <IANA-timezone-or-offset> <next-day-hour> [--max-seconds=N] [--poll-ms=N]");
- console.error("Timezone and day rollover are mandatory for FSRS-7 fractional study-day conversion.");
+const [input,output,...flagArgs]=args;
+if(!input||!output){
+ console.error("Usage: npm run optimize -- <reviews.csv> <profile.json> [--max-seconds=N] [--poll-ms=N]");
+ console.error("FSRS-7 conversion is explicitly fixed to elapsed 24-hour days, matching Practice Desk dateChrono runtime scheduling.");
  process.exit(2);
 }
 const inputPath=resolve(input),outputPath=resolve(output),temporaryOutput=outputPath+".tmp";
 if(inputPath===outputPath||inputPath===temporaryOutput)throw Error("Input CSV and output profile must use different paths");
-
-const nextDayStartsAt=Number(rolloverArg);
-if(!Number.isSafeInteger(nextDayStartsAt)||nextDayStartsAt<0||nextDayStartsAt>23)
- throw Error("next-day-hour must be an integer from 0 to 23");
-const numericTimezone=Number(timezoneArg);
-const timezone=timezoneArg.trim()!==""&&Number.isFinite(numericTimezone)?numericTimezone:timezoneArg.trim();
-if(typeof timezone==="string"&&!timezone)throw Error("timezone must be a non-empty IANA timezone or fixed UTC offset in minutes");
-if(typeof timezone==="number"&&(timezone<-1440||timezone>1440))
- throw Error("fixed timezone offset must be between -1440 and 1440 minutes");
 
 let maxSeconds=0,pollMs=250;
 for(const arg of flagArgs){
@@ -68,7 +60,9 @@ const ensureWeights=(weights,label)=>{
 };
 const bytes=new Uint8Array(await readFile(inputPath));
 const sourceSha256=createHash("sha256").update(bytes).digest("hex");
-const converted=await Promise.resolve(convertCsvToFsrsItemsWithCardIds(bytes,nextDayStartsAt,timezone,"FSRS-7"));
+const converted=await Promise.resolve(convertCsvToFsrsItemsWithCardIds(
+ bytes,OPTIMIZER_ROLLOVER_HOUR,OPTIMIZER_FIXED_UTC_OFFSET_MINUTES,"FSRS-7"
+));
 const {items,cardIds}=converted;
 if(items.length<1)throw Error("Review evidence did not produce any FSRS-7 optimizer items");
 
@@ -99,7 +93,7 @@ if(!Number.isFinite(crossValidation.logLoss)||!Number.isFinite(crossValidation.r
 if(abortRequested||Date.now()>=deadline)throw Error("Optimizer interrupted before profile write");
 
 const profile={
- schema:"practice-desk-fsrs-profile/v2",model:"FSRS-7",bindingVersion:"0.6.1",trainedAt:new Date().toISOString(),
+ schema:"practice-desk-fsrs-profile/v3",model:"FSRS-7",bindingVersion:"0.6.1",trainedAt:new Date().toISOString(),
  sourceSha256,evidenceItems:items.length,weights,
  evaluation:{
   crossValidation:{logLoss:crossValidation.logLoss,rmseBins:crossValidation.rmseBins},
@@ -112,13 +106,17 @@ const profile={
   }
  },
  training:{
-  enableShortTerm:true,enableSchedPenalties:true,numRelearningSteps:1,nextDayStartsAt,timezone,
+  enableShortTerm:true,enableSchedPenalties:true,numRelearningSteps:1,
+  chronology:OPTIMIZER_CHRONOLOGY,
+  converterFixedUtcOffsetMinutes:OPTIMIZER_FIXED_UTC_OFFSET_MINUTES,
+  converterRolloverHour:OPTIMIZER_ROLLOVER_HOUR,
   validationCandidateTrainedItems:split.trainCount,finalRetrainedOnAllEvidence:true
  }
 };
 await writeFile(temporaryOutput,JSON.stringify(profile,null,2)+"\n","utf8");
 await rename(temporaryOutput,outputPath);
 console.log("FSRS-7 profile written:",outputPath);
+console.log("optimizer chronology:",OPTIMIZER_CHRONOLOGY);
 console.log("optimizer items:",items.length);
 console.log("holdout log loss: stock",gate.baseline.logLoss,"personalized",gate.personalized.logLoss);
 console.log("holdout RMSE bins: stock",gate.baseline.rmseBins,"personalized",gate.personalized.rmseBins);

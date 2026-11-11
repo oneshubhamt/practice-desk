@@ -1,12 +1,16 @@
+import {checkFSRS7Parameters} from "ts-fsrs/models/fsrs-7";
 import type {LearningCard} from "./learning.ts";
 import type {RevisionMemoryState} from "./revision-scheduler-port.ts";
 
-export const FSRS_OPTIMIZER_PROFILE_SCHEMA="practice-desk-fsrs-profile/v2";
+export const FSRS_OPTIMIZER_PROFILE_SCHEMA="practice-desk-fsrs-profile/v3";
 export const FSRS_OPTIMIZER_BINDING_VERSION="0.6.1";
 export const FSRS_OPTIMIZER_HOLDOUT_STRATEGY="final-sixth";
 export const FSRS_OPTIMIZER_MIN_TRAIN_ITEMS=64;
 export const FSRS_OPTIMIZER_MIN_HOLDOUT_ITEMS=64;
 export const FSRS_OPTIMIZER_MIN_HOLDOUT_CARDS=16;
+export const FSRS_OPTIMIZER_CHRONOLOGY="elapsed-24h";
+export const FSRS_OPTIMIZER_CONVERTER_FIXED_UTC_OFFSET_MINUTES=0;
+export const FSRS_OPTIMIZER_CONVERTER_ROLLOVER_HOUR=0;
 
 export interface FsrsEvaluationMetrics{readonly logLoss:number;readonly rmseBins:number;}
 export interface FsrsOptimizerProfile{
@@ -26,7 +30,9 @@ export interface FsrsOptimizerProfile{
   };
  };
  readonly training:{readonly enableShortTerm:true;readonly enableSchedPenalties:true;
-  readonly numRelearningSteps:1;readonly nextDayStartsAt:number;readonly timezone:string|number;
+  readonly numRelearningSteps:1;readonly chronology:typeof FSRS_OPTIMIZER_CHRONOLOGY;
+  readonly converterFixedUtcOffsetMinutes:typeof FSRS_OPTIMIZER_CONVERTER_FIXED_UTC_OFFSET_MINUTES;
+  readonly converterRolloverHour:typeof FSRS_OPTIMIZER_CONVERTER_ROLLOVER_HOUR;
   readonly validationCandidateTrainedItems:number;readonly finalRetrainedOnAllEvidence:true;};
 }
 const stateCode=(state:RevisionMemoryState):0|1|2|3=>{
@@ -54,15 +60,21 @@ const metrics=(value:unknown,label:string):FsrsEvaluationMetrics=>{
  if(!nonNegative(m.logLoss)||!nonNegative(m.rmseBins))throw Error("Invalid FSRS optimizer "+label+" metrics");
  return {logLoss:m.logLoss,rmseBins:m.rmseBins};
 };
+const optimizerWeights=(value:unknown):number[]=>{
+ if(!Array.isArray(value)||value.length!==34||value.some(x=>typeof x!=="number"||!Number.isFinite(x)))
+  throw Error("Invalid FSRS optimizer profile weights");
+ try{return Array.from(checkFSRS7Parameters(value));}
+ catch{throw Error("Invalid FSRS optimizer FSRS-7 weights");}
+};
 export function validateFsrsOptimizerProfile(value:unknown):FsrsOptimizerProfile{
  if(!value||typeof value!=="object"||Array.isArray(value))throw Error("Invalid FSRS optimizer profile");
  const p=value as Partial<FsrsOptimizerProfile>;
  const fields=["schema","model","bindingVersion","trainedAt","sourceSha256","evidenceItems","weights","evaluation","training"];
  if(Object.keys(p).some(k=>!fields.includes(k))||p.schema!==FSRS_OPTIMIZER_PROFILE_SCHEMA||p.model!=="FSRS-7"||
    p.bindingVersion!==FSRS_OPTIMIZER_BINDING_VERSION||typeof p.trainedAt!=="string"||!Number.isFinite(Date.parse(p.trainedAt))||
-   typeof p.sourceSha256!=="string"||!/^[a-f0-9]{64}$/.test(p.sourceSha256)||
-   !safePositive(p.evidenceItems)||!Array.isArray(p.weights)||p.weights.length!==34||
-   p.weights.some(x=>typeof x!=="number"||!Number.isFinite(x)))throw Error("Invalid FSRS optimizer profile");
+   typeof p.sourceSha256!=="string"||!/^[a-f0-9]{64}$/.test(p.sourceSha256)||!safePositive(p.evidenceItems))
+  throw Error("Invalid FSRS optimizer profile");
+ const weights=optimizerWeights(p.weights);
 
  const e=p.evaluation;
  if(!e||typeof e!=="object"||Array.isArray(e))throw Error("Invalid FSRS optimizer evaluation");
@@ -80,21 +92,25 @@ export function validateFsrsOptimizerProfile(value:unknown):FsrsOptimizerProfile
  if(!(personalized.logLoss<baseline.logLoss)||personalized.rmseBins>baseline.rmseBins)
   throw Error("Personalized FSRS-7 profile did not pass the held-out non-regression gate");
 
- const t=p.training,z=t?.timezone;
+ const t=p.training;
  if(!t||t.enableShortTerm!==true||t.enableSchedPenalties!==true||t.numRelearningSteps!==1||
-   !Number.isSafeInteger(t.nextDayStartsAt)||t.nextDayStartsAt<0||t.nextDayStartsAt>23||
-   !(typeof z==="string"&&z.length>0&&z.length<=120||typeof z==="number"&&Number.isFinite(z)&&z>=-1440&&z<=1440)||
+   t.chronology!==FSRS_OPTIMIZER_CHRONOLOGY||
+   t.converterFixedUtcOffsetMinutes!==FSRS_OPTIMIZER_CONVERTER_FIXED_UTC_OFFSET_MINUTES||
+   t.converterRolloverHour!==FSRS_OPTIMIZER_CONVERTER_ROLLOVER_HOUR||
    t.validationCandidateTrainedItems!==h.trainItems||t.finalRetrainedOnAllEvidence!==true)
   throw Error("Invalid FSRS optimizer training metadata");
  return {
   schema:FSRS_OPTIMIZER_PROFILE_SCHEMA,model:"FSRS-7",bindingVersion:FSRS_OPTIMIZER_BINDING_VERSION,
-  trainedAt:p.trainedAt,sourceSha256:p.sourceSha256,evidenceItems:p.evidenceItems,weights:[...p.weights],
+  trainedAt:p.trainedAt,sourceSha256:p.sourceSha256,evidenceItems:p.evidenceItems,weights,
   evaluation:{crossValidation,holdout:{
    strategy:FSRS_OPTIMIZER_HOLDOUT_STRATEGY,trainItems:h.trainItems,holdoutItems:h.holdoutItems,holdoutCards:h.holdoutCards,
    minimumTrainItems:FSRS_OPTIMIZER_MIN_TRAIN_ITEMS,minimumHoldoutItems:FSRS_OPTIMIZER_MIN_HOLDOUT_ITEMS,
    minimumHoldoutCards:FSRS_OPTIMIZER_MIN_HOLDOUT_CARDS,default:baseline,personalized,gate:"passed"
   }},
-  training:{enableShortTerm:true,enableSchedPenalties:true,numRelearningSteps:1,nextDayStartsAt:t.nextDayStartsAt,timezone:z,
+  training:{enableShortTerm:true,enableSchedPenalties:true,numRelearningSteps:1,
+   chronology:FSRS_OPTIMIZER_CHRONOLOGY,
+   converterFixedUtcOffsetMinutes:FSRS_OPTIMIZER_CONVERTER_FIXED_UTC_OFFSET_MINUTES,
+   converterRolloverHour:FSRS_OPTIMIZER_CONVERTER_ROLLOVER_HOUR,
    validationCandidateTrainedItems:t.validationCandidateTrainedItems,finalRetrainedOnAllEvidence:true}
  };
 }

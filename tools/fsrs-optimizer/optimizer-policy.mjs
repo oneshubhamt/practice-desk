@@ -3,6 +3,9 @@ export const MIN_TRAIN_ITEMS=64;
 export const MIN_HOLDOUT_ITEMS=64;
 export const MIN_HOLDOUT_CARDS=16;
 export const HOLDOUT_STRATEGY="final-sixth";
+export const OPTIMIZER_CHRONOLOGY="elapsed-24h";
+export const OPTIMIZER_FIXED_UTC_OFFSET_MINUTES=0;
+export const OPTIMIZER_ROLLOVER_HOUR=0;
 
 const metric=(value,name)=>{
  if(!value||typeof value!=="object"||!Number.isFinite(value.logLoss)||value.logLoss<0||
