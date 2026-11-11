@@ -74,6 +74,7 @@ export type AuthoringDraft={
  readonly sectionTransition?:"manual"|"automatic";
  readonly allowEarlySubmit?:boolean;
  readonly allowReview?:boolean;
+ readonly calculatorTool?:"basic";
  readonly marksCorrect:number;
  readonly marksIncorrect:number;
  readonly updatedAt:string;
@@ -135,7 +136,7 @@ const list=(value:unknown,max:number,label:string):unknown[]=>{
 export function validateAuthoringDraft(value:unknown):AuthoringDraft{
  const p=rec(value,"authoring draft",["schema","id","ingestionMode","examId","paperId","title","edition",
   "revision","durationMinutes","timingKind","pausePolicy","questionNavigation",
-  "sectionNavigation","sectionTransition","allowEarlySubmit","allowReview",
+  "sectionNavigation","sectionTransition","allowEarlySubmit","allowReview","calculatorTool",
   "marksCorrect","marksIncorrect","updatedAt","assets","stimuli","questions"]);
  if(p.schema!==1)throw Error("Unsupported draft schema");
  if(p.ingestionMode!==undefined&&p.ingestionMode!=="manual"&&p.ingestionMode!=="external-source")
@@ -284,6 +285,9 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
      (p.allowEarlySubmit!==undefined&&typeof p.allowEarlySubmit!=="boolean")||
      (p.allowReview!==undefined&&typeof p.allowReview!=="boolean"))
     throw Error("Invalid authored timing or navigation settings");
+ const calculatorTool=p.calculatorTool;
+ if(calculatorTool!==undefined&&calculatorTool!=="basic")
+   throw Error("Invalid authored calculator tool");
  const draft:AuthoringDraft={
   schema:1,id:text(p.id,"draft ID",128,true),
   ...(p.ingestionMode===undefined?{}:{ingestionMode:p.ingestionMode as "manual"|"external-source"}),
@@ -297,6 +301,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   sectionNavigation:sectionNavigation as NonNullable<AuthoringDraft["sectionNavigation"]>,
   sectionTransition:sectionTransition as NonNullable<AuthoringDraft["sectionTransition"]>,
   allowEarlySubmit:p.allowEarlySubmit??true,allowReview:p.allowReview??true,
+  ...(calculatorTool?{calculatorTool:"basic" as const}:{}),
   marksCorrect:num(p.marksCorrect,"positive marks",0.01,1000),
   marksIncorrect:num(p.marksIncorrect,"negative marks",-1000,0),
   updatedAt:text(p.updatedAt,"updated time",100,true),assets,
