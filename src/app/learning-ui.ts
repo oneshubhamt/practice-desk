@@ -273,11 +273,16 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     '<option value="suspend"'+(revisionSettings.leechAction==="suspend"?' selected':'')+'>Suspend automatically</option></select></label></div>'+
     '<div class="row generic-actions"><button class="btn primary" id="learning-policy-apply">Apply scheduling policy</button></div>'+
     '<h3>Personalized FSRS-7 weights</h3><p class="fine">'+(revisionSettings.optimizerProfile?
-      'Active evaluated profile · trained '+esc(new Date(revisionSettings.optimizerProfile.trainedAt).toLocaleDateString())+
-      ' · '+revisionSettings.optimizerProfile.evidenceItems+' optimizer items · log loss '+Number(revisionSettings.optimizerProfile.evaluation.logLoss.toFixed(4))+
-      ' · RMSE bins '+Number(revisionSettings.optimizerProfile.evaluation.rmseBins.toFixed(4)):'Using upstream FSRS-7 default weights.')+
+      'Active held-out-validated profile · trained '+esc(new Date(revisionSettings.optimizerProfile.trainedAt).toLocaleDateString())+
+      ' · '+revisionSettings.optimizerProfile.evidenceItems+' optimizer items · holdout log loss '+
+      Number(revisionSettings.optimizerProfile.evaluation.holdout.default.logLoss.toFixed(4))+' → '+
+      Number(revisionSettings.optimizerProfile.evaluation.holdout.personalized.logLoss.toFixed(4))+
+      ' · holdout RMSE '+Number(revisionSettings.optimizerProfile.evaluation.holdout.default.rmseBins.toFixed(4))+' → '+
+      Number(revisionSettings.optimizerProfile.evaluation.holdout.personalized.rmseBins.toFixed(4))+
+      ' · cross-validation log loss '+Number(revisionSettings.optimizerProfile.evaluation.crossValidation.logLoss.toFixed(4)):
+      'Using upstream FSRS-7 default weights.')+
     ' Raw evidence: '+optimizerEvidence.reviews+' reviews across '+optimizerEvidence.cards+' cards.</p>'+
-    '<p class="fine">Beta optimizer training runs outside the main file:// UI via <code>tools/fsrs-optimizer</code>. Imported 34-weight profiles require evaluation metadata and scheduler validation. The same tool exposes <code>computeOptimalSteps</code> only as a separately labelled single-decay advisory diagnostic; upstream does not consider it FSRS-7 model-consistent, so it cannot alter scheduler steps.</p>'+
+    '<p class="fine">Beta optimizer training runs outside the main file:// UI via <code>tools/fsrs-optimizer</code>. Timezone and day rollover are mandatory. Personalized weights activate only after a later chronological holdout beats stock FSRS-7 on log loss without RMSE-bins regression; the final 34 weights are then retrained on all evidence. The same tool exposes <code>computeOptimalSteps</code> only as a separately labelled single-decay advisory diagnostic; upstream does not consider it FSRS-7 model-consistent, so it cannot alter scheduler steps.</p>'+
     '<div class="row generic-actions"><button class="btn" id="learning-optimizer-export"'+(optimizerEvidence.reviews?'':' disabled')+'>Export optimizer evidence</button>'+
     '<button class="btn" id="learning-optimizer-import">Import evaluated profile</button><input id="learning-optimizer-file" type="file" accept="application/json,.json" hidden>'+
     '<button class="btn" id="learning-optimizer-export-profile"'+(revisionSettings.optimizerProfile?'':' disabled')+'>Export active profile</button>'+
@@ -427,7 +432,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
       const next=validateRevisionSettings({...revisionSettings,optimizerProfile:profile});
       const nextScheduler=await createRevisionScheduler(revisionSchedulerOptions(next));
       revisionSettings=writeRevisionSettings(next);scheduler=nextScheduler;cache.clear();
-      message="Evaluated personalized FSRS-7 profile imported and activated.";draw();
+      message="Held-out-validated personalized FSRS-7 profile imported and activated.";draw();
     }catch(error){message=error instanceof Error?error.message:"Invalid optimizer profile";draw();}
   };
   root.querySelector<HTMLButtonElement>("#learning-optimizer-export-profile")!.onclick=()=>{

@@ -1,22 +1,116 @@
 import {createHash} from "node:crypto";
 import {readFile,writeFile} from "node:fs/promises";
-import {computeParameters,convertCsvToFsrsItemsWithCardIds,evaluateWithTimeSeriesSplits} from "@open-spaced-repetition/binding";
-const [input,output="practice-desk-fsrs-profile.json",timezoneArg="UTC",rolloverArg="4"]=process.argv.slice(2);
-if(!input){console.error("Usage: npm run optimize -- <reviews.csv> [profile.json] [timezone-or-offset] [next-day-hour]");process.exit(2);}
+import {
+ FSRSBinding,computeParameters,convertCsvToFsrsItemsWithCardIds,evaluateWithTimeSeriesSplits
+} from "@open-spaced-repetition/binding";
+import {
+ HOLDOUT_STRATEGY,MIN_HOLDOUT_CARDS,MIN_HOLDOUT_ITEMS,MIN_TRAIN_ITEMS,
+ evaluateHoldoutGate,splitChronologicalHoldout
+} from "./optimizer-policy.mjs";
+
+const args=process.argv.slice(2);
+const [input,output,timezoneArg,rolloverArg,...flagArgs]=args;
+if(!input||!output||!timezoneArg||rolloverArg===undefined){
+ console.error("Usage: npm run optimize -- <reviews.csv> <profile.json> <IANA-timezone-or-offset> <next-day-hour> [--max-seconds=N] [--poll-ms=N]");
+ console.error("Timezone and day rollover are mandatory for FSRS-7 fractional study-day conversion.");
+ process.exit(2);
+}
 const nextDayStartsAt=Number(rolloverArg);
-if(!Number.isSafeInteger(nextDayStartsAt)||nextDayStartsAt<0||nextDayStartsAt>23)throw Error("next-day-hour must be 0..23");
-const n=Number(timezoneArg),timezone=timezoneArg.trim()!==""&&Number.isFinite(n)?n:timezoneArg;
-const bytes=new Uint8Array(await readFile(input)),sourceSha256=createHash("sha256").update(bytes).digest("hex");
-const {items,cardIds}=await Promise.resolve(convertCsvToFsrsItemsWithCardIds(bytes,nextDayStartsAt,timezone,"FSRS-7"));
-if(items.length<1)throw Error("Review evidence did not produce any FSRS-7 training items");
-const options={modelVersion:"FSRS-7",enableShortTerm:true,enableSchedPenalties:true,numRelearningSteps:1,cardIds};
-const weights=await computeParameters(items,options);
-if(weights.length!==34||weights.some(v=>!Number.isFinite(v)))throw Error("Optimizer did not return 34 finite FSRS-7 weights");
-const evaluation=await evaluateWithTimeSeriesSplits(items,options);
-if(!Number.isFinite(evaluation.logLoss)||!Number.isFinite(evaluation.rmseBins))throw Error("Optimizer evaluation failed");
-const profile={schema:"practice-desk-fsrs-profile/v1",model:"FSRS-7",bindingVersion:"0.6.1",trainedAt:new Date().toISOString(),
- sourceSha256,evidenceItems:items.length,weights,evaluation:{logLoss:evaluation.logLoss,rmseBins:evaluation.rmseBins},
- training:{enableShortTerm:true,enableSchedPenalties:true,numRelearningSteps:1,nextDayStartsAt,timezone}};
+if(!Number.isSafeInteger(nextDayStartsAt)||nextDayStartsAt<0||nextDayStartsAt>23)
+ throw Error("next-day-hour must be an integer from 0 to 23");
+const numericTimezone=Number(timezoneArg);
+const timezone=timezoneArg.trim()!==""&&Number.isFinite(numericTimezone)?numericTimezone:timezoneArg.trim();
+if(typeof timezone==="string"&&!timezone)throw Error("timezone must be a non-empty IANA timezone or fixed UTC offset in minutes");
+
+let maxSeconds=0,pollMs=250;
+for(const arg of flagArgs){
+ const [name,raw]=arg.split("=",2);
+ if(name==="--max-seconds"){
+  maxSeconds=Number(raw);
+  if(!Number.isFinite(maxSeconds)||maxSeconds<0)throw Error("--max-seconds must be a non-negative number");
+ }else if(name==="--poll-ms"){
+  pollMs=Number(raw);
+  if(!Number.isSafeInteger(pollMs)||pollMs<50||pollMs>5000)throw Error("--poll-ms must be an integer from 50 to 5000");
+ }else throw Error("Unknown optimizer option: "+arg);
+}
+let abortRequested=false;
+const startedAt=Date.now(),deadline=maxSeconds>0?startedAt+maxSeconds*1000:Number.POSITIVE_INFINITY;
+process.on("SIGINT",()=>{abortRequested=true;console.error("\nOptimizer interruption requested; stopping at the next progress checkpoint.");});
+const progress=(stage)=>{
+ let lastPercent=-5,lastPrinted=0;
+ return (current,total)=>{
+  const now=Date.now();
+  if(abortRequested||now>=deadline)return false;
+  const percent=total>0?Math.floor(current*100/total):0;
+  if(percent>=lastPercent+5||now-lastPrinted>=2000||current===total){
+   console.error(stage+": "+current+"/"+total+(total>0?" ("+percent+"%)":""));
+   lastPercent=percent;lastPrinted=now;
+  }
+  return true;
+ };
+};
+const options=(cardIds,stage)=>({
+ modelVersion:"FSRS-7",enableShortTerm:true,enableSchedPenalties:true,numRelearningSteps:1,
+ cardIds,timeout:pollMs,progress:progress(stage)
+});
+const ensureWeights=(weights,label)=>{
+ if(weights.length!==34||weights.some(v=>!Number.isFinite(v)))throw Error(label+" did not return 34 finite FSRS-7 weights");
+ return weights;
+};
+const bytes=new Uint8Array(await readFile(input));
+const sourceSha256=createHash("sha256").update(bytes).digest("hex");
+const converted=await Promise.resolve(convertCsvToFsrsItemsWithCardIds(bytes,nextDayStartsAt,timezone,"FSRS-7"));
+const {items,cardIds}=converted;
+if(items.length<1)throw Error("Review evidence did not produce any FSRS-7 optimizer items");
+
+const split=splitChronologicalHoldout(items,cardIds);
+if(split.trainCount<MIN_TRAIN_ITEMS||split.holdoutCount<MIN_HOLDOUT_ITEMS||split.holdoutCards<MIN_HOLDOUT_CARDS)
+ throw Error("Insufficient evidence for personalized activation: need at least "+MIN_TRAIN_ITEMS+
+  " historical training items, "+MIN_HOLDOUT_ITEMS+" later holdout items and "+MIN_HOLDOUT_CARDS+
+  " holdout cards; observed "+split.trainCount+", "+split.holdoutCount+" and "+split.holdoutCards+".");
+
+const validationWeights=ensureWeights(
+ await computeParameters(split.trainItems,options(split.trainCardIds,"Train validation candidate")),
+ "Validation training"
+);
+if(abortRequested||Date.now()>=deadline)throw Error("Optimizer interrupted before holdout evaluation");
+const stockModel=new FSRSBinding();
+const validationModel=new FSRSBinding(validationWeights);
+const defaultHoldout=stockModel.evaluate(split.holdoutItems,split.holdoutCardIds);
+const personalizedHoldout=validationModel.evaluate(split.holdoutItems,split.holdoutCardIds);
+const gate=evaluateHoldoutGate(defaultHoldout,personalizedHoldout,split);
+console.error("Holdout stock FSRS-7:",JSON.stringify(gate.baseline));
+console.error("Holdout personalized:",JSON.stringify(gate.personalized));
+if(!gate.passed)throw Error("Personalized FSRS-7 activation gate failed: "+gate.reasons.join("; "));
+
+const weights=ensureWeights(await computeParameters(items,options(cardIds,"Retrain final profile on all evidence")),"Final training");
+const crossValidation=await evaluateWithTimeSeriesSplits(items,options(cardIds,"Time-series cross-validation"));
+if(!Number.isFinite(crossValidation.logLoss)||!Number.isFinite(crossValidation.rmseBins))
+ throw Error("Optimizer cross-validation failed");
+if(abortRequested||Date.now()>=deadline)throw Error("Optimizer interrupted before profile write");
+
+const profile={
+ schema:"practice-desk-fsrs-profile/v2",model:"FSRS-7",bindingVersion:"0.6.1",trainedAt:new Date().toISOString(),
+ sourceSha256,evidenceItems:items.length,weights,
+ evaluation:{
+  crossValidation:{logLoss:crossValidation.logLoss,rmseBins:crossValidation.rmseBins},
+  holdout:{
+   strategy:HOLDOUT_STRATEGY,trainItems:split.trainCount,holdoutItems:split.holdoutCount,holdoutCards:split.holdoutCards,
+   minimumTrainItems:MIN_TRAIN_ITEMS,minimumHoldoutItems:MIN_HOLDOUT_ITEMS,minimumHoldoutCards:MIN_HOLDOUT_CARDS,
+   default:{logLoss:gate.baseline.logLoss,rmseBins:gate.baseline.rmseBins},
+   personalized:{logLoss:gate.personalized.logLoss,rmseBins:gate.personalized.rmseBins},
+   gate:"passed"
+  }
+ },
+ training:{
+  enableShortTerm:true,enableSchedPenalties:true,numRelearningSteps:1,nextDayStartsAt,timezone,
+  validationCandidateTrainedItems:split.trainCount,finalRetrainedOnAllEvidence:true
+ }
+};
 await writeFile(output,JSON.stringify(profile,null,2)+"\n","utf8");
-console.log("FSRS-7 profile written:",output);console.log("training items:",items.length);
-console.log("time-series log loss:",evaluation.logLoss);console.log("time-series RMSE bins:",evaluation.rmseBins);
+console.log("FSRS-7 profile written:",output);
+console.log("optimizer items:",items.length);
+console.log("holdout log loss: stock",gate.baseline.logLoss,"personalized",gate.personalized.logLoss);
+console.log("holdout RMSE bins: stock",gate.baseline.rmseBins,"personalized",gate.personalized.rmseBins);
+console.log("time-series log loss:",crossValidation.logLoss);
+console.log("time-series RMSE bins:",crossValidation.rmseBins);
