@@ -57,7 +57,8 @@ export function importSimpleQuestionBank(value:unknown):ExamPackage{
  const revision=bank["revision"]===undefined?1:number(bank["revision"],"revision");
  ensure(Number.isSafeInteger(revision)&&revision>0,"revision must be a positive integer");
  const edition=bank["edition"]??"custom";
- ensure(edition==="custom"||edition==="source"||edition==="reviewed","Unsupported bank edition");
+ ensure(edition==="custom"||edition==="source",
+   "Simple bank imports support custom/source only; Reviewed requires the paired editorial workflow with exact Source lineage");
  const scoring=obj(bank["scoring"],"scoring");
  only(scoring,["correctMarks","negativeFraction","incorrectMarks","unansweredMarks"],"scoring");
  const correctMarks=number(scoring["correctMarks"],"scoring.correctMarks");
