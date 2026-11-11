@@ -23,7 +23,7 @@ import * as __suite_dep_17 from "../src/history/frozen.ts";
 import * as __suite_dep_18 from "../src/engine/session.ts";
 import * as __suite_dep_19 from "../src/engine/scoring.ts";
 
-// === Legacy suite: tests/history-cross-paper-marks.test.mjs — 6 unchanged test registrations ===
+// === Consolidated coverage: tests/history-cross-paper-marks.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -189,7 +189,7 @@ test("F05 adjacent: archive status filters retain separate complete and progress
 });
 }
 
-// === Legacy suite: tests/history-selection-filtering-and-backup.test.mjs — 4 unchanged test registrations ===
+// === Consolidated coverage: tests/history-selection-filtering-and-backup.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -292,7 +292,7 @@ test("P43 portable family setups survive backup v4 with checksum protection",asy
 
 }
 
-// === Legacy suite: tests/persistence-backup-and-concurrency.test.mjs — 9 unchanged test registrations ===
+// === Consolidated coverage: tests/persistence-backup-and-concurrency.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -446,7 +446,7 @@ test("new-record CAS uses null; persisted rows require revisions 1+ and progress
 }
 }
 
-// === Legacy suite: tests/persistence-session-recovery.test.mjs — 7 unchanged test registrations ===
+// === Consolidated coverage: tests/persistence-session-recovery.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];

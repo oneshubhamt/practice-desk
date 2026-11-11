@@ -24,7 +24,7 @@ import * as __suite_dep_18 from "../src/learning/fsrs-optimizer.ts";
 import {revisionInventory as independentRevisionInventory} from "../src/learning/revision-selection.ts";
 import * as __suite_dep_19 from "ts-fsrs/models/fsrs-7";
 
-// === Legacy suite: tests/analytics-property-model.test.mjs — 2 unchanged test registrations ===
+// === Consolidated coverage: tests/analytics-property-model.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -127,7 +127,7 @@ test("seeded six-kind frozen analytics retain denominators, pending essays and h
 });
 }
 
-// === Legacy suite: tests/analytics-visits-and-speed-evidence.test.mjs — 5 unchanged test registrations ===
+// === Consolidated coverage: tests/analytics-visits-and-speed-evidence.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -292,7 +292,7 @@ test("negative marking, manual-pending and excluded questions stay separate from
 });
 }
 
-// === Legacy suite: tests/learning-fsrs-and-cards.test.mjs — 4 unchanged test registrations ===
+// === Consolidated coverage: tests/learning-fsrs-and-cards.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -465,7 +465,7 @@ test("backup preserves notes and FSRS review logs with strict integrity checks",
 });
 }
 
-// === Legacy suite: tests/learning-notebook-and-evidence.test.mjs — 6 unchanged test registrations ===
+// === Consolidated coverage: tests/learning-notebook-and-evidence.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];

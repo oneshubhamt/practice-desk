@@ -15,7 +15,7 @@ import * as __suite_dep_10 from "../src/engine/response.ts";
 import * as __suite_dep_11 from "../src/engine/scoring.ts";
 import * as __suite_dep_12 from "../src/engine/score-ceiling.ts";
 
-// === Legacy suite: tests/exam-packages-and-cgl-modes.test.mjs — 5 unchanged test registrations ===
+// === Consolidated coverage: tests/exam-packages-and-cgl-modes.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -96,7 +96,7 @@ test("one engine supports strict, flexible and single CGL policies",()=>{
 }
 }
 
-// === Legacy suite: tests/exam-schema-validation.test.mjs — 6 unchanged test registrations ===
+// === Consolidated coverage: tests/exam-schema-validation.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -210,7 +210,7 @@ test("rejects an answer key that omits a question in the paper", () => {
 });
 }
 
-// === Legacy suite: tests/exam-six-kind-lifecycle.test.mjs — 5 unchanged test registrations ===
+// === Consolidated coverage: tests/exam-six-kind-lifecycle.test.mjs — retained assertions ===
 {
 const paperRevisionHash = __suite_dep_5["paperRevisionHash"];
 const test = __suite_dep_0["default"];

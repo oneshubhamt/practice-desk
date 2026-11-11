@@ -32,7 +32,7 @@ import * as __suite_dep_26 from "../src/domain/hash.ts";
 import * as __suite_dep_27 from "../src/learning/learning.ts";
 import * as __suite_dep_28 from "../src/app/preferences.ts";
 
-// === Consolidated coverage: tests/content-cgl-edition-parity.test.mjs — 5 unchanged test registrations ===
+// === Consolidated coverage: tests/content-cgl-edition-parity.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -177,7 +177,7 @@ test("standard CGL marking and nominal denominator are unchanged by generic cap"
 });
 }
 
-// === Consolidated coverage: tests/content-cgl-import-and-scoring.test.mjs — 4 unchanged test registrations ===
+// === Consolidated coverage: tests/content-cgl-import-and-scoring.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -190,7 +190,7 @@ const patches = JSON.parse(await readFile(new URL("../src/content/patches.json",
 const library = importCglBank(papers, patches);
 
 
-test("v11-reviewed editorial policy: source invalid without a patch is scored as caution", () => {
+test("reviewed editorial policy: source invalid without a patch is scored as caution", () => {
   for (let i = 0; i < library.length; i += 2) {
     const source = library[i], reviewed = library[i + 1];
     for (let j = 0; j < source.questions.length; j++) {
@@ -209,7 +209,7 @@ test("v11-reviewed editorial policy: source invalid without a patch is scored as
 
 }
 
-// === Consolidated coverage: tests/content-editorial-and-timing-labels.test.mjs — 3 unchanged test registrations ===
+// === Consolidated coverage: tests/content-editorial-and-timing-labels.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -303,7 +303,7 @@ test("L09/L10: timing type and frozen mode have accurate labels, untimed include
 });
 }
 
-// === Consolidated coverage: tests/content-frozen-integrity.test.mjs — 9 unchanged test registrations ===
+// === Consolidated coverage: tests/content-frozen-integrity.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -445,7 +445,7 @@ test("F13/G10: delete lifecycle cannot bypass unfinished status; noncanonical ba
 });
 }
 
-// === Consolidated coverage: tests/content-source-review-and-frozen-media.test.mjs — 6 unchanged test registrations ===
+// === Consolidated coverage: tests/content-source-review-and-frozen-media.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -628,7 +628,7 @@ test("time expiration and voluntary finishing have separate durable source-indep
 });
 }
 
-// === Consolidated coverage: tests/content-validation-and-build.test.mjs — 4 unchanged test registrations ===
+// === Consolidated coverage: tests/content-validation-and-build.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -705,7 +705,7 @@ test('single-file release contains a complete inline app',async()=>{
 });
 }
 
-// === Consolidated coverage: tests/integrity-hash-and-media.test.mjs — 5 unchanged test registrations ===
+// === Consolidated coverage: tests/integrity-hash-and-media.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];

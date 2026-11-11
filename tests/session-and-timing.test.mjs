@@ -16,7 +16,7 @@ import * as __suite_dep_11 from "../src/history/deletion-policy.ts";
 import * as __suite_dep_12 from "../src/app/history-page.ts";
 import * as __suite_dep_13 from "../src/app/result-presentation.ts";
 
-// === Legacy suite: tests/session-and-scoring-basics.test.mjs — 5 unchanged test registrations ===
+// === Consolidated coverage: tests/session-and-scoring-basics.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -84,7 +84,7 @@ test("locked navigation, early section submission and answer clearing", () => {
 
 }
 
-// === Legacy suite: tests/session-property-model.test.mjs — 4 unchanged test registrations ===
+// === Consolidated coverage: tests/session-property-model.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -237,7 +237,7 @@ test("section evidence rejects fabricated duration, expiry reason, identity and 
 });
 }
 
-// === Legacy suite: tests/session-timing-and-deletion.test.mjs — 8 unchanged test registrations ===
+// === Consolidated coverage: tests/session-timing-and-deletion.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];

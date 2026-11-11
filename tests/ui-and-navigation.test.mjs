@@ -19,7 +19,7 @@ import * as __suite_dep_11 from "../src/domain/integrity.ts";
 import * as __suite_dep_12 from "../src/app/response-drafts.ts";
 import * as __suite_dep_13 from "../src/app/navigation.ts";
 
-// === Legacy suite: tests/ui-history-and-results.test.mjs — 5 unchanged test registrations ===
+// === Consolidated coverage: tests/ui-history-and-results.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -128,7 +128,7 @@ test("answer changes preserve actual events and distinguish rescued from lost an
 });
 }
 
-// === Legacy suite: tests/ui-media-editorial-and-paused-controls.test.mjs — 6 unchanged test registrations ===
+// === Consolidated coverage: tests/ui-media-editorial-and-paused-controls.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -280,7 +280,7 @@ test("F10: cannot flag when disabled, after expiry or after completion",()=>{
 });
 }
 
-// === Legacy suite: tests/ui-question-controls-and-drafts.test.mjs — 8 unchanged test registrations ===
+// === Consolidated coverage: tests/ui-question-controls-and-drafts.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -413,7 +413,7 @@ test("G08: report each duplicate right value once; blanks and distinct right cho
 });
 }
 
-// === Legacy suite: tests/navigation-native-routes.test.mjs — 3 unchanged test registrations ===
+// === Consolidated coverage: tests/navigation-native-routes.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -466,7 +466,7 @@ test("routeHref clears old route parameters without destroying unrelated query",
 }
 
 
-// User-reported Mac Safari compatibility: deterministic file:// fragment codec.
+// Mac Safari/file:// resilience: deterministic fragment codec.
 // Real Back/Forward, persistence and reloading are covered by acceptance-safari-fallback.
 {
 const test=__suite_dep_0["default"];
