@@ -630,6 +630,9 @@ p45test("P45-B identical frozen exam content uses one SHA-addressed snapshot acr
  const first={...startGenericAttempt(pkg,"s1",1730000000000),saveRevision:1};
  const second={...startGenericAttempt(pkg,"s2",1730000001000),saveRevision:1};
  const a=compactAttempt(first),b=compactAttempt(second);
+ const unsaved=compactAttempt(startGenericAttempt(pkg,"unsaved-row",1730000002000));
+ p45assert.throws(()=>reconstructRecords([unsaved.row],[unsaved.snapshot]),/CAS revision 1 or greater/,
+   "Revision zero is an in-memory pre-write state, never a durable row");
  p45assert.equal(a.snapshot.id,b.snapshot.id);
  p45assert.ok(!("frozen" in a.row),"Attempt should never repeat stored frozen source");
  p45assert.equal(a.row.frozenAt,first.frozen.frozenAt);
