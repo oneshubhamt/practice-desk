@@ -1,4 +1,4 @@
-import {access,mkdir,readFile,rm,writeFile} from "node:fs/promises";
+import {access,copyFile,mkdir,readFile,rm,writeFile} from "node:fs/promises";
 import {resolve} from "node:path";
 import {build} from "esbuild";
 
@@ -15,6 +15,12 @@ await build({
  entryNames:"fsrs-optimizer.worker",assetNames:"[name]-[hash]",chunkNames:"[name]-[hash]",
  loader:{".wasm":"file"},conditions:["browser"],legalComments:"eof",minify:true,logLevel:"silent"
 });
+// The published browser loader resolves this exact sibling URL at runtime;
+// it is not expressed as an ESM import, so esbuild cannot discover/copy it.
+await copyFile(
+ resolve(root,"tools/fsrs-optimizer/node_modules/@open-spaced-repetition/binding-wasm32-wasip1/fsrs-binding.wasm32-wasip1.wasm"),
+ resolve(out,"fsrs-binding.wasm32-wasip1.wasm")
+);
 let html=await readFile(resolve(root,"Practice_Desk_Offline_Mock_Tests.html"),"utf8");
 html=html.replace("connect-src 'none'","connect-src 'self'")
  .replace("worker-src 'none'","worker-src 'self'")
