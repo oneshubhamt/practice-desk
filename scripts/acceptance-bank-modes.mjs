@@ -134,7 +134,9 @@ for(const v of [
     title:"CAT calculator demo",tools:{calculator:"basic"}};
   await page.locator("#g-file").setInputFiles({name:"cat-calculator.json",mimeType:"application/json",
     buffer:Buffer.from(JSON.stringify(calculatorBank))});
-  await page.waitForFunction(()=>document.querySelector("#g-family")?.value==="imported:cat");
+  await page.waitForFunction(()=>document.querySelector("#g-papers")?.value==="bank:cat-calculator-demo:paper:r1");
+  check(await page.locator('#g-family option[value="imported:cat"]').count()===1,
+    v.name+" calculator bank family was not registered");
   await page.locator("#g-start").click();await route(page,"exam");
   check(await page.locator("#g-calculator").count()===1,
     v.name+" calculator-enabled paper did not expose calculator");
