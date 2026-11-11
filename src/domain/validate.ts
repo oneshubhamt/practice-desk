@@ -358,7 +358,7 @@ export function validatePaperRevision(
   answerKey?: AnswerKeyRevision,
 ): PaperRevision {
   const paper = record(value, "paperRevision");
-  only(paper,["id","paperId","revision","contentHash","edition","sections","answerKeyRevisionId","sourcePaperRevisionId","sourceAnswerKeyRevisionId","timing","navigation","scoring","createdAt"],"paperRevision");
+  only(paper,["id","paperId","revision","contentHash","edition","sections","answerKeyRevisionId","sourcePaperRevisionId","sourceAnswerKeyRevisionId","timing","navigation","candidateTools","scoring","createdAt"],"paperRevision");
   text(paper["id"], "paperRevision.id");
   const paperId = text(paper["paperId"], "paperRevision.paperId");
   positiveInteger(paper["revision"], "paperRevision.revision");
@@ -436,6 +436,12 @@ export function validatePaperRevision(
     throw new Error("paperRevision.navigation.sectionNavigation: sectional timers require sequential-locked sections");
   for (const field of ["allowFlagging", "allowReview"] as const) {
     if (typeof navigation[field] !== "boolean") throw new Error("paperRevision.navigation." + field + ": expected a boolean");
+  }
+  if (paper["candidateTools"] !== undefined) {
+    const tools = record(paper["candidateTools"], "paperRevision.candidateTools");
+    only(tools,["calculator"],"paperRevision.candidateTools");
+    if (tools["calculator"] !== "basic")
+      throw new Error('paperRevision.candidateTools.calculator: expected "basic"');
   }
   validateScoringPolicy(paper["scoring"], "paperRevision.scoring");
 
