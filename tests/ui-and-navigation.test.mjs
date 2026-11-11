@@ -35,7 +35,7 @@ const reviewMatch = __suite_dep_6["reviewMatch"];
 const resultTabsHTML = __suite_dep_6["resultTabsHTML"];
 const reviewFiltersHTML = __suite_dep_6["reviewFiltersHTML"];
 const timingLedgerHTML = __suite_dep_6["timingLedgerHTML"];
-const sectionPaceHTML = __suite_dep_6["sectionPaceHTML"];
+const resultPacingHTML = __suite_dep_6["resultPacingHTML"];
 const answerRevisionEvidence = __suite_dep_7["answerRevisionEvidence"];
 const validateGenericStoredRecord = __suite_dep_4_stored_record_validator["validateGenericStoredRecord"];
 const bundle=validateExamPackage(pkg);
@@ -80,7 +80,7 @@ test("result tabs and time ledger keep frozen verdicts, timings and accessible c
  assert.equal(a.result.items.filter(row=>reviewMatch(a,row,"incorrect")).length,0);
  assert.equal(a.result.items.filter(row=>reviewMatch(a,row,"unanswered")).length,6);
  assert.equal(a.result.items.filter(row=>reviewMatch(a,row,"fastwrong")).length,0);
- const pacing=sectionPaceHTML(a);
+ const pacing=resultPacingHTML(a);
  assert.match(pacing,/Time &amp; pacing/);
  assert.match(pacing,/Section diagnostics/);
 });
