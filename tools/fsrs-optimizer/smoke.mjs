@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import {
- FSRSBinding,FSRSBindingItem,FSRSBindingReview,computeOptimalSteps,computeParameters
+ FSRSBinding,FSRSBindingItem,FSRSBindingReview,computeOptimalSteps,computeParameters,
+ convertCsvToFsrsItemsWithCardIds
 } from "@open-spaced-repetition/binding";
 import {evaluateHoldoutGate,splitChronologicalHoldout} from "./optimizer-policy.mjs";
 
@@ -19,8 +20,19 @@ const model=new FSRSBinding(weights);
 const next=model.nextStates(null,0.9,0);
 assert.ok(next.good.memory.stability>0);
 assert.ok(next.good.memory.stabilityFast>0);
-const stockMetrics=new FSRSBinding().evaluate([item],[1]);
-const personalizedMetrics=model.evaluate([item],[1]);
+
+const rows=["review_time,card_id,review_rating,review_duration,review_state"];
+for(let card=0;card<120;card++){
+ const start=1704067200000+card*1000;
+ rows.push(`${start},card-${card},3,1000,0`);
+ rows.push(`${start+10*60*1000},card-${card},3,900,1`);
+ rows.push(`${start+24*60*60*1000},card-${card},3,800,2`);
+}
+const csv=new TextEncoder().encode(rows.join("\n"));
+const converted=convertCsvToFsrsItemsWithCardIds(csv,4,"Asia/Kolkata","FSRS-7");
+assert.ok(converted.items.length>=120);
+const stockMetrics=new FSRSBinding().evaluate(converted.items,converted.cardIds);
+const personalizedMetrics=model.evaluate(converted.items,converted.cardIds);
 assert.ok(Number.isFinite(stockMetrics.logLoss)&&Number.isFinite(stockMetrics.rmseBins));
 assert.ok(Number.isFinite(personalizedMetrics.logLoss)&&Number.isFinite(personalizedMetrics.rmseBins));
 
@@ -37,13 +49,7 @@ assert.equal(evaluateHoldoutGate(
  {logLoss:0.4,rmseBins:0.08},{logLoss:0.39,rmseBins:0.081},split
 ).passed,false);
 
-const rows=["review_time,card_id,review_rating,review_duration,review_state"];
-for(let card=0;card<120;card++){
- const start=1704067200000+card*1000;
- rows.push(`${start},card-${card},3,1000,0`);
- rows.push(`${start+10*60*1000},card-${card},3,900,1`);
-}
-const analysis=computeOptimalSteps(new TextEncoder().encode(rows.join("\n")),0.9,0.5);
+const analysis=computeOptimalSteps(csv,0.9,0.5);
 assert.ok(Array.isArray(analysis.recommendedLearningSteps));
 assert.ok(Array.isArray(analysis.recommendedRelearningSteps));
 assert.ok(analysis.good&&analysis.good.count>=100);
