@@ -19,7 +19,7 @@ const q=(section,subject,topic,subtopic)=>({
 });
 function paper(){
  return {...newAuthoringDraft(),examId:"upsc-epfo-apfc",paperId:"p53-mixed",title:"Mixed subject practice",
-  questions:[
+  sections:[{name:"General Paper",minutes:15}],questions:[
    {...q("General Paper","", "Labour Codes","Wages"),syllabusHeadingId:"labour"},
    {...q("General Paper","", "Accounting","Ledger"),syllabusHeadingId:"accountancy"},
    {...q("General Paper","", "",""),syllabusHeadingId:"economy"}
@@ -54,7 +54,8 @@ test("P53: mixed APFC subjects remain ONE true exam section with separate semant
 });
 test("P53: author-declared non-APFC subject has no phantom exam section/syllabus inference",()=>{
  const draft={...newAuthoringDraft(),examId:"generic-cat",paperId:"p53-cat",
-  title:"CAT mixed practice",questions:[q("Full paper","Quantitative Aptitude","Ratios",""),
+  title:"CAT mixed practice",sections:[{name:"Full paper",minutes:15}],
+  questions:[q("Full paper","Quantitative Aptitude","Ratios",""),
     q("Full paper","Verbal Ability","Reading","Passages")]};
  const pkg=compileAuthoringPublication(draft);
  assert.equal(pkg.paper.sections.length,1);
