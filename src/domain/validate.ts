@@ -364,17 +364,19 @@ export function validatePaperRevision(
   const paperId = text(paper["paperId"], "paperRevision.paperId");
   positiveInteger(paper["revision"], "paperRevision.revision");
   hash(paper["contentHash"], "paperRevision.contentHash");
-  oneOf(paper["edition"], ["source", "reviewed", "custom"] as const, "paperRevision.edition");
+  const edition=oneOf(paper["edition"], ["source", "reviewed", "custom"] as const, "paperRevision.edition");
   const keyId = text(paper["answerKeyRevisionId"], "paperRevision.answerKeyRevisionId");
   const hasSourcePaper=paper["sourcePaperRevisionId"]!==undefined;
   const hasSourceKey=paper["sourceAnswerKeyRevisionId"]!==undefined;
-  if(hasSourcePaper!==hasSourceKey)throw Error("paperRevision: original revision and key must be supplied together");
-  if(hasSourcePaper){
-    if(paper["edition"]!=="reviewed")throw Error("paperRevision: only reviewed editions may declare original lineage");
+  if(edition==="reviewed"){
+    if(!hasSourcePaper||!hasSourceKey)
+      throw Error("paperRevision: reviewed edition requires exact original revision and key lineage");
     const sourcePaper=text(paper["sourcePaperRevisionId"],"paperRevision.sourcePaperRevisionId");
     const sourceKey=text(paper["sourceAnswerKeyRevisionId"],"paperRevision.sourceAnswerKeyRevisionId");
     if(sourcePaper===paper["id"]||sourceKey===keyId)
       throw Error("paperRevision: original lineage cannot point to the reviewed revision");
+  }else if(hasSourcePaper||hasSourceKey){
+    throw Error("paperRevision: only reviewed editions may declare original lineage");
   }
   if (!Array.isArray(paper["sections"]) || paper["sections"].length === 0) throw new Error("paperRevision.sections: expected a non-empty array");
 
