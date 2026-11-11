@@ -147,7 +147,8 @@ test("P56 exact v4 manifest and shared SHA survive multi-type sourceâ†’notebookâ
  const retestPkg=makeRevisionPackage([card],"p56-portable");
  const retest={...startGenericAttempt(retestPkg,"p56-portable-retest",timestamp+10000),
    notebookLineage:createNotebookLineage([card])};
- const corpus=[source,card,retest],at="2026-11-05T01:00:00.000Z";
+ const corpus=[{...source,saveRevision:1},{...card,saveRevision:1},{...retest,saveRevision:1}],
+   at="2026-11-05T01:00:00.000Z";
  const body=serializeVerifiedBackup(corpus,DEFAULT_PREFERENCES,at);
  const archive=verifyBackup(JSON.parse(body));
  assert.equal(archive.records.length,3);
@@ -155,9 +156,9 @@ test("P56 exact v4 manifest and shared SHA survive multi-type sourceâ†’notebookâ
  assert.equal(archive.manifest.algorithm,"sha256");
  assert.deepEqual(reconstructRecords(archive.records,archive.snapshots)
     .map(validateGenericStoredRecord).map(x=>x.id),corpus.map(x=>x.id));
- const duplicate=compactAttempt(source);
+ const duplicate=compactAttempt(corpus[0]);
  assert.equal(duplicate.snapshot.id,archive.snapshots[0].id);
- assert.deepEqual(planBackupMerge([source],corpus).map(x=>x.id),[card.id,retest.id]);
+ assert.deepEqual(planBackupMerge([corpus[0]],corpus).map(x=>x.id),[card.id,retest.id]);
  const tampered=JSON.parse(body);
  tampered.records.find(x=>x.id===source.id).result.snapshot.earnedMarks=999;
  assert.throws(()=>verifyBackup(tampered),/integrity check/i);
