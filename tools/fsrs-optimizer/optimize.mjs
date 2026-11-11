@@ -1,5 +1,6 @@
 import {createHash} from "node:crypto";
-import {readFile,writeFile} from "node:fs/promises";
+import {readFile,rename,rm,writeFile} from "node:fs/promises";
+import {resolve} from "node:path";
 import {
  FSRSBinding,computeParameters,convertCsvToFsrsItemsWithCardIds,evaluateWithTimeSeriesSplits
 } from "@open-spaced-repetition/binding";
@@ -15,6 +16,11 @@ if(!input||!output||!timezoneArg||rolloverArg===undefined){
  console.error("Timezone and day rollover are mandatory for FSRS-7 fractional study-day conversion.");
  process.exit(2);
 }
+const inputPath=resolve(input),outputPath=resolve(output),temporaryOutput=outputPath+".tmp";
+if(inputPath===outputPath)throw Error("Input CSV and output profile must use different paths");
+await rm(outputPath,{force:true});
+await rm(temporaryOutput,{force:true});
+
 const nextDayStartsAt=Number(rolloverArg);
 if(!Number.isSafeInteger(nextDayStartsAt)||nextDayStartsAt<0||nextDayStartsAt>23)
  throw Error("next-day-hour must be an integer from 0 to 23");
@@ -57,7 +63,7 @@ const ensureWeights=(weights,label)=>{
  if(weights.length!==34||weights.some(v=>!Number.isFinite(v)))throw Error(label+" did not return 34 finite FSRS-7 weights");
  return weights;
 };
-const bytes=new Uint8Array(await readFile(input));
+const bytes=new Uint8Array(await readFile(inputPath));
 const sourceSha256=createHash("sha256").update(bytes).digest("hex");
 const converted=await Promise.resolve(convertCsvToFsrsItemsWithCardIds(bytes,nextDayStartsAt,timezone,"FSRS-7"));
 const {items,cardIds}=converted;
@@ -107,8 +113,9 @@ const profile={
   validationCandidateTrainedItems:split.trainCount,finalRetrainedOnAllEvidence:true
  }
 };
-await writeFile(output,JSON.stringify(profile,null,2)+"\n","utf8");
-console.log("FSRS-7 profile written:",output);
+await writeFile(temporaryOutput,JSON.stringify(profile,null,2)+"\n","utf8");
+await rename(temporaryOutput,outputPath);
+console.log("FSRS-7 profile written:",outputPath);
 console.log("optimizer items:",items.length);
 console.log("holdout log loss: stock",gate.baseline.logLoss,"personalized",gate.personalized.logLoss);
 console.log("holdout RMSE bins: stock",gate.baseline.rmseBins,"personalized",gate.personalized.rmseBins);

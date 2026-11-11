@@ -16,7 +16,7 @@ The activation pipeline is deliberately conservative:
 
 `historical 5/6 → train validation weights → final 1/6 holdout → compare stock FSRS-7 and personalized weights on exactly the same holdout → require better log loss with no RMSE-bins regression → retrain final 34 weights on all evidence → report five-fold upstream time-series cross-validation`
 
-Practice Desk additionally requires at least 64 historical training items, 64 later holdout items, and 16 distinct holdout cards before a personalized profile can be produced. These are application reliability guards, not a claim of statistical significance. If the gate fails or evidence is insufficient, the optimizer exits without a profile and the app remains on stock FSRS-7 weights.
+Practice Desk additionally requires at least 64 historical training items, 64 later holdout items, and 16 distinct holdout cards before a personalized profile can be produced. These are application reliability guards, not a claim of statistical significance. If the gate fails or evidence is insufficient, the optimizer exits without a profile and the app remains on stock FSRS-7 weights. The requested output path is cleared before training and is only published after every gate succeeds, so a failed rerun cannot leave a stale profile masquerading as the new result.
 
 The beta dependency is pinned to `@open-spaced-repetition/binding@0.6.1`. Training uses FSRS-7, short-term learning, one relearning step, card IDs and FSRS-7 scheduling penalties.
 
