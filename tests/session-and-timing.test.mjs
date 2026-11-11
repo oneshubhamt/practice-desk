@@ -150,7 +150,7 @@ test("seeded whole-paper state model conserves elapsed, foreground and response 
    assert.ok(s.elapsedMs>=s.foregroundMs&&s.foregroundMs>=0,label+" accounting bounds");
    assert.ok(s.elapsedMs<=deadline,label+" deadline upper bound");
    assert.ok(s.responses.every(r=>r.timeSpentMs>=0&&r.answerChangeCount>=0),label+" per-item evidence");
-   assert.ok(s.questionVisits?.every(v=>v.count>=1),label+" visits always positive");
+   assert.ok(s.questionVisits.every(v=>v.count>=1),label+" visits always positive");
    validateSectionTimingEvidence(paper,s);
   }
   const restored=rebaseSession(s,2000000+seed);
@@ -173,7 +173,7 @@ test("seeded sectional automatic overshoot splits exact limits and closes each s
   assert.equal(s.elapsedMs,limits.reduce((a,b)=>a+b,0),label);
   assert.equal(s.foregroundMs,s.elapsedMs,label);
   assert.deepEqual(s.completedSections,limits.map((_,i)=>i),label);
-  assert.deepEqual(s.completedSectionTimings?.map(x=>x.durationMs),limits,label+" durations");
+  assert.deepEqual(s.completedSectionTimings.map(x=>x.durationMs),limits,label+" durations");
   assert.ok(s.completedSectionTimings?.every(x=>x.reason==="time-expired"),label+" expiry reasons");
   const spent=s.responses.reduce((sum,r)=>sum+r.timeSpentMs,0);
   assert.equal(spent,s.elapsedMs,label+" single attribution");
@@ -205,14 +205,14 @@ test("manual expiry excludes waiting time, prevents edits, and records exact sec
  assert.equal(s.status,"running");
  assert.equal(s.sectionIndex,1);
  assert.equal(s.elapsedMs,first);
- assert.deepEqual(s.completedSectionTimings?.map(x=>x.durationMs),[first]);
+ assert.deepEqual(s.completedSectionTimings.map(x=>x.durationMs),[first]);
  s=transition(paper,s,event("TICK",30000+second+40000));
  assert.equal(s.status,"section-expired");
  assert.equal(s.elapsedMs,first+second);
  s=transition(paper,s,event("SUBMIT_SECTION",80000));
  assert.equal(s.status,"completed");
  assert.equal(s.elapsedMs,first+second);
- assert.deepEqual(s.completedSectionTimings?.map(x=>x.durationMs),[first,second]);
+ assert.deepEqual(s.completedSectionTimings.map(x=>x.durationMs),[first,second]);
  validateSectionTimingEvidence(paper,s);
  assert.equal(transition(paper,s,event("ANSWER",90000,{response:{kind:"single-choice",optionId:"a"}})).elapsedMs,first+second);
 });
@@ -274,7 +274,7 @@ test("F01: automatic multi-section clock stores exactly one closure each, split 
  assert.equal(st.status,"completed");
  assert.equal(st.elapsedMs,350);
  assert.equal(st.foregroundMs,50);
- assert.deepEqual(st.completedSectionTimings?.map(x=>[x.sectionIndex,x.durationMs,x.reason]),
+ assert.deepEqual(st.completedSectionTimings.map(x=>[x.sectionIndex,x.durationMs,x.reason]),
   [[0,100,"time-expired"],[1,250,"time-expired"]]);
  assert.equal(sectionTimerDuration(st,0),100);
  assert.equal(sectionTimerDuration(st,1),250);
@@ -293,7 +293,7 @@ test("F01: early-submitted sequential section and final section preserve timer d
  attempt=transitionGenericAttempt(attempt,event("RESUME",3000),qm);
  attempt=transitionGenericAttempt(attempt,event("SUBMIT_SECTION",3150),qm);
  assert.equal(attempt.finishedAt,3150);
- assert.deepEqual(attempt.state.completedSectionTimings?.map(x=>[x.durationMs,x.reason]),
+ assert.deepEqual(attempt.state.completedSectionTimings.map(x=>[x.durationMs,x.reason]),
    [[125,"submitted"],[225,"submitted"]]);
  assert.equal(attempt.state.elapsedMs,350);
  assert.doesNotThrow(()=>validateGenericStoredRecord(attempt));
@@ -316,11 +316,11 @@ test("F01: manual expiry freezes waiting interval through persistence and restor
  assert.equal(restored.state.elapsedMs,100);
  assert.equal(restored.state.status,"section-expired");
  a=transitionGenericAttempt({...a,state:restored.state},event("SUBMIT_SECTION",20000),qm);
- assert.deepEqual(a.state.completedSectionTimings?.map(x=>[x.durationMs,x.reason]),[[100,"time-expired"]]);
+ assert.deepEqual(a.state.completedSectionTimings.map(x=>[x.durationMs,x.reason]),[[100,"time-expired"]]);
  a=transitionGenericAttempt(a,event("TICK",20200),qm);
  assert.equal(a.state.status,"section-expired");
  a=transitionGenericAttempt(a,event("SUBMIT_SECTION",21000),qm);
- assert.deepEqual(a.state.completedSectionTimings?.map(x=>x.durationMs),[100,200]);
+ assert.deepEqual(a.state.completedSectionTimings.map(x=>x.durationMs),[100,200]);
  assert.equal(a.state.elapsedMs,300);
  assert.doesNotThrow(()=>validateGenericStoredRecord(a));
 });
@@ -330,7 +330,7 @@ test("F01: locked whole-paper sections have consumable section time; free multi-
  let a=startGenericAttempt(locked,"locked",1000);
  a=transitionGenericAttempt(a,event("SUBMIT_SECTION",1120),qm);
  a=transitionGenericAttempt(a,event("SUBMIT_ATTEMPT",1280),qm);
- assert.deepEqual(a.state.completedSectionTimings?.map(x=>x.durationMs),[120,160]);
+ assert.deepEqual(a.state.completedSectionTimings.map(x=>x.durationMs),[120,160]);
  assert.equal(a.state.elapsedMs,280);
  assert.doesNotThrow(()=>validateGenericStoredRecord(a));
  const free=bundle({navigation:{...pkg.paper.navigation,sectionNavigation:"free"},
@@ -345,18 +345,15 @@ test("F01: locked whole-paper sections have consumable section time; free multi-
  assert.doesNotThrow(()=>validateGenericStoredRecord(f));
 });
 
-test("F01: older stored attempt lacks section timer evidence, and imported false claims are rejected",()=>{
+test("F01: missing or forged section timer evidence is rejected",()=>{
  const b=bundle({timing:{kind:"whole-paper",durationMs:500,pausePolicy:"allowed"}});
-  // Locked multi-section cannot finish from Section 1. Close the first, then finish.
- let a=startGenericAttempt(b,"old",1000);
+ let a=startGenericAttempt(b,"canonical",1000);
  a=transitionGenericAttempt(a,event("SUBMIT_SECTION",1030),qm);
  a=transitionGenericAttempt(a,event("SUBMIT_ATTEMPT",1075),qm);
  assert.doesNotThrow(()=>validateGenericStoredRecord(a));
- const {completedSectionTimings: _old, ...oldState}=a.state;
- const prior={...a,state:oldState};
- assert.equal(sectionTimerDuration(prior.state,0),null);
- assert.deepEqual(sectionScoreSummaries(prior,prior.result).map(x=>x.timerMs),[null,null]);
- assert.doesNotThrow(()=>validateGenericStoredRecord(prior));
+ const missing=structuredClone(a);
+ delete missing.state.completedSectionTimings;
+ assert.throws(()=>validateGenericStoredRecord(missing),/Missing canonical saved timing evidence/);
  const forged=structuredClone(a);
  forged.state.completedSectionTimings[0].durationMs=2000;
  assert.throws(()=>validateGenericStoredRecord(forged),/section timer exceeds|section timing history|section timing entry/i);
