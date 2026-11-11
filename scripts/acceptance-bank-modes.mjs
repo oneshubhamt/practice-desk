@@ -288,7 +288,7 @@ for(const v of [
   }
   if(v.name==="laptop1366"){
    await page.evaluate(()=>{
-     const key="practiceDesk.overhaul.setups.v2";
+     const key="practiceDesk.practiceSetups";
      const data=JSON.parse(localStorage.getItem(key));
      data.selectedFamilyId="imported:unavailable";
      data.families["imported:unavailable"]={paperRevisionId:"missing-revision",

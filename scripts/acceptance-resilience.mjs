@@ -101,7 +101,7 @@ try{
  await fallbackA.locator("#g-start").click();await route(fallbackA,"exam");
  await fallbackA.locator("input[data-choice]").first().click();
  const fallbackId=await until(async()=>fallbackA.evaluate(()=>{
-  const arr=JSON.parse(localStorage.getItem("practiceDesk.overhaul.fallback.v1")??"[]");
+  const arr=JSON.parse(localStorage.getItem("practiceDesk.history.fallback")??"[]");
   return arr.find(x=>x.recordType==="generic-attempt"&&x.state.responses.some(r=>r.response))?.id;
  }),"durable localStorage fallback answer");
  await fallbackB.goto(offlineUrl,{waitUntil:"load"});
@@ -129,13 +129,13 @@ try{
  await readFailure.goto(offlineUrl,{waitUntil:"load"});
  await readFailure.locator(".generic-warning").filter({hasText:"IndexedDB unavailable"}).waitFor();
  const before=await readFailure.evaluate(()=>
-  JSON.parse(localStorage.getItem("practiceDesk.overhaul.fallback.v1")??"[]").length);
+  JSON.parse(localStorage.getItem("practiceDesk.history.fallback")??"[]").length);
  await readFailure.locator("#g-start").click();
  await readFailure.locator("input[data-choice]").first().click();
  await readFailure.waitForFunction(old=>
-  JSON.parse(localStorage.getItem("practiceDesk.overhaul.fallback.v1")??"[]").length>old,before);
+  JSON.parse(localStorage.getItem("practiceDesk.history.fallback")??"[]").length>old,before);
  check(await readFailure.evaluate(old=>
-  JSON.parse(localStorage.getItem("practiceDesk.overhaul.fallback.v1")??"[]").length>old,before),
+  JSON.parse(localStorage.getItem("practiceDesk.history.fallback")??"[]").length>old,before),
   "Failed IDB initial cursor read did not persist subsequent exam in fallback store");
  await readFailure.close();
  console.log("MODERN RESILIENCE PASS failed initial IndexedDB read fallback");

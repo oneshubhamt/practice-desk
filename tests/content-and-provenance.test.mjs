@@ -788,7 +788,7 @@ test("display preferences are validated and round-trip through storage",()=>{
  assert.deepEqual(readDisplayPreferences(store),{schema:1,dark:false,scale:100});
  const p=writeDisplayPreferences({schema:1,dark:true,scale:120},store);
  assert.deepEqual(readDisplayPreferences(store),p);
- values.set("practiceDesk.overhaul.settings.v1",'{"schema":1,"dark":false,"scale":500}');
+ values.set("practiceDesk.preferences",'{"schema":1,"dark":false,"scale":500}');
  assert.deepEqual(readDisplayPreferences(store),{schema:1,dark:false,scale:100});
 });
 }

@@ -62,8 +62,8 @@ test("seeded evidence classifications require independent sample size and questi
   const random=rng(0x36ed01^seed);
   const attempts=random(8),answered=random(51),correct=random(answered+1),
    distinctQuestions=random(25);
-  const row={examId:"exam-"+random(4),label:"Topic",attempts,
-   distinctQuestions,answered,correct};
+  const row={examId:"exam-"+random(4),label:"Topic",answeredAttempts:attempts,
+   distinctAnsweredQuestions:distinctQuestions,answered,correct};
   const result=evidenceProgression([row])[0];
   const accuracy=answered?correct/answered:null;
   const expected=attempts<2||answered<10?"insufficient":distinctQuestions<5?

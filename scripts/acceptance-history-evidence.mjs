@@ -47,7 +47,7 @@ try{
    await page.locator('[data-mode="single"]').getAttribute("aria-pressed")==="true"&&
    await page.locator("#g-single-section").inputValue()==="2",
    "Selected original/reviewed, mode or section did not persist");
-  await page.evaluate(()=>localStorage.setItem("practiceDesk.overhaul.setups.v2","{bad"));
+  await page.evaluate(()=>localStorage.setItem("practiceDesk.practiceSetups","{bad"));
   await page.reload({waitUntil:"load"});await route(page,"library");
   check(await page.locator("#g-start").count()===1,"Bad selection storage broke offline boot");
   await page.locator("#g-file").setInputFiles({name:"six-kinds.json",mimeType:"application/json",
@@ -188,13 +188,13 @@ try{
   check((await fallback.locator("#g-storage-backend").innerText()).includes("localStorage fallback"),
    "Fallback backend indicator missing");
   const fallbackRead=()=>fallback.evaluate(()=>
-   JSON.parse(localStorage.getItem("practiceDesk.overhaul.fallback.v1")??"[]"));
+   JSON.parse(localStorage.getItem("practiceDesk.history.fallback")??"[]"));
   check((await fallbackRead()).some(x=>x.recordType==="generic-attempt"&&x.finishedAt!==null),
    "Completed fallback attempt not saved");
   await fallback.evaluate(()=>{
    window.__writeBefore=Storage.prototype.setItem;
    Storage.prototype.setItem=function(key,value){
-    if(key==="practiceDesk.overhaul.fallback.v1")
+    if(key==="practiceDesk.history.fallback")
      throw new DOMException("quota denied","QuotaExceededError");
     return window.__writeBefore.call(this,key,value);
    };
