@@ -1,6 +1,6 @@
 # Practice Desk — current engineering status
 
-**As of 8 November 2026 | Working branch: `overhaul`**
+**As of 12 November 2026 | Working branch: `working`**
 
 ## Product baseline
 
@@ -16,9 +16,9 @@ See [architecture](architecture/CURRENT_ARCHITECTURE.md), [data contracts](archi
 
 The P61 test-bench programme is **closed**, following a source audit and [exact-commit CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42433146976). The P61 baseline comprised **408 Node test cases**, ten semantic mutations, 32 Chromium and 20 each Firefox/WebKit journeys, and guarded HTML publication. The P62-B source commit passed the current **414 Node tests**, the same mutation gate, all required browser journeys and guarded publication. Source-code test coverage and CI outcomes do not independently validate question content or physical devices.
 
-P62-A closed two P60 integrity defects on `overhaul`: solution-only media are excluded from candidate figure references while preserved in frozen review, and incomplete blueprints are structurally valid but cannot pass final publication gates. [Verified CI for tested source commit](https://github.com/oneshubhamt/practice-desk/actions/runs/42484839413) passed all five required jobs. Remaining source-trust and editorial findings stay in the active backlog.
+P62-A closed two P60 integrity defects on the predecessor development branch: solution-only media are excluded from candidate figure references while preserved in frozen review, and incomplete blueprints are structurally valid but cannot pass final publication gates. [Verified CI for tested source commit](https://github.com/oneshubhamt/practice-desk/actions/runs/42484839413) passed all five required jobs. Remaining source-trust and editorial findings stay in the active backlog.
 
-P62-B closed three editorial correctness findings: Reviewed papers now carry hash-bound exact Source paper/key IDs into the Library, new comparison schema 3 retains eligible MCQ comparisons in mixed-type papers and excludes explanation/taxonomy-only changes from candidate-semantic equality. Existing frozen schema-2 snapshots remain supported. [Exact-commit passing CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42498768267) includes the end-to-end Source import and frozen-history journey. Unauthenticated original-source claims remain outside software certification.
+P62-B closed three editorial correctness findings: Reviewed papers now carry hash-bound exact Source paper/key IDs into the Library, new comparison schema 3 retains eligible MCQ comparisons in mixed-type papers and excludes explanation/taxonomy-only changes from candidate-semantic equality. Only the canonical schema-3 source-key representation is accepted; noncanonical schema-2 source-key snapshots are rejected rather than migrated. [Exact-commit passing CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42498768267) includes the end-to-end Source import and frozen-history journey. Unauthenticated original-source claims remain outside software certification.
 
 P62-C retained the 20-point review checklist and introduced explicit mathematical/legal/time-sensitive applicability in v2 quality-review sidecars, with supplementary heuristic contradiction checks, as-of dates and locatable evidence for law/time-sensitive items. [Verified CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42504775263) passed 416 Node tests, mutation checks, Chromium, Firefox, WebKit and guarded publication. Reviewer claims remain unauthenticated; that trust limitation is still open in the backlog.
 

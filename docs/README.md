@@ -15,6 +15,6 @@
 
 ## Current programme boundary
 
-P61's test-bench consolidation is **complete** on `overhaul` and has a [fully green five-job CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42433146976). Past programme names are **not** active implementation instructions. Unresolved P60 issues, factual/PDF checking and device/release gates are in the [backlog](../backlog.md).
+P61's test-bench consolidation is **complete**; its predecessor-branch closeout has a [fully green five-job CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42433146976). Past programme names are **not** active implementation instructions. Unresolved P60 issues, factual/PDF checking and device/release gates are in the [backlog](../backlog.md).
 
 **Trust model:** a SHA proves byte consistency, a passing test proves a scoped software assertion, and a filled review form records an attributed claim. None alone establishes a genuine official paper, current law, independent reviewer or accessible physical-device experience.

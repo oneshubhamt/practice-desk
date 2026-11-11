@@ -25,7 +25,7 @@ Unexpected failures produce diagnostics/screenshots. Optional `benchmark-*.mjs` 
 
 ## Required protected CI
 
-The latest P62-D verified source run on `overhaul` is [five-job CI 42508271948](https://github.com/oneshubhamt/practice-desk/actions/runs/42508271948) at `0a571a01443d`: **417/417 Node tests; ten of ten targeted source-isolated mutations; 32 Chromium, 20 Firefox and 20 Linux WebKit journeys; and guarded source-verified HTML publishing**. These are current run results, not a measure of factual question quality.
+The most recent recorded P62-D predecessor-branch verification is [five-job CI 42508271948](https://github.com/oneshubhamt/practice-desk/actions/runs/42508271948) at `0a571a01443d`: **417/417 Node tests; ten of ten targeted source-isolated mutations; 32 Chromium, 20 Firefox and 20 Linux WebKit journeys; and guarded source-verified HTML publishing**. These are current run results, not a measure of factual question quality.
 
 - **Core:** strict typecheck/build; validated imported source, paper/scoring, candidate disclosure, History/CAS, backup/recovery, authoring, provenance, PDF intake and FSRS. An independent 200-seed scoring rule model is complemented by 128 seeded six-kind questions, a 576-case recovered-record reference and seeded CAS/merge models.
 - **Browser suites:** one pooled browser launch per engine, with **independent and fully closed contexts per journey**. Scripts are enumerated against a fail-closed manifest; a missing/failed scenario fails the suite. Keep `file://` operation, keyboard/navigation fallback, editing, source comparison, 195px/140% layout and the 400-staged/200-selected scale journey.
