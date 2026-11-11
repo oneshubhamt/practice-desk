@@ -1,7 +1,7 @@
 /** Current-source editorial and media integrity in a real offline browser.
  * Test all 10 edition/scores, the disputed 6 October Q62, original-v-reviewed
  * media and editorial labels, current shared-source pinning and an authored
- * six-kind source/review pair. No historic v11 screenshot equality.
+ * six-kind source/review pair. No historical screenshot equality.
  */
 import {readFile} from "node:fs/promises";
 import {openHarness,check,records,route} from "./browser/fixtures.mjs";

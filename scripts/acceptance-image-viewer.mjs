@@ -1,4 +1,4 @@
-/** P47-3: actual single-file file:// image viewer; no v11 screenshot parity.
+/** P47-3: actual single-file file:// image viewer; no historical screenshot parity.
  * One source CGL q3 with 5 real figures, source review, 195px + 140% text,
  * native modal focus, mouse/keyboard and paused exam isolation.
  */

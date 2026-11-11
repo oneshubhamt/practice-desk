@@ -1,5 +1,5 @@
 /** P47-5C screenshot-first, offline user-facing Library editor journey.
- * Targeted screenshots are diagnostic evidence, not v11 parity fixtures.
+ * Targeted screenshots are diagnostic evidence, not historical parity fixtures.
  */
 import {captureVisualEvidence} from "./browser/visual-evidence.mjs";
 import {openHarness,check,assertNoOverflow} from "./browser/fixtures.mjs";
