@@ -54,17 +54,10 @@ jobs:
           node-version: '26.13.0'
           package-manager-cache: false
       - run: npm ci --no-audit --no-fund
-      - name: Bootstrap isolated optimizer lock for this closure run
-        run: npm install --prefix tools/fsrs-optimizer --package-lock-only --ignore-scripts --no-audit --no-fund
-      - name: Install isolated optimizer bindings from generated lock
+      - name: Install isolated optimizer bindings from committed lock
         run: npm ci --prefix tools/fsrs-optimizer --no-audit --no-fund
-      - name: Save generated optimizer lock for source commit
-        uses: actions/upload-artifact@v4
-        with:
-          name: optimizer-lock-bootstrap
-          path: tools/fsrs-optimizer/package-lock.json
-          if-no-files-found: error
-          retention-days: 2
+      - name: Prove isolated optimizer dependency graph is lock-clean
+        run: npm ls --prefix tools/fsrs-optimizer --all --parseable > /dev/null
       - name: Run FSRS-7 native optimizer, chronology and step-analysis smoke
         run: npm run --prefix tools/fsrs-optimizer smoke
       - name: Compare native and WASM optimizer semantics

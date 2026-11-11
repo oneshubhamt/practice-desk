@@ -44,8 +44,8 @@ const personalizedMetrics=model.evaluate(converted.items,converted.cardIds);
 assert.ok(Number.isFinite(stockMetrics.logLoss)&&Number.isFinite(stockMetrics.rmseBins));
 assert.ok(Number.isFinite(personalizedMetrics.logLoss)&&Number.isFinite(personalizedMetrics.rmseBins));
 
-const dstBefore=Date.parse("2026-03-07T12:00:00-05:00");
-const dstAfter=Date.parse("2026-03-08T12:00:00-04:00");
+const dstBefore=Date.parse("2026-03-08T00:00:00-05:00");
+const dstAfter=Date.parse("2026-03-09T00:00:00-04:00");
 const dstCsv=new TextEncoder().encode([
  "review_time,card_id,review_rating,review_duration,review_state",
  `${dstBefore},dst-card,3,1000,0`,
