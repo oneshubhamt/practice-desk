@@ -310,7 +310,7 @@ export function inspectExternalQuality(
   const response=expected(entry.answer);
   if(response){
    const record:AttemptResponseRecord={questionRevisionId:question.id,response,
-    flagged:false,timeSpentMs:0,answerChangeCount:0};
+    flagged:false,timeSpentMs:0,firstVisitMs:0,preFirstAnswerMs:0,answerChangeCount:0};
    const result=scoreAttempt(compiled.paper,compiled.answerKey,compiled.questions,
     [record],"1970-01-01T00:00:00.000Z");
    const item=result.items.find(r=>r.questionRevisionId===question.id);
