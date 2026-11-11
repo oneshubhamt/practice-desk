@@ -1,0 +1,26 @@
+name: Calculator UI screenshot audit
+on:
+  push:
+    branches: [calculator-ui-audit]
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.13.0'
+          package-manager-cache: false
+      - run: npm ci --no-audit --no-fund
+      - run: node node_modules/playwright-core/cli.js install --with-deps chromium
+      - run: npm run build
+      - run: node scripts/calculator-ui-audit.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: calculator-ui-screenshots
+          path: artifacts/calculator-ui-audit/
+          if-no-files-found: error
+          retention-days: 3
