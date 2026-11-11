@@ -130,6 +130,26 @@ for(const v of [
    check((await records(page)).filter(x=>x.recordType==="generic-package").length===before,
      "Rejected bank must not modify saved package records");
   }
+  const calculatorBank={...bank,bankId:"cat-calculator-demo",examId:"cat",
+    title:"CAT calculator demo",tools:{calculator:"basic"}};
+  await page.locator("#g-file").setInputFiles({name:"cat-calculator.json",mimeType:"application/json",
+    buffer:Buffer.from(JSON.stringify(calculatorBank))});
+  await page.waitForFunction(()=>document.querySelector("#g-family")?.value==="imported:cat");
+  await page.locator("#g-start").click();await route(page,"exam");
+  check(await page.locator("#g-calculator").count()===1,
+    v.name+" calculator-enabled paper did not expose calculator");
+  await page.locator("#g-calculator").click();
+  await page.locator('[data-calc-key="8"]').click();
+  await page.locator('[data-calc-key="*"]').click();
+  await page.locator('[data-calc-key="7"]').click();
+  await page.locator('[data-calc-key="equals"]').click();
+  check(await page.locator("#g-calculator-display").innerText()==="56",
+    v.name+" calculator arithmetic failed");
+  await assertNoOverflow(page,v.name+" open calculator");
+  await page.locator("[data-calc-close]").click();
+  await page.locator("#g-submit").click();await route(page,"result");
+  await page.locator("#g-library").click();await route(page,"library");
+
   await page.locator("#g-file").setInputFiles({name:"apfc-nat.json",mimeType:"application/json",
    buffer:Buffer.from(JSON.stringify(bank))});
   await page.waitForFunction(()=>document.querySelector("#g-papers")?.value==="bank:apfc-starter-demo:paper:r1");
@@ -140,6 +160,8 @@ for(const v of [
   await page.locator("#g-start").click();await route(page,"exam");
   check((await page.locator(".exam-question").innerText()).includes("EPFO APFC"),
    v.name+" authored MCQ missing");
+  check(await page.locator("#g-calculator").count()===0,
+   v.name+" calculator leaked into a paper that did not enable it");
   await page.locator("input[data-choice]").first().click();
   await page.locator('[data-section="2"]').click();
   check(await page.locator("#g-number").count()===1,v.name+" NAT control missing");
