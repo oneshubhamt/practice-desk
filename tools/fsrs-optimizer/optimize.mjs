@@ -14,7 +14,7 @@ const weights=await computeParameters(items,options);
 if(weights.length!==34||weights.some(v=>!Number.isFinite(v)))throw Error("Optimizer did not return 34 finite FSRS-7 weights");
 const evaluation=await evaluateWithTimeSeriesSplits(items,options);
 if(!Number.isFinite(evaluation.logLoss)||!Number.isFinite(evaluation.rmseBins))throw Error("Optimizer evaluation failed");
-const profile={schema:"practice-desk-fsrs-profile/v1",model:"FSRS-7",bindingVersion:"0.6.0",trainedAt:new Date().toISOString(),
+const profile={schema:"practice-desk-fsrs-profile/v1",model:"FSRS-7",bindingVersion:"0.6.1",trainedAt:new Date().toISOString(),
  sourceSha256,evidenceItems:items.length,weights,evaluation:{logLoss:evaluation.logLoss,rmseBins:evaluation.rmseBins},
  training:{enableShortTerm:true,enableSchedPenalties:true,numRelearningSteps:1,nextDayStartsAt,timezone}};
 await writeFile(output,JSON.stringify(profile,null,2)+"\n","utf8");

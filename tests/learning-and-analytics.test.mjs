@@ -394,7 +394,7 @@ test("optimizer evidence and evaluated profiles are portable without persisting 
  assert.match(csv,/^review_time,card_id,review_rating,review_duration,review_state\n/);assert.match(csv,/,3,810,0\n$/);
  assert.deepEqual(__suite_dep_18.optimizerEvidenceSummary([card]),{cards:1,reviews:1});
  const profile=__suite_dep_18.validateFsrsOptimizerProfile({
-  schema:"practice-desk-fsrs-profile/v1",model:"FSRS-7",bindingVersion:"0.6.0",trainedAt:"2026-11-10T00:00:00.000Z",
+  schema:"practice-desk-fsrs-profile/v1",model:"FSRS-7",bindingVersion:"0.6.1",trainedAt:"2026-11-10T00:00:00.000Z",
   sourceSha256:"a".repeat(64),evidenceItems:12,weights:Array(34).fill(0.5),evaluation:{logLoss:0.42,rmseBins:0.08},
   training:{enableShortTerm:true,enableSchedPenalties:true,numRelearningSteps:1,nextDayStartsAt:4,timezone:"Asia/Kolkata"}
  });

@@ -1,7 +1,7 @@
 import type {LearningCard} from "./learning.ts";
 import type {RevisionMemoryState} from "./revision-scheduler-port.ts";
 export const FSRS_OPTIMIZER_PROFILE_SCHEMA="practice-desk-fsrs-profile/v1";
-export const FSRS_OPTIMIZER_BINDING_VERSION="0.6.0";
+export const FSRS_OPTIMIZER_BINDING_VERSION="0.6.1";
 export interface FsrsOptimizerProfile{
  readonly schema:typeof FSRS_OPTIMIZER_PROFILE_SCHEMA;readonly model:"FSRS-7";
  readonly bindingVersion:typeof FSRS_OPTIMIZER_BINDING_VERSION;readonly trainedAt:string;

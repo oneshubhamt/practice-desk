@@ -4,7 +4,7 @@ Practice Desk is a **local, offline examination and learning application**. Its 
 
 ## Use the application
 
-1. Install Node.js 24 and run `npm ci --no-audit --no-fund`.
+1. Install Node.js 26 LTS (26.13.0 or newer 26.x) and run `npm ci --no-audit --no-fund`.
 2. Run `npm run check` to typecheck, build and run the Node test suite.
 3. Open `Practice_Desk_Offline_Mock_Tests.html` directly with `file://`.
 4. Create questions in Wordgard or explicitly import a validated bank from Library. Keep your own backups.
