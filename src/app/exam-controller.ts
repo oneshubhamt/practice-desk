@@ -7,6 +7,7 @@ import {transitionGenericAttempt} from "./exam-package.ts";
 import type {SessionEvent} from "../engine/session.ts";
 
 import {multipleDraftMessage,duplicateMatchingTargets} from "./response-drafts.ts";
+import {bindExamCalculator,newExamCalculatorState} from "./exam-calculator.ts";
 
 import type {CoordinatorContext} from "./coordinator-context.ts";
 
@@ -15,10 +16,11 @@ export function renderCurrentExamHTML(owner:CoordinatorContext):string {
    const qid=owner.attempt.frozen.paper.sections[owner.attempt.state.sectionIndex]
      ?.questionRevisionIds[owner.attempt.state.questionIndex];
    const draft=qid?owner.choiceDrafts.get(owner.attempt.id+"|"+qid):undefined;
+   const calculator=owner.calculatorStates.get(owner.attempt.id)??newExamCalculatorState();
    return renderModelExam(owner.attempt,owner.packageForAttempt(owner.attempt),owner.warning,draft,{
      focused:Boolean(document.fullscreenElement||
        document.documentElement.classList.contains("immersive"))
-   });
+   },calculator);
  }
 
 export const dispatchExamEvent=(owner:CoordinatorContext,event:SessionEvent)=>{
@@ -39,6 +41,9 @@ export const dispatchExamEvent=(owner:CoordinatorContext,event:SessionEvent)=>{
 export function bindExamScreen(owner:CoordinatorContext):void{
 owner.root.querySelector<HTMLButtonElement>("#g-exam-full")!.onclick=()=>
      window.dispatchEvent(new Event("practice-desk:toggle-fullscreen"));
+const calculatorId=owner.attempt!.id;
+bindExamCalculator(owner.root,owner.calculatorStates.get(calculatorId)??newExamCalculatorState(),
+  next=>owner.calculatorStates.set(calculatorId,next));
 const section=owner.attempt!.frozen.paper.sections[owner.attempt!.state.sectionIndex];
 const q=owner.attempt!.frozen.questions.find(x=>x.id===section?.questionRevisionIds[owner.attempt!.state.questionIndex]);
 if(!q)return;
