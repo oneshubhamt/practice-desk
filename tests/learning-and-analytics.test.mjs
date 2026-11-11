@@ -367,6 +367,10 @@ test("stable ts-fsrs 6.0.0 runs explicit FSRS-7 with evidence-rich replay, previ
  assert.ok(inspected.retrievability!==null&&inspected.retrievability>0&&inspected.retrievability<=1);
  const reloaded=validateLearningCard(JSON.parse(JSON.stringify(graded))),replayed=scheduledCard(reloaded,await DefaultScheduler());
  assert.equal(replayed.dueAt.getTime(),next.dueAt.getTime());assert.equal(replayed.stabilityFast,next.stabilityFast);
+ assert.throws(()=>scheduler.replay(item.id,item.createdAt,[
+  {at:new Date(3030).toISOString(),rating:Rating.Good,durationMs:100,state:"new"},
+  {at:new Date(2500).toISOString(),rating:Rating.Good,durationMs:100,state:"learning"}
+ ]),/chronological/);
  assert.throws(()=>rateLearningCard(graded,Rating.Again,new Date(1500).toISOString(),20,scheduler),/monotonic/);
 });
 test("Cost-ADR is an alternative FSRS-7 policy and leeches remediate or suspend without rewriting review evidence",async()=>{

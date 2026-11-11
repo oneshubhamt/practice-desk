@@ -2,6 +2,7 @@ import {
  DefaultScheduler,State,dateChrono,defineScheduler,
  type DefaultScheduler as FsrsScheduler,type DefaultSchedulerCard,type Grade
 } from "ts-fsrs";
+import {Reschedule} from "ts-fsrs/reschedule";
 import {
  COST_ADR_DEFAULT_GOAL_COST_WEIGHT,COST_ADR_DEFAULT_POLICY,
  schedulerCostAdrMiddleware,schedulerFuzzingMiddleware,schedulerLearningStepsMiddleware,
@@ -71,10 +72,21 @@ export async function createRevisionScheduler(options:RevisionSchedulerOptions={
    stabilityFast:card.stabilityFast,difficulty:card.difficulty,
    lastReviewAt:card.lastReviewAt?new Date(card.lastReviewAt):null,leechStatus:leechStatus(card.lapses)
  });
+ const reschedule=new Reschedule(scheduler);
  const replay=(id:string,createdAt:string,reviews:readonly ReviewObservation[])=>{
-   let card=scheduler.newCard({cardId:id,now:new Date(createdAt)});
-   for(const review of reviews)card=scheduler.review({card,grade:grade(review.rating),now:new Date(review.at)}).card;
-   return card;
+   const created=new Date(createdAt);
+   if(!Number.isFinite(created.getTime()))throw Error("Invalid learning-card creation time");
+   const initialCard=scheduler.newCard({cardId:id,now:created});
+   if(reviews.length===0)return initialCard;
+   let previous=created.getTime();
+   const history=reviews.map(review=>{
+     const reviewTime=new Date(review.at),timestamp=reviewTime.getTime();
+     if(!Number.isFinite(timestamp)||timestamp<previous)
+       throw Error("FSRS review history must be chronological and cannot be silently reordered");
+     previous=timestamp;
+     return {rating:grade(review.rating),reviewTime};
+   });
+   return reschedule.reschedule({initialCard,history},{sortHistory:false}).card;
  };
  const configuration={
    model:"FSRS-7" as const,packageVersion:"6.0.0" as const,retentionPolicy,desiredRetention,
@@ -88,7 +100,7 @@ export async function createRevisionScheduler(options:RevisionSchedulerOptions={
    replay(id,createdAt,reviews){return schedule(replay(id,createdAt,reviews));},
    inspect(id,createdAt,reviews,at):RevisionSnapshot{
      const card=replay(id,createdAt,reviews),when=new Date(at);
-     const elapsed=card.lastReviewAt?Math.max(0,(when.getTime()-card.lastReviewAt.getTime())/86_400_000):0;
+     const elapsed=card.lastReviewAt?Math.max(0,scheduler.chrono.difference(card.lastReviewAt,when)):0;
      const retrievability=card.reps===0?null:scheduler.model.forgettingCurve(card,elapsed);
      return {...schedule(card),retrievability};
    },
