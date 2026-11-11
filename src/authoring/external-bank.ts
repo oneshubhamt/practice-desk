@@ -186,7 +186,7 @@ function toAnswer(value:unknown,kind:QuestionKind,path:string):string{
 export function toAuthoringDraft(value:unknown):AuthoringDraft {
  validateExamImportBudget(value);
  const bank=object(value,"$",["format","version","bankId","examId","paperId",
-  "title","edition","revision","scoring","timing","navigation","sections",
+  "title","edition","revision","scoring","timing","navigation","tools","sections",
   "stimuli","media","questions"]);
  if(bank.format!=="practice-desk-authoring"||bank.version!==1)
   err("$.format","Expected practice-desk-authoring version 1");
@@ -229,6 +229,12 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
   err("$.navigation.sectionNavigation","Invalid section navigation");
  if(timing.kind==="sectional"&&sectionNavigation!=="sequential-locked")
   err("$.navigation.sectionNavigation","Sectional timing requires sequential-locked sections");
+ let calculatorTool:AuthoringDraft["calculatorTool"];
+ if(bank.tools!==undefined){
+  const tools=object(bank.tools,"$.tools",["calculator"]);
+  if(tools.calculator!=="basic")err("$.tools.calculator",'Expected "basic"');
+  calculatorTool="basic";
+ }
  const sections=new Map<string,{title:string;minutes:number}>();
  const titles=new Set<string>();
  array(bank.sections,"$.sections",40,1).forEach((v,i)=>{
@@ -383,7 +389,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
   questionNavigation:questionNavigation as NonNullable<AuthoringDraft["questionNavigation"]>,
   sectionNavigation:sectionNavigation as NonNullable<AuthoringDraft["sectionNavigation"]>,
   sectionTransition:sectionTransition as NonNullable<AuthoringDraft["sectionTransition"]>,
-  allowEarlySubmit,allowReview,marksCorrect,marksIncorrect,
+  allowEarlySubmit,allowReview,...(calculatorTool?{calculatorTool}:{}),marksCorrect,marksIncorrect,
   updatedAt:"1970-01-01T00:00:00.000Z",assets,stimuli,questions};
  try{return validateAuthoringDraft(draft);}
  catch(error){return err("$",error instanceof Error?error.message:"Invalid canonical authoring draft");}
