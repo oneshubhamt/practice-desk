@@ -5,6 +5,7 @@ import {isAttempt,type RecordItem} from "./stored-record-validator.ts";
 
 import {builtinCglPackages} from "./exam-package.ts";
 import type {ExamPackage,GenericAttempt,CglPracticeMode} from "./exam-package.ts";
+import type {ExamCalculatorState} from "./exam-calculator.ts";
 
 import type {OptionId} from "../domain/ids.js";
 import type {SessionEvent} from "../engine/session.ts";
@@ -100,6 +101,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  // Transient incomplete multi-select selections are NEVER part of the scored
  // response; saved answers are cleared when a draft becomes invalid.
  const choiceDrafts=new Map<string,{questionId:string;optionIds:OptionId[];message:string}>();
+ const calculatorStates=new Map<string,ExamCalculatorState>();
  const manualGradeDrafts=new Map<string,{marks:string;note:string}>();
  // Live-region updates depend on actual route/question changes, not timer ticks.
  const screenRenderer=createScreenRenderer(root);
@@ -169,6 +171,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  window.addEventListener("storage",storage);
  function cleanup():void{
    window.removeEventListener("practice-desk:shortcuts-changed",shortcutSettingsChanged);
+   calculatorStates.clear();
    return disposeWorkspace(owner);
  }
 
@@ -181,6 +184,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  get authoringStudio(){return authoringStudio;},
  get builtinPaperIds(){return builtinPaperIds;},
  get builtins(){return builtins;},
+ get calculatorStates(){return calculatorStates;},
  get cglMode(){return cglMode;},set cglMode(value){cglMode=value;},
  get changeHistoryQuery(){return changeHistoryQuery;},
  get choice(){return choice;},set choice(value){choice=value;},
