@@ -11,7 +11,8 @@ import {restoreSession} from "../history/frozen.ts";
 import {scoreAttempt} from "../engine/scoring.ts";
 
 import {type AppRoute,type RouteContext} from "./navigation.ts";
-import type {CoordinatorContext} from "./coordinator-context.ts";\nimport {clearCandidateToolWorkspace} from "./candidate-tool-state.ts";
+import type {CoordinatorContext} from "./coordinator-context.ts";
+import {clearCandidateToolWorkspace} from "./candidate-tool-state.ts";
 
 export async function activateWorkspaceRoute(owner:CoordinatorContext,target:AppRoute,ctx:RouteContext):Promise<void>{
    const requested=++owner.activationGeneration;
