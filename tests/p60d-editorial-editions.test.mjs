@@ -31,6 +31,12 @@ const run=(script,...args)=>{
  let data;try{data=JSON.parse(x.stdout||x.stderr)}catch{assert.fail("Expected machine JSON:\n"+x.stdout+"\n"+x.stderr)}
  return {...x,data};
 };
+const bindReviewed=(source,candidate)=>{
+ const paperBase={...candidate.paper,edition:"reviewed",
+  sourcePaperRevisionId:source.paper.id,sourceAnswerKeyRevisionId:source.answerKey.id};
+ return validateExamPackage({...candidate,
+  paper:{...paperBase,contentHash:paperRevisionHash(paperBase)}});
+};
 const pairs=async dir=>{
  const original=JSON.parse(await readFile(fixture,"utf8"));
  const reviewed=structuredClone(original);
@@ -246,9 +252,8 @@ test("P62-B exact revision pairing survives multiple originals and missing files
  delete unbound.paper.sourcePaperRevisionId;
  delete unbound.paper.sourceAnswerKeyRevisionId;
  unbound.paper.contentHash=paperRevisionHash(unbound.paper);
- validateExamPackage(unbound);
- assert.equal(pairedEdition(family,unbound,"source"),undefined,
-  "Unbound multi-revision imports must not silently choose the first candidate");
+ assert.throws(()=>validateExamPackage(unbound),/requires exact original revision and key lineage/,
+  "A reviewed paper without exact Source lineage is not a valid package");
  const tampered=structuredClone(target);
  tampered.paper.sourcePaperRevisionId=other.paper.id;
  assert.throws(()=>validateExamPackage(tampered),/hash mismatch/);
@@ -271,7 +276,7 @@ test("P62-B nineteen MCQs remain comparable beside one numerical question",()=>{
     options:["Alpha","Beta","Gamma","Delta"],answer:"B",
     ...(i===0?{imageIds:["diagram"]}:{})})});
  const source=importSimpleQuestionBank(input("source",1));
- const reviewed=importSimpleQuestionBank(input("reviewed",2));
+ const reviewed=bindReviewed(source,importSimpleQuestionBank(input("source",2)));
  const ref=createSourceKeyReference(reviewed,source);
  assert.equal(ref.schema,3);
  assert.equal(ref.entries.length,20);
@@ -322,25 +327,23 @@ test("P62-B nineteen MCQs remain comparable beside one numerical question",()=>{
  assert.equal(createSourceKeyReference(targetPassage,sourcePassage).entries.filter(x=>x.comparable).length,18);
 });
 
-// Old schema-2 source-key comparisons were already frozen in local History.
-test("P62-B reads original schema-2 snapshots without changing their digest",()=>{
- const bank=(edition,revision)=>({format:"practice-desk-bank",version:1,
-  bankId:"p62-legacy",examId:"upsc-epfo-apfc",title:"Legacy test",edition,revision,
+test("P62-B rejects noncanonical schema-2 source-key snapshots",()=>{
+ const bank=(revision)=>({format:"practice-desk-bank",version:1,
+  bankId:"p62-schema-reject",examId:"upsc-epfo-apfc",title:"Schema rejection test",edition:"source",revision,
   scoring:{correctMarks:2.5,incorrectMarks:-5/6,unansweredMarks:0},
-  questions:[{id:"q1",type:"mcq",section:"General",question:"Legacy question",
+  questions:[{id:"q1",type:"mcq",section:"General",question:"Canonical question",
    options:["A","B","C","D"],answer:"B"}]});
- const source=importSimpleQuestionBank(bank("source",1));
- const reviewed=importSimpleQuestionBank(bank("reviewed",2));
- const legacySourceHash=hashJson({content:source.questions[0].content,stimulus:null,media:[]});
+ const source=importSimpleQuestionBank(bank(1));
+ const reviewed=bindReviewed(source,importSimpleQuestionBank(bank(2)));
+ const sourceHash=hashJson({content:source.questions[0].content,stimulus:null,media:[]});
  const core={schema:2,paperId:reviewed.paper.paperId,sourcePaperRevisionId:source.paper.id,
    sourceAnswerKeyRevisionId:source.answerKey.id,
    entries:[{questionRevisionId:reviewed.questions[0].id,
     originalOptionId:"B",markingRule:source.paper.scoring.defaultRule,
-    sourceSemanticHash:legacySourceHash,comparable:true}]};
+    sourceSemanticHash:sourceHash,comparable:true}]};
  const reference={...core,contentHash:hashJson(core)};
- const attempt={...startGenericAttempt(reviewed,"legacy-snapshot",1000),
+ const attempt={...startGenericAttempt(reviewed,"schema-2-rejected",1000),
   sourceKeyReference:reference,finishedAt:2000};
- validateSourceKeyReference(attempt);
- assert.equal(sourceKeyScore(attempt).comparable,1);
- assert.equal(sourceKeyScore(attempt).maxMarks,2.5);
+ assert.throws(()=>validateSourceKeyReference(attempt),/source-key comparison schema/);
+ assert.throws(()=>sourceKeyScore(attempt),/source-key comparison schema/);
 });
