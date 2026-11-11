@@ -21,8 +21,8 @@ const completed=id=>{
  return transitionGenericAttempt(start,{type:"TICK",nowMs:t+1200000},
    new Map(pkg.questions.map(q=>[q.id,q])));
 };
-const foreign=completed("p56-foreign-committed");
-const restoring=completed("p56-additive-restored");
+const foreign={...completed("p56-foreign-committed"),saveRevision:1};
+const restoring={...completed("p56-additive-restored"),saveRevision:1};
 const packed=compactAttempt(foreign),otherPacked=compactAttempt(restoring);
 check(packed.snapshot.id===otherPacked.snapshot.id,
  "P56 precondition: frozen same-source digest should be shared");
