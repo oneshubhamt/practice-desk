@@ -4,7 +4,8 @@ import type {ExamPackage,GenericAttempt} from "./exam-package.ts";
 import type {OptionId} from "../domain/ids.js";
 import {escapeText} from "./html-escape.ts";
 import {assetHTML,stimulusHTML,renderGenericControls,renderQuestionPrompt} from "./question-content-view.ts";
-import {calculatorPanelHTML,calculatorToggleHTML} from "./exam-calculator.ts";\nimport {BASIC_CALCULATOR_V1,newExamCalculatorState,type ExamCalculatorState} from "../domain/calculator.ts";
+import {calculatorPanelHTML,calculatorToggleHTML} from "./exam-calculator.ts";
+import {BASIC_CALCULATOR_V1,newExamCalculatorState,type ExamCalculatorState} from "../domain/calculator.ts";
 /** Human-readable view of a frozen practice mode; do not alter persistence. */
 export function readablePracticeMode(mode:string):string{
  switch(mode){
