@@ -616,9 +616,9 @@ test("time expiration and voluntary finishing have separate durable source-indep
  const submitted=transitionGenericAttempt(started,{type:"SUBMIT_ATTEMPT",nowMs:1100},map);
  assert.equal(submitted.completionReason,"submitted");
  assert.equal(validateGenericStoredRecord(submitted),submitted);
- const old=structuredClone(submitted);
- delete old.completionReason;
- assert.equal(validateGenericStoredRecord(old),old,"Older stored completion remains readable");
+ const missing=structuredClone(submitted);
+ delete missing.completionReason;
+ assert.throws(()=>validateGenericStoredRecord(missing),/completion provenance/);
 });
 }
 
