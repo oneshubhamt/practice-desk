@@ -391,9 +391,9 @@ test("backup v4 checksum covers records and preferences; size, IDs and timestamp
  // The reference property also verifies unlike record types in one v4 archive.
  // This replaces the separate three-record illustrative backup test.
  const heterogeneous=[
-  {id:"opaque-note",recordType:"generic-note",finishedAt:null},
-  {id:"paper",recordType:"generic-package"},
-  {id:"learn",recordType:"learning-card"}
+  {id:"opaque-note",recordType:"generic-note",saveRevision:1,finishedAt:null},
+  {id:"paper",recordType:"generic-package",saveRevision:1},
+  {id:"learn",recordType:"learning-card",saveRevision:1}
  ];
  const mixed=makeBackup(heterogeneous,preferences,"2026-10-29T11:00:00Z");
  assert.deepEqual(verifyBackup(JSON.parse(JSON.stringify(mixed))),mixed);
@@ -404,7 +404,7 @@ test("backup v4 checksum covers records and preferences; size, IDs and timestamp
  assert.throws(()=>verifyBackup(changed),/integrity/);
 
  for(let count of [0,1,7,101,5000]){
-  const records=Array.from({length:count},(_,i)=>({id:"r"+i,recordType:"opaque",answer:i%4}));
+  const records=Array.from({length:count},(_,i)=>({id:"r"+i,recordType:"opaque",saveRevision:1,answer:i%4}));
   const b=makeBackup(records,preferences,at);
   assert.deepEqual(verifyBackup(JSON.parse(JSON.stringify(b))),b,"count="+count);
   for(const mutate of [
@@ -418,9 +418,9 @@ test("backup v4 checksum covers records and preferences; size, IDs and timestamp
    assert.throws(()=>verifyBackup(corrupted),"count="+count+" modified checksum payload");
   }
  }
- const over=makeBackup(Array.from({length:5001},(_,i)=>({id:"r"+i})),preferences,at);
+ const over=makeBackup(Array.from({length:5001},(_,i)=>({id:"r"+i,recordType:"opaque",saveRevision:1})),preferences,at);
  assert.throws(()=>verifyBackup(over),/Invalid backup format/);
- const dups=makeBackup([{id:"x"},{id:"x"}],preferences,at);
+ const dups=makeBackup([{id:"x",recordType:"opaque",saveRevision:1},{id:"x",recordType:"opaque",saveRevision:1}],preferences,at);
  assert.throws(()=>verifyBackup(dups),/Invalid backup records/);
  const invalidName=makeBackup([{id:"x".repeat(201),recordType:"generic-note",saveRevision:1}],preferences,at);
  assert.throws(()=>verifyBackup(invalidName),/Invalid backup records/);
@@ -602,7 +602,7 @@ p45test("P45 one-pass backup serialization remains byte-identical to v3 for ever
  const rows=[{id:"opaque-note",recordType:"generic-note",saveRevision:7,
    content:{prompt:"IPC § & Unicode क",options:["A","B"]},
    result:{earnedMarks:2.5,sectionMarks:[0,2.5]}},
- {id:"learning-one",recordType:"learning-card",dueAt:stamp,
+ {id:"learning-one",recordType:"learning-card",saveRevision:7,dueAt:stamp,
    note:"Quoted \"escaped\""}];
  const settings={schema:2,selectedFamilyId:"builtin:ssc-cgl",families:{
    "builtin:ssc-cgl":{paperRevisionId:"p1",mode:"strict",section:0,
@@ -627,8 +627,8 @@ p45test("P45-B identical frozen exam content uses one SHA-addressed snapshot acr
  const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url),"utf8"));
  const pkg=builtinCglPackages(sources,patches)[0];
  const {startGenericAttempt}=await import("../src/app/exam-package.ts");
- const first=startGenericAttempt(pkg,"s1",1730000000000);
- const second=startGenericAttempt(pkg,"s2",1730000001000);
+ const first={...startGenericAttempt(pkg,"s1",1730000000000),saveRevision:1};
+ const second={...startGenericAttempt(pkg,"s2",1730000001000),saveRevision:1};
  const a=compactAttempt(first),b=compactAttempt(second);
  p45assert.equal(a.snapshot.id,b.snapshot.id);
  p45assert.ok(!("frozen" in a.row),"Attempt should never repeat stored frozen source");
@@ -681,9 +681,9 @@ p45test("P45-B shared snapshot also stores publisher keys, source review and exp
  const key=createSourceKeyReference(reviewed,source);
  const review=createSourceReviewReference(reviewed,source);
  p45assert.ok(key&&review);
- const a={...startGenericAttempt(reviewed,"extras-a",1730000000000),
+ const a={...startGenericAttempt(reviewed,"extras-a",1730000000000),saveRevision:1,
    sourceKeyReference:key,sourceReviewReference:review};
- const b={...startGenericAttempt(reviewed,"extras-b",1730000001000),
+ const b={...startGenericAttempt(reviewed,"extras-b",1730000001000),saveRevision:1,
    sourceKeyReference:key,sourceReviewReference:review};
  const x=compactAttempt(a),y=compactAttempt(b);
  p45assert.equal(x.snapshot.id,y.snapshot.id);
