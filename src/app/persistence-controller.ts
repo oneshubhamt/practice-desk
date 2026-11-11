@@ -22,7 +22,7 @@ import type {SharedSnapshot,SlimAttempt} from "../history/shared-store.ts";
 
 import {readDisplayPreferences,writeDisplayPreferences,SETTINGS_EVENT} from "./preferences.ts";
 
-import type {CoordinatorContext} from "./coordinator-context.ts";
+import type {CoordinatorContext} from "./coordinator-context.ts";\nimport {clearCandidateToolWorkspace} from "./candidate-tool-state.ts";
 
 export const downloadHistoryBackup=async (owner:CoordinatorContext):Promise<void>=>{
    await owner.writeQueue;
@@ -276,6 +276,8 @@ export const removeWorkspaceAttempt=async (owner:CoordinatorContext,id:string,in
        localStorage.setItem(owner.storageKey,encoded);owner.fallbackStamp=encoded;
      }
      owner.records.delete(id);
+     owner.calculatorStates.delete(id);
+     clearCandidateToolWorkspace(localStorage,id);
      if(owner.db&&isAttempt(current)){
        for(const key of await pruneSharedSnapshots(owner.db))owner.storedSnapshots.delete(key);
      }
@@ -329,7 +331,11 @@ export const deleteCompletedWorkspaceAttempts=async (owner:CoordinatorContext):P
        const updated=JSON.stringify([...owner.records.values()].filter(r=>!ids.has(r.id)));
        localStorage.setItem(owner.storageKey,updated);owner.fallbackStamp=updated;
      }
-     for(const record of completed)owner.records.delete(record.id);
+     for(const record of completed){
+       owner.records.delete(record.id);
+       owner.calculatorStates.delete(record.id);
+       clearCandidateToolWorkspace(localStorage,record.id);
+     }
      if(owner.db)for(const key of await pruneSharedSnapshots(owner.db))owner.storedSnapshots.delete(key);
      try{
        const mirror=localStorage.getItem(owner.mirrorKey);
