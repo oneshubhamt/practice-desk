@@ -271,7 +271,7 @@ test("P62-B exact revision pairing survives multiple originals and missing files
 test("P62-B nineteen MCQs remain comparable beside one numerical question",()=>{
  const png="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/tAAAAABJRU5ErkJggg==";
  const input=revision=>({format:"practice-desk-authoring",version:1,
-  bankId:"p62-mixed",examId:"upsc-epfo-apfc",paperId:"p62-mixed",
+  bankId:"p62-mixed",examId:"synthetic-comparison",paperId:"p62-mixed",
   title:"Mixed P62 synthetic test",edition:"custom",revision,
   scoring:{correctMarks:2.5,incorrectMarks:-5/6},
   timing:{kind:"untimed",pausePolicy:"allowed"},
@@ -341,7 +341,7 @@ test("P62-B nineteen MCQs remain comparable beside one numerical question",()=>{
 
 test("P62-B rejects noncanonical schema-2 source-key snapshots",()=>{
  const bank=revision=>({format:"practice-desk-authoring",version:1,
-  bankId:"p62-schema-reject",examId:"upsc-epfo-apfc",paperId:"p62-schema-reject",
+  bankId:"p62-schema-reject",examId:"synthetic-comparison",paperId:"p62-schema-reject",
   title:"Schema rejection test",edition:"custom",revision,
   scoring:{correctMarks:2.5,incorrectMarks:-5/6},
   timing:{kind:"untimed",pausePolicy:"allowed"},
