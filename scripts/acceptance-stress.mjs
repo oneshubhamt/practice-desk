@@ -1,5 +1,5 @@
 /** Bounded modern stress: current lazy Results DOM and History with 80 frozen records.
- * No historical SHA, v11 screenshots, or environment-specific frame-time targets.
+ * No historical SHA/screenshots or environment-specific frame-time targets.
  */
 import {performance} from "node:perf_hooks";
 import {openHarness,check,route,records,assertNoOverflow} from "./browser/fixtures.mjs";

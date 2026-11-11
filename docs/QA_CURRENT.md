@@ -4,7 +4,7 @@ This is the **only active human-readable test strategy**. The source of truth is
 
 ## Execute the gates
 
-Use Node.js **24**, installed dependencies and Playwright browser binaries appropriate to the host.
+Use Node.js **26.13.0**, installed dependencies and Playwright browser binaries appropriate to the host.
 
 ```bash
 npm ci --no-audit --no-fund

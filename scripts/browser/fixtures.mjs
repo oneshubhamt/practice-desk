@@ -1,4 +1,4 @@
-/** Modern offline-browser acceptance harness. No frozen v11 oracle or runtime network.
+/** Current offline-browser acceptance harness. No frozen historical oracle or runtime network.
  * Browser engine versions are provided by CI's pinned Playwright Core installation
  * (and the installed Google Chrome for the Chromium leg).
  */
@@ -122,7 +122,7 @@ export async function openHarness({engine="chromium",artifactDir=null}={}){
  }
  return {engine,browser,open,finish,evidence,diagnose};
 }
-/** Authoritative current-schema persistence evidence (no legacy adapters). */
+/** Authoritative canonical persistence evidence. */
 export async function records(page,store="attempts"){
  return page.evaluate(async storeName=>{
   const db=await new Promise((resolve,reject)=>{

@@ -1,4 +1,4 @@
-/** P48-3 user-facing file:// checks, not v11 pixel parity. */
+/** P48-3 user-facing file:// checks, not historical pixel parity. */
 import {openHarness,check,route,records,assertNoOverflow} from "./browser/fixtures.mjs";
 import {chooseModernPaper} from "./paper-select.mjs";
 import {pkg as sixKinds} from "../tests/fixtures/six-kinds.mjs";

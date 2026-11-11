@@ -1,5 +1,5 @@
 /** Current offline persistence under two-tab races, unavailable IndexedDB,
- * failing first reads and quota-denied writes. No historical screenshot or v11.
+ * failing first reads and quota-denied writes. No historical screenshot oracle.
  */
 import {readFile,mkdtemp,rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
