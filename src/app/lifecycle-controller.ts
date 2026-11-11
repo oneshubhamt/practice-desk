@@ -6,7 +6,7 @@ import {transitionGenericAttempt} from "./exam-package.ts";
 
 import {resolveExamShortcut,readShortcutBindings} from "./exam-shortcuts.ts";
 
-import type {CoordinatorContext} from "./coordinator-context.ts";
+import type {CoordinatorContext} from "./coordinator-context.ts";\nimport {clearCandidateToolWorkspace} from "./candidate-tool-state.ts";
 
 export function dispatchWorkspaceVisibility(owner:CoordinatorContext,visible:boolean):void{
    if(!owner.attempt||owner.storageFault||owner.attempt.finishedAt!==null)return;
@@ -15,6 +15,8 @@ export function dispatchWorkspaceVisibility(owner:CoordinatorContext,visible:boo
      new Map(current.frozen.questions.map(q=>[q.id,q])));
    void owner.save(owner.attempt);
    if(owner.attempt.finishedAt!==null&&owner.view==="exam"){
+     owner.calculatorStates.delete(owner.attempt.id);
+     clearCandidateToolWorkspace(localStorage,owner.attempt.id);
      owner.reviewFilter="all";owner.go({screen:"result",attemptId:owner.attempt.id,tab:"overview"},"replace");return;
    }
    owner.draw();
