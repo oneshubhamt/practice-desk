@@ -140,6 +140,10 @@ export function composePracticeSet(source:ExamPackage,request:PracticeRequest):{
  const paperBase:Omit<PaperRevision,"contentHash">={
    id:(paperId+":paper") as PaperRevisionId,paperId,revision:1,
    edition:source.paper.edition,answerKeyRevisionId:keyId,
+   ...(source.paper.edition==="reviewed"?{
+     sourcePaperRevisionId:source.paper.sourcePaperRevisionId,
+     sourceAnswerKeyRevisionId:source.paper.sourceAnswerKeyRevisionId
+   }:{}),
    sections,timing,navigation:source.paper.navigation,
    ...(source.paper.candidateTools?{candidateTools:source.paper.candidateTools}:{}),
    scoring:source.paper.scoring
