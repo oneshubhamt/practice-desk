@@ -185,8 +185,8 @@ export function importSimpleQuestionBank(value:unknown):ExamPackage{
  if(rawTools!==undefined){
    const tools=obj(rawTools,"tools");
    only(tools,["calculator"],"tools");
-   ensure(tools["calculator"]==="basic",'tools.calculator must be "basic"');
-   candidateTools={calculator:"basic"};
+   ensure(tools["calculator"]==="basic-v1",'tools.calculator must be "basic-v1"');
+   candidateTools={calculator:"basic-v1"};
  }
  const paperBase={
   id:(paperId+":paper:r"+revision) as PaperRevisionId,paperId,revision,
