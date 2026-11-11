@@ -131,7 +131,7 @@ for(const v of [
      "Rejected bank must not modify saved package records");
   }
   const calculatorBank={...bank,bankId:"cat-calculator-demo",examId:"cat",
-    title:"CAT calculator demo",tools:{calculator:"basic"}};
+    title:"CAT calculator demo",tools:{calculator:"basic-v1"}};
   await page.locator("#g-file").setInputFiles({name:"cat-calculator.json",mimeType:"application/json",
     buffer:Buffer.from(JSON.stringify(calculatorBank))});
   await page.waitForFunction(()=>document.querySelector("#g-papers")?.value==="bank:cat-calculator-demo:paper:r1");
@@ -147,9 +147,36 @@ for(const v of [
   await page.locator('[data-calc-key="equals"]').click();
   check(await page.locator("#g-calculator-display").innerText()==="56",
     v.name+" calculator arithmetic failed");
-  await assertNoOverflow(page,v.name+" open calculator");
-  await page.locator("[data-calc-close]").click();
+  check(await page.locator('.calc-memory[role="group"]').getAttribute("aria-label")==="Calculator memory"&&
+    await page.locator('.calc-grid[role="group"]').getAttribute("aria-label")==="Calculator keypad"&&
+    await page.locator('[data-calc-key="/"]').getAttribute("aria-label")==="Divide",
+    v.name+" calculator accessibility labels/groups missing");
+  // Recover the exact scratch calculation independently of the scored attempt.
+  await page.locator('[data-calc-key="ms"]').click();
+  await page.locator('[data-calc-key="+"]').click();
+  await page.locator('[data-calc-key="4"]').click();
+  await page.reload({waitUntil:"load"});await route(page,"exam");
+  check(await page.locator("#g-calculator").getAttribute("aria-expanded")==="true"&&
+    await page.locator("#g-calculator-display").innerText()==="4",
+    v.name+" recoverable calculator scratch state did not survive reload");
+  await page.locator('[data-calc-key="equals"]').click();
+  check(await page.locator("#g-calculator-display").innerText()==="60",
+    v.name+" recovered pending calculator operation was not exact");
+  await page.locator('[data-calc-key="clear"]').click();
+  await page.locator("#g-calculator-display").focus();
+  await page.keyboard.type("12+3");await page.keyboard.press("Enter");
+  check(await page.locator("#g-calculator-display").innerText()==="15"&&
+    await page.locator("input[data-choice]:checked").count()===0,
+    v.name+" calculator keyboard input leaked into exam shortcuts or calculated incorrectly");
+  await page.keyboard.press("Escape");
+  check(await page.locator("#g-calculator").getAttribute("aria-expanded")==="false"&&
+    await page.evaluate(()=>document.activeElement?.id)==="g-calculator",
+    v.name+" Escape did not close calculator and restore trigger focus");
+  await assertNoOverflow(page,v.name+" calculator recovery/accessibility");
   await page.locator("#g-submit").click();await route(page,"result");
+  check(await page.evaluate(()=>!Object.keys(localStorage).some(k=>
+    k.startsWith("practiceDesk.candidateTools.v1:"))),
+    v.name+" completed attempt retained calculator scratch state");
   await page.locator("#g-library").click();await route(page,"library");
 
   await page.locator("#g-file").setInputFiles({name:"apfc-nat.json",mimeType:"application/json",
