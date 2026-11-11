@@ -1,6 +1,6 @@
-/** P54 physical-section editing, without a second persisted section schema.
- * The already-published format stores one timer per section; the draft's
- * per-question legacy fields are a denormalised, strictly validated view.
+/** Canonical physical-section editing for authoring drafts.
+ * Section timer budgets live only in AuthoringDraft.sections; questions carry
+ * section assignment only.
  */
 import type {AuthoringDraft} from "./authoring-draft.ts";
 
@@ -8,24 +8,22 @@ export interface AuthoringSection {
  readonly name:string;
  readonly count:number;
  readonly minutes:number;
- readonly conflict:boolean;
 }
-export function authoringSections(d:Pick<AuthoringDraft,"questions">):AuthoringSection[]{
- const rows=new Map<string,AuthoringSection>();
- for(const q of d.questions){
-  const duration=q.sectionMinutes??15;
-  const row=rows.get(q.section);
-  rows.set(q.section,row?{...row,count:row.count+1,conflict:row.conflict||row.minutes!==duration}:
-   {name:q.section,count:1,minutes:duration,conflict:false});
- }
- return [...rows.values()];
+export function authoringSections(d:Pick<AuthoringDraft,"questions"|"sections">):AuthoringSection[]{
+ const counts=new Map<string,number>();
+ for(const q of d.questions)counts.set(q.section,(counts.get(q.section)??0)+1);
+ return d.sections.map(section=>({
+  name:section.name,minutes:section.minutes,count:counts.get(section.name)??0
+ }));
 }
-export function setAuthoringSectionMinutes<T extends AuthoringDraft>(draft:T,section:string,minutes:number):T{
+export function setAuthoringSectionMinutes<T extends AuthoringDraft>(
+ draft:T,section:string,minutes:number
+):T{
  if(!Number.isSafeInteger(minutes)||minutes<0||minutes>600)
   throw Error("Section timer must be a whole number of minutes from 0 to 600");
- if(!draft.questions.some(q=>q.section===section))throw Error("Unknown exam section");
- return {...draft,questions:draft.questions.map(q=>
-  q.section===section?{...q,sectionMinutes:minutes}:q)};
+ if(!draft.sections.some(row=>row.name===section))throw Error("Unknown exam section");
+ return {...draft,sections:draft.sections.map(row=>
+  row.name===section?{...row,minutes}:row)};
 }
 export function assignAuthoringQuestionSection<T extends AuthoringDraft>(
  draft:T,questionId:string,newSection:string
@@ -35,7 +33,11 @@ export function assignAuthoringQuestionSection<T extends AuthoringDraft>(
   throw Error("Invalid actual exam section name");
  const source=draft.questions.find(q=>q.id===questionId);
  if(!source)throw Error("Unknown authoring question");
- const existing=draft.questions.find(q=>q.section===title&&q.id!==questionId);
- return {...draft,questions:draft.questions.map(q=>q.id===questionId?
-  {...q,section:title,sectionMinutes:existing?.sectionMinutes??q.sectionMinutes??15}:q)};
+ const sourceSection=draft.sections.find(row=>row.name===source.section);
+ if(!sourceSection)throw Error("Question references unknown exam section");
+ const sections=draft.sections.some(row=>row.name===title)?
+  draft.sections:[...draft.sections,{name:title,minutes:sourceSection.minutes}];
+ const questions=draft.questions.map(q=>q.id===questionId?{...q,section:title}:q);
+ const used=new Set(questions.map(q=>q.section));
+ return {...draft,questions,sections:sections.filter(row=>used.has(row.name))};
 }
