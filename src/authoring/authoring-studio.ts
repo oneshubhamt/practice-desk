@@ -78,7 +78,7 @@ function option(value:string,label:string,selected:string):string{
 }
 function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Field):string{
  const applicable=fields(current.kind);
- const timingKind=draft.timingKind??(draft.durationMinutes?"whole-paper":"untimed");
+ const timingKind=draft.timingKind;
  const kinds=QUESTION_KINDS.map(k=>option(k,labels[k],current.kind)).join("");
  return '<details class="pd-author-paper-settings"><summary>Paper settings · '+escapeText(draft.title)+'</summary><div class="pd-author-meta">'+
   '<label>Paper title<input id="pd-author-title" maxlength="180" value="'+escapeText(draft.title)+'"></label>'+
@@ -96,23 +96,23 @@ function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Field):st
   '<label>Pause policy<select id="pd-author-pause"'+
    (timingKind==="untimed"?' disabled title="No timer to pause in untimed mode"':"")+'>'+
     ([["allowed","Allow pause"],["forbidden","No pause"]] as const)
-      .map(([value,label])=>option(value,label,draft.pausePolicy??"allowed")).join("")+'</select></label>'+
+      .map(([value,label])=>option(value,label,draft.pausePolicy)).join("")+'</select></label>'+
   '<label>Question navigation<select id="pd-author-question-nav">'+
     ([["free","Free movement"],["forward-only","Forward only"]] as const)
-      .map(([value,label])=>option(value,label,draft.questionNavigation??"free")).join("")+'</select></label>'+
+      .map(([value,label])=>option(value,label,draft.questionNavigation)).join("")+'</select></label>'+
   '<label>Section navigation<select id="pd-author-section-nav">'+
     ([["free","Free section movement"],["sequential-locked","Sequential locked"]] as const)
-      .map(([value,label])=>option(value,label,draft.sectionNavigation??"free")).join("")+'</select></label>'+
+      .map(([value,label])=>option(value,label,draft.sectionNavigation)).join("")+'</select></label>'+
   '<label>Section expiry<select id="pd-author-section-transition"'+
    (timingKind==="sectional"?"":' disabled title="Only used in sectional countdown mode"')+'>'+
     ([["manual","Stop and continue manually"],["automatic","Advance automatically"]] as const)
-      .map(([value,label])=>option(value,label,draft.sectionTransition??"manual")).join("")+'</select></label>'+
+      .map(([value,label])=>option(value,label,draft.sectionTransition)).join("")+'</select></label>'+
   '<label class="pd-author-check"><input type="checkbox" id="pd-author-early-submit"'+
-    (draft.allowEarlySubmit!==false?" checked":"")+
+    (draft.allowEarlySubmit?" checked":"")+
      (timingKind==="sectional"?"":' disabled title="Only used in sectional countdown mode"')+
      '> Permit early section submission</label>'+
   '<label class="pd-author-check"><input type="checkbox" id="pd-author-allow-review"'+
-    (draft.allowReview!==false?" checked":"")+'> Release detailed answers after submission</label>'+
+    (draft.allowReview?" checked":"")+'> Release detailed answers after submission</label>'+
   '<label class="pd-author-check"><input type="checkbox" id="pd-author-calculator"'+
     (draft.calculatorTool==="basic-v1"?" checked":"")+'> Basic calculator available during the test</label>'+
   '<label>Correct marks<input id="pd-author-correct" type="number" step="any" value="'+draft.marksCorrect+'"></label>'+
@@ -142,9 +142,8 @@ function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Field):st
   '<label>Difficulty tag<select id="pd-author-difficulty">'+
     ([["","Not assigned"],["easy","Easy"],["medium","Medium"],["hard","Hard"]] as const)
       .map(([value,label])=>option(value,label,current.difficulty??"")).join("")+'</select></label>'+
-  '<label>Active section timer (minutes; affects every question in this section; 0 = untimed)<input id="pd-author-section-minutes" type="number" min="0" max="600" step="1" value="'+
-   (authoringSections(draft).find(s=>s.name===current.section)?.conflict?"":current.sectionMinutes??15)+'"'+
-   (authoringSections(draft).find(s=>s.name===current.section)?.conflict?' placeholder="Conflicting values — enter one time"':"")+'></label>'+
+  '<label>Active section timer (minutes; 0 = untimed)<input id="pd-author-section-minutes" type="number" min="0" max="600" step="1" value="'+
+   (authoringSections(draft).find(s=>s.name===current.section)?.minutes??0)+'"></label>'+
   '<label>Answer key draft<input id="pd-author-answer" maxlength="100" value="'+escapeText(current.answer)+'" aria-describedby="pd-author-answer-help"></label>'+
   '<label>Source / provenance note<input id="pd-author-source" maxlength="500" value="'+escapeText(current.source)+'"></label>'+
   (current.kind==="numeric-entry"?'<label>Absolute answer tolerance<input type="number" id="pd-author-tolerance" min="0" max="1000000" step="any" value="'+current.tolerance+'"></label>':"")+
@@ -277,20 +276,17 @@ function sectionManager(draft:AuthoringDraft,expanded:boolean):string{
  return '<details id="pd-author-section-manager" class="pd-author-section-manager"'+
   (expanded?" open":"")+'><summary>Manage actual exam sections · '+sections.length+
    ' section'+(sections.length===1?"":"s")+
-   (sections.some(s=>s.conflict)?" · conflicting section timers":"")+'</summary>'+
+   '</summary>'+
    '<p class="fine">Exam sections control timing and navigation independently of academic subjects. '+
     'Assign questions using their Actual exam section field; enter a new name to create a section. '+
-    'Changing a timer here updates every question assigned to the section. '+
-    'Conflicting values in an imported draft must be corrected before publishing.</p>'+
+    'Each section has exactly one timer budget owned here.</p>'+
    '<div class="scroll-table"><table class="pd-author-section-table"><thead><tr>'+
     '<th>Exam section</th><th>Questions</th><th>Minutes (0 = untimed)</th></tr></thead><tbody>'+
    sections.map(section=>'<tr><th scope="row">'+escapeText(section.name)+'</th><td>'+
       section.count+'</td><td><label class="pd-author-section-time-label">'+
       '<input aria-label="Timer for '+escapeText(section.name)+
       '" type="number" min="0" max="600" step="1" data-author-section-timer="'+escapeText(section.name)+
-      '" value="'+(section.conflict?"":section.minutes)+'"'+
-      (section.conflict?' placeholder="Conflict: choose one value" aria-invalid="true"':"")+
-      '></label></td></tr>').join("")+
+      '" value="'+section.minutes+'"></label></td></tr>').join("")+
    '</tbody></table></div>'+
    '<p class="fine" id="pd-author-section-policy">'+
     (draft.timingKind==="sectional"?
@@ -1123,7 +1119,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
     if(storageBlocked||lastSaveError)
      status("Section updated in memory but NOT saved: "+(lastSaveError||"damaged local draft storage")+
       ". Export a recovery copy before closing.",true);
-    else status("Set section "+title+" to "+minutes+" minutes across every assigned question.");
+    else status("Set section "+title+" to "+minutes+" minutes.");
    }catch(error){status(error instanceof Error?error.message:"Invalid section timer",true);}
   };
   const commitSectionTimer=(title:string,input:HTMLInputElement)=>{
@@ -1164,12 +1160,9 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   };
   click("pd-author-add-question",()=>{
    capture();const current=question(),freshBase=newAuthoringQuestion();
-   // Default new questions to the current *physical* section and its timer.
-   // Otherwise a new question in an existing section silently re-introduces
-   // conflicting per-question duration values.
-   const inherited=authoringSections(active()).find(s=>s.name===current.section);
-   const fresh={...freshBase,section:current.section,
-     sectionMinutes:inherited?.minutes??current.sectionMinutes??15};
+   // New questions inherit only the current physical-section assignment.
+   // Timer ownership remains in draft.sections.
+   const fresh={...freshBase,section:current.section};
    changeDraft(d=>({...d,questions:[...d.questions,fresh]}));
    questionId=fresh.id;field=initialField;void render();
   });
