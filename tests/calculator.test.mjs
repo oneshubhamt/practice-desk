@@ -128,5 +128,11 @@ test("calculator markup exposes keyboard/focus and labelled control semantics",(
  assert.match(html,/role="group" aria-label="Calculator memory"/);
  assert.match(html,/role="group" aria-label="Calculator keypad"/);
  assert.match(html,/data-calc-key="\/"[^>]*aria-label="Divide"/);
- assert.match(html,/data-calc-key="equals"[^>]*aria-label="Equals"/);
+ assert.match(html,/data-calc-key="backspace"[^>]*calc-backspace/);
+ assert.match(html,/data-calc-key="0"[^>]*calc-zero/);
+ assert.match(html,/data-calc-key="equals"[^>]*calc-equals[^>]*aria-label="Equals"/);
+ assert.ok(html.indexOf('data-calc-key="percent"')<html.indexOf('data-calc-key="4"'),
+   "CAT geometry keeps percent at the right of the 7/8/9/divide row");
+ assert.ok(html.indexOf('data-calc-key="reciprocal"')<html.indexOf('data-calc-key="1"'),
+   "CAT geometry keeps reciprocal at the right of the 4/5/6/multiply row");
 });
