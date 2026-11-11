@@ -11,7 +11,7 @@ import {validateSourceKeyReference} from "../engine/source-comparison.ts";
 import {validateSourceReviewReference} from "../engine/review-source.ts";
 import {validateNotebookLineage} from "../learning/revision-test.ts";
 import {validatePracticeComposition} from "./practice-compose.ts";
-export type PackageRecord={recordType:"generic-package";id:string;bundle:ExamPackage;saveRevision?:number};
+export type PackageRecord={recordType:"generic-package";id:string;bundle:ExamPackage;saveRevision:number};
 export type RecordItem=PackageRecord|GenericAttempt|LearningCard;
 export const isAttempt=(x:unknown):x is GenericAttempt=>!!x&&typeof x==="object"&&(x as GenericAttempt).recordType==="generic-attempt";
 export const isPackage=(x:unknown):x is PackageRecord=>!!x&&typeof x==="object"&&(x as PackageRecord).recordType==="generic-package";
@@ -54,16 +54,17 @@ function validateSavedSessionEvidence(attempt:GenericAttempt):void{
  if(state.status==="paused"&&(paper.timing.kind==="untimed"||
      paper.timing.pausePolicy==="forbidden"))
    throw Error("Invalid saved paused exam policy");
- if(state.questionVisits!==undefined)
-   for(const entry of state.questionVisits)
-     onlyFields(entry,["questionRevisionId","count"],"saved question visit");
- if(state.completedSectionTimings!==undefined)
-   for(const entry of state.completedSectionTimings)
-     onlyFields(entry,["sectionId","sectionIndex","durationMs","reason"],"saved section timing");
+ if(state.timingEvidenceVersion!==1||
+    !Array.isArray(state.questionVisits)||!Array.isArray(state.completedSectionTimings))
+   throw Error("Missing canonical saved timing evidence");
+ for(const entry of state.questionVisits)
+   onlyFields(entry,["questionRevisionId","count"],"saved question visit");
+ for(const entry of state.completedSectionTimings)
+   onlyFields(entry,["sectionId","sectionIndex","durationMs","reason"],"saved section timing");
  let accumulated=0;
  for(const row of state.responses){
    onlyFields(row,["questionRevisionId","response","flagged","timeSpentMs",
-     "firstVisitMs","preFirstAnswerMs","firstViewedAt","firstAnsweredAt",
+     "firstVisitMs","preFirstAnswerMs","firstAnsweredAt",
      "answerChangeCount","answerEvents"],"saved response row");
    if(typeof row.flagged!=="boolean")
      throw Error("Invalid saved response flag");
@@ -95,11 +96,11 @@ function validateSavedSessionEvidence(attempt:GenericAttempt):void{
 
 /** Treat browser records and exported JSON as untrusted until their frozen inputs and responses validate. */
 export function validateGenericStoredRecord(value:unknown):RecordItem {
- if(value && typeof value==="object" && "saveRevision" in value){
-   const n=(value as {saveRevision:unknown}).saveRevision;
-   if(typeof n!=="number"||!Number.isSafeInteger(n)||n<0)
-     throw new Error("Invalid stored write revision");
- }
+ if(!value||typeof value!=="object"||!("saveRevision" in value))
+   throw new Error("Stored record requires a CAS revision");
+ const n=(value as {saveRevision:unknown}).saveRevision;
+ if(typeof n!=="number"||!Number.isSafeInteger(n)||n<0)
+   throw new Error("Invalid stored write revision");
  if(isLearning(value)){
    onlyFields(value,["recordType","id","saveRevision","question","answer","stimuli","assets",
      "examId","paperId","paperEdition","sectionTitle","sourceTitle","sourceAttemptId",
@@ -137,6 +138,13 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
    throw new Error("Completed attempt has an unfinished session");
  if(value.finishedAt===null && value.state.status==="completed")
    throw new Error("Unfinished attempt has a completed session");
+ if(value.finishedAt===null){
+   if(value.completionReason!==null||value.result!==undefined)
+     throw new Error("Unfinished attempt cannot contain completion provenance or a score");
+ }else{
+   if(!["time-expired","submitted","section-submitted"].includes(value.completionReason??""))
+     throw new Error("Completed attempt requires valid completion provenance");
+ }
  if(!["running","paused","section-expired","completed"].includes(value.state.status))
    throw new Error("Invalid saved session status");
  validateSectionTimingEvidence(paper,value.state);
@@ -149,16 +157,14 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
  }
  const questionMap=new Map(value.frozen.questions.map(q=>[q.id,q]));
  const allowed=new Set(paper.sections.flatMap(section=>section.questionRevisionIds));
- if(value.state.timingEvidenceVersion!==undefined&&value.state.timingEvidenceVersion!==1)
+ if(value.state.timingEvidenceVersion!==1)
    throw new Error("Invalid question timing evidence version");
- if(value.state.questionVisits!==undefined){
-   const visits=value.state.questionVisits;
-   if(!Array.isArray(visits)||visits.length===0||visits.length>allowed.size||
-      new Set(visits.map(row=>row?.questionRevisionId)).size!==visits.length||
-      visits.some(row=>!row||!allowed.has(row.questionRevisionId)||
-        !Number.isSafeInteger(row.count)||row.count<1||row.count>1000000))
-     throw new Error("Invalid saved question visit history");
- }
+ const visits=value.state.questionVisits;
+ if(!Array.isArray(visits)||visits.length===0||visits.length>allowed.size||
+    new Set(visits.map(row=>row?.questionRevisionId)).size!==visits.length||
+    visits.some(row=>!row||!allowed.has(row.questionRevisionId)||
+      !Number.isSafeInteger(row.count)||row.count<1||row.count>1000000))
+   throw new Error("Invalid saved question visit history");
  const seen=new Set<string>();
  for(const row of value.state.responses){
    if(!row || typeof row.questionRevisionId!=="string" ||
@@ -168,11 +174,9 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
      throw new Error("Invalid saved response");
    seen.add(row.questionRevisionId);
    const first=row.firstVisitMs,pre=row.preFirstAnswerMs;
-   if((first!==undefined||pre!==undefined)&&
-      (value.state.timingEvidenceVersion!==1||first===undefined||pre===undefined||
-       !Number.isFinite(first)||!Number.isFinite(pre)||
-       first<0||pre<0||first>row.timeSpentMs||pre>row.timeSpentMs||
-       !Number.isSafeInteger(first)||!Number.isSafeInteger(pre)))
+   if(!Number.isFinite(first)||!Number.isFinite(pre)||
+      first<0||pre<0||first>row.timeSpentMs||pre>row.timeSpentMs||
+      !Number.isSafeInteger(first)||!Number.isSafeInteger(pre))
      throw new Error("Invalid saved question timing phase evidence");
    if(row.firstAnsweredAt!==undefined&&
       (typeof row.firstAnsweredAt!=="string"||
@@ -181,7 +185,7 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
        Date.parse(row.firstAnsweredAt)>value.updatedAt))
      throw new Error("Invalid saved first-answer timing");
    if(row.response)validateResponse(questionMap.get(row.questionRevisionId)!,row.response);
-   if(value.state.timingEvidenceVersion===1&&row.firstAnsweredAt!==undefined){
+   if(row.firstAnsweredAt!==undefined){
      const firstCommit=row.answerEvents?.find((x:{readonly at:string;readonly to?:unknown})=>x.to!==undefined);
      if(!firstCommit||firstCommit.at!==row.firstAnsweredAt)
        throw new Error("Inconsistent saved first-answer timing");
@@ -219,10 +223,20 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
  validateManualGrades(value);
  validateSourceKeyReference(value);
  validateSourceReviewReference(value);
- if(value.completionReason!==undefined){
-   if(value.finishedAt===null||
-     !["time-expired","submitted","section-submitted"].includes(value.completionReason))
-     throw new Error("Invalid saved completion provenance");
+ if(value.finishedAt!==null){
+   const lastSection=value.state.completedSectionTimings.at(-1);
+   if(value.completionReason==="time-expired"){
+     const wholeExpired=paper.timing.kind==="whole-paper"&&
+       Math.abs(value.state.elapsedMs-paper.timing.durationMs)<0.001;
+     const sectionExpired=paper.timing.kind==="sectional"&&lastSection?.reason==="time-expired";
+     if(!wholeExpired&&!sectionExpired)
+       throw new Error("Time-expired completion does not match recorded timer evidence");
+   }else if(value.completionReason==="section-submitted"){
+     if(paper.timing.kind!=="sectional"||lastSection?.reason!=="submitted")
+       throw new Error("Section-submitted completion does not match section evidence");
+   }else if(value.completionReason==="submitted"&&paper.timing.kind==="sectional"){
+     throw new Error("Sectional completion must use section completion provenance");
+   }
  }
  validateNotebookLineage(value);
  validatePracticeComposition(value);
