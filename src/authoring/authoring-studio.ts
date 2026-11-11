@@ -114,7 +114,7 @@ function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Field):st
   '<label class="pd-author-check"><input type="checkbox" id="pd-author-allow-review"'+
     (draft.allowReview!==false?" checked":"")+'> Release detailed answers after submission</label>'+
   '<label class="pd-author-check"><input type="checkbox" id="pd-author-calculator"'+
-    (draft.calculatorTool==="basic"?" checked":"")+'> Basic calculator available during the test</label>'+
+    (draft.calculatorTool==="basic-v1"?" checked":"")+'> Basic calculator available during the test</label>'+
   '<label>Correct marks<input id="pd-author-correct" type="number" step="any" value="'+draft.marksCorrect+'"></label>'+
   '<label>Incorrect marks<input id="pd-author-wrong" type="number" max="0" step="any" value="'+draft.marksIncorrect+'"></label>'+
   '</div><p class="fine pd-author-effective-policy-note" role="note">'+
@@ -963,7 +963,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   find<HTMLInputElement>("pd-author-calculator").onchange=e=>{
     const enabled=(e.target as HTMLInputElement).checked;
     changeDraft(d=>{
-      if(enabled)return {...d,calculatorTool:"basic"};
+      if(enabled)return {...d,calculatorTool:"basic-v1"};
       const {calculatorTool:_,...withoutCalculator}=d;
       return withoutCalculator;
     });
