@@ -336,9 +336,14 @@ test("F06: generic timing/section, forward navigation, review and pause policies
 
 test("F15: independently imported editions cannot inherit built-in SSC provenance",()=>{
  const sourceBundle=structuredClone(pkg);
- sourceBundle.paper.edition="source";
+ sourceBundle.paper={...sourceBundle.paper,id:sourceBundle.paper.id+":source",edition:"source"};
+ sourceBundle.paper.contentHash=paperRevisionHash(sourceBundle.paper);
  const reviewedBundle=structuredClone(pkg);
- reviewedBundle.paper.edition="reviewed";
+ reviewedBundle.answerKey={...reviewedBundle.answerKey,id:reviewedBundle.answerKey.id+":reviewed"};
+ reviewedBundle.paper={...reviewedBundle.paper,id:reviewedBundle.paper.id+":reviewed",
+  edition:"reviewed",answerKeyRevisionId:reviewedBundle.answerKey.id,
+  sourcePaperRevisionId:sourceBundle.paper.id,sourceAnswerKeyRevisionId:sourceBundle.answerKey.id};
+ reviewedBundle.paper.contentHash=paperRevisionHash(reviewedBundle.paper);
  for(const b of [sourceBundle,reviewedBundle]){
   const x=model(b);
   assert.equal(x.builtinCgl,false);
@@ -857,7 +862,12 @@ const p41patches=JSON.parse(await __suite_dep_2.readFile(new URL("../src/content
 testP41("publisher comparison preserves identical contexts but rejects reordered options and punctuation",()=>{
  const source=__suite_dep_5.builtinCglPackages(
   p41papers,p41patches).find(x=>x.paper.edition==="source");
- const same=structuredClone(source);same.paper.edition="reviewed";
+ const same=structuredClone(source);
+ same.answerKey={...same.answerKey,id:same.answerKey.id+":reviewed-test"};
+ same.paper={...same.paper,id:same.paper.id+":reviewed-test",edition:"reviewed",
+  answerKeyRevisionId:same.answerKey.id,sourcePaperRevisionId:source.paper.id,
+  sourceAnswerKeyRevisionId:source.answerKey.id};
+ same.paper.contentHash=__suite_dep_4.paperRevisionHash(same.paper);
  const original=__suite_dep_9.createSourceKeyReference(same,source);
  testAssert.ok(original.entries.every(x=>x.comparable));
  const changed=structuredClone(same);
