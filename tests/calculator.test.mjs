@@ -5,6 +5,7 @@ import {paperRevisionHash} from "../src/domain/integrity.ts";
 import {validateExamPackage,startGenericAttempt} from "../src/app/exam-package.ts";
 import {renderModelExam} from "../src/app/exam-view.ts";
 import {importSimpleQuestionBank} from "../src/app/bank-import.ts";
+import {composePracticeSet} from "../src/app/practice-compose.ts";
 import {pkg} from "./fixtures/six-kinds.mjs";
 
 const press=(keys,state=newExamCalculatorState())=>keys.reduce((s,key)=>calculatorPress(s,key),state);
@@ -51,6 +52,9 @@ test("simple-bank authors can opt into basic calculator; absence stays disabled"
  const enabled=importSimpleQuestionBank(bank);
  assert.equal(enabled.paper.candidateTools.calculator,"basic");
  assert.equal(validateExamPackage(enabled),enabled);
+ const composed=composePracticeSet(enabled,{count:1,seed:"calculator-policy",filters:{}});
+ assert.equal(composed.bundle.paper.candidateTools.calculator,"basic",
+   "custom practice sets must preserve the source paper calculator policy");
  const plain=importSimpleQuestionBank({...bank,bankId:"cat-no-calc",tools:undefined});
  assert.equal(plain.paper.candidateTools,undefined);
  assert.throws(()=>importSimpleQuestionBank({...bank,bankId:"bad-calc",tools:{calculator:"scientific"}}),
