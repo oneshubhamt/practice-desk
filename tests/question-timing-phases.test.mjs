@@ -122,8 +122,8 @@ test("P46-B frozen stored attempts reject impossible or forged timing phase clai
  })),/first-answer timing/,"first-answer timestamp without any recorded first commit");
 });
 test("P46-B exact phases survive compact v4 backup, reopen and remain independent of marks",()=>{
- const a=completed(),summary=a.result.snapshot;
- const archive=verifyBackup(makeBackup([a],{schema:1,dark:false,scale:100},"2026-11-02T20:00:00Z"));
+ const a=completed(),summary=a.result.snapshot,persisted={...a,saveRevision:1};
+ const archive=verifyBackup(makeBackup([persisted],{schema:1,dark:false,scale:100},"2026-11-02T20:00:00Z"));
  assert.equal(archive.version,4);
  const restored=validateGenericStoredRecord(reconstructRecords(archive.records,archive.snapshots)[0]);
  assert.equal(validateGenericStoredRecord(JSON.parse(JSON.stringify(a))).id,a.id,
