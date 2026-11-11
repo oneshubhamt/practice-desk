@@ -80,7 +80,8 @@ export function verifyBackup(raw:unknown):BackupV4{
    b.records.length>5000||b.snapshots.length>5000||
    typeof b.exportedAt!=="string"||!Number.isFinite(Date.parse(b.exportedAt)))
     throw Error("Invalid backup format");
- if(b.records.some(x=>!x||typeof x!=="object"||typeof x.id!=="string"||x.id.length>200)||
+ if(b.records.some(x=>!x||typeof x!=="object"||typeof x.id!=="string"||x.id.length>200||
+      !Number.isSafeInteger(x.saveRevision)||x.saveRevision<1)||
     new Set(b.records.map(x=>x.id)).size!==b.records.length)
     throw Error("Invalid backup records");
  const {manifest,...core}=b;
