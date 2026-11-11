@@ -128,7 +128,7 @@ const paper = (overrides = {}) => ({
   paperId: "paper-1",
   revision: 1,
   contentHash: hash,
-  edition: "reviewed",
+  edition: "custom",
   answerKeyRevisionId: "key-rev-1",
   sections: [{ id: "section-1", title: "Section 1", questionRevisionIds: ["question-rev-1"] }],
   timing: { kind: "sectional", sectionLimits: [{ sectionId: "section-1", durationMs: 900000 }], transition: "manual", allowEarlySubmit: true, pausePolicy: "forbidden" },
@@ -151,6 +151,16 @@ test("accepts a valid question, paper revision and matching answer key", () => {
   const p = validatePaperRevision(paper(), [q], key);
   assert.equal(p.sections[0].questionRevisionIds[0], q.id);
   assert.equal(key.entries[0].answer.optionId, "option-b");
+});
+
+test("reviewed paper revisions require exact Source paper and key lineage", () => {
+  const q = validateQuestionRevision(question());
+  const key = validateAnswerKeyRevision(answerKey(), [q]);
+  assert.throws(() => validatePaperRevision(paper({edition:"reviewed"}), [q], key),
+    /requires exact original revision and key lineage/);
+  const reviewed=paper({edition:"reviewed",sourcePaperRevisionId:"source-paper-rev",
+    sourceAnswerKeyRevisionId:"source-key-rev"});
+  assert.equal(validatePaperRevision(reviewed,[q],key).sourcePaperRevisionId,"source-paper-rev");
 });
 
 test("rejects duplicate option identities and malformed hashes", () => {
