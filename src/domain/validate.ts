@@ -1,7 +1,7 @@
 import type { AnswerKeyRevision } from "./answer-key.js";
 import type { ExamDefinition, PaperRevision, SectionDefinition } from "./exam.js";
 import type { QuestionRevision } from "./question.js";
-import {validateRichDocument} from "./rich-document.ts";
+import {validateRichDocument} from "./rich-document.ts";\nimport {BASIC_CALCULATOR_V1} from "./calculator.ts";
 
 const QUESTION_KINDS = [
   "single-choice", "multiple-select", "numeric-entry", "true-false", "matching", "free-response",
@@ -440,8 +440,8 @@ export function validatePaperRevision(
   if (paper["candidateTools"] !== undefined) {
     const tools = record(paper["candidateTools"], "paperRevision.candidateTools");
     only(tools,["calculator"],"paperRevision.candidateTools");
-    if (tools["calculator"] !== "basic")
-      throw new Error('paperRevision.candidateTools.calculator: expected "basic"');
+    if (tools["calculator"] !== BASIC_CALCULATOR_V1)
+      throw new Error('paperRevision.candidateTools.calculator: expected "'+BASIC_CALCULATOR_V1+'"');
   }
   validateScoringPolicy(paper["scoring"], "paperRevision.scoring");
 
