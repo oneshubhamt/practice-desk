@@ -151,22 +151,28 @@ for(const v of [
     await page.locator('.calc-grid[role="group"]').getAttribute("aria-label")==="Calculator keypad"&&
     await page.locator('[data-calc-key="/"]').getAttribute("aria-label")==="Divide",
     v.name+" calculator accessibility labels/groups missing");
-  const calcGeometry=await page.locator(".calc-grid").evaluate(grid=>{
-    const boxes=Object.fromEntries([...grid.querySelectorAll("[data-calc-key]")].map(node=>
-      [node.getAttribute("data-calc-key"),node.getBoundingClientRect()]));
-    const back=boxes.backspace,clear=boxes.clear,zero=boxes["0"],decimal=boxes["."],
-      equals=boxes.equals,plus=boxes["+"];
-    return {
-      columns:getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length,
-      backRatio:back.width/clear.width,zeroRatio:zero.width/decimal.width,
-      equalsRatio:equals.height/plus.height,
-      percentRow:Math.abs(boxes["%"].y-boxes["7"].y)<2,
-      reciprocalRow:Math.abs(boxes.reciprocal.y-boxes["4"].y)<2
-    };
-  });
-  check(calcGeometry.columns===5&&calcGeometry.backRatio>1.7&&calcGeometry.zeroRatio>1.7&&
-    calcGeometry.equalsRatio>1.7&&calcGeometry.percentRow&&calcGeometry.reciprocalRow,
-    v.name+" calculator no longer matches CAT five-column key geometry: "+JSON.stringify(calcGeometry));
+  const calcLayout=await page.locator(".calc-grid").evaluate(grid=>({
+    columns:getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length,
+    keys:[...grid.querySelectorAll("[data-calc-key]")].map(node=>{
+      const r=node.getBoundingClientRect();
+      return {key:node.getAttribute("data-calc-key"),x:r.x,y:r.y,width:r.width,height:r.height};
+    })
+  }));
+  const calcBox=key=>calcLayout.keys.find(item=>item.key===key);
+  const back=calcBox("backspace"),clear=calcBox("clear"),zero=calcBox("0"),
+    decimal=calcBox("."),equals=calcBox("equals"),plus=calcBox("+"),
+    percent=calcBox("%"),seven=calcBox("7"),reciprocal=calcBox("reciprocal"),four=calcBox("4");
+  const geometryComplete=[back,clear,zero,decimal,equals,plus,percent,seven,reciprocal,four].every(Boolean);
+  const calcGeometry=geometryComplete?{
+    columns:calcLayout.columns,backRatio:back.width/clear.width,zeroRatio:zero.width/decimal.width,
+    equalsRatio:equals.height/plus.height,percentRow:Math.abs(percent.y-seven.y)<2,
+    reciprocalRow:Math.abs(reciprocal.y-four.y)<2
+  }:{columns:calcLayout.columns,missing:true};
+  check(geometryComplete&&calcGeometry.columns===5&&calcGeometry.backRatio>1.7&&
+    calcGeometry.zeroRatio>1.7&&calcGeometry.equalsRatio>1.7&&calcGeometry.percentRow&&
+    calcGeometry.reciprocalRow,
+    v.name+" calculator no longer matches CAT five-column key geometry: "+
+      JSON.stringify({calcGeometry,keys:calcLayout.keys.map(x=>x.key)}));
   // Recover the exact scratch calculation independently of the scored attempt.
   await page.locator('[data-calc-key="ms"]').click();
   await page.locator('[data-calc-key="+"]').click();
