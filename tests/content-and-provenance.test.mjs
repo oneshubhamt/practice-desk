@@ -493,9 +493,9 @@ test("CGL original wording, options, source key and media are frozen at reviewed
  const patchedKey=structuredClone(attempt);
  patchedKey.sourceReviewReference.entries[0].sourceAnswer.optionId="unknown";
  assert.throws(()=>validateGenericStoredRecord(patchedKey),/source-review hash mismatch/);
- // Existing pre-Pass-12 records remain loadable, including historic reviews
- // that have no original-text snapshot and must not be silently backfilled.
- assert.equal(validateGenericStoredRecord(startGenericAttempt(reviewed,"old",1000)).id,"old");
+ // Source-review comparison metadata is additive current-session evidence; a
+ // current attempt remains valid when no comparison reference was frozen.
+ assert.equal(validateGenericStoredRecord(startGenericAttempt(reviewed,"no-comparison",1000)).id,"no-comparison");
 });
 
 test("edited single-section CGL preserves only its changed question subset and adjusted max",()=>{
@@ -619,6 +619,12 @@ test("time expiration and voluntary finishing have separate durable source-indep
  const missing=structuredClone(submitted);
  delete missing.completionReason;
  assert.throws(()=>validateGenericStoredRecord(missing),/completion provenance/);
+ const forgedExpiry=structuredClone(submitted);
+ forgedExpiry.completionReason="time-expired";
+ assert.throws(()=>validateGenericStoredRecord(forgedExpiry),/does not match recorded timer evidence/);
+ const unfinished=structuredClone(started);
+ unfinished.completionReason="submitted";
+ assert.throws(()=>validateGenericStoredRecord(unfinished),/Unfinished attempt cannot contain completion provenance/);
 });
 }
 
