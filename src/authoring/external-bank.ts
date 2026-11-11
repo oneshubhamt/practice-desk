@@ -232,8 +232,8 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
  let calculatorTool:AuthoringDraft["calculatorTool"];
  if(bank.tools!==undefined){
   const tools=object(bank.tools,"$.tools",["calculator"]);
-  if(tools.calculator!=="basic")err("$.tools.calculator",'Expected "basic"');
-  calculatorTool="basic";
+  if(tools.calculator!=="basic-v1")err("$.tools.calculator",'Expected "basic-v1"');
+  calculatorTool="basic-v1";
  }
  const sections=new Map<string,{title:string;minutes:number}>();
  const titles=new Set<string>();
