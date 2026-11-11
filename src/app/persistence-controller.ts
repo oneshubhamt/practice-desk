@@ -142,7 +142,7 @@ export const saveWorkspaceRecord=(owner:CoordinatorContext,record:RecordItem):Pr
      owner.draw();return Promise.resolve(false);
    }
    const previous=owner.records.get(record.id);
-   const expected=previous?previous.saveRevision??0:null;
+   const expected=previous?previous.saveRevision:null;
    const versioned={...record,saveRevision:nextWriteVersion(expected)};
    const packed=isAttempt(versioned)?compactAttempt(versioned):null;
    owner.records.set(record.id,versioned);
@@ -261,7 +261,7 @@ export const removeWorkspaceAttempt=async (owner:CoordinatorContext,id:string,in
          request.onsuccess=()=>{
            try{
              const stored=request.result as RecordItem|undefined;
-             assertWriteVersion(stored,current.saveRevision??0);
+             assertWriteVersion(stored,current.saveRevision);
              assertDeletionAllowed(stored,intent);
              store.delete(id);
            }catch(error){conflict=error as Error;tx.abort();}
@@ -314,7 +314,7 @@ export const deleteCompletedWorkspaceAttempts=async (owner:CoordinatorContext):P
            request.onsuccess=()=>{
              try{
                const current=request.result as SlimAttempt|undefined;
-               assertWriteVersion(current,saved.saveRevision??0);
+               assertWriteVersion(current,saved.saveRevision);
                if(!isSharedAttempt(current)||current.finishedAt===null)
                  throw Error("Completed status changed in another tab; deletion cancelled");
                store.delete(saved.id);
