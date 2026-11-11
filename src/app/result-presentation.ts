@@ -159,11 +159,6 @@ export function answerRevisionHTML(a:GenericAttempt):string{
   '</div><p class="fine">Tracks recorded successive single-choice replacements. Clear-and-reselect and unverified items are not classified as rescued/lost; these are observed changes, not proof that revision caused improvement.</p></section>';
 }
 
-/** Kept as an exported compatibility helper; the overview now uses resultPacingHTML. */
-export function sectionPaceHTML(a:GenericAttempt):string{
- return resultPacingHTML(a);
-}
-
 /** Compact v11-like question-speed and coaching presentation, retaining direct review links. */
 export function questionCoachingHTML(a:GenericAttempt,allowReview=true):string{
  const evidence=attemptEvidence(a);
