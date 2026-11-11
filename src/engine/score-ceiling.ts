@@ -112,6 +112,6 @@ export function sectionScoreSummaries(attempt:GenericAttempt,result:ScoreResult)
      attempted,correct,incorrect,unanswered,pending,excluded,marks,foregroundMs,
      eligibleMax:scoreableMaximum(paper,attempt.frozen.key,attempt.frozen.questions,section),
      timerMs:sectionTimerDuration(attempt.state,paper.sections.indexOf(section)),
-     timerReason:attempt.state.completedSectionTimings?.find(z=>z.sectionId===section.id)?.reason??null};
+     timerReason:attempt.state.completedSectionTimings.find(z=>z.sectionId===section.id)?.reason??null};
  });
 }
