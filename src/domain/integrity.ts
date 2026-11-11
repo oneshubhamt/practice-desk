@@ -11,9 +11,10 @@ export function answerKeyRevisionHash(value:Pick<AnswerKeyRevision,"entries">):C
  return hashJson(value.entries) as ContentHash;
 }
 export function paperRevisionHash(value:Pick<PaperRevision,
- "sections"|"timing"|"navigation"|"scoring"|"answerKeyRevisionId"|"edition"|
+ "sections"|"timing"|"navigation"|"candidateTools"|"scoring"|"answerKeyRevisionId"|"edition"|
  "sourcePaperRevisionId"|"sourceAnswerKeyRevisionId">):ContentHash{
  return hashJson({sections:value.sections,timing:value.timing,navigation:value.navigation,
+   ...(value.candidateTools?{candidateTools:value.candidateTools}:{}),
    scoring:value.scoring,answerKeyRevisionId:value.answerKeyRevisionId,edition:value.edition,
    ...(value.sourcePaperRevisionId?{sourcePaperRevisionId:value.sourcePaperRevisionId,
      sourceAnswerKeyRevisionId:value.sourceAnswerKeyRevisionId}:{})}) as ContentHash;
