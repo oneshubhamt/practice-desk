@@ -292,41 +292,6 @@ try{
   const ledger=await page.locator("#result-timing").innerText();
   check(["Speed","Visits","Changes","Not classified"].every(x=>ledger.includes(x)),
    "Actual visit/time/answer-change ledger or insufficient-sample disclosure missing");
-  // Restore an older record with no visit counters: do not fabricate observations.
-  await page.evaluate(async id=>{
-   const db=await new Promise((resolve,reject)=>{
-    const r=indexedDB.open("practiceDesk.shared.v1",1);
-    r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
-   });
-   try{await new Promise((resolve,reject)=>{
-    const tx=db.transaction("attempts","readwrite"),store=tx.objectStore("attempts");
-    const r=store.get(id);
-    r.onsuccess=()=>{const older=r.result;delete older.state.questionVisits;store.put(older);};
-    tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);
-   });}finally{db.close();}
-  },id);
-  await page.reload({waitUntil:"load"});
-  // Initial Library HTML is provisional during asynchronous hydration. Wait
-  // for the actual URL route AND its final mounted controls before deciding
-  // whether a manually restored older record needs to be opened via History.
-  await page.waitForFunction(()=>{
-   const url=new URL(location.href);
-   const fromHash=url.hash.startsWith("#pd=")?
-     new URLSearchParams(url.hash.slice(1)).get("pd"):null;
-   const screen=fromHash??url.searchParams.get("pd")??"library";
-   if(screen==="result")return Boolean(document.querySelector("#result-tab-timing"));
-   if(screen==="history")return Boolean(document.querySelector(".history-archive"));
-   return screen==="library"&&document.querySelector("#g-import")?.disabled===false;
-  });
-  if(await page.locator("#result-tab-timing").count()===0){
-   if(await page.locator(".history-archive").count()===0){
-    await page.locator("#g-history").click();await route(page,"history");
-   }
-   await page.locator('[data-attempt="'+id+'"]').first().click();await route(page,"result");
-  }
-  await page.locator("#result-tab-timing").click();
-  check((await page.locator("#result-timing").innerText()).includes("Not recorded"),
-   "Old saved attempts falsely attributed unsaved visit counts");
   await page.locator("#g-library").click();await route(page,"library");
   await page.locator("#g-file").setInputFiles({name:"six-kinds.json",mimeType:"application/json",
    buffer:Buffer.from(JSON.stringify(pkg))});
@@ -340,8 +305,36 @@ try{
    x.finishedAt!==null&&x.frozen.snapshot.examId===pkg.examId);
   check(custom?.state.questionVisits?.length===1,
    "Initial imported six-kind question visit not captured");
+  // Canonical persistence is fail-closed: a record missing required timing
+  // evidence is corrupt input, not an older schema to interpret.
+  await page.locator("#g-library").click();await route(page,"library");
+  await page.evaluate(async id=>{
+   const db=await new Promise((resolve,reject)=>{
+    const r=indexedDB.open("practiceDesk.history",1);
+    r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
+   });
+   try{await new Promise((resolve,reject)=>{
+    const tx=db.transaction("attempts","readwrite"),store=tx.objectStore("attempts");
+    const r=store.get(id);
+    r.onsuccess=()=>{
+     const corrupt=r.result;
+     if(!corrupt)throw new Error("Expected persisted attempt");
+     delete corrupt.state.questionVisits;
+     store.put(corrupt);
+    };
+    tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);
+   });}finally{db.close();}
+  },id);
+  await page.reload({waitUntil:"load"});
+  await page.waitForFunction(()=>document.querySelector(".generic-warning")?.textContent?.includes("STORAGE INTEGRITY WARNING"));
+  const integrityWarning=await page.locator(".generic-warning").first().innerText();
+  check(integrityWarning.includes("quarantined")&&await page.locator("#g-start").isDisabled(),
+   "Noncanonical persisted row was not quarantined with writes locked");
+  await page.locator("#g-history").click();await route(page,"history");
+  check(await page.locator('[data-attempt="'+id+'"]').count()===0,
+   "Noncanonical persisted row remained visible instead of being quarantined");
  });
  await h.evidence("advanced-history",{bulkAtomic:true,fallBackQuota:true,backup:true,
-  sixPending:true,crossPaper:true,historicVisits:true});
+  sixPending:true,crossPaper:true,canonicalTimingQuarantine:true});
 }catch(e){throw e;}
 finally{await h.finish();}
