@@ -1,6 +1,7 @@
-/** P45: one portable backup v3 archive, optionally gzip-compressed.
- * No new data schema and no network/dependency/runtime migration.
- * An explicit decompressed-size bound prevents unchecked gzip expansion. */
+/** Portable current backup archive, optionally gzip-compressed.
+ * The file wrapper adds no alternate data topology; it only compresses the
+ * canonical backup payload. An explicit decompressed-size bound prevents
+ * unchecked gzip expansion. */
 export const PLAIN_BACKUP_LIMIT=75*1024*1024;
 /** Compressed archives have a separate bound; total decompressed JSON is still capped. */
 export const GZIP_BACKUP_LIMIT=128*1024*1024;
