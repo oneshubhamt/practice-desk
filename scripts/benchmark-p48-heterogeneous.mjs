@@ -1,6 +1,6 @@
 /** P48-2 measured heterogeneous cold-load stress, *not* a speedup claim.
  * Synthetic workload: ten real image-bearing SSC CGL paper graphs, sixteen
- * different simple authored APFC/NAT revisions, frozen 100-question completed
+ * different canonical authored APFC/NAT revisions, frozen 100-question completed
  * and in-progress attempts, one imported package per family and FSRS cards.
  * Uses real IndexedDB and app file:// Chromium rather than a mocked store.
  */
@@ -8,7 +8,7 @@ import {performance} from "node:perf_hooks";
 import {readFile} from "node:fs/promises";
 import {openHarness,check,route} from "./browser/fixtures.mjs";
 import {builtinCglPackages,configureCglPractice,startGenericAttempt,transitionGenericAttempt} from "../src/app/exam-package.ts";
-import {importSimpleQuestionBank,APFC_NAT_BANK_TEMPLATE} from "../src/app/bank-import.ts";
+import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
 import {compactAttempt} from "../src/history/shared-store.ts";
 import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
 import {addLearningCard} from "../src/learning/learning.ts";
@@ -20,6 +20,8 @@ const round=n=>Math.round(n*100)/100;
 const summary=a=>({min:round(Math.min(...a)),median:round(a.toSorted((x,y)=>x-y)[Math.floor(a.length/2)]),max:round(Math.max(...a))});
 const papers=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url),"utf8"));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url),"utf8"));
+const authoringExample=JSON.parse(await readFile(
+ new URL("../examples/apfc-authoring-example.json",import.meta.url),"utf8"));
 const bundles=builtinCglPackages(papers,patches).map(p=>configureCglPractice(p,"strict"));
 const attempts=bundles.map((bundle,i)=>{
  let attempt=startGenericAttempt(bundle,"p48-real-template-"+i,origin);
@@ -33,12 +35,12 @@ const attempts=bundles.map((bundle,i)=>{
 });
 const pending=bundles.map((bundle,i)=>startGenericAttempt(bundle,"p48-pending-template-"+i,origin));
 const imported=Array.from({length:16},(_,i)=>{
- const bank=structuredClone(APFC_NAT_BANK_TEMPLATE);
- bank.bankId="p48-hetero-"+i;
+ const bank=structuredClone(authoringExample);
+ bank.bankId="p48-hetero-"+i;bank.paperId="p48-hetero-"+i;
  bank.title="Heterogeneous APFC family "+(i+1);
- bank.questions[0].question="Verified-input synthetic load case "+i+": "+
+ bank.questions[0].prompt="Synthetic load case "+i+": "+
    ("Labour, social security and independent source revision. ".repeat(7));
- return importSimpleQuestionBank(bank);
+ return compileExternalQuestionBank(bank);
 });
 const cards=attempts[0].frozen.questions.slice(0,80)
  .map(q=>({...addLearningCard(attempts[0],q.id,new Date(origin+5000).toISOString()),saveRevision:1}));
