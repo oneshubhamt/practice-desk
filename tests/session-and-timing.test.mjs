@@ -258,7 +258,7 @@ const restoreSession = __suite_dep_10["restoreSession"];
 const assertDeletionAllowed = __suite_dep_11["assertDeletionAllowed"];
 const deletionWarning = __suite_dep_11["deletionWarning"];
 const historyHTML = __suite_dep_12["historyHTML"];
-const sectionPaceHTML = __suite_dep_13["sectionPaceHTML"];
+const resultPacingHTML = __suite_dep_13["resultPacingHTML"];
 const event=(type,nowMs,props={})=>({type,nowMs,...props});
 const base=(overrides={})=>({...pkg.paper,...overrides,
   navigation:overrides.navigation??{...pkg.paper.navigation,sectionNavigation:"sequential-locked"}});
@@ -300,7 +300,7 @@ test("F01: early-submitted sequential section and final section preserve timer d
  const rows=sectionScoreSummaries(attempt,attempt.result);
  assert.deepEqual(rows.map(x=>x.timerMs),[125,225]);
  assert.deepEqual(rows.map(x=>x.timerReason),["submitted","submitted"]);
- assert.match(sectionPaceHTML(attempt),/Section time: 00:01/);
+ assert.match(resultPacingHTML(attempt),/Section time: 00:01/);
 });
 
 test("F01: manual expiry freezes waiting interval through persistence and restore",()=>{
@@ -341,7 +341,7 @@ test("F01: locked whole-paper sections have consumable section time; free multi-
  assert.equal(f.state.elapsedMs,200);
  assert.deepEqual(f.state.completedSectionTimings,[]);
  assert.deepEqual(sectionScoreSummaries(f,f.result).map(x=>x.timerMs),[null,null]);
- assert.match(sectionPaceHTML(f),/Not recorded/);
+ assert.match(resultPacingHTML(f),/Not recorded/);
  assert.doesNotThrow(()=>validateGenericStoredRecord(f));
 });
 
