@@ -32,11 +32,11 @@ Calculator display, pending operation, memory and open/closed state are recovera
 
 ## Local persistence, revision safety and backups
 
-- `practiceDesk.shared.v1` stores compact attempts plus deduplicated immutable snapshot bodies. Transactions verify both source identity and revision where applicable.
+- `practiceDesk.history` stores compact attempts plus deduplicated immutable snapshot bodies. Transactions verify both source identity and revision where applicable.
 - CAS/optimistic concurrency uses revision `0` only for a new in-memory record before its first durable write. Persisted rows and backups require revisions `1+`; stale sibling-tab writes are rejected and terminal results cannot be revived by an older emergency mirror.
 - `practice-desk-backup` v4 is SHA-checked, bounded, additive and conflict-aware. It cannot authenticate a maliciously authored backup: strictly validate records, fields, structural hashes and snapshots on restore.
 - Corrupted or missing snapshot references should be surfaced or quarantined, not silently replaced with newly computed key/marks. Explicit deletion/discard, stable archive IDs and recovery precedence apply.
-- Drafts/staging and local browser History are **separate export lifecycles**; do not promise v11/v3 migration or implicit remote synchronization.
+- Drafts/staging and local browser History are **separate export lifecycles**; noncanonical historical formats are not migration targets; do not promise implicit remote synchronization.
 
 ## Authoring and external sources
 
