@@ -34,7 +34,7 @@ jobs:
           test "$before" = "$after" || { echo "::error::Non-reproducible HTML build"; exit 1; }
           echo "P42 verified deterministic HTML SHA-256 $after"
       - name: Save source-verified standalone HTML
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/overhaul' || github.ref == 'refs/heads/Satyam')
+        if: github.event_name == 'push' && github.ref == 'refs/heads/working'
         uses: actions/upload-artifact@v4
         with:
           name: source-verified-offline-html
@@ -157,7 +157,7 @@ jobs:
 
   publish:
     name: Publish only after all current-app gates pass
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/overhaul' || github.ref == 'refs/heads/Satyam')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/working'
     needs: [core, optimizer-runtime, chromium, cross-browser]
     runs-on: ubuntu-latest
     permissions:
@@ -181,7 +181,7 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           target_branch="${GITHUB_REF_NAME}"
           case "$target_branch" in
-            overhaul|Satyam) ;;
+            working) ;;
             *) echo "::error::Unauthorized guarded publisher branch"; exit 1 ;;
           esac
           git fetch origin "$target_branch"
