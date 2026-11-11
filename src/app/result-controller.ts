@@ -156,7 +156,7 @@ export function renderCurrentResultHTML(owner:CoordinatorContext):string {
       const explanation=owner.attempt!.explanations?.[it.questionRevisionId];
       const richExplanation=q?.content.richExplanation;
       const seconds=owner.attempt!.state.responses.find(r=>r.questionRevisionId===it.questionRevisionId)?.timeSpentMs??0;
-      const visitCount=owner.attempt!.state.questionVisits?.find(r=>r.questionRevisionId===it.questionRevisionId)?.count;
+      const visitCount=owner.attempt!.state.questionVisits.find(r=>r.questionRevisionId===it.questionRevisionId)?.count;
       const speed=questionSpeed(owner.attempt!,it.questionRevisionId);
       if(!q)return "";
       const prior=owner.attempt!.manualGrades?.find(g=>g.questionRevisionId===q.id);
@@ -171,7 +171,7 @@ export function renderCurrentResultHTML(owner:CoordinatorContext):string {
          escapeText(editorialStatusLabel(q.editorial))+'</span>'+
          (q.editorial.sourcePage?' · Source page '+q.editorial.sourcePage:"")+
          ' · '+minutes(seconds)+' foreground exposure · Speed: '+escapeText(speed)+
-         ' · Visits: '+(owner.attempt!.state.questionVisits===undefined?"Not recorded":visitCount??0)+'</p>'+
+         ' · Visits: '+(visitCount??0)+'</p>'+
        frozenReviewMedia(owner.attempt!,q,response,answer,it.verdict)+
        (origin?'<p class="fine">Notebook source: '+escapeText(origin.sourcePaperId)+
          ' · '+escapeText(origin.sourcePaperEdition)+' · '+escapeText(origin.sourceSectionTitle)+
