@@ -22,17 +22,18 @@ const P=x=>plainRichDocument(x);
 function paper(){
  const a=newAuthoringDraft();
  const a1={...newAuthoringQuestion("multiple-select"),section:"Economy",subject:"Economy",topic:"Inflation",
-  subtopic:"CPI",difficulty:"medium",sectionMinutes:15,minSelections:2,maxSelections:3,
+  subtopic:"CPI",difficulty:"medium",minSelections:2,maxSelections:3,
   partialCreditEach:1,partialPenaltyEach:0.5,
   prompt:P("Select two correct statements"),options:["A","B","C","D"].map(P),
   answer:"A,C",explanation:P("Detailed source evidence")};
  const a2={...newAuthoringQuestion("single-choice"),section:"Polity",subject:"Polity",topic:"Parliament",
-  subtopic:"Committees",difficulty:"easy",sectionMinutes:10,
+  subtopic:"Committees",difficulty:"easy",
   prompt:P("What is the answer?"),options:["A","B","C","D"].map(P),answer:"B"};
  return {...a,examId:"upsc-epfo-apfc",paperId:"hierarchical-check",
   title:"User-authored custom hierarchy",timingKind:"sectional",sectionNavigation:"sequential-locked",
   questionNavigation:"forward-only",pausePolicy:"forbidden",allowReview:false,
-  sectionTransition:"automatic",allowEarlySubmit:false,questions:[a1,a2]};
+  sectionTransition:"automatic",allowEarlySubmit:false,
+  sections:[{name:"Economy",minutes:15},{name:"Polity",minutes:10}],questions:[a1,a2]};
 }
 test("P49 topic paths have stable ancestors and never collapse same label across different parents",()=>{
  const left=topicAncestors(["Economy","Inflation","CPI"]);
@@ -83,10 +84,9 @@ test("P50 component marking is actual scorer policy; frozen full marks remain ca
 });
 test("P50 author cannot publish conflicting section budgets, invalid key cardinality or impossible policy",()=>{
  const orig=paper();
- const conflict={...orig,questions:[orig.questions[0],{...orig.questions[0],
-  id:newAuthoringQuestion().id,sectionMinutes:14}]};
+ const conflict={...orig,sections:[...orig.sections,{name:"Economy",minutes:14}]};
  assert.equal(inspectAuthoringPublication(conflict).valid,false);
- assert.match(inspectAuthoringPublication(conflict).issues.map(x=>x.reason).join("|"),/same duration/);
+ assert.match(inspectAuthoringPublication(conflict).issues.map(x=>x.reason).join("|"),/Duplicate exam section/);
  const invalidPolicy={...orig,sectionNavigation:"free"};
  assert.equal(inspectAuthoringPublication(invalidPolicy).valid,false);
  const wrongKey={...orig,questions:[{...orig.questions[0],answer:"A"},orig.questions[1]]};
