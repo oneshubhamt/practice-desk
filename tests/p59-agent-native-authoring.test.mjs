@@ -230,15 +230,15 @@ test("P59: 200-question ordinary agent inspection uses much smaller output than 
  assert.equal(compact.data.issues.limit,12);
  assert.ok(compact.data.issues.items.length<=12);
  assert.equal(compact.data.factualVerification,"not-performed");
- const legacy=fileURLToPath(new URL("../scripts/question-bank-cli.mjs",import.meta.url));
- const old=spawnSync(process.execPath,[legacy,"qa-bank",input],{
+ const fullCli=fileURLToPath(new URL("../scripts/question-bank-cli.mjs",import.meta.url));
+ const old=spawnSync(process.execPath,[fullCli,"qa-bank",input],{
   encoding:"utf8",timeout:30000,maxBuffer:2*1024*1024
  });
  assert.equal(old.status,0,old.stderr);
  assert.ok(compact.stdout.length<8000,
   "200-question compact report must not print all 200 question checks");
  assert.ok(compact.stdout.length*5<old.stdout.length,
-  "Compact authoring diagnostics should consume at most a fifth of legacy QA characters");
+  "Compact authoring diagnostics should consume at most a fifth of full QA characters");
  console.log("P59 agent context proxy, 200 questions: concise "+compact.stdout.length+
   " UTF-8 JS characters vs full machine QA "+old.stdout.length+
   " JS characters; this is not a measured model token count");

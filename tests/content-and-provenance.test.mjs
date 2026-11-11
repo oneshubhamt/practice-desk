@@ -32,7 +32,7 @@ import * as __suite_dep_26 from "../src/domain/hash.ts";
 import * as __suite_dep_27 from "../src/learning/learning.ts";
 import * as __suite_dep_28 from "../src/app/preferences.ts";
 
-// === Legacy suite: tests/content-cgl-edition-parity.test.mjs — 5 unchanged test registrations ===
+// === Consolidated coverage: tests/content-cgl-edition-parity.test.mjs — 5 unchanged test registrations ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -83,9 +83,9 @@ test("all five CGL paper families preserve independently pinned original and rev
      assert.equal(rev.content.prompt,patch.stem??before.stem);
      assert.deepEqual(rev.content.options.map(o=>o.text),patch.opts??before.opts);
      assert.equal(keyReviewed.get(rev.id)?.optionId,rev.content.options["abcd".indexOf(patch.key??before.key)].id);
-     // Directly derived from frozen baseline/v11 legacy.ts 7-12:
-     const v11Status=patch.status??(before.status==="invalid"||before.status==="caution"?"caution":"ok");
-     const expected=v11Status==="ok"?"verified":v11Status;
+     // Canonical reviewed-edition status mapping:
+     const reviewedStatus=patch.status??(before.status==="invalid"||before.status==="caution"?"caution":"ok");
+     const expected=reviewedStatus==="ok"?"verified":reviewedStatus;
      assert.equal(rev.editorial.status,expected,original.id+" Q"+before.n+" editorial parity");
      if(expected==="corrected")corrected++;
      if(expected==="caution")caution++;
@@ -177,7 +177,7 @@ test("standard CGL marking and nominal denominator are unchanged by generic cap"
 });
 }
 
-// === Legacy suite: tests/content-cgl-import-and-scoring.test.mjs — 4 unchanged test registrations ===
+// === Consolidated coverage: tests/content-cgl-import-and-scoring.test.mjs — 4 unchanged test registrations ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -209,7 +209,7 @@ test("v11-reviewed editorial policy: source invalid without a patch is scored as
 
 }
 
-// === Legacy suite: tests/content-editorial-and-timing-labels.test.mjs — 3 unchanged test registrations ===
+// === Consolidated coverage: tests/content-editorial-and-timing-labels.test.mjs — 3 unchanged test registrations ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -303,7 +303,7 @@ test("L09/L10: timing type and frozen mode have accurate labels, untimed include
 });
 }
 
-// === Legacy suite: tests/content-frozen-legacy-integrity.test.mjs — 9 unchanged test registrations ===
+// === Consolidated coverage: tests/content-frozen-integrity.test.mjs — 9 unchanged test registrations ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -338,7 +338,7 @@ const makeBackup = __suite_dep_22["makeBackup"];
 const verifyBackup = __suite_dep_22["verifyBackup"];
 const planBackupMerge = __suite_dep_22["planBackupMerge"];
 /** Pass 23 independent boundary audit, not reused Pass 17–22 fixtures/results.
- * Cross-check immutable v11 banks and reconcile adversarial generic contracts.
+ * Cross-check immutable canonical source banks and reconcile adversarial generic contracts.
  */
 
 
@@ -372,8 +372,8 @@ const rehash=b=>{
 };
 const keyUpdate=entries=>({...pkg.answerKey,entries,contentHash:answerKeyRevisionHash({entries})});
 
-test("SOURCE A/V01/V05/V19: original three content banks byte-identical with frozen baseline v11",async()=>{
- const frozenV11Blob={
+test("SOURCE A/V01/V05/V19: original content banks retain their canonical source blobs",async()=>{
+ const canonicalSourceBlob={
    papers:"1d2c388a91a82c49feb57ccd86a8a40eb7388473",
    patches:"37328784aadd53810a786550ce02ff3105fccbd7",
    solutions:"ada93d1f27c091023d6a26e9f89dd8956ebaf55e"
@@ -381,8 +381,8 @@ test("SOURCE A/V01/V05/V19: original three content banks byte-identical with fro
  for(const name of ["papers","patches","solutions"]){
   const filename="src/content/"+name+".json";
   const hash=execFileSync("git",["hash-object",filename],{cwd:root,encoding:"utf8"}).trim();
-  assert.equal(hash,frozenV11Blob[name],
-    name+" was silently changed from frozen v11 source Git blob");
+  assert.equal(hash,canonicalSourceBlob[name],
+    name+" was silently changed from its canonical source Git blob");
  }
  assert.equal(Object.keys(sources).length,5);
  assert.equal(Object.values(sources).reduce((n,p)=>n+p.questions.length,0),500);
@@ -432,7 +432,7 @@ test("V02/V07/F02/F06: all 10 paper editions have derived full/section marks, no
 
 
 
-test("F13/G10: delete lifecycle cannot bypass unfinished status; v11 backup intentionally unsupported",()=>{
+test("F13/G10: delete lifecycle cannot bypass unfinished status; noncanonical backup versions are rejected",()=>{
  assert.throws(()=>assertDeletionAllowed({recordType:"generic-attempt",finishedAt:null},"completed"),/Discard/);
  assert.throws(()=>assertDeletionAllowed({recordType:"generic-attempt",finishedAt:1},"discard-unfinished"),/completed/);
  assert.doesNotThrow(()=>assertDeletionAllowed({recordType:"generic-attempt",finishedAt:1},"completed"));
@@ -445,7 +445,7 @@ test("F13/G10: delete lifecycle cannot bypass unfinished status; v11 backup inte
 });
 }
 
-// === Legacy suite: tests/content-source-review-and-frozen-media.test.mjs — 6 unchanged test registrations ===
+// === Consolidated coverage: tests/content-source-review-and-frozen-media.test.mjs — 6 unchanged test registrations ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -628,7 +628,7 @@ test("time expiration and voluntary finishing have separate durable source-indep
 });
 }
 
-// === Legacy suite: tests/content-validation-and-build.test.mjs — 4 unchanged test registrations ===
+// === Consolidated coverage: tests/content-validation-and-build.test.mjs — 4 unchanged test registrations ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -705,7 +705,7 @@ test('single-file release contains a complete inline app',async()=>{
 });
 }
 
-// === Legacy suite: tests/integrity-hash-and-media.test.mjs — 5 unchanged test registrations ===
+// === Consolidated coverage: tests/integrity-hash-and-media.test.mjs — 5 unchanged test registrations ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];

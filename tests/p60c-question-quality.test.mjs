@@ -190,8 +190,8 @@ test("P60-C RED: strict compiler refuses incomplete review and never writes comp
  const blocked=command(cli,"compile-bank",input,output,"--quality-review",review);
  assert.notEqual(blocked.status,0);
  await assert.rejects(access(output));
- const legacy=command(cli,"validate-bank",input);
- assert.equal(legacy.status,0,"Legacy unreviewed source remains caution-compatible");
+ const structural=command(cli,"validate-bank",input);
+ assert.equal(structural.status,0,"Unreviewed structural source validation remains available");
 }));
 test("P60-C RED: malformed, fabricated, duplicate and undisclosed review records fail closed",()=>temp(async dir=>{
  const input=await write(dir,"source.json",JSON.parse(await readFile(cat,"utf8")));
@@ -422,8 +422,8 @@ test("P62-C mathematical declarations, pending status and keyword conflicts fail
  assert.ok((await inspect("math-heuristic-conflict",contradiction)).data.issues.items.some(x=>x.code==="applicability-heuristic-conflict"));
  const prior=structuredClone(review);
  prior.version=1;
- assert.ok((await inspect("old-format",prior)).data.issues.items.some(x=>x.code==="review-invalid"),
-  "Old sidecar format must not bypass the explicit declarations");
+ assert.ok((await inspect("noncanonical-format",prior)).data.issues.items.some(x=>x.code==="review-invalid"),
+  "Noncanonical sidecar format must not bypass the explicit declarations");
  const legal=structuredClone(src);
  legal.questions[0].prompt="Under the Code on Wages 2019, which letter is second?";
  const legalFile=await write(dir,"legal-heuristic.json",legal);

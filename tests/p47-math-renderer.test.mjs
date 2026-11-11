@@ -56,7 +56,7 @@ test("P47-5B malformed, malicious and untrusted TeX uses safe visible fallback",
  assert.match(bad,/aria-label="x &lt; y"/);
  assert.doesNotMatch(bad,/<y/);
 });
-test("P47-5B ordinary legacy text including TeX-looking dollars stays inert",()=>{
+test("P47-5B ordinary plain text including TeX-looking dollars stays inert",()=>{
  const source="$x^2$ <script>alert(1)</script>";
  const html=authoredTextHTML(source,undefined,new Set());
  assert.equal(html,"$x^2$ &lt;script&gt;alert(1)&lt;/script&gt;");

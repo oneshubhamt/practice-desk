@@ -20,7 +20,7 @@ import * as __suite_dep_14 from "../src/domain/validate.ts";
 import * as __suite_dep_15 from "../src/app/result-presentation.ts";
 import * as __suite_dep_16 from "../src/history/frozen.ts";
 
-// === Legacy suite: tests/exam-policy-manual-grading-and-timing.test.mjs — 9 unchanged test registrations ===
+// === Consolidated coverage: tests/exam-policy-manual-grading-and-timing.test.mjs — 9 unchanged test registrations ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -191,7 +191,7 @@ test("live timer uses nondecreasing monotonic elapsed time even if wall clock mo
 });
 }
 
-// === Legacy suite: tests/exam-preflight-and-policy-disclosure.test.mjs — 7 unchanged test registrations ===
+// === Consolidated coverage: tests/exam-preflight-and-policy-disclosure.test.mjs — 7 unchanged test registrations ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -355,7 +355,7 @@ test("F15: independently imported editions cannot inherit built-in SSC provenanc
 });
 }
 
-// === Legacy suite: tests/scoring-and-section-policy.test.mjs — 12 unchanged test registrations ===
+// === Consolidated coverage: tests/scoring-and-section-policy.test.mjs — 12 unchanged test registrations ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -560,7 +560,7 @@ test("G06: withholding detailed post-test review does not disable exam navigatio
 });
 }
 
-// === Legacy suite: tests/scoring-property-model.test.mjs — 6 unchanged test registrations ===
+// === Consolidated coverage: tests/scoring-property-model.test.mjs — 6 unchanged test registrations ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -666,7 +666,7 @@ test("seeded independent scoring reference: precedence, marks ledger, verdicts, 
 
 /** Cross-kind property: independently calculate the six original verdicts,
  * then bijectively rename all candidate/key IDs and reorder *input arrays*.
- * Unlike the legacy scorer's 200-seed policy model, this exercises all kinds.
+ * This exercises all six kinds in addition to the independent policy model.
  */
 test("P61-H six-kind independent ledger survives answer-ID bijections and input permutations",()=>{
  const stamp="2026-11-08T00:00:00Z";
@@ -886,7 +886,7 @@ testP41("frozen source evidence rejects forged comparability and unsupported v1 
  const source=all.find(x=>x.paper.paperId==="cgl-2026-10-05"&&x.paper.edition==="source");
  const revised=all.find(x=>x.paper.paperId==="cgl-2026-10-05"&&x.paper.edition==="reviewed");
  const ref=__suite_dep_9.createSourceKeyReference(revised,source);
- const attempt={...__suite_dep_5.startGenericAttempt(revised,"p41-legacy",1000),
+ const attempt={...__suite_dep_5.startGenericAttempt(revised,"p41-canonical-guard",1000),
    finishedAt:1100,sourceKeyReference:ref};
  const subtotal=__suite_dep_9.sourceKeyScore(attempt);
  testAssert.ok(subtotal.unavailable>0);
@@ -897,13 +897,13 @@ testP41("frozen source evidence rejects forged comparability and unsupported v1 
  const {contentHash:ignored,...core}=forged.sourceKeyReference;
  forged.sourceKeyReference.contentHash=hash(core);
  testAssert.throws(()=>__suite_dep_9.validateSourceKeyReference(forged),/semantic correspondence/);
- const legacyEntries=ref.entries.map(({questionRevisionId,originalOptionId,markingRule})=>
+ const noncanonicalEntries=ref.entries.map(({questionRevisionId,originalOptionId,markingRule})=>
    ({questionRevisionId,originalOptionId,markingRule}));
- const legacyCore={schema:1,paperId:ref.paperId,
+ const noncanonicalCore={schema:1,paperId:ref.paperId,
    sourcePaperRevisionId:ref.sourcePaperRevisionId,
-   sourceAnswerKeyRevisionId:ref.sourceAnswerKeyRevisionId,entries:legacyEntries};
- const legacy={...attempt,sourceKeyReference:{...legacyCore,contentHash:hash(legacyCore)}};
- testAssert.throws(()=>__suite_dep_9.validateSourceKeyReference(legacy),
+   sourceAnswerKeyRevisionId:ref.sourceAnswerKeyRevisionId,entries:noncanonicalEntries};
+ const noncanonical={...attempt,sourceKeyReference:{...noncanonicalCore,contentHash:hash(noncanonicalCore)}};
+ testAssert.throws(()=>__suite_dep_9.validateSourceKeyReference(noncanonical),
    /Invalid original source-key comparison/,
-   "Clean-break app must reject unprovable old positional answer-key snapshots");
+   "Clean-break app must reject noncanonical positional answer-key snapshots");
 });

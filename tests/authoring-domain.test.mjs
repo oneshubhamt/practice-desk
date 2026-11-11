@@ -1,7 +1,7 @@
 /** Domain-organized authoring contracts.
  * All 27 historical test registrations and their original source bodies are
  * carried unchanged, each in a lexical scope. One new property oracle follows.
- * Migration and source hashes: docs/TEST_SUITE_LEDGER.md.
+ * Canonical source hashes and consolidation evidence: docs/TEST_SUITE_LEDGER.md.
  */
 import * as __dep_0 from "node:test";
 import * as __dep_1 from "node:assert/strict";
