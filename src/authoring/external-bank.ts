@@ -249,7 +249,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
    err(path+".minutes","Sectional timing requires explicit positive minutes");
   if(timing.kind!=="sectional"&&row.minutes!==undefined)
    err(path+".minutes","Section minutes require sectional timing");
-  const minutes=row.minutes===undefined?0:num(row.minutes,path+".minutes",1,600,true);
+  const minutes=row.minutes===undefined?0:num(row.minutes,path+".minutes",0,600,true);
   sections.set(id,{title:label,minutes});
  });
  const assets=media(bank.media);
@@ -371,7 +371,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
    err(path+".difficulty","Invalid difficulty label");
   return {id,section:section!.title,subject,syllabusHeadingId,
    topic,subtopic,difficulty:difficulty as NonNullable<AuthoringQuestion["difficulty"]>,
-   sectionMinutes:section!.minutes,minSelections,maxSelections,
+   minSelections,maxSelections,
    partialCreditEach,partialPenaltyEach,
    kind:questionKind,prompt,passage,options,leftItems,rightItems,explanation,
    answer,tolerance,source:sourceNote??"",
@@ -384,13 +384,15 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
  });
  const draft:AuthoringDraft={schema:1,id:"agent:"+bankId,ingestionMode:"external-source",examId,paperId,title,
   edition:"custom",revision,durationMinutes,
-  timingKind:timing.kind as NonNullable<AuthoringDraft["timingKind"]>,
-  pausePolicy:pausePolicy as NonNullable<AuthoringDraft["pausePolicy"]>,
-  questionNavigation:questionNavigation as NonNullable<AuthoringDraft["questionNavigation"]>,
-  sectionNavigation:sectionNavigation as NonNullable<AuthoringDraft["sectionNavigation"]>,
-  sectionTransition:sectionTransition as NonNullable<AuthoringDraft["sectionTransition"]>,
+  timingKind:timing.kind as AuthoringDraft["timingKind"],
+  pausePolicy:pausePolicy as AuthoringDraft["pausePolicy"],
+  questionNavigation:questionNavigation as AuthoringDraft["questionNavigation"],
+  sectionNavigation:sectionNavigation as AuthoringDraft["sectionNavigation"],
+  sectionTransition:sectionTransition as AuthoringDraft["sectionTransition"],
   allowEarlySubmit,allowReview,...(calculatorTool?{calculatorTool}:{}),marksCorrect,marksIncorrect,
-  updatedAt:"1970-01-01T00:00:00.000Z",assets,stimuli,questions};
+  updatedAt:"1970-01-01T00:00:00.000Z",assets,
+  sections:[...sections.values()].map(section=>({name:section.title,minutes:section.minutes})),
+  stimuli,questions};
  try{return validateAuthoringDraft(draft);}
  catch(error){return err("$",error instanceof Error?error.message:"Invalid canonical authoring draft");}
 }
