@@ -534,6 +534,10 @@ function edition(edition,revised=false){
    "numeric-entry":{correctMarks:5,incorrectMarks:-1,unansweredMarks:0},
    "multiple-select":{correctMarks:3,incorrectMarks:-1,unansweredMarks:0}}};
  const paperBase={...pkg.paper,id:"paper-"+edition,edition,answerKeyRevisionId:answerKey.id,
+   ...(edition==="reviewed"?{
+     sourcePaperRevisionId:"paper-source",
+     sourceAnswerKeyRevisionId:"key-source"
+   }:{}),
    sections,scoring:policy};
  const paper={...paperBase,contentHash:paperRevisionHash(paperBase)};
  return validateExamPackage({...pkg,title:"Generic exam "+edition,questions,answerKey,paper});
