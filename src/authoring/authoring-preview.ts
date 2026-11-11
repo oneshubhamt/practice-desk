@@ -167,7 +167,8 @@ export function authoringPartialCreditExamples(pkg:ExamPackage):AuthoringPartial
   }
   if(!response)continue;
   const scored=scoreAttempt(pkg.paper,pkg.answerKey,pkg.questions,[{
-   questionRevisionId:q.id,timeSpentMs:0,answerChangeCount:0,flagged:false,response
+   questionRevisionId:q.id,timeSpentMs:0,firstVisitMs:0,preFirstAnswerMs:0,
+   answerChangeCount:0,flagged:false,response
   }],"2026-11-04T00:00:00.000Z").items.find(item=>item.questionRevisionId===q.id);
   if(scored)results.push({questionRevisionId:q.id,response,verdict:scored.verdict,
     marks:scored.marks,description});
