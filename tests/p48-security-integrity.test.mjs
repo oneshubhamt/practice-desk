@@ -7,20 +7,22 @@ import {readFile} from "node:fs/promises";
 import {createHash} from "node:crypto";
 import {pkg} from "./fixtures/six-kinds.mjs";
 import {validateExamPackage} from "../src/app/exam-package.ts";
-import {importSimpleQuestionBank,APFC_NAT_BANK_TEMPLATE} from "../src/app/bank-import.ts";
+import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
 import {makeBackup,verifyBackup} from "../src/history/backup.ts";
 import {builtinCglPackages,startGenericAttempt} from "../src/app/exam-package.ts";
 import {createSourceKeyReference,validateSourceKeyReference} from "../src/engine/source-comparison.ts";
 import {createSourceReviewReference,validateSourceReviewReference} from "../src/engine/review-source.ts";
 
 const mutate=(fn)=>{const copy=structuredClone(pkg);fn(copy);return copy;};
+const authoringExample=JSON.parse(await readFile(
+ new URL("../examples/apfc-authoring-example.json",import.meta.url),"utf8"));
 
 
 
 test("P48-1 unknown unsigned fields are rejected at every exam/key/paper nested boundary",()=>{
- // Control: valid pre-existing six-kind and APFC/NAT source remain importable.
+ // Control: valid pre-existing six-kind and canonical authoring source remain usable.
  assert.equal(validateExamPackage(structuredClone(pkg)).paper.id,pkg.paper.id);
- assert.equal(importSimpleQuestionBank(structuredClone(APFC_NAT_BANK_TEMPLATE)).questions.length,2);
+ assert.equal(compileExternalQuestionBank(structuredClone(authoringExample)).questions.length,3);
 
  const invalid=[
   ["envelope",p=>p.silentPayload={canExecute:"never"}],
@@ -46,7 +48,7 @@ test("P48-1 unknown unsigned fields are rejected at every exam/key/paper nested 
  for(const [name,fn] of invalid)
    assert.throws(()=>validateExamPackage(mutate(fn)),/unsupported field/,name);
 });
-test("P48-1 simple authoring envelopes cannot launder undeclared metadata",()=>{
+test("P48-1 canonical authoring envelopes cannot launder undeclared metadata",()=>{
  const tests=[
   [bank=>bank.certificate="government", "root"],
   [bank=>bank.scoring.overrideKey="B","scoring"],
@@ -55,9 +57,9 @@ test("P48-1 simple authoring envelopes cannot launder undeclared metadata",()=>{
   [bank=>bank.media=[{id:"a",dataUri:"data:image/png;base64,AA==",altText:"x",unauthorized:true}],"media"]
  ];
  for(const [fn,label] of tests){
-   const copy=structuredClone(APFC_NAT_BANK_TEMPLATE);
+   const copy=structuredClone(authoringExample);
    fn(copy);
-   assert.throws(()=>importSimpleQuestionBank(copy),/unsupported|only id, dataUri and altText/,label);
+   assert.throws(()=>compileExternalQuestionBank(copy),/unsupported|field|media/i,label);
  }
 });
 
