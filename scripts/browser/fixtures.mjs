@@ -20,7 +20,7 @@ export const check=(condition,message)=>{
  if(!condition)throw Error("MODERN ACCEPTANCE: "+message);
 };
 export async function starterBank(){
- return JSON.parse(await readFile(join(root,"examples/apfc-mcq-nat-starter.json"),"utf8"));
+ return JSON.parse(await readFile(join(root,"examples/apfc-authoring-example.json"),"utf8"));
 }
 function chromePath(){
  for(const name of ["google-chrome","google-chrome-stable","chromium","chromium-browser"]){
