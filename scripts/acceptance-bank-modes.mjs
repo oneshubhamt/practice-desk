@@ -151,6 +151,20 @@ for(const v of [
     await page.locator('.calc-grid[role="group"]').getAttribute("aria-label")==="Calculator keypad"&&
     await page.locator('[data-calc-key="/"]').getAttribute("aria-label")==="Divide",
     v.name+" calculator accessibility labels/groups missing");
+  const calcGeometry=await page.locator(".calc-grid").evaluate(grid=>{
+    const box=key=>grid.querySelector('[data-calc-key="'+key+'"]').getBoundingClientRect();
+    const back=box("backspace"),clear=box("clear"),zero=box("0"),decimal=box("."),equals=box("equals"),plus=box("+");
+    return {
+      columns:getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length,
+      backRatio:back.width/clear.width,zeroRatio:zero.width/decimal.width,
+      equalsRatio:equals.height/plus.height,
+      percentRow:Math.abs(box("%").y-box("7").y)<2,
+      reciprocalRow:Math.abs(box("reciprocal").y-box("4").y)<2
+    };
+  });
+  check(calcGeometry.columns===5&&calcGeometry.backRatio>1.7&&calcGeometry.zeroRatio>1.7&&
+    calcGeometry.equalsRatio>1.7&&calcGeometry.percentRow&&calcGeometry.reciprocalRow,
+    v.name+" calculator no longer matches CAT five-column key geometry: "+JSON.stringify(calcGeometry));
   // Recover the exact scratch calculation independently of the scored attempt.
   await page.locator('[data-calc-key="ms"]').click();
   await page.locator('[data-calc-key="+"]').click();
