@@ -17,11 +17,9 @@ export interface QuestionTimingPhases {
  readonly visits:number;
 }
 export function questionTimingPhases(a:GenericAttempt,id:QuestionRevisionId):QuestionTimingPhases|null{
- if(a.state.timingEvidenceVersion!==1)return null;
  const row=a.state.responses.find(x=>x.questionRevisionId===id);
- const visits=a.state.questionVisits?.find(x=>x.questionRevisionId===id)?.count;
- if(!row||visits===undefined||row.firstVisitMs===undefined||
-    row.preFirstAnswerMs===undefined||!Number.isFinite(row.firstVisitMs)||
+ const visits=a.state.questionVisits.find(x=>x.questionRevisionId===id)?.count;
+ if(!row||visits===undefined||!Number.isFinite(row.firstVisitMs)||
     !Number.isFinite(row.preFirstAnswerMs)||row.firstVisitMs<0||
     row.preFirstAnswerMs<0||row.firstVisitMs>row.timeSpentMs||
     row.preFirstAnswerMs>row.timeSpentMs)return null;
