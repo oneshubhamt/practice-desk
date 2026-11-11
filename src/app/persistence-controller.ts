@@ -22,7 +22,8 @@ import type {SharedSnapshot,SlimAttempt} from "../history/shared-store.ts";
 
 import {readDisplayPreferences,writeDisplayPreferences,SETTINGS_EVENT} from "./preferences.ts";
 
-import type {CoordinatorContext} from "./coordinator-context.ts";\nimport {clearCandidateToolWorkspace} from "./candidate-tool-state.ts";
+import type {CoordinatorContext} from "./coordinator-context.ts";
+import {clearCandidateToolWorkspace} from "./candidate-tool-state.ts";
 
 export const downloadHistoryBackup=async (owner:CoordinatorContext):Promise<void>=>{
    await owner.writeQueue;
