@@ -105,8 +105,9 @@ export function calculatorToggleHTML(state:ExamCalculatorState):string{
   return '<button class="btn exam-calculator-toggle" type="button" id="g-calculator" '+
     'aria-controls="g-calculator-panel" aria-expanded="'+state.open+'">▦ Calculator</button>';
 }
-const key=(value:CalculatorKey,label:string,extra="")=>
-  '<button type="button" class="calc-key '+extra+'" data-calc-key="'+value+'">'+escapeText(label)+'</button>';
+const key=(value:CalculatorKey,label:string,extra="",ariaLabel?:string)=>
+  '<button type="button" class="calc-key '+extra+'" data-calc-key="'+value+'"'+
+  (ariaLabel?' aria-label="'+escapeText(ariaLabel)+'"':"")+'>'+escapeText(label)+'</button>';
 
 export function calculatorPanelHTML(state:ExamCalculatorState):string{
   return '<section class="exam-calculator" id="g-calculator-panel" role="dialog" aria-label="Basic calculator"'+
@@ -116,14 +117,14 @@ export function calculatorPanelHTML(state:ExamCalculatorState):string{
     '<div class="calc-memory" aria-label="Calculator memory">'+
       key("mc","MC")+key("mr","MR")+key("ms","MS")+key("mplus","M+")+key("mminus","M−")+
     '</div><div class="calc-grid">'+
-      key("backspace","⌫","calc-function")+key("clear","C","calc-clear")+
-      key("sign","+/−","calc-function")+key("sqrt","√","calc-function")+
+      key("backspace","⌫","calc-function","Backspace")+key("clear","C","calc-clear","Clear")+
+      key("sign","+/−","calc-function","Change sign")+key("sqrt","√","calc-function","Square root")+
       key("7","7")+key("8","8")+key("9","9")+key("/","÷","calc-operator")+
       key("4","4")+key("5","5")+key("6","6")+key("*","×","calc-operator")+
       key("1","1")+key("2","2")+key("3","3")+key("-","−","calc-operator")+
-      key("0","0")+key(".",".")+key("percent","%","calc-function")+key("+","+","calc-operator")+
-      key("reciprocal","1/x","calc-function")+key("equals","=","calc-equals")+
-    '</div><p class="calc-note">Basic arithmetic only. Calculator availability is defined by this paper.</p></section>';
+      key("0","0")+key(".",".")+key("percent","%","calc-function","Percent")+key("+","+","calc-operator","Add")+
+      key("reciprocal","1/x","calc-function","Reciprocal")+key("equals","=","calc-equals","Equals")+
+    '</div></section>';
 }
 
 export function bindExamCalculator(
