@@ -4,7 +4,7 @@ import type {ExamPackage,GenericAttempt} from "./exam-package.ts";
 import type {OptionId} from "../domain/ids.js";
 import {escapeText} from "./html-escape.ts";
 import {assetHTML,stimulusHTML,renderGenericControls,renderQuestionPrompt} from "./question-content-view.ts";
-import {calculatorPanelHTML,calculatorToggleHTML,newExamCalculatorState,type ExamCalculatorState} from "./exam-calculator.ts";
+import {calculatorPanelHTML,calculatorToggleHTML} from "./exam-calculator.ts";\nimport {BASIC_CALCULATOR_V1,newExamCalculatorState,type ExamCalculatorState} from "../domain/calculator.ts";
 /** Human-readable view of a frozen practice mode; do not alter persistence. */
 export function readablePracticeMode(mode:string):string{
  switch(mode){
@@ -61,7 +61,7 @@ export function renderModelExam(
      paper.timing.kind==="whole-paper"?"Whole-paper time used":"Section time used";
    const isLow=remaining!==null&&remaining<=60000;
    const focused=view.focused;
-   const calculatorEnabled=paper.candidateTools?.calculator==="basic";
+   const calculatorEnabled=paper.candidateTools?.calculator===BASIC_CALCULATOR_V1;
    const calculator=calculatorState??newExamCalculatorState();
    const sectionAnswered=section.questionRevisionIds.filter(qid=>Boolean(responsesById.get(qid)?.response)).length;
    const sectionFlagged=section.questionRevisionIds.filter(qid=>Boolean(responsesById.get(qid)?.flagged)).length;
