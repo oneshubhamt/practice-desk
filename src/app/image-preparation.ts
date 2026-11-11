@@ -260,7 +260,7 @@ export function createImagePreparation():ImagePreparation{
    exportBlob(new Blob([JSON.stringify(snippet,null,2)],{type:"application/json"}),
      "practice-desk-media-"+id+".json");
    status.textContent=(optimizedSource?"Reviewed WebP":"Original image")+
-    " entry downloaded. Insert it into the simple-bank media array before importing, then reference its ID using question imageIds or optionImageIds. The bank importer computes and verifies the SHA-256 before freezing.";
+    " entry downloaded. Add the prepared asset to the canonical authoring media inventory and reference it from rich question or option content. The bank importer computes and verifies the SHA-256 before freezing.";
   };
   exportOriginal.addEventListener("click",()=>{void exportSnippet(false);});
   exportWebp.addEventListener("click",()=>{void exportSnippet(true);});
