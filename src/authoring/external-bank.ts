@@ -399,6 +399,24 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
 export function inspectExternalQuestionBank(value:unknown,existing:readonly ExamPackage[]=[],comparisonSources:readonly unknown[]=[]):ExternalBankReport {
  const questionCount=Array.isArray((value as {questions?:unknown}|null)?.questions)?
   ((value as {questions:unknown[]}).questions.length):0;
+ // Give external source authors a precise structural error before conversion
+ // to the canonical draft, whose sections intentionally cannot be empty.
+ const raw=value as {sections?:unknown;questions?:unknown}|null;
+ if(Array.isArray(raw?.sections)&&Array.isArray(raw?.questions)){
+  const used=new Set(raw.questions.flatMap(item=>
+   item&&typeof item==="object"&&typeof (item as {examSection?:unknown}).examSection==="string"?
+    [(item as {examSection:string}).examSection]:[]));
+  const empty=raw.sections.flatMap(item=>{
+   if(!item||typeof item!=="object")return [];
+   const id=(item as {id?:unknown}).id;
+   return typeof id==="string"&&!used.has(id)?[id]:[];
+  });
+  if(empty.length)return {valid:false,questionCount,editorialStatus:"caution",
+   factualVerification:"not-performed",issues:empty.map(id=>({
+    path:"$.sections[id="+id+"]",code:"empty-exam-section",severity:"error" as const,
+    message:"Physical exam section has no assigned questions"
+   }))};
+ }
  try{
   const draft=toAuthoringDraft(value);
   // Preserve the precise candidate-answer-leak issue code even when the
