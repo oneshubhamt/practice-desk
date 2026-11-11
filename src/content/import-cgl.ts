@@ -14,6 +14,8 @@ const sectionNames = ["Reasoning", "General Awareness", "Quantitative Aptitude",
 export function importCglBank(papers: SourcePaperBank, patches: ReviewPatchBank) {
   const results: { paper: PaperRevision; key: AnswerKeyRevision; questions: QuestionRevision[] }[] = [];
   for (const source of Object.values(papers)) {
+    let sourcePaper:PaperRevision|undefined;
+    let sourceKey:AnswerKeyRevision|undefined;
     for (const edition of ["source", "reviewed"] as const) {
       const paperId = source.id as PaperId;
       const patchMap = edition === "reviewed" ? patches[source.id] ?? {} : {};
@@ -82,10 +84,17 @@ export function importCglBank(papers: SourcePaperBank, patches: ReviewPatchBank)
       const navigation = { questionNavigation: "free" as const, sectionNavigation: "sequential-locked" as const,
         allowFlagging: true, allowReview: true };
       const scoring = { defaultRule: { correctMarks: 2, incorrectMarks: -0.5, unansweredMarks: 0 } };
-      const paperContent = { sections, timing, navigation, scoring, answerKeyRevisionId: key.id, edition };
+      if(edition==="reviewed"&&(!sourcePaper||!sourceKey))
+        throw new Error("Reviewed CGL edition requires its exact Source revision");
+      const paperContent = { sections, timing, navigation, scoring, answerKeyRevisionId: key.id, edition,
+        ...(edition==="reviewed"?{
+          sourcePaperRevisionId:sourcePaper!.id,
+          sourceAnswerKeyRevisionId:sourceKey!.id
+        }:{}) };
       const fingerprint = paperRevisionHash(paperContent);
       const paper = validatePaperRevision({ id: `${source.id}:${edition}:${fingerprint.slice(0,16)}` as PaperRevisionId,
         paperId, revision: 1, contentHash: fingerprint, ...paperContent }, questions, key);
+      if(edition==="source"){sourcePaper=paper;sourceKey=key;}
       results.push({ paper, key, questions });
     }
   }
