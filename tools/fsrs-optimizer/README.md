@@ -1,6 +1,6 @@
 # FSRS-7 optimizer
 
-This isolated Node tool trains Practice Desk's portable FSRS-7 profile without adding Rust/WASI to the standalone `file://` application.
+Practice Desk exposes the same conservative FSRS-7 personalization contract through two local runtimes: this native Node tool remains the CI/reference path, while the static application bundles the threadless WASI Preview 1 optimizer in a dedicated browser Worker. The standalone `file://` artifact remains scheduler-capable but does not train weights in-app.
 
 ## Personalized FSRS-7 weights
 
@@ -18,7 +18,7 @@ The activation pipeline is deliberately conservative:
 
 Practice Desk additionally requires at least 64 historical training items, 64 later holdout items, and 16 distinct holdout cards before a personalized profile can be produced. These are application reliability guards, not a claim of statistical significance. If the gate fails or evidence is insufficient, the optimizer exits without a profile and the app remains on stock FSRS-7 weights. The requested output path is cleared before training and is only published after every gate succeeds, so a failed rerun cannot leave a stale profile masquerading as the new result.
 
-The beta dependency is pinned to `@open-spaced-repetition/binding@0.6.1`. Training uses FSRS-7, short-term learning, one relearning step, card IDs and FSRS-7 scheduling penalties.
+The beta native dependency is pinned to `@open-spaced-repetition/binding@0.6.1`; the browser runtime is pinned to `@open-spaced-repetition/binding-wasm32-wasip1@0.6.1`. Training uses FSRS-7, short-term learning, one relearning step, card IDs and FSRS-7 scheduling penalties. The browser Worker imports the same `optimizer-policy.mjs` holdout gate used by the native CLI, and the main application independently revalidates the emitted v2 profile before activation.
 
 ### Long runs, progress and interruption
 
@@ -40,3 +40,7 @@ The same binding exposes `computeOptimalSteps`, but upstream explicitly document
 The decay is deliberately mandatory: Practice Desk does not invent an FSRS-7 decay. The output is a separate `practice-desk-fsrs-step-analysis/v1` report marked `advisoryOnly: true` and `compatibility: "single-decay-heuristic-not-fsrs-7"`. It is never imported into, or automatically applied by, the scheduler.
 
 Run `npm run smoke` to exercise the native binding runtime, the held-out activation policy and the advisory step-analysis API.
+
+## Browser/static build
+
+From the repository root, after installing both root and optimizer dependencies, run `npm run build:static`. This creates `Practice_Desk_Static/` containing `index.html`, a bundled `fsrs-optimizer.worker.js`, and its local WASM asset. Serve the directory over localhost or HTTPS. Browser cancellation terminates the Worker; review evidence never leaves the browser for optimizer training.

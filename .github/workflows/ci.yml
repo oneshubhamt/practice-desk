@@ -53,14 +53,26 @@ jobs:
         with:
           node-version: '26.13.0'
           package-manager-cache: false
-      - name: Install isolated pinned optimizer binding
+      - run: npm ci --no-audit --no-fund
+      - name: Install isolated pinned optimizer bindings
         run: npm install --prefix tools/fsrs-optimizer --package-lock=false --no-audit --no-fund
-      - name: Run FSRS-7 optimizer and step-analysis smoke
+      - name: Run FSRS-7 native optimizer and step-analysis smoke
         run: npm run --prefix tools/fsrs-optimizer smoke
+      - name: Build static app with browser FSRS Worker/WASM
+        run: npm run build:static
+      - name: Save source-verified static app
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/overhaul' || github.ref == 'refs/heads/Satyam')
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-verified-static-app
+          path: Practice_Desk_Static/
+          if-no-files-found: error
+          retention-days: 2
+          compression-level: 0
 
   chromium:
     name: Complete offline Chromium candidate journeys
-    needs: core
+    needs: [core, optimizer-runtime]
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -70,9 +82,15 @@ jobs:
           node-version: '26.13.0'
           package-manager-cache: false
       - run: npm ci --no-audit --no-fund
+      - uses: actions/download-artifact@v4
+        with:
+          name: source-verified-static-app
+          path: Practice_Desk_Static
       - run: npm run build
       - name: All 32 source-mapped journeys in one browser process
         run: node scripts/acceptance-suite.mjs chromium
+      - name: Browser/WASM FSRS optimizer probe
+        run: node scripts/fsrs-browser-optimizer-smoke.mjs chromium
       - name: Upload failures only, including runner's per-journey report
         if: failure()
         uses: actions/upload-artifact@v4
@@ -92,7 +110,7 @@ jobs:
 
   cross-browser:
     name: Complete offline Firefox/WebKit candidate journeys (${{ matrix.browser }})
-    needs: core
+    needs: [core, optimizer-runtime]
     runs-on: ubuntu-latest
     timeout-minutes: 25
     strategy:
@@ -107,9 +125,15 @@ jobs:
           package-manager-cache: false
       - run: npm ci --no-audit --no-fund
       - run: node node_modules/playwright-core/cli.js install --with-deps ${{ matrix.browser }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: source-verified-static-app
+          path: Practice_Desk_Static
       - run: npm run build
       - name: All 20 source-mapped journeys in one browser process
         run: node scripts/acceptance-suite.mjs ${{ matrix.browser }}
+      - name: Browser/WASM FSRS optimizer probe
+        run: node scripts/fsrs-browser-optimizer-smoke.mjs ${{ matrix.browser }}
       - name: Upload failures only, including runner's per-journey report
         if: failure()
         uses: actions/upload-artifact@v4

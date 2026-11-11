@@ -1,13 +1,15 @@
 # Practice Desk
 
-Practice Desk is a **local, offline examination and learning application**. Its standalone HTML provides six question kinds, configurable exam rules, original/reviewed editions, immutable scored attempts, History, checked backups, Wordgard authoring and FSRS-based revision. It does **not** contain an embedded AI model or independently certify imported questions.
+Practice Desk is a **local-first examination and learning application**. Its static build provides six question kinds, configurable exam rules, original/reviewed editions, immutable scored attempts, History, checked backups, Wordgard authoring, FSRS-7 revision and local browser/WASM weight optimization. A standalone `file://` HTML remains available as a compatibility/offline fallback, but in-app FSRS training requires the static build. Practice Desk does **not** contain an embedded AI model or independently certify imported questions.
 
 ## Use the application
 
 1. Install Node.js 26 LTS (26.13.0 or newer 26.x) and run `npm ci --no-audit --no-fund`.
-2. Run `npm run check` to typecheck, build and run the Node test suite.
-3. Open `Practice_Desk_Offline_Mock_Tests.html` directly with `file://`.
-4. Create questions in Wordgard or explicitly import a validated bank from Library. Keep your own backups.
+2. Run `npm install --prefix tools/fsrs-optimizer --package-lock=false --no-audit --no-fund` to install the isolated native + WASM optimizer bindings.
+3. Run `npm run check` for the core application, or `npm run build:static` to additionally build `Practice_Desk_Static/` with the browser optimizer Worker/WASM.
+4. For the full-capability app, serve `Practice_Desk_Static/` over localhost or HTTPS and open its `index.html`. The directory has no required backend; the optimizer runs locally in the browser.
+5. `Practice_Desk_Offline_Mock_Tests.html` can still be opened directly with `file://` when a one-file fallback is preferable; scheduling works, but browser weight training is disabled.
+6. Create questions in Wordgard or explicitly import a validated bank from Library. Keep your own backups.
 
 External agents may create versioned question-bank JSON with repository CLI tools. **They cannot directly access the user's browser History, import content automatically or verify a claimed PYQ solely from a source hash.** Start with the [agent quickstart](docs/AGENT_AUTHORING_QUICKSTART.md).
 

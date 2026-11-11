@@ -2,7 +2,10 @@ import {createRevisionScheduler} from "../learning/fsrs-scheduler-adapter.ts";
 import {DEFAULT_REVISION_SETTINGS,readRevisionSettings,revisionSchedulerOptions,
  validateRevisionSettings,writeRevisionSettings} from "../learning/revision-settings.ts";
 import {fsrsOptimizerCsv,optimizerEvidenceSummary,serializeFsrsOptimizerProfile,
- validateFsrsOptimizerProfile} from "../learning/fsrs-optimizer.ts";
+ validateFsrsOptimizerProfile,type FsrsOptimizerProfile} from "../learning/fsrs-optimizer.ts";
+import {browserFsrsOptimizerAvailability,detectedFsrsOptimizerTimezone,FsrsOptimizerRejectedError,
+ startBrowserFsrsOptimizer,type BrowserFsrsOptimizerProgress,type BrowserFsrsOptimizerRun}
+ from "../learning/fsrs-browser-optimizer.ts";
 import {reconcileSameExamQuestion} from "./exam-dom-reconcile.ts";
 import type {RevisionSchedulerPort} from "../learning/revision-scheduler-port.ts";
 import type { ExamPackage, GenericAttempt } from "./exam-package.ts";
@@ -86,6 +89,18 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
  let selectedId:string|null=null,reviewId:string|null=null,revealed=false,revealedStartedAt:number|null=null;
  let filter:"all"|"due"|"remediation"|"bookmarked"="all",hierarchyRoot="",message="",closed=false,opened=false;
  let previousLearningView="";
+ const optimizerAvailability=browserFsrsOptimizerAvailability();
+ let optimizerTimezone=typeof revisionSettings.optimizerProfile?.training.timezone==="string"?
+   revisionSettings.optimizerProfile.training.timezone:detectedFsrsOptimizerTimezone();
+ let optimizerRollover=revisionSettings.optimizerProfile?.training.nextDayStartsAt??4;
+ let optimizerStatus=optimizerAvailability.reason;
+ let optimizerRun:BrowserFsrsOptimizerRun|null=null;
+ const optimizerProgress=(progress:BrowserFsrsOptimizerProgress)=>{
+   const percent=progress.total>0?Math.round(progress.current*100/progress.total):0;
+   optimizerStatus=progress.stage+" · "+progress.current+"/"+progress.total+(progress.total>0?" · "+percent+"%":"");
+   const status=root.querySelector<HTMLElement>("#learning-optimizer-status");
+   if(status)status.textContent=optimizerStatus;
+ };
  type NotebookDraft={note:string;customSubject:string;customTopic:string;customSubtopic:string;
    syllabusTopicId:string;errorLabel:string;bookmarked:boolean;revisionDisposition:"active"|"suspended"};
  const notebookDrafts=new Map<string,NotebookDraft>();
@@ -282,8 +297,14 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
       ' · cross-validation log loss '+Number(revisionSettings.optimizerProfile.evaluation.crossValidation.logLoss.toFixed(4)):
       'Using upstream FSRS-7 default weights.')+
     ' Raw evidence: '+optimizerEvidence.reviews+' reviews across '+optimizerEvidence.cards+' cards.</p>'+
-    '<p class="fine">Beta optimizer training runs outside the main file:// UI via <code>tools/fsrs-optimizer</code>. Timezone and day rollover are mandatory. Personalized weights activate only after a later chronological holdout beats stock FSRS-7 on log loss without RMSE-bins regression; the final 34 weights are then retrained on all evidence. The same tool exposes <code>computeOptimalSteps</code> only as a separately labelled single-decay advisory diagnostic; upstream does not consider it FSRS-7 model-consistent, so it cannot alter scheduler steps.</p>'+
-    '<div class="row generic-actions"><button class="btn" id="learning-optimizer-export"'+(optimizerEvidence.reviews?'':' disabled')+'>Export optimizer evidence</button>'+
+    '<p class="fine">The static Practice Desk build can train FSRS-7 locally in a dedicated WebAssembly Worker; no optimizer backend or review-log upload is used. Timezone and day rollover are mandatory. Personalized weights activate only after a later chronological holdout beats stock FSRS-7 on log loss without RMSE-bins regression; final 34 weights are then retrained on all evidence. The Node optimizer remains the native CI/reference path. <code>computeOptimalSteps</code> remains advisory only because upstream does not consider its single-decay fit FSRS-7 model-consistent.</p>'+
+    '<div class="learning-evidence-controls"><label>Optimizer timezone <input id="learning-optimizer-timezone" type="text" value="'+esc(optimizerTimezone)+'" placeholder="Asia/Kolkata or 330"></label>'+
+    '<label>Next study day starts <input id="learning-optimizer-rollover" type="number" min="0" max="23" step="1" value="'+optimizerRollover+'"></label></div>'+
+    '<p class="fine" id="learning-optimizer-status" role="status">'+esc(optimizerStatus)+'</p>'+
+    '<div class="row generic-actions"><button class="btn primary" id="learning-optimizer-run"'+
+      (!optimizerAvailability.available||!optimizerEvidence.reviews||optimizerRun?' disabled':'')+'>Optimize FSRS-7 locally</button>'+
+    '<button class="btn" id="learning-optimizer-cancel"'+(optimizerRun?'':' disabled')+'>Cancel optimization</button>'+
+    '<button class="btn" id="learning-optimizer-export"'+(optimizerEvidence.reviews?'':' disabled')+'>Export optimizer evidence</button>'+
     '<button class="btn" id="learning-optimizer-import">Import evaluated profile</button><input id="learning-optimizer-file" type="file" accept="application/json,.json" hidden>'+
     '<button class="btn" id="learning-optimizer-export-profile"'+(revisionSettings.optimizerProfile?'':' disabled')+'>Export active profile</button>'+
     '<button class="btn" id="learning-optimizer-reset"'+(revisionSettings.optimizerProfile?'':' disabled')+'>Use default weights</button></div></section>'+
@@ -421,6 +442,40 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
       revisionSettings=writeRevisionSettings(next);scheduler=nextScheduler;cache.clear();message="FSRS-7 scheduling policy applied.";draw();
     }catch(error){message=error instanceof Error?error.message:"Invalid scheduling policy";draw();}
   };
+  const activateOptimizerProfile=async(profile:FsrsOptimizerProfile)=>{
+    const next=validateRevisionSettings({...revisionSettings,optimizerProfile:profile});
+    const nextScheduler=await createRevisionScheduler(revisionSchedulerOptions(next));
+    revisionSettings=writeRevisionSettings(next);scheduler=nextScheduler;cache.clear();
+  };
+  const timezoneField=root.querySelector<HTMLInputElement>("#learning-optimizer-timezone")!;
+  const rolloverField=root.querySelector<HTMLInputElement>("#learning-optimizer-rollover")!;
+  timezoneField.oninput=()=>{optimizerTimezone=timezoneField.value;};
+  rolloverField.oninput=()=>{optimizerRollover=Number(rolloverField.value);};
+  root.querySelector<HTMLButtonElement>("#learning-optimizer-run")!.onclick=async()=>{
+    if(optimizerRun)return;
+    optimizerTimezone=timezoneField.value.trim();optimizerRollover=Number(rolloverField.value);
+    try{
+      optimizerStatus="Preparing FSRS-7 optimizer evidence…";
+      optimizerRun=startBrowserFsrsOptimizer(fsrsOptimizerCsv(all),{
+        timezone:optimizerTimezone,nextDayStartsAt:optimizerRollover,onProgress:optimizerProgress
+      });
+      draw();
+      const profile=await optimizerRun.promise;
+      await activateOptimizerProfile(profile);
+      optimizerTimezone=String(profile.training.timezone);optimizerRollover=profile.training.nextDayStartsAt;
+      optimizerStatus="Personalized FSRS-7 passed the later holdout gate and is active.";
+      message="Held-out-validated personalized FSRS-7 weights trained locally and activated.";
+    }catch(error){
+      if(error instanceof FsrsOptimizerRejectedError)
+        optimizerStatus="Stock FSRS-7 retained · "+error.reasons.join("; ");
+      else if(error instanceof DOMException&&error.name==="AbortError")
+        optimizerStatus="Optimization cancelled; active weights were not changed.";
+      else optimizerStatus=error instanceof Error?error.message:"FSRS optimizer failed";
+    }finally{optimizerRun=null;draw();}
+  };
+  root.querySelector<HTMLButtonElement>("#learning-optimizer-cancel")!.onclick=()=>{
+    optimizerRun?.cancel();
+  };
   root.querySelector<HTMLButtonElement>("#learning-optimizer-export")!.onclick=()=>downloadText(
     "practice-desk-fsrs-reviews.csv",fsrsOptimizerCsv(all),"text/csv;charset=utf-8");
   const optimizerFile=root.querySelector<HTMLInputElement>("#learning-optimizer-file")!;
@@ -429,9 +484,9 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     const file=optimizerFile.files?.[0];optimizerFile.value="";if(!file)return;
     try{
       const profile=validateFsrsOptimizerProfile(JSON.parse(await file.text()));
-      const next=validateRevisionSettings({...revisionSettings,optimizerProfile:profile});
-      const nextScheduler=await createRevisionScheduler(revisionSchedulerOptions(next));
-      revisionSettings=writeRevisionSettings(next);scheduler=nextScheduler;cache.clear();
+      await activateOptimizerProfile(profile);
+      optimizerTimezone=String(profile.training.timezone);optimizerRollover=profile.training.nextDayStartsAt;
+      optimizerStatus="Imported profile passed Practice Desk's v2 holdout validation.";
       message="Held-out-validated personalized FSRS-7 profile imported and activated.";draw();
     }catch(error){message=error instanceof Error?error.message:"Invalid optimizer profile";draw();}
   };
@@ -443,7 +498,8 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     try{
       const next=validateRevisionSettings({...revisionSettings,optimizerProfile:null});
       const nextScheduler=await createRevisionScheduler(revisionSchedulerOptions(next));
-      revisionSettings=writeRevisionSettings(next);scheduler=nextScheduler;cache.clear();message="Upstream FSRS-7 default weights restored.";draw();
+      revisionSettings=writeRevisionSettings(next);scheduler=nextScheduler;cache.clear();
+      optimizerStatus=optimizerAvailability.reason;message="Upstream FSRS-7 default weights restored.";draw();
     }catch(error){message=error instanceof Error?error.message:"Could not restore default weights";draw();}
   };
   root.querySelector<HTMLSelectElement>("#learning-hierarchy-root")!.onchange=e=>{
@@ -579,5 +635,5 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   });
  return {show(){opened=true;draw();},hide(){opened=false;previousLearningView="";},
   select(id:string){selectedId=id;},
-   dispose(){closed=true;previousLearningView="";notebookDrafts.clear();}};
+   dispose(){optimizerRun?.cancel();optimizerRun=null;closed=true;previousLearningView="";notebookDrafts.clear();}};
 }
