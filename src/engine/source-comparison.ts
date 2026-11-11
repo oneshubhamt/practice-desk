@@ -1,12 +1,11 @@
 import type { ExamPackage,GenericAttempt } from "../app/exam-package.ts";
-import type { QuestionRevision,QuestionContent } from "../domain/question.js";
+import type { QuestionRevision } from "../domain/question.js";
 import type { QuestionRevisionId,OptionId,PaperId,PaperRevisionId,AnswerKeyRevisionId } from "../domain/ids.js";
 import type { MarkingRule } from "../domain/scoring.js";
 import { hashJson } from "../domain/hash.ts";
 
 /** Hypothetical original-key score. Never changes the actual frozen result.
- * Legacy schema 2 is validated unchanged for existing immutable History;
- * schema 3 is a clean break permitting per-question unavailable entries.
+ * Only the canonical schema-3 representation is accepted.
  */
 interface CommonReference {
  readonly paperId:PaperId;
@@ -21,10 +20,6 @@ interface SingleChoiceEntry {
  readonly sourceSemanticHash:string;
  readonly comparable:boolean;
 }
-export interface LegacySourceKeyReference extends CommonReference {
- readonly schema:2;
- readonly entries:readonly SingleChoiceEntry[];
-}
 type V3Entry=
  | (SingleChoiceEntry&{readonly kind:"single-choice"})
  | {readonly kind:"unavailable";readonly questionRevisionId:QuestionRevisionId;
@@ -33,29 +28,9 @@ export interface VerifiedSourceKeyReference extends CommonReference {
  readonly schema:3;
  readonly entries:readonly V3Entry[];
 }
-export type SourceKeyReference=LegacySourceKeyReference|VerifiedSourceKeyReference;
-type V2Core=Omit<LegacySourceKeyReference,"contentHash">;
+export type SourceKeyReference=VerifiedSourceKeyReference;
 type V3Core=Omit<VerifiedSourceKeyReference,"contentHash">;
 type Resources=Pick<ExamPackage,"stimuli"|"assets">;
-
-/** Precisely the historical schema-2 digest, retained for old frozen records. */
-function legacySemanticHash(question:QuestionRevision,resources:Resources):string{
- const c=question.content;
- const stimulus=c.stimulusId?(resources.stimuli??[]).find(s=>s.id===c.stimulusId):undefined;
- const assetIds=[...(c.assetIds??[]),
-   ...(c.kind==="single-choice"||c.kind==="multiple-select"?
-     c.options.flatMap(o=>o.assetIds??[]):[])];
- if(stimulus){
-  if("assetIds" in stimulus)assetIds.push(...(stimulus.assetIds??[]));
-  if("assetId" in stimulus)assetIds.push(stimulus.assetId);
- }
- const byAsset=new Map((resources.assets??[]).map(a=>[a.id,a]));
- const media=assetIds.map(id=>{
-  const asset=byAsset.get(id);
-  return {id,contentHash:asset?.contentHash??null,mediaType:asset?.mediaType??null};
- });
- return hashJson({content:c,stimulus:stimulus??null,media});
-}
 
 /** Only candidate-visible scoring inputs, never solution, tags or editorial
  * metadata. Images include their accessible alt text and content digest.
@@ -87,14 +62,13 @@ function candidateSemanticHash(question:QuestionRevision,resources:Resources):st
  });
 }
 
-/** Revision-specific source pairing is required when a reviewed package
- * declares published lineage; a mismatched candidate cannot create evidence. */
+/** Source comparison is valid only for the exact Source revision/key
+ * hash-bound into the reviewed paper. No unbound or heuristic pairing exists. */
 function matchesPair(target:ExamPackage,source:ExamPackage):boolean{
  return target.paper.edition==="reviewed"&&source.paper.edition==="source"&&
   target.examId===source.examId&&target.paper.paperId===source.paper.paperId&&
-  (target.paper.sourcePaperRevisionId===undefined||
-   (target.paper.sourcePaperRevisionId===source.paper.id&&
-    target.paper.sourceAnswerKeyRevisionId===source.answerKey.id));
+  target.paper.sourcePaperRevisionId===source.paper.id&&
+  target.paper.sourceAnswerKeyRevisionId===source.answerKey.id;
 }
 
 export function createSourceKeyReference(
@@ -142,29 +116,24 @@ export function validateSourceKeyReference(attempt:GenericAttempt):void{
     Object.keys(ref).some(key=>!["schema","paperId","sourcePaperRevisionId",
      "sourceAnswerKeyRevisionId","contentHash","entries"].includes(key)))
    throw Error("Invalid original source-key comparison fields");
- if(ref.schema!==2&&ref.schema!==3)throw Error("Invalid original source-key comparison schema");
+ if(ref.schema!==3)throw Error("Invalid original source-key comparison schema");
  if(ref.paperId!==frozen.paper.paperId||
    typeof ref.sourcePaperRevisionId!=="string"||!ref.sourcePaperRevisionId||
    typeof ref.sourceAnswerKeyRevisionId!=="string"||!ref.sourceAnswerKeyRevisionId||
-   (frozen.paper.sourcePaperRevisionId!==undefined&&
-    (ref.sourcePaperRevisionId!==frozen.paper.sourcePaperRevisionId||
-     ref.sourceAnswerKeyRevisionId!==frozen.paper.sourceAnswerKeyRevisionId))||
+   ref.sourcePaperRevisionId!==frozen.paper.sourcePaperRevisionId||
+   ref.sourceAnswerKeyRevisionId!==frozen.paper.sourceAnswerKeyRevisionId||
    !Array.isArray(ref.entries)||ref.entries.length!==frozen.questions.length)
    throw Error("Invalid original source-key comparison");
- const core=ref.schema===2?
-  {schema:2 as const,paperId:ref.paperId,sourcePaperRevisionId:ref.sourcePaperRevisionId,
-   sourceAnswerKeyRevisionId:ref.sourceAnswerKeyRevisionId,entries:ref.entries}:
-  {schema:3 as const,paperId:ref.paperId,sourcePaperRevisionId:ref.sourcePaperRevisionId,
+ const core:V3Core={schema:3,paperId:ref.paperId,
+   sourcePaperRevisionId:ref.sourcePaperRevisionId,
    sourceAnswerKeyRevisionId:ref.sourceAnswerKeyRevisionId,entries:ref.entries};
- // Reject unexpected nested fields before digest validation, retaining the
- // strict historical rejection contract for forged frozen review metadata.
+ // Reject unexpected nested fields before digest validation.
  for(const item of ref.entries){
   if(!item||typeof item!=="object")throw Error("Invalid source-key entry fields");
-  const allowed=ref.schema===3&&"kind" in item&&item.kind==="unavailable"?
+  const allowed="kind" in item&&item.kind==="unavailable"?
    ["kind","questionRevisionId","comparable","reason"]:
-   ref.schema===3?["kind","questionRevisionId","originalOptionId","markingRule",
-      "sourceSemanticHash","comparable"]:
-     ["questionRevisionId","originalOptionId","markingRule","sourceSemanticHash","comparable"];
+   ["kind","questionRevisionId","originalOptionId","markingRule",
+      "sourceSemanticHash","comparable"];
   if(Object.keys(item).some(field=>!allowed.includes(field)))
    throw Error("Invalid source-key entry fields");
  }
@@ -176,7 +145,7 @@ export function validateSourceKeyReference(attempt:GenericAttempt):void{
   const q=questions.get(entry.questionRevisionId);
   if(!q||seen.has(q.id))throw Error("Invalid source-key question identity");
   seen.add(q.id);
-  if(ref.schema===3&&"kind" in entry&&entry.kind==="unavailable"){
+  if("kind" in entry&&entry.kind==="unavailable"){
    if(Object.keys(entry).some(key=>!["kind","questionRevisionId","comparable","reason"].includes(key))||
      entry.comparable!==false||
      !["unsupported-kind","missing-original","source-key-unavailable"].includes(entry.reason))
@@ -185,8 +154,7 @@ export function validateSourceKeyReference(attempt:GenericAttempt):void{
   }
   if(Object.keys(entry).some(key=>!["kind","questionRevisionId","originalOptionId",
     "markingRule","sourceSemanticHash","comparable"].includes(key))||
-    (ref.schema===3&&(!("kind" in entry)||entry.kind!=="single-choice"))||
-    (ref.schema===2&&"kind" in entry)||
+    !("kind" in entry)||entry.kind!=="single-choice"||
     q.content.kind!=="single-choice")
    throw Error("Invalid source-key answer entry");
   const choice=entry as SingleChoiceEntry;
@@ -197,9 +165,8 @@ export function validateSourceKeyReference(attempt:GenericAttempt):void{
     typeof choice.comparable!=="boolean"||
     !/^[0-9a-f]{64}$/.test(choice.sourceSemanticHash)||
     (choice.comparable&&(!q.content.options.some(o=>o.id===choice.originalOptionId)||
-       choice.sourceSemanticHash!==(ref.schema===2?
-        legacySemanticHash(q,{stimuli:frozen.stimuli,assets:frozen.assets}):
-        candidateSemanticHash(q,{stimuli:frozen.stimuli,assets:frozen.assets})))))
+       choice.sourceSemanticHash!==candidateSemanticHash(q,{
+        stimuli:frozen.stimuli,assets:frozen.assets}))))
    throw Error("Invalid source-key semantic correspondence");
  }
 }
