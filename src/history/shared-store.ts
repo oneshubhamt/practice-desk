@@ -22,7 +22,7 @@ export interface SlimAttempt extends Omit<GenericAttempt,
  readonly frozenAt:string;
 }
 type StoredRecord=SlimAttempt|{readonly id:string;readonly recordType:string;
- readonly saveRevision?:number;readonly [key:string]:unknown};
+ readonly saveRevision:number;readonly [key:string]:unknown};
 
 const bodyCache=new WeakMap<FrozenAttemptContent,SharedSnapshot>();
 // Only complete, content-verified snapshots reconstructed in this process
