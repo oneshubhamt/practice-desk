@@ -80,7 +80,7 @@ export function revisionInventory(
       sourcePaperId:a.frozen.paper.paperId,examId,prompt:q.content.prompt,finishedAt:a.finishedAt!,
       reasons:new Set(),wrongAttempts:new Set(),observedAttempts:new Set(),
       measuredForegroundMs:response?.timeSpentMs??null,
-      visits:a.state.questionVisits?.find(v=>v.questionRevisionId===q.id)?.count??null,
+      visits:a.state.questionVisits.find(v=>v.questionRevisionId===q.id)?.count??null,
       firstVisitMs:phases?.firstVisitMs??null,revisitMs:phases?.revisitMs??null,
       beforeFirstAnswerMs:phases?.beforeFirstAnswerMs??null};
     observations.set(signature,row);
