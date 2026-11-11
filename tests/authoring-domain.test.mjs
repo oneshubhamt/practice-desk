@@ -172,7 +172,8 @@ function readyDraft(){
    answer:answers[kind],tolerance:kind==="numeric-entry"?0.01:0};
  });
  return {...a,examId:"cat-pgdba",paperId:"mixed-2026",title:"Original six-kind CAT and PGDBA practice",
-   revision:1,edition:"custom",durationMinutes:120,questions};
+   revision:1,edition:"custom",durationMinutes:120,
+   sections:[{name:"Mathematics",minutes:15},{name:"General",minutes:15}],questions};
 }
 test("P47-5D all six kinds publish as source-validated frozen rich package, with correct hashes",()=>{
  const a=readyDraft(),pkg=compileAuthoringPublication(a);
@@ -342,15 +343,16 @@ function draft(){
  const d=newAuthoringDraft();
  return {...d,examId:"apfc",paperId:"p54",title:"Actual six-kind authoring proof",timingKind:"sectional",
   sectionNavigation:"sequential-locked",pausePolicy:"forbidden",allowEarlySubmit:false,
-  sectionTransition:"automatic",allowReview:false,questions:[
+  sectionTransition:"automatic",allowReview:false,
+  sections:[{name:"Specialised",minutes:15},{name:"General",minutes:10}],questions:[
     {...q("multiple-select","Specialised","A,C"),minSelections:2,maxSelections:3,
-      partialCreditEach:1,partialPenaltyEach:0.5,sectionMinutes:15},
+      partialCreditEach:1,partialPenaltyEach:0.5},
     {...q("matching","Specialised","1-C,2-A,3-D,4-B"),partialCreditEach:0.6,
-      partialPenaltyEach:0.1,sectionMinutes:15},
-    {...q("single-choice","General","B"),sectionMinutes:10},
-    {...q("true-false","General","True"),sectionMinutes:10},
-    {...q("numeric-entry","General","42"),sectionMinutes:10},
-    {...q("free-response","General","Write a rubric"),explanation:P("Model response"),sectionMinutes:10}
+      partialPenaltyEach:0.1},
+    q("single-choice","General","B"),
+    q("true-false","General","True"),
+    q("numeric-entry","General","42"),
+    {...q("free-response","General","Write a rubric"),explanation:P("Model response")}
   ]};
 }
 test("P54 authoritative inspector yields the same immutable package the publisher would create",()=>{
@@ -371,19 +373,21 @@ test("P54 inspector handles imported malformed structure as issues, never says R
 });
 test("P54 section manager always updates the whole named section, preserving physical section order",()=>{
  const d=draft();
- assert.deepEqual(authoringSections(d).map(s=>({name:s.name,count:s.count,minutes:s.minutes,conflict:s.conflict})),[
-  {name:"Specialised",count:2,minutes:15,conflict:false},
-  {name:"General",count:4,minutes:10,conflict:false}]);
+ assert.deepEqual(authoringSections(d),[
+  {name:"Specialised",count:2,minutes:15},
+  {name:"General",count:4,minutes:10}]);
  const changed=setAuthoringSectionMinutes(d,"Specialised",17);
- assert.deepEqual(changed.questions.slice(0,2).map(q=>q.sectionMinutes),[17,17]);
- assert.deepEqual(changed.questions.slice(2).map(q=>q.sectionMinutes),[10,10,10,10]);
+ assert.deepEqual(changed.sections,[{name:"Specialised",minutes:17},{name:"General",minutes:10}]);
+ assert.deepEqual(changed.questions,d.questions,"Changing a section timer must not rewrite questions");
  const moved=assignAuthoringQuestionSection(changed,changed.questions[0].id,"General");
- assert.equal(moved.questions[0].sectionMinutes,10);
  assert.equal(moved.questions[0].section,"General");
- const broken={...d,questions:[d.questions[0],{...d.questions[1],sectionMinutes:12},...d.questions.slice(2)]};
- assert.equal(authoringSections(broken)[0].conflict,true);
+ assert.deepEqual(moved.sections,[{name:"Specialised",minutes:17},{name:"General",minutes:10}]);
+ const created=assignAuthoringQuestionSection(changed,changed.questions[0].id,"New Section");
+ assert.equal(created.sections.find(s=>s.name==="New Section")?.minutes,17,
+  "A newly named section inherits the source section timer once");
+ const broken={...d,sections:[...d.sections,{name:"General",minutes:12}]};
  assert.equal(inspectAuthoringPublication(broken).valid,false);
- const repaired=setAuthoringSectionMinutes(broken,"Specialised",20);
+ const repaired={...d,sections:[{name:"Specialised",minutes:20},{name:"General",minutes:10}]};
  assert.equal(inspectAuthoringPublication(repaired).valid,true);
 });
 test("P54 real six-kind preview uses frozen question controls, never index-pairs matching answers",()=>{
