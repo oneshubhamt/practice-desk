@@ -20,8 +20,8 @@ Evidence: [source fix](https://github.com/oneshubhamt/practice-desk/commit/bd8a9
 
 ## P62-B addressed (8 November 2026)
 
-- **P60-03 — Exact Source pairing:** New P60-D Reviewed packages embed `sourcePaperRevisionId` and `sourceAnswerKeyRevisionId` in their hash-bound paper revision. The Library selects those exact identities; missing matches disable the advisory Source comparison. Unbound older packages pair only when the source candidate is unambiguous; there is no assertion of original provenance authenticity.
-- **P60-04 — Mixed response kinds:** New schema-3 Source-key references retain per-question unavailable rows, including unsupported numerical/non-MCQ items, rather than discarding otherwise comparable MCQs. Frozen schema-2 records remain validated unchanged; unsupported schema 1 is rejected.
+- **P60-03 — Exact Source pairing:** P60-D Reviewed packages embed `sourcePaperRevisionId` and `sourceAnswerKeyRevisionId` in their hash-bound paper revision. The Library selects only those exact identities; unbound or ambiguous packages are noncanonical and no positional/single-candidate fallback pairing is permitted. There is no assertion of original provenance authenticity.
+- **P60-04 — Mixed response kinds:** Canonical schema-3 Source-key references retain per-question unavailable rows, including unsupported numerical/non-MCQ items, rather than discarding otherwise comparable MCQs. Noncanonical source-key schemas are rejected; no compatibility reader or migration bridge is retained.
 - **P60-05 — Semantic comparability:** Candidate-visible wording, options, media and stimulus determine the new semantic digest. Explanations, academic classifications and difficulty tags do not affect Source-key comparability. Actual frozen marks are untouched.
 
 Evidence: [implementation and browser assertion](https://github.com/oneshubhamt/practice-desk/commit/f5b6a259247f35b66864db3540283c6a48daf40c) · [passing CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42498768267) (414 Node, mutation checks, Chromium, Firefox, WebKit and guarded build). Independent source authenticity remains open.

@@ -4,7 +4,7 @@ This is the **canonical architectural map**, independent of implementation pass 
 
 ## 1. Distribution and execution
 
-`src/app/bootstrap.ts` + `src/template.html` are bundled by `scripts/build.mjs` into **`Practice_Desk_Offline_Mock_Tests.html`**, the one-file compatibility/offline artifact. `scripts/build-static.mjs` derives the full-capability **`Practice_Desk_Static/`** distribution and adds a dedicated browser FSRS optimizer Worker plus its local WASI Preview 1 WebAssembly asset. The static directory is served over localhost or HTTPS but requires no application backend, login or optimizer service; review evidence and training remain on-device. The standalone `file://` build deliberately disables Worker/WASM optimization while preserving examination, persistence and scheduling. Generated artifacts are never hand-edited. User History is maintained locally, not synchronized to GitHub or an external agent.
+`src/app/bootstrap.ts` + `src/template.html` are bundled by `scripts/build.mjs` into **`Practice_Desk_Offline_Mock_Tests.html`**, the standalone one-file offline artifact. `scripts/build-static.mjs` derives the full-capability **`Practice_Desk_Static/`** distribution and adds a dedicated browser FSRS optimizer Worker plus its local WASI Preview 1 WebAssembly asset. The static directory is served over localhost or HTTPS but requires no application backend, login or optimizer service; review evidence and training remain on-device. The standalone `file://` build deliberately disables Worker/WASM optimization while preserving examination, persistence and scheduling. Generated artifacts are never hand-edited. User History is maintained locally, not synchronized to GitHub or an external agent.
 
 The runtime separates **domain and immutable data**, **pure exam state/scoring**, **transactional storage**, **learning**, **authoring** and **UI orchestration**. External content-generation CLIs run outside the app and do not become a second scoring engine.
 
@@ -56,7 +56,7 @@ Wordgard drafts/staging do **not** implicitly become completed-attempt History b
 
 ## 5. Rendering, interaction and devices
 
-The application uses modular controller/render ownership and a selective exam DOM reconciler to preserve in-progress edits, focus, choices, review flags and accessibility semantics across supported updates. Native Navigation API is preferred where available with `file://` fragment-route fallback where absent. UI must handle 195px width at 140% scaling; failures require source-level investigation and real browser journeys, not pixel-perfect v11 duplication.
+The application uses modular controller/render ownership and a selective exam DOM reconciler to preserve in-progress edits, focus, choices, review flags and accessibility semantics across supported updates. Native Navigation API is preferred where available with `file://` fragment-route fallback where absent. UI must handle 195px width at 140% scaling; failures require source-level investigation and real browser journeys, not historical pixel duplication.
 
 Wordgard renders rich structured content; mathematics/media pass through replaceable adapters. Vendor inclusion in the production HTML is minimized by the build; dependencies may remain fuller in source. Actual Mac Safari, touch/IME, screen readers and real hardware storage loss remain **separate release tests**; Linux WebKit does not certify them.
 

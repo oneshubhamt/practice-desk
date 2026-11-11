@@ -1,6 +1,6 @@
 # AI-supported question-bank work
 
-This file is a **compatibility entrypoint** referenced by the versioned machine capability contract; it no longer duplicates the entire application/agent guide.
+This file is the **stable documentation entrypoint** referenced by the versioned machine capability contract; it no longer duplicates the entire application/agent guide.
 
 Start with [the agent quickstart](AGENT_AUTHORING_QUICKSTART.md). For the advanced review, source/PDF and publication stages, read the [canonical content pipeline](architecture/AGENT_CONTENT_PIPELINE.md). For exam-bank fields use [question-bank authoring](architecture/QUESTION_BANK_AUTHORING.md).
 

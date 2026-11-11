@@ -6,7 +6,7 @@
     "name": "Practice Desk",
     "purpose": "Offline examination authoring, practice, scoring, history, analytics and spaced revision",
     "runtime": "Standalone offline HTML with local device storage; external Node 24 authoring CLI",
-    "sourceBranch": "Satyam",
+    "sourceBranch": "working",
     "asOfDate": "2026-11-06",
     "embeddedLLM": false,
     "automaticCloudSync": false,
@@ -462,7 +462,7 @@
       "limitations": [
         "No offline network fetch, independent citation/PYQ authentication or provable agent identity/blinding",
         "Self-attested reviewer/source/rendered UI claims are never certificates of factual accuracy",
-        "Legacy local browser import remains caution-labelled and is not automatically required to supply the external review sidecar",
+        "Structurally valid unreviewed local authoring remains caution-labelled and is not automatically required to supply the external review sidecar",
         "Candidate-only text/alt packet does not replace looking at actual image pixels or device-rendered question UI",
         "P60-D source/reviewed pairing is implemented externally with caution only; P60-E external-agent source-bound intake is implemented, but automatic PDF extraction is not."
       ],
