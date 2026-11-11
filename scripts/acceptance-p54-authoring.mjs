@@ -32,8 +32,9 @@ function inputDraft(){
  return {...base,examId:"apfc",paperId:"p54-browser",title:"Authentic P54 six-kind rules exercise",
   timingKind:"sectional",sectionNavigation:"sequential-locked",questionNavigation:"free",
   sectionTransition:"manual",pausePolicy:"forbidden",allowEarlySubmit:true,allowReview:true,
+  sections:[{name:"Specialised",minutes:15},{name:"General",minutes:10}],
   questions:answers.map(([kind,answer,section],i)=>({
-   ...newAuthoringQuestion(kind),kind,section,sectionMinutes:section==="General"?10:15,answer,
+   ...newAuthoringQuestion(kind),kind,section,answer,
    prompt:P("P54 specimen "+(i+1)+" "+kind),
    options:["Choice A","Choice B","Choice C","Choice D"].map(P),
    leftItems:["Left one","Left two","Left three","Left four"].map(P),
@@ -82,9 +83,9 @@ try{
   const data=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts.v1")??"null");
   return data?.drafts?.find(x=>x.id===data.activeId);
  });
- check(shelf?.questions?.slice(0,2).every(q=>q.sectionMinutes===16)&&
-   shelf?.questions?.slice(2).every(q=>q.sectionMinutes===10),
-   engine+" section-wide timer edit left inconsistent per-question metadata");
+ check(shelf?.sections?.find(s=>s.name==="Specialised")?.minutes===16&&
+   shelf?.sections?.find(s=>s.name==="General")?.minutes===10,
+   engine+" section-wide timer edit did not persist one canonical budget per section");
  await page.locator("#pd-author-add-question").click();
  check(await page.locator("#pd-author-questions option").count()===7,
    engine+" add question did not preserve editable section structure");
@@ -92,8 +93,8 @@ try{
    const raw=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts.v1")??"null");
    return raw?.drafts?.find(d=>d.id===raw.activeId)?.questions?.at(-1);
  });
- check(inherited?.section==="Specialised"&&inherited.sectionMinutes===16,
-   engine+" newly authored question reintroduced a conflicting timer");
+ check(inherited?.section==="Specialised"&&!("sectionMinutes" in inherited),
+   engine+" newly authored question did not inherit only the physical-section assignment");
  await page.locator("#pd-author-delete-question").click();
  check(authorDialogs.length===1&&authorDialogs[0].type==="confirm"&&
    authorDialogs[0].message.includes("Delete this unpublished draft question"),
