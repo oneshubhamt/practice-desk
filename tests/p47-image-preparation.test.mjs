@@ -58,7 +58,7 @@ test("P47-3B invalid image references and media metadata are rejected before fre
  const svg=bank();svg.media[0].dataUri="data:image/svg+xml;base64,PHN2Zz4=";
  assert.throws(()=>compileExternalQuestionBank(svg),/embedded data:image|dataUri|image/i);
  const malicious=bank();malicious.media[0].extra="script";
- assert.throws(()=>compileExternalQuestionBank(malicious),/unsupported field/i);
+ assert.throws(()=>compileExternalQuestionBank(malicious),/unsupported authoring field/i);
 });
 test("P47-3B choose smaller WebP only with strong fidelity and meaningful savings",()=>{
  const good={sourceBytes:550000,candidateBytes:240000,width:1600,height:1200,
