@@ -38,10 +38,9 @@ export interface AttemptResponseRecord {
   /** Cumulative foreground time for this question, in milliseconds. */
   readonly timeSpentMs: number;
   /** Accumulated foreground milliseconds on the first cursor visit. */
-  readonly firstVisitMs?:number;
+  readonly firstVisitMs:number;
   /** Foreground time across visits before the first committed answer. */
-  readonly preFirstAnswerMs?:number;
-  readonly firstViewedAt?: string;
+  readonly preFirstAnswerMs:number;
   readonly firstAnsweredAt?: string;
   readonly answerChangeCount: number;
   /** Explicit response sequence, when captured. Mock history stores the choices,
