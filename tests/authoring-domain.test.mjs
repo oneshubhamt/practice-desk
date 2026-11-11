@@ -278,8 +278,12 @@ test("P47-5D source/reviewed editions require provenance and a real source count
  const signed=compileAuthoringPublication(source);
  const reviewed={...a,edition:"reviewed",questions:a.questions.map((q,i)=>
   i===0?{...q,answer:"A"}:q)};
- assert.ok(inspectAuthoringPublication(reviewed).issues.some(x=>x.field==="Edition"));
- const review=compileAuthoringPublication(reviewed,[signed]);
+ assert.ok(inspectAuthoringPublication(reviewed,[signed]).issues.some(x=>x.field==="Edition"));
+ const ready=inspectAuthoringPublication(reviewed,[signed],signed);
+ assert.equal(ready.valid,true,JSON.stringify(ready.issues));
+ const review=compileAuthoringPublication(reviewed,[signed],signed);
+ assert.equal(review.paper.sourcePaperRevisionId,signed.paper.id);
+ assert.equal(review.paper.sourceAnswerKeyRevisionId,signed.answerKey.id);
  assert.notEqual(review.paper.id,signed.paper.id);
  assert.equal(review.paper.paperId,signed.paper.paperId);
  assert.equal(review.questions[0].questionId,signed.questions[0].questionId);
