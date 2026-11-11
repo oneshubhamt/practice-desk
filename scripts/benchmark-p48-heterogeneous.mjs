@@ -74,7 +74,7 @@ async function profile(n){
  try{
   const fixtures=rowsFor(n);
   const written=await page.evaluate(async({rows,snapshots})=>{
-   const request=indexedDB.open("practiceDesk.shared.v1",1);
+   const request=indexedDB.open("practiceDesk.history",1);
    const db=await new Promise((ok,fail)=>{
      request.onsuccess=()=>ok(request.result);request.onerror=()=>fail(request.error);
    });
@@ -107,7 +107,7 @@ async function profile(n){
   // not include source verification, scoring, DOM, History or browser paints.
   // They must not be presented as whole-app startup speedups.
   const rawRead=await page.evaluate(async()=>{
-   const open=indexedDB.open("practiceDesk.shared.v1",1);
+   const open=indexedDB.open("practiceDesk.history",1);
    const db=await new Promise((ok,fail)=>{
      open.onsuccess=()=>ok(open.result);open.onerror=()=>fail(open.error);
    });

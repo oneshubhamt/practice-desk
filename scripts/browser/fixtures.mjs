@@ -126,7 +126,7 @@ export async function openHarness({engine="chromium",artifactDir=null}={}){
 export async function records(page,store="attempts"){
  return page.evaluate(async storeName=>{
   const db=await new Promise((resolve,reject)=>{
-   const r=indexedDB.open("practiceDesk.shared.v1",1);
+   const r=indexedDB.open("practiceDesk.history",1);
    r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
   });
   try{
@@ -156,7 +156,7 @@ export async function records(page,store="attempts"){
 export async function saved(page,predicate,label){
  await page.waitForFunction(async needle=>{
   const db=await new Promise((resolve,reject)=>{
-   const req=indexedDB.open("practiceDesk.shared.v1",1);
+   const req=indexedDB.open("practiceDesk.history",1);
    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
   });
   try{

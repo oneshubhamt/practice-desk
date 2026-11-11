@@ -21,7 +21,7 @@ const run=async(name,fn)=>{
 async function readStoredRow(page,id){
  return page.evaluate(async id=>{
   const db=await new Promise((resolve,reject)=>{
-   const req=indexedDB.open("practiceDesk.shared.v1",1);
+   const req=indexedDB.open("practiceDesk.history",1);
    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
   });
   try{
@@ -78,7 +78,7 @@ await run("F02-corrupt-snapshot-normal-save",async()=>{
  // new-attempt row; otherwise its late write can masquerade as F02 reuse.
  await page.waitForFunction(async()=>{
   const db=await new Promise((resolve,reject)=>{
-   const r=indexedDB.open("practiceDesk.shared.v1",1);
+   const r=indexedDB.open("practiceDesk.history",1);
    r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
   });
   try{
@@ -102,7 +102,7 @@ await run("F02-corrupt-snapshot-normal-save",async()=>{
  await other.goto(offlineUrl,{waitUntil:"load"});
  await other.evaluate(async snapshot=>{
   const db=await new Promise((resolve,reject)=>{
-   const r=indexedDB.open("practiceDesk.shared.v1",1);
+   const r=indexedDB.open("practiceDesk.history",1);
    r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
   });
   try{
@@ -129,7 +129,7 @@ await run("F02-corrupt-snapshot-normal-save",async()=>{
   const msg=document.querySelector("#app")?.textContent??"";
   if(/SAVE FAILED|SHA-256 mismatch|Storage locked|Another tab changed this record/i.test(msg))return true;
   const db=await new Promise((resolve,reject)=>{
-   const r=indexedDB.open("practiceDesk.shared.v1",1);
+   const r=indexedDB.open("practiceDesk.history",1);
    r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
   });
   try{

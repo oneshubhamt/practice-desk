@@ -106,7 +106,7 @@ async function seedTo(count,sourceId){
  const expected=count-1;
  const actual=await page.evaluate(async({count,sourceId})=>{
   const db=await new Promise((ok,fail)=>{
-   const req=indexedDB.open("practiceDesk.shared.v1",1);
+   const req=indexedDB.open("practiceDesk.history",1);
    req.onsuccess=()=>ok(req.result);req.onerror=()=>fail(req.error);
   });
   try{

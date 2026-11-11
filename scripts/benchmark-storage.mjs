@@ -73,7 +73,7 @@ async function seed(page,data,n){
  const estimatedJsonBytes=fixtures.reduce((sum,row)=>sum+JSON.stringify(row).length,0)+
    bodies.reduce((sum,row)=>sum+JSON.stringify(row).length,0);
  const writeMs=await page.evaluate(async({rows,shared})=>{
-  const r=indexedDB.open("practiceDesk.shared.v1",1);
+  const r=indexedDB.open("practiceDesk.history",1);
   const db=await new Promise((resolve,reject)=>{r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
   try{
    const t=performance.now();
@@ -145,7 +145,7 @@ async function profile(count,data){
   // full frozen snapshots across Playwright's process boundary.
   const inventory=async()=>page.evaluate(async()=>{
    const db=await new Promise((resolve,reject)=>{
-    const r=indexedDB.open("practiceDesk.shared.v1",1);
+    const r=indexedDB.open("practiceDesk.history",1);
     r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
    });
    try{
@@ -163,7 +163,7 @@ async function profile(count,data){
   const t=elapsed();
   await page.evaluate(async()=>{
    const db=await new Promise((resolve,reject)=>{
-    const r=indexedDB.open("practiceDesk.shared.v1",1);
+    const r=indexedDB.open("practiceDesk.history",1);
     r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
    });
    const tx=db.transaction("attempts","readwrite");
