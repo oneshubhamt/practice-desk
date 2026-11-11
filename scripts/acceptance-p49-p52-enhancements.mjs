@@ -15,7 +15,7 @@ try{
  await page.locator("#shortcut-apply").click();
  check((await page.locator("#shortcut-status").innerText()).includes("saved"),
   engine+" shortcut changes not visibly saved");
- check(await page.evaluate(()=>JSON.parse(localStorage.getItem("practiceDesk.shortcuts.v1")??"{}").next==="k"),
+ check(await page.evaluate(()=>JSON.parse(localStorage.getItem("practiceDesk.shortcuts")??"{}").next==="k"),
   engine+" shortcut settings not persisted");
  await page.locator("#displayClose").click();
  await page.locator("#g-start").click();await route(page,"exam");
@@ -75,7 +75,7 @@ try{
  await page.locator("#pd-author-difficulty").selectOption("medium");
  await page.locator("#pd-author-section-minutes").fill("17");await page.locator("#pd-author-section-minutes").blur();
  const authored=await page.evaluate(()=>{
-  const shelf=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts.v1")??"null");
+  const shelf=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts")??"null");
   const draft=shelf?.drafts.find(d=>d.id===shelf.activeId);
   return {draft,q:draft?.questions[0]};
  });

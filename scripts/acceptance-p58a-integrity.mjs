@@ -48,7 +48,7 @@ await run("F01-AI-renamed-draft-QA",async()=>{
  // Deliberately modify only the authoring draft ID. Provenance, source text,
  // question content, and AI-review flags are unchanged.
  const renamed=await page.evaluate(()=>{
-  const key="practiceDesk.authoring.drafts.v1";
+  const key="practiceDesk.authoring.drafts";
   const shelf=JSON.parse(localStorage.getItem(key));
   const id="independently-imported-draft-no-stage-prefix";
   shelf.drafts=shelf.drafts.map(d=>d.id===shelf.activeId?{...d,id}:d);
@@ -176,7 +176,7 @@ await run("F07-two-tab-unpublished-draft-conflict",async()=>{
  await second.locator("#pd-author-title").fill("Tab B divergent unsaved edit");
  await second.locator("#pd-author-title").blur();
  const stored=await page.evaluate(()=>{
-  const shelf=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts.v1"));
+  const shelf=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts"));
   return shelf.drafts.find(d=>d.id===shelf.activeId)?.title;
  });
  const message=await second.locator("#pd-author-status").innerText();
@@ -205,7 +205,7 @@ await run("F07-staged-selection-cross-tab-conflict",async()=>{
  await second.locator("[data-stage-key]").first().waitFor({state:"visible"});
  await page.locator('[data-stage-key="'+keys[0]+'"]').uncheck();
  await second.locator('[data-stage-key="'+keys[1]+'"]').click(); // handler intentionally restores checked state on conflict
- const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem("practiceDesk.authoring.staging.v1")));
+ const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem("practiceDesk.authoring.staging")));
  const message=await second.locator("#pd-author-status").innerText();
  check(!saved.selected.includes(keys[0])&&saved.selected.includes(keys[1]),
   engine+" F07 stale tab silently overwrote an independently changed staging selection");

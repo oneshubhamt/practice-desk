@@ -199,7 +199,7 @@ for(const v of [
   await assertNoOverflow(page,v.name+" calculator recovery/accessibility");
   await page.locator("#g-submit").click();await route(page,"result");
   check(await page.evaluate(()=>!Object.keys(localStorage).some(k=>
-    k.startsWith("practiceDesk.candidateTools.v1:"))),
+    k.startsWith("practiceDesk.candidateTools:"))),
     v.name+" completed attempt retained calculator scratch state");
   await page.locator("#g-library").click();await route(page,"library");
 

@@ -25,7 +25,7 @@ try{
  check((await page.locator("body").innerText()).includes("Wordgard authoring studio"),"Library heading absent");
  await page.locator("wg-content").click();
  await page.keyboard.insertText("Find the value of x in the expression");
- await page.waitForFunction(()=>String(localStorage.getItem("practiceDesk.authoring.drafts.v1")).includes("Find the value"));
+ await page.waitForFunction(()=>String(localStorage.getItem("practiceDesk.authoring.drafts")).includes("Find the value"));
  check((await page.locator("wg-content").innerText()).includes("Find the value"),"Live Wordgard text editing failed");
  await page.locator("#pd-author-tex").fill("\\frac{x^2-1}{x-1}");
  await page.locator("#pd-author-math-alt").fill("x squared minus one divided by x minus one");
@@ -105,7 +105,7 @@ try{
  await page.evaluate(()=>document.documentElement.setAttribute("data-theme","light"));
  await assertNoOverflow(page,"P47-5C extreme 195px light");
  await shot("195px-140pct-light");
- const before=await page.evaluate(()=>localStorage.getItem("practiceDesk.authoring.drafts.v1"));
+ const before=await page.evaluate(()=>localStorage.getItem("practiceDesk.authoring.drafts"));
  check(Boolean(before&&before.includes("Find the value")),"Local draft not committed");
  await page.locator("#pd-author-close").click();
  check(await page.locator("#app.pd-author-mode").count()===0,"Closing studio failed to restore Library");

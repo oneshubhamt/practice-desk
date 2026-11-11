@@ -80,7 +80,7 @@ try{
  check(await page.locator("#pd-author-section-minutes").inputValue()==="16",
    engine+" section manager failed to synchronise active section timer");
  const shelf=await page.evaluate(()=>{
-  const data=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts.v1")??"null");
+  const data=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts")??"null");
   return data?.drafts?.find(x=>x.id===data.activeId);
  });
  check(shelf?.sections?.find(s=>s.name==="Specialised")?.minutes===16&&
@@ -90,7 +90,7 @@ try{
  check(await page.locator("#pd-author-questions option").count()===7,
    engine+" add question did not preserve editable section structure");
  const inherited=await page.evaluate(()=>{
-   const raw=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts.v1")??"null");
+   const raw=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts")??"null");
    return raw?.drafts?.find(d=>d.id===raw.activeId)?.questions?.at(-1);
  });
  check(inherited?.section==="Specialised"&&!("sectionMinutes" in inherited),

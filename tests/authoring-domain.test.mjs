@@ -90,7 +90,7 @@ test("P47-5C draft is not a published paper or answer key and covers six kinds",
  assert.ok(!("contentHash" in s));
  assert.ok(!("frozen" in s));
  assert.ok(!("score" in s));
- assert.equal(AUTHORING_KEY,"practiceDesk.authoring.drafts.v1");
+ assert.equal(AUTHORING_KEY,"practiceDesk.authoring.drafts");
 });
 test("P47-5C app-owned draft rejects malicious, duplicate and malformed content",()=>{
  const a=newAuthoringDraft();
