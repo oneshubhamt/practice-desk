@@ -113,6 +113,8 @@ function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Field):st
      '> Permit early section submission</label>'+
   '<label class="pd-author-check"><input type="checkbox" id="pd-author-allow-review"'+
     (draft.allowReview!==false?" checked":"")+'> Release detailed answers after submission</label>'+
+  '<label class="pd-author-check"><input type="checkbox" id="pd-author-calculator"'+
+    (draft.calculatorTool==="basic"?" checked":"")+'> Basic calculator available during the test</label>'+
   '<label>Correct marks<input id="pd-author-correct" type="number" step="any" value="'+draft.marksCorrect+'"></label>'+
   '<label>Incorrect marks<input id="pd-author-wrong" type="number" max="0" step="any" value="'+draft.marksIncorrect+'"></label>'+
   '</div><p class="fine pd-author-effective-policy-note" role="note">'+
@@ -958,6 +960,14 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
     ["pd-author-allow-review","allowReview"]] as const)
     find<HTMLInputElement>(id).onchange=e=>
       updateMetadata(key,(e.target as HTMLInputElement).checked);
+  find<HTMLInputElement>("pd-author-calculator").onchange=e=>{
+    const enabled=(e.target as HTMLInputElement).checked;
+    changeDraft(d=>{
+      if(enabled)return {...d,calculatorTool:"basic"};
+      const {calculatorTool:_,...withoutCalculator}=d;
+      return withoutCalculator;
+    });
+  };
   const editCurrentEvidence=(fn:(q:AuthoringQuestion)=>AuthoringQuestion):boolean=>{
    try{
     changeDraft(d=>({...d,questions:d.questions.map(q=>q.id===questionId?fn(q):q)}));
