@@ -1,1 +1,1 @@
-{"name":"practice-desk-fsrs-optimizer","private":true,"version":"0.1.0","type":"module","engines":{"node":">=24"},"scripts":{"optimize":"node optimize.mjs"},"dependencies":{"@open-spaced-repetition/binding":"0.6.0"}}
+{"name":"practice-desk-fsrs-optimizer","private":true,"version":"0.1.0","type":"module","engines":{"node":">=24"},"scripts":{"optimize":"node optimize.mjs","analyze-steps":"node analyze-steps.mjs","smoke":"node smoke.mjs"},"dependencies":{"@open-spaced-repetition/binding":"0.6.0"}}

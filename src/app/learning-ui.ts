@@ -277,7 +277,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
       ' · '+revisionSettings.optimizerProfile.evidenceItems+' optimizer items · log loss '+Number(revisionSettings.optimizerProfile.evaluation.logLoss.toFixed(4))+
       ' · RMSE bins '+Number(revisionSettings.optimizerProfile.evaluation.rmseBins.toFixed(4)):'Using upstream FSRS-7 default weights.')+
     ' Raw evidence: '+optimizerEvidence.reviews+' reviews across '+optimizerEvidence.cards+' cards.</p>'+
-    '<p class="fine">Beta optimizer training runs outside the main file:// UI via <code>tools/fsrs-optimizer</code>. Imported 34-weight profiles require evaluation metadata and scheduler validation.</p>'+
+    '<p class="fine">Beta optimizer training runs outside the main file:// UI via <code>tools/fsrs-optimizer</code>. Imported 34-weight profiles require evaluation metadata and scheduler validation. The same tool exposes <code>computeOptimalSteps</code> only as a separately labelled single-decay advisory diagnostic; upstream does not consider it FSRS-7 model-consistent, so it cannot alter scheduler steps.</p>'+
     '<div class="row generic-actions"><button class="btn" id="learning-optimizer-export"'+(optimizerEvidence.reviews?'':' disabled')+'>Export optimizer evidence</button>'+
     '<button class="btn" id="learning-optimizer-import">Import evaluated profile</button><input id="learning-optimizer-file" type="file" accept="application/json,.json" hidden>'+
     '<button class="btn" id="learning-optimizer-export-profile"'+(revisionSettings.optimizerProfile?'':' disabled')+'>Export active profile</button>'+
