@@ -335,8 +335,8 @@ test("review answers resolve human labels for all six question kinds",()=>{
 });
 
 test("generic history rejects malformed stored records before import",()=>{
- assert.throws(()=>validateGenericStoredRecord({recordType:"generic-attempt",id:"fake"}),/Invalid generic/);
- assert.throws(()=>validateGenericStoredRecord({recordType:"generic-package",id:"wrong",bundle:{paper:{id:"x"}}}),/identity/);
+ assert.throws(()=>validateGenericStoredRecord({recordType:"generic-attempt",saveRevision:1,id:"fake"}),/Invalid generic/);
+ assert.throws(()=>validateGenericStoredRecord({recordType:"generic-package",saveRevision:1,id:"wrong",bundle:{paper:{id:"x"}}}),/identity/);
 });
 
 test("shared renderer enforces paused, forward-only and no-early-submit policies",async()=>{
