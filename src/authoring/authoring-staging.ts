@@ -118,13 +118,13 @@ export function validateStagingWorkspace(value:unknown):StagingWorkspace{
   if(expected&&signature!==expected)
    throw Error("Staged files must use the same exam, paper, revision, marking, timing and navigation rules");
   expected=signature;
-  for(const q of draft.questions){
-   const existing=sections.get(q.section);
-   if(existing!==undefined&&existing!==(q.sectionMinutes??15))
-    throw Error("Conflicting section timer in staged files: "+q.section);
-   sections.set(q.section,q.sectionMinutes??15);
-   selections.add(itemKey(id,q.id));
+  for(const section of draft.sections){
+   const existing=sections.get(section.name);
+   if(existing!==undefined&&existing!==section.minutes)
+    throw Error("Conflicting section timer in staged files: "+section.name);
+   sections.set(section.name,section.minutes);
   }
+  for(const q of draft.questions)selections.add(itemKey(id,q.id));
   questions+=draft.questions.length;
   if(questions>400)throw Error("Staging is bounded to 400 source questions; split the batch");
   files.push({name:row.name,source:row.source});
