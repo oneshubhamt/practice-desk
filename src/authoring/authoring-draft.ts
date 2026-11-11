@@ -74,7 +74,7 @@ export type AuthoringDraft={
  readonly sectionTransition?:"manual"|"automatic";
  readonly allowEarlySubmit?:boolean;
  readonly allowReview?:boolean;
- readonly calculatorTool?:"basic";
+ readonly calculatorTool?:"basic-v1";
  readonly marksCorrect:number;
  readonly marksIncorrect:number;
  readonly updatedAt:string;
@@ -286,7 +286,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
      (p.allowReview!==undefined&&typeof p.allowReview!=="boolean"))
     throw Error("Invalid authored timing or navigation settings");
  const calculatorTool=p.calculatorTool;
- if(calculatorTool!==undefined&&calculatorTool!=="basic")
+ if(calculatorTool!==undefined&&calculatorTool!=="basic-v1")
    throw Error("Invalid authored calculator tool");
  const draft:AuthoringDraft={
   schema:1,id:text(p.id,"draft ID",128,true),
@@ -301,7 +301,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   sectionNavigation:sectionNavigation as NonNullable<AuthoringDraft["sectionNavigation"]>,
   sectionTransition:sectionTransition as NonNullable<AuthoringDraft["sectionTransition"]>,
   allowEarlySubmit:p.allowEarlySubmit??true,allowReview:p.allowReview??true,
-  ...(calculatorTool?{calculatorTool:"basic" as const}:{}),
+  ...(calculatorTool?{calculatorTool:"basic-v1" as const}:{}),
   marksCorrect:num(p.marksCorrect,"positive marks",0.01,1000),
   marksIncorrect:num(p.marksIncorrect,"negative marks",-1000,0),
   updatedAt:text(p.updatedAt,"updated time",100,true),assets,
