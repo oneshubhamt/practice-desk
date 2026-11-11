@@ -1,3 +1,4 @@
+import {STORAGE_TOPOLOGY} from "../storage-topology.ts";
 import type { CglPracticeMode } from "./exam-package.ts";
 
 /** The single current user-setup schema. No migration or dual-write path. */
@@ -13,7 +14,7 @@ export interface PracticeSetups {
  readonly selectedFamilyId:string;
  readonly families:Readonly<Record<string,FamilySetup>>;
 }
-export const PRACTICE_SETUPS_KEY="practiceDesk.overhaul.setups.v2";
+export const PRACTICE_SETUPS_KEY=STORAGE_TOPOLOGY.practiceSetups;
 const validId=(s:unknown,max=600):s is string=>
  typeof s==="string"&&Boolean(s.trim())&&s.length<=max&&
  s!=="__proto__"&&s!=="constructor"&&s!=="prototype";

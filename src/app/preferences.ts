@@ -1,5 +1,6 @@
+import {STORAGE_TOPOLOGY} from "../storage-topology.ts";
 export interface DisplayPreferences{readonly schema:1;readonly dark:boolean;readonly scale:number}
-export const SETTINGS_KEY="practiceDesk.overhaul.settings.v1";
+export const SETTINGS_KEY=STORAGE_TOPOLOGY.preferences;
 export const SETTINGS_EVENT="practice-desk-preferences";
 export const DEFAULT_PREFERENCES:DisplayPreferences={schema:1,dark:false,scale:100};
 

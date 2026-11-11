@@ -1,3 +1,4 @@
+import {STORAGE_TOPOLOGY} from "../storage-topology.ts";
 /** P57-C: bounded, offline AI-bank staging. Nothing here writes scored packages.
  * Source claims and QA warnings remain unverified. Identity is stable per bank+item,
  * independent of file order, correction, and the publication revision.
@@ -11,7 +12,7 @@ import {sha256} from "../domain/hash.ts";
 import type {StimulusDefinition,ImageAsset} from "../domain/question.ts";
 import type {StimulusId,AssetId} from "../domain/ids.ts";
 
-export const STAGING_KEY="practiceDesk.authoring.staging.v1";
+export const STAGING_KEY=STORAGE_TOPOLOGY.authoringStaging;
 export const STAGING_MAX_BYTES=1700000;
 /** Separate, strictly validated unpublished source backup; NOT History v4. */
 export const STAGING_ARCHIVE_FORMAT="practice-desk-staging-archive";

@@ -1,3 +1,4 @@
+import {STORAGE_TOPOLOGY} from "../storage-topology.ts";
 /** P47-5C: unpublished local-only question-authoring drafts.
  * Never reuse a saved draft as an executable paper, attempt, answer key or score.
  */
@@ -92,7 +93,7 @@ export type AuthoringDraftShelf={
  readonly activeId:string;
  readonly drafts:readonly AuthoringDraft[];
 };
-export const AUTHORING_KEY="practiceDesk.authoring.drafts.v1";
+export const AUTHORING_KEY=STORAGE_TOPOLOGY.authoringDrafts;
 export const AUTHORING_MAX_BYTES=1900000;
 const id=():string=>typeof crypto!=="undefined"&&crypto.randomUUID?crypto.randomUUID():
   "draft-"+Date.now()+"-"+Math.floor(Math.random()*1000000);

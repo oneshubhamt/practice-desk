@@ -1,8 +1,9 @@
+import {STORAGE_TOPOLOGY} from "../storage-topology.ts";
 import {FSRS_DEFAULT_COST_ADR_GOAL_WEIGHT,FSRS_DEFAULT_DESIRED_RETENTION,
  FSRS_DEFAULT_LEECH_THRESHOLD} from "./fsrs-scheduler-adapter.ts";
 import {validateFsrsOptimizerProfile,type FsrsOptimizerProfile} from "./fsrs-optimizer.ts";
 import type {LeechAction,RetentionPolicy,RevisionSchedulerOptions} from "./revision-scheduler-port.ts";
-export const REVISION_SETTINGS_KEY="practiceDesk.overhaul.revision.v1";
+export const REVISION_SETTINGS_KEY=STORAGE_TOPOLOGY.revisionSettings;
 export interface RevisionSettings{
  readonly schema:1;readonly retentionPolicy:RetentionPolicy;readonly desiredRetention:number;
  readonly costAdrGoalWeight:number;readonly leechThreshold:number;readonly leechAction:LeechAction;

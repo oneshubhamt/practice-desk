@@ -1,3 +1,4 @@
+import {STORAGE_TOPOLOGY} from "../storage-topology.ts";
 /** P52: pure exam keyboard policy plus a small local-only preference schema.
  * No new listener: the existing coordinator owns exam keyboard dispatch.
  * Untrusted localStorage is never allowed to introduce privileged chords.
@@ -14,7 +15,7 @@ export type ShortcutBindings={
  readonly answerA:string;readonly answerB:string;readonly answerC:string;readonly answerD:string;
  readonly flag:string;readonly fullscreen:string;
 };
-export const SHORTCUTS_KEY="practiceDesk.shortcuts.v1";
+export const SHORTCUTS_KEY=STORAGE_TOPOLOGY.shortcuts;
 export const SHORTCUT_FIELDS=[
  ["previous","Previous question"],["next","Next question"],
  ["answerA","Choose A"],["answerB","Choose B"],
