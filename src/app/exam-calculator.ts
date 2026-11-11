@@ -21,14 +21,18 @@ export function calculatorPanelHTML(state:ExamCalculatorState):string{
       key("mplus","M+","","Add displayed value to memory")+
       key("mminus","M−","","Subtract displayed value from memory")+
     '</div><div class="calc-grid" role="group" aria-label="Calculator keypad">'+
-      key("backspace","⌫","calc-function","Backspace")+key("clear","C","calc-clear","Clear calculation")+
+      // Match the CAT candidate calculator geometry: five columns, a double-width
+      // backspace and zero key, and a two-row equals key. Styling remains Practice Desk.
+      key("backspace","⌫","calc-function calc-backspace","Backspace")+
+      key("clear","C","calc-clear","Clear calculation")+
       key("sign","+/−","calc-function","Change sign")+key("sqrt","√","calc-function","Square root")+
       key("7","7")+key("8","8")+key("9","9")+key("/","÷","calc-operator","Divide")+
+      key("percent","%","calc-function","Percent")+
       key("4","4")+key("5","5")+key("6","6")+key("*","×","calc-operator","Multiply")+
+      key("reciprocal","1/x","calc-function","Reciprocal")+
       key("1","1")+key("2","2")+key("3","3")+key("-","−","calc-operator","Subtract")+
-      key("0","0")+key(".",".","","Decimal point")+key("percent","%","calc-function","Percent")+
-      key("+","+","calc-operator","Add")+key("reciprocal","1/x","calc-function","Reciprocal")+
       key("equals","=","calc-equals","Equals")+
+      key("0","0","calc-zero")+key(".",".","","Decimal point")+key("+","+","calc-operator","Add")+
     '</div></section>';
 }
 
