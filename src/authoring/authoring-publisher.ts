@@ -103,7 +103,7 @@ const keyFrom=(q:AuthoringQuestion):CorrectAnswer=>{
 const sourceId=(d:AuthoringDraft)=>("authored:"+d.examId+":"+d.paperId) as PaperId;
 const revisionId=(d:AuthoringDraft)=>sourceId(d)+":r"+d.revision+":"+d.edition;
 function validIdentity(s:string):boolean{return /^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(s);}
-function issuesFor(d:AuthoringDraft,existing:readonly ExamPackage[]):PublicationIssue[]{
+function issuesFor(d:AuthoringDraft,existing:readonly ExamPackage[],reviewedSource?:ExamPackage):PublicationIssue[]{
  const issues:PublicationIssue[]=[];
  const put=(field:string,reason:string,questionId?:string)=>issues.push({
   field,reason,...(questionId?{questionId}:{})
@@ -132,9 +132,16 @@ function issuesFor(d:AuthoringDraft,existing:readonly ExamPackage[]):Publication
  const fullId=revisionId(d);
  if(existing.some(x=>x.paper.id===fullId))
   put("Revision","This paper/edition revision is already published. Increment Revision; never overwrite an earlier publication.");
- if(d.edition==="reviewed"&&!existing.some(x=>
-  x.paper.paperId===sourceId(d)&&x.paper.edition==="source"))
-  put("Edition","Publish a corresponding user-supplied Source transcription first; Reviewed must have an existing source counterpart");
+ if(d.edition==="reviewed"){
+  if(!reviewedSource)
+   put("Edition","Reviewed publication requires an explicitly supplied Source package with exact revision/key lineage");
+  else if(reviewedSource.paper.edition!=="source"||reviewedSource.examId!==d.examId||
+      reviewedSource.paper.paperId!==sourceId(d))
+   put("Edition","Reviewed publication Source lineage does not match this exam/paper");
+  else if(!existing.some(x=>x.paper.id===reviewedSource.paper.id&&
+      x.answerKey.id===reviewedSource.answerKey.id))
+   put("Edition","The exact Source revision/key must be present in the publication context");
+ }
  // The Wordgard/manual publisher must obey the same candidate-visible
  // explicit-answer leak blockers as AI source import, including rich stimuli.
  for(const issue of inspectCandidateIntegrity(d))
@@ -188,7 +195,7 @@ function issuesFor(d:AuthoringDraft,existing:readonly ExamPackage[]):Publication
  * No persistent write, question-bank mutation or external effect is performed.
  */
 export function inspectAuthoringPublication(
- draft:unknown,existing:readonly ExamPackage[]=[]
+ draft:unknown,existing:readonly ExamPackage[]=[],reviewedSource?:ExamPackage
 ):{readonly valid:boolean;readonly issues:readonly PublicationIssue[];
  readonly estimatedQuestions:number;readonly compiled?:ExamPackage}{
  let d:AuthoringDraft;
@@ -197,12 +204,12 @@ export function inspectAuthoringPublication(
   const reason=error instanceof Error?error.message:"Invalid authoring draft";
   return {valid:false,issues:[{field:"Draft structure",reason}],estimatedQuestions:0};
  }
- const issues=issuesFor(d,existing);
+ const issues=issuesFor(d,existing,reviewedSource);
  if(issues.length)return {valid:false,issues,estimatedQuestions:d.questions.length};
  try{
   // Deliberately invoke the identical publisher (including exact frozen hash,
   // question, key, paper, media and rule validation) that the Publish action uses.
-  const compiled=compileAuthoringPublication(d,existing);
+  const compiled=compileAuthoringPublication(d,existing,reviewedSource);
   return {valid:true,issues:[],estimatedQuestions:d.questions.length,compiled};
  }catch(error){
   if(error instanceof PublicationValidationError)
@@ -215,10 +222,10 @@ export function inspectAuthoringPublication(
 /** Generate content-addressed, SHA-256-validated exam data from the app-owned draft.
  * An unkeyed digest cannot authenticate the author or certify an exam source. */
 export function compileAuthoringPublication(
- input:unknown,existing:readonly ExamPackage[]=[]
+ input:unknown,existing:readonly ExamPackage[]=[],reviewedSource?:ExamPackage
 ):ExamPackage{
  const d=validateAuthoringDraft(input);
- const issues=issuesFor(d,existing);
+ const issues=issuesFor(d,existing,reviewedSource);
  if(issues.length)throw new PublicationValidationError(issues);
  const paperId=sourceId(d),base=revisionId(d),keyId=(base+":key") as AnswerKeyRevisionId;
  const known=new Set(d.assets.map(a=>a.id));
@@ -367,6 +374,10 @@ export function compileAuthoringPublication(
  const paperBase={
   id:base as PaperRevisionId,paperId,revision:d.revision,edition:d.edition,sections,
   answerKeyRevisionId:answerKey.id,
+  ...(d.edition==="reviewed"?{
+    sourcePaperRevisionId:reviewedSource!.paper.id,
+    sourceAnswerKeyRevisionId:reviewedSource!.answerKey.id
+  }:{}),
   timing,
   navigation:{questionNavigation:d.questionNavigation??"free",
    sectionNavigation:d.sectionNavigation??"free",
