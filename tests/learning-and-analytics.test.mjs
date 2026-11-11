@@ -194,9 +194,6 @@ test("visits reflect cursor entries, never answering, flags, repeated cursor or 
  s=transition(bundle.paper,s,{type:"NAVIGATE",nowMs:1060,sectionIndex:0,questionIndex:0});
  assert.equal(s.questionVisits.find(x=>x.questionRevisionId===id(0)).count,2);
  assert.equal(s.questionVisits.find(x=>x.questionRevisionId===id(1)).count,1);
- const old={...s,questionVisits:undefined};
- assert.equal(transition(bundle.paper,old,{type:"NAVIGATE",nowMs:1070,sectionIndex:0,questionIndex:1}).questionVisits,
-  undefined,"Historic sessions must never receive fabricated partial visit counts");
 });
 test("section auto-advance records a new section's first question once",()=>{
  const source=bundle.paper;
@@ -246,12 +243,11 @@ test("generic six-kind frozen timing classifications, accurate filters, longest 
  const filters=reviewFiltersHTML("typicalwrong");
  assert.match(filters,/value="audit"/);assert.match(filters,/value="typicalwrong" selected/);
 });
-test("historic visits and insufficient speed samples are disclosed, not manufactured",()=>{
+test("missing visit evidence is rejected; insufficient speed samples remain conservative",()=>{
  const a=sample();
- const old=structuredClone(a);
- delete old.state.questionVisits;
- validateGenericStoredRecord(old);
- assert.match(timingLedgerHTML(old,true),/Not recorded/);
+ const missing=structuredClone(a);
+ delete missing.state.questionVisits;
+ assert.throws(()=>validateGenericStoredRecord(missing),/timing evidence|visit history/i);
  const fewer=validateExamPackage(sixKinds);
  const qmap=new Map(fewer.questions.map(q=>[q.id,q]));
  let limited=startGenericAttempt(fewer,"small",1000);
