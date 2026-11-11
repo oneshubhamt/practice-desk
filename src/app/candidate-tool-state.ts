@@ -29,7 +29,11 @@ function validState(value:unknown):value is ExamCalculatorState{
  if(s.accumulator!==null&&(typeof s.accumulator!=="number"||!Number.isFinite(s.accumulator)))return false;
  if(s.pending!==null&&(typeof s.pending!=="string"||!OPERATORS.has(s.pending as CalculatorOperator)))return false;
  if(s.error!== (s.display==="Error"))return false;
- if(!s.error&&!/^-?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(s.display))return false;
+ if(s.error&&(s.accumulator!==null||s.pending!==null||s.replaceInput!==true))return false;
+ if(!s.error){
+   if(!/^-?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(s.display)||
+      !Number.isFinite(Number(s.display)))return false;
+ }
  return true;
 }
 
