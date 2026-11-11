@@ -24,6 +24,13 @@ export interface SlimAttempt extends Omit<GenericAttempt,
 type StoredRecord=SlimAttempt|{readonly id:string;readonly recordType:string;
  readonly saveRevision:number;readonly [key:string]:unknown};
 
+function assertDurableRow(row:unknown):asserts row is StoredRecord{
+ if(!row||typeof row!=="object"||
+    !Number.isSafeInteger((row as {saveRevision?:unknown}).saveRevision)||
+    ((row as {saveRevision:number}).saveRevision)<1)
+   throw Error("Stored row requires CAS revision 1 or greater");
+}
+
 const bodyCache=new WeakMap<FrozenAttemptContent,SharedSnapshot>();
 // Only complete, content-verified snapshots reconstructed in this process
 // are trusted for repeated attempts. Every attempt's state/marks is still
@@ -102,6 +109,7 @@ export function createStrictRecordCollector(){
    byId.set(snapshot.id,snapshot);
   },
   acceptRow(row:unknown):void{
+   assertDurableRow(row);
    if(!isSharedAttempt(row)){records.push(row);return;}
    const snapshot=byId.get(row.frozenRef);
    if(!snapshot)throw Error("Stored attempt references a missing immutable snapshot");
@@ -143,8 +151,9 @@ export function createRecoverableRecordCollector(){
    }catch{rejectedSnapshots++;}
   },
   acceptRow(row:unknown):void{
-   if(!isSharedAttempt(row)){records.push(row);return;}
    try{
+    assertDurableRow(row);
+    if(!isSharedAttempt(row)){records.push(row);return;}
     const snapshot=byId.get(row.frozenRef);
     if(!snapshot)throw Error("Missing or unverified immutable snapshot");
     const expanded=expandAttempt(row,snapshot);
