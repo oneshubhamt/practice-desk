@@ -5,7 +5,7 @@ import {isAttempt,type RecordItem} from "./stored-record-validator.ts";
 
 import {builtinCglPackages} from "./exam-package.ts";
 import type {ExamPackage,GenericAttempt,CglPracticeMode} from "./exam-package.ts";
-import type {ExamCalculatorState} from "./exam-calculator.ts";
+import type {ExamCalculatorState} from "../domain/calculator.ts";
 
 import type {OptionId} from "../domain/ids.js";
 import type {SessionEvent} from "../engine/session.ts";
