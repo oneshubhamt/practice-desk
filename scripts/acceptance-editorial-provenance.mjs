@@ -64,7 +64,7 @@ async function persisted(id,pred=()=>true){
  throw Error("Missing committed source-provenance record "+id+"; last stored state "+
    JSON.stringify(last)+"; UI "+text.slice(0,320));
 }
-function genericVariant(edition,revised=false){
+function genericVariant(edition,revised=false,sourcePackage=null){
  const questions=pkg.questions.map((base,i)=>{
   const q=structuredClone(base);
   if(!revised||i!==0)return q;
@@ -79,8 +79,13 @@ function genericVariant(edition,revised=false){
  const answerKey={...pkg.answerKey,id:"six-key-"+edition,entries,contentHash:answerKeyRevisionHash({entries})};
  const sections=pkg.paper.sections.map(s=>({...s,
   questionRevisionIds:s.questionRevisionIds.map(id=>ids.get(id))}));
+ if(edition==="reviewed"&&!sourcePackage)throw Error("Reviewed generic fixture requires exact Source lineage");
  const paperBase={...pkg.paper,id:"six-"+edition,edition,
   answerKeyRevisionId:answerKey.id,sections,
+  ...(edition==="reviewed"?{
+    sourcePaperRevisionId:sourcePackage.paper.id,
+    sourceAnswerKeyRevisionId:sourcePackage.answerKey.id
+  }:{}),
   scoring:{decimalPlaces:3,defaultRule:{correctMarks:2,incorrectMarks:-0.5,unansweredMarks:0},
    byQuestionKind:{"numeric-entry":{correctMarks:5,incorrectMarks:-1,unansweredMarks:0},
     "multiple-select":{correctMarks:3,incorrectMarks:-1,unansweredMarks:0}}}};
@@ -250,7 +255,7 @@ try{
  await page.locator("#g-library").click();await route(page,"library");
  // Generic six-kind authored exams also support source/review without SSC
  // provenance; their author-supplied scoring overrides must be honoured.
- const src=genericVariant("source"),dst=genericVariant("reviewed",true);
+ const src=genericVariant("source"),dst=genericVariant("reviewed",true,src);
  await page.locator("#g-file").setInputFiles({name:"source.json",mimeType:"application/json",
   buffer:Buffer.from(JSON.stringify(src))});
  await page.locator("#g-file").setInputFiles({name:"reviewed.json",mimeType:"application/json",
