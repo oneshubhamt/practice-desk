@@ -1,16 +1,16 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
-import {importAuthoredExam,importSimpleQuestionBank} from "../src/app/bank-import.ts";
+import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
 import {validateExamPackage,builtinCglPackages,configureCglPractice,
  configureUntimedPractice,startGenericAttempt,transitionGenericAttempt} from "../src/app/exam-package.ts";
 import {validatePracticeSetups} from "../src/app/practice-selection.ts";
-const starter=JSON.parse(await readFile(new URL("../examples/apfc-mcq-nat-starter.json",import.meta.url),"utf8"));
+const starter=JSON.parse(await readFile(new URL("../examples/apfc-authoring-example.json",import.meta.url),"utf8"));
 const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url),"utf8"));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url),"utf8"));
 const solutions=JSON.parse(await readFile(new URL("../src/content/solutions.json",import.meta.url),"utf8"));
 test("easy APFC/NAT author bank generates a strict validated immutable exam package",()=>{
- const pkg=importAuthoredExam(starter);
+ const pkg=compileExternalQuestionBank(starter);
  assert.equal(pkg.questions.length,3);
  assert.equal(pkg.paper.sections.length,3);
  assert.equal(pkg.paper.timing.kind,"untimed");
@@ -22,22 +22,22 @@ test("easy APFC/NAT author bank generates a strict validated immutable exam pack
  assert.equal(pkg.answerKey.entries[1].answer.optionId,"B");
  assert.equal(pkg.answerKey.entries[2].answer.acceptedValues[0],4);
  assert.equal(validateExamPackage(pkg),pkg);
- const copy=importSimpleQuestionBank(JSON.parse(JSON.stringify(starter)));
- assert.deepEqual(copy,pkg,"Same authored question bank must generate same revision/content hashes");
+ const copy=compileExternalQuestionBank(JSON.parse(JSON.stringify(starter)));
+ assert.deepEqual(copy,pkg,"Same canonical authoring source must generate same revision/content hashes");
 });
-test("simple-bank input rejects malformed keys, excess questions, invalid marks and NAT tolerance",()=>{
+test("canonical authoring input rejects malformed keys, excess questions, invalid marks and numeric tolerance",()=>{
  const edited=mutate=>{const x=structuredClone(starter);mutate(x);return x;};
  for(const [name,mutate] of [
   ["duplicate",x=>x.questions[1].id=x.questions[0].id],
   ["letter outside options",x=>x.questions[0].answer="Z"],
-  ["bad question",x=>x.questions[0].question=""],
+  ["bad question",x=>x.questions[0].prompt=""],
   ["negative tolerance",x=>x.questions[2].tolerance=-0.01],
   ["invalid penalty",x=>x.scoring.incorrectMarks=10],
-  ["huge count",x=>x.questions=Array.from({length:2001},(_,i)=>({...x.questions[0],id:"q"+i}))],
-  ["unsupported content",x=>x.questions[0].type="bogus"],
-  ["duplicate bank identifier",x=>x.bankId="hello world"],
+  ["huge count",x=>x.questions=Array.from({length:201},(_,i)=>({...x.questions[0],id:"q"+i}))],
+  ["unsupported content",x=>x.questions[0].kind="bogus"],
+  ["invalid bank identifier",x=>x.bankId="hello world"],
  ]){
-  assert.throws(()=>importSimpleQuestionBank(edited(mutate)),undefined,name);
+  assert.throws(()=>compileExternalQuestionBank(edited(mutate)),undefined,name);
  }
 });
 test("untimed option derives new validated frozen policy for every built-in mode and generic package",()=>{
@@ -64,7 +64,7 @@ test("untimed option derives new validated frozen policy for every built-in mode
    assert.equal(continued.state.status,"running");
   }
  }
- const custom=importAuthoredExam({...starter,timing:{kind:"whole-paper",minutes:20}});
+ const custom=compileExternalQuestionBank({...starter,timing:{kind:"whole-paper",minutes:20,pausePolicy:"allowed"}});
  assert.equal(custom.paper.timing.kind,"whole-paper");
  const unlocked=configureUntimedPractice(custom,true);
  assert.equal(unlocked.paper.timing.kind,"untimed");
@@ -88,8 +88,12 @@ test("P43 catalog keeps imported families distinct, sorted and never claims offi
    await import("../src/app/exam-families.ts");
  const originals=builtinCglPackages(sources,patches);
  const builtins=new Set(originals.map(p=>p.paper.id));
- const apfc=importAuthoredExam(starter);
- const imposter=importAuthoredExam({...starter,examId:"ssc-cgl",bankId:"user-supplied-cgl",title:"Unverified SSC labelled bank"});
+ const apfc=compileExternalQuestionBank(starter);
+ const imposterSource={...starter,examId:"ssc-cgl",bankId:"user-supplied-cgl",
+   paperId:"user-supplied-cgl",title:"Unverified SSC labelled bank",
+   questions:starter.questions.map(q=>{const {syllabusHeadingId:_,...rest}=q;
+     return {...rest,subject:"User supplied"};})};
+ const imposter=compileExternalQuestionBank(imposterSource);
  const catalog=examFamilyCatalog([...originals,imposter,apfc],builtins);
  assert.deepEqual(catalog.map(f=>f.id),
    [BUILTIN_CGL_FAMILY,"imported:ssc-cgl","imported:upsc-epfo-apfc"]);
@@ -157,7 +161,7 @@ test("P44 refuses invented tags, unavailable inventory and misleading counts",as
 test("P44 imported APFC custom subset freezes exact policies and graded outcomes",async()=>{
  const {composePracticeSet,validatePracticeComposition}=await import("../src/app/practice-compose.ts");
  const {scoreAttempt}=await import("../src/engine/scoring.ts");
- const authored=importAuthoredExam(starter);
+ const authored=compileExternalQuestionBank(starter);
  const request={count:2,seed:"APFC-1",filters:{sectionId:authored.paper.sections[0].id}};
  assert.throws(()=>composePracticeSet(authored,request),/Only 1 eligible/);
  const selection=composePracticeSet(authored,{...request,count:1});
@@ -185,7 +189,7 @@ test("P44 imported APFC custom subset freezes exact policies and graded outcomes
 test("P44 explicit topic and difficulty metadata work without guessing or changing full source",async()=>{
  const {composePracticeSet,practiceInventory}=await import("../src/app/practice-compose.ts");
  const {questionRevisionHash}=await import("../src/domain/integrity.ts");
- const authored=importAuthoredExam(starter);
+ const authored=compileExternalQuestionBank(starter);
  const decorated=structuredClone(authored);
  const q=decorated.questions[0];
  q.content.topicIds=["labour-code-verified"];
