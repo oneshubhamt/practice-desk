@@ -81,7 +81,6 @@ export interface RecoveryCandidate {
   readonly startedAt?: number | null;
   readonly finishedAt?: number | null;
   readonly updatedAt?: number | null;
-  readonly schema?: number;
   readonly saveRevision: number;
 }
 /** Terminal records win over stale in-progress mirrors for the same ID. */

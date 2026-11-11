@@ -14,7 +14,7 @@ export interface SessionState {
   readonly responses: readonly AttemptResponseRecord[];
   /** Canonical cursor-entry counters for exact first-visit/revisit evidence. */
   readonly questionVisits: readonly { readonly questionRevisionId:QuestionRevisionId;readonly count:number }[];
-  /** Current timing evidence schema. Older shapes are not accepted. */
+  /** Canonical timing-evidence schema for every current session state. */
   readonly timingEvidenceVersion:1;
   readonly completedSections: readonly number[];
   /** Observed consumed timer time for each finished sequential section.

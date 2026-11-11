@@ -1,3 +1,4 @@
+import {STORAGE_TOPOLOGY} from "../storage-topology.ts";
 import type {GenericAttempt} from "../app/exam-package.ts";
 import type {FrozenAttemptContent} from "./frozen.ts";
 import {hashJson} from "../domain/hash.ts";
@@ -6,9 +7,9 @@ import {assertFrozenContent} from "./frozen.ts";
 /** Clean storage contract. Immutable content lives once per unique SHA-256 hash.
  * The per-attempt row never contains the question/key/media graph.
  * No legacy reader, migration or version bridge. */
-export const SHARED_DB_NAME="practiceDesk.shared.v1";
-export const ATTEMPTS_STORE="attempts";
-export const SNAPSHOTS_STORE="snapshots";
+export const SHARED_DB_NAME=STORAGE_TOPOLOGY.historyDatabase;
+export const ATTEMPTS_STORE=STORAGE_TOPOLOGY.attemptsStore;
+export const SNAPSHOTS_STORE=STORAGE_TOPOLOGY.snapshotsStore;
 
 type SharedBody=Omit<FrozenAttemptContent,"frozenAt"> &
  Pick<GenericAttempt,"sourceKeyReference"|"sourceReviewReference"|"explanations">;

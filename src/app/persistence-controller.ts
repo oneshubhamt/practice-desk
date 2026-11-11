@@ -1,3 +1,4 @@
+import {STORAGE_TOPOLOGY} from "../storage-topology.ts";
 /** P47-6 module: persistence-controller.ts */
 
 
@@ -405,7 +406,7 @@ export function hydrateWorkspaceStorage(owner:CoordinatorContext):void{
 (async()=>{
    try{
      owner.db=await new Promise<IDBDatabase>((resolve,reject)=>{
-       const request=indexedDB.open(owner.dbName,1);
+       const request=indexedDB.open(owner.dbName,STORAGE_TOPOLOGY.historyDatabaseVersion);
        request.onupgradeneeded=()=>{
          request.result.createObjectStore(ATTEMPTS_STORE,{keyPath:"id"});
          request.result.createObjectStore(SNAPSHOTS_STORE,{keyPath:"id"});

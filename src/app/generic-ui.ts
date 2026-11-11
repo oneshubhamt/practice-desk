@@ -1,3 +1,4 @@
+import {STORAGE_TOPOLOGY} from "../storage-topology.ts";
 
 
 import {isAttempt,type RecordItem} from "./stored-record-validator.ts";
@@ -83,7 +84,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  const families=()=>examFamilyCatalog(packages.values(),builtinPaperIds);
  const applyFamily=(id:string):void=>applyLibraryFamily(owner,id);
  const saveSelection=():void=>persistLibrarySelection(owner);
-  const historyQueryKey="practiceDesk.history.view.v1";
+  const historyQueryKey=STORAGE_TOPOLOGY.historyView;
   let historyQuery:HistoryQuery=(()=>{
     try{return restoreHistoryQuery(JSON.parse(sessionStorage.getItem(historyQueryKey)??"null"));}
     catch{return DEFAULT_HISTORY_QUERY;}
@@ -125,7 +126,7 @@ export function mountExamWorkspace(root:HTMLElement,sources:SourcePaperBank,patc
  const storageSnapshot=():StorageHealth=>workspaceStorageHealth(owner);
  const updateStorageHealth=():void=>updateWorkspaceStorageHealth(owner);
  const recordStorageFailure=(error:unknown):void=>reportWorkspaceStorageFailure(owner,error);
- const storageKey="practiceDesk.overhaul.fallback.v1", mirrorKey="practiceDesk.overhaul.active.v1";
+ const storageKey=STORAGE_TOPOLOGY.historyFallback, mirrorKey=STORAGE_TOPOLOGY.activeAttemptMirror;
  const dbName=SHARED_DB_NAME;
  const downloadBackup=():Promise<void>=>downloadHistoryBackup(owner);
  const importHistory=(file:File)=>importHistoryBackup(owner,file);
