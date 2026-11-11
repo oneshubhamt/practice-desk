@@ -20,7 +20,7 @@ export function createWorkspaceAuthoringStudio(owner:CoordinatorContext):ReturnT
        throw Error("This exact paper edition and revision is already published. Increase Revision rather than overwriting it.");
      // A newly published item uses the SAME source-validated, compare-and-save
      // path as ordinary imported papers. No separate mutable publication store.
-     const persisted=await owner.save({recordType:"generic-package",
+     const persisted=await owner.save({recordType:"generic-package",saveRevision:0,
        id:"generic-package:"+signed.paper.id,bundle:signed});
      if(!persisted)throw Error("The validated paper could not be saved; no new edition is available.");
      owner.packages.set(signed.paper.id,signed);
