@@ -415,7 +415,7 @@
       ],
       "sourcePaths": [
         "src/history/backup.ts",
-        "src/app/bank-import.ts",
+        "src/authoring/external-bank.ts",
         "src/app/exam-package.ts"
       ]
     },
