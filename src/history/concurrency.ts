@@ -10,5 +10,8 @@ export function assertWriteVersion(current:VersionedRecord|undefined,expected:nu
  }
 }
 export function nextWriteVersion(expected:number|null):number{
- return expected===null?1:expected+1;
+ if(expected===null)return 1;
+ if(!Number.isSafeInteger(expected)||expected<1)
+   throw new Error("Invalid expected stored write revision");
+ return expected+1;
 }
