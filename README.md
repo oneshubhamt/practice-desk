@@ -9,7 +9,7 @@ Practice Desk is a **local-first examination and learning application**. Its sta
 3. Run `npm run check` for the core application, or `npm run build:static` to additionally build `Practice_Desk_Static/` with the browser optimizer Worker/WASM.
 4. For the full-capability app, serve `Practice_Desk_Static/` over localhost or HTTPS and open its `index.html`. The directory has no required backend; the optimizer runs locally in the browser.
 5. `Practice_Desk_Offline_Mock_Tests.html` can still be opened directly with `file://` when a one-file fallback is preferable; scheduling works, but browser weight training is disabled.
-6. Create questions in Wordgard or explicitly import a validated bank from Library. Keep your own backups.
+6. Create questions in Wordgard, stage a canonical `practice-desk-authoring` source, or import a validated `practice-desk-exam` package from Library. Keep your own backups.
 
 External agents may create versioned question-bank JSON with repository CLI tools. **They cannot directly access the user's browser History, import content automatically or verify a claimed PYQ solely from a source hash.** Start with the [agent quickstart](docs/AGENT_AUTHORING_QUICKSTART.md).
 
@@ -19,6 +19,6 @@ Use the [task-oriented documentation index](docs/README.md); do not read every f
 
 ## Verified status and limits
 
-The P61 test-bench consolidation is closed on **`overhaul`**. [Final CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42433146976) passed 408 Node tests, ten selected semantic-mutation checks, 32 Chromium + 20 Firefox + 20 Linux WebKit acceptance journeys and guarded publishing. That verifies bounded software contracts—not independent official question accuracy, physical Mac/mobile accessibility, OS data recovery or release approval.
+The historical P61 test-bench consolidation is closed. [Final CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42433146976) passed 408 Node tests, ten selected semantic-mutation checks, 32 Chromium + 20 Firefox + 20 Linux WebKit acceptance journeys and guarded publishing. That verifies bounded software contracts—not independent official question accuracy, physical Mac/mobile accessibility, OS data recovery or release approval.
 
-`main` and `baseline/v11` are protected from unapproved changes. Changes to `overhaul` require a task-specific instruction.
+`main` and `baseline/v11` are protected from unapproved changes. The current development branch is **`working`**; branch/release policy remains governed by [AGENTS.md](AGENTS.md).
