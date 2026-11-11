@@ -141,13 +141,15 @@ test("P46-B exact phases survive compact v4 backup, reopen and remain independen
  assert.equal(q.revisitMs,0);
  assert.equal(q.beforeFirstAnswerMs,null);
 });
-test("P46-B uninstrumented records remain unavailable; no wall-clock guesses",()=>{
- const a=completed(),old=structuredClone(a);
- delete old.state.timingEvidenceVersion;
- for(const r of old.state.responses){delete r.firstVisitMs;delete r.preFirstAnswerMs;}
- assert.equal(validateGenericStoredRecord(old).id,a.id);
- assert.equal(questionTimingPhases(old,id(0)),null);
- assert.match(timingLedgerHTML(old,true),/Not measured/);
- const missing=revisionInventory([old],[],new Set(),pkg.examId,["blank"]);
- assert.ok(missing.selected.every(x=>x.firstVisitMs===null&&x.revisitMs===null));
+test("P46-B missing canonical timing instrumentation is rejected",()=>{
+ const a=completed();
+ const unversioned=structuredClone(a);
+ delete unversioned.state.timingEvidenceVersion;
+ assert.throws(()=>validateGenericStoredRecord(unversioned),/timing evidence/);
+ const missingPhase=structuredClone(a);
+ delete missingPhase.state.responses[0].firstVisitMs;
+ assert.throws(()=>validateGenericStoredRecord(missingPhase),/timing phase evidence/);
+ const missingPreAnswer=structuredClone(a);
+ delete missingPreAnswer.state.responses[0].preFirstAnswerMs;
+ assert.throws(()=>validateGenericStoredRecord(missingPreAnswer),/timing phase evidence/);
 });
