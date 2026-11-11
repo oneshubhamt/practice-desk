@@ -59,6 +59,11 @@ export type TimingPolicy =
       readonly pausePolicy: PausePolicy;
     };
 
+export interface CandidateTools {
+  /** Simple four-function exam calculator with common unary/memory operations. */
+  readonly calculator?: "basic";
+}
+
 export interface NavigationPolicy {
   readonly questionNavigation: "free" | "forward-only";
   readonly sectionNavigation: "free" | "sequential-locked";
@@ -86,6 +91,8 @@ export interface PaperRevision {
   readonly sourceAnswerKeyRevisionId?: AnswerKeyRevisionId;
   readonly timing: TimingPolicy;
   readonly navigation: NavigationPolicy;
+  /** Candidate-facing tools are explicit paper policy; never inferred from exam name. */
+  readonly candidateTools?: CandidateTools;
   readonly scoring: ScoringPolicy;
   readonly createdAt?: string;
 }
