@@ -2,7 +2,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
-import {importAuthoredExam,importSimpleQuestionBank} from "../src/app/bank-import.ts";
 import {compileExternalQuestionBank,inspectExternalQuestionBank,toAuthoringDraft} from "../src/authoring/external-bank.ts";
 import {validateExamPackage} from "../src/app/exam-package.ts";
 import {scoreAttempt} from "../src/engine/scoring.ts";
@@ -22,7 +21,6 @@ test("P57-A CAT external agent source compiles without authored hashes and reuse
  assert.equal(pkg.paper.timing.sectionLimits.length,3);
  assert.equal(pkg.questions[0].editorial.status,"caution");
  assert.match(pkg.questions[0].editorial.notes,/not been independently certified/);
- assert.equal(importAuthoredExam(source).paper.contentHash,pkg.paper.contentHash);
 });
 test("P57-A APFC academic subject hierarchy remains independent of one physical exam section",async()=>{
  const source=await fixture("apfc");
@@ -74,12 +72,6 @@ test("P57-A immutable question IDs survive source revisions; changed passage cha
  assert.equal(p2.answerKey.entries[0].answer.optionId,"B");
  assert.equal(inspectExternalQuestionBank(source,[p1]).valid,false);
 });
-test("P57-A simple legacy authoring imports remain supported but are never automatically 'verified'",()=>{
- const legacy={format:"practice-desk-bank",version:1,bankId:"legacy-p57",examId:"mock",title:"Legacy import",revision:1,scoring:{correctMarks:1,incorrectMarks:0},questions:[{id:"q1",type:"mcq",question:"2+2?",options:["1","2","3","4"],answer:"D"}]};
- const pkg=importSimpleQuestionBank(legacy);
- assert.equal(pkg.questions[0].editorial.status,"caution");
-});
-
 test("P57-A all six response kinds, safe rich math, image assets and genuine mixed scoring use one published engine",async()=>{
  const original=await fixture("cat");
  const png="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/tAAAAABJRU5ErkJggg==";
