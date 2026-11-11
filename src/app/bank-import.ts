@@ -48,7 +48,7 @@ export function importSimpleQuestionBank(value:unknown):ExamPackage{
  validateExamImportBudget(value);
  const bank=obj(value,"Question bank");
  only(bank,["format","version","bankId","examId","title","revision","edition",
-   "scoring","timing","questions","media"],"Question bank");
+   "scoring","timing","tools","questions","media"],"Question bank");
  ensure(bank["format"]==="practice-desk-bank"&&bank["version"]===1,
    "Not a Practice Desk simple bank v1");
  const bankId=key(bank["bankId"],"bankId");
@@ -180,9 +180,18 @@ export function importSimpleQuestionBank(value:unknown):ExamPackage{
      timing={kind:"whole-paper",durationMs:minutes*60000,pausePolicy:"allowed"};
    }else ensure(t["kind"]==="untimed","Simple bank timing must be untimed or whole-paper");
  }
+ let candidateTools:PaperRevision["candidateTools"]|undefined;
+ const rawTools=bank["tools"];
+ if(rawTools!==undefined){
+   const tools=obj(rawTools,"tools");
+   only(tools,["calculator"],"tools");
+   ensure(tools["calculator"]==="basic",'tools.calculator must be "basic"');
+   candidateTools={calculator:"basic"};
+ }
  const paperBase={
   id:(paperId+":paper:r"+revision) as PaperRevisionId,paperId,revision,
   edition:edition as PaperEdition,answerKeyRevisionId:keyId,sections:sectionList,timing,
+  ...(candidateTools?{candidateTools}:{}),
   navigation:{questionNavigation:"free" as const,sectionNavigation:"free" as const,
    allowFlagging:true,allowReview:true},
   scoring:{defaultRule:rule}
