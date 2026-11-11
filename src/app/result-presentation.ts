@@ -45,14 +45,14 @@ export function timingLedgerHTML(a:GenericAttempt,active:boolean,allowReview=tru
   a.result.items.map((x,i)=>{
     const response=a.state.responses.find(r=>r.questionRevisionId===x.questionRevisionId);
     const section=a.frozen.paper.sections.find(s=>s.questionRevisionIds.includes(x.questionRevisionId));
-    const visit=a.state.questionVisits?.find(v=>v.questionRevisionId===x.questionRevisionId)?.count;
+    const visit=a.state.questionVisits.find(v=>v.questionRevisionId===x.questionRevisionId)?.count;
     const speed=questionSpeed(a,x.questionRevisionId);
     const phases=questionTimingPhases(a,x.questionRevisionId);
     return '<tr><td>'+(i+1)+'</td><td>'+esc(section?.title??"—")+'</td>'+
     '<td><span class="verdict '+esc(x.verdict)+'">'+esc(x.verdict)+'</span></td>'+
     '<td>'+duration(response?.timeSpentMs??0)+'</td>'+
     '<td><span class="tag speed-'+speed.toLowerCase().replace(/[^a-z]+/g,"-")+'">'+esc(speed)+'</span></td>'+
-    '<td>'+(a.state.questionVisits===undefined?"Not recorded":visit??0)+'</td>'+
+    '<td>'+(visit??0)+'</td>'+
     '<td>'+(response?.answerChangeCount??0)+'</td>'+
     '<td>'+(phases?duration(phases.firstVisitMs):"Not measured")+'</td>'+
     '<td>'+(phases?duration(phases.revisitMs):"Not measured")+'</td>'+
