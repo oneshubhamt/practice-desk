@@ -81,6 +81,7 @@ jobs:
           node-version: '26.13.0'
           package-manager-cache: false
       - run: npm ci --no-audit --no-fund
+      - run: node node_modules/playwright-core/cli.js install --with-deps chromium
       - uses: actions/download-artifact@v4
         with:
           name: source-verified-static-app
