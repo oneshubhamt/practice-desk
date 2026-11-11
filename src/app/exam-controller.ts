@@ -7,7 +7,9 @@ import {transitionGenericAttempt} from "./exam-package.ts";
 import type {SessionEvent} from "../engine/session.ts";
 
 import {multipleDraftMessage,duplicateMatchingTargets} from "./response-drafts.ts";
-import {bindExamCalculator,newExamCalculatorState} from "./exam-calculator.ts";
+import {bindExamCalculator} from "./exam-calculator.ts";
+import {newExamCalculatorState} from "../domain/calculator.ts";
+import {readCalculatorWorkspace,writeCalculatorWorkspace,clearCandidateToolWorkspace} from "./candidate-tool-state.ts";
 
 import type {CoordinatorContext} from "./coordinator-context.ts";
 
@@ -16,7 +18,12 @@ export function renderCurrentExamHTML(owner:CoordinatorContext):string {
    const qid=owner.attempt.frozen.paper.sections[owner.attempt.state.sectionIndex]
      ?.questionRevisionIds[owner.attempt.state.questionIndex];
    const draft=qid?owner.choiceDrafts.get(owner.attempt.id+"|"+qid):undefined;
-   const calculator=owner.calculatorStates.get(owner.attempt.id)??newExamCalculatorState();
+   const calculatorProfile=owner.attempt.frozen.paper.candidateTools?.calculator;
+   let calculator=owner.calculatorStates.get(owner.attempt.id);
+   if(calculatorProfile&&!calculator){
+     calculator=readCalculatorWorkspace(localStorage,owner.attempt.id,calculatorProfile);
+     owner.calculatorStates.set(owner.attempt.id,calculator);
+   }
    return renderModelExam(owner.attempt,owner.packageForAttempt(owner.attempt),owner.warning,draft,{
      focused:Boolean(document.fullscreenElement||
        document.documentElement.classList.contains("immersive"))
@@ -31,6 +38,8 @@ export const dispatchExamEvent=(owner:CoordinatorContext,event:SessionEvent)=>{
      owner.attempt=transitionGenericAttempt(owner.attempt,event,ids);
      if(owner.attempt!==before)void owner.save(owner.attempt);
      if(owner.attempt.finishedAt!==null){
+       owner.calculatorStates.delete(owner.attempt.id);
+       clearCandidateToolWorkspace(localStorage,owner.attempt.id);
        owner.reviewFilter="all";owner.go({screen:"result",attemptId:owner.attempt.id,tab:"overview"},"replace");return;
      }
      owner.warning="";
@@ -42,8 +51,16 @@ export function bindExamScreen(owner:CoordinatorContext):void{
 owner.root.querySelector<HTMLButtonElement>("#g-exam-full")!.onclick=()=>
      window.dispatchEvent(new Event("practice-desk:toggle-fullscreen"));
 const calculatorId=owner.attempt!.id;
-bindExamCalculator(owner.root,owner.calculatorStates.get(calculatorId)??newExamCalculatorState(),
-  next=>owner.calculatorStates.set(calculatorId,next));
+const calculatorProfile=owner.attempt!.frozen.paper.candidateTools?.calculator;
+if(calculatorProfile){
+  const calculatorState=owner.calculatorStates.get(calculatorId)??
+    readCalculatorWorkspace(localStorage,calculatorId,calculatorProfile);
+  owner.calculatorStates.set(calculatorId,calculatorState);
+  bindExamCalculator(owner.root,calculatorState,next=>{
+    owner.calculatorStates.set(calculatorId,next);
+    writeCalculatorWorkspace(localStorage,calculatorId,calculatorProfile,next);
+  });
+}
 const section=owner.attempt!.frozen.paper.sections[owner.attempt!.state.sectionIndex];
 const q=owner.attempt!.frozen.questions.find(x=>x.id===section?.questionRevisionIds[owner.attempt!.state.questionIndex]);
 if(!q)return;
