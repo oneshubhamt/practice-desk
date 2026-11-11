@@ -8,7 +8,7 @@ import type {
   SectionId,
   SourceReference,
 } from "./ids.js";
-import type { ScoringPolicy, MarkingRule } from "./scoring.js";
+import type { ScoringPolicy, MarkingRule } from "./scoring.js";\nimport type {CalculatorProfile} from "./calculator.ts";
 
 export interface ExamDefinition {
   readonly id: ExamId;
@@ -61,7 +61,7 @@ export type TimingPolicy =
 
 export interface CandidateTools {
   /** Simple four-function exam calculator with common unary/memory operations. */
-  readonly calculator?: "basic";
+  readonly calculator?: CalculatorProfile;
 }
 
 export interface NavigationPolicy {
