@@ -17,9 +17,7 @@ if(!input||!output||!timezoneArg||rolloverArg===undefined){
  process.exit(2);
 }
 const inputPath=resolve(input),outputPath=resolve(output),temporaryOutput=outputPath+".tmp";
-if(inputPath===outputPath)throw Error("Input CSV and output profile must use different paths");
-await rm(outputPath,{force:true});
-await rm(temporaryOutput,{force:true});
+if(inputPath===outputPath||inputPath===temporaryOutput)throw Error("Input CSV and output profile must use different paths");
 
 const nextDayStartsAt=Number(rolloverArg);
 if(!Number.isSafeInteger(nextDayStartsAt)||nextDayStartsAt<0||nextDayStartsAt>23)
@@ -27,6 +25,8 @@ if(!Number.isSafeInteger(nextDayStartsAt)||nextDayStartsAt<0||nextDayStartsAt>23
 const numericTimezone=Number(timezoneArg);
 const timezone=timezoneArg.trim()!==""&&Number.isFinite(numericTimezone)?numericTimezone:timezoneArg.trim();
 if(typeof timezone==="string"&&!timezone)throw Error("timezone must be a non-empty IANA timezone or fixed UTC offset in minutes");
+if(typeof timezone==="number"&&(timezone<-1440||timezone>1440))
+ throw Error("fixed timezone offset must be between -1440 and 1440 minutes");
 
 let maxSeconds=0,pollMs=250;
 for(const arg of flagArgs){
@@ -39,6 +39,9 @@ for(const arg of flagArgs){
   if(!Number.isSafeInteger(pollMs)||pollMs<50||pollMs>5000)throw Error("--poll-ms must be an integer from 50 to 5000");
  }else throw Error("Unknown optimizer option: "+arg);
 }
+await rm(outputPath,{force:true});
+await rm(temporaryOutput,{force:true});
+
 let abortRequested=false;
 const startedAt=Date.now(),deadline=maxSeconds>0?startedAt+maxSeconds*1000:Number.POSITIVE_INFINITY;
 process.on("SIGINT",()=>{abortRequested=true;console.error("\nOptimizer interruption requested; stopping at the next progress checkpoint.");});

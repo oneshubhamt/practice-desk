@@ -1,3 +1,8 @@
+import {spawnSync} from "node:child_process";
+import {mkdtemp,readFile,rm,writeFile} from "node:fs/promises";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
+import {fileURLToPath} from "node:url";
 import assert from "node:assert/strict";
 import {
  FSRSBinding,FSRSBindingItem,FSRSBindingReview,computeOptimalSteps,computeParameters,
@@ -53,4 +58,21 @@ const analysis=computeOptimalSteps(csv,0.9,0.5);
 assert.ok(Array.isArray(analysis.recommendedLearningSteps));
 assert.ok(Array.isArray(analysis.recommendedRelearningSteps));
 assert.ok(analysis.good&&analysis.good.count>=100);
-console.log("FSRS optimizer smoke passed: FSRS-7 training, direct evaluation, held-out activation policy, and advisory step analysis.");
+
+const temp=await mkdtemp(join(tmpdir(),"practice-desk-fsrs-"));
+try{
+ const csvPath=join(temp,"small.csv"),profilePath=join(temp,"profile.json");
+ await writeFile(csvPath,rows.slice(0,4).join("\n")+"\n","utf8");
+ await writeFile(profilePath,"sentinel","utf8");
+ const cli=fileURLToPath(new URL("./optimize.mjs",import.meta.url));
+ const invalid=spawnSync(process.execPath,[cli,csvPath,profilePath],{encoding:"utf8"});
+ assert.equal(invalid.status,2);
+ assert.equal(await readFile(profilePath,"utf8"),"sentinel");
+ const insufficient=spawnSync(process.execPath,[cli,csvPath,profilePath,"Asia/Kolkata","4"],{encoding:"utf8"});
+ assert.notEqual(insufficient.status,0);
+ let staleProfileExists=true;
+ try{await readFile(profilePath,"utf8");}catch(error){staleProfileExists=error?.code!=="ENOENT";}
+ assert.equal(staleProfileExists,false);
+}finally{await rm(temp,{recursive:true,force:true});}
+
+console.log("FSRS optimizer smoke passed: FSRS-7 training, direct evaluation, held-out activation policy, mandatory CLI inputs, fail-closed output, and advisory step analysis.");
