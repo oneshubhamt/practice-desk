@@ -371,6 +371,7 @@ export function compileAuthoringPublication(
   navigation:{questionNavigation:d.questionNavigation??"free",
    sectionNavigation:d.sectionNavigation??"free",
    allowFlagging:true,allowReview:d.allowReview??true},
+  ...(d.calculatorTool?{candidateTools:{calculator:d.calculatorTool}}:{}),
   scoring:{defaultRule:{correctMarks:d.marksCorrect,incorrectMarks:d.marksIncorrect,
    unansweredMarks:0}}
  };
