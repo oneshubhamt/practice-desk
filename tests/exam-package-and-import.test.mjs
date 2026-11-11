@@ -280,8 +280,9 @@ test("generic attempts and imported packages survive a verified history backup r
  completed=transitionGenericAttempt(completed,{type:"SUBMIT_ATTEMPT",nowMs:1002},lookup);
  assert.equal(validateGenericStoredRecord(unfinished),unfinished);
  assert.equal(validateGenericStoredRecord(completed),completed);
- const importedPackage={recordType:"generic-package",id:"generic-package:"+bundle.paper.id,bundle};
- const contents=[importedPackage,unfinished,completed];
+ const importedPackage={recordType:"generic-package",saveRevision:1,id:"generic-package:"+bundle.paper.id,bundle};
+ const storedUnfinished={...unfinished,saveRevision:1},storedCompleted={...completed,saveRevision:1};
+ const contents=[importedPackage,storedUnfinished,storedCompleted];
  const backup=makeBackup(contents,{schema:1,dark:false,scale:100},"2026-10-28T00:00:00Z");
  const reloaded=verifyBackup(JSON.parse(JSON.stringify(backup)));
  assert.equal(reloaded.records.length,3);
@@ -289,8 +290,8 @@ test("generic attempts and imported packages survive a verified history backup r
  const {reconstructRecords}=await import("../src/history/shared-store.ts");
  const full=reconstructRecords(reloaded.records,reloaded.snapshots);
  for(const record of full) assert.doesNotThrow(()=>validateGenericStoredRecord(record));
- assert.deepEqual(planBackupMerge([completed],full,"completed").map(x=>x.id),
-  [importedPackage.id,unfinished.id]);
+ assert.deepEqual(planBackupMerge([storedCompleted],full,"completed").map(x=>x.id),
+  [importedPackage.id,storedUnfinished.id]);
  assert.throws(()=>verifyBackup({...reloaded,records:reloaded.records.slice(1)}),/integrity/);
 });
 test("completed generic scores cannot be silently rewritten in stored history",()=>{
@@ -482,8 +483,8 @@ test("P42 rejects unsupported source schemes, oversized media and invalid media 
  assert.throws(()=>validateExamPackage(tampered),/digest mismatch/);
 });
 
-test("P42 corrupted backup fails closed without altering legitimate v3 payloads",()=>{
- const backup=makeBackup([{id:"one"}],{schema:1,dark:false,scale:100},"2026-11-02T00:00:00Z");
+test("P42 corrupted backup fails closed without altering legitimate current payloads",()=>{
+ const backup=makeBackup([{id:"one",recordType:"opaque",saveRevision:1}],{schema:1,dark:false,scale:100},"2026-11-02T00:00:00Z");
  assert.deepEqual(verifyBackup(structuredClone(backup)),backup);
  const damaged=structuredClone(backup);
  damaged.records[0].id="tampered";
