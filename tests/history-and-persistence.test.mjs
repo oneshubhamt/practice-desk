@@ -353,7 +353,7 @@ test("seeded two-tab compare-and-swap interleavings reject stale writes, preserv
     assert.deepEqual(stored,before,"rejected tab must not mutate observed saved state");
    }
   }
-  assert.ok((stored?.saveRevision??0)>=0);
+  assert.ok(stored===undefined||stored.saveRevision>=1);
  }
 });
 
@@ -422,21 +422,22 @@ test("backup v4 checksum covers records and preferences; size, IDs and timestamp
  assert.throws(()=>verifyBackup(over),/Invalid backup format/);
  const dups=makeBackup([{id:"x"},{id:"x"}],preferences,at);
  assert.throws(()=>verifyBackup(dups),/Invalid backup records/);
- const invalidName=makeBackup([{id:"x".repeat(201)}],preferences,at);
+ const invalidName=makeBackup([{id:"x".repeat(201),recordType:"generic-note",saveRevision:1}],preferences,at);
  assert.throws(()=>verifyBackup(invalidName),/Invalid backup records/);
  assert.throws(()=>makeBackup([],preferences,"not-a-date"),/timestamp/);
 });
 
-test("new-record CAS, current revision zero and saved revision progression have distinct meanings",()=>{
+test("new-record CAS uses null; persisted rows require revisions 1+ and progress monotonically",()=>{
  assert.doesNotThrow(()=>assertWriteVersion(undefined,null));
- assert.doesNotThrow(()=>assertWriteVersion({},0));
  assert.equal(nextWriteVersion(null),1);
- assert.equal(nextWriteVersion(0),1);
  assert.equal(nextWriteVersion(12),13);
- for(const current of [undefined,{},{saveRevision:1},{saveRevision:8}]){
-  for(const expected of [null,0,1,8]){
-   const allowed=(expected===null?current===undefined:
-    current!==undefined&&(current.saveRevision??0)===expected);
+ assert.throws(()=>nextWriteVersion(0),/Invalid expected stored write revision/);
+ assert.throws(()=>assertWriteVersion({},0),/Another tab/);
+ assert.throws(()=>assertWriteVersion({saveRevision:0},0),/Another tab/);
+ for(const current of [undefined,{saveRevision:1},{saveRevision:8}]){
+  for(const expected of [null,1,8]){
+   const allowed=expected===null?current===undefined:
+    current!==undefined&&current.saveRevision===expected;
    if(allowed)assert.doesNotThrow(()=>assertWriteVersion(current,expected));
    else assert.throws(()=>assertWriteVersion(current,expected),/Another tab/);
   }
