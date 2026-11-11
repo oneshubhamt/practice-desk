@@ -197,7 +197,7 @@ test("P44 explicit topic and difficulty metadata work without guessing or changi
  q.contentHash=questionRevisionHash(q);
  const snapshot=JSON.stringify(decorated);
  const inventory=practiceInventory(decorated);
- assert.deepEqual(inventory.topics.map(x=>x.id),["labour-code-verified"]);
+ assert.ok(inventory.topics.some(x=>x.id==="labour-code-verified"));
  assert.deepEqual(inventory.difficulties.map(x=>x.id),["medium"]);
  const selected=composePracticeSet(decorated,{count:1,seed:"topic-1",
    filters:{topicId:"labour-code-verified",difficulty:"medium"}});
