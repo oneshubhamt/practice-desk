@@ -4,6 +4,7 @@ import type {ExamPackage,GenericAttempt} from "./exam-package.ts";
 import type {OptionId} from "../domain/ids.js";
 import {escapeText} from "./html-escape.ts";
 import {assetHTML,stimulusHTML,renderGenericControls,renderQuestionPrompt} from "./question-content-view.ts";
+import {calculatorPanelHTML,calculatorToggleHTML,newExamCalculatorState,type ExamCalculatorState} from "./exam-calculator.ts";
 /** Human-readable view of a frozen practice mode; do not alter persistence. */
 export function readablePracticeMode(mode:string):string{
  switch(mode){
@@ -30,7 +31,8 @@ export function renderModelExam(
  attempt:Pick<GenericAttempt,"state"|"frozen"|"packageId">,
  bundle:ExamPackage|undefined,warning="",
  draft?:{readonly questionId:string;readonly optionIds:readonly OptionId[];readonly message:string},
- view:Readonly<{focused:boolean}>={focused:false}
+ view:Readonly<{focused:boolean}>={focused:false},
+ calculatorState?:ExamCalculatorState
 ):string {
    const paper=attempt.frozen.paper, state=attempt.state;
    const section=paper.sections[state.sectionIndex];
@@ -59,6 +61,8 @@ export function renderModelExam(
      paper.timing.kind==="whole-paper"?"Whole-paper time used":"Section time used";
    const isLow=remaining!==null&&remaining<=60000;
    const focused=view.focused;
+   const calculatorEnabled=paper.candidateTools?.calculator==="basic";
+   const calculator=calculatorState??newExamCalculatorState();
    const sectionAnswered=section.questionRevisionIds.filter(qid=>Boolean(responsesById.get(qid)?.response)).length;
    const sectionFlagged=section.questionRevisionIds.filter(qid=>Boolean(responsesById.get(qid)?.flagged)).length;
 
@@ -71,9 +75,11 @@ export function renderModelExam(
      '<div class="row exam-header-actions"><div class="exam-clock '+(isLow?"low":"")+'"><strong class="generic-timer" id="g-timer" role="timer">'+
        (remaining===null?"Untimed":minutes(remaining))+'</strong><small>'+(remaining===null?"UNTIMED PRACTICE":
         paper.timing.kind==="sectional"?"SECTION TIME LEFT":"PAPER TIME LEFT")+'</small></div>'+
+     (calculatorEnabled?calculatorToggleHTML(calculator):"")+
      '<button class="btn quiet" id="g-library">← Library</button>'+
      '<button class="btn" type="button" id="g-exam-full" aria-label="Toggle full-screen test view" aria-pressed="'+
      focused+'">'+(focused?"⛶ Exit full screen":"⛶ Full screen")+'</button></div></div>'+
+     (calculatorEnabled?calculatorPanelHTML(calculator):"")+
      '<p id="g-fullscreen-status" role="status"></p>'+
      (warning?'<p class="generic-warning" role="status">'+escapeText(warning)+'</p>':"")+
      (expired?'<p class="generic-warning" role="status">Section time has expired. Answers are locked. Select Continue to advance without using extra time.</p>':"")+
