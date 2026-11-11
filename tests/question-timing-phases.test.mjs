@@ -109,7 +109,7 @@ test("P46-B frozen stored attempts reject impossible or forged timing phase clai
    ["unversioned forged fields",x=>{delete x.state.timingEvidenceVersion;}],
    ["unknown timing version",x=>{x.state.timingEvidenceVersion=2;}]
  ]){
-   assert.throws(()=>validateGenericStoredRecord(altered(fn)),/timing (?:phase evidence|evidence version)/,description);
+   assert.throws(()=>validateGenericStoredRecord(altered(fn)),/(?:timing phase evidence|timing evidence version|canonical saved timing evidence)/,description);
  }
  assert.throws(()=>validateGenericStoredRecord(altered(x=>{
    x.state.responses.find(r=>r.firstAnsweredAt).firstAnsweredAt=new Date(x.updatedAt+1000).toISOString();
