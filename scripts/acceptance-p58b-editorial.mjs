@@ -50,14 +50,14 @@ try{
  await page.locator('[data-stage-triage-reviewer="'+keys[0]+'"]').fill("Reviewer claimed by author");
  await page.locator('[data-stage-triage-save="'+keys[0]+'"]').click();
  await page.waitForFunction(key=>{
-  const state=JSON.parse(localStorage.getItem("practiceDesk.authoring.staging.v1")??"null");
+  const state=JSON.parse(localStorage.getItem("practiceDesk.authoring.staging")??"null");
   return state?.triage?.some(x=>x.key===key&&x.decision==="distinct");
  },keys[0]);
  await page.locator("#pd-stage-handoff").click();
  await page.waitForFunction(()=>document.querySelector("#pd-author-drafts")?.value.startsWith("stage:"));
  const firstId=await page.locator("#pd-author-drafts").inputValue();
  const firstShelf=await page.evaluate(()=>{
-  const shelf=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts.v1"));
+  const shelf=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts"));
   return shelf.drafts.find(x=>x.id===shelf.activeId);
  });
  check(firstShelf.questions[0].qa?.review?.note?.includes("author decision distinct"),
@@ -71,7 +71,7 @@ try{
  const nextId=await page.locator("#pd-author-drafts").inputValue();
  check(nextId!==firstId,engine+" changing the selected questions overwrote a prior draft");
  const preserved=await page.evaluate(id=>{
-  const shelf=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts.v1"));
+  const shelf=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts"));
   return shelf.drafts.find(d=>d.id===id)?.questions[0]?.source;
  },firstId);
  check(preserved==="Original fork edit — preserve me",
@@ -82,14 +82,14 @@ try{
  await page.locator("#pd-author-source-new-title").fill("Illustrative primary-source document");
  await page.locator("#pd-author-source-add").click();
  await page.waitForFunction(()=>{
-  const shelf=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts.v1"));
+  const shelf=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts"));
   return shelf.drafts.find(d=>d.id===shelf.activeId)?.questions[0]?.provenance?.sources?.length===1;
  });
  await sourceField(0,"url","http://untrusted.invalid/plaintext");
  check((await page.locator("#pd-author-status").innerText()).includes("NOT saved"),
   engine+" malformed source URL was silently accepted");
  const invalidStored=await page.evaluate(()=>{
-  const shelf=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts.v1"));
+  const shelf=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts"));
   return shelf.drafts.find(d=>d.id===shelf.activeId)?.questions[0]?.provenance?.sources?.[0]?.url;
  });
  check(!invalidStored,engine+" invalid source URL entered authoritative saved draft");
@@ -142,7 +142,7 @@ try{
  });
  await fresh.page.waitForFunction(id=>document.querySelector("#pd-author-drafts")?.value===id,nextId);
  const imported=await fresh.page.evaluate(id=>{
-  const shelf=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts.v1"));
+  const shelf=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts"));
   return shelf.drafts.find(x=>x.id===id);
  },nextId);
  check(JSON.stringify(imported)===JSON.stringify(exchange.draft),
@@ -164,7 +164,7 @@ try{
   name:"p58b-full-shelf.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(allDrafts))
  });
  await fresh.page.waitForFunction(id=>{
-  const shelf=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts.v1")??"null");
+  const shelf=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts")??"null");
   return shelf?.drafts?.some(x=>x.id===id);
  },firstId);
  check(await fresh.page.locator("#pd-author-drafts").inputValue()===nextId,

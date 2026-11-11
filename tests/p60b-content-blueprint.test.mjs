@@ -154,7 +154,7 @@ test("P60-B RED: audit reports no keys/base64 and rejects unsupported input/flag
 }));
 
 
-test("P60-B: canonical compiler optionally gates exact single-source publication, preserving old paths",()=>temp(async dir=>{
+test("P60-B: canonical compiler optionally gates exact single-source publication while structural validation remains explicit",()=>temp(async dir=>{
  const plan=await write(dir,"plan.json",mkPlan());
  const source=await write(dir,"source.json",JSON.parse(await readFile(example,"utf8")));
  const out=join(dir,"compiled.json");
