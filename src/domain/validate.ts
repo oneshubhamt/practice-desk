@@ -1,7 +1,8 @@
 import type { AnswerKeyRevision } from "./answer-key.js";
 import type { ExamDefinition, PaperRevision, SectionDefinition } from "./exam.js";
 import type { QuestionRevision } from "./question.js";
-import {validateRichDocument} from "./rich-document.ts";\nimport {BASIC_CALCULATOR_V1} from "./calculator.ts";
+import {validateRichDocument} from "./rich-document.ts";
+import {BASIC_CALCULATOR_V1} from "./calculator.ts";
 
 const QUESTION_KINDS = [
   "single-choice", "multiple-select", "numeric-entry", "true-false", "matching", "free-response",
