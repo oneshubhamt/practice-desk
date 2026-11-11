@@ -161,7 +161,7 @@ for(const v of [
   const calcBox=key=>calcLayout.keys.find(item=>item.key===key);
   const back=calcBox("backspace"),clear=calcBox("clear"),zero=calcBox("0"),
     decimal=calcBox("."),equals=calcBox("equals"),plus=calcBox("+"),
-    percent=calcBox("%"),seven=calcBox("7"),reciprocal=calcBox("reciprocal"),four=calcBox("4");
+    percent=calcBox("percent"),seven=calcBox("7"),reciprocal=calcBox("reciprocal"),four=calcBox("4");
   const geometryComplete=[back,clear,zero,decimal,equals,plus,percent,seven,reciprocal,four].every(Boolean);
   const calcGeometry=geometryComplete?{
     columns:calcLayout.columns,backRatio:back.width/clear.width,zeroRatio:zero.width/decimal.width,
