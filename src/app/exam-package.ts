@@ -213,9 +213,11 @@ export function configureUntimedPractice(base:ExamPackage,enabled:boolean):ExamP
  return {...base,paper};
 }
 
+export type CompletionReason="time-expired"|"submitted"|"section-submitted";
 export interface GenericAttempt {
  readonly recordType: "generic-attempt";
- readonly saveRevision?: number;
+ /** 0 before first durable write; persistence advances monotonically from 1. */
+ readonly saveRevision: number;
  readonly id: string;
  readonly packageId: string;
  readonly startedAt: number;
@@ -228,8 +230,8 @@ export interface GenericAttempt {
  readonly sourceKeyReference?: SourceKeyReference;
  /** Optional frozen original wording, media and source answer for revised exams. */
  readonly sourceReviewReference?: SourceReviewReference;
- /** Explicit completion cause, only populated on newly finished attempts. */
- readonly completionReason?: "time-expired" | "submitted" | "section-submitted";
+ /** Null while unfinished; mandatory provenance once the attempt completes. */
+ readonly completionReason: CompletionReason|null;
  readonly notebookLineage?: NotebookLineage;
  /** Hash-covered seed, filter and source revision manifest for an authored custom subset. */
  readonly practiceComposition?: PracticeComposition;
@@ -243,8 +245,8 @@ export function startGenericAttempt(bundle: ExamPackage, id: string, timestamp: 
    "exam-simulation";
  const frozen = freezeAttempt(validated.paper,validated.answerKey,validated.questions,
    validated.stimuli??[],validated.assets??[],mode,new Date(timestamp).toISOString(),validated.examId);
- return {recordType:"generic-attempt",id,packageId:bundle.paper.id,startedAt:timestamp,
-   updatedAt:timestamp,finishedAt:null,frozen,state:startSession(bundle.paper,timestamp),
+ return {recordType:"generic-attempt",saveRevision:0,id,packageId:bundle.paper.id,startedAt:timestamp,
+   updatedAt:timestamp,finishedAt:null,completionReason:null,frozen,state:startSession(bundle.paper,timestamp),
    ...(validated.explanations?{explanations:structuredClone(validated.explanations)}:{})};
 }
 export function transitionGenericAttempt(
@@ -270,7 +272,8 @@ export function transitionGenericAttempt(
  const completionReason=expired?"time-expired":
    event.type==="SUBMIT_SECTION"?"section-submitted":"submitted";
  return {...attempt,state,updatedAt:event.nowMs,finishedAt:finished?event.nowMs:null,
-    ...(finished ? {completionReason,result:scoreAttempt(paper,attempt.frozen.key,attempt.frozen.questions,
+    completionReason:finished?completionReason:null,
+    ...(finished ? {result:scoreAttempt(paper,attempt.frozen.key,attempt.frozen.questions,
       state.responses,new Date(event.nowMs).toISOString())}: {})};
 }
 export function responseFor(state: SessionState, questionId: QuestionRevisionId): CandidateResponse | undefined {
