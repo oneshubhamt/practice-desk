@@ -431,7 +431,7 @@ export function bindLibraryScreen(owner:CoordinatorContext):void{
          }
          const pkg=importAuthoredExam(source);
          if(owner.packages.has(pkg.paper.id))throw new Error("Paper revision ID already exists. Supply a new revision ID.");
-         if(!await owner.save({recordType:"generic-package",id:"generic-package:"+pkg.paper.id,bundle:pkg}))return;
+         if(!await owner.save({recordType:"generic-package",saveRevision:0,id:"generic-package:"+pkg.paper.id,bundle:pkg}))return;
          owner.packages.set(pkg.paper.id,pkg);
          owner.applyFamily(familyIdFor(pkg,owner.builtinPaperIds));
          owner.choice=pkg.paper.id;owner.singleSection=0;
