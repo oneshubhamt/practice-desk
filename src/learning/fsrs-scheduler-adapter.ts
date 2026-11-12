@@ -74,12 +74,12 @@ export async function createRevisionScheduler(options:RevisionSchedulerOptions={
    graduatingInterval:1 as const,allowModelOverride:true as const,
    leechThreshold:action==="suspend"?leechThreshold:0
  };
- const scheduler:FsrsScheduler<"FSRS-7">=schedulingPolicy.kind==="cost-adr"
+ const scheduler=(schedulingPolicy.kind==="cost-adr"
   ?costAdrDefinition.create({config:{
     ...config,costAdrPolicy:COST_ADR_DEFAULT_POLICY,goalCostWeight:FSRS_COST_ADR_PRESET_GOAL_WEIGHT
-   }}) as unknown as FsrsScheduler<"FSRS-7">
-  :fixedDefinition.create({config:{...config,desiredRetention:schedulingPolicy.desiredRetention}})
-    as unknown as FsrsScheduler<"FSRS-7">;
+   }})
+  :fixedDefinition.create({config:{...config,desiredRetention:schedulingPolicy.desiredRetention}}))
+   as unknown as FsrsScheduler<"FSRS-7">;
  const leechStatus=(card:DefaultSchedulerCard<"FSRS-7">):RevisionLeechStatus=>{
    if(action==="suspend")return scheduleStatus(card)==="suspended"?"suspended":"normal";
    return card.lapses<leechThreshold?"normal":"remediation";
