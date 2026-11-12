@@ -6,7 +6,8 @@ import {isAttempt,isLearning} from "./stored-record-validator.ts";
 
 import {cglAttemptMode,configureCglPractice,configureUntimedPractice,startGenericAttempt} from "./exam-package.ts";
 import {validateExamPackage} from "../domain/exam-package.ts";
-import type {ExamPackage,CglPracticeMode} from "../domain/exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
+import type {CglPracticeMode} from "../workspace-settings.ts";
 import type {GenericAttempt} from "../engine/generic-attempt.ts";
 
 import {createSourceKeyReference} from "../engine/source-comparison.ts";
