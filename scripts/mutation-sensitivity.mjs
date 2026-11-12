@@ -74,7 +74,7 @@ const mutants=[
   find:'manifest.digest!==digest(core as Core))',
   replace:'false)',
   testFile:"tests/history-and-persistence.test.mjs",
-  testName:"backup v4 checksum covers records and preferences; size, IDs and timestamp are bounded"
+  testName:"canonical backup checksum covers records and preferences; size, IDs and timestamp are bounded"
  },
  {
   id:"pdf-eof-signature-check-skipped",
