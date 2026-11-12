@@ -1,5 +1,5 @@
 import {STORAGE_TOPOLOGY} from "../storage-topology.ts";
-import {validatePracticeSetups,type FamilySetup,type PracticeSetups} from "../workspace-settings.ts";
+import {validatePracticeSetups,type PracticeSetups} from "../workspace-settings.ts";
 export {validatePracticeSetups,type FamilySetup,type PracticeSetups} from "../workspace-settings.ts";
 
 /** Browser storage adapter for the single current user-setup schema. */
