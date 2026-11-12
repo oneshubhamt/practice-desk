@@ -1,37 +1,44 @@
 # Practice Desk — current engineering status
 
-**As of 12 November 2026 | Working branch: `working`**
+**Current development branch: `working`**
 
-## Product baseline
+Practice Desk is a strict-TypeScript, offline-first examination and learning application. The normal standalone distribution is one deterministic `file://` HTML file; the static distribution adds a local Worker/WASM FSRS optimizer without adding an application backend.
 
-Practice Desk is a modular strict-TypeScript application distributed as one deterministic, offline `file://` HTML file. The existing architecture includes:
+## Canonical architecture
 
-- A single six-kind examination engine with explicit timing, navigation, marking and immutable paper/key revisions.
-- Library, Wordgard authoring, results, original/reviewed source comparison, local IndexedDB History, SHA-checked additive backup v4 and learning/FSRS.
-- A separate external-agent content pipeline for versioned source, syllabus blueprints, blind quality review, original/reviewed editorial versions, externally interpreted PDFs and permission-scoped file handoff.
+The active topology is intentionally small and one-directional:
 
-See [architecture](architecture/CURRENT_ARCHITECTURE.md), [data contracts](architecture/DATA_CONTRACTS.md) and [content pipeline](architecture/AGENT_CONTENT_PIPELINE.md) for design and supported interfaces. The application does not embed an AI model, remotely access learner data or independently authenticate sources.
+- **Domain:** immutable exam/package contracts, questions, scoring rules, media and validation live below the application layer.
+- **Engine:** generic attempt/session transitions and scoring consume domain contracts without depending on `app/`.
+- **Application composition:** `generic-ui.ts` assembles one workspace state object; feature controllers receive explicit capability slices rather than an unrestricted coordinator contract.
+- **Persistence:** application orchestration uses one `WorkspaceStore` contract. IndexedDB and the limited localStorage resilience fallback own their backend mechanics behind that boundary. Storage-health presentation is separate.
+- **Authoring:** the studio owns editor/UI orchestration; `AuthoringWorkspaceStore` owns unpublished shelf/staging persistence and cross-tab CAS; `authoring-workflow.ts` owns staging handoff and publication/QA sequencing.
+- **Learning:** FSRS scheduling remains local. Native and browser/WASM optimization are adapters around one shared optimizer pipeline and activation policy.
+- **Builds:** standalone and static distributions are generated independently from the same target builder/configuration; one generated artifact is never rewritten to create the other.
 
-## Verified engineering state
+See [CURRENT_ARCHITECTURE.md](architecture/CURRENT_ARCHITECTURE.md), [DATA_CONTRACTS.md](architecture/DATA_CONTRACTS.md) and [QUESTION_BANK_AUTHORING.md](architecture/QUESTION_BANK_AUTHORING.md) for the enduring contracts.
 
-The P61 test-bench programme is **closed**, following a source audit and [exact-commit CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42433146976). The P61 baseline comprised **408 Node test cases**, ten semantic mutations, 32 Chromium and 20 each Firefox/WebKit journeys, and guarded HTML publication. The P62-B source commit passed the current **414 Node tests**, the same mutation gate, all required browser journeys and guarded publication. Source-code test coverage and CI outcomes do not independently validate question content or physical devices.
+## Clean-slate policy
 
-P62-A closed two P60 integrity defects on the predecessor development branch: solution-only media are excluded from candidate figure references while preserved in frozen review, and incomplete blueprints are structurally valid but cannot pass final publication gates. [Verified CI for tested source commit](https://github.com/oneshubhamt/practice-desk/actions/runs/42484839413) passed all five required jobs. Remaining source-trust and editorial findings stay in the active backlog.
+This is a new application. Current production code should express one canonical schema/topology rather than carry migration readers, compatibility aliases, dual-write paths or retired workflow branches. Resilience mechanisms that protect current data—such as the IndexedDB fallback, emergency active-attempt mirror, immutable frozen history and corrupt-data quarantine—are current product behavior, not legacy compatibility.
 
-P62-B closed three editorial correctness findings: Reviewed papers now carry hash-bound exact Source paper/key IDs into the Library, new comparison schema 3 retains eligible MCQ comparisons in mixed-type papers and excludes explanation/taxonomy-only changes from candidate-semantic equality. Only the canonical schema-3 source-key representation is accepted; noncanonical schema-2 source-key snapshots are rejected rather than migrated. [Exact-commit passing CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42498768267) includes the end-to-end Source import and frozen-history journey. Unauthenticated original-source claims remain outside software certification.
+Historical implementation evidence remains in Git and is indexed from [HISTORY_INDEX.md](HISTORY_INDEX.md). Do not keep old programme diaries, temporary pass instructions or obsolete CI experiments in the active architecture merely for provenance.
 
-P62-C retained the 20-point review checklist and introduced explicit mathematical/legal/time-sensitive applicability in v2 quality-review sidecars, with supplementary heuristic contradiction checks, as-of dates and locatable evidence for law/time-sensitive items. [Verified CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42504775263) passed 416 Node tests, mutation checks, Chromium, Firefox, WebKit and guarded publication. Reviewer claims remain unauthenticated; that trust limitation is still open in the backlog.
+## Completion discipline
 
-P62-D independently replayed [five focused regressions covering six defects](https://github.com/oneshubhamt/practice-desk/actions/runs/42508271893) and ran the actual authoring/PDF pipeline against two source-reproduced APFC English and two CAT Quant questions; answer oracles matched 4/4 on this curated sample. The real CAT PDF run identified and repaired mathematical option sign loss, and an additional author-side applicability assertion prevents silent reviewer denial of declared legal questions. **[P62-D source CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42508271948)** passed 417/417 Node tests, ten selected mutations, all required browser journeys and guarded publication. The real-PDF/efficiency measurements and their significant limits are in [QA](QA_CURRENT.md); no original-publisher authentication, independent model-token comparison or general educational-quality claim follows.
+A change is complete only after source ownership and dependency direction are checked and the relevant automated gates pass. The current full verification contract is [QA_CURRENT.md](QA_CURRENT.md); the actual test suite and [CI workflow](../.github/workflows/ci.yml) are authoritative.
 
-Current documentation is deliberately architecture-first. Detailed P04–P61 implementation records and original audit evidence remain recoverable through [pinned Git history](HISTORY_INDEX.md); they are not current work instructions. No product code, question-bank data or release policy was changed during this documentation restructuring.
+For substantive shared-runtime changes, verify:
 
-## What is not closed
+1. strict TypeScript and complete Node contracts;
+2. targeted mutation witnesses;
+3. deterministic standalone build and clean dependency graph;
+4. native/WASM FSRS optimizer parity and static build;
+5. Chromium, Firefox and WebKit user journeys;
+6. guarded publication of the exact tested standalone artifact.
 
-The [active backlog](../backlog.md) is the **single list of unresolved product risks and proposed work**, including P60 source-audit findings, independently sourced exam-content verification and real Mac/mobile/accessibility/storage-recovery testing. An existing architecture or passing synthetic fixture does not convert these into completed capabilities.
+Passing tests do not authenticate external sources or prove educational/factual quality. Those and physical-device/accessibility/storage-loss risks remain in the [backlog](../backlog.md).
 
-## Engineering discipline
+## Engineering rule
 
-For a newly authorized task: (1) inspect the actual source and affected consumers; (2) define the contract and a concrete failing counterexample; (3) change only the agreed scope, preserving offline, scoring, provenance and privacy invariants; (4) run independent Node/property and realistic browser journeys; (5) report the exact tested commit, limits and any residual risks. Do not weaken unique safety tests to lower counts, invent review authenticity or merge to `main`/`baseline/v11` without permission.
-
-**Authority:** [AGENTS](../AGENTS.md) → [binding policy](decisions/POLICY_REGISTER.md) → actual source/validators → [QA](QA_CURRENT.md). Historical pass reports are background, not authority for current completion.
+Prefer the smallest boundary that removes a real duplicate responsibility or dependency inversion. Do not introduce frameworks, abstractions or file splits merely to reduce line counts. Preserve candidate secrecy, scoring correctness, immutable history, local privacy, offline operation and recoverability while making the source easier to reason about.
