@@ -1,13 +1,13 @@
 /** Inert HTML for frozen question media, stimuli and all six response kinds. */
 import type {ExamPackage} from "../domain/exam-package.ts";
 import type {QuestionRevision,CandidateResponse} from "../domain/question.js";
-import type {RichDocument} from "../domain/rich-document.ts";
+import type {RichDocument,RichInline} from "../domain/rich-document.ts";
 import {authoredTextHTML} from "./rich-content-view.ts";
 import {escapeText} from "./html-escape.ts";
 function richAssetIds(doc:RichDocument|undefined):ReadonlySet<string>{
  const ids=new Set<string>();
  if(!doc)return ids;
- const inline=(items:readonly import("../domain/rich-document.ts").RichInline[])=>{
+ const inline=(items:readonly RichInline[])=>{
   for(const item of items)if(item.type==="image")ids.add(item.assetId);
  };
  for(const block of doc.blocks){
