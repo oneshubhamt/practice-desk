@@ -1,7 +1,7 @@
 import {createRevisionScheduler} from "../learning/fsrs-scheduler-adapter.ts";
 import {DEFAULT_REVISION_SETTINGS,readRevisionSettings,revisionSchedulerOptions,
  validateRevisionSettings,writeRevisionSettings} from "../learning/revision-settings.ts";
-import {fsrsOptimizerCsv,optimizerEvidenceSummary,serializeFsrsOptimizerProfile,
+import {assertFsrsOptimizerReplacement,fsrsOptimizerCsv,optimizerEvidenceSummary,serializeFsrsOptimizerProfile,
  validateFsrsOptimizerProfile,type FsrsOptimizerProfile} from "../learning/fsrs-optimizer.ts";
 import {browserFsrsOptimizerAvailability,FsrsOptimizerRejectedError,startBrowserFsrsOptimizer,
  type BrowserFsrsOptimizerProgress,type BrowserFsrsOptimizerRun} from "../learning/fsrs-browser-optimizer.ts";
@@ -269,7 +269,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
       .map(([label,value])=>'<div class="summary-stat"><small>'+esc(label)+'</small><b>'+esc(value)+'</b></div>').join("")+
     '</div>'+
     '<section class="panel pad learning-scheduler-policy"><h2>FSRS-7 scheduling policy</h2>'+
-    '<p class="fine">Fixed retention remains the default. Cost-ADR is an explicit alternative. Repeated review lapses become leeches; remediation is the default response and automatic suspension is optional.</p>'+
+    '<p class="fine">Fixed retention remains the default. Cost-ADR is an explicit alternative. Repeated review lapses become leeches; remediation is the default response and optional automatic suspension uses ts-fsrs\'s native leech schedule status.</p>'+
     '<div class="learning-evidence-controls"><label>Retention policy <select id="learning-retention-policy">'+
     '<option value="fixed"'+(revisionSettings.retentionPolicy==="fixed"?' selected':'')+'>Fixed retention</option>'+
     '<option value="cost-adr"'+(revisionSettings.retentionPolicy==="cost-adr"?' selected':'')+'>Cost-adaptive retention (Cost-ADR)</option></select></label>'+
@@ -282,14 +282,15 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     '<h3>Personalized FSRS-7 weights</h3><p class="fine">'+(revisionSettings.optimizerProfile?
       'Active held-out-validated profile · trained '+esc(new Date(revisionSettings.optimizerProfile.trainedAt).toLocaleDateString())+
       ' · '+revisionSettings.optimizerProfile.evidenceItems+' optimizer items · holdout log loss '+
-      Number(revisionSettings.optimizerProfile.evaluation.holdout.default.logLoss.toFixed(4))+' → '+
+      Number(revisionSettings.optimizerProfile.evaluation.holdout.stock.logLoss.toFixed(4))+' → '+
       Number(revisionSettings.optimizerProfile.evaluation.holdout.personalized.logLoss.toFixed(4))+
-      ' · holdout RMSE '+Number(revisionSettings.optimizerProfile.evaluation.holdout.default.rmseBins.toFixed(4))+' → '+
+      ' · holdout RMSE '+Number(revisionSettings.optimizerProfile.evaluation.holdout.stock.rmseBins.toFixed(4))+' → '+
       Number(revisionSettings.optimizerProfile.evaluation.holdout.personalized.rmseBins.toFixed(4))+
       ' · cross-validation log loss '+Number(revisionSettings.optimizerProfile.evaluation.crossValidation.logLoss.toFixed(4)):
       'Using upstream FSRS-7 default weights.')+
-    ' Raw evidence: '+optimizerEvidence.reviews+' reviews across '+optimizerEvidence.cards+' cards.</p>'+
-    '<p class="fine">The static Practice Desk build can train FSRS-7 locally in a dedicated WebAssembly Worker; no optimizer backend or review-log upload is used. Optimizer intervals use explicit fixed elapsed 24-hour days, matching the runtime <code>dateChrono</code> scheduler; timezone/DST study-day normalization is intentionally not used. Personalized weights activate only after a later chronological holdout beats stock FSRS-7 on log loss without RMSE-bins regression; final 34 weights are then retrained on all evidence. The 64/64/16 evidence floors are reliability guards, not a claim of statistical significance. The Node optimizer remains the native CI/reference path. <code>computeOptimalSteps</code> remains advisory only because upstream does not consider its single-decay fit FSRS-7 model-consistent.</p>'+
+      (revisionSettings.optimizerProfile?.evaluation.holdout.incumbent?' · replacement beat prior active profile':'')+
+    ' · Raw evidence: '+optimizerEvidence.reviews+' reviews across '+optimizerEvidence.cards+' cards.</p>'+
+    '<p class="fine">The static Practice Desk build can train FSRS-7 locally in a dedicated WebAssembly Worker; no optimizer backend or review-log upload is used. Optimizer intervals use explicit fixed elapsed 24-hour days, matching the runtime <code>dateChrono</code> scheduler; timezone/DST study-day normalization is intentionally not used. Personalized weights activate only after a later chronological holdout clears a practical log-loss improvement floor without RMSE-bins regression; a replacement profile must clear the same gate against both stock FSRS-7 and the currently active personalized profile. Final 34 weights are then retrained on all evidence. The 64/64/16 evidence floors are reliability guards, not a claim of statistical significance. The Node optimizer remains the native CI/reference path. <code>computeOptimalSteps</code> remains advisory only because upstream does not consider its single-decay fit FSRS-7 model-consistent.</p>'+
     '<p class="fine" id="learning-optimizer-status" role="status">'+esc(optimizerStatus)+'</p>'+
     '<div class="row generic-actions"><button class="btn primary" id="learning-optimizer-run"'+
       (!optimizerAvailability.available||!optimizerEvidence.reviews||optimizerRun?' disabled':'')+'>Optimize FSRS-7 locally</button>'+
@@ -433,7 +434,8 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     }catch(error){message=error instanceof Error?error.message:"Invalid scheduling policy";draw();}
   };
   const activateOptimizerProfile=async(profile:FsrsOptimizerProfile)=>{
-    const next=validateRevisionSettings({...revisionSettings,optimizerProfile:profile});
+    const replacement=assertFsrsOptimizerReplacement(profile,revisionSettings.optimizerProfile);
+    const next=validateRevisionSettings({...revisionSettings,optimizerProfile:replacement});
     const nextScheduler=await createRevisionScheduler(revisionSchedulerOptions(next));
     revisionSettings=writeRevisionSettings(next);scheduler=nextScheduler;cache.clear();
   };
@@ -441,15 +443,17 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     if(optimizerRun)return;
     try{
       optimizerStatus="Preparing FSRS-7 optimizer evidence…";
-      optimizerRun=startBrowserFsrsOptimizer(fsrsOptimizerCsv(all),{onProgress:optimizerProgress});
+      optimizerRun=startBrowserFsrsOptimizer(fsrsOptimizerCsv(all),{
+        onProgress:optimizerProgress,incumbentProfile:revisionSettings.optimizerProfile
+      });
       draw();
       const profile=await optimizerRun.promise;
       await activateOptimizerProfile(profile);
-      optimizerStatus="Personalized FSRS-7 passed the later holdout gate and is active.";
+      optimizerStatus="Personalized FSRS-7 passed the practical stock/incumbent holdout gate and is active.";
       message="Held-out-validated personalized FSRS-7 weights trained locally and activated.";
     }catch(error){
       if(error instanceof FsrsOptimizerRejectedError)
-        optimizerStatus="Stock FSRS-7 retained · "+error.reasons.join("; ");
+        optimizerStatus="Current FSRS-7 weights retained · "+error.reasons.join("; ");
       else if(error instanceof DOMException&&error.name==="AbortError")
         optimizerStatus="Optimization cancelled; active weights were not changed.";
       else optimizerStatus=error instanceof Error?error.message:"FSRS optimizer failed";
@@ -467,7 +471,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     try{
       const profile=validateFsrsOptimizerProfile(JSON.parse(await file.text()));
       await activateOptimizerProfile(profile);
-      optimizerStatus="Imported profile passed Practice Desk's v3 chronology and holdout validation.";
+      optimizerStatus="Imported profile passed Practice Desk's v4 chronology, practical holdout and replacement validation.";
       message="Held-out-validated personalized FSRS-7 profile imported and activated.";draw();
     }catch(error){message=error instanceof Error?error.message:"Invalid optimizer profile";draw();}
   };

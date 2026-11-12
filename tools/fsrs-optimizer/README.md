@@ -14,11 +14,13 @@ Practice Desk exposes the same conservative FSRS-7 personalization contract thro
 
 The activation pipeline is deliberately conservative:
 
-`historical 5/6 → train validation weights → final 1/6 holdout → compare stock FSRS-7 and personalized weights on exactly the same holdout → require better log loss with no RMSE-bins regression → retrain final 34 weights on all evidence → report five-fold upstream time-series cross-validation`
+`historical 5/6 → train validation weights → final 1/6 holdout → compare stock FSRS-7 and personalized weights on exactly the same holdout → require a practical log-loss gain with no RMSE-bins regression → if replacing an active profile, require the same gain against that incumbent on the same holdout → retrain final 34 weights on all evidence → report five-fold upstream time-series cross-validation`
 
-Practice Desk additionally requires at least 64 historical training items, 64 later holdout items, and 16 distinct holdout cards before a personalized profile can be produced. These are application reliability guards, not a claim of statistical significance. If the gate fails or evidence is insufficient, the optimizer exits without a profile and the app remains on stock FSRS-7 weights. The requested output path is cleared before training and is only published after every gate succeeds, so a failed rerun cannot leave a stale profile masquerading as the new result.
+The practical log-loss floor is the larger of 0.001 absolute or 0.5% relative improvement. Practice Desk additionally requires at least 64 historical training items, 64 later holdout items, and 16 distinct holdout cards before a personalized profile can be produced. These are application reliability guards, not a claim of statistical significance. If the gate fails or evidence is insufficient, the optimizer exits without a profile and the current FSRS-7 weights remain active. The requested output path is cleared before training and is only published after every gate succeeds, so a failed rerun cannot leave a stale profile masquerading as the new result.
 
-The beta native dependency is pinned to `@open-spaced-repetition/binding@0.6.1`; the browser runtime is pinned to `@open-spaced-repetition/binding-wasm32-wasip1@0.6.1`. The isolated optimizer dependency tree is lockfile-controlled. Both runtime adapters call the same `optimizer-pipeline.mjs`; conversion, training options, evidence floors, final-sixth split, holdout gate, final retraining, time-series evaluation and v3 profile assembly therefore have one semantic implementation. `optimizer-policy.mjs` contains the shared constants/gate primitives, while the main application independently validates FSRS-7 parameter bounds plus emitted chronology/holdout metadata before activation. Existing v2 profiles are rejected because they cannot attest the corrected chronology.
+To train a native replacement against an existing active profile, pass `--incumbent=active-profile.json`. The emitted v4 profile binds the incumbent evidence hash and weights fingerprint to the held-out comparison. Browser optimization supplies the active profile automatically. Imported replacements are accepted only when their incumbent proof matches the active profile; reset to stock first if you intentionally want to activate a profile that was evaluated only against stock.
+
+The beta native dependency is pinned to `@open-spaced-repetition/binding@0.6.1`; the browser runtime is pinned to `@open-spaced-repetition/binding-wasm32-wasip1@0.6.1`. The isolated optimizer dependency tree is lockfile-controlled. Both runtime adapters call the same `optimizer-pipeline.mjs`; conversion, training options, evidence floors, final-sixth split, practical stock/incumbent holdout gate, final retraining, time-series evaluation and v4 profile assembly therefore have one semantic implementation. `optimizer-policy.mjs` contains the shared constants/gate primitives, while the main application independently validates FSRS-7 parameter bounds plus emitted chronology/holdout metadata before activation. Earlier profiles are rejected rather than migrated because Practice Desk has no production compatibility obligation.
 
 ### Long runs, progress and interruption
 
@@ -26,6 +28,7 @@ Training and cross-validation report progress to stderr. `Ctrl+C` requests a cle
 
 - `--max-seconds=600` sets a hard wall-clock deadline enforced through the progress callback.
 - `--poll-ms=250` controls the native binding's progress polling interval (50–5000 ms). This is not itself a training deadline.
+- `--incumbent=active-profile.json` requires the candidate to outperform that active profile on the candidate's later holdout before replacement.
 
 Example:
 

@@ -2,7 +2,7 @@ import {
  HOLDOUT_STRATEGY,MIN_HOLDOUT_CARDS,MIN_HOLDOUT_ITEMS,MIN_TRAIN_ITEMS,
  OPTIMIZER_BINDING_VERSION,OPTIMIZER_CHRONOLOGY,OPTIMIZER_FIXED_UTC_OFFSET_MINUTES,
  OPTIMIZER_MODEL_VERSION,OPTIMIZER_PROFILE_SCHEMA,OPTIMIZER_ROLLOVER_HOUR,
- evaluateHoldoutGate,splitChronologicalHoldout
+ evaluateHoldoutGate,fsrsWeightsFingerprint,splitChronologicalHoldout
 } from "./optimizer-policy.mjs";
 
 export const OPTIMIZER_STAGES=Object.freeze({
@@ -61,7 +61,7 @@ const evidenceReasons=split=>[
 
 export async function runFsrsOptimizerPipeline({
  binding,bytes,sourceSha256,trainedAt=new Date().toISOString(),
- makeOptions,progress=()=>{},checkpoint=()=>{}
+ makeOptions,progress=()=>{},checkpoint=()=>{},incumbentProfile=null
 }){
  if(!(bytes instanceof Uint8Array)||bytes.length<1)throw Error("Optimizer evidence is empty");
  if(typeof sourceSha256!=="string"||!/^[a-f0-9]{64}$/.test(sourceSha256))
@@ -92,18 +92,36 @@ export async function runFsrsOptimizerPipeline({
  );
  checkpoint();
 
- progress(OPTIMIZER_STAGES.holdout,0,2);
- const baseline=finiteOptimizerMetrics(
+ let incumbent=null;
+ if(incumbentProfile!==null){
+  if(!incumbentProfile||typeof incumbentProfile!=="object"||
+    typeof incumbentProfile.sourceSha256!=="string"||!/^[a-f0-9]{64}$/.test(incumbentProfile.sourceSha256))
+   throw Error("Active FSRS optimizer profile provenance is invalid");
+  const incumbentWeights=ensureOptimizerWeights(incumbentProfile.weights,"Active personalized profile");
+  incumbent={sourceSha256:incumbentProfile.sourceSha256,
+   weightsFingerprint:fsrsWeightsFingerprint(incumbentWeights),weights:incumbentWeights};
+ }
+ const evaluationTotal=incumbent?3:2;
+ progress(OPTIMIZER_STAGES.holdout,0,evaluationTotal);
+ const stock=finiteOptimizerMetrics(
   new binding.FSRSBinding().evaluate(split.holdoutItems,split.holdoutCardIds),
   "Stock FSRS-7"
  );
- progress(OPTIMIZER_STAGES.holdout,1,2);
+ progress(OPTIMIZER_STAGES.holdout,1,evaluationTotal);
  const personalized=finiteOptimizerMetrics(
   new binding.FSRSBinding(validationWeights).evaluate(split.holdoutItems,split.holdoutCardIds),
   "Personalized FSRS-7"
  );
- progress(OPTIMIZER_STAGES.holdout,2,2);
- const gate=evaluateHoldoutGate(baseline,personalized,split);
+ progress(OPTIMIZER_STAGES.holdout,2,evaluationTotal);
+ let incumbentMetrics=null;
+ if(incumbent){
+  incumbentMetrics=finiteOptimizerMetrics(
+   new binding.FSRSBinding(incumbent.weights).evaluate(split.holdoutItems,split.holdoutCardIds),
+   "Active personalized FSRS-7"
+  );
+  progress(OPTIMIZER_STAGES.holdout,3,evaluationTotal);
+ }
+ const gate=evaluateHoldoutGate(stock,personalized,split,incumbentMetrics);
  if(!gate.passed)throw new OptimizerPipelineRejectedError("gate",gate.reasons);
 
  checkpoint();
@@ -131,7 +149,10 @@ export async function runFsrsOptimizerPipeline({
     holdoutCards:split.holdoutCards,
     minimumTrainItems:MIN_TRAIN_ITEMS,minimumHoldoutItems:MIN_HOLDOUT_ITEMS,
     minimumHoldoutCards:MIN_HOLDOUT_CARDS,
-    default:gate.baseline,personalized:gate.personalized,gate:"passed"
+    stock:gate.stock,personalized:gate.personalized,
+    ...(incumbent?{incumbent:{sourceSha256:incumbent.sourceSha256,
+      weightsFingerprint:incumbent.weightsFingerprint,metrics:gate.incumbent}}:{}),
+    gate:"passed"
    }
   },
   training:{

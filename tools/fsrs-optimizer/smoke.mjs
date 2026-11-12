@@ -65,10 +65,16 @@ assert.equal(split.trainCount,320);
 assert.equal(split.holdoutCount,64);
 assert.equal(split.holdoutCards,16);
 assert.equal(evaluateHoldoutGate(
- {logLoss:0.4,rmseBins:0.08},{logLoss:0.39,rmseBins:0.08},split
+ {logLoss:0.4,rmseBins:0.08},{logLoss:0.397,rmseBins:0.08},split
 ).passed,true);
 assert.equal(evaluateHoldoutGate(
- {logLoss:0.4,rmseBins:0.08},{logLoss:0.39,rmseBins:0.081},split
+ {logLoss:0.4,rmseBins:0.08},{logLoss:0.399,rmseBins:0.079},split
+).passed,false);
+assert.equal(evaluateHoldoutGate(
+ {logLoss:0.4,rmseBins:0.08},{logLoss:0.397,rmseBins:0.081},split
+).passed,false);
+assert.equal(evaluateHoldoutGate(
+ {logLoss:0.4,rmseBins:0.08},{logLoss:0.397,rmseBins:0.08},split,{logLoss:0.396,rmseBins:0.08}
 ).passed,false);
 
 const analysis=computeOptimalSteps(csv,0.9,0.5);
@@ -92,4 +98,4 @@ try{
  assert.equal(staleProfileExists,false);
 }finally{await rm(temp,{recursive:true,force:true});}
 
-console.log("FSRS optimizer smoke passed: FSRS-7 training, direct evaluation, elapsed-24h DST regression, held-out activation policy, fail-closed output, and advisory step analysis.");
+console.log("FSRS optimizer smoke passed: FSRS-7 training, direct evaluation, elapsed-24h DST regression, practical stock/incumbent activation policy, fail-closed output, and advisory step analysis.");

@@ -67,12 +67,12 @@ try{
    throw Error("Browser optimizer probe returned invalid metrics");
  }else{
   const p=result.profile;
-  if(p?.schema!=="practice-desk-fsrs-profile/v3"||p.training?.chronology!=="elapsed-24h"||
+  if(p?.schema!=="practice-desk-fsrs-profile/v4"||p.training?.chronology!=="elapsed-24h"||
     p.training?.converterFixedUtcOffsetMinutes!==0||p.training?.converterRolloverHour!==0||
     p.evaluation?.holdout?.gate!=="passed"||!Array.isArray(p.weights)||p.weights.length!==34||
     p.weights.some(x=>!Number.isFinite(x))||!Number.isFinite(p.evaluation.crossValidation.logLoss)||
     !Number.isFinite(p.evaluation.crossValidation.rmseBins))
-   throw Error("Full browser optimizer returned an invalid v3 profile");
+   throw Error("Full browser optimizer returned an invalid v4 profile");
   const stages=new Set(result.updates.map(x=>x[0]));
   for(const stage of ["Train validation candidate","Compare later holdout","Retrain final profile on all evidence","Time-series cross-validation"])
    if(!stages.has(stage))throw Error("Full browser optimizer did not exercise stage: "+stage);

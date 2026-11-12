@@ -1,18 +1,18 @@
 import {
- DefaultScheduler,State,dateChrono,defineScheduler,
+ State,dateChrono,defineScheduler,
  type DefaultScheduler as FsrsScheduler,type DefaultSchedulerCard,type Grade
 } from "ts-fsrs";
 import {Reschedule} from "ts-fsrs/reschedule";
 import {
  COST_ADR_DEFAULT_GOAL_COST_WEIGHT,COST_ADR_DEFAULT_POLICY,
- schedulerCostAdrMiddleware,schedulerFuzzingMiddleware,schedulerLearningStepsMiddleware,
- schedulerMaximumIntervalMiddleware,schedulerMonotonicIntervalMiddleware,
- schedulerScheduledDaysMiddleware,schedulerStatsMiddleware
+ schedulerCostAdrMiddleware,schedulerDesiredRetentionMiddleware,schedulerFuzzingMiddleware,
+ schedulerLearningStepsMiddleware,schedulerLeechMiddleware,schedulerMaximumIntervalMiddleware,
+ schedulerMonotonicIntervalMiddleware,schedulerScheduledDaysMiddleware,schedulerStatsMiddleware
 } from "ts-fsrs/middlewares";
 import {FSRS7_DEFAULT_WEIGHTS,FSRS7Model,checkFSRS7Parameters} from "ts-fsrs/models/fsrs-7";
 import type {
  LeechAction,RecallRating,RetentionPolicy,ReviewObservation,RevisionLeechStatus,
- RevisionMemoryState,RevisionPreview,RevisionSchedule,RevisionSchedulerOptions,
+ RevisionMemoryState,RevisionPreview,RevisionSchedule,RevisionScheduleStatus,RevisionSchedulerOptions,
  RevisionSchedulerPort,RevisionSnapshot
 } from "./revision-scheduler-port.ts";
 
@@ -22,20 +22,29 @@ export const FSRS_DEFAULT_COST_ADR_GOAL_WEIGHT=COST_ADR_DEFAULT_GOAL_COST_WEIGHT
 export const FSRS_DEFAULT_LEECH_THRESHOLD=4;
 
 const stateName=(state:State):RevisionMemoryState=>{
- switch(state){
-  case State.New:return "new";case State.Learning:return "learning";
+ switch(state){case State.New:return "new";case State.Learning:return "learning";
   case State.Review:return "review";case State.Relearning:return "relearning";
  }
  throw Error("Unsupported FSRS state");
 };
 const grade=(rating:RecallRating):Grade=>rating as Grade;
+const fixedDefinition=defineScheduler({model:FSRS7Model,chrono:dateChrono}).use(
+ schedulerDesiredRetentionMiddleware,schedulerFuzzingMiddleware,schedulerStatsMiddleware,
+ schedulerLeechMiddleware,schedulerScheduledDaysMiddleware,schedulerLearningStepsMiddleware,
+ schedulerMaximumIntervalMiddleware,schedulerMonotonicIntervalMiddleware
+);
 const costAdrDefinition=defineScheduler({model:FSRS7Model,chrono:dateChrono}).use(
  schedulerCostAdrMiddleware,schedulerFuzzingMiddleware,schedulerStatsMiddleware,
- schedulerScheduledDaysMiddleware,schedulerLearningStepsMiddleware,
+ schedulerLeechMiddleware,schedulerScheduledDaysMiddleware,schedulerLearningStepsMiddleware,
  schedulerMaximumIntervalMiddleware,schedulerMonotonicIntervalMiddleware
 );
 const policy=(v:RetentionPolicy)=>{if(v!=="fixed"&&v!=="cost-adr")throw Error("Invalid retention policy");return v;};
 const leechAction=(v:LeechAction)=>{if(v!=="remediate"&&v!=="suspend")throw Error("Invalid leech action");return v;};
+const scheduleStatus=(card:DefaultSchedulerCard<"FSRS-7">):RevisionScheduleStatus=>{
+ const value=card.scheduleStatus as string;
+ if(value==="new"||value==="learning"||value==="review"||value==="suspended")return value;
+ throw Error("Unsupported FSRS schedule status");
+};
 
 export async function createRevisionScheduler(options:RevisionSchedulerOptions={}):Promise<RevisionSchedulerPort>{
  const retentionPolicy=policy(options.retentionPolicy??"fixed");
@@ -50,27 +59,27 @@ export async function createRevisionScheduler(options:RevisionSchedulerOptions={
  if(!Number.isSafeInteger(leechThreshold)||leechThreshold<1)throw Error("Leech threshold must be a positive integer");
  const action=leechAction(options.leechAction??"remediate");
  const weights=options.weights?Array.from(checkFSRS7Parameters(options.weights)):undefined;
+ const config={
+   weights:weights??FSRS7_DEFAULT_WEIGHTS,fractionalDays:true,
+   enableFuzz,maximumInterval:36500,clearStatsOnForget:true,
+   enableShortTerm:true,learningSteps:["1m","10m"],relearningSteps:["10m"],
+   graduatingInterval:1,allowModelOverride:true,
+   leechThreshold:action==="suspend"?leechThreshold:0
+ };
  const scheduler:FsrsScheduler<"FSRS-7">=retentionPolicy==="cost-adr"
   ?costAdrDefinition.create({config:{
-    weights:weights??FSRS7_DEFAULT_WEIGHTS,fractionalDays:true,
-    costAdrPolicy:COST_ADR_DEFAULT_POLICY,goalCostWeight:costAdrGoalWeight,
-    enableFuzz,maximumInterval:36500,clearStatsOnForget:true,
-    enableShortTerm:true,learningSteps:["1m","10m"],relearningSteps:["10m"],
-    graduatingInterval:1,allowModelOverride:true
+    ...config,costAdrPolicy:COST_ADR_DEFAULT_POLICY,goalCostWeight:costAdrGoalWeight
    }}) as unknown as FsrsScheduler<"FSRS-7">
-  :await DefaultScheduler<"FSRS-7">({
-    version:"FSRS-7",...(weights?{weights}:{}),desiredRetention,
-    enableShortTerm:true,learningSteps:["1m","10m"],relearningSteps:["10m"],
-    graduatingInterval:1,allowModelOverride:true,enableFuzz,maximumInterval:36500,
-    clearStatsOnForget:true
-   });
- const leechStatus=(lapses:number):RevisionLeechStatus=>
-   lapses<leechThreshold?"normal":action==="suspend"?"suspended":"remediation";
+  :fixedDefinition.create({config:{...config,desiredRetention}}) as unknown as FsrsScheduler<"FSRS-7">;
+ const leechStatus=(card:DefaultSchedulerCard<"FSRS-7">):RevisionLeechStatus=>{
+   if(action==="suspend")return scheduleStatus(card)==="suspended"?"suspended":"normal";
+   return card.lapses<leechThreshold?"normal":"remediation";
+ };
  const schedule=(card:DefaultSchedulerCard<"FSRS-7">):RevisionSchedule=>({
    dueAt:new Date(card.dueAt),scheduledDays:card.scheduledDays,state:stateName(card.state),
-   reps:card.reps,lapses:card.lapses,learningStep:card.learningStep,stability:card.stability,
-   stabilityFast:card.stabilityFast,difficulty:card.difficulty,
-   lastReviewAt:card.lastReviewAt?new Date(card.lastReviewAt):null,leechStatus:leechStatus(card.lapses)
+   scheduleStatus:scheduleStatus(card),reps:card.reps,lapses:card.lapses,learningStep:card.learningStep,
+   stability:card.stability,stabilityFast:card.stabilityFast,difficulty:card.difficulty,
+   lastReviewAt:card.lastReviewAt?new Date(card.lastReviewAt):null,leechStatus:leechStatus(card)
  });
  const reschedule=new Reschedule(scheduler);
  const replay=(id:string,createdAt:string,reviews:readonly ReviewObservation[])=>{

@@ -1,5 +1,6 @@
 export type RecallRating=1|2|3|4;
 export type RevisionMemoryState="new"|"learning"|"review"|"relearning";
+export type RevisionScheduleStatus="new"|"learning"|"review"|"suspended";
 export type RetentionPolicy="fixed"|"cost-adr";
 export type LeechAction="remediate"|"suspend";
 export type RevisionLeechStatus="normal"|"remediation"|"suspended";
@@ -8,7 +9,7 @@ export interface ReviewObservation{
 }
 export interface RevisionSchedule{
  readonly dueAt:Date;readonly scheduledDays:number;readonly state:RevisionMemoryState;
- readonly reps:number;readonly lapses:number;readonly learningStep:number;
+ readonly scheduleStatus:RevisionScheduleStatus;readonly reps:number;readonly lapses:number;readonly learningStep:number;
  readonly stability:number;readonly stabilityFast:number;readonly difficulty:number;
  readonly lastReviewAt:Date|null;readonly leechStatus:RevisionLeechStatus;
 }

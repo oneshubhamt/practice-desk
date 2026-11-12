@@ -63,9 +63,9 @@ See the [agent quickstart](../AGENT_AUTHORING_QUICKSTART.md) and [advanced pipel
 
 Learning derives from frozen attempt evidence and learner ratings without changing historical exam marks. The application uses FSRS-7 through a replaceable scheduler boundary.
 
-Native Node and browser/WASM optimization are adapters around one shared optimizer pipeline/activation policy. Training evidence is validated chronologically; candidate personalized weights must clear the configured held-out activation gate before use. The static build can train locally in a Worker/WASM environment; the standalone `file://` build retains scheduling/import/export but intentionally omits in-app training. Review history is not uploaded to an optimizer backend.
+Native Node and browser/WASM optimization are adapters around one shared optimizer pipeline/activation policy. Training evidence is validated chronologically; candidate personalized weights must clear a practical held-out gate against stock FSRS-7 and, for replacement, the active personalized profile before use. The static build can train locally in a Worker/WASM environment; the standalone `file://` build retains scheduling/import/export but intentionally omits in-app training. Review history is not uploaded to an optimizer backend.
 
-Exact optimizer floors, chronology settings, profile fields and upstream binding versions are implementation/test contracts, not architectural duplication points.
+The scheduler uses ts-fsrs's native leech suspension status for optional automatic queue suspension; remediation priority and explicit learner suspension remain application policy. Exact optimizer floors, chronology settings, profile fields and upstream binding versions are implementation/test contracts, not architectural duplication points.
 
 ## 7. Rendering and navigation
 
