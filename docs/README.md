@@ -5,9 +5,8 @@
 | Task | Read |
 |---|---|
 | Build/run the app | [root README](../README.md) |
-| Engineer/review code | [AGENTS](../AGENTS.md) → affected source → [architecture](architecture/CURRENT_ARCHITECTURE.md) as needed |
+| Engineer/review code or binding product policy | [AGENTS](../AGENTS.md) → affected source → [architecture](architecture/CURRENT_ARCHITECTURE.md) as needed |
 | Understand schemas/invariants | [data contracts](architecture/DATA_CONTRACTS.md) |
-| Understand binding product decisions | [policy register](decisions/POLICY_REGISTER.md) |
 | Run or design QA | [QA contract](QA_CURRENT.md) + actual tests/CI |
 | Create/review question banks | [agent quickstart](AGENT_AUTHORING_QUICKSTART.md); use [advanced content pipeline](architecture/AGENT_CONTENT_PIPELINE.md) only for blind review, Source/Reviewed or PDF workflows |
 | Discover machine operations | [capability contract](contracts/practice-desk-capabilities.v1.json) |

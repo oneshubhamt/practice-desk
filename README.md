@@ -2,7 +2,7 @@
 
 Practice Desk is a **local-first examination and learning application** with six question kinds, explicit exam rules, Source/Reviewed editions, immutable scored attempts, local History/backups, Wordgard authoring and FSRS-7 revision.
 
-The normal full-capability distribution is `Practice_Desk_Static/`, served over localhost or HTTPS. It adds a local browser Worker/WASM FSRS optimizer and requires no application backend. `Practice_Desk_Offline_Mock_Tests.html` is the deterministic one-file `file://` distribution; examination, persistence and scheduling work there, while in-app weight training is intentionally unavailable.
+The full-capability distribution is `Practice_Desk_Static/`, served over localhost or HTTPS. It adds a local browser Worker/WASM FSRS optimizer and requires no application backend. `Practice_Desk_Offline_Mock_Tests.html` is the deterministic one-file `file://` distribution; examination, persistence and scheduling work there, while in-app weight training is intentionally unavailable.
 
 ## Build and verify
 
@@ -23,6 +23,6 @@ Questions can be authored in Wordgard, supplied as canonical `practice-desk-auth
 
 ## Documentation
 
-Use the [documentation map](docs/README.md) rather than reading every file. Engineers start with [AGENTS.md](AGENTS.md) and the affected source; consult the [architecture](docs/architecture/CURRENT_ARCHITECTURE.md), [data contracts](docs/architecture/DATA_CONTRACTS.md), [policy](docs/decisions/POLICY_REGISTER.md), [QA contract](docs/QA_CURRENT.md) and [live backlog](backlog.md) only as needed. Historical programme evidence is indexed in [HISTORY_INDEX.md](docs/HISTORY_INDEX.md).
+Use the [documentation map](docs/README.md) rather than reading every file. Engineers start with [AGENTS.md](AGENTS.md) and the affected source; consult the [architecture](docs/architecture/CURRENT_ARCHITECTURE.md), [data contracts](docs/architecture/DATA_CONTRACTS.md), [QA contract](docs/QA_CURRENT.md) and [live backlog](backlog.md) only as needed. Historical programme evidence is indexed in [HISTORY_INDEX.md](docs/HISTORY_INDEX.md).
 
 The authorised development branch is **`working`**. Do not alter `main` or `baseline/v11`, merge, or release without explicit authorization.
