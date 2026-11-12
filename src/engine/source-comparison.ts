@@ -5,7 +5,7 @@ import type { MarkingRule } from "../domain/scoring.js";
 import { hashJson } from "../domain/hash.ts";
 
 /** Hypothetical original-key score. Never changes the actual frozen result.
- * Only the canonical schema-3 representation is accepted.
+ * Only the canonical current representation is accepted.
  */
 interface CommonReference {
  readonly paperId:PaperId;
@@ -20,16 +20,16 @@ interface SingleChoiceEntry {
  readonly sourceSemanticHash:string;
  readonly comparable:boolean;
 }
-type V3Entry=
+type SourceKeyEntry=
  | (SingleChoiceEntry&{readonly kind:"single-choice"})
  | {readonly kind:"unavailable";readonly questionRevisionId:QuestionRevisionId;
     readonly comparable:false;readonly reason:"unsupported-kind"|"missing-original"|"source-key-unavailable"};
 export interface VerifiedSourceKeyReference extends CommonReference {
  readonly schema:3;
- readonly entries:readonly V3Entry[];
+ readonly entries:readonly SourceKeyEntry[];
 }
 export type SourceKeyReference=VerifiedSourceKeyReference;
-type V3Core=Omit<VerifiedSourceKeyReference,"contentHash">;
+type SourceKeyReferenceCore=Omit<VerifiedSourceKeyReference,"contentHash">;
 type Resources=Pick<ExamPackage,"stimuli"|"assets">;
 
 /** Only candidate-visible scoring inputs, never solution, tags or editorial
@@ -78,7 +78,7 @@ export function createSourceKeyReference(
  const byQuestion=new Map(source.questions.map(q=>[q.questionId,q]));
  const byEntry=new Map(source.answerKey.entries.map(e=>[e.questionRevisionId,e]));
  const sections=new Map(source.paper.sections.flatMap(s=>s.questionRevisionIds.map(id=>[id,s] as const)));
- const entries:V3Entry[]=[];
+ const entries:SourceKeyEntry[]=[];
  for(const q of target.questions){
   const original=byQuestion.get(q.questionId);
   if(!original){
@@ -103,7 +103,7 @@ export function createSourceKeyReference(
   entries.push({kind:"single-choice",questionRevisionId:q.id,originalOptionId,
    markingRule:structuredClone(rule),sourceSemanticHash,comparable});
  }
- const core:V3Core={schema:3,paperId:target.paper.paperId,
+ const core:SourceKeyReferenceCore={schema:3,paperId:target.paper.paperId,
    sourcePaperRevisionId:source.paper.id,sourceAnswerKeyRevisionId:source.answerKey.id,entries};
  return {...core,contentHash:hashJson(core)};
 }
@@ -124,7 +124,7 @@ export function validateSourceKeyReference(attempt:GenericAttempt):void{
    ref.sourceAnswerKeyRevisionId!==frozen.paper.sourceAnswerKeyRevisionId||
    !Array.isArray(ref.entries)||ref.entries.length!==frozen.questions.length)
    throw Error("Invalid original source-key comparison");
- const core:V3Core={schema:3,paperId:ref.paperId,
+ const core:SourceKeyReferenceCore={schema:3,paperId:ref.paperId,
    sourcePaperRevisionId:ref.sourcePaperRevisionId,
    sourceAnswerKeyRevisionId:ref.sourceAnswerKeyRevisionId,entries:ref.entries};
  // Reject unexpected nested fields before digest validation.
