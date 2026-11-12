@@ -11,10 +11,10 @@ import {restoreSession} from "../history/frozen.ts";
 import {scoreAttempt} from "../engine/scoring.ts";
 
 import {type AppRoute,type RouteContext} from "./navigation.ts";
-import type {CoordinatorContext} from "./coordinator-context.ts";
+import type {RouteControllerContext} from "./coordinator-context.ts";
 import {clearCandidateToolWorkspace} from "./candidate-tool-state.ts";
 
-export async function activateWorkspaceRoute(owner:CoordinatorContext,target:AppRoute,ctx:RouteContext):Promise<void>{
+export async function activateWorkspaceRoute(owner:RouteControllerContext,target:AppRoute,ctx:RouteContext):Promise<void>{
    const requested=++owner.activationGeneration;
    if(!owner.routeHydrated)await owner.hydration;
    if(owner.disposed||ctx.signal?.aborted||requested!==owner.activationGeneration)return;
@@ -83,7 +83,7 @@ export async function activateWorkspaceRoute(owner:CoordinatorContext,target:App
    }
  }
 
-export const navigateWorkspace=(owner:CoordinatorContext,target:AppRoute,history:"push"|"replace"="push"):void=>{
+export const navigateWorkspace=(owner:RouteControllerContext,target:AppRoute,history:"push"|"replace"="push"):void=>{
    void owner.router.navigate(target,history).catch(error=>{
      owner.warning=error instanceof Error?"Navigation failed: "+error.message:"Navigation failed";
      if(!owner.disposed)owner.draw();

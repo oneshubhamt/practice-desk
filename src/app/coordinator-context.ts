@@ -29,7 +29,7 @@ import type {ScreenRenderer} from "./screen-renderer.ts";
 import type {ImageViewer} from "./image-viewer.ts";
 import type {ImagePreparation} from "./image-preparation.ts";
 import type {AuthoringStudioController} from "../authoring/authoring-studio.ts";
-export interface CoordinatorContext{
+export interface WorkspaceContext{
  activationGeneration:number;
  readonly addNotebookCard:(source: GenericAttempt, id: string) => void;
  readonly addResultCards:(source: GenericAttempt) => Promise<void>;
@@ -125,3 +125,77 @@ export interface CoordinatorContext{
  readonly writeMirror:(record: GenericAttempt) => void;
  writeQueue:Promise<void>;
 }
+
+
+type Slice<K extends keyof WorkspaceContext>=Pick<WorkspaceContext,K>;
+
+export type AuthoringControllerContext=Slice<
+ "applyFamily"|"authoringStudio"|"builtinPaperIds"|"choice"|"disposed"|"draw"|
+ "editionView"|"fallbackConflict"|"loading"|"packages"|"records"|"save"|
+ "saveSelection"|"singleSection"|"storageFault"|"view"|"warning"
+>;
+
+export type LearningControllerContext=Slice<
+ "attempt"|"draw"|"fallbackConflict"|"freshlyStartedAttemptId"|"go"|"loading"|
+ "notice"|"now"|"records"|"removeSavedAttempt"|"root"|"save"|"storageFault"|"warning"
+>;
+
+export type ExamControllerContext=Slice<
+ "attempt"|"calculatorStates"|"choiceDrafts"|"dispatch"|"draw"|"go"|"notice"|"now"|
+ "packageForAttempt"|"reviewFilter"|"root"|"save"|"storageFault"|"warning"
+>;
+
+export type ResultControllerContext=Slice<
+ "addNotebookCard"|"addResultCards"|"attempt"|"disposed"|"draw"|"go"|
+ "manualGradeDrafts"|"notice"|"now"|"packageForAttempt"|"packages"|"records"|
+ "resultTab"|"reviewFilter"|"root"|"router"|"save"|"storageFault"|"warning"
+>;
+
+export type HistoryControllerContext=Slice<
+ "changeHistoryQuery"|"deleteAllCompleted"|"downloadBackup"|"draw"|"go"|"historyQuery"|
+ "historyQueryKey"|"importHistory"|"notice"|"openSaved"|"packages"|"records"|
+ "removeSavedAttempt"|"requestPersistentStorage"|"root"|"showStorageEstimate"
+>;
+
+export type LibraryControllerContext=Slice<
+ "applyFamily"|"attempt"|"authoringStudio"|"builtinPaperIds"|"cglMode"|
+ "changeHistoryQuery"|"choice"|"composeCount"|"composeDifficulty"|"composeError"|
+ "composeOpen"|"composePreview"|"composeSection"|"composeSeed"|"composeTopic"|
+ "downloadBackup"|"draw"|"editionView"|"fallbackConflict"|"families"|
+ "freshlyStartedAttemptId"|"go"|"imagePreparation"|"importHistory"|"loading"|
+ "notice"|"now"|"openSaved"|"packages"|"patches"|"records"|"removeSavedAttempt"|
+ "root"|"save"|"saveSelection"|"selectedFamilyId"|"setups"|"singleSection"|
+ "storageFault"|"untimedPractice"|"warning"
+>;
+
+export type RouteControllerContext=Slice<
+ "activationGeneration"|"attempt"|"disposed"|"draw"|"freshlyStartedAttemptId"|"go"|
+ "hydration"|"now"|"records"|"resultTab"|"reviewFilter"|"routeHydrated"|"router"|
+ "save"|"view"|"warning"
+>;
+
+export type PersistenceControllerContext=Slice<
+ "applyFamily"|"attempt"|"calculatorStates"|"db"|"dbName"|"disposed"|"draw"|
+ "fallbackConflict"|"fallbackStamp"|"go"|"hydrationDone"|"lastCommittedAt"|
+ "lastStorageFailure"|"loading"|"mirrorKey"|"notice"|"packages"|"pendingWrites"|
+ "recordStorageFailure"|"records"|"root"|"routeHydrated"|"router"|"save"|
+ "saveSelection"|"setups"|"storageFault"|"storageKey"|"storageSnapshot"|
+ "storedSetups"|"storedSnapshots"|"updateStorageHealth"|"warning"|"writeMirror"|
+ "writeQueue"
+>;
+
+export type LifecycleControllerContext=Slice<
+ "attempt"|"authoringStudio"|"calculatorStates"|"db"|"dispatch"|"dispatchVisibility"|
+ "disposed"|"draw"|"fallbackConflict"|"fallbackStamp"|"go"|"imagePreparation"|
+ "imageViewer"|"keyboard"|"lastTimerSave"|"learningDesk"|"now"|"pagehide"|
+ "recordStorageFailure"|"reviewFilter"|"root"|"router"|"save"|"storage"|
+ "storageFault"|"storageKey"|"timer"|"view"|"visibility"|"warning"|"writeMirror"|
+ "writeQueue"
+>;
+
+export type ScreenControllerContext=Slice<
+ "attempt"|"authoringStudio"|"db"|"disposed"|"draw"|"examHTML"|"fallbackConflict"|
+ "go"|"historyQuery"|"imagePreparation"|"imageViewer"|"learningDesk"|"listHTML"|
+ "loading"|"packages"|"records"|"resultHTML"|"resultTab"|"root"|"screenRenderer"|
+ "storageFault"|"storageSnapshot"|"view"|"warning"
+> & HistoryControllerContext & LibraryControllerContext & ResultControllerContext & ExamControllerContext;

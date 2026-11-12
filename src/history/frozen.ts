@@ -6,25 +6,10 @@ import type { AnswerKeyRevision } from "../domain/answer-key.js";
 import type { QuestionRevision, StimulusDefinition, ImageAsset } from "../domain/question.js";
 import { assertRevisionHashes } from "../domain/integrity.ts";
 import { selectDisplayResources, validateMediaInventory, validateQuestionMediaReferences } from "../domain/media.ts";
-import type { AttemptSnapshot, AttemptMode } from "../domain/attempt.js";
+import type { AttemptSnapshot, AttemptMode, FrozenAttemptContent } from "../domain/attempt.js";
 import type { ExamId } from "../domain/ids.js";
 
-/**
- * The content used to score an attempt belongs to that attempt, not to the
- * mutable library selection or a later application release. All fields are
- * ordinary structured-clone-compatible data so IndexedDB writes remain atomic.
- * Exact display resources are frozen with the attempt so historical questions remain renderable.
- */
-export interface FrozenAttemptContent {
-  readonly schema: 2;
-  readonly frozenAt: string;
-  readonly snapshot: AttemptSnapshot;
-  readonly paper: PaperRevision;
-  readonly key: AnswerKeyRevision;
-  readonly questions: readonly QuestionRevision[];
-  readonly stimuli: readonly StimulusDefinition[];
-  readonly assets: readonly ImageAsset[];
-}
+/** Freeze exact scoring/display resources into the canonical attempt contract. */
 export function freezeAttempt(
   paper: PaperRevision, key: AnswerKeyRevision, questions: readonly QuestionRevision[],
   stimuli:readonly StimulusDefinition[],assets:readonly ImageAsset[],

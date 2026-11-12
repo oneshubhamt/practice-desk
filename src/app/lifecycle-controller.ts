@@ -6,10 +6,10 @@ import {transitionGenericAttempt} from "./exam-package.ts";
 
 import {resolveExamShortcut,readShortcutBindings} from "./exam-shortcuts.ts";
 
-import type {CoordinatorContext} from "./coordinator-context.ts";
+import type {LifecycleControllerContext} from "./coordinator-context.ts";
 import {clearCandidateToolWorkspace} from "./candidate-tool-state.ts";
 
-export function dispatchWorkspaceVisibility(owner:CoordinatorContext,visible:boolean):void{
+export function dispatchWorkspaceVisibility(owner:LifecycleControllerContext,visible:boolean):void{
    if(!owner.attempt||owner.storageFault||owner.attempt.finishedAt!==null)return;
    const current=owner.attempt;
    owner.attempt=transitionGenericAttempt(current,{type:"VISIBILITY",nowMs:owner.now(),visible},
@@ -23,16 +23,16 @@ export function dispatchWorkspaceVisibility(owner:CoordinatorContext,visible:boo
    owner.draw();
  }
 
-export function disposeWorkspace(owner:CoordinatorContext){owner.imageViewer.dispose();owner.imagePreparation.dispose();owner.authoringStudio.dispose();owner.router.dispose();owner.learningDesk.dispose();owner.disposed=true;window.clearInterval(owner.timer);document.removeEventListener("visibilitychange",owner.visibility);
+export function disposeWorkspace(owner:LifecycleControllerContext){owner.imageViewer.dispose();owner.imagePreparation.dispose();owner.authoringStudio.dispose();owner.router.dispose();owner.learningDesk.dispose();owner.disposed=true;window.clearInterval(owner.timer);document.removeEventListener("visibilitychange",owner.visibility);
    window.removeEventListener("pagehide",owner.pagehide);window.removeEventListener("storage",owner.storage);
    window.removeEventListener("keydown",owner.keyboard);void owner.writeQueue.finally(()=>owner.db?.close());owner.root.classList.remove("generic-workspace");}
 
-export const handleWorkspaceVisibility=(owner:CoordinatorContext)=>{
+export const handleWorkspaceVisibility=(owner:LifecycleControllerContext)=>{
    if(!owner.attempt||owner.attempt.finishedAt!==null||owner.storageFault)return;
    owner.dispatchVisibility(owner.view==="exam"&&!document.hidden);
  };
 
-export const handleWorkspaceKeyboard=(owner:CoordinatorContext,event:KeyboardEvent)=>{
+export const handleWorkspaceKeyboard=(owner:LifecycleControllerContext,event:KeyboardEvent)=>{
    if(owner.disposed||owner.view!=="exam"||!owner.attempt||owner.attempt.finishedAt!==null||
       (owner.attempt.state.status!=="running"&&owner.attempt.state.status!=="paused")||document.hidden||
       event.defaultPrevented||event.ctrlKey||event.metaKey||event.shiftKey||event.isComposing)return;
@@ -77,7 +77,7 @@ export const handleWorkspaceKeyboard=(owner:CoordinatorContext,event:KeyboardEve
    owner.dispatch({type:"ANSWER",nowMs:owner.now(),response:{kind:"single-choice",optionId:option.id}});
  };
 
-export const checkpointWorkspacePagehide=(owner:CoordinatorContext)=>{
+export const checkpointWorkspacePagehide=(owner:LifecycleControllerContext)=>{
    if(owner.attempt&&owner.attempt.finishedAt===null&&!owner.storageFault){
      try{
        const current=owner.attempt;
@@ -89,7 +89,7 @@ export const checkpointWorkspacePagehide=(owner:CoordinatorContext)=>{
    }
  };
 
-export const detectConcurrentStorageChange=(owner:CoordinatorContext,event:StorageEvent)=>{
+export const detectConcurrentStorageChange=(owner:LifecycleControllerContext,event:StorageEvent)=>{
    if(owner.db||event.key!==owner.storageKey||event.newValue===owner.fallbackStamp)return;
    owner.fallbackConflict=true;
    owner.warning="Fallback history changed in another tab. Reopen the file before continuing.";
@@ -98,7 +98,7 @@ export const detectConcurrentStorageChange=(owner:CoordinatorContext,event:Stora
    if(!owner.disposed)owner.draw();
  };
 
-export function startWorkspaceTimer(owner:CoordinatorContext):number{return window.setInterval(()=>{
+export function startWorkspaceTimer(owner:LifecycleControllerContext):number{return window.setInterval(()=>{
    // Time limits still elapse outside exam view, but hidden/library time is
    // not charged to the last foreground question.
    if(owner.disposed||owner.storageFault||!owner.attempt||owner.attempt.finishedAt!==null||

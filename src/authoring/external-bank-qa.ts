@@ -3,7 +3,7 @@
  * SHA-256 here is a comparison fingerprint, never source authentication.
  */
 import type {AuthoringDraft,AuthoringQuestion} from "./authoring-draft.ts";
-import type {ExamPackage} from "../app/exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
 import {publicationPlainText} from "./authoring-publisher.ts";
 import {scoreAttempt} from "../engine/scoring.ts";
 import type {CandidateResponse} from "../domain/question.ts";

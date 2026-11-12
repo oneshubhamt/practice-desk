@@ -2,7 +2,7 @@ import type { PaperRevision, SectionDefinition } from "../domain/exam.js";
 import type { AnswerKeyRevision } from "../domain/answer-key.js";
 import type { QuestionRevision } from "../domain/question.js";
 import type { MarkingRule } from "../domain/scoring.js";
-import type { GenericAttempt } from "../app/exam-package.ts";
+import type { GenericAttempt } from "./generic-attempt.ts";
 import type { ScoreResult } from "./scoring.ts";
 import { sectionTimerDuration } from "./session.ts";
 

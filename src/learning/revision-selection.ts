@@ -1,4 +1,4 @@
-import type {GenericAttempt} from "../app/exam-package.ts";
+import type {GenericAttempt} from "../engine/generic-attempt.ts";
 import type {LearningCard} from "./learning.ts";
 import {addLearningCard} from "./learning.ts";
 import {questionSpeed,questionTimingPhases} from "./question-analytics.ts";

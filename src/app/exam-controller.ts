@@ -11,9 +11,9 @@ import {bindExamCalculator} from "./exam-calculator.ts";
 import {newExamCalculatorState} from "../domain/calculator.ts";
 import {readCalculatorWorkspace,writeCalculatorWorkspace,clearCandidateToolWorkspace} from "./candidate-tool-state.ts";
 
-import type {CoordinatorContext} from "./coordinator-context.ts";
+import type {ExamControllerContext} from "./coordinator-context.ts";
 
-export function renderCurrentExamHTML(owner:CoordinatorContext):string {
+export function renderCurrentExamHTML(owner:ExamControllerContext):string {
    if(!owner.attempt)return "";
    const qid=owner.attempt.frozen.paper.sections[owner.attempt.state.sectionIndex]
      ?.questionRevisionIds[owner.attempt.state.questionIndex];
@@ -30,7 +30,7 @@ export function renderCurrentExamHTML(owner:CoordinatorContext):string {
    },calculator);
  }
 
-export const dispatchExamEvent=(owner:CoordinatorContext,event:SessionEvent)=>{
+export const dispatchExamEvent=(owner:ExamControllerContext,event:SessionEvent)=>{
    if(!owner.attempt||owner.storageFault)return;
    try{
      const ids=new Map(owner.attempt.frozen.questions.map(q=>[q.id,q]));
@@ -47,7 +47,7 @@ export const dispatchExamEvent=(owner:CoordinatorContext,event:SessionEvent)=>{
    owner.draw();
  };
 
-export function bindExamScreen(owner:CoordinatorContext):void{
+export function bindExamScreen(owner:ExamControllerContext):void{
 owner.root.querySelector<HTMLButtonElement>("#g-exam-full")!.onclick=()=>
      window.dispatchEvent(new Event("practice-desk:toggle-fullscreen"));
 const calculatorId=owner.attempt!.id;

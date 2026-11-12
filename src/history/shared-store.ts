@@ -1,5 +1,5 @@
 import {STORAGE_TOPOLOGY} from "../storage-topology.ts";
-import type {GenericAttempt} from "../app/exam-package.ts";
+import type {GenericAttempt} from "../engine/generic-attempt.ts";
 import type {FrozenAttemptContent} from "./frozen.ts";
 import {hashJson} from "../domain/hash.ts";
 import {assertFrozenContent} from "./frozen.ts";

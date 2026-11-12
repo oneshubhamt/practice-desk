@@ -23,10 +23,10 @@ import type {SharedSnapshot,SlimAttempt} from "../history/shared-store.ts";
 
 import {readDisplayPreferences,writeDisplayPreferences,SETTINGS_EVENT} from "./preferences.ts";
 
-import type {CoordinatorContext} from "./coordinator-context.ts";
+import type {PersistenceControllerContext} from "./coordinator-context.ts";
 import {clearCandidateToolWorkspace} from "./candidate-tool-state.ts";
 
-export const downloadHistoryBackup=async (owner:CoordinatorContext):Promise<void>=>{
+export const downloadHistoryBackup=async (owner:PersistenceControllerContext):Promise<void>=>{
    await owner.writeQueue;
    try{
      let toExport:RecordItem[]=[...owner.records.values()];
@@ -63,7 +63,7 @@ export const downloadHistoryBackup=async (owner:CoordinatorContext):Promise<void
    }catch(error){owner.warning=error instanceof Error?"Backup failed: "+error.message:"Backup failed";owner.draw();}
  };
 
-export const importHistoryBackup=async (owner:CoordinatorContext,file:File)=>{
+export const importHistoryBackup=async (owner:PersistenceControllerContext,file:File)=>{
    if(owner.storageFault||owner.fallbackConflict)throw new Error("Storage is unavailable or changed in another tab. Reopen before importing.");
    const archive=verifyBackup(await readBackupFile(file));
    const imported=reconstructRecords(archive.records,archive.snapshots)
@@ -132,12 +132,12 @@ export const importHistoryBackup=async (owner:CoordinatorContext,file:File)=>{
    owner.draw();
  };
 
-export const writeEmergencyMirror=(owner:CoordinatorContext,record:GenericAttempt)=>{
+export const writeEmergencyMirror=(owner:PersistenceControllerContext,record:GenericAttempt)=>{
    try{localStorage.setItem(owner.mirrorKey,JSON.stringify(record));}
    catch{owner.warning="Emergency session mirror could not be saved. Use a history export.";}
  };
 
-export const saveWorkspaceRecord=(owner:CoordinatorContext,record:RecordItem):Promise<boolean>=>{
+export const saveWorkspaceRecord=(owner:PersistenceControllerContext,record:RecordItem):Promise<boolean>=>{
    if(owner.fallbackConflict||owner.storageFault){
      owner.warning="Storage is unavailable or changed in another tab. Export a recovery backup and reopen before editing.";
      owner.draw();return Promise.resolve(false);
@@ -234,7 +234,7 @@ export const saveWorkspaceRecord=(owner:CoordinatorContext,record:RecordItem):Pr
    }).finally(()=>{owner.pendingWrites--;owner.updateStorageHealth();});
  };
 
-export const removeWorkspaceAttempt=async (owner:CoordinatorContext,id:string,intent:DeletionIntent="completed"):Promise<void>=>{
+export const removeWorkspaceAttempt=async (owner:PersistenceControllerContext,id:string,intent:DeletionIntent="completed"):Promise<void>=>{
    const chosen=owner.records.get(id);
    if(owner.storageFault||owner.fallbackConflict){owner.notice("Storage locked. Export recovery backup and reopen before deleting.");return;}
    // The action's label and the stored record must agree before confirmation.
@@ -295,7 +295,7 @@ export const removeWorkspaceAttempt=async (owner:CoordinatorContext,id:string,in
    }catch(error){owner.notice(error instanceof Error?error.message:"Deletion failed");}
  };
 
-export const deleteCompletedWorkspaceAttempts=async (owner:CoordinatorContext):Promise<void>=>{
+export const deleteCompletedWorkspaceAttempts=async (owner:PersistenceControllerContext):Promise<void>=>{
    if(owner.storageFault||owner.fallbackConflict){owner.notice("Storage is locked. Export recovery data and reopen before deletion.");return;}
    const completed=[...owner.records.values()].filter((r):r is GenericAttempt=>
      isAttempt(r)&&r.finishedAt!==null);
@@ -351,7 +351,7 @@ export const deleteCompletedWorkspaceAttempts=async (owner:CoordinatorContext):P
    }
  };
 
-export const showWorkspaceStorageEstimate=async (owner:CoordinatorContext):Promise<void>=>{
+export const showWorkspaceStorageEstimate=async (owner:PersistenceControllerContext):Promise<void>=>{
    const node=owner.root.querySelector<HTMLElement>("#g-storage-quota");
    if(!node)return;
    try{
@@ -365,7 +365,7 @@ export const showWorkspaceStorageEstimate=async (owner:CoordinatorContext):Promi
    }catch{if(node.isConnected)node.textContent="Storage estimate unavailable in this browser or file context.";}
  };
 
-export const requestWorkspacePersistentStorage=async (owner:CoordinatorContext):Promise<void>=>{
+export const requestWorkspacePersistentStorage=async (owner:PersistenceControllerContext):Promise<void>=>{
    const node=owner.root.querySelector<HTMLElement>("#g-storage-persist-status");
    if(!node)return;
    try{
@@ -378,11 +378,11 @@ export const requestWorkspacePersistentStorage=async (owner:CoordinatorContext):
    }
  };
 
-export const workspaceStorageHealth=(owner:CoordinatorContext):StorageHealth=>({pendingWrites:owner.pendingWrites,lastCommittedAt:owner.lastCommittedAt,
+export const workspaceStorageHealth=(owner:PersistenceControllerContext):StorageHealth=>({pendingWrites:owner.pendingWrites,lastCommittedAt:owner.lastCommittedAt,
    lastFailure:owner.lastStorageFailure,locked:owner.storageFault||owner.fallbackConflict,
    loading:owner.loading,inMemoryRecords:owner.records.size});
 
-export const updateWorkspaceStorageHealth=(owner:CoordinatorContext):void=>{
+export const updateWorkspaceStorageHealth=(owner:PersistenceControllerContext):void=>{
    const snapshot=owner.storageSnapshot();
    const status=owner.root.querySelector<HTMLElement>("#g-storage-health");
    if(status)status.textContent=healthSummary(snapshot);
@@ -397,12 +397,12 @@ export const updateWorkspaceStorageHealth=(owner:CoordinatorContext):void=>{
      " records (attempts, imported banks and learning cards). This is not a durable backup count.";
  };
 
-export const reportWorkspaceStorageFailure=(owner:CoordinatorContext,error:unknown):void=>{
+export const reportWorkspaceStorageFailure=(owner:PersistenceControllerContext,error:unknown):void=>{
    owner.lastStorageFailure=String(error instanceof Error?error.message:error).slice(0,240);
    owner.updateStorageHealth();
  };
 
-export function hydrateWorkspaceStorage(owner:CoordinatorContext):void{
+export function hydrateWorkspaceStorage(owner:PersistenceControllerContext):void{
 (async()=>{
    try{
      owner.db=await new Promise<IDBDatabase>((resolve,reject)=>{

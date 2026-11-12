@@ -2,8 +2,8 @@
  * This is NOT an editorial factual-verification service. Untrusted source and QA
  * assertions are always published with caution via the existing Wordgard compiler.
  */
-import {validateExamImportBudget} from "../app/exam-package.ts";
-import type {ExamPackage} from "../app/exam-package.ts";
+import {validateExamImportBudget} from "../domain/exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
 import type {AuthoringDraft,AuthoringQuestion} from "./authoring-draft.ts";
 import {validateAuthoringDraft} from "./authoring-draft.ts";
 import {inspectAuthoringPublication,publicationPlainText} from "./authoring-publisher.ts";

@@ -22,14 +22,14 @@ import {editorialStatusLabel} from "./editorial-labels.ts";
 
 import {reviewMatch,reviewFiltersHTML,resultTabsHTML,timingLedgerHTML,resultInsightsHTML,type ResultTab,type ReviewFilter} from "./result-presentation.ts";
 
-import type {CoordinatorContext} from "./coordinator-context.ts";
+import type {ResultControllerContext} from "./coordinator-context.ts";
 
-export function packageForResult(owner:CoordinatorContext,saved:GenericAttempt):ExamPackage|undefined{
+export function packageForResult(owner:ResultControllerContext,saved:GenericAttempt):ExamPackage|undefined{
    return owner.packages.get(saved.packageId)??[...owner.packages.values()].find(p=>
      p.paper.paperId===saved.frozen.paper.paperId&&p.paper.edition===saved.frozen.paper.edition);
  }
 
-export function renderCurrentResultHTML(owner:CoordinatorContext):string {
+export function renderCurrentResultHTML(owner:ResultControllerContext):string {
    if(!owner.attempt)return "";
    const paper=owner.attempt.frozen.paper,s=owner.attempt.result??scoreAttempt(paper,owner.attempt.frozen.key,owner.attempt.frozen.questions,
       owner.attempt.state.responses,new Date().toISOString());
@@ -211,7 +211,7 @@ export function renderCurrentResultHTML(owner:CoordinatorContext):string {
     '<footer class="result-device-footer">Saved on this device · Review, export and manage your data from History</footer>';
  }
 
-export function bindResultScreen(owner:CoordinatorContext):void{
+export function bindResultScreen(owner:ResultControllerContext):void{
 
      owner.root.querySelector<HTMLButtonElement>("#g-history-results")!.onclick=()=>owner.go({screen:"history"});
      const resultLibrary=owner.root.querySelector<HTMLButtonElement>("#g-result-library");

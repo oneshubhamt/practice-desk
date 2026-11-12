@@ -2,8 +2,8 @@
  * Never store Wordgard internals, DOM HTML, editable draft IDs or unsigned keys
  * as scored content. A published package enters the existing validated IDB path.
  */
-import type {ExamPackage} from "../app/exam-package.ts";
-import {validateExamPackage} from "../app/exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
+import {validateExamPackage} from "../domain/exam-package.ts";
 import type {AuthoringDraft,AuthoringQuestion} from "./authoring-draft.ts";
 import {validateAuthoringDraft} from "./authoring-draft.ts";
 import type {CorrectAnswer,AnswerKeyEntry,AnswerKeyRevision} from "../domain/answer-key.ts";

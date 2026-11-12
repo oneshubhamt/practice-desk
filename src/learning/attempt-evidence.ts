@@ -1,4 +1,4 @@
-import type { GenericAttempt } from "../app/exam-package.ts";
+import type { GenericAttempt } from "../engine/generic-attempt.ts";
 import type { QuestionRevisionId } from "../domain/ids.js";
 import type { MarkingRule } from "../domain/scoring.js";
 import type { Verdict } from "../engine/scoring.ts";

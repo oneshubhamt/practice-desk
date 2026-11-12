@@ -1,13 +1,8 @@
-import type { GenericAttempt } from "../app/exam-package.ts";
+import type { GenericAttempt } from "./generic-attempt.ts";
+import type { ManualGrade } from "../domain/attempt.js";
+export type {ManualGrade} from "../domain/attempt.js";
 import type { QuestionRevisionId } from "../domain/ids.js";
 
-/** User-entered assessment only; cannot mutate the immutable machine-scored snapshot. */
-export interface ManualGrade {
- readonly questionRevisionId:QuestionRevisionId;
- readonly marks:number;
- readonly note:string;
- readonly gradedAt:string;
-}
 function maxFor(attempt:GenericAttempt,id:QuestionRevisionId):number|null{
  const paper=attempt.frozen.paper;
  const section=paper.sections.find(x=>x.questionRevisionIds.includes(id));

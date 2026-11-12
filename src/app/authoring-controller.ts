@@ -7,9 +7,9 @@ import {familyIdFor} from "./exam-families.ts";
 import {createQuestionAuthoringStudio} from "../authoring/authoring-studio.ts";
 
 
-import type {CoordinatorContext} from "./coordinator-context.ts";
+import type {AuthoringControllerContext} from "./coordinator-context.ts";
 
-export function createWorkspaceAuthoringStudio(owner:CoordinatorContext):ReturnType<typeof createQuestionAuthoringStudio>{return createQuestionAuthoringStudio({
+export function createWorkspaceAuthoringStudio(owner:AuthoringControllerContext):ReturnType<typeof createQuestionAuthoringStudio>{return createQuestionAuthoringStudio({
    existing:()=>[...owner.packages.values()],
    onClose:()=>{if(!owner.disposed&&owner.view==="library")owner.draw();},
    publish:async bundle=>{

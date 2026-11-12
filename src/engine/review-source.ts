@@ -1,4 +1,5 @@
-import type { ExamPackage, GenericAttempt } from "../app/exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
+import type {GenericAttempt} from "./generic-attempt.ts";
 import type { QuestionRevision, StimulusDefinition, ImageAsset } from "../domain/question.js";
 import type { CorrectAnswer } from "../domain/answer-key.js";
 import type { ExamId, PaperId, PaperRevisionId, AnswerKeyRevisionId, QuestionRevisionId } from "../domain/ids.js";

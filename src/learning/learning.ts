@@ -1,4 +1,4 @@
-import type { GenericAttempt } from "../app/exam-package.ts";
+import type { GenericAttempt } from "../engine/generic-attempt.ts";
 import type { QuestionRevision, StimulusDefinition, ImageAsset } from "../domain/question.js";
 import { questionRevisionHash, answerKeyRevisionHash } from "../domain/integrity.ts";
 import { selectDisplayResources, validateMediaInventory, validateQuestionMediaReferences } from "../domain/media.ts";

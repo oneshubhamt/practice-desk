@@ -1,4 +1,7 @@
-import type { ExamPackage,GenericAttempt } from "./exam-package.ts";
+import type { ExamPackage } from "../domain/exam-package.ts";
+import type {GenericAttempt} from "../engine/generic-attempt.ts";
+import type {PracticeComposition,PracticeFilters} from "../domain/attempt.js";
+export type {PracticeComposition,PracticeFilters} from "../domain/attempt.js";
 import { validateExamPackage } from "./exam-package.ts";
 import type { QuestionRevision } from "../domain/question.js";
 import type { PaperRevision,SectionDefinition } from "../domain/exam.js";
@@ -11,11 +14,6 @@ import { hashJson,sha256 } from "../domain/hash.ts";
 /** This is a composition of ONE already validated, precisely selected paper.
  * No cross-exam mixing, guessed topics, or new scoring engine. */
 export const PRACTICE_ELIGIBLE_STATUSES = ["verified","corrected","caution"] as const;
-export interface PracticeFilters {
- readonly sectionId?:string;
- readonly topicId?:string;
- readonly difficulty?:string;
-}
 export interface PracticeRequest {
  readonly count:number;
  readonly seed:string;
@@ -30,23 +28,6 @@ export interface PracticeInventory {
  readonly cautions:number;
 }
 interface Candidate {readonly question:QuestionRevision;readonly section:SectionDefinition}
-export interface PracticeComposition {
- readonly schema:1;
- readonly sourceExamId:string;
- readonly sourcePaperRevisionId:string;
- readonly sourcePaperHash:string;
- readonly sourceAnswerKeyRevisionId:string;
- readonly sourceAnswerKeyHash:string;
- readonly seed:string;
- readonly filters:PracticeFilters;
- readonly eligibleCount:number;
- readonly selectedQuestionRevisionIds:readonly string[];
- readonly selectedQuestionHashes:readonly string[];
- readonly generatedPaperRevisionId:string;
- readonly generatedAnswerKeyRevisionId:string;
- readonly contentHash:string;
-}
-
 function candidates(source:ExamPackage,filters:PracticeFilters):Candidate[]{
  const byId=new Map(source.questions.map(q=>[q.id,q]));
  const eligible:Candidate[]=[];

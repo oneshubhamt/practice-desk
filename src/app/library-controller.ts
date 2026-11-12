@@ -22,9 +22,9 @@ import {examPreflight,preflightHTML,examRulesHTML} from "./exam-preflight.ts";
 import {writePracticeSetups,type PracticeSetups} from "./practice-selection.ts";
 import {familyIdFor,pairedEdition,BUILTIN_CGL_FAMILY} from "./exam-families.ts";
 
-import type {CoordinatorContext} from "./coordinator-context.ts";
+import type {LibraryControllerContext} from "./coordinator-context.ts";
 
-export function renderLibraryHTML(owner:CoordinatorContext):string {
+export function renderLibraryHTML(owner:LibraryControllerContext):string {
    const all=[...owner.records.values()].filter(isAttempt).sort((a,b)=>b.startedAt-a.startedAt);
    const complete=all.filter(a=>a.finishedAt!==null);
    const pending=all.filter(a=>a.finishedAt===null);
@@ -218,7 +218,7 @@ export function renderLibraryHTML(owner:CoordinatorContext):string {
        (preflight?examRulesHTML(preflight):"");
  }
 
-export const applyLibraryFamily=(owner:CoordinatorContext,id:string):void=>{
+export const applyLibraryFamily=(owner:LibraryControllerContext,id:string):void=>{
    owner.selectedFamilyId=id;
    const previous=owner.setups.families[id];
    if(previous){
@@ -235,7 +235,7 @@ export const applyLibraryFamily=(owner:CoordinatorContext,id:string):void=>{
      owner.singleSection=Math.min(owner.singleSection,Math.max(0,owner.packages.get(owner.choice)!.paper.sections.length-1));
  };
 
-export const persistLibrarySelection=(owner:CoordinatorContext):void=>{
+export const persistLibrarySelection=(owner:LibraryControllerContext):void=>{
    const next:PracticeSetups={schema:2,selectedFamilyId:owner.selectedFamilyId,
      families:{...owner.setups.families,[owner.selectedFamilyId]:{
        paperRevisionId:owner.choice,mode:owner.cglMode,section:owner.singleSection,
@@ -246,7 +246,7 @@ export const persistLibrarySelection=(owner:CoordinatorContext):void=>{
    catch{owner.warning="Exam setup could not be saved on this device; current selection still works.";}
  };
 
-export function bindLibraryScreen(owner:CoordinatorContext):void{
+export function bindLibraryScreen(owner:LibraryControllerContext):void{
 
      owner.root.querySelector<HTMLButtonElement>("#g-learning")!.onclick=()=>owner.go({screen:"learning"});
      owner.root.querySelector<HTMLSelectElement>("#g-family")!.onchange=e=>{

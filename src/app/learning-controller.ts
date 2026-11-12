@@ -14,9 +14,9 @@ import {makeRevisionPackage,createNotebookLineage} from "../learning/revision-te
 
 import {addLearningCard} from "../learning/learning.ts";
 
-import type {CoordinatorContext} from "./coordinator-context.ts";
+import type {LearningControllerContext} from "./coordinator-context.ts";
 
-export const addLearningNotebookCard=(owner:CoordinatorContext,source:GenericAttempt,id:string):void=>{
+export const addLearningNotebookCard=(owner:LearningControllerContext,source:GenericAttempt,id:string):void=>{
    if(owner.records.has("learning-card:"+id))return;
    try{
      const record=addLearningCard(source,id as QuestionRevisionId,new Date(owner.now()).toISOString());
@@ -24,7 +24,7 @@ export const addLearningNotebookCard=(owner:CoordinatorContext,source:GenericAtt
    }catch(error){owner.notice(error instanceof Error?error.message:"Unable to add notebook card");}
  };
 
-export const addLearningResultCards=async (owner:CoordinatorContext,source:GenericAttempt):Promise<void>=>{
+export const addLearningResultCards=async (owner:LearningControllerContext,source:GenericAttempt):Promise<void>=>{
    const ids=source.result?.items.filter(item=>item.verdict==="incorrect"||item.verdict==="unanswered")
      .map(item=>item.questionRevisionId).filter(id=>!owner.records.has("learning-card:"+id))??[];
    let saved=0;
@@ -36,7 +36,7 @@ export const addLearningResultCards=async (owner:CoordinatorContext,source:Gener
    owner.draw();
  };
 
-export function createWorkspaceLearningDesk(owner:CoordinatorContext):ReturnType<typeof createLearningDesk>{return createLearningDesk(owner.root,{
+export function createWorkspaceLearningDesk(owner:LearningControllerContext):ReturnType<typeof createLearningDesk>{return createLearningDesk(owner.root,{
    cards:()=>[...owner.records.values()].filter(isLearning),
    attempts:()=>[...owner.records.values()].filter(isAttempt),
    save:(item)=>owner.save(item),
