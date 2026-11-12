@@ -342,7 +342,8 @@ test("generic history rejects malformed stored records before import",()=>{
 
 test("shared renderer enforces paused, forward-only and no-early-submit policies",async()=>{
  const {renderModelExam}=await import("../src/app/exam-view.ts");
- const {validateExamPackage,startGenericAttempt,transitionGenericAttempt}=await import("../src/app/exam-package.ts");
+ const {validateExamPackage,startGenericAttempt}=await import("../src/app/exam-package.ts");
+ const {transitionGenericAttempt}=await import("../src/engine/generic-attempt.ts");
  const {pkg}=await import("./fixtures/six-kinds.mjs");
  const forwardPaper={...pkg.paper,navigation:{...pkg.paper.navigation,questionNavigation:"forward-only"}};
  const forward=validateExamPackage({...pkg,paper:{...forwardPaper,contentHash:paperRevisionHash(forwardPaper)}});

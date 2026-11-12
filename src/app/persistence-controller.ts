@@ -139,6 +139,12 @@ export const saveWorkspaceRecord=(owner:PersistenceControllerContext,record:Reco
  if(isAttempt(versioned)){
   if(owner.attempt?.id===versioned.id)owner.attempt=versioned;
   owner.writeMirror(versioned);
+  if(versioned.finishedAt!==null){
+   owner.calculatorStates.delete(versioned.id);
+   for(const key of owner.choiceDrafts.keys())
+    if(key.startsWith(versioned.id+"|"))owner.choiceDrafts.delete(key);
+   clearCandidateToolWorkspace(localStorage,versioned.id);
+  }
  }
  owner.pendingWrites++;
  owner.updateStorageHealth();

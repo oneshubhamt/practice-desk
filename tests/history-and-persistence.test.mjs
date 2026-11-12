@@ -52,8 +52,8 @@ const originals=editions.filter(p=>p.paper.edition==="source");
 const reviewed=editions.filter(p=>p.paper.edition==="reviewed");
 const questionMap=(bundle)=>new Map(bundle.questions.map(q=>[q.id,q]));
 const act=(type,nowMs,extra={})=>({type,nowMs,...extra});
-function finish(bundle,id,startedAt,sectionAnswers={}){
- let a=startGenericAttempt(bundle,id,startedAt);
+function finish(bundle,id,startedAt,sectionAnswers={},mode="exam-simulation"){
+ let a=startGenericAttempt(bundle,id,startedAt,mode);
  const qmap=questionMap(bundle);
  let time=startedAt;
  for(let section=0;section<bundle.paper.sections.length;section++){
@@ -165,7 +165,7 @@ test("F03: negative earned marks stay visible while progress width can be clampe
 
 test("F04: archive uses attempt's frozen eligible maximum, not nominal 100-paper marks",()=>{
  const strict=finish(configureCglPractice(originals[0],"strict"),"whole",1000,{});
- const single=finish(configureCglPractice(originals[0],"single",2),"section",2000,{});
+ const single=finish(configureCglPractice(originals[0],"single",2),"section",2000,{},"section-practice");
  const maxFull=scoreableMaximum(strict.frozen.paper,strict.frozen.key,strict.frozen.questions);
  const maxSingle=scoreableMaximum(single.frozen.paper,single.frozen.key,single.frozen.questions);
  assert.ok(maxFull>maxSingle);

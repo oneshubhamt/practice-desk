@@ -7,7 +7,6 @@ import {transitionGenericAttempt} from "../engine/generic-attempt.ts";
 import {resolveExamShortcut,readShortcutBindings} from "./exam-shortcuts.ts";
 
 import type {LifecycleControllerContext} from "./coordinator-context.ts";
-import {clearCandidateToolWorkspace} from "./candidate-tool-state.ts";
 
 export function dispatchWorkspaceVisibility(owner:LifecycleControllerContext,visible:boolean):void{
    if(!owner.attempt||owner.storageFault||owner.attempt.finishedAt!==null)return;
@@ -16,8 +15,6 @@ export function dispatchWorkspaceVisibility(owner:LifecycleControllerContext,vis
      new Map(current.frozen.questions.map(q=>[q.id,q])));
    void owner.save(owner.attempt);
    if(owner.attempt.finishedAt!==null&&owner.view==="exam"){
-     owner.calculatorStates.delete(owner.attempt.id);
-     clearCandidateToolWorkspace(localStorage,owner.attempt.id);
      owner.reviewFilter="all";owner.go({screen:"result",attemptId:owner.attempt.id,tab:"overview"},"replace");return;
    }
    owner.draw();
@@ -103,15 +100,15 @@ export function startWorkspaceTimer(owner:LifecycleControllerContext):number{ret
    // not charged to the last foreground question.
    if(owner.disposed||owner.storageFault||!owner.attempt||owner.attempt.finishedAt!==null||
       (owner.attempt.state.status==="paused"||owner.attempt.state.status==="section-expired"))return;
-   const original=owner.attempt;
-   const next=transitionGenericAttempt(original,{type:"TICK",nowMs:owner.now()},
+   const original=owner.attempt,now=owner.now();
+   const next=transitionGenericAttempt(original,{type:"TICK",nowMs:now},
      new Map(original.frozen.questions.map(q=>[q.id,q])));
    if(next!==original){
      owner.attempt=next;
      const changedSection=original.state.sectionIndex!==next.state.sectionIndex;
      if(next.finishedAt!==null||changedSection||original.state.status!==next.state.status||
-       (owner.view==="exam"&&owner.now()-owner.lastTimerSave>=10000)){
-       void owner.save(owner.attempt);owner.lastTimerSave=owner.now();
+       (owner.view==="exam"&&now-owner.lastTimerSave>=10000)){
+       void owner.save(owner.attempt);owner.lastTimerSave=now;
      }
      if(next.finishedAt!==null){
        if(owner.view==="exam"){

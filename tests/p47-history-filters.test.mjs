@@ -4,7 +4,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {pkg} from "./fixtures/six-kinds.mjs";
-import {startGenericAttempt,transitionGenericAttempt} from "../src/app/exam-package.ts";
+import {startGenericAttempt} from "../src/app/exam-package.ts";
+import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {historyHTML} from "../src/app/history-page.ts";
 import {DEFAULT_HISTORY_QUERY,filteredHistory,localAttemptDate,historyQueryError,
  activeHistoryFilterCount,restoreHistoryQuery} from "../src/app/history-query.ts";

@@ -281,11 +281,11 @@ test("L08: 30 Sep Q6 C to D, wording-only Q3, and disputed 6 Oct Q62 unchanged",
 });
 test("L09/L10: timing type and frozen mode have accurate labels, untimed included",()=>{
  const p=find("cgl-2026-09-30","reviewed");
- for(const [configured,policy,mode,scope,aria] of [
-  [configureCglPractice(p,"free"),"free","Full paper · flexible navigation","Whole-paper timer","Whole-paper time used"],
-  [configureCglPractice(p,"strict"),"strict","Exam simulation","Section timer","Section time used"],
-  [configureCglPractice(p,"single",1),"single","Single-section practice","Whole-paper timer","Whole-paper time used"]]){
-  const a=startGenericAttempt(configured,mode,0,cglAttemptMode(policy)),html=renderModelExam(a,configured);
+ for(const [configured,frozenMode,mode,scope,aria] of [
+  [configureCglPractice(p,"free"),"full-paper-practice","Full paper · flexible navigation","Whole-paper timer","Whole-paper time used"],
+  [configureCglPractice(p,"strict"),"exam-simulation","Exam simulation","Section timer","Section time used"],
+  [configureCglPractice(p,"single",1),"section-practice","Single-section practice","Whole-paper timer","Whole-paper time used"]]){
+  const a=startGenericAttempt(configured,mode,0,frozenMode),html=renderModelExam(a,configured);
   assert.ok(html.includes('<p class="muted">'+mode+' · '),
    "Human-readable frozen exam mode must remain visible beneath the compact title");
   assert.ok(html.includes('aria-valuetext="'+scope+' '),

@@ -180,7 +180,7 @@ export type RouteControllerContext=Slice<
 >;
 
 export type PersistenceControllerContext=Slice<
- "applyFamily"|"attempt"|"calculatorStates"|"disposed"|"draw"|"fallbackConflict"|
+ "applyFamily"|"attempt"|"calculatorStates"|"choiceDrafts"|"disposed"|"draw"|"fallbackConflict"|
  "go"|"hydrationDone"|"lastCommittedAt"|"loading"|"mirrorKey"|"notice"|"packages"|
  "pendingWrites"|"recordStorageFailure"|"records"|"routeHydrated"|"router"|"save"|
  "saveSelection"|"setups"|"storageBackend"|"storageFault"|"storedSetups"|

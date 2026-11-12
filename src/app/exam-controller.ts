@@ -8,8 +8,7 @@ import type {SessionEvent} from "../engine/session.ts";
 
 import {multipleDraftMessage,duplicateMatchingTargets} from "./response-drafts.ts";
 import {bindExamCalculator} from "./exam-calculator.ts";
-import {newExamCalculatorState} from "../domain/calculator.ts";
-import {readCalculatorWorkspace,writeCalculatorWorkspace,clearCandidateToolWorkspace} from "./candidate-tool-state.ts";
+import {readCalculatorWorkspace,writeCalculatorWorkspace} from "./candidate-tool-state.ts";
 
 import type {ExamControllerContext} from "./coordinator-context.ts";
 
@@ -38,8 +37,6 @@ export const dispatchExamEvent=(owner:ExamControllerContext,event:SessionEvent)=
      owner.attempt=transitionGenericAttempt(owner.attempt,event,ids);
      if(owner.attempt!==before)void owner.save(owner.attempt);
      if(owner.attempt.finishedAt!==null){
-       owner.calculatorStates.delete(owner.attempt.id);
-       clearCandidateToolWorkspace(localStorage,owner.attempt.id);
        owner.reviewFilter="all";owner.go({screen:"result",attemptId:owner.attempt.id,tab:"overview"},"replace");return;
      }
      owner.warning="";
