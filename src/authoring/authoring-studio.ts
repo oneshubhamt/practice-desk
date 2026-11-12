@@ -663,10 +663,6 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
     const {report,errors,warnings}=inspectPublication();
     showIssues(errors,warnings);
     if(!report.valid||errors.length){validationBox.scrollIntoView({block:"nearest"});return;}
-    if(warnings.length&&!find<HTMLInputElement>("pd-author-accept-warnings")?.checked)
-      throw Error("Explicitly acknowledge all remaining QA warnings for this staged draft before publication.");
-    if(!find<HTMLInputElement>("pd-author-confirm").checked)
-      throw Error("Confirm your source, answer keys and marking rules before publishing.");
     const prepared=preparePublicationWorkflow(active(),actions.existing(),{
      confirmed:find<HTMLInputElement>("pd-author-confirm").checked,
      acceptWarnings:find<HTMLInputElement>("pd-author-accept-warnings")?.checked??false,
@@ -851,7 +847,12 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   click("pd-author-import",()=>find<HTMLInputElement>("pd-author-import-file").click());
   if(storageBlocked)click("pd-author-reset-corrupt",()=>{
    if(!confirm("Replace unreadable local authoring data? Export your current draft first. This action cannot be undone."))return;
-   storageBlocked=false;lastSaveError="";persist();void render();
+   try{
+    shelf=workspaceStore.resetUnreadableShelf(shelf!);
+    storageBlocked=false;lastSaveError="";
+    status("Unreadable draft storage replaced with the currently displayed validated shelf.");
+    void render();
+   }catch(error){status(error instanceof Error?error.message:"Unable to reset draft storage",true);}
   });
   find<HTMLInputElement>("pd-author-import-file").onchange=async e=>{
    const file=(e.target as HTMLInputElement).files?.[0];if(!file)return;

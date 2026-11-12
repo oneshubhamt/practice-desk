@@ -24,6 +24,7 @@ export interface AuthoringWorkspaceStore {
  load():AuthoringWorkspaceSnapshot;
  saveShelf(value:AuthoringDraftShelf):AuthoringDraftShelf;
  saveStaging(value:StagingWorkspace|null):StagingWorkspace|null;
+ resetUnreadableShelf(value:AuthoringDraftShelf):AuthoringDraftShelf;
  resetUnreadableStaging():void;
  externalChange(event:StorageEvent):AuthoringStorageConflict;
 }
@@ -100,6 +101,19 @@ class LocalAuthoringWorkspaceStore implements AuthoringWorkspaceStore {
   this.storage.removeItem(STAGING_KEY);
   this.stagingStamp=null;
   return null;
+ }
+
+ resetUnreadableShelf(value:AuthoringDraftShelf):AuthoringDraftShelf{
+  if(!this.shelfBlocked)
+   throw new Error("Draft shelf is readable; use normal save instead.");
+  if(this.storage.getItem(AUTHORING_KEY)!==this.shelfStamp)
+   throw new Error("Another tab changed authoring drafts; reopen before resetting.");
+  const validated=validateAuthoringShelf(value);
+  const bytes=JSON.stringify(validated);
+  this.storage.setItem(AUTHORING_KEY,bytes);
+  this.shelfStamp=bytes;
+  this.shelfBlocked=false;
+  return validated;
  }
 
  resetUnreadableStaging():void{
