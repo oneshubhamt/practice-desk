@@ -108,7 +108,7 @@ const groups=[
 const declared=groups.flatMap(x=>x.scripts);
 const unretired=(await readdir(join(root,"scripts")))
  .filter(file=>/^acceptance-[a-z0-9-]+\.mjs$/.test(file))
- .filter(file=>file!=="acceptance-suite.mjs"&&file!=="acceptance-p47-5a-vendors.mjs")
+ .filter(file=>file!=="acceptance-suite.mjs")
  .map(file=>file.slice(0,-4));
 const same=(a,b)=>a.length===b.length&&a.slice().sort().every((x,i)=>x===b.slice().sort()[i]);
 if(!same(declared,unretired))
