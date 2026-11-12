@@ -5,11 +5,12 @@ import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {execFileSync} from "node:child_process";
 import {toAuthoringDraft} from "../src/authoring/external-bank.ts";
-import {validateAuthoringDraft,defaultAuthoringShelf,validateAuthoringShelf} from "../src/authoring/authoring-draft.ts";
+import {validateAuthoringDraft,defaultAuthoringShelf,validateAuthoringShelf,AUTHORING_KEY} from "../src/authoring/authoring-draft.ts";
 import {createDraftExchange,readDraftExchange,inspectDraftExchange,
  createDraftShelfArchive,readDraftShelfArchive} from "../src/authoring/authoring-exchange.ts";
 import {addStagedFiles,updateStagedTriage,stagedToAuthoringDraft,
- createStagingArchive,readStagingArchive,validateStagingWorkspace} from "../src/authoring/authoring-staging.ts";
+ createStagingArchive,readStagingArchive,validateStagingWorkspace,STAGING_KEY} from "../src/authoring/authoring-staging.ts";
+import {createAuthoringWorkspaceStore} from "../src/authoring/authoring-workspace-store.ts";
 
 const fixture=async name=>JSON.parse(await readFile(new URL("../examples/ai-first-"+name+".json",import.meta.url),"utf8"));
 const citation=(stance="supports")=>({publisher:"Illustrative government office",title:"Example document",
@@ -112,4 +113,74 @@ test("P58-B F04: real headless CLI accepts lossless exchange, preserves source a
    {encoding:"utf8",cwd:process.cwd(),stdio:"pipe"}));
   await assert.rejects(readFile(join(dir,"should-not-create.json"),"utf8"));
  }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+
+test("Authoring workspace store owns draft/staging CAS, corruption lockout and explicit reset",async()=>{
+ class MemoryStorage{
+  values=new Map();
+  getItem(key){return this.values.has(key)?this.values.get(key):null;}
+  setItem(key,value){this.values.set(key,String(value));}
+  removeItem(key){this.values.delete(key);}
+  clear(){this.values.clear();}
+  key(index){return [...this.values.keys()][index]??null;}
+  get length(){return this.values.size;}
+ }
+ const storage=new MemoryStorage();
+ const store=createAuthoringWorkspaceStore(storage);
+ const initial=store.load();
+ assert.equal(initial.shelfBlocked,false);
+ assert.equal(initial.stagingBlocked,false);
+ assert.equal(initial.staging,null);
+ const saved=store.saveShelf(initial.shelf);
+ assert.equal(JSON.parse(storage.getItem(AUTHORING_KEY)).activeId,saved.activeId);
+
+ const source=await fixture("apfc");
+ const staged=addStagedFiles({schema:1,files:[],selected:[]},[{name:"one.json",source}]);
+ assert.deepEqual(store.saveStaging(staged),staged);
+ assert.equal(JSON.parse(storage.getItem(STAGING_KEY)).selected.length,staged.selected.length);
+
+ storage.setItem(AUTHORING_KEY,JSON.stringify({...saved,activeId:"external-change"}));
+ assert.throws(()=>store.saveShelf(saved),/Another tab changed authoring drafts/);
+ const event={key:AUTHORING_KEY};
+ assert.equal(store.externalChange(event).shelfChanged,true);
+
+ const corruptStorage=new MemoryStorage();
+ corruptStorage.setItem(AUTHORING_KEY,"{broken");
+ corruptStorage.setItem(STAGING_KEY,"{broken");
+ const corruptStore=createAuthoringWorkspaceStore(corruptStorage);
+ const corrupt=corruptStore.load();
+ assert.equal(corrupt.shelfBlocked,true);
+ assert.equal(corrupt.stagingBlocked,true);
+ assert.equal(corruptStorage.getItem(AUTHORING_KEY),"{broken");
+ assert.equal(corruptStorage.getItem(STAGING_KEY),"{broken");
+ assert.throws(()=>corruptStore.saveShelf(corrupt.shelf),/Damaged saved draft data/);
+ assert.throws(()=>corruptStore.saveStaging(null),/unreadable/);
+ assert.deepEqual(corruptStore.resetUnreadableShelf(corrupt.shelf),corrupt.shelf);
+ assert.equal(JSON.parse(corruptStorage.getItem(AUTHORING_KEY)).activeId,corrupt.shelf.activeId);
+ corruptStore.resetUnreadableStaging();
+ assert.equal(corruptStorage.getItem(STAGING_KEY),null);
+});
+
+test("Authoring workspace explicit reset refuses to erase bytes changed after corruption was observed",()=>{
+ class MemoryStorage{
+  values=new Map();
+  getItem(key){return this.values.has(key)?this.values.get(key):null;}
+  setItem(key,value){this.values.set(key,String(value));}
+  removeItem(key){this.values.delete(key);}
+  clear(){this.values.clear();}
+  key(index){return [...this.values.keys()][index]??null;}
+  get length(){return this.values.size;}
+ }
+ const storage=new MemoryStorage();
+ storage.setItem(AUTHORING_KEY,"{broken");
+ storage.setItem(STAGING_KEY,"{broken");
+ const store=createAuthoringWorkspaceStore(storage);
+ const snapshot=store.load();
+ storage.setItem(AUTHORING_KEY,"{changed-elsewhere");
+ storage.setItem(STAGING_KEY,"{changed-elsewhere");
+ assert.throws(()=>store.resetUnreadableShelf(snapshot.shelf),/Another tab changed authoring drafts/);
+ assert.throws(()=>store.resetUnreadableStaging(),/Another tab changed AI staging/);
+ assert.equal(storage.getItem(AUTHORING_KEY),"{changed-elsewhere");
+ assert.equal(storage.getItem(STAGING_KEY),"{changed-elsewhere");
 });

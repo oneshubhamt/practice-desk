@@ -6,15 +6,15 @@ import {isAttempt} from "./stored-record-validator.ts";
 import {historyRowsHTML} from "./history-page.ts";
 import {DEFAULT_HISTORY_QUERY,filteredHistory,historyQueryError,activeHistoryFilterCount,type HistoryQuery} from "./history-query.ts";
 
-import type {CoordinatorContext} from "./coordinator-context.ts";
+import type {HistoryControllerContext} from "./coordinator-context.ts";
 
-export const changeHistoryFilters=(owner:CoordinatorContext,next:HistoryQuery,redraw=true):void=>{
+export const changeHistoryFilters=(owner:HistoryControllerContext,next:HistoryQuery,redraw=true):void=>{
     owner.historyQuery=next;
     try{sessionStorage.setItem(owner.historyQueryKey,JSON.stringify(next));}catch{}
     if(redraw)owner.draw();
   };
 
-export function bindHistoryScreen(owner:CoordinatorContext):void{
+export function bindHistoryScreen(owner:HistoryControllerContext):void{
 
      owner.root.querySelector<HTMLButtonElement>("#g-library")!.onclick=()=>owner.go({screen:"library"});
      // Filter edits keep #app, controls, and all-time metrics mounted.

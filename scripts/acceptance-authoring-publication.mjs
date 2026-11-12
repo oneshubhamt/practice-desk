@@ -1,5 +1,5 @@
 /** P47-5D actual file:// Library author → validate → immutable publish → score → review.
- * Captures focused, user-facing screenshots, not v11 parity images.
+ * Captures focused, user-facing screenshots, not historical parity images.
  */
 import {captureVisualEvidence} from "./browser/visual-evidence.mjs";
 import {openHarness,route,check,assertNoOverflow,records} from "./browser/fixtures.mjs";

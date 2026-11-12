@@ -5,7 +5,7 @@
 import {openHarness,check,route,records} from "./browser/fixtures.mjs";
 import {pkg as sixKinds} from "../tests/fixtures/six-kinds.mjs";
 import {readFile} from "node:fs/promises";
-import {importSimpleQuestionBank,APFC_NAT_BANK_TEMPLATE} from "../src/app/bank-import.ts";
+import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
 import {startGenericAttempt} from "../src/app/exam-package.ts";
 import {compactAttempt} from "../src/history/shared-store.ts";
 
@@ -99,14 +99,16 @@ try{
  // The current tab's in-memory snapshot cache MUST be stale; a valid backup
  // must capture both source stores atomically rather than exporting only
  // what this tab already knew.
- const externalBank=structuredClone(APFC_NAT_BANK_TEMPLATE);
+ const externalBank=JSON.parse(await readFile(
+   new URL("../examples/apfc-authoring-example.json",import.meta.url),"utf8"));
  externalBank.bankId="p48-independent-tab-paper";
+ externalBank.paperId="p48-independent-tab-paper";
  externalBank.title="Simulated external-tab source revision";
- const independent=importSimpleQuestionBank(externalBank);
- const foreign=compactAttempt(startGenericAttempt(independent,
-   "p48-other-tab-attempt",Date.UTC(2026,10,4,2,0,0)));
+ const independent=compileExternalQuestionBank(externalBank);
+ const foreign=compactAttempt({...startGenericAttempt(independent,
+   "p48-other-tab-attempt",Date.UTC(2026,10,4,2,0,0)),saveRevision:1});
  await page.evaluate(async({row,snapshot})=>{
-   const open=indexedDB.open("practiceDesk.shared.v1",1);
+   const open=indexedDB.open("practiceDesk.history",1);
    const db=await new Promise((resolve,reject)=>{
      open.onsuccess=()=>resolve(open.result);open.onerror=()=>reject(open.error);
    });

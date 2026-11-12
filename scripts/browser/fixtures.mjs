@@ -1,4 +1,4 @@
-/** Modern offline-browser acceptance harness. No frozen v11 oracle or runtime network.
+/** Current offline-browser acceptance harness. No frozen historical oracle or runtime network.
  * Browser engine versions are provided by CI's pinned Playwright Core installation
  * (and the installed Google Chrome for the Chromium leg).
  */
@@ -20,7 +20,7 @@ export const check=(condition,message)=>{
  if(!condition)throw Error("MODERN ACCEPTANCE: "+message);
 };
 export async function starterBank(){
- return JSON.parse(await readFile(join(root,"examples/apfc-mcq-nat-starter.json"),"utf8"));
+ return JSON.parse(await readFile(join(root,"examples/apfc-authoring-example.json"),"utf8"));
 }
 function chromePath(){
  for(const name of ["google-chrome","google-chrome-stable","chromium","chromium-browser"]){
@@ -122,11 +122,11 @@ export async function openHarness({engine="chromium",artifactDir=null}={}){
  }
  return {engine,browser,open,finish,evidence,diagnose};
 }
-/** Authoritative current-schema persistence evidence (no legacy adapters). */
+/** Authoritative canonical persistence evidence. */
 export async function records(page,store="attempts"){
  return page.evaluate(async storeName=>{
   const db=await new Promise((resolve,reject)=>{
-   const r=indexedDB.open("practiceDesk.shared.v1",1);
+   const r=indexedDB.open("practiceDesk.history",1);
    r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
   });
   try{
@@ -156,7 +156,7 @@ export async function records(page,store="attempts"){
 export async function saved(page,predicate,label){
  await page.waitForFunction(async needle=>{
   const db=await new Promise((resolve,reject)=>{
-   const req=indexedDB.open("practiceDesk.shared.v1",1);
+   const req=indexedDB.open("practiceDesk.history",1);
    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
   });
   try{

@@ -1,9 +1,11 @@
 /** Frozen post-submit reviewed and source media; no mutable current bank. */
-import {readableAnswer,type ExamPackage,type GenericAttempt} from "./exam-package.ts";
+import {readableAnswer} from "./exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
+import type {GenericAttempt} from "../engine/generic-attempt.ts";
 import type {QuestionRevision,CandidateResponse} from "../domain/question.js";
 import type {CorrectAnswer} from "../domain/answer-key.js";
 import type {Verdict} from "../engine/scoring.ts";
-import {assetHTML,stimulusHTML,renderAuthoredText} from "./question-content-view.ts";
+import {supplementalAssetHTML,stimulusHTML,renderAuthoredText} from "./question-content-view.ts";
 import {escapeText} from "./html-escape.ts";
 export function frozenReviewMedia(saved:GenericAttempt,q:QuestionRevision,
     response?:CandidateResponse,answer?:CorrectAnswer,verdict?:Verdict):string{
@@ -13,7 +15,7 @@ export function frozenReviewMedia(saved:GenericAttempt,q:QuestionRevision,
      questions:frozen.questions,stimuli:frozen.stimuli,assets:frozen.assets};
    const content=q.content;
    const passage=stimulusHTML(display,q);
-   const promptAssets=assetHTML(display,content.assetIds,"Figure for reviewed question");
+   const promptAssets=supplementalAssetHTML(display,content.assetIds,content.richPrompt,"Figure for reviewed question");
    const options=content.kind==="single-choice"||content.kind==="multiple-select"?
      '<div class="generic-choices" role="list" aria-label="Answer options">'+
       content.options.map((option,i)=>{
@@ -32,7 +34,7 @@ export function frozenReviewMedia(saved:GenericAttempt,q:QuestionRevision,
        ];
        return '<div role="listitem" class="generic-choice review-opt'+state+'"><div class="pd-review-choice-content"><b>'+
          String.fromCharCode(65+i)+'.</b> '+renderAuthoredText(display,option.text,option.richText)+
-         assetHTML(display,option.assetIds,"Image for option "+String.fromCharCode(65+i))+
+         supplementalAssetHTML(display,option.assetIds,option.richText,"Image for option "+String.fromCharCode(65+i))+
          (badges.length?'<span class="review-option-label"> · '+
            escapeText(badges.join(" · "))+'</span>':"")+'</div></div>';
       }).join("")+'</div>':"";
@@ -54,7 +56,7 @@ export function frozenReviewMedia(saved:GenericAttempt,q:QuestionRevision,
    const matches=content.kind==="matching"?
      '<div class="generic-matches">'+[...content.leftItems,...content.rightItems].map(item=>
        '<div><div class="pd-review-choice-content">'+renderAuthoredText(display,item.text,item.richText)+
-       assetHTML(display,item.assetIds,"Image for matching item "+item.text)+'</div></div>').join("")+'</div>':"";
+       supplementalAssetHTML(display,item.assetIds,item.richText,"Image for matching item "+item.text)+'</div></div>').join("")+'</div>':"";
    return passage+promptAssets+options+booleanOptions+matches;
  }
 export function sourceReviewHTML(saved:GenericAttempt,target:QuestionRevision,
@@ -72,10 +74,10 @@ export function sourceReviewHTML(saved:GenericAttempt,target:QuestionRevision,
      content.options.map((option,index)=>
        '<div role="listitem" class="generic-choice"><div class="pd-review-choice-content"><b>'+
        String.fromCharCode(65+index)+'.</b> '+renderAuthoredText(display,option.text,option.richText)+
-       assetHTML(display,option.assetIds)+'</div></div>').join("")+'</div>':"";
+       supplementalAssetHTML(display,option.assetIds,option.richText)+'</div></div>').join("")+'</div>':"";
    const matches=content.kind==="matching"?
      '<div class="generic-matches">'+[...content.leftItems,...content.rightItems]
-       .map(x=>'<div>'+renderAuthoredText(display,x.text,x.richText)+assetHTML(display,x.assetIds)+'</div>').join("")+'</div>':"";
+       .map(x=>'<div>'+renderAuthoredText(display,x.text,x.richText)+supplementalAssetHTML(display,x.assetIds,x.richText)+'</div>').join("")+'</div>':"";
    const currentAnswer=saved.frozen.key.entries.find(x=>x.questionRevisionId===target.id)?.answer;
    const modifications=[
      ...(content.prompt!==target.content.prompt?["question wording"]:[]),
@@ -92,7 +94,7 @@ export function sourceReviewHTML(saved:GenericAttempt,target:QuestionRevision,
        ' · Published key shown for provenance, not as a score adjustment.</p>'+
      stimulusHTML(display,original)+
      '<div class="generic-prompt">'+renderAuthoredText(display,content.prompt,content.richPrompt)+'</div>'+
-     assetHTML(display,content.assetIds)+optionLines+matches+
+     supplementalAssetHTML(display,content.assetIds,content.richPrompt)+optionLines+matches+
      '<p class="fine"><b>Original published answer:</b> '+
        escapeText(readableAnswer(original,entry.sourceAnswer))+'</p>'+
      '<p class="fine"><b>Changes in reviewed edition:</b> '+

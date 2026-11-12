@@ -1,9 +1,23 @@
 /** Inert HTML for frozen question media, stimuli and all six response kinds. */
-import type {ExamPackage} from "./exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
 import type {QuestionRevision,CandidateResponse} from "../domain/question.js";
-import type {RichDocument} from "../domain/rich-document.ts";
+import type {RichDocument,RichInline} from "../domain/rich-document.ts";
 import {authoredTextHTML} from "./rich-content-view.ts";
 import {escapeText} from "./html-escape.ts";
+function richAssetIds(doc:RichDocument|undefined):ReadonlySet<string>{
+ const ids=new Set<string>();
+ if(!doc)return ids;
+ const inline=(items:readonly RichInline[])=>{
+  for(const item of items)if(item.type==="image")ids.add(item.assetId);
+ };
+ for(const block of doc.blocks){
+  if(block.type==="paragraph"||block.type==="heading")inline(block.content);
+  else if(block.type==="list")block.items.forEach(inline);
+  else if(block.type==="table")block.rows.forEach(row=>row.forEach(inline));
+  else if(block.type==="image")ids.add(block.assetId);
+ }
+ return ids;
+}
 export function assetHTML(bundle:ExamPackage,ids:readonly string[]|undefined,fallbackAlt="Question figure"):string{
   return (ids??[]).map(id=>{
     const a=bundle.assets?.find(x=>x.id===id);
@@ -20,10 +34,19 @@ export function assetHTML(bundle:ExamPackage,ids:readonly string[]|undefined,fal
       'aria-label="Enlarge image: '+alt+'">Enlarge image</span></span>';
   }).join("");
 }
+export function supplementalAssetHTML(bundle:ExamPackage,ids:readonly string[]|undefined,
+ rich:RichDocument|undefined,fallbackAlt="Question figure"):string{
+ const embedded=richAssetIds(rich);
+ return assetHTML(bundle,(ids??[]).filter(id=>!embedded.has(id)),fallbackAlt);
+}
 /** Only explicit normalized rich content is interpreted; plain strings remain inert. */
 export function renderAuthoredText(bundle:ExamPackage,plain:string,rich?:RichDocument):string{
  const knownAssets=new Set(bundle.assets?.map(asset=>asset.id)??[]);
  return authoredTextHTML(plain,rich,knownAssets,(id,alt)=>assetHTML(bundle,[id],alt));
+}
+function renderAuthoredTextWithoutImages(bundle:ExamPackage,plain:string,rich?:RichDocument):string{
+ const knownAssets=new Set(bundle.assets?.map(asset=>asset.id)??[]);
+ return authoredTextHTML(plain,rich,knownAssets,()=> "");
 }
 export function renderQuestionPrompt(bundle:ExamPackage,q:QuestionRevision):string{
  const content=q.content;
@@ -43,7 +66,7 @@ export function renderGenericControls(bundle:ExamPackage,q:QuestionRevision,resp
       c.options.map((o,i)=>{
         const media=assetHTML(bundle,o.assetIds,"Image for option "+String.fromCharCode(65+i));
         const text=o.richText?'<div class="pd-rich-choice-text"><b>'+String.fromCharCode(65+i)+'.</b> '+
-           renderAuthoredText(bundle,o.text,o.richText)+'</div>':
+           renderAuthoredTextWithoutImages(bundle,o.text,o.richText)+'</div>':
            '<span><b>'+String.fromCharCode(65+i)+'.</b> '+escapeText(o.text)+'</span>';
         const label='<label class="generic-choice"><input type="'+kind+'" name="generic-answer" data-choice="'+escapeText(o.id)+'"'+
           (selected.includes(o.id)?" checked":"")+'>'+text+'</label>';
@@ -66,7 +89,8 @@ export function renderGenericControls(bundle:ExamPackage,q:QuestionRevision,resp
   const pairs=response?.kind==="matching"?response.pairs:[];
   return '<div class="generic-matches">'+c.leftItems.map(left=>{
     const media=assetHTML(bundle,left.assetIds,"Image for matching item "+left.text);
-    const label='<label>'+(left.richText?'<div class="pd-rich-choice-text">'+renderAuthoredText(bundle,left.text,left.richText)+'</div>':
+    const label='<label>'+(left.richText?'<div class="pd-rich-choice-text">'+
+      renderAuthoredTextWithoutImages(bundle,left.text,left.richText)+'</div>':
       '<span>'+escapeText(left.text)+'</span>')+
       '<select data-match="'+escapeText(left.id)+'"><option value="">Not matched</option>'+
       c.rightItems.map(right=>'<option value="'+escapeText(right.id)+'"'+
@@ -86,7 +110,8 @@ export function stimulusHTML(bundle:ExamPackage,q:QuestionRevision):string{
        " — scroll to read full text")+'"><b>'+escapeText(stimulus.title||"Reading passage")+
      '</b>'+(stimulus.richText?renderAuthoredText(bundle,stimulus.text,stimulus.richText):
        '<p>'+escapeText(stimulus.text)+'</p>')+
-     assetHTML(bundle,stimulus.assetIds,"Image accompanying "+(stimulus.title||"reading passage"))+'</section>';
+     supplementalAssetHTML(bundle,stimulus.assetIds,stimulus.richText,
+       "Image accompanying "+(stimulus.title||"reading passage"))+'</section>';
  if(stimulus.kind==="table")return '<section class="generic-stimulus"><b>'+escapeText(stimulus.title||"Table")+'</b><div class="scroll-table"><table><tr>'+
    stimulus.columns.map((c,i)=>'<th>'+renderAuthoredText(bundle,c,stimulus.richColumns?.[i])+'</th>').join("")+'</tr>'+
    stimulus.rows.map((r,i)=>'<tr>'+r.map((c,j)=>'<td>'+

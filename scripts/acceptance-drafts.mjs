@@ -6,7 +6,7 @@ const h=await openHarness({artifactDir:"artifacts/acceptance-modern"});
 const browser=h.browser,modern=offlineUrl,ensure=check,errors=[];
 async function attempts(page){
  return page.evaluate(()=>new Promise((resolve,reject)=>{
-  const req=indexedDB.open("practiceDesk.shared.v1",1);
+  const req=indexedDB.open("practiceDesk.history",1);
   req.onerror=()=>reject(req.error);
   req.onsuccess=()=>{
    const db=req.result,request=db.transaction("attempts","readonly").objectStore("attempts").getAll();

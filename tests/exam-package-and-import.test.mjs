@@ -5,17 +5,18 @@ import * as __suite_dep_0 from "node:test";
 import * as __suite_dep_1 from "node:assert/strict";
 import * as __suite_dep_2 from "node:fs/promises";
 import * as __suite_dep_3 from "../src/app/exam-package.ts";
+import * as __generic_attempt from "../src/engine/generic-attempt.ts";
 import * as __suite_dep_4 from "../src/domain/validate.ts";
 import * as __suite_dep_5 from "../src/domain/integrity.ts";
 import * as __suite_dep_6 from "./fixtures/six-kinds.mjs";
 import * as __suite_dep_7_stored_record_validator from "../src/app/stored-record-validator.ts";
 import * as __suite_dep_8 from "../src/history/backup.ts";
-import * as __suite_dep_9 from "../src/app/bank-import.ts";
+import * as __suite_dep_9 from "../src/authoring/external-bank.ts";
 import * as __suite_dep_10 from "../src/engine/response.ts";
 import * as __suite_dep_11 from "../src/engine/scoring.ts";
 import * as __suite_dep_12 from "../src/engine/score-ceiling.ts";
 
-// === Legacy suite: tests/exam-packages-and-cgl-modes.test.mjs — 5 unchanged test registrations ===
+// === Consolidated coverage: tests/exam-packages-and-cgl-modes.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -23,7 +24,7 @@ const readFile = __suite_dep_2["readFile"];
 const builtinCglPackages = __suite_dep_3["builtinCglPackages"];
 const validateExamPackage = __suite_dep_3["validateExamPackage"];
 const startGenericAttempt = __suite_dep_3["startGenericAttempt"];
-const transitionGenericAttempt = __suite_dep_3["transitionGenericAttempt"];
+const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
 const configureCglPractice = __suite_dep_3["configureCglPractice"];
 const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
@@ -96,7 +97,7 @@ test("one engine supports strict, flexible and single CGL policies",()=>{
 }
 }
 
-// === Legacy suite: tests/exam-schema-validation.test.mjs — 6 unchanged test registrations ===
+// === Consolidated coverage: tests/exam-schema-validation.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -128,7 +129,7 @@ const paper = (overrides = {}) => ({
   paperId: "paper-1",
   revision: 1,
   contentHash: hash,
-  edition: "reviewed",
+  edition: "custom",
   answerKeyRevisionId: "key-rev-1",
   sections: [{ id: "section-1", title: "Section 1", questionRevisionIds: ["question-rev-1"] }],
   timing: { kind: "sectional", sectionLimits: [{ sectionId: "section-1", durationMs: 900000 }], transition: "manual", allowEarlySubmit: true, pausePolicy: "forbidden" },
@@ -151,6 +152,16 @@ test("accepts a valid question, paper revision and matching answer key", () => {
   const p = validatePaperRevision(paper(), [q], key);
   assert.equal(p.sections[0].questionRevisionIds[0], q.id);
   assert.equal(key.entries[0].answer.optionId, "option-b");
+});
+
+test("reviewed paper revisions require exact Source paper and key lineage", () => {
+  const q = validateQuestionRevision(question());
+  const key = validateAnswerKeyRevision(answerKey(), [q]);
+  assert.throws(() => validatePaperRevision(paper({edition:"reviewed"}), [q], key),
+    /requires exact original revision and key lineage/);
+  const reviewed=paper({edition:"reviewed",sourcePaperRevisionId:"source-paper-rev",
+    sourceAnswerKeyRevisionId:"source-key-rev"});
+  assert.equal(validatePaperRevision(reviewed,[q],key).sourcePaperRevisionId,"source-paper-rev");
 });
 
 test("rejects duplicate option identities and malformed hashes", () => {
@@ -200,7 +211,7 @@ test("rejects an answer key that omits a question in the paper", () => {
 });
 }
 
-// === Legacy suite: tests/exam-six-kind-lifecycle.test.mjs — 5 unchanged test registrations ===
+// === Consolidated coverage: tests/exam-six-kind-lifecycle.test.mjs — retained assertions ===
 {
 const paperRevisionHash = __suite_dep_5["paperRevisionHash"];
 const test = __suite_dep_0["default"];
@@ -210,7 +221,7 @@ const pkg = __suite_dep_6["pkg"];
 const assert = __suite_dep_1["default"];
 const validateExamPackage = __suite_dep_3["validateExamPackage"];
 const startGenericAttempt = __suite_dep_3["startGenericAttempt"];
-const transitionGenericAttempt = __suite_dep_3["transitionGenericAttempt"];
+const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
 const readableAnswer = __suite_dep_3["readableAnswer"];
 const validateGenericStoredRecord = __suite_dep_7_stored_record_validator["validateGenericStoredRecord"];
 const makeBackup = __suite_dep_8["makeBackup"];
@@ -270,8 +281,9 @@ test("generic attempts and imported packages survive a verified history backup r
  completed=transitionGenericAttempt(completed,{type:"SUBMIT_ATTEMPT",nowMs:1002},lookup);
  assert.equal(validateGenericStoredRecord(unfinished),unfinished);
  assert.equal(validateGenericStoredRecord(completed),completed);
- const importedPackage={recordType:"generic-package",id:"generic-package:"+bundle.paper.id,bundle};
- const contents=[importedPackage,unfinished,completed];
+ const importedPackage={recordType:"generic-package",saveRevision:1,id:"generic-package:"+bundle.paper.id,bundle};
+ const storedUnfinished={...unfinished,saveRevision:1},storedCompleted={...completed,saveRevision:1};
+ const contents=[importedPackage,storedUnfinished,storedCompleted];
  const backup=makeBackup(contents,{schema:1,dark:false,scale:100},"2026-10-28T00:00:00Z");
  const reloaded=verifyBackup(JSON.parse(JSON.stringify(backup)));
  assert.equal(reloaded.records.length,3);
@@ -279,8 +291,8 @@ test("generic attempts and imported packages survive a verified history backup r
  const {reconstructRecords}=await import("../src/history/shared-store.ts");
  const full=reconstructRecords(reloaded.records,reloaded.snapshots);
  for(const record of full) assert.doesNotThrow(()=>validateGenericStoredRecord(record));
- assert.deepEqual(planBackupMerge([completed],full,"completed").map(x=>x.id),
-  [importedPackage.id,unfinished.id]);
+ assert.deepEqual(planBackupMerge([storedCompleted],full,"completed").map(x=>x.id),
+  [importedPackage.id,storedUnfinished.id]);
  assert.throws(()=>verifyBackup({...reloaded,records:reloaded.records.slice(1)}),/integrity/);
 });
 test("completed generic scores cannot be silently rewritten in stored history",()=>{
@@ -294,95 +306,80 @@ test("completed generic scores cannot be silently rewritten in stored history",(
 });
 }
 
-// === Legacy suite: tests/import-boundary-properties.test.mjs — 5 unchanged test registrations ===
+// === Canonical authoring/import boundary properties ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
 const readFile = __suite_dep_2["readFile"];
-const importAuthoredExam = __suite_dep_9["importAuthoredExam"];
-const importSimpleQuestionBank = __suite_dep_9["importSimpleQuestionBank"];
+const compileExternalQuestionBank = __suite_dep_9["compileExternalQuestionBank"];
 const validateExamPackage = __suite_dep_3["validateExamPackage"];
 const validateResponse = __suite_dep_10["validateResponse"];
-const scoreAttempt = __suite_dep_11["scoreAttempt"];
 const scoreableMaximum = __suite_dep_12["scoreableMaximum"];
 const questions = __suite_dep_6["questions"];
-const pkg = __suite_dep_6["pkg"];
-const starter=JSON.parse(await readFile(new URL("../examples/apfc-mcq-nat-starter.json",import.meta.url),"utf8"));
+const starter=JSON.parse(await readFile(new URL("../examples/apfc-authoring-example.json",import.meta.url),"utf8"));
 function rng(seed){let x=seed>>>0;return n=>{x^=x<<13;x^=x>>>17;x^=x<<5;return (x>>>0)%n;};}
 const edit=mutate=>{const b=structuredClone(starter);mutate(b);return b;};
 
-test("author-friendly MCQ/NAT adapter retains full fractions, unique identities and hash determinism",()=>{
+test("canonical authoring retains full fractions, unique identities and hash determinism",()=>{
  for(let seed=1;seed<=75;seed++){
-  const random=rng(0x36b123^seed);
-  const count=1+random(50);
+  const random=rng(0x36b123^seed),count=1+random(50);
   const bank=structuredClone(starter);
-  bank.bankId="seed-"+seed;
+  bank.bankId="seed-"+seed;bank.paperId="seed-"+seed;
+  bank.sections=[{id:"main",title:"Main"}];
   bank.questions=Array.from({length:count},(_,i)=>{
    const q=structuredClone(starter.questions[i%starter.questions.length]);
-   q.id="seed-q"+i;
-   q.section="Section "+(i%4);
-   if(q.type==="nat")q.answer=[-2,0,12][random(3)];
+   q.id="seed-q"+i;q.examSection="main";
+   if(q.kind==="numeric-entry")q.answer=[[-2],[0],[12]][random(3)];
    return q;
   });
-  const pkg=importAuthoredExam(bank);
-  assert.equal(pkg.questions.length,count,"seed="+seed);
-  assert.equal(pkg.answerKey.entries.length,count,"seed="+seed);
-  assert.equal(pkg.paper.sections.length,Math.min(4,count),"seed="+seed);
-  assert.equal(pkg.paper.scoring.defaultRule.correctMarks,2.5);
-  assert.ok(Math.abs(pkg.paper.scoring.defaultRule.incorrectMarks+5/6)<1e-12);
-  assert.equal(validateExamPackage(pkg),pkg);
-  assert.deepEqual(importAuthoredExam(structuredClone(bank)),pkg,
+  const out=compileExternalQuestionBank(bank);
+  assert.equal(out.questions.length,count,"seed="+seed);
+  assert.equal(out.answerKey.entries.length,count,"seed="+seed);
+  assert.equal(out.paper.sections.length,1,"seed="+seed);
+  assert.equal(out.paper.scoring.defaultRule.correctMarks,2.5);
+  assert.ok(Math.abs(out.paper.scoring.defaultRule.incorrectMarks+5/6)<1e-12);
+  assert.equal(validateExamPackage(out),out);
+  assert.deepEqual(compileExternalQuestionBank(structuredClone(bank)),out,
    "seed="+seed+" stable identities and hashes");
-  assert.equal(new Set(pkg.questions.map(q=>q.id)).size,count);
-  assert.ok(pkg.questions.every(q=>q.editorial.status==="caution"&&
-    q.editorial.notes.includes("not been independently certified")));
-  assert.ok(pkg.answerKey.entries.every(e=>e.answer.kind==="single-choice"||e.answer.kind==="numeric-entry"));
-  const maximum=scoreableMaximum(pkg.paper,pkg.answerKey,pkg.questions);
-  assert.ok(Math.abs(maximum-2.5*count)<1e-8,"seed="+seed+" nominal maximum");
+  assert.equal(new Set(out.questions.map(q=>q.id)).size,count);
+  assert.ok(Math.abs(scoreableMaximum(out.paper,out.answerKey,out.questions)-2.5*count)<1e-8);
  }
 });
 
-test("simple-bank upper boundary of 2000 questions succeeds without truncating keys or sections",()=>{
- const bank=edit(b=>{b.bankId="limit-2000";b.questions=Array.from({length:2000},(_,i)=>({
-  ...structuredClone(starter.questions[0]),id:"q"+i,section:"Group "+(i%10)}));});
- const p=importSimpleQuestionBank(bank);
- assert.equal(p.questions.length,2000);
- assert.equal(p.answerKey.entries.length,2000);
- assert.equal(p.paper.sections.length,10);
- assert.equal(p.paper.sections.reduce((n,s)=>n+s.questionRevisionIds.length,0),2000);
- assert.equal(new Set(p.questions.map(q=>q.id)).size,2000,
-  "each question has a unique revision identity even for identical wording");
- assert.equal(new Set(p.answerKey.entries.map(e=>e.questionRevisionId)).size,2000,
-  "all 2000 distinct identities have retained keys");
- assert.ok(p.questions.every(q=>typeof q.contentHash==="string"&&q.contentHash.length===64),
-  "every revision retains an integrity hash; identical content may legitimately share a hash");
- assert.ok(Math.abs(scoreableMaximum(p.paper,p.answerKey,p.questions)-5000)<1e-8);
- assert.throws(()=>importSimpleQuestionBank({...bank,questions:[
-  ...bank.questions,{...bank.questions[0],id:"q2000"}]}),/1–2000/);
+test("canonical authoring upper boundary is explicit and never truncates questions or keys",()=>{
+ const bank=edit(b=>{
+  b.bankId="limit-200";b.paperId="limit-200";b.sections=[{id:"main",title:"Main"}];
+  b.questions=Array.from({length:200},(_,i)=>({...structuredClone(b.questions[0]),
+   id:"q"+i,examSection:"main"}));
+ });
+ const out=compileExternalQuestionBank(bank);
+ assert.equal(out.questions.length,200);
+ assert.equal(out.answerKey.entries.length,200);
+ assert.equal(out.paper.sections[0].questionRevisionIds.length,200);
+ assert.equal(new Set(out.questions.map(q=>q.id)).size,200);
+ const over=structuredClone(bank);
+ over.questions.push({...structuredClone(bank.questions[0]),id:"q200"});
+ assert.throws(()=>compileExternalQuestionBank(over),/questions|200/i);
 });
 
-test("hostile or borderline authored bank input is rejected instead of truncated or coerced",()=>{
+test("hostile or borderline canonical authoring input is rejected instead of truncated or coerced",()=>{
  const cases=[
-  ["20001 prompt",b=>b.questions[0].question="X".repeat(20001)],
-  ["blank prompt",b=>b.questions[0].question=" "],
+  ["20001 prompt",b=>b.questions[0].prompt="X".repeat(20001)],
+  ["blank prompt",b=>b.questions[0].prompt=" "],
   ["duplicate stable ID",b=>b.questions[1].id=b.questions[0].id],
   ["invalid option",b=>b.questions[0].options=["only-one"]],
   ["nonfinite incorrect",b=>b.scoring.incorrectMarks=Infinity],
-  ["negative wrong reward fraction",b=>b.scoring.negativeFraction=-1],
-  ["contradictory scoring knobs",b=>b.scoring.incorrectMarks=-1],
-  ["nonfinite NAT",b=>b.questions[2].answer=NaN],
-  ["NAT accepted list empty",b=>b.questions[2].answer=[]],
-  ["NAT too many alternatives",b=>b.questions[2].answer=Array.from({length:21},(_,i)=>i)],
-  ["NAT negative tolerance",b=>b.questions[2].tolerance=-0.001],
-  ["NAT excessive tolerance",b=>b.questions[2].tolerance=1000001],
-  ["unsupported answer kind",b=>b.questions[0].type="matching"],
+  ["nonfinite numeric",b=>b.questions[2].answer=[NaN]],
+  ["numeric accepted list empty",b=>b.questions[2].answer=[]],
+  ["numeric negative tolerance",b=>b.questions[2].tolerance=-0.001],
+  ["numeric excessive tolerance",b=>b.questions[2].tolerance=1000001],
+  ["unsupported answer kind",b=>b.questions[0].kind="bogus"],
   ["invalid revision",b=>b.revision=1.5],
   ["invalid edition",b=>b.edition="official-maybe"],
   ["invalid bank identifier",b=>b.bankId="../outside"],
  ];
- for(const [name,mutate] of cases){
-  assert.throws(()=>importSimpleQuestionBank(edit(mutate)),undefined,name);
- }
+ for(const [name,mutate] of cases)
+  assert.throws(()=>compileExternalQuestionBank(edit(mutate)),undefined,name);
 });
 
 test("engine response validator gates six kinds independently from UI controls",()=>{
@@ -415,12 +412,10 @@ test("engine response validator gates six kinds independently from UI controls",
  const negative={...questions[2],content:{...questions[2].content,
   numericRules:{minimum:-10,maximum:10,allowNegative:true,decimalPlaces:2}}};
  for(const value of [-10,-1.25,0,10])assert.doesNotThrow(()=>
-  validateResponse(negative,{kind:"numeric-entry",value}),"negative/zero NAT "+value);
+  validateResponse(negative,{kind:"numeric-entry",value}),"negative/zero numeric "+value);
  for(const value of [-10.001,10.001,NaN,-Infinity])assert.throws(()=>
-  validateResponse(negative,{kind:"numeric-entry",value}),undefined,"boundary NAT "+value);
+  validateResponse(negative,{kind:"numeric-entry",value}),undefined,"boundary numeric "+value);
 });
-
-
 }
 
 
@@ -430,7 +425,7 @@ test("engine response validator gates six kinds independently from UI controls",
 const test=__suite_dep_0.default,assert=__suite_dep_1.default;
 const {pkg}=__suite_dep_6;
 const {validateExamPackage,validateExamImportBudget}=__suite_dep_3;
-const {importAuthoredExam}=__suite_dep_9;
+const {compileExternalQuestionBank}=__suite_dep_9;
 const {makeBackup,verifyBackup}=__suite_dep_8;
 const clone=()=>structuredClone(pkg);
 
@@ -455,9 +450,19 @@ test("P42 rejects deep, cyclic and oversized question inventories; allows shared
  const shared=clone();
  shared.questions[0].editorial=shared.questions[1].editorial;
  assert.equal(validateExamPackage(shared),shared);
- const source=JSON.parse("{\n  \"format\": \"practice-desk-bank\",\n  \"version\": 1,\n  \"bankId\": \"apfc-starter-demo\",\n  \"examId\": \"upsc-epfo-apfc\",\n  \"title\": \"APFC Sample — Labour, Accountancy & NAT\",\n  \"revision\": 1,\n  \"edition\": \"custom\",\n  \"scoring\": {\n    \"correctMarks\": 2.5,\n    \"negativeFraction\": 0.3333333333333333,\n    \"unansweredMarks\": 0\n  },\n  \"timing\": {\n    \"kind\": \"untimed\"\n  },\n  \"questions\": [\n    {\n      \"id\": \"labour-1\",\n      \"section\": \"Labour and Social Security\",\n      \"type\": \"mcq\",\n      \"question\": \"For EPFO APFC, which type of question is shown in this example?\",\n      \"options\": [\n        \"Multiple-choice question\",\n        \"Only a writing task\",\n        \"An audio task\",\n        \"An image-editing task\"\n      ],\n      \"answer\": \"A\",\n      \"explanation\": \"Demonstration item for a user-authored four-option MCQ. Replace with a source-verified APFC question before real study.\"\n    },\n    {\n      \"id\": \"accounts-1\",\n      \"section\": \"Accountancy\",\n      \"type\": \"mcq\",\n      \"question\": \"In double-entry accounting, each transaction has:\",\n      \"options\": [\n        \"One entry only\",\n        \"Equal debits and credits in total\",\n        \"No ledger impact\",\n        \"Only cash impact\"\n      ],\n      \"answer\": \"B\",\n      \"explanation\": \"Basic example; replace with source-backed APFC material for a real practice bank.\"\n    },\n    {\n      \"id\": \"nat-1\",\n      \"section\": \"Elementary Statistics / NAT\",\n      \"type\": \"nat\",\n      \"question\": \"Find the arithmetic mean of 3, 4 and 5.\",\n      \"answer\": 4,\n      \"tolerance\": 0.01,\n      \"explanation\": \"(3 + 4 + 5) / 3 = 4.\"\n    }\n  ]\n}");
- source.questions=Array.from({length:2001},(_,i)=>({...source.questions[0],id:"q"+i}));
- assert.throws(()=>importAuthoredExam(source),/2000 questions/);
+ const source={
+  format:"practice-desk-authoring",version:1,bankId:"oversized",examId:"upsc-epfo-apfc",
+  paperId:"oversized",title:"Oversized",edition:"custom",revision:1,
+  scoring:{correctMarks:2.5,incorrectMarks:-5/6},
+  timing:{kind:"untimed",pausePolicy:"allowed"},
+  navigation:{questionNavigation:"free",sectionNavigation:"free",allowReview:true},
+  sections:[{id:"main",title:"Main"}],
+  questions:Array.from({length:201},(_,i)=>({
+   id:"q"+i,examSection:"main",kind:"single-choice",prompt:"Question "+i,
+   options:["A","B","C","D"],answer:"A",provenance:{kind:"manual"},qa:{status:"unchecked"}
+  }))
+ };
+ assert.throws(()=>compileExternalQuestionBank(source),/questions|200/i);
 });
 
 test("P42 rejects unsupported source schemes, oversized media and invalid media digest",()=>{
@@ -472,8 +477,8 @@ test("P42 rejects unsupported source schemes, oversized media and invalid media 
  assert.throws(()=>validateExamPackage(tampered),/digest mismatch/);
 });
 
-test("P42 corrupted backup fails closed without altering legitimate v3 payloads",()=>{
- const backup=makeBackup([{id:"one"}],{schema:1,dark:false,scale:100},"2026-11-02T00:00:00Z");
+test("P42 corrupted backup fails closed without altering legitimate current payloads",()=>{
+ const backup=makeBackup([{id:"one",recordType:"opaque",saveRevision:1}],{schema:1,dark:false,scale:100},"2026-11-02T00:00:00Z");
  assert.deepEqual(verifyBackup(structuredClone(backup)),backup);
  const damaged=structuredClone(backup);
  damaged.records[0].id="tampered";

@@ -1,5 +1,5 @@
 import type { PaperRevision } from "../domain/exam.js";
-import type { CandidateResponse, QuestionRevision } from "../domain/question.js";
+import type { CandidateResponse } from "../domain/question.js";
 import type { QuestionRevisionId, SectionId } from "../domain/ids.js";
 import type { AttemptResponseRecord } from "../domain/attempt.js";
 
@@ -12,18 +12,15 @@ export interface SessionState {
   readonly sectionElapsedMs: number;
   readonly foregroundMs: number;
   readonly responses: readonly AttemptResponseRecord[];
-  /** Optional entry counters, present only for attempts begun after Pass 14.
-   * Previous attempts stay absent: duration/answer changes cannot reconstruct visits.
-   */
-  readonly questionVisits?: readonly { readonly questionRevisionId:QuestionRevisionId;readonly count:number }[];
-  /** Only versioned sessions have complete phase instrumentation. */
-  readonly timingEvidenceVersion?:1;
+  /** Canonical cursor-entry counters for exact first-visit/revisit evidence. */
+  readonly questionVisits: readonly { readonly questionRevisionId:QuestionRevisionId;readonly count:number }[];
+  /** Canonical timing-evidence schema for every current session state. */
+  readonly timingEvidenceVersion:1;
   readonly completedSections: readonly number[];
   /** Observed consumed timer time for each finished sequential section.
-   * Absent on older saved attempts; never reconstruct from question exposure.
    * A free multi-section paper has no defensible per-section wall-time split.
    */
-  readonly completedSectionTimings?: readonly {
+  readonly completedSectionTimings: readonly {
     readonly sectionId: SectionId;
     readonly sectionIndex: number;
     readonly durationMs: number;
@@ -51,7 +48,7 @@ function questionId(paper: PaperRevision, state: SessionState): QuestionRevision
 function record(state: SessionState, id: QuestionRevisionId): AttemptResponseRecord {
   return state.responses.find(r => r.questionRevisionId === id) ?? {
     questionRevisionId: id, flagged: false, timeSpentMs: 0, answerChangeCount: 0,
-    ...(state.timingEvidenceVersion===1?{firstVisitMs:0,preFirstAnswerMs:0}:{}),
+    firstVisitMs:0,preFirstAnswerMs:0,
   };
 }
 function put(state: SessionState, value: AttemptResponseRecord): SessionState {
@@ -68,17 +65,14 @@ export function startSession(paper: PaperRevision, nowMs: number): SessionState 
 }
 /** Count entering a different question, never timing ticks or response edits. */
 function enterQuestion(state:SessionState,id:QuestionRevisionId):SessionState{
- if(!state.questionVisits)return state;
  const previous=state.questionVisits.find(row=>row.questionRevisionId===id);
  const item={questionRevisionId:id,count:(previous?.count??0)+1};
  return {...state,questionVisits:[...state.questionVisits.filter(row=>row.questionRevisionId!==id),item]};
 }
 /** One section clock is meaningful only when sections are sequential or the
- * paper contains a single section. Historical records without this property
- * remain unmeasured, rather than inventing past section durations. */
+ * paper contains a single section. */
 function closeSection(paper:PaperRevision,state:SessionState,reason:"time-expired"|"submitted"):SessionState{
-  if(!state.completedSectionTimings ||
-     (paper.navigation.sectionNavigation!=="sequential-locked"&&paper.sections.length!==1))return state;
+  if(paper.navigation.sectionNavigation!=="sequential-locked"&&paper.sections.length!==1)return state;
   const section=paper.sections[state.sectionIndex];
   if(!section || state.completedSectionTimings.some(row=>row.sectionIndex===state.sectionIndex))return state;
   return {...state,completedSectionTimings:[...state.completedSectionTimings,
@@ -127,13 +121,11 @@ function checkpoint(paper: PaperRevision, state: SessionState, nowMs: number): S
         const previous = record(next, id);
         // The checkpoint's measured foreground interval is the only timing
         // source: it excludes paused, hidden, expired and process-offline time.
-        const visit=next.questionVisits?.find(v=>v.questionRevisionId===id)?.count;
+        const visit=next.questionVisits.find(v=>v.questionRevisionId===id)?.count;
         next = put(next,{
           ...previous,timeSpentMs:previous.timeSpentMs+spent,
-          ...(next.timingEvidenceVersion===1?{
-            firstVisitMs:(previous.firstVisitMs??0)+(visit===1?spent:0),
-            preFirstAnswerMs:(previous.preFirstAnswerMs??0)+(previous.firstAnsweredAt===undefined?spent:0)
-          }:{})
+          firstVisitMs:previous.firstVisitMs+(visit===1?spent:0),
+          preFirstAnswerMs:previous.preFirstAnswerMs+(previous.firstAnsweredAt===undefined?spent:0)
         });
       }
     }
@@ -230,16 +222,13 @@ export function transition(paper: PaperRevision, state: SessionState, event: Ses
   }
   return current;
 }
-/** Freeze per-section timer claims only when the exact interval was recorded.
- * Older attempts without this collection explicitly have no section evidence.
- */
+/** Read per-section timer claims only from exact recorded evidence. */
 export function sectionTimerDuration(state:SessionState,sectionIndex:number):number|null{
-  return state.completedSectionTimings?.find(x=>x.sectionIndex===sectionIndex)?.durationMs??null;
+  return state.completedSectionTimings.find(x=>x.sectionIndex===sectionIndex)?.durationMs??null;
 }
 /** Never trust claimed section timing supplied by imported backups or local storage. */
 export function validateSectionTimingEvidence(paper:PaperRevision,state:SessionState):void{
   const rows=state.completedSectionTimings;
-  if(rows===undefined)return; // Older attempts: preserve absence, never backfill.
   if(!Array.isArray(rows)||rows.length>paper.sections.length||
      (paper.navigation.sectionNavigation!=="sequential-locked"&&paper.sections.length!==1&&rows.length>0))
     throw Error("Invalid saved section timing evidence");

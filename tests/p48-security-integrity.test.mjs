@@ -7,20 +7,23 @@ import {readFile} from "node:fs/promises";
 import {createHash} from "node:crypto";
 import {pkg} from "./fixtures/six-kinds.mjs";
 import {validateExamPackage} from "../src/app/exam-package.ts";
-import {importSimpleQuestionBank,APFC_NAT_BANK_TEMPLATE} from "../src/app/bank-import.ts";
+import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
 import {makeBackup,verifyBackup} from "../src/history/backup.ts";
 import {builtinCglPackages,startGenericAttempt} from "../src/app/exam-package.ts";
 import {createSourceKeyReference,validateSourceKeyReference} from "../src/engine/source-comparison.ts";
 import {createSourceReviewReference,validateSourceReviewReference} from "../src/engine/review-source.ts";
+import {practiceDeskBuildTarget,practiceDeskCsp,practiceDeskHeadAdditions} from "../scripts/build-target-config.mjs";
 
 const mutate=(fn)=>{const copy=structuredClone(pkg);fn(copy);return copy;};
+const authoringExample=JSON.parse(await readFile(
+ new URL("../examples/apfc-authoring-example.json",import.meta.url),"utf8"));
 
 
 
 test("P48-1 unknown unsigned fields are rejected at every exam/key/paper nested boundary",()=>{
- // Control: valid pre-existing six-kind and APFC/NAT source remain importable.
+ // Control: valid pre-existing six-kind and canonical authoring source remain usable.
  assert.equal(validateExamPackage(structuredClone(pkg)).paper.id,pkg.paper.id);
- assert.equal(importSimpleQuestionBank(structuredClone(APFC_NAT_BANK_TEMPLATE)).questions.length,2);
+ assert.equal(compileExternalQuestionBank(structuredClone(authoringExample)).questions.length,3);
 
  const invalid=[
   ["envelope",p=>p.silentPayload={canExecute:"never"}],
@@ -46,7 +49,7 @@ test("P48-1 unknown unsigned fields are rejected at every exam/key/paper nested 
  for(const [name,fn] of invalid)
    assert.throws(()=>validateExamPackage(mutate(fn)),/unsupported field/,name);
 });
-test("P48-1 simple authoring envelopes cannot launder undeclared metadata",()=>{
+test("P48-1 canonical authoring envelopes cannot launder undeclared metadata",()=>{
  const tests=[
   [bank=>bank.certificate="government", "root"],
   [bank=>bank.scoring.overrideKey="B","scoring"],
@@ -55,9 +58,9 @@ test("P48-1 simple authoring envelopes cannot launder undeclared metadata",()=>{
   [bank=>bank.media=[{id:"a",dataUri:"data:image/png;base64,AA==",altText:"x",unauthorized:true}],"media"]
  ];
  for(const [fn,label] of tests){
-   const copy=structuredClone(APFC_NAT_BANK_TEMPLATE);
+   const copy=structuredClone(authoringExample);
    fn(copy);
-   assert.throws(()=>importSimpleQuestionBank(copy),/unsupported|only id, dataUri and altText/,label);
+   assert.throws(()=>compileExternalQuestionBank(copy),/unsupported|field|media/i,label);
  }
 });
 
@@ -104,4 +107,29 @@ test("P48-1 generated offline HTML restricts execution to its exact compiled run
  assert.ok(!meta[1].includes("script-src 'unsafe-inline'")&&!meta[1].includes("unsafe-eval"));
  assert.ok(html.indexOf('http-equiv="Content-Security-Policy"')<html.indexOf("<script>"),
   "CSP must be parsed before executable bundle");
+});
+
+
+test("Build targets share one canonical HTML/CSP contract without static post-build mutation",async()=>{
+ const standalone=practiceDeskBuildTarget("standalone");
+ const hosted=practiceDeskBuildTarget("static");
+ assert.equal(standalone.output,"Practice_Desk_Offline_Mock_Tests.html");
+ assert.equal(hosted.output,"Practice_Desk_Static/index.html");
+ const digest="A".repeat(43)+"=";
+ const offline=practiceDeskCsp(standalone,digest);
+ const staticCsp=practiceDeskCsp(hosted,digest);
+ for(const directive of ["connect-src 'none'","worker-src 'none'"])assert.match(offline,new RegExp(directive));
+ assert.doesNotMatch(offline,/wasm-unsafe-eval|practice-desk-browser-optimizer/);
+ for(const directive of ["connect-src 'self'","worker-src 'self'","'wasm-unsafe-eval'"])
+  assert.ok(staticCsp.includes(directive));
+ assert.equal(practiceDeskHeadAdditions(standalone),"");
+ assert.match(practiceDeskHeadAdditions(hosted),/practice-desk-browser-optimizer/);
+
+ const base=await readFile(new URL("../scripts/build-target.mjs",import.meta.url),"utf8");
+ const offlineEntry=await readFile(new URL("../scripts/build.mjs",import.meta.url),"utf8");
+ const staticEntry=await readFile(new URL("../scripts/build-static.mjs",import.meta.url),"utf8");
+ assert.match(base,/buildPracticeDeskHtml/);
+ assert.match(offlineEntry,/writePracticeDeskTarget\("standalone"\)/);
+ assert.match(staticEntry,/writePracticeDeskTarget\(target\.id\)/);
+ assert.doesNotMatch(staticEntry,/Practice_Desk_Offline_Mock_Tests\.html|\.replace\("connect-src|\.replace\("worker-src|wasm-unsafe-eval.*replace/);
 });

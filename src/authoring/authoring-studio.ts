@@ -4,300 +4,36 @@
  */
 import type {ImageAsset,QuestionKind} from "../domain/question.ts";
 import type {AssetId,ContentHash} from "../domain/ids.ts";
-import {QUESTION_KINDS} from "../domain/question.ts";
 import {sha256} from "../domain/hash.ts";
 import {validateMediaInventory} from "../domain/media.ts";
 import type {RichDocument} from "../domain/rich-document.ts";
-import type {ExamPackage} from "../app/exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
 import {inspectAuthoringPublication,publicationPlainText,PublicationValidationError,
  type PublicationIssue} from "./authoring-publisher.ts";
-import {inspectExternalQuality,type QualityIssue} from "./external-bank-qa.ts";
+import type {QualityIssue} from "./external-bank-qa.ts";
 import {createDraftExchange,isDraftExchange,readDraftExchange,
  createDraftShelfArchive,readDraftShelfArchive} from "./authoring-exchange.ts";
-import {STAGING_KEY,STAGING_MAX_BYTES,addStagedFiles,validateStagingWorkspace,inspectStagingWorkspace,
- stagedToAuthoringDraft,updateStagedSelection,updateStagedTriage,
- createStagingArchive,readStagingArchive,
- type StagingWorkspace,type StagedFile,type StagedQuestion}
+import {STAGING_MAX_BYTES,inspectStagingWorkspace,
+ updateStagedSelection,updateStagedTriage,createStagingArchive,readStagingArchive,
+ type StagingWorkspace}
  from "./authoring-staging.ts";
-import {authoringSections,setAuthoringSectionMinutes,assignAuthoringQuestionSection} from "./authoring-sections.ts";
-import {authoringPublishedPreview,authoringDraftPreview} from "./authoring-preview.ts";
+import {setAuthoringSectionMinutes,assignAuthoringQuestionSection} from "./authoring-sections.ts";
 import {mathRenderer} from "../app/math-renderer-provider.ts";
 import {escapeText} from "../app/html-escape.ts";
+import {downloadText} from "../app/download-file.ts";
 import {wordgardEditorPort} from "./wordgard-adapter.ts";
 import {syllabusForExam,syllabusHeading,UNCLASSIFIED_SUBJECT} from "../learning/syllabus-taxonomy.ts";
 import type {EditorSession,AuthoringEditCommand} from "./vendor-ports.ts";
-import {AUTHORING_KEY,AUTHORING_MAX_BYTES,defaultAuthoringShelf,newAuthoringDraft,
- newAuthoringQuestion,validateAuthoringDraft,validateAuthoringShelf,requiresExternalQuality,
+import {AUTHORING_MAX_BYTES,newAuthoringDraft,newAuthoringQuestion,validateAuthoringDraft,
+ validateAuthoringShelf,requiresExternalQuality,
  type AuthoringDraft,type AuthoringDraftShelf,type AuthoringQuestion} from "./authoring-draft.ts";
+import {createAuthoringWorkspaceStore} from "./authoring-workspace-store.ts";
+import {handoffStagingToDraftShelf,ingestStagedFiles,inspectPublicationWorkflow,
+ preparePublicationWorkflow} from "./authoring-workflow.ts";
+import {labels,type Field,initialField,fieldNames,fields,fieldOf,updatedField,option,
+ controls,evidenceEditor,stagedDetail,toolbar,preview,sectionManager,draftsOptions}
+ from "./authoring-studio-view.ts";
 
-const labels:Record<QuestionKind,string>={
- "single-choice":"Single choice (MCQ)",
- "multiple-select":"Multiple select",
- "numeric-entry":"Numerical answer (NAT)",
- "true-false":"True or false",
- "matching":"Matching pairs",
- "free-response":"Written response"
-};
-type Field="prompt"|"passage"|"explanation"|
- "A"|"B"|"C"|"D"|"L1"|"L2"|"L3"|"L4"|"R1"|"R2"|"R3"|"R4";
-const letters=["A","B","C","D"] as const;
-const initialField:Field="prompt";
-const fieldNames:Record<Field,string>={
- prompt:"Question stem",passage:"Passage / case",explanation:"Worked explanation",
- A:"Option A",B:"Option B",C:"Option C",D:"Option D",
- L1:"Match left 1",L2:"Match left 2",L3:"Match left 3",L4:"Match left 4",
- R1:"Match right 1",R2:"Match right 2",R3:"Match right 3",R4:"Match right 4"
-};
-function fields(kind:QuestionKind):Field[]{
- return ["prompt","passage",
-  ...(kind==="single-choice"||kind==="multiple-select"?letters:[]),
-  ...(kind==="matching"?["L1","L2","L3","L4","R1","R2","R3","R4"] as Field[]:[]),
-  "explanation"] as Field[];
-}
-function fieldOf(q:AuthoringQuestion,field:Field):RichDocument{
- if(field==="prompt"||field==="passage"||field==="explanation")return q[field];
- if(letters.includes(field as (typeof letters)[number]))
-  return q.options[letters.indexOf(field as (typeof letters)[number])]!;
- const index=Number(field.slice(1))-1;
- return (field[0]==="L"?q.leftItems:q.rightItems)[index]!;
-}
-function updatedField(q:AuthoringQuestion,field:Field,value:RichDocument):AuthoringQuestion{
- if(field==="prompt"||field==="passage"||field==="explanation")
-  return {...q,[field]:value};
- if(letters.includes(field as (typeof letters)[number])){
-  const i=letters.indexOf(field as (typeof letters)[number]);
-  return {...q,options:q.options.map((v,j)=>j===i?value:v)};
- }
- const i=Number(field.slice(1))-1;
- return field[0]==="L"?{...q,leftItems:q.leftItems.map((v,j)=>j===i?value:v)}:
-   {...q,rightItems:q.rightItems.map((v,j)=>j===i?value:v)};
-}
-function option(value:string,label:string,selected:string):string{
- return '<option value="'+escapeText(value)+'"'+(value===selected?" selected":"")+">"+
-  escapeText(label)+"</option>";
-}
-function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Field):string{
- const applicable=fields(current.kind);
- const timingKind=draft.timingKind??(draft.durationMinutes?"whole-paper":"untimed");
- const kinds=QUESTION_KINDS.map(k=>option(k,labels[k],current.kind)).join("");
- return '<details class="pd-author-paper-settings"><summary>Paper settings · '+escapeText(draft.title)+'</summary><div class="pd-author-meta">'+
-  '<label>Paper title<input id="pd-author-title" maxlength="180" value="'+escapeText(draft.title)+'"></label>'+
-  '<label>Exam family ID<input id="pd-author-exam" maxlength="80" value="'+escapeText(draft.examId)+'"></label>'+
-  '<label>Paper ID<input id="pd-author-paper" maxlength="80" value="'+escapeText(draft.paperId)+'"></label>'+
-  '<label>Edition<select id="pd-author-edition">'+
-  ([["custom","Custom"],["source","Source transcription"],["reviewed","Reviewed & corrected"]] as const)
-    .map(([a,b])=>option(a,b,draft.edition)).join("")+'</select></label>'+
-  '<label>Revision<input id="pd-author-revision" type="number" min="1" max="1000000" value="'+draft.revision+'"></label>'+
-  '<label>Timing policy<select id="pd-author-timing-kind">'+
-    ([["untimed","Untimed"],["whole-paper","Whole-paper countdown"],["sectional","Section-by-section countdown"]] as const)
-      .map(([value,label])=>option(value,label,timingKind)).join("")+'</select></label>'+
-  '<label>Whole-paper duration (minutes)<input id="pd-author-duration" type="number" min="0" max="600" value="'+draft.durationMinutes+'"'+
-   (timingKind==="whole-paper"?"":' disabled title="Only used in whole-paper mode"')+'></label>'+
-  '<label>Pause policy<select id="pd-author-pause"'+
-   (timingKind==="untimed"?' disabled title="No timer to pause in untimed mode"':"")+'>'+
-    ([["allowed","Allow pause"],["forbidden","No pause"]] as const)
-      .map(([value,label])=>option(value,label,draft.pausePolicy??"allowed")).join("")+'</select></label>'+
-  '<label>Question navigation<select id="pd-author-question-nav">'+
-    ([["free","Free movement"],["forward-only","Forward only"]] as const)
-      .map(([value,label])=>option(value,label,draft.questionNavigation??"free")).join("")+'</select></label>'+
-  '<label>Section navigation<select id="pd-author-section-nav">'+
-    ([["free","Free section movement"],["sequential-locked","Sequential locked"]] as const)
-      .map(([value,label])=>option(value,label,draft.sectionNavigation??"free")).join("")+'</select></label>'+
-  '<label>Section expiry<select id="pd-author-section-transition"'+
-   (timingKind==="sectional"?"":' disabled title="Only used in sectional countdown mode"')+'>'+
-    ([["manual","Stop and continue manually"],["automatic","Advance automatically"]] as const)
-      .map(([value,label])=>option(value,label,draft.sectionTransition??"manual")).join("")+'</select></label>'+
-  '<label class="pd-author-check"><input type="checkbox" id="pd-author-early-submit"'+
-    (draft.allowEarlySubmit!==false?" checked":"")+
-     (timingKind==="sectional"?"":' disabled title="Only used in sectional countdown mode"')+
-     '> Permit early section submission</label>'+
-  '<label class="pd-author-check"><input type="checkbox" id="pd-author-allow-review"'+
-    (draft.allowReview!==false?" checked":"")+'> Release detailed answers after submission</label>'+
-  '<label class="pd-author-check"><input type="checkbox" id="pd-author-calculator"'+
-    (draft.calculatorTool==="basic-v1"?" checked":"")+'> Basic calculator available during the test</label>'+
-  '<label>Correct marks<input id="pd-author-correct" type="number" step="any" value="'+draft.marksCorrect+'"></label>'+
-  '<label>Incorrect marks<input id="pd-author-wrong" type="number" max="0" step="any" value="'+draft.marksIncorrect+'"></label>'+
-  '</div><p class="fine pd-author-effective-policy-note" role="note">'+
-   (timingKind==="sectional"?
-     'Section timers, expiry and early-submission policies are active. Section movement must remain sequentially locked.':
-     timingKind==="whole-paper"?
-     'One shared whole-paper timer covers all sections. Their individual timers and expiry settings are saved but inactive.':
-     'Untimed mode has no countdown. Pause, expiry, section budgets and early-submission settings are inactive.')+
-   '</p></details><div class="pd-author-meta">'+
-  '<label>Question kind<select id="pd-author-kind">'+kinds+'</select></label>'+
-  '<label>Actual exam section (controls timing and navigation)<input id="pd-author-section" maxlength="100" value="'+escapeText(current.section)+'"></label>'+
-  '<label>Academic subject (custom, not an exam section)<input id="pd-author-subject" maxlength="120" value="'+escapeText(current.subject??"")+'" placeholder="Leave blank for Unclassified"></label>'+
-  '<label>Official broad syllabus subject (author-chosen)<select id="pd-author-syllabus-heading"'+
-    (!syllabusForExam(draft.examId)?' disabled':'')+'>'+
-    option("",syllabusForExam(draft.examId)?"Custom subject / Unclassified":"No official catalogue for this exam",current.syllabusHeadingId??"")+
-    (syllabusForExam(draft.examId)?.headings??[]).map(h=>option(h.id,h.label,current.syllabusHeadingId??"")).join("")+
-    '</select></label>'+
-  '<p class="fine pd-author-taxonomy-summary">Classification: '+
-    escapeText(current.syllabusHeadingId?
-      syllabusHeading(draft.examId,current.syllabusHeadingId)?.label??"Unknown heading":
-      current.subject?.trim()||UNCLASSIFIED_SUBJECT)+
-    '. Section timers and subjects are independent; no classification is inferred.</p>'+
-  '<label>Topic (author supplied)<input id="pd-author-topic" maxlength="120" value="'+escapeText(current.topic??"")+'"></label>'+
-  '<label>Subtopic (needs Topic)<input id="pd-author-subtopic" maxlength="120" value="'+escapeText(current.subtopic??"")+'"></label>'+
-  '<label>Difficulty tag<select id="pd-author-difficulty">'+
-    ([["","Not assigned"],["easy","Easy"],["medium","Medium"],["hard","Hard"]] as const)
-      .map(([value,label])=>option(value,label,current.difficulty??"")).join("")+'</select></label>'+
-  '<label>Active section timer (minutes; affects every question in this section; 0 = untimed)<input id="pd-author-section-minutes" type="number" min="0" max="600" step="1" value="'+
-   (authoringSections(draft).find(s=>s.name===current.section)?.conflict?"":current.sectionMinutes??15)+'"'+
-   (authoringSections(draft).find(s=>s.name===current.section)?.conflict?' placeholder="Conflicting values — enter one time"':"")+'></label>'+
-  '<label>Answer key draft<input id="pd-author-answer" maxlength="100" value="'+escapeText(current.answer)+'" aria-describedby="pd-author-answer-help"></label>'+
-  '<label>Source / provenance note<input id="pd-author-source" maxlength="500" value="'+escapeText(current.source)+'"></label>'+
-  (current.kind==="numeric-entry"?'<label>Absolute answer tolerance<input type="number" id="pd-author-tolerance" min="0" max="1000000" step="any" value="'+current.tolerance+'"></label>':"")+
-  (current.kind==="multiple-select"?'<label>Minimum choices<input id="pd-author-min-choices" type="number" min="1" max="4" step="1" value="'+(current.minSelections??1)+'"></label>'+
-    '<label>Maximum choices<input id="pd-author-max-choices" type="number" min="1" max="4" step="1" value="'+(current.maxSelections??4)+'"></label>':"")+
-  (current.kind==="multiple-select"||current.kind==="matching"?
-    '<label>Partial marks per correct component (0 = all-or-nothing)<input id="pd-author-partial-credit" type="number" min="0" max="1000" step="any" value="'+(current.partialCreditEach??0)+'"></label>'+
-    '<label>Partial penalty per incorrect component<input id="pd-author-partial-penalty" type="number" min="0" max="1000" step="any" value="'+(current.partialPenaltyEach??0)+'"></label>':"")+
-  '</div><p class="fine" id="pd-author-answer-help">'+
-  escapeText(current.kind==="single-choice"?"One correct option: A, B, C or D.":
-   current.kind==="multiple-select"?"All correct options: A,C or B,D; no duplicates.":
-   current.kind==="numeric-entry"?"Accepted numeric answers, comma-separated. Set absolute tolerance above.":
-   current.kind==="true-false"?"Enter True or False.":
-   current.kind==="matching"?"Four unique pairs: 1-C,2-A,3-D,4-B (or C,A,D,B).":
-   "Evaluated manually; supply a model answer or worked rubric, not an automatic key.")+
-  '</p>'+
-  '<label class="picker" for="pd-author-field">Rich-content field</label>'+
-  '<select id="pd-author-field">'+applicable.map(f=>option(f,fieldNames[f],field)).join("")+'</select>';
-}
-/** Author-supplied evidence is editable, but never automatically authenticated.
- * Keep strict calendar/HTTPS and review invalidation in validateAuthoringDraft.
- */
-function evidenceEditor(q:AuthoringQuestion):string{
- const p=q.provenance,sources=p?.sources??[];
- const fields=[["publisher","Publisher / issuing body",180],
-  ["title","Document title",240],["url","HTTPS URL",2048],
-  ["section","Section / chapter",180],["page","Page",80],
-  ["provision","Provision / section of law",140],
-  ["publicationDate","Publication date (YYYY-MM-DD)",10],
-  ["asOfDate","As-of date (YYYY-MM-DD)",10]] as const;
- const review=q.qa?.review;
- return '<details class="pd-author-section-manager" id="pd-author-evidence">'+
-  '<summary>Source evidence and question QA · '+sources.length+' citation(s) · '+
-  escapeText(q.qa?.status??"unchecked")+'</summary>'+
-  '<p class="fine">All citations, origin labels and review names are author-entered claims. Offline QA does not fetch documents, authenticate exam PYQs or certify current laws. Changing evidence invalidates an earlier reviewer acknowledgement.</p>'+
-  '<div class="pd-author-meta"><label>Claimed question origin<select id="pd-author-origin-kind">'+
-   ([["manual","Manual"],["ai-original","AI original"],["reconstruction","Reconstruction"],["official-pyq","Claimed official PYQ"]] as const)
-   .map(([value,label])=>option(value,label,p?.kind??"manual")).join("")+
-   '</select></label><label>Author provenance note<input id="pd-author-origin-note" maxlength="300" value="'+
-   escapeText(p?.sourceNote??"")+'"></label><label>Claimed exam year (optional)<input id="pd-author-origin-year" type="number" min="1900" max="2100" step="1" value="'+
-   escapeText(p?.examYear===undefined?"":String(p.examYear))+'"></label>'+
-   '<label>QA status (never certified)<select id="pd-author-qa-status">'+
-   ([["unchecked","Unchecked"],["needs-review","Needs review"]] as const)
-   .map(([value,label])=>option(value,label,q.qa?.status??"unchecked")).join("")+'</select></label></div>'+
-  sources.map((source,i)=>'<fieldset class="pd-author-evidence-source">'+
-   '<legend>Author-supplied citation '+(i+1)+'</legend><div class="pd-author-meta">'+
-   fields.map(([field,label,max])=>'<label>'+label+'<input data-author-source-index="'+i+
-    '" data-author-source-field="'+field+'" maxlength="'+max+'" value="'+
-    escapeText(source[field]??"")+'"></label>').join("")+
-   '<label>Author-assigned stance<select data-author-source-index="'+i+
-    '" data-author-source-field="stance">'+
-    option("","Unspecified",source.stance??"")+
-    option("supports","Supports",source.stance??"")+
-    option("disputes","Disputes",source.stance??"")+
-   '</select></label></div>'+
-   '<button type="button" class="btn danger" data-author-source-remove="'+i+'">Remove citation '+(i+1)+'</button>'+
-   '</fieldset>').join("")+
-  '<fieldset><legend>Add structured source</legend><div class="pd-author-meta">'+
-   '<label>Publisher / issuing body<input id="pd-author-source-new-publisher" maxlength="180" placeholder="Required"></label>'+
-   '<label>Document title<input id="pd-author-source-new-title" maxlength="240" placeholder="Required"></label></div>'+
-   '<button type="button" class="btn" id="pd-author-source-add"'+
-   (sources.length>=12?' disabled':'')+'>Add source citation</button></fieldset>'+
-  '<fieldset><legend>Optional independently attributed review claim</legend>'+
-   '<p class="fine">This records what a named reviewer is claimed to have checked. Identity and factual findings are NOT authenticated.</p>'+
-   '<div class="pd-author-meta"><label>Reviewer name<input id="pd-author-qa-reviewer" maxlength="120" value="'+
-    escapeText(review?.reviewer??"")+'"></label><label>Review/evidence note<input id="pd-author-qa-review-note" maxlength="500" value="'+
-    escapeText(review?.note??"")+'"></label></div>'+
-   (review?'<p class="fine">Claimed review: '+escapeText(review.reviewedAt)+
-    '. Accepted QA warning codes: '+escapeText(review.acceptedWarningCodes.join(", ")||"none")+'.</p>':"")+
-   '<button type="button" class="btn" id="pd-author-qa-record">Record author-attributed review</button>'+
-   (review?'<button type="button" class="btn danger" id="pd-author-qa-clear">Clear review record</button>':"")+
-  '</fieldset></details>';
-}
-function stagedDetail(item:StagedQuestion):string{
- const quality=item.quality,sources=item.question.provenance?.sources??[];
- const checks=quality?Object.entries(quality.checks).map(([key,value])=>
-  key.replaceAll("_"," ")+": "+value).join(" · "):"Unavailable pending valid publication preflight";
- const candidates=item.duplicates.map(candidate=>{
-  const other=candidate.first.bankId===item.bankId&&candidate.first.questionId===item.id?
-   candidate.second:candidate.first;
-  return '<p class="fine">Candidate '+escapeText(candidate.classification)+
-   ' with '+escapeText(other.bankId+'/'+other.questionId)+
-   ' · similarity '+candidate.similarity+' · '+escapeText(candidate.evidence)+
-   ' · human decision required</p>';
- }).join("");
- const triage=item.triage;
- return '<details class="pd-stage-question-detail" data-stage-detail="'+escapeText(item.key)+'">'+
-  '<summary>QA checks / source evidence / duplicate decision</summary>'+
-  '<p class="fine">Checks: '+escapeText(checks)+
-   '. Recommended status: '+escapeText(quality?.recommendedStatus??"not-checked")+'</p>'+
-  (sources.length?sources.map(ref=>'<p class="fine">Author citation: '+escapeText(ref.publisher+
-   ' / '+ref.title+(ref.url?' / '+ref.url:'')+(ref.provision?' / '+ref.provision:'')+
-   (ref.asOfDate?' / as of '+ref.asOfDate:''))+'</p>').join(""):
-    '<p class="fine">No structured source citation submitted.</p>')+
-  (candidates||'<p class="fine">No candidate duplicate linked in this bounded scan.</p>')+
-  '<div class="pd-author-meta"><label>Author triage decision<select data-stage-triage-decision="'+escapeText(item.key)+'">'+
-   ([["needs-review","Needs independent review"],["distinct","Author judged distinct"],["potential-duplicate","Author flagged potential duplicate"]] as const)
-     .map(([v,label])=>option(v,label,triage?.decision??"needs-review")).join("")+
-  '</select></label><label>Reason / evidence note<input data-stage-triage-note="'+escapeText(item.key)+
-   '" maxlength="500" value="'+escapeText(triage?.note??"")+'"></label>'+
-  '<label>Reviewer (optional unverified claim)<input data-stage-triage-reviewer="'+escapeText(item.key)+
-   '" maxlength="120" value="'+escapeText(triage?.reviewer??"")+'"></label></div>'+
-  '<button type="button" class="btn" data-stage-triage-save="'+escapeText(item.key)+
-   '">Save author triage</button></details>';
-}
-function toolbar():string{
- const buttons=[
-  ["strong","Bold"],["emphasis","Italic"],["underline","Underline"],
-  ["subscript","Sub"],["superscript","Super"],["code","Code"],
-  ["paragraph","Paragraph"],["heading2","H2"],["heading3","H3"],
-  ["bullet-list","Bullets"],["numbered-list","Numbered"],
-  ["undo","Undo"],["redo","Redo"]
- ];
- return '<div class="pd-author-toolbar" role="toolbar" aria-label="Wordgard formatting">'+
-  buttons.map(([action,label])=>'<button type="button" class="btn" data-author-command="'+action+'">'+label+'</button>').join("")+
-  '<button type="button" class="btn" id="pd-author-add-table">Insert table</button></div>';
-}
-/** Real six-kind response renderer for both validated publications and
- * unfinished drafts. The rule summary is shown only for exact compiled data. */
-function preview(draft:AuthoringDraft,q:AuthoringQuestion,
- existing:readonly ExamPackage[]):string{
- const report=inspectAuthoringPublication(draft,existing);
- if(!report.valid||!report.compiled)return authoringDraftPreview(draft,q);
- const revision=report.compiled.questions[draft.questions.findIndex(row=>row.id===q.id)];
- if(!revision)throw Error("Preview question not in compiled publication");
- return authoringPublishedPreview(report.compiled,revision.id);
-}
-function sectionManager(draft:AuthoringDraft,expanded:boolean):string{
- const sections=authoringSections(draft);
- return '<details id="pd-author-section-manager" class="pd-author-section-manager"'+
-  (expanded?" open":"")+'><summary>Manage actual exam sections · '+sections.length+
-   ' section'+(sections.length===1?"":"s")+
-   (sections.some(s=>s.conflict)?" · conflicting section timers":"")+'</summary>'+
-   '<p class="fine">Exam sections control timing and navigation independently of academic subjects. '+
-    'Assign questions using their Actual exam section field; enter a new name to create a section. '+
-    'Changing a timer here updates every question assigned to the section. '+
-    'Conflicting values in an imported draft must be corrected before publishing.</p>'+
-   '<div class="scroll-table"><table class="pd-author-section-table"><thead><tr>'+
-    '<th>Exam section</th><th>Questions</th><th>Minutes (0 = untimed)</th></tr></thead><tbody>'+
-   sections.map(section=>'<tr><th scope="row">'+escapeText(section.name)+'</th><td>'+
-      section.count+'</td><td><label class="pd-author-section-time-label">'+
-      '<input aria-label="Timer for '+escapeText(section.name)+
-      '" type="number" min="0" max="600" step="1" data-author-section-timer="'+escapeText(section.name)+
-      '" value="'+(section.conflict?"":section.minutes)+'"'+
-      (section.conflict?' placeholder="Conflict: choose one value" aria-invalid="true"':"")+
-      '></label></td></tr>').join("")+
-   '</tbody></table></div>'+
-   '<p class="fine" id="pd-author-section-policy">'+
-    (draft.timingKind==="sectional"?
-      'Sectional mode uses these section budgets; zero means no countdown for that section.':
-      'These budgets are saved for future sectional mode; the current timing policy does not use them.')+
-   '</p></details>';
-}
 export interface AuthoringStudioController{
  open(host:HTMLElement,trigger:HTMLElement):Promise<void>;
  stageFiles(files:readonly File[]):Promise<void>;
@@ -311,12 +47,12 @@ export interface AuthoringPublicationActions{
  onClose?():void;
 }
 export function createQuestionAuthoringStudio(actions:AuthoringPublicationActions):AuthoringStudioController{
+ const workspaceStore=createAuthoringWorkspaceStore();
  let host:HTMLElement|null=null,origin:HTMLElement|null=null,session:EditorSession|null=null;
  let shelf:AuthoringDraftShelf|null=null,questionId="",field:Field=initialField;
  let closed=true,renderSequence=0,lastSaveError="",storageBlocked=false,publishing=false,sectionManagerExpanded=false;
  let stage:StagingWorkspace|null=null,stageFilter="all",stageBlocked=false,stageError="";
- // Current per-open bytes serve as a local compare-and-set stamp.
- let lastShelfBytes:string|null=null,lastStageBytes:string|null=null,stageConflict=false;
+ let stageConflict=false;
  const active=():AuthoringDraft=>{
   const current=shelf?.drafts.find(d=>d.id===shelf!.activeId);
   if(!current)throw Error("No active authoring draft");
@@ -333,54 +69,36 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
  };
  const onExternalStorage=(event:StorageEvent):void=>{
   if(closed||!host)return;
-  if((event.key===AUTHORING_KEY||event.key===null)&&
-     localStorage.getItem(AUTHORING_KEY)!==lastShelfBytes){
+  const conflict=workspaceStore.externalChange(event);
+  if(conflict.shelfChanged){
    lastSaveError="Another tab changed authoring drafts. Your edits are UNSAVED; export the draft and reopen.";
    status("Not saved: "+lastSaveError,true);
   }
-  if((event.key===STAGING_KEY||event.key===null)&&
-     localStorage.getItem(STAGING_KEY)!==lastStageBytes){
+  if(conflict.stagingChanged){
    stageConflict=true;
    stageError="Another tab changed AI staging. Export work and reopen.";
    status(stageError,true);
   }
  };
  const load=():void=>{
-  try{
-   const value=localStorage.getItem(AUTHORING_KEY);
-   lastShelfBytes=value;
-   shelf=value?validateAuthoringShelf(JSON.parse(value)):defaultAuthoringShelf();
-   lastSaveError="";storageBlocked=false;
-  }catch(error){
-   storageBlocked=true;
-   // Never overwrite malformed saved data automatically.
-   shelf=defaultAuthoringShelf();
-   lastSaveError="Existing local drafts could not be read: "+
-    (error instanceof Error?error.message:"invalid data")+
-    ". Export or recover the original storage before overwriting it.";
-  }
+  const snapshot=workspaceStore.load();
+  shelf=snapshot.shelf;
+  storageBlocked=snapshot.shelfBlocked;
+  lastSaveError=snapshot.shelfError;
   questionId=active().questions[0]!.id;field=initialField;
-  try{
-   const staged=localStorage.getItem(STAGING_KEY);
-   lastStageBytes=staged;
-   stage=staged?validateStagingWorkspace(JSON.parse(staged)):null;
-   stageBlocked=false;stageConflict=false;stageError="";
-  }catch(error){
-   stage=null;stageBlocked=true;
-   stageError="Staging storage is unreadable; its original bytes are preserved. "+
-    (error instanceof Error?error.message:"Invalid staged data");
-  }
+  stage=snapshot.staging;
+  stageBlocked=snapshot.stagingBlocked;
+  stageConflict=false;
+  stageError=snapshot.stagingError;
  };
  const persist=():boolean=>{
   if(!shelf)return false;
-  if(storageBlocked){status("Damaged saved draft data remains untouched. Export your current draft or explicitly reset damaged storage.",true);return false;}
+  if(storageBlocked){
+   status("Damaged saved draft data remains untouched. Export your current draft or explicitly repair original storage.",true);
+   return false;
+  }
   try{
-   shelf=validateAuthoringShelf(shelf);
-   // Synchronous compare-and-set against bytes loaded in this tab.
-   if(localStorage.getItem(AUTHORING_KEY)!==lastShelfBytes)
-    throw Error("Another tab changed authoring drafts; export unsaved changes and reopen.");
-   const bytes=JSON.stringify(shelf);
-   localStorage.setItem(AUTHORING_KEY,bytes);lastShelfBytes=bytes;
+   shelf=workspaceStore.saveShelf(shelf);
    lastSaveError="";
    status("Draft saved locally on this device · "+new Date().toLocaleTimeString());
    return true;
@@ -391,26 +109,16 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   }
  };
  const persistStage=(next:StagingWorkspace|null):void=>{
-  if(stageBlocked)throw Error("Existing staged files are unreadable. Reset damaged staging explicitly.");
-  if(stageConflict||localStorage.getItem(STAGING_KEY)!==lastStageBytes){
-   stageConflict=true;
-   throw Error("Another tab changed AI staging; export work and reopen without overwriting.");
-  }
-  if(next){
-   const validated=validateStagingWorkspace(next),bytes=JSON.stringify(validated);
-   localStorage.setItem(STAGING_KEY,bytes);lastStageBytes=bytes;stage=validated;
-  }else{
-   localStorage.removeItem(STAGING_KEY);lastStageBytes=null;stage=null;
+  if(stageConflict)throw Error("Another tab changed AI staging; export work and reopen without overwriting.");
+  try{stage=workspaceStore.saveStaging(next);}
+  catch(error){
+   if(error instanceof Error&&error.message.startsWith("Another tab"))stageConflict=true;
+   throw error;
   }
  };
  const stageFiles=async(files:readonly File[]):Promise<void>=>{
   if(!files.length)return;
-  const inputs:StagedFile[]=[];
-  for(const file of files){
-   if(file.size>1700000)throw Error(file.name+" is too large for a safely staged source; split the bank");
-   inputs.push({name:file.name,source:JSON.parse(await file.text())});
-  }
-  persistStage(addStagedFiles(stage??{schema:1,files:[],selected:[]},inputs));
+  persistStage(await ingestStagedFiles(stage,files));
   stageFilter="all";
   await render();
   status("Staged "+files.length+" AI source file(s) without publishing any questions.");
@@ -464,12 +172,8 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
  };
  const exportDraft=()=>{
   capture();
-  const source=JSON.stringify(active(),null,2);
-  const objectUrl=URL.createObjectURL(new Blob([source],{type:"application/json"}));
-  const a=document.createElement("a");
-  a.href=objectUrl;a.download="Practice_Desk_Authored_Draft_"+active().id+".json";
-  document.body.append(a);a.click();a.remove();
-  window.setTimeout(()=>URL.revokeObjectURL(objectUrl),1000);
+  downloadText("Practice_Desk_Authored_Draft_"+active().id+".json",
+   JSON.stringify(active(),null,2));
   status("Unpublished draft exported as JSON. Validate and Publish to create a scored paper.");
   void render();
  };
@@ -615,17 +319,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   click("pd-author-save",()=>{capture();persist();void render();});
 
   const validationBox=find<HTMLElement>("pd-author-validation");
-  const inspectPublication=()=>{
-   const report=inspectAuthoringPublication(active(),actions.existing());
-   const quality=report.compiled&&requiresExternalQuality(active())?
-    inspectExternalQuality(active(),report.compiled,active().id):null;
-   const errors:PublicationIssue[]=[...report.issues,
-    ...(quality?.issues.filter(i=>i.severity==="error").map(i=>({
-     field:i.path,reason:i.code+": "+i.message,...(i.questionId?{questionId:i.questionId}:{})
-    }))??[])];
-   const warnings=quality?.issues.filter(i=>i.severity==="warning")??[];
-   return {report,errors,warnings};
-  };
+  const inspectPublication=()=>inspectPublicationWorkflow(active(),actions.existing());
   const dryRun=():string=>{
    if(!requiresExternalQuality(active()))return "";
    const compiled=inspectAuthoringPublication(active(),actions.existing()).compiled;
@@ -703,45 +397,22 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
     const {report,errors,warnings}=inspectPublication();
     showIssues(errors,warnings);
     if(!report.valid||errors.length){validationBox.scrollIntoView({block:"nearest"});return;}
-    if(warnings.length&&!find<HTMLInputElement>("pd-author-accept-warnings")?.checked)
-      throw Error("Explicitly acknowledge all remaining QA warnings for this staged draft before publication.");
-    if(!find<HTMLInputElement>("pd-author-confirm").checked)
-      throw Error("Confirm your source, answer keys and marking rules before publishing.");
-    let packageValue=report.compiled;
-    if(!packageValue)throw Error("Authoritative validation did not return the compiled publication");
-    if(requiresExternalQuality(active())){
-     const claimedReviewer=find<HTMLInputElement>("pd-author-reviewer")?.value.trim()??"";
-     const reviewNote=find<HTMLInputElement>("pd-author-review-note")?.value.trim()??"";
-     if(Boolean(claimedReviewer)!==Boolean(reviewNote))
-      throw Error("To attribute an independent review, provide both a reviewer name and an evidence note.");
-     if(warnings.length||claimedReviewer){
-      const acceptedAt=new Date().toISOString();
-      changeDraft(d=>({...d,questions:d.questions.map((q,i)=>{
-       const codes=[...new Set(warnings.filter(issue=>
-        issue.questionId===q.id||(!issue.questionId&&i===0)).map(issue=>issue.code))];
-       if(!codes.length&&!claimedReviewer)return q;
-       const previous=q.qa?.review;
-       const warningNote="Author acknowledges displayed QA warnings; factual and source verification were NOT performed.";
-       const nextNote=reviewNote||warningNote;
-       // Do not silently replace an earlier, separately attributed per-item
-       // staging decision when later publication warnings are acknowledged.
-       const priorLine=previous?"Earlier attributed review by "+previous.reviewer+
-        " ("+previous.reviewedAt+"): "+previous.note+"; ":"";
-       return {...q,qa:{status:q.qa?.status??"needs-review",review:{
-        reviewer:claimedReviewer||previous?.reviewer||"Author",
-        reviewedAt:acceptedAt,
-        note:(priorLine+nextNote).slice(0,500),
-        acceptedWarningCodes:[...new Set([...(previous?.acceptedWarningCodes??[]),...codes])]
-       }}};
-      })}));
-      if(lastSaveError)throw Error("Could not persist the author-attributed QA acknowledgement");
-      const checked=inspectPublication();
-      if(!checked.report.valid||checked.errors.length||!checked.report.compiled)
-       throw Error("Publication invalid after review evidence was attached");
-      packageValue=checked.report.compiled;
+    const prepared=preparePublicationWorkflow(active(),actions.existing(),{
+     confirmed:find<HTMLInputElement>("pd-author-confirm").checked,
+     acceptWarnings:find<HTMLInputElement>("pd-author-accept-warnings")?.checked??false,
+     reviewer:find<HTMLInputElement>("pd-author-reviewer")?.value.trim()??"",
+     reviewNote:find<HTMLInputElement>("pd-author-review-note")?.value.trim()??"",
+     acceptedAt:new Date().toISOString()
+    });
+    if(prepared.draftChanged){
+     const before=shelf!;
+     shelf={...before,drafts:before.drafts.map(d=>d.id===prepared.draft.id?prepared.draft:d)};
+     if(!persist()){
+      shelf=before;
+      throw Error("Could not persist the author-attributed QA acknowledgement");
      }
     }
-    await actions.publish(packageValue);
+    await actions.publish(prepared.packageValue);
     // The integrated Library owner refreshes the screen only after a
     // successfully committed package; do not change anything here afterwards.
    }catch(error){
@@ -756,10 +427,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   const downloadAuthoringJson=(payload:unknown,filename:string):void=>{
    // Compact archival exports remain within the same character budget as
    // their validated payload, even for large 8-file staged source collections.
-   const url=URL.createObjectURL(new Blob([JSON.stringify(payload)],{type:"application/json"}));
-   const link=document.createElement("a");link.href=url;link.download=filename;
-   document.body.append(link);link.click();link.remove();
-   window.setTimeout(()=>URL.revokeObjectURL(url),1000);
+   downloadText(filename,JSON.stringify(payload));
   };
   click("pd-stage-archive-import",()=>find<HTMLInputElement>("pd-stage-archive-file").click());
   find<HTMLInputElement>("pd-stage-archive-file").onchange=async e=>{
@@ -780,11 +448,10 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   };
   if(stageBlocked)click("pd-stage-recover",()=>{
    if(!confirm("Discard unreadable staging bytes? Recover or export original data first."))return;
-   try{if(localStorage.getItem(STAGING_KEY)!==lastStageBytes)
-      throw Error("Another tab changed AI staging; reopen before resetting.");
-     localStorage.removeItem(STAGING_KEY);lastStageBytes=null;
-     stageBlocked=false;stageConflict=false;stageError="";stage=null;void render();}
-   catch(error){status(error instanceof Error?error.message:"Unable to reset staging",true);}
+   try{
+     workspaceStore.resetUnreadableStaging();
+     stageBlocked=false;stageConflict=false;stageError="";stage=null;void render();
+   }catch(error){status(error instanceof Error?error.message:"Unable to reset staging",true);}
   });
   if(stage&&staged){
    find<HTMLSelectElement>("pd-stage-filter").onchange=e=>{
@@ -828,29 +495,21 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    });
    click("pd-stage-export",()=>{
     const report=inspectStagingWorkspace(stage!);
-    const blob=new Blob([JSON.stringify({schema:1,factualVerification:"not-performed",...report},null,2)],
-     {type:"application/json"});
-    const url=URL.createObjectURL(blob),link=document.createElement("a");
-    link.href=url;link.download="Practice_Desk_AI_Staging_QA.json";
-    document.body.append(link);link.click();link.remove();
-    window.setTimeout(()=>URL.revokeObjectURL(url),1000);
+    downloadText("Practice_Desk_AI_Staging_QA.json",
+     JSON.stringify({schema:1,factualVerification:"not-performed",...report},null,2));
    });
    click("pd-stage-handoff",()=>{
     try{
      if(storageBlocked||lastSaveError)throw Error("Draft storage unsafe; repair it before import.");
-     if(shelf!.drafts.length>=20)throw Error("20 local drafts already exist. Export and clear an older draft.");
-     const incoming=stagedToAuthoringDraft(stage!);
-     if(shelf!.drafts.some(d=>d.id===incoming.id))
-      throw Error("This stage already has a Wordgard draft. Open the saved draft to preserve its edits. Staged files cannot overwrite it.");
      capture();
-     const next=validateAuthoringShelf({schema:1,activeId:incoming.id,drafts:[...shelf!.drafts,incoming]});
      const oldShelf=shelf!;
-     shelf=next;
+     const handoff=handoffStagingToDraftShelf(stage!,oldShelf);
+     shelf=handoff.shelf;
      if(!persist()){
       shelf=oldShelf;
       throw Error("Staged handoff was not saved: "+lastSaveError);
      }
-     questionId=incoming.questions[0]!.id;field=initialField;
+     questionId=handoff.draft.questions[0]!.id;field=initialField;
      void render();
     }catch(error){status(error instanceof Error?error.message:"Staged handoff failed",true);}
    });
@@ -880,12 +539,8 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   click("pd-author-exchange",()=>{
    capture();
    try{
-    const source=JSON.stringify(createDraftExchange(active()),null,2);
-    const url=URL.createObjectURL(new Blob([source],{type:"application/json"}));
-    const link=document.createElement("a");
-    link.href=url;link.download="Practice_Desk_Draft_Exchange_"+active().id+".json";
-    document.body.append(link);link.click();link.remove();
-    window.setTimeout(()=>URL.revokeObjectURL(url),1000);
+    downloadText("Practice_Desk_Draft_Exchange_"+active().id+".json",
+     JSON.stringify(createDraftExchange(active()),null,2));
     status("Versioned lossless unpublished Wordgard exchange exported; no source authentication claimed.");
    }catch(error){status(error instanceof Error?error.message:"Unable to export draft exchange",true);}
   });
@@ -915,7 +570,12 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   click("pd-author-import",()=>find<HTMLInputElement>("pd-author-import-file").click());
   if(storageBlocked)click("pd-author-reset-corrupt",()=>{
    if(!confirm("Replace unreadable local authoring data? Export your current draft first. This action cannot be undone."))return;
-   storageBlocked=false;lastSaveError="";persist();void render();
+   try{
+    shelf=workspaceStore.resetUnreadableShelf(shelf!);
+    storageBlocked=false;lastSaveError="";
+    status("Unreadable draft storage replaced with the currently displayed validated shelf.");
+    void render();
+   }catch(error){status(error instanceof Error?error.message:"Unable to reset draft storage",true);}
   });
   find<HTMLInputElement>("pd-author-import-file").onchange=async e=>{
    const file=(e.target as HTMLInputElement).files?.[0];if(!file)return;
@@ -1123,7 +783,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
     if(storageBlocked||lastSaveError)
      status("Section updated in memory but NOT saved: "+(lastSaveError||"damaged local draft storage")+
       ". Export a recovery copy before closing.",true);
-    else status("Set section "+title+" to "+minutes+" minutes across every assigned question.");
+    else status("Set section "+title+" to "+minutes+" minutes.");
    }catch(error){status(error instanceof Error?error.message:"Invalid section timer",true);}
   };
   const commitSectionTimer=(title:string,input:HTMLInputElement)=>{
@@ -1164,12 +824,9 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   };
   click("pd-author-add-question",()=>{
    capture();const current=question(),freshBase=newAuthoringQuestion();
-   // Default new questions to the current *physical* section and its timer.
-   // Otherwise a new question in an existing section silently re-introduces
-   // conflicting per-question duration values.
-   const inherited=authoringSections(active()).find(s=>s.name===current.section);
-   const fresh={...freshBase,section:current.section,
-     sectionMinutes:inherited?.minutes??current.sectionMinutes??15};
+   // New questions inherit only the current physical-section assignment.
+   // Timer ownership remains in draft.sections.
+   const fresh={...freshBase,section:current.section};
    changeDraft(d=>({...d,questions:[...d.questions,fresh]}));
    questionId=fresh.id;field=initialField;void render();
   });
@@ -1282,7 +939,4 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   isOpen(){return !closed;},
   dispose(){close(false);}
  };
-}
-function draftsOptions(shelf:AuthoringDraftShelf):string{
- return shelf.drafts.map(d=>option(d.id,d.title+" ("+d.questions.length+" question"+(d.questions.length===1?"":"s")+")",shelf.activeId)).join("");
 }

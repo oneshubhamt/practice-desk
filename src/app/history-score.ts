@@ -1,4 +1,4 @@
-import type { GenericAttempt } from "./exam-package.ts";
+import type { GenericAttempt } from "../engine/generic-attempt.ts";
 import { scoreableMaximum } from "../engine/score-ceiling.ts";
 
 /** The denominator is derived from this attempt's frozen paper/key, never from

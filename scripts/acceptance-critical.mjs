@@ -1,4 +1,4 @@
-/** Current-app critical journeys: no frozen v11 screenshots or hard-coded prior SHA. */
+/** Current-app critical journeys: no frozen historical screenshots or hard-coded prior SHA. */
 import {openHarness,records,check,assertNoOverflow,route,claimNativeNavigation} from "./browser/fixtures.mjs";
 import {chooseModernPaper} from "./paper-select.mjs";
 import {pkg as sixKinds} from "../tests/fixtures/six-kinds.mjs";

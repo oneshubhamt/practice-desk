@@ -6,6 +6,7 @@ import * as __suite_dep_1 from "node:assert/strict";
 import * as __suite_dep_2 from "node:fs/promises";
 import * as __suite_dep_3 from "./fixtures/six-kinds.mjs";
 import * as __suite_dep_4 from "../src/app/exam-package.ts";
+import * as __generic_attempt from "../src/engine/generic-attempt.ts";
 import * as __suite_dep_5 from "../src/app/history-priorities.ts";
 import * as __suite_dep_6 from "../src/app/history-score.ts";
 import * as __suite_dep_7 from "../src/app/history-page.ts";
@@ -22,8 +23,9 @@ import * as __suite_dep_16 from "../src/content/import-cgl.ts";
 import * as __suite_dep_17 from "../src/history/frozen.ts";
 import * as __suite_dep_18 from "../src/engine/session.ts";
 import * as __suite_dep_19 from "../src/engine/scoring.ts";
+import * as __suite_storage_health from "../src/app/storage-health.ts";
 
-// === Legacy suite: tests/history-cross-paper-marks.test.mjs — 6 unchanged test registrations ===
+// === Consolidated coverage: tests/history-cross-paper-marks.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -34,7 +36,7 @@ const builtinCglPackages = __suite_dep_4["builtinCglPackages"];
 const configureCglPractice = __suite_dep_4["configureCglPractice"];
 const validateExamPackage = __suite_dep_4["validateExamPackage"];
 const startGenericAttempt = __suite_dep_4["startGenericAttempt"];
-const transitionGenericAttempt = __suite_dep_4["transitionGenericAttempt"];
+const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
 const crossPaperMarksPriorities = __suite_dep_5["crossPaperMarksPriorities"];
 const frozenScoreSummary = __suite_dep_6["frozenScoreSummary"];
 const historyHTML = __suite_dep_7["historyHTML"];
@@ -50,8 +52,8 @@ const originals=editions.filter(p=>p.paper.edition==="source");
 const reviewed=editions.filter(p=>p.paper.edition==="reviewed");
 const questionMap=(bundle)=>new Map(bundle.questions.map(q=>[q.id,q]));
 const act=(type,nowMs,extra={})=>({type,nowMs,...extra});
-function finish(bundle,id,startedAt,sectionAnswers={}){
- let a=startGenericAttempt(bundle,id,startedAt);
+function finish(bundle,id,startedAt,sectionAnswers={},mode="exam-simulation"){
+ let a=startGenericAttempt(bundle,id,startedAt,mode);
  const qmap=questionMap(bundle);
  let time=startedAt;
  for(let section=0;section<bundle.paper.sections.length;section++){
@@ -163,7 +165,7 @@ test("F03: negative earned marks stay visible while progress width can be clampe
 
 test("F04: archive uses attempt's frozen eligible maximum, not nominal 100-paper marks",()=>{
  const strict=finish(configureCglPractice(originals[0],"strict"),"whole",1000,{});
- const single=finish(configureCglPractice(originals[0],"single",2),"section",2000,{});
+ const single=finish(configureCglPractice(originals[0],"single",2),"section",2000,{},"section-practice");
  const maxFull=scoreableMaximum(strict.frozen.paper,strict.frozen.key,strict.frozen.questions);
  const maxSingle=scoreableMaximum(single.frozen.paper,single.frozen.key,single.frozen.questions);
  assert.ok(maxFull>maxSingle);
@@ -189,7 +191,7 @@ test("F05 adjacent: archive status filters retain separate complete and progress
 });
 }
 
-// === Legacy suite: tests/history-selection-filtering-and-backup.test.mjs — 4 unchanged test registrations ===
+// === Consolidated coverage: tests/history-selection-filtering-and-backup.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -204,7 +206,7 @@ const historyHTML = __suite_dep_7["historyHTML"];
 const builtinCglPackages = __suite_dep_4["builtinCglPackages"];
 const configureCglPractice = __suite_dep_4["configureCglPractice"];
 const startGenericAttempt = __suite_dep_4["startGenericAttempt"];
-const transitionGenericAttempt = __suite_dep_4["transitionGenericAttempt"];
+const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
 const readFile = __suite_dep_2["readFile"];
 const papers=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
@@ -275,7 +277,7 @@ test("adjusted score trends require exact frozen key, revision and practice mode
  assert.match(page,/Repeat the same frozen paper, key and mode/);
 });
 
-test("P43 portable family setups survive backup v4 with checksum protection",async()=>{
+test("P43 portable family setups survive canonical backup with checksum protection",async()=>{
  const {makeBackup,verifyBackup}=await import("../src/history/backup.ts");
  const preferences={schema:1,dark:false,scale:100};
  const setups={schema:2,selectedFamilyId:"builtin:ssc-cgl",families:{
@@ -292,7 +294,7 @@ test("P43 portable family setups survive backup v4 with checksum protection",asy
 
 }
 
-// === Legacy suite: tests/persistence-backup-and-concurrency.test.mjs — 9 unchanged test registrations ===
+// === Consolidated coverage: tests/persistence-backup-and-concurrency.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -353,7 +355,7 @@ test("seeded two-tab compare-and-swap interleavings reject stale writes, preserv
     assert.deepEqual(stored,before,"rejected tab must not mutate observed saved state");
    }
   }
-  assert.ok((stored?.saveRevision??0)>=0);
+  assert.ok(stored===undefined||stored.saveRevision>=1);
  }
 });
 
@@ -381,19 +383,19 @@ test("generated additive merge is deterministic, idempotent, ordered and non-des
  }
 });
 
-test("backup v4 checksum covers records and preferences; size, IDs and timestamp are bounded",()=>{
+test("canonical backup checksum covers records and preferences; size, IDs and timestamp are bounded",()=>{
  // Authenticated checksum alone must not launder unsupported v4 privileges.
  const unsigned=makeBackup([],{schema:1,dark:false,scale:100},"2026-11-04T03:15:00.000Z");
  assert.equal(verifyBackup(structuredClone(unsigned)).version,4);
  assert.throws(()=>verifyBackup({...unsigned,issuerSignature:"nonexistent"}),/unsupported envelope/);
  assert.throws(()=>verifyBackup({...unsigned,manifest:{...unsigned.manifest,privileged:true}}),/unsupported manifest/);
 
- // The reference property also verifies unlike record types in one v4 archive.
+ // The reference property also verifies unlike record types in one canonical archive.
  // This replaces the separate three-record illustrative backup test.
  const heterogeneous=[
-  {id:"opaque-note",recordType:"generic-note",finishedAt:null},
-  {id:"paper",recordType:"generic-package"},
-  {id:"learn",recordType:"learning-card"}
+  {id:"opaque-note",recordType:"generic-note",saveRevision:1,finishedAt:null},
+  {id:"paper",recordType:"generic-package",saveRevision:1},
+  {id:"learn",recordType:"learning-card",saveRevision:1}
  ];
  const mixed=makeBackup(heterogeneous,preferences,"2026-10-29T11:00:00Z");
  assert.deepEqual(verifyBackup(JSON.parse(JSON.stringify(mixed))),mixed);
@@ -404,7 +406,7 @@ test("backup v4 checksum covers records and preferences; size, IDs and timestamp
  assert.throws(()=>verifyBackup(changed),/integrity/);
 
  for(let count of [0,1,7,101,5000]){
-  const records=Array.from({length:count},(_,i)=>({id:"r"+i,recordType:"opaque",answer:i%4}));
+  const records=Array.from({length:count},(_,i)=>({id:"r"+i,recordType:"opaque",saveRevision:1,answer:i%4}));
   const b=makeBackup(records,preferences,at);
   assert.deepEqual(verifyBackup(JSON.parse(JSON.stringify(b))),b,"count="+count);
   for(const mutate of [
@@ -418,25 +420,26 @@ test("backup v4 checksum covers records and preferences; size, IDs and timestamp
    assert.throws(()=>verifyBackup(corrupted),"count="+count+" modified checksum payload");
   }
  }
- const over=makeBackup(Array.from({length:5001},(_,i)=>({id:"r"+i})),preferences,at);
+ const over=makeBackup(Array.from({length:5001},(_,i)=>({id:"r"+i,recordType:"opaque",saveRevision:1})),preferences,at);
  assert.throws(()=>verifyBackup(over),/Invalid backup format/);
- const dups=makeBackup([{id:"x"},{id:"x"}],preferences,at);
+ const dups=makeBackup([{id:"x",recordType:"opaque",saveRevision:1},{id:"x",recordType:"opaque",saveRevision:1}],preferences,at);
  assert.throws(()=>verifyBackup(dups),/Invalid backup records/);
- const invalidName=makeBackup([{id:"x".repeat(201)}],preferences,at);
+ const invalidName=makeBackup([{id:"x".repeat(201),recordType:"generic-note",saveRevision:1}],preferences,at);
  assert.throws(()=>verifyBackup(invalidName),/Invalid backup records/);
  assert.throws(()=>makeBackup([],preferences,"not-a-date"),/timestamp/);
 });
 
-test("new-record CAS, current revision zero and saved revision progression have distinct meanings",()=>{
+test("new-record CAS uses null; persisted rows require revisions 1+ and progress monotonically",()=>{
  assert.doesNotThrow(()=>assertWriteVersion(undefined,null));
- assert.doesNotThrow(()=>assertWriteVersion({},0));
  assert.equal(nextWriteVersion(null),1);
- assert.equal(nextWriteVersion(0),1);
  assert.equal(nextWriteVersion(12),13);
- for(const current of [undefined,{},{saveRevision:1},{saveRevision:8}]){
-  for(const expected of [null,0,1,8]){
-   const allowed=(expected===null?current===undefined:
-    current!==undefined&&(current.saveRevision??0)===expected);
+ assert.throws(()=>nextWriteVersion(0),/Invalid expected stored write revision/);
+ assert.throws(()=>assertWriteVersion({},0),/Another tab/);
+ assert.throws(()=>assertWriteVersion({saveRevision:0},0),/Another tab/);
+ for(const current of [undefined,{saveRevision:1},{saveRevision:8}]){
+  for(const expected of [null,1,8]){
+   const allowed=expected===null?current===undefined:
+    current!==undefined&&current.saveRevision===expected;
    if(allowed)assert.doesNotThrow(()=>assertWriteVersion(current,expected));
    else assert.throws(()=>assertWriteVersion(current,expected),/Another tab/);
   }
@@ -445,7 +448,7 @@ test("new-record CAS, current revision zero and saved revision progression have 
 }
 }
 
-// === Legacy suite: tests/persistence-session-recovery.test.mjs — 7 unchanged test registrations ===
+// === Consolidated coverage: tests/persistence-session-recovery.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -560,7 +563,8 @@ const p45test=__suite_dep_0.default;
 const p45assert=__suite_dep_1.default;
 
 p45test("P45 History health distinguishes pending, locked, failure and browser eviction",()=>{
- const {healthSummary,historyHTML}=__suite_dep_7;
+ const {historyHTML}=__suite_dep_7;
+ const {healthSummary}=__suite_storage_health;
  const base={pendingWrites:0,lastCommittedAt:null,lastFailure:null,locked:false,loading:false,inMemoryRecords:0};
  p45assert.match(healthSummary({...base,loading:true}),/Loading stored records/);
  p45assert.match(healthSummary({...base,pendingWrites:2}),/2 writes pending/);
@@ -576,7 +580,7 @@ p45test("P45 History health distinguishes pending, locked, failure and browser e
  p45assert.ok(html.includes("No automatic or verified external backup is tracked"));
 });
 
-p45test("P45 compressed backup keeps v4 checksum and resists malformed gzip",async()=>{
+p45test("P45 compressed backup keeps canonical backup checksum and resists malformed gzip",async()=>{
  const {backupDownload,readBackupFile,PLAIN_BACKUP_LIMIT}=await import("../src/history/backup-file.ts");
  const {makeBackup,verifyBackup}=__suite_dep_13;
  const {DEFAULT_PREFERENCES:preferences}=await import("../src/app/preferences.ts");
@@ -601,7 +605,7 @@ p45test("P45 one-pass backup serialization remains byte-identical to v3 for ever
  const rows=[{id:"opaque-note",recordType:"generic-note",saveRevision:7,
    content:{prompt:"IPC § & Unicode क",options:["A","B"]},
    result:{earnedMarks:2.5,sectionMarks:[0,2.5]}},
- {id:"learning-one",recordType:"learning-card",dueAt:stamp,
+ {id:"learning-one",recordType:"learning-card",saveRevision:7,dueAt:stamp,
    note:"Quoted \"escaped\""}];
  const settings={schema:2,selectedFamilyId:"builtin:ssc-cgl",families:{
    "builtin:ssc-cgl":{paperRevisionId:"p1",mode:"strict",section:0,
@@ -626,9 +630,12 @@ p45test("P45-B identical frozen exam content uses one SHA-addressed snapshot acr
  const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url),"utf8"));
  const pkg=builtinCglPackages(sources,patches)[0];
  const {startGenericAttempt}=await import("../src/app/exam-package.ts");
- const first=startGenericAttempt(pkg,"s1",1730000000000);
- const second=startGenericAttempt(pkg,"s2",1730000001000);
+ const first={...startGenericAttempt(pkg,"s1",1730000000000),saveRevision:1};
+ const second={...startGenericAttempt(pkg,"s2",1730000001000),saveRevision:1};
  const a=compactAttempt(first),b=compactAttempt(second);
+ const unsaved=compactAttempt(startGenericAttempt(pkg,"unsaved-row",1730000002000));
+ p45assert.throws(()=>reconstructRecords([unsaved.row],[unsaved.snapshot]),/CAS revision 1 or greater/,
+   "Revision zero is an in-memory pre-write state, never a durable row");
  p45assert.equal(a.snapshot.id,b.snapshot.id);
  p45assert.ok(!("frozen" in a.row),"Attempt should never repeat stored frozen source");
  p45assert.equal(a.row.frozenAt,first.frozen.frozenAt);
@@ -680,9 +687,9 @@ p45test("P45-B shared snapshot also stores publisher keys, source review and exp
  const key=createSourceKeyReference(reviewed,source);
  const review=createSourceReviewReference(reviewed,source);
  p45assert.ok(key&&review);
- const a={...startGenericAttempt(reviewed,"extras-a",1730000000000),
+ const a={...startGenericAttempt(reviewed,"extras-a",1730000000000),saveRevision:1,
    sourceKeyReference:key,sourceReviewReference:review};
- const b={...startGenericAttempt(reviewed,"extras-b",1730000001000),
+ const b={...startGenericAttempt(reviewed,"extras-b",1730000001000),saveRevision:1,
    sourceKeyReference:key,sourceReviewReference:review};
  const x=compactAttempt(a),y=compactAttempt(b);
  p45assert.equal(x.snapshot.id,y.snapshot.id);
@@ -695,4 +702,96 @@ p45test("P45-B shared snapshot also stores publisher keys, source review and exp
  p45assert.deepEqual(hydrated[0].sourceKeyReference,key);
  p45assert.deepEqual(hydrated[1].sourceReviewReference,review);
  p45assert.equal(hydrated[0].frozen.questions,hydrated[1].frozen.questions);
+});
+
+
+p45test("Persistence backend contract gives fallback one CAS/add/delete path and detects external change",async()=>{
+ const {createLocalFallbackWorkspaceStore}=await import("../src/history/workspace-store.ts");
+ class MemoryStorage{
+  values=new Map();
+  fail=false;
+  getItem(key){return this.values.has(key)?this.values.get(key):null;}
+  setItem(key,value){if(this.fail)throw new Error("quota denied");this.values.set(key,String(value));}
+  removeItem(key){this.values.delete(key);}
+  clear(){this.values.clear();}
+  key(index){return [...this.values.keys()][index]??null;}
+  get length(){return this.values.size;}
+ }
+ const storage=new MemoryStorage();
+ const store=createLocalFallbackWorkspaceStore(storage,"history");
+ const loaded=await store.loadRecoverable();
+ p45assert.deepEqual(loaded.records,[]);
+ const first={id:"card-1",recordType:"learning-card",saveRevision:1};
+ storage.fail=true;
+ await p45assert.rejects(store.write(first,null),/quota denied/);
+ p45assert.equal(storage.getItem("history"),null,
+  "Failed fallback write must not create durable bytes");
+ storage.fail=false;
+ await store.write(first,null);
+ await p45assert.rejects(store.write({...first,saveRevision:2},null),/Another tab already created/);
+ await store.write({...first,saveRevision:2},1);
+ await store.insertMany([{id:"card-2",recordType:"learning-card",saveRevision:1}]);
+ p45assert.deepEqual(JSON.parse(storage.getItem("history")).map(x=>x.id),["card-1","card-2"]);
+ await store.delete("card-2",1,"learning-card");
+ p45assert.deepEqual(JSON.parse(storage.getItem("history")).map(x=>x.id),["card-1"]);
+
+ const completed={id:"done",recordType:"generic-attempt",saveRevision:1,finishedAt:123};
+ await store.insertMany([completed]);
+ storage.fail=true;
+ await p45assert.rejects(store.deleteCompleted([{id:"done",saveRevision:1}]),/quota denied/);
+ p45assert.equal(JSON.parse(storage.getItem("history")).some(x=>x.id==="done"),true,
+  "Failed fallback deletion must leave durable and in-memory state retryable");
+ storage.fail=false;
+ await store.deleteCompleted([{id:"done",saveRevision:1}]);
+ p45assert.equal(JSON.parse(storage.getItem("history")).some(x=>x.id==="done"),false);
+
+ const external=JSON.stringify([{id:"outside",recordType:"learning-card",saveRevision:1}]);
+ storage.setItem("history",external);
+ p45assert.equal(store.externalStorageChanged({key:"history",newValue:external}),true);
+ await p45assert.rejects(
+  store.write({id:"later",recordType:"learning-card",saveRevision:1},null),/Another tab changed/
+ );
+ p45assert.equal((await store.loadVerified()).records[0].id,"outside",
+  "Recovery export reads authoritative fallback bytes even after a conflict");
+});
+
+p45test("Persistence backend refuses malformed fallback bytes without overwriting them",async()=>{
+ const {createLocalFallbackWorkspaceStore}=await import("../src/history/workspace-store.ts");
+ const storage={
+  value:"{broken",
+  getItem(){return this.value;},
+  setItem(_key,value){this.value=String(value);},
+  removeItem(){this.value=null;},
+  clear(){this.value=null;},
+  key(){return null;},
+  get length(){return this.value===null?0:1;}
+ };
+ const store=createLocalFallbackWorkspaceStore(storage,"history");
+ await p45assert.rejects(store.loadRecoverable(),/Unexpected token|JSON/);
+ p45assert.equal(storage.value,"{broken","Malformed current bytes must remain untouched");
+});
+
+
+p45test("Persistence fallback quarantines duplicate identities instead of choosing a winner",async()=>{
+ const {createLocalFallbackWorkspaceStore}=await import("../src/history/workspace-store.ts");
+ const duplicated=JSON.stringify([
+  {id:"duplicate",recordType:"learning-card",saveRevision:1},
+  {id:"healthy",recordType:"learning-card",saveRevision:1},
+  {id:"duplicate",recordType:"learning-card",saveRevision:2}
+ ]);
+ const storage={
+  value:duplicated,
+  getItem(){return this.value;},
+  setItem(_key,value){this.value=String(value);},
+  removeItem(){this.value=null;},
+  clear(){this.value=null;},
+  key(){return null;},
+  get length(){return this.value===null?0:1;}
+ };
+ const store=createLocalFallbackWorkspaceStore(storage,"history");
+ const recovered=await store.loadRecoverable();
+ p45assert.equal(recovered.rejectedRows,2);
+ p45assert.deepEqual(recovered.records.map(x=>x.id),["healthy"]);
+ p45assert.equal(storage.value,duplicated,"Recovery must not rewrite ambiguous original bytes");
+ await p45assert.rejects(store.loadVerified(),/Duplicate fallback record identity/);
 });

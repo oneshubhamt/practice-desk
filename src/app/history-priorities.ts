@@ -1,4 +1,4 @@
-import type { GenericAttempt } from "./exam-package.ts";
+import type { GenericAttempt } from "../engine/generic-attempt.ts";
 import { sectionScoreSummaries } from "../engine/score-ceiling.ts";
 
 export interface MarksPriorityRow {
@@ -61,7 +61,7 @@ function formatSignature(a:GenericAttempt):string{
    marking:{defaultRule:p.scoring.defaultRule,byQuestionKind:p.scoring.byQuestionKind??null}
  });
 }
-/** V11-compatible cross-paper marks lens, with stronger cohort safeguards.
+/** Canonical cross-paper marks lens with strict cohort safeguards.
  * Select at most eight newest completed multi-section/full-paper records from a
  * defensible cohort, and require two distinct underlying papers in that set.
  * Do not use this to claim normalized difficulty or predictive rank.

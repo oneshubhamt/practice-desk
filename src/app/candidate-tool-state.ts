@@ -1,8 +1,9 @@
+import {STORAGE_TOPOLOGY} from "../storage-topology.ts";
 import {sha256} from "../domain/hash.ts";
 import {BASIC_CALCULATOR_V1,newExamCalculatorState,
  type CalculatorOperator,type CalculatorProfile,type ExamCalculatorState} from "../domain/calculator.ts";
 
-const PREFIX="practiceDesk.candidateTools.v1:";
+const PREFIX=STORAGE_TOPOLOGY.candidateToolsPrefix;
 const OPERATORS=new Set<CalculatorOperator>(["+","-","*","/"]);
 const MAX_DISPLAY=24;
 

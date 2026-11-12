@@ -1,11 +1,10 @@
-import type { ExamPackage } from "./exam-package.ts";
+import type { ExamPackage } from "../domain/exam-package.ts";
 import type { QuestionKind } from "../domain/question.js";
 import type { MarkingRule } from "../domain/scoring.js";
 import { scoreableMaximum } from "../engine/score-ceiling.ts";
+import {escapeText} from "./html-escape.ts";
 
 const excludedStatuses=new Set(["draft","invalid","incomplete-source","under-review","superseded"]);
-const escapeHTML=(value:unknown):string=>String(value??"").replace(/[&<>"']/g,c=>
-  ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]??c));
 const signed=(value:number):string=>value>0?"+"+value:value===0?"0":String(value);
 const joinRange=(values:readonly number[]):string=>{
  const sorted=[...new Set(values)].sort((a,b)=>a-b);
@@ -142,10 +141,10 @@ export function preflightHTML(p:ExamPreflight):string{
  const label=(n:number)=>n.toFixed(p.decimals);
  return '<section id="g-preflight" class="paper-preflight" aria-label="Pre-test scoring and editorial information">'+
   '<h3>Scoring & source audit</h3>'+
-  '<div class="preflight-scoreline"><strong>'+escapeHTML(label(p.maximum))+
+  '<div class="preflight-scoreline"><strong>'+escapeText(label(p.maximum))+
   '</strong><span>eligible automated marks</span></div>'+
   '<p class="fine">Computed for this selected practice mode and edition; not the unadjusted printed maximum.</p>'+
-  '<p class="preflight-rule"><b>Marking:</b> '+escapeHTML(p.ruleSummary)+'</p>'+
+  '<p class="preflight-rule"><b>Marking:</b> '+escapeText(p.ruleSummary)+'</p>'+
   (p.hasComponentScoring?'<p class="fine">Component-based partial credit applies where configured, capped at each question\'s full marks.</p>':"")+
   '<p class="fine">Question status: '+plural(p.eligibleQuestions,"automatically scoreable")+
   '; '+plural(p.excludedQuestions,"excluded")+
@@ -154,20 +153,20 @@ export function preflightHTML(p:ExamPreflight):string{
   '; '+plural(p.correctedQuestions,"corrected")+'.'+
   (p.patchCount===null?"":' Independently reviewed changes in this built-in edition: '+
     p.patchCount+'.')+'</p>'+
-  '<p class="preflight-provenance"><b>Source & independence:</b> '+escapeHTML(p.provenance)+'</p>'+
+  '<p class="preflight-provenance"><b>Source & independence:</b> '+escapeText(p.provenance)+'</p>'+
   '<p class="fine">Exact key choices, editorial disputes, worked solutions and original-versus-reviewed answer comparisons remain hidden until permitted after completion.</p>'+
  '</section>';
 }
 
 export function examRulesHTML(p:ExamPreflight):string{
- const list=(items:readonly string[])=>'<ul>'+items.map(item=>'<li>'+escapeHTML(item)+'</li>').join("")+'</ul>';
+ const list=(items:readonly string[])=>'<ul>'+items.map(item=>'<li>'+escapeText(item)+'</li>').join("")+'</ul>';
  return '<details class="panel pad help-rules" id="g-exam-rules">'+
   '<summary>Full exam rules, shortcuts, source audit & offline storage</summary>'+
   '<div class="help-rules-body">'+
   '<h3>Exam clock and sections</h3>'+list(p.timingRules)+
   '<h3>Questions, review and navigation</h3>'+list(p.navigationRules)+
-  '<h3>Scoring for this selection</h3><p>'+escapeHTML(p.ruleSummary)+
-  '. Maximum eligible automated marks: <b>'+escapeHTML(p.maximum.toFixed(p.decimals))+
+  '<h3>Scoring for this selection</h3><p>'+escapeText(p.ruleSummary)+
+  '. Maximum eligible automated marks: <b>'+escapeText(p.maximum.toFixed(p.decimals))+
   '</b>. Excluded items are omitted; written/manual questions are self-assessed separately.</p>'+
   '<h3>Exam keyboard shortcuts</h3><p>During a running exam, A–D answer a single-choice question; '+
   'left/right arrows navigate between questions except when a native answer radio is focused. '+
@@ -175,7 +174,7 @@ export function examRulesHTML(p:ExamPreflight):string{
   'M toggles a flag if permitted, including while paused; F toggles full-screen/focus layout. '+
   'Answer and navigation shortcuts do not operate while paused or in text entry or an open Display panel. '+
   'Use ordinary Tab, Enter and Space to navigate controls.</p>'+
-  '<h3>Source and editorial independence</h3><p>'+escapeHTML(p.provenance)+
+  '<h3>Source and editorial independence</h3><p>'+escapeText(p.provenance)+
   ' No answer key, solution, dispute details or correction comparison is disclosed before permitted post-test review.</p>'+
   '<h3>Offline data and backups</h3><p>This is a standalone offline tool, not a synchronised account. '+
   'Attempts and display choices are kept in the current browser profile; storage can be cleared or evicted. '+

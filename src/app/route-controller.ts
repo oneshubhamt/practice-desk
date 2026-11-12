@@ -4,17 +4,16 @@
 import {isAttempt} from "./stored-record-validator.ts";
 
 
-import {transitionGenericAttempt} from "./exam-package.ts";
+import {transitionGenericAttempt} from "../engine/generic-attempt.ts";
 
 import {restoreSession} from "../history/frozen.ts";
 
 import {scoreAttempt} from "../engine/scoring.ts";
 
 import {type AppRoute,type RouteContext} from "./navigation.ts";
-import type {CoordinatorContext} from "./coordinator-context.ts";
-import {clearCandidateToolWorkspace} from "./candidate-tool-state.ts";
+import type {RouteControllerContext} from "./coordinator-context.ts";
 
-export async function activateWorkspaceRoute(owner:CoordinatorContext,target:AppRoute,ctx:RouteContext):Promise<void>{
+export async function activateWorkspaceRoute(owner:RouteControllerContext,target:AppRoute,ctx:RouteContext):Promise<void>{
    const requested=++owner.activationGeneration;
    if(!owner.routeHydrated)await owner.hydration;
    if(owner.disposed||ctx.signal?.aborted||requested!==owner.activationGeneration)return;
@@ -59,12 +58,13 @@ export async function activateWorkspaceRoute(owner:CoordinatorContext,target:App
      const switching=!fresh&&(owner.attempt?.id!==saved.id||prevView!=="exam");
      owner.attempt=saved;
      if(target.screen==="exam"&&switching){
-       const restored=restoreSession(saved.frozen.paper,saved.state,owner.now(),!document.hidden);
-       owner.attempt={...saved,state:restored.state,
-         ...(restored.expired?{finishedAt:owner.now(),completionReason:"time-expired" as const,
+       const restoredAt=owner.now();
+       const restored=restoreSession(saved.frozen.paper,saved.state,restoredAt,!document.hidden);
+       owner.attempt={...saved,state:restored.state,updatedAt:restoredAt,
+         ...(restored.expired?{finishedAt:restoredAt,completionReason:"time-expired" as const,
            result:scoreAttempt(saved.frozen.paper,saved.frozen.key,
-             saved.frozen.questions,restored.state.responses,new Date().toISOString())}:{})};
-       if(owner.attempt!==saved)void owner.save(owner.attempt);
+             saved.frozen.questions,restored.state.responses,new Date(restoredAt).toISOString())}:{})};
+       void owner.save(owner.attempt);
        if(owner.attempt.finishedAt!==null){
          owner.go({screen:"result",attemptId:owner.attempt.id,tab:"overview"},"replace");return;
        }
@@ -83,7 +83,7 @@ export async function activateWorkspaceRoute(owner:CoordinatorContext,target:App
    }
  }
 
-export const navigateWorkspace=(owner:CoordinatorContext,target:AppRoute,history:"push"|"replace"="push"):void=>{
+export const navigateWorkspace=(owner:RouteControllerContext,target:AppRoute,history:"push"|"replace"="push"):void=>{
    void owner.router.navigate(target,history).catch(error=>{
      owner.warning=error instanceof Error?"Navigation failed: "+error.message:"Navigation failed";
      if(!owner.disposed)owner.draw();

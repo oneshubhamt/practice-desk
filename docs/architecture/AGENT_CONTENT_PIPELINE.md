@@ -1,37 +1,40 @@
-# AI-first content pipeline — P57/P59/P60 consolidated task contract
+# Practice Desk — advanced content pipeline
 
-**Audience:** external AI agents and maintainers; start with [the compact quickstart](../AGENT_AUTHORING_QUICKSTART.md). **Runtime boundary:** local Node CLIs operate on explicitly provided source paths and emit files/JSON. They do not provide embedded models, authenticated external sources, browser/device controls, cloud sync or silent Library import. The user's local History/FSRS remains private.
+**Audience:** external agents and maintainers handling workflows beyond ordinary one-file authoring. Start with the [quickstart](../AGENT_AUTHORING_QUICKSTART.md). Local Node CLIs operate only on explicitly supplied files and emit files/JSON; they do not embed models, authenticate external sources, access browser History or silently import into Library.
 
-## Stage routing
-| Need | Script and handoff | Primary invariants |
+## Route by need
+
+| Need | Tooling | Invariant |
 |---|---|---|
-| AI/human source authoring | `question-bank-cli.mjs validate-bank / qa-bank / compile-bank` | One strict `practice-desk-authoring` v1 source, caution-labelled; compile via existing canonical publisher |
-| Small-context corrections | `question-bank-agent.mjs inspect / show / patch` | Paged issues, one-question retrieval, SHA preconditions, create-new-file, no whole-bank dump |
-| Planned syllabus distribution (P60-B) | `content-blueprint.mjs validate / audit`, compiler `--blueprint` | Versioned quotas, distinct exam subjects/sections/cognitive tags, explicit partial delivery; compiler cannot certify semantic syllabus correctness |
-| Independent editorial/answer-key challenge (P60-C) | `question-quality.mjs prepare / audit`, optional compiler `--quality-review` | Candidate-only blind packet; v2 review sidecar with explicit mathematical/legal/time-sensitive applicability, dated source locators, original 20 checks and source-hash freshness; no content authentication or key leakage |
-| Exact Source and separately corrected Reviewed editions (P60-D) | `editorial-editions.mjs template / audit / compile` | Preserve original source bytes/key; hash-bind exact Source paper/key IDs into Reviewed paper, import Source then Reviewed; missing revisions yield unavailable comparisons |
-| Supplied document/PDF (P60-E) | `pdf-ingest.mjs template / audit / compile` | External agent actually reads pages, math and diagrams; bind PDF/key bytes and per-item source provenance; no internal OCR |
-| One scoped handoff for the above (P60-F) | `agent-handoff.mjs actions / prepare / assess / publish` | Read-only assessment; new-file publication requires explicit `--allow-create`; SHA-stale reviews/decisions block strict export |
+| Validate/compile one source bank | `question-bank-cli.mjs` | One canonical `practice-desk-authoring` v1 source compiled through the canonical publisher |
+| Small-context corrections | `question-bank-agent.mjs` | Paged inspection, question-scoped retrieval, SHA preconditions, new-file output |
+| Planned distribution | `content-blueprint.mjs` + optional cognitive tags | Explicit quotas/partial delivery; structurally valid partial work is not publication-ready |
+| Blind editorial/key challenge | `question-quality.mjs` | Candidate-only packet, v2 applicability declarations, all 20 checks, source-hash freshness |
+| Source + separately corrected Reviewed | `editorial-editions.mjs` | Preserve Source bytes/key; bind Reviewed to exact Source paper/key identities |
+| Supplied PDF/document | `pdf-ingest.mjs` | External reviewer actually inspects pages/math/figures; bind document/key bytes and per-item provenance; no internal OCR |
+| Scoped orchestration | `agent-handoff.mjs` | Read-only assess; publication requires explicit create permission and fresh evidence |
 
-For ordinary one-file authoring, the shorter workflow avoids loading every stage into model context. A P60-F `prepare` creates a *blank/unapproved* review sidecar; this cannot demonstrate independent factual checking until genuinely completed and externally researched. A file can be structurally valid while educationally wrong. Source citations, date claims, checkmarks and reviewer labels are not source proof.
+For the common strict-review flow:
 
-## Example: strict reviewed publication
 ```bash
-node scripts/agent-handoff.mjs actions
 node scripts/agent-handoff.mjs prepare bank.json NEW-review-dir --allow-create
-# A truly independent solver inspects candidate-only packet, actual sources, answers and figures.
-# Fill the current review.json with supported evidence and all required checks.
+# Independently solve candidate-only material and genuinely inspect cited sources.
 node scripts/agent-handoff.mjs assess single bank.json --quality-review NEW-review-dir/review.json
 node scripts/agent-handoff.mjs publish single bank.json NEW.exam.json --quality-review NEW-review-dir/review.json --allow-create
 ```
-For original/reviewed, first derive a decision template using `editorial-editions.mjs template original.json reviewed.json`, fill evidence and reviewed QA, then `agent-handoff.mjs assess paired ...` and `publish paired ...`. For supplied documents, transcribe/source-check outside Practice Desk, fill the `pdf-ingest.mjs template` manifest, then assess/publish `pdf` with document, original source, reviewed corrections, decisions and QA sidecar. Use exact command usage in the quickstart.
 
-## Publication is not content authentication
-- A source PDF SHA validates the referenced bytes, but the tool does **not** verify each PDF page/image against transcription, original PYQ authenticity or printed key.
-- Source authoring may additionally declare `qa.applicability` booleans (`mathematical`, `legal`, `timeSensitive`) with a dated legal/temporal `asOfDate`; an independent review may not contradict positive source declarations. Applicable legal/time-sensitive assertions must carry a reviewer-declared ISO as-of date and matching locatable source evidence; maths requires explicit applicability and proof/source-based review. Heuristics flag likely omitted categories but cannot discover every misclassified claim. Factual/temporal/legal assertions and distractor quality still require genuine checking against authoritative sources; recorded review assertions are not independently authenticated by the app.
-- Revisions to prompt, image, key or explanation may invalidate earlier review/hash records. No candidate-answer exposure is allowed.
-- `allowPartial` batches can be structurally `valid:true` for continued authoring while `readyForPublication:false` until the total count and required quotas are fulfilled. The compiler and agent publish path reject incomplete plans; read-only audits/assessments can succeed without mislabeling readiness.
-- Original-key comparison is advisory and only reports supported candidate-semantic MCQs. Unsupported question kinds are individually unavailable; explanation/taxonomy edits do not invalidate equal candidate inputs. Frozen schema-2 records remain readable. Remaining source-authentication risks are tracked in [backlog](../../backlog.md).
-- Source/Reviewed are explicit *two* Library imports, not atomic remote synchronization. Retain original source/PDF and sidecars outside browser History as appropriate.
+For paired editions, create/complete an `editorial-editions.mjs template`, review the Reviewed source, then assess/publish `paired`. For supplied documents, complete the `pdf-ingest.mjs template` after actual document inspection, then assess/publish `pdf`.
 
-**References:** [source authoring](QUESTION_BANK_AUTHORING.md) · [agent quickstart](../AGENT_AUTHORING_QUICKSTART.md) · [machine capability contract](../contracts/practice-desk-capabilities.v1.json). Original individual P60-A–F design documents remain losslessly accessible in [the pinned history](../HISTORY_INDEX.md).
+## Publication/trust rules
+
+- A PDF/source SHA proves referenced bytes, not original publisher identity, transcription accuracy, official-key correctness or current law.
+- Positive author declarations for mathematical/legal/time-sensitive content cannot be contradicted away by review. Applicable legal/time-sensitive items require a matching as-of date and locatable evidence; mathematics requires proof/source-backed checking. Heuristics are supplementary only.
+- Candidate-visible stem/options/media/stimuli determine Source/Reviewed semantic comparability. Explanation/taxonomy-only changes do not; unsupported response kinds are individually unavailable rather than destroying otherwise valid comparisons.
+- Reviewed packages bind exact Source paper/key identities. Noncurrent source-key shapes are rejected rather than migrated.
+- Candidate explanations, keys and explanation-only media remain private until the permitted review boundary.
+- A partial blueprint can be `valid:true` while `readyForPublication:false`; strict publication rejects incomplete required quotas.
+- Source and Reviewed are explicit separate Library imports. Retain original documents and review/decision sidecars outside browser History.
+
+The CLI may report `factualVerification:not-performed`; treat reviewer/source statements as attributed claims unless independently authenticated.
+
+**References:** [quickstart](../AGENT_AUTHORING_QUICKSTART.md) · [data contracts](DATA_CONTRACTS.md) · [machine capability contract](../contracts/practice-desk-capabilities.v1.json) · [historical programme evidence](../HISTORY_INDEX.md).

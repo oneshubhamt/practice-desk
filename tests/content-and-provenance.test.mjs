@@ -6,6 +6,7 @@ import * as __suite_dep_1 from "node:assert/strict";
 import * as __suite_dep_2 from "node:fs/promises";
 import * as __suite_dep_3 from "./fixtures/six-kinds.mjs";
 import * as __suite_dep_4 from "../src/app/exam-package.ts";
+import * as __generic_attempt from "../src/engine/generic-attempt.ts";
 import * as __suite_dep_5 from "../src/engine/scoring.ts";
 import * as __suite_dep_6 from "../src/engine/score-ceiling.ts";
 import * as __suite_dep_7 from "../src/domain/integrity.ts";
@@ -32,7 +33,7 @@ import * as __suite_dep_26 from "../src/domain/hash.ts";
 import * as __suite_dep_27 from "../src/learning/learning.ts";
 import * as __suite_dep_28 from "../src/app/preferences.ts";
 
-// === Legacy suite: tests/content-cgl-edition-parity.test.mjs — 5 unchanged test registrations ===
+// === Consolidated coverage: tests/content-cgl-edition-parity.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -40,9 +41,10 @@ const readFile = __suite_dep_2["readFile"];
 const pkg = __suite_dep_3["pkg"];
 const builtinCglPackages = __suite_dep_4["builtinCglPackages"];
 const configureCglPractice = __suite_dep_4["configureCglPractice"];
+const cglAttemptMode = __suite_dep_4["cglAttemptMode"];
 const validateExamPackage = __suite_dep_4["validateExamPackage"];
 const startGenericAttempt = __suite_dep_4["startGenericAttempt"];
-const transitionGenericAttempt = __suite_dep_4["transitionGenericAttempt"];
+const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
 const scoreAttempt = __suite_dep_5["scoreAttempt"];
 const scoreableMaximum = __suite_dep_6["scoreableMaximum"];
 const sectionScoreSummaries = __suite_dep_6["sectionScoreSummaries"];
@@ -83,9 +85,9 @@ test("all five CGL paper families preserve independently pinned original and rev
      assert.equal(rev.content.prompt,patch.stem??before.stem);
      assert.deepEqual(rev.content.options.map(o=>o.text),patch.opts??before.opts);
      assert.equal(keyReviewed.get(rev.id)?.optionId,rev.content.options["abcd".indexOf(patch.key??before.key)].id);
-     // Directly derived from frozen baseline/v11 legacy.ts 7-12:
-     const v11Status=patch.status??(before.status==="invalid"||before.status==="caution"?"caution":"ok");
-     const expected=v11Status==="ok"?"verified":v11Status;
+     // Canonical reviewed-edition status mapping:
+     const reviewedStatus=patch.status??(before.status==="invalid"||before.status==="caution"?"caution":"ok");
+     const expected=reviewedStatus==="ok"?"verified":reviewedStatus;
      assert.equal(rev.editorial.status,expected,original.id+" Q"+before.n+" editorial parity");
      if(expected==="corrected")corrected++;
      if(expected==="caution")caution++;
@@ -177,7 +179,7 @@ test("standard CGL marking and nominal denominator are unchanged by generic cap"
 });
 }
 
-// === Legacy suite: tests/content-cgl-import-and-scoring.test.mjs — 4 unchanged test registrations ===
+// === Consolidated coverage: tests/content-cgl-import-and-scoring.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -190,7 +192,7 @@ const patches = JSON.parse(await readFile(new URL("../src/content/patches.json",
 const library = importCglBank(papers, patches);
 
 
-test("v11-reviewed editorial policy: source invalid without a patch is scored as caution", () => {
+test("reviewed editorial policy: source invalid without a patch is scored as caution", () => {
   for (let i = 0; i < library.length; i += 2) {
     const source = library[i], reviewed = library[i + 1];
     for (let j = 0; j < source.questions.length; j++) {
@@ -209,7 +211,7 @@ test("v11-reviewed editorial policy: source invalid without a patch is scored as
 
 }
 
-// === Legacy suite: tests/content-editorial-and-timing-labels.test.mjs — 3 unchanged test registrations ===
+// === Consolidated coverage: tests/content-editorial-and-timing-labels.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -279,11 +281,11 @@ test("L08: 30 Sep Q6 C to D, wording-only Q3, and disputed 6 Oct Q62 unchanged",
 });
 test("L09/L10: timing type and frozen mode have accurate labels, untimed included",()=>{
  const p=find("cgl-2026-09-30","reviewed");
- for(const [configured,mode,scope,aria] of [
-  [configureCglPractice(p,"free"),"Full paper · flexible navigation","Whole-paper timer","Whole-paper time used"],
-  [configureCglPractice(p,"strict"),"Exam simulation","Section timer","Section time used"],
-  [configureCglPractice(p,"single",1),"Single-section practice","Whole-paper timer","Whole-paper time used"]]){
-  const a=startGenericAttempt(configured,mode,0),html=renderModelExam(a,configured);
+ for(const [configured,frozenMode,mode,scope,aria] of [
+  [configureCglPractice(p,"free"),"full-paper-practice","Full paper · flexible navigation","Whole-paper timer","Whole-paper time used"],
+  [configureCglPractice(p,"strict"),"exam-simulation","Exam simulation","Section timer","Section time used"],
+  [configureCglPractice(p,"single",1),"section-practice","Single-section practice","Whole-paper timer","Whole-paper time used"]]){
+  const a=startGenericAttempt(configured,mode,0,frozenMode),html=renderModelExam(a,configured);
   assert.ok(html.includes('<p class="muted">'+mode+' · '),
    "Human-readable frozen exam mode must remain visible beneath the compact title");
   assert.ok(html.includes('aria-valuetext="'+scope+' '),
@@ -303,7 +305,7 @@ test("L09/L10: timing type and frozen mode have accurate labels, untimed include
 });
 }
 
-// === Legacy suite: tests/content-frozen-legacy-integrity.test.mjs — 9 unchanged test registrations ===
+// === Consolidated coverage: tests/content-frozen-integrity.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -317,7 +319,7 @@ const builtinCglPackages = __suite_dep_4["builtinCglPackages"];
 const configureCglPractice = __suite_dep_4["configureCglPractice"];
 const validateExamPackage = __suite_dep_4["validateExamPackage"];
 const startGenericAttempt = __suite_dep_4["startGenericAttempt"];
-const transitionGenericAttempt = __suite_dep_4["transitionGenericAttempt"];
+const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
 const validateAnswerKeyRevision = __suite_dep_16["validateAnswerKeyRevision"];
 const validatePaperRevision = __suite_dep_16["validatePaperRevision"];
 const paperRevisionHash = __suite_dep_7["paperRevisionHash"];
@@ -338,7 +340,7 @@ const makeBackup = __suite_dep_22["makeBackup"];
 const verifyBackup = __suite_dep_22["verifyBackup"];
 const planBackupMerge = __suite_dep_22["planBackupMerge"];
 /** Pass 23 independent boundary audit, not reused Pass 17–22 fixtures/results.
- * Cross-check immutable v11 banks and reconcile adversarial generic contracts.
+ * Cross-check immutable canonical source banks and reconcile adversarial generic contracts.
  */
 
 
@@ -372,8 +374,8 @@ const rehash=b=>{
 };
 const keyUpdate=entries=>({...pkg.answerKey,entries,contentHash:answerKeyRevisionHash({entries})});
 
-test("SOURCE A/V01/V05/V19: original three content banks byte-identical with frozen baseline v11",async()=>{
- const frozenV11Blob={
+test("SOURCE A/V01/V05/V19: original content banks retain their canonical source blobs",async()=>{
+ const canonicalSourceBlob={
    papers:"1d2c388a91a82c49feb57ccd86a8a40eb7388473",
    patches:"37328784aadd53810a786550ce02ff3105fccbd7",
    solutions:"ada93d1f27c091023d6a26e9f89dd8956ebaf55e"
@@ -381,8 +383,8 @@ test("SOURCE A/V01/V05/V19: original three content banks byte-identical with fro
  for(const name of ["papers","patches","solutions"]){
   const filename="src/content/"+name+".json";
   const hash=execFileSync("git",["hash-object",filename],{cwd:root,encoding:"utf8"}).trim();
-  assert.equal(hash,frozenV11Blob[name],
-    name+" was silently changed from frozen v11 source Git blob");
+  assert.equal(hash,canonicalSourceBlob[name],
+    name+" was silently changed from its canonical source Git blob");
  }
  assert.equal(Object.keys(sources).length,5);
  assert.equal(Object.values(sources).reduce((n,p)=>n+p.questions.length,0),500);
@@ -432,7 +434,7 @@ test("V02/V07/F02/F06: all 10 paper editions have derived full/section marks, no
 
 
 
-test("F13/G10: delete lifecycle cannot bypass unfinished status; v11 backup intentionally unsupported",()=>{
+test("F13/G10: delete lifecycle cannot bypass unfinished status; noncanonical backup versions are rejected",()=>{
  assert.throws(()=>assertDeletionAllowed({recordType:"generic-attempt",finishedAt:null},"completed"),/Discard/);
  assert.throws(()=>assertDeletionAllowed({recordType:"generic-attempt",finishedAt:1},"discard-unfinished"),/completed/);
  assert.doesNotThrow(()=>assertDeletionAllowed({recordType:"generic-attempt",finishedAt:1},"completed"));
@@ -445,7 +447,7 @@ test("F13/G10: delete lifecycle cannot bypass unfinished status; v11 backup inte
 });
 }
 
-// === Legacy suite: tests/content-source-review-and-frozen-media.test.mjs — 6 unchanged test registrations ===
+// === Consolidated coverage: tests/content-source-review-and-frozen-media.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -455,7 +457,7 @@ const builtinCglPackages = __suite_dep_4["builtinCglPackages"];
 const configureCglPractice = __suite_dep_4["configureCglPractice"];
 const validateExamPackage = __suite_dep_4["validateExamPackage"];
 const startGenericAttempt = __suite_dep_4["startGenericAttempt"];
-const transitionGenericAttempt = __suite_dep_4["transitionGenericAttempt"];
+const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
 const createSourceReviewReference = __suite_dep_9["createSourceReviewReference"];
 const validateSourceReviewReference = __suite_dep_9["validateSourceReviewReference"];
 const createSourceKeyReference = __suite_dep_23["createSourceKeyReference"];
@@ -493,9 +495,9 @@ test("CGL original wording, options, source key and media are frozen at reviewed
  const patchedKey=structuredClone(attempt);
  patchedKey.sourceReviewReference.entries[0].sourceAnswer.optionId="unknown";
  assert.throws(()=>validateGenericStoredRecord(patchedKey),/source-review hash mismatch/);
- // Existing pre-Pass-12 records remain loadable, including historic reviews
- // that have no original-text snapshot and must not be silently backfilled.
- assert.equal(validateGenericStoredRecord(startGenericAttempt(reviewed,"old",1000)).id,"old");
+ // Source-review comparison metadata is additive current-session evidence; a
+ // current attempt remains valid when no comparison reference was frozen.
+ assert.equal(validateGenericStoredRecord(startGenericAttempt(reviewed,"no-comparison",1000)).id,"no-comparison");
 });
 
 test("edited single-section CGL preserves only its changed question subset and adjusted max",()=>{
@@ -534,6 +536,10 @@ function edition(edition,revised=false){
    "numeric-entry":{correctMarks:5,incorrectMarks:-1,unansweredMarks:0},
    "multiple-select":{correctMarks:3,incorrectMarks:-1,unansweredMarks:0}}};
  const paperBase={...pkg.paper,id:"paper-"+edition,edition,answerKeyRevisionId:answerKey.id,
+   ...(edition==="reviewed"?{
+     sourcePaperRevisionId:"paper-source",
+     sourceAnswerKeyRevisionId:"key-source"
+   }:{}),
    sections,scoring:policy};
  const paper={...paperBase,contentHash:paperRevisionHash(paperBase)};
  return validateExamPackage({...pkg,title:"Generic exam "+edition,questions,answerKey,paper});
@@ -612,13 +618,19 @@ test("time expiration and voluntary finishing have separate durable source-indep
  const submitted=transitionGenericAttempt(started,{type:"SUBMIT_ATTEMPT",nowMs:1100},map);
  assert.equal(submitted.completionReason,"submitted");
  assert.equal(validateGenericStoredRecord(submitted),submitted);
- const old=structuredClone(submitted);
- delete old.completionReason;
- assert.equal(validateGenericStoredRecord(old),old,"Older stored completion remains readable");
+ const missing=structuredClone(submitted);
+ delete missing.completionReason;
+ assert.throws(()=>validateGenericStoredRecord(missing),/completion provenance/);
+ const forgedExpiry=structuredClone(submitted);
+ forgedExpiry.completionReason="time-expired";
+ assert.throws(()=>validateGenericStoredRecord(forgedExpiry),/does not match recorded timer evidence/);
+ const unfinished=structuredClone(started);
+ unfinished.completionReason="submitted";
+ assert.throws(()=>validateGenericStoredRecord(unfinished),/Unfinished attempt cannot contain completion provenance/);
 });
 }
 
-// === Legacy suite: tests/content-validation-and-build.test.mjs — 4 unchanged test registrations ===
+// === Consolidated coverage: tests/content-validation-and-build.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -695,7 +707,7 @@ test('single-file release contains a complete inline app',async()=>{
 });
 }
 
-// === Legacy suite: tests/integrity-hash-and-media.test.mjs — 5 unchanged test registrations ===
+// === Consolidated coverage: tests/integrity-hash-and-media.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -706,7 +718,7 @@ const answerKeyRevisionHash = __suite_dep_7["answerKeyRevisionHash"];
 const paperRevisionHash = __suite_dep_7["paperRevisionHash"];
 const validateExamPackage = __suite_dep_4["validateExamPackage"];
 const startGenericAttempt = __suite_dep_4["startGenericAttempt"];
-const transitionGenericAttempt = __suite_dep_4["transitionGenericAttempt"];
+const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
 const validateGenericStoredRecord = __suite_dep_8_stored_record_validator["validateGenericStoredRecord"];
 const addLearningCard = __suite_dep_27["addLearningCard"];
 const validateLearningCard = __suite_dep_27["validateLearningCard"];
@@ -778,7 +790,7 @@ test("display preferences are validated and round-trip through storage",()=>{
  assert.deepEqual(readDisplayPreferences(store),{schema:1,dark:false,scale:100});
  const p=writeDisplayPreferences({schema:1,dark:true,scale:120},store);
  assert.deepEqual(readDisplayPreferences(store),p);
- values.set("practiceDesk.overhaul.settings.v1",'{"schema":1,"dark":false,"scale":500}');
+ values.set("practiceDesk.preferences",'{"schema":1,"dark":false,"scale":500}');
  assert.deepEqual(readDisplayPreferences(store),{schema:1,dark:false,scale:100});
 });
 }

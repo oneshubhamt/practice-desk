@@ -1,5 +1,5 @@
 /** Current offline persistence under two-tab races, unavailable IndexedDB,
- * failing first reads and quota-denied writes. No historical screenshot or v11.
+ * failing first reads and quota-denied writes. No historical screenshot oracle.
  */
 import {readFile,mkdtemp,rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
@@ -93,6 +93,10 @@ try{
  console.log("MODERN RESILIENCE PASS actual IndexedDB two-tab CAS conflict");
  // Two tabs using localStorage fallback must detect a changed data generation.
  const fallbackA=await context.newPage(),fallbackB=await context.newPage();
+ // The preceding IndexedDB scenario deliberately leaves an unfinished mirrored
+ // attempt. Fallback hydration validly recovers it, so starting a separate
+ // attempt must accept the application's explicit safety confirmation.
+ fallbackA.on("dialog",dialog=>void dialog.accept());
  const unavailable=()=>Object.defineProperty(window,"indexedDB",
    {configurable:true,value:undefined});
  await fallbackA.addInitScript(unavailable);
@@ -101,9 +105,13 @@ try{
  await fallbackA.locator("#g-start").click();await route(fallbackA,"exam");
  await fallbackA.locator("input[data-choice]").first().click();
  const fallbackId=await until(async()=>fallbackA.evaluate(()=>{
-  const arr=JSON.parse(localStorage.getItem("practiceDesk.overhaul.fallback.v1")??"[]");
+  const arr=JSON.parse(localStorage.getItem("practiceDesk.history.fallback")??"[]");
   return arr.find(x=>x.recordType==="generic-attempt"&&x.state.responses.some(r=>r.response))?.id;
  }),"durable localStorage fallback answer");
+ // Freeze tab A's generation before opening B. Leaving A actively on Exam
+ // permits its legitimate 10-second timer checkpoint to race B's hydration,
+ // which tests scheduling luck rather than concurrent-storage detection.
+ await fallbackA.locator("#g-library").click();await route(fallbackA,"library");
  await fallbackB.goto(offlineUrl,{waitUntil:"load"});
  await fallbackB.locator('[data-attempt="'+fallbackId+'"]').first().click();await route(fallbackB,"exam");
  await fallbackB.locator("input[data-choice]").nth(1).click();
@@ -129,13 +137,13 @@ try{
  await readFailure.goto(offlineUrl,{waitUntil:"load"});
  await readFailure.locator(".generic-warning").filter({hasText:"IndexedDB unavailable"}).waitFor();
  const before=await readFailure.evaluate(()=>
-  JSON.parse(localStorage.getItem("practiceDesk.overhaul.fallback.v1")??"[]").length);
+  JSON.parse(localStorage.getItem("practiceDesk.history.fallback")??"[]").length);
  await readFailure.locator("#g-start").click();
  await readFailure.locator("input[data-choice]").first().click();
  await readFailure.waitForFunction(old=>
-  JSON.parse(localStorage.getItem("practiceDesk.overhaul.fallback.v1")??"[]").length>old,before);
+  JSON.parse(localStorage.getItem("practiceDesk.history.fallback")??"[]").length>old,before);
  check(await readFailure.evaluate(old=>
-  JSON.parse(localStorage.getItem("practiceDesk.overhaul.fallback.v1")??"[]").length>old,before),
+  JSON.parse(localStorage.getItem("practiceDesk.history.fallback")??"[]").length>old,before),
   "Failed IDB initial cursor read did not persist subsequent exam in fallback store");
  await readFailure.close();
  console.log("MODERN RESILIENCE PASS failed initial IndexedDB read fallback");

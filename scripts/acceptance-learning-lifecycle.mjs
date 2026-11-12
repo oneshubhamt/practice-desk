@@ -230,7 +230,7 @@ try{
   "P46-B timing ledger did not expose first-visit and revisit columns");
  await page.locator("#g-library").click();await route(page,"library");
  await page.locator("#g-learning").click();await route(page,"learning");
- // Independent current-app extreme zoom gate for the *new* P46 form, not v11 pixels.
+ // Independent current-app extreme zoom gate for the *new* P46 form, not historical pixels.
  await page.setViewportSize({width:195,height:760});
  await page.locator("#displayTrigger").click();
  for(let n=0;n<10&&(await page.locator("#fontReset").innerText())!=="140%";n++)

@@ -31,7 +31,7 @@ try{
   "Unfinished Discard must require a specific warning and second final confirmation");
  check(!(await records(page)).some(x=>x.id===draftId),
   "confirmed unfinished Discard did not persist");
- const mirror=await page.evaluate(()=>localStorage.getItem("practiceDesk.overhaul.active.v1"));
+ const mirror=await page.evaluate(()=>localStorage.getItem("practiceDesk.history.active"));
  check(!mirror||JSON.parse(mirror).id!==draftId,
   "Discard left a resumable emergency active-attempt mirror");
  await page.locator('[data-mode="single"]').click();

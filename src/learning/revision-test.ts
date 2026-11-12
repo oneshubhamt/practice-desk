@@ -1,14 +1,16 @@
 import type { LearningCard } from "./learning.ts";
 import { validateLearningCard } from "./learning.ts";
-import type { ExamPackage } from "../app/exam-package.ts";
-import { validateExamPackage } from "../app/exam-package.ts";
+import type { ExamPackage } from "../domain/exam-package.ts";
+import { validateExamPackage } from "../domain/exam-package.ts";
 import type { ImageAsset,StimulusDefinition } from "../domain/question.js";
 import type { PaperRevision } from "../domain/exam.js";
 import type { AnswerKeyRevision } from "../domain/answer-key.js";
 import type { ExamId,PaperId,PaperRevisionId,AnswerKeyRevisionId,SectionId } from "../domain/ids.js";
 import { answerKeyRevisionHash,paperRevisionHash } from "../domain/integrity.ts";
 import { hashJson } from "../domain/hash.ts";
-import type { GenericAttempt } from "../app/exam-package.ts";
+import type { GenericAttempt } from "../engine/generic-attempt.ts";
+import type {NotebookLineage,RevisionSelectionProvenance} from "../domain/attempt.js";
+export type {NotebookLineage,RevisionSelectionProvenance} from "../domain/attempt.js";
 
 export const REVISION_MAX_QUESTIONS=25;
 export const REVISION_SCORING={correctMarks:1,incorrectMarks:0,unansweredMarks:0} as const;
@@ -73,27 +75,6 @@ export function makeRevisionPackage(cards:readonly LearningCard[],paperNonce:str
 /** A verifiable trail from each revision item to the completed original attempt.
  * Source attempts may subsequently be deleted: identifiers/labels remain frozen.
  */
-export interface RevisionSelectionProvenance {
- readonly schema:1;
- readonly examId:string;
- readonly reasons:readonly ("wrong"|"blank"|"slow"|"repeated"|"flagged"|"bookmarked"|"due")[];
- readonly eligibleCount:number;
- readonly selectedQuestionIds:readonly string[];
-}
-export interface NotebookLineage{
- readonly schema:1;
- /** Authenticated selection criteria for evidence-assembled revision tests. */
- readonly selection?:RevisionSelectionProvenance;
- readonly entries:readonly {
-   readonly cardId:string;
-   readonly questionRevisionId:string;
-   readonly sourceAttemptId:string;
-   readonly sourcePaperId:string;
-   readonly sourcePaperEdition:string;
-   readonly sourceSectionTitle:string;
- }[];
- readonly contentHash:string;
-}
 export function createNotebookLineage(cards:readonly LearningCard[],selection?:RevisionSelectionProvenance):NotebookLineage{
  if(!cards.length||cards.length>REVISION_MAX_QUESTIONS)
    throw Error("Invalid revision source selection");

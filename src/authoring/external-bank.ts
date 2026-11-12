@@ -2,8 +2,8 @@
  * This is NOT an editorial factual-verification service. Untrusted source and QA
  * assertions are always published with caution via the existing Wordgard compiler.
  */
-import {validateExamImportBudget} from "../app/exam-package.ts";
-import type {ExamPackage} from "../app/exam-package.ts";
+import {validateExamImportBudget} from "../domain/exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
 import type {AuthoringDraft,AuthoringQuestion} from "./authoring-draft.ts";
 import {validateAuthoringDraft} from "./authoring-draft.ts";
 import {inspectAuthoringPublication,publicationPlainText} from "./authoring-publisher.ts";
@@ -249,7 +249,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
    err(path+".minutes","Sectional timing requires explicit positive minutes");
   if(timing.kind!=="sectional"&&row.minutes!==undefined)
    err(path+".minutes","Section minutes require sectional timing");
-  const minutes=row.minutes===undefined?0:num(row.minutes,path+".minutes",1,600,true);
+  const minutes=row.minutes===undefined?0:num(row.minutes,path+".minutes",0,600,true);
   sections.set(id,{title:label,minutes});
  });
  const assets=media(bank.media);
@@ -371,7 +371,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
    err(path+".difficulty","Invalid difficulty label");
   return {id,section:section!.title,subject,syllabusHeadingId,
    topic,subtopic,difficulty:difficulty as NonNullable<AuthoringQuestion["difficulty"]>,
-   sectionMinutes:section!.minutes,minSelections,maxSelections,
+   minSelections,maxSelections,
    partialCreditEach,partialPenaltyEach,
    kind:questionKind,prompt,passage,options,leftItems,rightItems,explanation,
    answer,tolerance,source:sourceNote??"",
@@ -384,19 +384,39 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
  });
  const draft:AuthoringDraft={schema:1,id:"agent:"+bankId,ingestionMode:"external-source",examId,paperId,title,
   edition:"custom",revision,durationMinutes,
-  timingKind:timing.kind as NonNullable<AuthoringDraft["timingKind"]>,
-  pausePolicy:pausePolicy as NonNullable<AuthoringDraft["pausePolicy"]>,
-  questionNavigation:questionNavigation as NonNullable<AuthoringDraft["questionNavigation"]>,
-  sectionNavigation:sectionNavigation as NonNullable<AuthoringDraft["sectionNavigation"]>,
-  sectionTransition:sectionTransition as NonNullable<AuthoringDraft["sectionTransition"]>,
+  timingKind:timing.kind as AuthoringDraft["timingKind"],
+  pausePolicy:pausePolicy as AuthoringDraft["pausePolicy"],
+  questionNavigation:questionNavigation as AuthoringDraft["questionNavigation"],
+  sectionNavigation:sectionNavigation as AuthoringDraft["sectionNavigation"],
+  sectionTransition:sectionTransition as AuthoringDraft["sectionTransition"],
   allowEarlySubmit,allowReview,...(calculatorTool?{calculatorTool}:{}),marksCorrect,marksIncorrect,
-  updatedAt:"1970-01-01T00:00:00.000Z",assets,stimuli,questions};
+  updatedAt:"1970-01-01T00:00:00.000Z",assets,
+  sections:[...sections.values()].map(section=>({name:section.title,minutes:section.minutes})),
+  stimuli,questions};
  try{return validateAuthoringDraft(draft);}
  catch(error){return err("$",error instanceof Error?error.message:"Invalid canonical authoring draft");}
 }
 export function inspectExternalQuestionBank(value:unknown,existing:readonly ExamPackage[]=[],comparisonSources:readonly unknown[]=[]):ExternalBankReport {
  const questionCount=Array.isArray((value as {questions?:unknown}|null)?.questions)?
   ((value as {questions:unknown[]}).questions.length):0;
+ // Give external source authors a precise structural error before conversion
+ // to the canonical draft, whose sections intentionally cannot be empty.
+ const raw=value as {sections?:unknown;questions?:unknown}|null;
+ if(Array.isArray(raw?.sections)&&Array.isArray(raw?.questions)){
+  const used=new Set(raw.questions.flatMap(item=>
+   item&&typeof item==="object"&&typeof (item as {examSection?:unknown}).examSection==="string"?
+    [(item as {examSection:string}).examSection]:[]));
+  const empty=raw.sections.flatMap(item=>{
+   if(!item||typeof item!=="object")return [];
+   const id=(item as {id?:unknown}).id;
+   return typeof id==="string"&&!used.has(id)?[id]:[];
+  });
+  if(empty.length)return {valid:false,questionCount,editorialStatus:"caution",
+   factualVerification:"not-performed",issues:empty.map(id=>({
+    path:"$.sections[id="+id+"]",code:"empty-exam-section",severity:"error" as const,
+    message:"Physical exam section has no assigned questions"
+   }))};
+ }
  try{
   const draft=toAuthoringDraft(value);
   // Preserve the precise candidate-answer-leak issue code even when the

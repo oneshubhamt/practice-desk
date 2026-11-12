@@ -1,4 +1,4 @@
-import type { GenericAttempt } from "../app/exam-package.ts";
+import type { GenericAttempt } from "../engine/generic-attempt.ts";
 import type { QuestionRevision, StimulusDefinition, ImageAsset } from "../domain/question.js";
 import { questionRevisionHash, answerKeyRevisionHash } from "../domain/integrity.ts";
 import { selectDisplayResources, validateMediaInventory, validateQuestionMediaReferences } from "../domain/media.ts";
@@ -17,7 +17,8 @@ export interface LearningReview {
 export interface LearningCard {
  readonly recordType:"learning-card";
  readonly id:string;
- readonly saveRevision?:number;
+ /** 0 before first durable write; persistence advances monotonically from 1. */
+ readonly saveRevision:number;
  readonly question:QuestionRevision;
  readonly answer:CorrectAnswer;
  readonly stimuli:readonly StimulusDefinition[];
@@ -104,7 +105,7 @@ export function addLearningCard(attempt:GenericAttempt,id:QuestionRevisionId,at:
  if(!question||!key||!section)throw Error("Question not in completed exam");
  const display=selectDisplayResources([question],attempt.frozen.stimuli,attempt.frozen.assets);
  const record:LearningCard={
-   recordType:"learning-card",id:"learning-card:"+id,
+   recordType:"learning-card",saveRevision:0,id:"learning-card:"+id,
    examId:attempt.frozen.snapshot.examId,paperId:attempt.frozen.paper.paperId,
    paperEdition:attempt.frozen.paper.edition,sectionTitle:section.title,
    sourceTitle:attempt.frozen.paper.paperId,sourceAttemptId:attempt.id,question:structuredClone(question),

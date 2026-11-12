@@ -7,7 +7,7 @@ import {renderModelExam} from "../src/app/exam-view.ts";
 import {calculatorPanelHTML} from "../src/app/exam-calculator.ts";
 import {candidateToolStorageKey,clearCandidateToolWorkspace,readCalculatorWorkspace,
  writeCalculatorWorkspace} from "../src/app/candidate-tool-state.ts";
-import {importSimpleQuestionBank} from "../src/app/bank-import.ts";
+import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
 import {composePracticeSet} from "../src/app/practice-compose.ts";
 import {pkg} from "./fixtures/six-kinds.mjs";
 
@@ -70,24 +70,28 @@ test("calculator availability is explicit versioned hash-bound paper policy and 
  }
 });
 
-test("simple-bank authors opt into basic-v1; custom composition preserves the exact profile",()=>{
- const bank={format:"practice-desk-bank",version:1,bankId:"cat-calc",examId:"cat",
-  title:"CAT calculator",revision:1,edition:"custom",
-  scoring:{correctMarks:3,incorrectMarks:-1,unansweredMarks:0},
-  timing:{kind:"whole-paper",minutes:40},tools:{calculator:BASIC_CALCULATOR_V1},
-  questions:[{id:"q1",section:"QA",type:"mcq",question:"2 + 2 = ?",
-    options:["3","4","5","6"],answer:"B"}]};
- const enabled=importSimpleQuestionBank(bank);
+test("canonical authoring source opts into basic-v1; custom composition preserves the exact profile",()=>{
+ const source={format:"practice-desk-authoring",version:1,bankId:"cat-calc",examId:"cat",
+  paperId:"cat-calc",title:"CAT calculator",edition:"custom",revision:1,
+  scoring:{correctMarks:3,incorrectMarks:-1},
+  timing:{kind:"whole-paper",minutes:40,pausePolicy:"allowed"},
+  navigation:{questionNavigation:"free",sectionNavigation:"free",allowReview:true},
+  tools:{calculator:BASIC_CALCULATOR_V1},
+  sections:[{id:"qa",title:"QA"}],
+  questions:[{id:"q1",examSection:"qa",subject:"Quantitative Aptitude",kind:"single-choice",
+    prompt:"2 + 2 = ?",options:["3","4","5","6"],answer:"B",
+    provenance:{kind:"manual"},qa:{status:"unchecked"}}]};
+ const enabled=compileExternalQuestionBank(source);
  assert.equal(enabled.paper.candidateTools.calculator,BASIC_CALCULATOR_V1);
  assert.equal(validateExamPackage(enabled),enabled);
  const composed=composePracticeSet(enabled,{count:1,seed:"calculator-policy",filters:{}});
  assert.equal(composed.bundle.paper.candidateTools.calculator,BASIC_CALCULATOR_V1,
    "custom practice sets must preserve the source paper calculator profile");
- const plain=importSimpleQuestionBank({...bank,bankId:"cat-no-calc",tools:undefined});
+ const plain=compileExternalQuestionBank({...source,bankId:"cat-no-calc",paperId:"cat-no-calc",tools:undefined});
  assert.equal(plain.paper.candidateTools,undefined);
  for(const invalidProfile of ["basic","scientific"])
-   assert.throws(()=>importSimpleQuestionBank({...bank,bankId:"bad-"+invalidProfile,
-     tools:{calculator:invalidProfile}}),/tools\.calculator/);
+   assert.throws(()=>compileExternalQuestionBank({...source,bankId:"bad-"+invalidProfile,
+     paperId:"bad-"+invalidProfile,tools:{calculator:invalidProfile}}),/tools\.calculator/);
 });
 
 test("calculator scratch state recovers separately from attempts and fails closed on tampering",()=>{

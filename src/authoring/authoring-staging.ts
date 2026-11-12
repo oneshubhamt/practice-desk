@@ -1,3 +1,4 @@
+import {STORAGE_TOPOLOGY} from "../storage-topology.ts";
 /** P57-C: bounded, offline AI-bank staging. Nothing here writes scored packages.
  * Source claims and QA warnings remain unverified. Identity is stable per bank+item,
  * independent of file order, correction, and the publication revision.
@@ -11,7 +12,7 @@ import {sha256} from "../domain/hash.ts";
 import type {StimulusDefinition,ImageAsset} from "../domain/question.ts";
 import type {StimulusId,AssetId} from "../domain/ids.ts";
 
-export const STAGING_KEY="practiceDesk.authoring.staging.v1";
+export const STAGING_KEY=STORAGE_TOPOLOGY.authoringStaging;
 export const STAGING_MAX_BYTES=1700000;
 /** Separate, strictly validated unpublished source backup; NOT History v4. */
 export const STAGING_ARCHIVE_FORMAT="practice-desk-staging-archive";
@@ -118,13 +119,13 @@ export function validateStagingWorkspace(value:unknown):StagingWorkspace{
   if(expected&&signature!==expected)
    throw Error("Staged files must use the same exam, paper, revision, marking, timing and navigation rules");
   expected=signature;
-  for(const q of draft.questions){
-   const existing=sections.get(q.section);
-   if(existing!==undefined&&existing!==(q.sectionMinutes??15))
-    throw Error("Conflicting section timer in staged files: "+q.section);
-   sections.set(q.section,q.sectionMinutes??15);
-   selections.add(itemKey(id,q.id));
+  for(const section of draft.sections){
+   const existing=sections.get(section.name);
+   if(existing!==undefined&&existing!==section.minutes)
+    throw Error("Conflicting section timer in staged files: "+section.name);
+   sections.set(section.name,section.minutes);
   }
+  for(const q of draft.questions)selections.add(itemKey(id,q.id));
   questions+=draft.questions.length;
   if(questions>400)throw Error("Staging is bounded to 400 source questions; split the batch");
   files.push({name:row.name,source:row.source});

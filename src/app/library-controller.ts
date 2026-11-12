@@ -4,8 +4,11 @@ import {minutes} from "./exam-view.ts";
 import {isAttempt,isLearning} from "./stored-record-validator.ts";
 
 
-import {configureCglPractice,configureUntimedPractice,startGenericAttempt} from "./exam-package.ts";
-import type {ExamPackage,GenericAttempt,CglPracticeMode} from "./exam-package.ts";
+import {cglAttemptMode,configureCglPractice,configureUntimedPractice,startGenericAttempt} from "./exam-package.ts";
+import {validateExamPackage} from "../domain/exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
+import type {CglPracticeMode} from "../workspace-settings.ts";
+import type {GenericAttempt} from "../engine/generic-attempt.ts";
 
 import {createSourceKeyReference} from "../engine/source-comparison.ts";
 import {composePracticeSet,practiceInventory} from "./practice-compose.ts";
@@ -21,11 +24,10 @@ import {examPreflight,preflightHTML,examRulesHTML} from "./exam-preflight.ts";
 
 import {writePracticeSetups,type PracticeSetups} from "./practice-selection.ts";
 import {familyIdFor,pairedEdition,BUILTIN_CGL_FAMILY} from "./exam-families.ts";
-import {importAuthoredExam,APFC_NAT_BANK_TEMPLATE} from "./bank-import.ts";
 
-import type {CoordinatorContext} from "./coordinator-context.ts";
+import type {LibraryControllerContext} from "./coordinator-context.ts";
 
-export function renderLibraryHTML(owner:CoordinatorContext):string {
+export function renderLibraryHTML(owner:LibraryControllerContext):string {
    const all=[...owner.records.values()].filter(isAttempt).sort((a,b)=>b.startedAt-a.startedAt);
    const complete=all.filter(a=>a.finishedAt!==null);
    const pending=all.filter(a=>a.finishedAt===null);
@@ -173,12 +175,12 @@ export function renderLibraryHTML(owner:CoordinatorContext):string {
         '<small>No countdown or automatic expiry. Keep the selected navigation and scoring rules; finish when ready.</small></span></label>'+
      '<div class="row generic-actions home-start"><button class="btn primary" id="g-start"'+
       (owner.loading||owner.fallbackConflict||owner.storageFault||!selected?' disabled':'')+'>Start '+escapeText(modeLabel)+' →</button>'+
-      '<button class="btn" id="g-import"'+(owner.loading||owner.fallbackConflict||owner.storageFault?' disabled':'')+'>Import question bank</button>'+
-      '<button type="button" class="btn" id="g-image-prep">Prepare image for a bank</button>'+
+      '<button class="btn" id="g-import"'+(owner.loading||owner.fallbackConflict||owner.storageFault?' disabled':'')+'>Import exam package</button>'+
+      '<button type="button" class="btn" id="g-image-prep">Prepare image for authoring</button>'+
       '<button type="button" class="btn" id="g-author-open"'+(owner.loading?' disabled':'')+'>Author question bank</button></div>'+
-      '<input type="file" id="g-file" accept=".json,.gz,application/json,application/gzip" hidden>'+
-      '<p class="fine">Start with an editable <button type="button" class="textlink" id="g-bank-template">Download APFC/NAT bank template</button> (JSON). '+
-      'An authored simple bank may include a media array, question imageIds and optionImageIds. Prepare local images first; content-hash-verified exam packages are never recompressed. Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section>'+
+      '<input type="file" id="g-file" accept=".json,application/json" hidden>'+
+      '<p class="fine">Import a canonical <code>practice-desk-exam</code> package, or open Author question bank to stage a <code>practice-desk-authoring</code> source. '+
+      'Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section>'+
      '<aside class="home-side"><section class="panel pad paper-preview"><span class="eyebrow">SELECTED PAPER</span>'+
       '<h2>'+escapeText(selected?.title??"Choose a paper")+'</h2>'+
       '<p class="fine family-provenance">'+(family?.imported?
@@ -219,7 +221,7 @@ export function renderLibraryHTML(owner:CoordinatorContext):string {
        (preflight?examRulesHTML(preflight):"");
  }
 
-export const applyLibraryFamily=(owner:CoordinatorContext,id:string):void=>{
+export const applyLibraryFamily=(owner:LibraryControllerContext,id:string):void=>{
    owner.selectedFamilyId=id;
    const previous=owner.setups.families[id];
    if(previous){
@@ -236,7 +238,7 @@ export const applyLibraryFamily=(owner:CoordinatorContext,id:string):void=>{
      owner.singleSection=Math.min(owner.singleSection,Math.max(0,owner.packages.get(owner.choice)!.paper.sections.length-1));
  };
 
-export const persistLibrarySelection=(owner:CoordinatorContext):void=>{
+export const persistLibrarySelection=(owner:LibraryControllerContext):void=>{
    const next:PracticeSetups={schema:2,selectedFamilyId:owner.selectedFamilyId,
      families:{...owner.setups.families,[owner.selectedFamilyId]:{
        paperRevisionId:owner.choice,mode:owner.cglMode,section:owner.singleSection,
@@ -247,7 +249,7 @@ export const persistLibrarySelection=(owner:CoordinatorContext):void=>{
    catch{owner.warning="Exam setup could not be saved on this device; current selection still works.";}
  };
 
-export function bindLibraryScreen(owner:CoordinatorContext):void{
+export function bindLibraryScreen(owner:LibraryControllerContext):void{
 
      owner.root.querySelector<HTMLButtonElement>("#g-learning")!.onclick=()=>owner.go({screen:"learning"});
      owner.root.querySelector<HTMLSelectElement>("#g-family")!.onchange=e=>{
@@ -359,7 +361,7 @@ export function bindLibraryScreen(owner:CoordinatorContext):void{
              " unfinished tests. Start a separate custom attempt? Existing attempts remain saved."))return;
            const id=typeof crypto!=="undefined"&&crypto.randomUUID?
              crypto.randomUUID():"custom-"+owner.now()+"-"+Math.random();
-           owner.attempt={...startGenericAttempt(bundle,id,owner.now()),practiceComposition:manifest};
+           owner.attempt={...startGenericAttempt(bundle,id,owner.now(),"custom-practice"),practiceComposition:manifest};
            owner.freshlyStartedAttemptId=owner.attempt.id;
            owner.composeError="";owner.composePreview="";owner.warning="";
            void owner.save(owner.attempt);owner.go({screen:"exam",attemptId:owner.attempt.id});
@@ -381,7 +383,10 @@ export function bindLibraryScreen(owner:CoordinatorContext):void{
        const id=typeof crypto!=="undefined"&&crypto.randomUUID?crypto.randomUUID():"generic-"+owner.now()+"-"+Math.random();
        const configured=configureUntimedPractice(
          owner.selectedFamilyId===BUILTIN_CGL_FAMILY?configureCglPractice(p,owner.cglMode,owner.singleSection):p,owner.untimedPractice);
-       owner.attempt=startGenericAttempt(configured,id,owner.now());
+       const attemptMode=owner.selectedFamilyId===BUILTIN_CGL_FAMILY?
+         cglAttemptMode(owner.cglMode):
+         configured.paper.edition==="custom"?"custom-practice":"exam-simulation";
+       owner.attempt=startGenericAttempt(configured,id,owner.now(),attemptMode);
        owner.freshlyStartedAttemptId=owner.attempt.id;
        if(configured.paper.edition==="reviewed"){
          const family=owner.families().find(f=>f.id===owner.selectedFamilyId);
@@ -401,13 +406,6 @@ export function bindLibraryScreen(owner:CoordinatorContext):void{
      owner.root.querySelector<HTMLButtonElement>("#g-author-open")!.onclick=e=>{
        const target=owner.root.querySelector<HTMLElement>("#pd-authoring-container");
        if(target)void owner.authoringStudio.open(target,e.currentTarget as HTMLElement);
-     };
-     owner.root.querySelector<HTMLButtonElement>("#g-bank-template")!.onclick=()=>{
-       const data=new Blob([JSON.stringify(APFC_NAT_BANK_TEMPLATE,null,2)],{type:"application/json"});
-       const url=URL.createObjectURL(data);
-       const link=document.createElement("a");link.href=url;link.download="Practice_Desk_APFC_NAT_Starter.json";
-       document.body.append(link);link.click();link.remove();
-       window.setTimeout(()=>URL.revokeObjectURL(url),2000);
      };
      owner.root.querySelector<HTMLButtonElement>("#g-export-history")!.onclick=()=>{void owner.downloadBackup();};
      owner.root.querySelector<HTMLButtonElement>("#g-import-history")!.onclick=()=>owner.root.querySelector<HTMLInputElement>("#g-history-file")?.click();
@@ -429,15 +427,15 @@ export function bindLibraryScreen(owner:CoordinatorContext):void{
            await owner.authoringStudio.stageFiles([file]);
            return; // AI source is staged, never silently published.
          }
-         const pkg=importAuthoredExam(source);
+         const pkg=validateExamPackage(source);
          if(owner.packages.has(pkg.paper.id))throw new Error("Paper revision ID already exists. Supply a new revision ID.");
-         if(!await owner.save({recordType:"generic-package",id:"generic-package:"+pkg.paper.id,bundle:pkg}))return;
+         if(!await owner.save({recordType:"generic-package",saveRevision:0,id:"generic-package:"+pkg.paper.id,bundle:pkg}))return;
          owner.packages.set(pkg.paper.id,pkg);
          owner.applyFamily(familyIdFor(pkg,owner.builtinPaperIds));
          owner.choice=pkg.paper.id;owner.singleSection=0;
          if(pkg.paper.edition==="source"||pkg.paper.edition==="reviewed")owner.editionView=pkg.paper.edition;
          owner.saveSelection();
-         owner.notice("Question bank validated and imported. Your paper is ready to practise.");
+         owner.notice("Exam package validated and imported. Your paper is ready to practise.");
        }catch(error){owner.notice(error instanceof Error?error.message:"Invalid exam package");}
      };
      owner.root.querySelectorAll<HTMLButtonElement>("[data-delete]").forEach(button=>button.onclick=()=>{

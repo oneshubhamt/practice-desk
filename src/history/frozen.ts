@@ -6,25 +6,10 @@ import type { AnswerKeyRevision } from "../domain/answer-key.js";
 import type { QuestionRevision, StimulusDefinition, ImageAsset } from "../domain/question.js";
 import { assertRevisionHashes } from "../domain/integrity.ts";
 import { selectDisplayResources, validateMediaInventory, validateQuestionMediaReferences } from "../domain/media.ts";
-import type { AttemptSnapshot, AttemptMode } from "../domain/attempt.js";
+import type { AttemptSnapshot, AttemptMode, FrozenAttemptContent } from "../domain/attempt.js";
 import type { ExamId } from "../domain/ids.js";
 
-/**
- * The content used to score an attempt belongs to that attempt, not to the
- * mutable library selection or a later application release. All fields are
- * ordinary structured-clone-compatible data so IndexedDB writes remain atomic.
- * Exact display resources are frozen with the attempt so historical questions remain renderable.
- */
-export interface FrozenAttemptContent {
-  readonly schema: 2;
-  readonly frozenAt: string;
-  readonly snapshot: AttemptSnapshot;
-  readonly paper: PaperRevision;
-  readonly key: AnswerKeyRevision;
-  readonly questions: readonly QuestionRevision[];
-  readonly stimuli: readonly StimulusDefinition[];
-  readonly assets: readonly ImageAsset[];
-}
+/** Freeze exact scoring/display resources into the canonical attempt contract. */
 export function freezeAttempt(
   paper: PaperRevision, key: AnswerKeyRevision, questions: readonly QuestionRevision[],
   stimuli:readonly StimulusDefinition[],assets:readonly ImageAsset[],
@@ -81,8 +66,7 @@ export interface RecoveryCandidate {
   readonly startedAt?: number | null;
   readonly finishedAt?: number | null;
   readonly updatedAt?: number | null;
-  readonly schema?: number;
-  readonly saveRevision?: number;
+  readonly saveRevision: number;
 }
 /** Terminal records win over stale in-progress mirrors for the same ID. */
 export function chooseRecovered<T extends RecoveryCandidate>(stored: T | undefined, mirror: T | undefined): T | undefined {
@@ -90,8 +74,7 @@ export function chooseRecovered<T extends RecoveryCandidate>(stored: T | undefin
   if (!mirror || stored.id !== mirror.id) return stored;
   // Version precedence comes first: even a completed mirror can be stale when
   // another tab has already persisted a newer revision of the same attempt.
-  if (Number.isSafeInteger(stored.saveRevision) && Number.isSafeInteger(mirror.saveRevision) &&
-      (stored.saveRevision as number) >= (mirror.saveRevision as number)) return stored;
+  if (stored.saveRevision >= mirror.saveRevision) return stored;
   if (stored.finishedAt && !mirror.finishedAt) return stored;
   if (mirror.finishedAt && !stored.finishedAt) return mirror;
   return (mirror.updatedAt ?? 0) > (stored.updatedAt ?? 0) ? mirror : stored;

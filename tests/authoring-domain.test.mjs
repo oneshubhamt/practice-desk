@@ -1,7 +1,7 @@
 /** Domain-organized authoring contracts.
  * All 27 historical test registrations and their original source bodies are
  * carried unchanged, each in a lexical scope. One new property oracle follows.
- * Migration and source hashes: docs/TEST_SUITE_LEDGER.md.
+ * Canonical source hashes and consolidation evidence: docs/TEST_SUITE_LEDGER.md.
  */
 import * as __dep_0 from "node:test";
 import * as __dep_1 from "node:assert/strict";
@@ -90,7 +90,7 @@ test("P47-5C draft is not a published paper or answer key and covers six kinds",
  assert.ok(!("contentHash" in s));
  assert.ok(!("frozen" in s));
  assert.ok(!("score" in s));
- assert.equal(AUTHORING_KEY,"practiceDesk.authoring.drafts.v1");
+ assert.equal(AUTHORING_KEY,"practiceDesk.authoring.drafts");
 });
 test("P47-5C app-owned draft rejects malicious, duplicate and malformed content",()=>{
  const a=newAuthoringDraft();
@@ -172,7 +172,8 @@ function readyDraft(){
    answer:answers[kind],tolerance:kind==="numeric-entry"?0.01:0};
  });
  return {...a,examId:"cat-pgdba",paperId:"mixed-2026",title:"Original six-kind CAT and PGDBA practice",
-   revision:1,edition:"custom",durationMinutes:120,questions};
+   revision:1,edition:"custom",durationMinutes:120,
+   sections:[{name:"Mathematics",minutes:15},{name:"General",minutes:15}],questions};
 }
 test("P47-5D all six kinds publish as source-validated frozen rich package, with correct hashes",()=>{
  const a=readyDraft(),pkg=compileAuthoringPublication(a);
@@ -278,13 +279,18 @@ test("P47-5D source/reviewed editions require provenance and a real source count
  const signed=compileAuthoringPublication(source);
  const reviewed={...a,edition:"reviewed",questions:a.questions.map((q,i)=>
   i===0?{...q,answer:"A"}:q)};
- assert.ok(inspectAuthoringPublication(reviewed).issues.some(x=>x.field==="Edition"));
- const review=compileAuthoringPublication(reviewed,[signed]);
+ assert.ok(inspectAuthoringPublication(reviewed,[signed]).issues.some(x=>x.field==="Edition"));
+ const ready=inspectAuthoringPublication(reviewed,[signed],signed);
+ assert.equal(ready.valid,true,JSON.stringify(ready.issues));
+ const review=compileAuthoringPublication(reviewed,[signed],signed);
+ assert.equal(review.paper.sourcePaperRevisionId,signed.paper.id);
+ assert.equal(review.paper.sourceAnswerKeyRevisionId,signed.answerKey.id);
  assert.notEqual(review.paper.id,signed.paper.id);
  assert.equal(review.paper.paperId,signed.paper.paperId);
  assert.equal(review.questions[0].questionId,signed.questions[0].questionId);
  assert.equal(review.answerKey.entries[0].answer.optionId,"A");
- const missing={...source,questions:[{...source.questions[0],source:""}]};
+ const missing={...source,sections:[source.sections[0]],
+  questions:[{...source.questions[0],source:""}]};
  assert.ok(inspectAuthoringPublication(missing).issues.some(x=>/Provenance/.test(x.field)));
 });
 test("P47-5D authenticated local image references include only used assets",()=>{
@@ -295,7 +301,8 @@ test("P47-5D authenticated local image references include only used assets",()=>
  const richImage={format:"practice-desk-rich",version:1,blocks:[
   {type:"paragraph",content:[{type:"text",text:"Find the marked figure"},{type:"image",assetId:"fig1",altText:figure.altText}]}
  ]};
- const qa={...a,assets:[figure],questions:[{...a.questions[0],prompt:richImage}]};
+ const qa={...a,assets:[figure],sections:[a.sections[0]],
+  questions:[{...a.questions[0],prompt:richImage}]};
  const compiled=compileAuthoringPublication(qa);
  assert.equal(compiled.assets.length,1);
  assert.deepEqual(compiled.questions[0].content.assetIds,["fig1"]);
@@ -338,15 +345,16 @@ function draft(){
  const d=newAuthoringDraft();
  return {...d,examId:"apfc",paperId:"p54",title:"Actual six-kind authoring proof",timingKind:"sectional",
   sectionNavigation:"sequential-locked",pausePolicy:"forbidden",allowEarlySubmit:false,
-  sectionTransition:"automatic",allowReview:false,questions:[
+  sectionTransition:"automatic",allowReview:false,
+  sections:[{name:"Specialised",minutes:15},{name:"General",minutes:10}],questions:[
     {...q("multiple-select","Specialised","A,C"),minSelections:2,maxSelections:3,
-      partialCreditEach:1,partialPenaltyEach:0.5,sectionMinutes:15},
+      partialCreditEach:1,partialPenaltyEach:0.5},
     {...q("matching","Specialised","1-C,2-A,3-D,4-B"),partialCreditEach:0.6,
-      partialPenaltyEach:0.1,sectionMinutes:15},
-    {...q("single-choice","General","B"),sectionMinutes:10},
-    {...q("true-false","General","True"),sectionMinutes:10},
-    {...q("numeric-entry","General","42"),sectionMinutes:10},
-    {...q("free-response","General","Write a rubric"),explanation:P("Model response"),sectionMinutes:10}
+      partialPenaltyEach:0.1},
+    q("single-choice","General","B"),
+    q("true-false","General","True"),
+    q("numeric-entry","General","42"),
+    {...q("free-response","General","Write a rubric"),explanation:P("Model response")}
   ]};
 }
 test("P54 authoritative inspector yields the same immutable package the publisher would create",()=>{
@@ -367,19 +375,21 @@ test("P54 inspector handles imported malformed structure as issues, never says R
 });
 test("P54 section manager always updates the whole named section, preserving physical section order",()=>{
  const d=draft();
- assert.deepEqual(authoringSections(d).map(s=>({name:s.name,count:s.count,minutes:s.minutes,conflict:s.conflict})),[
-  {name:"Specialised",count:2,minutes:15,conflict:false},
-  {name:"General",count:4,minutes:10,conflict:false}]);
+ assert.deepEqual(authoringSections(d),[
+  {name:"Specialised",count:2,minutes:15},
+  {name:"General",count:4,minutes:10}]);
  const changed=setAuthoringSectionMinutes(d,"Specialised",17);
- assert.deepEqual(changed.questions.slice(0,2).map(q=>q.sectionMinutes),[17,17]);
- assert.deepEqual(changed.questions.slice(2).map(q=>q.sectionMinutes),[10,10,10,10]);
+ assert.deepEqual(changed.sections,[{name:"Specialised",minutes:17},{name:"General",minutes:10}]);
+ assert.deepEqual(changed.questions,d.questions,"Changing a section timer must not rewrite questions");
  const moved=assignAuthoringQuestionSection(changed,changed.questions[0].id,"General");
- assert.equal(moved.questions[0].sectionMinutes,10);
  assert.equal(moved.questions[0].section,"General");
- const broken={...d,questions:[d.questions[0],{...d.questions[1],sectionMinutes:12},...d.questions.slice(2)]};
- assert.equal(authoringSections(broken)[0].conflict,true);
+ assert.deepEqual(moved.sections,[{name:"Specialised",minutes:17},{name:"General",minutes:10}]);
+ const created=assignAuthoringQuestionSection(changed,changed.questions[0].id,"New Section");
+ assert.equal(created.sections.find(s=>s.name==="New Section")?.minutes,17,
+  "A newly named section inherits the source section timer once");
+ const broken={...d,sections:[...d.sections,{name:"General",minutes:12}]};
  assert.equal(inspectAuthoringPublication(broken).valid,false);
- const repaired=setAuthoringSectionMinutes(broken,"Specialised",20);
+ const repaired={...d,sections:[{name:"Specialised",minutes:20},{name:"General",minutes:10}]};
  assert.equal(inspectAuthoringPublication(repaired).valid,true);
 });
 test("P54 real six-kind preview uses frozen question controls, never index-pairs matching answers",()=>{
@@ -505,7 +515,7 @@ const {compileAuthoringPublication}=__dep_6;
 const {validateExamPackage}=__dep_7;
 const {sha256}=__dep_10;
 test("P62-A candidate view excludes explanation-only image and alt text, review retains both",async()=>{
- const {renderQuestionPrompt,renderGenericControls,assetHTML,renderAuthoredText}=
+ const {renderQuestionPrompt,renderGenericControls,supplementalAssetHTML,renderAuthoredText}=
    await import("../src/app/question-content-view.ts");
  const png="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/tAAAAABJRU5ErkJggg==";
  const dataUri="data:image/png;base64,"+png;
@@ -519,34 +529,75 @@ test("P62-A candidate view excludes explanation-only image and alt text, review 
  const authored={...q,prompt:doc("stem-figure","Candidate-safe chart"),
    explanation:doc("solution-figure","SOLUTION ONLY correct option B"),
    source:"P62-A synthetic media regression",
-   options:["One","Two","Three","Four"].map(plainRichDocument),answer:"B"};
+   options:[doc("option-figure","Candidate-safe option diagram"),
+     ...["Two","Three","Four"].map(plainRichDocument)],answer:"B"};
  const input={...draft,examId:"upsc-epfo-apfc",paperId:"p62-explanation-media",
    title:"P62-A isolated solution image regression",
    assets:[asset("stem-figure","Candidate-safe chart"),
+     asset("option-figure","Candidate-safe option diagram"),
      asset("solution-figure","SOLUTION ONLY correct option B")],questions:[authored]};
  const pkg=compileAuthoringPublication(input);
  assert.equal(validateExamPackage(pkg),pkg);
  assert.deepEqual(pkg.questions[0].content.assetIds,["stem-figure"]);
  assert.deepEqual(pkg.questions[0].content.explanationAssetIds,["solution-figure"]);
- assert.deepEqual(pkg.assets.map(x=>x.id),["stem-figure","solution-figure"]);
+ assert.deepEqual(pkg.questions[0].content.options[0].assetIds,["option-figure"]);
+ assert.deepEqual(pkg.assets.map(x=>x.id),["stem-figure","option-figure","solution-figure"]);
  const question=pkg.questions[0];
  const candidate=renderQuestionPrompt(pkg,question)+
-   assetHTML(pkg,question.content.assetIds)+renderGenericControls(pkg,question);
+   supplementalAssetHTML(pkg,question.content.assetIds,question.content.richPrompt)+
+   renderGenericControls(pkg,question);
+ assert.equal((candidate.match(/class="generic-figure"/g)??[]).length,2,
+   "Rich prompt and option media must each render once while remaining indexed by assetIds");
+ assert.match(candidate,/class="generic-choice-media-row"/);
+ const labels=[...candidate.matchAll(/<label\b[\s\S]*?<\/label>/g)].map(match=>match[0]);
+ assert.ok(labels.length>=4&&labels.every(label=>!label.includes("generic-image-open")),
+   "Option image enlargement must remain outside every answer label");
  assert.match(candidate,/Candidate-safe chart/);
  assert.doesNotMatch(candidate,/SOLUTION ONLY|solution-figure/);
  const solution=renderAuthoredText(pkg,"",question.content.richExplanation);
  assert.match(solution,/SOLUTION ONLY correct option B/);
  const onlyExplanation={...input,paperId:"p62-explanation-only",
    assets:[asset("solution-figure","SOLUTION ONLY correct option B")],
-   questions:[{...authored,prompt:plainRichDocument("Which option is correct?")}]};
+   questions:[{...authored,prompt:plainRichDocument("Which option is correct?"),
+     options:["One","Two","Three","Four"].map(plainRichDocument)}]};
  const package2=compileAuthoringPublication(onlyExplanation);
  assert.equal(package2.questions[0].content.assetIds,undefined);
  assert.deepEqual(package2.questions[0].content.explanationAssetIds,["solution-figure"]);
  assert.deepEqual(package2.assets.map(x=>x.id),["solution-figure"]);
  const candidate2=renderQuestionPrompt(package2,package2.questions[0])+
-  assetHTML(package2,package2.questions[0].content.assetIds);
+  supplementalAssetHTML(package2,package2.questions[0].content.assetIds,
+   package2.questions[0].content.richPrompt);
  assert.doesNotMatch(candidate2,/SOLUTION ONLY|solution-figure/);
  assert.match(renderAuthoredText(package2,"",
   package2.questions[0].content.richExplanation),/SOLUTION ONLY correct option B/);
+});
+}
+
+
+{
+const test=__dep_0.default;
+const assert=__dep_1.default;
+const {readFile}=__dep_2;
+
+test("Authoring topology keeps persistence and staging/publication orchestration out of the studio",async()=>{
+ const studio=await readFile(new URL("../src/authoring/authoring-studio.ts",import.meta.url),"utf8");
+ const store=await readFile(new URL("../src/authoring/authoring-workspace-store.ts",import.meta.url),"utf8");
+ const workflow=await readFile(new URL("../src/authoring/authoring-workflow.ts",import.meta.url),"utf8");
+ assert.doesNotMatch(studio,/localStorage|AUTHORING_KEY|STAGING_KEY|inspectExternalQuality|addStagedFiles|stagedToAuthoringDraft/);
+ assert.match(studio,/createAuthoringWorkspaceStore\(\)/);
+ assert.match(studio,/preparePublicationWorkflow/);
+ assert.match(studio,/handoffStagingToDraftShelf/);
+ assert.match(store,/AUTHORING_KEY/);
+ assert.match(store,/STAGING_KEY/);
+ assert.match(store,/saveShelf/);
+ assert.match(store,/saveStaging/);
+ assert.match(store,/resetUnreadableShelf/);
+ assert.match(store,/resetUnreadableStaging/);
+ assert.doesNotMatch(store,/document\.|querySelector|wordgard|inspectAuthoringPublication/);
+ assert.match(workflow,/inspectPublicationWorkflow/);
+ assert.match(workflow,/preparePublicationWorkflow/);
+ assert.match(workflow,/handoffStagingToDraftShelf/);
+ assert.match(workflow,/ingestStagedFiles/);
+ assert.doesNotMatch(workflow,/localStorage|sessionStorage|document\.|querySelector|wordgard/);
 });
 }

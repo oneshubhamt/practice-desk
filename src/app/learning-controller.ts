@@ -5,7 +5,7 @@ import {isAttempt,isLearning} from "./stored-record-validator.ts";
 
 
 import {startGenericAttempt} from "./exam-package.ts";
-import type {GenericAttempt} from "./exam-package.ts";
+import type {GenericAttempt} from "../engine/generic-attempt.ts";
 
 import type {QuestionRevisionId} from "../domain/ids.js";
 
@@ -14,9 +14,9 @@ import {makeRevisionPackage,createNotebookLineage} from "../learning/revision-te
 
 import {addLearningCard} from "../learning/learning.ts";
 
-import type {CoordinatorContext} from "./coordinator-context.ts";
+import type {LearningControllerContext} from "./coordinator-context.ts";
 
-export const addLearningNotebookCard=(owner:CoordinatorContext,source:GenericAttempt,id:string):void=>{
+export const addLearningNotebookCard=(owner:LearningControllerContext,source:GenericAttempt,id:string):void=>{
    if(owner.records.has("learning-card:"+id))return;
    try{
      const record=addLearningCard(source,id as QuestionRevisionId,new Date(owner.now()).toISOString());
@@ -24,7 +24,7 @@ export const addLearningNotebookCard=(owner:CoordinatorContext,source:GenericAtt
    }catch(error){owner.notice(error instanceof Error?error.message:"Unable to add notebook card");}
  };
 
-export const addLearningResultCards=async (owner:CoordinatorContext,source:GenericAttempt):Promise<void>=>{
+export const addLearningResultCards=async (owner:LearningControllerContext,source:GenericAttempt):Promise<void>=>{
    const ids=source.result?.items.filter(item=>item.verdict==="incorrect"||item.verdict==="unanswered")
      .map(item=>item.questionRevisionId).filter(id=>!owner.records.has("learning-card:"+id))??[];
    let saved=0;
@@ -36,7 +36,7 @@ export const addLearningResultCards=async (owner:CoordinatorContext,source:Gener
    owner.draw();
  };
 
-export function createWorkspaceLearningDesk(owner:CoordinatorContext):ReturnType<typeof createLearningDesk>{return createLearningDesk(owner.root,{
+export function createWorkspaceLearningDesk(owner:LearningControllerContext):ReturnType<typeof createLearningDesk>{return createLearningDesk(owner.root,{
    cards:()=>[...owner.records.values()].filter(isLearning),
    attempts:()=>[...owner.records.values()].filter(isAttempt),
    save:(item)=>owner.save(item),
@@ -49,7 +49,8 @@ export function createWorkspaceLearningDesk(owner:CoordinatorContext):ReturnType
        const paper=makeRevisionPackage(selected,nonce);
        const id=typeof crypto!=="undefined"&&crypto.randomUUID?crypto.randomUUID():
          "attempt-"+owner.now()+"-"+Math.floor(Math.random()*100000);
-       const generated={...startGenericAttempt(paper,id,owner.now()),notebookLineage:createNotebookLineage(selected,selection)};
+       const generated={...startGenericAttempt(paper,id,owner.now(),"custom-practice"),
+         notebookLineage:createNotebookLineage(selected,selection)};
        if(!await owner.save(generated))return false;
        owner.attempt=generated;owner.freshlyStartedAttemptId=generated.id;
        owner.warning="Untimed notebook revision · +1 correct, 0 incorrect. This is not a source-exam score.";

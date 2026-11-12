@@ -1,15 +1,8 @@
-export interface DisplayPreferences{readonly schema:1;readonly dark:boolean;readonly scale:number}
-export const SETTINGS_KEY="practiceDesk.overhaul.settings.v1";
+import {STORAGE_TOPOLOGY} from "../storage-topology.ts";
+import {DEFAULT_PREFERENCES,validateDisplayPreferences,type DisplayPreferences} from "../workspace-settings.ts";
+export {DEFAULT_PREFERENCES,validateDisplayPreferences,type DisplayPreferences} from "../workspace-settings.ts";
+export const SETTINGS_KEY=STORAGE_TOPOLOGY.preferences;
 export const SETTINGS_EVENT="practice-desk-preferences";
-export const DEFAULT_PREFERENCES:DisplayPreferences={schema:1,dark:false,scale:100};
-
-export function validateDisplayPreferences(value:unknown):DisplayPreferences{
- if(!value||typeof value!=="object"||Array.isArray(value))throw new Error("Invalid display preferences");
- const p=value as Partial<DisplayPreferences>;
- if(p.schema!==1||typeof p.dark!=="boolean"||!Number.isInteger(p.scale)||p.scale!<85||p.scale!>140)
-   throw new Error("Invalid display preferences");
- return {schema:1,dark:p.dark,scale:p.scale!};
-}
 export function readDisplayPreferences(storage:Pick<Storage,"getItem">=localStorage):DisplayPreferences{
  try{
    const raw=storage.getItem(SETTINGS_KEY);

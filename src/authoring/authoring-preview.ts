@@ -3,8 +3,8 @@
  * never invent a scoring function, mutate a published package or mount a test.
  */
 import type {AuthoringDraft,AuthoringQuestion} from "./authoring-draft.ts";
-import type {ExamPackage} from "../app/exam-package.ts";
-import type {QuestionContent,QuestionRevision,CandidateResponse,QuestionKind} from "../domain/question.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
+import type {QuestionContent,QuestionRevision,CandidateResponse} from "../domain/question.ts";
 import type {CorrectAnswer} from "../domain/answer-key.ts";
 import {publicationPlainText} from "./authoring-publisher.ts";
 import {examPreflight} from "../app/exam-preflight.ts";
@@ -167,7 +167,8 @@ export function authoringPartialCreditExamples(pkg:ExamPackage):AuthoringPartial
   }
   if(!response)continue;
   const scored=scoreAttempt(pkg.paper,pkg.answerKey,pkg.questions,[{
-   questionRevisionId:q.id,timeSpentMs:0,answerChangeCount:0,flagged:false,response
+   questionRevisionId:q.id,timeSpentMs:0,firstVisitMs:0,preFirstAnswerMs:0,
+   answerChangeCount:0,flagged:false,response
   }],"2026-11-04T00:00:00.000Z").items.find(item=>item.questionRevisionId===q.id);
   if(scored)results.push({questionRevisionId:q.id,response,verdict:scored.verdict,
     marks:scored.marks,description});

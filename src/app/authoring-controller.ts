@@ -1,15 +1,17 @@
 /** P47-6 module: authoring-controller.ts */
 
-import {validateExamPackage} from "./exam-package.ts";
+import {validateExamPackage} from "../domain/exam-package.ts";
 
 import {familyIdFor} from "./exam-families.ts";
 
 import {createQuestionAuthoringStudio} from "../authoring/authoring-studio.ts";
 
 
-import type {CoordinatorContext} from "./coordinator-context.ts";
+import type {AuthoringControllerContext} from "./coordinator-context.ts";
 
-export function createWorkspaceAuthoringStudio(owner:CoordinatorContext):ReturnType<typeof createQuestionAuthoringStudio>{return createQuestionAuthoringStudio({
+export function createWorkspaceAuthoringStudio(owner:AuthoringControllerContext):ReturnType<typeof createQuestionAuthoringStudio>{
+ let studio!:ReturnType<typeof createQuestionAuthoringStudio>;
+ studio=createQuestionAuthoringStudio({
    existing:()=>[...owner.packages.values()],
    onClose:()=>{if(!owner.disposed&&owner.view==="library")owner.draw();},
    publish:async bundle=>{
@@ -20,7 +22,7 @@ export function createWorkspaceAuthoringStudio(owner:CoordinatorContext):ReturnT
        throw Error("This exact paper edition and revision is already published. Increase Revision rather than overwriting it.");
      // A newly published item uses the SAME source-validated, compare-and-save
      // path as ordinary imported papers. No separate mutable publication store.
-     const persisted=await owner.save({recordType:"generic-package",
+     const persisted=await owner.save({recordType:"generic-package",saveRevision:0,
        id:"generic-package:"+signed.paper.id,bundle:signed});
      if(!persisted)throw Error("The validated paper could not be saved; no new edition is available.");
      owner.packages.set(signed.paper.id,signed);
@@ -31,7 +33,9 @@ export function createWorkspaceAuthoringStudio(owner:CoordinatorContext):ReturnT
      owner.saveSelection();
      owner.warning="Published "+signed.questions.length+" user-authored questions as a new immutable "+
        signed.paper.edition+" revision. The paper is ready to practise; existing attempts are unchanged.";
-     owner.authoringStudio.beforeRender();
+     studio.beforeRender();
      owner.draw();
    }
- });}
+ });
+ return studio;
+}

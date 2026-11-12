@@ -24,7 +24,7 @@ try{
   // digest. Never mutate the completed, source-authenticated good attempt.
   await page.evaluate(async()=>{
     const db=await new Promise((resolve,reject)=>{
-      const q=indexedDB.open("practiceDesk.shared.v1",1);
+      const q=indexedDB.open("practiceDesk.history",1);
       q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error);
     });
     try{
@@ -78,7 +78,7 @@ try{
     "Recovery backup failed to preserve good attempt or leaked corrupted row");
   const preserved=await page.evaluate(async()=>{
     const db=await new Promise((resolve,reject)=>{
-      const q=indexedDB.open("practiceDesk.shared.v1",1);
+      const q=indexedDB.open("practiceDesk.history",1);
       q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error);
     });
     try{

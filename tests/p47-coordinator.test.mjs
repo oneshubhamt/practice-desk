@@ -7,13 +7,13 @@ const source=async file=>readFile(new URL("../"+file,import.meta.url),"utf8");
 const splitNames=[
  "library-controller","result-controller","exam-controller","route-controller",
  "persistence-controller","history-controller","screen-controller",
- "lifecycle-controller","authoring-controller","learning-controller"
+ "lifecycle-controller","authoring-controller","learning-controller","storage-health-controller"
 ];
 test("P47-6 full coordinator is a small composition root, not a relocated second monolith",async()=>{
  const text=await source("src/app/generic-ui.ts");
  assert.ok(text.split("\n").length<=350,"Coordinator must be composition-only");
  assert.match(text,/mountExamWorkspace/);
- assert.match(text,/const owner:CoordinatorContext/);
+ assert.match(text,/let owner!:WorkspaceContext/);
  assert.match(text,/authoringStudio=createWorkspaceAuthoringStudio\(owner\)/);
  assert.match(text,/learningDesk=createWorkspaceLearningDesk\(owner\)/);
  assert.match(text,/timer=startWorkspaceTimer\(owner\)/);
@@ -33,16 +33,33 @@ test("P47-6 independently owned route, Library, exam, Results, History, persiste
   "screen-controller":"drawWorkspaceScreen|reportWorkspaceNotice",
   "lifecycle-controller":"startWorkspaceTimer|disposeWorkspace|dispatchWorkspaceVisibility",
   "authoring-controller":"createWorkspaceAuthoringStudio",
-  "learning-controller":"createWorkspaceLearningDesk|addLearningNotebookCard"
+  "learning-controller":"createWorkspaceLearningDesk|addLearningNotebookCard",
+  "storage-health-controller":"showWorkspaceStorageEstimate|requestWorkspacePersistentStorage|workspaceStorageHealth"
  };
  const ctx=await source("src/app/coordinator-context.ts");
- assert.match(ctx,/export interface CoordinatorContext/);
+ assert.match(ctx,/export interface WorkspaceContext/);
  assert.match(ctx,/readonly records:Map<string, RecordItem>/);
  assert.match(ctx,/readonly packages:Map<string, ExamPackage>/);
  assert.match(ctx,/\battempt:GenericAttempt \| null/);
+ assert.match(ctx,/storageBackend:WorkspaceStore \| null/);
+ assert.doesNotMatch(ctx,/\bdb:IDBDatabase|fallbackStamp|storedSnapshots|readonly storageKey/);
+ const contexts={
+  "library-controller":"LibraryControllerContext",
+  "result-controller":"ResultControllerContext",
+  "exam-controller":"ExamControllerContext",
+  "history-controller":"HistoryControllerContext",
+  "route-controller":"RouteControllerContext",
+  "persistence-controller":"PersistenceControllerContext",
+  "screen-controller":"ScreenControllerContext",
+  "lifecycle-controller":"LifecycleControllerContext",
+  "authoring-controller":"AuthoringControllerContext",
+  "learning-controller":"LearningControllerContext",
+  "storage-health-controller":"StorageHealthControllerContext"
+ };
  for(const [name,required] of Object.entries(expected)){
   const text=await source("src/app/"+name+".ts");
-  assert.match(text,/import type \{CoordinatorContext\}/);
+  assert.match(text,new RegExp("import type \\{"+contexts[name]+"\\} from \\\"\\./coordinator-context\\.ts\\\""),
+    name+" must depend on its narrow capability slice");
   assert.doesNotMatch(text,/:\s*any\b|as any\b/);
   for(const value of required.split("|"))
     assert.match(text,new RegExp("\\b"+value+"\\b"),name+" must own "+value);
@@ -108,4 +125,63 @@ test("P47-6 no undeclared global event subscriptions or duplicate clock authorit
    "Unmount must dispose "+type);
  assert.equal((life.match(/window\.setInterval\(/g)??[]).length,1);
  assert.match(life,/window\.clearInterval\(owner\.timer\)/);
+});
+
+
+test("Persistence orchestration has one backend contract and no raw storage fork",async()=>{
+ const persistence=await source("src/app/persistence-controller.ts");
+ const backend=await source("src/history/workspace-store.ts");
+ const health=await source("src/app/storage-health-controller.ts");
+ assert.doesNotMatch(persistence,/\bindexedDB\b|\.transaction\s*\(|ATTEMPTS_STORE|SNAPSHOTS_STORE|fallbackStamp|storageKey/);
+ assert.match(backend,/export interface WorkspaceStore/);
+ assert.match(backend,/class IndexedDbWorkspaceStore implements WorkspaceStore/);
+ assert.match(backend,/class LocalFallbackWorkspaceStore implements WorkspaceStore/);
+ for(const method of ["loadRecoverable","loadVerified","write","insertMany","delete","deleteCompleted","readAuthoritative","pruneSnapshots"])
+  assert.match(backend,new RegExp("\\b"+method+"\\b"),"Backend contract must own "+method);
+ assert.doesNotMatch(health,/indexedDB|ATTEMPTS_STORE|SNAPSHOTS_STORE|\.transaction\s*\(/);
+ assert.match(health,/navigator\.storage\?\.estimate/);
+ assert.match(health,/navigator\.storage\?\.persist/);
+});
+
+
+test("Lower-layer modules cannot depend on application composition",async()=>{
+ for(const dir of ["domain","engine","history","learning"]){
+  const entries=await readdir(new URL("../src/"+dir+"/",import.meta.url));
+  for(const file of entries.filter(name=>name.endsWith(".ts"))){
+   const text=await source("src/"+dir+"/"+file);
+   assert.doesNotMatch(text,/from ["']\.\.\/app\//,
+     dir+"/"+file+" must not import an app-layer module");
+  }
+ }
+});
+
+
+test("CLEER package, attempt and composition ownership stays canonical",async()=>{
+ const domainPackage=await source("src/domain/exam-package.ts");
+ const appPackage=await source("src/app/exam-package.ts");
+ const engineAttempt=await source("src/engine/generic-attempt.ts");
+ const generic=await source("src/app/generic-ui.ts");
+ const authoring=await source("src/app/authoring-controller.ts");
+ assert.doesNotMatch(domainPackage,/\bCglPracticeMode\b|\bpracticeMode\b/,
+  "runtime CGL policy must not enter the canonical exam package");
+ assert.doesNotMatch(appPackage,/export function transitionGenericAttempt\s*\(/,
+  "attempt transitions belong to engine/, not app/");
+ assert.match(engineAttempt,/export function transitionGenericAttempt\s*\(/);
+ assert.doesNotMatch(generic,/authoring\/authoring-studio|createLearningDesk|\.\/learning-ui\.ts/,
+  "composition root must use workspace adapters rather than feature constructors for typing");
+ assert.doesNotMatch(authoring,/owner\.authoringStudio/,
+  "authoring adapter must not depend on the instance it is constructing");
+});
+
+test("terminal candidate scratch has one persistence cleanup owner",async()=>{
+ const persistence=await source("src/app/persistence-controller.ts");
+ assert.match(persistence,/versioned\.finishedAt!==null/);
+ assert.match(persistence,/clearCandidateToolWorkspace\(localStorage,versioned\.id\)/);
+ assert.match(persistence,/owner\.calculatorStates\.delete\(versioned\.id\)/);
+ assert.match(persistence,/owner\.choiceDrafts\.delete\(key\)/);
+ for(const file of ["exam-controller","route-controller","lifecycle-controller"]){
+  const text=await source("src/app/"+file+".ts");
+  assert.doesNotMatch(text,/clearCandidateToolWorkspace/,
+   file+" must delegate terminal candidate cleanup to persistence");
+ }
 });

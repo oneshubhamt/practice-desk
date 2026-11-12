@@ -1,9 +1,10 @@
 import { examShortcutHelp } from "./exam-shortcuts.ts";
 /** Read-only exam display; fullscreen state is supplied, not read from the DOM. */
-import type {ExamPackage,GenericAttempt} from "./exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
+import type {GenericAttempt} from "../engine/generic-attempt.ts";
 import type {OptionId} from "../domain/ids.js";
 import {escapeText} from "./html-escape.ts";
-import {assetHTML,stimulusHTML,renderGenericControls,renderQuestionPrompt} from "./question-content-view.ts";
+import {supplementalAssetHTML,stimulusHTML,renderGenericControls,renderQuestionPrompt} from "./question-content-view.ts";
 import {calculatorPanelHTML,calculatorToggleHTML} from "./exam-calculator.ts";
 import {BASIC_CALCULATOR_V1,newExamCalculatorState,type ExamCalculatorState} from "../domain/calculator.ts";
 /** Human-readable view of a frozen practice mode; do not alter persistence. */
@@ -101,7 +102,7 @@ export function renderModelExam(
      (attempt.frozen.snapshot.examId==="ssc-cgl"?
        ' · Paper Q'+escapeText(q.questionId.split(":").at(-1)):"")+'</p>'+
      stimulusHTML(assets,q)+renderQuestionPrompt(assets,q)+
-     assetHTML(assets,q.content.assetIds,"Figure for question "+(state.questionIndex+1))+
+     supplementalAssetHTML(assets,q.content.assetIds,q.content.richPrompt,"Figure for question "+(state.questionIndex+1))+
      '<fieldset class="generic-response-group"'+(state.status!=="running"?" disabled":"")+'>'
      +renderGenericControls(assets,q,currentDraft?{kind:"multiple-select",optionIds:currentDraft.optionIds}:response)+
      (currentDraft?'<p class="generic-inline-warning" role="status">'+escapeText(currentDraft.message)+'</p>':"")+

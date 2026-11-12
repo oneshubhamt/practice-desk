@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {pkg} from "./fixtures/six-kinds.mjs";
-import {validateExamPackage,startGenericAttempt,transitionGenericAttempt} from "../src/app/exam-package.ts";
+import {validateExamPackage,startGenericAttempt} from "../src/app/exam-package.ts";
+import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {addLearningCard,validateLearningCard,topicMetrics,comparableTrends} from "../src/learning/learning.ts";
 import {revisionInventory,revisionTake,mockEvidenceAttempts,isRevisionAttempt} from "../src/learning/revision-selection.ts";
 import {APFC_SYLLABUS_V1,syllabusForExam} from "../src/learning/syllabus-taxonomy.ts";
@@ -63,7 +64,8 @@ test("P46 explicit APFC syllabus is versioned, self-assigned and never inferred"
  assert.equal(apfc.syllabusTopicId,"labour");
  assert.equal(apfc.customTopic,"EPF contribution");
  assert.throws(()=>validateLearningCard({...apfc,syllabusTopicId:"invented"}),/Invalid learning card fields/);
- const archive=verifyBackup(makeBackup([apfc],{schema:1,dark:false,scale:100},"2026-11-02T12:00:00Z"));
+ const archive=verifyBackup(makeBackup([{...apfc,saveRevision:1}],
+   {schema:1,dark:false,scale:100},"2026-11-02T12:00:00Z"));
  assert.equal(validateLearningCard(archive.records[0]).syllabusTopicId,"labour");
 });
 test("P46 selection filters are authenticated and mock trends exclude revision results",()=>{
@@ -94,7 +96,8 @@ test("P46 selection filters are authenticated and mock trends exclude revision r
  const display=historyHTML([a,completed],new Map(),{status:"all",sort:"newest",search:""},false,false,"");
  assert.match(display,/Mock accuracy/);
  assert.match(display,/Revision tests/iu);
- const back=verifyBackup(makeBackup([a,completed],{schema:1,dark:false,scale:100},"2026-11-02T12:00:00Z"));
+ const back=verifyBackup(makeBackup([{...a,saveRevision:1},{...completed,saveRevision:1}],
+   {schema:1,dark:false,scale:100},"2026-11-02T12:00:00Z"));
  assert.equal(back.records.find(x=>x.id==="targeted").notebookLineage.selection.reasons[0],"wrong");
 });
 test("P46 only scoreable, review-permitted frozen questions can be selected",()=>{

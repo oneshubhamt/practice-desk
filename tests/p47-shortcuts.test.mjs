@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {resolveExamShortcut,EXAM_SHORTCUT_HELP} from "../src/app/exam-shortcuts.ts";
+import {resolveExamShortcut,examShortcutHelp} from "../src/app/exam-shortcuts.ts";
 const c={key:"a",alt:false,repeat:false,paused:false,focusedRadio:false,
  editable:false,blocked:false,allowFlagging:true};
 const decide=p=>resolveExamShortcut({...c,...p});
@@ -13,7 +13,7 @@ test("P47-4 keyboard table: answer, native radio arrows, Alt navigate, flag and 
  assert.deepEqual(decide({key:"ArrowRight",focusedRadio:true,alt:true}),{kind:"navigate",delta:1});
  assert.deepEqual(decide({key:"m"}),{kind:"flag"});
  assert.deepEqual(decide({key:"f"}),{kind:"fullscreen"});
- assert.match(EXAM_SHORTCUT_HELP,/radio/);
+ assert.match(examShortcutHelp(),/radio/);
 });
 test("P47-4 blocks shortcuts during editing, modal or Display, and Alt/repeated key actions",()=>{
  for(const key of ["a","m","f","ArrowLeft","ArrowRight"]){

@@ -5,6 +5,7 @@ import * as __suite_dep_0 from "node:test";
 import * as __suite_dep_1 from "node:assert/strict";
 import * as __suite_dep_2 from "./fixtures/six-kinds.mjs";
 import * as __suite_dep_3 from "../src/app/exam-package.ts";
+import * as __generic_attempt from "../src/engine/generic-attempt.ts";
 import * as __suite_dep_4_exam_view from "../src/app/exam-view.ts";
 import * as __suite_dep_4_stored_record_validator from "../src/app/stored-record-validator.ts";
 import * as __suite_dep_4_question_content_view from "../src/app/question-content-view.ts";
@@ -19,14 +20,14 @@ import * as __suite_dep_11 from "../src/domain/integrity.ts";
 import * as __suite_dep_12 from "../src/app/response-drafts.ts";
 import * as __suite_dep_13 from "../src/app/navigation.ts";
 
-// === Legacy suite: tests/ui-history-and-results.test.mjs — 5 unchanged test registrations ===
+// === Consolidated coverage: tests/ui-history-and-results.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
 const pkg = __suite_dep_2["pkg"];
 const validateExamPackage = __suite_dep_3["validateExamPackage"];
 const startGenericAttempt = __suite_dep_3["startGenericAttempt"];
-const transitionGenericAttempt = __suite_dep_3["transitionGenericAttempt"];
+const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
 const renderModelExam = __suite_dep_4_exam_view["renderModelExam"];
 const filteredHistory = __suite_history_query["filteredHistory"];
 const historyHTML = __suite_dep_5["historyHTML"];
@@ -35,7 +36,7 @@ const reviewMatch = __suite_dep_6["reviewMatch"];
 const resultTabsHTML = __suite_dep_6["resultTabsHTML"];
 const reviewFiltersHTML = __suite_dep_6["reviewFiltersHTML"];
 const timingLedgerHTML = __suite_dep_6["timingLedgerHTML"];
-const sectionPaceHTML = __suite_dep_6["sectionPaceHTML"];
+const resultPacingHTML = __suite_dep_6["resultPacingHTML"];
 const answerRevisionEvidence = __suite_dep_7["answerRevisionEvidence"];
 const validateGenericStoredRecord = __suite_dep_4_stored_record_validator["validateGenericStoredRecord"];
 const bundle=validateExamPackage(pkg);
@@ -80,7 +81,7 @@ test("result tabs and time ledger keep frozen verdicts, timings and accessible c
  assert.equal(a.result.items.filter(row=>reviewMatch(a,row,"incorrect")).length,0);
  assert.equal(a.result.items.filter(row=>reviewMatch(a,row,"unanswered")).length,6);
  assert.equal(a.result.items.filter(row=>reviewMatch(a,row,"fastwrong")).length,0);
- const pacing=sectionPaceHTML(a);
+ const pacing=resultPacingHTML(a);
  assert.match(pacing,/Time &amp; pacing/);
  assert.match(pacing,/Section diagnostics/);
 });
@@ -128,7 +129,7 @@ test("answer changes preserve actual events and distinguish rescued from lost an
 });
 }
 
-// === Legacy suite: tests/ui-media-editorial-and-paused-controls.test.mjs — 6 unchanged test registrations ===
+// === Consolidated coverage: tests/ui-media-editorial-and-paused-controls.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -280,7 +281,7 @@ test("F10: cannot flag when disabled, after expiry or after completion",()=>{
 });
 }
 
-// === Legacy suite: tests/ui-question-controls-and-drafts.test.mjs — 8 unchanged test registrations ===
+// === Consolidated coverage: tests/ui-question-controls-and-drafts.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -293,7 +294,7 @@ const paperRevisionHash = __suite_dep_11["paperRevisionHash"];
 const pkg = __suite_dep_2["pkg"];
 const validateExamPackage = __suite_dep_3["validateExamPackage"];
 const startGenericAttempt = __suite_dep_3["startGenericAttempt"];
-const transitionGenericAttempt = __suite_dep_3["transitionGenericAttempt"];
+const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
 const multipleDraftMessage = __suite_dep_12["multipleDraftMessage"];
 const duplicateMatchingTargets = __suite_dep_12["duplicateMatchingTargets"];
 const stub={format:"practice-desk-exam",version:1,examId:"example",
@@ -335,13 +336,14 @@ test("review answers resolve human labels for all six question kinds",()=>{
 });
 
 test("generic history rejects malformed stored records before import",()=>{
- assert.throws(()=>validateGenericStoredRecord({recordType:"generic-attempt",id:"fake"}),/Invalid generic/);
- assert.throws(()=>validateGenericStoredRecord({recordType:"generic-package",id:"wrong",bundle:{paper:{id:"x"}}}),/identity/);
+ assert.throws(()=>validateGenericStoredRecord({recordType:"generic-attempt",saveRevision:1,id:"fake"}),/Invalid generic/);
+ assert.throws(()=>validateGenericStoredRecord({recordType:"generic-package",saveRevision:1,id:"wrong",bundle:{paper:{id:"x"}}}),/identity/);
 });
 
 test("shared renderer enforces paused, forward-only and no-early-submit policies",async()=>{
  const {renderModelExam}=await import("../src/app/exam-view.ts");
- const {validateExamPackage,startGenericAttempt,transitionGenericAttempt}=await import("../src/app/exam-package.ts");
+ const {validateExamPackage,startGenericAttempt}=await import("../src/app/exam-package.ts");
+ const {transitionGenericAttempt}=await import("../src/engine/generic-attempt.ts");
  const {pkg}=await import("./fixtures/six-kinds.mjs");
  const forwardPaper={...pkg.paper,navigation:{...pkg.paper.navigation,questionNavigation:"forward-only"}};
  const forward=validateExamPackage({...pkg,paper:{...forwardPaper,contentHash:paperRevisionHash(forwardPaper)}});
@@ -413,7 +415,7 @@ test("G08: report each duplicate right value once; blanks and distinct right cho
 });
 }
 
-// === Legacy suite: tests/navigation-native-routes.test.mjs — 3 unchanged test registrations ===
+// === Consolidated coverage: tests/navigation-native-routes.test.mjs — retained assertions ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -466,7 +468,7 @@ test("routeHref clears old route parameters without destroying unrelated query",
 }
 
 
-// User-reported Mac Safari compatibility: deterministic file:// fragment codec.
+// Mac Safari/file:// resilience: deterministic fragment codec.
 // Real Back/Forward, persistence and reloading are covered by acceptance-safari-fallback.
 {
 const test=__suite_dep_0["default"];

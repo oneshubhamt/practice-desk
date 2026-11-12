@@ -1,4 +1,4 @@
-/** Modern-only responsive/layout/keyboard/a11y contracts; no v11 pixel comparator. */
+/** Current responsive/layout/keyboard/a11y contracts; no historical pixel comparator. */
 import {openHarness,check,viewports,assertNoOverflow,route} from "./browser/fixtures.mjs";
 const h=await openHarness({artifactDir:"artifacts/acceptance-modern"});
 const scenes=[];
@@ -69,7 +69,7 @@ async function checkDisplay(page,label){
    await page.evaluate(()=>document.activeElement?.id)==="displayTrigger",
    "Escape failed to close popover and restore focus");
 }
-/** Direct computed-token colour contrasts, not frozen v11 pixel equality. */
+/** Direct computed-token colour contrasts, not frozen historical pixel equality. */
 async function assertContrast(page,label){
  const ratios=await page.evaluate(()=>{
   const style=getComputedStyle(document.documentElement);

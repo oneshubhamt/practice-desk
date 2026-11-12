@@ -5,6 +5,7 @@
  * Therefore text/diagrams stay original; photos require automated fidelity
  * checks AND explicit user visual approval for a smaller WebP candidate.
  */
+import {downloadBlob as exportBlob} from "./download-file.ts";
 export type RasterAssessment={
  readonly sourceBytes:number;
  readonly candidateBytes:number;
@@ -62,12 +63,6 @@ function readAsDataUri(file:Blob):Promise<string>{
   reader.onerror=()=>reject(reader.error??Error("Local image conversion failed"));
   reader.readAsDataURL(file);
  });
-}
-function exportBlob(blob:Blob,name:string):void{
- const url=URL.createObjectURL(blob);
- const link=element("a");link.href=url;link.download=name;document.body.append(link);
- link.click();link.remove();
- window.setTimeout(()=>URL.revokeObjectURL(url),2000);
 }
 function calculateFidelity(original:ImageData,decoded:ImageData):{
  psnrDb:number;maxChannelError:number;significantErrorFraction:number
@@ -260,7 +255,7 @@ export function createImagePreparation():ImagePreparation{
    exportBlob(new Blob([JSON.stringify(snippet,null,2)],{type:"application/json"}),
      "practice-desk-media-"+id+".json");
    status.textContent=(optimizedSource?"Reviewed WebP":"Original image")+
-    " entry downloaded. Insert it into the simple-bank media array before importing, then reference its ID using question imageIds or optionImageIds. The bank importer computes and verifies the SHA-256 before freezing.";
+    " entry downloaded. Add the prepared asset to the canonical authoring media inventory and reference it from rich question or option content. The bank importer computes and verifies the SHA-256 before freezing.";
   };
   exportOriginal.addEventListener("click",()=>{void exportSnippet(false);});
   exportWebp.addEventListener("click",()=>{void exportSnippet(true);});

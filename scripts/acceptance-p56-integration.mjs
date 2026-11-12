@@ -7,7 +7,8 @@
  */
 import {openHarness,offlineUrl,route,records,check} from "./browser/fixtures.mjs";
 import {pkg} from "../tests/fixtures/six-kinds.mjs";
-import {startGenericAttempt,transitionGenericAttempt} from "../src/app/exam-package.ts";
+import {startGenericAttempt} from "../src/app/exam-package.ts";
+import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {compactAttempt} from "../src/history/shared-store.ts";
 import {serializeVerifiedBackup} from "../src/history/backup.ts";
 import {DEFAULT_PREFERENCES} from "../src/app/preferences.ts";
@@ -21,8 +22,8 @@ const completed=id=>{
  return transitionGenericAttempt(start,{type:"TICK",nowMs:t+1200000},
    new Map(pkg.questions.map(q=>[q.id,q])));
 };
-const foreign=completed("p56-foreign-committed");
-const restoring=completed("p56-additive-restored");
+const foreign={...completed("p56-foreign-committed"),saveRevision:1};
+const restoring={...completed("p56-additive-restored"),saveRevision:1};
 const packed=compactAttempt(foreign),otherPacked=compactAttempt(restoring);
 check(packed.snapshot.id===otherPacked.snapshot.id,
  "P56 precondition: frozen same-source digest should be shared");
@@ -38,7 +39,7 @@ try{
  // Only tab B commits. Tab A's in-memory storedSnapshots is now stale.
  await other.evaluate(async ({row,snapshot})=>{
    const db=await new Promise((resolve,reject)=>{
-     const req=indexedDB.open("practiceDesk.shared.v1",1);
+     const req=indexedDB.open("practiceDesk.history",1);
      req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
    });
    try{
@@ -72,7 +73,7 @@ try{
    engine+" P56 R1 import overwrote concurrent original record");
  const identity=await page.evaluate(async ()=>{
    const db=await new Promise((resolve,reject)=>{
-     const req=indexedDB.open("practiceDesk.shared.v1",1);
+     const req=indexedDB.open("practiceDesk.history",1);
      req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
    });
    try{
@@ -102,7 +103,7 @@ try{
  distorted.body.paper.revision=distorted.body.paper.revision+1;
  await hostile.page.evaluate(async snapshot=>{
    const db=await new Promise((resolve,reject)=>{
-     const r=indexedDB.open("practiceDesk.shared.v1",1);
+     const r=indexedDB.open("practiceDesk.history",1);
      r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
    });
    try{
@@ -121,7 +122,7 @@ try{
    document.querySelector("#app")?.textContent??""),null,{timeout:12000});
  const nonOverwrite=await hostile.page.evaluate(async id=>{
    const db=await new Promise((resolve,reject)=>{
-     const r=indexedDB.open("practiceDesk.shared.v1",1);
+     const r=indexedDB.open("practiceDesk.history",1);
      r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
    });
    try{

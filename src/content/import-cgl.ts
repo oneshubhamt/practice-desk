@@ -10,10 +10,12 @@ import { questionRevisionHash, answerKeyRevisionHash, paperRevisionHash } from "
 const optionId = (question: string, letter: string): OptionId => `${question}:option:${letter}` as OptionId;
 const sectionNames = ["Reasoning", "General Awareness", "Quantitative Aptitude", "English"] as const;
 
-/** Source-bank importer: no changes to the published JSON or v11 runtime. */
+/** Source-bank importer into the canonical runtime model. */
 export function importCglBank(papers: SourcePaperBank, patches: ReviewPatchBank) {
   const results: { paper: PaperRevision; key: AnswerKeyRevision; questions: QuestionRevision[] }[] = [];
   for (const source of Object.values(papers)) {
+    let sourcePaper:PaperRevision|undefined;
+    let sourceKey:AnswerKeyRevision|undefined;
     for (const edition of ["source", "reviewed"] as const) {
       const paperId = source.id as PaperId;
       const patchMap = edition === "reviewed" ? patches[source.id] ?? {} : {};
@@ -33,7 +35,7 @@ export function importCglBank(papers: SourcePaperBank, patches: ReviewPatchBank)
           ? original.status === "ok" ? "verified" : original.status
           : patch.status === "corrected" ? "corrected"
             : patch.status === "caution" ? "caution"
-              // v11 policy: an unpatched source-invalid/caution item remains
+              // Canonical policy: an unpatched source-invalid/caution item remains
               // scoreable in reviewed edition, marked as editorial caution.
               // Never silently change the published key or source edition.
               : original.status === "invalid" || original.status === "caution" ? "caution" : "verified";
@@ -82,10 +84,17 @@ export function importCglBank(papers: SourcePaperBank, patches: ReviewPatchBank)
       const navigation = { questionNavigation: "free" as const, sectionNavigation: "sequential-locked" as const,
         allowFlagging: true, allowReview: true };
       const scoring = { defaultRule: { correctMarks: 2, incorrectMarks: -0.5, unansweredMarks: 0 } };
-      const paperContent = { sections, timing, navigation, scoring, answerKeyRevisionId: key.id, edition };
+      if(edition==="reviewed"&&(!sourcePaper||!sourceKey))
+        throw new Error("Reviewed CGL edition requires its exact Source revision");
+      const paperContent = { sections, timing, navigation, scoring, answerKeyRevisionId: key.id, edition,
+        ...(edition==="reviewed"?{
+          sourcePaperRevisionId:sourcePaper!.id,
+          sourceAnswerKeyRevisionId:sourceKey!.id
+        }:{}) };
       const fingerprint = paperRevisionHash(paperContent);
       const paper = validatePaperRevision({ id: `${source.id}:${edition}:${fingerprint.slice(0,16)}` as PaperRevisionId,
         paperId, revision: 1, contentHash: fingerprint, ...paperContent }, questions, key);
+      if(edition==="source"){sourcePaper=paper;sourceKey=key;}
       results.push({ paper, key, questions });
     }
   }

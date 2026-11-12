@@ -6,6 +6,9 @@ import {addStagedFiles,updateStagedSelection,inspectStagingWorkspace,
  stagedToAuthoringDraft,validateStagingWorkspace} from "../src/authoring/authoring-staging.ts";
 import {inspectAuthoringPublication} from "../src/authoring/authoring-publisher.ts";
 import {inspectExternalQuality} from "../src/authoring/external-bank-qa.ts";
+import {defaultAuthoringShelf} from "../src/authoring/authoring-draft.ts";
+import {handoffStagingToDraftShelf,ingestStagedFiles,inspectPublicationWorkflow,
+ preparePublicationWorkflow} from "../src/authoring/authoring-workflow.ts";
 import {scoreAttempt} from "../src/engine/scoring.ts";
 const load=async(name)=>JSON.parse(await readFile(new URL("../examples/ai-first-"+name+".json",import.meta.url),"utf8"));
 const initial={schema:1,files:[],selected:[]};
@@ -122,4 +125,54 @@ test("P57-C attributed, unverified reviewer warning acceptance remains in exact 
  assert.equal(report.compiled.questions[0].editorial.status,"caution");
  const bad=structuredClone(reviewed);bad.questions[0].qa.review.reviewedAt="2026-02-30T08:00:00.000Z";
  assert.equal(inspectAuthoringPublication(bad).valid,false);
+});
+
+
+test("Authoring workflow ingests staging and hands off one deterministic unpublished draft without overwriting edits",async()=>{
+ const source=await load("apfc");
+ const file=new File([JSON.stringify(source)],"apfc.json",{type:"application/json"});
+ const stagedByWorkflow=await ingestStagedFiles(null,[file]);
+ assert.equal(stagedByWorkflow.files.length,1);
+ assert.equal(stagedByWorkflow.selected.length,source.questions.length);
+ const base=defaultAuthoringShelf();
+ const first=handoffStagingToDraftShelf(stagedByWorkflow,base);
+ assert.equal(first.shelf.activeId,first.draft.id);
+ assert.equal(first.draft.questions.length,source.questions.length);
+ assert.throws(()=>handoffStagingToDraftShelf(stagedByWorkflow,first.shelf),/already has a Wordgard draft/);
+ const direct=stagedToAuthoringDraft(stagedByWorkflow);
+ assert.equal(first.draft.id,direct.id);
+ assert.deepEqual(first.draft.questions.map(q=>q.id),direct.questions.map(q=>q.id));
+});
+
+test("Authoring publication workflow is sole owner of external QA acknowledgement and recompiles exact evidence",async()=>{
+ const source=await load("apfc");
+ const draft=stagedToAuthoringDraft(staged(source));
+ const inspection=inspectPublicationWorkflow(draft,[]);
+ assert.equal(inspection.report.valid,true,JSON.stringify(inspection.report.issues));
+ assert.equal(inspection.errors.length,0,JSON.stringify(inspection.errors));
+ if(inspection.warnings.length){
+  assert.throws(()=>preparePublicationWorkflow(draft,[],{
+   confirmed:true,acceptWarnings:false,reviewer:"",reviewNote:"",
+   acceptedAt:"2026-11-12T00:00:00.000Z"
+  }),/Explicitly acknowledge/);
+ }
+ assert.throws(()=>preparePublicationWorkflow(draft,[],{
+  confirmed:false,acceptWarnings:true,reviewer:"",reviewNote:"",
+  acceptedAt:"2026-11-12T00:00:00.000Z"
+ }),/Confirm your source/);
+ assert.throws(()=>preparePublicationWorkflow(draft,[],{
+  confirmed:true,acceptWarnings:true,reviewer:"Named reader",reviewNote:"",
+  acceptedAt:"2026-11-12T00:00:00.000Z"
+ }),/provide both a reviewer name and an evidence note/);
+
+ const prepared=preparePublicationWorkflow(draft,[],{
+  confirmed:true,acceptWarnings:true,
+  reviewer:"Named reader",reviewNote:"Checked the displayed offline QA evidence; factual verification not claimed.",
+  acceptedAt:"2026-11-12T00:00:00.000Z"
+ });
+ assert.equal(prepared.draftChanged,true);
+ assert.equal(prepared.packageValue.questions.length,draft.questions.length);
+ assert.ok(prepared.draft.questions.every(q=>q.qa?.review?.reviewer==="Named reader"));
+ assert.ok(prepared.packageValue.questions.every(q=>q.editorial.notes.includes("Named reader")));
+ assert.equal(prepared.inspection.errors.length,0);
 });

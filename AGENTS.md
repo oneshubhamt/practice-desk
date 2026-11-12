@@ -1,24 +1,36 @@
-# Practice Desk — engineering and agent contract
+# Practice Desk — engineering and product contract
 
-**Start small:** read [documentation map](docs/README.md), [current status](docs/ENGINEERING_PROGRAMME.md), [binding policy](docs/decisions/POLICY_REGISTER.md), then the affected actual source and [data contracts](docs/architecture/DATA_CONTRACTS.md). For creating questions, start instead with the [agent quickstart](docs/AGENT_AUTHORING_QUICKSTART.md). Do not load archived implementation programmes into every task.
+**Read narrowly.** Start with the [documentation map](docs/README.md), then inspect the affected source. Read [architecture](docs/architecture/CURRENT_ARCHITECTURE.md), [data contracts](docs/architecture/DATA_CONTRACTS.md) or [QA](docs/QA_CURRENT.md) only when the task touches those contracts. For question creation, start with the [agent authoring quickstart](docs/AGENT_AUTHORING_QUICKSTART.md).
 
-## Authority and change scope
+## Authority and branch policy
 
-- Current source, validators and testable contracts outrank prose and dated completion claims. The authorised current development branch is **`overhaul`**. Do not edit `main` or `baseline/v11`, switch branches, merge, distribute or change release policy without explicit authorization.
-- Treat [backlog](backlog.md) concerns as **unresolved source-audit findings**, not implemented fixes. P61 is closed; its historical execution diary is archived through [history](docs/HISTORY_INDEX.md).
-- Preserve one typed six-kind engine, one deterministic offline `file://` HTML distribution and one canonical validator/publisher. Never hand-edit generated HTML or add v11 migration/duplicate scoring pipelines.
+- Current source, validators and executable tests outrank prose or dated completion claims.
+- The authorised development branch is **`working`**. Do not edit `main` or `baseline/v11`, switch/merge/release, or change release policy without explicit authorization.
+- The [backlog](backlog.md) contains only unresolved current risks/proposals. Closed programme evidence belongs in [history](docs/HISTORY_INDEX.md), not active guidance.
+- Preserve one typed six-kind engine, one canonical publisher/validator and the two supported distributions generated from the same source topology. Never hand-edit generated HTML.
 
-## Non-negotiable product invariants
+## Clean-slate data rule
 
-1. **Exam and score fidelity:** freeze exact paper, question/answer-key revisions, media, scoring, timings and original-source edition on attempt start. Honor correct/wrong/blank/partial bounds, matching uniqueness, multi-select cardinality, numeric tolerance and genuinely unscored written answers. Do not invent APFC/CAT marking from exam names.
-2. **Candidate secrecy and editorial integrity:** no answer, worked explanation, explanation-only asset or private reviewer dispute before permitted release. Preserve printed Source separate from later Reviewed revisions. Specific SSC CGL 6 October Q62: original invalid/excluded; reviewed caution is scoreable against publisher B. Never rewrite completed marks through later corrections.
-3. **Local persistence:** preserve immutable snapshots, transactional compare-and-swap, checked additive backup v4, quarantine/recovery and deletion safety. Authoring drafts/staging, completed exam History and FSRS ratings have distinct lifecycles.
-4. **Correct taxonomy and evidence:** exam sections govern timing/navigation; Subject → Topic → Subtopic is semantic classification. Preserve stable underlying question identity across revisions, avoid unsupported mastery or invented per-question time.
-5. **Offline UX:** native Navigation API where supported, tested fragment fallback otherwise; accessible focus/keyboard semantics, 195px and 140% scale without horizontal overflow. Linux WebKit is not physical Mac Safari certification.
-6. **Truth boundary:** a hash authenticates neither an official PYQ nor a reviewer; a completed QA form and synthetic PDF mapping do not independently check primary sources, current laws or question quality. No remote/device/learner access is implicit in external agent tools.
+Practice Desk is a new application with no production data compatibility obligation. Maintain **one current schema/topology per contract**.
 
-## Implementation and QA discipline
+Do not add migration readers, schema upgraders, compatibility readers/writers, dual-write paths, legacy adapters, retired-format fallbacks or transitional persistence bridges unless explicitly authorized. Replace obsolete representations in source, fixtures, tests and generated artifacts. Version fields may identify and reject non-current input. Historical Git is the archive; runtime code is not.
 
-Inspect actual callers and persisted data flow; specify a reproducible counterexample and the smallest correction; preserve source/answer and release boundaries; verify with independent numerical, state-machine or metamorphic tests plus relevant real browser journeys. For cross-cutting changes run the protected full CI described in [QA](docs/QA_CURRENT.md). Any retired assertion needs a mapped equal-or-stronger successor; never sacrifice unique P0/P1 protection to meet a test-count target.
+Current resilience mechanisms—IndexedDB fallback, emergency active-attempt mirror, corrupt-data quarantine, immutable frozen snapshots and checked recovery—protect the **current** topology and are not legacy compatibility.
 
-State the exact tested commit, empirical observations, untested physical/content boundaries and unresolved risks. Opt-in visual inspection may use `PRACTICE_DESK_VISUAL_REVIEW=1`; automated screenshots are retained on failures. Current engineering docs contain architecture and policy; old pass-by-pass minutiae belong only in [pinned history](docs/HISTORY_INDEX.md).
+## Binding product decisions
+
+1. **Exam/score fidelity:** freeze exact paper, question/key revisions, media, scoring, timing and edition at attempt start. Honour declared negative/blank/partial/numeric/matching/multi-select/manual-response semantics; never infer marking from an exam name.
+2. **Candidate secrecy/editorial integrity:** no key, worked explanation, explanation-only asset or reviewer-only dispute before permitted reveal. Preserve Source separately from Reviewed; later corrections never rewrite completed marks.
+3. **Persistence:** preserve immutable snapshots, transactional CAS, checked additive backup, quarantine/recovery and deletion safety. Authoring drafts/staging, attempt History and learning evidence have distinct lifecycles.
+4. **Taxonomy/evidence:** physical sections own navigation/timing; Subject → Topic → Subtopic is semantic classification. Keep stable question identity across revisions and do not fabricate mastery or time evidence.
+5. **UI/navigation:** native Navigation API with tested fragment fallback, accessible focus/keyboard semantics and narrow-layout support including 195px at 140% scale. Linux WebKit is not physical Mac Safari certification.
+6. **Learning:** FSRS ratings/self-assessment cannot rewrite historical scores; recommendations must derive from correctly scoped evidence.
+7. **Authoring:** Wordgard and external agents converge on the same canonical publisher. External workflows use versioned source/review/decision/PDF files, explicit create-new-file permission and manual Library import; there is no embedded LLM or shadow runtime format.
+8. **Truth boundary:** hashes prove byte consistency, not official provenance or factual correctness. Review forms, PDF maps and agent labels are claims until independently checked. External tools do not imply access to local learner data.
+9. **QA:** preserve independent/adversarial witnesses and real browser journeys; do not remove unique safety coverage merely to reduce counts. Guarded publishing must use the tested source ancestry.
+
+## Implementation discipline
+
+Inspect actual callers/data flow, define a reproducible counterexample, make the smallest ownership-correct change, and add an independent expected-value/state/adversarial witness where warranted. For shared-runtime changes run the full CI contract in [QA_CURRENT.md](docs/QA_CURRENT.md).
+
+Report the exact tested commit, empirical results and unverified physical/content boundaries. Visual review is opt-in via `PRACTICE_DESK_VISUAL_REVIEW=1`; routine passing CI need not manufacture screenshots.

@@ -5,14 +5,14 @@ import {isAttempt} from "./stored-record-validator.ts";
 
 import {historyHTML} from "./history-page.ts";
 
-import type {CoordinatorContext} from "./coordinator-context.ts";
+import type {ScreenControllerContext} from "./coordinator-context.ts";
 import {bindHistoryScreen} from "./history-controller.ts";
 import {bindLibraryScreen} from "./library-controller.ts";
 import {bindResultScreen} from "./result-controller.ts";
 import {bindExamScreen} from "./exam-controller.ts";
-export const reportWorkspaceNotice=(owner:CoordinatorContext,s:string)=>{owner.warning=s;owner.draw();};
+export const reportWorkspaceNotice=(owner:ScreenControllerContext,s:string)=>{owner.warning=s;owner.draw();};
 
-export function drawWorkspaceScreen(owner:CoordinatorContext,):void{
+export function drawWorkspaceScreen(owner:ScreenControllerContext,):void{
    if(owner.disposed)return;
    // Do not destroy a live Wordgard editor for a background state notification.
    // Manual close or successful publication refreshes Library explicitly.
@@ -35,7 +35,7 @@ export function drawWorkspaceScreen(owner:CoordinatorContext,):void{
      html:()=>owner.view==="library"?owner.listHTML():owner.view==="history"?
        historyHTML([...owner.records.values()].filter(isAttempt),owner.packages,
          owner.historyQuery,
-         owner.loading,owner.fallbackConflict||owner.storageFault,owner.warning,owner.db?"indexeddb":"fallback",owner.storageSnapshot()):
+         owner.loading,owner.fallbackConflict||owner.storageFault,owner.warning,owner.storageBackend?.kind==="indexeddb"?"indexeddb":"fallback",owner.storageSnapshot()):
        owner.view==="exam"?owner.examHTML():owner.resultHTML()
    },owner.learningDesk);
    if(owner.view==="learning")return;

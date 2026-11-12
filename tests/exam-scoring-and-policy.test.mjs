@@ -7,6 +7,7 @@ import * as __suite_dep_2 from "node:fs/promises";
 import * as __suite_dep_3 from "./fixtures/six-kinds.mjs";
 import * as __suite_dep_4 from "../src/domain/integrity.ts";
 import * as __suite_dep_5 from "../src/app/exam-package.ts";
+import * as __generic_attempt from "../src/engine/generic-attempt.ts";
 import * as __suite_dep_6_stored_record_validator from "../src/app/stored-record-validator.ts";
 import * as __suite_dep_6_exam_view from "../src/app/exam-view.ts";
 import * as __suite_dep_7 from "../src/engine/session.ts";
@@ -20,7 +21,7 @@ import * as __suite_dep_14 from "../src/domain/validate.ts";
 import * as __suite_dep_15 from "../src/app/result-presentation.ts";
 import * as __suite_dep_16 from "../src/history/frozen.ts";
 
-// === Legacy suite: tests/exam-policy-manual-grading-and-timing.test.mjs — 9 unchanged test registrations ===
+// === Consolidated coverage: tests/exam-policy-manual-grading-and-timing.test.mjs — 9 unchanged test registrations ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -29,9 +30,10 @@ const pkg = __suite_dep_3["pkg"];
 const paperRevisionHash = __suite_dep_4["paperRevisionHash"];
 const validateExamPackage = __suite_dep_5["validateExamPackage"];
 const configureCglPractice = __suite_dep_5["configureCglPractice"];
+const cglAttemptMode = __suite_dep_5["cglAttemptMode"];
 const builtinCglPackages = __suite_dep_5["builtinCglPackages"];
 const startGenericAttempt = __suite_dep_5["startGenericAttempt"];
-const transitionGenericAttempt = __suite_dep_5["transitionGenericAttempt"];
+const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
 const validateGenericStoredRecord = __suite_dep_6_stored_record_validator["validateGenericStoredRecord"];
 const transition = __suite_dep_7["transition"];
 const startSession = __suite_dep_7["startSession"];
@@ -94,7 +96,7 @@ test("all four attempt modes are pinned with their actual CGL policy or custom p
  const cgl=builtins.find(p=>p.paper.edition==="reviewed");
  for(const [mode,expected] of [["strict","exam-simulation"],["free","full-paper-practice"],["single","section-practice"]]){
   const configured=configureCglPractice(cgl,mode,0);
-  const a=startGenericAttempt(configured,mode,1000);
+  const a=startGenericAttempt(configured,mode,1000,cglAttemptMode(mode));
   assert.equal(a.frozen.snapshot.mode,expected);
   validateGenericStoredRecord(a);
  }
@@ -191,7 +193,7 @@ test("live timer uses nondecreasing monotonic elapsed time even if wall clock mo
 });
 }
 
-// === Legacy suite: tests/exam-preflight-and-policy-disclosure.test.mjs — 7 unchanged test registrations ===
+// === Consolidated coverage: tests/exam-preflight-and-policy-disclosure.test.mjs — 7 unchanged test registrations ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -336,9 +338,14 @@ test("F06: generic timing/section, forward navigation, review and pause policies
 
 test("F15: independently imported editions cannot inherit built-in SSC provenance",()=>{
  const sourceBundle=structuredClone(pkg);
- sourceBundle.paper.edition="source";
+ sourceBundle.paper={...sourceBundle.paper,id:sourceBundle.paper.id+":source",edition:"source"};
+ sourceBundle.paper.contentHash=paperRevisionHash(sourceBundle.paper);
  const reviewedBundle=structuredClone(pkg);
- reviewedBundle.paper.edition="reviewed";
+ reviewedBundle.answerKey={...reviewedBundle.answerKey,id:reviewedBundle.answerKey.id+":reviewed"};
+ reviewedBundle.paper={...reviewedBundle.paper,id:reviewedBundle.paper.id+":reviewed",
+  edition:"reviewed",answerKeyRevisionId:reviewedBundle.answerKey.id,
+  sourcePaperRevisionId:sourceBundle.paper.id,sourceAnswerKeyRevisionId:sourceBundle.answerKey.id};
+ reviewedBundle.paper.contentHash=paperRevisionHash(reviewedBundle.paper);
  for(const b of [sourceBundle,reviewedBundle]){
   const x=model(b);
   assert.equal(x.builtinCgl,false);
@@ -350,7 +357,7 @@ test("F15: independently imported editions cannot inherit built-in SSC provenanc
 });
 }
 
-// === Legacy suite: tests/scoring-and-section-policy.test.mjs — 12 unchanged test registrations ===
+// === Consolidated coverage: tests/scoring-and-section-policy.test.mjs — 12 unchanged test registrations ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -369,7 +376,7 @@ const scoreableLowerBound = __suite_dep_13["scoreableLowerBound"];
 const scoreableBounds = __suite_dep_13["scoreableBounds"];
 const validateExamPackage = __suite_dep_5["validateExamPackage"];
 const startGenericAttempt = __suite_dep_5["startGenericAttempt"];
-const transitionGenericAttempt = __suite_dep_5["transitionGenericAttempt"];
+const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
 const validateGenericStoredRecord = __suite_dep_6_stored_record_validator["validateGenericStoredRecord"];
 const renderModelExam = __suite_dep_6_exam_view["renderModelExam"];
 const resultTabsHTML = __suite_dep_15["resultTabsHTML"];
@@ -555,7 +562,7 @@ test("G06: withholding detailed post-test review does not disable exam navigatio
 });
 }
 
-// === Legacy suite: tests/scoring-property-model.test.mjs — 6 unchanged test registrations ===
+// === Consolidated coverage: tests/scoring-property-model.test.mjs — 6 unchanged test registrations ===
 {
 const test = __suite_dep_0["default"];
 const assert = __suite_dep_1["default"];
@@ -661,7 +668,7 @@ test("seeded independent scoring reference: precedence, marks ledger, verdicts, 
 
 /** Cross-kind property: independently calculate the six original verdicts,
  * then bijectively rename all candidate/key IDs and reorder *input arrays*.
- * Unlike the legacy scorer's 200-seed policy model, this exercises all kinds.
+ * This exercises all six kinds in addition to the independent policy model.
  */
 test("P61-H six-kind independent ledger survives answer-ID bijections and input permutations",()=>{
  const stamp="2026-11-08T00:00:00Z";
@@ -857,7 +864,12 @@ const p41patches=JSON.parse(await __suite_dep_2.readFile(new URL("../src/content
 testP41("publisher comparison preserves identical contexts but rejects reordered options and punctuation",()=>{
  const source=__suite_dep_5.builtinCglPackages(
   p41papers,p41patches).find(x=>x.paper.edition==="source");
- const same=structuredClone(source);same.paper.edition="reviewed";
+ const same=structuredClone(source);
+ same.answerKey={...same.answerKey,id:same.answerKey.id+":reviewed-test"};
+ same.paper={...same.paper,id:same.paper.id+":reviewed-test",edition:"reviewed",
+  answerKeyRevisionId:same.answerKey.id,sourcePaperRevisionId:source.paper.id,
+  sourceAnswerKeyRevisionId:source.answerKey.id};
+ same.paper.contentHash=__suite_dep_4.paperRevisionHash(same.paper);
  const original=__suite_dep_9.createSourceKeyReference(same,source);
  testAssert.ok(original.entries.every(x=>x.comparable));
  const changed=structuredClone(same);
@@ -876,7 +888,7 @@ testP41("frozen source evidence rejects forged comparability and unsupported v1 
  const source=all.find(x=>x.paper.paperId==="cgl-2026-10-05"&&x.paper.edition==="source");
  const revised=all.find(x=>x.paper.paperId==="cgl-2026-10-05"&&x.paper.edition==="reviewed");
  const ref=__suite_dep_9.createSourceKeyReference(revised,source);
- const attempt={...__suite_dep_5.startGenericAttempt(revised,"p41-legacy",1000),
+ const attempt={...__suite_dep_5.startGenericAttempt(revised,"p41-canonical-guard",1000),
    finishedAt:1100,sourceKeyReference:ref};
  const subtotal=__suite_dep_9.sourceKeyScore(attempt);
  testAssert.ok(subtotal.unavailable>0);
@@ -887,13 +899,13 @@ testP41("frozen source evidence rejects forged comparability and unsupported v1 
  const {contentHash:ignored,...core}=forged.sourceKeyReference;
  forged.sourceKeyReference.contentHash=hash(core);
  testAssert.throws(()=>__suite_dep_9.validateSourceKeyReference(forged),/semantic correspondence/);
- const legacyEntries=ref.entries.map(({questionRevisionId,originalOptionId,markingRule})=>
+ const noncanonicalEntries=ref.entries.map(({questionRevisionId,originalOptionId,markingRule})=>
    ({questionRevisionId,originalOptionId,markingRule}));
- const legacyCore={schema:1,paperId:ref.paperId,
+ const noncanonicalCore={schema:1,paperId:ref.paperId,
    sourcePaperRevisionId:ref.sourcePaperRevisionId,
-   sourceAnswerKeyRevisionId:ref.sourceAnswerKeyRevisionId,entries:legacyEntries};
- const legacy={...attempt,sourceKeyReference:{...legacyCore,contentHash:hash(legacyCore)}};
- testAssert.throws(()=>__suite_dep_9.validateSourceKeyReference(legacy),
+   sourceAnswerKeyRevisionId:ref.sourceAnswerKeyRevisionId,entries:noncanonicalEntries};
+ const noncanonical={...attempt,sourceKeyReference:{...noncanonicalCore,contentHash:hash(noncanonicalCore)}};
+ testAssert.throws(()=>__suite_dep_9.validateSourceKeyReference(noncanonical),
    /Invalid original source-key comparison/,
-   "Clean-break app must reject unprovable old positional answer-key snapshots");
+   "Clean-break app must reject noncanonical positional answer-key snapshots");
 });

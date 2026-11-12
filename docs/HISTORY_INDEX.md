@@ -1,28 +1,36 @@
-# Practice Desk — historical design and audit archive
+# Practice Desk — historical evidence index
 
-The **active documents** are linked from [the documentation map](README.md). This page exists solely to locate earlier architectural thinking, policy decisions and full implementation/audit evidence **without loading them into the everyday agent context**.
+Active documentation describes the **current** system. This file only points to immutable historical snapshots that are useful for audits or design archaeology. Do not treat archived “verified”, “pending” or pass-number notes as current instructions.
 
-Original Git commits are immutable snapshots: removing obsolete prose from the current branch **does not erase its historical content**. Never treat an archived “verified” or “pending” line as current status; inspect the present source, [programme](ENGINEERING_PROGRAMME.md) and [backlog](../backlog.md).
+## Earlier architecture/programmes
 
-## Archived architecture and older programmes
+**Pre-consolidation snapshot:** [`a10ac8917b39b5febd228dc825487aeb1d0dba8d`](https://github.com/oneshubhamt/practice-desk/tree/a10ac8917b39b5febd228dc825487aeb1d0dba8d)
 
-**Pre-consolidation snapshot:** [commit `a10ac8917b39b5febd228dc825487aeb1d0dba8d`](https://github.com/oneshubhamt/practice-desk/tree/a10ac8917b39b5febd228dc825487aeb1d0dba8d).
+This snapshot retains the large architecture set, P04–P60 implementation diaries, chronological D01–D80 policy record, P48/P49/P50/P51 audits and the original P60 AI-native programme. Their enduring decisions were consolidated into current architecture/policy; implementation minutiae remain available at the snapshot.
 
-- [Original large architecture and detailed contracts](https://github.com/oneshubhamt/practice-desk/tree/a10ac8917b39b5febd228dc825487aeb1d0dba8d/docs/architecture): earlier design trade-offs, all module boundaries and original P47–P60 architecture plans. The **enduring architecture** is now represented concisely in [current architecture](architecture/CURRENT_ARCHITECTURE.md) and [data contracts](architecture/DATA_CONTRACTS.md).
-- [Independent P49/P50/P51 audit](https://github.com/oneshubhamt/practice-desk/blob/a10ac8917b39b5febd228dc825487aeb1d0dba8d/docs/audits/P49_P50_P51_INDEPENDENT_SOURCE_REAUDIT_2026-11-04.md): conceptual distinctions around subject hierarchy, Wordgard policy authoring and granular UI/unsaved-state safety; **not** a live defect list.
-- [Full P48 source audit](https://github.com/oneshubhamt/practice-desk/blob/a10ac8917b39b5febd228dc825487aeb1d0dba8d/docs/audits/P48_REQUIREMENT_BY_REQUIREMENT_SOURCE_REAUDIT_2026-11-03.md) and [other historical source audits](https://github.com/oneshubhamt/practice-desk/tree/a10ac8917b39b5febd228dc825487aeb1d0dba8d/docs/audits): implementation-specific inspections, defect evidence and decisions as of their dates.
-- [P60 AI-native capability design](https://github.com/oneshubhamt/practice-desk/blob/a10ac8917b39b5febd228dc825487aeb1d0dba8d/docs/architecture/P60_AI_NATIVE_CAPABILITY_PROGRAMME.md): original staged capability specification; current agent architecture is [content pipeline](architecture/AGENT_CONTENT_PIPELINE.md).
-- [Original binding chronological policy register](https://github.com/oneshubhamt/practice-desk/blob/a10ac8917b39b5febd228dc825487aeb1d0dba8d/docs/decisions/POLICY_REGISTER.md) and [historical passes](https://github.com/oneshubhamt/practice-desk/tree/a10ac8917b39b5febd228dc825487aeb1d0dba8d/docs/history): earlier D01–D80 decisions, P04–P60 implementation diary and exceptions. [Current policy](decisions/POLICY_REGISTER.md) consolidates still-binding directions.
+## Test-bench consolidation
 
-## Test-bench consolidation archive
+**P61 closure snapshot:** [`81d232b9f7d43d9e0ce398e02c468b6f3e356ebc`](https://github.com/oneshubhamt/practice-desk/tree/81d232b9f7d43d9e0ce398e02c468b6f3e356ebc)
 
-**P61 verified closure snapshot:** [commit `81d232b9f7d43d9e0ce398e02c468b6f3e356ebc`](https://github.com/oneshubhamt/practice-desk/tree/81d232b9f7d43d9e0ce398e02c468b6f3e356ebc).
+- [Full P61 assertion-retirement ledger](https://github.com/oneshubhamt/practice-desk/blob/81d232b9f7d43d9e0ce398e02c468b6f3e356ebc/docs/TEST_SUITE_LEDGER.md)
+- [Independent P61-H coverage audit](https://github.com/oneshubhamt/practice-desk/blob/81d232b9f7d43d9e0ce398e02c468b6f3e356ebc/docs/audits/P61_H_INDEPENDENT_COVERAGE_AUDIT_2026-11-08.md)
+- [P61-I final audit](https://github.com/oneshubhamt/practice-desk/blob/81d232b9f7d43d9e0ce398e02c468b6f3e356ebc/docs/audits/P61_I_FINAL_PROGRAMME_SOURCE_AUDIT_2026-11-08.md)
+- [Final P61 CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42433146976)
 
-- [P61 A–I implementation and source-to-assertion ledger](https://github.com/oneshubhamt/practice-desk/blob/81d232b9f7d43d9e0ce398e02c468b6f3e356ebc/docs/TEST_SUITE_LEDGER.md)
-- [Independent P61-H risk/contract audit](https://github.com/oneshubhamt/practice-desk/blob/81d232b9f7d43d9e0ce398e02c468b6f3e356ebc/docs/audits/P61_H_INDEPENDENT_COVERAGE_AUDIT_2026-11-08.md)
-- [P61-I final source-reconciled audit and objective exceptions](https://github.com/oneshubhamt/practice-desk/blob/81d232b9f7d43d9e0ce398e02c468b6f3e356ebc/docs/audits/P61_I_FINAL_PROGRAMME_SOURCE_AUDIT_2026-11-08.md)
-- [Final successful five-job CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42433146976): 408 Node tests, 10 targeted mutations and all 72 browser scenario executions, with guarded publishing.
+## Source/editorial verification closure
 
-The historical record includes **implementation minutiae**—old progress notes, temporary test counts, screenshots, step-by-step commits and previous QA failures—for audit or forensic use. It should **not** be duplicated in the current architecture, policy, QA or agent guides.
+The P62 sequence closed candidate-media secrecy, partial-blueprint readiness, exact Source pairing, mixed-kind comparison and candidate-semantic comparison, while preserving the separate limitation that software does not authenticate external sources.
 
-**Retention rule:** Do not rebase, squash, force-push or otherwise destroy pinned historical ancestry without separately preserving these evidence snapshots and obtaining approval.
+**Focused closure source:** [`0a571a01443d`](https://github.com/oneshubhamt/practice-desk/tree/0a571a01443d) · [focused evidence run](https://github.com/oneshubhamt/practice-desk/actions/runs/42508271893) · [full protected CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42508271948)
+
+## CLEER architecture closure
+
+The clean-slate/CLEER programme moved package/attempt contracts below `app/`, narrowed controller capabilities, unified persistence/authoring/optimizer/build ownership, removed dead workflow residue and consolidated active documentation.
+
+**Verified source:** [`a339837cca600b63ce0294acbbf96a917e3f16bb`](https://github.com/oneshubhamt/practice-desk/tree/a339837cca600b63ce0294acbbf96a917e3f16bb) · [full CI](https://github.com/oneshubhamt/practice-desk/actions/runs/43172682182): 438/438 Node tests, 10/10 targeted mutations, Chromium 32/32, Firefox 20/20, WebKit 20/20, native/WASM FSRS checks and guarded publication.
+
+The publisher then created [`a31282fd14ce4bd1e5ff983a8c87a8e384d3cc80`](https://github.com/oneshubhamt/practice-desk/commit/a31282fd14ce4bd1e5ff983a8c87a8e384d3cc80), changing only the generated offline HTML.
+
+## Retention
+
+Do not rebase/squash/force-push away these pinned snapshots without separately preserving the evidence and obtaining authorization. Git history is the archive; active product code/docs should not carry old implementation diaries for provenance.

@@ -1,24 +1,28 @@
-import type { GenericAttempt } from "./exam-package.ts";
-import { attemptEvidence } from "../learning/attempt-evidence.ts";
+import type { GenericAttempt } from "../engine/generic-attempt.ts";
+import { attemptEvidence,type AttemptEvidence } from "../learning/attempt-evidence.ts";
 import { answerRevisionEvidence } from "../learning/answer-revisions.ts";
-import { questionSpeed,isAuditQuestion,longestQuestionExposure,studySuggestions,questionTimingPhases } from "../learning/question-analytics.ts";
+import {attemptQuestionLookup,questionSpeed,isAuditQuestion,longestQuestionExposure,
+ studySuggestions,questionTimingPhases,type AttemptQuestionLookup} from "../learning/question-analytics.ts";
 import { sectionTimerDuration } from "../engine/session.ts";
 import type { ItemScore } from "../engine/scoring.ts";
+import {escapeText as esc} from "./html-escape.ts";
 
 export type ResultTab="overview"|"review"|"timing";
 export type ReviewFilter="all"|"incorrect"|"unanswered"|"correct"|"excluded"|"pending"|"flagged"|"audit"|"fastwrong"|"typicalwrong"|"slowwrong";
-const esc=(x:unknown)=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]??c));
 const duration=(ms:number)=>{const t=Math.ceil(Math.max(0,ms)/1000);return String(Math.floor(t/60)).padStart(2,"0")+":"+String(t%60).padStart(2,"0");};
 const mark=(a:GenericAttempt,value:number)=>value.toFixed(a.frozen.paper.scoring.decimalPlaces??2);
 
-export function reviewMatch(a:GenericAttempt,item:ItemScore,filter:ReviewFilter):boolean {
+export function reviewMatch(
+ a:GenericAttempt,item:ItemScore,filter:ReviewFilter,
+ lookup:AttemptQuestionLookup=attemptQuestionLookup(a)
+):boolean{
  if(filter==="all")return true;
  if(["correct","incorrect","unanswered","excluded","pending"].includes(filter))return item.verdict===filter;
- const answer=a.state.responses.find(x=>x.questionRevisionId===item.questionRevisionId);
+ const answer=lookup.responses.get(item.questionRevisionId);
  if(filter==="flagged")return Boolean(answer?.flagged);
- if(filter==="audit")return isAuditQuestion(a,item.questionRevisionId);
+ if(filter==="audit")return isAuditQuestion(a,item.questionRevisionId,lookup);
  if(item.verdict!=="incorrect")return false;
- const speed=questionSpeed(a,item.questionRevisionId);
+ const speed=questionSpeed(a,item.questionRevisionId,lookup);
  return filter==="fastwrong"?speed==="Fast":filter==="slowwrong"?speed==="Slow":
    filter==="typicalwrong"&&speed==="Typical";
 }
@@ -39,20 +43,21 @@ export function reviewFiltersHTML(active:ReviewFilter):string{
 }
 export function timingLedgerHTML(a:GenericAttempt,active:boolean,allowReview=true):string{
  if(!a.result)return "";
+ const lookup=attemptQuestionLookup(a);
  return '<section class="panel pad result-pane" id="result-timing" role="tabpanel" aria-labelledby="result-tab-timing"'+(!active?' hidden':'')+'>'+
   '<h2>Question timing ledger</h2><p class="fine">Time is cumulative foreground question exposure, not thinking time or an uninterrupted visit. Speed is relative to each section’s median only when at least five answered, scored items have measurable time. Missing phase evidence is shown as unavailable. First visit ends on the first departure, revisits measure exposure after returning, and before first answer accumulates across visits until the first committed response. All are foreground exposure, not continuous wall-clock intervals; displayed seconds are rounded up while source milliseconds remain exact. Speed still uses total exposure and a section median.</p>'+
   '<div class="scroll-table"><table><thead><tr><th>Question</th><th>Section</th><th>Verdict</th><th>Time</th><th>Speed</th><th>Visits</th><th>Changes</th><th>First visit</th><th>Revisits</th><th>Before first answer</th><th>Review</th></tr></thead><tbody>'+
   a.result.items.map((x,i)=>{
-    const response=a.state.responses.find(r=>r.questionRevisionId===x.questionRevisionId);
-    const section=a.frozen.paper.sections.find(s=>s.questionRevisionIds.includes(x.questionRevisionId));
-    const visit=a.state.questionVisits?.find(v=>v.questionRevisionId===x.questionRevisionId)?.count;
-    const speed=questionSpeed(a,x.questionRevisionId);
-    const phases=questionTimingPhases(a,x.questionRevisionId);
+    const response=lookup.responses.get(x.questionRevisionId);
+    const section=lookup.sections.get(x.questionRevisionId);
+    const visit=lookup.visits.get(x.questionRevisionId)?.count;
+    const speed=questionSpeed(a,x.questionRevisionId,lookup);
+    const phases=questionTimingPhases(a,x.questionRevisionId,lookup);
     return '<tr><td>'+(i+1)+'</td><td>'+esc(section?.title??"—")+'</td>'+
     '<td><span class="verdict '+esc(x.verdict)+'">'+esc(x.verdict)+'</span></td>'+
     '<td>'+duration(response?.timeSpentMs??0)+'</td>'+
     '<td><span class="tag speed-'+speed.toLowerCase().replace(/[^a-z]+/g,"-")+'">'+esc(speed)+'</span></td>'+
-    '<td>'+(a.state.questionVisits===undefined?"Not recorded":visit??0)+'</td>'+
+    '<td>'+(visit??0)+'</td>'+
     '<td>'+(response?.answerChangeCount??0)+'</td>'+
     '<td>'+(phases?duration(phases.firstVisitMs):"Not measured")+'</td>'+
     '<td>'+(phases?duration(phases.revisitMs):"Not measured")+'</td>'+
@@ -61,13 +66,15 @@ export function timingLedgerHTML(a:GenericAttempt,active:boolean,allowReview=tru
   }).join("")+'</tbody></table></div></section>';
 }
 
-/** v11-like pacing composition backed by the overhaul's frozen evidence model. */
-export function resultPacingHTML(a:GenericAttempt):string{
- const evidence=attemptEvidence(a);
+/** Pacing composition backed by the canonical frozen evidence model. */
+export function resultPacingHTML(
+ a:GenericAttempt,evidence:AttemptEvidence|null=attemptEvidence(a),lookup?:AttemptQuestionLookup
+):string{
  if(!evidence||!a.result)return "";
+ const index=lookup??attemptQuestionLookup(a,evidence);
  const scored=a.result.snapshot.correctCount+a.result.snapshot.incorrectCount;
  const accuracy=scored?a.result.snapshot.correctCount/scored:null;
- const phases=a.frozen.questions.map(q=>questionTimingPhases(a,q.id))
+ const phases=a.frozen.questions.map(q=>questionTimingPhases(a,q.id,index))
    .filter((x):x is NonNullable<typeof x>=>x!==null&&x.totalMs>0);
  const revisits=phases.reduce((total,row)=>total+row.revisitMs,0);
  return '<div class="insight-grid result-insight-grid">'+
@@ -100,9 +107,10 @@ export function resultPacingHTML(a:GenericAttempt):string{
   '</section></div>';
 }
 
-/** Generic arithmetic, presented in the compact v11 opportunity pattern. */
-export function scoreOpportunityHTML(a:GenericAttempt,allowReview=true):string{
- const evidence=attemptEvidence(a);
+/** Generic arithmetic presented as a compact opportunity summary. */
+export function scoreOpportunityHTML(
+ a:GenericAttempt,allowReview=true,evidence:AttemptEvidence|null=attemptEvidence(a)
+):string{
  if(!evidence)return "";
  const penalty=evidence.opportunity.observedPenalty;
  const actions=[
@@ -124,8 +132,9 @@ export function scoreOpportunityHTML(a:GenericAttempt,allowReview=true):string{
 }
 
 /** Suppress analytical machinery until section-relative speed evidence exists. */
-export function speedAccuracyHTML(a:GenericAttempt,allowReview=true):string{
- const evidence=attemptEvidence(a);
+export function speedAccuracyHTML(
+ a:GenericAttempt,allowReview=true,evidence:AttemptEvidence|null=attemptEvidence(a)
+):string{
  if(!evidence)return "";
  if(evidence.speed.classified<5){
    return '<section class="panel pad result-speed-accuracy"><h2>Speed × accuracy</h2>'+
@@ -159,16 +168,14 @@ export function answerRevisionHTML(a:GenericAttempt):string{
   '</div><p class="fine">Tracks recorded successive single-choice replacements. Clear-and-reselect and unverified items are not classified as rescued/lost; these are observed changes, not proof that revision caused improvement.</p></section>';
 }
 
-/** Kept as an exported compatibility helper; the overview now uses resultPacingHTML. */
-export function sectionPaceHTML(a:GenericAttempt):string{
- return resultPacingHTML(a);
-}
-
-/** Compact v11-like question-speed and coaching presentation, retaining direct review links. */
-export function questionCoachingHTML(a:GenericAttempt,allowReview=true):string{
- const evidence=attemptEvidence(a);
- const longest=longestQuestionExposure(a);
- const suggestions=studySuggestions(a);
+/** Compact question-speed and coaching presentation retaining direct review links. */
+export function questionCoachingHTML(
+ a:GenericAttempt,allowReview=true,evidence:AttemptEvidence|null=attemptEvidence(a),
+ lookup?:AttemptQuestionLookup
+):string{
+ const index=lookup??attemptQuestionLookup(a,evidence);
+ const longest=longestQuestionExposure(a,5,index);
+ const suggestions=studySuggestions(a,evidence);
  const fast=evidence?.speed.buckets.find(x=>x.label==="Fast")?.items??0;
  const slow=evidence?.speed.buckets.find(x=>x.label==="Slow")?.items??0;
  const measured=evidence?.speed.measured??0;
@@ -190,6 +197,8 @@ export function questionCoachingHTML(a:GenericAttempt,allowReview=true):string{
 }
 
 export function resultInsightsHTML(a:GenericAttempt,allowReview=true):string{
- return resultPacingHTML(a)+scoreOpportunityHTML(a,allowReview)+speedAccuracyHTML(a,allowReview)+
-   answerRevisionHTML(a)+questionCoachingHTML(a,allowReview);
+ const evidence=attemptEvidence(a),lookup=attemptQuestionLookup(a,evidence);
+ return resultPacingHTML(a,evidence,lookup)+scoreOpportunityHTML(a,allowReview,evidence)+
+   speedAccuracyHTML(a,allowReview,evidence)+answerRevisionHTML(a)+
+   questionCoachingHTML(a,allowReview,evidence,lookup);
 }

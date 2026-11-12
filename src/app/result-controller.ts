@@ -5,39 +5,46 @@ import {minutes,readablePracticeMode} from "./exam-view.ts";
 import {frozenReviewMedia,sourceReviewHTML} from "./review-media-view.ts";
 import {renderAuthoredText} from "./question-content-view.ts";
 import {readableAnswer} from "./exam-package.ts";
-import type {ExamPackage,GenericAttempt} from "./exam-package.ts";
-import type {QuestionRevision} from "../domain/question.js";
+import type {ExamPackage} from "../domain/exam-package.ts";
+import type {GenericAttempt} from "../engine/generic-attempt.ts";
 import type {QuestionRevisionId} from "../domain/ids.js";
 
-import {scoreAttempt} from "../engine/scoring.ts";
 import {manualGradeLimit,manualGradeSummary,setManualGrade} from "../engine/manual-grading.ts";
 import {sourceKeyScore} from "../engine/source-comparison.ts";
 
 import {scoreableMaximum,scoreableLowerBound,sectionScoreSummaries} from "../engine/score-ceiling.ts";
 
-import {questionSpeed} from "../learning/question-analytics.ts";
+import {attemptQuestionLookup,questionSpeed} from "../learning/question-analytics.ts";
 
 import {editorialStatusLabel} from "./editorial-labels.ts";
 
 
 import {reviewMatch,reviewFiltersHTML,resultTabsHTML,timingLedgerHTML,resultInsightsHTML,type ResultTab,type ReviewFilter} from "./result-presentation.ts";
 
-import type {CoordinatorContext} from "./coordinator-context.ts";
+import type {ResultControllerContext} from "./coordinator-context.ts";
 
-export function packageForResult(owner:CoordinatorContext,saved:GenericAttempt):ExamPackage|undefined{
+export function packageForResult(owner:ResultControllerContext,saved:GenericAttempt):ExamPackage|undefined{
    return owner.packages.get(saved.packageId)??[...owner.packages.values()].find(p=>
      p.paper.paperId===saved.frozen.paper.paperId&&p.paper.edition===saved.frozen.paper.edition);
  }
 
-export function renderCurrentResultHTML(owner:CoordinatorContext):string {
+export function renderCurrentResultHTML(owner:ResultControllerContext):string {
    if(!owner.attempt)return "";
-   const paper=owner.attempt.frozen.paper,s=owner.attempt.result??scoreAttempt(paper,owner.attempt.frozen.key,owner.attempt.frozen.questions,
-      owner.attempt.state.responses,new Date().toISOString());
-   const qs=owner.resultTab==="review"?new Map(owner.attempt.frozen.questions.map(q=>[q.id,q])):new Map<string,QuestionRevision>();
+   const paper=owner.attempt.frozen.paper,s=owner.attempt.result;
+   if(!s)throw new Error("Completed attempt has no immutable score");
    // allowReview controls post-completion detailed question/solution disclosure,
    // not question navigation during the attempt or numerical score visibility.
    const revealReview=paper.navigation.allowReview!==false;
    if(!revealReview&&owner.resultTab==="review")owner.resultTab="overview";
+   const reviewLookup=owner.resultTab==="review"?attemptQuestionLookup(owner.attempt):null;
+   const answerByQuestion=reviewLookup?
+     new Map(owner.attempt.frozen.key.entries.map(entry=>[entry.questionRevisionId,entry.answer])):null;
+   const manualGradeByQuestion=reviewLookup?
+     new Map(owner.attempt.manualGrades?.map(grade=>[grade.questionRevisionId,grade])??[]):null;
+   const lineageByQuestion=reviewLookup?
+     new Map(owner.attempt.notebookLineage?.entries.map(entry=>[entry.questionRevisionId,entry])??[]):null;
+   const reviewItems=reviewLookup?
+     s.items.filter(item=>reviewMatch(owner.attempt!,item,owner.reviewFilter,reviewLookup)):[];
    // Current attempts pin source review data at attempt creation. Never
    // reconstruct evidence from a mutable Library at result render time.
    const reviewSource=owner.resultTab==="review"?
@@ -148,30 +155,31 @@ export function renderCurrentResultHTML(owner:CoordinatorContext):string {
       '<button class="btn primary" id="g-revision-set">Add mistakes &amp; skips to notebook</button></div></div>'+
       reviewFiltersHTML(owner.reviewFilter)+
       '<p class="fine">Review frozen questions, actual responses, solutions and foreground time. Mock scores never become FSRS ratings.</p>'+
-      '<p class="fine">'+s.items.filter(it=>reviewMatch(owner.attempt!,it,owner.reviewFilter)).length+' of '+s.items.length+' items</p>'+
-      s.items.filter(it=>reviewMatch(owner.attempt!,it,owner.reviewFilter)).map((it,i)=>{
-      const q=qs.get(it.questionRevisionId);
-      const response=owner.attempt!.state.responses.find(r=>r.questionRevisionId===it.questionRevisionId)?.response;
-      const answer=owner.attempt!.frozen.key.entries.find(e=>e.questionRevisionId===it.questionRevisionId)?.answer;
+      '<p class="fine">'+reviewItems.length+' of '+s.items.length+' items</p>'+
+      reviewItems.map((it,i)=>{
+      const q=reviewLookup?.questions.get(it.questionRevisionId);
+      const responseRow=reviewLookup?.responses.get(it.questionRevisionId);
+      const response=responseRow?.response;
+      const answer=answerByQuestion?.get(it.questionRevisionId);
       const explanation=owner.attempt!.explanations?.[it.questionRevisionId];
       const richExplanation=q?.content.richExplanation;
-      const seconds=owner.attempt!.state.responses.find(r=>r.questionRevisionId===it.questionRevisionId)?.timeSpentMs??0;
-      const visitCount=owner.attempt!.state.questionVisits?.find(r=>r.questionRevisionId===it.questionRevisionId)?.count;
-      const speed=questionSpeed(owner.attempt!,it.questionRevisionId);
+      const seconds=responseRow?.timeSpentMs??0;
+      const visitCount=reviewLookup?.visits.get(it.questionRevisionId)?.count;
+      const speed=reviewLookup?questionSpeed(owner.attempt!,it.questionRevisionId,reviewLookup):"Not classified";
       if(!q)return "";
-      const prior=owner.attempt!.manualGrades?.find(g=>g.questionRevisionId===q.id);
+      const prior=manualGradeByQuestion?.get(q.id);
       const draft=owner.manualGradeDrafts.get(owner.attempt!.id+"|"+q.id);
-      const limit=manualGradeLimit(owner.attempt!,q.id);
+      const limit=q.content.kind==="free-response"?manualGradeLimit(owner.attempt!,q.id):null;
       const provenance=q.editorial.sources??[];
-      const origin=owner.attempt!.notebookLineage?.entries.find(x=>x.questionRevisionId===q.id);
+      const origin=lineageByQuestion?.get(q.id);
       return '<article class="generic-review" data-review-id="'+escapeText(q.id)+'" data-verdict="'+escapeText(it.verdict)+'"><div class="pd-review-question"><strong>'+
-       (paper.sections.flatMap(z=>z.questionRevisionIds).indexOf(q.id)+1)+'.</strong> '+
+       (reviewLookup?.paperNumbers.get(q.id)??i+1)+'.</strong> '+
        renderAuthoredText(frozenTarget,q.content.prompt,q.content.richPrompt)+'</div>'+
        '<p class="fine editorial-meta"><span class="editorial-status editorial-status-'+escapeText(q.editorial.status)+'">'+
          escapeText(editorialStatusLabel(q.editorial))+'</span>'+
          (q.editorial.sourcePage?' · Source page '+q.editorial.sourcePage:"")+
          ' · '+minutes(seconds)+' foreground exposure · Speed: '+escapeText(speed)+
-         ' · Visits: '+(owner.attempt!.state.questionVisits===undefined?"Not recorded":visitCount??0)+'</p>'+
+         ' · Visits: '+(visitCount??0)+'</p>'+
        frozenReviewMedia(owner.attempt!,q,response,answer,it.verdict)+
        (origin?'<p class="fine">Notebook source: '+escapeText(origin.sourcePaperId)+
          ' · '+escapeText(origin.sourcePaperEdition)+' · '+escapeText(origin.sourceSectionTitle)+
@@ -211,7 +219,7 @@ export function renderCurrentResultHTML(owner:CoordinatorContext):string {
     '<footer class="result-device-footer">Saved on this device · Review, export and manage your data from History</footer>';
  }
 
-export function bindResultScreen(owner:CoordinatorContext):void{
+export function bindResultScreen(owner:ResultControllerContext):void{
 
      owner.root.querySelector<HTMLButtonElement>("#g-history-results")!.onclick=()=>owner.go({screen:"history"});
      const resultLibrary=owner.root.querySelector<HTMLButtonElement>("#g-result-library");

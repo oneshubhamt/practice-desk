@@ -1,4 +1,4 @@
-import type { GenericAttempt } from "../app/exam-package.ts";
+import type { GenericAttempt } from "../engine/generic-attempt.ts";
 
 /** A factual record of single-choice answer transitions.
  * Clearing and reselecting breaks a direct-replacement trajectory.

@@ -7,7 +7,8 @@ import assert from "node:assert/strict";
 import {newAuthoringDraft,newAuthoringQuestion} from "../src/authoring/authoring-draft.ts";
 import {compileAuthoringPublication,inspectAuthoringPublication} from "../src/authoring/authoring-publisher.ts";
 import {plainRichDocument} from "../src/domain/rich-document.ts";
-import {validateExamPackage,startGenericAttempt,transitionGenericAttempt} from "../src/app/exam-package.ts";
+import {validateExamPackage,startGenericAttempt} from "../src/app/exam-package.ts";
+import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
 import {topicAncestors} from "../src/learning/syllabus-taxonomy.ts";
 import {topicMetrics,addLearningCard,validateLearningCard} from "../src/learning/learning.ts";
@@ -21,7 +22,7 @@ import {authoringPublishedPreview} from "../src/authoring/authoring-preview.ts";
 const P=s=>plainRichDocument(s);
 const timestamp=Date.UTC(2026,10,5,0);
 const Q=(kind,section,answer,extras={})=>({
- ...newAuthoringQuestion(kind),section,sectionMinutes:section==="Combined"?10:5,
+ ...newAuthoringQuestion(kind),section,
  answer,prompt:P("P56 independently frozen "+kind+" "+section),
  options:["Alpha","Beta","Gamma","Delta"].map(P),
  leftItems:["Left 1","Left 2","Left 3","Left 4"].map(P),
@@ -33,7 +34,8 @@ function mixedDraft(){
   title:"P56 cross-layer authored exam",edition:"custom",revision:1,
   timingKind:"sectional",sectionNavigation:"sequential-locked",
   pausePolicy:"forbidden",sectionTransition:"manual",allowEarlySubmit:true,allowReview:true,
-  marksCorrect:2.5,marksIncorrect:-5/6,questions:[
+  marksCorrect:2.5,marksIncorrect:-5/6,
+  sections:[{name:"Combined",minutes:10},{name:"General",minutes:5}],questions:[
     Q("single-choice","Combined","B",{syllabusHeadingId:"labour",
       topic:"Labour Codes",subtopic:"Wages"}),
     Q("multiple-select","Combined","A,C",{syllabusHeadingId:"accountancy",topic:"Ledger",
@@ -147,7 +149,8 @@ test("P56 exact v4 manifest and shared SHA survive multi-type sourceâ†’notebookâ
  const retestPkg=makeRevisionPackage([card],"p56-portable");
  const retest={...startGenericAttempt(retestPkg,"p56-portable-retest",timestamp+10000),
    notebookLineage:createNotebookLineage([card])};
- const corpus=[source,card,retest],at="2026-11-05T01:00:00.000Z";
+ const corpus=[{...source,saveRevision:1},{...card,saveRevision:1},{...retest,saveRevision:1}],
+   at="2026-11-05T01:00:00.000Z";
  const body=serializeVerifiedBackup(corpus,DEFAULT_PREFERENCES,at);
  const archive=verifyBackup(JSON.parse(body));
  assert.equal(archive.records.length,3);
@@ -155,9 +158,9 @@ test("P56 exact v4 manifest and shared SHA survive multi-type sourceâ†’notebookâ
  assert.equal(archive.manifest.algorithm,"sha256");
  assert.deepEqual(reconstructRecords(archive.records,archive.snapshots)
     .map(validateGenericStoredRecord).map(x=>x.id),corpus.map(x=>x.id));
- const duplicate=compactAttempt(source);
+ const duplicate=compactAttempt(corpus[0]);
  assert.equal(duplicate.snapshot.id,archive.snapshots[0].id);
- assert.deepEqual(planBackupMerge([source],corpus).map(x=>x.id),[card.id,retest.id]);
+ assert.deepEqual(planBackupMerge([corpus[0]],corpus).map(x=>x.id),[card.id,retest.id]);
  const tampered=JSON.parse(body);
  tampered.records.find(x=>x.id===source.id).result.snapshot.earnedMarks=999;
  assert.throws(()=>verifyBackup(tampered),/integrity check/i);
@@ -175,8 +178,9 @@ test("P56 invalid semantic/canonical taxonomy cannot acquire publisher readiness
   assert.equal(report.compiled,undefined);
   assert.throws(()=>compileAuthoringPublication(invalid));
  }
- const mismatched={...draft,questions:[draft.questions[0],
-   {...draft.questions[1],sectionMinutes:12},...draft.questions.slice(2)]};
+ const mismatched={...draft,sections:[
+   {name:"Combined",minutes:10},{name:"Combined",minutes:12},{name:"General",minutes:5}
+ ]};
  assert.equal(inspectAuthoringPublication(mismatched).valid,false);
  assert.deepEqual(compileAuthoringPublication(draft),prior);
 });

@@ -1,129 +1,20 @@
-import { validateAnswerKeyRevision, validatePaperRevision, validateQuestionRevision } from "../domain/validate.ts";
+/** Application assembly/configuration adapters. Canonical package and attempt contracts live below app/. */
 import { importCglBank } from "../content/import-cgl.ts";
 import { sha256 } from "../domain/hash.ts";
-import { assertRevisionHashes, answerKeyRevisionHash, paperRevisionHash } from "../domain/integrity.ts";
-import { validateMediaInventory, validateQuestionMediaReferences } from "../domain/media.ts";
+import { answerKeyRevisionHash, paperRevisionHash } from "../domain/integrity.ts";
 import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
 import type { PaperRevision } from "../domain/exam.js";
 import type { QuestionRevision, StimulusDefinition, ImageAsset, CandidateResponse } from "../domain/question.js";
 import type { AnswerKeyRevision, CorrectAnswer } from "../domain/answer-key.js";
 import type { ExamId, QuestionRevisionId } from "../domain/ids.js";
-import { validateResponse } from "../engine/response.ts";
-import { startSession, transition } from "../engine/session.ts";
-import type { SessionState, SessionEvent } from "../engine/session.ts";
-import { scoreAttempt } from "../engine/scoring.ts";
+import {validateExamPackage} from "../domain/exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
+import type {AttemptMode} from "../domain/attempt.js";
+import type {CglPracticeMode} from "../workspace-settings.ts";
+import type {GenericAttempt} from "../engine/generic-attempt.ts";
+export {validateExamImportBudget,validateExamPackage} from "../domain/exam-package.ts";
+import { startSession } from "../engine/session.ts";
 import { freezeAttempt } from "../history/frozen.ts";
-import type { FrozenAttemptContent } from "../history/frozen.ts";
-import type { ManualGrade } from "../engine/manual-grading.ts";
-import type { SourceKeyReference } from "../engine/source-comparison.ts";
-import type { SourceReviewReference } from "../engine/review-source.ts";
-import type { NotebookLineage } from "../learning/revision-test.ts";
-import type { PracticeComposition } from "./practice-compose.ts";
-
-export interface ExamPackage {
- readonly format: "practice-desk-exam";
- readonly version: 1;
- readonly examId: ExamId;
- readonly title: string;
- readonly paper: PaperRevision;
- readonly answerKey: AnswerKeyRevision;
- readonly questions: readonly QuestionRevision[];
- readonly stimuli?: readonly StimulusDefinition[];
- readonly assets?: readonly ImageAsset[];
- readonly explanations?: Readonly<Record<string,string>>;
- /** Runtime mode chosen by the user for derived CGL policies; never trusted as imported exam content. */
- readonly practiceMode?: CglPracticeMode;
-}
-
-/** Reject hostile deep/broad/oversized authored JSON before hashing or cloning it.
- * Browser file imports have a 25 MiB cap; this also guards programmatic callers
- * and restored user-authored packages. Already-frozen CGL data is not modified.
- */
-export function validateExamImportBudget(value:unknown):void{
- const MAX_TOTAL_CHARS=32*1024*1024;
- const MAX_NODES=150000;
- const MAX_DEPTH=48;
- const seen=new WeakSet<object>();
- let chars=0,nodes=0;
- const walk=(v:unknown,depth:number,field:string):void=>{
-  if(++nodes>MAX_NODES)throw Error("Exam import exceeds structural complexity limit");
-  if(depth>MAX_DEPTH)throw Error("Exam import exceeds nesting limit");
-  if(typeof v==="string"){
-    chars+=v.length;
-    if(chars>MAX_TOTAL_CHARS)throw Error("Exam import exceeds 32 MiB text budget");
-    if(field==="dataUri"){
-      // Image media also faces decoded per-asset/total limits and SHA-256 checks.
-      if(v.length>14*1024*1024)throw Error("Exam import image data URI too large");
-    }else if(v.length>20000){
-      throw Error("Exam import text field exceeds 20,000 characters");
-    }
-    if(/(?:^id$|Id$|^bankId$|^examId$|^optionId$|^rubricId$|^questionRevisionIds$)/.test(field)&&v.length>512)
-      throw Error("Exam import identifier too long");
-    return;
-  }
-  if(v===null||typeof v!=="object")return;
-  if(seen.has(v))throw Error("Exam import contains repeated/cyclic object references");
-  seen.add(v);
-  if(Array.isArray(v)){
-    if(v.length>MAX_NODES)throw Error("Exam import array is too large");
-    for(const item of v)walk(item,depth+1,field);
-  }else{
-    const pairs=Object.entries(v as Record<string,unknown>);
-    if(pairs.length>MAX_NODES)throw Error("Exam import object is too large");
-    for(const [key,item] of pairs){
-      if(key.length>512)throw Error("Exam import field name too long");
-      chars+=key.length;
-      if(chars>MAX_TOTAL_CHARS)throw Error("Exam import exceeds 32 MiB text budget");
-      walk(item,depth+1,key);
-    }
-  }
-  // Reuse of one immutable subobject in different fields is legal; only
-  // cycles on the active recursion path are rejected.
-  seen.delete(v);
- };
- walk(value,0,"");
-}
-
-/** Every supplied question, key and attachment is validated before becoming visible. */
-export function validateExamPackage(value: unknown): ExamPackage {
- validateExamImportBudget(value);
- if (!value || typeof value !== "object") throw new Error("Exam package must be an object");
- const raw = value as Record<string, unknown>;
- if(![Object.prototype,null].includes(Object.getPrototypeOf(value)))
-   throw new Error("Exam package must be a plain object");
- // SHA-256 revision hashes cover known domain fields, not an arbitrary
- // caller's envelope metadata. Reject any unmatched field before persistence.
- const fields=["format","version","examId","title","paper","answerKey","questions",
-   "stimuli","assets","explanations","practiceMode"];
- for(const field of Object.keys(raw))
-   if(!fields.includes(field))throw new Error("Exam package."+field+": unsupported field");
- if(raw.practiceMode!==undefined&&
-   (raw.examId!=="ssc-cgl"||!["strict","free","single"].includes(String(raw.practiceMode))))
-   throw new Error("Exam package: invalid runtime practice mode");
- if (raw.format !== "practice-desk-exam" || raw.version !== 1 ||
-    typeof raw.examId !== "string" || !raw.examId.trim() ||
-    typeof raw.title !== "string" || !raw.title.trim() ||
-    !Array.isArray(raw.questions) || raw.questions.length > 2000)
-    throw new Error("Invalid exam package header or question count");
- const questions = raw.questions.map(x => validateQuestionRevision(x));
- const key = validateAnswerKeyRevision(raw.answerKey, questions);
- const paper = validatePaperRevision(raw.paper, questions, key);
- const ids = new Set(paper.sections.flatMap(s => s.questionRevisionIds));
- if (ids.size !== questions.length || questions.some(q => !ids.has(q.id)))
-    throw new Error("Every question must belong to this paper exactly once");
- const {stimuli,assets}=validateMediaInventory(raw.stimuli??[],raw.assets??[]);
- validateQuestionMediaReferences(questions,stimuli,assets);
- assertRevisionHashes(questions,key,paper);
- const explanations=raw.explanations;
- if(explanations!==undefined){
-   if(!explanations || typeof explanations!=="object" || Array.isArray(explanations))
-     throw new Error("Invalid explanations");
-   for(const [id,text] of Object.entries(explanations)){
-     if(!ids.has(id as QuestionRevisionId) || typeof text!=="string" || text.length>20000) throw new Error("Invalid explanation reference");
-   }
- }
- return value as ExamPackage;
-}
 
 /** Convert existing CGL content without changing the original bank or editions. */
 export function builtinCglPackages(sources: SourcePaperBank, patches: ReviewPatchBank,
@@ -166,12 +57,11 @@ export function builtinCglPackages(sources: SourcePaperBank, patches: ReviewPatc
 }
 
 /** Runtime-only CGL practice policies share the same versioned model as every exam. */
-export type CglPracticeMode = "strict" | "free" | "single";
 export function configureCglPractice(base: ExamPackage, mode:CglPracticeMode, sectionIndex=0):ExamPackage {
  if(base.examId!=="ssc-cgl")return base;
  if(mode==="strict"){
    // The raw editorial/source package is an immutable document with a manual
-   // transition declaration. The actual v11-like exam simulation must instead
+   // transition declaration. The actual exam simulation must instead
    // explicitly freeze an AUTOMATIC 15-minute section policy; otherwise a
    // correctly implemented manual expiry would strand the strict exam.
    if(base.paper.timing.kind!=="sectional")throw new Error("Strict CGL requires sectional timing");
@@ -179,7 +69,7 @@ export function configureCglPractice(base: ExamPackage, mode:CglPracticeMode, se
      id:(base.paper.id+":practice:strict") as PaperRevision["id"],
      timing:{...base.paper.timing,transition:"automatic" as const}};
    const paper:PaperRevision={...derived,contentHash:paperRevisionHash(derived)};
-   return {...base,paper,practiceMode:"strict"};
+   return {...base,paper};
  }
  const source=base.paper;
  if(mode==="single"&&!source.sections[sectionIndex])throw new Error("Unknown practice section");
@@ -196,7 +86,7 @@ export function configureCglPractice(base: ExamPackage, mode:CglPracticeMode, se
    timing:{kind:"whole-paper" as const,durationMs:mode==="single"?900000:3600000,pausePolicy:"allowed" as const},
    navigation:{...source.navigation,sectionNavigation:mode==="free"?"free" as const:"sequential-locked" as const}};
  const paper:PaperRevision={...paperBase,contentHash:paperRevisionHash(paperBase)};
- return {...base,paper,answerKey,questions,practiceMode:mode,
+ return {...base,paper,answerKey,questions,
    ...(base.explanations?{explanations:Object.fromEntries(Object.entries(base.explanations)
      .filter(([id])=>included.has(id as QuestionRevisionId)))}:{}),
    title:base.title+(mode==="free"?" · Flexible practice":" · "+sections[0]!.title+" practice")};
@@ -213,68 +103,20 @@ export function configureUntimedPractice(base:ExamPackage,enabled:boolean):ExamP
  return {...base,paper};
 }
 
-export interface GenericAttempt {
- readonly recordType: "generic-attempt";
- readonly saveRevision?: number;
- readonly id: string;
- readonly packageId: string;
- readonly startedAt: number;
- readonly updatedAt: number;
- readonly finishedAt: number | null;
- readonly frozen: FrozenAttemptContent;
- readonly state: SessionState;
- readonly result?: ReturnType<typeof scoreAttempt>;
- readonly manualGrades?: readonly ManualGrade[];
- readonly sourceKeyReference?: SourceKeyReference;
- /** Optional frozen original wording, media and source answer for revised exams. */
- readonly sourceReviewReference?: SourceReviewReference;
- /** Explicit completion cause, only populated on newly finished attempts. */
- readonly completionReason?: "time-expired" | "submitted" | "section-submitted";
- readonly notebookLineage?: NotebookLineage;
- /** Hash-covered seed, filter and source revision manifest for an authored custom subset. */
- readonly practiceComposition?: PracticeComposition;
- readonly explanations?: Readonly<Record<string,string>>;
+export function cglAttemptMode(mode:CglPracticeMode):AttemptMode{
+ return mode==="free"?"full-paper-practice":mode==="single"?"section-practice":"exam-simulation";
 }
-export function startGenericAttempt(bundle: ExamPackage, id: string, timestamp: number): GenericAttempt {
- const validated = validateExamPackage(bundle);
- const mode=validated.paper.edition==="custom"?"custom-practice":validated.examId==="ssc-cgl" ?
-   validated.practiceMode==="free"?"full-paper-practice":
-   validated.practiceMode==="single"?"section-practice":"exam-simulation":
-   "exam-simulation";
- const frozen = freezeAttempt(validated.paper,validated.answerKey,validated.questions,
-   validated.stimuli??[],validated.assets??[],mode,new Date(timestamp).toISOString(),validated.examId);
- return {recordType:"generic-attempt",id,packageId:bundle.paper.id,startedAt:timestamp,
-   updatedAt:timestamp,finishedAt:null,frozen,state:startSession(bundle.paper,timestamp),
-   ...(validated.explanations?{explanations:structuredClone(validated.explanations)}:{})};
-}
-export function transitionGenericAttempt(
- attempt: GenericAttempt, event: SessionEvent, questionMap: ReadonlyMap<QuestionRevisionId,QuestionRevision>,
+
+export function startGenericAttempt(
+ bundle: ExamPackage,id:string,timestamp:number,mode?:AttemptMode
 ): GenericAttempt {
- if (attempt.finishedAt !== null) return attempt;
- const paper = attempt.frozen.paper;
- if (event.type === "ANSWER") {
-   const id=paper.sections[attempt.state.sectionIndex]?.questionRevisionIds[attempt.state.questionIndex];
-   const q=id && questionMap.get(id);
-   if (!q) throw new Error("No question at the cursor");
-   validateResponse(q,event.response);
- }
- const state=transition(paper,attempt.state,event);
- const finished = state.status === "completed";
- const expired=finished&&(paper.timing.kind==="whole-paper"?
-   state.elapsedMs>=paper.timing.durationMs:
-   paper.timing.kind==="sectional"?(()=>{
-     const section=paper.sections[state.sectionIndex];
-     const limit=paper.timing.sectionLimits.find(x=>x.sectionId===section?.id)?.durationMs;
-     return limit!==undefined&&limit!==null&&state.sectionElapsedMs>=limit;
-   })():false);
- const completionReason=expired?"time-expired":
-   event.type==="SUBMIT_SECTION"?"section-submitted":"submitted";
- return {...attempt,state,updatedAt:event.nowMs,finishedAt:finished?event.nowMs:null,
-    ...(finished ? {completionReason,result:scoreAttempt(paper,attempt.frozen.key,attempt.frozen.questions,
-      state.responses,new Date(event.nowMs).toISOString())}: {})};
-}
-export function responseFor(state: SessionState, questionId: QuestionRevisionId): CandidateResponse | undefined {
- return state.responses.find(r=>r.questionRevisionId===questionId)?.response;
+ const validated=validateExamPackage(bundle);
+ const frozenMode=mode??(validated.paper.edition==="custom"?"custom-practice":"exam-simulation");
+ const frozen=freezeAttempt(validated.paper,validated.answerKey,validated.questions,
+   validated.stimuli??[],validated.assets??[],frozenMode,new Date(timestamp).toISOString(),validated.examId);
+ return {recordType:"generic-attempt",saveRevision:0,id,packageId:validated.paper.id,startedAt:timestamp,
+   updatedAt:timestamp,finishedAt:null,completionReason:null,frozen,state:startSession(validated.paper,timestamp),
+   ...(validated.explanations?{explanations:structuredClone(validated.explanations)}:{})};
 }
 
 /** Resolve display labels from frozen question definitions, not option positions or keys. */

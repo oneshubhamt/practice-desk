@@ -7,7 +7,7 @@ import {AUTHORING_MAX_BYTES,requiresExternalQuality,validateAuthoringDraft,
 import {inspectAuthoringPublication} from "./authoring-publisher.ts";
 import {inspectExternalQuality} from "./external-bank-qa.ts";
 import type {ExternalBankReport,ExternalBankIssue} from "./external-bank.ts";
-import type {ExamPackage} from "../app/exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
 
 export const DRAFT_EXCHANGE_FORMAT="practice-desk-draft-exchange";
 export const DRAFT_SHELF_ARCHIVE_FORMAT="practice-desk-draft-shelf-archive";

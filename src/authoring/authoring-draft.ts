@@ -1,3 +1,4 @@
+import {STORAGE_TOPOLOGY} from "../storage-topology.ts";
 /** P47-5C: unpublished local-only question-authoring drafts.
  * Never reuse a saved draft as an executable paper, attempt, answer key or score.
  */
@@ -8,6 +9,11 @@ import {plainRichDocument,validateRichDocument} from "../domain/rich-document.ts
 import {validateMediaInventory} from "../domain/media.ts";
 import {attributedTopicPath,validateTopicPath} from "../learning/syllabus-taxonomy.ts";
 
+export type AuthoringDraftSection={
+ readonly name:string;
+ /** Single canonical owner of this physical section's timer budget. */
+ readonly minutes:number;
+};
 export type AuthoringQuestion={
  readonly id:string;
  readonly section:string;
@@ -19,9 +25,7 @@ export type AuthoringQuestion={
  readonly topic?:string;
  readonly subtopic?:string;
  readonly difficulty?:"easy"|"medium"|"hard"|""; 
- /** For sectional policies, minutes per section must agree across its questions. */
- readonly sectionMinutes?:number;
- /** Multiple-select response cardinality; the correct key must satisfy it. */
+  /** Multiple-select response cardinality; the correct key must satisfy it. */
  readonly minSelections?:number;
  readonly maxSelections?:number;
  /** Optional per-correct-component credit for multiple/matching only. */
@@ -59,26 +63,27 @@ export type AuthoringDraft={
  readonly schema:1;
  readonly id:string;
  /** Validated workflow provenance, independent of mutable draft IDs. */
- readonly ingestionMode?:"manual"|"external-source";
+ readonly ingestionMode:"manual"|"external-source";
  readonly examId:string;
  readonly paperId:string;
  readonly title:string;
  readonly edition:"custom"|"source"|"reviewed";
  readonly revision:number;
  readonly durationMinutes:number;
- /** Absent values retain the existing authoring defaults. */
- readonly timingKind?:"untimed"|"whole-paper"|"sectional";
- readonly pausePolicy?:"allowed"|"forbidden";
- readonly questionNavigation?:"free"|"forward-only";
- readonly sectionNavigation?:"free"|"sequential-locked";
- readonly sectionTransition?:"manual"|"automatic";
- readonly allowEarlySubmit?:boolean;
- readonly allowReview?:boolean;
+ readonly timingKind:"untimed"|"whole-paper"|"sectional";
+ readonly pausePolicy:"allowed"|"forbidden";
+ readonly questionNavigation:"free"|"forward-only";
+ readonly sectionNavigation:"free"|"sequential-locked";
+ readonly sectionTransition:"manual"|"automatic";
+ readonly allowEarlySubmit:boolean;
+ readonly allowReview:boolean;
  readonly calculatorTool?:"basic-v1";
  readonly marksCorrect:number;
  readonly marksIncorrect:number;
  readonly updatedAt:string;
  readonly assets:readonly ImageAsset[];
+ /** Physical exam sections. This is the only draft owner of section timer budgets. */
+ readonly sections:readonly AuthoringDraftSection[];
  /** Authoring-only shared stimuli, referenced by question stimulusRef. */
  readonly stimuli?:readonly StimulusDefinition[];
  readonly questions:readonly AuthoringQuestion[];
@@ -88,7 +93,7 @@ export type AuthoringDraftShelf={
  readonly activeId:string;
  readonly drafts:readonly AuthoringDraft[];
 };
-export const AUTHORING_KEY="practiceDesk.authoring.drafts.v1";
+export const AUTHORING_KEY=STORAGE_TOPOLOGY.authoringDrafts;
 export const AUTHORING_MAX_BYTES=1900000;
 const id=():string=>typeof crypto!=="undefined"&&crypto.randomUUID?crypto.randomUUID():
   "draft-"+Date.now()+"-"+Math.floor(Math.random()*1000000);
@@ -96,7 +101,7 @@ const fresh=()=>plainRichDocument("");
 export function newAuthoringQuestion(kind:QuestionKind="single-choice"):AuthoringQuestion{
  return {id:id(),section:"General",subject:"",syllabusHeadingId:"",
   topic:"",subtopic:"",difficulty:"",
-  sectionMinutes:15,minSelections:1,maxSelections:4,
+  minSelections:1,maxSelections:4,
   partialCreditEach:0,partialPenaltyEach:0,
   kind,prompt:fresh(),passage:fresh(),
   options:Array.from({length:4},fresh),leftItems:Array.from({length:4},fresh),
@@ -109,7 +114,7 @@ export function newAuthoringDraft():AuthoringDraft{
   pausePolicy:"allowed",questionNavigation:"free",sectionNavigation:"free",
   sectionTransition:"manual",allowEarlySubmit:true,allowReview:true,
   marksCorrect:2.5,marksIncorrect:-0.8333333333333334,
-  updatedAt:now,assets:[],questions:[newAuthoringQuestion()]};
+  updatedAt:now,assets:[],sections:[{name:"General",minutes:15}],questions:[newAuthoringQuestion()]};
 }
 const rec=(x:unknown,label:string,keys:readonly string[]):Record<string,unknown>=>{
  if(!x||typeof x!=="object"||Array.isArray(x)||Object.getPrototypeOf(x)!==Object.prototype)
@@ -137,11 +142,22 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
  const p=rec(value,"authoring draft",["schema","id","ingestionMode","examId","paperId","title","edition",
   "revision","durationMinutes","timingKind","pausePolicy","questionNavigation",
   "sectionNavigation","sectionTransition","allowEarlySubmit","allowReview","calculatorTool",
-  "marksCorrect","marksIncorrect","updatedAt","assets","stimuli","questions"]);
+  "marksCorrect","marksIncorrect","updatedAt","assets","sections","stimuli","questions"]);
  if(p.schema!==1)throw Error("Unsupported draft schema");
- if(p.ingestionMode!==undefined&&p.ingestionMode!=="manual"&&p.ingestionMode!=="external-source")
+ if(p.ingestionMode!=="manual"&&p.ingestionMode!=="external-source")
   throw Error("Invalid authoring ingestion mode");
  const assets=structuredClone(list(p.assets,100,"images") as ImageAsset[]);
+ const sections=list(p.sections,40,"sections").map((item,i)=>{
+  const s=rec(item,"section "+i,["name","minutes"]);
+  const name=text(s.name,"section name",100,true).trim();
+  validateTopicPath([name]);
+  const minutes=num(s.minutes,"section minutes",0,600);
+  if(!Number.isSafeInteger(minutes))throw Error("Section minutes must be whole numbers");
+  return {name,minutes};
+ });
+ if(!sections.length)throw Error("A draft needs at least one exam section");
+ if(new Set(sections.map(s=>s.name)).size!==sections.length)throw Error("Duplicate exam section");
+ const sectionNames=new Set(sections.map(s=>s.name));
  const stimuli=structuredClone(list(p.stimuli??[],200,"stimuli") as StimulusDefinition[]);
  validateMediaInventory(stimuli,assets);
  const stimulusIds=new Set(stimuli.map(s=>s.id as string));
@@ -154,7 +170,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   const q=rec(item,"draft question",["id","section","kind","prompt","passage","options","leftItems",
    "rightItems","explanation","answer","tolerance","source",
    "subject","syllabusHeadingId","topic","subtopic","difficulty",
-    "sectionMinutes","minSelections","maxSelections",
+    "minSelections","maxSelections",
    "partialCreditEach","partialPenaltyEach","stimulusRef","sourceOrigin","provenance","qa"]);
   const questionId=text(q.id,"question ID",128,true);
   if(all.has(questionId))throw Error("Duplicate draft question ID");
@@ -239,6 +255,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   if(qOpts.length!==4||left.length!==4||right.length!==4)
    throw Error("Draft has invalid option/item count");
   const section=text(q.section,"section",100,true).trim();
+  if(!sectionNames.has(section))throw Error("Question references unknown exam section");
   const stimulusRef=q.stimulusRef===undefined?undefined:text(q.stimulusRef,"stimulus reference",128,true);
   if(stimulusRef&&!stimulusIds.has(stimulusRef))throw Error("Unknown shared stimulus "+stimulusRef);
   validateTopicPath([section]);
@@ -256,11 +273,9 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   const maxSelections=num(q.maxSelections??4,"maximum selections",1,4);
   if(!Number.isInteger(minSelections)||!Number.isInteger(maxSelections)||
      minSelections>maxSelections)throw Error("Invalid selection bounds");
-  const sectionMinutes=num(q.sectionMinutes??15,"section minutes",0,600);
-  if(!Number.isInteger(sectionMinutes))throw Error("Section minutes must be whole numbers");
   return {id:questionId,section,subject,syllabusHeadingId,
    topic,subtopic,difficulty:difficulty as ""|"easy"|"medium"|"hard",
-   sectionMinutes,minSelections,maxSelections,
+   minSelections,maxSelections,
    partialCreditEach:num(q.partialCreditEach??0,"partial-credit component",0,1000),
    partialPenaltyEach:num(q.partialPenaltyEach??0,"partial penalty",0,1000),
    kind:kind as QuestionKind,prompt:rich(q.prompt),passage:rich(q.passage),
@@ -274,39 +289,40 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
  const edition=p.edition;
  if(edition!=="custom"&&edition!=="source"&&edition!=="reviewed")
   throw Error("Invalid paper edition");
- const timingKind=p.timingKind??(p.durationMinutes===0?"untimed":"whole-paper");
-  const pausePolicy=p.pausePolicy??"allowed",questionNavigation=p.questionNavigation??"free";
-  const sectionNavigation=p.sectionNavigation??"free",sectionTransition=p.sectionTransition??"manual";
-  if(!["untimed","whole-paper","sectional"].includes(String(timingKind))||
-     !["allowed","forbidden"].includes(String(pausePolicy))||
-     !["free","forward-only"].includes(String(questionNavigation))||
-     !["free","sequential-locked"].includes(String(sectionNavigation))||
-     !["manual","automatic"].includes(String(sectionTransition))||
-     (p.allowEarlySubmit!==undefined&&typeof p.allowEarlySubmit!=="boolean")||
-     (p.allowReview!==undefined&&typeof p.allowReview!=="boolean"))
-    throw Error("Invalid authored timing or navigation settings");
+ const timingKind=p.timingKind,pausePolicy=p.pausePolicy,
+  questionNavigation=p.questionNavigation,sectionNavigation=p.sectionNavigation,
+  sectionTransition=p.sectionTransition;
+ if(!["untimed","whole-paper","sectional"].includes(String(timingKind))||
+    !["allowed","forbidden"].includes(String(pausePolicy))||
+    !["free","forward-only"].includes(String(questionNavigation))||
+    !["free","sequential-locked"].includes(String(sectionNavigation))||
+    !["manual","automatic"].includes(String(sectionTransition))||
+    typeof p.allowEarlySubmit!=="boolean"||typeof p.allowReview!=="boolean")
+   throw Error("Invalid authored timing or navigation settings");
  const calculatorTool=p.calculatorTool;
  if(calculatorTool!==undefined&&calculatorTool!=="basic-v1")
    throw Error("Invalid authored calculator tool");
  const draft:AuthoringDraft={
   schema:1,id:text(p.id,"draft ID",128,true),
-  ...(p.ingestionMode===undefined?{}:{ingestionMode:p.ingestionMode as "manual"|"external-source"}),
+  ingestionMode:p.ingestionMode as "manual"|"external-source",
   examId:text(p.examId,"exam ID",80,true),
   paperId:text(p.paperId,"paper ID",80,true),title:text(p.title,"paper title",180,true),
   edition,revision:num(p.revision,"revision",1,1000000),
   durationMinutes:num(p.durationMinutes,"duration",0,600),
-  timingKind:timingKind as NonNullable<AuthoringDraft["timingKind"]>,
-  pausePolicy:pausePolicy as NonNullable<AuthoringDraft["pausePolicy"]>,
-  questionNavigation:questionNavigation as NonNullable<AuthoringDraft["questionNavigation"]>,
-  sectionNavigation:sectionNavigation as NonNullable<AuthoringDraft["sectionNavigation"]>,
-  sectionTransition:sectionTransition as NonNullable<AuthoringDraft["sectionTransition"]>,
-  allowEarlySubmit:p.allowEarlySubmit??true,allowReview:p.allowReview??true,
+  timingKind:timingKind as AuthoringDraft["timingKind"],
+  pausePolicy:pausePolicy as AuthoringDraft["pausePolicy"],
+  questionNavigation:questionNavigation as AuthoringDraft["questionNavigation"],
+  sectionNavigation:sectionNavigation as AuthoringDraft["sectionNavigation"],
+  sectionTransition:sectionTransition as AuthoringDraft["sectionTransition"],
+  allowEarlySubmit:p.allowEarlySubmit as boolean,allowReview:p.allowReview as boolean,
   ...(calculatorTool?{calculatorTool:"basic-v1" as const}:{}),
   marksCorrect:num(p.marksCorrect,"positive marks",0.01,1000),
   marksIncorrect:num(p.marksIncorrect,"negative marks",-1000,0),
-  updatedAt:text(p.updatedAt,"updated time",100,true),assets,
+  updatedAt:text(p.updatedAt,"updated time",100,true),assets,sections,
   ...(stimuli.length?{stimuli}:{}),questions:verified
  };
+ const usedSections=new Set(verified.map(q=>q.section));
+ if(sections.some(s=>!usedSections.has(s.name)))throw Error("Draft contains an unused exam section");
  const bytes=JSON.stringify(draft).length;
  if(bytes>AUTHORING_MAX_BYTES)throw Error("Draft size exceeds local storage budget; export and reduce images");
  return draft;

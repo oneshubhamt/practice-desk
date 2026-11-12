@@ -2,7 +2,7 @@ import type { PaperRevision, SectionDefinition } from "../domain/exam.js";
 import type { AnswerKeyRevision } from "../domain/answer-key.js";
 import type { QuestionRevision } from "../domain/question.js";
 import type { MarkingRule } from "../domain/scoring.js";
-import type { GenericAttempt } from "../app/exam-package.ts";
+import type { GenericAttempt } from "./generic-attempt.ts";
 import type { ScoreResult } from "./scoring.ts";
 import { sectionTimerDuration } from "./session.ts";
 
@@ -112,6 +112,6 @@ export function sectionScoreSummaries(attempt:GenericAttempt,result:ScoreResult)
      attempted,correct,incorrect,unanswered,pending,excluded,marks,foregroundMs,
      eligibleMax:scoreableMaximum(paper,attempt.frozen.key,attempt.frozen.questions,section),
      timerMs:sectionTimerDuration(attempt.state,paper.sections.indexOf(section)),
-     timerReason:attempt.state.completedSectionTimings?.find(z=>z.sectionId===section.id)?.reason??null};
+     timerReason:attempt.state.completedSectionTimings.find(z=>z.sectionId===section.id)?.reason??null};
  });
 }

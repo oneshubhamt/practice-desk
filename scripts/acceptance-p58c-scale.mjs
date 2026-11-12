@@ -87,7 +87,7 @@ try{
  await measure("restore200Selection",async()=>{
   await page.locator("#pd-stage-archive-file").setInputFiles(file(changed,"p58c-stage-200.json"));
   await page.waitForFunction(()=>{
-   const state=JSON.parse(localStorage.getItem("practiceDesk.authoring.staging.v1")??"null");
+   const state=JSON.parse(localStorage.getItem("practiceDesk.authoring.staging")??"null");
    return state?.selected?.length===200&&
     [...document.querySelectorAll("[data-stage-key]")].filter(el=>el.checked).length===200;
   },undefined,{timeout:95000});
@@ -100,7 +100,7 @@ try{
  check(await second.locator('[data-stage-key]').first().isChecked(),
   engine+" stale tab did not restore its own checkbox state");
  check((await page.evaluate(()=>
-  JSON.parse(localStorage.getItem("practiceDesk.authoring.staging.v1")).selected.length))===200,
+  JSON.parse(localStorage.getItem("practiceDesk.authoring.staging")).selected.length))===200,
   engine+" stale tab altered selected count");
  check(tabErrors.length===0,engine+" second-tab error "+tabErrors.join("; "));
  await second.close();
@@ -147,7 +147,7 @@ try{
  await page.locator("#pd-author-answer").fill("D");
  await page.locator("#pd-author-answer").blur();
  await page.waitForFunction(()=>{
-  const shelf=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts.v1")??"null");
+  const shelf=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts")??"null");
   return shelf?.drafts?.find(d=>d.id===shelf.activeId)?.questions?.[1]?.answer==="D";
  },undefined,{timeout:95000});
  check(sources[0].questions[1].answer==="B",engine+" high-volume correction mutated the source fixture");
@@ -171,7 +171,7 @@ try{
   document.querySelector("#pd-author-drafts")?.value===id,draftExchange.draft.id,
   {timeout:95000});
  const current=await fresh.page.evaluate(id=>{
-  const shelf=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts.v1"));
+  const shelf=JSON.parse(localStorage.getItem("practiceDesk.authoring.drafts"));
   return shelf.drafts.find(d=>d.id===id);
  },draftExchange.draft.id);
  check(JSON.stringify(current)===JSON.stringify(draftExchange.draft),

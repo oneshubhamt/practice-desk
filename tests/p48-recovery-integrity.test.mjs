@@ -9,12 +9,12 @@ import {
  compactAttempt,reconstructRecords,reconstructRecoverableRecords,createRecoverableRecordCollector,expandAttempt
 } from "../src/history/shared-store.ts";
 
-const attempt=(id)=>startGenericAttempt(pkg,id,Date.UTC(2026,10,3,12,0,0));
+const attempt=(id)=>({...startGenericAttempt(pkg,id,Date.UTC(2026,10,3,12,0,0)),saveRevision:1});
 
 test("P48 intact attempt survives a corrupt sibling without adopting the invalid row",()=>{
  const good=attempt("p48-valid");
  const {row,snapshot}=compactAttempt(good);
- const damaged={recordType:"generic-attempt",id:"p48-damaged",
+ const damaged={recordType:"generic-attempt",saveRevision:1,id:"p48-damaged",
    frozenAt:"2026-11-03T12:00:00.000Z",frozenRef:"snapshot:absent"};
  assert.throws(()=>reconstructRecords([row,damaged],[snapshot]),/missing immutable snapshot/);
  const recovered=reconstructRecoverableRecords([row,damaged],[snapshot]);
@@ -51,7 +51,7 @@ test("P48 compact rows cannot smuggle a different source/key/explanation outside
 
 test("P48 unknown non-attempt rows remain visible to the caller's strict record validator",()=>{
  const good=compactAttempt(attempt("p48-valid-d"));
- const unknown={recordType:"unexpected-record",id:"untrusted"};
+ const unknown={recordType:"unexpected-record",saveRevision:1,id:"untrusted"};
  const recovered=reconstructRecoverableRecords([good.row,unknown],[good.snapshot]);
  assert.deepEqual(recovered.records.map(x=>x.id),["p48-valid-d","untrusted"]);
  assert.equal(recovered.rejectedRows,0,"do not silently discard other record types");
@@ -62,7 +62,7 @@ test("P48-2 incremental cursor collector has exactly the same recoverable semant
  const second=compactAttempt(attempt("p48-cursor-second"));
  const corruptSnapshot={...valid.snapshot,id:"snapshot:"+("f".repeat(64))};
  const corruptAttempt={...valid.row,id:"p48-broken",frozenRef:"snapshot:unavailable"};
- const unsupported={recordType:"invalid-record",id:"unsupported"};
+ const unsupported={recordType:"invalid-record",saveRevision:1,id:"unsupported"};
  const snapshots=[valid.snapshot,corruptSnapshot];
  const rows=[valid.row,corruptAttempt,unsupported,second.row];
  const expected=reconstructRecoverableRecords(rows,snapshots);

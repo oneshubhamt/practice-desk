@@ -2,15 +2,15 @@
  * Never store Wordgard internals, DOM HTML, editable draft IDs or unsigned keys
  * as scored content. A published package enters the existing validated IDB path.
  */
-import type {ExamPackage} from "../app/exam-package.ts";
-import {validateExamPackage} from "../app/exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
+import {validateExamPackage} from "../domain/exam-package.ts";
 import type {AuthoringDraft,AuthoringQuestion} from "./authoring-draft.ts";
 import {validateAuthoringDraft} from "./authoring-draft.ts";
 import type {CorrectAnswer,AnswerKeyEntry,AnswerKeyRevision} from "../domain/answer-key.ts";
 import type {PaperRevision,SectionDefinition,TimingPolicy} from "../domain/exam.ts";
 import {attributedTopicPath,topicAncestors} from "../learning/syllabus-taxonomy.ts";
 import type {QuestionContent,QuestionRevision,QuestionKind,StimulusDefinition,ImageAsset} from "../domain/question.ts";
-import type {RichBlock,RichDocument,RichInline} from "../domain/rich-document.ts";
+import type {RichDocument,RichInline} from "../domain/rich-document.ts";
 import {validateRichDocument} from "../domain/rich-document.ts";
 import {publicationPlainText} from "./plain-rich-text.ts";
 import {inspectCandidateIntegrity} from "./candidate-integrity.ts";
@@ -103,7 +103,7 @@ const keyFrom=(q:AuthoringQuestion):CorrectAnswer=>{
 const sourceId=(d:AuthoringDraft)=>("authored:"+d.examId+":"+d.paperId) as PaperId;
 const revisionId=(d:AuthoringDraft)=>sourceId(d)+":r"+d.revision+":"+d.edition;
 function validIdentity(s:string):boolean{return /^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(s);}
-function issuesFor(d:AuthoringDraft,existing:readonly ExamPackage[]):PublicationIssue[]{
+function issuesFor(d:AuthoringDraft,existing:readonly ExamPackage[],reviewedSource?:ExamPackage):PublicationIssue[]{
  const issues:PublicationIssue[]=[];
  const put=(field:string,reason:string,questionId?:string)=>issues.push({
   field,reason,...(questionId?{questionId}:{})
@@ -114,27 +114,27 @@ function issuesFor(d:AuthoringDraft,existing:readonly ExamPackage[]):Publication
   put("Paper ID","Replace the placeholder with a stable ID using letters, digits, _ or -");
  if(/^untitled question bank$/i.test(d.title.trim()))
   put("Paper title","Give this bank a meaningful title");
- const timingKind=d.timingKind??(d.durationMinutes?"whole-paper":"untimed");
+ const timingKind=d.timingKind;
  if(timingKind==="whole-paper"&&
     (!d.durationMinutes||!Number.isSafeInteger(d.durationMinutes)))
   put("Duration","Whole-paper timing requires positive whole minutes");
  if(timingKind==="sectional"&&d.sectionNavigation!=="sequential-locked")
   put("Section navigation","Sectional timers require sequential-locked sections");
- const sectionTimes=new Map<string,number>();
- for(const q of d.questions){
-  if(timingKind!=="sectional")break;
-  const duration=q.sectionMinutes??15;
-  if(sectionTimes.has(q.section)&&sectionTimes.get(q.section)!==duration)
-    put("Sectional timing","All questions in section "+q.section+" must have the same duration");
-  sectionTimes.set(q.section,duration);
- }
+
  if(d.revision!==Math.trunc(d.revision))put("Revision","Revision must be a positive integer");
  const fullId=revisionId(d);
  if(existing.some(x=>x.paper.id===fullId))
   put("Revision","This paper/edition revision is already published. Increment Revision; never overwrite an earlier publication.");
- if(d.edition==="reviewed"&&!existing.some(x=>
-  x.paper.paperId===sourceId(d)&&x.paper.edition==="source"))
-  put("Edition","Publish a corresponding user-supplied Source transcription first; Reviewed must have an existing source counterpart");
+ if(d.edition==="reviewed"){
+  if(!reviewedSource)
+   put("Edition","Reviewed publication requires an explicitly supplied Source package with exact revision/key lineage");
+  else if(reviewedSource.paper.edition!=="source"||reviewedSource.examId!==d.examId||
+      reviewedSource.paper.paperId!==sourceId(d))
+   put("Edition","Reviewed publication Source lineage does not match this exam/paper");
+  else if(!existing.some(x=>x.paper.id===reviewedSource.paper.id&&
+      x.answerKey.id===reviewedSource.answerKey.id))
+   put("Edition","The exact Source revision/key must be present in the publication context");
+ }
  // The Wordgard/manual publisher must obey the same candidate-visible
  // explicit-answer leak blockers as AI source import, including rich stimuli.
  for(const issue of inspectCandidateIntegrity(d))
@@ -188,7 +188,7 @@ function issuesFor(d:AuthoringDraft,existing:readonly ExamPackage[]):Publication
  * No persistent write, question-bank mutation or external effect is performed.
  */
 export function inspectAuthoringPublication(
- draft:unknown,existing:readonly ExamPackage[]=[]
+ draft:unknown,existing:readonly ExamPackage[]=[],reviewedSource?:ExamPackage
 ):{readonly valid:boolean;readonly issues:readonly PublicationIssue[];
  readonly estimatedQuestions:number;readonly compiled?:ExamPackage}{
  let d:AuthoringDraft;
@@ -197,12 +197,12 @@ export function inspectAuthoringPublication(
   const reason=error instanceof Error?error.message:"Invalid authoring draft";
   return {valid:false,issues:[{field:"Draft structure",reason}],estimatedQuestions:0};
  }
- const issues=issuesFor(d,existing);
+ const issues=issuesFor(d,existing,reviewedSource);
  if(issues.length)return {valid:false,issues,estimatedQuestions:d.questions.length};
  try{
   // Deliberately invoke the identical publisher (including exact frozen hash,
   // question, key, paper, media and rule validation) that the Publish action uses.
-  const compiled=compileAuthoringPublication(d,existing);
+  const compiled=compileAuthoringPublication(d,existing,reviewedSource);
   return {valid:true,issues:[],estimatedQuestions:d.questions.length,compiled};
  }catch(error){
   if(error instanceof PublicationValidationError)
@@ -215,10 +215,10 @@ export function inspectAuthoringPublication(
 /** Generate content-addressed, SHA-256-validated exam data from the app-owned draft.
  * An unkeyed digest cannot authenticate the author or certify an exam source. */
 export function compileAuthoringPublication(
- input:unknown,existing:readonly ExamPackage[]=[]
+ input:unknown,existing:readonly ExamPackage[]=[],reviewedSource?:ExamPackage
 ):ExamPackage{
  const d=validateAuthoringDraft(input);
- const issues=issuesFor(d,existing);
+ const issues=issuesFor(d,existing,reviewedSource);
  if(issues.length)throw new PublicationValidationError(issues);
  const paperId=sourceId(d),base=revisionId(d),keyId=(base+":key") as AnswerKeyRevisionId;
  const known=new Set(d.assets.map(a=>a.id));
@@ -349,28 +349,35 @@ export function compileAuthoringPublication(
   }
   const group=groups.get(q.section)??[];group.push(revisionId);groups.set(q.section,group);
  }
- const sections:SectionDefinition[]=[...groups.entries()].map(([title,ids])=>({
-  id:(paperId+":section:"+sha256(title).slice(0,12)) as SectionId,title,questionRevisionIds:ids
- }));
+ const sections:SectionDefinition[]=d.sections.map(section=>{
+  const ids=groups.get(section.name);
+  if(!ids?.length)throw Error("Canonical draft section has no questions");
+  return {id:(paperId+":section:"+sha256(section.name).slice(0,12)) as SectionId,
+    title:section.name,questionRevisionIds:ids};
+ });
  const answerBase={id:keyId,paperId,revision:d.revision,entries};
  const answerKey:AnswerKeyRevision={...answerBase,contentHash:answerKeyRevisionHash(answerBase)};
- const kind=d.timingKind??(d.durationMinutes?"whole-paper":"untimed");
- const sectionTimes=new Map(d.questions.map(q=>[q.section,q.sectionMinutes??15]));
+ const kind=d.timingKind;
+ const sectionTimes=new Map(d.sections.map(section=>[section.name,section.minutes]));
  const timing:TimingPolicy=kind==="sectional"?{
    kind:"sectional",sectionLimits:sections.map(section=>({
-     sectionId:section.id,durationMs:(sectionTimes.get(section.title)??15)*60000||null
-   })),transition:d.sectionTransition??"manual",
-   allowEarlySubmit:d.allowEarlySubmit??true,pausePolicy:d.pausePolicy??"allowed"
+     sectionId:section.id,durationMs:sectionTimes.get(section.title)!*60000||null
+   })),transition:d.sectionTransition,
+   allowEarlySubmit:d.allowEarlySubmit,pausePolicy:d.pausePolicy
  }:kind==="whole-paper"?{
-   kind:"whole-paper",durationMs:d.durationMinutes*60000,pausePolicy:d.pausePolicy??"allowed"
+   kind:"whole-paper",durationMs:d.durationMinutes*60000,pausePolicy:d.pausePolicy
  }:{kind:"untimed"};
  const paperBase={
   id:base as PaperRevisionId,paperId,revision:d.revision,edition:d.edition,sections,
   answerKeyRevisionId:answerKey.id,
+  ...(d.edition==="reviewed"?{
+    sourcePaperRevisionId:reviewedSource!.paper.id,
+    sourceAnswerKeyRevisionId:reviewedSource!.answerKey.id
+  }:{}),
   timing,
-  navigation:{questionNavigation:d.questionNavigation??"free",
-   sectionNavigation:d.sectionNavigation??"free",
-   allowFlagging:true,allowReview:d.allowReview??true},
+  navigation:{questionNavigation:d.questionNavigation,
+   sectionNavigation:d.sectionNavigation,
+   allowFlagging:true,allowReview:d.allowReview},
   ...(d.calculatorTool?{candidateTools:{calculator:d.calculatorTool}}:{}),
   scoring:{defaultRule:{correctMarks:d.marksCorrect,incorrectMarks:d.marksIncorrect,
    unansweredMarks:0}}

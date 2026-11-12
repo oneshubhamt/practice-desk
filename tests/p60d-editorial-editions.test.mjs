@@ -14,7 +14,7 @@ import {createSourceKeyReference,validateSourceKeyReference,sourceKeyScore} from
 import {questionRevisionHash,paperRevisionHash} from "../src/domain/integrity.ts";
 import {hashJson} from "../src/domain/hash.ts";
 import {plainRichDocument} from "../src/domain/rich-document.ts";
-import {importSimpleQuestionBank} from "../src/app/bank-import.ts";
+import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
 import {createSourceReviewReference} from "../src/engine/review-source.ts";
 import {familyIdFor,pairedEdition,examFamilyCatalog} from "../src/app/exam-families.ts";
 
@@ -30,6 +30,17 @@ const run=(script,...args)=>{
  assert.equal(x.error,undefined,String(x.error));
  let data;try{data=JSON.parse(x.stdout||x.stderr)}catch{assert.fail("Expected machine JSON:\n"+x.stdout+"\n"+x.stderr)}
  return {...x,data};
+};
+const asSource=candidate=>{
+ const paperBase={...candidate.paper,edition:"source"};
+ return validateExamPackage({...candidate,
+  paper:{...paperBase,contentHash:paperRevisionHash(paperBase)}});
+};
+const bindReviewed=(source,candidate)=>{
+ const paperBase={...candidate.paper,edition:"reviewed",
+  sourcePaperRevisionId:source.paper.id,sourceAnswerKeyRevisionId:source.answerKey.id};
+ return validateExamPackage({...candidate,
+  paper:{...paperBase,contentHash:paperRevisionHash(paperBase)}});
 };
 const pairs=async dir=>{
  const original=JSON.parse(await readFile(fixture,"utf8"));
@@ -246,9 +257,8 @@ test("P62-B exact revision pairing survives multiple originals and missing files
  delete unbound.paper.sourcePaperRevisionId;
  delete unbound.paper.sourceAnswerKeyRevisionId;
  unbound.paper.contentHash=paperRevisionHash(unbound.paper);
- validateExamPackage(unbound);
- assert.equal(pairedEdition(family,unbound,"source"),undefined,
-  "Unbound multi-revision imports must not silently choose the first candidate");
+ assert.throws(()=>validateExamPackage(unbound),/requires exact original revision and key lineage/,
+  "A reviewed paper without exact Source lineage is not a valid package");
  const tampered=structuredClone(target);
  tampered.paper.sourcePaperRevisionId=other.paper.id;
  assert.throws(()=>validateExamPackage(tampered),/hash mismatch/);
@@ -260,18 +270,25 @@ test("P62-B exact revision pairing survives multiple originals and missing files
 
 test("P62-B nineteen MCQs remain comparable beside one numerical question",()=>{
  const png="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/tAAAAABJRU5ErkJggg==";
- const input=(edition,revision)=>({format:"practice-desk-bank",version:1,
-  bankId:"p62-mixed",examId:"upsc-epfo-apfc",title:"Mixed P62 synthetic test",
-  edition,revision,scoring:{correctMarks:2.5,incorrectMarks:-5/6,unansweredMarks:0},
-  timing:{kind:"untimed"},
+ const input=revision=>({format:"practice-desk-authoring",version:1,
+  bankId:"p62-mixed",examId:"synthetic-comparison",paperId:"p62-mixed",
+  title:"Mixed P62 synthetic test",edition:"custom",revision,
+  scoring:{correctMarks:2.5,incorrectMarks:-5/6},
+  timing:{kind:"untimed",pausePolicy:"allowed"},
+  navigation:{questionNavigation:"free",sectionNavigation:"free",allowReview:true},
+  sections:[{id:"general",title:"General"}],
   media:[{id:"diagram",dataUri:"data:image/png;base64,"+png,altText:"Diagram context"}],
   questions:Array.from({length:20},(_,i)=>i===19?
-   {id:"q20",section:"General",type:"nat",question:"Numeric example",answer:5}:
-   {id:"q"+(i+1),section:"General",type:"mcq",question:"MCQ "+(i+1),
+   {id:"q20",examSection:"general",kind:"numeric-entry",prompt:"Numeric example",answer:[5],
+    provenance:{kind:"ai-original"},qa:{status:"unchecked"}}:
+   {id:"q"+(i+1),examSection:"general",kind:"single-choice",
+    prompt:i===0?{format:"practice-desk-rich",version:1,blocks:[
+      {type:"paragraph",content:[{type:"text",text:"MCQ 1"}]},
+      {type:"image",assetId:"diagram",altText:"Diagram context"}]}:"MCQ "+(i+1),
     options:["Alpha","Beta","Gamma","Delta"],answer:"B",
-    ...(i===0?{imageIds:["diagram"]}:{})})});
- const source=importSimpleQuestionBank(input("source",1));
- const reviewed=importSimpleQuestionBank(input("reviewed",2));
+    provenance:{kind:"ai-original"},qa:{status:"unchecked"}})});
+ const source=asSource(compileExternalQuestionBank(input(1)));
+ const reviewed=bindReviewed(source,compileExternalQuestionBank(input(2)));
  const ref=createSourceKeyReference(reviewed,source);
  assert.equal(ref.schema,3);
  assert.equal(ref.entries.length,20);
@@ -322,25 +339,27 @@ test("P62-B nineteen MCQs remain comparable beside one numerical question",()=>{
  assert.equal(createSourceKeyReference(targetPassage,sourcePassage).entries.filter(x=>x.comparable).length,18);
 });
 
-// Old schema-2 source-key comparisons were already frozen in local History.
-test("P62-B reads original schema-2 snapshots without changing their digest",()=>{
- const bank=(edition,revision)=>({format:"practice-desk-bank",version:1,
-  bankId:"p62-legacy",examId:"upsc-epfo-apfc",title:"Legacy test",edition,revision,
-  scoring:{correctMarks:2.5,incorrectMarks:-5/6,unansweredMarks:0},
-  questions:[{id:"q1",type:"mcq",section:"General",question:"Legacy question",
-   options:["A","B","C","D"],answer:"B"}]});
- const source=importSimpleQuestionBank(bank("source",1));
- const reviewed=importSimpleQuestionBank(bank("reviewed",2));
- const legacySourceHash=hashJson({content:source.questions[0].content,stimulus:null,media:[]});
+test("P62-B rejects noncanonical schema-2 source-key snapshots",()=>{
+ const bank=revision=>({format:"practice-desk-authoring",version:1,
+  bankId:"p62-schema-reject",examId:"synthetic-comparison",paperId:"p62-schema-reject",
+  title:"Schema rejection test",edition:"custom",revision,
+  scoring:{correctMarks:2.5,incorrectMarks:-5/6},
+  timing:{kind:"untimed",pausePolicy:"allowed"},
+  navigation:{questionNavigation:"free",sectionNavigation:"free",allowReview:true},
+  sections:[{id:"general",title:"General"}],
+  questions:[{id:"q1",examSection:"general",kind:"single-choice",prompt:"Canonical question",
+   options:["A","B","C","D"],answer:"B",provenance:{kind:"ai-original"},qa:{status:"unchecked"}}]});
+ const source=asSource(compileExternalQuestionBank(bank(1)));
+ const reviewed=bindReviewed(source,compileExternalQuestionBank(bank(2)));
+ const sourceHash=hashJson({content:source.questions[0].content,stimulus:null,media:[]});
  const core={schema:2,paperId:reviewed.paper.paperId,sourcePaperRevisionId:source.paper.id,
    sourceAnswerKeyRevisionId:source.answerKey.id,
    entries:[{questionRevisionId:reviewed.questions[0].id,
     originalOptionId:"B",markingRule:source.paper.scoring.defaultRule,
-    sourceSemanticHash:legacySourceHash,comparable:true}]};
+    sourceSemanticHash:sourceHash,comparable:true}]};
  const reference={...core,contentHash:hashJson(core)};
- const attempt={...startGenericAttempt(reviewed,"legacy-snapshot",1000),
+ const attempt={...startGenericAttempt(reviewed,"schema-2-rejected",1000),
   sourceKeyReference:reference,finishedAt:2000};
- validateSourceKeyReference(attempt);
- assert.equal(sourceKeyScore(attempt).comparable,1);
- assert.equal(sourceKeyScore(attempt).maxMarks,2.5);
+ assert.throws(()=>validateSourceKeyReference(attempt),/source-key comparison schema/);
+ assert.throws(()=>sourceKeyScore(attempt),/source-key comparison schema/);
 });

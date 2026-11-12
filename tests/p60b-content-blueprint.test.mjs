@@ -154,7 +154,7 @@ test("P60-B RED: audit reports no keys/base64 and rejects unsupported input/flag
 }));
 
 
-test("P60-B: canonical compiler optionally gates exact single-source publication, preserving old paths",()=>temp(async dir=>{
+test("P60-B: canonical compiler optionally gates exact single-source publication while structural validation remains explicit",()=>temp(async dir=>{
  const plan=await write(dir,"plan.json",mkPlan());
  const source=await write(dir,"source.json",JSON.parse(await readFile(example,"utf8")));
  const out=join(dir,"compiled.json");
@@ -177,8 +177,8 @@ test("P60-B: canonical compiler optionally gates exact single-source publication
  assert.equal(blocked.data.compiled,false);
  assert.equal(blocked.data.blueprint.valid,false);
  await assert.rejects(readFile(join(dir,"blocked.json"),"utf8"));
- const old=compile("validate-bank",source);
- assert.equal(old.status,0,"Legacy no-plan workflow remains usable");
+ const structural=compile("validate-bank",source);
+ assert.equal(structural.status,0,"Structural validation remains available without a blueprint");
 }));
 
 test("P60-B: parent-child allocation contradictions are rejected at plan time, not silently audited",()=>temp(async dir=>{

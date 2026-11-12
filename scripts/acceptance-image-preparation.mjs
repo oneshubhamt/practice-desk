@@ -3,6 +3,7 @@
  */
 import {readFile} from "node:fs/promises";
 import {openHarness,route,records,check,assertNoOverflow} from "./browser/fixtures.mjs";
+import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
 const engine=process.argv[2]||"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
 const {page,context,errors}=await h.open();
@@ -75,28 +76,37 @@ try{
   "P47-3B original media export changed source pixels or author description");
  const dialogueCount=await page.locator("dialog.generic-image-preparation").count();
  check(dialogueCount===1,"preparation dialog disappeared unexpectedly");
- const validBank={format:"practice-desk-bank",version:1,bankId:"cat-figure-prepared",
-  examId:"cat",title:"CAT image preparation verification",revision:1,
-  scoring:{correctMarks:3,incorrectMarks:-1,unansweredMarks:0},
-  media:[entry],questions:[{id:"qa-figure",section:"Quantitative Ability",type:"mcq",
-   question:"Read the exact diagram carefully and select one option.",
-   imageIds:["math-fig"],options:["One","Two","Three","Four"],
-   optionImageIds:[["math-fig"],[],[],[]],answer:"C"}]};
+ const imageDoc=(label,id)=>({format:"practice-desk-rich",version:1,blocks:[
+  {type:"paragraph",content:[{type:"text",text:label},
+    {type:"image",assetId:id,altText:entry.altText}]}
+ ]});
+ const validBank=compileExternalQuestionBank({
+  format:"practice-desk-authoring",version:1,bankId:"cat-figure-prepared",
+  examId:"cat",paperId:"cat-figure-prepared",title:"CAT image preparation verification",
+  revision:1,edition:"custom",scoring:{correctMarks:3,incorrectMarks:-1},
+  timing:{kind:"untimed",pausePolicy:"allowed"},
+  navigation:{questionNavigation:"free",sectionNavigation:"free",allowReview:true},
+  sections:[{id:"qa",title:"Quantitative Ability"}],media:[entry],
+  questions:[{id:"qa-figure",examSection:"qa",subject:"Quantitative Aptitude",
+   kind:"single-choice",prompt:imageDoc("Read the exact diagram carefully and select one option.","math-fig"),
+   options:[imageDoc("One","math-fig"),"Two","Three","Four"],answer:"C",
+   provenance:{kind:"manual"},qa:{status:"unchecked"}}]
+ });
  // Close, verify focus returns to actual Library trigger, then import the JSON.
  await page.locator("dialog.generic-image-preparation button:text-is('Close')").click();
  await modal.waitFor({state:"detached"});
  check(await button.evaluate(el=>document.activeElement===el),"focus was not restored to preparation trigger");
  await page.locator("#g-file").setInputFiles({name:"authored-cat-figure.json",
   mimeType:"application/json",buffer:Buffer.from(JSON.stringify(validBank))});
- await page.waitForFunction(()=>document.querySelector("#g-papers")?.value==="bank:cat-figure-prepared:paper:r1"||
-  document.querySelector("#g-family")?.value?.includes("cat"));
+ await page.waitForFunction(id=>document.querySelector("#g-papers")?.value===id,
+  validBank.paper.id);
  check((await page.locator("#g-papers").inputValue()).includes("cat-figure-prepared"),
   "imported authored media package not selected after validation");
  await page.locator("#g-start").click();await route(page,"exam");
  check(await page.locator(".exam-question .generic-figure").count()===2,
-  "authored diagram and option figure missing after simple-bank import");
+  "authored diagram and option figure missing after canonical package import");
  check(await page.locator(".exam-question .generic-figure").first().getAttribute("src")===diagram,
-  "frozen simple bank changed original diagram bytes");
+  "frozen package changed original diagram bytes");
  check(await page.locator(".exam-question .generic-choice-media-row").count()===1,
   "authored option image missing or nested within radio option");
  const id=new URL(page.url()).searchParams.get("attempt");
@@ -151,22 +161,28 @@ try{
  await page.locator("dialog.generic-image-preparation button:text-is('Close')").click();
  await modal.waitFor({state:"detached"});
  if(convertedMedia){
-  const photographicBank={
-   format:"practice-desk-bank",version:1,bankId:"pgdba-photo-prepared",
-   examId:"pgdba",title:"PGDBA pre-frozen photo verification",revision:1,
-   scoring:{correctMarks:3,incorrectMarks:-1,unansweredMarks:0},
-   media:[convertedMedia],
-   questions:[{id:"q-photo",section:"Data Interpretation",type:"mcq",
-    question:"Inspect the photographic dataset.",imageIds:["photo-one"],
-    options:["First","Second","Third","Fourth"],answer:"A"}]
-  };
+  const photoDoc={format:"practice-desk-rich",version:1,blocks:[
+   {type:"paragraph",content:[{type:"text",text:"Inspect the photographic dataset."},
+    {type:"image",assetId:"photo-one",altText:convertedMedia.altText}]}
+  ]};
+  const photographicBank=compileExternalQuestionBank({
+   format:"practice-desk-authoring",version:1,bankId:"pgdba-photo-prepared",
+   examId:"pgdba",paperId:"pgdba-photo-prepared",title:"PGDBA pre-frozen photo verification",
+   revision:1,edition:"custom",scoring:{correctMarks:3,incorrectMarks:-1},
+   timing:{kind:"untimed",pausePolicy:"allowed"},
+   navigation:{questionNavigation:"free",sectionNavigation:"free",allowReview:true},
+   sections:[{id:"di",title:"Data Interpretation"}],media:[convertedMedia],
+   questions:[{id:"q-photo",examSection:"di",subject:"Data Interpretation",kind:"single-choice",
+    prompt:photoDoc,options:["First","Second","Third","Fourth"],answer:"A",
+    provenance:{kind:"manual"},qa:{status:"unchecked"}}]
+  });
   await page.locator("#g-file").setInputFiles({
    name:"pgdba-prepared-webp.json",mimeType:"application/json",
    buffer:Buffer.from(JSON.stringify(photographicBank))
   });
-  await page.waitForFunction(()=>document.querySelector("#g-papers")?.value==="bank:pgdba-photo-prepared:paper:r1");
+  await page.waitForFunction(id=>document.querySelector("#g-papers")?.value===id,photographicBank.paper.id);
   const stored=(await records(page)).find(x=>x.recordType==="generic-package"&&
-    x.bundle?.paper?.paperId==="bank:pgdba-photo-prepared");
+    x.bundle?.paper?.paperId===photographicBank.paper.paperId);
   check(stored?.bundle?.assets?.length===1&&
     stored.bundle.assets[0].mediaType==="image/webp"&&
     stored.bundle.assets[0].contentHash?.length===64,

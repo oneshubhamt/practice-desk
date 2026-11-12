@@ -1,4 +1,4 @@
-import {validateFsrsOptimizerProfile,type FsrsOptimizerProfile} from "./fsrs-optimizer.ts";
+import {FSRS_OPTIMIZER_BINDING_VERSION,validateFsrsOptimizerProfile,type FsrsOptimizerProfile} from "./fsrs-optimizer.ts";
 
 export interface BrowserFsrsOptimizerAvailability{readonly available:boolean;readonly reason:string;}
 export interface BrowserFsrsOptimizerProgress{readonly stage:string;readonly current:number;readonly total:number;}
@@ -15,7 +15,7 @@ export class FsrsOptimizerRejectedError extends Error{
   super(reasons.join("; "));this.name="FsrsOptimizerRejectedError";this.reasons=[...reasons];
  }
 }
-const CAPABILITY="wasm32-wasip1-0.6.1";
+const CAPABILITY="wasm32-wasip1-"+FSRS_OPTIMIZER_BINDING_VERSION;
 export function browserFsrsOptimizerAvailability():BrowserFsrsOptimizerAvailability{
  if(typeof document==="undefined"||typeof Worker==="undefined"||typeof WebAssembly==="undefined")
    return {available:false,reason:"Browser Worker/WebAssembly support is unavailable."};

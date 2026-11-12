@@ -23,16 +23,16 @@ const mutants=[
  {
   id:"stored-recovery-equal-version-not-protected",
   path:"src/history/frozen.ts",
-  find:'(stored.saveRevision as number) >= (mirror.saveRevision as number)',
-  replace:'(stored.saveRevision as number) > (mirror.saveRevision as number)',
+  find:'stored.saveRevision >= mirror.saveRevision',
+  replace:'stored.saveRevision > mirror.saveRevision',
   testFile:"tests/history-and-persistence.test.mjs",
   testName:"Recovery reference: 576 persisted/mirror precedence combinations, missing IDs, terminal and revision boundaries"
  },
  {
   id:"CAS-next-write-skips-one-revision",
   path:"src/history/concurrency.ts",
-  find:'return expected===null?1:expected+1;',
-  replace:'return expected===null?1:expected+2;',
+  find:'return expected+1;',
+  replace:'return expected+2;',
   testFile:"tests/history-and-persistence.test.mjs",
   testName:"seeded two-tab compare-and-swap interleavings reject stale writes, preserve stored revision"
  },
@@ -74,7 +74,7 @@ const mutants=[
   find:'manifest.digest!==digest(core as Core))',
   replace:'false)',
   testFile:"tests/history-and-persistence.test.mjs",
-  testName:"backup v4 checksum covers records and preferences; size, IDs and timestamp are bounded"
+  testName:"canonical backup checksum covers records and preferences; size, IDs and timestamp are bounded"
  },
  {
   id:"pdf-eof-signature-check-skipped",
@@ -123,7 +123,7 @@ function assertKilled(test,run){
  }
 }
 try{
- for(const dir of ["src","tests","scripts","examples"])
+ for(const dir of ["src","tests","scripts","examples","tools"])
   await cp(join(root,dir),join(sandbox,dir),{recursive:true});
  await cp(join(root,"package.json"),join(sandbox,"package.json"));
  await symlink(join(root,"node_modules"),join(sandbox,"node_modules"),"dir");

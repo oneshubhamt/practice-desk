@@ -1,4 +1,4 @@
-import type { GenericAttempt } from "../app/exam-package.ts";
+import type { GenericAttempt } from "../engine/generic-attempt.ts";
 import { scoreableMaximum } from "../engine/score-ceiling.ts";
 
 export interface ComparableScoreTrend{

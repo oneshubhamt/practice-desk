@@ -3,13 +3,12 @@
  * SHA-256 here is a comparison fingerprint, never source authentication.
  */
 import type {AuthoringDraft,AuthoringQuestion} from "./authoring-draft.ts";
-import type {ExamPackage} from "../app/exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
 import {publicationPlainText} from "./authoring-publisher.ts";
 import {scoreAttempt} from "../engine/scoring.ts";
 import type {CandidateResponse} from "../domain/question.ts";
 import type {CorrectAnswer} from "../domain/answer-key.ts";
 import type {AttemptResponseRecord} from "../domain/attempt.ts";
-import {sha256} from "../domain/hash.ts";
 import {inspectCandidateIntegrity} from "./candidate-integrity.ts";
 
 export type QualityIssue={
@@ -310,7 +309,7 @@ export function inspectExternalQuality(
   const response=expected(entry.answer);
   if(response){
    const record:AttemptResponseRecord={questionRevisionId:question.id,response,
-    flagged:false,timeSpentMs:0,answerChangeCount:0};
+    flagged:false,timeSpentMs:0,firstVisitMs:0,preFirstAnswerMs:0,answerChangeCount:0};
    const result=scoreAttempt(compiled.paper,compiled.answerKey,compiled.questions,
     [record],"1970-01-01T00:00:00.000Z");
    const item=result.items.find(r=>r.questionRevisionId===question.id);

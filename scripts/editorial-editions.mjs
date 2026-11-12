@@ -14,8 +14,8 @@ import {inspectCandidateIntegrity} from "../src/authoring/candidate-integrity.ts
 import {auditQuestionQuality} from "./question-quality.mjs";
 import {createSourceKeyReference} from "../src/engine/source-comparison.ts";
 import {createSourceReviewReference} from "../src/engine/review-source.ts";
-import {validateExamPackage} from "../src/app/exam-package.ts";
-import {questionRevisionHash,paperRevisionHash} from "../src/domain/integrity.ts";
+import {validateExamPackage} from "../src/domain/exam-package.ts";
+import {questionRevisionHash} from "../src/domain/integrity.ts";
 
 const FORMAT="practice-desk-editorial-decisions",LINEAGE_FORMAT="practice-desk-editorial-lineage";
 const sha=s=>createHash("sha256").update(s).digest("hex");
@@ -218,18 +218,11 @@ function compilePair(source,reviewed,rows,changes,a,b){
  const old=inspectAuthoringPublication(sourceDraft(a,"source"));
  if(!old.valid||!old.compiled)throw Error("Original source cannot be packaged: "+
   old.issues.map(x=>x.reason).slice(0,3).join("; "));
- const newer=inspectAuthoringPublication(sourceDraft(b,"reviewed"),[old.compiled]);
+ const sourcePkg=validateExamPackage(old.compiled);
+ const newer=inspectAuthoringPublication(sourceDraft(b,"reviewed"),[sourcePkg],sourcePkg);
  if(!newer.valid||!newer.compiled)throw Error("Reviewed edition cannot be packaged: "+
   newer.issues.map(x=>x.reason).slice(0,3).join("; "));
- const sourcePkg=validateExamPackage(old.compiled);
- const annotated=annotateReviewed(newer.compiled,reviewed,rows,changes);
- // The same exact revision identities exported in editorial-lineage.json must
- // travel with the Reviewed exam into the offline Library and frozen History.
- const boundPaper={...annotated.paper,
-   sourcePaperRevisionId:sourcePkg.paper.id,
-   sourceAnswerKeyRevisionId:sourcePkg.answerKey.id};
- const paper={...boundPaper,contentHash:paperRevisionHash(boundPaper)};
- const reviewedPkg=validateExamPackage({...annotated,paper});
+ const reviewedPkg=annotateReviewed(newer.compiled,reviewed,rows,changes);
  return {sourcePkg,reviewedPkg};
 }
 function inspectPair(sourceInput,reviewedInput,decisions,qualityReview){

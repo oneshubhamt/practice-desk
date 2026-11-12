@@ -1,3 +1,4 @@
+import {STORAGE_TOPOLOGY} from "../storage-topology.ts";
 /** P52: pure exam keyboard policy plus a small local-only preference schema.
  * No new listener: the existing coordinator owns exam keyboard dispatch.
  * Untrusted localStorage is never allowed to introduce privileged chords.
@@ -14,7 +15,7 @@ export type ShortcutBindings={
  readonly answerA:string;readonly answerB:string;readonly answerC:string;readonly answerD:string;
  readonly flag:string;readonly fullscreen:string;
 };
-export const SHORTCUTS_KEY="practiceDesk.shortcuts.v1";
+export const SHORTCUTS_KEY=STORAGE_TOPOLOGY.shortcuts;
 export const SHORTCUT_FIELDS=[
  ["previous","Previous question"],["next","Next question"],
  ["answerA","Choose A"],["answerB","Choose B"],
@@ -65,9 +66,6 @@ export function writeShortcutBindings(value:unknown,storage?:Pick<Storage,"setIt
 }
 export const shortcutKeyLabel=(key:string):string=>key==="arrowleft"?"←":
  key==="arrowright"?"→":key.length===1?key.toUpperCase():key;
-export const EXAM_SHORTCUT_HELP="A–D answer single-choice; Left/Right navigate except on native radios, "+
- "where Alt+Left/Right navigates; M marks/unmarks for review even when paused; F toggles full screen. "+
- "Typing, Display and modal dialogs suspend shortcuts.";
 export function examShortcutHelp(bindings:ShortcutBindings=readShortcutBindings()):string{
  const b=bindings;
  return "Answer "+[b.answerA,b.answerB,b.answerC,b.answerD].map(shortcutKeyLabel).join("/")+

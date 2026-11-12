@@ -283,7 +283,7 @@ export function createImageViewer(root:HTMLElement):ImageViewer{
    const image=frame?.querySelector<HTMLImageElement>("img.generic-figure");
    if(!image)return;
    const trigger=frame?.querySelector<HTMLElement>("[data-image-open]")??hit;
-   // Critical: a thumbnail inside a legacy answer label must NOT activate
+   // Critical: opening a thumbnail inside an answer label must NOT activate
    // the label's radio/checkbox by default, nor advance an exam.
    event.preventDefault();event.stopPropagation();
    open(image,trigger);
