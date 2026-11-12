@@ -275,7 +275,7 @@ test("adjusted score trends require exact frozen key, revision and practice mode
  assert.match(page,/Repeat the same frozen paper, key and mode/);
 });
 
-test("P43 portable family setups survive backup v4 with checksum protection",async()=>{
+test("P43 portable family setups survive canonical backup with checksum protection",async()=>{
  const {makeBackup,verifyBackup}=await import("../src/history/backup.ts");
  const preferences={schema:1,dark:false,scale:100};
  const setups={schema:2,selectedFamilyId:"builtin:ssc-cgl",families:{
@@ -381,14 +381,14 @@ test("generated additive merge is deterministic, idempotent, ordered and non-des
  }
 });
 
-test("backup v4 checksum covers records and preferences; size, IDs and timestamp are bounded",()=>{
+test("canonical backup checksum covers records and preferences; size, IDs and timestamp are bounded",()=>{
  // Authenticated checksum alone must not launder unsupported v4 privileges.
  const unsigned=makeBackup([],{schema:1,dark:false,scale:100},"2026-11-04T03:15:00.000Z");
  assert.equal(verifyBackup(structuredClone(unsigned)).version,4);
  assert.throws(()=>verifyBackup({...unsigned,issuerSignature:"nonexistent"}),/unsupported envelope/);
  assert.throws(()=>verifyBackup({...unsigned,manifest:{...unsigned.manifest,privileged:true}}),/unsupported manifest/);
 
- // The reference property also verifies unlike record types in one v4 archive.
+ // The reference property also verifies unlike record types in one canonical archive.
  // This replaces the separate three-record illustrative backup test.
  const heterogeneous=[
   {id:"opaque-note",recordType:"generic-note",saveRevision:1,finishedAt:null},
@@ -577,7 +577,7 @@ p45test("P45 History health distinguishes pending, locked, failure and browser e
  p45assert.ok(html.includes("No automatic or verified external backup is tracked"));
 });
 
-p45test("P45 compressed backup keeps v4 checksum and resists malformed gzip",async()=>{
+p45test("P45 compressed backup keeps canonical backup checksum and resists malformed gzip",async()=>{
  const {backupDownload,readBackupFile,PLAIN_BACKUP_LIMIT}=await import("../src/history/backup-file.ts");
  const {makeBackup,verifyBackup}=__suite_dep_13;
  const {DEFAULT_PREFERENCES:preferences}=await import("../src/app/preferences.ts");
