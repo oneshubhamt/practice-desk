@@ -11,13 +11,12 @@ import type {RichDocument} from "../domain/rich-document.ts";
 import type {ExamPackage} from "../domain/exam-package.ts";
 import {inspectAuthoringPublication,publicationPlainText,PublicationValidationError,
  type PublicationIssue} from "./authoring-publisher.ts";
-import {inspectExternalQuality,type QualityIssue} from "./external-bank-qa.ts";
+import type {QualityIssue} from "./external-bank-qa.ts";
 import {createDraftExchange,isDraftExchange,readDraftExchange,
  createDraftShelfArchive,readDraftShelfArchive} from "./authoring-exchange.ts";
-import {STAGING_KEY,STAGING_MAX_BYTES,addStagedFiles,validateStagingWorkspace,inspectStagingWorkspace,
- stagedToAuthoringDraft,updateStagedSelection,updateStagedTriage,
- createStagingArchive,readStagingArchive,
- type StagingWorkspace,type StagedFile,type StagedQuestion}
+import {STAGING_MAX_BYTES,inspectStagingWorkspace,
+ updateStagedSelection,updateStagedTriage,createStagingArchive,readStagingArchive,
+ type StagingWorkspace,type StagedQuestion}
  from "./authoring-staging.ts";
 import {authoringSections,setAuthoringSectionMinutes,assignAuthoringQuestionSection} from "./authoring-sections.ts";
 import {authoringPublishedPreview,authoringDraftPreview} from "./authoring-preview.ts";
@@ -26,9 +25,12 @@ import {escapeText} from "../app/html-escape.ts";
 import {wordgardEditorPort} from "./wordgard-adapter.ts";
 import {syllabusForExam,syllabusHeading,UNCLASSIFIED_SUBJECT} from "../learning/syllabus-taxonomy.ts";
 import type {EditorSession,AuthoringEditCommand} from "./vendor-ports.ts";
-import {AUTHORING_KEY,AUTHORING_MAX_BYTES,defaultAuthoringShelf,newAuthoringDraft,
- newAuthoringQuestion,validateAuthoringDraft,validateAuthoringShelf,requiresExternalQuality,
+import {AUTHORING_MAX_BYTES,newAuthoringDraft,newAuthoringQuestion,validateAuthoringDraft,
+ validateAuthoringShelf,requiresExternalQuality,
  type AuthoringDraft,type AuthoringDraftShelf,type AuthoringQuestion} from "./authoring-draft.ts";
+import {createAuthoringWorkspaceStore} from "./authoring-workspace-store.ts";
+import {handoffStagingToDraftShelf,ingestStagedFiles,inspectPublicationWorkflow,
+ preparePublicationWorkflow} from "./authoring-workflow.ts";
 
 const labels:Record<QuestionKind,string>={
  "single-choice":"Single choice (MCQ)",
@@ -307,12 +309,12 @@ export interface AuthoringPublicationActions{
  onClose?():void;
 }
 export function createQuestionAuthoringStudio(actions:AuthoringPublicationActions):AuthoringStudioController{
+ const workspaceStore=createAuthoringWorkspaceStore();
  let host:HTMLElement|null=null,origin:HTMLElement|null=null,session:EditorSession|null=null;
  let shelf:AuthoringDraftShelf|null=null,questionId="",field:Field=initialField;
  let closed=true,renderSequence=0,lastSaveError="",storageBlocked=false,publishing=false,sectionManagerExpanded=false;
  let stage:StagingWorkspace|null=null,stageFilter="all",stageBlocked=false,stageError="";
- // Current per-open bytes serve as a local compare-and-set stamp.
- let lastShelfBytes:string|null=null,lastStageBytes:string|null=null,stageConflict=false;
+ let stageConflict=false;
  const active=():AuthoringDraft=>{
   const current=shelf?.drafts.find(d=>d.id===shelf!.activeId);
   if(!current)throw Error("No active authoring draft");
@@ -329,54 +331,36 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
  };
  const onExternalStorage=(event:StorageEvent):void=>{
   if(closed||!host)return;
-  if((event.key===AUTHORING_KEY||event.key===null)&&
-     localStorage.getItem(AUTHORING_KEY)!==lastShelfBytes){
+  const conflict=workspaceStore.externalChange(event);
+  if(conflict.shelfChanged){
    lastSaveError="Another tab changed authoring drafts. Your edits are UNSAVED; export the draft and reopen.";
    status("Not saved: "+lastSaveError,true);
   }
-  if((event.key===STAGING_KEY||event.key===null)&&
-     localStorage.getItem(STAGING_KEY)!==lastStageBytes){
+  if(conflict.stagingChanged){
    stageConflict=true;
    stageError="Another tab changed AI staging. Export work and reopen.";
    status(stageError,true);
   }
  };
  const load=():void=>{
-  try{
-   const value=localStorage.getItem(AUTHORING_KEY);
-   lastShelfBytes=value;
-   shelf=value?validateAuthoringShelf(JSON.parse(value)):defaultAuthoringShelf();
-   lastSaveError="";storageBlocked=false;
-  }catch(error){
-   storageBlocked=true;
-   // Never overwrite malformed saved data automatically.
-   shelf=defaultAuthoringShelf();
-   lastSaveError="Existing local drafts could not be read: "+
-    (error instanceof Error?error.message:"invalid data")+
-    ". Export or recover the original storage before overwriting it.";
-  }
+  const snapshot=workspaceStore.load();
+  shelf=snapshot.shelf;
+  storageBlocked=snapshot.shelfBlocked;
+  lastSaveError=snapshot.shelfError;
   questionId=active().questions[0]!.id;field=initialField;
-  try{
-   const staged=localStorage.getItem(STAGING_KEY);
-   lastStageBytes=staged;
-   stage=staged?validateStagingWorkspace(JSON.parse(staged)):null;
-   stageBlocked=false;stageConflict=false;stageError="";
-  }catch(error){
-   stage=null;stageBlocked=true;
-   stageError="Staging storage is unreadable; its original bytes are preserved. "+
-    (error instanceof Error?error.message:"Invalid staged data");
-  }
+  stage=snapshot.staging;
+  stageBlocked=snapshot.stagingBlocked;
+  stageConflict=false;
+  stageError=snapshot.stagingError;
  };
  const persist=():boolean=>{
   if(!shelf)return false;
-  if(storageBlocked){status("Damaged saved draft data remains untouched. Export your current draft or explicitly reset damaged storage.",true);return false;}
+  if(storageBlocked){
+   status("Damaged saved draft data remains untouched. Export your current draft or explicitly repair original storage.",true);
+   return false;
+  }
   try{
-   shelf=validateAuthoringShelf(shelf);
-   // Synchronous compare-and-set against bytes loaded in this tab.
-   if(localStorage.getItem(AUTHORING_KEY)!==lastShelfBytes)
-    throw Error("Another tab changed authoring drafts; export unsaved changes and reopen.");
-   const bytes=JSON.stringify(shelf);
-   localStorage.setItem(AUTHORING_KEY,bytes);lastShelfBytes=bytes;
+   shelf=workspaceStore.saveShelf(shelf);
    lastSaveError="";
    status("Draft saved locally on this device · "+new Date().toLocaleTimeString());
    return true;
@@ -387,26 +371,16 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   }
  };
  const persistStage=(next:StagingWorkspace|null):void=>{
-  if(stageBlocked)throw Error("Existing staged files are unreadable. Reset damaged staging explicitly.");
-  if(stageConflict||localStorage.getItem(STAGING_KEY)!==lastStageBytes){
-   stageConflict=true;
-   throw Error("Another tab changed AI staging; export work and reopen without overwriting.");
-  }
-  if(next){
-   const validated=validateStagingWorkspace(next),bytes=JSON.stringify(validated);
-   localStorage.setItem(STAGING_KEY,bytes);lastStageBytes=bytes;stage=validated;
-  }else{
-   localStorage.removeItem(STAGING_KEY);lastStageBytes=null;stage=null;
+  if(stageConflict)throw Error("Another tab changed AI staging; export work and reopen without overwriting.");
+  try{stage=workspaceStore.saveStaging(next);}
+  catch(error){
+   if(error instanceof Error&&error.message.startsWith("Another tab"))stageConflict=true;
+   throw error;
   }
  };
  const stageFiles=async(files:readonly File[]):Promise<void>=>{
   if(!files.length)return;
-  const inputs:StagedFile[]=[];
-  for(const file of files){
-   if(file.size>1700000)throw Error(file.name+" is too large for a safely staged source; split the bank");
-   inputs.push({name:file.name,source:JSON.parse(await file.text())});
-  }
-  persistStage(addStagedFiles(stage??{schema:1,files:[],selected:[]},inputs));
+  persistStage(await ingestStagedFiles(stage,files));
   stageFilter="all";
   await render();
   status("Staged "+files.length+" AI source file(s) without publishing any questions.");
@@ -611,17 +585,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   click("pd-author-save",()=>{capture();persist();void render();});
 
   const validationBox=find<HTMLElement>("pd-author-validation");
-  const inspectPublication=()=>{
-   const report=inspectAuthoringPublication(active(),actions.existing());
-   const quality=report.compiled&&requiresExternalQuality(active())?
-    inspectExternalQuality(active(),report.compiled,active().id):null;
-   const errors:PublicationIssue[]=[...report.issues,
-    ...(quality?.issues.filter(i=>i.severity==="error").map(i=>({
-     field:i.path,reason:i.code+": "+i.message,...(i.questionId?{questionId:i.questionId}:{})
-    }))??[])];
-   const warnings=quality?.issues.filter(i=>i.severity==="warning")??[];
-   return {report,errors,warnings};
-  };
+  const inspectPublication=()=>inspectPublicationWorkflow(active(),actions.existing());
   const dryRun=():string=>{
    if(!requiresExternalQuality(active()))return "";
    const compiled=inspectAuthoringPublication(active(),actions.existing()).compiled;
@@ -703,41 +667,22 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
       throw Error("Explicitly acknowledge all remaining QA warnings for this staged draft before publication.");
     if(!find<HTMLInputElement>("pd-author-confirm").checked)
       throw Error("Confirm your source, answer keys and marking rules before publishing.");
-    let packageValue=report.compiled;
-    if(!packageValue)throw Error("Authoritative validation did not return the compiled publication");
-    if(requiresExternalQuality(active())){
-     const claimedReviewer=find<HTMLInputElement>("pd-author-reviewer")?.value.trim()??"";
-     const reviewNote=find<HTMLInputElement>("pd-author-review-note")?.value.trim()??"";
-     if(Boolean(claimedReviewer)!==Boolean(reviewNote))
-      throw Error("To attribute an independent review, provide both a reviewer name and an evidence note.");
-     if(warnings.length||claimedReviewer){
-      const acceptedAt=new Date().toISOString();
-      changeDraft(d=>({...d,questions:d.questions.map((q,i)=>{
-       const codes=[...new Set(warnings.filter(issue=>
-        issue.questionId===q.id||(!issue.questionId&&i===0)).map(issue=>issue.code))];
-       if(!codes.length&&!claimedReviewer)return q;
-       const previous=q.qa?.review;
-       const warningNote="Author acknowledges displayed QA warnings; factual and source verification were NOT performed.";
-       const nextNote=reviewNote||warningNote;
-       // Do not silently replace an earlier, separately attributed per-item
-       // staging decision when later publication warnings are acknowledged.
-       const priorLine=previous?"Earlier attributed review by "+previous.reviewer+
-        " ("+previous.reviewedAt+"): "+previous.note+"; ":"";
-       return {...q,qa:{status:q.qa?.status??"needs-review",review:{
-        reviewer:claimedReviewer||previous?.reviewer||"Author",
-        reviewedAt:acceptedAt,
-        note:(priorLine+nextNote).slice(0,500),
-        acceptedWarningCodes:[...new Set([...(previous?.acceptedWarningCodes??[]),...codes])]
-       }}};
-      })}));
-      if(lastSaveError)throw Error("Could not persist the author-attributed QA acknowledgement");
-      const checked=inspectPublication();
-      if(!checked.report.valid||checked.errors.length||!checked.report.compiled)
-       throw Error("Publication invalid after review evidence was attached");
-      packageValue=checked.report.compiled;
+    const prepared=preparePublicationWorkflow(active(),actions.existing(),{
+     confirmed:find<HTMLInputElement>("pd-author-confirm").checked,
+     acceptWarnings:find<HTMLInputElement>("pd-author-accept-warnings")?.checked??false,
+     reviewer:find<HTMLInputElement>("pd-author-reviewer")?.value.trim()??"",
+     reviewNote:find<HTMLInputElement>("pd-author-review-note")?.value.trim()??"",
+     acceptedAt:new Date().toISOString()
+    });
+    if(prepared.draftChanged){
+     const before=shelf!;
+     shelf={...before,drafts:before.drafts.map(d=>d.id===prepared.draft.id?prepared.draft:d)};
+     if(!persist()){
+      shelf=before;
+      throw Error("Could not persist the author-attributed QA acknowledgement");
      }
     }
-    await actions.publish(packageValue);
+    await actions.publish(prepared.packageValue);
     // The integrated Library owner refreshes the screen only after a
     // successfully committed package; do not change anything here afterwards.
    }catch(error){
@@ -776,11 +721,10 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   };
   if(stageBlocked)click("pd-stage-recover",()=>{
    if(!confirm("Discard unreadable staging bytes? Recover or export original data first."))return;
-   try{if(localStorage.getItem(STAGING_KEY)!==lastStageBytes)
-      throw Error("Another tab changed AI staging; reopen before resetting.");
-     localStorage.removeItem(STAGING_KEY);lastStageBytes=null;
-     stageBlocked=false;stageConflict=false;stageError="";stage=null;void render();}
-   catch(error){status(error instanceof Error?error.message:"Unable to reset staging",true);}
+   try{
+     workspaceStore.resetUnreadableStaging();
+     stageBlocked=false;stageConflict=false;stageError="";stage=null;void render();
+   }catch(error){status(error instanceof Error?error.message:"Unable to reset staging",true);}
   });
   if(stage&&staged){
    find<HTMLSelectElement>("pd-stage-filter").onchange=e=>{
@@ -834,19 +778,15 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    click("pd-stage-handoff",()=>{
     try{
      if(storageBlocked||lastSaveError)throw Error("Draft storage unsafe; repair it before import.");
-     if(shelf!.drafts.length>=20)throw Error("20 local drafts already exist. Export and clear an older draft.");
-     const incoming=stagedToAuthoringDraft(stage!);
-     if(shelf!.drafts.some(d=>d.id===incoming.id))
-      throw Error("This stage already has a Wordgard draft. Open the saved draft to preserve its edits. Staged files cannot overwrite it.");
      capture();
-     const next=validateAuthoringShelf({schema:1,activeId:incoming.id,drafts:[...shelf!.drafts,incoming]});
      const oldShelf=shelf!;
-     shelf=next;
+     const handoff=handoffStagingToDraftShelf(stage!,oldShelf);
+     shelf=handoff.shelf;
      if(!persist()){
       shelf=oldShelf;
       throw Error("Staged handoff was not saved: "+lastSaveError);
      }
-     questionId=incoming.questions[0]!.id;field=initialField;
+     questionId=handoff.draft.questions[0]!.id;field=initialField;
      void render();
     }catch(error){status(error instanceof Error?error.message:"Staged handoff failed",true);}
    });
