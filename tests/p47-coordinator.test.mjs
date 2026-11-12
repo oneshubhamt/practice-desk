@@ -7,7 +7,7 @@ const source=async file=>readFile(new URL("../"+file,import.meta.url),"utf8");
 const splitNames=[
  "library-controller","result-controller","exam-controller","route-controller",
  "persistence-controller","history-controller","screen-controller",
- "lifecycle-controller","authoring-controller","learning-controller"
+ "lifecycle-controller","authoring-controller","learning-controller","storage-health-controller"
 ];
 test("P47-6 full coordinator is a small composition root, not a relocated second monolith",async()=>{
  const text=await source("src/app/generic-ui.ts");
@@ -33,7 +33,8 @@ test("P47-6 independently owned route, Library, exam, Results, History, persiste
   "screen-controller":"drawWorkspaceScreen|reportWorkspaceNotice",
   "lifecycle-controller":"startWorkspaceTimer|disposeWorkspace|dispatchWorkspaceVisibility",
   "authoring-controller":"createWorkspaceAuthoringStudio",
-  "learning-controller":"createWorkspaceLearningDesk|addLearningNotebookCard"
+  "learning-controller":"createWorkspaceLearningDesk|addLearningNotebookCard",
+  "storage-health-controller":"showWorkspaceStorageEstimate|requestWorkspacePersistentStorage|workspaceStorageHealth"
  };
  const ctx=await source("src/app/coordinator-context.ts");
  assert.match(ctx,/export interface WorkspaceContext/);
@@ -52,13 +53,14 @@ test("P47-6 independently owned route, Library, exam, Results, History, persiste
   "screen-controller":"ScreenControllerContext",
   "lifecycle-controller":"LifecycleControllerContext",
   "authoring-controller":"AuthoringControllerContext",
-  "learning-controller":"LearningControllerContext"
+  "learning-controller":"LearningControllerContext",
+  "storage-health-controller":"StorageHealthControllerContext"
  };
  for(const [name,required] of Object.entries(expected)){
   const text=await source("src/app/"+name+".ts");
   assert.match(text,new RegExp("import type \\{"+contexts[name]+"\\} from \\\"\\./coordinator-context\\.ts\\\""),
     name+" must depend on its narrow capability slice");
-  assert.doesNotMatch(text,/:s*any\b|as any\b/);
+  assert.doesNotMatch(text,/:\s*any\b|as any\b/);
   for(const value of required.split("|"))
     assert.match(text,new RegExp("\\b"+value+"\\b"),name+" must own "+value);
   assert.ok(text.split("\n").length<600,name+" too large for a focused controller");
@@ -123,4 +125,20 @@ test("P47-6 no undeclared global event subscriptions or duplicate clock authorit
    "Unmount must dispose "+type);
  assert.equal((life.match(/window\.setInterval\(/g)??[]).length,1);
  assert.match(life,/window\.clearInterval\(owner\.timer\)/);
+});
+
+
+test("Persistence orchestration has one backend contract and no raw storage fork",async()=>{
+ const persistence=await source("src/app/persistence-controller.ts");
+ const backend=await source("src/history/workspace-store.ts");
+ const health=await source("src/app/storage-health-controller.ts");
+ assert.doesNotMatch(persistence,/\bindexedDB\b|\.transaction\s*\(|ATTEMPTS_STORE|SNAPSHOTS_STORE|fallbackStamp|storageKey/);
+ assert.match(backend,/export interface WorkspaceStore/);
+ assert.match(backend,/class IndexedDbWorkspaceStore implements WorkspaceStore/);
+ assert.match(backend,/class LocalFallbackWorkspaceStore implements WorkspaceStore/);
+ for(const method of ["loadRecoverable","loadVerified","write","insertMany","delete","deleteCompleted","readAuthoritative","pruneSnapshots"])
+  assert.match(backend,new RegExp("\\b"+method+"\\b"),"Backend contract must own "+method);
+ assert.doesNotMatch(health,/indexedDB|ATTEMPTS_STORE|SNAPSHOTS_STORE|\.transaction\s*\(/);
+ assert.match(health,/navigator\.storage\?\.estimate/);
+ assert.match(health,/navigator\.storage\?\.persist/);
 });
