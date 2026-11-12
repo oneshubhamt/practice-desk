@@ -23,6 +23,9 @@ import * as __suite_dep_17 from "../src/learning/revision-settings.ts";
 import * as __suite_dep_18 from "../src/learning/fsrs-optimizer.ts";
 import {revisionInventory as independentRevisionInventory} from "../src/learning/revision-selection.ts";
 import * as __suite_dep_19 from "ts-fsrs/models/fsrs-7";
+import * as __suite_dep_20 from "../tools/fsrs-optimizer/optimizer-pipeline.mjs";
+import * as __suite_dep_21 from "../tools/fsrs-optimizer/optimizer-policy.mjs";
+import * as __suite_dep_22 from "node:fs/promises";
 
 // === Consolidated coverage: tests/analytics-property-model.test.mjs — retained assertions ===
 {
@@ -627,5 +630,96 @@ test("speed classification uses a sufficient section median and distinguishes fa
  assert.equal(slowWrong.wrongAttempts,1,"slow/incorrect is not excluded from revision");
  assert.equal(slowCorrect.observedAttempts,1);
  assert.equal(slowCorrect.wrongAttempts,0,"slow/correct still qualifies for revision");
+});
+}
+
+
+{
+const test=__suite_dep_0.default;
+const assert=__suite_dep_1.default;
+const {runFsrsOptimizerPipeline,OptimizerPipelineRejectedError,OPTIMIZER_STAGES}=__suite_dep_20;
+const {
+ OPTIMIZER_PROFILE_SCHEMA,OPTIMIZER_BINDING_VERSION,OPTIMIZER_MODEL_VERSION,
+ MIN_TRAIN_ITEMS,MIN_HOLDOUT_ITEMS,MIN_HOLDOUT_CARDS
+}=__suite_dep_21;
+const {readFile}=__suite_dep_22;
+
+const evidence=(count=384)=>({
+ items:Array.from({length:count},(_,i)=>({i})),
+ cardIds:Array.from({length:count},(_,i)=>"card-"+Math.floor(i/4))
+});
+const fakeBinding=(personalizedLogLoss=0.4)=>({
+ convertCsvToFsrsItemsWithCardIds(){return evidence();},
+ async computeParameters(_items,options){
+  options.progress?.(0,1);options.progress?.(1,1);
+  return Array(34).fill(options.cardIds.length===320?1:2);
+ },
+ async evaluateWithTimeSeriesSplits(){return {logLoss:0.35,rmseBins:0.18};},
+ FSRSBinding:class{
+  constructor(weights){this.weights=weights;}
+  evaluate(){
+   return this.weights?{logLoss:personalizedLogLoss,rmseBins:0.2}:{logLoss:0.5,rmseBins:0.2};
+  }
+ }
+});
+
+test("FSRS optimizer native/browser pipeline owns conversion, holdout gate, retraining and profile assembly once",async()=>{
+ const stages=[],holdout=[];
+ const profile=await runFsrsOptimizerPipeline({
+  binding:fakeBinding(),bytes:new Uint8Array([1,2,3]),
+  sourceSha256:"a".repeat(64),trainedAt:"2026-11-12T00:00:00.000Z",
+  makeOptions:(cardIds,stage)=>{stages.push([stage,cardIds.length]);return {cardIds};},
+  progress:(stage,current,total)=>holdout.push([stage,current,total])
+ });
+ assert.equal(profile.schema,OPTIMIZER_PROFILE_SCHEMA);
+ assert.equal(profile.bindingVersion,OPTIMIZER_BINDING_VERSION);
+ assert.equal(profile.model,OPTIMIZER_MODEL_VERSION);
+ assert.equal(profile.evidenceItems,384);
+ assert.equal(profile.evaluation.holdout.trainItems,320);
+ assert.equal(profile.evaluation.holdout.holdoutItems,64);
+ assert.equal(profile.evaluation.holdout.holdoutCards,16);
+ assert.equal(profile.evaluation.holdout.gate,"passed");
+ assert.equal(profile.training.validationCandidateTrainedItems,320);
+ assert.equal(profile.training.finalRetrainedOnAllEvidence,true);
+ assert.deepEqual(stages.map(x=>x[0]),[
+  OPTIMIZER_STAGES.validation,OPTIMIZER_STAGES.final,OPTIMIZER_STAGES.crossValidation
+ ]);
+ assert.deepEqual(holdout,[
+  [OPTIMIZER_STAGES.holdout,0,2],[OPTIMIZER_STAGES.holdout,1,2],[OPTIMIZER_STAGES.holdout,2,2]
+ ]);
+ assert.equal(profile.weights.length,34);
+});
+
+test("FSRS optimizer shared pipeline rejects insufficient evidence and held-out regression before final training",async()=>{
+ const small=fakeBinding();
+ small.convertCsvToFsrsItemsWithCardIds=()=>evidence(60);
+ await assert.rejects(
+  runFsrsOptimizerPipeline({binding:small,bytes:new Uint8Array([1]),sourceSha256:"b".repeat(64)}),
+  error=>error instanceof OptimizerPipelineRejectedError&&error.kind==="evidence"&&
+   error.reasons.some(x=>x.includes(String(MIN_TRAIN_ITEMS))&&x.includes(String(MIN_HOLDOUT_ITEMS))&&
+    x.includes(String(MIN_HOLDOUT_CARDS)))
+ );
+ let calls=0;
+ const regressing=fakeBinding(0.6);
+ const original=regressing.computeParameters;
+ regressing.computeParameters=async(...args)=>{calls++;return original(...args);};
+ await assert.rejects(
+  runFsrsOptimizerPipeline({binding:regressing,bytes:new Uint8Array([1]),sourceSha256:"c".repeat(64)}),
+  error=>error instanceof OptimizerPipelineRejectedError&&error.kind==="gate"
+ );
+ assert.equal(calls,1,"held-out failure must not reach final all-evidence retraining");
+});
+
+test("Native and browser optimizer entrypoints are runtime adapters, not duplicate training pipelines",async()=>{
+ const native=await readFile(new URL("../tools/fsrs-optimizer/optimize.mjs",import.meta.url),"utf8");
+ const browser=await readFile(new URL("../tools/fsrs-optimizer/browser-worker.mjs",import.meta.url),"utf8");
+ const pipeline=await readFile(new URL("../tools/fsrs-optimizer/optimizer-pipeline.mjs",import.meta.url),"utf8");
+ for(const source of [native,browser])assert.match(source,/runFsrsOptimizerPipeline/);
+ for(const duplicate of ["splitChronologicalHoldout(","evaluateHoldoutGate(","validationCandidateTrainedItems:"])
+  for(const source of [native,browser])assert.equal(source.includes(duplicate),false,
+   "runtime adapter duplicated pipeline semantic: "+duplicate);
+ assert.match(pipeline,/splitChronologicalHoldout/);
+ assert.match(pipeline,/evaluateHoldoutGate/);
+ assert.match(pipeline,/validationCandidateTrainedItems/);
 });
 }

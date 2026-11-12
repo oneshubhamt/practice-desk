@@ -1,3 +1,7 @@
+export const OPTIMIZER_MODEL_VERSION="FSRS-7";
+export const OPTIMIZER_PROFILE_SCHEMA="practice-desk-fsrs-profile/v3";
+export const OPTIMIZER_BINDING_VERSION="0.6.1";
+export const OPTIMIZER_BROWSER_CAPABILITY="wasm32-wasip1-"+OPTIMIZER_BINDING_VERSION;
 export const HOLDOUT_SEGMENTS=6;
 export const MIN_TRAIN_ITEMS=64;
 export const MIN_HOLDOUT_ITEMS=64;
