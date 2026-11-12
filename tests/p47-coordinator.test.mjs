@@ -142,3 +142,15 @@ test("Persistence orchestration has one backend contract and no raw storage fork
  assert.match(health,/navigator\.storage\?\.estimate/);
  assert.match(health,/navigator\.storage\?\.persist/);
 });
+
+
+test("Lower-layer modules cannot depend on application composition",async()=>{
+ for(const dir of ["domain","engine","history","learning"]){
+  const entries=await readdir(new URL("../src/"+dir+"/",import.meta.url));
+  for(const file of entries.filter(name=>name.endsWith(".ts"))){
+   const text=await source("src/"+dir+"/"+file);
+   assert.doesNotMatch(text,/from ["']\.\.\/app\//,
+     dir+"/"+file+" must not import an app-layer module");
+  }
+ }
+});

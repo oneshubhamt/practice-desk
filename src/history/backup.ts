@@ -1,8 +1,6 @@
 import { sha256 } from "../domain/hash.ts";
-import { validateDisplayPreferences } from "../app/preferences.ts";
-import type { DisplayPreferences } from "../app/preferences.ts";
-import { validatePracticeSetups } from "../app/practice-selection.ts";
-import type { PracticeSetups } from "../app/practice-selection.ts";
+import {validateDisplayPreferences,validatePracticeSetups,
+ type DisplayPreferences,type PracticeSetups} from "../workspace-settings.ts";
 import type { GenericAttempt } from "../engine/generic-attempt.ts";
 import {compactAttempt,isSharedAttempt,verifiedSnapshot,reconstructRecords} from "./shared-store.ts";
 import type {SharedSnapshot} from "./shared-store.ts";

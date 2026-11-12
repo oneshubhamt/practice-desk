@@ -10,7 +10,6 @@ import type {GenericAttempt} from "../engine/generic-attempt.ts";
 import type {QuestionRevision} from "../domain/question.js";
 import type {QuestionRevisionId} from "../domain/ids.js";
 
-import {scoreAttempt} from "../engine/scoring.ts";
 import {manualGradeLimit,manualGradeSummary,setManualGrade} from "../engine/manual-grading.ts";
 import {sourceKeyScore} from "../engine/source-comparison.ts";
 
@@ -32,8 +31,8 @@ export function packageForResult(owner:ResultControllerContext,saved:GenericAtte
 
 export function renderCurrentResultHTML(owner:ResultControllerContext):string {
    if(!owner.attempt)return "";
-   const paper=owner.attempt.frozen.paper,s=owner.attempt.result??scoreAttempt(paper,owner.attempt.frozen.key,owner.attempt.frozen.questions,
-      owner.attempt.state.responses,new Date().toISOString());
+   const paper=owner.attempt.frozen.paper,s=owner.attempt.result;
+   if(!s)throw new Error("Completed attempt has no immutable score");
    const qs=owner.resultTab==="review"?new Map(owner.attempt.frozen.questions.map(q=>[q.id,q])):new Map<string,QuestionRevision>();
    // allowReview controls post-completion detailed question/solution disclosure,
    // not question navigation during the attempt or numerical score visibility.
