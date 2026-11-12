@@ -50,7 +50,7 @@ Optimizer evidence feeds one activation contract across two runtimes. The native
 
 ## 4. Storage and recovery
 
-The browser uses IndexedDB with **deduplicated immutable snapshots** and compact attempt records. Transactional revision/CAS protects against stale concurrent writes; a saved terminal record and newer revision must defeat stale emergency mirrors. Restore is additive and conflict-checked; backup v4 has strict bounds and a SHA-bound manifest. Corrupt or dangling records should be surfaced/quarantined rather than fabricating history.
+The browser uses IndexedDB with **deduplicated immutable snapshots** and compact attempt records. Transactional revision/CAS protects against stale concurrent writes; a saved terminal record and newer revision must defeat stale emergency mirrors. Restore is additive and conflict-checked; the canonical backup archive has strict bounds and a SHA-bound manifest. Corrupt or dangling records should be surfaced/quarantined rather than fabricating history.
 
 Wordgard drafts/staging do **not** implicitly become completed-attempt History backups. Export the corresponding archives separately. Local persistence is not cloud sync, cross-device backup, or physical-OS eviction certification.
 
