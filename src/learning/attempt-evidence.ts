@@ -27,14 +27,6 @@ function median(values:readonly number[]):number|null{
  const x=[...values].sort((a,b)=>a-b),middle=Math.floor(x.length/2);
  return x.length%2===0?((x[middle-1]??0)+(x[middle]??0))/2:(x[middle]??null);
 }
-const scoringRule=(a:GenericAttempt,id:QuestionRevisionId):MarkingRule=>{
- const section=a.frozen.paper.sections.find(s=>s.questionRevisionIds.includes(id));
- const question=a.frozen.questions.find(q=>q.id===id);
- if(!section||!question)throw Error("Question not in frozen attempt");
- const override=a.frozen.key.entries.find(e=>e.questionRevisionId===id)?.scoringOverride;
- return override??section.scoringOverride??a.frozen.paper.scoring.byQuestionKind?.[question.content.kind]??
-   a.frozen.paper.scoring.defaultRule;
-};
 function addCounts(row:SectionEvidence,verdict:Verdict,marks:number):void{
  row.total++;
  row.marks+=marks;
@@ -54,6 +46,18 @@ export function attemptEvidence(a:GenericAttempt):AttemptEvidence|null{
  if(a.finishedAt===null||!a.result)return null;
  const byId=new Map(a.state.responses.map(r=>[r.questionRevisionId,r]));
  const results=new Map(a.result.items.map(i=>[i.questionRevisionId,i]));
+ const questions=new Map(a.frozen.questions.map(q=>[q.id,q]));
+ const keyEntries=new Map(a.frozen.key.entries.map(e=>[e.questionRevisionId,e]));
+ const sectionsByQuestion=new Map<QuestionRevisionId,GenericAttempt["frozen"]["paper"]["sections"][number]>();
+ for(const section of a.frozen.paper.sections)
+  for(const id of section.questionRevisionIds)sectionsByQuestion.set(id,section);
+ const scoringRule=(id:QuestionRevisionId):MarkingRule=>{
+  const section=sectionsByQuestion.get(id),question=questions.get(id);
+  if(!section||!question)throw Error("Question not in frozen attempt");
+  const override=keyEntries.get(id)?.scoringOverride;
+  return override??section.scoringOverride??a.frozen.paper.scoring.byQuestionKind?.[question.content.kind]??
+    a.frozen.paper.scoring.defaultRule;
+ };
  const sectionRows:SectionEvidence[]=[];
  const speeds:SpeedBucket[]=[
    {label:"Fast",correct:0,incorrect:0,items:0},
@@ -75,9 +79,9 @@ export function attemptEvidence(a:GenericAttempt):AttemptEvidence|null{
      if((item.verdict==="correct"||item.verdict==="incorrect")&&(answer?.timeSpentMs??0)>0)
        times.push(answer!.timeSpentMs);
      if(item.verdict==="incorrect"){
-       wrongToCorrect+=scoringRule(a,id).correctMarks-item.marks;countWrong++;
+       wrongToCorrect+=scoringRule(id).correctMarks-item.marks;countWrong++;
      }else if(item.verdict==="unanswered"){
-       skippedToCorrect+=scoringRule(a,id).correctMarks-item.marks;countSkipped++;
+       skippedToCorrect+=scoringRule(id).correctMarks-item.marks;countSkipped++;
      }
    }
    row.coverage=row.answered+row.unanswered?row.answered/(row.answered+row.unanswered):0;

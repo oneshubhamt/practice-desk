@@ -10,7 +10,6 @@ import type {SessionEvent} from "../engine/session.ts";
 import {createSessionClock} from "../engine/clock.ts";
 import type {DeletionIntent} from "../history/deletion-policy.ts";
 import type {SourcePaperBank,ReviewPatchBank} from "../content/schema.js";
-import {createLearningDesk} from "./learning-ui.ts";
 import type {StorageHealth} from "./storage-health.ts";
 import {DEFAULT_HISTORY_QUERY,restoreHistoryQuery,type HistoryQuery} from "./history-query.ts";
 import type {ResultTab,ReviewFilter} from "./result-presentation.ts";
@@ -19,7 +18,6 @@ import {examFamilyCatalog,BUILTIN_CGL_FAMILY} from "./exam-families.ts";
 import {createScreenRenderer} from "./screen-renderer.ts";
 import {createImageViewer} from "./image-viewer.ts";
 import {createImagePreparation} from "./image-preparation.ts";
-import {createQuestionAuthoringStudio} from "../authoring/authoring-studio.ts";
 import {createNativeRouter,type AppRoute,type RouteContext,type NativeRouter} from "./navigation.ts";
 import {createWorkspaceAuthoringStudio} from "./authoring-controller.ts";
 import {createWorkspaceLearningDesk,addLearningNotebookCard,addLearningResultCards} from "./learning-controller.ts";
@@ -92,8 +90,8 @@ export function mountExamWorkspace(
  const hydration=new Promise<void>(resolve=>{hydrationDone=resolve;});
 
  let owner!:WorkspaceContext;
- let authoringStudio!:ReturnType<typeof createQuestionAuthoringStudio>;
- let learningDesk!:ReturnType<typeof createLearningDesk>;
+ let authoringStudio!:WorkspaceContext["authoringStudio"];
+ let learningDesk!:WorkspaceContext["learningDesk"];
  let router!:NativeRouter;
  let timer=0;
 

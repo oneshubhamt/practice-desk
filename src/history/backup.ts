@@ -2,7 +2,7 @@ import { sha256 } from "../domain/hash.ts";
 import {validateDisplayPreferences,validatePracticeSetups,
  type DisplayPreferences,type PracticeSetups} from "../workspace-settings.ts";
 import type { GenericAttempt } from "../engine/generic-attempt.ts";
-import {compactAttempt,isSharedAttempt,verifiedSnapshot,reconstructRecords} from "./shared-store.ts";
+import {compactAttempt,isSharedAttempt,reconstructRecords} from "./shared-store.ts";
 import type {SharedSnapshot} from "./shared-store.ts";
 
 /** Canonical backup archive; only the current format is accepted.

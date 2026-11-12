@@ -1,5 +1,5 @@
 import type { PaperRevision } from "../domain/exam.js";
-import type { CandidateResponse, QuestionRevision } from "../domain/question.js";
+import type { CandidateResponse } from "../domain/question.js";
 import type { QuestionRevisionId, SectionId } from "../domain/ids.js";
 import type { AttemptResponseRecord } from "../domain/attempt.js";
 

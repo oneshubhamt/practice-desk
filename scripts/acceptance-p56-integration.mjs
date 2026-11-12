@@ -7,7 +7,8 @@
  */
 import {openHarness,offlineUrl,route,records,check} from "./browser/fixtures.mjs";
 import {pkg} from "../tests/fixtures/six-kinds.mjs";
-import {startGenericAttempt,transitionGenericAttempt} from "../src/app/exam-package.ts";
+import {startGenericAttempt} from "../src/app/exam-package.ts";
+import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {compactAttempt} from "../src/history/shared-store.ts";
 import {serializeVerifiedBackup} from "../src/history/backup.ts";
 import {DEFAULT_PREFERENCES} from "../src/app/preferences.ts";

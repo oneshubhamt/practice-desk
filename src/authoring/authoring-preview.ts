@@ -4,7 +4,7 @@
  */
 import type {AuthoringDraft,AuthoringQuestion} from "./authoring-draft.ts";
 import type {ExamPackage} from "../domain/exam-package.ts";
-import type {QuestionContent,QuestionRevision,CandidateResponse,QuestionKind} from "../domain/question.ts";
+import type {QuestionContent,QuestionRevision,CandidateResponse} from "../domain/question.ts";
 import type {CorrectAnswer} from "../domain/answer-key.ts";
 import {publicationPlainText} from "./authoring-publisher.ts";
 import {examPreflight} from "../app/exam-preflight.ts";

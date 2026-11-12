@@ -9,7 +9,9 @@ import {createQuestionAuthoringStudio} from "../authoring/authoring-studio.ts";
 
 import type {AuthoringControllerContext} from "./coordinator-context.ts";
 
-export function createWorkspaceAuthoringStudio(owner:AuthoringControllerContext):ReturnType<typeof createQuestionAuthoringStudio>{return createQuestionAuthoringStudio({
+export function createWorkspaceAuthoringStudio(owner:AuthoringControllerContext):ReturnType<typeof createQuestionAuthoringStudio>{
+ let studio!:ReturnType<typeof createQuestionAuthoringStudio>;
+ studio=createQuestionAuthoringStudio({
    existing:()=>[...owner.packages.values()],
    onClose:()=>{if(!owner.disposed&&owner.view==="library")owner.draw();},
    publish:async bundle=>{
@@ -31,7 +33,9 @@ export function createWorkspaceAuthoringStudio(owner:AuthoringControllerContext)
      owner.saveSelection();
      owner.warning="Published "+signed.questions.length+" user-authored questions as a new immutable "+
        signed.paper.edition+" revision. The paper is ready to practise; existing attempts are unchanged.";
-     owner.authoringStudio.beforeRender();
+     studio.beforeRender();
      owner.draw();
    }
- });}
+ });
+ return studio;
+}

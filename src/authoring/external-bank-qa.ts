@@ -9,7 +9,6 @@ import {scoreAttempt} from "../engine/scoring.ts";
 import type {CandidateResponse} from "../domain/question.ts";
 import type {CorrectAnswer} from "../domain/answer-key.ts";
 import type {AttemptResponseRecord} from "../domain/attempt.ts";
-import {sha256} from "../domain/hash.ts";
 import {inspectCandidateIntegrity} from "./candidate-integrity.ts";
 
 export type QualityIssue={
