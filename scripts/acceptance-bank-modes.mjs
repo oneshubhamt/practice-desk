@@ -204,7 +204,7 @@ for(const v of [
   await page.locator("#g-library").click();await route(page,"library");
 
   await page.locator("#g-file").setInputFiles({name:"apfc-nat.json",mimeType:"application/json",
-   buffer:Buffer.from(JSON.stringify(bank))});
+   buffer:Buffer.from(JSON.stringify(validPackage))});
   await page.waitForFunction(()=>document.querySelector("#g-papers")?.value==="bank:apfc-starter-demo:paper:r1");
   check(await page.locator("#g-papers optgroup").evaluateAll(xs=>
    xs.some(x=>x.label==="Imported / custom examinations"&&
