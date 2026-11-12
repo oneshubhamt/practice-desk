@@ -7,10 +7,10 @@ import type { GenericAttempt } from "../app/exam-package.ts";
 import {compactAttempt,isSharedAttempt,verifiedSnapshot,reconstructRecords} from "./shared-store.ts";
 import type {SharedSnapshot} from "./shared-store.ts";
 
-/** Current clean-slate backup format; no legacy-version reader.
+/** Canonical backup archive; only the current format is accepted.
  * Frozen paper, key, questions and media occur ONCE per content digest.
  * Attempts keep only their individual timing/responses/results and a reference. */
-export interface BackupV4 {
+export interface BackupArchive {
  readonly format:"practice-desk-backup";
  readonly version:4;
  readonly exportedAt:string;
@@ -25,7 +25,7 @@ export interface BackupV4 {
    readonly snapshotCount:number;
  };
 }
-type Core=Omit<BackupV4,"manifest">;
+type Core=Omit<BackupArchive,"manifest">;
 const digest=(core:Core):string=>sha256(JSON.stringify(core));
 
 function coreBackup(records:readonly Record<string,unknown>[],
@@ -45,7 +45,7 @@ function coreBackup(records:readonly Record<string,unknown>[],
    ...(savedSetups?{setups:savedSetups}:{})};
 }
 export function makeBackup(records:readonly Record<string,unknown>[],
- preferences:DisplayPreferences,exportedAt:string,setups?:PracticeSetups|null):BackupV4{
+ preferences:DisplayPreferences,exportedAt:string,setups?:PracticeSetups|null):BackupArchive{
  const core=coreBackup(records,preferences,exportedAt,setups);
  return {...core,manifest:{algorithm:"sha256",digest:digest(core),
    recordCount:core.records.length,snapshotCount:core.snapshots.length}};
@@ -61,11 +61,11 @@ export function serializeVerifiedBackup(records:readonly Record<string,unknown>[
    recordCount:core.records.length,snapshotCount:core.snapshots.length};
  return serialized.slice(0,-1)+',"manifest":'+JSON.stringify(manifest)+'}';
 }
-export function verifyBackup(raw:unknown):BackupV4{
+export function verifyBackup(raw:unknown):BackupArchive{
  if(!raw||typeof raw!=="object"||Array.isArray(raw)||
    ![Object.prototype,null].includes(Object.getPrototypeOf(raw)))
    throw Error("Invalid backup");
- const b=raw as Partial<BackupV4>;
+ const b=raw as Partial<BackupArchive>;
  // A SHA-256 checksum is NOT a publisher signature. Unknown fields are not
  // part of the versioned format and must not slip into additive restores.
  const validFields=["format","version","exportedAt","records","snapshots","preferences","setups","manifest"];
@@ -98,7 +98,7 @@ export function verifyBackup(raw:unknown):BackupV4{
  if(b.records.some(x=>x.recordType==="generic-attempt"&&
    (!isSharedAttempt(x)||"frozen" in x)))
    throw Error("Backup contains noncompact attempt content");
- return b as BackupV4;
+ return b as BackupArchive;
 }
 export function planBackupMerge<T extends {readonly id:string}>(
  existing:readonly T[],incoming:readonly T[],activeId?:string
