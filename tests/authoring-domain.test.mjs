@@ -515,7 +515,7 @@ const {compileAuthoringPublication}=__dep_6;
 const {validateExamPackage}=__dep_7;
 const {sha256}=__dep_10;
 test("P62-A candidate view excludes explanation-only image and alt text, review retains both",async()=>{
- const {renderQuestionPrompt,renderGenericControls,assetHTML,renderAuthoredText}=
+ const {renderQuestionPrompt,renderGenericControls,supplementalAssetHTML,renderAuthoredText}=
    await import("../src/app/question-content-view.ts");
  const png="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/tAAAAABJRU5ErkJggg==";
  const dataUri="data:image/png;base64,"+png;
@@ -541,7 +541,10 @@ test("P62-A candidate view excludes explanation-only image and alt text, review 
  assert.deepEqual(pkg.assets.map(x=>x.id),["stem-figure","solution-figure"]);
  const question=pkg.questions[0];
  const candidate=renderQuestionPrompt(pkg,question)+
-   assetHTML(pkg,question.content.assetIds)+renderGenericControls(pkg,question);
+   supplementalAssetHTML(pkg,question.content.assetIds,question.content.richPrompt)+
+   renderGenericControls(pkg,question);
+ assert.equal((candidate.match(/class="generic-figure"/g)??[]).length,1,
+   "Rich prompt media must render once while remaining indexed by assetIds");
  assert.match(candidate,/Candidate-safe chart/);
  assert.doesNotMatch(candidate,/SOLUTION ONLY|solution-figure/);
  const solution=renderAuthoredText(pkg,"",question.content.richExplanation);
@@ -554,7 +557,8 @@ test("P62-A candidate view excludes explanation-only image and alt text, review 
  assert.deepEqual(package2.questions[0].content.explanationAssetIds,["solution-figure"]);
  assert.deepEqual(package2.assets.map(x=>x.id),["solution-figure"]);
  const candidate2=renderQuestionPrompt(package2,package2.questions[0])+
-  assetHTML(package2,package2.questions[0].content.assetIds);
+  supplementalAssetHTML(package2,package2.questions[0].content.assetIds,
+   package2.questions[0].content.richPrompt);
  assert.doesNotMatch(candidate2,/SOLUTION ONLY|solution-figure/);
  assert.match(renderAuthoredText(package2,"",
   package2.questions[0].content.richExplanation),/SOLUTION ONLY correct option B/);
