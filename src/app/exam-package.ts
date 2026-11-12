@@ -1,3 +1,4 @@
+/** Application assembly/configuration adapters. Canonical package and attempt contracts live below app/. */
 import { importCglBank } from "../content/import-cgl.ts";
 import { sha256 } from "../domain/hash.ts";
 import { answerKeyRevisionHash, paperRevisionHash } from "../domain/integrity.ts";
@@ -15,7 +16,6 @@ import { startSession, transition } from "../engine/session.ts";
 import type { SessionState, SessionEvent } from "../engine/session.ts";
 import { scoreAttempt } from "../engine/scoring.ts";
 import { freezeAttempt } from "../history/frozen.ts";
-import type { FrozenAttemptContent } from "../history/frozen.ts";
 
 /** Convert existing CGL content without changing the original bank or editions. */
 export function builtinCglPackages(sources: SourcePaperBank, patches: ReviewPatchBank,

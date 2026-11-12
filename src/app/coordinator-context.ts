@@ -1,4 +1,6 @@
-/** Single typed capability owner; mutable backing state is never cloned. */
+/** Composition-root workspace contract. Feature controllers consume explicit capability slices,
+ * so cross-feature access is enforced by TypeScript rather than convention.
+ */
 
 
 import {type RecordItem} from "./stored-record-validator.ts";
