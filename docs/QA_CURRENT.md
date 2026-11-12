@@ -29,7 +29,7 @@ Markdown-only pushes and pull requests are excluded from the expensive runtime w
 
 A current application change is release-eligible only when all of these gates pass on the same tested source ancestry:
 
-- **Core:** strict TypeScript, deterministic standalone build, complete Node test suite, clean dependency graph and the targeted mutation-sensitivity witnesses.
+- **Core:** strict TypeScript (including unused-local rejection), deterministic standalone build, complete Node test suite, clean dependency graph and the targeted mutation-sensitivity witnesses.
 - **Optimizer:** native FSRS optimizer smoke, native/WASM semantic parity and the independently generated static Worker/WASM build.
 - **Chromium:** all source-mapped offline candidate journeys plus the full browser/WASM optimizer activation path.
 - **Firefox and WebKit:** all cross-browser source-mapped journeys plus the browser/WASM optimizer probe.
@@ -49,7 +49,7 @@ Normal passing CI does not capture screenshots merely to create evidence.
 
 Prefer independent expected values, state models and adversarial counterexamples over implementation mirroring. A changed contract needs a witness that would fail for a plausible semantic defect.
 
-For scoring, preserve six-kind semantics, fractional/partial credit, exclusions and exact denominators. For persistence, challenge stale tabs, CAS revisions, corruption, recovery and additive backup. For authoring, challenge candidate secrecy, source lineage, publication gating and corrupt local state. For learning, challenge scheduling evidence, optimizer activation policy and privacy boundaries. Browser tests should exercise actual user journeys rather than duplicate pure-domain assertions.
+For scoring, preserve six-kind semantics, fractional/partial credit, exclusions and exact denominators. For persistence, challenge stale tabs, CAS revisions, corruption, recovery and additive backup. For authoring, challenge candidate secrecy, source lineage, publication gating and corrupt local state. For learning, challenge scheduling evidence, optimizer activation policy and privacy boundaries. Result/review analytics additionally exercise the 2,000-question package ceiling in Node. Browser tests should exercise actual user journeys rather than duplicate pure-domain assertions.
 
 The mutation suite is intentionally targeted: every listed mutant must have a green baseline and then fail for the named assertion. It is **not** a repository-wide mutation score.
 

@@ -15,9 +15,9 @@ Neither generated target is derived by rewriting the other. The application has 
 
 | Layer | Main modules | Owns |
 |---|---|---|
-| Domain | `src/domain/` | Canonical package/question/key/scoring/media/calculator contracts and validation |
-| Shared workspace contracts | `src/workspace-settings.ts` | Pure persisted preference/practice-setup contracts and validation; no browser storage |
-| Engine | `src/engine/` | Generic attempt/session transitions, response legality, timing, scoring and Source comparison |
+| Domain | `src/domain/` | Canonical package/question/key/scoring/media/calculator contracts and validation; no runtime CGL UI policy |
+| Shared workspace contracts | `src/workspace-settings.ts` | Pure persisted preference/practice-setup contracts, including built-in CGL runtime mode; no browser storage |
+| Engine | `src/engine/` | Generic attempt/session transitions, terminal scoring, response legality, timing and Source comparison |
 | App composition | `src/app/generic-ui.ts`, `coordinator-context.ts` | One workspace composition root; feature controllers receive explicit capability slices |
 | Feature UI | `src/app/*-controller.ts`, render/view modules | Library, Exam, Results, History, Learning, authoring shell, navigation and storage-health presentation |
 | Persistence | `src/history/` | `WorkspaceStore`, IndexedDB and limited localStorage resilience adapters, immutable snapshots, CAS, backup/recovery/deletion |
@@ -41,7 +41,7 @@ validated package/source
 
 Question identity and content/key revisions are separate. Exam sections own timing/navigation; Subject → Topic → Subtopic owns semantic classification. Printed Source and corrected Reviewed editions remain distinct, and advisory comparison never rewrites historical scores.
 
-Candidate-visible resources are narrower than reviewer/solution resources: keys, explanations, disputes and explanation-only assets stay outside the permitted pre-review surface.
+Candidate-visible resources are narrower than reviewer/solution resources: keys, explanations, disputes and explanation-only assets stay outside the permitted pre-review surface. Attempt mode is chosen explicitly when an attempt is created; runtime CGL selection is not part of `ExamPackage`, and evidence-selected/custom compositions freeze as `custom-practice`.
 
 ## 4. Persistence and recovery
 
@@ -49,7 +49,7 @@ Application orchestration talks to one `WorkspaceStore` interface. IndexedDB is 
 
 Attempts use compact records plus deduplicated immutable snapshots. Stale sibling-tab writes fail closed; terminal/newer records defeat older emergency mirrors. Backup restore is additive, bounded and integrity-checked. Corrupt/dangling data is surfaced or quarantined rather than silently repaired into invented history.
 
-Storage-health/quota/persistence prompts are application presentation concerns. Backup validation consumes the pure workspace-settings contract rather than importing application storage adapters. Authoring drafts/staging and attempt History are separate persistence/export lifecycles.
+Storage-health/quota/persistence prompts are application presentation concerns. Backup validation consumes the pure workspace-settings contract rather than importing application storage adapters. Terminal attempt persistence is also the single owner of candidate-only scratch cleanup, so calculator state and unsaved choice drafts cannot outlive a completed attempt. Authoring drafts/staging and attempt History are separate persistence/export lifecycles.
 
 ## 5. Authoring and content publication
 
@@ -69,7 +69,7 @@ Exact optimizer floors, chronology settings, profile fields and upstream binding
 
 ## 7. Rendering and navigation
 
-Feature controllers receive narrow `…ControllerContext` capability slices from the composition root. The exam renderer selectively reconciles changed UI so focus and unsaved candidate inputs are not casually destroyed.
+Feature controllers receive narrow `…ControllerContext` capability slices from the composition root. The exam renderer selectively reconciles changed UI so focus and unsaved candidate inputs are not casually destroyed. Results build one bounded per-render question/evidence lookup rather than repeatedly rescanning the frozen attempt; no persistent analytics cache is maintained.
 
 Native Navigation API is preferred where available; the tested fragment-route fallback preserves same-file `file://` operation. Responsive support includes narrow/zoom cases such as 195px at 140% scale. Linux WebKit automation does not certify physical Mac Safari, touch/IME or assistive technology.
 
