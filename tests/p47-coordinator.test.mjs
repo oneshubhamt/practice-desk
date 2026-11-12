@@ -13,7 +13,7 @@ test("P47-6 full coordinator is a small composition root, not a relocated second
  const text=await source("src/app/generic-ui.ts");
  assert.ok(text.split("\n").length<=350,"Coordinator must be composition-only");
  assert.match(text,/mountExamWorkspace/);
- assert.match(text,/const owner:CoordinatorContext/);
+ assert.match(text,/let owner!:WorkspaceContext/);
  assert.match(text,/authoringStudio=createWorkspaceAuthoringStudio\(owner\)/);
  assert.match(text,/learningDesk=createWorkspaceLearningDesk\(owner\)/);
  assert.match(text,/timer=startWorkspaceTimer\(owner\)/);
@@ -36,14 +36,29 @@ test("P47-6 independently owned route, Library, exam, Results, History, persiste
   "learning-controller":"createWorkspaceLearningDesk|addLearningNotebookCard"
  };
  const ctx=await source("src/app/coordinator-context.ts");
- assert.match(ctx,/export interface CoordinatorContext/);
+ assert.match(ctx,/export interface WorkspaceContext/);
  assert.match(ctx,/readonly records:Map<string, RecordItem>/);
  assert.match(ctx,/readonly packages:Map<string, ExamPackage>/);
  assert.match(ctx,/\battempt:GenericAttempt \| null/);
+ assert.match(ctx,/storageBackend:WorkspaceStore \| null/);
+ assert.doesNotMatch(ctx,/\bdb:IDBDatabase|fallbackStamp|storedSnapshots|readonly storageKey/);
+ const contexts={
+  "library-controller":"LibraryControllerContext",
+  "result-controller":"ResultControllerContext",
+  "exam-controller":"ExamControllerContext",
+  "history-controller":"HistoryControllerContext",
+  "route-controller":"RouteControllerContext",
+  "persistence-controller":"PersistenceControllerContext",
+  "screen-controller":"ScreenControllerContext",
+  "lifecycle-controller":"LifecycleControllerContext",
+  "authoring-controller":"AuthoringControllerContext",
+  "learning-controller":"LearningControllerContext"
+ };
  for(const [name,required] of Object.entries(expected)){
   const text=await source("src/app/"+name+".ts");
-  assert.match(text,/import type \{CoordinatorContext\}/);
-  assert.doesNotMatch(text,/:\s*any\b|as any\b/);
+  assert.match(text,new RegExp("import type \\{"+contexts[name]+"\\} from \\\"\\./coordinator-context\\.ts\\\""),
+    name+" must depend on its narrow capability slice");
+  assert.doesNotMatch(text,/:s*any\b|as any\b/);
   for(const value of required.split("|"))
     assert.match(text,new RegExp("\\b"+value+"\\b"),name+" must own "+value);
   assert.ok(text.split("\n").length<600,name+" too large for a focused controller");

@@ -139,15 +139,19 @@ class IndexedDbWorkspaceStore implements WorkspaceStore {
    const store=tx.objectStore(ATTEMPTS_STORE);
    const snapshots=tx.objectStore(SNAPSHOTS_STORE);
    let conflict:Error|null=null;
+   const uniqueSnapshots=new Map<string,SharedSnapshot>();
    for(const record of records){
     if(!isFullAttempt(record)){store.add(record);continue;}
     const packed=compactAttempt(record);
-    const existing=snapshots.get(packed.snapshot.id);
+    uniqueSnapshots.set(packed.snapshot.id,packed.snapshot);
+    store.add(packed.row);
+   }
+   for(const snapshot of uniqueSnapshots.values()){
+    const existing=snapshots.get(snapshot.id);
     existing.onsuccess=()=>{
      try{
       if(existing.result)verifiedSnapshot(existing.result as SharedSnapshot);
-      else snapshots.add(packed.snapshot);
-      store.add(packed.row);
+      else snapshots.add(snapshot);
      }catch(error){conflict=error instanceof Error?error:new Error("Invalid stored snapshot");tx.abort();}
     };
    }

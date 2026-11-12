@@ -22,6 +22,7 @@ import * as __suite_dep_16 from "../src/content/import-cgl.ts";
 import * as __suite_dep_17 from "../src/history/frozen.ts";
 import * as __suite_dep_18 from "../src/engine/session.ts";
 import * as __suite_dep_19 from "../src/engine/scoring.ts";
+import * as __suite_storage_health from "../src/app/storage-health.ts";
 
 // === Consolidated coverage: tests/history-cross-paper-marks.test.mjs — retained assertions ===
 {
@@ -561,7 +562,8 @@ const p45test=__suite_dep_0.default;
 const p45assert=__suite_dep_1.default;
 
 p45test("P45 History health distinguishes pending, locked, failure and browser eviction",()=>{
- const {healthSummary,historyHTML}=__suite_dep_7;
+ const {historyHTML}=__suite_dep_7;
+ const {healthSummary}=__suite_storage_health;
  const base={pendingWrites:0,lastCommittedAt:null,lastFailure:null,locked:false,loading:false,inMemoryRecords:0};
  p45assert.match(healthSummary({...base,loading:true}),/Loading stored records/);
  p45assert.match(healthSummary({...base,pendingWrites:2}),/2 writes pending/);
@@ -699,4 +701,60 @@ p45test("P45-B shared snapshot also stores publisher keys, source review and exp
  p45assert.deepEqual(hydrated[0].sourceKeyReference,key);
  p45assert.deepEqual(hydrated[1].sourceReviewReference,review);
  p45assert.equal(hydrated[0].frozen.questions,hydrated[1].frozen.questions);
+});
+
+
+p45test("Persistence backend contract gives fallback one CAS/add/delete path and detects external change",async()=>{
+ const {createLocalFallbackWorkspaceStore}=await import("../src/history/workspace-store.ts");
+ class MemoryStorage{
+  values=new Map();
+  getItem(key){return this.values.has(key)?this.values.get(key):null;}
+  setItem(key,value){this.values.set(key,String(value));}
+  removeItem(key){this.values.delete(key);}
+  clear(){this.values.clear();}
+  key(index){return [...this.values.keys()][index]??null;}
+  get length(){return this.values.size;}
+ }
+ const storage=new MemoryStorage();
+ const store=createLocalFallbackWorkspaceStore(storage,"history");
+ const loaded=await store.loadRecoverable();
+ p45assert.deepEqual(loaded.records,[]);
+ const first={id:"card-1",recordType:"learning-card",saveRevision:1};
+ await store.write(first,null);
+ await p45assert.rejects(store.write({...first,saveRevision:2},null),/Another tab already created/);
+ await store.write({...first,saveRevision:2},1);
+ await store.insertMany([{id:"card-2",recordType:"learning-card",saveRevision:1}]);
+ p45assert.deepEqual(JSON.parse(storage.getItem("history")).map(x=>x.id),["card-1","card-2"]);
+ await store.delete("card-2",1,"learning-card");
+ p45assert.deepEqual(JSON.parse(storage.getItem("history")).map(x=>x.id),["card-1"]);
+
+ const completed={id:"done",recordType:"generic-attempt",saveRevision:1,finishedAt:123};
+ await store.insertMany([completed]);
+ await store.deleteCompleted([{id:"done",saveRevision:1}]);
+ p45assert.equal(JSON.parse(storage.getItem("history")).some(x=>x.id==="done"),false);
+
+ const external=JSON.stringify([{id:"outside",recordType:"learning-card",saveRevision:1}]);
+ storage.setItem("history",external);
+ p45assert.equal(store.externalStorageChanged({key:"history",newValue:external}),true);
+ await p45assert.rejects(
+  store.write({id:"later",recordType:"learning-card",saveRevision:1},null),/Another tab changed/
+ );
+ p45assert.equal((await store.loadVerified()).records[0].id,"outside",
+  "Recovery export reads authoritative fallback bytes even after a conflict");
+});
+
+p45test("Persistence backend refuses malformed fallback bytes without overwriting them",async()=>{
+ const {createLocalFallbackWorkspaceStore}=await import("../src/history/workspace-store.ts");
+ const storage={
+  value:"{broken",
+  getItem(){return this.value;},
+  setItem(_key,value){this.value=String(value);},
+  removeItem(){this.value=null;},
+  clear(){this.value=null;},
+  key(){return null;},
+  get length(){return this.value===null?0:1;}
+ };
+ const store=createLocalFallbackWorkspaceStore(storage,"history");
+ await p45assert.rejects(store.loadRecoverable(),/Unexpected token|JSON/);
+ p45assert.equal(storage.value,"{broken","Malformed current bytes must remain untouched");
 });
