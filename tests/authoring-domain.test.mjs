@@ -529,29 +529,36 @@ test("P62-A candidate view excludes explanation-only image and alt text, review 
  const authored={...q,prompt:doc("stem-figure","Candidate-safe chart"),
    explanation:doc("solution-figure","SOLUTION ONLY correct option B"),
    source:"P62-A synthetic media regression",
-   options:["One","Two","Three","Four"].map(plainRichDocument),answer:"B"};
+   options:[doc("option-figure","Candidate-safe option diagram"),
+     ...["Two","Three","Four"].map(plainRichDocument)],answer:"B"};
  const input={...draft,examId:"upsc-epfo-apfc",paperId:"p62-explanation-media",
    title:"P62-A isolated solution image regression",
    assets:[asset("stem-figure","Candidate-safe chart"),
+     asset("option-figure","Candidate-safe option diagram"),
      asset("solution-figure","SOLUTION ONLY correct option B")],questions:[authored]};
  const pkg=compileAuthoringPublication(input);
  assert.equal(validateExamPackage(pkg),pkg);
  assert.deepEqual(pkg.questions[0].content.assetIds,["stem-figure"]);
  assert.deepEqual(pkg.questions[0].content.explanationAssetIds,["solution-figure"]);
- assert.deepEqual(pkg.assets.map(x=>x.id),["stem-figure","solution-figure"]);
+ assert.deepEqual(pkg.questions[0].content.options[0].assetIds,["option-figure"]);
+ assert.deepEqual(pkg.assets.map(x=>x.id),["stem-figure","option-figure","solution-figure"]);
  const question=pkg.questions[0];
  const candidate=renderQuestionPrompt(pkg,question)+
    supplementalAssetHTML(pkg,question.content.assetIds,question.content.richPrompt)+
    renderGenericControls(pkg,question);
- assert.equal((candidate.match(/class="generic-figure"/g)??[]).length,1,
-   "Rich prompt media must render once while remaining indexed by assetIds");
+ assert.equal((candidate.match(/class="generic-figure"/g)??[]).length,2,
+   "Rich prompt and option media must each render once while remaining indexed by assetIds");
+ assert.match(candidate,/class="generic-choice-media-row"/);
+ assert.doesNotMatch(candidate,/<label[^>]*>[\s\S]*generic-image-open[\s\S]*<\/label>/,
+   "Option image enlargement must remain outside the answer label");
  assert.match(candidate,/Candidate-safe chart/);
  assert.doesNotMatch(candidate,/SOLUTION ONLY|solution-figure/);
  const solution=renderAuthoredText(pkg,"",question.content.richExplanation);
  assert.match(solution,/SOLUTION ONLY correct option B/);
  const onlyExplanation={...input,paperId:"p62-explanation-only",
    assets:[asset("solution-figure","SOLUTION ONLY correct option B")],
-   questions:[{...authored,prompt:plainRichDocument("Which option is correct?")}]};
+   questions:[{...authored,prompt:plainRichDocument("Which option is correct?"),
+     options:["One","Two","Three","Four"].map(plainRichDocument)}]};
  const package2=compileAuthoringPublication(onlyExplanation);
  assert.equal(package2.questions[0].content.assetIds,undefined);
  assert.deepEqual(package2.questions[0].content.explanationAssetIds,["solution-figure"]);
