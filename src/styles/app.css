@@ -31,7 +31,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
 @media(max-width:760px){.generic-workspace .generic-layout{grid-template-columns:1fr}.pad{padding:16px}main{padding:15px 12px 45px}.wrap{padding:11px 12px}}
 @media(max-width:430px){.display-tools .btn{font-size:11px;padding:6px}.generic-workspace .generic-heading{align-items:stretch}}
 
-/* Pass 5 — notebook and evidence-based learning, using the shared responsive shell. */
+/* notebook and evidence-based learning, using the shared responsive shell. */
 .learning-entry{margin-top:18px;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .learning-entry h2{margin-bottom:4px}.learning-entry p{margin-bottom:0}
 .learning-layout{margin-top:18px}.learning-filter{width:auto;max-width:160px;padding:7px;min-width:120px}
@@ -44,7 +44,7 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
 @media(max-width:760px){.learning-entry{padding:16px}.learning-layout{grid-template-columns:1fr}}
 
 
-/* Pass 8 evidence presentation — v11-grade composition is a separate Pass 9 gate. */
+/* evidence presentation — v11-grade composition is a separate gate. */
 .learning-metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:11px;margin:12px 0 18px}
 .learning-metric{display:grid;gap:5px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px;min-width:0}
 .learning-metric strong{font-size:.85em;color:var(--muted)}.learning-metric b{font-size:1.12em;font-variant-numeric:tabular-nums}
@@ -56,8 +56,8 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
 @media(max-width:430px){.learning-metric-grid{grid-template-columns:1fr 1fr}.learning-metric{padding:10px}}
 
 
-/* PASS 9 — one considered visual system for the library, exam, history and review.
-   Preserve native keyboard semantics and light/dark preferences. */
+/* one considered visual system for the library, exam, history and review.
+ Preserve native keyboard semantics and light/dark preferences. */
 :root{
   --navy:#192d49;--soft:#f8fafd;--soft-blue:#eaf3ff;--bad:#a93440;--amber:#976015;
   --shadow:0 10px 30px rgba(27,48,78,.055);--shadow-hover:0 12px 30px rgba(22,56,108,.095);
@@ -136,7 +136,7 @@ select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-vis
 .ongoing-banner .btn{white-space:nowrap}
 .generic-workspace .home-grid{grid-template-columns:minmax(0,1.58fr) minmax(295px,1fr);align-items:start;gap:18px}
 /* The resume panel is a separate Library section. Match the 18px gutter
-   between Paper and Selected paper; no spacing change without saved attempts. */
+ between Paper and Selected paper; no spacing change without saved attempts. */
 .generic-workspace #g-pending-attempts + .home-grid{margin-top:18px}
 .home-side{display:grid;gap:18px;min-width:0}
 .home-picker .section-header{margin-bottom:22px;border-bottom:1px solid var(--line);padding-bottom:13px}
@@ -354,7 +354,7 @@ select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-vis
 .learning-answer .btn{min-width:84px}
 @media(max-width:760px){.learning-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.learning-revision-callout{padding:16px}}
 
-/* Pass 11 — v11 section counts and in-page exam-only focus layout. */
+/* v11 section counts and in-page exam-only focus layout. */
 .generic-sections .exam-section-tab{display:flex;flex:1 1 145px;min-width:0;flex-direction:column;align-items:flex-start;justify-content:center;gap:3px;padding:10px 12px;text-align:left}
 .generic-sections .exam-section-tab b{font-size:12px;line-height:1.4}
 .generic-sections .exam-section-tab small{font-size:10px;line-height:1.45;font-weight:620;opacity:.87}
@@ -371,7 +371,7 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
  .exam-header-actions #g-exam-full{white-space:normal}
 }
 
-/* Pass 12 — accessible, exam-generic completed-answer comparison. */
+/* accessible, exam-generic completed-answer comparison. */
 .generic-review .review-opt{cursor:default;white-space:pre-wrap}
 .generic-review .review-opt.review-option-correct{
  border:1px solid var(--good);background:color-mix(in srgb,var(--good) 11%,var(--panel))
@@ -397,7 +397,7 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
 .generic-review .worked-solution-body{border-top:1px solid var(--line);padding-top:12px}
 .score.standout b small{font-size:.55em;color:var(--muted);white-space:nowrap}
 
-/* Pass 13: storage/management and explicit v11-style theme selection. */
+/* storage/management and explicit v11-style theme selection. */
 .history-management-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:22px}
 .history-score-trend{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
 .history-management-grid .danger{margin-top:7px}
@@ -406,7 +406,7 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
 .display-theme-choices [aria-pressed="true"]{border-color:var(--blue);background:var(--soft-blue);font-weight:800}
 @media(max-width:760px){.history-management-grid{grid-template-columns:1fr}}
 
-/* Pass 14: evidence-linked question review and compact coaching. */
+/* evidence-linked question review and compact coaching. */
 .result-coaching{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px;margin-bottom:18px}
 .result-coaching>.panel{min-width:0}
 .slow-list{display:grid;gap:7px;margin-top:12px}
@@ -419,8 +419,8 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
 @media(max-width:800px){.result-coaching{grid-template-columns:1fr}}
 @media(max-width:450px){.slow-link{align-items:flex-start;flex-direction:column;gap:4px}.slow-link>span:last-child{white-space:normal}}
 
-/* Pass 15 — responsive/AT restitution, scoped to the generic multi-exam app.
-   The route status is screen-reader-only, never a visually hidden control. */
+/* responsive/AT restitution, scoped to the generic multi-exam app.
+ The route status is screen-reader-only, never a visually hidden control. */
 .sr-only{position:absolute!important;width:1px!important;height:1px!important;
  padding:0!important;margin:-1px!important;overflow:hidden!important;
  clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
@@ -466,7 +466,7 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
 }
 
 /* Respect the user-selected 85–140% scale in headings as well as body copy.
-   Pixel-sized headings otherwise remained fixed at the highest text setting. */
+ Pixel-sized headings otherwise remained fixed at the highest text setting. */
 .generic-workspace h1{
  font-size:clamp(calc(25px * var(--type-scale)),
                  calc(2.5vw * var(--type-scale)),
@@ -475,9 +475,9 @@ html.immersive:has(#g-exam-full) .generic-workspace .exam-grid{grid-template-col
 .generic-workspace h2{font-size:calc(19px * var(--type-scale))}
 .generic-workspace h3{font-size:calc(15px * var(--type-scale))}
 
-/* Pass35: the header is a normal-flow landmark, never a sticky container.
-   Its independent Aa sibling remains viewport-fixed across all routes.
-   Immersive Exam hides the unused brand header, not the detached controls. */
+/* the header is a normal-flow landmark, never a sticky container.
+ Its independent Aa sibling remains viewport-fixed across all routes.
+ Immersive Exam hides the unused brand header, not the detached controls. */
 header{position:static;z-index:auto}
 html{scroll-padding-top:0}
 html.immersive:has(#g-exam-full) header{display:none}
@@ -516,8 +516,8 @@ html.immersive:has(#g-exam-full) header{display:none}
 .app-independent-footer b{display:block;color:var(--ink);font-size:.88em;margin-bottom:5px}
 .app-independent-footer p{max-width:1000px;font-size:.79em;margin:0;line-height:1.55}
 
-/* Pass 15 screenshot audit: mobile controls previously wrapped the immersive
-   toggle onto a whole extra line above the question. Keep all three usable. */
+/* screenshot audit: mobile controls previously wrapped the immersive
+ toggle onto a whole extra line above the question. Keep all three usable. */
 @media(min-width:301px) and (max-width:550px){
  .exam-header{padding-bottom:10px}
  .exam-header-actions{width:100%;display:flex;flex-wrap:nowrap;justify-content:space-between;gap:6px}
@@ -529,8 +529,8 @@ html.immersive:has(#g-exam-full) header{display:none}
  .exam-progress{margin-bottom:9px}
 }
 
-/* Pass 22: draft answers are explicitly unscored; conflicting native matching
-   selections stay editable via mouse and keyboard, with direct row feedback. */
+/* draft answers are explicitly unscored; conflicting native matching
+ selections stay editable via mouse and keyboard, with direct row feedback. */
 .generic-response-group .generic-inline-warning{
  margin:9px 0 0;padding:9px 12px;border-left:3px solid var(--amber);
  background:var(--soft);color:var(--ink);line-height:1.5
@@ -542,10 +542,10 @@ html.immersive:has(#g-exam-full) header{display:none}
  background:var(--soft)
 }
 
-/* Pass 25 — laptop Library: restore v11's action-first information hierarchy.
-   Deliberately scoped to the Library and >= 981px; the six-kind exam,
-   results, History and compact/mobile accessibility rules are not restyled.
-   Do not hide metrics, warnings or preflight content; show them after setup. */
+/* laptop Library: restore v11's action-first information hierarchy.
+ Deliberately scoped to the Library and >= 981px; the six-kind exam,
+ results, History and compact/mobile accessibility rules are not restyled.
+ Do not hide metrics, warnings or preflight content; show them after setup. */
 @media (min-width:981px){
  main:has(.home-grid){padding-top:15px}
  .generic-workspace .home-heading{margin:0 0 13px!important;align-items:center}
@@ -574,15 +574,15 @@ html.immersive:has(#g-exam-full) header{display:none}
  .home-stats{margin:17px 0 10px;gap:11px}
  .home-stat{padding:11px 15px}
  .home-stat b{font-size:21px;margin-top:2px}
-}
-/* Screen-reader-only setup heading remains the accessible label for the
-   second-level task; the visible Test library heading is not duplicated. */
 
-/* Pass 26 — action-first exam density at laptop sizes (L02/L03/L04).
-   Do not globally shrink font scale or suppress passages/figures. Above 980px,
-   make navigation, question and readable scrollable passages available before
-   the fold; preserve the same buttons and answer key confidentiality. */
-@media (min-width:981px){
+/* Screen-reader-only setup heading remains the accessible label for the
+ second-level task; the visible Test library heading is not duplicated. */
+
+/* action-first exam density at laptop sizes (L02/L03/L04).
+ Do not globally shrink font scale or suppress passages/figures. Above 980px,
+ make navigation, question and readable scrollable passages available before
+ the fold; preserve the same buttons and answer key confidentiality. */
+
  main:has(.exam-grid){padding-top:12px}
  .generic-workspace .exam-header{margin:0 0 8px!important;padding-bottom:7px;gap:9px}
  .exam-header .eyebrow{margin-bottom:3px}
@@ -637,14 +637,14 @@ html.immersive:has(#g-exam-full) header{display:none}
  .generic-workspace .exam-sidebar .generic-palette{gap:5px!important;margin:8px 0}
  .exam-sidebar .generic-palette .num{min-height:37px}
  .exam-sidebar .palette-legend{margin:11px 0 0;padding-top:9px;gap:6px}
-}
-/* Tablet/mobile keep the original control dimensions and stacked rows.
-   The additional grouping wrapper has no layout influence below 981px. */
 
-/* Pass 27: task-first History and Results, desktop-only (L05/L06).
-   The full analytics, original-key comparison, storage safety and filtered
-   archive remain available beneath the primary record/score view. */
-@media (min-width:981px){
+/* Tablet/mobile keep the original control dimensions and stacked rows.
+ The additional grouping wrapper has no layout influence below 981px. */
+
+/* task-first History and Results, desktop-only (L05/L06).
+ The full analytics, original-key comparison, storage safety and filtered
+ archive remain available beneath the primary record/score view. */
+
  main:has(.history-archive),
  main:has(.results-heading){padding-top:13px}
  .generic-workspace .page-heading:has(+ .history-archive),
@@ -687,9 +687,9 @@ html.immersive:has(#g-exam-full) header{display:none}
  .result-pane .result-score-details{padding:15px 19px}
 }
 
-/* Pass 28 L07 — accessible non-wrapping Light/Dark at 100–140% and zoom.
-   Keep all three theme controls, with the toggle on its own full-width row.
-   This does not change the chosen font scale or hide settings on phone. */
+/* accessible non-wrapping Light/Dark at 100–140% and zoom.
+ Keep all three theme controls, with the toggle on its own full-width row.
+ This does not change the chosen font scale or hide settings on phone. */
 .display-control:has(.display-theme-choices){
  display:block;padding:11px 0;min-height:0
 }
@@ -709,9 +709,9 @@ html.immersive:has(#g-exam-full) header{display:none}
  white-space:normal;overflow-wrap:break-word;text-align:center
 }
 
-/* Pass28 narrow-zoom guard: the Library's scoring preflight had an intrinsic
-   183px grid column inside a 153px content box at 195px/140% zoom.
-   Preserve all disclosures and text scaling; let the grid and score wrap. */
+/* narrow-zoom guard: the Library's scoring preflight had an intrinsic
+ 183px grid column inside a 153px content box at 195px/140% zoom.
+ Preserve all disclosures and text scaling; let the grid and score wrap. */
 @media(max-width:300px){
  .paper-preflight{grid-template-columns:minmax(0,1fr);min-width:0}
  .paper-preflight>*{min-width:0;max-width:100%;overflow-wrap:anywhere}
@@ -724,9 +724,9 @@ html.immersive:has(#g-exam-full) header{display:none}
  }
 }
 
-/* Pass 29 F29-02: very narrow 200%-zoom History must not let intrinsic
-   insight headings or management headings widen their grid tracks. All
-   comparisons, priorities, controls and storage warnings remain readable. */
+/* very narrow 200%-zoom History must not let intrinsic
+ insight headings or management headings widen their grid tracks. All
+ comparisons, priorities, controls and storage warnings remain readable. */
 @media (max-width:300px){
  .history-panels,.history-management-grid{
   grid-template-columns:minmax(0,1fr);min-width:0;max-width:100%
@@ -741,12 +741,12 @@ html.immersive:has(#g-exam-full) header{display:none}
  .history-panels .fine,.history-management-grid .fine{
   min-width:0;max-width:100%;overflow-wrap:anywhere
  }
-}
 
-/* Pass29 F29-03: at a 195px zoom-equivalent viewport the Learning Desk
-   summary and insight/callout text must wrap without widening the document.
-   Keep the evidence table scrollable inside its own .scroll-table region. */
-@media (max-width:300px){
+
+/* at a 195px zoom-equivalent viewport the Learning Desk
+ summary and insight/callout text must wrap without widening the document.
+ Keep the evidence table scrollable inside its own .scroll-table region. */
+
  .learning-summary{grid-template-columns:minmax(0,1fr);min-width:0;max-width:100%}
  .learning-summary .summary-stat,.learning-revision-callout,
  .learning-insights{min-width:0;max-width:100%}
@@ -757,7 +757,7 @@ html.immersive:has(#g-exam-full) header{display:none}
  .learning-insights .scroll-table{max-width:100%;min-width:0;overflow-x:auto}
 }
 
-/* Pass30: v11-style genuine paper-edition filter, not a second select. */
+/* v11-style genuine paper-edition filter, not a second select. */
 .home-picker .edition-row{margin:3px 0 4px}
 .home-picker .edition-row>.picker{display:block;margin:0 0 8px}
 .home-picker .edition-toggle{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
@@ -777,14 +777,14 @@ html.immersive:has(#g-exam-full) header{display:none}
 .home-picker .untimed-option strong,.home-picker .untimed-option small{display:block;min-width:0}
 .home-picker .untimed-option strong{font-size:14px}
 .home-picker .untimed-option small{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.45}
-@media(max-width:300px){.home-picker .edition-toggle{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:300px){.home-picker .edition-toggle{grid-template-columns:minmax(0,1fr)}
 
-/* Pass30 F30-01: scored APFC/NAT Results at a 195px zoom-equivalent
-   viewport must fit within the document. The reusable analytics metric
-   minimum (165px) is larger than the available padded panel width.
-   Preserve all figures, scrollable tables and result tabs; only shrink
-   metric tracks and allow labels to wrap. */
-@media(max-width:300px){
+/* scored APFC/NAT Results at a 195px zoom-equivalent
+ viewport must fit within the document. The reusable analytics metric
+ minimum (165px) is larger than the available padded panel width.
+ Preserve all figures, scrollable tables and result tabs; only shrink
+ metric tracks and allow labels to wrap. */
+
  #result-overview .learning-metric-grid{
   grid-template-columns:minmax(0,1fr);min-width:0;max-width:100%
  }
@@ -794,9 +794,9 @@ html.immersive:has(#g-exam-full) header{display:none}
  #result-overview>.panel{min-width:0;max-width:100%}
 }
 
-/* Pass31: compact v11 exam shell, retaining the overhaul's generic runtime,
-   responsive targets, progressbar, theme/Display controls and shortcut help.
-   The Library/History/Results content widths are intentionally unchanged. */
+/* compact v11 exam shell, retaining the overhaul's generic runtime,
+ responsive targets, progressbar, theme/Display controls and shortcut help.
+ The Library/History/Results content widths are intentionally unchanged. */
 @media (min-width:981px){
  header .wrap{max-width:1130px;min-height:68px;padding:12px 23px}
  header .brand{gap:12px}
@@ -815,7 +815,7 @@ html.immersive:has(#g-exam-full) header{display:none}
  .exam-sidebar .generic-palette .num{min-height:35px}
 }
 /* v11's three compact local status tiles replace redundant counters
-   above the paper. All totals are calculated for the active section. */
+ above the paper. All totals are calculated for the active section. */
 .exam-sidebar h3{margin:0 0 6px}
 .exam-sidebar .navigator-intro{margin:0;font-size:calc(12px * var(--type-scale));line-height:1.55}
 .navigator-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:15px 0 8px}
@@ -833,11 +833,11 @@ html.immersive:has(#g-exam-full) header{display:none}
 .exam-sidebar .navigator-help summary:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
 .exam-sidebar .navigator-help p{font-size:calc(11px * var(--type-scale));line-height:1.6;margin:7px 0 0;overflow-wrap:anywhere}
 /* Clear v11-style green/amber/slate button states, while preserving the
-   blue current-question outline and full aria-current/aria-label semantics. */
+ blue current-question outline and full aria-current/aria-label semantics. */
 .exam-sidebar .generic-palette .num{background:var(--soft);border-color:var(--border-strong)}
 .exam-sidebar .generic-palette .num.answered{background:color-mix(in srgb,var(--good) 18%,var(--panel));border-color:var(--good);color:var(--ink)}
 /* The generic renderer supplies both independent flags; every question kind
-   and exam mode shares these four statuses. Current-question outline remains blue. */
+ and exam mode shares these four statuses. Current-question outline remains blue. */
 .exam-sidebar .generic-palette .num.marked:not(.answered){
   background:var(--review-unanswered-bg);border-color:var(--review-unanswered-border);
   color:var(--ink);box-shadow:none
@@ -856,7 +856,7 @@ html.immersive:has(#g-exam-full) header{display:none}
 }
 
 /* Review control is synchronized with the live navigator. Answer state is
-   committed engine evidence, not an unsaved numeric/text/matching draft. */
+ committed engine evidence, not an unsaved numeric/text/matching draft. */
 .exam-answer-actions #g-flag.review-unanswered[aria-pressed="true"]{
  background:var(--review-unanswered-bg);
  border-color:var(--review-unanswered-border);
@@ -881,10 +881,10 @@ html.immersive:has(#g-exam-full) header{display:none}
 }
 
 
-/* Pass33: v11 Results hierarchy and density over the overhaul evidence model.
-   Result-only overrides: Library/History/Exam retain their existing visual systems. */
+/* v11 Results hierarchy and density over the overhaul evidence model.
+ Result-only overrides: Library/History/Exam retain their existing visual systems. */
 /* Results intentionally omit the brand header entirely, but the Aa sibling
-   is unaffected and remains usable when the page is scrolled. */
+ is unaffected and remains usable when the page is scrolled. */
 body:has(.results-heading) header{display:none}
 main:has(.results-heading){max-width:1130px;padding:22px 20px 60px}
 .generic-workspace .results-heading{
@@ -1051,8 +1051,8 @@ main:has(.results-heading){max-width:1130px;padding:22px 20px 60px}
  .metriclist b{text-align:left}
  .revision-chips{gap:5px}
  /* Fit Results at 195px CSS viewport combined with 140% in-app type scale.
-    Allow headings, explanatory copy and nested rows to break long words
-    without hiding overflowing content or changing local scrollable tables. */
+ Allow headings, explanatory copy and nested rows to break long words
+ without hiding overflowing content or changing local scrollable tables. */
  #result-overview>.panel,
  #result-overview .result-insight-grid,
  #result-overview .result-insight-grid>.panel,
@@ -1081,9 +1081,9 @@ body:has(.results-heading) .app-independent-footer p{
  font-size:.7em;line-height:1.45
 }
 
-/* Pass35: Aa is independent of the header in the DOM and CSS.
-   Match the frozen v11 fixed trigger, preserve the overhaul-only controls
-   and correctly constrain the popover at narrow zoom sizes. */
+/* Aa is independent of the header in the DOM and CSS.
+ Match the frozen v11 fixed trigger, preserve the overhaul-only controls
+ and correctly constrain the popover at narrow zoom sizes. */
 header .header-actions{padding-right:53px}
 .display-tools{
  position:fixed;z-index:130;top:12px;right:14px;left:auto;bottom:auto;
@@ -1105,7 +1105,7 @@ html[data-theme="dark"] .display-trigger{
  background:#273f5d;border-color:#6080a6;color:#fff
 }
 /* Frozen v11 retains the same navy Aa fill while hovered/open in dark
-   mode; its higher-specificity dark selector overrides the hover rule. */
+ mode; its higher-specificity dark selector overrides the hover rule. */
 html[data-theme="dark"] .display-trigger:hover,
 html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
  background:#273f5d;border-color:#6080a6;color:#fff
@@ -1140,8 +1140,8 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
  }
 }
 
-/* P43: two-step exam selection occupies the same desktop first-fold height
-   as the former paper picker. At mobile widths both inputs stay full-width. */
+/* two-step exam selection occupies the same desktop first-fold height
+ as the former paper picker. At mobile widths both inputs stay full-width. */
 .home-picker .family-paper-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
   align-items:end;gap:12px;min-width:0}
 .home-picker .family-field,.home-picker .paper-field{min-width:0}
@@ -1152,8 +1152,8 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
  .home-picker .family-paper-row{grid-template-columns:minmax(0,1fr);gap:5px}
 }
 
-/* P44: optional builder follows primary start/preview, never consumes the
-   laptop first fold. On small devices every source filter remains usable. */
+/* optional builder follows primary start/preview, never consumes the
+ laptop first fold. On small devices every source filter remains usable. */
 .practice-builder{margin:16px 0}
 .practice-builder details>summary{cursor:pointer;font-weight:750;line-height:1.5}
 .practice-builder details[open]>summary{margin-bottom:12px}
@@ -1165,7 +1165,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
 @media(max-width:430px){.practice-compose-fields{grid-template-columns:minmax(0,1fr)}}
 
 /* Avoid min-content button text widening the entire document at 195px/140%.
-   Allow actual line wrapping; do not mask overflow or clip controls. */
+ Allow actual line wrapping; do not mask overflow or clip controls. */
 .practice-builder,.practice-builder details,.practice-compose-fields{min-width:0;max-width:100%}
 .practice-builder summary,.practice-builder label{overflow-wrap:anywhere}
 .practice-builder .generic-actions .btn{
@@ -1176,10 +1176,10 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
  .practice-builder select,.practice-builder input{min-width:0;max-width:100%}
 }
 
-/* P44 revealed a pre-existing imported-exam overflow at 195px/140%:
-   author-supplied titles, exam rules and the primary Start label could
-   exceed their narrow parent even with the builder itself fitting. Wrap
-   actual content, rather than hiding overflow. */
+/* revealed a pre-existing imported-exam overflow at 195px/140%:
+ author-supplied titles, exam rules and the primary Start label could
+ exceed their narrow parent even with the builder itself fitting. Wrap
+ actual content, rather than hiding overflow. */
 .paper-preview h2,.paper-preview .fine,.help-rules-body h3,
 .help-rules-body p,.help-rules-body li{overflow-wrap:anywhere}
 .home-picker .home-start .btn{
@@ -1188,18 +1188,18 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
 @media(max-width:250px){
  .home-picker .home-start .btn{flex:1 1 100%;padding:7px 8px}
  .home-side,.paper-preview,.help-rules-body{min-width:0;max-width:100%}
- /* P58-C RED (8 AI sources → 200-question imported paper, 195px at 140%):
-    1fr has an automatic min-content floor; the preview's metadata/metrics
-    expanded the grid to 203px despite a 195px document. Keep the grid
-    minmax(0,1fr) and stack metrics, not hidden clipped content. */
+ /* RED (8 AI sources → 200-question imported paper, 195px at 140%):
+ 1fr has an automatic min-content floor; the preview's metadata/metrics
+ expanded the grid to 203px despite a 195px document. Keep the grid
+ minmax(0,1fr) and stack metrics, not hidden clipped content. */
  .generic-workspace .home-grid .home-side{grid-template-columns:minmax(0,1fr)}
  .home-side>.paper-preview{min-width:0;max-width:100%;width:100%}
  .paper-preview .preview-metrics{grid-template-columns:minmax(0,1fr)}
  .paper-preview .preview-metrics small{overflow-wrap:anywhere}
- /* P58-C independent 8/400→200 red tests found 195px flex min-content
-    overflow in the RECENT-results H2 (155px inside a 99px row) and in
-    Learning's introductory flex child (216px inside a 141px heading).
-    Keep actual text accessible by wrapping, not clipping. */
+ /* independent 8/400→200 red tests found 195px flex min-content
+ overflow in the RECENT-results H2 (155px inside a 99px row) and in
+ Learning's introductory flex child (216px inside a 141px heading).
+ Keep actual text accessible by wrapping, not clipping. */
  .recent-panel>.row>h2{min-width:0;max-width:100%;overflow-wrap:anywhere}
  .generic-workspace .generic-heading>div{min-width:0;max-width:100%;overflow-wrap:anywhere}
  .generic-workspace .generic-heading>div :is(h1,p){
@@ -1207,8 +1207,8 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
  }
 }
 
-/* P46: evidence-based short revision sets. Controls reflow at extreme zoom;
-   source prompts and audit provenance must remain visible, never clipped. */
+/* evidence-based short revision sets. Controls reflow at extreme zoom;
+ source prompts and audit provenance must remain visible, never clipped. */
 .learning-evidence-builder{min-width:0;max-width:100%;margin-bottom:18px}
 .learning-evidence-builder h2,.learning-evidence-builder p,
 .learning-evidence-preview li{overflow-wrap:anywhere}
@@ -1228,7 +1228,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
 .learning-evidence-preview small{color:var(--muted)}
 .learning-evidence-builder .btn{max-width:100%;white-space:normal;overflow-wrap:anywhere}
 /* FSRS policy actions use long accessible labels; let flex items shrink/wrap under the
-   existing 195px/140% stress viewport instead of widening the document. */
+ existing 195px/140% stress viewport instead of widening the document. */
 .learning-scheduler-policy{
  min-width:0;max-width:100%;overflow-wrap:anywhere
 }
@@ -1249,11 +1249,11 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
  .learning-evidence-preview{padding-left:16px}
 }
 
-/* P46 extreme-zoom browser evidence: native text input's intrinsic 276px
-   min-width widened the whole Learning document at 195px + 140% scale. */
+/* extreme-zoom browser evidence: native text input's intrinsic 276px
+ min-width widened the whole Learning document at 195px + 140% scale. */
 .learning-layout #learning-subject,.learning-layout #learning-topic,.learning-layout #learning-subtopic{display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box}
 
-/* P55: at 195px/140% the report panel's 160px minimum track exceeds
+/* at 195px/140% the report panel's 160px minimum track exceeds
  * its usable inner width. Keep the whole card readable in a minmax(0,1fr)
  * track instead of clipping the page or hiding the report. */
 @media(max-width:300px){
@@ -1261,7 +1261,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
   .learning-report-list>div{min-width:0;overflow-wrap:anywhere}
 }
 
-/* P47-3: one native offline modal, no duplicate thumbnail source or saved bitmaps. */
+/* one native offline modal, no duplicate thumbnail source or saved bitmaps. */
 .generic-media-frame{display:block;min-width:0;max-width:100%;white-space:normal}
 .generic-workspace .generic-media-frame>.generic-figure{max-width:100%;height:auto}
 .generic-image-open{display:inline-flex;align-items:center;justify-content:center;min-height:33px;max-width:100%;padding:5px 10px;margin:0 0 6px;border:1px solid var(--line);border-radius:8px;color:var(--blue);background:var(--panel);font-size:12px;font-weight:750;line-height:1.4;cursor:zoom-in;overflow-wrap:anywhere;user-select:none}
@@ -1293,8 +1293,8 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
 @media(max-width:300px){.generic-workspace .generic-choice-media-row{padding:7px}.generic-choice-media-row .generic-choice-media{padding-left:0}.generic-image-head{padding:6px}.generic-image-caption{max-height:55px}.generic-image-help{font-size:9px}.generic-image-dialog .btn{padding:5px}}
 @media(prefers-reduced-motion:reduce){.generic-image-large,.generic-image-dialog{transition:none!important;animation:none!important}}
 
-/* P47-3B: image import preparation is separate from the immutable exam viewer.
-   Preview panes scroll at 200/400% so small glyphs/strokes can be compared. */
+/* image import preparation is separate from the immutable exam viewer.
+ Preview panes scroll at 200/400% so small glyphs/strokes can be compared. */
 .generic-image-preparation{overflow:hidden;max-height:calc(100dvh - 12px)}
 .generic-prepare-shell{display:grid;align-content:start;gap:10px;padding:13px;max-width:100%;max-height:calc(100dvh - 22px);overflow-y:auto;overscroll-behavior:contain}
 .generic-prepare-shell *{box-sizing:border-box;min-width:0}
@@ -1314,7 +1314,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
 @media(max-width:640px){.generic-prepare-previews{grid-template-columns:minmax(0,1fr)}.generic-prepare-preview{max-height:180px}}
 @media(max-width:300px){.generic-prepare-shell{padding:7px;gap:6px}.generic-prepare-shell .row .btn{flex:1 1 100%;padding:7px}.generic-prepare-preview{max-height:130px}}
 
-/* P47-5B: bounded author-supplied math. Use existing type scale and themes. */
+/* bounded author-supplied math. Use existing type scale and themes. */
 .generic-workspace .pd-rich-content{display:block;min-width:0;max-width:100%;white-space:normal;overflow-wrap:break-word;line-height:1.6}
 .generic-workspace .pd-rich-paragraph{white-space:pre-wrap;margin:0 0 .65em}
 .generic-workspace .pd-rich-content>:last-child{margin-bottom:0}
@@ -1339,11 +1339,11 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
  .generic-workspace .pd-rich-table{width:auto;max-width:100%;page-break-inside:avoid}
 }
 
-/* P47-5B imported long CAT/PGDBA titles must wrap at 195px/140% too. */
+/* imported long CAT/PGDBA titles must wrap at 195px/140% too. */
 .generic-workspace .exam-header>div:first-child{min-width:0;max-width:100%;flex:1 1 125px}
 .generic-workspace .exam-header h1,.generic-workspace .exam-header .muted{min-width:0;max-width:100%;overflow-wrap:anywhere;word-break:normal}
 
-/* P47-5B: WebKit fieldset min-content sizing with rich math choices at 195px. */
+/* WebKit fieldset min-content sizing with rich math choices at 195px. */
 .generic-workspace fieldset.generic-choices{min-width:0;min-inline-size:0;max-width:100%;width:100%;grid-template-columns:minmax(0,1fr)}
 .generic-workspace fieldset.generic-choices legend{max-width:100%;max-inline-size:100%;white-space:normal;overflow-wrap:anywhere}
 
@@ -1363,8 +1363,8 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
  }
 }
 
-/* P47-5C: Wordgard is authored only in Library. The visual system and
-   responsive editor chrome remain Practice Desk owned, not vendor-patched. */
+/* Wordgard is authored only in Library. The visual system and
+ responsive editor chrome remain Practice Desk owned, not vendor-patched. */
 #pd-authoring-container{margin:22px 0 0;max-width:100%;min-width:0;scroll-margin-top:12px}
 #pd-authoring-container[hidden]{display:none!important}
 .pd-author-studio{padding:clamp(12px,2vw,26px);min-width:0;max-width:100%;overflow-wrap:anywhere}
@@ -1451,7 +1451,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
  .pd-author-studio .pd-author-top>.row{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 
-/* P47-5C screenshot review: actual equation preview and very narrow controls. */
+/* screenshot review: actual equation preview and very narrow controls. */
 .pd-author-math-live{margin:10px 0 13px;padding:10px 12px;border:1px solid var(--line);
  border-radius:9px;background:var(--panel);min-height:44px;max-width:100%;
  font-size:.92em;overflow-x:auto;overflow-y:hidden;overscroll-behavior-inline:contain}
@@ -1465,7 +1465,7 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
 }
 
 /* Screenshot-verified WebKit fix: theme changes must invalidate inherited ink
-   explicitly inside mounted authoring UI, not rely on cached body colours. */
+ explicitly inside mounted authoring UI, not rely on cached body colours. */
 .pd-author-studio{color:var(--ink)}
 html[data-theme="dark"] .pd-author-studio,
 html[data-theme="dark"] .pd-author-studio :is(h2,h3,h4,summary,legend,wg-content,.pd-author-preview-content),
@@ -1481,9 +1481,9 @@ html[data-theme="light"] .pd-author-studio :is(input,select,textarea){
 }
 
 
-/* P47-5C screenshot and measured-contrast repair: all secondary authoring
-   buttons use one coherent theme pair, not a light global .btn fill with
-   inherited dark-mode white ink. Keep native focus treatment unchanged. */
+/* screenshot and measured-contrast repair: all secondary authoring
+ buttons use one coherent theme pair, not a light global .btn fill with
+ inherited dark-mode white ink. Keep native focus treatment unchanged. */
 html[data-theme="dark"] .pd-author-studio .btn:not(.primary){
  background:var(--panel);
  color:var(--ink);
@@ -1497,9 +1497,9 @@ html[data-theme="dark"] .pd-author-studio .btn.danger{
 /* Reduced motion: theme changes must never briefly wash out button text. */
 @media (prefers-reduced-motion:reduce){.pd-author-studio .btn{transition:none!important}}
 
-/* P47-5C screenshot inspection (WebKit): a selected Wordgard token and
-   nested read-only rich preview text must retain actual foreground contrast.
-   Do not force arbitrary vendor colours anywhere outside this Library studio. */
+/* screenshot inspection (WebKit): a selected Wordgard token and
+ nested read-only rich preview text must retain actual foreground contrast.
+ Do not force arbitrary vendor colours anywhere outside this Library studio. */
 html[data-theme="dark"] .pd-author-studio .pd-author-editor .pd-author-token,
 html[data-theme="dark"] .pd-author-studio .pd-author-math-live,
 html[data-theme="dark"] .pd-author-studio .pd-author-preview-content .pd-rich-content,
@@ -1509,8 +1509,8 @@ html[data-theme="dark"] .pd-author-studio .pd-author-preview-choice>span{
 }
 
 
-/* P47-5D: publication review stays visibly separate from mutable Wordgard
-   editing, but within the same focused Library studio and existing palette. */
+/* publication review stays visibly separate from mutable Wordgard
+ editing, but within the same focused Library studio and existing palette. */
 .pd-author-studio label.pd-author-publish-consent{
  display:flex!important;flex-direction:row!important;align-items:flex-start;
  gap:10px;line-height:1.5;margin:2px 0 12px;
@@ -1538,7 +1538,7 @@ html[data-theme="dark"] .pd-author-studio .pd-author-preview-choice>span{
  .pd-author-studio label.pd-author-publish-consent{padding:5px 0}
 }
 
-/* P52: keyboard map stays inside the floating panel's own scrollport. */
+/* keyboard map stays inside the floating panel's own scrollport. */
 .display-panel{max-height:min(78vh,720px);overflow-y:auto;overscroll-behavior:contain}
 .display-shortcuts{margin-top:12px;padding:9px 0;border-top:1px solid var(--line)}
 .display-shortcuts>summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--ink)}
@@ -1550,7 +1550,7 @@ html[data-theme="dark"] .pd-author-studio .pd-author-preview-choice>span{
 #shortcut-status{min-height:1.4em;overflow-wrap:anywhere}
 @media(max-width:260px){.shortcut-bindings{grid-template-columns:minmax(0,1fr)}}
 
-/* P53: explicit semantic subject filters are narrow-view safe; nested hierarchy
+/* explicit semantic subject filters are narrow-view safe; nested hierarchy
  * sits in the existing horizontally scrollable metrics table, not in body. */
 .learning-layout #learning-hierarchy-root,.learning-insights #learning-hierarchy-root{display:block;max-width:100%;width:100%;min-width:0;box-sizing:border-box;margin-bottom:12px}
 .learning-hierarchy-level[data-depth="2"]{padding-inline-start:0.65rem}
@@ -1558,7 +1558,7 @@ html[data-theme="dark"] .pd-author-studio .pd-author-preview-choice>span{
 .pd-author-taxonomy-summary{grid-column:1/-1;overflow-wrap:anywhere}
 .pd-author-meta #pd-author-subject,.pd-author-meta #pd-author-syllabus-heading{min-width:0;max-width:100%;width:100%;box-sizing:border-box}
 
-/* P54: one section-wide authoring timer, meaningful real controls in preview.
+/* one section-wide authoring timer, meaningful real controls in preview.
  * Keep table overflow inside its scroll region, never on the 195px document. */
 .pd-author-section-manager{margin:12px 0;border:1px solid var(--line);border-radius:11px;padding:10px;min-width:0;max-width:100%}
 .pd-author-section-manager summary{font-weight:750;cursor:pointer;overflow-wrap:anywhere}
