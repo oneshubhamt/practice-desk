@@ -1,56 +1,58 @@
-# Practice Desk — testing and verification
+# Practice Desk — current QA contract
 
-This is the **only active human-readable test strategy**. The source of truth is the actual test suite, `scripts/acceptance-suite.mjs`, mutation runner and [CI workflow](../.github/workflows/ci.yml). Prior pass-specific regression diaries are accessible in [historical Git evidence](HISTORY_INDEX.md), not repeated here.
+This is the active human-readable verification contract for the current `working` branch. Historical programme-specific runs and implementation diaries belong in [HISTORY_INDEX.md](HISTORY_INDEX.md). The executable sources of truth are the test files, `scripts/acceptance-suite.mjs`, `scripts/mutation-sensitivity.mjs` and [CI](../.github/workflows/ci.yml).
 
-## Execute the gates
+## Required toolchain
 
-Use Node.js **26.13.0**, installed dependencies and Playwright browser binaries appropriate to the host.
+Use Node.js **26.13.0** with the committed lockfiles. The main application and isolated FSRS optimizer dependency graphs must both install cleanly from those locks.
 
 ```bash
 npm ci --no-audit --no-fund
-npm run check                  # strict TS + reproducible build + Node tests
+npm run check
 node scripts/mutation-sensitivity.mjs
+
+npm ci --prefix tools/fsrs-optimizer --no-audit --no-fund
+npm run --prefix tools/fsrs-optimizer smoke
+npm run --prefix tools/fsrs-optimizer parity
+npm run build:static
+
 node scripts/acceptance-suite.mjs chromium
 node scripts/acceptance-suite.mjs firefox
 node scripts/acceptance-suite.mjs webkit
 ```
 
-For deliberate visual inspection only (not the normal passing CI path):
+The browser suites require the corresponding Playwright browser binaries. The protected CI workflow installs them on standard GitHub-hosted runners and is the normal full-system verification path.
+
+## Required CI gates
+
+A current application change is release-eligible only when all of these gates pass on the same tested source ancestry:
+
+- **Core:** strict TypeScript, deterministic standalone build, complete Node test suite, clean dependency graph and the targeted mutation-sensitivity witnesses.
+- **Optimizer:** native FSRS optimizer smoke, native/WASM semantic parity and the independently generated static Worker/WASM build.
+- **Chromium:** all source-mapped offline candidate journeys plus the full browser/WASM optimizer activation path.
+- **Firefox and WebKit:** all cross-browser source-mapped journeys plus the browser/WASM optimizer probe.
+- **Guarded publisher:** only after the preceding gates pass may CI publish the tested standalone HTML to `working`; source drift aborts publication.
+
+`npm run check` is necessary but not sufficient for UI, browser-storage, Worker/WASM or cross-browser changes.
+
+For deliberate visual evidence only:
 
 ```bash
 PRACTICE_DESK_VISUAL_REVIEW=1 node scripts/acceptance-suite.mjs chromium
 ```
 
-Unexpected failures produce diagnostics/screenshots. Optional `benchmark-*.mjs` scripts are **measurements**, not substitutes for correctness gates; do not infer speed improvements from uncontrolled hosted-runner comparisons.
+Normal passing CI does not capture screenshots merely to create evidence.
 
-## Required protected CI
+## Test design rules
 
-The most recent recorded P62-D predecessor-branch verification is [five-job CI 42508271948](https://github.com/oneshubhamt/practice-desk/actions/runs/42508271948) at `0a571a01443d`: **417/417 Node tests; ten of ten targeted source-isolated mutations; 32 Chromium, 20 Firefox and 20 Linux WebKit journeys; and guarded source-verified HTML publishing**. These are current run results, not a measure of factual question quality.
+Prefer independent expected values, state models and adversarial counterexamples over implementation mirroring. A changed contract needs a witness that would fail for a plausible semantic defect.
 
-- **Core:** strict typecheck/build; validated imported source, paper/scoring, candidate disclosure, History/CAS, backup/recovery, authoring, provenance, PDF intake and FSRS. An independent 200-seed scoring rule model is complemented by 128 seeded six-kind questions, a 576-case recovered-record reference and seeded CAS/merge models.
-- **Browser suites:** one pooled browser launch per engine, with **independent and fully closed contexts per journey**. Scripts are enumerated against a fail-closed manifest; a missing/failed scenario fails the suite. Keep `file://` operation, keyboard/navigation fallback, editing, source comparison, 195px/140% layout and the 400-staged/200-selected scale journey.
-- **Mutation sensitivity:** temporary source copies prove selected retained tests fail under ten deliberate faults (e.g., wrong blank penalty, recovery/CAS revision error, changed authoring marks, trimmed rich text, incorrect multi-select, skipped backup SHA/PDF EOF and FSRS rating drift). This is **not** a global mutation score.
-- **Publisher:** publish offline HTML **only after** core and all three browser gates succeed, with source ancestry/non-Markdown drift controls. Never hand-edit the generated artifact.
+For scoring, preserve six-kind semantics, fractional/partial credit, exclusions and exact denominators. For persistence, challenge stale tabs, CAS revisions, corruption, recovery and additive backup. For authoring, challenge candidate secrecy, source lineage, publication gating and corrupt local state. For learning, challenge scheduling evidence, optimizer activation policy and privacy boundaries. Browser tests should exercise actual user journeys rather than duplicate pure-domain assertions.
 
-## How to design or reduce tests
+The mutation suite is intentionally targeted: every listed mutant must have a green baseline and then fail for the named assertion. It is **not** a repository-wide mutation score.
 
-A changed contract needs an independent expected-value oracle, model-based state transition or meaningful adversarial counterexample. Prioritise unique safety coverage over low-level click counts, repeated screenshots or superficial test-file reduction.
+## What automated QA does not prove
 
-1. Identify the exact **source owner, user risk and contract**; map surviving witnesses across pure unit tests, persistence, production CLI and real user browser journeys.
-2. For scoring, preserve fractional/partial credit, exclusions, exact denominator and six-kind semantics. For storage, challenge stale tabs, crash/restore, duplicate snapshots and fraudulent backups. For authoring/PDF, challenge pre-submit secrecy and incorrect external source claims; for Learning, challenge distinct-question counts, FSRS and privacy gating.
-3. Add stronger tests **before** retiring overlap; map every retired assertion to a surviving, executed check. If a selected mutation survives, strengthen the witness rather than deleting the mutant.
-4. Execute focused tests, then **the entire protected five-job CI** when changes affect shared contracts, browser runtime or distribution. Log the exact SHA and distinguish observed runtimes from controlled benchmarks.
+Green CI establishes the bounded software contracts encoded by the suite. It does **not** independently prove factual correctness of question banks, statutory currency, authenticity of third-party source reproductions, human reviewer identity, physical-device behavior, native Mac Safari behavior, assistive-technology usability, or survival of browser data after OS/profile loss.
 
-## P62-D focused source and authoring verification (8 November 2026)
-
-The [separate P62-D live-source run](https://github.com/oneshubhamt/practice-desk/actions/runs/42508271893) reuses **five targeted regressions covering six defects**: solution-only image secrecy; incomplete blueprint publication refusal; pinned Source revisions; 19 comparable MCQs beside a numerical question; semantic edits (private explanation versus visible stem/options/media/stimuli); and an unkeyworded legal question with author-declared applicability that a reviewer may not contradict. **5/5 selected tests passed.** Source-level review revealed two and fixed two genuine issues: mathematical option normalization had collapsed signed fractions (`2/3` vs `-2/3`); and source-declared legal applicability previously could be contradicted by a reviewer.
-
-A separate live run downloaded **three third-party published PDF files**, then used **two actual CAT 2024 QA source pages** (from a 24-page 2IIM paper), one separate published answer-key page and independently reproduced APFC 2023 English questions. These are **source-grounded reconstructions**, not authenticated original IIM/UPSC papers. Independent mathematical/lexical answer oracles agreed on **four of four curated answers** (two APFC English, two CAT Quant). The full PDF → intake → Reviewed QA → compile → frozen Source pairing → candidate rendering workflow passed for two CAT questions; the actual PDF comparison remains attributed human/agent review, **not** software-proven visual/source fidelity. Plain-text extraction omitted mathematical glyphs (including `32768`), although answer value `540` was recovered. No claim of full 24-page coverage or source-authenticated publisher identity is warranted.
-
-**Actual CLI measurements:** eight subprocess calls, **1.293 s aggregate subprocess wall time** (excludes downloads, reviewer/model work). Candidate packet versus authored-source bytes: CAT **2,303/2,571**; APFC **2,361/2,410**. The aggregate output reduction is only **317/4,981 bytes (~6.4%)** on this tiny sample, not proof of reduced model context or superior agent efficiency. **Model tokens, independent agent baseline, generation time, distractor quality, calibrated difficulty and source-transcription error rate were not measured.** The sidecar remains `recorded-self-attestation-not-authenticated`; factual verification remains `not-performed`. The measured JSON report is in the [temporary live-run artifact](https://github.com/oneshubhamt/practice-desk/actions/runs/42508271893) (seven-day retention). 
-
-## Verified scope versus still-unverified evidence
-
-Automated CI verifies bounded software behaviors, not actual statutory/PYQ answer correctness, independent PDF visual transcription, publisher/reviewer identity, native Mac Safari, physical mobile/IME/screen-reader accessibility, OS-level storage loss or human visual/release approval. Those remain separately in the [backlog](../backlog.md).
-
-**Historical performance and assertion-retirement trace:** pinned [P61 final audit and detailed ledger](HISTORY_INDEX.md#test-bench-consolidation-archive). There is no open P61 implementation pass.
+Those risks belong in the active [backlog](../backlog.md). Historical measurements and prior verification runs remain available through [HISTORY_INDEX.md](HISTORY_INDEX.md), but an old green run never substitutes for verification of the present source.
