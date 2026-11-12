@@ -273,10 +273,8 @@ class LocalFallbackWorkspaceStore implements WorkspaceStore {
    throw new Error("Another tab changed fallback history; reopen before editing");
  }
 
- private flush():void{
-  const encoded=JSON.stringify([...this.rows.values()]);
-  this.storage.setItem(this.key,encoded);
-  this.stamp=encoded;
+ private commit(next:Map<string,WorkspaceStoredRecord>):void{
+  this.commit(next);
  }
 
  async loadRecoverable():Promise<WorkspaceRecovery>{
@@ -315,8 +313,9 @@ class LocalFallbackWorkspaceStore implements WorkspaceStore {
  async write(record:WorkspaceStoredRecord,expectedRevision:number|null):Promise<void>{
   this.assertCurrent();
   assertWriteVersion(this.rows.get(record.id),expectedRevision);
-  this.rows.set(record.id,record);
-  this.flush();
+  const next=new Map(this.rows);
+  next.set(record.id,record);
+  this.commit(next);
  }
 
  async insertMany(records:readonly WorkspaceStoredRecord[]):Promise<void>{
@@ -339,8 +338,9 @@ class LocalFallbackWorkspaceStore implements WorkspaceStore {
   const current=this.rows.get(id);
   assertWriteVersion(current,expectedRevision);
   assertDeletionAllowed(current,intent);
-  this.rows.delete(id);
-  this.flush();
+  const next=new Map(this.rows);
+  next.delete(id);
+  this.commit(next);
  }
 
  async deleteCompleted(records:readonly {readonly id:string;readonly saveRevision:number}[]):Promise<void>{
@@ -351,8 +351,9 @@ class LocalFallbackWorkspaceStore implements WorkspaceStore {
    assertWriteVersion(current,expected.saveRevision);
    assertDeletionAllowed(current,"completed");
   }
-  for(const expected of records)this.rows.delete(expected.id);
-  this.flush();
+  const next=new Map(this.rows);
+  for(const expected of records)next.delete(expected.id);
+  this.commit(next);
  }
 
  async readAuthoritative(id:string):Promise<unknown>{
