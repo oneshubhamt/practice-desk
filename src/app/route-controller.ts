@@ -4,7 +4,7 @@
 import {isAttempt} from "./stored-record-validator.ts";
 
 
-import {transitionGenericAttempt} from "./exam-package.ts";
+import {transitionGenericAttempt} from "../engine/generic-attempt.ts";
 
 import {restoreSession} from "../history/frozen.ts";
 

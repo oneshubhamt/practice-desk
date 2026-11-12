@@ -2,8 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
-import {validateExamPackage,builtinCglPackages,configureCglPractice,
- configureUntimedPractice,startGenericAttempt,transitionGenericAttempt} from "../src/app/exam-package.ts";
+import {validateExamPackage,builtinCglPackages,configureCglPractice,configureUntimedPractice,startGenericAttempt} from "../src/app/exam-package.ts";
+import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {validatePracticeSetups} from "../src/app/practice-selection.ts";
 const starter=JSON.parse(await readFile(new URL("../examples/apfc-authoring-example.json",import.meta.url),"utf8"));
 const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url),"utf8"));

@@ -2,7 +2,7 @@
 
 import {renderModelExam} from "./exam-view.ts";
 
-import {transitionGenericAttempt} from "./exam-package.ts";
+import {transitionGenericAttempt} from "../engine/generic-attempt.ts";
 
 import type {SessionEvent} from "../engine/session.ts";
 

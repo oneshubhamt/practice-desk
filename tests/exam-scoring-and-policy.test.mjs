@@ -7,6 +7,7 @@ import * as __suite_dep_2 from "node:fs/promises";
 import * as __suite_dep_3 from "./fixtures/six-kinds.mjs";
 import * as __suite_dep_4 from "../src/domain/integrity.ts";
 import * as __suite_dep_5 from "../src/app/exam-package.ts";
+import * as __generic_attempt from "../src/engine/generic-attempt.ts";
 import * as __suite_dep_6_stored_record_validator from "../src/app/stored-record-validator.ts";
 import * as __suite_dep_6_exam_view from "../src/app/exam-view.ts";
 import * as __suite_dep_7 from "../src/engine/session.ts";
@@ -29,9 +30,10 @@ const pkg = __suite_dep_3["pkg"];
 const paperRevisionHash = __suite_dep_4["paperRevisionHash"];
 const validateExamPackage = __suite_dep_5["validateExamPackage"];
 const configureCglPractice = __suite_dep_5["configureCglPractice"];
+const cglAttemptMode = __suite_dep_5["cglAttemptMode"];
 const builtinCglPackages = __suite_dep_5["builtinCglPackages"];
 const startGenericAttempt = __suite_dep_5["startGenericAttempt"];
-const transitionGenericAttempt = __suite_dep_5["transitionGenericAttempt"];
+const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
 const validateGenericStoredRecord = __suite_dep_6_stored_record_validator["validateGenericStoredRecord"];
 const transition = __suite_dep_7["transition"];
 const startSession = __suite_dep_7["startSession"];
@@ -94,7 +96,7 @@ test("all four attempt modes are pinned with their actual CGL policy or custom p
  const cgl=builtins.find(p=>p.paper.edition==="reviewed");
  for(const [mode,expected] of [["strict","exam-simulation"],["free","full-paper-practice"],["single","section-practice"]]){
   const configured=configureCglPractice(cgl,mode,0);
-  const a=startGenericAttempt(configured,mode,1000);
+  const a=startGenericAttempt(configured,mode,1000,cglAttemptMode(mode));
   assert.equal(a.frozen.snapshot.mode,expected);
   validateGenericStoredRecord(a);
  }
@@ -374,7 +376,7 @@ const scoreableLowerBound = __suite_dep_13["scoreableLowerBound"];
 const scoreableBounds = __suite_dep_13["scoreableBounds"];
 const validateExamPackage = __suite_dep_5["validateExamPackage"];
 const startGenericAttempt = __suite_dep_5["startGenericAttempt"];
-const transitionGenericAttempt = __suite_dep_5["transitionGenericAttempt"];
+const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
 const validateGenericStoredRecord = __suite_dep_6_stored_record_validator["validateGenericStoredRecord"];
 const renderModelExam = __suite_dep_6_exam_view["renderModelExam"];
 const resultTabsHTML = __suite_dep_15["resultTabsHTML"];

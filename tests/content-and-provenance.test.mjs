@@ -6,6 +6,7 @@ import * as __suite_dep_1 from "node:assert/strict";
 import * as __suite_dep_2 from "node:fs/promises";
 import * as __suite_dep_3 from "./fixtures/six-kinds.mjs";
 import * as __suite_dep_4 from "../src/app/exam-package.ts";
+import * as __generic_attempt from "../src/engine/generic-attempt.ts";
 import * as __suite_dep_5 from "../src/engine/scoring.ts";
 import * as __suite_dep_6 from "../src/engine/score-ceiling.ts";
 import * as __suite_dep_7 from "../src/domain/integrity.ts";
@@ -40,9 +41,10 @@ const readFile = __suite_dep_2["readFile"];
 const pkg = __suite_dep_3["pkg"];
 const builtinCglPackages = __suite_dep_4["builtinCglPackages"];
 const configureCglPractice = __suite_dep_4["configureCglPractice"];
+const cglAttemptMode = __suite_dep_4["cglAttemptMode"];
 const validateExamPackage = __suite_dep_4["validateExamPackage"];
 const startGenericAttempt = __suite_dep_4["startGenericAttempt"];
-const transitionGenericAttempt = __suite_dep_4["transitionGenericAttempt"];
+const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
 const scoreAttempt = __suite_dep_5["scoreAttempt"];
 const scoreableMaximum = __suite_dep_6["scoreableMaximum"];
 const sectionScoreSummaries = __suite_dep_6["sectionScoreSummaries"];
@@ -279,11 +281,11 @@ test("L08: 30 Sep Q6 C to D, wording-only Q3, and disputed 6 Oct Q62 unchanged",
 });
 test("L09/L10: timing type and frozen mode have accurate labels, untimed included",()=>{
  const p=find("cgl-2026-09-30","reviewed");
- for(const [configured,mode,scope,aria] of [
-  [configureCglPractice(p,"free"),"Full paper · flexible navigation","Whole-paper timer","Whole-paper time used"],
-  [configureCglPractice(p,"strict"),"Exam simulation","Section timer","Section time used"],
-  [configureCglPractice(p,"single",1),"Single-section practice","Whole-paper timer","Whole-paper time used"]]){
-  const a=startGenericAttempt(configured,mode,0),html=renderModelExam(a,configured);
+ for(const [configured,policy,mode,scope,aria] of [
+  [configureCglPractice(p,"free"),"free","Full paper · flexible navigation","Whole-paper timer","Whole-paper time used"],
+  [configureCglPractice(p,"strict"),"strict","Exam simulation","Section timer","Section time used"],
+  [configureCglPractice(p,"single",1),"single","Single-section practice","Whole-paper timer","Whole-paper time used"]]){
+  const a=startGenericAttempt(configured,mode,0,cglAttemptMode(policy)),html=renderModelExam(a,configured);
   assert.ok(html.includes('<p class="muted">'+mode+' · '),
    "Human-readable frozen exam mode must remain visible beneath the compact title");
   assert.ok(html.includes('aria-valuetext="'+scope+' '),
@@ -317,7 +319,7 @@ const builtinCglPackages = __suite_dep_4["builtinCglPackages"];
 const configureCglPractice = __suite_dep_4["configureCglPractice"];
 const validateExamPackage = __suite_dep_4["validateExamPackage"];
 const startGenericAttempt = __suite_dep_4["startGenericAttempt"];
-const transitionGenericAttempt = __suite_dep_4["transitionGenericAttempt"];
+const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
 const validateAnswerKeyRevision = __suite_dep_16["validateAnswerKeyRevision"];
 const validatePaperRevision = __suite_dep_16["validatePaperRevision"];
 const paperRevisionHash = __suite_dep_7["paperRevisionHash"];
@@ -455,7 +457,7 @@ const builtinCglPackages = __suite_dep_4["builtinCglPackages"];
 const configureCglPractice = __suite_dep_4["configureCglPractice"];
 const validateExamPackage = __suite_dep_4["validateExamPackage"];
 const startGenericAttempt = __suite_dep_4["startGenericAttempt"];
-const transitionGenericAttempt = __suite_dep_4["transitionGenericAttempt"];
+const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
 const createSourceReviewReference = __suite_dep_9["createSourceReviewReference"];
 const validateSourceReviewReference = __suite_dep_9["validateSourceReviewReference"];
 const createSourceKeyReference = __suite_dep_23["createSourceKeyReference"];
@@ -716,7 +718,7 @@ const answerKeyRevisionHash = __suite_dep_7["answerKeyRevisionHash"];
 const paperRevisionHash = __suite_dep_7["paperRevisionHash"];
 const validateExamPackage = __suite_dep_4["validateExamPackage"];
 const startGenericAttempt = __suite_dep_4["startGenericAttempt"];
-const transitionGenericAttempt = __suite_dep_4["transitionGenericAttempt"];
+const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
 const validateGenericStoredRecord = __suite_dep_8_stored_record_validator["validateGenericStoredRecord"];
 const addLearningCard = __suite_dep_27["addLearningCard"];
 const validateLearningCard = __suite_dep_27["validateLearningCard"];

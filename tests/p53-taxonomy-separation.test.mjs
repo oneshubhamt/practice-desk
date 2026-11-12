@@ -9,7 +9,8 @@ import {compileAuthoringPublication} from "../src/authoring/authoring-publisher.
 import {plainRichDocument} from "../src/domain/rich-document.ts";
 import {topicAncestors,parseTopicPathId,attributedTopicPath} from "../src/learning/syllabus-taxonomy.ts";
 import {topicMetrics,addLearningCard,validateLearningCard} from "../src/learning/learning.ts";
-import {startGenericAttempt,transitionGenericAttempt} from "../src/app/exam-package.ts";
+import {startGenericAttempt} from "../src/app/exam-package.ts";
+import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {practiceInventory,composePracticeSet} from "../src/app/practice-compose.ts";
 const P=s=>plainRichDocument(s);
 const q=(section,subject,topic,subtopic)=>({

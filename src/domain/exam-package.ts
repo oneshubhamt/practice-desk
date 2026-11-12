@@ -6,8 +6,6 @@ import type { QuestionRevision, StimulusDefinition, ImageAsset } from "./questio
 import type { AnswerKeyRevision } from "./answer-key.js";
 import type { ExamId, QuestionRevisionId } from "./ids.js";
 
-export type CglPracticeMode = "strict" | "free" | "single";
-
 export interface ExamPackage {
   readonly format: "practice-desk-exam";
   readonly version: 1;
@@ -19,8 +17,6 @@ export interface ExamPackage {
   readonly stimuli?: readonly StimulusDefinition[];
   readonly assets?: readonly ImageAsset[];
   readonly explanations?: Readonly<Record<string,string>>;
-  /** Runtime mode chosen by the user for derived CGL policies; never trusted as imported exam content. */
-  readonly practiceMode?: CglPracticeMode;
 }
 
 /** Reject hostile deep/broad/oversized authored JSON before hashing or cloning it. */
@@ -74,12 +70,9 @@ export function validateExamPackage(value: unknown): ExamPackage {
  if(![Object.prototype,null].includes(Object.getPrototypeOf(value)))
    throw new Error("Exam package must be a plain object");
  const fields=["format","version","examId","title","paper","answerKey","questions",
-   "stimuli","assets","explanations","practiceMode"];
+   "stimuli","assets","explanations"];
  for(const field of Object.keys(raw))
    if(!fields.includes(field))throw new Error("Exam package."+field+": unsupported field");
- if(raw.practiceMode!==undefined&&
-   (raw.examId!=="ssc-cgl"||!["strict","free","single"].includes(String(raw.practiceMode))))
-   throw new Error("Exam package: invalid runtime practice mode");
  if (raw.format !== "practice-desk-exam" || raw.version !== 1 ||
     typeof raw.examId !== "string" || !raw.examId.trim() ||
     typeof raw.title !== "string" || !raw.title.trim() ||

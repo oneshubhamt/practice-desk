@@ -1,4 +1,5 @@
-import type {CglPracticeMode} from "./domain/exam-package.ts";
+/** Built-in CGL runtime policy belongs to workspace/application state, not ExamPackage. */
+export type CglPracticeMode="strict"|"free"|"single";
 
 /** Pure persisted workspace contracts. Browser storage adapters live in app/. */
 export interface DisplayPreferences{

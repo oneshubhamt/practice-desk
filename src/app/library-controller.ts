@@ -4,7 +4,7 @@ import {minutes} from "./exam-view.ts";
 import {isAttempt,isLearning} from "./stored-record-validator.ts";
 
 
-import {configureCglPractice,configureUntimedPractice,startGenericAttempt} from "./exam-package.ts";
+import {cglAttemptMode,configureCglPractice,configureUntimedPractice,startGenericAttempt} from "./exam-package.ts";
 import {validateExamPackage} from "../domain/exam-package.ts";
 import type {ExamPackage,CglPracticeMode} from "../domain/exam-package.ts";
 import type {GenericAttempt} from "../engine/generic-attempt.ts";
@@ -360,7 +360,7 @@ export function bindLibraryScreen(owner:LibraryControllerContext):void{
              " unfinished tests. Start a separate custom attempt? Existing attempts remain saved."))return;
            const id=typeof crypto!=="undefined"&&crypto.randomUUID?
              crypto.randomUUID():"custom-"+owner.now()+"-"+Math.random();
-           owner.attempt={...startGenericAttempt(bundle,id,owner.now()),practiceComposition:manifest};
+           owner.attempt={...startGenericAttempt(bundle,id,owner.now(),"custom-practice"),practiceComposition:manifest};
            owner.freshlyStartedAttemptId=owner.attempt.id;
            owner.composeError="";owner.composePreview="";owner.warning="";
            void owner.save(owner.attempt);owner.go({screen:"exam",attemptId:owner.attempt.id});
@@ -382,7 +382,10 @@ export function bindLibraryScreen(owner:LibraryControllerContext):void{
        const id=typeof crypto!=="undefined"&&crypto.randomUUID?crypto.randomUUID():"generic-"+owner.now()+"-"+Math.random();
        const configured=configureUntimedPractice(
          owner.selectedFamilyId===BUILTIN_CGL_FAMILY?configureCglPractice(p,owner.cglMode,owner.singleSection):p,owner.untimedPractice);
-       owner.attempt=startGenericAttempt(configured,id,owner.now());
+       const attemptMode=owner.selectedFamilyId===BUILTIN_CGL_FAMILY?
+         cglAttemptMode(owner.cglMode):
+         configured.paper.edition==="custom"?"custom-practice":"exam-simulation";
+       owner.attempt=startGenericAttempt(configured,id,owner.now(),attemptMode);
        owner.freshlyStartedAttemptId=owner.attempt.id;
        if(configured.paper.edition==="reviewed"){
          const family=owner.families().find(f=>f.id===owner.selectedFamilyId);

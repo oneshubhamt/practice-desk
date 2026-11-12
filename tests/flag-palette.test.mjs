@@ -5,7 +5,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {pkg} from "./fixtures/six-kinds.mjs";
-import {validateExamPackage,startGenericAttempt,transitionGenericAttempt} from "../src/app/exam-package.ts";
+import {validateExamPackage,startGenericAttempt} from "../src/app/exam-package.ts";
+import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {renderModelExam} from "../src/app/exam-view.ts";
 
 const exam=validateExamPackage(pkg),map=new Map(exam.questions.map(q=>[q.id,q]));

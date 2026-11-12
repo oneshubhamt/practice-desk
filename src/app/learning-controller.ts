@@ -49,7 +49,8 @@ export function createWorkspaceLearningDesk(owner:LearningControllerContext):Ret
        const paper=makeRevisionPackage(selected,nonce);
        const id=typeof crypto!=="undefined"&&crypto.randomUUID?crypto.randomUUID():
          "attempt-"+owner.now()+"-"+Math.floor(Math.random()*100000);
-       const generated={...startGenericAttempt(paper,id,owner.now()),notebookLineage:createNotebookLineage(selected,selection)};
+       const generated={...startGenericAttempt(paper,id,owner.now(),"custom-practice"),
+         notebookLineage:createNotebookLineage(selected,selection)};
        if(!await owner.save(generated))return false;
        owner.attempt=generated;owner.freshlyStartedAttemptId=generated.id;
        owner.warning="Untimed notebook revision · +1 correct, 0 incorrect. This is not a source-exam score.";

@@ -8,13 +8,12 @@ import type { QuestionRevision, StimulusDefinition, ImageAsset, CandidateRespons
 import type { AnswerKeyRevision, CorrectAnswer } from "../domain/answer-key.js";
 import type { ExamId, QuestionRevisionId } from "../domain/ids.js";
 import {validateExamPackage} from "../domain/exam-package.ts";
-import type {ExamPackage,CglPracticeMode} from "../domain/exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
+import type {AttemptMode} from "../domain/attempt.js";
+import type {CglPracticeMode} from "../workspace-settings.ts";
 import type {GenericAttempt} from "../engine/generic-attempt.ts";
 export {validateExamImportBudget,validateExamPackage} from "../domain/exam-package.ts";
-import { validateResponse } from "../engine/response.ts";
-import { startSession, transition } from "../engine/session.ts";
-import type { SessionState, SessionEvent } from "../engine/session.ts";
-import { scoreAttempt } from "../engine/scoring.ts";
+import { startSession } from "../engine/session.ts";
 import { freezeAttempt } from "../history/frozen.ts";
 
 /** Convert existing CGL content without changing the original bank or editions. */
@@ -70,7 +69,7 @@ export function configureCglPractice(base: ExamPackage, mode:CglPracticeMode, se
      id:(base.paper.id+":practice:strict") as PaperRevision["id"],
      timing:{...base.paper.timing,transition:"automatic" as const}};
    const paper:PaperRevision={...derived,contentHash:paperRevisionHash(derived)};
-   return {...base,paper,practiceMode:"strict"};
+   return {...base,paper};
  }
  const source=base.paper;
  if(mode==="single"&&!source.sections[sectionIndex])throw new Error("Unknown practice section");
@@ -87,7 +86,7 @@ export function configureCglPractice(base: ExamPackage, mode:CglPracticeMode, se
    timing:{kind:"whole-paper" as const,durationMs:mode==="single"?900000:3600000,pausePolicy:"allowed" as const},
    navigation:{...source.navigation,sectionNavigation:mode==="free"?"free" as const:"sequential-locked" as const}};
  const paper:PaperRevision={...paperBase,contentHash:paperRevisionHash(paperBase)};
- return {...base,paper,answerKey,questions,practiceMode:mode,
+ return {...base,paper,answerKey,questions,
    ...(base.explanations?{explanations:Object.fromEntries(Object.entries(base.explanations)
      .filter(([id])=>included.has(id as QuestionRevisionId)))}:{}),
    title:base.title+(mode==="free"?" · Flexible practice":" · "+sections[0]!.title+" practice")};
@@ -104,47 +103,20 @@ export function configureUntimedPractice(base:ExamPackage,enabled:boolean):ExamP
  return {...base,paper};
 }
 
-export function startGenericAttempt(bundle: ExamPackage, id: string, timestamp: number): GenericAttempt {
- const validated = validateExamPackage(bundle);
- const mode=validated.paper.edition==="custom"?"custom-practice":validated.examId==="ssc-cgl" ?
-   validated.practiceMode==="free"?"full-paper-practice":
-   validated.practiceMode==="single"?"section-practice":"exam-simulation":
-   "exam-simulation";
- const frozen = freezeAttempt(validated.paper,validated.answerKey,validated.questions,
-   validated.stimuli??[],validated.assets??[],mode,new Date(timestamp).toISOString(),validated.examId);
- return {recordType:"generic-attempt",saveRevision:0,id,packageId:bundle.paper.id,startedAt:timestamp,
-   updatedAt:timestamp,finishedAt:null,completionReason:null,frozen,state:startSession(bundle.paper,timestamp),
-   ...(validated.explanations?{explanations:structuredClone(validated.explanations)}:{})};
+export function cglAttemptMode(mode:CglPracticeMode):AttemptMode{
+ return mode==="free"?"full-paper-practice":mode==="single"?"section-practice":"exam-simulation";
 }
-export function transitionGenericAttempt(
- attempt: GenericAttempt, event: SessionEvent, questionMap: ReadonlyMap<QuestionRevisionId,QuestionRevision>,
+
+export function startGenericAttempt(
+ bundle: ExamPackage,id:string,timestamp:number,mode?:AttemptMode
 ): GenericAttempt {
- if (attempt.finishedAt !== null) return attempt;
- const paper = attempt.frozen.paper;
- if (event.type === "ANSWER") {
-   const id=paper.sections[attempt.state.sectionIndex]?.questionRevisionIds[attempt.state.questionIndex];
-   const q=id && questionMap.get(id);
-   if (!q) throw new Error("No question at the cursor");
-   validateResponse(q,event.response);
- }
- const state=transition(paper,attempt.state,event);
- const finished = state.status === "completed";
- const expired=finished&&(paper.timing.kind==="whole-paper"?
-   state.elapsedMs>=paper.timing.durationMs:
-   paper.timing.kind==="sectional"?(()=>{
-     const section=paper.sections[state.sectionIndex];
-     const limit=paper.timing.sectionLimits.find(x=>x.sectionId===section?.id)?.durationMs;
-     return limit!==undefined&&limit!==null&&state.sectionElapsedMs>=limit;
-   })():false);
- const completionReason=expired?"time-expired":
-   event.type==="SUBMIT_SECTION"?"section-submitted":"submitted";
- return {...attempt,state,updatedAt:event.nowMs,finishedAt:finished?event.nowMs:null,
-    completionReason:finished?completionReason:null,
-    ...(finished ? {result:scoreAttempt(paper,attempt.frozen.key,attempt.frozen.questions,
-      state.responses,new Date(event.nowMs).toISOString())}: {})};
-}
-export function responseFor(state: SessionState, questionId: QuestionRevisionId): CandidateResponse | undefined {
- return state.responses.find(r=>r.questionRevisionId===questionId)?.response;
+ const validated=validateExamPackage(bundle);
+ const frozenMode=mode??(validated.paper.edition==="custom"?"custom-practice":"exam-simulation");
+ const frozen=freezeAttempt(validated.paper,validated.answerKey,validated.questions,
+   validated.stimuli??[],validated.assets??[],frozenMode,new Date(timestamp).toISOString(),validated.examId);
+ return {recordType:"generic-attempt",saveRevision:0,id,packageId:validated.paper.id,startedAt:timestamp,
+   updatedAt:timestamp,finishedAt:null,completionReason:null,frozen,state:startSession(validated.paper,timestamp),
+   ...(validated.explanations?{explanations:structuredClone(validated.explanations)}:{})};
 }
 
 /** Resolve display labels from frozen question definitions, not option positions or keys. */

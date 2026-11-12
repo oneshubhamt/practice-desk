@@ -135,8 +135,7 @@ export function composePracticeSet(source:ExamPackage,request:PracticeRequest):{
  const explanations=Object.fromEntries(Object.entries(source.explanations??{}).filter(([id])=>included.has(id as QuestionRevisionId)));
  const bundle:ExamPackage={format:"practice-desk-exam",version:1,
    examId:source.examId,title:source.title+" · Custom set ("+request.count+")",
-   paper,answerKey,questions,...resources,explanations,
-   ...(source.practiceMode?{practiceMode:source.practiceMode}:{})};
+   paper,answerKey,questions,...resources,explanations};
  validateExamPackage(bundle);
  const core:Omit<PracticeComposition,"contentHash">={
    schema:1,sourceExamId:source.examId,sourcePaperRevisionId:source.paper.id,

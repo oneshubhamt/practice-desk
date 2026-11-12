@@ -5,7 +5,8 @@
 
 import {type RecordItem} from "./stored-record-validator.ts";
 
-import type {ExamPackage,CglPracticeMode} from "../domain/exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
+import type {CglPracticeMode} from "../workspace-settings.ts";
 import type {GenericAttempt} from "../engine/generic-attempt.ts";
 import type {ExamCalculatorState} from "../domain/calculator.ts";
 
