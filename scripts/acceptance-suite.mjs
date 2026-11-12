@@ -1,7 +1,7 @@
 /** One browser process per engine; every original acceptance scenario runs with
  * its own fresh browser context, independent checks, and failure diagnostics.
  * This is a real execution harness, not static source scan or fake coverage.
- * Full source mapping and risks: docs/TEST_SUITE_LEDGER.md.
+ * Current verification contract: docs/QA_CURRENT.md.
  */
 import {mkdir,readdir,writeFile} from "node:fs/promises";
 import {join} from "node:path";

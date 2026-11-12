@@ -25,7 +25,7 @@ Persistence orchestration never branches on raw IndexedDB versus localStorage me
 
 Authoring follows the same ownership rule: `authoring-studio.ts` does not access browser storage or construct publication QA acknowledgements. `AuthoringWorkspaceStore` exclusively owns unpublished shelf/staging persistence and cross-tab CAS, while `authoring-workflow.ts` owns staged-source ingestion/handoff and the validate → acknowledge → revalidate publication sequence.
 
-Use [data contracts](DATA_CONTRACTS.md) for accepted formats and [authoring](QUESTION_BANK_AUTHORING.md) for producing banks.
+Use [data contracts](DATA_CONTRACTS.md) for accepted formats and the [agent authoring quickstart](../AGENT_AUTHORING_QUICKSTART.md) for producing banks.
 
 ## 3. End-to-end lifecycle
 
@@ -74,4 +74,4 @@ The application does **not** embed an LLM, OCR service, web research agent, auto
 
 The earlier P60 findings on explanation-only media secrecy, incomplete blueprint publication, exact Source pairing, mixed-kind comparability and candidate-semantic comparison have been addressed in the canonical implementation and are retained in the [backlog](../../backlog.md) only as closed evidence. Remaining open boundaries are source/authenticity trust, physical-device and assistive-technology verification, OS/profile storage-loss behavior, deliberate user visual/usability approval and release procedure.
 
-**References:** [data contracts](DATA_CONTRACTS.md) · [current programme](../ENGINEERING_PROGRAMME.md) · [policy](../decisions/POLICY_REGISTER.md) · [QA](../QA_CURRENT.md) · [historical design material](../HISTORY_INDEX.md).
+**References:** [data contracts](DATA_CONTRACTS.md) · [policy](../decisions/POLICY_REGISTER.md) · [QA](../QA_CURRENT.md) · [historical design material](../HISTORY_INDEX.md).

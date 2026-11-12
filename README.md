@@ -1,24 +1,28 @@
 # Practice Desk
 
-Practice Desk is a **local-first examination and learning application**. Its static build provides six question kinds, configurable exam rules, original/reviewed editions, immutable scored attempts, History, checked backups, Wordgard authoring, FSRS-7 revision and local browser/WASM weight optimization. A standalone `file://` HTML remains available as a compatibility/offline fallback, but in-app FSRS training requires the static build. Practice Desk does **not** contain an embedded AI model or independently certify imported questions.
+Practice Desk is a **local-first examination and learning application** with six question kinds, explicit exam rules, Source/Reviewed editions, immutable scored attempts, local History/backups, Wordgard authoring and FSRS-7 revision.
 
-## Use the application
+The normal full-capability distribution is `Practice_Desk_Static/`, served over localhost or HTTPS. It adds a local browser Worker/WASM FSRS optimizer and requires no application backend. `Practice_Desk_Offline_Mock_Tests.html` is the deterministic one-file `file://` distribution; examination, persistence and scheduling work there, while in-app weight training is intentionally unavailable.
 
-1. Install Node.js 26 LTS (26.13.0 or newer 26.x) and run `npm ci --no-audit --no-fund`.
-2. Run `npm install --prefix tools/fsrs-optimizer --package-lock=false --no-audit --no-fund` to install the isolated native + WASM optimizer bindings.
-3. Run `npm run check` for the core application, or `npm run build:static` to additionally build `Practice_Desk_Static/` with the browser optimizer Worker/WASM.
-4. For the full-capability app, serve `Practice_Desk_Static/` over localhost or HTTPS and open its `index.html`. The directory has no required backend; the optimizer runs locally in the browser.
-5. `Practice_Desk_Offline_Mock_Tests.html` can still be opened directly with `file://` when a one-file fallback is preferable; scheduling works, but browser weight training is disabled.
-6. Create questions in Wordgard, stage a canonical `practice-desk-authoring` source, or import a validated `practice-desk-exam` package from Library. Keep your own backups.
+## Build and verify
 
-External agents may create versioned question-bank JSON with repository CLI tools. **They cannot directly access the user's browser History, import content automatically or verify a claimed PYQ solely from a source hash.** Start with the [agent quickstart](docs/AGENT_AUTHORING_QUICKSTART.md).
+Use Node.js **26.13.0** with the committed lockfiles.
+
+```bash
+npm ci --no-audit --no-fund
+npm run check
+npm ci --prefix tools/fsrs-optimizer --no-audit --no-fund
+npm run build:static
+```
+
+For the complete verification contract, including mutation checks and Chromium/Firefox/WebKit journeys, use [QA_CURRENT.md](docs/QA_CURRENT.md). Generated HTML is build output; do not hand-edit it.
+
+## Content
+
+Questions can be authored in Wordgard, supplied as canonical `practice-desk-authoring` v1 JSON, or imported as a validated `practice-desk-exam` package. External agents can create/review versioned files through local CLI tools, but cannot access browser History, silently import content, or authenticate a claimed PYQ merely from a hash. Start with the [agent authoring quickstart](docs/AGENT_AUTHORING_QUICKSTART.md).
 
 ## Documentation
 
-Use the [task-oriented documentation index](docs/README.md); do not read every file. Engineers start at [AGENTS.md](AGENTS.md), then the [as-built architecture](docs/architecture/CURRENT_ARCHITECTURE.md) and source. The [current backlog](backlog.md) identifies unresolved risks and separate release gates. Original historical programme records are preserved through [pinned Git history](docs/HISTORY_INDEX.md), not copied into active guidance.
+Use the [documentation map](docs/README.md) rather than reading every file. Engineers start with [AGENTS.md](AGENTS.md) and the affected source; consult the [architecture](docs/architecture/CURRENT_ARCHITECTURE.md), [data contracts](docs/architecture/DATA_CONTRACTS.md), [policy](docs/decisions/POLICY_REGISTER.md), [QA contract](docs/QA_CURRENT.md) and [live backlog](backlog.md) only as needed. Historical programme evidence is indexed in [HISTORY_INDEX.md](docs/HISTORY_INDEX.md).
 
-## Verified status and limits
-
-The historical P61 test-bench consolidation is closed. [Final CI](https://github.com/oneshubhamt/practice-desk/actions/runs/42433146976) passed 408 Node tests, ten selected semantic-mutation checks, 32 Chromium + 20 Firefox + 20 Linux WebKit acceptance journeys and guarded publishing. That verifies bounded software contracts—not independent official question accuracy, physical Mac/mobile accessibility, OS data recovery or release approval.
-
-`main` and `baseline/v11` are protected from unapproved changes. The current development branch is **`working`**; branch/release policy remains governed by [AGENTS.md](AGENTS.md).
+The authorised development branch is **`working`**. Do not alter `main` or `baseline/v11`, merge, or release without explicit authorization.

@@ -1,46 +1,61 @@
-# Practice Desk — AI agent quickstart
+# Practice Desk — agent authoring quickstart
 
-**Goal:** create, review, correct and package exam questions for the existing offline app, with minimal context. This is a local CLI; it has **no** embedded LLM, network/source authenticator, user-browser control, History access or automatic Library import.
+**Goal:** create, review and package exam questions through local files/CLI with minimal context. Practice Desk has no embedded LLM, network source authenticator, browser-History access or automatic Library import.
 
-## Start here
+## Canonical source
 
-1. Read this file and **one** relevant source shape: [APFC](../examples/ai-first-apfc.json) or [CAT](../examples/ai-first-cat.json). Two source-traced **reconstructions**, not authenticated official PYQs: [APFC 2023 vocabulary](../examples/source-grounded-apfc-2023.json) and [CAT 2024 QA](../examples/source-grounded-cat-2024.json).
-2. To discover app features (not needed for ordinary bank writing), run `node scripts/practice-desk-capabilities.mjs summary`; for available agent operations, run `node scripts/agent-handoff.mjs actions`. For one-question corrections use `node scripts/question-bank-agent.mjs inspect bank.json`, `show bank.json QUESTION-ID` and `patch bank.json ops.json NEW-bank.json --dry-run`; always write a new source revision.
-3. Research **actual** syllabus, source PDF/HTML, dates, current law, original item numbers and answer rationale. Draft a `practice-desk-authoring` v1 JSON with real, distinct distractors, explanations, stable IDs, explicit origin and source locators. Label paraphrases `reconstruction`; only independently authenticated exact original paper items qualify as `official-pyq`.
+Author one `practice-desk-authoring` v1 JSON file. Start from [APFC](../examples/ai-first-apfc.json) or [CAT](../examples/ai-first-cat.json). Source-traced examples in `examples/source-grounded-*.json` are **reconstructions**, not authenticated official PYQs.
 
-## One-command complete blind review preparation
+A bank declares paper identity/edition/revision, scoring, timing/navigation, physical sections, optional shared stimuli/media and questions. Each question carries a stable id, section, semantic classification, response kind, candidate content, key, explanation and provenance/QA claims. Supported response kinds are `single-choice`, `multiple-select`, `numeric-entry`, `true-false`, `matching` and `free-response`; written responses are manually/self-assessed rather than silently machine-graded. Section timers belong to physical sections, not subjects/topics.
+
+Source files are bounded (currently 200 questions plus bounded media/stimuli); split larger work into staged batches. Material candidate/key/source changes require a new revision and fresh SHA-bound review.
+
+## Ordinary workflow
+
+```bash
+node scripts/question-bank-cli.mjs validate-bank bank.json
+node scripts/question-bank-cli.mjs qa-bank bank.json
+node scripts/question-bank-cli.mjs compile-bank bank.json NEW.exam.json
+
+# Small-context inspection/correction
+node scripts/question-bank-agent.mjs inspect bank.json
+node scripts/question-bank-agent.mjs show bank.json QUESTION-ID
+node scripts/question-bank-agent.mjs patch bank.json ops.json NEW-bank.json --dry-run
+```
+
+Research actual syllabus/source documents, dates/current law, original item numbers and answer rationale outside the offline app. Label paraphrases `reconstruction`; claim `official-pyq` only when independently authenticated.
+
+## Blind quality review
 
 ```bash
 node scripts/agent-handoff.mjs prepare bank.json NEW-review-dir --allow-create
 ```
 
-Creates `blind-candidates.json` and `review.json` for **all questions** without printing answers, explanations or base64 media to the agent. The reviewer must first solve candidate-only items, inspect relevant documents/figures and fill **all 20** assessments, defensible independent solutions and attributable evidence. The **v2 review sidecar** additionally requires a per-question `applicability` declaration: `mathematical`, `legal`, `timeSensitive` (each `yes` or `no`) and `asOfDate` (ISO date for legal/time-sensitive claims, otherwise `null`). Such claims require source-consulted factual and temporal checks plus evidence with the matching `asOfDate`, publisher, title, precise locator and extract; maths requires a proof/source-backed check. Text heuristics can flag contradictions, but do not replace declarations. The initial template contains `pending` classifications, `blindClaim:false` and `not-reviewed` checks and **cannot publish**. Earlier v1 quality-review files must be reassessed into v2; existing examination/History records are unaffected. Never invent blind review, source research, reviewer identity or timestamps: a completed checklist, SHA or URL is **not** factual authentication.
+This creates candidate-only review material without printing answers/explanations/base64 media. The reviewer independently solves the items and fills all 20 assessments plus evidence. Current v2 review records explicitly declare `mathematical`, `legal` and `timeSensitive` applicability; legal/time-sensitive claims require an ISO `asOfDate` and matching source evidence, while mathematics requires proof/source-backed checking.
 
-## Assess, then explicitly publish
+The initial template is intentionally pending and **cannot publish**. A completed checklist, SHA, URL, reviewer label or timestamp is not independent factual authentication.
+
+## Assess and publish
 
 ```bash
-# One ordinary AI-original/reconstruction bank
+# Single bank
 node scripts/agent-handoff.mjs assess single bank.json --quality-review NEW-review-dir/review.json
 node scripts/agent-handoff.mjs publish single bank.json NEW.exam.json --quality-review NEW-review-dir/review.json --allow-create
 
-# Preserve original and separate corrected/reviewed version
-node scripts/editorial-editions.mjs template original.json reviewed.json > decisions-template.json
-# Complete substantive decisions, evidence and reviewed bank's blind quality review.
+# Source + separately corrected Reviewed
+node scripts/editorial-editions.mjs template original.json reviewed.json > decisions.json
+# Complete decisions/evidence and reviewed-bank QA.
 node scripts/agent-handoff.mjs assess paired original.json reviewed.json decisions.json --quality-review review.json
 node scripts/agent-handoff.mjs publish paired original.json reviewed.json decisions.json NEW-directory --quality-review review.json --allow-create
 
-# Supplied PDF: external agent actually inspects/transcribes pages; no built-in OCR
-node scripts/pdf-ingest.mjs template original.json paper.pdf > intake-template.json
-# Fill complete page/key/figure/source comparison and independently review reviewed.json.
+# Supplied PDF: an external reviewer actually inspects/transcribes pages; no built-in OCR.
+node scripts/pdf-ingest.mjs template original.json paper.pdf > intake.json
 node scripts/agent-handoff.mjs assess pdf intake.json original.json paper.pdf reviewed.json decisions.json --quality-review review.json
 node scripts/agent-handoff.mjs publish pdf intake.json original.json paper.pdf reviewed.json decisions.json NEW-directory --quality-review review.json --allow-create
 ```
 
-Optional `--blueprint plan.json`, paired with `--cognitive tags.json` if cognitive quotas exist; `--against prior.json` compares explicitly supplied previous sources. Blueprints with `allowPartial:true` disclose remaining questions rather than fabricate completed quotas. Agents should publish only when returned `readyForPublication:true`, source evidence was genuinely checked and required review was actually performed. The CLI reports `factualVerification:not-performed` and reviewer statements are attributed claims, not independent system certification.
+Optional blueprint/cognitive files can enforce planned quotas. Partial batches may remain structurally valid for continued work but cannot publish until required totals/allocations are complete.
 
-A published `NEW.exam.json` is imported **manually** into Practice Desk's offline Library. For paired/PDF results import `source.exam.json` first, then `reviewed.exam.json`; retain original documents/sidecars. **Never replace** an existing output. Changes to keys/stems invalidate earlier SHA-bound reviews; prepare/review them again.
+Published packages are imported **manually** into Library. For paired/PDF results import Source first, then Reviewed, and retain source documents/sidecars externally. Never overwrite an existing output merely to preserve an old revision.
 
-## Focused references (open only when needed)
-
-- [One consolidated content pipeline](architecture/AGENT_CONTENT_PIPELINE.md) for coverage quotas, source-bound independent reviews, Source/Reviewed editions, supplied PDF evidence and agent handoff; [source authoring schema](architecture/QUESTION_BANK_AUTHORING.md) only when needed.
-- Historical APFC/CAT reconstructions in `examples/source-grounded-*.json` are secondary-source traces, **not** authenticated exact official PYQs/answers or primary source certifiers. Never infer official question number or law from them.
+For advanced quota, Source/Reviewed and PDF semantics read [AGENT_CONTENT_PIPELINE.md](architecture/AGENT_CONTENT_PIPELINE.md). Exact runtime/domain invariants live in [DATA_CONTRACTS.md](architecture/DATA_CONTRACTS.md). Machine-discoverable actions are in [practice-desk-capabilities.v1.json](contracts/practice-desk-capabilities.v1.json).

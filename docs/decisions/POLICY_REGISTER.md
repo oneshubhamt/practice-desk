@@ -17,6 +17,6 @@ These are the **current cross-programme rules**, not an implementation diary. Th
 | Authoring and agents | Wordgard manual authoring and compact external AI-first authoring contract; versioned staged sources, separate blind QA/editorial/PDF sidecars, explicit create-new-file permission; no embedded LLM or automatic browser import. Retired authoring formats are not runtime compatibility targets. |
 | QA | Source-level review, independent/adversarial oracles, all required real browser journeys, no removal of unique safety coverage for cosmetic count reduction, guarded source-verified HTML publishing. |
 | Truth and ethics | No fabricated legal/PYQ verification, reviewer independence, temporal certainty, device permissions or ability to access local learner data. |
-| Unresolved work | [Backlog](../../backlog.md) records deferred P60 correctness, independent content/PDF and physical-device/release checks. A closed test programme does not resolve product findings. |
+| Unresolved work | [Backlog](../../backlog.md) contains only current source-trust, physical-device/storage-loss, release/usability risks and separately authorised enhancements. Closed programme findings remain in Git history. |
 
-**For technical detail:** [architecture](../architecture/CURRENT_ARCHITECTURE.md), [data contracts](../architecture/DATA_CONTRACTS.md), [current programme](../ENGINEERING_PROGRAMME.md), [backlog](../../backlog.md).
+**For technical detail:** [architecture](../architecture/CURRENT_ARCHITECTURE.md), [data contracts](../architecture/DATA_CONTRACTS.md), [QA](../QA_CURRENT.md), [backlog](../../backlog.md).
