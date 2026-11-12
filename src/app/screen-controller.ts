@@ -35,7 +35,7 @@ export function drawWorkspaceScreen(owner:ScreenControllerContext,):void{
      html:()=>owner.view==="library"?owner.listHTML():owner.view==="history"?
        historyHTML([...owner.records.values()].filter(isAttempt),owner.packages,
          owner.historyQuery,
-         owner.loading,owner.fallbackConflict||owner.storageFault,owner.warning,owner.db?"indexeddb":"fallback",owner.storageSnapshot()):
+         owner.loading,owner.fallbackConflict||owner.storageFault,owner.warning,owner.storageBackend?.kind==="indexeddb"?"indexeddb":"fallback",owner.storageSnapshot()):
        owner.view==="exam"?owner.examHTML():owner.resultHTML()
    },owner.learningDesk);
    if(owner.view==="learning")return;

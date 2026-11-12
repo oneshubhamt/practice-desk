@@ -15,11 +15,11 @@ import type {SessionEvent} from "../engine/session.ts";
 import {type DeletionIntent} from "../history/deletion-policy.ts";
 import type {SourcePaperBank,ReviewPatchBank} from "../content/schema.js";
 
-import {type StorageHealth} from "./history-page.ts";
+import type {StorageHealth} from "./storage-health.ts";
 import {type HistoryQuery} from "./history-query.ts";
 
 
-import type {SharedSnapshot} from "../history/shared-store.ts";
+import type {WorkspaceStore} from "../history/workspace-store.ts";
 
 import {type ResultTab,type ReviewFilter} from "./result-presentation.ts";
 
@@ -56,8 +56,6 @@ export interface WorkspaceContext{
  composeSection:string;
  composeSeed:string;
  composeTopic:string;
- db:IDBDatabase | null;
- readonly dbName:string;
  readonly deleteAllCompleted:() => Promise<void>;
  readonly dispatch:(event: SessionEvent) => void;
  readonly dispatchVisibility:(visible: boolean) => void;
@@ -67,7 +65,6 @@ export interface WorkspaceContext{
  editionView:"source" | "reviewed";
  readonly examHTML:() => string;
  fallbackConflict:boolean;
- fallbackStamp:string | null;
  readonly families:()=>ExamFamily[];
  freshlyStartedAttemptId:string | null;
  readonly go:(target: AppRoute, history?: "push" | "replace") => void;
@@ -115,10 +112,9 @@ export interface WorkspaceContext{
  readonly sources:SourcePaperBank;
  readonly storage:(event: StorageEvent) => void;
  storageFault:boolean;
- readonly storageKey:string;
+ storageBackend:WorkspaceStore | null;
  readonly storageSnapshot:() => StorageHealth;
  readonly storedSetups:PracticeSetups | null;
- readonly storedSnapshots:Map<string, SharedSnapshot>;
  readonly timer:number;
  untimedPractice:boolean;
  readonly updateStorageHealth:() => void;
@@ -131,6 +127,11 @@ export interface WorkspaceContext{
 
 
 type Slice<K extends keyof WorkspaceContext>=Pick<WorkspaceContext,K>;
+
+export type StorageHealthControllerContext=Slice<
+ "fallbackConflict"|"lastCommittedAt"|"lastStorageFailure"|"loading"|"pendingWrites"|
+ "records"|"root"|"storageFault"|"storageSnapshot"|"updateStorageHealth"
+>;
 
 export type AuthoringControllerContext=Slice<
  "applyFamily"|"authoringStudio"|"builtinPaperIds"|"choice"|"disposed"|"draw"|
@@ -178,27 +179,24 @@ export type RouteControllerContext=Slice<
 >;
 
 export type PersistenceControllerContext=Slice<
- "applyFamily"|"attempt"|"calculatorStates"|"db"|"dbName"|"disposed"|"draw"|
- "fallbackConflict"|"fallbackStamp"|"go"|"hydrationDone"|"lastCommittedAt"|
- "lastStorageFailure"|"loading"|"mirrorKey"|"notice"|"packages"|"pendingWrites"|
- "recordStorageFailure"|"records"|"root"|"routeHydrated"|"router"|"save"|
- "saveSelection"|"setups"|"storageFault"|"storageKey"|"storageSnapshot"|
- "storedSetups"|"storedSnapshots"|"updateStorageHealth"|"warning"|"writeMirror"|
- "writeQueue"
+ "applyFamily"|"attempt"|"calculatorStates"|"disposed"|"draw"|"fallbackConflict"|
+ "go"|"hydrationDone"|"lastCommittedAt"|"loading"|"mirrorKey"|"notice"|"packages"|
+ "pendingWrites"|"recordStorageFailure"|"records"|"routeHydrated"|"router"|"save"|
+ "saveSelection"|"setups"|"storageBackend"|"storageFault"|"storedSetups"|
+ "updateStorageHealth"|"warning"|"writeMirror"|"writeQueue"
 >;
 
 export type LifecycleControllerContext=Slice<
- "attempt"|"authoringStudio"|"calculatorStates"|"db"|"dispatch"|"dispatchVisibility"|
- "disposed"|"draw"|"fallbackConflict"|"fallbackStamp"|"go"|"imagePreparation"|
- "imageViewer"|"keyboard"|"lastTimerSave"|"learningDesk"|"now"|"pagehide"|
- "recordStorageFailure"|"reviewFilter"|"root"|"router"|"save"|"storage"|
- "storageFault"|"storageKey"|"timer"|"view"|"visibility"|"warning"|"writeMirror"|
- "writeQueue"
+ "attempt"|"authoringStudio"|"calculatorStates"|"dispatch"|"dispatchVisibility"|
+ "disposed"|"draw"|"fallbackConflict"|"go"|"imagePreparation"|"imageViewer"|
+ "keyboard"|"lastTimerSave"|"learningDesk"|"now"|"pagehide"|"recordStorageFailure"|
+ "reviewFilter"|"root"|"router"|"save"|"storage"|"storageBackend"|"storageFault"|
+ "timer"|"view"|"visibility"|"warning"|"writeMirror"|"writeQueue"
 >;
 
 export type ScreenControllerContext=Slice<
- "attempt"|"authoringStudio"|"db"|"disposed"|"draw"|"examHTML"|"fallbackConflict"|
+ "attempt"|"authoringStudio"|"disposed"|"draw"|"examHTML"|"fallbackConflict"|
  "go"|"historyQuery"|"imagePreparation"|"imageViewer"|"learningDesk"|"listHTML"|
  "loading"|"packages"|"records"|"resultHTML"|"resultTab"|"root"|"screenRenderer"|
- "storageFault"|"storageSnapshot"|"view"|"warning"
+ "storageBackend"|"storageFault"|"storageSnapshot"|"view"|"warning"
 > & HistoryControllerContext & LibraryControllerContext & ResultControllerContext & ExamControllerContext;

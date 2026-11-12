@@ -10,9 +10,8 @@ import {createSessionClock} from "../engine/clock.ts";
 import type {DeletionIntent} from "../history/deletion-policy.ts";
 import type {SourcePaperBank,ReviewPatchBank} from "../content/schema.js";
 import {createLearningDesk} from "./learning-ui.ts";
-import type {StorageHealth} from "./history-page.ts";
+import type {StorageHealth} from "./storage-health.ts";
 import {DEFAULT_HISTORY_QUERY,restoreHistoryQuery,type HistoryQuery} from "./history-query.ts";
-import {SHARED_DB_NAME,type SharedSnapshot} from "../history/shared-store.ts";
 import type {ResultTab,ReviewFilter} from "./result-presentation.ts";
 import {readPracticeSetups,type PracticeSetups} from "./practice-selection.ts";
 import {examFamilyCatalog,BUILTIN_CGL_FAMILY} from "./exam-families.ts";
@@ -34,9 +33,11 @@ import {activateWorkspaceRoute,navigateWorkspace} from "./route-controller.ts";
 import {drawWorkspaceScreen,reportWorkspaceNotice} from "./screen-controller.ts";
 import {changeHistoryFilters} from "./history-controller.ts";
 import {downloadHistoryBackup,importHistoryBackup,writeEmergencyMirror,saveWorkspaceRecord,
- removeWorkspaceAttempt,deleteCompletedWorkspaceAttempts,showWorkspaceStorageEstimate,
- requestWorkspacePersistentStorage,workspaceStorageHealth,updateWorkspaceStorageHealth,
- reportWorkspaceStorageFailure,hydrateWorkspaceStorage} from "./persistence-controller.ts";
+ removeWorkspaceAttempt,deleteCompletedWorkspaceAttempts,hydrateWorkspaceStorage}
+ from "./persistence-controller.ts";
+import {showWorkspaceStorageEstimate,requestWorkspacePersistentStorage,
+ workspaceStorageHealth,updateWorkspaceStorageHealth,reportWorkspaceStorageFailure}
+ from "./storage-health-controller.ts";
 
 let builtinCache:{
  sources:SourcePaperBank;patches:ReviewPatchBank;
@@ -62,7 +63,6 @@ export function mountExamWorkspace(
  const builtinPaperIds=new Set(builtins.map(p=>p.paper.id));
  const packages=new Map<string,ExamPackage>(builtins.map(p=>[p.paper.id,p]));
  const records=new Map<string,RecordItem>();
- const storedSnapshots=new Map<string,SharedSnapshot>();
  const initialChoice=[...packages.values()].reverse().find(p=>p.paper.edition==="reviewed")?.paper.id??
    (packages.keys().next().value as string);
  const storedSetups=readPracticeSetups();
@@ -86,8 +86,6 @@ export function mountExamWorkspace(
  const imageViewer=createImageViewer(root);
  const imagePreparation=createImagePreparation();
  const now=createSessionClock(Date.now(),performance.now(),()=>performance.now());
- const dbName=SHARED_DB_NAME;
- const storageKey=STORAGE_TOPOLOGY.historyFallback;
  const mirrorKey=STORAGE_TOPOLOGY.activeAttemptMirror;
  let hydrationDone:()=>void=()=>{};
  const hydration=new Promise<void>(resolve=>{hydrationDone=resolve;});
@@ -151,11 +149,11 @@ export function mountExamWorkspace(
    choiceDrafts,manualGradeDrafts,
    composeCount:10,composeDifficulty:"",composeError:"",composeOpen:false,composePreview:"",
    composeSection:"",composeSeed:"practice-1",composeTopic:"",
-   db:null,dbName,deleteAllCompleted,dispatch,dispatchVisibility,
+   deleteAllCompleted,dispatch,dispatchVisibility,
    disposed:false,downloadBackup,draw,
    editionView:packages.get(initialChoice)?.paper.edition==="source"?"source":"reviewed",
    examHTML,
-   fallbackConflict:false,fallbackStamp:null,
+   fallbackConflict:false,
    families,
    freshlyStartedAttemptId:null,
    go,
@@ -171,7 +169,7 @@ export function mountExamWorkspace(
    save,saveSelection,screenRenderer,
    selectedFamilyId:BUILTIN_CGL_FAMILY,
    setups:initialSetups,showStorageEstimate,singleSection:0,solutions,sources,
-   storage,storageFault:false,storageKey,storageSnapshot,storedSetups,storedSnapshots,
+   storage,storageBackend:null,storageFault:false,storageSnapshot,storedSetups,
    get timer(){return timer;},
    untimedPractice:false,updateStorageHealth,
    view:"library",visibility,warning:"",writeMirror,writeQueue:Promise.resolve()
