@@ -44,6 +44,10 @@ export function renderAuthoredText(bundle:ExamPackage,plain:string,rich?:RichDoc
  const knownAssets=new Set(bundle.assets?.map(asset=>asset.id)??[]);
  return authoredTextHTML(plain,rich,knownAssets,(id,alt)=>assetHTML(bundle,[id],alt));
 }
+function renderAuthoredTextWithoutImages(bundle:ExamPackage,plain:string,rich?:RichDocument):string{
+ const knownAssets=new Set(bundle.assets?.map(asset=>asset.id)??[]);
+ return authoredTextHTML(plain,rich,knownAssets,()=> "");
+}
 export function renderQuestionPrompt(bundle:ExamPackage,q:QuestionRevision):string{
  const content=q.content;
  return content.richPrompt?
@@ -60,10 +64,9 @@ export function renderGenericControls(bundle:ExamPackage,q:QuestionRevision,resp
     return '<fieldset class="generic-choices"><legend>'+legend+'</legend>'+ 
       '<p class="generic-choice-narrow-legend" aria-hidden="true">'+legend+'</p>'+
       c.options.map((o,i)=>{
-        const media=supplementalAssetHTML(bundle,o.assetIds,o.richText,
-          "Image for option "+String.fromCharCode(65+i));
+        const media=assetHTML(bundle,o.assetIds,"Image for option "+String.fromCharCode(65+i));
         const text=o.richText?'<div class="pd-rich-choice-text"><b>'+String.fromCharCode(65+i)+'.</b> '+
-           renderAuthoredText(bundle,o.text,o.richText)+'</div>':
+           renderAuthoredTextWithoutImages(bundle,o.text,o.richText)+'</div>':
            '<span><b>'+String.fromCharCode(65+i)+'.</b> '+escapeText(o.text)+'</span>';
         const label='<label class="generic-choice"><input type="'+kind+'" name="generic-answer" data-choice="'+escapeText(o.id)+'"'+
           (selected.includes(o.id)?" checked":"")+'>'+text+'</label>';
@@ -85,9 +88,9 @@ export function renderGenericControls(bundle:ExamPackage,q:QuestionRevision,resp
     (response?.kind==="free-response"?escapeText(response.text):"")+'</textarea><button class="btn primary" id="g-save">Save response</button>';
   const pairs=response?.kind==="matching"?response.pairs:[];
   return '<div class="generic-matches">'+c.leftItems.map(left=>{
-    const media=supplementalAssetHTML(bundle,left.assetIds,left.richText,
-      "Image for matching item "+left.text);
-    const label='<label>'+(left.richText?'<div class="pd-rich-choice-text">'+renderAuthoredText(bundle,left.text,left.richText)+'</div>':
+    const media=assetHTML(bundle,left.assetIds,"Image for matching item "+left.text);
+    const label='<label>'+(left.richText?'<div class="pd-rich-choice-text">'+
+      renderAuthoredTextWithoutImages(bundle,left.text,left.richText)+'</div>':
       '<span>'+escapeText(left.text)+'</span>')+
       '<select data-match="'+escapeText(left.id)+'"><option value="">Not matched</option>'+
       c.rightItems.map(right=>'<option value="'+escapeText(right.id)+'"'+
