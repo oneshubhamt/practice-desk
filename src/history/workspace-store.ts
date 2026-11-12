@@ -274,7 +274,11 @@ class LocalFallbackWorkspaceStore implements WorkspaceStore {
  }
 
  private commit(next:Map<string,WorkspaceStoredRecord>):void{
-  this.commit(next);
+  const encoded=JSON.stringify([...next.values()]);
+  this.storage.setItem(this.key,encoded);
+  this.stamp=encoded;
+  this.rows.clear();
+  for(const [id,record] of next)this.rows.set(id,record);
  }
 
  async loadRecoverable():Promise<WorkspaceRecovery>{
@@ -326,11 +330,7 @@ class LocalFallbackWorkspaceStore implements WorkspaceStore {
    if(next.has(record.id))throw new Error("Another tab already created this record");
    next.set(record.id,record);
   }
-  const encoded=JSON.stringify([...next.values()]);
-  this.storage.setItem(this.key,encoded);
-  this.stamp=encoded;
-  this.rows.clear();
-  for(const [id,record] of next)this.rows.set(id,record);
+  this.commit(next);
  }
 
  async delete(id:string,expectedRevision:number,intent:DeletionIntent):Promise<void>{
