@@ -104,6 +104,10 @@ try{
   const arr=JSON.parse(localStorage.getItem("practiceDesk.history.fallback")??"[]");
   return arr.find(x=>x.recordType==="generic-attempt"&&x.state.responses.some(r=>r.response))?.id;
  }),"durable localStorage fallback answer");
+ // Freeze tab A's generation before opening B. Leaving A actively on Exam
+ // permits its legitimate 10-second timer checkpoint to race B's hydration,
+ // which tests scheduling luck rather than concurrent-storage detection.
+ await fallbackA.locator("#g-library").click();await route(fallbackA,"library");
  await fallbackB.goto(offlineUrl,{waitUntil:"load"});
  await fallbackB.locator('[data-attempt="'+fallbackId+'"]').first().click();await route(fallbackB,"exam");
  await fallbackB.locator("input[data-choice]").nth(1).click();
