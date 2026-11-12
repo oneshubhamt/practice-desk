@@ -560,3 +560,32 @@ test("P62-A candidate view excludes explanation-only image and alt text, review 
   package2.questions[0].content.richExplanation),/SOLUTION ONLY correct option B/);
 });
 }
+
+
+{
+const test=__dep_0.default;
+const assert=__dep_1.default;
+const {readFile}=__dep_2;
+
+test("Authoring topology keeps persistence and staging/publication orchestration out of the studio",async()=>{
+ const studio=await readFile(new URL("../src/authoring/authoring-studio.ts",import.meta.url),"utf8");
+ const store=await readFile(new URL("../src/authoring/authoring-workspace-store.ts",import.meta.url),"utf8");
+ const workflow=await readFile(new URL("../src/authoring/authoring-workflow.ts",import.meta.url),"utf8");
+ assert.doesNotMatch(studio,/localStorage|AUTHORING_KEY|STAGING_KEY|inspectExternalQuality|addStagedFiles|stagedToAuthoringDraft/);
+ assert.match(studio,/createAuthoringWorkspaceStore\(\)/);
+ assert.match(studio,/preparePublicationWorkflow/);
+ assert.match(studio,/handoffStagingToDraftShelf/);
+ assert.match(store,/AUTHORING_KEY/);
+ assert.match(store,/STAGING_KEY/);
+ assert.match(store,/saveShelf/);
+ assert.match(store,/saveStaging/);
+ assert.match(store,/resetUnreadableShelf/);
+ assert.match(store,/resetUnreadableStaging/);
+ assert.doesNotMatch(store,/document\.|querySelector|wordgard|inspectAuthoringPublication/);
+ assert.match(workflow,/inspectPublicationWorkflow/);
+ assert.match(workflow,/preparePublicationWorkflow/);
+ assert.match(workflow,/handoffStagingToDraftShelf/);
+ assert.match(workflow,/ingestStagedFiles/);
+ assert.doesNotMatch(workflow,/localStorage|sessionStorage|document\.|querySelector|wordgard/);
+});
+}
