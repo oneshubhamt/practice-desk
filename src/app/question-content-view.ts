@@ -25,10 +25,6 @@ export function renderAuthoredText(bundle:ExamPackage,plain:string,rich?:RichDoc
  const knownAssets=new Set(bundle.assets?.map(asset=>asset.id)??[]);
  return authoredTextHTML(plain,rich,knownAssets,(id,alt)=>assetHTML(bundle,[id],alt));
 }
-function renderAuthoredTextWithoutImages(bundle:ExamPackage,plain:string,rich?:RichDocument):string{
- const knownAssets=new Set(bundle.assets?.map(asset=>asset.id)??[]);
- return authoredTextHTML(plain,rich,knownAssets,()=>"");
-}
 export function renderQuestionPrompt(bundle:ExamPackage,q:QuestionRevision):string{
  const content=q.content;
  return content.richPrompt?
@@ -47,7 +43,7 @@ export function renderGenericControls(bundle:ExamPackage,q:QuestionRevision,resp
       c.options.map((o,i)=>{
         const media=assetHTML(bundle,o.assetIds,"Image for option "+String.fromCharCode(65+i));
         const text=o.richText?'<div class="pd-rich-choice-text"><b>'+String.fromCharCode(65+i)+'.</b> '+
-           renderAuthoredTextWithoutImages(bundle,o.text,o.richText)+'</div>':
+           renderAuthoredText(bundle,o.text,o.richText)+'</div>':
            '<span><b>'+String.fromCharCode(65+i)+'.</b> '+escapeText(o.text)+'</span>';
         const label='<label class="generic-choice"><input type="'+kind+'" name="generic-answer" data-choice="'+escapeText(o.id)+'"'+
           (selected.includes(o.id)?" checked":"")+'>'+text+'</label>';
@@ -70,7 +66,7 @@ export function renderGenericControls(bundle:ExamPackage,q:QuestionRevision,resp
   const pairs=response?.kind==="matching"?response.pairs:[];
   return '<div class="generic-matches">'+c.leftItems.map(left=>{
     const media=assetHTML(bundle,left.assetIds,"Image for matching item "+left.text);
-    const label='<label>'+(left.richText?'<div class="pd-rich-choice-text">'+renderAuthoredTextWithoutImages(bundle,left.text,left.richText)+'</div>':
+    const label='<label>'+(left.richText?'<div class="pd-rich-choice-text">'+renderAuthoredText(bundle,left.text,left.richText)+'</div>':
       '<span>'+escapeText(left.text)+'</span>')+
       '<select data-match="'+escapeText(left.id)+'"><option value="">Not matched</option>'+
       c.rightItems.map(right=>'<option value="'+escapeText(right.id)+'"'+
@@ -89,8 +85,8 @@ export function stimulusHTML(bundle:ExamPackage,q:QuestionRevision):string{
      escapeText((stimulus.title||(stimulus.kind==="case"?"Case study":"Reading passage"))+
        " — scroll to read full text")+'"><b>'+escapeText(stimulus.title||"Reading passage")+
      '</b>'+(stimulus.richText?renderAuthoredText(bundle,stimulus.text,stimulus.richText):
-       '<p>'+escapeText(stimulus.text)+'</p>'+assetHTML(bundle,stimulus.assetIds,
-         "Image accompanying "+(stimulus.title||"reading passage")))+'</section>';
+       '<p>'+escapeText(stimulus.text)+'</p>')+
+     assetHTML(bundle,stimulus.assetIds,"Image accompanying "+(stimulus.title||"reading passage"))+'</section>';
  if(stimulus.kind==="table")return '<section class="generic-stimulus"><b>'+escapeText(stimulus.title||"Table")+'</b><div class="scroll-table"><table><tr>'+
    stimulus.columns.map((c,i)=>'<th>'+renderAuthoredText(bundle,c,stimulus.richColumns?.[i])+'</th>').join("")+'</tr>'+
    stimulus.rows.map((r,i)=>'<tr>'+r.map((c,j)=>'<td>'+
