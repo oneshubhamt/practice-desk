@@ -65,7 +65,7 @@ Learning derives from frozen attempt evidence and learner ratings without changi
 
 Native Node and browser/WASM optimization are adapters around one shared optimizer pipeline/activation policy. Training evidence is validated chronologically; candidate personalized weights must clear a practical held-out gate against stock FSRS-7 and, for replacement, the active personalized profile before use. The static build can train locally in a Worker/WASM environment; the standalone `file://` build retains scheduling/import/export but intentionally omits in-app training. Review history is not uploaded to an optimizer backend.
 
-The scheduler uses ts-fsrs's native leech suspension status for optional automatic queue suspension; remediation priority and explicit learner suspension remain application policy. Exact optimizer floors, chronology settings, profile fields and upstream binding versions are implementation/test contracts, not architectural duplication points.
+The scheduler policy is a discriminated fixed-retention/Cost-ADR contract: fixed retention exposes a bounded 75–97% target, while Cost-ADR is one upstream-default preset rather than a raw tuning surface. Policy changes replay the same immutable review evidence to recompute future schedules; they never rewrite ratings, timestamps or exam history. The scheduler uses ts-fsrs's native leech suspension status for optional automatic queue suspension; remediation priority and explicit learner suspension remain application policy. Exact optimizer floors, chronology settings, profile fields and upstream binding versions are implementation/test contracts, not architectural duplication points.
 
 ## 7. Rendering and navigation
 
