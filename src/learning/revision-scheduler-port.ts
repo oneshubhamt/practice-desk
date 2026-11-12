@@ -1,7 +1,9 @@
 export type RecallRating=1|2|3|4;
 export type RevisionMemoryState="new"|"learning"|"review"|"relearning";
 export type RevisionScheduleStatus="new"|"learning"|"review"|"suspended";
-export type RetentionPolicy="fixed"|"cost-adr";
+export type RevisionSchedulingPolicy=
+ | {readonly kind:"fixed";readonly desiredRetention:number}
+ | {readonly kind:"cost-adr";readonly preset:"upstream-default"};
 export type LeechAction="remediate"|"suspend";
 export type RevisionLeechStatus="normal"|"remediation"|"suspended";
 export interface ReviewObservation{
@@ -15,16 +17,19 @@ export interface RevisionSchedule{
 }
 export interface RevisionSnapshot extends RevisionSchedule{readonly retrievability:number|null;}
 export interface RevisionPreview extends RevisionSchedule{readonly rating:RecallRating;}
-export interface RevisionSchedulerConfiguration{
- readonly model:"FSRS-7";readonly packageVersion:"6.0.0";readonly retentionPolicy:RetentionPolicy;
- readonly desiredRetention:number;readonly costAdrGoalWeight:number;readonly enableShortTerm:true;
+interface RevisionSchedulerConfigurationBase{
+ readonly model:"FSRS-7";readonly packageVersion:"6.0.0";readonly enableShortTerm:true;
  readonly learningSteps:readonly ["1m","10m"];readonly relearningSteps:readonly ["10m"];
  readonly graduatingInterval:1;readonly allowModelOverride:true;readonly enableFuzz:boolean;
  readonly maximumInterval:36500;readonly clearStatsOnForget:true;readonly leechThreshold:number;
  readonly leechAction:LeechAction;readonly weights:"FSRS-7-default"|"FSRS-7-custom";
 }
+export type RevisionSchedulerConfiguration=RevisionSchedulerConfigurationBase&(
+ | {readonly policy:{readonly kind:"fixed";readonly desiredRetention:number}}
+ | {readonly policy:{readonly kind:"cost-adr";readonly preset:"upstream-default";readonly goalCostWeight:number}}
+);
 export interface RevisionSchedulerOptions{
- readonly retentionPolicy?:RetentionPolicy;readonly desiredRetention?:number;readonly costAdrGoalWeight?:number;
+ readonly policy?:RevisionSchedulingPolicy;
  readonly enableFuzz?:boolean;readonly leechThreshold?:number;readonly leechAction?:LeechAction;
  readonly weights?:readonly number[];
 }
