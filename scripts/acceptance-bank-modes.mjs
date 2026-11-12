@@ -206,9 +206,9 @@ for(const v of [
   await page.locator("#g-file").setInputFiles({name:"apfc-nat.json",mimeType:"application/json",
    buffer:Buffer.from(JSON.stringify(validPackage))});
   await page.waitForFunction(id=>document.querySelector("#g-papers")?.value===id,validPackage.paper.id);
-  check(await page.locator("#g-papers optgroup").evaluateAll(xs=>
+  check(await page.locator("#g-papers optgroup").evaluateAll((xs,paperId)=>
    xs.some(x=>x.label==="Imported / custom examinations"&&
-    [...x.querySelectorAll("option")].some(o=>o.value===validPackage.paper.id))),
+    [...x.querySelectorAll("option")].some(o=>o.value===paperId)),validPackage.paper.id),
    v.name+" imported exam not independently grouped");
   await page.locator("#g-start").click();await route(page,"exam");
   check((await page.locator(".exam-question").innerText()).includes("EPFO APFC"),
