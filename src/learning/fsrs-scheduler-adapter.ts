@@ -60,10 +60,10 @@ export async function createRevisionScheduler(options:RevisionSchedulerOptions={
  const action=leechAction(options.leechAction??"remediate");
  const weights=options.weights?Array.from(checkFSRS7Parameters(options.weights)):undefined;
  const config={
-   weights:weights??FSRS7_DEFAULT_WEIGHTS,fractionalDays:true,
-   enableFuzz,maximumInterval:36500,clearStatsOnForget:true,
-   enableShortTerm:true,learningSteps:["1m","10m"],relearningSteps:["10m"],
-   graduatingInterval:1,allowModelOverride:true,
+   weights:weights??FSRS7_DEFAULT_WEIGHTS,fractionalDays:true as const,
+   enableFuzz,maximumInterval:36500,clearStatsOnForget:true as const,
+   enableShortTerm:true as const,learningSteps:["1m","10m"] as const,relearningSteps:["10m"] as const,
+   graduatingInterval:1 as const,allowModelOverride:true as const,
    leechThreshold:action==="suspend"?leechThreshold:0
  };
  const scheduler:FsrsScheduler<"FSRS-7">=retentionPolicy==="cost-adr"
