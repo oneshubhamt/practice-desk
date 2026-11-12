@@ -205,10 +205,10 @@ for(const v of [
 
   await page.locator("#g-file").setInputFiles({name:"apfc-nat.json",mimeType:"application/json",
    buffer:Buffer.from(JSON.stringify(validPackage))});
-  await page.waitForFunction(()=>document.querySelector("#g-papers")?.value==="bank:apfc-starter-demo:paper:r1");
+  await page.waitForFunction(id=>document.querySelector("#g-papers")?.value===id,validPackage.paper.id);
   check(await page.locator("#g-papers optgroup").evaluateAll(xs=>
    xs.some(x=>x.label==="Imported / custom examinations"&&
-    [...x.querySelectorAll("option")].some(o=>o.value.startsWith("bank:apfc-starter-demo")))),
+    [...x.querySelectorAll("option")].some(o=>o.value===validPackage.paper.id))),
    v.name+" imported exam not independently grouped");
   await page.locator("#g-start").click();await route(page,"exam");
   check((await page.locator(".exam-question").innerText()).includes("EPFO APFC"),
@@ -223,7 +223,7 @@ for(const v of [
   check(await page.locator(".score.standout").count()===1,
    v.name+" APFC authored result missing");
   const apfcAttempt=(await records(page)).find(x=>x.recordType==="generic-attempt"&&
-   x.frozen.paper.paperId==="bank:apfc-starter-demo"&&x.result?.items.length===3);
+   x.frozen.paper.paperId===validPackage.paper.paperId&&x.result?.items.length===3);
   check(Boolean(apfcAttempt),v.name+" bank did not freeze three questions");
   check(Math.abs(apfcAttempt.result.snapshot.earnedMarks-5)<1e-8,
    v.name+" exact APFC/NAT +2.5×2 and blank-0 score must equal 5/7.5");
