@@ -72,6 +72,6 @@ The application does **not** embed an LLM, OCR service, web research agent, auto
 
 ## 7. Known and intentionally deferred boundaries
 
-Some existing P60 source-audit findings concern explanation-only media leakage, blueprint readiness and Source/Reviewed comparability/lineage. These are tracked in the [backlog](../../backlog.md) and are **not resolved by this architecture document**. Release also requires authentic content review, physical-device/assistive verification and user acceptance.
+The earlier P60 findings on explanation-only media secrecy, incomplete blueprint publication, exact Source pairing, mixed-kind comparability and candidate-semantic comparison have been addressed in the canonical implementation and are retained in the [backlog](../../backlog.md) only as closed evidence. Remaining open boundaries are source/authenticity trust, physical-device and assistive-technology verification, OS/profile storage-loss behavior, deliberate user visual/usability approval and release procedure.
 
 **References:** [data contracts](DATA_CONTRACTS.md) · [current programme](../ENGINEERING_PROGRAMME.md) · [policy](../decisions/POLICY_REGISTER.md) · [QA](../QA_CURRENT.md) · [historical design material](../HISTORY_INDEX.md).
