@@ -11,14 +11,17 @@ import {
 } from "ts-fsrs/middlewares";
 import {FSRS7_DEFAULT_WEIGHTS,FSRS7Model,checkFSRS7Parameters} from "ts-fsrs/models/fsrs-7";
 import type {
- LeechAction,RecallRating,RetentionPolicy,ReviewObservation,RevisionLeechStatus,
- RevisionMemoryState,RevisionPreview,RevisionSchedule,RevisionScheduleStatus,RevisionSchedulerOptions,
- RevisionSchedulerPort,RevisionSnapshot
+ LeechAction,RecallRating,ReviewObservation,RevisionLeechStatus,
+ RevisionMemoryState,RevisionPreview,RevisionSchedule,RevisionScheduleStatus,
+ RevisionSchedulerConfiguration,RevisionSchedulerOptions,RevisionSchedulerPort,
+ RevisionSchedulingPolicy,RevisionSnapshot
 } from "./revision-scheduler-port.ts";
 
 export const FSRS_PROVIDER="ts-fsrs@6.0.0/FSRS-7";
 export const FSRS_DEFAULT_DESIRED_RETENTION=0.9;
-export const FSRS_DEFAULT_COST_ADR_GOAL_WEIGHT=COST_ADR_DEFAULT_GOAL_COST_WEIGHT;
+export const FSRS_MIN_DESIRED_RETENTION=0.75;
+export const FSRS_MAX_DESIRED_RETENTION=0.97;
+export const FSRS_COST_ADR_PRESET_GOAL_WEIGHT=COST_ADR_DEFAULT_GOAL_COST_WEIGHT;
 export const FSRS_DEFAULT_LEECH_THRESHOLD=4;
 
 const stateName=(state:State):RevisionMemoryState=>{
@@ -38,7 +41,18 @@ const costAdrDefinition=defineScheduler({model:FSRS7Model,chrono:dateChrono}).us
  schedulerLeechMiddleware,schedulerScheduledDaysMiddleware,schedulerLearningStepsMiddleware,
  schedulerMaximumIntervalMiddleware,schedulerMonotonicIntervalMiddleware
 );
-const policy=(v:RetentionPolicy)=>{if(v!=="fixed"&&v!=="cost-adr")throw Error("Invalid retention policy");return v;};
+const canonicalPolicy=(value:RevisionSchedulingPolicy|undefined):RevisionSchedulingPolicy=>{
+ const p=value??{kind:"fixed",desiredRetention:FSRS_DEFAULT_DESIRED_RETENTION};
+ if(p.kind==="fixed"){
+  if(!Number.isFinite(p.desiredRetention)||p.desiredRetention<FSRS_MIN_DESIRED_RETENTION||
+    p.desiredRetention>FSRS_MAX_DESIRED_RETENTION)
+   throw Error("Desired retention must be between 0.75 and 0.97");
+  return {kind:"fixed",desiredRetention:p.desiredRetention};
+ }
+ if(p.kind==="cost-adr"&&p.preset==="upstream-default")
+   return {kind:"cost-adr",preset:"upstream-default"};
+ throw Error("Invalid FSRS scheduling policy");
+};
 const leechAction=(v:LeechAction)=>{if(v!=="remediate"&&v!=="suspend")throw Error("Invalid leech action");return v;};
 const scheduleStatus=(card:DefaultSchedulerCard<"FSRS-7">):RevisionScheduleStatus=>{
  const value=card.scheduleStatus as string;
@@ -47,13 +61,7 @@ const scheduleStatus=(card:DefaultSchedulerCard<"FSRS-7">):RevisionScheduleStatu
 };
 
 export async function createRevisionScheduler(options:RevisionSchedulerOptions={}):Promise<RevisionSchedulerPort>{
- const retentionPolicy=policy(options.retentionPolicy??"fixed");
- const desiredRetention=options.desiredRetention??FSRS_DEFAULT_DESIRED_RETENTION;
- if(!Number.isFinite(desiredRetention)||desiredRetention<=0||desiredRetention>=1)
-   throw Error("Desired retention must be between 0 and 1");
- const costAdrGoalWeight=options.costAdrGoalWeight??FSRS_DEFAULT_COST_ADR_GOAL_WEIGHT;
- if(!Number.isFinite(costAdrGoalWeight)||costAdrGoalWeight<0||costAdrGoalWeight>1024)
-   throw Error("Cost-ADR goal weight must be between 0 and 1024");
+ const schedulingPolicy=canonicalPolicy(options.policy);
  const enableFuzz=options.enableFuzz??true;
  const leechThreshold=options.leechThreshold??FSRS_DEFAULT_LEECH_THRESHOLD;
  if(!Number.isSafeInteger(leechThreshold)||leechThreshold<1)throw Error("Leech threshold must be a positive integer");
@@ -66,11 +74,12 @@ export async function createRevisionScheduler(options:RevisionSchedulerOptions={
    graduatingInterval:1 as const,allowModelOverride:true as const,
    leechThreshold:action==="suspend"?leechThreshold:0
  };
- const scheduler:FsrsScheduler<"FSRS-7">=retentionPolicy==="cost-adr"
+ const scheduler:FsrsScheduler<"FSRS-7">=schedulingPolicy.kind==="cost-adr"
   ?costAdrDefinition.create({config:{
-    ...config,costAdrPolicy:COST_ADR_DEFAULT_POLICY,goalCostWeight:costAdrGoalWeight
+    ...config,costAdrPolicy:COST_ADR_DEFAULT_POLICY,goalCostWeight:FSRS_COST_ADR_PRESET_GOAL_WEIGHT
    }}) as unknown as FsrsScheduler<"FSRS-7">
-  :fixedDefinition.create({config:{...config,desiredRetention}}) as unknown as FsrsScheduler<"FSRS-7">;
+  :fixedDefinition.create({config:{...config,desiredRetention:schedulingPolicy.desiredRetention}})
+    as unknown as FsrsScheduler<"FSRS-7">;
  const leechStatus=(card:DefaultSchedulerCard<"FSRS-7">):RevisionLeechStatus=>{
    if(action==="suspend")return scheduleStatus(card)==="suspended"?"suspended":"normal";
    return card.lapses<leechThreshold?"normal":"remediation";
@@ -97,13 +106,17 @@ export async function createRevisionScheduler(options:RevisionSchedulerOptions={
    });
    return reschedule.reschedule({initialCard,history},{sortHistory:false}).card;
  };
- const configuration={
-   model:"FSRS-7" as const,packageVersion:"6.0.0" as const,retentionPolicy,desiredRetention,
-   costAdrGoalWeight,enableShortTerm:true as const,learningSteps:["1m","10m"] as const,
+ const commonConfiguration={
+   model:"FSRS-7" as const,packageVersion:"6.0.0" as const,
+   enableShortTerm:true as const,learningSteps:["1m","10m"] as const,
    relearningSteps:["10m"] as const,graduatingInterval:1 as const,allowModelOverride:true as const,
    enableFuzz,maximumInterval:36500 as const,clearStatsOnForget:true as const,
    leechThreshold,leechAction:action,weights:weights?"FSRS-7-custom" as const:"FSRS-7-default" as const
  };
+ const configuration:RevisionSchedulerConfiguration=schedulingPolicy.kind==="cost-adr"
+  ?{...commonConfiguration,policy:{kind:"cost-adr",preset:"upstream-default",
+    goalCostWeight:FSRS_COST_ADR_PRESET_GOAL_WEIGHT}}
+  :{...commonConfiguration,policy:{kind:"fixed",desiredRetention:schedulingPolicy.desiredRetention}};
  return {
    provider:FSRS_PROVIDER,configuration,
    replay(id,createdAt,reviews){return schedule(replay(id,createdAt,reviews));},
