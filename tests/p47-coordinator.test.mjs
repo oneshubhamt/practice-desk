@@ -87,7 +87,7 @@ test("P47-6 controller modules do not introduce runtime cycles, mutable parallel
  assert.match(adapter,/relearningSteps:\["10m"\]/);
  assert.match(adapter,/allowModelOverride:true/);
  assert.match(adapter,/schedulerCostAdrMiddleware/);
- assert.match(adapter,/retentionPolicy===\"cost-adr\"/);
+ assert.match(adapter,/schedulingPolicy\.kind===\"cost-adr\"/);
  assert.match(adapter,/checkFSRS7Parameters/);
  assert.match(adapter,/const enableFuzz=options\.enableFuzz\?\?true/);
  const index=await readdir(new URL("../src/learning/",import.meta.url));
