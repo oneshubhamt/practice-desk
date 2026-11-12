@@ -16,6 +16,7 @@ Neither generated target is derived by rewriting the other. The application has 
 | Layer | Main modules | Owns |
 |---|---|---|
 | Domain | `src/domain/` | Canonical package/question/key/scoring/media/calculator contracts and validation |
+| Shared workspace contracts | `src/workspace-settings.ts` | Pure persisted preference/practice-setup contracts and validation; no browser storage |
 | Engine | `src/engine/` | Generic attempt/session transitions, response legality, timing, scoring and Source comparison |
 | App composition | `src/app/generic-ui.ts`, `coordinator-context.ts` | One workspace composition root; feature controllers receive explicit capability slices |
 | Feature UI | `src/app/*-controller.ts`, render/view modules | Library, Exam, Results, History, Learning, authoring shell, navigation and storage-health presentation |
@@ -48,11 +49,11 @@ Application orchestration talks to one `WorkspaceStore` interface. IndexedDB is 
 
 Attempts use compact records plus deduplicated immutable snapshots. Stale sibling-tab writes fail closed; terminal/newer records defeat older emergency mirrors. Backup restore is additive, bounded and integrity-checked. Corrupt/dangling data is surfaced or quarantined rather than silently repaired into invented history.
 
-Storage-health/quota/persistence prompts are application presentation concerns. Authoring drafts/staging and attempt History are separate persistence/export lifecycles.
+Storage-health/quota/persistence prompts are application presentation concerns. Backup validation consumes the pure workspace-settings contract rather than importing application storage adapters. Authoring drafts/staging and attempt History are separate persistence/export lifecycles.
 
 ## 5. Authoring and content publication
 
-`AuthoringWorkspaceStore` owns unpublished shelf/staging persistence, corruption protection and cross-tab CAS. `authoring-workflow.ts` owns staged handoff and validate → acknowledge → revalidate publication sequencing. The studio owns editor/UI orchestration but not browser-storage mechanics or a second publisher.
+`AuthoringWorkspaceStore` owns unpublished shelf/staging persistence, corruption protection and cross-tab CAS. `authoring-workflow.ts` owns staged handoff and validate → acknowledge → revalidate publication sequencing. `authoring-studio-view.ts` owns pure authoring field projection and HTML generation; the studio owns editor state/event orchestration but not browser-storage mechanics or a second publisher.
 
 Wordgard/manual and external-agent flows converge on the same canonical `practice-desk-authoring` → validated exam-package boundary. Advanced external review can add quota blueprints, blind quality review, Source/Reviewed decisions and supplied-document evidence, but those files do not become a second scoring/runtime model.
 

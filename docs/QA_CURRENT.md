@@ -23,6 +23,8 @@ node scripts/acceptance-suite.mjs webkit
 
 The browser suites require the corresponding Playwright browser binaries. The protected CI workflow installs them on standard GitHub-hosted runners and is the normal full-system verification path.
 
+Markdown-only pushes and pull requests are excluded from the expensive runtime workflow because Markdown is not a build input. Any source, test, build, dependency or workflow change still enters the full gates below; a documentation-only commit therefore may legitimately have no CI run.
+
 ## Required CI gates
 
 A current application change is release-eligible only when all of these gates pass on the same tested source ancestry:
