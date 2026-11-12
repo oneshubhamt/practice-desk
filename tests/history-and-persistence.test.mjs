@@ -708,8 +708,9 @@ p45test("Persistence backend contract gives fallback one CAS/add/delete path and
  const {createLocalFallbackWorkspaceStore}=await import("../src/history/workspace-store.ts");
  class MemoryStorage{
   values=new Map();
+  fail=false;
   getItem(key){return this.values.has(key)?this.values.get(key):null;}
-  setItem(key,value){this.values.set(key,String(value));}
+  setItem(key,value){if(this.fail)throw new Error("quota denied");this.values.set(key,String(value));}
   removeItem(key){this.values.delete(key);}
   clear(){this.values.clear();}
   key(index){return [...this.values.keys()][index]??null;}
@@ -720,6 +721,11 @@ p45test("Persistence backend contract gives fallback one CAS/add/delete path and
  const loaded=await store.loadRecoverable();
  p45assert.deepEqual(loaded.records,[]);
  const first={id:"card-1",recordType:"learning-card",saveRevision:1};
+ storage.fail=true;
+ await p45assert.rejects(store.write(first,null),/quota denied/);
+ p45assert.equal(storage.getItem("history"),null,
+  "Failed fallback write must not create durable bytes");
+ storage.fail=false;
  await store.write(first,null);
  await p45assert.rejects(store.write({...first,saveRevision:2},null),/Another tab already created/);
  await store.write({...first,saveRevision:2},1);
@@ -730,6 +736,11 @@ p45test("Persistence backend contract gives fallback one CAS/add/delete path and
 
  const completed={id:"done",recordType:"generic-attempt",saveRevision:1,finishedAt:123};
  await store.insertMany([completed]);
+ storage.fail=true;
+ await p45assert.rejects(store.deleteCompleted([{id:"done",saveRevision:1}]),/quota denied/);
+ p45assert.equal(JSON.parse(storage.getItem("history")).some(x=>x.id==="done"),true,
+  "Failed fallback deletion must leave durable and in-memory state retryable");
+ storage.fail=false;
  await store.deleteCompleted([{id:"done",saveRevision:1}]);
  p45assert.equal(JSON.parse(storage.getItem("history")).some(x=>x.id==="done"),false);
 
