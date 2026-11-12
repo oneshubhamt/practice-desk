@@ -79,7 +79,9 @@ test("P47-6 controller modules do not introduce runtime cycles, mutable parallel
   assert.doesNotMatch(await source(path),/from ["']ts-fsrs["']/);
  const adapter=await source("src/learning/fsrs-scheduler-adapter.ts");
  assert.match(adapter,/from "ts-fsrs"/);
- assert.match(adapter,/version:"FSRS-7"/);
+ assert.equal((adapter.match(/defineScheduler\(\{model:FSRS7Model,chrono:dateChrono\}\)/g)??[]).length,2,
+  "fixed-retention and Cost-ADR paths must both use the explicit FSRS-7 model");
+ assert.match(adapter,/schedulerLeechMiddleware/);
  assert.match(adapter,/enableShortTerm:true/);
  assert.match(adapter,/learningSteps:\["1m","10m"\]/);
  assert.match(adapter,/relearningSteps:\["10m"\]/);
