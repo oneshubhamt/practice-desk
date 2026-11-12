@@ -123,7 +123,7 @@ function assertKilled(test,run){
  }
 }
 try{
- for(const dir of ["src","tests","scripts","examples"])
+ for(const dir of ["src","tests","scripts","examples","tools"])
   await cp(join(root,dir),join(sandbox,dir),{recursive:true});
  await cp(join(root,"package.json"),join(sandbox,"package.json"));
  await symlink(join(root,"node_modules"),join(sandbox,"node_modules"),"dir");
