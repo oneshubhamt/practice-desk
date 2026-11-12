@@ -8,7 +8,7 @@ import {QUESTION_KINDS} from "../domain/question.ts";
 import {sha256} from "../domain/hash.ts";
 import {validateMediaInventory} from "../domain/media.ts";
 import type {RichDocument} from "../domain/rich-document.ts";
-import type {ExamPackage} from "../app/exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
 import {inspectAuthoringPublication,publicationPlainText,PublicationValidationError,
  type PublicationIssue} from "./authoring-publisher.ts";
 import {inspectExternalQuality,type QualityIssue} from "./external-bank-qa.ts";

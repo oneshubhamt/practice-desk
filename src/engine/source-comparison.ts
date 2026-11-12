@@ -1,4 +1,5 @@
-import type { ExamPackage,GenericAttempt } from "../app/exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
+import type {GenericAttempt} from "./generic-attempt.ts";
 import type { QuestionRevision } from "../domain/question.js";
 import type { QuestionRevisionId,OptionId,PaperId,PaperRevisionId,AnswerKeyRevisionId } from "../domain/ids.js";
 import type { MarkingRule } from "../domain/scoring.js";
