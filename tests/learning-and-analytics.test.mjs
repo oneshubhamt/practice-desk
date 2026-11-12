@@ -430,7 +430,7 @@ test("optimizer evidence and evaluated profiles are portable without persisting 
    incumbent:{sourceSha256:active.sourceSha256,
     weightsFingerprint:__suite_dep_18.fsrsWeightsFingerprint(active.weights),
     metrics:{logLoss:0.405,rmseBins:0.08}}}}});
- assert.equal(__suite_dep_18.assertFsrsOptimizerReplacement(replacement,active),replacement);
+ assert.deepEqual(__suite_dep_18.assertFsrsOptimizerReplacement(replacement,active),replacement);
  const badWeights=[...profile.weights];badWeights[23]=0.9;
  assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,weights:badWeights}),/weights/);
  assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,schema:"practice-desk-fsrs-profile/v3"}),/profile/);
