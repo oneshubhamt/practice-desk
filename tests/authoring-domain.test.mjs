@@ -549,8 +549,9 @@ test("P62-A candidate view excludes explanation-only image and alt text, review 
  assert.equal((candidate.match(/class="generic-figure"/g)??[]).length,2,
    "Rich prompt and option media must each render once while remaining indexed by assetIds");
  assert.match(candidate,/class="generic-choice-media-row"/);
- assert.doesNotMatch(candidate,/<label[^>]*>[\s\S]*generic-image-open[\s\S]*<\/label>/,
-   "Option image enlargement must remain outside the answer label");
+ const labels=[...candidate.matchAll(/<label\b[\s\S]*?<\/label>/g)].map(match=>match[0]);
+ assert.ok(labels.length>=4&&labels.every(label=>!label.includes("generic-image-open")),
+   "Option image enlargement must remain outside every answer label");
  assert.match(candidate,/Candidate-safe chart/);
  assert.doesNotMatch(candidate,/SOLUTION ONLY|solution-figure/);
  const solution=renderAuthoredText(pkg,"",question.content.richExplanation);
