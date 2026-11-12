@@ -90,7 +90,8 @@ function readAtomicByCursor<Result>(db:IDBDatabase,collector:Collector<Result>):
 
 class IndexedDbWorkspaceStore implements WorkspaceStore {
  readonly kind="indexeddb" as const;
- constructor(private readonly db:IDBDatabase){}
+ private readonly db:IDBDatabase;
+ constructor(db:IDBDatabase){this.db=db;}
 
  loadRecoverable():Promise<WorkspaceRecovery>{
   return readAtomicByCursor(this.db,createRecoverableRecordCollector());
@@ -247,8 +248,10 @@ class LocalFallbackWorkspaceStore implements WorkspaceStore {
  readonly kind="fallback" as const;
  private stamp:string|null=null;
  private readonly rows=new Map<string,WorkspaceStoredRecord>();
+ private readonly storage:Storage;
+ private readonly key:string;
 
- constructor(private readonly storage:Storage,private readonly key:string){}
+ constructor(storage:Storage,key:string){this.storage=storage;this.key=key;}
 
  private parse(raw:string|null):unknown[]{
   const parsed=JSON.parse(raw??"[]") as unknown;
