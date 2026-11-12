@@ -168,9 +168,9 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
    const aa=schedule(a),bb=schedule(b),ap=effectiveStatus(a)==="remediation"?0:1,bp=effectiveStatus(b)==="remediation"?0:1;
    return ap-bp||aa.dueAt.getTime()-bb.dueAt.getTime();
  });
- const policySummary=()=>!scheduler?"Scheduler initializing":scheduler.configuration.retentionPolicy==="fixed"
-   ?Math.round(scheduler.configuration.desiredRetention*100)+"% fixed retention"
-   :"Cost-ADR · cost weight "+scheduler.configuration.costAdrGoalWeight;
+ const policySummary=()=>!scheduler?"Scheduler initializing":scheduler.configuration.policy.kind==="fixed"
+   ?Math.round(scheduler.configuration.policy.desiredRetention*100)+"% fixed retention"
+   :"Cost-ADR · upstream default preset";
  function draw(){
   if(closed||!opened)return;
   const all=cards();
@@ -271,10 +271,12 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     '<section class="panel pad learning-scheduler-policy"><h2>FSRS-7 scheduling policy</h2>'+
     '<p class="fine">Fixed retention remains the default. Cost-ADR is an explicit alternative. Repeated review lapses become leeches; remediation is the default response and optional automatic suspension uses ts-fsrs\'s native leech schedule status.</p>'+
     '<div class="learning-evidence-controls"><label>Retention policy <select id="learning-retention-policy">'+
-    '<option value="fixed"'+(revisionSettings.retentionPolicy==="fixed"?' selected':'')+'>Fixed retention</option>'+
-    '<option value="cost-adr"'+(revisionSettings.retentionPolicy==="cost-adr"?' selected':'')+'>Cost-adaptive retention (Cost-ADR)</option></select></label>'+
-    '<label>Fixed target <input id="learning-retention-target" type="number" min="0.01" max="0.99" step="0.01" value="'+revisionSettings.desiredRetention+'"></label>'+
-    '<label>Cost-ADR goal weight <input id="learning-cost-adr-weight" type="number" min="0" max="1024" step="1" value="'+revisionSettings.costAdrGoalWeight+'"></label>'+
+    '<option value="fixed"'+(revisionSettings.policy.kind==="fixed"?' selected':'')+'>Fixed retention</option>'+
+    '<option value="cost-adr"'+(revisionSettings.policy.kind==="cost-adr"?' selected':'')+'>Cost-adaptive retention (Cost-ADR)</option></select></label>'+
+    '<label>Fixed target <input id="learning-retention-target" type="number" min="0.75" max="0.97" step="0.01" value="'+
+      (revisionSettings.policy.kind==="fixed"?revisionSettings.policy.desiredRetention:0.9)+'"'+
+      (revisionSettings.policy.kind==="cost-adr"?' disabled':'')+'></label>'+
+    '<label>Cost-ADR preset <span class="fine">Upstream default adaptive-cost policy</span></label>'+
     '<label>Leech threshold <input id="learning-leech-threshold" type="number" min="1" max="1000" step="1" value="'+revisionSettings.leechThreshold+'"></label>'+
     '<label>Leech action <select id="learning-leech-action"><option value="remediate"'+(revisionSettings.leechAction==="remediate"?' selected':'')+'>Prioritize remediation</option>'+
     '<option value="suspend"'+(revisionSettings.leechAction==="suspend"?' selected':'')+'>Suspend automatically</option></select></label></div>'+
@@ -421,12 +423,17 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
        '<tr><td colspan="4">Complete the same paper revision twice to see a valid comparison.</td></tr>')+
     '</tbody></table></div></section>';
   present(html,"main");
+  root.querySelector<HTMLSelectElement>("#learning-retention-policy")!.onchange=e=>{
+    const fixed=(e.target as HTMLSelectElement).value==="fixed";
+    root.querySelector<HTMLInputElement>("#learning-retention-target")!.disabled=!fixed;
+  };
   root.querySelector<HTMLButtonElement>("#learning-policy-apply")!.onclick=async()=>{
     try{
-      const next=validateRevisionSettings({...revisionSettings,
-       retentionPolicy:root.querySelector<HTMLSelectElement>("#learning-retention-policy")!.value,
-       desiredRetention:Number(root.querySelector<HTMLInputElement>("#learning-retention-target")!.value),
-       costAdrGoalWeight:Number(root.querySelector<HTMLInputElement>("#learning-cost-adr-weight")!.value),
+      const kind=root.querySelector<HTMLSelectElement>("#learning-retention-policy")!.value;
+      const policy=kind==="fixed"
+       ?{kind:"fixed" as const,desiredRetention:Number(root.querySelector<HTMLInputElement>("#learning-retention-target")!.value)}
+       :{kind:"cost-adr" as const,preset:"upstream-default" as const};
+      const next=validateRevisionSettings({...revisionSettings,policy,
        leechThreshold:Number(root.querySelector<HTMLInputElement>("#learning-leech-threshold")!.value),
        leechAction:root.querySelector<HTMLSelectElement>("#learning-leech-action")!.value});
       const nextScheduler=await createRevisionScheduler(revisionSchedulerOptions(next));
