@@ -4,7 +4,7 @@ import {
  type AuthoringDraft,type AuthoringDraftShelf
 } from "./authoring-draft.ts";
 import {
- addStagedFiles,stagedToAuthoringDraft,type StagedFile,type StagingWorkspace
+ STAGING_MAX_BYTES,addStagedFiles,stagedToAuthoringDraft,type StagedFile,type StagingWorkspace
 } from "./authoring-staging.ts";
 import {
  inspectAuthoringPublication,type PublicationIssue
@@ -38,7 +38,7 @@ export async function ingestStagedFiles(
  if(!files.length)return current??{schema:1,files:[],selected:[]};
  const inputs:StagedFile[]=[];
  for(const file of files){
-  if(file.size>1700000)
+  if(file.size>STAGING_MAX_BYTES)
    throw new Error(file.name+" is too large for a safely staged source; split the bank");
   inputs.push({name:file.name,source:JSON.parse(await file.text())});
  }
