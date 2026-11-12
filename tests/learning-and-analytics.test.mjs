@@ -343,8 +343,8 @@ test("stable ts-fsrs 6.0.0 runs explicit FSRS-7 with evidence-rich replay, previ
  assert.equal(scheduler.provider,"ts-fsrs@6.0.0/FSRS-7");
  assert.equal(scheduler.configuration.model,"FSRS-7");
  assert.equal(scheduler.configuration.packageVersion,"6.0.0");
- assert.equal(scheduler.configuration.retentionPolicy,"fixed");
- assert.equal(scheduler.configuration.desiredRetention,0.9);
+ assert.equal(scheduler.configuration.policy.kind,"fixed");
+ assert.equal(scheduler.configuration.policy.desiredRetention,0.9);
  assert.equal(scheduler.configuration.enableShortTerm,true);
  assert.deepEqual(scheduler.configuration.learningSteps,["1m","10m"]);
  assert.deepEqual(scheduler.configuration.relearningSteps,["10m"]);
@@ -374,9 +374,37 @@ test("stable ts-fsrs 6.0.0 runs explicit FSRS-7 with evidence-rich replay, previ
  ]),/chronological/);
  assert.throws(()=>rateLearningCard(graded,Rating.Again,new Date(1500).toISOString(),20,scheduler),/monotonic/);
 });
+test("FSRS policy changes reschedule replayed history without mutating review evidence",async()=>{
+ const source=await DefaultScheduler({policy:{kind:"fixed",desiredRetention:0.9},enableFuzz:false});
+ let card=addLearningCard(complete("policy-replay"),bundle.questions[0].id,new Date(1030).toISOString());
+ for(let i=0;i<8&&scheduledCard(card,source).state!=="review";i++){
+  const current=scheduledCard(card,source),last=Date.parse(card.reviews.at(-1)?.at??card.createdAt);
+  card=rateLearningCard(card,Rating.Good,new Date(Math.max(last+1,current.dueAt.getTime()+1)).toISOString(),400,source);
+ }
+ assert.equal(scheduledCard(card,source).state,"review");
+ {
+  const current=scheduledCard(card,source),last=Date.parse(card.reviews.at(-1).at);
+  card=rateLearningCard(card,Rating.Good,new Date(Math.max(last+1,current.dueAt.getTime()+1)).toISOString(),450,source);
+ }
+ const immutableReviews=structuredClone(card.reviews);
+ const low=await DefaultScheduler({policy:{kind:"fixed",desiredRetention:0.75},enableFuzz:false});
+ const high=await DefaultScheduler({policy:{kind:"fixed",desiredRetention:0.97},enableFuzz:false});
+ const adaptive=await DefaultScheduler({policy:{kind:"cost-adr",preset:"upstream-default"},enableFuzz:false});
+ const lowSchedule=scheduledCard(card,low),highSchedule=scheduledCard(card,high),adaptiveSchedule=scheduledCard(card,adaptive);
+ assert.deepEqual(card.reviews,immutableReviews,"changing scheduler policy must not rewrite stored review evidence");
+ assert.equal(lowSchedule.reps,highSchedule.reps);assert.equal(lowSchedule.reps,adaptiveSchedule.reps);
+ assert.equal(lowSchedule.lapses,highSchedule.lapses);assert.equal(lowSchedule.lapses,adaptiveSchedule.lapses);
+ assert.equal(lowSchedule.stability,highSchedule.stability);assert.equal(lowSchedule.difficulty,highSchedule.difficulty);
+ assert.notEqual(lowSchedule.dueAt.getTime(),highSchedule.dueAt.getTime(),
+  "fixed-retention policy changes must recompute the future schedule from the same history");
+ assert.equal(low.configuration.policy.kind,"fixed");assert.equal(high.configuration.policy.kind,"fixed");
+ assert.equal(adaptive.configuration.policy.kind,"cost-adr");
+ assert.deepEqual(card.reviews,immutableReviews);
+});
 test("Cost-ADR composes with remediation and native ts-fsrs leech suspension without rewriting review evidence",async()=>{
- const scheduler=await DefaultScheduler({retentionPolicy:"cost-adr",costAdrGoalWeight:64,leechThreshold:1,leechAction:"remediate"});
- assert.equal(scheduler.configuration.retentionPolicy,"cost-adr");assert.equal(scheduler.configuration.costAdrGoalWeight,64);
+ const scheduler=await DefaultScheduler({policy:{kind:"cost-adr",preset:"upstream-default"},leechThreshold:1,leechAction:"remediate"});
+ assert.equal(scheduler.configuration.policy.kind,"cost-adr");
+ assert.equal(scheduler.configuration.policy.goalCostWeight,__suite_dep_11.FSRS_COST_ADR_PRESET_GOAL_WEIGHT);
  const seed=addLearningCard(complete("cost-adr"),bundle.questions[0].id,new Date(1030).toISOString());
  assert.deepEqual(previewLearningCard(seed,new Date(2030).toISOString(),scheduler).map(x=>x.rating),[1,2,3,4]);
  let card=seed;
@@ -389,7 +417,7 @@ test("Cost-ADR composes with remediation and native ts-fsrs leech suspension wit
  card=rateLearningCard(card,Rating.Again,new Date(Math.max(last+1,current.dueAt.getTime()+1)).toISOString(),650,scheduler);
  assert.equal(scheduledCard(card,scheduler).lapses,1);assert.equal(scheduledCard(card,scheduler).leechStatus,"remediation");
  assert.notEqual(scheduledCard(card,scheduler).scheduleStatus,"suspended");
- const suspended=await DefaultScheduler({retentionPolicy:"cost-adr",costAdrGoalWeight:64,leechThreshold:1,leechAction:"suspend"});
+ const suspended=await DefaultScheduler({policy:{kind:"cost-adr",preset:"upstream-default"},leechThreshold:1,leechAction:"suspend"});
  assert.equal(scheduledCard(card,suspended).scheduleStatus,"suspended");
  assert.equal(scheduledCard(card,suspended).leechStatus,"suspended");assert.equal(card.reviews.at(-1).state,"review");
 });
@@ -414,8 +442,11 @@ test("optimizer evidence and evaluated profiles are portable without persisting 
    validationCandidateTrainedItems:320,finalRetrainedOnAllEvidence:true}
  });
  const settings=__suite_dep_17.validateRevisionSettings({...__suite_dep_17.DEFAULT_REVISION_SETTINGS,
-  optimizerProfile:profile,retentionPolicy:"cost-adr"});
- const options=__suite_dep_17.revisionSchedulerOptions(settings);assert.equal(options.retentionPolicy,"cost-adr");assert.equal(options.weights.length,34);
+  optimizerProfile:profile,policy:{kind:"cost-adr",preset:"upstream-default"}});
+ const options=__suite_dep_17.revisionSchedulerOptions(settings);assert.equal(options.policy.kind,"cost-adr");assert.equal(options.weights.length,34);
+ assert.throws(()=>__suite_dep_17.validateRevisionSettings({...settings,policy:{kind:"fixed",desiredRetention:0.74}}),/0.75/);
+ assert.throws(()=>__suite_dep_17.validateRevisionSettings({...settings,policy:{kind:"cost-adr",preset:"custom"}}),/preset/);
+ assert.throws(()=>__suite_dep_17.validateRevisionSettings({...settings,retentionPolicy:"fixed"}),/Invalid revision settings/);
  const storage=new Map(),fake={getItem:key=>storage.get(key)??null,setItem:(key,value)=>storage.set(key,value)};
  __suite_dep_17.writeRevisionSettings(settings,fake);assert.deepEqual(__suite_dep_17.readRevisionSettings(fake),settings);
  assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,evaluation:null}),/evaluation/);
