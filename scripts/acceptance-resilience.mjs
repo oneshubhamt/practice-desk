@@ -93,6 +93,10 @@ try{
  console.log("MODERN RESILIENCE PASS actual IndexedDB two-tab CAS conflict");
  // Two tabs using localStorage fallback must detect a changed data generation.
  const fallbackA=await context.newPage(),fallbackB=await context.newPage();
+ // The preceding IndexedDB scenario deliberately leaves an unfinished mirrored
+ // attempt. Fallback hydration validly recovers it, so starting a separate
+ // attempt must accept the application's explicit safety confirmation.
+ fallbackA.on("dialog",dialog=>void dialog.accept());
  const unavailable=()=>Object.defineProperty(window,"indexedDB",
    {configurable:true,value:undefined});
  await fallbackA.addInitScript(unavailable);
