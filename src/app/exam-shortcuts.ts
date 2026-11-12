@@ -66,9 +66,6 @@ export function writeShortcutBindings(value:unknown,storage?:Pick<Storage,"setIt
 }
 export const shortcutKeyLabel=(key:string):string=>key==="arrowleft"?"←":
  key==="arrowright"?"→":key.length===1?key.toUpperCase():key;
-export const EXAM_SHORTCUT_HELP="A–D answer single-choice; Left/Right navigate except on native radios, "+
- "where Alt+Left/Right navigates; M marks/unmarks for review even when paused; F toggles full screen. "+
- "Typing, Display and modal dialogs suspend shortcuts.";
 export function examShortcutHelp(bindings:ShortcutBindings=readShortcutBindings()):string{
  const b=bindings;
  return "Answer "+[b.answerA,b.answerB,b.answerC,b.answerD].map(shortcutKeyLabel).join("/")+

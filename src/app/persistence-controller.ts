@@ -17,6 +17,7 @@ import {
 import {readDisplayPreferences,writeDisplayPreferences,SETTINGS_EVENT} from "./preferences.ts";
 import type {PersistenceControllerContext} from "./coordinator-context.ts";
 import {clearCandidateToolWorkspace} from "./candidate-tool-state.ts";
+import {downloadBlob} from "./download-file.ts";
 
 function acceptRecoveredRecords(owner:PersistenceControllerContext,recovered:WorkspaceRecovery):number{
  let rejected=recovered.rejectedRows+recovered.rejectedSnapshots;
@@ -72,13 +73,8 @@ export const downloadHistoryBackup=async (owner:PersistenceControllerContext):Pr
    readDisplayPreferences(),new Date().toISOString(),owner.setups
   );
   const exportFile=await backupDownload(serialized);
-  const url=URL.createObjectURL(exportFile.blob);
-  const link=document.createElement("a");
-  link.href=url;
-  link.download="Practice_Desk_Backup_"+new Date().toISOString().slice(0,10)+
-   (owner.storageFault?"_UNSAVED_RECOVERY":"")+exportFile.extension;
-  document.body.append(link);link.click();link.remove();
-  window.setTimeout(()=>URL.revokeObjectURL(url),2000);
+  downloadBlob(exportFile.blob,"Practice_Desk_Backup_"+new Date().toISOString().slice(0,10)+
+   (owner.storageFault?"_UNSAVED_RECOVERY":"")+exportFile.extension);
   if(owner.storageFault){
    owner.warning="Emergency recovery file exported: only currently accessible, validated records are included. "+
     "Damaged or unreadable entries may be absent. Preserve the original browser profile and verify restoration "+

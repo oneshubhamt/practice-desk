@@ -22,6 +22,7 @@ import {authoringSections,setAuthoringSectionMinutes,assignAuthoringQuestionSect
 import {authoringPublishedPreview,authoringDraftPreview} from "./authoring-preview.ts";
 import {mathRenderer} from "../app/math-renderer-provider.ts";
 import {escapeText} from "../app/html-escape.ts";
+import {downloadText} from "../app/download-file.ts";
 import {wordgardEditorPort} from "./wordgard-adapter.ts";
 import {syllabusForExam,syllabusHeading,UNCLASSIFIED_SUBJECT} from "../learning/syllabus-taxonomy.ts";
 import type {EditorSession,AuthoringEditCommand} from "./vendor-ports.ts";
@@ -434,12 +435,8 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
  };
  const exportDraft=()=>{
   capture();
-  const source=JSON.stringify(active(),null,2);
-  const objectUrl=URL.createObjectURL(new Blob([source],{type:"application/json"}));
-  const a=document.createElement("a");
-  a.href=objectUrl;a.download="Practice_Desk_Authored_Draft_"+active().id+".json";
-  document.body.append(a);a.click();a.remove();
-  window.setTimeout(()=>URL.revokeObjectURL(objectUrl),1000);
+  downloadText("Practice_Desk_Authored_Draft_"+active().id+".json",
+   JSON.stringify(active(),null,2));
   status("Unpublished draft exported as JSON. Validate and Publish to create a scored paper.");
   void render();
  };
@@ -693,10 +690,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   const downloadAuthoringJson=(payload:unknown,filename:string):void=>{
    // Compact archival exports remain within the same character budget as
    // their validated payload, even for large 8-file staged source collections.
-   const url=URL.createObjectURL(new Blob([JSON.stringify(payload)],{type:"application/json"}));
-   const link=document.createElement("a");link.href=url;link.download=filename;
-   document.body.append(link);link.click();link.remove();
-   window.setTimeout(()=>URL.revokeObjectURL(url),1000);
+   downloadText(filename,JSON.stringify(payload));
   };
   click("pd-stage-archive-import",()=>find<HTMLInputElement>("pd-stage-archive-file").click());
   find<HTMLInputElement>("pd-stage-archive-file").onchange=async e=>{
@@ -764,12 +758,8 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    });
    click("pd-stage-export",()=>{
     const report=inspectStagingWorkspace(stage!);
-    const blob=new Blob([JSON.stringify({schema:1,factualVerification:"not-performed",...report},null,2)],
-     {type:"application/json"});
-    const url=URL.createObjectURL(blob),link=document.createElement("a");
-    link.href=url;link.download="Practice_Desk_AI_Staging_QA.json";
-    document.body.append(link);link.click();link.remove();
-    window.setTimeout(()=>URL.revokeObjectURL(url),1000);
+    downloadText("Practice_Desk_AI_Staging_QA.json",
+     JSON.stringify({schema:1,factualVerification:"not-performed",...report},null,2));
    });
    click("pd-stage-handoff",()=>{
     try{
@@ -812,12 +802,8 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   click("pd-author-exchange",()=>{
    capture();
    try{
-    const source=JSON.stringify(createDraftExchange(active()),null,2);
-    const url=URL.createObjectURL(new Blob([source],{type:"application/json"}));
-    const link=document.createElement("a");
-    link.href=url;link.download="Practice_Desk_Draft_Exchange_"+active().id+".json";
-    document.body.append(link);link.click();link.remove();
-    window.setTimeout(()=>URL.revokeObjectURL(url),1000);
+    downloadText("Practice_Desk_Draft_Exchange_"+active().id+".json",
+     JSON.stringify(createDraftExchange(active()),null,2));
     status("Versioned lossless unpublished Wordgard exchange exported; no source authentication claimed.");
    }catch(error){status(error instanceof Error?error.message:"Unable to export draft exchange",true);}
   });

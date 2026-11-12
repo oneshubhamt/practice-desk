@@ -8,7 +8,7 @@ import { frozenScoreSummary } from "./history-score.ts";
 import {filteredHistory,historyQueryError,activeHistoryFilterCount,historyAttemptLabel,type HistoryQuery} from "./history-query.ts";
 
 import {healthSummary,type StorageHealth} from "./storage-health.ts";
-const esc=(x:unknown):string=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]??c));
+import {escapeText as esc} from "./html-escape.ts";
 const percent=(n:number)=>Math.max(0,Math.min(100,n));
 const stamp=(ms:number)=>new Date(ms).toLocaleString();
 interface Priority { readonly examId:string; readonly title:string; readonly answered:number;readonly correct:number;readonly attempts:number }

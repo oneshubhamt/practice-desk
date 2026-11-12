@@ -4,10 +4,10 @@ import { answerRevisionEvidence } from "../learning/answer-revisions.ts";
 import { questionSpeed,isAuditQuestion,longestQuestionExposure,studySuggestions,questionTimingPhases } from "../learning/question-analytics.ts";
 import { sectionTimerDuration } from "../engine/session.ts";
 import type { ItemScore } from "../engine/scoring.ts";
+import {escapeText as esc} from "./html-escape.ts";
 
 export type ResultTab="overview"|"review"|"timing";
 export type ReviewFilter="all"|"incorrect"|"unanswered"|"correct"|"excluded"|"pending"|"flagged"|"audit"|"fastwrong"|"typicalwrong"|"slowwrong";
-const esc=(x:unknown)=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]??c));
 const duration=(ms:number)=>{const t=Math.ceil(Math.max(0,ms)/1000);return String(Math.floor(t/60)).padStart(2,"0")+":"+String(t%60).padStart(2,"0");};
 const mark=(a:GenericAttempt,value:number)=>value.toFixed(a.frozen.paper.scoring.decimalPlaces??2);
 

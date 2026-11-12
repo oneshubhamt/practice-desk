@@ -5,6 +5,7 @@
  * Therefore text/diagrams stay original; photos require automated fidelity
  * checks AND explicit user visual approval for a smaller WebP candidate.
  */
+import {downloadBlob as exportBlob} from "./download-file.ts";
 export type RasterAssessment={
  readonly sourceBytes:number;
  readonly candidateBytes:number;
@@ -62,12 +63,6 @@ function readAsDataUri(file:Blob):Promise<string>{
   reader.onerror=()=>reject(reader.error??Error("Local image conversion failed"));
   reader.readAsDataURL(file);
  });
-}
-function exportBlob(blob:Blob,name:string):void{
- const url=URL.createObjectURL(blob);
- const link=element("a");link.href=url;link.download=name;document.body.append(link);
- link.click();link.remove();
- window.setTimeout(()=>URL.revokeObjectURL(url),2000);
 }
 function calculateFidelity(original:ImageData,decoded:ImageData):{
  psnrDb:number;maxChannelError:number;significantErrorFraction:number

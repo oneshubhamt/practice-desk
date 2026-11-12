@@ -14,7 +14,7 @@ import {inspectCandidateIntegrity} from "../src/authoring/candidate-integrity.ts
 import {auditQuestionQuality} from "./question-quality.mjs";
 import {createSourceKeyReference} from "../src/engine/source-comparison.ts";
 import {createSourceReviewReference} from "../src/engine/review-source.ts";
-import {validateExamPackage} from "../src/app/exam-package.ts";
+import {validateExamPackage} from "../src/domain/exam-package.ts";
 import {questionRevisionHash} from "../src/domain/integrity.ts";
 
 const FORMAT="practice-desk-editorial-decisions",LINEAGE_FORMAT="practice-desk-editorial-lineage";

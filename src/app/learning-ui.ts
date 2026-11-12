@@ -18,6 +18,8 @@ import { syllabusForExam } from "../learning/syllabus-taxonomy.ts";
 import type { ErrorLabel, LearningCard, ReviewGrade } from "../learning/learning.ts";
 import type {RichDocument} from "../domain/rich-document.ts";
 import {authoredTextHTML} from "./rich-content-view.ts";
+import {escapeText as esc} from "./html-escape.ts";
+import {downloadText} from "./download-file.ts";
 
 export interface LearningDeskHost {
   cards:()=>LearningCard[];
@@ -27,8 +29,6 @@ export interface LearningDeskHost {
   startRevision:(cards:readonly LearningCard[],selection?:RevisionSelectionProvenance)=>Promise<boolean>;
   close:()=>void;
 }
-const esc=(v:unknown):string=>String(v??"").replace(/[&<>"']/g,c=>
-  ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]??c));
 const fsrsInterval=(days:number):string=>{
  const seconds=Math.max(0,Math.round(days*86400));
  if(seconds<60)return seconds+"s";
@@ -37,10 +37,6 @@ const fsrsInterval=(days:number):string=>{
  if(days<30)return (days<10?Number(days.toFixed(1)):Math.round(days))+"d";
  if(days<365)return Math.round(days/30.4375)+"mo";
  return Number((days/365.25).toFixed(days<730?1:0))+"y";
-};
-const downloadText=(name:string,text:string,type:string):void=>{
- const url=URL.createObjectURL(new Blob([text],{type})),link=document.createElement("a");
- link.href=url;link.download=name;link.click();window.setTimeout(()=>URL.revokeObjectURL(url),0);
 };
 function figures(assets:LearningCard["assets"],ids:readonly string[]|undefined):string{
  return (ids??[]).map(id=>{

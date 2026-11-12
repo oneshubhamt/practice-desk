@@ -1,7 +1,11 @@
 name: CI
 on:
   push:
+    paths-ignore:
+      - "**/*.md"
   pull_request:
+    paths-ignore:
+      - "**/*.md"
 concurrency:
   group: practice-desk-${{ github.ref }}
   cancel-in-progress: true
