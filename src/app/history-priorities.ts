@@ -1,4 +1,4 @@
-import type { GenericAttempt } from "./exam-package.ts";
+import type { GenericAttempt } from "../engine/generic-attempt.ts";
 import { sectionScoreSummaries } from "../engine/score-ceiling.ts";
 
 export interface MarksPriorityRow {

@@ -4,8 +4,10 @@ import {minutes} from "./exam-view.ts";
 import {isAttempt,isLearning} from "./stored-record-validator.ts";
 
 
-import {configureCglPractice,configureUntimedPractice,startGenericAttempt,validateExamPackage} from "./exam-package.ts";
-import type {ExamPackage,GenericAttempt,CglPracticeMode} from "./exam-package.ts";
+import {configureCglPractice,configureUntimedPractice,startGenericAttempt} from "./exam-package.ts";
+import {validateExamPackage} from "../domain/exam-package.ts";
+import type {ExamPackage,CglPracticeMode} from "../domain/exam-package.ts";
+import type {GenericAttempt} from "../engine/generic-attempt.ts";
 
 import {createSourceKeyReference} from "../engine/source-comparison.ts";
 import {composePracticeSet,practiceInventory} from "./practice-compose.ts";

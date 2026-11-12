@@ -1,5 +1,5 @@
 /** Inert HTML for frozen question media, stimuli and all six response kinds. */
-import type {ExamPackage} from "./exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
 import type {QuestionRevision,CandidateResponse} from "../domain/question.js";
 import type {RichDocument} from "../domain/rich-document.ts";
 import {authoredTextHTML} from "./rich-content-view.ts";

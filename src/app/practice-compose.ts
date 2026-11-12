@@ -2,7 +2,7 @@ import type { ExamPackage } from "../domain/exam-package.ts";
 import type {GenericAttempt} from "../engine/generic-attempt.ts";
 import type {PracticeComposition,PracticeFilters} from "../domain/attempt.js";
 export type {PracticeComposition,PracticeFilters} from "../domain/attempt.js";
-import { validateExamPackage } from "./exam-package.ts";
+import { validateExamPackage } from "../domain/exam-package.ts";
 import type { QuestionRevision } from "../domain/question.js";
 import type { PaperRevision,SectionDefinition } from "../domain/exam.js";
 import type { AnswerKeyRevision } from "../domain/answer-key.js";

@@ -1,4 +1,4 @@
-import type { ExamPackage } from "./exam-package.ts";
+import type { ExamPackage } from "../domain/exam-package.ts";
 import type { QuestionKind } from "../domain/question.js";
 import type { MarkingRule } from "../domain/scoring.js";
 import { scoreableMaximum } from "../engine/score-ceiling.ts";

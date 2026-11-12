@@ -5,7 +5,8 @@ import {minutes,readablePracticeMode} from "./exam-view.ts";
 import {frozenReviewMedia,sourceReviewHTML} from "./review-media-view.ts";
 import {renderAuthoredText} from "./question-content-view.ts";
 import {readableAnswer} from "./exam-package.ts";
-import type {ExamPackage,GenericAttempt} from "./exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
+import type {GenericAttempt} from "../engine/generic-attempt.ts";
 import type {QuestionRevision} from "../domain/question.js";
 import type {QuestionRevisionId} from "../domain/ids.js";
 

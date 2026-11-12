@@ -1,6 +1,7 @@
 import { examShortcutHelp } from "./exam-shortcuts.ts";
 /** Read-only exam display; fullscreen state is supplied, not read from the DOM. */
-import type {ExamPackage,GenericAttempt} from "./exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
+import type {GenericAttempt} from "../engine/generic-attempt.ts";
 import type {OptionId} from "../domain/ids.js";
 import {escapeText} from "./html-escape.ts";
 import {assetHTML,stimulusHTML,renderGenericControls,renderQuestionPrompt} from "./question-content-view.ts";

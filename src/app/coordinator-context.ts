@@ -3,7 +3,8 @@
 
 import {type RecordItem} from "./stored-record-validator.ts";
 
-import type {ExamPackage,GenericAttempt,CglPracticeMode} from "./exam-package.ts";
+import type {ExamPackage,CglPracticeMode} from "../domain/exam-package.ts";
+import type {GenericAttempt} from "../engine/generic-attempt.ts";
 import type {ExamCalculatorState} from "../domain/calculator.ts";
 
 import type {OptionId} from "../domain/ids.js";

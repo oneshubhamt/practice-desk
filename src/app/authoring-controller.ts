@@ -1,6 +1,6 @@
 /** P47-6 module: authoring-controller.ts */
 
-import {validateExamPackage} from "./exam-package.ts";
+import {validateExamPackage} from "../domain/exam-package.ts";
 
 import {familyIdFor} from "./exam-families.ts";
 

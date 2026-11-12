@@ -7,7 +7,8 @@ import {browserFsrsOptimizerAvailability,FsrsOptimizerRejectedError,startBrowser
  type BrowserFsrsOptimizerProgress,type BrowserFsrsOptimizerRun} from "../learning/fsrs-browser-optimizer.ts";
 import {reconcileSameExamQuestion} from "./exam-dom-reconcile.ts";
 import type {RevisionSchedulerPort} from "../learning/revision-scheduler-port.ts";
-import type { ExamPackage, GenericAttempt } from "./exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
+import type {GenericAttempt} from "../engine/generic-attempt.ts";
 import { readableAnswer } from "./exam-package.ts";
 import { ERROR_LABELS, comparableTrends, inspectLearningCard, previewLearningCard, rateLearningCard, scheduledCard, topicMetrics, validateLearningCard } from "../learning/learning.ts";
 import { evidenceProgression } from "../learning/attempt-evidence.ts";

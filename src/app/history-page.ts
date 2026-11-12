@@ -1,4 +1,5 @@
-import type { GenericAttempt, ExamPackage } from "./exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
+import type {GenericAttempt} from "../engine/generic-attempt.ts";
 import { attemptEvidence } from "../learning/attempt-evidence.ts";
 import { comparableTrends } from "../learning/learning.ts";
 import { comparableScoreTrends,adjustedHistoryMetrics } from "./history-metrics.ts";

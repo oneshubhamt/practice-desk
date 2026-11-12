@@ -1,5 +1,6 @@
 /** Untrusted frozen attempt, learning card and imported package validation. */
-import {validateExamPackage,type GenericAttempt,type ExamPackage} from "./exam-package.ts";
+import {validateExamPackage,type ExamPackage} from "../domain/exam-package.ts";
+import type {GenericAttempt} from "../engine/generic-attempt.ts";
 import {validateLearningCard,type LearningCard} from "../learning/learning.ts";
 import {validateSectionTimingEvidence} from "../engine/session.ts";
 import {assertFrozenContent} from "../history/frozen.ts";

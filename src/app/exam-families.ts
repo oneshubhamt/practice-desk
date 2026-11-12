@@ -1,4 +1,4 @@
-import type { ExamPackage } from "./exam-package.ts";
+import type { ExamPackage } from "../domain/exam-package.ts";
 
 /** Source origin is part of identity: an imported bank called "ssc-cgl" must
  * never masquerade as the built-in verified CGL family. */

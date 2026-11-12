@@ -1,5 +1,7 @@
 /** Frozen post-submit reviewed and source media; no mutable current bank. */
-import {readableAnswer,type ExamPackage,type GenericAttempt} from "./exam-package.ts";
+import {readableAnswer} from "./exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
+import type {GenericAttempt} from "../engine/generic-attempt.ts";
 import type {QuestionRevision,CandidateResponse} from "../domain/question.js";
 import type {CorrectAnswer} from "../domain/answer-key.js";
 import type {Verdict} from "../engine/scoring.ts";

@@ -5,8 +5,8 @@ import {STORAGE_TOPOLOGY} from "../storage-topology.ts";
 import {validateGenericStoredRecord,isAttempt,isPackage,isLearning,type RecordItem} from "./stored-record-validator.ts";
 
 
-import {validateExamPackage} from "./exam-package.ts";
-import type {GenericAttempt} from "./exam-package.ts";
+import {validateExamPackage} from "../domain/exam-package.ts";
+import type {GenericAttempt} from "../engine/generic-attempt.ts";
 
 import {chooseRecovered} from "../history/frozen.ts";
 

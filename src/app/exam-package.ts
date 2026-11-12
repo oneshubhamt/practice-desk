@@ -10,8 +10,6 @@ import {validateExamPackage} from "../domain/exam-package.ts";
 import type {ExamPackage,CglPracticeMode} from "../domain/exam-package.ts";
 import type {GenericAttempt} from "../engine/generic-attempt.ts";
 export {validateExamImportBudget,validateExamPackage} from "../domain/exam-package.ts";
-export type {ExamPackage,CglPracticeMode} from "../domain/exam-package.ts";
-export type {GenericAttempt,CompletionReason} from "../engine/generic-attempt.ts";
 import { validateResponse } from "../engine/response.ts";
 import { startSession, transition } from "../engine/session.ts";
 import type { SessionState, SessionEvent } from "../engine/session.ts";

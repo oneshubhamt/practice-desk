@@ -1,5 +1,5 @@
 import {STORAGE_TOPOLOGY} from "../storage-topology.ts";
-import type { CglPracticeMode } from "./exam-package.ts";
+import type { CglPracticeMode } from "../domain/exam-package.ts";
 
 /** The single current user-setup schema. No migration or dual-write path. */
 export interface FamilySetup {

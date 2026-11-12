@@ -1,4 +1,4 @@
-import type { GenericAttempt } from "./exam-package.ts";
+import type { GenericAttempt } from "../engine/generic-attempt.ts";
 import { attemptEvidence } from "../learning/attempt-evidence.ts";
 import { answerRevisionEvidence } from "../learning/answer-revisions.ts";
 import { questionSpeed,isAuditQuestion,longestQuestionExposure,studySuggestions,questionTimingPhases } from "../learning/question-analytics.ts";

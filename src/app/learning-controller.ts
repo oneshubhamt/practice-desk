@@ -5,7 +5,7 @@ import {isAttempt,isLearning} from "./stored-record-validator.ts";
 
 
 import {startGenericAttempt} from "./exam-package.ts";
-import type {GenericAttempt} from "./exam-package.ts";
+import type {GenericAttempt} from "../engine/generic-attempt.ts";
 
 import type {QuestionRevisionId} from "../domain/ids.js";
 

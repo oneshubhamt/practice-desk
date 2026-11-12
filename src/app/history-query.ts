@@ -1,4 +1,5 @@
-import type {ExamPackage,GenericAttempt} from "./exam-package.ts";
+import type {ExamPackage} from "../domain/exam-package.ts";
+import type {GenericAttempt} from "../engine/generic-attempt.ts";
 
 /** The archive query is VIEW-ONLY. Filters never alter saved attempts or
  * all-time mock/learning statistics. All identities come from frozen attempts,
