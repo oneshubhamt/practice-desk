@@ -34,8 +34,9 @@ class LocalAuthoringWorkspaceStore implements AuthoringWorkspaceStore {
  private stagingStamp:string|null=null;
  private shelfBlocked=false;
  private stagingBlocked=false;
+ private readonly storage:Storage;
 
- constructor(private readonly storage:Storage){}
+ constructor(storage:Storage){this.storage=storage;}
 
  load():AuthoringWorkspaceSnapshot{
   let shelf:AuthoringDraftShelf;
