@@ -154,3 +154,34 @@ test("Lower-layer modules cannot depend on application composition",async()=>{
   }
  }
 });
+
+
+test("CLEER package, attempt and composition ownership stays canonical",async()=>{
+ const domainPackage=await source("src/domain/exam-package.ts");
+ const appPackage=await source("src/app/exam-package.ts");
+ const engineAttempt=await source("src/engine/generic-attempt.ts");
+ const generic=await source("src/app/generic-ui.ts");
+ const authoring=await source("src/app/authoring-controller.ts");
+ assert.doesNotMatch(domainPackage,/\bCglPracticeMode\b|\bpracticeMode\b/,
+  "runtime CGL policy must not enter the canonical exam package");
+ assert.doesNotMatch(appPackage,/export function transitionGenericAttempt\s*\(/,
+  "attempt transitions belong to engine/, not app/");
+ assert.match(engineAttempt,/export function transitionGenericAttempt\s*\(/);
+ assert.doesNotMatch(generic,/authoring\/authoring-studio|createLearningDesk|\.\/learning-ui\.ts/,
+  "composition root must use workspace adapters rather than feature constructors for typing");
+ assert.doesNotMatch(authoring,/owner\.authoringStudio/,
+  "authoring adapter must not depend on the instance it is constructing");
+});
+
+test("terminal candidate scratch has one persistence cleanup owner",async()=>{
+ const persistence=await source("src/app/persistence-controller.ts");
+ assert.match(persistence,/versioned\.finishedAt!==null/);
+ assert.match(persistence,/clearCandidateToolWorkspace\(localStorage,versioned\.id\)/);
+ assert.match(persistence,/owner\.calculatorStates\.delete\(versioned\.id\)/);
+ assert.match(persistence,/owner\.choiceDrafts\.delete\(key\)/);
+ for(const file of ["exam-controller","route-controller","lifecycle-controller"]){
+  const text=await source("src/app/"+file+".ts");
+  assert.doesNotMatch(text,/clearCandidateToolWorkspace/,
+   file+" must delegate terminal candidate cleanup to persistence");
+ }
+});
