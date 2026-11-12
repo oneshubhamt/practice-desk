@@ -279,12 +279,34 @@ class LocalFallbackWorkspaceStore implements WorkspaceStore {
  async loadRecoverable():Promise<WorkspaceRecovery>{
   const raw=this.storage.getItem(this.key);
   const records=this.parse(raw);
-  this.capture(raw,records);
-  return {records,snapshots:[],rejectedRows:0,rejectedSnapshots:0};
+  const counts=new Map<string,number>();
+  for(const record of records){
+   if(record&&typeof record==="object"&&typeof (record as {id?:unknown}).id==="string"){
+    const id=(record as {id:string}).id;
+    counts.set(id,(counts.get(id)??0)+1);
+   }
+  }
+  let rejectedRows=0;
+  const accepted=records.filter(record=>{
+   if(!record||typeof record!=="object"||typeof (record as {id?:unknown}).id!=="string")return true;
+   const duplicate=(counts.get((record as {id:string}).id)??0)>1;
+   if(duplicate)rejectedRows++;
+   return !duplicate;
+  });
+  this.capture(raw,accepted);
+  return {records:accepted,snapshots:[],rejectedRows,rejectedSnapshots:0};
  }
 
  async loadVerified():Promise<WorkspaceVerifiedSnapshot>{
-  return {records:this.parse(this.storage.getItem(this.key)),snapshots:[]};
+  const records=this.parse(this.storage.getItem(this.key));
+  const seen=new Set<string>();
+  for(const record of records){
+   if(!record||typeof record!=="object"||typeof (record as {id?:unknown}).id!=="string")continue;
+   const id=(record as {id:string}).id;
+   if(seen.has(id))throw new Error("Duplicate fallback record identity");
+   seen.add(id);
+  }
+  return {records,snapshots:[]};
  }
 
  async write(record:WorkspaceStoredRecord,expectedRevision:number|null):Promise<void>{

@@ -758,3 +758,28 @@ p45test("Persistence backend refuses malformed fallback bytes without overwritin
  await p45assert.rejects(store.loadRecoverable(),/Unexpected token|JSON/);
  p45assert.equal(storage.value,"{broken","Malformed current bytes must remain untouched");
 });
+
+
+p45test("Persistence fallback quarantines duplicate identities instead of choosing a winner",async()=>{
+ const {createLocalFallbackWorkspaceStore}=await import("../src/history/workspace-store.ts");
+ const duplicated=JSON.stringify([
+  {id:"duplicate",recordType:"learning-card",saveRevision:1},
+  {id:"healthy",recordType:"learning-card",saveRevision:1},
+  {id:"duplicate",recordType:"learning-card",saveRevision:2}
+ ]);
+ const storage={
+  value:duplicated,
+  getItem(){return this.value;},
+  setItem(_key,value){this.value=String(value);},
+  removeItem(){this.value=null;},
+  clear(){this.value=null;},
+  key(){return null;},
+  get length(){return this.value===null?0:1;}
+ };
+ const store=createLocalFallbackWorkspaceStore(storage,"history");
+ const recovered=await store.loadRecoverable();
+ p45assert.equal(recovered.rejectedRows,2);
+ p45assert.deepEqual(recovered.records.map(x=>x.id),["healthy"]);
+ p45assert.equal(storage.value,duplicated,"Recovery must not rewrite ambiguous original bytes");
+ await p45assert.rejects(store.loadVerified(),/Duplicate fallback record identity/);
+});
