@@ -101,8 +101,7 @@ export function renderModelExam(
      (attempt.frozen.snapshot.examId==="ssc-cgl"?
        ' · Paper Q'+escapeText(q.questionId.split(":").at(-1)):"")+'</p>'+
      stimulusHTML(assets,q)+renderQuestionPrompt(assets,q)+
-     (q.content.richPrompt?"":assetHTML(assets,q.content.assetIds,
-       "Figure for question "+(state.questionIndex+1)))+
+     assetHTML(assets,q.content.assetIds,"Figure for question "+(state.questionIndex+1))+
      '<fieldset class="generic-response-group"'+(state.status!=="running"?" disabled":"")+'>'
      +renderGenericControls(assets,q,currentDraft?{kind:"multiple-select",optionIds:currentDraft.optionIds}:response)+
      (currentDraft?'<p class="generic-inline-warning" role="status">'+escapeText(currentDraft.message)+'</p>':"")+
