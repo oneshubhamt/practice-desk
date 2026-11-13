@@ -27,6 +27,8 @@ export interface LearningDeskHost {
   save:(record:LearningCard)=>Promise<boolean>;
   remove:(id:string)=>Promise<void>;
   startRevision:(cards:readonly LearningCard[],selection?:RevisionSelectionProvenance)=>Promise<boolean>;
+  openCalendar:()=>void;
+  calendarChanged:()=>void;
   close:()=>void;
 }
 const fsrsMetric=(value:number)=>Number(value.toFixed(4));
@@ -274,7 +276,8 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   const candidates=visible.filter(c=>c.examId===exam&&
     ["verified","corrected","caution"].includes(c.question.editorial.status)).slice(0,REVISION_MAX_QUESTIONS);
   const html='<div class="generic-heading"><div><h1>Learning & revision</h1><p class="muted">Error notebook · FSRS-7 spaced review · Topic evidence</p></div>'+
-    '<button class="btn" id="learning-close">← Test library</button></div>'+
+    '<div class="row"><button class="btn quiet" id="learning-calendar">Calendar</button>'+
+    '<button class="btn" id="learning-close">← Test library</button></div></div>'+
     '<p class="generic-warning" role="status" id="learning-message"'+
       (message?'':' hidden')+'>'+esc(message)+'</p>'+
     '<div class="learning-summary">'+
@@ -469,14 +472,14 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
        leechThreshold:Number(root.querySelector<HTMLInputElement>("#learning-leech-threshold")!.value),
        leechAction:root.querySelector<HTMLSelectElement>("#learning-leech-action")!.value});
       const nextScheduler=await createRevisionScheduler(revisionSchedulerOptions(next));
-      revisionSettings=writeRevisionSettings(next);scheduler=nextScheduler;cache.clear();message="FSRS-7 scheduling policy applied.";draw();
+      revisionSettings=writeRevisionSettings(next);scheduler=nextScheduler;cache.clear();host.calendarChanged();message="FSRS-7 scheduling policy applied.";draw();
     }catch(error){message=error instanceof Error?error.message:"Invalid scheduling policy";draw();}
   };
   const activateOptimizerProfile=async(profile:FsrsOptimizerProfile)=>{
     const replacement=assertFsrsOptimizerReplacement(profile,revisionSettings.optimizerProfile);
     const next=validateRevisionSettings({...revisionSettings,optimizerProfile:replacement});
     const nextScheduler=await createRevisionScheduler(revisionSchedulerOptions(next));
-    revisionSettings=writeRevisionSettings(next);scheduler=nextScheduler;cache.clear();
+    revisionSettings=writeRevisionSettings(next);scheduler=nextScheduler;cache.clear();host.calendarChanged();
   };
   root.querySelector<HTMLButtonElement>("#learning-optimizer-run")!.onclick=async()=>{
     if(optimizerRun)return;
@@ -526,7 +529,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     try{
       const next=validateRevisionSettings({...revisionSettings,optimizerProfile:null});
       const nextScheduler=await createRevisionScheduler(revisionSchedulerOptions(next));
-      revisionSettings=writeRevisionSettings(next);scheduler=nextScheduler;cache.clear();
+      revisionSettings=writeRevisionSettings(next);scheduler=nextScheduler;cache.clear();host.calendarChanged();
       optimizerStatus=optimizerAvailability.reason;message="Upstream FSRS-7 default weights restored.";draw();
     }catch(error){message=error instanceof Error?error.message:"Could not restore default weights";draw();}
   };
@@ -575,6 +578,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     }catch(error){message=error instanceof Error?error.message:"Cannot assemble revision";draw();}
   };
   root.querySelector<HTMLButtonElement>("#learning-close")!.onclick=host.close;
+  root.querySelector<HTMLButtonElement>("#learning-calendar")!.onclick=host.openCalendar;
   root.querySelector<HTMLButtonElement>("#learning-test")!.onclick=async()=>{
     const button=root.querySelector<HTMLButtonElement>("#learning-test");
     if(button)button.disabled=true;

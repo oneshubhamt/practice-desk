@@ -9,6 +9,7 @@ export type AppRoute =
   | {readonly screen:"library"}
   | {readonly screen:"history"}
   | {readonly screen:"learning"}
+  | {readonly screen:"calendar"}
   | {readonly screen:"exam";readonly attemptId:string}
   | {readonly screen:"result";readonly attemptId:string;readonly tab:"overview"|"review"|"timing"};
 
@@ -40,7 +41,7 @@ type NativeNavigateEvent=Event&{
     handler:()=>void|Promise<void>;
   }):void;
 };
-const SCREENS=new Set(["library","history","learning","exam","result"]);
+const SCREENS=new Set(["library","history","learning","calendar","exam","result"]);
 const TABS=new Set(["overview","review","timing"]);
 const ATTEMPT_MAX=256;
 const isAttemptId=(s:string|null):s is string=>
@@ -55,7 +56,7 @@ export function parseAppRoute(url:string):AppRoute|null{
   const screens=params.getAll("pd");
   if(screens.length!==1||!SCREENS.has(screens[0]??""))return null;
   const screen=screens[0];
-  if(screen==="library"||screen==="history"||screen==="learning"){
+  if(screen==="library"||screen==="history"||screen==="learning"||screen==="calendar"){
     if(params.has("attempt")||params.has("tab"))return null;
     return {screen};
   }

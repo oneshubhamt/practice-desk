@@ -191,7 +191,7 @@ export async function assertNoOverflow(page,label){
 }
 export async function route(page,name){
  const selectors={library:"#g-start",exam:"#g-next",result:".result-performance-overview",
-  history:".history-archive",learning:"#learning-close"};
+  history:".history-archive",learning:"#learning-close",calendar:"#pd-calendar-mount"};
  await page.waitForFunction(expected=>{
   const current=new URL(location.href);
   const fromFragment=current.hash.startsWith("#pd=")?

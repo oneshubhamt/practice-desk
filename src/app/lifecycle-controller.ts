@@ -20,7 +20,7 @@ export function dispatchWorkspaceVisibility(owner:LifecycleControllerContext,vis
    owner.draw();
  }
 
-export function disposeWorkspace(owner:LifecycleControllerContext){owner.imageViewer.dispose();owner.imagePreparation.dispose();owner.authoringStudio.dispose();owner.router.dispose();owner.learningDesk.dispose();owner.disposed=true;window.clearInterval(owner.timer);document.removeEventListener("visibilitychange",owner.visibility);
+export function disposeWorkspace(owner:LifecycleControllerContext){owner.imageViewer.dispose();owner.imagePreparation.dispose();owner.authoringStudio.dispose();owner.router.dispose();owner.learningDesk.dispose();owner.calendarController.dispose();owner.disposed=true;window.clearInterval(owner.timer);document.removeEventListener("visibilitychange",owner.visibility);
    window.removeEventListener("pagehide",owner.pagehide);window.removeEventListener("storage",owner.storage);
    window.removeEventListener("keydown",owner.keyboard);void owner.writeQueue.finally(()=>owner.storageBackend?.close());owner.root.classList.remove("generic-workspace");}
 

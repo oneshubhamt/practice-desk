@@ -125,7 +125,8 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
      '</div></details>':"";
    return '<div class="generic-heading results-heading"><div>'+
      '<h1>Attempt analysis</h1><p class="muted">'+resultMeta+'</p></div>'+
-     '<div class="row"><button class="btn quiet" id="g-history-results">History</button>'+
+     '<div class="row"><button class="btn quiet" id="g-calendar-results">Calendar</button>'+
+     '<button class="btn quiet" id="g-history-results">History</button>'+
      '<button class="btn" id="g-library">Library</button></div></div>'+
     (owner.warning?'<p class="generic-warning" role="status">'+escapeText(owner.warning)+'</p>':"")+
     resultTabsHTML(owner.resultTab,revealReview)+
@@ -221,6 +222,7 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
 
 export function bindResultScreen(owner:ResultControllerContext):void{
 
+     owner.root.querySelector<HTMLButtonElement>("#g-calendar-results")!.onclick=()=>owner.go({screen:"calendar"});
      owner.root.querySelector<HTMLButtonElement>("#g-history-results")!.onclick=()=>owner.go({screen:"history"});
      const resultLibrary=owner.root.querySelector<HTMLButtonElement>("#g-result-library");
      if(resultLibrary)resultLibrary.onclick=()=>owner.go({screen:"library"});

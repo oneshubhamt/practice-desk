@@ -1593,3 +1593,19 @@ html[data-theme="dark"] .pd-author-studio .pd-author-preview-choice>span{
 .calc-backspace,.calc-zero{grid-column:span 2}.calc-equals{grid-row:span 2;background:var(--blue);border-color:var(--blue);color:#fff}.calc-equals:hover{background:var(--blue);filter:brightness(.94)}
 @media(max-width:430px){.exam-calculator{top:76px;left:50%;right:auto;transform:translateX(-50%);width:min(330px,calc(100vw - 16px));max-height:calc(100dvh - 88px);padding:9px}.calc-key{min-height:35px}}
 @media(max-width:230px){.exam-calculator{top:66px;width:calc(100vw - 16px);padding:8px}.calc-title strong{font-size:12px}.calc-display{font-size:19px;min-height:41px}.calc-key{font-size:13px;min-height:31px}.calc-memory .calc-key{font-size:10px;padding-inline:0}}
+
+
+/* Calendar is a first-class Practice Desk surface. Calendar owns its internal geometry;
+   Practice Desk styles only the surrounding shell and maps semantic theme tokens in code. */
+.pd-calendar-screen{min-width:0}
+.pd-calendar-scheduler{display:grid;gap:14px;margin-bottom:18px}
+.pd-calendar-scheduler h2{margin-bottom:4px}
+.pd-calendar-scheduler p{margin-bottom:0}
+.pd-calendar-form{display:grid;grid-template-columns:minmax(210px,2fr) minmax(180px,1fr) minmax(130px,.65fr) auto;gap:12px;align-items:end}
+.pd-calendar-form label{display:grid;gap:6px;font-size:.84em;font-weight:700;color:var(--muted)}
+.pd-calendar-form select,.pd-calendar-form input{min-width:0;margin:0;color:var(--ink)}
+.pd-calendar-form .btn{align-self:end}
+.pd-calendar-panel{padding:0;overflow:hidden;background:var(--panel)}
+.pd-calendar-mount{min-width:0}
+@media(max-width:900px){.pd-calendar-form{grid-template-columns:1fr 1fr}.pd-calendar-form .btn{width:100%}}
+@media(max-width:560px){.pd-calendar-form{grid-template-columns:1fr}.pd-calendar-panel{border-left:0;border-right:0;border-radius:0}}

@@ -15,6 +15,7 @@ export const changeHistoryFilters=(owner:HistoryControllerContext,next:HistoryQu
   };
 
 export function bindHistoryScreen(owner:HistoryControllerContext):void{
+   owner.root.querySelector<HTMLButtonElement>("#g-calendar-history")!.onclick=()=>owner.go({screen:"calendar"});
 
      owner.root.querySelector<HTMLButtonElement>("#g-library")!.onclick=()=>owner.go({screen:"library"});
      // Filter edits keep #app, controls, and all-time metrics mounted.

@@ -21,6 +21,7 @@ import {createImagePreparation} from "./image-preparation.ts";
 import {createNativeRouter,type AppRoute,type RouteContext,type NativeRouter} from "./navigation.ts";
 import {createWorkspaceAuthoringStudio} from "./authoring-controller.ts";
 import {createWorkspaceLearningDesk,addLearningNotebookCard,addLearningResultCards} from "./learning-controller.ts";
+import {createWorkspaceCalendarController} from "./calendar-controller.ts";
 import {startWorkspaceTimer,handleWorkspaceVisibility,handleWorkspaceKeyboard,
  checkpointWorkspacePagehide,detectConcurrentStorageChange,dispatchWorkspaceVisibility,
  disposeWorkspace} from "./lifecycle-controller.ts";
@@ -92,6 +93,7 @@ export function mountExamWorkspace(
  let owner!:WorkspaceContext;
  let authoringStudio!:WorkspaceContext["authoringStudio"];
  let learningDesk!:WorkspaceContext["learningDesk"];
+ let calendarController!:WorkspaceContext["calendarController"];
  let router!:NativeRouter;
  let timer=0;
 
@@ -105,12 +107,21 @@ export function mountExamWorkspace(
  const updateStorageHealth=():void=>updateWorkspaceStorageHealth(owner);
  const recordStorageFailure=(error:unknown):void=>reportWorkspaceStorageFailure(owner,error);
  const downloadBackup=():Promise<void>=>downloadHistoryBackup(owner);
- const importHistory=(file:File)=>importHistoryBackup(owner,file);
+ const importHistory=async(file:File)=>{
+   await importHistoryBackup(owner,file);
+   calendarController?.invalidate();
+ };
  const writeMirror=(record:GenericAttempt)=>writeEmergencyMirror(owner,record);
  const notice=(message:string)=>reportWorkspaceNotice(owner,message);
- const save=(record:RecordItem):Promise<boolean>=>saveWorkspaceRecord(owner,record);
- const removeSavedAttempt=(id:string,intent:DeletionIntent="completed"):Promise<void>=>
-   removeWorkspaceAttempt(owner,id,intent);
+ const save=async(record:RecordItem):Promise<boolean>=>{
+   const ok=await saveWorkspaceRecord(owner,record);
+   if(ok)calendarController?.invalidate();
+   return ok;
+ };
+ const removeSavedAttempt=async(id:string,intent:DeletionIntent="completed"):Promise<void>=>{
+   await removeWorkspaceAttempt(owner,id,intent);
+   calendarController?.invalidate();
+ };
  const deleteAllCompleted=():Promise<void>=>deleteCompletedWorkspaceAttempts(owner);
  const showStorageEstimate=():Promise<void>=>showWorkspaceStorageEstimate(owner);
  const requestPersistentStorage=():Promise<void>=>requestWorkspacePersistentStorage(owner);
@@ -160,6 +171,7 @@ export function mountExamWorkspace(
    imagePreparation,imageViewer,importHistory,keyboard,
    lastCommittedAt:null,lastStorageFailure:null,lastTimerSave:0,
    get learningDesk(){return learningDesk;},
+   get calendarController(){return calendarController;},
    listHTML,loading:true,mirrorKey,notice,now,openSaved,packageForAttempt,packages,pagehide,patches,
    pendingWrites:0,recordStorageFailure,records,removeSavedAttempt,requestPersistentStorage,resultHTML,
    resultTab:"overview" as ResultTab,reviewFilter:"all" as ReviewFilter,root,
@@ -176,6 +188,7 @@ export function mountExamWorkspace(
 
  authoringStudio=createWorkspaceAuthoringStudio(owner);
  learningDesk=createWorkspaceLearningDesk(owner);
+ calendarController=createWorkspaceCalendarController(owner);
  timer=startWorkspaceTimer(owner);
  router=createNativeRouter(activateRoute);
 

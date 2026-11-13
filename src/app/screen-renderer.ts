@@ -2,7 +2,7 @@ import {reconcileSameExamQuestion} from "./exam-dom-reconcile.ts";
 /** Presentation-only screen renderer.
  * No URL/history, persistent storage, exam policy or navigation decisions.
  */
-export type DisplayScreen="library"|"history"|"learning"|"exam"|"result";
+export type DisplayScreen="library"|"history"|"learning"|"calendar"|"exam"|"result";
 export type ResultPane="overview"|"review"|"timing";
 export type ScreenPresentation={
   readonly screen:DisplayScreen;
@@ -11,16 +11,16 @@ export type ScreenPresentation={
   readonly resultPane:ResultPane;
   readonly html:()=>string;
 };
-type LearningDisplay={show():void;hide():void};
+type PersistentDisplay={show():void;hide():void};
 export interface ScreenRenderer{
-  render(presentation:ScreenPresentation,learning:LearningDisplay):void;
+  render(presentation:ScreenPresentation,learning:PersistentDisplay,calendar:PersistentDisplay):void;
 }
 export function createScreenRenderer(root:HTMLElement):ScreenRenderer{
   let lastScreenKey="";
   let lastView:DisplayScreen|null=null;
   let lastPane:ResultPane="overview";
   let lastAnnouncement="";
-  return {render(p,learning){
+  return {render(p,learning,calendar){
     const previous=document.activeElement;
     const focusKey=previous instanceof HTMLElement&&root.contains(previous)?
       {id:previous.id,attributes:["data-choice","data-bool","data-match","data-q",
@@ -29,11 +29,14 @@ export function createScreenRenderer(root:HTMLElement):ScreenRenderer{
         .map(name=>[name,previous.getAttribute(name)] as const)}:null;
     root.classList.add("generic-workspace");
     const priorView=lastView,priorPane=lastPane;
-    if(p.screen==="learning"){
-      lastView="learning";lastPane=p.resultPane;
-      const entering=lastScreenKey!=="learning";
-      lastScreenKey="learning";
-      learning.show();
+    if(p.screen==="learning"||p.screen==="calendar"){
+      const active=p.screen==="learning"?learning:calendar;
+      const inactive=p.screen==="learning"?calendar:learning;
+      lastView=p.screen;lastPane=p.resultPane;
+      const entering=lastScreenKey!==p.screen;
+      lastScreenKey=p.screen;
+      inactive.hide();
+      active.show();
       if(entering){
         const announcement=document.getElementById("screen-announcement");
         if(announcement)announcement.textContent=p.announcement;
@@ -42,7 +45,7 @@ export function createScreenRenderer(root:HTMLElement):ScreenRenderer{
       }
       return;
     }
-    learning.hide();
+    learning.hide();calendar.hide();
     // Retain controls/focus on the same Exam question, Result pane or Library.
     // Route changes still use the heading-focus/full-replacement policy.
     // Active Wordgard sessions suspend background Library redraws.

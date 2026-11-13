@@ -33,7 +33,7 @@ try{
  await page.locator("#g-export-history").click();
  const download=await file;
  const exported=JSON.parse(await readFile(await download.path(),"utf8"));
- check(exported.format==="practice-desk-backup"&&exported.version===4&&
+ check(exported.format==="practice-desk-backup"&&exported.version===5&&
   exported.manifest?.recordCount===exported.records.length,
   engine+" verified backup metadata missing");
  check(exported.records.some(x=>x.id===attemptId&&x.state.responses.some(r=>r.response)),
