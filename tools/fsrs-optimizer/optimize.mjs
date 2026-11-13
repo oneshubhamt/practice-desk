@@ -90,7 +90,7 @@ await writeFile(temporaryOutput,JSON.stringify(profile,null,2)+"\n","utf8");
 await rename(temporaryOutput,outputPath);
 console.log("FSRS-7 profile written:",outputPath);
 console.log("optimizer chronology:",profile.training.chronology);
-console.log("optimizer items:",profile.evidenceItems);
+console.log("optimizer evidence: raw",profile.evidence.rawReviews,"reviews across",profile.evidence.rawCards,"cards; retained",profile.evidence.retainedItems,"items across",profile.evidence.retainedCards,"cards");
 console.log("holdout log loss: stock",profile.evaluation.holdout.stock.logLoss,
  "personalized",profile.evaluation.holdout.personalized.logLoss);
 console.log("holdout RMSE bins: stock",profile.evaluation.holdout.stock.rmseBins,
