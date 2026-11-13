@@ -19,12 +19,11 @@
     "forceConsistentCasingInFileNames": true,
     "verbatimModuleSyntax": true,
     "allowImportingTsExtensions": true,
-    "baseUrl": ".",
     "paths": {
-      "@director/calendar": ["vendor/calendar/src/index.ts"],
-      "@director/calendar/integration/practice-desk": ["vendor/calendar/src/integration/practice-desk.ts"],
-      "@director/calendar/integration/common": ["vendor/calendar/src/integration/common.ts"],
-      "@director/calendar/adapters/practice-desk": ["vendor/calendar/src/adapters/practice-desk.ts"]
+      "@director/calendar": ["./vendor/calendar/src/index.ts"],
+      "@director/calendar/integration/practice-desk": ["./vendor/calendar/src/integration/practice-desk.ts"],
+      "@director/calendar/integration/common": ["./vendor/calendar/src/integration/common.ts"],
+      "@director/calendar/adapters/practice-desk": ["./vendor/calendar/src/adapters/practice-desk.ts"]
     }
   },
   "include": [
