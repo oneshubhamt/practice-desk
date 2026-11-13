@@ -10,7 +10,7 @@ Practice Desk exposes the same conservative FSRS-7 personalization contract thro
    `npm run optimize -- path/to/practice-desk-fsrs-reviews.csv profile.json`
 4. Import the profile in Practice Desk only if the tool produces one.
 
-**Chronology is explicit and not user-configurable:** optimizer conversion uses a fixed UTC offset of 0 and rollover hour 0 solely to make upstream FSRS-7 conversion equal fixed elapsed 24-hour fractional days. This matches Practice Desk's runtime `dateChrono` scheduling. IANA/DST-normalized study days are intentionally not used, so a 23-hour DST interval remains `23 / 24` model days rather than becoming one local calendar day.
+**Review duration semantics are explicit:** new Learning reviews record active foreground time from card presentation through rating, split into recall-before-reveal and post-reveal checking. Hidden-tab intervals are excluded and an interruption flag remains on the Learning review. The upstream CSV receives the measured total foreground duration in `review_duration`; rating and timestamp remain the scheduling/training truth.\n\n**Chronology is explicit and not user-configurable:** optimizer conversion uses a fixed UTC offset of 0 and rollover hour 0 solely to make upstream FSRS-7 conversion equal fixed elapsed 24-hour fractional days. This matches Practice Desk's runtime `dateChrono` scheduling. IANA/DST-normalized study days are intentionally not used, so a 23-hour DST interval remains `23 / 24` model days rather than becoming one local calendar day.
 
 The activation pipeline is deliberately conservative:
 
