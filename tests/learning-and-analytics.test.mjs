@@ -706,7 +706,7 @@ test("speed classification uses a sufficient section median and distinguishes fa
 {
 const test=__suite_dep_0.default;
 const assert=__suite_dep_1.default;
-const {runFsrsOptimizerPipeline,OptimizerPipelineRejectedError,OPTIMIZER_STAGES}=__suite_dep_20;
+const {runFsrsOptimizerPipeline,rawOptimizerEvidenceCounts,OptimizerPipelineRejectedError,OPTIMIZER_STAGES}=__suite_dep_20;
 const {
  OPTIMIZER_PROFILE_SCHEMA,OPTIMIZER_BINDING_VERSION,OPTIMIZER_MODEL_VERSION,
  MIN_TRAIN_ITEMS,MIN_HOLDOUT_ITEMS,MIN_HOLDOUT_CARDS
@@ -736,6 +736,14 @@ const fakeBinding=(personalizedLogLoss=0.4,incumbentLogLoss=0.45)=>({
    return {logLoss:this.weights[0]===9?incumbentLogLoss:personalizedLogLoss,rmseBins:0.2};
   }
  }
+});
+
+test("optimizer raw evidence accounting handles quoted card IDs before upstream retention",()=>{
+ const bytes=new TextEncoder().encode(
+  'review_time,card_id,review_rating,review_duration,review_state\n'+
+  '1,"card,one",3,100,0\n2,"card,one",4,120,1\n3,"card ""two""",3,90,0\n'
+ );
+ assert.deepEqual(rawOptimizerEvidenceCounts(bytes),{rawReviews:3,rawCards:2});
 });
 
 test("FSRS optimizer native/browser pipeline owns conversion, holdout gate, retraining and profile assembly once",async()=>{
