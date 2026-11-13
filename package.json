@@ -19,7 +19,6 @@
     "playwright-core": "1.64.1"
   },
   "dependencies": {
-    "@director/calendar": "git+https://github.com/oneshubhamt/calendar.git#0aa64c3e99e6b6d40fb1eea395305ed21fe929e9",
     "katex": "0.19.1",
     "ts-fsrs": "6.0.0",
     "wordgard": "0.6.2"

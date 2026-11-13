@@ -1,0 +1,3 @@
+[submodule "vendor/calendar"]
+	path = vendor/calendar
+	url = https://github.com/oneshubhamt/calendar.git

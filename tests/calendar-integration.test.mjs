@@ -47,13 +47,18 @@ test("backup v5 carries scheduled mocks and exact revision-scheduler settings in
 });
 
 test("Practice Desk pins Calendar to the verified commit and keeps Calendar durability host-owned",async()=>{
-  const [pkg,controller]=await Promise.all([
-    readFile(new URL("../package.json",import.meta.url),"utf8"),
+  const [gitmodules,controller,calendarPackage]=await Promise.all([
+    readFile(new URL("../.gitmodules",import.meta.url),"utf8"),
     readFile(new URL("../src/app/calendar-controller.ts",import.meta.url),"utf8"),
+    readFile(new URL("../vendor/calendar/package.json",import.meta.url),"utf8"),
   ]);
-  const parsed=JSON.parse(pkg);
-  assert.equal(parsed.dependencies["@director/calendar"],
-    "git+https://github.com/oneshubhamt/calendar.git#"+CALENDAR_COMMIT);
+  assert.match(gitmodules,/path = vendor\/calendar/);
+  assert.match(gitmodules,/oneshubhamt\/calendar\.git/);
+  const gitHead=(await import("node:child_process")).execFileSync(
+    "git",["-C",new URL("../vendor/calendar",import.meta.url).pathname,"rev-parse","HEAD"],
+    {encoding:"utf8"}).trim();
+  assert.equal(gitHead,CALENDAR_COMMIT);
+  assert.equal(JSON.parse(calendarPackage).name,"@director/calendar");
   assert.match(controller,/MemoryCalendarRepository\(SOURCES,\[\]\)/);
   assert.doesNotMatch(controller,/IndexedDB|indexedDB|openIndexedDb/i);
   assert.match(controller,/readRevisionSettings\(\)/);
