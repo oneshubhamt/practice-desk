@@ -19,6 +19,7 @@ import type {RichDocument} from "../domain/rich-document.ts";
 import {authoredTextHTML} from "./rich-content-view.ts";
 import {escapeText as esc} from "./html-escape.ts";
 import {downloadText} from "./download-file.ts";
+import {createReviewDurationTracker} from "../learning/review-duration.ts";
 
 export interface LearningDeskHost {
   cards:()=>LearningCard[];
@@ -81,7 +82,7 @@ function questionHTML(record:LearningCard):string{
 
 export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
  let scheduler:RevisionSchedulerPort|null=null,revisionSettings=readRevisionSettings();
- let selectedId:string|null=null,reviewId:string|null=null,revealed=false,revealedStartedAt:number|null=null;
+ let selectedId:string|null=null,reviewId:string|null=null,revealed=false;
  let filter:"all"|"due"|"remediation"|"bookmarked"="all",hierarchyRoot="",message="",closed=false,opened=false;
  let previousLearningView="";
  const optimizerAvailability=browserFsrsOptimizerAvailability();
@@ -161,6 +162,10 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
    for(const [id,entry] of cache)if(active.get(id)!==entry.record)cache.delete(id);
  };
  const now=()=>new Date(),clock=()=>typeof performance!=="undefined"?performance.now():Date.now();
+ const reviewDuration=createReviewDurationTracker();
+ const reviewVisible=()=>document.visibilityState==="visible";
+ const onReviewVisibility=()=>reviewDuration.visibility(clock(),reviewVisible());
+ document.addEventListener("visibilitychange",onReviewVisibility);
  const cards=()=>host.cards().sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
  const effectiveStatus=(card:LearningCard)=>card.revisionDisposition==="suspended"?"suspended":schedule(card).leechStatus;
  const due=(card:LearningCard)=>scheduler!==null&&effectiveStatus(card)!=="suspended"&&schedule(card).dueAt.getTime()<=Date.now();
@@ -184,8 +189,9 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   const selectedDraft=selected?notebookDrafts.get(selected.id):undefined;
   if(reviewId){
     const item=all.find(c=>c.id===reviewId);
-    if(!item){reviewId=null;revealed=false;}
+    if(!item){reviewId=null;revealed=false;reviewDuration.reset();}
     else{
+     if(reviewDuration.cardId!==item.id)reviewDuration.start(item.id,clock(),reviewVisible());
      const inspectionAt=now().toISOString();
      const snapshot=scheduler&&revealed?inspectLearningCard(item,inspectionAt,scheduler):null;
      const previews=scheduler&&revealed?previewLearningCard(item,inspectionAt,scheduler):[];
@@ -210,27 +216,30 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
            learningRich(item,"",item.question.content.richExplanation):
            item.explanation?'<p>'+esc(item.explanation)+'</p>':"")+
          (item.note?'<p class="fine">Your note: '+esc(item.note)+'</p>':"")+fsrsDetail+
-         '<h3>How well did you recall it?</h3><div class="row generic-actions">'+
+         '<h3>How well did you recall it?</h3>'+
+         '<p class="fine"><strong>Rating guide:</strong> Again = failed recall; Hard = recalled with substantial difficulty; Good = correct with normal effort; Easy = effortless. Failed recall should be Again, not Hard.</p>'+
+         '<div class="row generic-actions">'+
          ([[1,"Again"],[2,"Hard"],[3,"Good"],[4,"Easy"]] as const)
           .map(([grade,label])=>{
             const projected=previewByRating.get(grade);
             return '<button class="btn" data-grade="'+grade+'">'+label+
               (projected?' · '+esc(fsrsInterval(projected.scheduledDays)):'')+'</button>';
           }).join("")+'</div></div>':
+         '<p class="fine">Attempt the answer from memory before revealing it. Review duration measures foreground time from card presentation through rating; hidden-tab time is excluded.</p>'+
          '<button class="btn primary" id="learning-reveal">Reveal answer</button>')+'</section>'+
        (message?'<p role="status" class="generic-warning">'+esc(message)+'</p>':"");
      present(html,"review:"+item.id);
-     root.querySelector<HTMLButtonElement>("#learning-back")!.onclick=()=>{reviewId=null;revealed=false;revealedStartedAt=null;draw();};
-     root.querySelector<HTMLButtonElement>("#learning-reveal")?.addEventListener("click",()=>{revealedStartedAt=clock();revealed=true;draw();});
+     root.querySelector<HTMLButtonElement>("#learning-back")!.onclick=()=>{reviewId=null;revealed=false;reviewDuration.reset();draw();};
+     root.querySelector<HTMLButtonElement>("#learning-reveal")?.addEventListener("click",()=>{reviewDuration.reveal(clock(),reviewVisible());revealed=true;draw();});
      root.querySelectorAll<HTMLButtonElement>("[data-grade]").forEach(button=>button.onclick=async()=>{
        if(!revealed||!scheduler)return;
        try{
-         const durationMs=revealedStartedAt===null?0:Math.max(0,Math.round(clock()-revealedStartedAt));
-         if(!await host.save(rateLearningCard(item,Number(button.dataset.grade) as ReviewGrade,now().toISOString(),durationMs,scheduler))){
+         const duration=reviewDuration.finish(clock(),reviewVisible());
+         if(!await host.save(rateLearningCard(item,Number(button.dataset.grade) as ReviewGrade,now().toISOString(),duration,scheduler))){
            message="Review not durably saved. Export a recovery backup from the library.";draw();return;
          }
          message="Review recorded. The next due date is scheduled by FSRS-7.";
-         reviewId=dueCards().find(c=>c.id!==item.id)?.id??null;revealed=false;revealedStartedAt=null;draw();
+         reviewDuration.reset();reviewId=dueCards().find(c=>c.id!==item.id)?.id??null;revealed=false;draw();
        }catch(error){message=error instanceof Error?error.message:"Scheduling failed";draw();}
      });
      return;
@@ -546,7 +555,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     if(!ok){message="Revision exam was not saved. Check storage and retry.";draw();}
   };
   root.querySelector<HTMLButtonElement>("#learning-due")!.onclick=()=>{
-    reviewId=dueCards()[0]?.id??null;revealed=false;revealedStartedAt=null;message="";draw();
+    reviewDuration.reset();reviewId=dueCards()[0]?.id??null;revealed=false;message="";draw();
   };
   root.querySelector<HTMLSelectElement>("#learning-filter")!.onchange=e=>{
     filter=(e.target as HTMLSelectElement).value as typeof filter;draw();
@@ -608,7 +617,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     }catch(e){message=e instanceof Error?e.message:"Cannot save notebook";draw();}
   };
   root.querySelector<HTMLButtonElement>("#learning-one")!.onclick=()=>{
-    reviewId=selected.id;revealed=false;revealedStartedAt=null;message="";draw();
+    reviewDuration.reset();reviewId=selected.id;revealed=false;message="";draw();
   };
   root.querySelector<HTMLButtonElement>("#learning-delete")!.onclick=async()=>{
     await host.remove(selected.id);
@@ -627,5 +636,5 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   });
  return {show(){opened=true;draw();},hide(){opened=false;previousLearningView="";},
   select(id:string){selectedId=id;},
-   dispose(){optimizerRun?.cancel();optimizerRun=null;closed=true;previousLearningView="";notebookDrafts.clear();}};
+   dispose(){optimizerRun?.cancel();optimizerRun=null;reviewDuration.reset();document.removeEventListener("visibilitychange",onReviewVisibility);closed=true;previousLearningView="";notebookDrafts.clear();}};
 }
