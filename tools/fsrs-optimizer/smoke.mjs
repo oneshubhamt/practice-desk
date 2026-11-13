@@ -65,17 +65,28 @@ assert.equal(split.trainCount,320);
 assert.equal(split.holdoutCount,64);
 assert.equal(split.holdoutCards,16);
 assert.equal(evaluateHoldoutGate(
- {logLoss:0.4,rmseBins:0.08},{logLoss:0.397,rmseBins:0.08},split
-).passed,true);
+ {logLoss:0.4,rmseBins:0.08},{logLoss:0.3999,rmseBins:0.08},split
+).passed,true,"Any genuine held-out log-loss improvement may pass; no unvalidated magnitude floor");
 assert.equal(evaluateHoldoutGate(
- {logLoss:0.4,rmseBins:0.08},{logLoss:0.399,rmseBins:0.079},split
-).passed,false);
+ {logLoss:0.4,rmseBins:0.08},{logLoss:0.4,rmseBins:0.079},split
+).passed,false,"Equal held-out log loss must not activate even with better calibration");
 assert.equal(evaluateHoldoutGate(
- {logLoss:0.4,rmseBins:0.08},{logLoss:0.397,rmseBins:0.081},split
-).passed,false);
+ {logLoss:0.4,rmseBins:0.08},{logLoss:0.4001,rmseBins:0.079},split
+).passed,false,"Worse held-out log loss must not activate");
 assert.equal(evaluateHoldoutGate(
- {logLoss:0.4,rmseBins:0.08},{logLoss:0.397,rmseBins:0.08},split,{logLoss:0.396,rmseBins:0.08}
-).passed,false);
+ {logLoss:0.4,rmseBins:0.08},{logLoss:0.3999,rmseBins:0.081},split
+).passed,false,"RMSE-bins regression remains a hard guard");
+assert.equal(evaluateHoldoutGate(
+ {logLoss:0.4,rmseBins:0.08},{logLoss:0.3998,rmseBins:0.08},split,{logLoss:0.3999,rmseBins:0.08}
+).passed,true,"A replacement may pass with a small but real gain over the incumbent");
+assert.equal(evaluateHoldoutGate(
+ {logLoss:0.4,rmseBins:0.08},{logLoss:0.3998,rmseBins:0.08},split,{logLoss:0.3997,rmseBins:0.08}
+).passed,false,"A replacement must still beat the incumbent on the same holdout");
+for(const counts of [
+ {...split,trainCount:63},{...split,holdoutCount:63},{...split,holdoutCards:15}
+])assert.equal(evaluateHoldoutGate(
+ {logLoss:0.4,rmseBins:0.08},{logLoss:0.399,rmseBins:0.08},counts
+).passed,false,"64/64/16 evidence floors remain mandatory");
 
 const analysis=computeOptimalSteps(csv,0.9,0.5);
 assert.ok(Array.isArray(analysis.recommendedLearningSteps));
@@ -98,4 +109,4 @@ try{
  assert.equal(staleProfileExists,false);
 }finally{await rm(temp,{recursive:true,force:true});}
 
-console.log("FSRS optimizer smoke passed: FSRS-7 training, direct evaluation, elapsed-24h DST regression, practical stock/incumbent activation policy, fail-closed output, and advisory step analysis.");
+console.log("FSRS optimizer smoke passed: FSRS-7 training, direct evaluation, elapsed-24h DST regression, strict stock/incumbent held-out activation policy, fail-closed output, and advisory step analysis.");
