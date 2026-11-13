@@ -87,8 +87,8 @@ const mutants=[
  {
   id:"fsrs-ratings-silently-rewritten",
   path:"src/learning/learning.ts",
-  find:'reviews:[...item.reviews,{rating,at,durationMs,state}],updatedAt:at}',
-  replace:'reviews:[...item.reviews,{rating:1,at,durationMs,state}],updatedAt:at}',
+  find:'reviews:[...item.reviews,{rating,at,duration:measured,state}],updatedAt:at}',
+  replace:'reviews:[...item.reviews,{rating:1,at,duration:measured,state}],updatedAt:at}',
   testFile:"tests/learning-and-analytics.test.mjs",
   testName:"stable ts-fsrs 6.0.0 runs explicit FSRS-7 with evidence-rich replay, previews and retrievability"
  }
