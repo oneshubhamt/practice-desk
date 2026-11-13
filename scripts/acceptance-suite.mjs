@@ -72,7 +72,8 @@ const groups=[
       "acceptance-p55-learning",
       "acceptance-p56-integration",
       "acceptance-learning-lifecycle",
-      "acceptance-recovery"
+      "acceptance-recovery",
+      "acceptance-calendar"
     ],
     "mode": [
       "chromium-only",
@@ -82,7 +83,8 @@ const groups=[
       "both",
       "both",
       "chromium-only",
-      "chromium-only"
+      "chromium-only",
+      "both"
     ]
   },
   {
@@ -117,7 +119,7 @@ if(!same(declared,unretired))
 const selected=groups.flatMap(group=>group.scripts
  .map((file,index)=>({file,group:group.name,mode:group.mode[index]})))
  .filter(s=>engine==="chromium"||s.mode==="both");
-const expected=engine==="chromium"?32:20;
+const expected=engine==="chromium"?33:21;
 if(selected.length!==expected||new Set(selected.map(x=>x.file)).size!==expected)
  throw Error("Suite coverage manifest mismatch");
 const result={format:"practice-desk-acceptance-suite",version:1,
