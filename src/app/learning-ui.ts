@@ -643,7 +643,8 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
       cache.clear();message="Saved FSRS settings were invalid; safe defaults were restored.";draw();
     }catch(fallback){message="FSRS scheduler failed to initialize.";console.error(fallback);draw();}
   });
- return {show(){opened=true;draw();},hide(){opened=false;previousLearningView="";},
+ return {show(){opened=true;if(reviewId)reviewDuration.visibility(clock(),reviewVisible());draw();},
+  hide(){if(reviewId)reviewDuration.visibility(clock(),false);opened=false;previousLearningView="";},
   select(id:string){selectedId=id;},
    dispose(){optimizerRun?.cancel();optimizerRun=null;reviewDuration.reset();document.removeEventListener("visibilitychange",onReviewVisibility);closed=true;previousLearningView="";notebookDrafts.clear();}};
 }
