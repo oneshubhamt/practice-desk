@@ -450,8 +450,13 @@ test("optimizer evidence and evaluated profiles are portable without persisting 
  const storage=new Map(),fake={getItem:key=>storage.get(key)??null,setItem:(key,value)=>storage.set(key,value)};
  __suite_dep_17.writeRevisionSettings(settings,fake);assert.deepEqual(__suite_dep_17.readRevisionSettings(fake),settings);
  assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,evaluation:null}),/evaluation/);
+ const tinyGain=__suite_dep_18.validateFsrsOptimizerProfile({...profile,evaluation:{...profile.evaluation,
+  holdout:{...profile.evaluation.holdout,personalized:{logLoss:0.4199,rmseBins:0.07}}}});
+ assert.equal(tinyGain.evaluation.holdout.personalized.logLoss,0.4199);
  assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,evaluation:{...profile.evaluation,
-  holdout:{...profile.evaluation.holdout,personalized:{logLoss:0.4199,rmseBins:0.07}}}}),/minimum practical/);
+  holdout:{...profile.evaluation.holdout,personalized:{logLoss:0.42,rmseBins:0.07}}}}),/not lower/);
+ assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,evaluation:{...profile.evaluation,
+  holdout:{...profile.evaluation.holdout,personalized:{logLoss:0.4201,rmseBins:0.07}}}}),/not lower/);
  assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,evaluation:{...profile.evaluation,
   holdout:{...profile.evaluation.holdout,personalized:{logLoss:0.40,rmseBins:0.081}}}}),/RMSE-bins/);
  const active=__suite_dep_18.validateFsrsOptimizerProfile({...profile,sourceSha256:"b".repeat(64)});
