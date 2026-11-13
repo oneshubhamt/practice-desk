@@ -37,6 +37,45 @@ export function ensureOptimizerWeights(weights,label){
  return normalized;
 }
 
+const OPTIMIZER_CSV_HEADER=["review_time","card_id","review_rating","review_duration","review_state"];
+
+const parseCsvRows=text=>{
+ const rows=[];let row=[],cell="",quoted=false;
+ for(let i=0;i<text.length;i++){
+  const ch=text[i];
+  if(quoted){
+   if(ch==='"'&&text[i+1]==='"'){cell+='"';i++;}
+   else if(ch==='"')quoted=false;
+   else cell+=ch;
+  }else if(ch==='"')quoted=true;
+  else if(ch===","){row.push(cell);cell="";}
+  else if(ch==="\n"){
+   row.push(cell);cell="";
+   if(row.length>1||row[0]!=="")rows.push(row);
+   row=[];
+  }else if(ch!=="\r")cell+=ch;
+ }
+ if(quoted)throw Error("Optimizer evidence contains an unterminated CSV quote");
+ if(cell!==""||row.length){row.push(cell);if(row.length>1||row[0]!=="")rows.push(row);}
+ return rows;
+};
+
+export function rawOptimizerEvidenceCounts(bytes){
+ if(!(bytes instanceof Uint8Array)||bytes.length<1)throw Error("Optimizer evidence is empty");
+ const text=new TextDecoder("utf-8",{fatal:true}).decode(bytes);
+ const rows=parseCsvRows(text);
+ if(!rows.length||rows[0].length!==OPTIMIZER_CSV_HEADER.length||
+   rows[0].some((value,index)=>value!==OPTIMIZER_CSV_HEADER[index]))
+  throw Error("Optimizer evidence CSV header is invalid");
+ const cards=new Set();
+ for(const row of rows.slice(1)){
+  if(row.length!==OPTIMIZER_CSV_HEADER.length||!row[1])
+   throw Error("Optimizer evidence CSV row is invalid");
+  cards.add(row[1]);
+ }
+ return {rawReviews:rows.length-1,rawCards:cards.size};
+}
+
 export async function convertOptimizerEvidence(binding,bytes){
  const converted=await Promise.resolve(binding.convertCsvToFsrsItemsWithCardIds(
   bytes,OPTIMIZER_ROLLOVER_HOUR,OPTIMIZER_FIXED_UTC_OFFSET_MINUTES,OPTIMIZER_MODEL_VERSION
@@ -53,8 +92,10 @@ export function evaluateOptimizerEvidence(binding,items,cardIds,label){
  );
 }
 
-const evidenceReasons=split=>[
- "Need at least "+MIN_TRAIN_ITEMS+" historical optimizer items, "+MIN_HOLDOUT_ITEMS+
+const evidenceReasons=(split,evidence)=>[
+ "Raw "+evidence.rawReviews+" reviews across "+evidence.rawCards+" cards converted to "+
+ evidence.retainedItems+" optimizer items across "+evidence.retainedCards+" cards. Need at least "+
+ MIN_TRAIN_ITEMS+" historical optimizer items, "+MIN_HOLDOUT_ITEMS+
  " later holdout items and "+MIN_HOLDOUT_CARDS+" holdout cards; observed "+
  split.trainCount+", "+split.holdoutCount+" and "+split.holdoutCards+"."
 ];
@@ -78,12 +119,14 @@ export async function runFsrsOptimizerPipeline({
  };
 
  checkpoint();
+ const rawEvidence=rawOptimizerEvidenceCounts(bytes);
  const {items,cardIds}=await convertOptimizerEvidence(binding,bytes);
  if(items.length<1)throw Error("Review evidence did not produce any FSRS-7 optimizer items");
+ const evidence={...rawEvidence,retainedItems:items.length,retainedCards:new Set(cardIds).size};
  const split=splitChronologicalHoldout(items,cardIds);
  if(split.trainCount<MIN_TRAIN_ITEMS||split.holdoutCount<MIN_HOLDOUT_ITEMS||
    split.holdoutCards<MIN_HOLDOUT_CARDS)
-  throw new OptimizerPipelineRejectedError("evidence",evidenceReasons(split));
+  throw new OptimizerPipelineRejectedError("evidence",evidenceReasons(split,evidence));
 
  const validationWeights=ensureOptimizerWeights(
   await binding.computeParameters(
@@ -140,7 +183,7 @@ export async function runFsrsOptimizerPipeline({
  return {
   schema:OPTIMIZER_PROFILE_SCHEMA,model:OPTIMIZER_MODEL_VERSION,
   bindingVersion:OPTIMIZER_BINDING_VERSION,trainedAt,sourceSha256,
-  evidenceItems:items.length,weights,
+  evidence,weights,
   evaluation:{
    crossValidation,
    holdout:{
