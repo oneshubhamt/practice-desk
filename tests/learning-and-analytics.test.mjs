@@ -407,8 +407,13 @@ test("FSRS policy changes reschedule replayed history without mutating review ev
  const low=await DefaultScheduler({policy:{kind:"fixed",desiredRetention:0.75},enableFuzz:false});
  const high=await DefaultScheduler({policy:{kind:"fixed",desiredRetention:0.97},enableFuzz:false});
  const adaptive=await DefaultScheduler({policy:{kind:"cost-adr",preset:"upstream-default"},enableFuzz:false});
+ const personalized=await DefaultScheduler({policy:{kind:"fixed",desiredRetention:0.9},enableFuzz:false,
+  weights:[...__suite_dep_19.FSRS7_DEFAULT_WEIGHTS]});
  const lowSchedule=scheduledCard(card,low),highSchedule=scheduledCard(card,high),adaptiveSchedule=scheduledCard(card,adaptive);
- assert.deepEqual(card.reviews,immutableReviews,"changing scheduler policy must not rewrite stored review evidence");
+ scheduledCard(card,personalized);
+ assert.equal(personalized.configuration.weights,"FSRS-7-custom");
+ assert.deepEqual(card.reviews,immutableReviews,
+  "retention, Cost-ADR and custom-weight replay must not rewrite stored review evidence");
  assert.equal(lowSchedule.reps,highSchedule.reps);assert.equal(lowSchedule.reps,adaptiveSchedule.reps);
  assert.equal(lowSchedule.lapses,highSchedule.lapses);assert.equal(lowSchedule.lapses,adaptiveSchedule.lapses);
  assert.equal(lowSchedule.stability,highSchedule.stability);assert.equal(lowSchedule.difficulty,highSchedule.difficulty);
@@ -434,9 +439,12 @@ test("Cost-ADR composes with remediation and native ts-fsrs leech suspension wit
  card=rateLearningCard(card,Rating.Again,new Date(Math.max(last+1,current.dueAt.getTime()+1)).toISOString(),duration(650),scheduler);
  assert.equal(scheduledCard(card,scheduler).lapses,1);assert.equal(scheduledCard(card,scheduler).leechStatus,"remediation");
  assert.notEqual(scheduledCard(card,scheduler).scheduleStatus,"suspended");
+ const immutableReviews=structuredClone(card.reviews);
  const suspended=await DefaultScheduler({policy:{kind:"cost-adr",preset:"upstream-default"},leechThreshold:1,leechAction:"suspend"});
  assert.equal(scheduledCard(card,suspended).scheduleStatus,"suspended");
  assert.equal(scheduledCard(card,suspended).leechStatus,"suspended");assert.equal(card.reviews.at(-1).state,"review");
+ assert.deepEqual(card.reviews,immutableReviews,
+  "changing leech action must replay the same immutable review evidence");
 });
 test("optimizer evidence and evaluated profiles are portable without persisting vendor scheduler state",async()=>{
  const scheduler=await DefaultScheduler();
