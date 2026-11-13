@@ -754,9 +754,9 @@ test("FSRS optimizer shared pipeline rejects insufficient evidence and held-out 
     x.includes(String(MIN_HOLDOUT_CARDS)))
  );
  await assert.rejects(
-  runFsrsOptimizerPipeline({binding:fakeBinding(0.4995),bytes:new Uint8Array([1]),sourceSha256:"e".repeat(64)}),
+  runFsrsOptimizerPipeline({binding:fakeBinding(0.5),bytes:new Uint8Array([1]),sourceSha256:"e".repeat(64)}),
   error=>error instanceof OptimizerPipelineRejectedError&&error.kind==="gate"&&
-   error.reasons.some(x=>x.includes("minimum practical"))
+   error.reasons.some(x=>x.includes("not lower"))
  );
  await assert.rejects(
   runFsrsOptimizerPipeline({binding:fakeBinding(0.4,0.39),bytes:new Uint8Array([1]),sourceSha256:"f".repeat(64),
