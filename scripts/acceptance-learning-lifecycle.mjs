@@ -71,6 +71,8 @@ try{
  check(await page.locator(".learning-answer").count()===0,"FSRS answer leaked pre-reveal");
  await page.locator("#learning-reveal").click();
  check(await page.locator(".learning-answer").count()===1,"FSRS answer did not reveal");
+ check(await page.getByText("Failed recall should be Again, not Hard.",{exact:false}).count()===1,
+  "FSRS rating guidance is absent after answer reveal");
  await page.locator('[data-grade="3"]').click();
  await page.locator("#learning-note").waitFor({state:"visible"});
  await page.locator("#learning-error").selectOption("conceptual");
@@ -94,6 +96,13 @@ try{
  await page.locator("#learning-save").click();
  const rated=await saved(x=>x.id===card.id&&x.reviews?.length===1&&
    x.note==="Review source fundamentals","explicit FSRS-rated notebook");
+ const reviewDuration=rated.reviews[0].duration;
+ check(Number.isSafeInteger(reviewDuration?.foregroundMs)&&reviewDuration.foregroundMs>=0&&
+  Number.isSafeInteger(reviewDuration?.recallMs)&&Number.isSafeInteger(reviewDuration?.postRevealMs)&&
+  reviewDuration.foregroundMs===reviewDuration.recallMs+reviewDuration.postRevealMs&&
+  ["continuous","interrupted"].includes(reviewDuration.reliability)&&
+  !("durationMs" in rated.reviews[0]),
+  "FSRS review did not persist canonical foreground duration evidence");
  check(rated.errorLabel==="conceptual"&&
   rated.customSubject==="Clinical Science"&&
   rated.customTopic==="Independently labelled topic"&&
