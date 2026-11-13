@@ -2,7 +2,7 @@ import {checkFSRS7Parameters} from "ts-fsrs/models/fsrs-7";
 import type {LearningCard} from "./learning.ts";
 import type {RevisionMemoryState} from "./revision-scheduler-port.ts";
 
-export const FSRS_OPTIMIZER_PROFILE_SCHEMA="practice-desk-fsrs-profile/v4";
+export const FSRS_OPTIMIZER_PROFILE_SCHEMA="practice-desk-fsrs-profile/v5";
 export const FSRS_OPTIMIZER_BINDING_VERSION="0.6.1";
 export const FSRS_OPTIMIZER_HOLDOUT_STRATEGY="final-sixth";
 export const FSRS_OPTIMIZER_MIN_TRAIN_ITEMS=64;
@@ -25,7 +25,10 @@ export interface FsrsIncumbentEvaluation{
 export interface FsrsOptimizerProfile{
  readonly schema:typeof FSRS_OPTIMIZER_PROFILE_SCHEMA;readonly model:"FSRS-7";
  readonly bindingVersion:typeof FSRS_OPTIMIZER_BINDING_VERSION;readonly trainedAt:string;
- readonly sourceSha256:string;readonly evidenceItems:number;readonly weights:readonly number[];
+ readonly sourceSha256:string;
+ readonly evidence:{readonly rawReviews:number;readonly rawCards:number;
+  readonly retainedItems:number;readonly retainedCards:number};
+ readonly weights:readonly number[];
  readonly evaluation:{
   readonly crossValidation:FsrsEvaluationMetrics;
   readonly holdout:{
@@ -49,15 +52,21 @@ const stateCode=(state:RevisionMemoryState):0|1|2|3=>{
 };
 const csvCell=(v:string)=>'"'+v.replaceAll('"','""')+'"';
 export function optimizerEvidenceSummary(cards:readonly Pick<LearningCard,"reviews">[]){
- let reviewedCards=0,reviews=0;
- for(const card of cards){if(card.reviews.length)reviewedCards++;reviews+=card.reviews.length;}
- return {cards:reviewedCards,reviews};
+ let reviewedCards=0,reviews=0,continuousDurations=0,interruptedDurations=0;
+ for(const card of cards){
+  if(card.reviews.length)reviewedCards++;
+  reviews+=card.reviews.length;
+  for(const review of card.reviews)
+   if(review.duration.reliability==="continuous")continuousDurations++;
+   else interruptedDurations++;
+ }
+ return {cards:reviewedCards,reviews,continuousDurations,interruptedDurations};
 }
 export function fsrsOptimizerCsv(cards:readonly Pick<LearningCard,"id"|"reviews">[]):string{
  const rows=["review_time,card_id,review_rating,review_duration,review_state"];
  for(const card of [...cards].sort((a,b)=>a.id.localeCompare(b.id)))
   for(const review of card.reviews)rows.push([
-   Date.parse(review.at),csvCell(card.id),review.rating,review.durationMs,stateCode(review.state)
+   Date.parse(review.at),csvCell(card.id),review.rating,review.duration.foregroundMs,stateCode(review.state)
   ].join(","));
  return rows.join("\n")+"\n";
 }
@@ -118,11 +127,19 @@ const incumbentEvaluation=(value:unknown):FsrsIncumbentEvaluation=>{
 export function validateFsrsOptimizerProfile(value:unknown):FsrsOptimizerProfile{
  if(!value||typeof value!=="object"||Array.isArray(value))throw Error("Invalid FSRS optimizer profile");
  const p=value as Partial<FsrsOptimizerProfile>;
- const fields=["schema","model","bindingVersion","trainedAt","sourceSha256","evidenceItems","weights","evaluation","training"];
+ const fields=["schema","model","bindingVersion","trainedAt","sourceSha256","evidence","weights","evaluation","training"];
  if(Object.keys(p).some(k=>!fields.includes(k))||p.schema!==FSRS_OPTIMIZER_PROFILE_SCHEMA||p.model!=="FSRS-7"||
    p.bindingVersion!==FSRS_OPTIMIZER_BINDING_VERSION||typeof p.trainedAt!=="string"||!Number.isFinite(Date.parse(p.trainedAt))||
-   typeof p.sourceSha256!=="string"||!/^[a-f0-9]{64}$/.test(p.sourceSha256)||!safePositive(p.evidenceItems))
+   typeof p.sourceSha256!=="string"||!/^[a-f0-9]{64}$/.test(p.sourceSha256))
   throw Error("Invalid FSRS optimizer profile");
+ const evidence=p.evidence;
+ if(!evidence||typeof evidence!=="object"||Array.isArray(evidence)||
+   Object.keys(evidence).some(k=>!["rawReviews","rawCards","retainedItems","retainedCards"].includes(k))||
+   !safePositive(evidence.rawReviews)||!safePositive(evidence.rawCards)||
+   !safePositive(evidence.retainedItems)||!safePositive(evidence.retainedCards)||
+   evidence.rawCards>evidence.rawReviews||evidence.retainedCards>evidence.retainedItems||
+   evidence.retainedCards>evidence.rawCards)
+  throw Error("Invalid FSRS optimizer evidence counts");
  const weights=optimizerWeights(p.weights);
 
  const e=p.evaluation;
@@ -135,7 +152,8 @@ export function validateFsrsOptimizerProfile(value:unknown):FsrsOptimizerProfile
    h.minimumHoldoutItems!==FSRS_OPTIMIZER_MIN_HOLDOUT_ITEMS||h.minimumHoldoutCards!==FSRS_OPTIMIZER_MIN_HOLDOUT_CARDS||
    h.gate!=="passed"||h.trainItems<FSRS_OPTIMIZER_MIN_TRAIN_ITEMS||
    h.holdoutItems<FSRS_OPTIMIZER_MIN_HOLDOUT_ITEMS||h.holdoutCards<FSRS_OPTIMIZER_MIN_HOLDOUT_CARDS||
-   h.holdoutCards>h.holdoutItems||h.trainItems+h.holdoutItems!==p.evidenceItems)
+   h.holdoutCards>h.holdoutItems||h.holdoutCards>evidence.retainedCards||
+   h.trainItems+h.holdoutItems!==evidence.retainedItems)
   throw Error("Invalid FSRS optimizer holdout evidence");
  const stock=metrics(h.stock,"stock holdout"),personalized=metrics(h.personalized,"personalized holdout");
  requireHeldoutImprovement(stock,personalized,"stock FSRS-7");
@@ -151,7 +169,9 @@ export function validateFsrsOptimizerProfile(value:unknown):FsrsOptimizerProfile
   throw Error("Invalid FSRS optimizer training metadata");
  return {
   schema:FSRS_OPTIMIZER_PROFILE_SCHEMA,model:"FSRS-7",bindingVersion:FSRS_OPTIMIZER_BINDING_VERSION,
-  trainedAt:p.trainedAt,sourceSha256:p.sourceSha256,evidenceItems:p.evidenceItems,weights,
+  trainedAt:p.trainedAt,sourceSha256:p.sourceSha256,
+  evidence:{rawReviews:evidence.rawReviews,rawCards:evidence.rawCards,
+   retainedItems:evidence.retainedItems,retainedCards:evidence.retainedCards},weights,
   evaluation:{crossValidation,holdout:{
    strategy:FSRS_OPTIMIZER_HOLDOUT_STRATEGY,trainItems:h.trainItems,holdoutItems:h.holdoutItems,holdoutCards:h.holdoutCards,
    minimumTrainItems:FSRS_OPTIMIZER_MIN_TRAIN_ITEMS,minimumHoldoutItems:FSRS_OPTIMIZER_MIN_HOLDOUT_ITEMS,
