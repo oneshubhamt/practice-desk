@@ -1,7 +1,7 @@
 import {
-  CalendarEngine,CalendarUi,MemoryCalendarRepository,
+  CalendarEngine,CalendarUi,
   type CalendarOccurrence,type CalendarProjectionProvider,type CalendarRange,
-  type CalendarSource,type CalendarSourceAction,type CalendarSourceActionPort
+  type CalendarSnapshotProvider,type CalendarSource,type CalendarSourceAction,type CalendarSourceActionPort
 } from "@director/calendar";
 import {PracticeDeskLiveProjection} from "@director/calendar/integration/practice-desk";
 import {CalendarIntegrationInvalidationNotifier} from "@director/calendar/integration/common";
@@ -110,8 +110,11 @@ export function createWorkspaceCalendarController(owner:CalendarControllerContex
     }
   };
 
-  const repository=new MemoryCalendarRepository(SOURCES,[]);
-  const engine=new CalendarEngine(repository,[liveProjection,scheduledProjection]);
+  const snapshotProvider:CalendarSnapshotProvider={
+    read:()=>({revision:0,sources:SOURCES,items:[]}),
+    subscribe:()=>()=>{}
+  };
+  const engine=new CalendarEngine(snapshotProvider,[liveProjection,scheduledProjection]);
 
   async function launchScheduled(id:string):Promise<void>{
     const record=owner.records.get(id);

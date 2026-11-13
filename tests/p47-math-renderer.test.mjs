@@ -105,5 +105,7 @@ test("P47-5C release carries only local WOFF2 and both KaTeX/Wordgard MIT notice
  assert.doesNotMatch(html,/url\(["']?(?:\.\/)?fonts\/KaTeX/);
  assert.doesNotMatch(html,/url\([^)]*\.ttf\)/);
  assert.doesNotMatch(html,/url\([^)]*\.woff\)/);
- assert.ok(size<2_500_000,"Bundled file exceeds P47-5B review size limit: "+size);
+ // Pass 3 adds the full pinned Calendar surface (~212 KB minified runtime, measured in CI).
+ // Keep a bounded post-integration review ceiling rather than silently dropping Calendar functionality.
+ assert.ok(size<2_750_000,"Bundled file exceeds reviewed post-Calendar size limit: "+size);
 });

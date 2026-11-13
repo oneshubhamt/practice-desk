@@ -59,8 +59,8 @@ test("Practice Desk pins Calendar to the verified commit and keeps Calendar dura
     {encoding:"utf8"}).trim();
   assert.equal(gitHead,CALENDAR_COMMIT);
   assert.equal(JSON.parse(calendarPackage).name,"@director/calendar");
-  assert.match(controller,/MemoryCalendarRepository\(SOURCES,\[\]\)/);
-  assert.doesNotMatch(controller,/IndexedDB|indexedDB|openIndexedDb/i);
+  assert.match(controller,/CalendarSnapshotProvider/);
+  assert.doesNotMatch(controller,/MemoryCalendarRepository|IndexedDB|indexedDB|openIndexedDb/i);
   assert.match(controller,/readRevisionSettings\(\)/);
   assert.match(controller,/scheduledCard\(card,revision\)/);
 });
