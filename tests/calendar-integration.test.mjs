@@ -69,4 +69,6 @@ test("Practice Desk pins Calendar to the verified commit and keeps Calendar dura
   assert.match(styles,/\.pd-calendar-mount\s*\{[\s\S]*--dc-theme-background:var\(--panel\)/);
   assert.match(styles,/--dc-theme-text:var\(--ink\)/);
   assert.match(styles,/--dc-theme-accent:var\(--blue\)/);
+  assert.match(styles,/\.pd-calendar-mount \.dc-root,\.pd-calendar-mount \.dc-dialog\{font-size:\.9333333333em\}/);
+  assert.doesNotMatch(styles,/\.pd-calendar-mount \.dc-root[^\n]*font-size:calc/);
 });

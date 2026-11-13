@@ -1619,7 +1619,8 @@ html[data-theme="dark"] .pd-author-studio .pd-author-preview-choice>span{
  --dc-theme-danger:var(--bad);
  --dc-theme-font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif
 }
-/* Presentation-only accessibility bridge: preserve Calendar-owned geometry while following Practice Desk text scale. */
-.pd-calendar-mount .dc-root,.pd-calendar-mount .dc-dialog{font-size:calc(14px * var(--type-scale))}
+/* Calendar's standalone baseline is 14px while Practice Desk's application baseline is 15px.
+   Relative sizing preserves that baseline and automatically follows the host's accessible text scale. */
+.pd-calendar-mount .dc-root,.pd-calendar-mount .dc-dialog{font-size:.9333333333em}
 @media(max-width:900px){.pd-calendar-form{grid-template-columns:1fr 1fr}.pd-calendar-form .btn{width:100%}}
 @media(max-width:560px){.pd-calendar-form{grid-template-columns:1fr}.pd-calendar-panel{border-left:0;border-right:0;border-radius:0}}
