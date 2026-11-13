@@ -48,10 +48,11 @@ test("backup v5 carries scheduled mocks and exact revision-scheduler settings in
 });
 
 test("Practice Desk pins Calendar to the verified commit and keeps Calendar durability host-owned",async()=>{
-  const [gitmodules,controller,calendarPackage]=await Promise.all([
+  const [gitmodules,controller,calendarPackage,styles]=await Promise.all([
     readFile(new URL("../.gitmodules",import.meta.url),"utf8"),
     readFile(new URL("../src/app/calendar-controller.ts",import.meta.url),"utf8"),
     readFile(new URL("../vendor/calendar/package.json",import.meta.url),"utf8"),
+    readFile(new URL("../src/styles/app.css",import.meta.url),"utf8"),
   ]);
   assert.match(gitmodules,/path = vendor\/calendar/);
   assert.match(gitmodules,/oneshubhamt\/calendar\.git/);
@@ -64,4 +65,8 @@ test("Practice Desk pins Calendar to the verified commit and keeps Calendar dura
   assert.doesNotMatch(controller,/MemoryCalendarRepository|IndexedDB|indexedDB|openIndexedDb/i);
   assert.match(controller,/readRevisionSettings\(\)/);
   assert.match(controller,/scheduledCard\(card,revision\)/);
+  assert.doesNotMatch(controller,/theme:\s*\{/);
+  assert.match(styles,/\.pd-calendar-mount\s*\{[\s\S]*--dc-theme-background:var\(--panel\)/);
+  assert.match(styles,/--dc-theme-text:var\(--ink\)/);
+  assert.match(styles,/--dc-theme-accent:var\(--blue\)/);
 });

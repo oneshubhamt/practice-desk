@@ -246,12 +246,7 @@ export function createWorkspaceCalendarController(owner:CalendarControllerContex
       timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC",
       initialView:"month",initialDate:new Date(owner.now()).toISOString(),
       allowCreate:false,allowDrag:false,allowResize:false,sourceActions,
-      ariaLabel:"Practice Desk calendar",
-      theme:{
-        background:"var(--panel)",softBackground:"var(--soft)",text:"var(--ink)",
-        mutedText:"var(--muted)",border:"var(--line)",accent:"var(--blue)",
-        danger:"var(--bad)",fontFamily:"system-ui, -apple-system, Segoe UI, Roboto, sans-serif"
-      }
+      ariaLabel:"Practice Desk calendar"
     });
     await ui.refresh();
   }

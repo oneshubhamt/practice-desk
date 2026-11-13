@@ -1606,7 +1606,19 @@ html[data-theme="dark"] .pd-author-studio .pd-author-preview-choice>span{
 .pd-calendar-form select,.pd-calendar-form input{min-width:0;margin:0;color:var(--ink)}
 .pd-calendar-form .btn{align-self:end}
 .pd-calendar-panel{padding:0;overflow:hidden;background:var(--panel)}
-.pd-calendar-mount{min-width:0}
+/* Supported Calendar theme-token bridge. Keeping the mapping on the dedicated mount
+   lets Practice Desk theme changes propagate live without remounting Calendar. */
+.pd-calendar-mount{
+ min-width:0;
+ --dc-theme-background:var(--panel);
+ --dc-theme-soft-background:var(--soft);
+ --dc-theme-text:var(--ink);
+ --dc-theme-muted-text:var(--muted);
+ --dc-theme-border:var(--line);
+ --dc-theme-accent:var(--blue);
+ --dc-theme-danger:var(--bad);
+ --dc-theme-font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif
+}
 /* Presentation-only accessibility bridge: preserve Calendar-owned geometry while following Practice Desk text scale. */
 .pd-calendar-mount .dc-root,.pd-calendar-mount .dc-dialog{font-size:calc(14px * var(--type-scale))}
 @media(max-width:900px){.pd-calendar-form{grid-template-columns:1fr 1fr}.pd-calendar-form .btn{width:100%}}
