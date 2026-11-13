@@ -29,6 +29,11 @@ export interface LearningDeskHost {
   startRevision:(cards:readonly LearningCard[],selection?:RevisionSelectionProvenance)=>Promise<boolean>;
   close:()=>void;
 }
+const fsrsMetric=(value:number)=>Number(value.toFixed(4));
+const fsrsDelta=(baseline:number,candidate:number)=>{
+ const value=Number((candidate-baseline).toFixed(4));
+ return (value>0?"+":"")+String(value);
+};
 const fsrsInterval=(days:number):string=>{
  const seconds=Math.max(0,Math.round(days*86400));
  if(seconds<60)return seconds+"s";
@@ -295,14 +300,27 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
       ' · source '+revisionSettings.optimizerProfile.evidence.rawReviews+' raw reviews / '+
       revisionSettings.optimizerProfile.evidence.rawCards+' cards → '+
       revisionSettings.optimizerProfile.evidence.retainedItems+' retained optimizer items / '+
-      revisionSettings.optimizerProfile.evidence.retainedCards+' cards · holdout log loss '+
-      Number(revisionSettings.optimizerProfile.evaluation.holdout.stock.logLoss.toFixed(4))+' → '+
-      Number(revisionSettings.optimizerProfile.evaluation.holdout.personalized.logLoss.toFixed(4))+
-      ' · holdout RMSE '+Number(revisionSettings.optimizerProfile.evaluation.holdout.stock.rmseBins.toFixed(4))+' → '+
-      Number(revisionSettings.optimizerProfile.evaluation.holdout.personalized.rmseBins.toFixed(4))+
-      ' · cross-validation log loss '+Number(revisionSettings.optimizerProfile.evaluation.crossValidation.logLoss.toFixed(4)):
+      revisionSettings.optimizerProfile.evidence.retainedCards+' cards · holdout log loss stock '+
+      fsrsMetric(revisionSettings.optimizerProfile.evaluation.holdout.stock.logLoss)+' → personalized '+
+      fsrsMetric(revisionSettings.optimizerProfile.evaluation.holdout.personalized.logLoss)+
+      ' (Δ '+fsrsDelta(revisionSettings.optimizerProfile.evaluation.holdout.stock.logLoss,
+        revisionSettings.optimizerProfile.evaluation.holdout.personalized.logLoss)+')'+
+      ' · holdout RMSE stock '+fsrsMetric(revisionSettings.optimizerProfile.evaluation.holdout.stock.rmseBins)+' → personalized '+
+      fsrsMetric(revisionSettings.optimizerProfile.evaluation.holdout.personalized.rmseBins)+
+      ' (Δ '+fsrsDelta(revisionSettings.optimizerProfile.evaluation.holdout.stock.rmseBins,
+        revisionSettings.optimizerProfile.evaluation.holdout.personalized.rmseBins)+')'+
+      (revisionSettings.optimizerProfile.evaluation.holdout.incumbent?
+        ' · prior active log loss '+fsrsMetric(revisionSettings.optimizerProfile.evaluation.holdout.incumbent.metrics.logLoss)+
+        ' → personalized '+fsrsMetric(revisionSettings.optimizerProfile.evaluation.holdout.personalized.logLoss)+
+        ' (Δ '+fsrsDelta(revisionSettings.optimizerProfile.evaluation.holdout.incumbent.metrics.logLoss,
+          revisionSettings.optimizerProfile.evaluation.holdout.personalized.logLoss)+')'+
+        ' · prior active RMSE '+fsrsMetric(revisionSettings.optimizerProfile.evaluation.holdout.incumbent.metrics.rmseBins)+
+        ' → personalized '+fsrsMetric(revisionSettings.optimizerProfile.evaluation.holdout.personalized.rmseBins)+
+        ' (Δ '+fsrsDelta(revisionSettings.optimizerProfile.evaluation.holdout.incumbent.metrics.rmseBins,
+          revisionSettings.optimizerProfile.evaluation.holdout.personalized.rmseBins)+')':'')+
+      ' · cross-validation log loss '+fsrsMetric(revisionSettings.optimizerProfile.evaluation.crossValidation.logLoss)+
+      ' · cross-validation RMSE '+fsrsMetric(revisionSettings.optimizerProfile.evaluation.crossValidation.rmseBins):
       'Using upstream FSRS-7 default weights.')+
-      (revisionSettings.optimizerProfile?.evaluation.holdout.incumbent?' · replacement beat prior active profile':'')+
     ' · Current raw export: '+optimizerEvidence.reviews+' reviews across '+optimizerEvidence.cards+' cards · '+
       optimizerEvidence.continuousDurations+' continuous duration measurements · '+
       optimizerEvidence.interruptedDurations+' background-interrupted.</p>'+
