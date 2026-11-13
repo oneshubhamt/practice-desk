@@ -95,7 +95,7 @@ export function createReviewDurationTracker():ReviewDurationTracker{
     foregroundMs:Math.max(0,Math.round(recallMs)+Math.round(postRevealMs)),
     reliability:interrupted?"interrupted":"continuous"
    });
-   reset();
+   if(visible)activeSince=validClock(nowMs);
    return evidence;
   },
   reset
