@@ -27,6 +27,7 @@ import * as __suite_dep_19 from "ts-fsrs/models/fsrs-7";
 import * as __suite_dep_20 from "../tools/fsrs-optimizer/optimizer-pipeline.mjs";
 import * as __suite_dep_21 from "../tools/fsrs-optimizer/optimizer-policy.mjs";
 import * as __suite_dep_22 from "node:fs/promises";
+import * as __suite_dep_23 from "../src/learning/review-duration.ts";
 
 // === Consolidated coverage: tests/analytics-property-model.test.mjs — retained assertions ===
 {
@@ -314,6 +315,8 @@ const previewLearningCard = __suite_dep_12["previewLearningCard"];
 const rateLearningCard = __suite_dep_12["rateLearningCard"];
 const topicMetrics = __suite_dep_12["topicMetrics"];
 const comparableTrends = __suite_dep_12["comparableTrends"];
+const createReviewDurationTracker = __suite_dep_23["createReviewDurationTracker"];
+const duration=foregroundMs=>({foregroundMs,recallMs:foregroundMs,postRevealMs:0,reliability:"continuous"});
 const validateGenericStoredRecord = __suite_dep_9_stored_record_validator["validateGenericStoredRecord"];
 const makeBackup = __suite_dep_13["makeBackup"];
 const verifyBackup = __suite_dep_13["verifyBackup"];
@@ -360,8 +363,8 @@ test("stable ts-fsrs 6.0.0 runs explicit FSRS-7 with evidence-rich replay, previ
  assert.deepEqual(previews.map(x=>x.rating),[1,2,3,4]);
  assert.ok(previews.every(x=>x.dueAt.getTime()>=2030&&x.scheduledDays>=0));
  assert.ok(previews.some(x=>x.scheduledDays>0&&x.scheduledDays<1));
- const graded=rateLearningCard(item,Rating.Good,new Date(2030).toISOString(),725,scheduler);
- assert.equal(graded.reviews[0].rating,Rating.Good);assert.equal(graded.reviews[0].durationMs,725);
+ const graded=rateLearningCard(item,Rating.Good,new Date(2030).toISOString(),duration(725),scheduler);
+ assert.equal(graded.reviews[0].rating,Rating.Good);assert.equal(graded.reviews[0].duration.foregroundMs,725);
  assert.equal(graded.reviews[0].state,"new");
  const next=scheduledCard(graded,scheduler);assert.equal(next.reps,1);assert.ok(next.stability>0);assert.ok(next.stabilityFast>0);
  const inspected=inspectLearningCard(graded,new Date(2030+12*60*60*1000).toISOString(),scheduler);
@@ -369,22 +372,36 @@ test("stable ts-fsrs 6.0.0 runs explicit FSRS-7 with evidence-rich replay, previ
  const reloaded=validateLearningCard(JSON.parse(JSON.stringify(graded))),replayed=scheduledCard(reloaded,await DefaultScheduler());
  assert.equal(replayed.dueAt.getTime(),next.dueAt.getTime());assert.equal(replayed.stabilityFast,next.stabilityFast);
  assert.throws(()=>scheduler.replay(item.id,item.createdAt,[
-  {at:new Date(3030).toISOString(),rating:Rating.Good,durationMs:100,state:"new"},
-  {at:new Date(2500).toISOString(),rating:Rating.Good,durationMs:100,state:"learning"}
+  {at:new Date(3030).toISOString(),rating:Rating.Good,state:"new"},
+  {at:new Date(2500).toISOString(),rating:Rating.Good,state:"learning"}
  ]),/chronological/);
- assert.throws(()=>rateLearningCard(graded,Rating.Again,new Date(1500).toISOString(),20,scheduler),/monotonic/);
+ assert.throws(()=>rateLearningCard(graded,Rating.Again,new Date(1500).toISOString(),duration(20),scheduler),/monotonic/);
+});
+test("review duration evidence measures foreground recall and post-reveal phases without hidden-tab inflation",()=>{
+ const continuous=createReviewDurationTracker();
+ continuous.start("card-a",0,true);continuous.reveal(300,true);
+ assert.deepEqual(continuous.finish(450,true),{
+  foregroundMs:450,recallMs:300,postRevealMs:150,reliability:"continuous"
+ });
+ continuous.reset();
+ const interrupted=createReviewDurationTracker();
+ interrupted.start("card-b",0,true);interrupted.reveal(500,true);
+ interrupted.visibility(700,false);interrupted.visibility(1700,true);
+ assert.deepEqual(interrupted.finish(1900,true),{
+  foregroundMs:900,recallMs:500,postRevealMs:400,reliability:"interrupted"
+ });
 });
 test("FSRS policy changes reschedule replayed history without mutating review evidence",async()=>{
  const source=await DefaultScheduler({policy:{kind:"fixed",desiredRetention:0.9},enableFuzz:false});
  let card=addLearningCard(complete("policy-replay"),bundle.questions[0].id,new Date(1030).toISOString());
  for(let i=0;i<8&&scheduledCard(card,source).state!=="review";i++){
   const current=scheduledCard(card,source),last=Date.parse(card.reviews.at(-1)?.at??card.createdAt);
-  card=rateLearningCard(card,Rating.Good,new Date(Math.max(last+1,current.dueAt.getTime()+1)).toISOString(),400,source);
+  card=rateLearningCard(card,Rating.Good,new Date(Math.max(last+1,current.dueAt.getTime()+1)).toISOString(),duration(400),source);
  }
  assert.equal(scheduledCard(card,source).state,"review");
  {
   const current=scheduledCard(card,source),last=Date.parse(card.reviews.at(-1).at);
-  card=rateLearningCard(card,Rating.Good,new Date(Math.max(last+1,current.dueAt.getTime()+1)).toISOString(),450,source);
+  card=rateLearningCard(card,Rating.Good,new Date(Math.max(last+1,current.dueAt.getTime()+1)).toISOString(),duration(450),source);
  }
  const immutableReviews=structuredClone(card.reviews);
  const low=await DefaultScheduler({policy:{kind:"fixed",desiredRetention:0.75},enableFuzz:false});
@@ -410,11 +427,11 @@ test("Cost-ADR composes with remediation and native ts-fsrs leech suspension wit
  let card=seed;
  for(let i=0;i<8&&scheduledCard(card,scheduler).state!=="review";i++){
    const current=scheduledCard(card,scheduler),last=Date.parse(card.reviews.at(-1)?.at??card.createdAt);
-   card=rateLearningCard(card,Rating.Good,new Date(Math.max(last+1,current.dueAt.getTime()+1)).toISOString(),500,scheduler);
+   card=rateLearningCard(card,Rating.Good,new Date(Math.max(last+1,current.dueAt.getTime()+1)).toISOString(),duration(500),scheduler);
  }
  assert.equal(scheduledCard(card,scheduler).state,"review");
  const current=scheduledCard(card,scheduler),last=Date.parse(card.reviews.at(-1).at);
- card=rateLearningCard(card,Rating.Again,new Date(Math.max(last+1,current.dueAt.getTime()+1)).toISOString(),650,scheduler);
+ card=rateLearningCard(card,Rating.Again,new Date(Math.max(last+1,current.dueAt.getTime()+1)).toISOString(),duration(650),scheduler);
  assert.equal(scheduledCard(card,scheduler).lapses,1);assert.equal(scheduledCard(card,scheduler).leechStatus,"remediation");
  assert.notEqual(scheduledCard(card,scheduler).scheduleStatus,"suspended");
  const suspended=await DefaultScheduler({policy:{kind:"cost-adr",preset:"upstream-default"},leechThreshold:1,leechAction:"suspend"});
@@ -424,13 +441,14 @@ test("Cost-ADR composes with remediation and native ts-fsrs leech suspension wit
 test("optimizer evidence and evaluated profiles are portable without persisting vendor scheduler state",async()=>{
  const scheduler=await DefaultScheduler();
  let card=addLearningCard(complete("optimizer"),bundle.questions[0].id,new Date(1030).toISOString());
- card=rateLearningCard(card,Rating.Good,new Date(2030).toISOString(),810,scheduler);
+ card=rateLearningCard(card,Rating.Good,new Date(2030).toISOString(),duration(810),scheduler);
  const csv=__suite_dep_18.fsrsOptimizerCsv([card]);
  assert.match(csv,/^review_time,card_id,review_rating,review_duration,review_state\n/);assert.match(csv,/,3,810,0\n$/);
- assert.deepEqual(__suite_dep_18.optimizerEvidenceSummary([card]),{cards:1,reviews:1});
+ assert.deepEqual(__suite_dep_18.optimizerEvidenceSummary([card]),{cards:1,reviews:1,continuousDurations:1,interruptedDurations:0});
  const profile=__suite_dep_18.validateFsrsOptimizerProfile({
-  schema:"practice-desk-fsrs-profile/v4",model:"FSRS-7",bindingVersion:"0.6.1",trainedAt:"2026-11-10T00:00:00.000Z",
-  sourceSha256:"a".repeat(64),evidenceItems:384,weights:[...__suite_dep_19.FSRS7_DEFAULT_WEIGHTS],
+  schema:"practice-desk-fsrs-profile/v5",model:"FSRS-7",bindingVersion:"0.6.1",trainedAt:"2026-11-10T00:00:00.000Z",
+  sourceSha256:"a".repeat(64),evidence:{rawReviews:480,rawCards:96,retainedItems:384,retainedCards:96},
+  weights:[...__suite_dep_19.FSRS7_DEFAULT_WEIGHTS],
   evaluation:{
    crossValidation:{logLoss:0.39,rmseBins:0.07},
    holdout:{strategy:"final-sixth",trainItems:320,holdoutItems:64,holdoutCards:16,
@@ -469,7 +487,8 @@ test("optimizer evidence and evaluated profiles are portable without persisting 
  assert.deepEqual(__suite_dep_18.assertFsrsOptimizerReplacement(replacement,active),replacement);
  const badWeights=[...profile.weights];badWeights[23]=0.9;
  assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,weights:badWeights}),/weights/);
- assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,schema:"practice-desk-fsrs-profile/v3"}),/profile/);
+ assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,schema:"practice-desk-fsrs-profile/v4"}),/profile/);
+ assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,evidence:{...profile.evidence,retainedCards:97}}),/evidence counts/);
  assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,training:{...profile.training,chronology:"zoned-study-day"}}),/training metadata/);
 });
 test("topic evidence and trends never compare different paper revisions",()=>{
@@ -697,6 +716,11 @@ const evidence=(count=384)=>({
  items:Array.from({length:count},(_,i)=>({i})),
  cardIds:Array.from({length:count},(_,i)=>"card-"+Math.floor(i/4))
 });
+const optimizerBytes=(reviews=384,cards=Math.max(1,Math.ceil(reviews/4)))=>new TextEncoder().encode(
+ "review_time,card_id,review_rating,review_duration,review_state\n"+
+ Array.from({length:reviews},(_,i)=>
+  (1704067200000+i)+",card-"+(i%cards)+",3,1000,2").join("\n")+"\n"
+);
 const fakeBinding=(personalizedLogLoss=0.4,incumbentLogLoss=0.45)=>({
  convertCsvToFsrsItemsWithCardIds(){return evidence();},
  async computeParameters(_items,options){
@@ -716,7 +740,7 @@ const fakeBinding=(personalizedLogLoss=0.4,incumbentLogLoss=0.45)=>({
 test("FSRS optimizer native/browser pipeline owns conversion, holdout gate, retraining and profile assembly once",async()=>{
  const stages=[],holdout=[];
  const profile=await runFsrsOptimizerPipeline({
-  binding:fakeBinding(),bytes:new Uint8Array([1,2,3]),
+  binding:fakeBinding(),bytes:optimizerBytes(),
   sourceSha256:"a".repeat(64),trainedAt:"2026-11-12T00:00:00.000Z",
   incumbentProfile:{sourceSha256:"d".repeat(64),weights:Array(34).fill(9)},
   makeOptions:(cardIds,stage)=>{stages.push([stage,cardIds.length]);return {cardIds};},
@@ -725,7 +749,7 @@ test("FSRS optimizer native/browser pipeline owns conversion, holdout gate, retr
  assert.equal(profile.schema,OPTIMIZER_PROFILE_SCHEMA);
  assert.equal(profile.bindingVersion,OPTIMIZER_BINDING_VERSION);
  assert.equal(profile.model,OPTIMIZER_MODEL_VERSION);
- assert.equal(profile.evidenceItems,384);
+ assert.deepEqual(profile.evidence,{rawReviews:384,rawCards:96,retainedItems:384,retainedCards:96});
  assert.equal(profile.evaluation.holdout.trainItems,320);
  assert.equal(profile.evaluation.holdout.holdoutItems,64);
  assert.equal(profile.evaluation.holdout.holdoutCards,16);
@@ -748,18 +772,18 @@ test("FSRS optimizer shared pipeline rejects insufficient evidence and held-out 
  const small=fakeBinding();
  small.convertCsvToFsrsItemsWithCardIds=()=>evidence(60);
  await assert.rejects(
-  runFsrsOptimizerPipeline({binding:small,bytes:new Uint8Array([1]),sourceSha256:"b".repeat(64)}),
+  runFsrsOptimizerPipeline({binding:small,bytes:optimizerBytes(60,15),sourceSha256:"b".repeat(64)}),
   error=>error instanceof OptimizerPipelineRejectedError&&error.kind==="evidence"&&
    error.reasons.some(x=>x.includes(String(MIN_TRAIN_ITEMS))&&x.includes(String(MIN_HOLDOUT_ITEMS))&&
     x.includes(String(MIN_HOLDOUT_CARDS)))
  );
  await assert.rejects(
-  runFsrsOptimizerPipeline({binding:fakeBinding(0.5),bytes:new Uint8Array([1]),sourceSha256:"e".repeat(64)}),
+  runFsrsOptimizerPipeline({binding:fakeBinding(0.5),bytes:optimizerBytes(),sourceSha256:"e".repeat(64)}),
   error=>error instanceof OptimizerPipelineRejectedError&&error.kind==="gate"&&
    error.reasons.some(x=>x.includes("not lower"))
  );
  await assert.rejects(
-  runFsrsOptimizerPipeline({binding:fakeBinding(0.4,0.39),bytes:new Uint8Array([1]),sourceSha256:"f".repeat(64),
+  runFsrsOptimizerPipeline({binding:fakeBinding(0.4,0.39),bytes:optimizerBytes(),sourceSha256:"f".repeat(64),
    incumbentProfile:{sourceSha256:"d".repeat(64),weights:Array(34).fill(9)}}),
   error=>error instanceof OptimizerPipelineRejectedError&&error.kind==="gate"&&
    error.reasons.some(x=>x.includes("active personalized"))
@@ -769,7 +793,7 @@ test("FSRS optimizer shared pipeline rejects insufficient evidence and held-out 
  const original=regressing.computeParameters;
  regressing.computeParameters=async(...args)=>{calls++;return original(...args);};
  await assert.rejects(
-  runFsrsOptimizerPipeline({binding:regressing,bytes:new Uint8Array([1]),sourceSha256:"c".repeat(64)}),
+  runFsrsOptimizerPipeline({binding:regressing,bytes:optimizerBytes(),sourceSha256:"c".repeat(64)}),
   error=>error instanceof OptimizerPipelineRejectedError&&error.kind==="gate"
  );
  assert.equal(calls,1,"held-out failure must not reach final all-evidence retraining");
