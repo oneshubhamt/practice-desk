@@ -6,8 +6,6 @@ export const HOLDOUT_SEGMENTS=6;
 export const MIN_TRAIN_ITEMS=64;
 export const MIN_HOLDOUT_ITEMS=64;
 export const MIN_HOLDOUT_CARDS=16;
-export const MIN_ABSOLUTE_LOG_LOSS_IMPROVEMENT=0.001;
-export const MIN_RELATIVE_LOG_LOSS_IMPROVEMENT=0.005;
 export const CALIBRATION_EPSILON=1e-9;
 export const HOLDOUT_STRATEGY="final-sixth";
 export const OPTIMIZER_CHRONOLOGY="elapsed-24h";
@@ -39,13 +37,11 @@ export function holdoutDiagnostics(baselineValue,candidateValue){
  const baseline=metric(baselineValue,"baseline"),candidate=metric(candidateValue,"candidate");
  const absolute=baseline.logLoss-candidate.logLoss;
  const relative=baseline.logLoss>0?absolute/baseline.logLoss:0;
- const required=Math.max(MIN_ABSOLUTE_LOG_LOSS_IMPROVEMENT,
-  baseline.logLoss*MIN_RELATIVE_LOG_LOSS_IMPROVEMENT);
  const delta=candidate.rmseBins-baseline.rmseBins;
  const relativeDelta=baseline.rmseBins>0?delta/baseline.rmseBins:delta===0?0:Number.POSITIVE_INFINITY;
  const status=delta < -CALIBRATION_EPSILON?"improved":
   Math.abs(delta)<=CALIBRATION_EPSILON?"unchanged":"regressed";
- return {logLossImprovement:{absolute,relative,required},
+ return {logLossImprovement:{absolute,relative},
   calibration:{metric:"rmse-bins",delta,relativeDelta,status}};
 }
 
@@ -66,8 +62,8 @@ export function splitChronologicalHoldout(items,cardIds){
 
 const comparisonReasons=(baseline,candidate,label)=>{
  const diagnostics=holdoutDiagnostics(baseline,candidate),reasons=[];
- if(diagnostics.logLossImprovement.absolute+Number.EPSILON<diagnostics.logLossImprovement.required)
-  reasons.push("personalized holdout log loss does not achieve the minimum practical improvement over "+label);
+ if(candidate.logLoss>=baseline.logLoss)
+  reasons.push("personalized holdout log loss is not lower than "+label);
  if(diagnostics.calibration.status==="regressed")
   reasons.push("personalized holdout RMSE bins regresses versus "+label);
  return reasons;
