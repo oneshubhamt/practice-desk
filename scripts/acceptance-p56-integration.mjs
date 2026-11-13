@@ -1,6 +1,6 @@
 /** P56 independent red-before-green integration: concurrent same-source snapshot.
  * The importing Library was hydrated BEFORE another tab committed a valid
- * digest. Import a separately made v4 archive with another attempt referencing
+ * digest. Import a separately made v5 archive with another attempt referencing
  * exactly that digest. A stale in-memory snapshot set must not abort a
  * legitimate, additive transaction or overwrite the other tab's record.
  * Runs against the real standalone file:// UI and IndexedDB in every engine.
@@ -67,7 +67,7 @@ try{
  const result=(await records(page));
  const message=await page.locator("#app").innerText();
  check(result.some(x=>x.id===restoring.id),
-   engine+" P56 R1 stale snapshot cache blocked valid additive v4 import: "+
+   engine+" P56 R1 stale snapshot cache blocked valid additive v5 import: "+
    message.slice(0,450));
  check(result.some(x=>x.id===foreign.id),
    engine+" P56 R1 import overwrote concurrent original record");

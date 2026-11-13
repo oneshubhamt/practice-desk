@@ -119,7 +119,7 @@ try{
  const backupEvent=fallbackA.waitForEvent("download");
  await fallbackA.locator("#g-export-history").click();
  const backup=JSON.parse(await readFile(await (await backupEvent).path(),"utf8"));
- check(backup.version===4&&backup.records.some(x=>x.id===fallbackId),
+ check(backup.version===5&&backup.records.some(x=>x.id===fallbackId),
   "Two-tab fallback conflict does not preserve valid export");
  await fallbackA.close();await fallbackB.close();
  console.log("MODERN RESILIENCE PASS concurrent localStorage fallback and recovery export");
@@ -171,7 +171,7 @@ try{
  check(downloaded.suggestedFilename().includes("UNSAVED_RECOVERY"),
   "Unsaved emergency export did not identify potentially non-durable material");
  const recovered=JSON.parse(await readFile(await downloaded.path(),"utf8"));
- check(recovered.version===4&&recovered.records.some(x=>
+ check(recovered.version===5&&recovered.records.some(x=>
   x.recordType==="generic-attempt"&&!initiallySaved.has(x.id))&&
   await quota.locator(".generic-warning").filter({hasText:"Emergency recovery file"}).count()===1,
   "Quota failure lost attempted record or failed to explain emergency backup");

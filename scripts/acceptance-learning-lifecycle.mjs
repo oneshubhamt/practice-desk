@@ -163,7 +163,7 @@ try{
  await page.locator("#g-history").click();await route(page,"history");
  const download=page.waitForEvent("download");await page.locator("#g-export-history").click();
  const archive=JSON.parse(await readFile(await (await download).path(),"utf8"));
- check(archive.version===4&&archive.preferences.dark===true&&
+ check(archive.version===5&&archive.preferences.dark===true&&
   archive.preferences.scale===105,"Backup omitted explicit appearance settings");
  check(archive.records.some(x=>x.id===custom.id&&x.manualGrades?.[0]?.marks===1.5)&&
   archive.records.some(x=>x.id===card.id&&x.reviews?.length===1)&&
@@ -270,6 +270,6 @@ try{
  check(errors.length===0,"Browser errors: "+errors.join("; "));
  await h.evidence("learning-lifecycle",{sixKinds:true,manualGrades:true,explicitFSRS:true,
   notebookRevision:true,backupCrossRecords:true,reload:true});
- console.log("MODERN LEARNING PASS six-kind manual marks, rated notebook, source-derived revision, FSRS independence, backup v4 and reload");
+ console.log("MODERN LEARNING PASS six-kind manual marks, rated notebook, source-derived revision, FSRS independence, backup v5 and reload");
 }catch(e){await h.diagnose("learning-lifecycle",page,e);throw e;}
 finally{await context.close();await h.finish();}

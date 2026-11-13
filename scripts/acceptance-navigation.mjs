@@ -10,7 +10,7 @@ const engine=process.argv[2]??"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
 
 async function nativeNavigationJourney(){
-/** New cross-browser modern critical path; validates clean shared-snapshot backup-v4 offline.
+/** New cross-browser modern critical path; validates clean shared-snapshot backup-v5 offline.
  * Requires actual native Navigation API; no router polyfill or silent browser skip.
  */
 
