@@ -26,9 +26,9 @@ export function validateReviewDurationEvidence(value:unknown):ReviewDurationEvid
   throw Error("Invalid review duration evidence");
  const raw=value as Partial<ReviewDurationEvidence>;
  if(Object.keys(raw).some(key=>!["foregroundMs","recallMs","postRevealMs","reliability"].includes(key))||
-   !Number.isSafeInteger(raw.foregroundMs)||raw.foregroundMs!<0||
-   !Number.isSafeInteger(raw.recallMs)||raw.recallMs!<0||
-   !Number.isSafeInteger(raw.postRevealMs)||raw.postRevealMs!<0||
+   !Number.isSafeInteger(raw.foregroundMs)||raw.foregroundMs!<0||raw.foregroundMs!>0xffffffff||
+   !Number.isSafeInteger(raw.recallMs)||raw.recallMs!<0||raw.recallMs!>0xffffffff||
+   !Number.isSafeInteger(raw.postRevealMs)||raw.postRevealMs!<0||raw.postRevealMs!>0xffffffff||
    raw.foregroundMs!==raw.recallMs!+raw.postRevealMs!||
    raw.reliability!=="continuous"&&raw.reliability!=="interrupted")
   throw Error("Invalid review duration evidence");
