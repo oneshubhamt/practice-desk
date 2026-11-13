@@ -1607,5 +1607,7 @@ html[data-theme="dark"] .pd-author-studio .pd-author-preview-choice>span{
 .pd-calendar-form .btn{align-self:end}
 .pd-calendar-panel{padding:0;overflow:hidden;background:var(--panel)}
 .pd-calendar-mount{min-width:0}
+/* Presentation-only accessibility bridge: preserve Calendar-owned geometry while following Practice Desk text scale. */
+.pd-calendar-mount .dc-root,.pd-calendar-mount .dc-dialog{font-size:calc(14px * var(--type-scale))}
 @media(max-width:900px){.pd-calendar-form{grid-template-columns:1fr 1fr}.pd-calendar-form .btn{width:100%}}
 @media(max-width:560px){.pd-calendar-form{grid-template-columns:1fr}.pd-calendar-panel{border-left:0;border-right:0;border-radius:0}}

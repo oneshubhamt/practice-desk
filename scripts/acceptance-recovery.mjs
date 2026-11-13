@@ -52,9 +52,9 @@ try{
  const pending=page.waitForEvent("download");
  await page.locator("#g-export-history").click();
  const archive=JSON.parse(await readFile(await (await pending).path(),"utf8"));
- check(archive.format==="practice-desk-backup"&&archive.version===4&&
+ check(archive.format==="practice-desk-backup"&&archive.version===5&&
   archive.manifest?.recordCount===archive.records.length,
-  "export is not an integrity-verified v3 complete backup");
+  "export is not an integrity-verified v5 complete backup");
  check(archive.records.some(x=>x.id===resultId&&x.result.snapshot.earnedMarks===
   original.result.snapshot.earnedMarks),"backup omitted frozen result");
  dialogMessages=[];
@@ -112,7 +112,7 @@ try{
  const fallbackFile=fallback.waitForEvent("download");
  await fallback.locator("#g-export-history").click();
  const fallbackBackup=JSON.parse(await readFile(await (await fallbackFile).path(),"utf8"));
- check(fallbackBackup.version===4&&fallbackBackup.records.some(x=>
+ check(fallbackBackup.version===5&&fallbackBackup.records.some(x=>
   x.recordType==="generic-attempt"&&x.state.responses.some(r=>r.response)),
   "fallback export did not include saved answers");
  check(!fallbackErrors.length,"fallback page errors "+fallbackErrors.join("; "));

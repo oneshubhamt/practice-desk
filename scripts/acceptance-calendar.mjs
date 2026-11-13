@@ -67,6 +67,18 @@ try{
   await page.locator("#themeLight").click();
   await page.waitForFunction(()=>document.documentElement.dataset.theme==="light");
 
+  const baseCalendarFont=await page.locator("#pd-calendar-mount .dc-root").evaluate(
+    el=>Number.parseFloat(getComputedStyle(el).fontSize));
+  await page.locator("#displayTrigger").click();
+  for(let i=0;i<4;i++)await page.locator("#fontMore").click();
+  await page.waitForFunction(()=>getComputedStyle(document.documentElement)
+    .getPropertyValue("--type-scale").trim()==="1.4");
+  const scaledCalendarFont=await page.locator("#pd-calendar-mount .dc-root").evaluate(
+    el=>Number.parseFloat(getComputedStyle(el).fontSize));
+  check(scaledCalendarFont>=baseCalendarFont*1.35,
+    engine+" Calendar did not follow Practice Desk text-scale presentation");
+  await page.locator("#fontReset").click();
+
   await page.setViewportSize({width:390,height:844});
   await assertNoOverflow(page,engine+" Calendar narrow");
   await page.setViewportSize({width:1280,height:850});
@@ -179,7 +191,7 @@ try{
 
   await h.evidence("calendar-"+engine,{
     engine,attemptId,learningCardId:learning.id,scheduledMockId:scheduled.id,
-    backupVersion:exported.version,standalone:true,static:true,darkLight:true,narrow:true
+    backupVersion:exported.version,standalone:true,static:true,darkLight:true,typeScale:true,narrow:true
   });
   console.log("CALENDAR "+engine+" PASS: route, durable schedule, source actions, backup restore, theme, narrow, file/static");
 }catch(error){

@@ -1,5 +1,5 @@
 /** Real offline archive and study evidence: revision-aware atomic deletion,
- * clean v4 shared-snapshot restoration, cross-paper progress, bounded pending
+ * clean v5 shared-snapshot restoration, cross-paper progress, bounded pending
  * panels and per-question visit evidence. No historical screen comparisons.
  */
 import {readFile} from "node:fs/promises";
@@ -109,9 +109,9 @@ try{
    "Denied persistence request falsely reported success");
   const download=page.waitForEvent("download");await page.locator("#g-export-history").click();
   const exported=JSON.parse(await readFile(await (await download).path(),"utf8"));
-  check(exported.format==="practice-desk-backup"&&exported.version===4&&
+  check(exported.format==="practice-desk-backup"&&exported.version===5&&
    exported.manifest.recordCount===exported.records.length,
-   "Integrity-checked exported v4 format wrong");
+   "Integrity-checked exported v5 format wrong");
   check(exported.setups?.families?.["builtin:ssc-cgl"]?.paperRevisionId===initial&&
    exported.setups?.families?.["builtin:ssc-cgl"]?.mode==="free",
    "Complete backup lacks verified exam selection");

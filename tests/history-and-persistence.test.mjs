@@ -384,7 +384,7 @@ test("generated additive merge is deterministic, idempotent, ordered and non-des
 });
 
 test("canonical backup checksum covers records and preferences; size, IDs and timestamp are bounded",()=>{
- // Authenticated checksum alone must not launder unsupported v4 privileges.
+ // Authenticated checksum alone must not launder unsupported envelope privileges.
  const unsigned=makeBackup([],{schema:1,dark:false,scale:100},"2026-11-04T03:15:00.000Z");
  assert.equal(verifyBackup(structuredClone(unsigned)).version,5);
  assert.throws(()=>verifyBackup({...unsigned,issuerSignature:"nonexistent"}),/unsupported envelope/);
@@ -598,7 +598,7 @@ p45test("P45 compressed backup keeps canonical backup checksum and resists malfo
  p45assert.ok(PLAIN_BACKUP_LIMIT>big.blob.size);
 });
 
-p45test("P45 one-pass backup serialization remains byte-identical to v3 for every checked source",async()=>{
+p45test("P45 one-pass backup serialization remains byte-identical to the current canonical format for every checked source",async()=>{
  const {makeBackup,serializeVerifiedBackup,verifyBackup}=await import("../src/history/backup.ts");
  const {DEFAULT_PREFERENCES}=await import("../src/app/preferences.ts");
  const stamp="2026-11-02T11:11:00.000Z";

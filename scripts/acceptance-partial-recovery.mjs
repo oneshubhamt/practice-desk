@@ -73,7 +73,7 @@ try{
   check(download.suggestedFilename().includes("UNSAVED_RECOVERY"),
     "Partial-recovery backup not clearly identified as exceptional");
   const archive=JSON.parse(await readFile(await download.path(),"utf8"));
-  check(archive.version===4&&archive.records.some(r=>r.id===good.id)&&
+  check(archive.version===5&&archive.records.some(r=>r.id===good.id)&&
     !archive.records.some(r=>r.id==="p48-corrupt-missing-snapshot"),
     "Recovery backup failed to preserve good attempt or leaked corrupted row");
   const preserved=await page.evaluate(async()=>{

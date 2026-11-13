@@ -42,6 +42,7 @@ test("backup v5 carries scheduled mocks and exact revision-scheduler settings in
   assert.equal(verified.version,5);
   assert.deepEqual(verified.records,[scheduled]);
   assert.deepEqual(verified.revisionSettings,revisionSettings);
+  assert.throws(()=>verifyBackup({...structuredClone(archive),version:4}),/Invalid backup format/);
   assert.throws(()=>verifyBackup({...structuredClone(archive),
     revisionSettings:{...revisionSettings,leechThreshold:999}}),/integrity check failed/i);
 });

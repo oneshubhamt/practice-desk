@@ -122,7 +122,10 @@ export function mountExamWorkspace(
    await removeWorkspaceAttempt(owner,id,intent);
    calendarController?.invalidate();
  };
- const deleteAllCompleted=():Promise<void>=>deleteCompletedWorkspaceAttempts(owner);
+ const deleteAllCompleted=async():Promise<void>=>{
+   await deleteCompletedWorkspaceAttempts(owner);
+   calendarController?.invalidate();
+ };
  const showStorageEstimate=():Promise<void>=>showWorkspaceStorageEstimate(owner);
  const requestPersistentStorage=():Promise<void>=>requestWorkspacePersistentStorage(owner);
  const addNotebookCard=(source:GenericAttempt,id:string):void=>addLearningNotebookCard(owner,source,id);
