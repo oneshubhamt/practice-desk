@@ -36,7 +36,7 @@ async function optimize(binding,request){
  const report=progressReporter(requestId);
  try{
   const profile=await runFsrsOptimizerPipeline({
-   binding,bytes,sourceSha256:await digest(bytes),
+   binding,bytes,sourceSha256:await digest(bytes),incumbentProfile:request.incumbentProfile??null,
    makeOptions:(cardIds,stage)=>({
     cardIds,progress:(current,total)=>{report(stage,current,total);return true;}
    }),

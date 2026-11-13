@@ -1,76 +1,98 @@
 import {
- DefaultScheduler,State,dateChrono,defineScheduler,
+ State,dateChrono,defineScheduler,
  type DefaultScheduler as FsrsScheduler,type DefaultSchedulerCard,type Grade
 } from "ts-fsrs";
 import {Reschedule} from "ts-fsrs/reschedule";
 import {
  COST_ADR_DEFAULT_GOAL_COST_WEIGHT,COST_ADR_DEFAULT_POLICY,
- schedulerCostAdrMiddleware,schedulerFuzzingMiddleware,schedulerLearningStepsMiddleware,
- schedulerMaximumIntervalMiddleware,schedulerMonotonicIntervalMiddleware,
- schedulerScheduledDaysMiddleware,schedulerStatsMiddleware
+ schedulerCostAdrMiddleware,schedulerDesiredRetentionMiddleware,schedulerFuzzingMiddleware,
+ schedulerLearningStepsMiddleware,schedulerLeechMiddleware,schedulerMaximumIntervalMiddleware,
+ schedulerMonotonicIntervalMiddleware,schedulerScheduledDaysMiddleware,schedulerStatsMiddleware
 } from "ts-fsrs/middlewares";
 import {FSRS7_DEFAULT_WEIGHTS,FSRS7Model,checkFSRS7Parameters} from "ts-fsrs/models/fsrs-7";
 import type {
- LeechAction,RecallRating,RetentionPolicy,ReviewObservation,RevisionLeechStatus,
- RevisionMemoryState,RevisionPreview,RevisionSchedule,RevisionSchedulerOptions,
- RevisionSchedulerPort,RevisionSnapshot
+ LeechAction,RecallRating,ReviewObservation,RevisionLeechStatus,
+ RevisionMemoryState,RevisionPreview,RevisionSchedule,RevisionScheduleStatus,
+ RevisionSchedulerConfiguration,RevisionSchedulerOptions,RevisionSchedulerPort,
+ RevisionSchedulingPolicy,RevisionSnapshot
 } from "./revision-scheduler-port.ts";
 
 export const FSRS_PROVIDER="ts-fsrs@6.0.0/FSRS-7";
 export const FSRS_DEFAULT_DESIRED_RETENTION=0.9;
-export const FSRS_DEFAULT_COST_ADR_GOAL_WEIGHT=COST_ADR_DEFAULT_GOAL_COST_WEIGHT;
+export const FSRS_MIN_DESIRED_RETENTION=0.75;
+export const FSRS_MAX_DESIRED_RETENTION=0.97;
+export const FSRS_COST_ADR_PRESET_GOAL_WEIGHT=COST_ADR_DEFAULT_GOAL_COST_WEIGHT;
 export const FSRS_DEFAULT_LEECH_THRESHOLD=4;
 
 const stateName=(state:State):RevisionMemoryState=>{
- switch(state){
-  case State.New:return "new";case State.Learning:return "learning";
+ switch(state){case State.New:return "new";case State.Learning:return "learning";
   case State.Review:return "review";case State.Relearning:return "relearning";
  }
  throw Error("Unsupported FSRS state");
 };
 const grade=(rating:RecallRating):Grade=>rating as Grade;
-const costAdrDefinition=defineScheduler({model:FSRS7Model,chrono:dateChrono}).use(
- schedulerCostAdrMiddleware,schedulerFuzzingMiddleware,schedulerStatsMiddleware,
- schedulerScheduledDaysMiddleware,schedulerLearningStepsMiddleware,
+const fixedDefinition=defineScheduler({model:FSRS7Model,chrono:dateChrono}).use(
+ schedulerDesiredRetentionMiddleware,schedulerFuzzingMiddleware,schedulerStatsMiddleware,
+ schedulerLeechMiddleware,schedulerScheduledDaysMiddleware,schedulerLearningStepsMiddleware,
  schedulerMaximumIntervalMiddleware,schedulerMonotonicIntervalMiddleware
 );
-const policy=(v:RetentionPolicy)=>{if(v!=="fixed"&&v!=="cost-adr")throw Error("Invalid retention policy");return v;};
+const costAdrDefinition=defineScheduler({model:FSRS7Model,chrono:dateChrono}).use(
+ schedulerCostAdrMiddleware,schedulerFuzzingMiddleware,schedulerStatsMiddleware,
+ schedulerLeechMiddleware,schedulerScheduledDaysMiddleware,schedulerLearningStepsMiddleware,
+ schedulerMaximumIntervalMiddleware,schedulerMonotonicIntervalMiddleware
+);
+const canonicalPolicy=(value:RevisionSchedulingPolicy|undefined):RevisionSchedulingPolicy=>{
+ const p=value??{kind:"fixed",desiredRetention:FSRS_DEFAULT_DESIRED_RETENTION};
+ if(p.kind==="fixed"){
+  if(!Number.isFinite(p.desiredRetention)||p.desiredRetention<FSRS_MIN_DESIRED_RETENTION||
+    p.desiredRetention>FSRS_MAX_DESIRED_RETENTION)
+   throw Error("Desired retention must be between 0.75 and 0.97");
+  return {kind:"fixed",desiredRetention:p.desiredRetention};
+ }
+ if(p.kind==="cost-adr"&&p.preset==="upstream-default")
+   return {kind:"cost-adr",preset:"upstream-default"};
+ throw Error("Invalid FSRS scheduling policy");
+};
 const leechAction=(v:LeechAction)=>{if(v!=="remediate"&&v!=="suspend")throw Error("Invalid leech action");return v;};
+const scheduleStatus=(card:DefaultSchedulerCard<"FSRS-7">):RevisionScheduleStatus=>{
+ const value=card.scheduleStatus as string;
+ if(value==="new"||value==="learning"||value==="review"||value==="suspended")return value;
+ throw Error("Unsupported FSRS schedule status");
+};
 
 export async function createRevisionScheduler(options:RevisionSchedulerOptions={}):Promise<RevisionSchedulerPort>{
- const retentionPolicy=policy(options.retentionPolicy??"fixed");
- const desiredRetention=options.desiredRetention??FSRS_DEFAULT_DESIRED_RETENTION;
- if(!Number.isFinite(desiredRetention)||desiredRetention<=0||desiredRetention>=1)
-   throw Error("Desired retention must be between 0 and 1");
- const costAdrGoalWeight=options.costAdrGoalWeight??FSRS_DEFAULT_COST_ADR_GOAL_WEIGHT;
- if(!Number.isFinite(costAdrGoalWeight)||costAdrGoalWeight<0||costAdrGoalWeight>1024)
-   throw Error("Cost-ADR goal weight must be between 0 and 1024");
+ const schedulingPolicy=canonicalPolicy(options.policy);
  const enableFuzz=options.enableFuzz??true;
  const leechThreshold=options.leechThreshold??FSRS_DEFAULT_LEECH_THRESHOLD;
  if(!Number.isSafeInteger(leechThreshold)||leechThreshold<1)throw Error("Leech threshold must be a positive integer");
  const action=leechAction(options.leechAction??"remediate");
  const weights=options.weights?Array.from(checkFSRS7Parameters(options.weights)):undefined;
- const scheduler:FsrsScheduler<"FSRS-7">=retentionPolicy==="cost-adr"
-  ?costAdrDefinition.create({config:{
-    weights:weights??FSRS7_DEFAULT_WEIGHTS,fractionalDays:true,
-    costAdrPolicy:COST_ADR_DEFAULT_POLICY,goalCostWeight:costAdrGoalWeight,
-    enableFuzz,maximumInterval:36500,clearStatsOnForget:true,
-    enableShortTerm:true,learningSteps:["1m","10m"],relearningSteps:["10m"],
-    graduatingInterval:1,allowModelOverride:true
-   }}) as unknown as FsrsScheduler<"FSRS-7">
-  :await DefaultScheduler<"FSRS-7">({
-    version:"FSRS-7",...(weights?{weights}:{}),desiredRetention,
-    enableShortTerm:true,learningSteps:["1m","10m"],relearningSteps:["10m"],
-    graduatingInterval:1,allowModelOverride:true,enableFuzz,maximumInterval:36500,
-    clearStatsOnForget:true
-   });
- const leechStatus=(lapses:number):RevisionLeechStatus=>
-   lapses<leechThreshold?"normal":action==="suspend"?"suspended":"remediation";
+ const config={
+   weights:weights??FSRS7_DEFAULT_WEIGHTS,fractionalDays:true as const,
+   enableFuzz,maximumInterval:36500,clearStatsOnForget:true as const,
+   enableShortTerm:true as const,learningSteps:["1m","10m"] as const,relearningSteps:["10m"] as const,
+   graduatingInterval:1 as const,allowModelOverride:true as const,
+   leechThreshold:action==="suspend"?leechThreshold:0
+ };
+ let scheduler:FsrsScheduler<"FSRS-7">;
+ if(schedulingPolicy.kind==="cost-adr"){
+  scheduler=costAdrDefinition.create({config:{
+   ...config,costAdrPolicy:COST_ADR_DEFAULT_POLICY,goalCostWeight:FSRS_COST_ADR_PRESET_GOAL_WEIGHT
+  }}) as unknown as FsrsScheduler<"FSRS-7">;
+ }else{
+  scheduler=fixedDefinition.create({config:{
+   ...config,desiredRetention:schedulingPolicy.desiredRetention
+  }}) as unknown as FsrsScheduler<"FSRS-7">;
+ }
+ const leechStatus=(card:DefaultSchedulerCard<"FSRS-7">):RevisionLeechStatus=>{
+   if(action==="suspend")return scheduleStatus(card)==="suspended"?"suspended":"normal";
+   return card.lapses<leechThreshold?"normal":"remediation";
+ };
  const schedule=(card:DefaultSchedulerCard<"FSRS-7">):RevisionSchedule=>({
    dueAt:new Date(card.dueAt),scheduledDays:card.scheduledDays,state:stateName(card.state),
-   reps:card.reps,lapses:card.lapses,learningStep:card.learningStep,stability:card.stability,
-   stabilityFast:card.stabilityFast,difficulty:card.difficulty,
-   lastReviewAt:card.lastReviewAt?new Date(card.lastReviewAt):null,leechStatus:leechStatus(card.lapses)
+   scheduleStatus:scheduleStatus(card),reps:card.reps,lapses:card.lapses,learningStep:card.learningStep,
+   stability:card.stability,stabilityFast:card.stabilityFast,difficulty:card.difficulty,
+   lastReviewAt:card.lastReviewAt?new Date(card.lastReviewAt):null,leechStatus:leechStatus(card)
  });
  const reschedule=new Reschedule(scheduler);
  const replay=(id:string,createdAt:string,reviews:readonly ReviewObservation[])=>{
@@ -88,13 +110,17 @@ export async function createRevisionScheduler(options:RevisionSchedulerOptions={
    });
    return reschedule.reschedule({initialCard,history},{sortHistory:false}).card;
  };
- const configuration={
-   model:"FSRS-7" as const,packageVersion:"6.0.0" as const,retentionPolicy,desiredRetention,
-   costAdrGoalWeight,enableShortTerm:true as const,learningSteps:["1m","10m"] as const,
+ const commonConfiguration={
+   model:"FSRS-7" as const,packageVersion:"6.0.0" as const,
+   enableShortTerm:true as const,learningSteps:["1m","10m"] as const,
    relearningSteps:["10m"] as const,graduatingInterval:1 as const,allowModelOverride:true as const,
    enableFuzz,maximumInterval:36500 as const,clearStatsOnForget:true as const,
    leechThreshold,leechAction:action,weights:weights?"FSRS-7-custom" as const:"FSRS-7-default" as const
  };
+ const configuration:RevisionSchedulerConfiguration=schedulingPolicy.kind==="cost-adr"
+  ?{...commonConfiguration,policy:{kind:"cost-adr",preset:"upstream-default",
+    goalCostWeight:FSRS_COST_ADR_PRESET_GOAL_WEIGHT}}
+  :{...commonConfiguration,policy:{kind:"fixed",desiredRetention:schedulingPolicy.desiredRetention}};
  return {
    provider:FSRS_PROVIDER,configuration,
    replay(id,createdAt,reviews){return schedule(replay(id,createdAt,reviews));},

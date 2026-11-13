@@ -1,7 +1,7 @@
 import {createRevisionScheduler} from "../learning/fsrs-scheduler-adapter.ts";
 import {DEFAULT_REVISION_SETTINGS,readRevisionSettings,revisionSchedulerOptions,
  validateRevisionSettings,writeRevisionSettings} from "../learning/revision-settings.ts";
-import {fsrsOptimizerCsv,optimizerEvidenceSummary,serializeFsrsOptimizerProfile,
+import {assertFsrsOptimizerReplacement,fsrsOptimizerCsv,optimizerEvidenceSummary,serializeFsrsOptimizerProfile,
  validateFsrsOptimizerProfile,type FsrsOptimizerProfile} from "../learning/fsrs-optimizer.ts";
 import {browserFsrsOptimizerAvailability,FsrsOptimizerRejectedError,startBrowserFsrsOptimizer,
  type BrowserFsrsOptimizerProgress,type BrowserFsrsOptimizerRun} from "../learning/fsrs-browser-optimizer.ts";
@@ -19,6 +19,7 @@ import type {RichDocument} from "../domain/rich-document.ts";
 import {authoredTextHTML} from "./rich-content-view.ts";
 import {escapeText as esc} from "./html-escape.ts";
 import {downloadText} from "./download-file.ts";
+import {createReviewDurationTracker} from "../learning/review-duration.ts";
 
 export interface LearningDeskHost {
   cards:()=>LearningCard[];
@@ -28,6 +29,11 @@ export interface LearningDeskHost {
   startRevision:(cards:readonly LearningCard[],selection?:RevisionSelectionProvenance)=>Promise<boolean>;
   close:()=>void;
 }
+const fsrsMetric=(value:number)=>Number(value.toFixed(4));
+const fsrsDelta=(baseline:number,candidate:number)=>{
+ const value=Number((candidate-baseline).toFixed(4));
+ return (value>0?"+":"")+String(value);
+};
 const fsrsInterval=(days:number):string=>{
  const seconds=Math.max(0,Math.round(days*86400));
  if(seconds<60)return seconds+"s";
@@ -81,7 +87,7 @@ function questionHTML(record:LearningCard):string{
 
 export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
  let scheduler:RevisionSchedulerPort|null=null,revisionSettings=readRevisionSettings();
- let selectedId:string|null=null,reviewId:string|null=null,revealed=false,revealedStartedAt:number|null=null;
+ let selectedId:string|null=null,reviewId:string|null=null,revealed=false;
  let filter:"all"|"due"|"remediation"|"bookmarked"="all",hierarchyRoot="",message="",closed=false,opened=false;
  let previousLearningView="";
  const optimizerAvailability=browserFsrsOptimizerAvailability();
@@ -161,6 +167,10 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
    for(const [id,entry] of cache)if(active.get(id)!==entry.record)cache.delete(id);
  };
  const now=()=>new Date(),clock=()=>typeof performance!=="undefined"?performance.now():Date.now();
+ const reviewDuration=createReviewDurationTracker();
+ const reviewVisible=()=>document.visibilityState==="visible";
+ const onReviewVisibility=()=>reviewDuration.visibility(clock(),reviewVisible());
+ document.addEventListener("visibilitychange",onReviewVisibility);
  const cards=()=>host.cards().sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
  const effectiveStatus=(card:LearningCard)=>card.revisionDisposition==="suspended"?"suspended":schedule(card).leechStatus;
  const due=(card:LearningCard)=>scheduler!==null&&effectiveStatus(card)!=="suspended"&&schedule(card).dueAt.getTime()<=Date.now();
@@ -168,9 +178,9 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
    const aa=schedule(a),bb=schedule(b),ap=effectiveStatus(a)==="remediation"?0:1,bp=effectiveStatus(b)==="remediation"?0:1;
    return ap-bp||aa.dueAt.getTime()-bb.dueAt.getTime();
  });
- const policySummary=()=>!scheduler?"Scheduler initializing":scheduler.configuration.retentionPolicy==="fixed"
-   ?Math.round(scheduler.configuration.desiredRetention*100)+"% fixed retention"
-   :"Cost-ADR · cost weight "+scheduler.configuration.costAdrGoalWeight;
+ const policySummary=()=>!scheduler?"Scheduler initializing":scheduler.configuration.policy.kind==="fixed"
+   ?Math.round(scheduler.configuration.policy.desiredRetention*100)+"% fixed retention"
+   :"Cost-ADR · upstream default preset";
  function draw(){
   if(closed||!opened)return;
   const all=cards();
@@ -184,8 +194,9 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   const selectedDraft=selected?notebookDrafts.get(selected.id):undefined;
   if(reviewId){
     const item=all.find(c=>c.id===reviewId);
-    if(!item){reviewId=null;revealed=false;}
+    if(!item){reviewId=null;revealed=false;reviewDuration.reset();}
     else{
+     if(reviewDuration.cardId!==item.id)reviewDuration.start(item.id,clock(),reviewVisible());
      const inspectionAt=now().toISOString();
      const snapshot=scheduler&&revealed?inspectLearningCard(item,inspectionAt,scheduler):null;
      const previews=scheduler&&revealed?previewLearningCard(item,inspectionAt,scheduler):[];
@@ -210,27 +221,30 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
            learningRich(item,"",item.question.content.richExplanation):
            item.explanation?'<p>'+esc(item.explanation)+'</p>':"")+
          (item.note?'<p class="fine">Your note: '+esc(item.note)+'</p>':"")+fsrsDetail+
-         '<h3>How well did you recall it?</h3><div class="row generic-actions">'+
+         '<h3>How well did you recall it?</h3>'+
+         '<p class="fine"><strong>Rating guide:</strong> Again = failed recall; Hard = recalled with substantial difficulty; Good = correct with normal effort; Easy = effortless. Failed recall should be Again, not Hard.</p>'+
+         '<div class="row generic-actions">'+
          ([[1,"Again"],[2,"Hard"],[3,"Good"],[4,"Easy"]] as const)
           .map(([grade,label])=>{
             const projected=previewByRating.get(grade);
             return '<button class="btn" data-grade="'+grade+'">'+label+
               (projected?' · '+esc(fsrsInterval(projected.scheduledDays)):'')+'</button>';
           }).join("")+'</div></div>':
+         '<p class="fine">Attempt the answer from memory before revealing it. Review duration measures foreground time from card presentation through rating; hidden-tab time is excluded.</p>'+
          '<button class="btn primary" id="learning-reveal">Reveal answer</button>')+'</section>'+
        (message?'<p role="status" class="generic-warning">'+esc(message)+'</p>':"");
      present(html,"review:"+item.id);
-     root.querySelector<HTMLButtonElement>("#learning-back")!.onclick=()=>{reviewId=null;revealed=false;revealedStartedAt=null;draw();};
-     root.querySelector<HTMLButtonElement>("#learning-reveal")?.addEventListener("click",()=>{revealedStartedAt=clock();revealed=true;draw();});
+     root.querySelector<HTMLButtonElement>("#learning-back")!.onclick=()=>{reviewId=null;revealed=false;reviewDuration.reset();draw();};
+     root.querySelector<HTMLButtonElement>("#learning-reveal")?.addEventListener("click",()=>{reviewDuration.reveal(clock(),reviewVisible());revealed=true;draw();});
      root.querySelectorAll<HTMLButtonElement>("[data-grade]").forEach(button=>button.onclick=async()=>{
        if(!revealed||!scheduler)return;
        try{
-         const durationMs=revealedStartedAt===null?0:Math.max(0,Math.round(clock()-revealedStartedAt));
-         if(!await host.save(rateLearningCard(item,Number(button.dataset.grade) as ReviewGrade,now().toISOString(),durationMs,scheduler))){
+         const duration=reviewDuration.finish(clock(),reviewVisible());
+         if(!await host.save(rateLearningCard(item,Number(button.dataset.grade) as ReviewGrade,now().toISOString(),duration,scheduler))){
            message="Review not durably saved. Export a recovery backup from the library.";draw();return;
          }
          message="Review recorded. The next due date is scheduled by FSRS-7.";
-         reviewId=dueCards().find(c=>c.id!==item.id)?.id??null;revealed=false;revealedStartedAt=null;draw();
+         reviewDuration.reset();reviewId=dueCards().find(c=>c.id!==item.id)?.id??null;revealed=false;draw();
        }catch(error){message=error instanceof Error?error.message:"Scheduling failed";draw();}
      });
      return;
@@ -269,27 +283,48 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
       .map(([label,value])=>'<div class="summary-stat"><small>'+esc(label)+'</small><b>'+esc(value)+'</b></div>').join("")+
     '</div>'+
     '<section class="panel pad learning-scheduler-policy"><h2>FSRS-7 scheduling policy</h2>'+
-    '<p class="fine">Fixed retention remains the default. Cost-ADR is an explicit alternative. Repeated review lapses become leeches; remediation is the default response and automatic suspension is optional.</p>'+
+    '<p class="fine">Fixed retention remains the default. Cost-ADR is an explicit alternative. Repeated review lapses become leeches; remediation is the default response and optional automatic suspension uses ts-fsrs\'s native leech schedule status.</p>'+
     '<div class="learning-evidence-controls"><label>Retention policy <select id="learning-retention-policy">'+
-    '<option value="fixed"'+(revisionSettings.retentionPolicy==="fixed"?' selected':'')+'>Fixed retention</option>'+
-    '<option value="cost-adr"'+(revisionSettings.retentionPolicy==="cost-adr"?' selected':'')+'>Cost-adaptive retention (Cost-ADR)</option></select></label>'+
-    '<label>Fixed target <input id="learning-retention-target" type="number" min="0.01" max="0.99" step="0.01" value="'+revisionSettings.desiredRetention+'"></label>'+
-    '<label>Cost-ADR goal weight <input id="learning-cost-adr-weight" type="number" min="0" max="1024" step="1" value="'+revisionSettings.costAdrGoalWeight+'"></label>'+
+    '<option value="fixed"'+(revisionSettings.policy.kind==="fixed"?' selected':'')+'>Fixed retention</option>'+
+    '<option value="cost-adr"'+(revisionSettings.policy.kind==="cost-adr"?' selected':'')+'>Cost-adaptive retention (Cost-ADR)</option></select></label>'+
+    '<label>Fixed target <input id="learning-retention-target" type="number" min="0.75" max="0.97" step="0.01" value="'+
+      (revisionSettings.policy.kind==="fixed"?revisionSettings.policy.desiredRetention:0.9)+'"'+
+      (revisionSettings.policy.kind==="cost-adr"?' disabled':'')+'></label>'+
+    '<label>Cost-ADR preset <span class="fine">Upstream default adaptive-cost policy</span></label>'+
     '<label>Leech threshold <input id="learning-leech-threshold" type="number" min="1" max="1000" step="1" value="'+revisionSettings.leechThreshold+'"></label>'+
     '<label>Leech action <select id="learning-leech-action"><option value="remediate"'+(revisionSettings.leechAction==="remediate"?' selected':'')+'>Prioritize remediation</option>'+
     '<option value="suspend"'+(revisionSettings.leechAction==="suspend"?' selected':'')+'>Suspend automatically</option></select></label></div>'+
     '<div class="row generic-actions"><button class="btn primary" id="learning-policy-apply">Apply scheduling policy</button></div>'+
     '<h3>Personalized FSRS-7 weights</h3><p class="fine">'+(revisionSettings.optimizerProfile?
       'Active held-out-validated profile · trained '+esc(new Date(revisionSettings.optimizerProfile.trainedAt).toLocaleDateString())+
-      ' · '+revisionSettings.optimizerProfile.evidenceItems+' optimizer items · holdout log loss '+
-      Number(revisionSettings.optimizerProfile.evaluation.holdout.default.logLoss.toFixed(4))+' → '+
-      Number(revisionSettings.optimizerProfile.evaluation.holdout.personalized.logLoss.toFixed(4))+
-      ' · holdout RMSE '+Number(revisionSettings.optimizerProfile.evaluation.holdout.default.rmseBins.toFixed(4))+' → '+
-      Number(revisionSettings.optimizerProfile.evaluation.holdout.personalized.rmseBins.toFixed(4))+
-      ' · cross-validation log loss '+Number(revisionSettings.optimizerProfile.evaluation.crossValidation.logLoss.toFixed(4)):
+      ' · source '+revisionSettings.optimizerProfile.evidence.rawReviews+' raw reviews / '+
+      revisionSettings.optimizerProfile.evidence.rawCards+' cards → '+
+      revisionSettings.optimizerProfile.evidence.retainedItems+' retained optimizer items / '+
+      revisionSettings.optimizerProfile.evidence.retainedCards+' cards · holdout log loss stock '+
+      fsrsMetric(revisionSettings.optimizerProfile.evaluation.holdout.stock.logLoss)+' → personalized '+
+      fsrsMetric(revisionSettings.optimizerProfile.evaluation.holdout.personalized.logLoss)+
+      ' (Δ '+fsrsDelta(revisionSettings.optimizerProfile.evaluation.holdout.stock.logLoss,
+        revisionSettings.optimizerProfile.evaluation.holdout.personalized.logLoss)+')'+
+      ' · holdout RMSE stock '+fsrsMetric(revisionSettings.optimizerProfile.evaluation.holdout.stock.rmseBins)+' → personalized '+
+      fsrsMetric(revisionSettings.optimizerProfile.evaluation.holdout.personalized.rmseBins)+
+      ' (Δ '+fsrsDelta(revisionSettings.optimizerProfile.evaluation.holdout.stock.rmseBins,
+        revisionSettings.optimizerProfile.evaluation.holdout.personalized.rmseBins)+')'+
+      (revisionSettings.optimizerProfile.evaluation.holdout.incumbent?
+        ' · prior active log loss '+fsrsMetric(revisionSettings.optimizerProfile.evaluation.holdout.incumbent.metrics.logLoss)+
+        ' → personalized '+fsrsMetric(revisionSettings.optimizerProfile.evaluation.holdout.personalized.logLoss)+
+        ' (Δ '+fsrsDelta(revisionSettings.optimizerProfile.evaluation.holdout.incumbent.metrics.logLoss,
+          revisionSettings.optimizerProfile.evaluation.holdout.personalized.logLoss)+')'+
+        ' · prior active RMSE '+fsrsMetric(revisionSettings.optimizerProfile.evaluation.holdout.incumbent.metrics.rmseBins)+
+        ' → personalized '+fsrsMetric(revisionSettings.optimizerProfile.evaluation.holdout.personalized.rmseBins)+
+        ' (Δ '+fsrsDelta(revisionSettings.optimizerProfile.evaluation.holdout.incumbent.metrics.rmseBins,
+          revisionSettings.optimizerProfile.evaluation.holdout.personalized.rmseBins)+')':'')+
+      ' · cross-validation log loss '+fsrsMetric(revisionSettings.optimizerProfile.evaluation.crossValidation.logLoss)+
+      ' · cross-validation RMSE '+fsrsMetric(revisionSettings.optimizerProfile.evaluation.crossValidation.rmseBins):
       'Using upstream FSRS-7 default weights.')+
-    ' Raw evidence: '+optimizerEvidence.reviews+' reviews across '+optimizerEvidence.cards+' cards.</p>'+
-    '<p class="fine">The static Practice Desk build can train FSRS-7 locally in a dedicated WebAssembly Worker; no optimizer backend or review-log upload is used. Optimizer intervals use explicit fixed elapsed 24-hour days, matching the runtime <code>dateChrono</code> scheduler; timezone/DST study-day normalization is intentionally not used. Personalized weights activate only after a later chronological holdout beats stock FSRS-7 on log loss without RMSE-bins regression; final 34 weights are then retrained on all evidence. The 64/64/16 evidence floors are reliability guards, not a claim of statistical significance. The Node optimizer remains the native CI/reference path. <code>computeOptimalSteps</code> remains advisory only because upstream does not consider its single-decay fit FSRS-7 model-consistent.</p>'+
+    ' · Current raw export: '+optimizerEvidence.reviews+' reviews across '+optimizerEvidence.cards+' cards · '+
+      optimizerEvidence.continuousDurations+' continuous duration measurements · '+
+      optimizerEvidence.interruptedDurations+' background-interrupted.</p>'+
+    '<p class="fine">The static Practice Desk build can train FSRS-7 locally in a dedicated WebAssembly Worker; no optimizer backend or review-log upload is used. Optimizer intervals use explicit fixed elapsed 24-hour days, matching the runtime <code>dateChrono</code> scheduler; timezone/DST study-day normalization is intentionally not used. Personalized weights activate only when a later chronological holdout has strictly lower log loss than stock FSRS-7 without RMSE-bins regression; a replacement profile must also have strictly lower log loss than the currently active personalized profile on that same holdout. Final 34 weights are then retrained on all retained optimizer evidence. The profile records both raw review/card counts and converter-retained item/card counts; the 64/64/16 evidence floors apply to retained optimizer evidence and are reliability guards, not a claim of statistical significance. The Node optimizer remains the native CI/reference path. <code>computeOptimalSteps</code> remains advisory only because upstream does not consider its single-decay fit FSRS-7 model-consistent.</p>'+
     '<p class="fine" id="learning-optimizer-status" role="status">'+esc(optimizerStatus)+'</p>'+
     '<div class="row generic-actions"><button class="btn primary" id="learning-optimizer-run"'+
       (!optimizerAvailability.available||!optimizerEvidence.reviews||optimizerRun?' disabled':'')+'>Optimize FSRS-7 locally</button>'+
@@ -420,12 +455,17 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
        '<tr><td colspan="4">Complete the same paper revision twice to see a valid comparison.</td></tr>')+
     '</tbody></table></div></section>';
   present(html,"main");
+  root.querySelector<HTMLSelectElement>("#learning-retention-policy")!.onchange=e=>{
+    const fixed=(e.target as HTMLSelectElement).value==="fixed";
+    root.querySelector<HTMLInputElement>("#learning-retention-target")!.disabled=!fixed;
+  };
   root.querySelector<HTMLButtonElement>("#learning-policy-apply")!.onclick=async()=>{
     try{
-      const next=validateRevisionSettings({...revisionSettings,
-       retentionPolicy:root.querySelector<HTMLSelectElement>("#learning-retention-policy")!.value,
-       desiredRetention:Number(root.querySelector<HTMLInputElement>("#learning-retention-target")!.value),
-       costAdrGoalWeight:Number(root.querySelector<HTMLInputElement>("#learning-cost-adr-weight")!.value),
+      const kind=root.querySelector<HTMLSelectElement>("#learning-retention-policy")!.value;
+      const policy=kind==="fixed"
+       ?{kind:"fixed" as const,desiredRetention:Number(root.querySelector<HTMLInputElement>("#learning-retention-target")!.value)}
+       :{kind:"cost-adr" as const,preset:"upstream-default" as const};
+      const next=validateRevisionSettings({...revisionSettings,policy,
        leechThreshold:Number(root.querySelector<HTMLInputElement>("#learning-leech-threshold")!.value),
        leechAction:root.querySelector<HTMLSelectElement>("#learning-leech-action")!.value});
       const nextScheduler=await createRevisionScheduler(revisionSchedulerOptions(next));
@@ -433,7 +473,8 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     }catch(error){message=error instanceof Error?error.message:"Invalid scheduling policy";draw();}
   };
   const activateOptimizerProfile=async(profile:FsrsOptimizerProfile)=>{
-    const next=validateRevisionSettings({...revisionSettings,optimizerProfile:profile});
+    const replacement=assertFsrsOptimizerReplacement(profile,revisionSettings.optimizerProfile);
+    const next=validateRevisionSettings({...revisionSettings,optimizerProfile:replacement});
     const nextScheduler=await createRevisionScheduler(revisionSchedulerOptions(next));
     revisionSettings=writeRevisionSettings(next);scheduler=nextScheduler;cache.clear();
   };
@@ -441,15 +482,19 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     if(optimizerRun)return;
     try{
       optimizerStatus="Preparing FSRS-7 optimizer evidence…";
-      optimizerRun=startBrowserFsrsOptimizer(fsrsOptimizerCsv(all),{onProgress:optimizerProgress});
+      optimizerRun=startBrowserFsrsOptimizer(fsrsOptimizerCsv(all),{
+        onProgress:optimizerProgress,incumbentProfile:revisionSettings.optimizerProfile
+      });
       draw();
       const profile=await optimizerRun.promise;
       await activateOptimizerProfile(profile);
-      optimizerStatus="Personalized FSRS-7 passed the later holdout gate and is active.";
+      optimizerStatus="Personalized FSRS-7 active · "+profile.evidence.rawReviews+" raw reviews / "+
+        profile.evidence.rawCards+" cards → "+profile.evidence.retainedItems+" retained optimizer items / "+
+        profile.evidence.retainedCards+" cards.";
       message="Held-out-validated personalized FSRS-7 weights trained locally and activated.";
     }catch(error){
       if(error instanceof FsrsOptimizerRejectedError)
-        optimizerStatus="Stock FSRS-7 retained · "+error.reasons.join("; ");
+        optimizerStatus="Current FSRS-7 weights retained · "+error.reasons.join("; ");
       else if(error instanceof DOMException&&error.name==="AbortError")
         optimizerStatus="Optimization cancelled; active weights were not changed.";
       else optimizerStatus=error instanceof Error?error.message:"FSRS optimizer failed";
@@ -467,7 +512,9 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     try{
       const profile=validateFsrsOptimizerProfile(JSON.parse(await file.text()));
       await activateOptimizerProfile(profile);
-      optimizerStatus="Imported profile passed Practice Desk's v3 chronology and holdout validation.";
+      optimizerStatus="Imported v5 profile validated · "+profile.evidence.rawReviews+" raw reviews / "+
+        profile.evidence.rawCards+" cards → "+profile.evidence.retainedItems+" retained optimizer items / "+
+        profile.evidence.retainedCards+" cards.";
       message="Held-out-validated personalized FSRS-7 profile imported and activated.";draw();
     }catch(error){message=error instanceof Error?error.message:"Invalid optimizer profile";draw();}
   };
@@ -535,7 +582,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     if(!ok){message="Revision exam was not saved. Check storage and retry.";draw();}
   };
   root.querySelector<HTMLButtonElement>("#learning-due")!.onclick=()=>{
-    reviewId=dueCards()[0]?.id??null;revealed=false;revealedStartedAt=null;message="";draw();
+    reviewDuration.reset();reviewId=dueCards()[0]?.id??null;revealed=false;message="";draw();
   };
   root.querySelector<HTMLSelectElement>("#learning-filter")!.onchange=e=>{
     filter=(e.target as HTMLSelectElement).value as typeof filter;draw();
@@ -597,7 +644,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     }catch(e){message=e instanceof Error?e.message:"Cannot save notebook";draw();}
   };
   root.querySelector<HTMLButtonElement>("#learning-one")!.onclick=()=>{
-    reviewId=selected.id;revealed=false;revealedStartedAt=null;message="";draw();
+    reviewDuration.reset();reviewId=selected.id;revealed=false;message="";draw();
   };
   root.querySelector<HTMLButtonElement>("#learning-delete")!.onclick=async()=>{
     await host.remove(selected.id);
@@ -614,7 +661,8 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
       cache.clear();message="Saved FSRS settings were invalid; safe defaults were restored.";draw();
     }catch(fallback){message="FSRS scheduler failed to initialize.";console.error(fallback);draw();}
   });
- return {show(){opened=true;draw();},hide(){opened=false;previousLearningView="";},
+ return {show(){opened=true;if(reviewId)reviewDuration.visibility(clock(),reviewVisible());draw();},
+  hide(){if(reviewId)reviewDuration.visibility(clock(),false);opened=false;previousLearningView="";},
   select(id:string){selectedId=id;},
-   dispose(){optimizerRun?.cancel();optimizerRun=null;closed=true;previousLearningView="";notebookDrafts.clear();}};
+   dispose(){optimizerRun?.cancel();optimizerRun=null;reviewDuration.reset();document.removeEventListener("visibilitychange",onReviewVisibility);closed=true;previousLearningView="";notebookDrafts.clear();}};
 }

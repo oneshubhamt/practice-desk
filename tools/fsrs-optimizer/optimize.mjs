@@ -11,7 +11,7 @@ import {
 const args=process.argv.slice(2);
 const [input,output,...flagArgs]=args;
 if(!input||!output){
- console.error("Usage: npm run optimize -- <reviews.csv> <profile.json> [--max-seconds=N] [--poll-ms=N]");
+ console.error("Usage: npm run optimize -- <reviews.csv> <profile.json> [--incumbent=profile.json] [--max-seconds=N] [--poll-ms=N]");
  console.error("FSRS-7 conversion is explicitly fixed to elapsed 24-hour days, matching Practice Desk dateChrono runtime scheduling.");
  process.exit(2);
 }
@@ -19,7 +19,7 @@ const inputPath=resolve(input),outputPath=resolve(output),temporaryOutput=output
 if(inputPath===outputPath||inputPath===temporaryOutput)
  throw Error("Input CSV and output profile must use different paths");
 
-let maxSeconds=0,pollMs=250;
+let maxSeconds=0,pollMs=250,incumbentInput=null;
 for(const arg of flagArgs){
  const [name,raw]=arg.split("=",2);
  if(name==="--max-seconds"){
@@ -30,8 +30,14 @@ for(const arg of flagArgs){
   pollMs=Number(raw);
   if(!Number.isSafeInteger(pollMs)||pollMs<50||pollMs>5000)
    throw Error("--poll-ms must be an integer from 50 to 5000");
+ }else if(name==="--incumbent"){
+  if(!raw)throw Error("--incumbent requires a profile path");
+  incumbentInput=resolve(raw);
  }else throw Error("Unknown optimizer option: "+arg);
 }
+if(incumbentInput===outputPath||incumbentInput===temporaryOutput)
+ throw Error("Incumbent profile must not use the optimizer output path");
+const incumbentProfile=incumbentInput?JSON.parse(await readFile(incumbentInput,"utf8")):null;
 await rm(outputPath,{force:true});
 await rm(temporaryOutput,{force:true});
 
@@ -66,7 +72,7 @@ const binding={
 let profile;
 try{
  profile=await runFsrsOptimizerPipeline({
-  binding,bytes,sourceSha256,
+  binding,bytes,sourceSha256,incumbentProfile,
   makeOptions:(cardIds,stage)=>({cardIds,timeout:pollMs,progress:progressFor(stage)}),
   checkpoint
  });
@@ -84,10 +90,12 @@ await writeFile(temporaryOutput,JSON.stringify(profile,null,2)+"\n","utf8");
 await rename(temporaryOutput,outputPath);
 console.log("FSRS-7 profile written:",outputPath);
 console.log("optimizer chronology:",profile.training.chronology);
-console.log("optimizer items:",profile.evidenceItems);
-console.log("holdout log loss: stock",profile.evaluation.holdout.default.logLoss,
+console.log("optimizer evidence: raw",profile.evidence.rawReviews,"reviews across",profile.evidence.rawCards,"cards; retained",profile.evidence.retainedItems,"items across",profile.evidence.retainedCards,"cards");
+console.log("holdout log loss: stock",profile.evaluation.holdout.stock.logLoss,
  "personalized",profile.evaluation.holdout.personalized.logLoss);
-console.log("holdout RMSE bins: stock",profile.evaluation.holdout.default.rmseBins,
+console.log("holdout RMSE bins: stock",profile.evaluation.holdout.stock.rmseBins,
  "personalized",profile.evaluation.holdout.personalized.rmseBins);
+if(profile.evaluation.holdout.incumbent)
+ console.log("incumbent comparison: passed against",profile.evaluation.holdout.incumbent.weightsFingerprint);
 console.log("time-series log loss:",profile.evaluation.crossValidation.logLoss);
 console.log("time-series RMSE bins:",profile.evaluation.crossValidation.rmseBins);

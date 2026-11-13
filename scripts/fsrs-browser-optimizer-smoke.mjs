@@ -67,19 +67,22 @@ try{
    throw Error("Browser optimizer probe returned invalid metrics");
  }else{
   const p=result.profile;
-  if(p?.schema!=="practice-desk-fsrs-profile/v3"||p.training?.chronology!=="elapsed-24h"||
+  if(p?.schema!=="practice-desk-fsrs-profile/v5"||p.training?.chronology!=="elapsed-24h"||
     p.training?.converterFixedUtcOffsetMinutes!==0||p.training?.converterRolloverHour!==0||
-    p.evaluation?.holdout?.gate!=="passed"||!Array.isArray(p.weights)||p.weights.length!==34||
+    p.evaluation?.holdout?.gate!=="passed"||
+    p.evidence?.rawReviews!==rows.length-1||p.evidence?.rawCards!==cards||
+    !(p.evidence?.retainedItems>0)||!(p.evidence?.retainedCards>0)||
+    !Array.isArray(p.weights)||p.weights.length!==34||
     p.weights.some(x=>!Number.isFinite(x))||!Number.isFinite(p.evaluation.crossValidation.logLoss)||
     !Number.isFinite(p.evaluation.crossValidation.rmseBins))
-   throw Error("Full browser optimizer returned an invalid v3 profile");
+   throw Error("Full browser optimizer returned an invalid v5 profile");
   const stages=new Set(result.updates.map(x=>x[0]));
   for(const stage of ["Train validation candidate","Compare later holdout","Retrain final profile on all evidence","Time-series cross-validation"])
    if(!stages.has(stage))throw Error("Full browser optimizer did not exercise stage: "+stage);
  }
  console.log(browserName+" browser/WASM optimizer "+mode+" passed:",JSON.stringify(
   mode==="full"?{
-   evidenceItems:result.profile.evidenceItems,holdout:result.profile.evaluation.holdout,
+   evidence:result.profile.evidence,holdout:result.profile.evaluation.holdout,
    crossValidation:result.profile.evaluation.crossValidation,progressUpdates:result.updates.length
   }:result
  ));

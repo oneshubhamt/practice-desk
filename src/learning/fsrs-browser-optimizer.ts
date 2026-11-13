@@ -8,6 +8,7 @@ export interface BrowserFsrsOptimizerRun{
 }
 export interface BrowserFsrsOptimizerOptions{
  readonly timeoutMs?:number;readonly onProgress?:(progress:BrowserFsrsOptimizerProgress)=>void;
+ readonly incumbentProfile?:FsrsOptimizerProfile|null;
 }
 export class FsrsOptimizerRejectedError extends Error{
  readonly reasons:readonly string[];
@@ -67,7 +68,9 @@ export function startBrowserFsrsOptimizer(csv:string,options:BrowserFsrsOptimize
    }
   });
   worker.addEventListener("error",event=>finishReject(new Error(event.message||"FSRS optimizer Worker crashed")));
-  worker.postMessage({type:"optimize",requestId,csv});
+  const incumbent=options.incumbentProfile?validateFsrsOptimizerProfile(options.incumbentProfile):null;
+  worker.postMessage({type:"optimize",requestId,csv,incumbentProfile:incumbent?
+   {sourceSha256:incumbent.sourceSha256,weights:[...incumbent.weights]}:null});
  });
  return {promise,cancel(){finishReject(new DOMException("FSRS optimization cancelled","AbortError"));}};
 }
