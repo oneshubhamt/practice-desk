@@ -1,0 +1,36 @@
+name: Calendar bundle composition
+on:
+  push:
+    branches: [working]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.13.0'
+          package-manager-cache: false
+      - run: npm ci --no-audit --no-fund
+      - name: Report minified runtime contribution
+        run: |
+          node --input-type=module <<'NODE'
+          import {build} from "esbuild";
+          import {resolve} from "node:path";
+          const result=await build({
+            entryPoints:[resolve("src/app/bootstrap.ts")],bundle:true,write:false,
+            platform:"browser",format:"iife",target:"es2022",minify:true,metafile:true,
+            legalComments:"none",logLevel:"silent"
+          });
+          const rows=Object.entries(result.metafile.inputs).map(([path,data])=>({
+            path,bytes:Object.values(data.imports??{}).length,
+            out:Object.values(result.metafile.outputs).reduce((sum,o)=>sum+(o.inputs?.[path]?.bytesInOutput??0),0)
+          })).sort((a,b)=>b.out-a.out);
+          console.log("RUNTIME_BYTES",result.outputFiles[0].contents.byteLength);
+          console.log("CALENDAR_BYTES",rows.filter(x=>x.path.includes("vendor/calendar/")).reduce((s,x)=>s+x.out,0));
+          console.log(rows.slice(0,35).map(x=>x.out+" "+x.path).join("\n"));
+          NODE
