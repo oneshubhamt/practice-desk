@@ -524,14 +524,15 @@ test("backup preserves notes and FSRS review logs with strict integrity checks",
  const a=complete("backup");
  const original=addLearningCard(a,bundle.questions[0].id,new Date(1030).toISOString());
  const rated=rateLearningCard({...original,note:"Review concept carefully",errorLabel:"conceptual",customTopic:"Topic"},
- Rating.Again,new Date(2030).toISOString(),900,scheduler);
+ Rating.Again,new Date(2030).toISOString(),duration(900),scheduler);
  const archived=verifyBackup(makeBackup([{...a,saveRevision:1},{...rated,saveRevision:1}],
    {schema:1,dark:false,scale:100},"2026-10-29T10:00:00Z"));
  assert.equal(archived.records.length,2);
  const card=validateLearningCard(archived.records.find(x=>x.recordType==="learning-card"));
  assert.equal(card.note,"Review concept carefully");
- assert.equal(card.reviews.length,1);assert.equal(card.reviews[0].durationMs,900);assert.equal(card.reviews[0].state,"new");
- assert.throws(()=>validateLearningCard({...card,reviews:[{rating:9,at:card.updatedAt,durationMs:1,state:"new"}]}),/history/);
+ assert.equal(card.reviews.length,1);assert.equal(card.reviews[0].duration.foregroundMs,900);assert.equal(card.reviews[0].state,"new");
+ assert.throws(()=>validateLearningCard({...card,reviews:[{rating:9,at:card.updatedAt,duration:duration(1),state:"new"}]}),/history/);
+ assert.throws(()=>validateLearningCard({...card,reviews:[{rating:Rating.Again,at:card.updatedAt,durationMs:1,state:"new"}]}),/history/);
  assert.throws(()=>verifyBackup({...archived,records:archived.records.slice(1)}),/integrity/);
 });
 }
