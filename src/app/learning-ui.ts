@@ -292,7 +292,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
       'Using upstream FSRS-7 default weights.')+
       (revisionSettings.optimizerProfile?.evaluation.holdout.incumbent?' · replacement beat prior active profile':'')+
     ' · Raw evidence: '+optimizerEvidence.reviews+' reviews across '+optimizerEvidence.cards+' cards.</p>'+
-    '<p class="fine">The static Practice Desk build can train FSRS-7 locally in a dedicated WebAssembly Worker; no optimizer backend or review-log upload is used. Optimizer intervals use explicit fixed elapsed 24-hour days, matching the runtime <code>dateChrono</code> scheduler; timezone/DST study-day normalization is intentionally not used. Personalized weights activate only after a later chronological holdout clears a practical log-loss improvement floor without RMSE-bins regression; a replacement profile must clear the same gate against both stock FSRS-7 and the currently active personalized profile. Final 34 weights are then retrained on all evidence. The 64/64/16 evidence floors are reliability guards, not a claim of statistical significance. The Node optimizer remains the native CI/reference path. <code>computeOptimalSteps</code> remains advisory only because upstream does not consider its single-decay fit FSRS-7 model-consistent.</p>'+
+    '<p class="fine">The static Practice Desk build can train FSRS-7 locally in a dedicated WebAssembly Worker; no optimizer backend or review-log upload is used. Optimizer intervals use explicit fixed elapsed 24-hour days, matching the runtime <code>dateChrono</code> scheduler; timezone/DST study-day normalization is intentionally not used. Personalized weights activate only when a later chronological holdout has strictly lower log loss than stock FSRS-7 without RMSE-bins regression; a replacement profile must also have strictly lower log loss than the currently active personalized profile on that same holdout. Final 34 weights are then retrained on all evidence. The 64/64/16 evidence floors are reliability guards, not a claim of statistical significance. The Node optimizer remains the native CI/reference path. <code>computeOptimalSteps</code> remains advisory only because upstream does not consider its single-decay fit FSRS-7 model-consistent.</p>'+
     '<p class="fine" id="learning-optimizer-status" role="status">'+esc(optimizerStatus)+'</p>'+
     '<div class="row generic-actions"><button class="btn primary" id="learning-optimizer-run"'+
       (!optimizerAvailability.available||!optimizerEvidence.reviews||optimizerRun?' disabled':'')+'>Optimize FSRS-7 locally</button>'+
@@ -456,7 +456,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
       draw();
       const profile=await optimizerRun.promise;
       await activateOptimizerProfile(profile);
-      optimizerStatus="Personalized FSRS-7 passed the practical stock/incumbent holdout gate and is active.";
+      optimizerStatus="Personalized FSRS-7 passed the stock/incumbent held-out validation gate and is active.";
       message="Held-out-validated personalized FSRS-7 weights trained locally and activated.";
     }catch(error){
       if(error instanceof FsrsOptimizerRejectedError)
@@ -478,7 +478,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     try{
       const profile=validateFsrsOptimizerProfile(JSON.parse(await file.text()));
       await activateOptimizerProfile(profile);
-      optimizerStatus="Imported profile passed Practice Desk's v4 chronology, practical holdout and replacement validation.";
+      optimizerStatus="Imported profile passed Practice Desk's v4 chronology, held-out and replacement validation.";
       message="Held-out-validated personalized FSRS-7 profile imported and activated.";draw();
     }catch(error){message=error instanceof Error?error.message:"Invalid optimizer profile";draw();}
   };
