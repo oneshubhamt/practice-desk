@@ -1,5 +1,5 @@
 export const OPTIMIZER_MODEL_VERSION="FSRS-7";
-export const OPTIMIZER_PROFILE_SCHEMA="practice-desk-fsrs-profile/v4";
+export const OPTIMIZER_PROFILE_SCHEMA="practice-desk-fsrs-profile/v5";
 export const OPTIMIZER_BINDING_VERSION="0.6.1";
 export const OPTIMIZER_BROWSER_CAPABILITY="wasm32-wasip1-"+OPTIMIZER_BINDING_VERSION;
 export const HOLDOUT_SEGMENTS=6;
