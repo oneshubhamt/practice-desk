@@ -63,13 +63,11 @@ try{
   }));
   check(light.bg!==dark.bg&&light.color!==dark.color,
     engine+" Calendar did not follow Practice Desk light/dark semantic tokens");
-  await page.locator("#displayTrigger").click();
   await page.locator("#themeLight").click();
   await page.waitForFunction(()=>document.documentElement.dataset.theme==="light");
 
   const baseCalendarFont=await page.locator("#pd-calendar-mount .dc-root").evaluate(
     el=>Number.parseFloat(getComputedStyle(el).fontSize));
-  await page.locator("#displayTrigger").click();
   for(let i=0;i<8;i++)await page.locator("#fontMore").click();
   await page.waitForFunction(()=>getComputedStyle(document.documentElement)
     .getPropertyValue("--type-scale").trim()==="1.4");
@@ -78,6 +76,7 @@ try{
   check(scaledCalendarFont>=baseCalendarFont*1.35,
     engine+" Calendar did not follow Practice Desk text-scale presentation");
   await page.locator("#fontReset").click();
+  await page.locator("#displayClose").click();
 
   await page.setViewportSize({width:390,height:844});
   await assertNoOverflow(page,engine+" Calendar narrow");
