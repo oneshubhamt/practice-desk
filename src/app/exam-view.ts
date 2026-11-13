@@ -78,7 +78,6 @@ export function renderModelExam(
        (remaining===null?"Untimed":minutes(remaining))+'</strong><small>'+(remaining===null?"UNTIMED PRACTICE":
         paper.timing.kind==="sectional"?"SECTION TIME LEFT":"PAPER TIME LEFT")+'</small></div>'+
      (calculatorEnabled?calculatorToggleHTML(calculator):"")+
-     '<button class="btn quiet" id="g-calendar-exam">Calendar</button>'+
      '<button class="btn quiet" id="g-library">← Library</button>'+
      '<button class="btn" type="button" id="g-exam-full" aria-label="Toggle full-screen test view" aria-pressed="'+
      focused+'">'+(focused?"⛶ Exit full screen":"⛶ Full screen")+'</button></div></div>'+

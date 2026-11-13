@@ -50,10 +50,5 @@ export function drawWorkspaceScreen(owner:ScreenControllerContext,):void{
    };
    if(owner.view==="result"&&owner.attempt){bindResultScreen(owner);return;}
    if(owner.view!=="exam"||!owner.attempt)return;
-   owner.root.querySelector<HTMLButtonElement>("#g-calendar-exam")!.onclick=()=>{
-     if(owner.attempt?.finishedAt===null&&
-       !confirm("Open Calendar? Your test timer will keep running and the attempt can be resumed."))return;
-     owner.go({screen:"calendar"});
-   };
    bindExamScreen(owner);
  }
