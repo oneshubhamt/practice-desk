@@ -7,7 +7,7 @@ export type RevisionSchedulingPolicy=
 export type LeechAction="remediate"|"suspend";
 export type RevisionLeechStatus="normal"|"remediation"|"suspended";
 export interface ReviewObservation{
- readonly at:string;readonly rating:RecallRating;readonly durationMs:number;readonly state:RevisionMemoryState;
+ readonly at:string;readonly rating:RecallRating;readonly state:RevisionMemoryState;
 }
 export interface RevisionSchedule{
  readonly dueAt:Date;readonly scheduledDays:number;readonly state:RevisionMemoryState;
