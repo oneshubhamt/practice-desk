@@ -462,6 +462,16 @@ test("optimizer evidence and evaluated profiles are portable without persisting 
  const settings=__suite_dep_17.validateRevisionSettings({...__suite_dep_17.DEFAULT_REVISION_SETTINGS,
   optimizerProfile:profile,policy:{kind:"cost-adr",preset:"upstream-default"}});
  const options=__suite_dep_17.revisionSchedulerOptions(settings);assert.equal(options.policy.kind,"cost-adr");assert.equal(options.weights.length,34);
+ const personalizedScheduler=await DefaultScheduler(options);
+ assert.equal(personalizedScheduler.configuration.weights,"FSRS-7-custom");
+ const resetSettings=__suite_dep_17.validateRevisionSettings({...settings,optimizerProfile:null});
+ const resetOptions=__suite_dep_17.revisionSchedulerOptions(resetSettings);
+ assert.equal("weights" in resetOptions,false);
+ const resetScheduler=await DefaultScheduler(resetOptions);
+ assert.equal(resetScheduler.configuration.weights,"FSRS-7-default");
+ assert.deepEqual(resetSettings.policy,settings.policy);
+ assert.equal(resetSettings.leechThreshold,settings.leechThreshold);
+ assert.equal(resetSettings.leechAction,settings.leechAction);
  assert.throws(()=>__suite_dep_17.validateRevisionSettings({...settings,policy:{kind:"fixed",desiredRetention:0.74}}),/0.75/);
  assert.throws(()=>__suite_dep_17.validateRevisionSettings({...settings,policy:{kind:"cost-adr",preset:"custom"}}),/preset/);
  assert.throws(()=>__suite_dep_17.validateRevisionSettings({...settings,retentionPolicy:"fixed"}),/Invalid revision settings/);
@@ -736,6 +746,21 @@ const fakeBinding=(personalizedLogLoss=0.4,incumbentLogLoss=0.45)=>({
    return {logLoss:this.weights[0]===9?incumbentLogLoss:personalizedLogLoss,rmseBins:0.2};
   }
  }
+});
+
+test("app profile validation and optimizer runtime protocol constants stay aligned",()=>{
+ assert.equal(__suite_dep_18.FSRS_OPTIMIZER_PROFILE_SCHEMA,__suite_dep_21.OPTIMIZER_PROFILE_SCHEMA);
+ assert.equal(__suite_dep_18.FSRS_OPTIMIZER_BINDING_VERSION,__suite_dep_21.OPTIMIZER_BINDING_VERSION);
+ assert.equal(__suite_dep_18.FSRS_OPTIMIZER_HOLDOUT_STRATEGY,__suite_dep_21.HOLDOUT_STRATEGY);
+ assert.equal(__suite_dep_18.FSRS_OPTIMIZER_MIN_TRAIN_ITEMS,__suite_dep_21.MIN_TRAIN_ITEMS);
+ assert.equal(__suite_dep_18.FSRS_OPTIMIZER_MIN_HOLDOUT_ITEMS,__suite_dep_21.MIN_HOLDOUT_ITEMS);
+ assert.equal(__suite_dep_18.FSRS_OPTIMIZER_MIN_HOLDOUT_CARDS,__suite_dep_21.MIN_HOLDOUT_CARDS);
+ assert.equal(__suite_dep_18.FSRS_OPTIMIZER_CHRONOLOGY,__suite_dep_21.OPTIMIZER_CHRONOLOGY);
+ assert.equal(__suite_dep_18.FSRS_OPTIMIZER_CONVERTER_FIXED_UTC_OFFSET_MINUTES,
+  __suite_dep_21.OPTIMIZER_FIXED_UTC_OFFSET_MINUTES);
+ assert.equal(__suite_dep_18.FSRS_OPTIMIZER_CONVERTER_ROLLOVER_HOUR,__suite_dep_21.OPTIMIZER_ROLLOVER_HOUR);
+ const weights=[...__suite_dep_19.FSRS7_DEFAULT_WEIGHTS];
+ assert.equal(__suite_dep_18.fsrsWeightsFingerprint(weights),__suite_dep_21.fsrsWeightsFingerprint(weights));
 });
 
 test("optimizer raw evidence accounting handles quoted card IDs before upstream retention",()=>{
