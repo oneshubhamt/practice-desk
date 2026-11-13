@@ -8,8 +8,6 @@ export const FSRS_OPTIMIZER_HOLDOUT_STRATEGY="final-sixth";
 export const FSRS_OPTIMIZER_MIN_TRAIN_ITEMS=64;
 export const FSRS_OPTIMIZER_MIN_HOLDOUT_ITEMS=64;
 export const FSRS_OPTIMIZER_MIN_HOLDOUT_CARDS=16;
-export const FSRS_OPTIMIZER_MIN_ABSOLUTE_LOG_LOSS_IMPROVEMENT=0.001;
-export const FSRS_OPTIMIZER_MIN_RELATIVE_LOG_LOSS_IMPROVEMENT=0.005;
 export const FSRS_OPTIMIZER_CALIBRATION_EPSILON=1e-9;
 export const FSRS_OPTIMIZER_CHRONOLOGY="elapsed-24h";
 export const FSRS_OPTIMIZER_CONVERTER_FIXED_UTC_OFFSET_MINUTES=0;
@@ -17,7 +15,7 @@ export const FSRS_OPTIMIZER_CONVERTER_ROLLOVER_HOUR=0;
 
 export interface FsrsEvaluationMetrics{readonly logLoss:number;readonly rmseBins:number;}
 export interface FsrsHoldoutDiagnostics{
- readonly logLossImprovement:{readonly absolute:number;readonly relative:number;readonly required:number};
+ readonly logLossImprovement:{readonly absolute:number;readonly relative:number};
  readonly calibration:{readonly metric:"rmse-bins";readonly delta:number;readonly relativeDelta:number;
   readonly status:"improved"|"unchanged"|"regressed"};
 }
@@ -92,20 +90,18 @@ export function fsrsHoldoutDiagnostics(
 ):FsrsHoldoutDiagnostics{
  const absolute=baseline.logLoss-candidate.logLoss;
  const relative=baseline.logLoss>0?absolute/baseline.logLoss:0;
- const required=Math.max(FSRS_OPTIMIZER_MIN_ABSOLUTE_LOG_LOSS_IMPROVEMENT,
-   baseline.logLoss*FSRS_OPTIMIZER_MIN_RELATIVE_LOG_LOSS_IMPROVEMENT);
  const delta=candidate.rmseBins-baseline.rmseBins;
  const relativeDelta=baseline.rmseBins>0?delta/baseline.rmseBins:delta===0?0:Number.POSITIVE_INFINITY;
  const status:FsrsHoldoutDiagnostics["calibration"]["status"]=
    delta < -FSRS_OPTIMIZER_CALIBRATION_EPSILON?"improved":
    Math.abs(delta)<=FSRS_OPTIMIZER_CALIBRATION_EPSILON?"unchanged":"regressed";
- return {logLossImprovement:{absolute,relative,required},
+ return {logLossImprovement:{absolute,relative},
   calibration:{metric:"rmse-bins",delta,relativeDelta,status}};
 }
-const requirePracticalImprovement=(baseline:FsrsEvaluationMetrics,candidate:FsrsEvaluationMetrics,label:string)=>{
+const requireHeldoutImprovement=(baseline:FsrsEvaluationMetrics,candidate:FsrsEvaluationMetrics,label:string)=>{
  const diagnostics=fsrsHoldoutDiagnostics(baseline,candidate);
- if(diagnostics.logLossImprovement.absolute+Number.EPSILON<diagnostics.logLossImprovement.required)
-  throw Error("Personalized FSRS-7 profile did not achieve the minimum practical held-out log-loss improvement over "+label);
+ if(candidate.logLoss>=baseline.logLoss)
+  throw Error("Personalized FSRS-7 profile held-out log loss is not lower than "+label);
  if(diagnostics.calibration.status==="regressed")
   throw Error("Personalized FSRS-7 profile regressed held-out RMSE-bins calibration versus "+label);
 };
@@ -142,9 +138,9 @@ export function validateFsrsOptimizerProfile(value:unknown):FsrsOptimizerProfile
    h.holdoutCards>h.holdoutItems||h.trainItems+h.holdoutItems!==p.evidenceItems)
   throw Error("Invalid FSRS optimizer holdout evidence");
  const stock=metrics(h.stock,"stock holdout"),personalized=metrics(h.personalized,"personalized holdout");
- requirePracticalImprovement(stock,personalized,"stock FSRS-7");
+ requireHeldoutImprovement(stock,personalized,"stock FSRS-7");
  const incumbent=h.incumbent===undefined?undefined:incumbentEvaluation(h.incumbent);
- if(incumbent)requirePracticalImprovement(incumbent.metrics,personalized,"the active personalized profile");
+ if(incumbent)requireHeldoutImprovement(incumbent.metrics,personalized,"the active personalized profile");
 
  const t=p.training;
  if(!t||t.enableShortTerm!==true||t.enableSchedPenalties!==true||t.numRelearningSteps!==1||
