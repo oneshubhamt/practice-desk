@@ -57,14 +57,27 @@ try{
   }));
   await page.locator("#displayTrigger").click();
   await page.locator("#themeDark").click();
-  await page.waitForFunction(()=>document.documentElement.dataset.theme==="dark");
+  await page.waitForFunction(light=>{
+    if(document.documentElement.dataset.theme!=="dark")return false;
+    const el=document.querySelector("#pd-calendar-mount .dc-root");
+    if(!(el instanceof HTMLElement))return false;
+    const style=getComputedStyle(el);
+    return style.backgroundColor!==light.bg&&style.color!==light.color;
+  },light);
   const dark=await page.locator("#pd-calendar-mount .dc-root").evaluate(el=>({
     bg:getComputedStyle(el).backgroundColor,color:getComputedStyle(el).color
   }));
   check(light.bg!==dark.bg&&light.color!==dark.color,
-    engine+" Calendar did not follow Practice Desk light/dark semantic tokens");
+    engine+" Calendar did not follow Practice Desk light/dark semantic tokens: "+
+    JSON.stringify({light,dark}));
   await page.locator("#themeLight").click();
-  await page.waitForFunction(()=>document.documentElement.dataset.theme==="light");
+  await page.waitForFunction(light=>{
+    if(document.documentElement.dataset.theme!=="light")return false;
+    const el=document.querySelector("#pd-calendar-mount .dc-root");
+    if(!(el instanceof HTMLElement))return false;
+    const style=getComputedStyle(el);
+    return style.backgroundColor===light.bg&&style.color===light.color;
+  },light);
 
   const baseCalendarFont=await page.locator("#pd-calendar-mount .dc-root").evaluate(
     el=>Number.parseFloat(getComputedStyle(el).fontSize));
