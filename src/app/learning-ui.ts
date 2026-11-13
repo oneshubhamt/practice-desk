@@ -292,7 +292,10 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     '<div class="row generic-actions"><button class="btn primary" id="learning-policy-apply">Apply scheduling policy</button></div>'+
     '<h3>Personalized FSRS-7 weights</h3><p class="fine">'+(revisionSettings.optimizerProfile?
       'Active held-out-validated profile · trained '+esc(new Date(revisionSettings.optimizerProfile.trainedAt).toLocaleDateString())+
-      ' · '+revisionSettings.optimizerProfile.evidenceItems+' optimizer items · holdout log loss '+
+      ' · source '+revisionSettings.optimizerProfile.evidence.rawReviews+' raw reviews / '+
+      revisionSettings.optimizerProfile.evidence.rawCards+' cards → '+
+      revisionSettings.optimizerProfile.evidence.retainedItems+' retained optimizer items / '+
+      revisionSettings.optimizerProfile.evidence.retainedCards+' cards · holdout log loss '+
       Number(revisionSettings.optimizerProfile.evaluation.holdout.stock.logLoss.toFixed(4))+' → '+
       Number(revisionSettings.optimizerProfile.evaluation.holdout.personalized.logLoss.toFixed(4))+
       ' · holdout RMSE '+Number(revisionSettings.optimizerProfile.evaluation.holdout.stock.rmseBins.toFixed(4))+' → '+
@@ -300,8 +303,10 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
       ' · cross-validation log loss '+Number(revisionSettings.optimizerProfile.evaluation.crossValidation.logLoss.toFixed(4)):
       'Using upstream FSRS-7 default weights.')+
       (revisionSettings.optimizerProfile?.evaluation.holdout.incumbent?' · replacement beat prior active profile':'')+
-    ' · Raw evidence: '+optimizerEvidence.reviews+' reviews across '+optimizerEvidence.cards+' cards.</p>'+
-    '<p class="fine">The static Practice Desk build can train FSRS-7 locally in a dedicated WebAssembly Worker; no optimizer backend or review-log upload is used. Optimizer intervals use explicit fixed elapsed 24-hour days, matching the runtime <code>dateChrono</code> scheduler; timezone/DST study-day normalization is intentionally not used. Personalized weights activate only when a later chronological holdout has strictly lower log loss than stock FSRS-7 without RMSE-bins regression; a replacement profile must also have strictly lower log loss than the currently active personalized profile on that same holdout. Final 34 weights are then retrained on all evidence. The 64/64/16 evidence floors are reliability guards, not a claim of statistical significance. The Node optimizer remains the native CI/reference path. <code>computeOptimalSteps</code> remains advisory only because upstream does not consider its single-decay fit FSRS-7 model-consistent.</p>'+
+    ' · Current raw export: '+optimizerEvidence.reviews+' reviews across '+optimizerEvidence.cards+' cards · '+
+      optimizerEvidence.continuousDurations+' continuous duration measurements · '+
+      optimizerEvidence.interruptedDurations+' background-interrupted.</p>'+
+    '<p class="fine">The static Practice Desk build can train FSRS-7 locally in a dedicated WebAssembly Worker; no optimizer backend or review-log upload is used. Optimizer intervals use explicit fixed elapsed 24-hour days, matching the runtime <code>dateChrono</code> scheduler; timezone/DST study-day normalization is intentionally not used. Personalized weights activate only when a later chronological holdout has strictly lower log loss than stock FSRS-7 without RMSE-bins regression; a replacement profile must also have strictly lower log loss than the currently active personalized profile on that same holdout. Final 34 weights are then retrained on all retained optimizer evidence. The profile records both raw review/card counts and converter-retained item/card counts; the 64/64/16 evidence floors apply to retained optimizer evidence and are reliability guards, not a claim of statistical significance. The Node optimizer remains the native CI/reference path. <code>computeOptimalSteps</code> remains advisory only because upstream does not consider its single-decay fit FSRS-7 model-consistent.</p>'+
     '<p class="fine" id="learning-optimizer-status" role="status">'+esc(optimizerStatus)+'</p>'+
     '<div class="row generic-actions"><button class="btn primary" id="learning-optimizer-run"'+
       (!optimizerAvailability.available||!optimizerEvidence.reviews||optimizerRun?' disabled':'')+'>Optimize FSRS-7 locally</button>'+
@@ -465,7 +470,9 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
       draw();
       const profile=await optimizerRun.promise;
       await activateOptimizerProfile(profile);
-      optimizerStatus="Personalized FSRS-7 passed the stock/incumbent held-out validation gate and is active.";
+      optimizerStatus="Personalized FSRS-7 active · "+profile.evidence.rawReviews+" raw reviews / "+
+        profile.evidence.rawCards+" cards → "+profile.evidence.retainedItems+" retained optimizer items / "+
+        profile.evidence.retainedCards+" cards.";
       message="Held-out-validated personalized FSRS-7 weights trained locally and activated.";
     }catch(error){
       if(error instanceof FsrsOptimizerRejectedError)
@@ -487,7 +494,9 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     try{
       const profile=validateFsrsOptimizerProfile(JSON.parse(await file.text()));
       await activateOptimizerProfile(profile);
-      optimizerStatus="Imported profile passed Practice Desk's v4 chronology, held-out and replacement validation.";
+      optimizerStatus="Imported v5 profile validated · "+profile.evidence.rawReviews+" raw reviews / "+
+        profile.evidence.rawCards+" cards → "+profile.evidence.retainedItems+" retained optimizer items / "+
+        profile.evidence.retainedCards+" cards.";
       message="Held-out-validated personalized FSRS-7 profile imported and activated.";draw();
     }catch(error){message=error instanceof Error?error.message:"Invalid optimizer profile";draw();}
   };
