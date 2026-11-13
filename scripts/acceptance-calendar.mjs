@@ -84,11 +84,22 @@ try{
   for(let i=0;i<8;i++)await page.locator("#fontMore").click();
   await page.waitForFunction(()=>getComputedStyle(document.documentElement)
     .getPropertyValue("--type-scale").trim()==="1.4");
+  await page.waitForFunction(base=>{
+    const el=document.querySelector("#pd-calendar-mount .dc-root");
+    return el instanceof HTMLElement&&
+      Number.parseFloat(getComputedStyle(el).fontSize)>=base*1.35;
+  },baseCalendarFont);
   const scaledCalendarFont=await page.locator("#pd-calendar-mount .dc-root").evaluate(
     el=>Number.parseFloat(getComputedStyle(el).fontSize));
   check(scaledCalendarFont>=baseCalendarFont*1.35,
-    engine+" Calendar did not follow Practice Desk text-scale presentation");
+    engine+" Calendar did not follow Practice Desk text-scale presentation: "+
+    JSON.stringify({baseCalendarFont,scaledCalendarFont}));
   await page.locator("#fontReset").click();
+  await page.waitForFunction(base=>{
+    const el=document.querySelector("#pd-calendar-mount .dc-root");
+    return el instanceof HTMLElement&&
+      Math.abs(Number.parseFloat(getComputedStyle(el).fontSize)-base)<0.2;
+  },baseCalendarFont);
   await page.locator("#displayClose").click();
 
   await page.setViewportSize({width:390,height:844});
