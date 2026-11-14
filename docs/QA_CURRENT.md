@@ -49,7 +49,9 @@ Normal passing CI does not capture screenshots merely to create evidence.
 
 ## Test design rules
 
-Prefer independent expected values, state models and adversarial counterexamples over implementation mirroring. A changed contract needs a witness that would fail for a plausible semantic defect.
+The Node suite is organized by stable product domains rather than historical programme/pass labels. Architecture rules are checked through the parser-backed resolved import graph in `tests/architecture-boundaries.test.mjs`; line-count, exact-helper-name and source-phrase scans are not architecture oracles.
+
+Prefer independent expected values, state/reference models, tables, metamorphic properties and adversarial counterexamples over implementation mirroring. A changed contract needs a witness that would fail for a plausible semantic defect.
 
 For scoring, preserve six-kind semantics, fractional/partial credit, exclusions and exact denominators. For persistence, challenge stale tabs, CAS revisions, corruption, recovery and additive backup. For authoring, challenge candidate secrecy, source lineage, publication gating and corrupt local state. For learning, challenge scheduling evidence, optimizer activation policy and privacy boundaries. Result/review analytics additionally exercise the 2,000-question package ceiling in Node. Browser tests should exercise actual user journeys rather than duplicate pure-domain assertions.
 
