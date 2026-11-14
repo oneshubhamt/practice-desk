@@ -52,8 +52,8 @@ test("Calendar dependency is pinned to the verified submodule revision",async()=
     readFile(new URL("../.gitmodules",import.meta.url),"utf8"),
     readFile(new URL("../vendor/calendar/package.json",import.meta.url),"utf8")
   ]);
-  assert.match(gitmodules,/path = vendor\\/calendar/);
-  assert.match(gitmodules,/oneshubhamt\\/calendar\\.git/);
+  assert.ok(gitmodules.includes("path = vendor/calendar"));
+  assert.ok(gitmodules.includes("oneshubhamt/calendar.git"));
   const gitHead=(await import("node:child_process")).execFileSync(
     "git",["-C",new URL("../vendor/calendar",import.meta.url).pathname,"rev-parse","HEAD"],
     {encoding:"utf8"}).trim();
