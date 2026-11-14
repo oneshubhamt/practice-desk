@@ -1,98 +1,51 @@
-# Practice Desk — current QA contract
+# Practice Desk — permanent QA contract
 
-This is the active human-readable verification contract for the current `working` branch. Historical programme-specific runs and implementation diaries belong in [HISTORY_INDEX.md](HISTORY_INDEX.md). The executable sources of truth are the test files, `scripts/node-suite.mjs`, `scripts/acceptance-suite.mjs`, `scripts/mutation-sensitivity.mjs` and [CI](../.github/workflows/ci.yml).
+**Canonical contract:** one Node test inventory, one tagged browser registry, one guarded release publisher. Executable truth lives in `tests/`, `scripts/node-suite.mjs`, `scripts/acceptance-suite.mjs`, `scripts/mutation-sensitivity.mjs`, and [CI](../.github/workflows/ci.yml). Historical rationale, evidence maps and measured changes: [QA census](QA_CENSUS.md) · [Pass E risk/case ledger](QA_PASS_E.md) · [Pass F](QA_PASS_F.md) · [Pass G](QA_PASS_G.md) · [Pass H](QA_PASS_H.md).
 
-The suite census and completed consolidation/equivalence evidence are recorded in [QA_CENSUS.md](QA_CENSUS.md).
+## Required gates and publication authority
 
-Pass E's invariant-level audit and case ledger are in [QA_PASS_E.md](QA_PASS_E.md) and [QA_PASS_E_CASE_REGISTER.tsv](QA_PASS_E_CASE_REGISTER.tsv). The verified Pass F canonicalisation, assertion-witness mapping and before/after evidence are in [QA_PASS_F.md](QA_PASS_F.md). Pass G adds source-backed independent state/property evidence in [QA_PASS_G.md](QA_PASS_G.md).
+| Gate | When | Non-negotiable scope |
+|---|---|---|
+| **Fast** | Every relevant PR/push | Node **26.13.0**, locked dependencies, strict TS, deterministic offline HTML, **443** non-deep Node tests, isolated FSRS optimizer smoke and static Worker/WASM build |
+| **Smoke** | Every relevant PR/push; needs Fast | **6** real Chrome journeys including candidate→History and author→Publish→Review; complete browser/WASM optimizer activation |
+| **Cross** | Every relevant PR/push; needs Fast | **4** genuine engine-sensitive scenarios **each** on Playwright Firefox and WebKit, plus WASM optimizer probes on both |
+| **Deep** | Push to `working`; needs Fast | **7** scale/benchmark Node cases, **14** named assertion-killed mutations, native/WASM parity and **8** remaining Chrome browser scenarios |
+| **Publish** | Push to `working` **only** | Requires **successful Fast + Smoke + both Cross legs + Deep**; checks tested-head ancestry, no unverified source/CI/artifact drift, publishes only the tested deterministic HTML |
 
-## Required toolchain
+The full Node inventory is **39 files / 450 cases** (443 fast + 7 deep). The browser registry has **14 scenarios / 22 engine executions**. The deep gate is not a routine PR gate, but **no `working` publication can bypass it**. Markdown-only changes do not trigger executable CI. Never weaken a required gate solely to improve timings.
 
-Use Node.js **26.13.0** with the committed lockfiles. The main application and isolated FSRS optimizer dependency graphs must both install cleanly from those locks.
-
-Useful local entry points:
+## Local reproducibility
 
 ```bash
 npm ci --no-audit --no-fund
-
-# Fast deterministic lane: 36 Node files / 443 tests plus type/build.
 npm run qa:fast
-
-# Deep Node subset: 3 scale/benchmark files / 7 tests.
 npm run qa:deep
 node scripts/mutation-sensitivity.mjs
-
 npm ci --prefix tools/fsrs-optimizer --no-audit --no-fund
 npm run --prefix tools/fsrs-optimizer smoke
 npm run --prefix tools/fsrs-optimizer parity
 npm run build:static
-
-# Browser lanes.
 node scripts/acceptance-suite.mjs chromium --tag=smoke
 node scripts/acceptance-suite.mjs chromium --tag=deep
 node scripts/acceptance-suite.mjs firefox --tag=cross-browser
 node scripts/acceptance-suite.mjs webkit --tag=cross-browser
-
-# Optional focused capability run.
-node scripts/acceptance-suite.mjs chromium --tag=storage
 ```
 
-The browser suites require the corresponding Playwright browser binaries. The protected CI workflow installs them on GitHub-hosted runners and is the normal full-system verification path.
+Install the locked browser toolchain and its host dependencies when running locally. Chrome smoke/deep (including the Chromium WASM probe) use the **same installed Chrome binary**; Firefox/WebKit use their separately installed Playwright browsers. Acceptance scenarios use one process per engine, **fresh contexts and serial journeys**. CI runs independent lanes concurrently only after the Fast artifact gate. Never parallelize journeys that share harness context teardown, IndexedDB/profile state or browser-global fixtures.
 
-Markdown-only pushes and pull requests are excluded from runtime CI because Markdown is not a build input. Any source, test, build, dependency or workflow change enters the applicable executable gates.
+## Quality invariants and selection
 
-## Required CI gates
+- **Scoring:** independent six-kind and seeded policy reference ledgers, exact fractional penalties and partial credit, exclusions, per-item/section identities, manual-pending and semantic mutations.
+- **Timing/session:** independent clocks, visibility/pause/section expiry, visit and answer evidence, terminal immutability, restore/rebase, event batching invariance.
+- **Persistence:** CAS, stale tabs, shared snapshot SHA, backups, intentional deletion, corrupt rows, fallback/read/quota failures and atomic publication retries.
+- **Authoring:** signed lineage, reviewer evidence, exact publication revision, pre-reveal private-key and explanation isolation, QA refusal, offline browser publish→score→review→reload.
+- **Learning:** deterministic scheduling/replay, upstream/native/WASM parity, actual browser Worker activation, explicit optimizer/profile privacy.
+- **UI/security:** actual browser paint, ARIA/keyboard/focus, file navigation, responsive 195px/140% layout, media, CSP, no remote dependence.
 
-The workflow is deliberately cost-tiered.
+For every proposed test deletion or move, first name **risk → invariant → surviving independent witness → cheapest valid layer**. Preserve real subprocesses for CLI transactions, actual IndexedDB and browser/process-restart witnesses, and meaningful security/a11y assertions. Mere source phrases, CSS classes or success-only mocks are not proof. The **14 mutants** require baseline-green and the named test's assertion failure; they are sensitivity spot checks, **not** a global mutation score.
 
-- **Fast — every source PR/push.** Strict TypeScript, deterministic standalone build, the **443 non-deep Node tests**, clean dependency graphs, native FSRS optimizer smoke and the source-verified static Worker/WASM build. This is the earliest deterministic feedback lane.
-- **Smoke — every source PR/push.** Six critical Chromium user journeys tagged `smoke` plus the complete browser/WASM optimizer activation path.
-- **Cross — every source PR/push.** The four scenarios tagged `cross-browser` on Firefox and WebKit, plus the browser/WASM optimizer probe. Do not replicate Chromium-only product policy here.
-- **Deep — required on `working` release pushes.** Three scale/benchmark Node files (**7 tests**), the **14 targeted semantic mutants**, native/WASM optimizer parity and eight Chromium scenarios tagged `deep`. Ordinary pull requests do not pay this cost.
-- **Guarded publisher — `working` only.** Publication occurs only after fast, smoke, both cross-browser legs and deep pass on the tested source ancestry; source drift aborts publication.
+## Timing, evidence and limits
 
-The complete Node inventory is **39 files / 450 tests**: 443 fast + 7 deep. `npm run check` still runs the complete Node suite when explicitly requested, but the CI lane split avoids paying deep costs in the earliest feedback path.
+`scripts/timed-run.mjs` reports per-lane `QA_TIMING` JSON; Node reporter gives case timings; `scripts/acceptance-suite.mjs` emits scenario IDs/outcomes. Compare repeated green runs on **the same source** and separate setup, execution, runner contention and guarded-publication wall time. Do not enforce arbitrary millisecond thresholds. Keep expensive reviewer-authority checks in Fast: moving them to a release-only gate would weaken PR screening. Retain WebKit dependencies rather than silently substituting Chrome for a different engine.
 
-## Timing evidence
-
-`scripts/timed-run.mjs` wraps timed CI commands. It emits a machine-readable `QA_TIMING` JSON record, appends JSONL to the lane artifact, and writes a concise GitHub step-summary entry.
-
-Treat timing values as observations, not thresholds. GitHub-hosted provisioning, browser installation and machine contention vary; timing evidence is intended to reveal sustained regressions and support lane placement, not create brittle millisecond budgets.
-
-## Browser test design
-
-The browser registry is capability/risk tagged rather than filename driven. Chromium owns the complete retained browser-risk surface; Firefox/WebKit own only genuine engine-sensitive scenarios.
-
-Browser tests should exercise visible user behaviour and browser-specific contracts instead of duplicating pure-domain mathematics. Prefer Playwright role/name and other user-facing locators for visible interactions. Stable IDs/data attributes remain appropriate for hidden file inputs, immutable persisted-record identities, exact diagnostic surfaces or other technical evidence where the identifier itself is part of the contract.
-
-Each scenario must be independently runnable. Helpers must wait for their own setup state rather than relying on a previous scenario to have selected a family, rendered an edition control or hydrated imported content.
-
-For deliberate visual evidence only:
-
-```bash
-PRACTICE_DESK_VISUAL_REVIEW=1 node scripts/acceptance-suite.mjs chromium
-```
-
-Normal passing CI does not capture screenshots merely to create evidence.
-
-## Node test design
-
-The Node suite is organized by stable product domains rather than historical programme/pass labels. Related tests use named domain-registration functions and shared test-only CLI/temporary-directory helpers; incidental layout/text snapshots are not substitutes for state, accessibility or actual browser witnesses. Architecture rules are checked through the parser-backed resolved import graph in `tests/architecture-boundaries.test.mjs`; line-count, exact-helper-name and source-phrase scans are not architecture oracles.
-
-Prefer independent expected values, state/reference models, tables, metamorphic properties and adversarial counterexamples over implementation mirroring. A changed contract needs a witness that would fail for a plausible semantic defect.
-
-For scoring, preserve six-kind semantics, fractional/partial credit, exclusions and exact denominators. For persistence, challenge stale tabs, CAS revisions, corruption, recovery and additive backup. For authoring, challenge candidate secrecy, source lineage, publication gating and corrupt local state. For learning, challenge scheduling evidence, optimizer activation policy and privacy boundaries.
-
-The mutation suite is intentionally targeted: every listed mutant must have a green baseline and then fail for the named assertion. It is **not** a repository-wide mutation score.
-
-## Equivalence status
-
-The former 33/21 historical browser suite was restored temporarily from its verified Pass-B commit and run side by side with the canonical tagged suite against the same current source. All old and new engine legs passed, all 33 legacy Chromium scenarios were mapped to surviving browser/Node witnesses, and the original targeted mutation set remained **10/10 killed** (Pass D historical equivalence). The current Pass G sensitivity audit is **14/14 killed**.
-
-The temporary legacy runner, historical acceptance scripts and equivalence auditor were then deleted. They are not part of the current QA topology; historical measurements are recorded in [QA_CENSUS.md](QA_CENSUS.md).
-
-## What automated QA does not prove
-
-Green CI establishes the bounded software contracts encoded by the suite. It does **not** independently prove factual correctness of question banks, statutory currency, authenticity of third-party source reproductions, human reviewer identity, physical-device behavior, native Mac Safari behavior, assistive-technology usability, or survival of browser data after OS/profile loss.
-
-Those risks belong in the active [backlog](../backlog.md). Historical measurements and prior verification runs remain available through [HISTORY_INDEX.md](HISTORY_INDEX.md), but an old green run never substitutes for verification of the present source.
+Passing CI does **not** establish historical PYQ authenticity, current legal facts, real reviewer identity, physical-device Safari, assistive-technology usability or survival of power loss/OS-profile loss. Address those outside the bounded automated contracts. See [Pass H](QA_PASS_H.md) for the latest measured economics, exact survivor mapping and closure evidence.
