@@ -9,7 +9,7 @@ import {createHash} from "node:crypto";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {fileURLToPath} from "node:url";
-import ts from "typescript";
+import {transformSync} from "esbuild";
 
 const root=fileURLToPath(new URL("../",import.meta.url));
 const mutants=[
@@ -85,96 +85,71 @@ const summary=[];
  * Each predicate also identifies the target operation/function or owned property.
  * A missing or ambiguous node aborts the gate, never counts as a killed mutant.
  */
-function mutateSource(source,spec){
- const ast=ts.createSourceFile(spec.path,source,ts.ScriptTarget.Latest,true,
-  spec.path.endsWith(".mjs")?ts.ScriptKind.JS:ts.ScriptKind.TS);
- if(ast.parseDiagnostics.length)
-  throw Error("Mutation target cannot be parsed: "+spec.id);
- const pathOf=node=>{
-  if(ts.isIdentifier(node))return node.text;
-  if(ts.isPropertyAccessExpression(node)){
-   const lhs=pathOf(node.expression);
-   return lhs?lhs+"."+node.name.text:null;
-  }
-  return null;
- };
- const inFunction=(node,name)=>{
-  for(let parent=node.parent;parent;parent=parent.parent)
-   if(ts.isFunctionDeclaration(parent)&&parent.name?.text===name)return true;
-  return false;
- };
- const num=(node,value)=>ts.isNumericLiteral(node)&&Number(node.text)===value;
- const edits=[];
- const capture=(node,text)=>edits.push({start:node.getStart(ast),end:node.getEnd(),text});
- function visit(node){
-  switch(spec.id){
-   case "scoring-unanswered-confused-with-wrong":
-    if(ts.isBinaryExpression(node)&&node.operatorToken.kind===ts.SyntaxKind.EqualsToken&&
-       pathOf(node.left)==="marks"&&pathOf(node.right)==="rule.unansweredMarks")
-     capture(node.right,"rule.incorrectMarks");
-    break;
-   case "stored-recovery-equal-version-not-protected":
-    if(ts.isBinaryExpression(node)&&node.operatorToken.kind===ts.SyntaxKind.GreaterThanEqualsToken&&
-       pathOf(node.left)==="stored.saveRevision"&&pathOf(node.right)==="mirror.saveRevision")
-     capture(node.operatorToken,">");
-    break;
-   case "CAS-next-write-skips-one-revision":
-    if(ts.isReturnStatement(node)&&node.expression&&ts.isBinaryExpression(node.expression)&&
-       node.expression.operatorToken.kind===ts.SyntaxKind.PlusToken&&
-       pathOf(node.expression.left)==="expected"&&num(node.expression.right,1))
-     capture(node.expression.right,"2");
-    break;
-   case "publisher-unilaterally-inflates-correct-marks":
-    if(ts.isPropertyAssignment(node)&&node.name.getText(ast)==="correctMarks"&&
-       pathOf(node.initializer)==="d.marksCorrect")
-     capture(node.initializer,"d.marksCorrect+0.5");
-    break;
-   case "rich-source-silently-trims-candidate-text":
-    if(ts.isShorthandPropertyAssignment(node)&&node.name.text==="text"&&
-       inFunction(node,"plainRichDocument"))
-     capture(node,"text:text.trim()");
-    break;
-   case "learning-incorrect-evidence-threshold":
-    if(ts.isBinaryExpression(node)&&node.operatorToken.kind===ts.SyntaxKind.LessThanToken&&
-       pathOf(node.left)==="r.answered"&&num(node.right,10))
-     capture(node.right,"100");
-    break;
-   case "six-kind-multi-select-matches-on-overlap-instead-of-exact-set":
-    if(ts.isCallExpression(node)&&ts.isPropertyAccessExpression(node.expression)&&
-       pathOf(node.expression.expression)==="a.optionIds"&&node.expression.name.text==="every")
-     capture(node.expression.name,"some");
-    break;
-   case "backup-sha256-payload-integrity-skipped":
-    if(ts.isBinaryExpression(node)&&
-       node.operatorToken.kind===ts.SyntaxKind.ExclamationEqualsEqualsToken&&
-       pathOf(node.left)==="manifest.digest"&&ts.isCallExpression(node.right)&&
-       pathOf(node.right.expression)==="digest")
-     capture(node,"false");
-    break;
-   case "pdf-eof-signature-check-skipped":
-    if(ts.isPrefixUnaryExpression(node)&&node.operator===ts.SyntaxKind.ExclamationToken&&
-       ts.isCallExpression(node.operand)&&
-       ts.isPropertyAccessExpression(node.operand.expression)&&
-       node.operand.expression.name.text==="includes"&&
-       node.operand.arguments.some(arg=>ts.isStringLiteral(arg)&&arg.text==="%%EOF"))
-     capture(node,"false");
-    break;
-   case "fsrs-ratings-silently-rewritten":
-    if(ts.isShorthandPropertyAssignment(node)&&node.name.text==="rating"&&
-       inFunction(node,"rateLearningCard"))
-     capture(node,"rating:1");
-    break;
-   default:throw Error("Unrecognized semantic mutation "+spec.id);
-  }
-  ts.forEachChild(node,visit);
+/**
+ * Mutation selectors express an operation and its owning context, tolerate
+ * whitespace/formatting, and require a *unique* match. esbuild parses the
+ * original and mutated TS/JS, so parse failures cannot count as killed mutants.
+ * This avoids dependency on the unavailable TypeScript 7 JavaScript AST API.
+ * A true rename of the semantic operation requires updating its contract here.
+ */
+const mutations={
+ "scoring-unanswered-confused-with-wrong":{
+  pattern:/\bmarks\s*=\s*rule\s*\.\s*unansweredMarks\s*;/g,
+  edit:s=>s.replace(/\bunansweredMarks\b/,"incorrectMarks")
+ },
+ "stored-recovery-equal-version-not-protected":{
+  pattern:/\bstored\s*\.\s*saveRevision\s*>=\s*mirror\s*\.\s*saveRevision\b/g,
+  edit:s=>s.replace(">=",">")
+ },
+ "CAS-next-write-skips-one-revision":{
+  pattern:/\breturn\s+expected\s*\+\s*1\s*;/g,
+  edit:s=>s.replace(/\b1\b/,"2")
+ },
+ "publisher-unilaterally-inflates-correct-marks":{
+  pattern:/\bscoring\s*:\s*\{\s*defaultRule\s*:\s*\{\s*correctMarks\s*:\s*d\s*\.\s*marksCorrect\b/g,
+  edit:s=>s+"+0.5"
+ },
+ "rich-source-silently-trims-candidate-text":{
+  pattern:/\bblocks\s*:\s*\[\s*\{\s*type\s*:\s*["']paragraph["']\s*,\s*content\s*:\s*\[\s*\{\s*type\s*:\s*["']text["']\s*,\s*text\s*\}\s*\]\s*\}\s*\]/g,
+  edit:s=>s.replace(/\btext(?=\s*\}\s*\]\s*\}\s*\]$)/,"text:text.trim()")
+ },
+ "learning-incorrect-evidence-threshold":{
+  pattern:/\br\s*\.\s*answered\s*<\s*10\b/g,
+  edit:s=>s.replace(/\b10\b/,"100")
+ },
+ "six-kind-multi-select-matches-on-overlap-instead-of-exact-set":{
+  pattern:/\ba\s*\.\s*optionIds\s*\.\s*every\s*\(/g,
+  edit:s=>s.replace(/\bevery\b/,"some")
+ },
+ "backup-sha256-payload-integrity-skipped":{
+  pattern:/\bmanifest\s*\.\s*digest\s*!==\s*digest\s*\(\s*core\s+as\s+Core\s*\)/g,
+  edit:()=> "false"
+ },
+ "pdf-eof-signature-check-skipped":{
+  pattern:/!\s*bytes\s*\.\s*subarray\s*\(\s*-2048\s*\)\s*\.\s*toString\s*\(\s*["']ascii["']\s*\)\s*\.\s*includes\s*\(\s*["']%%EOF["']\s*\)/g,
+  edit:()=> "false"
+ },
+ "fsrs-ratings-silently-rewritten":{
+  pattern:/\breviews\s*:\s*\[\s*\.\.\.\s*item\s*\.\s*reviews\s*,\s*\{\s*rating(?=\s*[},])/g,
+  edit:s=>s.replace(/\brating$/,"rating:1")
  }
- visit(ast);
- if(edits.length!==1)throw Error("Expected one semantic mutation site for "+
-  spec.id+"; found "+edits.length);
- const {start,end,text}=edits[0];
- if(source.slice(start,end)===text)throw Error("Mutation did not modify source: "+spec.id);
- return source.slice(0,start)+text+source.slice(end);
+};
+function mutateSource(source,spec){
+ const rule=mutations[spec.id];
+ if(!rule)throw Error("No semantic mutation rule for "+spec.id);
+ const loader=spec.path.endsWith(".ts")?"ts":"js";
+ const parse=code=>transformSync(code,{loader,target:"esnext",logLevel:"silent"});
+ parse(source);
+ const hits=[...source.matchAll(rule.pattern)];
+ if(hits.length!==1)throw Error("Expected one semantic operation for "+
+   spec.id+"; found "+hits.length);
+ const hit=hits[0],edited=rule.edit(hit[0]);
+ if(edited===hit[0])throw Error("Semantic mutant did not change source: "+spec.id);
+ const changed=source.slice(0,hit.index)+edited+source.slice(hit.index+hit[0].length);
+ parse(changed);
+ return changed;
 }
+
 function runNamed(test){
  const cmd=[ "--test","--test-reporter=tap",
   "--test-name-pattern=^"+reEscape(test.testName)+"$",
