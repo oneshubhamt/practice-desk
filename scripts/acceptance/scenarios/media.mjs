@@ -17,9 +17,9 @@ const requests=[];
 page.on("request",request=>{
  if(/^https?:/i.test(request.url()))requests.push(request.url());
 });
-const source=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
-const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
-const solutions=JSON.parse(await readFile(new URL("../src/content/solutions.json",import.meta.url)));
+const source=JSON.parse(await readFile(new URL("../../../src/content/papers.json",import.meta.url)));
+const patches=JSON.parse(await readFile(new URL("../../../src/content/patches.json",import.meta.url)));
+const solutions=JSON.parse(await readFile(new URL("../../../src/content/solutions.json",import.meta.url)));
 const pkg=builtinCglPackages(source,patches,solutions).find(x=>
  x.paper.paperId==="cgl-2026-10-08"&&x.paper.edition==="reviewed");
 check(Boolean(pkg),"P47-3 reviewed 8 October CGL fixture missing");
