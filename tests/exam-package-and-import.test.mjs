@@ -391,7 +391,6 @@ test("engine response validator gates six kinds independently from UI controls",
 // P42: adversarial imported-data envelopes; keep these beside the existing
 // import/package capability tests rather than adding a chronological suite.
 {
-const test=test,assert=assert;
 const {pkg}=__suite_dep_6;
 const {validateExamPackage,validateExamImportBudget}=__suite_dep_3;
 const {compileExternalQuestionBank}=__suite_dep_9;
