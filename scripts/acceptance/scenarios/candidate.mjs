@@ -82,6 +82,12 @@ try{
   await page.reload({waitUntil:"load"});await route(page,"history");
   check(await page.locator('[data-attempt="'+attemptId+'"]').count()===1,
    "reloading History lost frozen attempt");
+  const restored=(await records(page)).find(x=>x.id===attemptId);
+  check(restored?.frozen?.paper?.id===snapshot.frozen.paper.id&&
+    restored?.result?.snapshot?.earnedMarks===snapshot.result.snapshot.earnedMarks&&
+    restored?.result?.items?.length===snapshot.result.items.length&&
+    restored?.completionReason===snapshot.completionReason,
+    "History restore changed frozen revision, score ledger or completion provenance");
   await assertNoOverflow(page,"CGL History");
  });
  await scenario("six-kinds-manual-assessment-and-fsrs",async page=>{
@@ -128,6 +134,12 @@ try{
   check(persisted.manualGrades?.some(x=>x.marks===1.5)&&
     persisted.result.snapshot.earnedMarks===row.result.snapshot.earnedMarks,
    "manual self-mark changed frozen machine score or failed to persist");
+  await page.reload({waitUntil:"load"});await route(page,"library");
+  const restoredManual=(await records(page)).find(x=>x.id===row.id);
+  check(restoredManual?.manualGrades?.some(x=>x.marks===1.5)&&
+    restoredManual.result.snapshot.earnedMarks===row.result.snapshot.earnedMarks&&
+    restoredManual.result.items[5].verdict==="pending",
+    "Reload lost manual evidence or incorrectly rewrote frozen machine results");
   await page.locator('[data-attempt="'+row.id+'"]').first().click();await route(page,"result");
   await page.locator("#result-tab-review").click();
   await page.locator("[data-add-card]").first().click();

@@ -97,7 +97,7 @@ test("G scoring: seeded independent six-kind fractional ledger survives policy p
     ["unanswered","unansweredCount"],["excluded","excludedCount"]])
     assert.equal(result.snapshot[keyName],expected.filter(x=>x.verdict===verdict).length,label+" "+keyName);
   const ceiling=changedQuestions.reduce((total,q,i)=>total+
-   (q.editorial.status==="invalid"?0:rules[i].correctMarks),0);
+   (q.editorial.status==="invalid"||q.content.kind==="free-response"?0:rules[i].correctMarks),0);
   close(scoreableMaximum(paper,key,changedQuestions),ceiling,label+" eligible ceiling");
 
   // Section composition is additive; input order, answer-key order and

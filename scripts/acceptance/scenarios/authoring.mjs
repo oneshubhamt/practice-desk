@@ -98,6 +98,15 @@ try{
  const reread=(await records(page)).find(x=>x.recordType==="generic-attempt"&&x.packageId===paperId);
  check(reread?.frozen?.questions?.[0]?.contentHash===originalHash,
   "Reload mutated the immutable published question SHA");
+ const restoredPackage=(await records(page)).find(x=>
+  x.recordType==="generic-package"&&x.bundle?.paper?.id===paperId);
+ check(restoredPackage?.bundle?.answerKey?.contentHash===record.bundle.answerKey.contentHash&&
+  reread?.result?.snapshot?.earnedMarks===scored.result.snapshot.earnedMarks&&
+  reread?.completionReason===scored.completionReason,
+  "Reload crossed private-key, publication revision or completed-score boundaries");
+ await page.locator(".worked-solution").first().locator("summary").click();
+ check((await page.locator(".worked-solution").first().innerText()).includes("WORKED-SOLUTION-SECRET"),
+  "Restored post-submission review lost the authored private explanation");
  check(requestUrls.length===0,"Authoring/publishing triggered remote HTTP requests: "+requestUrls.join(", "));
  check(errors.length===0,"Browser errors: "+errors.join(" / "));
  console.log("P47-5D PUBLICATION PASS "+engine+": invalid draft rejected, source/key/hash published, scored, review/reload, offline");

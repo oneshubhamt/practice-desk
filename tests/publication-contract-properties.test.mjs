@@ -81,10 +81,10 @@ test("G publication: invalid mutations fail closed; revision increase is append-
   ];
   for(const change of bad){
    const draft=structuredClone(original);change(draft);
-   const report=inspectAuthoringPublication(draft,[first]);
+   const report=inspectAuthoringPublication(draft);
    assert.equal(report.valid,false,"bad input incorrectly marked ready");
    assert.equal(report.compiled,undefined,"invalid report cannot carry executable package");
-   assert.throws(()=>compileAuthoringPublication(draft,[first]));
+   assert.throws(()=>compileAuthoringPublication(draft));
    assert.equal(JSON.stringify(first),frozen,"refused attempt modified existing published revision");
   }
   assert.throws(()=>compileAuthoringPublication(original,[first]),/published|Revision/i);

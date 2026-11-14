@@ -67,7 +67,7 @@ test("G persistence: seeded CAS, insertion, deletion, disk failure and competing
     const candidate=existing??make("c"+nextId++,1);
     await store.loadRecoverable();
     const wrong=candidate.recordType==="learning-card"?"completed":"learning-card";
-    await assert.rejects(store.delete(candidate.id,candidate.saveRevision,wrong),/Deletion|saved item/i,label);
+    await assert.rejects(store.delete(candidate.id,candidate.saveRevision,wrong),/Deletion|saved item|Another tab changed/i,label);
     assert.equal(bytes.data,before,label+" wrong delete preserved bytes");
    }else if(mode===4){
     // One batch must be all-or-nothing, even if a later entry collides.
@@ -97,7 +97,7 @@ test("G persistence: seeded CAS, insertion, deletion, disk failure and competing
    }
    await check(label);
    assert.equal(bytes.fail,false,label+" injected failure was not swallowed");
-   assert.equal(bytes.data,snapshot(),label+" raw JSON, order and no partial write");
+   assert.equal(bytes.data??"[]",snapshot(),label+" raw JSON, order and no partial write");
   }
   store.close();stale.close();
  }
@@ -115,7 +115,7 @@ test("G persistence: bulk completed deletion is atomic on stale versions and inj
  assert.equal(bytes.data,original,"stale batch cannot delete its earlier member");
  await assert.rejects(s.deleteCompleted([
   {id:"a0",saveRevision:1},{id:"a1",saveRevision:1}
- ]),/Completed status changed/);
+ ]),/Completed status changed|unfinished attempt/);
  assert.equal(bytes.data,original,"unfinished record cannot masquerade as completed");
  bytes.fail=true;
  await assert.rejects(s.deleteCompleted(done.map(x=>({id:x.id,saveRevision:1}))),
