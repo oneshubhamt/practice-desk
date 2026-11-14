@@ -21,8 +21,13 @@ async function walk(dir){
 }
 const sourceFiles=(await walk(srcRoot)).map(rel).sort();
 const parsed=await build({
- absWorkingDir:root,entryPoints:sourceFiles,bundle:false,write:false,metafile:true,
- outdir:".qa-import-graph",outbase:"src",format:"esm",platform:"browser",
+ absWorkingDir:root,
+ stdin:{
+  contents:sourceFiles.map(file=>'import "./'+file+'";').join("\n"),
+  resolveDir:root,sourcefile:"qa-import-graph.ts",loader:"ts"
+ },
+ bundle:true,packages:"external",external:["@director/calendar","@director/calendar/*"],
+ write:false,metafile:true,format:"esm",platform:"browser",
  target:"es2022",logLevel:"silent",tsconfig:"tsconfig.json"
 });
 assert.ok(parsed.metafile);
