@@ -25,7 +25,7 @@ try{
  await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
  await page.locator("input[data-choice]").first().click();
  const attemptId=new URL(await page.url()).searchParams.get("attempt");
- await page.getByRole("button",{name:/Library/}).click();await route(page,"library");
+ await page.getByRole("button",{name:/library/i}).click();await route(page,"library");
  const departed=await until(async()=>{
   const x=(await records(page)).find(x=>x.id===attemptId);
   return x?.state.visible===false&&x.saveRevision>0?x:null;
@@ -115,7 +115,7 @@ try{
  // Freeze tab A's generation before opening B. Leaving A actively on Exam
  // permits its legitimate 10-second timer checkpoint to race B's hydration,
  // which tests scheduling luck rather than concurrent-storage detection.
- await fallbackA.getByRole("button",{name:/Library/}).click();await route(fallbackA,"library");
+ await fallbackA.getByRole("button",{name:/library/i}).click();await route(fallbackA,"library");
  await fallbackB.goto(offlineUrl,{waitUntil:"load"});
  await fallbackB.locator('[data-attempt="'+fallbackId+'"]').first().click();await route(fallbackB,"exam");
  await fallbackB.locator("input[data-choice]").nth(1).click();
@@ -168,7 +168,7 @@ try{
  });
  await quota.getByRole("button",{name:/^Start /}).click();await route(quota,"exam");
  await quota.locator(".generic-warning").filter({hasText:"SAVE FAILED"}).waitFor();
- await quota.getByRole("button",{name:/Library/}).click();await route(quota,"library");
+ await quota.getByRole("button",{name:/library/i}).click();await route(quota,"library");
  const emergency=quota.waitForEvent("download");
  await quota.locator("#g-export-history").click();
  const downloaded=await emergency;
@@ -216,7 +216,7 @@ try{
   await restored.getByRole("button",{name:/History & insights/}).click();await route(restored,"history");
   check(await restored.locator('[data-attempt="'+persistedId+'"]').count()===1,
    "Offline profile restart lost frozen result");
-  await restored.getByRole("button",{name:/Library/}).click();await route(restored,"library");
+  await restored.getByRole("button",{name:/library/i}).click();await route(restored,"library");
   await restored.getByRole("button",{name:/Open learning desk/}).click();await route(restored,"learning");
   check((await records(restored)).some(x=>x.recordType==="learning-card"&&
    x.sourceAttemptId===persistedId),
@@ -250,7 +250,7 @@ try{
   await route(page,"result");
   const good=(await records(page)).find(r=>r.recordType==="generic-attempt"&&r.finishedAt!==null);
   check(Boolean(good),"Cannot seed a durable completed attempt for corruption test");
-  await page.getByRole("button",{name:/Library/}).click();
+  await page.getByRole("button",{name:/library/i}).click();
   await route(page,"library");
 
   // Independently corrupt one attempt reference AND one otherwise-unused
