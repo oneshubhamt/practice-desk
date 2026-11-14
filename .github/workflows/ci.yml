@@ -220,7 +220,7 @@ jobs:
       - run: mkdir -p artifacts/equivalence
       - name: Legacy Pass-B browser manifest
         run: |
-          node scripts/timed-run.mjs legacy-${{ matrix.browser }} -- node scripts/acceptance-suite-legacy.mjs ${{ matrix.browser }}
+          node scripts/timed-run.mjs legacy-${{ matrix.browser }} -- node scripts/legacy-browser-suite.mjs ${{ matrix.browser }}
           cp artifacts/acceptance-modern/suite-${{ matrix.browser }}.json artifacts/equivalence/legacy-${{ matrix.browser }}.json
       - name: Tagged Pass-C browser registry
         run: |
@@ -255,7 +255,7 @@ jobs:
           path: artifacts
           merge-multiple: true
       - name: Compare legacy journeys to canonical browser/Node witnesses
-        run: node scripts/acceptance-equivalence.mjs artifacts/equivalence
+        run: node scripts/browser-equivalence-audit.mjs artifacts/equivalence
       - uses: actions/upload-artifact@v4
         with:
           name: browser-equivalence-audit
