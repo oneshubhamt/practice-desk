@@ -282,3 +282,93 @@ CI run `43556401035` on the Pass-B source commit passed every existing release g
 - guarded standalone publisher.
 
 The observed `npm run check` step was 36 seconds and the complete CI run about 4 minutes 47 seconds. CI runner timings are observational, not performance SLAs. Browser acceptance structure/runtime remains intentionally unchanged in Pass B; that is the subject of Pass C.
+
+
+## 11. Pass C outcome — browser consolidation
+
+Pass C was completed and fully verified at source commit `b8fc682e0044d14a7ac6f89f76d35a2daeb99128`. The historical browser filename manifest is no longer executable architecture.
+
+### Measured structural result
+
+| Measure | Pass-B browser baseline | Pass C | Change |
+|---|---:|---:|---:|
+| Historical top-level `acceptance-*.mjs` scenario files | 33 | **0** | eliminated |
+| Stable browser-domain modules | — | **9** | canonical |
+| Registry scenarios | 33 | **14** | −19 (−57.6%) |
+| Chromium journey executions | 33 | **14** | −57.6% |
+| Firefox journey executions | 21 | **4** | −81.0% |
+| WebKit journey executions | 21 | **4** | −81.0% |
+| Total browser journey executions | 75 | **22** | −70.7% |
+
+The stable modules are `candidate`, `authoring`, `storage`, `navigation`, `media`, `security`, `calendar`, `ui` and `scale`. `scripts/acceptance/registry.mjs` owns scenario identity and capability tags; the runner no longer compares a hard-coded filename list against a directory scan.
+
+### Canonical scenario registry
+
+| Scenario | Core tags | Firefox/WebKit? |
+|---|---|---|
+| `candidate-core` | smoke, candidate, history, learning | No |
+| `status-palette` | candidate, visual-state | No |
+| `authoring-publication` | smoke, authoring, publication | No |
+| `external-bank-authoring` | authoring, import, editorial | No |
+| `storage-resilience` | storage, recovery, concurrency | No |
+| `partial-recovery` | storage, recovery | **Yes** |
+| `file-navigation` | navigation, file-url | **Yes** |
+| `image-viewer` | media, focus, keyboard | **Yes** |
+| `image-preparation` | media, authoring, file-input | No |
+| `math-rendering` | media, math | No |
+| `csp-security` | security, csp | **Yes** |
+| `calendar-integration` | calendar, integration | No |
+| `responsive-ui` | ui, responsive, a11y | No |
+| `result-stress` | results, history, scale, deep | No |
+
+The independent browser/WASM FSRS optimizer probe remains outside this registry because it tests the specialized Worker/WASM runtime boundary rather than an application journey.
+
+The runner also accepts an optional focused capability filter, for example `node scripts/acceptance-suite.mjs chromium --tag=storage`.
+
+### Retired overlapping journeys and surviving witnesses
+
+No historical browser journey was removed merely because its filename was old. Each retirement has a cheaper or stronger surviving witness:
+
+| Retired journey | Surviving authoritative witness |
+|---|---|
+| `acceptance-authoring-visual` | `authoring-publication` + `responsive-ui` + Node authoring contracts |
+| `acceptance-p49-p52-enhancements` | Node `taxonomy-and-workspace-policy` + candidate/browser smoke |
+| `acceptance-p53-taxonomy` | Node taxonomy separation + `external-bank-authoring` |
+| `acceptance-p54-authoring` | `authoring-publication` + Node authoring/scoring contracts |
+| `acceptance-p58b-editorial` | `external-bank-authoring` + Node editorial-lineage contracts |
+| `acceptance-p58a-integrity` | `authoring-publication` + Node content/provenance integrity |
+| `acceptance-p48-architecture` | parser-backed `architecture-boundaries` + storage/navigation browser witnesses |
+| `acceptance-p48-ux` | `responsive-ui` |
+| `acceptance-session-policy` | Node session/timing state models + `candidate-core` |
+| `acceptance-editorial-provenance` | Node content/editorial lineage + retained authoring journeys |
+| `acceptance-bank-modes` | Node exam-bank/policy contracts + `candidate-core` |
+| `acceptance-drafts` | Node response-draft/UI contracts + six-kind candidate flow |
+| `acceptance-history-evidence` | Node history/persistence contracts + `candidate-core` History smoke |
+| `acceptance-history-filters` | 128-combination Node History-filter model + History smoke |
+| `acceptance-p55-learning` | Node learning/FSRS contracts + `candidate-core` learning lifecycle |
+| `acceptance-p56-integration` | Node cross-domain/shared-store contracts + retained recovery/resilience scenarios |
+| `acceptance-learning-lifecycle` | Node learning lifecycle + `candidate-core` |
+| `acceptance-recovery` | `storage-resilience` + `partial-recovery` + Node recovery/CAS models |
+| `acceptance-p58c-scale` | Node `authoring-scale` + retained `result-stress` browser witness |
+
+### Selector policy
+
+Primary candidate navigation and other visible controls were moved toward Playwright role/name locators, including Start, Library/Test library, History, Calendar and Learning controls. The consolidation deliberately does **not** replace every selector mechanically. Technical evidence surfaces such as hidden file inputs, immutable attempt rows, exact persisted IDs, and app-specific diagnostic controls may retain stable IDs/data attributes when those are the contract being exercised or when a user-facing role is ambiguous.
+
+A semantic selector that initially used a broad `/library/i` match was rejected by Firefox because both “Library” and “Test library” were visible. The final suite uses context-exact accessible names instead. This is a useful example of the new policy: resilient user-facing locators should be precise enough to express the intended interaction, not merely avoid CSS/ID selectors.
+
+### Verification and observed CI economics
+
+CI run `43567342498` passed every release gate on the final Pass-C source:
+
+- strict TypeScript/build + **442/442 Node tests**;
+- **10/10** targeted semantic mutants killed;
+- native optimizer smoke and native/WASM parity;
+- Chromium **14/14** tagged application scenarios + full browser optimizer activation;
+- Firefox **4/4** cross-browser scenarios + optimizer probe;
+- WebKit **4/4** cross-browser scenarios + optimizer probe;
+- guarded publisher.
+
+Observed browser-journey execution time changed from about **341 seconds aggregate** in the Pass-B verification run (145s Chromium + 72s Firefox + 124s WebKit) to about **122 seconds aggregate** in Pass C (71s + 18s + 33s), a ~64% reduction. Total CI wall time changed from about **4m47s** to **2m58s**, roughly 38% lower on these two GitHub-hosted runs. These are observations rather than performance SLAs because runner provisioning and browser installation vary.
+
+The in-process script syntax preflight also fell from about 286 ms to about 119 ms after the browser script surface was consolidated.
