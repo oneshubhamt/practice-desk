@@ -2,6 +2,8 @@
 
 This is the active human-readable verification contract for the current `working` branch. Historical programme-specific runs and implementation diaries belong in [HISTORY_INDEX.md](HISTORY_INDEX.md). The executable sources of truth are the test files, `scripts/acceptance-suite.mjs`, `scripts/mutation-sensitivity.mjs` and [CI](../.github/workflows/ci.yml).
 
+The current suite census, risk→invariant→cheapest-layer map, overlap clusters, source-shape heuristics and deep/stress classification are recorded in [QA_CENSUS.md](QA_CENSUS.md). That Pass-A map is descriptive: it authorizes no test deletion or CI weakening by itself.
+
 ## Required toolchain
 
 Use Node.js **26.13.0** with the committed lockfiles. The main application and isolated FSRS optimizer dependency graphs must both install cleanly from those locks.
