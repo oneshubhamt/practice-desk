@@ -88,10 +88,7 @@ test("third-party scheduler and editor dependencies terminate at their adapters"
 });
 
 test("application controllers are acyclic runtime capabilities and never depend back on generic-ui or vendors",()=>{
- const names=["library-controller","result-controller","exam-controller","route-controller",
-  "persistence-controller","history-controller","screen-controller","lifecycle-controller",
-  "authoring-controller","learning-controller","storage-health-controller"];
- const controllers=names.map(x=>"src/app/"+x+".ts");
+ const controllers=sourceFiles.filter(x=>/^src\/app\/[^/]+-controller\.ts$/.test(x));
  for(const file of controllers){
   assert.ok(!targets(file).has("src/app/generic-ui.ts"),file+" must not depend on generic-ui");
   assert.ok(!importsOf(file).some(e=>e.spec==="ts-fsrs"||e.spec.startsWith("ts-fsrs/")||
@@ -101,11 +98,17 @@ test("application controllers are acyclic runtime capabilities and never depend 
 });
 
 test("composition root and authoring modules preserve one-way ownership boundaries",()=>{
- const generic=targets("src/app/generic-ui.ts");
- for(const file of ["authoring-controller","learning-controller","calendar-controller","lifecycle-controller",
-  "library-controller","result-controller","exam-controller","route-controller","screen-controller",
-  "history-controller","persistence-controller","storage-health-controller"])
-  assert.ok(generic.has("src/app/"+file+".ts"),"composition root missing "+file);
+ const reachable=new Set(),pending=["src/app/generic-ui.ts"];
+ while(pending.length){
+  const file=pending.pop();
+  if(!file||reachable.has(file))continue;
+  reachable.add(file);
+  for(const edge of importsOf(file))if(edge.target&&graph.has(edge.target))pending.push(edge.target);
+ }
+ reachable.delete("src/app/generic-ui.ts");
+ const controllers=sourceFiles.filter(x=>/^src\/app\/[^/]+-controller\.ts$/.test(x));
+ for(const file of controllers)
+  assert.ok(reachable.has(file),"composition root cannot reach "+file);
 
  const studio=targets("src/authoring/authoring-studio.ts");
  for(const target of ["src/authoring/authoring-studio-view.ts",

@@ -34,8 +34,8 @@ test("history is a genuinely separate panel with faithful evidence disclaimers a
  assert.match(html,/id="g-history-sort"/);
  assert.match(html,/data-attempt="first"/);
  assert.match(html,/id="g-export-history"/);
- assert.ok(!html.includes('class="history-sparkline"'),
-   "Two unanswered attempts must not be plotted as false zero-percent scores");
+ assert.doesNotMatch(html,/aria-label="(?:Comparable attempt accuracy sequence|Adjusted score progression[^"]*)"/,
+   "Two unanswered attempts must not render a trend graphic");
  assert.match(html,/repeated questions count as repeated observations/i);
  assert.ok(!html.includes("Expected answer:"));
  const empty=historyHTML([],packages,{status:"all",sort:"newest",search:"x"},false,true,"");
@@ -59,7 +59,10 @@ test("result tabs and time ledger keep frozen verdicts, timings and accessible c
  assert.equal(a.result.items.filter(row=>reviewMatch(a,row,"unanswered")).length,6);
  assert.equal(a.result.items.filter(row=>reviewMatch(a,row,"fastwrong")).length,0);
  const pacing=resultPacingHTML(a);
- assert.match(pacing,/Section diagnostics/);
+ assert.equal((pacing.match(/role="progressbar"/g)??[]).length,a.frozen.paper.sections.length);
+ for(const section of a.frozen.paper.sections)
+  assert.ok(pacing.includes('aria-label="'+section.title+' coverage"'),
+    "missing accessible section coverage for "+section.title);
 });
 test("restored exam shell exposes progress, timer and navigator while withholding answer keys",()=>{
  const a=startGenericAttempt(bundle,"exam",1000);

@@ -1,6 +1,6 @@
 # Practice Desk — permanent QA contract
 
-**Canonical contract:** one Node test inventory, one tagged browser registry, one guarded release publisher. Executable truth lives in `tests/`, `scripts/node-suite.mjs`, `scripts/acceptance-suite.mjs`, `scripts/mutation-sensitivity.mjs`, and [CI](../.github/workflows/ci.yml). Historical rationale, evidence maps and measured changes: [QA census](QA_CENSUS.md) · [Pass E risk/case ledger](QA_PASS_E.md) · [Pass F](QA_PASS_F.md) · [Pass G](QA_PASS_G.md) · [Pass H](QA_PASS_H.md). The authoritative de novo objective check and corrected controlled economics are in [QA_CLOSURE_AUDIT.md](QA_CLOSURE_AUDIT.md).
+**Canonical contract:** one Node test inventory, one tagged browser registry, one guarded release publisher. Executable truth lives in `tests/`, `scripts/node-suite.mjs`, `scripts/acceptance-suite.mjs`, `scripts/mutation-sensitivity.mjs`, and [CI](../.github/workflows/ci.yml). Historical rationale, evidence maps and measured changes: [QA census](QA_CENSUS.md) · [Pass E risk/case ledger](QA_PASS_E.md) · [Pass F](QA_PASS_F.md) · [Pass G](QA_PASS_G.md) · [Pass H](QA_PASS_H.md) · [Pass I residual assertion audit](QA_PASS_I.md). The authoritative de novo E–H objective check and corrected controlled economics are in [QA_CLOSURE_AUDIT.md](QA_CLOSURE_AUDIT.md).
 
 ## Required gates and publication authority
 

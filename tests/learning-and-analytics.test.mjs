@@ -217,10 +217,12 @@ test("generic six-kind frozen timing classifications, accurate filters, longest 
  assert.match(html,/Typical/);assert.match(html,/Not classified/);
  assert.match(html,/Review question 1/);
  const overview=questionCoachingHTML(a);
- assert.match(overview,/Question-speed insights/);
- assert.match(overview,/Longest question visits/);
- assert.match(overview,/What to work on next/);
- assert.match(overview,/data-ledger-q="rev-4"/);
+ assert.ok(overview.includes(studySuggestions(a)[0]),
+  "rendered coaching must contain the computed study suggestion");
+ const longest=longestQuestionExposure(a)[0];
+ assert.ok(longest);
+ assert.ok(overview.includes('aria-label="Review question '+longest.paperNumber+'"'),
+  "longest-question action must remain accessible without depending on internal data attributes");
  const filters=reviewFiltersHTML("typicalwrong");
  assert.match(filters,/value="audit"/);assert.match(filters,/value="typicalwrong" selected/);
 });

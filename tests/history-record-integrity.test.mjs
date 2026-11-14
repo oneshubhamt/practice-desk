@@ -161,23 +161,17 @@ test("P47-2 filtering cannot affect all-time metrics or immutable attempt scores
  const all=historyHTML(attempts,new Map(),DEFAULT_HISTORY_QUERY,false,false,"");
  const subset=historyHTML(attempts,new Map(),{...DEFAULT_HISTORY_QUERY,examId:"pgdba"},
    false,false,"");
- const metrics=html=>{
-  const marker='<div class="history-summary">';
-  const start=html.indexOf(marker);
-  const finish=html.indexOf('</div><p class="fine">Mock-style',start);
-  assert.ok(start>=0&&finish>start,"complete current-summary block must be present");
-  return html.slice(start,finish);
- };
- assert.equal(metrics(all),metrics(subset),
-  "archive filters must not change the all-time metrics, denominators or score values");
- // In addition to exact totals, check the labels and the separately filtered archive count.
- for(const phrase of ['Total attempts','Completed','In progress','Papers practised','Best adjusted %','Mock accuracy']){
-  assert.ok(all.includes(phrase)&&subset.includes(phrase),phrase);
+ const visibleText=html=>html.replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim();
+ const expectedSummary=[
+  "Total attempts 4","Completed 3","In progress 1",
+  "Papers practised 1","Best adjusted % 0.0%","Mock accuracy —"
+ ];
+ for(const text of expectedSummary){
+  assert.ok(visibleText(all).includes(text),"full history missing "+text);
+  assert.ok(visibleText(subset).includes(text),"filtered history changed all-time metric "+text);
  }
  assert.match(subset,/1 of 4 records shown/);
  assert.match(all,/4 of 4 records shown/);
- assert.equal((all.match(/<div class="summary-stat">/g)||[]).length,
-   (subset.match(/<div class="summary-stat">/g)||[]).length);
  assert.deepEqual(attempts,snapshot);
 });
 }

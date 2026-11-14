@@ -218,7 +218,7 @@ test("P47-5B malformed, malicious and untrusted TeX uses safe visible fallback",
   assert.doesNotMatch(html,/href="https?:/);
  }
  const bad=mathRenderer.render({tex:"\\thisCommandDoesNotExist",linearText:"x < y",displayMode:false}).html;
- assert.match(bad,/pd-math-fallback/);
+ assert.match(bad,/role="math"/);
  assert.match(bad,/aria-label="x &lt; y"/);
  assert.doesNotMatch(bad,/<y/);
 });
@@ -235,14 +235,14 @@ test("P47-5B six-kind authored rich math, tables and explanations survive valid 
  const view=renderModelExam(a,pack);
  assert.match(view,/katex-mathml/);
  assert.match(view,/Rational numbers/);
- assert.match(view,/generic-choices/);
+ assert.match(view,/type="radio"[^>]*data-choice=/);
  assert.doesNotMatch(view,/SOLUTION-ONLY-CONTENT/);
  assert.doesNotMatch(view,/Correct answer/);
  const source=frozenReviewMedia(a,a.frozen.questions[0],undefined,undefined,undefined);
  assert.match(source,/katex-html/);
  const answerHTML=renderAuthoredText(pack,"",pack.questions[0].content.richExplanation);
  assert.match(answerHTML,/SOLUTION-ONLY-CONTENT/);
- assert.match(stimulusHTML(pack,pack.questions[0]),/scroll-table/);
+ assert.match(stimulusHTML(pack,pack.questions[0]),/<table>/);
 });
 test("P47-5B tampering with frozen rich math is rejected by current SHA source contract",()=>{
  const pack=richPack();
