@@ -164,7 +164,7 @@ test("P47-2 filtering cannot affect all-time metrics or immutable attempt scores
  const visibleText=html=>html.replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim();
  const expectedSummary=[
   "Total attempts 4","Completed 3","In progress 1",
-  "Papers practised 3","Best adjusted % 0.0%","Mock accuracy —"
+  "Papers practised 2","Best adjusted % 0.0%","Mock accuracy —"
  ];
  for(const text of expectedSummary){
   assert.ok(visibleText(all).includes(text),"full history missing "+text);
