@@ -51,7 +51,7 @@ try{
   check(await page.locator("#result-review").count()===0,"pre-submit review/solutions leaked");
   await page.locator(".exam-question input[data-choice]").first().click();
   await page.locator("#g-flag").click();
-  await page.getByRole("button",{name:/library/i}).click();await route(page,"library");
+  await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
   await page.locator('[data-attempt="'+attemptId+'"]').first().click();
   await route(page,"exam");
   await page.locator('input[data-choice]:checked').first().waitFor({state:"visible"});
@@ -74,7 +74,7 @@ try{
   check(await page.locator(".generic-review").count()===25,"lazy review wrong question count");
   await page.locator("#result-tab-timing").click();await page.locator("#result-timing").waitFor({state:"visible"});
   check(await page.locator("#result-timing tbody tr").count()===25,"item time ledger missing");
-  await page.getByRole("button",{name:/library/i}).click();await route(page,"library");
+  await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
   await page.getByRole("button",{name:/History & insights/}).click();await route(page,"history");
   await page.locator("#g-filter").selectOption("complete");
   check(await page.locator('[data-attempt="'+attemptId+'"]').count()===1,
@@ -123,7 +123,7 @@ try{
   await page.locator('[data-manual-save="rev-5"]').click();
   await page.waitForFunction(id=>Boolean(document.querySelector('[data-manual-save="rev-5"]')),row.id);
   // Reload ensures both the manual mark and the automated score were actually saved.
-  await page.getByRole("button",{name:/library/i}).click();await route(page,"library");
+  await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
   const persisted=(await records(page)).find(x=>x.id===row.id);
   check(persisted.manualGrades?.some(x=>x.marks===1.5)&&
     persisted.result.snapshot.earnedMarks===row.result.snapshot.earnedMarks,
@@ -131,7 +131,7 @@ try{
   await page.locator('[data-attempt="'+row.id+'"]').first().click();await route(page,"result");
   await page.locator("#result-tab-review").click();
   await page.locator("[data-add-card]").first().click();
-  await page.getByRole("button",{name:/library/i}).click();await route(page,"library");
+  await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
   await page.getByRole("button",{name:/Open learning desk/}).click();await route(page,"learning");
   await page.locator("#learning-due").click();
   check(await page.locator(".learning-answer").count()===0,"FSRS answer leaked before reveal");
@@ -258,7 +258,7 @@ try{
  await page.evaluate(()=>document.documentElement.style.setProperty("--type-scale","1.4"));
  await status(2,false);
  await assertNoOverflow(page,engine+" 195px 140% flagged-unanswered");
- await page.getByRole("button",{name:/library/i}).click();await route(page,"library");
+ await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
  await page.setViewportSize({width:1100,height:790});
  await page.evaluate(()=>document.documentElement.style.setProperty("--type-scale","1"));
  await page.locator("#g-family").selectOption("builtin:ssc-cgl");
