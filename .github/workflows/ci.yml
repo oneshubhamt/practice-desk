@@ -127,7 +127,13 @@ jobs:
           node-version: '26.13.0'
           package-manager-cache: false
       - run: npm ci --no-audit --no-fund
-      - run: node node_modules/playwright-core/cli.js install --with-deps ${{ matrix.browser }}
+      - name: Restore pinned Playwright browser binary cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ matrix.browser }}
+      - name: Install Playwright browser and host dependencies
+        run: node scripts/timed-run.mjs browser-install-${{ matrix.browser }} -- node node_modules/playwright-core/cli.js install --with-deps ${{ matrix.browser }}
       - uses: actions/download-artifact@v4
         with:
           name: source-verified-offline-html
