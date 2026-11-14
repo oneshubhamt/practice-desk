@@ -145,7 +145,7 @@ try{
    check(await page.locator("#g-pending-attempts").count()===0,
     "fresh Library unexpectedly shows unfinished-attempt panel "+name);
    await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
-   await page.getByRole("button",{name:/Library/}).click();await route(page,"library");
+   await page.getByRole("button",{name:/library/i}).click();await route(page,"library");
    await page.locator("#g-pending-attempts").waitFor({state:"visible"});
    const resumeSpacing=await page.evaluate(()=>{
     const pending=document.querySelector("#g-pending-attempts")?.getBoundingClientRect();
@@ -181,7 +181,7 @@ try{
    check(historyAttribution.includes("Not affiliated")&&
     historyAttribution.toLowerCase().includes("imported"),
     "History independent/imported educational attribution missing "+name);
-   await page.getByRole("button",{name:/Library/}).click();await route(page,"library");
+   await page.getByRole("button",{name:/library/i}).click();await route(page,"library");
    await page.getByRole("button",{name:/Open learning desk/}).click();await route(page,"learning");
    await inspect(page,name+"-learning");
    await page.locator("#learning-close").click();await route(page,"library");
