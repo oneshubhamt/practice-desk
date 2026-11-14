@@ -1,50 +1,32 @@
-// Pass37 lossless capability suite. Each lexical block preserves the original
-// independent fixtures and test body, identified for assertion-level traceability.
-// Imports are module namespaces to avoid collisions between former suites.
-import * as __suite_dep_0 from "node:test";
-import * as __suite_dep_1 from "node:assert/strict";
-import * as __suite_dep_2 from "node:fs/promises";
-import * as __suite_dep_3 from "./fixtures/six-kinds.mjs";
-import * as __suite_dep_4 from "../src/app/exam-package.ts";
-import * as __generic_attempt from "../src/engine/generic-attempt.ts";
-import * as __suite_dep_5 from "../src/app/history-priorities.ts";
-import * as __suite_dep_6 from "../src/app/history-score.ts";
+/** Canonical executable contracts, grouped by stable product responsibility. */
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFile} from "node:fs/promises";
+import {pkg,questions} from "./fixtures/six-kinds.mjs";
+import {builtinCglPackages,configureCglPractice,validateExamPackage,startGenericAttempt} from "../src/app/exam-package.ts";
+import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
+import {crossPaperMarksPriorities} from "../src/app/history-priorities.ts";
+import {frozenScoreSummary} from "../src/app/history-score.ts";
 import * as __suite_dep_7 from "../src/app/history-page.ts";
-import * as __suite_history_query from "../src/app/history-query.ts";
-import * as __suite_dep_8 from "../src/engine/score-ceiling.ts";
-import * as __suite_dep_9_stored_record_validator from "../src/app/stored-record-validator.ts";
-import * as __suite_dep_10 from "../src/app/practice-selection.ts";
-import * as __suite_dep_11 from "../src/app/history-metrics.ts";
-import * as __suite_dep_12 from "../src/domain/hash.ts";
+import {filteredHistory} from "../src/app/history-query.ts";
+import {scoreableMaximum,sectionScoreSummaries} from "../src/engine/score-ceiling.ts";
+import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
+import {readPracticeSetups,writePracticeSetups,validatePracticeSetups,PRACTICE_SETUPS_KEY} from "../src/app/practice-selection.ts";
+import {adjustedHistoryMetrics,comparableScoreTrends} from "../src/app/history-metrics.ts";
+import {sha256} from "../src/domain/hash.ts";
 import * as __suite_dep_13 from "../src/history/backup.ts";
-import * as __suite_dep_14 from "../src/app/preferences.ts";
-import * as __suite_dep_15 from "../src/history/concurrency.ts";
-import * as __suite_dep_16 from "../src/content/import-cgl.ts";
-import * as __suite_dep_17 from "../src/history/frozen.ts";
-import * as __suite_dep_18 from "../src/engine/session.ts";
-import * as __suite_dep_19 from "../src/engine/scoring.ts";
+import {validateDisplayPreferences} from "../src/app/preferences.ts";
+import {assertWriteVersion,nextWriteVersion} from "../src/history/concurrency.ts";
+import {importCglBank} from "../src/content/import-cgl.ts";
+import {freezeAttempt,assertFrozenContent,restoreSession,chooseRecovered} from "../src/history/frozen.ts";
+import {startSession,transition} from "../src/engine/session.ts";
+import {scoreAttempt} from "../src/engine/scoring.ts";
 import * as __suite_storage_health from "../src/app/storage-health.ts";
 
-// === Consolidated coverage: tests/history-cross-paper-marks.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const readFile = __suite_dep_2["readFile"];
-const pkg = __suite_dep_3["pkg"];
-const questions = __suite_dep_3["questions"];
-const builtinCglPackages = __suite_dep_4["builtinCglPackages"];
-const configureCglPractice = __suite_dep_4["configureCglPractice"];
-const validateExamPackage = __suite_dep_4["validateExamPackage"];
-const startGenericAttempt = __suite_dep_4["startGenericAttempt"];
-const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
-const crossPaperMarksPriorities = __suite_dep_5["crossPaperMarksPriorities"];
-const frozenScoreSummary = __suite_dep_6["frozenScoreSummary"];
+/** Cross Paper Trends — canonical domain contracts. */
+async function registerCrossPaperTrendsTests(){
 const historyHTML = __suite_dep_7["historyHTML"];
 const sectionPriorities = __suite_dep_7["sectionPriorities"];
-const filteredHistory = __suite_history_query["filteredHistory"];
-const scoreableMaximum = __suite_dep_8["scoreableMaximum"];
-const sectionScoreSummaries = __suite_dep_8["sectionScoreSummaries"];
-const validateGenericStoredRecord = __suite_dep_9_stored_record_validator["validateGenericStoredRecord"];
 const bank=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
 const patch=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
 const editions=builtinCglPackages(bank,patch);
@@ -190,24 +172,11 @@ test("F05 adjacent: archive status filters retain separate complete and progress
  assert.deepEqual(filteredHistory([complete,progress],packages,{status:"progress",sort:"newest",search:""}).map(x=>x.id),["progress"]);
 });
 }
+await registerCrossPaperTrendsTests();
 
-// === Consolidated coverage: tests/history-selection-filtering-and-backup.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const readPracticeSetups = __suite_dep_10["readPracticeSetups"];
-const writePracticeSetups = __suite_dep_10["writePracticeSetups"];
-const validatePracticeSetups = __suite_dep_10["validatePracticeSetups"];
-const PRACTICE_SETUPS_KEY = __suite_dep_10["PRACTICE_SETUPS_KEY"];
-const adjustedHistoryMetrics = __suite_dep_11["adjustedHistoryMetrics"];
-const comparableScoreTrends = __suite_dep_11["comparableScoreTrends"];
-const filteredHistory = __suite_history_query["filteredHistory"];
+/** History Preferences — canonical domain contracts. */
+async function registerHistoryPreferencesTests(){
 const historyHTML = __suite_dep_7["historyHTML"];
-const builtinCglPackages = __suite_dep_4["builtinCglPackages"];
-const configureCglPractice = __suite_dep_4["configureCglPractice"];
-const startGenericAttempt = __suite_dep_4["startGenericAttempt"];
-const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
-const readFile = __suite_dep_2["readFile"];
 const papers=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
 const all=builtinCglPackages(papers,patches);
@@ -293,18 +262,13 @@ test("P43 portable family setups survive canonical backup with checksum protecti
 });
 
 }
+await registerHistoryPreferencesTests();
 
-// === Consolidated coverage: tests/persistence-backup-and-concurrency.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const sha256 = __suite_dep_12["sha256"];
+/** Persistence Concurrency — canonical domain contracts. */
+async function registerPersistenceConcurrencyTests(){
 const makeBackup = __suite_dep_13["makeBackup"];
 const verifyBackup = __suite_dep_13["verifyBackup"];
 const planBackupMerge = __suite_dep_13["planBackupMerge"];
-const validateDisplayPreferences = __suite_dep_14["validateDisplayPreferences"];
-const assertWriteVersion = __suite_dep_15["assertWriteVersion"];
-const nextWriteVersion = __suite_dep_15["nextWriteVersion"];
 const preferences={schema:1,dark:true,scale:115};
 test("SHA-256 standard vectors and UTF-8",()=>{
  assert.equal(sha256("abc"),"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
@@ -447,22 +411,10 @@ test("new-record CAS uses null; persisted rows require revisions 1+ and progress
 });
 }
 }
+await registerPersistenceConcurrencyTests();
 
-// === Consolidated coverage: tests/persistence-session-recovery.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const readFile = __suite_dep_2["readFile"];
-const importCglBank = __suite_dep_16["importCglBank"];
-const builtinCglPackages = __suite_dep_4["builtinCglPackages"];
-const configureCglPractice = __suite_dep_4["configureCglPractice"];
-const freezeAttempt = __suite_dep_17["freezeAttempt"];
-const assertFrozenContent = __suite_dep_17["assertFrozenContent"];
-const restoreSession = __suite_dep_17["restoreSession"];
-const chooseRecovered = __suite_dep_17["chooseRecovered"];
-const startSession = __suite_dep_18["startSession"];
-const transition = __suite_dep_18["transition"];
-const scoreAttempt = __suite_dep_19["scoreAttempt"];
+/** Recovery And Replay — canonical domain contracts. */
+async function registerRecoveryAndReplayTests(){
 const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
 const first=importCglBank(sources,patches)[0];
@@ -558,9 +510,10 @@ test("Recovery reference: 576 persisted/mirror precedence combinations, missing 
 });
 
 }
+await registerRecoveryAndReplayTests();
 
-const p45test=__suite_dep_0.default;
-const p45assert=__suite_dep_1.default;
+const p45test=test;
+const p45assert=assert;
 
 p45test("P45 History health distinguishes pending, locked, failure and browser eviction",()=>{
  const {historyHTML}=__suite_dep_7;

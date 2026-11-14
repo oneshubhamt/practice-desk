@@ -1,25 +1,23 @@
-// Pass37 lossless capability suite. Each lexical block preserves the original
-// independent fixtures and test body, identified for assertion-level traceability.
-// Imports are module namespaces to avoid collisions between former suites.
-import * as __suite_dep_0 from "node:test";
-import * as __suite_dep_1 from "node:assert/strict";
-import * as __suite_dep_2 from "./fixtures/six-kinds.mjs";
-import * as __suite_dep_3 from "../src/app/exam-package.ts";
-import * as __generic_attempt from "../src/engine/generic-attempt.ts";
-import * as __suite_dep_4 from "../src/learning/attempt-evidence.ts";
-import * as __suite_dep_5 from "../src/learning/question-analytics.ts";
-import * as __suite_dep_6 from "../src/app/history-score.ts";
-import * as __suite_dep_7 from "../src/engine/session.ts";
-import * as __suite_dep_8 from "../src/domain/integrity.ts";
-import * as __suite_dep_9_stored_record_validator from "../src/app/stored-record-validator.ts";
-import * as __suite_dep_9_exam_view from "../src/app/exam-view.ts";
-import * as __suite_dep_10 from "../src/app/result-presentation.ts";
+/** Canonical executable contracts, grouped by stable product responsibility. */
+import test from "node:test";
+import assert from "node:assert/strict";
+import {pkg,pkg as sixKinds} from "./fixtures/six-kinds.mjs";
+import {validateExamPackage,startGenericAttempt} from "../src/app/exam-package.ts";
+import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
+import {attemptEvidence,evidenceProgression} from "../src/learning/attempt-evidence.ts";
+import {questionSpeed,studySuggestions,isAuditQuestion,longestQuestionExposure} from "../src/learning/question-analytics.ts";
+import {frozenScoreSummary} from "../src/app/history-score.ts";
+import {startSession,transition} from "../src/engine/session.ts";
+import {paperRevisionHash,questionRevisionHash} from "../src/domain/integrity.ts";
+import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
+import {renderModelExam} from "../src/app/exam-view.ts";
+import {reviewMatch,reviewFiltersHTML,timingLedgerHTML,questionCoachingHTML} from "../src/app/result-presentation.ts";
 import * as __suite_dep_11 from "../src/learning/fsrs-scheduler-adapter.ts";
-import * as __suite_dep_12 from "../src/learning/learning.ts";
-import * as __suite_dep_13 from "../src/history/backup.ts";
-import * as __suite_dep_14 from "../src/learning/revision-test.ts";
-import * as __suite_dep_15 from "../src/engine/scoring.ts";
-import * as __suite_dep_16 from "../src/domain/hash.ts";
+import {addLearningCard,validateLearningCard,scheduledCard,inspectLearningCard,previewLearningCard,rateLearningCard,topicMetrics,comparableTrends} from "../src/learning/learning.ts";
+import {makeBackup,verifyBackup} from "../src/history/backup.ts";
+import {makeRevisionPackage,createNotebookLineage,validateNotebookLineage,REVISION_MAX_QUESTIONS} from "../src/learning/revision-test.ts";
+import {scoreAttempt} from "../src/engine/scoring.ts";
+import {sha256} from "../src/domain/hash.ts";
 import * as __suite_dep_17 from "../src/learning/revision-settings.ts";
 import * as __suite_dep_18 from "../src/learning/fsrs-optimizer.ts";
 import {revisionInventory as independentRevisionInventory} from "../src/learning/revision-selection.ts";
@@ -27,21 +25,10 @@ import * as __suite_dep_19 from "ts-fsrs/models/fsrs-7";
 import * as __suite_dep_20 from "../tools/fsrs-optimizer/optimizer-pipeline.mjs";
 import * as __suite_dep_21 from "../tools/fsrs-optimizer/optimizer-policy.mjs";
 import * as __suite_dep_22 from "node:fs/promises";
-import * as __suite_dep_23 from "../src/learning/review-duration.ts";
+import {createReviewDurationTracker} from "../src/learning/review-duration.ts";
 
-// === Consolidated coverage: tests/analytics-property-model.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const pkg = __suite_dep_2["pkg"];
-const validateExamPackage = __suite_dep_3["validateExamPackage"];
-const startGenericAttempt = __suite_dep_3["startGenericAttempt"];
-const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
-const attemptEvidence = __suite_dep_4["attemptEvidence"];
-const evidenceProgression = __suite_dep_4["evidenceProgression"];
-const questionSpeed = __suite_dep_5["questionSpeed"];
-const studySuggestions = __suite_dep_5["studySuggestions"];
-const frozenScoreSummary = __suite_dep_6["frozenScoreSummary"];
+/** Analytics Reference — canonical domain contracts. */
+async function registerAnalyticsReferenceTests(){
 function rng(seed){let x=seed>>>0;return n=>{x^=x<<13;x^=x>>>17;x^=x<<5;return (x>>>0)%n;};}
 const bundle=validateExamPackage(pkg);
 const lookup=new Map(bundle.questions.map(q=>[q.id,q]));
@@ -131,28 +118,10 @@ test("seeded six-kind frozen analytics retain denominators, pending essays and h
  }
 });
 }
+await registerAnalyticsReferenceTests();
 
-// === Consolidated coverage: tests/analytics-visits-and-speed-evidence.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const sixKinds = __suite_dep_2["pkg"];
-const validateExamPackage = __suite_dep_3["validateExamPackage"];
-const startGenericAttempt = __suite_dep_3["startGenericAttempt"];
-const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
-const startSession = __suite_dep_7["startSession"];
-const transition = __suite_dep_7["transition"];
-const paperRevisionHash = __suite_dep_8["paperRevisionHash"];
-const questionRevisionHash = __suite_dep_8["questionRevisionHash"];
-const validateGenericStoredRecord = __suite_dep_9_stored_record_validator["validateGenericStoredRecord"];
-const questionSpeed = __suite_dep_5["questionSpeed"];
-const isAuditQuestion = __suite_dep_5["isAuditQuestion"];
-const longestQuestionExposure = __suite_dep_5["longestQuestionExposure"];
-const studySuggestions = __suite_dep_5["studySuggestions"];
-const reviewMatch = __suite_dep_10["reviewMatch"];
-const reviewFiltersHTML = __suite_dep_10["reviewFiltersHTML"];
-const timingLedgerHTML = __suite_dep_10["timingLedgerHTML"];
-const questionCoachingHTML = __suite_dep_10["questionCoachingHTML"];
+/** Visits And Speed — canonical domain contracts. */
+async function registerVisitsAndSpeedTests(){
 const base=structuredClone(sixKinds);
 const updated=base.questions.map((q,i)=>{
  if(i!==1)return q;
@@ -296,30 +265,13 @@ test("negative marking, manual-pending and excluded questions stay separate from
  assert.equal(reviewMatch(a,a.result.items[0],"fastwrong"),false);
 });
 }
+await registerVisitsAndSpeedTests();
 
-// === Consolidated coverage: tests/learning-fsrs-and-cards.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
+/** Fsrs Scheduling — canonical domain contracts. */
+async function registerFsrsSchedulingTests(){
 const DefaultScheduler = __suite_dep_11["createRevisionScheduler"];
 const Rating = {Again:1,Hard:2,Good:3,Easy:4};
-const pkg = __suite_dep_2["pkg"];
-const validateExamPackage = __suite_dep_3["validateExamPackage"];
-const startGenericAttempt = __suite_dep_3["startGenericAttempt"];
-const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
-const addLearningCard = __suite_dep_12["addLearningCard"];
-const validateLearningCard = __suite_dep_12["validateLearningCard"];
-const scheduledCard = __suite_dep_12["scheduledCard"];
-const inspectLearningCard = __suite_dep_12["inspectLearningCard"];
-const previewLearningCard = __suite_dep_12["previewLearningCard"];
-const rateLearningCard = __suite_dep_12["rateLearningCard"];
-const topicMetrics = __suite_dep_12["topicMetrics"];
-const comparableTrends = __suite_dep_12["comparableTrends"];
-const createReviewDurationTracker = __suite_dep_23["createReviewDurationTracker"];
 const duration=foregroundMs=>({foregroundMs,recallMs:foregroundMs,postRevealMs:0,reliability:"continuous"});
-const validateGenericStoredRecord = __suite_dep_9_stored_record_validator["validateGenericStoredRecord"];
-const makeBackup = __suite_dep_13["makeBackup"];
-const verifyBackup = __suite_dep_13["verifyBackup"];
 const bundle=validateExamPackage(pkg);
 const lookup=new Map(bundle.questions.map(q=>[q.id,q]));
 function complete(id,answer=false){
@@ -554,31 +506,10 @@ test("backup preserves notes and FSRS review logs with strict integrity checks",
  assert.throws(()=>verifyBackup({...archived,records:archived.records.slice(1)}),/integrity/);
 });
 }
+await registerFsrsSchedulingTests();
 
-// === Consolidated coverage: tests/learning-notebook-and-evidence.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const pkg = __suite_dep_2["pkg"];
-const makeRevisionPackage = __suite_dep_14["makeRevisionPackage"];
-const createNotebookLineage = __suite_dep_14["createNotebookLineage"];
-const validateNotebookLineage = __suite_dep_14["validateNotebookLineage"];
-const REVISION_MAX_QUESTIONS = __suite_dep_14["REVISION_MAX_QUESTIONS"];
-const attemptEvidence = __suite_dep_4["attemptEvidence"];
-const evidenceProgression = __suite_dep_4["evidenceProgression"];
-const topicMetrics = __suite_dep_12["topicMetrics"];
-const addLearningCard = __suite_dep_12["addLearningCard"];
-const validateExamPackage = __suite_dep_3["validateExamPackage"];
-const startGenericAttempt = __suite_dep_3["startGenericAttempt"];
-const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
-const validateGenericStoredRecord = __suite_dep_9_stored_record_validator["validateGenericStoredRecord"];
-const renderModelExam = __suite_dep_9_exam_view["renderModelExam"];
-const scoreAttempt = __suite_dep_15["scoreAttempt"];
-const questionRevisionHash = __suite_dep_8["questionRevisionHash"];
-const paperRevisionHash = __suite_dep_8["paperRevisionHash"];
-const makeBackup = __suite_dep_13["makeBackup"];
-const verifyBackup = __suite_dep_13["verifyBackup"];
-const sha256 = __suite_dep_16["sha256"];
+/** Revision And Optimizer — canonical domain contracts. */
+async function registerRevisionAndOptimizerTests(){
 const bundle=validateExamPackage(pkg);
 function complete(id){
  const a=startGenericAttempt(bundle,id,1000);
@@ -722,8 +653,6 @@ test("speed classification uses a sufficient section median and distinguishes fa
 
 
 {
-const test=__suite_dep_0.default;
-const assert=__suite_dep_1.default;
 const {runFsrsOptimizerPipeline,rawOptimizerEvidenceCounts,OptimizerPipelineRejectedError,OPTIMIZER_STAGES}=__suite_dep_20;
 const {
  OPTIMIZER_PROFILE_SCHEMA,OPTIMIZER_BINDING_VERSION,OPTIMIZER_MODEL_VERSION,
@@ -843,3 +772,4 @@ test("FSRS optimizer shared pipeline rejects insufficient evidence and held-out 
 
 
 }
+await registerRevisionAndOptimizerTests();

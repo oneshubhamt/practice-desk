@@ -1,30 +1,24 @@
-// Pass37 lossless capability suite. Each lexical block preserves the original
-// independent fixtures and test body, identified for assertion-level traceability.
-// Imports are module namespaces to avoid collisions between former suites.
-import * as __suite_dep_0 from "node:test";
-import * as __suite_dep_1 from "node:assert/strict";
-import * as __suite_dep_2 from "node:fs/promises";
+/** Canonical executable contracts, grouped by stable product responsibility. */
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFile} from "node:fs/promises";
 import * as __suite_dep_3 from "../src/app/exam-package.ts";
-import * as __generic_attempt from "../src/engine/generic-attempt.ts";
-import * as __suite_dep_4 from "../src/domain/validate.ts";
-import * as __suite_dep_5 from "../src/domain/integrity.ts";
+import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
+import {validateAnswerKeyRevision,validatePaperRevision,validateQuestionRevision} from "../src/domain/validate.ts";
+import {paperRevisionHash} from "../src/domain/integrity.ts";
 import * as __suite_dep_6 from "./fixtures/six-kinds.mjs";
-import * as __suite_dep_7_stored_record_validator from "../src/app/stored-record-validator.ts";
+import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
 import * as __suite_dep_8 from "../src/history/backup.ts";
 import * as __suite_dep_9 from "../src/authoring/external-bank.ts";
-import * as __suite_dep_10 from "../src/engine/response.ts";
+import {validateResponse} from "../src/engine/response.ts";
 import * as __suite_dep_11 from "../src/engine/scoring.ts";
-import * as __suite_dep_12 from "../src/engine/score-ceiling.ts";
+import {scoreableMaximum} from "../src/engine/score-ceiling.ts";
 
-// === Consolidated coverage: tests/exam-packages-and-cgl-modes.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const readFile = __suite_dep_2["readFile"];
+/** Cgl Import Modes — canonical domain contracts. */
+async function registerCglImportModesTests(){
 const builtinCglPackages = __suite_dep_3["builtinCglPackages"];
 const validateExamPackage = __suite_dep_3["validateExamPackage"];
 const startGenericAttempt = __suite_dep_3["startGenericAttempt"];
-const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
 const configureCglPractice = __suite_dep_3["configureCglPractice"];
 const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
@@ -96,14 +90,10 @@ test("one engine supports strict, flexible and single CGL policies",()=>{
 });
 }
 }
+await registerCglImportModesTests();
 
-// === Consolidated coverage: tests/exam-schema-validation.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const validateAnswerKeyRevision = __suite_dep_4["validateAnswerKeyRevision"];
-const validatePaperRevision = __suite_dep_4["validatePaperRevision"];
-const validateQuestionRevision = __suite_dep_4["validateQuestionRevision"];
+/** Schema Validation — canonical domain contracts. */
+async function registerSchemaValidationTests(){
 const hash = "a".repeat(64);
 const question = (overrides = {}) => ({
   id: "question-rev-1",
@@ -197,20 +187,16 @@ test("schema validators reject invalid structural mutations as a table", () => {
 });
 
 }
+await registerSchemaValidationTests();
 
-// === Consolidated coverage: tests/exam-six-kind-lifecycle.test.mjs — retained assertions ===
-{
-const paperRevisionHash = __suite_dep_5["paperRevisionHash"];
-const test = __suite_dep_0["default"];
+/** Six Kind Lifecycle — canonical domain contracts. */
+async function registerSixKindLifecycleTests(){
 const questions = __suite_dep_6["questions"];
 const answers = __suite_dep_6["answers"];
 const pkg = __suite_dep_6["pkg"];
-const assert = __suite_dep_1["default"];
 const validateExamPackage = __suite_dep_3["validateExamPackage"];
 const startGenericAttempt = __suite_dep_3["startGenericAttempt"];
-const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
 const readableAnswer = __suite_dep_3["readableAnswer"];
-const validateGenericStoredRecord = __suite_dep_7_stored_record_validator["validateGenericStoredRecord"];
 const makeBackup = __suite_dep_8["makeBackup"];
 const verifyBackup = __suite_dep_8["verifyBackup"];
 const planBackupMerge = __suite_dep_8["planBackupMerge"];
@@ -292,16 +278,12 @@ test("completed generic scores cannot be silently rewritten in stored history",(
  assert.throws(()=>validateGenericStoredRecord({...completed,packageId:"different-revision"}),/incorrect revision/);
 });
 }
+await registerSixKindLifecycleTests();
 
-// === Canonical authoring/import boundary properties ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const readFile = __suite_dep_2["readFile"];
+/** Canonical Import Properties — canonical domain contracts. */
+async function registerCanonicalImportPropertiesTests(){
 const compileExternalQuestionBank = __suite_dep_9["compileExternalQuestionBank"];
 const validateExamPackage = __suite_dep_3["validateExamPackage"];
-const validateResponse = __suite_dep_10["validateResponse"];
-const scoreableMaximum = __suite_dep_12["scoreableMaximum"];
 const questions = __suite_dep_6["questions"];
 const starter=JSON.parse(await readFile(new URL("../examples/apfc-authoring-example.json",import.meta.url),"utf8"));
 function rng(seed){let x=seed>>>0;return n=>{x^=x<<13;x^=x>>>17;x^=x<<5;return (x>>>0)%n;};}
@@ -409,7 +391,7 @@ test("engine response validator gates six kinds independently from UI controls",
 // P42: adversarial imported-data envelopes; keep these beside the existing
 // import/package capability tests rather than adding a chronological suite.
 {
-const test=__suite_dep_0.default,assert=__suite_dep_1.default;
+const test=test,assert=assert;
 const {pkg}=__suite_dep_6;
 const {validateExamPackage,validateExamImportBudget}=__suite_dep_3;
 const {compileExternalQuestionBank}=__suite_dep_9;
@@ -472,3 +454,4 @@ test("P42 corrupted backup fails closed without altering legitimate current payl
  assert.throws(()=>verifyBackup(damaged),/integrity/);
 });
 }
+await registerCanonicalImportPropertiesTests();

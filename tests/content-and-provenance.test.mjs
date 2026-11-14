@@ -1,57 +1,38 @@
-// Capability suite with source-verified consolidation. Original fixture blocks
-// remain traceable; overlapping Q62 status/marks checks now have one owner.
-// Imports are module namespaces to avoid collisions between former suites.
-import * as __suite_dep_0 from "node:test";
-import * as __suite_dep_1 from "node:assert/strict";
-import * as __suite_dep_2 from "node:fs/promises";
-import * as __suite_dep_3 from "./fixtures/six-kinds.mjs";
-import * as __suite_dep_4 from "../src/app/exam-package.ts";
-import * as __generic_attempt from "../src/engine/generic-attempt.ts";
-import * as __suite_dep_5 from "../src/engine/scoring.ts";
-import * as __suite_dep_6 from "../src/engine/score-ceiling.ts";
-import * as __suite_dep_7 from "../src/domain/integrity.ts";
-import * as __suite_dep_8_stored_record_validator from "../src/app/stored-record-validator.ts";
-import * as __suite_dep_8_exam_view from "../src/app/exam-view.ts";
-import * as __suite_dep_9 from "../src/engine/review-source.ts";
-import * as __suite_dep_10 from "../src/content/import-cgl.ts";
-import * as __suite_dep_11 from "../src/engine/response.ts";
-import * as __suite_dep_12 from "../src/app/editorial-labels.ts";
-import * as __suite_dep_13 from "node:child_process";
-import * as __suite_dep_14 from "node:url";
-import * as __suite_dep_15 from "node:path";
-import * as __suite_dep_16 from "../src/domain/validate.ts";
-import * as __suite_dep_17 from "../src/engine/session.ts";
-import * as __suite_dep_18 from "../src/app/result-presentation.ts";
-import * as __suite_dep_19 from "../src/app/exam-preflight.ts";
-import * as __suite_dep_20 from "../src/app/response-drafts.ts";
-import * as __suite_dep_21 from "../src/history/deletion-policy.ts";
-import * as __suite_dep_22 from "../src/history/backup.ts";
-import * as __suite_dep_23 from "../src/engine/source-comparison.ts";
-import * as __suite_dep_24 from "../src/content/validate.ts";
-import * as __suite_dep_25 from "node:vm";
-import * as __suite_dep_26 from "../src/domain/hash.ts";
-import * as __suite_dep_27 from "../src/learning/learning.ts";
-import * as __suite_dep_28 from "../src/app/preferences.ts";
+/** Canonical source, editorial lineage and frozen-result contracts. */
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFile} from "node:fs/promises";
+import {pkg,questions} from "./fixtures/six-kinds.mjs";
+import {builtinCglPackages,configureCglPractice,cglAttemptMode,validateExamPackage,startGenericAttempt} from "../src/app/exam-package.ts";
+import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
+import {scoreAttempt} from "../src/engine/scoring.ts";
+import {scoreableMaximum,sectionScoreSummaries,scoreableLowerBound} from "../src/engine/score-ceiling.ts";
+import {paperRevisionHash,answerKeyRevisionHash,questionRevisionHash} from "../src/domain/integrity.ts";
+import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
+import {renderModelExam,readablePracticeMode} from "../src/app/exam-view.ts";
+import {createSourceReviewReference,validateSourceReviewReference} from "../src/engine/review-source.ts";
+import {importCglBank} from "../src/content/import-cgl.ts";
+import {validateResponse} from "../src/engine/response.ts";
+import {editorialStatusLabel} from "../src/app/editorial-labels.ts";
+import {execFileSync} from "node:child_process";
+import {fileURLToPath} from "node:url";
+import {resolve} from "node:path";
+import {validateAnswerKeyRevision,validatePaperRevision} from "../src/domain/validate.ts";
+import {startSession,transition,sectionTimerDuration} from "../src/engine/session.ts";
+import {resultTabsHTML} from "../src/app/result-presentation.ts";
+import {examPreflight} from "../src/app/exam-preflight.ts";
+import {duplicateMatchingTargets,multipleDraftMessage} from "../src/app/response-drafts.ts";
+import {assertDeletionAllowed} from "../src/history/deletion-policy.ts";
+import {makeBackup,verifyBackup,planBackupMerge} from "../src/history/backup.ts";
+import {createSourceKeyReference} from "../src/engine/source-comparison.ts";
+import {validateContent} from "../src/content/validate.ts";
+import {Script} from "node:vm";
+import {sha256} from "../src/domain/hash.ts";
+import {addLearningCard,validateLearningCard} from "../src/learning/learning.ts";
+import {readDisplayPreferences,writeDisplayPreferences} from "../src/app/preferences.ts";
 
-// === Consolidated coverage: tests/content-cgl-edition-parity.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const readFile = __suite_dep_2["readFile"];
-const pkg = __suite_dep_3["pkg"];
-const builtinCglPackages = __suite_dep_4["builtinCglPackages"];
-const configureCglPractice = __suite_dep_4["configureCglPractice"];
-const cglAttemptMode = __suite_dep_4["cglAttemptMode"];
-const validateExamPackage = __suite_dep_4["validateExamPackage"];
-const startGenericAttempt = __suite_dep_4["startGenericAttempt"];
-const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
-const scoreAttempt = __suite_dep_5["scoreAttempt"];
-const scoreableMaximum = __suite_dep_6["scoreableMaximum"];
-const sectionScoreSummaries = __suite_dep_6["sectionScoreSummaries"];
-const paperRevisionHash = __suite_dep_7["paperRevisionHash"];
-const validateGenericStoredRecord = __suite_dep_8_stored_record_validator["validateGenericStoredRecord"];
-const createSourceReviewReference = __suite_dep_9["createSourceReviewReference"];
-const editorialStatusLabel = __suite_dep_12["editorialStatusLabel"];
+/** Cgl Edition Parity — canonical domain contracts. */
+async function registerCglEditionParityTests(){
 const papers=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
 const solutions=JSON.parse(await readFile(new URL("../src/content/solutions.json",import.meta.url)));
@@ -178,15 +159,10 @@ test("standard CGL marking and nominal denominator are unchanged by generic cap"
    scoreableMaximum(ended.frozen.paper,ended.frozen.key,ended.frozen.questions));
 });
 }
+await registerCglEditionParityTests();
 
-// === Consolidated coverage: tests/content-cgl-import-and-scoring.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const readFile = __suite_dep_2["readFile"];
-const importCglBank = __suite_dep_10["importCglBank"];
-const validateResponse = __suite_dep_11["validateResponse"];
-const scoreAttempt = __suite_dep_5["scoreAttempt"];
+/** Original Bank Scoring — canonical domain contracts. */
+async function registerOriginalBankScoringTests(){
 const papers = JSON.parse(await readFile(new URL("../src/content/papers.json", import.meta.url)));
 const patches = JSON.parse(await readFile(new URL("../src/content/patches.json", import.meta.url)));
 const library = importCglBank(papers, patches);
@@ -210,19 +186,10 @@ test("reviewed editorial policy: source invalid without a patch is scored as cau
 
 
 }
+await registerOriginalBankScoringTests();
 
-// === Consolidated coverage: tests/content-editorial-and-timing-labels.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const readFile = __suite_dep_2["readFile"];
-const builtinCglPackages = __suite_dep_4["builtinCglPackages"];
-const configureCglPractice = __suite_dep_4["configureCglPractice"];
-const startGenericAttempt = __suite_dep_4["startGenericAttempt"];
-const renderModelExam = __suite_dep_8_exam_view["renderModelExam"];
-const readablePracticeMode = __suite_dep_8_exam_view["readablePracticeMode"];
-const editorialStatusLabel = __suite_dep_12["editorialStatusLabel"];
-const scoreAttempt = __suite_dep_5["scoreAttempt"];
+/** Editorial Timing — canonical domain contracts. */
+async function registerEditorialTimingTests(){
 const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url),"utf8"));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url),"utf8"));
 const packages=builtinCglPackages(sources,patches);
@@ -304,41 +271,10 @@ test("L09/L10: timing type and frozen mode have accurate labels, untimed include
  assert.equal(readablePracticeMode("author-defined-mode"),"author defined mode");
 });
 }
+await registerEditorialTimingTests();
 
-// === Consolidated coverage: tests/content-frozen-integrity.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const readFile = __suite_dep_2["readFile"];
-const execFileSync = __suite_dep_13["execFileSync"];
-const fileURLToPath = __suite_dep_14["fileURLToPath"];
-const resolve = __suite_dep_15["resolve"];
-const pkg = __suite_dep_3["pkg"];
-const questions = __suite_dep_3["questions"];
-const builtinCglPackages = __suite_dep_4["builtinCglPackages"];
-const configureCglPractice = __suite_dep_4["configureCglPractice"];
-const validateExamPackage = __suite_dep_4["validateExamPackage"];
-const startGenericAttempt = __suite_dep_4["startGenericAttempt"];
-const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
-const validateAnswerKeyRevision = __suite_dep_16["validateAnswerKeyRevision"];
-const validatePaperRevision = __suite_dep_16["validatePaperRevision"];
-const paperRevisionHash = __suite_dep_7["paperRevisionHash"];
-const answerKeyRevisionHash = __suite_dep_7["answerKeyRevisionHash"];
-const scoreableMaximum = __suite_dep_6["scoreableMaximum"];
-const scoreableLowerBound = __suite_dep_6["scoreableLowerBound"];
-const scoreAttempt = __suite_dep_5["scoreAttempt"];
-const startSession = __suite_dep_17["startSession"];
-const transition = __suite_dep_17["transition"];
-const sectionTimerDuration = __suite_dep_17["sectionTimerDuration"];
-const resultTabsHTML = __suite_dep_18["resultTabsHTML"];
-const examPreflight = __suite_dep_19["examPreflight"];
-const editorialStatusLabel = __suite_dep_12["editorialStatusLabel"];
-const duplicateMatchingTargets = __suite_dep_20["duplicateMatchingTargets"];
-const multipleDraftMessage = __suite_dep_20["multipleDraftMessage"];
-const assertDeletionAllowed = __suite_dep_21["assertDeletionAllowed"];
-const makeBackup = __suite_dep_22["makeBackup"];
-const verifyBackup = __suite_dep_22["verifyBackup"];
-const planBackupMerge = __suite_dep_22["planBackupMerge"];
+/** Frozen Content Integrity — canonical domain contracts. */
+async function registerFrozenContentIntegrityTests(){
 /** Pass 23 independent boundary audit, not reused Pass 17–22 fixtures/results.
  * Cross-check immutable canonical source banks and reconcile adversarial generic contracts.
  */
@@ -446,27 +382,10 @@ test("F13/G10: delete lifecycle cannot bypass unfinished status; noncanonical ba
  assert.throws(()=>verifyBackup(corrupt),/integrity/i);
 });
 }
+await registerFrozenContentIntegrityTests();
 
-// === Consolidated coverage: tests/content-source-review-and-frozen-media.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const readFile = __suite_dep_2["readFile"];
-const pkg = __suite_dep_3["pkg"];
-const builtinCglPackages = __suite_dep_4["builtinCglPackages"];
-const configureCglPractice = __suite_dep_4["configureCglPractice"];
-const validateExamPackage = __suite_dep_4["validateExamPackage"];
-const startGenericAttempt = __suite_dep_4["startGenericAttempt"];
-const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
-const createSourceReviewReference = __suite_dep_9["createSourceReviewReference"];
-const validateSourceReviewReference = __suite_dep_9["validateSourceReviewReference"];
-const createSourceKeyReference = __suite_dep_23["createSourceKeyReference"];
-const scoreableMaximum = __suite_dep_6["scoreableMaximum"];
-const sectionScoreSummaries = __suite_dep_6["sectionScoreSummaries"];
-const questionRevisionHash = __suite_dep_7["questionRevisionHash"];
-const paperRevisionHash = __suite_dep_7["paperRevisionHash"];
-const answerKeyRevisionHash = __suite_dep_7["answerKeyRevisionHash"];
-const validateGenericStoredRecord = __suite_dep_8_stored_record_validator["validateGenericStoredRecord"];
+/** Source Review Media — canonical domain contracts. */
+async function registerSourceReviewMediaTests(){
 const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
 const solutions=JSON.parse(await readFile(new URL("../src/content/solutions.json",import.meta.url)));
@@ -629,14 +548,10 @@ test("time expiration and voluntary finishing have separate durable source-indep
  assert.throws(()=>validateGenericStoredRecord(unfinished),/Unfinished attempt cannot contain completion provenance/);
 });
 }
+await registerSourceReviewMediaTests();
 
-// === Consolidated coverage: tests/content-validation-and-build.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const readFile = __suite_dep_2["readFile"];
-const validateContent = __suite_dep_24["validateContent"];
-const Script = __suite_dep_25["Script"];
+/** Bank Validation And Build — canonical domain contracts. */
+async function registerBankValidationAndBuildTests(){
 const load = async name => JSON.parse(
   await readFile(new URL('../src/content/' + name + '.json', import.meta.url), 'utf8')
 );
@@ -706,24 +621,10 @@ test('single-file release contains a complete inline app',async()=>{
  assert.ok(code);assert.doesNotThrow(()=>new Script(code));
 });
 }
+await registerBankValidationAndBuildTests();
 
-// === Consolidated coverage: tests/integrity-hash-and-media.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const pkg = __suite_dep_3["pkg"];
-const sha256 = __suite_dep_26["sha256"];
-const questionRevisionHash = __suite_dep_7["questionRevisionHash"];
-const answerKeyRevisionHash = __suite_dep_7["answerKeyRevisionHash"];
-const paperRevisionHash = __suite_dep_7["paperRevisionHash"];
-const validateExamPackage = __suite_dep_4["validateExamPackage"];
-const startGenericAttempt = __suite_dep_4["startGenericAttempt"];
-const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
-const validateGenericStoredRecord = __suite_dep_8_stored_record_validator["validateGenericStoredRecord"];
-const addLearningCard = __suite_dep_27["addLearningCard"];
-const validateLearningCard = __suite_dep_27["validateLearningCard"];
-const readDisplayPreferences = __suite_dep_28["readDisplayPreferences"];
-const writeDisplayPreferences = __suite_dep_28["writeDisplayPreferences"];
+/** Hash And Media Integrity — canonical domain contracts. */
+async function registerHashAndMediaIntegrityTests(){
 const clone=structuredClone;
 const image="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9WsSlz8AAAAASUVORK5CYII=";
 const decoded=Uint8Array.from(atob(image.slice(image.indexOf(",")+1)),c=>c.charCodeAt(0));
@@ -794,3 +695,4 @@ test("display preferences are validated and round-trip through storage",()=>{
  assert.deepEqual(readDisplayPreferences(store),{schema:1,dark:false,scale:100});
 });
 }
+await registerHashAndMediaIntegrityTests();
