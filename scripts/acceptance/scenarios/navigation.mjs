@@ -27,7 +27,7 @@ try{
  check(Boolean(attemptId),engine+" attempt URL identity missing");
  await page.locator('input[data-choice]').first().click();
  await page.locator("#g-flag").click();
- await page.getByRole("button",{name:/library/i}).click();await route(page,"library");
+ await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
  const savedRow=(await records(page)).find(x=>x.id===attemptId);
  check(savedRow?.state?.responses?.some(x=>x.response)&&savedRow.finishedAt===null,
   engine+" save/checkpoint did not persist");
@@ -50,7 +50,7 @@ try{
  await page.locator("#g-next").click();
  check(await page.url()===routeBefore,
   engine+" question navigation pushed an unwanted browser history entry");
- await page.getByRole("button",{name:/library/i}).click();await route(page,"library");
+ await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
  const nativeHistory=await page.evaluate(()=>({
   canGoBack:window.navigation?.canGoBack??false,
   canGoForward:window.navigation?.canGoForward??false,
@@ -114,7 +114,7 @@ try{
  check(Boolean(id),"fragment attempt id not pinned");
  await page.locator('input[data-choice]').first().click();
  await page.locator("#g-flag").click();
- await page.getByRole("button",{name:/library/i}).click();await route(page,"library");
+ await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
  check(new URL(await page.url()).hash==="#pd=library",
   engine+" Library fragment not updated");
  const saved=(await records(page)).find(a=>a.id===id);
@@ -138,7 +138,7 @@ try{
  await page.reload({waitUntil:"load"});await route(page,"exam");
  check(await page.locator('input[data-choice]:checked').count()===1,
   "fragment deep-link reload lost persisted answer");
- await page.getByRole("button",{name:/library/i}).click();await route(page,"library");
+ await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
  await page.evaluate(()=>{location.hash="#pd=exam&attempt=not-a-real-attempt";});
  await route(page,"library");
  check((await page.locator(".generic-warning").innerText()).includes("unavailable"),
