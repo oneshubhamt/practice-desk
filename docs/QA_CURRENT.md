@@ -1,18 +1,18 @@
 # Practice Desk — permanent QA contract
 
-**Canonical contract:** one Node test inventory, one tagged browser registry, one guarded release publisher. Executable truth lives in `tests/`, `scripts/node-suite.mjs`, `scripts/acceptance-suite.mjs`, `scripts/mutation-sensitivity.mjs`, and [CI](../.github/workflows/ci.yml). Historical rationale, evidence maps and measured changes: [QA census](QA_CENSUS.md) · [Pass E risk/case ledger](QA_PASS_E.md) · [Pass F](QA_PASS_F.md) · [Pass G](QA_PASS_G.md) · [Pass H](QA_PASS_H.md) · [Pass I residual assertion audit](QA_PASS_I.md). The authoritative de novo E–H objective check and corrected controlled economics are in [QA_CLOSURE_AUDIT.md](QA_CLOSURE_AUDIT.md).
+**Canonical contract:** one Node test inventory, one tagged browser registry, one guarded release publisher. Executable truth lives in `tests/`, `scripts/node-suite.mjs`, `scripts/acceptance-suite.mjs`, `scripts/mutation-sensitivity.mjs`, and [CI](../.github/workflows/ci.yml). Historical rationale, evidence maps and measured changes: [QA census](QA_CENSUS.md) · [Pass E risk/case ledger](QA_PASS_E.md) · [Pass F](QA_PASS_F.md) · [Pass G](QA_PASS_G.md) · [Pass H](QA_PASS_H.md) · [Pass I residual assertion audit](QA_PASS_I.md) · [Pass J evidence-gap strengthening](QA_PASS_J.md). The authoritative de novo E–H objective check and corrected controlled economics are in [QA_CLOSURE_AUDIT.md](QA_CLOSURE_AUDIT.md).
 
 ## Required gates and publication authority
 
 | Gate | When | Non-negotiable scope |
 |---|---|---|
-| **Fast** | Every relevant PR/push | Node **26.13.0**, locked dependencies, strict TS, deterministic offline HTML, **443** non-deep Node tests, isolated FSRS optimizer smoke and static Worker/WASM build |
+| **Fast** | Every relevant PR/push | Node **26.13.0**, locked dependencies, strict TS, deterministic offline HTML, **445** non-deep Node tests, isolated FSRS optimizer smoke and static Worker/WASM build |
 | **Smoke** | Every relevant PR/push; needs Fast | **6** real Chrome journeys including candidate→History and author→Publish→Review; complete browser/WASM optimizer activation |
 | **Cross** | Every relevant PR/push; needs Fast | **4** genuine engine-sensitive scenarios **each** on Playwright Firefox and WebKit, plus WASM optimizer probes on both |
 | **Deep** | Push to `working`; needs Fast | **7** scale/benchmark Node cases, **14** named assertion-killed mutations, native/WASM parity and **8** remaining Chrome browser scenarios |
 | **Publish** | Push to `working` **only** | Requires **successful Fast + Smoke + both Cross legs + Deep**; checks tested-head ancestry, no unverified source/CI/artifact drift, publishes only the tested deterministic HTML |
 
-The full Node inventory is **39 files / 450 cases** (443 fast + 7 deep). The browser registry has **14 scenarios / 22 engine executions**. The deep gate is not a routine PR gate, but **no `working` publication can bypass it**. Markdown-only changes do not trigger executable CI. Never weaken a required gate solely to improve timings.
+The full Node inventory is **39 files / 452 cases** (445 fast + 7 deep). The browser registry has **14 scenarios / 22 engine executions**. The deep gate is not a routine PR gate, but **no `working` publication can bypass it**. Markdown-only changes do not trigger executable CI. Never weaken a required gate solely to improve timings.
 
 ## Local reproducibility
 
@@ -36,10 +36,11 @@ Install the locked browser toolchain and its host dependencies when running loca
 ## Quality invariants and selection
 
 - **Scoring:** independent six-kind and seeded policy reference ledgers, exact fractional penalties and partial credit, exclusions, per-item/section identities, manual-pending and semantic mutations.
-- **Timing/session:** independent clocks, visibility/pause/section expiry, visit and answer evidence, terminal immutability, restore/rebase, event batching invariance.
+- **Timing/session:** independent clocks, visibility/pause/section expiry, visit and answer evidence, terminal immutability, restore/rebase, event batching invariance, plus real-browser pagehide/off-document/reopen recovery.
 - **Persistence:** CAS, stale tabs, shared snapshot SHA, backups, intentional deletion, corrupt rows, fallback/read/quota failures and atomic publication retries.
-- **Authoring:** signed lineage, reviewer evidence, exact publication revision, pre-reveal private-key and explanation isolation, QA refusal, offline browser publish→score→review→reload.
-- **Learning:** deterministic scheduling/replay, upstream/native/WASM parity, actual browser Worker activation, explicit optimizer/profile privacy.
+- **Authoring:** signed lineage, reviewer evidence, exact publication revision, pre-reveal private-key/explanation isolation, browser adversaries for stem/shared-stimulus/media-alt leakage, QA refusal, offline publish→score→review→reload.
+- **Learning:** deterministic scheduling/replay, an independent published FSRS-7 dual-trace retrievability reference, upstream/native/WASM parity, actual browser Worker activation, explicit optimizer/profile privacy.
+- **Calendar:** canonical temporal records plus an Asia/Kolkata datetime-local→UTC year-boundary browser witness with reload preservation.
 - **UI/security:** actual browser paint, ARIA/keyboard/focus, file navigation, responsive 195px/140% layout, media, CSP, no remote dependence.
 
 For every proposed test deletion or move, first name **risk → invariant → surviving independent witness → cheapest valid layer**. Preserve real subprocesses for CLI transactions, actual IndexedDB and browser/process-restart witnesses, and meaningful security/a11y assertions. Mere source phrases, CSS classes or success-only mocks are not proof. The **14 mutants** require baseline-green and the named test's assertion failure; they are sensitivity spot checks, **not** a global mutation score.

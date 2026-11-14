@@ -28,3 +28,27 @@ Specification: https://open-spaced-repetition.github.io/ts-fsrs/guide/model/fsrs
 ## Stop condition
 
 Pass J is complete only after the two added Node cases and the strengthened existing browser scenarios pass the complete required release path, with the guarded publisher still green.
+
+
+## Verification
+
+Verified executable source: `b387514ccf5c83bb010df9f1065eb0b57c5df168`.
+
+GitHub Actions run [43595073345](https://github.com/oneshubhamt/practice-desk/actions/runs/43595073345) passed on the first attempt:
+
+- **445/445 Fast Node cases** (two new J cases; previously 443);
+- **7/7 Deep Node** scale/benchmark cases;
+- **14/14** targeted baseline-green, assertion-killed semantic mutants;
+- **6** Chromium Smoke scenarios;
+- **8** Chromium Deep scenarios, including the strengthened authoring, storage-resilience and Calendar journeys;
+- **4 + 4** Firefox/WebKit Cross scenarios;
+- native/WASM optimizer parity and browser Worker evidence;
+- guarded Publish.
+
+Observed execution for this run: Fast Node/type/build **40.821 s**, Deep browser scenarios **49.587 s**. These are single-run observations, not performance baselines or SLAs.
+
+The browser evidence explicitly logged the real pagehide/reopen foreground-exclusion witness, and the Calendar integration completed after the Asia/Kolkata year-boundary schedule/reload check. The existing scenario registry remains **14 scenarios / 22 engine executions**.
+
+Pass J changes test/acceptance evidence and QA documentation only. No `src/` production file, generated app behaviour, scoring policy, persistence implementation or browser matrix was changed.
+
+**Disposition:** stop condition met. Further evidence should be added only for a newly identified material risk; J does not justify another generic expansion of the suite.
