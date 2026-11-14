@@ -21,6 +21,8 @@ npm run build:static
 node scripts/acceptance-suite.mjs chromium
 node scripts/acceptance-suite.mjs firefox
 node scripts/acceptance-suite.mjs webkit
+# Optional focused capability run:
+node scripts/acceptance-suite.mjs chromium --tag=storage
 ```
 
 The browser suites require the corresponding Playwright browser binaries. The protected CI workflow installs them on standard GitHub-hosted runners and is the normal full-system verification path.
@@ -33,8 +35,8 @@ A current application change is release-eligible only when all of these gates pa
 
 - **Core:** strict TypeScript (including unused-local rejection), deterministic standalone build, complete Node test suite, clean dependency graph and the targeted mutation-sensitivity witnesses.
 - **Optimizer:** native FSRS optimizer smoke, native/WASM semantic parity and the independently generated static Worker/WASM build.
-- **Chromium:** all source-mapped offline candidate journeys plus the full browser/WASM optimizer activation path.
-- **Firefox and WebKit:** all cross-browser source-mapped journeys plus the browser/WASM optimizer probe.
+- **Chromium:** all scenarios in the capability-tagged browser registry (currently 14) plus the full browser/WASM optimizer activation path.
+- **Firefox and WebKit:** only scenarios tagged `cross-browser` (currently 4) plus the browser/WASM optimizer probe.
 - **Guarded publisher:** only after the preceding gates pass may CI publish the tested standalone HTML to `working`; source drift aborts publication.
 
 `npm run check` is necessary but not sufficient for UI, browser-storage, Worker/WASM or cross-browser changes.
@@ -53,7 +55,7 @@ The Node suite is organized by stable product domains rather than historical pro
 
 Prefer independent expected values, state/reference models, tables, metamorphic properties and adversarial counterexamples over implementation mirroring. A changed contract needs a witness that would fail for a plausible semantic defect.
 
-For scoring, preserve six-kind semantics, fractional/partial credit, exclusions and exact denominators. For persistence, challenge stale tabs, CAS revisions, corruption, recovery and additive backup. For authoring, challenge candidate secrecy, source lineage, publication gating and corrupt local state. For learning, challenge scheduling evidence, optimizer activation policy and privacy boundaries. Result/review analytics additionally exercise the 2,000-question package ceiling in Node. Browser tests should exercise actual user journeys rather than duplicate pure-domain assertions.
+For scoring, preserve six-kind semantics, fractional/partial credit, exclusions and exact denominators. For persistence, challenge stale tabs, CAS revisions, corruption, recovery and additive backup. For authoring, challenge candidate secrecy, source lineage, publication gating and corrupt local state. For learning, challenge scheduling evidence, optimizer activation policy and privacy boundaries. Result/review analytics additionally exercise the 2,000-question package ceiling in Node. Browser tests should exercise actual user journeys rather than duplicate pure-domain assertions. Prefer Playwright role/name and other user-facing locators for visible interactions; retain stable IDs/data attributes when the test is intentionally addressing a technical evidence surface or a semantic locator would be ambiguous.
 
 The mutation suite is intentionally targeted: every listed mutant must have a green baseline and then fail for the named assertion. It is **not** a repository-wide mutation score.
 
