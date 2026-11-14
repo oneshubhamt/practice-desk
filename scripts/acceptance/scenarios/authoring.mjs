@@ -122,7 +122,7 @@ const {QUALITY_CHECKLIST}=await import("../../question-quality.mjs");
 const engine=process.argv[2]??"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
 const {page,errors}=await h.open({viewport:{width:1280,height:840}});
-const fixture=async name=>JSON.parse(await readFile(new URL("../examples/ai-first-"+name+".json",import.meta.url),"utf8"));
+const fixture=async name=>JSON.parse(await readFile(new URL("../../../examples/ai-first-"+name+".json",import.meta.url),"utf8"));
 async function stage(source,label){
  await page.locator("#g-file").setInputFiles({name:label+".json",mimeType:"application/json",
   buffer:Buffer.from(JSON.stringify(source))});
@@ -291,7 +291,7 @@ try{
  try{
   const path=join(temp,"reviewed.json");
   await writeFile(path,reviewedRaw);
-  const command=fileURLToPath(new URL("./question-quality.mjs",import.meta.url));
+  const command=fileURLToPath(new URL("../../question-quality.mjs",import.meta.url));
   const packet=JSON.parse(execFileSync(process.execPath,[command,"candidate",path,"--limit","10"],
    {encoding:"utf8",timeout:30000}));
   const decisions=editorialDecisionTemplate(originalBank,reviewedBank,digest(originalRaw),digest(reviewedRaw));
@@ -331,7 +331,7 @@ try{
   await writeFile(originalPath,originalRaw);
   await writeFile(decisionsPath,JSON.stringify(decisions));
   await writeFile(reviewPath,JSON.stringify(review));
-  const handoffCommand=fileURLToPath(new URL("./agent-handoff.mjs",import.meta.url));
+  const handoffCommand=fileURLToPath(new URL("../../agent-handoff.mjs",import.meta.url));
   const preflight=JSON.parse(execFileSync(process.execPath,
    [handoffCommand,"assess","paired",originalPath,path,decisionsPath,
     "--quality-review",reviewPath],
