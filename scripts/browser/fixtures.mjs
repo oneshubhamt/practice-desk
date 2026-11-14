@@ -3,7 +3,7 @@
  * (and the installed Google Chrome for the Chromium leg).
  */
 import {chromium,firefox,webkit} from "playwright-core";
-import {spawnSync} from "node:child_process";
+import {chromePath} from "./chrome-path.mjs";
 import {resolve,join} from "node:path";
 import {fileURLToPath,pathToFileURL} from "node:url";
 import {mkdir,writeFile,readFile} from "node:fs/promises";
@@ -22,16 +22,6 @@ export const check=(condition,message)=>{
 export async function starterBank(){
  return JSON.parse(await readFile(join(root,"examples/apfc-authoring-example.json"),"utf8"));
 }
-function chromePath(){
- for(const name of ["google-chrome","google-chrome-stable","chromium","chromium-browser"]){
-  if(spawnSync(name,["--version"],{encoding:"utf8"}).status===0){
-   const path=spawnSync("which",[name],{encoding:"utf8"}).stdout.trim();
-   if(path)return path;
-  }
- }
- throw Error("Chromium acceptance requires installed Chrome; refusing browser fallback");
-}
-
 /** A process-scoped browser pool for serial, independently isolated acceptance journeys.
  * All page/storage isolation remains per scenario via new browser contexts.
  * This is a test-harness optimization only; production app code is untouched.
@@ -40,7 +30,7 @@ let activeSuite=null;
 export function beginAcceptanceSuite(engine){
  check(!activeSuite,"nested acceptance suites are forbidden");
  check(["chromium","firefox","webkit"].includes(engine),"unsupported pooled engine");
- activeSuite={engine,browser:null,launches:0,contextStarts:0};
+ activeSuite={engine,browser:null,launches:0,contextStarts:0,browserVersion:null};
 }
 export async function endAcceptanceSuite(){
  const current=activeSuite;
@@ -50,7 +40,9 @@ export async function endAcceptanceSuite(){
  if(current.browser)await current.browser.close();
  check(leftovers===0,"isolation failure: "+leftovers+" context(s) survived completed journey");
  check(current.launches===1,"expected exactly one browser launch; observed "+current.launches);
- return {browserLaunches:current.launches,contextStarts:current.contextStarts};
+ return {browserLaunches:current.launches,contextStarts:current.contextStarts,
+  browserVersion:current.browserVersion,
+  executableKind:current.engine==="chromium"?"system-chrome":"playwright-managed"};
 }
 
 export async function openHarness({engine="chromium",artifactDir=null}={}){
@@ -67,7 +59,10 @@ export async function openHarness({engine="chromium",artifactDir=null}={}){
   ? activeSuite.browser??(activeSuite.browser=await selected.launch(options),
       activeSuite.launches++,activeSuite.browser)
   : await selected.launch(options);
- if(activeSuite)activeSuite.contextStarts++;
+ if(activeSuite){
+  activeSuite.contextStarts++;
+  activeSuite.browserVersion??=browser.version();
+ }
 
  const pages=[];
  async function open({viewport=viewports.laptop,colorScheme="light",reducedMotion="reduce",
@@ -191,7 +186,7 @@ export async function assertNoOverflow(page,label){
 }
 export async function route(page,name){
  const selectors={library:"#g-start",exam:"#g-next",result:".result-performance-overview",
-  history:".history-archive",learning:"#learning-close"};
+  history:".history-archive",learning:"#learning-close",calendar:"#pd-calendar-mount"};
  await page.waitForFunction(expected=>{
   const current=new URL(location.href);
   const fromFragment=current.hash.startsWith("#pd=")?

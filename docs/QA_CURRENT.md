@@ -1,60 +1,61 @@
-# Practice Desk — current QA contract
+# Practice Desk — permanent QA contract
 
-This is the active human-readable verification contract for the current `working` branch. Historical programme-specific runs and implementation diaries belong in [HISTORY_INDEX.md](HISTORY_INDEX.md). The executable sources of truth are the test files, `scripts/acceptance-suite.mjs`, `scripts/mutation-sensitivity.mjs` and [CI](../.github/workflows/ci.yml).
+**Canonical contract:** one Node test inventory, one tagged browser registry, one guarded release publisher. Executable truth lives in `tests/`, `scripts/node-suite.mjs`, `scripts/acceptance-suite.mjs`, `scripts/mutation-sensitivity.mjs`, and [CI](../.github/workflows/ci.yml). Historical rationale, evidence maps and measured changes: [QA census](QA_CENSUS.md) · [Pass E risk/case ledger](QA_PASS_E.md) · [Pass F](QA_PASS_F.md) · [Pass G](QA_PASS_G.md) · [Pass H](QA_PASS_H.md) · [Pass I residual assertion audit](QA_PASS_I.md) · [Pass J evidence-gap strengthening](QA_PASS_J.md) · [Pass K economics + final adequacy](QA_PASS_K.md). The authoritative de novo E–H objective check and corrected controlled economics are in [QA_CLOSURE_AUDIT.md](QA_CLOSURE_AUDIT.md).
 
-## Required toolchain
+## Required gates and publication authority
 
-Use Node.js **26.13.0** with the committed lockfiles. The main application and isolated FSRS optimizer dependency graphs must both install cleanly from those locks.
+| Gate | When | Non-negotiable scope |
+|---|---|---|
+| **Fast** | Every relevant PR/push | Node **26.13.0**, locked dependencies, strict TS, deterministic offline HTML, **445** non-deep Node tests, isolated FSRS optimizer smoke and static Worker/WASM build |
+| **Smoke** | Every relevant PR/push; needs Fast | **6** real Chrome journeys including candidate→History and author→Publish→Review; complete browser/WASM optimizer activation |
+| **Cross** | Every relevant PR/push; needs Fast | **4** genuine engine-sensitive scenarios **each** on Playwright Firefox and WebKit, plus WASM optimizer probes on both |
+| **Deep** | Push to `working`; needs Fast | **7** scale/benchmark Node cases, **14** named assertion-killed mutations and native/WASM parity run as one contract lane **concurrently in the same runner** with the **8** serial Chrome browser scenarios |
+| **Publish** | Push to `working` **only** | Requires **successful Fast + Smoke + both Cross legs + Deep**; checks tested-head ancestry, no unverified source/CI/artifact drift, publishes only the tested deterministic HTML |
+
+The full Node inventory is **39 files / 452 cases** (445 fast + 7 deep). The browser registry has **14 scenarios / 22 engine executions**. The deep gate is not a routine PR gate, but **no `working` publication can bypass it**. Markdown-only changes do not trigger executable CI. Never weaken a required gate solely to improve timings.
+
+## Local reproducibility
 
 ```bash
 npm ci --no-audit --no-fund
-npm run check
+npm run qa:fast
+npm run qa:deep
 node scripts/mutation-sensitivity.mjs
-
 npm ci --prefix tools/fsrs-optimizer --no-audit --no-fund
 npm run --prefix tools/fsrs-optimizer smoke
 npm run --prefix tools/fsrs-optimizer parity
 npm run build:static
-
-node scripts/acceptance-suite.mjs chromium
-node scripts/acceptance-suite.mjs firefox
-node scripts/acceptance-suite.mjs webkit
+node scripts/acceptance-suite.mjs chromium --tag=smoke
+node scripts/acceptance-suite.mjs chromium --tag=deep
+node scripts/acceptance-suite.mjs firefox --tag=cross-browser
+node scripts/acceptance-suite.mjs webkit --tag=cross-browser
 ```
 
-The browser suites require the corresponding Playwright browser binaries. The protected CI workflow installs them on standard GitHub-hosted runners and is the normal full-system verification path.
+Install the locked browser toolchain and its host dependencies when running locally. Chrome smoke/deep (including the Chromium WASM probe) use the **same installed Chrome binary**; Firefox/WebKit use their separately installed Playwright browsers. Acceptance scenarios use one process per engine, **fresh contexts and serial journeys**. CI runs independent lanes concurrently only after the Fast artifact gate. Within Deep, the contract lane overlaps the Chromium lane because mutations use a temporary sandbox while the browser reads immutable Fast artifacts; the eight browser journeys themselves remain serial. Never parallelize journeys that share harness context teardown, IndexedDB/profile state or browser-global fixtures.
 
-Markdown-only pushes and pull requests are excluded from the expensive runtime workflow because Markdown is not a build input. Any source, test, build, dependency or workflow change still enters the full gates below; a documentation-only commit therefore may legitimately have no CI run.
+## Quality invariants and selection
 
-## Required CI gates
+- **Scoring:** independent six-kind and seeded policy reference ledgers, exact fractional penalties and partial credit, exclusions, per-item/section identities, manual-pending and semantic mutations.
+- **Timing/session:** independent clocks, visibility/pause/section expiry, visit and answer evidence, terminal immutability, restore/rebase, event batching invariance, plus real-browser pagehide/off-document/reopen recovery.
+- **Persistence:** CAS, stale tabs, shared snapshot SHA, backups, intentional deletion, corrupt rows, fallback/read/quota failures and atomic publication retries.
+- **Authoring:** signed lineage, reviewer evidence, exact publication revision, pre-reveal private-key/explanation isolation, browser adversaries for stem/shared-stimulus/media-alt leakage, QA refusal, offline publish→score→review→reload.
+- **Learning:** deterministic scheduling/replay, an independent published FSRS-7 dual-trace retrievability reference, upstream/native/WASM parity, actual browser Worker activation, explicit optimizer/profile privacy.
+- **Calendar:** canonical temporal records plus an Asia/Kolkata datetime-local→UTC year-boundary browser witness with reload preservation.
+- **UI/security:** actual browser paint, ARIA/keyboard/focus, file navigation, responsive 195px/140% layout, media, CSP, no remote dependence.
 
-A current application change is release-eligible only when all of these gates pass on the same tested source ancestry:
+For every proposed test deletion or move, first name **risk → invariant → surviving independent witness → cheapest valid layer**. Preserve real subprocesses for CLI transactions, actual IndexedDB and browser/process-restart witnesses, and meaningful security/a11y assertions. Mere source phrases, CSS classes or success-only mocks are not proof. The **14 mutants** require baseline-green and the named test's assertion failure; they are sensitivity spot checks, **not** a global mutation score.
 
-- **Core:** strict TypeScript (including unused-local rejection), deterministic standalone build, complete Node test suite, clean dependency graph and the targeted mutation-sensitivity witnesses.
-- **Optimizer:** native FSRS optimizer smoke, native/WASM semantic parity and the independently generated static Worker/WASM build.
-- **Chromium:** all source-mapped offline candidate journeys plus the full browser/WASM optimizer activation path.
-- **Firefox and WebKit:** all cross-browser source-mapped journeys plus the browser/WASM optimizer probe.
-- **Guarded publisher:** only after the preceding gates pass may CI publish the tested standalone HTML to `working`; source drift aborts publication.
+## Timing, evidence and limits
 
-`npm run check` is necessary but not sufficient for UI, browser-storage, Worker/WASM or cross-browser changes.
+`scripts/timed-run.mjs` reports per-lane `QA_TIMING` JSON; Node reporter gives case timings; `scripts/acceptance-suite.mjs` emits scenario IDs/outcomes, per-scenario elapsed time and actual browser version/executable provenance. Compare repeated green runs on **the same source** and separate setup, execution, runner contention and guarded-publication wall time. The closure benchmark uses three baseline and three final same-source attempts: median pre-publication gate runner consumption **351→325 s (−7.4%)** and median gate critical path **157→153 s (−2.5%)**; the eliminated duplicate Chromium installs have a baseline median cost of **32.77 s/attempt**. Do not enforce arbitrary millisecond thresholds. Keep expensive reviewer-authority checks in Fast: moving them to a release-only gate would weaken PR screening. Retain WebKit dependencies rather than silently substituting Chrome for a different engine.
 
-For deliberate visual evidence only:
+**Pass K retained economics (three green same-source attempts each):** J baseline executable `b387514` had median pre-publication runner consumption **315 s**, median gate critical path **154 s**, median full Fast→Publish path **163 s**, and median Deep job **88 s**. The retained K topology (`415a973`; identical executable tree at final verification `41a4d50`) measured **313 s (−0.6%)**, **144 s (−6.5%)**, **155 s (−4.9%)**, and **70 s (−20.5%)** respectively. No test was removed or moved. A pinned Playwright browser-cache experiment improved the WebKit job but not whole-pipeline economics enough to justify its cache state/dependency, so it was reverted. See [Pass K](QA_PASS_K.md) for raw attempts, the rejected experiment and final adequacy evidence.
 
-```bash
-PRACTICE_DESK_VISUAL_REVIEW=1 node scripts/acceptance-suite.mjs chromium
-```
+Passing CI does **not** establish historical PYQ authenticity, current legal facts, real reviewer identity, physical-device Safari, assistive-technology usability or survival of power loss/OS-profile loss. Address those outside the bounded automated contracts. See [Pass K](QA_PASS_K.md) for the latest measured economics and final adequacy evidence; [Pass H](QA_PASS_H.md) retains the earlier A–H survivor mapping and closure benchmark.
 
-Normal passing CI does not capture screenshots merely to create evidence.
 
-## Test design rules
+## Repository governance boundary
 
-Prefer independent expected values, state models and adversarial counterexamples over implementation mirroring. A changed contract needs a witness that would fail for a plausible semantic defect.
+The automated QA contract does not substitute for GitHub branch governance. The latest closure check found `main`, `working` and `Satyam` unprotected and no repository rulesets. `working` is documented as the authorised development branch; merge/release still requires explicit authorization.
 
-For scoring, preserve six-kind semantics, fractional/partial credit, exclusions and exact denominators. For persistence, challenge stale tabs, CAS revisions, corruption, recovery and additive backup. For authoring, challenge candidate secrecy, source lineage, publication gating and corrupt local state. For learning, challenge scheduling evidence, optimizer activation policy and privacy boundaries. Result/review analytics additionally exercise the 2,000-question package ceiling in Node. Browser tests should exercise actual user journeys rather than duplicate pure-domain assertions.
-
-The mutation suite is intentionally targeted: every listed mutant must have a green baseline and then fail for the named assertion. It is **not** a repository-wide mutation score.
-
-## What automated QA does not prove
-
-Green CI establishes the bounded software contracts encoded by the suite. It does **not** independently prove factual correctness of question banks, statutory currency, authenticity of third-party source reproductions, human reviewer identity, physical-device behavior, native Mac Safari behavior, assistive-technology usability, or survival of browser data after OS/profile loss.
-
-Those risks belong in the active [backlog](../backlog.md). Historical measurements and prior verification runs remain available through [HISTORY_INDEX.md](HISTORY_INDEX.md), but an old green run never substitutes for verification of the present source.
+The guarded publisher prevents untested artifact publication **inside that workflow**, but cannot prevent a direct push from bypassing CI. If `main` or `working` is designated a release-authority branch, enforce that policy with GitHub branch protection/rulesets (including an intentional publisher/bot strategy) rather than adding more application tests.

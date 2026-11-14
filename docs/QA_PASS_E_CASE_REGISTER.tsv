@@ -1,0 +1,449 @@
+# Practice Desk Pass E — case-to-invariant index
+# Source: successful CI run 43569704822, SHA 78930faa, 2026-11-14. Branch at audit start d9a44eb (documentation-only change).
+# Exactly 442 observed Node cases; per-file grouping verified against lexicographically ordered, contiguous Node test reporter output and source first-title anchors.
+# Primary contract/classification is a navigation aid inferred from observed title and source-domain; not a certified assertion-level semantic judgement.
+# independence-candidate denotes a named model/reference/parity witness requiring Pass F review, not proof of independence.
+# duration_ms is Node runner case-reported time; parallel execution means sums are NOT file wall-clock times.
+case_id	lane	file	primary_contract	primary_lens	witness_hint	duration_ms	observed_test_title
+001	fast	acceptance-script-syntax.test.mjs	QA-HARNESS	integration	integration-witness	227.62	all current browser and agent scripts parse in-process under the locked toolchain
+002	fast	agent-authoring.test.mjs	AUTHOR-AGENT	behavioural	contract-example	989.50	P59: agent inspect returns bounded, paginated actionable errors without full questions or false factual verification
+003	fast	agent-authoring.test.mjs	AUTHOR-AGENT	presentation	contract-example	682.24	P59: agent show retrieves exactly one question with stable per-item fingerprint and separate shared context, no unnecessary bank or image bytes
+004	fast	agent-authoring.test.mjs	AUTHOR-AGENT	behavioural	contract-example	1370.83	P59: guarded delta edits preserve original, validate canonical publisher, compile as caution, permit a new numbered revision and refuse overwrite
+005	fast	agent-authoring.test.mjs	AUTHOR-AGENT	behavioural	contract-example	3685.75	P59: bad source hash, item hash, id, path, revisions and wrong keyed schema fail closed without partial output
+006	fast	agent-authoring.test.mjs	AUTHOR-AGENT	integration	contract-example	630.41	P59: malformed source and unsupported draft exchange are not silently coerced into the narrow AI edit contract
+007	fast	agent-authoring.test.mjs	AUTHOR-AGENT	behavioural	contract-example	1557.69	P59: AI appends or removes only named questions with a non-destructive guard; dry runs never materialize output
+008	fast	agent-authoring.test.mjs	AUTHOR-AGENT	presentation	contract-example	856.53	P59: focused optional-field removal needs exact question identity; no arbitrary modifications allowed
+009	fast	agent-authoring.test.mjs	AUTHOR-AGENT	behavioural	contract-example	1306.49	P59: 200-question ordinary agent inspection uses much smaller output than full QA without concealing truncation
+010	fast	agent-authoring.test.mjs	AUTHOR-AGENT	behavioural	contract-example	1333.63	P59: editing an alleged official PYQ cannot silently retain its provenance or suppress correction review
+011	fast	agent-authoring.test.mjs	AUTHOR-AGENT	behavioural	contract-example	14.30	P60-A: source-backed capability catalogue is versioned, unique, nonempty and evidence-navigable
+012	fast	agent-authoring.test.mjs	AUTHOR-AGENT	security	contract-example	130.86	P60-A: default summary and list are bounded, source-private, machine-readable and low-context
+013	fast	agent-authoring.test.mjs	AUTHOR-AGENT	behavioural	contract-example	236.65	P60-A: agent can inspect exactly one capability and concrete operation separately
+014	fast	agent-authoring.test.mjs	AUTHOR-AGENT	behavioural	contract-example	307.62	P60-A: unsupported or ambiguous commands fail closed without app/history access
+015	fast	agent-authoring.test.mjs	AUTHOR-AGENT	superficial-candidate	contract-example	3.29	P60-A: documentation truth table excludes claims that later P60 work already exists
+016	fast	agent-authoring.test.mjs	AUTHOR-AGENT	integration	integration-witness	59.31	P60-F RED: discover concise versioned actions and privilege limits, without any browser/History access
+017	fast	agent-authoring.test.mjs	AUTHOR-AGENT	presentation	contract-example	2974.77	P60-H: sourced APFC/CAT items prepare as a complete blind packet, compile cautiously and require real review for strict publication
+018	fast	agent-authoring.test.mjs	AUTHOR-AGENT	behavioural	contract-example	740.77	P60 final: reject paired comparison options that cannot be applied without a blueprint
+019	fast	agent-authoring.test.mjs	AUTHOR-AGENT	integration	integration-witness	4070.69	P60 full QA: source-attributed APFC/CAT end-to-end review record, strict publication, integrity and stale refusal
+020	fast	agent-authoring.test.mjs	AUTHOR-AGENT	security	contract-example	2010.72	P60-F RED: single mode converges source + P60-C into bounded answer-private readiness
+021	fast	agent-authoring.test.mjs	AUTHOR-AGENT	behavioural	contract-example	2439.64	P60-F RED: paired original/reviewed only publishes with complete SHA-bound review, decisions and create-only permission
+022	fast	agent-authoring.test.mjs	AUTHOR-AGENT	behavioural	contract-example	1416.87	P60-F RED: invalid QA source hash and blueprint mismatch fail before any new file
+023	fast	agent-authoring.test.mjs	AUTHOR-AGENT	security	contract-example	341.09	P60-F RED: unknown modes/flags and local private-performance request fail closed
+024	fast	agent-authoring.test.mjs	AUTHOR-AGENT	behavioural	contract-example	3439.85	P60-F RED: one strict handoff also handles agent-transcribed PDF and preserves original/key lineage
+025	fast	agent-authoring.test.mjs	AUTHOR-AGENT	integration	contract-example	2916.13	P62-A agent assessment preserves valid partial status and rejects incomplete publication
+026	fast	architecture-boundaries.test.mjs	ARCH-DEPENDENCY	architecture	contract-example	2.65	parser-backed import graph keeps foundational layers below application composition
+027	fast	architecture-boundaries.test.mjs	ARCH-DEPENDENCY	architecture	contract-example	1.17	third-party scheduler and editor dependencies terminate at their adapters
+028	fast	architecture-boundaries.test.mjs	ARCH-DEPENDENCY	architecture	integration-witness	0.66	application controllers are acyclic runtime capabilities and never depend back on generic-ui or vendors
+029	fast	architecture-boundaries.test.mjs	ARCH-DEPENDENCY	architecture	contract-example	0.50	composition root and authoring modules preserve one-way ownership boundaries
+030	fast	architecture-boundaries.test.mjs	ARCH-DEPENDENCY	architecture	contract-example	0.36	storage/media/calendar dependency topology has no second persistence path
+031	fast	attempt-provenance.test.mjs	EXAM-PACKAGE	behavioural	contract-example	12.22	runtime CGL practice policy is not accepted as canonical ExamPackage content
+032	fast	attempt-provenance.test.mjs	EXAM-PACKAGE	behavioural	contract-example	166.88	attempt creation freezes deliberate CGL modes while ordinary packages default safely
+033	fast	attempt-provenance.test.mjs	EXAM-PACKAGE	behavioural	contract-example	67.34	custom composition always freezes custom-practice provenance regardless of CGL source policy
+034	fast	authoring-domain.test.mjs	AUTHOR-DRAFT	mathematical	contract-example	3.07	P47-5A canonical immutable normalized marks and explicit math
+035	fast	authoring-domain.test.mjs	AUTHOR-DRAFT	behavioural	contract-example	1.06	P47-5A rectangles, local assets and lists are canonical
+036	fast	authoring-domain.test.mjs	AUTHOR-DRAFT	security	contract-example	0.43	P47-5A rejects active HTML, remote assets and untrusted fields
+037	fast	authoring-domain.test.mjs	AUTHOR-DRAFT	security	contract-example	0.41	P47-5A rejects budget overflow and prototype-inherited metadata
+038	fast	authoring-domain.test.mjs	AUTHOR-PUBLISH	integration	contract-example	9.20	P47-5C draft is not a published paper or answer key and covers six kinds
+039	fast	authoring-domain.test.mjs	AUTHOR-DRAFT	security	contract-example	1.42	P47-5C app-owned draft rejects malicious, duplicate and malformed content
+040	fast	authoring-domain.test.mjs	AUTHOR-DRAFT	behavioural	contract-example	1.15	P47-5C shelf is independent of exam attempts and blocks unknown active IDs
+041	fast	authoring-domain.test.mjs	AUTHOR-DRAFT	presentation	contract-example	1.20	P47-5C math and local image tokens never contain remote URLs or execute HTML
+042	fast	authoring-domain.test.mjs	AUTHOR-PUBLISH	behavioural	contract-example	50.79	P47-5D all six kinds publish as source-validated frozen rich package, with correct hashes
+043	fast	authoring-domain.test.mjs	AUTHOR-DRAFT	behavioural	contract-example	0.69	P47-5D authored rich fallback preserves math alt/table/image semantics without TeX parsing of literal dollars
+044	fast	authoring-domain.test.mjs	AUTHOR-DRAFT	behavioural	contract-example	46.11	P47-5D rejects incomplete paper, missing keys and every kind's malformed answer
+045	fast	authoring-domain.test.mjs	AUTHOR-PUBLISH	integration	contract-example	17.88	P47-5D never replaces published ID; increments and separately authenticates new revision
+046	fast	authoring-domain.test.mjs	AUTHOR-PUBLISH	presentation	contract-example	21.33	P47-5D source/reviewed editions require provenance and a real source counterpart
+047	fast	authoring-domain.test.mjs	AUTHOR-DRAFT	mathematical	independence-candidate	7.20	P47-5D authenticated local image references include only used assets
+048	fast	authoring-domain.test.mjs	AUTHOR-PUBLISH	behavioural	contract-example	20.68	P54 authoritative inspector yields the same immutable package the publisher would create
+049	fast	authoring-domain.test.mjs	AUTHOR-DRAFT	integration	contract-example	1.05	P54 inspector handles imported malformed structure as issues, never says Ready
+050	fast	authoring-domain.test.mjs	AUTHOR-DRAFT	behavioural	contract-example	9.20	P54 section manager always updates the whole named section, preserving physical section order
+051	fast	authoring-domain.test.mjs	AUTHOR-PUBLISH	presentation	contract-example	14.14	P54 real six-kind preview uses frozen question controls, never index-pairs matching answers
+052	fast	authoring-domain.test.mjs	AUTHOR-DRAFT	mathematical	contract-example	4.88	P54 partial-credit examples are from actual scoreAttempt, not a second scoring formula
+053	fast	authoring-domain.test.mjs	AUTHOR-DRAFT	behavioural	contract-example	27.94	P58-A F01: external QA is bound to a validated ingestion mode, not a draft ID
+054	fast	authoring-domain.test.mjs	AUTHOR-DRAFT	presentation	contract-example	0.87	P58-A F01: genuine manual drafts preserve existing publication validation path
+055	fast	authoring-domain.test.mjs	AUTHOR-DRAFT	presentation	contract-example	22.82	Authoring property: literal Unicode/math/HTML-like strings survive rich validation unchanged
+056	fast	authoring-domain.test.mjs	AUTHOR-PUBLISH	presentation	contract-example	5.38	P62-A candidate view excludes explanation-only image and alt text, review retains both
+057	fast	authoring-workspace-integrity.test.mjs	AUTHOR-PUBLISH	behavioural	contract-example	79.31	P58-B F04: versioned exchange preserves source IDs, rich content, citations, keys and exact frozen policy
+058	fast	authoring-workspace-integrity.test.mjs	AUTHOR-PUBLISH	security	contract-example	36.99	P58-B F03: malicious dates and URLs never persist; source-disagreement remains unverified
+059	fast	authoring-workspace-integrity.test.mjs	AUTHOR-DRAFT	integration	contract-example	39.37	P58-B F04/F12: strict shelf and staging archive reject malformed, oversize or spoofed data
+060	fast	authoring-workspace-integrity.test.mjs	AUTHOR-PUBLISH	integration	integration-witness	1040.68	P58-B F04: real headless CLI accepts lossless exchange, preserves source and fails closed for wrong keys
+061	fast	authoring-workspace-integrity.test.mjs	AUTHOR-DRAFT	security	contract-example	8.57	Authoring workspace store owns draft/staging CAS, corruption lockout and explicit reset
+062	fast	authoring-workspace-integrity.test.mjs	AUTHOR-DRAFT	security	contract-example	1.69	Authoring workspace explicit reset refuses to erase bytes changed after corruption was observed
+063	fast	build-security.test.mjs	SEC-BUILD	behavioural	contract-example	47.93	P48-1 unknown unsigned fields are rejected at every exam/key/paper nested boundary
+064	fast	build-security.test.mjs	SEC-BUILD	behavioural	contract-example	2.23	P48-1 canonical authoring envelopes cannot launder undeclared metadata
+065	fast	build-security.test.mjs	SEC-BUILD	mathematical	independence-candidate	343.21	P48-1 frozen CGL source review references reject unsigned extra metadata without losing valid Q32 provenance
+066	fast	build-security.test.mjs	SEC-BUILD	presentation	contract-example	17.57	P48-1 generated offline HTML restricts execution to its exact compiled runtime SHA-256
+067	fast	build-security.test.mjs	SEC-BUILD	security	contract-example	4.34	Build targets share one canonical HTML/CSP contract without static post-build mutation
+068	fast	calculator.test.mjs	CALC-CONTRACT	mathematical	contract-example	2.77	basic-v1 calculator semantics are deterministic and versioned
+069	fast	calculator.test.mjs	CALC-CONTRACT	behavioural	contract-example	0.51	basic-v1 unary, memory, clear and safe-error semantics remain finite
+070	fast	calculator.test.mjs	CALC-CONTRACT	behavioural	contract-example	13.74	calculator availability is explicit versioned hash-bound paper policy and frozen into attempts
+071	fast	calculator.test.mjs	CALC-CONTRACT	behavioural	contract-example	30.01	canonical authoring source opts into basic-v1; custom composition preserves the exact profile
+072	fast	calculator.test.mjs	CALC-CONTRACT	security	contract-example	4.64	calculator scratch state recovers separately from attempts and fails closed on tampering
+073	fast	calculator.test.mjs	CALC-CONTRACT	presentation	contract-example	3.85	calculator markup exposes keyboard/focus and labelled control semantics
+074	fast	calendar-integration.test.mjs	CALENDAR	behavioural	contract-example	5.65	calendar route is first-class in native and fragment-compatible route semantics
+075	fast	calendar-integration.test.mjs	CALENDAR	behavioural	contract-example	1.41	scheduled mocks are strict canonical Practice Desk records
+076	fast	calendar-integration.test.mjs	CALENDAR	integration	contract-example	11.02	backup v5 carries scheduled mocks and exact revision-scheduler settings in the canonical archive
+077	fast	calendar-integration.test.mjs	CALENDAR	behavioural	contract-example	34.22	Calendar dependency is pinned to the verified submodule revision
+078	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	behavioural	contract-example	9.10	all five CGL paper families preserve independently pinned original and reviewed keys, editorial changes and content
+079	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	mathematical	contract-example	7.54	October 6 Q62: published b disputed; original excluded, reviewed caution remains scored against b
+080	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	integration	contract-example	2.98	imported generic multiple-select cannot earn above declared max through excessive component awards
+081	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	integration	contract-example	1.15	imported generic matching partial response cannot exceed nominal full credit
+082	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	mathematical	contract-example	21.81	standard CGL marking and nominal denominator are unchanged by generic cap
+083	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	mathematical	contract-example	1.14	reviewed editorial policy: source invalid without a patch is scored as caution
+084	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	behavioural	contract-example	4.95	L08: classified changes match actual source/patch field differences
+085	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	behavioural	contract-example	0.59	L08: 30 Sep Q6 C to D, wording-only Q3, and disputed 6 Oct Q62 unchanged
+086	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	mathematical	contract-example	182.15	L09/L10: timing type and frozen mode have accurate labels, untimed included
+087	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	behavioural	contract-example	26.24	SOURCE A/V01/V05/V19: original content banks retain their canonical source blobs
+088	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	mathematical	contract-example	15.47	V02/V07/F02/F06: all 10 paper editions have derived full/section marks, no hardcoded ceiling
+089	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	integration	contract-example	1.92	F13/G10: delete lifecycle cannot bypass unfinished status; noncanonical backup versions are rejected
+090	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	behavioural	contract-example	142.60	CGL original wording, options, source key and media are frozen at reviewed test start
+091	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	behavioural	contract-example	15.19	edited single-section CGL preserves only its changed question subset and adjusted max
+092	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	behavioural	contract-example	7.75	non-CGL exam source/review snapshots support six response types and arbitrary marking
+093	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	behavioural	contract-example	5.60	source-review snapshots detect passage-only edits without forcing a new question kind
+094	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	presentation	contract-example	1.40	corrected published keys are compared by semantic source option ID, not display index
+095	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	behavioural	contract-example	4.04	time expiration and voluntary finishing have separate durable source-independent reasons
+096	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	mathematical	independence-candidate	19.31	current library satisfies schema and all cross-bank references
+097	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	behavioural	contract-example	13.99	validator rejects duplicate question numbers and invalid answer keys
+098	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	behavioural	contract-example	28.44	validator rejects orphaned patches, missing stimuli and unknown fields
+099	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	behavioural	contract-example	72.05	single-file release contains a complete inline app
+100	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	behavioural	contract-example	2.04	canonical hashes prevent unreviewed edits to question, answer key or paper
+101	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	behavioural	contract-example	1.95	stimuli and assets reject unsupported fields, missing images, bad media and malformed tables
+102	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	behavioural	contract-example	3.09	frozen attempt and learning notebook retain media after original package is unavailable
+103	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	security	contract-example	1.61	stored result rejects tampered item verdict even with untouched totals
+104	fast	content-and-provenance.test.mjs	CONTENT-LINEAGE	mathematical	independence-candidate	0.43	display preferences are validated and round-trip through storage
+105	fast	content-blueprint-quality.test.mjs	AUTHOR-BLUEPRINT	behavioural	contract-example	847.14	P60-B RED: exact syllabus counts and all specified quotas produce a compact truthful pass
+106	fast	content-blueprint-quality.test.mjs	AUTHOR-BLUEPRINT	behavioural	contract-example	1422.62	P60-B RED: count mismatch, subject drift, mixed paper and duplicated question IDs are hard failures
+107	fast	content-blueprint-quality.test.mjs	AUTHOR-BLUEPRINT	security	contract-example	1028.54	P60-B RED: untrusted cognitive labels require a complete separate sidecar, never inferred
+108	fast	content-blueprint-quality.test.mjs	AUTHOR-BLUEPRINT	behavioural	contract-example	2125.04	P60-B RED: contradicted blueprint, impossible allocations, unsupported fields and false official claims fail closed
+109	fast	content-blueprint-quality.test.mjs	AUTHOR-BLUEPRINT	presentation	contract-example	336.73	P60-B RED: requirements, audited metadata, quota enforcement and honest nonverification
+110	fast	content-blueprint-quality.test.mjs	AUTHOR-BLUEPRINT	behavioural	contract-example	623.83	P60-B: explicitly permitted partial batches disclose remaining targets without pretending complete coverage
+111	fast	content-blueprint-quality.test.mjs	AUTHOR-SECRECY	behavioural	contract-example	1459.35	P60-B RED: audit reports no keys/base64 and rejects unsupported input/flags
+112	fast	content-blueprint-quality.test.mjs	AUTHOR-BLUEPRINT	integration	contract-example	1077.60	P60-B: canonical compiler optionally gates exact single-source publication while structural validation remains explicit
+113	fast	content-blueprint-quality.test.mjs	AUTHOR-BLUEPRINT	behavioural	contract-example	876.02	P60-B: parent-child allocation contradictions are rejected at plan time, not silently audited
+114	fast	content-blueprint-quality.test.mjs	AUTHOR-BLUEPRINT	mathematical	contract-example	620.86	P60-B: explicitly requested paper rules must match actual scoring, timers and navigation
+115	fast	content-blueprint-quality.test.mjs	AUTHOR-BLUEPRINT	behavioural	contract-example	338.01	P60-B: separate coherent source batches meet an exact aggregate blueprint without flattening exam sections
+116	fast	content-blueprint-quality.test.mjs	AUTHOR-BLUEPRINT	behavioural	contract-example	288.86	P60-B: combined sibling topic targets cannot exceed a parent allocation
+117	fast	content-blueprint-quality.test.mjs	AUTHOR-BLUEPRINT	behavioural	contract-example	369.96	P60-B: actual category inventory remains paged and available even without exact quotas
+118	fast	content-blueprint-quality.test.mjs	AUTHOR-BLUEPRINT	behavioural	contract-example	592.44	P60-B: same versioned blueprint contract works for CAT's separate physical sections and semantic subjects
+119	fast	content-blueprint-quality.test.mjs	AUTHOR-BLUEPRINT	behavioural	contract-example	925.98	P60-B: agents can page errors without loading 200 questions and coverage output is bounded
+120	fast	content-blueprint-quality.test.mjs	AUTHOR-BLUEPRINT	behavioural	contract-example	733.75	P62-A partial blueprint passes read-only validation but blocks final compiler output
+121	fast	content-blueprint-quality.test.mjs	AUTHOR-SECRECY	security	contract-example	37.22	P60-C: all authoring paths block explicit answers hidden in private rich passages or shared rich media text
+122	fast	content-blueprint-quality.test.mjs	AUTHOR-SECRECY	behavioural	contract-example	43.76	P60 full QA: explicit choice/answer markers are blocked but legitimate checkmark symbols remain choices
+123	fast	content-blueprint-quality.test.mjs	AUTHOR-SECRECY	presentation	contract-example	10.35	P60-C RED: explicit answer labels in actual candidate stems fail canonical existing publisher
+124	fast	content-blueprint-quality.test.mjs	AUTHOR-SECRECY	security	contract-example	18.74	P60-C RED: misleading option markers, shared stimulus leakage and answer-giving alt metadata fail
+125	fast	content-blueprint-quality.test.mjs	AUTHOR-SECRECY	behavioural	contract-example	263.85	P60-C RED: blinded review packet exposes single candidate-only question, never key/explanation/source QA
+126	fast	content-blueprint-quality.test.mjs	AUTHOR-BLUEPRINT	behavioural	contract-example	341.41	P60-C RED: QA reports 20 mandatory checks, unverified by default and never claims internet retrieval
+127	fast	content-blueprint-quality.test.mjs	AUTHOR-SECRECY	behavioural	independence-candidate	8191.31	P60-C RED: external review must be SHA-bound, complete, independently solved; a matching self-assertion is NOT authenticated
+128	fast	content-blueprint-quality.test.mjs	AUTHOR-SECRECY	behavioural	contract-example	713.37	P60-C RED: strict compiler refuses incomplete review and never writes compiled output
+129	fast	content-blueprint-quality.test.mjs	AUTHOR-SECRECY	behavioural	contract-example	970.37	P60-C RED: malformed, fabricated, duplicate and undisclosed review records fail closed
+130	fast	content-blueprint-quality.test.mjs	AUTHOR-SECRECY	presentation	contract-example	120.63	P60-C: actual candidate exam renderer with an unpublished answer key never prints solution or editorial key
+131	fast	content-blueprint-quality.test.mjs	AUTHOR-SECRECY	security	independence-candidate	3.19	P60-C: referenced image alt text can leak a key without any incorrect answer field
+132	fast	content-blueprint-quality.test.mjs	AUTHOR-SECRECY	behavioural	contract-example	677.41	P60-C: review templates are intentionally incomplete and do not contain hidden source keys or explanations
+133	fast	content-blueprint-quality.test.mjs	AUTHOR-SECRECY	security	contract-example	20.47	P60-C: complete keyed answer repeated in question prompt is highlighted as untrusted semantic clue
+134	fast	content-blueprint-quality.test.mjs	AUTHOR-SECRECY	behavioural	contract-example	6.91	P60-C: literal check-mark symbol as an answer choice is not falsely blocked as an editorial badge
+135	fast	content-blueprint-quality.test.mjs	AUTHOR-SECRECY	security	contract-example	20.54	P60-C: direct named-answer and worked-solution labels are blocked in GK stems, without touching private explanations
+136	fast	content-blueprint-quality.test.mjs	AUTHOR-SECRECY	behavioural	contract-example	488.77	P60-C: bounded quality audit exposes heuristic candidate-hint warnings instead of hiding them behind aggregate counts
+137	fast	content-blueprint-quality.test.mjs	AUTHOR-SECRECY	presentation	contract-example	2816.94	P62-C unscanned contribution rate still requires reviewer-declared as-of and identifiable source
+138	fast	content-blueprint-quality.test.mjs	AUTHOR-SECRECY	mathematical	contract-example	3596.86	P62-C mathematical declarations, pending status and keyword conflicts fail closed
+139	fast	cross-domain-integration.test.mjs	CROSS-RELEASE	integration	integration-witness	77.38	P56 publication source→exact preview and APFC academic roots remain independent of two physical section budgets
+140	fast	cross-domain-integration.test.mjs	CROSS-RELEASE	mathematical	contract-example	27.73	P56 real session uses exactly frozen numeric tolerance, negative and partial rules, review embargo and honest pending free response
+141	fast	cross-domain-integration.test.mjs	CROSS-RELEASE	behavioural	contract-example	15.15	P56 source-frozen wrong answer produces independent 1/0 revision, strict lineage, and is excluded from source-topic statistics
+142	fast	cross-domain-integration.test.mjs	CROSS-RELEASE	security	integration-witness	17.43	P56 exact v4 manifest and shared SHA survive multi-type source→notebook→retest without mutable score leakage
+143	fast	cross-domain-integration.test.mjs	CROSS-RELEASE	presentation	contract-example	8.81	P56 invalid semantic/canonical taxonomy cannot acquire publisher readiness or mutate approved source revision
+144	fast	editorial-lineage-and-pdf.test.mjs	AUTHOR-PDF	behavioural	contract-example	395.82	P60-D RED: machine-readable template derives exact changed fields without exposing either keyed answer
+145	fast	editorial-lineage-and-pdf.test.mjs	AUTHOR-PDF	mathematical	contract-example	1686.29	P60-D RED: source-preserving paired publication uses existing scorer/reviewer contracts and exact original bytes
+146	fast	editorial-lineage-and-pdf.test.mjs	AUTHOR-PDF	behavioural	contract-example	623.23	P60-D RED: changed stem/options/shared table makes source-key comparison unavailable for that item
+147	fast	editorial-lineage-and-pdf.test.mjs	AUTHOR-PDF	behavioural	contract-example	1569.07	P60-D RED: missing or stale decisions, undeclared corrections and invented official authenticity fail closed
+148	fast	editorial-lineage-and-pdf.test.mjs	AUTHOR-PDF	behavioural	contract-example	1161.61	P60-D RED: mismatched paper policy, attempted question deletion or answer in source stem cannot silently publish
+149	fast	editorial-lineage-and-pdf.test.mjs	AUTHOR-PDF	behavioural	contract-example	922.91	P60-D RED: absent independent review or old review after edited question cannot produce half-written output
+150	fast	editorial-lineage-and-pdf.test.mjs	AUTHOR-PDF	behavioural	contract-example	1215.04	P62-B exact revision pairing survives multiple originals and missing files
+151	fast	editorial-lineage-and-pdf.test.mjs	AUTHOR-PDF	mathematical	contract-example	144.25	P62-B nineteen MCQs remain comparable beside one numerical question
+152	fast	editorial-lineage-and-pdf.test.mjs	AUTHOR-PDF	behavioural	contract-example	9.22	P62-B rejects noncanonical schema-2 source-key snapshots
+153	fast	editorial-lineage-and-pdf.test.mjs	AUTHOR-PDF	behavioural	contract-example	23.81	P60-E extracted mixed page, shared passage/table, TeX and embedded figure have complete page-bound ledger
+154	fast	editorial-lineage-and-pdf.test.mjs	AUTHOR-PDF	behavioural	contract-example	98.24	P60-E missing page, duplicate numbering and cropped/uncertain maths or figure fail closed
+155	fast	editorial-lineage-and-pdf.test.mjs	AUTHOR-PDF	behavioural	contract-example	55.36	P60-E original/source-document mismatch, stale individual revision and forged identity cannot silently pass
+156	fast	editorial-lineage-and-pdf.test.mjs	AUTHOR-PDF	security	integration-witness	1260.48	P60-E CLI template is explicitly incomplete and does not reveal keys, audit uses byte-bound source, safe on corrupt PDFs
+157	fast	editorial-lineage-and-pdf.test.mjs	AUTHOR-PDF	behavioural	contract-example	3731.35	P60-E strict compile delegates P60-D without rewriting original, and cannot publish stale decisions
+158	fast	editorial-lineage-and-pdf.test.mjs	AUTHOR-PDF	behavioural	contract-example	41.34	P60-E source-page tokens do not accept page 10 as citation of page 1; shared TeX must be compared
+159	fast	editorial-lineage-and-pdf.test.mjs	AUTHOR-PDF	presentation	contract-example	1895.91	P60-E actual separate printed-key bytes and image document mode require explicit source/key identity
+160	fast	exam-bank-and-policy.test.mjs	EXAM-PACKAGE	behavioural	contract-example	60.43	easy APFC/NAT author bank generates a strict validated immutable exam package
+161	fast	exam-bank-and-policy.test.mjs	EXAM-PACKAGE	mathematical	contract-example	6.58	canonical authoring input rejects malformed keys, excess questions, invalid marks and numeric tolerance
+162	fast	exam-bank-and-policy.test.mjs	EXAM-PACKAGE	presentation	contract-example	368.11	untimed option derives new validated frozen policy for every built-in mode and generic package
+163	fast	exam-bank-and-policy.test.mjs	EXAM-PACKAGE	behavioural	contract-example	0.99	P43 per-family selection rejects invalid mode, edition and untimed values
+164	fast	exam-bank-and-policy.test.mjs	EXAM-PACKAGE	integration	contract-example	155.38	P43 catalog keeps imported families distinct, sorted and never claims official CGL identity
+165	fast	exam-bank-and-policy.test.mjs	EXAM-PACKAGE	mathematical	independence-candidate	417.50	P44 seeded composition is exact, reproducible, editorial-safe and preserves source policy
+166	fast	exam-bank-and-policy.test.mjs	EXAM-PACKAGE	behavioural	contract-example	299.64	P44 refuses invented tags, unavailable inventory and misleading counts
+167	fast	exam-bank-and-policy.test.mjs	EXAM-PACKAGE	integration	contract-example	18.26	P44 imported APFC custom subset freezes exact policies and graded outcomes
+168	fast	exam-bank-and-policy.test.mjs	EXAM-PACKAGE	behavioural	contract-example	17.06	P44 explicit topic and difficulty metadata work without guessing or changing full source
+169	fast	exam-package-and-import.test.mjs	EXAM-PACKAGE	integration	contract-example	171.00	generic importer retains all 500 questions in 10 existing editions
+170	fast	exam-package-and-import.test.mjs	EXAM-PACKAGE	behavioural	contract-example	16.70	a package rejects missing questions, unknown media and malformed keys
+171	fast	exam-package-and-import.test.mjs	EXAM-PACKAGE	behavioural	contract-example	32.98	generic attempt uses validated responses and frozen revisions
+172	fast	exam-package-and-import.test.mjs	EXAM-PACKAGE	behavioural	contract-example	45.68	one engine supports strict, flexible and single CGL policies
+173	fast	exam-package-and-import.test.mjs	EXAM-PACKAGE	behavioural	contract-example	0.65	accepts a valid question, paper revision and matching answer key
+174	fast	exam-package-and-import.test.mjs	EXAM-PACKAGE	presentation	contract-example	1.50	reviewed paper revisions require exact Source paper and key lineage
+175	fast	exam-package-and-import.test.mjs	EXAM-PACKAGE	behavioural	contract-example	1.43	schema validators reject invalid structural mutations as a table
+176	fast	exam-package-and-import.test.mjs	EXAM-PACKAGE	behavioural	contract-example	5.89	a non-CGL paper completes all six response types through the same engine
+177	fast	exam-package-and-import.test.mjs	EXAM-PACKAGE	mathematical	contract-example	2.28	invalid numeric value, underspecified selections and duplicate matches are rejected
+178	fast	exam-package-and-import.test.mjs	EXAM-PACKAGE	behavioural	contract-example	2.90	forward-only navigation restrictions are respected for non-CGL papers
+179	fast	exam-package-and-import.test.mjs	EXAM-PACKAGE	integration	integration-witness	9.08	generic attempts and imported packages survive a verified history backup round trip
+180	fast	exam-package-and-import.test.mjs	EXAM-PACKAGE	mathematical	contract-example	1.72	completed generic scores cannot be silently rewritten in stored history
+181	fast	exam-package-and-import.test.mjs	EXAM-PACKAGE	mathematical	contract-example	3604.03	canonical authoring retains full fractions, unique identities and hash determinism
+182	fast	exam-package-and-import.test.mjs	EXAM-PACKAGE	behavioural	contract-example	213.78	canonical authoring upper boundary is explicit and never truncates questions or keys
+183	fast	exam-package-and-import.test.mjs	EXAM-PACKAGE	behavioural	contract-example	3.79	hostile or borderline canonical authoring input is rejected instead of truncated or coerced
+184	fast	exam-package-and-import.test.mjs	EXAM-PACKAGE	presentation	contract-example	1.00	engine response validator gates six kinds independently from UI controls
+185	fast	exam-package-and-import.test.mjs	EXAM-PACKAGE	presentation	contract-example	0.64	P42 rejects oversized authored text and IDs before any revision hashes are trusted
+186	fast	exam-package-and-import.test.mjs	EXAM-PACKAGE	integration	integration-witness	7.79	P42 rejects deep, cyclic and oversized question inventories; allows shared immutable objects
+187	fast	exam-package-and-import.test.mjs	EXAM-PACKAGE	behavioural	contract-example	2.75	P42 rejects unsupported source schemes, oversized media and invalid media digest
+188	fast	exam-package-and-import.test.mjs	EXAM-PACKAGE	security	contract-example	0.75	P42 corrupted backup fails closed without altering legitimate current payloads
+189	fast	exam-scoring-and-policy.test.mjs	EXAM-TIMING	behavioural	contract-example	11.20	strict section submission policy is an engine invariant, not a disabled button
+190	fast	exam-scoring-and-policy.test.mjs	EXAM-TIMING	behavioural	contract-example	4.75	delayed submit cannot accidentally finish the next section after a timeout
+191	fast	exam-scoring-and-policy.test.mjs	EXAM-TIMING	mathematical	contract-example	1.01	pause and flag policies hold in pure transitions, including clock rollback
+192	fast	exam-scoring-and-policy.test.mjs	EXAM-POLICY	behavioural	contract-example	194.49	all four attempt modes are pinned with their actual CGL policy or custom package
+193	fast	exam-scoring-and-policy.test.mjs	EXAM-POLICY	mathematical	independence-candidate	0.43	built-in source page and independently supplied references survive reviewed import
+194	fast	exam-scoring-and-policy.test.mjs	EXAM-POLICY	behavioural	contract-example	5.12	written response can be explicitly self-assessed without modifying frozen automated results
+195	fast	exam-scoring-and-policy.test.mjs	EXAM-POLICY	mathematical	independence-candidate	90.45	source-key comparison pins original answer references independently of reviewed revisions
+196	fast	exam-scoring-and-policy.test.mjs	EXAM-POLICY	behavioural	contract-example	0.38	draft and editorial-unsafe questions are excluded rather than treated as correct
+197	fast	exam-scoring-and-policy.test.mjs	EXAM-TIMING	mathematical	contract-example	0.46	live timer uses nondecreasing monotonic elapsed time even if wall clock moves
+198	fast	exam-scoring-and-policy.test.mjs	EXAM-POLICY	behavioural	contract-example	5.87	F02: reviewed CGL strict, free, single are calculated on their actual executable policy
+199	fast	exam-scoring-and-policy.test.mjs	EXAM-SCORING	mathematical	contract-example	1.33	F02/F15: source edition reports excluded publisher items; reviewed is scoreable caution, not official SSC
+200	fast	exam-scoring-and-policy.test.mjs	EXAM-POLICY	presentation	contract-example	0.94	F02: a custom exam uses frozen eligible max and plainly labels manual questions
+201	fast	exam-scoring-and-policy.test.mjs	EXAM-TIMING	behavioural	contract-example	0.59	F02: effective per-item and per-section overrides are disclosed without key answers
+202	fast	exam-scoring-and-policy.test.mjs	EXAM-POLICY	behavioural	contract-example	0.33	F02: a paper with only manually graded and excluded items never invents an automated maximum
+203	fast	exam-scoring-and-policy.test.mjs	EXAM-TIMING	mathematical	contract-example	0.81	F06: generic timing/section, forward navigation, review and pause policies are explained
+204	fast	exam-scoring-and-policy.test.mjs	EXAM-POLICY	presentation	contract-example	0.51	F15: independently imported editions cannot inherit built-in SSC provenance
+205	fast	exam-scoring-and-policy.test.mjs	EXAM-TIMING	behavioural	contract-example	3.87	G01: whole-paper locked sections have explicit one-way progress and cannot submit unseen later sections
+206	fast	exam-scoring-and-policy.test.mjs	EXAM-TIMING	behavioural	contract-example	1.27	G01: untimed sequentially locked sections are reachable but cannot be skipped
+207	fast	exam-scoring-and-policy.test.mjs	EXAM-TIMING	mathematical	contract-example	0.23	G01/G02: sectional clocks reject a contradictory free section-navigation promise
+208	fast	exam-scoring-and-policy.test.mjs	EXAM-POLICY	mathematical	contract-example	0.48	G01 adjacent: a whole-paper lock cannot bypass the global deadline
+209	fast	exam-scoring-and-policy.test.mjs	EXAM-TIMING	mathematical	contract-example	2.57	G02: manual expiry freezes answers and elapsed time until an explicit continuation
+210	fast	exam-scoring-and-policy.test.mjs	EXAM-TIMING	mathematical	contract-example	1.25	G02 extra: no-deadline sectional sections can always be finished explicitly
+211	fast	exam-scoring-and-policy.test.mjs	EXAM-POLICY	mathematical	contract-example	0.76	G04: imported multi-select key is constrained by actual candidate selection bounds
+212	fast	exam-scoring-and-policy.test.mjs	EXAM-POLICY	integration	contract-example	0.53	G05: imported matching keys cannot reuse left or right endpoints
+213	fast	exam-scoring-and-policy.test.mjs	EXAM-SCORING	behavioural	contract-example	0.73	G03/G09: blank reward cannot exceed correct; worse-than-wrong blank is rejected across overrides
+214	fast	exam-scoring-and-policy.test.mjs	EXAM-POLICY	mathematical	contract-example	0.91	G09: unusual partial penalties have honest conservative lower bound and capped full maximum
+215	fast	exam-scoring-and-policy.test.mjs	EXAM-TIMING	mathematical	contract-example	1.61	G06: withholding detailed post-test review does not disable exam navigation or summary/timing tabs
+216	fast	exam-scoring-and-policy.test.mjs	EXAM-SCORING	mathematical	independence-candidate	42.58	seeded independent scoring reference: precedence, marks ledger, verdicts, exclusions and bounds
+217	fast	exam-scoring-and-policy.test.mjs	EXAM-SCORING	behavioural	independence-candidate	18.96	P61-H six-kind independent ledger survives answer-ID bijections and input permutations
+218	fast	exam-scoring-and-policy.test.mjs	EXAM-SCORING	mathematical	contract-example	0.91	partial-credit cap and conservative penalty floor hold under adversarial component rules
+219	fast	exam-scoring-and-policy.test.mjs	EXAM-SCORING	mathematical	contract-example	0.75	numeric-entry uses max(absolute,relative × |accepted|) at exact binary boundaries
+220	fast	exam-scoring-and-policy.test.mjs	EXAM-SCORING	mathematical	contract-example	0.91	APFC one-third deduction is accumulated unrounded, blanks score zero
+221	fast	exam-scoring-and-policy.test.mjs	EXAM-SCORING	mathematical	contract-example	0.22	negative-zero policy never creates phantom marks or a negative aggregate
+222	fast	exam-scoring-and-policy.test.mjs	EXAM-POLICY	behavioural	contract-example	384.27	source comparison refuses unchanged-letter identities when option meaning changes
+223	fast	exam-scoring-and-policy.test.mjs	EXAM-POLICY	presentation	contract-example	234.95	publisher comparison preserves identical contexts but rejects reordered options and punctuation
+224	fast	exam-scoring-and-policy.test.mjs	EXAM-POLICY	behavioural	contract-example	320.85	frozen source evidence rejects forged comparability and unsupported v1 snapshots
+225	fast	external-bank-authoring.test.mjs	AUTHOR-IMPORT	behavioural	contract-example	119.36	P57-A CAT external agent source compiles without authored hashes and reuses one shared RC and DILR stimulus
+226	fast	external-bank-authoring.test.mjs	AUTHOR-IMPORT	behavioural	contract-example	12.67	P57-A APFC academic subject hierarchy remains independent of one physical exam section
+227	fast	external-bank-authoring.test.mjs	AUTHOR-QA	mathematical	independence-candidate	7.02	P57-A external source rejects unsupported fields, fake IDs, broken references, suspect math and conflicting answer keys
+228	fast	external-bank-authoring.test.mjs	AUTHOR-QA	mathematical	independence-candidate	16.26	P57-A immutable question IDs survive source revisions; changed passage changes hashed reference and older key remains frozen
+229	fast	external-bank-authoring.test.mjs	AUTHOR-IMPORT	mathematical	contract-example	35.44	P57-A all six response kinds, safe rich math, image assets and genuine mixed scoring use one published engine
+230	fast	external-bank-authoring.test.mjs	AUTHOR-IMPORT	integration	integration-witness	1444.01	P57-A headless CLI emits machine-readable diagnostics and byte-identical compiled JSON without network
+231	fast	external-bank-authoring.test.mjs	AUTHOR-IMPORT	mathematical	independence-candidate	18.50	P57-A two CAT RC questions share the same immutable stimulus once; changing media bytes changes frozen reference
+232	fast	external-bank-authoring.test.mjs	AUTHOR-QA	behavioural	contract-example	18.45	P57-B valid CAT/APFC reports explicit unverified states; real engine oracle; no source fetch
+233	fast	external-bank-authoring.test.mjs	AUTHOR-IMPORT	presentation	contract-example	12.75	P57-B block equivalent MCQ answer options with question/field diagnosis
+234	fast	external-bank-authoring.test.mjs	AUTHOR-QA	mathematical	contract-example	8.41	P57-B narrow deterministic mathematics flags an incorrect keyed arithmetic answer
+235	fast	external-bank-authoring.test.mjs	AUTHOR-IMPORT	mathematical	contract-example	5.30	P57-B recognizes proved arithmetic but does not claim general factual proof
+236	fast	external-bank-authoring.test.mjs	AUTHOR-IMPORT	presentation	contract-example	8.23	P57-B legal claims require provision and as-of evidence, and still cannot be source corroborated
+237	fast	external-bank-authoring.test.mjs	AUTHOR-IMPORT	security	contract-example	4.01	P57-B reject fake calendar dates and malicious/credentialled URLs; never execute data
+238	fast	external-bank-authoring.test.mjs	AUTHOR-QA	behavioural	contract-example	10.47	P57-B exact duplicate across files ignores option order; shared passage alone never duplicates
+239	fast	external-bank-authoring.test.mjs	AUTHOR-QA	behavioural	contract-example	12.09	P57-B same-stem and near-duplicate candidates are advisory, not destructive
+240	fast	external-bank-authoring.test.mjs	AUTHOR-IMPORT	behavioural	contract-example	4.91	P57-B claimed official PYQ year, source disputes and explicit explanation mismatch remain warning-only
+241	fast	external-bank-authoring.test.mjs	AUTHOR-QA	mathematical	integration-witness	688.61	P57-B CLI qa-bank and against source emit JSON; deterministic fatal exit and no destructive output
+242	fast	external-bank-authoring.test.mjs	AUTHOR-IMPORT	behavioural	contract-example	1.05	P57-B do not silently discard zero-question physical exam sections
+243	fast	external-bank-authoring.test.mjs	AUTHOR-IMPORT	behavioural	contract-example	6.04	P57-B APFC academic syllabus attribution is mandatory and never inferred from physical section
+244	fast	external-bank-authoring.test.mjs	AUTHOR-IMPORT	mathematical	contract-example	17.24	P57-B distinct matching labels and redundant numeric-answer tolerance trigger appropriate severity
+245	fast	external-bank-authoring.test.mjs	AUTHOR-IMPORT	mathematical	contract-example	14.40	P62-D math option fingerprint distinguishes signed fractions and decimals
+246	fast	external-bank-authoring.test.mjs	AUTHOR-QA	mathematical	contract-example	25.00	P57-C stores unverified AI imports as selected, unpublished staged files with no scored package
+247	fast	external-bank-authoring.test.mjs	AUTHOR-IMPORT	mathematical	contract-example	64.04	P57-C two compatible batches provide cross-batch overlap diagnostics and deterministic stable handoff identities
+248	fast	external-bank-authoring.test.mjs	AUTHOR-QA	mathematical	contract-example	21.71	P57-C a deterministically wrong mathematical key is staged for Wordgard correction, then rechecked
+249	fast	external-bank-authoring.test.mjs	AUTHOR-QA	mathematical	contract-example	11.15	P57-C selecting individual questions prunes unselected scoring while preserving the selected key and source
+250	fast	external-bank-authoring.test.mjs	AUTHOR-QA	behavioural	contract-example	11.33	P57-C strict staging rejects incompatible marking policies and duplicate bank identity
+251	fast	external-bank-authoring.test.mjs	AUTHOR-QA	behavioural	contract-example	12.31	P57-C rejects unknown/duplicate selection, excessive authoring selection and empty handoff
+252	fast	external-bank-authoring.test.mjs	AUTHOR-IMPORT	behavioural	contract-example	16.80	P57-C stable semantic identities survive corrected revisions and never replace old frozen papers
+253	fast	external-bank-authoring.test.mjs	AUTHOR-QA	behavioural	contract-example	12.04	P57-C attributed, unverified reviewer warning acceptance remains in exact immutable editorial evidence
+254	fast	external-bank-authoring.test.mjs	AUTHOR-IMPORT	mathematical	contract-example	15.71	Authoring workflow ingests staging and hands off one deterministic unpublished draft without overwriting edits
+255	fast	external-bank-authoring.test.mjs	AUTHOR-QA	integration	contract-example	26.75	Authoring publication workflow is sole owner of external QA acknowledgement and recompiles exact evidence
+256	fast	external-bank-authoring.test.mjs	AUTHOR-IMPORT	integration	contract-example	8.79	P58-B F05 red: changed selection forks without overwriting existing unpublished corrections
+257	fast	external-bank-authoring.test.mjs	AUTHOR-QA	presentation	contract-example	149.27	P58-B F06 red: duplicate screening reports explicit incompleteness and pair count
+258	fast	external-bank-authoring.test.mjs	AUTHOR-IMPORT	mathematical	contract-example	14.76	P58-B F08 red: independently generated shared media IDs get deterministic safe namespaces
+259	fast	flag-palette.test.mjs	UI-STATUS	presentation	contract-example	9.74	review palette uses actual session evidence for single-choice
+260	fast	flag-palette.test.mjs	UI-STATUS	presentation	contract-example	2.50	review palette uses actual session evidence for multiple-select
+261	fast	flag-palette.test.mjs	UI-STATUS	mathematical	contract-example	2.19	review palette uses actual session evidence for numeric-entry
+262	fast	flag-palette.test.mjs	UI-STATUS	presentation	contract-example	3.71	review palette uses actual session evidence for true-false
+263	fast	flag-palette.test.mjs	UI-STATUS	presentation	contract-example	2.34	review palette uses actual session evidence for matching
+264	fast	flag-palette.test.mjs	UI-STATUS	presentation	contract-example	1.85	review palette uses actual session evidence for free-response
+265	fast	fsrs-scheduler-contract.test.mjs	LEARN-FSRS	mathematical	contract-example	5.59	FSRS-7 scheduler exposes one versioned runtime configuration for fixed and Cost-ADR policies
+266	fast	fsrs-scheduler-contract.test.mjs	LEARN-FSRS	mathematical	contract-example	20.02	FSRS-7 replay is deterministic, chronological and invariant to hypothetical preview/inspection
+267	fast	fsrs-scheduler-contract.test.mjs	LEARN-FSRS	mathematical	contract-example	1.02	FSRS scheduler rejects invalid policy and leech settings as a table
+268	fast	history-and-persistence.test.mjs	HISTORY-TRENDS	mathematical	contract-example	202.23	F03: rank frozen adjusted marks, not accuracy, across two real compatible full CGL papers
+269	fast	history-and-persistence.test.mjs	HISTORY-TRENDS	behavioural	contract-example	740.47	F03: eight newest qualifying full-paper records limit cohort; single and unrelated modes excluded
+270	fast	history-and-persistence.test.mjs	HISTORY-TRENDS	behavioural	contract-example	128.41	F03: separate exam identities and differently structured papers cannot produce false cross-paper groups
+271	fast	history-and-persistence.test.mjs	HISTORY-TRENDS	mathematical	contract-example	118.84	F03: negative earned marks stay visible while progress width can be clamped for display
+272	fast	history-and-persistence.test.mjs	HISTORY-TRENDS	mathematical	contract-example	61.07	F04: archive uses attempt's frozen eligible maximum, not nominal 100-paper marks
+273	fast	history-and-persistence.test.mjs	HISTORY-TRENDS	integration	contract-example	47.80	F05 adjacent: archive status filters retain separate complete and progress workflows
+274	fast	history-and-persistence.test.mjs	HISTORY-TRENDS	mathematical	independence-candidate	2.45	P43 one per-family selection map validates independent paper and timing preferences
+275	fast	history-and-persistence.test.mjs	HISTORY-TRENDS	presentation	contract-example	130.13	exact frozen paper edition filtering combines with free text and status
+276	fast	history-and-persistence.test.mjs	PERSIST-RECOVERY	mathematical	contract-example	158.29	adjusted score trends require exact frozen key, revision and practice mode
+277	fast	history-and-persistence.test.mjs	PERSIST-BACKUP	security	contract-example	1.90	P43 portable family setups survive canonical backup with checksum protection
+278	fast	history-and-persistence.test.mjs	HISTORY-TRENDS	behavioural	contract-example	1.41	SHA-256 standard vectors and UTF-8
+279	fast	history-and-persistence.test.mjs	HISTORY-TRENDS	mathematical	independence-candidate	0.28	preferences import validates range and type
+280	fast	history-and-persistence.test.mjs	PERSIST-RECOVERY	mathematical	independence-candidate	259.21	seeded two-tab compare-and-swap interleavings reject stale writes, preserve stored revision
+281	fast	history-and-persistence.test.mjs	PERSIST-BACKUP	mathematical	contract-example	11.67	generated additive merge is deterministic, idempotent, ordered and non-destructive
+282	fast	history-and-persistence.test.mjs	PERSIST-BACKUP	security	independence-candidate	96.35	canonical backup checksum covers records and preferences; size, IDs and timestamp are bounded
+283	fast	history-and-persistence.test.mjs	PERSIST-RECOVERY	presentation	contract-example	0.49	new-record CAS uses null; persisted rows require revisions 1+ and progress monotonically
+284	fast	history-and-persistence.test.mjs	HISTORY-TRENDS	behavioural	contract-example	29.31	frozen attempt survives a later changed key, paper or editorial state
+285	fast	history-and-persistence.test.mjs	HISTORY-TRENDS	behavioural	contract-example	0.52	saved strict session expires while app is closed, without fictitious foreground viewing
+286	fast	history-and-persistence.test.mjs	HISTORY-TRENDS	behavioural	contract-example	0.18	paused flexible attempt does not consume offline wall time
+287	fast	history-and-persistence.test.mjs	PERSIST-RECOVERY	mathematical	contract-example	0.16	recover from clock rollback without assigning negative time
+288	fast	history-and-persistence.test.mjs	PERSIST-RECOVERY	mathematical	independence-candidate	6.61	Recovery reference: 576 persisted/mirror precedence combinations, missing IDs, terminal and revision boundaries
+289	fast	history-and-persistence.test.mjs	HISTORY-TRENDS	presentation	integration-witness	0.60	P45 History health distinguishes pending, locked, failure and browser eviction
+290	fast	history-and-persistence.test.mjs	PERSIST-BACKUP	security	contract-example	593.27	P45 compressed backup keeps canonical backup checksum and resists malformed gzip
+291	fast	history-and-persistence.test.mjs	PERSIST-BACKUP	integration	contract-example	1.98	P45 one-pass backup serialization remains byte-identical to the current canonical format for every checked source
+292	fast	history-and-persistence.test.mjs	HISTORY-TRENDS	behavioural	contract-example	383.75	P45-B identical frozen exam content uses one SHA-addressed snapshot across attempts
+293	fast	history-and-persistence.test.mjs	HISTORY-TRENDS	behavioural	contract-example	274.15	P45-B shared snapshot also stores publisher keys, source review and explanations once
+294	fast	history-and-persistence.test.mjs	PERSIST-RECOVERY	integration	contract-example	7.71	Persistence backend contract gives fallback one CAS/add/delete path and detects external change
+295	fast	history-and-persistence.test.mjs	HISTORY-TRENDS	integration	contract-example	0.37	Persistence backend refuses malformed fallback bytes without overwriting them
+296	fast	history-and-persistence.test.mjs	HISTORY-TRENDS	integration	contract-example	0.45	Persistence fallback quarantines duplicate identities instead of choosing a winner
+297	fast	history-record-integrity.test.mjs	HISTORY-FILTER	mathematical	independence-candidate	80.41	History model: 128 seeded combinations preserve AND semantics, exact identity, stable order and records
+298	fast	history-record-integrity.test.mjs	HISTORY-FILTER	integration	contract-example	18.82	P47-2 frozen exam/mode filter survives removal of its imported package
+299	fast	history-record-integrity.test.mjs	HISTORY-FILTER	behavioural	contract-example	17.75	P47-2 local attempt-start dates are inclusive at both boundaries, not completion dates
+300	fast	history-record-integrity.test.mjs	HISTORY-FILTER	behavioural	contract-example	24.96	P47-2 leap day, noncalendar dates, malformed strings and reversed ranges fail visibly
+301	fast	history-record-integrity.test.mjs	HISTORY-FILTER	presentation	contract-example	10.74	P47-2 Reset and active count distinguish sort order from limiting filters
+302	fast	history-record-integrity.test.mjs	HISTORY-FILTER	behavioural	contract-example	23.69	P47-2 session query restore is bounded and refuses hostile/invalid data
+303	fast	history-record-integrity.test.mjs	HISTORY-FILTER	mathematical	contract-example	13.77	P47-2 filtering cannot affect all-time metrics or immutable attempt scores
+304	fast	history-record-integrity.test.mjs	PERSIST-VALIDATION	mathematical	contract-example	16.98	P48-4 reject impossible clock/timer snapshots before History or backup import
+305	fast	history-record-integrity.test.mjs	PERSIST-VALIDATION	behavioural	contract-example	2.12	P48-4 reject undeclared mutable-row and session metadata irrespective of SHA source hashes
+306	fast	history-record-integrity.test.mjs	PERSIST-VALIDATION	presentation	contract-example	1.07	P48-4 genuinely accrued foreground question time must not exceed saved total
+307	fast	history-record-integrity.test.mjs	HISTORY-FILTER	behavioural	contract-example	1.86	P48-4 candidate answer and pair objects must reject unsigned extra keys
+308	fast	history-record-integrity.test.mjs	PERSIST-VALIDATION	security	contract-example	2.11	P48 intact attempt survives a corrupt sibling without adopting the invalid row
+309	fast	history-record-integrity.test.mjs	PERSIST-VALIDATION	security	contract-example	1.64	P48 unauthenticated snapshot corruption is quarantined but not normalized
+310	fast	history-record-integrity.test.mjs	PERSIST-VALIDATION	behavioural	contract-example	3.57	P48 compact rows cannot smuggle a different source/key/explanation outside its SHA snapshot
+311	fast	history-record-integrity.test.mjs	PERSIST-VALIDATION	behavioural	contract-example	1.01	P48 unknown non-attempt rows remain visible to the caller's strict record validator
+312	fast	history-record-integrity.test.mjs	PERSIST-VALIDATION	behavioural	contract-example	2.19	P48-2 incremental cursor collector has exactly the same recoverable semantics as array startup
+313	fast	keyboard-shortcuts.test.mjs	UI-KEYBOARD	presentation	contract-example	3.19	P47-4 keyboard table: answer, native radio arrows, Alt navigate, flag and fullscreen
+314	fast	keyboard-shortcuts.test.mjs	UI-KEYBOARD	presentation	contract-example	0.47	P47-4 blocks shortcuts during editing, modal or Display, and Alt/repeated key actions
+315	fast	keyboard-shortcuts.test.mjs	UI-KEYBOARD	behavioural	contract-example	0.30	P47-4 paused state allows only a single flag command
+316	fast	learning-and-analytics.test.mjs	LEARN-ANALYTICS	mathematical	independence-candidate	5.15	seeded evidence classifications require independent sample size and question diversity
+317	fast	learning-and-analytics.test.mjs	LEARN-ANALYTICS	mathematical	independence-candidate	155.20	seeded six-kind frozen analytics retain denominators, pending essays and honest speed evidence
+318	fast	learning-and-analytics.test.mjs	LEARN-ANALYTICS	mathematical	contract-example	1.43	visits reflect cursor entries, never answering, flags, repeated cursor or clock ticks
+319	fast	learning-and-analytics.test.mjs	LEARN-ANALYTICS	behavioural	contract-example	3.81	section auto-advance records a new section's first question once
+320	fast	learning-and-analytics.test.mjs	LEARN-ANALYTICS	mathematical	contract-example	11.36	generic six-kind frozen timing classifications, accurate filters, longest links and conservative suggestions
+321	fast	learning-and-analytics.test.mjs	LEARN-ANALYTICS	behavioural	contract-example	3.70	missing visit evidence is rejected; insufficient speed samples remain conservative
+322	fast	learning-and-analytics.test.mjs	LEARN-ANALYTICS	behavioural	contract-example	2.44	negative marking, manual-pending and excluded questions stay separate from pace classification
+323	fast	learning-and-analytics.test.mjs	LEARN-ANALYTICS	behavioural	contract-example	1.86	learning cards are created from completed immutable answers, not active test keys
+324	fast	learning-and-analytics.test.mjs	LEARN-FSRS	mathematical	contract-example	11.11	stable ts-fsrs 6.0.0 runs explicit FSRS-7 with evidence-rich replay, previews and retrievability
+325	fast	learning-and-analytics.test.mjs	LEARN-ANALYTICS	mathematical	contract-example	1.33	review duration evidence measures foreground recall and post-reveal phases without hidden-tab inflation
+326	fast	learning-and-analytics.test.mjs	LEARN-FSRS	mathematical	contract-example	6.59	FSRS policy changes reschedule replayed history without mutating review evidence
+327	fast	learning-and-analytics.test.mjs	LEARN-FSRS	mathematical	contract-example	5.66	Cost-ADR composes with remediation and native ts-fsrs leech suspension without rewriting review evidence
+328	fast	learning-and-analytics.test.mjs	LEARN-FSRS	integration	contract-example	7.17	optimizer evidence and evaluated profiles are portable without persisting vendor scheduler state
+329	fast	learning-and-analytics.test.mjs	LEARN-REVISION	behavioural	contract-example	11.84	topic evidence and trends never compare different paper revisions
+330	fast	learning-and-analytics.test.mjs	LEARN-FSRS	mathematical	contract-example	3.72	backup preserves notes and FSRS review logs with strict integrity checks
+331	fast	learning-and-analytics.test.mjs	LEARN-REVISION	behavioural	contract-example	5.85	generated notebook revision is a real validated attempt, not a copied note
+332	fast	learning-and-analytics.test.mjs	LEARN-REVISION	behavioural	contract-example	0.70	revision selection rejects duplicates, unsafe statuses, mixed exams and impossible sizes
+333	fast	learning-and-analytics.test.mjs	LEARN-REVISION	integration	contract-example	2.63	media from notebook remains in generated paper even if source package disappears
+334	fast	learning-and-analytics.test.mjs	LEARN-ANALYTICS	mathematical	contract-example	1.59	pace, speed relative to a section median and marking opportunities are exact
+335	fast	learning-and-analytics.test.mjs	LEARN-ANALYTICS	mathematical	contract-example	3.09	speed classification uses a sufficient section median and distinguishes fast mistakes
+336	fast	learning-and-analytics.test.mjs	LEARN-FSRS	behavioural	contract-example	0.31	app profile validation and optimizer runtime protocol constants stay aligned
+337	fast	learning-and-analytics.test.mjs	LEARN-FSRS	behavioural	contract-example	0.39	optimizer raw evidence accounting handles quoted card IDs before upstream retention
+338	fast	learning-and-analytics.test.mjs	LEARN-FSRS	mathematical	integration-witness	3.18	FSRS optimizer native/browser pipeline owns conversion, holdout gate, retraining and profile assembly once
+339	fast	learning-and-analytics.test.mjs	LEARN-FSRS	mathematical	contract-example	4.01	FSRS optimizer shared pipeline rejects insufficient evidence and held-out regression before final training
+340	fast	media-rendering.test.mjs	UI-MEDIA	mathematical	independence-candidate	39.68	P47-3B canonical authoring image is frozen with exact validated SHA-256 and all references
+341	fast	media-rendering.test.mjs	UI-MEDIA	integration	contract-example	9.22	P47-3B advanced already-hashed package imports without altering authenticated images
+342	fast	media-rendering.test.mjs	UI-MEDIA	mathematical	independence-candidate	2.34	P47-3B invalid image references and media metadata are rejected before freezing
+343	fast	media-rendering.test.mjs	UI-MEDIA	behavioural	contract-example	0.61	P47-3B choose smaller WebP only with strong fidelity and meaningful savings
+344	fast	media-rendering.test.mjs	UI-MEDIA	mathematical	contract-example	2.65	P47-3 geometry fits originals without upscaling and guards invalid dimensions
+345	fast	media-rendering.test.mjs	UI-MEDIA	mathematical	contract-example	0.88	P47-3 zoom/pan are mathematically bounded and pointer anchored
+346	fast	media-rendering.test.mjs	UI-MEDIA	behavioural	contract-example	0.37	P47-3 viewer refuses network, active SVG, plain strings and malformed URL prefixes
+347	fast	media-rendering.test.mjs	UI-MEDIA	behavioural	contract-example	0.81	P47-3 one validated source URI per thumbnail, exact alt escaped, and keyboard launcher
+348	fast	media-rendering.test.mjs	UI-MEDIA	presentation	contract-example	0.96	P47-3 input and matching option images place launch controls OUTSIDE their labels
+349	fast	media-rendering.test.mjs	UI-MEDIA	behavioural	contract-example	4.63	P47-3 stimulus, frozen reviewed and source edition figures all share same launcher
+350	fast	media-rendering.test.mjs	UI-MEDIA	presentation	contract-example	11.82	P47-5B latest pinned KaTeX emits HTML and accessible MathML, bounded
+351	fast	media-rendering.test.mjs	UI-MEDIA	security	contract-example	4.69	P47-5B malformed, malicious and untrusted TeX uses safe visible fallback
+352	fast	media-rendering.test.mjs	UI-MEDIA	presentation	contract-example	0.29	P47-5B ordinary plain text including TeX-looking dollars stays inert
+353	fast	media-rendering.test.mjs	UI-MEDIA	integration	contract-example	14.78	P47-5B six-kind authored rich math, tables and explanations survive valid signed import
+354	fast	media-rendering.test.mjs	UI-MEDIA	security	contract-example	2.80	P47-5B tampering with frozen rich math is rejected by current SHA source contract
+355	fast	media-rendering.test.mjs	UI-MEDIA	behavioural	contract-example	4.30	P47-5B source/review presentation supports math only from frozen verified resources
+356	fast	media-rendering.test.mjs	UI-MEDIA	behavioural	contract-example	65.56	P47-5C release carries only local WOFF2 and both KaTeX/Wordgard MIT notices
+357	fast	media-rendering.test.mjs	UI-MEDIA	presentation	contract-example	2.11	P47-1 independently escaped HTML text/attributes cannot turn into markup
+358	fast	media-rendering.test.mjs	UI-MEDIA	presentation	contract-example	0.63	P47-1 all six independently rendered answer kinds retain exact controls and drafts
+359	fast	media-rendering.test.mjs	UI-MEDIA	mathematical	independence-candidate	0.46	P47-1 asset/stimulus modules use validated source references and preserve authored alt
+360	fast	media-rendering.test.mjs	UI-MEDIA	presentation	contract-example	4.78	P47-1 exam view is a read-only dependency of supplied state and focus flag
+361	fast	media-rendering.test.mjs	UI-MEDIA	presentation	contract-example	3.98	P47-1 review display uses exact frozen answers and separate source edition
+362	fast	media-rendering.test.mjs	UI-MEDIA	behavioural	contract-example	6.97	P47-1 validator is standalone, fail-closed and never modifies the input
+363	fast	question-timing-phases.test.mjs	EXAM-TIMING	mathematical	contract-example	10.56	P46-B exact first-visit/revisit/first-answer phases across navigation and changes
+364	fast	question-timing-phases.test.mjs	EXAM-TIMING	mathematical	contract-example	0.42	P46-B pauses, visibility and clock rebase never invent phase exposure
+365	fast	question-timing-phases.test.mjs	EXAM-TIMING	behavioural	contract-example	0.51	P46-B automatic sectional expiry caps attribution and records next section
+366	fast	question-timing-phases.test.mjs	EXAM-TIMING	behavioural	contract-example	0.29	P46-B zero-time first visit followed by measured revisit is not fabricated
+367	fast	question-timing-phases.test.mjs	EXAM-TIMING	mathematical	contract-example	29.65	P46-B frozen stored attempts reject impossible or forged timing phase claims
+368	fast	question-timing-phases.test.mjs	EXAM-TIMING	mathematical	contract-example	64.93	P46-B exact phases survive compact v5 backup, reopen and remain independent of marks
+369	fast	question-timing-phases.test.mjs	EXAM-TIMING	mathematical	contract-example	8.97	P46-B missing canonical timing instrumentation is rejected
+370	fast	result-integrity.test.mjs	EXAM-TIMING	mathematical	contract-example	9.36	resume expiry samples one monotonic instant for state, persistence and score evidence
+371	fast	result-integrity.test.mjs	EXAM-TIMING	mathematical	contract-example	3.03	Results never repairs a completed attempt by recomputing a missing immutable score
+372	fast	revision-evidence.test.mjs	LEARN-REVISION	behavioural	contract-example	34.08	P46 correct/blank/flagged/recurrent evidence is exact and exam-scoped
+373	fast	revision-evidence.test.mjs	LEARN-REVISION	presentation	contract-example	5.54	P46 bookmarked and genuinely due cards work after deleting source attempts
+374	fast	revision-evidence.test.mjs	LEARN-REVISION	behavioural	contract-example	5.85	P46 explicit APFC syllabus is versioned, self-assigned and never inferred
+375	fast	revision-evidence.test.mjs	LEARN-REVISION	behavioural	contract-example	41.22	P46 selection filters are authenticated and mock trends exclude revision results
+376	fast	revision-evidence.test.mjs	LEARN-REVISION	mathematical	contract-example	5.17	P46 only scoreable, review-permitted frozen questions can be selected
+377	fast	revision-evidence.test.mjs	LEARN-REVISION	behavioural	contract-example	2.52	P46 pacing evidence does not invent first-answer or revisit timestamps
+378	fast	revision-evidence.test.mjs	LEARN-REVISION	behavioural	contract-example	2.49	P46 explicitly assigned broad APFC syllabus heading becomes a separate measured topic row
+379	fast	session-and-timing.test.mjs	EXAM-TIMING	behavioural	contract-example	2.69	visibility change commits the preceding visible interval exactly once
+380	fast	session-and-timing.test.mjs	EXAM-TIMING	behavioural	contract-example	0.48	pause freezes countdown; resume rebases; completion is terminal
+381	fast	session-and-timing.test.mjs	EXAM-TIMING	behavioural	contract-example	1.63	locked navigation, early section submission and answer clearing
+382	fast	session-and-timing.test.mjs	EXAM-TIMING	mathematical	independence-candidate	81.57	seeded whole-paper state model conserves elapsed, foreground and response exposure
+383	fast	session-and-timing.test.mjs	EXAM-TIMING	mathematical	independence-candidate	6.47	seeded sectional automatic overshoot splits exact limits and closes each section once
+384	fast	session-and-timing.test.mjs	EXAM-TIMING	behavioural	contract-example	0.42	manual expiry excludes waiting time, prevents edits, and records exact section closure
+385	fast	session-and-timing.test.mjs	EXAM-TIMING	mathematical	contract-example	1.28	section evidence rejects fabricated duration, expiry reason, identity and totals
+386	fast	session-and-timing.test.mjs	EXAM-TIMING	mathematical	contract-example	0.76	F01: automatic multi-section clock stores exactly one closure each, split across a late background tick
+387	fast	session-and-timing.test.mjs	EXAM-TIMING	mathematical	contract-example	10.56	F01: early-submitted sequential section and final section preserve timer durations, not response exposure
+388	fast	session-and-timing.test.mjs	EXAM-TIMING	integration	contract-example	3.94	F01: manual expiry freezes waiting interval through persistence and restore
+389	fast	session-and-timing.test.mjs	EXAM-TIMING	behavioural	contract-example	8.24	F01: locked whole-paper sections have consumable section time; free multi-section does not
+390	fast	session-and-timing.test.mjs	EXAM-TIMING	mathematical	contract-example	4.63	F01: missing or forged section timer evidence is rejected
+391	fast	session-and-timing.test.mjs	EXAM-TIMING	mathematical	contract-example	3.56	F09: elapsed timer, actual answer attempt-rate and global median exclude editorially unscored items
+392	fast	session-and-timing.test.mjs	EXAM-TIMING	behavioural	contract-example	0.46	F13: status-specific destructive intent rejects cross-type and wrong-lifecycle requests
+393	fast	session-and-timing.test.mjs	EXAM-TIMING	presentation	contract-example	27.75	F13: archive renders completed Delete and unfinished Discard as non-interchangeable controls
+394	fast	taxonomy-and-workspace-policy.test.mjs	CONTENT-TAXONOMY	presentation	contract-example	5.03	P49 topic paths have stable ancestors and never collapse same label across different parents
+395	fast	taxonomy-and-workspace-policy.test.mjs	CONTENT-TAXONOMY	behavioural	contract-example	36.24	P50 authored sectional paper freezes exact navigation, source topic hierarchy and difficulty
+396	fast	taxonomy-and-workspace-policy.test.mjs	CONTENT-TAXONOMY	mathematical	contract-example	8.14	P50 component marking is actual scorer policy; frozen full marks remain capped
+397	fast	taxonomy-and-workspace-policy.test.mjs	CONTENT-TAXONOMY	behavioural	contract-example	4.37	P50 author cannot publish conflicting section budgets, invalid key cardinality or impossible policy
+398	fast	taxonomy-and-workspace-policy.test.mjs	CONTENT-TAXONOMY	presentation	contract-example	6.28	P49 published labels roll up to subject/topic/subtopic without inventing measured mastery
+399	fast	taxonomy-and-workspace-policy.test.mjs	CONTENT-TAXONOMY	presentation	contract-example	23.63	P49 real completed attempts aggregate full author and self-labelled paths separately
+400	fast	taxonomy-and-workspace-policy.test.mjs	CONTENT-TAXONOMY	behavioural	contract-example	1.74	P52 local keyboard remapping rejects conflicts, reserved keys and phantom fields
+401	fast	taxonomy-and-workspace-policy.test.mjs	CONTENT-TAXONOMY	integration	integration-witness	0.55	P52 pure Exam presenter resolves default shortcuts without browser localStorage
+402	fast	taxonomy-and-workspace-policy.test.mjs	CONTENT-TAXONOMY	presentation	contract-example	0.51	P49 full-path IDs stay distinct even for visually identical joined labels
+403	fast	taxonomy-and-workspace-policy.test.mjs	CONTENT-TAXONOMY	integration	contract-example	10.97	P49 hierarchical Learning note and subtopic survive strict v4 backup and import
+404	fast	taxonomy-and-workspace-policy.test.mjs	CONTENT-TAXONOMY	behavioural	contract-example	5.13	P53: mixed APFC subjects remain ONE true exam section with separate semantic roots
+405	fast	taxonomy-and-workspace-policy.test.mjs	CONTENT-TAXONOMY	behavioural	contract-example	2.15	P53: author-declared non-APFC subject has no phantom exam section/syllabus inference
+406	fast	taxonomy-and-workspace-policy.test.mjs	CONTENT-TAXONOMY	behavioural	contract-example	3.76	P53: exact source subject selection is validated; unknown APFC or orphaned path fails
+407	fast	taxonomy-and-workspace-policy.test.mjs	CONTENT-TAXONOMY	behavioural	contract-example	6.33	P53: source-root totals include topicless questions and child subtree filters select correct questions
+408	fast	taxonomy-and-workspace-policy.test.mjs	CONTENT-TAXONOMY	behavioural	contract-example	6.18	P53: distinct underlying question counts cannot inflate with authored revisions and repeat attempts
+409	fast	taxonomy-and-workspace-policy.test.mjs	CONTENT-TAXONOMY	behavioural	contract-example	2.73	P53: notebook subject is a separate explicit annotation, not exam section
+410	fast	terminal-scratch-cleanup.test.mjs	PERSIST-TERMINAL	integration	contract-example	10.40	terminal persistence clears all candidate-only scratch regardless of completion path
+411	fast	ui-and-navigation.test.mjs	UI-NAV	presentation	contract-example	22.23	history is a genuinely separate panel with faithful evidence disclaimers and native actions
+412	fast	ui-and-navigation.test.mjs	UI-NAV	mathematical	contract-example	3.35	result tabs and time ledger keep frozen verdicts, timings and accessible controls separate
+413	fast	ui-and-navigation.test.mjs	UI-NAV	mathematical	contract-example	3.09	restored exam shell exposes progress, timer and navigator while withholding answer keys
+414	fast	ui-and-navigation.test.mjs	UI-NAV	presentation	contract-example	5.82	answer changes preserve actual events and distinguish rescued from lost answers
+415	fast	ui-and-navigation.test.mjs	UI-NAV	presentation	contract-example	2.97	F07: built-in CGL question/option media carries exact contextual alt descriptions in both editions
+416	fast	ui-and-navigation.test.mjs	UI-NAV	presentation	contract-example	0.66	F07: generic author alt survives exactly; option without alt gets contextual fallback
+417	fast	ui-and-navigation.test.mjs	UI-NAV	presentation	contract-example	24.47	F07: actual question screen inherits source context rather than generic image label
+418	fast	ui-and-navigation.test.mjs	UI-NAV	presentation	contract-example	0.62	F08: all eight statuses have explicit meaningful labels; change types avoid false key-correction claims
+419	fast	ui-and-navigation.test.mjs	UI-NAV	behavioural	contract-example	0.69	F10: paused marking changes only the flag; time, response, cursor and visit counts remain frozen
+420	fast	ui-and-navigation.test.mjs	UI-NAV	behavioural	contract-example	0.59	F10: cannot flag when disabled, after expiry or after completion
+421	fast	ui-and-navigation.test.mjs	UI-NAV	presentation	contract-example	0.54	six exam question response kinds render editable, escaped controls
+422	fast	ui-and-navigation.test.mjs	UI-NAV	mathematical	contract-example	0.14	timer display derives from paper policy, not CGL constants
+423	fast	ui-and-navigation.test.mjs	UI-NAV	presentation	contract-example	0.31	review answers resolve human labels for all six question kinds
+424	fast	ui-and-navigation.test.mjs	UI-NAV	integration	contract-example	0.18	generic history rejects malformed stored records before import
+425	fast	ui-and-navigation.test.mjs	UI-NAV	presentation	contract-example	3.53	shared renderer enforces paused, forward-only and no-early-submit policies
+426	fast	ui-and-navigation.test.mjs	UI-NAV	behavioural	contract-example	0.20	G07: under-minimum and over-maximum selections are clearly unsaved; legal selections are not drafts
+427	fast	ui-and-navigation.test.mjs	UI-NAV	presentation	contract-example	1.70	G07: explicit draft renders visible selected options and a live status without altering saved engine response
+428	fast	ui-and-navigation.test.mjs	UI-NAV	behavioural	contract-example	0.48	G08: report each duplicate right value once; blanks and distinct right choices are legal
+429	fast	ui-and-navigation.test.mjs	UI-NAV	presentation	integration-witness	1.33	native-only query codec round-trips every routable screen on file URL
+430	fast	ui-and-navigation.test.mjs	UI-NAV	behavioural	contract-example	0.27	native codec rejects ambiguous, malformed or answer-bearing route schema
+431	fast	ui-and-navigation.test.mjs	UI-NAV	behavioural	contract-example	0.29	routeHref clears old route parameters without destroying unrelated query
+432	fast	ui-and-navigation.test.mjs	UI-NAV	behavioural	contract-example	1.17	Safari fallback encodes every route in same-file fragments without changing pathname
+433	fast	ui-and-navigation.test.mjs	UI-NAV	behavioural	contract-example	0.29	Safari fallback rejects malformed and duplicate deep-link routes without executing content
+434	fast	visual-evidence.test.mjs	QA-HARNESS	integration	contract-example	1.20	Visual evidence opt-in is an explicit exact-string gate
+435	fast	visual-evidence.test.mjs	QA-HARNESS	integration	contract-example	14.51	Visual evidence: default passing tests never capture; explicit opt-in captures actual requested image
+436	deep	agent-benchmark.test.mjs	SCALE	behavioural	contract-example	4357.66	P60-F independently measures matched synthetic agent tasks and preserves all unmeasured source/truth caveats
+437	deep	authoring-scale.test.mjs	SCALE	integration	contract-example	1241.63	P58-C F10: 8 different AI banks, 400 mixed six-kind questions, exactly 200 selected and immutable source publication
+438	deep	authoring-scale.test.mjs	SCALE	mathematical	contract-example	616.24	P58-C F10: actual 500-candidate cap is visible and source list remains non-destructively complete
+439	deep	authoring-scale.test.mjs	SCALE	behavioural	contract-example	132.65	P58-C F10: 8/400/200 caps fail closed, source config disagreements rejected before any edits
+440	deep	authoring-scale.test.mjs	SCALE	mathematical	contract-example	25.95	P58-C F10: immutable historical revision and source edits do not silently overwrite prior scored exam
+441	deep	authoring-scale.test.mjs	SCALE	behavioural	contract-example	4.79	P58-C F10: source-package citation and QA never auto-certifies fictional PYQ claims
+442	deep	result-scale.test.mjs	SCALE	behavioural	contract-example	98.82	result analytics and review stay complete at the 2,000-question package ceiling

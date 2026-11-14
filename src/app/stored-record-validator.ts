@@ -12,11 +12,14 @@ import {validateSourceKeyReference} from "../engine/source-comparison.ts";
 import {validateSourceReviewReference} from "../engine/review-source.ts";
 import {validateNotebookLineage} from "../learning/revision-test.ts";
 import {validatePracticeComposition} from "./practice-compose.ts";
+import {isScheduledMock as isCalendarScheduledMock,validateScheduledMock,
+ type ScheduledMockRecord} from "../calendar/scheduled-mock.ts";
 export type PackageRecord={recordType:"generic-package";id:string;bundle:ExamPackage;saveRevision:number};
-export type RecordItem=PackageRecord|GenericAttempt|LearningCard;
+export type RecordItem=PackageRecord|GenericAttempt|LearningCard|ScheduledMockRecord;
 export const isAttempt=(x:unknown):x is GenericAttempt=>!!x&&typeof x==="object"&&(x as GenericAttempt).recordType==="generic-attempt";
 export const isPackage=(x:unknown):x is PackageRecord=>!!x&&typeof x==="object"&&(x as PackageRecord).recordType==="generic-package";
 export const isLearning=(x:unknown):x is LearningCard=>!!x&&typeof x==="object"&&(x as LearningCard).recordType==="learning-card";
+export const isScheduledMock=isCalendarScheduledMock;
 
 /** P48-4: saved browser and backup records are untrusted, including mutable
  * session clocks and annotations outside the independently hashed paper/key.
@@ -109,6 +112,7 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
      "revisionDisposition","createdAt","updatedAt","reviews"],"learning card");
    return validateLearningCard(value);
  }
+ if(isScheduledMock(value))return validateScheduledMock(value);
  if(isPackage(value)){
    onlyFields(value,["recordType","id","bundle","saveRevision"],"saved package");
    if(typeof value.id!=="string" || value.id!=="generic-package:"+value.bundle?.paper?.id)

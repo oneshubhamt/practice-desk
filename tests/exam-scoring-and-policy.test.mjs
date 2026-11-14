@@ -1,50 +1,26 @@
-// Pass37 lossless capability suite. Each lexical block preserves the original
-// independent fixtures and test body, identified for assertion-level traceability.
-// Imports are module namespaces to avoid collisions between former suites.
-import * as __suite_dep_0 from "node:test";
-import * as __suite_dep_1 from "node:assert/strict";
-import * as __suite_dep_2 from "node:fs/promises";
-import * as __suite_dep_3 from "./fixtures/six-kinds.mjs";
-import * as __suite_dep_4 from "../src/domain/integrity.ts";
-import * as __suite_dep_5 from "../src/app/exam-package.ts";
-import * as __generic_attempt from "../src/engine/generic-attempt.ts";
-import * as __suite_dep_6_stored_record_validator from "../src/app/stored-record-validator.ts";
-import * as __suite_dep_6_exam_view from "../src/app/exam-view.ts";
-import * as __suite_dep_7 from "../src/engine/session.ts";
-import * as __suite_dep_8 from "../src/engine/manual-grading.ts";
-import * as __suite_dep_9 from "../src/engine/source-comparison.ts";
-import * as __suite_dep_10 from "../src/engine/scoring.ts";
-import * as __suite_dep_11 from "../src/engine/clock.ts";
-import * as __suite_dep_12 from "../src/app/exam-preflight.ts";
-import * as __suite_dep_13 from "../src/engine/score-ceiling.ts";
-import * as __suite_dep_14 from "../src/domain/validate.ts";
-import * as __suite_dep_15 from "../src/app/result-presentation.ts";
-import * as __suite_dep_16 from "../src/history/frozen.ts";
+/** Canonical executable contracts, grouped by stable product responsibility. */
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFile} from "node:fs/promises";
+import {pkg,questions,answers} from "./fixtures/six-kinds.mjs";
+import {paperRevisionHash,answerKeyRevisionHash} from "../src/domain/integrity.ts";
+import {validateExamPackage,configureCglPractice,cglAttemptMode,builtinCglPackages,startGenericAttempt} from "../src/app/exam-package.ts";
+import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
+import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
+import {renderModelExam} from "../src/app/exam-view.ts";
+import {transition,startSession} from "../src/engine/session.ts";
+import {setManualGrade,validateManualGrades,manualGradeSummary} from "../src/engine/manual-grading.ts";
+import {createSourceKeyReference,sourceKeyScore,validateSourceKeyReference} from "../src/engine/source-comparison.ts";
+import {scoreAttempt} from "../src/engine/scoring.ts";
+import {createSessionClock} from "../src/engine/clock.ts";
+import {examPreflight,preflightHTML,examRulesHTML} from "../src/app/exam-preflight.ts";
+import {scoreableMaximum,scoreableLowerBound,scoreableBounds} from "../src/engine/score-ceiling.ts";
+import {validateAnswerKeyRevision,validatePaperRevision} from "../src/domain/validate.ts";
+import {resultTabsHTML} from "../src/app/result-presentation.ts";
+import {restoreSession} from "../src/history/frozen.ts";
 
-// === Consolidated coverage: tests/exam-policy-manual-grading-and-timing.test.mjs — 9 unchanged test registrations ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const readFile = __suite_dep_2["readFile"];
-const pkg = __suite_dep_3["pkg"];
-const paperRevisionHash = __suite_dep_4["paperRevisionHash"];
-const validateExamPackage = __suite_dep_5["validateExamPackage"];
-const configureCglPractice = __suite_dep_5["configureCglPractice"];
-const cglAttemptMode = __suite_dep_5["cglAttemptMode"];
-const builtinCglPackages = __suite_dep_5["builtinCglPackages"];
-const startGenericAttempt = __suite_dep_5["startGenericAttempt"];
-const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
-const validateGenericStoredRecord = __suite_dep_6_stored_record_validator["validateGenericStoredRecord"];
-const transition = __suite_dep_7["transition"];
-const startSession = __suite_dep_7["startSession"];
-const setManualGrade = __suite_dep_8["setManualGrade"];
-const validateManualGrades = __suite_dep_8["validateManualGrades"];
-const manualGradeSummary = __suite_dep_8["manualGradeSummary"];
-const createSourceKeyReference = __suite_dep_9["createSourceKeyReference"];
-const sourceKeyScore = __suite_dep_9["sourceKeyScore"];
-const validateSourceKeyReference = __suite_dep_9["validateSourceKeyReference"];
-const scoreAttempt = __suite_dep_10["scoreAttempt"];
-const createSessionClock = __suite_dep_11["createSessionClock"];
+/** Session Policy — canonical domain contracts. */
+async function registerSessionPolicyTests(){
 const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
 const builtins=builtinCglPackages(sources,patches);
@@ -192,23 +168,10 @@ test("live timer uses nondecreasing monotonic elapsed time even if wall clock mo
  assert.equal(transition(paper,after,{type:"TICK",nowMs:clock()}).status,"completed");
 });
 }
+await registerSessionPolicyTests();
 
-// === Consolidated coverage: tests/exam-preflight-and-policy-disclosure.test.mjs — 7 unchanged test registrations ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const readFile = __suite_dep_2["readFile"];
-const pkg = __suite_dep_3["pkg"];
-const questions = __suite_dep_3["questions"];
-const builtinCglPackages = __suite_dep_5["builtinCglPackages"];
-const configureCglPractice = __suite_dep_5["configureCglPractice"];
-const validateExamPackage = __suite_dep_5["validateExamPackage"];
-const examPreflight = __suite_dep_12["examPreflight"];
-const preflightHTML = __suite_dep_12["preflightHTML"];
-const examRulesHTML = __suite_dep_12["examRulesHTML"];
-const scoreableMaximum = __suite_dep_13["scoreableMaximum"];
-const paperRevisionHash = __suite_dep_4["paperRevisionHash"];
-const answerKeyRevisionHash = __suite_dep_4["answerKeyRevisionHash"];
+/** Preflight Disclosure — canonical domain contracts. */
+async function registerPreflightDisclosureTests(){
 const source=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
 const cgl=builtinCglPackages(source,patches);
@@ -356,31 +319,10 @@ test("F15: independently imported editions cannot inherit built-in SSC provenanc
  }
 });
 }
+await registerPreflightDisclosureTests();
 
-// === Consolidated coverage: tests/scoring-and-section-policy.test.mjs — 12 unchanged test registrations ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const pkg = __suite_dep_3["pkg"];
-const questions = __suite_dep_3["questions"];
-const answers = __suite_dep_3["answers"];
-const validateAnswerKeyRevision = __suite_dep_14["validateAnswerKeyRevision"];
-const validatePaperRevision = __suite_dep_14["validatePaperRevision"];
-const paperRevisionHash = __suite_dep_4["paperRevisionHash"];
-const answerKeyRevisionHash = __suite_dep_4["answerKeyRevisionHash"];
-const startSession = __suite_dep_7["startSession"];
-const transition = __suite_dep_7["transition"];
-const scoreAttempt = __suite_dep_10["scoreAttempt"];
-const scoreableMaximum = __suite_dep_13["scoreableMaximum"];
-const scoreableLowerBound = __suite_dep_13["scoreableLowerBound"];
-const scoreableBounds = __suite_dep_13["scoreableBounds"];
-const validateExamPackage = __suite_dep_5["validateExamPackage"];
-const startGenericAttempt = __suite_dep_5["startGenericAttempt"];
-const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
-const validateGenericStoredRecord = __suite_dep_6_stored_record_validator["validateGenericStoredRecord"];
-const renderModelExam = __suite_dep_6_exam_view["renderModelExam"];
-const resultTabsHTML = __suite_dep_15["resultTabsHTML"];
-const restoreSession = __suite_dep_16["restoreSession"];
+/** Section Scoring Policies — canonical domain contracts. */
+async function registerSectionScoringPoliciesTests(){
 const evt=(type,nowMs,rest={})=>({type,nowMs,...rest});
 const bundleWith=(changes)=>{
  const base={...pkg.paper,...changes,
@@ -561,17 +503,10 @@ test("G06: withholding detailed post-test review does not disable exam navigatio
  assert.match(resultTabsHTML("overview",true),/data-result-tab="review"/);
 });
 }
+await registerSectionScoringPoliciesTests();
 
-// === Consolidated coverage: tests/scoring-property-model.test.mjs — 6 unchanged test registrations ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const scoreAttempt = __suite_dep_10["scoreAttempt"];
-const scoreableBounds = __suite_dep_13["scoreableBounds"];
-const scoreableMaximum = __suite_dep_13["scoreableMaximum"];
-const scoreableLowerBound = __suite_dep_13["scoreableLowerBound"];
-const pkg = __suite_dep_3["pkg"];
-const questions = __suite_dep_3["questions"];
+/** Independent Scoring Model — canonical domain contracts. */
+async function registerIndependentScoringModelTests(){
 // Self-contained reference arithmetic: no production scoring/ceiling helper is used
 // to calculate any expected answer. Seed, policy and case index survive test failures.
 function rng(seed){
@@ -833,18 +768,19 @@ test("negative-zero policy never creates phantom marks or a negative aggregate",
  assert.ok(result.snapshot.earnedMarks<=scoreableMaximum(paper,key,[question]));
 });
 }
+await registerIndependentScoringModelTests();
 
-const testP41=__suite_dep_0.default,testAssert=__suite_dep_1.default;
+const testP41=test,testAssert=assert;
 
 testP41("source comparison refuses unchanged-letter identities when option meaning changes",async()=>{
- const papers=JSON.parse(await __suite_dep_2.readFile(new URL("../src/content/papers.json",import.meta.url)));
- const patches=JSON.parse(await __suite_dep_2.readFile(new URL("../src/content/patches.json",import.meta.url)));
- const all=__suite_dep_5.builtinCglPackages(papers,patches);
+ const papers=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
+ const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
+ const all=builtinCglPackages(papers,patches);
  let changes=0,correctTextChanges=0;
  for(const [paperId,modified] of Object.entries(patches)){
   const src=all.find(x=>x.paper.paperId===paperId&&x.paper.edition==="source");
   const reviewed=all.find(x=>x.paper.paperId===paperId&&x.paper.edition==="reviewed");
-  const ref=__suite_dep_9.createSourceKeyReference(reviewed,src);
+  const ref=createSourceKeyReference(reviewed,src);
   for(const [number,patch] of Object.entries(modified)){
    const q=papers[paperId].questions.find(x=>x.n===Number(number));
    if(!patch.opts||patch.opts.every((text,i)=>text===q.opts[i]))continue;
@@ -858,39 +794,39 @@ testP41("source comparison refuses unchanged-letter identities when option meani
  testAssert.equal(correctTextChanges,21);
 });
 
-const p41papers=JSON.parse(await __suite_dep_2.readFile(new URL("../src/content/papers.json",import.meta.url)));
-const p41patches=JSON.parse(await __suite_dep_2.readFile(new URL("../src/content/patches.json",import.meta.url)));
+const p41papers=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
+const p41patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
 
 testP41("publisher comparison preserves identical contexts but rejects reordered options and punctuation",()=>{
- const source=__suite_dep_5.builtinCglPackages(
+ const source=builtinCglPackages(
   p41papers,p41patches).find(x=>x.paper.edition==="source");
  const same=structuredClone(source);
  same.answerKey={...same.answerKey,id:same.answerKey.id+":reviewed-test"};
  same.paper={...same.paper,id:same.paper.id+":reviewed-test",edition:"reviewed",
   answerKeyRevisionId:same.answerKey.id,sourcePaperRevisionId:source.paper.id,
   sourceAnswerKeyRevisionId:source.answerKey.id};
- same.paper.contentHash=__suite_dep_4.paperRevisionHash(same.paper);
- const original=__suite_dep_9.createSourceKeyReference(same,source);
+ same.paper.contentHash=paperRevisionHash(same.paper);
+ const original=createSourceKeyReference(same,source);
  testAssert.ok(original.entries.every(x=>x.comparable));
  const changed=structuredClone(same);
  changed.questions[0].content.options.reverse();
- testAssert.equal(__suite_dep_9.createSourceKeyReference(changed,source).entries[0].comparable,false);
+ testAssert.equal(createSourceKeyReference(changed,source).entries[0].comparable,false);
  const punct=structuredClone(same);
  punct.questions[0].content.prompt+=".";
- testAssert.equal(__suite_dep_9.createSourceKeyReference(punct,source).entries[0].comparable,false);
+ testAssert.equal(createSourceKeyReference(punct,source).entries[0].comparable,false);
  const media=structuredClone(same);
  media.questions[0].content.assetIds=["unmatched-media"];
- testAssert.equal(__suite_dep_9.createSourceKeyReference(media,source).entries[0].comparable,false);
+ testAssert.equal(createSourceKeyReference(media,source).entries[0].comparable,false);
 });
 
 testP41("frozen source evidence rejects forged comparability and unsupported v1 snapshots",async()=>{
- const all=__suite_dep_5.builtinCglPackages(p41papers,p41patches);
+ const all=builtinCglPackages(p41papers,p41patches);
  const source=all.find(x=>x.paper.paperId==="cgl-2026-10-05"&&x.paper.edition==="source");
  const revised=all.find(x=>x.paper.paperId==="cgl-2026-10-05"&&x.paper.edition==="reviewed");
- const ref=__suite_dep_9.createSourceKeyReference(revised,source);
- const attempt={...__suite_dep_5.startGenericAttempt(revised,"p41-canonical-guard",1000),
+ const ref=createSourceKeyReference(revised,source);
+ const attempt={...startGenericAttempt(revised,"p41-canonical-guard",1000),
    finishedAt:1100,sourceKeyReference:ref};
- const subtotal=__suite_dep_9.sourceKeyScore(attempt);
+ const subtotal=sourceKeyScore(attempt);
  testAssert.ok(subtotal.unavailable>0);
  testAssert.equal(subtotal.comparable+subtotal.unavailable,100);
  const hash=(await import("../src/domain/hash.ts")).hashJson;
@@ -898,14 +834,14 @@ testP41("frozen source evidence rejects forged comparability and unsupported v1 
  forged.sourceKeyReference.entries.find(x=>!x.comparable).comparable=true;
  const {contentHash:ignored,...core}=forged.sourceKeyReference;
  forged.sourceKeyReference.contentHash=hash(core);
- testAssert.throws(()=>__suite_dep_9.validateSourceKeyReference(forged),/semantic correspondence/);
+ testAssert.throws(()=>validateSourceKeyReference(forged),/semantic correspondence/);
  const noncanonicalEntries=ref.entries.map(({questionRevisionId,originalOptionId,markingRule})=>
    ({questionRevisionId,originalOptionId,markingRule}));
  const noncanonicalCore={schema:1,paperId:ref.paperId,
    sourcePaperRevisionId:ref.sourcePaperRevisionId,
    sourceAnswerKeyRevisionId:ref.sourceAnswerKeyRevisionId,entries:noncanonicalEntries};
  const noncanonical={...attempt,sourceKeyReference:{...noncanonicalCore,contentHash:hash(noncanonicalCore)}};
- testAssert.throws(()=>__suite_dep_9.validateSourceKeyReference(noncanonical),
+ testAssert.throws(()=>validateSourceKeyReference(noncanonical),
    /Invalid original source-key comparison/,
    "Clean-break app must reject noncanonical positional answer-key snapshots");
 });

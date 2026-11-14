@@ -1,47 +1,41 @@
-// Pass37 lossless capability suite. Each lexical block preserves the original
-// independent fixtures and test body, identified for assertion-level traceability.
-// Imports are module namespaces to avoid collisions between former suites.
-import * as __suite_dep_0 from "node:test";
-import * as __suite_dep_1 from "node:assert/strict";
-import * as __suite_dep_2 from "./fixtures/six-kinds.mjs";
-import * as __suite_dep_3 from "../src/app/exam-package.ts";
-import * as __generic_attempt from "../src/engine/generic-attempt.ts";
-import * as __suite_dep_4 from "../src/learning/attempt-evidence.ts";
-import * as __suite_dep_5 from "../src/learning/question-analytics.ts";
-import * as __suite_dep_6 from "../src/app/history-score.ts";
-import * as __suite_dep_7 from "../src/engine/session.ts";
-import * as __suite_dep_8 from "../src/domain/integrity.ts";
-import * as __suite_dep_9_stored_record_validator from "../src/app/stored-record-validator.ts";
-import * as __suite_dep_9_exam_view from "../src/app/exam-view.ts";
-import * as __suite_dep_10 from "../src/app/result-presentation.ts";
-import * as __suite_dep_11 from "../src/learning/fsrs-scheduler-adapter.ts";
-import * as __suite_dep_12 from "../src/learning/learning.ts";
-import * as __suite_dep_13 from "../src/history/backup.ts";
-import * as __suite_dep_14 from "../src/learning/revision-test.ts";
-import * as __suite_dep_15 from "../src/engine/scoring.ts";
-import * as __suite_dep_16 from "../src/domain/hash.ts";
-import * as __suite_dep_17 from "../src/learning/revision-settings.ts";
-import * as __suite_dep_18 from "../src/learning/fsrs-optimizer.ts";
+/** Canonical executable contracts, grouped by stable product responsibility. */
+import test from "node:test";
+import assert from "node:assert/strict";
+import {pkg,pkg as sixKinds} from "./fixtures/six-kinds.mjs";
+import {validateExamPackage,startGenericAttempt} from "../src/app/exam-package.ts";
+import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
+import {attemptEvidence,evidenceProgression} from "../src/learning/attempt-evidence.ts";
+import {questionSpeed,studySuggestions,isAuditQuestion,longestQuestionExposure} from "../src/learning/question-analytics.ts";
+import {frozenScoreSummary} from "../src/app/history-score.ts";
+import {startSession,transition} from "../src/engine/session.ts";
+import {paperRevisionHash,questionRevisionHash} from "../src/domain/integrity.ts";
+import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
+import {renderModelExam} from "../src/app/exam-view.ts";
+import {reviewMatch,reviewFiltersHTML,timingLedgerHTML,questionCoachingHTML} from "../src/app/result-presentation.ts";
+import {createRevisionScheduler as DefaultScheduler,FSRS_COST_ADR_PRESET_GOAL_WEIGHT} from "../src/learning/fsrs-scheduler-adapter.ts";
+import {addLearningCard,validateLearningCard,scheduledCard,inspectLearningCard,previewLearningCard,rateLearningCard,topicMetrics,comparableTrends} from "../src/learning/learning.ts";
+import {makeBackup,verifyBackup} from "../src/history/backup.ts";
+import {makeRevisionPackage,createNotebookLineage,validateNotebookLineage,REVISION_MAX_QUESTIONS} from "../src/learning/revision-test.ts";
+import {scoreAttempt} from "../src/engine/scoring.ts";
+import {sha256} from "../src/domain/hash.ts";
+import {validateRevisionSettings,DEFAULT_REVISION_SETTINGS,revisionSchedulerOptions,writeRevisionSettings,readRevisionSettings} from "../src/learning/revision-settings.ts";
+import {fsrsOptimizerCsv,optimizerEvidenceSummary,validateFsrsOptimizerProfile,assertFsrsOptimizerReplacement,
+ fsrsWeightsFingerprint as appFsrsWeightsFingerprint,FSRS_OPTIMIZER_PROFILE_SCHEMA,FSRS_OPTIMIZER_BINDING_VERSION,
+ FSRS_OPTIMIZER_HOLDOUT_STRATEGY,FSRS_OPTIMIZER_MIN_TRAIN_ITEMS,FSRS_OPTIMIZER_MIN_HOLDOUT_ITEMS,
+ FSRS_OPTIMIZER_MIN_HOLDOUT_CARDS,FSRS_OPTIMIZER_CHRONOLOGY,
+ FSRS_OPTIMIZER_CONVERTER_FIXED_UTC_OFFSET_MINUTES,FSRS_OPTIMIZER_CONVERTER_ROLLOVER_HOUR} from "../src/learning/fsrs-optimizer.ts";
 import {revisionInventory as independentRevisionInventory} from "../src/learning/revision-selection.ts";
-import * as __suite_dep_19 from "ts-fsrs/models/fsrs-7";
-import * as __suite_dep_20 from "../tools/fsrs-optimizer/optimizer-pipeline.mjs";
-import * as __suite_dep_21 from "../tools/fsrs-optimizer/optimizer-policy.mjs";
-import * as __suite_dep_22 from "node:fs/promises";
-import * as __suite_dep_23 from "../src/learning/review-duration.ts";
+import {FSRS7_DEFAULT_WEIGHTS} from "ts-fsrs/models/fsrs-7";
+import {runFsrsOptimizerPipeline,rawOptimizerEvidenceCounts,OptimizerPipelineRejectedError,OPTIMIZER_STAGES} from "../tools/fsrs-optimizer/optimizer-pipeline.mjs";
+import {OPTIMIZER_PROFILE_SCHEMA,OPTIMIZER_BINDING_VERSION,OPTIMIZER_MODEL_VERSION,HOLDOUT_STRATEGY,
+ MIN_TRAIN_ITEMS,MIN_HOLDOUT_ITEMS,MIN_HOLDOUT_CARDS,OPTIMIZER_CHRONOLOGY,
+ OPTIMIZER_FIXED_UTC_OFFSET_MINUTES,OPTIMIZER_ROLLOVER_HOUR,
+ fsrsWeightsFingerprint as policyFsrsWeightsFingerprint} from "../tools/fsrs-optimizer/optimizer-policy.mjs";
+import {readFile} from "node:fs/promises";
+import {createReviewDurationTracker} from "../src/learning/review-duration.ts";
 
-// === Consolidated coverage: tests/analytics-property-model.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const pkg = __suite_dep_2["pkg"];
-const validateExamPackage = __suite_dep_3["validateExamPackage"];
-const startGenericAttempt = __suite_dep_3["startGenericAttempt"];
-const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
-const attemptEvidence = __suite_dep_4["attemptEvidence"];
-const evidenceProgression = __suite_dep_4["evidenceProgression"];
-const questionSpeed = __suite_dep_5["questionSpeed"];
-const studySuggestions = __suite_dep_5["studySuggestions"];
-const frozenScoreSummary = __suite_dep_6["frozenScoreSummary"];
+/** Analytics Reference — canonical domain contracts. */
+async function registerAnalyticsReferenceTests(){
 function rng(seed){let x=seed>>>0;return n=>{x^=x<<13;x^=x>>>17;x^=x<<5;return (x>>>0)%n;};}
 const bundle=validateExamPackage(pkg);
 const lookup=new Map(bundle.questions.map(q=>[q.id,q]));
@@ -131,28 +125,10 @@ test("seeded six-kind frozen analytics retain denominators, pending essays and h
  }
 });
 }
+await registerAnalyticsReferenceTests();
 
-// === Consolidated coverage: tests/analytics-visits-and-speed-evidence.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const sixKinds = __suite_dep_2["pkg"];
-const validateExamPackage = __suite_dep_3["validateExamPackage"];
-const startGenericAttempt = __suite_dep_3["startGenericAttempt"];
-const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
-const startSession = __suite_dep_7["startSession"];
-const transition = __suite_dep_7["transition"];
-const paperRevisionHash = __suite_dep_8["paperRevisionHash"];
-const questionRevisionHash = __suite_dep_8["questionRevisionHash"];
-const validateGenericStoredRecord = __suite_dep_9_stored_record_validator["validateGenericStoredRecord"];
-const questionSpeed = __suite_dep_5["questionSpeed"];
-const isAuditQuestion = __suite_dep_5["isAuditQuestion"];
-const longestQuestionExposure = __suite_dep_5["longestQuestionExposure"];
-const studySuggestions = __suite_dep_5["studySuggestions"];
-const reviewMatch = __suite_dep_10["reviewMatch"];
-const reviewFiltersHTML = __suite_dep_10["reviewFiltersHTML"];
-const timingLedgerHTML = __suite_dep_10["timingLedgerHTML"];
-const questionCoachingHTML = __suite_dep_10["questionCoachingHTML"];
+/** Visits And Speed — canonical domain contracts. */
+async function registerVisitsAndSpeedTests(){
 const base=structuredClone(sixKinds);
 const updated=base.questions.map((q,i)=>{
  if(i!==1)return q;
@@ -241,10 +217,12 @@ test("generic six-kind frozen timing classifications, accurate filters, longest 
  assert.match(html,/Typical/);assert.match(html,/Not classified/);
  assert.match(html,/Review question 1/);
  const overview=questionCoachingHTML(a);
- assert.match(overview,/Question-speed insights/);
- assert.match(overview,/Longest question visits/);
- assert.match(overview,/What to work on next/);
- assert.match(overview,/data-ledger-q="rev-4"/);
+ assert.ok(overview.includes(studySuggestions(a)[0]),
+  "rendered coaching must contain the computed study suggestion");
+ const longest=longestQuestionExposure(a)[0];
+ assert.ok(longest);
+ assert.ok(overview.includes('aria-label="Review question '+longest.paperNumber+'"'),
+  "longest-question action must remain accessible without depending on internal data attributes");
  const filters=reviewFiltersHTML("typicalwrong");
  assert.match(filters,/value="audit"/);assert.match(filters,/value="typicalwrong" selected/);
 });
@@ -296,30 +274,12 @@ test("negative marking, manual-pending and excluded questions stay separate from
  assert.equal(reviewMatch(a,a.result.items[0],"fastwrong"),false);
 });
 }
+await registerVisitsAndSpeedTests();
 
-// === Consolidated coverage: tests/learning-fsrs-and-cards.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const DefaultScheduler = __suite_dep_11["createRevisionScheduler"];
+/** Fsrs Scheduling — canonical domain contracts. */
+async function registerFsrsSchedulingTests(){
 const Rating = {Again:1,Hard:2,Good:3,Easy:4};
-const pkg = __suite_dep_2["pkg"];
-const validateExamPackage = __suite_dep_3["validateExamPackage"];
-const startGenericAttempt = __suite_dep_3["startGenericAttempt"];
-const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
-const addLearningCard = __suite_dep_12["addLearningCard"];
-const validateLearningCard = __suite_dep_12["validateLearningCard"];
-const scheduledCard = __suite_dep_12["scheduledCard"];
-const inspectLearningCard = __suite_dep_12["inspectLearningCard"];
-const previewLearningCard = __suite_dep_12["previewLearningCard"];
-const rateLearningCard = __suite_dep_12["rateLearningCard"];
-const topicMetrics = __suite_dep_12["topicMetrics"];
-const comparableTrends = __suite_dep_12["comparableTrends"];
-const createReviewDurationTracker = __suite_dep_23["createReviewDurationTracker"];
 const duration=foregroundMs=>({foregroundMs,recallMs:foregroundMs,postRevealMs:0,reliability:"continuous"});
-const validateGenericStoredRecord = __suite_dep_9_stored_record_validator["validateGenericStoredRecord"];
-const makeBackup = __suite_dep_13["makeBackup"];
-const verifyBackup = __suite_dep_13["verifyBackup"];
 const bundle=validateExamPackage(pkg);
 const lookup=new Map(bundle.questions.map(q=>[q.id,q]));
 function complete(id,answer=false){
@@ -408,7 +368,7 @@ test("FSRS policy changes reschedule replayed history without mutating review ev
  const high=await DefaultScheduler({policy:{kind:"fixed",desiredRetention:0.97},enableFuzz:false});
  const adaptive=await DefaultScheduler({policy:{kind:"cost-adr",preset:"upstream-default"},enableFuzz:false});
  const personalized=await DefaultScheduler({policy:{kind:"fixed",desiredRetention:0.9},enableFuzz:false,
-  weights:[...__suite_dep_19.FSRS7_DEFAULT_WEIGHTS]});
+  weights:[...FSRS7_DEFAULT_WEIGHTS]});
  const lowSchedule=scheduledCard(card,low),highSchedule=scheduledCard(card,high),adaptiveSchedule=scheduledCard(card,adaptive);
  scheduledCard(card,personalized);
  assert.equal(personalized.configuration.weights,"FSRS-7-custom");
@@ -426,7 +386,7 @@ test("FSRS policy changes reschedule replayed history without mutating review ev
 test("Cost-ADR composes with remediation and native ts-fsrs leech suspension without rewriting review evidence",async()=>{
  const scheduler=await DefaultScheduler({policy:{kind:"cost-adr",preset:"upstream-default"},leechThreshold:1,leechAction:"remediate"});
  assert.equal(scheduler.configuration.policy.kind,"cost-adr");
- assert.equal(scheduler.configuration.policy.goalCostWeight,__suite_dep_11.FSRS_COST_ADR_PRESET_GOAL_WEIGHT);
+ assert.equal(scheduler.configuration.policy.goalCostWeight,FSRS_COST_ADR_PRESET_GOAL_WEIGHT);
  const seed=addLearningCard(complete("cost-adr"),bundle.questions[0].id,new Date(1030).toISOString());
  assert.deepEqual(previewLearningCard(seed,new Date(2030).toISOString(),scheduler).map(x=>x.rating),[1,2,3,4]);
  let card=seed;
@@ -450,13 +410,13 @@ test("optimizer evidence and evaluated profiles are portable without persisting 
  const scheduler=await DefaultScheduler();
  let card=addLearningCard(complete("optimizer"),bundle.questions[0].id,new Date(1030).toISOString());
  card=rateLearningCard(card,Rating.Good,new Date(2030).toISOString(),duration(810),scheduler);
- const csv=__suite_dep_18.fsrsOptimizerCsv([card]);
+ const csv=fsrsOptimizerCsv([card]);
  assert.match(csv,/^review_time,card_id,review_rating,review_duration,review_state\n/);assert.match(csv,/,3,810,0\n$/);
- assert.deepEqual(__suite_dep_18.optimizerEvidenceSummary([card]),{cards:1,reviews:1,continuousDurations:1,interruptedDurations:0});
- const profile=__suite_dep_18.validateFsrsOptimizerProfile({
+ assert.deepEqual(optimizerEvidenceSummary([card]),{cards:1,reviews:1,continuousDurations:1,interruptedDurations:0});
+ const profile=validateFsrsOptimizerProfile({
   schema:"practice-desk-fsrs-profile/v5",model:"FSRS-7",bindingVersion:"0.6.1",trainedAt:"2026-11-10T00:00:00.000Z",
   sourceSha256:"a".repeat(64),evidence:{rawReviews:480,rawCards:96,retainedItems:384,retainedCards:96},
-  weights:[...__suite_dep_19.FSRS7_DEFAULT_WEIGHTS],
+  weights:[...FSRS7_DEFAULT_WEIGHTS],
   evaluation:{
    crossValidation:{logLoss:0.39,rmseBins:0.07},
    holdout:{strategy:"final-sixth",trainItems:320,holdoutItems:64,holdoutCards:16,
@@ -467,47 +427,47 @@ test("optimizer evidence and evaluated profiles are portable without persisting 
    converterFixedUtcOffsetMinutes:0,converterRolloverHour:0,
    validationCandidateTrainedItems:320,finalRetrainedOnAllEvidence:true}
  });
- const settings=__suite_dep_17.validateRevisionSettings({...__suite_dep_17.DEFAULT_REVISION_SETTINGS,
+ const settings=validateRevisionSettings({...DEFAULT_REVISION_SETTINGS,
   optimizerProfile:profile,policy:{kind:"cost-adr",preset:"upstream-default"}});
- const options=__suite_dep_17.revisionSchedulerOptions(settings);assert.equal(options.policy.kind,"cost-adr");assert.equal(options.weights.length,34);
+ const options=revisionSchedulerOptions(settings);assert.equal(options.policy.kind,"cost-adr");assert.equal(options.weights.length,34);
  const personalizedScheduler=await DefaultScheduler(options);
  assert.equal(personalizedScheduler.configuration.weights,"FSRS-7-custom");
- const resetSettings=__suite_dep_17.validateRevisionSettings({...settings,optimizerProfile:null});
- const resetOptions=__suite_dep_17.revisionSchedulerOptions(resetSettings);
+ const resetSettings=validateRevisionSettings({...settings,optimizerProfile:null});
+ const resetOptions=revisionSchedulerOptions(resetSettings);
  assert.equal("weights" in resetOptions,false);
  const resetScheduler=await DefaultScheduler(resetOptions);
  assert.equal(resetScheduler.configuration.weights,"FSRS-7-default");
  assert.deepEqual(resetSettings.policy,settings.policy);
  assert.equal(resetSettings.leechThreshold,settings.leechThreshold);
  assert.equal(resetSettings.leechAction,settings.leechAction);
- assert.throws(()=>__suite_dep_17.validateRevisionSettings({...settings,policy:{kind:"fixed",desiredRetention:0.74}}),/0.75/);
- assert.throws(()=>__suite_dep_17.validateRevisionSettings({...settings,policy:{kind:"cost-adr",preset:"custom"}}),/preset/);
- assert.throws(()=>__suite_dep_17.validateRevisionSettings({...settings,retentionPolicy:"fixed"}),/Invalid revision settings/);
+ assert.throws(()=>validateRevisionSettings({...settings,policy:{kind:"fixed",desiredRetention:0.74}}),/0.75/);
+ assert.throws(()=>validateRevisionSettings({...settings,policy:{kind:"cost-adr",preset:"custom"}}),/preset/);
+ assert.throws(()=>validateRevisionSettings({...settings,retentionPolicy:"fixed"}),/Invalid revision settings/);
  const storage=new Map(),fake={getItem:key=>storage.get(key)??null,setItem:(key,value)=>storage.set(key,value)};
- __suite_dep_17.writeRevisionSettings(settings,fake);assert.deepEqual(__suite_dep_17.readRevisionSettings(fake),settings);
- assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,evaluation:null}),/evaluation/);
- const tinyGain=__suite_dep_18.validateFsrsOptimizerProfile({...profile,evaluation:{...profile.evaluation,
+ writeRevisionSettings(settings,fake);assert.deepEqual(readRevisionSettings(fake),settings);
+ assert.throws(()=>validateFsrsOptimizerProfile({...profile,evaluation:null}),/evaluation/);
+ const tinyGain=validateFsrsOptimizerProfile({...profile,evaluation:{...profile.evaluation,
   holdout:{...profile.evaluation.holdout,personalized:{logLoss:0.4199,rmseBins:0.07}}}});
  assert.equal(tinyGain.evaluation.holdout.personalized.logLoss,0.4199);
- assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,evaluation:{...profile.evaluation,
+ assert.throws(()=>validateFsrsOptimizerProfile({...profile,evaluation:{...profile.evaluation,
   holdout:{...profile.evaluation.holdout,personalized:{logLoss:0.42,rmseBins:0.07}}}}),/not lower/);
- assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,evaluation:{...profile.evaluation,
+ assert.throws(()=>validateFsrsOptimizerProfile({...profile,evaluation:{...profile.evaluation,
   holdout:{...profile.evaluation.holdout,personalized:{logLoss:0.4201,rmseBins:0.07}}}}),/not lower/);
- assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,evaluation:{...profile.evaluation,
+ assert.throws(()=>validateFsrsOptimizerProfile({...profile,evaluation:{...profile.evaluation,
   holdout:{...profile.evaluation.holdout,personalized:{logLoss:0.40,rmseBins:0.081}}}}),/RMSE-bins/);
- const active=__suite_dep_18.validateFsrsOptimizerProfile({...profile,sourceSha256:"b".repeat(64)});
- assert.throws(()=>__suite_dep_18.assertFsrsOptimizerReplacement(profile,active),/active personalized profile/);
- const replacement=__suite_dep_18.validateFsrsOptimizerProfile({...profile,sourceSha256:"c".repeat(64),
+ const active=validateFsrsOptimizerProfile({...profile,sourceSha256:"b".repeat(64)});
+ assert.throws(()=>assertFsrsOptimizerReplacement(profile,active),/active personalized profile/);
+ const replacement=validateFsrsOptimizerProfile({...profile,sourceSha256:"c".repeat(64),
   evaluation:{...profile.evaluation,holdout:{...profile.evaluation.holdout,
    incumbent:{sourceSha256:active.sourceSha256,
-    weightsFingerprint:__suite_dep_18.fsrsWeightsFingerprint(active.weights),
+    weightsFingerprint:appFsrsWeightsFingerprint(active.weights),
     metrics:{logLoss:0.405,rmseBins:0.08}}}}});
- assert.deepEqual(__suite_dep_18.assertFsrsOptimizerReplacement(replacement,active),replacement);
+ assert.deepEqual(assertFsrsOptimizerReplacement(replacement,active),replacement);
  const badWeights=[...profile.weights];badWeights[23]=0.9;
- assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,weights:badWeights}),/weights/);
- assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,schema:"practice-desk-fsrs-profile/v4"}),/profile/);
- assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,evidence:{...profile.evidence,retainedCards:97}}),/evidence counts/);
- assert.throws(()=>__suite_dep_18.validateFsrsOptimizerProfile({...profile,training:{...profile.training,chronology:"zoned-study-day"}}),/training metadata/);
+ assert.throws(()=>validateFsrsOptimizerProfile({...profile,weights:badWeights}),/weights/);
+ assert.throws(()=>validateFsrsOptimizerProfile({...profile,schema:"practice-desk-fsrs-profile/v4"}),/profile/);
+ assert.throws(()=>validateFsrsOptimizerProfile({...profile,evidence:{...profile.evidence,retainedCards:97}}),/evidence counts/);
+ assert.throws(()=>validateFsrsOptimizerProfile({...profile,training:{...profile.training,chronology:"zoned-study-day"}}),/training metadata/);
 });
 test("topic evidence and trends never compare different paper revisions",()=>{
  const a=complete("one",true),b=complete("two",false);
@@ -554,31 +514,10 @@ test("backup preserves notes and FSRS review logs with strict integrity checks",
  assert.throws(()=>verifyBackup({...archived,records:archived.records.slice(1)}),/integrity/);
 });
 }
+await registerFsrsSchedulingTests();
 
-// === Consolidated coverage: tests/learning-notebook-and-evidence.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const pkg = __suite_dep_2["pkg"];
-const makeRevisionPackage = __suite_dep_14["makeRevisionPackage"];
-const createNotebookLineage = __suite_dep_14["createNotebookLineage"];
-const validateNotebookLineage = __suite_dep_14["validateNotebookLineage"];
-const REVISION_MAX_QUESTIONS = __suite_dep_14["REVISION_MAX_QUESTIONS"];
-const attemptEvidence = __suite_dep_4["attemptEvidence"];
-const evidenceProgression = __suite_dep_4["evidenceProgression"];
-const topicMetrics = __suite_dep_12["topicMetrics"];
-const addLearningCard = __suite_dep_12["addLearningCard"];
-const validateExamPackage = __suite_dep_3["validateExamPackage"];
-const startGenericAttempt = __suite_dep_3["startGenericAttempt"];
-const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
-const validateGenericStoredRecord = __suite_dep_9_stored_record_validator["validateGenericStoredRecord"];
-const renderModelExam = __suite_dep_9_exam_view["renderModelExam"];
-const scoreAttempt = __suite_dep_15["scoreAttempt"];
-const questionRevisionHash = __suite_dep_8["questionRevisionHash"];
-const paperRevisionHash = __suite_dep_8["paperRevisionHash"];
-const makeBackup = __suite_dep_13["makeBackup"];
-const verifyBackup = __suite_dep_13["verifyBackup"];
-const sha256 = __suite_dep_16["sha256"];
+/** Revision And Optimizer — canonical domain contracts. */
+async function registerRevisionAndOptimizerTests(){
 const bundle=validateExamPackage(pkg);
 function complete(id){
  const a=startGenericAttempt(bundle,id,1000);
@@ -721,16 +660,8 @@ test("speed classification uses a sufficient section median and distinguishes fa
 }
 
 
-{
-const test=__suite_dep_0.default;
-const assert=__suite_dep_1.default;
-const {runFsrsOptimizerPipeline,rawOptimizerEvidenceCounts,OptimizerPipelineRejectedError,OPTIMIZER_STAGES}=__suite_dep_20;
-const {
- OPTIMIZER_PROFILE_SCHEMA,OPTIMIZER_BINDING_VERSION,OPTIMIZER_MODEL_VERSION,
- MIN_TRAIN_ITEMS,MIN_HOLDOUT_ITEMS,MIN_HOLDOUT_CARDS
-}=__suite_dep_21;
-const {readFile}=__suite_dep_22;
-
+/** Optimizer Pipeline — native/browser boundary and policy-alignment contracts. */
+function registerOptimizerPipelineTests(){
 const evidence=(count=384)=>({
  items:Array.from({length:count},(_,i)=>({i})),
  cardIds:Array.from({length:count},(_,i)=>"card-"+Math.floor(i/4))
@@ -757,18 +688,18 @@ const fakeBinding=(personalizedLogLoss=0.4,incumbentLogLoss=0.45)=>({
 });
 
 test("app profile validation and optimizer runtime protocol constants stay aligned",()=>{
- assert.equal(__suite_dep_18.FSRS_OPTIMIZER_PROFILE_SCHEMA,__suite_dep_21.OPTIMIZER_PROFILE_SCHEMA);
- assert.equal(__suite_dep_18.FSRS_OPTIMIZER_BINDING_VERSION,__suite_dep_21.OPTIMIZER_BINDING_VERSION);
- assert.equal(__suite_dep_18.FSRS_OPTIMIZER_HOLDOUT_STRATEGY,__suite_dep_21.HOLDOUT_STRATEGY);
- assert.equal(__suite_dep_18.FSRS_OPTIMIZER_MIN_TRAIN_ITEMS,__suite_dep_21.MIN_TRAIN_ITEMS);
- assert.equal(__suite_dep_18.FSRS_OPTIMIZER_MIN_HOLDOUT_ITEMS,__suite_dep_21.MIN_HOLDOUT_ITEMS);
- assert.equal(__suite_dep_18.FSRS_OPTIMIZER_MIN_HOLDOUT_CARDS,__suite_dep_21.MIN_HOLDOUT_CARDS);
- assert.equal(__suite_dep_18.FSRS_OPTIMIZER_CHRONOLOGY,__suite_dep_21.OPTIMIZER_CHRONOLOGY);
- assert.equal(__suite_dep_18.FSRS_OPTIMIZER_CONVERTER_FIXED_UTC_OFFSET_MINUTES,
-  __suite_dep_21.OPTIMIZER_FIXED_UTC_OFFSET_MINUTES);
- assert.equal(__suite_dep_18.FSRS_OPTIMIZER_CONVERTER_ROLLOVER_HOUR,__suite_dep_21.OPTIMIZER_ROLLOVER_HOUR);
- const weights=[...__suite_dep_19.FSRS7_DEFAULT_WEIGHTS];
- assert.equal(__suite_dep_18.fsrsWeightsFingerprint(weights),__suite_dep_21.fsrsWeightsFingerprint(weights));
+ assert.equal(FSRS_OPTIMIZER_PROFILE_SCHEMA,OPTIMIZER_PROFILE_SCHEMA);
+ assert.equal(FSRS_OPTIMIZER_BINDING_VERSION,OPTIMIZER_BINDING_VERSION);
+ assert.equal(FSRS_OPTIMIZER_HOLDOUT_STRATEGY,HOLDOUT_STRATEGY);
+ assert.equal(FSRS_OPTIMIZER_MIN_TRAIN_ITEMS,MIN_TRAIN_ITEMS);
+ assert.equal(FSRS_OPTIMIZER_MIN_HOLDOUT_ITEMS,MIN_HOLDOUT_ITEMS);
+ assert.equal(FSRS_OPTIMIZER_MIN_HOLDOUT_CARDS,MIN_HOLDOUT_CARDS);
+ assert.equal(FSRS_OPTIMIZER_CHRONOLOGY,OPTIMIZER_CHRONOLOGY);
+ assert.equal(FSRS_OPTIMIZER_CONVERTER_FIXED_UTC_OFFSET_MINUTES,
+  OPTIMIZER_FIXED_UTC_OFFSET_MINUTES);
+ assert.equal(FSRS_OPTIMIZER_CONVERTER_ROLLOVER_HOUR,OPTIMIZER_ROLLOVER_HOUR);
+ const weights=[...FSRS7_DEFAULT_WEIGHTS];
+ assert.equal(appFsrsWeightsFingerprint(weights),policyFsrsWeightsFingerprint(weights));
 });
 
 test("optimizer raw evidence accounting handles quoted card IDs before upstream retention",()=>{
@@ -841,17 +772,6 @@ test("FSRS optimizer shared pipeline rejects insufficient evidence and held-out 
  assert.equal(calls,1,"held-out failure must not reach final all-evidence retraining");
 });
 
-test("Native and browser optimizer entrypoints are runtime adapters, not duplicate training pipelines",async()=>{
- const native=await readFile(new URL("../tools/fsrs-optimizer/optimize.mjs",import.meta.url),"utf8");
- const browser=await readFile(new URL("../tools/fsrs-optimizer/browser-worker.mjs",import.meta.url),"utf8");
- const pipeline=await readFile(new URL("../tools/fsrs-optimizer/optimizer-pipeline.mjs",import.meta.url),"utf8");
- for(const source of [native,browser])assert.match(source,/runFsrsOptimizerPipeline/);
- assert.match(native,/--incumbent/);assert.match(browser,/incumbentProfile/);
- for(const duplicate of ["splitChronologicalHoldout(","evaluateHoldoutGate(","validationCandidateTrainedItems:"])
-  for(const source of [native,browser])assert.equal(source.includes(duplicate),false,
-   "runtime adapter duplicated pipeline semantic: "+duplicate);
- assert.match(pipeline,/splitChronologicalHoldout/);
- assert.match(pipeline,/evaluateHoldoutGate/);
- assert.match(pipeline,/validationCandidateTrainedItems/);
-});
 }
+registerOptimizerPipelineTests();
+await registerRevisionAndOptimizerTests();

@@ -128,7 +128,8 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
      '>Start custom set</button></div></details></section>':"";
    return '<div class="generic-heading home-heading"><div><span class="eyebrow">OFFLINE PRACTICE STUDIO</span>'+
      '<h1>Test library</h1><p class="muted">Choose a paper, work in exam conditions and learn from every attempt.</p></div>'+
-     '<button class="btn quiet" id="g-history">History & insights →</button></div>'+
+     '<div class="row"><button class="btn quiet" id="g-calendar">Calendar</button>'+
+     '<button class="btn quiet" id="g-history">History & insights →</button></div></div>'+
      (owner.warning?'<p class="generic-warning" role="status">'+escapeText(owner.warning)+'</p>':"")+
      (pending.length?'<section class="panel pad pending-panel" id="g-pending-attempts">'+
       '<div class="row between"><div><span class="eyebrow">PICK UP WHERE YOU LEFT OFF</span>'+
@@ -252,6 +253,7 @@ export const persistLibrarySelection=(owner:LibraryControllerContext):void=>{
 export function bindLibraryScreen(owner:LibraryControllerContext):void{
 
      owner.root.querySelector<HTMLButtonElement>("#g-learning")!.onclick=()=>owner.go({screen:"learning"});
+     owner.root.querySelector<HTMLButtonElement>("#g-calendar")!.onclick=()=>owner.go({screen:"calendar"});
      owner.root.querySelector<HTMLSelectElement>("#g-family")!.onchange=e=>{
        const id=(e.target as HTMLSelectElement).value;
        if(!owner.families().some(f=>f.id===id))return;

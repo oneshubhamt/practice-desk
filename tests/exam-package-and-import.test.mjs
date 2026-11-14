@@ -1,31 +1,20 @@
-// Pass37 lossless capability suite. Each lexical block preserves the original
-// independent fixtures and test body, identified for assertion-level traceability.
-// Imports are module namespaces to avoid collisions between former suites.
-import * as __suite_dep_0 from "node:test";
-import * as __suite_dep_1 from "node:assert/strict";
-import * as __suite_dep_2 from "node:fs/promises";
-import * as __suite_dep_3 from "../src/app/exam-package.ts";
-import * as __generic_attempt from "../src/engine/generic-attempt.ts";
-import * as __suite_dep_4 from "../src/domain/validate.ts";
-import * as __suite_dep_5 from "../src/domain/integrity.ts";
-import * as __suite_dep_6 from "./fixtures/six-kinds.mjs";
-import * as __suite_dep_7_stored_record_validator from "../src/app/stored-record-validator.ts";
-import * as __suite_dep_8 from "../src/history/backup.ts";
-import * as __suite_dep_9 from "../src/authoring/external-bank.ts";
-import * as __suite_dep_10 from "../src/engine/response.ts";
-import * as __suite_dep_11 from "../src/engine/scoring.ts";
-import * as __suite_dep_12 from "../src/engine/score-ceiling.ts";
+/** Canonical executable contracts, grouped by stable product responsibility. */
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFile} from "node:fs/promises";
+import {builtinCglPackages,validateExamPackage,startGenericAttempt,configureCglPractice,readableAnswer,validateExamImportBudget} from "../src/app/exam-package.ts";
+import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
+import {validateAnswerKeyRevision,validatePaperRevision,validateQuestionRevision} from "../src/domain/validate.ts";
+import {paperRevisionHash} from "../src/domain/integrity.ts";
+import {pkg,questions,answers} from "./fixtures/six-kinds.mjs";
+import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
+import {makeBackup,verifyBackup,planBackupMerge} from "../src/history/backup.ts";
+import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
+import {validateResponse} from "../src/engine/response.ts";
+import {scoreableMaximum} from "../src/engine/score-ceiling.ts";
 
-// === Consolidated coverage: tests/exam-packages-and-cgl-modes.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const readFile = __suite_dep_2["readFile"];
-const builtinCglPackages = __suite_dep_3["builtinCglPackages"];
-const validateExamPackage = __suite_dep_3["validateExamPackage"];
-const startGenericAttempt = __suite_dep_3["startGenericAttempt"];
-const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
-const configureCglPractice = __suite_dep_3["configureCglPractice"];
+/** Cgl Import Modes — canonical domain contracts. */
+async function registerCglImportModesTests(){
 const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
 const packages=builtinCglPackages(sources,patches);
@@ -65,7 +54,7 @@ test("generic attempt uses validated responses and frozen revisions",()=>{
 });
 
 
-// Alternate built-in CGL edition/mode fixtures; retained from cgl-practice.test.mjs.
+// Additional built-in CGL edition/mode policy coverage.
 {
 const papers=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
@@ -96,14 +85,10 @@ test("one engine supports strict, flexible and single CGL policies",()=>{
 });
 }
 }
+await registerCglImportModesTests();
 
-// === Consolidated coverage: tests/exam-schema-validation.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const validateAnswerKeyRevision = __suite_dep_4["validateAnswerKeyRevision"];
-const validatePaperRevision = __suite_dep_4["validatePaperRevision"];
-const validateQuestionRevision = __suite_dep_4["validateQuestionRevision"];
+/** Schema Validation — canonical domain contracts. */
+async function registerSchemaValidationTests(){
 const hash = "a".repeat(64);
 const question = (overrides = {}) => ({
   id: "question-rev-1",
@@ -164,69 +149,43 @@ test("reviewed paper revisions require exact Source paper and key lineage", () =
   assert.equal(validatePaperRevision(reviewed,[q],key).sourcePaperRevisionId,"source-paper-rev");
 });
 
-test("rejects duplicate option identities and malformed hashes", () => {
-  const duplicateOptions = question({
-    content: { kind: "single-choice", prompt: "Choose", options: [{ id: "same", text: "A" }, { id: "same", text: "B" }] },
-  });
-  assert.throws(() => validateQuestionRevision(duplicateOptions), /duplicate identifier/);
-  assert.throws(() => validateQuestionRevision(question({ contentHash: "not-a-hash" })), /SHA-256/);
+test("schema validators reject invalid structural mutations as a table", () => {
+  const q=validateQuestionRevision(question());
+  const validKey=validateAnswerKeyRevision(answerKey(),[q]);
+  const cases=[
+    ["duplicate option identity",()=>validateQuestionRevision(question({
+      content:{kind:"single-choice",prompt:"Choose",options:[{id:"same",text:"A"},{id:"same",text:"B"}]}
+    })),/duplicate identifier/],
+    ["malformed content hash",()=>validateQuestionRevision(question({contentHash:"not-a-hash"})),/SHA-256/],
+    ["unknown keyed option",()=>validateAnswerKeyRevision(answerKey({entries:[{
+      questionRevisionId:q.id,answer:{kind:"single-choice",optionId:"not-an-option"}
+    }]}),[q]),/unknown option/],
+    ["answer kind mismatch",()=>validateAnswerKeyRevision(answerKey({entries:[{
+      questionRevisionId:q.id,answer:{kind:"true-false",value:true}
+    }]}),[q]),/does not match question kind/],
+    ["question repeated across sections",()=>validatePaperRevision(paper({sections:[
+      {id:"section-1",title:"One",questionRevisionIds:[q.id]},
+      {id:"section-2",title:"Two",questionRevisionIds:[q.id]}
+    ],timing:{kind:"untimed"}}),[q]),/multiple sections/],
+    ["missing sectional timer",()=>validatePaperRevision(paper({timing:{
+      kind:"sectional",sectionLimits:[],transition:"manual",allowEarlySubmit:true,pausePolicy:"forbidden"
+    }}),[q]),/exactly one limit/],
+    ["positive wrong-answer marks",()=>validatePaperRevision(paper({scoring:{
+      defaultRule:{correctMarks:2,incorrectMarks:0.5,unansweredMarks:0}
+    }}),[q]),/non-positive/],
+    ["paper question missing from key",()=>{
+      const empty=validateAnswerKeyRevision(answerKey({entries:[]}),[q]);
+      return validatePaperRevision(paper(),[q],empty);
+    },/missing answer-key entry/]
+  ];
+  for(const [name,run,pattern] of cases)assert.throws(run,pattern,name);
 });
 
-test("rejects incompatible answer kinds and unknown option IDs", () => {
-  const q = validateQuestionRevision(question());
-  assert.throws(() => validateAnswerKeyRevision(answerKey({
-    entries: [{ questionRevisionId: q.id, answer: { kind: "single-choice", optionId: "not-an-option" } }],
-  }), [q]), /unknown option/);
-  assert.throws(() => validateAnswerKeyRevision(answerKey({
-    entries: [{ questionRevisionId: q.id, answer: { kind: "true-false", value: true } }],
-  }), [q]), /does not match question kind/);
-});
-
-test("rejects duplicate section membership and missing sectional limits", () => {
-  const q = validateQuestionRevision(question());
-  const duplicated = paper({
-    sections: [
-      { id: "section-1", title: "One", questionRevisionIds: [q.id] },
-      { id: "section-2", title: "Two", questionRevisionIds: [q.id] },
-    ],
-    timing: { kind: "untimed" },
-  });
-  assert.throws(() => validatePaperRevision(duplicated, [q]), /multiple sections/);
-  assert.throws(() => validatePaperRevision(paper({
-    timing: { kind: "sectional", sectionLimits: [], transition: "manual", allowEarlySubmit: true, pausePolicy: "forbidden" },
-  }), [q]), /exactly one limit/);
-});
-
-test("rejects scoring rules with a positive wrong-answer penalty", () => {
-  const q = validateQuestionRevision(question());
-  assert.throws(() => validatePaperRevision(paper({
-    scoring: { defaultRule: { correctMarks: 2, incorrectMarks: 0.5, unansweredMarks: 0 } },
-  }), [q]), /non-positive/);
-});
-
-test("rejects an answer key that omits a question in the paper", () => {
-  const q = validateQuestionRevision(question());
-  const key = validateAnswerKeyRevision(answerKey({ entries: [] }), [q]);
-  assert.throws(() => validatePaperRevision(paper(), [q], key), /missing answer-key entry/);
-});
 }
+await registerSchemaValidationTests();
 
-// === Consolidated coverage: tests/exam-six-kind-lifecycle.test.mjs — retained assertions ===
-{
-const paperRevisionHash = __suite_dep_5["paperRevisionHash"];
-const test = __suite_dep_0["default"];
-const questions = __suite_dep_6["questions"];
-const answers = __suite_dep_6["answers"];
-const pkg = __suite_dep_6["pkg"];
-const assert = __suite_dep_1["default"];
-const validateExamPackage = __suite_dep_3["validateExamPackage"];
-const startGenericAttempt = __suite_dep_3["startGenericAttempt"];
-const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
-const readableAnswer = __suite_dep_3["readableAnswer"];
-const validateGenericStoredRecord = __suite_dep_7_stored_record_validator["validateGenericStoredRecord"];
-const makeBackup = __suite_dep_8["makeBackup"];
-const verifyBackup = __suite_dep_8["verifyBackup"];
-const planBackupMerge = __suite_dep_8["planBackupMerge"];
+/** Six Kind Lifecycle — canonical domain contracts. */
+async function registerSixKindLifecycleTests(){
 const responses=[
  {kind:"single-choice",optionId:"a"},
  {kind:"multiple-select",optionIds:["x","z"]},
@@ -305,17 +264,10 @@ test("completed generic scores cannot be silently rewritten in stored history",(
  assert.throws(()=>validateGenericStoredRecord({...completed,packageId:"different-revision"}),/incorrect revision/);
 });
 }
+await registerSixKindLifecycleTests();
 
-// === Canonical authoring/import boundary properties ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const readFile = __suite_dep_2["readFile"];
-const compileExternalQuestionBank = __suite_dep_9["compileExternalQuestionBank"];
-const validateExamPackage = __suite_dep_3["validateExamPackage"];
-const validateResponse = __suite_dep_10["validateResponse"];
-const scoreableMaximum = __suite_dep_12["scoreableMaximum"];
-const questions = __suite_dep_6["questions"];
+/** Canonical Import Properties — canonical domain contracts. */
+async function registerCanonicalImportPropertiesTests(){
 const starter=JSON.parse(await readFile(new URL("../examples/apfc-authoring-example.json",import.meta.url),"utf8"));
 function rng(seed){let x=seed>>>0;return n=>{x^=x<<13;x^=x>>>17;x^=x<<5;return (x>>>0)%n;};}
 const edit=mutate=>{const b=structuredClone(starter);mutate(b);return b;};
@@ -419,14 +371,8 @@ test("engine response validator gates six kinds independently from UI controls",
 }
 
 
-// P42: adversarial imported-data envelopes; keep these beside the existing
-// import/package capability tests rather than adding a chronological suite.
+// Adversarial imported-data envelopes remain beside the package/import boundary they protect.
 {
-const test=__suite_dep_0.default,assert=__suite_dep_1.default;
-const {pkg}=__suite_dep_6;
-const {validateExamPackage,validateExamImportBudget}=__suite_dep_3;
-const {compileExternalQuestionBank}=__suite_dep_9;
-const {makeBackup,verifyBackup}=__suite_dep_8;
 const clone=()=>structuredClone(pkg);
 
 test("P42 rejects oversized authored text and IDs before any revision hashes are trusted",()=>{
@@ -485,3 +431,4 @@ test("P42 corrupted backup fails closed without altering legitimate current payl
  assert.throws(()=>verifyBackup(damaged),/integrity/);
 });
 }
+await registerCanonicalImportPropertiesTests();

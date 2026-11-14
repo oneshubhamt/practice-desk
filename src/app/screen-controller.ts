@@ -29,16 +29,17 @@ export function drawWorkspaceScreen(owner:ScreenControllerContext,):void{
      owner.view==="result"?"Results. "+(owner.resultTab==="overview"?"Performance overview":
        owner.resultTab==="review"?"Question review":"Question timing ledger")+".": 
      owner.view==="history"?"History and insights.":
-     owner.view==="learning"?"Learning and spaced revision.":"Test library.";
+     owner.view==="learning"?"Learning and spaced revision.":
+     owner.view==="calendar"?"Practice calendar.":"Test library.";
    owner.screenRenderer.render({
      screen:owner.view,screenKey,announcement,resultPane:owner.resultTab,
      html:()=>owner.view==="library"?owner.listHTML():owner.view==="history"?
        historyHTML([...owner.records.values()].filter(isAttempt),owner.packages,
          owner.historyQuery,
          owner.loading,owner.fallbackConflict||owner.storageFault,owner.warning,owner.storageBackend?.kind==="indexeddb"?"indexeddb":"fallback",owner.storageSnapshot()):
-       owner.view==="exam"?owner.examHTML():owner.resultHTML()
-   },owner.learningDesk);
-   if(owner.view==="learning")return;
+       owner.view==="exam"?owner.examHTML():owner.view==="calendar"?"":owner.resultHTML()
+   },owner.learningDesk,owner.calendarController);
+   if(owner.view==="learning"||owner.view==="calendar")return;
    if(owner.view==="history"){bindHistoryScreen(owner);return;}
    if(owner.view==="library"){bindLibraryScreen(owner);return;}
    owner.root.querySelector<HTMLButtonElement>("#g-library")!.onclick=()=>{

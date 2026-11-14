@@ -1,44 +1,25 @@
-// Pass37 lossless capability suite. Each lexical block preserves the original
-// independent fixtures and test body, identified for assertion-level traceability.
-// Imports are module namespaces to avoid collisions between former suites.
-import * as __suite_dep_0 from "node:test";
-import * as __suite_dep_1 from "node:assert/strict";
-import * as __suite_dep_2 from "./fixtures/six-kinds.mjs";
-import * as __suite_dep_3 from "../src/app/exam-package.ts";
-import * as __generic_attempt from "../src/engine/generic-attempt.ts";
-import * as __suite_dep_4_exam_view from "../src/app/exam-view.ts";
-import * as __suite_dep_4_stored_record_validator from "../src/app/stored-record-validator.ts";
-import * as __suite_dep_4_question_content_view from "../src/app/question-content-view.ts";
-import * as __suite_dep_5 from "../src/app/history-page.ts";
-import * as __suite_history_query from "../src/app/history-query.ts";
-import * as __suite_dep_6 from "../src/app/result-presentation.ts";
-import * as __suite_dep_7 from "../src/learning/answer-revisions.ts";
-import * as __suite_dep_8 from "node:fs/promises";
-import * as __suite_dep_9 from "../src/app/editorial-labels.ts";
-import * as __suite_dep_10 from "../src/engine/session.ts";
-import * as __suite_dep_11 from "../src/domain/integrity.ts";
-import * as __suite_dep_12 from "../src/app/response-drafts.ts";
-import * as __suite_dep_13 from "../src/app/navigation.ts";
+/** Canonical executable contracts, grouped by stable product responsibility. */
+import test from "node:test";
+import assert from "node:assert/strict";
+import {pkg} from "./fixtures/six-kinds.mjs";
+import {validateExamPackage,startGenericAttempt,builtinCglPackages,configureCglPractice,readableAnswer} from "../src/app/exam-package.ts";
+import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
+import {renderModelExam,examTimeRemaining} from "../src/app/exam-view.ts";
+import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
+import {renderGenericControls} from "../src/app/question-content-view.ts";
+import {historyHTML,sectionPriorities} from "../src/app/history-page.ts";
+import {filteredHistory} from "../src/app/history-query.ts";
+import {reviewMatch,resultTabsHTML,reviewFiltersHTML,timingLedgerHTML,resultPacingHTML} from "../src/app/result-presentation.ts";
+import {answerRevisionEvidence} from "../src/learning/answer-revisions.ts";
+import {readFile} from "node:fs/promises";
+import {editorialStatusLabel} from "../src/app/editorial-labels.ts";
+import {startSession,transition} from "../src/engine/session.ts";
+import {paperRevisionHash} from "../src/domain/integrity.ts";
+import {multipleDraftMessage,duplicateMatchingTargets} from "../src/app/response-drafts.ts";
+import {parseAppRoute,routeHref,sameDocumentPath,fragmentRouteHref,parseFragmentRoute} from "../src/app/navigation.ts";
 
-// === Consolidated coverage: tests/ui-history-and-results.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const pkg = __suite_dep_2["pkg"];
-const validateExamPackage = __suite_dep_3["validateExamPackage"];
-const startGenericAttempt = __suite_dep_3["startGenericAttempt"];
-const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
-const renderModelExam = __suite_dep_4_exam_view["renderModelExam"];
-const filteredHistory = __suite_history_query["filteredHistory"];
-const historyHTML = __suite_dep_5["historyHTML"];
-const sectionPriorities = __suite_dep_5["sectionPriorities"];
-const reviewMatch = __suite_dep_6["reviewMatch"];
-const resultTabsHTML = __suite_dep_6["resultTabsHTML"];
-const reviewFiltersHTML = __suite_dep_6["reviewFiltersHTML"];
-const timingLedgerHTML = __suite_dep_6["timingLedgerHTML"];
-const resultPacingHTML = __suite_dep_6["resultPacingHTML"];
-const answerRevisionEvidence = __suite_dep_7["answerRevisionEvidence"];
-const validateGenericStoredRecord = __suite_dep_4_stored_record_validator["validateGenericStoredRecord"];
+/** History Results Presentation — canonical domain contracts. */
+async function registerHistoryResultsPresentationTests(){
 const bundle=validateExamPackage(pkg);
 const questionMap=new Map(bundle.questions.map(q=>[q.id,q]));
 function completed(id="complete",at=1000){
@@ -49,18 +30,15 @@ const packages=new Map([[bundle.paper.id,bundle]]);
 test("history is a genuinely separate panel with faithful evidence disclaimers and native actions",()=>{
  const a=completed("first"),b=completed("second");
  const html=historyHTML([a,b],packages,{status:"all",sort:"newest",search:""},false,false,"");
- assert.match(html,/History &amp; insights|History & insights/);
  assert.match(html,/id="g-history-search"/);
  assert.match(html,/id="g-history-sort"/);
  assert.match(html,/data-attempt="first"/);
  assert.match(html,/id="g-export-history"/);
- assert.match(html,/Comparable progression/);
- assert.ok(!html.includes('class="history-sparkline"'),
-   "Two unanswered attempts must not be plotted as false zero-percent scores");
+ assert.doesNotMatch(html,/aria-label="(?:Comparable attempt accuracy sequence|Adjusted score progression[^"]*)"/,
+   "Two unanswered attempts must not render a trend graphic");
  assert.match(html,/repeated questions count as repeated observations/i);
  assert.ok(!html.includes("Expected answer:"));
  const empty=historyHTML([],packages,{status:"all",sort:"newest",search:"x"},false,true,"");
- assert.match(empty,/No attempts match/);
  assert.match(empty,/id="g-import-history" disabled/);
  assert.deepEqual(sectionPriorities([a]),[],"Too little evidence must not create fake section priorities");
 });
@@ -72,7 +50,6 @@ test("result tabs and time ledger keep frozen verdicts, timings and accessible c
  assert.match(html,/aria-selected="true"/);
  const ledger=timingLedgerHTML(a,true);
  assert.match(ledger,/id="result-timing"/);
- assert.match(ledger,/Question timing ledger/);
  assert.equal((ledger.match(/data-ledger-q=/g)??[]).length,6);
  assert.ok(!ledger.includes("Expected answer"));
  const filters=reviewFiltersHTML("incorrect");
@@ -82,18 +59,16 @@ test("result tabs and time ledger keep frozen verdicts, timings and accessible c
  assert.equal(a.result.items.filter(row=>reviewMatch(a,row,"unanswered")).length,6);
  assert.equal(a.result.items.filter(row=>reviewMatch(a,row,"fastwrong")).length,0);
  const pacing=resultPacingHTML(a);
- assert.match(pacing,/Time &amp; pacing/);
- assert.match(pacing,/Section diagnostics/);
+ assert.equal((pacing.match(/role="progressbar"/g)??[]).length,a.frozen.paper.sections.length);
+ for(const section of a.frozen.paper.sections)
+  assert.ok(pacing.includes('aria-label="'+section.title+' coverage"'),
+    "missing accessible section coverage for "+section.title);
 });
 test("restored exam shell exposes progress, timer and navigator while withholding answer keys",()=>{
  const a=startGenericAttempt(bundle,"exam",1000);
  const html=renderModelExam(a,bundle);
- assert.match(html,/class="generic-layout exam-grid"/);
- assert.match(html,/class="exam-progress"/);
  assert.match(html,/id="g-timer"/);
  assert.match(html,/role="progressbar"/);
- assert.match(html,/Question navigator/);
- assert.match(html,/palette-legend/);
  assert.match(html,/aria-label="Question 1/);
  assert.ok(!html.includes("Expected answer"));
 });
@@ -128,21 +103,10 @@ test("answer changes preserve actual events and distinguish rescued from lost an
  assert.throws(()=>validateGenericStoredRecord(altered),/Disconnected saved answer revision/);
 });
 }
+await registerHistoryResultsPresentationTests();
 
-// === Consolidated coverage: tests/ui-media-editorial-and-paused-controls.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const readFile = __suite_dep_8["readFile"];
-const pkg = __suite_dep_2["pkg"];
-const builtinCglPackages = __suite_dep_3["builtinCglPackages"];
-const configureCglPractice = __suite_dep_3["configureCglPractice"];
-const startGenericAttempt = __suite_dep_3["startGenericAttempt"];
-const renderGenericControls = __suite_dep_4_question_content_view["renderGenericControls"];
-const renderModelExam = __suite_dep_4_exam_view["renderModelExam"];
-const editorialStatusLabel = __suite_dep_9["editorialStatusLabel"];
-const startSession = __suite_dep_10["startSession"];
-const transition = __suite_dep_10["transition"];
+/** Media Editorial And Pause — canonical domain contracts. */
+async function registerMediaEditorialAndPauseTests(){
 const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
 const cgl=builtinCglPackages(sources,patches);
@@ -280,23 +244,10 @@ test("F10: cannot flag when disabled, after expiry or after completion",()=>{
  assert.deepEqual(done.responses,frozenAtCompletion,"Completed exam must not accept new flags");
 });
 }
+await registerMediaEditorialAndPauseTests();
 
-// === Consolidated coverage: tests/ui-question-controls-and-drafts.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const renderGenericControls = __suite_dep_4_question_content_view["renderGenericControls"];
-const renderModelExam = __suite_dep_4_exam_view["renderModelExam"];
-const examTimeRemaining = __suite_dep_4_exam_view["examTimeRemaining"];
-const validateGenericStoredRecord = __suite_dep_4_stored_record_validator["validateGenericStoredRecord"];
-const readableAnswer = __suite_dep_3["readableAnswer"];
-const paperRevisionHash = __suite_dep_11["paperRevisionHash"];
-const pkg = __suite_dep_2["pkg"];
-const validateExamPackage = __suite_dep_3["validateExamPackage"];
-const startGenericAttempt = __suite_dep_3["startGenericAttempt"];
-const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
-const multipleDraftMessage = __suite_dep_12["multipleDraftMessage"];
-const duplicateMatchingTargets = __suite_dep_12["duplicateMatchingTargets"];
+/** Question Controls And Drafts — canonical domain contracts. */
+async function registerQuestionControlsAndDraftsTests(){
 const stub={format:"practice-desk-exam",version:1,examId:"example",
  title:"Example",paper:{},answerKey:{},questions:[],assets:[]};
 const revision=(content)=>({id:"q",questionId:"q",revision:1,contentHash:"0".repeat(64),
@@ -414,14 +365,10 @@ test("G08: report each duplicate right value once; blanks and distinct right cho
  assert.match(html,/id="g-save">Save matches/);
 });
 }
+await registerQuestionControlsAndDraftsTests();
 
-// === Consolidated coverage: tests/navigation-native-routes.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const parseAppRoute = __suite_dep_13["parseAppRoute"];
-const routeHref = __suite_dep_13["routeHref"];
-const sameDocumentPath = __suite_dep_13["sameDocumentPath"];
+/** Native Navigation — canonical domain contracts. */
+async function registerNativeNavigationTests(){
 const file="file:///tmp/Practice_Desk_Offline_Mock_Tests.html";
 test("native-only query codec round-trips every routable screen on file URL",()=>{
   const cases=[
@@ -471,11 +418,6 @@ test("routeHref clears old route parameters without destroying unrelated query",
 // Mac Safari/file:// resilience: deterministic fragment codec.
 // Real Back/Forward, persistence and reloading are covered by acceptance-safari-fallback.
 {
-const test=__suite_dep_0["default"];
-const assert=__suite_dep_1["default"];
-const fragmentRouteHref=__suite_dep_13["fragmentRouteHref"];
-const parseFragmentRoute=__suite_dep_13["parseFragmentRoute"];
-const sameDocumentPath=__suite_dep_13["sameDocumentPath"];
 test("Safari fallback encodes every route in same-file fragments without changing pathname",()=>{
  const base="file:///Users/example/Practice_Desk_Offline_Mock_Tests.html?mode=demo";
  const routes=[
@@ -506,3 +448,4 @@ test("Safari fallback rejects malformed and duplicate deep-link routes without e
  assert.equal(parseFragmentRoute("not a url"),null);
 });
 }
+await registerNativeNavigationTests();

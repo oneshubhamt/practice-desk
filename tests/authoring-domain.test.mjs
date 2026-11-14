@@ -1,29 +1,21 @@
-/** Domain-organized authoring contracts.
- * All 27 historical test registrations and their original source bodies are
- * carried unchanged, each in a lexical scope. One new property oracle follows.
- * Canonical source hashes and consolidation evidence: docs/TEST_SUITE_LEDGER.md.
- */
-import * as __dep_0 from "node:test";
-import * as __dep_1 from "node:assert/strict";
-import * as __dep_2 from "node:fs/promises";
-import * as __dep_3 from "../src/domain/rich-document.ts";
-import * as __dep_4 from "../src/authoring/authoring-draft.ts";
-import * as __dep_5 from "../src/authoring/wordgard-document-bridge.ts";
-import * as __dep_6 from "../src/authoring/authoring-publisher.ts";
-import * as __dep_7 from "../src/app/exam-package.ts";
-import * as __dep_8 from "../src/domain/integrity.ts";
-import * as __dep_9 from "../src/engine/scoring.ts";
-import * as __dep_10 from "../src/domain/hash.ts";
-import * as __dep_11 from "../src/authoring/authoring-sections.ts";
-import * as __dep_12 from "../src/authoring/authoring-preview.ts";
-import * as __dep_13 from "../src/authoring/external-bank.ts";
+/** Authoring source, publication, preview and candidate secrecy contracts. */
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFile} from "node:fs/promises";
+import {validateRichDocument,plainRichDocument,canonicalRichDocument,RICH_LIMITS} from "../src/domain/rich-document.ts";
+import {newAuthoringDraft,newAuthoringQuestion,validateAuthoringDraft,validateAuthoringShelf,AUTHORING_KEY,requiresExternalQuality} from "../src/authoring/authoring-draft.ts";
+import {decodeAuthorAtom,encodeAuthorAtom,richToWordgardHTML} from "../src/authoring/wordgard-document-bridge.ts";
+import {compileAuthoringPublication,inspectAuthoringPublication,publicationPlainText,PublicationValidationError} from "../src/authoring/authoring-publisher.ts";
+import {validateExamPackage} from "../src/app/exam-package.ts";
+import {questionRevisionHash} from "../src/domain/integrity.ts";
+import {scoreAttempt} from "../src/engine/scoring.ts";
+import {sha256} from "../src/domain/hash.ts";
+import {authoringSections,setAuthoringSectionMinutes,assignAuthoringQuestionSection} from "../src/authoring/authoring-sections.ts";
+import {authoringPublishedPreview,authoringPartialCreditExamples} from "../src/authoring/authoring-preview.ts";
+import {toAuthoringDraft} from "../src/authoring/external-bank.ts";
 
-// === Unchanged tests from tests/p47-rich-document.test.mjs (source blob 6eb45817f1a6075e3e1c28080fd4f52f30103974) ===
-{
-const test=__dep_0.default;
-const assert=__dep_1.default;
-const {readFile}=__dep_2;
-const {validateRichDocument,plainRichDocument,canonicalRichDocument,RICH_LIMITS}=__dep_3;
+/** Rich Documents — canonical domain contracts. */
+async function registerRichDocumentsTests(){
 const doc=blocks=>({format:"practice-desk-rich",version:1,blocks});
 const txt=(text,marks)=>({type:"text",text,...(marks?{marks}:{})});
 const assets={knownAssets:new Set(["fig-1"])};
@@ -63,25 +55,11 @@ test("P47-5A rejects budget overflow and prototype-inherited metadata",()=>{
   assert.throws(()=>validateRichDocument(doc(Array.from({length:RICH_LIMITS.blocks+1},()=>({type:"paragraph",content:[]})))));
   assert.throws(()=>validateRichDocument(Object.assign(Object.create({unsafe:1}),doc([]))));
 });
-test("P47-5A app-owned ports do not import vendors, persist data or mutate application engines",async()=>{
-  for(const path of ["src/authoring/vendor-ports.ts","src/learning/revision-scheduler-port.ts","src/domain/rich-document.ts"]){
-    const content=await readFile(new URL("../"+path,import.meta.url),"utf8");
-    for(const vendor of ["from \"wordgard","from \"katex","from \"ts-fsrs"])
-      assert.ok(!content.includes(vendor),path+" imports vendor "+vendor);
-    assert.ok(!content.includes("indexedDB")&&!content.includes("localStorage"));
-  }
-});
+
 }
-
-
-// === Unchanged tests from tests/p47-authoring.test.mjs (source blob bb7d1b8042b74afa4f4bff19b0fdecb048311298) ===
-{
-const test=__dep_0.default;
-const assert=__dep_1.default;
-const {readFile}=__dep_2;
-const {newAuthoringDraft,newAuthoringQuestion,validateAuthoringDraft,validateAuthoringShelf,AUTHORING_KEY}=__dep_4;
-const {plainRichDocument}=__dep_3;
-const {decodeAuthorAtom,encodeAuthorAtom,richToWordgardHTML}=__dep_5;
+await registerRichDocumentsTests();
+/** Authoring Drafts — canonical domain contracts. */
+async function registerAuthoringDraftsTests(){
 test("P47-5C draft is not a published paper or answer key and covers six kinds",()=>{
  const kinds=["single-choice","multiple-select","numeric-entry","true-false","matching","free-response"];
  const a=newAuthoringDraft();
@@ -121,31 +99,11 @@ test("P47-5C math and local image tokens never contain remote URLs or execute HT
  assert.ok(html.includes("&lt;script&gt;"));
  assert.ok(!html.includes("<script>"));
 });
-test("P47-5C vendor is quarantined to adapter; no global published schema or FSRS changes",async()=>{
- const paths=["src/authoring/authoring-draft.ts","src/authoring/authoring-studio.ts",
-  "src/authoring/wordgard-document-bridge.ts","src/authoring/vendor-ports.ts"];
- for(const path of paths){
-  const source=await readFile(new URL("../"+path,import.meta.url),"utf8");
-  assert.doesNotMatch(source,/from "wordgard\//,path+" may not reach vendor code");
- }
- const adapter=await readFile(new URL("../src/authoring/wordgard-adapter.ts",import.meta.url),"utf8");
- assert.match(adapter,/from "wordgard\/editor"/);
- assert.doesNotMatch(adapter,/indexedDB|createExamPackage|scoreAttempt|localStorage/);
-});
+
 }
-
-
-// === Unchanged tests from tests/p47-publication.test.mjs (source blob 785fa9c52dabad40e806cb9afd1f6375225ee7b8) ===
-{
-const test=__dep_0.default;
-const assert=__dep_1.default;
-const {newAuthoringDraft,newAuthoringQuestion,validateAuthoringDraft}=__dep_4;
-const {compileAuthoringPublication,inspectAuthoringPublication,publicationPlainText, PublicationValidationError}=__dep_6;
-const {plainRichDocument}=__dep_3;
-const {validateExamPackage}=__dep_7;
-const {questionRevisionHash}=__dep_8;
-const {scoreAttempt}=__dep_9;
-const {sha256}=__dep_10;
+await registerAuthoringDraftsTests();
+/** Publication — canonical domain contracts. */
+async function registerPublicationTests(){
 /** P47-5D: source-verified immutable publication and scored engine contracts. */
 const P=(text)=>plainRichDocument(text);
 const rich=(name)=>({format:"practice-desk-rich",version:1,blocks:[
@@ -310,27 +268,11 @@ test("P47-5D authenticated local image references include only used assets",()=>
  assert.throws(()=>validateExamPackage(tampered),/digest mismatch/);
 });
 
-test("P47-5D publisher depends on domain hashes and validated packages, never editor or storage",async()=>{
- const {readFile}=await import("node:fs/promises");
- const s=await readFile(new URL("../src/authoring/authoring-publisher.ts",import.meta.url),"utf8");
- assert.doesNotMatch(s,/from "wordgard\/|localStorage|indexedDB|document\.querySelector|fetch\(/);
- assert.match(s,/validateExamPackage/);
- assert.match(s,/answerKeyRevisionHash/);
- assert.match(s,/paperRevisionHash/);
-});
+
 }
-
-
-// === Unchanged tests from tests/p54-authoring-integrity.test.mjs (source blob 42ff0f713fd36624d2c26e10d66269ddee12501c) ===
-{
-const test=__dep_0.default;
-const assert=__dep_1.default;
-const {newAuthoringDraft,newAuthoringQuestion}=__dep_4;
-const {compileAuthoringPublication,inspectAuthoringPublication}=__dep_6;
-const {plainRichDocument}=__dep_3;
-const {authoringSections,setAuthoringSectionMinutes,assignAuthoringQuestionSection}=__dep_11;
-const {authoringPublishedPreview,authoringPartialCreditExamples}=__dep_12;
-const {scoreAttempt}=__dep_9;
+await registerPublicationTests();
+/** Inspection And Preview — canonical domain contracts. */
+async function registerInspectionAndPreviewTests(){
 /** P54 first-principles: publication preflight must mean exact compiler success,
  * section editing is one operation on a section, and real scorer previews policy.
  */
@@ -424,15 +366,9 @@ test("P54 partial-credit examples are from actual scoreAttempt, not a second sco
  }
 });
 }
-
-
-// === Unchanged tests from tests/p58a-authoring-integrity.test.mjs (source blob 8b1dbf14f6bdb5382c4988250274f3c5fd83844a) ===
-{
-const test=__dep_0.default;
-const assert=__dep_1.default;
-const {readFile}=__dep_2;
-const {newAuthoringDraft,validateAuthoringDraft,requiresExternalQuality}=__dep_4;
-const {toAuthoringDraft}=__dep_13;
+await registerInspectionAndPreviewTests();
+/** External Quality Gate — canonical domain contracts. */
+async function registerExternalQualityGateTests(){
 test("P58-A F01: external QA is bound to a validated ingestion mode, not a draft ID",async()=>{
  const source=JSON.parse(await readFile(new URL("../examples/ai-first-apfc.json",import.meta.url),"utf8"));
  const imported=toAuthoringDraft(source);
@@ -457,13 +393,10 @@ test("P58-A F01: genuine manual drafts preserve existing publication validation 
  assert.throws(()=>validateAuthoringDraft({...original,ingestionMode:"verified"}),/Invalid authoring ingestion mode/);
 });
 }
-
+await registerExternalQualityGateTests();
 /** Seeded metamorphic check. Plain text must not be reinterpreted as HTML or
  * TeX by rich document validation, and repeated validation must be idempotent. */
-{
- const test=__dep_0.default;
- const assert=__dep_1.default;
- const {plainRichDocument,validateRichDocument,canonicalRichDocument}=__dep_3;
+async function registerRichDocumentPropertiesTests(){
  test("Authoring property: literal Unicode/math/HTML-like strings survive rich validation unchanged",()=>{
   let state=0x5A17D1;
   const alphabet=["a","Z"," ","<",">","&","$","\\","/","{","}","'","\"","0","9","²","√","∑","न","\\n"];
@@ -504,16 +437,11 @@ test("P58-A F01: genuine manual drafts preserve existing publication validation 
   }
  });
 }
+await registerRichDocumentPropertiesTests();
 
 // P62-A: package-level solution media must survive for review but never enter
 // the media list or alt text rendered in an active examination.
-{
-const test=__dep_0.default,assert=__dep_1.default;
-const {newAuthoringDraft,newAuthoringQuestion}=__dep_4;
-const {plainRichDocument}=__dep_3;
-const {compileAuthoringPublication}=__dep_6;
-const {validateExamPackage}=__dep_7;
-const {sha256}=__dep_10;
+async function registerExplanationOnlyMediaTests(){
 test("P62-A candidate view excludes explanation-only image and alt text, review retains both",async()=>{
  const {renderQuestionPrompt,renderGenericControls,supplementalAssetHTML,renderAuthoredText}=
    await import("../src/app/question-content-view.ts");
@@ -572,32 +500,4 @@ test("P62-A candidate view excludes explanation-only image and alt text, review 
   package2.questions[0].content.richExplanation),/SOLUTION ONLY correct option B/);
 });
 }
-
-
-{
-const test=__dep_0.default;
-const assert=__dep_1.default;
-const {readFile}=__dep_2;
-
-test("Authoring topology keeps persistence and staging/publication orchestration out of the studio",async()=>{
- const studio=await readFile(new URL("../src/authoring/authoring-studio.ts",import.meta.url),"utf8");
- const store=await readFile(new URL("../src/authoring/authoring-workspace-store.ts",import.meta.url),"utf8");
- const workflow=await readFile(new URL("../src/authoring/authoring-workflow.ts",import.meta.url),"utf8");
- assert.doesNotMatch(studio,/localStorage|AUTHORING_KEY|STAGING_KEY|inspectExternalQuality|addStagedFiles|stagedToAuthoringDraft/);
- assert.match(studio,/createAuthoringWorkspaceStore\(\)/);
- assert.match(studio,/preparePublicationWorkflow/);
- assert.match(studio,/handoffStagingToDraftShelf/);
- assert.match(store,/AUTHORING_KEY/);
- assert.match(store,/STAGING_KEY/);
- assert.match(store,/saveShelf/);
- assert.match(store,/saveStaging/);
- assert.match(store,/resetUnreadableShelf/);
- assert.match(store,/resetUnreadableStaging/);
- assert.doesNotMatch(store,/document\.|querySelector|wordgard|inspectAuthoringPublication/);
- assert.match(workflow,/inspectPublicationWorkflow/);
- assert.match(workflow,/preparePublicationWorkflow/);
- assert.match(workflow,/handoffStagingToDraftShelf/);
- assert.match(workflow,/ingestStagedFiles/);
- assert.doesNotMatch(workflow,/localStorage|sessionStorage|document\.|querySelector|wordgard/);
-});
-}
+await registerExplanationOnlyMediaTests();

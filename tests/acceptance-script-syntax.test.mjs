@@ -1,27 +1,35 @@
-/** Static preflight: catch browser-acceptance .mjs syntax errors in fast Node
- * CI BEFORE slow real Playwright browser/dependency installation jobs start.
- * This only checks parse validity; behavioral acceptance stays in all engines.
+/** Fast in-process syntax preflight for QA/build scripts.
+ * Behavioral acceptance remains in real browsers; this catches parse errors first.
  */
 import test from "node:test";
 import assert from "node:assert/strict";
-import {readdirSync} from "node:fs";
+import {readdir,readFile} from "node:fs/promises";
 import {fileURLToPath} from "node:url";
 import {join} from "node:path";
-import {spawnSync} from "node:child_process";
+import {transform} from "esbuild";
+
 const scripts=fileURLToPath(new URL("../scripts/",import.meta.url));
-test("all current browser/agent standalone scripts parse under the locked Node runtime",()=>{
- const paths=[
-  ...readdirSync(scripts).filter(name=>name.endsWith(".mjs")).map(name=>join(scripts,name)),
-  ...readdirSync(join(scripts,"browser")).filter(name=>name.endsWith(".mjs"))
-   .map(name=>join(scripts,"browser",name))
- ];
- assert.ok(paths.some(x=>x.endsWith("acceptance-resilience.mjs")));
- assert.ok(paths.some(x=>x.endsWith("question-bank-agent.mjs")));
- for(const file of paths){
-  const r=spawnSync(process.execPath,["--check",file],{
-   encoding:"utf8",timeout:10000,maxBuffer:100000
-  });
-  assert.equal(r.error,undefined,file+": "+String(r.error));
-  assert.equal(r.status,0,file+": "+r.stderr);
+async function modules(dir){
+ const out=[];
+ for(const entry of await readdir(dir,{withFileTypes:true})){
+  const path=join(dir,entry.name);
+  if(entry.isDirectory())out.push(...await modules(path));
+  else if(entry.isFile()&&entry.name.endsWith(".mjs"))out.push(path);
  }
+ return out;
+}
+test("all current browser and agent scripts parse in-process under the locked toolchain",async()=>{
+ const paths=await modules(scripts);
+ assert.ok(paths.some(x=>x.endsWith("acceptance/registry.mjs")));
+ assert.ok(paths.some(x=>x.endsWith("acceptance/scenarios/storage.mjs")));
+ assert.ok(paths.some(x=>x.endsWith("question-bank-agent.mjs")));
+ const failures=[];
+ for(const file of paths){
+  try{
+   await transform(await readFile(file,"utf8"),{
+    loader:"js",format:"esm",target:"node26",sourcefile:file,logLevel:"silent"
+   });
+  }catch(error){failures.push(file+": "+String(error));}
+ }
+ assert.deepEqual(failures,[]);
 });

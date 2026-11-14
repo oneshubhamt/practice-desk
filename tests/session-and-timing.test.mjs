@@ -1,30 +1,22 @@
-// Pass37 lossless capability suite. Each lexical block preserves the original
-// independent fixtures and test body, identified for assertion-level traceability.
-// Imports are module namespaces to avoid collisions between former suites.
-import * as __suite_dep_0 from "node:test";
-import * as __suite_dep_1 from "node:assert/strict";
-import * as __suite_dep_2 from "../src/engine/session.ts";
-import * as __suite_dep_3 from "../src/engine/scoring.ts";
-import * as __suite_dep_4 from "./fixtures/six-kinds.mjs";
-import * as __suite_dep_5 from "../src/domain/integrity.ts";
-import * as __suite_dep_6 from "../src/app/exam-package.ts";
-import * as __generic_attempt from "../src/engine/generic-attempt.ts";
-import * as __suite_dep_7_stored_record_validator from "../src/app/stored-record-validator.ts";
-import * as __suite_dep_8 from "../src/engine/score-ceiling.ts";
-import * as __suite_dep_9 from "../src/learning/attempt-evidence.ts";
-import * as __suite_dep_10 from "../src/history/frozen.ts";
-import * as __suite_dep_11 from "../src/history/deletion-policy.ts";
-import * as __suite_dep_12 from "../src/app/history-page.ts";
-import * as __suite_dep_13 from "../src/app/result-presentation.ts";
+/** Canonical executable contracts, grouped by stable product responsibility. */
+import test from "node:test";
+import assert from "node:assert/strict";
+import {startSession,transition,rebaseSession,validateSectionTimingEvidence,sectionTimerDuration} from "../src/engine/session.ts";
+import {scoreAttempt} from "../src/engine/scoring.ts";
+import {pkg,questions} from "./fixtures/six-kinds.mjs";
+import {paperRevisionHash} from "../src/domain/integrity.ts";
+import {validateExamPackage,startGenericAttempt} from "../src/app/exam-package.ts";
+import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
+import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
+import {sectionScoreSummaries} from "../src/engine/score-ceiling.ts";
+import {attemptEvidence} from "../src/learning/attempt-evidence.ts";
+import {restoreSession} from "../src/history/frozen.ts";
+import {assertDeletionAllowed,deletionWarning} from "../src/history/deletion-policy.ts";
+import {historyHTML} from "../src/app/history-page.ts";
+import {resultPacingHTML} from "../src/app/result-presentation.ts";
 
-// === Consolidated coverage: tests/session-and-scoring-basics.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const startSession = __suite_dep_2["startSession"];
-const transition = __suite_dep_2["transition"];
-const rebaseSession = __suite_dep_2["rebaseSession"];
-const scoreAttempt = __suite_dep_3["scoreAttempt"];
+/** Session Basics — canonical domain contracts. */
+async function registerSessionBasicsTests(){
 const q = (id, kind = "single-choice", status = "verified") => ({
   id, content: { kind, prompt: "Test", options: [{ id: "a", text: "A" }, { id: "b", text: "B" }] },
   editorial: { status },
@@ -84,15 +76,10 @@ test("locked navigation, early section submission and answer clearing", () => {
 
 
 }
+await registerSessionBasicsTests();
 
-// === Consolidated coverage: tests/session-property-model.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const startSession = __suite_dep_2["startSession"];
-const transition = __suite_dep_2["transition"];
-const rebaseSession = __suite_dep_2["rebaseSession"];
-const validateSectionTimingEvidence = __suite_dep_2["validateSectionTimingEvidence"];
+/** Independent Timing Model — canonical domain contracts. */
+async function registerIndependentTimingModelTests(){
 function rng(seed){
  let x=seed>>>0;
  return n=>{x^=x<<13;x^=x>>>17;x^=x<<5;return (x>>>0)%n;};
@@ -237,29 +224,10 @@ test("section evidence rejects fabricated duration, expiry reason, identity and 
  }
 });
 }
+await registerIndependentTimingModelTests();
 
-// === Consolidated coverage: tests/session-timing-and-deletion.test.mjs — retained assertions ===
-{
-const test = __suite_dep_0["default"];
-const assert = __suite_dep_1["default"];
-const pkg = __suite_dep_4["pkg"];
-const questions = __suite_dep_4["questions"];
-const paperRevisionHash = __suite_dep_5["paperRevisionHash"];
-const startSession = __suite_dep_2["startSession"];
-const transition = __suite_dep_2["transition"];
-const sectionTimerDuration = __suite_dep_2["sectionTimerDuration"];
-const validateSectionTimingEvidence = __suite_dep_2["validateSectionTimingEvidence"];
-const validateExamPackage = __suite_dep_6["validateExamPackage"];
-const startGenericAttempt = __suite_dep_6["startGenericAttempt"];
-const transitionGenericAttempt = __generic_attempt["transitionGenericAttempt"];
-const validateGenericStoredRecord = __suite_dep_7_stored_record_validator["validateGenericStoredRecord"];
-const sectionScoreSummaries = __suite_dep_8["sectionScoreSummaries"];
-const attemptEvidence = __suite_dep_9["attemptEvidence"];
-const restoreSession = __suite_dep_10["restoreSession"];
-const assertDeletionAllowed = __suite_dep_11["assertDeletionAllowed"];
-const deletionWarning = __suite_dep_11["deletionWarning"];
-const historyHTML = __suite_dep_12["historyHTML"];
-const resultPacingHTML = __suite_dep_13["resultPacingHTML"];
+/** Session Evidence And Deletion — canonical domain contracts. */
+async function registerSessionEvidenceAndDeletionTests(){
 const event=(type,nowMs,props={})=>({type,nowMs,...props});
 const base=(overrides={})=>({...pkg.paper,...overrides,
   navigation:overrides.navigation??{...pkg.paper.navigation,sectionNavigation:"sequential-locked"}});
@@ -415,3 +383,4 @@ test("F13: archive renders completed Delete and unfinished Discard as non-interc
  assert.match(html,/Discard unfinished/);
 });
 }
+await registerSessionEvidenceAndDeletionTests();

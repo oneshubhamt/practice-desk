@@ -81,6 +81,7 @@ export interface WorkspaceContext{
  lastStorageFailure:string | null;
  lastTimerSave:number;
  readonly learningDesk:{ show(): void; hide(): void; select(id: string): void; dispose(): void; };
+ readonly calendarController:{ show(): void; hide(): void; refresh(): Promise<void>; dispose(): void; invalidate(): void; };
  readonly listHTML:() => string;
  loading:boolean;
  readonly mirrorKey:string;
@@ -119,7 +120,7 @@ export interface WorkspaceContext{
  readonly timer:number;
  untimedPractice:boolean;
  readonly updateStorageHealth:() => void;
- view:"result" | "exam" | "library" | "history" | "learning";
+ view:"result" | "exam" | "library" | "history" | "learning" | "calendar";
  readonly visibility:() => void;
  warning:string;
  readonly writeMirror:(record: GenericAttempt) => void;
@@ -141,8 +142,14 @@ export type AuthoringControllerContext=Slice<
 >;
 
 export type LearningControllerContext=Slice<
- "attempt"|"draw"|"fallbackConflict"|"freshlyStartedAttemptId"|"go"|"loading"|
+ "attempt"|"calendarController"|"draw"|"fallbackConflict"|"freshlyStartedAttemptId"|"go"|"loading"|
  "notice"|"now"|"records"|"removeSavedAttempt"|"root"|"save"|"storageFault"|"warning"
+>;
+
+export type CalendarControllerContext=Slice<
+ "attempt"|"builtinPaperIds"|"choice"|"fallbackConflict"|"families"|"freshlyStartedAttemptId"|
+ "go"|"learningDesk"|"loading"|"notice"|"now"|"packages"|"records"|"removeSavedAttempt"|
+ "root"|"save"|"storageFault"|"warning"
 >;
 
 export type ExamControllerContext=Slice<
@@ -190,14 +197,14 @@ export type PersistenceControllerContext=Slice<
 export type LifecycleControllerContext=Slice<
  "attempt"|"authoringStudio"|"calculatorStates"|"dispatch"|"dispatchVisibility"|
  "disposed"|"draw"|"fallbackConflict"|"go"|"imagePreparation"|"imageViewer"|
- "keyboard"|"lastTimerSave"|"learningDesk"|"now"|"pagehide"|"recordStorageFailure"|
+ "keyboard"|"lastTimerSave"|"learningDesk"|"calendarController"|"now"|"pagehide"|"recordStorageFailure"|
  "reviewFilter"|"root"|"router"|"save"|"storage"|"storageBackend"|"storageFault"|
  "timer"|"view"|"visibility"|"warning"|"writeMirror"|"writeQueue"
 >;
 
 export type ScreenControllerContext=Slice<
  "attempt"|"authoringStudio"|"disposed"|"draw"|"examHTML"|"fallbackConflict"|
- "go"|"historyQuery"|"imagePreparation"|"imageViewer"|"learningDesk"|"listHTML"|
+ "go"|"historyQuery"|"imagePreparation"|"imageViewer"|"learningDesk"|"calendarController"|"listHTML"|
  "loading"|"packages"|"records"|"resultHTML"|"resultTab"|"root"|"screenRenderer"|
  "storageBackend"|"storageFault"|"storageSnapshot"|"view"|"warning"
 > & HistoryControllerContext & LibraryControllerContext & ResultControllerContext & ExamControllerContext;

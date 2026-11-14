@@ -1,6 +1,6 @@
 import {STORAGE_TOPOLOGY} from "../storage-topology.ts";
 import {
- validateGenericStoredRecord,isAttempt,isPackage,isLearning,type RecordItem
+ validateGenericStoredRecord,isAttempt,isPackage,isLearning,isScheduledMock,type RecordItem
 } from "./stored-record-validator.ts";
 import {validateExamPackage} from "../domain/exam-package.ts";
 import type {GenericAttempt} from "../engine/generic-attempt.ts";
@@ -15,6 +15,7 @@ import {
  type WorkspaceRecovery
 } from "../history/workspace-store.ts";
 import {readDisplayPreferences,writeDisplayPreferences,SETTINGS_EVENT} from "./preferences.ts";
+import {readRevisionSettings,writeRevisionSettings} from "../learning/revision-settings.ts";
 import type {PersistenceControllerContext} from "./coordinator-context.ts";
 import {clearCandidateToolWorkspace} from "./candidate-tool-state.ts";
 import {downloadBlob} from "./download-file.ts";
@@ -30,7 +31,7 @@ function acceptRecoveredRecords(owner:PersistenceControllerContext,recovered:Wor
      owner.packages.set(validPackage.paper.id,validPackage);
      owner.records.set(validRecord.id,validRecord);
     }
-   }else if(isAttempt(validRecord)||isLearning(validRecord)){
+   }else if(isAttempt(validRecord)||isLearning(validRecord)||isScheduledMock(validRecord)){
     owner.records.set(validRecord.id,validRecord);
    }else rejected++;
   }catch(error){
@@ -70,7 +71,7 @@ export const downloadHistoryBackup=async (owner:PersistenceControllerContext):Pr
    toExport=toExport.map(value=>validateGenericStoredRecord(value));
   const serialized=serializeVerifiedBackup(
    toExport as unknown as readonly Record<string,unknown>[],
-   readDisplayPreferences(),new Date().toISOString(),owner.setups
+   readDisplayPreferences(),new Date().toISOString(),owner.setups,readRevisionSettings()
   );
   const exportFile=await backupDownload(serialized);
   downloadBlob(exportFile.blob,"Practice_Desk_Backup_"+new Date().toISOString().slice(0,10)+
@@ -96,7 +97,7 @@ export const importHistoryBackup=async (owner:PersistenceControllerContext,file:
   .map(record=>validateGenericStoredRecord(record));
  const incoming=planBackupMerge([...owner.records.values()],imported,owner.attempt?.id);
  if(!confirm("Import "+incoming.length+
-   " new saved records and restore available display/exam setup preferences? Existing records will not be overwritten."))return;
+   " new saved records and restore display, exam setup and revision-scheduler preferences? Existing records will not be overwritten."))return;
  await owner.writeQueue;
  if(incoming.length){
   await owner.storageBackend.insertMany(incoming);
@@ -108,15 +109,16 @@ export const importHistoryBackup=async (owner:PersistenceControllerContext,file:
  }
  try{
   writeDisplayPreferences(archive.preferences);
+  writeRevisionSettings(archive.revisionSettings);
   window.dispatchEvent(new Event(SETTINGS_EVENT));
   if(archive.setups){
    owner.setups=archive.setups;
    owner.applyFamily(owner.setups.selectedFamilyId);
    owner.saveSelection();
   }
-  owner.warning="Imported "+incoming.length+" records; available display/exam setup preferences restored.";
+  owner.warning="Imported "+incoming.length+" records; display, exam setup and revision-scheduler preferences restored.";
  }catch{
-  owner.warning="Imported "+incoming.length+" records. Display preferences could not be stored by this browser.";
+  owner.warning="Imported "+incoming.length+" records. Some local preferences could not be stored by this browser.";
  }
  owner.draw();
 };
@@ -226,7 +228,8 @@ export const removeWorkspaceAttempt=async (
    owner.go({screen:"library"},"replace");
   }
   owner.warning=intent==="discard-unfinished"?"Unfinished test discarded. Other saved work was preserved.":
-   intent==="completed"?"Completed result deleted.":"Learning card deleted.";
+   intent==="completed"?"Completed result deleted.":intent==="learning-card"?"Learning card deleted.":
+   "Scheduled mock deleted.";
   owner.draw();
  }catch(error){
   owner.notice(error instanceof Error?error.message:"Deletion failed");

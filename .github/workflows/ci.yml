@@ -13,20 +13,22 @@ permissions:
   contents: read
 
 jobs:
-  core:
-    name: Strict TypeScript, build and Node contracts
+  fast:
+    name: Fast — type, build, contracts and optimizer smoke
     runs-on: ubuntu-latest
+    env:
+      QA_TIMING_FILE: artifacts/qa-timing/fast.jsonl
     steps:
       - uses: actions/checkout@v7
+        with:
+          submodules: recursive
       - uses: actions/setup-node@v7
         with:
           node-version: '26.13.0'
           package-manager-cache: false
-      # Node 26.13.0 LTS; committed lockfile fixes direct and transitive resolution.
       - run: npm ci --no-audit --no-fund
-      - run: npm run check
-      - name: Verify retained tests detect each targeted isolated semantic mutation
-        run: node scripts/mutation-sensitivity.mjs
+      - name: Fast Node/type/build contracts
+        run: node scripts/timed-run.mjs fast-node -- npm run qa:fast
       - name: Prove clean locked dependency graph and deterministic HTML rebuild
         shell: bash
         run: |
@@ -36,97 +38,90 @@ jobs:
           npm run build
           after=$(sha256sum Practice_Desk_Offline_Mock_Tests.html | cut -d' ' -f1)
           test "$before" = "$after" || { echo "::error::Non-reproducible HTML build"; exit 1; }
-          echo "P42 verified deterministic HTML SHA-256 $after"
-      - name: Save source-verified standalone HTML
-        if: github.event_name == 'push' && github.ref == 'refs/heads/working'
-        uses: actions/upload-artifact@v4
+          echo "Verified deterministic HTML SHA-256 $after"
+      - name: Install isolated optimizer bindings
+        run: npm ci --prefix tools/fsrs-optimizer --no-audit --no-fund
+      - name: Prove isolated optimizer dependency graph is lock-clean
+        run: npm ls --prefix tools/fsrs-optimizer --all --parseable > /dev/null
+      - name: Native FSRS optimizer smoke
+        run: node scripts/timed-run.mjs optimizer-smoke -- npm run --prefix tools/fsrs-optimizer smoke
+      - name: Build static Worker/WASM app
+        run: node scripts/timed-run.mjs static-build -- npm run build:static
+      - uses: actions/upload-artifact@v4
         with:
           name: source-verified-offline-html
           path: Practice_Desk_Offline_Mock_Tests.html
           if-no-files-found: error
           retention-days: 2
           compression-level: 0
-
-  optimizer-runtime:
-    name: Exercise beta FSRS optimizer runtime
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: '26.13.0'
-          package-manager-cache: false
-      - run: npm ci --no-audit --no-fund
-      - name: Install isolated optimizer bindings from committed lock
-        run: npm ci --prefix tools/fsrs-optimizer --no-audit --no-fund
-      - name: Prove isolated optimizer dependency graph is lock-clean
-        run: npm ls --prefix tools/fsrs-optimizer --all --parseable > /dev/null
-      - name: Run FSRS-7 native optimizer, chronology and step-analysis smoke
-        run: npm run --prefix tools/fsrs-optimizer smoke
-      - name: Compare native and WASM optimizer semantics
-        run: npm run --prefix tools/fsrs-optimizer parity
-      - name: Build static app with browser FSRS Worker/WASM
-        run: npm run build:static
-      - name: Save source-verified static app
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: source-verified-static-app
           path: Practice_Desk_Static/
           if-no-files-found: error
           retention-days: 2
           compression-level: 0
+      - name: Upload fast timing report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-timing-fast
+          path: artifacts/qa-timing/
+          if-no-files-found: ignore
+          retention-days: 7
 
-  chromium:
-    name: Complete offline Chromium candidate journeys
-    needs: [core, optimizer-runtime]
+  smoke:
+    name: Smoke — critical Chromium user journeys
+    needs: fast
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 15
+    env:
+      QA_TIMING_FILE: artifacts/qa-timing/smoke.jsonl
     steps:
       - uses: actions/checkout@v7
+        with:
+          submodules: recursive
       - uses: actions/setup-node@v7
         with:
           node-version: '26.13.0'
           package-manager-cache: false
       - run: npm ci --no-audit --no-fund
-      - run: node node_modules/playwright-core/cli.js install --with-deps chromium
+      - uses: actions/download-artifact@v4
+        with:
+          name: source-verified-offline-html
+          path: .
       - uses: actions/download-artifact@v4
         with:
           name: source-verified-static-app
           path: Practice_Desk_Static
-      - run: npm run build
-      - name: All 32 source-mapped journeys in one browser process
-        run: node scripts/acceptance-suite.mjs chromium
-      - name: Complete browser/WASM FSRS optimizer activation pipeline
-        run: node scripts/fsrs-browser-optimizer-smoke.mjs chromium full
-      - name: Upload failures only, including runner's per-journey report
-        if: failure()
+      - name: Six critical Chromium smoke scenarios
+        run: node scripts/timed-run.mjs browser-smoke -- node scripts/acceptance-suite.mjs chromium --tag=smoke
+      - name: Browser/WASM optimizer activation
+        run: node scripts/timed-run.mjs browser-optimizer-full -- node scripts/fsrs-browser-optimizer-smoke.mjs chromium full
+      - name: Upload smoke timing/failure evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: chromium-failure-evidence
-          path: |
-            artifacts/acceptance-modern/
-            artifacts/p58a-integrity/
-            artifacts/p58b-editorial/
-            artifacts/p58c-scale/
-            artifacts/p47-5c-visual/
-            artifacts/p47-5d-publish/
-            artifacts/p54-authoring/
-            artifacts/p53-taxonomy/
+          name: qa-smoke-evidence
+          path: artifacts/
           if-no-files-found: ignore
           retention-days: 7
 
-  cross-browser:
-    name: Complete offline Firefox/WebKit candidate journeys (${{ matrix.browser }})
-    needs: [core, optimizer-runtime]
+  cross:
+    name: Cross — browser-sensitive contracts (${{ matrix.browser }})
+    needs: fast
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
         browser: [firefox, webkit]
+    env:
+      QA_TIMING_FILE: artifacts/qa-timing/cross-${{ matrix.browser }}.jsonl
     steps:
       - uses: actions/checkout@v7
+        with:
+          submodules: recursive
       - uses: actions/setup-node@v7
         with:
           node-version: '26.13.0'
@@ -135,40 +130,100 @@ jobs:
       - run: node node_modules/playwright-core/cli.js install --with-deps ${{ matrix.browser }}
       - uses: actions/download-artifact@v4
         with:
+          name: source-verified-offline-html
+          path: .
+      - uses: actions/download-artifact@v4
+        with:
           name: source-verified-static-app
           path: Practice_Desk_Static
-      - run: npm run build
-      - name: All 20 source-mapped journeys in one browser process
-        run: node scripts/acceptance-suite.mjs ${{ matrix.browser }}
-      - name: Browser/WASM FSRS optimizer probe
-        run: node scripts/fsrs-browser-optimizer-smoke.mjs ${{ matrix.browser }}
-      - name: Upload failures only, including runner's per-journey report
-        if: failure()
+      - name: Four cross-browser scenarios
+        run: node scripts/timed-run.mjs browser-cross-${{ matrix.browser }} -- node scripts/acceptance-suite.mjs ${{ matrix.browser }} --tag=cross-browser
+      - name: Browser/WASM optimizer probe
+        run: node scripts/timed-run.mjs optimizer-probe-${{ matrix.browser }} -- node scripts/fsrs-browser-optimizer-smoke.mjs ${{ matrix.browser }}
+      - name: Upload cross timing/failure evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.browser }}-failure-evidence
-          path: |
-            artifacts/acceptance-modern/
-            artifacts/p58a-integrity/
-            artifacts/p58b-editorial/
-            artifacts/p58c-scale/
-            artifacts/p47-5c-visual/
-            artifacts/p47-5d-publish/
-            artifacts/p54-authoring/
-            artifacts/p53-taxonomy/
+          name: qa-cross-${{ matrix.browser }}
+          path: artifacts/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  deep:
+    name: Deep — scale, mutations, parity and remaining Chromium risks
+    if: github.event_name == 'push' && github.ref == 'refs/heads/working'
+    needs: fast
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      QA_TIMING_FILE: artifacts/qa-timing/deep.jsonl
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.13.0'
+          package-manager-cache: false
+      - run: npm ci --no-audit --no-fund
+      - name: Install isolated optimizer bindings
+        run: npm ci --prefix tools/fsrs-optimizer --no-audit --no-fund
+      - uses: actions/download-artifact@v4
+        with:
+          name: source-verified-offline-html
+          path: .
+      - uses: actions/download-artifact@v4
+        with:
+          name: source-verified-static-app
+          path: Practice_Desk_Static
+      - name: Deep contracts and Chromium scenarios — independent parallel lanes
+        shell: bash
+        run: |
+          set -u
+          # The browser reads immutable Fast artifacts. Mutation sensitivity edits
+          # only a temporary sandbox, so these lanes have no shared mutable state.
+          (
+            set -euo pipefail
+            export QA_TIMING_FILE=artifacts/qa-timing/deep-contracts.jsonl
+            node scripts/timed-run.mjs deep-node -- npm run qa:deep
+            node scripts/timed-run.mjs targeted-mutations -- node scripts/mutation-sensitivity.mjs
+            node scripts/timed-run.mjs optimizer-parity -- npm run --prefix tools/fsrs-optimizer parity
+          ) &
+          contracts_pid=$!
+          (
+            set -euo pipefail
+            export QA_TIMING_FILE=artifacts/qa-timing/deep-browser.jsonl
+            node scripts/timed-run.mjs browser-deep -- node scripts/acceptance-suite.mjs chromium --tag=deep
+          ) &
+          browser_pid=$!
+          contracts_status=0
+          browser_status=0
+          wait "$contracts_pid" || contracts_status=$?
+          wait "$browser_pid" || browser_status=$?
+          if [ "$contracts_status" -ne 0 ] || [ "$browser_status" -ne 0 ]; then
+            echo "::error::Deep lane failure: contracts=$contracts_status browser=$browser_status"
+            exit 1
+          fi
+      - name: Upload deep timing/failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-deep-evidence
+          path: artifacts/
           if-no-files-found: ignore
           retention-days: 7
 
   publish:
-    name: Publish only after all current-app gates pass
+    name: Publish only after fast/smoke/cross/deep gates pass
     if: github.event_name == 'push' && github.ref == 'refs/heads/working'
-    needs: [core, optimizer-runtime, chromium, cross-browser]
+    needs: [fast, smoke, cross, deep]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v7
         with:
+          submodules: recursive
           fetch-depth: 0
       - uses: actions/download-artifact@v4
         with:
