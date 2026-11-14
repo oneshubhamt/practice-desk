@@ -1,15 +1,25 @@
 /** Canonical product-domain suite. Historical programme files are preserved only as trace comments. */
-{
-// Merged from tests/p47-image-preparation.test.mjs; lexical isolation preserves the original fixture namespace.
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFile,stat} from "node:fs/promises";
+import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
+import {validateExamPackage,startGenericAttempt} from "../src/app/exam-package.ts";
+import {sha256} from "../src/domain/hash.ts";
+import {assessRasterCandidate,PREPARE_MAX_FILE_BYTES,PREPARE_MAX_COMPARE_PIXELS,PREPARE_WEBP_QUALITY,imageBytesLabel} from "../src/app/image-preparation.ts";
+import {pkg,questions,answers} from "./fixtures/six-kinds.mjs";
+import {assetHTML,renderGenericControls,stimulusHTML,renderAuthoredText} from "../src/app/question-content-view.ts";
+import {frozenReviewMedia,sourceReviewHTML} from "../src/app/review-media-view.ts";
+import {IMAGE_MIN_ZOOM,IMAGE_MAX_ZOOM,boundedImageZoom,fittedImage,boundedImageOffset,anchoredImageOffset,isLocalVerifiedImageUri} from "../src/app/image-viewer.ts";
+import {mathRenderer,KATEX_VERSION} from "../src/app/katex-math-adapter.ts";
+import {authoredTextHTML} from "../src/app/rich-content-view.ts";
+import {renderModelExam,minutes,readablePracticeMode,examTimeRemaining} from "../src/app/exam-view.ts";
+import {questionRevisionHash} from "../src/domain/integrity.ts";
+import {escapeText} from "../src/app/html-escape.ts";
+import {validateGenericStoredRecord,isAttempt,isPackage,isLearning} from "../src/app/stored-record-validator.ts";
+
+/** Image Preparation — canonical domain contracts. */
+async function registerImagePreparationTests(){
 /** P47-3B: authored image preparation/commit gate, independent of UI. */
-const {default:test}=await import("node:test");
-const {default:assert}=await import("node:assert/strict");
-const {readFile}=await import("node:fs/promises");
-const {compileExternalQuestionBank}=await import("../src/authoring/external-bank.ts");
-const {validateExamPackage}=await import("../src/app/exam-package.ts");
-const {sha256}=await import("../src/domain/hash.ts");
-const {assessRasterCandidate,PREPARE_MAX_FILE_BYTES,PREPARE_MAX_COMPARE_PIXELS,
- PREPARE_WEBP_QUALITY,imageBytesLabel}=await import("../src/app/image-preparation.ts");
 const IMAGE="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/4NwAAAAASUVORK5CYII=";
 const richImage=(text,id)=>({format:"practice-desk-rich",version:1,blocks:[
  {type:"paragraph",content:[{type:"text",text},
@@ -81,19 +91,12 @@ test("P47-3B choose smaller WebP only with strong fidelity and meaningful saving
  assert.equal(imageBytesLabel(1024*1024),"1.00 MiB");
 });
 }
+await registerImagePreparationTests();
 
-{
-// Merged from tests/p47-image-viewer.test.mjs; lexical isolation preserves the original fixture namespace.
+
+/** Image Viewing — canonical domain contracts. */
+async function registerImageViewingTests(){
 /** P47-3: pure viewer geometry, trust boundary and actual HTML contracts. */
-const {default:test}=await import("node:test");
-const {default:assert}=await import("node:assert/strict");
-const {readFile}=await import("node:fs/promises");
-const {pkg,questions}=await import("./fixtures/six-kinds.mjs");
-const {assetHTML,renderGenericControls,stimulusHTML}=await import("../src/app/question-content-view.ts");
-const {frozenReviewMedia,sourceReviewHTML}=await import("../src/app/review-media-view.ts");
-const {startGenericAttempt}=await import("../src/app/exam-package.ts");
-const {IMAGE_MIN_ZOOM,IMAGE_MAX_ZOOM,boundedImageZoom,fittedImage,
-  boundedImageOffset,anchoredImageOffset,isLocalVerifiedImageUri}=await import("../src/app/image-viewer.ts");
 const dataUri="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/4NwAAAAASUVORK5CYII=";
 const image={id:"diagram-1",mediaType:"image/png",dataUri,contentHash:"0".repeat(64),
  altText:'Exact “graph” & <radius> > 10'};
@@ -173,22 +176,12 @@ test("P47-3 stimulus, frozen reviewed and source edition figures all share same 
  assert.match(sourceReviewHTML(saved,q,source),/data-image-open/);
 });
 }
+await registerImageViewingTests();
 
-{
-// Merged from tests/p47-math-renderer.test.mjs; lexical isolation preserves the original fixture namespace.
+
+/** Math Rendering — canonical domain contracts. */
+async function registerMathRenderingTests(){
 /** P47-5B: source-hashed explicit authored maths and safe KaTeX renderer. */
-const {default:test}=await import("node:test");
-const {default:assert}=await import("node:assert/strict");
-const {readFile}=await import("node:fs/promises");
-const {stat}=await import("node:fs/promises");
-const {mathRenderer,KATEX_VERSION}=await import("../src/app/katex-math-adapter.ts");
-const {authoredTextHTML}=await import("../src/app/rich-content-view.ts");
-const {renderModelExam}=await import("../src/app/exam-view.ts");
-const {renderAuthoredText,stimulusHTML}=await import("../src/app/question-content-view.ts");
-const {frozenReviewMedia,sourceReviewHTML}=await import("../src/app/review-media-view.ts");
-const {validateExamPackage,startGenericAttempt}=await import("../src/app/exam-package.ts");
-const {questionRevisionHash}=await import("../src/domain/integrity.ts");
-const {pkg}=await import("./fixtures/six-kinds.mjs");
 const TEX="\\frac{1}{2}";
 const doc=blocks=>({format:"practice-desk-rich",version:1,blocks});
 const paragraph=items=>doc([{type:"paragraph",content:items}]);
@@ -287,20 +280,12 @@ test("P47-5C release carries only local WOFF2 and both KaTeX/Wordgard MIT notice
  assert.ok(size<2_750_000,"Bundled file exceeds reviewed post-Calendar size limit: "+size);
 });
 }
+await registerMathRenderingTests();
 
-{
-// Merged from tests/p47-pure-modules.test.mjs; lexical isolation preserves the original fixture namespace.
+
+/** Rendering Purity — canonical domain contracts. */
+async function registerRenderingPurityTests(){
 /** P47-1 direct public module seam tests; no import from the old UI coordinator. */
-const {default:test}=await import("node:test");
-const {default:assert}=await import("node:assert/strict");
-const {readFile}=await import("node:fs/promises");
-const {pkg,questions,answers}=await import("./fixtures/six-kinds.mjs");
-const {startGenericAttempt}=await import("../src/app/exam-package.ts");
-const {escapeText}=await import("../src/app/html-escape.ts");
-const {assetHTML,stimulusHTML,renderGenericControls}=await import("../src/app/question-content-view.ts");
-const {minutes,readablePracticeMode,examTimeRemaining,renderModelExam}=await import("../src/app/exam-view.ts");
-const {frozenReviewMedia,sourceReviewHTML}=await import("../src/app/review-media-view.ts");
-const {validateGenericStoredRecord,isAttempt,isPackage,isLearning}=await import("../src/app/stored-record-validator.ts");
 const attempt=()=>startGenericAttempt(pkg,"module-seam-attempt",1000);
 test("P47-1 independently escaped HTML text/attributes cannot turn into markup",()=>{
  assert.equal(escapeText('&<>"\''),"&amp;&lt;&gt;&quot;&#39;");
@@ -391,3 +376,4 @@ test("P47-1 validator is standalone, fail-closed and never modifies the input",(
  assert.throws(()=>validateGenericStoredRecord(forged),/frozen|snapshot|hash|integrity|content/i);
 });
 }
+await registerRenderingPurityTests();

@@ -1,26 +1,27 @@
 /** Canonical product-domain suite. Historical programme files are preserved only as trace comments. */
-{
-// Merged from tests/p49-p52-enhancements.test.mjs; lexical isolation preserves the original fixture namespace.
+import test from "node:test";
+import assert from "node:assert/strict";
+import {newAuthoringDraft,newAuthoringQuestion,validateAuthoringDraft} from "../src/authoring/authoring-draft.ts";
+import {compileAuthoringPublication,inspectAuthoringPublication} from "../src/authoring/authoring-publisher.ts";
+import {plainRichDocument} from "../src/domain/rich-document.ts";
+import {validateExamPackage,startGenericAttempt} from "../src/app/exam-package.ts";
+import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
+import {scoreAttempt} from "../src/engine/scoring.ts";
+import {topicAncestors,topicPathId,parseTopicPathId,attributedTopicPath} from "../src/learning/syllabus-taxonomy.ts";
+import {addLearningCard,topicMetrics,validateLearningCard} from "../src/learning/learning.ts";
+import {makeBackup,verifyBackup} from "../src/history/backup.ts";
+import {reconstructRecords} from "../src/history/shared-store.ts";
+import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
+import {DEFAULT_PREFERENCES} from "../src/app/preferences.ts";
+import {DEFAULT_SHORTCUTS,resolveExamShortcut,readShortcutBindings,validateShortcutBindings,writeShortcutBindings,examShortcutHelp} from "../src/app/exam-shortcuts.ts";
+import {practiceInventory,composePracticeSet} from "../src/app/practice-compose.ts";
+
+/** Taxonomy And Workspace — canonical domain contracts. */
+async function registerTaxonomyAndWorkspaceTests(){
 /** P49/P50/P52 independent hierarchy, publication and shortcut contracts.
  * Assemble genuine six-kind authored papers and evaluate through actual engine
  * rather than asserting merely that authoring controls exist in HTML.
  */
-const {default:test}=await import("node:test");
-const {default:assert}=await import("node:assert/strict");
-const {newAuthoringDraft,newAuthoringQuestion,validateAuthoringDraft}=await import("../src/authoring/authoring-draft.ts");
-const {compileAuthoringPublication,inspectAuthoringPublication}=await import("../src/authoring/authoring-publisher.ts");
-const {plainRichDocument}=await import("../src/domain/rich-document.ts");
-const {validateExamPackage,startGenericAttempt}=await import("../src/app/exam-package.ts");
-const {transitionGenericAttempt}=await import("../src/engine/generic-attempt.ts");
-const {scoreAttempt}=await import("../src/engine/scoring.ts");
-const {topicAncestors,topicPathId,parseTopicPathId,attributedTopicPath}=await import("../src/learning/syllabus-taxonomy.ts");
-const {addLearningCard,topicMetrics,validateLearningCard}=await import("../src/learning/learning.ts");
-const {makeBackup,verifyBackup}=await import("../src/history/backup.ts");
-const {reconstructRecords}=await import("../src/history/shared-store.ts");
-const {validateGenericStoredRecord}=await import("../src/app/stored-record-validator.ts");
-const {DEFAULT_PREFERENCES}=await import("../src/app/preferences.ts");
-const {DEFAULT_SHORTCUTS,resolveExamShortcut,readShortcutBindings,
- validateShortcutBindings,writeShortcutBindings,examShortcutHelp}=await import("../src/app/exam-shortcuts.ts");
 const P=x=>plainRichDocument(x);
 function paper(){
  const a=newAuthoringDraft();
@@ -186,23 +187,15 @@ test("P49 hierarchical Learning note and subtopic survive strict v4 backup and i
    /unsupported field/);
 });
 }
+await registerTaxonomyAndWorkspaceTests();
 
-{
-// Merged from tests/p53-taxonomy-separation.test.mjs; lexical isolation preserves the original fixture namespace.
+
+/** Subject Section Separation — canonical domain contracts. */
+async function registerSubjectSectionSeparationTests(){
 /** P53 independent structural regression checks (introduced red BEFORE repair).
  * Exercise the real publisher and completed saved attempts, not a made-up
  * taxonomy demo. A failed assertion is a requirement, not a green fixture.
  */
-const {default:test}=await import("node:test");
-const {default:assert}=await import("node:assert/strict");
-const {newAuthoringDraft,newAuthoringQuestion,validateAuthoringDraft}=await import("../src/authoring/authoring-draft.ts");
-const {compileAuthoringPublication}=await import("../src/authoring/authoring-publisher.ts");
-const {plainRichDocument}=await import("../src/domain/rich-document.ts");
-const {topicAncestors,parseTopicPathId,attributedTopicPath}=await import("../src/learning/syllabus-taxonomy.ts");
-const {topicMetrics,addLearningCard,validateLearningCard}=await import("../src/learning/learning.ts");
-const {startGenericAttempt}=await import("../src/app/exam-package.ts");
-const {transitionGenericAttempt}=await import("../src/engine/generic-attempt.ts");
-const {practiceInventory,composePracticeSet}=await import("../src/app/practice-compose.ts");
 const P=s=>plainRichDocument(s);
 const q=(section,subject,topic,subtopic)=>({
  ...newAuthoringQuestion("single-choice"),section,subject,topic,subtopic,
@@ -305,3 +298,4 @@ test("P53: notebook subject is a separate explicit annotation, not exam section"
  assert.equal(m.find(x=>x.kind==="hierarchy"&&x.label==="General Paper › Trade Unions › Recognition"),undefined);
 });
 }
+await registerSubjectSectionSeparationTests();

@@ -1,19 +1,22 @@
 /** Canonical product-domain suite. */
-{
-// Merged from tests/p59-agent-native-authoring.test.mjs; lexical isolation preserves original fixtures.
+import test from "node:test";
+import assert from "node:assert/strict";
+import {spawnSync} from "node:child_process";
+import {fileURLToPath} from "node:url";
+import {mkdtemp,readFile,writeFile,rm,access,readdir} from "node:fs/promises";
+import {tmpdir} from "node:os";
+import {join,resolve,dirname} from "node:path";
+import {createHash} from "node:crypto";
+import {inspectExternalQuestionBank} from "../src/authoring/external-bank.ts";
+import {validateExamPackage} from "../src/app/exam-package.ts";
+import {QUALITY_CHECKLIST} from "../scripts/question-quality.mjs";
+
+/** Agent Editing — canonical domain contracts. */
+async function registerAgentEditingTests(){
 /** P59 RED-first agent-native context-efficient editing contract.
  * Proves real CLI interface without binding external agents to app internals.
  * Generated source claims stay unverified; no network/browser/DB use.
  */
-const {default:test}=await import("node:test");
-const {default:assert}=await import("node:assert/strict");
-const {spawnSync}=await import("node:child_process");
-const {fileURLToPath}=await import("node:url");
-const {mkdtemp,readFile,writeFile,rm}=await import("node:fs/promises");
-const {tmpdir}=await import("node:os");
-const {join}=await import("node:path");
-const {createHash}=await import("node:crypto");
-const {inspectExternalQuestionBank}=await import("../src/authoring/external-bank.ts");
 const cmd=fileURLToPath(new URL("../scripts/question-bank-agent.mjs",import.meta.url));
 const apfc=fileURLToPath(new URL("../examples/ai-first-apfc.json",import.meta.url));
 const cat=fileURLToPath(new URL("../examples/ai-first-cat.json",import.meta.url));
@@ -279,18 +282,14 @@ test("P59: editing an alleged official PYQ cannot silently retain its provenance
  assert.equal(JSON.parse(await readFile(input,"utf8")).questions[0].provenance.kind,"official-pyq");
 }));
 }
+await registerAgentEditingTests();
 
-{
-// Merged from tests/p60a-agent-capabilities.test.mjs; lexical isolation preserves original fixtures.
+
+/** Capability Discovery — canonical domain contracts. */
+async function registerCapabilityDiscoveryTests(){
 /** P60-A read-only agent capability discovery contract.
  * Source-based claims, bounded outputs and honest planned-vs-built statuses.
  */
-const {default:test}=await import("node:test");
-const {default:assert}=await import("node:assert/strict");
-const {spawnSync}=await import("node:child_process");
-const {readFile,access}=await import("node:fs/promises");
-const {fileURLToPath}=await import("node:url");
-const {resolve,dirname}=await import("node:path");
 const root=fileURLToPath(new URL("../",import.meta.url));
 const contract=fileURLToPath(new URL("../docs/contracts/practice-desk-capabilities.v1.json",import.meta.url));
 const script=fileURLToPath(new URL("../scripts/practice-desk-capabilities.mjs",import.meta.url));
@@ -394,22 +393,14 @@ test("P60-A: documentation truth table excludes claims that later P60 work alrea
  assert.ok(contractDoc.capabilities.some(x=>x.id==="ai-authoring"&&x.limitations.some(y=>y.includes("authenticate"))));
 });
 }
+await registerCapabilityDiscoveryTests();
 
-{
-// Merged from tests/p60f-agent-handoff.test.mjs; lexical isolation preserves original fixtures.
+
+/** Source Bound Handoff — canonical domain contracts. */
+async function registerSourceBoundHandoffTests(){
 /** P60-F RED: a coherent source-bound agent handoff, never a cloud/device bridge.
  * All reviewer/source statements in fixtures are synthetic, not proof of truth.
  */
-const {default:test}=await import("node:test");
-const {default:assert}=await import("node:assert/strict");
-const {spawnSync}=await import("node:child_process");
-const {readFile,writeFile,mkdtemp,rm,readdir,access}=await import("node:fs/promises");
-const {createHash}=await import("node:crypto");
-const {tmpdir}=await import("node:os");
-const {join}=await import("node:path");
-const {fileURLToPath}=await import("node:url");
-const {validateExamPackage}=await import("../src/app/exam-package.ts");
-const {QUALITY_CHECKLIST}=await import("../scripts/question-quality.mjs");
 const script=fileURLToPath(new URL("../scripts/agent-handoff.mjs",import.meta.url));
 const quality=fileURLToPath(new URL("../scripts/question-quality.mjs",import.meta.url));
 const editorial=fileURLToPath(new URL("../scripts/editorial-editions.mjs",import.meta.url));
@@ -745,3 +736,4 @@ test("P62-A agent assessment preserves valid partial status and rejects incomple
  await assert.rejects(access(folder));
 }));
 }
+await registerSourceBoundHandoffTests();

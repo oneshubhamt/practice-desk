@@ -1,14 +1,19 @@
 /** Canonical product-domain suite. */
-{
-// Merged from tests/p60b-content-blueprint.test.mjs; lexical isolation preserves original fixtures.
+import test from "node:test";
+import assert from "node:assert/strict";
+import {spawnSync} from "node:child_process";
+import {mkdtemp,readFile,writeFile,rm,access} from "node:fs/promises";
+import {join} from "node:path";
+import {tmpdir} from "node:os";
+import {fileURLToPath} from "node:url";
+import {createHash} from "node:crypto";
+import {inspectExternalQuestionBank,toAuthoringDraft} from "../src/authoring/external-bank.ts";
+import {inspectCandidateIntegrity} from "../src/authoring/candidate-integrity.ts";
+import {inspectAuthoringPublication} from "../src/authoring/authoring-publisher.ts";
+
+/** Content Blueprints — canonical domain contracts. */
+async function registerContentBlueprintsTests(){
 /** P60-B RED-first: enforce authored content blueprints without modifying exam or scorer. */
-const {default:test}=await import("node:test");
-const {default:assert}=await import("node:assert/strict");
-const {spawnSync}=await import("node:child_process");
-const {mkdtemp,readFile,writeFile,rm}=await import("node:fs/promises");
-const {join}=await import("node:path");
-const {tmpdir}=await import("node:os");
-const {fileURLToPath}=await import("node:url");
 const script=fileURLToPath(new URL("../scripts/content-blueprint.mjs",import.meta.url));
 const example=fileURLToPath(new URL("../examples/ai-first-apfc.json",import.meta.url));
 const mkPlan=()=>({
@@ -315,21 +320,12 @@ test("P62-A partial blueprint passes read-only validation but blocks final compi
  await assert.rejects(readFile(out,"utf8"));
 }));
 }
+await registerContentBlueprintsTests();
 
-{
-// Merged from tests/p60c-question-quality.test.mjs; lexical isolation preserves original fixtures.
+
+/** Candidate Secrecy — canonical domain contracts. */
+async function registerCandidateSecrecyTests(){
 /** P60-C RED: candidate-visible hint leakage and externally performed quality evidence. */
-const {default:test}=await import("node:test");
-const {default:assert}=await import("node:assert/strict");
-const {spawnSync}=await import("node:child_process");
-const {readFile,writeFile,mkdtemp,rm,access}=await import("node:fs/promises");
-const {join}=await import("node:path");
-const {tmpdir}=await import("node:os");
-const {fileURLToPath}=await import("node:url");
-const {createHash}=await import("node:crypto");
-const {inspectExternalQuestionBank,toAuthoringDraft}=await import("../src/authoring/external-bank.ts");
-const {inspectCandidateIntegrity}=await import("../src/authoring/candidate-integrity.ts");
-const {inspectAuthoringPublication}=await import("../src/authoring/authoring-publisher.ts");
 const tool=fileURLToPath(new URL("../scripts/question-quality.mjs",import.meta.url));
 const cli=fileURLToPath(new URL("../scripts/question-bank-cli.mjs",import.meta.url));
 const apfc=fileURLToPath(new URL("../examples/ai-first-apfc.json",import.meta.url));
@@ -755,3 +751,4 @@ test("P62-C mathematical declarations, pending status and keyword conflicts fail
   x=>x.code==="applicability-heuristic-conflict"));
 }));
 }
+await registerCandidateSecrecyTests();

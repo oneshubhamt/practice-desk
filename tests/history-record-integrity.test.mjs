@@ -1,17 +1,19 @@
 /** Canonical product-domain suite. Historical programme files are preserved only as trace comments. */
-{
-// Merged from tests/p47-history-filters.test.mjs; lexical isolation preserves the original fixture namespace.
+import test from "node:test";
+import assert from "node:assert/strict";
+import {pkg} from "./fixtures/six-kinds.mjs";
+import {startGenericAttempt} from "../src/app/exam-package.ts";
+import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
+import {historyHTML} from "../src/app/history-page.ts";
+import {DEFAULT_HISTORY_QUERY,filteredHistory,localAttemptDate,historyQueryError,activeHistoryFilterCount,restoreHistoryQuery} from "../src/app/history-query.ts";
+import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
+import {compactAttempt,reconstructRecords,reconstructRecoverableRecords,createRecoverableRecordCollector,expandAttempt} from "../src/history/shared-store.ts";
+
+/** History Filtering — canonical domain contracts. */
+async function registerHistoryFilteringTests(){
 /** P47-2: frozen History query and archive filter integration contracts.
  * No test imports the stateful coordinator; no saved record is modified.
  */
-const {default:test}=await import("node:test");
-const {default:assert}=await import("node:assert/strict");
-const {pkg}=await import("./fixtures/six-kinds.mjs");
-const {startGenericAttempt}=await import("../src/app/exam-package.ts");
-const {transitionGenericAttempt}=await import("../src/engine/generic-attempt.ts");
-const {historyHTML}=await import("../src/app/history-page.ts");
-const {DEFAULT_HISTORY_QUERY,filteredHistory,localAttemptDate,historyQueryError,
- activeHistoryFilterCount,restoreHistoryQuery}=await import("../src/app/history-query.ts");
 const mk=(id,examId,startedAt,finished=false)=>{
  const bundle={...pkg,examId};
  const a=startGenericAttempt(bundle,id,startedAt);
@@ -179,20 +181,16 @@ test("P47-2 filtering cannot affect all-time metrics or immutable attempt scores
  assert.deepEqual(attempts,snapshot);
 });
 }
+await registerHistoryFilteringTests();
 
-{
-// Merged from tests/p48-independent-record-invariants.test.mjs; lexical isolation preserves the original fixture namespace.
+
+/** Frozen Record Validation — canonical domain contracts. */
+async function registerFrozenRecordValidationTests(){
 /** P48-4 independent adversarial saved-session contract.
  * Build from live six-kind domain package, not a previously green mock.
  * A checksum-matched hostile archive must not confer legitimacy on invented
  * timer data or unsigned fields in mutable attempt/session records.
  */
-const {default:test}=await import("node:test");
-const {default:assert}=await import("node:assert/strict");
-const {pkg}=await import("./fixtures/six-kinds.mjs");
-const {startGenericAttempt}=await import("../src/app/exam-package.ts");
-const {transitionGenericAttempt}=await import("../src/engine/generic-attempt.ts");
-const {validateGenericStoredRecord}=await import("../src/app/stored-record-validator.ts");
 const origin=Date.UTC(2026,10,4,8,30);
 const fresh=()=>startGenericAttempt(pkg,"p48-4-record",origin);
 const savedResponse=()=>{
@@ -259,19 +257,14 @@ test("P48-4 candidate answer and pair objects must reject unsigned extra keys",(
    "matching endpoint must not contain shadow fields");
 });
 }
+await registerFrozenRecordValidationTests();
 
-{
-// Merged from tests/p48-recovery-integrity.test.mjs; lexical isolation preserves the original fixture namespace.
+
+/** Recovery Integrity — canonical domain contracts. */
+async function registerRecoveryIntegrityTests(){
 /** P48 independent defect regression: damaged local IndexedDB must not mask
  * unrelated healthy immutable attempts, nor weaken strict backup import.
  */
-const {default:test}=await import("node:test");
-const {default:assert}=await import("node:assert/strict");
-const {pkg}=await import("./fixtures/six-kinds.mjs");
-const {startGenericAttempt}=await import("../src/app/exam-package.ts");
-const {
- compactAttempt,reconstructRecords,reconstructRecoverableRecords,createRecoverableRecordCollector,expandAttempt
-}=await import("../src/history/shared-store.ts");
 const attempt=(id)=>({...startGenericAttempt(pkg,id,Date.UTC(2026,10,3,12,0,0)),saveRevision:1});
 
 test("P48 intact attempt survives a corrupt sibling without adopting the invalid row",()=>{
@@ -344,3 +337,4 @@ test("P48-2 incremental cursor collector has exactly the same recoverable semant
  assert.equal(actual.records.some(x=>x.id==="p48-broken"),false);
 });
 }
+await registerRecoveryIntegrityTests();

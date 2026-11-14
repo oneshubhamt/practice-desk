@@ -1,25 +1,27 @@
 /** Canonical product-domain suite. */
-{
-// Merged from tests/p60d-editorial-editions.test.mjs; lexical isolation preserves original fixtures.
+import test from "node:test";
+import assert from "node:assert/strict";
+import {spawnSync} from "node:child_process";
+import {readFile,writeFile,mkdtemp,access,readdir,rm} from "node:fs/promises";
+import {createHash} from "node:crypto";
+import {join} from "node:path";
+import {tmpdir} from "node:os";
+import {fileURLToPath} from "node:url";
+import {validateExamPackage,startGenericAttempt} from "../src/app/exam-package.ts";
+import {createSourceKeyReference,validateSourceKeyReference,sourceKeyScore} from "../src/engine/source-comparison.ts";
+import {questionRevisionHash,paperRevisionHash} from "../src/domain/integrity.ts";
+import {hashJson} from "../src/domain/hash.ts";
+import {plainRichDocument} from "../src/domain/rich-document.ts";
+import {compileExternalQuestionBank,inspectExternalQuestionBank} from "../src/authoring/external-bank.ts";
+import {createSourceReviewReference} from "../src/engine/review-source.ts";
+import {familyIdFor,pairedEdition,examFamilyCatalog} from "../src/app/exam-families.ts";
+import {auditPdfIntake,buildPdfIntakeTemplate} from "../scripts/pdf-ingest.mjs";
+
+/** Editorial Lineage — canonical domain contracts. */
+async function registerEditorialLineageTests(){
 /** P60-D RED: general original/reviewed editorial lineage for external AI banks.
  * A stamped, unverified author explanation never upgrades facts to official truth.
  */
-const {default:test}=await import("node:test");
-const {default:assert}=await import("node:assert/strict");
-const {spawnSync}=await import("node:child_process");
-const {readFile,writeFile,mkdtemp,access,readdir,rm}=await import("node:fs/promises");
-const {createHash}=await import("node:crypto");
-const {join}=await import("node:path");
-const {tmpdir}=await import("node:os");
-const {fileURLToPath}=await import("node:url");
-const {validateExamPackage,startGenericAttempt}=await import("../src/app/exam-package.ts");
-const {createSourceKeyReference,validateSourceKeyReference,sourceKeyScore}=await import("../src/engine/source-comparison.ts");
-const {questionRevisionHash,paperRevisionHash}=await import("../src/domain/integrity.ts");
-const {hashJson}=await import("../src/domain/hash.ts");
-const {plainRichDocument}=await import("../src/domain/rich-document.ts");
-const {compileExternalQuestionBank}=await import("../src/authoring/external-bank.ts");
-const {createSourceReviewReference}=await import("../src/engine/review-source.ts");
-const {familyIdFor,pairedEdition,examFamilyCatalog}=await import("../src/app/exam-families.ts");
 const tool=fileURLToPath(new URL("../scripts/editorial-editions.mjs",import.meta.url));
 const qualityTool=fileURLToPath(new URL("../scripts/question-quality.mjs",import.meta.url));
 const fixture=fileURLToPath(new URL("../examples/ai-first-apfc.json",import.meta.url));
@@ -366,22 +368,14 @@ test("P62-B rejects noncanonical schema-2 source-key snapshots",()=>{
  assert.throws(()=>sourceKeyScore(attempt),/source-key comparison schema/);
 });
 }
+await registerEditorialLineageTests();
 
-{
-// Merged from tests/p60e-pdf-ingest.test.mjs; lexical isolation preserves original fixtures.
+
+/** Pdf Ingestion — canonical domain contracts. */
+async function registerPdfIngestionTests(){
 /** P60-E: no-PDF-parser intake protocol; all semantic/page claims remain external.
  * Fixtures exercise the same canonical authoring, P60-C and P60-D CLIs.
  */
-const {default:test}=await import("node:test");
-const {default:assert}=await import("node:assert/strict");
-const {readFile,writeFile,mkdtemp,rm,readdir,access}=await import("node:fs/promises");
-const {join}=await import("node:path");
-const {tmpdir}=await import("node:os");
-const {createHash}=await import("node:crypto");
-const {spawnSync}=await import("node:child_process");
-const {fileURLToPath}=await import("node:url");
-const {auditPdfIntake,buildPdfIntakeTemplate}=await import("../scripts/pdf-ingest.mjs");
-const {inspectExternalQuestionBank}=await import("../src/authoring/external-bank.ts");
 const tool=fileURLToPath(new URL("../scripts/pdf-ingest.mjs",import.meta.url));
 const editorial=fileURLToPath(new URL("../scripts/editorial-editions.mjs",import.meta.url));
 const quality=fileURLToPath(new URL("../scripts/question-quality.mjs",import.meta.url));
@@ -659,3 +653,4 @@ test("P60-E actual separate printed-key bytes and image document mode require ex
  assert.ok(rejected.data.message.includes("signature"));
 }));
 }
+await registerPdfIngestionTests();

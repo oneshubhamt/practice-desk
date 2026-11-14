@@ -1,13 +1,22 @@
 /** Canonical external-bank and staged-authoring contracts. */
-{
-// Merged from tests/p57a-external-bank.test.mjs; lexical isolation preserves original fixtures.
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFile,mkdtemp,writeFile,rm} from "node:fs/promises";
+import {compileExternalQuestionBank,inspectExternalQuestionBank,toAuthoringDraft} from "../src/authoring/external-bank.ts";
+import {validateExamPackage} from "../src/app/exam-package.ts";
+import {scoreAttempt} from "../src/engine/scoring.ts";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
+import {spawnSync} from "node:child_process";
+import {addStagedFiles,updateStagedSelection,inspectStagingWorkspace,stagedToAuthoringDraft,validateStagingWorkspace} from "../src/authoring/authoring-staging.ts";
+import {inspectAuthoringPublication,publicationPlainText} from "../src/authoring/authoring-publisher.ts";
+import {inspectExternalQuality} from "../src/authoring/external-bank-qa.ts";
+import {defaultAuthoringShelf} from "../src/authoring/authoring-draft.ts";
+import {handoffStagingToDraftShelf,ingestStagedFiles,inspectPublicationWorkflow,preparePublicationWorkflow} from "../src/authoring/authoring-workflow.ts";
+
+/** External Bank Publication — canonical domain contracts. */
+async function registerExternalBankPublicationTests(){
 /** P57-A red/green external authoring source contract and immutable end-to-end oracles. */
-const {default:test}=await import("node:test");
-const {default:assert}=await import("node:assert/strict");
-const {readFile}=await import("node:fs/promises");
-const {compileExternalQuestionBank,inspectExternalQuestionBank,toAuthoringDraft}=await import("../src/authoring/external-bank.ts");
-const {validateExamPackage}=await import("../src/app/exam-package.ts");
-const {scoreAttempt}=await import("../src/engine/scoring.ts");
 const fixture=async(name)=>JSON.parse(await readFile(new URL("../examples/ai-first-"+name+".json",import.meta.url),"utf8"));
 test("P57-A CAT external agent source compiles without authored hashes and reuses one shared RC and DILR stimulus",async()=>{
  const source=await fixture("cat"),report=inspectExternalQuestionBank(source);
@@ -172,17 +181,12 @@ test("P57-A two CAT RC questions share the same immutable stimulus once; changin
  assert.equal(inspectExternalQuestionBank(broken).valid,false);
 });
 }
+await registerExternalBankPublicationTests();
 
-{
-// Merged from tests/p57b-external-bank-qa.test.mjs; lexical isolation preserves original fixtures.
+
+/** Bank Quality — canonical domain contracts. */
+async function registerBankQualityTests(){
 /** P57-B independent adversarial deterministic QA tests; no network requests. */
-const {default:test}=await import("node:test");
-const {default:assert}=await import("node:assert/strict");
-const {readFile,mkdtemp,writeFile,rm}=await import("node:fs/promises");
-const {tmpdir}=await import("node:os");
-const {join}=await import("node:path");
-const {spawnSync}=await import("node:child_process");
-const {inspectExternalQuestionBank,compileExternalQuestionBank}=await import("../src/authoring/external-bank.ts");
 const load=async(kind)=>JSON.parse(await readFile(new URL("../examples/ai-first-"+kind+".json",import.meta.url),"utf8"));
 const inspect=(source,compare=[])=>inspectExternalQuestionBank(source,[],compare);
 test("P57-B valid CAT/APFC reports explicit unverified states; real engine oracle; no source fetch",async()=>{
@@ -357,21 +361,12 @@ test("P62-D math option fingerprint distinguishes signed fractions and decimals"
  assert.ok(report.issues.some(x=>x.code==="duplicate-option"&&x.questionId==="labour-01"));
 });
 }
+await registerBankQualityTests();
 
-{
-// Merged from tests/p57c-authoring-staging.test.mjs; lexical isolation preserves original fixtures.
+
+/** Staged Authoring — canonical domain contracts. */
+async function registerStagedAuthoringTests(){
 /** P57-C staged multi-source handoff contract. Actual browser lifecycle is tested separately. */
-const {default:test}=await import("node:test");
-const {default:assert}=await import("node:assert/strict");
-const {readFile}=await import("node:fs/promises");
-const {addStagedFiles,updateStagedSelection,inspectStagingWorkspace,
- stagedToAuthoringDraft,validateStagingWorkspace}=await import("../src/authoring/authoring-staging.ts");
-const {inspectAuthoringPublication}=await import("../src/authoring/authoring-publisher.ts");
-const {inspectExternalQuality}=await import("../src/authoring/external-bank-qa.ts");
-const {defaultAuthoringShelf}=await import("../src/authoring/authoring-draft.ts");
-const {handoffStagingToDraftShelf,ingestStagedFiles,inspectPublicationWorkflow,
- preparePublicationWorkflow}=await import("../src/authoring/authoring-workflow.ts");
-const {scoreAttempt}=await import("../src/engine/scoring.ts");
 const load=async(name)=>JSON.parse(await readFile(new URL("../examples/ai-first-"+name+".json",import.meta.url),"utf8"));
 const initial={schema:1,files:[],selected:[]};
 const staged=(source,name="first.json")=>addStagedFiles(initial,[{name,source}]);
@@ -539,15 +534,11 @@ test("Authoring publication workflow is sole owner of external QA acknowledgemen
  assert.equal(prepared.inspection.errors.length,0);
 });
 }
+await registerStagedAuthoringTests();
 
-{
-// Merged from tests/p58b-editorial-gap.test.mjs; lexical isolation preserves original fixtures.
-const {default:test}=await import("node:test");
-const {default:assert}=await import("node:assert/strict");
-const {readFile}=await import("node:fs/promises");
-const {addStagedFiles,stagedToAuthoringDraft,updateStagedSelection,inspectStagingWorkspace}=await import("../src/authoring/authoring-staging.ts");
-const {inspectExternalQuestionBank}=await import("../src/authoring/external-bank.ts");
-const {publicationPlainText}=await import("../src/authoring/authoring-publisher.ts");
+
+/** External Media Identity — canonical domain contracts. */
+async function registerExternalMediaIdentityTests(){
 const load=async()=>JSON.parse(await readFile(new URL("../examples/ai-first-apfc.json",import.meta.url),"utf8"));
 const blank={schema:1,files:[],selected:[]};
 const staged=(s,name="ai.json")=>addStagedFiles(blank,[{name,source:s}]);
@@ -616,3 +607,4 @@ test("P58-B F08 red: independently generated shared media IDs get deterministic 
  assert.equal(sameMerged.assets[0].contentHash,sameMerged.assets[1].contentHash);
 });
 }
+await registerExternalMediaIdentityTests();
