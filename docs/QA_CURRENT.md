@@ -1,16 +1,23 @@
 # Practice Desk — current QA contract
 
-This is the active human-readable verification contract for the current `working` branch. Historical programme-specific runs and implementation diaries belong in [HISTORY_INDEX.md](HISTORY_INDEX.md). The executable sources of truth are the test files, `scripts/acceptance-suite.mjs`, `scripts/mutation-sensitivity.mjs` and [CI](../.github/workflows/ci.yml).
+This is the active human-readable verification contract for the current `working` branch. Historical programme-specific runs and implementation diaries belong in [HISTORY_INDEX.md](HISTORY_INDEX.md). The executable sources of truth are the test files, `scripts/node-suite.mjs`, `scripts/acceptance-suite.mjs`, `scripts/mutation-sensitivity.mjs` and [CI](../.github/workflows/ci.yml).
 
-The current suite census, risk→invariant→cheapest-layer map, overlap clusters, source-shape heuristics and deep/stress classification are recorded in [QA_CENSUS.md](QA_CENSUS.md). That Pass-A map is descriptive: it authorizes no test deletion or CI weakening by itself.
+The suite census and completed consolidation/equivalence evidence are recorded in [QA_CENSUS.md](QA_CENSUS.md).
 
 ## Required toolchain
 
 Use Node.js **26.13.0** with the committed lockfiles. The main application and isolated FSRS optimizer dependency graphs must both install cleanly from those locks.
 
+Useful local entry points:
+
 ```bash
 npm ci --no-audit --no-fund
-npm run check
+
+# Fast deterministic lane: 32 Node files / 435 tests plus type/build.
+npm run qa:fast
+
+# Deep Node subset: 3 scale/benchmark files / 7 tests.
+npm run qa:deep
 node scripts/mutation-sensitivity.mjs
 
 npm ci --prefix tools/fsrs-optimizer --no-audit --no-fund
@@ -18,28 +25,45 @@ npm run --prefix tools/fsrs-optimizer smoke
 npm run --prefix tools/fsrs-optimizer parity
 npm run build:static
 
-node scripts/acceptance-suite.mjs chromium
-node scripts/acceptance-suite.mjs firefox
-node scripts/acceptance-suite.mjs webkit
-# Optional focused capability run:
+# Browser lanes.
+node scripts/acceptance-suite.mjs chromium --tag=smoke
+node scripts/acceptance-suite.mjs chromium --tag=deep
+node scripts/acceptance-suite.mjs firefox --tag=cross-browser
+node scripts/acceptance-suite.mjs webkit --tag=cross-browser
+
+# Optional focused capability run.
 node scripts/acceptance-suite.mjs chromium --tag=storage
 ```
 
-The browser suites require the corresponding Playwright browser binaries. The protected CI workflow installs them on standard GitHub-hosted runners and is the normal full-system verification path.
+The browser suites require the corresponding Playwright browser binaries. The protected CI workflow installs them on GitHub-hosted runners and is the normal full-system verification path.
 
-Markdown-only pushes and pull requests are excluded from the expensive runtime workflow because Markdown is not a build input. Any source, test, build, dependency or workflow change still enters the full gates below; a documentation-only commit therefore may legitimately have no CI run.
+Markdown-only pushes and pull requests are excluded from runtime CI because Markdown is not a build input. Any source, test, build, dependency or workflow change enters the applicable executable gates.
 
 ## Required CI gates
 
-A current application change is release-eligible only when all of these gates pass on the same tested source ancestry:
+The workflow is deliberately cost-tiered.
 
-- **Core:** strict TypeScript (including unused-local rejection), deterministic standalone build, complete Node test suite, clean dependency graph and the targeted mutation-sensitivity witnesses.
-- **Optimizer:** native FSRS optimizer smoke, native/WASM semantic parity and the independently generated static Worker/WASM build.
-- **Chromium:** all scenarios in the capability-tagged browser registry (currently 14) plus the full browser/WASM optimizer activation path.
-- **Firefox and WebKit:** only scenarios tagged `cross-browser` (currently 4) plus the browser/WASM optimizer probe.
-- **Guarded publisher:** only after the preceding gates pass may CI publish the tested standalone HTML to `working`; source drift aborts publication.
+- **Fast — every source PR/push.** Strict TypeScript, deterministic standalone build, the **435 non-deep Node tests**, clean dependency graphs, native FSRS optimizer smoke and the source-verified static Worker/WASM build. This is the earliest deterministic feedback lane.
+- **Smoke — every source PR/push.** Six critical Chromium user journeys tagged `smoke` plus the complete browser/WASM optimizer activation path.
+- **Cross — every source PR/push.** The four scenarios tagged `cross-browser` on Firefox and WebKit, plus the browser/WASM optimizer probe. Do not replicate Chromium-only product policy here.
+- **Deep — required on `working` release pushes.** Three scale/benchmark Node files (**7 tests**), the **10 targeted semantic mutants**, native/WASM optimizer parity and eight Chromium scenarios tagged `deep`. Ordinary pull requests do not pay this cost.
+- **Guarded publisher — `working` only.** Publication occurs only after fast, smoke, both cross-browser legs and deep pass on the tested source ancestry; source drift aborts publication.
 
-`npm run check` is necessary but not sufficient for UI, browser-storage, Worker/WASM or cross-browser changes.
+The complete Node inventory remains **35 files / 442 tests**: 435 fast + 7 deep. `npm run check` still runs the complete Node suite when explicitly requested, but the CI lane split avoids paying deep costs in the earliest feedback path.
+
+## Timing evidence
+
+`scripts/timed-run.mjs` wraps timed CI commands. It emits a machine-readable `QA_TIMING` JSON record, appends JSONL to the lane artifact, and writes a concise GitHub step-summary entry.
+
+Treat timing values as observations, not thresholds. GitHub-hosted provisioning, browser installation and machine contention vary; timing evidence is intended to reveal sustained regressions and support lane placement, not create brittle millisecond budgets.
+
+## Browser test design
+
+The browser registry is capability/risk tagged rather than filename driven. Chromium owns the complete retained browser-risk surface; Firefox/WebKit own only genuine engine-sensitive scenarios.
+
+Browser tests should exercise visible user behaviour and browser-specific contracts instead of duplicating pure-domain mathematics. Prefer Playwright role/name and other user-facing locators for visible interactions. Stable IDs/data attributes remain appropriate for hidden file inputs, immutable persisted-record identities, exact diagnostic surfaces or other technical evidence where the identifier itself is part of the contract.
+
+Each scenario must be independently runnable. Helpers must wait for their own setup state rather than relying on a previous scenario to have selected a family, rendered an edition control or hydrated imported content.
 
 For deliberate visual evidence only:
 
@@ -49,15 +73,21 @@ PRACTICE_DESK_VISUAL_REVIEW=1 node scripts/acceptance-suite.mjs chromium
 
 Normal passing CI does not capture screenshots merely to create evidence.
 
-## Test design rules
+## Node test design
 
 The Node suite is organized by stable product domains rather than historical programme/pass labels. Architecture rules are checked through the parser-backed resolved import graph in `tests/architecture-boundaries.test.mjs`; line-count, exact-helper-name and source-phrase scans are not architecture oracles.
 
 Prefer independent expected values, state/reference models, tables, metamorphic properties and adversarial counterexamples over implementation mirroring. A changed contract needs a witness that would fail for a plausible semantic defect.
 
-For scoring, preserve six-kind semantics, fractional/partial credit, exclusions and exact denominators. For persistence, challenge stale tabs, CAS revisions, corruption, recovery and additive backup. For authoring, challenge candidate secrecy, source lineage, publication gating and corrupt local state. For learning, challenge scheduling evidence, optimizer activation policy and privacy boundaries. Result/review analytics additionally exercise the 2,000-question package ceiling in Node. Browser tests should exercise actual user journeys rather than duplicate pure-domain assertions. Prefer Playwright role/name and other user-facing locators for visible interactions; retain stable IDs/data attributes when the test is intentionally addressing a technical evidence surface or a semantic locator would be ambiguous.
+For scoring, preserve six-kind semantics, fractional/partial credit, exclusions and exact denominators. For persistence, challenge stale tabs, CAS revisions, corruption, recovery and additive backup. For authoring, challenge candidate secrecy, source lineage, publication gating and corrupt local state. For learning, challenge scheduling evidence, optimizer activation policy and privacy boundaries.
 
 The mutation suite is intentionally targeted: every listed mutant must have a green baseline and then fail for the named assertion. It is **not** a repository-wide mutation score.
+
+## Equivalence status
+
+The former 33/21 historical browser suite was restored temporarily from its verified Pass-B commit and run side by side with the canonical tagged suite against the same current source. All old and new engine legs passed, all 33 legacy Chromium scenarios were mapped to surviving browser/Node witnesses, and the targeted mutation set remained **10/10 killed**.
+
+The temporary legacy runner, historical acceptance scripts and equivalence auditor were then deleted. They are not part of the current QA topology; historical measurements are recorded in [QA_CENSUS.md](QA_CENSUS.md).
 
 ## What automated QA does not prove
 

@@ -372,3 +372,73 @@ CI run `43567342498` passed every release gate on the final Pass-C source:
 Observed browser-journey execution time changed from about **341 seconds aggregate** in the Pass-B verification run (145s Chromium + 72s Firefox + 124s WebKit) to about **122 seconds aggregate** in Pass C (71s + 18s + 33s), a ~64% reduction. Total CI wall time changed from about **4m47s** to **2m58s**, roughly 38% lower on these two GitHub-hosted runs. These are observations rather than performance SLAs because runner provisioning and browser installation vary.
 
 The in-process script syntax preflight also fell from about 286 ms to about 119 ms after the browser script surface was consolidated.
+
+
+## 12. Pass D outcome — CI economics and final equivalence audit
+
+Pass D was completed and fully verified at source commit `78930faaed2bf4f72bcab0024e4b982004c17a3a` in CI run `43569704822`. Before deleting the superseded browser QA, a temporary transition run executed the exact Pass-B browser suite and the tagged Pass-C suite side by side against the same current application source.
+
+### Final lane topology
+
+| Lane | Purpose | Current contents | Release role |
+|---|---|---|---|
+| **fast** | earliest deterministic feedback | typecheck/build, **32 Node files / 435 tests**, dependency/build reproducibility, native optimizer smoke, static Worker/WASM build | every source PR/push |
+| **smoke** | critical Chromium user behaviour | **6** tagged scenarios + full browser/WASM optimizer activation | every source PR/push |
+| **cross** | genuine engine-sensitive behaviour | **4** tagged scenarios on Firefox and WebKit + optimizer probes | every source PR/push |
+| **deep** | expensive adequacy/scale checks | **3 Node files / 7 tests**, **10 mutations**, native/WASM optimizer parity, **8** Chromium scenarios | required on `working` release pushes; omitted from ordinary PRs |
+
+The 35-file Node suite therefore remains **442 tests** in total; the split changes scheduling/cost, not the canonical test inventory.
+
+### Timing instrumentation
+
+`scripts/timed-run.mjs` is the common timing wrapper. Each timed gate emits a machine-readable `QA_TIMING` record, appends JSONL to the lane's artifact directory, and writes the same measurement to the GitHub step summary. These are observational measurements, not performance SLAs.
+
+The final verified run observed:
+
+| Check | Observed time |
+|---|---:|
+| fast Node/type/build contract | 38.85 s |
+| native optimizer smoke | 0.25 s |
+| static Worker/WASM build | 0.56 s |
+| Chromium smoke (6 scenarios) | 28.22 s |
+| full browser optimizer activation | 0.67 s |
+| Firefox cross-browser (4 scenarios) | 15.29 s |
+| Firefox optimizer probe | 2.26 s |
+| WebKit cross-browser (4 scenarios) | 27.96 s |
+| WebKit optimizer probe | 0.92 s |
+| deep Node scale/benchmark (7 tests) | 4.64 s |
+| targeted mutations | 7.52 s |
+| optimizer native/WASM parity | 0.69 s |
+| Chromium deep (8 scenarios) | 54.31 s |
+
+The complete final release workflow ran from 07:08:57Z to 07:11:55Z, about **2m58s wall time** on that GitHub-hosted run.
+
+### Exact old-vs-new equivalence experiment
+
+For one temporary transition commit, Pass D restored the exact 33 Pass-B browser scenario blobs and the exact Pass-B runner from verified commit `14bef1e3cb4efc2046f19e3355d09438cf580cc9`. The legacy and tagged suites then executed independently against the same current application source on Chromium, Firefox and WebKit.
+
+The executable equivalence audit required every legacy Chromium scenario to have an explicit retained browser and/or canonical Node witness; direct browser and cross-browser invariants additionally had to retain the corresponding live browser witness.
+
+| Engine | Legacy suite | Canonical suite | Legacy time | Canonical time | Reduction |
+|---|---:|---:|---:|---:|---:|
+| Chromium | **33/33** | **14/14** | 171.09 s | 51.99 s | **69.6%** |
+| Firefox | **21/21** | **4/4** | 77.32 s | 12.89 s | **83.3%** |
+| WebKit | **21/21** | **4/4** | 141.67 s | 19.49 s | **86.2%** |
+
+The audit result was **33/33 legacy scenarios mapped** and all six old/new engine runs green. This is behavioural-witness equivalence, not a claim that the two suites contain identical assertions: intentionally duplicated policy/math assertions now live at their cheaper Node layer.
+
+### Mutation adequacy after consolidation
+
+The existing ten isolated semantic mutants were run against the new canonical Node topology after the lane split. Result: **10/10 baseline-green, assertion-killed, source-isolated**. No mutation witness depends on the deleted legacy browser files.
+
+### Cleanup after proof
+
+Only after the old/new experiment and witness-map audit passed were the temporary legacy files removed. The final tree contains:
+
+- **0** historical top-level `scripts/acceptance-*.mjs` scenario files (apart from the canonical `acceptance-suite.mjs` runner);
+- **0** temporary legacy/equivalence runner files;
+- **9** stable browser-domain scenario modules;
+- **35** Node test files;
+- retained `scripts/node-suite.mjs` and `scripts/timed-run.mjs` as permanent lane/timing infrastructure.
+
+The final post-cleanup run passed **fast, smoke, Firefox cross, WebKit cross, deep and guarded publish**. During final lane isolation, the suite exposed an imported-custom-paper race in `paper-select.mjs`; the helper now waits for non-CGL imported papers to appear and reserves source/reviewed edition fallback exclusively for CGL IDs. This made scenarios independently runnable instead of relying on prior suite state.
