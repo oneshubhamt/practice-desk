@@ -8,10 +8,14 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "npm run build && node --test tests/*.test.mjs",
+    "test": "npm run build && node scripts/node-suite.mjs all",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "check": "npm run typecheck && npm test",
-    "build:static": "node scripts/build-static.mjs"
+    "build:static": "node scripts/build-static.mjs",
+    "test:fast": "node scripts/node-suite.mjs fast",
+    "test:deep": "node scripts/node-suite.mjs deep",
+    "qa:fast": "npm run typecheck && npm run build && npm run test:fast",
+    "qa:deep": "npm run test:deep"
   },
   "devDependencies": {
     "typescript": "7.0.2",

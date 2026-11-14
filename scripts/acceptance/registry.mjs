@@ -11,18 +11,18 @@ import {resultStress} from "./scenarios/scale.mjs";
 const scenario=(id,tags,run)=>Object.freeze({id,tags:Object.freeze(["browser",...tags]),run});
 export const scenarioRegistry=Object.freeze([
  scenario("candidate-core",["smoke","candidate","history","learning"],candidateCore),
- scenario("status-palette",["candidate","visual-state"],statusPalette),
+ scenario("status-palette",["candidate","visual-state","deep"],statusPalette),
  scenario("authoring-publication",["smoke","authoring","publication"],authoringPublication),
- scenario("external-bank-authoring",["authoring","import","editorial"],externalBankAuthoring),
- scenario("storage-resilience",["storage","recovery","concurrency"],storageResilience),
- scenario("partial-recovery",["storage","recovery","cross-browser"],partialRecovery),
- scenario("file-navigation",["navigation","file-url","cross-browser"],fileNavigation),
- scenario("image-viewer",["media","focus","keyboard","cross-browser"],imageViewer),
- scenario("image-preparation",["media","authoring","file-input"],imagePreparation),
- scenario("math-rendering",["media","math"],mathRendering),
- scenario("csp-security",["security","csp","cross-browser"],cspSecurity),
- scenario("calendar-integration",["calendar","integration"],calendarIntegration),
- scenario("responsive-ui",["ui","responsive","a11y"],responsiveUi),
+ scenario("external-bank-authoring",["authoring","import","editorial","deep"],externalBankAuthoring),
+ scenario("storage-resilience",["storage","recovery","concurrency","deep"],storageResilience),
+ scenario("partial-recovery",["storage","recovery","cross-browser","smoke"],partialRecovery),
+ scenario("file-navigation",["navigation","file-url","cross-browser","smoke"],fileNavigation),
+ scenario("image-viewer",["media","focus","keyboard","cross-browser","smoke"],imageViewer),
+ scenario("image-preparation",["media","authoring","file-input","deep"],imagePreparation),
+ scenario("math-rendering",["media","math","deep"],mathRendering),
+ scenario("csp-security",["security","csp","cross-browser","smoke"],cspSecurity),
+ scenario("calendar-integration",["calendar","integration","deep"],calendarIntegration),
+ scenario("responsive-ui",["ui","responsive","a11y","deep"],responsiveUi),
  scenario("result-stress",["results","history","scale","deep"],resultStress)
 ]);
 
