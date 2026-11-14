@@ -30,9 +30,9 @@ try{
   console.log("::group::"+engine+" | "+item.id+" | "+item.tags.join(","));
   try{
    await item.run();
-   result.executed.push({id:item.id,tags:item.tags,outcome:"pass",
-    elapsedMs:Math.round(performance.now()-begin)});
-   console.log("ASSERTION JOURNEY PASS "+item.id);
+   const elapsedMs=Math.round(performance.now()-begin);
+   result.executed.push({id:item.id,tags:item.tags,outcome:"pass",elapsedMs});
+   console.log("ASSERTION JOURNEY PASS "+item.id+" "+elapsedMs+"ms");
   }catch(e){
    result.executed.push({id:item.id,tags:item.tags,outcome:"fail",
     elapsedMs:Math.round(performance.now()-begin),error:String(e)});

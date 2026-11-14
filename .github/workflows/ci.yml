@@ -166,14 +166,8 @@ jobs:
           node-version: '26.13.0'
           package-manager-cache: false
       - run: npm ci --no-audit --no-fund
-      - name: Deep Node scale and benchmark contracts
-        run: node scripts/timed-run.mjs deep-node -- npm run qa:deep
-      - name: Ten targeted semantic mutations
-        run: node scripts/timed-run.mjs targeted-mutations -- node scripts/mutation-sensitivity.mjs
       - name: Install isolated optimizer bindings
         run: npm ci --prefix tools/fsrs-optimizer --no-audit --no-fund
-      - name: Native/WASM optimizer semantic parity
-        run: node scripts/timed-run.mjs optimizer-parity -- npm run --prefix tools/fsrs-optimizer parity
       - uses: actions/download-artifact@v4
         with:
           name: source-verified-offline-html
@@ -182,8 +176,34 @@ jobs:
         with:
           name: source-verified-static-app
           path: Practice_Desk_Static
-      - name: Eight deep Chromium scenarios
-        run: node scripts/timed-run.mjs browser-deep -- node scripts/acceptance-suite.mjs chromium --tag=deep
+      - name: Deep contracts and Chromium scenarios — independent parallel lanes
+        shell: bash
+        run: |
+          set -u
+          # The browser reads immutable Fast artifacts. Mutation sensitivity edits
+          # only a temporary sandbox, so these lanes have no shared mutable state.
+          (
+            set -euo pipefail
+            export QA_TIMING_FILE=artifacts/qa-timing/deep-contracts.jsonl
+            node scripts/timed-run.mjs deep-node -- npm run qa:deep
+            node scripts/timed-run.mjs targeted-mutations -- node scripts/mutation-sensitivity.mjs
+            node scripts/timed-run.mjs optimizer-parity -- npm run --prefix tools/fsrs-optimizer parity
+          ) &
+          contracts_pid=$!
+          (
+            set -euo pipefail
+            export QA_TIMING_FILE=artifacts/qa-timing/deep-browser.jsonl
+            node scripts/timed-run.mjs browser-deep -- node scripts/acceptance-suite.mjs chromium --tag=deep
+          ) &
+          browser_pid=$!
+          contracts_status=0
+          browser_status=0
+          wait "$contracts_pid" || contracts_status=$?
+          wait "$browser_pid" || browser_status=$?
+          if [ "$contracts_status" -ne 0 ] || [ "$browser_status" -ne 0 ]; then
+            echo "::error::Deep lane failure: contracts=$contracts_status browser=$browser_status"
+            exit 1
+          fi
       - name: Upload deep timing/failure evidence
         if: always()
         uses: actions/upload-artifact@v4
