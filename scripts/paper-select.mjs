@@ -12,7 +12,13 @@ async function selectCglFamily(page){
 export async function chooseModernPaper(page,id){
  const available=()=>page.locator("#g-papers option").evaluateAll((opts,want)=>
   opts.some(o=>o.value===want),id);
- if(!await available()&&id.includes("cgl-"))await selectCglFamily(page);
+ if(!id.includes("cgl-")){
+  if(!await available())await page.waitForFunction(want=>
+   [...document.querySelectorAll("#g-papers option")].some(o=>o.value===want),id);
+  await page.locator("#g-papers").selectOption(id);
+  return;
+ }
+ if(!await available())await selectCglFamily(page);
  if(!await available()){
   for(const edition of ["source","reviewed"]){
    await page.getByRole("button",{name:new RegExp("^"+edition+"$","i")}).click();
