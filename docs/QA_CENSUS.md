@@ -212,3 +212,73 @@ Pass A authorizes no deletion. Before a test is removed or merged in Pass B, the
 Deep/stress cases move lanes rather than disappear.
 
 The acceptance manifest should ultimately become capability/risk-tag driven instead of requiring every historical `acceptance-*.mjs` filename to exist forever. That is a later pass, not part of this census.
+
+
+## 10. Pass B outcome — Node suite consolidation
+
+Pass B was completed and fully verified at source commit `14bef1e3cb4efc2046f19e3355d09438cf580cc9`. This section records the post-consolidation state; §§1–9 remain the Pass-A baseline/census used to justify each replacement.
+
+### Measured structural result
+
+| Measure | Pass A baseline | Pass B | Change |
+|---|---:|---:|---:|
+| Node test files | 48 | **35** | −13 (−27.1%) |
+| Node test bytes | 647,989 | **641,835** | −6,154 (−0.9%) |
+| Historical `p47`–`p60` / `cleer-*` filenames | 30+ | **0** | eliminated |
+| Final executed Node tests | — | **442/442 passed** | measured in CI |
+| Targeted semantic mutants | 10 | **10/10 killed** | preserved |
+
+The small byte reduction is deliberate: Pass B primarily removed organisational duplication and refactor-hostile oracles while retaining substantive assertions. It did not chase line-count reduction by discarding independent evidence.
+
+### Canonical domain filenames
+
+| Historical suites | Canonical Pass-B suite |
+|---|---|
+| P47 image preparation/viewer/math/pure presentation | `media-rendering.test.mjs` |
+| P47 History filters + P48 record/recovery integrity | `history-record-integrity.test.mjs` |
+| P49–P53 taxonomy/workspace enhancements | `taxonomy-and-workspace-policy.test.mjs` |
+| P57 external-bank QA/staging + P58 editorial-gap | `external-bank-authoring.test.mjs` |
+| P56 integration audit | `cross-domain-integration.test.mjs` |
+| P58 authoring exchange/recovery | `authoring-workspace-integrity.test.mjs` |
+| P58 scale | `authoring-scale.test.mjs` |
+| P59 agent authoring + P60 capabilities/handoff | `agent-authoring.test.mjs` |
+| P60 blueprint + question quality | `content-blueprint-quality.test.mjs` |
+| P60 editorial editions + PDF ingest | `editorial-lineage-and-pdf.test.mjs` |
+| P60 agent benchmark | `agent-benchmark.test.mjs` |
+| P47 shortcuts / P48 build security | `keyboard-shortcuts.test.mjs` / `build-security.test.mjs` |
+| CLEER attempt/result/scale/terminal suites | `attempt-provenance.test.mjs`, `result-integrity.test.mjs`, `result-scale.test.mjs`, `terminal-scratch-cleanup.test.mjs` |
+
+### Architecture oracle
+
+The former line-count, helper-name, import-string and forbidden-phrase architecture checks were replaced by `architecture-boundaries.test.mjs`. It derives the resolved runtime import graph from the already-pinned esbuild parser/metafile and checks dependency direction, controller cycles, composition ownership, vendor boundaries, authoring boundaries, storage ownership and media/calendar topology.
+
+The graph also exposed a fact hidden by the old regex tests: `fsrs-optimizer.ts` legitimately consumes the upstream FSRS-7 model contract while scheduling runtime/middleware remain isolated in `fsrs-scheduler-adapter.ts`. The canonical rule now encodes that actual boundary instead of a textual approximation.
+
+Source-shape checks were removed only where their invariant is now covered by this graph, a stronger runtime contract, or an existing real-browser witness. The Calendar submodule revision remains an exact build dependency fact; flag-palette styling remains covered by the real browser palette journey.
+
+### Model / table / metamorphic direction
+
+Pass B retained the strongest existing mathematical witnesses and promoted their role as canonical:
+
+- independent seeded scoring reference plus answer-ID bijection/input-permutation metamorphic scoring;
+- seeded whole-paper/sectional timing state models;
+- 576-case saved-vs-mirror recovery reference;
+- 128-combination History-filter reference;
+- rich-text preservation property cases;
+- FSRS deterministic replay and held-out optimizer gate.
+
+It also replaced repeated schema rejection examples with one table-driven structural-mutation matrix, added a table-driven FSRS scheduler configuration/invalid-policy contract, and changed standalone-script syntax checking from one child Node process per script to an in-process esbuild parse.
+
+### Verification
+
+CI run `43556401035` on the Pass-B source commit passed every existing release gate:
+
+- strict TypeScript/build + **442/442 Node tests**;
+- **10/10** targeted mutations baseline-green and assertion-killed;
+- native FSRS optimizer smoke and native/WASM parity;
+- Chromium **33/33** acceptance journeys + full browser optimizer activation;
+- Firefox **21/21** acceptance journeys + optimizer probe;
+- WebKit **21/21** acceptance journeys + optimizer probe;
+- guarded standalone publisher.
+
+The observed `npm run check` step was 36 seconds and the complete CI run about 4 minutes 47 seconds. CI runner timings are observational, not performance SLAs. Browser acceptance structure/runtime remains intentionally unchanged in Pass B; that is the subject of Pass C.
