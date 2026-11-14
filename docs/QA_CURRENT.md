@@ -1,6 +1,6 @@
 # Practice Desk — permanent QA contract
 
-**Canonical contract:** one Node test inventory, one tagged browser registry, one guarded release publisher. Executable truth lives in `tests/`, `scripts/node-suite.mjs`, `scripts/acceptance-suite.mjs`, `scripts/mutation-sensitivity.mjs`, and [CI](../.github/workflows/ci.yml). Historical rationale, evidence maps and measured changes: [QA census](QA_CENSUS.md) · [Pass E risk/case ledger](QA_PASS_E.md) · [Pass F](QA_PASS_F.md) · [Pass G](QA_PASS_G.md) · [Pass H](QA_PASS_H.md).
+**Canonical contract:** one Node test inventory, one tagged browser registry, one guarded release publisher. Executable truth lives in `tests/`, `scripts/node-suite.mjs`, `scripts/acceptance-suite.mjs`, `scripts/mutation-sensitivity.mjs`, and [CI](../.github/workflows/ci.yml). Historical rationale, evidence maps and measured changes: [QA census](QA_CENSUS.md) · [Pass E risk/case ledger](QA_PASS_E.md) · [Pass F](QA_PASS_F.md) · [Pass G](QA_PASS_G.md) · [Pass H](QA_PASS_H.md). The authoritative de novo objective check and corrected controlled economics are in [QA_CLOSURE_AUDIT.md](QA_CLOSURE_AUDIT.md).
 
 ## Required gates and publication authority
 
@@ -46,6 +46,6 @@ For every proposed test deletion or move, first name **risk → invariant → su
 
 ## Timing, evidence and limits
 
-`scripts/timed-run.mjs` reports per-lane `QA_TIMING` JSON; Node reporter gives case timings; `scripts/acceptance-suite.mjs` emits scenario IDs/outcomes. Compare repeated green runs on **the same source** and separate setup, execution, runner contention and guarded-publication wall time. Do not enforce arbitrary millisecond thresholds. Keep expensive reviewer-authority checks in Fast: moving them to a release-only gate would weaken PR screening. Retain WebKit dependencies rather than silently substituting Chrome for a different engine.
+`scripts/timed-run.mjs` reports per-lane `QA_TIMING` JSON; Node reporter gives case timings; `scripts/acceptance-suite.mjs` emits scenario IDs/outcomes plus actual browser version/executable provenance. Compare repeated green runs on **the same source** and separate setup, execution, runner contention and guarded-publication wall time. The closure benchmark uses three baseline and three final same-source attempts: median pre-publication gate runner consumption **351→325 s (−7.4%)** and median gate critical path **157→153 s (−2.5%)**; the eliminated duplicate Chromium installs have a baseline median cost of **32.77 s/attempt**. Do not enforce arbitrary millisecond thresholds. Keep expensive reviewer-authority checks in Fast: moving them to a release-only gate would weaken PR screening. Retain WebKit dependencies rather than silently substituting Chrome for a different engine.
 
 Passing CI does **not** establish historical PYQ authenticity, current legal facts, real reviewer identity, physical-device Safari, assistive-technology usability or survival of power loss/OS-profile loss. Address those outside the bounded automated contracts. See [Pass H](QA_PASS_H.md) for the latest measured economics, exact survivor mapping and closure evidence.

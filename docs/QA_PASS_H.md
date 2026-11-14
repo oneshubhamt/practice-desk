@@ -1,5 +1,8 @@
 # Practice Desk — Pass H: CI economics, adequacy and closure
 
+> **De novo closure correction — 14 November 2026.** The original H closure below used a useful but insufficient single-run comparison and therefore overstated the strength of its efficiency conclusion. A subsequent source-level audit found residual Pass F alias scaffolding and repeated the H benchmark three times on the exact baseline and final sources. The authoritative closure is now [QA_CLOSURE_AUDIT.md](QA_CLOSURE_AUDIT.md). Controlled medians are **351→325 pre-publication gate runner-seconds (−7.4%)** and **157→153 s gate critical path (−2.5%)**; median redundant Chromium installation cost is **32.77 s→0**. Current executable source is `30e0a201`, with three full successful release attempts on workflow 43585791864. The historical 179→132 s observation below should not be read as a causal 26% programme effect.
+
+
 **Baseline source:** Pass G `ceb99196f1b4a61c3a8f6abaf6db709941062659`. **Final executable source:** `18ef4621ecf67d0d271deda8132ecc2f730a09d3`. Verified green on [run 43581732988](https://github.com/oneshubhamt/practice-desk/actions/runs/43581732988) and the final [run 43582144678](https://github.com/oneshubhamt/practice-desk/actions/runs/43582144678), 14 November 2026.
 
 **Scope:** production source and built offline HTML were unchanged. Modifications were limited to CI setup, test-only browser discovery/harness and an optimizer browser-test launcher. No test or meaningful fault witness was removed. This audit closes the Pass E→H programme; see [Pass E](QA_PASS_E.md), [case evidence register](QA_PASS_E_CASE_REGISTER.tsv), [F](QA_PASS_F.md), and [G](QA_PASS_G.md).
@@ -84,4 +87,4 @@ The final workflow passed **443 fast + 7 deep** Node cases, all **14/14 targeted
 - **No further architecture sweep recommended solely for QA economics.** Target a new cost improvement only with repeated comparable data and a testable per-risk preservation plan.
 - **Honest limitations:** green CI does not prove real-world macOS Safari behaviour, accessibility with assistive technologies, interruption from physical power failure, legal-current source truth, authentic PYQs or reviewer identity. Track these independently; do not claim that a synthetic seeded test certifies an outside source.
 
-**Pass H disposition:** complete. The active CI topology is smaller, tested, source-identical for product code and guarded by the original release publication authority.
+**Pass H disposition:** superseded by the de novo closure audit for final adequacy/economics claims. The optimized topology remains valid; [QA_CLOSURE_AUDIT.md](QA_CLOSURE_AUDIT.md) supplies the corrected controlled medians and the post-H canonicalization evidence.
