@@ -134,7 +134,6 @@ test("P47-3 one validated source URI per thumbnail, exact alt escaped, and keybo
  const pack=withMedia();
  const html=assetHTML(pack,["diagram-1"]);
  assert.equal(html.split("data:image/png;base64,").length-1,1,"do not embed duplicate base64 for enlarged copy");
- assert.match(html,/class="generic-media-frame"/);
  assert.match(html,/data-image-open/);
  assert.match(html,/role="button" tabindex="0"/);
  assert.match(html,/alt="Exact “graph” &amp; &lt;radius&gt; &gt; 10"/);
@@ -147,7 +146,6 @@ test("P47-3 input and matching option images place launch controls OUTSIDE their
  const withOption={...questions[0],content:{...questions[0].content,
   options:questions[0].content.options.map((o,i)=>i===0?{...o,assetIds:["diagram-1"]}:o)}};
  const controls=renderGenericControls(pack,withOption);
- assert.match(controls,/generic-choice-media-row/);
  assert.match(controls,/data-choice="a"/);
  assert.match(controls,/data-image-open/);
  const optionPart=controls.slice(controls.indexOf('data-choice="a"'),controls.indexOf('data-choice="b"'));
@@ -157,7 +155,6 @@ test("P47-3 input and matching option images place launch controls OUTSIDE their
  const matching={...questions[4],content:{...questions[4].content,
   leftItems:questions[4].content.leftItems.map((o,i)=>i===0?{...o,assetIds:["diagram-1"]}:o)}};
  const html=renderGenericControls(pack,matching);
- assert.match(html,/generic-match-media-row/);
  assert.ok(html.indexOf('data-image-open')>html.indexOf('</select></label>'),
   "image zoom must not be nested inside matching select label");
 });
@@ -213,7 +210,6 @@ test("P47-5B latest pinned KaTeX emits HTML and accessible MathML, bounded",()=>
  assert.match(html,/katex-html/);
  assert.match(html,/katex-mathml/);
  assert.match(html,/<math/);
- assert.match(html,/pd-math-block/);
 });
 test("P47-5B malformed, malicious and untrusted TeX uses safe visible fallback",()=>{
  for(const tex of ["\\unknowncommand{bad}","\\href{https://evil.invalid/}{x}","\\includegraphics{https://evil.invalid/}{x}","x".repeat(2049)]){

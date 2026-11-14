@@ -1,15 +1,15 @@
-/** Generic candidate-status contract: a review flag must not conceal answer evidence.
- * Tests the production frozen-attempt transition and shared exam renderer, not a
- * CGL-only mock, so every response kind obeys the same status classes.
+/** Pure flagged-response state contract. Real palette paint, accessible labels,
+ * six-kind UI and theme/reload behaviour are independently exercised by
+ * scripts/acceptance/scenarios/candidate.mjs: statusPalette.
  */
 import test from "node:test";
 import assert from "node:assert/strict";
 import {pkg} from "./fixtures/six-kinds.mjs";
 import {validateExamPackage,startGenericAttempt} from "../src/app/exam-package.ts";
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
-import {renderModelExam} from "../src/app/exam-view.ts";
 
-const exam=validateExamPackage(pkg),map=new Map(exam.questions.map(q=>[q.id,q]));
+const exam=validateExamPackage(pkg);
+const questions=new Map(exam.questions.map(q=>[q.id,q]));
 const responses=[
  {kind:"single-choice",optionId:"a"},
  {kind:"multiple-select",optionIds:["x","z"]},
@@ -18,42 +18,35 @@ const responses=[
  {kind:"matching",pairs:[{leftId:"l1",rightId:"r1"}]},
  {kind:"free-response",text:"Candidate explanation"}
 ];
-function palette(a,index){
- const html=renderModelExam(a,exam),q=index%3;
- const markup=html.match(new RegExp('<button class="num ([^"]*)" data-q="'+q+'"[^>]*>'))?.[0];
- assert.ok(markup,"Question navigator entry is missing for kind "+index);
- return {html,markup};
-}
-for(let i=0;i<responses.length;i++){
- test("review palette uses actual session evidence for "+responses[i].kind,()=>{
-  let a=startGenericAttempt(exam,"palette-"+i,1000);
-  const send=(event)=>{a=transitionGenericAttempt(a,{...event,nowMs:1100},map);};
-  if(i>=3)send({type:"NAVIGATE",sectionIndex:1,questionIndex:i-3});
-  else if(i>0)send({type:"NAVIGATE",sectionIndex:0,questionIndex:i});
-  const before=palette(a,i);
-  assert.doesNotMatch(before.markup,/\bmarked\b/);
-  assert.doesNotMatch(before.markup,/\banswered\b/);
-  send({type:"FLAG",flagged:true});
-  const pending=palette(a,i);
-  assert.match(pending.markup,/\bmarked\b/);
-  assert.doesNotMatch(pending.markup,/class="num [^"]*\banswered\b/);
-  assert.match(pending.markup,/unanswered, marked for review/);
-  assert.match(pending.html,/id="g-flag" aria-pressed="true" aria-label="Unmark review \(unanswered\)"/);
-  send({type:"ANSWER",response:responses[i]});
-  const done=palette(a,i);
-  assert.match(done.markup,/class="num [^"]*\banswered\b[^"]*\bmarked\b/);
-  assert.match(done.markup,/answered, marked for review/);
-  assert.match(done.html,/id="g-flag" aria-pressed="true" aria-label="Unmark review \(answered\)"/);
-  assert.match(done.html,/Unanswered · review/);
-  assert.match(done.html,/Answered · review/);
-  send({type:"CLEAR"});
-  const cleared=palette(a,i);
-  assert.match(cleared.markup,/\bmarked\b/);
-  assert.doesNotMatch(cleared.markup,/class="num [^"]*\banswered\b/);
-  assert.equal(a.state.responses.find(r=>r.questionRevisionId===exam.questions[i].id)?.flagged,true);
-  send({type:"FLAG",flagged:false});
-  const unmarked=palette(a,i);
-  assert.doesNotMatch(unmarked.markup,/\bmarked\b/);
-  assert.doesNotMatch(unmarked.markup,/class="num [^"]*\banswered\b/);
+
+for(const [index,response] of responses.entries()){
+ test("flagged answer state remains independent of answer status for "+response.kind,()=>{
+  let attempt=startGenericAttempt(exam,"flag-"+index,1000);
+  const question=exam.questions[index];
+  const update=event=>{
+   attempt=transitionGenericAttempt(attempt,{...event,nowMs:1100},questions);
+   return attempt.state.responses.find(row=>row.questionRevisionId===question.id);
+  };
+  if(index>=3)update({type:"NAVIGATE",sectionIndex:1,questionIndex:index-3});
+  else if(index>0)update({type:"NAVIGATE",sectionIndex:0,questionIndex:index});
+  const before=attempt.state.responses.find(row=>row.questionRevisionId===question.id);
+  assert.equal(before?.flagged??false,false);
+  assert.equal(before?.response??null,null);
+
+  const flagged=update({type:"FLAG",flagged:true});
+  assert.equal(flagged?.flagged,true);
+  assert.equal(flagged?.response??null,null,"a review flag must not invent an answer");
+
+  const saved=update({type:"ANSWER",response});
+  assert.equal(saved?.flagged,true);
+  assert.equal(saved?.response?.kind,response.kind,"answer should commit independently of review flag");
+
+  const cleared=update({type:"CLEAR"});
+  assert.equal(cleared?.flagged,true,"clearing an answer must retain review intent");
+  assert.equal(cleared?.response??null,null,"clear must remove committed answer");
+
+  const unmarked=update({type:"FLAG",flagged:false});
+  assert.equal(unmarked?.flagged,false);
+  assert.equal(unmarked?.response??null,null);
  });
 }
