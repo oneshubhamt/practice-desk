@@ -180,6 +180,10 @@ jobs:
         with:
           name: source-verified-offline-html
           path: .
+      - uses: actions/download-artifact@v4
+        with:
+          name: source-verified-static-app
+          path: Practice_Desk_Static
       - name: Eight deep Chromium scenarios
         run: node scripts/timed-run.mjs browser-deep -- node scripts/acceptance-suite.mjs chromium --tag=deep
       - name: Upload deep timing/failure evidence
@@ -217,6 +221,10 @@ jobs:
         with:
           name: source-verified-offline-html
           path: .
+      - uses: actions/download-artifact@v4
+        with:
+          name: source-verified-static-app
+          path: Practice_Desk_Static
       - run: mkdir -p artifacts/equivalence
       - name: Legacy Pass-B browser manifest
         run: |
