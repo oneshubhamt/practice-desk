@@ -195,86 +195,10 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-  equivalence:
-    name: Temporary equivalence — legacy vs tagged (${{ matrix.browser }})
-    if: github.event_name == 'push' && github.ref == 'refs/heads/working'
-    needs: fast
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        browser: [chromium, firefox, webkit]
-    env:
-      QA_TIMING_FILE: artifacts/qa-timing/equivalence-${{ matrix.browser }}.jsonl
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          submodules: recursive
-      - uses: actions/setup-node@v7
-        with:
-          node-version: '26.13.0'
-          package-manager-cache: false
-      - run: npm ci --no-audit --no-fund
-      - run: node node_modules/playwright-core/cli.js install --with-deps ${{ matrix.browser }}
-      - uses: actions/download-artifact@v4
-        with:
-          name: source-verified-offline-html
-          path: .
-      - uses: actions/download-artifact@v4
-        with:
-          name: source-verified-static-app
-          path: Practice_Desk_Static
-      - run: mkdir -p artifacts/equivalence
-      - name: Legacy Pass-B browser manifest
-        run: |
-          node scripts/timed-run.mjs legacy-${{ matrix.browser }} -- node scripts/legacy-browser-suite.mjs ${{ matrix.browser }}
-          cp artifacts/acceptance-modern/suite-${{ matrix.browser }}.json artifacts/equivalence/legacy-${{ matrix.browser }}.json
-      - name: Tagged Pass-C browser registry
-        run: |
-          node scripts/timed-run.mjs tagged-${{ matrix.browser }} -- node scripts/acceptance-suite.mjs ${{ matrix.browser }}
-          cp artifacts/acceptance-modern/suite-${{ matrix.browser }}.json artifacts/equivalence/new-${{ matrix.browser }}.json
-      - name: Upload equivalence evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: equivalence-${{ matrix.browser }}
-          path: artifacts/
-          if-no-files-found: error
-          retention-days: 7
-
-  equivalence-audit:
-    name: Temporary behavioural-equivalence audit
-    if: github.event_name == 'push' && github.ref == 'refs/heads/working'
-    needs: equivalence
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          submodules: recursive
-      - uses: actions/setup-node@v7
-        with:
-          node-version: '26.13.0'
-          package-manager-cache: false
-      - run: npm ci --no-audit --no-fund
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: equivalence-*
-          path: artifacts
-          merge-multiple: true
-      - name: Compare legacy journeys to canonical browser/Node witnesses
-        run: node scripts/browser-equivalence-audit.mjs artifacts/equivalence
-      - uses: actions/upload-artifact@v4
-        with:
-          name: browser-equivalence-audit
-          path: artifacts/equivalence/equivalence-audit.json
-          if-no-files-found: error
-          retention-days: 14
-
   publish:
-    name: Publish only after fast/smoke/cross/deep/equivalence gates pass
+    name: Publish only after fast/smoke/cross/deep gates pass
     if: github.event_name == 'push' && github.ref == 'refs/heads/working'
-    needs: [fast, smoke, cross, deep, equivalence-audit]
+    needs: [fast, smoke, cross, deep]
     runs-on: ubuntu-latest
     permissions:
       contents: write
