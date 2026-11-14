@@ -156,3 +156,14 @@ test("lifecycle, candidate cleanup and raw browser-storage ownership each have o
  assert.ok(!callFacts("src/app/image-viewer.ts").some(x=>x.name==="createObjectURL"),
   "verified image viewer must not introduce object-URL lifetime state");
 });
+
+
+test("Calendar controller consumes the vendor through adapters while Practice Desk remains the durability owner",()=>{
+ const imports=graph.get("src/app/calendar-controller.ts");
+ assert.ok(imports.some(e=>e.spec==="@director/calendar"));
+ assert.ok(imports.some(e=>e.spec==="@director/calendar/adapters/practice-desk"));
+ assert.ok(imports.some(e=>e.spec==="./coordinator-context.ts"&&e.node.importClause?.isTypeOnly));
+ const ids=identifiers("src/app/calendar-controller.ts");
+ for(const forbidden of ["indexedDB","localStorage","sessionStorage","MemoryCalendarRepository","openIndexedDb"])
+  assert.ok(!ids.includes(forbidden),"Calendar controller must not own a private persistence backend: "+forbidden);
+});

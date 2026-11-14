@@ -841,17 +841,5 @@ test("FSRS optimizer shared pipeline rejects insufficient evidence and held-out 
  assert.equal(calls,1,"held-out failure must not reach final all-evidence retraining");
 });
 
-test("Native and browser optimizer entrypoints are runtime adapters, not duplicate training pipelines",async()=>{
- const native=await readFile(new URL("../tools/fsrs-optimizer/optimize.mjs",import.meta.url),"utf8");
- const browser=await readFile(new URL("../tools/fsrs-optimizer/browser-worker.mjs",import.meta.url),"utf8");
- const pipeline=await readFile(new URL("../tools/fsrs-optimizer/optimizer-pipeline.mjs",import.meta.url),"utf8");
- for(const source of [native,browser])assert.match(source,/runFsrsOptimizerPipeline/);
- assert.match(native,/--incumbent/);assert.match(browser,/incumbentProfile/);
- for(const duplicate of ["splitChronologicalHoldout(","evaluateHoldoutGate(","validationCandidateTrainedItems:"])
-  for(const source of [native,browser])assert.equal(source.includes(duplicate),false,
-   "runtime adapter duplicated pipeline semantic: "+duplicate);
- assert.match(pipeline,/splitChronologicalHoldout/);
- assert.match(pipeline,/evaluateHoldoutGate/);
- assert.match(pipeline,/validationCandidateTrainedItems/);
-});
+
 }

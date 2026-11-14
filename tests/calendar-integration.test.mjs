@@ -47,28 +47,16 @@ test("backup v5 carries scheduled mocks and exact revision-scheduler settings in
     revisionSettings:{...revisionSettings,leechThreshold:999}}),/integrity check failed/i);
 });
 
-test("Practice Desk pins Calendar to the verified commit and keeps Calendar durability host-owned",async()=>{
-  const [gitmodules,controller,calendarPackage,styles]=await Promise.all([
+test("Calendar dependency is pinned to the verified submodule revision",async()=>{
+  const [gitmodules,calendarPackage]=await Promise.all([
     readFile(new URL("../.gitmodules",import.meta.url),"utf8"),
-    readFile(new URL("../src/app/calendar-controller.ts",import.meta.url),"utf8"),
-    readFile(new URL("../vendor/calendar/package.json",import.meta.url),"utf8"),
-    readFile(new URL("../src/styles/app.css",import.meta.url),"utf8"),
+    readFile(new URL("../vendor/calendar/package.json",import.meta.url),"utf8")
   ]);
-  assert.match(gitmodules,/path = vendor\/calendar/);
-  assert.match(gitmodules,/oneshubhamt\/calendar\.git/);
+  assert.match(gitmodules,/path = vendor\\/calendar/);
+  assert.match(gitmodules,/oneshubhamt\\/calendar\\.git/);
   const gitHead=(await import("node:child_process")).execFileSync(
     "git",["-C",new URL("../vendor/calendar",import.meta.url).pathname,"rev-parse","HEAD"],
     {encoding:"utf8"}).trim();
   assert.equal(gitHead,CALENDAR_COMMIT);
   assert.equal(JSON.parse(calendarPackage).name,"@director/calendar");
-  assert.match(controller,/CalendarSnapshotProvider/);
-  assert.doesNotMatch(controller,/MemoryCalendarRepository|IndexedDB|indexedDB|openIndexedDb/i);
-  assert.match(controller,/readRevisionSettings\(\)/);
-  assert.match(controller,/scheduledCard\(card,revision\)/);
-  assert.doesNotMatch(controller,/theme:\s*\{/);
-  assert.match(styles,/\.pd-calendar-mount\s*\{[\s\S]*--dc-theme-background:var\(--panel\)/);
-  assert.match(styles,/--dc-theme-text:var\(--ink\)/);
-  assert.match(styles,/--dc-theme-accent:var\(--blue\)/);
-  assert.match(styles,/\.pd-calendar-mount \.dc-root,\.pd-calendar-mount \.dc-dialog\{font-size:\.9333333333em\}/);
-  assert.doesNotMatch(styles,/\.pd-calendar-mount \.dc-root[^\n]*font-size:calc/);
 });

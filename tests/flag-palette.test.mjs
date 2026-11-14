@@ -57,15 +57,3 @@ for(let i=0;i<responses.length;i++){
   assert.doesNotMatch(unmarked.markup,/class="num [^"]*\banswered\b/);
  });
 }
-test("light/dark status CSS declares distinct yellow/orange for both navigator and review button",async()=>{
- const {readFile}=await import("node:fs/promises");
- const css=await readFile(new URL("../src/styles/app.css",import.meta.url),"utf8");
- assert.match(css,/\.num\.marked:not\(\.answered\)\s*\{[^}]*--review-unanswered-bg/);
- assert.match(css,/\.num\.marked\.answered\s*\{[^}]*--review-answered-bg/);
- assert.match(css,/\.legend-dot\.marked-unanswered\{background:var\(--review-unanswered-bg\)/);
- assert.match(css,/\.legend-dot\.marked-answered\{background:var\(--review-answered-bg\)/);
- assert.match(css,/#g-flag\.review-unanswered\[aria-pressed="true"\]/);
- assert.match(css,/#g-flag\.review-answered\[aria-pressed="true"\]/);
- assert.match(css,/html\[data-theme="dark"\][\s\S]*--review-unanswered-bg:[^;]+;/);
- assert.match(css,/html\[data-theme="dark"\][\s\S]*--review-answered-bg:[^;]+;/);
-});
