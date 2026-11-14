@@ -4,7 +4,7 @@ This is the active human-readable verification contract for the current `working
 
 The suite census and completed consolidation/equivalence evidence are recorded in [QA_CENSUS.md](QA_CENSUS.md).
 
-Pass E's invariant-level audit and case ledger are in [QA_PASS_E.md](QA_PASS_E.md) and [QA_PASS_E_CASE_REGISTER.tsv](QA_PASS_E_CASE_REGISTER.tsv). The verified Pass F canonicalisation, assertion-witness mapping and before/after evidence are in [QA_PASS_F.md](QA_PASS_F.md).
+Pass E's invariant-level audit and case ledger are in [QA_PASS_E.md](QA_PASS_E.md) and [QA_PASS_E_CASE_REGISTER.tsv](QA_PASS_E_CASE_REGISTER.tsv). The verified Pass F canonicalisation, assertion-witness mapping and before/after evidence are in [QA_PASS_F.md](QA_PASS_F.md). Pass G adds source-backed independent state/property evidence in [QA_PASS_G.md](QA_PASS_G.md).
 
 ## Required toolchain
 
@@ -15,7 +15,7 @@ Useful local entry points:
 ```bash
 npm ci --no-audit --no-fund
 
-# Fast deterministic lane: 32 Node files / 435 tests plus type/build.
+# Fast deterministic lane: 36 Node files / 443 tests plus type/build.
 npm run qa:fast
 
 # Deep Node subset: 3 scale/benchmark files / 7 tests.
@@ -45,13 +45,13 @@ Markdown-only pushes and pull requests are excluded from runtime CI because Mark
 
 The workflow is deliberately cost-tiered.
 
-- **Fast — every source PR/push.** Strict TypeScript, deterministic standalone build, the **435 non-deep Node tests**, clean dependency graphs, native FSRS optimizer smoke and the source-verified static Worker/WASM build. This is the earliest deterministic feedback lane.
+- **Fast — every source PR/push.** Strict TypeScript, deterministic standalone build, the **443 non-deep Node tests**, clean dependency graphs, native FSRS optimizer smoke and the source-verified static Worker/WASM build. This is the earliest deterministic feedback lane.
 - **Smoke — every source PR/push.** Six critical Chromium user journeys tagged `smoke` plus the complete browser/WASM optimizer activation path.
 - **Cross — every source PR/push.** The four scenarios tagged `cross-browser` on Firefox and WebKit, plus the browser/WASM optimizer probe. Do not replicate Chromium-only product policy here.
-- **Deep — required on `working` release pushes.** Three scale/benchmark Node files (**7 tests**), the **10 targeted semantic mutants**, native/WASM optimizer parity and eight Chromium scenarios tagged `deep`. Ordinary pull requests do not pay this cost.
+- **Deep — required on `working` release pushes.** Three scale/benchmark Node files (**7 tests**), the **14 targeted semantic mutants**, native/WASM optimizer parity and eight Chromium scenarios tagged `deep`. Ordinary pull requests do not pay this cost.
 - **Guarded publisher — `working` only.** Publication occurs only after fast, smoke, both cross-browser legs and deep pass on the tested source ancestry; source drift aborts publication.
 
-The complete Node inventory remains **35 files / 442 tests**: 435 fast + 7 deep. `npm run check` still runs the complete Node suite when explicitly requested, but the CI lane split avoids paying deep costs in the earliest feedback path.
+The complete Node inventory is **39 files / 450 tests**: 443 fast + 7 deep. `npm run check` still runs the complete Node suite when explicitly requested, but the CI lane split avoids paying deep costs in the earliest feedback path.
 
 ## Timing evidence
 
@@ -87,7 +87,7 @@ The mutation suite is intentionally targeted: every listed mutant must have a gr
 
 ## Equivalence status
 
-The former 33/21 historical browser suite was restored temporarily from its verified Pass-B commit and run side by side with the canonical tagged suite against the same current source. All old and new engine legs passed, all 33 legacy Chromium scenarios were mapped to surviving browser/Node witnesses, and the targeted mutation set remained **10/10 killed**.
+The former 33/21 historical browser suite was restored temporarily from its verified Pass-B commit and run side by side with the canonical tagged suite against the same current source. All old and new engine legs passed, all 33 legacy Chromium scenarios were mapped to surviving browser/Node witnesses, and the original targeted mutation set remained **10/10 killed** (Pass D historical equivalence). The current Pass G sensitivity audit is **14/14 killed**.
 
 The temporary legacy runner, historical acceptance scripts and equivalence auditor were then deleted. They are not part of the current QA topology; historical measurements are recorded in [QA_CENSUS.md](QA_CENSUS.md).
 
