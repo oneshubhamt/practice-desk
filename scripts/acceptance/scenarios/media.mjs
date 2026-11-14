@@ -564,7 +564,7 @@ function authoredMath(){
  });
  return p;
 }
-const {paperRevisionHash}=await import("../src/domain/integrity.ts");
+const {paperRevisionHash}=await import("../../../src/domain/integrity.ts");
 try{
  const p=authoredMath();
  p.paper.contentHash=paperRevisionHash(p.paper);
