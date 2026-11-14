@@ -555,7 +555,7 @@
         "scripts/question-bank-cli.mjs",
         "scripts/editorial-editions.mjs",
         "scripts/pdf-ingest.mjs",
-        "scripts/acceptance-p57a-bank.mjs"
+        "scripts/acceptance/scenarios/authoring.mjs"
       ]
     }
   ],
