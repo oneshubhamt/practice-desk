@@ -1,10 +1,10 @@
 /** Canonical product-domain suite. */
+import {runJsonCli,inTempDir} from "./fixtures/cli-test-support.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {spawnSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
-import {mkdtemp,readFile,writeFile,rm,access,readdir} from "node:fs/promises";
-import {tmpdir} from "node:os";
+import {readFile,writeFile,access,readdir} from "node:fs/promises";
 import {join,resolve,dirname} from "node:path";
 import {createHash} from "node:crypto";
 import {inspectExternalQuestionBank} from "../src/authoring/external-bank.ts";
@@ -20,18 +20,9 @@ async function registerAgentEditingTests(){
 const cmd=fileURLToPath(new URL("../scripts/question-bank-agent.mjs",import.meta.url));
 const apfc=fileURLToPath(new URL("../examples/ai-first-apfc.json",import.meta.url));
 const cat=fileURLToPath(new URL("../examples/ai-first-cat.json",import.meta.url));
-const exec=(...args)=>{
- const run=spawnSync(process.execPath,[cmd,...args],{
-  encoding:"utf8",timeout:30000,maxBuffer:2*1024*1024});
- assert.equal(run.error,undefined,String(run.error));
- return {...run,data:JSON.parse(run.stdout||run.stderr)};
-};
+const exec=(...args)=>runJsonCli(cmd,args,{timeout:30000,maxBuffer:2*1024*1024});
 const sha=x=>createHash("sha256").update(x).digest("hex");
-const inTemp=async(fn)=>{
- const dir=await mkdtemp(join(tmpdir(),"pd-p59-"));
- try{return await fn(dir);}
- finally{await rm(dir,{recursive:true,force:true});}
-};
+const inTemp=fn=>inTempDir("pd-p59-",fn);
 
 test("P59: agent inspect returns bounded, paginated actionable errors without full questions or false factual verification",async()=>inTemp(async dir=>{
  const j=JSON.parse(await readFile(apfc,"utf8"));
@@ -294,11 +285,8 @@ const root=fileURLToPath(new URL("../",import.meta.url));
 const contract=fileURLToPath(new URL("../docs/contracts/practice-desk-capabilities.v1.json",import.meta.url));
 const script=fileURLToPath(new URL("../scripts/practice-desk-capabilities.mjs",import.meta.url));
 const cli=(...args)=>{
- const r=spawnSync(process.execPath,[script,...args],{encoding:"utf8",timeout:10000,maxBuffer:250000});
- assert.equal(r.error,undefined,String(r.error));
- let json;
- try{json=JSON.parse(r.stdout||r.stderr);}catch{assert.fail("CLI must emit valid JSON: "+r.stdout+" "+r.stderr);}
- return {...r,json};
+ const {data,...result}=runJsonCli(script,args,{timeout:10000,maxBuffer:250000});
+ return {...result,json:data};
 };
 
 test("P60-A: source-backed capability catalogue is versioned, unique, nonempty and evidence-navigable",async()=>{
@@ -405,14 +393,8 @@ const script=fileURLToPath(new URL("../scripts/agent-handoff.mjs",import.meta.ur
 const quality=fileURLToPath(new URL("../scripts/question-quality.mjs",import.meta.url));
 const editorial=fileURLToPath(new URL("../scripts/editorial-editions.mjs",import.meta.url));
 const sha=s=>createHash("sha256").update(s).digest("hex");
-const run=(program,...args)=>{
- const r=spawnSync(process.execPath,[program,...args],{encoding:"utf8",timeout:60000,maxBuffer:3*1024*1024});
- assert.equal(r.error,undefined,JSON.stringify(r.error));
- let data;try{data=JSON.parse(r.stdout||r.stderr)}catch{assert.fail("Expected JSON: "+r.stdout+" "+r.stderr)}
- return {...r,data};
-};
-const scoped=async fn=>{const root=await mkdtemp(join(tmpdir(),"pd-p60f-"));
- try{return await fn(root);}finally{await rm(root,{recursive:true,force:true});}};
+const run=(program,...args)=>runJsonCli(program,args,{timeout:60000,maxBuffer:3*1024*1024});
+const scoped=fn=>inTempDir("pd-p60f-",fn);
 const put=async(dir,name,data)=>{const path=join(dir,name);await writeFile(path,typeof data==="string"||Buffer.isBuffer(data)?data:JSON.stringify(data));return path;};
 async function files(dir,{asDocument=false}={}){
  const source=JSON.parse(await readFile(new URL("../examples/ai-first-apfc.json",import.meta.url),"utf8"));

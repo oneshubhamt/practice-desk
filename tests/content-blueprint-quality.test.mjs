@@ -1,10 +1,10 @@
 /** Canonical product-domain suite. */
+import {runJsonCli,inTempDir} from "./fixtures/cli-test-support.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {spawnSync} from "node:child_process";
-import {mkdtemp,readFile,writeFile,rm,access} from "node:fs/promises";
+import {readFile,writeFile,access} from "node:fs/promises";
 import {join} from "node:path";
-import {tmpdir} from "node:os";
 import {fileURLToPath} from "node:url";
 import {createHash} from "node:crypto";
 import {inspectExternalQuestionBank,toAuthoringDraft} from "../src/authoring/external-bank.ts";
@@ -28,13 +28,8 @@ const mkPlan=()=>({
   kinds:{exhaustive:true,targets:[{key:"single-choice",count:3}]}
  }
 });
-const run=(...args)=>{
- const out=spawnSync(process.execPath,[script,...args],{encoding:"utf8",timeout:20000,maxBuffer:200000});
- assert.equal(out.error,undefined,String(out.error));
- let data;try{data=JSON.parse(out.stdout||out.stderr);}catch{assert.fail(out.stdout+"\n"+out.stderr);}
- return {...out,data};
-};
-const temp=async fn=>{const dir=await mkdtemp(join(tmpdir(),"pd-p60b-"));try{return await fn(dir);}finally{await rm(dir,{force:true,recursive:true});}};
+const run=(...args)=>runJsonCli(script,args,{timeout:20000,maxBuffer:200000});
+const temp=fn=>inTempDir("pd-p60b-",fn);
 const write=async(dir,name,value)=>{const p=join(dir,name);await writeFile(p,JSON.stringify(value));return p;};
 
 test("P60-B RED: exact syllabus counts and all specified quotas produce a compact truthful pass",()=>temp(async dir=>{
@@ -331,14 +326,8 @@ const cli=fileURLToPath(new URL("../scripts/question-bank-cli.mjs",import.meta.u
 const apfc=fileURLToPath(new URL("../examples/ai-first-apfc.json",import.meta.url));
 const cat=fileURLToPath(new URL("../examples/ai-first-cat.json",import.meta.url));
 const sha=s=>createHash("sha256").update(s).digest("hex");
-const command=(script,...args)=>{
- const result=spawnSync(process.execPath,[script,...args],{encoding:"utf8",timeout:30000,maxBuffer:1024*1024});
- assert.equal(result.error,undefined,String(result.error));
- let data;try{data=JSON.parse(result.stdout||result.stderr);}
- catch{assert.fail(result.stdout+" "+result.stderr);}
- return {...result,data};
-};
-const temp=async f=>{const dir=await mkdtemp(join(tmpdir(),"pd-p60c-"));try{return await f(dir);}finally{await rm(dir,{recursive:true,force:true});}};
+const command=(script,...args)=>runJsonCli(script,args,{timeout:30000,maxBuffer:1024*1024});
+const temp=f=>inTempDir("pd-p60c-",f);
 const write=async(dir,name,data)=>{const path=join(dir,name);await writeFile(path,JSON.stringify(data));return path;};
 
 test("P60-C: all authoring paths block explicit answers hidden in private rich passages or shared rich media text",async()=>{

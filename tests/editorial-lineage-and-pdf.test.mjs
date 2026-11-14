@@ -1,11 +1,10 @@
 /** Canonical product-domain suite. */
+import {runJsonCli,inTempDir} from "./fixtures/cli-test-support.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
-import {spawnSync} from "node:child_process";
-import {readFile,writeFile,mkdtemp,access,readdir,rm} from "node:fs/promises";
+import {readFile,writeFile,access,readdir} from "node:fs/promises";
 import {createHash} from "node:crypto";
 import {join} from "node:path";
-import {tmpdir} from "node:os";
 import {fileURLToPath} from "node:url";
 import {validateExamPackage,startGenericAttempt} from "../src/app/exam-package.ts";
 import {createSourceKeyReference,validateSourceKeyReference,sourceKeyScore} from "../src/engine/source-comparison.ts";
@@ -26,15 +25,9 @@ const tool=fileURLToPath(new URL("../scripts/editorial-editions.mjs",import.meta
 const qualityTool=fileURLToPath(new URL("../scripts/question-quality.mjs",import.meta.url));
 const fixture=fileURLToPath(new URL("../examples/ai-first-apfc.json",import.meta.url));
 const sha=s=>createHash("sha256").update(s).digest("hex");
-const temp=async fn=>{const dir=await mkdtemp(join(tmpdir(),"pd-p60d-"));
- try{return await fn(dir);}finally{await rm(dir,{force:true,recursive:true});}};
+const temp=fn=>inTempDir("pd-p60d-",fn);
 const file=async(dir,name,raw)=>{const path=join(dir,name);await writeFile(path,typeof raw==="string"?raw:JSON.stringify(raw));return path;};
-const run=(script,...args)=>{
- const x=spawnSync(process.execPath,[script,...args],{encoding:"utf8",timeout:30000,maxBuffer:1200000});
- assert.equal(x.error,undefined,String(x.error));
- let data;try{data=JSON.parse(x.stdout||x.stderr)}catch{assert.fail("Expected machine JSON:\n"+x.stdout+"\n"+x.stderr)}
- return {...x,data};
-};
+const run=(script,...args)=>runJsonCli(script,args,{timeout:30000,maxBuffer:1200000});
 const asSource=candidate=>{
  const paperBase={...candidate.paper,edition:"source"};
  return validateExamPackage({...candidate,
@@ -380,17 +373,10 @@ const tool=fileURLToPath(new URL("../scripts/pdf-ingest.mjs",import.meta.url));
 const editorial=fileURLToPath(new URL("../scripts/editorial-editions.mjs",import.meta.url));
 const quality=fileURLToPath(new URL("../scripts/question-quality.mjs",import.meta.url));
 const sha=v=>createHash("sha256").update(v).digest("hex");
-const sandbox=async fn=>{const folder=await mkdtemp(join(tmpdir(),"pd-p60e-"));
- try{return await fn(folder);}finally{await rm(folder,{recursive:true,force:true});}};
+const sandbox=fn=>inTempDir("pd-p60e-",fn);
 const save=async(dir,name,v)=>{const f=join(dir,name);
  await writeFile(f,typeof v==="string"||Buffer.isBuffer(v)?v:JSON.stringify(v));return f;};
-const run=(script,...args)=>{
- const p=spawnSync(process.execPath,[script,...args],{encoding:"utf8",timeout:60000,maxBuffer:2*1024*1024});
- assert.equal(p.error,undefined,String(p.error));
- let data;try{data=JSON.parse(p.stdout||p.stderr);}
- catch{assert.fail("Invalid CLI JSON: "+p.stdout+" / "+p.stderr)}
- return {...p,data};
-};
+const run=(script,...args)=>runJsonCli(script,args,{timeout:60000,maxBuffer:2*1024*1024});
 // Actually structured, small, two-page PDF fixture with a shared passage, a table,
 // a TeX exercise and a figure; the software checks bytes, not visual equivalence.
 function pdf(pages){
