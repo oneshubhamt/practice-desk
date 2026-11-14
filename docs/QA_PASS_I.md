@@ -52,3 +52,20 @@ GitHub Actions run [43593749612](https://github.com/oneshubhamt/practice-desk/ac
 The pass changed five test files plus QA documentation only. Production source and generated application behaviour were not modified. Existing test titles and the permanent 450-case / 14-scenario topology were retained.
 
 Two intermediate Fast runs correctly rejected an initially over-specific semantic-history fixture expectation (`Papers practised`). The final expectation was reconciled to the production metric's documented identity of unique `examId | paperId` pairs, after which the full release path passed. These failures were test-oracle corrections, not production changes.
+
+
+## Post-K de novo closure correction
+
+A final repository-wide assertion scan after Pass K found one missed Pass-I candidate in `tests/result-scale.test.mjs`: the 2,000-question scale case still used the exact headings `Question-speed insights` / `Section diagnostics` and the CSS class `generic-review` as evidence.
+
+Commit `d8bd94c745c8bd562c6861aa7be9863f4c48a608` replaced those with semantic/integration evidence while preserving the same test case:
+
+- section analytics must expose a 100% accessible `Scale coverage` progressbar and the complete `2000/2000 attempted` value;
+- all 2,000 review items must expose their active notebook action hook;
+- the final question must remain addressable by the review-navigation identity used by the result controller.
+
+The same de novo scan re-reviewed the remaining apparent class/shape assertions. The notable retained cases have explicit contracts: calculator geometry classes are the selectors that implement the documented double-width/two-row keypad geometry and are paired with ARIA/order checks; authored-media layout selectors implement bounded option/image layout and are paired with asset-count, candidate-secrecy and control-outside-label assertions; stable IDs/data attributes retained elsewhere are active controller hooks, accessibility contracts, or distribution/security boundaries.
+
+Run [43605648956](https://github.com/oneshubhamt/practice-desk/actions/runs/43605648956) passed Fast, Smoke, Firefox/WebKit Cross, Deep, 14/14 mutations and guarded Publish on the corrected executable source. No production file or test count changed.
+
+With this correction, the Pass-I stop condition is met de novo, not merely by the original audit sample.

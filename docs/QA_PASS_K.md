@@ -80,3 +80,30 @@ Further optimization should require a new measured bottleneck or a newly demonst
 - do not reintroduce browser caching unless the runner image or Playwright installation economics materially change.
 
 **Pass K stop condition: met.**
+
+
+## Post-programme objective check
+
+A de novo source/CI review after I–K checked the original tightened programme rather than relying on the pass narratives.
+
+| Objective | Final status |
+|---|---|
+| I: replace/justify residual implementation-shaped assertions only | **Met after one closure correction** — the missed 2,000-question scale assertion was repaired in `d8bd94c`; remaining scanned shape assertions have explicit interaction, accessibility, security, distribution or layout contracts |
+| I: no suite reorganisation or target count reduction | **Met** — 39 Node files / 452 cases remain |
+| J: selected cross-surface secrecy adversaries | **Met** — stem, shared stimulus and media-alt browser staging failures are independently exercised |
+| J: actual-browser visibility/recovery timing | **Met** — real pagehide/off-document/reopen preserves answers and excludes absence from foreground exposure |
+| J: Calendar temporal boundaries and restore interaction | **Met** — canonical invalid-boundary table, Asia/Kolkata→UTC year boundary, reload preservation, delete→backup restore |
+| J: independent FSRS correctness witness | **Met for the intended curve risk** — the published FSRS-7 dual-trace curve is implemented independently from the adapter; replay/parity evidence remains separate |
+| K: profile actual wall-time hotspots first | **Met** — three same-source J baseline attempts preceded optimization |
+| K: optimize only demonstrated cost | **Met** — only same-runner Deep concurrency retained; low-value browser cache experiment was measured and reverted |
+| K: preserved/increased defect sensitivity | **Met** — 14/14 named mutants remain baseline-green and assertion-killed; no test/scenario/engine removed |
+| K: complete browser/release gates and repeated same-source timings | **Met** — three baseline and three retained-topology runs plus final corrected-source release run |
+| No standalone L / no structural-overhaul continuation | **Met** — closure remains inside K |
+
+The final corrected-source release verification is [43605648956](https://github.com/oneshubhamt/practice-desk/actions/runs/43605648956), with all required gates green.
+
+### Repository-governance boundary
+
+Branch protection is not an executable QA invariant. The final check found the public repository's default branch `main`, development branch `working`, and `Satyam` all unprotected, with no repository rulesets. The README identifies `working` as the authorised **development** branch and separately requires explicit authorization to merge or release.
+
+The guarded publisher therefore proves that its own publication path is tested/fail-closed, but it cannot prevent an authorized account from directly pushing around CI. Whether branch protection is required depends on which branch is designated release authority; that decision must be implemented through GitHub repository settings/rulesets rather than another test. It is tracked separately from the closed I–K QA programme.

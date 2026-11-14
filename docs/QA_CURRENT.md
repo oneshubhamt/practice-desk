@@ -52,3 +52,10 @@ For every proposed test deletion or move, first name **risk → invariant → su
 **Pass K retained economics (three green same-source attempts each):** J baseline executable `b387514` had median pre-publication runner consumption **315 s**, median gate critical path **154 s**, median full Fast→Publish path **163 s**, and median Deep job **88 s**. The retained K topology (`415a973`; identical executable tree at final verification `41a4d50`) measured **313 s (−0.6%)**, **144 s (−6.5%)**, **155 s (−4.9%)**, and **70 s (−20.5%)** respectively. No test was removed or moved. A pinned Playwright browser-cache experiment improved the WebKit job but not whole-pipeline economics enough to justify its cache state/dependency, so it was reverted. See [Pass K](QA_PASS_K.md) for raw attempts, the rejected experiment and final adequacy evidence.
 
 Passing CI does **not** establish historical PYQ authenticity, current legal facts, real reviewer identity, physical-device Safari, assistive-technology usability or survival of power loss/OS-profile loss. Address those outside the bounded automated contracts. See [Pass K](QA_PASS_K.md) for the latest measured economics and final adequacy evidence; [Pass H](QA_PASS_H.md) retains the earlier A–H survivor mapping and closure benchmark.
+
+
+## Repository governance boundary
+
+The automated QA contract does not substitute for GitHub branch governance. The latest closure check found `main`, `working` and `Satyam` unprotected and no repository rulesets. `working` is documented as the authorised development branch; merge/release still requires explicit authorization.
+
+The guarded publisher prevents untested artifact publication **inside that workflow**, but cannot prevent a direct push from bypassing CI. If `main` or `working` is designated a release-authority branch, enforce that policy with GitHub branch protection/rulesets (including an intentional publisher/bot strategy) rather than adding more application tests.
