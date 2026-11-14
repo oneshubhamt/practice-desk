@@ -213,7 +213,7 @@ try{
  await page.locator("#displayClose").click();
  await assertNoOverflow(page,engine+" APFC result 195px/140%");
  await page.setViewportSize({width:1280,height:840});
- await page.getByRole("button",{name:/library/i}).click();await route(page,"library");
+ await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
  const cat=await fixture("cat");
  const catId=await publishStage(cat,"p57-cat");
  const catSaved=(await records(page)).find(r=>r.recordType==="generic-package"&&r.bundle?.paper.id===catId);
@@ -406,7 +406,7 @@ try{
  }
  check(Boolean(card)&&card.reviews?.length===0,
   engine+" P60-F card not derived from frozen reviewed source or FSRS was silently graded");
- await page.getByRole("button",{name:/library/i}).click();await route(page,"library");
+ await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
  await page.getByRole("button",{name:/Open learning desk/}).click();await route(page,"learning");
  await page.locator("#learning-due").click();
  check(await page.locator(".learning-answer").count()===0,
