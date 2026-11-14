@@ -101,7 +101,7 @@ jobs:
           name: source-verified-static-app
           path: Practice_Desk_Static
       - run: npm run build
-      - name: All 33 source-mapped journeys in one browser process
+      - name: All 14 tagged Chromium browser-risk scenarios
         run: node scripts/acceptance-suite.mjs chromium
       - name: Complete browser/WASM FSRS optimizer activation pipeline
         run: node scripts/fsrs-browser-optimizer-smoke.mjs chromium full
@@ -110,16 +110,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: chromium-failure-evidence
-          path: |
-            artifacts/acceptance-modern/
-            artifacts/p58a-integrity/
-            artifacts/p58b-editorial/
-            artifacts/p58c-scale/
-            artifacts/p47-5c-visual/
-            artifacts/p47-5d-publish/
-            artifacts/p54-authoring/
-            artifacts/p53-taxonomy/
-            artifacts/calendar/
+          path: artifacts/
           if-no-files-found: ignore
           retention-days: 7
 
@@ -147,7 +138,7 @@ jobs:
           name: source-verified-static-app
           path: Practice_Desk_Static
       - run: npm run build
-      - name: All 21 source-mapped journeys in one browser process
+      - name: Four genuinely cross-browser scenarios
         run: node scripts/acceptance-suite.mjs ${{ matrix.browser }}
       - name: Browser/WASM FSRS optimizer probe
         run: node scripts/fsrs-browser-optimizer-smoke.mjs ${{ matrix.browser }}
@@ -156,16 +147,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.browser }}-failure-evidence
-          path: |
-            artifacts/acceptance-modern/
-            artifacts/p58a-integrity/
-            artifacts/p58b-editorial/
-            artifacts/p58c-scale/
-            artifacts/p47-5c-visual/
-            artifacts/p47-5d-publish/
-            artifacts/p54-authoring/
-            artifacts/p53-taxonomy/
-            artifacts/calendar/
+          path: artifacts/
           if-no-files-found: ignore
           retention-days: 7
 
