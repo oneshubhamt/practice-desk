@@ -164,51 +164,38 @@ test("reviewed paper revisions require exact Source paper and key lineage", () =
   assert.equal(validatePaperRevision(reviewed,[q],key).sourcePaperRevisionId,"source-paper-rev");
 });
 
-test("rejects duplicate option identities and malformed hashes", () => {
-  const duplicateOptions = question({
-    content: { kind: "single-choice", prompt: "Choose", options: [{ id: "same", text: "A" }, { id: "same", text: "B" }] },
-  });
-  assert.throws(() => validateQuestionRevision(duplicateOptions), /duplicate identifier/);
-  assert.throws(() => validateQuestionRevision(question({ contentHash: "not-a-hash" })), /SHA-256/);
+test("schema validators reject invalid structural mutations as a table", () => {
+  const q=validateQuestionRevision(question());
+  const validKey=validateAnswerKeyRevision(answerKey(),[q]);
+  const cases=[
+    ["duplicate option identity",()=>validateQuestionRevision(question({
+      content:{kind:"single-choice",prompt:"Choose",options:[{id:"same",text:"A"},{id:"same",text:"B"}]}
+    })),/duplicate identifier/],
+    ["malformed content hash",()=>validateQuestionRevision(question({contentHash:"not-a-hash"})),/SHA-256/],
+    ["unknown keyed option",()=>validateAnswerKeyRevision(answerKey({entries:[{
+      questionRevisionId:q.id,answer:{kind:"single-choice",optionId:"not-an-option"}
+    }]}),[q]),/unknown option/],
+    ["answer kind mismatch",()=>validateAnswerKeyRevision(answerKey({entries:[{
+      questionRevisionId:q.id,answer:{kind:"true-false",value:true}
+    }]}),[q]),/does not match question kind/],
+    ["question repeated across sections",()=>validatePaperRevision(paper({sections:[
+      {id:"section-1",title:"One",questionRevisionIds:[q.id]},
+      {id:"section-2",title:"Two",questionRevisionIds:[q.id]}
+    ],timing:{kind:"untimed"}}),[q]),/multiple sections/],
+    ["missing sectional timer",()=>validatePaperRevision(paper({timing:{
+      kind:"sectional",sectionLimits:[],transition:"manual",allowEarlySubmit:true,pausePolicy:"forbidden"
+    }}),[q]),/exactly one limit/],
+    ["positive wrong-answer marks",()=>validatePaperRevision(paper({scoring:{
+      defaultRule:{correctMarks:2,incorrectMarks:0.5,unansweredMarks:0}
+    }}),[q]),/non-positive/],
+    ["paper question missing from key",()=>{
+      const empty=validateAnswerKeyRevision(answerKey({entries:[]}),[q]);
+      return validatePaperRevision(paper(),[q],empty);
+    },/missing answer-key entry/]
+  ];
+  for(const [name,run,pattern] of cases)assert.throws(run,pattern,name);
 });
 
-test("rejects incompatible answer kinds and unknown option IDs", () => {
-  const q = validateQuestionRevision(question());
-  assert.throws(() => validateAnswerKeyRevision(answerKey({
-    entries: [{ questionRevisionId: q.id, answer: { kind: "single-choice", optionId: "not-an-option" } }],
-  }), [q]), /unknown option/);
-  assert.throws(() => validateAnswerKeyRevision(answerKey({
-    entries: [{ questionRevisionId: q.id, answer: { kind: "true-false", value: true } }],
-  }), [q]), /does not match question kind/);
-});
-
-test("rejects duplicate section membership and missing sectional limits", () => {
-  const q = validateQuestionRevision(question());
-  const duplicated = paper({
-    sections: [
-      { id: "section-1", title: "One", questionRevisionIds: [q.id] },
-      { id: "section-2", title: "Two", questionRevisionIds: [q.id] },
-    ],
-    timing: { kind: "untimed" },
-  });
-  assert.throws(() => validatePaperRevision(duplicated, [q]), /multiple sections/);
-  assert.throws(() => validatePaperRevision(paper({
-    timing: { kind: "sectional", sectionLimits: [], transition: "manual", allowEarlySubmit: true, pausePolicy: "forbidden" },
-  }), [q]), /exactly one limit/);
-});
-
-test("rejects scoring rules with a positive wrong-answer penalty", () => {
-  const q = validateQuestionRevision(question());
-  assert.throws(() => validatePaperRevision(paper({
-    scoring: { defaultRule: { correctMarks: 2, incorrectMarks: 0.5, unansweredMarks: 0 } },
-  }), [q]), /non-positive/);
-});
-
-test("rejects an answer key that omits a question in the paper", () => {
-  const q = validateQuestionRevision(question());
-  const key = validateAnswerKeyRevision(answerKey({ entries: [] }), [q]);
-  assert.throws(() => validatePaperRevision(paper(), [q], key), /missing answer-key entry/);
-});
 }
 
 // === Consolidated coverage: tests/exam-six-kind-lifecycle.test.mjs — retained assertions ===
