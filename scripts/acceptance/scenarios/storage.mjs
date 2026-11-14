@@ -8,7 +8,7 @@ export async function storageResilience(){
 const {readFile,mkdtemp,rm}=await import("node:fs/promises");
 const {tmpdir}=await import("node:os");
 const {join}=await import("node:path");
-const {spawnSync}=await import("node:child_process");
+const {chromePath}=await import("../../browser/chrome-path.mjs");
 const {chromium}=await import("playwright-core");
 const {openHarness,offlineUrl,records,check,route}=await import("../../browser/fixtures.mjs");
 const h=await openHarness({artifactDir:"artifacts/acceptance-modern"});
@@ -182,11 +182,7 @@ try{
  await quota.close();
  // Persist across an actual complete Chrome process/profile restart, not
  // merely a page.reload() or a fresh isolated in-memory browser context.
- const executable=["google-chrome","google-chrome-stable","chromium","chromium-browser"]
-  .map(cmd=>({cmd,version:spawnSync(cmd,["--version"],{encoding:"utf8"})}))
-  .find(x=>x.version.status===0)?.cmd;
- check(Boolean(executable),"No installed Chromium for real profile restart");
- const binary=spawnSync("which",[executable],{encoding:"utf8"}).stdout.trim();
+ const binary=chromePath();
  const profile=await mkdtemp(join(tmpdir(),"practice-resilience-persistent-"));
  let persistent;
  try{

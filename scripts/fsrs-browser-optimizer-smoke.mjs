@@ -2,6 +2,7 @@ import {createServer} from "node:http";
 import {readFile} from "node:fs/promises";
 import {extname,join,normalize} from "node:path";
 import {chromium,firefox,webkit} from "playwright-core";
+import {chromePath} from "./browser/chrome-path.mjs";
 
 const browserName=process.argv[2]??"chromium";
 const mode=process.argv[3]??"probe";
@@ -21,7 +22,13 @@ const server=createServer(async(req,res)=>{
 });
 await new Promise(resolve=>server.listen(0,"127.0.0.1",resolve));
 const address=server.address();if(!address||typeof address==="string")throw Error("server address unavailable");
-const browser=await browserType.launch({headless:true});
+// Match the already-required installed Chrome used by the offline Chromium
+// acceptance harness. Avoid downloading a *second* Chromium binary in CI.
+// Firefox/WebKit retain their separately installed Playwright binaries.
+const browser=await browserType.launch({
+ headless:true,...(browserName==="chromium"?{executablePath:chromePath(),
+  args:["--no-sandbox","--disable-dev-shm-usage","--disable-background-networking"]}:{})
+});
 try{
  const page=await browser.newPage();
  await page.goto(`http://127.0.0.1:${address.port}/`,{waitUntil:"load"});

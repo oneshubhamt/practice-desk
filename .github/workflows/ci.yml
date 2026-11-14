@@ -86,7 +86,8 @@ jobs:
           node-version: '26.13.0'
           package-manager-cache: false
       - run: npm ci --no-audit --no-fund
-      - run: node node_modules/playwright-core/cli.js install --with-deps chromium
+      - name: Verify installed Chrome (shared by offline and WASM Chromium witnesses)
+        run: node --input-type=module -e 'import {chromePath} from "./scripts/browser/chrome-path.mjs"; console.log(chromePath())'
       - uses: actions/download-artifact@v4
         with:
           name: source-verified-offline-html
@@ -175,7 +176,8 @@ jobs:
         run: npm ci --prefix tools/fsrs-optimizer --no-audit --no-fund
       - name: Native/WASM optimizer semantic parity
         run: node scripts/timed-run.mjs optimizer-parity -- npm run --prefix tools/fsrs-optimizer parity
-      - run: node node_modules/playwright-core/cli.js install --with-deps chromium
+      - name: Verify installed Chrome (shared by offline and WASM Chromium witnesses)
+        run: node --input-type=module -e 'import {chromePath} from "./scripts/browser/chrome-path.mjs"; console.log(chromePath())'
       - uses: actions/download-artifact@v4
         with:
           name: source-verified-offline-html
