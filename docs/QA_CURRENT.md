@@ -4,6 +4,8 @@ This is the active human-readable verification contract for the current `working
 
 The suite census and completed consolidation/equivalence evidence are recorded in [QA_CENSUS.md](QA_CENSUS.md).
 
+Pass E's invariant-level audit and case ledger are in [QA_PASS_E.md](QA_PASS_E.md) and [QA_PASS_E_CASE_REGISTER.tsv](QA_PASS_E_CASE_REGISTER.tsv). The verified Pass F canonicalisation, assertion-witness mapping and before/after evidence are in [QA_PASS_F.md](QA_PASS_F.md).
+
 ## Required toolchain
 
 Use Node.js **26.13.0** with the committed lockfiles. The main application and isolated FSRS optimizer dependency graphs must both install cleanly from those locks.
@@ -75,7 +77,7 @@ Normal passing CI does not capture screenshots merely to create evidence.
 
 ## Node test design
 
-The Node suite is organized by stable product domains rather than historical programme/pass labels. Architecture rules are checked through the parser-backed resolved import graph in `tests/architecture-boundaries.test.mjs`; line-count, exact-helper-name and source-phrase scans are not architecture oracles.
+The Node suite is organized by stable product domains rather than historical programme/pass labels. Related tests use named domain-registration functions and shared test-only CLI/temporary-directory helpers; incidental layout/text snapshots are not substitutes for state, accessibility or actual browser witnesses. Architecture rules are checked through the parser-backed resolved import graph in `tests/architecture-boundaries.test.mjs`; line-count, exact-helper-name and source-phrase scans are not architecture oracles.
 
 Prefer independent expected values, state/reference models, tables, metamorphic properties and adversarial counterexamples over implementation mirroring. A changed contract needs a witness that would fail for a plausible semantic defect.
 
