@@ -78,7 +78,12 @@ test("parser-backed import graph keeps foundational layers below application com
 });
 
 test("third-party scheduler and editor dependencies terminate at their adapters",()=>{
- assert.deepEqual(bareUsers("ts-fsrs"),["src/learning/fsrs-scheduler-adapter.ts"]);
+ assert.deepEqual(bareUsers("ts-fsrs"),[
+  "src/learning/fsrs-optimizer.ts","src/learning/fsrs-scheduler-adapter.ts"
+ ]);
+ assert.ok(importsOf("src/learning/fsrs-optimizer.ts").every(e=>
+   !e.spec.startsWith("ts-fsrs/")||e.spec==="ts-fsrs/models/fsrs-7"),
+  "optimizer may consume the FSRS-7 model contract but not scheduler runtime/middleware");
  assert.deepEqual(bareUsers("wordgard"),["src/authoring/wordgard-adapter.ts"]);
 });
 
