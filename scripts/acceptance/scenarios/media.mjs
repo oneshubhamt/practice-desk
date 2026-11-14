@@ -435,7 +435,7 @@ try{
  await page.keyboard.press("Escape");await viewer.waitFor({state:"detached"});
  check(await page.locator("input[data-choice]:checked").count()===0,
   "image viewer selected an option while inspecting the imported diagram");
- await page.getByRole("button",{name:/library/i}).click();await route(page,"library");
+ await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
  // Explicitly opt in to lossy high-quality WebP for PHOTOGRAPHS only.
  await page.locator("#g-image-prep").click();await modal.waitFor({state:"visible"});
  await page.locator("#prep-image-type").selectOption("photo");
