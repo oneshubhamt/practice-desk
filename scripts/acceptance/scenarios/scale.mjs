@@ -37,7 +37,7 @@ try{
   "Timing displayed inactive 100-question review");
  const after=await page.locator("#app *").count();
  check(after<15000,"unbounded active-only Result DOM regression: "+after+" nodes");
- await page.getByRole("button",{name:/Library/}).click();await route(page,"library");
+ await page.getByRole("button",{name:/library/i}).click();await route(page,"library");
  const count=80;
  await page.evaluate(async ({baseId,n})=>{
   const db=await new Promise((resolve,reject)=>{
