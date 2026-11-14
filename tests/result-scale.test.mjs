@@ -50,13 +50,17 @@ test("result analytics and review stay complete at the 2,000-question package ce
  const timing=timingLedgerHTML(attempt,true,true);
  assert.equal((timing.match(/data-ledger-q=/g)??[]).length,COUNT);
  const insights=resultInsightsHTML(attempt,true);
- assert.match(insights,/Question-speed insights/);
- assert.match(insights,/Section diagnostics/);
+ assert.match(insights,/role="progressbar" aria-label="Scale coverage"[^>]*aria-valuenow="100"/);
+ assert.match(insights,/2000\/2000 attempted/,
+   "Scale analytics must expose complete section coverage without depending on headings");
 
  const review=renderCurrentResultHTML({
   attempt,resultTab:"review",reviewFilter:"all",warning:"",
   packageForAttempt:()=>undefined,manualGradeDrafts:new Map(),records:new Map()
  });
- assert.equal((review.match(/class="generic-review"/g)??[]).length,COUNT);
+ assert.equal((review.match(/data-add-card=/g)??[]).length,COUNT,
+   "Every rendered scale review item must retain its actionable notebook control");
+ assert.match(review,/data-review-id="scale:q:2000"/,
+   "The final scale item must remain addressable for review navigation");
  assert.match(review,/2000 of 2000 items/);
 });
