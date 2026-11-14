@@ -9,86 +9,67 @@ import {createHash} from "node:crypto";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {fileURLToPath} from "node:url";
+import ts from "typescript";
 
 const root=fileURLToPath(new URL("../",import.meta.url));
 const mutants=[
  {
   id:"scoring-unanswered-confused-with-wrong",
   path:"src/engine/scoring.ts",
-  find:'marks = rule.unansweredMarks;',
-  replace:'marks = rule.incorrectMarks;',
   testFile:"tests/exam-scoring-and-policy.test.mjs",
   testName:"seeded independent scoring reference: precedence, marks ledger, verdicts, exclusions and bounds"
  },
  {
   id:"stored-recovery-equal-version-not-protected",
   path:"src/history/frozen.ts",
-  find:'stored.saveRevision >= mirror.saveRevision',
-  replace:'stored.saveRevision > mirror.saveRevision',
   testFile:"tests/history-and-persistence.test.mjs",
   testName:"Recovery reference: 576 persisted/mirror precedence combinations, missing IDs, terminal and revision boundaries"
  },
  {
   id:"CAS-next-write-skips-one-revision",
   path:"src/history/concurrency.ts",
-  find:'return expected+1;',
-  replace:'return expected+2;',
   testFile:"tests/history-and-persistence.test.mjs",
   testName:"seeded two-tab compare-and-swap interleavings reject stale writes, preserve stored revision"
  },
  {
   id:"publisher-unilaterally-inflates-correct-marks",
   path:"src/authoring/authoring-publisher.ts",
-  find:'scoring:{defaultRule:{correctMarks:d.marksCorrect,incorrectMarks:d.marksIncorrect,',
-  replace:'scoring:{defaultRule:{correctMarks:d.marksCorrect+0.5,incorrectMarks:d.marksIncorrect,',
   testFile:"tests/authoring-domain.test.mjs",
   testName:"P47-5D all six kinds publish as source-validated frozen rich package, with correct hashes"
  },
  {
   id:"rich-source-silently-trims-candidate-text",
   path:"src/domain/rich-document.ts",
-  find:'blocks:[{type:"paragraph",content:[{type:"text",text}]}]});',
-  replace:'blocks:[{type:"paragraph",content:[{type:"text",text:text.trim()}]}]});',
   testFile:"tests/authoring-domain.test.mjs",
   testName:"Authoring property: literal Unicode/math/HTML-like strings survive rich validation unchanged"
  },
  {
   id:"learning-incorrect-evidence-threshold",
   path:"src/learning/attempt-evidence.ts",
-  find:'r.answered<10?"insufficient":',
-  replace:'r.answered<100?"insufficient":',
   testFile:"tests/learning-and-analytics.test.mjs",
   testName:"seeded evidence classifications require independent sample size and question diversity"
  },
  {
   id:"six-kind-multi-select-matches-on-overlap-instead-of-exact-set",
   path:"src/engine/scoring.ts",
-  find:'a.optionIds.every(id => b.optionIds.includes(id))',
-  replace:'a.optionIds.some(id => b.optionIds.includes(id))',
   testFile:"tests/exam-scoring-and-policy.test.mjs",
   testName:"P61-H six-kind independent ledger survives answer-ID bijections and input permutations"
  },
  {
   id:"backup-sha256-payload-integrity-skipped",
   path:"src/history/backup.ts",
-  find:'manifest.digest!==digest(core as Core))',
-  replace:'false)',
   testFile:"tests/history-and-persistence.test.mjs",
   testName:"canonical backup checksum covers records and preferences; size, IDs and timestamp are bounded"
  },
  {
   id:"pdf-eof-signature-check-skipped",
   path:"scripts/pdf-ingest.mjs",
-  find:'!bytes.subarray(-2048).toString("ascii").includes("%%EOF")',
-  replace:'false',
   testFile:"tests/editorial-lineage-and-pdf.test.mjs",
   testName:"P60-E CLI template is explicitly incomplete and does not reveal keys, audit uses byte-bound source, safe on corrupt PDFs"
  },
  {
   id:"fsrs-ratings-silently-rewritten",
   path:"src/learning/learning.ts",
-  find:'reviews:[...item.reviews,{rating,at,duration:measured,state}],updatedAt:at}',
-  replace:'reviews:[...item.reviews,{rating:1,at,duration:measured,state}],updatedAt:at}',
   testFile:"tests/learning-and-analytics.test.mjs",
   testName:"stable ts-fsrs 6.0.0 runs explicit FSRS-7 with evidence-rich replay, previews and retrievability"
  }
@@ -97,6 +78,103 @@ const sandbox=await mkdtemp(join(tmpdir(),"practice-desk-mutant-"));
 const sha=buffer=>createHash("sha256").update(buffer).digest("hex");
 const reEscape=text=>Array.from(text).map(ch=>".*+?^$()|[]{}\\".includes(ch)?"\\"+ch:ch).join("");
 const summary=[];
+
+/**
+ * Apply one intentional *semantic* fault to a uniquely selected syntax node.
+ * Formatting, whitespace and unrelated helper renames are not mutation anchors.
+ * Each predicate also identifies the target operation/function or owned property.
+ * A missing or ambiguous node aborts the gate, never counts as a killed mutant.
+ */
+function mutateSource(source,spec){
+ const ast=ts.createSourceFile(spec.path,source,ts.ScriptTarget.Latest,true,
+  spec.path.endsWith(".mjs")?ts.ScriptKind.JS:ts.ScriptKind.TS);
+ if(ast.parseDiagnostics.length)
+  throw Error("Mutation target cannot be parsed: "+spec.id);
+ const pathOf=node=>{
+  if(ts.isIdentifier(node))return node.text;
+  if(ts.isPropertyAccessExpression(node)){
+   const lhs=pathOf(node.expression);
+   return lhs?lhs+"."+node.name.text:null;
+  }
+  return null;
+ };
+ const inFunction=(node,name)=>{
+  for(let parent=node.parent;parent;parent=parent.parent)
+   if(ts.isFunctionDeclaration(parent)&&parent.name?.text===name)return true;
+  return false;
+ };
+ const num=(node,value)=>ts.isNumericLiteral(node)&&Number(node.text)===value;
+ const edits=[];
+ const capture=(node,text)=>edits.push({start:node.getStart(ast),end:node.getEnd(),text});
+ function visit(node){
+  switch(spec.id){
+   case "scoring-unanswered-confused-with-wrong":
+    if(ts.isBinaryExpression(node)&&node.operatorToken.kind===ts.SyntaxKind.EqualsToken&&
+       pathOf(node.left)==="marks"&&pathOf(node.right)==="rule.unansweredMarks")
+     capture(node.right,"rule.incorrectMarks");
+    break;
+   case "stored-recovery-equal-version-not-protected":
+    if(ts.isBinaryExpression(node)&&node.operatorToken.kind===ts.SyntaxKind.GreaterThanEqualsToken&&
+       pathOf(node.left)==="stored.saveRevision"&&pathOf(node.right)==="mirror.saveRevision")
+     capture(node.operatorToken,">");
+    break;
+   case "CAS-next-write-skips-one-revision":
+    if(ts.isReturnStatement(node)&&node.expression&&ts.isBinaryExpression(node.expression)&&
+       node.expression.operatorToken.kind===ts.SyntaxKind.PlusToken&&
+       pathOf(node.expression.left)==="expected"&&num(node.expression.right,1))
+     capture(node.expression.right,"2");
+    break;
+   case "publisher-unilaterally-inflates-correct-marks":
+    if(ts.isPropertyAssignment(node)&&node.name.getText(ast)==="correctMarks"&&
+       pathOf(node.initializer)==="d.marksCorrect")
+     capture(node.initializer,"d.marksCorrect+0.5");
+    break;
+   case "rich-source-silently-trims-candidate-text":
+    if(ts.isShorthandPropertyAssignment(node)&&node.name.text==="text"&&
+       inFunction(node,"plainRichDocument"))
+     capture(node,"text:text.trim()");
+    break;
+   case "learning-incorrect-evidence-threshold":
+    if(ts.isBinaryExpression(node)&&node.operatorToken.kind===ts.SyntaxKind.LessThanToken&&
+       pathOf(node.left)==="r.answered"&&num(node.right,10))
+     capture(node.right,"100");
+    break;
+   case "six-kind-multi-select-matches-on-overlap-instead-of-exact-set":
+    if(ts.isCallExpression(node)&&ts.isPropertyAccessExpression(node.expression)&&
+       pathOf(node.expression.expression)==="a.optionIds"&&node.expression.name.text==="every")
+     capture(node.expression.name,"some");
+    break;
+   case "backup-sha256-payload-integrity-skipped":
+    if(ts.isBinaryExpression(node)&&
+       node.operatorToken.kind===ts.SyntaxKind.ExclamationEqualsEqualsToken&&
+       pathOf(node.left)==="manifest.digest"&&ts.isCallExpression(node.right)&&
+       pathOf(node.right.expression)==="digest")
+     capture(node,"false");
+    break;
+   case "pdf-eof-signature-check-skipped":
+    if(ts.isPrefixUnaryExpression(node)&&node.operator===ts.SyntaxKind.ExclamationToken&&
+       ts.isCallExpression(node.operand)&&
+       ts.isPropertyAccessExpression(node.operand.expression)&&
+       node.operand.expression.name.text==="includes"&&
+       node.operand.arguments.some(arg=>ts.isStringLiteral(arg)&&arg.text==="%%EOF"))
+     capture(node,"false");
+    break;
+   case "fsrs-ratings-silently-rewritten":
+    if(ts.isShorthandPropertyAssignment(node)&&node.name.text==="rating"&&
+       inFunction(node,"rateLearningCard"))
+     capture(node,"rating:1");
+    break;
+   default:throw Error("Unrecognized semantic mutation "+spec.id);
+  }
+  ts.forEachChild(node,visit);
+ }
+ visit(ast);
+ if(edits.length!==1)throw Error("Expected one semantic mutation site for "+
+  spec.id+"; found "+edits.length);
+ const {start,end,text}=edits[0];
+ if(source.slice(start,end)===text)throw Error("Mutation did not modify source: "+spec.id);
+ return source.slice(0,start)+text+source.slice(end);
+}
 function runNamed(test){
  const cmd=[ "--test","--test-reporter=tap",
   "--test-name-pattern=^"+reEscape(test.testName)+"$",
@@ -131,12 +209,11 @@ try{
   const target=join(sandbox,test.path);
   const bytes=await readFile(target);
   const original=bytes.toString("utf8");
-  if(original.split(test.find).length!==2)
-   throw Error("Unsafe/nonunique mutant anchor for "+test.id);
+  const mutatedSource=mutateSource(original,test);
   const baseline=runNamed(test);
   assertBaseline(test,baseline);
   try{
-   await writeFile(target,original.replace(test.find,test.replace),"utf8");
+   await writeFile(target,mutatedSource,"utf8");
    const mutated=runNamed(test);
    assertKilled(test,mutated);
   }finally{
