@@ -81,7 +81,7 @@ const mutants=[
   path:"scripts/pdf-ingest.mjs",
   find:'!bytes.subarray(-2048).toString("ascii").includes("%%EOF")',
   replace:'false',
-  testFile:"tests/p60e-pdf-ingest.test.mjs",
+  testFile:"tests/editorial-lineage-and-pdf.test.mjs",
   testName:"P60-E CLI template is explicitly incomplete and does not reveal keys, audit uses byte-bound source, safe on corrupt PDFs"
  },
  {
