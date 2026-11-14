@@ -100,3 +100,51 @@ test("G publication: invalid mutations fail closed; revision increase is append-
   assert.equal(JSON.stringify(first),frozen,"append-only publication mutated previous frozen source");
  }
 });
+
+
+test("G publication: failed durable write cannot partially publish a new revision or damage its predecessor",async()=>{
+ const {createLocalFallbackWorkspaceStore}=await import("../src/history/workspace-store.ts");
+ class Disk {
+  bytes=null;failNext=false;
+  getItem(key){return key==="published"?this.bytes:null;}
+  setItem(key,value){
+   if(key!=="published")throw Error("Unexpected key");
+   if(this.failNext){this.failNext=false;throw Error("injected publication storage failure");}
+   this.bytes=String(value);
+  }
+  removeItem(key){if(key==="published")this.bytes=null;}
+  get length(){return this.bytes===null?0:1;}
+  key(index){return index===0&&this.bytes!==null?"published":null;}
+ }
+ for(let seed=1;seed<=40;seed++){
+  const disk=new Disk(),store=createLocalFallbackWorkspaceStore(disk,"published");
+  await store.loadRecoverable();
+  const draft=draftFor(2000+seed,2+seed%4);
+  const first=compileAuthoringPublication(draft);
+  const record=bundle=>({id:bundle.paper.id,recordType:"generic-package",saveRevision:1,bundle});
+  await store.write(record(first),null);
+  const originalBytes=disk.bytes;
+  const rekeyed=structuredClone(draft);
+  rekeyed.questions[0].answer="B";
+  // A duplicate edition/revision is not a permitted overwrite route even
+  // if its private key has been edited after the first release.
+  assert.equal(inspectAuthoringPublication(rekeyed,[first]).valid,false);
+  assert.throws(()=>compileAuthoringPublication(rekeyed,[first]));
+  assert.equal(disk.bytes,originalBytes,"rejected same-revision edit damaged source");
+
+  const second=compileAuthoringPublication({...draft,revision:2},[first]);
+  disk.failNext=true;
+  await assert.rejects(store.write(record(second),null),/injected publication storage failure/);
+  assert.equal(disk.bytes,originalBytes,"partial or failed commit changed prior package");
+  assert.equal(await store.readAuthoritative(second.paper.id),undefined);
+  assert.deepEqual(await store.readAuthoritative(first.paper.id),record(first));
+
+  await store.write(record(second),null);
+  const stored=(await store.loadVerified()).records;
+  assert.deepEqual(stored,[record(first),record(second)],
+    "retry must append one exact new revision and preserve signed predecessor");
+  assert.equal(stored[0].bundle.answerKey.contentHash,first.answerKey.contentHash);
+  assert.equal(stored[1].bundle.answerKey.contentHash,second.answerKey.contentHash);
+  store.close();
+ }
+});
