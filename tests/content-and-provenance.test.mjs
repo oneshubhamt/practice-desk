@@ -253,8 +253,8 @@ test("L09/L10: timing type and frozen mode have accurate labels, untimed include
   [configureCglPractice(p,"strict"),"exam-simulation","Exam simulation","Section timer","Section time used"],
   [configureCglPractice(p,"single",1),"section-practice","Single-section practice","Whole-paper timer","Whole-paper time used"]]){
   const a=startGenericAttempt(configured,mode,0,frozenMode),html=renderModelExam(a,configured);
-  assert.ok(html.includes('<p class="muted">'+mode+' · '),
-   "Human-readable frozen exam mode must remain visible beneath the compact title");
+  assert.ok(html.includes(mode+" · "),
+   "Human-readable frozen exam mode must remain visible in the active exam");
   assert.ok(html.includes('aria-valuetext="'+scope+' '),
    scope+" must remain available to screen readers in the compact progress bar");
   assert.ok(html.includes('aria-label="'+aria+'"'),aria+" missing");

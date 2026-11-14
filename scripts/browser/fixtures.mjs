@@ -30,7 +30,7 @@ let activeSuite=null;
 export function beginAcceptanceSuite(engine){
  check(!activeSuite,"nested acceptance suites are forbidden");
  check(["chromium","firefox","webkit"].includes(engine),"unsupported pooled engine");
- activeSuite={engine,browser:null,launches:0,contextStarts:0};
+ activeSuite={engine,browser:null,launches:0,contextStarts:0,browserVersion:null};
 }
 export async function endAcceptanceSuite(){
  const current=activeSuite;
@@ -40,7 +40,9 @@ export async function endAcceptanceSuite(){
  if(current.browser)await current.browser.close();
  check(leftovers===0,"isolation failure: "+leftovers+" context(s) survived completed journey");
  check(current.launches===1,"expected exactly one browser launch; observed "+current.launches);
- return {browserLaunches:current.launches,contextStarts:current.contextStarts};
+ return {browserLaunches:current.launches,contextStarts:current.contextStarts,
+  browserVersion:current.browserVersion,
+  executableKind:current.engine==="chromium"?"system-chrome":"playwright-managed"};
 }
 
 export async function openHarness({engine="chromium",artifactDir=null}={}){
@@ -57,7 +59,10 @@ export async function openHarness({engine="chromium",artifactDir=null}={}){
   ? activeSuite.browser??(activeSuite.browser=await selected.launch(options),
       activeSuite.launches++,activeSuite.browser)
   : await selected.launch(options);
- if(activeSuite)activeSuite.contextStarts++;
+ if(activeSuite){
+  activeSuite.contextStarts++;
+  activeSuite.browserVersion??=browser.version();
+ }
 
  const pages=[];
  async function open({viewport=viewports.laptop,colorScheme="light",reducedMotion="reduce",

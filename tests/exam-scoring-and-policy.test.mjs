@@ -1,16 +1,16 @@
 /** Canonical executable contracts, grouped by stable product responsibility. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import * as __suite_dep_2 from "node:fs/promises";
+import {readFile} from "node:fs/promises";
 import {pkg,questions,answers} from "./fixtures/six-kinds.mjs";
-import * as __suite_dep_4 from "../src/domain/integrity.ts";
-import * as __suite_dep_5 from "../src/app/exam-package.ts";
+import {paperRevisionHash,answerKeyRevisionHash} from "../src/domain/integrity.ts";
+import {validateExamPackage,configureCglPractice,cglAttemptMode,builtinCglPackages,startGenericAttempt} from "../src/app/exam-package.ts";
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
 import {renderModelExam} from "../src/app/exam-view.ts";
 import {transition,startSession} from "../src/engine/session.ts";
 import {setManualGrade,validateManualGrades,manualGradeSummary} from "../src/engine/manual-grading.ts";
-import * as __suite_dep_9 from "../src/engine/source-comparison.ts";
+import {createSourceKeyReference,sourceKeyScore,validateSourceKeyReference} from "../src/engine/source-comparison.ts";
 import {scoreAttempt} from "../src/engine/scoring.ts";
 import {createSessionClock} from "../src/engine/clock.ts";
 import {examPreflight,preflightHTML,examRulesHTML} from "../src/app/exam-preflight.ts";
@@ -21,16 +21,6 @@ import {restoreSession} from "../src/history/frozen.ts";
 
 /** Session Policy — canonical domain contracts. */
 async function registerSessionPolicyTests(){
-const readFile = __suite_dep_2["readFile"];
-const paperRevisionHash = __suite_dep_4["paperRevisionHash"];
-const validateExamPackage = __suite_dep_5["validateExamPackage"];
-const configureCglPractice = __suite_dep_5["configureCglPractice"];
-const cglAttemptMode = __suite_dep_5["cglAttemptMode"];
-const builtinCglPackages = __suite_dep_5["builtinCglPackages"];
-const startGenericAttempt = __suite_dep_5["startGenericAttempt"];
-const createSourceKeyReference = __suite_dep_9["createSourceKeyReference"];
-const sourceKeyScore = __suite_dep_9["sourceKeyScore"];
-const validateSourceKeyReference = __suite_dep_9["validateSourceKeyReference"];
 const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
 const builtins=builtinCglPackages(sources,patches);
@@ -182,12 +172,6 @@ await registerSessionPolicyTests();
 
 /** Preflight Disclosure — canonical domain contracts. */
 async function registerPreflightDisclosureTests(){
-const readFile = __suite_dep_2["readFile"];
-const builtinCglPackages = __suite_dep_5["builtinCglPackages"];
-const configureCglPractice = __suite_dep_5["configureCglPractice"];
-const validateExamPackage = __suite_dep_5["validateExamPackage"];
-const paperRevisionHash = __suite_dep_4["paperRevisionHash"];
-const answerKeyRevisionHash = __suite_dep_4["answerKeyRevisionHash"];
 const source=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
 const cgl=builtinCglPackages(source,patches);
@@ -339,10 +323,6 @@ await registerPreflightDisclosureTests();
 
 /** Section Scoring Policies — canonical domain contracts. */
 async function registerSectionScoringPoliciesTests(){
-const paperRevisionHash = __suite_dep_4["paperRevisionHash"];
-const answerKeyRevisionHash = __suite_dep_4["answerKeyRevisionHash"];
-const validateExamPackage = __suite_dep_5["validateExamPackage"];
-const startGenericAttempt = __suite_dep_5["startGenericAttempt"];
 const evt=(type,nowMs,rest={})=>({type,nowMs,...rest});
 const bundleWith=(changes)=>{
  const base={...pkg.paper,...changes,
@@ -793,14 +773,14 @@ await registerIndependentScoringModelTests();
 const testP41=test,testAssert=assert;
 
 testP41("source comparison refuses unchanged-letter identities when option meaning changes",async()=>{
- const papers=JSON.parse(await __suite_dep_2.readFile(new URL("../src/content/papers.json",import.meta.url)));
- const patches=JSON.parse(await __suite_dep_2.readFile(new URL("../src/content/patches.json",import.meta.url)));
- const all=__suite_dep_5.builtinCglPackages(papers,patches);
+ const papers=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
+ const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
+ const all=builtinCglPackages(papers,patches);
  let changes=0,correctTextChanges=0;
  for(const [paperId,modified] of Object.entries(patches)){
   const src=all.find(x=>x.paper.paperId===paperId&&x.paper.edition==="source");
   const reviewed=all.find(x=>x.paper.paperId===paperId&&x.paper.edition==="reviewed");
-  const ref=__suite_dep_9.createSourceKeyReference(reviewed,src);
+  const ref=createSourceKeyReference(reviewed,src);
   for(const [number,patch] of Object.entries(modified)){
    const q=papers[paperId].questions.find(x=>x.n===Number(number));
    if(!patch.opts||patch.opts.every((text,i)=>text===q.opts[i]))continue;
@@ -814,39 +794,39 @@ testP41("source comparison refuses unchanged-letter identities when option meani
  testAssert.equal(correctTextChanges,21);
 });
 
-const p41papers=JSON.parse(await __suite_dep_2.readFile(new URL("../src/content/papers.json",import.meta.url)));
-const p41patches=JSON.parse(await __suite_dep_2.readFile(new URL("../src/content/patches.json",import.meta.url)));
+const p41papers=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
+const p41patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
 
 testP41("publisher comparison preserves identical contexts but rejects reordered options and punctuation",()=>{
- const source=__suite_dep_5.builtinCglPackages(
+ const source=builtinCglPackages(
   p41papers,p41patches).find(x=>x.paper.edition==="source");
  const same=structuredClone(source);
  same.answerKey={...same.answerKey,id:same.answerKey.id+":reviewed-test"};
  same.paper={...same.paper,id:same.paper.id+":reviewed-test",edition:"reviewed",
   answerKeyRevisionId:same.answerKey.id,sourcePaperRevisionId:source.paper.id,
   sourceAnswerKeyRevisionId:source.answerKey.id};
- same.paper.contentHash=__suite_dep_4.paperRevisionHash(same.paper);
- const original=__suite_dep_9.createSourceKeyReference(same,source);
+ same.paper.contentHash=paperRevisionHash(same.paper);
+ const original=createSourceKeyReference(same,source);
  testAssert.ok(original.entries.every(x=>x.comparable));
  const changed=structuredClone(same);
  changed.questions[0].content.options.reverse();
- testAssert.equal(__suite_dep_9.createSourceKeyReference(changed,source).entries[0].comparable,false);
+ testAssert.equal(createSourceKeyReference(changed,source).entries[0].comparable,false);
  const punct=structuredClone(same);
  punct.questions[0].content.prompt+=".";
- testAssert.equal(__suite_dep_9.createSourceKeyReference(punct,source).entries[0].comparable,false);
+ testAssert.equal(createSourceKeyReference(punct,source).entries[0].comparable,false);
  const media=structuredClone(same);
  media.questions[0].content.assetIds=["unmatched-media"];
- testAssert.equal(__suite_dep_9.createSourceKeyReference(media,source).entries[0].comparable,false);
+ testAssert.equal(createSourceKeyReference(media,source).entries[0].comparable,false);
 });
 
 testP41("frozen source evidence rejects forged comparability and unsupported v1 snapshots",async()=>{
- const all=__suite_dep_5.builtinCglPackages(p41papers,p41patches);
+ const all=builtinCglPackages(p41papers,p41patches);
  const source=all.find(x=>x.paper.paperId==="cgl-2026-10-05"&&x.paper.edition==="source");
  const revised=all.find(x=>x.paper.paperId==="cgl-2026-10-05"&&x.paper.edition==="reviewed");
- const ref=__suite_dep_9.createSourceKeyReference(revised,source);
- const attempt={...__suite_dep_5.startGenericAttempt(revised,"p41-canonical-guard",1000),
+ const ref=createSourceKeyReference(revised,source);
+ const attempt={...startGenericAttempt(revised,"p41-canonical-guard",1000),
    finishedAt:1100,sourceKeyReference:ref};
- const subtotal=__suite_dep_9.sourceKeyScore(attempt);
+ const subtotal=sourceKeyScore(attempt);
  testAssert.ok(subtotal.unavailable>0);
  testAssert.equal(subtotal.comparable+subtotal.unavailable,100);
  const hash=(await import("../src/domain/hash.ts")).hashJson;
@@ -854,14 +834,14 @@ testP41("frozen source evidence rejects forged comparability and unsupported v1 
  forged.sourceKeyReference.entries.find(x=>!x.comparable).comparable=true;
  const {contentHash:ignored,...core}=forged.sourceKeyReference;
  forged.sourceKeyReference.contentHash=hash(core);
- testAssert.throws(()=>__suite_dep_9.validateSourceKeyReference(forged),/semantic correspondence/);
+ testAssert.throws(()=>validateSourceKeyReference(forged),/semantic correspondence/);
  const noncanonicalEntries=ref.entries.map(({questionRevisionId,originalOptionId,markingRule})=>
    ({questionRevisionId,originalOptionId,markingRule}));
  const noncanonicalCore={schema:1,paperId:ref.paperId,
    sourcePaperRevisionId:ref.sourcePaperRevisionId,
    sourceAnswerKeyRevisionId:ref.sourceAnswerKeyRevisionId,entries:noncanonicalEntries};
  const noncanonical={...attempt,sourceKeyReference:{...noncanonicalCore,contentHash:hash(noncanonicalCore)}};
- testAssert.throws(()=>__suite_dep_9.validateSourceKeyReference(noncanonical),
+ testAssert.throws(()=>validateSourceKeyReference(noncanonical),
    /Invalid original source-key comparison/,
    "Clean-break app must reject noncanonical positional answer-key snapshots");
 });

@@ -87,10 +87,12 @@ try{
   for(const stage of ["Train validation candidate","Compare later holdout","Retrain final profile on all evidence","Time-series cross-validation"])
    if(!stages.has(stage))throw Error("Full browser optimizer did not exercise stage: "+stage);
  }
- console.log(browserName+" browser/WASM optimizer "+mode+" passed:",JSON.stringify(
-  mode==="full"?{
+ console.log(browserName+" browser/WASM optimizer "+mode+" passed:",JSON.stringify({
+  browserVersion:browser.version(),
+  executableKind:browserName==="chromium"?"system-chrome":"playwright-managed",
+  result:mode==="full"?{
    evidence:result.profile.evidence,holdout:result.profile.evaluation.holdout,
    crossValidation:result.profile.evaluation.crossValidation,progressUpdates:result.updates.length
   }:result
- ));
+ }));
 }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}

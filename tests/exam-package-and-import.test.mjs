@@ -2,24 +2,19 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
-import * as __suite_dep_3 from "../src/app/exam-package.ts";
+import {builtinCglPackages,validateExamPackage,startGenericAttempt,configureCglPractice,readableAnswer,validateExamImportBudget} from "../src/app/exam-package.ts";
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {validateAnswerKeyRevision,validatePaperRevision,validateQuestionRevision} from "../src/domain/validate.ts";
 import {paperRevisionHash} from "../src/domain/integrity.ts";
-import * as __suite_dep_6 from "./fixtures/six-kinds.mjs";
+import {pkg,questions,answers} from "./fixtures/six-kinds.mjs";
 import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
-import * as __suite_dep_8 from "../src/history/backup.ts";
-import * as __suite_dep_9 from "../src/authoring/external-bank.ts";
+import {makeBackup,verifyBackup,planBackupMerge} from "../src/history/backup.ts";
+import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
 import {validateResponse} from "../src/engine/response.ts";
-import * as __suite_dep_11 from "../src/engine/scoring.ts";
 import {scoreableMaximum} from "../src/engine/score-ceiling.ts";
 
 /** Cgl Import Modes — canonical domain contracts. */
 async function registerCglImportModesTests(){
-const builtinCglPackages = __suite_dep_3["builtinCglPackages"];
-const validateExamPackage = __suite_dep_3["validateExamPackage"];
-const startGenericAttempt = __suite_dep_3["startGenericAttempt"];
-const configureCglPractice = __suite_dep_3["configureCglPractice"];
 const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
 const packages=builtinCglPackages(sources,patches);
@@ -59,7 +54,7 @@ test("generic attempt uses validated responses and frozen revisions",()=>{
 });
 
 
-// Alternate built-in CGL edition/mode fixtures; retained from cgl-practice.test.mjs.
+// Additional built-in CGL edition/mode policy coverage.
 {
 const papers=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
 const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
@@ -191,15 +186,6 @@ await registerSchemaValidationTests();
 
 /** Six Kind Lifecycle — canonical domain contracts. */
 async function registerSixKindLifecycleTests(){
-const questions = __suite_dep_6["questions"];
-const answers = __suite_dep_6["answers"];
-const pkg = __suite_dep_6["pkg"];
-const validateExamPackage = __suite_dep_3["validateExamPackage"];
-const startGenericAttempt = __suite_dep_3["startGenericAttempt"];
-const readableAnswer = __suite_dep_3["readableAnswer"];
-const makeBackup = __suite_dep_8["makeBackup"];
-const verifyBackup = __suite_dep_8["verifyBackup"];
-const planBackupMerge = __suite_dep_8["planBackupMerge"];
 const responses=[
  {kind:"single-choice",optionId:"a"},
  {kind:"multiple-select",optionIds:["x","z"]},
@@ -282,9 +268,6 @@ await registerSixKindLifecycleTests();
 
 /** Canonical Import Properties — canonical domain contracts. */
 async function registerCanonicalImportPropertiesTests(){
-const compileExternalQuestionBank = __suite_dep_9["compileExternalQuestionBank"];
-const validateExamPackage = __suite_dep_3["validateExamPackage"];
-const questions = __suite_dep_6["questions"];
 const starter=JSON.parse(await readFile(new URL("../examples/apfc-authoring-example.json",import.meta.url),"utf8"));
 function rng(seed){let x=seed>>>0;return n=>{x^=x<<13;x^=x>>>17;x^=x<<5;return (x>>>0)%n;};}
 const edit=mutate=>{const b=structuredClone(starter);mutate(b);return b;};
@@ -388,13 +371,8 @@ test("engine response validator gates six kinds independently from UI controls",
 }
 
 
-// P42: adversarial imported-data envelopes; keep these beside the existing
-// import/package capability tests rather than adding a chronological suite.
+// Adversarial imported-data envelopes remain beside the package/import boundary they protect.
 {
-const {pkg}=__suite_dep_6;
-const {validateExamPackage,validateExamImportBudget}=__suite_dep_3;
-const {compileExternalQuestionBank}=__suite_dep_9;
-const {makeBackup,verifyBackup}=__suite_dep_8;
 const clone=()=>structuredClone(pkg);
 
 test("P42 rejects oversized authored text and IDs before any revision hashes are trusted",()=>{
