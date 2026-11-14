@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import * as ts from "typescript";
+import ts from "typescript";
 import {existsSync} from "node:fs";
 import {readdir,readFile} from "node:fs/promises";
 import {dirname,join,relative,resolve,sep} from "node:path";
