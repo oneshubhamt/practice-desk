@@ -1,7 +1,7 @@
 /** P61-G: isolated mutation-sensitivity witnesses for crucial domain contracts.
  * Never edits the working tree. Only a temporary copy holds mutated sources.
  * Each targeted test must PASS unchanged, then FAIL as a named assertion.
- * Ten chosen mutants do not establish a global mutation score.
+ * Fourteen chosen mutants do not establish a global mutation score.
  */
 import {cp,mkdtemp,readFile,rm,symlink,writeFile} from "node:fs/promises";
 import {spawnSync} from "node:child_process";
@@ -72,6 +72,30 @@ const mutants=[
   path:"src/learning/learning.ts",
   testFile:"tests/learning-and-analytics.test.mjs",
   testName:"stable ts-fsrs 6.0.0 runs explicit FSRS-7 with evidence-rich replay, previews and retrievability"
+ },
+ {
+  id:"scoring-rule-precedence-inverted",
+  path:"src/engine/scoring.ts",
+  testFile:"tests/scoring-metamorphic.test.mjs",
+  testName:"G scoring: seeded independent six-kind fractional ledger survives policy precedence and split/reordered sections"
+ },
+ {
+  id:"session-hidden-time-counted-as-foreground",
+  path:"src/engine/session.ts",
+  testFile:"tests/session-event-properties.test.mjs",
+  testName:"G session: independently calculated hidden/paused time is not misattributed across automatic sectional expiry"
+ },
+ {
+  id:"fallback-stale-tab-overwrites-newer-bytes",
+  path:"src/history/workspace-store.ts",
+  testFile:"tests/persistence-state-properties.test.mjs",
+  testName:"G persistence: seeded CAS, insertion, deletion, disk failure and competing tabs obey a standalone transactional map"
+ },
+ {
+  id:"publisher-private-answer-exposed-in-stem",
+  path:"src/authoring/authoring-publisher.ts",
+  testFile:"tests/publication-contract-properties.test.mjs",
+  testName:"G publication: seeded private-key changes leave signed candidate content unchanged while altering only key evidence"
  }
 ];
 const sandbox=await mkdtemp(join(tmpdir(),"practice-desk-mutant-"));
@@ -132,6 +156,22 @@ const mutations={
  "fsrs-ratings-silently-rewritten":{
   pattern:/\breviews\s*:\s*\[\s*\.\.\.\s*item\s*\.\s*reviews\s*,\s*\{\s*rating(?=\s*[},])/g,
   edit:s=>s.replace(/\brating$/,"rating:1")
+ },
+ "scoring-rule-precedence-inverted":{
+  pattern:/\bentry\s*\.\s*scoringOverride\s*\?\?\s*section\s*\.\s*scoringOverride/g,
+  edit:()=>"section.scoringOverride ?? entry.scoringOverride"
+ },
+ "session-hidden-time-counted-as-foreground":{
+  pattern:/\bforegroundMs\s*:\s*next\s*\.\s*foregroundMs\s*\+\s*\(\s*next\s*\.\s*visible\s*\?\s*spent\s*:\s*0\s*\)/g,
+  edit:()=>"foregroundMs:next.foregroundMs+spent"
+ },
+ "fallback-stale-tab-overwrites-newer-bytes":{
+  pattern:/async\s+write\s*\(\s*record\s*:\s*WorkspaceStoredRecord\s*,\s*expectedRevision\s*:\s*number\s*\|\s*null\s*\)\s*:\s*Promise<void>\s*\{\s*this\s*\.\s*assertCurrent\s*\(\s*\)\s*;/g,
+  edit:s=>s.replace(/this\s*\.\s*assertCurrent\s*\(\s*\)\s*;/,"")
+ },
+ "publisher-private-answer-exposed-in-stem":{
+  pattern:/\bprompt\s*:\s*publicationPlainText\s*\(\s*prompt\s*\)\s*\.\s*slice\s*\(\s*0\s*,\s*20000\s*\)/g,
+  edit:s=>s+'+" Correct answer "+q.answer'
  }
 };
 function mutateSource(source,spec){
