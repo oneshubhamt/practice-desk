@@ -9,7 +9,7 @@ export async function calendarIntegration(){
 const {createServer}=await import("node:http");
 const {readFile}=await import("node:fs/promises");
 const {extname,join}=await import("node:path");
-const {openHarness,route,check,records,assertNoOverflow,root}=await import("../../browser/fixtures.mjs");
+const {openHarness,route,check,records,assertNoOverflow,root,offlineUrl}=await import("../../browser/fixtures.mjs");
 const {chooseModernPaper}=await import("../../paper-select.mjs");
 const {pkg}=await import("../../../tests/fixtures/six-kinds.mjs");
 const engine=process.argv[2]??"chromium";
@@ -182,6 +182,40 @@ try{
   await page.locator("#pd-calendar-mount [data-occurrence-id]").filter({hasText:pkg.title}).first()
     .waitFor({state:"visible"});
   check(errors.length===0,engine+" Calendar standalone runtime errors "+errors.join("; "));
+
+  // Independent timezone-boundary witness: datetime-local is interpreted in
+  // the browser's configured local timezone exactly once, then persisted as a canonical UTC instant.
+  const tzContext=await h.browser.newContext({
+    viewport:{width:900,height:700},timezoneId:"Asia/Kolkata",acceptDownloads:true
+  });
+  try{
+    const tzPage=await tzContext.newPage();
+    tzPage.setDefaultTimeout(18000);
+    await tzPage.goto(offlineUrl,{waitUntil:"load"});
+    await tzPage.locator("#g-papers").waitFor({state:"visible"});
+    await tzPage.locator("#g-file").setInputFiles({
+      name:"timezone-six-kinds.json",mimeType:"application/json",
+      buffer:Buffer.from(JSON.stringify(pkg))
+    });
+    await chooseModernPaper(tzPage,pkg.paper.id);
+    await tzPage.getByRole("button",{name:"Calendar",exact:true}).click();await route(tzPage,"calendar");
+    await tzPage.locator("#calendar-package").selectOption(pkg.paper.id);
+    await tzPage.locator("#calendar-start").fill("2027-01-01T00:15");
+    await tzPage.locator("#calendar-duration").fill("90");
+    await tzPage.locator("#calendar-schedule").click();
+    let boundary=null;
+    for(let i=0;i<80&&!boundary;i++){
+      boundary=(await records(tzPage)).find(x=>x.recordType==="calendar-scheduled-mock"&&x.durationMinutes===90);
+      if(!boundary)await tzPage.waitForTimeout(50);
+    }
+    check(boundary?.start==="2026-12-31T18:45:00.000Z",
+      engine+" Calendar local→UTC conversion drifted across the year boundary: "+JSON.stringify(boundary));
+    const boundaryId=boundary.id;
+    await tzPage.reload({waitUntil:"load"});await route(tzPage,"calendar");
+    const restoredBoundary=(await records(tzPage)).find(x=>x.id===boundaryId);
+    check(restoredBoundary?.start===boundary.start&&restoredBoundary.durationMinutes===90,
+      engine+" Calendar reload changed the exact timezone-boundary instant");
+  }finally{await tzContext.close();}
 
   // Static target: serve the actual separately built artifact rather than reusing file:// HTML.
   const staticRoot=join(root,"Practice_Desk_Static");

@@ -186,6 +186,27 @@ try{
  check((await records(page)).length===initial,
   engine+" P60-C unsafe answer-leak source changed persisted exams");
  await clearStage();
+ const secrecyCat=await fixture("cat");
+ const png="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/tAAAAABJRU5ErkJggg==";
+ const secrecyCases=[
+  ["shared-stimulus",source=>{source.stimuli[0].text+=" Correct answer: A";}],
+  ["media-alt",source=>{
+    source.media=[{id:"secret-image",dataUri:"data:image/png;base64,"+png,altText:"Correct answer: A"}];
+    source.stimuli.push({id:"secret-picture",kind:"image",mediaRef:"secret-image",
+      altText:"Question illustration"});
+    source.questions[0].stimulusRef="secret-picture";
+  }]
+ ];
+ for(const [label,mutate] of secrecyCases){
+  const unsafe=structuredClone(secrecyCat);mutate(unsafe);
+  await stage(unsafe,"p60c-"+label);
+  check((await page.locator(".pd-author-section-manager").allTextContents()).some(x=>
+    /candidate-answer-leak|Candidate-visible content contains an explicit answer/i.test(x)),
+    engine+" P60-C "+label+" answer leak bypassed browser staging");
+  check((await records(page)).length===initial,
+    engine+" P60-C "+label+" unsafe source changed persisted exams");
+  await clearStage();
+ }
  const duplicates=structuredClone(apfc);duplicates.questions[0].options[2]=" B ";
  await stage(duplicates,"p57b-equivalent-options");
  check((await page.locator(".pd-author-section-manager").allTextContents()).some(x=>

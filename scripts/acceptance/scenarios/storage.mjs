@@ -25,6 +25,28 @@ try{
  await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
  await page.locator("input[data-choice]").first().click();
  const attemptId=new URL(await page.url()).searchParams.get("attempt");
+ const runningUrl=await page.url();
+ const beforeLifecycle=await until(async()=>{
+  const x=(await records(page)).find(x=>x.id===attemptId);
+  return x?.state.visible===true&&x.state.responses.some(r=>r.response)?x:null;
+ },"durable visible attempt before pagehide");
+ await page.goto("about:blank",{waitUntil:"load"});
+ await page.waitForTimeout(700);
+ await page.goto(runningUrl,{waitUntil:"load"});await route(page,"exam");
+ const recoveredLifecycle=await until(async()=>{
+  const x=(await records(page)).find(x=>x.id===attemptId);
+  return x?.state.visible===true&&x.saveRevision>beforeLifecycle.saveRevision?x:null;
+ },"pagehide/reopen durable recovery");
+ const elapsedGap=recoveredLifecycle.state.elapsedMs-beforeLifecycle.state.elapsedMs;
+ const foregroundGap=recoveredLifecycle.state.foregroundMs-beforeLifecycle.state.foregroundMs;
+ check(elapsedGap>=500,
+   "Real pagehide/reopen did not account for off-document wall time: "+JSON.stringify({elapsedGap,foregroundGap}));
+ check(elapsedGap-foregroundGap>=400,
+   "Off-document recovery time was incorrectly charged to foreground question exposure: "+
+   JSON.stringify({elapsedGap,foregroundGap}));
+ check(recoveredLifecycle.state.responses.some(r=>r.response),
+   "Real pagehide/reopen lost the saved candidate answer");
+ console.log("MODERN RESILIENCE PASS real pagehide/reopen excludes absence from foreground exposure");
  await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
  const departed=await until(async()=>{
   const x=(await records(page)).find(x=>x.id===attemptId);

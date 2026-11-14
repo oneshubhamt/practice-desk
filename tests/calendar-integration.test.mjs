@@ -29,6 +29,19 @@ test("scheduled mocks are strict canonical Practice Desk records",()=>{
   assert.throws(()=>validateScheduledMock({...record,extra:true}),/Invalid scheduled mock/);
 });
 
+test("J calendar: canonical temporal boundaries reject silent date/offset normalization",()=>{
+  const base=createScheduledMock({
+    packageRevisionId:"paper-revision-1",examId:"exam-1",paperId:"paper-1",
+    title:"Boundary mock",start:"2028-02-29T23:30:00.000Z",durationMinutes:1440
+  },"2028-02-29T00:00:00.000Z","boundary");
+  assert.equal(base.start,"2028-02-29T23:30:00.000Z");
+  assert.equal(base.durationMinutes,1440);
+  assert.throws(()=>validateScheduledMock({...base,start:"2028-02-29T23:30:00+05:30"}),/Invalid scheduled mock/);
+  assert.throws(()=>validateScheduledMock({...base,start:"2027-02-29T23:30:00.000Z"}),/Invalid scheduled mock/);
+  assert.throws(()=>validateScheduledMock({...base,durationMinutes:1441}),/Invalid scheduled mock/);
+  assert.throws(()=>validateScheduledMock({...base,updatedAt:"2028-02-28T23:59:59.999Z"}),/Invalid scheduled mock/);
+});
+
 test("backup v5 carries scheduled mocks and exact revision-scheduler settings in the canonical archive",()=>{
   const scheduled={...createScheduledMock({
     packageRevisionId:"paper-revision-1",examId:"exam-1",paperId:"paper-1",
