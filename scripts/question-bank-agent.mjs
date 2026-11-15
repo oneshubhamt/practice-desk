@@ -194,6 +194,11 @@ function patchSource(source,shape,sha256){
   if(before.provenance?.kind==="official-pyq"&&sourceWordingChanged&&
      !Object.hasOwn(set,"provenance"))
    fail("Edited official-PYQ wording/key requires an explicit source-origin/provenance update, not silent retention of the PYQ claim");
+  if(Object.hasOwn(set,"qa")){
+   const qaUpdate=exact(set.qa,["status","applicability"],"QA update for "+id);
+   if(qaUpdate.status!=="needs-review")
+    fail("Agent QA edits must remain needs-review; independent review is required to clear that state");
+  }
   if(material&&set.qa?.status==="unchecked")
    fail("A material question correction cannot opt out of needs-review; omit qa or set needs-review");
   const target=next.questions.find(q=>q.id===id);
