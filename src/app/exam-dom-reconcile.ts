@@ -83,7 +83,11 @@ function reconcile(a:Node,b:Node):void{
    }else if(a instanceof HTMLSelectElement&&b instanceof HTMLSelectElement&&
      document.activeElement!==a)a.value=b.value;
    else if(a instanceof HTMLTextAreaElement&&b instanceof HTMLTextAreaElement&&
-     document.activeElement!==a)a.value=b.value;
+     document.activeElement!==a)
+     // Textarea model state is serialized as escaped child text, not a value
+     // attribute. Read that canonical rendered text directly from the inert
+     // template instead of depending on its live form-control value state.
+     a.value=b.textContent??"";
    return;
  }
  if(a.nodeType===Node.TEXT_NODE&&a.nodeValue!==b.nodeValue)
