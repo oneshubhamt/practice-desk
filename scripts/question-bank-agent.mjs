@@ -199,7 +199,8 @@ function patchSource(source,shape,sha256){
   const target=next.questions.find(q=>q.id===id);
   Object.assign(target,set);
   unset.forEach(key=>{delete target[key];});
-  if(material)target.qa={status:"needs-review"};
+  if(material)target.qa={...(target.qa?.applicability?{applicability:target.qa.applicability}:{}),
+   status:"needs-review"};
   updated.push(id);
  }
  for(const item of additions){

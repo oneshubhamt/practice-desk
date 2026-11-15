@@ -133,12 +133,19 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   });
   // Review acceptance belongs to the exact content checked. Any later edit
   // invalidates its previously attributed warning/reviewer evidence.
+  const withoutReview=(q:AuthoringQuestion):AuthoringQuestion=>{
+   if(!q.qa)return q;
+   const {review:_,...qa}=q.qa;
+   return {...q,qa};
+  };
   const reviewed=new Map(draft.questions.filter(q=>q.qa?.review).map(q=>
-   [q.id,JSON.stringify({...q,qa:undefined})]));
+   [q.id,JSON.stringify(withoutReview(q))]));
   const current=reviewed.size?validateAuthoringDraft({...changed,questions:changed.questions.map(q=>{
    const prior=reviewed.get(q.id);
-   return prior&&prior!==JSON.stringify({...q,qa:undefined})?
-    {...q,qa:{status:q.qa?.status??"needs-review"}}:q;
+   if(!prior||prior===JSON.stringify(withoutReview(q)))return q;
+   if(!q.qa)return {...q,qa:{status:"needs-review"}};
+   const {review:_,...qa}=q.qa;
+   return {...q,qa:{...qa,status:q.qa.status}};
   })}):changed;
   shelf={...shelf,drafts:shelf.drafts.map(d=>d.id===draft.id?current:d)};
   persist();
@@ -757,10 +764,15 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    editCurrentEvidence(q=>({...q,qa:{...q.qa,status:q.qa?.status??"unchecked",
     applicability:{...applicability(),...patch}}}));
   find<HTMLInputElement>("pd-author-qa-asof").onchange=e=>{
-   const value=(e.target as HTMLInputElement).value.trim();
-   if(value)updateApplicability({asOfDate:value});
-   else editCurrentEvidence(q=>{
-    const current=applicability(),{asOfDate:_,...withoutDate}=current;
+   const input=e.target as HTMLInputElement,value=input.value.trim(),current=applicability();
+   if(value){updateApplicability({asOfDate:value});return;}
+   if(current.legal||current.timeSensitive){
+    input.value=current.asOfDate??"";
+    status("Turn off legal/time-sensitive applicability before clearing its required as-of date.",true);
+    return;
+   }
+   editCurrentEvidence(q=>{
+    const {asOfDate:_,...withoutDate}=applicability();
     return {...q,qa:{...q.qa,status:q.qa?.status??"unchecked",applicability:withoutDate}};
    });
   };
