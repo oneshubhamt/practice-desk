@@ -63,6 +63,10 @@ try{
   const attemptId=new URL(await page.url()).searchParams.get("attempt");
   check(Boolean(attemptId),"exam URL not pinned to saved attempt");
   check(await page.locator("#result-review").count()===0,"pre-submit review/solutions leaked");
+  await page.locator('[data-q="4"]').click();
+  check(await page.locator('.exam-question [data-image-open]').count()>0,
+    "canonical CGL package lost question/option media in the candidate browser");
+  await page.locator('[data-q="0"]').click();
   await page.locator(".exam-question input[data-choice]").first().click();
   await page.locator("#g-flag").click();
   await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
@@ -86,6 +90,8 @@ try{
     "reviewed CGL lost independently pinned source key");
   await page.locator("#result-tab-review").click();await page.locator("#result-review").waitFor({state:"visible"});
   check(await page.locator(".generic-review").count()===25,"lazy review wrong question count");
+  check((await page.locator("#result-review").innerText()).includes("Compare with frozen source edition"),
+    "Reviewed CGL browser review lost its exact frozen Source comparison lineage");
   await page.locator("#result-tab-timing").click();await page.locator("#result-timing").waitFor({state:"visible"});
   check(await page.locator("#result-timing tbody tr").count()===25,"item time ledger missing");
   await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
