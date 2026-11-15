@@ -33,9 +33,9 @@ import {readDisplayPreferences,writeDisplayPreferences} from "../src/app/prefere
 
 /** Cgl Edition Parity — canonical domain contracts. */
 async function registerCglEditionParityTests(){
-const papers=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
-const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
-const solutions=JSON.parse(await readFile(new URL("../src/content/solutions.json",import.meta.url)));
+const papers=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/original/papers.json",import.meta.url)));
+const patches=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/revised/patches.json",import.meta.url)));
+const solutions=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/revised/solutions.json",import.meta.url)));
 const editions=builtinCglPackages(papers,patches,solutions);
 
 test("all five CGL paper families preserve independently pinned original and reviewed keys, editorial changes and content",()=>{
@@ -163,8 +163,8 @@ await registerCglEditionParityTests();
 
 /** Original Bank Scoring — canonical domain contracts. */
 async function registerOriginalBankScoringTests(){
-const papers = JSON.parse(await readFile(new URL("../src/content/papers.json", import.meta.url)));
-const patches = JSON.parse(await readFile(new URL("../src/content/patches.json", import.meta.url)));
+const papers = JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/original/papers.json", import.meta.url)));
+const patches = JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/revised/patches.json", import.meta.url)));
 const library = importCglBank(papers, patches);
 
 
@@ -190,8 +190,8 @@ await registerOriginalBankScoringTests();
 
 /** Editorial Timing — canonical domain contracts. */
 async function registerEditorialTimingTests(){
-const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url),"utf8"));
-const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url),"utf8"));
+const sources=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/original/papers.json",import.meta.url),"utf8"));
+const patches=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/revised/patches.json",import.meta.url),"utf8"));
 const packages=builtinCglPackages(sources,patches);
 const find=(paperId,edition)=>packages.find(p=>p.paper.paperId===paperId&&p.paper.edition===edition);
 const question=(p,n)=>p.questions[n-1];
@@ -386,9 +386,9 @@ await registerFrozenContentIntegrityTests();
 
 /** Source Review Media — canonical domain contracts. */
 async function registerSourceReviewMediaTests(){
-const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
-const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
-const solutions=JSON.parse(await readFile(new URL("../src/content/solutions.json",import.meta.url)));
+const sources=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/original/papers.json",import.meta.url)));
+const patches=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/revised/patches.json",import.meta.url)));
+const solutions=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/revised/solutions.json",import.meta.url)));
 const cgl=builtinCglPackages(sources,patches,solutions);
 const byPaper=(id,edition)=>cgl.find(p=>p.paper.paperId===id&&p.paper.edition===edition);
 const editedPaper=Object.keys(patches).find(id=>Object.keys(patches[id]).length>0);

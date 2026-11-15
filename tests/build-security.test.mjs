@@ -65,9 +65,10 @@ test("P48-1 canonical authoring envelopes cannot launder undeclared metadata",()
 });
 
 test("P48-1 frozen CGL source review references reject unsigned extra metadata without losing valid Q32 provenance",async()=>{
- const base=new URL("../src/content/",import.meta.url);
- const papers=JSON.parse(await readFile(new URL("papers.json",base),"utf8"));
- const patches=JSON.parse(await readFile(new URL("patches.json",base),"utf8"));
+ const papers=JSON.parse(await readFile(new URL(
+   "../question-banks/ssc-cgl/pyqs/original/papers.json",import.meta.url),"utf8"));
+ const patches=JSON.parse(await readFile(new URL(
+   "../question-banks/ssc-cgl/pyqs/revised/patches.json",import.meta.url),"utf8"));
  const builtins=builtinCglPackages(papers,patches);
  const source=builtins.find(p=>p.paper.paperId==="cgl-2026-10-05"&&p.paper.edition==="source");
  const reviewed=builtins.find(p=>p.paper.paperId==="cgl-2026-10-05"&&p.paper.edition==="reviewed");

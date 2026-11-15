@@ -6,8 +6,8 @@ import {
 } from "../src/app/exam-package.ts";
 import {composePracticeSet} from "../src/app/practice-compose.ts";
 
-const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
-const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
+const sources=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/original/papers.json",import.meta.url)));
+const patches=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/revised/patches.json",import.meta.url)));
 const reviewed=builtinCglPackages(sources,patches).find(p=>p.paper.edition==="reviewed");
 assert.ok(reviewed);
 
