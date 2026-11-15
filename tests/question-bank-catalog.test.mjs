@@ -92,6 +92,8 @@ test("PFRDA Original and Revised packages retain distinct immutable identities",
  assert.equal(new Set(packages.map(x=>x.paper.id)).size,2);
  assert.equal(new Set(packages.map(x=>x.answerKey.id)).size,2);
  assert.deepEqual(packages.map(x=>x.paper.revision),[1,4]);
+ assert.deepEqual(packages.map(x=>x.paper.edition),["custom","custom"],
+  "workflow labels Original/Revised must not be misrepresented as Source/Reviewed provenance");
  for(const pkg of packages){
   assert.equal(pkg.questions.length,51);
   assert.deepEqual(pkg.paper.scoring.defaultRule,{correctMarks:2,incorrectMarks:-0.5,unansweredMarks:0});

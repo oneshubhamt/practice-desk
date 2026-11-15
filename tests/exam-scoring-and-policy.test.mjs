@@ -771,6 +771,34 @@ await registerIndependentScoringModelTests();
 
 const testP41=test,testAssert=assert;
 
+testP41("source-key comparison fails closed for unsupported non-single-choice kinds",()=>{
+ const sourceKey={...pkg.answerKey,id:"six-source-key",
+  contentHash:answerKeyRevisionHash({entries:pkg.answerKey.entries})};
+ const sourceBase={...pkg.paper,id:"six-source-paper",edition:"source",
+  answerKeyRevisionId:sourceKey.id};
+ const source=validateExamPackage({...pkg,answerKey:sourceKey,
+  paper:{...sourceBase,contentHash:paperRevisionHash(sourceBase)}});
+ const reviewedKey={...source.answerKey,id:"six-reviewed-key",
+  contentHash:answerKeyRevisionHash({entries:source.answerKey.entries})};
+ const reviewedBase={...source.paper,id:"six-reviewed-paper",edition:"reviewed",
+  answerKeyRevisionId:reviewedKey.id,sourcePaperRevisionId:source.paper.id,
+  sourceAnswerKeyRevisionId:source.answerKey.id};
+ const reviewed=validateExamPackage({...source,answerKey:reviewedKey,
+  paper:{...reviewedBase,contentHash:paperRevisionHash(reviewedBase)}});
+ const ref=createSourceKeyReference(reviewed,source);
+ testAssert.ok(ref);
+ const byQuestion=new Map(reviewed.questions.map(q=>[q.id,q]));
+ for(const entry of ref.entries){
+  const kind=byQuestion.get(entry.questionRevisionId)?.content.kind;
+  if(kind==="single-choice")testAssert.equal(entry.kind,"single-choice");
+  else{
+   testAssert.equal(entry.kind,"unavailable");
+   testAssert.equal(entry.reason,"unsupported-kind");
+   testAssert.equal(entry.comparable,false);
+  }
+ }
+});
+
 testP41("source comparison refuses unchanged-letter identities when option meaning changes",async()=>{
  const papers=(await loadCglFixture()).sources;
  const patches=(await loadCglFixture()).patches;
