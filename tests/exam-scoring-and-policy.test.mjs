@@ -223,10 +223,10 @@ test("F02/F15: source edition reports excluded publisher items; reviewed is scor
  assert.equal(y.changedQuestions,Object.keys(patches[reviewed.paper.paperId]??{}).length,
   "canonical reviewed-change metadata must preserve archived patch coverage");
  assert.ok(y.changedQuestions>0);
- assert.match(x.provenance,/Source edition supplied by this package/);
+ assert.match(x.provenance,/Source edition frozen as supplied by this package/);
  assert.match(x.provenance,/does not independently authenticate/);
- assert.match(y.provenance,/Reviewed edition supplied by this package/);
- assert.match(y.provenance,/pinned to its declared source revision/);
+ assert.match(y.provenance,/Reviewed edition frozen as supplied/);
+ assert.match(y.provenance,/pinned to its declared Source paper and key revisions/);
  assert.doesNotMatch(preflightHTML(y),/correct option is|answer is A|Q62.+B/i);
  assert.match(preflightHTML(x),/excluded/);
  assert.match(preflightHTML(y),/reviewed changes/);
