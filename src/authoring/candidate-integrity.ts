@@ -88,14 +88,15 @@ export function inspectCandidateIntegrity(draft:AuthoringDraft):readonly Candida
   if(q.kind==="single-choice"&&/^[A-Z]$/i.test(q.answer.trim())){
    const index=q.answer.trim().toUpperCase().charCodeAt(0)-65;
    const keyedDoc=q.options[index];
-   if(!keyedDoc)continue;
-   const keyed=visible(keyedDoc);
-   const stem=visible(q.prompt);
-   if(keyed.trim().length>=12&&stem.toLocaleLowerCase("en")
-      .includes(keyed.trim().toLocaleLowerCase("en"))){
-    issues.push({questionId:q.id,field:"prompt",code:"candidate-unintended-clue",
-     severity:"warning",message:"Question stem repeats the entire keyed response text, which may unintentionally reveal the answer.",
-     suggestion:"Ask a blind reviewer whether the keyed phrase belongs in the stimulus; revise if it bypasses the intended reasoning."});
+   if(keyedDoc){
+    const keyed=visible(keyedDoc);
+    const stem=visible(q.prompt);
+    if(keyed.trim().length>=12&&stem.toLocaleLowerCase("en")
+       .includes(keyed.trim().toLocaleLowerCase("en"))){
+     issues.push({questionId:q.id,field:"prompt",code:"candidate-unintended-clue",
+      severity:"warning",message:"Question stem repeats the entire keyed response text, which may unintentionally reveal the answer.",
+      suggestion:"Ask a blind reviewer whether the keyed phrase belongs in the stimulus; revise if it bypasses the intended reasoning."});
+    }
    }
   }
   for(const {field,text} of candidateFields(draft,q)){
