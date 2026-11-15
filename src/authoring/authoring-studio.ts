@@ -758,7 +758,11 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
     applicability:{...applicability(),...patch}}}));
   find<HTMLInputElement>("pd-author-qa-asof").onchange=e=>{
    const value=(e.target as HTMLInputElement).value.trim();
-   updateApplicability(value?{asOfDate:value}:{asOfDate:undefined});
+   if(value)updateApplicability({asOfDate:value});
+   else editCurrentEvidence(q=>{
+    const current=applicability(),{asOfDate:_,...withoutDate}=current;
+    return {...q,qa:{...q.qa,status:q.qa?.status??"unchecked",applicability:withoutDate}};
+   });
   };
   find<HTMLInputElement>("pd-author-qa-mathematical").onchange=e=>{
    updateApplicability({mathematical:(e.target as HTMLInputElement).checked});
