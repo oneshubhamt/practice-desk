@@ -5,9 +5,9 @@
   "title": "PFRDA Grade A 2026 — Day 1 — Revised Practice",
   "questions": [
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:3a0b175ed1702238db747052",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:3a0b175ed1702238db747052",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:3a0b175ed1702238db747052",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "Write a précis in approximately 110 words (target 100–120 words) and supply a suitable title. This is the original 20-minute Day 1 practice exercise; the full official Paper 1 is 60 minutes. Your answer needs manual assessment.",
         "topicIds": [
@@ -76,9 +76,9 @@
       "contentHash": "c308bc7bc33f66c35eac804a9fdfbb50c214813ae2c0f505998def34debc377f"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:e70b67e917f467196a1045c9",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:e70b67e917f467196a1045c9",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:e70b67e917f467196a1045c9",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "Which statement most accurately describes the general scope of the PFRDA Act, 2013?",
         "topicIds": [
@@ -207,9 +207,9 @@
       "contentHash": "4dcff5ed3f8999615ab5f49a52c862fda3c4b4382c87a25a5dc5e7a489ab9770"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:1df289e255f35bba7799f2c1",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:1df289e255f35bba7799f2c1",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:1df289e255f35bba7799f2c1",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "According to Union Budget 2026–27, the fiscal deficit was estimated at what percentage of GDP in the Budget Estimates (BE) for 2026–27?",
         "topicIds": [
@@ -338,9 +338,9 @@
       "contentHash": "cd928868d16f2b1e17d33f2d0f962f9148fc6e00680fb5827f9482dd5cc17182"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:bb6ce3568f668c45eab8fd01",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:bb6ce3568f668c45eab8fd01",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:bb6ce3568f668c45eab8fd01",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "A business holds inventory costing ₹8 lakh. Its estimated selling price is ₹7.8 lakh, and estimated selling expenses are ₹0.3 lakh. At what amount should the inventory generally be measured under the lower-of-cost-and-NRV principle?",
         "topicIds": [
@@ -469,9 +469,9 @@
       "contentHash": "ea99fd679f6a71e06ec228675123f94c4e89fc570f853cc897d5089254e503cc"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:e29ef5308217203cdfd97903",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:e29ef5308217203cdfd97903",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:e29ef5308217203cdfd97903",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "A manager compares actual output with established standards, identifies deviations and initiates corrective action. Which management function is primarily illustrated?",
         "topicIds": [
@@ -594,9 +594,9 @@
       "contentHash": "e1d039510a00f73f5d0c4eaef0cce5c5748a5f5686e88eae2df7e39b9aead1b5"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:9ce1a138d16ae18c7524d0a2",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:9ce1a138d16ae18c7524d0a2",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:9ce1a138d16ae18c7524d0a2",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "For an existing fixed-coupon bond, which relationship generally holds between its market price and yield to maturity, other factors remaining unchanged?",
         "topicIds": [
@@ -719,9 +719,9 @@
       "contentHash": "874c3a88a561269a69548d9ac335ab9ef861e7ec10e40e32274590f3dd4ebadf"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:2861d6076f41bf82080ad5c1",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:2861d6076f41bf82080ad5c1",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:2861d6076f41bf82080ad5c1",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "A product sells for ₹500 per unit, its variable cost is ₹300 per unit and total fixed cost is ₹2,40,000. What is the break-even sales volume in units?",
         "topicIds": [
@@ -850,9 +850,9 @@
       "contentHash": "912a0be5e105f79fe2ecc9a33768e31303cf2b4d34ed6bf38b216f07f39c29ae"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:195c0863ab8aa38a06169451",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:195c0863ab8aa38a06169451",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:195c0863ab8aa38a06169451",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "Which description best captures a private placement under Section 42 of the Companies Act, 2013?",
         "topicIds": [
@@ -981,9 +981,9 @@
       "contentHash": "ca89320aaad891cc5b05d52e79b793cb071322164a99d100fdba5724fcedff49"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:7bfbb5ce544e6d171e56c830",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:7bfbb5ce544e6d171e56c830",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:7bfbb5ce544e6d171e56c830",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "Which item is ordinarily excluded from GDP calculated by the expenditure method, assuming no corresponding purchase of currently produced goods or services?",
         "topicIds": [
@@ -1106,9 +1106,9 @@
       "contentHash": "35b8424fc373db5b589a77ee25686977d5fcff4a4402a9bbe8fa0d19f23fe715"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:04708c162f6ae24e670b552d",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:04708c162f6ae24e670b552d",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:04708c162f6ae24e670b552d",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "Within the NPS architecture, which intermediary primarily maintains individual subscriber records and facilitates the operation of Permanent Retirement Account Numbers (PRANs)?",
         "topicIds": [
@@ -1237,9 +1237,9 @@
       "contentHash": "2dcc6e2f8738b4f7fdbc802b044a9a997c308f990a3a20dd4ce2b6a484d66ca6"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:3c9175e145d6963c1e55daba",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:3c9175e145d6963c1e55daba",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:3c9175e145d6963c1e55daba",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "A lender trains a model using historical loan applications labelled 'default' or 'no default' to predict the class of new applications. This is primarily an example of:",
         "topicIds": [
@@ -1362,9 +1362,9 @@
       "contentHash": "935e2e15b398112b79da5520ad7a79e33ca4de7296db290f7ca46c915c8658ab"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:ff904bda734ce70f5eafc14c",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:ff904bda734ce70f5eafc14c",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:ff904bda734ce70f5eafc14c",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "A media company distributes the same news programme through traditional television, its website, mobile applications and social platforms, with integrated production and distribution. Which concept is illustrated most directly?",
         "topicIds": [
@@ -1487,9 +1487,9 @@
       "contentHash": "41cd720e32ade2db2247a20aa0d5f48cbc136a0d58f795dc35511ff76338d614"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:9fdc30470cf4c974139bd69f",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:9fdc30470cf4c974139bd69f",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:9fdc30470cf4c974139bd69f",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "A pension-service provider improves access through branches, mobile applications and authorised distribution partners. Which element of the traditional marketing mix does this address most directly?",
         "topicIds": [
@@ -1612,9 +1612,9 @@
       "contentHash": "bd16f90939bf1bba6907af4e5426c434db87e754225b9a023e8415fbc7f20ead"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:d65d1ec3f59f390a013c15e9",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:d65d1ec3f59f390a013c15e9",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:d65d1ec3f59f390a013c15e9",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "Under Section 14 of the PFRDA Act, 2013, which of the following is expressly part of the Authority's subscriber-protection responsibilities?",
         "topicIds": [
@@ -1743,9 +1743,9 @@
       "contentHash": "dbdd10a00b3a592a25433a29baa51b8f166a030dbb35ee611958d593b4677c76"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:f90c77d6cf883e34854e10dd",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:f90c77d6cf883e34854e10dd",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:f90c77d6cf883e34854e10dd",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "According to Union Budget 2026–27, the Central Government's direct capital expenditure in BE 2026–27 was estimated at approximately:",
         "topicIds": [
@@ -1874,9 +1874,9 @@
       "contentHash": "d1f9681a25039837217763252db0c8f94aa03a766716048a6a2cbdd80d8f45cb"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:02a78b405c6dc161bbc65fa4",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:02a78b405c6dc161bbc65fa4",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:02a78b405c6dc161bbc65fa4",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "Under the indirect method of preparing cash flows from operating activities, an increase in inventories during the year, other things equal, is generally:",
         "topicIds": [
@@ -1999,9 +1999,9 @@
       "contentHash": "dbff4bf91c5bc0ba2476a6337a9c7250903a0ee5e627acac9c7d109581aa6b4c"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:a2004ab6816124abaab20d5a",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:a2004ab6816124abaab20d5a",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:a2004ab6816124abaab20d5a",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "An employee reports simultaneously to a functional manager and a project manager. Which organisation structure does this most directly indicate?",
         "topicIds": [
@@ -2124,9 +2124,9 @@
       "contentHash": "233d050717e818b95b29a679abd38c62c19d04374b2dda2f0bd29bfbacfebd34"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:f65ded8f52dbeedf8f2de171",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:f65ded8f52dbeedf8f2de171",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:f65ded8f52dbeedf8f2de171",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "The buyer of a standard put option has which contractual right?",
         "topicIds": [
@@ -2249,9 +2249,9 @@
       "contentHash": "75e20c3251c1ed1206440d111a961582cbd82ddc6b0b05d9575413f293ba0a6f"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:f7d0c3ab6204576961bc8283",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:f7d0c3ab6204576961bc8283",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:f7d0c3ab6204576961bc8283",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "A manufacturer finds that production set-ups, rather than machine hours, primarily drive a particular category of overhead. Which costing approach most directly supports assigning that overhead using the number of set-ups?",
         "topicIds": [
@@ -2380,9 +2380,9 @@
       "contentHash": "81196d0cb69ee0ccc66d55fa7320e20b70f58058dcc64e4d14e3c36260dbe80d"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:89bf1faa3a0d330e8eff76b6",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:89bf1faa3a0d330e8eff76b6",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:89bf1faa3a0d330e8eff76b6",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "Under Section 63 of the Companies Act, 2013, which reserve cannot be capitalised for issuing bonus shares?",
         "topicIds": [
@@ -2511,9 +2511,9 @@
       "contentHash": "6cf2ae195028f800f91c7726da0afcd73b5aff2fb78fbcc720d1c6eeeaeaf8b1"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:492954ad53edd1dbfacafcf0",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:492954ad53edd1dbfacafcf0",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:492954ad53edd1dbfacafcf0",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "Nominal GDP is ₹2,200 billion and real GDP at the relevant base-year prices is ₹2,000 billion. What is the GDP deflator (base = 100)?",
         "topicIds": [
@@ -2636,9 +2636,9 @@
       "contentHash": "078061580e8395c68c775186bfbea5ac55dd4235fd142ff3255cf8e8c9764904"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:6ef5e9bc757cb3f37562ff83",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:6ef5e9bc757cb3f37562ff83",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:6ef5e9bc757cb3f37562ff83",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "Which statement correctly describes the Central Government-guaranteed minimum pension options under Atal Pension Yojana, subject to its eligibility and contribution requirements?",
         "topicIds": [
@@ -2767,9 +2767,9 @@
       "contentHash": "603775939d4004af6184418e43b341c1e730abfc8975a0967d4453e56e4e3fe4"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:1ecc819798ebbd59c017e336",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:1ecc819798ebbd59c017e336",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:1ecc819798ebbd59c017e336",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "A machine-learning model achieves 99% accuracy on training observations but only 65% accuracy on an independent, representative test dataset. Which issue is most strongly suggested?",
         "topicIds": [
@@ -2892,9 +2892,9 @@
       "contentHash": "b4c8eaed76edecdafd4ea396e91f9680f2469a1b8aae4c6734a68144274a94f0"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:762f1d164a55bf4947810fbc",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:762f1d164a55bf4947810fbc",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:762f1d164a55bf4947810fbc",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "An advertiser uses detailed behavioural information to deliver different political or commercial messages to narrowly defined audience groups. What is a particularly relevant ethical and regulatory concern?",
         "topicIds": [
@@ -3017,9 +3017,9 @@
       "contentHash": "dbc20ceab92d3c6a967b674f94f0bc6c4431252cbc1e6bab9e3344bc6446c4c8"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:85ec1adccfd6ee3062028610",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:85ec1adccfd6ee3062028610",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:85ec1adccfd6ee3062028610",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "During a difficult conversation, an officer restates a citizen's concern in their own words and asks whether the understanding is correct. Which skill is being demonstrated?",
         "topicIds": [
@@ -3142,9 +3142,9 @@
       "contentHash": "33f80de696c0f3c777fc416d6c04aad86f66efba369a8e5bffec74da982c37c3"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:07ac1c99f8349921968a7a0f",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:07ac1c99f8349921968a7a0f",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:07ac1c99f8349921968a7a0f",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "Under the PFRDA Act, 2013, which statement correctly distinguishes rules and regulations under the Act?",
         "topicIds": [
@@ -3273,9 +3273,9 @@
       "contentHash": "164568f5f05f850304283703aec4e9ef716dd5a29aedae65be6c6c3a225de04b"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:2cfe11fb9f340a1fd3a1df18",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:2cfe11fb9f340a1fd3a1df18",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:2cfe11fb9f340a1fd3a1df18",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "The Economic Survey 2025–26 projected India's real GDP growth for FY 2026–27 in which range, according to the Survey's January 2026 assessment?",
         "topicIds": [
@@ -3404,9 +3404,9 @@
       "contentHash": "5b0639e6b4d69ba6b6e4c65c151ec2e202de4188022718b998c983e19f3fe312"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:f9dc51043450d58eb17031c5",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:f9dc51043450d58eb17031c5",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:f9dc51043450d58eb17031c5",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "A firm has current assets of ₹480 lakh and current liabilities of ₹240 lakh. It pays ₹40 lakh of trade payables using cash. Assuming no other changes, what is the new current ratio?",
         "topicIds": [
@@ -3529,9 +3529,9 @@
       "contentHash": "c49526800683f6b5bf970f54d9432d4b7c6af6b674579edf9fae9e67ef8b1a5e"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:dc208e4870dc2c90b9d8b29a",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:dc208e4870dc2c90b9d8b29a",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:dc208e4870dc2c90b9d8b29a",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "In Herzberg's two-factor theory, which statement is most consistent with the distinction between hygiene factors and motivators?",
         "topicIds": [
@@ -3654,9 +3654,9 @@
       "contentHash": "8fdea17917983359668a9178f0b3e072c0efc3b074e2515bb53771011a6d3bbd"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:b484cad4aed00033a13f6ee0",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:b484cad4aed00033a13f6ee0",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:b484cad4aed00033a13f6ee0",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "According to CAPM, a security has beta 1.2, the risk-free rate is 6% and the expected market return is 11%. What is its required return?",
         "topicIds": [
@@ -3779,9 +3779,9 @@
       "contentHash": "aa70dec423236f92350bd28d6765554a3fba715d12f45e50fd3a179682015b21"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:d520101228e9b778eb33d475",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:d520101228e9b778eb33d475",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:d520101228e9b778eb33d475",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "A factory originally budgeted output at 10,000 units but actually produced 12,000 units. Which budgeting technique is designed to adjust relevant budgeted costs for the actual level of activity?",
         "topicIds": [
@@ -3910,9 +3910,9 @@
       "contentHash": "0606fa8e58a71aa911bc07a8072341f9bdf762733d888fefe55dbff879fc2313"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:d881dc31cf45f786f05cbd04",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:d881dc31cf45f786f05cbd04",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:d881dc31cf45f786f05cbd04",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "Under Section 123 of the Companies Act, 2013, who may declare an interim dividend, subject to the statutory conditions?",
         "topicIds": [
@@ -4041,9 +4041,9 @@
       "contentHash": "c7f3a3c630f043b91a019f2d7ed2868d2a79e5982bfc3c693c04623e5baec225"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:d29523620e3f8ac999a714f3",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:d29523620e3f8ac999a714f3",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:d29523620e3f8ac999a714f3",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "In the simple Keynesian expenditure model with no taxes, imports or induced investment, the marginal propensity to consume is 0.8. What is the government-expenditure multiplier?",
         "topicIds": [
@@ -4166,9 +4166,9 @@
       "contentHash": "209a94aef14ea92ec6381b88f9d61e1bf592536a537eab4e036839c06af73c96"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:569b440bb159451bce01eeaf",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:569b440bb159451bce01eeaf",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:569b440bb159451bce01eeaf",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "When a retiree purchases a conventional life annuity from an insurer, which risk is principally transferred to the insurer under the annuity contract?",
         "topicIds": [
@@ -4297,9 +4297,9 @@
       "contentHash": "c6de09072c99d635989b4caebec87416e4390079fc5dd533b05ca29d0a1f3c3a"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:17db4d634f3384227ab27e5e",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:17db4d634f3384227ab27e5e",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:17db4d634f3384227ab27e5e",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "Which feature most clearly distinguishes an agentic AI system from a conventional model that merely generates an answer to a single prompt?",
         "topicIds": [
@@ -4422,9 +4422,9 @@
       "contentHash": "2d733b01893e32e829328ac9155ee694ed16368a69324f588d298fb40f930180"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:55f1d49c5b7733bdd36be9f3",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:55f1d49c5b7733bdd36be9f3",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:55f1d49c5b7733bdd36be9f3",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "Which activity is specifically included in the powers and functions of PFRDA under Section 14 of the PFRDA Act, 2013?",
         "topicIds": [
@@ -4553,9 +4553,9 @@
       "contentHash": "7285f38ac25bdb7de826fd29c00fbe7daeaae8c0c9037ccae43b4c07cece4320"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:120dc638877d466aef41d8a2",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:120dc638877d466aef41d8a2",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:120dc638877d466aef41d8a2",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "Which statement correctly describes the effective capital expenditure estimate in Union Budget 2026–27 (BE)?",
         "topicIds": [
@@ -4684,9 +4684,9 @@
       "contentHash": "743225d27e9a2635d51b1793f8dcd3c9be3905db2791f1e8b1f88d6e8ffb68e5"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:808114691aaceebf835031f5",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:808114691aaceebf835031f5",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:808114691aaceebf835031f5",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "In a company's statement of cash flows, cash received from issuing ordinary equity shares is ordinarily classified as:",
         "topicIds": [
@@ -4809,9 +4809,9 @@
       "contentHash": "f0ac27237a74b41cf6918674aa6a0ed606255616d756d54415500036ad431348"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:707c52d7509d269a88f66155",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:707c52d7509d269a88f66155",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:707c52d7509d269a88f66155",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "A team consists of highly experienced employees who require little technical instruction but need participation in decisions. Which leadership approach is most consistent with situational leadership principles?",
         "topicIds": [
@@ -4934,9 +4934,9 @@
       "contentHash": "66598c259a85130f0407b7b903e2c383e28e8b97303aaf69e3e41653ee7444cd"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:7b1559c08ce5945afd0fcfdf",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:7b1559c08ce5945afd0fcfdf",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:7b1559c08ce5945afd0fcfdf",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "Assuming effective monetary transmission and other things unchanged, an RBI repo-rate reduction would most directly tend to:",
         "topicIds": [
@@ -5059,9 +5059,9 @@
       "contentHash": "9c038123ab2a80055b019b8304b42f96964ebb945892138a500dfa89b6d3270f"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:6e92f41721cb558177dbb024",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:6e92f41721cb558177dbb024",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:6e92f41721cb558177dbb024",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "The standard material price is ₹60 per kg. Actual material price is ₹66 per kg and actual quantity purchased and used is 1,000 kg. Using (standard price − actual price) × actual quantity, what is the material price variance?",
         "topicIds": [
@@ -5190,9 +5190,9 @@
       "contentHash": "3b03b20a81c92eb8c2cba3ebf71c2a114b026766a12e9e64fe1e3d8b3ead8349"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:ebcd39e3c8ef8c6017d3af86",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:ebcd39e3c8ef8c6017d3af86",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:ebcd39e3c8ef8c6017d3af86",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "Which right or power is generally available to a statutory auditor under Section 143 of the Companies Act, 2013?",
         "topicIds": [
@@ -5321,9 +5321,9 @@
       "contentHash": "1ba47ca2dd08ef103ed6cc2fc9f06bde33ad2c2af36809c6fc74f463741ccde9"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:5e610dd629eb798def50ad52",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:5e610dd629eb798def50ad52",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:5e610dd629eb798def50ad52",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "Which transaction is ordinarily recorded in the current account of India's balance of payments?",
         "topicIds": [
@@ -5452,9 +5452,9 @@
       "contentHash": "176ae0052215164c975dd499ec70bff5c7427a744e40d34225bf63642cdafab3"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:b62b75a461faf7f2bed1454b",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:b62b75a461faf7f2bed1454b",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:b62b75a461faf7f2bed1454b",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "For an ordinary NPS account operating on a defined-contribution, market-linked basis, which statement is most accurate?",
         "topicIds": [
@@ -5583,9 +5583,9 @@
       "contentHash": "4bd09f3ca78a9d2eae4eceece4910bbdece6161dc087a979e2f43ac3be56fd54"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:0eb456471b2f23172928a94b",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:0eb456471b2f23172928a94b",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:0eb456471b2f23172928a94b",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "Which statement is most consistent with the statutory concept of an independent director under Section 149 of the Companies Act, 2013?",
         "topicIds": [
@@ -5714,9 +5714,9 @@
       "contentHash": "2affce392e77c08e3eeccccb144ea913d8b06a85546a7ee7aa1cd80f6885a0ee"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:f720caad9b0265cb2d85bfaa",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:f720caad9b0265cb2d85bfaa",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:f720caad9b0265cb2d85bfaa",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "Which market primarily facilitates trading in securities that have already been issued?",
         "topicIds": [
@@ -5839,9 +5839,9 @@
       "contentHash": "2fabd5fc184def76be26ee9aa28ccab2ed74d5a60544921372faa08f3b9d65e1"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:75929b280c3526a832ddc053",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:75929b280c3526a832ddc053",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:75929b280c3526a832ddc053",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "A company offers additional shares for cash to existing equity shareholders, generally in proportion to their paid-up share capital holdings. Which type of issue is most directly described?",
         "topicIds": [
@@ -5970,9 +5970,9 @@
       "contentHash": "4a7de541737b0f883e1f7a13acc0d1398109c68daf73b2bf461f9a8565b1c01a"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:67e0eee7d0f393575231a351",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:67e0eee7d0f393575231a351",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:67e0eee7d0f393575231a351",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "The price of a product rises from ₹100 to ₹110 and quantity demanded falls from 200 units to 180 units. Using the original values as bases for percentage changes, the absolute value of price elasticity of demand is:",
         "topicIds": [
@@ -6095,9 +6095,9 @@
       "contentHash": "c4d7d5b6f93295eae0c8967c12b6451d878f84b463310b325509867c72e9e6ad"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:d537e40887e17677320f5a14",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:d537e40887e17677320f5a14",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:d537e40887e17677320f5a14",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "In a typical NPS lifecycle or auto-choice investment arrangement, what is the general purpose of a declining equity allocation as a subscriber approaches retirement?",
         "topicIds": [
@@ -6226,9 +6226,9 @@
       "contentHash": "1c66f029a5fa557f28ae45189bab9600461ef6c7745fd959951d029f184d1b11"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:52ec010b565142b1e2e0ae56",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:52ec010b565142b1e2e0ae56",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:52ec010b565142b1e2e0ae56",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "Consider two statements regarding the Companies Act, 2013: (1) As a general rule under Section 173, not more than 120 days should intervene between two consecutive Board meetings, subject to applicable exemptions. (2) The National Company Law Appellate Tribunal generally hears appeals against orders of the National Company Law Tribunal, as provided by law. Which is correct?",
         "topicIds": [
@@ -6357,9 +6357,9 @@
       "contentHash": "07eecad660f41946de40f9fa3a2bb9b946eac2d192bdc3d2fe78b0866820f75b"
     },
     {
-      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:a901f551b8aac835a9999418",
+      "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:a901f551b8aac835a9999418",
       "questionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:q:a901f551b8aac835a9999418",
-      "revision": 3,
+      "revision": 4,
       "content": {
         "prompt": "According to the Economic Survey 2025–26's assessment using the estimates available at that time, private final consumption expenditure (PFCE) accounted for approximately what share of India's GDP in FY 2025–26?",
         "topicIds": [
@@ -6489,12 +6489,12 @@
     }
   ],
   "answerKey": {
-    "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:key",
+    "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:key",
     "paperId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1",
-    "revision": 3,
+    "revision": 4,
     "entries": [
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:3a0b175ed1702238db747052",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:3a0b175ed1702238db747052",
         "answer": {
           "kind": "free-response",
           "evaluation": "manual"
@@ -6506,429 +6506,429 @@
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:e70b67e917f467196a1045c9",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:e70b67e917f467196a1045c9",
         "answer": {
           "kind": "single-choice",
           "optionId": "A"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:1df289e255f35bba7799f2c1",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:1df289e255f35bba7799f2c1",
         "answer": {
           "kind": "single-choice",
           "optionId": "B"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:bb6ce3568f668c45eab8fd01",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:bb6ce3568f668c45eab8fd01",
         "answer": {
           "kind": "single-choice",
           "optionId": "C"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:e29ef5308217203cdfd97903",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:e29ef5308217203cdfd97903",
         "answer": {
           "kind": "single-choice",
           "optionId": "B"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:9ce1a138d16ae18c7524d0a2",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:9ce1a138d16ae18c7524d0a2",
         "answer": {
           "kind": "single-choice",
           "optionId": "D"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:2861d6076f41bf82080ad5c1",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:2861d6076f41bf82080ad5c1",
         "answer": {
           "kind": "single-choice",
           "optionId": "B"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:195c0863ab8aa38a06169451",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:195c0863ab8aa38a06169451",
         "answer": {
           "kind": "single-choice",
           "optionId": "B"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:7bfbb5ce544e6d171e56c830",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:7bfbb5ce544e6d171e56c830",
         "answer": {
           "kind": "single-choice",
           "optionId": "D"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:04708c162f6ae24e670b552d",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:04708c162f6ae24e670b552d",
         "answer": {
           "kind": "single-choice",
           "optionId": "B"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:3c9175e145d6963c1e55daba",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:3c9175e145d6963c1e55daba",
         "answer": {
           "kind": "single-choice",
           "optionId": "C"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:ff904bda734ce70f5eafc14c",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:ff904bda734ce70f5eafc14c",
         "answer": {
           "kind": "single-choice",
           "optionId": "B"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:9fdc30470cf4c974139bd69f",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:9fdc30470cf4c974139bd69f",
         "answer": {
           "kind": "single-choice",
           "optionId": "C"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:d65d1ec3f59f390a013c15e9",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:d65d1ec3f59f390a013c15e9",
         "answer": {
           "kind": "single-choice",
           "optionId": "C"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:f90c77d6cf883e34854e10dd",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:f90c77d6cf883e34854e10dd",
         "answer": {
           "kind": "single-choice",
           "optionId": "B"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:02a78b405c6dc161bbc65fa4",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:02a78b405c6dc161bbc65fa4",
         "answer": {
           "kind": "single-choice",
           "optionId": "A"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:a2004ab6816124abaab20d5a",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:a2004ab6816124abaab20d5a",
         "answer": {
           "kind": "single-choice",
           "optionId": "C"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:f65ded8f52dbeedf8f2de171",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:f65ded8f52dbeedf8f2de171",
         "answer": {
           "kind": "single-choice",
           "optionId": "D"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:f7d0c3ab6204576961bc8283",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:f7d0c3ab6204576961bc8283",
         "answer": {
           "kind": "single-choice",
           "optionId": "B"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:89bf1faa3a0d330e8eff76b6",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:89bf1faa3a0d330e8eff76b6",
         "answer": {
           "kind": "single-choice",
           "optionId": "C"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:492954ad53edd1dbfacafcf0",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:492954ad53edd1dbfacafcf0",
         "answer": {
           "kind": "single-choice",
           "optionId": "B"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:6ef5e9bc757cb3f37562ff83",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:6ef5e9bc757cb3f37562ff83",
         "answer": {
           "kind": "single-choice",
           "optionId": "B"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:1ecc819798ebbd59c017e336",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:1ecc819798ebbd59c017e336",
         "answer": {
           "kind": "single-choice",
           "optionId": "C"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:762f1d164a55bf4947810fbc",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:762f1d164a55bf4947810fbc",
         "answer": {
           "kind": "single-choice",
           "optionId": "B"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:85ec1adccfd6ee3062028610",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:85ec1adccfd6ee3062028610",
         "answer": {
           "kind": "single-choice",
           "optionId": "B"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:07ac1c99f8349921968a7a0f",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:07ac1c99f8349921968a7a0f",
         "answer": {
           "kind": "single-choice",
           "optionId": "A"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:2cfe11fb9f340a1fd3a1df18",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:2cfe11fb9f340a1fd3a1df18",
         "answer": {
           "kind": "single-choice",
           "optionId": "D"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:f9dc51043450d58eb17031c5",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:f9dc51043450d58eb17031c5",
         "answer": {
           "kind": "single-choice",
           "optionId": "C"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:dc208e4870dc2c90b9d8b29a",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:dc208e4870dc2c90b9d8b29a",
         "answer": {
           "kind": "single-choice",
           "optionId": "D"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:b484cad4aed00033a13f6ee0",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:b484cad4aed00033a13f6ee0",
         "answer": {
           "kind": "single-choice",
           "optionId": "A"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:d520101228e9b778eb33d475",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:d520101228e9b778eb33d475",
         "answer": {
           "kind": "single-choice",
           "optionId": "B"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:d881dc31cf45f786f05cbd04",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:d881dc31cf45f786f05cbd04",
         "answer": {
           "kind": "single-choice",
           "optionId": "A"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:d29523620e3f8ac999a714f3",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:d29523620e3f8ac999a714f3",
         "answer": {
           "kind": "single-choice",
           "optionId": "D"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:569b440bb159451bce01eeaf",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:569b440bb159451bce01eeaf",
         "answer": {
           "kind": "single-choice",
           "optionId": "C"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:17db4d634f3384227ab27e5e",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:17db4d634f3384227ab27e5e",
         "answer": {
           "kind": "single-choice",
           "optionId": "A"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:55f1d49c5b7733bdd36be9f3",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:55f1d49c5b7733bdd36be9f3",
         "answer": {
           "kind": "single-choice",
           "optionId": "C"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:120dc638877d466aef41d8a2",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:120dc638877d466aef41d8a2",
         "answer": {
           "kind": "single-choice",
           "optionId": "D"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:808114691aaceebf835031f5",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:808114691aaceebf835031f5",
         "answer": {
           "kind": "single-choice",
           "optionId": "B"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:707c52d7509d269a88f66155",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:707c52d7509d269a88f66155",
         "answer": {
           "kind": "single-choice",
           "optionId": "C"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:7b1559c08ce5945afd0fcfdf",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:7b1559c08ce5945afd0fcfdf",
         "answer": {
           "kind": "single-choice",
           "optionId": "B"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:6e92f41721cb558177dbb024",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:6e92f41721cb558177dbb024",
         "answer": {
           "kind": "single-choice",
           "optionId": "C"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:ebcd39e3c8ef8c6017d3af86",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:ebcd39e3c8ef8c6017d3af86",
         "answer": {
           "kind": "single-choice",
           "optionId": "A"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:5e610dd629eb798def50ad52",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:5e610dd629eb798def50ad52",
         "answer": {
           "kind": "single-choice",
           "optionId": "C"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:b62b75a461faf7f2bed1454b",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:b62b75a461faf7f2bed1454b",
         "answer": {
           "kind": "single-choice",
           "optionId": "B"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:0eb456471b2f23172928a94b",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:0eb456471b2f23172928a94b",
         "answer": {
           "kind": "single-choice",
           "optionId": "A"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:f720caad9b0265cb2d85bfaa",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:f720caad9b0265cb2d85bfaa",
         "answer": {
           "kind": "single-choice",
           "optionId": "A"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:75929b280c3526a832ddc053",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:75929b280c3526a832ddc053",
         "answer": {
           "kind": "single-choice",
           "optionId": "D"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:67e0eee7d0f393575231a351",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:67e0eee7d0f393575231a351",
         "answer": {
           "kind": "single-choice",
           "optionId": "B"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:d537e40887e17677320f5a14",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:d537e40887e17677320f5a14",
         "answer": {
           "kind": "single-choice",
           "optionId": "C"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:52ec010b565142b1e2e0ae56",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:52ec010b565142b1e2e0ae56",
         "answer": {
           "kind": "single-choice",
           "optionId": "D"
         }
       },
       {
-        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:a901f551b8aac835a9999418",
+        "questionRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:a901f551b8aac835a9999418",
         "answer": {
           "kind": "single-choice",
           "optionId": "A"
         }
       }
     ],
-    "contentHash": "43ccfa4b9ac45c825a46595bb133c503b88ed7ce4d41265a56341ab8aeb4556f"
+    "contentHash": "38d2937116efe6bd3522809ec1e5d18c869e2c24284db4ad3b65d094e67a98c8"
   },
   "paper": {
-    "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom",
+    "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom",
     "paperId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1",
-    "revision": 3,
+    "revision": 4,
     "edition": "custom",
     "sections": [
       {
         "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:section:34bed1998c81",
         "title": "Paper 1 — Descriptive English (Day 1 précis practice)",
         "questionRevisionIds": [
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:3a0b175ed1702238db747052"
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:3a0b175ed1702238db747052"
         ]
       },
       {
         "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:section:8754f838501e",
         "title": "Paper 2 — General Stream",
         "questionRevisionIds": [
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:e70b67e917f467196a1045c9",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:1df289e255f35bba7799f2c1",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:bb6ce3568f668c45eab8fd01",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:e29ef5308217203cdfd97903",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:9ce1a138d16ae18c7524d0a2",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:2861d6076f41bf82080ad5c1",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:195c0863ab8aa38a06169451",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:7bfbb5ce544e6d171e56c830",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:04708c162f6ae24e670b552d",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:3c9175e145d6963c1e55daba",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:ff904bda734ce70f5eafc14c",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:9fdc30470cf4c974139bd69f",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:d65d1ec3f59f390a013c15e9",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:f90c77d6cf883e34854e10dd",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:02a78b405c6dc161bbc65fa4",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:a2004ab6816124abaab20d5a",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:f65ded8f52dbeedf8f2de171",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:f7d0c3ab6204576961bc8283",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:89bf1faa3a0d330e8eff76b6",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:492954ad53edd1dbfacafcf0",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:6ef5e9bc757cb3f37562ff83",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:1ecc819798ebbd59c017e336",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:762f1d164a55bf4947810fbc",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:85ec1adccfd6ee3062028610",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:07ac1c99f8349921968a7a0f",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:2cfe11fb9f340a1fd3a1df18",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:f9dc51043450d58eb17031c5",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:dc208e4870dc2c90b9d8b29a",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:b484cad4aed00033a13f6ee0",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:d520101228e9b778eb33d475",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:d881dc31cf45f786f05cbd04",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:d29523620e3f8ac999a714f3",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:569b440bb159451bce01eeaf",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:17db4d634f3384227ab27e5e",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:55f1d49c5b7733bdd36be9f3",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:120dc638877d466aef41d8a2",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:808114691aaceebf835031f5",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:707c52d7509d269a88f66155",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:7b1559c08ce5945afd0fcfdf",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:6e92f41721cb558177dbb024",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:ebcd39e3c8ef8c6017d3af86",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:5e610dd629eb798def50ad52",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:b62b75a461faf7f2bed1454b",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:0eb456471b2f23172928a94b",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:f720caad9b0265cb2d85bfaa",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:75929b280c3526a832ddc053",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:67e0eee7d0f393575231a351",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:d537e40887e17677320f5a14",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:52ec010b565142b1e2e0ae56",
-          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:a901f551b8aac835a9999418"
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:e70b67e917f467196a1045c9",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:1df289e255f35bba7799f2c1",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:bb6ce3568f668c45eab8fd01",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:e29ef5308217203cdfd97903",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:9ce1a138d16ae18c7524d0a2",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:2861d6076f41bf82080ad5c1",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:195c0863ab8aa38a06169451",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:7bfbb5ce544e6d171e56c830",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:04708c162f6ae24e670b552d",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:3c9175e145d6963c1e55daba",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:ff904bda734ce70f5eafc14c",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:9fdc30470cf4c974139bd69f",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:d65d1ec3f59f390a013c15e9",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:f90c77d6cf883e34854e10dd",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:02a78b405c6dc161bbc65fa4",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:a2004ab6816124abaab20d5a",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:f65ded8f52dbeedf8f2de171",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:f7d0c3ab6204576961bc8283",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:89bf1faa3a0d330e8eff76b6",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:492954ad53edd1dbfacafcf0",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:6ef5e9bc757cb3f37562ff83",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:1ecc819798ebbd59c017e336",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:762f1d164a55bf4947810fbc",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:85ec1adccfd6ee3062028610",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:07ac1c99f8349921968a7a0f",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:2cfe11fb9f340a1fd3a1df18",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:f9dc51043450d58eb17031c5",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:dc208e4870dc2c90b9d8b29a",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:b484cad4aed00033a13f6ee0",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:d520101228e9b778eb33d475",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:d881dc31cf45f786f05cbd04",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:d29523620e3f8ac999a714f3",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:569b440bb159451bce01eeaf",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:17db4d634f3384227ab27e5e",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:55f1d49c5b7733bdd36be9f3",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:120dc638877d466aef41d8a2",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:808114691aaceebf835031f5",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:707c52d7509d269a88f66155",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:7b1559c08ce5945afd0fcfdf",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:6e92f41721cb558177dbb024",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:ebcd39e3c8ef8c6017d3af86",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:5e610dd629eb798def50ad52",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:b62b75a461faf7f2bed1454b",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:0eb456471b2f23172928a94b",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:f720caad9b0265cb2d85bfaa",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:75929b280c3526a832ddc053",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:67e0eee7d0f393575231a351",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:d537e40887e17677320f5a14",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:52ec010b565142b1e2e0ae56",
+          "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:a901f551b8aac835a9999418"
         ]
       }
     ],
-    "answerKeyRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:key",
+    "answerKeyRevisionId": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:key",
     "timing": {
       "kind": "sectional",
       "sectionLimits": [
@@ -6951,9 +6951,6 @@
       "allowFlagging": true,
       "allowReview": true
     },
-    "candidateTools": {
-      "wordCount": "shown"
-    },
     "scoring": {
       "defaultRule": {
         "correctMarks": 2,
@@ -6961,7 +6958,7 @@
         "unansweredMarks": 0
       }
     },
-    "contentHash": "4d00a625a8f082025b71d49d8056233f7d719e93049c3a7480343d10f0bba4b9"
+    "contentHash": "5b4b4df4a6093946450e4266f03b997207cfa17c8f050826fedbdb55d5c28a82"
   },
   "stimuli": [
     {
@@ -7032,56 +7029,56 @@
     }
   ],
   "explanations": {
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:3a0b175ed1702238db747052": "Illustrative title: Retirement Security in a Changing Economy\nModel précis: Retirement security depends not simply on accumulated savings but also on stable earnings, accessible institutions and systems that manage uncertainty. Traditional pensions assumed predictable employment, whereas irregular incomes and interrupted careers now make regular contributions difficult. Genuine financial inclusion therefore requires affordable, convenient and transparent arrangements that build trust. Policymakers must balance investment flexibility against market risk, guarantees against financial sustainability, and emergency withdrawals against future adequacy. Women, informal workers and those with interrupted careers face particular disadvantages, calling for inclusive yet administratively sustainable designs. Pension systems should consequently be assessed not only by enrolment or assets, but by their ability to provide dependable old-age income while balancing personal responsibility and social protection.\nUnofficial practice rubric (/20): fidelity and coverage 8; compression 4; logical structure 3; language and grammar 3; title 2. Manually assess writing; the model is not the only acceptable response.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:e70b67e917f467196a1045c9": "A is correct. The PFRDA Act regulates the NPS and the pension schemes within its statutory scope; it is not a universal law for every provident fund. B ignores exclusions and other regulators; C wrongly confines it to Central employees; D confuses pension regulation with insurance annuity regulation. Recall: identify the scheme and its governing enactment before naming its regulator.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:1df289e255f35bba7799f2c1": "B, 4.3% of GDP, is the FY 2026–27 Budget Estimate for fiscal deficit. C (4.4%) belongs to a different Budget-period comparison; A and D are not the specified BE figure. Fiscal deficit measures borrowing requirements, not capital expenditure or the revenue deficit. Always distinguish BE from RE and identify the financial year before memorising a Budget number.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:bb6ce3568f668c45eab8fd01": "C, ₹7.5 lakh. NRV is expected sale proceeds less costs necessary to complete and sell: ₹7.8 − ₹0.3 = ₹7.5 lakh. Inventory is measured at the lower of its ₹8 lakh cost and ₹7.5 lakh NRV. A ignores the write-down; B ignores selling expenses; D incorrectly adds expenses. The rule is lower of cost and NRV, not lower of cost and selling price.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:e29ef5308217203cdfd97903": "B is controlling: measure actual performance, compare it with standards, identify deviations and take corrective action. Planning sets objectives (A), staffing secures people (C), and organising allocates roles/resources (D). Controlling is the feedback-and-correction function, not simply drawing up a plan. The question’s decisive clue is comparison of actual results with standards followed by corrective action.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:9ce1a138d16ae18c7524d0a2": "D. For an existing fixed-coupon bond, higher market price means lower yield to maturity and vice versa, other inputs held constant. A reverses the relationship; B denies the price sensitivity of yield; C confuses the contractually fixed coupon rate with the changing market yield. A bond can keep paying the same coupon while its traded price and yield move in opposite directions.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:2861d6076f41bf82080ad5c1": "B, 1,200 units. Contribution per unit = ₹500 selling price − ₹300 variable cost = ₹200. Break-even units = fixed costs / contribution per unit = ₹2,40,000 / ₹200 = 1,200. A understates fixed-cost recovery; C and D exceed the break-even output. Fixed costs are not divided by selling price: only the contribution left after variable costs pays for fixed costs.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:195c0863ab8aa38a06169451": "B. Section 42 private placement is an offer/invitation to a selected, identified set of persons subject to the statutory process. A describes a public offer, C resembles a proportionate rights issue under Section 62, and D a bonus issue under Section 63. The distinction is the mode and target of invitation; a private placement is not an unrestricted appeal to the public.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:7bfbb5ce544e6d171e56c830": "D. A cash transfer does not itself buy newly produced goods or services and is excluded from the expenditure measure of GDP. A is government consumption/investment expenditure, B household final consumption, and C business investment in equipment. If the recipient later spends the transfer on current output, that spending may enter GDP; the transfer itself is not counted again.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:04708c162f6ae24e670b552d": "B. The Central Recordkeeping Agency maintains subscriber records and PRAN-linked transactions. A pension fund manages invested assets; C an annuity service provider contracts for pension/annuity payments at the applicable stage; D a custodian safeguards securities/assets. The CRA is the recordkeeping and transaction-information hub, not the owner or portfolio manager of the underlying investments.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:3c9175e145d6963c1e55daba": "C. Historical applications labelled default/not default supply the known target classes needed for supervised classification. A clustering and D dimensionality reduction are unsupervised methods without such outcome labels; B reinforcement learning uses reward-based interaction rather than labelled examples as the central training signal. Key distinction: labels + predicted category = supervised classification.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:ff904bda734ce70f5eafc14c": "B, media convergence, combines distribution and often production across broadcast, websites, apps and social channels. A digital exclusion is about access barriers; C audience fragmentation may coexist but does not explain integrated cross-platform distribution; D price discrimination concerns varying prices across buyers. Convergence involves media technologies, content and platforms coming together, not merely the existence of several audiences.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:9fdc30470cf4c974139bd69f": "C, Place. The provider is changing how and where users reach its service through branches, apps and partners. Product refers to the service offered (A), Price to what users pay (B), and Promotion to persuasive communications (D). In the four Ps, access and distribution channels belong to Place even if the channel is digital rather than a physical shop.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:d65d1ec3f59f390a013c15e9": "C. Section 14(2)(f) empowers PFRDA to establish subscriber-grievance redressal mechanisms by regulation. A is not a universal guarantee of investment returns; B would confer judicial powers not supplied by that clause; D concerns insurance-product pricing, not PFRDA subscriber grievance redressal. Memorise the function and the provision together: protection of subscribers includes grievance handling, not underwriting all investment risk.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:f90c77d6cf883e34854e10dd": "B, ₹12.22 lakh crore, is direct Central Government capital expenditure in BE 2026–27. D, ₹17.15 lakh crore, is the broader effective capital expenditure including grants for creation of capital assets; A and C are not the direct capex BE total. An MCQ may deliberately swap direct and effective capex: check the exact expenditure concept and the BE/RE label.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:02a78b405c6dc161bbc65fa4": "A. Under the indirect method, increasing inventory ordinarily uses operating resources; its increase is deducted while reconciling accrual profit to operating cash flow, other things equal. B has the cash-flow direction reversed; C misclassifies working capital as financing; D wrongly ignores non-cash working-capital changes in the reconciliation. A cash purchase of inventory is already reflected through working-capital adjustment.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:a2004ab6816124abaab20d5a": "C, matrix structure, because an employee has both functional and project reporting relationships. A line or B purely functional structure ordinarily has a single vertical command chain; D divisional structure is arranged around products, regions or markets and need not create dual reporting. The identifying feature of a matrix is the coexistence of functional and project authority.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:f65ded8f52dbeedf8f2de171": "D. A put option gives its buyer the right, not the obligation, to sell the underlying at the strike under the option terms. A and B mistakenly impose exercise obligations on the buyer; C describes the buyer of a call option. The seller/writer, not the buyer, undertakes the corresponding obligation if valid exercise occurs. Put = right to sell; call = right to buy.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:f7d0c3ab6204576961bc8283": "B. Activity-based costing first groups overhead by activity, then charges products using an activity cost driver such as number of set-ups. A uses a broad allocation base regardless of the actual driver; C marginal costing focuses on variable contribution and does not solve this overhead-driver allocation; D equivalent-unit process costing addresses homogeneous production. Allocate set-up cost by set-ups when set-ups cause that overhead.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:89bf1faa3a0d330e8eff76b6": "C. Section 63 allows eligible free reserves, the securities premium account and the capital redemption reserve account to be capitalised for fully paid bonus shares, subject to conditions. It expressly excludes reserves created by asset revaluation. Hence A, B and D name eligible sources, while C is prohibited. Exam trap: an accounting reserve appearing in equity is not automatically distributable or eligible for bonus capitalisation.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:492954ad53edd1dbfacafcf0": "B, 110. GDP deflator = nominal GDP / real GDP × 100 = 2,200 / 2,000 × 100. A (90.9) inverts the ratio; C treats the figure as a percentage by an incorrect operation; D omits the base-100 scaling. A value of 110 indicates the current-price level of measured output is 10% above the base-year price level in this calculation.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:6ef5e9bc757cb3f37562ff83": "B. APY offers specified Government-guaranteed minimum monthly pensions of ₹1,000, ₹2,000, ₹3,000, ₹4,000 or ₹5,000 after age 60, subject to enrolment and contribution conditions. A gives the wrong amount and age; C wrongly denies the defined guarantee; D wrongly presents a lump-sum at age 40. Do not confuse APY’s specified minimum benefit with ordinary market-linked NPS accumulation.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:1ecc819798ebbd59c017e336": "C. Excellent training accuracy with much weaker performance on independent representative data suggests overfitting or poor generalisation. A underfitting would usually show weak training performance too; B accuracy alone cannot guarantee data integrity; D successful cross-validation cannot be inferred from one reported test result. Look at the gap between in-sample and out-of-sample performance, not the training score alone.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:762f1d164a55bf4947810fbc": "B. Behavioural microtargeting creates privacy and profiling concerns, particularly when personal data and tailored messages can be used manipulatively. A spectrum licensing, C copyright ownership and D circulation audit may be genuine media-law subjects, but none responds as directly to individual behavioural profiling. The ethical issue is not personalisation as such; it is data use, consent, fairness and manipulation risk.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:85ec1adccfd6ee3062028610": "B, active listening and clarification. Paraphrasing another person’s concern and checking accuracy verifies shared understanding. A one-way persuasion seeks to influence rather than clarify; C avoids the feedback just used; D selectively withholds information. The question gives two clues: restating in one’s own words and seeking confirmation. Together they distinguish genuine listening from passive silence.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:07ac1c99f8349921968a7a0f": "A. Under PFRDA Act Section 51, the Central Government may make rules; Section 52 empowers PFRDA to make regulations consistent with the Act and rules. B and C incorrectly give both law-making powers to one institution; D reverses their statutory roles. Rules and regulations are both subordinate instruments, but the maker and statutory delegation differ. Do not confuse a regulator’s circulars with its regulations.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:2cfe11fb9f340a1fd3a1df18": "D, 6.8–7.2%, is the Economic Survey 2025–26 projection for real GDP growth in FY 2026–27. A and B are below this stated projection, while C is above it. The Survey figure is a forward-looking range, not a realised FY27 growth rate. In dynamic-data questions, first identify whether the number is an estimate, projection or actual and then match the fiscal year.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:f9dc51043450d58eb17031c5": "C, 2.20:1. Initial current ratio = 480/240 = 2. After paying ₹40 lakh of current payables from cash, current assets become ₹440 lakh and current liabilities ₹200 lakh. New ratio = 440/200 = 2.2. B wrongly assumes the ratio is unchanged; A and D reflect incorrect adjustments. Paying liabilities from cash increases an initially above-one current ratio under the stated assumptions.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:dc208e4870dc2c90b9d8b29a": "D. In Herzberg’s two-factor theory, pay and working conditions are hygiene factors: their inadequacy causes dissatisfaction, while their adequacy does not automatically produce intrinsic satisfaction. Achievement, responsibility and recognition are more typical motivators. A incorrectly calls salary necessarily intrinsic, B misclassifies recognition, and C claims an automatic long-term motivating effect from working conditions. Avoid equating the absence of dissatisfaction with positive motivation.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:b484cad4aed00033a13f6ee0": "A, 12%. CAPM required return = risk-free rate + beta × (market return − risk-free rate) = 6% + 1.2 × (11% − 6%) = 12%. B ignores beta-adjusted premium; C typically results from multiplying by the wrong base; D incorrectly adds beta times the full market return. The market risk premium is 5 percentage points, not 11%.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:d520101228e9b778eb33d475": "B, flexible budgeting, adjusts variable and other activity-dependent budget amounts to the actual 12,000-unit output. A retains the original static activity assumption; C confuses zero-based justification of expenditures with activity-flexing; D addresses allocation among competing capital projects. A fixed budget is useful for initial planning, but comparing actual costs with an activity-adjusted flexible budget isolates efficiency from volume differences.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:d881dc31cf45f786f05cbd04": "A. Section 123 permits the Board of Directors to declare an interim dividend, subject to statutory conditions. B refers to shareholder approval associated with final dividends, not the Board’s interim power. C can review financial information but does not itself declare the dividend; D, the auditor, expresses an audit opinion rather than taking the Board’s distribution decision. Separate authority to recommend, approve and declare dividends.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:d29523620e3f8ac999a714f3": "D, 5. In the simple closed-economy Keynesian model, government-expenditure multiplier = 1/(1 − MPC) = 1/(1 − 0.8) = 5. A is the reciprocal of MPC; B and C do not follow the stated formula. The result relies on the question’s assumptions: leakage through taxes or imports, or other changes in behaviour, would reduce the multiplier.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:569b440bb159451bce01eeaf": "C. A conventional life annuity transfers the contractual longevity/payment-duration risk to the insurer: payments continue according to the contract even if the annuitant lives longer than expected. A employment eligibility, B the retiree’s other equity portfolio risk and D tax-law changes are not the principal risk transferred. The annuity does not by itself eliminate inflation or insurer counterparty risk.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:17db4d634f3384227ab27e5e": "A. An agentic system can select and sequence actions, use tools, observe feedback and iterate toward a specified goal. B a longer one-off output and D ranking drafts can occur without multi-step agency; C is a training method, not a defining property of agentic operation. Agentic does not mean ungoverned or independently self-directed: constraints, permissions and human oversight still matter.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:55f1d49c5b7733bdd36be9f3": "C. Section 14 expressly empowers PFRDA to register and regulate pension intermediaries. A wrongly treats PFRDA as the guarantor of all market-linked pension returns; B confuses regulation with selecting an individual subscriber’s investments under NPS Active Choice; D confuses the Authority with the Central Recordkeeping Agency, which maintains subscriber/PRAN records. Distinguish the regulator’s powers from functions of supervised intermediaries and decisions reserved to subscribers.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:120dc638877d466aef41d8a2": "D. Effective capital expenditure in BE 2026–27 was ₹17.15 lakh crore: direct GoI capital spending ₹12.22 lakh crore plus grants-in-aid for creation of capital assets ₹4.93 lakh crore. A and C leave out one of these components; B mistakes the direct capex subtotal for the effective total. A grant that creates a capital asset expands effective capex even though it is classified differently in Union accounts.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:808114691aaceebf835031f5": "B, financing cash inflow. Issuing equity raises funds from owners and therefore changes financing, not operations or investment. A would involve the company’s main revenue-generating activity; C usually concerns buying/selling long-term assets or investments; D applies when no cash actually changes hands. Share issuance for cash is a financing receipt even if the proceeds are later spent on capital equipment.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:707c52d7509d269a88f66155": "C, a supporting/participating style, because employees are technically competent yet need consultation and encouragement. A directing provides too much task instruction; B coaching retains more task direction than needed; D delegating withdraws support despite the stated participation need. Situational leadership varies direction and support with competence and commitment; high skill does not always imply low need for relationship support.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:7b1559c08ce5945afd0fcfdf": "B. A repo-rate cut can lower banks’ marginal funding cost and, with effective transmission, make borrowing and investment more attractive. A incorrectly assumes a mechanical one-for-one reduction in every lending rate; C reverses the expected monetary direction; D confuses repo policy with the independent CRR instrument. Actual credit growth depends on risk appetite, demand, liquidity and transmission, so the question correctly says potentially.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:6e92f41721cb558177dbb024": "C, ₹6,000 adverse. Material price variance = (standard price − actual price) × actual quantity = (₹60 − ₹66) × 1,000 = −₹6,000. Under the stated sign convention a negative result is adverse because the firm paid ₹6/kg above standard. A reverses the favourable/adverse label; B uses the wrong magnitude; D is neither the difference nor the correct sign.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:ebcd39e3c8ef8c6017d3af86": "A. Section 143 gives the statutory auditor access to the company’s books and vouchers at all times for audit purposes. B declaring dividends and C appointing directors are governance decisions, not audit powers. D wrongly makes statutory inspection dependent on a fresh shareholder resolution. Auditors may seek information and explanations, but access and audit opinion do not make them the company’s management.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:5e610dd629eb798def50ad52": "C. Ordinary personal remittances from non-residents to residents are recorded as secondary-income transfers in the current account. A foreign direct investment, B external commercial borrowing and D reserve-asset transactions fall in the financial account under BPM6, rather than being personal transfers. The capital account is a separate category mainly for capital transfers and non-produced non-financial assets; do not collapse capital and financial accounts.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:b62b75a461faf7f2bed1454b": "B. Ordinary NPS is a defined-contribution, market-linked arrangement: benefits depend on contributions, accumulated investment returns and the applicable exit/annuitisation rules. A describes a final-salary defined-benefit formula; C invents a universal government guarantee across NPS assets; D wrongly gives everyone the same annuity regardless of corpus. Do not confuse NPS with APY’s guaranteed minimum options or separate government pension arrangements.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:0eb456471b2f23172928a94b": "A. Section 149’s independent-director test uses detailed conditions involving promoter/management connections, pecuniary relationships and other eligibility criteria. B mere minority nomination, C non-executive status and D length of service do not by themselves establish statutory independence. Independence is substantive, not a title; relevant relationships and disqualifications must be checked against the law and applicable rules.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:f720caad9b0265cb2d85bfaa": "A, the secondary market. Investors trade securities already issued, transferring ownership without the issuer necessarily receiving fresh capital. B the primary market raises new funds by issuance; C IPO and D new subscription are specific primary-issue mechanisms. A securities exchange is commonly a secondary-market venue, whereas applying to a fresh public issue belongs to the primary market.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:75929b280c3526a832ddc053": "D, rights issue. Under Section 62, a company offering further shares for cash to existing equity shareholders in proportion to holdings is ordinarily making a rights offer. A bonus shares involve capitalising eligible reserves rather than fresh cash; B employee options target employees under an incentive plan; C IPO offers securities to the public as an initial listing. The decisive clues are existing shareholders and proportionate cash subscription.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:67e0eee7d0f393575231a351": "B, 1.0 in absolute value. Quantity falls by 20/200 = 10%; price rises by 10/100 = 10%; PED = −10%/10% = −1, so absolute elasticity is 1. A, C and D use incorrect percentage bases or ratios. The question specifies original-value percentage changes; midpoint/arc elasticity would differ slightly, so do not silently change the convention.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:d537e40887e17677320f5a14": "C. A lifecycle fund normally tapers equity exposure as retirement approaches to reduce vulnerability to equity-market swings when time for recovery is shorter. A incorrectly increases risk with age as a supposed necessity; B mistakes risk reduction for a benefit guarantee; D confuses strategy design with a promise to replicate historical returns. Changing the allocation cannot eliminate all market, interest-rate or inflation risk.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:52ec010b565142b1e2e0ae56": "D: both statements are correct. Section 173(1) generally requires at least four Board meetings a year and no more than 120 days between consecutive meetings, subject to statutory exemptions. Section 410 constitutes the NCLAT, while Section 421 provides for appeals against NCLT orders. A omits the true appellate statement; B omits the true meeting rule; C wrongly rejects both. Do not cite Section 410 alone for the right of appeal.",
-    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r3:custom:q:a901f551b8aac835a9999418": "A, 61.5% of nominal GDP, is the Economic Survey 2025–26 figure for private final consumption expenditure in FY 2025–26 using first advance estimates. B, C and D are not that reported share. Note the precision of the label: the Survey also cites 61.4% for H1 FY26, which must not be confused with the full-year FAE 61.5%. Estimates can later be revised."
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:3a0b175ed1702238db747052": "Illustrative title: Retirement Security in a Changing Economy\nModel précis: Retirement security depends not simply on accumulated savings but also on stable earnings, accessible institutions and systems that manage uncertainty. Traditional pensions assumed predictable employment, whereas irregular incomes and interrupted careers now make regular contributions difficult. Genuine financial inclusion therefore requires affordable, convenient and transparent arrangements that build trust. Policymakers must balance investment flexibility against market risk, guarantees against financial sustainability, and emergency withdrawals against future adequacy. Women, informal workers and those with interrupted careers face particular disadvantages, calling for inclusive yet administratively sustainable designs. Pension systems should consequently be assessed not only by enrolment or assets, but by their ability to provide dependable old-age income while balancing personal responsibility and social protection.\nUnofficial practice rubric (/20): fidelity and coverage 8; compression 4; logical structure 3; language and grammar 3; title 2. Manually assess writing; the model is not the only acceptable response.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:e70b67e917f467196a1045c9": "A is correct. The PFRDA Act regulates the NPS and the pension schemes within its statutory scope; it is not a universal law for every provident fund. B ignores exclusions and other regulators; C wrongly confines it to Central employees; D confuses pension regulation with insurance annuity regulation. Recall: identify the scheme and its governing enactment before naming its regulator.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:1df289e255f35bba7799f2c1": "B, 4.3% of GDP, is the FY 2026–27 Budget Estimate for fiscal deficit. C (4.4%) belongs to a different Budget-period comparison; A and D are not the specified BE figure. Fiscal deficit measures borrowing requirements, not capital expenditure or the revenue deficit. Always distinguish BE from RE and identify the financial year before memorising a Budget number.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:bb6ce3568f668c45eab8fd01": "C, ₹7.5 lakh. NRV is expected sale proceeds less costs necessary to complete and sell: ₹7.8 − ₹0.3 = ₹7.5 lakh. Inventory is measured at the lower of its ₹8 lakh cost and ₹7.5 lakh NRV. A ignores the write-down; B ignores selling expenses; D incorrectly adds expenses. The rule is lower of cost and NRV, not lower of cost and selling price.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:e29ef5308217203cdfd97903": "B is controlling: measure actual performance, compare it with standards, identify deviations and take corrective action. Planning sets objectives (A), staffing secures people (C), and organising allocates roles/resources (D). Controlling is the feedback-and-correction function, not simply drawing up a plan. The question’s decisive clue is comparison of actual results with standards followed by corrective action.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:9ce1a138d16ae18c7524d0a2": "D. For an existing fixed-coupon bond, higher market price means lower yield to maturity and vice versa, other inputs held constant. A reverses the relationship; B denies the price sensitivity of yield; C confuses the contractually fixed coupon rate with the changing market yield. A bond can keep paying the same coupon while its traded price and yield move in opposite directions.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:2861d6076f41bf82080ad5c1": "B, 1,200 units. Contribution per unit = ₹500 selling price − ₹300 variable cost = ₹200. Break-even units = fixed costs / contribution per unit = ₹2,40,000 / ₹200 = 1,200. A understates fixed-cost recovery; C and D exceed the break-even output. Fixed costs are not divided by selling price: only the contribution left after variable costs pays for fixed costs.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:195c0863ab8aa38a06169451": "B. Section 42 private placement is an offer/invitation to a selected, identified set of persons subject to the statutory process. A describes a public offer, C resembles a proportionate rights issue under Section 62, and D a bonus issue under Section 63. The distinction is the mode and target of invitation; a private placement is not an unrestricted appeal to the public.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:7bfbb5ce544e6d171e56c830": "D. A cash transfer does not itself buy newly produced goods or services and is excluded from the expenditure measure of GDP. A is government consumption/investment expenditure, B household final consumption, and C business investment in equipment. If the recipient later spends the transfer on current output, that spending may enter GDP; the transfer itself is not counted again.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:04708c162f6ae24e670b552d": "B. The Central Recordkeeping Agency maintains subscriber records and PRAN-linked transactions. A pension fund manages invested assets; C an annuity service provider contracts for pension/annuity payments at the applicable stage; D a custodian safeguards securities/assets. The CRA is the recordkeeping and transaction-information hub, not the owner or portfolio manager of the underlying investments.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:3c9175e145d6963c1e55daba": "C. Historical applications labelled default/not default supply the known target classes needed for supervised classification. A clustering and D dimensionality reduction are unsupervised methods without such outcome labels; B reinforcement learning uses reward-based interaction rather than labelled examples as the central training signal. Key distinction: labels + predicted category = supervised classification.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:ff904bda734ce70f5eafc14c": "B, media convergence, combines distribution and often production across broadcast, websites, apps and social channels. A digital exclusion is about access barriers; C audience fragmentation may coexist but does not explain integrated cross-platform distribution; D price discrimination concerns varying prices across buyers. Convergence involves media technologies, content and platforms coming together, not merely the existence of several audiences.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:9fdc30470cf4c974139bd69f": "C, Place. The provider is changing how and where users reach its service through branches, apps and partners. Product refers to the service offered (A), Price to what users pay (B), and Promotion to persuasive communications (D). In the four Ps, access and distribution channels belong to Place even if the channel is digital rather than a physical shop.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:d65d1ec3f59f390a013c15e9": "C. Section 14(2)(f) empowers PFRDA to establish subscriber-grievance redressal mechanisms by regulation. A is not a universal guarantee of investment returns; B would confer judicial powers not supplied by that clause; D concerns insurance-product pricing, not PFRDA subscriber grievance redressal. Memorise the function and the provision together: protection of subscribers includes grievance handling, not underwriting all investment risk.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:f90c77d6cf883e34854e10dd": "B, ₹12.22 lakh crore, is direct Central Government capital expenditure in BE 2026–27. D, ₹17.15 lakh crore, is the broader effective capital expenditure including grants for creation of capital assets; A and C are not the direct capex BE total. An MCQ may deliberately swap direct and effective capex: check the exact expenditure concept and the BE/RE label.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:02a78b405c6dc161bbc65fa4": "A. Under the indirect method, increasing inventory ordinarily uses operating resources; its increase is deducted while reconciling accrual profit to operating cash flow, other things equal. B has the cash-flow direction reversed; C misclassifies working capital as financing; D wrongly ignores non-cash working-capital changes in the reconciliation. A cash purchase of inventory is already reflected through working-capital adjustment.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:a2004ab6816124abaab20d5a": "C, matrix structure, because an employee has both functional and project reporting relationships. A line or B purely functional structure ordinarily has a single vertical command chain; D divisional structure is arranged around products, regions or markets and need not create dual reporting. The identifying feature of a matrix is the coexistence of functional and project authority.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:f65ded8f52dbeedf8f2de171": "D. A put option gives its buyer the right, not the obligation, to sell the underlying at the strike under the option terms. A and B mistakenly impose exercise obligations on the buyer; C describes the buyer of a call option. The seller/writer, not the buyer, undertakes the corresponding obligation if valid exercise occurs. Put = right to sell; call = right to buy.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:f7d0c3ab6204576961bc8283": "B. Activity-based costing first groups overhead by activity, then charges products using an activity cost driver such as number of set-ups. A uses a broad allocation base regardless of the actual driver; C marginal costing focuses on variable contribution and does not solve this overhead-driver allocation; D equivalent-unit process costing addresses homogeneous production. Allocate set-up cost by set-ups when set-ups cause that overhead.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:89bf1faa3a0d330e8eff76b6": "C. Section 63 allows eligible free reserves, the securities premium account and the capital redemption reserve account to be capitalised for fully paid bonus shares, subject to conditions. It expressly excludes reserves created by asset revaluation. Hence A, B and D name eligible sources, while C is prohibited. Exam trap: an accounting reserve appearing in equity is not automatically distributable or eligible for bonus capitalisation.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:492954ad53edd1dbfacafcf0": "B, 110. GDP deflator = nominal GDP / real GDP × 100 = 2,200 / 2,000 × 100. A (90.9) inverts the ratio; C treats the figure as a percentage by an incorrect operation; D omits the base-100 scaling. A value of 110 indicates the current-price level of measured output is 10% above the base-year price level in this calculation.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:6ef5e9bc757cb3f37562ff83": "B. APY offers specified Government-guaranteed minimum monthly pensions of ₹1,000, ₹2,000, ₹3,000, ₹4,000 or ₹5,000 after age 60, subject to enrolment and contribution conditions. A gives the wrong amount and age; C wrongly denies the defined guarantee; D wrongly presents a lump-sum at age 40. Do not confuse APY’s specified minimum benefit with ordinary market-linked NPS accumulation.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:1ecc819798ebbd59c017e336": "C. Excellent training accuracy with much weaker performance on independent representative data suggests overfitting or poor generalisation. A underfitting would usually show weak training performance too; B accuracy alone cannot guarantee data integrity; D successful cross-validation cannot be inferred from one reported test result. Look at the gap between in-sample and out-of-sample performance, not the training score alone.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:762f1d164a55bf4947810fbc": "B. Behavioural microtargeting creates privacy and profiling concerns, particularly when personal data and tailored messages can be used manipulatively. A spectrum licensing, C copyright ownership and D circulation audit may be genuine media-law subjects, but none responds as directly to individual behavioural profiling. The ethical issue is not personalisation as such; it is data use, consent, fairness and manipulation risk.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:85ec1adccfd6ee3062028610": "B, active listening and clarification. Paraphrasing another person’s concern and checking accuracy verifies shared understanding. A one-way persuasion seeks to influence rather than clarify; C avoids the feedback just used; D selectively withholds information. The question gives two clues: restating in one’s own words and seeking confirmation. Together they distinguish genuine listening from passive silence.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:07ac1c99f8349921968a7a0f": "A. Under PFRDA Act Section 51, the Central Government may make rules; Section 52 empowers PFRDA to make regulations consistent with the Act and rules. B and C incorrectly give both law-making powers to one institution; D reverses their statutory roles. Rules and regulations are both subordinate instruments, but the maker and statutory delegation differ. Do not confuse a regulator’s circulars with its regulations.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:2cfe11fb9f340a1fd3a1df18": "D, 6.8–7.2%, is the Economic Survey 2025–26 projection for real GDP growth in FY 2026–27. A and B are below this stated projection, while C is above it. The Survey figure is a forward-looking range, not a realised FY27 growth rate. In dynamic-data questions, first identify whether the number is an estimate, projection or actual and then match the fiscal year.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:f9dc51043450d58eb17031c5": "C, 2.20:1. Initial current ratio = 480/240 = 2. After paying ₹40 lakh of current payables from cash, current assets become ₹440 lakh and current liabilities ₹200 lakh. New ratio = 440/200 = 2.2. B wrongly assumes the ratio is unchanged; A and D reflect incorrect adjustments. Paying liabilities from cash increases an initially above-one current ratio under the stated assumptions.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:dc208e4870dc2c90b9d8b29a": "D. In Herzberg’s two-factor theory, pay and working conditions are hygiene factors: their inadequacy causes dissatisfaction, while their adequacy does not automatically produce intrinsic satisfaction. Achievement, responsibility and recognition are more typical motivators. A incorrectly calls salary necessarily intrinsic, B misclassifies recognition, and C claims an automatic long-term motivating effect from working conditions. Avoid equating the absence of dissatisfaction with positive motivation.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:b484cad4aed00033a13f6ee0": "A, 12%. CAPM required return = risk-free rate + beta × (market return − risk-free rate) = 6% + 1.2 × (11% − 6%) = 12%. B ignores beta-adjusted premium; C typically results from multiplying by the wrong base; D incorrectly adds beta times the full market return. The market risk premium is 5 percentage points, not 11%.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:d520101228e9b778eb33d475": "B, flexible budgeting, adjusts variable and other activity-dependent budget amounts to the actual 12,000-unit output. A retains the original static activity assumption; C confuses zero-based justification of expenditures with activity-flexing; D addresses allocation among competing capital projects. A fixed budget is useful for initial planning, but comparing actual costs with an activity-adjusted flexible budget isolates efficiency from volume differences.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:d881dc31cf45f786f05cbd04": "A. Section 123 permits the Board of Directors to declare an interim dividend, subject to statutory conditions. B refers to shareholder approval associated with final dividends, not the Board’s interim power. C can review financial information but does not itself declare the dividend; D, the auditor, expresses an audit opinion rather than taking the Board’s distribution decision. Separate authority to recommend, approve and declare dividends.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:d29523620e3f8ac999a714f3": "D, 5. In the simple closed-economy Keynesian model, government-expenditure multiplier = 1/(1 − MPC) = 1/(1 − 0.8) = 5. A is the reciprocal of MPC; B and C do not follow the stated formula. The result relies on the question’s assumptions: leakage through taxes or imports, or other changes in behaviour, would reduce the multiplier.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:569b440bb159451bce01eeaf": "C. A conventional life annuity transfers the contractual longevity/payment-duration risk to the insurer: payments continue according to the contract even if the annuitant lives longer than expected. A employment eligibility, B the retiree’s other equity portfolio risk and D tax-law changes are not the principal risk transferred. The annuity does not by itself eliminate inflation or insurer counterparty risk.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:17db4d634f3384227ab27e5e": "A. An agentic system can select and sequence actions, use tools, observe feedback and iterate toward a specified goal. B a longer one-off output and D ranking drafts can occur without multi-step agency; C is a training method, not a defining property of agentic operation. Agentic does not mean ungoverned or independently self-directed: constraints, permissions and human oversight still matter.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:55f1d49c5b7733bdd36be9f3": "C. Section 14 expressly empowers PFRDA to register and regulate pension intermediaries. A wrongly treats PFRDA as the guarantor of all market-linked pension returns; B confuses regulation with selecting an individual subscriber’s investments under NPS Active Choice; D confuses the Authority with the Central Recordkeeping Agency, which maintains subscriber/PRAN records. Distinguish the regulator’s powers from functions of supervised intermediaries and decisions reserved to subscribers.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:120dc638877d466aef41d8a2": "D. Effective capital expenditure in BE 2026–27 was ₹17.15 lakh crore: direct GoI capital spending ₹12.22 lakh crore plus grants-in-aid for creation of capital assets ₹4.93 lakh crore. A and C leave out one of these components; B mistakes the direct capex subtotal for the effective total. A grant that creates a capital asset expands effective capex even though it is classified differently in Union accounts.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:808114691aaceebf835031f5": "B, financing cash inflow. Issuing equity raises funds from owners and therefore changes financing, not operations or investment. A would involve the company’s main revenue-generating activity; C usually concerns buying/selling long-term assets or investments; D applies when no cash actually changes hands. Share issuance for cash is a financing receipt even if the proceeds are later spent on capital equipment.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:707c52d7509d269a88f66155": "C, a supporting/participating style, because employees are technically competent yet need consultation and encouragement. A directing provides too much task instruction; B coaching retains more task direction than needed; D delegating withdraws support despite the stated participation need. Situational leadership varies direction and support with competence and commitment; high skill does not always imply low need for relationship support.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:7b1559c08ce5945afd0fcfdf": "B. A repo-rate cut can lower banks’ marginal funding cost and, with effective transmission, make borrowing and investment more attractive. A incorrectly assumes a mechanical one-for-one reduction in every lending rate; C reverses the expected monetary direction; D confuses repo policy with the independent CRR instrument. Actual credit growth depends on risk appetite, demand, liquidity and transmission, so the question correctly says potentially.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:6e92f41721cb558177dbb024": "C, ₹6,000 adverse. Material price variance = (standard price − actual price) × actual quantity = (₹60 − ₹66) × 1,000 = −₹6,000. Under the stated sign convention a negative result is adverse because the firm paid ₹6/kg above standard. A reverses the favourable/adverse label; B uses the wrong magnitude; D is neither the difference nor the correct sign.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:ebcd39e3c8ef8c6017d3af86": "A. Section 143 gives the statutory auditor access to the company’s books and vouchers at all times for audit purposes. B declaring dividends and C appointing directors are governance decisions, not audit powers. D wrongly makes statutory inspection dependent on a fresh shareholder resolution. Auditors may seek information and explanations, but access and audit opinion do not make them the company’s management.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:5e610dd629eb798def50ad52": "C. Ordinary personal remittances from non-residents to residents are recorded as secondary-income transfers in the current account. A foreign direct investment, B external commercial borrowing and D reserve-asset transactions fall in the financial account under BPM6, rather than being personal transfers. The capital account is a separate category mainly for capital transfers and non-produced non-financial assets; do not collapse capital and financial accounts.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:b62b75a461faf7f2bed1454b": "B. Ordinary NPS is a defined-contribution, market-linked arrangement: benefits depend on contributions, accumulated investment returns and the applicable exit/annuitisation rules. A describes a final-salary defined-benefit formula; C invents a universal government guarantee across NPS assets; D wrongly gives everyone the same annuity regardless of corpus. Do not confuse NPS with APY’s guaranteed minimum options or separate government pension arrangements.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:0eb456471b2f23172928a94b": "A. Section 149’s independent-director test uses detailed conditions involving promoter/management connections, pecuniary relationships and other eligibility criteria. B mere minority nomination, C non-executive status and D length of service do not by themselves establish statutory independence. Independence is substantive, not a title; relevant relationships and disqualifications must be checked against the law and applicable rules.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:f720caad9b0265cb2d85bfaa": "A, the secondary market. Investors trade securities already issued, transferring ownership without the issuer necessarily receiving fresh capital. B the primary market raises new funds by issuance; C IPO and D new subscription are specific primary-issue mechanisms. A securities exchange is commonly a secondary-market venue, whereas applying to a fresh public issue belongs to the primary market.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:75929b280c3526a832ddc053": "D, rights issue. Under Section 62, a company offering further shares for cash to existing equity shareholders in proportion to holdings is ordinarily making a rights offer. A bonus shares involve capitalising eligible reserves rather than fresh cash; B employee options target employees under an incentive plan; C IPO offers securities to the public as an initial listing. The decisive clues are existing shareholders and proportionate cash subscription.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:67e0eee7d0f393575231a351": "B, 1.0 in absolute value. Quantity falls by 20/200 = 10%; price rises by 10/100 = 10%; PED = −10%/10% = −1, so absolute elasticity is 1. A, C and D use incorrect percentage bases or ratios. The question specifies original-value percentage changes; midpoint/arc elasticity would differ slightly, so do not silently change the convention.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:d537e40887e17677320f5a14": "C. A lifecycle fund normally tapers equity exposure as retirement approaches to reduce vulnerability to equity-market swings when time for recovery is shorter. A incorrectly increases risk with age as a supposed necessity; B mistakes risk reduction for a benefit guarantee; D confuses strategy design with a promise to replicate historical returns. Changing the allocation cannot eliminate all market, interest-rate or inflation risk.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:52ec010b565142b1e2e0ae56": "D: both statements are correct. Section 173(1) generally requires at least four Board meetings a year and no more than 120 days between consecutive meetings, subject to statutory exemptions. Section 410 constitutes the NCLAT, while Section 421 provides for appeals against NCLT orders. A omits the true appellate statement; B omits the true meeting rule; C wrongly rejects both. Do not cite Section 410 alone for the right of appeal.",
+    "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:a901f551b8aac835a9999418": "A, 61.5% of nominal GDP, is the Economic Survey 2025–26 figure for private final consumption expenditure in FY 2025–26 using first advance estimates. B, C and D are not that reported share. Note the precision of the label: the Survey also cites 61.4% for H1 FY26, which must not be confused with the full-year FAE 61.5%. Estimates can later be revised."
   }
 }

@@ -17,11 +17,11 @@ const title='PFRDA Grade A 2026 — Day 1';
 source.title=title+' — Original';
 source.questions[0].scoringOverride={correctMarks:20,incorrectMarks:0,unansweredMarks:0};
 const revised=structuredClone(source);
-revised.revision=3;
+revised.revision=4;
 revised.title=title+' — Revised Practice';
-// Précis practice needs a visible live counter even in exam-simulation mode.
-// The upper end of the stated 100–120-word target is advisory, not a hard cap.
-revised.tools={...revised.tools,wordCount:'shown'};
+// The 120-word advisory target enables the live counter under the global Auto
+// policy: hidden in strict simulation, visible in all practice modes.
+revised.tools={...revised.tools,wordCount:'auto'};
 revised.questions[0].wordLimit=120;
 
 // The source passage itself remains byte-for-byte unchanged. In the revised

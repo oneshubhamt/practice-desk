@@ -60,7 +60,18 @@ export function builtinCglPackages(sources: SourcePaperBank, patches: ReviewPatc
 /** Derive practice policies from any validated paper without modifying its source.
  * Only authored section limits may become individual section-practice timers;
  * never invent an equal division of a whole-paper timer. */
+export function availablePracticeModes(paper:PaperRevision):readonly PracticeMode[]{
+ return paper.sections.length>1?["strict","free","single"]:["strict","free"];
+}
+
+export function resolvePracticeMode(paper:PaperRevision,selected:PracticeMode):PracticeMode{
+ return availablePracticeModes(paper).includes(selected)?selected:
+   paper.edition==="custom"?"free":"strict";
+}
+
 export function configurePracticeMode(base:ExamPackage,mode:PracticeMode,sectionIndex=0):ExamPackage{
+ if(!availablePracticeModes(base.paper).includes(mode))
+   throw new Error("Selected practice mode is unavailable for this paper");
  if(mode==="strict"){
    if(base.paper.timing.kind!=="sectional")return base;
    // A hard deadline must automatically advance, not strand the candidate
@@ -72,6 +83,12 @@ export function configurePracticeMode(base:ExamPackage,mode:PracticeMode,section
    return {...base,paper};
  }
  const source=base.paper;
+ // A whole-paper or untimed package with already-flexible navigation and pause
+ // policy needs only the frozen advisory AttemptMode, not a duplicate paper/key.
+ if(mode==="free"&&source.timing.kind!=="sectional"&&
+   (source.timing.kind==="untimed"||source.timing.pausePolicy==="allowed")&&
+   source.navigation.questionNavigation==="free"&&source.navigation.sectionNavigation==="free")
+   return base;
  if(mode==="single"&&!source.sections[sectionIndex])throw new Error("Unknown practice section");
  const sections=mode==="single"?[source.sections[sectionIndex]!]:[...source.sections];
  const included=new Set(sections.flatMap(s=>s.questionRevisionIds));

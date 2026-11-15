@@ -53,7 +53,7 @@ test("PFRDA Original and Revised packages retain distinct immutable identities",
   JSON.parse(await readFile(join(base,edition,"package.exam.json"),"utf8"))));
  assert.equal(new Set(packages.map(x=>x.paper.id)).size,2);
  assert.equal(new Set(packages.map(x=>x.answerKey.id)).size,2);
- assert.deepEqual(packages.map(x=>x.paper.revision),[1,3]);
+ assert.deepEqual(packages.map(x=>x.paper.revision),[1,4]);
  for(const pkg of packages){
   assert.equal(pkg.questions.length,51);
   assert.deepEqual(pkg.paper.scoring.defaultRule,{correctMarks:2,incorrectMarks:-0.5,unansweredMarks:0});
@@ -64,7 +64,7 @@ test("PFRDA Original and Revised packages retain distinct immutable identities",
  assert.equal(installed[0].paper.id,packages[1].paper.id);
 });
 
-test("preinstalled PFRDA précis shows its advisory live word counter in exam simulation",async()=>{
+test("preinstalled PFRDA précis follows Auto: hidden in strict and shown in practice",async()=>{
  const base=join(root,"question-banks","pfrda","2026","mocks","day-01","revised");
  const source=JSON.parse(await readFile(join(base,"bank.authoring.json"),"utf8"));
  const pkg=JSON.parse(await readFile(join(base,"package.exam.json"),"utf8"));
@@ -72,13 +72,16 @@ test("preinstalled PFRDA précis shows its advisory live word counter in exam si
  const installed=(await loadQuestionBankCatalog(root)).preinstalled.packages[0];
  const precis=installed.questions.find(q=>q.content.kind==="free-response");
  assert.ok(precis,"PFRDA précis must be present");
- assert.equal(installed.paper.candidateTools?.wordCount,"shown");
+ assert.equal(installed.paper.candidateTools?.wordCount,undefined);
  assert.equal(precis.content.responseRules.wordLimit,120);
- const show=shouldShowWordCount(installed.paper.candidateTools?.wordCount,"exam-simulation");
- assert.equal(show,true);
- const html=renderGenericControls(installed,precis,undefined,{showWordCount:show});
- assert.match(html,/id="g-word-count"/);
- assert.match(html,/0 \/ 120 words/);
+ for(const [mode,expected] of [["exam-simulation",false],["full-paper-practice",true],
+  ["section-practice",true],["custom-practice",true]]){
+  const show=shouldShowWordCount(installed.paper.candidateTools?.wordCount,mode);
+  assert.equal(show,expected,mode);
+  const html=renderGenericControls(installed,precis,undefined,{showWordCount:show});
+  if(expected){assert.match(html,/id="g-word-count"/);assert.match(html,/0 \/ 120 words/);}
+  else assert.doesNotMatch(html,/id="g-word-count"/);
+ }
 });
 
 test("manifest-only append discovers a synthetic second generic paper without root-catalog edits",async()=>{

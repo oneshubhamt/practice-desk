@@ -121,6 +121,8 @@ try{
   await page.locator("#g-file").setInputFiles({name:"advisory-written.json",mimeType:"application/json",
    buffer:Buffer.from(JSON.stringify(advisoryWritten))});
   await chooseModernPaper(page,advisoryWritten.paper.id);
+  check(await page.locator('[data-mode="free"]').getAttribute("aria-pressed")==="true",
+   "a newly imported custom paper must retain its advisory practice default");
   await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
   await page.locator('[data-section="1"]').click();
   await page.locator("#g-next").click();await page.locator("#g-next").click();

@@ -3,8 +3,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
-import {validateExamPackage,builtinCglPackages,configurePracticeMode,attemptModeForPractice,configureUntimedPractice,startGenericAttempt} from "../src/app/exam-package.ts";
+import {validateExamPackage,builtinCglPackages,availablePracticeModes,resolvePracticeMode,
+ configurePracticeMode,attemptModeForPractice,configureUntimedPractice,startGenericAttempt} from "../src/app/exam-package.ts";
 import {loadQuestionBankCatalog} from "../scripts/question-bank-catalog.mjs";
+import {applyLibraryFamily} from "../src/app/library-controller.ts";
+import {shouldShowWordCount} from "../src/domain/word-count.ts";
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {validatePracticeSetups} from "../src/app/practice-selection.ts";
 const starter=JSON.parse(await readFile(new URL("../examples/apfc-authoring-example.json",import.meta.url),"utf8"));
@@ -107,7 +110,7 @@ test("PFRDA generic modes preserve authored 20+40 minutes, keys and live word-co
   assert.equal(single.paper.sections.length,1);
   assert.equal(single.paper.timing.kind,"whole-paper");
   assert.equal(single.paper.timing.durationMs,minutes*60000);
-  assert.equal(single.paper.candidateTools.wordCount,"shown");
+  assert.equal(single.paper.candidateTools?.wordCount,undefined);
   assert.equal(validateExamPackage(single),single);
   assert.equal(startGenericAttempt(single,"pfrda-section-"+sectionIndex,1000,
    attemptModeForPractice("single")).frozen.snapshot.mode,"section-practice");
@@ -115,13 +118,67 @@ test("PFRDA generic modes preserve authored 20+40 minutes, keys and live word-co
  assert.deepEqual(strict.answerKey.entries,packageValue.answerKey.entries);
  assert.deepEqual(flexible.answerKey.entries,packageValue.answerKey.entries);
  assert.equal(flexible.questions[0].content.responseRules.wordLimit,120);
+ assert.equal(shouldShowWordCount(strict.paper.candidateTools?.wordCount,"exam-simulation"),false);
+ assert.equal(shouldShowWordCount(flexible.paper.candidateTools?.wordCount,"full-paper-practice"),true);
+ assert.equal(resolvePracticeMode(packageValue.paper,"strict"),"strict");
+});
+
+test("mode availability follows authored physical sections, not exam names",()=>{
+ const oneSection={...starter,
+  paperId:"one-section-exam",bankId:"one-section-exam",examId:"upsc-cse-prelims",
+  sections:[{id:"whole",title:"Complete paper"}],
+  questions:starter.questions.map(({syllabusHeadingId:_,...q})=>({...q,subject:"General",examSection:"whole"})),
+  timing:{kind:"whole-paper",minutes:120,pausePolicy:"forbidden"}};
+ const single=compileExternalQuestionBank(oneSection);
+ assert.deepEqual(availablePracticeModes(single.paper),["strict","free"]);
+ assert.equal(resolvePracticeMode(single.paper,"single"),"free",
+  "a custom one-section paper must not retain an unavailable mode");
+ assert.throws(()=>configurePracticeMode(single,"single",0),/unavailable/);
+ assert.equal(configurePracticeMode(single,"strict").paper.timing.durationMs,120*60000);
+ assert.equal(configurePracticeMode(single,"free").paper.timing.durationMs,120*60000);
+
+ const multi=compileExternalQuestionBank({...oneSection,
+  bankId:"multi-section-exam",paperId:"multi-section-exam",examId:"xat",
+  sections:starter.sections,
+  questions:starter.questions.map(({syllabusHeadingId:_,...q})=>({...q,subject:"General"}))});
+ assert.deepEqual(availablePracticeModes(multi.paper),["strict","free","single"]);
+ assert.equal(configurePracticeMode(multi,"single",1).paper.timing.kind,"untimed",
+  "whole-paper limit must not fabricate a section-only time budget");
+});
+
+test("fresh custom families retain advisory default; CGL stays strict; saved modes remain deliberate",()=>{
+ const custom=compileExternalQuestionBank({...starter,
+  timing:{kind:"whole-paper",minutes:2,pausePolicy:"allowed"}});
+ const cgl=builtinCglPackages(sources,patches)[0];
+ const families=[
+  {id:"imported:custom",papers:[custom],currentPaperId:custom.paper.id},
+  {id:"builtin:ssc-cgl",papers:[cgl],currentPaperId:cgl.paper.id}
+ ];
+ const owner={selectedFamilyId:"",setups:{schema:2,selectedFamilyId:"imported:custom",families:{}},
+  choice:"",practiceMode:"strict",singleSection:0,untimedPractice:false,editionView:"reviewed",
+  packages:new Map([[custom.paper.id,custom],[cgl.paper.id,cgl]]),families:()=>families};
+ applyLibraryFamily(owner,"imported:custom");
+ assert.equal(owner.practiceMode,"free","new authored/imported papers must not silently gain hard expiry");
+ applyLibraryFamily(owner,"builtin:ssc-cgl");
+ assert.equal(owner.practiceMode,"strict","CGL default must remain strict");
+ owner.setups.families["imported:custom"]={paperRevisionId:custom.paper.id,mode:"strict",
+  section:0,untimed:false,edition:"reviewed"};
+ applyLibraryFamily(owner,"imported:custom");
+ assert.equal(owner.practiceMode,"strict","an explicitly saved strict selection must be respected");
 });
 
 test("generic mode derivation never invents timers for unallocated sections",()=>{
  const noClock=compileExternalQuestionBank(starter);
+ assert.equal(resolvePracticeMode(noClock.paper,"strict"),"strict");
+ assert.equal(configurePracticeMode(noClock,"free"),noClock,
+  "already-flexible untimed papers need no duplicate paper/key revisions");
  assert.equal(configurePracticeMode(noClock,"free").paper.timing.kind,"untimed");
  assert.equal(configurePracticeMode(noClock,"single",1).paper.timing.kind,"untimed");
  const whole=compileExternalQuestionBank({...starter,timing:{kind:"whole-paper",minutes:50,pausePolicy:"forbidden"}});
+ const alreadyFlexible=compileExternalQuestionBank({...starter,
+  timing:{kind:"whole-paper",minutes:50,pausePolicy:"allowed"}});
+ assert.equal(configurePracticeMode(alreadyFlexible,"free"),alreadyFlexible,
+  "existing whole-paper free navigation must retain its package identity");
  assert.equal(configurePracticeMode(whole,"free").paper.timing.durationMs,50*60000);
  assert.equal(configurePracticeMode(whole,"single",1).paper.timing.kind,"untimed",
   "the whole-paper limit is not evidence of a particular section's allowance");
