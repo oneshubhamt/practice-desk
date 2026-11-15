@@ -853,6 +853,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   };
   const resizeCurrent=(listField:"options"|"leftItems"|"rightItems",count:number,min:number)=>{
    if(!Number.isSafeInteger(count)||count<min||count>MAX_AUTHORED_ITEMS){status("Item count must be "+min+"–"+MAX_AUTHORED_ITEMS+".",true);return;}
+   capture();
    try{changeDraft(d=>({...d,questions:d.questions.map(q=>{
     if(q.id!==questionId)return q;
     const resized=resizeRichItems(q[listField],count,()=>plainRichDocument(""));
@@ -1007,6 +1008,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   }
   find<HTMLSelectElement>("pd-author-kind").onchange=e=>{
    const nextKind=(e.target as HTMLSelectElement).value as QuestionKind;
+   capture();
    try{
     changeDraft(d=>({...d,questions:d.questions.map(q=>{
      if(q.id!==questionId)return q;
