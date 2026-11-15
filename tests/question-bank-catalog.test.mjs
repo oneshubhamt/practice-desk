@@ -234,6 +234,21 @@ test("manifest-only append discovers a synthetic second generic paper without ro
  }finally{await rm(dir,{recursive:true,force:true});}
 });
 
+test("preinstalled false never exempts an installed family from corpus validation",async()=>{
+ const dir=await mkdtemp(join(tmpdir(),"pd-disabled-family-"));
+ try{
+  await cp(join(root,"question-banks"),join(dir,"question-banks"),{recursive:true});
+  const catalog=JSON.parse(await readFile(join(dir,"question-banks/catalog.json"),"utf8"));
+  catalog.families.find(x=>x.id==="pfrda-grade-a-2026-phase-ii").preinstalled=false;
+  const packagePath=join(dir,"question-banks/pfrda/2026/mocks/day-01/revised/package.exam.json");
+  const pkg=JSON.parse(await readFile(packagePath,"utf8"));
+  pkg.title+=" — corrupted while disabled";
+  await writeFile(packagePath,JSON.stringify(pkg,null,2));
+  await assert.rejects(()=>loadQuestionBankCatalog(dir,catalog),
+   /diverges from canonical bank\.authoring\.json/);
+ }finally{await rm(dir,{recursive:true,force:true});}
+});
+
 test("catalog switches independently remove PFRDA, CGL, or every bundled bank",async()=>{
  const noPfrda=await loadQuestionBankCatalog(root,await withPreinstall({"pfrda-grade-a-2026-phase-ii":false}));
  assert.equal(noPfrda.preinstalled.packages.length,10);

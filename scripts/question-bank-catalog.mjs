@@ -273,8 +273,10 @@ export async function loadQuestionBankCatalog(root,catalogOverride){
  for(const family of catalog.families){
   const manifestSet=await manifestPapers(root,family);
   for(const path of manifestSet.activePaths)reachable.add(path);
-  if(!family.preinstalled)continue;
+  // Registered corpus validity is independent of packaging policy: disabled
+  // families are still source/package/lineage validated, then omitted from the payload.
   const loaded=await loadExamPackages(root,family,manifestSet,seenPaperIds);
+  if(!family.preinstalled)continue;
   packages.push(...loaded.packages);
   families.push(Object.freeze({id:family.id,examId:family.examId,title:family.title,
    paperIds:Object.freeze(loaded.paperIds),
