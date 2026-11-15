@@ -6,6 +6,14 @@ export async function candidateCore(){
 const {openHarness,records,check,assertNoOverflow,route,claimNativeNavigation}=await import("../../browser/fixtures.mjs");
 const {chooseModernPaper}=await import("../../paper-select.mjs");
 const {pkg : sixKinds}=await import("../../../tests/fixtures/six-kinds.mjs");
+const {paperRevisionHash}=await import("../../../src/domain/integrity.ts");
+const shortTimed=(id,durationMs,edition)=>{
+ const {contentHash:_oldHash,...paperCore}=sixKinds.paper;
+ const base={...paperCore,id,edition,timing:{kind:"whole-paper",durationMs,pausePolicy:"allowed"}};
+ return {...sixKinds,title:sixKinds.title+" · "+id,paper:{...base,contentHash:paperRevisionHash(base)}};
+};
+const hardWritten=shortTimed("rev-paper:hard-written",4000,"source");
+const advisoryWritten=shortTimed("rev-paper:advisory-written",2000,"custom");
 const h=await openHarness({artifactDir:"artifacts/acceptance-modern"});
 const evidence=[];
 async function scenario(name,run){
@@ -89,6 +97,48 @@ try{
     restored?.completionReason===snapshot.completionReason,
     "History restore changed frozen revision, score ledger or completion provenance");
   await assertNoOverflow(page,"CGL History");
+ });
+ await scenario("written-hard-timeout-preserves-visible-draft",async page=>{
+  await page.locator("#g-file").setInputFiles({name:"hard-written.json",mimeType:"application/json",
+   buffer:Buffer.from(JSON.stringify(hardWritten))});
+  await chooseModernPaper(page,hardWritten.paper.id);
+  await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
+  await page.locator('[data-section="1"]').click();
+  await page.locator("#g-next").click();await page.locator("#g-next").click();
+  const text="Visible draft before hard timeout";
+  await page.locator("#g-text").fill(text); // deliberately never select Save response
+  await route(page,"result",{timeout:8000});
+  const row=(await records(page)).find(x=>x.recordType==="generic-attempt"&&x.packageId===hardWritten.paper.id);
+  check(row?.completionReason==="time-expired","hard written attempt did not expire");
+  const written=row?.state?.responses?.find(x=>x.questionRevisionId==="rev-5");
+  check(written?.response?.text===text,"hard timeout lost the latest visible written draft");
+  check(written?.postDeadlineMs===0,"hard timeout recorded impossible post-deadline exposure");
+  check(written?.answerEvents===undefined,"hard timeout persisted written typing telemetry");
+  check((await page.locator(".result-written-answers").innerText()).includes("Visible")===false,
+    "written analytics should summarize evidence, not duplicate candidate prose in Insights");
+ });
+ await scenario("written-advisory-overtime-continues-live",async page=>{
+  await page.locator("#g-file").setInputFiles({name:"advisory-written.json",mimeType:"application/json",
+   buffer:Buffer.from(JSON.stringify(advisoryWritten))});
+  await chooseModernPaper(page,advisoryWritten.paper.id);
+  await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
+  await page.locator('[data-section="1"]').click();
+  await page.locator("#g-next").click();await page.locator("#g-next").click();
+  await page.locator("#g-text").fill("Practice answer may continue beyond the target.");
+  await page.waitForFunction(()=>document.querySelector("#g-timer-label")?.textContent==="PAPER OVERTIME",
+    undefined,{timeout:7000,polling:"raf"});
+  check((await page.locator("#g-timer").innerText()).startsWith("+"),
+    "advisory live timer did not switch to positive overtime");
+  await page.locator("#g-submit").click();await route(page,"result");
+  const row=(await records(page)).find(x=>x.recordType==="generic-attempt"&&x.packageId===advisoryWritten.paper.id);
+  check(row?.completionReason==="submitted","advisory practice should finish by user submission");
+  check(row.state.elapsedMs>advisoryWritten.paper.timing.durationMs,
+    "advisory practice did not continue past its budget");
+  check(row.state.responses.find(x=>x.questionRevisionId==="rev-5")?.postDeadlineMs>0,
+    "written question did not receive foreground overtime attribution");
+  const pacing=await page.locator(".result-time-pacing").innerText();
+  check(pacing.includes("% over budget")&&pacing.includes("Submitted by user"),
+    "Results omitted derived overtime percentage or completion mode");
  });
  await scenario("six-kinds-manual-assessment-and-fsrs",async page=>{
   await page.locator("#g-file").setInputFiles({name:"six-kinds.json",mimeType:"application/json",
