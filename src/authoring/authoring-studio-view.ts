@@ -98,6 +98,9 @@ export function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Fi
     (draft.allowReview?" checked":"")+'> Release detailed answers after submission</label>'+
   '<label class="pd-author-check"><input type="checkbox" id="pd-author-calculator"'+
     (draft.calculatorTool==="basic-v1"?" checked":"")+'> Basic calculator available during the test</label>'+
+  '<label>Written-answer word counter<select id="pd-author-word-count">'+
+    ([["auto","Auto — practice on, exam simulation off"],["shown","Always show"],["hidden","Always hide"]] as const)
+      .map(([value,label])=>option(value,label,draft.wordCountPolicy)).join("")+'</select></label>'+
   '<label>Correct marks<input id="pd-author-correct" type="number" step="any" value="'+draft.marksCorrect+'"></label>'+
   '<label>Incorrect marks<input id="pd-author-wrong" type="number" max="0" step="any" value="'+draft.marksIncorrect+'"></label>'+
   '</div><p class="fine pd-author-effective-policy-note" role="note">'+
@@ -130,6 +133,7 @@ export function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Fi
   '<label>Answer key draft<input id="pd-author-answer" maxlength="100" value="'+escapeText(current.answer)+'" aria-describedby="pd-author-answer-help"></label>'+
   '<label>Source / provenance note<input id="pd-author-source" maxlength="500" value="'+escapeText(current.source)+'"></label>'+
   (current.kind==="numeric-entry"?'<label>Absolute answer tolerance<input type="number" id="pd-author-tolerance" min="0" max="1000000" step="any" value="'+current.tolerance+'"></label>':"")+
+  (current.kind==="free-response"?'<label>Advisory word limit<input type="number" id="pd-author-word-limit" min="1" max="10000" step="1" value="'+(current.wordLimit??300)+'"></label>':"")+
   (current.kind==="multiple-select"?'<label>Minimum choices<input id="pd-author-min-choices" type="number" min="1" max="4" step="1" value="'+(current.minSelections??1)+'"></label>'+
     '<label>Maximum choices<input id="pd-author-max-choices" type="number" min="1" max="4" step="1" value="'+(current.maxSelections??4)+'"></label>':"")+
   (current.kind==="multiple-select"||current.kind==="matching"?
@@ -141,7 +145,7 @@ export function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Fi
    current.kind==="numeric-entry"?"Accepted numeric answers, comma-separated. Set absolute tolerance above.":
    current.kind==="true-false"?"Enter True or False.":
    current.kind==="matching"?"Four unique pairs: 1-C,2-A,3-D,4-B (or C,A,D,B).":
-   "Evaluated manually; supply a model answer or worked rubric, not an automatic key.")+
+   "Evaluated manually. The word limit is advisory: candidates may save responses beyond it.")+
   '</p>'+
   '<label class="picker" for="pd-author-field">Rich-content field</label>'+
   '<select id="pd-author-field">'+applicable.map(f=>option(f,fieldNames[f],field)).join("")+'</select>';

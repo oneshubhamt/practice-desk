@@ -127,10 +127,11 @@ function readyDraft(){
    leftItems:["One","Two","Three","Four"].map(P),
    rightItems:["Right A","Right B","Right C","Right D"].map(P),
    explanation:P("Worked explanation for "+kind),
-   answer:answers[kind],tolerance:kind==="numeric-entry"?0.01:0};
+   answer:answers[kind],tolerance:kind==="numeric-entry"?0.01:0,
+   ...(kind==="free-response"?{wordLimit:250}:{})};
  });
  return {...a,examId:"cat-pgdba",paperId:"mixed-2026",title:"Original six-kind CAT and PGDBA practice",
-   revision:1,edition:"custom",durationMinutes:120,
+   revision:1,edition:"custom",durationMinutes:120,wordCountPolicy:"shown",
    sections:[{name:"Mathematics",minutes:15},{name:"General",minutes:15}],questions};
 }
 test("P47-5D all six kinds publish as source-validated frozen rich package, with correct hashes",()=>{
@@ -150,6 +151,8 @@ test("P47-5D all six kinds publish as source-validated frozen rich package, with
  assert.equal(pkg.answerKey.entries[2].answer.absoluteTolerance,0.01);
  assert.equal(pkg.answerKey.entries[4].answer.pairs[0].rightId,"C");
  assert.equal(pkg.answerKey.entries[5].answer.evaluation,"manual");
+ assert.equal(pkg.questions[5].content.responseRules.wordLimit,250);
+ assert.equal(pkg.paper.candidateTools.wordCount,"shown");
  assert.match(pkg.questions[0].editorial.notes,/not been independently certified/);
  // Same authenticated six-kind publisher output is the scorer oracle; one compile.
 

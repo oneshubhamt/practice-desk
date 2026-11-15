@@ -8,6 +8,7 @@ import type {RichDocument} from "../domain/rich-document.ts";
 import {plainRichDocument,validateRichDocument} from "../domain/rich-document.ts";
 import {validateMediaInventory} from "../domain/media.ts";
 import {attributedTopicPath,validateTopicPath} from "../learning/syllabus-taxonomy.ts";
+import type {WordCountPolicy} from "../domain/word-count.ts";
 
 export type AuthoringDraftSection={
  readonly name:string;
@@ -31,6 +32,8 @@ export type AuthoringQuestion={
  /** Optional per-correct-component credit for multiple/matching only. */
  readonly partialCreditEach?:number;
  readonly partialPenaltyEach?:number;
+ /** Advisory limit for written responses; never a save gate. */
+ readonly wordLimit?:number;
  readonly kind:QuestionKind;
  readonly prompt:RichDocument;
  readonly passage:RichDocument;
@@ -78,6 +81,7 @@ export type AuthoringDraft={
  readonly allowEarlySubmit:boolean;
  readonly allowReview:boolean;
  readonly calculatorTool?:"basic-v1";
+ readonly wordCountPolicy:WordCountPolicy;
  readonly marksCorrect:number;
  readonly marksIncorrect:number;
  readonly updatedAt:string;
@@ -103,6 +107,7 @@ export function newAuthoringQuestion(kind:QuestionKind="single-choice"):Authorin
   topic:"",subtopic:"",difficulty:"",
   minSelections:1,maxSelections:4,
   partialCreditEach:0,partialPenaltyEach:0,
+  ...(kind==="free-response"?{wordLimit:300}:{}),
   kind,prompt:fresh(),passage:fresh(),
   options:Array.from({length:4},fresh),leftItems:Array.from({length:4},fresh),
   rightItems:Array.from({length:4},fresh),explanation:fresh(),answer:"",tolerance:0,source:""};
@@ -113,6 +118,7 @@ export function newAuthoringDraft():AuthoringDraft{
   edition:"custom",revision:1,durationMinutes:120,timingKind:"whole-paper",
   pausePolicy:"allowed",questionNavigation:"free",sectionNavigation:"free",
   sectionTransition:"manual",allowEarlySubmit:true,allowReview:true,
+  wordCountPolicy:"auto",
   marksCorrect:2.5,marksIncorrect:-0.8333333333333334,
   updatedAt:now,assets:[],sections:[{name:"General",minutes:15}],questions:[newAuthoringQuestion()]};
 }
@@ -141,7 +147,7 @@ const list=(value:unknown,max:number,label:string):unknown[]=>{
 export function validateAuthoringDraft(value:unknown):AuthoringDraft{
  const p=rec(value,"authoring draft",["schema","id","ingestionMode","examId","paperId","title","edition",
   "revision","durationMinutes","timingKind","pausePolicy","questionNavigation",
-  "sectionNavigation","sectionTransition","allowEarlySubmit","allowReview","calculatorTool",
+  "sectionNavigation","sectionTransition","allowEarlySubmit","allowReview","calculatorTool","wordCountPolicy",
   "marksCorrect","marksIncorrect","updatedAt","assets","sections","stimuli","questions"]);
  if(p.schema!==1)throw Error("Unsupported draft schema");
  if(p.ingestionMode!=="manual"&&p.ingestionMode!=="external-source")
@@ -170,7 +176,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   const q=rec(item,"draft question",["id","section","kind","prompt","passage","options","leftItems",
    "rightItems","explanation","answer","tolerance","source",
    "subject","syllabusHeadingId","topic","subtopic","difficulty",
-    "minSelections","maxSelections",
+    "minSelections","maxSelections","wordLimit",
    "partialCreditEach","partialPenaltyEach","stimulusRef","sourceOrigin","provenance","qa"]);
   const questionId=text(q.id,"question ID",128,true);
   if(all.has(questionId))throw Error("Duplicate draft question ID");
@@ -276,6 +282,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   return {id:questionId,section,subject,syllabusHeadingId,
    topic,subtopic,difficulty:difficulty as ""|"easy"|"medium"|"hard",
    minSelections,maxSelections,
+   ...(kind==="free-response"?{wordLimit:num(q.wordLimit??300,"advisory word limit",1,10000)}:{}),
    partialCreditEach:num(q.partialCreditEach??0,"partial-credit component",0,1000),
    partialPenaltyEach:num(q.partialPenaltyEach??0,"partial penalty",0,1000),
    kind:kind as QuestionKind,prompt:rich(q.prompt),passage:rich(q.passage),
@@ -302,6 +309,9 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
  const calculatorTool=p.calculatorTool;
  if(calculatorTool!==undefined&&calculatorTool!=="basic-v1")
    throw Error("Invalid authored calculator tool");
+ const wordCountPolicy=p.wordCountPolicy??"auto";
+ if(!["auto","shown","hidden"].includes(String(wordCountPolicy)))
+   throw Error("Invalid authored word-count policy");
  const draft:AuthoringDraft={
   schema:1,id:text(p.id,"draft ID",128,true),
   ingestionMode:p.ingestionMode as "manual"|"external-source",
@@ -316,6 +326,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   sectionTransition:sectionTransition as AuthoringDraft["sectionTransition"],
   allowEarlySubmit:p.allowEarlySubmit as boolean,allowReview:p.allowReview as boolean,
   ...(calculatorTool?{calculatorTool:"basic-v1" as const}:{}),
+  wordCountPolicy:wordCountPolicy as WordCountPolicy,
   marksCorrect:num(p.marksCorrect,"positive marks",0.01,1000),
   marksIncorrect:num(p.marksIncorrect,"negative marks",-1000,0),
   updatedAt:text(p.updatedAt,"updated time",100,true),assets,sections,

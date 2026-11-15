@@ -9,6 +9,7 @@ import type {SessionEvent} from "../engine/session.ts";
 import {multipleDraftMessage,duplicateMatchingTargets} from "./response-drafts.ts";
 import {bindExamCalculator} from "./exam-calculator.ts";
 import {readCalculatorWorkspace,writeCalculatorWorkspace} from "./candidate-tool-state.ts";
+import {countWords,wordCountBand} from "../domain/word-count.ts";
 
 import type {ExamControllerContext} from "./coordinator-context.ts";
 
@@ -88,6 +89,24 @@ owner.root.querySelectorAll<HTMLInputElement>("[data-choice]").forEach(input=>in
 owner.root.querySelectorAll<HTMLInputElement>("[data-bool]").forEach(input=>input.onchange=()=>{
      owner.dispatch({type:"ANSWER",nowMs:owner.now(),response:{kind:"true-false",value:input.dataset.bool==="true"}});
    });
+if(q.content.kind==="free-response"){
+     const field=owner.root.querySelector<HTMLTextAreaElement>("#g-text");
+     const counter=owner.root.querySelector<HTMLElement>("#g-word-count");
+     const updateWordCount=()=>{
+       if(!field||!counter)return;
+       const limit=Number(counter.dataset.wordLimit);
+       const count=countWords(field.value);
+       const band=wordCountBand(count,limit);
+       counter.dataset.wordCountState=band;
+       counter.textContent=count+" / "+limit+" words";
+       const status=band==="over"?"over the advisory limit":
+         band==="warning"?"near the advisory limit":
+         band==="caution"?"approaching the advisory limit":"within the advisory limit";
+       counter.setAttribute("aria-label","Word count: "+count+" of "+limit+" words, "+status);
+     };
+     field?.addEventListener("input",updateWordCount);
+     updateWordCount();
+   }
 const saveButton=owner.root.querySelector<HTMLButtonElement>("#g-save");
 if(q.content.kind==="matching"&&saveButton){
      const matching=q.content;

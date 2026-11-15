@@ -4,6 +4,7 @@ import type {QuestionRevision,CandidateResponse} from "../domain/question.js";
 import type {RichDocument,RichInline} from "../domain/rich-document.ts";
 import {authoredTextHTML} from "./rich-content-view.ts";
 import {escapeText} from "./html-escape.ts";
+import {countWords,wordCountBand} from "../domain/word-count.ts";
 function richAssetIds(doc:RichDocument|undefined):ReadonlySet<string>{
  const ids=new Set<string>();
  if(!doc)return ids;
@@ -55,7 +56,10 @@ export function renderQuestionPrompt(bundle:ExamPackage,q:QuestionRevision):stri
      renderAuthoredText(bundle,content.prompt,content.richPrompt)+'</div>':
    '<h2 class="generic-prompt">'+escapeText(content.prompt)+'</h2>';
 }
-export function renderGenericControls(bundle:ExamPackage,q:QuestionRevision,response?:CandidateResponse):string{
+export function renderGenericControls(
+ bundle:ExamPackage,q:QuestionRevision,response?:CandidateResponse,
+ options:Readonly<{showWordCount?:boolean}>={}
+):string{
   const c=q.content;
   if(c.kind==="single-choice"||c.kind==="multiple-select"){
     const selected=response?.kind==="single-choice"?[response.optionId]:response?.kind==="multiple-select"?response.optionIds:[];
@@ -84,8 +88,20 @@ export function renderGenericControls(bundle:ExamPackage,q:QuestionRevision,resp
     (c.numericRules.minimum!==undefined?' min="'+c.numericRules.minimum+'"':"")+
     (c.numericRules.maximum!==undefined?' max="'+c.numericRules.maximum+'"':"")+
     ' value="'+(response?.kind==="numeric-entry"?escapeText(response.value):"")+'"><button class="btn primary" id="g-save">Save answer</button>';
-  if(c.kind==="free-response")return '<label class="picker" for="g-text">Written response</label><textarea id="g-text" rows="6">'+
-    (response?.kind==="free-response"?escapeText(response.text):"")+'</textarea><button class="btn primary" id="g-save">Save response</button>';
+  if(c.kind==="free-response"){
+    const value=response?.kind==="free-response"?response.text:"";
+    const limit=c.responseRules.wordLimit;
+    const count=countWords(value);
+    const band=limit?wordCountBand(count,limit):"normal";
+    const counter=options.showWordCount&&limit?
+      '<span class="generic-word-count" id="g-word-count" data-word-count-state="'+band+
+      '" data-word-limit="'+limit+'" aria-label="Word count: '+count+' of '+limit+' words">'+
+      count+' / '+limit+' words</span>':"";
+    return '<div class="generic-written-response"><div class="generic-written-response-head">'+
+      '<label class="picker" for="g-text">Written response</label>'+counter+'</div>'+
+      '<textarea id="g-text" rows="10"'+(counter?' aria-describedby="g-word-count"':"")+'>'+
+      escapeText(value)+'</textarea><button class="btn primary" id="g-save">Save response</button></div>';
+  }
   const pairs=response?.kind==="matching"?response.pairs:[];
   return '<div class="generic-matches">'+c.leftItems.map(left=>{
     const media=assetHTML(bundle,left.assetIds,"Image for matching item "+left.text);

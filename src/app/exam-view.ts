@@ -7,6 +7,7 @@ import {escapeText} from "./html-escape.ts";
 import {supplementalAssetHTML,stimulusHTML,renderGenericControls,renderQuestionPrompt} from "./question-content-view.ts";
 import {calculatorPanelHTML,calculatorToggleHTML} from "./exam-calculator.ts";
 import {BASIC_CALCULATOR_V1,newExamCalculatorState,type ExamCalculatorState} from "../domain/calculator.ts";
+import {shouldShowWordCount} from "../domain/word-count.ts";
 /** Human-readable view of a frozen practice mode; do not alter persistence. */
 export function readablePracticeMode(mode:string):string{
  switch(mode){
@@ -104,7 +105,9 @@ export function renderModelExam(
      stimulusHTML(assets,q)+renderQuestionPrompt(assets,q)+
      supplementalAssetHTML(assets,q.content.assetIds,q.content.richPrompt,"Figure for question "+(state.questionIndex+1))+
      '<fieldset class="generic-response-group"'+(state.status!=="running"?" disabled":"")+'>'
-     +renderGenericControls(assets,q,currentDraft?{kind:"multiple-select",optionIds:currentDraft.optionIds}:response)+
+     +renderGenericControls(assets,q,currentDraft?{kind:"multiple-select",optionIds:currentDraft.optionIds}:response,{
+       showWordCount:shouldShowWordCount(paper.candidateTools?.wordCount,attempt.frozen.snapshot.mode)
+     })+
      (currentDraft?'<p class="generic-inline-warning" role="status">'+escapeText(currentDraft.message)+'</p>':"")+
      '</fieldset>'+
      '<div class="exam-question-controls">'+

@@ -64,12 +64,14 @@ main{max-width:1150px;margin:auto;padding:23px 20px 70px}h1,h2,h3,p{margin-top:0
   --border-strong:#cbd8e7;--focus:#8bb9ee;
   --review-unanswered-bg:#fff0a0;--review-unanswered-border:#aa8412;
   --review-answered-bg:#f5bf7c;--review-answered-border:#a75e1e;
+  --word-yellow:#846a00;--word-amber:#9a5a12;
 }
 html[data-theme="dark"]{
   --navy:#0d1b2c;--soft:#172638;--soft-blue:#1d3958;--bad:#ff9ca0;--amber:#e1b874;
   --shadow:0 10px 35px rgba(0,0,0,.14);--shadow-hover:0 10px 40px rgba(0,0,0,.2);--border-strong:#50647c;
   --review-unanswered-bg:#54491d;--review-unanswered-border:#e5ca55;
   --review-answered-bg:#633f25;--review-answered-border:#ec9e5d;
+  --word-yellow:#efd36d;--word-amber:#efad68;
 }
 body{line-height:1.55;background:radial-gradient(1100px 500px at 50% -400px,rgba(71,124,205,.09),transparent),var(--bg)}
 header{background:linear-gradient(112deg,#172b48 10%,#233f64 100%);border-bottom:1px solid #365b88}
@@ -227,6 +229,20 @@ select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-vis
 .exam-question .generic-choice:hover{border-color:var(--blue);background:var(--soft)}
 .exam-question .generic-choice:has(input:checked){background:var(--soft-blue);border-color:var(--blue);outline:1px solid var(--blue)}
 .exam-question .generic-response-group{margin:0}
+.generic-written-response{margin:18px 0 0;min-width:0}
+.generic-written-response-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;min-width:0}
+.generic-written-response-head .picker{margin:0}
+.generic-written-response textarea{margin-top:8px;min-height:240px;resize:vertical;line-height:1.6}
+.generic-word-count{flex:none;margin-left:auto;padding:4px 8px;border:1px solid var(--line);border-radius:999px;
+ background:var(--soft);color:var(--muted);font-size:11px;font-weight:750;font-variant-numeric:tabular-nums;white-space:nowrap}
+.generic-word-count[data-word-count-state="caution"]{color:var(--word-yellow);
+ border-color:color-mix(in srgb,var(--word-yellow) 60%,var(--line));
+ background:color-mix(in srgb,var(--word-yellow) 10%,var(--panel))}
+.generic-word-count[data-word-count-state="warning"]{color:var(--word-amber);
+ border-color:color-mix(in srgb,var(--word-amber) 68%,var(--line));
+ background:color-mix(in srgb,var(--word-amber) 12%,var(--panel))}
+.generic-word-count[data-word-count-state="over"]{color:var(--bad);border-color:var(--bad);
+ background:color-mix(in srgb,var(--bad) 10%,var(--panel))}
 .exam-answer-actions{margin-top:22px!important}
 .exam-nav-actions{border-top:1px solid var(--line);padding-top:18px;justify-content:space-between;margin-top:16px!important}
 .exam-submit-actions{border-top:1px solid var(--line);padding-top:15px;justify-content:space-between;margin-top:18px!important}
@@ -320,6 +336,8 @@ select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-vis
  .generic-palette{grid-template-columns:repeat(5,minmax(0,1fr))!important}
  .exam-header-actions{width:100%;justify-content:space-between}
  .exam-question{padding:16px}
+ .generic-written-response textarea{min-height:200px}
+ .generic-written-response-head{align-items:center}
  .result-tab{padding:10px 12px}
  .result-pane .scoregrid{grid-template-columns:repeat(2,minmax(0,1fr))}
  .score b{font-size:22px}

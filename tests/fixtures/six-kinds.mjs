@@ -5,7 +5,7 @@ const items=[
  {kind:"numeric-entry",prompt:"Compute",numericRules:{minimum:0,maximum:10,decimalPlaces:2}},
  {kind:"true-false",prompt:"True?",},
  {kind:"matching",prompt:"Match",leftItems:[{id:"l1",text:"One"},{id:"l2",text:"Two"}],rightItems:[{id:"r1",text:"First"},{id:"r2",text:"Second"}]},
- {kind:"free-response",prompt:"Explain",responseRules:{maxWords:40}},
+ {kind:"free-response",prompt:"Explain",responseRules:{wordLimit:40,maxWords:10000}},
 ];
 import { questionRevisionHash, answerKeyRevisionHash, paperRevisionHash } from "../../src/domain/integrity.ts";
 export const questions=items.map((content,i)=>{

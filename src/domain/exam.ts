@@ -10,6 +10,7 @@ import type {
 } from "./ids.js";
 import type { ScoringPolicy, MarkingRule } from "./scoring.js";
 import type {CalculatorProfile} from "./calculator.ts";
+import type {WordCountPolicy} from "./word-count.ts";
 
 export interface ExamDefinition {
   readonly id: ExamId;
@@ -63,6 +64,8 @@ export type TimingPolicy =
 export interface CandidateTools {
   /** Simple four-function exam calculator with common unary/memory operations. */
   readonly calculator?: CalculatorProfile;
+  /** Written-answer counter visibility. Auto shows in practice, hides in exam simulation. */
+  readonly wordCount?: WordCountPolicy;
 }
 
 export interface NavigationPolicy {
