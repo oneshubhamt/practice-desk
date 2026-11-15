@@ -5,7 +5,7 @@ import {isAttempt,isLearning} from "./stored-record-validator.ts";
 
 
 import {attemptModeForPractice,availablePracticeModes,configurePracticeMode,configureUntimedPractice,
- resolvePracticeMode,startGenericAttempt} from "./exam-package.ts";
+ defaultPracticeMode,resolvePracticeMode,startGenericAttempt} from "./exam-package.ts";
 import {validateExamPackage} from "../domain/exam-package.ts";
 import type {ExamPackage} from "../domain/exam-package.ts";
 import type {PracticeMode} from "../workspace-settings.ts";
@@ -25,7 +25,7 @@ import {frozenScoreSummary} from "./history-score.ts";
 import {examPreflight,preflightHTML,examRulesHTML} from "./exam-preflight.ts";
 
 import {writePracticeSetups,type PracticeSetups} from "./practice-selection.ts";
-import {pairedEdition} from "./exam-families.ts";
+import {pairedCounterpart,pairedEdition} from "./exam-families.ts";
 
 import type {LibraryControllerContext} from "./coordinator-context.ts";
 
@@ -81,8 +81,7 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
      (custom.length?'<optgroup label="'+(family?.origin==="included"?"Included / custom practice papers":"Imported / custom examinations")+'">'+
        custom.map(option).join("")+'</optgroup>':"")+
      (!selected&&!missing?'<option value="" selected disabled>Choose a paper</option>':"");
-   const hasEditions=Boolean(selected&&selected.paper.edition!=="custom"&&family&&
-     (pairedEdition(family,selected,"source")||pairedEdition(family,selected,"reviewed")));
+   const hasEditions=Boolean(selected&&family&&pairedCounterpart(family,selected));
    const familyOptions=(owner.selectedFamilyId&&!family?
      '<option value="'+escapeText(owner.selectedFamilyId)+'" selected disabled>Saved exam family unavailable — re-import</option>':"")+
      catalog.map(f=>'<option value="'+escapeText(f.id)+'"'+
@@ -250,7 +249,7 @@ export const applyLibraryFamily=(owner:LibraryControllerContext,id:string):void=
      const family=owner.families().find(f=>f.id===id);
      const paper=family?.papers.find(p=>p.paper.id===family.currentPaperId)??family?.papers.find(p=>p.paper.edition==="reviewed")??family?.papers[0];
      owner.choice=paper?.paper.id??"";
-     owner.practiceMode=paper?.paper.edition==="custom"?"free":"strict";
+     owner.practiceMode=paper?defaultPracticeMode(paper.paper):"free";
      owner.singleSection=0;
      owner.untimedPractice=false;owner.editionView=paper?.paper.edition==="source"?"source":"reviewed";
    }

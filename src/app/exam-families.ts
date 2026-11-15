@@ -66,3 +66,10 @@ export function pairedEdition(
  }
  return candidates.length===1?candidates[0]:undefined;
 }
+
+/** Exact opposite-edition counterpart only; the current paper never counts as its own pair. */
+export function pairedCounterpart(family:ExamFamily,paper:ExamPackage):ExamPackage|undefined{
+ if(paper.paper.edition==="source")return pairedEdition(family,paper,"reviewed");
+ if(paper.paper.edition==="reviewed")return pairedEdition(family,paper,"source");
+ return undefined;
+}

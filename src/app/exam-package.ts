@@ -28,6 +28,10 @@ export function resolvePracticeMode(paper:PaperRevision,selected:PracticeMode):P
  const preferred:PracticeMode=paper.edition==="custom"?"free":"strict";
  return available.includes(preferred)?preferred:available[0]!;
 }
+/** One canonical initial mode rule for first mount, new families and imports. */
+export function defaultPracticeMode(paper:PaperRevision):PracticeMode{
+ return resolvePracticeMode(paper,paper.edition==="custom"?"free":"strict");
+}
 
 export function configurePracticeMode(base:ExamPackage,mode:PracticeMode,sectionIndex=0):ExamPackage{
  if(!availablePracticeModes(base.paper).includes(mode))

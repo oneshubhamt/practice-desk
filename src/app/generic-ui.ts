@@ -1,6 +1,6 @@
 import {STORAGE_TOPOLOGY} from "../storage-topology.ts";
 import {isAttempt,type RecordItem} from "./stored-record-validator.ts";
-import {resolvePracticeMode} from "./exam-package.ts";
+import {defaultPracticeMode,resolvePracticeMode} from "./exam-package.ts";
 import type {ExamPackage} from "../domain/exam-package.ts";
 import type {PracticeMode} from "../workspace-settings.ts";
 import type {GenericAttempt} from "../engine/generic-attempt.ts";
@@ -52,8 +52,7 @@ export function mountExamWorkspace(
    defaultFamily?.papers[0]?.paper.id??"";
  const defaultFamilyId=defaultFamily?.id??"";
  const defaultPaper=packages.get(defaultChoice);
- const defaultMode:PracticeMode=defaultPaper?
-   resolvePracticeMode(defaultPaper.paper,defaultPaper.paper.edition==="custom"?"free":"strict"):"free";
+ const defaultMode:PracticeMode=defaultPaper?defaultPracticeMode(defaultPaper.paper):"free";
  const storedSetups=readPracticeSetups();
  const initialSetups:PracticeSetups=storedSetups??{
    schema:2,selectedFamilyId:defaultFamilyId,

@@ -4,7 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
-import {validateExamPackage,availablePracticeModes,resolvePracticeMode,
+import {validateExamPackage,availablePracticeModes,defaultPracticeMode,resolvePracticeMode,
  configurePracticeMode,attemptModeForPractice,configureUntimedPractice,startGenericAttempt} from "../src/app/exam-package.ts";
 import {loadQuestionBankCatalog} from "../scripts/question-bank-catalog.mjs";
 import {applyLibraryFamily} from "../src/app/library-controller.ts";
@@ -154,7 +154,9 @@ test("mode availability follows authored physical sections, not exam names",()=>
 test("fresh custom families retain advisory default; CGL stays strict; saved modes remain deliberate",()=>{
  const custom=compileExternalQuestionBank({...starter,
   timing:{kind:"whole-paper",minutes:2,pausePolicy:"allowed"}});
+ assert.equal(defaultPracticeMode(custom.paper),"free");
  const cgl=builtinCglPackages(sources,patches)[0];
+ assert.equal(defaultPracticeMode(cgl.paper),"strict");
  const families=[
   {id:"imported:custom",papers:[custom],currentPaperId:custom.paper.id},
   {id:"builtin:ssc-cgl",papers:[cgl],currentPaperId:cgl.paper.id}
@@ -402,7 +404,7 @@ test("explicit practice eligibility can narrow structural modes without exam-nam
 });
 
 test("edition pairing never substitutes a different logical paper",async()=>{
- const {pairedEdition}=await import("../src/app/exam-families.ts");
+ const {pairedCounterpart,pairedEdition}=await import("../src/app/exam-families.ts");
  const genericQuestions=starter.questions.map(({syllabusHeadingId:_,...q})=>({...q,subject:"General"}));
  const source=compileExternalQuestionBank({...starter,bankId:"paper-a",paperId:"paper-a",examId:"mixed-editions",questions:genericQuestions});
  const reviewedLike=compileExternalQuestionBank({...starter,bankId:"paper-b",paperId:"paper-b",examId:"mixed-editions",questions:genericQuestions});
@@ -413,4 +415,16 @@ test("edition pairing never substitutes a different logical paper",async()=>{
   examId:"mixed-editions",includedPaperIds:[],papers:[fakeSource,fakeReviewed]};
  assert.equal(pairedEdition(family,fakeSource,"reviewed"),undefined);
  assert.equal(pairedEdition(family,fakeReviewed,"source"),undefined);
+ assert.equal(pairedCounterpart(family,fakeSource),undefined,
+  "an unrelated reviewed paper must not make a source-only paper look paired");
+ assert.equal(pairedCounterpart(family,fakeReviewed),undefined,
+  "an unrelated source paper must not make a reviewed-only paper look paired");
+ const actual=builtinCglPackages(sources,patches);
+ const realSource=actual.find(p=>p.paper.edition==="source");
+ const realReviewed=actual.find(p=>p.paper.edition==="reviewed"&&
+   p.paper.sourcePaperRevisionId===realSource?.paper.id);
+ assert.ok(realSource&&realReviewed);
+ const realFamily={...family,examId:"ssc-cgl",papers:[realSource,realReviewed]};
+ assert.equal(pairedCounterpart(realFamily,realSource)?.paper.id,realReviewed.paper.id);
+ assert.equal(pairedCounterpart(realFamily,realReviewed)?.paper.id,realSource.paper.id);
 });
