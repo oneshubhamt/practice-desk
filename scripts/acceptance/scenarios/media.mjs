@@ -8,7 +8,6 @@ export async function imageViewer(){
  */
 const {openHarness,route,records,check,assertNoOverflow,root}=await import("../../browser/fixtures.mjs");
 const {chooseModernPaper}=await import("../../paper-select.mjs");
-const {builtinCglPackages}=await import("../../../src/app/exam-package.ts");
 const {loadQuestionBankCatalog}=await import("../../question-bank-catalog.mjs");
 const engine=process.argv[2]||"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
@@ -18,16 +17,14 @@ page.on("request",request=>{
  if(/^https?:/i.test(request.url()))requests.push(request.url());
 });
 const loadedBanks=await loadQuestionBankCatalog(root);
-check(Boolean(loadedBanks.legacy),"P47-3 SSC CGL manifest bank missing");
-const source=JSON.parse(loadedBanks.legacy.papersRaw);
-const patches=JSON.parse(loadedBanks.legacy.patchesRaw);
-const solutions=JSON.parse(loadedBanks.legacy.solutionsRaw);
-const pkg=builtinCglPackages(source,patches,solutions).find(x=>
- x.paper.paperId==="cgl-2026-10-08"&&x.paper.edition==="reviewed");
-check(Boolean(pkg),"P47-3 reviewed 8 October CGL fixture missing");
-const expected=source["cgl-2026-10-08"].questions.find(q=>q.n===3);
-check(Boolean(expected?.images.stem)&&expected.images.options?.filter(Boolean).length===4,
- "P47-3 real question fixture must contain four option images and a stem diagram");
+const pkg=loadedBanks.preinstalled.packages.find(x=>
+ x.examId==="ssc-cgl"&&x.paper.paperId==="cgl-2026-10-08"&&x.paper.edition==="reviewed");
+check(Boolean(pkg),"P47-3 canonical reviewed 8 October CGL package missing");
+const expected=pkg.questions.find(q=>q.questionId==="cgl-2026-10-08:q:3");
+check(Boolean(expected?.content.assetIds?.length===1&&
+ expected.content.kind==="single-choice"&&
+ expected.content.options.filter(option=>option.assetIds?.length).length===4),
+ "P47-3 canonical package must retain four option images and a stem diagram");
 const modal=page.locator("dialog.generic-image-dialog");
 const thumbnail=page.locator(".exam-question .generic-choice-media-row .generic-figure").first();
 const button=page.locator(".exam-question .generic-choice-media-row [data-image-open]").first();
