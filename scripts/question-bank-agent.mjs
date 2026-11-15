@@ -85,6 +85,10 @@ const pageOf=(issues,offset,limit)=>({
  nextOffset:offset+limit<issues.length?offset+limit:null,
  items:issues.slice(offset,offset+limit).map(briefIssue)
 });
+const severityRank={error:0,warning:1,info:2};
+const prioritizedIssues=issues=>issues.map((issue,index)=>({issue,index}))
+ .sort((a,b)=>(severityRank[a.issue.severity]??9)-(severityRank[b.issue.severity]??9)||a.index-b.index)
+ .map(row=>row.issue);
 const fileMeta=(value,report,sha256)=>{
  const source=sourceOnly(value);
  return {
@@ -228,7 +232,7 @@ async function createNewAtomic(filename,contents){
   await unlink(temp).catch(()=>{});
  }
 }
-const usage="Usage: question-bank-agent.mjs inspect source.json [--offset N --limit 1..50] | show source.json question-id | patch source.json patch.json NEW-output.json [--dry-run]";
+const usage="Usage: question-bank-agent.mjs inspect source.json [--offset N --limit 1..50] | next source.json [--limit 1..20] | show source.json question-id [question-id ... up to 10] | patch source.json patch.json NEW-output.json [--dry-run]";
 async function main(){
  const [command,input,...args]=process.argv.slice(2);
  if(!command||!input)fail(usage);
@@ -250,21 +254,58 @@ async function main(){
   if(!report.valid)process.exitCode=1;
   return;
  }
+ if(command==="next"){
+  if(args.length!==0&&!(args.length===2&&args[0]==="--limit"))fail(usage);
+  const limit=args.length?positive(Number(args[1]),"limit",20,1):8;
+  const {value,sha256}=await io(input,MAX_SOURCE,"Source");
+  sourceOnly(value);
+  const report=inspectExternalQuestionBank(value);
+  const ordered=prioritizedIssues(report.issues);
+  const items=ordered.slice(0,limit).map(briefIssue);
+  output({format:"practice-desk-agent-next-issues",version:1,
+   ...fileMeta(value,report,sha256),
+   issues:{limit,total:ordered.length,remaining:Math.max(0,ordered.length-items.length),items},
+   questionIds:[...new Set(items.map(x=>x.questionId).filter(Boolean))],
+   note:"Prioritized deterministic errors before warnings/info. Retrieve only the listed question IDs with show; factual/source verification is not performed."});
+  if(!report.valid)process.exitCode=1;
+  return;
+ }
  if(command==="show"){
-  if(args.length!==1)fail(usage);
-  const id=ident(args[0],"Question ID");
+  if(!args.length||args.length>10)fail(usage);
+  const ids=args.map((raw,index)=>ident(raw,"Question ID "+(index+1)));
+  if(new Set(ids).size!==ids.length)fail("Question IDs for show must be unique");
   const {value,sha256}=await io(input,MAX_SOURCE,"Source");
   const source=sourceOnly(value);
-  const matching=source.questions.filter(q=>q?.id===id);
-  if(matching.length!==1)fail(matching.length?"Ambiguous duplicate question ID "+id:"Unknown question "+id);
-  const question=matching[0];
-  const stimulus=source.stimuli?.find(x=>x.id===question.stimulusRef)??null;
-  output({format:"practice-desk-agent-question",version:1,
+  const rows=ids.map(id=>{
+   const matching=source.questions.filter(q=>q?.id===id);
+   if(matching.length!==1)fail(matching.length?"Ambiguous duplicate question ID "+id:"Unknown question "+id);
+   const question=matching[0];
+   const stimulus=source.stimuli?.find(x=>x.id===question.stimulusRef)??null;
+   return {id,question,stimulus,media:linkedMedia(source,question,stimulus)};
+  });
+  if(rows.length===1){
+   const row=rows[0];
+   output({format:"practice-desk-agent-question",version:1,
+    bankId:source.bankId,revision:source.revision,sourceSha256:sha256,
+    questionSha256:digest(JSON.stringify(row.question)),
+    question:row.question,stimulus:row.stimulus,media:row.media,
+    factualVerification:"not-performed",
+    note:"Only this source question is shown. Shared media bytes are omitted; cite/verify external documents before changing factual claims."});
+   return;
+  }
+  const stimuli=new Map(),media=new Map();
+  for(const row of rows){
+   if(row.stimulus)stimuli.set(row.stimulus.id,row.stimulus);
+   for(const item of row.media)media.set(item.id,item);
+  }
+  output({format:"practice-desk-agent-questions",version:1,
    bankId:source.bankId,revision:source.revision,sourceSha256:sha256,
-   questionSha256:digest(JSON.stringify(question)),
-   question,stimulus,media:linkedMedia(source,question,stimulus),
+   count:rows.length,
+   items:rows.map(row=>({questionSha256:digest(JSON.stringify(row.question)),question:row.question,
+    ...(row.stimulus?{stimulusId:row.stimulus.id}:{})})),
+   stimuli:[...stimuli.values()],media:[...media.values()],
    factualVerification:"not-performed",
-   note:"Only this source question is shown. Shared media bytes are omitted; cite/verify external documents before changing factual claims."});
+   note:"Bounded multi-question retrieval (maximum 10). Shared stimuli and media metadata are deduplicated; inline media bytes are omitted."});
   return;
  }
  if(command==="patch"){

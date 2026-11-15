@@ -55,6 +55,25 @@ test("P59: agent inspect returns bounded, paginated actionable errors without fu
  assert.equal(bad.data.code,"agent-input-invalid");
 }));
 
+test("P59: agent next prioritizes a bounded actionable queue without question-body flooding",async()=>inTemp(async dir=>{
+ const source=JSON.parse(await readFile(apfc,"utf8"));
+ source.questions[0].prompt="";
+ source.questions[1].explanation="";
+ const input=join(dir,"next.json");await writeFile(input,JSON.stringify(source));
+ const result=exec("next",input,"--limit","2");
+ assert.notEqual(result.status,0,"invalid source may still return a repair queue with nonzero status");
+ assert.equal(result.data.format,"practice-desk-agent-next-issues");
+ assert.equal(result.data.issues.limit,2);
+ assert.equal(result.data.issues.items.length,2);
+ assert.ok(result.data.issues.total>=2);
+ assert.equal(result.data.issues.items[0].severity,"error");
+ assert.ok(Array.isArray(result.data.questionIds));
+ assert.ok(!result.stdout.includes("Which letter comes second alphabetically?"),"next must not dump full question bodies");
+ assert.ok(result.stdout.length<9000,"next issue queue must stay bounded");
+ const bad=exec("next",input,"--limit","21");
+ assert.notEqual(bad.status,0);
+}));
+
 test("P59: agent show retrieves exactly one question with stable per-item fingerprint and separate shared context, no unnecessary bank or image bytes",async()=>inTemp(async dir=>{
  const source=JSON.parse(await readFile(cat,"utf8"));
  const input=join(dir,"cat.json");
@@ -71,6 +90,15 @@ test("P59: agent show retrieves exactly one question with stable per-item finger
  const unknown=exec("show",input,"no-such-question");
  assert.notEqual(unknown.status,0);
  assert.equal(unknown.data.code,"agent-input-invalid");
+ const multi=exec("show",input,"rc-1","rc-2");
+ assert.equal(multi.status,0,multi.stderr);
+ assert.equal(multi.data.format,"practice-desk-agent-questions");
+ assert.equal(multi.data.count,2);
+ assert.deepEqual(multi.data.items.map(x=>x.question.id),["rc-1","rc-2"]);
+ assert.equal(multi.data.stimuli.length,1,"shared passage must be deduplicated");
+ assert.ok(!multi.stdout.includes("data:image/"));
+ assert.notEqual(exec("show",input,...Array.from({length:11},(_,i)=>"q"+i)).status,0,
+  "multi-show must remain hard bounded");
 }));
 
 test("P59: guarded delta edits preserve original, validate canonical publisher, compile as caution, permit a new numbered revision and refuse overwrite",async()=>inTemp(async dir=>{

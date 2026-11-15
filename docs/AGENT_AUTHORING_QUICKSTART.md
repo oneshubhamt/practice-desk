@@ -16,6 +16,23 @@ Scoring is data-driven rather than exam-name-driven. Paper scoring carries `corr
 
 Source files are bounded (currently 200 questions plus bounded media/stimuli); split larger work into staged batches. Material candidate/key/source changes require a new revision and fresh SHA-bound review.
 
+
+### Bounded repair queue and retrieval
+
+Use `next` to ask for the highest-priority unresolved issues without loading question bodies:
+
+```bash
+node scripts/question-bank-agent.mjs next bank.json --limit 8
+```
+
+It returns errors before warnings/info plus the affected stable question IDs. Fetch only those questions, up to ten at a time:
+
+```bash
+node scripts/question-bank-agent.mjs show bank.json q-17 q-23 q-31
+```
+
+Multi-question output deduplicates shared stimuli and media metadata and never emits inline media bytes. The existing one-question `show` response remains unchanged.
+
 ## Ordinary workflow
 
 ```bash
