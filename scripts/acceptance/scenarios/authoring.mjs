@@ -26,6 +26,11 @@ try{
   "Catalog-preinstalled PFRDA family is missing from Library");
  await page.locator("#g-author-open").click();
  await page.locator("#pd-author-editor wg-content").waitFor({state:"visible"});
+ check(await page.locator("#pd-author-health").isVisible(),"Derived authoring health summary missing");
+ check(await page.locator("#pd-author-fix-next").isEnabled(),"Invalid draft did not expose Fix next");
+ check(await page.locator(".pd-author-question-chips").count()===1,"Current-question QA chips missing");
+ check((await page.locator("#pd-author-health").innerText()).includes("Draft health"),
+  "Authoring health summary did not identify itself");
  check(await page.locator("#pd-author-publish").isEnabled(),"Publish entrypoint absent");
  await page.locator("#pd-author-publish").click();
  check((await page.locator("#pd-author-validation").innerText()).includes("Fix"),
