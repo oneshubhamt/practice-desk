@@ -62,7 +62,7 @@ export function renderModelExam(
    const total=paper.sections.reduce((n,section)=>n+section.questionRevisionIds.length,0);
    const answered=state.responses.filter(record=>record.response).length;
    const timeLimit=paper.timing.kind==="whole-paper"?paper.timing.durationMs:
-     paper.timing.kind==="sectional"?paper.timing.sectionLimits.find(t=>t.sectionId===section.id)?.durationMs??null:null;
+     paper.timing.kind==="sectional"?sectionTimeBudgetMs(paper,state.sectionIndex):null;
    const elapsed=paper.timing.kind==="sectional"?state.sectionElapsedMs:state.elapsedMs;
    const advisoryBudgetReached=timeLimit!==null&&elapsed>=timeLimit&&
      timeEnforcementForMode(attempt.frozen.snapshot.mode)==="advisory";
@@ -70,7 +70,7 @@ export function renderModelExam(
    const lockedWhole=paper.timing.kind!=="sectional"&&paper.navigation.sectionNavigation==="sequential-locked";
    const hasNextSection=state.sectionIndex < paper.sections.length-1;
    const untimedSection=paper.timing.kind==="sectional"&&
-     paper.timing.sectionLimits.find(limit=>limit.sectionId===section.id)?.durationMs===null;
+     sectionTimeBudgetMs(paper,state.sectionIndex)===null;
    const progressValue=timeLimit!==null&&timeLimit>0?
      Math.min(100,100*elapsed/timeLimit):Math.min(100,100*answered/Math.max(1,total));
    const progressScope=timeLimit===null?"Question coverage":

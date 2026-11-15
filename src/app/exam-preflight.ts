@@ -1,7 +1,8 @@
 import type { ExamPackage } from "../domain/exam-package.ts";
-import type { QuestionKind } from "../domain/question.js";
 import type { MarkingRule } from "../domain/scoring.js";
 import { scoreableMaximum } from "../engine/score-ceiling.ts";
+import {effectiveMarkingRule} from "../engine/scoring.ts";
+import {sectionTimeBudgetMs} from "../domain/timing.ts";
 import {escapeText} from "./html-escape.ts";
 
 const excludedStatuses=new Set(["draft","invalid","incomplete-source","under-review","superseded"]);
@@ -66,9 +67,7 @@ export function examPreflight(bundle:ExamPackage):ExamPreflight{
    if(excludedStatuses.has(q.editorial.status)){excludedQuestions++;continue;}
    if(q.content.kind==="free-response"){manualQuestions++;continue;}
    eligibleQuestions++;
-   const kind=q.content.kind as QuestionKind;
-   rules.push(entry.scoringOverride??section.scoringOverride??
-     paper.scoring.byQuestionKind?.[kind]??paper.scoring.defaultRule);
+   rules.push(effectiveMarkingRule(paper,section,q,entry));
   }
  }
  const hasVariableRules=new Set(rules.map(r=>JSON.stringify(r))).size>1;
@@ -90,10 +89,9 @@ export function examPreflight(bundle:ExamPackage):ExamPreflight{
   timingRules.push("One shared "+timeLabel(paper.timing.durationMs)+" paper timer across "+
    plural(paper.sections.length,"section")+". Changing/closing a section does not reset this total.");
  }else{
-  timingRules.push("Independent section timers: "+paper.sections.map(s=>{
-   const d=paper.timing.kind==="sectional"?
-     paper.timing.sectionLimits.find(x=>x.sectionId===s.id)?.durationMs:null;
-   return s.title+" "+(d===null?"untimed":typeof d==="number"?timeLabel(d):"not specified");
+  timingRules.push("Independent section timers: "+paper.sections.map((s,index)=>{
+   const d=sectionTimeBudgetMs(paper,index);
+   return s.title+" "+(d===null?"untimed":timeLabel(d));
   }).join("; ")+".");
   timingRules.push(paper.timing.allowEarlySubmit?
    "You may submit a timed section early and advance. Unused minutes do not carry into the next section.":
