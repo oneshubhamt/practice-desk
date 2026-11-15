@@ -83,8 +83,12 @@ export function mountExamWorkspace(
      untimed:false,edition:packages.get(defaultChoice)?.paper.edition==="source"?"source":"reviewed"
    }}:{}
  };
- const initialFamilyId=initialSetups.selectedFamilyId;
- const initialChoice=initialSetups.families[initialFamilyId]?.paperRevisionId??defaultChoice;
+ const storedPaperId=initialSetups.families[initialSetups.selectedFamilyId]?.paperRevisionId;
+ const storedPaperInitiallyAvailable=Boolean(storedPaperId&&packages.has(storedPaperId)&&
+   initialCatalog.some(f=>f.id===initialSetups.selectedFamilyId&&
+     f.papers.some(p=>p.paper.id===storedPaperId)));
+ const initialFamilyId=storedPaperInitiallyAvailable?initialSetups.selectedFamilyId:defaultFamilyId;
+ const initialChoice=storedPaperInitiallyAvailable?storedPaperId!:defaultChoice;
  const historyQueryKey=STORAGE_TOPOLOGY.historyView;
  const initialHistoryQuery:HistoryQuery=(()=>{
    try{return restoreHistoryQuery(JSON.parse(sessionStorage.getItem(historyQueryKey)??"null"));}
