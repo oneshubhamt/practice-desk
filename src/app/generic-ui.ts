@@ -10,6 +10,7 @@ import type {SessionEvent} from "../engine/session.ts";
 import {createSessionClock} from "../engine/clock.ts";
 import type {DeletionIntent} from "../history/deletion-policy.ts";
 import type {SourcePaperBank,ReviewPatchBank} from "../content/schema.js";
+import type {PreinstalledExamCatalog} from "./preinstalled-exams.ts";
 import type {StorageHealth} from "./storage-health.ts";
 import {DEFAULT_HISTORY_QUERY,restoreHistoryQuery,type HistoryQuery} from "./history-query.ts";
 import type {ResultTab,ReviewFilter} from "./result-presentation.ts";
@@ -57,11 +58,14 @@ function cachedCglPackages(
 
 export function mountExamWorkspace(
  root:HTMLElement,sources:SourcePaperBank,patches:ReviewPatchBank,
- solutions:Readonly<Record<string,Readonly<Record<string,string>>>>
+ solutions:Readonly<Record<string,Readonly<Record<string,string>>>>,
+ preinstalled:PreinstalledExamCatalog
 ):()=>void{
  const builtins=cachedCglPackages(sources,patches,solutions);
  const builtinPaperIds=new Set(builtins.map(p=>p.paper.id));
- const packages=new Map<string,ExamPackage>(builtins.map(p=>[p.paper.id,p]));
+ const packages=new Map<string,ExamPackage>(
+   [...builtins,...preinstalled.packages].map(p=>[p.paper.id,p])
+ );
  const records=new Map<string,RecordItem>();
  const initialChoice=[...packages.values()].reverse().find(p=>p.paper.edition==="reviewed")?.paper.id??
    (packages.keys().next().value as string);
@@ -97,7 +101,7 @@ export function mountExamWorkspace(
  let router!:NativeRouter;
  let timer=0;
 
- const families=()=>examFamilyCatalog(packages.values(),builtinPaperIds);
+ const families=()=>examFamilyCatalog(packages.values(),builtinPaperIds,preinstalled.families);
  const applyFamily=(id:string):void=>applyLibraryFamily(owner,id);
  const saveSelection=():void=>persistLibrarySelection(owner);
  const changeHistoryQuery=(next:HistoryQuery,redraw=true):void=>changeHistoryFilters(owner,next,redraw);

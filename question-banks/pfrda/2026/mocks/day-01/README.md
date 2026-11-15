@@ -1,0 +1,1 @@
+# PFRDA Grade A 2026 — Day 1\n\n`original/` and `revised/` contain the canonical authoring source plus compiled package. `archive/` is recovery-only and never preinstalled. `audit.md` records verification limits. Both active packages are catalog-preinstalled generic Practice Desk packages; there is no PFRDA-specific runtime/scoring path.\n

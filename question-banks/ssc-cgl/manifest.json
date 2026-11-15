@@ -1,0 +1,16 @@
+{
+  "format": "practice-desk-exam-bank-manifest",
+  "version": 1,
+  "id": "ssc-cgl",
+  "examId": "ssc-cgl",
+  "title": "SSC CGL",
+  "contentTypes": [
+    "pyq"
+  ],
+  "preinstalled": true,
+  "paths": {
+    "original": "pyqs/original/papers.json",
+    "revisedPatches": "pyqs/revised/patches.json",
+    "revisedSolutions": "pyqs/revised/solutions.json"
+  }
+}\n

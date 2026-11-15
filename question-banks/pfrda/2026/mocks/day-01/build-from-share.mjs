@@ -3,7 +3,7 @@
  *
  * Usage (from the repository root):
  *   curl -fsSL 'https://chatgpt.com/s/t_6af93d7f091881918cf9123723691cef' |
- *     node examples/pfrda-2026-day1/build-from-share.mjs
+ *     node question-banks/pfrda/2026/mocks/day-01/build-from-share.mjs
  *
  * This is an extraction/transcription tool, not an answer-key verifier. It does
  * not execute code found in the shared page. Keep the generated source snapshot
@@ -41,13 +41,13 @@ if (originals.length !== 50 || originals.some(q =>
   throw new Error('Expected 50 complete MCQs (one stem, four options each)');
 }
 
-const hintMarkdown = readFileSync(join(directory, 'general-stream-answer-index.md'), 'utf8');
+const hintMarkdown = readFileSync(join(directory, 'archive', 'general-stream-answer-index.md'), 'utf8');
 const rows = [...hintMarkdown.matchAll(/^\|\s*(\d+)\s*\|\s*([A-D])\s*\|\s*([^|]+)\|\s*([^|]+)\|\s*$/gm)];
 if (rows.length !== 50 || rows.some((row, i) => Number(row[1]) !== i + 1)) {
   throw new Error('Recovered answer/hint index is missing or out of order');
 }
 
-const englishMarkdown = readFileSync(join(directory, 'descriptive-english.md'), 'utf8');
+const englishMarkdown = readFileSync(join(directory, 'archive', 'descriptive-english.md'), 'utf8');
 const heading = '## Original passage: Retirement Security in a Changing Economy\n\n';
 const englishStart = englishMarkdown.indexOf(heading);
 const englishEnd = englishMarkdown.indexOf('\n## Manual evaluation reference', englishStart);
@@ -144,6 +144,6 @@ const bank = {
   ],
 };
 
-writeFileSync(join(directory, 'original-50-questions.json'), JSON.stringify(source, null, 2) + '\n');
-writeFileSync(join(directory, 'day1.authoring.json'), JSON.stringify(bank, null, 2) + '\n');
+writeFileSync(join(directory, 'archive', 'original-50-questions.json'), JSON.stringify(source, null, 2) + '\n');
+writeFileSync(join(directory, 'archive', 'recovered-day1.authoring.json'), JSON.stringify(bank, null, 2) + '\n');
 console.log('Recovered 50 original stems and all 200 options; wrote 51-question two-section Practice Desk authoring source.');

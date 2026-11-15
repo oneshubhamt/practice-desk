@@ -23,7 +23,7 @@ import {frozenScoreSummary} from "./history-score.ts";
 import {examPreflight,preflightHTML,examRulesHTML} from "./exam-preflight.ts";
 
 import {writePracticeSetups,type PracticeSetups} from "./practice-selection.ts";
-import {familyIdFor,pairedEdition,BUILTIN_CGL_FAMILY} from "./exam-families.ts";
+import {pairedEdition,BUILTIN_CGL_FAMILY} from "./exam-families.ts";
 
 import type {LibraryControllerContext} from "./coordinator-context.ts";
 
@@ -38,6 +38,7 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
    const catalog=owner.families(),family=catalog.find(f=>f.id===owner.selectedFamilyId);
    const selected=family?.papers.find(p=>p.paper.id===owner.choice);
    const cgl=owner.selectedFamilyId===BUILTIN_CGL_FAMILY&&Boolean(selected);
+   const selectedIncluded=Boolean(selected&&family?.includedPaperIds.includes(selected.paper.id));
    const configured=selected?configureUntimedPractice(
      cgl?configureCglPractice(selected,owner.cglMode,owner.singleSection):selected,owner.untimedPractice):null;
    const selectedNumbers=new Set(configured?.questions.map(q=>q.questionId.split(":").at(-1))??[]);
@@ -67,7 +68,7 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
    const options=missing+
      (published.length?'<optgroup label="'+(owner.editionView==="reviewed"?"Reviewed papers":"Original papers")+'">'+
        published.map(option).join("")+'</optgroup>':"")+
-     (custom.length?'<optgroup label="Imported / custom examinations">'+
+     (custom.length?'<optgroup label="'+(family?.origin==="included"?"Included / custom practice papers":"Imported / custom examinations")+'">'+
        custom.map(option).join("")+'</optgroup>':"")+
      (!selected&&!missing?'<option value="" selected disabled>Choose a paper</option>':"");
    const hasEditions=available.some(p=>p.paper.edition==="source")&&
@@ -184,8 +185,10 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
       'Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section>'+
      '<aside class="home-side"><section class="panel pad paper-preview"><span class="eyebrow">SELECTED PAPER</span>'+
       '<h2>'+escapeText(selected?.title??"Choose a paper")+'</h2>'+
-      '<p class="fine family-provenance">'+(family?.imported?
+      '<p class="fine family-provenance">'+(family?.origin==="imported"?
         "Imported/user-supplied content; not an official exam bank.":
+        family?.origin==="included"?
+          (selectedIncluded?"Included practice package from the repository question-bank catalog; provenance still governs official status.":"Imported/user-supplied paper grouped under this included examination family."):
         family?"Included SSC CGL papers. Original and reviewed versions remain distinct.":
         "Saved examination unavailable. Re-import the bank or select another.")+'</p>'+
       '<p class="fine">'+escapeText(selected?.paper.paperId??"")+' · '+escapeText(selected?.paper.edition??"")+'</p>'+
@@ -433,7 +436,9 @@ export function bindLibraryScreen(owner:LibraryControllerContext):void{
          if(owner.packages.has(pkg.paper.id))throw new Error("Paper revision ID already exists. Supply a new revision ID.");
          if(!await owner.save({recordType:"generic-package",saveRevision:0,id:"generic-package:"+pkg.paper.id,bundle:pkg}))return;
          owner.packages.set(pkg.paper.id,pkg);
-         owner.applyFamily(familyIdFor(pkg,owner.builtinPaperIds));
+         const targetFamily=owner.families().find(f=>f.papers.some(p=>p.paper.id===pkg.paper.id));
+         if(!targetFamily)throw new Error("Imported package has no exam family");
+         owner.applyFamily(targetFamily.id);
          owner.choice=pkg.paper.id;owner.singleSection=0;
          if(pkg.paper.edition==="source"||pkg.paper.edition==="reviewed")owner.editionView=pkg.paper.edition;
          owner.saveSelection();

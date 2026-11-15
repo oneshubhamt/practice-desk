@@ -19,12 +19,12 @@ const EDITABLE_FIELDS=new Set([
  "examSection","subject","syllabusHeadingId","topic","subtopic","difficulty",
  "kind","prompt","options","answer","explanation","stimulusRef","tolerance",
  "minSelections","maxSelections","partialCreditEach","partialPenaltyEach",
- "leftItems","rightItems","provenance","qa"
+ "leftItems","rightItems","provenance","qa","scoringOverride"
 ]);
 const OPTIONAL_FIELDS=new Set([
  "subject","syllabusHeadingId","topic","subtopic","difficulty","stimulusRef",
  "tolerance","minSelections","maxSelections","partialCreditEach","partialPenaltyEach",
- "leftItems","rightItems","options"
+ "leftItems","rightItems","options","scoringOverride"
 ]);
 const fail=message=>{throw Error(message);};
 const plain=(value,label)=>{
@@ -173,7 +173,7 @@ function patchSource(source,shape,sha256){
   // in the app's QA queue, even when the incoming source had unchecked status.
   const materialFields=["kind","prompt","options","answer","explanation",
    "leftItems","rightItems","tolerance","minSelections","maxSelections",
-   "partialCreditEach","partialPenaltyEach","provenance"];
+   "partialCreditEach","partialPenaltyEach","provenance","scoringOverride"];
   const material=materialFields.some(k=>Object.hasOwn(set,k)||unset.includes(k));
   const sourceWordingChanged=["kind","prompt","options","answer","leftItems","rightItems"]
    .some(k=>Object.hasOwn(set,k)||unset.includes(k));

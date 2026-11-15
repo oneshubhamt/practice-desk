@@ -1,0 +1,43 @@
+{
+  "format": "practice-desk-question-bank-catalog",
+  "version": 1,
+  "families": [
+    {
+      "id": "ssc-cgl",
+      "examId": "ssc-cgl",
+      "title": "SSC CGL",
+      "kind": "pyq",
+      "preinstalled": true,
+      "adapter": "legacy-cgl",
+      "content": {
+        "papers": "question-banks/ssc-cgl/pyqs/original/papers.json",
+        "patches": "question-banks/ssc-cgl/pyqs/revised/patches.json",
+        "solutions": "question-banks/ssc-cgl/pyqs/revised/solutions.json"
+      },
+      "manifest": "question-banks/ssc-cgl/manifest.json"
+    },
+    {
+      "id": "pfrda-grade-a-2026-phase-ii",
+      "examId": "pfrda-grade-a-2026-phase-ii",
+      "title": "PFRDA Grade A 2026 — Phase II",
+      "kind": "mock",
+      "preinstalled": true,
+      "adapter": "exam-packages",
+      "packages": [
+        {
+          "id": "pfrda-day1-original",
+          "label": "Day 1 — Original",
+          "path": "question-banks/pfrda/2026/mocks/day-01/original/package.exam.json",
+          "current": false
+        },
+        {
+          "id": "pfrda-day1-revised",
+          "label": "Day 1 — Revised",
+          "path": "question-banks/pfrda/2026/mocks/day-01/revised/package.exam.json",
+          "current": true
+        }
+      ],
+      "manifest": "question-banks/pfrda/2026/manifest.json"
+    }
+  ]
+}

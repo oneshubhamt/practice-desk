@@ -2,7 +2,7 @@
   "format": "practice-desk-exam",
   "version": 1,
   "examId": "pfrda-grade-a-2026-phase-ii",
-  "title": "PFRDA Grade A 2026 — Day 1",
+  "title": "PFRDA Grade A 2026 — Day 1 — Original",
   "questions": [
     {
       "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r1:custom:q:3a0b175ed1702238db747052",
@@ -6444,6 +6444,11 @@
         "answer": {
           "kind": "free-response",
           "evaluation": "manual"
+        },
+        "scoringOverride": {
+          "correctMarks": 20,
+          "incorrectMarks": 0,
+          "unansweredMarks": 0
         }
       },
       {
@@ -6797,7 +6802,7 @@
         }
       }
     ],
-    "contentHash": "bf38c523ac1ccbce5f89245f70ecd478b40fcbc62cb40f5bfbb8d83adade822f"
+    "contentHash": "88c5c376e6eb3c20a50983f79a361b250aab127a4234d10387922993447af614"
   },
   "paper": {
     "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r1:custom",

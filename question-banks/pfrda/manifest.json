@@ -1,0 +1,17 @@
+{
+  "format": "practice-desk-exam-bank-manifest",
+  "version": 1,
+  "id": "pfrda-grade-a",
+  "examId": "pfrda-grade-a-2026-phase-ii",
+  "title": "PFRDA Grade A",
+  "contentTypes": [
+    "mock"
+  ],
+  "years": [
+    "2026"
+  ],
+  "preinstalled": true,
+  "paths": {
+    "2026": "2026/manifest.json"
+  }
+}\n
