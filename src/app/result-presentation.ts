@@ -163,7 +163,7 @@ export function writtenAnswerAnalysisHTML(a:GenericAttempt):string{
    '<td>'+duration(row.foregroundMs)+'</td>'+
    '<td>'+(row.postDeadlineMs>0?"+"+duration(row.postDeadlineMs):"—")+'</td>'+
    '<td>'+(row.selfAssessedMarks===null?"Not yet assessed":
-      esc(String(row.selfAssessedMarks))+(row.selfAssessedMaximum===null?"":" / "+esc(String(row.selfAssessedMaximum)))+
+      esc(mark(a,row.selfAssessedMarks))+(row.selfAssessedMaximum===null?"":" / "+esc(mark(a,row.selfAssessedMaximum)))+
       (row.assessmentNote?'<small>'+esc(row.assessmentNote)+'</small>':""))+'</td></tr>').join("")+
   '</tbody></table></div>'+
   '<p class="fine result-method-note">Paper overtime is timer time. Written-answer overtime is only foreground exposure on written questions after an advisory deadline; other questions and hidden-page time are intentionally excluded. The Question times ledger shows attribution for every question.</p></section>';

@@ -66,7 +66,8 @@ export function configurePracticeMode(base:ExamPackage,mode:PracticeMode,section
    source.timing.kind==="sectional"?sectionTimeBudgetMs(source,sectionIndex):
    source.timing.kind==="whole-paper"&&source.sections.length===1?
      source.timing.durationMs:null;
- const paperBase={...source,
+ const sourcePolicy=mode==="single"?((({practiceModes:_,...rest})=>rest)(source)):source;
+ const paperBase={...sourcePolicy,
    id:(source.id+":practice:"+mode+(mode==="single"?":"+sectionIndex:"")) as PaperRevision["id"],
    answerKeyRevisionId:answerKey.id,sections,
    timing:duration===null?{kind:"untimed" as const}:

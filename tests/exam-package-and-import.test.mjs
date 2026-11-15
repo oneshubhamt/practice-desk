@@ -75,6 +75,14 @@ test("optional practice-mode eligibility is declarative, structural and hash-bou
  const multi={...pkg.paper,practiceModes:["strict","single"]};
  assert.deepEqual(availablePracticeModes(multi),["strict","single"]);
  assert.equal(resolvePracticeMode(multi,"free"),"strict");
+ const multiBundle=validateExamPackage({...pkg,paper:{...multi,contentHash:paperRevisionHash(multi)}});
+ const single=configurePracticeMode(multiBundle,"single",0);
+ assert.equal(single.paper.sections.length,1);
+ assert.equal(single.paper.practiceModes,undefined,
+  "derived one-section executable paper must not inherit source menu eligibility");
+ assert.equal(validateExamPackage(single),single);
+ assert.equal(startGenericAttempt(single,"declared-single",0,"section-practice").frozen.snapshot.mode,
+  "section-practice");
  const originalHash=paperRevisionHash({...pkg.paper,practiceModes:["strict","free"]});
  const changedHash=paperRevisionHash({...pkg.paper,practiceModes:["free"]});
  assert.notEqual(originalHash,changedHash,"candidate-visible mode eligibility must be part of paper identity");

@@ -174,6 +174,15 @@ try{
   await page.locator("#g-single-section").selectOption("1");
   check((await page.locator(".preview-metrics").innerText()).includes("Untimed"),
     "untimed section practice inherited a fabricated timer");
+  await page.locator("#g-single-section").selectOption("0");
+  await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
+  check((await page.locator("#g-timer").innerText())==="01:00",
+    "declared section-practice mode could not execute its authored timed section");
+  check(await page.locator(".generic-sections").count()===0,
+    "one selected practice section rendered a fake section-tab bar");
+  await page.locator("#g-submit").click();await route(page,"result");
+  await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
+  await chooseModernPaper(page,mixedSections.paper.id);
   await choosePracticeMode(page,"strict");
   await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
   check(await page.locator(".generic-sections").count()===1&&

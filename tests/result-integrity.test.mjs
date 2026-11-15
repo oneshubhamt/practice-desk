@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {pkg} from "./fixtures/six-kinds.mjs";
 import {startGenericAttempt,validateExamPackage} from "../src/app/exam-package.ts";
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
+import {setManualGrade} from "../src/engine/manual-grading.ts";
 import {paperRevisionHash} from "../src/domain/integrity.ts";
 import {timingLedgerHTML} from "../src/app/result-presentation.ts";
 import {activateWorkspaceRoute} from "../src/app/route-controller.ts";
@@ -57,7 +58,11 @@ test("unsectioned fractional Results use frozen precision, paper language and ne
  const right=bundle.answerKey.entries[0].answer;
  let attempt=startGenericAttempt(bundle,"fractional-result",0,"full-paper-practice");
  attempt=transitionGenericAttempt(attempt,{type:"ANSWER",nowMs:10,response:right},lookup);
+ attempt=transitionGenericAttempt(attempt,{type:"NAVIGATE",nowMs:11,sectionIndex:0,questionIndex:5},lookup);
+ attempt=transitionGenericAttempt(attempt,{type:"ANSWER",nowMs:12,
+  response:{kind:"free-response",text:"A short assessed response."}},lookup);
  attempt=transitionGenericAttempt(attempt,{type:"SUBMIT_ATTEMPT",nowMs:20},lookup);
+ attempt=setManualGrade(attempt,"rev-5",1/3,"Fractional manual assessment",new Date(30).toISOString());
  const owner={attempt,resultTab:"overview",reviewFilter:"all",warning:"",
   packageForAttempt:()=>bundle,manualGradeDrafts:new Map(),records:new Map()};
  const overview=renderCurrentResultHTML(owner);
@@ -67,6 +72,8 @@ test("unsectioned fractional Results use frozen precision, paper language and ne
  assert.doesNotMatch(overview,/Section diagnostics/);
  assert.match(overview,/Frozen source &amp; independence:/);
  assert.match(overview,/does not independently authenticate official status/);
+ assert.match(overview,/0\.333 \/ 0\.333/,"written self-assessment must use frozen mark precision");
+ assert.doesNotMatch(overview,/0\.333333/);
  const ledger=timingLedgerHTML(attempt,true,true);
  assert.match(ledger,/<th>Paper<\/th>/);
  assert.match(ledger,/Whole paper/);
