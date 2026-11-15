@@ -180,37 +180,36 @@ const cgl=builtinCglPackages(source,patches);
 const reviewed=cgl.find(p=>p.paper.edition==="reviewed");
 const original=cgl.find(p=>p.paper.edition==="source");
 assert.ok(reviewed&&original);
-const model=(bundle,builtinCgl=false)=>examPreflight(bundle,{builtinCgl,
- reviewedPatchCount:Object.keys(patches[bundle.paper.paperId]??{}).length});
+const model=bundle=>examPreflight(bundle);
 
 test("F02: reviewed CGL strict, free, single are calculated on their actual executable policy",()=>{
  const strict=configurePracticeMode(reviewed,"strict");
  const free=configurePracticeMode(reviewed,"free");
  const single=configurePracticeMode(reviewed,"single",2);
  for(const p of [strict,free,single]){
-  const x=model(p,true);
+  const x=model(p);
   assert.equal(x.maximum,scoreableMaximum(p.paper,p.answerKey,p.questions));
   assert.equal(x.eligibleQuestions+x.excludedQuestions+x.manualQuestions,x.totalQuestions);
   assert.equal(x.ruleSummary,"Correct +2 · Incorrect -0.5 · Unanswered 0");
   assert.equal(x.eligibleQuestions*2,x.maximum);
   assert.equal(x.decimals,2);
  }
- assert.equal(model(strict,true).maximum,200);
- assert.equal(model(free,true).maximum,200);
- assert.equal(model(single,true).maximum,50);
- assert.equal(model(single,true).totalQuestions,25);
+ assert.equal(model(strict).maximum,200);
+ assert.equal(model(free).maximum,200);
+ assert.equal(model(single).maximum,50);
+ assert.equal(model(single).totalQuestions,25);
  assert.equal(strict.paper.timing.kind,"sectional");
  assert.equal(strict.paper.timing.transition,"automatic");
- assert.match(model(strict,true).timingRules.join(" "),/15 min/);
- assert.match(model(strict,true).timingRules.join(" "),/Unused minutes do not carry/);
- assert.match(model(free,true).timingRules.join(" "),/One shared 60 min paper timer/);
- assert.doesNotMatch(model(free,true).timingRules.join(" "),/Unused minutes do not carry/);
- assert.match(model(free,true).timingRules.join(" "),/Pause control is available/);
- assert.match(model(strict,true).timingRules.join(" "),/Pausing the timer is not permitted/);
+ assert.match(model(strict).timingRules.join(" "),/15 min/);
+ assert.match(model(strict).timingRules.join(" "),/Unused minutes do not carry/);
+ assert.match(model(free).timingRules.join(" "),/One shared 60 min paper timer/);
+ assert.doesNotMatch(model(free).timingRules.join(" "),/Unused minutes do not carry/);
+ assert.match(model(free).timingRules.join(" "),/Pause control is available/);
+ assert.match(model(strict).timingRules.join(" "),/Pausing the timer is not permitted/);
 });
 
 test("F02/F15: source edition reports excluded publisher items; reviewed is scoreable caution, not official SSC",()=>{
- const x=model(original,true),y=model(reviewed,true);
+ const x=model(original),y=model(reviewed);
  assert.ok(x.excludedQuestions>0,"Source edition should count genuine unscoreable original defects");
  assert.equal(x.maximum,scoreableMaximum(original.paper,original.answerKey,original.questions));
  assert.ok(x.maximum<200);
@@ -218,15 +217,16 @@ test("F02/F15: source edition reports excluded publisher items; reviewed is scor
  assert.ok(y.correctedQuestions>0,"Reviewed paper contains independently corrected items");
  const disputed=cgl.find(p=>p.paper.edition==="reviewed"&&p.paper.paperId==="cgl-2026-10-06");
  assert.ok(disputed);
- assert.ok(model(disputed,true).cautionQuestions>0,
+ assert.ok(model(disputed).cautionQuestions>0,
    "Disputed reviewed 6 October questions retain editorial caution rather than being silently excluded");
  assert.equal(y.cautionQuestions,reviewed.questions.filter(q=>q.editorial.status==="caution").length);
- assert.equal(y.patchCount,Object.keys(patches[reviewed.paper.paperId]??{}).length);
- assert.ok(y.patchCount>0);
- assert.match(x.provenance,/publisher-provided/);
- assert.match(x.provenance,/not an SSC-operated/);
- assert.match(y.provenance,/independent educational corrections/);
- assert.match(y.provenance,/not official SSC answer keys/);
+ assert.equal(y.changedQuestions,Object.keys(patches[reviewed.paper.paperId]??{}).length,
+  "canonical reviewed-change metadata must preserve archived patch coverage");
+ assert.ok(y.changedQuestions>0);
+ assert.match(x.provenance,/Source edition supplied by this package/);
+ assert.match(x.provenance,/does not independently authenticate/);
+ assert.match(y.provenance,/Reviewed edition supplied by this package/);
+ assert.match(y.provenance,/pinned to its declared source revision/);
  assert.doesNotMatch(preflightHTML(y),/correct option is|answer is A|Q62.+B/i);
  assert.match(preflightHTML(x),/excluded/);
  assert.match(preflightHTML(y),/reviewed changes/);
@@ -239,8 +239,7 @@ test("F02: a custom exam uses frozen eligible max and plainly labels manual ques
  assert.equal(x.eligibleQuestions,5);
  assert.equal(x.manualQuestions,1);
  assert.equal(x.excludedQuestions,0);
- assert.equal(x.patchCount,null);
- assert.equal(x.builtinCgl,false);
+ assert.equal(x.changedQuestions,0);
  assert.match(x.provenance,/author\/importer/);
  assert.doesNotMatch(x.provenance,/SSC/);
  const html=preflightHTML(x);
@@ -313,11 +312,9 @@ test("F15: independently imported editions cannot inherit built-in SSC provenanc
  reviewedBundle.paper.contentHash=paperRevisionHash(reviewedBundle.paper);
  for(const b of [sourceBundle,reviewedBundle]){
   const x=model(b);
-  assert.equal(x.builtinCgl,false);
-  assert.equal(x.patchCount,null);
+  assert.equal(x.changedQuestions,0);
   assert.match(x.provenance,/supplied/);
   assert.doesNotMatch(x.provenance,/SSC/);
-  assert.doesNotMatch(x.provenance,/independent educational corrections/);
  }
 });
 }

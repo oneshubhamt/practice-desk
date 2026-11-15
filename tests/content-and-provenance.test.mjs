@@ -255,8 +255,10 @@ test("L09/L10: timing type and frozen mode have accurate labels, untimed include
   [configurePracticeMode(p,"strict"),"exam-simulation","Exam simulation","Section timer","Section time used"],
   [configurePracticeMode(p,"single",1),"section-practice","Single-section practice","Whole-paper timer","Whole-paper time used"]]){
   const a=startGenericAttempt(configured,mode,0,frozenMode),html=renderModelExam(a,configured);
-  assert.ok(html.includes(mode+" · "),
+  assert.ok(html.includes(mode+(frozenMode==="section-practice"?" · ":" · ")),
    "Human-readable frozen exam mode must remain visible in the active exam");
+  if(frozenMode==="section-practice")assert.ok(!html.includes("Section 1 of 1"),
+   "single-section practice should keep its title without artificial one-of-one chrome");
   assert.ok(html.includes('aria-valuetext="'+scope+' '),
    scope+" must remain available to screen readers in the compact progress bar");
   assert.ok(html.includes('aria-label="'+aria+'"'),aria+" missing");

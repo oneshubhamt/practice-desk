@@ -84,13 +84,14 @@ export function renderModelExam(
    const sectionAnswered=section.questionRevisionIds.filter(qid=>Boolean(responsesById.get(qid)?.response)).length;
    const sectionFlagged=section.questionRevisionIds.filter(qid=>Boolean(responsesById.get(qid)?.flagged)).length;
    const multiSection=paper.sections.length>1;
+   const showSectionContext=multiSection||attempt.frozen.snapshot.mode==="section-practice";
 
    const assets:ExamPackage={format:"practice-desk-exam",version:1,
      examId:attempt.frozen.snapshot.examId,title:bundle?.title??"",paper,answerKey:attempt.frozen.key,
      questions:attempt.frozen.questions,stimuli:attempt.frozen.stimuli,assets:attempt.frozen.assets};
    return '<div class="generic-heading exam-header"><div><h1>'+escapeText(bundle?.title??paper.paperId)+'</h1>'+
      '<p class="muted">'+escapeText(readablePracticeMode(attempt.frozen.snapshot.mode))+
-     (multiSection?' · '+escapeText(section.title)+' · Section '+(state.sectionIndex+1)+' of '+paper.sections.length:'')+'</p></div>'+
+     (showSectionContext?' · '+escapeText(section.title)+(multiSection?' · Section '+(state.sectionIndex+1)+' of '+paper.sections.length:''):'')+'</p></div>'+
      '<div class="row exam-header-actions"><div class="exam-clock '+(isLow?"low ":"")+(clock.overtime?"overtime":"")+'"><strong class="generic-timer" id="g-timer" role="timer">'+
        clock.text+'</strong><small id="g-timer-label">'+clock.label+'</small></div>'+
      (calculatorEnabled?calculatorToggleHTML(calculator):"")+

@@ -24,6 +24,7 @@ export interface ExamPreflight {
  readonly manualQuestions:number;
  readonly correctedQuestions:number;
  readonly cautionQuestions:number;
+ readonly changedQuestions:number;
  readonly totalQuestions:number;
  readonly ruleSummary:string;
  readonly hasVariableRules:boolean;
@@ -43,13 +44,14 @@ export function examPreflight(bundle:ExamPackage):ExamPreflight{
  const questions=new Map(bundle.questions.map(q=>[q.id,q]));
  const rules:MarkingRule[]=[];
  let excludedQuestions=0,manualQuestions=0,eligibleQuestions=0;
- let cautionQuestions=0,correctedQuestions=0;
+ let cautionQuestions=0,correctedQuestions=0,changedQuestions=0;
  for(const section of paper.sections){
   for(const id of section.questionRevisionIds){
    const q=questions.get(id),entry=entries.get(id);
    if(!q||!entry)throw Error("Preflight cannot inspect an incomplete exam package");
    if(q.editorial.status==="caution")cautionQuestions++;
    if(q.editorial.status==="corrected")correctedQuestions++;
+   if(q.editorial.changes?.length)changedQuestions++;
    if(excludedStatuses.has(q.editorial.status)){excludedQuestions++;continue;}
    if(q.content.kind==="free-response"){manualQuestions++;continue;}
    eligibleQuestions++;
@@ -117,7 +119,7 @@ export function examPreflight(bundle:ExamPackage):ExamPreflight{
  return {
   maximum:scoreableMaximum(paper,bundle.answerKey,bundle.questions),
   decimals:paper.scoring.decimalPlaces??2,
-  eligibleQuestions,excludedQuestions,manualQuestions,correctedQuestions,cautionQuestions,
+  eligibleQuestions,excludedQuestions,manualQuestions,correctedQuestions,cautionQuestions,changedQuestions,
   totalQuestions:paper.sections.reduce((n,s)=>n+s.questionRevisionIds.length,0),
   ruleSummary,hasVariableRules,hasComponentScoring,timingRules,navigationRules,
   provenance:provenanceDetail,sectionTitles:paper.sections.map(s=>s.title)
@@ -137,7 +139,8 @@ export function preflightHTML(p:ExamPreflight):string{
   '; '+plural(p.excludedQuestions,"excluded")+
   '; '+plural(p.manualQuestions,"manual-response")+
   '; '+plural(p.cautionQuestions,"editorial caution")+
-  '; '+plural(p.correctedQuestions,"corrected")+'.</p>'+
+  '; '+plural(p.correctedQuestions,"corrected")+
+  '; '+plural(p.changedQuestions,"reviewed change")+'.</p>'+
   '<p class="preflight-provenance"><b>Source & independence:</b> '+escapeText(p.provenance)+'</p>'+
   '<p class="fine">Exact key choices, editorial disputes, worked solutions and original-versus-reviewed answer comparisons remain hidden until permitted after completion.</p>'+
  '</section>';
