@@ -29,7 +29,7 @@ Calculator display, pending operation, memory and open/closed state are recovera
 - Free-response text remains manual/pending for substantive assessment. Automated marks never silently score relevance, factual quality, structure or language; optional self-assessed marks/notes remain separate from the immutable machine score.
 - `wordLimit` is advisory. Results derive word count with the same canonical `countWords()` rule used by the candidate counter; derived counts are not persisted.
 - Visible written text is transiently staged and committed at navigation, submission, lifecycle and timer checkpoints so a hard deadline cannot drop the last legal draft. Checkpoints replace the current free-response value without answer-revision/keystroke telemetry.
-- Practice overtime is timer time beyond the frozen budget. `postDeadlineMs` attributes only visible question exposure after that budget, so attributed question overtime may legitimately be smaller than paper overtime.
+- Practice overtime is timer time beyond the applicable frozen paper/section budget. `postDeadlineMs` attributes only visible question exposure after that advisory deadline. The Written-answers summary sums this field only across written questions; the Question-times ledger remains the all-question attribution surface. Hidden-page time and non-written questions therefore must not be misreported as written-answer overtime.
 
 ## Subject hierarchy and sections
 
