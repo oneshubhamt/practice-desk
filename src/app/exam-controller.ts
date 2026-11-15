@@ -92,20 +92,23 @@ owner.root.querySelectorAll<HTMLInputElement>("[data-bool]").forEach(input=>inpu
 if(q.content.kind==="free-response"){
      const field=owner.root.querySelector<HTMLTextAreaElement>("#g-text");
      const counter=owner.root.querySelector<HTMLElement>("#g-word-count");
-     const updateWordCount=()=>{
-       if(!field||!counter)return;
-       const limit=Number(counter.dataset.wordLimit);
-       const count=countWords(field.value);
-       const band=wordCountBand(count,limit);
-       counter.dataset.wordCountState=band;
-       counter.textContent=count+" / "+limit+" words";
-       const status=band==="over"?"over the advisory limit":
-         band==="warning"?"near the advisory limit":
-         band==="caution"?"approaching the advisory limit":"within the advisory limit";
-       counter.setAttribute("aria-label","Word count: "+count+" of "+limit+" words, "+status);
-     };
-     field?.addEventListener("input",updateWordCount);
-     updateWordCount();
+     const limit=q.content.responseRules.wordLimit;
+     if(field&&counter&&limit!==undefined){
+       const updateWordCount=()=>{
+         const count=countWords(field.value);
+         const band=wordCountBand(count,limit);
+         counter.dataset.wordCountState=band;
+         counter.textContent=count+" / "+limit+" words";
+         const status=band==="over"?"over the advisory limit":
+           band==="warning"?"near the advisory limit":
+           band==="caution"?"approaching the advisory limit":"within the advisory limit";
+         counter.setAttribute("aria-label","Word count: "+count+" of "+limit+" words, "+status);
+       };
+       // Same-question redraws reconcile and retain this textarea node.
+       // Property assignment replaces the prior binding instead of stacking listeners.
+       field.oninput=updateWordCount;
+       updateWordCount();
+     }
    }
 const saveButton=owner.root.querySelector<HTMLButtonElement>("#g-save");
 if(q.content.kind==="matching"&&saveButton){

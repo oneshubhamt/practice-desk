@@ -95,7 +95,7 @@ export function renderGenericControls(
     const band=limit?wordCountBand(count,limit):"normal";
     const counter=options.showWordCount&&limit?
       '<span class="generic-word-count" id="g-word-count" data-word-count-state="'+band+
-      '" data-word-limit="'+limit+'" aria-label="Word count: '+count+' of '+limit+' words">'+
+      '" aria-label="Word count: '+count+' of '+limit+' words">'+
       count+' / '+limit+' words</span>':"";
     return '<div class="generic-written-response"><div class="generic-written-response-head">'+
       '<label class="picker" for="g-text">Written response</label>'+counter+'</div>'+

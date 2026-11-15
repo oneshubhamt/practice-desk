@@ -114,7 +114,7 @@ export function authoringDraftPreview(d:AuthoringDraft,q:AuthoringQuestion):stri
  }else if(q.kind==="numeric-entry")content={...base,kind:"numeric-entry",numericRules:{allowNegative:true}};
  else if(q.kind==="true-false")content={...base,kind:"true-false"};
  else content={...base,kind:"free-response",responseRules:{
-  minWords:1,maxWords:10000,wordLimit:q.wordLimit??300
+  minWords:1,wordLimit:q.wordLimit??300
  }};
  if(publicationPlainText(q.passage))content={...content,
    stimulusId:"author-preview-stimulus"} as unknown as QuestionContent;

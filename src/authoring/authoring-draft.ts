@@ -279,10 +279,14 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   const maxSelections=num(q.maxSelections??4,"maximum selections",1,4);
   if(!Number.isInteger(minSelections)||!Number.isInteger(maxSelections)||
      minSelections>maxSelections)throw Error("Invalid selection bounds");
+  const wordLimit=kind==="free-response"?
+    num(q.wordLimit??300,"advisory word limit",1,10000):undefined;
+  if(wordLimit!==undefined&&!Number.isSafeInteger(wordLimit))
+    throw Error("Advisory word limit must be a whole number");
   return {id:questionId,section,subject,syllabusHeadingId,
    topic,subtopic,difficulty:difficulty as ""|"easy"|"medium"|"hard",
    minSelections,maxSelections,
-   ...(kind==="free-response"?{wordLimit:num(q.wordLimit??300,"advisory word limit",1,10000)}:{}),
+   ...(wordLimit===undefined?{}:{wordLimit}),
    partialCreditEach:num(q.partialCreditEach??0,"partial-credit component",0,1000),
    partialPenaltyEach:num(q.partialPenaltyEach??0,"partial penalty",0,1000),
    kind:kind as QuestionKind,prompt:rich(q.prompt),passage:rich(q.passage),

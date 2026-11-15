@@ -262,7 +262,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
   const q=object(item,path,["id","examSection","subject","syllabusHeadingId",
    "topic","subtopic","difficulty","kind","prompt","stimulusRef","options",
    "leftItems","rightItems","explanation","answer","tolerance","minSelections",
-   "maxSelections","partialCreditEach","partialPenaltyEach","provenance","qa"]);
+   "maxSelections","wordLimit","partialCreditEach","partialPenaltyEach","provenance","qa"]);
   const id=key(q.id,path+".id");
   if(qIds.has(id))err(path+".id","Duplicate semantic question ID");
   qIds.add(id);
@@ -298,6 +298,10 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
   if(minSelections>maxSelections)err(path+".minSelections","Minimum exceeds maximum");
   if(questionKind!=="multiple-select"&&(q.minSelections!==undefined||q.maxSelections!==undefined))
    err(path+".minSelections","Selection limits apply only to multiple-select");
+  const wordLimit=q.wordLimit===undefined?300:
+   num(q.wordLimit,path+".wordLimit",1,10000,true);
+  if(questionKind!=="free-response"&&q.wordLimit!==undefined)
+   err(path+".wordLimit","Word limits apply only to written responses");
   const partialCreditEach=q.partialCreditEach===undefined?0:
    num(q.partialCreditEach,path+".partialCreditEach",0,1000);
   const partialPenaltyEach=q.partialPenaltyEach===undefined?0:
@@ -372,6 +376,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
   return {id,section:section!.title,subject,syllabusHeadingId,
    topic,subtopic,difficulty:difficulty as NonNullable<AuthoringQuestion["difficulty"]>,
    minSelections,maxSelections,
+   ...(questionKind==="free-response"?{wordLimit}:{}),
    partialCreditEach,partialPenaltyEach,
    kind:questionKind,prompt,passage,options,leftItems,rightItems,explanation,
    answer,tolerance,source:sourceNote??"",

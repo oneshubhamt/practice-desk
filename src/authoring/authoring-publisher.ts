@@ -304,7 +304,7 @@ export function compileAuthoringPublication(
     rightItems:items(q.rightItems,letters)};
   }else{
    content={...baseContent,kind:"free-response",responseRules:{
-    minWords:1,maxWords:10000,wordLimit:q.wordLimit??300
+    minWords:1,wordLimit:q.wordLimit??300
    }};
   }
   const editorial={
