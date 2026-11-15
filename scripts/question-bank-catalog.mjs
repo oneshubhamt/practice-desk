@@ -28,7 +28,6 @@ const fileAt=(root,path)=>{
  return full;
 };
 const readJson=async(root,path)=>JSON.parse(await readFile(fileAt(root,path),"utf8"));
-const readText=(root,path)=>readFile(fileAt(root,path),"utf8");
 const relativeTo=(manifestPath,child)=>join(dirname(manifestPath),str(child,"Manifest child path"));
 
 function validateCatalog(value){
@@ -58,15 +57,14 @@ function validateExamManifest(raw,family,path){
   throw Error("Unsupported exam manifest "+path);
  if(str(manifest.id,"Exam manifest id")!==family.id||str(manifest.examId,"Exam manifest examId")!==family.examId)
   throw Error("Exam manifest identity mismatch for "+family.id);
- const representation=str(manifest.representation,"Exam representation");
- if(!["legacy-cgl","exam-packages"].includes(representation))
-  throw Error("Unsupported exam representation "+representation);
+ if(str(manifest.representation,"Exam representation")!=="exam-packages")
+  throw Error("Exam manifests must use canonical exam-packages: "+path);
  const years=arr(manifest.years,"Exam years").map((year,i)=>integer(year,"Exam year "+i));
  if(new Set(years).size!==years.length)throw Error("Duplicate exam year in "+path);
  const paths=plain(manifest.paths,"Exam year paths");
  for(const year of years)str(paths[String(year)],"Path for exam year "+year);
  return {id:manifest.id,examId:manifest.examId,title:str(manifest.title,"Exam title"),
-  representation,years,paths,
+  representation:"exam-packages",years,paths,
   ...(manifest.currentPaperId===undefined?{}:{currentPaperId:str(manifest.currentPaperId,"Current paper id")})};
 }
 
@@ -101,8 +99,17 @@ function validatePaperManifest(raw,exam,entry,path){
  const editions=plain(manifest.editions,"Paper editions");
  const canonicalEdition=str(manifest.canonicalEdition,"Canonical edition");
  if(!Object.hasOwn(editions,canonicalEdition))throw Error("Canonical edition missing from "+path);
+ for(const [name,rawEdition] of Object.entries(editions)){
+  const edition=plain(rawEdition,"Paper edition "+name+" in "+path);
+  only(edition,["authoring","package"],"Paper edition "+name+" in "+path);
+  str(edition.package,"Package path for "+name+" in "+path);
+  if(edition.authoring!==undefined)str(edition.authoring,"Authoring path for "+name+" in "+path);
+ }
  return {id:manifest.id,examId:manifest.examId,paperId:str(manifest.paperId,"Paper id"),
-  kind:manifest.kind,title:str(manifest.title,"Paper title"),canonicalEdition,editions,path};
+  kind:manifest.kind,title:str(manifest.title,"Paper title"),canonicalEdition,editions,
+  ...(manifest.archive===undefined?{}:{archive:manifest.archive}),
+  ...(manifest.audit===undefined?{}:{audit:manifest.audit}),
+  ...(manifest.identityPolicy===undefined?{}:{identityPolicy:manifest.identityPolicy}),path};
 }
 
 async function manifestPapers(root,family){
@@ -124,43 +131,24 @@ async function manifestPapers(root,family){
  return {exam,papers};
 }
 
-async function loadLegacyCgl(root,family,manifestSet){
- const sourceBank={},patchBank={},solutionBank={};
- for(const paper of manifestSet.papers){
-  if(paper.kind!=="pyq")throw Error("legacy-cgl supports PYQ papers only");
-  const original=plain(paper.editions.original,"CGL original edition "+paper.id);
-  const revised=plain(paper.editions.revised,"CGL revised edition "+paper.id);
-  only(original,["source"],"CGL original edition "+paper.id);
-  only(revised,["patches","solutions"],"CGL revised edition "+paper.id);
-  const sourcePath=relativeTo(paper.path,str(original.source,"CGL original source"));
-  const source=plain(await readJson(root,sourcePath),"CGL source paper "+paper.id);
-  if(str(source.id,"CGL source id")!==paper.paperId)throw Error("CGL source id mismatch "+paper.id);
-  if(Object.hasOwn(sourceBank,source.id))throw Error("Duplicate CGL paper "+source.id);
-  sourceBank[source.id]=source;
-  const patchPath=relativeTo(paper.path,str(revised.patches,"CGL revised patches"));
-  const solutionPath=relativeTo(paper.path,str(revised.solutions,"CGL revised solutions"));
-  patchBank[source.id]=plain(await readJson(root,patchPath),"CGL patches "+paper.id);
-  solutionBank[source.id]=plain(await readJson(root,solutionPath),"CGL solutions "+paper.id);
- }
- return {papersRaw:JSON.stringify(sourceBank),patchesRaw:JSON.stringify(patchBank),
-  solutionsRaw:JSON.stringify(solutionBank)};
-}
-
 async function loadExamPackages(root,family,manifestSet,seenPaperIds){
- const packages=[],paperIds=[],manifestToPackage=new Map();
+ const packages=[],paperIds=[],manifestToCanonical=new Map();
  for(const paper of manifestSet.papers){
-  const edition=plain(paper.editions[paper.canonicalEdition],"Canonical edition "+paper.id);
-  const packagePath=relativeTo(paper.path,str(edition.package,"Canonical package path"));
-  const pkg=validateExamPackage(await readJson(root,packagePath));
-  if(pkg.examId!==family.examId)throw Error("Package examId mismatch for "+paper.id);
-  if(pkg.paper.paperId!==paper.paperId&&!pkg.paper.paperId.endsWith(":"+paper.paperId))
-   throw Error("Package paperId mismatch for "+paper.id);
-  if(seenPaperIds.has(pkg.paper.id))throw Error("Duplicate preinstalled paper revision "+pkg.paper.id);
-  seenPaperIds.add(pkg.paper.id);paperIds.push(pkg.paper.id);packages.push(pkg);
-  manifestToPackage.set(paper.id,pkg.paper.id);
+  for(const [editionName,rawEdition] of Object.entries(paper.editions)){
+   const edition=plain(rawEdition,"Edition "+editionName+" "+paper.id);
+   const packagePath=relativeTo(paper.path,str(edition.package,"Package path "+paper.id+" "+editionName));
+   const pkg=validateExamPackage(await readJson(root,packagePath));
+   if(pkg.examId!==family.examId)throw Error("Package examId mismatch for "+paper.id+" "+editionName);
+   if(pkg.paper.paperId!==paper.paperId&&!pkg.paper.paperId.endsWith(":"+paper.paperId))
+    throw Error("Package paperId mismatch for "+paper.id+" "+editionName);
+   if(seenPaperIds.has(pkg.paper.id))throw Error("Duplicate preinstalled paper revision "+pkg.paper.id);
+   seenPaperIds.add(pkg.paper.id);paperIds.push(pkg.paper.id);packages.push(pkg);
+   if(editionName===paper.canonicalEdition)manifestToCanonical.set(paper.id,pkg.paper.id);
+  }
+  if(!manifestToCanonical.has(paper.id))throw Error("Canonical edition did not resolve for "+paper.id);
  }
  const currentPaperId=manifestSet.exam.currentPaperId?
-  manifestToPackage.get(manifestSet.exam.currentPaperId):undefined;
+  manifestToCanonical.get(manifestSet.exam.currentPaperId):undefined;
  if(manifestSet.exam.currentPaperId&&!currentPaperId)
   throw Error("Current paper manifest does not resolve to a canonical package");
  return {packages,paperIds,currentPaperId};
@@ -168,21 +156,16 @@ async function loadExamPackages(root,family,manifestSet,seenPaperIds){
 
 export async function loadQuestionBankCatalog(root,catalogOverride){
  const catalog=validateCatalog(catalogOverride??await readJson(root,"question-banks/catalog.json"));
- const families=[],packages=[],seenPaperIds=new Set();let legacy=null;
+ const families=[],packages=[],seenPaperIds=new Set();
  for(const family of catalog.families){
   if(!family.preinstalled)continue;
   const manifestSet=await manifestPapers(root,family);
-  if(manifestSet.exam.representation==="legacy-cgl"){
-   if(legacy)throw Error("Only one legacy CGL bank may be preinstalled");
-   legacy=await loadLegacyCgl(root,family,manifestSet);
-   continue;
-  }
   const loaded=await loadExamPackages(root,family,manifestSet,seenPaperIds);
   packages.push(...loaded.packages);
   families.push(Object.freeze({id:family.id,examId:family.examId,title:family.title,
    paperIds:Object.freeze(loaded.paperIds),...(loaded.currentPaperId?{currentPaperId:loaded.currentPaperId}:{})}));
  }
- return {catalog,legacy,preinstalled:Object.freeze({format:"practice-desk-preinstalled-exams",
+ return {catalog,preinstalled:Object.freeze({format:"practice-desk-preinstalled-exams",
   version:1,families:Object.freeze(families),packages:Object.freeze(packages)})};
 }
 
@@ -192,7 +175,8 @@ export async function readQuestionBankManifestGraph(root,catalogOverride){
  for(const family of catalog.families){
   const manifests=await manifestPapers(root,family);
   families.push({family,exam:manifests.exam,papers:manifests.papers.map(p=>({
-   id:p.id,paperId:p.paperId,kind:p.kind,title:p.title,canonicalEdition:p.canonicalEdition,path:p.path
+   id:p.id,paperId:p.paperId,kind:p.kind,title:p.title,canonicalEdition:p.canonicalEdition,
+   editions:p.editions,path:p.path,...(p.archive===undefined?{}:{archive:p.archive})
   }))});
  }
  return {catalog,families};

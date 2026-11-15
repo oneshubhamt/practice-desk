@@ -31,18 +31,13 @@ export interface ExamPreflight {
  readonly timingRules:readonly string[];
  readonly navigationRules:readonly string[];
  readonly provenance:string;
- readonly patchCount:number|null;
- readonly builtinCgl:boolean;
  readonly sectionTitles:readonly string[];
 }
 
 /** Read-only pre-start metadata from the exact executable selection. Never
  * expose answers, solution notes, source-review diffs, or a mutable key.
  */
-export function examPreflight(bundle:ExamPackage,options:{
-  readonly builtinCgl?:boolean;
-  readonly reviewedPatchCount?:number;
-}={}):ExamPreflight{
+export function examPreflight(bundle:ExamPackage):ExamPreflight{
  const paper=bundle.paper;
  const entries=new Map(bundle.answerKey.entries.map(e=>[e.questionRevisionId,e]));
  const questions=new Map(bundle.questions.map(q=>[q.id,q]));
@@ -111,29 +106,21 @@ export function examPreflight(bundle:ExamPackage,options:{
    "Detailed answer-key/solution review becomes available only after completion.":
    "After completion, numerical score and timing appear; detailed answer-key/solution review is withheld."
  ];
- const builtinCgl=options.builtinCgl===true;
- const provenance=builtinCgl?
-  (paper.edition==="source"?
-   "SSC CGL original transcription: publisher-provided question wording and answer labels are preserved; disputed/invalid items can be excluded. This is not an SSC-operated or official answer-key service.":
-   "SSC CGL reviewed edition: independent educational corrections, not official SSC answer keys. "+
-   (cautionQuestions?
-     "Some disputed published answers remain scoreable with an editorial caution. ":
-     "This edition has no currently flagged caution questions. ")+
-   "The identity and reasoning for any individual correction are disclosed only after submission."):
-  paper.edition==="source"?
-   "Source edition supplied by the paper author/importer. Publication, key accuracy and any claimed official status are not independently authenticated by Practice Desk.":
+ const hasCitations=bundle.questions.some(q=>Boolean(q.editorial.sources?.length));
+ const provenance=paper.edition==="source"?
+   "Source edition supplied by this package. Practice Desk preserves its frozen provenance but does not independently authenticate publisher, key accuracy or official status.":
   paper.edition==="reviewed"?
-   "Reviewed edition label and corrections are author/importer supplied. Practice Desk does not independently certify their accuracy or official status.":
-   "Custom exam content and scoring were provided by the author/importer; Practice Desk is independent of examining organisations.";
+   "Reviewed edition supplied by this package and pinned to its declared source revision. Practice Desk preserves that lineage but does not independently certify the reviewer, corrections or official status.":
+   "Custom exam content and scoring were supplied by the author/importer; Practice Desk is independent of examining organisations.";
+ const provenanceDetail=provenance+(hasCitations?
+   " Question-level citations, where supplied, are disclosed with the frozen review evidence.":"");
  return {
   maximum:scoreableMaximum(paper,bundle.answerKey,bundle.questions),
   decimals:paper.scoring.decimalPlaces??2,
   eligibleQuestions,excludedQuestions,manualQuestions,correctedQuestions,cautionQuestions,
   totalQuestions:paper.sections.reduce((n,s)=>n+s.questionRevisionIds.length,0),
   ruleSummary,hasVariableRules,hasComponentScoring,timingRules,navigationRules,
-  provenance,patchCount:builtinCgl&&paper.edition==="reviewed"?
-    options.reviewedPatchCount??0:null,
-  builtinCgl,sectionTitles:paper.sections.map(s=>s.title)
+  provenance:provenanceDetail,sectionTitles:paper.sections.map(s=>s.title)
  };
 }
 
@@ -150,9 +137,7 @@ export function preflightHTML(p:ExamPreflight):string{
   '; '+plural(p.excludedQuestions,"excluded")+
   '; '+plural(p.manualQuestions,"manual-response")+
   '; '+plural(p.cautionQuestions,"editorial caution")+
-  '; '+plural(p.correctedQuestions,"corrected")+'.'+
-  (p.patchCount===null?"":' Independently reviewed changes in this built-in edition: '+
-    p.patchCount+'.')+'</p>'+
+  '; '+plural(p.correctedQuestions,"corrected")+'.</p>'+
   '<p class="preflight-provenance"><b>Source & independence:</b> '+escapeText(p.provenance)+'</p>'+
   '<p class="fine">Exact key choices, editorial disputes, worked solutions and original-versus-reviewed answer comparisons remain hidden until permitted after completion.</p>'+
  '</section>';
@@ -168,7 +153,7 @@ export function examRulesHTML(p:ExamPreflight):string{
   '<h3>Scoring for this selection</h3><p>'+escapeText(p.ruleSummary)+
   '. Maximum eligible automated marks: <b>'+escapeText(p.maximum.toFixed(p.decimals))+
   '</b>. Excluded items are omitted; written/manual questions are self-assessed separately.</p>'+
-  '<h3>Exam keyboard shortcuts</h3><p>During a running exam, A–D answer a single-choice question; '+
+  '<h3>Exam keyboard shortcuts</h3><p>During a running exam, A–D answer the first four options and E–Z answer additional lettered options when present; '+
   'left/right arrows navigate between questions except when a native answer radio is focused. '+
   'On a focused radio, unmodified arrows select answer options; Alt+left/right navigates questions instead. '+
   'M toggles a flag if permitted, including while paused; F toggles full-screen/focus layout. '+

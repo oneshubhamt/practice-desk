@@ -25,7 +25,7 @@ import {frozenScoreSummary} from "./history-score.ts";
 import {examPreflight,preflightHTML,examRulesHTML} from "./exam-preflight.ts";
 
 import {writePracticeSetups,type PracticeSetups} from "./practice-selection.ts";
-import {pairedEdition,BUILTIN_CGL_FAMILY} from "./exam-families.ts";
+import {pairedEdition} from "./exam-families.ts";
 
 import type {LibraryControllerContext} from "./coordinator-context.ts";
 
@@ -39,18 +39,12 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
      b.startedAt-a.startedAt).slice(0,3);
    const catalog=owner.families(),family=catalog.find(f=>f.id===owner.selectedFamilyId);
    const selected=family?.papers.find(p=>p.paper.id===owner.choice);
-   const cgl=owner.selectedFamilyId===BUILTIN_CGL_FAMILY&&Boolean(selected);
    const mode=selected?resolvePracticeMode(selected.paper,owner.practiceMode):owner.practiceMode;
    const availableModes=selected?availablePracticeModes(selected.paper):[];
    const selectedIncluded=Boolean(selected&&family?.includedPaperIds.includes(selected.paper.id));
    const configured=selected?configureUntimedPractice(
      configurePracticeMode(selected,mode,owner.singleSection),owner.untimedPractice):null;
-   const selectedNumbers=new Set(configured?.questions.map(q=>q.questionId.split(":").at(-1))??[]);
-   const preflight=configured?examPreflight(configured,{
-     builtinCgl:cgl,
-     ...(cgl?{reviewedPatchCount:Object.keys(owner.patches[selected!.paper.paperId]??{})
-       .filter(id=>selectedNumbers.has(id)).length}:{})
-   }):null;
+   const preflight=configured?examPreflight(configured):null;
    const modeLabel=mode==="strict"?"Exam simulation":
      mode==="free"?"Flexible full paper":"Section practice";
    const policy=configured?.paper.timing;
@@ -375,7 +369,7 @@ export function bindLibraryScreen(owner:LibraryControllerContext):void{
        owner.root.querySelector<HTMLButtonElement>("#g-compose-preview")!.onclick=()=>{
          try{
            const {bundle,manifest}=make();
-           const pf=examPreflight(bundle,{builtinCgl:owner.selectedFamilyId===BUILTIN_CGL_FAMILY});
+           const pf=examPreflight(bundle);
            owner.composePreview=manifest.selectedQuestionRevisionIds.length+" selected from "+
              manifest.eligibleCount+" eligible · maximum "+pf.maximum.toFixed(pf.decimals)+
              " marks · "+(bundle.paper.timing.kind==="untimed"?"untimed":bundle.paper.timing.kind)+

@@ -2,7 +2,6 @@ import { mountExamWorkspace } from "./generic-ui.ts";
 import {SHORTCUT_FIELDS,SHORTCUT_KEY_CHOICES,DEFAULT_SHORTCUTS,
  readShortcutBindings,writeShortcutBindings,shortcutKeyLabel,
  type ShortcutBindings} from "./exam-shortcuts.ts";
-import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
 import {validatePreinstalledExamCatalog} from "./preinstalled-exams.ts";
 import { readDisplayPreferences, writeDisplayPreferences, SETTINGS_EVENT } from "./preferences.ts";
 import type { DisplayPreferences } from "./preferences.ts";
@@ -12,13 +11,10 @@ function readEmbedded<T>(id:string):T {
  if(!element?.textContent)throw new Error("Missing offline exam bank: "+id);
  return JSON.parse(element.textContent) as T;
 }
-const sources=readEmbedded<SourcePaperBank>("paper-bank");
-const patches=readEmbedded<ReviewPatchBank>("review-patches");
-const solutions=readEmbedded<Readonly<Record<string,Readonly<Record<string,string>>>>>("solution-bank");
 const preinstalled=validatePreinstalledExamCatalog(readEmbedded<unknown>("preinstalled-exams"));
 const root=document.getElementById("app");
 if(!root)throw new Error("Practice Desk mount missing");
-mountExamWorkspace(root,sources,patches,solutions,preinstalled);
+mountExamWorkspace(root,preinstalled);
 let settings:DisplayPreferences=readDisplayPreferences();
 function apply(){
  document.documentElement.dataset.theme=settings.dark?"dark":"light";

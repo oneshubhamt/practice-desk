@@ -1,12 +1,9 @@
 /** Application assembly/configuration adapters. Canonical package and attempt contracts live below app/. */
-import { importCglBank } from "../content/import-cgl.ts";
-import { sha256 } from "../domain/hash.ts";
 import { answerKeyRevisionHash, paperRevisionHash } from "../domain/integrity.ts";
-import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
 import type { PaperRevision } from "../domain/exam.js";
-import type { QuestionRevision, StimulusDefinition, ImageAsset, CandidateResponse } from "../domain/question.js";
+import type { QuestionRevision, CandidateResponse } from "../domain/question.js";
 import type { AnswerKeyRevision, CorrectAnswer } from "../domain/answer-key.js";
-import type { ExamId, QuestionRevisionId } from "../domain/ids.js";
+import type { QuestionRevisionId } from "../domain/ids.js";
 import {validateExamPackage} from "../domain/exam-package.ts";
 import type {ExamPackage} from "../domain/exam-package.ts";
 import type {AttemptMode} from "../domain/attempt.js";
@@ -16,46 +13,6 @@ import {paperTimeBudgetMs,sectionTimeBudgetMs} from "../domain/timing.ts";
 export {validateExamImportBudget,validateExamPackage} from "../domain/exam-package.ts";
 import { startSession } from "../engine/session.ts";
 import { freezeAttempt } from "../history/frozen.ts";
-
-/** Convert existing CGL content without changing the original bank or editions. */
-export function builtinCglPackages(sources: SourcePaperBank, patches: ReviewPatchBank,
-  solutions: Readonly<Record<string,Readonly<Record<string,string>>>> = {}): ExamPackage[] {
- const editions = importCglBank(sources, patches);
- return editions.map(({ paper, key, questions }) => {
-   const source = sources[paper.paperId];
-   if (!source) throw new Error("Missing CGL source");
-   const assets: ImageAsset[] = [];
-   const stimuli: StimulusDefinition[] = [];
-   const explanations: Record<string,string> = {};
-   const patchMap = paper.edition === "reviewed" ? patches[paper.paperId] ?? {} : {};
-   for (const [id, text] of Object.entries(source.passages))
-      stimuli.push({id: `${paper.paperId}:passage:${id}` as StimulusDefinition["id"],kind:"passage",text});
-   // CGL images are pre-embedded as data URIs. Never request remote resources.
-   for (const question of questions) {
-     const n = Number(question.questionId.split(":").at(-1));
-     const original = source.questions.find(q => q.n === n)!;
-     const merged = {...original, ...(patchMap[String(n)] ?? {})};
-     const explanation = merged.explanation || solutions[paper.paperId]?.[String(n)] || "";
-     if (explanation) explanations[question.id] = explanation;
-     const stemId = `${paper.paperId}:q:${n}:stem`;
-     // The immutable packaged media should identify its question/option to
-     // assist screen readers in both the live paper and frozen post-test review.
-     const asImage=(id:string, uri:string, altText:string):ImageAsset=>({
-       id:id as ImageAsset["id"],mediaType:(uri.match(/^data:(image\/[a-z]+);/)?.[1]??"image/webp") as ImageAsset["mediaType"],
-       dataUri:uri,contentHash:sha256(Uint8Array.from(atob(uri.slice(uri.indexOf(",")+1)),char=>char.charCodeAt(0))) as ImageAsset["contentHash"],
-       altText
-     });
-     if (merged.images.stem) assets.push(asImage(stemId,merged.images.stem,"Diagram for question "+n));
-     merged.images.options?.forEach((uri,i)=>{
-       if(uri)assets.push(asImage(`${paper.paperId}:q:${n}:option:${i}`,uri,
-         "Image for option "+String.fromCharCode(65+i)+" of question "+n));
-     });
-   }
-   return {format:"practice-desk-exam",version:1,examId:"ssc-cgl" as ExamId,
-     title:`${source.name} · ${paper.edition === "reviewed" ? "Reviewed" : "Original"}`,
-     paper,answerKey:key,questions,stimuli,assets,explanations};
- });
-}
 
 /** Derive practice policies from any validated paper without modifying its source.
  * Only authored section limits may become individual section-practice timers;

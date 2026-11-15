@@ -9,11 +9,16 @@
   "canonicalEdition": "revised",
   "editions": {
     "original": {
-      "source": "original/paper.json"
+      "package": "original/package.exam.json"
     },
     "revised": {
-      "patches": "revised/patches.json",
-      "solutions": "revised/solutions.json"
+      "package": "revised/package.exam.json"
     }
-  }
+  },
+  "archive": {
+    "originalSource": "original/paper.json",
+    "reviewedPatches": "revised/patches.json",
+    "reviewedSolutions": "revised/solutions.json"
+  },
+  "identityPolicy": "Runtime uses immutable canonical Source/Reviewed packages. Archived transcription, patches and solutions are retained only as equivalence evidence."
 }
