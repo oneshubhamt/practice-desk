@@ -601,6 +601,9 @@ test("Authoring workflow ingests staging and hands off one deterministic unpubli
 
 test("Authoring publication workflow is sole owner of external QA acknowledgement and recompiles exact evidence",async()=>{
  const source=await load("apfc");
+ source.questions[0].qa={status:"needs-review",applicability:{
+  mathematical:false,legal:true,timeSensitive:true,asOfDate:"2026-11-12"
+ }};
  const draft=stagedToAuthoringDraft(staged(source));
  const inspection=inspectPublicationWorkflow(draft,[]);
  assert.equal(inspection.report.valid,true,JSON.stringify(inspection.report.issues));
@@ -628,6 +631,9 @@ test("Authoring publication workflow is sole owner of external QA acknowledgemen
  assert.equal(prepared.draftChanged,true);
  assert.equal(prepared.packageValue.questions.length,draft.questions.length);
  assert.ok(prepared.draft.questions.every(q=>q.qa?.review?.reviewer==="Named reader"));
+ assert.deepEqual(prepared.draft.questions[0].qa?.applicability,{
+  mathematical:false,legal:true,timeSensitive:true,asOfDate:"2026-11-12"
+ },"Publication acknowledgement must preserve author QA-routing declarations");
  assert.ok(prepared.packageValue.questions.every(q=>q.editorial.notes.includes("Named reader")));
  assert.equal(prepared.inspection.errors.length,0);
 });

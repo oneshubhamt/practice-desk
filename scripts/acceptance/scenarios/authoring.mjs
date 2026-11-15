@@ -327,6 +327,9 @@ try{
  // P57-C: a second, overlapping APFC revision arrives in two files.
  // The bad arithmetic key must be corrected in Wordgard before publication.
  const second=structuredClone(apfc);second.revision=2;second.questions[2].answer="B";
+ second.questions[0].qa={status:"needs-review",applicability:{
+  mathematical:false,legal:true,timeSensitive:true,asOfDate:"2026-11-12"
+ }};
  const overlap=structuredClone(apfc);overlap.revision=2;overlap.bankId="second-source-p57c";
  overlap.questions=overlap.questions.map(q=>({...q,id:"copy-"+q.id}));
  await page.locator("#g-author-open").click();
@@ -346,6 +349,13 @@ try{
  await page.waitForFunction(()=>document.querySelector("#pd-author-drafts")?.value.startsWith("stage:"));
  check(await page.locator("#pd-author-questions option").count()===5,
   engine+" selected source questions did not transfer to Wordgard");
+ const firstQuestion=await page.locator("#pd-author-questions option").first().getAttribute("value");
+ await page.locator("#pd-author-questions").selectOption(firstQuestion);
+ await page.locator("#pd-author-evidence > summary").click();
+ check(await page.locator("#pd-author-qa-legal").isChecked()&&
+  await page.locator("#pd-author-qa-time-sensitive").isChecked()&&
+  await page.locator("#pd-author-qa-asof").inputValue()==="2026-11-12",
+  engine+" author-declared QA applicability was lost during staged Wordgard handoff");
  await page.locator("#pd-author-validate").click();
  check((await page.locator("#pd-author-validation").innerText()).includes("math-answer-conflict"),
   engine+" bad key bypassed Wordgard QA");

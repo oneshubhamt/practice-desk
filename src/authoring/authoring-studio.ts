@@ -235,7 +235,8 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    qErrors?chip(qErrors+" error"+(qErrors===1?"":"s"),"bad"):"",
    qWarnings?chip(qWarnings+" warning"+(qWarnings===1?"":"s"),"warn"):"",
    qDuplicates?chip(qDuplicates+" duplicate candidate"+(qDuplicates===1?"":"s"),"warn"):"",
-   qNeedsReview?chip("Needs review","review"):chip("No flagged QA","good")
+   qNeedsReview?chip("Needs review","review"):
+    (qErrors||qWarnings||qDuplicates?chip("QA unchecked","review"):chip("Ready","good"))
   ].join("");
   container.hidden=false;
   const questionOptions=d.questions.map((q,i)=>option(q.id,(i+1)+". "+q.section+
