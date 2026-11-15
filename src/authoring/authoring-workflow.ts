@@ -74,6 +74,26 @@ export function handoffStagingToDraftShelf(
  return {shelf:next,draft:incoming};
 }
 
+export function invalidateChangedQuestionReviews(
+ before:AuthoringDraft,after:AuthoringDraft
+):AuthoringDraft{
+ const withoutReview=(question:AuthoringDraft["questions"][number])=>{
+  if(!question.qa)return question;
+  const {review:_,...qa}=question.qa;
+  return {...question,qa};
+ };
+ const reviewed=new Map(before.questions.filter(question=>question.qa?.review).map(question=>
+  [question.id,JSON.stringify(withoutReview(question))]));
+ if(!reviewed.size)return after;
+ return validateAuthoringDraft({...after,questions:after.questions.map(question=>{
+  const previous=reviewed.get(question.id);
+  if(!previous||previous===JSON.stringify(withoutReview(question)))return question;
+  if(!question.qa)return {...question,qa:{status:"needs-review"}};
+  const {review:_,...qa}=question.qa;
+  return {...question,qa:{...qa,status:"needs-review"}};
+ })});
+}
+
 export function inspectPublicationWorkflow(
  draft:AuthoringDraft,existing:readonly ExamPackage[]
 ):AuthoringPublicationInspection{

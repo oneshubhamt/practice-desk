@@ -32,7 +32,7 @@ import {AUTHORING_MAX_BYTES,newAuthoringDraft,newAuthoringQuestion,validateAutho
  type AuthoringDraft,type AuthoringDraftShelf,type AuthoringQuestion} from "./authoring-draft.ts";
 import {createAuthoringWorkspaceStore} from "./authoring-workspace-store.ts";
 import {handoffStagingToDraftShelf,ingestStagedFiles,inspectAuthoringHealth,inspectPublicationWorkflow,
- preparePublicationWorkflow} from "./authoring-workflow.ts";
+ invalidateChangedQuestionReviews,preparePublicationWorkflow} from "./authoring-workflow.ts";
 import {labels,type Field,initialField,fieldName,fields,fieldOf,updatedField,option,
  authoringIssueTarget,controls,evidenceEditor,stagedDetail,toolbar,preview,sectionManager,draftsOptions}
  from "./authoring-studio-view.ts";
@@ -133,20 +133,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   });
   // Review acceptance belongs to the exact content checked. Any later edit
   // invalidates its previously attributed warning/reviewer evidence.
-  const withoutReview=(q:AuthoringQuestion):AuthoringQuestion=>{
-   if(!q.qa)return q;
-   const {review:_,...qa}=q.qa;
-   return {...q,qa};
-  };
-  const reviewed=new Map(draft.questions.filter(q=>q.qa?.review).map(q=>
-   [q.id,JSON.stringify(withoutReview(q))]));
-  const current=reviewed.size?validateAuthoringDraft({...changed,questions:changed.questions.map(q=>{
-   const prior=reviewed.get(q.id);
-   if(!prior||prior===JSON.stringify(withoutReview(q)))return q;
-   if(!q.qa)return {...q,qa:{status:"needs-review"}};
-   const {review:_,...qa}=q.qa;
-   return {...q,qa:{...qa,status:"needs-review"}};
-  })}):changed;
+  const current=invalidateChangedQuestionReviews(draft,changed);
   shelf={...shelf,drafts:shelf.drafts.map(d=>d.id===draft.id?current:d)};
   persist();
  };
