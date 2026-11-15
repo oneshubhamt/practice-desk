@@ -2,7 +2,7 @@ import type { ExamPackage } from "../domain/exam-package.ts";
 import type {PreinstalledExamFamilyDescriptor} from "./preinstalled-exams.ts";
 export const BUILTIN_CGL_FAMILY = "builtin:ssc-cgl";
 export type ExamFamilyOrigin="builtin"|"included"|"imported";
-export type ExamFamily={readonly id:string;readonly title:string;readonly imported:boolean;readonly origin:ExamFamilyOrigin;readonly examId:string;readonly includedPaperIds:readonly string[];readonly papers:readonly ExamPackage[];};
+export type ExamFamily={readonly id:string;readonly title:string;readonly imported:boolean;readonly origin:ExamFamilyOrigin;readonly examId:string;readonly includedPaperIds:readonly string[];readonly currentPaperId?:string;readonly papers:readonly ExamPackage[];};
 export function familyIdFor(bundle:ExamPackage,builtinPaperIds:ReadonlySet<string>,includedFamilies:readonly PreinstalledExamFamilyDescriptor[]=[]):string{
  if(builtinPaperIds.has(bundle.paper.id)&&bundle.examId==="ssc-cgl")return BUILTIN_CGL_FAMILY;
  const included=includedFamilies.find(f=>f.examId===bundle.examId);
@@ -10,11 +10,11 @@ export function familyIdFor(bundle:ExamPackage,builtinPaperIds:ReadonlySet<strin
 }
 export function examFamilyCatalog(packages:Iterable<ExamPackage>,builtinPaperIds:ReadonlySet<string>,includedFamilies:readonly PreinstalledExamFamilyDescriptor[]=[]):ExamFamily[]{
  const definitions=new Map(includedFamilies.map(f=>[f.examId,f]));
- const families=new Map<string,{id:string;title:string;imported:boolean;origin:ExamFamilyOrigin;examId:string;includedPaperIds:readonly string[];papers:ExamPackage[]}>();
+ const families=new Map<string,{id:string;title:string;imported:boolean;origin:ExamFamilyOrigin;examId:string;includedPaperIds:readonly string[];currentPaperId?:string;papers:ExamPackage[]}>();
  for(const p of packages){
   const id=familyIdFor(p,builtinPaperIds,includedFamilies);let f=families.get(id);
   if(!f){const builtin=id===BUILTIN_CGL_FAMILY,definition=definitions.get(p.examId),origin:ExamFamilyOrigin=builtin?"builtin":definition?"included":"imported";
-   f={id,title:builtin?"SSC CGL":definition?.title??"Imported · "+p.examId,imported:origin==="imported",origin,examId:p.examId,includedPaperIds:definition?.paperIds??[],papers:[]};families.set(id,f);}
+   f={id,title:builtin?"SSC CGL":definition?.title??"Imported · "+p.examId,imported:origin==="imported",origin,examId:p.examId,includedPaperIds:definition?.paperIds??[],...(definition?.currentPaperId?{currentPaperId:definition.currentPaperId}:{}),papers:[]};families.set(id,f);}
   f.papers.push(p);
  }
  const rank=(o:ExamFamilyOrigin)=>o==="builtin"?0:o==="included"?1:2;

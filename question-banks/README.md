@@ -31,6 +31,6 @@ Each paper has a machine-readable manifest. `bank.authoring.json` is the canonic
 
 ## Preinstallation
 
-`preinstalled: true` plus explicit package paths makes a maintained family available in Library at build time. Set it to `false` or remove the family entry and rebuild to remove it cleanly. Add a paper by placing it in the exam hierarchy and listing its package; no exam-specific scorer/UI branch is required.
+`preinstalled: true` plus explicit package/content paths makes a maintained family available in Library at build time. Set it to `false` or remove the family entry and rebuild to remove **any** family, including SSC CGL, cleanly. For package-based families, one package may be marked `current: true`; that revision is the default when the user first selects the family. Add a paper by placing it in the exam hierarchy and listing its package; no exam-specific scorer/UI branch is required.
 
 Catalog inclusion says nothing by itself about official provenance or factual accuracy.
