@@ -566,7 +566,6 @@ test("P45 one-pass backup serialization remains byte-identical to the current ca
 
 test("P45-B identical frozen exam content uses one SHA-addressed snapshot across attempts",async()=>{
  const {compactAttempt,expandAttempt,reconstructRecords,sharedSnapshot,verifiedSnapshot}=await import("../src/history/shared-store.ts");
- const {builtinCglPackages}=await import("../src/app/exam-package.ts");
  const {readFile}=await import("node:fs/promises");
  const sources=(await loadCglFixture()).sources;
  const patches=(await loadCglFixture()).patches;
@@ -614,7 +613,7 @@ test("P45-B identical frozen exam content uses one SHA-addressed snapshot across
 
 test("P45-B shared snapshot also stores publisher keys, source review and explanations once",async()=>{
  const {compactAttempt,reconstructRecords}=await import("../src/history/shared-store.ts");
- const {builtinCglPackages,startGenericAttempt}=await import("../src/app/exam-package.ts");
+ const {startGenericAttempt}=await import("../src/app/exam-package.ts");
  const {createSourceKeyReference}=await import("../src/engine/source-comparison.ts");
  const {createSourceReviewReference}=await import("../src/engine/review-source.ts");
  const {makeBackup,verifyBackup}=await import("../src/history/backup.ts");

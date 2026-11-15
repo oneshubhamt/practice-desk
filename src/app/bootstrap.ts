@@ -2,7 +2,7 @@ import { mountExamWorkspace } from "./generic-ui.ts";
 import {SHORTCUT_FIELDS,SHORTCUT_KEY_CHOICES,DEFAULT_SHORTCUTS,
  readShortcutBindings,writeShortcutBindings,shortcutKeyLabel,
  type ShortcutBindings} from "./exam-shortcuts.ts";
-import {validatePreinstalledExamCatalog} from "./preinstalled-exams.ts";
+import {decodePreinstalledExamCatalog} from "./preinstalled-codec.ts";
 import { readDisplayPreferences, writeDisplayPreferences, SETTINGS_EVENT } from "./preferences.ts";
 import type { DisplayPreferences } from "./preferences.ts";
 
@@ -11,10 +11,15 @@ function readEmbedded<T>(id:string):T {
  if(!element?.textContent)throw new Error("Missing offline exam bank: "+id);
  return JSON.parse(element.textContent) as T;
 }
-const preinstalled=validatePreinstalledExamCatalog(readEmbedded<unknown>("preinstalled-exams"));
 const root=document.getElementById("app");
 if(!root)throw new Error("Practice Desk mount missing");
-mountExamWorkspace(root,preinstalled);
+void decodePreinstalledExamCatalog(readEmbedded<unknown>("preinstalled-exams")).then(preinstalled=>{
+ mountExamWorkspace(root,preinstalled);
+}).catch(error=>{
+ root.replaceChildren();const message=document.createElement("p");message.className="generic-warning";
+ message.setAttribute("role","alert");message.textContent=error instanceof Error?error.message:"Offline exam catalog could not be opened";
+ root.appendChild(message);
+});
 let settings:DisplayPreferences=readDisplayPreferences();
 function apply(){
  document.documentElement.dataset.theme=settings.dark?"dark":"light";

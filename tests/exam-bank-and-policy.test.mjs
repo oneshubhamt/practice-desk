@@ -80,7 +80,10 @@ test("untimed option derives new validated frozen policy for every built-in mode
 });
 
 test("PFRDA generic modes preserve authored 20+40 minutes, keys and live word-counter policy",async()=>{
- const packageValue=(await loadQuestionBankCatalog(repositoryRoot)).preinstalled.packages[0];
+ const preinstalled=(await loadQuestionBankCatalog(repositoryRoot)).preinstalled;
+ const pfrda=preinstalled.families.find(f=>f.id==="pfrda-grade-a-2026-phase-ii");
+ const packageValue=preinstalled.packages.find(p=>p.paper.id===pfrda?.currentPaperId);
+ assert.ok(packageValue);
  assert.equal(packageValue.examId,"pfrda-grade-a-2026-phase-ii");
  const strict=configurePracticeMode(packageValue,"strict");
  assert.equal(strict.paper.timing.kind,"sectional");
@@ -199,23 +202,24 @@ test("P43 per-family selection rejects invalid mode, edition and untimed values"
 });
 
 test("P43 catalog keeps imported families distinct, sorted and never claims official CGL identity",async()=>{
- const {examFamilyCatalog,BUILTIN_CGL_FAMILY,pairedEdition,familyIdFor}=
-   await import("../src/app/exam-families.ts");
+ const {examFamilyCatalog,pairedEdition,familyIdFor}=await import("../src/app/exam-families.ts");
  const originals=builtinCglPackages(sources,patches);
- const builtins=new Set(originals.map(p=>p.paper.id));
+ const included=[{id:"ssc-cgl",examId:"ssc-cgl",title:"SSC CGL",
+   paperIds:originals.map(p=>p.paper.id),
+   currentPaperId:originals.find(p=>p.paper.edition==="reviewed")?.paper.id}];
  const apfc=compileExternalQuestionBank(starter);
  const imposterSource={...starter,examId:"ssc-cgl",bankId:"user-supplied-cgl",
    paperId:"user-supplied-cgl",title:"Unverified SSC labelled bank",
    questions:starter.questions.map(q=>{const {syllabusHeadingId:_,...rest}=q;
      return {...rest,subject:"User supplied"};})};
  const imposter=compileExternalQuestionBank(imposterSource);
- const catalog=examFamilyCatalog([...originals,imposter,apfc],builtins);
+ const catalog=examFamilyCatalog([...originals,imposter,apfc],included);
  assert.deepEqual(catalog.map(f=>f.id),
-   [BUILTIN_CGL_FAMILY,"imported:ssc-cgl","imported:upsc-epfo-apfc"]);
+   ["included:ssc-cgl","imported:ssc-cgl","imported:upsc-epfo-apfc"]);
  assert.equal(catalog[0].papers.length,10);
  assert.equal(catalog[1].imported,true);
  assert.equal(catalog[1].papers.length,1);
- assert.equal(familyIdFor(imposter,builtins),"imported:ssc-cgl");
+ assert.equal(familyIdFor(imposter,included),"imported:ssc-cgl");
  const reviewed=catalog[0].papers.find(p=>p.paper.edition==="reviewed");
  const original=pairedEdition(catalog[0],reviewed,"source");
  assert.equal(original?.paper.paperId,reviewed.paper.paperId);
