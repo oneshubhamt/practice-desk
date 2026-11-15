@@ -614,8 +614,9 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    const input=e.target as HTMLInputElement;
    const value=["revision","durationMinutes","marksCorrect","marksIncorrect","marksUnanswered","scoreDecimalPlaces"].includes(key)?
     Number(input.value):input.value;
-   if(key==="timingKind"&&value==="sectional"){
-     changeDraft(d=>({...d,timingKind:"sectional",sectionNavigation:"sequential-locked"}));
+   if(key==="timingKind"){
+     changeDraft(d=>({...d,timingKind:value as AuthoringDraft["timingKind"],
+       ...(value==="sectional"?{sectionNavigation:"sequential-locked"}:{})}));
      void render();
    }else updateMetadata(key,value);
    if(key==="examId")refreshOfficialHeadingChoices();
