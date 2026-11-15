@@ -37,6 +37,8 @@ try{
  await page.locator("#pd-author-title").fill("Authored mathematics and CAT practice");
  await page.locator("#pd-author-exam").fill("cat-practice");
  await page.locator("#pd-author-paper").fill("local-math-quiz");
+ await page.locator("#pd-author-timing-kind").selectOption("whole-paper");
+ await page.locator(".pd-author-paper-settings > summary").click();
  await page.locator("#pd-author-duration").fill("20");
  await page.locator(".pd-author-paper-settings > summary").click();
  await page.locator("#pd-author-answer").fill("B");
@@ -118,6 +120,8 @@ try{
  await page.locator("#pd-author-title").fill("Twenty mark written practice");
  await page.locator("#pd-author-exam").fill("manual-mark-practice");
  await page.locator("#pd-author-paper").fill("written-20");
+ await page.locator("#pd-author-timing-kind").selectOption("whole-paper");
+ await page.locator(".pd-author-paper-settings > summary").click();
  await page.locator("#pd-author-duration").fill("10");
  await page.locator(".pd-author-paper-settings > summary").click();
  await page.locator("#pd-author-kind").selectOption("free-response");
