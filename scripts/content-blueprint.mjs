@@ -245,7 +245,8 @@ function audit(plan,sources,tagDoc,{offset=0,limit=12,priorSources=[]}={}){
  }
  const counts=Object.fromEntries(GROUPS.map(g=>[g,new Map()]));
  const tick=(g,key)=>counts[g].set(key,(counts[g].get(key)??0)+1);
- const stems=new Map(),nearSeen=[],topicShare=new Map(),answerPositions={A:0,B:0,C:0,D:0};
+ const stems=new Map(),nearSeen=[],topicShare=new Map(),answerPositions={};
+ const optionLabel=index=>String.fromCharCode(65+index);
  let nearDuplicateCandidates=0,nearDuplicateScanTruncated=false;
  // Prior banks are for deduplication only: never counted against delivery quotas.
  for(const prior of priorSources){
@@ -317,7 +318,11 @@ function audit(plan,sources,tagDoc,{offset=0,limit=12,priorSources=[]}={}){
     nearSeen.push({bankId,name,kind:q.kind,words,grams});
    }
   }
-  if(q.kind==="single-choice"&&"ABCD".includes(q.answer)&&q.answer.length===1)answerPositions[q.answer]++;
+  if(q.kind==="single-choice"){
+   for(let i=0;i<q.options.length;i++)answerPositions[optionLabel(i)]??=0;
+   const answer=String(q.answer??"").toUpperCase(),index=answer.length===1?answer.charCodeAt(0)-65:-1;
+   if(index>=0&&index<q.options.length)answerPositions[answer]++;
+  }
  }
  for(const tagged of tags.keys()){
   if(!all.some(x=>JSON.stringify([x.bankId,x.q.id])===tagged))

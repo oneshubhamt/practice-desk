@@ -265,6 +265,23 @@ test("P57-B valid CAT/APFC reports explicit unverified states; real engine oracl
   assert.equal(r.compiled.questions[0].editorial.status,"caution");
  }
 });
+test("P57-B registered syllabus policy uses the exact taxonomy registry, never an exam-id suffix",async()=>{
+ const exact=await load("apfc");
+ delete exact.questions[0].syllabusHeadingId;
+ let r=inspect(exact);
+ assert.equal(r.valid,false);
+ assert.ok(r.issues.some(i=>i.code==="syllabus-heading-missing"&&i.questionId==="labour-01"));
+
+ const lookalike=await load("apfc");
+ lookalike.examId="vendor-apfc";
+ delete lookalike.questions[0].syllabusHeadingId;
+ lookalike.questions[0].subject="Labour";
+ r=inspect(lookalike);
+ assert.equal(r.issues.some(i=>i.code==="syllabus-heading-missing"),false,
+  "an APFC-looking ID must not activate a registered taxonomy");
+ assert.equal(r.valid,true,JSON.stringify(r.issues));
+});
+
 test("P57-B block equivalent MCQ answer options with question/field diagnosis",async()=>{
  const s=await load("apfc");
  s.questions[0].options[2]=" B ";

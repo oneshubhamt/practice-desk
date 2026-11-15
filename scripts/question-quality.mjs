@@ -83,13 +83,14 @@ const parseFile=async(path,limit,label)=>{
  if(Buffer.byteLength(raw,"utf8")>limit)fail(label+" exceeds "+limit+" bytes");
  return {raw,value:JSON.parse(raw)};
 };
+const optionLabel=index=>String.fromCharCode(65+index);
 function candidateProjection(draft,q){
  const fields=candidateFields(draft,q);
  const result={
   questionId:q.id,kind:q.kind,physicalSection:q.section,
   prompt:publicationPlainText(q.prompt),
   choices:(q.kind==="single-choice"||q.kind==="multiple-select")?
-   q.options.map((v,i)=>({label:"ABCD"[i],text:publicationPlainText(v)})):[],
+   q.options.map((v,i)=>({label:optionLabel(i),text:publicationPlainText(v)})):[],
   matching:q.kind==="matching"?{
    left:q.leftItems.map(v=>publicationPlainText(v)),right:q.rightItems.map(v=>publicationPlainText(v))}:null,
   candidateContext:fields.filter(f=>f.field.startsWith("stimulus.")||f.field.startsWith("media.")),

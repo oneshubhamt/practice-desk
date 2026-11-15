@@ -7,6 +7,10 @@ const decide=p=>resolveExamShortcut({...c,...p});
 test("P47-4 keyboard table: answer, native radio arrows, Alt navigate, flag and fullscreen",()=>{
  assert.deepEqual(decide({key:"a"}),{kind:"answer",index:0});
  assert.deepEqual(decide({key:"D"}),{kind:"answer",index:3});
+ assert.deepEqual(decide({key:"e"}),{kind:"answer",index:4},
+  "fifth option must remain keyboard-addressable");
+ assert.deepEqual(decide({key:"Z"}),{kind:"answer",index:25},
+  "data-driven authored choices may use the full A–Z label range");
  assert.deepEqual(decide({key:"ArrowLeft"}),{kind:"navigate",delta:-1});
  assert.deepEqual(decide({key:"ArrowRight"}),{kind:"navigate",delta:1});
  assert.equal(decide({key:"ArrowRight",focusedRadio:true}),null);
