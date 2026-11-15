@@ -186,9 +186,7 @@ try{
     "second mixed section did not retain its explicit untimed status");
  });
  await scenario("written-hard-timeout-preserves-visible-draft",async page=>{
-  await page.locator("#g-file").setInputFiles({name:"hard-written.json",mimeType:"application/json",
-   buffer:Buffer.from(JSON.stringify(hardWritten))});
-  await chooseModernPaper(page,hardWritten.paper.id);
+  await importModernPaper(page,hardWritten,"hard-written.json");
   await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
   await page.locator('[data-section="1"]').click();
   await page.locator("#g-next").click();await page.locator("#g-next").click();
@@ -205,9 +203,7 @@ try{
     "written analytics should summarize evidence, not duplicate candidate prose in Insights");
  });
  await scenario("written-advisory-overtime-continues-live",async page=>{
-  await page.locator("#g-file").setInputFiles({name:"advisory-written.json",mimeType:"application/json",
-   buffer:Buffer.from(JSON.stringify(advisoryWritten))});
-  await chooseModernPaper(page,advisoryWritten.paper.id);
+  await importModernPaper(page,advisoryWritten,"advisory-written.json");
   check(await page.locator('[data-mode="free"]').getAttribute("aria-pressed")==="true",
    "a newly imported custom paper must retain its advisory practice default");
   await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
@@ -230,9 +226,7 @@ try{
     "Results omitted derived overtime percentage or completion mode");
  });
  await scenario("six-kinds-manual-assessment-and-fsrs",async page=>{
-  await page.locator("#g-file").setInputFiles({name:"six-kinds.json",mimeType:"application/json",
-   buffer:Buffer.from(JSON.stringify(sixKinds))});
-  await chooseModernPaper(page,sixKinds.paper.id);
+  await importModernPaper(page,sixKinds,"six-kinds.json");
   const importedPreflight=await page.locator("#g-preflight").innerText();
   check(importedPreflight.includes("10.00")&&
     importedPreflight.includes("manual-response")&&
