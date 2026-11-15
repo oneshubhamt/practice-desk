@@ -274,8 +274,10 @@ test("P57-B registered syllabus policy uses the exact taxonomy registry, never a
 
  const lookalike=await load("apfc");
  lookalike.examId="vendor-apfc";
- delete lookalike.questions[0].syllabusHeadingId;
- lookalike.questions[0].subject="Labour";
+ lookalike.questions=lookalike.questions.map(q=>{
+  const {syllabusHeadingId:_,...rest}=q;
+  return {...rest,subject:rest.subject||"General"};
+ });
  r=inspect(lookalike);
  assert.equal(r.issues.some(i=>i.code==="syllabus-heading-missing"),false,
   "an APFC-looking ID must not activate a registered taxonomy");
@@ -408,7 +410,7 @@ test("P57-B APFC academic syllabus attribution is mandatory and never inferred f
  delete s.questions[1].syllabusHeadingId;
  const r=inspect(s);
  assert.equal(r.valid,false);
- assert.ok(r.issues.some(i=>i.code==="apfc-heading-missing"&&i.questionId==="economy-01"));
+ assert.ok(r.issues.some(i=>i.code==="syllabus-heading-missing"&&i.questionId==="economy-01"));
 });
 test("P57-B distinct matching labels and redundant numeric-answer tolerance trigger appropriate severity",async()=>{
  const cat=await load("cat");
