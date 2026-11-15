@@ -13,6 +13,15 @@ export type ResultTab="overview"|"review"|"timing";
 export type ReviewFilter="all"|"incorrect"|"unanswered"|"correct"|"excluded"|"pending"|"flagged"|"audit"|"fastwrong"|"typicalwrong"|"slowwrong";
 const duration=(ms:number)=>{const t=Math.ceil(Math.max(0,ms)/1000);return String(Math.floor(t/60)).padStart(2,"0")+":"+String(t%60).padStart(2,"0");};
 const mark=(a:GenericAttempt,value:number)=>value.toFixed(a.frozen.paper.scoring.decimalPlaces??2);
+function budgetLabel(a:GenericAttempt,budget:number|null):string{
+ if(a.frozen.paper.timing.kind==="untimed")return "Untimed";
+ return budget===null?"No single total budget":duration(budget);
+}
+function overtimeLabel(elapsedMs:number,budget:number|null):string{
+ if(budget===null)return "Not derivable";
+ const over=overtimeMs(elapsedMs,budget);
+ return over>0?"+"+duration(over)+" ("+(over/budget*100).toFixed(1)+"% over budget)":"None";
+}
 export function resultCompletionLabel(a:GenericAttempt):string{
  return a.completionReason==="time-expired"?"Time expired":
    a.completionReason==="section-submitted"?"Section submitted by user":
@@ -94,14 +103,14 @@ export function resultPacingHTML(
  const phases=a.frozen.questions.map(q=>questionTimingPhases(a,q.id,index))
    .filter((x):x is NonNullable<typeof x>=>x!==null&&x.totalMs>0);
  const revisits=phases.reduce((total,row)=>total+row.revisitMs,0);
- const budget=paperTimeBudgetMs(a.frozen.paper),over=overtimeMs(evidence.timing.elapsedMs,budget);
+ const budget=paperTimeBudgetMs(a.frozen.paper);
  const hard=timeEnforcementForMode(a.frozen.snapshot.mode)==="hard";
  return '<div class="insight-grid result-insight-grid">'+
   '<section class="panel pad result-time-pacing"><h2>Time &amp; pacing</h2>'+
   '<div class="metriclist">'+
-   '<div><span>'+(hard?"Time limit":"Time budget")+'</span><b>'+(budget===null?"Untimed":duration(budget))+'</b></div>'+
+   '<div><span>'+(hard?"Time limit":"Time budget")+'</span><b>'+budgetLabel(a,budget)+'</b></div>'+
    '<div><span>Actual timer used</span><b>'+duration(evidence.timing.elapsedMs)+'</b></div>'+
-   '<div><span>Overtime</span><b>'+(budget===null?"—":over>0?"+"+duration(over):"None")+'</b></div>'+
+   '<div><span>Overtime</span><b>'+overtimeLabel(evidence.timing.elapsedMs,budget)+'</b></div>'+
    '<div><span>Completion</span><b>'+esc(resultCompletionLabel(a))+'</b></div>'+
    '<div><span>Median per scored answer</span><b>'+
      (evidence.timing.overallMedianAnsweredMs===null?"Not recorded":duration(evidence.timing.overallMedianAnsweredMs))+'</b></div>'+
@@ -135,7 +144,7 @@ export function writtenAnswerAnalysisHTML(a:GenericAttempt):string{
  const evidence=writtenAnswerEvidence(a);
  if(!evidence.rows.length)return "";
  const paperOver=evidence.paperBudgetMs===null?"—":
-   evidence.paperOvertimeMs>0?"+"+duration(evidence.paperOvertimeMs):"None";
+   overtimeLabel(evidence.actualMs,evidence.paperBudgetMs);
  const attributed=evidence.attributedOvertimeMs>0?"+"+duration(evidence.attributedOvertimeMs):"None";
  return '<section class="panel pad result-written-answers"><h2>Written answers</h2>'+
   '<p class="fine">Objective measurements only. Word count and timing do not grade relevance, factual accuracy, structure or language; substantive quality remains a human/self assessment.</p>'+
@@ -143,7 +152,7 @@ export function writtenAnswerAnalysisHTML(a:GenericAttempt):string{
    '<div><b>'+evidence.answered+' / '+evidence.rows.length+'</b><span>Saved responses</span></div>'+
    '<div><b>'+(evidence.limited?evidence.withinLimit+' / '+evidence.limited:"—")+'</b><span>Within advisory word limit</span></div>'+
    '<div><b>'+paperOver+'</b><span>Paper overtime</span></div>'+
-   '<div><b>'+attributed+'</b><span>Recorded question overtime</span></div>'+
+   '<div><b>'+attributed+'</b><span>Written-answer overtime</span></div>'+
   '</div><div class="scroll-table written-answer-table"><table><thead><tr><th>Question</th><th>Words</th><th>Foreground time</th><th>After deadline</th><th>Self-assessment</th></tr></thead><tbody>'+
   evidence.rows.map(row=>'<tr><td>Q'+row.paperNumber+' · '+esc(row.section)+'</td>'+
    '<td class="'+(row.wordLimit!==null&&row.wordCount>row.wordLimit?"written-over":"")+'">'+esc(writtenWordSummary(row))+'</td>'+
@@ -153,7 +162,7 @@ export function writtenAnswerAnalysisHTML(a:GenericAttempt):string{
       esc(String(row.selfAssessedMarks))+(row.selfAssessedMaximum===null?"":" / "+esc(String(row.selfAssessedMaximum)))+
       (row.assessmentNote?'<small>'+esc(row.assessmentNote)+'</small>':""))+'</td></tr>').join("")+
   '</tbody></table></div>'+
-  '<p class="fine result-method-note">Paper overtime is timer time. Recorded question overtime is foreground exposure after the advisory budget and can therefore be smaller when the page was hidden.</p></section>';
+  '<p class="fine result-method-note">Paper overtime is timer time. Written-answer overtime is only foreground exposure on written questions after an advisory deadline; other questions and hidden-page time are intentionally excluded. The Question times ledger shows attribution for every question.</p></section>';
 }
 
 /** Generic arithmetic presented as a compact opportunity summary. */

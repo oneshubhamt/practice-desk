@@ -2,7 +2,7 @@ import type {GenericAttempt} from "../engine/generic-attempt.ts";
 import type {QuestionRevisionId} from "../domain/ids.js";
 import {countWords} from "../domain/word-count.ts";
 import {paperTimeBudgetMs,overtimeMs} from "../domain/timing.ts";
-import {manualGradeLimit} from "../engine/manual-grading.ts";
+import {manualGradeLimits} from "../engine/manual-grading.ts";
 
 export interface WrittenAnswerEvidence{
  readonly questionRevisionId:QuestionRevisionId;
@@ -33,12 +33,14 @@ export interface WrittenAttemptEvidence{
 export function writtenAnswerEvidence(a:GenericAttempt):WrittenAttemptEvidence{
  const responses=new Map(a.state.responses.map(row=>[row.questionRevisionId,row]));
  const grades=new Map(a.manualGrades?.map(row=>[row.questionRevisionId,row])??[]);
+ const questions=new Map(a.frozen.questions.map(row=>[row.id,row]));
+ const gradeLimits=manualGradeLimits(a);
  const rows:WrittenAnswerEvidence[]=[];
  let paperNumber=0;
  for(const section of a.frozen.paper.sections){
    for(const id of section.questionRevisionIds){
      paperNumber++;
-     const q=a.frozen.questions.find(row=>row.id===id);
+     const q=questions.get(id);
      if(q?.content.kind!=="free-response")continue;
      const response=responses.get(id),text=response?.response?.kind==="free-response"?
        response.response.text:"";
@@ -48,7 +50,7 @@ export function writtenAnswerEvidence(a:GenericAttempt):WrittenAttemptEvidence{
        answered:Boolean(text.trim()),wordCount:countWords(text),wordLimit:limit,
        foregroundMs:response?.timeSpentMs??0,postDeadlineMs:response?.postDeadlineMs??0,
        selfAssessedMarks:grade?.marks??null,
-       selfAssessedMaximum:manualGradeLimit(a,id),
+       selfAssessedMaximum:gradeLimits.get(id)??null,
        assessmentNote:grade?.note??""
      });
    }
@@ -61,6 +63,6 @@ export function writtenAnswerEvidence(a:GenericAttempt):WrittenAttemptEvidence{
    withinLimit:limitedRows.filter(row=>row.wordCount<=(row.wordLimit??Infinity)).length,
    paperBudgetMs:budget,actualMs:a.state.elapsedMs,
    paperOvertimeMs:overtimeMs(a.state.elapsedMs,budget),
-   attributedOvertimeMs:a.state.responses.reduce((sum,row)=>sum+row.postDeadlineMs,0)
+   attributedOvertimeMs:rows.reduce((sum,row)=>sum+row.postDeadlineMs,0)
  };
 }
