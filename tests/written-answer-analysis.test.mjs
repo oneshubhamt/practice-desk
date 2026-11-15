@@ -136,6 +136,11 @@ test("Written answers summary excludes overtime spent on non-written questions",
  assert.equal(a.state.responses.reduce((sum,row)=>sum+row.postDeadlineMs,0),300);
  assert.equal(evidence.writtenPostDeadlineMs,100,
    "Written panel must not attribute MCQ overtime to written responses");
+ const ledger=timingLedgerHTML(a,true);
+ assert.match(ledger,/<th>After deadline<\/th>/);
+ const objectiveRow=ledger.match(/<tr><td>1<\/td>[\s\S]*?<\/tr>/)?.[0]??"";
+ assert.match(objectiveRow,/\+00:01/,
+   "Objective-question overtime must remain visible in the all-question timing ledger");
  const html=writtenAnswerAnalysisHTML(a);
  assert.match(html,/Written-answer overtime/);
  assert.match(html,/other questions and hidden-page time are intentionally excluded/);
