@@ -65,7 +65,7 @@ test("PFRDA Original and Revised packages retain distinct immutable identities",
 test("manifest-only append discovers a synthetic second generic paper without root-catalog edits",async()=>{
  const source=JSON.parse(await readFile(join(root,"examples","ai-first-apfc.json"),"utf8"));
  const make=(paperId,title)=>compileExternalQuestionBank({...source,
-  bankId:"synthetic-"+paperId,examId:"synthetic-exam",paperId,title,revision:1});
+  bankId:"synthetic-"+paperId,examId:"upsc-epfo-apfc",paperId,title,revision:1});
  const first=make("paper-one","Synthetic paper one"),second=make("paper-two","Synthetic paper two");
  const dir=await mkdtemp(join(tmpdir(),"pd-bank-append-"));
  const write=async(relative,value)=>{
@@ -74,19 +74,19 @@ test("manifest-only append discovers a synthetic second generic paper without ro
  };
  try{
   await write("question-banks/catalog.json",{format:"practice-desk-question-bank-catalog",version:1,families:[
-   {id:"synthetic",examId:"synthetic-exam",title:"Synthetic",manifest:"question-banks/synthetic/manifest.json",preinstalled:true}
+   {id:"synthetic",examId:"upsc-epfo-apfc",title:"Synthetic",manifest:"question-banks/synthetic/manifest.json",preinstalled:true}
   ]});
   await write("question-banks/synthetic/manifest.json",{format:"practice-desk-exam-bank-manifest",version:1,
-   id:"synthetic",examId:"synthetic-exam",title:"Synthetic",representation:"exam-packages",
+   id:"synthetic",examId:"upsc-epfo-apfc",title:"Synthetic",representation:"exam-packages",
    contentTypes:["mock"],years:[2026],paths:{"2026":"2026/manifest.json"},currentPaperId:"paper-two-manifest"});
   await write("question-banks/synthetic/2026/manifest.json",{format:"practice-desk-exam-year-manifest",version:1,
-   id:"synthetic-2026",examId:"synthetic-exam",title:"Synthetic 2026",year:2026,pyqs:[],mocks:[
+   id:"synthetic-2026",examId:"upsc-epfo-apfc",title:"Synthetic 2026",year:2026,pyqs:[],mocks:[
     {id:"paper-one-manifest",path:"mocks/paper-one/manifest.json"},
     {id:"paper-two-manifest",path:"mocks/paper-two/manifest.json"}
    ]});
   for(const [slug,pkg] of [["paper-one",first],["paper-two",second]]){
    await write("question-banks/synthetic/2026/mocks/"+slug+"/manifest.json",{
-    format:"practice-desk-paper-manifest",version:1,id:slug+"-manifest",examId:"synthetic-exam",
+    format:"practice-desk-paper-manifest",version:1,id:slug+"-manifest",examId:"upsc-epfo-apfc",
     paperId:slug,kind:"mock",title:pkg.title,canonicalEdition:"revised",
     editions:{revised:{package:"revised/package.exam.json"}}});
    await write("question-banks/synthetic/2026/mocks/"+slug+"/revised/package.exam.json",pkg);
