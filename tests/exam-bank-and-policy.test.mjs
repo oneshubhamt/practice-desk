@@ -1,9 +1,10 @@
 import {loadCglFixture,loadQuestionBankGraph,repositoryRoot} from "./fixtures/cgl-bank.mjs";
+import {archiveCglPackages as builtinCglPackages} from "../tools/cgl-archive-converter.ts";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
-import {validateExamPackage,builtinCglPackages,availablePracticeModes,resolvePracticeMode,
+import {validateExamPackage,availablePracticeModes,resolvePracticeMode,
  configurePracticeMode,attemptModeForPractice,configureUntimedPractice,startGenericAttempt} from "../src/app/exam-package.ts";
 import {loadQuestionBankCatalog} from "../scripts/question-bank-catalog.mjs";
 import {applyLibraryFamily} from "../src/app/library-controller.ts";

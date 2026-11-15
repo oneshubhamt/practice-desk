@@ -1,10 +1,11 @@
 import {loadCglFixture,loadQuestionBankGraph,repositoryRoot} from "./fixtures/cgl-bank.mjs";
+import {archiveCglPackages as builtinCglPackages} from "../tools/cgl-archive-converter.ts";
 /** Canonical executable contracts, grouped by stable product responsibility. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {pkg,questions} from "./fixtures/six-kinds.mjs";
-import {builtinCglPackages,configurePracticeMode,validateExamPackage,startGenericAttempt} from "../src/app/exam-package.ts";
+import {configurePracticeMode,validateExamPackage,startGenericAttempt} from "../src/app/exam-package.ts";
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {crossPaperMarksPriorities} from "../src/app/history-priorities.ts";
 import {frozenScoreSummary} from "../src/app/history-score.ts";

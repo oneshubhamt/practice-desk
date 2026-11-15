@@ -1,4 +1,5 @@
 import {loadCglFixture,loadQuestionBankGraph,repositoryRoot} from "./fixtures/cgl-bank.mjs";
+import {archiveCglPackages as builtinCglPackages} from "../tools/cgl-archive-converter.ts";
 /** P48-1 independent hostile-input, strict v1/v4 schemas and compiler CSP tests.
  * Inputs are rebuilt from real domain fixtures, not prior CI success labels.
  */
@@ -10,7 +11,7 @@ import {pkg} from "./fixtures/six-kinds.mjs";
 import {validateExamPackage} from "../src/app/exam-package.ts";
 import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
 import {makeBackup,verifyBackup} from "../src/history/backup.ts";
-import {builtinCglPackages,startGenericAttempt} from "../src/app/exam-package.ts";
+import {startGenericAttempt} from "../src/app/exam-package.ts";
 import {createSourceKeyReference,validateSourceKeyReference} from "../src/engine/source-comparison.ts";
 import {createSourceReviewReference,validateSourceReviewReference} from "../src/engine/review-source.ts";
 import {practiceDeskBuildTarget,practiceDeskCsp,practiceDeskHeadAdditions} from "../scripts/build-target-config.mjs";
