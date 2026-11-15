@@ -83,13 +83,14 @@ export function renderModelExam(
    const calculator=calculatorState??newExamCalculatorState();
    const sectionAnswered=section.questionRevisionIds.filter(qid=>Boolean(responsesById.get(qid)?.response)).length;
    const sectionFlagged=section.questionRevisionIds.filter(qid=>Boolean(responsesById.get(qid)?.flagged)).length;
+   const multiSection=paper.sections.length>1;
 
    const assets:ExamPackage={format:"practice-desk-exam",version:1,
      examId:attempt.frozen.snapshot.examId,title:bundle?.title??"",paper,answerKey:attempt.frozen.key,
      questions:attempt.frozen.questions,stimuli:attempt.frozen.stimuli,assets:attempt.frozen.assets};
    return '<div class="generic-heading exam-header"><div><h1>'+escapeText(bundle?.title??paper.paperId)+'</h1>'+
-     '<p class="muted">'+escapeText(readablePracticeMode(attempt.frozen.snapshot.mode))+' · '+
-     escapeText(section.title)+' · Section '+(state.sectionIndex+1)+' of '+paper.sections.length+'</p></div>'+
+     '<p class="muted">'+escapeText(readablePracticeMode(attempt.frozen.snapshot.mode))+
+     (multiSection?' · '+escapeText(section.title)+' · Section '+(state.sectionIndex+1)+' of '+paper.sections.length:'')+'</p></div>'+
      '<div class="row exam-header-actions"><div class="exam-clock '+(isLow?"low ":"")+(clock.overtime?"overtime":"")+'"><strong class="generic-timer" id="g-timer" role="timer">'+
        clock.text+'</strong><small id="g-timer-label">'+clock.label+'</small></div>'+
      (calculatorEnabled?calculatorToggleHTML(calculator):"")+
@@ -104,7 +105,7 @@ export function renderModelExam(
         '" aria-valuemin="0" aria-valuemax="100" aria-label="'+progressAccessibleName+
         '" aria-valuetext="'+escapeText(progressScope)+' '+Math.round(progressValue)+'%">'+
          '<span style="width:'+progressValue.toFixed(1)+'%"></span></div></section>'+
-     '<div class="generic-sections" role="group" aria-label="Exam sections">'+paper.sections.map((s,i)=>{
+     (multiSection?'<div class="generic-sections" role="group" aria-label="Exam sections">'+paper.sections.map((s,i)=>{
        const locked=state.status!=="running"||state.completedSections.includes(i)||
          ((paper.timing.kind==="sectional"||paper.navigation.sectionNavigation==="sequential-locked")&&i!==state.sectionIndex);
        const filled=s.questionRevisionIds.filter(qid=>Boolean(responsesById.get(qid)?.response)).length;
@@ -112,10 +113,8 @@ export function renderModelExam(
          locked?"Locked":filled+" / "+s.questionRevisionIds.length+" answered";
        return '<button class="btn exam-section-tab '+(i===state.sectionIndex?"primary":"")+'" data-section="'+i+'" aria-current="'+(i===state.sectionIndex?"step":"false")+'"'+(locked?" disabled":"")+'>'+
          '<b>'+escapeText(s.title)+'</b><small>'+status+'</small></button>';
-     }).join("")+'</div><div class="generic-layout exam-grid"><section class="panel pad exam-question" data-active-question="'+escapeText(q.id)+'"><p class="eyebrow">'+
-     escapeText(section.title)+' · Question '+(state.questionIndex+1)+' of '+section.questionRevisionIds.length+
-     (attempt.frozen.snapshot.examId==="ssc-cgl"?
-       ' · Paper Q'+escapeText(q.questionId.split(":").at(-1)):"")+'</p>'+
+     }).join("")+'</div>':"")+'<div class="generic-layout exam-grid"><section class="panel pad exam-question" data-active-question="'+escapeText(q.id)+'"><p class="eyebrow">'+
+     (multiSection?escapeText(section.title)+' · ':"")+'Question '+(state.questionIndex+1)+' of '+section.questionRevisionIds.length+'</p>'+
      stimulusHTML(assets,q)+renderQuestionPrompt(assets,q)+
      supplementalAssetHTML(assets,q.content.assetIds,q.content.richPrompt,"Figure for question "+(state.questionIndex+1))+
      '<fieldset class="generic-response-group"'+(state.status!=="running"?" disabled":"")+'>'
@@ -141,7 +140,7 @@ export function renderModelExam(
         paper.timing.kind==="sectional"?(untimedSection?"Finish untimed section":"Submit section"):
         lockedWhole&&hasNextSection?"Finish section →":"Submit exam")+'</button></div></section>'+
      '<aside class="panel pad exam-sidebar" aria-label="Question navigator"><h3>Question navigator</h3>'+
-     '<p class="fine navigator-intro">Jump to a question in this section</p><div class="generic-palette">'+
+     '<p class="fine navigator-intro">'+(multiSection?"Jump to a question in this section":"Jump to a question")+'</p><div class="generic-palette">'+
       section.questionRevisionIds.map((qid,i)=>{
         const r=responsesById.get(qid);
         const locked=state.status!=="running"||(paper.navigation.questionNavigation==="forward-only"&&i<state.questionIndex);
@@ -149,7 +148,7 @@ export function renderModelExam(
         (r?.flagged?"marked":"")+'" data-q="'+i+'" aria-current="'+(i===state.questionIndex?"step":"false")+'" aria-label="Question '+(i+1)+
         (r?.response?", answered":", unanswered")+(r?.flagged?", marked for review":"")+'"'+(locked?" disabled":"")+'>'+(i+1)+'</button>';
       }).join("")+'</div>'+
-      '<div class="navigator-stats" role="group" aria-label="Current section answer counts">'+
+      '<div class="navigator-stats" role="group" aria-label="'+(multiSection?"Current section answer counts":"Question answer counts")+'">'+
        '<div><b>'+sectionAnswered+'<span> / '+section.questionRevisionIds.length+'</span></b><small>Answered</small></div>'+
        '<div><b>'+(section.questionRevisionIds.length-sectionAnswered)+'</b><small>Not answered</small></div>'+
        '<div><b>'+sectionFlagged+'</b><small>Flagged</small></div></div>'+
@@ -157,7 +156,7 @@ export function renderModelExam(
        '<span><i class="legend-dot marked-unanswered"></i>Unanswered · review</span>'+ 
        '<span><i class="legend-dot marked-answered"></i>Answered · review</span>'+
        '<span><i class="legend-dot empty"></i>Not answered</span></div>'+
-      '<p class="fine navigator-status">'+(paper.navigation.sectionNavigation==="sequential-locked"?
+      '<p class="fine navigator-status">'+(paper.navigation.sectionNavigation==="sequential-locked"&&multiSection?
         "Answers remain hidden until the exam finishes. Submitting a section locks it.":
         "Answers remain hidden until you submit.")+'</p>'+
       '<details class="navigator-help"><summary>Keyboard shortcuts</summary>'+

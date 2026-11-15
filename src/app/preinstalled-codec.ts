@@ -28,7 +28,8 @@ export async function decodePreinstalledExamCatalog(value:unknown):Promise<Prein
  if(!packed(value))return validatePreinstalledExamCatalog(value);
  if(typeof DecompressionStream==="undefined")throw Error("This browser cannot open the compressed offline exam catalog");
  const compressed=bytesFromBase64(value.data);
- const stream=new Blob([compressed]).stream().pipeThrough(new DecompressionStream("gzip"));
+ const compressedBuffer=new ArrayBuffer(compressed.byteLength);new Uint8Array(compressedBuffer).set(compressed);
+ const stream=new Blob([compressedBuffer]).stream().pipeThrough(new DecompressionStream("gzip"));
  const bytes=new Uint8Array(await new Response(stream).arrayBuffer());
  if(bytes.byteLength!==value.uncompressedBytes)throw Error("Embedded exam catalog size check failed");
  if(sha256(bytes)!==value.sha256)throw Error("Embedded exam catalog integrity check failed");
