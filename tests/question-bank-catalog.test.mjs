@@ -9,6 +9,8 @@ import {fileURLToPath} from "node:url";
 import {loadQuestionBankCatalog,readQuestionBankManifestGraph} from "../scripts/question-bank-catalog.mjs";
 import {buildPracticeDeskHtml} from "../scripts/build-target.mjs";
 import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
+import {shouldShowWordCount} from "../src/domain/word-count.ts";
+import {renderGenericControls} from "../src/app/question-content-view.ts";
 
 const root=resolve(fileURLToPath(new URL("../",import.meta.url)));
 const sha=value=>createHash("sha256").update(value).digest("hex");
@@ -51,7 +53,7 @@ test("PFRDA Original and Revised packages retain distinct immutable identities",
   JSON.parse(await readFile(join(base,edition,"package.exam.json"),"utf8"))));
  assert.equal(new Set(packages.map(x=>x.paper.id)).size,2);
  assert.equal(new Set(packages.map(x=>x.answerKey.id)).size,2);
- assert.deepEqual(packages.map(x=>x.paper.revision),[1,2]);
+ assert.deepEqual(packages.map(x=>x.paper.revision),[1,3]);
  for(const pkg of packages){
   assert.equal(pkg.questions.length,51);
   assert.deepEqual(pkg.paper.scoring.defaultRule,{correctMarks:2,incorrectMarks:-0.5,unansweredMarks:0});
@@ -60,6 +62,23 @@ test("PFRDA Original and Revised packages retain distinct immutable identities",
  const installed=(await loadQuestionBankCatalog(root)).preinstalled.packages;
  assert.equal(installed.length,1);
  assert.equal(installed[0].paper.id,packages[1].paper.id);
+});
+
+test("preinstalled PFRDA précis shows its advisory live word counter in exam simulation",async()=>{
+ const base=join(root,"question-banks","pfrda","2026","mocks","day-01","revised");
+ const source=JSON.parse(await readFile(join(base,"bank.authoring.json"),"utf8"));
+ const pkg=JSON.parse(await readFile(join(base,"package.exam.json"),"utf8"));
+ assert.deepEqual(pkg,compileExternalQuestionBank(source),"checked-in package must match authored source");
+ const installed=(await loadQuestionBankCatalog(root)).preinstalled.packages[0];
+ const precis=installed.questions.find(q=>q.content.kind==="free-response");
+ assert.ok(precis,"PFRDA précis must be present");
+ assert.equal(installed.paper.candidateTools?.wordCount,"shown");
+ assert.equal(precis.content.responseRules.wordLimit,120);
+ const show=shouldShowWordCount(installed.paper.candidateTools?.wordCount,"exam-simulation");
+ assert.equal(show,true);
+ const html=renderGenericControls(installed,precis,undefined,{showWordCount:show});
+ assert.match(html,/id="g-word-count"/);
+ assert.match(html,/0 \/ 120 words/);
 });
 
 test("manifest-only append discovers a synthetic second generic paper without root-catalog edits",async()=>{

@@ -14,11 +14,15 @@ if(source.questions.length!==51)throw Error('Source must retain one précis + 50
 if(Object.keys(explanations).length!==50||Object.keys(revisedOptions).length!==12)
  throw Error('Incomplete editorial content inventory');
 const title='PFRDA Grade A 2026 — Day 1';
-source.title=title+' — Original Source (20-mark English rubric)';
+source.title=title+' — Original';
 source.questions[0].scoringOverride={correctMarks:20,incorrectMarks:0,unansweredMarks:0};
 const revised=structuredClone(source);
-revised.revision=2;
+revised.revision=3;
 revised.title=title+' — Revised Practice';
+// Précis practice needs a visible live counter even in exam-simulation mode.
+// The upper end of the stated 100–120-word target is advisory, not a hard cap.
+revised.tools={...revised.tools,wordCount:'shown'};
+revised.questions[0].wordLimit=120;
 
 // The source passage itself remains byte-for-byte unchanged. In the revised
 // candidate view the neutral stimulus heading no longer supplies the title.
