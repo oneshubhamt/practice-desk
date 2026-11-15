@@ -16,6 +16,17 @@ const timeLabel=(ms:number):string=>{
 };
 const plural=(n:number,word:string):string=>n+" "+word+(n===1?"":"s");
 
+export function paperProvenanceText(bundle:Pick<ExamPackage,"paper"|"questions">):string{
+ const hasCitations=bundle.questions.some(q=>Boolean(q.editorial.sources?.length));
+ const provenance=bundle.paper.edition==="source"?
+   "Source edition frozen as supplied by this package. Practice Desk does not independently authenticate publisher identity, official status or answer-key accuracy.":
+  bundle.paper.edition==="reviewed"?
+   "Reviewed edition frozen as supplied and pinned to its declared Source paper and key revisions. Practice Desk preserves that lineage but does not independently certify the reviewer, corrections or official status.":
+   "Custom exam content and scoring were supplied by the author/importer. Practice Desk does not independently authenticate official status.";
+ return provenance+(hasCitations?
+   " Question-level citations, where supplied, are disclosed with the frozen review evidence.":"");
+}
+
 export interface ExamPreflight {
  readonly maximum:number;
  readonly decimals:number;
@@ -108,14 +119,7 @@ export function examPreflight(bundle:ExamPackage):ExamPreflight{
    "Detailed answer-key/solution review becomes available only after completion.":
    "After completion, numerical score and timing appear; detailed answer-key/solution review is withheld."
  ];
- const hasCitations=bundle.questions.some(q=>Boolean(q.editorial.sources?.length));
- const provenance=paper.edition==="source"?
-   "Source edition supplied by this package. Practice Desk preserves its frozen provenance but does not independently authenticate publisher, key accuracy or official status.":
-  paper.edition==="reviewed"?
-   "Reviewed edition supplied by this package and pinned to its declared source revision. Practice Desk preserves that lineage but does not independently certify the reviewer, corrections or official status.":
-   "Custom exam content and scoring were supplied by the author/importer; Practice Desk is independent of examining organisations.";
- const provenanceDetail=provenance+(hasCitations?
-   " Question-level citations, where supplied, are disclosed with the frozen review evidence.":"");
+ const provenanceDetail=paperProvenanceText(bundle);
  return {
   maximum:scoreableMaximum(paper,bundle.answerKey,bundle.questions),
   decimals:paper.scoring.decimalPlaces??2,

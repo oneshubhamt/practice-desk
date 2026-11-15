@@ -57,6 +57,8 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
        sectionBudgets.map(ms=>ms===null?"Untimed":minutes(ms)).join(" + ");
    const questionCount=configured?.questions.length??0;
    const previewSections=configured?.paper.sections.length??0;
+   const previewStructure=previewSections===1?"Whole paper":String(previewSections);
+   const previewStructureLabel=previewSections===1?"Structure":"Sections";
    const previewNavigation=configured?.paper.navigation.sectionNavigation==="free"?"Free":"Sequential";
    const sourceTime=selected?paperTimeBudgetMs(selected.paper):null;
    const strictDetail=selected?.paper.timing.kind==="sectional"?
@@ -171,11 +173,8 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
          '<button type="button" class="edition-choice '+(owner.editionView===edition?"active":"")+
          '" data-edition="'+edition+'" aria-pressed="'+(owner.editionView===edition)+'">'+
          (edition==="reviewed"?"Reviewed":"Source")+'</button>').join("")+
-       '</div><p class="fine edition-note">'+(family?.imported?
-         "User-supplied edition; Practice Desk does not certify its questions, keys or provenance.":
-         owner.editionView==="reviewed"?
-           "Reviewed package revision pinned to its declared source revision; reviewer identity and correction accuracy are not independently certified.":
-           "Source package revision preserved as supplied; publisher or official status is not independently authenticated.")+
+       '</div><p class="fine edition-note">'+escapeText(preflight?.provenance??
+         "Package provenance unavailable for this selection.")+
        '</p></div>':"")+
      (selected?'<h3 class="subhead">Practice mode</h3><div class="generic-modes" role="group" aria-label="Practice mode">'+
       ([["strict","Exam simulation",strictDetail],["free","Flexible full paper",flexibleDetail],
@@ -199,14 +198,14 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
      '<aside class="home-side"><section class="panel pad paper-preview"><span class="eyebrow">SELECTED PAPER</span>'+
       '<h2>'+escapeText(selected?.title??"Choose a paper")+'</h2>'+
       '<p class="fine family-provenance">'+(family?.origin==="imported"?
-        "Imported/user-supplied content; not an official exam bank.":
+        "Imported/user-supplied package; Practice Desk does not authenticate official status.":
         family?.origin==="included"?
-          (selectedIncluded?"Included practice package from the repository question-bank catalog; provenance still governs official status.":"Imported/user-supplied paper grouped under this included examination family."):
+          (selectedIncluded?"Included practice package from the repository question-bank catalog; inclusion does not establish official status.":"Imported/user-supplied paper grouped under this included examination family; family membership does not establish official status."):
         family?"Selected examination family; package provenance determines source/review status.":
         "Saved examination unavailable. Re-import the bank or select another.")+'</p>'+
       '<p class="fine">'+escapeText(selected?.paper.paperId??"")+' · '+escapeText(selected?.paper.edition??"")+'</p>'+
       '<div class="preview-metrics"><div><b>'+questionCount+'</b><small>Questions</small></div>'+
-      '<div><b>'+escapeText(time)+'</b><small>Time</small></div><div><b>'+escapeText(previewSections)+'</b><small>Sections</small></div>'+
+      '<div><b>'+escapeText(time)+'</b><small>Time</small></div><div><b>'+escapeText(previewStructure)+'</b><small>'+previewStructureLabel+'</small></div>'+
       '<div><b>'+escapeText(previewNavigation)+
       '</b><small>Navigation</small></div></div>'+
       '<p class="fine">Scoring and timer rules are frozen when you start; later paper edits cannot change a saved result.</p>'+

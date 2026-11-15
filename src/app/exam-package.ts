@@ -19,7 +19,8 @@ import { freezeAttempt } from "../history/frozen.ts";
  * never invent an equal division of a whole-paper timer. */
 export function availablePracticeModes(paper:PaperRevision):readonly PracticeMode[]{
  const structural:readonly PracticeMode[]=paper.sections.length>1?["strict","free","single"]:["strict","free"];
- return paper.practiceModes??structural;
+ const declared=paper.practiceModes??structural;
+ return declared.filter(mode=>structural.includes(mode));
 }
 
 export function resolvePracticeMode(paper:PaperRevision,selected:PracticeMode):PracticeMode{
