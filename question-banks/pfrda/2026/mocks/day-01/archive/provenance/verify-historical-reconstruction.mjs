@@ -6,10 +6,12 @@
  */
 import {readFileSync} from 'node:fs';
 import {dirname,join,resolve} from 'node:path';
-import {fileURLToPath} from 'node:url';\nimport {isDeepStrictEqual} from 'node:util';
+import {fileURLToPath} from 'node:url';
+import {isDeepStrictEqual} from 'node:util';
 import {explanations,revisedOptions} from './review-content.mjs';
 const directory=dirname(fileURLToPath(import.meta.url));
-const source=JSON.parse(readFileSync(join(directory,'archive','recovered-day1.authoring.json'),'utf8'));
+const paperDirectory=resolve(directory,'../..');
+const source=JSON.parse(readFileSync(join(paperDirectory,'archive','recovered-day1.authoring.json'),'utf8'));
 if(source.questions.length!==51)throw Error('Source must retain one précis + 50 MCQs');
 if(Object.keys(explanations).length!==50||Object.keys(revisedOptions).length!==12)
  throw Error('Incomplete editorial content inventory');

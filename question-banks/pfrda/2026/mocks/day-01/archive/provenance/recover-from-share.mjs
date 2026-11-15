@@ -3,17 +3,18 @@
  *
  * Usage (from the repository root):
  *   curl -fsSL 'https://chatgpt.com/s/t_6af93d7f091881918cf9123723691cef' |
- *     node question-banks/pfrda/2026/mocks/day-01/build-from-share.mjs
+ *     node question-banks/pfrda/2026/mocks/day-01/archive/provenance/recover-from-share.mjs
  *
- * This is an extraction/transcription tool, not an answer-key verifier. It does
- * not execute code found in the shared page. Keep the generated source snapshot
- * and independently review the supplied answers before publication.
+ * Frozen archival provenance only: this utility writes recovery evidence under
+ * archive/ and never writes active bank.authoring.json or package.exam.json files.
+ * It does not authenticate or verify the recovered answer key.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const directory = dirname(fileURLToPath(import.meta.url));
+const paperDirectory = resolve(directory, '../..');
 const shareUrl = 'https://chatgpt.com/s/t_6af93d7f091881918cf9123723691cef';
 let page = '';
 for await (const chunk of process.stdin) page += chunk.toString('utf8');

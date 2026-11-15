@@ -145,8 +145,9 @@ test("preinstalled PFRDA précis follows Auto: hidden in strict and shown in pra
 
 test("manifest-only append discovers a synthetic second generic paper without root-catalog edits",async()=>{
  const source=JSON.parse(await readFile(join(root,"examples","ai-first-apfc.json"),"utf8"));
- const make=(paperId,title)=>compileExternalQuestionBank({...source,
+ const makeSource=(paperId,title)=>({...source,
   bankId:"synthetic-"+paperId,examId:"upsc-epfo-apfc",paperId,title,revision:1});
+ const make=(paperId,title)=>compileExternalQuestionBank(makeSource(paperId,title));
  const first=make("paper-one","Synthetic paper one"),second=make("paper-two","Synthetic paper two");
  const dir=await mkdtemp(join(tmpdir(),"pd-bank-append-"));
  const write=async(relative,value)=>{
@@ -169,7 +170,8 @@ test("manifest-only append discovers a synthetic second generic paper without ro
    await write("question-banks/synthetic/2026/mocks/"+slug+"/manifest.json",{
     format:"practice-desk-paper-manifest",version:1,id:slug+"-manifest",examId:"upsc-epfo-apfc",
     paperId:slug,kind:"mock",title:pkg.title,canonicalEdition:"revised",
-    editions:{revised:{package:"revised/package.exam.json"}}});
+    editions:{revised:{authoring:"revised/bank.authoring.json",package:"revised/package.exam.json"}}});
+   await write("question-banks/synthetic/2026/mocks/"+slug+"/revised/bank.authoring.json",makeSource(slug,pkg.title));
    await write("question-banks/synthetic/2026/mocks/"+slug+"/revised/package.exam.json",pkg);
   }
   // Align the manifest IDs referenced by the year/current fields.
@@ -180,6 +182,30 @@ test("manifest-only append discovers a synthetic second generic paper without ro
   const loaded=await loadQuestionBankCatalog(dir);
   assert.deepEqual(loaded.preinstalled.packages.map(x=>x.title),["Synthetic paper one","Synthetic paper two"]);
   assert.equal(loaded.preinstalled.families[0].currentPaperRevisionId,second.paper.id);
+
+  const examPath=join(dir,"question-banks/synthetic/manifest.json");
+  const paperPath=join(dir,"question-banks/synthetic/2026/mocks/paper-two/manifest.json");
+  const packagePath=join(dir,"question-banks/synthetic/2026/mocks/paper-two/revised/package.exam.json");
+  const canonicalPackage=JSON.parse(await readFile(packagePath,"utf8"));
+  await writeFile(packagePath,JSON.stringify({...canonicalPackage,title:"Drifted generated package"},null,2));
+  await assert.rejects(()=>loadQuestionBankCatalog(dir),/diverges from canonical bank\.authoring\.json/);
+  await writeFile(packagePath,JSON.stringify(canonicalPackage,null,2));
+
+  const exam=JSON.parse(await readFile(examPath,"utf8"));
+  exam.contentTypes=["pyq"];await writeFile(examPath,JSON.stringify(exam,null,2));
+  await assert.rejects(()=>loadQuestionBankCatalog(dir),/contentTypes does not allow mock/);
+  exam.contentTypes=["mock"];await writeFile(examPath,JSON.stringify(exam,null,2));
+
+  const paper=JSON.parse(await readFile(paperPath,"utf8"));
+  paper.identityPolicy="Narrative policy must not be executable";
+  await writeFile(paperPath,JSON.stringify(paper,null,2));
+  await assert.rejects(()=>loadQuestionBankCatalog(dir),/unsupported field identityPolicy/);
+  delete paper.identityPolicy;
+  paper.archive={bad:"../outside.txt"};await writeFile(paperPath,JSON.stringify(paper,null,2));
+  await assert.rejects(()=>loadQuestionBankCatalog(dir),/Archive path must stay under archive\//);
+  delete paper.archive;
+  paper.audit="missing.md";await writeFile(paperPath,JSON.stringify(paper,null,2));
+  await assert.rejects(()=>loadQuestionBankCatalog(dir),/Paper audit .* does not exist/);
  }finally{await rm(dir,{recursive:true,force:true});}
 });
 
