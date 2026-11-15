@@ -11,6 +11,7 @@ import {examPreflight} from "../app/exam-preflight.ts";
 import {stimulusHTML,renderQuestionPrompt,assetHTML,renderGenericControls} from "../app/question-content-view.ts";
 import {escapeText} from "../app/html-escape.ts";
 import {scoreAttempt} from "../engine/scoring.ts";
+import {shouldShowWordCount} from "../domain/word-count.ts";
 
 const letters=["A","B","C","D"] as const;
 function answerDescription(answer:CorrectAnswer):string {
@@ -38,7 +39,9 @@ const main=(pkg:ExamPackage,q:QuestionRevision,authorValidated:boolean):string=>
   '<p class="fine">'+escapeText(section?.title??"Draft section")+'</p>',
   stimulusHTML(pkg,q),renderQuestionPrompt(pkg,q),assetHTML(pkg,q.content.assetIds),
   '<div class="pd-author-preview-controls" inert aria-label="Inactive preview of candidate response widgets">'+
-    renderGenericControls(pkg,q)+'</div></section>'
+    renderGenericControls(pkg,q,undefined,{
+      showWordCount:shouldShowWordCount(pkg.paper.candidateTools?.wordCount,"custom-practice")
+    })+'</div></section>'
  ];
  if(metadata){
   parts.push('<section class="pd-author-effective-rules" aria-label="Author-only effective published rules">'+
@@ -110,13 +113,16 @@ export function authoringDraftPreview(d:AuthoringDraft,q:AuthoringQuestion):stri
     rightItems:q.rightItems.map((doc,i)=>option(doc,letters[i]!))} as unknown as QuestionContent;
  }else if(q.kind==="numeric-entry")content={...base,kind:"numeric-entry",numericRules:{allowNegative:true}};
  else if(q.kind==="true-false")content={...base,kind:"true-false"};
- else content={...base,kind:"free-response",responseRules:{minWords:1,maxWords:10000}};
+ else content={...base,kind:"free-response",responseRules:{
+  minWords:1,wordLimit:q.wordLimit??300
+ }};
  if(publicationPlainText(q.passage))content={...content,
    stimulusId:"author-preview-stimulus"} as unknown as QuestionContent;
  const revision={id:"author-preview-question",content} as QuestionRevision;
  const pkg={assets:d.assets,questions:[revision],answerKey:{entries:[]},
   paper:{sections:[{title:q.section,questionRevisionIds:[revision.id]}],
-    timing:{kind:"untimed"},navigation:{},scoring:{}},
+    timing:{kind:"untimed"},navigation:{},scoring:{},
+    ...(d.wordCountPolicy!=="auto"?{candidateTools:{wordCount:d.wordCountPolicy}}:{})},
   stimuli:publicationPlainText(q.passage)?[{id:"author-preview-stimulus",kind:"passage",
     text:publicationPlainText(q.passage),richText:q.passage}]:[]} as unknown as ExamPackage;
  return main(pkg,revision,false);

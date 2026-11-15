@@ -230,10 +230,18 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
  if(timing.kind==="sectional"&&sectionNavigation!=="sequential-locked")
   err("$.navigation.sectionNavigation","Sectional timing requires sequential-locked sections");
  let calculatorTool:AuthoringDraft["calculatorTool"];
+ let wordCountPolicy:AuthoringDraft["wordCountPolicy"]="auto";
  if(bank.tools!==undefined){
-  const tools=object(bank.tools,"$.tools",["calculator"]);
-  if(tools.calculator!=="basic-v1")err("$.tools.calculator",'Expected "basic-v1"');
-  calculatorTool="basic-v1";
+  const tools=object(bank.tools,"$.tools",["calculator","wordCount"]);
+  if(tools.calculator!==undefined){
+   if(tools.calculator!=="basic-v1")err("$.tools.calculator",'Expected "basic-v1"');
+   calculatorTool="basic-v1";
+  }
+  if(tools.wordCount!==undefined){
+   if(!["auto","shown","hidden"].includes(String(tools.wordCount)))
+    err("$.tools.wordCount",'Expected "auto", "shown" or "hidden"');
+   wordCountPolicy=tools.wordCount as AuthoringDraft["wordCountPolicy"];
+  }
  }
  const sections=new Map<string,{title:string;minutes:number}>();
  const titles=new Set<string>();
@@ -262,7 +270,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
   const q=object(item,path,["id","examSection","subject","syllabusHeadingId",
    "topic","subtopic","difficulty","kind","prompt","stimulusRef","options",
    "leftItems","rightItems","explanation","answer","tolerance","minSelections",
-   "maxSelections","partialCreditEach","partialPenaltyEach","scoringOverride","provenance","qa"]);
+   "maxSelections","wordLimit","partialCreditEach","partialPenaltyEach","scoringOverride","provenance","qa"]);
   const id=key(q.id,path+".id");
   if(qIds.has(id))err(path+".id","Duplicate semantic question ID");
   qIds.add(id);
@@ -307,6 +315,10 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
   if(minSelections>maxSelections)err(path+".minSelections","Minimum exceeds maximum");
   if(questionKind!=="multiple-select"&&(q.minSelections!==undefined||q.maxSelections!==undefined))
    err(path+".minSelections","Selection limits apply only to multiple-select");
+  const wordLimit=q.wordLimit===undefined?300:
+   num(q.wordLimit,path+".wordLimit",1,10000,true);
+  if(questionKind!=="free-response"&&q.wordLimit!==undefined)
+   err(path+".wordLimit","Word limits apply only to written responses");
   const partialCreditEach=q.partialCreditEach===undefined?0:
    num(q.partialCreditEach,path+".partialCreditEach",0,1000);
   const partialPenaltyEach=q.partialPenaltyEach===undefined?0:
@@ -380,7 +392,9 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
    err(path+".difficulty","Invalid difficulty label");
   return {id,section:section!.title,subject,syllabusHeadingId,
    topic,subtopic,difficulty:difficulty as NonNullable<AuthoringQuestion["difficulty"]>,
-   minSelections,maxSelections,...(scoringOverride?{scoringOverride}:{}),
+   minSelections,maxSelections,
+   ...(questionKind==="free-response"?{wordLimit}:{}),
+   ...(scoringOverride?{scoringOverride}:{}),
    partialCreditEach,partialPenaltyEach,
    kind:questionKind,prompt,passage,options,leftItems,rightItems,explanation,
    answer,tolerance,source:sourceNote??"",
@@ -398,7 +412,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
   questionNavigation:questionNavigation as AuthoringDraft["questionNavigation"],
   sectionNavigation:sectionNavigation as AuthoringDraft["sectionNavigation"],
   sectionTransition:sectionTransition as AuthoringDraft["sectionTransition"],
-  allowEarlySubmit,allowReview,...(calculatorTool?{calculatorTool}:{}),marksCorrect,marksIncorrect,
+  allowEarlySubmit,allowReview,...(calculatorTool?{calculatorTool}:{}),wordCountPolicy,marksCorrect,marksIncorrect,
   updatedAt:"1970-01-01T00:00:00.000Z",assets,
   sections:[...sections.values()].map(section=>({name:section.title,minutes:section.minutes})),
   stimuli,questions};

@@ -104,8 +104,11 @@ export type QuestionContent =
   | (QuestionContentBase & {
       readonly kind: "free-response";
       readonly responseRules: {
+        /** Hard technical validity bounds, when present. */
         readonly minWords?: number;
         readonly maxWords?: number;
+        /** Advisory exam word limit; exceeding it never prevents saving. */
+        readonly wordLimit?: number;
       };
     });
 

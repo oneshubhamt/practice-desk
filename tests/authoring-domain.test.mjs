@@ -79,6 +79,7 @@ test("P47-5C app-owned draft rejects malicious, duplicate and malformed content"
   {...a,questions:[q,q]},
   {...a,questions:[{...q,kind:"custom-script"}]},
   {...a,questions:[{...q,prompt:{...q.prompt,html:"<iframe>"}}]},
+  {...a,questions:[{...newAuthoringQuestion("free-response"),wordLimit:250.5}]},
   {...a,marksIncorrect:Infinity},
   {...a,assets:[{id:"url",dataUri:"https://external.example/image"}]}
  ])assert.throws(()=>validateAuthoringDraft(x));
@@ -127,10 +128,11 @@ function readyDraft(){
    leftItems:["One","Two","Three","Four"].map(P),
    rightItems:["Right A","Right B","Right C","Right D"].map(P),
    explanation:P("Worked explanation for "+kind),
-   answer:answers[kind],tolerance:kind==="numeric-entry"?0.01:0};
+   answer:answers[kind],tolerance:kind==="numeric-entry"?0.01:0,
+   ...(kind==="free-response"?{wordLimit:250}:{})};
  });
  return {...a,examId:"cat-pgdba",paperId:"mixed-2026",title:"Original six-kind CAT and PGDBA practice",
-   revision:1,edition:"custom",durationMinutes:120,
+   revision:1,edition:"custom",durationMinutes:120,wordCountPolicy:"shown",
    sections:[{name:"Mathematics",minutes:15},{name:"General",minutes:15}],questions};
 }
 test("P47-5D all six kinds publish as source-validated frozen rich package, with correct hashes",()=>{
@@ -150,6 +152,10 @@ test("P47-5D all six kinds publish as source-validated frozen rich package, with
  assert.equal(pkg.answerKey.entries[2].answer.absoluteTolerance,0.01);
  assert.equal(pkg.answerKey.entries[4].answer.pairs[0].rightId,"C");
  assert.equal(pkg.answerKey.entries[5].answer.evaluation,"manual");
+ assert.equal(pkg.questions[5].content.responseRules.wordLimit,250);
+ assert.equal(pkg.questions[5].content.responseRules.maxWords,undefined,
+  "authored advisory word limits must not become hard save caps");
+ assert.equal(pkg.paper.candidateTools.wordCount,"shown");
  assert.match(pkg.questions[0].editorial.notes,/not been independently certified/);
  // Same authenticated six-kind publisher output is the scorer oracle; one compile.
 
@@ -381,6 +387,21 @@ test("P58-A F01: external QA is bound to a validated ingestion mode, not a draft
   "Question provenance must prevent downgrading mandatory QA by toggling workflow mode");
 });
 
+test("external authoring carries a written question's advisory word limit into the canonical draft",async()=>{
+ const source=JSON.parse(await readFile(new URL("../examples/apfc-authoring-example.json",import.meta.url),"utf8"));
+ source.sections=[source.sections[0]];
+ source.tools={wordCount:"hidden"};
+ source.questions=[{
+  id:"essay-1",examSection:source.sections[0].id,syllabusHeadingId:"labour",
+  kind:"free-response",prompt:"Discuss a labour-law principle.",wordLimit:250,
+  explanation:"Illustrative rubric.",provenance:{kind:"manual",sourceNote:"Illustrative only"},
+  qa:{status:"unchecked"}
+ }];
+ const imported=toAuthoringDraft(source);
+ assert.equal(imported.questions[0].kind,"free-response");
+ assert.equal(imported.questions[0].wordLimit,250);
+ assert.equal(imported.wordCountPolicy,"hidden");
+});
 test("P58-A F01: genuine manual drafts preserve existing publication validation path",()=>{
  const original=newAuthoringDraft();
  assert.equal(original.ingestionMode,"manual");

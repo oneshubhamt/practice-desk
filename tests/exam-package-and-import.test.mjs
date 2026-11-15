@@ -357,10 +357,15 @@ test("engine response validator gates six kinds independently from UI controls",
   [3,{kind:"true-false",value:"true"}],
   [4,{kind:"matching",pairs:[{leftId:"l1",rightId:"r1"},{leftId:"l2",rightId:"r1"}]}],
   [4,{kind:"matching",pairs:[{leftId:"l1",rightId:"r1"},{leftId:"l1",rightId:"r2"}]}],
-  [5,{kind:"free-response",text:"word ".repeat(41)}],
  ];
  for(const [i,response] of invalid)assert.throws(()=>validateResponse(questions[i],response),
   undefined,"kind="+i+" input="+JSON.stringify(response));
+ assert.doesNotThrow(()=>validateResponse(questions[5],{kind:"free-response",text:"word ".repeat(41)}),
+  "advisory wordLimit must never gate a saved written response");
+ const hardCapped={...questions[5],content:{...questions[5].content,
+  responseRules:{...questions[5].content.responseRules,maxWords:10}}};
+ assert.throws(()=>validateResponse(hardCapped,{kind:"free-response",text:"word ".repeat(11)}),
+  /length/,"hard technical maxWords must still protect stored response validity");
  const negative={...questions[2],content:{...questions[2].content,
   numericRules:{minimum:-10,maximum:10,allowNegative:true,decimalPlaces:2}}};
  for(const value of [-10,-1.25,0,10])assert.doesNotThrow(()=>

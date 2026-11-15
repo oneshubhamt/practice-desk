@@ -303,7 +303,9 @@ export function compileAuthoringPublication(
     leftItems:items(q.leftItems,["L1","L2","L3","L4"]),
     rightItems:items(q.rightItems,letters)};
   }else{
-   content={...baseContent,kind:"free-response",responseRules:{minWords:1,maxWords:10000}};
+   content={...baseContent,kind:"free-response",responseRules:{
+    minWords:1,wordLimit:q.wordLimit??300
+   }};
   }
   const editorial={
    status:"caution" as const,
@@ -371,6 +373,10 @@ export function compileAuthoringPublication(
  }:kind==="whole-paper"?{
    kind:"whole-paper",durationMs:d.durationMinutes*60000,pausePolicy:d.pausePolicy
  }:{kind:"untimed"};
+ const candidateTools={
+  ...(d.calculatorTool?{calculator:d.calculatorTool}:{}),
+  ...(d.wordCountPolicy!=="auto"?{wordCount:d.wordCountPolicy}:{})
+ };
  const paperBase={
   id:base as PaperRevisionId,paperId,revision:d.revision,edition:d.edition,sections,
   answerKeyRevisionId:answerKey.id,
@@ -382,7 +388,7 @@ export function compileAuthoringPublication(
   navigation:{questionNavigation:d.questionNavigation,
    sectionNavigation:d.sectionNavigation,
    allowFlagging:true,allowReview:d.allowReview},
-  ...(d.calculatorTool?{candidateTools:{calculator:d.calculatorTool}}:{}),
+  ...(Object.keys(candidateTools).length?{candidateTools}:{}),
   scoring:{defaultRule:{correctMarks:d.marksCorrect,incorrectMarks:d.marksIncorrect,
    unansweredMarks:0}}
  };

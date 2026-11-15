@@ -117,7 +117,21 @@ try{
   await page.locator('select[data-match]').nth(0).selectOption("r1");
   await page.locator('select[data-match]').nth(1).selectOption("r2");
   await page.locator("#g-save").click();await page.locator("#g-next").click();
-  await page.locator("#g-text").fill("Self assessment response");await page.locator("#g-save").click();
+  const written=n=>Array.from({length:n},(_,i)=>"word"+(i+1)).join(" ");
+  check((await page.locator("#g-word-count").innerText())==="0 / 40 words",
+    "custom-practice should show the Auto word counter");
+  await page.locator("#g-text").fill(written(32));
+  check(await page.locator("#g-word-count").getAttribute("data-word-count-state")==="caution",
+    "80% word count should enter yellow caution state");
+  await page.locator("#g-text").fill(written(36));
+  check(await page.locator("#g-word-count").getAttribute("data-word-count-state")==="warning",
+    "90% word count should enter amber warning state");
+  await page.locator("#g-text").fill(written(41));
+  check(await page.locator("#g-word-count").getAttribute("data-word-count-state")==="over",
+    "over-limit word count should enter red state");
+  await page.locator("#g-save").click();
+  check((await page.locator("#g-word-count").innerText())==="41 / 40 words",
+    "over-limit written response was not saved and restored");
   await page.locator("#g-submit").click();await route(page,"result");
   await page.locator("#result-tab-review").click();
   check(await page.locator(".generic-review").count()===6,"six question kinds not independently reviewed");

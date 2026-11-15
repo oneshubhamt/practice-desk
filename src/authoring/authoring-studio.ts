@@ -604,6 +604,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    ["pd-author-pause","pausePolicy"],["pd-author-question-nav","questionNavigation"],
    ["pd-author-section-nav","sectionNavigation"],
    ["pd-author-section-transition","sectionTransition"],
+   ["pd-author-word-count","wordCountPolicy"],
    ["pd-author-correct","marksCorrect"],["pd-author-wrong","marksIncorrect"]
   ] as const;
   for(const [id,key] of metadata)find<HTMLInputElement|HTMLSelectElement>(id).onchange=e=>{
@@ -807,6 +808,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    input.onchange=()=>commitSectionTimer(input.dataset.authorSectionTimer??"",input);
   });
   for(const [id,key] of [["pd-author-min-choices","minSelections"],["pd-author-max-choices","maxSelections"],
+    ["pd-author-word-limit","wordLimit"],
     ["pd-author-partial-credit","partialCreditEach"],
     ["pd-author-partial-penalty","partialPenaltyEach"]] as const){
     const input=container.querySelector<HTMLInputElement>("#"+id);

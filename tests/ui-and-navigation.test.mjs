@@ -266,6 +266,16 @@ test("six exam question response kinds render editable, escaped controls",()=>{
  assert.ok(!html.includes("<script>"));
  assert.ok(html.includes("&lt;script&gt;"));
 });
+test("written response counter is optional and renders an advisory limit without disabling save",()=>{
+ const q=revision({kind:"free-response",prompt:"x",responseRules:{wordLimit:20,maxWords:10000}});
+ const shown=renderGenericControls(stub,q,{kind:"free-response",text:"one two three"},{showWordCount:true});
+ assert.match(shown,/id="g-word-count"/);
+ assert.match(shown,/3 \/ 20 words/);
+ assert.match(shown,/data-word-count-state="normal"/);
+ assert.match(shown,/id="g-save">Save response/);
+ const hidden=renderGenericControls(stub,q,undefined,{showWordCount:false});
+ assert.doesNotMatch(hidden,/g-word-count/);
+});
 test("timer display derives from paper policy, not CGL constants",()=>{
  const state={sectionIndex:1,elapsedMs:5000,sectionElapsedMs:2000};
  assert.equal(examTimeRemaining({timing:{kind:"untimed"}},state),null);
