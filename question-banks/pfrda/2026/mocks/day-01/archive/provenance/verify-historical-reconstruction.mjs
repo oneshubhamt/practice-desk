@@ -1,12 +1,12 @@
 /**
- * Materially improve Day 1 while preserving the exact earlier source.
- * Generates canonical source + revised practice files; never edits the original
- * archive/recovered-day1.authoring.json or the verbatim recovery snapshot.
- * The formal source/reviewed publishing gate still requires independent review.
+ * Frozen historical reconstruction verifier for PFRDA Day 1.
+ * Reconstructs the earlier Original/Revised authoring objects from archive evidence
+ * and compares them with the maintained bank.authoring.json files. It never writes
+ * active authoring or runtime-package content.
  */
-import {readFileSync,writeFileSync} from 'node:fs';
-import {dirname,join} from 'node:path';
-import {fileURLToPath} from 'node:url';
+import {readFileSync} from 'node:fs';
+import {dirname,join,resolve} from 'node:path';
+import {fileURLToPath} from 'node:url';\nimport {isDeepStrictEqual} from 'node:util';
 import {explanations,revisedOptions} from './review-content.mjs';
 const directory=dirname(fileURLToPath(import.meta.url));
 const source=JSON.parse(readFileSync(join(directory,'archive','recovered-day1.authoring.json'),'utf8'));
@@ -73,7 +73,8 @@ const originalQs=source.questions.slice(1);
 const revisedQs=revised.questions.slice(1);
 if(revisedQs.some((q,i)=>q.id!==originalQs[i].id||q.answer!==originalQs[i].answer||q.prompt!==originalQs[i].prompt))
  throw Error('Reviewed questions must keep original IDs, keys and stems');
-const dump=(parts,data)=>writeFileSync(join(directory,...parts),JSON.stringify(data,null,2)+'\n');
-dump(['original','bank.authoring.json'],source);
-dump(['revised','bank.authoring.json'],revised);
-console.log('Wrote original-source and improved practice authoring banks; 50 explanations and 12 distractor sets reviewed.');
+const activeOriginal=JSON.parse(readFileSync(join(paperDirectory,'original','bank.authoring.json'),'utf8'));
+const activeRevised=JSON.parse(readFileSync(join(paperDirectory,'revised','bank.authoring.json'),'utf8'));
+if(!isDeepStrictEqual(source,activeOriginal)||!isDeepStrictEqual(revised,activeRevised))
+ throw Error('Historical reconstruction differs from the maintained authoring sources');
+console.log('Historical reconstruction matches both maintained bank.authoring.json sources.');

@@ -46,8 +46,8 @@ export function mountExamWorkspace(
  const packages=new Map<string,ExamPackage>(preinstalled.packages.map(p=>[p.paper.id,p]));
  const records=new Map<string,RecordItem>();
  const initialCatalog=examFamilyCatalog(packages.values(),preinstalled.families);
- const defaultFamily=initialCatalog.find(f=>f.currentPaperId)??initialCatalog[0];
- const defaultChoice=defaultFamily?.currentPaperId??
+ const defaultFamily=initialCatalog.find(f=>f.currentPaperRevisionId)??initialCatalog[0];
+ const defaultChoice=defaultFamily?.currentPaperRevisionId??
    defaultFamily?.papers.find(p=>p.paper.edition==="reviewed")?.paper.id??
    defaultFamily?.papers[0]?.paper.id??"";
  const defaultFamilyId=defaultFamily?.id??"";

@@ -9,7 +9,7 @@ export type ExamFamily={
  readonly origin:ExamFamilyOrigin;
  readonly examId:string;
  readonly includedPaperIds:readonly string[];
- readonly currentPaperId?:string;
+ readonly currentPaperRevisionId?:string;
  readonly papers:readonly ExamPackage[];
 };
 
@@ -27,7 +27,7 @@ export function examFamilyCatalog(
 ):ExamFamily[]{
  const definitions=new Map(includedFamilies.map(f=>[f.id,f]));
  const families=new Map<string,{id:string;title:string;imported:boolean;origin:ExamFamilyOrigin;
-  examId:string;includedPaperIds:readonly string[];currentPaperId?:string;papers:ExamPackage[]}>();
+  examId:string;includedPaperIds:readonly string[];currentPaperRevisionId?:string;papers:ExamPackage[]}>();
  for(const p of packages){
   const id=familyIdFor(p,includedFamilies);
   let family=families.get(id);
@@ -37,7 +37,7 @@ export function examFamilyCatalog(
    const origin:ExamFamilyOrigin=definition?"included":"imported";
    family={id,title:definition?.title??"Imported · "+p.examId,imported:origin==="imported",origin,
     examId:p.examId,includedPaperIds:definition?.paperIds??[],
-    ...(definition?.currentPaperId?{currentPaperId:definition.currentPaperId}:{}),papers:[]};
+    ...(definition?.currentPaperRevisionId?{currentPaperRevisionId:definition.currentPaperRevisionId}:{}),papers:[]};
    families.set(id,family);
   }
   family.papers.push(p);

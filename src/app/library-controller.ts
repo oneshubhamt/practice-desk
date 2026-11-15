@@ -246,7 +246,7 @@ export const applyLibraryFamily=(owner:LibraryControllerContext,id:string):void=
      owner.editionView=previous.edition;
    }else{
      const family=owner.families().find(f=>f.id===id);
-     const paper=family?.papers.find(p=>p.paper.id===family.currentPaperId)??family?.papers.find(p=>p.paper.edition==="reviewed")??family?.papers[0];
+     const paper=family?.papers.find(p=>p.paper.id===family.currentPaperRevisionId)??family?.papers.find(p=>p.paper.edition==="reviewed")??family?.papers[0];
      owner.choice=paper?.paper.id??"";
      owner.practiceMode=paper?defaultPracticeMode(paper.paper):"free";
      owner.singleSection=0;

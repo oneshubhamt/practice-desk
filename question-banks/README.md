@@ -12,11 +12,21 @@ catalog.json
     → <year>/manifest.json
       → pyqs/<paper>/manifest.json
       → mocks/<paper>/manifest.json
-        → original/...
-        → revised/...
+        → <edition>/bank.authoring.json   (when authoring source exists)
+        → <edition>/package.exam.json
 ```
 
-Nested manifests own year, paper, edition and canonical source/package paths. The build loader follows this graph; catalog entries do **not** duplicate package/content paths. A path that is not reachable through the manifest graph is not active bank content.
+Nested manifests own year, paper, edition and canonical paths. The build loader follows this graph; catalog entries do **not** duplicate content paths. A path that is not reachable through the manifest graph is not active bank content.
+
+### Executable manifest contract
+
+- `contentTypes` is non-empty, unique and limited to `pyq` / `mock`; year entries must conform to it.
+- `currentPaperRef` names a **paper-manifest node**. Catalog loading resolves it to the canonical immutable runtime `currentPaperRevisionId`.
+- An edition that declares `authoring` must point to a file named `bank.authoring.json`. That file is the sole maintained source for the edition; `package.exam.json` is generated material and catalog loading rejects any source/package divergence.
+- Runtime packages are always named `package.exam.json`.
+- `archive` entries must stay under the paper's `archive/` directory and name existing files.
+- `audit`, when present, must name an existing Markdown file.
+- Narrative identity policy is documentation, not executable manifest state. Immutable IDs, edition lineage and source/package equality carry the enforceable identity contract.
 
 ## Layout
 
@@ -30,26 +40,26 @@ question-banks/
       pyqs/
         <paper>/
           manifest.json
-          original/
-          revised/
+          <edition>/
+          archive/
       mocks/
         <paper>/
           manifest.json
-          original/
-          revised/
+          <edition>/
+          archive/
 ```
 
-PFRDA-style generic banks use `bank.authoring.json` as the human/AI editing surface and `package.exam.json` as generated runtime material. Recovery/transcription evidence belongs under `archive/`.
+For maintained generic authoring banks, `bank.authoring.json` is the human/AI editing surface and `package.exam.json` is its deterministic runtime projection. Recovery/transcription/generation history belongs under `archive/` and must never overwrite active authoring sources.
 
-SSC CGL uses the same canonical package topology as every other included exam. Each PYQ keeps immutable Original/Source and Revised/Reviewed `package.exam.json` editions in its paper folder; preserved raw transcription, patches and solutions are archive evidence used only by tooling equivalence tests, never runtime inputs.
+SSC CGL uses the same canonical package topology as every other included exam. Its immutable Source/Reviewed packages are canonical because those migrated editions do not declare active `authoring` sources; preserved raw transcription, patches and solutions are archive evidence used only by equivalence tooling.
 
 ## Efficient AI traversal
 
 1. Read `catalog.json`.
 2. Follow the selected exam manifest, then year manifest, then paper manifest.
 3. Read only the paper/edition required.
-4. For canonical authoring banks, prefer `bank.authoring.json` or `question-bank-agent.mjs inspect/show`.
-5. Open compiled `.exam.json` only when runtime-package inspection is needed.
+4. When an edition declares `authoring`, edit only its `bank.authoring.json` and regenerate the package through the canonical compiler.
+5. Open compiled `.exam.json` only for runtime inspection.
 6. Do not scan archives or unrelated papers by default.
 
 ## Preinstallation, removal and append

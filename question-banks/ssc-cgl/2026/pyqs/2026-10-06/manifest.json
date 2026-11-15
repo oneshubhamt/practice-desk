@@ -19,6 +19,5 @@
     "originalSource": "archive/paper.json",
     "reviewedPatches": "archive/patches.json",
     "reviewedSolutions": "archive/solutions.json"
-  },
-  "identityPolicy": "Runtime uses immutable canonical Source/Reviewed packages. Archived transcription, patches and solutions are retained only as equivalence evidence."
+  }
 }
