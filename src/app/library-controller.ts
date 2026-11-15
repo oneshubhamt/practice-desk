@@ -87,8 +87,8 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
      (custom.length?'<optgroup label="'+(family?.origin==="included"?"Included / custom practice papers":"Imported / custom examinations")+'">'+
        custom.map(option).join("")+'</optgroup>':"")+
      (!selected&&!missing?'<option value="" selected disabled>Choose a paper</option>':"");
-   const hasEditions=available.some(p=>p.paper.edition==="source")&&
-     available.some(p=>p.paper.edition==="reviewed");
+   const hasEditions=Boolean(selected&&selected.paper.edition!=="custom"&&family&&
+     (pairedEdition(family,selected,"source")||pairedEdition(family,selected,"reviewed")));
    const familyOptions=(owner.selectedFamilyId&&!family?
      '<option value="'+escapeText(owner.selectedFamilyId)+'" selected disabled>Saved exam family unavailable — re-import</option>':"")+
      catalog.map(f=>'<option value="'+escapeText(f.id)+'"'+
@@ -305,8 +305,8 @@ export function bindLibraryScreen(owner:LibraryControllerContext):void{
        owner.editionView=next;
        const family=owner.families().find(f=>f.id===owner.selectedFamilyId);
        const same=current&&family?pairedEdition(family,current,next):undefined;
-       const first=family?.papers.find(p=>p.paper.edition===next);
-       owner.choice=(same??first??current)?.paper.id??owner.choice;
+       if(!same){owner.editionView=current?.paper.edition==="source"?"source":"reviewed";owner.draw();return;}
+       owner.choice=same.paper.id;
        const chosen=owner.packages.get(owner.choice);
        if(chosen)owner.practiceMode=resolvePracticeMode(chosen.paper,owner.practiceMode);
        owner.singleSection=Math.min(owner.singleSection,Math.max(0,(owner.packages.get(owner.choice)?.paper.sections.length??1)-1));

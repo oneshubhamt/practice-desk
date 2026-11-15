@@ -12,6 +12,7 @@ import {authoringPublishedPreview,authoringDraftPreview} from "./authoring-previ
 import {escapeText} from "../app/html-escape.ts";
 import {syllabusForExam,syllabusHeading,UNCLASSIFIED_SUBJECT} from "../learning/syllabus-taxonomy.ts";
 import type {AuthoringDraft,AuthoringDraftShelf,AuthoringQuestion} from "./authoring-draft.ts";
+import {MAX_AUTHORED_ITEMS,optionLabel} from "./authoring-cardinality.ts";
 
 export const labels:Record<QuestionKind,string>={
  "single-choice":"Single choice (MCQ)",
@@ -21,37 +22,31 @@ export const labels:Record<QuestionKind,string>={
  "matching":"Matching pairs",
  "free-response":"Written response"
 };
-export type Field="prompt"|"passage"|"explanation"|
- "A"|"B"|"C"|"D"|"L1"|"L2"|"L3"|"L4"|"R1"|"R2"|"R3"|"R4";
-const letters=["A","B","C","D"] as const;
+export type Field="prompt"|"passage"|"explanation"|\`O\${number}\`|\`L\${number}\`|\`R\${number}\`;
 export const initialField:Field="prompt";
-export const fieldNames:Record<Field,string>={
- prompt:"Question stem",passage:"Passage / case",explanation:"Worked explanation",
- A:"Option A",B:"Option B",C:"Option C",D:"Option D",
- L1:"Match left 1",L2:"Match left 2",L3:"Match left 3",L4:"Match left 4",
- R1:"Match right 1",R2:"Match right 2",R3:"Match right 3",R4:"Match right 4"
-};
-export function fields(kind:QuestionKind):Field[]{
+export function fieldName(field:Field):string{
+ if(field==="prompt")return "Question stem";
+ if(field==="passage")return "Passage / case";
+ if(field==="explanation")return "Worked explanation";
+ const index=Number(field.slice(1))-1;
+ return field[0]==="O"?"Option "+optionLabel(index):field[0]==="L"?"Match left "+(index+1):"Match right "+optionLabel(index);
+}
+export function fields(q:AuthoringQuestion):Field[]{
  return ["prompt","passage",
-  ...(kind==="single-choice"||kind==="multiple-select"?letters:[]),
-  ...(kind==="matching"?["L1","L2","L3","L4","R1","R2","R3","R4"] as Field[]:[]),
-  "explanation"] as Field[];
+  ...(q.kind==="single-choice"||q.kind==="multiple-select"?q.options.map((_,i)=>("O"+(i+1)) as Field):[]),
+  ...(q.kind==="matching"?[
+    ...q.leftItems.map((_,i)=>("L"+(i+1)) as Field),...q.rightItems.map((_,i)=>("R"+(i+1)) as Field)]:[]),
+  "explanation"];
 }
 export function fieldOf(q:AuthoringQuestion,field:Field):RichDocument{
  if(field==="prompt"||field==="passage"||field==="explanation")return q[field];
- if(letters.includes(field as (typeof letters)[number]))
-  return q.options[letters.indexOf(field as (typeof letters)[number])]!;
  const index=Number(field.slice(1))-1;
- return (field[0]==="L"?q.leftItems:q.rightItems)[index]!;
+ return (field[0]==="O"?q.options:field[0]==="L"?q.leftItems:q.rightItems)[index]!;
 }
 export function updatedField(q:AuthoringQuestion,field:Field,value:RichDocument):AuthoringQuestion{
- if(field==="prompt"||field==="passage"||field==="explanation")
-  return {...q,[field]:value};
- if(letters.includes(field as (typeof letters)[number])){
-  const i=letters.indexOf(field as (typeof letters)[number]);
-  return {...q,options:q.options.map((v,j)=>j===i?value:v)};
- }
+ if(field==="prompt"||field==="passage"||field==="explanation")return {...q,[field]:value};
  const i=Number(field.slice(1))-1;
+ if(field[0]==="O")return {...q,options:q.options.map((v,j)=>j===i?value:v)};
  return field[0]==="L"?{...q,leftItems:q.leftItems.map((v,j)=>j===i?value:v)}:
    {...q,rightItems:q.rightItems.map((v,j)=>j===i?value:v)};
 }
@@ -60,9 +55,22 @@ export function option(value:string,label:string,selected:string):string{
   escapeText(label)+"</option>";
 }
 export function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Field):string{
- const applicable=fields(current.kind);
+ const applicable=fields(current);
  const timingKind=draft.timingKind;
  const kinds=QUESTION_KINDS.map(k=>option(k,labels[k],current.kind)).join("");
+ const practiceValue=draft.practiceModes?.join(",")??"auto";
+ const practiceChoices=([["auto","Auto from paper structure"],["strict","Exam simulation only"],["free","Flexible practice only"],
+  ["strict,free","Exam simulation + flexible"],["single","Section practice only"],["strict,single","Exam simulation + section"],
+  ["free,single","Flexible + section"],["strict,free,single","All compatible modes"]] as const)
+  .filter(([value])=>draft.sections.length>1||!value.includes("single"))
+  .map(([value,label])=>option(value,label,practiceValue)).join("");
+ const kindScoreRows=QUESTION_KINDS.map(kind=>{const rule=draft.kindScoring?.[kind];return
+  '<fieldset class="pd-author-kind-score"><legend>'+escapeText(labels[kind])+'</legend>'+
+  '<label class="pd-author-check"><input type="checkbox" data-author-kind-score="'+kind+'"'+(rule?' checked':'')+'> Override paper marks</label>'+
+  ([["correctMarks","Correct"],["incorrectMarks","Incorrect"],["unansweredMarks","Unanswered"]] as const).map(([key,label])=>
+   '<label>'+label+'<input type="number" step="any" data-author-kind="'+kind+'" data-author-kind-mark="'+key+'"'+
+    (rule?'':' disabled')+' value="'+(rule?.[key]??(key==="correctMarks"?draft.marksCorrect:key==="incorrectMarks"?draft.marksIncorrect:draft.marksUnanswered))+'"></label>').join("")+
+  '</fieldset>';}).join("");
  return '<details class="pd-author-paper-settings"><summary>Paper settings · '+escapeText(draft.title)+'</summary><div class="pd-author-meta">'+
   '<label>Paper title<input id="pd-author-title" maxlength="180" value="'+escapeText(draft.title)+'"></label>'+
   '<label>Exam family ID<input id="pd-author-exam" maxlength="80" value="'+escapeText(draft.examId)+'"></label>'+
@@ -101,8 +109,12 @@ export function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Fi
   '<label>Written-answer word counter<select id="pd-author-word-count">'+
     ([["auto","Auto — practice on, exam simulation off"],["shown","Always show"],["hidden","Always hide"]] as const)
       .map(([value,label])=>option(value,label,draft.wordCountPolicy)).join("")+'</select></label>'+
+  '<label>Available practice modes<select id="pd-author-practice-modes">'+practiceChoices+'</select></label>'+
   '<label>Correct marks<input id="pd-author-correct" type="number" step="any" value="'+draft.marksCorrect+'"></label>'+
   '<label>Incorrect marks<input id="pd-author-wrong" type="number" max="0" step="any" value="'+draft.marksIncorrect+'"></label>'+
+  '<label>Unanswered marks<input id="pd-author-unanswered" type="number" step="any" value="'+draft.marksUnanswered+'"></label>'+
+  '<label>Score decimal places<input id="pd-author-decimals" type="number" min="0" max="6" step="1" value="'+draft.scoreDecimalPlaces+'"></label>'+
+  '</div><details class="pd-author-kind-marks"><summary>Question-kind marks (optional)</summary><div class="pd-author-meta">'+kindScoreRows+'</div></details><div class="pd-author-meta">'+
   '</div><p class="fine pd-author-effective-policy-note" role="note">'+
    (timingKind==="sectional"?
      'Section timers, expiry and early-submission policies are active. Section movement must remain sequentially locked.':
@@ -111,6 +123,11 @@ export function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Fi
      'Untimed mode has no countdown. Pause, expiry, section budgets and early-submission settings are inactive.')+
    '</p></details><div class="pd-author-meta">'+
   '<label>Question kind<select id="pd-author-kind">'+kinds+'</select></label>'+
+  ((current.kind==="single-choice"||current.kind==="multiple-select")?
+   '<label>Option count<input id="pd-author-option-count" type="number" min="2" max="'+MAX_AUTHORED_ITEMS+'" step="1" value="'+current.options.length+'"></label>':"")+
+  (current.kind==="matching"?
+   '<label>Left item count<input id="pd-author-left-count" type="number" min="1" max="'+MAX_AUTHORED_ITEMS+'" step="1" value="'+current.leftItems.length+'"></label>'+
+   '<label>Right item count<input id="pd-author-right-count" type="number" min="1" max="'+MAX_AUTHORED_ITEMS+'" step="1" value="'+current.rightItems.length+'"></label>':"")+
   '<label>Actual exam section (controls timing and navigation)<input id="pd-author-section" maxlength="100" value="'+escapeText(current.section)+'"></label>'+
   '<label>Academic subject (custom, not an exam section)<input id="pd-author-subject" maxlength="120" value="'+escapeText(current.subject??"")+'" placeholder="Leave blank for Unclassified"></label>'+
   '<label>Official broad syllabus subject (author-chosen)<select id="pd-author-syllabus-heading"'+
@@ -136,30 +153,30 @@ export function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Fi
    (current.scoringOverride?' checked':'')+'> Override the paper-wide marking rule for this question</label>'+
   ([['correctMarks','Correct marks','0.01','1000'],
     ['incorrectMarks','Incorrect marks','-1000','0'],
-    ['unansweredMarks','Unanswered marks','0','1000']] as const).map(([field,label,min,max])=>
+    ['unansweredMarks','Unanswered marks','-1000','1000']] as const).map(([field,label,min,max])=>
    '<label>'+label+'<input id="pd-author-mark-'+field+'" type="number" min="'+min+'" max="'+max+
    '" step="any"'+(current.scoringOverride?'':' disabled')+' value="'+
    (current.scoringOverride?.[field]??(field==='correctMarks'?draft.marksCorrect:
-     field==='incorrectMarks'?draft.marksIncorrect:0))+'"></label>').join('')+
+     field==='incorrectMarks'?draft.marksIncorrect:draft.marksUnanswered))+'"></label>').join('')+
   '</details>'+
   '<label>Source / provenance note<input id="pd-author-source" maxlength="500" value="'+escapeText(current.source)+'"></label>'+
   (current.kind==="numeric-entry"?'<label>Absolute answer tolerance<input type="number" id="pd-author-tolerance" min="0" max="1000000" step="any" value="'+current.tolerance+'"></label>':"")+
-  (current.kind==="free-response"?'<label>Advisory word limit<input type="number" id="pd-author-word-limit" min="1" max="10000" step="1" value="'+(current.wordLimit??300)+'"></label>':"")+
-  (current.kind==="multiple-select"?'<label>Minimum choices<input id="pd-author-min-choices" type="number" min="1" max="4" step="1" value="'+(current.minSelections??1)+'"></label>'+
-    '<label>Maximum choices<input id="pd-author-max-choices" type="number" min="1" max="4" step="1" value="'+(current.maxSelections??4)+'"></label>':"")+
+  (current.kind==="free-response"?'<label>Advisory word limit (optional)<input type="number" id="pd-author-word-limit" min="1" max="10000" step="1" placeholder="No target" value="'+(current.wordLimit??"")+'"></label>':"")+
+  (current.kind==="multiple-select"?'<label>Minimum choices<input id="pd-author-min-choices" type="number" min="1" max="'+current.options.length+'" step="1" value="'+(current.minSelections??1)+'"></label>'+
+    '<label>Maximum choices<input id="pd-author-max-choices" type="number" min="1" max="'+current.options.length+'" step="1" value="'+(current.maxSelections??current.options.length)+'"></label>':"")+
   (current.kind==="multiple-select"||current.kind==="matching"?
     '<label>Partial marks per correct component (0 = all-or-nothing)<input id="pd-author-partial-credit" type="number" min="0" max="1000" step="any" value="'+(current.partialCreditEach??0)+'"></label>'+
     '<label>Partial penalty per incorrect component<input id="pd-author-partial-penalty" type="number" min="0" max="1000" step="any" value="'+(current.partialPenaltyEach??0)+'"></label>':"")+
   '</div><p class="fine" id="pd-author-answer-help">'+
-  escapeText(current.kind==="single-choice"?"One correct option: A, B, C or D.":
-   current.kind==="multiple-select"?"All correct options: A,C or B,D; no duplicates.":
+  escapeText(current.kind==="single-choice"?"One correct option: A–"+optionLabel(current.options.length-1)+".":
+   current.kind==="multiple-select"?"All correct options from A–"+optionLabel(current.options.length-1)+"; no duplicates.":
    current.kind==="numeric-entry"?"Accepted numeric answers, comma-separated. Set absolute tolerance above.":
    current.kind==="true-false"?"Enter True or False.":
-   current.kind==="matching"?"Four unique pairs: 1-C,2-A,3-D,4-B (or C,A,D,B).":
-   "Evaluated manually. The word limit is advisory: candidates may save responses beyond it.")+
+   current.kind==="matching"?"Match left items 1–"+current.leftItems.length+" to right options A–"+optionLabel(current.rightItems.length-1)+".":
+   "Evaluated manually. Any word limit is advisory: candidates may save responses beyond it.")+
   '</p>'+
   '<label class="picker" for="pd-author-field">Rich-content field</label>'+
-  '<select id="pd-author-field">'+applicable.map(f=>option(f,fieldNames[f],field)).join("")+'</select>';
+  '<select id="pd-author-field">'+applicable.map(f=>option(f,fieldName(f),field)).join("")+'</select>';
 }
 /** Author-supplied evidence is editable, but never automatically authenticated.
  * Keep strict calendar/HTTPS and review invalidation in validateAuthoringDraft.
@@ -279,12 +296,18 @@ export function sectionManager(draft:AuthoringDraft,expanded:boolean):string{
     'Assign questions using their Actual exam section field; enter a new name to create a section. '+
     'Each section has exactly one timer budget owned here.</p>'+
    '<div class="scroll-table"><table class="pd-author-section-table"><thead><tr>'+
-    '<th>Exam section</th><th>Questions</th><th>Minutes (0 = untimed)</th></tr></thead><tbody>'+
+    '<th>Exam section</th><th>Questions</th><th>Minutes (0 = untimed)</th><th>Section scoring (optional)</th></tr></thead><tbody>'+
    sections.map(section=>'<tr><th scope="row">'+escapeText(section.name)+'</th><td>'+
       section.count+'</td><td><label class="pd-author-section-time-label">'+
       '<input aria-label="Timer for '+escapeText(section.name)+
       '" type="number" min="0" max="600" step="1" data-author-section-timer="'+escapeText(section.name)+
-      '" value="'+section.minutes+'"></label></td></tr>').join("")+
+      '" value="'+section.minutes+'"></label></td><td><label class="pd-author-check"><input type="checkbox" data-author-section-score-enable="'+escapeText(section.name)+'"'+
+      (section.scoringOverride?' checked':'')+'> Override</label>'+
+      ([["correctMarks","Correct"],["incorrectMarks","Incorrect"],["unansweredMarks","Blank"]] as const).map(([key,label])=>
+       '<label>'+label+'<input type="number" step="any" data-author-section-score="'+escapeText(section.name)+
+       '" data-author-section-score-field="'+key+'"'+(section.scoringOverride?'':' disabled')+' value="'+
+       (section.scoringOverride?.[key]??(key==="correctMarks"?draft.marksCorrect:key==="incorrectMarks"?draft.marksIncorrect:draft.marksUnanswered))+'"></label>').join("")+
+      '</td></tr>').join("")+
    '</tbody></table></div>'+
    '<p class="fine" id="pd-author-section-policy">'+
     (draft.timingKind==="sectional"?

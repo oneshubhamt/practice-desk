@@ -2,18 +2,20 @@
  * Section timer budgets live only in AuthoringDraft.sections; questions carry
  * section assignment only.
  */
-import type {AuthoringDraft} from "./authoring-draft.ts";
+import type {AuthoringDraft,AuthoringMarkingRule} from "./authoring-draft.ts";
 
 export interface AuthoringSection {
  readonly name:string;
  readonly count:number;
  readonly minutes:number;
+ readonly scoringOverride?:AuthoringMarkingRule;
 }
 export function authoringSections(d:Pick<AuthoringDraft,"questions"|"sections">):AuthoringSection[]{
  const counts=new Map<string,number>();
  for(const q of d.questions)counts.set(q.section,(counts.get(q.section)??0)+1);
  return d.sections.map(section=>({
-  name:section.name,minutes:section.minutes,count:counts.get(section.name)??0
+  name:section.name,minutes:section.minutes,count:counts.get(section.name)??0,
+  ...(section.scoringOverride?{scoringOverride:section.scoringOverride}:{})
  }));
 }
 export function setAuthoringSectionMinutes<T extends AuthoringDraft>(
@@ -24,6 +26,16 @@ export function setAuthoringSectionMinutes<T extends AuthoringDraft>(
  if(!draft.sections.some(row=>row.name===section))throw Error("Unknown exam section");
  return {...draft,sections:draft.sections.map(row=>
   row.name===section?{...row,minutes}:row)};
+}
+export function setAuthoringSectionScoring<T extends AuthoringDraft>(
+ draft:T,section:string,rule:AuthoringMarkingRule|undefined
+):T{
+ if(!draft.sections.some(row=>row.name===section))throw Error("Unknown exam section");
+ return {...draft,sections:draft.sections.map(row=>{
+  if(row.name!==section)return row;
+  if(rule)return {...row,scoringOverride:rule};
+  const {scoringOverride:_,...rest}=row;return rest;
+ })};
 }
 export function assignAuthoringQuestionSection<T extends AuthoringDraft>(
  draft:T,questionId:string,newSection:string

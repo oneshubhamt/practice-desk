@@ -7,6 +7,7 @@ import type {AssetId,ContentHash} from "../domain/ids.ts";
 import {sha256} from "../domain/hash.ts";
 import {validateMediaInventory} from "../domain/media.ts";
 import type {RichDocument} from "../domain/rich-document.ts";
+import {plainRichDocument} from "../domain/rich-document.ts";
 import type {ExamPackage} from "../domain/exam-package.ts";
 import {inspectAuthoringPublication,publicationPlainText,PublicationValidationError,
  type PublicationIssue} from "./authoring-publisher.ts";
@@ -17,7 +18,8 @@ import {STAGING_MAX_BYTES,inspectStagingWorkspace,
  updateStagedSelection,updateStagedTriage,createStagingArchive,readStagingArchive,
  type StagingWorkspace}
  from "./authoring-staging.ts";
-import {setAuthoringSectionMinutes,assignAuthoringQuestionSection} from "./authoring-sections.ts";
+import {setAuthoringSectionMinutes,setAuthoringSectionScoring,assignAuthoringQuestionSection} from "./authoring-sections.ts";
+import {MAX_AUTHORED_ITEMS,resizeRichItems} from "./authoring-cardinality.ts";
 import {mathRenderer} from "../app/math-renderer-provider.ts";
 import {escapeText} from "../app/html-escape.ts";
 import {downloadText} from "../app/download-file.ts";
@@ -30,7 +32,7 @@ import {AUTHORING_MAX_BYTES,newAuthoringDraft,newAuthoringQuestion,validateAutho
 import {createAuthoringWorkspaceStore} from "./authoring-workspace-store.ts";
 import {handoffStagingToDraftShelf,ingestStagedFiles,inspectPublicationWorkflow,
  preparePublicationWorkflow} from "./authoring-workflow.ts";
-import {labels,type Field,initialField,fieldNames,fields,fieldOf,updatedField,option,
+import {labels,type Field,initialField,fieldName,fields,fieldOf,updatedField,option,
  controls,evidenceEditor,stagedDetail,toolbar,preview,sectionManager,draftsOptions}
  from "./authoring-studio-view.ts";
 
@@ -211,7 +213,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   if(before)sectionManagerExpanded=before.open;
   capture();
   const version=++renderSequence,container=host,d=active(),q=question();
-  if(!fields(q.kind).includes(field))field=initialField;
+  if(!fields(q).includes(field))field=initialField;
   container.hidden=false;
   const questionOptions=d.questions.map((q,i)=>option(q.id,(i+1)+". "+q.section+
     " · "+(q.syllabusHeadingId?syllabusHeading(d.examId,q.syllabusHeadingId)?.label:
@@ -288,7 +290,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    '<button class="btn danger" id="pd-author-delete-question">Delete question</button></div></div>'+
    controls(d,q,field)+evidenceEditor(q)+sectionManager(d,sectionManagerExpanded)+
    toolbar()+
-   '<div id="pd-author-editor" class="pd-author-editor" role="group" aria-label="Edit '+escapeText(fieldNames[field])+'"></div>'+
+   '<div id="pd-author-editor" class="pd-author-editor" role="group" aria-label="Edit '+escapeText(fieldName(field))+'"></div>'+
    '<div class="pd-author-insert"><fieldset><legend>Insert equation</legend>'+
    '<label>LaTeX<input id="pd-author-tex" placeholder="\\frac{a}{b}" maxlength="2048"></label>'+
    '<label>Accessible spoken/text description<input id="pd-author-math-alt" maxlength="500" placeholder="a divided by b"></label>'+
@@ -605,11 +607,12 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    ["pd-author-section-nav","sectionNavigation"],
    ["pd-author-section-transition","sectionTransition"],
    ["pd-author-word-count","wordCountPolicy"],
-   ["pd-author-correct","marksCorrect"],["pd-author-wrong","marksIncorrect"]
+   ["pd-author-correct","marksCorrect"],["pd-author-wrong","marksIncorrect"],
+   ["pd-author-unanswered","marksUnanswered"],["pd-author-decimals","scoreDecimalPlaces"]
   ] as const;
   for(const [id,key] of metadata)find<HTMLInputElement|HTMLSelectElement>(id).onchange=e=>{
    const input=e.target as HTMLInputElement;
-   const value=["revision","durationMinutes","marksCorrect","marksIncorrect"].includes(key)?
+   const value=["revision","durationMinutes","marksCorrect","marksIncorrect","marksUnanswered","scoreDecimalPlaces"].includes(key)?
     Number(input.value):input.value;
    if(key==="timingKind"&&value==="sectional"){
      changeDraft(d=>({...d,timingKind:"sectional",sectionNavigation:"sequential-locked"}));
@@ -629,6 +632,34 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
       return withoutCalculator;
     });
   };
+  find<HTMLSelectElement>("pd-author-practice-modes").onchange=e=>{
+   const value=(e.target as HTMLSelectElement).value;
+   try{changeDraft(d=>{
+    if(value==="auto"){const {practiceModes:_,...rest}=d;return rest;}
+    return {...d,practiceModes:value.split(",") as ("strict"|"free"|"single")[]};
+   });void render();}catch(error){status(error instanceof Error?error.message:"Invalid practice modes",true);}
+  };
+  container.querySelectorAll<HTMLInputElement>("[data-author-kind-score]").forEach(toggle=>{
+   toggle.onchange=()=>{
+    const kind=toggle.dataset.authorKindScore as QuestionKind;
+    try{changeDraft(d=>{
+     const next={...(d.kindScoring??{})};
+     if(toggle.checked)next[kind]={correctMarks:d.marksCorrect,incorrectMarks:d.marksIncorrect,unansweredMarks:d.marksUnanswered};
+     else delete next[kind];
+     if(Object.keys(next).length)return {...d,kindScoring:next};
+     const {kindScoring:_,...rest}=d;return rest;
+    });void render();}catch(error){status(error instanceof Error?error.message:"Invalid question-kind scoring",true);}
+   };
+  });
+  container.querySelectorAll<HTMLInputElement>("[data-author-kind-mark]").forEach(input=>{
+   input.onchange=()=>{
+    const kind=input.dataset.authorKind as QuestionKind,field=input.dataset.authorKindMark as "correctMarks"|"incorrectMarks"|"unansweredMarks";
+    const value=Number(input.value);
+    try{changeDraft(d=>{const rule=d.kindScoring?.[kind];if(!rule)throw Error("Enable this question-kind override first");
+      return {...d,kindScoring:{...d.kindScoring,[kind]:{...rule,[field]:value}}};});}
+    catch(error){status(error instanceof Error?error.message:"Invalid question-kind scoring",true);}
+   };
+  });
   const editCurrentEvidence=(fn:(q:AuthoringQuestion)=>AuthoringQuestion):boolean=>{
    try{
     changeDraft(d=>({...d,questions:d.questions.map(q=>q.id===questionId?fn(q):q)}));
@@ -718,6 +749,23 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   if(clearReview)clearReview.onclick=()=>{
    if(editCurrentEvidence(q=>({...q,qa:{status:q.qa?.status??"needs-review"}})))void render();
   };
+  const resizeCurrent=(field:"options"|"leftItems"|"rightItems",count:number,min:number)=>{
+   if(!Number.isSafeInteger(count)||count<min||count>MAX_AUTHORED_ITEMS){status("Item count must be "+min+"–"+MAX_AUTHORED_ITEMS+".",true);return;}
+   try{changeDraft(d=>({...d,questions:d.questions.map(q=>{
+    if(q.id!==questionId)return q;
+    const resized=resizeRichItems(q[field],count,()=>plainRichDocument(""));
+    if(field!=="options")return {...q,[field]:resized};
+    const maxSelections=Math.min(q.maxSelections??count,count);
+    const minSelections=Math.min(q.minSelections??1,maxSelections);
+    return {...q,options:resized,minSelections,maxSelections};
+   })}));field=initialField;void render();}catch(error){status(error instanceof Error?error.message:"Invalid item count",true);}
+  };
+  const optionCount=container.querySelector<HTMLInputElement>("#pd-author-option-count");
+  if(optionCount)optionCount.onchange=()=>resizeCurrent("options",Number(optionCount.value),2);
+  const leftCount=container.querySelector<HTMLInputElement>("#pd-author-left-count");
+  if(leftCount)leftCount.onchange=()=>resizeCurrent("leftItems",Number(leftCount.value),1);
+  const rightCount=container.querySelector<HTMLInputElement>("#pd-author-right-count");
+  if(rightCount)rightCount.onchange=()=>resizeCurrent("rightItems",Number(rightCount.value),1);
   const tolerance=find<HTMLInputElement>("pd-author-tolerance");
   if(tolerance)tolerance.onchange=e=>updateQuestion("tolerance",Number((e.target as HTMLInputElement).value));
   const refreshOfficialHeadingChoices=()=>{
@@ -807,8 +855,33 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   container.querySelectorAll<HTMLInputElement>("[data-author-section-timer]").forEach(input=>{
    input.onchange=()=>commitSectionTimer(input.dataset.authorSectionTimer??"",input);
   });
+  container.querySelectorAll<HTMLInputElement>("[data-author-section-score-enable]").forEach(toggle=>{
+   toggle.onchange=()=>{
+    const section=toggle.dataset.authorSectionScoreEnable??"";
+    try{changeDraft(d=>setAuthoringSectionScoring(d,section,toggle.checked?{
+      correctMarks:d.marksCorrect,incorrectMarks:d.marksIncorrect,unansweredMarks:d.marksUnanswered}:undefined));void render();}
+    catch(error){status(error instanceof Error?error.message:"Invalid section scoring",true);}
+   };
+  });
+  container.querySelectorAll<HTMLInputElement>("[data-author-section-score-field]").forEach(input=>{
+   input.onchange=()=>{
+    const section=input.dataset.authorSectionScore??"";
+    const field=input.dataset.authorSectionScoreField as "correctMarks"|"incorrectMarks"|"unansweredMarks";
+    try{changeDraft(d=>{const row=d.sections.find(x=>x.name===section);if(!row?.scoringOverride)throw Error("Enable section scoring first");
+      return setAuthoringSectionScoring(d,section,{...row.scoringOverride,[field]:Number(input.value)});});}
+    catch(error){status(error instanceof Error?error.message:"Invalid section scoring",true);}
+   };
+  });
+  const wordLimit=container.querySelector<HTMLInputElement>("#pd-author-word-limit");
+  if(wordLimit)wordLimit.onchange=()=>{
+   const value=wordLimit.value.trim();
+   try{changeDraft(d=>({...d,questions:d.questions.map(q=>{
+    if(q.id!==questionId)return q;
+    if(value)return {...q,wordLimit:Number(value)};
+    const {wordLimit:_,...rest}=q;return rest;
+   })}));}catch(error){status(error instanceof Error?error.message:"Invalid word limit",true);}
+  };
   for(const [id,key] of [["pd-author-min-choices","minSelections"],["pd-author-max-choices","maxSelections"],
-    ["pd-author-word-limit","wordLimit"],
     ["pd-author-partial-credit","partialCreditEach"],
     ["pd-author-partial-penalty","partialPenaltyEach"]] as const){
     const input=container.querySelector<HTMLInputElement>("#"+id);
@@ -818,7 +891,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    const enabled=(e.target as HTMLInputElement).checked;
    updateQuestion("scoringOverride",enabled?{
     correctMarks:active().marksCorrect,incorrectMarks:active().marksIncorrect,
-    unansweredMarks:0}:undefined);
+    unansweredMarks:active().marksUnanswered}:undefined);
    for(const key of ["correctMarks","incorrectMarks","unansweredMarks"] as const)
     find<HTMLInputElement>("pd-author-mark-"+key).disabled=!enabled;
   };
