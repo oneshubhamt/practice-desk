@@ -281,8 +281,11 @@ export function inspectExternalQuality(
   if(exact!==undefined&&(q.kind==="numeric-entry"||q.kind==="single-choice")){
    const answer=compiled.answerKey.entries[i]!.answer;
    const chosen=answer.kind==="numeric-entry"?answer.acceptedValues:
-    answer.kind==="single-choice"?
-     [Number(publicationPlainText(q.options["ABCD".indexOf(answer.optionId)]!).trim())]:[];
+    answer.kind==="single-choice"?(()=>{
+     const index=answer.optionId.length===1?answer.optionId.charCodeAt(0)-65:-1;
+     const option=q.options[index];
+     return option?[Number(publicationPlainText(option).trim())]:[];
+    })():[];
    if(chosen.length&&chosen.every(Number.isFinite)){
     checked++;
     const tolerance=answer.kind==="numeric-entry"?answer.absoluteTolerance??0:0;
