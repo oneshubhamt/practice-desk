@@ -65,7 +65,6 @@
         "stimulusId": "stimulus:ecf68a9f0b4abc5a189cea85",
         "kind": "free-response",
         "responseRules": {
-          "minWords": 1,
           "wordLimit": 120
         }
       },
@@ -73,7 +72,7 @@
         "status": "caution",
         "notes": "User-authored custom question; answer and source have not been independently certified. Claimed origin: ai-original (not authenticated). Author QA state: needs-review. Original AI input identity (author-attributed): bank pfrda-grade-a-2026-day1, question day1-english-precis, stimulus day1-precis-passage. Source/reference: Original Day 1 ChatGPT précis practice in the user’s PFRDA project; source text preserved verbatim."
       },
-      "contentHash": "c308bc7bc33f66c35eac804a9fdfbb50c214813ae2c0f505998def34debc377f"
+      "contentHash": "a0a758a9952b5e0f9bd9d3f3e525b1d807907698b8d5166b969c0d236b0761a5"
     },
     {
       "id": "authored:pfrda-grade-a-2026-phase-ii:pfrda-grade-a-2026-day1:r4:custom:q:e70b67e917f467196a1045c9",
@@ -6956,9 +6955,10 @@
         "correctMarks": 2,
         "incorrectMarks": -0.5,
         "unansweredMarks": 0
-      }
+      },
+      "decimalPlaces": 2
     },
-    "contentHash": "5b4b4df4a6093946450e4266f03b997207cfa17c8f050826fedbdb55d5c28a82"
+    "contentHash": "fd22dc31da55ff3f745d9bc41ef4447923009b4bfeb4e9e9fbc7677f25facbfa"
   },
   "stimuli": [
     {
