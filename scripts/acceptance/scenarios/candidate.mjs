@@ -132,12 +132,23 @@ try{
   await page.locator("#g-save").click();
   check((await page.locator("#g-word-count").innerText())==="41 / 40 words",
     "over-limit written response was not saved and restored");
+  // A final visible edit is deliberately left unsaved. Submission must commit
+  // the textarea boundary state rather than silently submit the older 41-word snapshot.
+  await page.locator("#g-text").fill(written(42));
   await page.locator("#g-submit").click();await route(page,"result");
+  check((await page.locator(".result-written-answers").innerText()).includes("42 / 40 words"),
+    "Results did not analyse the final visible written response");
+  check((await page.locator(".result-written-answers").innerText()).includes("Written answers"),
+    "written-answer analysis panel missing");
   await page.locator("#result-tab-review").click();
   check(await page.locator(".generic-review").count()===6,"six question kinds not independently reviewed");
   const row=(await records(page)).find(x=>x.recordType==="generic-attempt"&&x.packageId===sixKinds.paper.id&&x.finishedAt);
   check(row?.result?.snapshot?.correctCount===5,"automated five answer verdicts wrong");
   check(row.result.items[5].verdict==="pending","written response not manual-pending");
+  check(row.state.responses.find(x=>x.questionRevisionId==="rev-5")?.response?.text===written(42),
+    "final unsaved textarea edit was not committed at submission");
+  check(row.state.responses.find(x=>x.questionRevisionId==="rev-5")?.answerEvents===undefined,
+    "written checkpoints leaked typing telemetry");
   await page.locator('[data-manual-marks="rev-5"]').fill("1.5");
   await page.locator('[data-manual-note="rev-5"]').fill("Rubric self-assessment");
   await page.locator('[data-manual-save="rev-5"]').click();
