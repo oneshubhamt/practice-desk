@@ -1,6 +1,6 @@
-# Day 1 — General Stream: recovered key and hint index
+# Day 1 — General Stream: answer and hint index
 
-**Source state: incomplete.** The exact candidate-visible 50 original stems and option texts are missing from the accessible transcript. The keys and short teaching hints below were transcribed from the previous *evaluation*, not independently validated against the original question content. They must **not** be compiled into a new paper or presented as if the original stems/options were known. No official PYQ provenance is claimed.
+**Source state: restored.** All 50 original stems and 200 options have now been recovered verbatim from the user's [ChatGPT shared conversation](https://chatgpt.com/s/t_6af93d7f091881918cf9123723691cef), retained in [original-50-questions.json](original-50-questions.json) and paired with the keys and hints below in [day1.authoring.json](day1.authoring.json). The keys/hints came from the earlier evaluation; their independent legal and numerical review remains a separate step. No official PYQ provenance is claimed.
 
 **Original Day 1 practice settings:** 50 single-choice MCQs; 40 minutes; +2 correct, −0.5 incorrect and 0 blank; across all 12 General Stream syllabus areas. The user's prior result was 43 correct, 7 incorrect, 0 blank (82.5/100), but this score alone cannot authenticate the source paper.
 
@@ -57,6 +57,6 @@
 | 49 | D | Companies Act | Prior evaluation said both propositions were correct, but their exact wording is unavailable; key requires source recovery. |
 | 50 | A | Budget/Survey | Survey's FY 2025–26 first advance estimates gave PFCE at 61.5% of GDP; not final actuals. |
 
-## Source gate
+## Integrity note
 
-The missing original candidate-visible 50 × (stem + four options) must be supplied or recovered before a valid canonical two-section bank can be published. Reconstructing those options from the above summaries would produce **new questions**, violating the user's explicit instruction to use *precisely the earlier questions*. Once source text arrives, verify each key and reasoning and preserve any corrections transparently.
+The question wording and option ordering were not reconstructed from these answer summaries. They came from the original shared quiz. This index remains an answer-side revision aid, and any future correction to a source-sensitive key must be tracked through the repository's editorial process.
