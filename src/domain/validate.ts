@@ -3,7 +3,7 @@ import type { ExamDefinition, PaperRevision } from "./exam.js";
 import type { QuestionRevision } from "./question.js";
 import {validateRichDocument} from "./rich-document.ts";
 import {BASIC_CALCULATOR_V1} from "./calculator.ts";
-import {WORD_COUNT_POLICIES} from "./word-count.ts";
+import {WORD_COUNT_OVERRIDES} from "./word-count.ts";
 
 const QUESTION_KINDS = [
   "single-choice", "multiple-select", "numeric-entry", "true-false", "matching", "free-response",
@@ -447,7 +447,7 @@ export function validatePaperRevision(
     if (tools["calculator"] !== undefined && tools["calculator"] !== BASIC_CALCULATOR_V1)
       throw new Error('paperRevision.candidateTools.calculator: expected "'+BASIC_CALCULATOR_V1+'"');
     if (tools["wordCount"] !== undefined)
-      oneOf(tools["wordCount"],WORD_COUNT_POLICIES,"paperRevision.candidateTools.wordCount");
+      oneOf(tools["wordCount"],WORD_COUNT_OVERRIDES,"paperRevision.candidateTools.wordCount");
   }
   validateScoringPolicy(paper["scoring"], "paperRevision.scoring");
 
