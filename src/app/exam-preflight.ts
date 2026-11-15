@@ -3,7 +3,6 @@ import type { QuestionKind } from "../domain/question.js";
 import type { MarkingRule } from "../domain/scoring.js";
 import { scoreableMaximum } from "../engine/score-ceiling.ts";
 import {escapeText} from "./html-escape.ts";
-import {paperEditionLabel} from "./editorial-labels.ts";
 
 const excludedStatuses=new Set(["draft","invalid","incomplete-source","under-review","superseded"]);
 const signed=(value:number):string=>value>0?"+"+value:value===0?"0":String(value);
@@ -19,14 +18,11 @@ const plural=(n:number,word:string):string=>n+" "+word+(n===1?"":"s");
 
 export function paperProvenanceText(bundle:Pick<ExamPackage,"paper"|"questions">):string{
  const hasCitations=bundle.questions.some(q=>Boolean(q.editorial.sources?.length));
- const label=paperEditionLabel(bundle.paper);
  const provenance=bundle.paper.edition==="source"?
-   "Source edition frozen as supplied by this package · "+label.replace("Source edition ","")+
-    ". Practice Desk does not independently authenticate publisher identity, official status or answer-key accuracy.":
+   "Source edition frozen as supplied by this package. Practice Desk does not independently authenticate publisher identity, official status or answer-key accuracy.":
   bundle.paper.edition==="reviewed"?
-   "Reviewed edition frozen as supplied · "+label+
-    "; pinned to its declared Source paper and key revisions. Practice Desk preserves that lineage but does not independently certify the reviewer, corrections or official status.":
-   label+" contains author/importer-supplied exam content and scoring. Practice Desk does not independently authenticate official status.";
+   "Reviewed edition frozen as supplied and pinned to its declared Source paper and key revisions. Practice Desk preserves that lineage but does not independently certify the reviewer, corrections or official status.":
+   "Custom exam content and scoring were supplied by the author/importer. Practice Desk does not independently authenticate official status.";
  return provenance+(hasCitations?
    " Question-level citations, where supplied, are disclosed with the frozen review evidence.":"");
 }
