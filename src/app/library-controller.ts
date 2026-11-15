@@ -23,7 +23,7 @@ import {frozenScoreSummary} from "./history-score.ts";
 import {examPreflight,preflightHTML,examRulesHTML} from "./exam-preflight.ts";
 
 import {writePracticeSetups,type PracticeSetups} from "./practice-selection.ts";
-import {familyIdFor,pairedEdition,BUILTIN_CGL_FAMILY} from "./exam-families.ts";
+import {pairedEdition,BUILTIN_CGL_FAMILY} from "./exam-families.ts";
 
 import type {LibraryControllerContext} from "./coordinator-context.ts";
 
@@ -38,6 +38,7 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
    const catalog=owner.families(),family=catalog.find(f=>f.id===owner.selectedFamilyId);
    const selected=family?.papers.find(p=>p.paper.id===owner.choice);
    const cgl=owner.selectedFamilyId===BUILTIN_CGL_FAMILY&&Boolean(selected);
+   const selectedIncluded=Boolean(selected&&family?.includedPaperIds.includes(selected.paper.id));
    const configured=selected?configureUntimedPractice(
      cgl?configureCglPractice(selected,owner.cglMode,owner.singleSection):selected,owner.untimedPractice):null;
    const selectedNumbers=new Set(configured?.questions.map(q=>q.questionId.split(":").at(-1))??[]);
@@ -67,7 +68,7 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
    const options=missing+
      (published.length?'<optgroup label="'+(owner.editionView==="reviewed"?"Reviewed papers":"Original papers")+'">'+
        published.map(option).join("")+'</optgroup>':"")+
-     (custom.length?'<optgroup label="Imported / custom examinations">'+
+     (custom.length?'<optgroup label="'+(family?.origin==="included"?"Included / custom practice papers":"Imported / custom examinations")+'">'+
        custom.map(option).join("")+'</optgroup>':"")+
      (!selected&&!missing?'<option value="" selected disabled>Choose a paper</option>':"");
    const hasEditions=available.some(p=>p.paper.edition==="source")&&
@@ -150,7 +151,11 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
      '<select id="g-family" aria-label="Examination family">'+familyOptions+'</select></div>'+
      '<div class="paper-field"><label class="picker" for="g-papers">Paper</label>'+
      '<select id="g-papers">'+options+'</select></div></div>'+
-     (!selected?'<p class="generic-warning" role="status">Saved paper unavailable. Re-import its revision or select an installed paper.</p>':"")+
+     (!selected?'<p class="generic-warning" role="status">'+
+       (catalog.length===0&&!owner.choice?
+        'No examination bank is installed. Import a package or author a question bank to begin.':
+        'Saved paper unavailable. Re-import its revision or select an installed paper.')+
+       '</p>':"")+
      (hasEditions?'<div class="edition-row"><span class="picker" id="editionLabel">Paper edition</span>'+
        '<div class="edition-toggle" id="g-edition" role="group" aria-labelledby="editionLabel">'+
        (["reviewed","source"] as const).map(edition=>
@@ -184,8 +189,10 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
       'Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section>'+
      '<aside class="home-side"><section class="panel pad paper-preview"><span class="eyebrow">SELECTED PAPER</span>'+
       '<h2>'+escapeText(selected?.title??"Choose a paper")+'</h2>'+
-      '<p class="fine family-provenance">'+(family?.imported?
+      '<p class="fine family-provenance">'+(family?.origin==="imported"?
         "Imported/user-supplied content; not an official exam bank.":
+        family?.origin==="included"?
+          (selectedIncluded?"Included practice package from the repository question-bank catalog; provenance still governs official status.":"Imported/user-supplied paper grouped under this included examination family."):
         family?"Included SSC CGL papers. Original and reviewed versions remain distinct.":
         "Saved examination unavailable. Re-import the bank or select another.")+'</p>'+
       '<p class="fine">'+escapeText(selected?.paper.paperId??"")+' · '+escapeText(selected?.paper.edition??"")+'</p>'+
@@ -231,7 +238,7 @@ export const applyLibraryFamily=(owner:LibraryControllerContext,id:string):void=
      owner.editionView=previous.edition;
    }else{
      const family=owner.families().find(f=>f.id===id);
-     const paper=family?.papers.find(p=>p.paper.edition==="reviewed")??family?.papers[0];
+     const paper=family?.papers.find(p=>p.paper.id===family.currentPaperId)??family?.papers.find(p=>p.paper.edition==="reviewed")??family?.papers[0];
      owner.choice=paper?.paper.id??"";owner.cglMode="strict";owner.singleSection=0;
      owner.untimedPractice=false;owner.editionView=paper?.paper.edition==="source"?"source":"reviewed";
    }
@@ -330,7 +337,9 @@ export function bindLibraryScreen(owner:LibraryControllerContext):void{
        const make=()=>{
          capture();
          const p=owner.packages.get(owner.choice);
-         if(!p||familyIdFor(p,owner.builtinPaperIds)!==owner.selectedFamilyId)throw Error("Selected paper unavailable");
+         const selectedFamily=owner.families().find(f=>f.id===owner.selectedFamilyId);
+         if(!p||!selectedFamily?.papers.some(item=>item.paper.id===p.paper.id))
+           throw Error("Selected paper unavailable");
          const base=configureUntimedPractice(
            owner.selectedFamilyId===BUILTIN_CGL_FAMILY?
              configureCglPractice(p,owner.cglMode,owner.singleSection):p,owner.untimedPractice);
@@ -376,7 +385,8 @@ export function bindLibraryScreen(owner:LibraryControllerContext):void{
      }
      owner.root.querySelector<HTMLButtonElement>("#g-start")!.onclick=()=>{
        const p=owner.packages.get(owner.choice);
-       if(!p||familyIdFor(p,owner.builtinPaperIds)!==owner.selectedFamilyId)return;
+       const selectedFamily=owner.families().find(f=>f.id===owner.selectedFamilyId);
+       if(!p||!selectedFamily?.papers.some(item=>item.paper.id===p.paper.id))return;
        const unfinished=[...owner.records.values()].filter((row):row is GenericAttempt=>
          isAttempt(row)&&row.finishedAt===null);
        if(unfinished.length&&!confirm(
@@ -433,7 +443,9 @@ export function bindLibraryScreen(owner:LibraryControllerContext):void{
          if(owner.packages.has(pkg.paper.id))throw new Error("Paper revision ID already exists. Supply a new revision ID.");
          if(!await owner.save({recordType:"generic-package",saveRevision:0,id:"generic-package:"+pkg.paper.id,bundle:pkg}))return;
          owner.packages.set(pkg.paper.id,pkg);
-         owner.applyFamily(familyIdFor(pkg,owner.builtinPaperIds));
+         const targetFamily=owner.families().find(f=>f.papers.some(p=>p.paper.id===pkg.paper.id));
+         if(!targetFamily)throw new Error("Imported package has no exam family");
+         owner.applyFamily(targetFamily.id);
          owner.choice=pkg.paper.id;owner.singleSection=0;
          if(pkg.paper.edition==="source"||pkg.paper.edition==="reviewed")owner.editionView=pkg.paper.edition;
          owner.saveSelection();

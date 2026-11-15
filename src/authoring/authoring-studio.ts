@@ -814,6 +814,22 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
     const input=container.querySelector<HTMLInputElement>("#"+id);
     if(input)input.onchange=e=>updateQuestion(key,Number((e.target as HTMLInputElement).value));
   }
+  find<HTMLInputElement>("pd-author-custom-marks").onchange=e=>{
+   const enabled=(e.target as HTMLInputElement).checked;
+   updateQuestion("scoringOverride",enabled?{
+    correctMarks:active().marksCorrect,incorrectMarks:active().marksIncorrect,
+    unansweredMarks:0}:undefined);
+   for(const key of ["correctMarks","incorrectMarks","unansweredMarks"] as const)
+    find<HTMLInputElement>("pd-author-mark-"+key).disabled=!enabled;
+  };
+  for(const key of ["correctMarks","incorrectMarks","unansweredMarks"] as const){
+   find<HTMLInputElement>("pd-author-mark-"+key).onchange=e=>{
+    const value=(e.target as HTMLInputElement).value;
+    if(!value.trim()){status("Enter a number for question-specific marks.",true);return;}
+    const existing=question().scoringOverride;
+    if(existing)updateQuestion("scoringOverride",{...existing,[key]:Number(value)});
+   };
+  }
   find<HTMLSelectElement>("pd-author-kind").onchange=e=>{
    updateQuestion("kind",(e.target as HTMLSelectElement).value as QuestionKind);
    field=initialField;void render();

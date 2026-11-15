@@ -271,7 +271,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
   const q=object(item,path,["id","examSection","subject","syllabusHeadingId",
    "topic","subtopic","difficulty","kind","prompt","stimulusRef","options",
    "leftItems","rightItems","explanation","answer","tolerance","minSelections",
-   "maxSelections","wordLimit","partialCreditEach","partialPenaltyEach","provenance","qa"]);
+   "maxSelections","wordLimit","partialCreditEach","partialPenaltyEach","scoringOverride","provenance","qa"]);
   const id=key(q.id,path+".id");
   if(qIds.has(id))err(path+".id","Duplicate semantic question ID");
   qIds.add(id);
@@ -297,6 +297,15 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
   if(questionKind!=="matching"&&(q.leftItems!==undefined||q.rightItems!==undefined))
    err(path+".leftItems","Matching items belong to matching questions only");
   const answer=toAnswer(q.answer,questionKind,path+".answer");
+  let scoringOverride:AuthoringQuestion["scoringOverride"];
+  if(q.scoringOverride!==undefined){
+   const rule=object(q.scoringOverride,path+".scoringOverride",
+    ["correctMarks","incorrectMarks","unansweredMarks"]);
+   scoringOverride={
+    correctMarks:num(rule.correctMarks,path+".scoringOverride.correctMarks",0.01,1000),
+    incorrectMarks:num(rule.incorrectMarks,path+".scoringOverride.incorrectMarks",-1000,0),
+    unansweredMarks:num(rule.unansweredMarks,path+".scoringOverride.unansweredMarks",0,1000)};
+  }
   const tolerance=q.tolerance===undefined?0:num(q.tolerance,path+".tolerance",0,1000000);
   if(questionKind!=="numeric-entry"&&q.tolerance!==undefined)
    err(path+".tolerance","Tolerance applies only to numeric-entry questions");
@@ -386,6 +395,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
    topic,subtopic,difficulty:difficulty as NonNullable<AuthoringQuestion["difficulty"]>,
    minSelections,maxSelections,
    ...(questionKind==="free-response"?{wordLimit}:{}),
+   ...(scoringOverride?{scoringOverride}:{}),
    partialCreditEach,partialPenaltyEach,
    kind:questionKind,prompt,passage,options,leftItems,rightItems,explanation,
    answer,tolerance,source:sourceNote??"",

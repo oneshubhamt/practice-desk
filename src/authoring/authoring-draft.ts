@@ -34,6 +34,9 @@ export type AuthoringQuestion={
  readonly partialPenaltyEach?:number;
  /** Advisory limit for written responses; never a save gate. */
  readonly wordLimit?:number;
+ /** Optional question-specific marking rule; also sets the manual grade ceiling. */
+ readonly scoringOverride?:{readonly correctMarks:number;readonly incorrectMarks:number;
+  readonly unansweredMarks:number};
  readonly kind:QuestionKind;
  readonly prompt:RichDocument;
  readonly passage:RichDocument;
@@ -176,7 +179,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   const q=rec(item,"draft question",["id","section","kind","prompt","passage","options","leftItems",
    "rightItems","explanation","answer","tolerance","source",
    "subject","syllabusHeadingId","topic","subtopic","difficulty",
-    "minSelections","maxSelections","wordLimit",
+    "minSelections","maxSelections","wordLimit","scoringOverride",
    "partialCreditEach","partialPenaltyEach","stimulusRef","sourceOrigin","provenance","qa"]);
   const questionId=text(q.id,"question ID",128,true);
   if(all.has(questionId))throw Error("Duplicate draft question ID");
@@ -283,10 +286,19 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
     num(q.wordLimit??300,"advisory word limit",1,10000):undefined;
   if(wordLimit!==undefined&&!Number.isSafeInteger(wordLimit))
     throw Error("Advisory word limit must be a whole number");
+  let scoringOverride:AuthoringQuestion["scoringOverride"];
+  if(q.scoringOverride!==undefined){
+   const rule=rec(q.scoringOverride,"question scoring override",
+    ["correctMarks","incorrectMarks","unansweredMarks"]);
+   scoringOverride={correctMarks:num(rule.correctMarks,"question correct marks",0.01,1000),
+    incorrectMarks:num(rule.incorrectMarks,"question incorrect marks",-1000,0),
+    unansweredMarks:num(rule.unansweredMarks,"question blank marks",0,1000)};
+  }
   return {id:questionId,section,subject,syllabusHeadingId,
    topic,subtopic,difficulty:difficulty as ""|"easy"|"medium"|"hard",
    minSelections,maxSelections,
    ...(wordLimit===undefined?{}:{wordLimit}),
+   ...(scoringOverride?{scoringOverride}:{}),
    partialCreditEach:num(q.partialCreditEach??0,"partial-credit component",0,1000),
    partialPenaltyEach:num(q.partialPenaltyEach??0,"partial penalty",0,1000),
    kind:kind as QuestionKind,prompt:rich(q.prompt),passage:rich(q.passage),

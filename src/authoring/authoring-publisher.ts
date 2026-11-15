@@ -338,12 +338,16 @@ export function compileAuthoringPublication(
   const signed={id:revisionId,questionId,revision:d.revision,content,editorial};
   questions.push({...signed,contentHash:questionRevisionHash(signed)});
   const partialCredit=q.partialCreditEach??0;
+  const scoringRule=q.scoringOverride;
   entries.push({questionRevisionId:revisionId,answer:keyFrom(q),
-    ...(partialCredit>0&&["multiple-select","matching"].includes(q.kind)?{
-      scoringOverride:{correctMarks:d.marksCorrect,incorrectMarks:d.marksIncorrect,
-        unansweredMarks:0,partialCredit:{kind:"per-correct-component" as const,
-          marksPerCorrectComponent:partialCredit,
-          penaltyPerIncorrectComponent:q.partialPenaltyEach??0,floorAtZero:true}}
+    ...(scoringRule||(partialCredit>0&&["multiple-select","matching"].includes(q.kind))?{
+      scoringOverride:{correctMarks:scoringRule?.correctMarks??d.marksCorrect,
+       incorrectMarks:scoringRule?.incorrectMarks??d.marksIncorrect,
+       unansweredMarks:scoringRule?.unansweredMarks??0,
+       ...(partialCredit>0&&["multiple-select","matching"].includes(q.kind)?{
+        partialCredit:{kind:"per-correct-component" as const,
+         marksPerCorrectComponent:partialCredit,
+         penaltyPerIncorrectComponent:q.partialPenaltyEach??0,floorAtZero:true}}:{})}
     }:{})});
   if(hasContent(explanation)||q.kind==="free-response"){
    const plain=hasContent(explanation)?publicationPlainText(explanation):q.answer.trim();

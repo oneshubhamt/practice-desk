@@ -2,8 +2,6 @@
 
 import {validateExamPackage} from "../domain/exam-package.ts";
 
-import {familyIdFor} from "./exam-families.ts";
-
 import {createQuestionAuthoringStudio} from "../authoring/authoring-studio.ts";
 
 
@@ -26,7 +24,9 @@ export function createWorkspaceAuthoringStudio(owner:AuthoringControllerContext)
        id:"generic-package:"+signed.paper.id,bundle:signed});
      if(!persisted)throw Error("The validated paper could not be saved; no new edition is available.");
      owner.packages.set(signed.paper.id,signed);
-     owner.applyFamily(familyIdFor(signed,owner.builtinPaperIds));
+     const targetFamily=owner.families().find(f=>f.papers.some(p=>p.paper.id===signed.paper.id));
+     if(!targetFamily)throw Error("Published package has no exam family");
+     owner.applyFamily(targetFamily.id);
      owner.choice=signed.paper.id;owner.singleSection=0;
      if(signed.paper.edition==="source"||signed.paper.edition==="reviewed")
        owner.editionView=signed.paper.edition;

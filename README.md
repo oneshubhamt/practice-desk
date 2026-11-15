@@ -19,7 +19,7 @@ For the complete verification contract, including mutation checks and Chromium/F
 
 ## Content
 
-Questions can be authored in Wordgard, supplied as canonical `practice-desk-authoring` v1 JSON, or imported as a validated `practice-desk-exam` package. External agents can create/review versioned files through local CLI tools, but cannot access browser History, silently import content, or authenticate a claimed PYQ merely from a hash. Start with the [agent authoring quickstart](docs/AGENT_AUTHORING_QUICKSTART.md).
+Questions can be authored in Wordgard, supplied as canonical `practice-desk-authoring` v1 JSON, or imported as a validated `practice-desk-exam` package. Maintained exam content lives under [`question-banks/`](question-banks/) with one exam-scoped hierarchy, mock/PYQ separation and Original/Revised editions. The root catalog only selects families/preinstallation; authoritative exam/year/paper manifests own discovery and canonical edition paths. External agents can create/review versioned files through local CLI tools, but cannot access browser History or authenticate a claimed PYQ merely from a hash. Start with the [agent authoring quickstart](docs/AGENT_AUTHORING_QUICKSTART.md).
 
 ## Documentation
 

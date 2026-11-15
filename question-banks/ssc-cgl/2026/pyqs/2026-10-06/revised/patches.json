@@ -1,0 +1,121 @@
+{
+  "1": {
+    "stem": "How many distinct six-digit codes are listed?\n521478, 721478, 521498, 721498",
+    "key": "a",
+    "status": "corrected",
+    "review": "The source uses the unclear word “sources”. The intended task is counting distinct number codes.",
+    "explanation": "The source uses the unclear word “sources”. The intended task is counting distinct number codes.",
+    "revised": true
+  },
+  "2": {
+    "stem": "Use the row–column lookup table. Each pair gives (row, column). Decode (0,4), (4,3), (2,1), (3,4).\n   0 | 1 | 2 | 3 | 4\n0: J | B | D | C | L\n1: F | I | A | J | H\n2: D | A | K | L | E\n3: B | K | G | I | A\n4: K | C | E | L | L",
+    "key": "d",
+    "status": "corrected",
+    "review": "Specify that each ordered pair denotes row followed by column.",
+    "explanation": "Specify that each ordered pair denotes row followed by column.",
+    "revised": true
+  },
+  "21": {
+    "stem": "Four numbers are given. Three follow the same divisibility rule. Select the odd one out.",
+    "opts": [
+      "112",
+      "124",
+      "136",
+      "216"
+    ],
+    "key": "b",
+    "status": "corrected",
+    "review": "The source options (112, 124, 132, 216) did not support the previously claimed divisibility-by-three explanation. In the reviewed version 132 is replaced by 136: the other three values are divisible by 8, but 124 is not. Original options and published key are preserved in Original PDF.",
+    "explanation": "The revised options create a single clear intended numerical property: three are multiples of eight. The previous solution incorrectly claimed three original choices were multiples of three.",
+    "revised": true
+  },
+  "29": {
+    "stem": "Match List I with List II.\nA. Electoral college for Presidential election\nB. Qualifications to be President\nC. Term of office of the President\nD. Ground for impeachment: violation of Constitution\nI. Article 58\nII. Article 56\nIII. Article 61\nIV. Article 54\nSelect the matching sequence A B C D.",
+    "key": "c",
+    "status": "corrected",
+    "review": "The PDF gives both impeachment and the ground for impeachment, which correspond to Article 61, leaving no one-to-one pairing. Replaced the “impeachment” item with the President’s tenure.",
+    "explanation": "The PDF gives both impeachment and the ground for impeachment, which correspond to Article 61, leaving no one-to-one pairing. Replaced the “impeachment” item with the President’s tenure.",
+    "revised": true
+  },
+  "32": {
+    "stem": "At which city were the rifle events of the 67th National Shooting Championship (2024) held?",
+    "key": "d",
+    "status": "corrected",
+    "review": "The national championship was contested at more than one venue. This question specifies the rifle competition held at Bhopal.",
+    "explanation": "The national championship was contested at more than one venue. This question specifies the rifle competition held at Bhopal.",
+    "revised": true
+  },
+  "41": {
+    "stem": "Under the regular statutory provision for anticipatory bail (section 482, BNSS), which courts may entertain an application?",
+    "opts": [
+      "The High Court and the Court of Session",
+      "Any criminal court, including a magistrate",
+      "Only the High Court and Supreme Court",
+      "Only the Supreme Court"
+    ],
+    "key": "a",
+    "status": "corrected",
+    "review": "The statutory anticipatory-bail jurisdiction under BNSS section 482 (CrPC section 438 previously) is the High Court or Court of Session; the original adds the Supreme Court under a different jurisdiction.",
+    "explanation": "The statutory anticipatory-bail jurisdiction under BNSS section 482 (CrPC section 438 previously) is the High Court or Court of Session; the original adds the Supreme Court under a different jurisdiction.",
+    "revised": true
+  },
+  "63": {
+    "stem": "A histogram shows 115 students’ marks, with equal-width score classes. A student qualifies if the score is above 40.5. Find the ratio of qualified to non-qualified students from the histogram.",
+    "key": "c",
+    "status": "corrected",
+    "review": "Make the class-width implication explicit: frequencies are proportional to bar heights because all histogram class intervals have equal width.",
+    "explanation": "Make the class-width implication explicit: frequencies are proportional to bar heights because all histogram class intervals have equal width.",
+    "revised": true
+  },
+  "67": {
+    "stem": "A can finish a job in 6 days, B in 8 days and C in 24 days. They start together. How many days will the entire job take if C is scheduled to leave after 3 days?",
+    "key": "c",
+    "status": "corrected",
+    "review": "All three finish the work in precisely 3 days, so C departs only when the project is already completed.",
+    "explanation": "All three finish the work in precisely 3 days, so C departs only when the project is already completed.",
+    "revised": true
+  },
+  "87": {
+    "stem": "Convert to passive: “Suruchi observed that the fish had a very large dorsal fin.”",
+    "opts": [
+      "It was observed by Suruchi that the fish had a very large dorsal fin.",
+      "It had been observed that the fin is possessing the fish.",
+      "Suruchi was observed having a fin by the fish.",
+      "The fish was observed Suruchi to have a fin."
+    ],
+    "key": "a",
+    "status": "corrected",
+    "review": "The original passive voice of “exclaimed that” is unnatural. This is changed to the conventional report verb “observed,” with a grammatical passive construction.",
+    "explanation": "The original passive voice of “exclaimed that” is unnatural. This is changed to the conventional report verb “observed,” with a grammatical passive construction.",
+    "revised": true
+  },
+  "88": {
+    "stem": "Identify the incorrect part: The ruling party (A)/ has announced (B)/ that it will supporting the bill (C)/ during the coming session. (D)",
+    "key": "c",
+    "status": "corrected",
+    "review": "The error is the ungrammatical “will supporting”, which should be “will support”; avoids the original disputed use of singular “their”.",
+    "explanation": "After will, use the base form of the verb: will support.",
+    "revised": true
+  },
+  "98": {
+    "stem": "Arrange the sentences to form a coherent paragraph.\nA. A sunrise sector can become a sunset sector in less than a decade, leaving its revenue model disconnected from influence, trust and reach.\nB. One defining lesson I learnt in three decades as a journalist is also a life skill applicable to many fields.\nC. It is about navigating change while retaining core values and principles.\nD. Technology advances rapidly, geopolitics shifts continually, and industries must adjust to new realities.",
+    "key": "b",
+    "status": "corrected",
+    "review": "The source sentence D is visibly incomplete. Completed it without introducing new facts; BCDA remains the coherent order.",
+    "explanation": "The source sentence D is visibly incomplete. Completed it without introducing new facts; BCDA remains the coherent order.",
+    "revised": true
+  },
+  "100": {
+    "opts": [
+      "ACBD",
+      "ABCD",
+      "BDAC",
+      "DBAC"
+    ],
+    "key": "b",
+    "status": "corrected",
+    "review": "The logical order is A–B–C–D (claim → psychiatrist introduction → what he said → wife’s reaction); no PDF option gives that order. Option B has been replaced.",
+    "explanation": "The logical order is A–B–C–D (claim → psychiatrist introduction → what he said → wife’s reaction); no PDF option gives that order. Option B has been replaced.",
+    "revised": true
+  }
+}

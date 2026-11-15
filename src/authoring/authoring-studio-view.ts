@@ -131,6 +131,17 @@ export function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Fi
   '<label>Active section timer (minutes; 0 = untimed)<input id="pd-author-section-minutes" type="number" min="0" max="600" step="1" value="'+
    (authoringSections(draft).find(s=>s.name===current.section)?.minutes??0)+'"></label>'+
   '<label>Answer key draft<input id="pd-author-answer" maxlength="100" value="'+escapeText(current.answer)+'" aria-describedby="pd-author-answer-help"></label>'+
+  '<details class="pd-author-question-marks"><summary>Question-specific marks (optional)</summary>'+
+  '<label><input id="pd-author-custom-marks" type="checkbox"'+
+   (current.scoringOverride?' checked':'')+'> Override the paper-wide marking rule for this question</label>'+
+  ([['correctMarks','Correct marks','0.01','1000'],
+    ['incorrectMarks','Incorrect marks','-1000','0'],
+    ['unansweredMarks','Unanswered marks','0','1000']] as const).map(([field,label,min,max])=>
+   '<label>'+label+'<input id="pd-author-mark-'+field+'" type="number" min="'+min+'" max="'+max+
+   '" step="any"'+(current.scoringOverride?'':' disabled')+' value="'+
+   (current.scoringOverride?.[field]??(field==='correctMarks'?draft.marksCorrect:
+     field==='incorrectMarks'?draft.marksIncorrect:0))+'"></label>').join('')+
+  '</details>'+
   '<label>Source / provenance note<input id="pd-author-source" maxlength="500" value="'+escapeText(current.source)+'"></label>'+
   (current.kind==="numeric-entry"?'<label>Absolute answer tolerance<input type="number" id="pd-author-tolerance" min="0" max="1000000" step="any" value="'+current.tolerance+'"></label>':"")+
   (current.kind==="free-response"?'<label>Advisory word limit<input type="number" id="pd-author-word-limit" min="1" max="10000" step="1" value="'+(current.wordLimit??300)+'"></label>':"")+

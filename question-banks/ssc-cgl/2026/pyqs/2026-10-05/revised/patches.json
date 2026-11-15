@@ -1,0 +1,190 @@
+{
+  "1": {
+    "stem": "Eight symbol-number clusters are given below. Find the three clusters that are exactly identical (including spaces).\nA. #4%43@8^7*%$34% 4\nB. #4% 43@7^8*%$34%4\nC. #4%43@7^7*%$34% 4\nD. #4%43@7^7*%$34% 4\nE. #4% 43 @7^7*%#34%4\nF. #4%43@7^7*%$35% 4\nG. #4%53@7^7*%$34%4\nH. #4%43@7^7*%$34% 4",
+    "key": "c",
+    "status": "corrected",
+    "review": "The PDF has inconsistent spaces in ostensibly identical symbol clusters. In this version C, D and H are exact character-for-character matches.",
+    "explanation": "The PDF has inconsistent spaces in ostensibly identical symbol clusters. In this version C, D and H are exact character-for-character matches.",
+    "revised": true
+  },
+  "14": {
+    "stem": "In a certain code, 'UPEND' is written as 'VQFOE' and 'AUDIT' is written as 'BVEJU'. How will 'AIMED' be written?",
+    "opts": [
+      "BBJGW",
+      "BZLDV",
+      "BJNFE",
+      "AYKEY"
+    ],
+    "key": "c",
+    "status": "corrected",
+    "review": "Replaced inconsistent code examples with two internally consistent examples. The underlying transformation is intentionally left for the candidate to infer; it is explained only after submission. The two examples do not define a unique coding rule. The revised item explicitly specifies the transformation.",
+    "explanation": "Replaced inconsistent code examples with two internally consistent examples. The underlying transformation is intentionally left for the candidate to infer; it is explained only after submission. The two examples do not define a unique coding rule. The revised item explicitly specifies the transformation.",
+    "revised": true
+  },
+  "18": {
+    "stem": "Statement: Children below five years of age should not be assigned lengthy handwriting homework.\nAssumptions:\nI. Sustained writing may be difficult for some children in this age group.\nII. Children in this age group should not be introduced to writing skills at all.",
+    "key": "d",
+    "status": "corrected",
+    "review": "Removed the explicit “because” clause that effectively supplied assumption I in the question. The revised assumptions distinguish lengthy homework from all early writing instruction. Implicit assumptions should not equate avoiding lengthy homework with being too young to learn any writing. Revised statement makes only assumption I necessary.",
+    "explanation": "Removed the explicit “because” clause that effectively supplied assumption I in the question. The revised assumptions distinguish lengthy homework from all early writing instruction. Implicit assumptions should not equate avoiding lengthy homework with being too young to learn any writing. Revised statement makes only assumption I necessary.",
+    "revised": true
+  },
+  "24": {
+    "stem": "Statement: BEST Bus Travels plans to increase fares by 10%, expecting the change to increase fare revenue.\nAssumptions:\n1. The price of the ticket is the only consideration in every passenger’s travel decision.\n2. The increase in fare per passenger can outweigh any fall in the number of tickets sold.",
+    "key": "b",
+    "status": "corrected",
+    "review": "The revised premise expects increased total fare revenue, which makes the sufficiency of revenue per passenger relevant. It does not assert that ridership remains unchanged. The fare increase alone does not imply all riders will switch.",
+    "explanation": "The revised premise expects increased total fare revenue, which makes the sufficiency of revenue per passenger relevant. It does not assert that ridership remains unchanged. The fare increase alone does not imply all riders will switch.",
+    "revised": true
+  },
+  "31": {
+    "stem": "Assertion (A): India’s 1991 economic reforms liberalised the rules governing foreign investment.\nReason (R): India had recorded a large balance-of-payments surplus immediately before adopting these reforms.",
+    "key": "c",
+    "status": "corrected",
+    "review": "Replaced the transparently false “prohibit all foreign investment” statement with a fact-based, plausible alternative relating to the 1991 balance-of-payments crisis. An unsupported assertion about sharply raising savings is replaced with a clearly false stated purpose.",
+    "explanation": "Replaced the transparently false “prohibit all foreign investment” statement with a fact-based, plausible alternative relating to the 1991 balance-of-payments crisis. An unsupported assertion about sharply raising savings is replaced with a clearly false stated purpose.",
+    "revised": true
+  },
+  "32": {
+    "stem": "Which assessment of India’s Sixth Five-Year Plan (1980–85) is best supported by historical economic reviews?",
+    "opts": [
+      "Economic growth remained exactly zero",
+      "Actual GDP growth exceeded the Plan’s targeted rate, although estimates vary by method",
+      "The Plan focused entirely on urban development",
+      "All major agricultural crops failed to meet production targets"
+    ],
+    "key": "b",
+    "sources": [
+      {
+        "title": "World Bank: Accomplishments of the Sixth Plan",
+        "url": "https://documents1.worldbank.org/curated/en/111301468269145455/pdf/multi0page.pdf"
+      }
+    ],
+    "status": "corrected",
+    "review": "The PDF falsely suggests Sixth Plan agricultural targets were missed due to famine. Historical evidence indicates foodgrain and oilseed production targets were largely attained.",
+    "explanation": "The PDF falsely suggests Sixth Plan agricultural targets were missed due to famine. Historical evidence indicates foodgrain and oilseed production targets were largely attained.",
+    "revised": true
+  },
+  "50": {
+    "stem": "Which sector–method pairing is appropriate when estimating output in India’s national accounts?",
+    "opts": [
+      "Manufacturing — exclusively the expenditure method",
+      "General government non-market services — largely valued using the cost of inputs",
+      "Agriculture — exclusively the income method",
+      "Construction — never included in gross value added"
+    ],
+    "key": "b",
+    "status": "corrected",
+    "review": "No offered sector–method pairing in the PDF reliably matches the usual national-accounting treatment. Replaced the choices with a correct one.",
+    "explanation": "No offered sector–method pairing in the PDF reliably matches the usual national-accounting treatment. Replaced the choices with a correct one.",
+    "revised": true
+  },
+  "51": {
+    "stem": "Four distinct prime numbers are arranged in strictly increasing order. The first three multiply to 105 and the last three multiply to 385. What is the largest prime?",
+    "key": "d",
+    "status": "corrected",
+    "review": "Four prime numbers are assumed to be increasing; the common factors 5 and 7 give the ordered list 3, 5, 7, 11.",
+    "explanation": "Four prime numbers are assumed to be increasing; the common factors 5 and 7 give the ordered list 3, 5, 7, 11.",
+    "revised": true
+  },
+  "56": {
+    "opts": [
+      "4√15 cm",
+      "14√5 cm",
+      "5√14 cm",
+      "6√14 cm"
+    ],
+    "key": "a",
+    "status": "corrected",
+    "review": "The PDF repeats the same mathematical value in options C and D. One distractor has been replaced to make options distinct.",
+    "explanation": "The PDF repeats the same mathematical value in options C and D. One distractor has been replaced to make options distinct.",
+    "revised": true
+  },
+  "64": {
+    "stem": "A 30 m high building supports a vertical communication tower. From a point on level ground 70 m horizontally from the building, the angle of elevation to the top of the tower is 60°. Find the tower’s height.",
+    "key": "a",
+    "status": "corrected",
+    "review": "Original data conflict: a building 30 m high cannot subtend 30° at horizontal distance 70 m. The inconsistent second angle has been removed.",
+    "explanation": "Original data conflict: a building 30 m high cannot subtend 30° at horizontal distance 70 m. The inconsistent second angle has been removed.",
+    "revised": true
+  },
+  "67": {
+    "stem": "If P and Q are acute angles, sin P = 5/13 and cos Q = 12/13. Evaluate sin P cos Q + cos P sin Q.",
+    "key": "c",
+    "status": "corrected",
+    "review": "Specify acute angles; otherwise sin(P+Q) may be negative for other quadrants despite the given values.",
+    "explanation": "Specify acute angles; otherwise sin(P+Q) may be negative for other quadrants despite the given values.",
+    "revised": true
+  },
+  "69": {
+    "stem": "If A is an acute angle and tan A = 3, find sin A and cos A.",
+    "key": "a",
+    "status": "corrected",
+    "review": "Assuming A is acute is necessary to determine positive sin A and cos A from tan A = 3.",
+    "explanation": "Assuming A is acute is necessary to determine positive sin A and cos A from tan A = 3.",
+    "revised": true
+  },
+  "77": {
+    "opts": [
+      "Establish",
+      "Impudence",
+      "Request",
+      "Dislodge"
+    ],
+    "key": "d",
+    "status": "corrected",
+    "review": "“Unveil” is only a loose antonym of “ensconce”; the revised choices include the more direct “dislodge.”",
+    "explanation": "“Unveil” is only a loose antonym of “ensconce”; the revised choices include the more direct “dislodge.”",
+    "revised": true
+  },
+  "78": {
+    "stem": "Identify the grammatically incorrect phrase in this sentence: “To overcome depression and stress, adopting meditation, yoga or other similar methods can be helped.”",
+    "opts": [
+      "adopting meditation, yoga or",
+      "can be helped",
+      "To overcome depression and stress",
+      "other similar methods"
+    ],
+    "key": "b",
+    "status": "corrected",
+    "review": "The original sentence contains multiple independent errors (“adapting”, “similar other”, and “can be helped”). The revised sentence has one clearly identifiable error.",
+    "explanation": "The original sentence contains multiple independent errors (“adapting”, “similar other”, and “can be helped”). The revised sentence has one clearly identifiable error.",
+    "revised": true
+  },
+  "81": {
+    "stem": "Change the following indirect speech into the most appropriate direct statement of the coach’s announcement.\nSanvi told Prakash that the coach had announced that practice would be cancelled for the rest of the week because the playing fields were flooded.",
+    "opts": [
+      "“Practice was cancelling for the rest of the week.”",
+      "“Practice would have been cancelled for the rest of the week.”",
+      "“Practice will be cancelled for the rest of the week.”",
+      "“Practice would be cancelling for the rest of the week.”"
+    ],
+    "key": "c",
+    "status": "corrected",
+    "review": "The previous corrected stem quoted the correct answer word-for-word. The indirect statement is now the prompt; the candidate must identify the correct direct speech. Quoted nested speech retains would because the original message could already use it. Recast the item to give a unique clear answer.",
+    "explanation": "The previous corrected stem quoted the correct answer word-for-word. The indirect statement is now the prompt; the candidate must identify the correct direct speech. Quoted nested speech retains would because the original message could already use it. Recast the item to give a unique clear answer.",
+    "revised": true
+  },
+  "92": {
+    "stem": "Change into passive voice: “Take a pair of binoculars with you; otherwise, you may miss the distant view.”",
+    "opts": [
+      "A pair of binoculars is taking with you; otherwise, the view may miss.",
+      "Let binoculars taken with you; otherwise, the view may miss.",
+      "A pair of binoculars was taken with you; otherwise, the view would miss.",
+      "Let a pair of binoculars be taken with you; otherwise, the distant view may be missed."
+    ],
+    "key": "d",
+    "status": "corrected",
+    "review": "A clearer passive transformation avoids awkward “lest” rephrasing and preserves the modal.",
+    "explanation": "A clearer passive transformation avoids awkward “lest” rephrasing and preserves the modal.",
+    "revised": true
+  },
+  "97": {
+    "stem": "The word “reconnnaissance” in the sentence below is misspelled. Choose its correctly spelled replacement.\n“During the preliminary reconnnaissance of the floodplain, the geologists catalogued subterranean fissures and recommended immediate remediation.”",
+    "key": "a",
+    "status": "corrected",
+    "review": "The publisher’s option A is the correctly spelled replacement; the revised wording makes clear that the choices are possible replacements, not four incorrect words to locate.",
+    "explanation": "Reconnaissance is spelled with one n after “reco” and two consecutive n letters after “co” in the standard form: reconnaissance.",
+    "revised": true
+  }
+}

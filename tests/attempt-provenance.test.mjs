@@ -1,3 +1,4 @@
+import {loadCglFixture,loadQuestionBankGraph,repositoryRoot} from "./fixtures/cgl-bank.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
@@ -6,8 +7,8 @@ import {
 } from "../src/app/exam-package.ts";
 import {composePracticeSet} from "../src/app/practice-compose.ts";
 
-const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
-const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
+const sources=(await loadCglFixture()).sources;
+const patches=(await loadCglFixture()).patches;
 const reviewed=builtinCglPackages(sources,patches).find(p=>p.paper.edition==="reviewed");
 assert.ok(reviewed);
 

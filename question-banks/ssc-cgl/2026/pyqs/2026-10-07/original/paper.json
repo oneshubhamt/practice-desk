@@ -1,0 +1,1956 @@
+{
+  "id": "cgl-2026-10-07",
+  "date": "7 October 2026",
+  "name": "SSC CGL · 7 Oct 2026",
+  "kind": "SSC CGL Tier I",
+  "questions": [
+    {
+      "n": 1,
+      "stem": "How many triangles are there in the given figure?",
+      "opts": [
+        "12",
+        "32",
+        "24",
+        "16"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {
+        "stem": "data:image/webp;base64,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"
+      },
+      "sourcePage": 1,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 2,
+      "stem": "In a sports club, men get full-time coaches but women get part-time coaches despite equal\nmembership fees. Which inference is valid?",
+      "opts": [
+        "Women need less training",
+        "Male coaches work longer",
+        "Women’s teams are stronger",
+        "Possible gender bias in coaching allocation"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 1,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 3,
+      "stem": "If 12 March 2024 is a Tuesday, then what day will 21 September 2024 be?",
+      "opts": [
+        "Friday",
+        "Monday",
+        "Sunday",
+        "Saturday"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 1,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 4,
+      "stem": "In each of the following questions, a statement is given followed by 2 conclusions. Read the\nstatements carefully and answer the following questions:\nStatement: Mr. X is one of the probable candidates short-listed for the post of Director of R.L.M. Institute.\nConclusions:\nI. Mr. X will be selected as Director of R.L.M. Institute.\nII. Mr. X will not be selected as Director of R.L.M. Institute.",
+      "opts": [
+        "Only conclusion I follows",
+        "Only conclusion II follows",
+        "either I or II follows.",
+        "Neither I nor II follows"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 1,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 5,
+      "stem": "Identify the figure given in the options which when put in place of ? will logically complete the\nseries?",
+      "opts": [
+        "Figure A",
+        "Figure B",
+        "Figure C",
+        "Figure D"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {
+        "stem": "data:image/webp;base64,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",
+        "options": [
+          "data:image/webp;base64,UklGRigCAABXRUJQVlA4IBwCAABQEQCdASp4AGgAPpVCn0olo6MhpJv7gLASiWkAERrx7/8JnAN0GHcmb+X76aDJCkmVMNfDAo6swJdpDmC4DT6y8LP8JTbM+hnmHNn4bwfZn/fWfEHff033W8umfwoy6PzPnmILvjPu/Gdsue6iNwpV4PthS/WgC7HIxS/bxub34Qkmma74sj15awkw9KhBrazE5AAA/vzZd+f+YvqRiwfaJLudehQz531j7YkQmgQEvKtnhrj4GnwxsKyJsG8BAhvv8FLHsXsqIQUKrajbcKG03uu+h+OHlVmZy/j9bW09aqNHy/P6z6Q5PfXUGGjmI89wbnSfyAeu6r/EBcTZSiwkAKH+xBwBUNjxgUG2SKucfiGp+L+b/kjahFU4MARi9RHjbzB5AXku6sh7mEhLofj72Vx0MfjAoNskVxAEYjGc1Rp0a3ahq6o/AyueuPKufeZYgfGF9OpH1k/Cq+aMuXmxHmr18TN8d5np06+nYIGwXLhIRQw3k3vP9L4AhaxcKlY+XcdLmmeSU0iujJMZ7G3TT/oZKEH+BvGfD5Yc9V6y6ejydG4athbNjTgRAF9IRHt1DmuMdxSmEcJNAJPNi1PqP+w4L4nTqu9WlrrzeXTyvWmgLcni9rLZsgPecjBDfUC+/D/prNdnphigM2PIgrmNnV8bySNTfMnWtFP7NjB1uncO0F9E/iuuKdyg5DJOcPVnDc/fd+vLb5AAAAA=",
+          "data:image/webp;base64,UklGRlQCAABXRUJQVlA4IEgCAABQEQCdASp4AGwAPpVGn0olpCMhpJgLgLASiWlEdwK9GPv4k1p7emLheMvTNzPPLT9FEFRJjG58H7sbM9atCvAWxL6RFuYZuEePTGTQJ/o3ImzW5KciKr67chcaoiU3zYR109M7LXYvHwQ4gNzLV1WqUMZu5MvqAmWT6loU8jWf3H7ZYvKuRoMA4kXJ/DA1/uf4TwAA/v14nvyQ77U3hpD7sK/uDfn+8vR9W3pJoQ+AWytaqEUadf9eoNicCSa2yzwb4OpP+oeugm20ch4GEh72ij//Vp1/tw+6gGZSuZPR7SspYqaj9HRD1Svx+cHzody/XnBIlixRqaCYXVP3tFD6cMeuitpfobT6evkBtYixLU0xKiwiATfp/wx0bi+CeVby7tg5Wk+b9uP6cNsx2J4QgZCwpbNH30/p8pd1thv/qZOV3kNX/zFSyrt6TMlcRxnGii2ATQUulfELF/AI4NLGSrnrdmZufsXdrEvjIvkLfqUq8yp9UB3hB72R/xHK2xa19cONdkGqNRDpGyyqtzcEriSJ1ZHgk2FqoZmhuPRnBlMniKUK4ypmtmtuD64uACxc0Ziz3oyEuinhkTuSj2Bzc4tj4QX7fIxeh/w8/k5iXoB/3EGOkaGkZ6Uu0lSFBFnqueQcHZJVIniAQVGQZH7zOeIg9p3uniim+NJF8sz2245gcbS43YgE/mVbDeNUgytJ2+VfnbB6o1qwz9zfXO9RASnG7w+J+Dl56D6L/Or4ZG1wC2t6ZT7DFziotaAkTia77JdCsaAAAA==",
+          "data:image/webp;base64,UklGRiACAABXRUJQVlA4IBQCAABQEACdASp4AGoAPpVCn0olo6MhpJn7gLASiWkADO1vh3gV8WGYJ0dvUoXn/4X55vJGMsFtf0g+M7TAyjq38nbL7b0fgJNE2ZYrp5+lwBt3cUQikFpT2s3Rd1WfFcTYxUi7iqdrs4zkJOMrPlSs17+PFj99EzfpgKY9OzwJCmqPGzKYygrZMUSz8hVAAP78jkdB8a2ARuqq5hP/oivwdraYqDaEmEkWHi8uwatuh5810ORUbt9RNn/v/u/fddrcjMD5H0ww3OuGn6VVW1qhsBBpciPZT2Kjm2qZsk+A+mT9LP3TOe4I6677fgysZBd49XwxfMzAhY2tO0n3AADG93bEpabNYUw9IfkTXP4ODAvCvblo7lr+KyyhuDbxAd8qSjcQdZC2KtK8MYjLLA1WJyXxRIaswB44G+AWvCaEx77K/0XwANsiecYrtQA7gxYOiJcufn8yvkYJ8VfbAHPKNj/BCoYOriZHs7OKcrmW0oPdISjhLgtA/jP6Cx79ld+cRIUSaoEHSDPsH9g6eOz/OPxRUakzOOHDzPwmzDuN+H/A7QfI6kd3EaDXc5M84Ot7ICAUOkZT4T0An5qC7PPbr78/LtIxLOYgd+HOCL24ko/4vbV7qjC2RMU437n9J6P71bczrjXb6XU678qANmCd9h4G6SrwpI7/frnnNacCCjrx/bF54O0dmPki9Bvtb0230e7oAAAA",
+          "data:image/webp;base64,UklGRnACAABXRUJQVlA4IGQCAACQEQCdASp4AHAAPpVKnkqlpKaho3qrqNASiWkAE9hfVcac2ziQdKueDwU0o8zjykfVA9LDkrn+TlW2tN3tweA+vT/5K1Zzx8Qe5/gRlAKbve4onz151G1WAYVHsgsYjXk9c3wfto7judkGNlmhaCed5juO52RyeJo95QLEfs1nV7QkG8rKU/lYIqXfkidadY0Vh7EYAAD+/bs1fG0kaLS/eBL7tJrzZlU8RXWW9NAyu+5LEDrRX2S/hYKb4ENEgNNHg65Suu9XRM8Gs81R1yWWMLD7vc0aJP1cC+a4vWQerDvS62QdfYniXL9cuSk0LU7PtB5i1y4YEfnxrSGKuAWZkJ0yGpzm6e+kyk5DkhBJ91b3YU14VioeUZ38+KkR6LS8FANKYlgxRzolflYQuY9vktQL/1m+dZbNGaxNVaSD8JCgpkMGhVRI7t4NTu1obW7dYyGjKE4eexzlHudBn4zjWR0v7YaWe7/iWBxBQU40fm8xeuF7c/dPk2STSySeuhpgpYbbau4F1ds2YGzxC5+qtUG9Tc33bw8PPbIfRRr63ag9x6rNbFEl8KfqAx9tB0b+OgVADnoc8fWKide8gFzcTxFtrlC7B3QcF/21vrivMGulm06EO/+lIOu56sp1M12AYhhmseQaaJfcj3Z2gg4jkQqP+7yT3yB8rwQdwStHI23p8Ylm/mWVVN3ROYLxWpaVw2QdLd7smxja8OtCvi0OYkP/NWYFraP3RjoKAN7N/kA/MXA83EQaR7Vs4DL10tAOlVdBOkQz0EG2cTtSH4/OO31ioN/R0omCn3dq8/hhAVEmIAA="
+        ]
+      },
+      "sourcePage": 4,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 6,
+      "stem": "In the question below there are three statements followed by two conclusions I and II. You have to\ntake the given statements to be true even if they seem to be at variance from commonly known facts and\nthen decide which of the given conclusions logically follows from the three statements disregarding\ncommonly known facts.\nStatements:\nOnly Car are Vehicle.\nSome Car are Bulky.\nAll Metal are Bulky.\nConclusions:\nI. Some Vehicle are not Metal.\nII. Some Metal are Car.",
+      "opts": [
+        "Only II",
+        "Both I and II",
+        "Only I",
+        "Neither I nor II"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "invalid",
+      "review": "The source key C does not follow logically; neither conclusion is established.",
+      "explanation": "The source key C does not follow logically; neither conclusion is established.",
+      "images": {},
+      "sourcePage": 4,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 7,
+      "stem": "Pointing to a lady, a man said, \"The son of her only brother is the brother of my wife.\" How is the\nlady related to the man?",
+      "opts": [
+        "Mother's sister",
+        "Grandmother",
+        "Mother-in-law",
+        "Sister of father-in-law"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 4,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 8,
+      "stem": "In a certain coded language 'COMPS' is coded as 'NKHKY' and 'ABATE' is coded as 'ZOVXW'. How\nwill 'SMOKY' be coded in the same code language?",
+      "opts": [
+        "RHKJN",
+        "TGKIQ",
+        "SFIKQ",
+        "TFJIO"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "invalid",
+      "review": "The examples do not establish a consistent coding rule; answer D is unverifiable.",
+      "explanation": "The examples do not establish a consistent coding rule; answer D is unverifiable.",
+      "images": {},
+      "sourcePage": 5,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 9,
+      "stem": "Which of the following option, if true, would most undermine the conclusion?\nObservation: A large number of street vendors moved from the city market area to the main railway\nstation area. Conclusion: The City Market Authority must have enforced stricter regulations, causing the\nvendors to relocate.",
+      "opts": [
+        "Rent in the railway station area is significantly higher than in the city market area.",
+        "The City Market Authority recently increased the daily fee for vendors by 50%.",
+        "A major new office complex recently opened near the railway station, significantly increasing foot\ntraffic there.",
+        "Street vendors typically prefer locations with easy access to public transportation."
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 5,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 10,
+      "stem": "Read the following statement carefully and identify the conclusion that follows.\nStatement:\nNo chair is a stool.\nAll stools are wooden.\nConclusions:\nI. No chair is wooden.\nII. Some wooden are not chairs.",
+      "opts": [
+        "Only conclusion I follows.",
+        "Only conclusion II follows.",
+        "Either conclusion I or II follows.",
+        "Neither conclusion I nor II follows."
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "caution",
+      "review": "Inference relies on an unstated existence assumption for stools.",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 5,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 11,
+      "stem": "What would be the number on the opposite side of '8' if the given sheet is folded to form a cube?",
+      "opts": [
+        "7",
+        "6",
+        "10",
+        "5"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {
+        "stem": "data:image/webp;base64,UklGRkAFAABXRUJQVlA4IDQFAACwMwCdASoKAQoBPpVGoUslo6Oho3Ka2LASiWlu58AonSJuuqOX6sf4bty/znR/evpfNFv+y80bumEB+Y2vY2z1IXrcIFB/1XTLb2NixNNstvkq5vf7HCnVftAHqGEnPAlgCa6cj3NA8KdV/8+Bj0Y9JfnJpsabaTNhJ/EqfytX3h+zBYwMtHPioQIqC+I0SI/TTbSZmkwCXhd60bNfgC/qs8SroQUCdEM8dR4wqgxW3bkpTnuVB1zgXFm9q3vGr8eV2xAXzvGEPxQ046iQoJeD0Ce0ZsanEV1FpWSR/DYrWAvhCglNgXmWBmrndi1+/lgXrSlFvoEyB2PLbwBrRKmKdFviuwjGQVF4oH0XbEBCxBG2jRwN/rP6aE2+U4siLn+oMlrssh9jb51jjpqUTtEItb1hiYRV3DT66Z6pNKECeq54fjsRXMzlk5aIM2Jc7BQaGviiebtxsNwBgokCuoEfahSzsIoErvbA0DKaUyyGdely8kouuEC9RdjN61CDnCaTlQU+jEsgHBzH0WxG71UwYwMjX+p8/THJMveSYiCny9djXwJAAAD+7hQD9v/x/t+exbf+x4DcSm+wlTaC4m+8cLSxnCUMOS3V+syT27w9LUIY7hYklME5Zsz9cfISR78HLKqF+9aymkGPSL+qYANZQPNH23sxCBUs9s/r3gtcPAkYJ1eipslOEYK/NkDU7iOOnIBYeXrYXoHI+YnYiRDaa9rscgQvattB+DWN7jHlQUVySsfgSW9SXkt6JXo/EW1x0ot76wwLUdwMAHr6z7qfsWcb7Wljs9AswUoTr1XaSJ88H7pUpdX/0h++pd3PW7row6CZ+wSSpg7nzRb0/KkF463rwi5ziOETPwNtfYOuzGYd3G0vRjCEU8ENdJwu7JED0Utud9l6n/cPcTcI657fXs1mXZbYY76sORN8QM+RAfLweUmwM1d3pNXBZgFVinKPX4AZaWwha18ONsX3Vo/HpZjSpa3xgthgTr5xuxhULlzStMjHB1X+5Jansv3rHfjjRkBYPNpObDAr3RCFFu1Ey6T/CWvuFAwx+57P5Q4wYl9dL9rOQXsJsdTcQY3VqvmMBBR9Ab8R3V9+zBXTbtp9bPJl8Q0zcuwXlArYe6gnprtBKXUAcQ+KrdkClpg+NE+OJcHTxeXUhE31OazsU4pv71OteABPi1+S1JrbOFOgws7AME0PsVKYq9D/gXnbKXPlxZqX9R1EU5QLkrnPa3fSSpziBSZIM1s4rcxeSdqPUEY4oFIXQtfGeZiFpV/xrKQU66yf3naGXFHBoLOtUAjkVt/tbrWAo8mhb5I2r7ylYMP3PX+flE2lekfQZmDFC4ewAiKu4z20Wj9wXqWyYm9uqIhDDqVxiFX2HPO/y6VQFPz1u8YKs1vNwmdir3svL+uvN0A7JJBkpIFQUJqq4T6B7+Ag5UvtrhX7q+9CH8ryg8ao5Y6pD4DFi5W+rU+qu3bsUnWmXwKO+6NFdzMhbuVDmDl2pWiIP/n7etwBwetJZqUa2SEelrqeT+ez5yBh0uv9W9/K8p8dvQ1HLzzELJOIgBlVZ+6a7W+03RQeswchH9FdB803lDPAFR7//wqwD+FtumH4GO7khJPw8YuZ8nu9RYfLZ5EK5lKdkoT1fUlGTD3NPeCjh+3z/Dj4XqLUY0Go7mMhMGiZybYOm2Z53/sAEPW+DeanqQIV64MSF2gPXPYtv/4xvG6AOihA9Qvbn6Wxg/92BfE31kHb/MAGgZSUDBKdjYVit11N1We75V/bY9QAAAA="
+      },
+      "sourcePage": 5,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 12,
+      "stem": "Examine the statement and determine which assumptions are logically implied or necessary for\nthe statement to hold true.\nStatement:\nCompanies should adopt flexible work policies to improve employee productivity.\nAssumption:\nI. Flexible work arrangements can enhance employee productivity.\nII. Employees prefer flexible work policies.\nIII. All companies currently have low employee productivity.",
+      "opts": [
+        "Only I and II are implicit",
+        "Only I is implicit",
+        "All are implicit",
+        "Only II and III are implicit"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 6,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 13,
+      "stem": "Which number will replace the question mark (?) in the following series?\n27, 55, 99, 165, 260, ?",
+      "opts": [
+        "390",
+        "391",
+        "392",
+        "393"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 6,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 14,
+      "stem": "In a line of 33 bicycles, Bicycle R is 10th from the left and Bicycle S is 17th from the right. How\nmany bicycles are there between R and S?",
+      "opts": [
+        "5",
+        "6",
+        "7",
+        "8"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 6,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 15,
+      "stem": "Statement: \"The education board will now conduct teacher training every quarter\".\nWhich conclusion follows?",
+      "opts": [
+        "Online classes will be discontinued",
+        "Students fail because of teachers",
+        "Teacher skills need regular updates",
+        "Teachers are unhappy with current conditions"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 6,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 16,
+      "stem": "Find the next letter in the series: M, L, J, G, ?",
+      "opts": [
+        "B",
+        "D",
+        "C",
+        "E"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 7,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 17,
+      "stem": "How many squares are there in the given figure?",
+      "opts": [
+        "20",
+        "15",
+        "12",
+        "8"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {
+        "stem": "data:image/webp;base64,UklGRsgDAABXRUJQVlA4ILwDAABQIQCdASrcAL4APoE8k0glJCGhObw4AKAQCWk3jta0GBLTlCAU5LyDfke8AdOSlowBXk/2/bALod+b/5epABnVI1p6HsyKh/wpX0dUbrUB83jg8JghF5kEo1gCMXN3YMiU/rsJVO6/RuPD0g8aTtMoZkQZf7eHZIhVQ199783m8c17PvGJ50X4Y+FkXRt2FdiZ/8aZTLinSonyFaoH1X8lh0hjbaTkWHO91BdmYY22j9ioovJmbb09JpxizlVCTivMZHb0NYuxbjoIgpj+G3MPRXO/LmHuNEKBxTv32QCmBM39SzaQEv9Wpy5XZn8MBnmdPgqJp9+8WdcF2BnESOCzSwxDyYt0XoGOvB8F4obh/bR4AAD+/ysxNQ+urTSjUI9podHVDf/G+jJWNQ0BqaaOlqlyIDMPWPMEirv9AZQ4HRChtG1Np2lTKHu41+/8u8rgBTObBriX6a+kVADbThGjmAmPCT92AscMT9FVuw1NquVtWVE5GaJo4IY5d0Ez1viLdW8oIOwa2XaDmuEoeTdrae/KdMS1XE3JLfJuXVMTv99BJD1dKvbWqQV02S+aefPxisE8GFlRl1+AWoLoKhYBac24Ud3fXyWGfQMieVQsSTVgQkFD0UiPX+E8TjkJbu0yKlX1MCJ+7Y1Q7+nHL85rEsrr86nciCtsFdFuUA267P6dAXNud9Dnf7DEmlEIyKHFqcIzaJB25zcB/tXWvKuNCpDVghfhhGudSUIy93nPEeyXQ/T22MhLDEYcy2VB1POPoR1GVuj67KSQq7DVmrFhOfwUH+ouH+VnzCGo9Qrzsk2uB1lWpIhQQP/Id38iynnld3T9mC6J0s106sXm+b1uOrnFr4wpnV/fAZo/9+h5jlPj9CyNp+M+BT3wd3ypkDgEO3s4UFv0nTuqMg3nzv5ifNChwXiLsaSUrW078PngRwcgw1vYAs5AqWSG6TWnv5qyWcsmzRXdByvTf51Iv6KHs3utZwCokZP20M+LFbdgCFk1WDgQtyyBEWKSZJ0ZZ/cOhpH+sza/wSmZY+1wf8UQuDZdgG62cSdJR4V0e9B4OPD4rS/hkkE/wrY53FEQB/Oy7J6r8g4QzJAcPjRBp3Db/GKZCdzE4hGLZ/O4mgQIO3gYNhKhaXaHuZdM3Htl1ASBgHhk+McLbJhRU8G3xbfcnY+QoFIzMIJ63A/JM1z2Yh93fvlmewkl6PLHWryAC47DTOUHEiFyhoifU97DYcdVkebHAK4z+CItarCPfYc2fPxnV0lr+bPo5XqAAA=="
+      },
+      "sourcePage": 7,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 18,
+      "stem": "In the question below one statement is given followed by two conclusions numbered I and II. You\nhave to assume everything in the statement to be true, then consider the two conclusions together and\ndecide which of them logically follows beyond a reasonable doubt from the information given in the\nstatement.\nStatement: Morning walks are good for health.\nConclusions:\n1. All healthy people go for morning walks.\nII. Evening walks are harmful.",
+      "opts": [
+        "Only conclusion I follows",
+        "Only conclusion II follows",
+        "Both I and II follow",
+        "Neither I nor II follows"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 7,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 19,
+      "stem": "If a mirror is placed on the line AB, then which of the answer figures is the right image of the given\nfigure?",
+      "opts": [
+        "Figure A",
+        "Figure B",
+        "Figure C",
+        "Figure D"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {
+        "stem": "data:image/webp;base64,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",
+        "options": [
+          "data:image/webp;base64,UklGRv4DAABXRUJQVlA4IPIDAAAQGQCdASpyAGwAPpU+m0glo6MhKbPOiLASiWkAFsx+Zuxn/KcrOfGfovMC7XeRLWVju/03p45+nyz/LejJ/zBRf8AtCPOWtnFpSkGQSg4++ARCRF2776nBwHYDq+aqTFL6aabir76EAvU77uI0xvy086S3syvU33Kll36uWQjCecySoMbxbVxVA61hVZtAv89jfIDGF2HP4cdm4Eix/tcE5BwqNcxlXC3Y8ItNxBdASFEdtPPeLBHU2LbfsX/pdCdMLqTLmHsVTOGUydxO1W/KAAD++AwK5TBgqBZ58i9fOlbG0b20uf/8ltWdEheQtj3Z3h0ebAJTiLF1/ZUc4J8OSb109fWmYg8Hl/HSpIme13ZeSCBkDZ3nOhULXxMv/jfdKYxYTncVI4wCcVGIRzC1j0NhnacK/4mbaYNe7yy6U2pPa0oSt1+dun1T67HzaPSJzU7VXMUOfaOVY4lHzqpNTA9g51n8375af+J8OVHEHuyizEaBhYF92f/3ZlrRJx8w0F+lD9s/GFDfw6ma5XExSNBj0+8YzxKDWhU6GdFfMQsQFaN2fw+v6rAvIhy8EpO1ss61wTvibp1/U+Sh9wzcRwLh7MnZDDy1yFGt3sp0HewB11VRxATBlGV8vzcrKTG+MhOZ3d2KRCQv8NLH3udTlgTNGwohsPr/qGR1McZe68fi8FVCFOYWNCNdi2pMxYeR5BfRb8O2HbfLyo1JtxsfMpNqc/bjf/SufrTnK70/UopR/yZZ0gLiIx8xnL9qoKbbYwGnJnQE9aIa/GAwe76o0/zC9pQX7yZ56DJcmxVNjFAgAww1qzp7lCI/28L1/R8IvBUNwQnmwPyaP6mYmkfD/VMHj6D7uLZk4yJl4RN6Aq18qJ4Y5Dr5lsHSems0IZf5qhN9sR//5WYX1K92qnoqlSvaNvDOWrUqxHXUOg4tPvtirUjy1542DdOEaXbnfmrd0Dd/m4/bradt5u/9tIh9dyQ9yWa4Ay7roU6IN0jSHpzp+ZeAgy9EdTevD9YaravjGVM/xvqGzvGEjzV+cnxmbvS1+ZLsqr2/5nuUyndxFPwfu/pbKOLVbliFCUPsBM+Q89x2lhY41YJ6Cld51pnbXQpkMy8o5mmvMbokNnTDIiJsWDsoTEZ2deOhn+6hjLrAmVjjB8fw8t2pu+KAmYZJMfyIBaKX3slRQ8o262SkHmQyi0b6/MM5B+3hMc7WWp6v966SkU0WgzPO423gY4NBAeceg0BVBggGkcepMTvssd496V5v9F3JTUK+djwvxT+JtzlUo0ed7Utx9IKB4t/DexGG2K+VPml+ZDlhd2SCZgf9d/T/W9Wv/quBrOwXs0IAAA==",
+          "data:image/webp;base64,UklGRtQDAABXRUJQVlA4IMgDAAAQGACdASpyAG4APok4lkglI6IhOtUYAKARCWkG9+BhLn+A7df8pXb+G3fjLjYAaVCZD+xnn0+f/xu+Q/9ZutR+xns4IedUrMqhCQO95SsUKYUV1PXwmeIm2irI1AvUHoyXfBA5PAjSzKJ+jgQ7Z+y3231p4pG67vgu7zD4R5H4HEne9r2HJW308tzYDD5PLSxJ2dObqW16+GdC73Cgb10Skrh7LwiVLfdexs5hdsF4VRzhqBQt1N4WPbZXsJFPhFgFx7x8PpSiSwAA/tfAFx1OHyd6E4IBrOm/nx67ZAV1xlk3iDfWDWhMiUfJrvD9dxuzymeVOeFWq6Z+NHakD1ctN8qzceJaUBXuWTmQ3SSMN7Ps+V01XkYZfukolFGK48tiCfDoT/59ov68N/mEKzMChF/H3M04S7zpPrseznfVgd0vAoTTD9erFDYfg3fZRYilrmDXuin126Nw+X8U9PYQKnYVRgssRrm9z0ygBg5yExRPfiOUp/ZzDiRClBhN3DMM2XDauf9TjmM2zgWjkvYucMeM7hYDB8WQqCfT3una18GNOnZscyGvbSYjKxzu34MZdbysC4Gt0EuE/3Ua9rtwEBZ+2/92zz/HhjbqybL8v69w79EIZ+OPive5/iY//T5iUEVOaOGAzZXqh5FPdoU/GE/+5BOtq6QqNgsk3XHAHA1JvSUj/Oc4fOBEP+ImfZDdDP117UHwwwMxhamuH5Sd05u4Z4qUYl8z70lxFiz6APlrV9PQkMPwwJ7R6r2ICxLq+7XT0jIuT/0ZnuWWBdbiK5TxeyWMp8xdbT0KZsD7UrX2RVKGFjBjjC3UA3RXbgWNS+G6FQ6AgrwQPQOtcpXD4ulS4y95fBxDhU5rDnX/2+WPJqz9kiUHHndbRyH8mc+a8jRHt9hhaR6AODF2ZSQ2m9BfEbf8EJZ3yhsNtfQashbaOgrNU6nmO19k/IuqY/XylOoUIo16UK8VLP1MNYShR5DuyHf9y3ptsxz9s46KdqRdOFqr6arzNQswkcxgixYP38rwNNFEIthMYsuUzOxiCy0Osb6jPyQmXOhMau6KsHjuuuUIA0Irpxop9h6vMvETAH/UiV1r59nP6Aia6VFGBfpABdSj69X36f2GtJu2zMWOF+eXtKWyPnbBwl8OBlKgGll89C7u25OzqQn0tAB77oEte37xbaQCOVGtbOLbLI4QqyOJLCcTkFL3sIwCjCeLO/T5Paa1nVcxkX2/kvKIUHk/+C54B9eLPoO1yazxJ/oJK25HjUZBCwIOm9Z9N09fVSH67TYAAA==",
+          "data:image/webp;base64,UklGRoYDAABXRUJQVlA4IHoDAABQFQCdASpyAG4APok6l0glI6IhOtK4AKARCWkAFekzWlbXLA0lMyLyAfSfsFdI0zg63iX8xILrebZ+ydzw7sKPr6ffH79q1+rS6et/t+1O0i9IwlXk/jeusVrWuGxLCne8wqBPCPCOND2aKuyR79mYrcynASPKZn1IC/CLZPm3VJ5dOGTlyjXARVPEAlosebd1Clvr4b4RPnuOq5g/SCfUMazV2NBSOgYOVCQGPwIEYBDmGAD+90p4axtF265MwqBuODGy5crytBhGozIrKl4orHOPnZI8x9aA60ufSf/RqTrLuArSKh/9UJ9G1LZMCof2E56WvHbex7D2ou9nziNK4cpWJqyZAnxT1MnWfY9UfQbR3+5XqRLgW+ojoKCwyHpU+YDM9N7ihvXUwHEwig+mS/m9x7R8tKbmkPRO+zZILiSCmSk0EDHIgM/PwJe3vqhLZytknPjPQfzichWfFsBhC1A0+v8xogRZj/3ArKeucaBDgEUzrH9F75SL8/xN+mwmRUKaYaIT9p0fiP7bi783bWAFE6DqU6gDBdkWlYXUdxsiMYGnj1rCMYkp9guGZVFWPW+j0xkFVRYp9gf0Xel9e6mvSetuvKcsjVQtMDsi+6U/5DUqTWi6RFoY6OvBFQJGuDpDj1fc0AbDz3VAUTvRmB/LzecbqCvF6trS4lnmepBO12Ui1Si6Ino/DIiuw/SvysjU7dVY701CUJAZr54eLX/QKLYDm30hGBkt9ruHdt4zHTNiA7JC+v/bjc371+TXVqN4kivZm7BbfP+/kCIVr0bzxE0C6USs061dOe+JK7Ph3988QH2gOm4fdZfPHvsO+7+b3qBPqPw2n3FX7RzVmnev1eVAZoDXFx8rMLp+17dArNtLu4A2Fxrj3nfcERfzEQZLKtSMPVdPxQSKc2f1mknap+Fwb20j8M/ijlcdScee4/Am7B6V5S3zRSdKnedxc3L/BtdrPO731Oa1SPWCxcg94UORtlfGqn0K9V9C47/JakTOFXSNTfObmwa2BQiqP5XVPHdmGtVHCCYp+Ocp0z0qtw8h+oPZ1ZoFr5wbnT+DnSzgp6KutBkQ/hj6R1Hp5BUn3VjfRbh0yCvu3zhFsKcu9z0nxBZ3zEIqFQM8/3jbLNlpSAOmfoClDjkrUpRIg38DToh5ZR72qfh1RuCOBhRru5ojAAAAAA==",
+          "data:image/webp;base64,UklGRtADAABXRUJQVlA4IMQDAACwFgCdASpyAGwAPo06mkglI6KhMBUt+KARiWkAFsx+Sf612s/5evZ8Ku+WXCZe4n9LjMi8j30+QV/Abqj1AcNtn/Pvn8uLRMvWRyOWkz5g7WFH07anOdvd22vXn5CU+X9em0c1GRriKIEQBUuZGh9DkQ9fdOVyIZ7+1V4wWrR2cd663sla0Kcbzt1p3XAYqHzV80R0sGZoPvJ86YwMuaSm4Gx0vtsC7GVxSqOmDHdXb8hKmGBazvo7PiP/7v1AAP7fIm12abi3vuuEMlvwL/wcw87rQMcfEE1ZSZVmKOGUe4KvTC13xQghXVpiEqsaGq8ybsr5sXkxvJYpBzJvnI9ab3eCIvmvVOc9VXCUb9lTm68lrY9JR1YthWtWb90NneQ4UFG25rUMGhrHT3dZ4Ff9iqE1HpyjUEP7NmN3fIYhWiZ8dGCWlFkVSyRDxRZlc5A2oHx4nx5784jjw7ARIyTohLTwEsTVFf489I/nYxfKbgbwFzSkHvV1ZQIGriBAdLcY1o8wbooxygCn58Mr37586G7ns0/7SzKzmqIR2S4CLaxz4dN3A4WpkgFLDn07gYhSQvNmu1SxW5vjJdaVhPDNtK9pddFjk8G+tXXKKZFtaQk2+9DqUh518BFoHLcKebNlAI/aH4sbHlOj7CB0f7INxjG5k18aLXeP0P7UTnxaUYMlRnqfG3ZgxcEOSCJDmL3zZYXnQI+7wVyRK2eMidszGitgnrsMffE12ApcmZ4Ph1KitAtzaOwa+Y2h4nMAz0Va6OPmONT+tmEO6ZhEaEjXaDZ/IjAFHJ9pcneUlsp91kv9Gjmcs653QngKcBmbHUID+WY/iC/RF7T7Sm0eZ4Yt7//71fvsgtTIAijwrvbLaJzFAuCeVbmrLkwn9CnIpEFIgnEoyLnCf1KGnoeoYs48phgBsgyyW/8q3jvrjJHx5Bf11+c+6SUDw5uNnxhphy795ygu8k1d1jqbWwVw1C4mBv04SWyEMVXLxSH26rEAHmeCZjhMKyi52cKIPnjbBE+nCuKvpCPKYRma0eh0JKNamNdxbc3DH2Kthuic2CBnAudJEadyHUpIhwlwSh7tFFuzCOiNauoDMN7KnkhX3KoiHwZ+OaTH4q3HAmd3uTM4XJsPaW+a0qKoLfcgXX7xjJeN5vES7PATIpDOeUdCFoTb06VO+m8otBbvZLjRzdddgKqOnghX/BJdo3APcKIs++YgIlO+Ms4h6hLiGszjEuN30QP85cTAZFjk7iYEpLzxWkioaXXGw5g2+QxDUmQndkMAAAAA"
+        ]
+      },
+      "sourcePage": 7,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 20,
+      "stem": "In each question below is given a statement followed by two assumptions numbered I and II. You\nhave to consider the statement and the following assumptions and decide which of the assumptions is\nimplicit in the statement.\nStatement:\nThe Parent Teacher Association (PTA) of a school has informed the Principal that they will not send\ntheir children to the school unless the school authority reduces the fees with immediate effect.\nAssumptions:\nI. Majority of the parents may agree with the PTA and may not send their wards to the school.\nII. The school authority may accede to the demand of the PTA and reduce the fees.",
+      "opts": [
+        "If only assumption I is implicit",
+        "If only assumption II is implicit",
+        "If both I and II are implicit.",
+        "If neither I nor II is implicit"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 8,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 21,
+      "stem": "In the figure given below the triangle represents balls, the circle represents chairs and the\nrectangle represents wickets. The number in each area represents the number of items in that area.\nWhich of the following statement is correct?\nI. Number of wickets which are only chairs are 10.\nII. Total number of balls are 14 less than the total number of wickets.",
+      "opts": [
+        "Only I",
+        "Only II",
+        "Both I and II",
+        "Neither I nor II"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {
+        "stem": "data:image/webp;base64,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"
+      },
+      "sourcePage": 8,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 22,
+      "stem": "The following question consists of a Statement followed by two Arguments I and II.\nGive answer :\nStatement: Should a total ban be put on trapping wild animals?\nArguments:\nI. Yes. Trappers are making a lot of money.\nII. No. Bans on hunting and trapping are not effective.",
+      "opts": [
+        "if only argument I is strong",
+        "if only argument II is strong",
+        "if both I and II are strong and",
+        "if neither I nor II is strong"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 9,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 23,
+      "stem": "In making decisions about important questions, it is desirable to be able to distinguish between\nstrong arguments and weak arguments. Strong arguments are those which are both important and\ndirectly related to the question. Weak arguments are those which are of miner important and also may\nnot be directly related to the question or may be related to a trivial aspect of the question. Each question\nbelow is followed by two arguments numbered I and II. You have to decide which of the arguments is a\nstrong argument and which is a weak argument.\nStatement: Should so much money be spent on advertisements?\nArguments:\nI. Yes. It is an essential concomitant in a capitalist economy.\nII. No. It leads to wastage of resources.",
+      "opts": [
+        "if only argument I is strong",
+        "if only argument II is strong",
+        "if both I and II are strong",
+        "if neither I nor II is strong"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "caution",
+      "review": "Argument-strength judgements can depend on how narrowly the claim is read.",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 9,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 24,
+      "stem": "Which option figure will replace the question mark (?) to complete the given pattern?",
+      "opts": [
+        "Figure A",
+        "Figure B",
+        "Figure C",
+        "Figure D"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {
+        "stem": "data:image/webp;base64,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",
+        "options": [
+          "data:image/webp;base64,UklGRkgCAABXRUJQVlA4IDwCAAAwEACdASp0AGYAPpVAm0ilpCKhMlSIALASiWkAE5pru6yGswY7WYv5VPqEqyXnlD3/C1uAn6AYtlYiFXg8ix7jhynIegqmDNWid1rH00MpTeJWCC1+oazO+zHeh64nqVVsFdRpRqFdOFe4JJrIPKRuaN5smCuHpu+yO5OvDeeht0BXYMUVXJpHXKAA/vmxAemgv50Of6xe31uFQbSKp9wq2ohptqEn7IwSBemMqCxUYe2kJ8aiS4WYLJOyeUu8znpXorK6GJWu1d072Sayh/BP2UlvnA+ve6Hgu9oRVYkcWfSPVtiPiAvU2is/u0/Wo2rJD55sBm7XEIJ+EAaj2U9AnJebyXa2OPY0hzQf9Qs+65W4LhaC94gOEjAi+7zok7RxKPzzXN0ookvxmv25ENt24RP22FNkBEVnNX6rC1lHNnRKpQ11xRvRFH3lomVeux94Q8z/N0/8un/hyx0UQU2cueNs6G63ov5F3v4Tt4nM7Y8cc84SLCIUhqqxe4r/h12jHeK8vKu1Jvzifds6zGQDT4ic7Nlpk4F6Q731vsl/JtwvwnLLdNszlBKvxKwudP3UusezQqPIx5ILsfwuXNrK4s6RUDFOVRoL1fB5WTRMVIJxf/1zWI9fLkT0j1g014GQW0ew1LnYT7ezC4vK2ep/EdE+Agcos/zF09lVlLfxuVfZaOLHvtxpvau2mpEvvGl3nrYThDxfyiSGPeCUGkawsL4SwosVL0tm5zqFU7VUaJEWDfAabMxGIgAAAA==",
+          "data:image/webp;base64,UklGRrwCAABXRUJQVlA4ILACAAAQEQCdASp0AGAAPpVEnkglpCMhKVgMALASiWkAFeu9jn97rs99mVYwU+o+tM96dBbo4+iy6cyk2JO1erP4yliq6PvpZkWia9PkFf4HJyn4R0XGppPndF2MNTukVCZqT/JH8KTzH2Y3oTHd3B4OObJRVV8QqDLsba8cSVdNRzIzj17ObIzBpSvOaRPf1Tth9A4AAP73hKeZvYoGh0//Iz3xT2MXC/fxr8SiXTUxryV31qnOFkSQrUn8s6QvA/ILbG9ElWBjxoCmHQRa5nep+SBTUNwVLCBliIjdIydS0Sr2b6oX0pfbDYzQFTKsROr+jH4tk0x+7r1jfCHpLAyN5+qnY4h4UQmBnX+Kmt6ZTOUorDlUMGnX86GlGlYKQ6HXcsCfvTwXeMeD+vkwv11OS0bmr8PpD4TsklZBYSWrNJW8g+QGuDXvhgx/WxHU6SV4f+5nzxb7d7BA4X8n1qPJVdLMx+M4e6OFKPez81M01EhoCxS8T1ZhLf3K4fPcJ7/t3ezo9NMQUxHmaGsCv7KNbj/Qa+6N57n0N84IiPpxArnQUtK1nPA4Ki2/KMhZGaf30H465z1Q+cIRDkB5gskffpYbSUO7ckV+0Nte3WXOnP37EEKXffb4qsWEbO09HnT37Vm56TZQpddSdG/hgUDMvifiYfLikOw36extKCTNLclEVK3wy5/8iSwuGljSdDP7/u9W5H5eVl3BkCBP9v7c2/4XzZ/2WFqCw7ypJMOzuOAH+L5Wg61OVJb4LwGAvaoRBuAM+MPYY1Lcm+PwJPtzqA1+pVvkkJkKH9uVM2P8vKHCJ2aR9wtq4LL5LtN9vwykDPE0GFResLmT8Ycj5UvYXopGR1a7y6T2DyW5lCWB+y2svV6e2cxK7VxmuL90TOyDSjku9fJ27iXGQe8SEZA+tAAA",
+          "data:image/webp;base64,UklGRv4BAABXRUJQVlA4IPIBAAAwDwCdASp0AGoAPpVEn0klpCMhJTcckLASiWkAFeM/16brfwHz9aH/pX0XinINLd2FixpkBvLGIne1HOxhtbNFRq75a1Uf/48O+rJsYBj5eUARaZnUP8eHffaDWh9/ClGY0WV6jeBLcsjOS5pjvaiZ9ogHF7ZvLnz6UQIDZUFwjXoAAP6aH+vyxV+mH4e0IKvIMpqMybHdaqnIvFIx//zrrFUAhR7oZ1W6ZBH5K6qnWZIkLU4aia97Hovqr5ySYvdfTAMVrsd+XgGnW+pk3xQUQEY46fNfHe3Dtaj1vG/b4oEPLBhB1HXq8mx0KpRsz26ghewsdaIQGp06xW4yIUr2sl06q4Q6AhaS6h1JZWf4r+lZHvtIAv9NcqKMEDg3aSyrRD09eZLagPC7dz7nqdr50XJmBF4l+Po1uJZz6b3AkOeFkpZW1dhmj5217KDbqf9f7rJxhWWtnlLagttEL3Vd2GkHL0IPKSbUULmsDQBelfwLQk5u5tY9sYiYRdwSPssAFyqtgC/LzQooi9+Cz4BunHA1wRInvUOSms4ZoZZ+PrkLE+GOPlU2NrzgaBqh9TFsP92bXPrN7zKnHgtgCKuAzLDCCGFtCuxnNgcSou+zX84Ap56ZhN0KeYgKFXU/6N8AMyKBbzV5QD9TaYn7f2QAAAA=",
+          "data:image/webp;base64,UklGRlIDAABXRUJQVlA4IEYDAABQFACdASp0AGwAPpU+mUglo6KhNbQ4cLASiWkAFek9Q2u18Ff85t3N96x7/r+N/SrTQ/KL9HewaWE/tnRr9EN7XpoFRWQlfFl2NIXT8J03dxe+bDfxnZx+ogEQHEKZLrP4vl15YnaWywGiPfoWZZ4uySU5/TQ1GLELM2o3Ok4Wc90bdGP3vhmW1im5JydcBWiRJHvSWFC4IuGLrYil7foo9uSmxh/yY8G47QAA/vUTd6d/P/Vv/08bIcPFW50ad5EQZEbQ5BgpzPvtkhhgkDIieSnhO4ds1s7ys2/yGO7iVzIm5JX9/Tbja6qs62HdcU5NX4oIGmS85OhKdY4mVI//rwuvPofwar1GkLsKFK4Ou0u3mwzF7i/zVFRLJGhhC+0PP38srQPl5mImBbXVpZUQeo1gRdCHFL7qbyP+9xASW994BOcPq48YKdhSfOq0WjA2TvGXKGophWP/lAa95lElEEP9z9wjxwXu6EWcgbckRfECMoZ536G5gqLPt9XzeLH+IH7/Mpbz4riQ1GMIgL+BXVKxsYnUG1JttK8m6Vb11SUn/dHCValNS0trL1k4k6Lw4FAIUuOcnwZnoRlLRwkfIRCaf8Zb6/X/xuV4mwDW/a/Lu+NVNmDCURY+z5in5PWeGxL4P6+Y7anGQh++VJhQyz2KToQcMaHKcOHD/0G9/F9iGSEinwSD8sFk2OhKIli+hyClJ0v5NZ6fS74Zj+kdtEnMlgQBYGWpUbouUdhR8RXYC3gr1guCJVVzK2bPKxR8Z/f1zUvX3nUZtPXCIxDlEHCOjQvHiVtqbLsB97hdKSJQkfxUZRHg2R7clov6x/E41+EhGFbdBYRFE/433y4/tLvsz108Gx4lsafZIIaenH2rQGxtxuUaOVJ55Bge/IQzyDvK4meZTH7QAth56/HKUDiGOfYABNd07ik90fSf34V0ayUduRWWytZGhUMe+1HssdFI2RtegKJrtooCV+jx0HDjgFrl7iMLSpJo43VrGtHMVam9jTfhBAjn5+A5LYTizbyZ1eT5OV7nWbwJT/1e5lv3TcXMb/6dB0nJlgb2BZf26/HLT7DKgQw0+oWO9FR9by5VT7rmIIqftStLkFNMGRQngAAA"
+        ]
+      },
+      "sourcePage": 9,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 25,
+      "stem": "A piece of paper is folded and punched as shown below in the question figures. From the given\noption figures, indicate how it will appear when opened.",
+      "opts": [
+        "Figure A",
+        "Figure B",
+        "Figure C",
+        "Figure D"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {
+        "stem": "data:image/webp;base64,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",
+        "options": [
+          "data:image/webp;base64,UklGRoQCAABXRUJQVlA4IHgCAACQEgCdASp4AGYAPpVCnkilpCMhKlnLKLASiWkADqMrHcJsqAyTbAWVKMsv4lz9RtOU4BubJCkuHiVeqQm/t0anXexgRsfSm6VtL0PxwDVVOZrUPrNq6HwmtvgUHwhSI2WLByIyxhUx3tLlndqLl/h6eC2TaZIhcagUuO5xp+LJtdfUk13Zj8KGOFSNcen2k0ltv11SUvdXJNeRNFXAAP79v5FOQQt/TXljngIWdrk1ortg6ueVYuUMyYRFGgPZTyDRUzZ1dMTuhSzMyfBJcahcKCSvufftM+jXVfNRHbPOhZGybY9i4UHmZTW24kGT7a/ECAjQfEHjXfh0n7zOwCZr+mysPYDtUCIhRvBqfi2bc9yjd6esmLHvuDCQTi01vTF6jwwB/qln4Jih3/pRYmNQeSnj9l10GFcd31ANZVfEvb8P+Sh+zf+saSP5vy9ZCyeflTeuty0TYkJDKDdmwW/HZ/An3Hi5OgYjm83uzkGEhvK3YQ6UP2eS99+1L5g7xC1oAspteuVkqXQs9ysqNi1/BbHu9Orf4bu6uiznNTaMAqtueobnIXg/h6KJPKGVMDIZ+jcfRyEgteYPgp8aLzZzklmbBUp79aEOkGNB5j6umbb4xRLIoE5BEqZR1+FRgd9TPqVEgB4eLAt9KHN4pA2pe029CqCxRq8nr+GSYtJ8/d56xU9fjy8jehuGvR0xIL7f3UiiXBx/MHdgdpILllubMuuK8ZVfZ9273fLqU6jTcys4qZApvfG0sesMscXXBHPgarkVNTe0Vu9YPdisLIc0dPomp0+LvP/s+DYYQ0wAAwvqLomk/NlV+6oo+uihJx4mKRAAAAAAAA==",
+          "data:image/webp;base64,UklGRsQDAABXRUJQVlA4ILgDAABwGQCdASp4AGgAPpVEm0klpCKhKJVdELASiWkAE6SyHnen8t5ed7e1Z/jN8fhppVpp3mah0JHxYw80EARXK0pW2/2LpLKCzx2uvHvOKhy7j+fPoRX51ZsiPoFllZz/u2Y8IQahhj41xiM24WoZRvEf7x+sKpMD0CD6wWylNVKJwtKxKbQJ3MPS1WzPbNkLXcFA/IJCtWyC/F8jTdOASEbNCDs3HH4+UTz6oIrMh8o+NotJZAEQLam7zJOSuj5RvAWLq9PPC8BthnX5Dw7RaaN4iOWbQAD+/jBnW9Hv8uh6O3ZFVToILyzfIXuJ1hq0jVNOfyiydWI+aEeB21jEEQvkBKbnl1HEQzqaFUHCwsf9/nkrs8mvI/xBf/7sb29L0aFkW2vDyiu4u+LTurOrkS6n+77yc74iWfxlt9yu+m7xxe/p4Q6eedWNk/yX7b/8C+DbFQBGgZZF2KPjvzZoIWlFqGrYFcXs6E0pktBHWFskm4W8C7PtDSRU5uP0EL8KN/TeN/KhmD56SVWzzhoF5nTdhlLzz9J7pyp60BIJ8HNNk5Zpk9iMMvbAlz08q+Pa3TIwuKB4nNyffw11TzJKlbV2cE+aCiPVFNd+obfmXJ2qZHheUgRRx4a2VSsQx1NXSmvbyB/iiRKWg1zvRu4qixFDrdvlyNvoCkNf7fuIHNYVeIA7Hf4WTjtfxZ+mtkuig4vAC6Ssmi2vVhvF7wvr+PPJNdhWlxZiJ9bWB7DE+5FBYeQWLtc+1B/WBrejZBX24bTtfHELPg1QDOOndtatjt2JsQt72gYOQU1SXqgcX7WTsKYeGrGKsBqg53RbzCByKw25h/4wFK7OO6Csp7O+3Q88+xhEfxvhq6i8KDCZQf9/C0DQwCN3cQykpPqf5hnLfuFHVcDie755BDpRwyreKDdrb81wHzv/5rvK1PmYYPIg94GpaGAFEEQyoTym/MgpEE0o9AmpXk9W95JmkMhS8v7qp0kWQT+TikT394+xxxiqfzduQz03OQ0lO/3xxj1ZmangR6B3MiRzERWl4TeJ2GMoR0Hv0PU3UXGe54ugiSfYgLaRP9ZyL86sMra4q+hIXvh2jh3T/nbWYmlhEyMBYjharHTvYP6vA1dQgt92u4acag90Dyc5JdvTiyqL2SlQHu+OjkjsSdMM7hj7SMBw6uZ5AfeXB1GJLcPnPfRcT798HG3TD4GAurMtB4iTPXE2N0DgtmE3KPN5aMrbTzyTOagcv3JOlc/5X58GBX4FAx3ng/XJanIAAAAA",
+          "data:image/webp;base64,UklGRiADAABXRUJQVlA4IBQDAACQFwCdASp4AGoAPpVGnEmlpCMhJdgMsLASiWkAFcgWiud7jHZa7R27nwm0xk1LzOsrcLhvlDGOnaG9H1bW8tBz87qhNcEzMqk31556vYW8KdRFIIzY3HyvJRylokFXNb5BnP+Lk6POEeDROHWwZK1mHqD7MTr9qzJrQgAvARYpcN81w9bD9s2bpS/QR/hwLogTSVy5v4YIkn9Xk2Zn8uLm0iLJlp2Jh9aFQxVOHIu7YSOdu6AQEa5ud8VHgOUV6JznOc5y8AD+8Fvrv2X1Hb+cX+E3MAAfo1k7U6PI6xMLDVq73JOtAKzQzepy1qjNLtUaEHjLYOe3B475UJdagqfLVeDE6ONGOTP/x2QP7viXpPc5RTylpfQGR6nPyDDTImcrnk/3B7f/R8eQURT8IIERORRFrifyxne1Pwa3sp5s9ze/Tt4qrAi5D7ucJ7km6eSotkEzuvLQ9D0AiTbH90ynPz5ZBz/9n5/FjOKvoBPXL8t4K1rXXqCs7u1KmyOCTjaUKpHjh03MrqNC7y2I2HVlDmq5lSgYEPQLRDde/EPtBuXrPbGj7mFYVvPUjxS3GvVIWbf+pxVxMeSmZc/geNuH2NY2sRME5Irt685H48BRbAy9HbFz1NtVEFCrC6FAYDXUxWHkQMY7JRRoMXMeDkXU6Y2kEVygSPN/vg8/CZ2U2rGQtqDHDk3b0RL1n3tfq19ajuklcKzN2bim1oORPDZipSFsbHcse5PZiwRvTZVstUOGh4Fp5eVNl8HpfYMYVBOnPjA0QnXc3vFMt8J9Tckcfy2x+OAlROBtau6lOIpftWad8JBcS99OS1dwPWP0M7OyZy4DZuOcrtlC76bXfzSSocf3OjDM76hDMqJJGFgbWcoZ5fwb7gM39cI6+QAWPELXj4i39qIgfWpWUWIPkwpCO7ayVuVaPn/jslxLzAv5PiayuJ6k5R2SvRpdt6hzsRaKgOsLbflB9L4I1paumkFqkdD8yxQM5xnGO4qe3QhaDJIT9DkV/B+yOJayJe2AzoeABiWHw4MdfidSUpkVzNhWAAAAAA==",
+          "data:image/webp;base64,UklGRt4DAABXRUJQVlA4INIDAADwGQCdASp4AGgAPpVEm0klpCKhJ3YtwLASiWkAFs0XlPo+N80N/IexfsX2lv8PwEQ2s6z4IIeYZWBPZ9ZKp/hnzdZe9eA9/iZR1iIdjtYx5oC06t/NGJVgZwACCQFCS82rAA7Ca4pE39NGtzaA939Ltiu5PtlLyINIZzTJIUALeCY2g0KaWnyN7HiiPIRDtt8BzD/IU89nkq9AquxzvkbosZw8O3xRWEpnxw0k8hZKHM6HQ1ZK1O2T1SyuadvDttmT7dNEtfvsLMLsDT7V2sFIS5fuvWfcv5AA/v8YM6v5VW53QStoaHsYHWN0eA0FTfWUjoJtiLkVrbHW3Gfw4/y1JwQ9T82w5Q1pBasx4GazhM9Dm97E3O7QmvhjG5c4T2rf1Xbnf4gsKOY1L2T/nZ4j+GZZOsk4F2ottKORS1eJ+1lJ1V71+DXmNPYG3Ey8La/EJ793nOhpm+8CjsYHkGmxa0H3Mi2PXBtaVFnMet0D8iv9pT6xrqN6QkmW0vxUC7UiestiuhvXS14efD9Dcw5UXCbeKJVS0G3E36uEbxTVPfIsJl5RcE2oWy7UVTiU1W1SJs7S8nQmKYS3tTDHDd+tosdkAcbpt02MM0nXTgHrodl5i79ga1wBKwQ5GNE+sG+K73YFSufddyKVY4ps6VRCaPR3mGddhcO4L7jzmmj10LBc9ETEYlMhicO2R0Qqcvo0OO8ZStupnM8/cRih62ebT3B2ZILDzwT1+KdfcPsedRtAqNqTWcySny6SJvEALXzscGbgMygz1fGohax7eZ5lDWABIlCzOY5vF9PS+Zq+6NB8d8/HuL4RePJf8/UGpTz9+hm+pkq9xbt4XMzBG7qPusua+u76KHvggqIhFuuxGG9Vbvm0xBkUisVc9m7WIx9C/6aoaWb1+uopL8daxqcJduUKEMJ8E2NeD13azqmFKtRwwq+sbTj3zYaa60JTXtl34Eb1tIcEBBIBqQ4nl8ynyTKxDYee3eVRSEQpmfeODa8g8m/SN95nWTw4Nbx/XeiXjXTgnO+FepdsYZk2LoK0Pv6/nHGklWXI3XdF1sh8+tN3xVcaj8aw2+WSplT5PMGNNXIZpOYcsUMLzI7J+lk2Fka1BIMUejE9vhMsDiPPIgEuRGUgoDva8rZVj+6Fn90wCLPMHcA2v7c3rhSdE7FgJLyOviTaKZCwo9h7AQMMpakkyIHU1N0fzvokiH7EHbPgeoTzO5lf/jnGP/y1D+semaVsqhfE4flubtsOlAeCfhMRwGiB2jzHKkyKiVH9jD0BfPicKsUAkDZt/zlLYSAAAAA="
+        ]
+      },
+      "sourcePage": 10,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 26,
+      "stem": "Which of the following is the most effective step for mitigating the impact of an earthquake?",
+      "opts": [
+        "Seismic zoning and earthquake-resistant buildings",
+        "Water harvesting",
+        "Flood barriers",
+        "Deforestation"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 10,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 27,
+      "stem": "India’s support for which of the following missions aligns most closely with IMEC’s purpose?",
+      "opts": [
+        "African Union’s Blue Charter mission",
+        "Non-Aligned Movement’s Neutrality Declaration",
+        "International Solar Alliance energy initiative",
+        "One Sun One World One Grid initiative"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "caution",
+      "review": "The proposed parallel with IMEC is indirect and depends on the energy-connectivity interpretation.",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 11,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 28,
+      "stem": "Which of the following is a subject under the State List?",
+      "opts": [
+        "Banking",
+        "Public Order",
+        "Defence",
+        "Education"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 11,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 29,
+      "stem": "Which of the following programmes is NOT a part of the Tenth Five-Year Plan?",
+      "opts": [
+        "Jute Technology Mission",
+        "Drought Prone Area Programme",
+        "National Horticulture Mission",
+        "Micro Irrigation Programme"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "invalid",
+      "review": "DPAP continued during the Tenth Five-Year Plan; this stem has no defensible unique answer.",
+      "explanation": "DPAP continued during the Tenth Five-Year Plan; this stem has no defensible unique answer.",
+      "images": {},
+      "sourcePage": 11,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 30,
+      "stem": "The phase difference between the instantaneous velocity and acceleration of a particle executing\nsimple harmonic motion is:",
+      "opts": [
+        "0",
+        "π/2",
+        "π",
+        "π/4"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 11,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 31,
+      "stem": "In cricket, ________ is called by the umpire when the bowler doesn’t deliver the ball within reach of\nthe batter.",
+      "opts": [
+        "wide",
+        "dead ball",
+        "no ball",
+        "Yorker"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 11,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 32,
+      "stem": "Which of the following Articles of the Indian Constitution deals with the District\nPlanning Committee?",
+      "opts": [
+        "243-XD",
+        "243-ZD",
+        "243-YD",
+        "243-WD"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 11,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 33,
+      "stem": "How many players are there on each side of the Kabaddi Team in the field?",
+      "opts": [
+        "9",
+        "7",
+        "8",
+        "10"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 12,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 34,
+      "stem": "Who was the great general responsible for executing Alauddin Khilji's Deccan campaigns\nsuccessfully?",
+      "opts": [
+        "Qutbuddin Aibak",
+        "Ghiyasuddin Tughlaq",
+        "Malik Kafur",
+        "Balban"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 12,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 35,
+      "stem": "Consider the following statements regarding BRICS:\n1. BRICS represents 49.5% of the global population.\n2. BRICS represents 40% of global GDP.\n3. BRICS represents 26% of global trade.\nWhich of the statements given above are correct?",
+      "opts": [
+        "1 and 2 only",
+        "2 and 3 only",
+        "1 and 3 only",
+        "1, 2 and 3"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 12,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 36,
+      "stem": "Who among the following is the writer of ‘Train to Pakistan’, ‘Good, Bad and Ridiculous’ and ‘Delhi:\nA Novel’?",
+      "opts": [
+        "Ruskin Bond",
+        "Khushwant Singh",
+        "Vikram Seth",
+        "Amitav Ghosh"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 12,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 37,
+      "stem": "Gangaur Festival, Pushkar Fair, Nagaur Fair and Urs Fair are the popular fairs and festivals of which\nstate?",
+      "opts": [
+        "Rajasthan",
+        "Tripura",
+        "Punjab",
+        "Maharashtra"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 12,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 38,
+      "stem": "Banking reforms were part of the 1991 economic reforms. Which of the following committees\nrecommended banking sector liberalisation in 1991?",
+      "opts": [
+        "Kelkar Committeee",
+        "Narasimham Committeee",
+        "Suresh Tendulkar Committeee",
+        "Rangarajan Committeee"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 12,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 39,
+      "stem": "Who was the first Indian Chairman of the Union Public Service Commission (UPSC) after independence?",
+      "opts": [
+        "V.S. Hejmadi",
+        "R.N. Banerjee",
+        "N. Govindarajan",
+        "H.K. Kripalani"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "caution",
+      "review": "The Federal Public Service Commission became the Union Public Service Commission only in January 1950.",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 13,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 40,
+      "stem": "Find out the chronological order of the following British Authorities/Persons who took interest in\nhigher education in India:\nA. Lord Curzon B. Lord Ripon C. Lord Canning D. Lord Dalhousie\nChoose the most appropriate answer from the options given below:",
+      "opts": [
+        "A, B, C, D",
+        "B, D, A, C",
+        "D, C, B, A",
+        "C, D, A, B"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 13,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 41,
+      "stem": "Apart from India's national anthem 'Jana Gana Mana', Nobel laureate Rabindranath Tagore\ncomposed the national anthem of which of the following countries?",
+      "opts": [
+        "Nepal",
+        "Bangladesh",
+        "Sri Lanka",
+        "Bhutan"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 13,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 42,
+      "stem": "According to the 2011 Census, which of the following religions has the lowest population in the\nstate of Punjab?",
+      "opts": [
+        "Buddhism",
+        "Christianity",
+        "Islam",
+        "Jainism"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 13,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 43,
+      "stem": "Work done by a constant force depends on which of the following?",
+      "opts": [
+        "Magnitude of force only",
+        "Both force and displacement, and the angle between them",
+        "Displacement only",
+        "Mass of the object"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 13,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 44,
+      "stem": "Which of the following statements is/are correct?\nA. Article 269A of the Constitution of India empowers the Government of India to collect Goods and Services Tax in the course of inter-State trade and commerce.\nB. The amount apportioned to a State under GST forms part of the Consolidated Fund of India.\nSelect the correct answer.",
+      "opts": [
+        "A only",
+        "B only",
+        "Both A and B",
+        "Neither A nor B"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 14,
+      "edition": "original",
+      "transcription": "PDF text normalized into A/B statements; meaning and option order preserved. The source erroneously prints “Consolidated Fund of India” in B."
+    },
+    {
+      "n": 45,
+      "stem": "Who among the following was part of the gold medal winning Indian hockey team of 1928 Summer\nOlympics?",
+      "opts": [
+        "Balbir Singh Sr.",
+        "Major Dhyan Chand",
+        "KD Jadhav",
+        "Sarangapani Raman"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 14,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 46,
+      "stem": "Who supported the king’s judicial authority in the Gupta Empire and played a key role in the\njudicial system?",
+      "opts": [
+        "Mahapratihara",
+        "Mahanandanayaka",
+        "Uparikas",
+        "Vishayapatis"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 14,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 47,
+      "stem": "Which of the following amendments to the Indian Constitution is regarded as a major milestone\nin the country's taxation system for introducing the Goods and Services Tax (GST)?",
+      "opts": [
+        "97th Amendment, 2011",
+        "101st Amendment, 2016",
+        "100th Amendment, 2015",
+        "86th Amendment, 2002"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 14,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 48,
+      "stem": "Under the Pitt’s India Act of 1784, the Board of Control supervised:",
+      "opts": [
+        "Commercial affairs only",
+        "Civil and Military government and Revenues",
+        "Judicial appointments only",
+        "Religious and social reforms"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 14,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 49,
+      "stem": "What is the weight of the shot put for the men's category?",
+      "opts": [
+        "16 pounds",
+        "12 pounds",
+        "14 pounds",
+        "10 pounds"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 15,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 50,
+      "stem": "What term describes the region of rapidly increasing density with increasing depth in the ocean?",
+      "opts": [
+        "Isotherm",
+        "Thermocline",
+        "Pycnocline",
+        "Halocline"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 15,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 51,
+      "stem": "A boat travels a certain distance. The ratio of the time taken by the boat to travel downstream to\nthe time taken to travel upstream is 5:7. If the downstream speed is 21 km/h, find the speed of the boat\nin still water.",
+      "opts": [
+        "12 km/h",
+        "13 km/h",
+        "18 km/h",
+        "9 km/h"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 15,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 52,
+      "stem": "Two parallel chords are drawn in a circle of radius 25 cm. The distance between the two chords is\n27 cm. If the length of one chord is 48 cm, then length of the other chord is equal to:",
+      "opts": [
+        "42 cm",
+        "36 cm",
+        "48 cm",
+        "30 cm"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 15,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 53,
+      "stem": "What is the value of 9x + 2y if the mean of the distribution is 68?\nClass intervals: 0–20 | 20–40 | 40–60 | 60–80 | 80–100 | Total\nFrequencies: 4 | 10 | x | 2 | y | 60.",
+      "opts": [
+        "138",
+        "156",
+        "151",
+        "137"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 15,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 54,
+      "stem": "Ten observations written in descending order are 45, 34, 32, 30, 2x - 15, x + 3, 17, 15, 14, and 8. If\nthe median is 24, then find the value of x.",
+      "opts": [
+        "20",
+        "25",
+        "21",
+        "24"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 15,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 55,
+      "stem": "If the mean of three values 3x, 2x+6 and 2x+1 is 7, then find x.",
+      "opts": [
+        "8",
+        "4",
+        "6",
+        "2"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 16,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 56,
+      "stem": "If cot x = 5/12, find sec x + cosec x.",
+      "opts": [
+        "216/60",
+        "221/60",
+        "313/156",
+        "209/60"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 16,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 57,
+      "stem": "If x + y = 5 and 1/x + 1/y = 20/9, find x³ + y³.",
+      "opts": [
+        "365/3",
+        "356/7",
+        "367/7",
+        "365/4"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 16,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 58,
+      "stem": "If cot²θ = 1 + cos²θ − sin²θ, where 0° < θ < 90°, find tan²θ + cosec²θ.",
+      "opts": [
+        "1/2",
+        "3/2",
+        "−1",
+        "3"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 16,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 59,
+      "stem": "The area of four walls of a room is 336 𝑚2. The length of the room is thrice its breadth. If the height\nof the room is 6 m. What is the area of the floor.",
+      "opts": [
+        "143 m2",
+        "139 m2",
+        "147 m2",
+        "150 m2"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 16,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 60,
+      "stem": "A train running at 63 km/h takes 30 sec to pass a platform. Next it takes 18 sec to pass a man\ncycling at 9 km/h in the same direction in which the train is going. The ratio of the length of the train to\nthe length of the platform is:",
+      "opts": [
+        "18 : 17",
+        "8 : 7",
+        "21 : 19",
+        "10 : 9"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 16,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 61,
+      "stem": "In a parallelogram ABCD, the diagonals intersect at O. ∠BCA = 38° and ∠CAB = 27°. Find ∠AOD if\n∠ADO : ∠CDO = 2 : 3.",
+      "opts": [
+        "86°",
+        "102°",
+        "96°",
+        "92°"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 17,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 62,
+      "stem": "The radius of a cylinder is increased by 33⅓% and its height is decreased by x% so that its volume remains unchanged. Find x.",
+      "opts": [
+        "42.5",
+        "41.25",
+        "44.15",
+        "43.75"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 17,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 63,
+      "stem": "A cube has a total surface area of 294 cm2. A smaller cube is cut from one of its corners such that\nthe edge of the smaller cube is one-third the edge of the original cube. Find the surface area of the\nremaining solid.",
+      "opts": [
+        "294 cm2",
+        "306 cm2",
+        "270 cm2",
+        "282 cm2"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 17,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 64,
+      "stem": "Evaluate sin²42° + sin²48° + sec²30° − cot²45°.",
+      "opts": [
+        "4/3",
+        "3/4",
+        "2/3",
+        "1"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 17,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 65,
+      "stem": "The mean and the mode of a set of data are 62 and 43.6, respectively. Find the median of the data,\nusing the empirical formula. (Round off to one decimal place)",
+      "opts": [
+        "55.4",
+        "56.9",
+        "56.1",
+        "55.9"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 17,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 66,
+      "stem": "Manu printed 20 books of 200 pages each. The cost of printing is Rs. 25 per page. After this, he\nspent Rs. 80 per book on binding. After this, he spent Rs. 2,000 on advertising the books and Rs. 50 per\nbook in supply. If at the end he sold each book for Rs. 7500, then find the amount gained (profit) by\nManu.",
+      "opts": [
+        "Rs. 61,400",
+        "Rs. 38,400",
+        "Rs. 45,400",
+        "Rs. 67,400"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 18,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 67,
+      "stem": "Anirudh travels 55 km at 11 km/h, 65 km at 13 km/h, and 120 km at 20 km/h. What is his average\nspeed (in km/h)?",
+      "opts": [
+        "16",
+        "18",
+        "14",
+        "15"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 18,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 68,
+      "stem": "A jar contains orange juice and water in the ratio 3:1. 70 litres of the mixture are taken out, and 20 litres of water are added. If water is 30% of the resultant mixture, what was the initial quantity?",
+      "opts": [
+        "310 litres",
+        "330 litres",
+        "350 litres",
+        "280 litres"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 18,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 69,
+      "stem": "Four litres of paint was required to paint the surface of a solid sphere. If 4 identical pieces were\nmade of this solid sphere, then how many litres of paint would be required to paint all the surfaces of\nthese 4 pieces?",
+      "opts": [
+        "12",
+        "16",
+        "6",
+        "8"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "invalid",
+      "review": "The shape of the four pieces is unspecified; their exposed surface area cannot be calculated.",
+      "explanation": "The shape of the four pieces is unspecified; their exposed surface area cannot be calculated.",
+      "images": {},
+      "sourcePage": 18,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 70,
+      "stem": "In quadrilateral PQRS, the bisectors of ∠R and ∠S meet at the point T (inside the quadrilateral)\nand ∠STR = 87.5°. If the ratio of ∠P to ∠Q is 2 : 3, then what is the difference between the measures of\n∠Q and ∠P?",
+      "opts": [
+        "25°",
+        "40°",
+        "35°",
+        "45°"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 18,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 71,
+      "stem": "The hypotenuse of a right-angled triangle is 2 more than twice of one of the sides, while the third\nside is 13 more than half of the hypotenuse. The length of the median to the hypotenuse is:",
+      "opts": [
+        "15",
+        "18",
+        "17",
+        "20"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 19,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 72,
+      "stem": "If cos A = √3/2 and A is acute, find (tan A − cot A)/(√3 − sec A).",
+      "opts": [
+        "-2.5",
+        "-2",
+        "-3.5",
+        "2.5"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 19,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 73,
+      "stem": "The number of daily active users on an educational app is modeled by a variable X. If the baseline engagement metric satisfies the equation X + 1/X = 3√2, a data analyst needs to calculate a higher-order engagement index given by the expression X³ + 1/X³. What is the precise numerical value of this higher-order index?",
+      "opts": [
+        "45√2",
+        "36√2",
+        "27√2",
+        "54√2"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 19,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 74,
+      "stem": "Akshat and Shivam start walking together from point P towards point Q, which are located 300 km\naway from each other. Akshat travels at a speed of 70 km/h, while Shivam travels at a speed of 50 km/h.\nAfter reaching point Q, Akshat immediately turns back towards point P and eventually meets Shivam on\nthe way. At what distance from point Q do they meet?",
+      "opts": [
+        "51 km",
+        "49 km",
+        "48 km",
+        "50 km"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 19,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 75,
+      "stem": "What will be the compound interest on a sum of ₹10,176 after 3 years at the rate of 25% per\nannum, interest being compounded annually?",
+      "opts": [
+        "₹9,799",
+        "₹9,899",
+        "₹9,999",
+        "₹9,699"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 19,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 76,
+      "stem": "(1) of space scientists of India, which provides platform to the researchers in space sciences\n(2) to exchange the scientific results, review the scientific lessons learnt from the previous missions\n(3) National Space Science Symposium is a forum\n(4) Inauguration of this year’s event has happened in online mode due to restrictions imposed in view\nof COVID-19 pandemic.\nGiven below are some jumbled sentences. Pick the one that gives their correct order.",
+      "opts": [
+        "2134",
+        "3124",
+        "4132",
+        "3412"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 20,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 77,
+      "stem": "(1) In its second developmental flight, the SSLV-D2 vehicle placed EOS-07, Janus-1 and AzaadiSAT-\n2 satellites into their intended 450 km circular orbit with an inclination of 37 degrees\n(2) Small Satellite Launch Vehicle (SSLV) successfully launched three satellites into their intended orbits\n(3) and took about 15 minutes to inject the satellites.\n(4) It took-off from the first launch pad at Satish Dhawan Space Centre, Sriharikota at 09 : 18 hours IST\nGiven below are some jumbled sentences. Pick the one that gives their correct order.",
+      "opts": [
+        "2134",
+        "1324",
+        "2143",
+        "3124"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 20,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 78,
+      "stem": "Select the most appropriate synonym of the given word.\nZealous",
+      "opts": [
+        "Envious",
+        "Impersonal",
+        "Enthusiastic",
+        "Formal"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 20,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 79,
+      "stem": "From the alternatives given below, select the correct passive voice of the following sentence.\nThe chef has prepared a very sweet dish to serve the dignitaries in the reception.",
+      "opts": [
+        "A very sweet dish to be served to the dignitaries in the reception has been prepared by the chef.",
+        "A very sweet dish to be serve to the dignitaries in the reception has been prepared by the chef.",
+        "A very sweet dish to served to the dignitaries in the reception has been prepared by the chef.",
+        "A very sweet dish to serve to the dignitaries in the reception is prepared by the chef."
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 20,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 80,
+      "stem": "Select the most appropriate meaning of the given idiom.\nGive one the slip",
+      "opts": [
+        "to flatter others",
+        "to neglect someone",
+        "to give a notice",
+        "to escape from someone"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 20,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 81,
+      "stem": "Which word is spelled incorrectly?",
+      "opts": [
+        "Conscientious",
+        "Indispensable",
+        "Reconnassance",
+        "Entrepreneur"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 21,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 82,
+      "stem": "Given below are four jumbled sentences. Select the option that gives their correct order to form a\nmeaningful and coherent paragraph.\nP: In addition, these ancient manuscripts provide profound insights into human consciousness.\nQ: Therefore, modern scholars continue to analyze these texts for timeless wisdom.\nR: Ancient Indian scriptures offer a vast treasure of philosophical and spiritual knowledge.\nS: However, translating these complex Sanskrit verses remains a very difficult task.",
+      "opts": [
+        "RPSQ",
+        "QSPR",
+        "PRSQ",
+        "SQRP"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 21,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 83,
+      "stem": "Change the following sentence into the Active form.\nHis application had been looked over by a special committee for weeks.",
+      "opts": [
+        "A special committee has looked over his application for weeks.",
+        "A special committee was looking over his application for weeks.",
+        "A special committee had been looking over his application for weeks.",
+        "His application was looked over by a special committee."
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "invalid",
+      "review": "The published option changes grammatical tense/aspect; none is an exact active equivalent.",
+      "explanation": "The published option changes grammatical tense/aspect; none is an exact active equivalent.",
+      "images": {},
+      "sourcePage": 21,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 84,
+      "stem": "Select the most appropriate ANTONYM of the given word.\nArduous",
+      "opts": [
+        "Grueling",
+        "Exhausting",
+        "Effortless",
+        "Tedious"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 21,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 85,
+      "stem": "Rearrange the following sentence parts to form a meaningful and grammatically correct\nparagraph:\nP. She poured the hot liquid into her favourite mug.\nQ A downpour had started raining hard, beating against the windowpanes in steady rhythm.\nR. The kitchen was filled with the scent of cinnamon and cloves, a comforting and warm smell.\nS. It was a fantastic night to have a mug of hot cider.",
+      "opts": [
+        "RQPS",
+        "QSRP",
+        "SPQR",
+        "RPQS"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 21,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 86,
+      "stem": "Select the option that can be used as a one-word substitute for the given group of words.\nVery determined and refusing to be defeated by problems",
+      "opts": [
+        "Vociferous",
+        "Impetuous",
+        "Imprudent",
+        "Pertinacious"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 22,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 87,
+      "stem": "Choose the correctly spelt word:",
+      "opts": [
+        "Facsimile",
+        "Facsmile",
+        "Facsimily",
+        "Facsimele"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 22,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 88,
+      "stem": "Select the correct option to fill in the blank 1.",
+      "opts": [
+        "hospitable",
+        "placid",
+        "inhospitable",
+        "verdant"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 23,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied.",
+      "passageRef": "reading88"
+    },
+    {
+      "n": 89,
+      "stem": "Select the correct option to fill in the blank 2.",
+      "opts": [
+        "unilateral",
+        "reciprocal",
+        "desultory",
+        "parochial"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 23,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied.",
+      "passageRef": "reading88"
+    },
+    {
+      "n": 90,
+      "stem": "Select the correct option to fill in the blank 3.",
+      "opts": [
+        "vigilant",
+        "circumspect",
+        "indomitable",
+        "unwary"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 23,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied.",
+      "passageRef": "reading88"
+    },
+    {
+      "n": 91,
+      "stem": "Select the correct option to fill in the blank 4.",
+      "opts": [
+        "ephemeral",
+        "indelible",
+        "nebulous",
+        "inconsequential"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 23,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied.",
+      "passageRef": "reading88"
+    },
+    {
+      "n": 92,
+      "stem": "Select the correct option to fill in the blank 5.",
+      "opts": [
+        "resonance",
+        "obsolescence",
+        "irrelevance",
+        "ambiguity"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 23,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied.",
+      "passageRef": "reading88"
+    },
+    {
+      "n": 93,
+      "stem": "One of these words is spelled incorrectly. Which one is it?",
+      "opts": [
+        "Euphemism",
+        "Fractious",
+        "Willful",
+        "Supplecation"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 23,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 94,
+      "stem": "Select the correct Antonym of the given word.\nRebuke",
+      "opts": [
+        "Repulse",
+        "Admonish",
+        "Applaud",
+        "Reprimand"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 24,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 95,
+      "stem": "Choose the correctly used homonym in the sentence.",
+      "opts": [
+        "She has a flair for baking.",
+        "He tied the flag to the flaire.",
+        "They built a flair to signal help.",
+        "She used a flare pen to write."
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 24,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 96,
+      "stem": "One of the most difficult problem/ that the organisation faces is the evasion of contribution by\nsmall establishments\nEach of the following sentences is divided into four parts. Select the part that contains an error. If there\nis no error, select option (d):",
+      "opts": [
+        "One of the most difficult problem",
+        "that the organisation faces",
+        "is the evasion of contribution by small establishments",
+        "No error"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 24,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 97,
+      "stem": "No sooner did the Commissioner enter the hall/ than the members rose from their seats/ and\ngreeted him with a loud applause\nEach of the following sentences is divided into four parts. Select the part that contains an error. If there\nis no error, select option (d):",
+      "opts": [
+        "No sooner did the Commissioner enter the hall",
+        "than the members rose from their seats",
+        "and greeted him with a loud applause",
+        "No error"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 24,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 98,
+      "stem": "Given below are four jumbled sentences. Select the option that gives their correct order to form a\nmeaningful and coherent paragraph.\nA. This field allows scientists to design and construct new biological parts and systems.\nB. Synthetic biology is an emerging discipline that combines biology with engineering principles.\nC. Applications range from creating new medicines to developing sustainable biofuels.\nD. It holds immense potential to solve some of humanity's biggest challenges.",
+      "opts": [
+        "B – A – C – D",
+        "B – C – A – D",
+        "A – B – C – D",
+        "D – B – A – C"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 24,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 99,
+      "stem": "Select the most appropriate meaning of the given idiom.\nRed letter day",
+      "opts": [
+        "Memorable day",
+        "Rose day",
+        "Holiday",
+        "Birthday"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 27,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 100,
+      "stem": "Choose the most appropriate conversion of the following sentence into Direct Speech.\nShe said that they would have left the town and moved to Pune by the following week.",
+      "opts": [
+        "She said, \"They will have left the town and moved to Pune by next week.\"",
+        "She said, \"That they would leave the town and move to Pune by next week.\"",
+        "She said, \"They have left the town and moved to Pune by the following week.\"",
+        "She said, \"They will leave the town and move to Pune by the following week.\""
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 27,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    }
+  ],
+  "passages": {
+    "reading88": "For centuries, the Silk Road served as far more than a conduit for commodities; it was a vibrant artery through which ideas, beliefs and technologies flowed between civilisations. Merchants traversing its (1)________ terrain, which included scorching deserts, treacherous mountain passes and desolate steppes, carried not merely silk and spices but also philosophies that would profoundly reshape the societies they touched. The exchange was remarkably (2)________. Buddhism journeyed eastward from India into China, while papermaking techniques gradually migrated westward, eventually transforming scholarship in the Islamic world and Europe. Such cross-pollination fostered a cosmopolitan ethos in bustling entrepo ts like Samarkand and Kashgar, where polyglot traders haggled in myriad tongues. Yet the route was not without its perils. Brigands lay in wait for (3)________ caravans, and the vicissitudes of politics could abruptly sever vital links. The collapse of a single empire often precipitated a decline in commerce across vast regions, illustrating how interdependent these far-flung economies had become. Historians caution against romanticising this era, noting that disease, too, travelled along these pathways; the Black Death is widely believed to have spread partly through such networks. Nonetheless, the Silk Road's legacy remains (4)________. It demonstrates that human progress has seldom been the achievement of isolated societies but rather the fruit of sustained interaction. In today's increasingly insular  political  climate,  this lesson acquires fresh  (5)________. Nations contemplating a retreat behind protectionist barriers would do well to remember that prosperity has historically flourished where borders were porous and minds were receptive."
+  }
+}

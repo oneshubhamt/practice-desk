@@ -1,3 +1,4 @@
+import {loadCglFixture,loadQuestionBankGraph,repositoryRoot} from "./fixtures/cgl-bank.mjs";
 /** Canonical executable contracts, grouped by stable product responsibility. */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -107,8 +108,8 @@ await registerHistoryResultsPresentationTests();
 
 /** Media Editorial And Pause — canonical domain contracts. */
 async function registerMediaEditorialAndPauseTests(){
-const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
-const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
+const sources=(await loadCglFixture()).sources;
+const patches=(await loadCglFixture()).patches;
 const cgl=builtinCglPackages(sources,patches);
 const send=(type,nowMs,extra={})=>({type,nowMs,...extra});
 const visible=(a,id)=>a.responses.find(r=>r.questionRevisionId===id);

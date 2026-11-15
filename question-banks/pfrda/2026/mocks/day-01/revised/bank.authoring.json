@@ -1,0 +1,1769 @@
+{
+  "format": "practice-desk-authoring",
+  "version": 1,
+  "bankId": "pfrda-grade-a-2026-day1",
+  "examId": "pfrda-grade-a-2026-phase-ii",
+  "paperId": "pfrda-grade-a-2026-day1",
+  "title": "PFRDA Grade A 2026 — Day 1 — Revised Practice",
+  "edition": "custom",
+  "revision": 2,
+  "scoring": {
+    "correctMarks": 2,
+    "incorrectMarks": -0.5
+  },
+  "timing": {
+    "kind": "sectional",
+    "pausePolicy": "forbidden",
+    "sectionTransition": "automatic",
+    "allowEarlySubmit": true
+  },
+  "navigation": {
+    "questionNavigation": "free",
+    "sectionNavigation": "sequential-locked",
+    "allowReview": true
+  },
+  "sections": [
+    {
+      "id": "descriptive",
+      "title": "Paper 1 — Descriptive English (Day 1 précis practice)",
+      "minutes": 20
+    },
+    {
+      "id": "general",
+      "title": "Paper 2 — General Stream",
+      "minutes": 40
+    }
+  ],
+  "stimuli": [
+    {
+      "id": "day1-precis-passage",
+      "kind": "passage",
+      "title": "Untitled passage for précis",
+      "text": {
+        "format": "practice-desk-rich",
+        "version": 1,
+        "blocks": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Retirement security is often discussed as a question of how much money individuals accumulate during their working lives. Yet the ability to enjoy financial independence in old age depends on more than savings alone. It is shaped by the stability of employment, the accessibility of financial institutions, the design of pension systems and the capacity of households to manage uncertainty over several decades."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Traditional pension arrangements were generally developed around the assumption that workers would enjoy relatively stable careers and predictable earnings. However, changing labour markets have weakened this assumption. A growing number of individuals experience irregular incomes, frequent changes in employment or prolonged periods outside the workforce. For such workers, maintaining consistent pension contributions can be difficult, even when they recognise the importance of retirement planning."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Financial inclusion is therefore not merely a matter of opening pension accounts. Participation must be sustained through affordable contributions, convenient payment mechanisms, transparent information and confidence in the institutions managing retirement savings. Excessive complexity may discourage participation, while poorly understood investment risks can undermine trust, particularly among individuals with limited financial knowledge."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Pension policy also involves difficult choices. Greater investment flexibility may improve opportunities for long-term wealth creation, but it can expose subscribers to market fluctuations. Guaranteed benefits may provide certainty, yet their financing must remain sustainable. Similarly, early access to accumulated savings may help households during emergencies but reduce the resources available after retirement."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "These challenges affect different groups unequally. Women, informal workers and individuals with interrupted careers may accumulate smaller retirement balances despite spending many years engaged in economically valuable activities. A well-designed pension framework must recognise such differences without compromising financial sustainability or creating excessive administrative burdens."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Ultimately, the success of a pension system should not be judged solely by the number of accounts opened or the total assets accumulated. Its deeper purpose is to provide reliable income security in old age while balancing individual responsibility, social protection and long-term economic sustainability."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "day1-english-precis",
+      "examSection": "descriptive",
+      "subject": "Descriptive English",
+      "topic": "Précis writing",
+      "kind": "free-response",
+      "stimulusRef": "day1-precis-passage",
+      "prompt": "Write a précis in approximately 110 words (target 100–120 words) and supply a suitable title. This is the original 20-minute Day 1 practice exercise; the full official Paper 1 is 60 minutes. Your answer needs manual assessment.",
+      "answer": "",
+      "explanation": {
+        "format": "practice-desk-rich",
+        "version": 1,
+        "blocks": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Illustrative title: Retirement Security in a Changing Economy"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Model précis: Retirement security depends not simply on accumulated savings but also on stable earnings, accessible institutions and systems that manage uncertainty. Traditional pensions assumed predictable employment, whereas irregular incomes and interrupted careers now make regular contributions difficult. Genuine financial inclusion therefore requires affordable, convenient and transparent arrangements that build trust. Policymakers must balance investment flexibility against market risk, guarantees against financial sustainability, and emergency withdrawals against future adequacy. Women, informal workers and those with interrupted careers face particular disadvantages, calling for inclusive yet administratively sustainable designs. Pension systems should consequently be assessed not only by enrolment or assets, but by their ability to provide dependable old-age income while balancing personal responsibility and social protection."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Unofficial practice rubric (/20): fidelity and coverage 8; compression 4; logical structure 3; language and grammar 3; title 2. Manually assess writing; the model is not the only acceptable response."
+              }
+            ]
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Original Day 1 ChatGPT précis practice in the user’s PFRDA project; source text preserved verbatim."
+      },
+      "qa": {
+        "status": "needs-review"
+      },
+      "scoringOverride": {
+        "correctMarks": 20,
+        "incorrectMarks": 0,
+        "unansweredMarks": 0
+      }
+    },
+    {
+      "id": "day1-general-01",
+      "examSection": "general",
+      "subject": "PFRDA Act",
+      "kind": "single-choice",
+      "prompt": "Which statement most accurately describes the general scope of the PFRDA Act, 2013?",
+      "options": [
+        "It applies to the National Pension System and other pension schemes not regulated by another enactment, subject to statutory exclusions.",
+        "It applies to every pension and provident fund scheme in India without exception.",
+        "It applies exclusively to Central Government pension schemes.",
+        "It regulates only insurance-company annuities."
+      ],
+      "answer": "A",
+      "explanation": "A is correct. The PFRDA Act regulates the NPS and the pension schemes within its statutory scope; it is not a universal law for every provident fund. B ignores exclusions and other regulators; C wrongly confines it to Central employees; D confuses pension regulation with insurance annuity regulation. Recall: identify the scheme and its governing enactment before naming its regulator.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q1; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "India Code",
+            "title": "PFRDA Act, 2013",
+            "url": "https://upload.indiacode.nic.in/showfile?actid=AC_CEN_2_45_00007_201323_1517807327819&filename=201323.pdf&type=actfile",
+            "stance": "supports",
+            "provision": "Section 1(4)",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": true,
+          "timeSensitive": false,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day1-general-02",
+      "examSection": "general",
+      "subject": "Budget/Survey",
+      "kind": "single-choice",
+      "prompt": "According to Union Budget 2026–27, the fiscal deficit was estimated at what percentage of GDP in the Budget Estimates (BE) for 2026–27?",
+      "options": [
+        "3.9%",
+        "4.3%",
+        "4.4%",
+        "5.1%"
+      ],
+      "answer": "B",
+      "explanation": "B, 4.3% of GDP, is the FY 2026–27 Budget Estimate for fiscal deficit. C (4.4%) belongs to a different Budget-period comparison; A and D are not the specified BE figure. Fiscal deficit measures borrowing requirements, not capital expenditure or the revenue deficit. Always distinguish BE from RE and identify the financial year before memorising a Budget number.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q2; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "Ministry of Finance",
+            "title": "Union Budget 2026–27: Fiscal Policy Strategy Statement",
+            "url": "https://www.indiabudget.gov.in/doc/frbm1.pdf",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": true,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day1-general-03",
+      "examSection": "general",
+      "subject": "Accountancy",
+      "kind": "single-choice",
+      "prompt": "A business holds inventory costing ₹8 lakh. Its estimated selling price is ₹7.8 lakh, and estimated selling expenses are ₹0.3 lakh. At what amount should the inventory generally be measured under the lower-of-cost-and-NRV principle?",
+      "options": [
+        "₹8.0 lakh",
+        "₹7.8 lakh",
+        "₹7.5 lakh",
+        "₹8.3 lakh"
+      ],
+      "answer": "C",
+      "explanation": "C, ₹7.5 lakh. NRV is expected sale proceeds less costs necessary to complete and sell: ₹7.8 − ₹0.3 = ₹7.5 lakh. Inventory is measured at the lower of its ₹8 lakh cost and ₹7.5 lakh NRV. A ignores the write-down; B ignores selling expenses; D incorrectly adds expenses. The rule is lower of cost and NRV, not lower of cost and selling price.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q3; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "ICAI",
+            "title": "AS 2: Valuation of Inventories",
+            "url": "https://kb.icai.org/pdfs/69232asb55316-as2.pdf",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": true,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-04",
+      "examSection": "general",
+      "subject": "Management",
+      "kind": "single-choice",
+      "prompt": "A manager compares actual output with established standards, identifies deviations and initiates corrective action. Which management function is primarily illustrated?",
+      "options": [
+        "Planning",
+        "Controlling",
+        "Staffing",
+        "Organising"
+      ],
+      "answer": "B",
+      "explanation": "B is controlling: measure actual performance, compare it with standards, identify deviations and take corrective action. Planning sets objectives (A), staffing secures people (C), and organising allocates roles/resources (D). Controlling is the feedback-and-correction function, not simply drawing up a plan. The question’s decisive clue is comparison of actual results with standards followed by corrective action.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q4; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ."
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-05",
+      "examSection": "general",
+      "subject": "Finance",
+      "kind": "single-choice",
+      "prompt": "For an existing fixed-coupon bond, which relationship generally holds between its market price and yield to maturity, other factors remaining unchanged?",
+      "options": [
+        "They always move proportionately in the same direction.",
+        "The yield remains constant when market prices change.",
+        "A price increase causes the coupon rate itself to rise.",
+        "Market price and yield to maturity move inversely."
+      ],
+      "answer": "D",
+      "explanation": "D. For an existing fixed-coupon bond, higher market price means lower yield to maturity and vice versa, other inputs held constant. A reverses the relationship; B denies the price sensitivity of yield; C confuses the contractually fixed coupon rate with the changing market yield. A bond can keep paying the same coupon while its traded price and yield move in opposite directions.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q5; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ."
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-06",
+      "examSection": "general",
+      "subject": "Costing",
+      "kind": "single-choice",
+      "prompt": "A product sells for ₹500 per unit, its variable cost is ₹300 per unit and total fixed cost is ₹2,40,000. What is the break-even sales volume in units?",
+      "options": [
+        "800",
+        "1,200",
+        "1,500",
+        "2,000"
+      ],
+      "answer": "B",
+      "explanation": "B, 1,200 units. Contribution per unit = ₹500 selling price − ₹300 variable cost = ₹200. Break-even units = fixed costs / contribution per unit = ₹2,40,000 / ₹200 = 1,200. A understates fixed-cost recovery; C and D exceed the break-even output. Fixed costs are not divided by selling price: only the contribution left after variable costs pays for fixed costs.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q6; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "ICMAI",
+            "title": "Cost Accounting study material",
+            "url": "https://www.icmai.in/upload/Students/Syllabus2022/Inter_Stdy_Mtrl/P8.pdf",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": true,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-07",
+      "examSection": "general",
+      "subject": "Companies Act",
+      "kind": "single-choice",
+      "prompt": "Which description best captures a private placement under Section 42 of the Companies Act, 2013?",
+      "options": [
+        "An unrestricted public invitation to subscribe to securities.",
+        "An offer or invitation to subscribe to securities to an identified group of persons, subject to statutory requirements.",
+        "An issue of shares exclusively to existing shareholders in proportion to their holdings.",
+        "An issue of fully paid bonus shares from eligible reserves."
+      ],
+      "answer": "B",
+      "explanation": "B. Section 42 private placement is an offer/invitation to a selected, identified set of persons subject to the statutory process. A describes a public offer, C resembles a proportionate rights issue under Section 62, and D a bonus issue under Section 63. The distinction is the mode and target of invitation; a private placement is not an unrestricted appeal to the public.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q7; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "Ministry of Corporate Affairs",
+            "title": "Companies Act, 2013",
+            "url": "https://www.mca.gov.in/Ministry/pdf/CompaniesAct2013.pdf",
+            "stance": "supports",
+            "provision": "Section 42",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": true,
+          "timeSensitive": false,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day1-general-08",
+      "examSection": "general",
+      "subject": "Economics",
+      "kind": "single-choice",
+      "prompt": "Which item is ordinarily excluded from GDP calculated by the expenditure method, assuming no corresponding purchase of currently produced goods or services?",
+      "options": [
+        "Government purchase of newly produced medical equipment",
+        "Household expenditure on newly produced domestic appliances",
+        "A firm's purchase of new machinery",
+        "A government cash transfer to an individual"
+      ],
+      "answer": "D",
+      "explanation": "D. A cash transfer does not itself buy newly produced goods or services and is excluded from the expenditure measure of GDP. A is government consumption/investment expenditure, B household final consumption, and C business investment in equipment. If the recipient later spends the transfer on current output, that spending may enter GDP; the transfer itself is not counted again.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q8; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ."
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-09",
+      "examSection": "general",
+      "subject": "Pension Sector",
+      "kind": "single-choice",
+      "prompt": "Within the NPS architecture, which intermediary primarily maintains individual subscriber records and facilitates the operation of Permanent Retirement Account Numbers (PRANs)?",
+      "options": [
+        "Pension Fund",
+        "Central Recordkeeping Agency",
+        "Annuity Service Provider",
+        "Custodian"
+      ],
+      "answer": "B",
+      "explanation": "B. The Central Recordkeeping Agency maintains subscriber records and PRAN-linked transactions. A pension fund manages invested assets; C an annuity service provider contracts for pension/annuity payments at the applicable stage; D a custodian safeguards securities/assets. The CRA is the recordkeeping and transaction-information hub, not the owner or portfolio manager of the underlying investments.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q9; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "PFRDA",
+            "title": "Central Recordkeeping Agency functions",
+            "url": "https://pfrda.org.in/en/intermediaries/registered-intermediaries/central-record-keeping-agency",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": true,
+          "timeSensitive": false,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day1-general-10",
+      "examSection": "general",
+      "subject": "AI/ML",
+      "kind": "single-choice",
+      "prompt": "A lender trains a model using historical loan applications labelled 'default' or 'no default' to predict the class of new applications. This is primarily an example of:",
+      "options": [
+        "Unsupervised clustering",
+        "Reinforcement learning",
+        "Supervised classification",
+        "Unsupervised dimensionality reduction"
+      ],
+      "answer": "C",
+      "explanation": "C. Historical applications labelled default/not default supply the known target classes needed for supervised classification. A clustering and D dimensionality reduction are unsupervised methods without such outcome labels; B reinforcement learning uses reward-based interaction rather than labelled examples as the central training signal. Key distinction: labels + predicted category = supervised classification.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q10; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ."
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-11",
+      "examSection": "general",
+      "subject": "Media",
+      "kind": "single-choice",
+      "prompt": "A media company distributes the same news programme through traditional television, its website, mobile applications and social platforms, with integrated production and distribution. Which concept is illustrated most directly?",
+      "options": [
+        "Digital exclusion",
+        "Media convergence",
+        "Audience fragmentation alone",
+        "Price discrimination"
+      ],
+      "answer": "B",
+      "explanation": "B, media convergence, combines distribution and often production across broadcast, websites, apps and social channels. A digital exclusion is about access barriers; C audience fragmentation may coexist but does not explain integrated cross-platform distribution; D price discrimination concerns varying prices across buyers. Convergence involves media technologies, content and platforms coming together, not merely the existence of several audiences.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q11; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ."
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-12",
+      "examSection": "general",
+      "subject": "Marketing/Communication",
+      "kind": "single-choice",
+      "prompt": "A pension-service provider improves access through branches, mobile applications and authorised distribution partners. Which element of the traditional marketing mix does this address most directly?",
+      "options": [
+        "Product",
+        "Price",
+        "Place",
+        "Promotion"
+      ],
+      "answer": "C",
+      "explanation": "C, Place. The provider is changing how and where users reach its service through branches, apps and partners. Product refers to the service offered (A), Price to what users pay (B), and Promotion to persuasive communications (D). In the four Ps, access and distribution channels belong to Place even if the channel is digital rather than a physical shop.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q12; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ."
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-13",
+      "examSection": "general",
+      "subject": "PFRDA Act",
+      "kind": "single-choice",
+      "prompt": "Under Section 14 of the PFRDA Act, 2013, which of the following is expressly part of the Authority's subscriber-protection responsibilities?",
+      "options": [
+        "Requiring every pension fund to guarantee an identical annual investment return",
+        "Adjudicating employers’ civil-damages claims as a court of first instance",
+        "Establishing a mechanism for redressal of subscribers’ grievances in accordance with regulations",
+        "Approving the retail price of every life-insurer annuity product"
+      ],
+      "answer": "C",
+      "explanation": "C. Section 14(2)(f) empowers PFRDA to establish subscriber-grievance redressal mechanisms by regulation. A is not a universal guarantee of investment returns; B would confer judicial powers not supplied by that clause; D concerns insurance-product pricing, not PFRDA subscriber grievance redressal. Memorise the function and the provision together: protection of subscribers includes grievance handling, not underwriting all investment risk.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q13; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "India Code",
+            "title": "PFRDA Act, 2013",
+            "url": "https://upload.indiacode.nic.in/showfile?actid=AC_CEN_2_45_00007_201323_1517807327819&filename=201323.pdf&type=actfile",
+            "stance": "supports",
+            "provision": "Section 14(2)(f)",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": true,
+          "timeSensitive": false,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day1-general-14",
+      "examSection": "general",
+      "subject": "Budget/Survey",
+      "kind": "single-choice",
+      "prompt": "According to Union Budget 2026–27, the Central Government's direct capital expenditure in BE 2026–27 was estimated at approximately:",
+      "options": [
+        "₹10.00 lakh crore",
+        "₹12.22 lakh crore",
+        "₹14.93 lakh crore",
+        "₹17.15 lakh crore"
+      ],
+      "answer": "B",
+      "explanation": "B, ₹12.22 lakh crore, is direct Central Government capital expenditure in BE 2026–27. D, ₹17.15 lakh crore, is the broader effective capital expenditure including grants for creation of capital assets; A and C are not the direct capex BE total. An MCQ may deliberately swap direct and effective capex: check the exact expenditure concept and the BE/RE label.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q14; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "Ministry of Finance",
+            "title": "Union Budget 2026–27: Fiscal Policy Strategy Statement",
+            "url": "https://www.indiabudget.gov.in/doc/frbm1.pdf",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": true,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day1-general-15",
+      "examSection": "general",
+      "subject": "Accountancy",
+      "kind": "single-choice",
+      "prompt": "Under the indirect method of preparing cash flows from operating activities, an increase in inventories during the year, other things equal, is generally:",
+      "options": [
+        "Deducted from profit while calculating cash flow from operations",
+        "Added to profit as a source of operating cash",
+        "Reported only as a financing cash inflow",
+        "Ignored because inventory is a non-cash asset"
+      ],
+      "answer": "A",
+      "explanation": "A. Under the indirect method, increasing inventory ordinarily uses operating resources; its increase is deducted while reconciling accrual profit to operating cash flow, other things equal. B has the cash-flow direction reversed; C misclassifies working capital as financing; D wrongly ignores non-cash working-capital changes in the reconciliation. A cash purchase of inventory is already reflected through working-capital adjustment.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q15; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ."
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-16",
+      "examSection": "general",
+      "subject": "Management",
+      "kind": "single-choice",
+      "prompt": "An employee reports simultaneously to a functional manager and a project manager. Which organisation structure does this most directly indicate?",
+      "options": [
+        "Pure line structure",
+        "Strictly functional structure with a single reporting chain",
+        "Matrix structure",
+        "Divisional structure without cross-functional responsibility"
+      ],
+      "answer": "C",
+      "explanation": "C, matrix structure, because an employee has both functional and project reporting relationships. A line or B purely functional structure ordinarily has a single vertical command chain; D divisional structure is arranged around products, regions or markets and need not create dual reporting. The identifying feature of a matrix is the coexistence of functional and project authority.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q16; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ."
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-17",
+      "examSection": "general",
+      "subject": "Finance",
+      "kind": "single-choice",
+      "prompt": "The buyer of a standard put option has which contractual right?",
+      "options": [
+        "The obligation to buy the underlying asset at the strike price",
+        "The obligation to sell the underlying asset at the strike price",
+        "The right to buy the underlying asset at the strike price",
+        "The right, but not the obligation, to sell the underlying asset at the strike price"
+      ],
+      "answer": "D",
+      "explanation": "D. A put option gives its buyer the right, not the obligation, to sell the underlying at the strike under the option terms. A and B mistakenly impose exercise obligations on the buyer; C describes the buyer of a call option. The seller/writer, not the buyer, undertakes the corresponding obligation if valid exercise occurs. Put = right to sell; call = right to buy.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q17; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ."
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-18",
+      "examSection": "general",
+      "subject": "Costing",
+      "kind": "single-choice",
+      "prompt": "A manufacturer finds that production set-ups, rather than machine hours, primarily drive a particular category of overhead. Which costing approach most directly supports assigning that overhead using the number of set-ups?",
+      "options": [
+        "Traditional blanket labour-hour absorption alone",
+        "Activity-based costing",
+        "Marginal costing without overhead allocation",
+        "Process costing based only on equivalent units"
+      ],
+      "answer": "B",
+      "explanation": "B. Activity-based costing first groups overhead by activity, then charges products using an activity cost driver such as number of set-ups. A uses a broad allocation base regardless of the actual driver; C marginal costing focuses on variable contribution and does not solve this overhead-driver allocation; D equivalent-unit process costing addresses homogeneous production. Allocate set-up cost by set-ups when set-ups cause that overhead.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q18; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "ICMAI",
+            "title": "Cost Accounting study material",
+            "url": "https://www.icmai.in/upload/Students/Syllabus2022/Inter_Stdy_Mtrl/P8.pdf",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-19",
+      "examSection": "general",
+      "subject": "Companies Act",
+      "kind": "single-choice",
+      "prompt": "Under Section 63 of the Companies Act, 2013, which reserve cannot be capitalised for issuing bonus shares?",
+      "options": [
+        "Eligible free reserves",
+        "Securities premium account, subject to applicable requirements",
+        "Reserves created by revaluation of assets",
+        "Capital redemption reserve account"
+      ],
+      "answer": "C",
+      "explanation": "C. Section 63 allows eligible free reserves, the securities premium account and the capital redemption reserve account to be capitalised for fully paid bonus shares, subject to conditions. It expressly excludes reserves created by asset revaluation. Hence A, B and D name eligible sources, while C is prohibited. Exam trap: an accounting reserve appearing in equity is not automatically distributable or eligible for bonus capitalisation.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q19; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "Ministry of Corporate Affairs",
+            "title": "Companies Act, 2013",
+            "url": "https://www.mca.gov.in/Ministry/pdf/CompaniesAct2013.pdf",
+            "stance": "supports",
+            "provision": "Section 63",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": true,
+          "timeSensitive": false,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day1-general-20",
+      "examSection": "general",
+      "subject": "Economics",
+      "kind": "single-choice",
+      "prompt": "Nominal GDP is ₹2,200 billion and real GDP at the relevant base-year prices is ₹2,000 billion. What is the GDP deflator (base = 100)?",
+      "options": [
+        "90.9",
+        "110",
+        "200",
+        "10"
+      ],
+      "answer": "B",
+      "explanation": "B, 110. GDP deflator = nominal GDP / real GDP × 100 = 2,200 / 2,000 × 100. A (90.9) inverts the ratio; C treats the figure as a percentage by an incorrect operation; D omits the base-100 scaling. A value of 110 indicates the current-price level of measured output is 10% above the base-year price level in this calculation.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q20; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ."
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": true,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-21",
+      "examSection": "general",
+      "subject": "Pension Sector",
+      "kind": "single-choice",
+      "prompt": "Which statement correctly describes the Central Government-guaranteed minimum pension options under Atal Pension Yojana, subject to its eligibility and contribution requirements?",
+      "options": [
+        "A uniform pension of ₹10,000 monthly beginning at age 55",
+        "A choice of ₹1,000, ₹2,000, ₹3,000, ₹4,000 or ₹5,000 monthly after age 60",
+        "A market-linked pension with no guaranteed minimum amount",
+        "A one-time pension payment at age 40"
+      ],
+      "answer": "B",
+      "explanation": "B. APY offers specified Government-guaranteed minimum monthly pensions of ₹1,000, ₹2,000, ₹3,000, ₹4,000 or ₹5,000 after age 60, subject to enrolment and contribution conditions. A gives the wrong amount and age; C wrongly denies the defined guarantee; D wrongly presents a lump-sum at age 40. Do not confuse APY’s specified minimum benefit with ordinary market-linked NPS accumulation.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q21; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "PFRDA",
+            "title": "Atal Pension Yojana FAQs",
+            "url": "https://pfrda.org.in/web/pfrda/w/faqs/atal-pension-yojana",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": true,
+          "timeSensitive": true,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day1-general-22",
+      "examSection": "general",
+      "subject": "AI/ML",
+      "kind": "single-choice",
+      "prompt": "A machine-learning model achieves 99% accuracy on training observations but only 65% accuracy on an independent, representative test dataset. Which issue is most strongly suggested?",
+      "options": [
+        "Underfitting with identically poor training and test performance",
+        "Guaranteed data integrity",
+        "Overfitting or poor generalisation",
+        "Successful cross-validation by definition"
+      ],
+      "answer": "C",
+      "explanation": "C. Excellent training accuracy with much weaker performance on independent representative data suggests overfitting or poor generalisation. A underfitting would usually show weak training performance too; B accuracy alone cannot guarantee data integrity; D successful cross-validation cannot be inferred from one reported test result. Look at the gap between in-sample and out-of-sample performance, not the training score alone.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q22; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ."
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-23",
+      "examSection": "general",
+      "subject": "Media",
+      "kind": "single-choice",
+      "prompt": "An advertiser uses detailed behavioural information to deliver different political or commercial messages to narrowly defined audience groups. What is a particularly relevant ethical and regulatory concern?",
+      "options": [
+        "The allocation of broadcasting spectrum to the advertiser’s digital platform",
+        "Privacy, profiling and potentially manipulative targeting",
+        "The copyright status of the advertiser’s reusable artwork and templates",
+        "The auditing of circulation figures for traditional print advertising"
+      ],
+      "answer": "B",
+      "explanation": "B. Behavioural microtargeting creates privacy and profiling concerns, particularly when personal data and tailored messages can be used manipulatively. A spectrum licensing, C copyright ownership and D circulation audit may be genuine media-law subjects, but none responds as directly to individual behavioural profiling. The ethical issue is not personalisation as such; it is data use, consent, fairness and manipulation risk.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q23; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ."
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-24",
+      "examSection": "general",
+      "subject": "Marketing/Communication",
+      "kind": "single-choice",
+      "prompt": "During a difficult conversation, an officer restates a citizen's concern in their own words and asks whether the understanding is correct. Which skill is being demonstrated?",
+      "options": [
+        "One-way persuasion",
+        "Active listening and clarification",
+        "Avoidance of feedback",
+        "Selective disclosure"
+      ],
+      "answer": "B",
+      "explanation": "B, active listening and clarification. Paraphrasing another person’s concern and checking accuracy verifies shared understanding. A one-way persuasion seeks to influence rather than clarify; C avoids the feedback just used; D selectively withholds information. The question gives two clues: restating in one’s own words and seeking confirmation. Together they distinguish genuine listening from passive silence.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q24; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ."
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-25",
+      "examSection": "general",
+      "subject": "PFRDA Act",
+      "kind": "single-choice",
+      "prompt": "Under the PFRDA Act, 2013, which statement correctly distinguishes rules and regulations under the Act?",
+      "options": [
+        "The Central Government makes rules under its rule-making power, while PFRDA makes regulations within its statutory authority.",
+        "PFRDA alone makes both rules and regulations, subject only to its internal approval.",
+        "The Central Government makes both rules and regulations, while PFRDA issues only guidance.",
+        "PFRDA makes statutory rules for State Governments, while the Central Government makes regulations."
+      ],
+      "answer": "A",
+      "explanation": "A. Under PFRDA Act Section 51, the Central Government may make rules; Section 52 empowers PFRDA to make regulations consistent with the Act and rules. B and C incorrectly give both law-making powers to one institution; D reverses their statutory roles. Rules and regulations are both subordinate instruments, but the maker and statutory delegation differ. Do not confuse a regulator’s circulars with its regulations.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q25; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "India Code",
+            "title": "PFRDA Act, 2013",
+            "url": "https://upload.indiacode.nic.in/showfile?actid=AC_CEN_2_45_00007_201323_1517807327819&filename=201323.pdf&type=actfile",
+            "stance": "supports",
+            "provision": "Sections 51 and 52",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": true,
+          "timeSensitive": false,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day1-general-26",
+      "examSection": "general",
+      "subject": "Budget/Survey",
+      "kind": "single-choice",
+      "prompt": "The Economic Survey 2025–26 projected India's real GDP growth for FY 2026–27 in which range, according to the Survey's January 2026 assessment?",
+      "options": [
+        "5.0%–5.5%",
+        "5.8%–6.2%",
+        "7.8%–8.2%",
+        "6.8%–7.2%"
+      ],
+      "answer": "D",
+      "explanation": "D, 6.8–7.2%, is the Economic Survey 2025–26 projection for real GDP growth in FY 2026–27. A and B are below this stated projection, while C is above it. The Survey figure is a forward-looking range, not a realised FY27 growth rate. In dynamic-data questions, first identify whether the number is an estimate, projection or actual and then match the fiscal year.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q26; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "Ministry of Finance",
+            "title": "Economic Survey 2025–26, Chapter 1",
+            "url": "https://www.indiabudget.gov.in/economicsurvey/doc/echapter.pdf",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": true,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day1-general-27",
+      "examSection": "general",
+      "subject": "Accountancy",
+      "kind": "single-choice",
+      "prompt": "A firm has current assets of ₹480 lakh and current liabilities of ₹240 lakh. It pays ₹40 lakh of trade payables using cash. Assuming no other changes, what is the new current ratio?",
+      "options": [
+        "1.83:1",
+        "2.00:1",
+        "2.20:1",
+        "2.40:1"
+      ],
+      "answer": "C",
+      "explanation": "C, 2.20:1. Initial current ratio = 480/240 = 2. After paying ₹40 lakh of current payables from cash, current assets become ₹440 lakh and current liabilities ₹200 lakh. New ratio = 440/200 = 2.2. B wrongly assumes the ratio is unchanged; A and D reflect incorrect adjustments. Paying liabilities from cash increases an initially above-one current ratio under the stated assumptions.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q27; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ."
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": true,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-28",
+      "examSection": "general",
+      "subject": "Management",
+      "kind": "single-choice",
+      "prompt": "In Herzberg's two-factor theory, which statement is most consistent with the distinction between hygiene factors and motivators?",
+      "options": [
+        "Salary is always an intrinsic motivator and cannot affect dissatisfaction.",
+        "Recognition is purely a hygiene factor.",
+        "Improved working conditions necessarily create long-term intrinsic motivation.",
+        "Adequate salary and working conditions can reduce dissatisfaction without necessarily creating strong positive motivation."
+      ],
+      "answer": "D",
+      "explanation": "D. In Herzberg’s two-factor theory, pay and working conditions are hygiene factors: their inadequacy causes dissatisfaction, while their adequacy does not automatically produce intrinsic satisfaction. Achievement, responsibility and recognition are more typical motivators. A incorrectly calls salary necessarily intrinsic, B misclassifies recognition, and C claims an automatic long-term motivating effect from working conditions. Avoid equating the absence of dissatisfaction with positive motivation.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q28; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ."
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-29",
+      "examSection": "general",
+      "subject": "Finance",
+      "kind": "single-choice",
+      "prompt": "According to CAPM, a security has beta 1.2, the risk-free rate is 6% and the expected market return is 11%. What is its required return?",
+      "options": [
+        "12%",
+        "11%",
+        "13.2%",
+        "17%"
+      ],
+      "answer": "A",
+      "explanation": "A, 12%. CAPM required return = risk-free rate + beta × (market return − risk-free rate) = 6% + 1.2 × (11% − 6%) = 12%. B ignores beta-adjusted premium; C typically results from multiplying by the wrong base; D incorrectly adds beta times the full market return. The market risk premium is 5 percentage points, not 11%.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q29; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ."
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": true,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-30",
+      "examSection": "general",
+      "subject": "Costing",
+      "kind": "single-choice",
+      "prompt": "A factory originally budgeted output at 10,000 units but actually produced 12,000 units. Which budgeting technique is designed to adjust relevant budgeted costs for the actual level of activity?",
+      "options": [
+        "Fixed budgeting without adjustment",
+        "Flexible budgeting",
+        "Zero-based budgeting solely by prior-year increment",
+        "Capital rationing"
+      ],
+      "answer": "B",
+      "explanation": "B, flexible budgeting, adjusts variable and other activity-dependent budget amounts to the actual 12,000-unit output. A retains the original static activity assumption; C confuses zero-based justification of expenditures with activity-flexing; D addresses allocation among competing capital projects. A fixed budget is useful for initial planning, but comparing actual costs with an activity-adjusted flexible budget isolates efficiency from volume differences.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q30; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "ICMAI",
+            "title": "Cost Accounting study material",
+            "url": "https://www.icmai.in/upload/Students/Syllabus2022/Inter_Stdy_Mtrl/P8.pdf",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-31",
+      "examSection": "general",
+      "subject": "Companies Act",
+      "kind": "single-choice",
+      "prompt": "Under Section 123 of the Companies Act, 2013, who may declare an interim dividend, subject to the statutory conditions?",
+      "options": [
+        "The Board of Directors",
+        "Shareholders at an annual general meeting alone",
+        "The Audit Committee by approving quarterly financial results",
+        "The statutory auditor when certifying distributable profits"
+      ],
+      "answer": "A",
+      "explanation": "A. Section 123 permits the Board of Directors to declare an interim dividend, subject to statutory conditions. B refers to shareholder approval associated with final dividends, not the Board’s interim power. C can review financial information but does not itself declare the dividend; D, the auditor, expresses an audit opinion rather than taking the Board’s distribution decision. Separate authority to recommend, approve and declare dividends.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q31; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "Ministry of Corporate Affairs",
+            "title": "Companies Act, 2013",
+            "url": "https://www.mca.gov.in/Ministry/pdf/CompaniesAct2013.pdf",
+            "stance": "supports",
+            "provision": "Section 123",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": true,
+          "timeSensitive": false,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day1-general-32",
+      "examSection": "general",
+      "subject": "Economics",
+      "kind": "single-choice",
+      "prompt": "In the simple Keynesian expenditure model with no taxes, imports or induced investment, the marginal propensity to consume is 0.8. What is the government-expenditure multiplier?",
+      "options": [
+        "1.25",
+        "2",
+        "4",
+        "5"
+      ],
+      "answer": "D",
+      "explanation": "D, 5. In the simple closed-economy Keynesian model, government-expenditure multiplier = 1/(1 − MPC) = 1/(1 − 0.8) = 5. A is the reciprocal of MPC; B and C do not follow the stated formula. The result relies on the question’s assumptions: leakage through taxes or imports, or other changes in behaviour, would reduce the multiplier.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q32; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ."
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": true,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-33",
+      "examSection": "general",
+      "subject": "Pension Sector",
+      "kind": "single-choice",
+      "prompt": "When a retiree purchases a conventional life annuity from an insurer, which risk is principally transferred to the insurer under the annuity contract?",
+      "options": [
+        "The risk that the retiree will become eligible for employment",
+        "The risk of fluctuations in the retiree's chosen equity portfolio",
+        "The financial risk of having to make contracted payments for as long as the annuitant survives",
+        "The risk of changes in future statutory income-tax slabs"
+      ],
+      "answer": "C",
+      "explanation": "C. A conventional life annuity transfers the contractual longevity/payment-duration risk to the insurer: payments continue according to the contract even if the annuitant lives longer than expected. A employment eligibility, B the retiree’s other equity portfolio risk and D tax-law changes are not the principal risk transferred. The annuity does not by itself eliminate inflation or insurer counterparty risk.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q33; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "PFRDA",
+            "title": "NPS for All Citizen Models",
+            "url": "https://pfrda.org.in/en/schemes/national-pension-system/nps-for-all-citizen-models",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-34",
+      "examSection": "general",
+      "subject": "AI/ML",
+      "kind": "single-choice",
+      "prompt": "Which feature most clearly distinguishes an agentic AI system from a conventional model that merely generates an answer to a single prompt?",
+      "options": [
+        "Its ability to plan and execute multi-step actions using tools and feedback toward an objective",
+        "Its ability to generate a longer single response using a larger context window",
+        "Its use of a supervised-learning loss function during model training",
+        "Its ability to rank several generated drafts without taking goal-directed actions"
+      ],
+      "answer": "A",
+      "explanation": "A. An agentic system can select and sequence actions, use tools, observe feedback and iterate toward a specified goal. B a longer one-off output and D ranking drafts can occur without multi-step agency; C is a training method, not a defining property of agentic operation. Agentic does not mean ungoverned or independently self-directed: constraints, permissions and human oversight still matter.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q34; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ."
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-35",
+      "examSection": "general",
+      "subject": "PFRDA Act",
+      "kind": "single-choice",
+      "prompt": "Which activity is specifically included in the powers and functions of PFRDA under Section 14 of the PFRDA Act, 2013?",
+      "options": [
+        "Fixing a guaranteed annual investment return for every registered pension scheme",
+        "Choosing each NPS subscriber’s asset mix in place of the subscriber under Active Choice",
+        "Registering and regulating intermediaries under its pension-regulation framework",
+        "Maintaining every subscriber’s PRAN transaction ledger directly in place of a CRA"
+      ],
+      "answer": "C",
+      "explanation": "C. Section 14 expressly empowers PFRDA to register and regulate pension intermediaries. A wrongly treats PFRDA as the guarantor of all market-linked pension returns; B confuses regulation with selecting an individual subscriber’s investments under NPS Active Choice; D confuses the Authority with the Central Recordkeeping Agency, which maintains subscriber/PRAN records. Distinguish the regulator’s powers from functions of supervised intermediaries and decisions reserved to subscribers.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q35; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "India Code",
+            "title": "PFRDA Act, 2013",
+            "url": "https://upload.indiacode.nic.in/showfile?actid=AC_CEN_2_45_00007_201323_1517807327819&filename=201323.pdf&type=actfile",
+            "stance": "supports",
+            "provision": "Section 14(2)(d)",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": true,
+          "timeSensitive": false,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day1-general-36",
+      "examSection": "general",
+      "subject": "Budget/Survey",
+      "kind": "single-choice",
+      "prompt": "Which statement correctly describes the effective capital expenditure estimate in Union Budget 2026–27 (BE)?",
+      "options": [
+        "It comprised only grants to States and excluded Central Government capital expenditure.",
+        "It was estimated at ₹12.22 lakh crore, identical to direct capital expenditure.",
+        "It excluded grants-in-aid used for creating capital assets.",
+        "It was estimated at ₹17.15 lakh crore, including ₹4.93 lakh crore of grants-in-aid for creation of capital assets."
+      ],
+      "answer": "D",
+      "explanation": "D. Effective capital expenditure in BE 2026–27 was ₹17.15 lakh crore: direct GoI capital spending ₹12.22 lakh crore plus grants-in-aid for creation of capital assets ₹4.93 lakh crore. A and C leave out one of these components; B mistakes the direct capex subtotal for the effective total. A grant that creates a capital asset expands effective capex even though it is classified differently in Union accounts.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q36; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "Ministry of Finance",
+            "title": "Union Budget 2026–27: Fiscal Policy Strategy Statement",
+            "url": "https://www.indiabudget.gov.in/doc/frbm1.pdf",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": true,
+          "legal": false,
+          "timeSensitive": true,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day1-general-37",
+      "examSection": "general",
+      "subject": "Accountancy",
+      "kind": "single-choice",
+      "prompt": "In a company's statement of cash flows, cash received from issuing ordinary equity shares is ordinarily classified as:",
+      "options": [
+        "An operating cash inflow",
+        "A financing cash inflow",
+        "An investing cash inflow",
+        "A non-cash transaction"
+      ],
+      "answer": "B",
+      "explanation": "B, financing cash inflow. Issuing equity raises funds from owners and therefore changes financing, not operations or investment. A would involve the company’s main revenue-generating activity; C usually concerns buying/selling long-term assets or investments; D applies when no cash actually changes hands. Share issuance for cash is a financing receipt even if the proceeds are later spent on capital equipment.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q37; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ."
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-38",
+      "examSection": "general",
+      "subject": "Management",
+      "kind": "single-choice",
+      "prompt": "A team consists of highly experienced employees who require little technical instruction but need participation in decisions. Which leadership approach is most consistent with situational leadership principles?",
+      "options": [
+        "A directing style emphasising task instructions and frequent close supervision",
+        "A coaching style combining extensive task direction with encouragement",
+        "A supporting/participating style that invites decisions while reducing task direction",
+        "A delegating style that minimises both task instruction and relationship support"
+      ],
+      "answer": "C",
+      "explanation": "C, a supporting/participating style, because employees are technically competent yet need consultation and encouragement. A directing provides too much task instruction; B coaching retains more task direction than needed; D delegating withdraws support despite the stated participation need. Situational leadership varies direction and support with competence and commitment; high skill does not always imply low need for relationship support.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q38; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ."
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-39",
+      "examSection": "general",
+      "subject": "Finance",
+      "kind": "single-choice",
+      "prompt": "Assuming effective monetary transmission and other things unchanged, an RBI repo-rate reduction would most directly tend to:",
+      "options": [
+        "Lower every commercial-bank lending rate automatically by exactly the repo-rate change",
+        "Reduce marginal funding costs and potentially support bank credit and aggregate demand",
+        "Raise lending rates immediately because the repo-rate reduction contracts reserve money",
+        "Increase the cash reserve ratio by the same number of basis points as the repo reduction"
+      ],
+      "answer": "B",
+      "explanation": "B. A repo-rate cut can lower banks’ marginal funding cost and, with effective transmission, make borrowing and investment more attractive. A incorrectly assumes a mechanical one-for-one reduction in every lending rate; C reverses the expected monetary direction; D confuses repo policy with the independent CRR instrument. Actual credit growth depends on risk appetite, demand, liquidity and transmission, so the question correctly says potentially.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q39; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ."
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-40",
+      "examSection": "general",
+      "subject": "Costing",
+      "kind": "single-choice",
+      "prompt": "The standard material price is ₹60 per kg. Actual material price is ₹66 per kg and actual quantity purchased and used is 1,000 kg. Using (standard price − actual price) × actual quantity, what is the material price variance?",
+      "options": [
+        "₹6,000 favourable",
+        "₹60,000 adverse",
+        "₹6,000 adverse",
+        "₹66,000 favourable"
+      ],
+      "answer": "C",
+      "explanation": "C, ₹6,000 adverse. Material price variance = (standard price − actual price) × actual quantity = (₹60 − ₹66) × 1,000 = −₹6,000. Under the stated sign convention a negative result is adverse because the firm paid ₹6/kg above standard. A reverses the favourable/adverse label; B uses the wrong magnitude; D is neither the difference nor the correct sign.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q40; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "ICMAI",
+            "title": "Standard Costing and Variance Analysis",
+            "url": "https://icmai.in/upload/Students/Syllabus2022/Inter_Stdy_Mtrl/P12_160824.pdf",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": true,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-41",
+      "examSection": "general",
+      "subject": "Companies Act",
+      "kind": "single-choice",
+      "prompt": "Which right or power is generally available to a statutory auditor under Section 143 of the Companies Act, 2013?",
+      "options": [
+        "Access to the company’s books of account and vouchers at all times, as provided by the section",
+        "The authority to declare dividends after verifying distributable profits",
+        "The authority to appoint directors after examining governance controls",
+        "The right to inspect books only when a shareholders’ resolution expressly allows it"
+      ],
+      "answer": "A",
+      "explanation": "A. Section 143 gives the statutory auditor access to the company’s books and vouchers at all times for audit purposes. B declaring dividends and C appointing directors are governance decisions, not audit powers. D wrongly makes statutory inspection dependent on a fresh shareholder resolution. Auditors may seek information and explanations, but access and audit opinion do not make them the company’s management.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q41; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "Ministry of Corporate Affairs",
+            "title": "Companies Act, 2013",
+            "url": "https://www.mca.gov.in/Ministry/pdf/CompaniesAct2013.pdf",
+            "stance": "supports",
+            "provision": "Section 143",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": true,
+          "timeSensitive": false,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day1-general-42",
+      "examSection": "general",
+      "subject": "Economics",
+      "kind": "single-choice",
+      "prompt": "Which transaction is ordinarily recorded in the current account of India's balance of payments?",
+      "options": [
+        "Acquisition of equity in an Indian company by a foreign direct investor",
+        "An external commercial borrowing received by an Indian firm",
+        "Personal remittances received by Indian resident households from abroad",
+        "The RBI's sale of foreign exchange reserves"
+      ],
+      "answer": "C",
+      "explanation": "C. Ordinary personal remittances from non-residents to residents are recorded as secondary-income transfers in the current account. A foreign direct investment, B external commercial borrowing and D reserve-asset transactions fall in the financial account under BPM6, rather than being personal transfers. The capital account is a separate category mainly for capital transfers and non-produced non-financial assets; do not collapse capital and financial accounts.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q42; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "RBI",
+            "title": "Balance of Payments: Concepts and Definitions",
+            "url": "https://rbi.org.in/scripts/PublicationsView.aspx?id=13013",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-43",
+      "examSection": "general",
+      "subject": "Pension Sector",
+      "kind": "single-choice",
+      "prompt": "For an ordinary NPS account operating on a defined-contribution, market-linked basis, which statement is most accurate?",
+      "options": [
+        "The retirement pension is a fixed percentage of final salary for every subscriber",
+        "Retirement benefits depend on contributions, investment performance and applicable exit or annuitisation arrangements",
+        "The government guarantees a minimum investment yield on each NPS asset class",
+        "Every subscriber must receive the same annuity irrespective of accumulated corpus"
+      ],
+      "answer": "B",
+      "explanation": "B. Ordinary NPS is a defined-contribution, market-linked arrangement: benefits depend on contributions, accumulated investment returns and the applicable exit/annuitisation rules. A describes a final-salary defined-benefit formula; C invents a universal government guarantee across NPS assets; D wrongly gives everyone the same annuity regardless of corpus. Do not confuse NPS with APY’s guaranteed minimum options or separate government pension arrangements.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q43; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "PFRDA",
+            "title": "NPS for All Citizen Models",
+            "url": "https://pfrda.org.in/en/schemes/national-pension-system/nps-for-all-citizen-models",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": true,
+          "timeSensitive": false,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day1-general-44",
+      "examSection": "general",
+      "subject": "Companies Act",
+      "kind": "single-choice",
+      "prompt": "Which statement is most consistent with the statutory concept of an independent director under Section 149 of the Companies Act, 2013?",
+      "options": [
+        "Independence is assessed through conditions including relationships with promoters and management, subject to detailed statutory criteria",
+        "A minority-shareholder nomination automatically establishes statutory independence",
+        "Any non-executive director is independent despite material promoter relationships",
+        "Five years of service automatically establishes independence, regardless of other relationships"
+      ],
+      "answer": "A",
+      "explanation": "A. Section 149’s independent-director test uses detailed conditions involving promoter/management connections, pecuniary relationships and other eligibility criteria. B mere minority nomination, C non-executive status and D length of service do not by themselves establish statutory independence. Independence is substantive, not a title; relevant relationships and disqualifications must be checked against the law and applicable rules.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q44; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "Ministry of Corporate Affairs",
+            "title": "Companies Act, 2013",
+            "url": "https://www.mca.gov.in/Ministry/pdf/CompaniesAct2013.pdf",
+            "stance": "supports",
+            "provision": "Section 149",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": true,
+          "timeSensitive": false,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day1-general-45",
+      "examSection": "general",
+      "subject": "Finance",
+      "kind": "single-choice",
+      "prompt": "Which market primarily facilitates trading in securities that have already been issued?",
+      "options": [
+        "Secondary market",
+        "Primary market",
+        "Initial public offering market only",
+        "New-issue subscription market only"
+      ],
+      "answer": "A",
+      "explanation": "A, the secondary market. Investors trade securities already issued, transferring ownership without the issuer necessarily receiving fresh capital. B the primary market raises new funds by issuance; C IPO and D new subscription are specific primary-issue mechanisms. A securities exchange is commonly a secondary-market venue, whereas applying to a fresh public issue belongs to the primary market.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q45; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ."
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-46",
+      "examSection": "general",
+      "subject": "Companies Act",
+      "kind": "single-choice",
+      "prompt": "A company offers additional shares for cash to existing equity shareholders, generally in proportion to their paid-up share capital holdings. Which type of issue is most directly described?",
+      "options": [
+        "Bonus issue",
+        "Employee stock option exercise",
+        "Initial public offer",
+        "Rights issue"
+      ],
+      "answer": "D",
+      "explanation": "D, rights issue. Under Section 62, a company offering further shares for cash to existing equity shareholders in proportion to holdings is ordinarily making a rights offer. A bonus shares involve capitalising eligible reserves rather than fresh cash; B employee options target employees under an incentive plan; C IPO offers securities to the public as an initial listing. The decisive clues are existing shareholders and proportionate cash subscription.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q46; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "Ministry of Corporate Affairs",
+            "title": "Companies Act, 2013",
+            "url": "https://www.mca.gov.in/Ministry/pdf/CompaniesAct2013.pdf",
+            "stance": "supports",
+            "provision": "Section 62",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": true,
+          "timeSensitive": false,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day1-general-47",
+      "examSection": "general",
+      "subject": "Economics",
+      "kind": "single-choice",
+      "prompt": "The price of a product rises from ₹100 to ₹110 and quantity demanded falls from 200 units to 180 units. Using the original values as bases for percentage changes, the absolute value of price elasticity of demand is:",
+      "options": [
+        "0.5",
+        "1.0",
+        "1.5",
+        "2.0"
+      ],
+      "answer": "B",
+      "explanation": "B, 1.0 in absolute value. Quantity falls by 20/200 = 10%; price rises by 10/100 = 10%; PED = −10%/10% = −1, so absolute elasticity is 1. A, C and D use incorrect percentage bases or ratios. The question specifies original-value percentage changes; midpoint/arc elasticity would differ slightly, so do not silently change the convention.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q47; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ."
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": true,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day1-general-48",
+      "examSection": "general",
+      "subject": "Pension Sector",
+      "kind": "single-choice",
+      "prompt": "In a typical NPS lifecycle or auto-choice investment arrangement, what is the general purpose of a declining equity allocation as a subscriber approaches retirement?",
+      "options": [
+        "Maintain maximum equity exposure with age because equity returns must increase near retirement",
+        "Guarantee a fixed retirement pension even if the fund’s market value falls",
+        "Reduce exposure to equity-market volatility as the remaining investment horizon shortens",
+        "Replicate the fund’s historical return regardless of future allocation changes"
+      ],
+      "answer": "C",
+      "explanation": "C. A lifecycle fund normally tapers equity exposure as retirement approaches to reduce vulnerability to equity-market swings when time for recovery is shorter. A incorrectly increases risk with age as a supposed necessity; B mistakes risk reduction for a benefit guarantee; D confuses strategy design with a promise to replicate historical returns. Changing the allocation cannot eliminate all market, interest-rate or inflation risk.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q48; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "PFRDA",
+            "title": "NPS for All Citizen Models",
+            "url": "https://pfrda.org.in/en/schemes/national-pension-system/nps-for-all-citizen-models",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": true,
+          "timeSensitive": true,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day1-general-49",
+      "examSection": "general",
+      "subject": "Companies Act",
+      "kind": "single-choice",
+      "prompt": "Consider two statements regarding the Companies Act, 2013: (1) As a general rule under Section 173, not more than 120 days should intervene between two consecutive Board meetings, subject to applicable exemptions. (2) The National Company Law Appellate Tribunal generally hears appeals against orders of the National Company Law Tribunal, as provided by law. Which is correct?",
+      "options": [
+        "Statement 1 only",
+        "Statement 2 only",
+        "Neither statement",
+        "Both statements"
+      ],
+      "answer": "D",
+      "explanation": "D: both statements are correct. Section 173(1) generally requires at least four Board meetings a year and no more than 120 days between consecutive meetings, subject to statutory exemptions. Section 410 constitutes the NCLAT, while Section 421 provides for appeals against NCLT orders. A omits the true appellate statement; B omits the true meeting rule; C wrongly rejects both. Do not cite Section 410 alone for the right of appeal.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q49; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "Ministry of Corporate Affairs",
+            "title": "Companies Act, 2013",
+            "url": "https://www.mca.gov.in/Ministry/pdf/CompaniesAct2013.pdf",
+            "stance": "supports",
+            "provision": "Sections 173(1), 410 and 421",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": true,
+          "timeSensitive": false,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day1-general-50",
+      "examSection": "general",
+      "subject": "Budget/Survey",
+      "kind": "single-choice",
+      "prompt": "According to the Economic Survey 2025–26's assessment using the estimates available at that time, private final consumption expenditure (PFCE) accounted for approximately what share of India's GDP in FY 2025–26?",
+      "options": [
+        "61.5%",
+        "51.5%",
+        "71.5%",
+        "41.5%"
+      ],
+      "answer": "A",
+      "explanation": "A, 61.5% of nominal GDP, is the Economic Survey 2025–26 figure for private final consumption expenditure in FY 2025–26 using first advance estimates. B, C and D are not that reported share. Note the precision of the label: the Survey also cites 61.4% for H1 FY26, which must not be confused with the full-year FAE 61.5%. Estimates can later be revised.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 1 ChatGPT diagnostic Q50; original stem/options recovered from public share; answer/hint drawn from subsequent evaluation. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "Ministry of Finance",
+            "title": "Economic Survey 2025–26, Chapter 1",
+            "url": "https://www.indiabudget.gov.in/economicsurvey/doc/echapter.pdf",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": true,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    }
+  ]
+}

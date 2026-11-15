@@ -1,3 +1,4 @@
+import {catalogLifecycle} from "./scenarios/catalog.mjs";
 import {candidateCore,statusPalette} from "./scenarios/candidate.mjs";
 import {authoringPublication,externalBankAuthoring} from "./scenarios/authoring.mjs";
 import {storageResilience,partialRecovery} from "./scenarios/storage.mjs";
@@ -13,6 +14,7 @@ export const scenarioRegistry=Object.freeze([
  scenario("candidate-core",["smoke","candidate","history","learning"],candidateCore),
  scenario("status-palette",["candidate","visual-state","deep"],statusPalette),
  scenario("authoring-publication",["smoke","authoring","publication"],authoringPublication),
+ scenario("catalog-lifecycle",["smoke","catalog","removal"],catalogLifecycle),
  scenario("external-bank-authoring",["authoring","import","editorial","deep"],externalBankAuthoring),
  scenario("storage-resilience",["storage","recovery","concurrency","deep"],storageResilience),
  scenario("partial-recovery",["storage","recovery","cross-browser","smoke"],partialRecovery),

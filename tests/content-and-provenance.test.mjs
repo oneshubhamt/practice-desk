@@ -1,3 +1,4 @@
+import {loadCglFixture,loadQuestionBankGraph,repositoryRoot} from "./fixtures/cgl-bank.mjs";
 /** Canonical source, editorial lineage and frozen-result contracts. */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -33,9 +34,9 @@ import {readDisplayPreferences,writeDisplayPreferences} from "../src/app/prefere
 
 /** Cgl Edition Parity — canonical domain contracts. */
 async function registerCglEditionParityTests(){
-const papers=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
-const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
-const solutions=JSON.parse(await readFile(new URL("../src/content/solutions.json",import.meta.url)));
+const papers=(await loadCglFixture()).sources;
+const patches=(await loadCglFixture()).patches;
+const solutions=(await loadCglFixture()).solutions;
 const editions=builtinCglPackages(papers,patches,solutions);
 
 test("all five CGL paper families preserve independently pinned original and reviewed keys, editorial changes and content",()=>{
@@ -163,8 +164,8 @@ await registerCglEditionParityTests();
 
 /** Original Bank Scoring — canonical domain contracts. */
 async function registerOriginalBankScoringTests(){
-const papers = JSON.parse(await readFile(new URL("../src/content/papers.json", import.meta.url)));
-const patches = JSON.parse(await readFile(new URL("../src/content/patches.json", import.meta.url)));
+const papers = (await loadCglFixture()).sources;
+const patches = (await loadCglFixture()).patches;
 const library = importCglBank(papers, patches);
 
 
@@ -190,8 +191,8 @@ await registerOriginalBankScoringTests();
 
 /** Editorial Timing — canonical domain contracts. */
 async function registerEditorialTimingTests(){
-const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url),"utf8"));
-const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url),"utf8"));
+const sources=(await loadCglFixture()).sources;
+const patches=(await loadCglFixture()).patches;
 const packages=builtinCglPackages(sources,patches);
 const find=(paperId,edition)=>packages.find(p=>p.paper.paperId===paperId&&p.paper.edition===edition);
 const question=(p,n)=>p.questions[n-1];
@@ -298,9 +299,8 @@ async function registerFrozenContentIntegrityTests(){
 
 
 
-const root=resolve(fileURLToPath(new URL("..",import.meta.url)));
-const json=async name=>JSON.parse(await readFile(new URL("../src/content/"+name+".json",import.meta.url)));
-const [sources,patches,solutions]=await Promise.all(["papers","patches","solutions"].map(json));
+const root=repositoryRoot;
+const {sources,patches,solutions}=await loadCglFixture();
 const banks=builtinCglPackages(sources,patches,solutions);
 const sameRecord=(old,now)=>JSON.stringify(old)===JSON.stringify(now);
 const advance=(p,s,type,at,props={})=>transition(p,s,{type,nowMs:at,...props});
@@ -310,19 +310,32 @@ const rehash=b=>{
 };
 const keyUpdate=entries=>({...pkg.answerKey,entries,contentHash:answerKeyRevisionHash({entries})});
 
-test("SOURCE A/V01/V05/V19: original content banks retain their canonical source blobs",async()=>{
- const canonicalSourceBlob={
-   papers:"1d2c388a91a82c49feb57ccd86a8a40eb7388473",
-   patches:"37328784aadd53810a786550ce02ff3105fccbd7",
-   solutions:"ada93d1f27c091023d6a26e9f89dd8956ebaf55e"
+test("SOURCE A/V01/V05/V19: split CGL artifacts retain their canonical normalized blobs",async()=>{
+ const canonicalSourceBlobs={
+  "question-banks/ssc-cgl/2026/pyqs/2026-09-30/original/paper.json":"0a8994b50558694722837d3fa4d6e58c344332e8",
+  "question-banks/ssc-cgl/2026/pyqs/2026-09-30/revised/patches.json":"d74169356ab153da61d904f307364c51a23ea872",
+  "question-banks/ssc-cgl/2026/pyqs/2026-09-30/revised/solutions.json":"a3f300769a6e4d37c0c292974f7d45112d26b5a2",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-05/original/paper.json":"74ff088ec038976e08c6fef9091b584093da8821",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-05/revised/patches.json":"6bfff9e3eedc65493df831284b68f327c1576cdb",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-05/revised/solutions.json":"7a824166bad7f91987319c5b322c20f9c3b0c5cf",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-06/original/paper.json":"9afcbc214365bda65b240a6901b98c826661235d",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-06/revised/patches.json":"249f191fac7e75f77a8b34015aa1dd853b773767",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-06/revised/solutions.json":"2b7c28b1aa7f9a741e5b29e3f372c151627b477f",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-07/original/paper.json":"8ef3f05f609456535443e8e8d98a884e32400c65",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-07/revised/patches.json":"22f5db9bb621d6d42f3f541360f5200eb318474f",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-07/revised/solutions.json":"5c1d7baf9a3d5c3159ab8edb45505fc34e697b6b",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-08/original/paper.json":"895f99a07126819ae9f960685a4eb51002b4f048",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-08/revised/patches.json":"aff32e0741271b54b3e6b8c30e2f710a738f941e",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-08/revised/solutions.json":"5f23d5f51b1185d73b4c0d3240654d91039c70ba"
  };
- for(const name of ["papers","patches","solutions"]){
-  const filename="src/content/"+name+".json";
-  const hash=execFileSync("git",["hash-object",filename],{cwd:root,encoding:"utf8"}).trim();
-  assert.equal(hash,canonicalSourceBlob[name],
-    name+" was silently changed from its canonical source Git blob");
+ for(const [relative,expected] of Object.entries(canonicalSourceBlobs)){
+  const hash=execFileSync("git",["hash-object",relative],{cwd:root,encoding:"utf8"}).trim();
+  assert.equal(hash,expected,relative+" was silently changed from its normalized canonical blob");
  }
- assert.equal(Object.keys(sources).length,5);
+ const graph=await loadQuestionBankGraph();
+ const cgl=graph.families.find(x=>x.family.id==="ssc-cgl");
+ assert.equal(cgl?.papers.length,5);
+ assert.deepEqual(cgl?.papers.map(x=>x.id).sort(),Object.keys(sources).sort());
  assert.equal(Object.values(sources).reduce((n,p)=>n+p.questions.length,0),500);
  assert.equal(banks.length,10);
  for(const paper of Object.values(sources)){
@@ -386,9 +399,9 @@ await registerFrozenContentIntegrityTests();
 
 /** Source Review Media — canonical domain contracts. */
 async function registerSourceReviewMediaTests(){
-const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
-const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
-const solutions=JSON.parse(await readFile(new URL("../src/content/solutions.json",import.meta.url)));
+const sources=(await loadCglFixture()).sources;
+const patches=(await loadCglFixture()).patches;
+const solutions=(await loadCglFixture()).solutions;
 const cgl=builtinCglPackages(sources,patches,solutions);
 const byPaper=(id,edition)=>cgl.find(p=>p.paper.paperId===id&&p.paper.edition===edition);
 const editedPaper=Object.keys(patches).find(id=>Object.keys(patches[id]).length>0);
@@ -552,14 +565,10 @@ await registerSourceReviewMediaTests();
 
 /** Bank Validation And Build — canonical domain contracts. */
 async function registerBankValidationAndBuildTests(){
-const load = async name => JSON.parse(
-  await readFile(new URL('../src/content/' + name + '.json', import.meta.url), 'utf8')
-);
-const loadContent = async () => ({
-  papers: await load('papers'),
-  patches: await load('patches'),
-  solutions: await load('solutions'),
-});
+const loadContent = async () => {
+ const {sources,patches,solutions}=await loadCglFixture();
+ return {papers:sources,patches,solutions};
+};
 const countEntries = bank => Object.values(bank).reduce(
   (total, pack) => total + Object.keys(pack).length, 0
 );
@@ -613,7 +622,8 @@ test('single-file release contains a complete inline app',async()=>{
  const html=await readFile(new URL('../Practice_Desk_Offline_Mock_Tests.html',import.meta.url),'utf8');
  assert.match(html,/^<!doctype html>/i);
  assert.equal((html.match(/<style>/g)||[]).length,1);
- assert.equal((html.match(/type="application\/json"/g)||[]).length,3);
+ assert.equal(html.split('type="application/json"').length-1,4);
+ assert.match(html,/id="preinstalled-exams"/);
  assert.equal((html.match(/<script>/g)||[]).length,1);
  assert.doesNotMatch(html,/<!-- PD:[A-Z_]+ -->/);
  assert.doesNotMatch(html,/<script[^>]+src=|<link[^>]+rel=["']stylesheet/i);

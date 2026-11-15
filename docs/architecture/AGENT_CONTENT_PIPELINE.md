@@ -1,6 +1,6 @@
 # Practice Desk — advanced content pipeline
 
-**Audience:** external agents and maintainers handling workflows beyond ordinary one-file authoring. Start with the [quickstart](../AGENT_AUTHORING_QUICKSTART.md). Local Node CLIs operate only on explicitly supplied files and emit files/JSON; they do not embed models, authenticate external sources, access browser History or silently import into Library.
+**Audience:** external agents and maintainers handling workflows beyond ordinary one-file authoring. Start with the [quickstart](../AGENT_AUTHORING_QUICKSTART.md). Local Node CLIs operate only on explicitly supplied files and emit files/JSON; they do not embed models, authenticate external sources or access browser History. One-off outputs never silently import into Library; repository maintainers may deliberately list validated packages in `question-banks/catalog.json` for build-time preinstallation.
 
 ## Route by need
 
@@ -33,7 +33,7 @@ For paired editions, create/complete an `editorial-editions.mjs template`, revie
 - Reviewed packages bind exact Source paper/key identities. Noncurrent source-key shapes are rejected rather than migrated.
 - Candidate explanations, keys and explanation-only media remain private until the permitted review boundary.
 - A partial blueprint can be `valid:true` while `readyForPublication:false`; strict publication rejects incomplete required quotas.
-- Source and Reviewed are explicit separate Library imports. Retain original documents and review/decision sidecars outside browser History.
+- Source and Reviewed remain explicit separate immutable packages. For ad-hoc external work they are separate Library imports; a repository-maintained family may instead list the intended packages explicitly in the question-bank catalog. Retain original documents and review/decision sidecars outside browser History.
 
 The CLI may report `factualVerification:not-performed`; treat reviewer/source statements as attributed claims unless independently authenticated.
 

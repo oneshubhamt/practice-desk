@@ -1,0 +1,19 @@
+{
+  "format": "practice-desk-paper-manifest",
+  "version": 1,
+  "id": "cgl-2026-10-08",
+  "examId": "ssc-cgl",
+  "paperId": "cgl-2026-10-08",
+  "kind": "pyq",
+  "title": "SSC CGL · 8 Oct 2026",
+  "canonicalEdition": "revised",
+  "editions": {
+    "original": {
+      "source": "original/paper.json"
+    },
+    "revised": {
+      "patches": "revised/patches.json",
+      "solutions": "revised/solutions.json"
+    }
+  }
+}
