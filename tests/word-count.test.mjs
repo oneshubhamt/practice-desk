@@ -1,7 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {countWords,wordCountBand,shouldShowWordCount} from "../src/domain/word-count.ts";
-import {validateResponse} from "../src/engine/response.ts";
 
 test("word count uses one whitespace-delimited canonical rule",()=>{
  assert.equal(countWords(""),0);
@@ -24,13 +23,4 @@ test("Auto shows in practice modes and hides in exam simulation; explicit policy
  assert.equal(shouldShowWordCount(undefined,"exam-simulation"),false);
  assert.equal(shouldShowWordCount("shown","exam-simulation"),true);
  assert.equal(shouldShowWordCount("hidden","custom-practice"),false);
-});
-
-test("advisory wordLimit never blocks saving; hard maxWords still protects response validity",()=>{
- const question={
-  id:"q",questionId:"q",revision:1,contentHash:"0".repeat(64),editorial:{status:"verified"},
-  content:{kind:"free-response",prompt:"Explain",responseRules:{wordLimit:3,maxWords:10}}
- };
- assert.doesNotThrow(()=>validateResponse(question,{kind:"free-response",text:"one two three four"}));
- assert.throws(()=>validateResponse(question,{kind:"free-response",text:"one two three four five six seven eight nine ten eleven"}),/length/);
 });

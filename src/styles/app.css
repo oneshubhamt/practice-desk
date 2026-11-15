@@ -230,7 +230,7 @@ select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-vis
 .exam-question .generic-choice:has(input:checked){background:var(--soft-blue);border-color:var(--blue);outline:1px solid var(--blue)}
 .exam-question .generic-response-group{margin:0}
 .generic-written-response{margin:18px 0 0;min-width:0}
-.generic-written-response-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;min-width:0}
+.generic-written-response-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;min-width:0;flex-wrap:wrap}
 .generic-written-response-head .picker{margin:0}
 .generic-written-response textarea{margin-top:8px;min-height:240px;resize:vertical;line-height:1.6}
 .generic-word-count{flex:none;margin-left:auto;padding:4px 8px;border:1px solid var(--line);border-radius:999px;
