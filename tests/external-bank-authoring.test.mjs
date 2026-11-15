@@ -5,6 +5,8 @@ import {readFile,mkdtemp,writeFile,rm} from "node:fs/promises";
 import {compileExternalQuestionBank,inspectExternalQuestionBank,toAuthoringDraft} from "../src/authoring/external-bank.ts";
 import {validateExamPackage} from "../src/app/exam-package.ts";
 import {scoreAttempt} from "../src/engine/scoring.ts";
+import {manualGradeLimit} from "../src/engine/manual-grading.ts";
+import {scoreableMaximum} from "../src/engine/score-ceiling.ts";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {spawnSync} from "node:child_process";
@@ -33,6 +35,66 @@ test("P57-A CAT external agent source compiles without authored hashes and reuse
  assert.equal(pkg.paper.timing.sectionLimits.length,3);
  assert.equal(pkg.questions[0].editorial.status,"caution");
  assert.match(pkg.questions[0].editorial.notes,/not been independently certified/);
+});
+test("Question-specific custom marking preserves MCQ penalty while raising English manual ceiling to 20",async()=>{
+ const bank=await fixture("cat");
+ const existing=bank.questions[0];
+ bank.questions.unshift({
+  id:"english-precis",examSection:"varc",subject:"Descriptive English",
+  kind:"free-response",prompt:"Write an original précis.",answer:"",
+  explanation:"Manual rubric out of twenty marks.",
+  scoringOverride:{correctMarks:20,incorrectMarks:0,unansweredMarks:0},
+  provenance:{kind:"ai-original"},qa:{status:"unchecked"}
+ });
+ const pkg=compileExternalQuestionBank(bank);
+ assert.equal(pkg.paper.scoring.defaultRule.correctMarks,3);
+ assert.deepEqual(pkg.answerKey.entries[0].scoringOverride,
+  {correctMarks:20,incorrectMarks:0,unansweredMarks:0});
+ assert.equal(pkg.answerKey.entries[1].scoringOverride,undefined);
+ const id=pkg.questions[0].id;
+ const attempt={finishedAt:Date.parse("2026-11-15T10:00:00Z"),
+  state:{status:"completed"},result:{items:[{questionRevisionId:id,verdict:"pending",marks:0}]},
+  frozen:{paper:pkg.paper,key:pkg.answerKey,questions:pkg.questions}};
+ assert.equal(manualGradeLimit(attempt,id),20);
+ const wrong={...bank,questions:[{...bank.questions[0],scoringOverride:{correctMarks:-1,incorrectMarks:0,unansweredMarks:0}},...bank.questions.slice(1)]};
+ assert.equal(inspectExternalQuestionBank(wrong).valid,false);
+ assert.equal(existing.kind,"single-choice");
+});
+test("PFRDA Day 1 keeps original keys, changes only reviewed distractors, and marks English out of 20",async()=>{
+ const path=(name)=>new URL("../examples/pfrda-2026-day1/"+name,import.meta.url);
+ const initial=JSON.parse(await readFile(path("day1.authoring.json"),"utf8"));
+ const source=JSON.parse(await readFile(path("day1.source.authoring.json"),"utf8"));
+ const reviewed=JSON.parse(await readFile(path("day1.reviewed.authoring.json"),"utf8"));
+ const changed=[13,23,25,31,34,35,38,39,41,43,44,48];
+ assert.equal(reviewed.questions.length,51);
+ assert.equal(reviewed.sections.length,2);
+ assert.equal(reviewed.stimuli[0].title,"Untitled passage for précis");
+ assert.equal(initial.questions[0].scoringOverride,undefined,
+  "Exact earlier authoring source must remain unchanged");
+ assert.equal(reviewed.questions[0].scoringOverride.correctMarks,20);
+ for(let n=1;n<=50;n++){
+  const q=reviewed.questions[n];
+  assert.equal(q.id,initial.questions[n].id);
+  assert.equal(q.prompt,initial.questions[n].prompt);
+  assert.equal(q.answer,initial.questions[n].answer);
+  assert.deepEqual(source.questions[n].options,initial.questions[n].options);
+  assert.equal(JSON.stringify(q.options)!==JSON.stringify(initial.questions[n].options),changed.includes(n));
+  assert.ok(q.explanation.length>=150,`Reviewed explanation ${n} must give meaningful reasoning`);
+ }
+ const pkg=compileExternalQuestionBank(reviewed);
+ assert.equal(scoreableMaximum(pkg.paper,pkg.answerKey,pkg.questions),100);
+ assert.equal(pkg.paper.scoring.defaultRule.correctMarks,2);
+ assert.equal(pkg.paper.scoring.defaultRule.incorrectMarks,-0.5);
+ assert.equal(pkg.answerKey.entries[0].scoringOverride.correctMarks,20);
+ const responses="A B C B D B B D D C B C C B A C D C D B B C B B A D B D C B A D C A C D B C B B A C B A A D D C D A".split(" ");
+ assert.equal(responses.length,50);
+ const marked=responses.map((letter,i)=>({questionRevisionId:pkg.questions[i+1].id,
+  response:{kind:"single-choice",optionId:letter},timeSpentMs:0,answerChangeCount:0}));
+ const result=scoreAttempt(pkg.paper,pkg.answerKey,pkg.questions,marked,"2026-11-15T09:00:00.000Z");
+ assert.equal(result.snapshot.correctCount,43);
+ assert.equal(result.snapshot.incorrectCount,7);
+ assert.equal(result.snapshot.earnedMarks,82.5);
+ assert.equal(result.snapshot.unansweredCount,1,"The unanswered précis must not be counted as attempted");
 });
 test("P57-A APFC academic subject hierarchy remains independent of one physical exam section",async()=>{
  const source=await fixture("apfc");

@@ -8,6 +8,35 @@ The user's **original Day 1** preparation questions, recovered from the [publicl
 - [descriptive-english.md](descriptive-english.md): original English passage and manual evaluation reference.
 - [build-from-share.mjs](build-from-share.mjs): repeatable, data-only extraction/transcription script. The snapshot survives if the link becomes unavailable.
 
+## Corrected Day 1 practice packages (15 November 2026)
+
+The **original historical record is untouched**: `original-50-questions.json`,
+`day1.authoring.json`, and the original answer index preserve what was actually
+asked on Day 1. The following are additional, canonical, importable practice banks:
+
+| File | Purpose |
+| --- | --- |
+| [day1.source.authoring.json](day1.source.authoring.json) | Original 50 question stems, 200 options, answers and short notes, with a **20-mark English manual grading override**. This is a corrected *source-playback* bank, not an identical byte-for-byte copy of `day1.authoring.json`. |
+| [day1.reviewed.authoring.json](day1.reviewed.authoring.json) | Candidate **improved practice** bank: 50 instructional worked solutions, 12 repaired distractor groups, corrected Q42/Q49 notes and references, English title de-leaked and graded out of 20. |
+| [day1.source.exam.json](day1.source.exam.json) | Compiled original-option **source-playback** package, directly importable in Practice Desk. |
+| [day1.reviewed.exam.json](day1.reviewed.exam.json) | Compiled **improved practice** package, directly importable in Practice Desk. Recommended for learning/revision. |
+| [review-audit.md](review-audit.md) | Change register, verification evidence, outstanding legal-certification limits. |
+| [review-content.mjs](review-content.mjs) and [build-reviewed.mjs](build-reviewed.mjs) | Hand-edited rationales and reproducible canonical source transformation. |
+
+**Both compiled packages deliberately use `paper.edition: "custom"`.** The
+"Reviewed Practice" title means author-improved content, **not an independently
+signed-off Wordgard Reviewed edition**. All editorial `qa` flags remain
+`needs-review`, and the 11 legal-currentness warnings remain visible; the blind,
+source-hash-bound independent review/publish gate must not be bypassed. The
+source-playback package retains the historical title cue and terse explanations
+for comparison, so take the improved practice package when testing the précis.
+
+The underlying scoring engine already supports question-specific marks. The
+external authoring import now exposes `questions[].scoringOverride` so the
+précis can be manually marked **0–20**, while the 50 MCQs keep **+2 / −0.5 / 0**.
+The maximum automatically graded General Stream score remains **100**; English
+is assessed separately, rather than combined into a misleading 120-mark paper.
+
 ## Intended Practice Desk configuration
 
 Practice Desk's canonical authoring contract supports both requested physical sections in one paper:
@@ -17,7 +46,7 @@ Practice Desk's canonical authoring contract supports both requested physical se
 | 1 | Descriptive English (Paper 1) | One original précis passage and prompt | 20-minute Day 1 practice | Free response; manual evaluation |
 | 2 | General Stream (Paper 2) | Fifty original mixed MCQs | 40 minutes | +2 correct, −0.5 incorrect, 0 blank |
 
-The section labels are the official paper names, **not** two semantic subjects. The exam's full English-paper duration is 60 minutes; the user's actual Day 1 *précis practice* was 20 minutes. This source dossier preserves the Day 1 exercise, not a claim to reproduce the entire official Paper 1. The English exercise's estimated 20-mark rubric is an offline/manual practice assessment, separate from the Paper 2 100-mark MCQ total.
+The section labels are the official paper names, **not** two semantic subjects. The exam's full English-paper duration is 60 minutes; the user's actual Day 1 *précis practice* was 20 minutes. This source dossier preserves the Day 1 exercise, not a claim to reproduce the entire official Paper 1. The English exercise's estimated 20-mark rubric is a manual practice assessment, separate from the Paper 2 100-mark MCQ total.
 
 The JSON bank implements both sections with sectional timing and sequential-locked section navigation. Answers, explanations and evaluation guidance are answer-side fields, not candidate prompts/options. Practice Desk grades only the General Stream MCQs automatically; written English is manually assessed.
 
@@ -34,6 +63,11 @@ The JSON bank implements both sections with sectional timing and sequential-lock
 node scripts/question-bank-cli.mjs validate-bank examples/pfrda-2026-day1/day1.authoring.json
 node scripts/question-bank-cli.mjs qa-bank examples/pfrda-2026-day1/day1.authoring.json
 node scripts/question-bank-cli.mjs compile-bank examples/pfrda-2026-day1/day1.authoring.json examples/pfrda-2026-day1/day1.exam.json
+# For improved practice (the CLI refuses to overwrite an existing output):
+node examples/pfrda-2026-day1/build-reviewed.mjs
+node scripts/question-bank-cli.mjs validate-bank examples/pfrda-2026-day1/day1.reviewed.authoring.json
+node scripts/question-bank-cli.mjs qa-bank examples/pfrda-2026-day1/day1.reviewed.authoring.json
+node scripts/question-bank-cli.mjs compile-bank examples/pfrda-2026-day1/day1.reviewed.authoring.json /tmp/pfrda-day1-review-fresh.exam.json
 ```
 
 The schema validator and source-only quality check do not independently authenticate facts, legal currentness or the user's original score. The `qa` records therefore remain `needs-review` and the independent review/publish workflow remains a separate quality gate. The compiled `.exam.json` is a practice/import artefact, **not an official or independently certified examination**.

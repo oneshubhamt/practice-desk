@@ -31,6 +31,9 @@ export type AuthoringQuestion={
  /** Optional per-correct-component credit for multiple/matching only. */
  readonly partialCreditEach?:number;
  readonly partialPenaltyEach?:number;
+ /** Optional question-specific marking rule; also sets the manual grade ceiling. */
+ readonly scoringOverride?:{readonly correctMarks:number;readonly incorrectMarks:number;
+  readonly unansweredMarks:number};
  readonly kind:QuestionKind;
  readonly prompt:RichDocument;
  readonly passage:RichDocument;
@@ -168,7 +171,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
  const all=new Set<string>();
  const verified=questions.map(item=>{
   const q=rec(item,"draft question",["id","section","kind","prompt","passage","options","leftItems",
-   "rightItems","explanation","answer","tolerance","source",
+   "rightItems","explanation","answer","tolerance","source","scoringOverride",
    "subject","syllabusHeadingId","topic","subtopic","difficulty",
     "minSelections","maxSelections",
    "partialCreditEach","partialPenaltyEach","stimulusRef","sourceOrigin","provenance","qa"]);
@@ -273,9 +276,18 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   const maxSelections=num(q.maxSelections??4,"maximum selections",1,4);
   if(!Number.isInteger(minSelections)||!Number.isInteger(maxSelections)||
      minSelections>maxSelections)throw Error("Invalid selection bounds");
+  let scoringOverride:AuthoringQuestion["scoringOverride"];
+  if(q.scoringOverride!==undefined){
+   const rule=rec(q.scoringOverride,"question scoring override",
+    ["correctMarks","incorrectMarks","unansweredMarks"]);
+   scoringOverride={correctMarks:num(rule.correctMarks,"question correct marks",0.01,1000),
+    incorrectMarks:num(rule.incorrectMarks,"question incorrect marks",-1000,0),
+    unansweredMarks:num(rule.unansweredMarks,"question blank marks",0,1000)};
+  }
   return {id:questionId,section,subject,syllabusHeadingId,
    topic,subtopic,difficulty:difficulty as ""|"easy"|"medium"|"hard",
    minSelections,maxSelections,
+   ...(scoringOverride?{scoringOverride}:{}),
    partialCreditEach:num(q.partialCreditEach??0,"partial-credit component",0,1000),
    partialPenaltyEach:num(q.partialPenaltyEach??0,"partial penalty",0,1000),
    kind:kind as QuestionKind,prompt:rich(q.prompt),passage:rich(q.passage),
