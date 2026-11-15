@@ -623,7 +623,7 @@ test('single-file release contains a complete inline app',async()=>{
  const html=await readFile(new URL('../Practice_Desk_Offline_Mock_Tests.html',import.meta.url),'utf8');
  assert.match(html,/^<!doctype html>/i);
  assert.equal((html.match(/<style>/g)||[]).length,1);
- assert.equal((html.match(/type="application\\/json"/g)||[]).length,4);
+ assert.equal(html.split('type="application/json"').length-1,4);
  assert.match(html,/id="preinstalled-exams"/);
  assert.equal((html.match(/<script>/g)||[]).length,1);
  assert.doesNotMatch(html,/<!-- PD:[A-Z_]+ -->/);
