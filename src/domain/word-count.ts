@@ -2,6 +2,8 @@ import type {AttemptMode} from "./attempt.ts";
 
 export const WORD_COUNT_POLICIES=["auto","shown","hidden"] as const;
 export type WordCountPolicy=(typeof WORD_COUNT_POLICIES)[number];
+export const WORD_COUNT_OVERRIDES=["shown","hidden"] as const;
+export type WordCountOverride=(typeof WORD_COUNT_OVERRIDES)[number];
 export type WordCountBand="normal"|"caution"|"warning"|"over";
 
 export function countWords(text:string):number{
@@ -17,7 +19,7 @@ export function wordCountBand(count:number,limit:number):WordCountBand{
  return "normal";
 }
 
-export function shouldShowWordCount(policy:WordCountPolicy|undefined,mode:AttemptMode):boolean{
+export function shouldShowWordCount(policy:WordCountOverride|undefined,mode:AttemptMode):boolean{
  if(policy==="shown")return true;
  if(policy==="hidden")return false;
  return mode!=="exam-simulation";

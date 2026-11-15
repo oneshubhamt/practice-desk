@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {countWords,wordCountBand,shouldShowWordCount} from "../src/domain/word-count.ts";
+import {countWords,wordCountBand,shouldShowWordCount,WORD_COUNT_OVERRIDES} from "../src/domain/word-count.ts";
 
 test("word count uses one whitespace-delimited canonical rule",()=>{
  assert.equal(countWords(""),0);
@@ -17,6 +17,9 @@ test("word-count guidance escalates at 80%, 90% and only turns over after the li
  assert.equal(wordCountBand(101,100),"over");
 });
 
+test("published paper override vocabulary has one canonical Auto representation",()=>{
+ assert.deepEqual([...WORD_COUNT_OVERRIDES],["shown","hidden"]);
+});
 test("Auto shows in practice modes and hides in exam simulation; explicit policy wins",()=>{
  for(const mode of ["full-paper-practice","section-practice","custom-practice"])
   assert.equal(shouldShowWordCount(undefined,mode),true,mode);

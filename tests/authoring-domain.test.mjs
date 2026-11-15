@@ -80,6 +80,7 @@ test("P47-5C app-owned draft rejects malicious, duplicate and malformed content"
   {...a,questions:[{...q,kind:"custom-script"}]},
   {...a,questions:[{...q,prompt:{...q.prompt,html:"<iframe>"}}]},
   {...a,questions:[{...newAuthoringQuestion("free-response"),wordLimit:250.5}]},
+  Object.fromEntries(Object.entries(a).filter(([key])=>key!=="wordCountPolicy")),
   {...a,marksIncorrect:Infinity},
   {...a,assets:[{id:"url",dataUri:"https://external.example/image"}]}
  ])assert.throws(()=>validateAuthoringDraft(x));

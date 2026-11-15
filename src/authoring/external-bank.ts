@@ -17,6 +17,7 @@ import {sha256} from "../domain/hash.ts";
 import {inspectExternalQuality} from "./external-bank-qa.ts";
 import {inspectCandidateIntegrity} from "./candidate-integrity.ts";
 import type {QualityIssue,QualityResult} from "./external-bank-qa.ts";
+import {WORD_COUNT_POLICIES} from "../domain/word-count.ts";
 
 export type ExternalBankIssue=QualityIssue;
 export interface ExternalBankReport {
@@ -238,7 +239,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
    calculatorTool="basic-v1";
   }
   if(tools.wordCount!==undefined){
-   if(!["auto","shown","hidden"].includes(String(tools.wordCount)))
+   if(!WORD_COUNT_POLICIES.includes(tools.wordCount as AuthoringDraft["wordCountPolicy"]))
     err("$.tools.wordCount",'Expected "auto", "shown" or "hidden"');
    wordCountPolicy=tools.wordCount as AuthoringDraft["wordCountPolicy"];
   }

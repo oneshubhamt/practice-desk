@@ -8,7 +8,7 @@ import type {RichDocument} from "../domain/rich-document.ts";
 import {plainRichDocument,validateRichDocument} from "../domain/rich-document.ts";
 import {validateMediaInventory} from "../domain/media.ts";
 import {attributedTopicPath,validateTopicPath} from "../learning/syllabus-taxonomy.ts";
-import type {WordCountPolicy} from "../domain/word-count.ts";
+import {WORD_COUNT_POLICIES,type WordCountPolicy} from "../domain/word-count.ts";
 
 export type AuthoringDraftSection={
  readonly name:string;
@@ -325,8 +325,8 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
  const calculatorTool=p.calculatorTool;
  if(calculatorTool!==undefined&&calculatorTool!=="basic-v1")
    throw Error("Invalid authored calculator tool");
- const wordCountPolicy=p.wordCountPolicy??"auto";
- if(!["auto","shown","hidden"].includes(String(wordCountPolicy)))
+ const wordCountPolicy=p.wordCountPolicy;
+ if(!WORD_COUNT_POLICIES.includes(wordCountPolicy as WordCountPolicy))
    throw Error("Invalid authored word-count policy");
  const draft:AuthoringDraft={
   schema:1,id:text(p.id,"draft ID",128,true),
