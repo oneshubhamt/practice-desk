@@ -390,6 +390,7 @@ test("P58-A F01: external QA is bound to a validated ingestion mode, not a draft
 test("external authoring carries a written question's advisory word limit into the canonical draft",async()=>{
  const source=JSON.parse(await readFile(new URL("../examples/apfc-authoring-example.json",import.meta.url),"utf8"));
  source.sections=[source.sections[0]];
+ source.tools={wordCount:"hidden"};
  source.questions=[{
   id:"essay-1",examSection:source.sections[0].id,syllabusHeadingId:"labour",
   kind:"free-response",prompt:"Discuss a labour-law principle.",wordLimit:250,
@@ -399,6 +400,7 @@ test("external authoring carries a written question's advisory word limit into t
  const imported=toAuthoringDraft(source);
  assert.equal(imported.questions[0].kind,"free-response");
  assert.equal(imported.questions[0].wordLimit,250);
+ assert.equal(imported.wordCountPolicy,"hidden");
 });
 test("P58-A F01: genuine manual drafts preserve existing publication validation path",()=>{
  const original=newAuthoringDraft();

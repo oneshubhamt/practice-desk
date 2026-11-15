@@ -230,10 +230,18 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
  if(timing.kind==="sectional"&&sectionNavigation!=="sequential-locked")
   err("$.navigation.sectionNavigation","Sectional timing requires sequential-locked sections");
  let calculatorTool:AuthoringDraft["calculatorTool"];
+ let wordCountPolicy:AuthoringDraft["wordCountPolicy"]="auto";
  if(bank.tools!==undefined){
-  const tools=object(bank.tools,"$.tools",["calculator"]);
-  if(tools.calculator!=="basic-v1")err("$.tools.calculator",'Expected "basic-v1"');
-  calculatorTool="basic-v1";
+  const tools=object(bank.tools,"$.tools",["calculator","wordCount"]);
+  if(tools.calculator!==undefined){
+   if(tools.calculator!=="basic-v1")err("$.tools.calculator",'Expected "basic-v1"');
+   calculatorTool="basic-v1";
+  }
+  if(tools.wordCount!==undefined){
+   if(!["auto","shown","hidden"].includes(String(tools.wordCount)))
+    err("$.tools.wordCount",'Expected "auto", "shown" or "hidden"');
+   wordCountPolicy=tools.wordCount as AuthoringDraft["wordCountPolicy"];
+  }
  }
  const sections=new Map<string,{title:string;minutes:number}>();
  const titles=new Set<string>();
@@ -394,7 +402,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
   questionNavigation:questionNavigation as AuthoringDraft["questionNavigation"],
   sectionNavigation:sectionNavigation as AuthoringDraft["sectionNavigation"],
   sectionTransition:sectionTransition as AuthoringDraft["sectionTransition"],
-  allowEarlySubmit,allowReview,...(calculatorTool?{calculatorTool}:{}),wordCountPolicy:"auto",marksCorrect,marksIncorrect,
+  allowEarlySubmit,allowReview,...(calculatorTool?{calculatorTool}:{}),wordCountPolicy,marksCorrect,marksIncorrect,
   updatedAt:"1970-01-01T00:00:00.000Z",assets,
   sections:[...sections.values()].map(section=>({name:section.title,minutes:section.minutes})),
   stimuli,questions};
