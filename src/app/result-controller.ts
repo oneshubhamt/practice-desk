@@ -60,16 +60,16 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
      assets:owner.attempt.frozen.assets};
    const grades=owner.resultTab==="overview"?manualGradeSummary(owner.attempt):{graded:0,pending:0,total:0};
    const selfAssessed=s.snapshot.earnedMarks+grades.total;
+   const scorePrecision=paper.scoring.decimalPlaces??2;
+   const markLabel=(value:number)=>value.toFixed(scorePrecision);
    const originalKey=owner.resultTab==="overview"?sourceKeyScore(owner.attempt):null;
    const sourceKeyText=paper.edition==="reviewed"&&!owner.attempt.sourceKeyReference?
      "Original-source comparison unavailable: no unambiguous original revision was frozen at attempt start":
      originalKey&&originalKey.comparable>0?
      (originalKey.unavailable>0?"Comparable original-source subset only":"Original-source key comparison")+
-     ": "+originalKey.marks.toFixed(1)+" / "+originalKey.maxMarks.toFixed(1)+
+     ": "+markLabel(originalKey.marks)+" / "+markLabel(originalKey.maxMarks)+
      " marks ("+originalKey.comparable+" of "+originalKey.total+" comparable; "+
      originalKey.unavailable+" unavailable)":null;
-   const scorePrecision=paper.scoring.decimalPlaces??2;
-   const markLabel=(value:number)=>value.toFixed(scorePrecision);
    const eligibleMax=owner.resultTab==="overview"?scoreableMaximum(paper,owner.attempt.frozen.key,owner.attempt.frozen.questions):0;
    const conservativeFloor=owner.resultTab==="overview"?scoreableLowerBound(paper,owner.attempt.frozen.key,owner.attempt.frozen.questions):0;
    const resultPackage=owner.packageForAttempt(owner.attempt);

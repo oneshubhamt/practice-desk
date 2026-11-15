@@ -19,6 +19,7 @@ export interface CrossPaperMarksPriorities {
  readonly mode:string;
  readonly attempts:number;
  readonly distinctPapers:number;
+ readonly decimals:number;
  readonly rows:readonly MarksPriorityRow[];
 }
 
@@ -107,7 +108,7 @@ export function crossPaperMarksPriorities(attempts:readonly GenericAttempt[]):Cr
    if(!rows.length)continue;
    return {examId:chosen[0]!.frozen.snapshot.examId,edition:chosen[0]!.frozen.paper.edition,
      mode:chosen[0]!.frozen.snapshot.mode,attempts:chosen.length,
-     distinctPapers:papers.size,rows};
+     distinctPapers:papers.size,decimals:chosen[0]!.frozen.paper.scoring.decimalPlaces??2,rows};
  }
  return null;
 }

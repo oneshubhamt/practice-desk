@@ -173,8 +173,8 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
     'Same exam, section structure, scoring scheme, edition and practice mode. Sections ranked by actual frozen automated marks / eligible maximum (lowest first), not by difficulty-adjusted ability.</p>'+
     marksPriorities.rows.map(row=>
       '<div class="priority-line"><div class="row between"><b>'+esc(row.title)+'</b>'+
-      '<span class="fine">'+row.percent.toFixed(1)+'% marks ('+row.earned.toFixed(2)+' / '+
-      row.eligibleMax.toFixed(2)+') · '+(row.accuracy===null?"No scored responses":row.accuracy.toFixed(0)+"% accuracy")+
+      '<span class="fine">'+row.percent.toFixed(1)+'% marks ('+row.earned.toFixed(marksPriorities.decimals)+' / '+
+      row.eligibleMax.toFixed(marksPriorities.decimals)+') · '+(row.accuracy===null?"No scored responses":row.accuracy.toFixed(0)+"% accuracy")+
       '</span></div><div class="progress-track"><span style="width:'+percent(row.percent)+
       '%"></span></div><p class="fine">'+row.sections+' section result'+(row.sections===1?"":"s")+
       ' · '+row.attempted+' submitted answers</p></div>').join("")+
