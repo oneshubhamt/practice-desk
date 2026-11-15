@@ -22,6 +22,7 @@ import {editorialStatusLabel} from "./editorial-labels.ts";
 
 import {reviewMatch,reviewFiltersHTML,resultTabsHTML,timingLedgerHTML,resultInsightsHTML,
  resultCompletionLabel,writtenWordSummary,type ResultTab,type ReviewFilter} from "./result-presentation.ts";
+import {paperProvenanceText} from "./exam-preflight.ts";
 
 import type {ResultControllerContext} from "./coordinator-context.ts";
 
@@ -58,6 +59,8 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
      paper:owner.attempt.frozen.paper,answerKey:owner.attempt.frozen.key,
      questions:owner.attempt.frozen.questions,stimuli:owner.attempt.frozen.stimuli,
      assets:owner.attempt.frozen.assets};
+   const frozenProvenance=paperProvenanceText(frozenTarget);
+   const multiSection=paper.sections.length>1;
    const grades=owner.resultTab==="overview"?manualGradeSummary(owner.attempt):{graded:0,pending:0,total:0};
    const selfAssessed=s.snapshot.earnedMarks+grades.total;
    const scorePrecision=paper.scoring.decimalPlaces??2;
@@ -80,7 +83,7 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
    const resultMeta=escapeText(resultName)+' · '+escapeText(readablePracticeMode(owner.attempt.frozen.snapshot.mode))+
      (resultDate?' · '+escapeText(resultDate):"");
    const paperSectionRows=owner.resultTab==="overview"?sectionScoreSummaries(owner.attempt,s).map(row=>
-     '<tr><td>'+escapeText(row.title)+'</td><td>'+row.attempted+'/'+
+     '<tr><td>'+escapeText(multiSection?row.title:"Whole paper")+'</td><td>'+row.attempted+'/'+
        (row.questions-row.excluded)+'</td><td>'+row.correct+'</td><td>'+row.incorrect+
        '</td><td>'+escapeText(markLabel(row.marks))+' / '+
        escapeText(markLabel(row.eligibleMax))+'</td><td>'+
@@ -95,6 +98,7 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
        (sourceKeyText?' · '+escapeText(sourceKeyText):"")+'.</p>':"";
    const scoringDetails=owner.resultTab==="overview"?'<details class="result-scoring-details">'+
      '<summary>Scoring details</summary><div class="result-scoring-detail-body">'+
+     '<p class="fine"><b>Frozen source &amp; independence:</b> '+escapeText(frozenProvenance)+'</p>'+
      (owner.attempt.practiceComposition?'<p class="fine"><b>Custom selection provenance:</b> source paper '+
        escapeText(owner.attempt.practiceComposition.sourcePaperRevisionId)+
        ' · source key '+escapeText(owner.attempt.practiceComposition.sourceAnswerKeyRevisionId)+
@@ -145,7 +149,7 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
     '</b><small>Unanswered</small></div><div class="score"><b>'+s.snapshot.excludedCount+
     '</b><small>Excluded</small></div></div>'+
     scoreExplainer+
-    '<div class="scroll-table result-section-table"><table><thead><tr><th>Section</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Marks</th><th>Time used</th></tr></thead><tbody>'+
+    '<div class="scroll-table result-section-table"><table><thead><tr><th>'+(multiSection?"Section":"Paper")+'</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Marks</th><th>Time used</th></tr></thead><tbody>'+
      paperSectionRows+'</tbody></table></div>'+scoringDetails+'</section>'+
      resultInsightsHTML(owner.attempt,revealReview)+
     '<div class="row result-footer-actions">'+
@@ -188,15 +192,15 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
          '<span>'+minutes(written.foregroundMs)+' foreground'+
            (written.postDeadlineMs>0?' · +'+minutes(written.postDeadlineMs)+' after deadline':' · no recorded overtime')+'</span>'+
          '<span>'+(written.selfAssessedMarks===null?'Not yet self-assessed':
-           'Self-assessed '+escapeText(String(written.selfAssessedMarks))+
-           (written.selfAssessedMaximum===null?'':' / '+escapeText(String(written.selfAssessedMaximum))))+'</span>'+
+           'Self-assessed '+escapeText(markLabel(written.selfAssessedMarks))+
+           (written.selfAssessedMaximum===null?'':' / '+escapeText(markLabel(written.selfAssessedMaximum))))+'</span>'+
          (written.assessmentNote?'<small>'+escapeText(written.assessmentNote)+'</small>':'')+'</div>':"")+
        frozenReviewMedia(owner.attempt!,q,response,answer,it.verdict)+
        (origin?'<p class="fine">Notebook source: '+escapeText(origin.sourcePaperId)+
          ' · '+escapeText(origin.sourcePaperEdition)+' · '+escapeText(origin.sourceSectionTitle)+
          ' · source attempt '+escapeText(origin.sourceAttemptId)+'</p>':"")+
        '<p class="fine"><span class="verdict '+escapeText(it.verdict)+'">'+
-        escapeText(it.verdict)+'</span> · '+it.marks+' automated marks</p>'+
+        escapeText(it.verdict)+'</span> · '+escapeText(markLabel(it.marks))+' automated marks</p>'+
        '<p class="fine">Your answer: '+escapeText(readableAnswer(q,response))+'</p>'+
        '<p class="fine">'+(it.verdict==="excluded"?"Frozen answer key (not scored): ":
          it.verdict==="pending"?"Manual assessment: ":"Expected: ")+
