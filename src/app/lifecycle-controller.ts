@@ -1,6 +1,6 @@
 /** P47-6 module: lifecycle-controller.ts */
 
-import {minutes,examTimeRemaining} from "./exam-view.ts";
+import {examClockDisplay} from "./exam-view.ts";
 
 import {transitionGenericAttempt} from "../engine/generic-attempt.ts";
 
@@ -124,7 +124,15 @@ export function startWorkspaceTimer(owner:LifecycleControllerContext):number{ret
    }
    if(owner.view==="exam"){
      const el=owner.root.querySelector("#g-timer");
-     if(el&&owner.attempt){const time=examTimeRemaining(owner.attempt.frozen.paper,owner.attempt.state);
-       el.textContent=time===null?"Untimed":minutes(time);}
+     if(el&&owner.attempt){
+       const clock=examClockDisplay(owner.attempt.frozen.paper,owner.attempt.state,
+         owner.attempt.frozen.snapshot.mode);
+       el.textContent=clock.text;
+       const label=owner.root.querySelector("#g-timer-label");
+       if(label)label.textContent=clock.label;
+       const shell=el.closest(".exam-clock");
+       shell?.classList.toggle("low",clock.low);
+       shell?.classList.toggle("overtime",clock.overtime);
+     }
    }
  },1000);}

@@ -8,6 +8,7 @@ import {supplementalAssetHTML,stimulusHTML,renderGenericControls,renderQuestionP
 import {calculatorPanelHTML,calculatorToggleHTML} from "./exam-calculator.ts";
 import {BASIC_CALCULATOR_V1,newExamCalculatorState,type ExamCalculatorState} from "../domain/calculator.ts";
 import {shouldShowWordCount} from "../domain/word-count.ts";
+import {sectionTimeBudgetMs,timeEnforcementForMode} from "../domain/timing.ts";
 /** Human-readable view of a frozen practice mode; do not alter persistence. */
 export function readablePracticeMode(mode:string):string{
  switch(mode){
@@ -24,10 +25,29 @@ export const minutes=(ms:number):string=>{
 };
 export function examTimeRemaining(paper:ExamPackage["paper"],state:GenericAttempt["state"]):number|null{
   if(paper.timing.kind==="untimed")return null;
-  if(paper.timing.kind==="whole-paper")return Math.max(0,paper.timing.durationMs-state.elapsedMs);
-  const id=paper.sections[state.sectionIndex]?.id;
-  const limit=paper.timing.sectionLimits.find(s=>s.sectionId===id)?.durationMs;
-  return limit==null?null:Math.max(0,limit-state.sectionElapsedMs);
+  const limit=paper.timing.kind==="whole-paper"?paper.timing.durationMs:
+    sectionTimeBudgetMs(paper,state.sectionIndex);
+  const elapsed=paper.timing.kind==="sectional"?state.sectionElapsedMs:state.elapsedMs;
+  return limit===null?null:Math.max(0,limit-elapsed);
+}
+export interface ExamClockDisplay{
+ readonly text:string;readonly label:string;readonly low:boolean;readonly overtime:boolean;
+}
+export function examClockDisplay(
+ paper:ExamPackage["paper"],state:GenericAttempt["state"],mode:GenericAttempt["frozen"]["snapshot"]["mode"]
+):ExamClockDisplay{
+ if(paper.timing.kind==="untimed")return {text:"Untimed",label:"UNTIMED PRACTICE",low:false,overtime:false};
+ const budget=paper.timing.kind==="whole-paper"?paper.timing.durationMs:
+   sectionTimeBudgetMs(paper,state.sectionIndex);
+ if(budget===null)return {text:"Untimed",label:"UNTIMED SECTION",low:false,overtime:false};
+ const elapsed=paper.timing.kind==="sectional"?state.sectionElapsedMs:state.elapsedMs;
+ const over=Math.max(0,elapsed-budget);
+ if(over>0&&timeEnforcementForMode(mode)==="advisory")
+   return {text:"+"+minutes(over),label:paper.timing.kind==="sectional"?"SECTION OVERTIME":"PAPER OVERTIME",
+     low:false,overtime:true};
+ const remaining=Math.max(0,budget-elapsed);
+ return {text:minutes(remaining),label:paper.timing.kind==="sectional"?"SECTION TIME LEFT":"PAPER TIME LEFT",
+   low:remaining<=60000,overtime:false};
 }
 
 export function renderModelExam(
@@ -45,7 +65,7 @@ export function renderModelExam(
    const responsesById=new Map(state.responses.map(row=>[row.questionRevisionId,row]));
    const response=responsesById.get(q.id)?.response;
    const currentDraft=draft?.questionId===q.id&&q.content.kind==="multiple-select"?draft:null;
-   const remaining=examTimeRemaining(paper,state);
+   const clock=examClockDisplay(paper,state,attempt.frozen.snapshot.mode);
    const total=paper.sections.reduce((n,section)=>n+section.questionRevisionIds.length,0);
    const answered=state.responses.filter(record=>record.response).length;
    const timeLimit=paper.timing.kind==="whole-paper"?paper.timing.durationMs:
@@ -62,7 +82,7 @@ export function renderModelExam(
      paper.timing.kind==="whole-paper"?"Whole-paper timer":"Section timer";
    const progressAccessibleName=timeLimit===null?"Questions answered":
      paper.timing.kind==="whole-paper"?"Whole-paper time used":"Section time used";
-   const isLow=remaining!==null&&remaining<=60000;
+   const isLow=clock.low;
    const focused=view.focused;
    const calculatorEnabled=paper.candidateTools?.calculator===BASIC_CALCULATOR_V1;
    const calculator=calculatorState??newExamCalculatorState();
@@ -75,9 +95,8 @@ export function renderModelExam(
    return '<div class="generic-heading exam-header"><div><h1>'+escapeText(bundle?.title??paper.paperId)+'</h1>'+
      '<p class="muted">'+escapeText(readablePracticeMode(attempt.frozen.snapshot.mode))+' · '+
      escapeText(section.title)+' · Section '+(state.sectionIndex+1)+' of '+paper.sections.length+'</p></div>'+
-     '<div class="row exam-header-actions"><div class="exam-clock '+(isLow?"low":"")+'"><strong class="generic-timer" id="g-timer" role="timer">'+
-       (remaining===null?"Untimed":minutes(remaining))+'</strong><small>'+(remaining===null?"UNTIMED PRACTICE":
-        paper.timing.kind==="sectional"?"SECTION TIME LEFT":"PAPER TIME LEFT")+'</small></div>'+
+     '<div class="row exam-header-actions"><div class="exam-clock '+(isLow?"low ":"")+(clock.overtime?"overtime":"")+'"><strong class="generic-timer" id="g-timer" role="timer">'+
+       clock.text+'</strong><small id="g-timer-label">'+clock.label+'</small></div>'+
      (calculatorEnabled?calculatorToggleHTML(calculator):"")+
      '<button class="btn quiet" id="g-library">← Library</button>'+
      '<button class="btn" type="button" id="g-exam-full" aria-label="Toggle full-screen test view" aria-pressed="'+
