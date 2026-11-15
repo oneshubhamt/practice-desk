@@ -115,9 +115,10 @@ test("P59: guarded delta edits preserve original, validate canonical publisher, 
 test("P59: bad source hash, item hash, id, path, revisions and wrong keyed schema fail closed without partial output",async()=>inTemp(async dir=>{
  const input=join(dir,"source.json"),output=join(dir,"result.json"),patch=join(dir,"patch.json");
  await writeFile(input,await readFile(apfc));
- const h=exec("inspect",input).data.sourceSha256;
+ const inspected=exec("inspect",input).data;
+ const h=inspected.sourceSha256;
  const item=exec("show",input,"labour-01").data.questionSha256;
- const base={format:"practice-desk-agent-patch",version:1,baseSha256:h,nextRevision:source.revision+1,
+ const base={format:"practice-desk-agent-patch",version:1,baseSha256:h,nextRevision:inspected.revision+1,
   updates:[{id:"labour-01",expectedQuestionSha256:item,set:{explanation:"New explanation with existing B key."}}]};
  const {nextRevision:_missingRevision,...missingRevision}=base;
  const cases=[
