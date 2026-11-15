@@ -48,7 +48,7 @@ try{
  await page.locator("#pd-author-math-alt").fill("x divided by 2");
  check(await page.locator("#pd-author-math-live .katex-mathml").count()===1,"Live authored maths missing");
  await page.locator("#pd-author-math-insert").click();
- for(const [letter,text] of [["A","2"],["B","4"],["C","6"],["D","8"]])await fillField(letter,text);
+ for(const [field,text] of [["O1","2"],["O2","4"],["O3","6"],["O4","8"]])await fillField(field,text);
  await fillField("explanation","WORKED-SOLUTION-SECRET. Multiply both sides by 2.");
  await page.locator("#pd-author-field").selectOption("prompt");
  await page.locator("#pd-author-validate").click();
