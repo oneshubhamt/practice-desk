@@ -1,5 +1,7 @@
 import type { GenericAttempt } from "../engine/generic-attempt.ts";
 import { sectionScoreSummaries } from "../engine/score-ceiling.ts";
+import {effectiveMarkingRule} from "../engine/scoring.ts";
+import {sectionTimeBudgetMs} from "../domain/timing.ts";
 
 export interface MarksPriorityRow {
  readonly title:string;
@@ -42,10 +44,10 @@ function formatSignature(a:GenericAttempt):string{
      // scoring comparability, even when overall default rules agree. Sort the
      // grading shapes so mere question order does not break the cohort.
      gradingShapes:s.questionRevisionIds.map(id=>{
-       const kind=questions.get(id)?.content.kind;
-       const rule=answers.get(id)?.scoringOverride??s.scoringOverride??
-         (kind?p.scoring.byQuestionKind?.[kind]:undefined)??p.scoring.defaultRule;
-       return JSON.stringify({kind,rule});
+       const question=questions.get(id),entry=answers.get(id);
+       if(!question||!entry)throw Error("Frozen scoring signature is incomplete");
+       const rule=effectiveMarkingRule(p,s,question,entry);
+       return JSON.stringify({kind:question.content.kind,rule});
      }).sort()})),
    // Section IDs are scoped to individual paper families. Compare timer
    // budgets in section order, not raw IDs, so two genuine 4x15-minute papers
@@ -53,9 +55,7 @@ function formatSignature(a:GenericAttempt):string{
    timing:p.timing.kind==="sectional"?
      {kind:"sectional",transition:p.timing.transition,allowEarlySubmit:p.timing.allowEarlySubmit,
        pausePolicy:p.timing.pausePolicy,
-       sectionDurations:p.sections.map(section=>
-         p.timing.kind==="sectional"?
-           p.timing.sectionLimits.find(limit=>limit.sectionId===section.id)?.durationMs??null:null)}:
+       sectionDurations:p.sections.map((_,index)=>sectionTimeBudgetMs(p,index))}:
      p.timing,
    navigation:{questionNavigation:p.navigation.questionNavigation,
      sectionNavigation:p.navigation.sectionNavigation},

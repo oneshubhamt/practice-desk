@@ -9,7 +9,7 @@ import {attemptModeForPractice,availablePracticeModes,configurePracticeMode,conf
 import {validateExamPackage} from "../domain/exam-package.ts";
 import type {ExamPackage} from "../domain/exam-package.ts";
 import type {PracticeMode} from "../workspace-settings.ts";
-import {paperTimeBudgetMs} from "../domain/timing.ts";
+import {paperTimeBudgetMs,sectionTimeBudgetMs} from "../domain/timing.ts";
 import type {GenericAttempt} from "../engine/generic-attempt.ts";
 
 import {createSourceKeyReference} from "../engine/source-comparison.ts";
@@ -50,7 +50,7 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
      mode==="free"?"Flexible full paper":"Section practice";
    const policy=configured?.paper.timing;
    const sectionBudgets=policy?.kind==="sectional"?
-     configured!.paper.sections.map(s=>policy.sectionLimits.find(x=>x.sectionId===s.id)?.durationMs??null):[];
+     configured!.paper.sections.map((_,index)=>sectionTimeBudgetMs(configured!.paper,index)):[];
    const time=configured?.paper.timing.kind==="untimed"?"Untimed":
      configured?.paper.timing.kind==="whole-paper"?minutes(configured.paper.timing.durationMs):
        sectionBudgets.length&&sectionBudgets.every(ms=>ms===sectionBudgets[0])?
