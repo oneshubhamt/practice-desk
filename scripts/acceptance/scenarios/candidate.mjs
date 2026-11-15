@@ -6,7 +6,7 @@ export async function candidateCore(){
 const {openHarness,records,check,assertNoOverflow,route,claimNativeNavigation}=await import("../../browser/fixtures.mjs");
 const {chooseModernPaper,findModernPaper}=await import("../../paper-select.mjs");
 const {pkg : sixKinds}=await import("../../../tests/fixtures/six-kinds.mjs");
-const {paperRevisionHash}=await import("../../../src/domain/integrity.ts");
+const {paperRevisionHash,answerKeyRevisionHash}=await import("../../../src/domain/integrity.ts");
 const shortTimed=(id,durationMs,edition)=>{
  const {contentHash:_oldHash,...paperCore}=sixKinds.paper;
  const base={...paperCore,id,edition,timing:{kind:"whole-paper",durationMs,pausePolicy:"allowed"}};
@@ -23,8 +23,11 @@ const unsectioned=(()=>{
   navigation:{...paperCore.navigation,questionNavigation:"free",sectionNavigation:"free"},
   scoring:{...paperCore.scoring,
    defaultRule:{correctMarks:1/3,incorrectMarks:-1/9,unansweredMarks:0},decimalPlaces:3}};
+ const keyCore={...sixKinds.answerKey,paperRevisionId:base.id};
+ const answerKey={...keyCore,contentHash:answerKeyRevisionHash(keyCore)};
  return {...sixKinds,examId:"generic-structure",title:"Unsectioned precision demo",
-  paper:{...base,contentHash:paperRevisionHash(base)}};
+  paper:{...base,answerKeyRevisionId:answerKey.id,contentHash:paperRevisionHash({...base,answerKeyRevisionId:answerKey.id})},
+  answerKey};
 })();
 const h=await openHarness({artifactDir:"artifacts/acceptance-modern"});
 const evidence=[];
