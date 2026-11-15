@@ -330,7 +330,7 @@ export async function statusPalette(){
  * kinds and built-in CGL, including draft transitions, reload and dark mode.
  */
 const {openHarness,route,check,assertNoOverflow}=await import("../../browser/fixtures.mjs");
-const {chooseModernPaper,findModernPaper}=await import("../../paper-select.mjs");
+const {chooseModernPaper,findModernPaper,importModernPaper}=await import("../../paper-select.mjs");
 const {pkg}=await import("../../../tests/fixtures/six-kinds.mjs");
 const engine=process.argv[2]??"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
@@ -377,9 +377,7 @@ async function flagAndCheck(index){
  return status(index,false);
 }
 try{
- await page.locator("#g-file").setInputFiles({name:"six-kinds.json",mimeType:"application/json",
-  buffer:Buffer.from(JSON.stringify(pkg))});
- await chooseModernPaper(page,pkg.paper.id);
+ await importModernPaper(page,pkg,"six-kinds.json");
  await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
  const pending=await flagAndCheck(0);
  await page.locator('input[data-choice]').first().check();
