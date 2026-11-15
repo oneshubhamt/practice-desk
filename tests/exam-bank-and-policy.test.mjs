@@ -8,6 +8,7 @@ import {validateExamPackage,builtinCglPackages,availablePracticeModes,resolvePra
 import {loadQuestionBankCatalog} from "../scripts/question-bank-catalog.mjs";
 import {applyLibraryFamily} from "../src/app/library-controller.ts";
 import {shouldShowWordCount} from "../src/domain/word-count.ts";
+import {newAuthoringDraft} from "../src/authoring/authoring-draft.ts";
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {validatePracticeSetups} from "../src/app/practice-selection.ts";
 const starter=JSON.parse(await readFile(new URL("../examples/apfc-authoring-example.json",import.meta.url),"utf8"));
@@ -318,4 +319,91 @@ test("P44 explicit topic and difficulty metadata work without guessing or changi
  assert.equal(selected.manifest.eligibleCount,1);
  assert.equal(JSON.stringify(decorated),snapshot,"No mutation of original bank");
  assert.equal(validateExamPackage(selected.bundle),selected.bundle);
+});
+
+
+test("authoring cardinality and scoring are data-driven for 2/4/5 options and variable matching",()=>{
+ const source=structuredClone(starter);
+ source.questions[0].options=["Alpha","Beta"];
+ source.questions[0].answer="B";
+ source.questions[1].options=["A","B","C","D","E"];
+ source.questions[1].answer="E";
+ const third=source.questions[2];
+ delete third.tolerance;
+ third.kind="matching";
+ third.leftItems=["Left 1","Left 2","Left 3"];
+ third.rightItems=["Right A","Right B","Right C","Right D","Right E"];
+ third.answer="1-A,2-C,3-E";
+ source.scoring={
+  correctMarks:3,incorrectMarks:-1,unansweredMarks:-0.25,decimalPlaces:3,
+  byQuestionKind:{"matching":{correctMarks:4,incorrectMarks:-1,unansweredMarks:0}}
+ };
+ source.sections[1].scoringOverride={correctMarks:2,incorrectMarks:-0.5,unansweredMarks:0};
+ const pkg=compileExternalQuestionBank(source);
+ assert.deepEqual(pkg.questions.slice(0,2).map(q=>q.content.options.length),[2,5]);
+ assert.equal(pkg.answerKey.entries[0].answer.optionId,"B");
+ assert.equal(pkg.answerKey.entries[1].answer.optionId,"E");
+ assert.equal(pkg.questions[2].content.leftItems.length,3);
+ assert.equal(pkg.questions[2].content.rightItems.length,5);
+ assert.deepEqual(pkg.answerKey.entries[2].answer.pairs.map(p=>p.rightId),["A","C","E"]);
+ assert.deepEqual(pkg.paper.scoring.defaultRule,{correctMarks:3,incorrectMarks:-1,unansweredMarks:-0.25});
+ assert.deepEqual(pkg.paper.scoring.byQuestionKind.matching,{correctMarks:4,incorrectMarks:-1,unansweredMarks:0});
+ assert.equal(pkg.paper.scoring.decimalPlaces,3);
+ assert.deepEqual(pkg.paper.sections[1].scoringOverride,{correctMarks:2,incorrectMarks:-0.5,unansweredMarks:0});
+ assert.equal(validateExamPackage(pkg),pkg);
+ const four=compileExternalQuestionBank(starter);
+ assert.deepEqual(four.questions.filter(q=>q.content.kind==="single-choice").map(q=>q.content.options.length),[4,4]);
+});
+
+test("omitted written target stays omitted and new manual authoring starts from neutral policy",()=>{
+ const source=structuredClone(starter),written=source.questions[2];
+ delete written.tolerance;
+ written.kind="free-response";
+ delete written.answer;
+ delete written.wordLimit;
+ written.prompt="Write a short analytical response.";
+ const pkg=compileExternalQuestionBank(source);
+ const q=pkg.questions[2];
+ assert.equal(q.content.kind,"free-response");
+ assert.equal(q.content.responseRules.wordLimit,undefined,
+  "AI authoring must never invent a 300-word target");
+ const draft=newAuthoringDraft();
+ assert.equal(draft.timingKind,"untimed");
+ assert.equal(draft.durationMinutes,0);
+ assert.equal(draft.marksCorrect,1);
+ assert.equal(draft.marksIncorrect,0);
+ assert.equal(draft.marksUnanswered,0);
+ assert.equal(draft.scoreDecimalPlaces,2);
+ assert.equal(draft.sections[0].minutes,0);
+ assert.equal(draft.questions[0].wordLimit,undefined);
+});
+
+test("explicit practice eligibility can narrow structural modes without exam-name special cases",()=>{
+ const one={...starter,bankId:"one-mode",paperId:"one-mode",examId:"generic-one",
+  practiceModes:["free"],sections:[{id:"whole",title:"Whole paper"}],
+  questions:starter.questions.map(({syllabusHeadingId:_,...q})=>({...q,subject:"General",examSection:"whole"}))};
+ const onePkg=compileExternalQuestionBank(one);
+ assert.deepEqual(availablePracticeModes(onePkg.paper),["free"]);
+ assert.equal(resolvePracticeMode(onePkg.paper,"strict"),"free");
+ assert.throws(()=>configurePracticeMode(onePkg,"strict"),/unavailable/);
+ const multi={...starter,bankId:"multi-modes",paperId:"multi-modes",examId:"generic-multi",
+  practiceModes:["strict","free"]};
+ const multiPkg=compileExternalQuestionBank(multi);
+ assert.deepEqual(availablePracticeModes(multiPkg.paper),["strict","free"]);
+ assert.throws(()=>configurePracticeMode(multiPkg,"single",0),/unavailable/);
+ const invalid={...one,practiceModes:["single"]};
+ assert.throws(()=>compileExternalQuestionBank(invalid),/Section practice requires multiple physical sections/);
+});
+
+test("edition pairing never substitutes a different logical paper",async()=>{
+ const {pairedEdition}=await import("../src/app/exam-families.ts");
+ const source=compileExternalQuestionBank({...starter,bankId:"paper-a",paperId:"paper-a",examId:"mixed-editions"});
+ const reviewedLike=compileExternalQuestionBank({...starter,bankId:"paper-b",paperId:"paper-b",examId:"mixed-editions"});
+ const fakeSource={...source,paper:{...source.paper,edition:"source"}};
+ const fakeReviewed={...reviewedLike,paper:{...reviewedLike.paper,edition:"reviewed",
+  sourcePaperRevisionId:"other-source",sourceAnswerKeyRevisionId:"other-key"}};
+ const family={id:"included:mixed-editions",title:"Mixed",imported:false,origin:"included",
+  examId:"mixed-editions",includedPaperIds:[],papers:[fakeSource,fakeReviewed]};
+ assert.equal(pairedEdition(family,fakeSource,"reviewed"),undefined);
+ assert.equal(pairedEdition(family,fakeReviewed,"source"),undefined);
 });
