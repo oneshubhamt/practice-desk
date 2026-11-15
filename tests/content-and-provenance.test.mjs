@@ -299,7 +299,12 @@ async function registerFrozenContentIntegrityTests(){
 
 
 const root=resolve(fileURLToPath(new URL("..",import.meta.url)));
-const json=async name=>JSON.parse(await readFile(new URL("../src/content/"+name+".json",import.meta.url)));
+const cglContentPaths={
+ papers:"../question-banks/ssc-cgl/pyqs/original/papers.json",
+ patches:"../question-banks/ssc-cgl/pyqs/revised/patches.json",
+ solutions:"../question-banks/ssc-cgl/pyqs/revised/solutions.json"
+};
+const json=async name=>JSON.parse(await readFile(new URL(cglContentPaths[name],import.meta.url)));
 const [sources,patches,solutions]=await Promise.all(["papers","patches","solutions"].map(json));
 const banks=builtinCglPackages(sources,patches,solutions);
 const sameRecord=(old,now)=>JSON.stringify(old)===JSON.stringify(now);
@@ -317,7 +322,7 @@ test("SOURCE A/V01/V05/V19: original content banks retain their canonical source
    solutions:"ada93d1f27c091023d6a26e9f89dd8956ebaf55e"
  };
  for(const name of ["papers","patches","solutions"]){
-  const filename="src/content/"+name+".json";
+  const filename=fileURLToPath(new URL(cglContentPaths[name],import.meta.url));
   const hash=execFileSync("git",["hash-object",filename],{cwd:root,encoding:"utf8"}).trim();
   assert.equal(hash,canonicalSourceBlob[name],
     name+" was silently changed from its canonical source Git blob");
@@ -553,7 +558,7 @@ await registerSourceReviewMediaTests();
 /** Bank Validation And Build — canonical domain contracts. */
 async function registerBankValidationAndBuildTests(){
 const load = async name => JSON.parse(
-  await readFile(new URL('../src/content/' + name + '.json', import.meta.url), 'utf8')
+  await readFile(new URL(cglContentPaths[name], import.meta.url), 'utf8')
 );
 const loadContent = async () => ({
   papers: await load('papers'),
