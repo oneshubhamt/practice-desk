@@ -53,12 +53,12 @@ export interface RestoredSession {
  * question time; paused attempts remain paused. Never extend a deadline.
  */
 export function restoreSession(
-  paper: PaperRevision, saved: SessionState, wallNowMs: number, visible: boolean,
+  paper: PaperRevision, saved: SessionState, wallNowMs: number, visible: boolean,mode:AttemptMode,
 ): RestoredSession {
   if (!Number.isFinite(wallNowMs)) throw new Error("Invalid restoration time");
   const aligned = wallNowMs < saved.clockMs
     ? rebaseSession({ ...saved, visible: false }, wallNowMs)
-    : transition(paper, { ...saved, visible: false }, { type: "TICK", nowMs: wallNowMs });
+    : transition(paper, { ...saved, visible: false }, { type: "TICK", nowMs: wallNowMs },mode);
   return { state: { ...aligned, visible }, expired: aligned.status === "completed" };
 }
 export interface RecoveryCandidate {

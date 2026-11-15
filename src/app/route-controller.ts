@@ -59,7 +59,8 @@ export async function activateWorkspaceRoute(owner:RouteControllerContext,target
      owner.attempt=saved;
      if(target.screen==="exam"&&switching){
        const restoredAt=owner.now();
-       const restored=restoreSession(saved.frozen.paper,saved.state,restoredAt,!document.hidden);
+       const restored=restoreSession(saved.frozen.paper,saved.state,restoredAt,!document.hidden,
+         saved.frozen.snapshot.mode);
        owner.attempt={...saved,state:restored.state,updatedAt:restoredAt,
          ...(restored.expired?{finishedAt:restoredAt,completionReason:"time-expired" as const,
            result:scoreAttempt(saved.frozen.paper,saved.frozen.key,

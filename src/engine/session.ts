@@ -1,7 +1,8 @@
 import type { PaperRevision } from "../domain/exam.js";
 import type { CandidateResponse } from "../domain/question.js";
 import type { QuestionRevisionId, SectionId } from "../domain/ids.js";
-import type { AttemptResponseRecord } from "../domain/attempt.js";
+import type { AttemptMode, AttemptResponseRecord } from "../domain/attempt.js";
+import {sectionTimeBudgetMs,timeEnforcementForMode} from "../domain/timing.ts";
 
 export interface SessionState {
   /** An expired manual section is frozen until the candidate explicitly advances. */
@@ -15,7 +16,7 @@ export interface SessionState {
   /** Canonical cursor-entry counters for exact first-visit/revisit evidence. */
   readonly questionVisits: readonly { readonly questionRevisionId:QuestionRevisionId;readonly count:number }[];
   /** Canonical timing-evidence schema for every current session state. */
-  readonly timingEvidenceVersion:1;
+  readonly timingEvidenceVersion:2;
   readonly completedSections: readonly number[];
   /** Observed consumed timer time for each finished sequential section.
    * A free multi-section paper has no defensible per-section wall-time split.
@@ -48,7 +49,7 @@ function questionId(paper: PaperRevision, state: SessionState): QuestionRevision
 function record(state: SessionState, id: QuestionRevisionId): AttemptResponseRecord {
   return state.responses.find(r => r.questionRevisionId === id) ?? {
     questionRevisionId: id, flagged: false, timeSpentMs: 0, answerChangeCount: 0,
-    firstVisitMs:0,preFirstAnswerMs:0,
+    firstVisitMs:0,postDeadlineMs:0,preFirstAnswerMs:0,
   };
 }
 function put(state: SessionState, value: AttemptResponseRecord): SessionState {
@@ -59,7 +60,7 @@ export function startSession(paper: PaperRevision, nowMs: number): SessionState 
   return {
     status: "running", sectionIndex: 0, questionIndex: 0, elapsedMs: 0,
     sectionElapsedMs: 0, foregroundMs: 0, responses: [], completedSections: [], completedSectionTimings: [],
-    visible: true, clockMs: nowMs, timingEvidenceVersion:1,
+    visible: true, clockMs: nowMs, timingEvidenceVersion:2,
     questionVisits:[{questionRevisionId:paper.sections[0]!.questionRevisionIds[0]!,count:1}],
   };
 }
@@ -97,8 +98,31 @@ function sectionLimit(paper: PaperRevision, sectionIndex: number): number | null
   if (!limit) throw new Error("Missing sectional timer");
   return limit.durationMs;
 }
-/** Consume a monotonic interval without assigning time after expiry to a completed question. */
-function checkpoint(paper: PaperRevision, state: SessionState, nowMs: number): SessionState {
+function activeBudget(paper:PaperRevision,state:SessionState):number|null{
+ return paper.timing.kind==="whole-paper"?paper.timing.durationMs:
+   paper.timing.kind==="sectional"?sectionTimeBudgetMs(paper,state.sectionIndex):null;
+}
+function activeElapsed(paper:PaperRevision,state:SessionState):number{
+ return paper.timing.kind==="sectional"?state.sectionElapsedMs:state.elapsedMs;
+}
+/** Whether a hard attempt would have reached its active deadline at nowMs.
+ * Advisory practice never locks merely because its budget was exceeded. */
+export function hardDeadlineReached(
+ paper:PaperRevision,state:SessionState,mode:AttemptMode,nowMs:number
+):boolean{
+ if(!Number.isFinite(nowMs))throw new Error("Invalid session clock");
+ if(timeEnforcementForMode(mode)!=="hard"||paper.timing.kind==="untimed")return false;
+ if(state.status==="completed"||state.status==="section-expired")return true;
+ if(state.status!=="running")return false;
+ const budget=activeBudget(paper,state);
+ if(budget===null)return false;
+ return activeElapsed(paper,state)+Math.max(0,nowMs-state.clockMs)>=budget;
+}
+/** Consume a monotonic interval. Hard attempts stop at the budget; advisory
+ * attempts continue and attribute only visible post-budget exposure. */
+function checkpoint(
+ paper: PaperRevision,state:SessionState,nowMs:number,mode:AttemptMode="exam-simulation"
+): SessionState {
   if (!Number.isFinite(nowMs)) throw new Error("Invalid session clock");
   // Wall-clock adjustments can move backwards. Rebase without subtracting time
   // or inventing a negative interval; future intervals are measured from the new origin.
@@ -106,14 +130,14 @@ function checkpoint(paper: PaperRevision, state: SessionState, nowMs: number): S
   let remaining = state.status === "running" ? nowMs - state.clockMs : 0;
   let next: SessionState = { ...state, clockMs: nowMs };
   if (state.status !== "running") return next;
-  // Every iteration either consumes time, advances a section, or terminates.
+  // Every iteration either consumes time, advances a hard-timed section, or terminates.
+  const hard=timeEnforcementForMode(mode)==="hard";
   while (next.status === "running") {
-    const limit = paper.timing.kind === "whole-paper"
-      ? Math.max(0, paper.timing.durationMs - next.elapsedMs)
-      : sectionLimit(paper, next.sectionIndex) === null
-        ? Infinity : Math.max(0, (sectionLimit(paper, next.sectionIndex) ?? Infinity) - next.sectionElapsedMs);
-    const spent = Math.min(remaining, limit);
+    const budget=activeBudget(paper,next),used=activeElapsed(paper,next);
+    const remainingToHardDeadline=hard&&budget!==null?Math.max(0,budget-used):Infinity;
+    const spent = Math.min(remaining, remainingToHardDeadline);
     if (spent > 0) {
+      const postDeadline=budget===null?0:Math.max(0,(used+spent)-Math.max(used,budget));
       next = { ...next, elapsedMs: next.elapsedMs + spent, sectionElapsedMs: next.sectionElapsedMs + spent,
         foregroundMs: next.foregroundMs + (next.visible ? spent : 0) };
       if (next.visible) {
@@ -125,12 +149,13 @@ function checkpoint(paper: PaperRevision, state: SessionState, nowMs: number): S
         next = put(next,{
           ...previous,timeSpentMs:previous.timeSpentMs+spent,
           firstVisitMs:previous.firstVisitMs+(visit===1?spent:0),
+          postDeadlineMs:previous.postDeadlineMs+postDeadline,
           preFirstAnswerMs:previous.preFirstAnswerMs+(previous.firstAnsweredAt===undefined?spent:0)
         });
       }
     }
     remaining -= spent;
-    if (limit !== Infinity && spent === limit) {
+    if (remainingToHardDeadline !== Infinity && spent === remainingToHardDeadline) {
       if (paper.timing.kind === "whole-paper") return finish(paper,next,"time-expired");
       if (paper.timing.kind === "sectional" && paper.timing.transition === "manual")
         return { ...next, status: "section-expired" };
@@ -141,8 +166,10 @@ function checkpoint(paper: PaperRevision, state: SessionState, nowMs: number): S
   }
   return next;
 }
-export function transition(paper: PaperRevision, state: SessionState, event: SessionEvent): SessionState {
-  const current = checkpoint(paper, state, event.nowMs);
+export function transition(
+ paper:PaperRevision,state:SessionState,event:SessionEvent,mode:AttemptMode="exam-simulation"
+): SessionState {
+  const current = checkpoint(paper,state,event.nowMs,mode);
   if (event.type === "VISIBILITY") return { ...current, visible: event.visible };
   if (current.status === "completed") return current;
   if (event.type === "TICK") return current;
@@ -182,8 +209,11 @@ export function transition(paper: PaperRevision, state: SessionState, event: Ses
         current.sectionIndex < paper.sections.length - 1) return advance(paper,current);
     // Untimed sections cannot expire, so explicit continuation is their only
     // legitimate forward path even when early submission is forbidden.
+    const budget=sectionLimit(paper,current.sectionIndex);
+    const advisoryExpired=timeEnforcementForMode(mode)==="advisory"&&budget!==null&&
+      current.sectionElapsedMs>=budget;
     if (paper.timing.kind !== "sectional" ||
-        !(paper.timing.allowEarlySubmit || sectionLimit(paper,current.sectionIndex) === null) ||
+        !(paper.timing.allowEarlySubmit || budget === null || advisoryExpired) ||
         current.sectionIndex !== state.sectionIndex) return current;
     // Expiry may have advanced to the next section during checkpoint(). Never
     // accidentally submit two sections with one delayed click.
@@ -227,7 +257,9 @@ export function sectionTimerDuration(state:SessionState,sectionIndex:number):num
   return state.completedSectionTimings.find(x=>x.sectionIndex===sectionIndex)?.durationMs??null;
 }
 /** Never trust claimed section timing supplied by imported backups or local storage. */
-export function validateSectionTimingEvidence(paper:PaperRevision,state:SessionState):void{
+export function validateSectionTimingEvidence(
+ paper:PaperRevision,state:SessionState,mode:AttemptMode="exam-simulation"
+):void{
   const rows=state.completedSectionTimings;
   if(!Array.isArray(rows)||rows.length>paper.sections.length||
      (paper.navigation.sectionNavigation!=="sequential-locked"&&paper.sections.length!==1&&rows.length>0))
@@ -240,11 +272,11 @@ export function validateSectionTimingEvidence(paper:PaperRevision,state:SessionS
        (row.reason!=="time-expired"&&row.reason!=="submitted"))
       throw Error("Invalid saved section timing entry");
     if(paper.timing.kind==="sectional"){
-      const limit=sectionLimit(paper,index);
-      if(limit!==null&&row.durationMs>limit)
+      const limit=sectionLimit(paper,index),hard=timeEnforcementForMode(mode)==="hard";
+      if(hard&&limit!==null&&row.durationMs>limit)
         throw Error("Saved section timer exceeds its limit");
-      if(row.reason==="time-expired"&&(limit===null||row.durationMs!==limit))
-        throw Error("Saved section expiry does not match the timer limit");
+      if(row.reason==="time-expired"&&(!hard||limit===null||row.durationMs!==limit))
+        throw Error("Saved section expiry does not match the hard timer limit");
     }
     sum+=row.durationMs;
   });

@@ -7,6 +7,7 @@ import {validateResponse} from "./response.ts";
 import {scoreAttempt} from "./scoring.ts";
 import type {SourceKeyReference} from "./source-comparison.ts";
 import type {SourceReviewReference} from "./review-source.ts";
+import {timeEnforcementForMode} from "../domain/timing.ts";
 
 export type CompletionReason="time-expired"|"submitted"|"section-submitted";
 
@@ -47,9 +48,10 @@ export function transitionGenericAttempt(
    if(!q)throw new Error("No question at the cursor");
    validateResponse(q,event.response);
  }
- const state=transition(paper,attempt.state,event);
+ const state=transition(paper,attempt.state,event,attempt.frozen.snapshot.mode);
  const finished=state.status==="completed";
- const expired=finished&&(paper.timing.kind==="whole-paper"?
+ const expired=finished&&timeEnforcementForMode(attempt.frozen.snapshot.mode)==="hard"&&
+   (paper.timing.kind==="whole-paper"?
    state.elapsedMs>=paper.timing.durationMs:
    paper.timing.kind==="sectional"?(()=>{
      const section=paper.sections[state.sectionIndex];

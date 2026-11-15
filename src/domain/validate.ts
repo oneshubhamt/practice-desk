@@ -300,7 +300,7 @@ export function validateAnswerKeyRevision(
       "single-choice":["optionId"],"multiple-select":["optionIds"],
       "numeric-entry":["acceptedValues","absoluteTolerance","relativeTolerance"],
       "true-false":["value"],"matching":["pairs"],
-      "free-response":["evaluation","rubricId"]
+      "free-response":["evaluation"]
     };
     only(answer,["kind",...answerFields[expectedKind]],path+".answer");
     if (expectedKind === "single-choice") {
@@ -347,7 +347,6 @@ export function validateAnswerKeyRevision(
       if (seenLeft.length === 0) throw new Error(path + ".answer.pairs: expected at least one pair");
     } else if (expectedKind === "free-response") {
       oneOf(answer["evaluation"], ["manual"] as const, path + ".answer.evaluation");
-      if (answer["rubricId"] !== undefined) text(answer["rubricId"], path + ".answer.rubricId");
     }
     if (entry["scoringOverride"] !== undefined) validateMarkingRule(entry["scoringOverride"], path + ".scoringOverride");
   });

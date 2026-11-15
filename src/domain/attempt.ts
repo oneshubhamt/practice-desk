@@ -41,6 +41,8 @@ export interface AttemptResponseRecord {
   readonly timeSpentMs: number;
   /** Accumulated foreground milliseconds on the first cursor visit. */
   readonly firstVisitMs:number;
+  /** Foreground exposure on this question after its active advisory time budget was exhausted. */
+  readonly postDeadlineMs:number;
   /** Foreground time across visits before the first committed answer. */
   readonly preFirstAnswerMs:number;
   readonly firstAnsweredAt?: string;
