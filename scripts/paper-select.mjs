@@ -38,3 +38,18 @@ export async function findModernPaper(page,edition,predicate){
  }
  throw Error("No visible "+edition+" paper matches predicate in any installed family");
 }
+
+export async function choosePracticeMode(page,mode){
+ const button=page.locator('[data-mode="'+mode+'"]');
+ if(await button.count()!==1)throw Error("Practice mode not offered by selected paper: "+mode);
+ await button.click();
+ if(await button.getAttribute("aria-pressed")!=="true")
+  throw Error("Practice mode did not become active: "+mode);
+}
+export async function importModernPaper(page,pkg,name="imported-exam.json"){
+ await page.locator("#g-file").setInputFiles({name,mimeType:"application/json",
+  buffer:Buffer.from(JSON.stringify(pkg))});
+ await page.waitForFunction(id=>[...document.querySelectorAll("#g-papers option")]
+  .some(option=>option.value===id),pkg.paper.id);
+ await chooseModernPaper(page,pkg.paper.id);
+}
