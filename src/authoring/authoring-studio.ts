@@ -34,7 +34,7 @@ import {createAuthoringWorkspaceStore} from "./authoring-workspace-store.ts";
 import {handoffStagingToDraftShelf,ingestStagedFiles,inspectAuthoringHealth,inspectPublicationWorkflow,
  preparePublicationWorkflow} from "./authoring-workflow.ts";
 import {labels,type Field,initialField,fieldName,fields,fieldOf,updatedField,option,
- controls,evidenceEditor,stagedDetail,toolbar,preview,sectionManager,draftsOptions}
+ authoringIssueTarget,controls,evidenceEditor,stagedDetail,toolbar,preview,sectionManager,draftsOptions}
  from "./authoring-studio-view.ts";
 
 export interface AuthoringStudioController{
@@ -222,8 +222,8 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    candidate.first.questionId===q.id||candidate.second.questionId===q.id).length??0;
   const qNeedsReview=health.inspection.quality?.questions.find(item=>item.questionId===q.id)?.
    recommendedStatus==="needs-review"||q.qa?.status==="needs-review";
-  const chip=(label:string,state:"bad"|"warn"|"review"|"good")=>
-   '<span class="pd-author-chip '+state+'">'+escapeText(label)+'</span>';
+  const chip=(label:string,state:"bad"|"warn"|"review"|"good"|"neutral")=>
+   '<span class="pd-author-chip '+(state==="neutral"?"":state)+'">'+escapeText(label)+'</span>';
   const questionChips=[
    qErrors?chip(qErrors+" error"+(qErrors===1?"":"s"),"bad"):"",
    qWarnings?chip(qWarnings+" warning"+(qWarnings===1?"":"s"),"warn"):"",
@@ -288,6 +288,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    stagePanel+
    '<div class="pd-author-health" id="pd-author-health" role="status"><div><b>Draft health</b>'+
     '<div class="pd-author-chips">'+
+     chip(health.questionCount+" question"+(health.questionCount===1?"":"s"),"neutral")+
      chip(health.errorCount+" error"+(health.errorCount===1?"":"s"),health.errorCount?"bad":"good")+
      chip(health.warningCount+" warning"+(health.warningCount===1?"":"s"),health.warningCount?"warn":"good")+
      chip(health.questionsNeedingReview+" need review","review")+
@@ -345,7 +346,23 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    '<p class="fine" id="pd-author-status" role="status">Editing locally; changes are saved automatically.</p>'+
    '<div id="pd-author-preview" class="pd-author-preview" hidden></div></section>';
   const find=<T extends HTMLElement>(id:string)=>container.querySelector<T>("#"+id)!;
-  const click=(id:string,handler:()=>void)=>{find<HTMLButtonElement>(id).onclick=handler;};
+  const click=(id:string,handler:()=>void|Promise<void>)=>{
+   find<HTMLButtonElement>(id).onclick=()=>{void handler();};
+  };
+  const navigateToIssue=async(id:string,path:string,reason:string):Promise<void>=>{
+   const targetQuestion=active().questions.find(item=>item.id===id);
+   if(!targetQuestion)return;
+   capture();questionId=id;
+   const target=authoringIssueTarget(path,targetQuestion);
+   if(target.field)field=target.field;
+   await render();
+   if(target.controlId&&host){
+    const el=host.querySelector<HTMLElement>("#"+target.controlId);
+    const details=el?.closest("details");if(details)details.open=true;
+    el?.scrollIntoView({block:"nearest"});el?.focus();
+   }
+   status("Next authoring issue: "+reason);
+  };
   click("pd-author-close",()=>close());
   click("pd-author-save",()=>{capture();persist();void render();});
 
@@ -397,22 +414,23 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
     '<ol>'+[...issues.map(i=>({field:i.field,reason:i.reason,questionId:i.questionId})),
     ...warnings.map(i=>({field:i.path,reason:i.code+": "+i.message,questionId:i.questionId}))].
      map(issue=>'<li>'+escapeText(issue.field+": "+issue.reason)+
-      (issue.questionId?'<button type="button" class="textlink" data-author-issue="'+escapeText(issue.questionId)+'">Edit question</button>':"")+
+      (issue.questionId?'<button type="button" class="textlink" data-author-issue="'+escapeText(issue.questionId)+
+       '" data-author-issue-path="'+escapeText(issue.field)+'">Edit issue</button>':"")+
       '</li>').join("")+'</ol>'+dryRun();
    validationBox.querySelectorAll<HTMLButtonElement>("[data-author-issue]").forEach(btn=>{
     btn.onclick=()=>{
-     const id=btn.dataset.authorIssue;
-     if(id&&active().questions.some(q=>q.id===id)){
-      capture();questionId=id;field="prompt";void render();
-     }
+     const id=btn.dataset.authorIssue,path=btn.dataset.authorIssuePath??"";
+     const row=[...issues.map(i=>({field:i.field,reason:i.reason,questionId:i.questionId})),
+      ...warnings.map(i=>({field:i.path,reason:i.code+": "+i.message,questionId:i.questionId}))]
+      .find(item=>item.questionId===id&&item.field===path);
+     if(id)void navigateToIssue(id,path,row?.reason??"review this issue");
     };
    });
    status(issues.length?"Publication blocked: "+issues.length+" errors":"Remaining unverified QA warnings: "+warnings.length,Boolean(issues.length));
   };
-  click("pd-author-fix-next",()=>{
+  click("pd-author-fix-next",async()=>{
    if(health.nextQuestionId&&active().questions.some(item=>item.id===health.nextQuestionId)){
-    capture();questionId=health.nextQuestionId;field="prompt";void render();
-    status("Next authoring issue: "+(health.nextReason??"review this question"));
+    await navigateToIssue(health.nextQuestionId,health.nextPath??"",health.nextReason??"review this question");
     return;
    }
    showIssues(health.inspection.errors,health.inspection.warnings);

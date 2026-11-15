@@ -57,16 +57,19 @@ test("P59: agent inspect returns bounded, paginated actionable errors without fu
 
 test("P59: agent next prioritizes a bounded actionable queue without question-body flooding",async()=>inTemp(async dir=>{
  const source=JSON.parse(await readFile(apfc,"utf8"));
- source.questions[0].prompt="";
+ source.questions[0].explanation="";
+ source.questions[0].provenance={kind:"official-pyq"};
  source.questions[1].explanation="";
  const input=join(dir,"next.json");await writeFile(input,JSON.stringify(source));
  const result=exec("next",input,"--limit","2");
- assert.notEqual(result.status,0,"invalid source may still return a repair queue with nonzero status");
+ assert.equal(result.status,0,result.stderr);
  assert.equal(result.data.format,"practice-desk-agent-next-issues");
  assert.equal(result.data.issues.limit,2);
- assert.ok(result.data.issues.items.length>=1&&result.data.issues.items.length<=2);
- assert.ok(result.data.issues.total>=1);
- assert.equal(result.data.issues.items[0].severity,"error");
+ assert.equal(result.data.issues.items.length,2);
+ assert.ok(result.data.issues.rawTotal>result.data.issues.items.length,
+  "Repeated warnings on one question should be collapsed for next-target retrieval");
+ assert.equal(new Set(result.data.questionIds).size,2,
+  "A two-target limit should surface two distinct affected questions");
  assert.ok(Array.isArray(result.data.questionIds));
  assert.ok(!result.stdout.includes("Which letter comes second alphabetically?"),"next must not dump full question bodies");
  assert.ok(result.stdout.length<9000,"next issue queue must stay bounded");

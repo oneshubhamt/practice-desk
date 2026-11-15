@@ -89,6 +89,16 @@ const severityRank={error:0,warning:1,info:2};
 const prioritizedIssues=issues=>issues.map((issue,index)=>({issue,index}))
  .sort((a,b)=>(severityRank[a.issue.severity]??9)-(severityRank[b.issue.severity]??9)||a.index-b.index)
  .map(row=>row.issue);
+const prioritizedTargets=issues=>{
+ const seen=new Set(),targets=[];
+ for(const issue of prioritizedIssues(issues)){
+  const key=issue.questionId?"question:"+issue.questionId:
+   "paper:"+(issue.code??"issue")+":"+(issue.path??issue.message);
+  if(seen.has(key))continue;
+  seen.add(key);targets.push(issue);
+ }
+ return targets;
+};
 const fileMeta=(value,report,sha256)=>{
  const source=sourceOnly(value);
  return {
@@ -260,13 +270,14 @@ async function main(){
   const {value,sha256}=await io(input,MAX_SOURCE,"Source");
   sourceOnly(value);
   const report=inspectExternalQuestionBank(value);
-  const ordered=prioritizedIssues(report.issues);
+  const ordered=prioritizedTargets(report.issues);
   const items=ordered.slice(0,limit).map(briefIssue);
   output({format:"practice-desk-agent-next-issues",version:1,
    ...fileMeta(value,report,sha256),
-   issues:{limit,total:ordered.length,remaining:Math.max(0,ordered.length-items.length),items},
-   questionIds:[...new Set(items.map(x=>x.questionId).filter(Boolean))],
-   note:"Prioritized deterministic errors before warnings/info. Retrieve only the listed question IDs with show; factual/source verification is not performed."});
+   issues:{limit,total:ordered.length,rawTotal:report.issues.length,
+    remaining:Math.max(0,ordered.length-items.length),items},
+   questionIds:items.map(x=>x.questionId).filter(Boolean),
+   note:"Limit counts distinct actionable targets, so repeated warnings on one question do not consume the queue. Errors precede warnings/info; retrieve listed question IDs with show. Factual/source verification is not performed."});
   if(!report.valid)process.exitCode=1;
   return;
  }

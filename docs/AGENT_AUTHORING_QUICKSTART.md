@@ -25,7 +25,7 @@ Use `next` to ask for the highest-priority unresolved issues without loading que
 node scripts/question-bank-agent.mjs next bank.json --limit 8
 ```
 
-It returns errors before warnings/info plus the affected stable question IDs. Fetch only those questions, up to ten at a time:
+It returns errors before warnings/info plus the affected stable question IDs. The limit counts distinct actionable targets, so repeated warnings on one question do not crowd out the next question. Fetch only those questions, up to ten at a time:
 
 ```bash
 node scripts/question-bank-agent.mjs show bank.json q-17 q-23 q-31

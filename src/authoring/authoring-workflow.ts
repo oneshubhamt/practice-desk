@@ -20,12 +20,14 @@ export interface AuthoringPublicationInspection {
 
 export interface AuthoringHealthSummary {
  readonly inspection:AuthoringPublicationInspection;
+ readonly questionCount:number;
  readonly errorCount:number;
  readonly warningCount:number;
  readonly questionsNeedingReview:number;
  readonly duplicateCandidates:number;
  readonly duplicateTruncated:boolean;
  readonly nextQuestionId:string|null;
+ readonly nextPath:string|null;
  readonly nextReason:string|null;
 }
 
@@ -98,17 +100,19 @@ export function inspectAuthoringHealth(
  const needsReview=quality?.summary.questionsNeedingReview??
   draft.questions.filter(q=>q.qa?.status==="needs-review").length;
  const next=[...inspection.errors.map(issue=>({questionId:issue.questionId??null,
-    reason:issue.field+": "+issue.reason})),
+    path:issue.field,reason:issue.field+": "+issue.reason})),
   ...inspection.warnings.map(issue=>({questionId:issue.questionId??null,
-    reason:issue.code+": "+issue.message}))].find(item=>item.questionId)??null;
+    path:issue.path,reason:issue.code+": "+issue.message}))].find(item=>item.questionId)??null;
  const fallback=!next&&needsReview?
   draft.questions.find(q=>q.qa?.status==="needs-review")??null:null;
  return {
-  inspection,errorCount:inspection.errors.length,warningCount:inspection.warnings.length,
+  inspection,questionCount:draft.questions.length,
+  errorCount:inspection.errors.length,warningCount:inspection.warnings.length,
   questionsNeedingReview:needsReview,
   duplicateCandidates:quality?.summary.duplicateCandidates??0,
   duplicateTruncated:quality?.summary.duplicateTruncated??false,
   nextQuestionId:next?.questionId??fallback?.id??null,
+  nextPath:next?.path??null,
   nextReason:next?.reason??(fallback?"Question is marked needs-review":null)
  };
 }

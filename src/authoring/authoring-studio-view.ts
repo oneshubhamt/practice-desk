@@ -24,6 +24,35 @@ export const labels:Record<QuestionKind,string>={
 };
 export type Field="prompt"|"passage"|"explanation"|`O${number}`|`L${number}`|`R${number}`;
 export const initialField:Field="prompt";
+export interface AuthoringIssueTarget{readonly field?:Field;readonly controlId?:string;}
+export function authoringIssueTarget(path:string,q:AuthoringQuestion):AuthoringIssueTarget{
+ const lower=path.toLowerCase();
+ if(/question stem|\.prompt\b/.test(lower))return {field:"prompt"};
+ if(/worked explanation|manual rubric|\.explanation\b/.test(lower))return {field:"explanation"};
+ if(/shared stimulus|\bpassage\b|\.passage\b/.test(lower))return {field:"passage"};
+ let match=/option\s+([a-z])/i.exec(path);
+ if(!match)match=/\.options\[(\d+)\]/i.exec(path);
+ if(match){
+  const index=/^\d+$/.test(match[1]!)?Number(match[1]):match[1]!.toUpperCase().charCodeAt(0)-65;
+  if(index>=0&&index<q.options.length)return {field:("O"+(index+1)) as Field};
+ }
+ match=/left\s+(\d+)/i.exec(path)??/\.leftItems\[(\d+)\]/i.exec(path);
+ if(match){const index=Number(match[1])-(/left\s+/i.test(match[0])?1:0);
+  if(index>=0&&index<q.leftItems.length)return {field:("L"+(index+1)) as Field};}
+ match=/right\s+([a-z])/i.exec(path)??/\.rightItems\[(\d+)\]/i.exec(path);
+ if(match){const index=/^\d+$/.test(match[1]!)?Number(match[1]):match[1]!.toUpperCase().charCodeAt(0)-65;
+  if(index>=0&&index<q.rightItems.length)return {field:("R"+(index+1)) as Field};}
+ if(/answer|key|tolerance/.test(lower))return {controlId:"pd-author-answer"};
+ if(/provenance|source|citation|qa|currentness|time-sensitive/.test(lower))return {controlId:"pd-author-evidence"};
+ if(/word.?limit/.test(lower))return {controlId:"pd-author-word-limit"};
+ if(/partial credit|mark|scoring/.test(lower))return {controlId:"pd-author-custom-marks"};
+ if(/syllabus/.test(lower))return {controlId:"pd-author-syllabus-heading"};
+ if(/subtopic/.test(lower))return {controlId:"pd-author-subtopic"};
+ if(/topic/.test(lower))return {controlId:"pd-author-topic"};
+ if(/difficulty/.test(lower))return {controlId:"pd-author-difficulty"};
+ if(/section/.test(lower))return {controlId:"pd-author-section"};
+ return {};
+}
 export function fieldName(field:Field):string{
  if(field==="prompt")return "Question stem";
  if(field==="passage")return "Passage / case";

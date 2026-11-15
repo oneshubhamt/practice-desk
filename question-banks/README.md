@@ -64,7 +64,7 @@ SSC CGL uses the same canonical package topology as every other included exam. I
 
 ## Preinstallation, removal and append
 
-Set a family to `preinstalled: true` in the root catalog to include all canonical papers reachable through its manifest graph. Set it to `false` (or remove the family entry) and rebuild to remove it cleanly.
+Set a family to `preinstalled: true` in the root catalog to include all canonical papers reachable through its manifest graph. Set it to `false` and rebuild to exclude that family cleanly while keeping its corpus installed. To remove a family from the repository corpus entirely, delete both its catalog entry and its active family directory in the same change; reciprocal reachability intentionally rejects unregistered active bank files.
 
 To append a paper, create one self-contained paper folder and add exactly one entry to its year manifest. No root-catalog package path and no exam-specific scorer/UI branch are required.
 

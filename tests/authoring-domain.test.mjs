@@ -14,6 +14,7 @@ import {authoringSections,setAuthoringSectionMinutes,assignAuthoringQuestionSect
 import {authoringPublishedPreview,authoringPartialCreditExamples} from "../src/authoring/authoring-preview.ts";
 import {toAuthoringDraft} from "../src/authoring/external-bank.ts";
 import {inspectAuthoringHealth} from "../src/authoring/authoring-workflow.ts";
+import {authoringIssueTarget} from "../src/authoring/authoring-studio-view.ts";
 
 /** Rich Documents — canonical domain contracts. */
 async function registerRichDocumentsTests(){
@@ -115,6 +116,15 @@ test("Studio health is derived from publication/QA state and identifies the next
  assert.ok(health.nextReason);
  assert.equal(Object.hasOwn(draft,"health"),false,"health must remain derived, not persisted");
 });
+test("Fix-next target mapping resolves editor fields and non-rich controls precisely",()=>{
+ const q=newAuthoringQuestion("single-choice");
+ assert.deepEqual(authoringIssueTarget("Question 1 · Question stem",q),{field:"prompt"});
+ assert.deepEqual(authoringIssueTarget("$.questions[id=x].options[1]",q),{field:"O2"});
+ assert.deepEqual(authoringIssueTarget("Question 1 · Worked explanation",q),{field:"explanation"});
+ assert.deepEqual(authoringIssueTarget("$.questions[id=x].answer",q),{controlId:"pd-author-answer"});
+ assert.deepEqual(authoringIssueTarget("$.questions[id=x].provenance.sources",q),{controlId:"pd-author-evidence"});
+});
+
 await registerAuthoringDraftsTests();
 /** Publication — canonical domain contracts. */
 async function registerPublicationTests(){
