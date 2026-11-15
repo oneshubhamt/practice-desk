@@ -56,6 +56,13 @@ try{
  await page.locator("#pd-author-math-insert").click();
  for(const [field,text] of [["O1","2"],["O2","4"],["O3","6"],["O4","8"]])await fillField(field,text);
  await fillField("explanation","WORKED-SOLUTION-SECRET. Multiply both sides by 2.");
+ // A kind transition must not strand hidden component-scoring metadata.
+ await page.locator("#pd-author-kind").selectOption("multiple-select");
+ await page.locator("#pd-author-partial-credit").fill("0.5");
+ await page.locator("#pd-author-partial-credit").blur();
+ await page.locator("#pd-author-kind").selectOption("single-choice");
+ check(await page.locator("#pd-author-partial-credit").count()===0,
+  "Changing to a non-component kind left obsolete partial-scoring controls/state visible");
  await page.locator("#pd-author-field").selectOption("prompt");
  await page.locator("#pd-author-validate").click();
  check((await page.locator("#pd-author-validation").innerText()).includes("Ready to publish"),
