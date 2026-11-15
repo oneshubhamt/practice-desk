@@ -13,7 +13,10 @@ export function timeEnforcementForMode(mode:AttemptMode):TimeEnforcement{
 export function sectionTimeBudgetMs(paper:PaperRevision,sectionIndex:number):number|null{
  if(paper.timing.kind!=="sectional")return null;
  const sectionId=paper.sections[sectionIndex]?.id;
- return paper.timing.sectionLimits.find(row=>row.sectionId===sectionId)?.durationMs??null;
+ if(!sectionId)return null;
+ const limit=paper.timing.sectionLimits.find(row=>row.sectionId===sectionId);
+ if(!limit)throw new Error("Missing sectional timer");
+ return limit.durationMs;
 }
 
 export function paperTimeBudgetMs(paper:PaperRevision):number|null{

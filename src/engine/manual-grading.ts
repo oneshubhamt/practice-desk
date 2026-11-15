@@ -2,6 +2,7 @@ import type { GenericAttempt } from "./generic-attempt.ts";
 import type { ManualGrade } from "../domain/attempt.js";
 export type {ManualGrade} from "../domain/attempt.js";
 import type { QuestionRevisionId } from "../domain/ids.js";
+import {effectiveMarkingRule} from "./scoring.ts";
 
 export function manualGradeLimits(attempt:GenericAttempt):ReadonlyMap<QuestionRevisionId,number>{
  const limits=new Map<QuestionRevisionId,number>();
@@ -17,8 +18,7 @@ export function manualGradeLimits(attempt:GenericAttempt):ReadonlyMap<QuestionRe
    const question=questions.get(id),entry=entries.get(id),result=results.get(id);
    if(question?.content.kind!=="free-response"||entry?.answer.kind!=="free-response"||
       result?.verdict!=="pending")continue;
-   limits.set(id,entry.scoringOverride?.correctMarks??section.scoringOverride?.correctMarks??
-     paper.scoring.byQuestionKind?.["free-response"]?.correctMarks??paper.scoring.defaultRule.correctMarks);
+   limits.set(id,effectiveMarkingRule(paper,section,question,entry).correctMarks);
  }
  return limits;
 }

@@ -1,6 +1,6 @@
-import type { AnswerKeyRevision, CorrectAnswer } from "../domain/answer-key.js";
+import type { AnswerKeyEntry, AnswerKeyRevision, CorrectAnswer } from "../domain/answer-key.js";
 import type { AttemptResponseRecord, AttemptScoreSnapshot } from "../domain/attempt.js";
-import type { PaperRevision } from "../domain/exam.js";
+import type { PaperRevision, SectionDefinition } from "../domain/exam.js";
 import type { CandidateResponse, QuestionRevision } from "../domain/question.js";
 import type { MarkingRule } from "../domain/scoring.js";
 import type { QuestionRevisionId } from "../domain/ids.js";
@@ -8,6 +8,13 @@ import type { QuestionRevisionId } from "../domain/ids.js";
 export type Verdict = "correct" | "incorrect" | "unanswered" | "excluded" | "pending";
 export interface ItemScore { readonly questionRevisionId: QuestionRevisionId; readonly verdict: Verdict; readonly marks: number; }
 export interface ScoreResult { readonly items: readonly ItemScore[]; readonly snapshot: AttemptScoreSnapshot; }
+
+export function effectiveMarkingRule(
+ paper:PaperRevision,section:SectionDefinition,question:QuestionRevision,entry:AnswerKeyEntry
+):MarkingRule{
+ return entry.scoringOverride??section.scoringOverride??
+  paper.scoring.byQuestionKind?.[question.content.kind]??paper.scoring.defaultRule;
+}
 
 function equal(a: CorrectAnswer, b: CandidateResponse): boolean {
   if (a.kind !== b.kind) return false;
@@ -55,7 +62,7 @@ export function scoreAttempt(paper: PaperRevision, key: AnswerKeyRevision, quest
     const question = questionMap.get(id);
     const entry = answerMap.get(id);
     if (!question || !entry) throw new Error("Missing question or answer key entry");
-    const rule = entry.scoringOverride ?? section.scoringOverride ?? paper.scoring.byQuestionKind?.[question.content.kind] ?? paper.scoring.defaultRule;
+    const rule = effectiveMarkingRule(paper,section,question,entry);
     const response = responseMap.get(id)?.response;
     if (response && response.kind !== question.content.kind) throw new Error("Response kind mismatch");
     let verdict: Verdict;

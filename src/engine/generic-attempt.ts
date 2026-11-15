@@ -7,7 +7,7 @@ import {validateResponse} from "./response.ts";
 import {scoreAttempt} from "./scoring.ts";
 import type {SourceKeyReference} from "./source-comparison.ts";
 import type {SourceReviewReference} from "./review-source.ts";
-import {timeEnforcementForMode} from "../domain/timing.ts";
+import {sectionTimeBudgetMs,timeEnforcementForMode} from "../domain/timing.ts";
 
 export type CompletionReason="time-expired"|"submitted"|"section-submitted";
 
@@ -54,9 +54,8 @@ export function transitionGenericAttempt(
    (paper.timing.kind==="whole-paper"?
    state.elapsedMs>=paper.timing.durationMs:
    paper.timing.kind==="sectional"?(()=>{
-     const section=paper.sections[state.sectionIndex];
-     const limit=paper.timing.sectionLimits.find(x=>x.sectionId===section?.id)?.durationMs;
-     return limit!==undefined&&limit!==null&&state.sectionElapsedMs>=limit;
+     const limit=sectionTimeBudgetMs(paper,state.sectionIndex);
+     return limit!==null&&state.sectionElapsedMs>=limit;
    })():false);
  const completionReason=expired?"time-expired":
    event.type==="SUBMIT_SECTION"?"section-submitted":"submitted";

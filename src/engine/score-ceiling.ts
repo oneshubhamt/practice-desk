@@ -1,9 +1,8 @@
 import type { PaperRevision, SectionDefinition } from "../domain/exam.js";
 import type { AnswerKeyRevision } from "../domain/answer-key.js";
 import type { QuestionRevision } from "../domain/question.js";
-import type { MarkingRule } from "../domain/scoring.js";
 import type { GenericAttempt } from "./generic-attempt.ts";
-import type { ScoreResult } from "./scoring.ts";
+import {effectiveMarkingRule,type ScoreResult} from "./scoring.ts";
 import { sectionTimerDuration } from "./session.ts";
 
 const excluded=new Set(["draft","invalid","incomplete-source","under-review","superseded"]);
@@ -23,8 +22,7 @@ export function scoreableMaximum(
      const q=qs.get(id),entry=entries.get(id);
      if(!q||!entry)throw new Error("Cannot derive maximum for missing frozen question or key");
      if(excluded.has(q.editorial.status)||q.content.kind==="free-response")return sum;
-     const rule:MarkingRule=entry.scoringOverride??part.scoringOverride??
-       paper.scoring.byQuestionKind?.[q.content.kind]??paper.scoring.defaultRule;
+     const rule=effectiveMarkingRule(paper,part,q,entry);
      return sum+rule.correctMarks;
    },0),0);
 }
@@ -44,8 +42,7 @@ export function scoreableLowerBound(
      const q=qs.get(id),entry=entries.get(id);
      if(!q||!entry)throw new Error("Cannot derive lower bound for missing frozen question or key");
      if(excluded.has(q.editorial.status)||q.content.kind==="free-response")return sum;
-     const rule:MarkingRule=entry.scoringOverride??part.scoringOverride??
-       paper.scoring.byQuestionKind?.[q.content.kind]??paper.scoring.defaultRule;
+     const rule=effectiveMarkingRule(paper,part,q,entry);
      let floor=Math.min(rule.correctMarks,rule.incorrectMarks,rule.unansweredMarks);
      if(rule.partialCredit){
        const count=q.content.kind==="multiple-select"?

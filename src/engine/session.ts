@@ -91,13 +91,6 @@ function advance(paper: PaperRevision, state: SessionState, reason:"time-expired
     : enterQuestion({ ...measured, completedSections, sectionIndex: next, questionIndex: 0, sectionElapsedMs: 0 },
       paper.sections[next]!.questionRevisionIds[0]!);
 }
-function sectionLimit(paper: PaperRevision, sectionIndex: number): number | null {
-  if (paper.timing.kind !== "sectional") return null;
-  const sectionId = paper.sections[sectionIndex]?.id;
-  const limit = paper.timing.sectionLimits.find(s => s.sectionId === sectionId);
-  if (!limit) throw new Error("Missing sectional timer");
-  return limit.durationMs;
-}
 function activeBudget(paper:PaperRevision,state:SessionState):number|null{
  return paper.timing.kind==="whole-paper"?paper.timing.durationMs:
    paper.timing.kind==="sectional"?sectionTimeBudgetMs(paper,state.sectionIndex):null;
@@ -209,7 +202,7 @@ export function transition(
         current.sectionIndex < paper.sections.length - 1) return advance(paper,current);
     // Untimed sections cannot expire, so explicit continuation is their only
     // legitimate forward path even when early submission is forbidden.
-    const budget=sectionLimit(paper,current.sectionIndex);
+    const budget=sectionTimeBudgetMs(paper,current.sectionIndex);
     const advisoryExpired=timeEnforcementForMode(mode)==="advisory"&&budget!==null&&
       current.sectionElapsedMs>=budget;
     if (paper.timing.kind !== "sectional" ||
@@ -282,7 +275,7 @@ export function validateSectionTimingEvidence(
        (row.reason!=="time-expired"&&row.reason!=="submitted"))
       throw Error("Invalid saved section timing entry");
     if(paper.timing.kind==="sectional"){
-      const limit=sectionLimit(paper,index),hard=timeEnforcementForMode(mode)==="hard";
+      const limit=sectionTimeBudgetMs(paper,index),hard=timeEnforcementForMode(mode)==="hard";
       if(hard&&limit!==null&&row.durationMs>limit)
         throw Error("Saved section timer exceeds its limit");
       if(row.reason==="time-expired"&&(!hard||limit===null||row.durationMs!==limit))
