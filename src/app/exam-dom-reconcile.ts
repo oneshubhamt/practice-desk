@@ -33,6 +33,16 @@ function reconcile(a:Node,b:Node):void{
        a.removeAttribute(old.name);
    for(const next of Array.from(b.attributes))
      if(a.getAttribute(next.name)!==next.value)a.setAttribute(next.name,next.value);
+   // Textarea child text is its serialized/default value, not an ordinary
+   // descendant subtree. Snapshot the rendered model value before any node
+   // movement could drain the inert template. A focused textarea keeps its
+   // unsaved live draft; otherwise the saved model becomes the visible value.
+   if(a instanceof HTMLTextAreaElement&&b instanceof HTMLTextAreaElement){
+     const modelValue=b.value;
+     a.defaultValue=b.defaultValue;
+     if(document.activeElement!==a)a.value=modelValue;
+     return;
+   }
    const newNodes=Array.from(b.childNodes);
    // Learning notebook cards have stable record identities, not positional
    // identities. Reuse live buttons across selection, filtering and reorder.
@@ -82,12 +92,7 @@ function reconcile(a:Node,b:Node):void{
      else if(document.activeElement!==a)a.value=b.value;
    }else if(a instanceof HTMLSelectElement&&b instanceof HTMLSelectElement&&
      document.activeElement!==a)a.value=b.value;
-   else if(a instanceof HTMLTextAreaElement&&b instanceof HTMLTextAreaElement&&
-     document.activeElement!==a)
-     // Textarea model state is serialized as escaped child text, not a value
-     // attribute. Read that canonical rendered text directly from the inert
-     // template instead of depending on its live form-control value state.
-     a.value=b.textContent??"";
+
    return;
  }
  if(a.nodeType===Node.TEXT_NODE&&a.nodeValue!==b.nodeValue)
