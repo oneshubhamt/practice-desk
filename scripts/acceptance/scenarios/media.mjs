@@ -6,10 +6,10 @@ export async function imageViewer(){
  * One source CGL q3 with 5 real figures, source review, 195px + 140% text,
  * native modal focus, mouse/keyboard and paused exam isolation.
  */
-const {readFile}=await import("node:fs/promises");
-const {openHarness,route,records,check,assertNoOverflow}=await import("../../browser/fixtures.mjs");
+const {openHarness,route,records,check,assertNoOverflow,root}=await import("../../browser/fixtures.mjs");
 const {chooseModernPaper}=await import("../../paper-select.mjs");
 const {builtinCglPackages}=await import("../../../src/app/exam-package.ts");
+const {loadQuestionBankCatalog}=await import("../../question-bank-catalog.mjs");
 const engine=process.argv[2]||"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
 const {page,context,errors}=await h.open();
@@ -17,9 +17,11 @@ const requests=[];
 page.on("request",request=>{
  if(/^https?:/i.test(request.url()))requests.push(request.url());
 });
-const source=JSON.parse(await readFile(new URL("../../../question-banks/ssc-cgl/pyqs/original/papers.json",import.meta.url)));
-const patches=JSON.parse(await readFile(new URL("../../../question-banks/ssc-cgl/pyqs/revised/patches.json",import.meta.url)));
-const solutions=JSON.parse(await readFile(new URL("../../../question-banks/ssc-cgl/pyqs/revised/solutions.json",import.meta.url)));
+const loadedBanks=await loadQuestionBankCatalog(root);
+check(Boolean(loadedBanks.legacy),"P47-3 SSC CGL manifest bank missing");
+const source=JSON.parse(loadedBanks.legacy.papersRaw);
+const patches=JSON.parse(loadedBanks.legacy.patchesRaw);
+const solutions=JSON.parse(loadedBanks.legacy.solutionsRaw);
 const pkg=builtinCglPackages(source,patches,solutions).find(x=>
  x.paper.paperId==="cgl-2026-10-08"&&x.paper.edition==="reviewed");
 check(Boolean(pkg),"P47-3 reviewed 8 October CGL fixture missing");

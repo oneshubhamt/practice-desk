@@ -1,3 +1,4 @@
+import {loadCglFixture,loadQuestionBankGraph,repositoryRoot} from "./fixtures/cgl-bank.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
@@ -6,9 +7,9 @@ import {validateExamPackage,builtinCglPackages,configureCglPractice,configureUnt
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {validatePracticeSetups} from "../src/app/practice-selection.ts";
 const starter=JSON.parse(await readFile(new URL("../examples/apfc-authoring-example.json",import.meta.url),"utf8"));
-const sources=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/original/papers.json",import.meta.url),"utf8"));
-const patches=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/revised/patches.json",import.meta.url),"utf8"));
-const solutions=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/revised/solutions.json",import.meta.url),"utf8"));
+const sources=(await loadCglFixture()).sources;
+const patches=(await loadCglFixture()).patches;
+const solutions=(await loadCglFixture()).solutions;
 test("easy APFC/NAT author bank generates a strict validated immutable exam package",()=>{
  const pkg=compileExternalQuestionBank(starter);
  assert.equal(pkg.questions.length,3);
