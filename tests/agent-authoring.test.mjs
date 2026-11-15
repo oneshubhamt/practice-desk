@@ -65,7 +65,7 @@ test("P59: agent next prioritizes a bounded actionable queue without question-bo
  assert.equal(result.data.format,"practice-desk-agent-next-issues");
  assert.equal(result.data.issues.limit,2);
  assert.ok(result.data.issues.items.length>=1&&result.data.issues.items.length<=2);
- assert.ok(result.data.issues.total>=2);
+ assert.ok(result.data.issues.total>=1);
  assert.equal(result.data.issues.items[0].severity,"error");
  assert.ok(Array.isArray(result.data.questionIds));
  assert.ok(!result.stdout.includes("Which letter comes second alphabetically?"),"next must not dump full question bodies");

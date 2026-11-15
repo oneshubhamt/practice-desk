@@ -21,9 +21,11 @@ export function paperProvenanceText(bundle:Pick<ExamPackage,"paper"|"questions">
  const hasCitations=bundle.questions.some(q=>Boolean(q.editorial.sources?.length));
  const label=paperEditionLabel(bundle.paper);
  const provenance=bundle.paper.edition==="source"?
-   label+" is frozen as supplied by this package. Practice Desk does not independently authenticate publisher identity, official status or answer-key accuracy.":
+   "Source edition frozen as supplied by this package · "+label.replace("Source edition ","")+
+    ". Practice Desk does not independently authenticate publisher identity, official status or answer-key accuracy.":
   bundle.paper.edition==="reviewed"?
-   label+" to the declared Source paper and key revisions. Practice Desk preserves that lineage but does not independently certify the reviewer, corrections or official status.":
+   "Reviewed edition frozen as supplied · "+label+
+    " to the declared Source paper and key revisions. Practice Desk preserves that lineage but does not independently certify the reviewer, corrections or official status.":
    label+" contains author/importer-supplied exam content and scoring. Practice Desk does not independently authenticate official status.";
  return provenance+(hasCitations?
    " Question-level citations, where supplied, are disclosed with the frozen review evidence.":"");
