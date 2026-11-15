@@ -388,7 +388,11 @@ test("P60-A: agent can inspect exactly one capability and concrete operation sep
  assert.ok(!f.stdout.includes("Exam source and answer-key integrity maintained"));
  const ops=cli("operations");
  assert.equal(ops.status,0,ops.stderr);
- assert.equal(ops.json.operations.length,21);
+ assert.equal(ops.json.operations.length,22);
+ assert.ok(ops.json.operations.some(x=>x.operation==="next-bank-issues"&&
+  x.command.includes("question-bank-agent.mjs next")),"Discovery must advertise bounded next-issue retrieval");
+ assert.ok(ops.json.operations.some(x=>x.operation==="show-question"&&
+  x.command.includes("up to 10")),"Discovery must advertise bounded multi-question retrieval");
   assert.ok(ops.json.operations.some(x=>x.operation==="prepare-blind-review"&&
    x.command.includes("--allow-create")),"Discovery must advertise the real full-bank preparation action");
  assert.ok(ops.json.operations.every(x=>["read-only","create-new-file"].includes(x.privilege)));
