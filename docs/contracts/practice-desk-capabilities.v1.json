@@ -55,7 +55,7 @@
       "operation": "patch-bank",
       "command": "node scripts/question-bank-agent.mjs patch <source.json> <patch.json> <NEW-output.json> [--dry-run]",
       "privilege": "create-new-file",
-      "effect": "SHA-guarded edits; no original overwrite; material edits reopen review"
+      "effect": "SHA-guarded question edits, including question-specific scoringOverride; no original overwrite; material edits reopen review"
     },
     {
       "operation": "qa-bank",
@@ -67,7 +67,7 @@
       "operation": "compile-bank",
       "command": "node scripts/question-bank-cli.mjs compile-bank <source.json> <NEW-output.json>",
       "privilege": "create-new-file",
-      "effect": "Canonical validated publication package; explicit offline browser import remains necessary"
+      "effect": "Canonical validated publication package; manual browser import unless a repository maintainer explicitly lists the package in the preinstall catalog"
     },
     {
       "operation": "validate-content-blueprint",
@@ -183,21 +183,25 @@
     {
       "id": "exam-catalog",
       "status": "implemented",
-      "summary": "Separate built-in SSC CGL sources from imported exam families and paper/revision/edition selections.",
+      "summary": "Catalog-backed separation of built-in SSC CGL, repository-included exam families and user-imported families/revisions.",
       "provides": [
-        "Browse available families and paper editions",
-        "Distinguish source/reviewed/custom and source identities",
-        "Effective exam rules derive from selected frozen paper"
+        "Browse available built-in, included and imported exam families and paper revisions",
+        "Repository question-bank catalog controls explicit build-time preinstallation/removal",
+        "Distinguish source/reviewed/custom identities and included-vs-user-supplied provenance",
+        "Effective exam rules derive from the selected frozen paper"
       ],
-      "agentUse": "Choose examId/paperId explicitly; never infer official status from a name or user-imported bank.",
+      "agentUse": "Read question-banks/catalog.json first for maintained corpus discovery; choose examId/paperId explicitly and never infer official status from a name or catalog inclusion.",
       "limitations": [
-        "Imported content is not automatically certified official",
-        "New exam bank content is not shipped merely because the engine supports its exam"
+        "Catalog inclusion is a packaging decision, not certification that a paper is official or factually correct",
+        "User-imported papers sharing an included examId are grouped with that family but remain user supplied",
+        "Built-in SSC CGL privileges still require exact bundled identities; names alone confer no runtime policy"
       ],
       "sourcePaths": [
+        "question-banks/catalog.json",
+        "scripts/question-bank-catalog.mjs",
+        "src/app/preinstalled-exams.ts",
         "src/app/exam-families.ts",
-        "src/app/library-controller.ts",
-        "src/app/exam-preflight.ts"
+        "src/app/library-controller.ts"
       ]
     },
     {
@@ -213,9 +217,10 @@
         "free-response",
         "Correct/incorrect/blank/excluded/pending outcomes",
         "Optional component partial-credit for matching and multiple-select",
-        "Exact frozen marks and source snapshots"
+        "Exact frozen marks and source snapshots",
+        "Question-specific marking overrides, including manual written-response ceilings"
       ],
-      "agentUse": "Author in the existing external v1 format; validate using canonical compiler and score oracle, never create independent marks in the bank tool.",
+      "agentUse": "Author through the existing external v1 format; use optional questions[].scoringOverride only when the item genuinely differs from paper/section rules, and validate through the canonical compiler/scorer.",
       "limitations": [
         "Free response needs separate manual grading; do not label it auto-scored",
         "A valid published key is not proof that the answer is factually correct"
@@ -359,9 +364,10 @@
         "Headless inspect (paged issues) and show (single item, no image bytes)",
         "Guarded create-new patch/add/update/unset/remove",
         "Cross-bank duplicate candidates and source-metadata warnings",
-        "Wordgard manual correction, lossless distinct draft exchange, immutable caution publication"
+        "Wordgard manual correction, lossless distinct draft exchange, immutable caution publication",
+        "Question-specific scoringOverride editable through both Studio and the small-context agent patch path"
       ],
-      "agentUse": "Read docs/AGENT_AUTHORING_QUICKSTART.md plus one example; research externally; compile and import via Library.",
+      "agentUse": "Read question-banks/catalog.json and nested manifests for maintained banks, then inspect/show only the needed canonical bank/question; generic examples remain under examples/. Use SHA-guarded patch for edits and canonical compile/publish boundaries.",
       "limitations": [
         "No embedded LLM, automatic cloud/device sync or direct browser agent bridge",
         "Structural/scorer QA does not authenticate factual truth, official PYQs, reviewer or legal commencement",

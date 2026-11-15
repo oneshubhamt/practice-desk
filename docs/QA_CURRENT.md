@@ -6,13 +6,13 @@
 
 | Gate | When | Non-negotiable scope |
 |---|---|---|
-| **Fast** | Every relevant PR/push | Node **26.13.0**, locked dependencies, strict TS, deterministic offline HTML, **445** non-deep Node tests, isolated FSRS optimizer smoke and static Worker/WASM build |
+| **Fast** | Every relevant PR/push | Node **26.13.0**, locked dependencies, strict TS, deterministic offline HTML, **448** non-deep Node tests, isolated FSRS optimizer smoke and static Worker/WASM build |
 | **Smoke** | Every relevant PR/push; needs Fast | **6** real Chrome journeys including candidate→History and author→Publish→Review; complete browser/WASM optimizer activation |
 | **Cross** | Every relevant PR/push; needs Fast | **4** genuine engine-sensitive scenarios **each** on Playwright Firefox and WebKit, plus WASM optimizer probes on both |
 | **Deep** | Push to `working`; needs Fast | **7** scale/benchmark Node cases, **14** named assertion-killed mutations and native/WASM parity run as one contract lane **concurrently in the same runner** with the **8** serial Chrome browser scenarios |
 | **Publish** | Push to `working` **only** | Requires **successful Fast + Smoke + both Cross legs + Deep**; checks tested-head ancestry, no unverified source/CI/artifact drift, publishes only the tested deterministic HTML |
 
-The full Node inventory is **39 files / 452 cases** (445 fast + 7 deep). The browser registry has **14 scenarios / 22 engine executions**. The deep gate is not a routine PR gate, but **no `working` publication can bypass it**. Markdown-only changes do not trigger executable CI. Never weaken a required gate solely to improve timings.
+The full Node inventory is **40 files / 455 cases** (448 fast + 7 deep). The browser registry has **14 scenarios / 22 engine executions**. The deep gate is not a routine PR gate, but **no `working` publication can bypass it**. Markdown-only changes do not trigger executable CI. Never weaken a required gate solely to improve timings.
 
 ## Local reproducibility
 
@@ -38,7 +38,7 @@ Install the locked browser toolchain and its host dependencies when running loca
 - **Scoring:** independent six-kind and seeded policy reference ledgers, exact fractional penalties and partial credit, exclusions, per-item/section identities, manual-pending and semantic mutations.
 - **Timing/session:** independent clocks, visibility/pause/section expiry, visit and answer evidence, terminal immutability, restore/rebase, event batching invariance, plus real-browser pagehide/off-document/reopen recovery.
 - **Persistence:** CAS, stale tabs, shared snapshot SHA, backups, intentional deletion, corrupt rows, fallback/read/quota failures and atomic publication retries.
-- **Authoring:** signed lineage, reviewer evidence, exact publication revision, pre-reveal private-key/explanation isolation, browser adversaries for stem/shared-stimulus/media-alt leakage, QA refusal, offline publish→score→review→reload.
+- **Authoring:** signed lineage, reviewer evidence, exact publication revision, pre-reveal private-key/explanation isolation, browser adversaries for stem/shared-stimulus/media-alt leakage, QA refusal, catalog-preinstalled family visibility, and offline publish→score→review→reload including question-specific manual-mark ceilings.
 - **Learning:** deterministic scheduling/replay, an independent published FSRS-7 dual-trace retrievability reference, upstream/native/WASM parity, actual browser Worker activation, explicit optimizer/profile privacy.
 - **Calendar:** canonical temporal records plus an Asia/Kolkata datetime-local→UTC year-boundary browser witness with reload preservation.
 - **UI/security:** actual browser paint, ARIA/keyboard/focus, file navigation, responsive 195px/140% layout, media, CSP, no remote dependence.

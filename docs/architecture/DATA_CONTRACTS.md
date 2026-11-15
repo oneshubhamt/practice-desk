@@ -40,10 +40,11 @@ Calculator display, pending operation, memory and open/closed state are recovera
 
 ## Authoring and external sources
 
-- AI/human source: `practice-desk-authoring` v1, with explicit origins, section/subject differentiation, stable question IDs, author-supplied explanations, question-kind keys and declared scoring. Physical section definitions own their timer budgets; questions only reference their assigned section. The canonical compiler emits `practice-desk-exam` v1. There is no second simple-bank runtime format.
+- AI/human source: `practice-desk-authoring` v1, with explicit origins, section/subject differentiation, stable question IDs, author-supplied explanations, question-kind keys and declared scoring. A question may supply `scoringOverride`; runtime precedence remains question override → section override → question-kind rule → paper default, and free-response uses that resolved positive mark as its manual assessment ceiling. Physical section definitions own their timer budgets; questions only reference their assigned section. The canonical compiler emits `practice-desk-exam` v1. There is no second simple-bank runtime format.
 - Source can be staged in bounded batches and selectively authored/published (maximum published/draft question count is enforced by validators; large imports must be split). Publication must be atomic with valid hashes, keys, source-hash-bound provenance and candidate-only separation.
 - Blind quality review, quota blueprint, original/reviewed editorial mapping and supplied-document/PDF manifests have their own versioned sidecars and source-bound freshness. **They do not override answer key schemas or act as independently authenticated official sources.**
-- External agents can read provided files and create new outputs with permission, but cannot read private IndexedDB, fetch authenticated laws inside the offline app or auto-import into Library.
+- Repository-maintained exam data lives under `question-banks/`, indexed by `question-banks/catalog.json` and nested exam/year/paper manifests. Canonical authoring sources are distinct from generated `.exam.json` packages and recovery archives. Catalog preinstallation is a build-time inclusion decision, not provenance certification.
+- External agents can read provided files and create new outputs with permission, but cannot read private IndexedDB or fetch authenticated laws inside the offline app; one-off outputs do not silently enter Library.
 
 ## Truth and evidence boundaries
 

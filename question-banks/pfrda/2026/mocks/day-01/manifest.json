@@ -25,4 +25,4 @@
   },
   "audit": "audit.md",
   "identityPolicy": "Historical compiled r1 package with conflicting key bytes was removed; active original and revised package identities are unique."
-}\n
+}

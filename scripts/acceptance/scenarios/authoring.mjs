@@ -21,6 +21,9 @@ async function fillField(field,text){
  await page.keyboard.insertText(text);
 }
 try{
+ const installedFamilies=await page.locator("#g-family option").allTextContents();
+ check(installedFamilies.some(x=>x.includes("PFRDA Grade A 2026 — Phase II")),
+  "Catalog-preinstalled PFRDA family is missing from Library");
  await page.locator("#g-author-open").click();
  await page.locator("#pd-author-editor wg-content").waitFor({state:"visible"});
  check(await page.locator("#pd-author-publish").isEnabled(),"Publish entrypoint absent");
@@ -107,9 +110,60 @@ try{
  await page.locator(".worked-solution").first().locator("summary").click();
  check((await page.locator(".worked-solution").first().innerText()).includes("WORKED-SOLUTION-SECRET"),
   "Restored post-submission review lost the authored private explanation");
+ await page.locator("#g-result-library").click();await route(page,"library");
+ await page.locator("#g-author-open").click();
+ await page.locator("#pd-author-new").click();
+ await page.locator("#pd-author-editor wg-content").waitFor({state:"visible"});
+ await page.locator(".pd-author-paper-settings summary").click();
+ await page.locator("#pd-author-title").fill("Twenty mark written practice");
+ await page.locator("#pd-author-exam").fill("manual-mark-practice");
+ await page.locator("#pd-author-paper").fill("written-20");
+ await page.locator("#pd-author-duration").fill("10");
+ await page.locator(".pd-author-paper-settings summary").click();
+ await page.locator("#pd-author-kind").selectOption("free-response");
+ await page.locator("#pd-author-editor wg-content").waitFor({state:"visible"});
+ await page.locator("#pd-author-answer").fill("");
+ await page.locator("#pd-author-answer").blur();
+ await fillField("prompt","Explain the principle briefly.");
+ await fillField("explanation","Assess the response manually against the stated principle and award up to twenty marks.");
+ await page.locator(".pd-author-question-marks summary").click();
+ await page.locator("#pd-author-custom-marks").check();
+ await page.locator("#pd-author-mark-correctMarks").fill("20");
+ await page.locator("#pd-author-mark-correctMarks").blur();
+ await page.locator("#pd-author-validate").click();
+ check((await page.locator("#pd-author-validation").innerText()).includes("Ready to publish"),
+  "Valid twenty-mark written question did not pass authoring validation");
+ await page.locator("#pd-author-confirm").check();
+ await page.locator("#pd-author-publish").click();
+ const writtenId="authored:manual-mark-practice:written-20:r1:custom";
+ await page.waitForFunction(id=>document.querySelector("#g-papers")?.value===id,writtenId);
+ const writtenPackage=(await records(page)).find(x=>
+  x.recordType==="generic-package"&&x.bundle?.paper?.id===writtenId);
+ check(writtenPackage?.bundle?.answerKey?.entries?.[0]?.scoringOverride?.correctMarks===20,
+  "Question-specific twenty-mark rule was not frozen in the published key");
+ await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
+ await page.locator("#g-text").fill("A short candidate response.");
+ await page.locator("#g-save").click();
+ await page.locator("#g-submit").click();await route(page,"result");
+ await page.locator("#result-tab-review").click();
+ const manualMarks=page.locator("[data-manual-marks]").first();
+ check(await manualMarks.getAttribute("max")==="20","Result UI did not expose the frozen twenty-mark ceiling");
+ await manualMarks.fill("20");
+ await page.locator("[data-manual-note]").first().fill("Full credit for the browser acceptance witness.");
+ await page.locator("[data-manual-save]").first().click();
+ await page.waitForTimeout(50);
+ const writtenAttempt=()=>records(page).then(rows=>rows.find(x=>
+  x.recordType==="generic-attempt"&&x.packageId===writtenId&&x.finishedAt));
+ check((await writtenAttempt())?.manualGrades?.[0]?.marks===20,
+  "Maximum valid manual grade was not persisted");
+ await page.locator("[data-manual-marks]").first().fill("20.01");
+ await page.locator("[data-manual-save]").first().click();
+ await page.waitForTimeout(50);
+ check((await writtenAttempt())?.manualGrades?.[0]?.marks===20,
+  "Manual grading accepted marks above the question-specific ceiling");
  check(requestUrls.length===0,"Authoring/publishing triggered remote HTTP requests: "+requestUrls.join(", "));
  check(errors.length===0,"Browser errors: "+errors.join(" / "));
- console.log("P47-5D PUBLICATION PASS "+engine+": invalid draft rejected, source/key/hash published, scored, review/reload, offline");
+ console.log("P47-5D PUBLICATION PASS "+engine+": preinstalled catalog visible; authored MCQ and twenty-mark written response published, scored/manual-graded, review/reload, offline");
 }catch(error){await h.diagnose("p47-5d-publish-"+engine,page,error);throw error;}
 finally{await h.finish();}
 }
