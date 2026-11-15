@@ -387,7 +387,8 @@ test("explicit practice eligibility can narrow structural modes without exam-nam
  assert.equal(resolvePracticeMode(onePkg.paper,"strict"),"free");
  assert.throws(()=>configurePracticeMode(onePkg,"strict"),/unavailable/);
  const multi={...starter,bankId:"multi-modes",paperId:"multi-modes",examId:"generic-multi",
-  practiceModes:["strict","free"]};
+  practiceModes:["strict","free"],
+  questions:starter.questions.map(({syllabusHeadingId:_,...q})=>({...q,subject:"General"}))};
  const multiPkg=compileExternalQuestionBank(multi);
  assert.deepEqual(availablePracticeModes(multiPkg.paper),["strict","free"]);
  assert.throws(()=>configurePracticeMode(multiPkg,"single",0),/unavailable/);
@@ -397,8 +398,9 @@ test("explicit practice eligibility can narrow structural modes without exam-nam
 
 test("edition pairing never substitutes a different logical paper",async()=>{
  const {pairedEdition}=await import("../src/app/exam-families.ts");
- const source=compileExternalQuestionBank({...starter,bankId:"paper-a",paperId:"paper-a",examId:"mixed-editions"});
- const reviewedLike=compileExternalQuestionBank({...starter,bankId:"paper-b",paperId:"paper-b",examId:"mixed-editions"});
+ const genericQuestions=starter.questions.map(({syllabusHeadingId:_,...q})=>({...q,subject:"General"}));
+ const source=compileExternalQuestionBank({...starter,bankId:"paper-a",paperId:"paper-a",examId:"mixed-editions",questions:genericQuestions});
+ const reviewedLike=compileExternalQuestionBank({...starter,bankId:"paper-b",paperId:"paper-b",examId:"mixed-editions",questions:genericQuestions});
  const fakeSource={...source,paper:{...source.paper,edition:"source"}};
  const fakeReviewed={...reviewedLike,paper:{...reviewedLike.paper,edition:"reviewed",
   sourcePaperRevisionId:"other-source",sourceAnswerKeyRevisionId:"other-key"}};

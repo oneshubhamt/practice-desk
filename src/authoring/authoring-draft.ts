@@ -357,6 +357,8 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
  }
  const defaultRule=markingRule({correctMarks:p.marksCorrect,incorrectMarks:p.marksIncorrect,
   unansweredMarks:p.marksUnanswered},"paper scoring");
+ const durationMinutes=num(p.durationMinutes,"duration",0,600);
+ if(!Number.isSafeInteger(durationMinutes))throw Error("Duration must be a whole number of minutes");
  const scoreDecimalPlaces=num(p.scoreDecimalPlaces,"score decimal places",0,6);
  if(!Number.isSafeInteger(scoreDecimalPlaces))throw Error("Score decimal places must be a whole number");
  let kindScoring:AuthoringDraft["kindScoring"];
@@ -372,7 +374,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   examId:text(p.examId,"exam ID",80,true),
   paperId:text(p.paperId,"paper ID",80,true),title:text(p.title,"paper title",180,true),
   edition,revision:num(p.revision,"revision",1,1000000),
-  durationMinutes:num(p.durationMinutes,"duration",0,600),
+  durationMinutes,
   timingKind:timingKind as AuthoringDraft["timingKind"],
   pausePolicy:pausePolicy as AuthoringDraft["pausePolicy"],
   questionNavigation:questionNavigation as AuthoringDraft["questionNavigation"],

@@ -133,7 +133,8 @@ function readyDraft(){
    ...(kind==="free-response"?{wordLimit:250}:{})};
  });
  return {...a,examId:"cat-pgdba",paperId:"mixed-2026",title:"Original six-kind CAT and PGDBA practice",
-   revision:1,edition:"custom",durationMinutes:120,wordCountPolicy:"shown",
+   revision:1,edition:"custom",timingKind:"whole-paper",durationMinutes:120,wordCountPolicy:"shown",
+   marksCorrect:2.5,marksIncorrect:-5/6,marksUnanswered:0,scoreDecimalPlaces:2,
    sections:[{name:"Mathematics",minutes:15},{name:"General",minutes:15}],questions};
 }
 test("P47-5D all six kinds publish as source-validated frozen rich package, with correct hashes",()=>{

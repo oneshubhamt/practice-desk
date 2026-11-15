@@ -123,7 +123,7 @@ test("P57-A external source rejects unsupported fields, fake IDs, broken referen
   {questions:source.questions.map((q,i)=>i?{...q}:{...q,contentHash:"forged"})},
   {questions:source.questions.map((q,i)=>i?{...q}:{...q,stimulusRef:"missing"})},
   {questions:source.questions.map((q,i)=>i?{...q}:{...q,answer:"Z"})},
-  {questions:source.questions.map((q,i)=>i?{...q}:{...q,options:["x","y"]})},
+  {questions:source.questions.map((q,i)=>i?{...q}:{...q,options:["x"]})},
   {questions:source.questions.map((q,i)=>i?{...q}:{...q,prompt:"<script>alert(1)</script>"})},
   {timing:{...source.timing,kind:"sectional",sectionTransition:"automatic"},navigation:{...source.navigation,sectionNavigation:"free"}}
  ];
