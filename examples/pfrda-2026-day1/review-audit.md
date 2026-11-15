@@ -10,7 +10,7 @@
 4. **Q42:** fixes the BPM6 distinction: personal transfers/remittances usually **current account—secondary income**; FDI, external commercial borrowing and reserves transactions **financial account**, not generically “capital account”. RBI is cited in answer-side provenance.
 5. **Q49:** removes the obsolete missing-source explanation; clarifies Companies Act §§173(1) (Board meetings), 410 (NCLAT constitution), and **421 (NCLT appeals)**. Both statements remain true and key D is unchanged.
 6. **English title leak:** the improved candidate passage is headed **“Untitled passage for précis”**. The historical source-playback heading remains intact for comparison; the model answer title is still answer-side only.
-7. **Manual marking:** adds per-question `scoringOverride` to the canonical external authoring-to-publishing path. The English rubric can use 0–20 marks, MCQs still +2/−0.5/0. The 100-mark automated MCQ denominator excludes free-response pending manual marking. The change is optional and does not alter existing imported papers.
+7. **Manual marking:** adds per-question `scoringOverride` to the canonical external authoring-to-publishing path **and a checkbox-controlled marks editor in Authoring Studio**. The English rubric can use 0–20 marks, MCQs still +2/−0.5/0. The 100-mark automated MCQ denominator excludes free-response pending manual marking. The change is optional and does not alter existing imported papers.
 8. **Evidence metadata:** retains existing Budget, Economic Survey, statutory and scheme source links and adds ICAI inventory guidance, ICMAI costing/variance guidance, RBI BoP terminology, PFRDA CRA/NPS information, and Section 421 to the Companies Act reference.
 
 ## Verification
@@ -26,6 +26,8 @@
 | Précis manual grade ceiling | **20** |
 | Original submitted 50-answer response replay | **43 right, 7 wrong, 0 skipped; 82.5/100**; précis was not assumed attempted |
 | Targeted external authoring test suite | **36/36 passed** (including the new marking and historical-fidelity checks) |
+| Studio view/controller syntax check | **Passed** (`node --check` on both modified Studio files) |
+| Whole-repo typecheck / fast suite | **Environment-limited:** dependencies such as TypeScript, esbuild and KaTeX are absent from this clean checkout; the broader gate was attempted but could not complete |
 | Independent legal-currentness certification | **Not completed; 11 automated advisory warnings remain** |
 
 The program's quality scanner intentionally reports `legal-currentness-unverified` even when a dated, provision-specific citation exists: it cannot itself inspect commencement orders, every later statutory amendment or subordinate rule. A reference and a reasoned manual check are not an independently signed publication review. The packages retain truthful `qa: needs-review` metadata and **do not bypass** this gate.

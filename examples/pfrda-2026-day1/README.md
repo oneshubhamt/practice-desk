@@ -32,7 +32,8 @@ source-playback package retains the historical title cue and terse explanations
 for comparison, so take the improved practice package when testing the précis.
 
 The underlying scoring engine already supports question-specific marks. The
-external authoring import now exposes `questions[].scoringOverride` so the
+external authoring import now exposes `questions[].scoringOverride`, and the
+Authoring Studio has an optional **Question-specific marks** editor, so the
 précis can be manually marked **0–20**, while the 50 MCQs keep **+2 / −0.5 / 0**.
 The maximum automatically graded General Stream score remains **100**; English
 is assessed separately, rather than combined into a misleading 120-mark paper.
