@@ -23,6 +23,7 @@ import {frozenScoreSummary} from "./history-score.ts";
 
 
 import {examPreflight,preflightHTML,examRulesHTML} from "./exam-preflight.ts";
+import {paperEditionLabel} from "./editorial-labels.ts";
 
 import {writePracticeSetups,type PracticeSetups} from "./practice-selection.ts";
 import {pairedCounterpart,pairedEdition} from "./exam-families.ts";
@@ -203,7 +204,8 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
           (selectedIncluded?"Included practice package from the repository question-bank catalog; inclusion does not establish official status.":"Imported/user-supplied paper grouped under this included examination family; family membership does not establish official status."):
         family?"Selected examination family; package provenance determines source/review status.":
         "Saved examination unavailable. Re-import the bank or select another.")+'</p>'+
-      '<p class="fine">'+escapeText(selected?.paper.paperId??"")+' · '+escapeText(selected?.paper.edition??"")+'</p>'+
+      '<p class="fine">'+escapeText(selected?.paper.paperId??"")+
+       (selected?' · '+escapeText(paperEditionLabel(selected.paper)):'')+'</p>'+
       '<div class="preview-metrics"><div><b>'+questionCount+'</b><small>Questions</small></div>'+
       '<div><b>'+escapeText(time)+'</b><small>Time</small></div><div><b>'+escapeText(previewStructure)+'</b><small>'+previewStructureLabel+'</small></div>'+
       '<div><b>'+escapeText(previewNavigation)+

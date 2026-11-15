@@ -13,6 +13,7 @@ import {sha256} from "../src/domain/hash.ts";
 import {authoringSections,setAuthoringSectionMinutes,assignAuthoringQuestionSection} from "../src/authoring/authoring-sections.ts";
 import {authoringPublishedPreview,authoringPartialCreditExamples} from "../src/authoring/authoring-preview.ts";
 import {toAuthoringDraft} from "../src/authoring/external-bank.ts";
+import {inspectAuthoringHealth} from "../src/authoring/authoring-workflow.ts";
 
 /** Rich Documents — canonical domain contracts. */
 async function registerRichDocumentsTests(){
@@ -103,6 +104,17 @@ test("P47-5C math and local image tokens never contain remote URLs or execute HT
 });
 
 }
+test("Studio health is derived from publication/QA state and identifies the next affected question",()=>{
+ const base=newAuthoringDraft(),q=base.questions[0];
+ const draft=validateAuthoringDraft({...base,ingestionMode:"external-source",
+  questions:[{...q,qa:{status:"needs-review"}}]});
+ const health=inspectAuthoringHealth(draft,[]);
+ assert.equal(health.questionsNeedingReview,1);
+ assert.ok(health.errorCount>0||health.warningCount>0);
+ assert.equal(health.nextQuestionId,q.id);
+ assert.ok(health.nextReason);
+ assert.equal(Object.hasOwn(draft,"health"),false,"health must remain derived, not persisted");
+});
 await registerAuthoringDraftsTests();
 /** Publication — canonical domain contracts. */
 async function registerPublicationTests(){

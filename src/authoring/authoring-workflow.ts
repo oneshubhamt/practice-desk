@@ -15,6 +15,18 @@ export interface AuthoringPublicationInspection {
  readonly report:ReturnType<typeof inspectAuthoringPublication>;
  readonly errors:readonly PublicationIssue[];
  readonly warnings:readonly QualityIssue[];
+ readonly quality:ReturnType<typeof inspectExternalQuality>|null;
+}
+
+export interface AuthoringHealthSummary {
+ readonly inspection:AuthoringPublicationInspection;
+ readonly errorCount:number;
+ readonly warningCount:number;
+ readonly questionsNeedingReview:number;
+ readonly duplicateCandidates:number;
+ readonly duplicateTruncated:boolean;
+ readonly nextQuestionId:string|null;
+ readonly nextReason:string|null;
 }
 
 export interface PublicationAcceptance {
@@ -75,7 +87,30 @@ export function inspectPublicationWorkflow(
   }))??[])
  ];
  const warnings=quality?.issues.filter(issue=>issue.severity==="warning")??[];
- return {report,errors,warnings};
+ return {report,errors,warnings,quality};
+}
+
+export function inspectAuthoringHealth(
+ draft:AuthoringDraft,existing:readonly ExamPackage[]
+):AuthoringHealthSummary{
+ const inspection=inspectPublicationWorkflow(draft,existing);
+ const quality=inspection.quality;
+ const needsReview=quality?.summary.questionsNeedingReview??
+  draft.questions.filter(q=>q.qa?.status==="needs-review").length;
+ const next=[...inspection.errors.map(issue=>({questionId:issue.questionId??null,
+    reason:issue.field+": "+issue.reason})),
+  ...inspection.warnings.map(issue=>({questionId:issue.questionId??null,
+    reason:issue.code+": "+issue.message}))].find(item=>item.questionId)??null;
+ const fallback=!next&&needsReview?
+  draft.questions.find(q=>q.qa?.status==="needs-review")??null:null;
+ return {
+  inspection,errorCount:inspection.errors.length,warningCount:inspection.warnings.length,
+  questionsNeedingReview:needsReview,
+  duplicateCandidates:quality?.summary.duplicateCandidates??0,
+  duplicateTruncated:quality?.summary.duplicateTruncated??false,
+  nextQuestionId:next?.questionId??fallback?.id??null,
+  nextReason:next?.reason??(fallback?"Question is marked needs-review":null)
+ };
 }
 
 function attachPublicationAcknowledgement(

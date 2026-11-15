@@ -22,6 +22,7 @@ import {setAuthoringSectionMinutes,setAuthoringSectionScoring,assignAuthoringQue
 import {MAX_AUTHORED_ITEMS,resizeRichItems} from "./authoring-cardinality.ts";
 import {mathRenderer} from "../app/math-renderer-provider.ts";
 import {escapeText} from "../app/html-escape.ts";
+import {paperEditionLabel} from "../app/editorial-labels.ts";
 import {downloadText} from "../app/download-file.ts";
 import {wordgardEditorPort} from "./wordgard-adapter.ts";
 import {syllabusForExam,syllabusHeading,UNCLASSIFIED_SUBJECT} from "../learning/syllabus-taxonomy.ts";
@@ -30,7 +31,7 @@ import {AUTHORING_MAX_BYTES,newAuthoringDraft,newAuthoringQuestion,validateAutho
  validateAuthoringShelf,requiresExternalQuality,
  type AuthoringDraft,type AuthoringDraftShelf,type AuthoringQuestion} from "./authoring-draft.ts";
 import {createAuthoringWorkspaceStore} from "./authoring-workspace-store.ts";
-import {handoffStagingToDraftShelf,ingestStagedFiles,inspectPublicationWorkflow,
+import {handoffStagingToDraftShelf,ingestStagedFiles,inspectAuthoringHealth,inspectPublicationWorkflow,
  preparePublicationWorkflow} from "./authoring-workflow.ts";
 import {labels,type Field,initialField,fieldName,fields,fieldOf,updatedField,option,
  controls,evidenceEditor,stagedDetail,toolbar,preview,sectionManager,draftsOptions}
@@ -214,6 +215,21 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   capture();
   const version=++renderSequence,container=host,d=active(),q=question();
   if(!fields(q).includes(field))field=initialField;
+  const health=inspectAuthoringHealth(d,actions.existing());
+  const qErrors=health.inspection.errors.filter(issue=>issue.questionId===q.id).length;
+  const qWarnings=health.inspection.warnings.filter(issue=>issue.questionId===q.id).length;
+  const qDuplicates=health.inspection.quality?.duplicates.filter(candidate=>
+   candidate.first.questionId===q.id||candidate.second.questionId===q.id).length??0;
+  const qNeedsReview=health.inspection.quality?.questions.find(item=>item.questionId===q.id)?.
+   recommendedStatus==="needs-review"||q.qa?.status==="needs-review";
+  const chip=(label:string,state:"bad"|"warn"|"review"|"good")=>
+   '<span class="pd-author-chip '+state+'">'+escapeText(label)+'</span>';
+  const questionChips=[
+   qErrors?chip(qErrors+" error"+(qErrors===1?"":"s"),"bad"):"",
+   qWarnings?chip(qWarnings+" warning"+(qWarnings===1?"":"s"),"warn"):"",
+   qDuplicates?chip(qDuplicates+" duplicate candidate"+(qDuplicates===1?"":"s"),"warn"):"",
+   qNeedsReview?chip("Needs review","review"):chip("No flagged QA","good")
+  ].join("");
   container.hidden=false;
   const questionOptions=d.questions.map((q,i)=>option(q.id,(i+1)+". "+q.section+
     " · "+(q.syllabusHeadingId?syllabusHeading(d.examId,q.syllabusHeadingId)?.label:
@@ -270,6 +286,18 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    '<input type="file" id="pd-stage-archive-file" accept=".json,application/json" hidden>'+
    '<input type="file" multiple accept=".json,application/json" id="pd-stage-input" hidden></div>'+
    stagePanel+
+   '<div class="pd-author-health" id="pd-author-health" role="status"><div><b>Draft health</b>'+
+    '<div class="pd-author-chips">'+
+     chip(health.errorCount+" error"+(health.errorCount===1?"":"s"),health.errorCount?"bad":"good")+
+     chip(health.warningCount+" warning"+(health.warningCount===1?"":"s"),health.warningCount?"warn":"good")+
+     chip(health.questionsNeedingReview+" need review","review")+
+     chip(health.duplicateCandidates+" duplicate candidate"+(health.duplicateCandidates===1?"":"s"),
+      health.duplicateCandidates?"warn":"good")+
+    '</div>'+
+    (health.duplicateTruncated?'<p class="fine generic-warning">Duplicate scan reached its configured bound; split or review separately.</p>':"")+
+   '</div><button class="btn" id="pd-author-fix-next"'+
+    (health.errorCount||health.warningCount||health.questionsNeedingReview?'':' disabled')+
+    '>Fix next</button></div>'+
    (stageConflict?'<p class="generic-warning" role="alert">'+escapeText(stageError)+'</p>':"")+
    (lastSaveError?'<p class="generic-warning" role="alert">'+escapeText(lastSaveError)+'</p>':"")+
    '<div class="pd-author-top"><label>Saved draft<select id="pd-author-drafts">'+draftOptions+'</select></label>'+
@@ -282,7 +310,8 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    '<button class="btn" id="pd-author-import">Import draft / exchange JSON</button>'+
    (storageBlocked?'<button class="btn danger" id="pd-author-reset-corrupt">Reset damaged draft storage</button>':"")+
    '<input type="file" id="pd-author-import-file" accept=".json,application/json" hidden></div></div>'+
-   '<div class="pd-author-top"><label>Question<select id="pd-author-questions">'+questionOptions+'</select></label>'+
+   '<div class="pd-author-top"><div><label>Question<select id="pd-author-questions">'+questionOptions+'</select></label>'+
+    '<div class="pd-author-chips pd-author-question-chips" aria-label="Current question QA status">'+questionChips+'</div></div>'+
    '<div class="row"><button class="btn" id="pd-author-add-question">Add question</button>'+
    '<button class="btn" id="pd-author-copy-question">Duplicate</button>'+
    '<button class="btn" id="pd-author-up">Move up</button>'+
@@ -341,7 +370,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    return '<details class="pd-author-section-manager"><summary>Exact publication dry-run · '+
     count+' questions · '+escapeText(compiled.title)+'</summary>'+
     '<p class="fine">Paper '+escapeText(compiled.paper.paperId)+' · edition '+
-    escapeText(compiled.paper.edition)+' · revision '+compiled.paper.revision+
+    escapeText(paperEditionLabel(compiled.paper))+
     ' · sections '+compiled.paper.sections.length+' · correct-answer ceiling '+
     (count*draft.marksCorrect)+' marks · wrong answer '+draft.marksIncorrect+
     ' marks · '+escapeText(duration)+'</p>'+
@@ -380,6 +409,15 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    });
    status(issues.length?"Publication blocked: "+issues.length+" errors":"Remaining unverified QA warnings: "+warnings.length,Boolean(issues.length));
   };
+  click("pd-author-fix-next",()=>{
+   if(health.nextQuestionId&&active().questions.some(item=>item.id===health.nextQuestionId)){
+    capture();questionId=health.nextQuestionId;field="prompt";void render();
+    status("Next authoring issue: "+(health.nextReason??"review this question"));
+    return;
+   }
+   showIssues(health.inspection.errors,health.inspection.warnings);
+   validationBox.scrollIntoView({block:"nearest"});
+  });
   click("pd-author-validate",()=>{
    try{
     flush();
