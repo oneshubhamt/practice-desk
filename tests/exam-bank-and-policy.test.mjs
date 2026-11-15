@@ -82,7 +82,7 @@ test("untimed option derives new validated frozen policy for every built-in mode
 test("PFRDA generic modes preserve authored 20+40 minutes, keys and live word-counter policy",async()=>{
  const preinstalled=(await loadQuestionBankCatalog(repositoryRoot)).preinstalled;
  const pfrda=preinstalled.families.find(f=>f.id==="pfrda-grade-a-2026-phase-ii");
- const packageValue=preinstalled.packages.find(p=>p.paper.id===pfrda?.currentPaperId);
+ const packageValue=preinstalled.packages.find(p=>p.paper.id===pfrda?.currentPaperRevisionId);
  assert.ok(packageValue);
  assert.equal(packageValue.examId,"pfrda-grade-a-2026-phase-ii");
  const strict=configurePracticeMode(packageValue,"strict");
@@ -158,8 +158,8 @@ test("fresh custom families retain advisory default; CGL stays strict; saved mod
  const cgl=builtinCglPackages(sources,patches)[0];
  assert.equal(defaultPracticeMode(cgl.paper),"strict");
  const families=[
-  {id:"imported:custom",papers:[custom],currentPaperId:custom.paper.id},
-  {id:"builtin:ssc-cgl",papers:[cgl],currentPaperId:cgl.paper.id}
+  {id:"imported:custom",papers:[custom],currentPaperRevisionId:custom.paper.id},
+  {id:"builtin:ssc-cgl",papers:[cgl],currentPaperRevisionId:cgl.paper.id}
  ];
  const owner={selectedFamilyId:"",setups:{schema:2,selectedFamilyId:"imported:custom",families:{}},
   choice:"",practiceMode:"strict",singleSection:0,untimedPractice:false,editionView:"reviewed",
@@ -208,8 +208,8 @@ test("included family bootstrap preserves catalog-declared order without exam-na
  const cgl=builtinCglPackages(sources,patches)[0];
  const apfc=compileExternalQuestionBank(starter);
  const included=[
-  {id:"first-declared",examId:cgl.examId,title:"Zeta title",paperIds:[cgl.paper.id],currentPaperId:cgl.paper.id},
-  {id:"second-declared",examId:apfc.examId,title:"Alpha title",paperIds:[apfc.paper.id],currentPaperId:apfc.paper.id}
+  {id:"first-declared",examId:cgl.examId,title:"Zeta title",paperIds:[cgl.paper.id],currentPaperRevisionId:cgl.paper.id},
+  {id:"second-declared",examId:apfc.examId,title:"Alpha title",paperIds:[apfc.paper.id],currentPaperRevisionId:apfc.paper.id}
  ];
  const catalog=examFamilyCatalog([apfc,cgl],included);
  assert.deepEqual(catalog.map(f=>f.id),["included:first-declared","included:second-declared"],
@@ -221,7 +221,7 @@ test("P43 catalog keeps imported families distinct, sorted and never claims offi
  const originals=builtinCglPackages(sources,patches);
  const included=[{id:"ssc-cgl",examId:"ssc-cgl",title:"SSC CGL",
    paperIds:originals.map(p=>p.paper.id),
-   currentPaperId:originals.find(p=>p.paper.edition==="reviewed")?.paper.id}];
+   currentPaperRevisionId:originals.find(p=>p.paper.edition==="reviewed")?.paper.id}];
  const apfc=compileExternalQuestionBank(starter);
  const imposterSource={...starter,examId:"ssc-cgl",bankId:"user-supplied-cgl",
    paperId:"user-supplied-cgl",title:"Unverified SSC labelled bank",
