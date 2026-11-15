@@ -21,8 +21,8 @@ import {restoreSession} from "../src/history/frozen.ts";
 
 /** Session Policy — canonical domain contracts. */
 async function registerSessionPolicyTests(){
-const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
-const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
+const sources=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/original/papers.json",import.meta.url)));
+const patches=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/revised/patches.json",import.meta.url)));
 const builtins=builtinCglPackages(sources,patches);
 const mock=(paperChanges)=>{const base={...pkg.paper,...paperChanges,
   navigation:paperChanges.timing?.kind==="sectional"?
@@ -172,8 +172,8 @@ await registerSessionPolicyTests();
 
 /** Preflight Disclosure — canonical domain contracts. */
 async function registerPreflightDisclosureTests(){
-const source=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
-const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
+const source=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/original/papers.json",import.meta.url)));
+const patches=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/revised/patches.json",import.meta.url)));
 const cgl=builtinCglPackages(source,patches);
 const reviewed=cgl.find(p=>p.paper.edition==="reviewed");
 const original=cgl.find(p=>p.paper.edition==="source");
@@ -773,8 +773,8 @@ await registerIndependentScoringModelTests();
 const testP41=test,testAssert=assert;
 
 testP41("source comparison refuses unchanged-letter identities when option meaning changes",async()=>{
- const papers=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
- const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
+ const papers=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/original/papers.json",import.meta.url)));
+ const patches=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/revised/patches.json",import.meta.url)));
  const all=builtinCglPackages(papers,patches);
  let changes=0,correctTextChanges=0;
  for(const [paperId,modified] of Object.entries(patches)){
@@ -794,8 +794,8 @@ testP41("source comparison refuses unchanged-letter identities when option meani
  testAssert.equal(correctTextChanges,21);
 });
 
-const p41papers=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
-const p41patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
+const p41papers=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/original/papers.json",import.meta.url)));
+const p41patches=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/revised/patches.json",import.meta.url)));
 
 testP41("publisher comparison preserves identical contexts but rejects reordered options and punctuation",()=>{
  const source=builtinCglPackages(

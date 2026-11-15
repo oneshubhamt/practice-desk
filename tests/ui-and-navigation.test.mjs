@@ -107,8 +107,8 @@ await registerHistoryResultsPresentationTests();
 
 /** Media Editorial And Pause — canonical domain contracts. */
 async function registerMediaEditorialAndPauseTests(){
-const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
-const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
+const sources=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/original/papers.json",import.meta.url)));
+const patches=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/revised/patches.json",import.meta.url)));
 const cgl=builtinCglPackages(sources,patches);
 const send=(type,nowMs,extra={})=>({type,nowMs,...extra});
 const visible=(a,id)=>a.responses.find(r=>r.questionRevisionId===id);

@@ -25,8 +25,8 @@ import {healthSummary} from "../src/app/storage-health.ts";
 
 /** Cross Paper Trends — canonical domain contracts. */
 async function registerCrossPaperTrendsTests(){
-const bank=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
-const patch=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
+const bank=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/original/papers.json",import.meta.url)));
+const patch=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/revised/patches.json",import.meta.url)));
 const editions=builtinCglPackages(bank,patch);
 const originals=editions.filter(p=>p.paper.edition==="source");
 const reviewed=editions.filter(p=>p.paper.edition==="reviewed");
@@ -174,8 +174,8 @@ await registerCrossPaperTrendsTests();
 
 /** History Preferences — canonical domain contracts. */
 async function registerHistoryPreferencesTests(){
-const papers=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
-const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
+const papers=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/original/papers.json",import.meta.url)));
+const patches=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/revised/patches.json",import.meta.url)));
 const all=builtinCglPackages(papers,patches);
 const source=all.find(p=>p.paper.edition==="source");
 const reviewed=all.find(p=>p.paper.edition==="reviewed"&&p.paper.paperId===source.paper.paperId);
@@ -406,8 +406,8 @@ await registerPersistenceConcurrencyTests();
 
 /** Recovery And Replay — canonical domain contracts. */
 async function registerRecoveryAndReplayTests(){
-const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
-const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
+const sources=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/original/papers.json",import.meta.url)));
+const patches=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/revised/patches.json",import.meta.url)));
 const first=importCglBank(sources,patches)[0];
 const firstAssets=builtinCglPackages(sources,patches)[0];
 
@@ -566,8 +566,8 @@ test("P45-B identical frozen exam content uses one SHA-addressed snapshot across
  const {compactAttempt,expandAttempt,reconstructRecords,sharedSnapshot,verifiedSnapshot}=await import("../src/history/shared-store.ts");
  const {builtinCglPackages}=await import("../src/app/exam-package.ts");
  const {readFile}=await import("node:fs/promises");
- const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url),"utf8"));
- const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url),"utf8"));
+ const sources=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/original/papers.json",import.meta.url),"utf8"));
+ const patches=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/revised/patches.json",import.meta.url),"utf8"));
  const pkg=builtinCglPackages(sources,patches)[0];
  const {startGenericAttempt}=await import("../src/app/exam-package.ts");
  const first={...startGenericAttempt(pkg,"s1",1730000000000),saveRevision:1};
@@ -618,8 +618,8 @@ test("P45-B shared snapshot also stores publisher keys, source review and explan
  const {makeBackup,verifyBackup}=await import("../src/history/backup.ts");
  const {DEFAULT_PREFERENCES}=await import("../src/app/preferences.ts");
  const {readFile}=await import("node:fs/promises");
- const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url),"utf8"));
- const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url),"utf8"));
+ const sources=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/original/papers.json",import.meta.url),"utf8"));
+ const patches=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/revised/patches.json",import.meta.url),"utf8"));
  const all=builtinCglPackages(sources,patches);
  const reviewed=all.find(x=>x.paper.edition==="reviewed");
  const source=all.find(x=>x.paper.paperId===reviewed.paper.paperId&&x.paper.edition==="source");

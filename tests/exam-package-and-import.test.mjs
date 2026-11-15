@@ -15,8 +15,8 @@ import {scoreableMaximum} from "../src/engine/score-ceiling.ts";
 
 /** Cgl Import Modes — canonical domain contracts. */
 async function registerCglImportModesTests(){
-const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
-const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
+const sources=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/original/papers.json",import.meta.url)));
+const patches=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/revised/patches.json",import.meta.url)));
 const packages=builtinCglPackages(sources,patches);
 
 test("generic importer retains all 500 questions in 10 existing editions",()=>{
@@ -56,9 +56,9 @@ test("generic attempt uses validated responses and frozen revisions",()=>{
 
 // Additional built-in CGL edition/mode policy coverage.
 {
-const papers=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
-const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
-const solutions=JSON.parse(await readFile(new URL("../src/content/solutions.json",import.meta.url)));
+const papers=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/original/papers.json",import.meta.url)));
+const patches=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/revised/patches.json",import.meta.url)));
+const solutions=JSON.parse(await readFile(new URL("../question-banks/ssc-cgl/pyqs/revised/solutions.json",import.meta.url)));
 const all=builtinCglPackages(papers,patches,solutions);
 test("one engine supports strict, flexible and single CGL policies",()=>{
  const standard=all[0];
