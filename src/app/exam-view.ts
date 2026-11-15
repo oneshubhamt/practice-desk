@@ -71,6 +71,8 @@ export function renderModelExam(
    const timeLimit=paper.timing.kind==="whole-paper"?paper.timing.durationMs:
      paper.timing.kind==="sectional"?paper.timing.sectionLimits.find(t=>t.sectionId===section.id)?.durationMs??null:null;
    const elapsed=paper.timing.kind==="sectional"?state.sectionElapsedMs:state.elapsedMs;
+   const advisoryBudgetReached=timeLimit!==null&&elapsed>=timeLimit&&
+     timeEnforcementForMode(attempt.frozen.snapshot.mode)==="advisory";
    const expired=state.status==="section-expired";
    const lockedWhole=paper.timing.kind!=="sectional"&&paper.navigation.sectionNavigation==="sequential-locked";
    const hasNextSection=state.sectionIndex < paper.sections.length-1;
@@ -141,7 +143,7 @@ export function renderModelExam(
      (paper.timing.kind!=="untimed"&&paper.timing.pausePolicy==="allowed"?
       '<button class="btn" id="g-pause"'+(expired?" disabled":"")+'>'+(state.status==="paused"?"Resume timer":"Pause timer")+'</button>':"")+
      '<button class="btn danger" id="g-submit"'+(state.status==="paused"||
-       (paper.timing.kind==="sectional"&&!paper.timing.allowEarlySubmit&&!expired&&!untimedSection&&!clock.overtime)?" disabled":"")+'>'+
+       (paper.timing.kind==="sectional"&&!paper.timing.allowEarlySubmit&&!expired&&!untimedSection&&!advisoryBudgetReached)?" disabled":"")+'>'+
       (expired?(hasNextSection?"Continue to next section":"Finish expired exam"):
         paper.timing.kind==="sectional"?(untimedSection?"Finish untimed section":"Submit section"):
         lockedWhole&&hasNextSection?"Finish section →":"Submit exam")+'</button></div></section>'+
