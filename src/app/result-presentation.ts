@@ -145,7 +145,7 @@ export function writtenAnswerAnalysisHTML(a:GenericAttempt):string{
  if(!evidence.rows.length)return "";
  const paperOver=evidence.paperBudgetMs===null?"—":
    overtimeLabel(evidence.actualMs,evidence.paperBudgetMs);
- const attributed=evidence.attributedOvertimeMs>0?"+"+duration(evidence.attributedOvertimeMs):"None";
+ const attributed=evidence.writtenPostDeadlineMs>0?"+"+duration(evidence.writtenPostDeadlineMs):"None";
  return '<section class="panel pad result-written-answers"><h2>Written answers</h2>'+
   '<p class="fine">Objective measurements only. Word count and timing do not grade relevance, factual accuracy, structure or language; substantive quality remains a human/self assessment.</p>'+
   '<div class="written-answer-summary">'+

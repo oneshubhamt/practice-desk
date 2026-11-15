@@ -93,7 +93,7 @@ test("written Results derive word/time/overtime evidence and keep self-assessmen
  assert.equal(evidence.paperBudgetMs,1000);
  assert.equal(evidence.actualMs,1400);
  assert.equal(evidence.paperOvertimeMs,400);
- assert.equal(evidence.attributedOvertimeMs,400);
+ assert.equal(evidence.writtenPostDeadlineMs,400);
  assert.equal(evidence.rows[0].selfAssessedMarks,1.5);
  const html=writtenAnswerAnalysisHTML(a);
  assert.match(html,/Written answers/);
@@ -134,7 +134,7 @@ test("Written answers summary excludes overtime spent on non-written questions",
  a=transitionGenericAttempt(a,event("SUBMIT_ATTEMPT",1300),qmap); // 100 ms written overtime
  const evidence=writtenAnswerEvidence(a);
  assert.equal(a.state.responses.reduce((sum,row)=>sum+row.postDeadlineMs,0),300);
- assert.equal(evidence.attributedOvertimeMs,100,
+ assert.equal(evidence.writtenPostDeadlineMs,100,
    "Written panel must not attribute MCQ overtime to written responses");
  const html=writtenAnswerAnalysisHTML(a);
  assert.match(html,/Written-answer overtime/);

@@ -107,7 +107,7 @@ try{
   await page.locator("#g-next").click();await page.locator("#g-next").click();
   const text="Visible draft before hard timeout";
   await page.locator("#g-text").fill(text); // deliberately never select Save response
-  await route(page,"result",{timeout:8000});
+  await route(page,"result");
   const row=(await records(page)).find(x=>x.recordType==="generic-attempt"&&x.packageId===hardWritten.paper.id);
   check(row?.completionReason==="time-expired","hard written attempt did not expire");
   const written=row?.state?.responses?.find(x=>x.questionRevisionId==="rev-5");
