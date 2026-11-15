@@ -171,13 +171,12 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
        (["reviewed","source"] as const).map(edition=>
          '<button type="button" class="edition-choice '+(owner.editionView===edition?"active":"")+
          '" data-edition="'+edition+'" aria-pressed="'+(owner.editionView===edition)+'">'+
-         (cgl?(edition==="reviewed"?"Reviewed &amp; Corrected":"Original PDF"):
-           edition==="reviewed"?"Imported reviewed":"Imported source")+'</button>').join("")+
+         (edition==="reviewed"?"Reviewed":"Source")+'</button>').join("")+
        '</div><p class="fine edition-note">'+(family?.imported?
-         "User-supplied edition; Practice Desk does not certify its questions or keys.":
+         "User-supplied edition; Practice Desk does not certify its questions, keys or provenance.":
          owner.editionView==="reviewed"?
-           "Independently reviewed wording and answer keys; disputed items are labelled after submission.":
-           "Original publisher transcription; no independent key changes applied.")+
+           "Reviewed package revision pinned to its declared source revision; reviewer identity and correction accuracy are not independently certified.":
+           "Source package revision preserved as supplied; publisher or official status is not independently authenticated.")+
        '</p></div>':"")+
      (selected?'<h3 class="subhead">Practice mode</h3><div class="generic-modes" role="group" aria-label="Practice mode">'+
       ([["strict","Exam simulation",strictDetail],["free","Flexible full paper",flexibleDetail],
