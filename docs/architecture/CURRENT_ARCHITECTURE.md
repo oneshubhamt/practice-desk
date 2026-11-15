@@ -9,7 +9,7 @@ The same source is built through `scripts/build-target.mjs` into two targets:
 - **Standalone:** `Practice_Desk_Offline_Mock_Tests.html`, deterministic and directly runnable via `file://`.
 - **Static:** `Practice_Desk_Static/`, served over localhost/HTTPS and adding the local FSRS optimizer Worker/WASM assets.
 
-Neither generated target is derived by rewriting the other. `scripts/build-target.mjs` reads the machine catalog at `question-banks/catalog.json`: SSC CGL source data and explicitly preinstalled generic exam packages are assembled from their exam folders into the same validated build. Removing or disabling a catalog family removes it from future builds without changing the scorer or Library runtime. The application has no required backend, login or cloud learner store. Generated artifacts are never hand-edited.
+Neither generated target is derived by rewriting the other. `question-banks/catalog.json` owns only exam-family identity, root-manifest address and the preinstall switch. `scripts/build-target.mjs` follows the authoritative catalog → exam → year → paper manifest graph to assemble each enabled family. Paper manifests own canonical editions and content/package paths; the root catalog does not duplicate them. SSC CGL retains its existing Source/Reviewed converter semantics, but its five PYQs are stored as five isolated paper directories rather than one aggregate content file. Removing or disabling a family removes it from future builds without changing the scorer or Library runtime. The application has no required backend, login or cloud learner store. Generated artifacts are never hand-edited.
 
 ## 2. Ownership map
 
@@ -23,7 +23,7 @@ Neither generated target is derived by rewriting the other. `scripts/build-targe
 | Persistence | `src/history/` | `WorkspaceStore`, IndexedDB and limited localStorage resilience adapters, immutable snapshots, CAS, backup/recovery/deletion |
 | Learning | `src/learning/` | Evidence extraction, FSRS-7 scheduling/revision selection, optimizer profile validation/browser orchestration |
 | Authoring | `src/authoring/` | Draft/staging store, editor binding, publication workflow and canonical publisher boundary |
-| Question-bank corpus | `question-banks/` | Exam-scoped PYQ/mock sources, Original/Revised editions, manifests, generated packages and preinstall catalog; no runtime policy |
+| Question-bank corpus | `question-banks/` | One authoritative exam → year → paper manifest graph; exam-scoped PYQ/mock sources, Original/Revised editions, generated packages and a family-level preinstall catalog; no runtime policy |
 | External content tools | `scripts/*bank*`, review/editorial/PDF/handoff CLIs | Structured source preparation, review/evidence sidecars and explicit file publication |
 
 The dependency direction is deliberate: domain/engine contracts do not depend upward on application orchestration.
@@ -56,7 +56,7 @@ Storage-health/quota/persistence prompts are application presentation concerns. 
 
 `AuthoringWorkspaceStore` owns unpublished shelf/staging persistence, corruption protection and cross-tab CAS. `authoring-workflow.ts` owns staged handoff and validate → acknowledge → revalidate publication sequencing. `authoring-studio-view.ts` owns pure authoring field projection and HTML generation; the studio owns editor state/event orchestration but not browser-storage mechanics or a second publisher.
 
-Wordgard/manual and external-agent flows converge on the same canonical `practice-desk-authoring` → validated exam-package boundary. Per-question marking is one optional authoring field that compiles to the existing answer-key `scoringOverride`; it does not create a second scoring path. Advanced external review can add quota blueprints, blind quality review, Source/Reviewed decisions and supplied-document evidence, but those files do not become a second scoring/runtime model. Repository-maintained exam content is organized under `question-banks/<exam>/...`; `src/content/` retains schemas/conversion logic rather than owning the corpus.
+Wordgard/manual and external-agent flows converge on the same canonical `practice-desk-authoring` → validated exam-package boundary. Per-question marking is one optional authoring field that compiles to the existing answer-key `scoringOverride`; it does not create a second scoring path. Advanced external review can add quota blueprints, blind quality review, Source/Reviewed decisions and supplied-document evidence, but those files do not become a second scoring/runtime model. Repository-maintained exam content is organized under `question-banks/<exam>/<year>/<pyqs|mocks>/<paper>/...`; `src/content/` retains schemas/conversion logic rather than owning the corpus. Appending a maintained paper changes its year/paper manifests, not the family catalog or scorer.
 
 See the [agent quickstart](../AGENT_AUTHORING_QUICKSTART.md) and [advanced pipeline](AGENT_CONTENT_PIPELINE.md).
 

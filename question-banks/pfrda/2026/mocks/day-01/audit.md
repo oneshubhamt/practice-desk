@@ -27,8 +27,9 @@
 | Original submitted 50-answer response replay | **43 right, 7 wrong, 0 skipped; 82.5/100**; précis was not assumed attempted |
 | Targeted external authoring test suite | **36/36 passed** (including the new marking and historical-fidelity checks) |
 | Studio view/controller syntax check | **Passed** (`node --check` on both modified Studio files) |
-| Whole-repo Fast gate | **Passed** on the reorganized branch: strict type/build contracts, **456/456** non-deep Node tests, deterministic standalone rebuild, locked dependency checks, native FSRS optimizer smoke and static Worker/WASM build |
-| Chromium Smoke | **Passed** all six critical journeys, including catalog-preinstalled PFRDA visibility and Studio → publish → attempt → 20-mark manual-grade ceiling → reload/offline persistence |
+| Whole-repo Fast gate | **Passed** on the reorganized branch: strict type/build contracts, **459/459** non-deep Node tests, deterministic standalone rebuild, locked dependency checks, native FSRS optimizer smoke and static Worker/WASM build |
+| Chromium Smoke | **Passed** all seven critical journeys, including catalog-preinstalled PFRDA visibility and Studio → publish → attempt → 20-mark manual-grade ceiling → reload/offline persistence |
+| Question-bank manifest/removal closure | **Passed**: five CGL PYQs are paper-isolated; manifest graph is authoritative; synthetic second-paper append requires no root-catalog path edit; PFRDA/CGL/both can be disabled independently; zero-preinstall Chromium boot retains working package import |
 | Firefox/WebKit Cross | **Passed** the four browser-sensitive scenarios on both engines |
 | Deep gate | **Not run on this draft branch by CI design**; repository workflow runs Deep only on pushes to `working`, so no Deep result is claimed here |
 | Independent legal-currentness certification | **Not completed; 11 automated advisory warnings remain** |
