@@ -1,4 +1,4 @@
-import {readFile,stat} from "node:fs/promises";
+import {readFile,stat,readdir} from "node:fs/promises";
 import {basename,dirname,join,resolve,sep} from "node:path";
 import {isDeepStrictEqual} from "node:util";
 import {validateExamPackage} from "../src/domain/exam-package.ts";
@@ -168,20 +168,27 @@ function validatePaperManifest(raw,exam,entry,path){
 
 async function manifestPapers(root,family){
  const examPath=family.manifest,exam=validateExamManifest(await readJson(root,examPath),family,examPath);
+ const activePaths=new Set([examPath.replaceAll("\\","/")]);
  const papers=[],manifestIds=new Set(),logicalPaperIds=new Set();
  for(const year of exam.years){
   const yearPath=childPath(examPath,exam.paths[String(year)],"Exam year manifest path");
+  activePaths.add(yearPath.replaceAll("\\","/"));
   const entries=validateYearManifest(await readJson(root,yearPath),exam,year,yearPath);
   for(const entry of entries){
    const paperPath=childPath(yearPath,entry.path,"Paper manifest path");
+   activePaths.add(paperPath.replaceAll("\\","/"));
    const paper=validatePaperManifest(await readJson(root,paperPath),exam,entry,paperPath);
    if(manifestIds.has(paper.id)||logicalPaperIds.has(paper.paperId))
     throw Error("Duplicate paper identity in manifest graph: "+paper.id);
    for(const [name,edition] of Object.entries(paper.editions)){
-    await requireFile(root,childPath(paperPath,edition.package,"Package path"),
-     "Package "+paper.id+" "+name);
-    if(edition.authoring)await requireFile(root,childPath(paperPath,edition.authoring,"Authoring path"),
-     "Authoring source "+paper.id+" "+name);
+    const packagePath=childPath(paperPath,edition.package,"Package path");
+    activePaths.add(packagePath.replaceAll("\\","/"));
+    await requireFile(root,packagePath,"Package "+paper.id+" "+name);
+    if(edition.authoring){
+     const authoringPath=childPath(paperPath,edition.authoring,"Authoring path");
+     activePaths.add(authoringPath.replaceAll("\\","/"));
+     await requireFile(root,authoringPath,"Authoring source "+paper.id+" "+name);
+    }
    }
    if(paper.archive)for(const [name,archivePath] of Object.entries(paper.archive))
     await requireFile(root,childPath(paperPath,archivePath,"Archive path"),
@@ -193,13 +200,23 @@ async function manifestPapers(root,family){
  }
  if(exam.currentPaperRef&&!papers.some(p=>p.id===exam.currentPaperRef))
   throw Error("Current paper ref is absent from manifest chain: "+exam.currentPaperRef);
- return {exam,papers};
+ return {exam,papers,activePaths};
+}
+
+async function assertNoOrphanActiveContent(root,reachable){
+ const names=await readdir(fileAt(root,"question-banks"),{recursive:true});
+ const active=names.map(name=>"question-banks/"+String(name).replaceAll("\\","/"))
+  .filter(path=>!path.includes("/archive/")&&
+    (path.endsWith("/manifest.json")||path.endsWith("/bank.authoring.json")||
+     path.endsWith("/package.exam.json")));
+ const orphans=active.filter(path=>!reachable.has(path)).sort();
+ if(orphans.length)throw Error("Orphan active question-bank content is not reachable from catalog manifests: "+orphans.join(", "));
 }
 
 async function loadExamPackages(root,family,manifestSet,seenPaperIds){
  const packages=[],paperIds=[],manifestToCanonical=new Map();
  for(const paper of manifestSet.papers){
-  const paperPackages=[];
+  const paperPackages=[];let canonicalPackage=null;
   for(const [editionName,rawEdition] of Object.entries(paper.editions)){
    const edition=plain(rawEdition,"Edition "+editionName+" "+paper.id);
    const packagePath=childPath(paper.path,str(edition.package,"Package path "+paper.id+" "+editionName),
@@ -218,7 +235,17 @@ async function loadExamPackages(root,family,manifestSet,seenPaperIds){
     throw Error("Manifest edition role "+editionName+" disagrees with package "+pkg.paper.edition+" for "+paper.id);
    if(seenPaperIds.has(pkg.paper.id))throw Error("Duplicate preinstalled paper revision "+pkg.paper.id);
    seenPaperIds.add(pkg.paper.id);paperIds.push(pkg.paper.id);packages.push(pkg);paperPackages.push(pkg);
-   if(editionName===paper.canonicalEdition)manifestToCanonical.set(paper.id,pkg.paper.id);
+   if(editionName===paper.canonicalEdition){
+    manifestToCanonical.set(paper.id,pkg.paper.id);canonicalPackage=pkg;
+   }
+  }
+  const custom=paperPackages.filter(pkg=>pkg.paper.edition==="custom");
+  if(custom.length>1){
+   const revisions=custom.map(pkg=>pkg.paper.revision);
+   if(new Set(revisions).size!==revisions.length)
+    throw Error("Custom package revisions must be unique within a paper manifest: "+paper.id);
+   if(canonicalPackage?.paper.edition==="custom"&&canonicalPackage.paper.revision!==Math.max(...revisions))
+    throw Error("Canonical custom edition must be the highest maintained revision: "+paper.id);
   }
   const source=paperPackages.filter(pkg=>pkg.paper.edition==="source");
   const reviewed=paperPackages.filter(pkg=>pkg.paper.edition==="reviewed");
@@ -242,30 +269,34 @@ async function loadExamPackages(root,family,manifestSet,seenPaperIds){
 
 export async function loadQuestionBankCatalog(root,catalogOverride){
  const catalog=validateCatalog(catalogOverride??await readJson(root,"question-banks/catalog.json"));
- const families=[],packages=[],seenPaperIds=new Set();
+ const families=[],packages=[],seenPaperIds=new Set(),reachable=new Set();
  for(const family of catalog.families){
-  if(!family.preinstalled)continue;
   const manifestSet=await manifestPapers(root,family);
+  for(const path of manifestSet.activePaths)reachable.add(path);
+  if(!family.preinstalled)continue;
   const loaded=await loadExamPackages(root,family,manifestSet,seenPaperIds);
   packages.push(...loaded.packages);
   families.push(Object.freeze({id:family.id,examId:family.examId,title:family.title,
    paperIds:Object.freeze(loaded.paperIds),
    ...(loaded.currentPaperRevisionId?{currentPaperRevisionId:loaded.currentPaperRevisionId}:{})}));
  }
+ await assertNoOrphanActiveContent(root,reachable);
  return {catalog,preinstalled:Object.freeze({format:"practice-desk-preinstalled-exams",
   version:1,families:Object.freeze(families),packages:Object.freeze(packages)})};
 }
 
 export async function readQuestionBankManifestGraph(root,catalogOverride){
  const catalog=validateCatalog(catalogOverride??await readJson(root,"question-banks/catalog.json"));
- const families=[];
+ const families=[],reachable=new Set();
  for(const family of catalog.families){
   const manifests=await manifestPapers(root,family);
+  for(const path of manifests.activePaths)reachable.add(path);
   families.push({family,exam:manifests.exam,papers:manifests.papers.map(p=>({
    id:p.id,paperId:p.paperId,kind:p.kind,title:p.title,canonicalEdition:p.canonicalEdition,
    editions:p.editions,path:p.path,...(p.archive===undefined?{}:{archive:p.archive}),
    ...(p.audit===undefined?{}:{audit:p.audit})
   }))});
  }
+ await assertNoOrphanActiveContent(root,reachable);
  return {catalog,families};
 }

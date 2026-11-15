@@ -42,6 +42,8 @@ export async function catalogLifecycle(){
   await pfrdaWordCountCase("free",false,true,"PFRDA flexible full-paper practice");
   await pfrdaWordCountCase("single",false,true,"PFRDA section practice");
   await pfrdaWordCountCase("strict",true,true,"PFRDA untimed strict-navigation practice");
+  await pfrdaWordCountCase("free",true,true,"PFRDA untimed flexible practice");
+  await pfrdaWordCountCase("single",true,true,"PFRDA untimed section practice");
 
   for(const [file,expected,absent] of [
    [noCgl,"PFRDA Grade A 2026","SSC CGL"],

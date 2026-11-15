@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {readFile,mkdtemp,writeFile,rm,mkdir} from "node:fs/promises";
+import {readFile,mkdtemp,writeFile,rm,mkdir,cp} from "node:fs/promises";
 import {gunzipSync} from "node:zlib";
 import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
@@ -78,6 +78,31 @@ test("materialized CGL canonical packages are exactly equivalent to archived sou
   assert.deepEqual(byId.get(pkg.paper.id),pkg,
    "canonical CGL package diverged from archived source/review evidence: "+pkg.paper.id);
  }
+});
+
+test("active question-bank content is reciprocally reachable from the catalog graph",async()=>{
+ await readQuestionBankManifestGraph(root);
+ const dir=await mkdtemp(join(tmpdir(),"pd-bank-orphan-"));
+ try{
+  await cp(join(root,"question-banks"),join(dir,"question-banks"),{recursive:true});
+  await mkdir(join(dir,"question-banks","orphan"),{recursive:true});
+  await writeFile(join(dir,"question-banks","orphan","package.exam.json"),"{}");
+  await assert.rejects(()=>loadQuestionBankCatalog(dir),/Orphan active question-bank content/);
+ }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+test("custom revision identity is unique and the canonical custom edition is the highest maintained revision",async()=>{
+ const loaded=(await loadQuestionBankCatalog(root)).preinstalled;
+ const groups=new Map();
+ for(const pkg of loaded.packages.filter(x=>x.paper.edition==="custom")){
+  const rows=groups.get(pkg.paper.paperId)??[];rows.push(pkg.paper.revision);groups.set(pkg.paper.paperId,rows);
+ }
+ for(const revisions of groups.values())assert.equal(new Set(revisions).size,revisions.length);
+ const family=loaded.families.find(x=>x.id==="pfrda-grade-a-2026-phase-ii");
+ const current=loaded.packages.find(x=>x.paper.id===family.currentPaperRevisionId);
+ const pfrda=loaded.packages.filter(x=>x.examId==="pfrda-grade-a-2026-phase-ii"&&x.paper.edition==="custom");
+ assert.deepEqual(pfrda.map(x=>x.paper.revision).sort((a,b)=>a-b),[1,4]);
+ assert.equal(current.paper.revision,Math.max(...pfrda.map(x=>x.paper.revision)));
 });
 
 test("generic preinstalled packing round-trips canonical packages without semantic drift",async()=>{
