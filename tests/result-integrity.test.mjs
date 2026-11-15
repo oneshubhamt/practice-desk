@@ -80,5 +80,8 @@ test("unsectioned fractional Results use frozen precision, paper language and ne
 
  const review=renderCurrentResultHTML({...owner,resultTab:"review"});
  assert.match(review,/0\.333 automated marks/);
+ assert.match(review,/Self-assessed marks \(0–0\.333\)/);
+ assert.match(review,/step="0\.001"/);
+ assert.match(review,/value="0\.333"/);
  assert.doesNotMatch(review,/0\.333333/);
 });

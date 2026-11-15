@@ -65,6 +65,7 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
    const selfAssessed=s.snapshot.earnedMarks+grades.total;
    const scorePrecision=paper.scoring.decimalPlaces??2;
    const markLabel=(value:number)=>value.toFixed(scorePrecision);
+   const markStep=scorePrecision===0?"1":(10**-scorePrecision).toFixed(scorePrecision);
    const originalKey=owner.resultTab==="overview"?sourceKeyScore(owner.attempt):null;
    const sourceKeyText=paper.edition==="reviewed"&&!owner.attempt.sourceKeyReference?
      "Original-source comparison unavailable: no unambiguous original revision was frozen at attempt start":
@@ -220,7 +221,7 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
          escapeText(source.title)+'</a>').join(' · ')+'</p>':"")+
        (limit!==null?'<div class="generic-manual-grade"><p class="fine">Content quality requires explicit human assessment. Objective word/time evidence above is descriptive only; self-marked results remain separate from the immutable automated exam score. Unsaved assessment drafts stay in this tab only and are not included in backups.</p>'+ 
           '<p class="fine" data-manual-status="'+escapeText(q.id)+'" role="status">'+(draft?"Unsaved changes — select Save self-assessment to commit.":"No unsaved assessment changes.")+'</p>'+
-          '<label>Self-assessed marks (0–'+limit+')<input type="number" step="0.01" min="0" max="'+limit+'" data-manual-marks="'+escapeText(q.id)+'" value="'+escapeText(draft?.marks??prior?.marks??"")+'"></label>'+
+          '<label>Self-assessed marks (0–'+escapeText(markLabel(limit))+')<input type="number" step="'+markStep+'" min="0" max="'+limit+'" data-manual-marks="'+escapeText(q.id)+'" value="'+escapeText(draft?.marks??(prior?markLabel(prior.marks):""))+'"></label>'+
           '<label>Assessment note (optional)<textarea maxlength="2000" rows="2" data-manual-note="'+escapeText(q.id)+'">'+escapeText(draft?.note??prior?.note??"")+'</textarea></label>'+
           '<button class="btn" data-manual-save="'+escapeText(q.id)+'">Save self-assessment</button></div>':"")+
        '<button class="btn" data-add-card="'+escapeText(q.id)+'"'+
