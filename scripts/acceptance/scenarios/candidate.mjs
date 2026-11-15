@@ -4,7 +4,7 @@ export async function candidateCore(){
 // Consolidated from scripts/acceptance-critical.mjs; retained browser-only assertions remain intact.
 /** Current-app critical journeys: no frozen historical screenshots or hard-coded prior SHA. */
 const {openHarness,records,check,assertNoOverflow,route,claimNativeNavigation}=await import("../../browser/fixtures.mjs");
-const {chooseModernPaper}=await import("../../paper-select.mjs");
+const {chooseModernPaper,findModernPaper}=await import("../../paper-select.mjs");
 const {pkg : sixKinds}=await import("../../../tests/fixtures/six-kinds.mjs");
 const {paperRevisionHash}=await import("../../../src/domain/integrity.ts");
 const shortTimed=(id,durationMs,edition)=>{
@@ -14,6 +14,18 @@ const shortTimed=(id,durationMs,edition)=>{
 };
 const hardWritten=shortTimed("rev-paper:hard-written",4000,"source");
 const advisoryWritten=shortTimed("rev-paper:advisory-written",2000,"custom");
+const unsectioned=(()=>{
+ const {contentHash:_oldHash,...paperCore}=sixKinds.paper;
+ const base={...paperCore,id:"rev-paper:unsectioned-precision",paperId:"unsectioned-precision",
+  edition:"custom",practiceModes:["strict","free"],
+  sections:[{id:"whole",title:"Whole paper",questionRevisionIds:sixKinds.questions.map(q=>q.id)}],
+  timing:{kind:"whole-paper",durationMs:20*60000,pausePolicy:"allowed"},
+  navigation:{...paperCore.navigation,questionNavigation:"free",sectionNavigation:"free"},
+  scoring:{...paperCore.scoring,
+   defaultRule:{correctMarks:1/3,incorrectMarks:-1/9,unansweredMarks:0},decimalPlaces:3}};
+ return {...sixKinds,examId:"generic-structure",title:"Unsectioned precision demo",
+  paper:{...base,contentHash:paperRevisionHash(base)}};
+})();
 const h=await openHarness({artifactDir:"artifacts/acceptance-modern"});
 const evidence=[];
 async function scenario(name,run){
@@ -28,16 +40,10 @@ async function scenario(name,run){
 try{
  await scenario("source-reviewed-cgl-immutable-results-and-history",async page=>{
   check(await claimNativeNavigation(page),"native Navigation API not supported");
-  const options=await page.locator("#g-papers option").evaluateAll(xs=>xs.map(x=>x.value));
-  check(options.length>=5,"no built-in CGL papers");
-  check(await page.locator('[data-edition="reviewed"]').getAttribute("aria-pressed")==="true"||
-    await page.locator('[data-edition="source"]').getAttribute("aria-pressed")==="true",
-    "edition segment missing");
-  await page.locator('[data-edition="reviewed"]').click();
-  const reviewed=await page.locator("#g-papers option").evaluateAll(xs=>
-   xs.find(x=>x.value.includes("cgl-2026-09-30")&&x.value.includes("reviewed"))?.value??"");
-  check(Boolean(reviewed),"no reviewed paper");
+  const reviewed=await findModernPaper(page,"reviewed",o=>o.value.includes("cgl-2026-09-30"));
   await chooseModernPaper(page,reviewed);
+  check(await page.locator('[data-edition="reviewed"]').getAttribute("aria-pressed")==="true",
+    "reviewed edition segment missing");
   const title=await page.locator("#g-papers option:checked").innerText();
   await page.locator('[data-edition="source"]').click();
   check(await page.locator("#g-papers option").evaluateAll(xs=>
@@ -97,6 +103,34 @@ try{
     restored?.completionReason===snapshot.completionReason,
     "History restore changed frozen revision, score ledger or completion provenance");
   await assertNoOverflow(page,"CGL History");
+ });
+ await scenario("exam-shape-unsectioned-fractional-and-unallocated-sections",async page=>{
+  await page.locator("#g-file").setInputFiles({name:"unsectioned.json",mimeType:"application/json",
+   buffer:Buffer.from(JSON.stringify(unsectioned))});
+  await chooseModernPaper(page,unsectioned.paper.id);
+  check(await page.locator(".generic-modes [data-mode]").count()===2,
+    "one physical section must expose only compatible full-paper modes");
+  check(await page.locator('[data-mode="single"]').count()===0,
+    "one physical section exposed artificial section practice");
+  await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
+  check(await page.locator(".generic-sections").count()===0,
+    "unsectioned paper rendered a section-tab bar");
+  check(!(await page.locator("main").innerText()).includes("Section 1 of 1"),
+    "unsectioned paper leaked internal section numbering");
+  check((await page.locator(".navigator-intro").innerText())==="Jump to a question",
+    "unsectioned navigator used section-specific wording");
+  await page.locator('input[data-choice]').first().click();
+  await page.locator("#g-submit").click();await route(page,"result");
+  check((await page.locator(".result-performance-overview").innerText()).includes("0.333"),
+    "fractional marks ignored the frozen three-decimal scoring policy");
+  await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
+  await page.locator("#g-file").setInputFiles({name:"mixed-whole-paper.json",mimeType:"application/json",
+   buffer:Buffer.from(JSON.stringify(sixKinds))});
+  await chooseModernPaper(page,sixKinds.paper.id);
+  await page.locator('[data-mode="single"]').click();
+  await page.locator("#g-single-section").selectOption("0");
+  check((await page.locator(".preview-metrics").innerText()).includes("Untimed"),
+    "whole-paper clock was incorrectly divided into a fabricated section timer");
  });
  await scenario("written-hard-timeout-preserves-visible-draft",async page=>{
   await page.locator("#g-file").setInputFiles({name:"hard-written.json",mimeType:"application/json",
@@ -243,7 +277,7 @@ export async function statusPalette(){
  * kinds and built-in CGL, including draft transitions, reload and dark mode.
  */
 const {openHarness,route,check,assertNoOverflow}=await import("../../browser/fixtures.mjs");
-const {chooseModernPaper}=await import("../../paper-select.mjs");
+const {chooseModernPaper,findModernPaper}=await import("../../paper-select.mjs");
 const {pkg}=await import("../../../tests/fixtures/six-kinds.mjs");
 const engine=process.argv[2]??"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
@@ -350,8 +384,7 @@ try{
  await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
  await page.setViewportSize({width:1100,height:790});
  await page.evaluate(()=>document.documentElement.style.setProperty("--type-scale","1"));
- await page.locator("#g-family").selectOption("builtin:ssc-cgl");
- const cgl=await page.locator("#g-papers option").first().getAttribute("value");
+ const cgl=await findModernPaper(page,"reviewed",o=>o.value.includes("cgl-"));
  check(Boolean(cgl),engine+" no source/reviewed CGL paper to verify shared renderer");
  await chooseModernPaper(page,cgl);
  await page.locator('[data-mode="single"]').click();
