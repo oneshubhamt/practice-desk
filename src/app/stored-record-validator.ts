@@ -137,6 +137,7 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
    throw new Error("Invalid generic attempt record");
  if(!isVerifiedSharedFrozen(value.frozen))assertFrozenContent(value.frozen);
  const paper=value.frozen.paper;
+ const hard=timeEnforcementForMode(value.frozen.snapshot.mode)==="hard";
  if(value.packageId!==paper.id)throw new Error("Attempt references an incorrect revision");
  validateSavedSessionEvidence(value);
  const current=paper.sections[value.state.sectionIndex]?.questionRevisionIds[value.state.questionIndex];

@@ -20,7 +20,7 @@ export function paperTimeBudgetMs(paper:PaperRevision):number|null{
  if(paper.timing.kind==="untimed")return null;
  if(paper.timing.kind==="whole-paper")return paper.timing.durationMs;
  const limits=paper.sections.map((_,index)=>sectionTimeBudgetMs(paper,index));
- return limits.some(value=>value===null)?null:limits.reduce((sum,value)=>sum+(value??0),0);
+ return limits.some(value=>value===null)?null:limits.reduce<number>((sum,value)=>sum+(value??0),0);
 }
 
 export const overtimeMs=(elapsedMs:number,budgetMs:number|null):number=>
