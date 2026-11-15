@@ -136,7 +136,7 @@ export type StorageHealthControllerContext=Slice<
 >;
 
 export type AuthoringControllerContext=Slice<
- "applyFamily"|"builtinPaperIds"|"choice"|"disposed"|"draw"|
+ "applyFamily"|"builtinPaperIds"|"choice"|"disposed"|"draw"|"families"|
  "editionView"|"fallbackConflict"|"loading"|"packages"|"records"|"save"|
  "saveSelection"|"singleSection"|"storageFault"|"view"|"warning"
 >;

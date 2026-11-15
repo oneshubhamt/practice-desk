@@ -333,7 +333,9 @@ export function bindLibraryScreen(owner:LibraryControllerContext):void{
        const make=()=>{
          capture();
          const p=owner.packages.get(owner.choice);
-         if(!p||familyIdFor(p,owner.builtinPaperIds)!==owner.selectedFamilyId)throw Error("Selected paper unavailable");
+         const selectedFamily=owner.families().find(f=>f.id===owner.selectedFamilyId);
+         if(!p||!selectedFamily?.papers.some(item=>item.paper.id===p.paper.id))
+           throw Error("Selected paper unavailable");
          const base=configureUntimedPractice(
            owner.selectedFamilyId===BUILTIN_CGL_FAMILY?
              configureCglPractice(p,owner.cglMode,owner.singleSection):p,owner.untimedPractice);
@@ -379,7 +381,8 @@ export function bindLibraryScreen(owner:LibraryControllerContext):void{
      }
      owner.root.querySelector<HTMLButtonElement>("#g-start")!.onclick=()=>{
        const p=owner.packages.get(owner.choice);
-       if(!p||familyIdFor(p,owner.builtinPaperIds)!==owner.selectedFamilyId)return;
+       const selectedFamily=owner.families().find(f=>f.id===owner.selectedFamilyId);
+       if(!p||!selectedFamily?.papers.some(item=>item.paper.id===p.paper.id))return;
        const unfinished=[...owner.records.values()].filter((row):row is GenericAttempt=>
          isAttempt(row)&&row.finishedAt===null);
        if(unfinished.length&&!confirm(
