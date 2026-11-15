@@ -4,7 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {pkg,questions} from "./fixtures/six-kinds.mjs";
-import {builtinCglPackages,configureCglPractice,cglAttemptMode,validateExamPackage,startGenericAttempt} from "../src/app/exam-package.ts";
+import {builtinCglPackages,configurePracticeMode,attemptModeForPractice,validateExamPackage,startGenericAttempt} from "../src/app/exam-package.ts";
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {scoreAttempt} from "../src/engine/scoring.ts";
 import {scoreableMaximum,sectionScoreSummaries,scoreableLowerBound} from "../src/engine/score-ceiling.ts";
@@ -152,7 +152,7 @@ test("standard CGL marking and nominal denominator are unchanged by generic cap"
   response:{kind:"single-choice",optionId:wrong.id},timeSpentMs:1,answerChangeCount:0,flagged:false}],
   new Date().toISOString());
  assert.equal(r.items[0].marks,q.editorial.status==="invalid"?0:-0.5);
- const a=startGenericAttempt(configureCglPractice(x,"single",0),"pass16-standard",1000);
+ const a=startGenericAttempt(configurePracticeMode(x,"single",0),"pass16-standard",1000);
  assert.equal(validateGenericStoredRecord(a),a);
  const ended=transitionGenericAttempt(a,{type:"SUBMIT_ATTEMPT",nowMs:1200},
     new Map(a.frozen.questions.map(q=>[q.id,q])));
@@ -250,9 +250,9 @@ test("L08: 30 Sep Q6 C to D, wording-only Q3, and disputed 6 Oct Q62 unchanged",
 test("L09/L10: timing type and frozen mode have accurate labels, untimed included",()=>{
  const p=find("cgl-2026-09-30","reviewed");
  for(const [configured,frozenMode,mode,scope,aria] of [
-  [configureCglPractice(p,"free"),"full-paper-practice","Full paper · flexible navigation","Whole-paper timer","Whole-paper time used"],
-  [configureCglPractice(p,"strict"),"exam-simulation","Exam simulation","Section timer","Section time used"],
-  [configureCglPractice(p,"single",1),"section-practice","Single-section practice","Whole-paper timer","Whole-paper time used"]]){
+  [configurePracticeMode(p,"free"),"full-paper-practice","Full paper · flexible navigation","Whole-paper timer","Whole-paper time used"],
+  [configurePracticeMode(p,"strict"),"exam-simulation","Exam simulation","Section timer","Section time used"],
+  [configurePracticeMode(p,"single",1),"section-practice","Single-section practice","Whole-paper timer","Whole-paper time used"]]){
   const a=startGenericAttempt(configured,mode,0,frozenMode),html=renderModelExam(a,configured);
   assert.ok(html.includes(mode+" · "),
    "Human-readable frozen exam mode must remain visible in the active exam");
@@ -353,9 +353,9 @@ test("SOURCE A/V01/V05/V19: split CGL artifacts retain their canonical normalize
 
 test("V02/V07/F02/F06: all 10 paper editions have derived full/section marks, no hardcoded ceiling",()=>{
  for(const b of banks){
-  const strict=configureCglPractice(b,"strict");
-  const free=configureCglPractice(b,"free");
-  const single=configureCglPractice(b,"single",3);
+  const strict=configurePracticeMode(b,"strict");
+  const free=configurePracticeMode(b,"free");
+  const single=configurePracticeMode(b,"single",3);
   for(const mode of [strict,free,single]){
    const max=scoreableMaximum(mode.paper,mode.answerKey,mode.questions);
    assert.equal(examPreflight(mode,{builtinCgl:true}).maximum,max);
@@ -433,7 +433,7 @@ test("CGL original wording, options, source key and media are frozen at reviewed
 });
 
 test("edited single-section CGL preserves only its changed question subset and adjusted max",()=>{
- const r=configureCglPractice(reviewed,"single",2);
+ const r=configurePracticeMode(reviewed,"single",2);
  const o=original;
  const ref=createSourceReviewReference(r,o);
  if(ref)assert.ok(ref.entries.every(e=>r.questions.some(q=>q.id===e.targetQuestionRevisionId)));

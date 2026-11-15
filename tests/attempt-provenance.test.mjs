@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {
- builtinCglPackages,cglAttemptMode,configureCglPractice,startGenericAttempt,validateExamPackage
+ builtinCglPackages,attemptModeForPractice,configurePracticeMode,startGenericAttempt,validateExamPackage
 } from "../src/app/exam-package.ts";
 import {composePracticeSet} from "../src/app/practice-compose.ts";
 
@@ -22,15 +22,15 @@ test("attempt creation freezes deliberate CGL modes while ordinary packages defa
  for(const [policy,expected] of [
   ["strict","exam-simulation"],["free","full-paper-practice"],["single","section-practice"]
  ]){
-  const configured=configureCglPractice(reviewed,policy,0);
+  const configured=configurePracticeMode(reviewed,policy,0);
   assert.equal("practiceMode" in configured,false);
-  assert.equal(startGenericAttempt(configured,policy,0,cglAttemptMode(policy)).frozen.snapshot.mode,expected);
+  assert.equal(startGenericAttempt(configured,policy,0,attemptModeForPractice(policy)).frozen.snapshot.mode,expected);
  }
 });
 
 test("custom composition always freezes custom-practice provenance regardless of CGL source policy",()=>{
  for(const [policy,index] of [["strict",0],["free",0],["single",1]]){
-  const configured=configureCglPractice(reviewed,policy,index);
+  const configured=configurePracticeMode(reviewed,policy,index);
   const selection=composePracticeSet(configured,{count:1,seed:"cleer-"+policy,filters:{}});
   assert.equal("practiceMode" in selection.bundle,false);
   const attempt={...startGenericAttempt(selection.bundle,"custom-"+policy,0,"custom-practice"),

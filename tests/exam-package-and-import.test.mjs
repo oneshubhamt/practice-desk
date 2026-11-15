@@ -3,7 +3,7 @@ import {loadCglFixture,loadQuestionBankGraph,repositoryRoot} from "./fixtures/cg
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
-import {builtinCglPackages,validateExamPackage,startGenericAttempt,configureCglPractice,readableAnswer,validateExamImportBudget} from "../src/app/exam-package.ts";
+import {builtinCglPackages,validateExamPackage,startGenericAttempt,configurePracticeMode,readableAnswer,validateExamImportBudget} from "../src/app/exam-package.ts";
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {validateAnswerKeyRevision,validatePaperRevision,validateQuestionRevision} from "../src/domain/validate.ts";
 import {paperRevisionHash} from "../src/domain/integrity.ts";
@@ -63,9 +63,9 @@ const solutions=(await loadCglFixture()).solutions;
 const all=builtinCglPackages(papers,patches,solutions);
 test("one engine supports strict, flexible and single CGL policies",()=>{
  const standard=all[0];
- const strict=configureCglPractice(standard,"strict");
- const free=configureCglPractice(standard,"free");
- const single=configureCglPractice(standard,"single",2);
+ const strict=configurePracticeMode(standard,"strict");
+ const free=configurePracticeMode(standard,"free");
+ const single=configurePracticeMode(standard,"single",2);
  assert.equal(strict.paper.timing.kind,"sectional");
  assert.equal(strict.paper.timing.transition,"automatic","Actual strict mode must not inherit raw manual source transition");
  assert.notEqual(strict.paper.id,standard.paper.id,"Derived strict policy must have distinct frozen revision identity");

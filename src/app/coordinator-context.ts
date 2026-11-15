@@ -6,7 +6,7 @@
 import {type RecordItem} from "./stored-record-validator.ts";
 
 import type {ExamPackage} from "../domain/exam-package.ts";
-import type {CglPracticeMode} from "../workspace-settings.ts";
+import type {PracticeMode} from "../workspace-settings.ts";
 import type {GenericAttempt} from "../engine/generic-attempt.ts";
 import type {ExamCalculatorState} from "../domain/calculator.ts";
 
@@ -44,7 +44,7 @@ export interface WorkspaceContext{
  readonly builtinPaperIds:Set<PaperRevisionId>;
  readonly builtins:ExamPackage[];
  readonly calculatorStates:Map<string,ExamCalculatorState>;
- cglMode:CglPracticeMode;
+ practiceMode:PracticeMode;
  readonly changeHistoryQuery:(next: HistoryQuery, redraw?: boolean) => void;
  choice:string;
  readonly choiceDrafts:Map<string, { questionId: string; optionIds: OptionId[]; message: string; }>;
@@ -173,7 +173,7 @@ export type HistoryControllerContext=Slice<
 >;
 
 export type LibraryControllerContext=Slice<
- "applyFamily"|"attempt"|"authoringStudio"|"builtinPaperIds"|"cglMode"|
+ "applyFamily"|"attempt"|"authoringStudio"|"builtinPaperIds"|"practiceMode"|
  "changeHistoryQuery"|"choice"|"composeCount"|"composeDifficulty"|"composeError"|
  "composeOpen"|"composePreview"|"composeSection"|"composeSeed"|"composeTopic"|
  "downloadBackup"|"draw"|"editionView"|"fallbackConflict"|"families"|

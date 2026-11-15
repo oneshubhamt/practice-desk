@@ -27,6 +27,20 @@ export async function catalogLifecycle(){
   check((await page.locator("#g-family option").first().innerText()).includes("pfrda-grade-a-2026-phase-ii"),
    "Import into an empty Library did not create the PFRDA family");
   check(!(await page.locator("#g-start").isDisabled()),"Imported paper did not become startable");
+  check(await page.locator(".generic-modes [data-mode]").count()===3,
+   "PFRDA must expose the same three selectable modes as CGL");
+  await page.locator('[data-mode="free"]').click();
+  check((await page.locator(".preview-metrics").innerText()).includes("60:00"),
+   "Flexible PFRDA must combine the declared 20+40-minute budget");
+  await page.locator('[data-mode="single"]').click();
+  await page.locator("#g-single-section").selectOption("0");
+  check((await page.locator(".preview-metrics").innerText()).includes("20:00"),
+   "Descriptive-only practice must use the declared 20-minute section limit");
+  await page.locator("#g-start").click();
+  await page.locator("#g-word-count").waitFor({state:"visible"});
+  await page.locator("#g-text").fill("A concise four word answer");
+  check((await page.locator("#g-word-count").innerText()).includes("5 / 120 words"),
+   "PFRDA section practice must update its advisory counter during typing");
   check(errors.length===0,"Empty-catalog lifecycle produced browser errors: "+errors.join(" / "));
   console.log("QUESTION BANK LIFECYCLE PASS "+engine+": zero preinstalls boots, import remains usable");
  }catch(error){throw error;}

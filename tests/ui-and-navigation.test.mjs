@@ -3,7 +3,7 @@ import {loadCglFixture,loadQuestionBankGraph,repositoryRoot} from "./fixtures/cg
 import test from "node:test";
 import assert from "node:assert/strict";
 import {pkg} from "./fixtures/six-kinds.mjs";
-import {validateExamPackage,startGenericAttempt,builtinCglPackages,configureCglPractice,readableAnswer} from "../src/app/exam-package.ts";
+import {validateExamPackage,startGenericAttempt,builtinCglPackages,configurePracticeMode,readableAnswer} from "../src/app/exam-package.ts";
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {renderModelExam,examClockDisplay} from "../src/app/exam-view.ts";
 import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
@@ -159,7 +159,7 @@ test("F07: actual question screen inherits source context rather than generic im
   const imageQuestion=sources[p.paper.paperId].questions.find(q=>q.n<=25&&
    (q.images.stem||q.images.options?.some(Boolean)));
   assert.ok(imageQuestion);
-  const attempt=startGenericAttempt(configureCglPractice(p,"free"),"img",0);
+  const attempt=startGenericAttempt(configurePracticeMode(p,"free"),"img",0);
   const state={...attempt.state,questionIndex:imageQuestion.n-1};
   const html=renderModelExam({...attempt,state},p);
   assert.match(html,new RegExp("question "+imageQuestion.n+"|option [A-D] of question "+imageQuestion.n,"i"));

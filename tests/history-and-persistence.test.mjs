@@ -4,7 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {pkg,questions} from "./fixtures/six-kinds.mjs";
-import {builtinCglPackages,configureCglPractice,validateExamPackage,startGenericAttempt} from "../src/app/exam-package.ts";
+import {builtinCglPackages,configurePracticeMode,validateExamPackage,startGenericAttempt} from "../src/app/exam-package.ts";
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {crossPaperMarksPriorities} from "../src/app/history-priorities.ts";
 import {frozenScoreSummary} from "../src/app/history-score.ts";
@@ -62,8 +62,8 @@ function finish(bundle,id,startedAt,sectionAnswers={},mode="exam-simulation"){
 }
 
 test("F03: rank frozen adjusted marks, not accuracy, across two real compatible full CGL papers",()=>{
- const one=configureCglPractice(originals[0],"strict");
- const two=configureCglPractice(originals[1],"strict");
+ const one=configurePracticeMode(originals[0],"strict");
+ const two=configurePracticeMode(originals[1],"strict");
  const answers={0:[[0,true]],1:[[0,true],[1,true],[2,true],[3,true],[4,true],
    [5,false],[6,false],[7,false],[8,false],[9,false]]};
  const a=finish(one,"a",1000,answers),b=finish(two,"b",2000,answers);
@@ -86,7 +86,7 @@ test("F03: rank frozen adjusted marks, not accuracy, across two real compatible 
 });
 
 test("F03: eight newest qualifying full-paper records limit cohort; single and unrelated modes excluded",()=>{
- const base=originals.slice(0,2).map(p=>configureCglPractice(p,"strict"));
+ const base=originals.slice(0,2).map(p=>configurePracticeMode(p,"strict"));
  const attempts=Array.from({length:10},(_,i)=>finish(base[i%2],"id-"+i,10000+i*1000,{}));
  // All have zero marks but still have true eligible maximum.
  const result=crossPaperMarksPriorities(attempts);
@@ -94,19 +94,19 @@ test("F03: eight newest qualifying full-paper records limit cohort; single and u
  assert.equal(result.attempts,8);
  assert.equal(result.distinctPapers,2);
  assert.equal(result.rows[0].earned,0);
- const single=finish(configureCglPractice(originals[0],"single",0),"single",40000,{});
+ const single=finish(configurePracticeMode(originals[0],"single",0),"single",40000,{});
  assert.equal(crossPaperMarksPriorities([single,...attempts]).attempts,8);
- const reviewedAttempt=finish(configureCglPractice(reviewed[0],"strict"),"reviewed",50000,{});
+ const reviewedAttempt=finish(configurePracticeMode(reviewed[0],"strict"),"reviewed",50000,{});
  const mixed=crossPaperMarksPriorities([reviewedAttempt,...attempts]);
  assert.equal(mixed.edition,"source","One newer reviewed edition must not join the original-source cohort");
- const free=finish(configureCglPractice(originals[0],"free"),"free",60000,{});
+ const free=finish(configurePracticeMode(originals[0],"free"),"free",60000,{});
  assert.equal(crossPaperMarksPriorities([free,...attempts]).mode,"exam-simulation");
  assert.equal(crossPaperMarksPriorities([attempts[0],attempts[2]]),null,
    "Repeated attempts at only one paper do not constitute cross-paper evidence");
 });
 
 test("F03: separate exam identities and differently structured papers cannot produce false cross-paper groups",()=>{
- const p=originals.slice(0,2).map(p=>configureCglPractice(p,"strict"));
+ const p=originals.slice(0,2).map(p=>configurePracticeMode(p,"strict"));
  const a=finish(p[0],"first",1000,{});
  const b=finish(p[1],"second",2000,{});
  const swappedExam=structuredClone(b);
@@ -132,8 +132,8 @@ test("F03: separate exam identities and differently structured papers cannot pro
 });
 
 test("F03: negative earned marks stay visible while progress width can be clamped for display",()=>{
- const a=finish(configureCglPractice(originals[0],"strict"),"bad-a",1000,{0:[[0,false]]});
- const b=finish(configureCglPractice(originals[1],"strict"),"bad-b",2000,{0:[[0,false]]});
+ const a=finish(configurePracticeMode(originals[0],"strict"),"bad-a",1000,{0:[[0,false]]});
+ const b=finish(configurePracticeMode(originals[1],"strict"),"bad-b",2000,{0:[[0,false]]});
  const result=crossPaperMarksPriorities([a,b]);
  assert.ok(result);
  const first=result.rows.find(row=>row.title===a.frozen.paper.sections[0].title);
@@ -145,8 +145,8 @@ test("F03: negative earned marks stay visible while progress width can be clampe
 });
 
 test("F04: archive uses attempt's frozen eligible maximum, not nominal 100-paper marks",()=>{
- const strict=finish(configureCglPractice(originals[0],"strict"),"whole",1000,{});
- const single=finish(configureCglPractice(originals[0],"single",2),"section",2000,{},"section-practice");
+ const strict=finish(configurePracticeMode(originals[0],"strict"),"whole",1000,{});
+ const single=finish(configurePracticeMode(originals[0],"single",2),"section",2000,{},"section-practice");
  const maxFull=scoreableMaximum(strict.frozen.paper,strict.frozen.key,strict.frozen.questions);
  const maxSingle=scoreableMaximum(single.frozen.paper,single.frozen.key,single.frozen.questions);
  assert.ok(maxFull>maxSingle);
@@ -164,7 +164,7 @@ test("F04: archive uses attempt's frozen eligible maximum, not nominal 100-paper
 });
 
 test("F05 adjacent: archive status filters retain separate complete and progress workflows",()=>{
- const complete=finish(configureCglPractice(originals[0],"strict"),"complete",1000,{});
+ const complete=finish(configurePracticeMode(originals[0],"strict"),"complete",1000,{});
  const progress=startGenericAttempt(validateExamPackage(pkg),"progress",3000);
  const packages=new Map();
  assert.deepEqual(filteredHistory([complete,progress],packages,{status:"complete",sort:"newest",search:""}).map(x=>x.id),["complete"]);
@@ -208,10 +208,10 @@ test("P43 one per-family selection map validates independent paper and timing pr
  assert.equal(readPracticeSetups(adapter),null);
 });
 test("exact frozen paper edition filtering combines with free text and status",()=>{
- const a=ended(configureCglPractice(source,"free"),"original",1000),
- b=ended(configureCglPractice(reviewed,"free"),"reviewed",2000);
- const pending=startGenericAttempt(configureCglPractice(reviewed,"free"),"pending",3000);
- const query={status:"all",sort:"newest",search:"",paperRevisionId:configureCglPractice(reviewed,"free").paper.id};
+ const a=ended(configurePracticeMode(source,"free"),"original",1000),
+ b=ended(configurePracticeMode(reviewed,"free"),"reviewed",2000);
+ const pending=startGenericAttempt(configurePracticeMode(reviewed,"free"),"pending",3000);
+ const query={status:"all",sort:"newest",search:"",paperRevisionId:configurePracticeMode(reviewed,"free").paper.id};
  assert.deepEqual(filteredHistory([a,b,pending],packages,query).map(x=>x.id),["pending","reviewed"]);
  assert.deepEqual(filteredHistory([a,b,pending],packages,{...query,status:"complete"}).map(x=>x.id),["reviewed"]);
  assert.deepEqual(filteredHistory([a,b,pending],packages,{...query,search:"no matching paper"}),[]);
@@ -223,10 +223,10 @@ test("exact frozen paper edition filtering combines with free text and status",(
  assert.match(fallback,/localStorage fallback/);
 });
 test("adjusted score trends require exact frozen key, revision and practice mode",()=>{
- const flexible=configureCglPractice(source,"free");
+ const flexible=configurePracticeMode(source,"free");
  const original=ended(flexible,"s1",1000),second=ended(flexible,"s2",2000);
- const corrected=ended(configureCglPractice(reviewed,"free"),"review",3000);
- const single=configureCglPractice(source,"single",0);
+ const corrected=ended(configurePracticeMode(reviewed,"free"),"review",3000);
+ const single=configurePracticeMode(source,"single",0);
  const free=ended(single,"single",4000);
  const metrics=adjustedHistoryMetrics([original,second,corrected,free]);
  assert.equal(metrics.papersPractised,1);
@@ -426,7 +426,7 @@ test("frozen attempt survives a later changed key, paper or editorial state",()=
 test("saved strict session expires while app is closed, without fictitious foreground viewing",()=>{
  // The actual strict CGL mode is automatic; the raw source package's
  // manual timing contract intentionally waits for a user transition.
- const strict=configureCglPractice(firstAssets,"strict",0);
+ const strict=configurePracticeMode(firstAssets,"strict",0);
  const saved=transition(strict.paper,startSession(strict.paper,0),{type:"VISIBILITY",nowMs:1000,visible:false});
  const restored=restoreSession(strict.paper,JSON.parse(JSON.stringify(saved)),3600001,true);
  assert.equal(restored.state.status,"completed");

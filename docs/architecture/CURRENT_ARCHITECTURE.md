@@ -42,7 +42,7 @@ validated package/source
 
 Question identity and content/key revisions are separate. The frozen paper owns the immutable timer budget/navigation policy, while frozen `AttemptMode` owns enforcement: `exam-simulation` is hard-deadline, practice modes are advisory and may record overtime. Exam sections remain the only source of sectional budgets; Subject → Topic → Subtopic owns semantic classification. Printed Source and corrected Reviewed editions remain distinct, and advisory comparison never rewrites historical scores.
 
-Candidate-visible resources are narrower than reviewer/solution resources: keys, explanations, disputes and explanation-only assets stay outside the permitted pre-review surface. Attempt mode is chosen explicitly when an attempt is created; runtime CGL selection is not part of `ExamPackage`, and evidence-selected/custom compositions freeze as `custom-practice`.
+Candidate-visible resources are narrower than reviewer/solution resources: keys, explanations, disputes and explanation-only assets stay outside the permitted pre-review surface. Strict, flexible-full-paper and section-only practice are user workspace choices for any exam package, derived from its own section limits, navigation and scoring rather than added to `ExamPackage`. Flexible practice combines declared section limits where all are known; section-only practice uses an authored per-section limit or stays untimed, never an invented allocation. Evidence-selected/custom compositions still freeze as `custom-practice`.
 
 ## 4. Persistence and recovery
 

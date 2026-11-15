@@ -10,8 +10,9 @@ import type { ExamId, QuestionRevisionId } from "../domain/ids.js";
 import {validateExamPackage} from "../domain/exam-package.ts";
 import type {ExamPackage} from "../domain/exam-package.ts";
 import type {AttemptMode} from "../domain/attempt.js";
-import type {CglPracticeMode} from "../workspace-settings.ts";
+import type {PracticeMode} from "../workspace-settings.ts";
 import type {GenericAttempt} from "../engine/generic-attempt.ts";
+import {paperTimeBudgetMs,sectionTimeBudgetMs} from "../domain/timing.ts";
 export {validateExamImportBudget,validateExamPackage} from "../domain/exam-package.ts";
 import { startSession } from "../engine/session.ts";
 import { freezeAttempt } from "../history/frozen.ts";
@@ -56,15 +57,14 @@ export function builtinCglPackages(sources: SourcePaperBank, patches: ReviewPatc
  });
 }
 
-/** Runtime-only CGL practice policies share the same versioned model as every exam. */
-export function configureCglPractice(base: ExamPackage, mode:CglPracticeMode, sectionIndex=0):ExamPackage {
- if(base.examId!=="ssc-cgl")return base;
+/** Derive practice policies from any validated paper without modifying its source.
+ * Only authored section limits may become individual section-practice timers;
+ * never invent an equal division of a whole-paper timer. */
+export function configurePracticeMode(base:ExamPackage,mode:PracticeMode,sectionIndex=0):ExamPackage{
  if(mode==="strict"){
-   // The raw editorial/source package is an immutable document with a manual
-   // transition declaration. The actual exam simulation must instead
-   // explicitly freeze an AUTOMATIC 15-minute section policy; otherwise a
-   // correctly implemented manual expiry would strand the strict exam.
-   if(base.paper.timing.kind!=="sectional")throw new Error("Strict CGL requires sectional timing");
+   if(base.paper.timing.kind!=="sectional")return base;
+   // A hard deadline must automatically advance, not strand the candidate
+   // behind a frozen manual-expiry section. Preserve each authored limit.
    const derived={...base.paper,
      id:(base.paper.id+":practice:strict") as PaperRevision["id"],
      timing:{...base.paper.timing,transition:"automatic" as const}};
@@ -80,11 +80,18 @@ export function configureCglPractice(base: ExamPackage, mode:CglPracticeMode, se
  const answerKey={...base.answerKey,
    id:(base.answerKey.id+":practice:"+mode+(mode==="single"?":"+sectionIndex:"")) as AnswerKeyRevision["id"],
    contentHash:answerKeyRevisionHash({entries}),entries};
+ const duration=mode==="free"?paperTimeBudgetMs(source):
+   source.timing.kind==="sectional"?sectionTimeBudgetMs(source,sectionIndex):
+   source.timing.kind==="whole-paper"&&source.sections.length===1?
+     source.timing.durationMs:null;
  const paperBase={...source,
    id:(source.id+":practice:"+mode+(mode==="single"?":"+sectionIndex:"")) as PaperRevision["id"],
    answerKeyRevisionId:answerKey.id,sections,
-   timing:{kind:"whole-paper" as const,durationMs:mode==="single"?900000:3600000,pausePolicy:"allowed" as const},
-   navigation:{...source.navigation,sectionNavigation:mode==="free"?"free" as const:"sequential-locked" as const}};
+   timing:duration===null?{kind:"untimed" as const}:
+     {kind:"whole-paper" as const,durationMs:duration,pausePolicy:"allowed" as const},
+   navigation:{...source.navigation,
+     questionNavigation:mode==="free"?"free" as const:source.navigation.questionNavigation,
+     sectionNavigation:mode==="free"?"free" as const:"sequential-locked" as const}};
  const paper:PaperRevision={...paperBase,contentHash:paperRevisionHash(paperBase)};
  return {...base,paper,answerKey,questions,
    ...(base.explanations?{explanations:Object.fromEntries(Object.entries(base.explanations)
@@ -103,7 +110,7 @@ export function configureUntimedPractice(base:ExamPackage,enabled:boolean):ExamP
  return {...base,paper};
 }
 
-export function cglAttemptMode(mode:CglPracticeMode):AttemptMode{
+export function attemptModeForPractice(mode:PracticeMode):AttemptMode{
  return mode==="free"?"full-paper-practice":mode==="single"?"section-practice":"exam-simulation";
 }
 

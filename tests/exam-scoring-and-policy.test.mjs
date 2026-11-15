@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {pkg,questions,answers} from "./fixtures/six-kinds.mjs";
 import {paperRevisionHash,answerKeyRevisionHash} from "../src/domain/integrity.ts";
-import {validateExamPackage,configureCglPractice,cglAttemptMode,builtinCglPackages,startGenericAttempt} from "../src/app/exam-package.ts";
+import {validateExamPackage,configurePracticeMode,attemptModeForPractice,builtinCglPackages,startGenericAttempt} from "../src/app/exam-package.ts";
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
 import {renderModelExam} from "../src/app/exam-view.ts";
@@ -72,8 +72,8 @@ test("pause and flag policies hold in pure transitions, including clock rollback
 test("all four attempt modes are pinned with their actual CGL policy or custom package",()=>{
  const cgl=builtins.find(p=>p.paper.edition==="reviewed");
  for(const [mode,expected] of [["strict","exam-simulation"],["free","full-paper-practice"],["single","section-practice"]]){
-  const configured=configureCglPractice(cgl,mode,0);
-  const a=startGenericAttempt(configured,mode,1000,cglAttemptMode(mode));
+  const configured=configurePracticeMode(cgl,mode,0);
+  const a=startGenericAttempt(configured,mode,1000,attemptModeForPractice(mode));
   assert.equal(a.frozen.snapshot.mode,expected);
   validateGenericStoredRecord(a);
  }
@@ -135,7 +135,7 @@ test("source-key comparison pins original answer references independently of rev
  const malicious=structuredClone(a);
  malicious.sourceKeyReference.entries[0].originalOptionId="tampered";
  assert.throws(()=>validateGenericStoredRecord(malicious),/source-key reference hash mismatch/);
- const single=configureCglPractice(reviewed,"single",2);
+ const single=configurePracticeMode(reviewed,"single",2);
  const singleRef=createSourceKeyReference(single,source);
  assert.equal(singleRef.entries.length,25);
  assert.equal(createSourceKeyReference(pkg,source),null);
@@ -183,9 +183,9 @@ const model=(bundle,builtinCgl=false)=>examPreflight(bundle,{builtinCgl,
  reviewedPatchCount:Object.keys(patches[bundle.paper.paperId]??{}).length});
 
 test("F02: reviewed CGL strict, free, single are calculated on their actual executable policy",()=>{
- const strict=configureCglPractice(reviewed,"strict");
- const free=configureCglPractice(reviewed,"free");
- const single=configureCglPractice(reviewed,"single",2);
+ const strict=configurePracticeMode(reviewed,"strict");
+ const free=configurePracticeMode(reviewed,"free");
+ const single=configurePracticeMode(reviewed,"single",2);
  for(const p of [strict,free,single]){
   const x=model(p,true);
   assert.equal(x.maximum,scoreableMaximum(p.paper,p.answerKey,p.questions));

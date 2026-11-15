@@ -3,7 +3,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
-import {validateExamPackage,builtinCglPackages,configureCglPractice,configureUntimedPractice,startGenericAttempt} from "../src/app/exam-package.ts";
+import {validateExamPackage,builtinCglPackages,configurePracticeMode,attemptModeForPractice,configureUntimedPractice,startGenericAttempt} from "../src/app/exam-package.ts";
+import {loadQuestionBankCatalog} from "../scripts/question-bank-catalog.mjs";
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {validatePracticeSetups} from "../src/app/practice-selection.ts";
 const starter=JSON.parse(await readFile(new URL("../examples/apfc-authoring-example.json",import.meta.url),"utf8"));
@@ -45,7 +46,7 @@ test("untimed option derives new validated frozen policy for every built-in mode
  const p=builtinCglPackages(sources,patches,solutions).find(x=>x.paper.edition==="reviewed");
  assert(p);
  for(const mode of ["strict","free","single"]){
-  const base=configureCglPractice(p,mode,2);
+  const base=configurePracticeMode(p,mode,2);
   const untimed=configureUntimedPractice(base,true);
   assert.notEqual(untimed.paper.id,base.paper.id);
   assert.notEqual(untimed.paper.contentHash,base.paper.contentHash);
@@ -71,6 +72,60 @@ test("untimed option derives new validated frozen policy for every built-in mode
  assert.equal(unlocked.paper.timing.kind,"untimed");
  assert.equal(unlocked.paper.edition,"custom");
  assert.equal(validateExamPackage(unlocked),unlocked);
+});
+
+test("PFRDA generic modes preserve authored 20+40 minutes, keys and live word-counter policy",async()=>{
+ const packageValue=(await loadQuestionBankCatalog(repositoryRoot)).preinstalled.packages[0];
+ assert.equal(packageValue.examId,"pfrda-grade-a-2026-phase-ii");
+ const strict=configurePracticeMode(packageValue,"strict");
+ assert.equal(strict.paper.timing.kind,"sectional");
+ assert.deepEqual(strict.paper.timing.sectionLimits.map(x=>x.durationMs),[20*60000,40*60000]);
+ assert.equal(strict.paper.timing.transition,"automatic");
+ assert.equal(validateExamPackage(strict),strict);
+ const hard=startGenericAttempt(strict,"pfrda-strict",1000,attemptModeForPractice("strict"));
+ const lookup=new Map(strict.questions.map(q=>[q.id,q]));
+ const advanced=transitionGenericAttempt(hard,{type:"TICK",nowMs:1000+20*60000},lookup);
+ assert.equal(advanced.state.sectionIndex,1,"hard deadline must advance to General Stream");
+ assert.equal(advanced.state.status,"running");
+ const expired=transitionGenericAttempt(advanced,{type:"TICK",nowMs:1000+60*60000},lookup);
+ assert.equal(expired.state.status,"completed","hard exam must finish after both sections");
+
+ const flexible=configurePracticeMode(packageValue,"free");
+ assert.equal(flexible.paper.timing.kind,"whole-paper");
+ assert.equal(flexible.paper.timing.durationMs,60*60000);
+ assert.equal(flexible.paper.navigation.sectionNavigation,"free");
+ assert.equal(flexible.paper.navigation.questionNavigation,"free");
+ assert.equal(validateExamPackage(flexible),flexible);
+ const advisory=startGenericAttempt(flexible,"pfrda-flexible",1000,attemptModeForPractice("free"));
+ assert.equal(transitionGenericAttempt(advisory,{type:"TICK",nowMs:1000+65*60000},lookup).state.status,"running",
+  "flexible PFRDA must allow truthful overtime");
+
+ for(const [sectionIndex,count,minutes] of [[0,1,20],[1,50,40]]){
+  const single=configurePracticeMode(packageValue,"single",sectionIndex);
+  assert.equal(single.questions.length,count);
+  assert.equal(single.answerKey.entries.length,count);
+  assert.equal(single.paper.sections.length,1);
+  assert.equal(single.paper.timing.kind,"whole-paper");
+  assert.equal(single.paper.timing.durationMs,minutes*60000);
+  assert.equal(single.paper.candidateTools.wordCount,"shown");
+  assert.equal(validateExamPackage(single),single);
+  assert.equal(startGenericAttempt(single,"pfrda-section-"+sectionIndex,1000,
+   attemptModeForPractice("single")).frozen.snapshot.mode,"section-practice");
+ }
+ assert.deepEqual(strict.answerKey.entries,packageValue.answerKey.entries);
+ assert.deepEqual(flexible.answerKey.entries,packageValue.answerKey.entries);
+ assert.equal(flexible.questions[0].content.responseRules.wordLimit,120);
+});
+
+test("generic mode derivation never invents timers for unallocated sections",()=>{
+ const noClock=compileExternalQuestionBank(starter);
+ assert.equal(configurePracticeMode(noClock,"free").paper.timing.kind,"untimed");
+ assert.equal(configurePracticeMode(noClock,"single",1).paper.timing.kind,"untimed");
+ const whole=compileExternalQuestionBank({...starter,timing:{kind:"whole-paper",minutes:50,pausePolicy:"forbidden"}});
+ assert.equal(configurePracticeMode(whole,"free").paper.timing.durationMs,50*60000);
+ assert.equal(configurePracticeMode(whole,"single",1).paper.timing.kind,"untimed",
+  "the whole-paper limit is not evidence of a particular section's allowance");
+ assert.throws(()=>configurePracticeMode(whole,"single",100),/Unknown practice section/);
 });
 test("P43 per-family selection rejects invalid mode, edition and untimed values",()=>{
  const valid={schema:2,selectedFamilyId:"builtin:ssc-cgl",families:{
