@@ -110,7 +110,7 @@ try{
  await page.locator(".worked-solution").first().locator("summary").click();
  check((await page.locator(".worked-solution").first().innerText()).includes("WORKED-SOLUTION-SECRET"),
   "Restored post-submission review lost the authored private explanation");
- await page.locator("#g-result-library").click();await route(page,"library");
+ await page.locator("#g-library").click();await route(page,"library");
  await page.locator("#g-author-open").click();
  await page.locator("#pd-author-new").click();
  await page.locator("#pd-author-editor wg-content").waitFor({state:"visible"});
