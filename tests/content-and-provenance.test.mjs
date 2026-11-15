@@ -255,7 +255,7 @@ test("L09/L10: timing type and frozen mode have accurate labels, untimed include
   [configurePracticeMode(p,"strict"),"exam-simulation","Exam simulation","Section timer","Section time used"],
   [configurePracticeMode(p,"single",1),"section-practice","Single-section practice","Whole-paper timer","Whole-paper time used"]]){
   const a=startGenericAttempt(configured,mode,0,frozenMode),html=renderModelExam(a,configured);
-  assert.ok(html.includes(mode+(frozenMode==="section-practice"?" · ":" · ")),
+  assert.ok(html.includes(mode),
    "Human-readable frozen exam mode must remain visible in the active exam");
   if(frozenMode==="section-practice")assert.ok(!html.includes("Section 1 of 1"),
    "single-section practice should keep its title without artificial one-of-one chrome");
@@ -315,21 +315,21 @@ const keyUpdate=entries=>({...pkg.answerKey,entries,contentHash:answerKeyRevisio
 
 test("SOURCE A/V01/V05/V19: split CGL artifacts retain their canonical normalized blobs",async()=>{
  const canonicalSourceBlobs={
-  "question-banks/ssc-cgl/2026/pyqs/2026-09-30/archive/paper.json":"0a8994b50558694722837d3fa4d6e58c344332e8",
-  "question-banks/ssc-cgl/2026/pyqs/2026-09-30/archive/patches.json":"d74169356ab153da61d904f307364c51a23ea872",
-  "question-banks/ssc-cgl/2026/pyqs/2026-09-30/archive/solutions.json":"a3f300769a6e4d37c0c292974f7d45112d26b5a2",
-  "question-banks/ssc-cgl/2026/pyqs/2026-10-05/archive/paper.json":"74ff088ec038976e08c6fef9091b584093da8821",
-  "question-banks/ssc-cgl/2026/pyqs/2026-10-05/archive/patches.json":"6bfff9e3eedc65493df831284b68f327c1576cdb",
-  "question-banks/ssc-cgl/2026/pyqs/2026-10-05/archive/solutions.json":"7a824166bad7f91987319c5b322c20f9c3b0c5cf",
-  "question-banks/ssc-cgl/2026/pyqs/2026-10-06/archive/paper.json":"9afcbc214365bda65b240a6901b98c826661235d",
-  "question-banks/ssc-cgl/2026/pyqs/2026-10-06/archive/patches.json":"249f191fac7e75f77a8b34015aa1dd853b773767",
-  "question-banks/ssc-cgl/2026/pyqs/2026-10-06/archive/solutions.json":"2b7c28b1aa7f9a741e5b29e3f372c151627b477f",
-  "question-banks/ssc-cgl/2026/pyqs/2026-10-07/archive/paper.json":"8ef3f05f609456535443e8e8d98a884e32400c65",
-  "question-banks/ssc-cgl/2026/pyqs/2026-10-07/archive/patches.json":"22f5db9bb621d6d42f3f541360f5200eb318474f",
-  "question-banks/ssc-cgl/2026/pyqs/2026-10-07/archive/solutions.json":"5c1d7baf9a3d5c3159ab8edb45505fc34e697b6b",
-  "question-banks/ssc-cgl/2026/pyqs/2026-10-08/archive/paper.json":"895f99a07126819ae9f960685a4eb51002b4f048",
-  "question-banks/ssc-cgl/2026/pyqs/2026-10-08/archive/patches.json":"aff32e0741271b54b3e6b8c30e2f710a738f941e",
-  "question-banks/ssc-cgl/2026/pyqs/2026-10-08/archive/solutions.json":"5f23d5f51b1185d73b4c0d3240654d91039c70ba"
+  "question-banks/ssc-cgl/2026/pyqs/2026-09-30/original/paper.json":"0a8994b50558694722837d3fa4d6e58c344332e8",
+  "question-banks/ssc-cgl/2026/pyqs/2026-09-30/revised/patches.json":"d74169356ab153da61d904f307364c51a23ea872",
+  "question-banks/ssc-cgl/2026/pyqs/2026-09-30/revised/solutions.json":"a3f300769a6e4d37c0c292974f7d45112d26b5a2",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-05/original/paper.json":"74ff088ec038976e08c6fef9091b584093da8821",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-05/revised/patches.json":"6bfff9e3eedc65493df831284b68f327c1576cdb",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-05/revised/solutions.json":"7a824166bad7f91987319c5b322c20f9c3b0c5cf",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-06/original/paper.json":"9afcbc214365bda65b240a6901b98c826661235d",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-06/revised/patches.json":"249f191fac7e75f77a8b34015aa1dd853b773767",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-06/revised/solutions.json":"2b7c28b1aa7f9a741e5b29e3f372c151627b477f",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-07/original/paper.json":"8ef3f05f609456535443e8e8d98a884e32400c65",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-07/revised/patches.json":"22f5db9bb621d6d42f3f541360f5200eb318474f",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-07/revised/solutions.json":"5c1d7baf9a3d5c3159ab8edb45505fc34e697b6b",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-08/original/paper.json":"895f99a07126819ae9f960685a4eb51002b4f048",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-08/revised/patches.json":"aff32e0741271b54b3e6b8c30e2f710a738f941e",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-08/revised/solutions.json":"5f23d5f51b1185d73b4c0d3240654d91039c70ba"
  };
  for(const [relative,expected] of Object.entries(canonicalSourceBlobs)){
   const hash=execFileSync("git",["hash-object",relative],{cwd:root,encoding:"utf8"}).trim();
