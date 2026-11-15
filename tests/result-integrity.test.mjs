@@ -6,7 +6,7 @@ import {activateWorkspaceRoute} from "../src/app/route-controller.ts";
 import {renderCurrentResultHTML} from "../src/app/result-controller.ts";
 
 test("resume expiry samples one monotonic instant for state, persistence and score evidence",async()=>{
- const attempt={...startGenericAttempt(pkg,"cleer-expiry",0),saveRevision:1};
+ const attempt={...startGenericAttempt(pkg,"cleer-expiry",0,"exam-simulation"),saveRevision:1};
  const restoredAt=pkg.paper.timing.durationMs+5000;
  let nowCalls=0,saved=null;
  const routes=[];
@@ -16,7 +16,7 @@ test("resume expiry samples one monotonic instant for state, persistence and sco
   const owner={
    activationGeneration:0,routeHydrated:true,hydration:Promise.resolve(),disposed:false,
    view:"library",resultTab:"overview",attempt:null,records:new Map([[attempt.id,attempt]]),
-   warning:"",freshlyStartedAttemptId:null,reviewFilter:"all",
+   warning:"",freshlyStartedAttemptId:null,reviewFilter:"all",writtenDrafts:new Map(),
    now:()=>{nowCalls++;return restoredAt;},
    save:async record=>{saved=record;return true;},
    go:route=>{routes.push(route);},

@@ -385,7 +385,7 @@ test("G01 adjacent: a whole-paper lock cannot bypass the global deadline",()=>{
 test("G02: manual expiry freezes answers and elapsed time until an explicit continuation",()=>{
  const bundle=bundleWith({timing:{kind:"sectional",transition:"manual",allowEarlySubmit:false,pausePolicy:"allowed",
   sectionLimits:[{sectionId:"s1",durationMs:100},{sectionId:"s2",durationMs:200}]}});
- let a=startGenericAttempt(bundle,"manual",1000);
+ let a=startGenericAttempt(bundle,"manual",1000,"exam-simulation");
  a=transitionGenericAttempt(a,evt("TICK",1150),lookup);
  assert.equal(a.state.status,"section-expired");
  assert.equal(a.state.elapsedMs,100);
@@ -403,7 +403,7 @@ test("G02: manual expiry freezes answers and elapsed time until an explicit cont
  assert.equal(a.state.elapsedMs,100);
  assert.equal(a.state.status,"section-expired");
  assert.doesNotThrow(()=>validateGenericStoredRecord(a));
- const restored=restoreSession(bundle.paper,a.state,3500,true);
+ const restored=restoreSession(bundle.paper,a.state,3500,true,"exam-simulation");
  assert.equal(restored.state.status,"section-expired");
  assert.equal(restored.state.elapsedMs,100);
  assert.equal(restored.expired,false);
@@ -425,7 +425,7 @@ test("G02: manual expiry freezes answers and elapsed time until an explicit cont
 test("G02 extra: no-deadline sectional sections can always be finished explicitly",()=>{
  const b=bundleWith({timing:{kind:"sectional",transition:"automatic",allowEarlySubmit:false,pausePolicy:"forbidden",
   sectionLimits:[{sectionId:"s1",durationMs:null},{sectionId:"s2",durationMs:100}]}});
- let a=startGenericAttempt(b,"untimed-section",1000);
+ let a=startGenericAttempt(b,"untimed-section",1000,"exam-simulation");
  assert.match(renderModelExam(a,b),/Finish untimed section/);
  a=transitionGenericAttempt(a,evt("SUBMIT_SECTION",1500),lookup);
  assert.equal(a.state.sectionIndex,1);
