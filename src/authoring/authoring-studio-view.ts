@@ -189,7 +189,7 @@ export function evidenceEditor(q:AuthoringQuestion):string{
   ["provision","Provision / section of law",140],
   ["publicationDate","Publication date (YYYY-MM-DD)",10],
   ["asOfDate","As-of date (YYYY-MM-DD)",10]] as const;
- const review=q.qa?.review;
+ const review=q.qa?.review,app=q.qa?.applicability;
  return '<details class="pd-author-section-manager" id="pd-author-evidence">'+
   '<summary>Source evidence and question QA · '+sources.length+' citation(s) · '+
   escapeText(q.qa?.status??"unchecked")+'</summary>'+
@@ -203,6 +203,18 @@ export function evidenceEditor(q:AuthoringQuestion):string{
    '<label>QA status (never certified)<select id="pd-author-qa-status">'+
    ([["unchecked","Unchecked"],["needs-review","Needs review"]] as const)
    .map(([value,label])=>option(value,label,q.qa?.status??"unchecked")).join("")+'</select></label></div>'+
+  '<fieldset><legend>Author-declared QA applicability</legend>'+
+   '<p class="fine">These flags route offline checks only; they do not certify mathematical correctness, current law or current data.</p>'+
+   '<div class="pd-author-meta">'+
+    '<label class="pd-author-check"><input type="checkbox" id="pd-author-qa-mathematical"'+
+     (app?.mathematical?' checked':'')+'> Mathematical reasoning</label>'+
+    '<label class="pd-author-check"><input type="checkbox" id="pd-author-qa-legal"'+
+     (app?.legal?' checked':'')+'> Legal / statutory currentness</label>'+
+    '<label class="pd-author-check"><input type="checkbox" id="pd-author-qa-time-sensitive"'+
+     (app?.timeSensitive?' checked':'')+'> Time-sensitive facts/data</label>'+
+    '<label>Applicability as-of date<input type="date" id="pd-author-qa-asof" value="'+
+     escapeText(app?.asOfDate??"")+'"></label>'+
+   '</div></fieldset>'+
   sources.map((source,i)=>'<fieldset class="pd-author-evidence-source">'+
    '<legend>Author-supplied citation '+(i+1)+'</legend><div class="pd-author-meta">'+
    fields.map(([field,label,max])=>'<label>'+label+'<input data-author-source-index="'+i+

@@ -64,6 +64,9 @@ export type AuthoringQuestion={
   readonly publicationDate?:string;readonly asOfDate?:string;
   readonly stance?:"supports"|"disputes"}[];};
  readonly qa?:{readonly status:"unchecked"|"needs-review";
+  /** Author-declared applicability guides offline QA; it is never factual certification. */
+  readonly applicability?:{readonly mathematical:boolean;readonly legal:boolean;
+   readonly timeSensitive:boolean;readonly asOfDate?:string};
   /** Author-entered, unverified review/acceptance, never source authentication. */
   readonly review?:{readonly reviewer:string;readonly reviewedAt:string;readonly note:string;
    readonly acceptedWarningCodes:readonly string[]};};
@@ -252,9 +255,27 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   }
   let qa:AuthoringQuestion["qa"];
   if(q.qa!==undefined){
-   const checking=rec(q.qa,"QA metadata",["status","review"]);
+   const checking=rec(q.qa,"QA metadata",["status","applicability","review"]);
    if(checking.status!=="unchecked"&&checking.status!=="needs-review")
     throw Error("Unsupported unverified QA status");
+   let applicability:NonNullable<NonNullable<AuthoringQuestion["qa"]>["applicability"]>|undefined;
+   if(checking.applicability!==undefined){
+    const value=rec(checking.applicability,"QA applicability",
+     ["mathematical","legal","timeSensitive","asOfDate"]);
+    for(const field of ["mathematical","legal","timeSensitive"] as const)
+     if(typeof value[field]!=="boolean")throw Error("QA applicability flags must be explicit booleans");
+    let asOfDate:string|undefined;
+    if(value.asOfDate!==undefined){
+     asOfDate=text(value.asOfDate,"QA applicability as-of date",10,true);
+     if(!/^\d{4}-\d{2}-\d{2}$/.test(asOfDate)||Number.isNaN(Date.parse(asOfDate+"T00:00:00.000Z"))||
+        new Date(asOfDate+"T00:00:00.000Z").toISOString().slice(0,10)!==asOfDate)
+      throw Error("Invalid QA applicability as-of date");
+    }
+    if((value.legal||value.timeSensitive)&&!asOfDate)
+     throw Error("Legal or time-sensitive applicability requires an as-of date");
+    applicability={mathematical:value.mathematical as boolean,legal:value.legal as boolean,
+     timeSensitive:value.timeSensitive as boolean,...(asOfDate?{asOfDate}:{})};
+   }
    let review:NonNullable<NonNullable<AuthoringQuestion["qa"]>["review"]>|undefined;
    if(checking.review!==undefined){
     const value=rec(checking.review,"authored review",["reviewer","reviewedAt","note","acceptedWarningCodes"]);
@@ -271,7 +292,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
     review={reviewer:text(value.reviewer,"reviewer claim",120,true),
      reviewedAt,note:text(value.note,"review note",500,true),acceptedWarningCodes:codes};
    }
-   qa={status:checking.status,...(review?{review}:{})};
+   qa={status:checking.status,...(applicability?{applicability}:{}),...(review?{review}:{})};
   }
   const kind=q.kind;
   if(typeof kind!=="string"||!QUESTION_KINDS.includes(kind as QuestionKind))

@@ -385,6 +385,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
     return clean as NonNullable<NonNullable<AuthoringQuestion["provenance"]>["sources"]>[number];
    });
   const qa=object(q.qa,path+".qa",["status","applicability"]);
+  let applicability:NonNullable<NonNullable<AuthoringQuestion["qa"]>["applicability"]>|undefined;
   // The author can declare applicability before review. This is a separate,
   // source-hash-bound assertion, never a fact-verified certification.
   if(qa.applicability!==undefined){
@@ -403,6 +404,9 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
    }
    if((flags.legal||flags.timeSensitive)&&!flags.asOfDate)
     err(path+".qa.applicability.asOfDate","Applicable source law/data must declare an as-of date");
+   applicability={mathematical:flags.mathematical as boolean,legal:flags.legal as boolean,
+    timeSensitive:flags.timeSensitive as boolean,
+    ...(flags.asOfDate?{asOfDate:String(flags.asOfDate)}:{})};
   }
   if(qa.status!=="unchecked"&&qa.status!=="needs-review")
    err(path+".qa.status","Only unchecked or needs-review are accepted; no self-certification");
@@ -430,7 +434,8 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
    provenance:{kind:provenance.kind as NonNullable<AuthoringQuestion["provenance"]>["kind"],
      ...(sourceNote===undefined?{}:{sourceNote}),
      ...(examYear===undefined?{}:{examYear}),...(sources===undefined?{}:{sources})},
-   qa:{status:qa.status as NonNullable<AuthoringQuestion["qa"]>["status"]}};
+   qa:{status:qa.status as NonNullable<AuthoringQuestion["qa"]>["status"],
+    ...(applicability?{applicability}:{})}};
  });
  const draft:AuthoringDraft={schema:1,id:"agent:"+bankId,ingestionMode:"external-source",examId,paperId,title,
   edition:"custom",revision,durationMinutes,

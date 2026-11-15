@@ -5,7 +5,7 @@
 import type {AuthoringDraft,AuthoringQuestion} from "./authoring-draft.ts";
 import type {ExamPackage} from "../domain/exam-package.ts";
 import {publicationPlainText} from "./authoring-publisher.ts";
-import {scoreAttempt} from "../engine/scoring.ts";
+import {effectiveMarkingRule,scoreAttempt} from "../engine/scoring.ts";
 import type {CandidateResponse} from "../domain/question.ts";
 import type {CorrectAnswer} from "../domain/answer-key.ts";
 import type {AttemptResponseRecord} from "../domain/attempt.ts";
@@ -258,7 +258,8 @@ export function inspectExternalQuality(
    if(!src.length)add("pyq-primary-source-missing","warning",
     "Official PYQ identity has no cited source",q.id,"provenance.sources","unverified");
   }
-  const law=/(?:\b(?:Act|Code|Rules|Regulations|Gazette|Notification)\b(?:\s+[A-Za-z&\x27-]+){0,8}\s*,?\s*(?:19|20)\d{2}\b|\b(?:commenc(?:ed|ement)|amend(?:ed|ment)|section\s+\d+|effective\s+(?:from|on))\b)/iu
+  const applicability=q.qa?.applicability;
+  const law=Boolean(applicability?.legal)||/(?:\b(?:Act|Code|Rules|Regulations|Gazette|Notification)\b(?:\s+[A-Za-z&\x27-]+){0,8}\s*,?\s*(?:19|20)\d{2}\b|\b(?:commenc(?:ed|ement)|amend(?:ed|ment)|section\s+\d+|effective\s+(?:from|on))\b)/iu
     .test(prompt+" "+explanation);
   if(law){
    if(!src.some(s=>s.asOfDate&&s.provision))
@@ -271,6 +272,11 @@ export function inspectExternalQuality(
     q.id,"provenance.sources","unverified",undefined,
     "Confirm current law, effective date and relevant rules outside this offline tool");
   }
+  if(applicability?.timeSensitive&&!src.some(s=>s.asOfDate||s.publicationDate))
+   add("time-sensitive-evidence-missing","warning",
+    "Author marked this question time-sensitive but supplied no dated source evidence",
+    q.id,"provenance.sources","unverified",applicability.asOfDate,
+    "Add dated authoritative evidence and verify it against the declared as-of date");
   if(src.some(s=>s.stance==="disputes")&&src.some(s=>s.stance==="supports"))
    add("source-disagreement","warning",
     "Author reports mutually disagreeing sources; factual resolution requires review",
@@ -301,6 +307,11 @@ export function inspectExternalQuality(
     }
    }
   }
+  if(applicability?.mathematical&&math==="unverified")
+   add("mathematical-solution-unverified","warning",
+    "Author marked this question mathematical but the bounded deterministic checker could not verify the solution",
+    q.id,"answer","unverified",undefined,
+    "Independently verify the derivation/key; automated QA only proves simple supported arithmetic");
   if(q.kind==="single-choice"){
    const m=/(?:^|\.\s+)(?:the\s+)?(?:correct\s+)?answer\s+(?:is|:)\s*([A-Z])\b/iu.exec(explanation);
    if(m&&q.answer.trim().toUpperCase()!==m[1]!.toUpperCase())
@@ -319,8 +330,8 @@ export function inspectExternalQuality(
     [record],"1970-01-01T00:00:00.000Z");
    const item=result.items.find(r=>r.questionRevisionId===question.id);
    const section=compiled.paper.sections.find(s=>s.questionRevisionIds.includes(question.id));
-   const rule=entry.scoringOverride??section?.scoringOverride??
-    compiled.paper.scoring.byQuestionKind?.[q.kind]??compiled.paper.scoring.defaultRule;
+   if(!section)throw Error("Compiled question is absent from all paper sections");
+   const rule=effectiveMarkingRule(compiled.paper,section,question,entry);
    if(!item||item.verdict!=="correct"||Math.abs(item.marks-rule.correctMarks)>1e-9)
     add("scoring-oracle-conflict","error",
      "Canonical scorer did not award full credit to the exact published key",

@@ -733,6 +733,27 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    const state=(e.target as HTMLSelectElement).value as "unchecked"|"needs-review";
    editCurrentEvidence(q=>({...q,qa:{...q.qa,status:state}}));
   };
+  const applicability=()=>question().qa?.applicability??
+   {mathematical:false,legal:false,timeSensitive:false};
+  const updateApplicability=(patch:Partial<NonNullable<NonNullable<AuthoringQuestion["qa"]>["applicability"]>>):boolean=>
+   editCurrentEvidence(q=>({...q,qa:{...q.qa,status:q.qa?.status??"unchecked",
+    applicability:{...applicability(),...patch}}}));
+  find<HTMLInputElement>("pd-author-qa-asof").onchange=e=>{
+   const value=(e.target as HTMLInputElement).value.trim();
+   updateApplicability(value?{asOfDate:value}:{asOfDate:undefined});
+  };
+  find<HTMLInputElement>("pd-author-qa-mathematical").onchange=e=>{
+   updateApplicability({mathematical:(e.target as HTMLInputElement).checked});
+  };
+  for(const [id,key] of [["pd-author-qa-legal","legal"],["pd-author-qa-time-sensitive","timeSensitive"]] as const){
+   const input=find<HTMLInputElement>(id);
+   input.onchange=()=>{
+    if(input.checked&&!applicability().asOfDate){
+     input.checked=false;status("Set an applicability as-of date before enabling legal or time-sensitive QA.",true);return;
+    }
+    updateApplicability({[key]:input.checked});
+   };
+  }
   container.querySelectorAll<HTMLInputElement|HTMLSelectElement>("[data-author-source-field]").forEach(input=>{
    input.onchange=()=>{
     const index=Number(input.dataset.authorSourceIndex);
@@ -779,14 +800,17 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    const reviewer=find<HTMLInputElement>("pd-author-qa-reviewer").value.trim();
    const note=find<HTMLInputElement>("pd-author-qa-review-note").value.trim();
    if(!reviewer||!note){status("Provide both a named reviewer and an evidence note; identity is not authenticated.",true);return;}
-   if(editCurrentEvidence(q=>({...q,qa:{status:"needs-review",review:{
+   if(editCurrentEvidence(q=>({...q,qa:{...q.qa,status:"needs-review",review:{
     reviewer,reviewedAt:new Date().toISOString(),note,
     acceptedWarningCodes:q.qa?.review?.acceptedWarningCodes??[]
    }}})))void render();
   });
   const clearReview=container.querySelector<HTMLButtonElement>("#pd-author-qa-clear");
   if(clearReview)clearReview.onclick=()=>{
-   if(editCurrentEvidence(q=>({...q,qa:{status:q.qa?.status??"needs-review"}})))void render();
+   if(editCurrentEvidence(q=>{
+    const {review:_,...kept}=q.qa??{status:"needs-review" as const};
+    return {...q,qa:{...kept,status:q.qa?.status??"needs-review"}};
+   }))void render();
   };
   const resizeCurrent=(listField:"options"|"leftItems"|"rightItems",count:number,min:number)=>{
    if(!Number.isSafeInteger(count)||count<min||count>MAX_AUTHORED_ITEMS){status("Item count must be "+min+"–"+MAX_AUTHORED_ITEMS+".",true);return;}

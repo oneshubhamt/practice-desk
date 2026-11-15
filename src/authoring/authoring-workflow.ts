@@ -132,7 +132,7 @@ function attachPublicationAcknowledgement(
    "Earlier attributed review by "+previous.reviewer+" ("+previous.reviewedAt+"): "+
     previous.note+"; ":"";
   const note=(priorLine+(reviewNote||warningNote)).slice(0,500);
-  return {...question,qa:{status:question.qa?.status??"needs-review",review:{
+  return {...question,qa:{...question.qa,status:question.qa?.status??"needs-review",review:{
    reviewer:reviewer||previous?.reviewer||"Author",
    reviewedAt:acceptance.acceptedAt,
    note,

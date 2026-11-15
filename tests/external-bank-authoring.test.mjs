@@ -311,6 +311,23 @@ test("P57-B recognizes proved arithmetic but does not claim general factual proo
  assert.equal(r.quality.questions[0].checks.solution_checked,"unverified");
  assert.equal(r.factualVerification,"not-performed");
 });
+test("P57-B declared QA applicability survives import and actively routes bounded checks",async()=>{
+ const s=await load("apfc");
+ s.questions[0].qa={status:"unchecked",applicability:{
+  mathematical:true,legal:true,timeSensitive:true,asOfDate:"2026-11-05"
+ }};
+ const draft=toAuthoringDraft(s);
+ assert.deepEqual(draft.questions[0].qa.applicability,{
+  mathematical:true,legal:true,timeSensitive:true,asOfDate:"2026-11-05"
+ });
+ const r=inspect(s);
+ assert.ok(r.issues.some(i=>i.code==="legal-asof-evidence-missing"&&i.questionId==="labour-01"));
+ assert.ok(r.issues.some(i=>i.code==="legal-currentness-unverified"&&i.questionId==="labour-01"));
+ assert.ok(r.issues.some(i=>i.code==="time-sensitive-evidence-missing"&&i.questionId==="labour-01"));
+ assert.ok(r.issues.some(i=>i.code==="mathematical-solution-unverified"&&i.questionId==="labour-01"));
+ assert.match(r.compiled.questions[0].editorial.notes,/Author-declared QA applicability/);
+});
+
 test("P57-B legal claims require provision and as-of evidence, and still cannot be source corroborated",async()=>{
  const s=await load("apfc");
  s.questions[0].prompt="Under the Example Code 2020, section 5 is effective from 2025; which is second alphabetically?";
