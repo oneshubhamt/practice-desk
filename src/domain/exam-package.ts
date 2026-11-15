@@ -37,7 +37,7 @@ export function validateExamImportBudget(value:unknown):void{
     }else if(v.length>20000){
       throw Error("Exam import text field exceeds 20,000 characters");
     }
-    if(/(?:^id$|Id$|^bankId$|^examId$|^optionId$|^rubricId$|^questionRevisionIds$)/.test(field)&&v.length>512)
+    if(/(?:^id$|Id$|^bankId$|^examId$|^optionId$|^questionRevisionIds$)/.test(field)&&v.length>512)
       throw Error("Exam import identifier too long");
     return;
   }

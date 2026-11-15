@@ -3,7 +3,7 @@ import {validateExamPackage,type ExamPackage} from "../domain/exam-package.ts";
 import type {GenericAttempt} from "../engine/generic-attempt.ts";
 import {validateLearningCard,type LearningCard} from "../learning/learning.ts";
 import {validateSectionTimingEvidence} from "../engine/session.ts";
-import {sectionTimeBudgetMs,timeEnforcementForMode} from "../domain/timing.ts";
+import {overtimeMs,sectionTimeBudgetMs,timeEnforcementForMode} from "../domain/timing.ts";
 import {assertFrozenContent} from "../history/frozen.ts";
 import {isVerifiedSharedFrozen} from "../history/shared-store.ts";
 import {validateResponse} from "../engine/response.ts";
@@ -224,7 +224,7 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
  if(hard&&postDeadlineTotal!==0)
    throw new Error("Hard-timed attempt contains post-deadline question exposure");
  if(!hard&&paper.timing.kind==="whole-paper"&&
-    postDeadlineTotal>Math.max(0,value.state.elapsedMs-paper.timing.durationMs)+0.001)
+    postDeadlineTotal>overtimeMs(value.state.elapsedMs,paper.timing.durationMs)+0.001)
    throw new Error("Post-deadline question exposure exceeds whole-paper overtime");
  if(!hard&&paper.timing.kind==="sectional"){
    for(const [index,section] of paper.sections.entries()){
@@ -235,7 +235,7 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
      const ids=new Set(section.questionRevisionIds);
      const attributed=value.state.responses.filter(row=>ids.has(row.questionRevisionId))
        .reduce((sum,row)=>sum+row.postDeadlineMs,0);
-     if(attributed>Math.max(0,actual-limit)+0.001)
+     if(attributed>overtimeMs(actual,limit)+0.001)
        throw new Error("Post-deadline question exposure exceeds sectional overtime");
    }
  }

@@ -61,6 +61,6 @@ export function writtenAnswerEvidence(a:GenericAttempt):WrittenAttemptEvidence{
    withinLimit:limitedRows.filter(row=>row.wordCount<=(row.wordLimit??Infinity)).length,
    paperBudgetMs:budget,actualMs:a.state.elapsedMs,
    paperOvertimeMs:overtimeMs(a.state.elapsedMs,budget),
-   attributedOvertimeMs:a.state.responses.reduce((sum,row)=>sum+(row.postDeadlineMs??0),0)
+   attributedOvertimeMs:a.state.responses.reduce((sum,row)=>sum+row.postDeadlineMs,0)
  };
 }

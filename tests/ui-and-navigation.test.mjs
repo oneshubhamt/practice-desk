@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import {pkg} from "./fixtures/six-kinds.mjs";
 import {validateExamPackage,startGenericAttempt,builtinCglPackages,configureCglPractice,readableAnswer} from "../src/app/exam-package.ts";
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
-import {renderModelExam,examTimeRemaining} from "../src/app/exam-view.ts";
+import {renderModelExam,examClockDisplay} from "../src/app/exam-view.ts";
 import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
 import {renderGenericControls} from "../src/app/question-content-view.ts";
 import {historyHTML,sectionPriorities} from "../src/app/history-page.ts";
@@ -276,12 +276,13 @@ test("written response counter is optional and renders an advisory limit without
  const hidden=renderGenericControls(stub,q,undefined,{showWordCount:false});
  assert.doesNotMatch(hidden,/g-word-count/);
 });
-test("timer display derives from paper policy, not CGL constants",()=>{
+test("timer display derives from paper policy and frozen mode, not CGL constants",()=>{
  const state={sectionIndex:1,elapsedMs:5000,sectionElapsedMs:2000};
- assert.equal(examTimeRemaining({timing:{kind:"untimed"}},state),null);
- assert.equal(examTimeRemaining({timing:{kind:"whole-paper",durationMs:12000}},state),7000);
- assert.equal(examTimeRemaining({timing:{kind:"sectional",sectionLimits:[{sectionId:"one",durationMs:3000},{sectionId:"two",durationMs:9000}]},
- sections:[{id:"one"},{id:"two"}]},state),7000);
+ assert.deepEqual(examClockDisplay({timing:{kind:"untimed"}},state,"custom-practice"),
+   {text:"Untimed",label:"UNTIMED PRACTICE",low:false,overtime:false});
+ assert.equal(examClockDisplay({timing:{kind:"whole-paper",durationMs:12000}},state,"exam-simulation").text,"00:07");
+ assert.equal(examClockDisplay({timing:{kind:"sectional",sectionLimits:[{sectionId:"one",durationMs:3000},{sectionId:"two",durationMs:9000}]},
+ sections:[{id:"one"},{id:"two"}]},state,"exam-simulation").text,"00:07");
 });
 
 test("review answers resolve human labels for all six question kinds",()=>{

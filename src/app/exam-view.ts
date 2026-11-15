@@ -8,7 +8,7 @@ import {supplementalAssetHTML,stimulusHTML,renderGenericControls,renderQuestionP
 import {calculatorPanelHTML,calculatorToggleHTML} from "./exam-calculator.ts";
 import {BASIC_CALCULATOR_V1,newExamCalculatorState,type ExamCalculatorState} from "../domain/calculator.ts";
 import {shouldShowWordCount} from "../domain/word-count.ts";
-import {sectionTimeBudgetMs,timeEnforcementForMode} from "../domain/timing.ts";
+import {overtimeMs,sectionTimeBudgetMs,timeEnforcementForMode} from "../domain/timing.ts";
 /** Human-readable view of a frozen practice mode; do not alter persistence. */
 export function readablePracticeMode(mode:string):string{
  switch(mode){
@@ -23,13 +23,6 @@ export const minutes=(ms:number):string=>{
   const sec=Math.ceil(Math.max(0,ms)/1000);
   return Math.floor(sec/60).toString().padStart(2,"0")+":"+(sec%60).toString().padStart(2,"0");
 };
-export function examTimeRemaining(paper:ExamPackage["paper"],state:GenericAttempt["state"]):number|null{
-  if(paper.timing.kind==="untimed")return null;
-  const limit=paper.timing.kind==="whole-paper"?paper.timing.durationMs:
-    sectionTimeBudgetMs(paper,state.sectionIndex);
-  const elapsed=paper.timing.kind==="sectional"?state.sectionElapsedMs:state.elapsedMs;
-  return limit===null?null:Math.max(0,limit-elapsed);
-}
 export interface ExamClockDisplay{
  readonly text:string;readonly label:string;readonly low:boolean;readonly overtime:boolean;
 }
@@ -41,7 +34,7 @@ export function examClockDisplay(
    sectionTimeBudgetMs(paper,state.sectionIndex);
  if(budget===null)return {text:"Untimed",label:"UNTIMED SECTION",low:false,overtime:false};
  const elapsed=paper.timing.kind==="sectional"?state.sectionElapsedMs:state.elapsedMs;
- const over=Math.max(0,elapsed-budget);
+ const over=overtimeMs(elapsed,budget);
  if(over>0&&timeEnforcementForMode(mode)==="advisory")
    return {text:"+"+minutes(over),label:paper.timing.kind==="sectional"?"SECTION OVERTIME":"PAPER OVERTIME",
      low:false,overtime:true};

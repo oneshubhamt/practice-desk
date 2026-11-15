@@ -119,7 +119,7 @@ export function resultPacingHTML(
      const sectionIndex=a.frozen.paper.sections.findIndex(s=>s.id===e.sectionId);
      const timer=sectionTimerDuration(a.state,sectionIndex);
      const sectionBudget=sectionTimeBudgetMs(a.frozen.paper,sectionIndex);
-     const sectionOver=timer===null||sectionBudget===null?0:Math.max(0,timer-sectionBudget);
+     const sectionOver=timer===null?0:overtimeMs(timer,sectionBudget);
      const timerText=timer===null?"Not recorded":duration(timer)+
        (sectionBudget===null?"":" / "+duration(sectionBudget)+(sectionOver>0?" · +"+duration(sectionOver)+" overtime":""));
      return '<div class="metric-bar"><div class="row between"><b>'+esc(e.title)+'</b><span>'+

@@ -12,7 +12,7 @@ import {frozenReviewMedia,sourceReviewHTML} from "../src/app/review-media-view.t
 import {IMAGE_MIN_ZOOM,IMAGE_MAX_ZOOM,boundedImageZoom,fittedImage,boundedImageOffset,anchoredImageOffset,isLocalVerifiedImageUri} from "../src/app/image-viewer.ts";
 import {mathRenderer,KATEX_VERSION} from "../src/app/katex-math-adapter.ts";
 import {authoredTextHTML} from "../src/app/rich-content-view.ts";
-import {renderModelExam,minutes,readablePracticeMode,examTimeRemaining} from "../src/app/exam-view.ts";
+import {renderModelExam,minutes,readablePracticeMode,examClockDisplay} from "../src/app/exam-view.ts";
 import {questionRevisionHash} from "../src/domain/integrity.ts";
 import {escapeText} from "../src/app/html-escape.ts";
 import {validateGenericStoredRecord,isAttempt,isPackage,isLearning} from "../src/app/stored-record-validator.ts";
@@ -340,7 +340,7 @@ test("P47-1 exam view is a read-only dependency of supplied state and focus flag
  assert.match(full,/Toggle full-screen test view" aria-pressed="true"/);
  assert.equal(readablePracticeMode("custom-practice"),"Custom practice");
  assert.equal(minutes(1001),"00:02");
- assert.equal(examTimeRemaining(a.frozen.paper,a.state),1200000);
+ assert.equal(examClockDisplay(a.frozen.paper,a.state,a.frozen.snapshot.mode).text,"20:00");
  assert.deepEqual(a,snapshot,"renderModelExam may not mutate frozen attempts");
 });
 test("P47-1 review display uses exact frozen answers and separate source edition",()=>{
