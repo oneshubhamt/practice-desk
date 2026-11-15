@@ -320,7 +320,7 @@ export function bindLibraryScreen(owner:LibraryControllerContext):void{
        owner.untimedPractice=(e.target as HTMLInputElement).checked;owner.saveSelection();owner.draw();
      };
      const single=owner.root.querySelector<HTMLSelectElement>("#g-single-section");
-     if(single)single.onchange=()=>{owner.singleSection=Number(single.value);owner.saveSelection();};
+     if(single)single.onchange=()=>{owner.singleSection=Number(single.value);owner.saveSelection();owner.draw();};
      const builderDetails=owner.root.querySelector<HTMLDetailsElement>("#g-compose-details");
      if(builderDetails){
        builderDetails.ontoggle=()=>{
