@@ -134,6 +134,7 @@ async function manifestPapers(root,family){
 async function loadExamPackages(root,family,manifestSet,seenPaperIds){
  const packages=[],paperIds=[],manifestToCanonical=new Map();
  for(const paper of manifestSet.papers){
+  const paperPackages=[];
   for(const [editionName,rawEdition] of Object.entries(paper.editions)){
    const edition=plain(rawEdition,"Edition "+editionName+" "+paper.id);
    const packagePath=relativeTo(paper.path,str(edition.package,"Package path "+paper.id+" "+editionName));
@@ -141,9 +142,22 @@ async function loadExamPackages(root,family,manifestSet,seenPaperIds){
    if(pkg.examId!==family.examId)throw Error("Package examId mismatch for "+paper.id+" "+editionName);
    if(pkg.paper.paperId!==paper.paperId&&!pkg.paper.paperId.endsWith(":"+paper.paperId))
     throw Error("Package paperId mismatch for "+paper.id+" "+editionName);
+   if((pkg.paper.edition==="source"||pkg.paper.edition==="reviewed")&&editionName!==pkg.paper.edition)
+    throw Error("Manifest edition role "+editionName+" disagrees with package "+pkg.paper.edition+" for "+paper.id);
    if(seenPaperIds.has(pkg.paper.id))throw Error("Duplicate preinstalled paper revision "+pkg.paper.id);
-   seenPaperIds.add(pkg.paper.id);paperIds.push(pkg.paper.id);packages.push(pkg);
+   seenPaperIds.add(pkg.paper.id);paperIds.push(pkg.paper.id);packages.push(pkg);paperPackages.push(pkg);
    if(editionName===paper.canonicalEdition)manifestToCanonical.set(paper.id,pkg.paper.id);
+  }
+  const source=paperPackages.filter(pkg=>pkg.paper.edition==="source");
+  const reviewed=paperPackages.filter(pkg=>pkg.paper.edition==="reviewed");
+  if(source.length>1||reviewed.length>1)
+   throw Error("Paper manifest has ambiguous Source/Reviewed editions: "+paper.id);
+  if(reviewed.length){
+   if(source.length!==1)throw Error("Reviewed package requires Source in the same paper manifest: "+paper.id);
+   const target=reviewed[0],origin=source[0];
+   if(target.paper.sourcePaperRevisionId!==origin.paper.id||
+      target.paper.sourceAnswerKeyRevisionId!==origin.answerKey.id)
+    throw Error("Reviewed package lineage does not pin the exact Source package/key: "+paper.id);
   }
   if(!manifestToCanonical.has(paper.id))throw Error("Canonical edition did not resolve for "+paper.id);
  }

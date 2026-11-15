@@ -148,3 +148,12 @@ test("storage/media/calendar dependency topology has no second persistence path"
  assert.ok(!calTargets.has("src/history/workspace-store.ts"));
  assert.ok(!calTargets.has("src/storage-topology.ts"));
 });
+
+
+test("canonical runtime has no CGL legacy/archive adapter dependency",()=>{
+ assert.deepEqual(sourceFiles.filter(file=>/cgl|legacy-cgl/i.test(file)),[],
+  "CGL conversion/archive code must remain outside src runtime");
+ for(const file of sourceFiles)
+  for(const edge of importsOf(file))
+   assert.ok(!/cgl-archive|legacy-cgl/i.test(edge.spec),file+" must not import archived CGL conversion code");
+});

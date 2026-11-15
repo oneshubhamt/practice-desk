@@ -43,6 +43,10 @@ test("manifest graph is authoritative for five CGL PYQs and current PFRDA",async
  const pfrda=graph.families.find(x=>x.family.id==="pfrda-grade-a-2026-phase-ii");
  assert.equal(cgl?.exam.representation,"exam-packages");
  assert.equal(cgl?.papers.length,5);
+ for(const paper of cgl?.papers??[]){
+  assert.equal(paper.canonicalEdition,"reviewed");
+  assert.deepEqual(Object.keys(paper.editions).sort(),["reviewed","source"]);
+ }
  assert.deepEqual(cgl?.papers.map(x=>x.id),[
   "cgl-2026-09-30","cgl-2026-10-05","cgl-2026-10-06","cgl-2026-10-07","cgl-2026-10-08"
  ]);
@@ -58,6 +62,7 @@ test("manifest graph is authoritative for five CGL PYQs and current PFRDA",async
  const pfrdaFamily=loaded.preinstalled.families.find(x=>x.id==="pfrda-grade-a-2026-phase-ii");
  assert.equal(cglFamily.paperIds.length,10);
  assert.ok(cglFamily.paperIds.includes(cglFamily.currentPaperId));
+ assert.equal(loaded.preinstalled.packages.find(x=>x.paper.id===cglFamily.currentPaperId)?.paper.edition,"reviewed");
  assert.equal(pfrdaFamily.paperIds.length,2);
  assert.ok(pfrdaFamily.paperIds.includes(pfrdaFamily.currentPaperId));
 });

@@ -19,7 +19,7 @@ import {sha256} from "../src/domain/hash.ts";
 import {makeBackup,verifyBackup,planBackupMerge} from "../src/history/backup.ts";
 import {validateDisplayPreferences} from "../src/app/preferences.ts";
 import {assertWriteVersion,nextWriteVersion} from "../src/history/concurrency.ts";
-import {importCglBank} from "../src/content/import-cgl.ts";
+import {importCglBank} from "../tools/cgl-archive/import.ts";
 import {freezeAttempt,assertFrozenContent,restoreSession,chooseRecovered} from "../src/history/frozen.ts";
 import {startSession,transition} from "../src/engine/session.ts";
 import {scoreAttempt} from "../src/engine/scoring.ts";
