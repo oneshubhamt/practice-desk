@@ -141,7 +141,7 @@ export function renderModelExam(
      (paper.timing.kind!=="untimed"&&paper.timing.pausePolicy==="allowed"?
       '<button class="btn" id="g-pause"'+(expired?" disabled":"")+'>'+(state.status==="paused"?"Resume timer":"Pause timer")+'</button>':"")+
      '<button class="btn danger" id="g-submit"'+(state.status==="paused"||
-       (paper.timing.kind==="sectional"&&!paper.timing.allowEarlySubmit&&!expired&&!untimedSection)?" disabled":"")+'>'+
+       (paper.timing.kind==="sectional"&&!paper.timing.allowEarlySubmit&&!expired&&!untimedSection&&!clock.overtime)?" disabled":"")+'>'+
       (expired?(hasNextSection?"Continue to next section":"Finish expired exam"):
         paper.timing.kind==="sectional"?(untimedSection?"Finish untimed section":"Submit section"):
         lockedWhole&&hasNextSection?"Finish section →":"Submit exam")+'</button></div></section>'+

@@ -50,7 +50,8 @@ export interface RestoredSession {
 /**
  * On a file:// reopen, the saved clock origin is no longer a safe monotonic
  * source. Account for actual wall-clock absence without charging foreground
- * question time; paused attempts remain paused. Never extend a deadline.
+ * question time; paused attempts remain paused. Hard deadlines remain hard;
+ * advisory practice budgets may continue into overtime.
  */
 export function restoreSession(
   paper: PaperRevision, saved: SessionState, wallNowMs: number, visible: boolean,mode:AttemptMode,
