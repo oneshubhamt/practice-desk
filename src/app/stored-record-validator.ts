@@ -191,12 +191,15 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
        Date.parse(row.firstAnsweredAt)<value.startedAt||
        Date.parse(row.firstAnsweredAt)>value.updatedAt))
      throw new Error("Invalid saved first-answer timing");
-   if(row.response)validateResponse(questionMap.get(row.questionRevisionId)!,row.response);
-   if(row.firstAnsweredAt!==undefined){
+   const question=questionMap.get(row.questionRevisionId)!;
+   if(row.response)validateResponse(question,row.response);
+   if(row.firstAnsweredAt!==undefined&&question.content.kind!=="free-response"){
      const firstCommit=row.answerEvents?.find((x:{readonly at:string;readonly to?:unknown})=>x.to!==undefined);
      if(!firstCommit||firstCommit.at!==row.firstAnsweredAt)
        throw new Error("Inconsistent saved first-answer timing");
    }
+   if(question.content.kind==="free-response"&&(row.answerEvents?.length||row.answerChangeCount!==0))
+     throw new Error("Written response checkpoints must not persist revision telemetry");
    if(row.answerEvents!==undefined){
      if(!Array.isArray(row.answerEvents)||row.answerEvents.length>1000)
        throw new Error("Invalid saved answer revision history");

@@ -236,14 +236,24 @@ export function transition(
   const previous = record(current, id);
   if (event.type === "FLAG") return paper.navigation.allowFlagging ? put(current, { ...previous, flagged: event.flagged }) : current;
   if (event.type === "CLEAR") {
-    const { response: _removed, ...rest } = previous;
     if(!previous.response)return current;
+    if(previous.response.kind==="free-response"){
+      const {response:_removed,answerEvents:_events,...rest}=previous;
+      return put(current,{...rest,answerChangeCount:0});
+    }
+    const { response: _removed, ...rest } = previous;
     return put(current, { ...rest, answerChangeCount: previous.answerChangeCount + 1,
       answerEvents:[...(previous.answerEvents??[]),{at:new Date(event.nowMs).toISOString(),from:previous.response}] });
   }
   if (event.type === "ANSWER") {
     const changed=!previous.response||JSON.stringify(previous.response)!==JSON.stringify(event.response);
     if(!changed)return current;
+    if(event.response.kind==="free-response"){
+      const {answerEvents:_events,...stable}=previous;
+      return put(current,{...stable,response:event.response,
+        firstAnsweredAt:previous.firstAnsweredAt??new Date(event.nowMs).toISOString(),
+        answerChangeCount:0});
+    }
     return put(current, { ...previous, response: event.response,
       firstAnsweredAt:previous.firstAnsweredAt??new Date(event.nowMs).toISOString(),
       answerEvents:[...(previous.answerEvents??[]),
