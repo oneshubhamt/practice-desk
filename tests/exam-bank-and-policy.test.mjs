@@ -203,6 +203,19 @@ test("P43 per-family selection rejects invalid mode, edition and untimed values"
  }
 });
 
+test("included family bootstrap preserves catalog-declared order without exam-name special cases",async()=>{
+ const {examFamilyCatalog}=await import("../src/app/exam-families.ts");
+ const cgl=builtinCglPackages(sources,patches)[0];
+ const apfc=compileExternalQuestionBank(starter);
+ const included=[
+  {id:"first-declared",examId:cgl.examId,title:"Zeta title",paperIds:[cgl.paper.id],currentPaperId:cgl.paper.id},
+  {id:"second-declared",examId:apfc.examId,title:"Alpha title",paperIds:[apfc.paper.id],currentPaperId:apfc.paper.id}
+ ];
+ const catalog=examFamilyCatalog([apfc,cgl],included);
+ assert.deepEqual(catalog.map(f=>f.id),["included:first-declared","included:second-declared"],
+  "bootstrap order must follow the catalog, not alphabetical titles or package iteration order");
+});
+
 test("P43 catalog keeps imported families distinct, sorted and never claims official CGL identity",async()=>{
  const {examFamilyCatalog,pairedEdition,familyIdFor}=await import("../src/app/exam-families.ts");
  const originals=builtinCglPackages(sources,patches);

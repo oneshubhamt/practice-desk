@@ -42,9 +42,15 @@ export function examFamilyCatalog(
   }
   family.papers.push(p);
  }
- const result=[...families.values()].sort((a,b)=>
-  (a.origin==="included"?0:1)-(b.origin==="included"?0:1)||
-  a.title.localeCompare(b.title)||a.examId.localeCompare(b.examId));
+ const includedOrder=new Map(includedFamilies.map((family,index)=>["included:"+family.id,index]));
+ const result=[...families.values()].sort((a,b)=>{
+  const origin=(a.origin==="included"?0:1)-(b.origin==="included"?0:1);
+  if(origin)return origin;
+  if(a.origin==="included"&&b.origin==="included")
+   return (includedOrder.get(a.id)??Number.MAX_SAFE_INTEGER)-
+     (includedOrder.get(b.id)??Number.MAX_SAFE_INTEGER);
+  return a.title.localeCompare(b.title)||a.examId.localeCompare(b.examId);
+ });
  for(const family of result)family.papers.sort((a,b)=>
   a.paper.paperId.localeCompare(b.paper.paperId)||a.paper.revision-b.paper.revision||
   a.paper.edition.localeCompare(b.paper.edition));
