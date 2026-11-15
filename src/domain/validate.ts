@@ -359,7 +359,7 @@ export function validatePaperRevision(
   answerKey?: AnswerKeyRevision,
 ): PaperRevision {
   const paper = record(value, "paperRevision");
-  only(paper,["id","paperId","revision","contentHash","edition","sections","answerKeyRevisionId","sourcePaperRevisionId","sourceAnswerKeyRevisionId","timing","navigation","candidateTools","scoring","createdAt"],"paperRevision");
+  only(paper,["id","paperId","revision","contentHash","edition","sections","answerKeyRevisionId","sourcePaperRevisionId","sourceAnswerKeyRevisionId","timing","navigation","candidateTools","practiceModes","scoring","createdAt"],"paperRevision");
   text(paper["id"], "paperRevision.id");
   const paperId = text(paper["paperId"], "paperRevision.paperId");
   positiveInteger(paper["revision"], "paperRevision.revision");
@@ -447,6 +447,14 @@ export function validatePaperRevision(
       throw new Error('paperRevision.candidateTools.calculator: expected "'+BASIC_CALCULATOR_V1+'"');
     if (tools["wordCount"] !== undefined)
       oneOf(tools["wordCount"],WORD_COUNT_OVERRIDES,"paperRevision.candidateTools.wordCount");
+  }
+  if (paper["practiceModes"] !== undefined) {
+    const modes=stringArray(paper["practiceModes"],"paperRevision.practiceModes");
+    if(!modes.length||modes.length>3)throw Error("paperRevision.practiceModes: expected one to three modes");
+    unique(modes,"paperRevision.practiceModes");
+    for(const mode of modes)oneOf(mode,["strict","free","single"] as const,"paperRevision.practiceModes");
+    if(modes.includes("single")&&sectionIds.length<2)
+      throw Error("paperRevision.practiceModes: section practice requires multiple physical sections");
   }
   validateScoringPolicy(paper["scoring"], "paperRevision.scoring");
 

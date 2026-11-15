@@ -61,12 +61,15 @@ export function builtinCglPackages(sources: SourcePaperBank, patches: ReviewPatc
  * Only authored section limits may become individual section-practice timers;
  * never invent an equal division of a whole-paper timer. */
 export function availablePracticeModes(paper:PaperRevision):readonly PracticeMode[]{
- return paper.sections.length>1?["strict","free","single"]:["strict","free"];
+ const structural:readonly PracticeMode[]=paper.sections.length>1?["strict","free","single"]:["strict","free"];
+ return paper.practiceModes??structural;
 }
 
 export function resolvePracticeMode(paper:PaperRevision,selected:PracticeMode):PracticeMode{
- return availablePracticeModes(paper).includes(selected)?selected:
-   paper.edition==="custom"?"free":"strict";
+ const available=availablePracticeModes(paper);
+ if(available.includes(selected))return selected;
+ const preferred:PracticeMode=paper.edition==="custom"?"free":"strict";
+ return available.includes(preferred)?preferred:available[0]!;
 }
 
 export function configurePracticeMode(base:ExamPackage,mode:PracticeMode,sectionIndex=0):ExamPackage{
