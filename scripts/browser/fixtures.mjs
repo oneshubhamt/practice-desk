@@ -66,7 +66,7 @@ export async function openHarness({engine="chromium",artifactDir=null}={}){
 
  const pages=[];
  async function open({viewport=viewports.laptop,colorScheme="light",reducedMotion="reduce",
-  onDialog=null}={}){
+  onDialog=null,url=offlineUrl}={}){
   const context=await browser.newContext({viewport,colorScheme,reducedMotion,acceptDownloads:true});
   const page=await context.newPage();
   page.setDefaultTimeout(18000);
@@ -76,7 +76,7 @@ export async function openHarness({engine="chromium",artifactDir=null}={}){
    if(onDialog)onDialog(d);
    else void d.accept();
   });
-  await page.goto(offlineUrl,{waitUntil:"load"});
+  await page.goto(url,{waitUntil:"load"});
   // The first Library render proves that the offline generated app booted.
   await page.locator("#g-papers").waitFor({state:"visible"});
   const record={page,context,errors};

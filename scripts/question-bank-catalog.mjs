@@ -107,13 +107,16 @@ function validatePaperManifest(raw,exam,entry,path){
 
 async function manifestPapers(root,family){
  const examPath=family.manifest,exam=validateExamManifest(await readJson(root,examPath),family,examPath);
- const papers=[];
+ const papers=[],manifestIds=new Set(),logicalPaperIds=new Set();
  for(const year of exam.years){
   const yearPath=relativeTo(examPath,exam.paths[String(year)]);
   const entries=validateYearManifest(await readJson(root,yearPath),exam,year,yearPath);
   for(const entry of entries){
    const paperPath=relativeTo(yearPath,entry.path);
-   papers.push(validatePaperManifest(await readJson(root,paperPath),exam,entry,paperPath));
+   const paper=validatePaperManifest(await readJson(root,paperPath),exam,entry,paperPath);
+   if(manifestIds.has(paper.id)||logicalPaperIds.has(paper.paperId))
+    throw Error("Duplicate paper identity in manifest graph: "+paper.id);
+   manifestIds.add(paper.id);logicalPaperIds.add(paper.paperId);papers.push(paper);
   }
  }
  if(exam.currentPaperId&&!papers.some(p=>p.id===exam.currentPaperId))
@@ -150,6 +153,8 @@ async function loadExamPackages(root,family,manifestSet,seenPaperIds){
   const packagePath=relativeTo(paper.path,str(edition.package,"Canonical package path"));
   const pkg=validateExamPackage(await readJson(root,packagePath));
   if(pkg.examId!==family.examId)throw Error("Package examId mismatch for "+paper.id);
+  if(pkg.paper.paperId!==paper.paperId&&!pkg.paper.paperId.endsWith(":"+paper.paperId))
+   throw Error("Package paperId mismatch for "+paper.id);
   if(seenPaperIds.has(pkg.paper.id))throw Error("Duplicate preinstalled paper revision "+pkg.paper.id);
   seenPaperIds.add(pkg.paper.id);paperIds.push(pkg.paper.id);packages.push(pkg);
   manifestToPackage.set(paper.id,pkg.paper.id);

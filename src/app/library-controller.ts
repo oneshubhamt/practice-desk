@@ -151,7 +151,11 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
      '<select id="g-family" aria-label="Examination family">'+familyOptions+'</select></div>'+
      '<div class="paper-field"><label class="picker" for="g-papers">Paper</label>'+
      '<select id="g-papers">'+options+'</select></div></div>'+
-     (!selected?'<p class="generic-warning" role="status">Saved paper unavailable. Re-import its revision or select an installed paper.</p>':"")+
+     (!selected?'<p class="generic-warning" role="status">'+
+       (catalog.length===0&&!owner.choice?
+        'No examination bank is installed. Import a package or author a question bank to begin.':
+        'Saved paper unavailable. Re-import its revision or select an installed paper.')+
+       '</p>':"")+
      (hasEditions?'<div class="edition-row"><span class="picker" id="editionLabel">Paper edition</span>'+
        '<div class="edition-toggle" id="g-edition" role="group" aria-labelledby="editionLabel">'+
        (["reviewed","source"] as const).map(edition=>
