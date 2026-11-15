@@ -134,13 +134,13 @@ function patchSource(source,shape,sha256){
   fail("Patch must add, update or remove at least one question");
  if(updates.length+additions.length+removals.length>100)
   fail("A batch may change at most 100 questions");
+ if(body.nextRevision===undefined)
+  fail("Patch nextRevision is required; every patched source must create a new immutable revision");
+ positive(body.nextRevision,"nextRevision",999999,1);
+ if(body.nextRevision<=source.revision)
+  fail("nextRevision must strictly increase for a new publication revision");
  const next=structuredClone(source);
- if(body.nextRevision!==undefined){
-  positive(body.nextRevision,"nextRevision",999999,1);
-  if(body.nextRevision<=source.revision)
-   fail("nextRevision must strictly increase for a new publication revision");
-  next.revision=body.nextRevision;
- }
+ next.revision=body.nextRevision;
  const original=new Map();
  for(const [index,q] of source.questions.entries()){
   if(!q||typeof q!=="object"||Array.isArray(q))
@@ -192,8 +192,14 @@ function patchSource(source,shape,sha256){
   plain(item,"Added question");
   const id=ident(item.id,"Added question ID");
   if(touched.has(id)||original.has(id))fail("Duplicate new question ID "+id);
+  if(item.qa!==undefined&&(!item.qa||typeof item.qa!=="object"||Array.isArray(item.qa)))
+   fail("Added question "+id+" qa must be an object");
   touched.add(id);
-  next.questions.push(structuredClone(item));
+  const addedQuestion=structuredClone(item);
+  // New agent-authored content is unverified work even when the incoming file
+  // claims otherwise. Preserve applicability metadata but always reopen review.
+  addedQuestion.qa={...(addedQuestion.qa??{}),status:"needs-review"};
+  next.questions.push(addedQuestion);
   added.push(id);
  }
  for(const item of removals){

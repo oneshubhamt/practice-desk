@@ -117,9 +117,11 @@ test("P59: bad source hash, item hash, id, path, revisions and wrong keyed schem
  await writeFile(input,await readFile(apfc));
  const h=exec("inspect",input).data.sourceSha256;
  const item=exec("show",input,"labour-01").data.questionSha256;
- const base={format:"practice-desk-agent-patch",version:1,baseSha256:h,
+ const base={format:"practice-desk-agent-patch",version:1,baseSha256:h,nextRevision:source.revision+1,
   updates:[{id:"labour-01",expectedQuestionSha256:item,set:{explanation:"New explanation with existing B key."}}]};
+ const {nextRevision:_missingRevision,...missingRevision}=base;
  const cases=[
+  missingRevision,
   {...base,baseSha256:"0".repeat(64)},
   {...base,updates:[{...base.updates[0],expectedQuestionSha256:"0".repeat(64)}]},
   {...base,updates:[{...base.updates[0],id:"question-does-not-exist"}]},
@@ -171,9 +173,10 @@ test("P59: AI appends or removes only named questions with a non-destructive gua
  const q=exec("show",input,"labour-01");
  const appended={...structuredClone(source.questions[0]),
   id:"labour-02",prompt:"Which letter immediately follows B in the English alphabet?",
-  answer:"C",explanation:"C follows B; A precedes B and D comes after C."};
+  answer:"C",explanation:"C follows B; A precedes B and D comes after C.",
+  qa:{status:"unchecked"}};
  const operations={
-  format:"practice-desk-agent-patch",version:1,baseSha256:base,
+  format:"practice-desk-agent-patch",version:1,baseSha256:base,nextRevision:source.revision+1,
   add:[appended],
   remove:[{id:"labour-01",expectedQuestionSha256:q.data.questionSha256}]
  };
@@ -189,6 +192,9 @@ test("P59: AI appends or removes only named questions with a non-destructive gua
  const next=JSON.parse(await readFile(output,"utf8"));
  assert.ok(!next.questions.some(q=>q.id==="labour-01"));
  assert.ok(next.questions.some(q=>q.id==="labour-02"));
+ assert.equal(next.questions.find(q=>q.id==="labour-02").qa.status,"needs-review",
+  "New agent-added content must always re-enter review");
+ assert.equal(next.revision,source.revision+1);
  assert.equal(next.questions.length,3);
  assert.equal(source.questions[0].id,"labour-01");
  assert.equal(inspectExternalQuestionBank(next).valid,true);
@@ -205,7 +211,7 @@ test("P59: focused optional-field removal needs exact question identity; no arbi
  const base=exec("inspect",input).data.sourceSha256;
  const item=exec("show",input,"labour-01").data.questionSha256;
  await writeFile(patch,JSON.stringify({
-  format:"practice-desk-agent-patch",version:1,baseSha256:base,
+  format:"practice-desk-agent-patch",version:1,baseSha256:base,nextRevision:source.revision+1,
   updates:[{id:"labour-01",expectedQuestionSha256:item,unset:["topic"]}]
  }));
  const out=exec("patch",input,patch,output);
@@ -252,7 +258,7 @@ test("P59: editing an alleged official PYQ cannot silently retain its provenance
  const set={prompt:"Which letter comes third in the English alphabet?",
   answer:"C",explanation:"C comes third in this synthetic practice example."};
  const patch={
-  format:"practice-desk-agent-patch",version:1,baseSha256,
+  format:"practice-desk-agent-patch",version:1,baseSha256,nextRevision:source.revision+1,
   updates:[{id:"labour-01",expectedQuestionSha256,set}]
  };
  await writeFile(ops,JSON.stringify(patch));

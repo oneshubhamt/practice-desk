@@ -20,6 +20,29 @@ export async function catalogLifecycle(){
  const engine=process.argv[2]??"chromium";
  const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
  try{
+  const pfrdaWordCountCase=async(mode,untimed,expected,label)=>{
+   const {page,errors}=await h.open({url:pathToFileURL(noCgl).href});
+   check((await page.locator("#g-family option").first().innerText()).includes("PFRDA Grade A 2026"),
+    label+": preinstalled PFRDA family unavailable");
+   await page.locator('[data-mode="'+mode+'"]').click();
+   if(mode==="single")await page.locator("#g-single-section").selectOption("0");
+   if(untimed)await page.locator("#g-untimed").check();
+   await page.locator("#g-start").click();
+   await page.locator("#g-text").waitFor({state:"visible"});
+   const count=await page.locator("#g-word-count").count();
+   check((count===1)===expected,label+": Auto word-count visibility was incorrect");
+   if(expected){
+    await page.locator("#g-text").fill("A concise four word answer");
+    check((await page.locator("#g-word-count").innerText())==="5 / 120 words",
+     label+": advisory word count did not update live");
+   }
+   check(errors.length===0,label+" produced browser errors: "+errors.join(" / "));
+  };
+  await pfrdaWordCountCase("strict",false,false,"PFRDA strict simulation");
+  await pfrdaWordCountCase("free",false,true,"PFRDA flexible full-paper practice");
+  await pfrdaWordCountCase("single",false,true,"PFRDA section practice");
+  await pfrdaWordCountCase("strict",true,true,"PFRDA untimed strict-navigation practice");
+
   for(const [file,expected,absent] of [
    [noCgl,"PFRDA Grade A 2026","SSC CGL"],
    [noPfrda,"SSC CGL","PFRDA Grade A 2026"]

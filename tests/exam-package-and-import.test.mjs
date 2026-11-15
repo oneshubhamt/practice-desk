@@ -5,7 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {validateExamPackage,startGenericAttempt,configurePracticeMode,readableAnswer,validateExamImportBudget,
- availablePracticeModes,resolvePracticeMode} from "../src/app/exam-package.ts";
+ availablePracticeModes,resolvePracticeMode,attemptModeForPractice} from "../src/app/exam-package.ts";
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {validateAnswerKeyRevision,validatePaperRevision,validateQuestionRevision} from "../src/domain/validate.ts";
 import {paperRevisionHash} from "../src/domain/integrity.ts";
@@ -70,6 +70,11 @@ test("optional practice-mode eligibility is declarative, structural and hash-bou
  const freeOnly={...oneSection,practiceModes:["free"]};
  assert.deepEqual(availablePracticeModes(freeOnly),["free"]);
  assert.equal(resolvePracticeMode(freeOnly,"single"),"free");
+ assert.equal(attemptModeForPractice("strict"),"exam-simulation");
+ assert.equal(attemptModeForPractice("free"),"full-paper-practice");
+ assert.equal(attemptModeForPractice("single"),"section-practice");
+ assert.equal(attemptModeForPractice("strict",true),"custom-practice",
+  "An explicit untimed override must not masquerade as exam simulation");
  assert.throws(()=>configurePracticeMode({...pkg,paper:freeOnly},"strict"),/unavailable/);
 
  const multi={...pkg.paper,practiceModes:["strict","single"]};

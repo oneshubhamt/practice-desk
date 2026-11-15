@@ -93,7 +93,11 @@ export function configureUntimedPractice(base:ExamPackage,enabled:boolean):ExamP
  return {...base,paper};
 }
 
-export function attemptModeForPractice(mode:PracticeMode):AttemptMode{
+export function attemptModeForPractice(mode:PracticeMode,untimed=false):AttemptMode{
+ // An explicit untimed override is practice even when strict navigation is retained.
+ // Free/single already have practice attempt modes; strict+untimed needs the generic
+ // custom-practice mode so advisory practice UI (including Auto word count) is honest.
+ if(untimed&&mode==="strict")return "custom-practice";
  return mode==="free"?"full-paper-practice":mode==="single"?"section-practice":"exam-simulation";
 }
 

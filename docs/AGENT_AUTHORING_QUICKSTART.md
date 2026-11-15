@@ -29,6 +29,8 @@ node scripts/question-bank-agent.mjs show bank.json QUESTION-ID
 node scripts/question-bank-agent.mjs patch bank.json ops.json NEW-bank.json --dry-run
 ```
 
+Every agent patch creates a new immutable source revision: `nextRevision` is required and must strictly exceed the input revision. New questions and materially edited questions are forced back to `needs-review`; a patch cannot self-certify its own changes.
+
 Research actual syllabus/source documents, dates/current law, original item numbers and answer rationale outside the offline app. Label paraphrases `reconstruction`; claim `official-pyq` only when independently authenticated.
 
 ## Blind quality review

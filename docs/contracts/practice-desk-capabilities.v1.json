@@ -55,7 +55,7 @@
       "operation": "patch-bank",
       "command": "node scripts/question-bank-agent.mjs patch <source.json> <patch.json> <NEW-output.json> [--dry-run]",
       "privilege": "create-new-file",
-      "effect": "SHA-guarded question edits, including question-specific scoringOverride; no original overwrite; material edits reopen review"
+      "effect": "SHA-guarded question edits with mandatory increasing nextRevision, including question-specific scoringOverride; no original overwrite; added/materially edited questions reopen review"
     },
     {
       "operation": "qa-bank",

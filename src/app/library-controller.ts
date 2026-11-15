@@ -408,9 +408,10 @@ export function bindLibraryScreen(owner:LibraryControllerContext):void{
          "You have "+unfinished.length+" unfinished test"+(unfinished.length===1?"":"s")+
          ". Start a separate attempt? Existing attempts will be kept; their timers continue until expiry when resumed or while active."))return;
        const id=typeof crypto!=="undefined"&&crypto.randomUUID?crypto.randomUUID():"generic-"+owner.now()+"-"+Math.random();
+       const practiceMode=resolvePracticeMode(p.paper,owner.practiceMode);
        const configured=configureUntimedPractice(
-         configurePracticeMode(p,resolvePracticeMode(p.paper,owner.practiceMode),owner.singleSection),owner.untimedPractice);
-       const attemptMode=attemptModeForPractice(resolvePracticeMode(p.paper,owner.practiceMode));
+         configurePracticeMode(p,practiceMode,owner.singleSection),owner.untimedPractice);
+       const attemptMode=attemptModeForPractice(practiceMode,owner.untimedPractice);
        owner.attempt=startGenericAttempt(configured,id,owner.now(),attemptMode);
        owner.freshlyStartedAttemptId=owner.attempt.id;
        if(configured.paper.edition==="reviewed"){
