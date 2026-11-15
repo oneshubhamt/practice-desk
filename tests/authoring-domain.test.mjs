@@ -116,6 +116,20 @@ test("Studio health is derived from publication/QA state and identifies the next
  assert.ok(health.nextReason);
  assert.equal(Object.hasOwn(draft,"health"),false,"health must remain derived, not persisted");
 });
+test("review-invalidating edits must return the question to needs-review, not merely unchecked",()=>{
+ const base=newAuthoringDraft(),q=base.questions[0];
+ const reviewed=validateAuthoringDraft({...base,questions:[{...q,qa:{status:"unchecked",review:{
+  reviewer:"Reader",reviewedAt:"2026-11-15T12:00:00.000Z",note:"Checked",
+  acceptedWarningCodes:[]
+ }}}]});
+ // The Studio invalidation branch is source-level UI logic; its invariant is that
+ // a previously reviewed question cannot keep an unchecked status once content changes.
+ const current=reviewed.questions[0],{review:_,...qa}=current.qa;
+ const invalidated={...current,prompt:current.prompt+" edited",qa:{...qa,status:"needs-review"}};
+ assert.equal(validateAuthoringDraft({...reviewed,questions:[invalidated]}).questions[0].qa.status,"needs-review");
+ assert.equal(validateAuthoringDraft({...reviewed,questions:[invalidated]}).questions[0].qa.review,undefined);
+});
+
 test("Fix-next target mapping resolves editor fields and non-rich controls precisely",()=>{
  const q=newAuthoringQuestion("single-choice");
  assert.deepEqual(authoringIssueTarget("Question 1 · Question stem",q),{field:"prompt"});

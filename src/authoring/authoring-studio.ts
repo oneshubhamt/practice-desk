@@ -145,7 +145,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    if(!prior||prior===JSON.stringify(withoutReview(q)))return q;
    if(!q.qa)return {...q,qa:{status:"needs-review"}};
    const {review:_,...qa}=q.qa;
-   return {...q,qa:{...qa,status:q.qa.status}};
+   return {...q,qa:{...qa,status:"needs-review"}};
   })}):changed;
   shelf={...shelf,drafts:shelf.drafts.map(d=>d.id===draft.id?current:d)};
   persist();
