@@ -8,8 +8,7 @@
   "mocks": [
     {
       "id": "day-01",
-      "path": "mocks/day-01/manifest.json",
-      "currentEdition": "revised"
+      "path": "mocks/day-01/manifest.json"
     }
   ],
   "pyqs": []

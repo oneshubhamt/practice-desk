@@ -4,13 +4,14 @@
   "id": "ssc-cgl",
   "examId": "ssc-cgl",
   "title": "SSC CGL",
+  "representation": "legacy-cgl",
   "contentTypes": [
     "pyq"
   ],
-  "preinstalled": true,
+  "years": [
+    2026
+  ],
   "paths": {
-    "original": "pyqs/original/papers.json",
-    "revisedPatches": "pyqs/revised/patches.json",
-    "revisedSolutions": "pyqs/revised/solutions.json"
+    "2026": "2026/manifest.json"
   }
 }

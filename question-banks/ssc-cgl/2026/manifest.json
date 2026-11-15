@@ -1,0 +1,31 @@
+{
+  "format": "practice-desk-exam-year-manifest",
+  "version": 1,
+  "id": "ssc-cgl-2026",
+  "examId": "ssc-cgl",
+  "title": "SSC CGL 2026",
+  "year": 2026,
+  "mocks": [],
+  "pyqs": [
+    {
+      "id": "cgl-2026-09-30",
+      "path": "pyqs/2026-09-30/manifest.json"
+    },
+    {
+      "id": "cgl-2026-10-05",
+      "path": "pyqs/2026-10-05/manifest.json"
+    },
+    {
+      "id": "cgl-2026-10-06",
+      "path": "pyqs/2026-10-06/manifest.json"
+    },
+    {
+      "id": "cgl-2026-10-07",
+      "path": "pyqs/2026-10-07/manifest.json"
+    },
+    {
+      "id": "cgl-2026-10-08",
+      "path": "pyqs/2026-10-08/manifest.json"
+    }
+  ]
+}

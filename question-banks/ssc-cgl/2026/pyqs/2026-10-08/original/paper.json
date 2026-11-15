@@ -1,0 +1,1932 @@
+{
+  "id": "cgl-2026-10-08",
+  "date": "8 October 2026",
+  "name": "SSC CGL · 8 Oct 2026",
+  "kind": "SSC CGL Tier I",
+  "questions": [
+    {
+      "n": 1,
+      "stem": "What is the next number in the series?\n2, 10, 50, 250, ?",
+      "opts": [
+        "1000",
+        "1100",
+        "1220",
+        "1250"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 1,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 2,
+      "stem": "Vegetable prices have suddenly gone up in the market. What is the likely cause?",
+      "opts": [
+        "Sellers want to earn high profit margins only now",
+        "People have stopped eating other food items now",
+        "Vegetable supply has reduced greatly",
+        "Prices are always highest in the winter season now"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "caution",
+      "review": "The fall in supply is a plausible explanation, but the market observation alone does not establish causation.",
+      "explanation": "The fall in supply is a plausible explanation, but the market observation alone does not establish causation.",
+      "images": {},
+      "sourcePage": 1,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 3,
+      "stem": "In the following figure series, select the figure which can be placed at the sign of question mark (?)\nfrom the given alternatives.",
+      "opts": [
+        "Figure A",
+        "Figure B",
+        "Figure C",
+        "Figure D"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {
+        "stem": "data:image/webp;base64,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",
+        "options": [
+          "data:image/webp;base64,UklGRnwBAABXRUJQVlA4IHABAADwDACdASpgAFwAPm0skEakIqGhPxV4AIANiWkAAD0QCsaZm9JeM2FY3sw1p0WM40bhJ6dEA3vzk+/QFbMBREWjodhcXc5S/t/uraNTtpSobGN4L9Z66uQ8IDqGcHVkGVbz3w5rjrdG3aDZ7+3b3h0AAP7+LxP+Hvmxbu/p6yYJDrToMXaafxxsiNLMyYBPI10ow6WfABn2yhYblSpxyRTh4mNfWzj9alpjAV5KT6b/a7MV6N30QjSlNdt81gJXyd0Km1I04Q/5DTQT6jlbxuPx9/mtgNz6nd/btryvPpkXUXAWC+5fJZ/yYE/f/MFuGJDi8Bod1tAA5qC0JNXLhIJwQGA7I+mtJ+ENadeAVRRV75c62C3fjnmYCGSZCu8+HYlmPV74WKBnT5jLejVGnosGbyh/VNukqm4/lbjMlsSWvuLeURaLqVzUPbw9tBMLokWh2vyiuaL7tk3oDu3dwHe7HfqgOORRiMjtELrU6AAAAA==",
+          "data:image/webp;base64,UklGRo4BAABXRUJQVlA4IIIBAABQDgCdASpgAGYAPnU0k0ako6GhNtooAJAOiWkAFeqzVYMyrEeqmeroCuU+WiYq7Qg1POXANGxI0KPDFIwuRlhM/PH86XBwycgRFot1UK2nzKqsjAja4SGpaG++I6vFslQXw4MA2hhlyXpdPn2/r5yDeQabbd8Ett72cQAA/vfkW27IrNxunUFfUlpEXsy4Cw+/9yEz3+hiUR9Sqzs009L/doQ3dPFr2L/XVzCxi4QUHI68vIX5r3q8ccU3DHq/45efSSVZ1PV9uXFfwmqEdeHHYhqbsTJY7BlKAlcp0ldDf+gK+0v0uLwLkWhpbKTa5Pv2ZgvPBHvk7G0ot/j53jL4yEkGHANl/Vi3vU61bzhvWAT4uTMkis2ZQwTjCbVYLLojCTZjPDWrc+p4EnsNkyPWK2SMbeu6sKx9mzd5kvhWyFKta3C9l/jXE8c6APXhOl929XSHhYcjrdXHmAsQTmltlRKPpV5c6wrsWbrYK30T47GtpUeWANBBp8Y56jX6AAAAAA==",
+          "data:image/webp;base64,UklGRqoBAABXRUJQVlA4IJ4BAABwDwCdASpgAGAAPoE8mEglI6KhKrQLqKAQCWkfQAAApK21RNdGvg04QagAp5/gL/cbnA04ZdpvgXNKroAiu1jPM1rFf+6UytMKSnpUS+iIbB1ZlV8yXR4uK7/Bz4lQU3aiSbMkDXDT2AQ/mKxc0WuLXyZ+RpAI8dmE+br8ErJKV1Tg7AAA/vw67pFrO3+VHD90cjlMPwCGMtRDtplBVqoWVn3OjpdY2R+cKZ+jvNzt+9oRDP8oa0xFxuD+LGSdVKynZjEsKZUoMrxTfZiL0UaYdRB95lJDaRw6QJRahuGsQc2+jqqlal7cIUNoGj/U8GfMNR6PUKc4gYK4xZz88o5AKKPYyoYg1ALPSNPVTiM9yA7iP4tLz8IVmKRvlBT7QWWk1L6QKbAR/wHgWWbKvnnhuvIAxcU8VJDx3jUx8KeR2qw9OSmgKa9IfJMuOq0MJkL48VbofpU4BPsgimCkV8TbM7DMpoBgIxQpijSWhZGqCd4lwSsva+D8YEgD66ep6U6uuPtNzU81PNTyCgPglJoSzHlDuOFLUQ5Xi3AAAAA=",
+          "data:image/webp;base64,UklGRm4BAABXRUJQVlA4IGIBAAAwDACdASpgAF4APoE+m0qlIyIiIrVZ8KAQCWkAFedgaVroszPW6h78ktJ/Wj7CTSJgU1qSsRPx+N9KhP0kGihTLefIfTetxZ+DI0ouFktounsUEM+fHlck2S2aRLHxD/3Lsw7vm9yzrMUAAP73jkKQvskf7iieM2OMZZaj+St4I/m+89lU5C4eCD3dTT3XFyQQQJC9ciYAOJzjdORMYLmi2knmggzRy4bEwoj5Cv974DhhW6G4BSGlgDf/9mti55YoxAg8TiqmOw1yi+VSRSVdYt3C4Q8zNbGbismdT2wvUvMNKLwuti/YMpgtcTzus3jmRoHYo4pEYKQYJuf8IcnTWWAW/OXTrKtWqXOIz49CIv42NqJZpu5rLMm0ClWvTvy0PQO/Kjez2py9PR+2oBQk3WSqoZFoNACidBqZFvEwZ8UeZg+eUIP3sr+M3hCQsgEvUm5vKDqco3vfOnZ9SEAAAAA="
+        ]
+      },
+      "sourcePage": 1,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 4,
+      "stem": "Directions: Pick the correct option from below.\n37, 53, ?, 97, 125",
+      "opts": [
+        "60",
+        "64",
+        "69",
+        "73"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 1,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 5,
+      "stem": "In a certain coded language 'ROOT' is coded as 'MIJN' and 'FANS' is coded as 'AUIM'. How will\n'JAMS' be coded in the same code language?",
+      "opts": [
+        "GSIK",
+        "CSGM",
+        "FSFM",
+        "EUHM"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 4,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 6,
+      "stem": "The criteria for selecting a candidate for the post of 'Mechanical Engineer' are as follows.\nThe candidate:\n1. must have passed M.Tech in Mechanical Engineering with more than 75% marks.\n2. must have secured more than 65% marks in the written test and more than 70% in the interview.\n3. must not be less than 30 years and not more than 35 years of age as on 1 January 2019.\nHowever, if a candidate fulfils all the above criteria EXCEPT:\na. no. 2, but has obtained more than 80% marks in M.Tech, his/her case is to be referred to the Chief\nEngineer.\nb. no. 3, but has got more than five years experience of working as a Mechanical Engineer, his/her case\nis to be referred to the Deputy Director.\nBased on the criteria given and without assuming any additional information, you have to take a\ndecision for the following candidate.\nVijendra completed M.Tech with 76% marks in Mechanical Engineering. He was born on 14th\nNovember 1983. He has got 73% marks in both written test and interview. He has worked as\nMechanical Engineer for three years.",
+      "opts": [
+        "The candidate is to be selected.",
+        "The candidate is not to be selected.",
+        "The candidate's case is to be referred to the Chief Engineer.",
+        "The candidate's case is to be referred to Deputy Director."
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "caution",
+      "review": "Eligibility depends on whether “not more than 35 years” means the exact age or completed years.",
+      "explanation": "Eligibility depends on whether “not more than 35 years” means the exact age or completed years.",
+      "images": {},
+      "sourcePage": 4,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 7,
+      "stem": "In a certain coded language 'COMPS' is coded as 'NKHKY' and 'ABATE' is coded as 'ZOVXW'. How\nwill 'SMOKY' be coded in the same code language?",
+      "opts": [
+        "RHKJN",
+        "TGKIQ",
+        "SFIKQ",
+        "TFJIO"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "invalid",
+      "review": "The two example transformations do not define a consistent recoverable coding rule; the marked option cannot be independently justified.",
+      "explanation": "The two example transformations do not define a consistent recoverable coding rule; the marked option cannot be independently justified.",
+      "images": {},
+      "sourcePage": 4,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 8,
+      "stem": "Statement:\nOnline education platforms are increasingly being adopted by students.\nAssumptions:\nI. Students have access to the internet.\nII. Traditional education has become irrelevant.\nIII. Online platforms offer flexible learning.\n   2",
+      "opts": [
+        "Only I and III are implicit",
+        "Only I is implicit",
+        "Only II and III are implicit",
+        "All are implicit"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "caution",
+      "review": "Flexible learning is a plausible benefit, but not a logically necessary assumption behind every adoption decision.",
+      "explanation": "Flexible learning is a plausible benefit, but not a logically necessary assumption behind every adoption decision.",
+      "images": {},
+      "sourcePage": 4,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 9,
+      "stem": "In the question one statement is given, followed by arguments, I and II. You have to decide which\nof the argument is strong.\nStatement: Should male labourers be paid more than female labourers?\nArguments:\nΙ. Yes. Even physiologists confirm that men are physically stronger than women.\nΙΙ. No. Equal work should be paid equally irrespective of gender.",
+      "opts": [
+        "Only argument I is strong",
+        "Only argument II is strong",
+        "Both arguments I and II are strong",
+        "Neither argument I nor II is strong"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 5,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 10,
+      "stem": "Select the option exactly similar to:\n16th Floor, Alpha Tower, Near City Center Mall, Bangalore, KA 560001",
+      "opts": [
+        "16th Floor, Alpha Tower, Near City Center Mall, Bengalooru, KA- 560001",
+        "16 Floor, Alpha Tower, Near City Center Mall, Bangalore, KA 560001",
+        "16th Floor, Alpha Tower, Near City Center Mall, Bangalore, KA 560001",
+        "16th Floor, Alpha Tower, Near City Center Mall, Bangalore, Karnataka 560001"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 5,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 11,
+      "stem": "Two figures given on the left side of (::) are related with some logic/rule/relation. Select the missing figure on the right side of (::) from the given alternatives based on the same logic/rule/relation.",
+      "opts": [
+        "Figure A",
+        "Figure B",
+        "Figure C",
+        "Figure D"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {
+        "stem": "data:image/webp;base64,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",
+        "options": [
+          "data:image/webp;base64,UklGRnoDAABXRUJQVlA4IG4DAACwGQCdASqCAHkAPnk0lkakoyIhNjV4uJAPCWkAEWPkovxMTpEmML0EHerVDmXyi1WBGJ6/7lod6swbX1mTRXEA4NUuFQE4O4y0CT6gTMOvDeUVjwfveWgnH+ssgytChWTMrzCgLc3EcxlBnI2tFK+fu3f9vYJSxoR9eCg+2qx4L0VieoFgpnXsuOdjUPSL3tvBorcHloOecDyhcjv4sIp3R881CxsY+sSWrc6jXiaW9SSXMlIiBeGuryq7eqhkz1YGChi/CSjsvO7yCsP6QtmhsSy3+0EgAP7+eon/nZ/8Fl8uGqZU8/zCJyrtzvgRbc4x8EuiiDWT60J5rCxzJhDoa6UAGNJG//qtT6avlVAKystESAk5uqsubAODPN83Q1O6ZAJRUlAYvCcFKc1WG4A7Tb85UEYSk6Rw+zSCB6VJY7j+x/7KyNZuq5HnyGF1WUYU4+MnjxmayAIRDGb5s9UyVTPYiexe+Yxq+XqSy6Niu/1eHMrXWBus6BDzh3U3xek+YFtVPVbg8r2cB5Rr/ZKl70I8ymlsReKe4VWLF+zoDV2I6PVkRGIm/GmDTXeZZiq+E9Jn/T4Fts0gOoFWYRQ1liH1OO6ameGk+/nWAktDrXo1+/Yc/XPnDM+X7utpWaDbDibKWqYPUfoGlaZZC5z8fibomrRGkRc+x38uobntAg2tQdretDkDGzuwCaL+/uXwpLcwULVVvyo5nR8jn5iw/S7regkkM9q2MgA5GrCPkPEi7okyeiBGKRoDMoTK6pW1sP5yubIfXkUtta3rLUYrpidyfu5y2fuzomi1KzeRjPpqCeAa+tjPBPFIl0Yp3f2xxRAJlGOTzvnSwqABJNORHLzbAB5GATLmjENah3jbgLTnSUBfg9zNqTe7iXsDO2Fl5chSJ+lKRCdCCUsgI9ags2KuutlK2YF1eKCFdu1AG2HsDQ2Ur7MNF63uC1ShhQBSGFshwdz+cchtCfmpUwurQ3rfKgHTpss9E/Ma16CyHE7RDCOhq7SP6FfMaWdZJKAaBDvTa1oLWkg3ry1RmZolcV2DgmJaNhLY6SPzXC3xe0TXDMtxwxWM/BnJ2hyIvClZoTqRNolbma79A3VdD97buCJZTc68D6QGqHF3yLfUtCsUvwt/+dv8wu8x5DG4OdDZX2nHsR1hwiwxtAAAAA==",
+          "data:image/webp;base64,UklGRoIDAABXRUJQVlA4IHYDAABwGgCdASqCAIAAPn00lUakoyIhNrVYAJAPiWkAFen6hY1JewiFRB7ZIgIf7ap0rkwOShwHfMEcJ25OgR7cNLVbein0cYKMDAp/KLGUGSYJG/d88ca23/XNNVz6dII71SCSF6btjXgapsu2TBPY0ojNGSv6JbzmInbg4qY/fOpTsXkg3OCyJ1jxzypM92nFm1Dtd1rY7r+WufSsEDNkCUnN9bEdxN3SD/RC1Gto0uRXGO29TSlhQ98THyjfVUjUU83/Jb/9dIh6Z/roUSxUujHT+D6HcO4AaMr/1bAAAP746E2O6n7hJpmrNzPXvv3jr2rjbCPLdBmuT/35ZOetnNbknWr2CZTf/anyWrehDpsPUNqfa+YwkYAE4Sq/VwJ9VoNbbZrtWHIrj0vALmzKyVpQF/fVMbTyAoHwuapBIsHYoY16od3ZO3xbzqKfAaTgQIIM0UKZzqc0GaS5n7bDc1t8cCHWXkzX7naz2aqWfqnmRCqDaL+Bgv24m+kQ/c0U8MR6B9pEwZOVsZuG7qBU+cKJyLVwOTquTs878fB3yRyRuq3Bg9XN+KxDT6pxnbWEXxPt1Z5jzzzMhY3RrlLOCLgWkPyhBv9sYox4SOwhdhC5wbh3MyMD9U3T4GX+fghdlNtpXeK3GWJyYIRS5AzuzI0cR7LhGAgHBtya2OZj2HgdW2RP3kweLLkK3hruQSvLPW44wI0WL8y+eISJyTO7oicgtUsHRsH/JBYOVAyFxD8Ann29GowHpnkPRPkTEYAMSABCoUpdiYQwfzGvpVhP+YK91UGdxa5iZwo8WF5yNXc8LTwHvcqv/mVaKNsYf1jUcdgSPzYM0qro1CKJhQ6dyocz33X0ZIMP7kCTBKEf3Dem+a4qEfgp06cv5onFhe6FbHKQtqOpA6fZnEvlp77F2zFgRKWyccySAQYyS7tiCA5e2Ja+tW39lkFbOTt6B7iiz/oeMBZX7Ta6+LRUuMRDSd2UCF4SCoTgJiAim6oxfqvLiFxf5VXt103UFulLiYR+PRlhqassvcZXzkKSfT50WmNIhWCogjQpGnFImK5OL7w18ScegysrGVLC6mwhA3LlC4uxrh/CTC06Z0BuhL8VmNlwZq8JGPGMqTSbBw37mSvRUkQJjJuBfebbTgHfbExFqkb+txIO4yDiztYaFcM1H9UTcTacQAAA",
+          "data:image/webp;base64,UklGRjIDAABXRUJQVlA4ICYDAAAQGwCdASqFAJkAPnk0kEakoyGhNxWo+JAPCWkAFc3Wr+ftPuWoorz2syUYhwgp+QQZDZtEkIz8HoLsEGTWYTMhQ0r/em/2auxIwZjHNndGJXPWtSiMHGHUmKipxeqnQG3GyzRRkcOwLFKtfkc4e4fIW3xJKvimBG4WqAel+AbyHTGg7/RCp4H3lO2G2Ks3a6m65kObpiGE5o4itQhNeClwnwyi3u4NydVigAut5zw6+I4476YPnArlAsVsJwaWgCdGncHBHElkhTld0zusi1OQjXfAkPKAvuoD+WN2zJoivQAA/vCVynYGE+vtyRRVJoxu8vWJA1sJEvrzGZOLlRswwdaYXvJmHVNcG6TCl7cNAPFOtFCcxglne251jLZ1YzB7EsJxWXeVvGAvsnXO6KttAOol/fr8tD+dAZ4lu50eLQ0Pi4p/qctX8mFZqPYNnYZSBIZqYpcO/IscWJwLnyRJuvJQ5WftPIRrbRqfRn36LcvcmLMyFYXa/YVEN/MaoEQP8BaQXh8j/9t7e/d1dfX60VjruebdiNY8kbIK6M+GmEnbCAH4LO6D1NnTbzUMRAJIPa0dso7d1V5wPDAbzmRM8oW7yWEyuQtIreIe8VpvjZD6XeAPxY+ioqmuvovQKPveFuRMUkErsEcFphZbqmJVcBRkeiJ3AcskQR4IdTT3AUAeRLIRiPVhV44n37udtUgID0MKPrxUz/5HfVN23mzIAlwIU0wZK4kAiR9uAmDS0S6ArEmimkgWL5dolYHGa2MqCK+lg9KAyK3Fa098w+JuG74hlRSzuSxJ+JAQpO2SHCCzrez6GmwKfNCajQdeVVkdscQc3rKpGSHRmksDztS8dOl0NaoA1fiM5Fss4xz33lK5UmbXNj6UDjt015Jm3G50aP7qz21EePyvC4Yq8KEtPIeJ/KDzca/HY6JdHpezITVP8PjiNQ7Aie4VrwSnp0dBn3Drfuwq8pxLXG4pji2Df6Bu9ULqUDSRc3i8WleZv6mzM+BdrHe/I0yJ2KlZE7Ob2/iiwIb7xD5wui24dsU/HKGvav+0xKuWquk3QfzQw9fAoAAAAA==",
+          "data:image/webp;base64,UklGRigDAABXRUJQVlA4IBwDAACQGgCdASqHAIIAPoE0lEalIyIhNPMKkKAQCWkAFsw9AbVZg5V2wng3c3zzDESEG9YhOsBAcBwLghuqOceuGEWHJtJizCtUh29GkCt3QkNvkdhe1cAIwNH2vveL83KqZ2eiPD0CC6pqa7C5sEsi/0OFIx7zad2j7Mm182SXc2Klr5TrXqvVawFsZZ9uNaqrLpZjPquKnqty3pMuRr8z1jlluaYKCQfynDz+4w9FeXMl7zTGH7X15a0dT4f6fB7oiuFeA06HUBau23tIMn0BoJiMWErWovZDHy5VyrlVQAD+/z1GJhTKAatfCW+VjExDQa2Q4NWnAW314A8Jz0Lc0gMB9Lc0DNYDIY+6HBOAOaHsRmvUsVToS9PFlxxu21dcz83LegHn/yq4LtFNGt0eIT6/rlAzwcj543DfxVGRMlh8KFcDOJUsbK0fnRw5f9eTkV4Ixng4NQaMt1UCa6z9UYvp9HCZfDkx0QD0AG64Am9lB9nzasrhamP3arLPVOqza2S6ngqjp2WMDupYnvJNHlWimX4Uo3pbeqbMRb7n7LLkrUPFO0LSYXyoBKvMbP47K1AiLV8w+odhVQ1MMl27uxVy2y6j1rrMtL5a47vZaWn3sUUJGd5K18gZtc87MY+0rjxyn29X5cKPi2rd3tIFG6e+YAuYwMbd4E2Z2PxdmA5I3Oie1lzx2kmbCSs7/dIm46KCr46TIkOS10q+gIr02qVoQvbaNVZTWLIOHihpN7V2/odUe8Bc/t1L15LdCjF7bYlC6YdINd2GQ7FaLTN0vm8OL/xO0OHrrNuLa1OzthrjlIEQs1EFeeTcD6gO4YQDYj37mRS28cbNaL8e9YRM7iT6oNZZTLsTpg5Nd3AwFHjghnpDrC1v8D2jzTONjddCj414ALN6s+3Bt9hWLnalMMOGmdjGrXaOU1R+QFHhqYX3bkfkBbVhavNVCrvPkBjVJo4jJdw25nIvanIor/DPWODF4tq8uGeteUO5FM1I0zrHuImh7c5UQHWfil2pdN73Mr2pymAAuwvox8/vEB5snkOgAjmX7XWY66JAAAAA"
+        ]
+      },
+      "sourcePage": 5,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 12,
+      "stem": "In the question a statement is given, followed by two arguments, I and II. You have to consider\nthe statements to be true even if it seems to be at variance from commonly known facts. You have to\ndecide which of the given conclusions, if any, follows from the given statement.\nStatement: Should India support all the decisions and policies made by Pakistan.\nArguments:\nI. Yes, as this is the only way to maintain peace among both the nations.\nII. No, as India should have its own opinion on the decisions and policies made by Pakistan as some\nmay be correct and some may be incorrect.",
+      "opts": [
+        "Only argument I is strong",
+        "Only argument II is strong",
+        "Either argument I or argument II is strong",
+        "Neither argument I nor argument II is strong"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 6,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 13,
+      "stem": "Pointing to Sakshi, I said, 'She is the daughter of the brother of the son of my wife.' How am I\nrelated to Sakshi?",
+      "opts": [
+        "Granddaughter",
+        "Grandson",
+        "Grandmother",
+        "Grandfather"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "invalid",
+      "review": "The speaker’s gender is not specified, so both grandfather and grandmother are possible. The published answer assumes a male speaker.",
+      "explanation": "The speaker’s gender is not specified, so both grandfather and grandmother are possible. The published answer assumes a male speaker.",
+      "images": {},
+      "sourcePage": 6,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 14,
+      "stem": "Find the next element that replace the ? Logically\n1, 15, 85, 435, ?",
+      "opts": [
+        "2186",
+        "2185",
+        "2184",
+        "2201"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 6,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 15,
+      "stem": "Eight symbol-number clusters are given below three of which are same. Find the three clusters\nthat are exactly same.\n\n(A) 74* &4%48@23*7^+#\n(B) 74* &4%43@23*7$+#\n(C) 74* &4%43@23*7^+#\n(D) 74* &4%43@23*7^+#\n(E) 74* &4$43@23*7^+#\n(F) 74* &4%43@33*7^+#\n(G) 74* &4&43@23*7^+#\n(H) 74* &4%43@23*7^+#",
+      "opts": [
+        "A, C and E",
+        "B, C and E",
+        "C, D and H",
+        "C, F and H"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 6,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 16,
+      "stem": "Read the given statements and conclusions carefully and decide which of the conclusions\nlogically follows(s) from the statements.\nStatements:\n(I) All ships are boats.\n(II) All anchors are ships\nConclusions:\nI. All anchors are boats.\nII. Some ships are anchors.\nIII. No anchor is a boat.\nIV. Some boats are anchors.",
+      "opts": [
+        "All four conclusions follow",
+        "Only conclusions I and III follow",
+        "Only conclusion III follows",
+        "Only conclusions I, II, and IV follow"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "caution",
+      "review": "Conclusions about “some” anchors require an existence convention when the premises are universal.",
+      "explanation": "Conclusions about “some” anchors require an existence convention when the premises are universal.",
+      "images": {},
+      "sourcePage": 7,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 17,
+      "stem": "In a certain code language, 'GOAT' is coded as '68', 'POLE' is coded as '63'. How will 'FAIL' be\ncoded in that code language?",
+      "opts": [
+        "85",
+        "83",
+        "80",
+        "78"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "invalid",
+      "review": "Two word–number examples are insufficient to infer a unique rule yielding the printed answer.",
+      "explanation": "Two word–number examples are insufficient to infer a unique rule yielding the printed answer.",
+      "images": {},
+      "sourcePage": 7,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 18,
+      "stem": "Amrita is the sister of Bablu. Bablu is the brother of Deepak. Deepak is the son of Malti and Malti\nis the wife of Lakhan. Nehal is the brother of Lakhan. How is Nehal related to Amrita?",
+      "opts": [
+        "Father's brother",
+        "Son",
+        "Mother's brother",
+        "Brother"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 7,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 19,
+      "stem": "Directions: Select the correct options from the given alternatives\n10, 110, 220, 340, ....",
+      "opts": [
+        "470",
+        "450",
+        "460",
+        "480"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 8,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 20,
+      "stem": "In a hospital, non-local patients wait longer for appointments compared to local patients with\nsimilar conditions. Which inference is valid?",
+      "opts": [
+        "Locals need faster treatment",
+        "Locals pay more",
+        "Non-locals have more serious illnesses",
+        "Preference for local patients"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "caution",
+      "review": "Longer waiting suggests possible preference, but the data alone cannot rule out other operational causes.",
+      "explanation": "Longer waiting suggests possible preference, but the data alone cannot rule out other operational causes.",
+      "images": {},
+      "sourcePage": 8,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 21,
+      "stem": "A Candidate ID is a 13-digit number. The structure is non-standard: The first 3 digits are the\nYear, the next 2 digits are the Batch. The Center Code is formed by taking the 6th, 9th, and 12th digits\nof the entire ID. For the Candidate ID 2021543217654, what is the Center Code?",
+      "opts": [
+        "146",
+        "175",
+        "415",
+        "475"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "caution",
+      "review": "The candidate-ID layout calls its first three digits “Year”; this is nonstandard but explicitly stated.",
+      "explanation": "The candidate-ID layout calls its first three digits “Year”; this is nonstandard but explicitly stated.",
+      "images": {},
+      "sourcePage": 8,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 22,
+      "stem": "Some conditional data is provided to you in form of statement you have to check which of the\nfollowing statement are logically inference from given statement.\nStatement: No student who fails the midterm exam passes the final course. Sarah passed the final\ncourse.\nWhat can we infer about Sarah's midterm performance?",
+      "opts": [
+        "Sarah got an A on the midterm",
+        "Sarah did not fail the midterm exam",
+        "Sarah studied hard for the midterm",
+        "Sarah retook the midterm"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 8,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 23,
+      "stem": "Choose the address that is the same as the one given below.\nSample Address: Flat C-3, Phase 2, Golden Homes, Navi Mumbai, Maharashtra – 410210",
+      "opts": [
+        "Flat C3, Phase 2, Golden Homes, Navi Mumbai, Maharashtra - 410210",
+        "Flat C-3, Phase 2, Golden Homes, Navi Mumbai, Maharashtra - 410210",
+        "Flat C-3, Phase II, Golden Homes, Navi Mumbai, Maharashtra - 410210",
+        "Flat C-3, Phase 2, Golden Home, Navi Mumbai, Maharashtra 410210"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "invalid",
+      "review": "The sample address uses an en dash before the PIN code; the marked option uses a hyphen, so it is not exactly identical as worded.",
+      "explanation": "The sample address uses an en dash before the PIN code; the marked option uses a hyphen, so it is not exactly identical as worded.",
+      "images": {},
+      "sourcePage": 8,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 24,
+      "stem": "If in a certain code language, 'LIFE' is written as '11731', then in that code language, how 'ZONE'\nmay be written?",
+      "opts": [
+        "2514112",
+        "2513111",
+        "2515111",
+        "2514211"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 9,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 25,
+      "stem": "Identify the assumption: “The company reduced prices to increase sales.”",
+      "opts": [
+        "Customers prefer cheap products",
+        "Lower prices attract more buyers",
+        "Sales were already high",
+        "Quality is irrelevant"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 9,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 26,
+      "stem": "Which of the following sports includes a ball?",
+      "opts": [
+        "Boxing",
+        "Badminton",
+        "Chess",
+        "Golf"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 9,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 27,
+      "stem": "Which of the following countries never hosted the Asian Games till 2022?",
+      "opts": [
+        "Pakistan",
+        "South Korea",
+        "China",
+        "Japan"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 9,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 28,
+      "stem": "Which of the following is not a function of biosphere reserves?",
+      "opts": [
+        "Cultural heritage preservation",
+        "Conservation of biodiversity",
+        "Promotion of monoculture farming",
+        "Sustainable development of local communities"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 9,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 29,
+      "stem": "The Land Boundary Agreement with Bangladesh was  constitutionalized through which\nConstitutional Amendment?",
+      "opts": [
+        "One Hundred and First Amendment",
+        "Ninety-Eighth Amendment",
+        "Ninety-Seventh Amendment",
+        "One Hundredth Amendment"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 10,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 30,
+      "stem": "On which date did the Gujarat State Assembly make history by passing the Uniform Civil Code\n(UCC) Bill 2026?",
+      "opts": [
+        "January 26, 2026",
+        "March 24, 2026",
+        "August 15, 2025",
+        "March 25, 2026"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 10,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 31,
+      "stem": "Match the following regarding the host cities of the Asian Games:\n List-I (Asian Games)    List-II (Host City)\n  I. 2022 Asian Games    1. Riyadh\n  II. 2026 Asian Games   2. Hangzhou\n  III. 2030 Asian Games  3. Doha\n IV. 2034 Asian Games  4. Aichi-Nagoya\nSelect the correct answer using the code given below:",
+      "opts": [
+        "I-2, II-4, III-3, IV-1",
+        "I-4, II-2, III-1, IV-3",
+        "I-2, II-3, III-4, IV-1",
+        "I-3, II-4, III-2, IV-1"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 10,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 32,
+      "stem": "Which statement accurately describes the characteristics of protons in an atom?",
+      "opts": [
+        "They revolve around the nucleus in fixed orbits.",
+        "They have negligible mass compared to electrons.",
+        "They are located in the nucleus of an atom.",
+        "They are negatively charged particles."
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 10,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 33,
+      "stem": "In 2022, the President pardoned a woman jailed for a minor crime. Which Article of the Indian\nConstitution allows the President to grant pardons?",
+      "opts": [
+        "Article 75",
+        "Article 74",
+        "Article 72",
+        "Article 53"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 10,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 34,
+      "stem": "In May 2026, Union Minister of State (Independent Charge) Prataprao Jadhav launched which\nportal under the Ayush Grid initiative to strengthen digital governance and enhance transparency in\nthe AYUSH sector?",
+      "opts": [
+        "Ayush Setu Portal",
+        "Ayush Anudan Portal",
+        "Ayush Bharat Portal",
+        "Ayush Sampada Portal"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 11,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 35,
+      "stem": "In 2026, India will surpass which country to become Sri Lanka's second-largest export\ndestination?",
+      "opts": [
+        "USA",
+        "China",
+        "United Kingdom",
+        "Japan"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 11,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 36,
+      "stem": "The stringent industrial licensing regime in India (pre-1991) often led to which unintended\nconsequence for established firms, despite aiming to prevent monopolies?",
+      "opts": [
+        "Excessive foreign competition.",
+        "Rapid expansion of small-scale industries.",
+        "Reduced incentive for technological upgradation and efficiency.",
+        "Increased diversification into global markets."
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 11,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 37,
+      "stem": "Consider the following statements regarding privatization:\n(i) Privatization means not transferring ownership of public sector enterprises to private enterprises.\n(ii) Privatization involves the transfer of management of public sector enterprises to private\nenterprises.\nChoose the correct answer:",
+      "opts": [
+        "Only (i) is true",
+        "Both (i) and (ii) are false",
+        "Both (i) and (ii) are true",
+        "Only (ii) is true"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "caution",
+      "review": "The first statement contains a confusing double negative; the intended distinction is ownership versus management.",
+      "explanation": "The first statement contains a confusing double negative; the intended distinction is ownership versus management.",
+      "images": {},
+      "sourcePage": 11,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 38,
+      "stem": "Which of the following veto powers is NOT available to the President of India?",
+      "opts": [
+        "Absolute Veto",
+        "Pocket Veto",
+        "Qualified Veto",
+        "Suspensive Veto"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 11,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 39,
+      "stem": "Which of the following subjects is NOT included in the Union List, as per allocation between\nthree lists in seventh schedule, given under Article 246 of the Indian Constitution?",
+      "opts": [
+        "Atomic Energy",
+        "Railways",
+        "Banking",
+        "Liquor"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 12,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 40,
+      "stem": "The 1991 economic reforms in India led to rapid industrialisation and expansion of energy-\nintensive sectors. Which market-based mechanism has India adopted to balance industrial growth,\nenergy efficiency and emissions?",
+      "opts": [
+        "Green GDP Accounting",
+        "Food Security Act",
+        "Perform, Achieve and Trade (PAT) scheme",
+        "Make in India"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 12,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 41,
+      "stem": "Under which mission was the Deen Dayal Upadhyaya Grameen Kaushalya Yojana (DDU-GKY)\nlaunched?",
+      "opts": [
+        "National Health Mission",
+        "National Rural Livelihoods Mission",
+        "National Skill Development Mission",
+        "National Urban Livelihoods Mission"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 12,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 42,
+      "stem": "Which of the following industry was emphasized in the second five year plan of India?",
+      "opts": [
+        "IT industry",
+        "Food processing industry",
+        "Heavy and basic industry",
+        "Tourism industry"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 12,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 43,
+      "stem": "The Bharatiya Nyaya Sanhita (BNS), 2023 introduced provisions to replace the Indian Penal\nCode. What is the primary objective of this reform?",
+      "opts": [
+        "To increase the number of criminal courts in India",
+        "To modernize criminal laws and align them with contemporary legal needs",
+        "To abolish all colonial-era legal provisions immediately",
+        "To transfer criminal law powers entirely to state governments"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 12,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 44,
+      "stem": "What is the public capital expenditure proposed by Union Finance Minister Nirmala Sitharaman\nfor FY 2026-27 in Union Budget 2026-27?",
+      "opts": [
+        "₹10.2 lakh crore",
+        "₹11.2 lakh crore",
+        "₹12.2 lakh crore",
+        "₹13.2 lakh crore"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 12,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 45,
+      "stem": "What was the intended flight profile and duration of the Artemis II mission?",
+      "opts": [
+        "3-day mission; Lunar landing at the South Pole",
+        "10-day mission; Lunar flyby and return to Earth",
+        "30-day mission; Orbiting the Moon and docking with Gateway",
+        "6-month mission; Rotation at the International Space Station"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 13,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 46,
+      "stem": "In June 2026, which of the following products from Assam was granted a Geographical\nIndication (GI) tag?",
+      "opts": [
+        "Pochampally Ikat",
+        "Bihu Pepa",
+        "Channapatna Toys",
+        "Kullu Shawl"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "invalid",
+      "review": "The source says GI registration was granted in June 2026, but the official GI certificate for Assamese Bihu Pepa is dated 27 March 2026.",
+      "explanation": "The source says GI registration was granted in June 2026, but the official GI certificate for Assamese Bihu Pepa is dated 27 March 2026.",
+      "images": {},
+      "sourcePage": 13,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 47,
+      "stem": "Which of the following symbols is a correct representation for air mass above a hot and dry\ndesert region?",
+      "opts": [
+        "cP",
+        "cA",
+        "cT",
+        "mP"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 13,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 48,
+      "stem": "Which of the following is a shallow desert depression formed by wind erosion?",
+      "opts": [
+        "Pediment",
+        "Deflation hollow",
+        "Playa",
+        "Inselberg"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 13,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 49,
+      "stem": "In early 2026, which individual from Chhattisgarh was recognized for outstanding contributions\nin Social Work with the Padma Shri award?",
+      "opts": [
+        "Dr. Budhri Tati",
+        "Dr. Sunil Kumar",
+        "Ms. Anjali Deshmukh",
+        "Mr. Suresh Patel"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 13,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 50,
+      "stem": "‘Tamu Lochar’ is one of the traditional festivals of the ____________ of Sikkim. It is celebrated to\nmark the beginning of their new year, which falls on the 15th day of Pusa, according to the Hindu\ncalendar Vikram Samvat and 30th December in the English calendar.",
+      "opts": [
+        "Mangar community",
+        "Bhutia community",
+        "Lepcha community",
+        "Gurung community"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 14,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 51,
+      "stem": "A man sold two articles for ₹ 850 each. On one article, he earns a profit of 25% and on the other\narticle, he suffers a loss of 15%. What is his overall profit ?",
+      "opts": [
+        "₹ 30",
+        "₹ 25",
+        "₹ 20",
+        "₹ 22"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 14,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 52,
+      "stem": "The perimeter of a rectangular field is 52 meters, and the difference between its length and its\nbreadth is 10 meters. What is the side length of a square whose area is exactly equal to the area of this\nrectangular field?",
+      "opts": [
+        "10 meters",
+        "12 meters",
+        "14 meters",
+        "16 meters"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 14,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 53,
+      "stem": "What is the compound interest on ₹10,000 at 14% per annum for 2 5/7 years when interest is compounded yearly? Round to the nearest rupee.",
+      "opts": [
+        "Rs. 4,259",
+        "Rs. 4,296",
+        "Rs. 4,439",
+        "Rs. 4,394"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 14,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 54,
+      "stem": "The base of a right prism is an equilateral triangle with each side measuring 8 cm . Given that the\nheight of the prism is 10 cm , what is its volume?",
+      "opts": [
+        "3203 cubic cm",
+        "676.6 cubic cm",
+        "240 cubic cm",
+        "160√3 cubic cm"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 14,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 55,
+      "stem": "If a + 1/a = 3, find a⁶ + 1/a⁶.",
+      "opts": [
+        "324",
+        "321",
+        "323",
+        "322"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 15,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 56,
+      "stem": "Two right prisms have the same height, but their bases are triangles with areas in the ratio 3:5.\nWhat is the ratio of their volumes?",
+      "opts": [
+        "3:5",
+        "5:3",
+        "9:25",
+        "9:15"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 15,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 57,
+      "stem": "A right-angled triangle has its angles in the ratio 1 : 2 : 3, and the length of the side opposite to\nthe 60° angle is 6√3 cm. A geometry student needs to find the length of the hypotenuse of this triangle\nwithout using any trigonometric table, purely by the property of a 30°-60°-90° triangle. What is the\nlength of the hypotenuse?",
+      "opts": [
+        "6 cm",
+        "12√3 cm",
+        "12 cm",
+        "9 cm"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 15,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 58,
+      "stem": "The ratio of men to women in a hall is 5 : 3. If 24 more women join and 12 men leave, the ratio\nbecomes 3 : 2. Find the number of men originally present.",
+      "opts": [
+        "440",
+        "360",
+        "520",
+        "480"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 15,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 59,
+      "stem": "Evaluate: (5.75³ + 3.25³) / (575² + 325² − 575 × 325).",
+      "opts": [
+        "0.9",
+        "0.09",
+        "0.009",
+        "0.0009"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 15,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 60,
+      "stem": "If 1/(cosec θ + cot θ) = p, then 1/(cosec θ − cot θ) is equal to:",
+      "opts": [
+        "p",
+        "1/p",
+        "−1/p",
+        "−p"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 16,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 61,
+      "stem": "Find the ratio of volumes of a sphere to its hemisphere of same radius.",
+      "opts": [
+        "2 : 1",
+        "3 : 2",
+        "1 : 2",
+        "4 : 3"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 16,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 62,
+      "stem": "The diameter of a circular garden is 140 m. Its area is equal to a rectangular field whose sides\nare in the ratio 11 : 7. The perimeter (in m) of the rectangular field is (take π = 22/7):",
+      "opts": [
+        "360 √2",
+        "180 √2",
+        "120 √2",
+        "270 √2"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 16,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 63,
+      "stem": "Alloy A contains metals x and y only in the ratio 3:2, while alloy B contains them in the ratio 5:6.\nAlloy C is prepared by mixing alloys A and B in the ratio 4:3. The percentage of x in alloy C is:",
+      "opts": [
+        "51%",
+        "55%",
+        "52%",
+        "53.77%"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 16,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 64,
+      "stem": "The chord of a circle is 30 cm long, and the height of the minor segment cut off by this chord is 5\ncm. What is the diameter of the circle?",
+      "opts": [
+        "50 cm",
+        "55 cm",
+        "45 cm",
+        "40 cm"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 16,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 65,
+      "stem": "3 liters of lime syrup are mixed with m liters of water. If the lime syrup is 5% of the mixture, find\nthe value of m.",
+      "opts": [
+        "54 litres",
+        "60 litres",
+        "65 litres",
+        "57 litres"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 16,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 66,
+      "stem": "88+47-59+(36+29)×2-94= ?",
+      "opts": [
+        "124",
+        "126",
+        "112",
+        "130"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 17,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 67,
+      "stem": "Three candidates contested an election. The first candidate got 40% votes and the second got\n30% votes. If the total number of votes polled were 36,000, find the number of votes obtained by the\nthird candidate.",
+      "opts": [
+        "10,800",
+        "10,200",
+        "10,100",
+        "10,900"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 17,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 68,
+      "stem": "If sin A = 3/5, and A is acute, find the value of sec² A - tan² A.",
+      "opts": [
+        "-2",
+        "-3",
+        "0",
+        "1"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 17,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 69,
+      "stem": "Two trains leave the same station and travel in the same direction. If the faster train moves at 54\nkm/h and the distance between them becomes 42 km after 6 hours, what is the speed of the slower\ntrain?",
+      "opts": [
+        "47 km/h",
+        "48 km/h",
+        "45 km/h",
+        "50 km/h"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 17,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 70,
+      "stem": "If the length of a rectangular field is increased by 25%, then by what percentage should its\nbreadth be reduced so that the area of the field remains constant?",
+      "opts": [
+        "18%",
+        "20%",
+        "22%",
+        "25%"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 17,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 71,
+      "stem": "During a sale, 52% of the goods are sold at 32% profit, 25% of the remaining goods are sold at\n42% profit and the still remaining goods are sold at a loss of 11%. If there is an overall profit of x%,\nthen what is the value of x?",
+      "opts": [
+        "17.72",
+        "16",
+        "17",
+        "16.52"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 18,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 72,
+      "stem": "A group of 12 students appeared for a physics test. The average of the top 6 scores was 84.5, and\nthe average of the bottom 6 scores was 72.75. Later, it was found that a decimal error had occurred,\nand one of the scores from the bottom half was mistakenly recorded as 58.2 instead of 85.2. What is\nthe corrected overall average of the group?",
+      "opts": [
+        "80.25",
+        "79.95",
+        "81.00",
+        "80.875"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 18,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 73,
+      "stem": "Which one of the following statements is FALSE?",
+      "opts": [
+        "Every irrational number is real",
+        "Rational and irrational numbers are real",
+        "Every integer is rational",
+        "Every integer is irrational"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 18,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 74,
+      "stem": "On a certain sum of money, Neha received a compound interest (interest compounded annually)\nof ₹308 in 2 years.\nShe received a simple interest of ₹280 on the same amount for the same time period. What is the rate\nof interest per annum?",
+      "opts": [
+        "18%",
+        "12%",
+        "16%",
+        "20%"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 18,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 75,
+      "stem": "Two completely distinct geometric circles possess radii measuring precisely 15 cm and 10 cm respectively. The straight linear distance spanning perfectly between their two central anchor points is officially measured as 35 cm. What is the mathematical length of the direct common tangent connecting these two circular boundaries?",
+      "opts": [
+        "20√3 cm",
+        "15√2 cm",
+        "10√6 cm",
+        "30 cm"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 18,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 76,
+      "stem": "Fill in the Blank 1.",
+      "opts": [
+        "exculpation",
+        "cavil",
+        "imputation",
+        "salience"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 19,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied.",
+      "passageRef": "cloze76"
+    },
+    {
+      "n": 77,
+      "stem": "Fill in the Blank 2.",
+      "opts": [
+        "congruous",
+        "refractory",
+        "pellucid",
+        "censorious"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 19,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied.",
+      "passageRef": "cloze76"
+    },
+    {
+      "n": 78,
+      "stem": "Fill in the Blank 3.",
+      "opts": [
+        "inimical",
+        "receptive",
+        "obsequious",
+        "impervious"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 20,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied.",
+      "passageRef": "cloze76"
+    },
+    {
+      "n": 79,
+      "stem": "Fill in the Blank 4.",
+      "opts": [
+        "innocuous",
+        "recondite",
+        "pernicious",
+        "desultory"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "caution",
+      "review": "The collocation “not merely innocuous” is awkward in context; a clearer word is “theoretical”.",
+      "explanation": "The collocation “not merely innocuous” is awkward in context; a clearer word is “theoretical”.",
+      "images": {},
+      "sourcePage": 20,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied.",
+      "passageRef": "cloze76"
+    },
+    {
+      "n": 80,
+      "stem": "Fill in the Blank 5.",
+      "opts": [
+        "verisimilar",
+        "veracious",
+        "prolix",
+        "vituperative"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 20,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied.",
+      "passageRef": "cloze76"
+    },
+    {
+      "n": 81,
+      "stem": "Select the most appropriate synonym of the given word.\nSuave",
+      "opts": [
+        "Urbane",
+        "Prodigal",
+        "Lament",
+        "Nippy"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 20,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 82,
+      "stem": "From the alternatives given below, select the correct meaning of the idiom.\nBe up to the minute.",
+      "opts": [
+        "At the last possible instant or opportunity",
+        "To wait or pause",
+        "To be as current as is possible",
+        "At a very rapid pace"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 20,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 83,
+      "stem": "Which of the following idioms given in the alternatives has the meaning?\nEagerly, with great enthusiasm, or ready to enjoy oneself.",
+      "opts": [
+        "Bear the bell",
+        "Passing bells",
+        "With bells on",
+        "Sound as a bell"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 21,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 84,
+      "stem": "What is the antonym of \"Irascible\"?",
+      "opts": [
+        "Petulant",
+        "Tranquil",
+        "Hostile",
+        "Fractious"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 21,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 85,
+      "stem": "Choose the most appropriate conversion of the following sentence into Direct Speech.\nThe librarian requested us to maintain silence in the reading room.",
+      "opts": [
+        "The librarian said to us, \"Maintain silence in the reading room.\"",
+        "The librarian said, \"Please maintain silence in the reading room.\"",
+        "The librarian told us, \"Silence should be maintained in the reading room.\"",
+        "The librarian requested, \"You can maintain silence in the reading room.\""
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "caution",
+      "review": "The source’s two potentially plausible imperatives differ mainly by politeness; option B best matches a request.",
+      "explanation": "The source’s two potentially plausible imperatives differ mainly by politeness; option B best matches a request.",
+      "images": {},
+      "sourcePage": 21,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 86,
+      "stem": "From the given alternatives, select the correct direct narration of the given indirect narration.\nShivi told Rahul that he had realized that the mysterious footprints in the snow were actually made by\na very large neighborhood dog.",
+      "opts": [
+        "Shivi said to Rahul, \"He realized that the mysterious footprints in the snow were actually made by\na very large neighborhood dog.\"",
+        "Shivi said to Rahul, \"He realizes that the mysterious footprints in the snow were actually made by\na very large neighborhood dog.\"",
+        "Shivi said to Rahul, \"He realized that the mysterious footprints in the snow had been actually made\nby a very large neighborhood dog.\"",
+        "Shivi said to Rahul, \"He realized that the mysterious footprints in the snow were actually made\nfrom a very large neighborhood dog.\""
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "caution",
+      "review": "The antecedent of “he” and the original direct wording are not fully specified by the indirect report.",
+      "explanation": "The antecedent of “he” and the original direct wording are not fully specified by the indirect report.",
+      "images": {},
+      "sourcePage": 21,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 87,
+      "stem": "Select the option with the correct spelling that can replace the highlighted word in the given\nsentence. If the spelling in the given sentence is already correct, choose Option \"No replacement\nrequired\".\nHis actions were considered an anathima to the entire community, leading to his exile.\n   19",
+      "opts": [
+        "anethema",
+        "anathama",
+        "anathema",
+        "No replacement required"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 21,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 88,
+      "stem": "Choose the option that is the most appropriate conversion of the following sentence into Active\nVoice.\nThe victims were provided food and shelter by the volunteers.",
+      "opts": [
+        "The volunteers were providing food and shelter to the victims.",
+        "The volunteers have provided food and shelter to the victims.",
+        "The volunteers provide food and shelter to the victims.",
+        "The volunteers provided food and shelter to the victims"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 22,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 89,
+      "stem": "Sentences of a paragraph are given below in jumbled order. Arrange the sentences in the correct\norder to form a meaningful and coherent paragraph.\n1. In today's fast-paced world, it can be easy to feel disconnected from others.\n2. That's why it's important to make time for face-to-face interactions with friends and loved ones.\n3. Social media and technology have made it easier than ever to stay in touch, but they can also\ncontribute to feelings of isolation.\n4. By prioritizing these connections, we can improve our mental health and overall well-being.",
+      "opts": [
+        "1324",
+        "1234",
+        "3124",
+        "1423"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 22,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 90,
+      "stem": "Sentences of a paragraph are given below in jumbled order. Arrange the sentences in the correct\norder to form a meaningful and coherent paragraph.\nA. One of the earliest known vacuum cleaners was so large that it had to be hauled from house to\nhouse.\nB. Its giant hoses were popped through the windows of customers.\nC. Vacuum cleaners were originally horse-drawn.\nD. A gas-powered motor generated the suction that pulled the dirt and debris into a glass container\nwhere onlookers could gawk at the volume of filth coming from their neighbours' homes.",
+      "opts": [
+        "CBDA",
+        "CDAB",
+        "CABD",
+        "CADB"
+      ],
+      "key": "c",
+      "original": "c",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 22,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 91,
+      "stem": "From the alternatives given below, select the correct passive voice of the following sentence.\nThe usher must have made the guests sit by the time the dinner was ready.",
+      "opts": [
+        "The guests must have been made sit by the usher by the time the dinner was ready.",
+        "The guests must have been made to sit by the usher by the time the dinner was ready.",
+        "The guests must have been made to sit by the usher by the time the dinner had been ready.",
+        "The guests must have made to sit by the usher by the time the dinner had been ready."
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 23,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 92,
+      "stem": "What is the term for a government controlled by monopolists?",
+      "opts": [
+        "Oligarchy",
+        "Plutocracy",
+        "Autocracy",
+        "Plutonomy"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "caution",
+      "review": "Plutocracy describes rule by the wealthy, not necessarily specifically by monopolists.",
+      "explanation": "Plutocracy describes rule by the wealthy, not necessarily specifically by monopolists.",
+      "images": {},
+      "sourcePage": 23,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 93,
+      "stem": "Directions: Identify the part containing a GRAMMATICAL ERROR.\nThe investigative committee / decided to look into / the irregularities and eventually / looked them\nover carefully.",
+      "opts": [
+        "The investigative committee",
+        "decided to look into",
+        "the irregularities and eventually",
+        "looked them over carefully"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "invalid",
+      "review": "The complete source sentence is grammatically acceptable; none of its four parts contains a grammatical error.",
+      "explanation": "The complete source sentence is grammatically acceptable; none of its four parts contains a grammatical error.",
+      "images": {},
+      "sourcePage": 23,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 94,
+      "stem": "Given below are six sentences taken from a paragraph. The first and the last sentences are\nnumbered S1 and S2 and are placed in their fixed positions respectively and are fixed in their\npositions. The other four sentences between the first and last sentences are jumbled up and are\nnumbered A, B, C and D. Rearrange the jumbled sentences in a logical sequence keeping the unity and\ncoherence of the paragraph intact. Choose the correct alternative that best describes the sequence.\nS1 Two days and two nights did Peter sleep without once awakening.\nA. He looked; there were two bags of gold.\nB. When he came to himself, on the third day, he looked long at all the corners of his hut but in vain did\nhe endeavour to recollect what had taken place; his memory was like a miser's pocket from which you\ncannot entice a quarter of a kopek.\nC. Stretching himself, he heard something clash at his feet.\nD. Then only, as if in a dream, he recollected that he had been seeking for treasure and that something\nhad frightened him in the woods.\nS2 But at what price he had obtained it, and how, he could by no means tell.",
+      "opts": [
+        "CADB",
+        "BCAD",
+        "ACDB",
+        "CDBA"
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 23,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 95,
+      "stem": "Sentences of a paragraph are given below in jumbled order. Arrange the sentences in the correct\norder to form a meaningful and coherent paragraph.\nA. The Voynich Manuscript is a 240-page medieval tome written in an unknown language that has\nbaffled scholars and code-breakers for years.\nB. All attempts to translate the book’s text or identify the plants depicted in it have failed.\nC. The manuscript is believed to have originated sometime between 1404 and 1438.\nD. It is filled with enigmatic illustrations and diagrams that seem to depict everything from unusual\nplants to women with swollen bellies bathing in green pools.",
+      "opts": [
+        "ACDB",
+        "ADBC",
+        "ABDC",
+        "ACBD"
+      ],
+      "key": "a",
+      "original": "a",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 24,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 96,
+      "stem": "Choose the correctly spelt word from the given options.",
+      "opts": [
+        "Playright",
+        "Playrite",
+        "Playwrite",
+        "Playwright"
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 24,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 97,
+      "stem": "Choose the option that is the most appropriate conversion of the following sentence into Direct\nSpeech.\nHe warned that if we did not act immediately, the consequences would be irreversible.",
+      "opts": [
+        "He said, \"If you didn't act immediately, the consequences will be irreversible.\"",
+        "He said, \"If you don't act immediately, the consequences will be irreversible.\"",
+        "He said, \"If you hadn't act immediately, the consequences would be irreversible.\"",
+        "He said, \"If you haven't act immediately, the consequences would be irreversible.\""
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 24,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 98,
+      "stem": "Choose the correct indirect narration of the following statement from the given alternatives:\nThe trainer said to the trainees, \"Go on writing this paragraph till you understand it very clearly.\"",
+      "opts": [
+        "The trainer asked the trainees going on writing that paragraph till they understood it very clearly.",
+        "The trainer asked the trainees to go on writing that paragraph till they understood it very clearly.",
+        "The trainer asked the trainees to go on writing that paragraph till they understand it very clearly.",
+        "The trainer asked the trainees to went on writing that paragraph till they understood it very\nclearly."
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 24,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 99,
+      "stem": "Choose the most appropriate conversion of the following sentence into Direct Speech.\nShe said that she had started attending yoga classes because she wanted to lose weight.",
+      "opts": [
+        "She said, \"I started attending yoga classes because I wants to lose weight.\"",
+        "She said, \"I have started attending yoga classes because I want to lose weight.\"",
+        "She said, \"I started attending yoga classes because I wanted to lose weight.\"",
+        "She said, \"I had started attending yoga classes because I want lose weight.\""
+      ],
+      "key": "b",
+      "original": "b",
+      "status": "ok",
+      "review": "",
+      "explanation": "",
+      "images": {},
+      "sourcePage": 24,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    },
+    {
+      "n": 100,
+      "stem": "Choose the most appropriate conversion of the following sentence into Direct Speech.\nHe asked her whether she wanted tea or coffee with her breakfast.",
+      "opts": [
+        "He asked her, \"You want tea or coffee with your breakfast?\"",
+        "He said, \"Whether you want tea or coffee with your breakfast?\"",
+        "He asked, \"Did you want tea or coffee with your breakfast?\"",
+        "He said to her, \"Do you want tea or coffee with your breakfast?\""
+      ],
+      "key": "d",
+      "original": "d",
+      "status": "caution",
+      "review": "The published direct-speech option expresses a question but uses “said” rather than “asked”.",
+      "explanation": "The published direct-speech option expresses a question but uses “said” rather than “asked”.",
+      "images": {},
+      "sourcePage": 27,
+      "edition": "original",
+      "transcription": "Transcribed from the uploaded PDF; typographical and mathematical normalization may be applied."
+    }
+  ],
+  "passages": {
+    "cloze76": "Directions (76-80): Read the following passage carefully and  fill in the blanks with the most appropriate word from the given alternatives. In an age increasingly enamored of instantaneous information, intellectual restraint has become an almost antiquated virtue. The contemporary reader is perpetually assailed by a prodigious volume of claims, conjectures, and polemics, many of which acquire an unwarranted aura of credibility merely through repetition. What is particularly disquieting is not the sheer abundance of information but the gradual erosion of the cognitive habits required to interrogate it. A proposition that ought to invite scrutiny is instead accepted with remarkable alacrity, while evidence that complicates an established conviction is frequently dismissed as an inconvenient (1)________. This tendency is exacerbated by digital platforms whose algorithms are designed less to cultivate discernment than  to maximise engagement. By continuously presenting users with material consonant with their pre-existing preferences, such systems can create an epistemic environment that is deceptively (2)________. Within such an environment, disagreement is no longer perceived as an opportunity for intellectual refinement but as an affront to one’s identity. Consequently, individuals become increasingly (3)________ to information that unsettles their assumptions, even when such information is supported by cogent evidence. The predicament is further complicated by the proliferation of ostensibly authoritative voices whose expertise is difficult to verify. Eloquence, confidence, and rhetorical dexterity are often mistaken for substantive knowledge, allowing specious arguments to acquire an appearance of legitimacy. The resulting confusion is not merely (4)________; it can have tangible consequences when poorly examined claims influence public policy, medical decisions, or collective perceptions of social reality. The remedy, therefore, cannot consist simply in accumulating more information. What is required is a deliberate cultivation of intellectual habits that enable individuals to distinguish the plausible from the demonstrable, the persuasive from the (5)________, and the familiar from the genuinely verifiable. In an informational ecosystem increasingly saturated with noise, scepticism—properly understood not as cynical disbelief but as disciplined inquiry—may be among the most indispensable forms of intellectual hygiene."
+  }
+}

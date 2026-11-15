@@ -1,0 +1,135 @@
+{
+  "3": {
+    "stem": "If + means ÷, − means ×, × means + and ÷ means −, find the value of 100 + 10 − 2 × 4 ÷ 2.",
+    "key": "c",
+    "status": "corrected",
+    "review": "The PDF lost its operator-substitution glyphs. The repaired rule is explicit and yields exactly 22.",
+    "explanation": "The PDF lost its operator-substitution glyphs. The repaired rule is explicit and yields exactly 22.",
+    "revised": true
+  },
+  "6": {
+    "key": "d",
+    "explanation": "All fit objects must be flat; this does not establish that any Hilux are unfit. Some trucks may be flat, so saying all flat can never be trucks is false.",
+    "status": "corrected",
+    "review": "Given All Hilux are trucks, some trucks are flat, and only flat are fit: neither conclusion follows necessarily.",
+    "revised": true
+  },
+  "21": {
+    "key": "a",
+    "status": "corrected",
+    "review": "Clarified that the age limit is assessed using completed years. Vijendra is 35 completed years old on 1 January 2019, and meets the other conditions. This differs from the explicitly exact chronological-age rule in the 8 October revised version of the repeated question.",
+    "explanation": "Clarified that the age limit is assessed using completed years. Vijendra is 35 completed years old on 1 January 2019, and meets the other conditions. This differs from the explicitly exact chronological-age rule in the 8 October revised version of the repeated question.",
+    "revised": true,
+    "stem": "The criteria for selecting a Mechanical Engineer are:\n1. M.Tech in Mechanical Engineering with more than 75% marks.\n2. More than 65% in the written test and more than 70% in the interview.\n3. Age in completed years between 30 and 35 (inclusive) on 1 January 2019.\nA candidate meeting all but criterion 2, with more than 80% in M.Tech, is referred to the Chief Engineer. A candidate meeting all but criterion 3, with more than five years as a Mechanical Engineer, is referred to the Deputy Director.\nVijendra: M.Tech 76%; born 14 November 1983; written test 73%; interview 73%; work experience 3 years. What decision follows?"
+  },
+  "25": {
+    "stem": "Statement: Is the Government justified in spending so much on defence?\nArguments:\nI. Yes. National security is of prime importance.\nII. No. During peacetime, some of this money could be used for development instead.",
+    "key": "a",
+    "status": "corrected",
+    "review": "Restored the source’s substantive competing arguments rather than weakening argument II into an obviously incorrect absolute claim. This judgement remains interpretive. The original asks for subjective comparative “strong arguments.” Refined argument II is demonstrably overgeneralized.",
+    "explanation": "Restored the source’s substantive competing arguments rather than weakening argument II into an obviously incorrect absolute claim. This judgement remains interpretive. The original asks for subjective comparative “strong arguments.” Refined argument II is demonstrably overgeneralized.",
+    "revised": true
+  },
+  "27": {
+    "stem": "Which measures were central to India’s New Industrial Policy, 1991?\nI. Foreign investment rules and industrial licensing were liberalised.\nII. A uniform mandatory exit arrangement for sick private-sector industrial units was introduced across all industries.",
+    "key": "a",
+    "status": "corrected",
+    "review": "Removed an artificially extreme distractor that made the answer obvious. Statement II now tests a specific policy claim; check the accompanying note when reviewing. The wording of statement II does not accurately describe the central provisions of the 1991 Industrial Policy. The main liberalisation measures included easing industrial licensing and foreign-investment controls.",
+    "explanation": "Removed an artificially extreme distractor that made the answer obvious. Statement II now tests a specific policy claim; check the accompanying note when reviewing. The wording of statement II does not accurately describe the central provisions of the 1991 Industrial Policy. The main liberalisation measures included easing industrial licensing and foreign-investment controls.",
+    "revised": true
+  },
+  "34": {
+    "key": "a",
+    "sources": [
+      {
+        "title": "Asian Aerobic Gymnastics 2026 final results",
+        "url": "https://www.scribd.com/document/1070813431/Senior-Finals-Results-2026-AER-ACH"
+      }
+    ],
+    "status": "corrected",
+    "review": "Official final results identify the silver medallist as Kanokpit Mali of Thailand, not Chanyapit Manee. As originally worded, statements 1 and 2 alone are correct.",
+    "explanation": "Official final results identify the silver medallist as Kanokpit Mali of Thailand, not Chanyapit Manee. As originally worded, statements 1 and 2 alone are correct.",
+    "revised": true
+  },
+  "39": {
+    "stem": "Choose the correct statements:\nI. Pongal is primarily celebrated as a harvest festival in Tamil Nadu.\nII. Vaisakhi/Baisakhi is celebrated in Punjab as a harvest festival and is associated with the 1699 founding of the Khalsa.",
+    "key": "c",
+    "status": "corrected",
+    "review": "Both statements are verifiable regional festival facts; the original “Sikh New Year” wording is avoided because modern Nanakshahi calendar conventions differ.",
+    "explanation": "Harvest festivals vary regionally; Baisakhi is traditionally associated with the Sikh solar new year and the Punjabi harvest. Key is still the publisher option C.",
+    "revised": true
+  },
+  "44": {
+    "stem": "Consider the Five-Year Plans:\nI. The Sixth Five-Year Plan (1980–85) included poverty reduction, employment and technological modernisation objectives.\nII. The Third Five-Year Plan (1961–66) was disrupted by wars and successive droughts.\nWhich statement(s) are correct?",
+    "key": "d",
+    "status": "corrected",
+    "review": "The Third Plan was derailed principally by wars and severe drought; the 1966 rupee devaluation occurred after its scheduled period. Statement II needs clearer framing.",
+    "explanation": "The Third Plan was derailed principally by wars and severe drought; the 1966 rupee devaluation occurred after its scheduled period. Statement II needs clearer framing.",
+    "revised": true,
+    "sources": [
+      {
+        "title": "World Bank review of Sixth Plan agriculture",
+        "url": "https://documents1.worldbank.org/curated/en/111301468269145455/pdf/multi0page.pdf"
+      }
+    ]
+  },
+  "45": {
+    "stem": "Consider the 2026 Asian U-19 and U-23 Boxing Championships held in Jakarta.\n1. Indian women won five gold medals across U-19 and U-23 competitions.\n2. The competition ran from 3 to 16 July 2026.\n3. Two Indian boxers won gold in the men’s U-23 finals.\n4. Uzbekistan secured 33 medals, including 21 gold medals.\nWhich of these statements is/are correct?",
+    "key": "d",
+    "status": "corrected",
+    "revised": true,
+    "review": "Original statement 3 undercounted women’s golds. Replaced unsupported overall tally with independently corroborated event results.",
+    "explanation": "Women: five gold across U19/U23 (DD India). Men: Vishvanath Suresh and Ganga won U23 gold. Asian Boxing lists 3–16 July; Uzbekistan secured 33 medals including 21 gold.",
+    "sources": [
+      {
+        "title": "Asian Boxing championship schedule",
+        "url": "https://asianboxing.org/event/asian-boxing-u19-u23-boxing-championships/"
+      },
+      {
+        "title": "DD India, women’s five golds",
+        "url": "https://ddindia.co.in/2026/07/india-win-five-gold-10-silver-and-four-bronze-in-womens-section-of-asian-u-19-u-23-boxing-championships/"
+      },
+      {
+        "title": "Asian Boxing, men’s finals",
+        "url": "https://asianboxing.org/2026/07/uzbekistan-dominates-u19-as-kazakhstan-and-uzbekistan-share-u23-honours-on-final-day-in-jakarta/"
+      }
+    ]
+  },
+  "51": {
+    "stem": "A right square pyramid has a square base of side 10 cm. The length of each slant edge from apex to a base vertex is 13 cm. Find the vertical height.",
+    "key": "b",
+    "status": "corrected",
+    "review": "“Slant height along the diagonal (face diagonal)” is not a standard unambiguous pyramid measurement. Using the slant edge (apex to square-base vertex) gives vertical height √119≈10.9 cm.",
+    "explanation": "“Slant height along the diagonal (face diagonal)” is not a standard unambiguous pyramid measurement. Using the slant edge (apex to square-base vertex) gives vertical height √119≈10.9 cm.",
+    "revised": true
+  },
+  "66": {
+    "stem": "Two tangents QP and QR from external point Q touch a circle at P and R. If QP = QR = 40 cm and the angle PQR = 60°, find the perimeter of triangle PQR.",
+    "key": "c",
+    "explanation": "PR = 2×40×sin30° = 40 cm; perimeter = 40+40+40 = 120 cm.",
+    "status": "corrected",
+    "review": "OQ = 41 cm, radius 9 cm and ∠PQR = 60° are inconsistent: the radius implied by the angle is 20.5 cm. For the revised version, the radius is 20.5 cm, giving an equilateral triangle PQR with 35.51 cm sides, not in the options; instead the geometry is made compatible with the 120 cm choice.",
+    "revised": true
+  },
+  "81": {
+    "stem": "In “Prolonged exposure to high-stress environments can precipitate harmful outcomes,” which option best describes the time reference of “can precipitate”?",
+    "opts": [
+      "Past perfect",
+      "Present-time general possibility",
+      "Future perfect",
+      "Past conditional"
+    ],
+    "key": "b",
+    "status": "corrected",
+    "review": "A modal “can” followed by the base verb expresses present general possibility; the question should ask for the construction rather than a rigid tense label.",
+    "explanation": "A modal “can” followed by the base verb expresses present general possibility; the question should ask for the construction rather than a rigid tense label.",
+    "revised": true
+  },
+  "97": {
+    "key": "c",
+    "status": "corrected",
+    "review": "Passive interrogative word order is preserved in “By whom were the plaques vandalised?”",
+    "explanation": "Passive interrogative word order is preserved in “By whom were the plaques vandalised?”",
+    "revised": true
+  }
+}

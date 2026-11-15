@@ -10,8 +10,9 @@
   "years": [
     "2026"
   ],
-  "preinstalled": true,
   "paths": {
     "2026": "2026/manifest.json"
-  }
+  },
+  "representation": "exam-packages",
+  "currentPaperId": "pfrda-grade-a-2026-day-01"
 }
