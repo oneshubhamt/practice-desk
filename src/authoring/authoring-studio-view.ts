@@ -22,7 +22,7 @@ export const labels:Record<QuestionKind,string>={
  "matching":"Matching pairs",
  "free-response":"Written response"
 };
-export type Field="prompt"|"passage"|"explanation"|\`O\${number}\`|\`L\${number}\`|\`R\${number}\`;
+export type Field="prompt"|"passage"|"explanation"|`O${number}`|`L${number}`|`R${number}`;
 export const initialField:Field="prompt";
 export function fieldName(field:Field):string{
  if(field==="prompt")return "Question stem";
