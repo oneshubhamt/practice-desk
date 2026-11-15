@@ -24,7 +24,9 @@ export const labels:Record<QuestionKind,string>={
 };
 export type Field="prompt"|"passage"|"explanation"|`O${number}`|`L${number}`|`R${number}`;
 export const initialField:Field="prompt";
-export interface AuthoringIssueTarget{readonly field?:Field;readonly controlId?:string;}
+export interface AuthoringIssueTarget{
+ readonly field?:Field;readonly controlId?:string;readonly sourceOwned?:boolean;
+}
 export function authoringIssueTarget(path:string,q:AuthoringQuestion):AuthoringIssueTarget{
  const lower=path.toLowerCase();
  if(/question stem|\.prompt\b/.test(lower))return {field:"prompt"};
@@ -42,10 +44,13 @@ export function authoringIssueTarget(path:string,q:AuthoringQuestion):AuthoringI
  match=/right\s+([a-z])/i.exec(path)??/\.rightItems\[(\d+)\]/i.exec(path);
  if(match){const index=/^\d+$/.test(match[1]!)?Number(match[1]):match[1]!.toUpperCase().charCodeAt(0)-65;
   if(index>=0&&index<q.rightItems.length)return {field:("R"+(index+1)) as Field};}
+ if(/stimulus\.|media\.alttext/.test(lower))return {sourceOwned:true};
  if(/answer|key|tolerance/.test(lower))return {controlId:"pd-author-answer"};
  if(/provenance|source|citation|qa|currentness|time-sensitive/.test(lower))return {controlId:"pd-author-evidence"};
  if(/word.?limit/.test(lower))return {controlId:"pd-author-word-limit"};
- if(/partial credit|mark|scoring/.test(lower))return {controlId:"pd-author-custom-marks"};
+ if(/partial penalty/.test(lower))return {controlId:"pd-author-partial-penalty"};
+ if(/partial credit/.test(lower))return {controlId:"pd-author-partial-credit"};
+ if(/mark|scoring/.test(lower))return {controlId:"pd-author-custom-marks"};
  if(/syllabus/.test(lower))return {controlId:"pd-author-syllabus-heading"};
  if(/subtopic/.test(lower))return {controlId:"pd-author-subtopic"};
  if(/topic/.test(lower))return {controlId:"pd-author-topic"};
@@ -193,9 +198,12 @@ export function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Fi
   (current.kind==="free-response"?'<label>Advisory word limit (optional)<input type="number" id="pd-author-word-limit" min="1" max="10000" step="1" placeholder="No target" value="'+(current.wordLimit??"")+'"></label>':"")+
   (current.kind==="multiple-select"?'<label>Minimum choices<input id="pd-author-min-choices" type="number" min="1" max="'+current.options.length+'" step="1" value="'+(current.minSelections??1)+'"></label>'+
     '<label>Maximum choices<input id="pd-author-max-choices" type="number" min="1" max="'+current.options.length+'" step="1" value="'+(current.maxSelections??current.options.length)+'"></label>':"")+
-  (current.kind==="multiple-select"||current.kind==="matching"?
+  (current.kind==="multiple-select"||current.kind==="matching"||
+    (current.partialCreditEach??0)>0||(current.partialPenaltyEach??0)>0?
     '<label>Partial marks per correct component (0 = all-or-nothing)<input id="pd-author-partial-credit" type="number" min="0" max="1000" step="any" value="'+(current.partialCreditEach??0)+'"></label>'+
-    '<label>Partial penalty per incorrect component<input id="pd-author-partial-penalty" type="number" min="0" max="1000" step="any" value="'+(current.partialPenaltyEach??0)+'"></label>':"")+
+    '<label>Partial penalty per incorrect component<input id="pd-author-partial-penalty" type="number" min="0" max="1000" step="any" value="'+(current.partialPenaltyEach??0)+'"></label>'+
+    (!["multiple-select","matching"].includes(current.kind)?
+      '<p class="fine generic-warning">Component scoring is invalid for this question kind; set both component values to 0 or change the kind.</p>':""):"")+
   '</div><p class="fine" id="pd-author-answer-help">'+
   escapeText(current.kind==="single-choice"?"One correct option: A–"+optionLabel(current.options.length-1)+".":
    current.kind==="multiple-select"?"All correct options from A–"+optionLabel(current.options.length-1)+"; no duplicates.":

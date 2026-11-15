@@ -236,7 +236,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    qWarnings?chip(qWarnings+" warning"+(qWarnings===1?"":"s"),"warn"):"",
    qDuplicates?chip(qDuplicates+" duplicate candidate"+(qDuplicates===1?"":"s"),"warn"):"",
    qNeedsReview?chip("Needs review","review"):
-    (qErrors||qWarnings||qDuplicates?chip("QA unchecked","review"):chip("Ready","good"))
+    (qErrors||qWarnings||qDuplicates?chip("QA unchecked","review"):chip("No flagged QA","good"))
   ].join("");
   container.hidden=false;
   const questionOptions=d.questions.map((q,i)=>option(q.id,(i+1)+". "+q.section+
@@ -364,6 +364,10 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    const target=authoringIssueTarget(path,targetQuestion);
    if(target.field)field=target.field;
    await render();
+   if(target.sourceOwned){
+    status("This issue is in shared stimulus/media content. Correct the source or draft JSON and re-stage/re-import it; Wordgard edits question-local content only.",true);
+    return;
+   }
    if(target.controlId&&host){
     const el=host.querySelector<HTMLElement>("#"+target.controlId);
     const details=el?.closest("details");if(details)details.open=true;
@@ -423,7 +427,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
     ...warnings.map(i=>({field:i.path,reason:i.code+": "+i.message,questionId:i.questionId}))].
      map(issue=>'<li>'+escapeText(issue.field+": "+issue.reason)+
       (issue.questionId?'<button type="button" class="textlink" data-author-issue="'+escapeText(issue.questionId)+
-       '" data-author-issue-path="'+escapeText(issue.field)+'">Edit issue</button>':"")+
+       '" data-author-issue-path="'+escapeText(issue.field)+'">Locate issue</button>':"")+
       '</li>').join("")+'</ol>'+dryRun();
    validationBox.querySelectorAll<HTMLButtonElement>("[data-author-issue]").forEach(btn=>{
     btn.onclick=()=>{
@@ -1002,8 +1006,21 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    };
   }
   find<HTMLSelectElement>("pd-author-kind").onchange=e=>{
-   updateQuestion("kind",(e.target as HTMLSelectElement).value as QuestionKind);
-   field=initialField;void render();
+   const nextKind=(e.target as HTMLSelectElement).value as QuestionKind;
+   try{
+    changeDraft(d=>({...d,questions:d.questions.map(q=>{
+     if(q.id!==questionId)return q;
+     let next:AuthoringQuestion={...q,kind:nextKind};
+     if(nextKind!=="multiple-select"&&nextKind!=="matching")
+      next={...next,partialCreditEach:0,partialPenaltyEach:0};
+     if(nextKind!=="free-response"&&next.wordLimit!==undefined){
+      const {wordLimit:_,...withoutWordLimit}=next;next=withoutWordLimit;
+     }
+     if(nextKind!=="numeric-entry")next={...next,tolerance:0};
+     return next;
+    })}));
+    field=initialField;void render();
+   }catch(error){status(error instanceof Error?error.message:"Invalid question kind",true);}
   };
   find<HTMLSelectElement>("pd-author-questions").onchange=e=>{
    capture();questionId=(e.target as HTMLSelectElement).value;field=initialField;void render();

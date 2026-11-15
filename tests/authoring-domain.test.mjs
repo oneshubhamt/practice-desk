@@ -123,6 +123,8 @@ test("Fix-next target mapping resolves editor fields and non-rich controls preci
  assert.deepEqual(authoringIssueTarget("Question 1 · Worked explanation",q),{field:"explanation"});
  assert.deepEqual(authoringIssueTarget("$.questions[id=x].answer",q),{controlId:"pd-author-answer"});
  assert.deepEqual(authoringIssueTarget("$.questions[id=x].provenance.sources",q),{controlId:"pd-author-evidence"});
+ assert.deepEqual(authoringIssueTarget("Question 1 · Partial credit",q),{controlId:"pd-author-partial-credit"});
+ assert.deepEqual(authoringIssueTarget("$.questions[id=x].stimulus.text",q),{sourceOwned:true});
 });
 
 await registerAuthoringDraftsTests();
