@@ -21,7 +21,11 @@
     "historicalAuthoring": "archive/recovered-day1.authoring.json",
     "recoveredQuestions": "archive/original-50-questions.json",
     "englishReference": "archive/descriptive-english.md",
-    "answerIndex": "archive/general-stream-answer-index.md"
+    "answerIndex": "archive/general-stream-answer-index.md",
+    "provenanceReadme": "archive/provenance/README.md",
+    "recoveryUtility": "archive/provenance/recover-from-share.mjs",
+    "reconstructionVerifier": "archive/provenance/verify-historical-reconstruction.mjs",
+    "reconstructionContent": "archive/provenance/review-content.mjs"
   },
   "audit": "audit.md"
 }
