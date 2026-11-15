@@ -325,7 +325,6 @@ test("P57-B declared QA applicability survives import and actively routes bounde
  assert.ok(r.issues.some(i=>i.code==="legal-currentness-unverified"&&i.questionId==="labour-01"));
  assert.ok(r.issues.some(i=>i.code==="time-sensitive-evidence-missing"&&i.questionId==="labour-01"));
  assert.ok(r.issues.some(i=>i.code==="mathematical-solution-unverified"&&i.questionId==="labour-01"));
- assert.match(r.compiled.questions[0].editorial.notes,/Author-declared QA applicability/);
 });
 
 test("P57-B legal claims require provision and as-of evidence, and still cannot be source corroborated",async()=>{

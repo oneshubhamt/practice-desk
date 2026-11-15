@@ -164,6 +164,9 @@ test("P59: bad source hash, item hash, id, path, revisions and wrong keyed schem
   {...base,nextRevision:1},
   {...base,evil:"surprise"},
   {...base,updates:[{...base.updates[0],set:{qa:{status:"verified"}}}]},
+  {...base,updates:[{...base.updates[0],set:{qa:{status:"unchecked",applicability:{
+   mathematical:true,legal:false,timeSensitive:false
+  }}}}]},
   {...base,updates:[{...base.updates[0],set:{answer:"C",qa:{status:"unchecked"}}}]}
  ];
  for(const [i,shape] of cases.entries()){

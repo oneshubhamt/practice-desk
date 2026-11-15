@@ -187,7 +187,7 @@ function patchSource(source,shape,sha256){
   // in the app's QA queue, even when the incoming source had unchecked status.
   const materialFields=["kind","prompt","options","answer","explanation",
    "leftItems","rightItems","tolerance","minSelections","maxSelections",
-   "partialCreditEach","partialPenaltyEach","provenance","scoringOverride"];
+   "partialCreditEach","partialPenaltyEach","provenance","qa","scoringOverride"];
   const material=materialFields.some(k=>Object.hasOwn(set,k)||unset.includes(k));
   const sourceWordingChanged=["kind","prompt","options","answer","leftItems","rightItems"]
    .some(k=>Object.hasOwn(set,k)||unset.includes(k));
