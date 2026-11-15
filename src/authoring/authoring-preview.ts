@@ -12,6 +12,7 @@ import {stimulusHTML,renderQuestionPrompt,assetHTML,renderGenericControls} from 
 import {escapeText} from "../app/html-escape.ts";
 import {scoreAttempt} from "../engine/scoring.ts";
 import {shouldShowWordCount} from "../domain/word-count.ts";
+import {sectionTimeBudgetMs} from "../domain/timing.ts";
 import {optionLabel} from "./authoring-cardinality.ts";
 function answerDescription(answer:CorrectAnswer):string {
  switch(answer.kind){
@@ -54,9 +55,9 @@ const main=(pkg:ExamPackage,q:QuestionRevision,authorValidated:boolean):string=>
    '<h5>Navigation and solution release</h5><ul>'+
    metadata.navigationRules.map(s=>'<li>'+escapeText(s)+'</li>').join("")+'</ul>'+
    '<h5>Actual section budget</h5><div class="scroll-table" role="region" tabindex="0" aria-label="Published section timing and question counts"><table><thead><tr><th>Section</th><th>Questions</th><th>Time</th></tr></thead><tbody>'+
-   pkg.paper.sections.map(s=>{
+   pkg.paper.sections.map((s,index)=>{
     const t=pkg.paper.timing;
-    const ms=t.kind==="sectional"?t.sectionLimits.find(x=>x.sectionId===s.id)?.durationMs:
+    const ms=t.kind==="sectional"?sectionTimeBudgetMs(pkg.paper,index):
       t.kind==="whole-paper"?t.durationMs:null;
     return '<tr><td>'+escapeText(s.title)+'</td><td>'+s.questionRevisionIds.length+
       '</td><td>'+(ms===null||ms===undefined?"Untimed":ms/60000+" min")+
