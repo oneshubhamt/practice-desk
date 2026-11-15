@@ -416,6 +416,22 @@ test("P54 partial-credit examples are from actual scoreAttempt, not a second sco
   assert.equal(e.verdict,expected.verdict);
  }
 });
+test("P54 partial-credit publication preserves section scoring precedence",()=>{
+ const d=draft();
+ const withSectionRule={...d,sections:d.sections.map(section=>section.name==="Specialised"?
+  {...section,scoringOverride:{correctMarks:5,incorrectMarks:-1,unansweredMarks:0}}:section)};
+ const pkg=compileAuthoringPublication(withSectionRule);
+ const question=pkg.questions.find(q=>q.content.kind==="multiple-select");
+ const entry=pkg.answerKey.entries.find(e=>e.questionRevisionId===question.id);
+ assert.equal(entry.scoringOverride.correctMarks,5,
+  "Partial-credit answer-key metadata must not silently replace section-level full marks");
+ assert.equal(entry.scoringOverride.incorrectMarks,-1);
+ const exact=scoreAttempt(pkg.paper,pkg.answerKey,pkg.questions,[{
+  questionRevisionId:question.id,timeSpentMs:0,answerChangeCount:0,
+  response:{kind:"multiple-select",optionIds:["A","C"]}
+ }],"2026-11-04T00:00:00.000Z").items.find(i=>i.questionRevisionId===question.id);
+ assert.equal(exact.marks,5);
+});
 }
 await registerInspectionAndPreviewTests();
 /** External Quality Gate — canonical domain contracts. */

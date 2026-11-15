@@ -349,7 +349,8 @@ export function compileAuthoringPublication(
   questions.push({...signed,contentHash:questionRevisionHash(signed)});
   const partialCredit=q.partialCreditEach??0;
   const scoringRule=q.scoringOverride;
-  const effectiveRule:AuthoringMarkingRule=scoringRule??d.kindScoring?.[q.kind]??{
+  const sectionRule=d.sections.find(section=>section.name===q.section)?.scoringOverride;
+  const effectiveRule:AuthoringMarkingRule=scoringRule??sectionRule??d.kindScoring?.[q.kind]??{
    correctMarks:d.marksCorrect,incorrectMarks:d.marksIncorrect,unansweredMarks:d.marksUnanswered};
   entries.push({questionRevisionId:revisionId,answer:keyFrom(q),
     ...(scoringRule||(partialCredit>0&&["multiple-select","matching"].includes(q.kind))?{
