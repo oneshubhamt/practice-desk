@@ -39,7 +39,7 @@ validated package/source
   → optional notebook + FSRS revision evidence
 ```
 
-Question identity and content/key revisions are separate. Exam sections own timing/navigation; Subject → Topic → Subtopic owns semantic classification. Printed Source and corrected Reviewed editions remain distinct, and advisory comparison never rewrites historical scores.
+Question identity and content/key revisions are separate. The frozen paper owns the immutable timer budget/navigation policy, while frozen `AttemptMode` owns enforcement: `exam-simulation` is hard-deadline, practice modes are advisory and may record overtime. Exam sections remain the only source of sectional budgets; Subject → Topic → Subtopic owns semantic classification. Printed Source and corrected Reviewed editions remain distinct, and advisory comparison never rewrites historical scores.
 
 Candidate-visible resources are narrower than reviewer/solution resources: keys, explanations, disputes and explanation-only assets stay outside the permitted pre-review surface. Attempt mode is chosen explicitly when an attempt is created; runtime CGL selection is not part of `ExamPackage`, and evidence-selected/custom compositions freeze as `custom-practice`.
 
@@ -49,7 +49,7 @@ Application orchestration talks to one `WorkspaceStore` interface. IndexedDB is 
 
 Attempts use compact records plus deduplicated immutable snapshots. Stale sibling-tab writes fail closed; terminal/newer records defeat older emergency mirrors. Backup restore is additive, bounded and integrity-checked. Corrupt/dangling data is surfaced or quarantined rather than silently repaired into invented history.
 
-Storage-health/quota/persistence prompts are application presentation concerns. Backup validation consumes the pure workspace-settings contract rather than importing application storage adapters. Terminal attempt persistence is also the single owner of candidate-only scratch cleanup, so calculator state and unsaved choice drafts cannot outlive a completed attempt. Authoring drafts/staging and attempt History are separate persistence/export lifecycles.
+Storage-health/quota/persistence prompts are application presentation concerns. Backup validation consumes the pure workspace-settings contract rather than importing application storage adapters. Terminal attempt persistence is also the single owner of candidate-only scratch cleanup, so calculator state, unsaved choice drafts and transient written-response drafts cannot outlive a completed attempt. Authoring drafts/staging and attempt History are separate persistence/export lifecycles.
 
 ## 5. Authoring and content publication
 
@@ -71,7 +71,7 @@ The scheduler policy is a discriminated fixed-retention/Cost-ADR contract: fixed
 
 ## 7. Rendering and navigation
 
-Feature controllers receive narrow `…ControllerContext` capability slices from the composition root. The exam renderer selectively reconciles changed UI so focus and unsaved candidate inputs are not casually destroyed. Results build one bounded per-render question/evidence lookup rather than repeatedly rescanning the frozen attempt; no persistent analytics cache is maintained.
+Feature controllers receive narrow `…ControllerContext` capability slices from the composition root. The exam renderer selectively reconciles changed UI so focus and unsaved candidate inputs are not casually destroyed. Written text is staged transiently and checkpointed at meaningful attempt/lifecycle boundaries; those checkpoints replace the current response without retaining typing/revision telemetry. Results derive written word counts, timer budget/overtime and post-deadline foreground exposure from frozen attempt evidence; no derived word count or persistent analytics cache is maintained.
 
 Native Navigation API is preferred where available; the tested fragment-route fallback preserves same-file `file://` operation. Responsive support includes narrow/zoom cases such as 195px at 140% scale. Linux WebKit automation does not certify physical Mac Safari, touch/IME or assistive technology.
 

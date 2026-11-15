@@ -19,10 +19,17 @@ Calculator display, pending operation, memory and open/closed state are recovera
 ## Exam lifecycle and candidate-facing security
 
 1. Validate and preflight the source package; freeze paper/key/media/policy/edition and source-reference IDs **at start**, not on post-submit rendering.
-2. Accept legal `answer`, `clear`, `flag`, `navigate`, `pause`, `resume`, `submit` and `expiry` events for the selected navigation/timer policy. Prevent late submissions, double counting, clock rollback and illegal cross-section responses.
+2. Accept legal `answer`, `clear`, `flag`, `navigate`, `pause`, `resume`, `submit` and `expiry` events for the selected navigation/timer policy. The frozen paper supplies the time budget; frozen `AttemptMode` supplies enforcement: exam simulation is hard-deadline, while practice modes may continue into advisory overtime. Prevent post-deadline edits in hard mode, double counting, clock rollback and illegal cross-section responses.
 3. Candidate content is narrower than reviewer/answer-key data. Solutions, explanations, editorial disputes, answer-only media and privileged annotations must not leak before the permitted review boundary.
 4. On completion, store the exact result/ledger. A later correction or notebook rating must not modify those frozen marks.
-5. Preserve raw measured timing/event evidence; do not assign invented per-question time or mastery merely because an item was opened.
+5. Preserve raw measured timing/event evidence. Per-question `postDeadlineMs` is foreground exposure after an advisory budget, not wall-clock paper overtime; do not invent per-question limits, typing speed, semantic quality scores or mastery from timing.
+
+## Written responses and result evidence
+
+- Free-response text remains manual/pending for substantive assessment. Automated marks never silently score relevance, factual quality, structure or language; optional self-assessed marks/notes remain separate from the immutable machine score.
+- `wordLimit` is advisory. Results derive word count with the same canonical `countWords()` rule used by the candidate counter; derived counts are not persisted.
+- Visible written text is transiently staged and committed at navigation, submission, lifecycle and timer checkpoints so a hard deadline cannot drop the last legal draft. Checkpoints replace the current free-response value without answer-revision/keystroke telemetry.
+- Practice overtime is timer time beyond the frozen budget. `postDeadlineMs` attributes only visible question exposure after that budget, so attributed question overtime may legitimately be smaller than paper overtime.
 
 ## Subject hierarchy and sections
 
