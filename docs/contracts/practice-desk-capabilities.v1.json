@@ -196,7 +196,7 @@
       "limitations": [
         "Catalog/manifest inclusion is packaging and discovery policy, not certification that a paper is official or factually correct",
         "User-imported papers sharing a maintained examId remain user supplied",
-        "SSC CGL still uses its established Source/Reviewed converter at build time, but storage is paper-isolated and manifest-addressed",
+        "SSC CGL runtime uses the same canonical Source/Reviewed ExamPackage path as other included exams; preserved raw CGL conversion is archive-only equivalence tooling.",
         "Disabling every maintained family intentionally yields an empty Library; import/authoring remain the recovery path"
       ],
       "sourcePaths": [
@@ -353,7 +353,7 @@
         "An original printed key remains a caution-labelled source key; reviewer proof and publisher authenticity are not authenticated."
       ],
       "sourcePaths": [
-        "src/content/import-cgl.ts",
+        "tools/cgl-archive-converter.ts",
         "src/engine/source-comparison.ts",
         "src/domain/question.ts",
         "scripts/editorial-editions.mjs"
