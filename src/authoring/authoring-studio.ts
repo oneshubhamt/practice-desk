@@ -819,7 +819,8 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    updateQuestion("scoringOverride",enabled?{
     correctMarks:active().marksCorrect,incorrectMarks:active().marksIncorrect,
     unansweredMarks:0}:undefined);
-   void render();
+   for(const key of ["correctMarks","incorrectMarks","unansweredMarks"] as const)
+    find<HTMLInputElement>("pd-author-mark-"+key).disabled=!enabled;
   };
   for(const key of ["correctMarks","incorrectMarks","unansweredMarks"] as const){
    find<HTMLInputElement>("pd-author-mark-"+key).onchange=e=>{
