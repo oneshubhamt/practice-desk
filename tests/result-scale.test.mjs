@@ -50,7 +50,8 @@ test("result analytics and review stay complete at the 2,000-question package ce
  const timing=timingLedgerHTML(attempt,true,true);
  assert.equal((timing.match(/data-ledger-q=/g)??[]).length,COUNT);
  const insights=resultInsightsHTML(attempt,true);
- assert.match(insights,/role="progressbar" aria-label="Scale coverage"[^>]*aria-valuenow="100"/);
+ assert.match(insights,/role="progressbar" aria-label="Paper coverage"[^>]*aria-valuenow="100"/,
+  "one-section scale result must use whole-paper presentation rather than an artificial section label");
  assert.match(insights,/2000\/2000 attempted/,
    "Scale analytics must expose complete section coverage without depending on headings");
 
