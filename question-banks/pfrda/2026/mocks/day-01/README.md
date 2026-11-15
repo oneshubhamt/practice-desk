@@ -10,4 +10,4 @@ This is an original practice mock under the PFRDA exam corpus.
 - `archive/` contains recovery-only historical inputs and is never preinstalled.
 - `audit.md` records content-review findings and verification limits.
 
-Both active packages are currently preinstalled through the root catalog. They remain generic Practice Desk packages; disabling/removing the PFRDA catalog entry removes them from future builds without deleting PFRDA-specific runtime code, because none exists.
+The current Revised package is preinstalled through the root catalog. The Original package remains beside it as an importable historical edition but is not duplicated into every build. Disabling/removing the PFRDA catalog entry removes the preinstalled paper from future builds without deleting PFRDA-specific runtime code, because none exists.

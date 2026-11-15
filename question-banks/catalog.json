@@ -25,12 +25,6 @@
       "adapter": "exam-packages",
       "packages": [
         {
-          "id": "pfrda-day1-original",
-          "label": "Day 1 — Original",
-          "path": "question-banks/pfrda/2026/mocks/day-01/original/package.exam.json",
-          "current": false
-        },
-        {
           "id": "pfrda-day1-revised",
           "label": "Day 1 — Revised",
           "path": "question-banks/pfrda/2026/mocks/day-01/revised/package.exam.json",
