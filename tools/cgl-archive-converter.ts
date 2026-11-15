@@ -3,9 +3,9 @@
  * to prove that the materialized packages remain byte-for-byte equivalent to
  * the preserved historical source/patch/solution corpus.
  */
-import {importCglBank} from "../src/content/import-cgl.ts";
+import {importCglBank} from "./cgl-archive/import.ts";
 import {sha256} from "../src/domain/hash.ts";
-import type {SourcePaperBank,ReviewPatchBank} from "../src/content/schema.js";
+import type {SourcePaperBank,ReviewPatchBank} from "./cgl-archive/schema.js";
 import type {StimulusDefinition,ImageAsset} from "../src/domain/question.js";
 import type {ExamId} from "../src/domain/ids.js";
 import type {ExamPackage} from "../src/domain/exam-package.ts";

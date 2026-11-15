@@ -13,7 +13,7 @@ import {paperRevisionHash,answerKeyRevisionHash,questionRevisionHash} from "../s
 import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
 import {renderModelExam,readablePracticeMode} from "../src/app/exam-view.ts";
 import {createSourceReviewReference,validateSourceReviewReference} from "../src/engine/review-source.ts";
-import {importCglBank} from "../src/content/import-cgl.ts";
+import {importCglBank} from "../tools/cgl-archive/import.ts";
 import {validateResponse} from "../src/engine/response.ts";
 import {editorialStatusLabel} from "../src/app/editorial-labels.ts";
 import {execFileSync} from "node:child_process";
@@ -27,7 +27,7 @@ import {duplicateMatchingTargets,multipleDraftMessage} from "../src/app/response
 import {assertDeletionAllowed} from "../src/history/deletion-policy.ts";
 import {makeBackup,verifyBackup,planBackupMerge} from "../src/history/backup.ts";
 import {createSourceKeyReference} from "../src/engine/source-comparison.ts";
-import {validateContent} from "../src/content/validate.ts";
+import {validateContent} from "../tools/cgl-archive/validate.ts";
 import {Script} from "node:vm";
 import {sha256} from "../src/domain/hash.ts";
 import {addLearningCard,validateLearningCard} from "../src/learning/learning.ts";

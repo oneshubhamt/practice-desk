@@ -1,12 +1,12 @@
 import type { SourcePaperBank, ReviewPatchBank, QuestionPatch, ChoiceKey } from "./schema.js";
-import type { PaperRevision } from "../domain/exam.js";
-import type { QuestionRevision, EditorialChange } from "../domain/question.js";
-import type { AnswerKeyRevision } from "../domain/answer-key.js";
-import type { AssetId, OptionId, PaperId, PaperRevisionId, QuestionId, QuestionRevisionId, SectionId, AnswerKeyRevisionId, StimulusId } from "../domain/ids.js";
-import { validateAnswerKeyRevision, validatePaperRevision, validateQuestionRevision } from "../domain/validate.ts";
+import type { PaperRevision } from "../../src/domain/exam.js";
+import type { QuestionRevision, EditorialChange } from "../../src/domain/question.js";
+import type { AnswerKeyRevision } from "../../src/domain/answer-key.js";
+import type { AssetId, OptionId, PaperId, PaperRevisionId, QuestionId, QuestionRevisionId, SectionId, AnswerKeyRevisionId, StimulusId } from "../../src/domain/ids.js";
+import { validateAnswerKeyRevision, validatePaperRevision, validateQuestionRevision } from "../../src/domain/validate.ts";
 
-export { sha256 } from "../domain/hash.ts";
-import { questionRevisionHash, answerKeyRevisionHash, paperRevisionHash } from "../domain/integrity.ts";
+export { sha256 } from "../../src/domain/hash.ts";
+import { questionRevisionHash, answerKeyRevisionHash, paperRevisionHash } from "../../src/domain/integrity.ts";
 const optionId = (question: string, letter: string): OptionId => `${question}:option:${letter}` as OptionId;
 const sectionNames = ["Reasoning", "General Awareness", "Quantitative Aptitude", "English"] as const;
 
