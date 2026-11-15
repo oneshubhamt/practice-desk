@@ -41,7 +41,7 @@ question-banks/
 
 PFRDA-style generic banks use `bank.authoring.json` as the human/AI editing surface and `package.exam.json` as generated runtime material. Recovery/transcription evidence belongs under `archive/`.
 
-SSC CGL retains its existing Source/Reviewed conversion semantics, but each PYQ is physically isolated under its own paper folder: the Original folder owns that paper's source bytes and the Revised folder owns only that paper's review patches/solutions.
+SSC CGL uses the same canonical package topology as every other included exam. Each PYQ keeps immutable Original/Source and Revised/Reviewed `package.exam.json` editions in its paper folder; preserved raw transcription, patches and solutions are archive evidence used only by tooling equivalence tests, never runtime inputs.
 
 ## Efficient AI traversal
 
