@@ -557,8 +557,13 @@ await registerSourceReviewMediaTests();
 
 /** Bank Validation And Build — canonical domain contracts. */
 async function registerBankValidationAndBuildTests(){
+const contentPaths={
+ papers:"../question-banks/ssc-cgl/pyqs/original/papers.json",
+ patches:"../question-banks/ssc-cgl/pyqs/revised/patches.json",
+ solutions:"../question-banks/ssc-cgl/pyqs/revised/solutions.json"
+};
 const load = async name => JSON.parse(
-  await readFile(new URL(cglContentPaths[name], import.meta.url), 'utf8')
+  await readFile(new URL(contentPaths[name], import.meta.url), 'utf8')
 );
 const loadContent = async () => ({
   papers: await load('papers'),
@@ -618,7 +623,8 @@ test('single-file release contains a complete inline app',async()=>{
  const html=await readFile(new URL('../Practice_Desk_Offline_Mock_Tests.html',import.meta.url),'utf8');
  assert.match(html,/^<!doctype html>/i);
  assert.equal((html.match(/<style>/g)||[]).length,1);
- assert.equal((html.match(/type="application\/json"/g)||[]).length,3);
+ assert.equal((html.match(/type="application\\/json"/g)||[]).length,4);
+ assert.match(html,/id="preinstalled-exams"/);
  assert.equal((html.match(/<script>/g)||[]).length,1);
  assert.doesNotMatch(html,/<!-- PD:[A-Z_]+ -->/);
  assert.doesNotMatch(html,/<script[^>]+src=|<link[^>]+rel=["']stylesheet/i);
