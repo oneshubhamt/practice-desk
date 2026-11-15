@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile,mkdtemp,writeFile,rm,mkdir} from "node:fs/promises";
+import {gunzipSync} from "node:zlib";
 import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {tmpdir} from "node:os";
@@ -11,6 +12,7 @@ import {buildPracticeDeskHtml} from "../scripts/build-target.mjs";
 import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
 import {shouldShowWordCount} from "../src/domain/word-count.ts";
 import {renderGenericControls} from "../src/app/question-content-view.ts";
+import {packPreinstalledExamCatalog,unpackPreinstalledExamCatalog} from "../src/app/preinstalled-pack.ts";
 import {archiveCglPackages} from "../tools/cgl-archive-converter.ts";
 import {loadCglFixture} from "./fixtures/cgl-bank.mjs";
 
@@ -26,6 +28,12 @@ const embedded=(html,id)=>{
  const match=html.match(new RegExp('<script id="'+id+'" type="application/json">([\\s\\S]*?)<\\/script>'));
  assert.ok(match,"Missing embedded payload "+id);
  return JSON.parse(match[1]);
+};
+const embeddedPreinstalled=html=>{
+ const wrapper=embedded(html,"preinstalled-exams");
+ assert.equal(wrapper.format,"practice-desk-preinstalled-exams-gzip");
+ const unpacked=JSON.parse(gunzipSync(Buffer.from(wrapper.data,"base64")).toString("utf8"));
+ return unpackPreinstalledExamCatalog(unpacked);
 };
 
 test("manifest graph is authoritative for five CGL PYQs and current PFRDA",async()=>{
@@ -65,6 +73,11 @@ test("materialized CGL canonical packages are exactly equivalent to archived sou
   assert.deepEqual(byId.get(pkg.paper.id),pkg,
    "canonical CGL package diverged from archived source/review evidence: "+pkg.paper.id);
  }
+});
+
+test("generic preinstalled packing round-trips canonical packages without semantic drift",async()=>{
+ const loaded=(await loadQuestionBankCatalog(root)).preinstalled;
+ assert.deepEqual(unpackPreinstalledExamCatalog(packPreinstalledExamCatalog(loaded)),loaded);
 });
 
 test("PFRDA Original and Revised packages retain distinct immutable identities",async()=>{
@@ -161,13 +174,13 @@ test("catalog switches independently remove PFRDA, CGL, or every bundled bank",a
 
 test("standalone builds honor each removal switch without stale embedded banks",async()=>{
  const noPfrda=await buildPracticeDeskHtml("standalone",{catalogOverride:await withPreinstall({"pfrda-grade-a-2026-phase-ii":false})});
- assert.equal(embedded(noPfrda.html,"preinstalled-exams").packages.length,10);
+ assert.equal(embeddedPreinstalled(noPfrda.html).packages.length,10);
  assert.doesNotMatch(noPfrda.html,/id="paper-bank"|id="review-patches"|id="solution-bank"/);
  const noCgl=await buildPracticeDeskHtml("standalone",{catalogOverride:await withPreinstall({"ssc-cgl":false})});
- assert.equal(embedded(noCgl.html,"preinstalled-exams").packages.length,2);
+ assert.equal(embeddedPreinstalled(noCgl.html).packages.length,2);
  assert.doesNotMatch(noCgl.html,/id="paper-bank"|id="review-patches"|id="solution-bank"/);
  const empty=await buildPracticeDeskHtml("standalone",{catalogOverride:await withPreinstall({"ssc-cgl":false,"pfrda-grade-a-2026-phase-ii":false})});
- assert.deepEqual(embedded(empty.html,"preinstalled-exams").packages,[]);
+ assert.deepEqual(embeddedPreinstalled(empty.html).packages,[]);
  assert.doesNotMatch(empty.html,/id="paper-bank"|id="review-patches"|id="solution-bank"/);
 });
 

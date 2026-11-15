@@ -1,5 +1,6 @@
 import {sha256} from "../domain/hash.ts";
 import {validatePreinstalledExamCatalog,type PreinstalledExamCatalog} from "./preinstalled-exams.ts";
+import {unpackPreinstalledExamCatalog} from "./preinstalled-pack.ts";
 
 const MAX_EMBEDDED_BYTES=64*1024*1024;
 type PackedPreinstalled={
@@ -35,5 +36,5 @@ export async function decodePreinstalledExamCatalog(value:unknown):Promise<Prein
  if(sha256(bytes)!==value.sha256)throw Error("Embedded exam catalog integrity check failed");
  const text=new TextDecoder().decode(bytes);
  let parsed:unknown;try{parsed=JSON.parse(text);}catch{throw Error("Embedded exam catalog JSON is invalid");}
- return validatePreinstalledExamCatalog(parsed);
+ return validatePreinstalledExamCatalog(unpackPreinstalledExamCatalog(parsed));
 }
