@@ -273,3 +273,34 @@ jobs:
             if git push origin "HEAD:$target_branch"; then exit 0; fi
           done
           echo "::error::Could not safely publish tested HTML"; exit 1
+
+  sync-pfrda-generated-html:
+    name: Temporary — materialize exact PFRDA standalone on validation branch
+    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'PFRDA' && github.event.pull_request.head.ref == 'pfrda-qbank-validation' && needs.fast.result == 'success' && needs.smoke.result == 'success' && needs.cross.result == 'success' }}
+    needs: [fast, smoke, cross]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: pfrda-qbank-validation
+          submodules: recursive
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.13.0'
+          package-manager-cache: false
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - name: Commit exact deterministic standalone if changed
+        run: |
+          git config user.name "practice-desk-ci"
+          git config user.email "practice-desk-ci@users.noreply.github.com"
+          git add Practice_Desk_Offline_Mock_Tests.html
+          if git diff --cached --quiet; then
+            echo "Standalone already exact."
+          else
+            git commit -m "build: stage exact green PFRDA standalone [artifact-sync]"
+            git push origin HEAD:pfrda-qbank-validation
+          fi
