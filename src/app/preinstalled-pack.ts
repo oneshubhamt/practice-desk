@@ -9,6 +9,8 @@ type PackedPackage=Omit<ExamPackage,"questions"|"assets"|"stimuli">&{
  readonly questions:readonly PackedQuestion[];
  readonly assetRefs:readonly string[];
  readonly stimulusRefs:readonly string[];
+ readonly hasAssets:boolean;
+ readonly hasStimuli:boolean;
 };
 export interface PackedPreinstalledExamCatalog{
  readonly format:typeof PREINSTALLED_PACKED_FORMAT;
@@ -34,7 +36,8 @@ export function packPreinstalledExamCatalog(catalog:PreinstalledExamCatalog):Pac
   return {...rest,
    questions:questions.map(q=>{const {content,...meta}=q;return {...meta,contentRef:remember(contentTable,content)};}),
    assetRefs:(assets??[]).map(asset=>remember(assetTable,asset)),
-   stimulusRefs:(stimuli??[]).map(stimulus=>remember(stimulusTable,stimulus))
+   stimulusRefs:(stimuli??[]).map(stimulus=>remember(stimulusTable,stimulus)),
+   hasAssets:assets!==undefined,hasStimuli:stimuli!==undefined
   };
  });
  return {format:PREINSTALLED_PACKED_FORMAT,version:1,families:catalog.families,
@@ -71,10 +74,13 @@ export function unpackPreinstalledExamCatalog(value:unknown):unknown{
   const resolve=(table:Record<string,unknown>,ref:string,label:string)=>{
    const item=table[ref];if(item===undefined)throw Error("Missing packed "+label);return item;
   };
-  const {assetRefs:_assets,stimulusRefs:_stimuli,questions:_questions,...rest}=row;
+  if(typeof row.hasAssets!=="boolean"||typeof row.hasStimuli!=="boolean")
+   throw Error("Packed package optional-field flags are invalid");
+  const {assetRefs:_assets,stimulusRefs:_stimuli,questions:_questions,
+   hasAssets,hasStimuli,...rest}=row;
   return {...rest,questions,
-   assets:assetRefs.map(ref=>resolve(assets,ref,"asset")),
-   stimuli:stimulusRefs.map(ref=>resolve(stimuli,ref,"stimulus"))};
+   ...(hasAssets?{assets:assetRefs.map(ref=>resolve(assets,ref,"asset"))}:{}),
+   ...(hasStimuli?{stimuli:stimulusRefs.map(ref=>resolve(stimuli,ref,"stimulus"))}:{})};
  });
  return {format:"practice-desk-preinstalled-exams",version:1,families:packed.families,packages};
 }
