@@ -145,6 +145,8 @@ export const saveWorkspaceRecord=(owner:PersistenceControllerContext,record:Reco
    owner.calculatorStates.delete(versioned.id);
    for(const key of owner.choiceDrafts.keys())
     if(key.startsWith(versioned.id+"|"))owner.choiceDrafts.delete(key);
+   for(const key of owner.writtenDrafts.keys())
+    if(key.startsWith(versioned.id+"|"))owner.writtenDrafts.delete(key);
    clearCandidateToolWorkspace(localStorage,versioned.id);
   }
  }

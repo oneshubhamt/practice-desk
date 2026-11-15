@@ -9,6 +9,7 @@ import {transitionGenericAttempt} from "../engine/generic-attempt.ts";
 import {restoreSession} from "../history/frozen.ts";
 
 import {scoreAttempt} from "../engine/scoring.ts";
+import {commitCurrentWrittenDraft} from "./written-response-draft.ts";
 
 import {type AppRoute,type RouteContext} from "./navigation.ts";
 import type {RouteControllerContext} from "./coordinator-context.ts";
@@ -26,9 +27,11 @@ export async function activateWorkspaceRoute(owner:RouteControllerContext,target
      !(target.screen==="exam"&&target.attemptId===previousAttempt.id);
    if(leavesExam){
      try{
-       const next=transitionGenericAttempt(previousAttempt,{
-         type:"VISIBILITY",nowMs:owner.now(),visible:false},
-         new Map(previousAttempt.frozen.questions.map(q=>[q.id,q])));
+       const now=owner.now();
+       const prepared=commitCurrentWrittenDraft(owner.writtenDrafts,previousAttempt,now);
+       const next=transitionGenericAttempt(prepared,{
+         type:"VISIBILITY",nowMs:now,visible:false},
+         new Map(prepared.frozen.questions.map(q=>[q.id,q])));
        owner.attempt=next;
        if(next!==previousAttempt)await owner.save(next);
      }catch(error){

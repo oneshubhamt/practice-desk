@@ -29,6 +29,7 @@ import type {WorkspaceContext} from "./coordinator-context.ts";
 import {renderLibraryHTML,applyLibraryFamily,persistLibrarySelection} from "./library-controller.ts";
 import {packageForResult,renderCurrentResultHTML} from "./result-controller.ts";
 import {renderCurrentExamHTML,dispatchExamEvent} from "./exam-controller.ts";
+import type {WrittenResponseDraftStore} from "./written-response-draft.ts";
 import {activateWorkspaceRoute,navigateWorkspace} from "./route-controller.ts";
 import {drawWorkspaceScreen,reportWorkspaceNotice} from "./screen-controller.ts";
 import {changeHistoryFilters} from "./history-controller.ts";
@@ -80,6 +81,7 @@ export function mountExamWorkspace(
  })();
 
  const choiceDrafts=new Map<string,{questionId:string;optionIds:OptionId[];message:string}>();
+ const writtenDrafts:WrittenResponseDraftStore=new Map();
  const calculatorStates=new Map<string,ExamCalculatorState>();
  const manualGradeDrafts=new Map<string,{marks:string;note:string}>();
  const screenRenderer=createScreenRenderer(root);
@@ -159,7 +161,7 @@ export function mountExamWorkspace(
    cglMode:"strict" as CglPracticeMode,
    changeHistoryQuery,
    choice:initialChoice,
-   choiceDrafts,manualGradeDrafts,
+   choiceDrafts,writtenDrafts,manualGradeDrafts,
    composeCount:10,composeDifficulty:"",composeError:"",composeOpen:false,composePreview:"",
    composeSection:"",composeSeed:"practice-1",composeTopic:"",
    deleteAllCompleted,dispatch,dispatchVisibility,
