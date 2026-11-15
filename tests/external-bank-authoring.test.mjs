@@ -61,10 +61,11 @@ test("Question-specific custom marking preserves MCQ penalty while raising Engli
  assert.equal(existing.kind,"single-choice");
 });
 test("PFRDA Day 1 keeps original keys, changes only reviewed distractors, and marks English out of 20",async()=>{
- const path=(name)=>new URL("../examples/pfrda-2026-day1/"+name,import.meta.url);
- const initial=JSON.parse(await readFile(path("day1.authoring.json"),"utf8"));
- const source=JSON.parse(await readFile(path("day1.source.authoring.json"),"utf8"));
- const reviewed=JSON.parse(await readFile(path("day1.reviewed.authoring.json"),"utf8"));
+ const root="../question-banks/pfrda/2026/mocks/day-01/";
+ const path=(name)=>new URL(root+name,import.meta.url);
+ const initial=JSON.parse(await readFile(path("archive/recovered-day1.authoring.json"),"utf8"));
+ const source=JSON.parse(await readFile(path("original/bank.authoring.json"),"utf8"));
+ const reviewed=JSON.parse(await readFile(path("revised/bank.authoring.json"),"utf8"));
  const changed=[13,23,25,31,34,35,38,39,41,43,44,48];
  assert.equal(reviewed.questions.length,51);
  assert.equal(reviewed.sections.length,2);

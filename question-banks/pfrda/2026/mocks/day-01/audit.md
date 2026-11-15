@@ -4,7 +4,7 @@
 
 ## Changes implemented
 
-1. **Original source preserved:** `original-50-questions.json`, `day1.authoring.json` and the historical answer index are unchanged. The new source-playback package preserves all 50 original stems, all 200 original options and all answer letters; its only material practice-configuration change is the 20-mark English manual rule.
+1. **Original source preserved:** recovery inputs live under `archive/` (`original-50-questions.json`, `recovered-day1.authoring.json`, the English reference and historical answer index). The active `original/` package preserves all 50 original MCQ stems, all 200 original options and all answer letters; its only material practice-configuration change is the 20-mark English manual rule. The active `revised/` package is a distinct immutable revision.
 2. **Explanation quality:** 50 of 50 Paper 2 explanations have been rewritten with the key, the rule or formula, explicit reasons for competing options being wrong, and a high-yield distinction. Q9, Q18, Q19, Q27, Q29, Q40 and Q47 receive worked remediation of the user's Day 1 mistakes.
 3. **Options:** exactly 12 complete *distractor groups* revised, for Q13, 23, 25, 31, 34, 35, 38, 39, 41, 43, 44 and 48. Their question stems, IDs and answer letters do **not** change. This is a targeted improvement, not a claim that all items are now difficult.
 4. **Q42:** fixes the BPM6 distinction: personal transfers/remittances usually **current account—secondary income**; FDI, external commercial borrowing and reserves transactions **financial account**, not generically “capital account”. RBI is cited in answer-side provenance.
@@ -27,7 +27,7 @@
 | Original submitted 50-answer response replay | **43 right, 7 wrong, 0 skipped; 82.5/100**; précis was not assumed attempted |
 | Targeted external authoring test suite | **36/36 passed** (including the new marking and historical-fidelity checks) |
 | Studio view/controller syntax check | **Passed** (`node --check` on both modified Studio files) |
-| Whole-repo typecheck / fast suite | **Environment-limited:** dependencies such as TypeScript, esbuild and KaTeX are absent from this clean checkout; the broader gate was attempted but could not complete |
+| Whole-repo typecheck / fast suite | **Pending branch CI after repository-wide question-bank reorganization and merge with current `working`**; prior targeted authoring checks are retained as historical evidence, not a substitute for this gate |
 | Independent legal-currentness certification | **Not completed; 11 automated advisory warnings remain** |
 
 The program's quality scanner intentionally reports `legal-currentness-unverified` even when a dated, provision-specific citation exists: it cannot itself inspect commencement orders, every later statutory amendment or subordinate rule. A reference and a reasoned manual check are not an independently signed publication review. The packages retain truthful `qa: needs-review` metadata and **do not bypass** this gate.
