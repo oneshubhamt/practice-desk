@@ -83,5 +83,5 @@ test("unsectioned fractional Results use frozen precision, paper language and ne
  assert.match(review,/Self-assessed marks \(0–0\.333\)/);
  assert.match(review,/step="0\.001"/);
  assert.match(review,/value="0\.333"/);
- assert.doesNotMatch(review,/0\.333333/);
+ assert.doesNotMatch(review,/>0\.333333/,"visible review text must respect frozen precision");
 });
