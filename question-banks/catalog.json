@@ -1,0 +1,20 @@
+{
+  "format": "practice-desk-question-bank-catalog",
+  "version": 1,
+  "families": [
+    {
+      "id": "ssc-cgl",
+      "examId": "ssc-cgl",
+      "title": "SSC CGL",
+      "manifest": "question-banks/ssc-cgl/manifest.json",
+      "preinstalled": true
+    },
+    {
+      "id": "pfrda-grade-a-2026-phase-ii",
+      "examId": "pfrda-grade-a-2026-phase-ii",
+      "title": "PFRDA Grade A 2026 — Phase II",
+      "manifest": "question-banks/pfrda/manifest.json",
+      "preinstalled": true
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "format": "practice-desk-paper-manifest",
+  "version": 1,
+  "id": "pfrda-grade-a-2026-day-01",
+  "examId": "pfrda-grade-a-2026-phase-ii",
+  "paperId": "pfrda-grade-a-2026-day1",
+  "kind": "mock",
+  "title": "PFRDA Grade A 2026 — Day 1",
+  "canonicalEdition": "revised",
+  "editions": {
+    "original": {
+      "authoring": "original/bank.authoring.json",
+      "package": "original/package.exam.json"
+    },
+    "revised": {
+      "authoring": "revised/bank.authoring.json",
+      "package": "revised/package.exam.json"
+    }
+  },
+  "archive": {
+    "historicalAuthoring": "archive/recovered-day1.authoring.json",
+    "recoveredQuestions": "archive/original-50-questions.json",
+    "englishReference": "archive/descriptive-english.md",
+    "answerIndex": "archive/general-stream-answer-index.md"
+  },
+  "audit": "audit.md",
+  "identityPolicy": "Historical compiled r1 package with conflicting key bytes was removed; active original and revised package identities are unique."
+}

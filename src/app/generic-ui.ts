@@ -10,6 +10,7 @@ import type {SessionEvent} from "../engine/session.ts";
 import {createSessionClock} from "../engine/clock.ts";
 import type {DeletionIntent} from "../history/deletion-policy.ts";
 import type {SourcePaperBank,ReviewPatchBank} from "../content/schema.js";
+import type {PreinstalledExamCatalog} from "./preinstalled-exams.ts";
 import type {StorageHealth} from "./storage-health.ts";
 import {DEFAULT_HISTORY_QUERY,restoreHistoryQuery,type HistoryQuery} from "./history-query.ts";
 import type {ResultTab,ReviewFilter} from "./result-presentation.ts";
@@ -29,6 +30,7 @@ import type {WorkspaceContext} from "./coordinator-context.ts";
 import {renderLibraryHTML,applyLibraryFamily,persistLibrarySelection} from "./library-controller.ts";
 import {packageForResult,renderCurrentResultHTML} from "./result-controller.ts";
 import {renderCurrentExamHTML,dispatchExamEvent} from "./exam-controller.ts";
+import type {WrittenResponseDraftStore} from "./written-response-draft.ts";
 import {activateWorkspaceRoute,navigateWorkspace} from "./route-controller.ts";
 import {drawWorkspaceScreen,reportWorkspaceNotice} from "./screen-controller.ts";
 import {changeHistoryFilters} from "./history-controller.ts";
@@ -57,22 +59,36 @@ function cachedCglPackages(
 
 export function mountExamWorkspace(
  root:HTMLElement,sources:SourcePaperBank,patches:ReviewPatchBank,
- solutions:Readonly<Record<string,Readonly<Record<string,string>>>>
+ solutions:Readonly<Record<string,Readonly<Record<string,string>>>>,
+ preinstalled:PreinstalledExamCatalog
 ):()=>void{
  const builtins=cachedCglPackages(sources,patches,solutions);
  const builtinPaperIds=new Set(builtins.map(p=>p.paper.id));
- const packages=new Map<string,ExamPackage>(builtins.map(p=>[p.paper.id,p]));
+ const packages=new Map<string,ExamPackage>(
+   [...builtins,...preinstalled.packages].map(p=>[p.paper.id,p])
+ );
  const records=new Map<string,RecordItem>();
- const initialChoice=[...packages.values()].reverse().find(p=>p.paper.edition==="reviewed")?.paper.id??
-   (packages.keys().next().value as string);
+ const initialCatalog=examFamilyCatalog(packages.values(),builtinPaperIds,preinstalled.families);
+ const defaultFamily=initialCatalog.find(f=>f.id===BUILTIN_CGL_FAMILY)??
+   initialCatalog.find(f=>f.currentPaperId)??initialCatalog[0];
+ const defaultChoice=defaultFamily?.currentPaperId??
+   defaultFamily?.papers.find(p=>p.paper.edition==="reviewed")?.paper.id??
+   defaultFamily?.papers[0]?.paper.id??"";
+ const defaultFamilyId=defaultFamily?.id??"";
  const storedSetups=readPracticeSetups();
  const initialSetups:PracticeSetups=storedSetups??{
-   schema:2,selectedFamilyId:BUILTIN_CGL_FAMILY,
-   families:{[BUILTIN_CGL_FAMILY]:{
-     paperRevisionId:initialChoice,mode:"strict",section:0,
-     untimed:false,edition:packages.get(initialChoice)?.paper.edition==="source"?"source":"reviewed"
-   }}
+   schema:2,selectedFamilyId:defaultFamilyId,
+   families:defaultFamily?{[defaultFamilyId]:{
+     paperRevisionId:defaultChoice,mode:"strict",section:0,
+     untimed:false,edition:packages.get(defaultChoice)?.paper.edition==="source"?"source":"reviewed"
+   }}:{}
  };
+ const storedPaperId=initialSetups.families[initialSetups.selectedFamilyId]?.paperRevisionId;
+ const storedPaperInitiallyAvailable=Boolean(storedPaperId&&packages.has(storedPaperId)&&
+   initialCatalog.some(f=>f.id===initialSetups.selectedFamilyId&&
+     f.papers.some(p=>p.paper.id===storedPaperId)));
+ const initialFamilyId=storedPaperInitiallyAvailable?initialSetups.selectedFamilyId:defaultFamilyId;
+ const initialChoice=storedPaperInitiallyAvailable?storedPaperId!:defaultChoice;
  const historyQueryKey=STORAGE_TOPOLOGY.historyView;
  const initialHistoryQuery:HistoryQuery=(()=>{
    try{return restoreHistoryQuery(JSON.parse(sessionStorage.getItem(historyQueryKey)??"null"));}
@@ -80,6 +96,7 @@ export function mountExamWorkspace(
  })();
 
  const choiceDrafts=new Map<string,{questionId:string;optionIds:OptionId[];message:string}>();
+ const writtenDrafts:WrittenResponseDraftStore=new Map();
  const calculatorStates=new Map<string,ExamCalculatorState>();
  const manualGradeDrafts=new Map<string,{marks:string;note:string}>();
  const screenRenderer=createScreenRenderer(root);
@@ -97,7 +114,7 @@ export function mountExamWorkspace(
  let router!:NativeRouter;
  let timer=0;
 
- const families=()=>examFamilyCatalog(packages.values(),builtinPaperIds);
+ const families=()=>examFamilyCatalog(packages.values(),builtinPaperIds,preinstalled.families);
  const applyFamily=(id:string):void=>applyLibraryFamily(owner,id);
  const saveSelection=():void=>persistLibrarySelection(owner);
  const changeHistoryQuery=(next:HistoryQuery,redraw=true):void=>changeHistoryFilters(owner,next,redraw);
@@ -159,7 +176,7 @@ export function mountExamWorkspace(
    cglMode:"strict" as CglPracticeMode,
    changeHistoryQuery,
    choice:initialChoice,
-   choiceDrafts,manualGradeDrafts,
+   choiceDrafts,writtenDrafts,manualGradeDrafts,
    composeCount:10,composeDifficulty:"",composeError:"",composeOpen:false,composePreview:"",
    composeSection:"",composeSeed:"practice-1",composeTopic:"",
    deleteAllCompleted,dispatch,dispatchVisibility,
@@ -181,7 +198,7 @@ export function mountExamWorkspace(
    routeHydrated:false,
    get router(){return router;},set router(value){router=value;},
    save,saveSelection,screenRenderer,
-   selectedFamilyId:BUILTIN_CGL_FAMILY,
+   selectedFamilyId:initialFamilyId,
    setups:initialSetups,showStorageEstimate,singleSection:0,solutions,sources,
    storage,storageBackend:null,storageFault:false,storageSnapshot,storedSetups,
    get timer(){return timer;},

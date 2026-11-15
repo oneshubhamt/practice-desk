@@ -3,6 +3,7 @@ import type { ExamDefinition, PaperRevision } from "./exam.js";
 import type { QuestionRevision } from "./question.js";
 import {validateRichDocument} from "./rich-document.ts";
 import {BASIC_CALCULATOR_V1} from "./calculator.ts";
+import {WORD_COUNT_OVERRIDES} from "./word-count.ts";
 
 const QUESTION_KINDS = [
   "single-choice", "multiple-select", "numeric-entry", "true-false", "matching", "free-response",
@@ -195,8 +196,8 @@ export function validateQuestionRevision(value: unknown): QuestionRevision {
     }
   } else if (kind === "free-response") {
     const rules = record(content["responseRules"], "question.content.responseRules");
-    only(rules,["minWords","maxWords"],"question.content.responseRules");
-    for (const field of ["minWords", "maxWords"] as const) {
+    only(rules,["minWords","maxWords","wordLimit"],"question.content.responseRules");
+    for (const field of ["minWords", "maxWords", "wordLimit"] as const) {
       if (rules[field] !== undefined) positiveInteger(rules[field], "question.content.responseRules." + field);
     }
     if (typeof rules["minWords"] === "number" && typeof rules["maxWords"] === "number" && rules["minWords"] > rules["maxWords"]) {
@@ -299,7 +300,7 @@ export function validateAnswerKeyRevision(
       "single-choice":["optionId"],"multiple-select":["optionIds"],
       "numeric-entry":["acceptedValues","absoluteTolerance","relativeTolerance"],
       "true-false":["value"],"matching":["pairs"],
-      "free-response":["evaluation","rubricId"]
+      "free-response":["evaluation"]
     };
     only(answer,["kind",...answerFields[expectedKind]],path+".answer");
     if (expectedKind === "single-choice") {
@@ -346,7 +347,6 @@ export function validateAnswerKeyRevision(
       if (seenLeft.length === 0) throw new Error(path + ".answer.pairs: expected at least one pair");
     } else if (expectedKind === "free-response") {
       oneOf(answer["evaluation"], ["manual"] as const, path + ".answer.evaluation");
-      if (answer["rubricId"] !== undefined) text(answer["rubricId"], path + ".answer.rubricId");
     }
     if (entry["scoringOverride"] !== undefined) validateMarkingRule(entry["scoringOverride"], path + ".scoringOverride");
   });
@@ -442,9 +442,11 @@ export function validatePaperRevision(
   }
   if (paper["candidateTools"] !== undefined) {
     const tools = record(paper["candidateTools"], "paperRevision.candidateTools");
-    only(tools,["calculator"],"paperRevision.candidateTools");
-    if (tools["calculator"] !== BASIC_CALCULATOR_V1)
+    only(tools,["calculator","wordCount"],"paperRevision.candidateTools");
+    if (tools["calculator"] !== undefined && tools["calculator"] !== BASIC_CALCULATOR_V1)
       throw new Error('paperRevision.candidateTools.calculator: expected "'+BASIC_CALCULATOR_V1+'"');
+    if (tools["wordCount"] !== undefined)
+      oneOf(tools["wordCount"],WORD_COUNT_OVERRIDES,"paperRevision.candidateTools.wordCount");
   }
   validateScoringPolicy(paper["scoring"], "paperRevision.scoring");
 

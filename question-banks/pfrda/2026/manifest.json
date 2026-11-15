@@ -1,0 +1,15 @@
+{
+  "format": "practice-desk-exam-year-manifest",
+  "version": 1,
+  "id": "pfrda-grade-a-2026",
+  "examId": "pfrda-grade-a-2026-phase-ii",
+  "title": "PFRDA Grade A 2026 — Phase II",
+  "year": 2026,
+  "mocks": [
+    {
+      "id": "pfrda-grade-a-2026-day-01",
+      "path": "mocks/day-01/manifest.json"
+    }
+  ],
+  "pyqs": []
+}

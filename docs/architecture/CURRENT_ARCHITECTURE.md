@@ -9,7 +9,7 @@ The same source is built through `scripts/build-target.mjs` into two targets:
 - **Standalone:** `Practice_Desk_Offline_Mock_Tests.html`, deterministic and directly runnable via `file://`.
 - **Static:** `Practice_Desk_Static/`, served over localhost/HTTPS and adding the local FSRS optimizer Worker/WASM assets.
 
-Neither generated target is derived by rewriting the other. The application has no required backend, login or cloud learner store. Generated artifacts are never hand-edited.
+Neither generated target is derived by rewriting the other. `question-banks/catalog.json` owns only exam-family identity, root-manifest address and the preinstall switch. `scripts/build-target.mjs` follows the authoritative catalog → exam → year → paper manifest graph to assemble each enabled family. Paper manifests own canonical editions and content/package paths; the root catalog does not duplicate them. SSC CGL retains its existing Source/Reviewed converter semantics, but its five PYQs are stored as five isolated paper directories rather than one aggregate content file. Removing or disabling a family removes it from future builds without changing the scorer or Library runtime. The application has no required backend, login or cloud learner store. Generated artifacts are never hand-edited.
 
 ## 2. Ownership map
 
@@ -23,6 +23,7 @@ Neither generated target is derived by rewriting the other. The application has 
 | Persistence | `src/history/` | `WorkspaceStore`, IndexedDB and limited localStorage resilience adapters, immutable snapshots, CAS, backup/recovery/deletion |
 | Learning | `src/learning/` | Evidence extraction, FSRS-7 scheduling/revision selection, optimizer profile validation/browser orchestration |
 | Authoring | `src/authoring/` | Draft/staging store, editor binding, publication workflow and canonical publisher boundary |
+| Question-bank corpus | `question-banks/` | One authoritative exam → year → paper manifest graph; exam-scoped PYQ/mock sources, Original/Revised editions, generated packages and a family-level preinstall catalog; no runtime policy |
 | External content tools | `scripts/*bank*`, review/editorial/PDF/handoff CLIs | Structured source preparation, review/evidence sidecars and explicit file publication |
 
 The dependency direction is deliberate: domain/engine contracts do not depend upward on application orchestration.
@@ -39,7 +40,7 @@ validated package/source
   → optional notebook + FSRS revision evidence
 ```
 
-Question identity and content/key revisions are separate. Exam sections own timing/navigation; Subject → Topic → Subtopic owns semantic classification. Printed Source and corrected Reviewed editions remain distinct, and advisory comparison never rewrites historical scores.
+Question identity and content/key revisions are separate. The frozen paper owns the immutable timer budget/navigation policy, while frozen `AttemptMode` owns enforcement: `exam-simulation` is hard-deadline, practice modes are advisory and may record overtime. Exam sections remain the only source of sectional budgets; Subject → Topic → Subtopic owns semantic classification. Printed Source and corrected Reviewed editions remain distinct, and advisory comparison never rewrites historical scores.
 
 Candidate-visible resources are narrower than reviewer/solution resources: keys, explanations, disputes and explanation-only assets stay outside the permitted pre-review surface. Attempt mode is chosen explicitly when an attempt is created; runtime CGL selection is not part of `ExamPackage`, and evidence-selected/custom compositions freeze as `custom-practice`.
 
@@ -49,13 +50,13 @@ Application orchestration talks to one `WorkspaceStore` interface. IndexedDB is 
 
 Attempts use compact records plus deduplicated immutable snapshots. Stale sibling-tab writes fail closed; terminal/newer records defeat older emergency mirrors. Backup restore is additive, bounded and integrity-checked. Corrupt/dangling data is surfaced or quarantined rather than silently repaired into invented history.
 
-Storage-health/quota/persistence prompts are application presentation concerns. Backup validation consumes the pure workspace-settings contract rather than importing application storage adapters. Terminal attempt persistence is also the single owner of candidate-only scratch cleanup, so calculator state and unsaved choice drafts cannot outlive a completed attempt. Authoring drafts/staging and attempt History are separate persistence/export lifecycles.
+Storage-health/quota/persistence prompts are application presentation concerns. Backup validation consumes the pure workspace-settings contract rather than importing application storage adapters. Terminal attempt persistence is also the single owner of candidate-only scratch cleanup, so calculator state, unsaved choice drafts and transient written-response drafts cannot outlive a completed attempt. Authoring drafts/staging and attempt History are separate persistence/export lifecycles.
 
 ## 5. Authoring and content publication
 
 `AuthoringWorkspaceStore` owns unpublished shelf/staging persistence, corruption protection and cross-tab CAS. `authoring-workflow.ts` owns staged handoff and validate → acknowledge → revalidate publication sequencing. `authoring-studio-view.ts` owns pure authoring field projection and HTML generation; the studio owns editor state/event orchestration but not browser-storage mechanics or a second publisher.
 
-Wordgard/manual and external-agent flows converge on the same canonical `practice-desk-authoring` → validated exam-package boundary. Advanced external review can add quota blueprints, blind quality review, Source/Reviewed decisions and supplied-document evidence, but those files do not become a second scoring/runtime model.
+Wordgard/manual and external-agent flows converge on the same canonical `practice-desk-authoring` → validated exam-package boundary. Per-question marking is one optional authoring field that compiles to the existing answer-key `scoringOverride`; it does not create a second scoring path. Advanced external review can add quota blueprints, blind quality review, Source/Reviewed decisions and supplied-document evidence, but those files do not become a second scoring/runtime model. Repository-maintained exam content is organized under `question-banks/<exam>/<year>/<pyqs|mocks>/<paper>/...`; `src/content/` retains schemas/conversion logic rather than owning the corpus. Appending a maintained paper changes its year/paper manifests, not the family catalog or scorer.
 
 See the [agent quickstart](../AGENT_AUTHORING_QUICKSTART.md) and [advanced pipeline](AGENT_CONTENT_PIPELINE.md).
 
@@ -71,7 +72,7 @@ The scheduler policy is a discriminated fixed-retention/Cost-ADR contract: fixed
 
 ## 7. Rendering and navigation
 
-Feature controllers receive narrow `…ControllerContext` capability slices from the composition root. The exam renderer selectively reconciles changed UI so focus and unsaved candidate inputs are not casually destroyed. Results build one bounded per-render question/evidence lookup rather than repeatedly rescanning the frozen attempt; no persistent analytics cache is maintained.
+Feature controllers receive narrow `…ControllerContext` capability slices from the composition root. The exam renderer selectively reconciles changed UI so focus and unsaved candidate inputs are not casually destroyed. Written text is staged transiently and checkpointed at meaningful attempt/lifecycle boundaries; those checkpoints replace the current response without retaining typing/revision telemetry. Results derive written word counts, timer budget/overtime and post-deadline foreground exposure from frozen attempt evidence; no derived word count or persistent analytics cache is maintained.
 
 Native Navigation API is preferred where available; the tested fragment-route fallback preserves same-file `file://` operation. Responsive support includes narrow/zoom cases such as 195px at 140% scale. Linux WebKit automation does not certify physical Mac Safari, touch/IME or assistive technology.
 

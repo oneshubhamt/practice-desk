@@ -1,4 +1,5 @@
 import type { CandidateResponse, QuestionRevision } from "../domain/question.js";
+import {countWords} from "../domain/word-count.ts";
 
 /** Reject invalid candidate input at the engine boundary, independently of UI controls. */
 export function validateResponse(question: QuestionRevision, response: CandidateResponse): void {
@@ -60,7 +61,7 @@ export function validateResponse(question: QuestionRevision, response: Candidate
     }
     case "free-response": {
       if (response.kind !== "free-response" || typeof response.text !== "string") throw new Error("Invalid text");
-      const words = response.text.trim() ? response.text.trim().split(/\s+/).length : 0;
+      const words=countWords(response.text);
       if ((content.responseRules.minWords !== undefined && words < content.responseRules.minWords) ||
           (content.responseRules.maxWords !== undefined && words > content.responseRules.maxWords)) throw new Error("Invalid response length");
       break;

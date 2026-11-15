@@ -1,0 +1,257 @@
+{
+  "2": {
+    "stem": "At a sports club, male and female members pay equal fees, but men receive full-time coaching while women receive only part-time coaching. Which inference is most reasonable?",
+    "status": "caution",
+    "review": "An allocation disparity is consistent with possible gender bias, but alone cannot prove discriminatory intent; the answer is framed as a possibility.",
+    "revised": true,
+    "explanation": "An allocation disparity is consistent with possible gender bias, but alone cannot prove discriminatory intent; the answer is framed as a possibility."
+  },
+  "4": {
+    "stem": "Mr X has been shortlisted as one of several probable candidates for the post of Director of R.L.M. Institute. Which conclusion follows?\nI. Mr X will be selected.\nII. Mr X will not be selected.",
+    "review": "Removed an additional cue introduced in the earlier redraft. “Either I or II” follows under the exhaustive alternatives principle, although neither is individually established.",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "Removed an additional cue introduced in the earlier redraft. “Either I or II” follows under the exhaustive alternatives principle, although neither is individually established."
+  },
+  "6": {
+    "key": "d",
+    "stem": "Statements:\nAll vehicles are cars. Some cars are bulky. All metals are bulky.\nConclusions:\nI. Some vehicles are not metals.\nII. Some metals are cars.\nWhich conclusions logically follow?",
+    "review": "Publisher answer C is unsupported. Neither the existence of vehicles nor an overlap of metals and cars is guaranteed, so neither conclusion follows.",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "Publisher answer C is unsupported. Neither the existence of vehicles nor an overlap of metals and cars is guaranteed, so neither conclusion follows."
+  },
+  "8": {
+    "stem": "In a certain code language, 'COMPS' is written as 'DPNQT', while 'ABATE' is written as 'BCBUF'. How is 'SMOKY' written in the same code?",
+    "opts": [
+      "TNPLZ",
+      "SNPLZ",
+      "TNPMZ",
+      "TPNLZ"
+    ],
+    "key": "a",
+    "review": "The corrupted source examples were rebuilt consistently. The transformation rule is no longer given away in the question. Original coded examples COMPS→NKHKY and ABATE→ZOVXW do not establish a consistent uniquely recoverable rule. Rebuilt as an unambiguous alphabet-shift exercise.",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "The corrupted source examples were rebuilt consistently. The transformation rule is no longer given away in the question. Original coded examples COMPS→NKHKY and ABATE→ZOVXW do not establish a consistent uniquely recoverable rule. Rebuilt as an unambiguous alphabet-shift exercise."
+  },
+  "10": {
+    "stem": "Statements:\nNo chair is a stool. Some stools are wooden.\nConclusions:\nI. No chair is wooden.\nII. Some wooden things are not chairs.\nWhich conclusion follows?",
+    "review": "Changing “All stools are wooden” to “Some stools are wooden” explicitly establishes the existence needed for conclusion II; the original is vulnerable to existential ambiguity in formal logic.",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "Changing “All stools are wooden” to “Some stools are wooden” explicitly establishes the existence needed for conclusion II; the original is vulnerable to existential ambiguity in formal logic."
+  },
+  "12": {
+    "stem": "A company proposes flexible-work policies to improve employee productivity. Which assumptions are necessary?\nI. Such policies can improve productivity.\nII. All employees prefer flexible work.\nIII. Every company currently has low productivity.",
+    "review": "Statement II is not necessary. The corrected phrasing avoids mistaking a preference for a prerequisite.",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "Statement II is not necessary. The corrected phrasing avoids mistaking a preference for a prerequisite."
+  },
+  "15": {
+    "stem": "The education board has announced quarterly teacher-training sessions. Which inference best explains this decision?",
+    "status": "caution",
+    "review": "Quarterly training is consistent with updating teaching skills regularly; the board’s motives are inferred, not established.",
+    "revised": true,
+    "explanation": "Quarterly training is consistent with updating teaching skills regularly; the board’s motives are inferred, not established."
+  },
+  "20": {
+    "stem": "The PTA has threatened not to send children to school unless fees are reduced. Which assumptions underlie the PTA’s strategy?\nI. A substantial number of parents may support the boycott.\nII. The school may respond to the pressure by reducing fees.",
+    "status": "caution",
+    "review": "Both are plausible implicit beliefs underlying a collective threat, not certain facts.",
+    "revised": true,
+    "explanation": "Both are plausible implicit beliefs underlying a collective threat, not certain facts."
+  },
+  "23": {
+    "stem": "Should substantial public and private funds be spent on advertising? Decide which argument is stronger.\nI. Yes. Advertising can help businesses communicate information about their products.\nII. No. Some advertisements use resources without giving useful information.",
+    "review": "The previous redraft used “every advertising expense is a complete waste”, making argument II trivially weak. Restored a plausible counterpoint; the strength-of-argument classification remains open to judgement. The source’s extremely general “wastage” counterargument is subjective. Strengthening its absolute wording makes the intended distinction clearer.",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "The previous redraft used “every advertising expense is a complete waste”, making argument II trivially weak. Restored a plausible counterpoint; the strength-of-argument classification remains open to judgement. The source’s extremely general “wastage” counterargument is subjective. Strengthening its absolute wording makes the intended distinction clearer."
+  },
+  "27": {
+    "stem": "India’s support for which of the following missions aligns most closely with the purpose of IMEC (India–Middle East–Europe Economic Corridor)?",
+    "status": "caution",
+    "review": "The earlier reviewed stem identified cross-border connectivity and unnecessarily narrowed the choices. Reverted to a neutral purpose-comparison question. The suggested pairing remains interpretative: IMEC is mainly an economic and transport corridor, whereas OSOWOG concerns energy networks.",
+    "revised": true,
+    "explanation": "The earlier reviewed stem identified cross-border connectivity and unnecessarily narrowed the choices. Reverted to a neutral purpose-comparison question. The suggested pairing remains interpretative: IMEC is mainly an economic and transport corridor, whereas OSOWOG concerns energy networks."
+  },
+  "29": {
+    "stem": "Which of the following programmes began before the Tenth Five-Year Plan (2002–07), rather than being launched during the 2000s?",
+    "opts": [
+      "Jute Technology Mission",
+      "Drought Prone Areas Programme",
+      "National Horticulture Mission",
+      "Micro Irrigation Programme"
+    ],
+    "review": "The original “NOT part of the Tenth Plan” was wrong: DPAP continued during 2002–07. Its earlier inception, in the 1970s, is the valid distinguishing fact. Source: Ministry of Environment report and PIB 2007.",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "The original “NOT part of the Tenth Plan” was wrong: DPAP continued during 2002–07. Its earlier inception, in the 1970s, is the valid distinguishing fact. Source: Ministry of Environment report and PIB 2007."
+  },
+  "35": {
+    "stem": "According to Government of India figures cited in 2026, roughly what shares of world population, global GDP and global trade are represented by BRICS?\nI. 49.5% of population\nII. 40% of GDP (PPP-based comparison)\nIII. 26% of trade",
+    "status": "caution",
+    "review": "Government-published figures substantiate all three; GDP percentage is not 40% at market exchange rates and requires specifying the basis and date.",
+    "revised": true,
+    "explanation": "Government-published figures substantiate all three; GDP percentage is not 40% at market exchange rates and requires specifying the basis and date."
+  },
+  "39": {
+    "stem": "Who became the first Indian Chairman of the Federal Public Service Commission (predecessor of UPSC) after Independence, in 1947?",
+    "review": "H. K. Kripalani chaired the pre-1950 Federal PSC. R. N. Banerjee chaired the UPSC from 1950. Specifying the institution removes an ambiguity.",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "H. K. Kripalani chaired the pre-1950 Federal PSC. R. N. Banerjee chaired the UPSC from 1950. Specifying the institution removes an ambiguity."
+  },
+  "41": {
+    "stem": "Apart from India's national anthem 'Jana Gana Mana', Rabindranath Tagore wrote the national anthem of which other country?",
+    "status": "caution",
+    "review": "Removed the title “Amar Sonar Bangla”, which introduced an unnecessary linguistic clue absent from the source. The question concerns Tagore’s authorship of the anthem later adopted by Bangladesh.",
+    "revised": true,
+    "explanation": "Removed the title “Amar Sonar Bangla”, which introduced an unnecessary linguistic clue absent from the source. The question concerns Tagore’s authorship of the anthem later adopted by Bangladesh."
+  },
+  "44": {
+    "stem": "Which statements about the Constitution of India are correct?\nA. Under Article 269A, GST on inter-State supplies is levied and collected by the Government of India.\nB. GST apportioned to a State forms part of the Consolidated Fund of India.",
+    "review": "A is correct. Under Article 269A(1), the State-apportioned amount does not form part of the Consolidated Fund of India.",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "A is correct. Under Article 269A(1), the State-apportioned amount does not form part of the Consolidated Fund of India."
+  },
+  "46": {
+    "stem": "In the Gupta period, which officer is most closely associated with supporting the king in exercising judicial authority?",
+    "opts": [
+      "Mahapratihara",
+      "Mahadandanayaka",
+      "Uparika",
+      "Vishayapati"
+    ],
+    "review": "Removed added “penal-administration” terminology, a root-word clue pointing at Mahadandanayaka. Retained the corrected spelling of the office in the options; the PDF has “Mahanandanayaka”.",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "Removed added “penal-administration” terminology, a root-word clue pointing at Mahadandanayaka. Retained the corrected spelling of the office in the options; the PDF has “Mahanandanayaka”."
+  },
+  "49": {
+    "stem": "What is the standard mass of the shot in senior men’s outdoor shot put (approximately in pounds)?",
+    "review": "The exact standard mass is 7.260 kg, approximately 16 lb. Added event context and “approximately”.",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "The exact standard mass is 7.260 kg, approximately 16 lb. Added event context and “approximately”."
+  },
+  "53": {
+    "stem": "A grouped frequency distribution has class intervals 0–20, 20–40, 40–60, 60–80, 80–100 and corresponding frequencies 4, 10, x, 2, y (total 60). If the mean is 68, find 9x + 2y.",
+    "review": "Reformatted the grouped-frequency table to be readable. Equations x+y=44 and 50x+90y=3600 give x=9, y=35, hence 151.",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "Reformatted the grouped-frequency table to be readable. Equations x+y=44 and 50x+90y=3600 give x=9, y=35, hence 151."
+  },
+  "56": {
+    "stem": "If cot x = 5/12 and x is acute, evaluate sec x + cosec x.",
+    "review": "The PDF typesets the fractions on separate lines; the normalized answer is 221/60.",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "The PDF typesets the fractions on separate lines; the normalized answer is 221/60."
+  },
+  "58": {
+    "stem": "Given cot²θ = 1 + cos²θ − sin²θ with 0° < θ < 90°, evaluate tan²θ + cosec²θ.",
+    "review": "Restored superscripts to avoid confusing squared trigonometric functions with double angles. θ=45°, so the expression equals 3.",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "Restored superscripts to avoid confusing squared trigonometric functions with double angles. θ=45°, so the expression equals 3."
+  },
+  "62": {
+    "stem": "The radius of a right circular cylinder increases by 33⅓%. By what percentage must its height decrease to keep its volume constant?",
+    "review": "Clarified the mixed-number percentage. The radius multiplier is 4/3, so height multiplier is 9/16 and decrease 43.75%.",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "Clarified the mixed-number percentage. The radius multiplier is 4/3, so height multiplier is 9/16 and decrease 43.75%."
+  },
+  "64": {
+    "stem": "Evaluate sin²42° + sin²48° + sec²30° − cot²45°.",
+    "review": "Restored superscripts. The complementary sine squares sum to 1, yielding 4/3.",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "Restored superscripts. The complementary sine squares sum to 1, yielding 4/3."
+  },
+  "69": {
+    "stem": "Four litres of paint are required to coat a solid sphere. The sphere is cut into four equal quarters by two perpendicular planes, both passing through its centre. If the paint usage is proportional to surface area, how many litres are required to paint all exposed surfaces of the four pieces?",
+    "review": "The original gives no cutting method, so “four identical pieces” does not determine surface area. Specifying two perpendicular diametral cuts doubles exposed area, giving 8 litres.",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "The original gives no cutting method, so “four identical pieces” does not determine surface area. Specifying two perpendicular diametral cuts doubles exposed area, giving 8 litres."
+  },
+  "72": {
+    "stem": "If cos A = √3/2 and A is acute, evaluate (tan A − cot A)/(√3 − sec A).",
+    "review": "Clarified stacked fractions from the PDF. A=30°, so the result is −2.",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "Clarified stacked fractions from the PDF. A=30°, so the result is −2."
+  },
+  "73": {
+    "stem": "If X + 1/X = 3√2 and X ≠ 0, find X³ + 1/X³.",
+    "review": "Removed an unnecessary, potentially misleading “daily active users” interpretation of a reciprocal algebra expression. Result 45√2.",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "Removed an unnecessary, potentially misleading “daily active users” interpretation of a reciprocal algebra expression. Result 45√2."
+  },
+  "74": {
+    "stem": "Two travellers set off simultaneously from P towards Q, which is 300 km away. Akshat travels at 70 km/h and Shivam at 50 km/h. Akshat turns back immediately on reaching Q. How far from Q do they meet?",
+    "review": "Corrected “walking” at 50–70 km/h to “travellers”, preserving mathematical conditions and answer.",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "Corrected “walking” at 50–70 km/h to “travellers”, preserving mathematical conditions and answer."
+  },
+  "76": {
+    "stem": "Arrange the four parts of the statement about the National Space Science Symposium into a coherent paragraph. Choose the correct order.",
+    "review": "The first three fragments form a single sentence; 3–1–2–4 is the published and grammatical sequence.",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "The first three fragments form a single sentence; 3–1–2–4 is the published and grammatical sequence."
+  },
+  "79": {
+    "stem": "Convert into passive voice: “The chef has prepared a very sweet dish to serve the dignitaries at the reception.”",
+    "opts": [
+      "A very sweet dish to be served to the dignitaries at the reception has been prepared by the chef.",
+      "A very sweet dish to be serve to the dignitaries at the reception has been prepared by the chef.",
+      "A very sweet dish to served to the dignitaries at the reception has been prepared by the chef.",
+      "A very sweet dish to serve to the dignitaries at the reception is prepared by the chef."
+    ],
+    "review": "The idiomatic preposition is “at the reception”, not “in the reception”; preserved the correct perfect passive form.",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "The idiomatic preposition is “at the reception”, not “in the reception”; preserved the correct perfect passive form."
+  },
+  "83": {
+    "opts": [
+      "A special committee has looked over his application for weeks.",
+      "A special committee was looking over his application for weeks.",
+      "A special committee had looked over his application for weeks.",
+      "His application was looked over by a special committee."
+    ],
+    "review": "The original option C (“had been looking over”) changes perfect passive to past perfect continuous active. “Had looked over” preserves tense and aspect.",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "The original option C (“had been looking over”) changes perfect passive to past perfect continuous active. “Had looked over” preserves tense and aspect."
+  },
+  "85": {
+    "stem": "Rearrange the following sentence parts to form a meaningful and grammatically correct\nparagraph:\nP. She poured the hot liquid into her favourite mug.\nQ Rain had begun falling heavily, beating against the windowpanes in steady rhythm.\nR. The kitchen was filled with the scent of cinnamon and cloves, a comforting and warm smell.\nS. It was a fantastic night to have a mug of hot cider.",
+    "review": "Rephrased a tautological sentence; the published order remains coherent.",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "Rephrased a tautological sentence; the published order remains coherent."
+  },
+  "93": {
+    "stem": "Which of the following words is misspelled?",
+    "review": "The printed form “Supplecation” is incorrect; “supplication” is the standard spelling.",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "The printed form “Supplecation” is incorrect; “supplication” is the standard spelling."
+  },
+  "98": {
+    "stem": "Arrange the sentences about synthetic biology in the most logical order.",
+    "review": "The introductory definition is B, followed by its explanation (A), applications (C), and concluding potential (D).",
+    "status": "corrected",
+    "revised": true,
+    "explanation": "The introductory definition is B, followed by its explanation (A), applications (C), and concluding potential (D)."
+  }
+}

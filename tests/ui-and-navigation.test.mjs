@@ -1,10 +1,11 @@
+import {loadCglFixture,loadQuestionBankGraph,repositoryRoot} from "./fixtures/cgl-bank.mjs";
 /** Canonical executable contracts, grouped by stable product responsibility. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import {pkg} from "./fixtures/six-kinds.mjs";
 import {validateExamPackage,startGenericAttempt,builtinCglPackages,configureCglPractice,readableAnswer} from "../src/app/exam-package.ts";
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
-import {renderModelExam,examTimeRemaining} from "../src/app/exam-view.ts";
+import {renderModelExam,examClockDisplay} from "../src/app/exam-view.ts";
 import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
 import {renderGenericControls} from "../src/app/question-content-view.ts";
 import {historyHTML,sectionPriorities} from "../src/app/history-page.ts";
@@ -107,8 +108,8 @@ await registerHistoryResultsPresentationTests();
 
 /** Media Editorial And Pause — canonical domain contracts. */
 async function registerMediaEditorialAndPauseTests(){
-const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
-const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
+const sources=(await loadCglFixture()).sources;
+const patches=(await loadCglFixture()).patches;
 const cgl=builtinCglPackages(sources,patches);
 const send=(type,nowMs,extra={})=>({type,nowMs,...extra});
 const visible=(a,id)=>a.responses.find(r=>r.questionRevisionId===id);
@@ -266,12 +267,23 @@ test("six exam question response kinds render editable, escaped controls",()=>{
  assert.ok(!html.includes("<script>"));
  assert.ok(html.includes("&lt;script&gt;"));
 });
-test("timer display derives from paper policy, not CGL constants",()=>{
+test("written response counter is optional and renders an advisory limit without disabling save",()=>{
+ const q=revision({kind:"free-response",prompt:"x",responseRules:{wordLimit:20,maxWords:10000}});
+ const shown=renderGenericControls(stub,q,{kind:"free-response",text:"one two three"},{showWordCount:true});
+ assert.match(shown,/id="g-word-count"/);
+ assert.match(shown,/3 \/ 20 words/);
+ assert.match(shown,/data-word-count-state="normal"/);
+ assert.match(shown,/id="g-save">Save response/);
+ const hidden=renderGenericControls(stub,q,undefined,{showWordCount:false});
+ assert.doesNotMatch(hidden,/g-word-count/);
+});
+test("timer display derives from paper policy and frozen mode, not CGL constants",()=>{
  const state={sectionIndex:1,elapsedMs:5000,sectionElapsedMs:2000};
- assert.equal(examTimeRemaining({timing:{kind:"untimed"}},state),null);
- assert.equal(examTimeRemaining({timing:{kind:"whole-paper",durationMs:12000}},state),7000);
- assert.equal(examTimeRemaining({timing:{kind:"sectional",sectionLimits:[{sectionId:"one",durationMs:3000},{sectionId:"two",durationMs:9000}]},
- sections:[{id:"one"},{id:"two"}]},state),7000);
+ assert.deepEqual(examClockDisplay({timing:{kind:"untimed"}},state,"custom-practice"),
+   {text:"Untimed",label:"UNTIMED PRACTICE",low:false,overtime:false});
+ assert.equal(examClockDisplay({timing:{kind:"whole-paper",durationMs:12000}},state,"exam-simulation").text,"00:07");
+ assert.equal(examClockDisplay({timing:{kind:"sectional",sectionLimits:[{sectionId:"one",durationMs:3000},{sectionId:"two",durationMs:9000}]},
+ sections:[{id:"one"},{id:"two"}]},state,"exam-simulation").text,"00:07");
 });
 
 test("review answers resolve human labels for all six question kinds",()=>{

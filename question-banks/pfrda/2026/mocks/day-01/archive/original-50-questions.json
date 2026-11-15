@@ -1,0 +1,507 @@
+{
+  "shareUrl": "https://chatgpt.com/s/t_6af93d7f091881918cf9123723691cef",
+  "sourceKind": "original-ai-generated-day1-test",
+  "recoveredAt": "2026-11-15",
+  "questions": [
+    {
+      "number": 1,
+      "prompt": "Which statement most accurately describes the general scope of the PFRDA Act, 2013?",
+      "options": [
+        "It applies to the National Pension System and other pension schemes not regulated by another enactment, subject to statutory exclusions.",
+        "It applies to every pension and provident fund scheme in India without exception.",
+        "It applies exclusively to Central Government pension schemes.",
+        "It regulates only insurance-company annuities."
+      ]
+    },
+    {
+      "number": 2,
+      "prompt": "According to Union Budget 2026–27, the fiscal deficit was estimated at what percentage of GDP in the Budget Estimates (BE) for 2026–27?",
+      "options": [
+        "3.9%",
+        "4.3%",
+        "4.4%",
+        "5.1%"
+      ]
+    },
+    {
+      "number": 3,
+      "prompt": "A business holds inventory costing ₹8 lakh. Its estimated selling price is ₹7.8 lakh, and estimated selling expenses are ₹0.3 lakh. At what amount should the inventory generally be measured under the lower-of-cost-and-NRV principle?",
+      "options": [
+        "₹8.0 lakh",
+        "₹7.8 lakh",
+        "₹7.5 lakh",
+        "₹8.3 lakh"
+      ]
+    },
+    {
+      "number": 4,
+      "prompt": "A manager compares actual output with established standards, identifies deviations and initiates corrective action. Which management function is primarily illustrated?",
+      "options": [
+        "Planning",
+        "Controlling",
+        "Staffing",
+        "Organising"
+      ]
+    },
+    {
+      "number": 5,
+      "prompt": "For an existing fixed-coupon bond, which relationship generally holds between its market price and yield to maturity, other factors remaining unchanged?",
+      "options": [
+        "They always move proportionately in the same direction.",
+        "The yield remains constant when market prices change.",
+        "A price increase causes the coupon rate itself to rise.",
+        "Market price and yield to maturity move inversely."
+      ]
+    },
+    {
+      "number": 6,
+      "prompt": "A product sells for ₹500 per unit, its variable cost is ₹300 per unit and total fixed cost is ₹2,40,000. What is the break-even sales volume in units?",
+      "options": [
+        "800",
+        "1,200",
+        "1,500",
+        "2,000"
+      ]
+    },
+    {
+      "number": 7,
+      "prompt": "Which description best captures a private placement under Section 42 of the Companies Act, 2013?",
+      "options": [
+        "An unrestricted public invitation to subscribe to securities.",
+        "An offer or invitation to subscribe to securities to an identified group of persons, subject to statutory requirements.",
+        "An issue of shares exclusively to existing shareholders in proportion to their holdings.",
+        "An issue of fully paid bonus shares from eligible reserves."
+      ]
+    },
+    {
+      "number": 8,
+      "prompt": "Which item is ordinarily excluded from GDP calculated by the expenditure method, assuming no corresponding purchase of currently produced goods or services?",
+      "options": [
+        "Government purchase of newly produced medical equipment",
+        "Household expenditure on newly produced domestic appliances",
+        "A firm's purchase of new machinery",
+        "A government cash transfer to an individual"
+      ]
+    },
+    {
+      "number": 9,
+      "prompt": "Within the NPS architecture, which intermediary primarily maintains individual subscriber records and facilitates the operation of Permanent Retirement Account Numbers (PRANs)?",
+      "options": [
+        "Pension Fund",
+        "Central Recordkeeping Agency",
+        "Annuity Service Provider",
+        "Custodian"
+      ]
+    },
+    {
+      "number": 10,
+      "prompt": "A lender trains a model using historical loan applications labelled 'default' or 'no default' to predict the class of new applications. This is primarily an example of:",
+      "options": [
+        "Unsupervised clustering",
+        "Reinforcement learning",
+        "Supervised classification",
+        "Unsupervised dimensionality reduction"
+      ]
+    },
+    {
+      "number": 11,
+      "prompt": "A media company distributes the same news programme through traditional television, its website, mobile applications and social platforms, with integrated production and distribution. Which concept is illustrated most directly?",
+      "options": [
+        "Digital exclusion",
+        "Media convergence",
+        "Audience fragmentation alone",
+        "Price discrimination"
+      ]
+    },
+    {
+      "number": 12,
+      "prompt": "A pension-service provider improves access through branches, mobile applications and authorised distribution partners. Which element of the traditional marketing mix does this address most directly?",
+      "options": [
+        "Product",
+        "Price",
+        "Place",
+        "Promotion"
+      ]
+    },
+    {
+      "number": 13,
+      "prompt": "Under Section 14 of the PFRDA Act, 2013, which of the following is expressly part of the Authority's subscriber-protection responsibilities?",
+      "options": [
+        "Guaranteeing a fixed investment return on every NPS account",
+        "Replacing the judicial system in all criminal disputes",
+        "Establishing a mechanism for redressal of subscribers' grievances in accordance with regulations",
+        "Managing the individual investment portfolio of every subscriber itself"
+      ]
+    },
+    {
+      "number": 14,
+      "prompt": "According to Union Budget 2026–27, the Central Government's direct capital expenditure in BE 2026–27 was estimated at approximately:",
+      "options": [
+        "₹10.00 lakh crore",
+        "₹12.22 lakh crore",
+        "₹14.93 lakh crore",
+        "₹17.15 lakh crore"
+      ]
+    },
+    {
+      "number": 15,
+      "prompt": "Under the indirect method of preparing cash flows from operating activities, an increase in inventories during the year, other things equal, is generally:",
+      "options": [
+        "Deducted from profit while calculating cash flow from operations",
+        "Added to profit as a source of operating cash",
+        "Reported only as a financing cash inflow",
+        "Ignored because inventory is a non-cash asset"
+      ]
+    },
+    {
+      "number": 16,
+      "prompt": "An employee reports simultaneously to a functional manager and a project manager. Which organisation structure does this most directly indicate?",
+      "options": [
+        "Pure line structure",
+        "Strictly functional structure with a single reporting chain",
+        "Matrix structure",
+        "Divisional structure without cross-functional responsibility"
+      ]
+    },
+    {
+      "number": 17,
+      "prompt": "The buyer of a standard put option has which contractual right?",
+      "options": [
+        "The obligation to buy the underlying asset at the strike price",
+        "The obligation to sell the underlying asset at the strike price",
+        "The right to buy the underlying asset at the strike price",
+        "The right, but not the obligation, to sell the underlying asset at the strike price"
+      ]
+    },
+    {
+      "number": 18,
+      "prompt": "A manufacturer finds that production set-ups, rather than machine hours, primarily drive a particular category of overhead. Which costing approach most directly supports assigning that overhead using the number of set-ups?",
+      "options": [
+        "Traditional blanket labour-hour absorption alone",
+        "Activity-based costing",
+        "Marginal costing without overhead allocation",
+        "Process costing based only on equivalent units"
+      ]
+    },
+    {
+      "number": 19,
+      "prompt": "Under Section 63 of the Companies Act, 2013, which reserve cannot be capitalised for issuing bonus shares?",
+      "options": [
+        "Eligible free reserves",
+        "Securities premium account, subject to applicable requirements",
+        "Reserves created by revaluation of assets",
+        "Capital redemption reserve account"
+      ]
+    },
+    {
+      "number": 20,
+      "prompt": "Nominal GDP is ₹2,200 billion and real GDP at the relevant base-year prices is ₹2,000 billion. What is the GDP deflator (base = 100)?",
+      "options": [
+        "90.9",
+        "110",
+        "200",
+        "10"
+      ]
+    },
+    {
+      "number": 21,
+      "prompt": "Which statement correctly describes the Central Government-guaranteed minimum pension options under Atal Pension Yojana, subject to its eligibility and contribution requirements?",
+      "options": [
+        "A uniform pension of ₹10,000 monthly beginning at age 55",
+        "A choice of ₹1,000, ₹2,000, ₹3,000, ₹4,000 or ₹5,000 monthly after age 60",
+        "A market-linked pension with no guaranteed minimum amount",
+        "A one-time pension payment at age 40"
+      ]
+    },
+    {
+      "number": 22,
+      "prompt": "A machine-learning model achieves 99% accuracy on training observations but only 65% accuracy on an independent, representative test dataset. Which issue is most strongly suggested?",
+      "options": [
+        "Underfitting with identically poor training and test performance",
+        "Guaranteed data integrity",
+        "Overfitting or poor generalisation",
+        "Successful cross-validation by definition"
+      ]
+    },
+    {
+      "number": 23,
+      "prompt": "An advertiser uses detailed behavioural information to deliver different political or commercial messages to narrowly defined audience groups. What is a particularly relevant ethical and regulatory concern?",
+      "options": [
+        "The elimination of all message-personalisation capability",
+        "Privacy, profiling and potentially manipulative targeting",
+        "The inability to measure digital engagement",
+        "The absence of any algorithmic decision-making"
+      ]
+    },
+    {
+      "number": 24,
+      "prompt": "During a difficult conversation, an officer restates a citizen's concern in their own words and asks whether the understanding is correct. Which skill is being demonstrated?",
+      "options": [
+        "One-way persuasion",
+        "Active listening and clarification",
+        "Avoidance of feedback",
+        "Selective disclosure"
+      ]
+    },
+    {
+      "number": 25,
+      "prompt": "Under the PFRDA Act, 2013, which statement correctly distinguishes rules and regulations under the Act?",
+      "options": [
+        "The Central Government makes rules under its rule-making power, while PFRDA makes regulations within its statutory authority.",
+        "Only Parliament may make either rules or regulations.",
+        "Every registered pension fund independently makes binding regulations under the Act.",
+        "PFRDA makes rules, while the Central Government exclusively issues regulations."
+      ]
+    },
+    {
+      "number": 26,
+      "prompt": "The Economic Survey 2025–26 projected India's real GDP growth for FY 2026–27 in which range, according to the Survey's January 2026 assessment?",
+      "options": [
+        "5.0%–5.5%",
+        "5.8%–6.2%",
+        "7.8%–8.2%",
+        "6.8%–7.2%"
+      ]
+    },
+    {
+      "number": 27,
+      "prompt": "A firm has current assets of ₹480 lakh and current liabilities of ₹240 lakh. It pays ₹40 lakh of trade payables using cash. Assuming no other changes, what is the new current ratio?",
+      "options": [
+        "1.83:1",
+        "2.00:1",
+        "2.20:1",
+        "2.40:1"
+      ]
+    },
+    {
+      "number": 28,
+      "prompt": "In Herzberg's two-factor theory, which statement is most consistent with the distinction between hygiene factors and motivators?",
+      "options": [
+        "Salary is always an intrinsic motivator and cannot affect dissatisfaction.",
+        "Recognition is purely a hygiene factor.",
+        "Improved working conditions necessarily create long-term intrinsic motivation.",
+        "Adequate salary and working conditions can reduce dissatisfaction without necessarily creating strong positive motivation."
+      ]
+    },
+    {
+      "number": 29,
+      "prompt": "According to CAPM, a security has beta 1.2, the risk-free rate is 6% and the expected market return is 11%. What is its required return?",
+      "options": [
+        "12%",
+        "11%",
+        "13.2%",
+        "17%"
+      ]
+    },
+    {
+      "number": 30,
+      "prompt": "A factory originally budgeted output at 10,000 units but actually produced 12,000 units. Which budgeting technique is designed to adjust relevant budgeted costs for the actual level of activity?",
+      "options": [
+        "Fixed budgeting without adjustment",
+        "Flexible budgeting",
+        "Zero-based budgeting solely by prior-year increment",
+        "Capital rationing"
+      ]
+    },
+    {
+      "number": 31,
+      "prompt": "Under Section 123 of the Companies Act, 2013, who may declare an interim dividend, subject to the statutory conditions?",
+      "options": [
+        "The Board of Directors",
+        "Only the Registrar of Companies",
+        "Only the company's statutory auditor",
+        "The National Company Law Appellate Tribunal"
+      ]
+    },
+    {
+      "number": 32,
+      "prompt": "In the simple Keynesian expenditure model with no taxes, imports or induced investment, the marginal propensity to consume is 0.8. What is the government-expenditure multiplier?",
+      "options": [
+        "1.25",
+        "2",
+        "4",
+        "5"
+      ]
+    },
+    {
+      "number": 33,
+      "prompt": "When a retiree purchases a conventional life annuity from an insurer, which risk is principally transferred to the insurer under the annuity contract?",
+      "options": [
+        "The risk that the retiree will become eligible for employment",
+        "The risk of fluctuations in the retiree's chosen equity portfolio",
+        "The financial risk of having to make contracted payments for as long as the annuitant survives",
+        "The risk of changes in future statutory income-tax slabs"
+      ]
+    },
+    {
+      "number": 34,
+      "prompt": "Which feature most clearly distinguishes an agentic AI system from a conventional model that merely generates an answer to a single prompt?",
+      "options": [
+        "Its ability to plan and execute multi-step actions using tools and feedback toward an objective",
+        "Its inability to interact with external tools",
+        "Its complete independence from any human-defined goal",
+        "Its requirement to use only unsupervised learning"
+      ]
+    },
+    {
+      "number": 35,
+      "prompt": "Which activity is specifically included in the powers and functions of PFRDA under Section 14 of the PFRDA Act, 2013?",
+      "options": [
+        "Setting the RBI's monetary policy rate",
+        "Providing statutory audits for all listed companies",
+        "Registering and regulating intermediaries under its pension-regulation framework",
+        "Determining the Union Government's annual fiscal deficit target"
+      ]
+    },
+    {
+      "number": 36,
+      "prompt": "Which statement correctly describes the effective capital expenditure estimate in Union Budget 2026–27 (BE)?",
+      "options": [
+        "It comprised only grants to States and excluded Central Government capital expenditure.",
+        "It was estimated at ₹12.22 lakh crore, identical to direct capital expenditure.",
+        "It excluded grants-in-aid used for creating capital assets.",
+        "It was estimated at ₹17.15 lakh crore, including ₹4.93 lakh crore of grants-in-aid for creation of capital assets."
+      ]
+    },
+    {
+      "number": 37,
+      "prompt": "In a company's statement of cash flows, cash received from issuing ordinary equity shares is ordinarily classified as:",
+      "options": [
+        "An operating cash inflow",
+        "A financing cash inflow",
+        "An investing cash inflow",
+        "A non-cash transaction"
+      ]
+    },
+    {
+      "number": 38,
+      "prompt": "A team consists of highly experienced employees who require little technical instruction but need participation in decisions. Which leadership approach is most consistent with situational leadership principles?",
+      "options": [
+        "Maintaining the same highly directive style regardless of employee capability",
+        "Removing all accountability and performance expectations",
+        "Adapting the mix of direction and support to employee competence and commitment",
+        "Selecting leadership style solely according to the manager's age"
+      ]
+    },
+    {
+      "number": 39,
+      "prompt": "Assuming effective monetary transmission and other things unchanged, an RBI repo-rate reduction would most directly tend to:",
+      "options": [
+        "Automatically increase every bank's lending rate",
+        "Reduce marginal funding costs and potentially support bank credit and aggregate demand",
+        "Immediately eliminate credit risk",
+        "Increase the statutory CRR by exactly the same number of basis points"
+      ]
+    },
+    {
+      "number": 40,
+      "prompt": "The standard material price is ₹60 per kg. Actual material price is ₹66 per kg and actual quantity purchased and used is 1,000 kg. Using (standard price − actual price) × actual quantity, what is the material price variance?",
+      "options": [
+        "₹6,000 favourable",
+        "₹60,000 adverse",
+        "₹6,000 adverse",
+        "₹66,000 favourable"
+      ]
+    },
+    {
+      "number": 41,
+      "prompt": "Which right or power is generally available to a statutory auditor under Section 143 of the Companies Act, 2013?",
+      "options": [
+        "Access to the company's books of account and vouchers at all times, as provided by the section",
+        "An unconditional power to declare dividends",
+        "A right to independently issue new shares without Board approval",
+        "The power to appoint all directors of the company"
+      ]
+    },
+    {
+      "number": 42,
+      "prompt": "Which transaction is ordinarily recorded in the current account of India's balance of payments?",
+      "options": [
+        "Acquisition of equity in an Indian company by a foreign direct investor",
+        "An external commercial borrowing received by an Indian firm",
+        "Personal remittances received by Indian resident households from abroad",
+        "The RBI's sale of foreign exchange reserves"
+      ]
+    },
+    {
+      "number": 43,
+      "prompt": "For an ordinary NPS account operating on a defined-contribution, market-linked basis, which statement is most accurate?",
+      "options": [
+        "The pension amount is always an identical, fixed statutory percentage of final salary.",
+        "Retirement benefits depend on contributions, investment performance and applicable exit or annuitisation arrangements.",
+        "PFRDA guarantees every investment option against loss.",
+        "Subscribers are prohibited from holding any debt instruments."
+      ]
+    },
+    {
+      "number": 44,
+      "prompt": "Which statement is most consistent with the statutory concept of an independent director under Section 149 of the Companies Act, 2013?",
+      "options": [
+        "Independence is assessed through conditions including relationships with promoters and management, subject to detailed statutory criteria.",
+        "Every independent director must also serve as the company's statutory auditor.",
+        "An independent director is permitted to have any material relationship with promoters without statutory scrutiny.",
+        "Every private company must appoint the same number of independent directors as a listed public company."
+      ]
+    },
+    {
+      "number": 45,
+      "prompt": "Which market primarily facilitates trading in securities that have already been issued?",
+      "options": [
+        "Secondary market",
+        "Primary market",
+        "Initial public offering market only",
+        "New-issue subscription market only"
+      ]
+    },
+    {
+      "number": 46,
+      "prompt": "A company offers additional shares for cash to existing equity shareholders, generally in proportion to their paid-up share capital holdings. Which type of issue is most directly described?",
+      "options": [
+        "Bonus issue",
+        "Employee stock option exercise",
+        "Initial public offer",
+        "Rights issue"
+      ]
+    },
+    {
+      "number": 47,
+      "prompt": "The price of a product rises from ₹100 to ₹110 and quantity demanded falls from 200 units to 180 units. Using the original values as bases for percentage changes, the absolute value of price elasticity of demand is:",
+      "options": [
+        "0.5",
+        "1.0",
+        "1.5",
+        "2.0"
+      ]
+    },
+    {
+      "number": 48,
+      "prompt": "In a typical NPS lifecycle or auto-choice investment arrangement, what is the general purpose of a declining equity allocation as a subscriber approaches retirement?",
+      "options": [
+        "To maximise the absolute equity exposure of all older subscribers",
+        "To eliminate every form of investment risk",
+        "To reduce exposure to equity-market volatility as the remaining investment horizon shortens",
+        "To convert the NPS account automatically into a fixed bank deposit"
+      ]
+    },
+    {
+      "number": 49,
+      "prompt": "Consider two statements regarding the Companies Act, 2013: (1) As a general rule under Section 173, not more than 120 days should intervene between two consecutive Board meetings, subject to applicable exemptions. (2) The National Company Law Appellate Tribunal generally hears appeals against orders of the National Company Law Tribunal, as provided by law. Which is correct?",
+      "options": [
+        "Statement 1 only",
+        "Statement 2 only",
+        "Neither statement",
+        "Both statements"
+      ]
+    },
+    {
+      "number": 50,
+      "prompt": "According to the Economic Survey 2025–26's assessment using the estimates available at that time, private final consumption expenditure (PFCE) accounted for approximately what share of India's GDP in FY 2025–26?",
+      "options": [
+        "61.5%",
+        "51.5%",
+        "71.5%",
+        "41.5%"
+      ]
+    }
+  ]
+}

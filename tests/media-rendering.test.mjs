@@ -12,7 +12,7 @@ import {frozenReviewMedia,sourceReviewHTML} from "../src/app/review-media-view.t
 import {IMAGE_MIN_ZOOM,IMAGE_MAX_ZOOM,boundedImageZoom,fittedImage,boundedImageOffset,anchoredImageOffset,isLocalVerifiedImageUri} from "../src/app/image-viewer.ts";
 import {mathRenderer,KATEX_VERSION} from "../src/app/katex-math-adapter.ts";
 import {authoredTextHTML} from "../src/app/rich-content-view.ts";
-import {renderModelExam,minutes,readablePracticeMode,examTimeRemaining} from "../src/app/exam-view.ts";
+import {renderModelExam,minutes,readablePracticeMode,examClockDisplay} from "../src/app/exam-view.ts";
 import {questionRevisionHash} from "../src/domain/integrity.ts";
 import {escapeText} from "../src/app/html-escape.ts";
 import {validateGenericStoredRecord,isAttempt,isPackage,isLearning} from "../src/app/stored-record-validator.ts";
@@ -273,7 +273,10 @@ test("P47-5C release carries only local WOFF2 and both KaTeX/Wordgard MIT notice
  assert.doesNotMatch(html,/url\([^)]*\.woff\)/);
  // Pass 3 adds the full pinned Calendar surface (~212 KB minified runtime, measured in CI).
  // Keep a bounded post-integration review ceiling rather than silently dropping Calendar functionality.
- assert.ok(size<2_750_000,"Bundled file exceeds reviewed post-Calendar size limit: "+size);
+ // The standalone intentionally includes the current PFRDA Day 1 package (~207 KiB
+ // over the 2.66 MiB CGL-only build). Keep a tight bound so future preinstalls
+ // must make an explicit payload-budget decision rather than growing silently.
+ assert.ok(size<2_900_000,"Bundled file exceeds reviewed preinstalled-bank size limit: "+size);
 });
 }
 await registerMathRenderingTests();
@@ -340,7 +343,7 @@ test("P47-1 exam view is a read-only dependency of supplied state and focus flag
  assert.match(full,/Toggle full-screen test view" aria-pressed="true"/);
  assert.equal(readablePracticeMode("custom-practice"),"Custom practice");
  assert.equal(minutes(1001),"00:02");
- assert.equal(examTimeRemaining(a.frozen.paper,a.state),1200000);
+ assert.equal(examClockDisplay(a.frozen.paper,a.state,a.frozen.snapshot.mode).text,"20:00");
  assert.deepEqual(a,snapshot,"renderModelExam may not mutate frozen attempts");
 });
 test("P47-1 review display uses exact frozen answers and separate source edition",()=>{

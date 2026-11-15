@@ -19,10 +19,17 @@ Calculator display, pending operation, memory and open/closed state are recovera
 ## Exam lifecycle and candidate-facing security
 
 1. Validate and preflight the source package; freeze paper/key/media/policy/edition and source-reference IDs **at start**, not on post-submit rendering.
-2. Accept legal `answer`, `clear`, `flag`, `navigate`, `pause`, `resume`, `submit` and `expiry` events for the selected navigation/timer policy. Prevent late submissions, double counting, clock rollback and illegal cross-section responses.
+2. Accept legal `answer`, `clear`, `flag`, `navigate`, `pause`, `resume`, `submit` and `expiry` events for the selected navigation/timer policy. The frozen paper supplies the time budget; frozen `AttemptMode` supplies enforcement: exam simulation is hard-deadline, while practice modes may continue into advisory overtime. Prevent post-deadline edits in hard mode, double counting, clock rollback and illegal cross-section responses.
 3. Candidate content is narrower than reviewer/answer-key data. Solutions, explanations, editorial disputes, answer-only media and privileged annotations must not leak before the permitted review boundary.
 4. On completion, store the exact result/ledger. A later correction or notebook rating must not modify those frozen marks.
-5. Preserve raw measured timing/event evidence; do not assign invented per-question time or mastery merely because an item was opened.
+5. Preserve raw measured timing/event evidence. Per-question `postDeadlineMs` is foreground exposure after an advisory budget, not wall-clock paper overtime; do not invent per-question limits, typing speed, semantic quality scores or mastery from timing.
+
+## Written responses and result evidence
+
+- Free-response text remains manual/pending for substantive assessment. Automated marks never silently score relevance, factual quality, structure or language; optional self-assessed marks/notes remain separate from the immutable machine score.
+- `wordLimit` is advisory. Results derive word count with the same canonical `countWords()` rule used by the candidate counter; derived counts are not persisted.
+- Visible written text is transiently staged and committed at navigation, submission, lifecycle and timer checkpoints so a hard deadline cannot drop the last legal draft. Checkpoints replace the current free-response value without answer-revision/keystroke telemetry.
+- Practice overtime is timer time beyond the applicable frozen paper/section budget. `postDeadlineMs` attributes only visible question exposure after that advisory deadline. The Written-answers summary sums this field only across written questions; the Question-times ledger remains the all-question attribution surface. Hidden-page time and non-written questions therefore must not be misreported as written-answer overtime.
 
 ## Subject hierarchy and sections
 
@@ -40,10 +47,11 @@ Calculator display, pending operation, memory and open/closed state are recovera
 
 ## Authoring and external sources
 
-- AI/human source: `practice-desk-authoring` v1, with explicit origins, section/subject differentiation, stable question IDs, author-supplied explanations, question-kind keys and declared scoring. Physical section definitions own their timer budgets; questions only reference their assigned section. The canonical compiler emits `practice-desk-exam` v1. There is no second simple-bank runtime format.
+- AI/human source: `practice-desk-authoring` v1, with explicit origins, section/subject differentiation, stable question IDs, author-supplied explanations, question-kind keys and declared scoring. A question may supply `scoringOverride`; runtime precedence remains question override → section override → question-kind rule → paper default, and free-response uses that resolved positive mark as its manual assessment ceiling. Physical section definitions own their timer budgets; questions only reference their assigned section. The canonical compiler emits `practice-desk-exam` v1. There is no second simple-bank runtime format.
 - Source can be staged in bounded batches and selectively authored/published (maximum published/draft question count is enforced by validators; large imports must be split). Publication must be atomic with valid hashes, keys, source-hash-bound provenance and candidate-only separation.
 - Blind quality review, quota blueprint, original/reviewed editorial mapping and supplied-document/PDF manifests have their own versioned sidecars and source-bound freshness. **They do not override answer key schemas or act as independently authenticated official sources.**
-- External agents can read provided files and create new outputs with permission, but cannot read private IndexedDB, fetch authenticated laws inside the offline app or auto-import into Library.
+- Repository-maintained exam data lives under `question-banks/`. `question-banks/catalog.json` is deliberately family-level: it owns only stable family identity, root-manifest address and `preinstalled`. Exam/year/paper manifests are the single authority for paper discovery, PYQ/mock classification, canonical edition and source/package paths, and the build follows that graph rather than duplicating paths in the catalog. Canonical authoring sources are distinct from generated `.exam.json` packages and recovery archives. Catalog preinstallation is a build-time inclusion decision, not provenance certification.
+- External agents can read provided files and create new outputs with permission, but cannot read private IndexedDB or fetch authenticated laws inside the offline app; one-off outputs do not silently enter Library.
 
 ## Truth and evidence boundaries
 

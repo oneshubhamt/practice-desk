@@ -9,6 +9,9 @@ import type {SessionEvent} from "../engine/session.ts";
 import {multipleDraftMessage,duplicateMatchingTargets} from "./response-drafts.ts";
 import {bindExamCalculator} from "./exam-calculator.ts";
 import {readCalculatorWorkspace,writeCalculatorWorkspace} from "./candidate-tool-state.ts";
+import {countWords,wordCountBand} from "../domain/word-count.ts";
+import {commitCurrentWrittenDraft,discardCurrentWrittenDraft,stageWrittenResponseDraft}
+ from "./written-response-draft.ts";
 
 import type {ExamControllerContext} from "./coordinator-context.ts";
 
@@ -34,6 +37,8 @@ export const dispatchExamEvent=(owner:ExamControllerContext,event:SessionEvent)=
    try{
      const ids=new Map(owner.attempt.frozen.questions.map(q=>[q.id,q]));
      const before=owner.attempt;
+     if(event.type==="CLEAR")discardCurrentWrittenDraft(owner.writtenDrafts,owner.attempt);
+     else owner.attempt=commitCurrentWrittenDraft(owner.writtenDrafts,owner.attempt,event.nowMs);
      owner.attempt=transitionGenericAttempt(owner.attempt,event,ids);
      if(owner.attempt!==before)void owner.save(owner.attempt);
      if(owner.attempt.finishedAt!==null){
@@ -88,6 +93,34 @@ owner.root.querySelectorAll<HTMLInputElement>("[data-choice]").forEach(input=>in
 owner.root.querySelectorAll<HTMLInputElement>("[data-bool]").forEach(input=>input.onchange=()=>{
      owner.dispatch({type:"ANSWER",nowMs:owner.now(),response:{kind:"true-false",value:input.dataset.bool==="true"}});
    });
+if(q.content.kind==="free-response"){
+     const field=owner.root.querySelector<HTMLTextAreaElement>("#g-text");
+     const counter=owner.root.querySelector<HTMLElement>("#g-word-count");
+     const limit=q.content.responseRules.wordLimit;
+     if(field){
+       const updateWordCount=()=>{
+         if(!counter||limit===undefined)return;
+         const count=countWords(field.value);
+         const band=wordCountBand(count,limit);
+         counter.dataset.wordCountState=band;
+         counter.textContent=count+" / "+limit+" words";
+         const status=band==="over"?"over the advisory limit":
+           band==="warning"?"near the advisory limit":
+           band==="caution"?"approaching the advisory limit":"within the advisory limit";
+         counter.setAttribute("aria-label","Word count: "+count+" of "+limit+" words, "+status);
+       };
+       // Text remains transient between keystrokes. Boundary checkpoints commit
+       // one canonical response without producing a persisted keystroke history.
+       field.oninput=()=>{
+         const now=owner.now();
+         if(stageWrittenResponseDraft(owner.writtenDrafts,owner.attempt!,q.id,field.value,now)==="deadline"){
+           owner.dispatch({type:"TICK",nowMs:now});return;
+         }
+         updateWordCount();
+       };
+       updateWordCount();
+     }
+   }
 const saveButton=owner.root.querySelector<HTMLButtonElement>("#g-save");
 if(q.content.kind==="matching"&&saveButton){
      const matching=q.content;

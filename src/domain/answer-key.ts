@@ -19,7 +19,7 @@ export type CorrectAnswer =
     }
   | { readonly kind: "true-false"; readonly value: boolean }
   | { readonly kind: "matching"; readonly pairs: readonly CorrectMatchingPair[] }
-  | { readonly kind: "free-response"; readonly evaluation: "manual"; readonly rubricId?: string };
+  | { readonly kind: "free-response"; readonly evaluation: "manual" };
 
 export interface CorrectMatchingPair {
   readonly leftId: MatchItemId;

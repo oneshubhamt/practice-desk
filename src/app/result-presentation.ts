@@ -6,11 +6,36 @@ import {attemptQuestionLookup,questionSpeed,isAuditQuestion,longestQuestionExpos
 import { sectionTimerDuration } from "../engine/session.ts";
 import type { ItemScore } from "../engine/scoring.ts";
 import {escapeText as esc} from "./html-escape.ts";
+import {paperTimeBudgetMs,overtimeMs,sectionTimeBudgetMs,timeEnforcementForMode} from "../domain/timing.ts";
+import {writtenAnswerEvidence,type WrittenAnswerEvidence} from "../learning/written-answer-analytics.ts";
 
 export type ResultTab="overview"|"review"|"timing";
 export type ReviewFilter="all"|"incorrect"|"unanswered"|"correct"|"excluded"|"pending"|"flagged"|"audit"|"fastwrong"|"typicalwrong"|"slowwrong";
 const duration=(ms:number)=>{const t=Math.ceil(Math.max(0,ms)/1000);return String(Math.floor(t/60)).padStart(2,"0")+":"+String(t%60).padStart(2,"0");};
 const mark=(a:GenericAttempt,value:number)=>value.toFixed(a.frozen.paper.scoring.decimalPlaces??2);
+function budgetLabel(a:GenericAttempt,budget:number|null):string{
+ if(a.frozen.paper.timing.kind==="untimed")return "Untimed";
+ return budget===null?"No single total budget":duration(budget);
+}
+function overtimeLabel(elapsedMs:number,budget:number|null):string{
+ if(budget===null)return "Not derivable";
+ const over=overtimeMs(elapsedMs,budget);
+ return over>0?"+"+duration(over)+" ("+(over/budget*100).toFixed(1)+"% over budget)":"None";
+}
+export function resultCompletionLabel(a:GenericAttempt):string{
+ return a.completionReason==="time-expired"?"Time expired":
+   a.completionReason==="section-submitted"?"Section submitted by user":
+   a.completionReason==="submitted"?"Submitted by user":"Not recorded";
+}
+export function writtenWordSummary(row:WrittenAnswerEvidence):string{
+ if(!row.answered)return row.wordLimit===null?"Unanswered":"0 / "+row.wordLimit+" words · unanswered";
+ if(row.wordLimit===null)return row.wordCount+" words · no advisory limit";
+ const delta=row.wordCount-row.wordLimit;
+ if(delta===0)return row.wordCount+" / "+row.wordLimit+" words · at limit";
+ const percent=(Math.abs(delta)/row.wordLimit*100).toFixed(1);
+ return row.wordCount+" / "+row.wordLimit+" words · "+
+   (delta>0?"+"+delta+" ("+percent+"% over)":Math.abs(delta)+" below ("+percent+"% below)");
+}
 
 export function reviewMatch(
  a:GenericAttempt,item:ItemScore,filter:ReviewFilter,
@@ -45,8 +70,8 @@ export function timingLedgerHTML(a:GenericAttempt,active:boolean,allowReview=tru
  if(!a.result)return "";
  const lookup=attemptQuestionLookup(a);
  return '<section class="panel pad result-pane" id="result-timing" role="tabpanel" aria-labelledby="result-tab-timing"'+(!active?' hidden':'')+'>'+
-  '<h2>Question timing ledger</h2><p class="fine">Time is cumulative foreground question exposure, not thinking time or an uninterrupted visit. Speed is relative to each section’s median only when at least five answered, scored items have measurable time. Missing phase evidence is shown as unavailable. First visit ends on the first departure, revisits measure exposure after returning, and before first answer accumulates across visits until the first committed response. All are foreground exposure, not continuous wall-clock intervals; displayed seconds are rounded up while source milliseconds remain exact. Speed still uses total exposure and a section median.</p>'+
-  '<div class="scroll-table"><table><thead><tr><th>Question</th><th>Section</th><th>Verdict</th><th>Time</th><th>Speed</th><th>Visits</th><th>Changes</th><th>First visit</th><th>Revisits</th><th>Before first answer</th><th>Review</th></tr></thead><tbody>'+
+  '<h2>Question timing ledger</h2><p class="fine">Time is cumulative foreground question exposure, not thinking time or an uninterrupted visit. After deadline is foreground exposure recorded beyond an advisory practice budget; hard exam simulations cannot accrue it. Missing phase evidence is shown as unavailable. First visit ends on the first departure, revisits measure exposure after returning, and before first answer accumulates across visits until the first committed response. Displayed seconds are rounded up while source milliseconds remain exact.</p>'+
+  '<div class="scroll-table"><table><thead><tr><th>Question</th><th>Section</th><th>Verdict</th><th>Time</th><th>After deadline</th><th>Speed</th><th>Visits</th><th>Changes</th><th>First visit</th><th>Revisits</th><th>Before first answer</th><th>Review</th></tr></thead><tbody>'+
   a.result.items.map((x,i)=>{
     const response=lookup.responses.get(x.questionRevisionId);
     const section=lookup.sections.get(x.questionRevisionId);
@@ -56,6 +81,7 @@ export function timingLedgerHTML(a:GenericAttempt,active:boolean,allowReview=tru
     return '<tr><td>'+(i+1)+'</td><td>'+esc(section?.title??"—")+'</td>'+
     '<td><span class="verdict '+esc(x.verdict)+'">'+esc(x.verdict)+'</span></td>'+
     '<td>'+duration(response?.timeSpentMs??0)+'</td>'+
+    '<td>'+((response?.postDeadlineMs??0)>0?"+": "")+((response?.postDeadlineMs??0)>0?duration(response!.postDeadlineMs):"—")+'</td>'+
     '<td><span class="tag speed-'+speed.toLowerCase().replace(/[^a-z]+/g,"-")+'">'+esc(speed)+'</span></td>'+
     '<td>'+(visit??0)+'</td>'+
     '<td>'+(response?.answerChangeCount??0)+'</td>'+
@@ -77,19 +103,23 @@ export function resultPacingHTML(
  const phases=a.frozen.questions.map(q=>questionTimingPhases(a,q.id,index))
    .filter((x):x is NonNullable<typeof x>=>x!==null&&x.totalMs>0);
  const revisits=phases.reduce((total,row)=>total+row.revisitMs,0);
+ const budget=paperTimeBudgetMs(a.frozen.paper);
+ const hard=timeEnforcementForMode(a.frozen.snapshot.mode)==="hard";
  return '<div class="insight-grid result-insight-grid">'+
   '<section class="panel pad result-time-pacing"><h2>Time &amp; pacing</h2>'+
   '<div class="metriclist">'+
-   '<div><span>Test timer used</span><b>'+duration(evidence.timing.elapsedMs)+'</b></div>'+
-   '<div><span>Median per answered question</span><b>'+
+   '<div><span>'+(hard?"Time limit":"Time budget")+'</span><b>'+budgetLabel(a,budget)+'</b></div>'+
+   '<div><span>Actual timer used</span><b>'+duration(evidence.timing.elapsedMs)+'</b></div>'+
+   '<div><span>Overtime</span><b>'+overtimeLabel(evidence.timing.elapsedMs,budget)+'</b></div>'+
+   '<div><span>Completion</span><b>'+esc(resultCompletionLabel(a))+'</b></div>'+
+   '<div><span>Median per scored answer</span><b>'+
      (evidence.timing.overallMedianAnsweredMs===null?"Not recorded":duration(evidence.timing.overallMedianAnsweredMs))+'</b></div>'+
    '<div><span>Question time captured</span><b>'+duration(evidence.timing.questionMeasuredMs)+'</b></div>'+
-   '<div><span>Revisit exposure ('+phases.length+' measured)</span><b>'+
-     (phases.length?duration(revisits):"Not measured")+'</b></div>'+
    '<div><span>Attempt rate</span><b>'+
      (evidence.timing.attemptRate===null?"—":Math.round(evidence.timing.attemptRate*100)+"%")+'</b></div>'+
-   '<div><span>Accuracy (valid attempts)</span><b>'+(accuracy===null?"—":Math.round(accuracy*100)+"%")+'</b></div>'+
-  '</div><p class="fine result-method-note">Timer time follows the frozen exam policy. Per-question time is foreground exposure while a question was displayed; time away from the page is not attributed to a question.</p></section>'+
+   '<div><span>Accuracy (valid scored attempts)</span><b>'+(accuracy===null?"—":Math.round(accuracy*100)+"%")+'</b></div>'+
+  '</div><p class="fine result-method-note">Timer time follows the frozen paper budget. Practice modes may continue into advisory overtime; exam simulation stops at its hard deadline. Per-question time and after-deadline attribution are foreground exposure, so hidden-page time can make paper overtime larger than recorded question overtime. Revisit exposure: '+
+    (phases.length?duration(revisits):"not measured")+'.</p></section>'+
   '<section class="panel pad result-section-diagnostics"><h2>Section diagnostics</h2>'+
    evidence.sections.map(e=>{
      const eligible=Math.max(0,e.total-e.excluded);
@@ -97,14 +127,42 @@ export function resultPacingHTML(
      const coverage=eligible?attempted/eligible:0;
      const sectionIndex=a.frozen.paper.sections.findIndex(s=>s.id===e.sectionId);
      const timer=sectionTimerDuration(a.state,sectionIndex);
+     const sectionBudget=sectionTimeBudgetMs(a.frozen.paper,sectionIndex);
+     const sectionOver=timer===null?0:overtimeMs(timer,sectionBudget);
+     const timerText=timer===null?"Not recorded":duration(timer)+
+       (sectionBudget===null?"":" / "+duration(sectionBudget)+(sectionOver>0?" · +"+duration(sectionOver)+" overtime":""));
      return '<div class="metric-bar"><div class="row between"><b>'+esc(e.title)+'</b><span>'+
        attempted+'/'+eligible+' attempted · '+(e.accuracy===null?"—":Math.round(e.accuracy*100)+"% accuracy")+
        '</span></div><div class="bartrack" role="progressbar" aria-label="'+esc(e.title)+' coverage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+
        Math.round(coverage*100)+'"><div style="width:'+Math.round(coverage*100)+'%"></div></div>'+
-       '<p class="fine">Section time: '+(timer===null?"Not recorded":duration(timer))+
-       ' · Foreground: '+duration(e.foregroundMs)+'</p></div>';
+       '<p class="fine">Section time: '+timerText+' · Foreground: '+duration(e.foregroundMs)+'</p></div>';
    }).join("")+
   '</section></div>';
+}
+
+export function writtenAnswerAnalysisHTML(a:GenericAttempt):string{
+ const evidence=writtenAnswerEvidence(a);
+ if(!evidence.rows.length)return "";
+ const paperOver=evidence.paperBudgetMs===null?"—":
+   overtimeLabel(evidence.actualMs,evidence.paperBudgetMs);
+ const attributed=evidence.writtenPostDeadlineMs>0?"+"+duration(evidence.writtenPostDeadlineMs):"None";
+ return '<section class="panel pad result-written-answers"><h2>Written answers</h2>'+
+  '<p class="fine">Objective measurements only. Word count and timing do not grade relevance, factual accuracy, structure or language; substantive quality remains a human/self assessment.</p>'+
+  '<div class="written-answer-summary">'+
+   '<div><b>'+evidence.answered+' / '+evidence.rows.length+'</b><span>Saved responses</span></div>'+
+   '<div><b>'+(evidence.limited?evidence.withinLimit+' / '+evidence.limited:"—")+'</b><span>Within advisory word limit</span></div>'+
+   '<div><b>'+paperOver+'</b><span>Paper overtime</span></div>'+
+   '<div><b>'+attributed+'</b><span>Written-answer overtime</span></div>'+
+  '</div><div class="scroll-table written-answer-table"><table><thead><tr><th>Question</th><th>Words</th><th>Foreground time</th><th>After deadline</th><th>Self-assessment</th></tr></thead><tbody>'+
+  evidence.rows.map(row=>'<tr><td>Q'+row.paperNumber+' · '+esc(row.section)+'</td>'+
+   '<td class="'+(row.wordLimit!==null&&row.wordCount>row.wordLimit?"written-over":"")+'">'+esc(writtenWordSummary(row))+'</td>'+
+   '<td>'+duration(row.foregroundMs)+'</td>'+
+   '<td>'+(row.postDeadlineMs>0?"+"+duration(row.postDeadlineMs):"—")+'</td>'+
+   '<td>'+(row.selfAssessedMarks===null?"Not yet assessed":
+      esc(String(row.selfAssessedMarks))+(row.selfAssessedMaximum===null?"":" / "+esc(String(row.selfAssessedMaximum)))+
+      (row.assessmentNote?'<small>'+esc(row.assessmentNote)+'</small>':""))+'</td></tr>').join("")+
+  '</tbody></table></div>'+
+  '<p class="fine result-method-note">Paper overtime is timer time. Written-answer overtime is only foreground exposure on written questions after an advisory deadline; other questions and hidden-page time are intentionally excluded. The Question times ledger shows attribution for every question.</p></section>';
 }
 
 /** Generic arithmetic presented as a compact opportunity summary. */
@@ -198,7 +256,7 @@ export function questionCoachingHTML(
 
 export function resultInsightsHTML(a:GenericAttempt,allowReview=true):string{
  const evidence=attemptEvidence(a),lookup=attemptQuestionLookup(a,evidence);
- return resultPacingHTML(a,evidence,lookup)+scoreOpportunityHTML(a,allowReview,evidence)+
-   speedAccuracyHTML(a,allowReview,evidence)+answerRevisionHTML(a)+
+ return resultPacingHTML(a,evidence,lookup)+writtenAnswerAnalysisHTML(a)+
+   scoreOpportunityHTML(a,allowReview,evidence)+speedAccuracyHTML(a,allowReview,evidence)+answerRevisionHTML(a)+
    questionCoachingHTML(a,allowReview,evidence,lookup);
 }

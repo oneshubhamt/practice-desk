@@ -604,6 +604,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    ["pd-author-pause","pausePolicy"],["pd-author-question-nav","questionNavigation"],
    ["pd-author-section-nav","sectionNavigation"],
    ["pd-author-section-transition","sectionTransition"],
+   ["pd-author-word-count","wordCountPolicy"],
    ["pd-author-correct","marksCorrect"],["pd-author-wrong","marksIncorrect"]
   ] as const;
   for(const [id,key] of metadata)find<HTMLInputElement|HTMLSelectElement>(id).onchange=e=>{
@@ -807,10 +808,27 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    input.onchange=()=>commitSectionTimer(input.dataset.authorSectionTimer??"",input);
   });
   for(const [id,key] of [["pd-author-min-choices","minSelections"],["pd-author-max-choices","maxSelections"],
+    ["pd-author-word-limit","wordLimit"],
     ["pd-author-partial-credit","partialCreditEach"],
     ["pd-author-partial-penalty","partialPenaltyEach"]] as const){
     const input=container.querySelector<HTMLInputElement>("#"+id);
     if(input)input.onchange=e=>updateQuestion(key,Number((e.target as HTMLInputElement).value));
+  }
+  find<HTMLInputElement>("pd-author-custom-marks").onchange=e=>{
+   const enabled=(e.target as HTMLInputElement).checked;
+   updateQuestion("scoringOverride",enabled?{
+    correctMarks:active().marksCorrect,incorrectMarks:active().marksIncorrect,
+    unansweredMarks:0}:undefined);
+   for(const key of ["correctMarks","incorrectMarks","unansweredMarks"] as const)
+    find<HTMLInputElement>("pd-author-mark-"+key).disabled=!enabled;
+  };
+  for(const key of ["correctMarks","incorrectMarks","unansweredMarks"] as const){
+   find<HTMLInputElement>("pd-author-mark-"+key).onchange=e=>{
+    const value=(e.target as HTMLInputElement).value;
+    if(!value.trim()){status("Enter a number for question-specific marks.",true);return;}
+    const existing=question().scoringOverride;
+    if(existing)updateQuestion("scoringOverride",{...existing,[key]:Number(value)});
+   };
   }
   find<HTMLSelectElement>("pd-author-kind").onchange=e=>{
    updateQuestion("kind",(e.target as HTMLSelectElement).value as QuestionKind);

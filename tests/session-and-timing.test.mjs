@@ -275,13 +275,13 @@ test("F01: early-submitted sequential section and final section preserve timer d
 test("F01: manual expiry freezes waiting interval through persistence and restore",()=>{
  const b=bundle({timing:{kind:"sectional",transition:"manual",pausePolicy:"allowed",allowEarlySubmit:false,
    sectionLimits:[{sectionId:"s1",durationMs:100},{sectionId:"s2",durationMs:200}]}});
- let a=startGenericAttempt(b,"manual",1000);
+ let a=startGenericAttempt(b,"manual",1000,"exam-simulation");
  a=transitionGenericAttempt(a,event("TICK",1400),qm);
  assert.equal(a.state.status,"section-expired");
  assert.equal(a.state.elapsedMs,100);
  a=transitionGenericAttempt(a,event("TICK",9000),qm);
  assert.equal(a.state.elapsedMs,100);
- const restored=restoreSession(b.paper,a.state,20000,false);
+ const restored=restoreSession(b.paper,a.state,20000,false,"exam-simulation");
  assert.equal(restored.state.elapsedMs,100);
  assert.equal(restored.state.status,"section-expired");
  a=transitionGenericAttempt({...a,state:restored.state},event("SUBMIT_SECTION",20000),qm);

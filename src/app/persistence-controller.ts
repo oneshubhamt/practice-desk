@@ -145,6 +145,8 @@ export const saveWorkspaceRecord=(owner:PersistenceControllerContext,record:Reco
    owner.calculatorStates.delete(versioned.id);
    for(const key of owner.choiceDrafts.keys())
     if(key.startsWith(versioned.id+"|"))owner.choiceDrafts.delete(key);
+   for(const key of owner.writtenDrafts.keys())
+    if(key.startsWith(versioned.id+"|"))owner.writtenDrafts.delete(key);
    clearCandidateToolWorkspace(localStorage,versioned.id);
   }
  }
@@ -217,6 +219,8 @@ export const removeWorkspaceAttempt=async (
   await owner.storageBackend.delete(id,current.saveRevision,intent);
   owner.records.delete(id);
   owner.calculatorStates.delete(id);
+  for(const key of owner.choiceDrafts.keys())if(key.startsWith(id+"|"))owner.choiceDrafts.delete(key);
+  for(const key of owner.writtenDrafts.keys())if(key.startsWith(id+"|"))owner.writtenDrafts.delete(key);
   clearCandidateToolWorkspace(localStorage,id);
   if(isAttempt(current))await owner.storageBackend.pruneSnapshots();
   try{
@@ -256,6 +260,8 @@ export const deleteCompletedWorkspaceAttempts=async (owner:PersistenceController
   for(const record of completed){
    owner.records.delete(record.id);
    owner.calculatorStates.delete(record.id);
+   for(const key of owner.choiceDrafts.keys())if(key.startsWith(record.id+"|"))owner.choiceDrafts.delete(key);
+   for(const key of owner.writtenDrafts.keys())if(key.startsWith(record.id+"|"))owner.writtenDrafts.delete(key);
    clearCandidateToolWorkspace(localStorage,record.id);
   }
   await owner.storageBackend.pruneSnapshots();

@@ -29,10 +29,11 @@ test("terminal persistence clears all candidate-only scratch regardless of compl
   writeCalculatorWorkspace(storage,completed.id,BASIC_CALCULATOR_V1,newExamCalculatorState());
   const calculatorStates=new Map([[completed.id,newExamCalculatorState()]]);
   const choiceDrafts=new Map([[completed.id+"|"+qid,{questionId:qid,optionIds:[],message:"draft"}]]);
+  const writtenDrafts=new Map([[completed.id+"|"+qid,{questionId:qid,text:"draft",editedAt:1050}]]);
   let mirrorWrites=0;
   const owner={
    fallbackConflict:false,storageFault:false,warning:"",draw(){},disposed:false,
-   records:new Map([[pending.id,pending]]),attempt:completed,calculatorStates,choiceDrafts,
+   records:new Map([[pending.id,pending]]),attempt:completed,calculatorStates,choiceDrafts,writtenDrafts,
    pendingWrites:0,updateStorageHealth(){},writeQueue:Promise.resolve(),
    storageBackend:{kind:"indexeddb",write:async()=>{}},
    writeMirror(){mirrorWrites++;},lastCommittedAt:null,
@@ -42,6 +43,7 @@ test("terminal persistence clears all candidate-only scratch regardless of compl
   assert.equal(await saveWorkspaceRecord(owner,completed),true);
   assert.equal(calculatorStates.has(completed.id),false);
   assert.equal([...choiceDrafts.keys()].some(key=>key.startsWith(completed.id+"|")),false);
+  assert.equal([...writtenDrafts.keys()].some(key=>key.startsWith(completed.id+"|")),false);
   assert.equal(storage.getItem(candidateToolStorageKey(completed.id)),null);
   assert.equal(mirrorWrites,1,"terminal attempt mirror remains available for persistence recovery");
  }finally{

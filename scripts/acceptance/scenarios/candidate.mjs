@@ -6,6 +6,14 @@ export async function candidateCore(){
 const {openHarness,records,check,assertNoOverflow,route,claimNativeNavigation}=await import("../../browser/fixtures.mjs");
 const {chooseModernPaper}=await import("../../paper-select.mjs");
 const {pkg : sixKinds}=await import("../../../tests/fixtures/six-kinds.mjs");
+const {paperRevisionHash}=await import("../../../src/domain/integrity.ts");
+const shortTimed=(id,durationMs,edition)=>{
+ const {contentHash:_oldHash,...paperCore}=sixKinds.paper;
+ const base={...paperCore,id,edition,timing:{kind:"whole-paper",durationMs,pausePolicy:"allowed"}};
+ return {...sixKinds,title:sixKinds.title+" · "+id,paper:{...base,contentHash:paperRevisionHash(base)}};
+};
+const hardWritten=shortTimed("rev-paper:hard-written",4000,"source");
+const advisoryWritten=shortTimed("rev-paper:advisory-written",2000,"custom");
 const h=await openHarness({artifactDir:"artifacts/acceptance-modern"});
 const evidence=[];
 async function scenario(name,run){
@@ -90,6 +98,48 @@ try{
     "History restore changed frozen revision, score ledger or completion provenance");
   await assertNoOverflow(page,"CGL History");
  });
+ await scenario("written-hard-timeout-preserves-visible-draft",async page=>{
+  await page.locator("#g-file").setInputFiles({name:"hard-written.json",mimeType:"application/json",
+   buffer:Buffer.from(JSON.stringify(hardWritten))});
+  await chooseModernPaper(page,hardWritten.paper.id);
+  await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
+  await page.locator('[data-section="1"]').click();
+  await page.locator("#g-next").click();await page.locator("#g-next").click();
+  const text="Visible draft before hard timeout";
+  await page.locator("#g-text").fill(text); // deliberately never select Save response
+  await route(page,"result");
+  const row=(await records(page)).find(x=>x.recordType==="generic-attempt"&&x.packageId===hardWritten.paper.id);
+  check(row?.completionReason==="time-expired","hard written attempt did not expire");
+  const written=row?.state?.responses?.find(x=>x.questionRevisionId==="rev-5");
+  check(written?.response?.text===text,"hard timeout lost the latest visible written draft");
+  check(written?.postDeadlineMs===0,"hard timeout recorded impossible post-deadline exposure");
+  check(written?.answerEvents===undefined,"hard timeout persisted written typing telemetry");
+  check((await page.locator(".result-written-answers").innerText()).includes("Visible")===false,
+    "written analytics should summarize evidence, not duplicate candidate prose in Insights");
+ });
+ await scenario("written-advisory-overtime-continues-live",async page=>{
+  await page.locator("#g-file").setInputFiles({name:"advisory-written.json",mimeType:"application/json",
+   buffer:Buffer.from(JSON.stringify(advisoryWritten))});
+  await chooseModernPaper(page,advisoryWritten.paper.id);
+  await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
+  await page.locator('[data-section="1"]').click();
+  await page.locator("#g-next").click();await page.locator("#g-next").click();
+  await page.locator("#g-text").fill("Practice answer may continue beyond the target.");
+  await page.waitForFunction(()=>document.querySelector("#g-timer-label")?.textContent==="PAPER OVERTIME",
+    undefined,{timeout:7000,polling:"raf"});
+  check((await page.locator("#g-timer").innerText()).startsWith("+"),
+    "advisory live timer did not switch to positive overtime");
+  await page.locator("#g-submit").click();await route(page,"result");
+  const row=(await records(page)).find(x=>x.recordType==="generic-attempt"&&x.packageId===advisoryWritten.paper.id);
+  check(row?.completionReason==="submitted","advisory practice should finish by user submission");
+  check(row.state.elapsedMs>advisoryWritten.paper.timing.durationMs,
+    "advisory practice did not continue past its budget");
+  check(row.state.responses.find(x=>x.questionRevisionId==="rev-5")?.postDeadlineMs>0,
+    "written question did not receive foreground overtime attribution");
+  const pacing=await page.locator(".result-time-pacing").innerText();
+  check(pacing.includes("% over budget")&&pacing.includes("Submitted by user"),
+    "Results omitted derived overtime percentage or completion mode");
+ });
  await scenario("six-kinds-manual-assessment-and-fsrs",async page=>{
   await page.locator("#g-file").setInputFiles({name:"six-kinds.json",mimeType:"application/json",
    buffer:Buffer.from(JSON.stringify(sixKinds))});
@@ -117,13 +167,38 @@ try{
   await page.locator('select[data-match]').nth(0).selectOption("r1");
   await page.locator('select[data-match]').nth(1).selectOption("r2");
   await page.locator("#g-save").click();await page.locator("#g-next").click();
-  await page.locator("#g-text").fill("Self assessment response");await page.locator("#g-save").click();
+  const written=n=>Array.from({length:n},(_,i)=>"word"+(i+1)).join(" ");
+  check((await page.locator("#g-word-count").innerText())==="0 / 40 words",
+    "custom-practice should show the Auto word counter");
+  await page.locator("#g-text").fill(written(32));
+  check(await page.locator("#g-word-count").getAttribute("data-word-count-state")==="caution",
+    "80% word count should enter yellow caution state");
+  await page.locator("#g-text").fill(written(36));
+  check(await page.locator("#g-word-count").getAttribute("data-word-count-state")==="warning",
+    "90% word count should enter amber warning state");
+  await page.locator("#g-text").fill(written(41));
+  check(await page.locator("#g-word-count").getAttribute("data-word-count-state")==="over",
+    "over-limit word count should enter red state");
+  await page.locator("#g-save").click();
+  check((await page.locator("#g-word-count").innerText())==="41 / 40 words",
+    "over-limit written response was not saved and restored");
+  // A final visible edit is deliberately left unsaved. Submission must commit
+  // the textarea boundary state rather than silently submit the older 41-word snapshot.
+  await page.locator("#g-text").fill(written(42));
   await page.locator("#g-submit").click();await route(page,"result");
+  check((await page.locator(".result-written-answers").innerText()).includes("42 / 40 words"),
+    "Results did not analyse the final visible written response");
+  check((await page.locator(".result-written-answers").innerText()).includes("Written answers"),
+    "written-answer analysis panel missing");
   await page.locator("#result-tab-review").click();
   check(await page.locator(".generic-review").count()===6,"six question kinds not independently reviewed");
   const row=(await records(page)).find(x=>x.recordType==="generic-attempt"&&x.packageId===sixKinds.paper.id&&x.finishedAt);
   check(row?.result?.snapshot?.correctCount===5,"automated five answer verdicts wrong");
   check(row.result.items[5].verdict==="pending","written response not manual-pending");
+  check(row.state.responses.find(x=>x.questionRevisionId==="rev-5")?.response?.text===written(42),
+    "final unsaved textarea edit was not committed at submission");
+  check(row.state.responses.find(x=>x.questionRevisionId==="rev-5")?.answerEvents===undefined,
+    "written checkpoints leaked typing telemetry");
   await page.locator('[data-manual-marks="rev-5"]').fill("1.5");
   await page.locator('[data-manual-note="rev-5"]').fill("Rubric self-assessment");
   await page.locator('[data-manual-save="rev-5"]').click();

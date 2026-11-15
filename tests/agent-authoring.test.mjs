@@ -308,7 +308,7 @@ test("P60-A: source-backed capability catalogue is versioned, unique, nonempty a
   assert.ok(cap.limitations.length>=1);
   assert.ok(cap.provides.length>=2);
   for(const src of cap.sourcePaths){
-   assert.ok(/^(src|scripts)\/[\w./-]+\.(?:ts|mjs)$/.test(src),"No external/untrusted evidence path");
+   assert.ok(/^(?:src|scripts|question-banks)\/[\w./-]+\.(?:ts|mjs|json|md)$/.test(src),"No external/untrusted evidence path");
    assert.ok(!src.includes(".."),"Source paths must remain repository-relative");
    await access(resolve(root,src));
   }

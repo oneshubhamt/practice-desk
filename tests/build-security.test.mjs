@@ -1,3 +1,4 @@
+import {loadCglFixture,loadQuestionBankGraph,repositoryRoot} from "./fixtures/cgl-bank.mjs";
 /** P48-1 independent hostile-input, strict v1/v4 schemas and compiler CSP tests.
  * Inputs are rebuilt from real domain fixtures, not prior CI success labels.
  */
@@ -65,9 +66,8 @@ test("P48-1 canonical authoring envelopes cannot launder undeclared metadata",()
 });
 
 test("P48-1 frozen CGL source review references reject unsigned extra metadata without losing valid Q32 provenance",async()=>{
- const base=new URL("../src/content/",import.meta.url);
- const papers=JSON.parse(await readFile(new URL("papers.json",base),"utf8"));
- const patches=JSON.parse(await readFile(new URL("patches.json",base),"utf8"));
+ const papers=(await loadCglFixture()).sources;
+ const patches=(await loadCglFixture()).patches;
  const builtins=builtinCglPackages(papers,patches);
  const source=builtins.find(p=>p.paper.paperId==="cgl-2026-10-05"&&p.paper.edition==="source");
  const reviewed=builtins.find(p=>p.paper.paperId==="cgl-2026-10-05"&&p.paper.edition==="reviewed");

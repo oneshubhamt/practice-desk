@@ -186,7 +186,7 @@ async function registerFrozenRecordValidationTests(){
  * timer data or unsigned fields in mutable attempt/session records.
  */
 const origin=Date.UTC(2026,10,4,8,30);
-const fresh=()=>startGenericAttempt(pkg,"p48-4-record",origin);
+const fresh=()=>startGenericAttempt(pkg,"p48-4-record",origin,"exam-simulation");
 const savedResponse=()=>{
  const a=fresh(),qs=new Map(pkg.questions.map(q=>[q.id,q]));
  return transitionGenericAttempt(a,{type:"ANSWER",nowMs:origin+1000,

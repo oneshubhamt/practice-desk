@@ -3,32 +3,39 @@ import type { ManualGrade } from "../domain/attempt.js";
 export type {ManualGrade} from "../domain/attempt.js";
 import type { QuestionRevisionId } from "../domain/ids.js";
 
-function maxFor(attempt:GenericAttempt,id:QuestionRevisionId):number|null{
+export function manualGradeLimits(attempt:GenericAttempt):ReadonlyMap<QuestionRevisionId,number>{
+ const limits=new Map<QuestionRevisionId,number>();
+ if(attempt.finishedAt===null||attempt.state.status!=="completed"||!attempt.result)return limits;
  const paper=attempt.frozen.paper;
- const section=paper.sections.find(x=>x.questionRevisionIds.includes(id));
- const question=attempt.frozen.questions.find(x=>x.id===id);
- const entry=attempt.frozen.key.entries.find(x=>x.questionRevisionId===id);
- if(!section||question?.content.kind!=="free-response"||entry?.answer.kind!=="free-response")return null;
- const result=attempt.result?.items.find(x=>x.questionRevisionId===id);
- if(result?.verdict!=="pending")return null;
- return entry.scoringOverride?.correctMarks??section.scoringOverride?.correctMarks??
-   paper.scoring.byQuestionKind?.["free-response"]?.correctMarks??paper.scoring.defaultRule.correctMarks;
+ const sections=new Map<QuestionRevisionId,typeof paper.sections[number]>();
+ for(const section of paper.sections)
+   for(const id of section.questionRevisionIds)sections.set(id,section);
+ const questions=new Map(attempt.frozen.questions.map(q=>[q.id,q]));
+ const entries=new Map(attempt.frozen.key.entries.map(entry=>[entry.questionRevisionId,entry]));
+ const results=new Map(attempt.result.items.map(item=>[item.questionRevisionId,item]));
+ for(const [id,section] of sections){
+   const question=questions.get(id),entry=entries.get(id),result=results.get(id);
+   if(question?.content.kind!=="free-response"||entry?.answer.kind!=="free-response"||
+      result?.verdict!=="pending")continue;
+   limits.set(id,entry.scoringOverride?.correctMarks??section.scoringOverride?.correctMarks??
+     paper.scoring.byQuestionKind?.["free-response"]?.correctMarks??paper.scoring.defaultRule.correctMarks);
+ }
+ return limits;
 }
 export function manualGradeLimit(attempt:GenericAttempt,id:QuestionRevisionId):number|null{
- if(attempt.finishedAt===null||attempt.state.status!=="completed")return null;
- return maxFor(attempt,id);
+ return manualGradeLimits(attempt).get(id)??null;
 }
 export function validateManualGrades(attempt:GenericAttempt):void{
  const grades=attempt.manualGrades??[];
  if(!Array.isArray(grades)||grades.length>attempt.frozen.questions.length)
    throw new Error("Invalid manual grading records");
  if(attempt.finishedAt===null&&grades.length)throw new Error("Cannot grade an active attempt");
- const ids=new Set<string>();
+ const ids=new Set<string>(),limits=manualGradeLimits(attempt);
  for(const grade of grades){
    if(!grade||typeof grade.questionRevisionId!=="string"||ids.has(grade.questionRevisionId))
      throw new Error("Duplicate or invalid manual grade");
    ids.add(grade.questionRevisionId);
-   const maximum=manualGradeLimit(attempt,grade.questionRevisionId);
+   const maximum=limits.get(grade.questionRevisionId)??null;
    if(maximum===null||!Number.isFinite(grade.marks)||grade.marks<0||grade.marks>maximum||
       !Number.isFinite(maximum)||typeof grade.note!=="string"||grade.note.length>2000||
       typeof grade.gradedAt!=="string"||!Number.isFinite(Date.parse(grade.gradedAt))||

@@ -15,11 +15,13 @@ import {sourceKeyScore} from "../engine/source-comparison.ts";
 import {scoreableMaximum,scoreableLowerBound,sectionScoreSummaries} from "../engine/score-ceiling.ts";
 
 import {attemptQuestionLookup,questionSpeed} from "../learning/question-analytics.ts";
+import {writtenAnswerEvidence} from "../learning/written-answer-analytics.ts";
 
 import {editorialStatusLabel} from "./editorial-labels.ts";
 
 
-import {reviewMatch,reviewFiltersHTML,resultTabsHTML,timingLedgerHTML,resultInsightsHTML,type ResultTab,type ReviewFilter} from "./result-presentation.ts";
+import {reviewMatch,reviewFiltersHTML,resultTabsHTML,timingLedgerHTML,resultInsightsHTML,
+ resultCompletionLabel,writtenWordSummary,type ResultTab,type ReviewFilter} from "./result-presentation.ts";
 
 import type {ResultControllerContext} from "./coordinator-context.ts";
 
@@ -45,6 +47,8 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
      new Map(owner.attempt.notebookLineage?.entries.map(entry=>[entry.questionRevisionId,entry])??[]):null;
    const reviewItems=reviewLookup?
      s.items.filter(item=>reviewMatch(owner.attempt!,item,owner.reviewFilter,reviewLookup)):[];
+   const writtenByQuestion=reviewLookup?new Map(writtenAnswerEvidence(owner.attempt).rows
+     .map(row=>[row.questionRevisionId,row] as const)):null;
    // Current attempts pin source review data at attempt creation. Never
    // reconstruct evidence from a mutable Library at result render time.
    const reviewSource=owner.resultTab==="review"?
@@ -82,9 +86,7 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
        escapeText(markLabel(row.eligibleMax))+'</td><td>'+
        (row.timerMs===null?"Not recorded":minutes(row.timerMs)+
          (row.timerReason==="time-expired"?" · Expired":" · Submitted"))+'</td></tr>').join(""):"";
-   const completionLabel=owner.attempt.completionReason?
-     owner.attempt.completionReason==="time-expired"?"Time expired":
-     owner.attempt.completionReason==="section-submitted"?"Submitted early":"Submitted by user":"";
+   const completionLabel=resultCompletionLabel(owner.attempt);
    const scoreExplainer=owner.resultTab==="overview"?
      '<p class="fine score-explainer">+'+escapeText(markLabel(s.snapshot.positiveMarks))+
        ' positive marks · −'+escapeText(markLabel(s.snapshot.penaltyMarks))+
@@ -173,6 +175,7 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
       const limit=q.content.kind==="free-response"?manualGradeLimit(owner.attempt!,q.id):null;
       const provenance=q.editorial.sources??[];
       const origin=lineageByQuestion?.get(q.id);
+      const written=writtenByQuestion?.get(q.id);
       return '<article class="generic-review" data-review-id="'+escapeText(q.id)+'" data-verdict="'+escapeText(it.verdict)+'"><div class="pd-review-question"><strong>'+
        (reviewLookup?.paperNumbers.get(q.id)??i+1)+'.</strong> '+
        renderAuthoredText(frozenTarget,q.content.prompt,q.content.richPrompt)+'</div>'+
@@ -181,6 +184,13 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
          (q.editorial.sourcePage?' · Source page '+q.editorial.sourcePage:"")+
          ' · '+minutes(seconds)+' foreground exposure · Speed: '+escapeText(speed)+
          ' · Visits: '+(visitCount??0)+'</p>'+
+       (written?'<div class="written-review-metrics"><b>'+escapeText(writtenWordSummary(written))+'</b>'+
+         '<span>'+minutes(written.foregroundMs)+' foreground'+
+           (written.postDeadlineMs>0?' · +'+minutes(written.postDeadlineMs)+' after deadline':' · no recorded overtime')+'</span>'+
+         '<span>'+(written.selfAssessedMarks===null?'Not yet self-assessed':
+           'Self-assessed '+escapeText(String(written.selfAssessedMarks))+
+           (written.selfAssessedMaximum===null?'':' / '+escapeText(String(written.selfAssessedMaximum))))+'</span>'+
+         (written.assessmentNote?'<small>'+escapeText(written.assessmentNote)+'</small>':'')+'</div>':"")+
        frozenReviewMedia(owner.attempt!,q,response,answer,it.verdict)+
        (origin?'<p class="fine">Notebook source: '+escapeText(origin.sourcePaperId)+
          ' · '+escapeText(origin.sourcePaperEdition)+' · '+escapeText(origin.sourceSectionTitle)+
@@ -204,7 +214,7 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
        (provenance.length?'<p class="fine">Sources: '+provenance.map(source=>
          '<a href="'+escapeText(source.url)+'" target="_blank" rel="noopener noreferrer">'+
          escapeText(source.title)+'</a>').join(' · ')+'</p>':"")+
-       (limit!==null?'<div class="generic-manual-grade"><p class="fine">Written response requires explicit human assessment. Self-marked results are separate from exam scores. Unsaved drafts stay in this tab only and are not included in backups.</p>'+ 
+       (limit!==null?'<div class="generic-manual-grade"><p class="fine">Content quality requires explicit human assessment. Objective word/time evidence above is descriptive only; self-marked results remain separate from the immutable automated exam score. Unsaved assessment drafts stay in this tab only and are not included in backups.</p>'+ 
           '<p class="fine" data-manual-status="'+escapeText(q.id)+'" role="status">'+(draft?"Unsaved changes — select Save self-assessment to commit.":"No unsaved assessment changes.")+'</p>'+
           '<label>Self-assessed marks (0–'+limit+')<input type="number" step="0.01" min="0" max="'+limit+'" data-manual-marks="'+escapeText(q.id)+'" value="'+escapeText(draft?.marks??prior?.marks??"")+'"></label>'+
           '<label>Assessment note (optional)<textarea maxlength="2000" rows="2" data-manual-note="'+escapeText(q.id)+'">'+escapeText(draft?.note??prior?.note??"")+'</textarea></label>'+

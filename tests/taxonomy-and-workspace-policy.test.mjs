@@ -107,7 +107,7 @@ test("P49 published labels roll up to subject/topic/subtopic without inventing m
 });
 test("P49 real completed attempts aggregate full author and self-labelled paths separately",()=>{
  const pkg=compileAuthoringPublication(paper()),start=Date.UTC(2026,10,4,8);
- const attempt=startGenericAttempt(pkg,"p49-timed",start);
+ const attempt=startGenericAttempt(pkg,"p49-timed",start,"exam-simulation");
  const finished=transitionGenericAttempt(attempt,{type:"TICK",nowMs:start+30*60*1000},
   new Map(pkg.questions.map(q=>[q.id,q])));
  assert.notEqual(finished.finishedAt,null,"actual sectional expiry must finish both sections");
@@ -166,7 +166,7 @@ test("P49 full-path IDs stay distinct even for visually identical joined labels"
 test("P49 hierarchical Learning note and subtopic survive strict v4 backup and import",()=>{
  const pkg=compileAuthoringPublication(paper());
  const start=Date.UTC(2026,10,4,8,0);
- const frozen=startGenericAttempt(pkg,"p49-roundtrip",start);
+ const frozen=startGenericAttempt(pkg,"p49-roundtrip",start,"exam-simulation");
  const completed=transitionGenericAttempt(frozen,{type:"TICK",nowMs:start+1800000},
    new Map(pkg.questions.map(q=>[q.id,q])));
  assert.notEqual(completed.finishedAt,null);
@@ -212,7 +212,7 @@ function paper(){
 }
 const complete=(pkg,id,ms)=>{
  const t=Date.UTC(2026,10,4,8)+ms;
- const started=startGenericAttempt(pkg,id,t);
+ const started=startGenericAttempt(pkg,id,t,"exam-simulation");
  const finished=transitionGenericAttempt(started,{type:"TICK",nowMs:t+125*60000},
    new Map(pkg.questions.map(x=>[x.id,x])));
  assert.ok(finished.finishedAt!==null,"the real paper must have finished");

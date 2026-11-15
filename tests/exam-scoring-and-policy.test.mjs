@@ -1,3 +1,4 @@
+import {loadCglFixture,loadQuestionBankGraph,repositoryRoot} from "./fixtures/cgl-bank.mjs";
 /** Canonical executable contracts, grouped by stable product responsibility. */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -21,8 +22,8 @@ import {restoreSession} from "../src/history/frozen.ts";
 
 /** Session Policy — canonical domain contracts. */
 async function registerSessionPolicyTests(){
-const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
-const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
+const sources=(await loadCglFixture()).sources;
+const patches=(await loadCglFixture()).patches;
 const builtins=builtinCglPackages(sources,patches);
 const mock=(paperChanges)=>{const base={...pkg.paper,...paperChanges,
   navigation:paperChanges.timing?.kind==="sectional"?
@@ -172,8 +173,8 @@ await registerSessionPolicyTests();
 
 /** Preflight Disclosure — canonical domain contracts. */
 async function registerPreflightDisclosureTests(){
-const source=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
-const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
+const source=(await loadCglFixture()).sources;
+const patches=(await loadCglFixture()).patches;
 const cgl=builtinCglPackages(source,patches);
 const reviewed=cgl.find(p=>p.paper.edition==="reviewed");
 const original=cgl.find(p=>p.paper.edition==="source");
@@ -385,7 +386,7 @@ test("G01 adjacent: a whole-paper lock cannot bypass the global deadline",()=>{
 test("G02: manual expiry freezes answers and elapsed time until an explicit continuation",()=>{
  const bundle=bundleWith({timing:{kind:"sectional",transition:"manual",allowEarlySubmit:false,pausePolicy:"allowed",
   sectionLimits:[{sectionId:"s1",durationMs:100},{sectionId:"s2",durationMs:200}]}});
- let a=startGenericAttempt(bundle,"manual",1000);
+ let a=startGenericAttempt(bundle,"manual",1000,"exam-simulation");
  a=transitionGenericAttempt(a,evt("TICK",1150),lookup);
  assert.equal(a.state.status,"section-expired");
  assert.equal(a.state.elapsedMs,100);
@@ -403,7 +404,7 @@ test("G02: manual expiry freezes answers and elapsed time until an explicit cont
  assert.equal(a.state.elapsedMs,100);
  assert.equal(a.state.status,"section-expired");
  assert.doesNotThrow(()=>validateGenericStoredRecord(a));
- const restored=restoreSession(bundle.paper,a.state,3500,true);
+ const restored=restoreSession(bundle.paper,a.state,3500,true,"exam-simulation");
  assert.equal(restored.state.status,"section-expired");
  assert.equal(restored.state.elapsedMs,100);
  assert.equal(restored.expired,false);
@@ -425,7 +426,7 @@ test("G02: manual expiry freezes answers and elapsed time until an explicit cont
 test("G02 extra: no-deadline sectional sections can always be finished explicitly",()=>{
  const b=bundleWith({timing:{kind:"sectional",transition:"automatic",allowEarlySubmit:false,pausePolicy:"forbidden",
   sectionLimits:[{sectionId:"s1",durationMs:null},{sectionId:"s2",durationMs:100}]}});
- let a=startGenericAttempt(b,"untimed-section",1000);
+ let a=startGenericAttempt(b,"untimed-section",1000,"exam-simulation");
  assert.match(renderModelExam(a,b),/Finish untimed section/);
  a=transitionGenericAttempt(a,evt("SUBMIT_SECTION",1500),lookup);
  assert.equal(a.state.sectionIndex,1);
@@ -773,8 +774,8 @@ await registerIndependentScoringModelTests();
 const testP41=test,testAssert=assert;
 
 testP41("source comparison refuses unchanged-letter identities when option meaning changes",async()=>{
- const papers=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
- const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
+ const papers=(await loadCglFixture()).sources;
+ const patches=(await loadCglFixture()).patches;
  const all=builtinCglPackages(papers,patches);
  let changes=0,correctTextChanges=0;
  for(const [paperId,modified] of Object.entries(patches)){
@@ -794,8 +795,8 @@ testP41("source comparison refuses unchanged-letter identities when option meani
  testAssert.equal(correctTextChanges,21);
 });
 
-const p41papers=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
-const p41patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
+const p41papers=(await loadCglFixture()).sources;
+const p41patches=(await loadCglFixture()).patches;
 
 testP41("publisher comparison preserves identical contexts but rejects reordered options and punctuation",()=>{
  const source=builtinCglPackages(

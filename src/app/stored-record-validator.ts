@@ -3,6 +3,7 @@ import {validateExamPackage,type ExamPackage} from "../domain/exam-package.ts";
 import type {GenericAttempt} from "../engine/generic-attempt.ts";
 import {validateLearningCard,type LearningCard} from "../learning/learning.ts";
 import {validateSectionTimingEvidence} from "../engine/session.ts";
+import {overtimeMs,sectionTimeBudgetMs,timeEnforcementForMode} from "../domain/timing.ts";
 import {assertFrozenContent} from "../history/frozen.ts";
 import {isVerifiedSharedFrozen} from "../history/shared-store.ts";
 import {validateResponse} from "../engine/response.ts";
@@ -44,12 +45,13 @@ function validateSavedSessionEvidence(attempt:GenericAttempt):void{
     state.sectionElapsedMs>state.elapsedMs+0.001||
     state.foregroundMs>state.elapsedMs+0.001)
    throw Error("Invalid saved session clock/timing totals");
- if(paper.timing.kind==="whole-paper"&&state.elapsedMs>paper.timing.durationMs+0.001)
+ const hard=timeEnforcementForMode(attempt.frozen.snapshot.mode)==="hard";
+ if(hard&&paper.timing.kind==="whole-paper"&&state.elapsedMs>paper.timing.durationMs+0.001)
    throw Error("Invalid saved whole-paper timer duration");
  if(paper.timing.kind==="sectional"){
    const sectionId=paper.sections[state.sectionIndex]?.id;
    const limit=paper.timing.sectionLimits.find(item=>item.sectionId===sectionId);
-   if(!limit||limit.durationMs!==null&&state.sectionElapsedMs>limit.durationMs+0.001)
+   if(!limit||hard&&limit.durationMs!==null&&state.sectionElapsedMs>limit.durationMs+0.001)
      throw Error("Invalid saved sectional timer duration");
  }
  if(!Array.isArray(state.completedSections)||state.completedSections.length>paper.sections.length||
@@ -58,7 +60,7 @@ function validateSavedSessionEvidence(attempt:GenericAttempt):void{
  if(state.status==="paused"&&(paper.timing.kind==="untimed"||
      paper.timing.pausePolicy==="forbidden"))
    throw Error("Invalid saved paused exam policy");
- if(state.timingEvidenceVersion!==1||
+ if(state.timingEvidenceVersion!==2||
     !Array.isArray(state.questionVisits)||!Array.isArray(state.completedSectionTimings))
    throw Error("Missing canonical saved timing evidence");
  for(const entry of state.questionVisits)
@@ -68,7 +70,7 @@ function validateSavedSessionEvidence(attempt:GenericAttempt):void{
  let accumulated=0;
  for(const row of state.responses){
    onlyFields(row,["questionRevisionId","response","flagged","timeSpentMs",
-     "firstVisitMs","preFirstAnswerMs","firstAnsweredAt",
+     "firstVisitMs","postDeadlineMs","preFirstAnswerMs","firstAnsweredAt",
      "answerChangeCount","answerEvents"],"saved response row");
    if(typeof row.flagged!=="boolean")
      throw Error("Invalid saved response flag");
@@ -135,6 +137,7 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
    throw new Error("Invalid generic attempt record");
  if(!isVerifiedSharedFrozen(value.frozen))assertFrozenContent(value.frozen);
  const paper=value.frozen.paper;
+ const hard=timeEnforcementForMode(value.frozen.snapshot.mode)==="hard";
  if(value.packageId!==paper.id)throw new Error("Attempt references an incorrect revision");
  validateSavedSessionEvidence(value);
  const current=paper.sections[value.state.sectionIndex]?.questionRevisionIds[value.state.questionIndex];
@@ -152,9 +155,9 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
  }
  if(!["running","paused","section-expired","completed"].includes(value.state.status))
    throw new Error("Invalid saved session status");
- validateSectionTimingEvidence(paper,value.state);
+ validateSectionTimingEvidence(paper,value.state,value.frozen.snapshot.mode);
  if(value.state.status==="section-expired"){
-   if(paper.timing.kind!=="sectional"||paper.timing.transition!=="manual")
+   if(!hard||paper.timing.kind!=="sectional"||paper.timing.transition!=="manual")
      throw new Error("Expired-section state requires manual sectional timing");
    const limit=paper.timing.sectionLimits.find(x=>x.sectionId===paper.sections[value.state.sectionIndex]?.id);
    if(limit?.durationMs==null||value.state.sectionElapsedMs!==limit.durationMs)
@@ -162,7 +165,7 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
  }
  const questionMap=new Map(value.frozen.questions.map(q=>[q.id,q]));
  const allowed=new Set(paper.sections.flatMap(section=>section.questionRevisionIds));
- if(value.state.timingEvidenceVersion!==1)
+ if(value.state.timingEvidenceVersion!==2)
    throw new Error("Invalid question timing evidence version");
  const visits=value.state.questionVisits;
  if(!Array.isArray(visits)||visits.length===0||visits.length>allowed.size||
@@ -178,10 +181,10 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
       !Number.isInteger(row.answerChangeCount)||row.answerChangeCount<0)
      throw new Error("Invalid saved response");
    seen.add(row.questionRevisionId);
-   const first=row.firstVisitMs,pre=row.preFirstAnswerMs;
-   if(!Number.isFinite(first)||!Number.isFinite(pre)||
-      first<0||pre<0||first>row.timeSpentMs||pre>row.timeSpentMs||
-      !Number.isSafeInteger(first)||!Number.isSafeInteger(pre))
+   const first=row.firstVisitMs,post=row.postDeadlineMs,pre=row.preFirstAnswerMs;
+   if(!Number.isFinite(first)||!Number.isFinite(post)||!Number.isFinite(pre)||
+      first<0||post<0||pre<0||first>row.timeSpentMs||post>row.timeSpentMs||pre>row.timeSpentMs||
+      !Number.isSafeInteger(first)||!Number.isSafeInteger(post)||!Number.isSafeInteger(pre))
      throw new Error("Invalid saved question timing phase evidence");
    if(row.firstAnsweredAt!==undefined&&
       (typeof row.firstAnsweredAt!=="string"||
@@ -189,12 +192,15 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
        Date.parse(row.firstAnsweredAt)<value.startedAt||
        Date.parse(row.firstAnsweredAt)>value.updatedAt))
      throw new Error("Invalid saved first-answer timing");
-   if(row.response)validateResponse(questionMap.get(row.questionRevisionId)!,row.response);
-   if(row.firstAnsweredAt!==undefined){
+   const question=questionMap.get(row.questionRevisionId)!;
+   if(row.response)validateResponse(question,row.response);
+   if(row.firstAnsweredAt!==undefined&&question.content.kind!=="free-response"){
      const firstCommit=row.answerEvents?.find((x:{readonly at:string;readonly to?:unknown})=>x.to!==undefined);
      if(!firstCommit||firstCommit.at!==row.firstAnsweredAt)
        throw new Error("Inconsistent saved first-answer timing");
    }
+   if(question.content.kind==="free-response"&&(row.answerEvents?.length||row.answerChangeCount!==0))
+     throw new Error("Written response checkpoints must not persist revision telemetry");
    if(row.answerEvents!==undefined){
      if(!Array.isArray(row.answerEvents)||row.answerEvents.length>1000)
        throw new Error("Invalid saved answer revision history");
@@ -214,6 +220,25 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
        throw new Error("Saved answer revision does not match final response");
    }
  }
+ const postDeadlineTotal=value.state.responses.reduce((sum,row)=>sum+row.postDeadlineMs,0);
+ if(hard&&postDeadlineTotal!==0)
+   throw new Error("Hard-timed attempt contains post-deadline question exposure");
+ if(!hard&&paper.timing.kind==="whole-paper"&&
+    postDeadlineTotal>overtimeMs(value.state.elapsedMs,paper.timing.durationMs)+0.001)
+   throw new Error("Post-deadline question exposure exceeds whole-paper overtime");
+ if(!hard&&paper.timing.kind==="sectional"){
+   for(const [index,section] of paper.sections.entries()){
+     const limit=sectionTimeBudgetMs(paper,index);
+     if(limit===null)continue;
+     const actual=value.state.completedSectionTimings.find(row=>row.sectionIndex===index)?.durationMs??
+       (index===value.state.sectionIndex?value.state.sectionElapsedMs:0);
+     const ids=new Set(section.questionRevisionIds);
+     const attributed=value.state.responses.filter(row=>ids.has(row.questionRevisionId))
+       .reduce((sum,row)=>sum+row.postDeadlineMs,0);
+     if(attributed>overtimeMs(actual,limit)+0.001)
+       throw new Error("Post-deadline question exposure exceeds sectional overtime");
+   }
+ }
  if(value.finishedAt!==null){
    if(!value.result)throw new Error("Completed attempt has no immutable score");
    const recalculated=scoreAttempt(paper,value.frozen.key,value.frozen.questions,value.state.responses,
@@ -231,6 +256,7 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
  if(value.finishedAt!==null){
    const lastSection=value.state.completedSectionTimings.at(-1);
    if(value.completionReason==="time-expired"){
+     if(!hard)throw new Error("Advisory practice cannot complete as time-expired");
      const wholeExpired=paper.timing.kind==="whole-paper"&&
        Math.abs(value.state.elapsedMs-paper.timing.durationMs)<0.001;
      const sectionExpired=paper.timing.kind==="sectional"&&lastSection?.reason==="time-expired";

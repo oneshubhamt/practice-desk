@@ -12,7 +12,7 @@ import {scheduledCard} from "../learning/learning.ts";
 import {isAttempt,isLearning,isScheduledMock} from "./stored-record-validator.ts";
 import {createScheduledMock,type ScheduledMockRecord} from "../calendar/scheduled-mock.ts";
 import {escapeText} from "./html-escape.ts";
-import {BUILTIN_CGL_FAMILY,familyIdFor,pairedEdition} from "./exam-families.ts";
+import {BUILTIN_CGL_FAMILY,pairedEdition} from "./exam-families.ts";
 import {cglAttemptMode,configureCglPractice,startGenericAttempt} from "./exam-package.ts";
 import {createSourceKeyReference} from "../engine/source-comparison.ts";
 import {createSourceReviewReference} from "../engine/review-source.ts";
@@ -123,7 +123,8 @@ export function createWorkspaceCalendarController(owner:CalendarControllerContex
     if(!base||base.examId!==record.examId||base.paper.paperId!==record.paperId){
       owner.notice("The scheduled paper revision is unavailable. Re-import it before launching.");return;
     }
-    const familyId=familyIdFor(base,owner.builtinPaperIds);
+    const familyId=owner.families().find(f=>f.papers.some(p=>p.paper.id===base.paper.id))?.id;
+    if(!familyId){owner.notice("The scheduled paper has no exam family.");return;}
     const configured=familyId===BUILTIN_CGL_FAMILY?configureCglPractice(base,"strict",0):base;
     const attemptMode=familyId===BUILTIN_CGL_FAMILY?cglAttemptMode("strict"):
       configured.paper.edition==="custom"?"custom-practice":"exam-simulation";

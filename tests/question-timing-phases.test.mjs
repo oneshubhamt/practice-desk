@@ -20,7 +20,7 @@ const row=(s,i)=>s.responses.find(r=>r.questionRevisionId===id(i));
 
 test("P46-B exact first-visit/revisit/first-answer phases across navigation and changes",()=>{
  let s=startSession(paper,1000);
- assert.equal(s.timingEvidenceVersion,1);
+ assert.equal(s.timingEvidenceVersion,2);
  s=transition(paper,s,event("TICK",1800));
  s=transition(paper,s,event("NAVIGATE",2000,{sectionIndex:0,questionIndex:1}));
  s=transition(paper,s,event("NAVIGATE",2500,{sectionIndex:0,questionIndex:0}));
@@ -108,7 +108,7 @@ test("P46-B frozen stored attempts reject impossible or forged timing phase clai
    ["nonfinite before first answer",x=>{x.state.responses[0].preFirstAnswerMs=Infinity;}],
    ["half-filled phase",x=>{delete x.state.responses[0].preFirstAnswerMs;}],
    ["unversioned forged fields",x=>{delete x.state.timingEvidenceVersion;}],
-   ["unknown timing version",x=>{x.state.timingEvidenceVersion=2;}]
+   ["unknown timing version",x=>{x.state.timingEvidenceVersion=3;}]
  ]){
    assert.throws(()=>validateGenericStoredRecord(altered(fn)),/(?:timing phase evidence|timing evidence version|canonical saved timing evidence)/,description);
  }
@@ -131,7 +131,7 @@ test("P46-B exact phases survive compact v5 backup, reopen and remain independen
    "Uncompressed original attempt remains valid when materialized independently");
  assert.equal(restored.result.snapshot.earnedMarks,summary.earnedMarks);
  assert.deepEqual(questionTimingPhases(restored,id(0)),questionTimingPhases(a,id(0)));
- assert.equal(restored.state.timingEvidenceVersion,1);
+ assert.equal(restored.state.timingEvidenceVersion,2);
  const html=timingLedgerHTML(restored,true);
  assert.match(html,/<th>First visit<\/th><th>Revisits<\/th><th>Before first answer<\/th>/);
  assert.match(html,/00:01/);

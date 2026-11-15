@@ -1,17 +1,19 @@
 /** P47-6 module: lifecycle-controller.ts */
 
-import {minutes,examTimeRemaining} from "./exam-view.ts";
+import {examClockDisplay} from "./exam-view.ts";
 
 import {transitionGenericAttempt} from "../engine/generic-attempt.ts";
 
 import {resolveExamShortcut,readShortcutBindings} from "./exam-shortcuts.ts";
+import {commitCurrentWrittenDraft} from "./written-response-draft.ts";
 
 import type {LifecycleControllerContext} from "./coordinator-context.ts";
 
 export function dispatchWorkspaceVisibility(owner:LifecycleControllerContext,visible:boolean):void{
    if(!owner.attempt||owner.storageFault||owner.attempt.finishedAt!==null)return;
-   const current=owner.attempt;
-   owner.attempt=transitionGenericAttempt(current,{type:"VISIBILITY",nowMs:owner.now(),visible},
+   const now=owner.now(),current=owner.attempt;
+   const prepared=commitCurrentWrittenDraft(owner.writtenDrafts,current,now);
+   owner.attempt=transitionGenericAttempt(prepared,{type:"VISIBILITY",nowMs:now,visible},
      new Map(current.frozen.questions.map(q=>[q.id,q])));
    void owner.save(owner.attempt);
    if(owner.attempt.finishedAt!==null&&owner.view==="exam"){
@@ -77,8 +79,9 @@ export const handleWorkspaceKeyboard=(owner:LifecycleControllerContext,event:Key
 export const checkpointWorkspacePagehide=(owner:LifecycleControllerContext)=>{
    if(owner.attempt&&owner.attempt.finishedAt===null&&!owner.storageFault){
      try{
-       const current=owner.attempt;
-       owner.attempt=transitionGenericAttempt(current,{type:"VISIBILITY",nowMs:owner.now(),visible:false},
+       const now=owner.now(),current=owner.attempt;
+       const prepared=commitCurrentWrittenDraft(owner.writtenDrafts,current,now);
+       owner.attempt=transitionGenericAttempt(prepared,{type:"VISIBILITY",nowMs:now,visible:false},
          new Map(current.frozen.questions.map(q=>[q.id,q])));
        owner.writeMirror(owner.attempt);
        void owner.save(owner.attempt);
@@ -101,12 +104,13 @@ export function startWorkspaceTimer(owner:LifecycleControllerContext):number{ret
    if(owner.disposed||owner.storageFault||!owner.attempt||owner.attempt.finishedAt!==null||
       (owner.attempt.state.status==="paused"||owner.attempt.state.status==="section-expired"))return;
    const original=owner.attempt,now=owner.now();
-   const next=transitionGenericAttempt(original,{type:"TICK",nowMs:now},
-     new Map(original.frozen.questions.map(q=>[q.id,q])));
+   const prepared=commitCurrentWrittenDraft(owner.writtenDrafts,original,now);
+   const next=transitionGenericAttempt(prepared,{type:"TICK",nowMs:now},
+     new Map(prepared.frozen.questions.map(q=>[q.id,q])));
    if(next!==original){
      owner.attempt=next;
      const changedSection=original.state.sectionIndex!==next.state.sectionIndex;
-     if(next.finishedAt!==null||changedSection||original.state.status!==next.state.status||
+     if(prepared!==original||next.finishedAt!==null||changedSection||original.state.status!==next.state.status||
        (owner.view==="exam"&&now-owner.lastTimerSave>=10000)){
        void owner.save(owner.attempt);owner.lastTimerSave=now;
      }
@@ -120,7 +124,15 @@ export function startWorkspaceTimer(owner:LifecycleControllerContext):number{ret
    }
    if(owner.view==="exam"){
      const el=owner.root.querySelector("#g-timer");
-     if(el&&owner.attempt){const time=examTimeRemaining(owner.attempt.frozen.paper,owner.attempt.state);
-       el.textContent=time===null?"Untimed":minutes(time);}
+     if(el&&owner.attempt){
+       const clock=examClockDisplay(owner.attempt.frozen.paper,owner.attempt.state,
+         owner.attempt.frozen.snapshot.mode);
+       el.textContent=clock.text;
+       const label=owner.root.querySelector("#g-timer-label");
+       if(label)label.textContent=clock.label;
+       const shell=el.closest(".exam-clock");
+       shell?.classList.toggle("low",clock.low);
+       shell?.classList.toggle("overtime",clock.overtime);
+     }
    }
  },1000);}

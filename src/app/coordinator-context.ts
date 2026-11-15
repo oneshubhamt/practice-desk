@@ -33,6 +33,7 @@ import type {ScreenRenderer} from "./screen-renderer.ts";
 import type {ImageViewer} from "./image-viewer.ts";
 import type {ImagePreparation} from "./image-preparation.ts";
 import type {AuthoringStudioController} from "../authoring/authoring-studio.ts";
+import type {WrittenResponseDraftStore} from "./written-response-draft.ts";
 export interface WorkspaceContext{
  activationGeneration:number;
  readonly addNotebookCard:(source: GenericAttempt, id: string) => void;
@@ -46,7 +47,9 @@ export interface WorkspaceContext{
  cglMode:CglPracticeMode;
  readonly changeHistoryQuery:(next: HistoryQuery, redraw?: boolean) => void;
  choice:string;
- readonly choiceDrafts:Map<string, { questionId: string; optionIds: OptionId[]; message: string; }>; 
+ readonly choiceDrafts:Map<string, { questionId: string; optionIds: OptionId[]; message: string; }>;
+ /** Latest unsaved free-response text; committed at navigation/lifecycle/timer boundaries. */
+ readonly writtenDrafts:WrittenResponseDraftStore;
  /** Unsaved self-assessment notes and marks are tab-local, never part of the frozen attempt. */
  readonly manualGradeDrafts:Map<string,{marks:string;note:string}>;
  composeCount:number;
@@ -136,7 +139,7 @@ export type StorageHealthControllerContext=Slice<
 >;
 
 export type AuthoringControllerContext=Slice<
- "applyFamily"|"builtinPaperIds"|"choice"|"disposed"|"draw"|
+ "applyFamily"|"builtinPaperIds"|"choice"|"disposed"|"draw"|"families"|
  "editionView"|"fallbackConflict"|"loading"|"packages"|"records"|"save"|
  "saveSelection"|"singleSection"|"storageFault"|"view"|"warning"
 >;
@@ -153,7 +156,7 @@ export type CalendarControllerContext=Slice<
 >;
 
 export type ExamControllerContext=Slice<
- "attempt"|"calculatorStates"|"choiceDrafts"|"dispatch"|"draw"|"go"|"notice"|"now"|
+ "attempt"|"calculatorStates"|"choiceDrafts"|"writtenDrafts"|"dispatch"|"draw"|"go"|"notice"|"now"|
  "packageForAttempt"|"reviewFilter"|"root"|"save"|"storageFault"|"warning"
 >;
 
@@ -181,13 +184,13 @@ export type LibraryControllerContext=Slice<
 >;
 
 export type RouteControllerContext=Slice<
- "activationGeneration"|"attempt"|"disposed"|"draw"|"freshlyStartedAttemptId"|"go"|
+ "activationGeneration"|"attempt"|"writtenDrafts"|"disposed"|"draw"|"freshlyStartedAttemptId"|"go"|
  "hydration"|"now"|"records"|"resultTab"|"reviewFilter"|"routeHydrated"|"router"|
  "save"|"view"|"warning"
 >;
 
 export type PersistenceControllerContext=Slice<
- "applyFamily"|"attempt"|"calculatorStates"|"choiceDrafts"|"disposed"|"draw"|"fallbackConflict"|
+ "applyFamily"|"attempt"|"calculatorStates"|"choiceDrafts"|"writtenDrafts"|"disposed"|"draw"|"fallbackConflict"|
  "go"|"hydrationDone"|"lastCommittedAt"|"loading"|"mirrorKey"|"notice"|"packages"|
  "pendingWrites"|"recordStorageFailure"|"records"|"routeHydrated"|"router"|"save"|
  "saveSelection"|"setups"|"storageBackend"|"storageFault"|"storedSetups"|
@@ -195,7 +198,7 @@ export type PersistenceControllerContext=Slice<
 >;
 
 export type LifecycleControllerContext=Slice<
- "attempt"|"authoringStudio"|"calculatorStates"|"dispatch"|"dispatchVisibility"|
+ "attempt"|"authoringStudio"|"calculatorStates"|"writtenDrafts"|"dispatch"|"dispatchVisibility"|
  "disposed"|"draw"|"fallbackConflict"|"go"|"imagePreparation"|"imageViewer"|
  "keyboard"|"lastTimerSave"|"learningDesk"|"calendarController"|"now"|"pagehide"|"recordStorageFailure"|
  "reviewFilter"|"root"|"router"|"save"|"storage"|"storageBackend"|"storageFault"|

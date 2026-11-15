@@ -1,3 +1,4 @@
+import {loadCglFixture,loadQuestionBankGraph,repositoryRoot} from "./fixtures/cgl-bank.mjs";
 /** Canonical executable contracts, grouped by stable product responsibility. */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -15,8 +16,8 @@ import {scoreableMaximum} from "../src/engine/score-ceiling.ts";
 
 /** Cgl Import Modes — canonical domain contracts. */
 async function registerCglImportModesTests(){
-const sources=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
-const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
+const sources=(await loadCglFixture()).sources;
+const patches=(await loadCglFixture()).patches;
 const packages=builtinCglPackages(sources,patches);
 
 test("generic importer retains all 500 questions in 10 existing editions",()=>{
@@ -56,9 +57,9 @@ test("generic attempt uses validated responses and frozen revisions",()=>{
 
 // Additional built-in CGL edition/mode policy coverage.
 {
-const papers=JSON.parse(await readFile(new URL("../src/content/papers.json",import.meta.url)));
-const patches=JSON.parse(await readFile(new URL("../src/content/patches.json",import.meta.url)));
-const solutions=JSON.parse(await readFile(new URL("../src/content/solutions.json",import.meta.url)));
+const papers=(await loadCglFixture()).sources;
+const patches=(await loadCglFixture()).patches;
+const solutions=(await loadCglFixture()).solutions;
 const all=builtinCglPackages(papers,patches,solutions);
 test("one engine supports strict, flexible and single CGL policies",()=>{
  const standard=all[0];
@@ -357,10 +358,15 @@ test("engine response validator gates six kinds independently from UI controls",
   [3,{kind:"true-false",value:"true"}],
   [4,{kind:"matching",pairs:[{leftId:"l1",rightId:"r1"},{leftId:"l2",rightId:"r1"}]}],
   [4,{kind:"matching",pairs:[{leftId:"l1",rightId:"r1"},{leftId:"l1",rightId:"r2"}]}],
-  [5,{kind:"free-response",text:"word ".repeat(41)}],
  ];
  for(const [i,response] of invalid)assert.throws(()=>validateResponse(questions[i],response),
   undefined,"kind="+i+" input="+JSON.stringify(response));
+ assert.doesNotThrow(()=>validateResponse(questions[5],{kind:"free-response",text:"word ".repeat(41)}),
+  "advisory wordLimit must never gate a saved written response");
+ const hardCapped={...questions[5],content:{...questions[5].content,
+  responseRules:{...questions[5].content.responseRules,maxWords:10}}};
+ assert.throws(()=>validateResponse(hardCapped,{kind:"free-response",text:"word ".repeat(11)}),
+  /length/,"hard technical maxWords must still protect stored response validity");
  const negative={...questions[2],content:{...questions[2].content,
   numericRules:{minimum:-10,maximum:10,allowNegative:true,decimalPlaces:2}}};
  for(const value of [-10,-1.25,0,10])assert.doesNotThrow(()=>
