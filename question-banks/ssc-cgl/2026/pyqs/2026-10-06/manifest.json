@@ -6,19 +6,19 @@
   "paperId": "cgl-2026-10-06",
   "kind": "pyq",
   "title": "SSC CGL · 06 Oct 2026",
-  "canonicalEdition": "revised",
+  "canonicalEdition": "reviewed",
   "editions": {
-    "original": {
-      "package": "original/package.exam.json"
+    "source": {
+      "package": "source/package.exam.json"
     },
-    "revised": {
-      "package": "revised/package.exam.json"
+    "reviewed": {
+      "package": "reviewed/package.exam.json"
     }
   },
   "archive": {
-    "originalSource": "original/paper.json",
-    "reviewedPatches": "revised/patches.json",
-    "reviewedSolutions": "revised/solutions.json"
+    "originalSource": "archive/paper.json",
+    "reviewedPatches": "archive/patches.json",
+    "reviewedSolutions": "archive/solutions.json"
   },
   "identityPolicy": "Runtime uses immutable canonical Source/Reviewed packages. Archived transcription, patches and solutions are retained only as equivalence evidence."
 }
