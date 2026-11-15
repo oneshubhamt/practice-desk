@@ -33,12 +33,12 @@ try{
  check(!(await records(page)).some(x=>x.recordType==="generic-package"&&
   x.bundle?.paper?.paperId==="authored:cat-practice:local-math-quiz"),
   "Blank authoring draft escaped validation");
- await page.locator(".pd-author-paper-settings summary").click();
+ await page.locator(".pd-author-paper-settings > summary").click();
  await page.locator("#pd-author-title").fill("Authored mathematics and CAT practice");
  await page.locator("#pd-author-exam").fill("cat-practice");
  await page.locator("#pd-author-paper").fill("local-math-quiz");
  await page.locator("#pd-author-duration").fill("20");
- await page.locator(".pd-author-paper-settings summary").click();
+ await page.locator(".pd-author-paper-settings > summary").click();
  await page.locator("#pd-author-answer").fill("B");
  await page.locator("#pd-author-answer").blur();
  await fillField("prompt","What is the value of x when x divided by 2 equals 2?");
@@ -114,12 +114,12 @@ try{
  await page.locator("#g-author-open").click();
  await page.locator("#pd-author-new").click();
  await page.locator("#pd-author-editor wg-content").waitFor({state:"visible"});
- await page.locator(".pd-author-paper-settings summary").click();
+ await page.locator(".pd-author-paper-settings > summary").click();
  await page.locator("#pd-author-title").fill("Twenty mark written practice");
  await page.locator("#pd-author-exam").fill("manual-mark-practice");
  await page.locator("#pd-author-paper").fill("written-20");
  await page.locator("#pd-author-duration").fill("10");
- await page.locator(".pd-author-paper-settings summary").click();
+ await page.locator(".pd-author-paper-settings > summary").click();
  await page.locator("#pd-author-kind").selectOption("free-response");
  await page.locator("#pd-author-editor wg-content").waitFor({state:"visible"});
  await page.locator("#pd-author-answer").fill("");
