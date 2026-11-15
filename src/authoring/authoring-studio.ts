@@ -749,12 +749,12 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   if(clearReview)clearReview.onclick=()=>{
    if(editCurrentEvidence(q=>({...q,qa:{status:q.qa?.status??"needs-review"}})))void render();
   };
-  const resizeCurrent=(field:"options"|"leftItems"|"rightItems",count:number,min:number)=>{
+  const resizeCurrent=(listField:"options"|"leftItems"|"rightItems",count:number,min:number)=>{
    if(!Number.isSafeInteger(count)||count<min||count>MAX_AUTHORED_ITEMS){status("Item count must be "+min+"–"+MAX_AUTHORED_ITEMS+".",true);return;}
    try{changeDraft(d=>({...d,questions:d.questions.map(q=>{
     if(q.id!==questionId)return q;
-    const resized=resizeRichItems(q[field],count,()=>plainRichDocument(""));
-    if(field!=="options")return {...q,[field]:resized};
+    const resized=resizeRichItems(q[listField],count,()=>plainRichDocument(""));
+    if(listField!=="options")return {...q,[listField]:resized};
     const maxSelections=Math.min(q.maxSelections??count,count);
     const minSelections=Math.min(q.minSelections??1,maxSelections);
     return {...q,options:resized,minSelections,maxSelections};

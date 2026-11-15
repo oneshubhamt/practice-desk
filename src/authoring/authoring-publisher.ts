@@ -9,7 +9,7 @@ import {validateAuthoringDraft} from "./authoring-draft.ts";
 import type {CorrectAnswer,AnswerKeyEntry,AnswerKeyRevision} from "../domain/answer-key.ts";
 import type {PaperRevision,SectionDefinition,TimingPolicy} from "../domain/exam.ts";
 import {attributedTopicPath,topicAncestors} from "../learning/syllabus-taxonomy.ts";
-import type {QuestionContent,QuestionRevision,QuestionKind,StimulusDefinition,ImageAsset} from "../domain/question.ts";
+import type {QuestionContent,QuestionRevision,StimulusDefinition,ImageAsset} from "../domain/question.ts";
 import type {RichDocument,RichInline} from "../domain/rich-document.ts";
 import {validateRichDocument} from "../domain/rich-document.ts";
 import {publicationPlainText} from "./plain-rich-text.ts";
