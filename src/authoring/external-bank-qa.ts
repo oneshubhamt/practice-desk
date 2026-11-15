@@ -297,7 +297,7 @@ export function inspectExternalQuality(
    }
   }
   if(q.kind==="single-choice"){
-   const m=/(?:^|\.\s+)(?:the\s+)?(?:correct\s+)?answer\s+(?:is|:)\s*([A-D])\b/iu.exec(explanation);
+   const m=/(?:^|\.\s+)(?:the\s+)?(?:correct\s+)?answer\s+(?:is|:)\s*([A-Z])\b/iu.exec(explanation);
    if(m&&q.answer.trim().toUpperCase()!==m[1]!.toUpperCase())
     add("explanation-key-conflict","warning",
      "Explicit answer letter in explanation differs from the key",

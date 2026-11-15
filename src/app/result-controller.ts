@@ -106,8 +106,8 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
      (originalKey&&originalKey.comparable>0?
        '<p class="fine"><b>'+escapeText(originalKey.unavailable?
          "Original-source key — comparable subset only":"Original-source key comparison")+
-       ':</b> '+escapeText(originalKey.marks.toFixed(1))+' / '+
-       escapeText(originalKey.maxMarks.toFixed(1))+' marks · '+
+       ':</b> '+escapeText(markLabel(originalKey.marks))+' / '+
+       escapeText(markLabel(originalKey.maxMarks))+' marks · '+
        originalKey.correct+' correct · '+originalKey.incorrect+' incorrect · '+
        originalKey.unanswered+' unanswered · '+originalKey.comparable+' of '+
        originalKey.total+' questions comparable; '+originalKey.unavailable+
@@ -122,7 +122,7 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
      (!revealReview?'<p class="fine"><b>Detailed answers withheld:</b> this exam releases numerical results and timing feedback but not its question-by-question answer key or worked solutions.</p>':"")+
      (grades.graded||grades.pending?'<p class="fine"><b>Separate self-assessment:</b> '+escapeText(grades.graded)+
        ' of '+escapeText(grades.graded+grades.pending)+' written responses marked; self-assessed total '+
-       escapeText(selfAssessed.toFixed(2))+'. The automated score above remains unchanged.</p>':
+       escapeText(markLabel(selfAssessed))+'. The automated score above remains unchanged.</p>':
        '<p class="fine">Automated marks reflect only scoreable questions.</p>')+
      '</div></details>':"";
    return '<div class="generic-heading results-heading"><div>'+

@@ -167,7 +167,7 @@ function issuesFor(d:AuthoringDraft,existing:readonly ExamPackage[],reviewedSour
     const key=keyFrom(q);
     if(key.kind==="multiple-select"&&
        (key.optionIds.length<(q.minSelections??1)||
-        key.optionIds.length>(q.maxSelections??4)))
+        key.optionIds.length>(q.maxSelections??q.options.length)))
        item("Answer key","Correct option count must respect the published selection bounds");
    }catch{/* Separate answer-key error below has exact input details. */}
   }

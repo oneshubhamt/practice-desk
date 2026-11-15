@@ -202,7 +202,7 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
         "Imported/user-supplied content; not an official exam bank.":
         family?.origin==="included"?
           (selectedIncluded?"Included practice package from the repository question-bank catalog; provenance still governs official status.":"Imported/user-supplied paper grouped under this included examination family."):
-        family?"Included SSC CGL papers. Original and reviewed versions remain distinct.":
+        family?"Selected examination family; package provenance determines source/review status.":
         "Saved examination unavailable. Re-import the bank or select another.")+'</p>'+
       '<p class="fine">'+escapeText(selected?.paper.paperId??"")+' · '+escapeText(selected?.paper.edition??"")+'</p>'+
       '<div class="preview-metrics"><div><b>'+questionCount+'</b><small>Questions</small></div>'+

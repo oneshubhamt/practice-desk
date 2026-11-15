@@ -12,8 +12,7 @@ import {stimulusHTML,renderQuestionPrompt,assetHTML,renderGenericControls} from 
 import {escapeText} from "../app/html-escape.ts";
 import {scoreAttempt} from "../engine/scoring.ts";
 import {shouldShowWordCount} from "../domain/word-count.ts";
-
-const letters=["A","B","C","D"] as const;
+import {optionLabel} from "./authoring-cardinality.ts";
 function answerDescription(answer:CorrectAnswer):string {
  switch(answer.kind){
   case "single-choice":return answer.optionId;
@@ -103,18 +102,18 @@ export function authoringDraftPreview(d:AuthoringDraft,q:AuthoringQuestion):stri
   richExplanation:q.explanation};
  let content:QuestionContent;
  if(q.kind==="single-choice"||q.kind==="multiple-select"){
-  const options=q.options.map((doc,i)=>option(doc,letters[i]!));
+  const options=q.options.map((doc,i)=>option(doc,optionLabel(i)));
   content=q.kind==="single-choice"?{...base,kind:"single-choice",options} as unknown as QuestionContent:
    {...base,kind:"multiple-select",options,minSelections:q.minSelections??1,
-      maxSelections:q.maxSelections??4} as unknown as QuestionContent;
+      maxSelections:q.maxSelections??q.options.length} as unknown as QuestionContent;
  }else if(q.kind==="matching"){
   content={...base,kind:"matching",
     leftItems:q.leftItems.map((doc,i)=>option(doc,"L"+(i+1))),
-    rightItems:q.rightItems.map((doc,i)=>option(doc,letters[i]!))} as unknown as QuestionContent;
+    rightItems:q.rightItems.map((doc,i)=>option(doc,optionLabel(i)))} as unknown as QuestionContent;
  }else if(q.kind==="numeric-entry")content={...base,kind:"numeric-entry",numericRules:{allowNegative:true}};
  else if(q.kind==="true-false")content={...base,kind:"true-false"};
  else content={...base,kind:"free-response",responseRules:{
-  minWords:1,wordLimit:q.wordLimit??300
+  ...(q.wordLimit===undefined?{}:{wordLimit:q.wordLimit})
  }};
  if(publicationPlainText(q.passage))content={...content,
    stimulusId:"author-preview-stimulus"} as unknown as QuestionContent;
@@ -147,21 +146,20 @@ export function authoringPartialCreditExamples(pkg:ExamPackage):AuthoringPartial
    const correct=new Set(key.optionIds);
    const ids=q.content.options.map(x=>x.id);
    const min=q.content.minSelections??1,max=q.content.maxSelections??ids.length;
-   // Enumerate the finite legal response space, prefer one correct and one
-   // incorrect. A 4-of-4 full-answer item simply has no legal wrong choice.
-   const choices=[] as {ids:typeof ids;correct:number;wrong:number}[];
-   for(let mask=1;mask<1<<ids.length;mask++){
-    const chosen=ids.filter((_,i)=>Boolean(mask&(1<<i)));
-    if(chosen.length<min||chosen.length>max||
-       (chosen.length===key.optionIds.length&&chosen.every(x=>correct.has(x))))continue;
-    choices.push({ids:chosen,correct:chosen.filter(x=>correct.has(x)).length,
-      wrong:chosen.filter(x=>!correct.has(x)).length});
+   // Build a bounded set of representative legal responses. Never enumerate
+   // 2^N combinations: authored choice cardinality may legitimately exceed four.
+   const correctIds=ids.filter(x=>correct.has(x)),wrongIds=ids.filter(x=>!correct.has(x));
+   const candidates:(typeof ids)[]=[];
+   if(correctIds[0]&&wrongIds[0])candidates.push([correctIds[0],wrongIds[0]]);
+   if(wrongIds[0])candidates.push([wrongIds[0],...correctIds].slice(0,Math.max(min,1)));
+   candidates.push(correctIds.slice(0,Math.max(min,1)),ids.slice(0,Math.max(min,1)));
+   const pickedIds=candidates.find(chosen=>chosen.length>=min&&chosen.length<=max&&
+     !(chosen.length===key.optionIds.length&&chosen.every(x=>correct.has(x))));
+   if(pickedIds){
+    const hit=pickedIds.filter(x=>correct.has(x)).length,miss=pickedIds.length-hit;
+    response={kind:"multiple-select",optionIds:pickedIds};
+    description="Select "+pickedIds.join(", ")+" ("+hit+" correct, "+miss+" incorrect components)";
    }
-   choices.sort((a,b)=>(b.correct>0&&b.wrong>0?1:0)-(a.correct>0&&a.wrong>0?1:0)||
-     b.correct-a.correct||a.wrong-b.wrong);
-   const picked=choices[0];
-   if(picked){response={kind:"multiple-select",optionIds:picked.ids};
-     description="Select "+picked.ids.join(", ")+" ("+picked.correct+" correct, "+picked.wrong+" incorrect components)";}
   }else if(key.kind==="matching"){
    const pairs=key.pairs.map(p=>({...p}));
    if(pairs.length>=2){

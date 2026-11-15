@@ -14,9 +14,9 @@ export type CandidateIntegrityIssue={
  readonly message:string;
  readonly suggestion:string;
 };
-const explicitAnswer=/(?:^|[.!?;:\n\s])(?:the\s+)?(?:(?:correct|right)\s+)?(?:answer|option|choice|key)\s*(?:is|=|:|→)\s*(?:(?:option|choice)\s*)?(?:[A-D](?![A-Za-z])|true\b|false\b|\d+(?:\.\d+)?\b)/iu;
+const explicitAnswer=/(?:^|[.!?;:\n\s])(?:the\s+)?(?:(?:correct|right)\s+)?(?:answer|option|choice|key)\s*(?:is|=|:|→)\s*(?:(?:option|choice)\s*)?(?:[A-Z](?![A-Za-z])|true\b|false\b|\d+(?:\.\d+)?\b)/iu;
 const exposedAnswerLabel=/(?:^|[.!?;:\n]\s*)(?:the\s+)?(?:correct\s+answer|answer\s+key|answer|solution)\s*(?:is|:|=)\s*\S+/iu;
-const correctMarker=/(?:^\s*[✓✔✅☑]\s+\S|\[(?:correct|answer|key)\]|\(\s*(?:correct|right|answer|key)(?:\s+(?:answer|option))?\s*\)|\banswer\s+key\s*:\s*[A-D]\b)/iu;
+const correctMarker=/(?:^\s*[✓✔✅☑]\s+\S|\[(?:correct|answer|key)\]|\(\s*(?:correct|right|answer|key)(?:\s+(?:answer|option))?\s*\)|\banswer\s+key\s*:\s*[A-Z]\b)/iu;
 const unintendedClue=/\b(?:follows?\s+(?:the\s+)?pattern\s+of|(?:the\s+)?pattern\s+is|(?:each|every)\s+(?:successive\s+)?term\s+(?:is\s+)?(?:obtained|formed)\s+by|since\s+the\s+(?:answer|correct\s+option)\s+is)\b/iu;
 const visible=(doc:RichDocument):string=>publicationPlainText(doc);
 function referencedAssets(doc:RichDocument):Set<string>{
@@ -85,9 +85,11 @@ export function inspectCandidateIntegrity(draft:AuthoringDraft):readonly Candida
  for(const q of draft.questions){
   // An exact copy of the keyed choice inside the stem is a possible
   // giveaway, but may be a legitimate quoted example: warning only.
-  if(q.kind==="single-choice"&&/^[A-D]$/i.test(q.answer.trim())){
-   const index="ABCD".indexOf(q.answer.trim().toUpperCase());
-   const keyed=visible(q.options[index]!);
+  if(q.kind==="single-choice"&&/^[A-Z]$/i.test(q.answer.trim())){
+   const index=q.answer.trim().toUpperCase().charCodeAt(0)-65;
+   const keyedDoc=q.options[index];
+   if(!keyedDoc)continue;
+   const keyed=visible(keyedDoc);
    const stem=visible(q.prompt);
    if(keyed.trim().length>=12&&stem.toLocaleLowerCase("en")
       .includes(keyed.trim().toLocaleLowerCase("en"))){
