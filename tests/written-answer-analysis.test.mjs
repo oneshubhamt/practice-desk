@@ -7,9 +7,10 @@ import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
 import {stageWrittenResponseDraft,commitCurrentWrittenDraft} from "../src/app/written-response-draft.ts";
 import {writtenAnswerEvidence} from "../src/learning/written-answer-analytics.ts";
-import {writtenAnswerAnalysisHTML,timingLedgerHTML} from "../src/app/result-presentation.ts";
+import {writtenAnswerAnalysisHTML,timingLedgerHTML,resultPacingHTML} from "../src/app/result-presentation.ts";
 import {examClockDisplay} from "../src/app/exam-view.ts";
-import {setManualGrade} from "../src/engine/manual-grading.ts";
+import {setManualGrade,manualGradeLimits} from "../src/engine/manual-grading.ts";
+import {timeEnforcementForMode} from "../src/domain/timing.ts";
 
 const qmap=new Map(pkg.questions.map(q=>[q.id,q]));
 const event=(type,nowMs,extra={})=>({type,nowMs,...extra});
@@ -114,4 +115,67 @@ test("hard exam simulation still auto-completes exactly at its timer limit",()=>
  assert.equal(a.completionReason,"time-expired");
  assert.equal(a.state.responses.find(x=>x.questionRevisionId==="rev-5").postDeadlineMs,0);
  assert.doesNotThrow(()=>validateGenericStoredRecord(a));
+});
+
+
+test("attempt modes resolve one generic hard/advisory timing policy",()=>{
+ assert.equal(timeEnforcementForMode("exam-simulation"),"hard");
+ for(const mode of ["full-paper-practice","section-practice","custom-practice"])
+   assert.equal(timeEnforcementForMode(mode),"advisory");
+});
+
+test("Written answers summary excludes overtime spent on non-written questions",()=>{
+ const bundle=timedBundle(),store=new Map();
+ let a=startGenericAttempt(bundle,"mixed-overtime",0,"custom-practice");
+ a=transitionGenericAttempt(a,event("TICK",1200),qmap); // 200 ms overtime on MCQ Q1
+ a=transitionGenericAttempt(a,event("NAVIGATE",1200,{sectionIndex:1,questionIndex:2}),qmap);
+ stageWrittenResponseDraft(store,a,"rev-5","written overtime",1250);
+ a=commitCurrentWrittenDraft(store,a,1250);
+ a=transitionGenericAttempt(a,event("SUBMIT_ATTEMPT",1300),qmap); // 100 ms written overtime
+ const evidence=writtenAnswerEvidence(a);
+ assert.equal(a.state.responses.reduce((sum,row)=>sum+row.postDeadlineMs,0),300);
+ assert.equal(evidence.attributedOvertimeMs,100,
+   "Written panel must not attribute MCQ overtime to written responses");
+ const html=writtenAnswerAnalysisHTML(a);
+ assert.match(html,/Written-answer overtime/);
+ assert.match(html,/other questions and hidden-page time are intentionally excluded/);
+});
+
+test("Results distinguish a mixed sectional policy from a wholly untimed paper",()=>{
+ const base={...pkg.paper,
+   timing:{kind:"sectional",transition:"automatic",allowEarlySubmit:true,pausePolicy:"allowed",
+     sectionLimits:[{sectionId:"s1",durationMs:1000},{sectionId:"s2",durationMs:null}]},
+   navigation:{...pkg.paper.navigation,sectionNavigation:"sequential-locked"}};
+ const bundle={...pkg,paper:{...base,contentHash:paperRevisionHash(base)}};
+ let a=startGenericAttempt(bundle,"mixed-sectional",0,"custom-practice");
+ a=transitionGenericAttempt(a,event("SUBMIT_SECTION",100),qmap);
+ a=transitionGenericAttempt(a,event("SUBMIT_SECTION",200),qmap);
+ assert.equal(a.finishedAt,200);
+ const html=resultPacingHTML(a);
+ assert.match(html,/No single total budget/);
+ assert.match(html,/Not derivable/);
+ assert.doesNotMatch(html,/<b>Untimed<\/b>/);
+});
+
+test("Results report derived paper overtime percentage without persisting another field",()=>{
+ const bundle=timedBundle(),store=new Map();
+ let a=atWritten(bundle,"custom-practice","overtime-percent");
+ stageWrittenResponseDraft(store,a,"rev-5","answer",900);
+ a=commitCurrentWrittenDraft(store,a,900);
+ a=transitionGenericAttempt(a,event("SUBMIT_ATTEMPT",1400),qmap);
+ const html=resultPacingHTML(a);
+ assert.match(html,/40\.0% over budget/);
+ assert.equal(Object.hasOwn(a.state,"paperOvertimeMs"),false);
+ assert.equal(Object.hasOwn(a,"paperOvertimeMs"),false);
+});
+
+test("manual grading exposes one linear limit map for written analytics",()=>{
+ const bundle=timedBundle(),store=new Map();
+ let a=atWritten(bundle,"custom-practice","manual-limits");
+ stageWrittenResponseDraft(store,a,"rev-5","answer",200);
+ a=commitCurrentWrittenDraft(store,a,200);
+ a=transitionGenericAttempt(a,event("SUBMIT_ATTEMPT",300),qmap);
+ const limits=manualGradeLimits(a);
+ assert.equal(limits.size,1);
+ assert.equal(limits.get("rev-5"),2);
 });
