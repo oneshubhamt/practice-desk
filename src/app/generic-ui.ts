@@ -67,16 +67,23 @@ export function mountExamWorkspace(
    [...builtins,...preinstalled.packages].map(p=>[p.paper.id,p])
  );
  const records=new Map<string,RecordItem>();
- const initialChoice=[...packages.values()].reverse().find(p=>p.paper.edition==="reviewed")?.paper.id??
-   (packages.keys().next().value as string);
+ const initialCatalog=examFamilyCatalog(packages.values(),builtinPaperIds,preinstalled.families);
+ const defaultFamily=initialCatalog.find(f=>f.id===BUILTIN_CGL_FAMILY)??
+   initialCatalog.find(f=>f.currentPaperId)??initialCatalog[0];
+ const defaultChoice=defaultFamily?.currentPaperId??
+   defaultFamily?.papers.find(p=>p.paper.edition==="reviewed")?.paper.id??
+   defaultFamily?.papers[0]?.paper.id??"";
+ const defaultFamilyId=defaultFamily?.id??"";
  const storedSetups=readPracticeSetups();
  const initialSetups:PracticeSetups=storedSetups??{
-   schema:2,selectedFamilyId:BUILTIN_CGL_FAMILY,
-   families:{[BUILTIN_CGL_FAMILY]:{
-     paperRevisionId:initialChoice,mode:"strict",section:0,
-     untimed:false,edition:packages.get(initialChoice)?.paper.edition==="source"?"source":"reviewed"
-   }}
+   schema:2,selectedFamilyId:defaultFamilyId,
+   families:defaultFamily?{[defaultFamilyId]:{
+     paperRevisionId:defaultChoice,mode:"strict",section:0,
+     untimed:false,edition:packages.get(defaultChoice)?.paper.edition==="source"?"source":"reviewed"
+   }}:{}
  };
+ const initialFamilyId=initialSetups.selectedFamilyId;
+ const initialChoice=initialSetups.families[initialFamilyId]?.paperRevisionId??defaultChoice;
  const historyQueryKey=STORAGE_TOPOLOGY.historyView;
  const initialHistoryQuery:HistoryQuery=(()=>{
    try{return restoreHistoryQuery(JSON.parse(sessionStorage.getItem(historyQueryKey)??"null"));}
@@ -185,7 +192,7 @@ export function mountExamWorkspace(
    routeHydrated:false,
    get router(){return router;},set router(value){router=value;},
    save,saveSelection,screenRenderer,
-   selectedFamilyId:BUILTIN_CGL_FAMILY,
+   selectedFamilyId:initialFamilyId,
    setups:initialSetups,showStorageEstimate,singleSection:0,solutions,sources,
    storage,storageBackend:null,storageFault:false,storageSnapshot,storedSetups,
    get timer(){return timer;},
