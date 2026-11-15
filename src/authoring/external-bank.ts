@@ -389,7 +389,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
   questionNavigation:questionNavigation as AuthoringDraft["questionNavigation"],
   sectionNavigation:sectionNavigation as AuthoringDraft["sectionNavigation"],
   sectionTransition:sectionTransition as AuthoringDraft["sectionTransition"],
-  allowEarlySubmit,allowReview,...(calculatorTool?{calculatorTool}:{}),marksCorrect,marksIncorrect,
+  allowEarlySubmit,allowReview,...(calculatorTool?{calculatorTool}:{}),wordCountPolicy:"auto",marksCorrect,marksIncorrect,
   updatedAt:"1970-01-01T00:00:00.000Z",assets,
   sections:[...sections.values()].map(section=>({name:section.title,minutes:section.minutes})),
   stimuli,questions};
