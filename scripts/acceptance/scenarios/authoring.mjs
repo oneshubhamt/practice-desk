@@ -40,6 +40,7 @@ try{
  await page.locator("#pd-author-timing-kind").selectOption("whole-paper");
  await page.locator(".pd-author-paper-settings > summary").click();
  await page.locator("#pd-author-duration").fill("20");
+ await page.locator("#pd-author-correct").fill("2.5");
  await page.locator(".pd-author-paper-settings > summary").click();
  await page.locator("#pd-author-answer").fill("B");
  await page.locator("#pd-author-answer").blur();
