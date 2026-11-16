@@ -192,7 +192,7 @@ function validateBlueprint(value){
  }
  return b;
 }
-function audit(plan,sources,tagDoc,{offset=0,limit=12,priorSources=[]}={}){
+function audit(plan,sources,tagDoc,{offset=0,limit=12,priorSources=[],coverageLimit=12}={}){
  const issues=[],all=[],batches=[],sourceHashes=[],bankIds=new Set(),questionIds=new Set();
  const add=(code,message,path="$",severity="error")=>issues.push({code,severity,basis:severity==="warning"?"heuristic":"deterministic",path,message});
  const first=sources[0]?.value,head=first?{scoring:first.scoring,timing:first.timing,navigation:first.navigation,sections:first.sections}:null;
@@ -374,8 +374,8 @@ function audit(plan,sources,tagDoc,{offset=0,limit=12,priorSources=[]}={}){
   const rows=coverage[group];
   const mismatches=rows.filter(x=>x.difference!==0);
   coverageSummary[group]={totalTargets:rows.length,mismatches:mismatches.length,
-   shown:Math.min(12,rows.length),remainingTargets:Math.max(0,rows.length-12)};
-  coverage[group]=[...mismatches,...rows.filter(x=>x.difference===0)].slice(0,12);
+   shown:Math.min(coverageLimit,rows.length),remainingTargets:Math.max(0,rows.length-coverageLimit)};
+  coverage[group]=[...mismatches,...rows.filter(x=>x.difference===0)].slice(0,coverageLimit);
  }
  const countsByGroup=Object.fromEntries(GROUPS.map(g=>[g,counts[g].size]));
  const observed=Object.fromEntries(GROUPS.map(g=>{
@@ -447,7 +447,7 @@ function buildAuthoringBrief(plan,planSha,sources,tagDoc,{priorSources=[],batchS
   fail("--bank-id must be new for this authored batch");
  const planning={...plan,allowPartial:true};
  const tagsForEmpty=sources.length||tagDoc?tagDoc:{format:TAG_FORMAT,version:1,tags:[]};
- const audited=audit(planning,sources,tagsForEmpty,{limit:50,offset:0,priorSources});
+ const audited=audit(planning,sources,tagsForEmpty,{limit:50,offset:0,priorSources,coverageLimit:MAX_TOTAL});
  if(audited.issues.blocking)
   fail("Cannot build authoring brief while current sources contradict the blueprint: "+
    audited.issues.items.filter(x=>x.severity==="error").slice(0,3).map(x=>x.code).join(", "));
@@ -478,9 +478,12 @@ function buildAuthoringBrief(plan,planSha,sources,tagDoc,{priorSources=[],batchS
   workflow:{singleAgentCompatible:true,multipleAgentsRequired:false},
   task:{targetCount:plan.targetCount,alreadyAuthored:audited.actualCount,
    remainingCount:audited.remainingCount,requestedNow},
-  paper:structuredClone(plan.paperRules??{
-   scoring:envelope.scoring,timing:envelope.timing,navigation:envelope.navigation,sections:envelope.sections
-  }),
+  paper:{
+   scoring:structuredClone(envelope.scoring),timing:structuredClone(envelope.timing),
+   navigation:structuredClone(envelope.navigation),sections:structuredClone(envelope.sections),
+   ...(envelope.tools?{tools:structuredClone(envelope.tools)}:{}),
+   ...(envelope.practiceModes?{practiceModes:structuredClone(envelope.practiceModes)}:{})
+  },
   sourcePolicy,classification,
   priorityDeficits:deficits.slice(0,24),
   deficitSummary:{shown:Math.min(24,deficits.length),remaining:Math.max(0,deficits.length-24),

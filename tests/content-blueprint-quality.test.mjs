@@ -353,6 +353,29 @@ test("Authoring brief: existing partial batches contribute only compact coverage
  assert.match(duplicate.data.message,/bank-id.*new/i);
 }));
 
+test("Authoring brief: deficit accounting stays exact beyond the ordinary audit display bound",()=>temp(async dir=>{
+ const p=mkPlan();
+ p.targetCount=13;
+ p.quotas={
+  subjects:{exhaustive:true,targets:Array.from({length:13},(_,i)=>({key:"subject:S"+i,count:1}))},
+  topics:{exhaustive:true,targets:Array.from({length:13},(_,i)=>({subjectKey:"subject:S"+i,topic:"T"+i,count:1}))},
+  kinds:{exhaustive:true,targets:[{key:"single-choice",count:13}]}
+ };
+ p.paperRules={
+  scoring:{correctMarks:2,incorrectMarks:-0.5},
+  timing:{kind:"whole-paper",minutes:20,pausePolicy:"allowed"},
+  sections:[{id:"combined",title:"Combined"}]
+ };
+ const plan=await write(dir,"large-brief-plan.json",p);
+ const result=run("brief",plan,"--bank-id","large-batch","--title","Large batch","--batch-size","8");
+ assert.equal(result.status,0,result.stderr);
+ assert.equal(result.data.task.remainingCount,13);
+ assert.equal(result.data.priorityDeficits.length,24);
+ assert.equal(result.data.deficitSummary.shown,24);
+ assert.equal(result.data.deficitSummary.remaining,3,
+  "13 subject + 13 topic + 1 kind deficits should be counted even though ordinary audit displays only 12 rows per group");
+}));
+
 test("Authoring brief: bootstrap requires explicit identity and enough paper rules; authoring constraints fail closed",()=>temp(async dir=>{
  const p=mkPlan();
  const plan=await write(dir,"no-rules.json",p);
