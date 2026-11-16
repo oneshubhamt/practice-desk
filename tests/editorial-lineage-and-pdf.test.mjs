@@ -168,7 +168,7 @@ test("P60-D RED: changed stem/options/shared table makes source-key comparison u
  assert.ok(t.data.entries[0].changedFields.includes("prompt"));
  const decisions=await file(dir,"decisions.json",fillDecisions(t.data));
  const result=run(tool,"audit",originalPath,reviewedPath,decisions);
- assert.equal(result.status,1,"Missing independent review must block final publication");
+ assert.equal(result.status,1,"Missing required layered review must block final publication");
  assert.equal(result.data.sourceKeyComparison.comparable,2);
  assert.equal(result.data.sourceKeyComparison.unavailable,1);
  assert.equal(result.data.sourceKeyComparison.total,3);
@@ -211,7 +211,7 @@ test("P60-D RED: mismatched paper policy, attempted question deletion or answer 
  assert.equal(no.status,1);
  assert.ok(no.data.issues.items.some(x=>x.code==="source-candidate-answer-leak"));
 }));
-test("P60-D RED: absent independent review or old review after edited question cannot produce half-written output",()=>temp(async dir=>{
+test("P60-D RED: absent layered review or old review after edited question cannot produce half-written output",()=>temp(async dir=>{
  const {originalPath,reviewedPath}=await pairs(dir);
  const t=run(tool,"template",originalPath,reviewedPath);
  const decision=await file(dir,"decision.json",fillDecisions(t.data));

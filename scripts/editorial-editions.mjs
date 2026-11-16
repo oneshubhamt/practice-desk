@@ -357,7 +357,7 @@ async function main(){
  }
  if(op==="compile"&&!reviewPath)throw Error("compile requires a P60-C --quality-review file");
  const decisionData=(await load(args[2],MAX_DECISIONS_BYTES,"Editorial decisions")).data;
- const review=reviewPath?(await load(reviewPath,MAX_REVIEW_BYTES,"P60-C independent review")).data:undefined;
+ const review=reviewPath?(await load(reviewPath,MAX_REVIEW_BYTES,"P60-C layered review")).data:undefined;
  const result=inspectPair(original,reviewed,decisionData,review);
  const summary=publicAudit(result,offset,limit);
  if(op==="audit"){emit(summary);if(!result.valid)process.exitCode=1;return;}

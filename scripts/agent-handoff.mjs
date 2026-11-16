@@ -13,7 +13,7 @@ const FORMAT="practice-desk-agent-handoff", VERSION=1,MAX_BUFFER=6*1024*1024;
 const MODES={single:{inputs:1},paired:{inputs:3},pdf:{inputs:5}};
 const COMMANDS=Object.freeze([
  {name:"prepare",privilege:"create-only-with-explicit-consent",description:"Create a complete candidate-only packet and exact fillable layered review template for an entire bank; no key/media in output"},
- {name:"assess",privilege:"read-only",description:"Evaluate existing independent-review, source/edition and optional coverage contracts; no answers or full media returned"},
+ {name:"assess",privilege:"read-only",description:"Evaluate existing layered-review, source/edition and optional coverage contracts; no answers or full media returned"},
  {name:"publish",privilege:"create-only-with-explicit-consent",description:"Requires --allow-create, a current layered quality review in any supported assurance mode and canonical signed source publication; no browser/device import"}
 ]);
 const sha=data=>createHash("sha256").update(data).digest("hex");
@@ -173,7 +173,7 @@ function report(task,primary,coverage,inputsSha){
   permissions:{operation:action==="assess"?"read-only":"create-new-files-only",
    explicitCreateConsent:action==="publish"&&task.flags["--allow-create"]===true},
   issues,
-  note:"Passing software gates verify format/freshness/recorded review only; NOT factual, historical, PDF-visual or independent-review authenticity."};
+  note:"Passing software gates verify format/freshness/recorded review only; NOT factual, historical, PDF-visual or reviewer/context-independence authenticity."};
 }
 async function perform(task){
  const allInput=[...task.inputs,task.flags["--quality-review"],
