@@ -73,7 +73,7 @@ async function measure(){
    const sourceRaw=JSON.stringify(source),sourcePath=join(dir,type+"-bank.json");
    await writeFile(sourcePath,sourceRaw);
    const packet=call("question-quality.mjs",["candidate",sourcePath,"--limit","10"]);
-   if(!packet.ok)throw Error("Synthetic blind packet failed for "+type);
+   if(!packet.ok)throw Error("Synthetic candidate-only packet failed for "+type);
    const review=reviewFor(source,sourceRaw,packet.data);
    const reviewPath=join(dir,type+"-review.json");
    await writeFile(reviewPath,JSON.stringify(review));

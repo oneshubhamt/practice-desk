@@ -394,7 +394,7 @@ async function main(){
    emit(reviewTemplate(value,raw,items));
    return;
   }
-  emit({format:"practice-desk-blind-candidates",version:1,bankId:value.bankId,
+  emit({format:"practice-desk-review-candidates",version:1,bankId:value.bankId,
    sourceSha256:sha(raw),total:draft.questions.length,offset,limit,
    nextOffset:offset+limit<draft.questions.length?offset+limit:null,items,
    factualVerification:"not-performed",
