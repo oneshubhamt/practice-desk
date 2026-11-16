@@ -9,7 +9,7 @@ import {join,resolve,dirname} from "node:path";
 import {createHash} from "node:crypto";
 import {inspectExternalQuestionBank} from "../src/authoring/external-bank.ts";
 import {validateExamPackage} from "../src/app/exam-package.ts";
-import {QUALITY_CHECKLIST} from "../scripts/question-quality.mjs";
+import {SEMANTIC_CHECKLIST,BANK_CHECKLIST} from "../scripts/question-quality.mjs";
 
 /** Agent Editing — canonical domain contracts. */
 async function registerAgentEditingTests(){
@@ -446,6 +446,22 @@ const sha=s=>createHash("sha256").update(s).digest("hex");
 const run=(program,...args)=>runJsonCli(program,args,{timeout:60000,maxBuffer:3*1024*1024});
 const scoped=fn=>inTempDir("pd-p60f-",fn);
 const put=async(dir,name,data)=>{const path=join(dir,name);await writeFile(path,typeof data==="string"||Buffer.isBuffer(data)?data:JSON.stringify(data));return path;};
+const semanticPasses=(q,{math=false,legal=false,timeSensitive=false,visual=false}={})=>{
+ const ids=new Set(["exam-relevance","clarity-defensibility","reasoning-correctness","factual-correctness","explanation-quality"]);
+ if(["single-choice","multiple-select"].includes(q.kind))ids.add("distractor-quality");
+ if(math)ids.add("mathematical-correctness");
+ if(legal||timeSensitive)ids.add("temporal-correctness");
+ if(q.provenance?.kind==="official-pyq")ids.add("pyq-fidelity");
+ if(visual)ids.add("visual-integrity");
+ return SEMANTIC_CHECKLIST.filter(x=>ids.has(x.id)).map(x=>({id:x.id,status:"pass",
+  basis:x.id==="mathematical-correctness"||x.id==="factual-correctness"&&math?"mathematical-proof":
+   ["factual-correctness","temporal-correctness","pyq-fidelity"].includes(x.id)?"source-consulted":
+   x.id==="visual-integrity"?"rendered-claim":"independent-editorial",
+  rationale:"Synthetic software fixture, never factual source certification."}));
+};
+const bankPasses=()=>BANK_CHECKLIST.map(x=>({id:x.id,status:"pass",basis:"bank-editorial",
+ rationale:"Synthetic bank-level software fixture; exam quality is not authenticated."}));
+
 async function files(dir,{asDocument=false}={}){
  const source=JSON.parse(await readFile(new URL("../examples/ai-first-apfc.json",import.meta.url),"utf8"));
  if(asDocument)source.questions=source.questions.map((q,i)=>({...q,
@@ -456,21 +472,20 @@ async function files(dir,{asDocument=false}={}){
  const corrected=await put(dir,"reviewed.json",reviewed);
  const packet=run(quality,"candidate",corrected,"--limit","10");
  assert.equal(packet.status,0,packet.stderr);
- const review={format:"practice-desk-quality-review",version:2,bankId:reviewed.bankId,
-  sourceSha256:packet.data.sourceSha256,records:packet.data.items.map(candidate=>{
-   const q=reviewed.questions.find(x=>x.id===candidate.questionId);
-   return {questionId:q.id,questionSha256:sha(JSON.stringify(q)),
-    candidateSha256:candidate.candidateSha256,
-    applicability:{mathematical:q.id==="account-01"?"yes":"no",legal:"no",timeSensitive:"no",asOfDate:null},
-    reviewer:{kind:"ai",id:"synthetic-independent-check"},
-    independentSolution:{blindClaim:true,answer:String(q.answer),
-     reasoning:"Synthetic QA check record; no source has been authenticated."},
-    checks:QUALITY_CHECKLIST.map((ck,i)=>({id:ck.id,status:"pass",
-     basis:i===9?"mathematical-proof":[11,12,13].includes(i)?"source-consulted":i===19?"rendered-claim":"independent-editorial",
-     rationale:"Synthetic software fixture, never factual source certification."})),
+ const review={format:"practice-desk-quality-review",version:3,bankId:reviewed.bankId,
+  sourceSha256:packet.data.sourceSha256,reviewMode:"self-review",candidateOnlyContextClaim:false,
+  reviewer:{kind:"ai",id:"synthetic-self-review"},
+  records:packet.data.items.map(candidate=>{
+   const q=reviewed.questions.find(x=>x.id===candidate.questionId),math=q.id==="account-01";
+   return {questionId:q.id,questionSha256:sha(JSON.stringify(q)),candidateSha256:candidate.candidateSha256,
+    applicability:{mathematical:math?"yes":"no",legal:"no",timeSensitive:"no",visual:"no",asOfDate:null},
+    solution:{status:"completed",answer:String(q.answer),
+     reasoning:"Synthetic second-pass QA record; no source has been authenticated."},
+    semanticChecks:semanticPasses(q,{math}),
     evidence:[{publisher:"Synthetic",title:"Fixture only",locator:"test:"+q.id,
       retrievedAt:"2026-11-06",excerpt:"No independent source consultation was actually performed."}]};
-  })};
+  }),
+  bankReview:{checks:bankPasses()}};
  const reviewFile=await put(dir,"review.json",review);
  const decisionTemplate=run(editorial,"template",original,corrected);
  assert.equal(decisionTemplate.status,0,decisionTemplate.stderr);
@@ -514,9 +529,11 @@ test("P60-H: sourced APFC/CAT items prepare as a complete blind packet, compile 
    assert.equal(blind.items[index].answer,undefined);
    assert.equal(blind.items[index].explanation,undefined);
    assert.ok(!JSON.stringify(blind.items[index]).includes(q.explanation));
-   assert.equal(review.records[index].independentSolution.blindClaim,false);
-   assert.equal(review.records[index].checks.length,20);
-   assert.ok(review.records[index].checks.every(check=>check.status==="not-reviewed"));
+   assert.equal(review.records[index].solution.status,"pending");
+   assert.ok(review.records[index].semanticChecks.length<20);
+   assert.ok(review.records[index].semanticChecks.every(check=>check.status==="not-reviewed"));
+   assert.equal(review.bankReview.checks.length,6);
+   assert.ok(review.bankReview.checks.every(check=>check.status==="not-reviewed"));
   }
   const notReviewed=run(quality,"audit",input,"--review",join(reviewDir,"review.json"));
   assert.notEqual(notReviewed.status,0,"An unreviewed real source must not pass the strict editorial gate");
@@ -553,18 +570,16 @@ test("P60 full QA: source-attributed APFC/CAT end-to-end review record, strict p
   const review=JSON.parse(await readFile(join(reviewDir,"review.json"),"utf8"));
   // These reviewer and evidence declarations are synthetic contract checks,
   // NOT an independent blind fact check, source fetch or PYQ authentication.
+  review.reviewMode="self-review";
+  review.candidateOnlyContextClaim=false;
+  review.reviewer={id:"synthetic-p60-e2e",kind:"ai"};
+  review.bankReview={checks:bankPasses()};
   review.records=review.records.map((record,i)=>{
    const q=source.questions[i],math=file.startsWith("source-grounded-cat");
-   return {...record,applicability:{mathematical:math?"yes":"no",legal:"no",timeSensitive:"no",asOfDate:null},reviewer:{id:"synthetic-p60-e2e",kind:"ai"},
-    independentSolution:{blindClaim:true,answer:String(q.answer),
-     reasoning:"Synthetic software-acceptance replay of the authored answer. No independent research or blinding occurred."},
-    checks:record.checks.map(check=>({id:check.id,
-     status:check.id==="pyq-fidelity"||check.id==="temporal-correctness"||
-      (check.id==="mathematical-correctness"&&!math)?"not-applicable":"pass",
-     basis:check.id==="candidate-view-integrity"?"rendered-claim":
-      check.id==="factual-correctness"?(math?"mathematical-proof":"source-consulted"):
-      check.id==="mathematical-correctness"&&math?"mathematical-proof":"independent-editorial",
-     rationale:"Synthetic acceptance record only. Editorial and source claims remain unauthenticated."})),
+   return {...record,applicability:{mathematical:math?"yes":"no",legal:"no",timeSensitive:"no",visual:"no",asOfDate:null},
+    solution:{status:"completed",answer:String(q.answer),
+     reasoning:"Synthetic software-acceptance replay of the authored answer. No independent research or context separation occurred."},
+    semanticChecks:semanticPasses(q,{math}),
     evidence:[{publisher:"Synthetic acceptance",title:"Source-grounded example only",
      locator:q.id,retrievedAt:"2026-11-06",excerpt:"Software regression: source was not independently authenticated."}]};
   });
@@ -611,7 +626,7 @@ test("P60-F RED: single mode converges source + P60-C into bounded answer-privat
  const noReview=run(script,"assess","single",x.corrected);
  assert.notEqual(noReview.status,0);
  assert.equal(noReview.data.readyForPublication,false);
- assert.ok(!noReview.stdout.includes(x.review.records[0].independentSolution.reasoning));
+ assert.ok(!noReview.stdout.includes(x.review.records[0].solution.reasoning));
  const noOutput=join(dir,"forbidden.json");
  const blocked=run(script,"publish","single",x.corrected,noOutput,"--quality-review",x.reviewFile);
  assert.notEqual(blocked.status,0);
@@ -628,6 +643,30 @@ test("P60-F RED: single mode converges source + P60-C into bounded answer-privat
  assert.notEqual(duplicate.status,0);
  assert.equal(sha(await readFile(noOutput)),yes.data.writtenFiles[0].sha256);
 }));
+test("P60-C review modes: self, clean-context and independent-agent share identical substantive publication gates",()=>scoped(async dir=>{
+ const x=await files(dir);
+ for(const [mode,candidateOnly] of [["self-review",false],["clean-context",true],["independent-agent",true]]){
+  const review=structuredClone(x.review);
+  review.reviewMode=mode;review.candidateOnlyContextClaim=candidateOnly;
+  const reviewFile=await put(dir,mode+".json",review);
+  const result=run(script,"assess","single",x.corrected,"--quality-review",reviewFile);
+  assert.equal(result.status,0,JSON.stringify(result.data));
+  assert.equal(result.data.readyForPublication,true);
+  assert.equal(result.data.reviewMode,mode);
+ }
+ const falseIndependence=structuredClone(x.review);
+ falseIndependence.reviewMode="clean-context";falseIndependence.candidateOnlyContextClaim=false;
+ const blocked=run(script,"assess","single",x.corrected,"--quality-review",
+  await put(dir,"false-clean-context.json",falseIndependence));
+ assert.notEqual(blocked.status,0);
+ const failedSubstance=structuredClone(x.review);
+ failedSubstance.reviewMode="independent-agent";failedSubstance.candidateOnlyContextClaim=true;
+ failedSubstance.records[0].semanticChecks.find(x=>x.id==="clarity-defensibility").status="fail";
+ const substantive=run(script,"assess","single",x.corrected,"--quality-review",
+  await put(dir,"independent-but-failed.json",failedSubstance));
+ assert.notEqual(substantive.status,0,"Stronger review mode must never waive substantive quality failure");
+}));
+
 test("P60-F RED: paired original/reviewed only publishes with complete SHA-bound review, decisions and create-only permission",()=>scoped(async dir=>{
  const x=await files(dir);
  const ok=run(script,"assess","paired",x.original,x.corrected,x.decisions,"--quality-review",x.reviewFile);

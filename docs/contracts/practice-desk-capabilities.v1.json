@@ -110,19 +110,19 @@
       "operation": "quality-review-template",
       "command": "node scripts/question-quality.mjs template <bank.json> [--offset N --limit N]",
       "privilege": "read-only",
-      "effect": "Incomplete-by-default 20-check review records bound to question and candidate hashes; no keys"
+      "effect": "Incomplete-by-default layered v3 review: compact semantic checks per question plus one bank-level review and explicit reviewMode"
     },
     {
       "operation": "prepare-blind-review",
       "command": "node scripts/agent-handoff.mjs prepare <source.json> <NEW-review-dir> --allow-create",
       "privilege": "create-new-file",
-      "effect": "One complete key-hidden candidate review packet plus matching incomplete 20-check reviewer sidecar; never authenticates sources or approves publication Explicit --allow-create required."
+      "effect": "Create candidate-only packet plus matching incomplete layered v3 review sidecar; --allow-create required; no reviewer/source authentication"
     },
     {
       "operation": "audit-question-quality",
       "command": "node scripts/question-quality.mjs audit <bank.json> [--review review.json] [--offset N --limit N]",
       "privilege": "read-only",
-      "effect": "Check canonical source, recorded independent answer, checklist, evidence basis and SHA freshness; never authenticates factual claims"
+      "effect": "Check canonical source, second-pass solution, semantic/conditional item review, bank-level review, evidence basis, reviewMode and SHA freshness; never authenticates factual claims"
     },
     {
       "operation": "compile-with-quality-review",
@@ -471,24 +471,24 @@
     {
       "id": "question-quality",
       "status": "implemented-with-limits",
-      "summary": "P60-C candidate-facing hint detection, 20-check attributed editorial review sidecars, blind question packets, stale-source checks and opt-in publication gate.",
+      "summary": "P60-C layered quality assurance: deterministic candidate/source guards, compact per-question semantic review, one bank-level review, explicit conditional evidence and truthful review modes.",
       "provides": [
-        "Automatic blocking of explicit candidate-visible answer labels across prompts, options, shared stimuli and referenced image alt text",
-        "Heuristic warnings for prematurely revealed reasoning patterns and literal keyed-answer echoes",
-        "Answer-free, source-bound blind solver packets and deliberately incomplete review templates",
-        "Twenty quality dimensions with evidence/rationale status and per-item source/candidate SHA fingerprints",
-        "Independent answer comparison to authored key for automatically scorable response kinds",
-        "Fail-closed stale source/review, unsupported evidence and missing-check detection",
-        "Temporal source claims require an evidence as-of date and official PYQ claims demand locatable original evidence",
-        "Optional --quality-review gate for canonical source validate and compile"
+        "Automatic deterministic blocking/warning for canonical source defects, candidate answer leakage, unintended clues and structural option/key problems",
+        "Source-bound candidate-only packets and deliberately incomplete v3 layered review templates",
+        "Compact semantic item review for exam relevance, clarity/defensibility, distractors, reasoning, facts and explanations",
+        "Conditional mathematics, legal/current, official-PYQ and visual review only when applicable",
+        "One bank-level review for coverage, difficulty distribution, cognitive diversity, duplication/diversity, style consistency and overall exam fidelity",
+        "Explicit self-review, clean-context and independent-agent assurance modes; substantive correctness/evidence gates are identical in every mode",
+        "Second-pass answer comparison to the authored key for automatically scorable response kinds",
+        "Fail-closed SHA freshness, source evidence/as-of requirements and optional --quality-review canonical publication gate"
       ],
-      "agentUse": "Read docs/architecture/AGENT_CONTENT_PIPELINE.md after the P59 quickstart; send candidate packet only to independent solver, research sources with externally connected tools, fill separate 20-check records, audit bounded issues and compile with --quality-review when records are complete.",
+      "agentUse": "Use question-quality.mjs prepare/template to review candidate material. Complete only required semantic/conditional checks per item, then the six bank-level checks once. Set reviewMode truthfully: self-review is fully supported; clean-context or independent-agent adds epistemic separation but is never a publication prerequisite.",
       "limitations": [
-        "No offline network fetch, independent citation/PYQ authentication or provable agent identity/blinding",
-        "Self-attested reviewer/source/rendered UI claims are never certificates of factual accuracy",
-        "Structurally valid unreviewed local authoring remains caution-labelled and is not automatically required to supply the external review sidecar",
-        "Candidate-only text/alt packet does not replace looking at actual image pixels or device-rendered question UI",
-        "P60-D source/reviewed pairing is implemented externally with caution only; P60-E external-agent source-bound intake is implemented, but automatic PDF extraction is not."
+        "No offline network fetch, citation/PYQ authentication or provable reviewer identity/context separation",
+        "Self-review is not independent review; clean-context and independent-agent are attributed claims, not authenticated identities",
+        "Structurally valid unreviewed local authoring remains caution-labelled unless a strict quality-review gate is requested",
+        "Candidate-only text/alt packets do not replace inspecting actual visual pixels when visual material is applicable",
+        "P60-D/P60-E source and document provenance remain separate from factual truth certification"
       ],
       "sourcePaths": [
         "src/authoring/candidate-integrity.ts",

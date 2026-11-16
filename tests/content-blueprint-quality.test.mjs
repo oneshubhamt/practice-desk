@@ -472,6 +472,39 @@ const sha=s=>createHash("sha256").update(s).digest("hex");
 const command=(script,...args)=>runJsonCli(script,args,{timeout:30000,maxBuffer:1024*1024});
 const temp=f=>inTempDir("pd-p60c-",f);
 const write=async(dir,name,data)=>{const path=join(dir,name);await writeFile(path,JSON.stringify(data));return path;};
+const semanticContract=()=>command(tool,"checklist").data.layers.semantic.checklist;
+const bankContract=()=>command(tool,"checklist").data.layers.bank.checklist;
+const semanticPass=(id,math=false)=>({id,status:"pass",
+ basis:id==="mathematical-correctness"||id==="factual-correctness"&&math?"mathematical-proof":
+  ["factual-correctness","temporal-correctness","pyq-fidelity"].includes(id)?"source-consulted":
+  id==="visual-integrity"?"rendered-claim":"independent-editorial",
+ rationale:"Synthetic regression assertion only; it does not authenticate content."});
+const completeLayeredReview=(src,pack,{mathIds=[],legalIds=[],timeIds=[],visualIds=[],asOfDates={},
+ reviewMode="self-review",candidateOnlyContextClaim=reviewMode!=="self-review"}={})=>{
+ const math=new Set(mathIds),legal=new Set(legalIds),time=new Set(timeIds),visual=new Set(visualIds);
+ const semantic=semanticContract();
+ return {format:"practice-desk-quality-review",version:3,bankId:src.bankId,sourceSha256:pack.sourceSha256,
+  reviewMode,candidateOnlyContextClaim,reviewer:{id:"synthetic-quality-fixture",kind:"ai"},
+  records:pack.items.map(item=>{
+   const q=src.questions.find(x=>x.id===item.questionId),m=math.has(q.id),l=legal.has(q.id),t=time.has(q.id),v=visual.has(q.id);
+   const ids=new Set(["exam-relevance","clarity-defensibility","reasoning-correctness","factual-correctness","explanation-quality"]);
+   if(["single-choice","multiple-select"].includes(q.kind))ids.add("distractor-quality");
+   if(m)ids.add("mathematical-correctness");if(l||t)ids.add("temporal-correctness");
+   if(q.provenance?.kind==="official-pyq")ids.add("pyq-fidelity");if(v)ids.add("visual-integrity");
+   const asOfDate=asOfDates[q.id]??null;
+   return {questionId:q.id,questionSha256:sha(JSON.stringify(q)),candidateSha256:item.candidateSha256,
+    applicability:{mathematical:m?"yes":"no",legal:l?"yes":"no",timeSensitive:t?"yes":"no",visual:v?"yes":"no",asOfDate},
+    solution:{status:"completed",answer:String(q.answer),
+     reasoning:"Synthetic second-pass reasoning for software regression only."},
+    semanticChecks:semantic.filter(x=>ids.has(x.id)).map(x=>semanticPass(x.id,m)),
+    evidence:[{publisher:"Synthetic fixture",title:"Regression evidence",locator:"item:"+q.id,
+     retrievedAt:"2026-11-06",...(asOfDate?{asOfDate}:{}),excerpt:"Software contract fixture; not independently authenticated."}]};
+  }),
+  bankReview:{checks:bankContract().map(x=>({id:x.id,status:"pass",basis:"bank-editorial",
+   rationale:"Synthetic bank-level regression assertion only."}))}
+ };
+};
+
 
 test("P60-C: all authoring paths block explicit answers hidden in private rich passages or shared rich media text",async()=>{
  const source=JSON.parse(await readFile(cat,"utf8"));
@@ -562,87 +595,78 @@ test("P60-C RED: blinded review packet exposes single candidate-only question, n
  assert.ok(!r.stdout.includes("What is 2 + 2?"));
  assert.ok(r.stdout.length<9000);
 }));
-test("P60-C RED: QA reports 20 mandatory checks, unverified by default and never claims internet retrieval",()=>temp(async dir=>{
+test("P60-C: all 20 former quality dimensions are redistributed across deterministic, semantic and bank layers without loss",()=>temp(async dir=>{
  const input=await write(dir,"apfc.json",JSON.parse(await readFile(apfc,"utf8")));
+ const contract=command(tool,"checklist");
+ assert.equal(contract.status,0,contract.stderr);
+ assert.equal(contract.data.version,2);
+ assert.equal(contract.data.layers.semantic.checklist.length,10);
+ assert.equal(contract.data.layers.bank.checklist.length,6);
+ assert.equal(contract.data.coverageMap.length,20);
+ assert.equal(new Set(contract.data.coverageMap.map(x=>x.dimension)).size,20);
+ assert.deepEqual(contract.data.reviewModes,["self-review","clean-context","independent-agent"]);
  const r=command(tool,"audit",input);
- assert.equal(r.status,1,"Independent assessment absent is not a completed quality gate");
+ assert.equal(r.status,1,"Semantic and bank review are absent");
  assert.equal(r.data.format,"practice-desk-question-quality-audit");
  assert.equal(r.data.readyForPublication,false);
  assert.equal(r.data.factualVerification,"not-performed");
  assert.equal(r.data.externalSourceFetches,0);
- assert.equal(r.data.checklist.length,20);
  assert.equal(r.data.questionsMissingReview,3);
- assert.ok(r.data.issues.total>=3);
+ assert.equal(r.data.layers.deterministic.status,"pass");
+ assert.equal(r.data.layers.semantic.status,"incomplete");
+ assert.equal(r.data.layers.bank.status,"incomplete");
  assert.ok(!r.stdout.includes("B is second. This placeholder"));
  assert.ok(!r.stdout.includes("data:image/"));
 }));
-test("P60-C RED: external review must be SHA-bound, complete, independently solved; a matching self-assertion is NOT authenticated",()=>temp(async dir=>{
+
+test("P60-C: layered semantic + bank review is SHA-bound, key-reconciled and source-evidence strict",()=>temp(async dir=>{
  const src=JSON.parse(await readFile(apfc,"utf8"));
  const input=await write(dir,"source.json",src);
  const pack=command(tool,"candidate",input,"--limit","10");
  assert.equal(pack.status,0,pack.stderr);
- const checks=Array.from({length:20},(_,i)=>({id:command(tool,"checklist").data.checklist[i].id,
-  status:"pass",basis:i===9?"mathematical-proof":i===11||i===12||i===13?"source-consulted":i===19?"rendered-claim":"independent-editorial",
-  rationale:"Synthetic test assertion only, no authentic source verification"}));
- const report={format:"practice-desk-quality-review",version:2,bankId:src.bankId,sourceSha256:pack.data.sourceSha256,
-  records:pack.data.items.map((q,i)=>({questionId:q.questionId,questionSha256:sha(JSON.stringify(src.questions[i])),
-   candidateSha256:q.candidateSha256,
-   applicability:{mathematical:src.questions[i].id==="account-01"?"yes":"no",legal:"no",timeSensitive:"no",asOfDate:null},
-   reviewer:{id:"synthetic-reviewer",kind:"ai"},
-   independentSolution:{blindClaim:true,answer:src.questions[i].answer,
-    reasoning:"Synthetic fixture reasoning, not independently established"},
-   checks:structuredClone(checks),
-   evidence:[{publisher:"Fixture",title:"Illustrative only",locator:"test",retrievedAt:"2026-11-06",
-    excerpt:"Synthetic example; source not authenticated"}]
-  }))};
+ const report=completeLayeredReview(src,pack.data,{mathIds:["account-01"]});
  const review=await write(dir,"review.json",report);
  const out=command(tool,"audit",input,"--review",review);
  assert.equal(out.status,0,out.stderr);
  assert.equal(out.data.readyForPublication,true);
- assert.equal(out.data.reviewAssurance,"recorded-self-attestation-not-authenticated");
- assert.equal(out.data.factualVerification,"not-performed");
- assert.equal(out.data.externalSourceFetches,0);
- const compiled=command(cli,"compile-bank",input,join(dir,"quality-reviewed-exam.json"),
-  "--quality-review",review);
+ assert.equal(out.data.reviewMode,"self-review");
+ assert.equal(out.data.reviewAssurance,"recorded-self-review-not-independent-or-authenticated");
+ assert.equal(out.data.layers.semantic.reviewedQuestions,3);
+ assert.equal(out.data.layers.bank.passedChecks,6);
+ const compiled=command(cli,"compile-bank",input,join(dir,"quality-reviewed-exam.json"),"--quality-review",review);
  assert.equal(compiled.status,0,compiled.stderr);
- assert.equal(compiled.data.qualityReview.readyForPublication,true);
- assert.equal(compiled.data.qualityReview.factualVerification,"not-performed");
+ assert.equal(compiled.data.qualityReview.reviewMode,"self-review");
  const plan=fileURLToPath(new URL("../examples/p60b-apfc-blueprint.json",import.meta.url));
- const both=command(cli,"compile-bank",input,join(dir,"blueprint-and-reviewed.json"),
-  "--blueprint",plan,"--quality-review",review);
+ const both=command(cli,"compile-bank",input,join(dir,"blueprint-and-reviewed.json"),"--blueprint",plan,"--quality-review",review);
  assert.equal(both.status,0,both.stderr);
  assert.equal(both.data.blueprint.valid,true);
  assert.equal(both.data.qualityReview.readyForPublication,true);
- const compiledPkg=JSON.parse(await readFile(join(dir,"quality-reviewed-exam.json"),"utf8"));
- assert.equal(compiledPkg.questions[0].editorial.status,"caution",
-  "An asserted review does not automatically upgrade editorial source authenticity");
  const legal=structuredClone(src);
  legal.questions[0].prompt="Under the Code on Wages 2019, which letter is second?";
- const legalPath=await write(dir,"legal.json",legal);
- const legalPacket=command(tool,"candidate",legalPath);
- const legalReview=structuredClone(report);
- legalReview.sourceSha256=legalPacket.data.sourceSha256;
- legalReview.records[0].questionSha256=sha(JSON.stringify(legal.questions[0]));
- legalReview.records[0].candidateSha256=legalPacket.data.items[0].candidateSha256;
- legalReview.records[0].applicability={mathematical:"no",legal:"yes",timeSensitive:"yes",asOfDate:null};
- const lawResult=command(tool,"audit",legalPath,"--review",
-  await write(dir,"legal-review.json",legalReview));
+ const legalPath=await write(dir,"legal.json",legal),legalPacket=command(tool,"candidate",legalPath);
+ const legalReview=completeLayeredReview(legal,legalPacket.data,{mathIds:["account-01"],legalIds:["labour-01"],timeIds:["labour-01"]});
+ const lawResult=command(tool,"audit",legalPath,"--review",await write(dir,"legal-review.json",legalReview));
  assert.equal(lawResult.status,1);
  assert.ok(lawResult.data.issues.items.some(x=>x.code==="legal-asof-evidence-required"));
- const bad=structuredClone(report);bad.records[0].independentSolution.answer="D";
+ const bad=structuredClone(report);bad.records[0].solution.answer="D";
  const wrong=command(tool,"audit",input,"--review",await write(dir,"wrong.json",bad));
  assert.equal(wrong.status,1);
- assert.ok(wrong.data.issues.items.some(x=>x.code==="independent-key-disagreement"));
+ assert.ok(wrong.data.issues.items.some(x=>x.code==="review-key-disagreement"));
  const stale=structuredClone(report);stale.records[0].candidateSha256="0".repeat(64);
  const staleResult=command(tool,"audit",input,"--review",await write(dir,"stale.json",stale));
  assert.equal(staleResult.status,1);
  assert.ok(staleResult.data.issues.items.some(x=>x.code==="review-stale"));
+ const bankFail=structuredClone(report);bankFail.bankReview.checks[0].status="fail";
+ const bankResult=command(tool,"audit",input,"--review",await write(dir,"bank-fail.json",bankFail));
+ assert.equal(bankResult.status,1);
+ assert.ok(bankResult.data.issues.items.some(x=>x.code==="bank-check-unresolved"));
 }));
+
 test("P60-C RED: strict compiler refuses incomplete review and never writes compiled output",()=>temp(async dir=>{
  const src=JSON.parse(await readFile(apfc,"utf8"));
  const input=await write(dir,"source.json",src);
- const incomplete={format:"practice-desk-quality-review",version:2,bankId:src.bankId,
-  sourceSha256:sha(JSON.stringify(src)),records:[]};
+ const incomplete=command(tool,"template",input,"--limit","10").data;
+ incomplete.records=[];
  const review=await write(dir,"review.json",incomplete),output=join(dir,"blocked.json");
  const blocked=command(cli,"compile-bank",input,output,"--quality-review",review);
  assert.notEqual(blocked.status,0);
@@ -650,21 +674,19 @@ test("P60-C RED: strict compiler refuses incomplete review and never writes comp
  const structural=command(cli,"validate-bank",input);
  assert.equal(structural.status,0,"Unreviewed structural source validation remains available");
 }));
-test("P60-C RED: malformed, fabricated, duplicate and undisclosed review records fail closed",()=>temp(async dir=>{
+test("P60-C: malformed, fabricated, duplicate and stale layered review records fail closed",()=>temp(async dir=>{
  const input=await write(dir,"source.json",JSON.parse(await readFile(cat,"utf8")));
- const source=JSON.parse(await readFile(input,"utf8"));
- for(const review of [
-  {format:"practice-desk-quality-review",version:2,bankId:source.bankId,sourceSha256:"0".repeat(64),records:[]},
-  {format:"practice-desk-quality-review",version:2,bankId:source.bankId,sourceSha256:sha(JSON.stringify(source)),records:[{questionId:"x",extra:"trusted"}]},
-  {format:"practice-desk-quality-review",version:2,bankId:source.bankId,sourceSha256:sha(JSON.stringify(source)),records:[]}
- ]){
-  const p=await write(dir,"broken-"+Math.random()+".json",review);
-  const r=command(tool,"audit",input,"--review",p);
-  assert.notEqual(r.status,0);
-  assert.equal(r.data.readyForPublication,false);
+ const template=command(tool,"template",input,"--limit","10").data;
+ const cases=[];
+ const stale=structuredClone(template);stale.sourceSha256="0".repeat(64);cases.push(stale);
+ const extra=structuredClone(template);extra.records[0].extra="trusted";cases.push(extra);
+ const empty=structuredClone(template);empty.records=[];cases.push(empty);
+ const duplicate=structuredClone(template);duplicate.records.push(structuredClone(duplicate.records[0]));cases.push(duplicate);
+ for(const review of cases){
+  const p=await write(dir,"broken-"+Math.random()+".json",review),r=command(tool,"audit",input,"--review",p);
+  assert.notEqual(r.status,0);assert.equal(r.data.readyForPublication,false);
  }
 }));
-
 
 test("P60-C: actual candidate exam renderer with an unpublished answer key never prints solution or editorial key",async()=>{
  const {compileExternalQuestionBank}=await import("../src/authoring/external-bank.ts");
@@ -692,26 +714,23 @@ test("P60-C: referenced image alt text can leak a key without any incorrect answ
  assert.ok(report.issues.some(x=>x.code==="candidate-answer-leak"&&x.path.includes("media.altText")));
 });
 
-test("P60-C: review templates are intentionally incomplete and do not contain hidden source keys or explanations",()=>temp(async dir=>{
- const src=JSON.parse(await readFile(apfc,"utf8"));
- const input=await write(dir,"source.json",src);
- const r=command(tool,"template",input,"--limit","1");
- assert.equal(r.status,0,r.stderr);
- assert.equal(r.data.format,"practice-desk-quality-review");
- assert.equal("templateIncomplete" in r.data,false,"Fillable review must match exact v2 schema");
- assert.equal(r.data.version,2);
- assert.deepEqual(r.data.records[0].applicability,{mathematical:"pending",legal:"pending",timeSensitive:"pending",asOfDate:null});
- assert.equal(r.data.records.length,1);
- assert.equal(r.data.records[0].checks.length,20);
- assert.equal(r.data.records[0].independentSolution.blindClaim,false);
- assert.ok(!r.stdout.includes("B is second. This placeholder"));
- assert.ok(!r.stdout.includes("data:image/"));
- const check=command(tool,"audit",input,"--review",await write(dir,"unfinished-review.json",{
-  format:r.data.format,version:r.data.version,bankId:r.data.bankId,
-  sourceSha256:r.data.sourceSha256,records:r.data.records
- }));
- assert.equal(check.status,1);
- assert.equal(check.data.readyForPublication,false);
+test("P60-C: layered review template is incomplete, answer-private and materially smaller than the former 20xN checklist",()=>temp(async dir=>{
+ const src=JSON.parse(await readFile(apfc,"utf8")),input=await write(dir,"source.json",src);
+ const r=command(tool,"template",input,"--limit","10");
+ assert.equal(r.status,0,r.stderr);assert.equal(r.data.format,"practice-desk-quality-review");assert.equal(r.data.version,3);
+ assert.equal(r.data.reviewMode,"self-review");assert.equal(r.data.candidateOnlyContextClaim,false);
+ assert.equal(r.data.records.length,3);assert.equal(r.data.bankReview.checks.length,6);
+ for(const row of r.data.records){
+  assert.deepEqual(row.applicability,{mathematical:"pending",legal:"pending",timeSensitive:"pending",visual:"pending",asOfDate:null});
+  assert.equal(row.solution.status,"pending");
+  assert.ok(row.semanticChecks.length>=6&&row.semanticChecks.length<20);
+  assert.ok(row.semanticChecks.every(check=>check.status==="not-reviewed"));
+ }
+ const judgmentRows=r.data.records.reduce((n,row)=>n+row.semanticChecks.length,0)+r.data.bankReview.checks.length;
+ assert.ok(judgmentRows<src.questions.length*20,"Layered review must reduce repetitive reviewer judgments");
+ assert.ok(!r.stdout.includes("B is second. This placeholder"));assert.ok(!r.stdout.includes("data:image/"));
+ const check=command(tool,"audit",input,"--review",await write(dir,"unfinished-review.json",r.data));
+ assert.equal(check.status,1);assert.equal(check.data.readyForPublication,false);
 }));
 
 test("P60-C: complete keyed answer repeated in question prompt is highlighted as untrusted semantic clue",async()=>{
@@ -765,27 +784,10 @@ test("P62-C unscanned contribution rate still requires reviewer-declared as-of a
  src.questions[0].prompt="For Plan Z, which contribution share is assigned to the employer?";
  const input=await write(dir,"opaque-statutory.json",src);
  const pack=command(tool,"candidate",input,"--limit","10");
- const checklist=command(tool,"checklist").data.checklist;
- const review={format:"practice-desk-quality-review",version:2,bankId:src.bankId,
-  sourceSha256:pack.data.sourceSha256,
-  records:pack.data.items.map(item=>{
-   const q=src.questions.find(q=>q.id===item.questionId),math=q.id==="account-01";
-   return {questionId:q.id,questionSha256:sha(JSON.stringify(q)),
-    candidateSha256:item.candidateSha256,
-    applicability:{mathematical:math?"yes":"no",legal:q.id==="labour-01"?"yes":"no",
-     timeSensitive:"no",asOfDate:null},
-    reviewer:{kind:"ai",id:"synthetic-software-regression"},
-    independentSolution:{blindClaim:true,answer:q.answer,
-     reasoning:"Synthetic asserted answer to an imaginary scheme; no statutory facts authenticated."},
-    checks:checklist.map(check=>({id:check.id,status:"pass",
-     basis:check.id==="mathematical-correctness"?"mathematical-proof":
-      ["factual-correctness","temporal-correctness","pyq-fidelity"].includes(check.id)?"source-consulted":
-      check.id==="candidate-view-integrity"?"rendered-claim":"independent-editorial",
-     rationale:"Regression-only assertion; source content not authenticated."})),
-    evidence:[{publisher:"Synthetic fixture",title:"Imaginary Plan Z note",
-     locator:"appendix-z-17",retrievedAt:"2026-11-06",
-     excerpt:"Imaginary contribution schedule, only a regression fixture."}]};
-  })};
+ const review=completeLayeredReview(src,pack.data,{mathIds:["account-01"],legalIds:["labour-01"]});
+ review.records[0].evidence[0]={publisher:"Synthetic fixture",title:"Imaginary Plan Z note",
+  locator:"appendix-z-17",retrievedAt:"2026-11-06",
+  excerpt:"Imaginary contribution schedule, only a regression fixture."};
  const verify=async(name,review)=>{
   const path=await write(dir,name+".json",review);
   return command(tool,"audit",input,"--review",path,"--limit","50");
@@ -804,9 +806,9 @@ test("P62-C unscanned contribution rate still requires reviewer-declared as-of a
  assert.equal(accepted.status,0,JSON.stringify(accepted.data.issues));
  assert.equal(accepted.data.readyForPublication,true);
  assert.equal(accepted.data.factualVerification,"not-performed");
- assert.equal(accepted.data.reviewAssurance,"recorded-self-attestation-not-authenticated");
+ assert.equal(accepted.data.reviewAssurance,"recorded-self-review-not-independent-or-authenticated");
  const unsupported=structuredClone(review);
- unsupported.records[0].checks.find(x=>x.id==="temporal-correctness").basis="independent-editorial";
+ unsupported.records[0].semanticChecks.find(x=>x.id==="temporal-correctness").basis="independent-editorial";
  assert.ok((await verify("wrong-temporal-basis",unsupported)).data.issues.items.some(
   x=>x.code==="source-check-basis-invalid"));
  // Independent author-side classification makes this same keyword-free
@@ -836,61 +838,48 @@ test("P62-C unscanned contribution rate still requires reviewer-declared as-of a
  assert.ok(wrongDate.data.issues.items.some(x=>x.code==="source-asof-conflict"));
 }));
 
-test("P62-C mathematical declarations, pending status and keyword conflicts fail closed",()=>temp(async dir=>{
- const src=JSON.parse(await readFile(apfc,"utf8"));
- const input=await write(dir,"math.json",src);
+test("P60-C visual material activates one conditional rendered-integrity check instead of a per-item candidate-view ritual",()=>temp(async dir=>{
+ const src=JSON.parse(await readFile(cat,"utf8"));
+ const png="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/tAAAAABJRU5ErkJggg==";
+ src.media=[{id:"safe-image",dataUri:"data:image/png;base64,"+png,altText:"Neutral one-pixel diagram"}];
+ src.stimuli.push({id:"safe-visual",kind:"image",mediaRef:"safe-image",altText:"Neutral diagram"});
+ src.questions[0].stimulusRef="safe-visual";
+ const input=await write(dir,"visual.json",src),packet=command(tool,"candidate",input,"--limit","10");
+ const review=completeLayeredReview(src,packet.data,{visualIds:["rc-1"]});
+ const ok=command(tool,"audit",input,"--review",await write(dir,"visual-review.json",review));
+ assert.equal(ok.status,0,JSON.stringify(ok.data.issues));
+ const denied=structuredClone(review);denied.records[0].applicability.visual="no";
+ denied.records[0].semanticChecks=denied.records[0].semanticChecks.filter(x=>x.id!=="visual-integrity");
+ const blocked=command(tool,"audit",input,"--review",await write(dir,"visual-denied.json",denied));
+ assert.equal(blocked.status,1);
+ assert.ok(blocked.data.issues.items.some(x=>x.code==="visual-applicability-conflict"));
+}));
+
+test("P62-C mathematical declarations, pending status, evidence basis and keyword conflicts fail closed",()=>temp(async dir=>{
+ const src=JSON.parse(await readFile(apfc,"utf8")),input=await write(dir,"math.json",src);
  const packet=command(tool,"candidate",input,"--limit","10");
- const template=command(tool,"template",input,"--limit","10");
- const checks=command(tool,"checklist").data.checklist;
- const review=structuredClone(template.data);
- for(const row of review.records){
-  const q=src.questions.find(q=>q.id===row.questionId);
-  row.applicability={mathematical:q.id==="account-01"?"yes":"no",legal:"no",timeSensitive:"no",asOfDate:null};
-  row.reviewer={id:"synthetic-qa",kind:"ai"};
-  row.independentSolution={blindClaim:true,answer:q.answer,
-   reasoning:"Synthetic reviewer assertion for a software classification test."};
-  row.checks=checks.map(c=>({id:c.id,status:"pass",
-   basis:c.id==="mathematical-correctness"?"mathematical-proof":
-    ["factual-correctness","temporal-correctness","pyq-fidelity"].includes(c.id)?"source-consulted":
-    c.id==="candidate-view-integrity"?"rendered-claim":"independent-editorial",
-   rationale:"This record is synthetic and cannot establish independent factual truth."}));
-  row.evidence=[{publisher:"Test fixture",title:"Fictional calculation note",locator:"item:"+q.id,
-   retrievedAt:"2026-11-06",excerpt:"Only proves that schema gates work."}];
- }
- const inspect=async(label,value,sourcePath=input)=>{
-  const p=await write(dir,label+".json",value);
-  return command(tool,"audit",sourcePath,"--review",p,"--limit","50");
- };
+ const review=completeLayeredReview(src,packet.data,{mathIds:["account-01"]});
+ const inspect=async(label,value,sourcePath=input)=>command(tool,"audit",sourcePath,"--review",await write(dir,label+".json",value),"--limit","50");
  assert.equal((await inspect("valid",review)).status,0);
- const missing=structuredClone(review);
- delete missing.records[0].applicability;
+ const missing=structuredClone(review);delete missing.records[0].applicability;
  assert.ok((await inspect("missing",missing)).data.issues.items.some(x=>x.code==="review-invalid"));
- const pending=structuredClone(review);
- pending.records[0].applicability.legal="pending";
+ const pending=structuredClone(review);pending.records[0].applicability.legal="pending";
  assert.ok((await inspect("pending",pending)).data.issues.items.some(x=>x.code==="applicability-unresolved"));
  const failedMath=structuredClone(review);
- failedMath.records[2].checks.find(x=>x.id==="mathematical-correctness").status="not-applicable";
- assert.ok((await inspect("math-na",failedMath)).data.issues.items.some(x=>x.code==="mathematics-review-required"));
+ failedMath.records[2].semanticChecks.find(x=>x.id==="mathematical-correctness").status="not-reviewed";
+ assert.ok((await inspect("math-unreviewed",failedMath)).data.issues.items.some(x=>x.code==="semantic-check-unresolved"));
  const unsupportedMath=structuredClone(review);
- unsupportedMath.records[2].checks.find(x=>x.id==="mathematical-correctness").basis="independent-editorial";
+ unsupportedMath.records[2].semanticChecks.find(x=>x.id==="mathematical-correctness").basis="independent-editorial";
  assert.ok((await inspect("math-without-proof",unsupportedMath)).data.issues.items.some(x=>x.code==="mathematics-proof-required"));
- const contradiction=structuredClone(review);
- contradiction.records[2].applicability.mathematical="no";
+ const contradiction=structuredClone(review);contradiction.records[2].applicability.mathematical="no";
  assert.ok((await inspect("math-heuristic-conflict",contradiction)).data.issues.items.some(x=>x.code==="applicability-heuristic-conflict"));
- const prior=structuredClone(review);
- prior.version=1;
- assert.ok((await inspect("noncanonical-format",prior)).data.issues.items.some(x=>x.code==="review-invalid"),
-  "Noncanonical sidecar format must not bypass the explicit declarations");
- const legal=structuredClone(src);
- legal.questions[0].prompt="Under the Code on Wages 2019, which letter is second?";
- const legalFile=await write(dir,"legal-heuristic.json",legal);
- const legalPacket=command(tool,"candidate",legalFile,"--limit","10");
- const underClaim=structuredClone(review);
- underClaim.sourceSha256=legalPacket.data.sourceSha256;
- underClaim.records[0].questionSha256=sha(JSON.stringify(legal.questions[0]));
- underClaim.records[0].candidateSha256=legalPacket.data.items[0].candidateSha256;
- assert.ok((await inspect("legal-heuristic-conflict",underClaim,legalFile)).data.issues.items.some(
-  x=>x.code==="applicability-heuristic-conflict"));
+ const prior=structuredClone(review);prior.version=2;
+ assert.ok((await inspect("noncanonical-format",prior)).data.issues.items.some(x=>x.code==="review-invalid"));
+ const legal=structuredClone(src);legal.questions[0].prompt="Under the Code on Wages 2019, which letter is second?";
+ const legalFile=await write(dir,"legal-heuristic.json",legal),legalPacket=command(tool,"candidate",legalFile,"--limit","10");
+ const underClaim=completeLayeredReview(legal,legalPacket.data,{mathIds:["account-01"]});
+ assert.ok((await inspect("legal-heuristic-conflict",underClaim,legalFile)).data.issues.items.some(x=>x.code==="applicability-heuristic-conflict"));
 }));
+
 }
 await registerCandidateSecrecyTests();
