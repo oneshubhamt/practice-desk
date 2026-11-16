@@ -726,6 +726,10 @@ test("P60-C: layered review template is incomplete, answer-private and materiall
   assert.ok(row.semanticChecks.length>=6&&row.semanticChecks.length<20);
   assert.ok(row.semanticChecks.every(check=>check.status==="not-reviewed"));
  }
+ const mathRecord=r.data.records.find(row=>row.questionId==="account-01");
+ assert.equal(mathRecord.semanticChecks.find(x=>x.id==="mathematical-correctness")?.basis,"mathematical-proof");
+ assert.equal(mathRecord.semanticChecks.find(x=>x.id==="factual-correctness")?.basis,"mathematical-proof",
+  "Pure mathematical items should not be prefilled with a needless source-consulted factual basis");
  const judgmentRows=r.data.records.reduce((n,row)=>n+row.semanticChecks.length,0)+r.data.bankReview.checks.length;
  assert.ok(judgmentRows<src.questions.length*20,"Layered review must reduce repetitive reviewer judgments");
  assert.ok(!r.stdout.includes("B is second. This placeholder"));assert.ok(!r.stdout.includes("data:image/"));
