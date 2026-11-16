@@ -22,7 +22,7 @@ if(!["validate-bank","compile-bank","qa-bank"].includes(command)||!input||!flagO
   "       node scripts/question-bank-cli.mjs compile-bank <source.json> <compiled.json> [--against prior.json]...\n"+
   "Both AI source v1 and the versioned Wordgard draft exchange are accepted; --against applies to source v1 only.\n"+
   "Optional --blueprint <plan.json> with --cognitive <tags.json> checks a scoped single-source or explicitly approved partial delivery; for multi-batch use content-blueprint.mjs audit.\n"+
-  "Optional --quality-review <review.json> requires complete P60-C SHA-bound independent review records; no source fact authentication.\n");
+  "Optional --quality-review <review.json> requires complete P60-C SHA-bound layered review records; no source fact authentication.\n");
  process.exitCode=2;
 }else{
  try{
@@ -79,8 +79,8 @@ if(!["validate-bank","compile-bank","qa-bank"].includes(command)||!input||!flagO
       actualCount:blueprintAudit.actualCount,partialDelivery:blueprintAudit.partialDelivery,
        remainingCount:blueprintAudit.remainingCount,issues:blueprintAudit.issues,coverage:blueprintAudit.coverage}}:{}),
     ...(qualityAudit?{qualityReview:{readyForPublication:qualityAudit.readyForPublication,
-      factualVerification:"not-performed",reviewAssurance:qualityAudit.reviewAssurance,
-      issues:qualityAudit.issues,questionsMissingReview:qualityAudit.questionsMissingReview}}:{})},null,2)+"\n");
+      factualVerification:"not-performed",reviewMode:qualityAudit.reviewMode,reviewAssurance:qualityAudit.reviewAssurance,
+      layers:qualityAudit.layers,issues:qualityAudit.issues,questionsMissingReview:qualityAudit.questionsMissingReview}}:{})},null,2)+"\n");
    process.exitCode=1;
   }else{
    if(compiling){
@@ -92,7 +92,7 @@ if(!["validate-bank","compile-bank","qa-bank"].includes(command)||!input||!flagO
       partialDelivery:blueprintAudit.partialDelivery,remainingCount:blueprintAudit.remainingCount,
       nearDuplicateCandidates:blueprintAudit.nearDuplicateCandidates}}:{}),
     ...(qualityAudit?{qualityReview:{readyForPublication:true,factualVerification:"not-performed",
-      reviewAssurance:qualityAudit.reviewAssurance}}:{}),
+      reviewMode:qualityAudit.reviewMode,reviewAssurance:qualityAudit.reviewAssurance,layers:qualityAudit.layers}}:{}),
     ...(output?{output}:{})},null,2)+"\n");
   }
  }catch(error){

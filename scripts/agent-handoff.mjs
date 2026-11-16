@@ -12,9 +12,9 @@ import {fileURLToPath} from "node:url";
 const FORMAT="practice-desk-agent-handoff", VERSION=1,MAX_BUFFER=6*1024*1024;
 const MODES={single:{inputs:1},paired:{inputs:3},pdf:{inputs:5}};
 const COMMANDS=Object.freeze([
- {name:"prepare",privilege:"create-only-with-explicit-consent",description:"Create a complete candidate-blind review packet and exact fillable review-v1 template for an entire bank; no key/media in output"},
+ {name:"prepare",privilege:"create-only-with-explicit-consent",description:"Create a complete candidate-only packet and exact fillable layered review template for an entire bank; no key/media in output"},
  {name:"assess",privilege:"read-only",description:"Evaluate existing independent-review, source/edition and optional coverage contracts; no answers or full media returned"},
- {name:"publish",privilege:"create-only-with-explicit-consent",description:"Requires --allow-create, an independently recorded current quality review and canonical signed source publication; no browser/device import"}
+ {name:"publish",privilege:"create-only-with-explicit-consent",description:"Requires --allow-create, a current layered quality review in any supported assurance mode and canonical signed source publication; no browser/device import"}
 ]);
 const sha=data=>createHash("sha256").update(data).digest("hex");
 const emit=x=>process.stdout.write(JSON.stringify(x,null,2)+"\n");
@@ -161,6 +161,7 @@ function report(task,primary,coverage,inputsSha){
    sourceKeyComparison:comparison&&typeof comparison==="object"?{
     total:comparison.total??null,comparable:comparison.comparable??null,
     unavailable:comparison.unavailable??null}:null}),
+  reviewMode:p.reviewMode??p.qualityReview?.reviewMode??"not-performed",
   reviewAssurance:p.reviewAssurance??p.qualityReview?.reviewAssurance??"not-performed",
   coverageValid:coverage?c.valid===true:mode==="pdf"?p.coverageValid??null:null,
   partialDelivery:mode==="single"?p.blueprint?.partialDelivery??null:
@@ -271,14 +272,14 @@ async function main(){
    questionCount:generated.body.questionCount??null,
    directory:generated.body.directory,files:generated.body.files,
    factualVerification:"not-performed",externalAuthenticatedReview:false,appAccess:"none",
-   note:"Prepared review is empty and cannot be published: blind reviewer must solve, record genuine evidence and complete every applicable check."});
+   note:"Prepared review is empty and cannot be published: complete a second-pass solution, required semantic/evidence checks and the bank-level review; choose the truthful review mode."});
   return;
  }
  if(argv.length===1&&argv[0]==="actions"){
   emit({format:"practice-desk-agent-handoff-actions",version:1,
    modes:["single","paired","pdf"],commands:COMMANDS,
    appAccess:"none",agentDeviceBridge:false,externalSourceFetches:0,
-   input:"Existing practice-desk-authoring v1, P60-C review, P60-D decisions and optional P60-B plan / P60-E intake",
+   input:"Existing practice-desk-authoring v1, P60-C layered review, P60-D decisions and optional P60-B plan / P60-E intake",
    examples:[
     "node scripts/agent-handoff.mjs prepare bank.json NEW-review-dir --allow-create",
      "node scripts/agent-handoff.mjs assess single bank.json --quality-review review.json [--blueprint plan.json]",
