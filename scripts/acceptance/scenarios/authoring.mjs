@@ -148,9 +148,11 @@ try{
  await page.locator("#pd-author-mark-correctMarks").fill("20");
  await page.locator("#pd-author-mark-correctMarks").blur();
  await page.locator("#pd-author-validate").click();
- const writtenValidation=await page.locator("#pd-author-validation").innerText();
- check(writtenValidation.includes("Ready to publish"),
+ const writtenValidationBox=page.locator("#pd-author-validation");
+ check((await writtenValidationBox.innerText()).includes("Ready to publish"),
   "Valid twenty-mark written question did not pass authoring validation");
+ await writtenValidationBox.locator("details > summary").click();
+ const writtenValidation=await writtenValidationBox.innerText();
  check(writtenValidation.includes("automated correct-answer ceiling 0 marks"),
   "Authoring dry-run did not use the canonical automated score ceiling for manual written grading");
  await page.locator("#pd-author-confirm").check();
