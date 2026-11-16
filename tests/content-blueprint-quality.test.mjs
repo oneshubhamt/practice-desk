@@ -405,9 +405,14 @@ test("Authoring brief: deficit accounting stays exact beyond the ordinary audit 
  assert.equal(result.status,0,result.stderr);
  assert.equal(result.data.task.remainingCount,13);
  assert.equal(result.data.priorityDeficits.length,24);
+ assert.ok(result.data.priorityDeficits.some(x=>x.group==="kinds"),
+  "Bounded brief must not let large subject/topic lists hide another active quota dimension");
  assert.equal(result.data.deficitSummary.shown,24);
  assert.equal(result.data.deficitSummary.remaining,3,
   "13 subject + 13 topic + 1 kind deficits should be counted even though ordinary audit displays only 12 rows per group");
+ assert.deepEqual(result.data.deficitSummary.byGroup.kinds,{total:1,shown:1,remaining:0});
+ assert.equal(result.data.deficitSummary.byGroup.subjects.total,13);
+ assert.equal(result.data.deficitSummary.byGroup.topics.total,13);
 }));
 
 test("Authoring brief: bootstrap requires explicit identity and enough paper rules; authoring constraints fail closed",()=>temp(async dir=>{

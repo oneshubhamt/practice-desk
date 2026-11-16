@@ -544,6 +544,20 @@ function buildAuthoringBrief(plan,planSha,sources,tagDoc,{priorSources=[],batchS
    deficits.push({group,...briefKey(group,row.key),target:row.target,actual:row.actual,remaining:-row.difference});
   }
  }
+ const byGroup=new Map(briefGroupOrder.map(group=>[group,deficits.filter(x=>x.group===group)]));
+ const priorityDeficits=[];
+ for(let round=0;priorityDeficits.length<24;round++){
+  let added=false;
+  for(const group of briefGroupOrder){
+   const row=byGroup.get(group)?.[round];
+   if(row&&priorityDeficits.length<24){priorityDeficits.push(row);added=true;}
+  }
+  if(!added)break;
+ }
+ const deficitByGroup=Object.fromEntries(briefGroupOrder.map(group=>{
+  const rows=byGroup.get(group)??[],shown=priorityDeficits.filter(x=>x.group===group).length;
+  return [group,{total:rows.length,shown,remaining:Math.max(0,rows.length-shown)}];
+ }).filter(([,v])=>v.total>0));
  const requestedNow=Math.min(batchSize,audited.remainingCount);
  const envelope=sourceEnvelope(plan,sources,bankId,title);
  const occupiedIds=new Set(sources.flatMap(x=>Array.isArray(x.value?.questions)?
@@ -589,9 +603,10 @@ function buildAuthoringBrief(plan,planSha,sources,tagDoc,{priorSources=[],batchS
    "Use explanations to justify the key and resolve the misconception or distinction being tested.",
    "Research and verify legal, numerical, current and PYQ claims; never infer authority from this packet."
   ],
-  priorityDeficits:deficits.slice(0,24),
-  deficitSummary:{shown:Math.min(24,deficits.length),remaining:Math.max(0,deficits.length-24),
-   note:"Quota groups overlap; satisfy these constraints jointly rather than summing their remaining counts."},
+  priorityDeficits,
+  deficitSummary:{shown:priorityDeficits.length,remaining:Math.max(0,deficits.length-priorityDeficits.length),
+   byGroup:deficitByGroup,
+   note:"Quota groups overlap; satisfy these constraints jointly rather than summing their remaining counts. Bounded output is interleaved across active quota groups so one dimension cannot hide all others."},
   dedupe:{comparisonSourceCount:audited.comparisonSourceCount,
    nearDuplicateCandidates:audited.nearDuplicateCandidates},
   outputContract:{
