@@ -170,7 +170,7 @@
       "operation": "assess-agent-handoff",
       "command": "node scripts/agent-handoff.mjs assess <single|paired|pdf> <mode-inputs...> --quality-review <review.json> [--blueprint plan.json]",
       "privilege": "read-only",
-      "effect": "One bounded, answer-private source/edition/PDF and independent-review/coverage gate; canonical tools reused, no browser/History access"
+      "effect": "One bounded, answer-private source/edition/PDF and layered-review/coverage gate; canonical tools reused, no browser/History access"
     },
     {
       "operation": "publish-agent-handoff",
@@ -359,7 +359,7 @@
         "Editorial/provenance fields in question revisions",
         "P60-D source-preserving external editorial decision/lineage records, source and reviewed package outputs, and explicit unchanged source keys."
       ],
-      "agentUse": "For any exam, preserve an exact original practice-desk-authoring source, create the reviewed source separately, derive decisions with editorial-editions.mjs, complete P60-C independent review, and import the two signed packages Source first then Reviewed. Existing Library/source-reference features handle comparison.",
+      "agentUse": "For any exam, preserve an exact original practice-desk-authoring source, create the reviewed source separately, derive decisions with editorial-editions.mjs, complete P60-C layered review, and import the two signed packages Source first then Reviewed. Existing Library/source-reference features handle comparison.",
       "limitations": [
         "An attributed official PYQ URL is not independently authenticated",
         "Current P60-D workflow writes two separately imported signed exam files, not a transactional in-browser pair import.",
@@ -485,7 +485,7 @@
       "agentUse": "Use question-quality.mjs prepare/template to review candidate material. Complete only required semantic/conditional checks per item, then the six bank-level checks once. Set reviewMode truthfully: self-review is fully supported; clean-context or independent-agent adds epistemic separation but is never a publication prerequisite.",
       "limitations": [
         "No offline network fetch, citation/PYQ authentication or provable reviewer identity/context separation",
-        "Self-review is not independent review; clean-context and independent-agent are attributed claims, not authenticated identities",
+        "Self-review is not layered review; clean-context and independent-agent are attributed claims, not authenticated identities",
         "Structurally valid unreviewed local authoring remains caution-labelled unless a strict quality-review gate is requested",
         "Candidate-only text/alt packets do not replace inspecting actual visual pixels when visual material is applicable",
         "P60-D/P60-E source and document provenance remain separate from factual truth certification"
@@ -504,7 +504,7 @@
       "provides": [
         "Derive a low-context correction-decision template from source/reviewed v1 banks without showing answers",
         "Require exact source/reviewed SHA, per-question and changed-field correspondence plus recorded reasons/evidence",
-        "Run existing P60-C source-bound independent review gate on reviewed content before paired compilation",
+        "Run existing P60-C source-bound layered review gate on reviewed content before paired compilation",
         "Archive exact original and reviewed source bytes along with source/reviewed signed exam packages and lineage",
         "Report conservative source-key score comparability, preserving altered wording and media as unavailable",
         "Use current Library paired edition/source review/frozen key modules without duplicating scorer or History",
@@ -558,7 +558,7 @@
       "status": "implemented-with-limits",
       "summary": "P60-F model-agnostic low-context local handoff combines existing strict source, review, original/reviewed, document provenance and coverage gates into explicit read-only assess or create-only publication.",
       "provides": [
-        "One-command answer-hidden full-bank review preparation and exact fillable SHA-bound review-v1 sidecar",
+        "One-command answer-hidden full-bank review preparation and exact fillable SHA-bound layered v3 review sidecar",
         "Discover agent actions and privileges without source-tree scans or backend access",
         "Read-only single/paired/PDF assessment with SHA-bound review and optional exact blueprint",
         "Mandatory reviewed-quality sidecar, explicit --allow-create for new-only canonical package writes, compact diagnostics without answer/media dumps",

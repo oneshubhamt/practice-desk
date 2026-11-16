@@ -10,7 +10,7 @@
 | Validate/compile one source bank | `question-bank-cli.mjs` | One canonical `practice-desk-authoring` v1 source compiled through the canonical publisher |
 | Small-context corrections | `question-bank-agent.mjs` | Paged inspection, question-scoped retrieval, SHA preconditions, new-file output |
 | Planned distribution | `content-blueprint.mjs` + optional cognitive tags | Explicit quotas/partial delivery; structurally valid partial work is not publication-ready |
-| Blind editorial/key challenge | `question-quality.mjs` | Candidate-only packet, v2 applicability declarations, all 20 checks, source-hash freshness |
+| Blind editorial/key challenge | `question-quality.mjs` | Candidate-only packet, v2 applicability declarations, all layered checks, source-hash freshness |
 | Source + separately corrected Reviewed | `editorial-editions.mjs` | Preserve Source bytes/key; bind Reviewed to exact Source paper/key identities |
 | Supplied PDF/document | `pdf-ingest.mjs` | External reviewer actually inspects pages/math/figures; bind document/key bytes and per-item provenance; no internal OCR |
 | Scoped orchestration | `agent-handoff.mjs` | Read-only assess; publication requires explicit create permission and fresh evidence |

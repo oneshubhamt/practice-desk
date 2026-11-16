@@ -61,23 +61,28 @@ const fillDecisions=(template)=>{
 };
 const reviewFor=(source,candidates)=>{
  const c=run(qualityTool,"checklist");assert.equal(c.status,0);
- return {format:"practice-desk-quality-review",version:2,bankId:source.bankId,
-  sourceSha256:candidates.sourceSha256,
-  records:candidates.items.map((entry,index)=>{
-   const q=source.questions.find(x=>x.id===entry.questionId);
-   return {questionId:q.id,questionSha256:sha(JSON.stringify(q)),
-    candidateSha256:entry.candidateSha256,
-    applicability:{mathematical:q.id==="account-01"?"yes":"no",legal:"no",timeSensitive:"no",asOfDate:null},
-    reviewer:{id:"fictional-test-operator",kind:"ai"},
-    independentSolution:{blindClaim:true,answer:q.answer,
-     reasoning:"Test-only assertion of independent solution, no external source was checked."},
-    checks:c.data.checklist.map((check,i)=>({id:check.id,status:"pass",
-     basis:i===9?"mathematical-proof":[11,12,13].includes(i)?"source-consulted":i===19?"rendered-claim":"independent-editorial",
+ const semantic=c.data.layers.semantic.checklist,bank=c.data.layers.bank.checklist;
+ const core=new Set(["exam-relevance","clarity-defensibility","reasoning-correctness","factual-correctness","explanation-quality"]);
+ return {format:"practice-desk-quality-review",version:3,bankId:source.bankId,
+  sourceSha256:candidates.sourceSha256,reviewMode:"self-review",candidateOnlyContextClaim:false,
+  reviewer:{id:"fictional-test-operator",kind:"ai"},
+  records:candidates.items.map(entry=>{
+   const q=source.questions.find(x=>x.id===entry.questionId),math=q.id==="account-01",ids=new Set(core);
+   if(["single-choice","multiple-select"].includes(q.kind))ids.add("distractor-quality");
+   if(math)ids.add("mathematical-correctness");
+   return {questionId:q.id,questionSha256:sha(JSON.stringify(q)),candidateSha256:entry.candidateSha256,
+    applicability:{mathematical:math?"yes":"no",legal:"no",timeSensitive:"no",visual:"no",asOfDate:null},
+    solution:{status:"completed",answer:String(q.answer),
+     reasoning:"Test-only second-pass assertion; no external source was checked."},
+    semanticChecks:semantic.filter(x=>ids.has(x.id)).map(check=>({id:check.id,status:"pass",
+     basis:check.id==="mathematical-correctness"||check.id==="factual-correctness"&&math?"mathematical-proof":
+      check.id==="factual-correctness"?"source-consulted":"independent-editorial",
      rationale:"Synthetic QA record, not authenticated independent reasoning."})),
     evidence:[{publisher:"Fixture",title:"Synthetic QA record",locator:"test:"+q.id,
-      retrievedAt:"2026-11-06",excerpt:"This is only a software regression fixture, not evidence of factual truth."}]
-   };
-  })
+      retrievedAt:"2026-11-06",excerpt:"This is only a software regression fixture, not evidence of factual truth."}]};
+  }),
+  bankReview:{checks:bank.map(check=>({id:check.id,status:"pass",basis:"bank-editorial",
+   rationale:"Synthetic bank-level regression review, not exam-quality certification."}))}
  };
 };
 test("P60-D RED: machine-readable template derives exact changed fields without exposing either keyed answer",()=>temp(async dir=>{
@@ -107,7 +112,7 @@ test("P60-D RED: source-preserving paired publication uses existing scorer/revie
  assert.equal(preview.data.sourceKeyComparison.comparable,3);
  assert.equal(preview.data.sourceKeyComparison.total,3);
  assert.equal(preview.data.factualVerification,"not-performed");
- assert.equal(preview.data.reviewAssurance,"recorded-self-attestation-not-authenticated");
+ assert.equal(preview.data.reviewAssurance,"recorded-self-review-not-independent-or-authenticated");
  assert.equal(preview.data.changes.total,1);
  const out=join(dir,"published-pair");
  const result=run(tool,"compile",originalPath,reviewedPath,decisionsPath,out,"--quality-review",reviewPath);
@@ -539,22 +544,29 @@ test("P60-E strict compile delegates P60-D without rewriting original, and canno
  const candidate=run(quality,"candidate",reviewedPath);
  assert.equal(candidate.status,0,candidate.stderr);
  const checklist=run(quality,"checklist");
- const review={format:"practice-desk-quality-review",version:2,bankId:reviewed.bankId,
-  sourceSha256:candidate.data.sourceSha256,records:candidate.data.items.map(row=>{
-   const q=reviewed.questions.find(q=>q.id===row.questionId);
-   return {questionId:q.id,questionSha256:sha(JSON.stringify(q)),
-    candidateSha256:row.candidateSha256,
-    applicability:{mathematical:["dilr-1","qa-1"].includes(q.id)?"yes":"no",legal:"no",timeSensitive:"no",asOfDate:null},
-    reviewer:{id:"synthetic-agent-reviewer",kind:"ai"},
-    independentSolution:{blindClaim:true,answer:String(q.answer),
+ const semantic=checklist.data.layers.semantic.checklist,bank=checklist.data.layers.bank.checklist;
+ const core=new Set(["exam-relevance","clarity-defensibility","reasoning-correctness","factual-correctness","explanation-quality"]);
+ const review={format:"practice-desk-quality-review",version:3,bankId:reviewed.bankId,
+  sourceSha256:candidate.data.sourceSha256,reviewMode:"self-review",candidateOnlyContextClaim:false,
+  reviewer:{id:"synthetic-agent-reviewer",kind:"ai"},
+  records:candidate.data.items.map(row=>{
+   const q=reviewed.questions.find(q=>q.id===row.questionId),math=["dilr-1","qa-1"].includes(q.id),ids=new Set(core);
+   if(["single-choice","multiple-select"].includes(q.kind))ids.add("distractor-quality");
+   if(math)ids.add("mathematical-correctness");
+   return {questionId:q.id,questionSha256:sha(JSON.stringify(q)),candidateSha256:row.candidateSha256,
+    applicability:{mathematical:math?"yes":"no",legal:"no",timeSensitive:"no",visual:"no",asOfDate:null},
+    solution:{status:"completed",answer:String(q.answer),
      reasoning:"Synthetic review assertion for software tests, not external proof."},
-    checks:checklist.data.checklist.map((c,i)=>({id:c.id,status:"pass",
-      basis:i===9?"mathematical-proof":[11,12,13].includes(i)?"source-consulted":i===19?"rendered-claim":"independent-editorial",
+    semanticChecks:semantic.filter(x=>ids.has(x.id)).map(c=>({id:c.id,status:"pass",
+      basis:c.id==="mathematical-correctness"||c.id==="factual-correctness"&&math?"mathematical-proof":
+       c.id==="factual-correctness"?"source-consulted":"independent-editorial",
       rationale:"Synthetic QA statement for a regression fixture, not source certification."})),
-    evidence:[{publisher:"Fixture",title:"Synthetic sample",
-      locator:"paper page 1",retrievedAt:"2026-11-06",
+    evidence:[{publisher:"Fixture",title:"Synthetic sample",locator:"paper page 1",retrievedAt:"2026-11-06",
       excerpt:"Test-only statement; no external source content checked."}]};
-  })};
+  }),
+  bankReview:{checks:bank.map(c=>({id:c.id,status:"pass",basis:"bank-editorial",
+   rationale:"Synthetic bank-level PDF regression assertion only."}))}
+ };
  const reviewPath=await save(dir,"review.json",review);
  const out=join(dir,"compiled");
  const before=run(tool,"audit",manifest,original,pdfPath,"--reviewed",reviewedPath,

@@ -845,7 +845,7 @@ test("P60-C visual material activates one conditional rendered-integrity check i
  src.stimuli.push({id:"safe-visual",kind:"image",mediaRef:"safe-image",altText:"Neutral diagram"});
  src.questions[0].stimulusRef="safe-visual";
  const input=await write(dir,"visual.json",src),packet=command(tool,"candidate",input,"--limit","10");
- const review=completeLayeredReview(src,packet.data,{visualIds:["rc-1"]});
+ const review=completeLayeredReview(src,packet.data,{mathIds:["dilr-1","qa-1"],visualIds:["rc-1"]});
  const ok=command(tool,"audit",input,"--review",await write(dir,"visual-review.json",review));
  assert.equal(ok.status,0,JSON.stringify(ok.data.issues));
  const denied=structuredClone(review);denied.records[0].applicability.visual="no";
