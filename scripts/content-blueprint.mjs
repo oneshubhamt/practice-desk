@@ -497,7 +497,9 @@ const sourceEnvelope=(plan,sources,bankId,title)=>{
   envelope={
    format:"practice-desk-authoring",version:1,bankId,examId:plan.examId,paperId:plan.paperId,
    title,edition:"custom",revision:plan.revision,scoring:structuredClone(rules.scoring),
-   timing,navigation,sections:structuredClone(rules.sections)
+   timing,navigation,sections:structuredClone(rules.sections),
+   ...(rules.tools?{tools:structuredClone(rules.tools)}:{}),
+   ...(rules.practiceModes?{practiceModes:structuredClone(rules.practiceModes)}:{})
   };
  }
  envelope.bankId=bankId;envelope.title=title;
