@@ -203,7 +203,7 @@ const {join}=await import("node:path");
 const {execFileSync}=await import("node:child_process");
 const {fileURLToPath}=await import("node:url");
 const {editorialDecisionTemplate,inspectEditorialPair}=await import("../../editorial-editions.mjs");
-const {QUALITY_CHECKLIST}=await import("../../question-quality.mjs");
+const {SEMANTIC_CHECKLIST,BANK_CHECKLIST}=await import("../../question-quality.mjs");
 const engine=process.argv[2]??"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
 const {page,errors}=await h.open({viewport:{width:1280,height:840}});
@@ -418,22 +418,31 @@ try{
    evidence:[{publisher:"Fixture",title:"Synthetic editorial decision",locator:"P60-D browser test",
     sourceNote:"Test-only user-attributed note; independent factual correctness not asserted"}]
   }));
-  const review={format:"practice-desk-quality-review",version:2,bankId:reviewedBank.bankId,
-   sourceSha256:packet.sourceSha256,records:packet.items.map(entry=>{
-    const question=reviewedBank.questions.find(q=>q.id===entry.questionId);
+  const reviewCore=new Set(["exam-relevance","clarity-defensibility","reasoning-correctness",
+   "factual-correctness","explanation-quality"]);
+  const review={format:"practice-desk-quality-review",version:3,bankId:reviewedBank.bankId,
+   sourceSha256:packet.sourceSha256,reviewMode:"self-review",candidateOnlyContextClaim:false,
+   reviewer:{id:"regression-only",kind:"ai"},
+   records:packet.items.map(entry=>{
+    const question=reviewedBank.questions.find(q=>q.id===entry.questionId),
+     mathematical=question.id==="account-01",required=new Set(reviewCore);
+    if(["single-choice","multiple-select"].includes(question.kind))required.add("distractor-quality");
+    if(mathematical)required.add("mathematical-correctness");
     return {questionId:entry.questionId,questionSha256:digest(JSON.stringify(question)),
       candidateSha256:entry.candidateSha256,
-      applicability:{mathematical:question.id==="account-01"?"yes":"no",legal:"no",timeSensitive:"no",asOfDate:null},
-      reviewer:{id:"regression-only",kind:"ai"},
-      independentSolution:{blindClaim:true,answer:question.answer,
-       reasoning:"Synthetic software-fixture assertion, not a checked external answer."},
-      checks:QUALITY_CHECKLIST.map((x,i)=>({id:x.id,status:"pass",
-       basis:i===9?"mathematical-proof":[11,12,13].includes(i)?"source-consulted":i===19?"rendered-claim":"independent-editorial",
+      applicability:{mathematical:mathematical?"yes":"no",legal:"no",timeSensitive:"no",visual:"no",asOfDate:null},
+      solution:{status:"completed",answer:String(question.answer),
+       reasoning:"Synthetic second-pass software-fixture assertion, not a checked external answer."},
+      semanticChecks:SEMANTIC_CHECKLIST.filter(x=>required.has(x.id)).map(x=>({id:x.id,status:"pass",
+       basis:x.id==="mathematical-correctness"||x.id==="factual-correctness"&&mathematical?
+        "mathematical-proof":x.id==="factual-correctness"?"source-consulted":"semantic-editorial",
        rationale:"Synthetic regression fixture, verification not authenticated."})),
       evidence:[{publisher:"Fixture",title:"P60-D browser QA",locator:"question:"+question.id,
        retrievedAt:"2026-11-06",excerpt:"Only tests code contracts; not factual source verification."}]
     };
-   })};
+   }),
+   bankReview:{checks:BANK_CHECKLIST.map(x=>({id:x.id,status:"pass",basis:"bank-editorial",
+    rationale:"Synthetic bank-level browser regression assertion only."}))}};
   editionPair=inspectEditorialPair(
    {data:originalBank,raw:originalRaw,sha256:digest(originalRaw)},
    {data:reviewedBank,raw:reviewedRaw,sha256:digest(reviewedRaw)},
