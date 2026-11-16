@@ -19,7 +19,7 @@ For the common strict-review flow:
 
 ```bash
 node scripts/agent-handoff.mjs prepare bank.json NEW-review-dir --allow-create
-# Independently solve candidate-only material and genuinely inspect cited sources.
+# Complete the second-pass solution and evidence checks. Use self-review, clean-context, or independent-agent truthfully.
 node scripts/agent-handoff.mjs assess single bank.json --quality-review NEW-review-dir/review.json
 node scripts/agent-handoff.mjs publish single bank.json NEW.exam.json --quality-review NEW-review-dir/review.json --allow-create
 ```

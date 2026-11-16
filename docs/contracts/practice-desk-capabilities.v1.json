@@ -158,7 +158,7 @@
       "operation": "pdf-intake-audit",
       "command": "node scripts/pdf-ingest.mjs audit <intake.json> <original.json> <paper.pdf> [--key-document key.pdf] [--reviewed reviewed.json --decisions decisions.json --quality-review review.json] [--blueprint plan.json]",
       "privilege": "read-only",
-      "effect": "Fail-closed document/item/page/key/visual provenance and optional independently recorded P60-C/D/B review; bounded answer-free output"
+      "effect": "Fail-closed document/item/page/key/visual provenance and optional layered P60-C/D/B review evidence; bounded answer-free output"
     },
     {
       "operation": "pdf-intake-compile",
@@ -485,7 +485,7 @@
       "agentUse": "Use question-quality.mjs prepare/template to review candidate material. Complete only required semantic/conditional checks per item, then the six bank-level checks once. Set reviewMode truthfully: self-review is fully supported; clean-context or independent-agent adds epistemic separation but is never a publication prerequisite.",
       "limitations": [
         "No offline network fetch, citation/PYQ authentication or provable reviewer identity/context separation",
-        "Self-review is not layered review; clean-context and independent-agent are attributed claims, not authenticated identities",
+        "Self-review is a valid layered review but provides no independent context; clean-context and independent-agent separation remain attributed claims, not authenticated identities",
         "Structurally valid unreviewed local authoring remains caution-labelled unless a strict quality-review gate is requested",
         "Candidate-only text/alt packets do not replace inspecting actual visual pixels when visual material is applicable",
         "P60-D/P60-E source and document provenance remain separate from factual truth certification"
@@ -510,7 +510,7 @@
         "Use current Library paired edition/source review/frozen key modules without duplicating scorer or History",
         "Exclude explicitly unresolved reviewed questions from scoring under existing invalid editorial status"
       ],
-      "agentUse": "Read docs/architecture/AGENT_CONTENT_PIPELINE.md. Use existing P59 patches to make a separate reviewed file; run editorial-editions.mjs template, fill decisions, independently review P60-C, audit then compile into a new directory; import source.exam.json before reviewed.exam.json.",
+      "agentUse": "Read docs/architecture/AGENT_CONTENT_PIPELINE.md. Use existing P59 patches to make a separate reviewed file; run editorial-editions.mjs template, fill decisions, complete the P60-C layered review using the truthful reviewMode, audit then compile into a new directory; import source.exam.json before reviewed.exam.json.",
       "limitations": [
         "Does not authenticate official PYQs, original publishers, external evidence or reviewer independence.",
         "Requires structurally publishable original with no explicit candidate answer leak; unreadable historical scans stay outside executable Source.",
@@ -538,7 +538,7 @@
         "Existing P60-D source/reviewed signed immutable paired exams, exact raw source archives and extra PDF provenance sidecar",
         "No browser/app access without the user's explicit offline import"
       ],
-      "agentUse": "Read docs/architecture/AGENT_CONTENT_PIPELINE.md only for a supplied document; transcribe externally and preserve bytes, template, source-inspect, audit, independently review the corrected edition, compile into a new directory.",
+      "agentUse": "Read docs/architecture/AGENT_CONTENT_PIPELINE.md only for a supplied document; transcribe externally and preserve bytes, template, source-inspect, audit, complete the corrected edition's P60-C layered review in the truthful reviewMode, then compile into a new directory.",
       "limitations": [
         "No PDF text parsing/OCR/image recognition, no independently verified document page count or content fidelity",
         "Actual source-key/PYQ/source publisher/reviewer identity and factual verification cannot follow from a SHA or model declaration",

@@ -78,7 +78,7 @@ Research actual syllabus/source documents, dates/current law, original item numb
 node scripts/agent-handoff.mjs prepare bank.json NEW-review-dir --allow-create
 ```
 
-This creates candidate-only review material without printing answers/explanations/base64 media. The reviewer independently solves the items and fills all 20 assessments plus evidence. Current v2 review records explicitly declare `mathematical`, `legal` and `timeSensitive` applicability; legal/time-sensitive claims require an ISO `asOfDate` and matching source evidence, while mathematics requires proof/source-backed checking.
+This creates answer-hidden candidate-only material without printing answers/explanations/base64 media. The v3 review records the truthful `reviewMode` (`self-review`, `clean-context`, or `independent-agent`), requires a second-pass solution, compact semantic checks per item, and six bank-level checks once. It explicitly declares `mathematical`, `legal`, `timeSensitive`, and `visual` applicability; legal/time-sensitive claims require an ISO `asOfDate` and matching source evidence, mathematics requires proof/source-backed checking, and visual items require an actual visual-inspection claim.
 
 The initial template is intentionally pending and **cannot publish**. A completed checklist, SHA, URL, reviewer label or timestamp is not independent factual authentication.
 
