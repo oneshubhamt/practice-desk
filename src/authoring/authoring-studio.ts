@@ -23,6 +23,7 @@ import {MAX_AUTHORED_ITEMS,resizeRichItems} from "./authoring-cardinality.ts";
 import {mathRenderer} from "../app/math-renderer-provider.ts";
 import {escapeText} from "../app/html-escape.ts";
 import {paperEditionLabel} from "../app/editorial-labels.ts";
+import {scoreableMaximum} from "../engine/score-ceiling.ts";
 import {downloadText} from "../app/download-file.ts";
 import {wordgardEditorPort} from "./wordgard-adapter.ts";
 import {syllabusForExam,syllabusHeading,UNCLASSIFIED_SUBJECT} from "../learning/syllabus-taxonomy.ts";
@@ -372,6 +373,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    const compiled=inspectAuthoringPublication(active(),actions.existing()).compiled;
    if(!compiled)return "";
    const draft=active(),count=compiled.questions.length;
+   const maximum=scoreableMaximum(compiled.paper,compiled.answerKey,compiled.questions);
    const coverage=new Map<string,number>(),kinds=new Map<string,number>();
    for(const q of draft.questions){
     const label=q.syllabusHeadingId||q.subject||"Unclassified";
@@ -387,9 +389,8 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
     count+' questions · '+escapeText(compiled.title)+'</summary>'+
     '<p class="fine">Paper '+escapeText(compiled.paper.paperId)+' · edition '+
     escapeText(paperEditionLabel(compiled.paper))+
-    ' · sections '+compiled.paper.sections.length+' · correct-answer ceiling '+
-    (count*draft.marksCorrect)+' marks · wrong answer '+draft.marksIncorrect+
-    ' marks · '+escapeText(duration)+'</p>'+
+    ' · sections '+compiled.paper.sections.length+' · automated correct-answer ceiling '+
+    maximum+' marks · compiled marking rules preserved · '+escapeText(duration)+'</p>'+
     '<p class="fine">Physical sections: '+
     escapeText(compiled.paper.sections.map(section=>section.title+' ('+
       section.questionRevisionIds.length+')').join('; '))+'</p>'+
