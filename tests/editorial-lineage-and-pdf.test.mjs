@@ -550,16 +550,19 @@ test("P60-E strict compile delegates P60-D without rewriting original, and canno
   sourceSha256:candidate.data.sourceSha256,reviewMode:"self-review",candidateOnlyContextClaim:false,
   reviewer:{id:"synthetic-agent-reviewer",kind:"ai"},
   records:candidate.data.items.map(row=>{
-   const q=reviewed.questions.find(q=>q.id===row.questionId),math=["dilr-1","qa-1"].includes(q.id),ids=new Set(core);
+   const q=reviewed.questions.find(q=>q.id===row.questionId),math=["dilr-1","qa-1"].includes(q.id),
+    visual=q.id==="figure-q",ids=new Set(core);
    if(["single-choice","multiple-select"].includes(q.kind))ids.add("distractor-quality");
    if(math)ids.add("mathematical-correctness");
+   if(visual)ids.add("visual-integrity");
    return {questionId:q.id,questionSha256:sha(JSON.stringify(q)),candidateSha256:row.candidateSha256,
-    applicability:{mathematical:math?"yes":"no",legal:"no",timeSensitive:"no",visual:"no",asOfDate:null},
+    applicability:{mathematical:math?"yes":"no",legal:"no",timeSensitive:"no",visual:visual?"yes":"no",asOfDate:null},
     solution:{status:"completed",answer:String(q.answer),
      reasoning:"Synthetic review assertion for software tests, not external proof."},
     semanticChecks:semantic.filter(x=>ids.has(x.id)).map(c=>({id:c.id,status:"pass",
       basis:c.id==="mathematical-correctness"||c.id==="factual-correctness"&&math?"mathematical-proof":
-       c.id==="factual-correctness"?"source-consulted":"semantic-editorial",
+       c.id==="factual-correctness"?"source-consulted":
+       c.id==="visual-integrity"?"rendered-claim":"semantic-editorial",
       rationale:"Synthetic QA statement for a regression fixture, not source certification."})),
     evidence:[{publisher:"Fixture",title:"Synthetic sample",locator:"paper page 1",retrievedAt:"2026-11-06",
       excerpt:"Test-only statement; no external source content checked."}]};
