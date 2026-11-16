@@ -299,13 +299,19 @@ export function auditQuestionQuality(source,sourceRaw,reviewRaw=undefined,{offse
 // The output is an exact, fillable layered review contract; no extra template-only
 // properties requiring agents to repair JSON before running the validator.
 function suggestedSemanticChecks(value,draft,q,projection){
- const sourceQuestion=value.questions.find(x=>x.id===q.id),inferred=inferredApplicability(q,draft),author=sourceQuestion?.qa?.applicability,ids=new Set(SEMANTIC_CORE);
+ const sourceQuestion=value.questions.find(x=>x.id===q.id),inferred=inferredApplicability(q,draft),author=sourceQuestion?.qa?.applicability,
+  mathematical=inferred.mathematical||author?.mathematical===true,
+  sourceCritical=inferred.legal||inferred.timeSensitive||author?.legal===true||author?.timeSensitive===true,
+  ids=new Set(SEMANTIC_CORE);
  if(["single-choice","multiple-select"].includes(q.kind))ids.add("distractor-quality");
- if(inferred.mathematical||author?.mathematical===true)ids.add("mathematical-correctness");
- if(inferred.legal||inferred.timeSensitive||author?.legal===true||author?.timeSensitive===true)ids.add("temporal-correctness");
+ if(mathematical)ids.add("mathematical-correctness");
+ if(sourceCritical)ids.add("temporal-correctness");
  if(q.provenance?.kind==="official-pyq")ids.add("pyq-fidelity");if(projection.hasVisualMaterial)ids.add("visual-integrity");
  return SEMANTIC_CHECKLIST.filter(x=>ids.has(x.id)).map(x=>({id:x.id,status:"not-reviewed",
-  basis:x.id==="mathematical-correctness"?"mathematical-proof":["factual-correctness","temporal-correctness","pyq-fidelity"].includes(x.id)?"source-consulted":x.id==="visual-integrity"?"rendered-claim":"semantic-editorial",
+  basis:x.id==="mathematical-correctness"?"mathematical-proof":
+   x.id==="factual-correctness"?(sourceCritical?"source-consulted":mathematical?"mathematical-proof":"source-consulted"):
+   ["temporal-correctness","pyq-fidelity"].includes(x.id)?"source-consulted":
+   x.id==="visual-integrity"?"rendered-claim":"semantic-editorial",
   rationale:"Pending semantic assessment"}));
 }
 function reviewTemplate(value,sourceRaw,items){
