@@ -369,7 +369,6 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   const validationBox=find<HTMLElement>("pd-author-validation");
   const inspectPublication=()=>inspectPublicationWorkflow(active(),actions.existing());
   const dryRun=():string=>{
-   if(!requiresExternalQuality(active()))return "";
    const compiled=inspectAuthoringPublication(active(),actions.existing()).compiled;
    if(!compiled)return "";
    const draft=active(),count=compiled.questions.length;
