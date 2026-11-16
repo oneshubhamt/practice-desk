@@ -106,7 +106,8 @@ function validateBlueprint(value){
   if(policy.scoring!==undefined){
    const score=obj(policy.scoring,"paperRules.scoring",
     ["correctMarks","incorrectMarks","unansweredMarks","decimalPlaces","byQuestionKind"]);
-   marking(score,"paperRules.scoring");
+   marking({correctMarks:score.correctMarks,incorrectMarks:score.incorrectMarks,
+    unansweredMarks:score.unansweredMarks},"paperRules.scoring");
    if(score.decimalPlaces!==undefined)int(score.decimalPlaces,"paperRules.scoring.decimalPlaces",0,6);
    if(score.byQuestionKind!==undefined){
     const by=obj(score.byQuestionKind,"paperRules.scoring.byQuestionKind",KINDS);
