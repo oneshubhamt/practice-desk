@@ -456,7 +456,7 @@ const semanticPasses=(q,{math=false,legal=false,timeSensitive=false,visual=false
  return SEMANTIC_CHECKLIST.filter(x=>ids.has(x.id)).map(x=>({id:x.id,status:"pass",
   basis:x.id==="mathematical-correctness"||x.id==="factual-correctness"&&math?"mathematical-proof":
    ["factual-correctness","temporal-correctness","pyq-fidelity"].includes(x.id)?"source-consulted":
-   x.id==="visual-integrity"?"rendered-claim":"independent-editorial",
+   x.id==="visual-integrity"?"rendered-claim":"semantic-editorial",
   rationale:"Synthetic software fixture, never factual source certification."}));
 };
 const bankPasses=()=>BANK_CHECKLIST.map(x=>({id:x.id,status:"pass",basis:"bank-editorial",

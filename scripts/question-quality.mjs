@@ -16,7 +16,7 @@ export const SEMANTIC_CHECKLIST=Object.freeze([
  ["exam-relevance","Exam/syllabus relevance and appropriate item-level difficulty/construct"],
  ["clarity-defensibility","Well-formed unambiguous task with sufficient assumptions and one defensible response"],
  ["distractor-quality","Plausible distractors test meaningful misconceptions rather than wording tricks"],
- ["reasoning-correctness","Independent reasoning supports the keyed response and relevant alternatives"],
+ ["reasoning-correctness","Second-pass reasoning supports the keyed response and relevant alternatives"],
  ["factual-correctness","Factual claims, exceptions and jurisdiction are correct on the recorded evidence basis"],
  ["explanation-quality","Explanation correctly justifies the response and resolves useful distinctions"],
  ["mathematical-correctness","Calculations, units, tolerance, rounding and boundary conditions are correct"],
@@ -63,7 +63,7 @@ const MAX_SOURCE=25*1024*1024,MAX_REVIEW=3*1024*1024,MAX_ROWS=200;
 const idPattern=/^[A-Za-z0-9][A-Za-z0-9_-]*$/;
 const hashPattern=/^[a-f0-9]{64}$/;
 const allowedChecks=new Set(["pass","fail","not-reviewed"]);
-const allowedSemanticBasis=new Set(["independent-editorial","mathematical-proof","source-consulted","rendered-claim","human-claim"]);
+const allowedSemanticBasis=new Set(["semantic-editorial","mathematical-proof","source-consulted","rendered-claim","human-claim"]);
 const allowedBankBasis=new Set(["bank-editorial","blueprint-audit","source-consulted","human-claim"]);
 const emit=x=>process.stdout.write(JSON.stringify(x,null,2)+"\n");
 const fail=message=>{throw Error(message);};
@@ -305,7 +305,7 @@ function suggestedSemanticChecks(value,draft,q,projection){
  if(inferred.legal||inferred.timeSensitive||author?.legal===true||author?.timeSensitive===true)ids.add("temporal-correctness");
  if(q.provenance?.kind==="official-pyq")ids.add("pyq-fidelity");if(projection.hasVisualMaterial)ids.add("visual-integrity");
  return SEMANTIC_CHECKLIST.filter(x=>ids.has(x.id)).map(x=>({id:x.id,status:"not-reviewed",
-  basis:x.id==="mathematical-correctness"?"mathematical-proof":["factual-correctness","temporal-correctness","pyq-fidelity"].includes(x.id)?"source-consulted":x.id==="visual-integrity"?"rendered-claim":"independent-editorial",
+  basis:x.id==="mathematical-correctness"?"mathematical-proof":["factual-correctness","temporal-correctness","pyq-fidelity"].includes(x.id)?"source-consulted":x.id==="visual-integrity"?"rendered-claim":"semantic-editorial",
   rationale:"Pending semantic assessment"}));
 }
 function reviewTemplate(value,sourceRaw,items){

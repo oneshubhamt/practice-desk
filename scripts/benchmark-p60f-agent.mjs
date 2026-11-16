@@ -38,7 +38,7 @@ function reviewFor(source,raw,packet){
      reasoning:"Synthetic review assertion for measuring workflow, not genuine independent verification."},
     semanticChecks:SEMANTIC_CHECKLIST.filter(x=>needed.has(x.id)).map(x=>({id:x.id,status:"pass",
      basis:x.id==="mathematical-correctness"||x.id==="factual-correctness"&&math?"mathematical-proof":
-      x.id==="factual-correctness"?"source-consulted":"independent-editorial",
+      x.id==="factual-correctness"?"source-consulted":"semantic-editorial",
      rationale:"Synthetic attributed assertion; external source not fetched or checked."})),
     evidence:[{publisher:"Synthetic fixture",title:"Not a real source",locator:"question:"+q.id,retrievedAt:"2026-11-06",excerpt:"Only measured workflow; not real evidence."}]};}),
   bankReview:{checks:BANK_CHECKLIST.map(x=>({id:x.id,status:"pass",basis:"bank-editorial",rationale:"Synthetic bank-level benchmark assertion; educational quality was not measured."}))}};
