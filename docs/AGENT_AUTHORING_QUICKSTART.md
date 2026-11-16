@@ -2,6 +2,28 @@
 
 **Goal:** create, review and package exam questions through local files/CLI with minimal context. Practice Desk has no embedded LLM, network source authenticator or external-agent access to browser History. Repository-maintained exam families may be explicitly preinstalled through the family switch in `question-banks/catalog.json`; their papers/editions are discovered through the nested manifest graph. Ad-hoc external outputs still require user-controlled import.
 
+## Start new authoring with a compact brief
+
+For new question generation, prefer a blueprint-driven authoring brief instead of making the model learn repository structure:
+
+```bash
+node scripts/content-blueprint.mjs brief plan.json \
+  --bank-id day4-batch-01 \
+  --title "Day 4 batch 1" \
+  --batch-size 8
+```
+
+If earlier batches already exist, list only those source files before the flags. The brief then reports the remaining blueprint deficits without emitting their question bodies:
+
+```bash
+node scripts/content-blueprint.mjs brief plan.json batch-01.json batch-02.json \
+  --bank-id day4-batch-03 \
+  --title "Day 4 batch 3" \
+  --batch-size 8
+```
+
+The packet contains the exam/paper identity, current remaining count, bounded quota deficits, source policy, the exact non-question paper envelope and the small question-output contract. It deliberately omits repository/package placement, existing question bodies and media bytes. The workflow is fully usable with **one AI agent**; multiple agents or clean-context review may strengthen later review but are not prerequisites for authoring. The current brief does not include learner-performance context; any later personalized focus is an explicit optional input, not a requirement for this baseline flow.
+
 ## Canonical source
 
 Author one `practice-desk-authoring` v1 JSON file. Generic format examples remain under `examples/`; maintained exam content belongs under [`question-banks/`](../question-banks/). For maintained content, read `question-banks/catalog.json`, follow the selected family’s root manifest → year manifest → paper manifest, then open only the required canonical authoring/source file. The root catalog is not a paper index. Do not ingest generated `.exam.json` packages unless runtime-package inspection is actually needed. Source-traced examples in `examples/source-grounded-*.json` are **reconstructions**, not authenticated official PYQs.

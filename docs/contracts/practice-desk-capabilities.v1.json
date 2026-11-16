@@ -29,6 +29,7 @@
       "For supplied PDF papers, have an external authorized agent interpret original document and use P60-E source-bound intake audit before reviewed publication",
       "Read one relevant authoring example/task contract",
       "Translate user coverage and source constraints to a v1 content blueprint and validate it before creating question batches",
+      "Generate a compact content-blueprint brief for each new authoring batch so the model sees only decision-ready paper rules, remaining deficits and the output contract; one AI agent is sufficient",
       "Research facts outside app",
       "Generate only requested question batch",
       "For source-bound review, create one complete blind packet via agent-handoff.mjs prepare ... --allow-create; do not expose answer keys to the blind reviewer",
@@ -74,6 +75,12 @@
       "command": "node scripts/question-bank-cli.mjs compile-bank <source.json> <NEW-output.json>",
       "privilege": "create-new-file",
       "effect": "Canonical validated publication package; manual browser import unless a repository maintainer places it under the exam/year/paper manifest graph of an enabled catalog family"
+    },
+    {
+      "operation": "authoring-brief",
+      "command": "node scripts/content-blueprint.mjs brief <plan.json> [existing-source.json ...] --bank-id <new-batch-id> --title <title> [--batch-size 1..20] [--cognitive tags.json] [--against prior-bank.json]...",
+      "privilege": "read-only",
+      "effect": "Compact single-agent-compatible authoring task packet: remaining blueprint deficits, source policy, exact non-question paper envelope and minimal question contract; omits existing question bodies, media bytes and repository/package placement"
     },
     {
       "operation": "validate-content-blueprint",
@@ -441,6 +448,7 @@
       "summary": "P60-B versioned content production blueprint, bounded multi-batch quota audit and optional exact canonical compiler preflight.",
       "provides": [
         "Validate user-authored exam, paper, subject and topic targets before content generation",
+        "Generate a bounded single-agent-compatible authoring brief for a fresh batch, preserving exact paper rules while hiding existing question bodies and repository/package mechanics",
         "Enforce exhaustive or partial exact counts across subject, topic, subtopic, difficulty, kind, origin and physical section",
         "Optional explicit user marking, timer and navigation constraints",
         "Unverified author-attributed cognitive-level sidecar and counts",
@@ -448,7 +456,7 @@
         "Compact requested-versus-actual coverage and observed category inventories without question text",
         "Optional --blueprint guard for exact single-source canonical validate or compile"
       ],
-      "agentUse": "Start from docs/architecture/AGENT_CONTENT_PIPELINE.md plus one exam blueprint example; validate the user-defined plan, generate batches, audit entire intended composition before importing; use --blueprint on one-file compilation.",
+      "agentUse": "Validate the user-defined plan, then use content-blueprint.mjs brief as the normal new-batch interface. Supply only existing source batches needed to calculate remaining quotas; generate the requested batch, audit the aggregate plan, and compile through the canonical source pipeline.",
       "limitations": [
         "No automatic syllabus truth, cognitive calibration, fact verification or source authentication",
         "The current offline browser can import without a blueprint; CLI enforcement requires an explicit --blueprint flag or content-blueprint audit",
@@ -457,7 +465,8 @@
       ],
       "sourcePaths": [
         "scripts/content-blueprint.mjs",
-        "scripts/question-bank-cli.mjs"
+        "scripts/question-bank-cli.mjs",
+        "docs/AGENT_AUTHORING_QUICKSTART.md"
       ]
     },
     {

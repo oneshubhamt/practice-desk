@@ -396,6 +396,120 @@ function audit(plan,sources,tagDoc,{offset=0,limit=12,priorSources=[]}={}){
    nextOffset:offset+limit<issueCount?offset+limit:null,
    remaining:Math.max(0,issueCount-offset-limit),items:issues.slice(offset,offset+limit)}};
 }
+const briefGroupOrder=["subjects","topics","subtopics","difficulties","kinds","origins","sections","cognitive"];
+const stableSourceId=(value,label)=>{
+ str(value,label,80);
+ if(!/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(value))
+  fail(label+" must use letters, numbers, underscores or hyphens");
+ return value;
+};
+const briefKey=(group,key)=>{
+ if(group==="topics"||group==="subtopics"){
+  try{
+   const parts=JSON.parse(key);
+   if(Array.isArray(parts))return group==="topics"?
+    {subjectKey:parts[0],topic:parts[1]}:
+    {subjectKey:parts[0],topic:parts[1],subtopic:parts[2]};
+  }catch{}
+ }
+ return {key};
+};
+const sourceEnvelope=(plan,sources,bankId,title)=>{
+ let envelope;
+ if(sources.length){
+  envelope=structuredClone(sources[0].value);
+  delete envelope.questions;delete envelope.stimuli;delete envelope.media;
+ }else{
+  const rules=plan.paperRules;
+  if(!rules?.scoring||rules.scoring.correctMarks===undefined||rules.scoring.incorrectMarks===undefined||
+     !rules?.timing?.kind||!Array.isArray(rules.sections)||!rules.sections.length)
+   fail("brief without an existing source requires blueprint paperRules.scoring, paperRules.timing.kind and at least one paperRules.sections entry");
+  const timing=structuredClone(rules.timing);
+  const navigation=rules.navigation?structuredClone(rules.navigation):{
+   questionNavigation:"free",
+   sectionNavigation:timing.kind==="sectional"?"sequential-locked":"free",
+   allowReview:true
+  };
+  envelope={
+   format:"practice-desk-authoring",version:1,bankId,examId:plan.examId,paperId:plan.paperId,
+   title,edition:"custom",revision:plan.revision,scoring:structuredClone(rules.scoring),
+   timing,navigation,sections:structuredClone(rules.sections)
+  };
+ }
+ envelope.bankId=bankId;envelope.title=title;
+ envelope.examId=plan.examId;envelope.paperId=plan.paperId;envelope.revision=plan.revision;
+ return envelope;
+};
+function buildAuthoringBrief(plan,planSha,sources,tagDoc,{priorSources=[],batchSize=8,bankId,title}={}){
+ stableSourceId(bankId,"--bank-id");
+ str(title,"--title",180);
+ if(sources.some(x=>x.value?.bankId===bankId))
+  fail("--bank-id must be new for this authored batch");
+ const planning={...plan,allowPartial:true};
+ const tagsForEmpty=sources.length||tagDoc?tagDoc:{format:TAG_FORMAT,version:1,tags:[]};
+ const audited=audit(planning,sources,tagsForEmpty,{limit:50,offset:0,priorSources});
+ if(audited.issues.blocking)
+  fail("Cannot build authoring brief while current sources contradict the blueprint: "+
+   audited.issues.items.filter(x=>x.severity==="error").slice(0,3).map(x=>x.code).join(", "));
+ const deficits=[];
+ for(const group of briefGroupOrder){
+  for(const row of audited.coverage[group]??[]){
+   if(row.difference>=0)continue;
+   deficits.push({group,...briefKey(group,row.key),target:row.target,actual:row.actual,remaining:-row.difference});
+  }
+ }
+ const requestedNow=Math.min(batchSize,audited.remainingCount);
+ const envelope=sourceEnvelope(plan,sources,bankId,title);
+ const sourcePolicy={
+  syllabus:structuredClone(plan.syllabus),
+  minCitations:plan.requirements.minCitations??0,
+  allowedOrigins:structuredClone(plan.requirements.allowedOrigins??ORIGINS),
+  excludedTopics:structuredClone(plan.requirements.excludedTopics??[]),
+  maxTopicSharePercent:plan.requirements.maxTopicSharePercent??100
+ };
+ const classification={
+  requireTopic:plan.requirements.requireTopic===true,
+  requireSubtopic:plan.requirements.requireSubtopic===true,
+  requireDifficulty:plan.requirements.requireDifficulty===true
+ };
+ return {
+  format:"practice-desk-authoring-brief",version:1,valid:true,
+  blueprint:{id:plan.id,sha256:planSha,examId:plan.examId,paperId:plan.paperId,revision:plan.revision},
+  workflow:{singleAgentCompatible:true,multipleAgentsRequired:false},
+  task:{targetCount:plan.targetCount,alreadyAuthored:audited.actualCount,
+   remainingCount:audited.remainingCount,requestedNow},
+  paper:structuredClone(plan.paperRules??{
+   scoring:envelope.scoring,timing:envelope.timing,navigation:envelope.navigation,sections:envelope.sections
+  }),
+  sourcePolicy,classification,
+  priorityDeficits:deficits.slice(0,24),
+  deficitSummary:{shown:Math.min(24,deficits.length),remaining:Math.max(0,deficits.length-24),
+   note:"Quota groups overlap; satisfy these constraints jointly rather than summing their remaining counts."},
+  dedupe:{comparisonSourceCount:audited.comparisonSourceCount,
+   nearDuplicateCandidates:audited.nearDuplicateCandidates},
+  outputContract:{
+   sourceEnvelope:envelope,
+   add:["questions","optional stimuli/media only when the authored items need shared context or images"],
+   question:{
+    coreRequired:["id","examSection","kind","prompt","answer","provenance","qa",
+     ...(plan.requirements.requireExplanation===true?["explanation"]:[])],
+    classification,
+    kindSpecific:{
+     "single-choice":"options: 2..26; one defensible keyed option",
+     "multiple-select":"options: 2..26; answer plus optional selection/partial-credit fields",
+     "numeric-entry":"numeric answer(s); optional tolerance",
+     "true-false":"boolean or True/False answer",
+     "matching":"leftItems/rightItems: 1..26 each",
+     "free-response":"manual/self-assessed; wordLimit only when defensible"
+    },
+    qa:"Author-created or materially changed items remain unchecked/needs-review; do not self-certify."
+   }
+  },
+  learnerFocusIncluded:false,
+  factualVerification:"not-performed",
+  note:"Decision-ready authoring context only. It omits existing question bodies, media bytes and repository/package placement. Research and verify factual, legal, current and PYQ claims outside this packet."
+ };
+}
 const emit=v=>process.stdout.write(JSON.stringify(v,null,2)+"\n");
 const failure=message=>{
  process.stderr.write(JSON.stringify({valid:false,code:"blueprint-input-invalid",message},null,2)+"\n");
@@ -403,9 +517,11 @@ const failure=message=>{
 };
 async function main(){
  const [command,...args]=process.argv.slice(2);
- if(!["validate","audit"].includes(command))fail("Usage: content-blueprint.mjs validate <plan.json> | audit <plan.json> <source.json>... [--cognitive tags.json] [--against prior-bank.json]... [--offset N] [--limit 1..50]");
+ const usage="Usage: content-blueprint.mjs validate <plan.json> | audit <plan.json> <source.json>... [--cognitive tags.json] [--against prior-bank.json]... [--offset N] [--limit 1..50] | brief <plan.json> [existing-source.json ...] --bank-id ID --title TITLE [--batch-size 1..20] [--cognitive tags.json] [--against prior-bank.json]...";
+ if(!["validate","audit","brief"].includes(command))fail(usage);
  if(command==="validate"&&args.length!==1)fail("validate takes only one blueprint file");
  if(command==="audit"&&args.length<2)fail("audit needs blueprint and at least one source");
+ if(command==="brief"&&args.length<1)fail(usage);
  const planFile=await load(args[0],MAX_PLAN,"Blueprint");
  const plan=validateBlueprint(planFile.value);
  if(command==="validate"){
@@ -416,33 +532,53 @@ async function main(){
    factualVerification:"not-performed",note:"A valid blueprint does not authenticate the curriculum or prove question quality."});
   return;
  }
- const files=[],priorPaths=[];let tagPath=null,limit=12,offset=0;
+ const files=[],priorPaths=[];let tagPath=null,limit=12,offset=0,batchSize=8,bankId=null,title=null;
  for(let i=1;i<args.length;i++){
-  if(args[i]==="--cognitive"||args[i]==="--limit"||args[i]==="--offset"||args[i]==="--against"){
-   if(i+1>=args.length)fail("Missing argument after "+args[i]);
-   if(args[i]==="--cognitive"){
+  const flag=args[i];
+  if(["--cognitive","--limit","--offset","--against","--batch-size","--bank-id","--title"].includes(flag)){
+   if(i+1>=args.length)fail("Missing argument after "+flag);
+   if(flag==="--cognitive"){
     if(tagPath)fail("Duplicate --cognitive");tagPath=args[++i];
-   }else if(args[i]==="--against"){
+   }else if(flag==="--against"){
     priorPaths.push(args[++i]);
-   }else if(args[i]==="--limit"){
+   }else if(flag==="--limit"){
+    if(command!=="audit")fail("--limit is only valid for audit");
     const num=Number(args[++i]);
     if(!Number.isSafeInteger(num)||num<1||num>50)fail("Limit must be 1..50");
     limit=num;
-   }else{
+   }else if(flag==="--offset"){
+    if(command!=="audit")fail("--offset is only valid for audit");
     const num=Number(args[++i]);
     if(!Number.isSafeInteger(num)||num<0||num>1000000)fail("Offset must be 0..1000000");
     offset=num;
+   }else if(flag==="--batch-size"){
+    if(command!=="brief")fail("--batch-size is only valid for brief");
+    const num=Number(args[++i]);
+    if(!Number.isSafeInteger(num)||num<1||num>20)fail("Batch size must be 1..20");
+    batchSize=num;
+   }else if(flag==="--bank-id"){
+    if(command!=="brief"||bankId!==null)fail("Duplicate or misplaced --bank-id");
+    bankId=args[++i];
+   }else{
+    if(command!=="brief"||title!==null)fail("Duplicate or misplaced --title");
+    title=args[++i];
    }
-  }else if(args[i].startsWith("--"))fail("Unknown flag "+args[i]);
-  else files.push(args[i]);
+  }else if(flag.startsWith("--"))fail("Unknown flag "+flag);
+  else files.push(flag);
  }
- if(files.length<1||files.length>MAX_FILES)fail("Supply 1.."+MAX_FILES+" source JSON files");
+ if(command==="audit"&&(files.length<1||files.length>MAX_FILES))
+  fail("Supply 1.."+MAX_FILES+" source JSON files");
+ if(command==="brief"&&files.length>MAX_FILES)fail("Supply at most "+MAX_FILES+" existing source JSON files");
  const sources=[];
  for(const path of files)sources.push(await load(path,MAX_SOURCE,"Source"));
  const tags=tagPath?(await load(tagPath,MAX_PLAN,"Cognitive tags")).value:undefined;
  if(priorPaths.length>MAX_FILES)fail("Too many comparison banks");
  const priorSources=[];
  for(const path of priorPaths)priorSources.push(await load(path,MAX_SOURCE,"Prior comparison source"));
+ if(command==="brief"){
+  const result=buildAuthoringBrief(plan,planFile.digest,sources,tags,{priorSources,batchSize,bankId,title});
+  emit(result);return;
+ }
  const result=audit(plan,sources,tags,{limit,offset,priorSources});
  result.blueprintSha256=planFile.digest;
  emit(result);

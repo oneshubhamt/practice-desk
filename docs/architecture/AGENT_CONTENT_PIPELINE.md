@@ -6,6 +6,7 @@
 
 | Need | Tooling | Invariant |
 |---|---|---|
+| Compact new-batch authoring brief | `content-blueprint.mjs brief` | Decision-ready exam/coverage/source contract; no repository/package plumbing or existing question bodies |
 | Validate/compile one source bank | `question-bank-cli.mjs` | One canonical `practice-desk-authoring` v1 source compiled through the canonical publisher |
 | Small-context corrections | `question-bank-agent.mjs` | Paged inspection, question-scoped retrieval, SHA preconditions, new-file output |
 | Planned distribution | `content-blueprint.mjs` + optional cognitive tags | Explicit quotas/partial delivery; structurally valid partial work is not publication-ready |

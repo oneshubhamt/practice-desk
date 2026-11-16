@@ -298,6 +298,75 @@ test("P60-B: agents can page errors without loading 200 questions and coverage o
  assert.equal(bad.data.code,"blueprint-input-invalid");
 }));
 
+test("Authoring brief: new-bank packet is compact, single-agent compatible and contains decisions rather than repository plumbing",()=>temp(async dir=>{
+ const p=mkPlan();
+ p.paperRules={
+  scoring:{correctMarks:2.5,incorrectMarks:-0.8333333333333334},
+  timing:{kind:"whole-paper",minutes:10,pausePolicy:"allowed"},
+  navigation:{questionNavigation:"free",sectionNavigation:"free",allowReview:true},
+  sections:[{id:"combined",title:"Combined Examination"}]
+ };
+ const plan=await write(dir,"brief-plan.json",p);
+ const result=run("brief",plan,"--bank-id","apfc-next-batch","--title","APFC next authoring batch","--batch-size","2");
+ assert.equal(result.status,0,result.stderr);
+ assert.equal(result.data.format,"practice-desk-authoring-brief");
+ assert.equal(result.data.valid,true);
+ assert.deepEqual(result.data.workflow,{singleAgentCompatible:true,multipleAgentsRequired:false});
+ assert.deepEqual(result.data.task,{targetCount:3,alreadyAuthored:0,remainingCount:3,requestedNow:2});
+ assert.equal(result.data.outputContract.sourceEnvelope.format,"practice-desk-authoring");
+ assert.equal(result.data.outputContract.sourceEnvelope.bankId,"apfc-next-batch");
+ assert.equal(result.data.outputContract.sourceEnvelope.questions,undefined);
+ assert.ok(result.data.priorityDeficits.some(x=>x.group==="subjects"&&x.remaining===1));
+ assert.ok(result.data.priorityDeficits.some(x=>x.group==="kinds"&&x.remaining===3));
+ assert.equal(result.data.learnerFocusIncluded,false);
+ assert.equal(result.data.factualVerification,"not-performed");
+ assert.ok(!result.stdout.includes("question-banks/"));
+ assert.ok(!result.stdout.includes("package.exam.json"));
+ assert.ok(!result.stdout.includes("Which letter comes second"));
+ assert.ok(result.stdout.length<12000,"brief must stay decision-ready rather than becoming a source-tree dump");
+}));
+
+test("Authoring brief: existing partial batches contribute only compact coverage and preserve exact paper envelope",()=>temp(async dir=>{
+ const p=mkPlan();
+ p.paperRules={
+  scoring:{correctMarks:2.5,incorrectMarks:-0.8333333333333334},
+  timing:{kind:"whole-paper",minutes:10,pausePolicy:"allowed"},
+  navigation:{questionNavigation:"free",sectionNavigation:"free",allowReview:true},
+  sections:[{id:"combined",title:"Combined Examination"}]
+ };
+ const source=JSON.parse(await readFile(example,"utf8"));
+ source.questions=source.questions.slice(0,1);
+ source.tools={wordCount:"auto"};
+ const plan=await write(dir,"partial-brief-plan.json",p);
+ const input=await write(dir,"partial-source.json",source);
+ const result=run("brief",plan,input,"--bank-id","apfc-batch-2","--title","APFC batch 2","--batch-size","8");
+ assert.equal(result.status,0,result.stderr);
+ assert.equal(result.data.task.alreadyAuthored,1);
+ assert.equal(result.data.task.remainingCount,2);
+ assert.equal(result.data.task.requestedNow,2);
+ assert.equal(result.data.outputContract.sourceEnvelope.tools.wordCount,"auto");
+ assert.equal(result.data.outputContract.sourceEnvelope.bankId,"apfc-batch-2");
+ assert.equal(result.data.outputContract.sourceEnvelope.questions,undefined);
+ assert.ok(!result.stdout.includes(source.questions[0].prompt));
+ const duplicate=run("brief",plan,input,"--bank-id",source.bankId,"--title","Duplicate");
+ assert.notEqual(duplicate.status,0);
+ assert.match(duplicate.data.message,/bank-id.*new/i);
+}));
+
+test("Authoring brief: bootstrap requires explicit identity and enough paper rules; authoring constraints fail closed",()=>temp(async dir=>{
+ const p=mkPlan();
+ const plan=await write(dir,"no-rules.json",p);
+ const noIdentity=run("brief",plan);
+ assert.notEqual(noIdentity.status,0);
+ assert.match(noIdentity.data.message,/bank-id|title/i);
+ const noRules=run("brief",plan,"--bank-id","new-bank","--title","New bank");
+ assert.notEqual(noRules.status,0);
+ assert.match(noRules.data.message,/paperRules/i);
+ const badBatch=run("brief",plan,"--bank-id","new-bank","--title","New bank","--batch-size","21");
+ assert.notEqual(badBatch.status,0);
+ assert.match(badBatch.data.message,/Batch size/i);
+}));
+
 // P62-A: structural partial validity must not be confused with a final compiled bank.
 test("P62-A partial blueprint passes read-only validation but blocks final compiler output",()=>temp(async dir=>{
  const p=mkPlan();p.targetCount=4;p.allowPartial=true;
