@@ -379,7 +379,7 @@ test("P60-A: default summary and list are bounded, source-private, machine-reada
  assert.ok(!list.stdout.includes("correctMarks"),"List should not expose paper/answer data");
 });
 
-test("P60-A: agent can inspect exactly one capability and concrete operation separately",()=>{
+test("P60-A: agent can inspect exactly one capability and concrete operation separately",async()=>{
  const f=cli("show","ai-authoring");
  assert.equal(f.status,0,f.stderr);
  assert.equal(f.json.format,"practice-desk-capability");
@@ -388,7 +388,12 @@ test("P60-A: agent can inspect exactly one capability and concrete operation sep
  assert.ok(!f.stdout.includes("Exam source and answer-key integrity maintained"));
  const ops=cli("operations");
  assert.equal(ops.status,0,ops.stderr);
- assert.equal(ops.json.operations.length,22);
+ const contractDoc=JSON.parse(await readFile(contract,"utf8"));
+ assert.equal(ops.json.operations.length,contractDoc.existingAgentOperations.length,
+  "Operation discovery must match the machine contract instead of a brittle historical count");
+ assert.ok(ops.json.operations.some(x=>x.operation==="authoring-brief"&&
+  x.command.includes("content-blueprint.mjs brief")&&x.privilege==="read-only"),
+  "Discovery must advertise the compact single-agent authoring brief");
  assert.ok(ops.json.operations.some(x=>x.operation==="next-bank-issues"&&
   x.command.includes("question-bank-agent.mjs next")),"Discovery must advertise bounded next-issue retrieval");
  assert.ok(ops.json.operations.some(x=>x.operation==="show-question"&&

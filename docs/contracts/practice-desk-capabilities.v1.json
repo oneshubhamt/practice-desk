@@ -465,8 +465,7 @@
       ],
       "sourcePaths": [
         "scripts/content-blueprint.mjs",
-        "scripts/question-bank-cli.mjs",
-        "docs/AGENT_AUTHORING_QUICKSTART.md"
+        "scripts/question-bank-cli.mjs"
       ]
     },
     {
