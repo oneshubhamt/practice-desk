@@ -477,7 +477,7 @@ const bankContract=()=>command(tool,"checklist").data.layers.bank.checklist;
 const semanticPass=(id,math=false)=>({id,status:"pass",
  basis:id==="mathematical-correctness"||id==="factual-correctness"&&math?"mathematical-proof":
   ["factual-correctness","temporal-correctness","pyq-fidelity"].includes(id)?"source-consulted":
-  id==="visual-integrity"?"rendered-claim":"independent-editorial",
+  id==="visual-integrity"?"rendered-claim":"semantic-editorial",
  rationale:"Synthetic regression assertion only; it does not authenticate content."});
 const completeLayeredReview=(src,pack,{mathIds=[],legalIds=[],timeIds=[],visualIds=[],asOfDates={},
  reviewMode="self-review",candidateOnlyContextClaim=reviewMode!=="self-review"}={})=>{
@@ -808,7 +808,7 @@ test("P62-C unscanned contribution rate still requires reviewer-declared as-of a
  assert.equal(accepted.data.factualVerification,"not-performed");
  assert.equal(accepted.data.reviewAssurance,"recorded-self-review-not-independent-or-authenticated");
  const unsupported=structuredClone(review);
- unsupported.records[0].semanticChecks.find(x=>x.id==="temporal-correctness").basis="independent-editorial";
+ unsupported.records[0].semanticChecks.find(x=>x.id==="temporal-correctness").basis="semantic-editorial";
  assert.ok((await verify("wrong-temporal-basis",unsupported)).data.issues.items.some(
   x=>x.code==="source-check-basis-invalid"));
  // Independent author-side classification makes this same keyword-free
@@ -869,7 +869,7 @@ test("P62-C mathematical declarations, pending status, evidence basis and keywor
  failedMath.records[2].semanticChecks.find(x=>x.id==="mathematical-correctness").status="not-reviewed";
  assert.ok((await inspect("math-unreviewed",failedMath)).data.issues.items.some(x=>x.code==="semantic-check-unresolved"));
  const unsupportedMath=structuredClone(review);
- unsupportedMath.records[2].semanticChecks.find(x=>x.id==="mathematical-correctness").basis="independent-editorial";
+ unsupportedMath.records[2].semanticChecks.find(x=>x.id==="mathematical-correctness").basis="semantic-editorial";
  assert.ok((await inspect("math-without-proof",unsupportedMath)).data.issues.items.some(x=>x.code==="mathematics-proof-required"));
  const contradiction=structuredClone(review);contradiction.records[2].applicability.mathematical="no";
  assert.ok((await inspect("math-heuristic-conflict",contradiction)).data.issues.items.some(x=>x.code==="applicability-heuristic-conflict"));

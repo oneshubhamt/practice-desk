@@ -53,7 +53,7 @@ function options(argv){
       i+1===args.length||Object.hasOwn(flags,key))throw Error("Invalid or duplicate flag "+String(key));
   flags[key]=args[++i];
  }
- if(!flags["--quality-review"])throw Error("Independent source-bound P60-C review file is mandatory");
+ if(!flags["--quality-review"])throw Error("A source-bound P60-C layered review file is mandatory");
  if(action==="publish"&&!flags["--allow-create"])throw Error("Explicit --allow-create required for new-file publication");
  if(action==="assess"&&flags["--allow-create"])throw Error("Read-only assessment cannot request publication privilege");
  if(mode!=="pdf"&&flags["--key-document"])throw Error("Separate key document is only for PDF ingestion mode");

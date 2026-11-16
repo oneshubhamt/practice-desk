@@ -76,7 +76,7 @@ const reviewFor=(source,candidates)=>{
      reasoning:"Test-only second-pass assertion; no external source was checked."},
     semanticChecks:semantic.filter(x=>ids.has(x.id)).map(check=>({id:check.id,status:"pass",
      basis:check.id==="mathematical-correctness"||check.id==="factual-correctness"&&math?"mathematical-proof":
-      check.id==="factual-correctness"?"source-consulted":"independent-editorial",
+      check.id==="factual-correctness"?"source-consulted":"semantic-editorial",
      rationale:"Synthetic QA record, not authenticated independent reasoning."})),
     evidence:[{publisher:"Fixture",title:"Synthetic QA record",locator:"test:"+q.id,
       retrievedAt:"2026-11-06",excerpt:"This is only a software regression fixture, not evidence of factual truth."}]};
@@ -559,7 +559,7 @@ test("P60-E strict compile delegates P60-D without rewriting original, and canno
      reasoning:"Synthetic review assertion for software tests, not external proof."},
     semanticChecks:semantic.filter(x=>ids.has(x.id)).map(c=>({id:c.id,status:"pass",
       basis:c.id==="mathematical-correctness"||c.id==="factual-correctness"&&math?"mathematical-proof":
-       c.id==="factual-correctness"?"source-consulted":"independent-editorial",
+       c.id==="factual-correctness"?"source-consulted":"semantic-editorial",
       rationale:"Synthetic QA statement for a regression fixture, not source certification."})),
     evidence:[{publisher:"Fixture",title:"Synthetic sample",locator:"paper page 1",retrievedAt:"2026-11-06",
       excerpt:"Test-only statement; no external source content checked."}]};
