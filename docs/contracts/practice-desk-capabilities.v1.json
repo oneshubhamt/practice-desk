@@ -32,7 +32,7 @@
       "Generate a compact content-blueprint brief for each new authoring batch so the model sees only decision-ready paper rules, remaining deficits and the output contract; one AI agent is sufficient",
       "Research facts outside app",
       "Generate only requested question batch",
-      "For source-bound review, create one complete blind packet via agent-handoff.mjs prepare ... --allow-create; do not expose answer keys to the blind reviewer",
+      "For source-bound review, create one complete candidate-only packet via agent-handoff.mjs prepare ... --allow-create; do not expose answer keys to the semantic reviewer",
       "When reviewing an authentic source or AI-original, preserve the original as a separate file and create a reviewed source via P59 guarded patch; compare with editorial-editions.mjs template/audit/compile.",
       "Audit all planned source batches against the exact blueprint; do not treat authored classification as factual truth",
       "Run canonical QA/compile and targeted corrections",
@@ -101,7 +101,7 @@
       "effect": "Single-bank canonical compiler refuses publication output when explicit content quotas fail"
     },
     {
-      "operation": "blind-question-review",
+      "operation": "candidate-review-packet",
       "command": "node scripts/question-quality.mjs candidate <bank.json> [--offset N --limit N]",
       "privilege": "read-only",
       "effect": "One bounded candidate-only page with source/candidate digest; hides keyed solution and media bytes"
@@ -113,7 +113,7 @@
       "effect": "Incomplete-by-default layered v3 review: compact semantic checks per question plus one bank-level review and explicit reviewMode"
     },
     {
-      "operation": "prepare-blind-review",
+      "operation": "prepare-quality-review",
       "command": "node scripts/agent-handoff.mjs prepare <source.json> <NEW-review-dir> --allow-create",
       "privilege": "create-new-file",
       "effect": "Create candidate-only packet plus matching incomplete layered v3 review sidecar; --allow-create required; no reviewer/source authentication"
@@ -565,7 +565,7 @@
         "Existing immutable source/reviewed package importer and actual offline exam, scoring and FSRS lifecycle exercised with externally generated files",
         "Matched baseline-vs-integrated CLI call count, output bytes and wall-clock observations with independently checked elementary synthetic answers"
       ],
-      "agentUse": "Read docs/architecture/AGENT_CONTENT_PIPELINE.md only for a multi-gate workflow. Use agent-handoff.mjs actions; prepare the blind review packet (source files only) with explicit --allow-create, complete actual review and evidence, then assess single|paired|pdf with a current P60-C review and optional P60-B plan; publish only to a new path with --allow-create. User imports manually into offline Library.",
+      "agentUse": "Read docs/architecture/AGENT_CONTENT_PIPELINE.md only for a multi-gate workflow. Use agent-handoff.mjs actions; prepare the candidate-only review packet (source files only) with explicit --allow-create, complete actual review and evidence, then assess single|paired|pdf with a current P60-C review and optional P60-B plan; publish only to a new path with --allow-create. User imports manually into offline Library.",
       "limitations": [
         "A local CLI flag is not an authenticated remote permission grant; OS sandbox and user-operated file choice remain binding",
         "No direct cloud/local-app, browser or History/learning/performance access and no agent-to-device synchronization",

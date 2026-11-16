@@ -567,7 +567,7 @@ test("P60-C RED: misleading option markers, shared stimulus leakage and answer-g
  const qa=inspectExternalQuestionBank(subtle);
  assert.ok(qa.issues.some(x=>x.code==="candidate-unintended-clue"&&x.severity==="warning"));
 });
-test("P60-C: five-option blind candidate packets preserve every authored choice label",()=>temp(async dir=>{
+test("P60-C: five-option candidate-only packets preserve every authored choice label",()=>temp(async dir=>{
  const src=JSON.parse(await readFile(apfc,"utf8"));
  src.questions[0].options=["One","Two","Three","Four","Five"];
  src.questions[0].answer="E";
@@ -577,12 +577,12 @@ test("P60-C: five-option blind candidate packets preserve every authored choice 
  assert.deepEqual(packet.data.items[0].choices.map(x=>x.label),["A","B","C","D","E"]);
 }));
 
-test("P60-C RED: blinded review packet exposes single candidate-only question, never key/explanation/source QA",()=>temp(async dir=>{
+test("P60-C RED: answer-hidden review packet exposes single candidate-only question, never key/explanation/source QA",()=>temp(async dir=>{
  const src=JSON.parse(await readFile(apfc,"utf8"));
  const input=await write(dir,"source.json",src);
  const r=command(tool,"candidate",input,"--limit","1");
  assert.equal(r.status,0,r.stderr);
- assert.equal(r.data.format,"practice-desk-blind-candidates");
+ assert.equal(r.data.format,"practice-desk-review-candidates");
  assert.equal(r.data.items.length,1);
  assert.equal(r.data.items[0].questionId,"labour-01");
  assert.ok(/^[a-f0-9]{64}$/.test(r.data.items[0].candidateSha256));

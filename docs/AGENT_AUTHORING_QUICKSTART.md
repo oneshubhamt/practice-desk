@@ -72,7 +72,7 @@ Every agent patch creates a new immutable source revision: `nextRevision` is req
 
 Research actual syllabus/source documents, dates/current law, original item numbers and answer rationale outside the offline app. Label paraphrases `reconstruction`; claim `official-pyq` only when independently authenticated.
 
-## Blind quality review
+## Layered quality review
 
 ```bash
 node scripts/agent-handoff.mjs prepare bank.json NEW-review-dir --allow-create

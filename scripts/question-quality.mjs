@@ -106,9 +106,8 @@ function candidateProjection(draft,q){
   matching:q.kind==="matching"?{
    left:q.leftItems.map(v=>publicationPlainText(v)),right:q.rightItems.map(v=>publicationPlainText(v))}:null,
   candidateContext:fields.filter(f=>f.field.startsWith("stimulus.")||f.field.startsWith("media.")),
-  hasVisualMaterial:fields.some(f=>f.field.includes("altText"))||
-   (q.kind==="matching"?false:false),
-  note:"Text-only blind packet; visually inspect any referenced figures and actual candidate rendering independently."
+  hasVisualMaterial:fields.some(f=>f.field.includes("altText")),
+  note:"Answer-hidden candidate-only packet; inspect any referenced visual material when the review requires it."
  };
  return {...result,candidateSha256:sha(JSON.stringify(result))};
 }
@@ -321,19 +320,19 @@ function reviewTemplate(value,sourceRaw,items){
  };
 }
 async function prepareReviewWorkspace(value,raw,outputDir){
- // Build the complete blind packet and the corresponding empty review source
+ // Build the complete candidate-only packet and the corresponding empty review source
  // locally; stdout carries no question/answer/media content.
  const draft=toAuthoringDraft(value);
  const items=draft.questions.map(q=>{
   const item=candidateProjection(draft,q);
   return {...item,questionSha256:sha(JSON.stringify(value.questions.find(x=>x.id===q.id)))};
  });
- const packets={format:"practice-desk-blind-candidates",version:1,bankId:value.bankId,
+ const packets={format:"practice-desk-review-candidates",version:1,bankId:value.bankId,
   sourceSha256:sha(raw),total:items.length,items,
   factualVerification:"not-performed",
   warning:"Text/alt only: inspect original source, equations and any visual material as required by the selected review mode."};
  const template=reviewTemplate(value,raw,items);
- const files=[["blind-candidates.json",packets],["review.json",template]];
+ const files=[["review-candidates.json",packets],["review.json",template]];
  const directory=resolve(outputDir);
  await mkdir(directory); // Exclusive: never replace an existing review directory.
  try{
@@ -344,7 +343,7 @@ async function prepareReviewWorkspace(value,raw,outputDir){
   readyForPublication:false,reviewComplete:false,sourceSha256:sha(raw),
   bankId:value.bankId,questionCount:items.length,directory,
   files:files.map(([name])=>name),
-  note:"Review is incomplete: explicitly classify mathematics, law and time sensitivity, supply dated supporting evidence where applicable, solve blind, then complete the required semantic checks and one bank-level review. These remain reviewer claims."};
+  note:"Review is incomplete: explicitly classify mathematics, law, time sensitivity and visual applicability, complete a second-pass solution, supply dated evidence where applicable, then complete the required semantic checks and one bank-level review. Review mode and evidence remain attributed claims."};
 }
 const usage="Usage: question-quality.mjs checklist | candidate <source.json> [--offset N --limit 1..20] | template <source.json> [--offset N --limit 1..20] | prepare <source.json> <NEW-directory> | audit <source.json> [--review <review.json>] [--offset N --limit 1..50]";
 const throwResult=(e)=>{

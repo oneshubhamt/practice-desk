@@ -398,7 +398,7 @@ test("P60-A: agent can inspect exactly one capability and concrete operation sep
   x.command.includes("question-bank-agent.mjs next")),"Discovery must advertise bounded next-issue retrieval");
  assert.ok(ops.json.operations.some(x=>x.operation==="show-question"&&
   x.command.includes("up to 10")),"Discovery must advertise bounded multi-question retrieval");
-  assert.ok(ops.json.operations.some(x=>x.operation==="prepare-blind-review"&&
+  assert.ok(ops.json.operations.some(x=>x.operation==="prepare-quality-review"&&
    x.command.includes("--allow-create")),"Discovery must advertise the real full-bank preparation action");
  assert.ok(ops.json.operations.every(x=>["read-only","create-new-file"].includes(x.privilege)));
  assert.ok(!ops.stdout.includes("IndexedDB"));
@@ -510,7 +510,7 @@ test("P60-F RED: discover concise versioned actions and privilege limits, withou
  assert.equal(r.data.agentDeviceBridge,false);
  assert.ok(!r.stdout.includes("IndexedDB")&&!r.stdout.includes("correctMarks"));
 });
-test("P60-H: sourced APFC/CAT items prepare as a complete blind packet, compile cautiously and require real review for strict publication",()=>scoped(async dir=>{
+test("P60-H: sourced APFC/CAT items prepare as a complete candidate-only packet, compile cautiously and require real review for strict publication",()=>scoped(async dir=>{
  const compiler=fileURLToPath(new URL("../scripts/question-bank-cli.mjs",import.meta.url));
  for(const filename of ["source-grounded-apfc-2023.json","source-grounded-cat-2024.json"]){
   const input=fileURLToPath(new URL("../examples/"+filename,import.meta.url));
@@ -520,15 +520,15 @@ test("P60-H: sourced APFC/CAT items prepare as a complete blind packet, compile 
   assert.equal(prepared.status,0,prepared.stderr);
   assert.equal(prepared.data.readyForPublication,false);
   assert.equal(prepared.data.questionCount,2);
-  const blind=JSON.parse(await readFile(join(reviewDir,"blind-candidates.json"),"utf8"));
+  const candidates=JSON.parse(await readFile(join(reviewDir,"review-candidates.json"),"utf8"));
   const review=JSON.parse(await readFile(join(reviewDir,"review.json"),"utf8"));
-  assert.equal(blind.items.length,source.questions.length);
+  assert.equal(candidates.items.length,source.questions.length);
   assert.equal(review.records.length,source.questions.length);
-  assert.deepEqual(blind.items.map(x=>x.questionId),source.questions.map(q=>q.id));
+  assert.deepEqual(candidates.items.map(x=>x.questionId),source.questions.map(q=>q.id));
   for(const [index,q] of source.questions.entries()){
-   assert.equal(blind.items[index].answer,undefined);
-   assert.equal(blind.items[index].explanation,undefined);
-   assert.ok(!JSON.stringify(blind.items[index]).includes(q.explanation));
+   assert.equal(candidates.items[index].answer,undefined);
+   assert.equal(candidates.items[index].explanation,undefined);
+   assert.ok(!JSON.stringify(candidates.items[index]).includes(q.explanation));
    assert.equal(review.records[index].solution.status,"pending");
    assert.ok(review.records[index].semanticChecks.length<20);
    assert.ok(review.records[index].semanticChecks.every(check=>check.status==="not-reviewed"));
@@ -569,7 +569,7 @@ test("P60 full QA: source-attributed APFC/CAT end-to-end review record, strict p
   assert.equal(prepared.status,0,prepared.stderr);
   const review=JSON.parse(await readFile(join(reviewDir,"review.json"),"utf8"));
   // These reviewer and evidence declarations are synthetic contract checks,
-  // NOT an independent blind fact check, source fetch or PYQ authentication.
+  // NOT an authenticated independent fact check, source fetch or PYQ authentication.
   review.reviewMode="self-review";
   review.candidateOnlyContextClaim=false;
   review.reviewer={id:"synthetic-p60-e2e",kind:"ai"};
