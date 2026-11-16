@@ -147,10 +147,10 @@ test("P60-D RED: source-preserving paired publication uses existing scorer/revie
  assert.equal(ref.entries.filter(x=>x.comparable).length,3);
  const frozen=startGenericAttempt(target,"id",100000);
  assert.ok(createSourceReviewReference(target,source));
- const families=examFamilyCatalog([source,target],new Set());
+ const families=examFamilyCatalog([source,target]);
  const paired=pairedEdition(families[0],target,"source");
  assert.equal(paired?.paper.id,source.paper.id);
- assert.equal(familyIdFor(target,new Set()),familyIdFor(source,new Set()));
+ assert.equal(familyIdFor(target),familyIdFor(source));
  assert.equal(frozen.frozen.questions[0].questionId,target.questions[0].questionId);
  assert.equal(sourceKeyScore(frozen),null,"Unfinished attempt never produces hypothetical score");
 }));
@@ -244,11 +244,11 @@ test("P62-B exact revision pairing survives multiple originals and missing files
  other.paper.answerKeyRevisionId=other.answerKey.id;
  other.paper.contentHash=paperRevisionHash(other.paper);
  validateExamPackage(other);
- const family=examFamilyCatalog([other,target,source],new Set())[0];
+ const family=examFamilyCatalog([other,target,source])[0];
  assert.equal(pairedEdition(family,target,"source")?.paper.id,source.paper.id);
  assert.equal(createSourceKeyReference(target,other),null);
  assert.equal(createSourceReviewReference(target,other),null);
- assert.equal(pairedEdition(examFamilyCatalog([other,target],new Set())[0],target,"source"),undefined,
+ assert.equal(pairedEdition(examFamilyCatalog([other,target])[0],target,"source"),undefined,
   "A different original must not replace the pinned source");
  const unbound=structuredClone(target);
  delete unbound.paper.sourcePaperRevisionId;

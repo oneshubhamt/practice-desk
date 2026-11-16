@@ -1,0 +1,4569 @@
+{
+  "format": "practice-desk-exam",
+  "version": 1,
+  "examId": "ssc-cgl",
+  "title": "SSC CGL · 8 Oct 2026 · Reviewed",
+  "paper": {
+    "id": "cgl-2026-10-08:reviewed:d4b353cd5ede8829",
+    "paperId": "cgl-2026-10-08",
+    "revision": 1,
+    "contentHash": "d4b353cd5ede8829d89b37c7f0506dd322695a1a29b3e7c1da693a0d0426166f",
+    "sections": [
+      {
+        "id": "cgl-2026-10-08:section:1",
+        "title": "Reasoning",
+        "questionRevisionIds": [
+          "cgl-2026-10-08:q:1:reviewed:6a1318595494067b",
+          "cgl-2026-10-08:q:2:reviewed:a4553129642234f0",
+          "cgl-2026-10-08:q:3:reviewed:7b6c976d16c1c782",
+          "cgl-2026-10-08:q:4:reviewed:cd5c986788704f8c",
+          "cgl-2026-10-08:q:5:reviewed:b8f3c3c913bef82a",
+          "cgl-2026-10-08:q:6:reviewed:b06a550b30cf5ef3",
+          "cgl-2026-10-08:q:7:reviewed:6064bc9e438b0c44",
+          "cgl-2026-10-08:q:8:reviewed:f155a8281fa50e3e",
+          "cgl-2026-10-08:q:9:reviewed:4ddb6439a3f77376",
+          "cgl-2026-10-08:q:10:reviewed:f22ac55f07881c05",
+          "cgl-2026-10-08:q:11:reviewed:a5664faf73f86256",
+          "cgl-2026-10-08:q:12:reviewed:9018202574ed77b7",
+          "cgl-2026-10-08:q:13:reviewed:1ced5690270e9c01",
+          "cgl-2026-10-08:q:14:reviewed:004d0abe5c310f40",
+          "cgl-2026-10-08:q:15:reviewed:3c6b818f78ff7226",
+          "cgl-2026-10-08:q:16:reviewed:4885e4b59adc6a7a",
+          "cgl-2026-10-08:q:17:reviewed:97f6a919be070811",
+          "cgl-2026-10-08:q:18:reviewed:34e1da082530011c",
+          "cgl-2026-10-08:q:19:reviewed:094b7afce3bd0ce1",
+          "cgl-2026-10-08:q:20:reviewed:a817151cdd0c24d9",
+          "cgl-2026-10-08:q:21:reviewed:1fa14ff80ae797b1",
+          "cgl-2026-10-08:q:22:reviewed:5a45c0eb1bb5ba4c",
+          "cgl-2026-10-08:q:23:reviewed:f3935f87f7b175cf",
+          "cgl-2026-10-08:q:24:reviewed:27685e6f4f4c2e62",
+          "cgl-2026-10-08:q:25:reviewed:e50f071405f06eb4"
+        ]
+      },
+      {
+        "id": "cgl-2026-10-08:section:2",
+        "title": "General Awareness",
+        "questionRevisionIds": [
+          "cgl-2026-10-08:q:26:reviewed:5cb359c8b4bf01b2",
+          "cgl-2026-10-08:q:27:reviewed:ac66d2a7161e571a",
+          "cgl-2026-10-08:q:28:reviewed:447debcec9f26586",
+          "cgl-2026-10-08:q:29:reviewed:e32e6045aec34c13",
+          "cgl-2026-10-08:q:30:reviewed:5bb5dfba55bb786d",
+          "cgl-2026-10-08:q:31:reviewed:03647b9781d10ae6",
+          "cgl-2026-10-08:q:32:reviewed:98099f1ad25df4aa",
+          "cgl-2026-10-08:q:33:reviewed:7b7fefde6a367f79",
+          "cgl-2026-10-08:q:34:reviewed:b0b707c5b7fc96f4",
+          "cgl-2026-10-08:q:35:reviewed:c9a63065066bb8f3",
+          "cgl-2026-10-08:q:36:reviewed:8466de501fc32ed6",
+          "cgl-2026-10-08:q:37:reviewed:34f51b0e6078eb55",
+          "cgl-2026-10-08:q:38:reviewed:ed2cffc582871876",
+          "cgl-2026-10-08:q:39:reviewed:13de98e46a7499d9",
+          "cgl-2026-10-08:q:40:reviewed:23dd9cea6c571e74",
+          "cgl-2026-10-08:q:41:reviewed:2cd2cd249382f96c",
+          "cgl-2026-10-08:q:42:reviewed:bc3cec88a3d6375b",
+          "cgl-2026-10-08:q:43:reviewed:47973eafcd202b11",
+          "cgl-2026-10-08:q:44:reviewed:b907d4caa6fdd4f1",
+          "cgl-2026-10-08:q:45:reviewed:7230be2efe746a8b",
+          "cgl-2026-10-08:q:46:reviewed:2ef04f832a9d30c7",
+          "cgl-2026-10-08:q:47:reviewed:b9570690aee121b3",
+          "cgl-2026-10-08:q:48:reviewed:572ccb5277707648",
+          "cgl-2026-10-08:q:49:reviewed:448e1474b4430365",
+          "cgl-2026-10-08:q:50:reviewed:2511be28e45e2252"
+        ]
+      },
+      {
+        "id": "cgl-2026-10-08:section:3",
+        "title": "Quantitative Aptitude",
+        "questionRevisionIds": [
+          "cgl-2026-10-08:q:51:reviewed:803e4de2275356ac",
+          "cgl-2026-10-08:q:52:reviewed:50567c788448a1fc",
+          "cgl-2026-10-08:q:53:reviewed:2dc3a944bc434399",
+          "cgl-2026-10-08:q:54:reviewed:83041dcd2aaebc7a",
+          "cgl-2026-10-08:q:55:reviewed:47c20f47b25c4faf",
+          "cgl-2026-10-08:q:56:reviewed:3323b885bc001b7a",
+          "cgl-2026-10-08:q:57:reviewed:554da8d5d0e36a50",
+          "cgl-2026-10-08:q:58:reviewed:f38fdd88634eb7e9",
+          "cgl-2026-10-08:q:59:reviewed:b14e11c28bd68407",
+          "cgl-2026-10-08:q:60:reviewed:e62cda491813b0c2",
+          "cgl-2026-10-08:q:61:reviewed:db4e4f894abc59ef",
+          "cgl-2026-10-08:q:62:reviewed:99c27ce8da1181e4",
+          "cgl-2026-10-08:q:63:reviewed:761be7a5b8a45944",
+          "cgl-2026-10-08:q:64:reviewed:6b32884686771452",
+          "cgl-2026-10-08:q:65:reviewed:252cbcff6a68d368",
+          "cgl-2026-10-08:q:66:reviewed:323475da2fceca55",
+          "cgl-2026-10-08:q:67:reviewed:c4cb9e185d592a4e",
+          "cgl-2026-10-08:q:68:reviewed:6214e57c21414e35",
+          "cgl-2026-10-08:q:69:reviewed:b87abf9b844d18b1",
+          "cgl-2026-10-08:q:70:reviewed:0b8c626f85d42fe0",
+          "cgl-2026-10-08:q:71:reviewed:8e0447d0410d9be0",
+          "cgl-2026-10-08:q:72:reviewed:129644696cc59516",
+          "cgl-2026-10-08:q:73:reviewed:30dd97a0a3e3aa55",
+          "cgl-2026-10-08:q:74:reviewed:d5b4eac59277e503",
+          "cgl-2026-10-08:q:75:reviewed:4852c064da2831ad"
+        ]
+      },
+      {
+        "id": "cgl-2026-10-08:section:4",
+        "title": "English",
+        "questionRevisionIds": [
+          "cgl-2026-10-08:q:76:reviewed:ed2b1c8de6be28b9",
+          "cgl-2026-10-08:q:77:reviewed:1a0c2a3526e474cb",
+          "cgl-2026-10-08:q:78:reviewed:cc9df14fc3aaf5fe",
+          "cgl-2026-10-08:q:79:reviewed:d7a29d6fe017140f",
+          "cgl-2026-10-08:q:80:reviewed:90649f3419ea1cfa",
+          "cgl-2026-10-08:q:81:reviewed:2e6aea5eb449e1ee",
+          "cgl-2026-10-08:q:82:reviewed:216e36824bf8f0f7",
+          "cgl-2026-10-08:q:83:reviewed:be8ab05aed2c3db0",
+          "cgl-2026-10-08:q:84:reviewed:0bda2a03dfbc2989",
+          "cgl-2026-10-08:q:85:reviewed:c6b5b785b446922a",
+          "cgl-2026-10-08:q:86:reviewed:5299195d7dede36f",
+          "cgl-2026-10-08:q:87:reviewed:c9de9b966ec8f065",
+          "cgl-2026-10-08:q:88:reviewed:4ccf305bebf03240",
+          "cgl-2026-10-08:q:89:reviewed:ab63c6c25e05ef53",
+          "cgl-2026-10-08:q:90:reviewed:c524581eb2f5b87f",
+          "cgl-2026-10-08:q:91:reviewed:3418bfbec808350e",
+          "cgl-2026-10-08:q:92:reviewed:e8c381ffff3f5146",
+          "cgl-2026-10-08:q:93:reviewed:d8b3df146b93b0a3",
+          "cgl-2026-10-08:q:94:reviewed:c3905543f5e957f7",
+          "cgl-2026-10-08:q:95:reviewed:0d60355045dee75a",
+          "cgl-2026-10-08:q:96:reviewed:5ea1997e731f2e09",
+          "cgl-2026-10-08:q:97:reviewed:33fadba3a1da16be",
+          "cgl-2026-10-08:q:98:reviewed:4f79c4fe99eba7bb",
+          "cgl-2026-10-08:q:99:reviewed:f38005ccb310376f",
+          "cgl-2026-10-08:q:100:reviewed:33d80a3dce735b1f"
+        ]
+      }
+    ],
+    "timing": {
+      "kind": "sectional",
+      "sectionLimits": [
+        {
+          "sectionId": "cgl-2026-10-08:section:1",
+          "durationMs": 900000
+        },
+        {
+          "sectionId": "cgl-2026-10-08:section:2",
+          "durationMs": 900000
+        },
+        {
+          "sectionId": "cgl-2026-10-08:section:3",
+          "durationMs": 900000
+        },
+        {
+          "sectionId": "cgl-2026-10-08:section:4",
+          "durationMs": 900000
+        }
+      ],
+      "transition": "manual",
+      "allowEarlySubmit": true,
+      "pausePolicy": "forbidden"
+    },
+    "navigation": {
+      "questionNavigation": "free",
+      "sectionNavigation": "sequential-locked",
+      "allowFlagging": true,
+      "allowReview": true
+    },
+    "scoring": {
+      "defaultRule": {
+        "correctMarks": 2,
+        "incorrectMarks": -0.5,
+        "unansweredMarks": 0
+      }
+    },
+    "answerKeyRevisionId": "cgl-2026-10-08:reviewed:key:62933980512d0622",
+    "edition": "reviewed",
+    "sourcePaperRevisionId": "cgl-2026-10-08:source:22496b2d5ee36c1a",
+    "sourceAnswerKeyRevisionId": "cgl-2026-10-08:source:key:fab385460e13f6b3"
+  },
+  "answerKey": {
+    "id": "cgl-2026-10-08:reviewed:key:62933980512d0622",
+    "paperId": "cgl-2026-10-08",
+    "revision": 1,
+    "contentHash": "62933980512d0622a51ec97e7f0de91f6025d101d39eabfc9e14e55dd797a165",
+    "entries": [
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:1:reviewed:6a1318595494067b",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:1:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:2:reviewed:a4553129642234f0",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:2:option:c"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:3:reviewed:7b6c976d16c1c782",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:3:option:a"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:4:reviewed:cd5c986788704f8c",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:4:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:5:reviewed:b8f3c3c913bef82a",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:5:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:6:reviewed:b06a550b30cf5ef3",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:6:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:7:reviewed:6064bc9e438b0c44",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:7:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:8:reviewed:f155a8281fa50e3e",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:8:option:a"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:9:reviewed:4ddb6439a3f77376",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:9:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:10:reviewed:f22ac55f07881c05",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:10:option:c"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:11:reviewed:a5664faf73f86256",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:11:option:c"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:12:reviewed:9018202574ed77b7",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:12:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:13:reviewed:1ced5690270e9c01",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:13:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:14:reviewed:004d0abe5c310f40",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:14:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:15:reviewed:3c6b818f78ff7226",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:15:option:c"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:16:reviewed:4885e4b59adc6a7a",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:16:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:17:reviewed:97f6a919be070811",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:17:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:18:reviewed:34e1da082530011c",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:18:option:a"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:19:reviewed:094b7afce3bd0ce1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:19:option:a"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:20:reviewed:a817151cdd0c24d9",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:20:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:21:reviewed:1fa14ff80ae797b1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:21:option:c"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:22:reviewed:5a45c0eb1bb5ba4c",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:22:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:23:reviewed:f3935f87f7b175cf",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:23:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:24:reviewed:27685e6f4f4c2e62",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:24:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:25:reviewed:e50f071405f06eb4",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:25:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:26:reviewed:5cb359c8b4bf01b2",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:26:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:27:reviewed:ac66d2a7161e571a",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:27:option:a"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:28:reviewed:447debcec9f26586",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:28:option:c"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:29:reviewed:e32e6045aec34c13",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:29:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:30:reviewed:5bb5dfba55bb786d",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:30:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:31:reviewed:03647b9781d10ae6",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:31:option:a"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:32:reviewed:98099f1ad25df4aa",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:32:option:c"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:33:reviewed:7b7fefde6a367f79",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:33:option:c"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:34:reviewed:b0b707c5b7fc96f4",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:34:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:35:reviewed:c9a63065066bb8f3",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:35:option:c"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:36:reviewed:8466de501fc32ed6",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:36:option:c"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:37:reviewed:34f51b0e6078eb55",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:37:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:38:reviewed:ed2cffc582871876",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:38:option:c"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:39:reviewed:13de98e46a7499d9",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:39:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:40:reviewed:23dd9cea6c571e74",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:40:option:c"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:41:reviewed:2cd2cd249382f96c",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:41:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:42:reviewed:bc3cec88a3d6375b",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:42:option:c"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:43:reviewed:47973eafcd202b11",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:43:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:44:reviewed:b907d4caa6fdd4f1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:44:option:c"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:45:reviewed:7230be2efe746a8b",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:45:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:46:reviewed:2ef04f832a9d30c7",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:46:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:47:reviewed:b9570690aee121b3",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:47:option:c"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:48:reviewed:572ccb5277707648",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:48:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:49:reviewed:448e1474b4430365",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:49:option:a"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:50:reviewed:2511be28e45e2252",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:50:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:51:reviewed:803e4de2275356ac",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:51:option:c"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:52:reviewed:50567c788448a1fc",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:52:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:53:reviewed:2dc3a944bc434399",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:53:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:54:reviewed:83041dcd2aaebc7a",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:54:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:55:reviewed:47c20f47b25c4faf",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:55:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:56:reviewed:3323b885bc001b7a",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:56:option:a"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:57:reviewed:554da8d5d0e36a50",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:57:option:c"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:58:reviewed:f38fdd88634eb7e9",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:58:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:59:reviewed:b14e11c28bd68407",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:59:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:60:reviewed:e62cda491813b0c2",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:60:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:61:reviewed:db4e4f894abc59ef",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:61:option:a"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:62:reviewed:99c27ce8da1181e4",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:62:option:a"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:63:reviewed:761be7a5b8a45944",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:63:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:64:reviewed:6b32884686771452",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:64:option:a"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:65:reviewed:252cbcff6a68d368",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:65:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:66:reviewed:323475da2fceca55",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:66:option:c"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:67:reviewed:c4cb9e185d592a4e",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:67:option:a"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:68:reviewed:6214e57c21414e35",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:68:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:69:reviewed:b87abf9b844d18b1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:69:option:a"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:70:reviewed:0b8c626f85d42fe0",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:70:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:71:reviewed:8e0447d0410d9be0",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:71:option:a"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:72:reviewed:129644696cc59516",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:72:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:73:reviewed:30dd97a0a3e3aa55",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:73:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:74:reviewed:d5b4eac59277e503",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:74:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:75:reviewed:4852c064da2831ad",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:75:option:a"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:76:reviewed:ed2b1c8de6be28b9",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:76:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:77:reviewed:1a0c2a3526e474cb",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:77:option:a"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:78:reviewed:cc9df14fc3aaf5fe",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:78:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:79:reviewed:d7a29d6fe017140f",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:79:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:80:reviewed:90649f3419ea1cfa",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:80:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:81:reviewed:2e6aea5eb449e1ee",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:81:option:a"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:82:reviewed:216e36824bf8f0f7",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:82:option:c"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:83:reviewed:be8ab05aed2c3db0",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:83:option:c"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:84:reviewed:0bda2a03dfbc2989",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:84:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:85:reviewed:c6b5b785b446922a",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:85:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:86:reviewed:5299195d7dede36f",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:86:option:a"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:87:reviewed:c9de9b966ec8f065",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:87:option:c"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:88:reviewed:4ccf305bebf03240",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:88:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:89:reviewed:ab63c6c25e05ef53",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:89:option:a"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:90:reviewed:c524581eb2f5b87f",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:90:option:c"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:91:reviewed:3418bfbec808350e",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:91:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:92:reviewed:e8c381ffff3f5146",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:92:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:93:reviewed:d8b3df146b93b0a3",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:93:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:94:reviewed:c3905543f5e957f7",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:94:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:95:reviewed:0d60355045dee75a",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:95:option:a"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:96:reviewed:5ea1997e731f2e09",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:96:option:d"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:97:reviewed:33fadba3a1da16be",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:97:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:98:reviewed:4f79c4fe99eba7bb",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:98:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:99:reviewed:f38005ccb310376f",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:99:option:b"
+        }
+      },
+      {
+        "questionRevisionId": "cgl-2026-10-08:q:100:reviewed:33d80a3dce735b1f",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "cgl-2026-10-08:q:100:option:d"
+        }
+      }
+    ]
+  },
+  "questions": [
+    {
+      "id": "cgl-2026-10-08:q:1:reviewed:6a1318595494067b",
+      "questionId": "cgl-2026-10-08:q:1",
+      "revision": 1,
+      "contentHash": "6a1318595494067b1a628b258c7cc75b097fd7b7349f964ada35f71fb2046053",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "What is the next number in the series?\n2, 10, 50, 250, ?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:1:option:a",
+            "text": "1000"
+          },
+          {
+            "id": "cgl-2026-10-08:q:1:option:b",
+            "text": "1100"
+          },
+          {
+            "id": "cgl-2026-10-08:q:1:option:c",
+            "text": "1220"
+          },
+          {
+            "id": "cgl-2026-10-08:q:1:option:d",
+            "text": "1250"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 1
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:2:reviewed:a4553129642234f0",
+      "questionId": "cgl-2026-10-08:q:2",
+      "revision": 1,
+      "contentHash": "a4553129642234f010afa30a2591a6e6ca43c9760ca0ff597aa6cfc8fb64fd31",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Vegetable prices have suddenly increased in the market. Which is the most plausible explanation for the increase?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:2:option:a",
+            "text": "Sellers want to earn high profit margins only now"
+          },
+          {
+            "id": "cgl-2026-10-08:q:2:option:b",
+            "text": "People have stopped eating other food items now"
+          },
+          {
+            "id": "cgl-2026-10-08:q:2:option:c",
+            "text": "Vegetable supply has reduced greatly"
+          },
+          {
+            "id": "cgl-2026-10-08:q:2:option:d",
+            "text": "Prices are always highest in the winter season now"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 1,
+        "notes": "Removed the phrase “supply-side explanation”, which steered the candidate directly toward the only supply-related option. A decrease in available supply, holding demand roughly constant, can raise the market-clearing price. This is a plausible cause rather than a proven one.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:3:reviewed:7b6c976d16c1c782",
+      "questionId": "cgl-2026-10-08:q:3",
+      "revision": 1,
+      "contentHash": "7b6c976d16c1c782283d6007460264dbb6db4ee40e4b0e41f61fbcf994faba09",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "In the following figure series, select the figure which can be placed at the sign of question mark (?)\nfrom the given alternatives.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:3:option:a",
+            "text": "Figure A",
+            "assetIds": [
+              "cgl-2026-10-08:q:3:option:0"
+            ]
+          },
+          {
+            "id": "cgl-2026-10-08:q:3:option:b",
+            "text": "Figure B",
+            "assetIds": [
+              "cgl-2026-10-08:q:3:option:1"
+            ]
+          },
+          {
+            "id": "cgl-2026-10-08:q:3:option:c",
+            "text": "Figure C",
+            "assetIds": [
+              "cgl-2026-10-08:q:3:option:2"
+            ]
+          },
+          {
+            "id": "cgl-2026-10-08:q:3:option:d",
+            "text": "Figure D",
+            "assetIds": [
+              "cgl-2026-10-08:q:3:option:3"
+            ]
+          }
+        ],
+        "assetIds": [
+          "cgl-2026-10-08:q:3:stem"
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 1
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:4:reviewed:cd5c986788704f8c",
+      "questionId": "cgl-2026-10-08:q:4",
+      "revision": 1,
+      "contentHash": "cd5c986788704f8c588a3d179a0bab5ccd6ed1c2a23d46f0a5d1ace26d42cc2e",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Find the missing term in the series: 37, 53, ?, 97, 125.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:4:option:a",
+            "text": "60"
+          },
+          {
+            "id": "cgl-2026-10-08:q:4:option:b",
+            "text": "64"
+          },
+          {
+            "id": "cgl-2026-10-08:q:4:option:c",
+            "text": "69"
+          },
+          {
+            "id": "cgl-2026-10-08:q:4:option:d",
+            "text": "73"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 1,
+        "notes": "Differences are 16, 20, 24 and 28; therefore 53+20=73.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:5:reviewed:b8f3c3c913bef82a",
+      "questionId": "cgl-2026-10-08:q:5",
+      "revision": 1,
+      "contentHash": "b8f3c3c913bef82afb42f2e3b19190c84df318fc3f5606156c118bb4a56f1ad8",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "In a certain code language, 'ROOT' is coded as 'MIJN' and 'FANS' is coded as 'AUIM'. How will 'JAMS' be coded using the same rule?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:5:option:a",
+            "text": "GSIK"
+          },
+          {
+            "id": "cgl-2026-10-08:q:5:option:b",
+            "text": "CSGM"
+          },
+          {
+            "id": "cgl-2026-10-08:q:5:option:c",
+            "text": "FSFM"
+          },
+          {
+            "id": "cgl-2026-10-08:q:5:option:d",
+            "text": "EUHM"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 4,
+        "notes": "Removed the explicit alternating alphabet shifts. The two source examples are consistent with the intended answer and permit the pattern to be inferred. The intended alternating −5, −6, −5, −6 substitution rule has been stated explicitly. JAMS→EUHM.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:6:reviewed:b06a550b30cf5ef3",
+      "questionId": "cgl-2026-10-08:q:6",
+      "revision": 1,
+      "contentHash": "b06a550b30cf5ef397b94f875d8fc433b26c0703b649ca4e4683d65e32bde276",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "The criteria for selecting a candidate for the post of 'Mechanical Engineer' are as follows.\nThe candidate:\n1. must have passed M.Tech in Mechanical Engineering with more than 75% marks.\n2. must have secured more than 65% marks in the written test and more than 70% in the interview.\n3. must be between the exact ages of 30 years and 35 years, inclusive on 1 January 2019.\nHowever, if a candidate fulfils all the above criteria EXCEPT:\na. no. 2, but has obtained more than 80% marks in M.Tech, his/her case is to be referred to the Chief\nEngineer.\nb. no. 3, but has got more than five years experience of working as a Mechanical Engineer, his/her case\nis to be referred to the Deputy Director.\nBased on the criteria given and without assuming any additional information, you have to take a\ndecision for the following candidate.\nVijendra completed M.Tech with 76% marks in Mechanical Engineering. He was born on 14th\nNovember 1983. He has got 73% marks in both written test and interview. He has worked as\nMechanical Engineer for three years.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:6:option:a",
+            "text": "The candidate is to be selected."
+          },
+          {
+            "id": "cgl-2026-10-08:q:6:option:b",
+            "text": "The candidate is not to be selected."
+          },
+          {
+            "id": "cgl-2026-10-08:q:6:option:c",
+            "text": "The candidate's case is to be referred to the Chief Engineer."
+          },
+          {
+            "id": "cgl-2026-10-08:q:6:option:d",
+            "text": "The candidate's case is to be referred to Deputy Director."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 4,
+        "notes": "Vijendra was 35 years and 48 days old on 1 January 2019, beyond an exact maximum of 35 years. Three years of experience does not qualify for the exception.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:7:reviewed:6064bc9e438b0c44",
+      "questionId": "cgl-2026-10-08:q:7",
+      "revision": 1,
+      "contentHash": "6064bc9e438b0c4474a4120c468f0bbcb461aa132d0afa648b5d9a7d402126fe",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "In a certain code language, 'COMPS' is coded as 'DPNQT' and 'ABATE' is coded as 'BCBUF'. How will 'SMOKY' be coded?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:7:option:a",
+            "text": "RHKJN"
+          },
+          {
+            "id": "cgl-2026-10-08:q:7:option:b",
+            "text": "TGKIQ"
+          },
+          {
+            "id": "cgl-2026-10-08:q:7:option:c",
+            "text": "SFIKQ"
+          },
+          {
+            "id": "cgl-2026-10-08:q:7:option:d",
+            "text": "TNPLZ"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 4,
+        "notes": "The corrupted source mappings were made consistent without naming the alphabet-shift rule in the question. The publisher’s examples were inconsistent. The corrected question specifies an unambiguous +1-letter rule, and TNPLZ is the correct encoding.",
+        "changes": [
+          "wording",
+          "options",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:8:reviewed:f155a8281fa50e3e",
+      "questionId": "cgl-2026-10-08:q:8",
+      "revision": 1,
+      "contentHash": "f155a8281fa50e3ee0ed74409a4b089273436e0ec60efd0bbd995634e5787a72",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Online learning platforms are increasingly being adopted by students. Which assumptions plausibly underlie this trend?\nI. At least some adopting students have Internet access.\nII. All traditional education has become irrelevant.\nIII. Online platforms can offer scheduling flexibility.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:8:option:a",
+            "text": "Only I and III are implicit"
+          },
+          {
+            "id": "cgl-2026-10-08:q:8:option:b",
+            "text": "Only I is implicit"
+          },
+          {
+            "id": "cgl-2026-10-08:q:8:option:c",
+            "text": "Only II and III are implicit"
+          },
+          {
+            "id": "cgl-2026-10-08:q:8:option:d",
+            "text": "All are implicit"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "sourcePage": 4,
+        "notes": "Reframed the task as identifying plausible assumptions: I and III, not the unsupported universal claim II.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:9:reviewed:4ddb6439a3f77376",
+      "questionId": "cgl-2026-10-08:q:9",
+      "revision": 1,
+      "contentHash": "4ddb6439a3f773765517554f1ada0b1a76ed414013d5c7d612f5451fb58cd1f9",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "In the question one statement is given, followed by arguments, I and II. You have to decide which\nof the argument is strong.\nStatement: Should male labourers be paid more than female labourers?\nArguments:\nΙ. Yes. Even physiologists confirm that men are physically stronger than women.\nΙΙ. No. Equal work should be paid equally irrespective of gender.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:9:option:a",
+            "text": "Only argument I is strong"
+          },
+          {
+            "id": "cgl-2026-10-08:q:9:option:b",
+            "text": "Only argument II is strong"
+          },
+          {
+            "id": "cgl-2026-10-08:q:9:option:c",
+            "text": "Both arguments I and II are strong"
+          },
+          {
+            "id": "cgl-2026-10-08:q:9:option:d",
+            "text": "Neither argument I nor II is strong"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 5
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:10:reviewed:f22ac55f07881c05",
+      "questionId": "cgl-2026-10-08:q:10",
+      "revision": 1,
+      "contentHash": "f22ac55f07881c05ab70a85f589a85ca48f38501d5184edfa325b273dd16da8e",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which option exactly reproduces the reference address, including spelling, spacing and punctuation?\n16th Floor, Alpha Tower, Near City Center Mall, Bangalore, KA 560001",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:10:option:a",
+            "text": "16th Floor, Alpha Tower, Near City Center Mall, Bengalooru, KA- 560001"
+          },
+          {
+            "id": "cgl-2026-10-08:q:10:option:b",
+            "text": "16 Floor, Alpha Tower, Near City Center Mall, Bangalore, KA 560001"
+          },
+          {
+            "id": "cgl-2026-10-08:q:10:option:c",
+            "text": "16th Floor, Alpha Tower, Near City Center Mall, Bangalore, KA 560001"
+          },
+          {
+            "id": "cgl-2026-10-08:q:10:option:d",
+            "text": "16th Floor, Alpha Tower, Near City Center Mall, Bangalore, Karnataka 560001"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 5,
+        "notes": "Normalized the instruction without changing the address or options.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:11:reviewed:a5664faf73f86256",
+      "questionId": "cgl-2026-10-08:q:11",
+      "revision": 1,
+      "contentHash": "a5664faf73f86256161a2620d292bd34b71cd9f6b82865eb86bed3653b928149",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Two figures given on the left side of (::) are related with some logic/rule/relation. Select the missing figure on the right side of (::) from the given alternatives based on the same logic/rule/relation.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:11:option:a",
+            "text": "Figure A",
+            "assetIds": [
+              "cgl-2026-10-08:q:11:option:0"
+            ]
+          },
+          {
+            "id": "cgl-2026-10-08:q:11:option:b",
+            "text": "Figure B",
+            "assetIds": [
+              "cgl-2026-10-08:q:11:option:1"
+            ]
+          },
+          {
+            "id": "cgl-2026-10-08:q:11:option:c",
+            "text": "Figure C",
+            "assetIds": [
+              "cgl-2026-10-08:q:11:option:2"
+            ]
+          },
+          {
+            "id": "cgl-2026-10-08:q:11:option:d",
+            "text": "Figure D",
+            "assetIds": [
+              "cgl-2026-10-08:q:11:option:3"
+            ]
+          }
+        ],
+        "assetIds": [
+          "cgl-2026-10-08:q:11:stem"
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 5
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:12:reviewed:9018202574ed77b7",
+      "questionId": "cgl-2026-10-08:q:12",
+      "revision": 1,
+      "contentHash": "9018202574ed77b7736a2036b731c5ea66483dc654e29ec2163dd2092cfb49c3",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Should India automatically support every policy decision taken by Pakistan? Decide which argument is stronger.\nI. Yes, because unconditional agreement is the only possible route to peace.\nII. No, because each policy should be assessed independently on its merits.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:12:option:a",
+            "text": "Only argument I is strong"
+          },
+          {
+            "id": "cgl-2026-10-08:q:12:option:b",
+            "text": "Only argument II is strong"
+          },
+          {
+            "id": "cgl-2026-10-08:q:12:option:c",
+            "text": "Either argument I or argument II is strong"
+          },
+          {
+            "id": "cgl-2026-10-08:q:12:option:d",
+            "text": "Neither argument I nor argument II is strong"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 6,
+        "notes": "Made the distinctions between the arguments explicit without political advocacy.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:13:reviewed:1ced5690270e9c01",
+      "questionId": "cgl-2026-10-08:q:13",
+      "revision": 1,
+      "contentHash": "1ced5690270e9c01c49a273413bc2734f09b6cdb0ccd8b57079ad3ba28545a36",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A man points to Sakshi and says: “She is the daughter of the brother of the son of my wife.” Assuming the son is also his child, how is the man related to Sakshi?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:13:option:a",
+            "text": "Granddaughter"
+          },
+          {
+            "id": "cgl-2026-10-08:q:13:option:b",
+            "text": "Grandson"
+          },
+          {
+            "id": "cgl-2026-10-08:q:13:option:c",
+            "text": "Grandmother"
+          },
+          {
+            "id": "cgl-2026-10-08:q:13:option:d",
+            "text": "Grandfather"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 6,
+        "notes": "The source omitted the speaker’s gender and parentage assumptions. A male speaker who is parent of that son is Sakshi’s grandfather.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:14:reviewed:004d0abe5c310f40",
+      "questionId": "cgl-2026-10-08:q:14",
+      "revision": 1,
+      "contentHash": "004d0abe5c310f4059d35cd077f76904826da9d4ee9af22c7b57321cc5325135",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Find the next term of the series: 1, 15, 85, 435, ?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:14:option:a",
+            "text": "2186"
+          },
+          {
+            "id": "cgl-2026-10-08:q:14:option:b",
+            "text": "2185"
+          },
+          {
+            "id": "cgl-2026-10-08:q:14:option:c",
+            "text": "2184"
+          },
+          {
+            "id": "cgl-2026-10-08:q:14:option:d",
+            "text": "2201"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 6,
+        "notes": "Each term is five times the preceding term plus 10: 435×5+10=2185.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:15:reviewed:3c6b818f78ff7226",
+      "questionId": "cgl-2026-10-08:q:15",
+      "revision": 1,
+      "contentHash": "3c6b818f78ff72268cc41b0c376ec7aa948654acd02b0fdb076b05bca11a5288",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Eight symbol-number clusters are given below three of which are same. Find the three clusters\nthat are exactly the same, including each symbol and space.\n\n(A) 74* &4%48@23*7^+#\n(B) 74* &4%43@23*7$+#\n(C) 74* &4%43@23*7^+#\n(D) 74* &4%43@23*7^+#\n(E) 74* &4$43@23*7^+#\n(F) 74* &4%43@33*7^+#\n(G) 74* &4&43@23*7^+#\n(H) 74* &4%43@23*7^+#",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:15:option:a",
+            "text": "A, C and E"
+          },
+          {
+            "id": "cgl-2026-10-08:q:15:option:b",
+            "text": "B, C and E"
+          },
+          {
+            "id": "cgl-2026-10-08:q:15:option:c",
+            "text": "C, D and H"
+          },
+          {
+            "id": "cgl-2026-10-08:q:15:option:d",
+            "text": "C, F and H"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 6,
+        "notes": "Character-by-character comparison shows clusters C, D and H match.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:16:reviewed:4885e4b59adc6a7a",
+      "questionId": "cgl-2026-10-08:q:16",
+      "revision": 1,
+      "contentHash": "4885e4b59adc6a7a1d878edd8879689ca7fa661094c860e30d348285e5722685",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Statements: At least one anchor exists. All anchors are ships. All ships are boats.\nConclusions:\nI. All anchors are boats.\nII. Some ships are anchors.\nIII. No anchor is a boat.\nIV. Some boats are anchors.\nWhich set of conclusions follows?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:16:option:a",
+            "text": "All four conclusions follow"
+          },
+          {
+            "id": "cgl-2026-10-08:q:16:option:b",
+            "text": "Only conclusions I and III follow"
+          },
+          {
+            "id": "cgl-2026-10-08:q:16:option:c",
+            "text": "Only conclusion III follows"
+          },
+          {
+            "id": "cgl-2026-10-08:q:16:option:d",
+            "text": "Only conclusions I, II, and IV follow"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 7,
+        "notes": "An explicit existence premise makes the conclusions II and IV valid as well as I, without an implicit existential convention.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:17:reviewed:97f6a919be070811",
+      "questionId": "cgl-2026-10-08:q:17",
+      "revision": 1,
+      "contentHash": "97f6a919be07081181534c5615b00950b63d8ee75932f0676c8353f5a911e8c8",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "In a certain code language, 'GOAT' is written as '98' and 'POLE' is written as '103'. How is 'FAIL' written in the same code?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:17:option:a",
+            "text": "85"
+          },
+          {
+            "id": "cgl-2026-10-08:q:17:option:b",
+            "text": "83"
+          },
+          {
+            "id": "cgl-2026-10-08:q:17:option:c",
+            "text": "80"
+          },
+          {
+            "id": "cgl-2026-10-08:q:17:option:d",
+            "text": "78"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 7,
+        "notes": "Removed the formula “sum of alphabet positions plus 55” from the question. The two examples now convey the pattern without directly stating the solution method. The original numerical examples were not enough to determine a unique mapping. The revised code is explicit: FAIL=6+1+9+12+55=83.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:18:reviewed:34e1da082530011c",
+      "questionId": "cgl-2026-10-08:q:18",
+      "revision": 1,
+      "contentHash": "34e1da082530011c7351dd4885b0ed48d654675250a542265649210549c8be04",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Amrita is the sister of Bablu. Bablu is the brother of Deepak. Deepak is the son of Malti and Malti\nis the wife of Lakhan. Nehal is the brother of Lakhan. How is Nehal related to Amrita?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:18:option:a",
+            "text": "Father's brother"
+          },
+          {
+            "id": "cgl-2026-10-08:q:18:option:b",
+            "text": "Son"
+          },
+          {
+            "id": "cgl-2026-10-08:q:18:option:c",
+            "text": "Mother's brother"
+          },
+          {
+            "id": "cgl-2026-10-08:q:18:option:d",
+            "text": "Brother"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 7
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:19:reviewed:094b7afce3bd0ce1",
+      "questionId": "cgl-2026-10-08:q:19",
+      "revision": 1,
+      "contentHash": "094b7afce3bd0ce19b68d8728ab3b28cc8a35de0243a7b3da72379680f5fb6b1",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Directions: Select the correct options from the given alternatives\n10, 110, 220, 340, ....",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:19:option:a",
+            "text": "470"
+          },
+          {
+            "id": "cgl-2026-10-08:q:19:option:b",
+            "text": "450"
+          },
+          {
+            "id": "cgl-2026-10-08:q:19:option:c",
+            "text": "460"
+          },
+          {
+            "id": "cgl-2026-10-08:q:19:option:d",
+            "text": "480"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 8
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:20:reviewed:a817151cdd0c24d9",
+      "questionId": "cgl-2026-10-08:q:20",
+      "revision": 1,
+      "contentHash": "a817151cdd0c24d93c48c0d10b873edc9bb1d9b860dbea372bee08c7e430ef60",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "At a hospital, patients from outside the city have longer average appointment waits than local patients with comparable conditions. Which possible inference is most directly supported?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:20:option:a",
+            "text": "Locals need faster treatment"
+          },
+          {
+            "id": "cgl-2026-10-08:q:20:option:b",
+            "text": "Locals pay more"
+          },
+          {
+            "id": "cgl-2026-10-08:q:20:option:c",
+            "text": "Non-locals have more serious illnesses"
+          },
+          {
+            "id": "cgl-2026-10-08:q:20:option:d",
+            "text": "Preference for local patients"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "sourcePage": 8,
+        "notes": "Longer waits may indicate preference for locals, but additional data is needed to establish cause.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:21:reviewed:1fa14ff80ae797b1",
+      "questionId": "cgl-2026-10-08:q:21",
+      "revision": 1,
+      "contentHash": "1fa14ff80ae797b13eb2aaca21771df54d1ef66280a135afc5fdc7914baee48c",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "For this ID scheme, take the 6th, 9th and 12th digits of the 13-digit candidate ID in that order. What code is obtained from 2021543217654?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:21:option:a",
+            "text": "146"
+          },
+          {
+            "id": "cgl-2026-10-08:q:21:option:b",
+            "text": "175"
+          },
+          {
+            "id": "cgl-2026-10-08:q:21:option:c",
+            "text": "415"
+          },
+          {
+            "id": "cgl-2026-10-08:q:21:option:d",
+            "text": "475"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 8,
+        "notes": "The 6th, 9th and 12th characters are 4, 1 and 5, giving 415.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:22:reviewed:5a45c0eb1bb5ba4c",
+      "questionId": "cgl-2026-10-08:q:22",
+      "revision": 1,
+      "contentHash": "5a45c0eb1bb5ba4cf3e50ea636f84e2a378b0718d4adda914e59a458b363c0b0",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "No student who fails the midterm can pass the final course. Sarah passed the final course. What necessarily follows?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:22:option:a",
+            "text": "Sarah got an A on the midterm"
+          },
+          {
+            "id": "cgl-2026-10-08:q:22:option:b",
+            "text": "Sarah did not fail the midterm exam"
+          },
+          {
+            "id": "cgl-2026-10-08:q:22:option:c",
+            "text": "Sarah studied hard for the midterm"
+          },
+          {
+            "id": "cgl-2026-10-08:q:22:option:d",
+            "text": "Sarah retook the midterm"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 8,
+        "notes": "By contraposition, Sarah cannot have failed the midterm.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:23:reviewed:f3935f87f7b175cf",
+      "questionId": "cgl-2026-10-08:q:23",
+      "revision": 1,
+      "contentHash": "f3935f87f7b175cfc455796f672e8ddf34597f90f5ea371e0279c16ee49efbcb",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Choose the address that is the same as the one given below.\nSample Address: Flat C-3, Phase 2, Golden Homes, Navi Mumbai, Maharashtra – 410210",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:23:option:a",
+            "text": "Flat C3, Phase 2, Golden Homes, Navi Mumbai, Maharashtra - 410210"
+          },
+          {
+            "id": "cgl-2026-10-08:q:23:option:b",
+            "text": "Flat C-3, Phase 2, Golden Homes, Navi Mumbai, Maharashtra – 410210"
+          },
+          {
+            "id": "cgl-2026-10-08:q:23:option:c",
+            "text": "Flat C-3, Phase II, Golden Homes, Navi Mumbai, Maharashtra - 410210"
+          },
+          {
+            "id": "cgl-2026-10-08:q:23:option:d",
+            "text": "Flat C-3, Phase 2, Golden Home, Navi Mumbai, Maharashtra 410210"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 8,
+        "notes": "The source reference uses an en dash, but the marked option used a hyphen. The corrected option now matches exactly, including punctuation.",
+        "changes": [
+          "options",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:24:reviewed:27685e6f4f4c2e62",
+      "questionId": "cgl-2026-10-08:q:24",
+      "revision": 1,
+      "contentHash": "27685e6f4f4c2e6201ec24b42ab9c0ff4e8c41e0a196735203f880ccd147b78d",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "In a certain code language, 'LIFE' is written as '11731' and 'LOVE' as '1113191'. How will 'ZONE' be coded in the same language?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:24:option:a",
+            "text": "2514112"
+          },
+          {
+            "id": "cgl-2026-10-08:q:24:option:b",
+            "text": "2513111"
+          },
+          {
+            "id": "cgl-2026-10-08:q:24:option:c",
+            "text": "2515111"
+          },
+          {
+            "id": "cgl-2026-10-08:q:24:option:d",
+            "text": "2514211"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 9,
+        "notes": "The publisher supplied only one coding example, allowing several possible rules. The corrected version adds a second consistent example without disclosing the transformation; the rule subtracts successive alphabet positions 1, 2, 3, 4.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:25:reviewed:e50f071405f06eb4",
+      "questionId": "cgl-2026-10-08:q:25",
+      "revision": 1,
+      "contentHash": "e50f071405f06eb40c4bae0873781da4954a93fdacc94673922264dc65f2006d",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A company lowers its product prices in the hope of increasing sales. What assumption most directly supports this decision?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:25:option:a",
+            "text": "Customers prefer cheap products"
+          },
+          {
+            "id": "cgl-2026-10-08:q:25:option:b",
+            "text": "Lower prices attract more buyers"
+          },
+          {
+            "id": "cgl-2026-10-08:q:25:option:c",
+            "text": "Sales were already high"
+          },
+          {
+            "id": "cgl-2026-10-08:q:25:option:d",
+            "text": "Quality is irrelevant"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 9,
+        "notes": "The decision assumes that reducing price can attract additional buyers.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:26:reviewed:5cb359c8b4bf01b2",
+      "questionId": "cgl-2026-10-08:q:26",
+      "revision": 1,
+      "contentHash": "5cb359c8b4bf01b2c548b54f7a288354ca62589b251711fd8d2f8831378e1235",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which of the following sports uses a ball in standard play?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:26:option:a",
+            "text": "Boxing"
+          },
+          {
+            "id": "cgl-2026-10-08:q:26:option:b",
+            "text": "Badminton"
+          },
+          {
+            "id": "cgl-2026-10-08:q:26:option:c",
+            "text": "Chess"
+          },
+          {
+            "id": "cgl-2026-10-08:q:26:option:d",
+            "text": "Golf"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 9,
+        "notes": "Golf is the only sport listed that uses a ball (badminton uses a shuttlecock).",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:27:reviewed:ac66d2a7161e571a",
+      "questionId": "cgl-2026-10-08:q:27",
+      "revision": 1,
+      "contentHash": "ac66d2a7161e571a22e9629275d07b5027ca35ab97f874f60610e14adf4ba281",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which listed country had never hosted the Asian Games up to and including 2022?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:27:option:a",
+            "text": "Pakistan"
+          },
+          {
+            "id": "cgl-2026-10-08:q:27:option:b",
+            "text": "South Korea"
+          },
+          {
+            "id": "cgl-2026-10-08:q:27:option:c",
+            "text": "China"
+          },
+          {
+            "id": "cgl-2026-10-08:q:27:option:d",
+            "text": "Japan"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 9,
+        "notes": "Pakistan had not hosted; Japan, China and South Korea all had.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:28:reviewed:447debcec9f26586",
+      "questionId": "cgl-2026-10-08:q:28",
+      "revision": 1,
+      "contentHash": "447debcec9f26586d0fe08814a469010bfd0a74743cca87e9a554edb9e485e64",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which of the following is not a function of biosphere reserves?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:28:option:a",
+            "text": "Cultural heritage preservation"
+          },
+          {
+            "id": "cgl-2026-10-08:q:28:option:b",
+            "text": "Conservation of biodiversity"
+          },
+          {
+            "id": "cgl-2026-10-08:q:28:option:c",
+            "text": "Promotion of monoculture farming"
+          },
+          {
+            "id": "cgl-2026-10-08:q:28:option:d",
+            "text": "Sustainable development of local communities"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 9
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:29:reviewed:e32e6045aec34c13",
+      "questionId": "cgl-2026-10-08:q:29",
+      "revision": 1,
+      "contentHash": "e32e6045aec34c13795bf1c98d775eb2941c7c0f88e45f70350a6f8932c346ee",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "The Land Boundary Agreement with Bangladesh was  constitutionalized through which\nConstitutional Amendment?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:29:option:a",
+            "text": "One Hundred and First Amendment"
+          },
+          {
+            "id": "cgl-2026-10-08:q:29:option:b",
+            "text": "Ninety-Eighth Amendment"
+          },
+          {
+            "id": "cgl-2026-10-08:q:29:option:c",
+            "text": "Ninety-Seventh Amendment"
+          },
+          {
+            "id": "cgl-2026-10-08:q:29:option:d",
+            "text": "One Hundredth Amendment"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 10
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:30:reviewed:5bb5dfba55bb786d",
+      "questionId": "cgl-2026-10-08:q:30",
+      "revision": 1,
+      "contentHash": "5bb5dfba55bb786d29d4b610c1d398fdab34e6bf1cfee6b601ac563cf1e129f0",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "On what date did the Gujarat Legislative Assembly pass the Gujarat Uniform Civil Code Bill, 2026?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:30:option:a",
+            "text": "January 26, 2026"
+          },
+          {
+            "id": "cgl-2026-10-08:q:30:option:b",
+            "text": "March 24, 2026"
+          },
+          {
+            "id": "cgl-2026-10-08:q:30:option:c",
+            "text": "August 15, 2025"
+          },
+          {
+            "id": "cgl-2026-10-08:q:30:option:d",
+            "text": "March 25, 2026"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 10,
+        "notes": "The Gujarat Assembly passed the Bill on 24 March 2026, as reported by PTI and other contemporaneous reports.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:31:reviewed:03647b9781d10ae6",
+      "questionId": "cgl-2026-10-08:q:31",
+      "revision": 1,
+      "contentHash": "03647b9781d10ae6e5e473c5c7d4bc548f2846f046a430ab0a1025388e13b0c1",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Match the editions of the Asian Games with their designated host cities. (Note: the Hangzhou 2022 edition was actually held in 2023.)\nI. 2022 — II. 2026 — III. 2030 — IV. 2034\n1. Riyadh — 2. Hangzhou — 3. Doha — 4. Aichi–Nagoya",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:31:option:a",
+            "text": "I-2, II-4, III-3, IV-1"
+          },
+          {
+            "id": "cgl-2026-10-08:q:31:option:b",
+            "text": "I-4, II-2, III-1, IV-3"
+          },
+          {
+            "id": "cgl-2026-10-08:q:31:option:c",
+            "text": "I-2, II-3, III-4, IV-1"
+          },
+          {
+            "id": "cgl-2026-10-08:q:31:option:d",
+            "text": "I-3, II-4, III-2, IV-1"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 10,
+        "notes": "Clarified that “2022” is the official edition name, notwithstanding the 2023 staging.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:32:reviewed:98099f1ad25df4aa",
+      "questionId": "cgl-2026-10-08:q:32",
+      "revision": 1,
+      "contentHash": "98099f1ad25df4aa2fe016aef51998bca23e97e3b405f4e24983a8ec0bed53a1",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which statement accurately describes the characteristics of protons in an atom?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:32:option:a",
+            "text": "They revolve around the nucleus in fixed orbits."
+          },
+          {
+            "id": "cgl-2026-10-08:q:32:option:b",
+            "text": "They have negligible mass compared to electrons."
+          },
+          {
+            "id": "cgl-2026-10-08:q:32:option:c",
+            "text": "They are located in the nucleus of an atom."
+          },
+          {
+            "id": "cgl-2026-10-08:q:32:option:d",
+            "text": "They are negatively charged particles."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 10
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:33:reviewed:7b7fefde6a367f79",
+      "questionId": "cgl-2026-10-08:q:33",
+      "revision": 1,
+      "contentHash": "7b7fefde6a367f7981eaeebff83605382eeda7408e03735e0d660ab34adea7bb",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Under which Article of the Constitution of India does the President possess the power to grant pardons in specified cases?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:33:option:a",
+            "text": "Article 75"
+          },
+          {
+            "id": "cgl-2026-10-08:q:33:option:b",
+            "text": "Article 74"
+          },
+          {
+            "id": "cgl-2026-10-08:q:33:option:c",
+            "text": "Article 72"
+          },
+          {
+            "id": "cgl-2026-10-08:q:33:option:d",
+            "text": "Article 53"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 10,
+        "notes": "The 2022 anecdote is unsupported and unnecessary. Article 72 provides the President’s clemency power.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:34:reviewed:b0b707c5b7fc96f4",
+      "questionId": "cgl-2026-10-08:q:34",
+      "revision": 1,
+      "contentHash": "b0b707c5b7fc96f40762980030ae96f8fa197e040a42f6ba9a3fbb542058d967",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which digital grants-management portal did Union Minister Prataprao Jadhav launch on 19 May 2026 under the Ayush Grid?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:34:option:a",
+            "text": "Ayush Setu Portal"
+          },
+          {
+            "id": "cgl-2026-10-08:q:34:option:b",
+            "text": "Ayush Anudan Portal"
+          },
+          {
+            "id": "cgl-2026-10-08:q:34:option:c",
+            "text": "Ayush Bharat Portal"
+          },
+          {
+            "id": "cgl-2026-10-08:q:34:option:d",
+            "text": "Ayush Sampada Portal"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 11,
+        "notes": "Verified against the Ministry of Ayush/PIB announcement of 19 May 2026: Ayush Anudan Portal.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:35:reviewed:c9a63065066bb8f3",
+      "questionId": "cgl-2026-10-08:q:35",
+      "revision": 1,
+      "contentHash": "c9a63065066bb8f36b1a6706de0175d0ba9ce8ad5513213a74e7c8041e0bc840",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "According to Sri Lanka Export Development Board data for January–August 2026, India became Sri Lanka’s second-largest merchandise export destination after overtaking which country?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:35:option:a",
+            "text": "USA"
+          },
+          {
+            "id": "cgl-2026-10-08:q:35:option:b",
+            "text": "China"
+          },
+          {
+            "id": "cgl-2026-10-08:q:35:option:c",
+            "text": "United Kingdom"
+          },
+          {
+            "id": "cgl-2026-10-08:q:35:option:d",
+            "text": "Japan"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 11,
+        "notes": "The original future-tense wording is outdated. The Sri Lanka EDB reported that India overtook the United Kingdom in January–August 2026.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:36:reviewed:8466de501fc32ed6",
+      "questionId": "cgl-2026-10-08:q:36",
+      "revision": 1,
+      "contentHash": "8466de501fc32ed6226ccf5421647d0cf7fe0b182c8e7b53530584886a97f852",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "The stringent industrial licensing regime in India (pre-1991) often led to which unintended\nconsequence for established firms, despite aiming to prevent monopolies?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:36:option:a",
+            "text": "Excessive foreign competition."
+          },
+          {
+            "id": "cgl-2026-10-08:q:36:option:b",
+            "text": "Rapid expansion of small-scale industries."
+          },
+          {
+            "id": "cgl-2026-10-08:q:36:option:c",
+            "text": "Reduced incentive for technological upgradation and efficiency."
+          },
+          {
+            "id": "cgl-2026-10-08:q:36:option:d",
+            "text": "Increased diversification into global markets."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 11
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:37:reviewed:34f51b0e6078eb55",
+      "questionId": "cgl-2026-10-08:q:37",
+      "revision": 1,
+      "contentHash": "34f51b0e6078eb556ae61418ee4b09523e2cbc9b11fbdc90d82bd940b3e499a2",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Consider the following statements about privatisation.\nI. Privatisation never involves transferring state ownership to private entities.\nII. Privatisation may involve transferring management of public enterprises to private entities.\nWhich statements are true?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:37:option:a",
+            "text": "Only (i) is true"
+          },
+          {
+            "id": "cgl-2026-10-08:q:37:option:b",
+            "text": "Both (i) and (ii) are false"
+          },
+          {
+            "id": "cgl-2026-10-08:q:37:option:c",
+            "text": "Both (i) and (ii) are true"
+          },
+          {
+            "id": "cgl-2026-10-08:q:37:option:d",
+            "text": "Only (ii) is true"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 11,
+        "notes": "Removed the awkward double negative while preserving the intended distinction. Statement I is false; II is true.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:38:reviewed:ed2cffc582871876",
+      "questionId": "cgl-2026-10-08:q:38",
+      "revision": 1,
+      "contentHash": "ed2cffc5828718769b496fd48fd9240c482789d40f9ffbfda6c6f62876eb42cd",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which of the following veto powers is NOT available to the President of India?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:38:option:a",
+            "text": "Absolute Veto"
+          },
+          {
+            "id": "cgl-2026-10-08:q:38:option:b",
+            "text": "Pocket Veto"
+          },
+          {
+            "id": "cgl-2026-10-08:q:38:option:c",
+            "text": "Qualified Veto"
+          },
+          {
+            "id": "cgl-2026-10-08:q:38:option:d",
+            "text": "Suspensive Veto"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 11
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:39:reviewed:13de98e46a7499d9",
+      "questionId": "cgl-2026-10-08:q:39",
+      "revision": 1,
+      "contentHash": "13de98e46a7499d9b83f6d276d63d5438bfcd1837b5f56c5ed9cd0c01f7364f0",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which of the following subjects is NOT included in the Union List, as per allocation between\nthree lists in seventh schedule, given under Article 246 of the Indian Constitution?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:39:option:a",
+            "text": "Atomic Energy"
+          },
+          {
+            "id": "cgl-2026-10-08:q:39:option:b",
+            "text": "Railways"
+          },
+          {
+            "id": "cgl-2026-10-08:q:39:option:c",
+            "text": "Banking"
+          },
+          {
+            "id": "cgl-2026-10-08:q:39:option:d",
+            "text": "Liquor"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 12
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:40:reviewed:23dd9cea6c571e74",
+      "questionId": "cgl-2026-10-08:q:40",
+      "revision": 1,
+      "contentHash": "23dd9cea6c571e743cd04e040720866564998d33d9029865aba733568a091e4d",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "The 1991 economic reforms in India led to rapid industrialisation and expansion of energy-\nintensive sectors. Which market-based mechanism has India adopted to balance industrial growth,\nenergy efficiency and emissions?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:40:option:a",
+            "text": "Green GDP Accounting"
+          },
+          {
+            "id": "cgl-2026-10-08:q:40:option:b",
+            "text": "Food Security Act"
+          },
+          {
+            "id": "cgl-2026-10-08:q:40:option:c",
+            "text": "Perform, Achieve and Trade (PAT) scheme"
+          },
+          {
+            "id": "cgl-2026-10-08:q:40:option:d",
+            "text": "Make in India"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 12
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:41:reviewed:2cd2cd249382f96c",
+      "questionId": "cgl-2026-10-08:q:41",
+      "revision": 1,
+      "contentHash": "2cd2cd249382f96c2609fd03f4ad3e33b86c518c38a5150f183ab4e65d8bfe68",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Under which mission was the Deen Dayal Upadhyaya Grameen Kaushalya Yojana (DDU-GKY)\nlaunched?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:41:option:a",
+            "text": "National Health Mission"
+          },
+          {
+            "id": "cgl-2026-10-08:q:41:option:b",
+            "text": "National Rural Livelihoods Mission"
+          },
+          {
+            "id": "cgl-2026-10-08:q:41:option:c",
+            "text": "National Skill Development Mission"
+          },
+          {
+            "id": "cgl-2026-10-08:q:41:option:d",
+            "text": "National Urban Livelihoods Mission"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 12
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:42:reviewed:bc3cec88a3d6375b",
+      "questionId": "cgl-2026-10-08:q:42",
+      "revision": 1,
+      "contentHash": "bc3cec88a3d6375b6c9ea061de2203f6d84795e75d23b25af91c0763cc4c032c",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which of the following industry was emphasized in the second five year plan of India?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:42:option:a",
+            "text": "IT industry"
+          },
+          {
+            "id": "cgl-2026-10-08:q:42:option:b",
+            "text": "Food processing industry"
+          },
+          {
+            "id": "cgl-2026-10-08:q:42:option:c",
+            "text": "Heavy and basic industry"
+          },
+          {
+            "id": "cgl-2026-10-08:q:42:option:d",
+            "text": "Tourism industry"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 12
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:43:reviewed:47973eafcd202b11",
+      "questionId": "cgl-2026-10-08:q:43",
+      "revision": 1,
+      "contentHash": "47973eafcd202b1101f9631c92ff5a733743a36d0ca7401e9bc391e069cd3bad",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "What is a central stated aim of replacing the Indian Penal Code with the Bharatiya Nyaya Sanhita, 2023?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:43:option:a",
+            "text": "To increase the number of criminal courts in India"
+          },
+          {
+            "id": "cgl-2026-10-08:q:43:option:b",
+            "text": "To modernize criminal laws and align them with contemporary legal needs"
+          },
+          {
+            "id": "cgl-2026-10-08:q:43:option:c",
+            "text": "To abolish all colonial-era legal provisions immediately"
+          },
+          {
+            "id": "cgl-2026-10-08:q:43:option:d",
+            "text": "To transfer criminal law powers entirely to state governments"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "sourcePage": 12,
+        "notes": "“Modernising criminal law” is the closest option; the policy description is kept descriptive rather than normative.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:44:reviewed:b907d4caa6fdd4f1",
+      "questionId": "cgl-2026-10-08:q:44",
+      "revision": 1,
+      "contentHash": "b907d4caa6fdd4f1b63f8f991f66e62d49ce3b69fc04617717bf24fa0f577726",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "What public capital expenditure did the Union Budget 2026–27 propose for FY 2026–27?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:44:option:a",
+            "text": "₹10.2 lakh crore"
+          },
+          {
+            "id": "cgl-2026-10-08:q:44:option:b",
+            "text": "₹11.2 lakh crore"
+          },
+          {
+            "id": "cgl-2026-10-08:q:44:option:c",
+            "text": "₹12.2 lakh crore"
+          },
+          {
+            "id": "cgl-2026-10-08:q:44:option:d",
+            "text": "₹13.2 lakh crore"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 12,
+        "notes": "The Ministry of Finance budget announcement specifies ₹12.2 lakh crore.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:45:reviewed:7230be2efe746a8b",
+      "questionId": "cgl-2026-10-08:q:45",
+      "revision": 1,
+      "contentHash": "7230be2efe746a8b9653a743e5d781d2d8ea2adc48fb1c933914150c74176631",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "What was the planned duration and objective of NASA’s Artemis II crewed mission?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:45:option:a",
+            "text": "3-day mission; Lunar landing at the South Pole"
+          },
+          {
+            "id": "cgl-2026-10-08:q:45:option:b",
+            "text": "10-day mission; Lunar flyby and return to Earth"
+          },
+          {
+            "id": "cgl-2026-10-08:q:45:option:c",
+            "text": "30-day mission; Orbiting the Moon and docking with Gateway"
+          },
+          {
+            "id": "cgl-2026-10-08:q:45:option:d",
+            "text": "6-month mission; Rotation at the International Space Station"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 13,
+        "notes": "Its mission design was an approximately 10-day lunar flyby, without a lunar landing.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:46:reviewed:2ef04f832a9d30c7",
+      "questionId": "cgl-2026-10-08:q:46",
+      "revision": 1,
+      "contentHash": "2ef04f832a9d30c7c2fb59cf257b2811e06aebaf572c1e2d7fdcbe7ce708c31f",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which of the following products originating in Assam received a Geographical Indication registration during 2026?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:46:option:a",
+            "text": "Pochampally Ikat"
+          },
+          {
+            "id": "cgl-2026-10-08:q:46:option:b",
+            "text": "Bihu Pepa"
+          },
+          {
+            "id": "cgl-2026-10-08:q:46:option:c",
+            "text": "Channapatna Toys"
+          },
+          {
+            "id": "cgl-2026-10-08:q:46:option:d",
+            "text": "Kullu Shawl"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 13,
+        "notes": "Removed “musical instrument”, which singled out the Bihu Pepa option on category alone. The official registration date is discussed only after submission. The official GI register records Assamese Bihu Pepa, registration certificate dated 27 March 2026; the source’s June date is inaccurate.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:47:reviewed:b9570690aee121b3",
+      "questionId": "cgl-2026-10-08:q:47",
+      "revision": 1,
+      "contentHash": "b9570690aee121b3ced8fe34e179f94a1b9880ad5b5a996f2e3a0d0b6f018a37",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which of the following symbols is a correct representation for air mass above a hot and dry\ndesert region?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:47:option:a",
+            "text": "cP"
+          },
+          {
+            "id": "cgl-2026-10-08:q:47:option:b",
+            "text": "cA"
+          },
+          {
+            "id": "cgl-2026-10-08:q:47:option:c",
+            "text": "cT"
+          },
+          {
+            "id": "cgl-2026-10-08:q:47:option:d",
+            "text": "mP"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 13
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:48:reviewed:572ccb5277707648",
+      "questionId": "cgl-2026-10-08:q:48",
+      "revision": 1,
+      "contentHash": "572ccb52777076487a7858cf6ea85fab9d4ee114f085ce8fab8c54aef39315fb",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which of the following is a shallow desert depression formed by wind erosion?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:48:option:a",
+            "text": "Pediment"
+          },
+          {
+            "id": "cgl-2026-10-08:q:48:option:b",
+            "text": "Deflation hollow"
+          },
+          {
+            "id": "cgl-2026-10-08:q:48:option:c",
+            "text": "Playa"
+          },
+          {
+            "id": "cgl-2026-10-08:q:48:option:d",
+            "text": "Inselberg"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 13
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:49:reviewed:448e1474b4430365",
+      "questionId": "cgl-2026-10-08:q:49",
+      "revision": 1,
+      "contentHash": "448e1474b443036539aa203d12ffd3e0c94af8d056bf9a59bed6c07104da494b",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Who from Chhattisgarh was named a Padma Shri awardee in 2026 for contributions in Social Work?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:49:option:a",
+            "text": "Dr. Budhri Tati"
+          },
+          {
+            "id": "cgl-2026-10-08:q:49:option:b",
+            "text": "Dr. Sunil Kumar"
+          },
+          {
+            "id": "cgl-2026-10-08:q:49:option:c",
+            "text": "Ms. Anjali Deshmukh"
+          },
+          {
+            "id": "cgl-2026-10-08:q:49:option:d",
+            "text": "Mr. Suresh Patel"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 13,
+        "notes": "The Government of India’s Padma Awards 2026 list names Dr Budhri Tati under Social Work, Chhattisgarh.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:50:reviewed:2511be28e45e2252",
+      "questionId": "cgl-2026-10-08:q:50",
+      "revision": 1,
+      "contentHash": "2511be28e45e22524cc8fae5be0232bf5cadbabcc484eafa7aa780c0d45af0eb",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "‘Tamu Lochar’ is one of the traditional festivals of the ____________ of Sikkim. It is celebrated to\nmark the beginning of their new year, which falls on the 15th day of Pusa, according to the Hindu\ncalendar Vikram Samvat and 30th December in the English calendar.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:50:option:a",
+            "text": "Mangar community"
+          },
+          {
+            "id": "cgl-2026-10-08:q:50:option:b",
+            "text": "Bhutia community"
+          },
+          {
+            "id": "cgl-2026-10-08:q:50:option:c",
+            "text": "Lepcha community"
+          },
+          {
+            "id": "cgl-2026-10-08:q:50:option:d",
+            "text": "Gurung community"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 14
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:51:reviewed:803e4de2275356ac",
+      "questionId": "cgl-2026-10-08:q:51",
+      "revision": 1,
+      "contentHash": "803e4de2275356ac8fd4bbec5cedba09767e08bc78a15521ecde1c515484bec0",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Two articles are sold for ₹850 each. One yields a 25% profit and the other a 15% loss. What is the net profit in rupees?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:51:option:a",
+            "text": "₹ 30"
+          },
+          {
+            "id": "cgl-2026-10-08:q:51:option:b",
+            "text": "₹ 25"
+          },
+          {
+            "id": "cgl-2026-10-08:q:51:option:c",
+            "text": "₹ 20"
+          },
+          {
+            "id": "cgl-2026-10-08:q:51:option:d",
+            "text": "₹ 22"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 14,
+        "notes": "Cost prices are ₹680 and ₹1,000; overall revenue ₹1,700 exceeds the combined cost ₹1,680 by ₹20.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:52:reviewed:50567c788448a1fc",
+      "questionId": "cgl-2026-10-08:q:52",
+      "revision": 1,
+      "contentHash": "50567c788448a1fc9b0326b20638ea6e583fd68d40442dd5197389821ecde6e8",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "The perimeter of a rectangular field is 52 meters, and the difference between its length and its\nbreadth is 10 meters. What is the side length of a square whose area is exactly equal to the area of this\nrectangular field?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:52:option:a",
+            "text": "10 meters"
+          },
+          {
+            "id": "cgl-2026-10-08:q:52:option:b",
+            "text": "12 meters"
+          },
+          {
+            "id": "cgl-2026-10-08:q:52:option:c",
+            "text": "14 meters"
+          },
+          {
+            "id": "cgl-2026-10-08:q:52:option:d",
+            "text": "16 meters"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 14
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:53:reviewed:2dc3a944bc434399",
+      "questionId": "cgl-2026-10-08:q:53",
+      "revision": 1,
+      "contentHash": "2dc3a944bc434399adc3c48bfe0323d5778553b61dc1b2eb6bc92c5d641542c7",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Calculate the compound interest on ₹10,000 at 14% p.a. for 2 5/7 years, assuming annual compounding and simple interest for the remaining 5/7 year. Round to the nearest rupee.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:53:option:a",
+            "text": "Rs. 4,259"
+          },
+          {
+            "id": "cgl-2026-10-08:q:53:option:b",
+            "text": "Rs. 4,296"
+          },
+          {
+            "id": "cgl-2026-10-08:q:53:option:c",
+            "text": "Rs. 4,439"
+          },
+          {
+            "id": "cgl-2026-10-08:q:53:option:d",
+            "text": "Rs. 4,394"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 14,
+        "notes": "10000×(1.14)²×(1+0.14×5/7)−10000=₹4295.60, approximately ₹4296.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:54:reviewed:83041dcd2aaebc7a",
+      "questionId": "cgl-2026-10-08:q:54",
+      "revision": 1,
+      "contentHash": "83041dcd2aaebc7a5d0e11d086a67ab1c9dcfea05aea128b3df97136ab5acbb2",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "The base of a right prism is an equilateral triangle with each side measuring 8 cm . Given that the\nheight of the prism is 10 cm , what is its volume?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:54:option:a",
+            "text": "320√3 cm³"
+          },
+          {
+            "id": "cgl-2026-10-08:q:54:option:b",
+            "text": "676.6 cm³"
+          },
+          {
+            "id": "cgl-2026-10-08:q:54:option:c",
+            "text": "240 cm³"
+          },
+          {
+            "id": "cgl-2026-10-08:q:54:option:d",
+            "text": "160√3 cm³"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 14,
+        "notes": "The first option’s printed “3203” is almost certainly a lost radical; it is corrected to 320√3. The volume remains 160√3 cm³.",
+        "changes": [
+          "options",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:55:reviewed:47c20f47b25c4faf",
+      "questionId": "cgl-2026-10-08:q:55",
+      "revision": 1,
+      "contentHash": "47c20f47b25c4faf51b19cb40419c592e6b6cd2aad513cb3351ced2893b3fa8a",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "If a + 1/a = 3, where a ≠ 0, evaluate a⁶ + 1/a⁶.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:55:option:a",
+            "text": "324"
+          },
+          {
+            "id": "cgl-2026-10-08:q:55:option:b",
+            "text": "321"
+          },
+          {
+            "id": "cgl-2026-10-08:q:55:option:c",
+            "text": "323"
+          },
+          {
+            "id": "cgl-2026-10-08:q:55:option:d",
+            "text": "322"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 15,
+        "notes": "a³+1/a³=3³−3×3=18. Squaring and subtracting 2 gives 322.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:56:reviewed:3323b885bc001b7a",
+      "questionId": "cgl-2026-10-08:q:56",
+      "revision": 1,
+      "contentHash": "3323b885bc001b7ac320d6132fdc5414121d4eec6e65615768088554bc14d6e5",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Two right prisms have the same height, but their bases are triangles with areas in the ratio 3:5.\nWhat is the ratio of their volumes?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:56:option:a",
+            "text": "3:5"
+          },
+          {
+            "id": "cgl-2026-10-08:q:56:option:b",
+            "text": "5:3"
+          },
+          {
+            "id": "cgl-2026-10-08:q:56:option:c",
+            "text": "9:25"
+          },
+          {
+            "id": "cgl-2026-10-08:q:56:option:d",
+            "text": "9:15"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 15
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:57:reviewed:554da8d5d0e36a50",
+      "questionId": "cgl-2026-10-08:q:57",
+      "revision": 1,
+      "contentHash": "554da8d5d0e36a50e61e92cb60beeaa544ac42fdf99cd72dc0ff044c9e02edbf",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "In a 30°–60°–90° triangle, the side opposite 60° is 6√3 cm. What is the hypotenuse?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:57:option:a",
+            "text": "6 cm"
+          },
+          {
+            "id": "cgl-2026-10-08:q:57:option:b",
+            "text": "12√3 cm"
+          },
+          {
+            "id": "cgl-2026-10-08:q:57:option:c",
+            "text": "12 cm"
+          },
+          {
+            "id": "cgl-2026-10-08:q:57:option:d",
+            "text": "9 cm"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 15,
+        "notes": "The 30°–60°–90° side ratio is 1:√3:2, giving hypotenuse 12 cm.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:58:reviewed:f38fdd88634eb7e9",
+      "questionId": "cgl-2026-10-08:q:58",
+      "revision": 1,
+      "contentHash": "f38fdd88634eb7e9aa45b68215b2217fdda23b5af4fb1510ce240a32b87f9d44",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "The ratio of men to women in a hall is 5 : 3. If 24 more women join and 12 men leave, the ratio\nbecomes 3 : 2. Find the number of men originally present.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:58:option:a",
+            "text": "440"
+          },
+          {
+            "id": "cgl-2026-10-08:q:58:option:b",
+            "text": "360"
+          },
+          {
+            "id": "cgl-2026-10-08:q:58:option:c",
+            "text": "520"
+          },
+          {
+            "id": "cgl-2026-10-08:q:58:option:d",
+            "text": "480"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 15
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:59:reviewed:b14e11c28bd68407",
+      "questionId": "cgl-2026-10-08:q:59",
+      "revision": 1,
+      "contentHash": "b14e11c28bd684072a3a5dcc06317ea3d8dc17643aa40238dd07910f305d6049",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Evaluate (5.75³ + 3.25³)/(575² + 325² − 575×325).",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:59:option:a",
+            "text": "0.9"
+          },
+          {
+            "id": "cgl-2026-10-08:q:59:option:b",
+            "text": "0.09"
+          },
+          {
+            "id": "cgl-2026-10-08:q:59:option:c",
+            "text": "0.009"
+          },
+          {
+            "id": "cgl-2026-10-08:q:59:option:d",
+            "text": "0.0009"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 15,
+        "notes": "Use a³+b³=(a+b)(a²−ab+b²) and note 575=100a, 325=100b; result 9/10000=0.0009.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:60:reviewed:e62cda491813b0c2",
+      "questionId": "cgl-2026-10-08:q:60",
+      "revision": 1,
+      "contentHash": "e62cda491813b0c2f4334f02bd2d6967fc45603c483dbf0168abb2f6759fbf48",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "If 1/(cosec θ + cot θ) = p, then 1/(cosec θ − cot θ) is equal to:",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:60:option:a",
+            "text": "p"
+          },
+          {
+            "id": "cgl-2026-10-08:q:60:option:b",
+            "text": "1/p"
+          },
+          {
+            "id": "cgl-2026-10-08:q:60:option:c",
+            "text": "−1/p"
+          },
+          {
+            "id": "cgl-2026-10-08:q:60:option:d",
+            "text": "−p"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 16
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:61:reviewed:db4e4f894abc59ef",
+      "questionId": "cgl-2026-10-08:q:61",
+      "revision": 1,
+      "contentHash": "db4e4f894abc59efcf0190362f0908798c9e7890ece014865cf2e5ce4e3924b4",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Find the ratio of volumes of a sphere to its hemisphere of same radius.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:61:option:a",
+            "text": "2 : 1"
+          },
+          {
+            "id": "cgl-2026-10-08:q:61:option:b",
+            "text": "3 : 2"
+          },
+          {
+            "id": "cgl-2026-10-08:q:61:option:c",
+            "text": "1 : 2"
+          },
+          {
+            "id": "cgl-2026-10-08:q:61:option:d",
+            "text": "4 : 3"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 16
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:62:reviewed:99c27ce8da1181e4",
+      "questionId": "cgl-2026-10-08:q:62",
+      "revision": 1,
+      "contentHash": "99c27ce8da1181e4c21236c54a1406fd9e5b6f9ce07570899a7f47c6b76a8571",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A circular garden of diameter 140 m has the same area as a rectangular plot with sides in the ratio 11:7. Find the rectangle’s perimeter, taking π=22/7.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:62:option:a",
+            "text": "360 √2"
+          },
+          {
+            "id": "cgl-2026-10-08:q:62:option:b",
+            "text": "180 √2"
+          },
+          {
+            "id": "cgl-2026-10-08:q:62:option:c",
+            "text": "120 √2"
+          },
+          {
+            "id": "cgl-2026-10-08:q:62:option:d",
+            "text": "270 √2"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 16,
+        "notes": "Circle area 15400 m². Setting sides 11x and 7x yields x=10√2, perimeter 36x=360√2 m.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:63:reviewed:761be7a5b8a45944",
+      "questionId": "cgl-2026-10-08:q:63",
+      "revision": 1,
+      "contentHash": "761be7a5b8a4594462f662287c6630fdcbc1125be88acdb3a46591e6aba88097",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Alloy A has metals X:Y=3:2; alloy B has X:Y=5:6. Alloys A and B are combined in the mass ratio 4:3. What percentage of the final alloy is metal X (to two decimals)?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:63:option:a",
+            "text": "51%"
+          },
+          {
+            "id": "cgl-2026-10-08:q:63:option:b",
+            "text": "55%"
+          },
+          {
+            "id": "cgl-2026-10-08:q:63:option:c",
+            "text": "52%"
+          },
+          {
+            "id": "cgl-2026-10-08:q:63:option:d",
+            "text": "53.77%"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 16,
+        "notes": "X fraction=(4×3/5+3×5/11)/7≈53.766%, or 53.77%.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:64:reviewed:6b32884686771452",
+      "questionId": "cgl-2026-10-08:q:64",
+      "revision": 1,
+      "contentHash": "6b328846867714525133ebbe210c359f30fd2185bbea08a98df58ebb92386b5c",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "The chord of a circle is 30 cm long, and the height of the minor segment cut off by this chord is 5\ncm. What is the diameter of the circle?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:64:option:a",
+            "text": "50 cm"
+          },
+          {
+            "id": "cgl-2026-10-08:q:64:option:b",
+            "text": "55 cm"
+          },
+          {
+            "id": "cgl-2026-10-08:q:64:option:c",
+            "text": "45 cm"
+          },
+          {
+            "id": "cgl-2026-10-08:q:64:option:d",
+            "text": "40 cm"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 16
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:65:reviewed:252cbcff6a68d368",
+      "questionId": "cgl-2026-10-08:q:65",
+      "revision": 1,
+      "contentHash": "252cbcff6a68d368066588ac5df6ebc6cb61f8a9aae717d79ed2f8081c8f89c4",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Three litres of pure lime syrup are diluted with m litres of water. If the syrup is 5% of the final solution, find m.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:65:option:a",
+            "text": "54 litres"
+          },
+          {
+            "id": "cgl-2026-10-08:q:65:option:b",
+            "text": "60 litres"
+          },
+          {
+            "id": "cgl-2026-10-08:q:65:option:c",
+            "text": "65 litres"
+          },
+          {
+            "id": "cgl-2026-10-08:q:65:option:d",
+            "text": "57 litres"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 16,
+        "notes": "3/(3+m)=0.05; hence m=57 L.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:66:reviewed:323475da2fceca55",
+      "questionId": "cgl-2026-10-08:q:66",
+      "revision": 1,
+      "contentHash": "323475da2fceca55d90e0fc9a4f8d40f74b2cf136bac714b0182d10f4a07dd1c",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Evaluate 88 + 47 − 59 + (36 + 29)×2 − 94.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:66:option:a",
+            "text": "124"
+          },
+          {
+            "id": "cgl-2026-10-08:q:66:option:b",
+            "text": "126"
+          },
+          {
+            "id": "cgl-2026-10-08:q:66:option:c",
+            "text": "112"
+          },
+          {
+            "id": "cgl-2026-10-08:q:66:option:d",
+            "text": "130"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 17,
+        "notes": "Parentheses first: 88+47−59+130−94=112.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:67:reviewed:c4cb9e185d592a4e",
+      "questionId": "cgl-2026-10-08:q:67",
+      "revision": 1,
+      "contentHash": "c4cb9e185d592a4ec39943a68d374c21ca37289659c1e47ff716f9c98323e92e",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Three candidates contested an election. The first candidate got 40% votes and the second got\n30% votes. If the total number of votes polled were 36,000, find the number of votes obtained by the\nthird candidate.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:67:option:a",
+            "text": "10,800"
+          },
+          {
+            "id": "cgl-2026-10-08:q:67:option:b",
+            "text": "10,200"
+          },
+          {
+            "id": "cgl-2026-10-08:q:67:option:c",
+            "text": "10,100"
+          },
+          {
+            "id": "cgl-2026-10-08:q:67:option:d",
+            "text": "10,900"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 17
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:68:reviewed:6214e57c21414e35",
+      "questionId": "cgl-2026-10-08:q:68",
+      "revision": 1,
+      "contentHash": "6214e57c21414e3565cae1826002bf294833f28dae0e56bec398db2c6bb6b94c",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "If sin A = 3/5, and A is acute, find the value of sec² A - tan² A.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:68:option:a",
+            "text": "-2"
+          },
+          {
+            "id": "cgl-2026-10-08:q:68:option:b",
+            "text": "-3"
+          },
+          {
+            "id": "cgl-2026-10-08:q:68:option:c",
+            "text": "0"
+          },
+          {
+            "id": "cgl-2026-10-08:q:68:option:d",
+            "text": "1"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 17
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:69:reviewed:b87abf9b844d18b1",
+      "questionId": "cgl-2026-10-08:q:69",
+      "revision": 1,
+      "contentHash": "b87abf9b844d18b1d4547403424aa64474ddcc344efb24df48dd3956380a3b49",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Two trains leave the same station and travel in the same direction. If the faster train moves at 54\nkm/h and the distance between them becomes 42 km after 6 hours, what is the speed of the slower\ntrain?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:69:option:a",
+            "text": "47 km/h"
+          },
+          {
+            "id": "cgl-2026-10-08:q:69:option:b",
+            "text": "48 km/h"
+          },
+          {
+            "id": "cgl-2026-10-08:q:69:option:c",
+            "text": "45 km/h"
+          },
+          {
+            "id": "cgl-2026-10-08:q:69:option:d",
+            "text": "50 km/h"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 17
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:70:reviewed:0b8c626f85d42fe0",
+      "questionId": "cgl-2026-10-08:q:70",
+      "revision": 1,
+      "contentHash": "0b8c626f85d42fe0eb0f129213fa1b63570275d784977ac66cb09aed46d7a8bb",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "If the length of a rectangular field is increased by 25%, then by what percentage should its\nbreadth be reduced so that the area of the field remains constant?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:70:option:a",
+            "text": "18%"
+          },
+          {
+            "id": "cgl-2026-10-08:q:70:option:b",
+            "text": "20%"
+          },
+          {
+            "id": "cgl-2026-10-08:q:70:option:c",
+            "text": "22%"
+          },
+          {
+            "id": "cgl-2026-10-08:q:70:option:d",
+            "text": "25%"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 17
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:71:reviewed:8e0447d0410d9be0",
+      "questionId": "cgl-2026-10-08:q:71",
+      "revision": 1,
+      "contentHash": "8e0447d0410d9be0acada6b7e3449f23694660db213610169d680c45d99792a1",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Of a stock of goods with equal cost per item, 52% are sold at 32% profit, 25% of the remainder at 42% profit, and the rest at 11% loss. What is the overall percentage profit?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:71:option:a",
+            "text": "17.72"
+          },
+          {
+            "id": "cgl-2026-10-08:q:71:option:b",
+            "text": "16"
+          },
+          {
+            "id": "cgl-2026-10-08:q:71:option:c",
+            "text": "17"
+          },
+          {
+            "id": "cgl-2026-10-08:q:71:option:d",
+            "text": "16.52"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 18,
+        "notes": "Weighted profit=0.52×32+0.12×42−0.36×11=17.72%. The equal-cost condition is made explicit.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:72:reviewed:129644696cc59516",
+      "questionId": "cgl-2026-10-08:q:72",
+      "revision": 1,
+      "contentHash": "129644696cc595169e43056e538a92cb962dc3130affee98a9e94aa8ea1dc99a",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "The average of 12 test scores, divided into two groups of six, is initially 84.5 for the higher-scoring group and 72.75 for the lower-scoring group. One score was recorded as 58.2 instead of 85.2. What is the corrected overall mean?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:72:option:a",
+            "text": "80.25"
+          },
+          {
+            "id": "cgl-2026-10-08:q:72:option:b",
+            "text": "79.95"
+          },
+          {
+            "id": "cgl-2026-10-08:q:72:option:c",
+            "text": "81.00"
+          },
+          {
+            "id": "cgl-2026-10-08:q:72:option:d",
+            "text": "80.875"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 18,
+        "notes": "Original grand mean 78.625; correction increases total by 27, raising mean by 27/12=2.25 to 80.875.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:73:reviewed:30dd97a0a3e3aa55",
+      "questionId": "cgl-2026-10-08:q:73",
+      "revision": 1,
+      "contentHash": "30dd97a0a3e3aa55adc865c9ceacbc2b3f3f20f18edcc619466c56ce5fff0a54",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which one of the following statements is FALSE?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:73:option:a",
+            "text": "Every irrational number is real"
+          },
+          {
+            "id": "cgl-2026-10-08:q:73:option:b",
+            "text": "Rational and irrational numbers are real"
+          },
+          {
+            "id": "cgl-2026-10-08:q:73:option:c",
+            "text": "Every integer is rational"
+          },
+          {
+            "id": "cgl-2026-10-08:q:73:option:d",
+            "text": "Every integer is irrational"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 18
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:74:reviewed:d5b4eac59277e503",
+      "questionId": "cgl-2026-10-08:q:74",
+      "revision": 1,
+      "contentHash": "d5b4eac59277e503d97686ee06719f631b19f8be23ab8b174692e3193dff5af6",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "On a certain sum of money, Neha received a compound interest (interest compounded annually)\nof ₹308 in 2 years.\nShe received a simple interest of ₹280 on the same amount for the same time period. What is the rate\nof interest per annum?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:74:option:a",
+            "text": "18%"
+          },
+          {
+            "id": "cgl-2026-10-08:q:74:option:b",
+            "text": "12%"
+          },
+          {
+            "id": "cgl-2026-10-08:q:74:option:c",
+            "text": "16%"
+          },
+          {
+            "id": "cgl-2026-10-08:q:74:option:d",
+            "text": "20%"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 18
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:75:reviewed:4852c064da2831ad",
+      "questionId": "cgl-2026-10-08:q:75",
+      "revision": 1,
+      "contentHash": "4852c064da2831adb8c83c9415e7b7c7ef12e5c4dbfec2fccb363d04a68ac327",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Two circles have radii 15 cm and 10 cm with centres 35 cm apart. Find the length of a direct common tangent between the two points of tangency.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:75:option:a",
+            "text": "20√3 cm"
+          },
+          {
+            "id": "cgl-2026-10-08:q:75:option:b",
+            "text": "15√2 cm"
+          },
+          {
+            "id": "cgl-2026-10-08:q:75:option:c",
+            "text": "10√6 cm"
+          },
+          {
+            "id": "cgl-2026-10-08:q:75:option:d",
+            "text": "30 cm"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 18,
+        "notes": "Direct common tangent length √[35²−(15−10)²]=20√3 cm.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:76:reviewed:ed2b1c8de6be28b9",
+      "questionId": "cgl-2026-10-08:q:76",
+      "revision": 1,
+      "contentHash": "ed2b1c8de6be28b91c992e4772b0b644f5d006fd2fb145248b7c028705f78c17",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "From the passage on critical evaluation of information, select the best word for blank (1).",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:76:option:a",
+            "text": "exculpation"
+          },
+          {
+            "id": "cgl-2026-10-08:q:76:option:b",
+            "text": "cavil"
+          },
+          {
+            "id": "cgl-2026-10-08:q:76:option:c",
+            "text": "imputation"
+          },
+          {
+            "id": "cgl-2026-10-08:q:76:option:d",
+            "text": "salience"
+          }
+        ],
+        "stimulusId": "cgl-2026-10-08:passage:cloze76"
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 19,
+        "notes": "“Cavil” is a petty or trivial objection; evidence dismissed as an inconvenient cavil fits the author’s criticism.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:77:reviewed:1a0c2a3526e474cb",
+      "questionId": "cgl-2026-10-08:q:77",
+      "revision": 1,
+      "contentHash": "1a0c2a3526e474cbf1e2d5c41346d3ca0139183f1fd0e819e6e60097a6c1b826",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Fill in the Blank 2.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:77:option:a",
+            "text": "congruous"
+          },
+          {
+            "id": "cgl-2026-10-08:q:77:option:b",
+            "text": "refractory"
+          },
+          {
+            "id": "cgl-2026-10-08:q:77:option:c",
+            "text": "pellucid"
+          },
+          {
+            "id": "cgl-2026-10-08:q:77:option:d",
+            "text": "censorious"
+          }
+        ],
+        "stimulusId": "cgl-2026-10-08:passage:cloze76"
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 19
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:78:reviewed:cc9df14fc3aaf5fe",
+      "questionId": "cgl-2026-10-08:q:78",
+      "revision": 1,
+      "contentHash": "cc9df14fc3aaf5fea58b507a57cfc535edb302f496ef979aff646a76f84d2016",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Fill in the Blank 3.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:78:option:a",
+            "text": "inimical"
+          },
+          {
+            "id": "cgl-2026-10-08:q:78:option:b",
+            "text": "receptive"
+          },
+          {
+            "id": "cgl-2026-10-08:q:78:option:c",
+            "text": "obsequious"
+          },
+          {
+            "id": "cgl-2026-10-08:q:78:option:d",
+            "text": "impervious"
+          }
+        ],
+        "stimulusId": "cgl-2026-10-08:passage:cloze76"
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 20
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:79:reviewed:d7a29d6fe017140f",
+      "questionId": "cgl-2026-10-08:q:79",
+      "revision": 1,
+      "contentHash": "d7a29d6fe017140f107c1efdbb94dfbdfc07b0f64b0d21d13c4bb442862e4f4e",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "From the passage on critical evaluation of information, select the best word for blank (4).",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:79:option:a",
+            "text": "innocuous"
+          },
+          {
+            "id": "cgl-2026-10-08:q:79:option:b",
+            "text": "theoretical"
+          },
+          {
+            "id": "cgl-2026-10-08:q:79:option:c",
+            "text": "pernicious"
+          },
+          {
+            "id": "cgl-2026-10-08:q:79:option:d",
+            "text": "desultory"
+          }
+        ],
+        "stimulusId": "cgl-2026-10-08:passage:cloze76"
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 20,
+        "notes": "The original phrase “not merely innocuous” is awkward and semantically inconsistent. “Not merely theoretical; it can have tangible consequences” is coherent.",
+        "changes": [
+          "answer-key",
+          "wording",
+          "options",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:80:reviewed:90649f3419ea1cfa",
+      "questionId": "cgl-2026-10-08:q:80",
+      "revision": 1,
+      "contentHash": "90649f3419ea1cfa52d5bc92920e312594cd944357b7c3ccec85628625157262",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Fill in the Blank 5.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:80:option:a",
+            "text": "verisimilar"
+          },
+          {
+            "id": "cgl-2026-10-08:q:80:option:b",
+            "text": "veracious"
+          },
+          {
+            "id": "cgl-2026-10-08:q:80:option:c",
+            "text": "prolix"
+          },
+          {
+            "id": "cgl-2026-10-08:q:80:option:d",
+            "text": "vituperative"
+          }
+        ],
+        "stimulusId": "cgl-2026-10-08:passage:cloze76"
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 20
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:81:reviewed:2e6aea5eb449e1ee",
+      "questionId": "cgl-2026-10-08:q:81",
+      "revision": 1,
+      "contentHash": "2e6aea5eb449e1ee69803ce632608f5b5493d1f8e333f28098761ad00336f55d",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Select the most appropriate synonym of the given word.\nSuave",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:81:option:a",
+            "text": "Urbane"
+          },
+          {
+            "id": "cgl-2026-10-08:q:81:option:b",
+            "text": "Prodigal"
+          },
+          {
+            "id": "cgl-2026-10-08:q:81:option:c",
+            "text": "Lament"
+          },
+          {
+            "id": "cgl-2026-10-08:q:81:option:d",
+            "text": "Nippy"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 20
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:82:reviewed:216e36824bf8f0f7",
+      "questionId": "cgl-2026-10-08:q:82",
+      "revision": 1,
+      "contentHash": "216e36824bf8f0f72323589ebc5cbc74be733a93bba3da9c6f817fa97b99b3c8",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "From the alternatives given below, select the correct meaning of the idiom.\nBe up to the minute.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:82:option:a",
+            "text": "At the last possible instant or opportunity"
+          },
+          {
+            "id": "cgl-2026-10-08:q:82:option:b",
+            "text": "To wait or pause"
+          },
+          {
+            "id": "cgl-2026-10-08:q:82:option:c",
+            "text": "To be as current as is possible"
+          },
+          {
+            "id": "cgl-2026-10-08:q:82:option:d",
+            "text": "At a very rapid pace"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 20
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:83:reviewed:be8ab05aed2c3db0",
+      "questionId": "cgl-2026-10-08:q:83",
+      "revision": 1,
+      "contentHash": "be8ab05aed2c3db06e65e7de76b8aa9e3fa09e6d92c69b3844d5201280b7007d",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which of the following idioms given in the alternatives has the meaning?\nEagerly, with great enthusiasm, or ready to enjoy oneself.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:83:option:a",
+            "text": "Bear the bell"
+          },
+          {
+            "id": "cgl-2026-10-08:q:83:option:b",
+            "text": "Passing bells"
+          },
+          {
+            "id": "cgl-2026-10-08:q:83:option:c",
+            "text": "With bells on"
+          },
+          {
+            "id": "cgl-2026-10-08:q:83:option:d",
+            "text": "Sound as a bell"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 21
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:84:reviewed:0bda2a03dfbc2989",
+      "questionId": "cgl-2026-10-08:q:84",
+      "revision": 1,
+      "contentHash": "0bda2a03dfbc2989c8957a559de312a163e66db7a61b3105f6163cdbd567ff7e",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "What is the antonym of \"Irascible\"?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:84:option:a",
+            "text": "Petulant"
+          },
+          {
+            "id": "cgl-2026-10-08:q:84:option:b",
+            "text": "Tranquil"
+          },
+          {
+            "id": "cgl-2026-10-08:q:84:option:c",
+            "text": "Hostile"
+          },
+          {
+            "id": "cgl-2026-10-08:q:84:option:d",
+            "text": "Fractious"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 21
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:85:reviewed:c6b5b785b446922a",
+      "questionId": "cgl-2026-10-08:q:85",
+      "revision": 1,
+      "contentHash": "c6b5b785b446922ad5b043247b3add20b0a90c0cace7eedfac76bf2559b1e40a",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Convert the following sentence into the most appropriate direct speech: “The librarian requested us to maintain silence in the reading room.”",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:85:option:a",
+            "text": "The librarian said to us, \"Maintain silence in the reading room.\""
+          },
+          {
+            "id": "cgl-2026-10-08:q:85:option:b",
+            "text": "The librarian said, \"Please maintain silence in the reading room.\""
+          },
+          {
+            "id": "cgl-2026-10-08:q:85:option:c",
+            "text": "The librarian told us, \"Silence should be maintained in the reading room.\""
+          },
+          {
+            "id": "cgl-2026-10-08:q:85:option:d",
+            "text": "The librarian requested, \"You can maintain silence in the reading room.\""
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "sourcePage": 21,
+        "notes": "Removed an additional cue introduced in the earlier redraft. “Please maintain silence…” retains the polite request; the source also offers a bare imperative, which is less faithful to tone.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:86:reviewed:5299195d7dede36f",
+      "questionId": "cgl-2026-10-08:q:86",
+      "revision": 1,
+      "contentHash": "5299195d7dede36f9a9b5bd56fa7bdfd70a675ff8f7e2ef1b3b43d16ecd62185",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Convert the following indirect statement into direct speech: Shivi told Rahul that he had realised that the mysterious footprints in the snow were actually made by a very large neighbourhood dog.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:86:option:a",
+            "text": "Shivi told Rahul, “He realised that the mysterious footprints in the snow were actually made by a very large neighbourhood dog.”"
+          },
+          {
+            "id": "cgl-2026-10-08:q:86:option:b",
+            "text": "Shivi told Rahul, “He realises that the mysterious footprints in the snow were actually made by a very large neighbourhood dog.”"
+          },
+          {
+            "id": "cgl-2026-10-08:q:86:option:c",
+            "text": "Shivi told Rahul, “He had realised that the mysterious footprints in the snow have actually been made by a very large neighbourhood dog.”"
+          },
+          {
+            "id": "cgl-2026-10-08:q:86:option:d",
+            "text": "Shivi told Rahul, “He realised that the mysterious footprints in the snow were made from a very large neighbourhood dog.”"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 21,
+        "notes": "Removed an additional cue introduced in the earlier redraft. Clarified “he” as a third person to avoid conflating him with Rahul, retaining the intended option A.",
+        "changes": [
+          "wording",
+          "options",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:87:reviewed:c9de9b966ec8f065",
+      "questionId": "cgl-2026-10-08:q:87",
+      "revision": 1,
+      "contentHash": "c9de9b966ec8f06529945cb1886ba99cc307202bb364cf6444a383d746fcda83",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Select the option with the correct spelling that can replace the highlighted word in the given\nsentence. If the spelling in the given sentence is already correct, choose Option \"No replacement\nrequired\".\nHis actions were considered an anathima to the entire community, leading to his exile.\n   19",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:87:option:a",
+            "text": "anethema"
+          },
+          {
+            "id": "cgl-2026-10-08:q:87:option:b",
+            "text": "anathama"
+          },
+          {
+            "id": "cgl-2026-10-08:q:87:option:c",
+            "text": "anathema"
+          },
+          {
+            "id": "cgl-2026-10-08:q:87:option:d",
+            "text": "No replacement required"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 21
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:88:reviewed:4ccf305bebf03240",
+      "questionId": "cgl-2026-10-08:q:88",
+      "revision": 1,
+      "contentHash": "4ccf305bebf03240349648f7f8153f188324f8080f7957bf7222c60e2241e295",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Choose the option that is the most appropriate conversion of the following sentence into Active\nVoice.\nThe victims were provided food and shelter by the volunteers.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:88:option:a",
+            "text": "The volunteers were providing food and shelter to the victims."
+          },
+          {
+            "id": "cgl-2026-10-08:q:88:option:b",
+            "text": "The volunteers have provided food and shelter to the victims."
+          },
+          {
+            "id": "cgl-2026-10-08:q:88:option:c",
+            "text": "The volunteers provide food and shelter to the victims."
+          },
+          {
+            "id": "cgl-2026-10-08:q:88:option:d",
+            "text": "The volunteers provided food and shelter to the victims"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 22
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:89:reviewed:ab63c6c25e05ef53",
+      "questionId": "cgl-2026-10-08:q:89",
+      "revision": 1,
+      "contentHash": "ab63c6c25e05ef5315ee3ba962394bf9890635c7d087fe6b8f3f46ffc1416ca9",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Arrange sentences 1–4 into a coherent paragraph about digital communication, isolation and face-to-face relationships.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:89:option:a",
+            "text": "1324"
+          },
+          {
+            "id": "cgl-2026-10-08:q:89:option:b",
+            "text": "1234"
+          },
+          {
+            "id": "cgl-2026-10-08:q:89:option:c",
+            "text": "3124"
+          },
+          {
+            "id": "cgl-2026-10-08:q:89:option:d",
+            "text": "1423"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 22,
+        "notes": "1 introduces disconnection; 3 qualifies digital connectivity; 2 proposes a remedy; 4 concludes: 1–3–2–4.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:90:reviewed:c524581eb2f5b87f",
+      "questionId": "cgl-2026-10-08:q:90",
+      "revision": 1,
+      "contentHash": "c524581eb2f5b87fdf2b1df9b820d224e6f1e5f639f2c9fef20f07b2e0fc9bd7",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Arrange the sentences A–D into a coherent paragraph about early horse-drawn vacuum cleaners.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:90:option:a",
+            "text": "CBDA"
+          },
+          {
+            "id": "cgl-2026-10-08:q:90:option:b",
+            "text": "CDAB"
+          },
+          {
+            "id": "cgl-2026-10-08:q:90:option:c",
+            "text": "CABD"
+          },
+          {
+            "id": "cgl-2026-10-08:q:90:option:d",
+            "text": "CADB"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 22,
+        "notes": "C introduces the topic; A describes the machine; B and D explain its operation: C–A–B–D.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:91:reviewed:3418bfbec808350e",
+      "questionId": "cgl-2026-10-08:q:91",
+      "revision": 1,
+      "contentHash": "3418bfbec808350e9e385d46b7f72ee2237975a5477871dd26e00b91c5c9006c",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "From the alternatives given below, select the correct passive voice of the following sentence.\nThe usher must have made the guests sit by the time the dinner was ready.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:91:option:a",
+            "text": "The guests must have been made sit by the usher by the time the dinner was ready."
+          },
+          {
+            "id": "cgl-2026-10-08:q:91:option:b",
+            "text": "The guests must have been made to sit by the usher by the time the dinner was ready."
+          },
+          {
+            "id": "cgl-2026-10-08:q:91:option:c",
+            "text": "The guests must have been made to sit by the usher by the time the dinner had been ready."
+          },
+          {
+            "id": "cgl-2026-10-08:q:91:option:d",
+            "text": "The guests must have made to sit by the usher by the time the dinner had been ready."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 23
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:92:reviewed:e8c381ffff3f5146",
+      "questionId": "cgl-2026-10-08:q:92",
+      "revision": 1,
+      "contentHash": "e8c381ffff3f514627a7e7343f7b2c531cc93c4d9ecbb2a9e833951f87760e40",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "What is the term for a government in which political power is effectively controlled by wealthy people?",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:92:option:a",
+            "text": "Oligarchy"
+          },
+          {
+            "id": "cgl-2026-10-08:q:92:option:b",
+            "text": "Plutocracy"
+          },
+          {
+            "id": "cgl-2026-10-08:q:92:option:c",
+            "text": "Autocracy"
+          },
+          {
+            "id": "cgl-2026-10-08:q:92:option:d",
+            "text": "Plutonomy"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 23,
+        "notes": "Plutocracy is government by the wealthy. The original “controlled by monopolists” is not the precise definition.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:93:reviewed:d8b3df146b93b0a3",
+      "questionId": "cgl-2026-10-08:q:93",
+      "revision": 1,
+      "contentHash": "d8b3df146b93b0a3b792f1a873eecb5427034accf868f5b1518d174478d74c8e",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Identify the part containing a grammatical error.\nThe investigative committee / decided to look into / the irregularities and eventually / looked them over careful.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:93:option:a",
+            "text": "The investigative committee"
+          },
+          {
+            "id": "cgl-2026-10-08:q:93:option:b",
+            "text": "decided to look into"
+          },
+          {
+            "id": "cgl-2026-10-08:q:93:option:c",
+            "text": "the irregularities and eventually"
+          },
+          {
+            "id": "cgl-2026-10-08:q:93:option:d",
+            "text": "looked them over careful"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 23,
+        "notes": "The publisher’s original sentence had no grammatical error. The revised D uses the adjective “careful” where the adverb “carefully” is required.",
+        "changes": [
+          "wording",
+          "options",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:94:reviewed:c3905543f5e957f7",
+      "questionId": "cgl-2026-10-08:q:94",
+      "revision": 1,
+      "contentHash": "c3905543f5e957f7add2c8e15e1b9ffeac2d4853a875742df3d00dca86be2cd9",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Given below are six sentences taken from a paragraph. The first and the last sentences are\nnumbered S1 and S2 and are placed in their fixed positions respectively and are fixed in their\npositions. The other four sentences between the first and last sentences are jumbled up and are\nnumbered A, B, C and D. Rearrange the jumbled sentences in a logical sequence keeping the unity and\ncoherence of the paragraph intact. Choose the correct alternative that best describes the sequence.\nS1 Two days and two nights did Peter sleep without once awakening.\nA. He looked; there were two bags of gold.\nB. When he came to himself, on the third day, he looked long at all the corners of his hut but in vain did\nhe endeavour to recollect what had taken place; his memory was like a miser's pocket from which you\ncannot entice a quarter of a kopek.\nC. Stretching himself, he heard something clash at his feet.\nD. Then only, as if in a dream, he recollected that he had been seeking for treasure and that something\nhad frightened him in the woods.\nS2 But at what price he had obtained it, and how, he could by no means tell.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:94:option:a",
+            "text": "CADB"
+          },
+          {
+            "id": "cgl-2026-10-08:q:94:option:b",
+            "text": "BCAD"
+          },
+          {
+            "id": "cgl-2026-10-08:q:94:option:c",
+            "text": "ACDB"
+          },
+          {
+            "id": "cgl-2026-10-08:q:94:option:d",
+            "text": "CDBA"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 23,
+        "notes": "B describes Peter awakening and failing to recall events, followed by C (sound), A (gold), D (recollection), so B–C–A–D.",
+        "changes": [
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:95:reviewed:0d60355045dee75a",
+      "questionId": "cgl-2026-10-08:q:95",
+      "revision": 1,
+      "contentHash": "0d60355045dee75aa4686fb6c00d4b28b7bf2d3a1f74a28ed76e69c35ee2432f",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Sentences of a paragraph are given below in jumbled order. Arrange the sentences in the correct\norder to form a meaningful and coherent paragraph.\nA. The Voynich Manuscript is a 240-page medieval tome written in an unknown language that has\nbaffled scholars and code-breakers for years.\nB. All attempts to translate the book’s text or identify the plants depicted in it have failed.\nC. The manuscript is believed to have originated sometime between 1404 and 1438.\nD. It is filled with enigmatic illustrations and diagrams that seem to depict everything from unusual\nplants to women with swollen bellies bathing in green pools.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:95:option:a",
+            "text": "ACDB"
+          },
+          {
+            "id": "cgl-2026-10-08:q:95:option:b",
+            "text": "ADBC"
+          },
+          {
+            "id": "cgl-2026-10-08:q:95:option:c",
+            "text": "ABDC"
+          },
+          {
+            "id": "cgl-2026-10-08:q:95:option:d",
+            "text": "ACBD"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 24
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:96:reviewed:5ea1997e731f2e09",
+      "questionId": "cgl-2026-10-08:q:96",
+      "revision": 1,
+      "contentHash": "5ea1997e731f2e097379eb326343233ade5cfd0c0801c34c72c030fc3801ac4a",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Choose the correctly spelt word from the given options.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:96:option:a",
+            "text": "Playright"
+          },
+          {
+            "id": "cgl-2026-10-08:q:96:option:b",
+            "text": "Playrite"
+          },
+          {
+            "id": "cgl-2026-10-08:q:96:option:c",
+            "text": "Playwrite"
+          },
+          {
+            "id": "cgl-2026-10-08:q:96:option:d",
+            "text": "Playwright"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 24
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:97:reviewed:33fadba3a1da16be",
+      "questionId": "cgl-2026-10-08:q:97",
+      "revision": 1,
+      "contentHash": "33fadba3a1da16be835c1cc845251518d725c4428989fc831ba245bfa421c0ee",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Convert to direct speech: He warned that if we did not act immediately, the consequences would be irreversible.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:97:option:a",
+            "text": "He said, \"If you didn't act immediately, the consequences will be irreversible.\""
+          },
+          {
+            "id": "cgl-2026-10-08:q:97:option:b",
+            "text": "He said, \"If you don't act immediately, the consequences will be irreversible.\""
+          },
+          {
+            "id": "cgl-2026-10-08:q:97:option:c",
+            "text": "He said, \"If you hadn't act immediately, the consequences would be irreversible.\""
+          },
+          {
+            "id": "cgl-2026-10-08:q:97:option:d",
+            "text": "He said, \"If you haven't act immediately, the consequences would be irreversible.\""
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 24,
+        "notes": "Direct conditional form: “If you don’t act immediately, the consequences will be irreversible.”",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:98:reviewed:4f79c4fe99eba7bb",
+      "questionId": "cgl-2026-10-08:q:98",
+      "revision": 1,
+      "contentHash": "4f79c4fe99eba7bb3ca9ed6513705a9ac222cc4d23e9238a9653cebaf780ab9e",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Choose the correct indirect narration of the following statement from the given alternatives:\nThe trainer said to the trainees, \"Go on writing this paragraph till you understand it very clearly.\"",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:98:option:a",
+            "text": "The trainer asked the trainees going on writing that paragraph till they understood it very clearly."
+          },
+          {
+            "id": "cgl-2026-10-08:q:98:option:b",
+            "text": "The trainer asked the trainees to go on writing that paragraph till they understood it very clearly."
+          },
+          {
+            "id": "cgl-2026-10-08:q:98:option:c",
+            "text": "The trainer asked the trainees to go on writing that paragraph till they understand it very clearly."
+          },
+          {
+            "id": "cgl-2026-10-08:q:98:option:d",
+            "text": "The trainer asked the trainees to went on writing that paragraph till they understood it very\nclearly."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "verified",
+        "sourcePage": 24
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:99:reviewed:f38005ccb310376f",
+      "questionId": "cgl-2026-10-08:q:99",
+      "revision": 1,
+      "contentHash": "f38005ccb310376f3dfa63fe799d8c1948b75668a2f8ebc94d2201ad437bcfac",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Convert to direct speech: She said that she had started attending yoga classes because she wanted to lose weight.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:99:option:a",
+            "text": "She said, \"I started attending yoga classes because I wants to lose weight.\""
+          },
+          {
+            "id": "cgl-2026-10-08:q:99:option:b",
+            "text": "She said, \"I have started attending yoga classes because I want to lose weight.\""
+          },
+          {
+            "id": "cgl-2026-10-08:q:99:option:c",
+            "text": "She said, \"I started attending yoga classes because I wanted to lose weight.\""
+          },
+          {
+            "id": "cgl-2026-10-08:q:99:option:d",
+            "text": "She said, \"I had started attending yoga classes because I want lose weight.\""
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 24,
+        "notes": "Present perfect “have started” and present “want” are naturally backshifted to past perfect and past respectively.",
+        "changes": [
+          "wording",
+          "explanation"
+        ]
+      }
+    },
+    {
+      "id": "cgl-2026-10-08:q:100:reviewed:33d80a3dce735b1f",
+      "questionId": "cgl-2026-10-08:q:100",
+      "revision": 1,
+      "contentHash": "33d80a3dce735b1f2bce9cea3ab27a87e5bbf86eb6c010c32bb6be8834245938",
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Choose the most appropriate conversion of the following sentence into Direct Speech.\nHe asked her whether she wanted tea or coffee with her breakfast.",
+        "options": [
+          {
+            "id": "cgl-2026-10-08:q:100:option:a",
+            "text": "He asked her, \"You want tea or coffee with your breakfast?\""
+          },
+          {
+            "id": "cgl-2026-10-08:q:100:option:b",
+            "text": "He said, \"Whether you want tea or coffee with your breakfast?\""
+          },
+          {
+            "id": "cgl-2026-10-08:q:100:option:c",
+            "text": "He asked, \"Did you want tea or coffee with your breakfast?\""
+          },
+          {
+            "id": "cgl-2026-10-08:q:100:option:d",
+            "text": "He asked her, “Do you want tea or coffee with your breakfast?”"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "sourcePage": 27,
+        "notes": "The original selected option used “said” although the report used “asked”. The corrected version preserves both question and reporting verb.",
+        "changes": [
+          "options",
+          "explanation"
+        ]
+      }
+    }
+  ],
+  "stimuli": [
+    {
+      "id": "cgl-2026-10-08:passage:cloze76",
+      "kind": "passage",
+      "text": "Directions (76-80): Read the following passage carefully and  fill in the blanks with the most appropriate word from the given alternatives. In an age increasingly enamored of instantaneous information, intellectual restraint has become an almost antiquated virtue. The contemporary reader is perpetually assailed by a prodigious volume of claims, conjectures, and polemics, many of which acquire an unwarranted aura of credibility merely through repetition. What is particularly disquieting is not the sheer abundance of information but the gradual erosion of the cognitive habits required to interrogate it. A proposition that ought to invite scrutiny is instead accepted with remarkable alacrity, while evidence that complicates an established conviction is frequently dismissed as an inconvenient (1)________. This tendency is exacerbated by digital platforms whose algorithms are designed less to cultivate discernment than  to maximise engagement. By continuously presenting users with material consonant with their pre-existing preferences, such systems can create an epistemic environment that is deceptively (2)________. Within such an environment, disagreement is no longer perceived as an opportunity for intellectual refinement but as an affront to one’s identity. Consequently, individuals become increasingly (3)________ to information that unsettles their assumptions, even when such information is supported by cogent evidence. The predicament is further complicated by the proliferation of ostensibly authoritative voices whose expertise is difficult to verify. Eloquence, confidence, and rhetorical dexterity are often mistaken for substantive knowledge, allowing specious arguments to acquire an appearance of legitimacy. The resulting confusion is not merely (4)________; it can have tangible consequences when poorly examined claims influence public policy, medical decisions, or collective perceptions of social reality. The remedy, therefore, cannot consist simply in accumulating more information. What is required is a deliberate cultivation of intellectual habits that enable individuals to distinguish the plausible from the demonstrable, the persuasive from the (5)________, and the familiar from the genuinely verifiable. In an informational ecosystem increasingly saturated with noise, scepticism—properly understood not as cynical disbelief but as disciplined inquiry—may be among the most indispensable forms of intellectual hygiene."
+    }
+  ],
+  "assets": [
+    {
+      "id": "cgl-2026-10-08:q:3:stem",
+      "mediaType": "image/webp",
+      "dataUri": "data:image/webp;base64,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",
+      "contentHash": "ea2da47dbbf630d34239575678c746408e679a9db3bc75720da8bfed6df3abfa",
+      "altText": "Diagram for question 3"
+    },
+    {
+      "id": "cgl-2026-10-08:q:3:option:0",
+      "mediaType": "image/webp",
+      "dataUri": "data:image/webp;base64,UklGRnwBAABXRUJQVlA4IHABAADwDACdASpgAFwAPm0skEakIqGhPxV4AIANiWkAAD0QCsaZm9JeM2FY3sw1p0WM40bhJ6dEA3vzk+/QFbMBREWjodhcXc5S/t/uraNTtpSobGN4L9Z66uQ8IDqGcHVkGVbz3w5rjrdG3aDZ7+3b3h0AAP7+LxP+Hvmxbu/p6yYJDrToMXaafxxsiNLMyYBPI10ow6WfABn2yhYblSpxyRTh4mNfWzj9alpjAV5KT6b/a7MV6N30QjSlNdt81gJXyd0Km1I04Q/5DTQT6jlbxuPx9/mtgNz6nd/btryvPpkXUXAWC+5fJZ/yYE/f/MFuGJDi8Bod1tAA5qC0JNXLhIJwQGA7I+mtJ+ENadeAVRRV75c62C3fjnmYCGSZCu8+HYlmPV74WKBnT5jLejVGnosGbyh/VNukqm4/lbjMlsSWvuLeURaLqVzUPbw9tBMLokWh2vyiuaL7tk3oDu3dwHe7HfqgOORRiMjtELrU6AAAAA==",
+      "contentHash": "c4ec7a6c11c313bb6eb15dbf53b8dad65fd138e3b3dd2782c055abdd2c2cf5a8",
+      "altText": "Image for option A of question 3"
+    },
+    {
+      "id": "cgl-2026-10-08:q:3:option:1",
+      "mediaType": "image/webp",
+      "dataUri": "data:image/webp;base64,UklGRo4BAABXRUJQVlA4IIIBAABQDgCdASpgAGYAPnU0k0ako6GhNtooAJAOiWkAFeqzVYMyrEeqmeroCuU+WiYq7Qg1POXANGxI0KPDFIwuRlhM/PH86XBwycgRFot1UK2nzKqsjAja4SGpaG++I6vFslQXw4MA2hhlyXpdPn2/r5yDeQabbd8Ett72cQAA/vfkW27IrNxunUFfUlpEXsy4Cw+/9yEz3+hiUR9Sqzs009L/doQ3dPFr2L/XVzCxi4QUHI68vIX5r3q8ccU3DHq/45efSSVZ1PV9uXFfwmqEdeHHYhqbsTJY7BlKAlcp0ldDf+gK+0v0uLwLkWhpbKTa5Pv2ZgvPBHvk7G0ot/j53jL4yEkGHANl/Vi3vU61bzhvWAT4uTMkis2ZQwTjCbVYLLojCTZjPDWrc+p4EnsNkyPWK2SMbeu6sKx9mzd5kvhWyFKta3C9l/jXE8c6APXhOl929XSHhYcjrdXHmAsQTmltlRKPpV5c6wrsWbrYK30T47GtpUeWANBBp8Y56jX6AAAAAA==",
+      "contentHash": "89263300f74b356ef7247daf231974074be81fe0dae37bebae52e58d4c918b23",
+      "altText": "Image for option B of question 3"
+    },
+    {
+      "id": "cgl-2026-10-08:q:3:option:2",
+      "mediaType": "image/webp",
+      "dataUri": "data:image/webp;base64,UklGRqoBAABXRUJQVlA4IJ4BAABwDwCdASpgAGAAPoE8mEglI6KhKrQLqKAQCWkfQAAApK21RNdGvg04QagAp5/gL/cbnA04ZdpvgXNKroAiu1jPM1rFf+6UytMKSnpUS+iIbB1ZlV8yXR4uK7/Bz4lQU3aiSbMkDXDT2AQ/mKxc0WuLXyZ+RpAI8dmE+br8ErJKV1Tg7AAA/vw67pFrO3+VHD90cjlMPwCGMtRDtplBVqoWVn3OjpdY2R+cKZ+jvNzt+9oRDP8oa0xFxuD+LGSdVKynZjEsKZUoMrxTfZiL0UaYdRB95lJDaRw6QJRahuGsQc2+jqqlal7cIUNoGj/U8GfMNR6PUKc4gYK4xZz88o5AKKPYyoYg1ALPSNPVTiM9yA7iP4tLz8IVmKRvlBT7QWWk1L6QKbAR/wHgWWbKvnnhuvIAxcU8VJDx3jUx8KeR2qw9OSmgKa9IfJMuOq0MJkL48VbofpU4BPsgimCkV8TbM7DMpoBgIxQpijSWhZGqCd4lwSsva+D8YEgD66ep6U6uuPtNzU81PNTyCgPglJoSzHlDuOFLUQ5Xi3AAAAA=",
+      "contentHash": "70c15cb0762cb0193eaeb4d2d0ba0aaf03cfb91e395049449babf49390cbe954",
+      "altText": "Image for option C of question 3"
+    },
+    {
+      "id": "cgl-2026-10-08:q:3:option:3",
+      "mediaType": "image/webp",
+      "dataUri": "data:image/webp;base64,UklGRm4BAABXRUJQVlA4IGIBAAAwDACdASpgAF4APoE+m0qlIyIiIrVZ8KAQCWkAFedgaVroszPW6h78ktJ/Wj7CTSJgU1qSsRPx+N9KhP0kGihTLefIfTetxZ+DI0ouFktounsUEM+fHlck2S2aRLHxD/3Lsw7vm9yzrMUAAP73jkKQvskf7iieM2OMZZaj+St4I/m+89lU5C4eCD3dTT3XFyQQQJC9ciYAOJzjdORMYLmi2knmggzRy4bEwoj5Cv974DhhW6G4BSGlgDf/9mti55YoxAg8TiqmOw1yi+VSRSVdYt3C4Q8zNbGbismdT2wvUvMNKLwuti/YMpgtcTzus3jmRoHYo4pEYKQYJuf8IcnTWWAW/OXTrKtWqXOIz49CIv42NqJZpu5rLMm0ClWvTvy0PQO/Kjez2py9PR+2oBQk3WSqoZFoNACidBqZFvEwZ8UeZg+eUIP3sr+M3hCQsgEvUm5vKDqco3vfOnZ9SEAAAAA=",
+      "contentHash": "8ee5b2c28a0027bdbdf8c8e274a35f304b4c3d4df5221398d05aef94315c2e1a",
+      "altText": "Image for option D of question 3"
+    },
+    {
+      "id": "cgl-2026-10-08:q:11:stem",
+      "mediaType": "image/webp",
+      "dataUri": "data:image/webp;base64,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",
+      "contentHash": "35a63a15f3b1503d69282ba174e877943fae42c6571c4230e4334be7f92967b2",
+      "altText": "Diagram for question 11"
+    },
+    {
+      "id": "cgl-2026-10-08:q:11:option:0",
+      "mediaType": "image/webp",
+      "dataUri": "data:image/webp;base64,UklGRnoDAABXRUJQVlA4IG4DAACwGQCdASqCAHkAPnk0lkakoyIhNjV4uJAPCWkAEWPkovxMTpEmML0EHerVDmXyi1WBGJ6/7lod6swbX1mTRXEA4NUuFQE4O4y0CT6gTMOvDeUVjwfveWgnH+ssgytChWTMrzCgLc3EcxlBnI2tFK+fu3f9vYJSxoR9eCg+2qx4L0VieoFgpnXsuOdjUPSL3tvBorcHloOecDyhcjv4sIp3R881CxsY+sSWrc6jXiaW9SSXMlIiBeGuryq7eqhkz1YGChi/CSjsvO7yCsP6QtmhsSy3+0EgAP7+eon/nZ/8Fl8uGqZU8/zCJyrtzvgRbc4x8EuiiDWT60J5rCxzJhDoa6UAGNJG//qtT6avlVAKystESAk5uqsubAODPN83Q1O6ZAJRUlAYvCcFKc1WG4A7Tb85UEYSk6Rw+zSCB6VJY7j+x/7KyNZuq5HnyGF1WUYU4+MnjxmayAIRDGb5s9UyVTPYiexe+Yxq+XqSy6Niu/1eHMrXWBus6BDzh3U3xek+YFtVPVbg8r2cB5Rr/ZKl70I8ymlsReKe4VWLF+zoDV2I6PVkRGIm/GmDTXeZZiq+E9Jn/T4Fts0gOoFWYRQ1liH1OO6ameGk+/nWAktDrXo1+/Yc/XPnDM+X7utpWaDbDibKWqYPUfoGlaZZC5z8fibomrRGkRc+x38uobntAg2tQdretDkDGzuwCaL+/uXwpLcwULVVvyo5nR8jn5iw/S7regkkM9q2MgA5GrCPkPEi7okyeiBGKRoDMoTK6pW1sP5yubIfXkUtta3rLUYrpidyfu5y2fuzomi1KzeRjPpqCeAa+tjPBPFIl0Yp3f2xxRAJlGOTzvnSwqABJNORHLzbAB5GATLmjENah3jbgLTnSUBfg9zNqTe7iXsDO2Fl5chSJ+lKRCdCCUsgI9ags2KuutlK2YF1eKCFdu1AG2HsDQ2Ur7MNF63uC1ShhQBSGFshwdz+cchtCfmpUwurQ3rfKgHTpss9E/Ma16CyHE7RDCOhq7SP6FfMaWdZJKAaBDvTa1oLWkg3ry1RmZolcV2DgmJaNhLY6SPzXC3xe0TXDMtxwxWM/BnJ2hyIvClZoTqRNolbma79A3VdD97buCJZTc68D6QGqHF3yLfUtCsUvwt/+dv8wu8x5DG4OdDZX2nHsR1hwiwxtAAAAA==",
+      "contentHash": "cef866addbe82e35cce2cefc89eaebab591fc3ed6ca90a37cc0c10b4f6c9da17",
+      "altText": "Image for option A of question 11"
+    },
+    {
+      "id": "cgl-2026-10-08:q:11:option:1",
+      "mediaType": "image/webp",
+      "dataUri": "data:image/webp;base64,UklGRoIDAABXRUJQVlA4IHYDAABwGgCdASqCAIAAPn00lUakoyIhNrVYAJAPiWkAFen6hY1JewiFRB7ZIgIf7ap0rkwOShwHfMEcJ25OgR7cNLVbein0cYKMDAp/KLGUGSYJG/d88ca23/XNNVz6dII71SCSF6btjXgapsu2TBPY0ojNGSv6JbzmInbg4qY/fOpTsXkg3OCyJ1jxzypM92nFm1Dtd1rY7r+WufSsEDNkCUnN9bEdxN3SD/RC1Gto0uRXGO29TSlhQ98THyjfVUjUU83/Jb/9dIh6Z/roUSxUujHT+D6HcO4AaMr/1bAAAP746E2O6n7hJpmrNzPXvv3jr2rjbCPLdBmuT/35ZOetnNbknWr2CZTf/anyWrehDpsPUNqfa+YwkYAE4Sq/VwJ9VoNbbZrtWHIrj0vALmzKyVpQF/fVMbTyAoHwuapBIsHYoY16od3ZO3xbzqKfAaTgQIIM0UKZzqc0GaS5n7bDc1t8cCHWXkzX7naz2aqWfqnmRCqDaL+Bgv24m+kQ/c0U8MR6B9pEwZOVsZuG7qBU+cKJyLVwOTquTs878fB3yRyRuq3Bg9XN+KxDT6pxnbWEXxPt1Z5jzzzMhY3RrlLOCLgWkPyhBv9sYox4SOwhdhC5wbh3MyMD9U3T4GX+fghdlNtpXeK3GWJyYIRS5AzuzI0cR7LhGAgHBtya2OZj2HgdW2RP3kweLLkK3hruQSvLPW44wI0WL8y+eISJyTO7oicgtUsHRsH/JBYOVAyFxD8Ann29GowHpnkPRPkTEYAMSABCoUpdiYQwfzGvpVhP+YK91UGdxa5iZwo8WF5yNXc8LTwHvcqv/mVaKNsYf1jUcdgSPzYM0qro1CKJhQ6dyocz33X0ZIMP7kCTBKEf3Dem+a4qEfgp06cv5onFhe6FbHKQtqOpA6fZnEvlp77F2zFgRKWyccySAQYyS7tiCA5e2Ja+tW39lkFbOTt6B7iiz/oeMBZX7Ta6+LRUuMRDSd2UCF4SCoTgJiAim6oxfqvLiFxf5VXt103UFulLiYR+PRlhqassvcZXzkKSfT50WmNIhWCogjQpGnFImK5OL7w18ScegysrGVLC6mwhA3LlC4uxrh/CTC06Z0BuhL8VmNlwZq8JGPGMqTSbBw37mSvRUkQJjJuBfebbTgHfbExFqkb+txIO4yDiztYaFcM1H9UTcTacQAAA",
+      "contentHash": "0c787c74181c357d60d0645a2c3524d0499dbcac5659ce148967d2c9a4957c12",
+      "altText": "Image for option B of question 11"
+    },
+    {
+      "id": "cgl-2026-10-08:q:11:option:2",
+      "mediaType": "image/webp",
+      "dataUri": "data:image/webp;base64,UklGRjIDAABXRUJQVlA4ICYDAAAQGwCdASqFAJkAPnk0kEakoyGhNxWo+JAPCWkAFc3Wr+ftPuWoorz2syUYhwgp+QQZDZtEkIz8HoLsEGTWYTMhQ0r/em/2auxIwZjHNndGJXPWtSiMHGHUmKipxeqnQG3GyzRRkcOwLFKtfkc4e4fIW3xJKvimBG4WqAel+AbyHTGg7/RCp4H3lO2G2Ks3a6m65kObpiGE5o4itQhNeClwnwyi3u4NydVigAut5zw6+I4476YPnArlAsVsJwaWgCdGncHBHElkhTld0zusi1OQjXfAkPKAvuoD+WN2zJoivQAA/vCVynYGE+vtyRRVJoxu8vWJA1sJEvrzGZOLlRswwdaYXvJmHVNcG6TCl7cNAPFOtFCcxglne251jLZ1YzB7EsJxWXeVvGAvsnXO6KttAOol/fr8tD+dAZ4lu50eLQ0Pi4p/qctX8mFZqPYNnYZSBIZqYpcO/IscWJwLnyRJuvJQ5WftPIRrbRqfRn36LcvcmLMyFYXa/YVEN/MaoEQP8BaQXh8j/9t7e/d1dfX60VjruebdiNY8kbIK6M+GmEnbCAH4LO6D1NnTbzUMRAJIPa0dso7d1V5wPDAbzmRM8oW7yWEyuQtIreIe8VpvjZD6XeAPxY+ioqmuvovQKPveFuRMUkErsEcFphZbqmJVcBRkeiJ3AcskQR4IdTT3AUAeRLIRiPVhV44n37udtUgID0MKPrxUz/5HfVN23mzIAlwIU0wZK4kAiR9uAmDS0S6ArEmimkgWL5dolYHGa2MqCK+lg9KAyK3Fa098w+JuG74hlRSzuSxJ+JAQpO2SHCCzrez6GmwKfNCajQdeVVkdscQc3rKpGSHRmksDztS8dOl0NaoA1fiM5Fss4xz33lK5UmbXNj6UDjt015Jm3G50aP7qz21EePyvC4Yq8KEtPIeJ/KDzca/HY6JdHpezITVP8PjiNQ7Aie4VrwSnp0dBn3Drfuwq8pxLXG4pji2Df6Bu9ULqUDSRc3i8WleZv6mzM+BdrHe/I0yJ2KlZE7Ob2/iiwIb7xD5wui24dsU/HKGvav+0xKuWquk3QfzQw9fAoAAAAA==",
+      "contentHash": "ef225739cf6238d9be0ce45ea3bfa3e4dbab21af0daee438fc101ea852cae354",
+      "altText": "Image for option C of question 11"
+    },
+    {
+      "id": "cgl-2026-10-08:q:11:option:3",
+      "mediaType": "image/webp",
+      "dataUri": "data:image/webp;base64,UklGRigDAABXRUJQVlA4IBwDAACQGgCdASqHAIIAPoE0lEalIyIhNPMKkKAQCWkAFsw9AbVZg5V2wng3c3zzDESEG9YhOsBAcBwLghuqOceuGEWHJtJizCtUh29GkCt3QkNvkdhe1cAIwNH2vveL83KqZ2eiPD0CC6pqa7C5sEsi/0OFIx7zad2j7Mm182SXc2Klr5TrXqvVawFsZZ9uNaqrLpZjPquKnqty3pMuRr8z1jlluaYKCQfynDz+4w9FeXMl7zTGH7X15a0dT4f6fB7oiuFeA06HUBau23tIMn0BoJiMWErWovZDHy5VyrlVQAD+/z1GJhTKAatfCW+VjExDQa2Q4NWnAW314A8Jz0Lc0gMB9Lc0DNYDIY+6HBOAOaHsRmvUsVToS9PFlxxu21dcz83LegHn/yq4LtFNGt0eIT6/rlAzwcj543DfxVGRMlh8KFcDOJUsbK0fnRw5f9eTkV4Ixng4NQaMt1UCa6z9UYvp9HCZfDkx0QD0AG64Am9lB9nzasrhamP3arLPVOqza2S6ngqjp2WMDupYnvJNHlWimX4Uo3pbeqbMRb7n7LLkrUPFO0LSYXyoBKvMbP47K1AiLV8w+odhVQ1MMl27uxVy2y6j1rrMtL5a47vZaWn3sUUJGd5K18gZtc87MY+0rjxyn29X5cKPi2rd3tIFG6e+YAuYwMbd4E2Z2PxdmA5I3Oie1lzx2kmbCSs7/dIm46KCr46TIkOS10q+gIr02qVoQvbaNVZTWLIOHihpN7V2/odUe8Bc/t1L15LdCjF7bYlC6YdINd2GQ7FaLTN0vm8OL/xO0OHrrNuLa1OzthrjlIEQs1EFeeTcD6gO4YQDYj37mRS28cbNaL8e9YRM7iT6oNZZTLsTpg5Nd3AwFHjghnpDrC1v8D2jzTONjddCj414ALN6s+3Bt9hWLnalMMOGmdjGrXaOU1R+QFHhqYX3bkfkBbVhavNVCrvPkBjVJo4jJdw25nIvanIor/DPWODF4tq8uGeteUO5FM1I0zrHuImh7c5UQHWfil2pdN73Mr2pymAAuwvox8/vEB5snkOgAjmX7XWY66JAAAAA",
+      "contentHash": "aec958b010d99681df91ff254fe018c010a4e8bced8f628b8bcaa18d1e29c0d9",
+      "altText": "Image for option D of question 11"
+    }
+  ],
+  "explanations": {
+    "cgl-2026-10-08:q:1:reviewed:6a1318595494067b": "Each term is five times its predecessor: 2→10→50→250→1250.",
+    "cgl-2026-10-08:q:2:reviewed:a4553129642234f0": "Removed the phrase “supply-side explanation”, which steered the candidate directly toward the only supply-related option. A decrease in available supply, holding demand roughly constant, can raise the market-clearing price. This is a plausible cause rather than a proven one.",
+    "cgl-2026-10-08:q:3:reviewed:7b6c976d16c1c782": "Read the successive line segments in the small-box diagrams; select the option that continues the same sequence of line lengths and spacing.",
+    "cgl-2026-10-08:q:4:reviewed:cd5c986788704f8c": "Differences are 16, 20, 24 and 28; therefore 53+20=73.",
+    "cgl-2026-10-08:q:5:reviewed:b8f3c3c913bef82a": "Removed the explicit alternating alphabet shifts. The two source examples are consistent with the intended answer and permit the pattern to be inferred. The intended alternating −5, −6, −5, −6 substitution rule has been stated explicitly. JAMS→EUHM.",
+    "cgl-2026-10-08:q:6:reviewed:b06a550b30cf5ef3": "Vijendra was 35 years and 48 days old on 1 January 2019, beyond an exact maximum of 35 years. Three years of experience does not qualify for the exception.",
+    "cgl-2026-10-08:q:7:reviewed:6064bc9e438b0c44": "The corrupted source mappings were made consistent without naming the alphabet-shift rule in the question. The publisher’s examples were inconsistent. The corrected question specifies an unambiguous +1-letter rule, and TNPLZ is the correct encoding.",
+    "cgl-2026-10-08:q:8:reviewed:f155a8281fa50e3e": "Reframed the task as identifying plausible assumptions: I and III, not the unsupported universal claim II.",
+    "cgl-2026-10-08:q:9:reviewed:4ddb6439a3f77376": "Compare general group differences against the principle of equal pay for equal work; average biological differences alone do not justify unequal wages for the same job.",
+    "cgl-2026-10-08:q:10:reviewed:f22ac55f07881c05": "Normalized the instruction without changing the address or options.",
+    "cgl-2026-10-08:q:11:reviewed:a5664faf73f86256": "Treat each letter-grid figure as a matrix. Identify the row/column transformation in the example pair and apply it to the second example.",
+    "cgl-2026-10-08:q:12:reviewed:9018202574ed77b7": "Made the distinctions between the arguments explicit without political advocacy.",
+    "cgl-2026-10-08:q:13:reviewed:1ced5690270e9c01": "The source omitted the speaker’s gender and parentage assumptions. A male speaker who is parent of that son is Sakshi’s grandfather.",
+    "cgl-2026-10-08:q:14:reviewed:004d0abe5c310f40": "Each term is five times the preceding term plus 10: 435×5+10=2185.",
+    "cgl-2026-10-08:q:15:reviewed:3c6b818f78ff7226": "Character-by-character comparison shows clusters C, D and H match.",
+    "cgl-2026-10-08:q:16:reviewed:4885e4b59adc6a7a": "An explicit existence premise makes the conclusions II and IV valid as well as I, without an implicit existential convention.",
+    "cgl-2026-10-08:q:17:reviewed:97f6a919be070811": "Removed the formula “sum of alphabet positions plus 55” from the question. The two examples now convey the pattern without directly stating the solution method. The original numerical examples were not enough to determine a unique mapping. The revised code is explicit: FAIL=6+1+9+12+55=83.",
+    "cgl-2026-10-08:q:18:reviewed:34e1da082530011c": "Malti is Deepak's mother and Lakhan his father; Amrita and Bablu are their children. Nehal is Lakhan's brother, hence Amrita's paternal uncle.",
+    "cgl-2026-10-08:q:19:reviewed:094b7afce3bd0ce1": "The increments are 100,110,120, so the next increment is 130; add to 340.",
+    "cgl-2026-10-08:q:20:reviewed:a817151cdd0c24d9": "Longer waits may indicate preference for locals, but additional data is needed to establish cause.",
+    "cgl-2026-10-08:q:21:reviewed:1fa14ff80ae797b1": "The 6th, 9th and 12th characters are 4, 1 and 5, giving 415.",
+    "cgl-2026-10-08:q:22:reviewed:5a45c0eb1bb5ba4c": "By contraposition, Sarah cannot have failed the midterm.",
+    "cgl-2026-10-08:q:23:reviewed:f3935f87f7b175cf": "The source reference uses an en dash, but the marked option used a hyphen. The corrected option now matches exactly, including punctuation.",
+    "cgl-2026-10-08:q:24:reviewed:27685e6f4f4c2e62": "The publisher supplied only one coding example, allowing several possible rules. The corrected version adds a second consistent example without disclosing the transformation; the rule subtracts successive alphabet positions 1, 2, 3, 4.",
+    "cgl-2026-10-08:q:25:reviewed:e50f071405f06eb4": "The decision assumes that reducing price can attract additional buyers.",
+    "cgl-2026-10-08:q:26:reviewed:5cb359c8b4bf01b2": "Golf is the only sport listed that uses a ball (badminton uses a shuttlecock).",
+    "cgl-2026-10-08:q:27:reviewed:ac66d2a7161e571a": "Pakistan had not hosted; Japan, China and South Korea all had.",
+    "cgl-2026-10-08:q:30:reviewed:5bb5dfba55bb786d": "The Gujarat Assembly passed the Bill on 24 March 2026, as reported by PTI and other contemporaneous reports.",
+    "cgl-2026-10-08:q:31:reviewed:03647b9781d10ae6": "Clarified that “2022” is the official edition name, notwithstanding the 2023 staging.",
+    "cgl-2026-10-08:q:33:reviewed:7b7fefde6a367f79": "The 2022 anecdote is unsupported and unnecessary. Article 72 provides the President’s clemency power.",
+    "cgl-2026-10-08:q:34:reviewed:b0b707c5b7fc96f4": "Verified against the Ministry of Ayush/PIB announcement of 19 May 2026: Ayush Anudan Portal.",
+    "cgl-2026-10-08:q:35:reviewed:c9a63065066bb8f3": "The original future-tense wording is outdated. The Sri Lanka EDB reported that India overtook the United Kingdom in January–August 2026.",
+    "cgl-2026-10-08:q:37:reviewed:34f51b0e6078eb55": "Removed the awkward double negative while preserving the intended distinction. Statement I is false; II is true.",
+    "cgl-2026-10-08:q:43:reviewed:47973eafcd202b11": "“Modernising criminal law” is the closest option; the policy description is kept descriptive rather than normative.",
+    "cgl-2026-10-08:q:44:reviewed:b907d4caa6fdd4f1": "The Ministry of Finance budget announcement specifies ₹12.2 lakh crore.",
+    "cgl-2026-10-08:q:45:reviewed:7230be2efe746a8b": "Its mission design was an approximately 10-day lunar flyby, without a lunar landing.",
+    "cgl-2026-10-08:q:46:reviewed:2ef04f832a9d30c7": "Removed “musical instrument”, which singled out the Bihu Pepa option on category alone. The official registration date is discussed only after submission. The official GI register records Assamese Bihu Pepa, registration certificate dated 27 March 2026; the source’s June date is inaccurate.",
+    "cgl-2026-10-08:q:49:reviewed:448e1474b4430365": "The Government of India’s Padma Awards 2026 list names Dr Budhri Tati under Social Work, Chhattisgarh.",
+    "cgl-2026-10-08:q:51:reviewed:803e4de2275356ac": "Cost prices are ₹680 and ₹1,000; overall revenue ₹1,700 exceeds the combined cost ₹1,680 by ₹20.",
+    "cgl-2026-10-08:q:52:reviewed:50567c788448a1fc": "Perimeter gives l+b=26 and the difference gives l−b=10. Solve l,b; the equal-area square has side √(lb).",
+    "cgl-2026-10-08:q:53:reviewed:2dc3a944bc434399": "10000×(1.14)²×(1+0.14×5/7)−10000=₹4295.60, approximately ₹4296.",
+    "cgl-2026-10-08:q:54:reviewed:83041dcd2aaebc7a": "The first option’s printed “3203” is almost certainly a lost radical; it is corrected to 320√3. The volume remains 160√3 cm³.",
+    "cgl-2026-10-08:q:55:reviewed:47c20f47b25c4faf": "a³+1/a³=3³−3×3=18. Squaring and subtracting 2 gives 322.",
+    "cgl-2026-10-08:q:56:reviewed:3323b885bc001b7a": "Prism volume=base area×common height, so the volume ratio equals the base-area ratio.",
+    "cgl-2026-10-08:q:57:reviewed:554da8d5d0e36a50": "The 30°–60°–90° side ratio is 1:√3:2, giving hypotenuse 12 cm.",
+    "cgl-2026-10-08:q:58:reviewed:f38fdd88634eb7e9": "Let initial men/women be 5k and 3k. Set (5k−12)/(3k+24)=3/2; solve for k and multiply by five.",
+    "cgl-2026-10-08:q:59:reviewed:b14e11c28bd68407": "Use a³+b³=(a+b)(a²−ab+b²) and note 575=100a, 325=100b; result 9/10000=0.0009.",
+    "cgl-2026-10-08:q:60:reviewed:e62cda491813b0c2": "(cosecθ+cotθ)(cosecθ−cotθ)=cosec²θ−cot²θ=1. If 1/(first)=p, then the second equals p, so 1/(second)=1/p.",
+    "cgl-2026-10-08:q:61:reviewed:db4e4f894abc59ef": "A hemisphere has half the volume of a sphere of equal radius; the ratio is 2:1.",
+    "cgl-2026-10-08:q:62:reviewed:99c27ce8da1181e4": "Circle area 15400 m². Setting sides 11x and 7x yields x=10√2, perimeter 36x=360√2 m.",
+    "cgl-2026-10-08:q:63:reviewed:761be7a5b8a45944": "X fraction=(4×3/5+3×5/11)/7≈53.766%, or 53.77%.",
+    "cgl-2026-10-08:q:64:reviewed:6b32884686771452": "If half-chord=15 and minor sagitta=5, use r²=15²+(r−5)². Solve r, then diameter=2r.",
+    "cgl-2026-10-08:q:65:reviewed:252cbcff6a68d368": "3/(3+m)=0.05; hence m=57 L.",
+    "cgl-2026-10-08:q:66:reviewed:323475da2fceca55": "Parentheses first: 88+47−59+130−94=112.",
+    "cgl-2026-10-08:q:67:reviewed:c4cb9e185d592a4e": "The first two candidates have 70% of votes; the third has the remaining 30% of 36,000.",
+    "cgl-2026-10-08:q:68:reviewed:6214e57c21414e35": "Use the identity sec²A−tan²A=1, independent of the supplied value of sinA.",
+    "cgl-2026-10-08:q:69:reviewed:b87abf9b844d18b1": "Relative speed=separation/time=42/6=7 km/h. Slower speed=54−7.",
+    "cgl-2026-10-08:q:70:reviewed:0b8c626f85d42fe0": "Area multiplier must remain one: 1.25×new breadth fraction=1. Hence breadth fraction=0.8, i.e. a 20% reduction.",
+    "cgl-2026-10-08:q:71:reviewed:8e0447d0410d9be0": "Weighted profit=0.52×32+0.12×42−0.36×11=17.72%. The equal-cost condition is made explicit.",
+    "cgl-2026-10-08:q:72:reviewed:129644696cc59516": "Original grand mean 78.625; correction increases total by 27, raising mean by 27/12=2.25 to 80.875.",
+    "cgl-2026-10-08:q:73:reviewed:30dd97a0a3e3aa55": "Integers are rational because n=n/1. Thus the statement that all integers are irrational is false.",
+    "cgl-2026-10-08:q:74:reviewed:d5b4eac59277e503": "For two years at rate r in decimal, CI−SI=Pr²=28. Also SI=2Pr=280, so divide to eliminate P and solve r.",
+    "cgl-2026-10-08:q:75:reviewed:4852c064da2831ad": "Direct common tangent length √[35²−(15−10)²]=20√3 cm.",
+    "cgl-2026-10-08:q:76:reviewed:ed2b1c8de6be28b9": "“Cavil” is a petty or trivial objection; evidence dismissed as an inconvenient cavil fits the author’s criticism.",
+    "cgl-2026-10-08:q:79:reviewed:d7a29d6fe017140f": "The original phrase “not merely innocuous” is awkward and semantically inconsistent. “Not merely theoretical; it can have tangible consequences” is coherent.",
+    "cgl-2026-10-08:q:85:reviewed:c6b5b785b446922a": "Removed an additional cue introduced in the earlier redraft. “Please maintain silence…” retains the polite request; the source also offers a bare imperative, which is less faithful to tone.",
+    "cgl-2026-10-08:q:86:reviewed:5299195d7dede36f": "Removed an additional cue introduced in the earlier redraft. Clarified “he” as a third person to avoid conflating him with Rahul, retaining the intended option A.",
+    "cgl-2026-10-08:q:89:reviewed:ab63c6c25e05ef53": "1 introduces disconnection; 3 qualifies digital connectivity; 2 proposes a remedy; 4 concludes: 1–3–2–4.",
+    "cgl-2026-10-08:q:90:reviewed:c524581eb2f5b87f": "C introduces the topic; A describes the machine; B and D explain its operation: C–A–B–D.",
+    "cgl-2026-10-08:q:92:reviewed:e8c381ffff3f5146": "Plutocracy is government by the wealthy. The original “controlled by monopolists” is not the precise definition.",
+    "cgl-2026-10-08:q:93:reviewed:d8b3df146b93b0a3": "The publisher’s original sentence had no grammatical error. The revised D uses the adjective “careful” where the adverb “carefully” is required.",
+    "cgl-2026-10-08:q:94:reviewed:c3905543f5e957f7": "B describes Peter awakening and failing to recall events, followed by C (sound), A (gold), D (recollection), so B–C–A–D.",
+    "cgl-2026-10-08:q:97:reviewed:33fadba3a1da16be": "Direct conditional form: “If you don’t act immediately, the consequences will be irreversible.”",
+    "cgl-2026-10-08:q:99:reviewed:f38005ccb310376f": "Present perfect “have started” and present “want” are naturally backshifted to past perfect and past respectively.",
+    "cgl-2026-10-08:q:100:reviewed:33d80a3dce735b1f": "The original selected option used “said” although the report used “asked”. The corrected version preserves both question and reporting verb."
+  }
+}

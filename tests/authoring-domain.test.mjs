@@ -13,6 +13,8 @@ import {sha256} from "../src/domain/hash.ts";
 import {authoringSections,setAuthoringSectionMinutes,assignAuthoringQuestionSection} from "../src/authoring/authoring-sections.ts";
 import {authoringPublishedPreview,authoringPartialCreditExamples} from "../src/authoring/authoring-preview.ts";
 import {toAuthoringDraft} from "../src/authoring/external-bank.ts";
+import {inspectAuthoringHealth,invalidateChangedQuestionReviews} from "../src/authoring/authoring-workflow.ts";
+import {authoringIssueTarget} from "../src/authoring/authoring-studio-view.ts";
 
 /** Rich Documents — canonical domain contracts. */
 async function registerRichDocumentsTests(){
@@ -103,6 +105,47 @@ test("P47-5C math and local image tokens never contain remote URLs or execute HT
 });
 
 }
+test("Studio health is derived from publication/QA state and identifies the next affected question",()=>{
+ const base=newAuthoringDraft(),q=base.questions[0];
+ const draft=validateAuthoringDraft({...base,ingestionMode:"external-source",
+  questions:[{...q,qa:{status:"needs-review"}}]});
+ const health=inspectAuthoringHealth(draft,[]);
+ assert.equal(health.questionsNeedingReview,1);
+ assert.ok(health.errorCount>0||health.warningCount>0);
+ assert.equal(health.nextQuestionId,q.id);
+ assert.ok(health.nextReason);
+ assert.equal(Object.hasOwn(draft,"health"),false,"health must remain derived, not persisted");
+});
+test("review-invalidating edits reopen exact production question state and preserve applicability",()=>{
+ const base=newAuthoringDraft(),q=base.questions[0];
+ const reviewed=validateAuthoringDraft({...base,questions:[{...q,qa:{status:"unchecked",
+  applicability:{mathematical:true,legal:false,timeSensitive:false},
+  review:{reviewer:"Reader",reviewedAt:"2026-11-15T12:00:00.000Z",note:"Checked",
+   acceptedWarningCodes:[]}
+ }}]});
+ const unchanged=invalidateChangedQuestionReviews(reviewed,reviewed);
+ assert.equal(unchanged.questions[0].qa.review.reviewer,"Reader");
+ const edited=validateAuthoringDraft({...reviewed,questions:[{
+  ...reviewed.questions[0],prompt:plainRichDocument("Edited after review")
+ }]});
+ const invalidated=invalidateChangedQuestionReviews(reviewed,edited);
+ assert.equal(invalidated.questions[0].qa.status,"needs-review");
+ assert.equal(invalidated.questions[0].qa.review,undefined);
+ assert.deepEqual(invalidated.questions[0].qa.applicability,
+  {mathematical:true,legal:false,timeSensitive:false});
+});
+
+test("Fix-next target mapping resolves editor fields and non-rich controls precisely",()=>{
+ const q=newAuthoringQuestion("single-choice");
+ assert.deepEqual(authoringIssueTarget("Question 1 · Question stem",q),{field:"prompt"});
+ assert.deepEqual(authoringIssueTarget("$.questions[id=x].options[1]",q),{field:"O2"});
+ assert.deepEqual(authoringIssueTarget("Question 1 · Worked explanation",q),{field:"explanation"});
+ assert.deepEqual(authoringIssueTarget("$.questions[id=x].answer",q),{controlId:"pd-author-answer"});
+ assert.deepEqual(authoringIssueTarget("$.questions[id=x].provenance.sources",q),{controlId:"pd-author-evidence"});
+ assert.deepEqual(authoringIssueTarget("Question 1 · Partial credit",q),{controlId:"pd-author-partial-credit"});
+ assert.deepEqual(authoringIssueTarget("$.questions[id=x].stimulus.text",q),{sourceOwned:true});
+});
+
 await registerAuthoringDraftsTests();
 /** Publication — canonical domain contracts. */
 async function registerPublicationTests(){
@@ -133,7 +176,8 @@ function readyDraft(){
    ...(kind==="free-response"?{wordLimit:250}:{})};
  });
  return {...a,examId:"cat-pgdba",paperId:"mixed-2026",title:"Original six-kind CAT and PGDBA practice",
-   revision:1,edition:"custom",durationMinutes:120,wordCountPolicy:"shown",
+   revision:1,edition:"custom",timingKind:"whole-paper",durationMinutes:120,wordCountPolicy:"shown",
+   marksCorrect:2.5,marksIncorrect:-5/6,marksUnanswered:0,scoreDecimalPlaces:2,
    sections:[{name:"Mathematics",minutes:15},{name:"General",minutes:15}],questions};
 }
 test("P47-5D all six kinds publish as source-validated frozen rich package, with correct hashes",()=>{
@@ -371,6 +415,22 @@ test("P54 partial-credit examples are from actual scoreAttempt, not a second sco
   assert.equal(e.marks,expected.marks);
   assert.equal(e.verdict,expected.verdict);
  }
+});
+test("P54 partial-credit publication preserves section scoring precedence",()=>{
+ const d=draft();
+ const withSectionRule={...d,sections:d.sections.map(section=>section.name==="Specialised"?
+  {...section,scoringOverride:{correctMarks:5,incorrectMarks:-1,unansweredMarks:0}}:section)};
+ const pkg=compileAuthoringPublication(withSectionRule);
+ const question=pkg.questions.find(q=>q.content.kind==="multiple-select");
+ const entry=pkg.answerKey.entries.find(e=>e.questionRevisionId===question.id);
+ assert.equal(entry.scoringOverride.correctMarks,5,
+  "Partial-credit answer-key metadata must not silently replace section-level full marks");
+ assert.equal(entry.scoringOverride.incorrectMarks,-1);
+ const exact=scoreAttempt(pkg.paper,pkg.answerKey,pkg.questions,[{
+  questionRevisionId:question.id,timeSpentMs:0,answerChangeCount:0,
+  response:{kind:"multiple-select",optionIds:["A","C"]}
+ }],"2026-11-04T00:00:00.000Z").items.find(i=>i.questionRevisionId===question.id);
+ assert.equal(exact.marks,5);
 });
 }
 await registerInspectionAndPreviewTests();

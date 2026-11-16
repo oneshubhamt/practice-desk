@@ -1,21 +1,20 @@
 import {STORAGE_TOPOLOGY} from "../storage-topology.ts";
 import {isAttempt,type RecordItem} from "./stored-record-validator.ts";
-import {builtinCglPackages} from "./exam-package.ts";
+import {defaultPracticeMode,resolvePracticeMode} from "./exam-package.ts";
 import type {ExamPackage} from "../domain/exam-package.ts";
-import type {CglPracticeMode} from "../workspace-settings.ts";
+import type {PracticeMode} from "../workspace-settings.ts";
 import type {GenericAttempt} from "../engine/generic-attempt.ts";
 import type {ExamCalculatorState} from "../domain/calculator.ts";
 import type {OptionId} from "../domain/ids.js";
 import type {SessionEvent} from "../engine/session.ts";
 import {createSessionClock} from "../engine/clock.ts";
 import type {DeletionIntent} from "../history/deletion-policy.ts";
-import type {SourcePaperBank,ReviewPatchBank} from "../content/schema.js";
 import type {PreinstalledExamCatalog} from "./preinstalled-exams.ts";
 import type {StorageHealth} from "./storage-health.ts";
 import {DEFAULT_HISTORY_QUERY,restoreHistoryQuery,type HistoryQuery} from "./history-query.ts";
 import type {ResultTab,ReviewFilter} from "./result-presentation.ts";
 import {readPracticeSetups,type PracticeSetups} from "./practice-selection.ts";
-import {examFamilyCatalog,BUILTIN_CGL_FAMILY} from "./exam-families.ts";
+import {examFamilyCatalog} from "./exam-families.ts";
 import {createScreenRenderer} from "./screen-renderer.ts";
 import {createImageViewer} from "./image-viewer.ts";
 import {createImagePreparation} from "./image-preparation.ts";
@@ -41,54 +40,39 @@ import {showWorkspaceStorageEstimate,requestWorkspacePersistentStorage,
  workspaceStorageHealth,updateWorkspaceStorageHealth,reportWorkspaceStorageFailure}
  from "./storage-health-controller.ts";
 
-let builtinCache:{
- sources:SourcePaperBank;patches:ReviewPatchBank;
- solutions:Readonly<Record<string,Readonly<Record<string,string>>>>;bundles:ExamPackage[]
-}|null=null;
-
-function cachedCglPackages(
- sources:SourcePaperBank,patches:ReviewPatchBank,
- solutions:Readonly<Record<string,Readonly<Record<string,string>>>>
-):ExamPackage[]{
- if(builtinCache&&builtinCache.sources===sources&&builtinCache.patches===patches&&
-   builtinCache.solutions===solutions)return builtinCache.bundles;
- const bundles=builtinCglPackages(sources,patches,solutions);
- builtinCache={sources,patches,solutions,bundles};
- return bundles;
-}
-
 export function mountExamWorkspace(
- root:HTMLElement,sources:SourcePaperBank,patches:ReviewPatchBank,
- solutions:Readonly<Record<string,Readonly<Record<string,string>>>>,
- preinstalled:PreinstalledExamCatalog
+ root:HTMLElement,preinstalled:PreinstalledExamCatalog
 ):()=>void{
- const builtins=cachedCglPackages(sources,patches,solutions);
- const builtinPaperIds=new Set(builtins.map(p=>p.paper.id));
- const packages=new Map<string,ExamPackage>(
-   [...builtins,...preinstalled.packages].map(p=>[p.paper.id,p])
- );
+ const packages=new Map<string,ExamPackage>(preinstalled.packages.map(p=>[p.paper.id,p]));
  const records=new Map<string,RecordItem>();
- const initialCatalog=examFamilyCatalog(packages.values(),builtinPaperIds,preinstalled.families);
- const defaultFamily=initialCatalog.find(f=>f.id===BUILTIN_CGL_FAMILY)??
-   initialCatalog.find(f=>f.currentPaperId)??initialCatalog[0];
- const defaultChoice=defaultFamily?.currentPaperId??
+ const initialCatalog=examFamilyCatalog(packages.values(),preinstalled.families);
+ const defaultFamily=initialCatalog.find(f=>f.currentPaperRevisionId)??initialCatalog[0];
+ const defaultChoice=defaultFamily?.currentPaperRevisionId??
    defaultFamily?.papers.find(p=>p.paper.edition==="reviewed")?.paper.id??
    defaultFamily?.papers[0]?.paper.id??"";
  const defaultFamilyId=defaultFamily?.id??"";
+ const defaultPaper=packages.get(defaultChoice);
+ const defaultMode:PracticeMode=defaultPaper?defaultPracticeMode(defaultPaper.paper):"free";
  const storedSetups=readPracticeSetups();
  const initialSetups:PracticeSetups=storedSetups??{
    schema:2,selectedFamilyId:defaultFamilyId,
    families:defaultFamily?{[defaultFamilyId]:{
-     paperRevisionId:defaultChoice,mode:"strict",section:0,
+     paperRevisionId:defaultChoice,mode:defaultMode,section:0,
      untimed:false,edition:packages.get(defaultChoice)?.paper.edition==="source"?"source":"reviewed"
    }}:{}
  };
- const storedPaperId=initialSetups.families[initialSetups.selectedFamilyId]?.paperRevisionId;
+ const storedSetup=initialSetups.families[initialSetups.selectedFamilyId];
+ const storedPaperId=storedSetup?.paperRevisionId;
  const storedPaperInitiallyAvailable=Boolean(storedPaperId&&packages.has(storedPaperId)&&
    initialCatalog.some(f=>f.id===initialSetups.selectedFamilyId&&
      f.papers.some(p=>p.paper.id===storedPaperId)));
  const initialFamilyId=storedPaperInitiallyAvailable?initialSetups.selectedFamilyId:defaultFamilyId;
  const initialChoice=storedPaperInitiallyAvailable?storedPaperId!:defaultChoice;
+ const initialPaper=packages.get(initialChoice);
+ const initialMode:PracticeMode=initialPaper?
+   resolvePracticeMode(initialPaper.paper,storedPaperInitiallyAvailable?storedSetup!.mode:defaultMode):defaultMode;
+ const initialSection=storedPaperInitiallyAvailable?storedSetup!.section:0;
+ const initialUntimed=storedPaperInitiallyAvailable?storedSetup!.untimed:false;
  const historyQueryKey=STORAGE_TOPOLOGY.historyView;
  const initialHistoryQuery:HistoryQuery=(()=>{
    try{return restoreHistoryQuery(JSON.parse(sessionStorage.getItem(historyQueryKey)??"null"));}
@@ -114,7 +98,7 @@ export function mountExamWorkspace(
  let router!:NativeRouter;
  let timer=0;
 
- const families=()=>examFamilyCatalog(packages.values(),builtinPaperIds,preinstalled.families);
+ const families=()=>examFamilyCatalog(packages.values(),preinstalled.families);
  const applyFamily=(id:string):void=>applyLibraryFamily(owner,id);
  const saveSelection=():void=>persistLibrarySelection(owner);
  const changeHistoryQuery=(next:HistoryQuery,redraw=true):void=>changeHistoryFilters(owner,next,redraw);
@@ -172,8 +156,8 @@ export function mountExamWorkspace(
    addNotebookCard,addResultCards,applyFamily,
    attempt:null,
    get authoringStudio(){return authoringStudio;},
-   builtinPaperIds,builtins,calculatorStates,
-   cglMode:"strict" as CglPracticeMode,
+   calculatorStates,
+   practiceMode:initialMode,
    changeHistoryQuery,
    choice:initialChoice,
    choiceDrafts,writtenDrafts,manualGradeDrafts,
@@ -192,17 +176,17 @@ export function mountExamWorkspace(
    lastCommittedAt:null,lastStorageFailure:null,lastTimerSave:0,
    get learningDesk(){return learningDesk;},
    get calendarController(){return calendarController;},
-   listHTML,loading:true,mirrorKey,notice,now,openSaved,packageForAttempt,packages,pagehide,patches,
+   listHTML,loading:true,mirrorKey,notice,now,openSaved,packageForAttempt,packages,pagehide,
    pendingWrites:0,recordStorageFailure,records,removeSavedAttempt,requestPersistentStorage,resultHTML,
    resultTab:"overview" as ResultTab,reviewFilter:"all" as ReviewFilter,root,
    routeHydrated:false,
    get router(){return router;},set router(value){router=value;},
    save,saveSelection,screenRenderer,
    selectedFamilyId:initialFamilyId,
-   setups:initialSetups,showStorageEstimate,singleSection:0,solutions,sources,
+   setups:initialSetups,showStorageEstimate,singleSection:initialSection,
    storage,storageBackend:null,storageFault:false,storageSnapshot,storedSetups,
    get timer(){return timer;},
-   untimedPractice:false,updateStorageHealth,
+   untimedPractice:initialUntimed,updateStorageHealth,
    view:"library",visibility,warning:"",writeMirror,writeQueue:Promise.resolve()
  };
 

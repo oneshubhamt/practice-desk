@@ -85,17 +85,14 @@ export function sourceReviewHTML(saved:GenericAttempt,target:QuestionRevision,
        ["options, response rules or media"]:[]),
      ...(JSON.stringify(entry.sourceAnswer)!==JSON.stringify(currentAnswer)?["answer key"]:[])
    ];
-   return '<details class="change-log source-review"><summary>'+
-     (saved.frozen.snapshot.examId==="ssc-cgl"?
-       "Compare with original PDF version":"Compare with original source edition")+
-     '</summary>'+
-     '<div class="change-body"><p class="fine"><b>Original source revision</b>'+
+   return '<details class="change-log source-review"><summary>Compare with frozen source edition</summary>'+
+     '<div class="change-body"><p class="fine"><b>Frozen source revision</b>'+
        (original.editorial.sourcePage?' · Source page '+original.editorial.sourcePage:"")+
        ' · Published key shown for provenance, not as a score adjustment.</p>'+
      stimulusHTML(display,original)+
      '<div class="generic-prompt">'+renderAuthoredText(display,content.prompt,content.richPrompt)+'</div>'+
      supplementalAssetHTML(display,content.assetIds,content.richPrompt)+optionLines+matches+
-     '<p class="fine"><b>Original published answer:</b> '+
+     '<p class="fine"><b>Source-edition answer:</b> '+
        escapeText(readableAnswer(original,entry.sourceAnswer))+'</p>'+
      '<p class="fine"><b>Changes in reviewed edition:</b> '+
        escapeText(modifications.length?[...new Set(modifications)].join(", "):"editorial review/status")+'</p>'+

@@ -68,17 +68,17 @@ export function reviewFiltersHTML(active:ReviewFilter):string{
 }
 export function timingLedgerHTML(a:GenericAttempt,active:boolean,allowReview=true):string{
  if(!a.result)return "";
- const lookup=attemptQuestionLookup(a);
+ const lookup=attemptQuestionLookup(a),multiSection=a.frozen.paper.sections.length>1;
  return '<section class="panel pad result-pane" id="result-timing" role="tabpanel" aria-labelledby="result-tab-timing"'+(!active?' hidden':'')+'>'+
   '<h2>Question timing ledger</h2><p class="fine">Time is cumulative foreground question exposure, not thinking time or an uninterrupted visit. After deadline is foreground exposure recorded beyond an advisory practice budget; hard exam simulations cannot accrue it. Missing phase evidence is shown as unavailable. First visit ends on the first departure, revisits measure exposure after returning, and before first answer accumulates across visits until the first committed response. Displayed seconds are rounded up while source milliseconds remain exact.</p>'+
-  '<div class="scroll-table"><table><thead><tr><th>Question</th><th>Section</th><th>Verdict</th><th>Time</th><th>After deadline</th><th>Speed</th><th>Visits</th><th>Changes</th><th>First visit</th><th>Revisits</th><th>Before first answer</th><th>Review</th></tr></thead><tbody>'+
+  '<div class="scroll-table"><table><thead><tr><th>Question</th><th>'+(multiSection?"Section":"Paper")+'</th><th>Verdict</th><th>Time</th><th>After deadline</th><th>Speed</th><th>Visits</th><th>Changes</th><th>First visit</th><th>Revisits</th><th>Before first answer</th><th>Review</th></tr></thead><tbody>'+
   a.result.items.map((x,i)=>{
     const response=lookup.responses.get(x.questionRevisionId);
     const section=lookup.sections.get(x.questionRevisionId);
     const visit=lookup.visits.get(x.questionRevisionId)?.count;
     const speed=questionSpeed(a,x.questionRevisionId,lookup);
     const phases=questionTimingPhases(a,x.questionRevisionId,lookup);
-    return '<tr><td>'+(i+1)+'</td><td>'+esc(section?.title??"—")+'</td>'+
+    return '<tr><td>'+(i+1)+'</td><td>'+esc(multiSection?(section?.title??"—"):"Whole paper")+'</td>'+
     '<td><span class="verdict '+esc(x.verdict)+'">'+esc(x.verdict)+'</span></td>'+
     '<td>'+duration(response?.timeSpentMs??0)+'</td>'+
     '<td>'+((response?.postDeadlineMs??0)>0?"+": "")+((response?.postDeadlineMs??0)>0?duration(response!.postDeadlineMs):"—")+'</td>'+
@@ -105,6 +105,7 @@ export function resultPacingHTML(
  const revisits=phases.reduce((total,row)=>total+row.revisitMs,0);
  const budget=paperTimeBudgetMs(a.frozen.paper);
  const hard=timeEnforcementForMode(a.frozen.snapshot.mode)==="hard";
+ const multiSection=a.frozen.paper.sections.length>1;
  return '<div class="insight-grid result-insight-grid">'+
   '<section class="panel pad result-time-pacing"><h2>Time &amp; pacing</h2>'+
   '<div class="metriclist">'+
@@ -120,7 +121,7 @@ export function resultPacingHTML(
    '<div><span>Accuracy (valid scored attempts)</span><b>'+(accuracy===null?"—":Math.round(accuracy*100)+"%")+'</b></div>'+
   '</div><p class="fine result-method-note">Timer time follows the frozen paper budget. Practice modes may continue into advisory overtime; exam simulation stops at its hard deadline. Per-question time and after-deadline attribution are foreground exposure, so hidden-page time can make paper overtime larger than recorded question overtime. Revisit exposure: '+
     (phases.length?duration(revisits):"not measured")+'.</p></section>'+
-  '<section class="panel pad result-section-diagnostics"><h2>Section diagnostics</h2>'+
+  '<section class="panel pad result-section-diagnostics"><h2>'+(multiSection?"Section diagnostics":"Paper diagnostics")+'</h2>'+
    evidence.sections.map(e=>{
      const eligible=Math.max(0,e.total-e.excluded);
      const attempted=e.answered+e.pending;
@@ -131,11 +132,13 @@ export function resultPacingHTML(
      const sectionOver=timer===null?0:overtimeMs(timer,sectionBudget);
      const timerText=timer===null?"Not recorded":duration(timer)+
        (sectionBudget===null?"":" / "+duration(sectionBudget)+(sectionOver>0?" · +"+duration(sectionOver)+" overtime":""));
-     return '<div class="metric-bar"><div class="row between"><b>'+esc(e.title)+'</b><span>'+
+     const displayTitle=multiSection?e.title:"Whole paper";
+     const coverageLabel=multiSection?e.title+" coverage":"Paper coverage";
+     return '<div class="metric-bar"><div class="row between"><b>'+esc(displayTitle)+'</b><span>'+
        attempted+'/'+eligible+' attempted · '+(e.accuracy===null?"—":Math.round(e.accuracy*100)+"% accuracy")+
-       '</span></div><div class="bartrack" role="progressbar" aria-label="'+esc(e.title)+' coverage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+
+       '</span></div><div class="bartrack" role="progressbar" aria-label="'+esc(coverageLabel)+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+
        Math.round(coverage*100)+'"><div style="width:'+Math.round(coverage*100)+'%"></div></div>'+
-       '<p class="fine">Section time: '+timerText+' · Foreground: '+duration(e.foregroundMs)+'</p></div>';
+       '<p class="fine">'+(multiSection?"Section":"Paper")+' time: '+timerText+' · Foreground: '+duration(e.foregroundMs)+'</p></div>';
    }).join("")+
   '</section></div>';
 }
@@ -154,12 +157,13 @@ export function writtenAnswerAnalysisHTML(a:GenericAttempt):string{
    '<div><b>'+paperOver+'</b><span>Paper overtime</span></div>'+
    '<div><b>'+attributed+'</b><span>Written-answer overtime</span></div>'+
   '</div><div class="scroll-table written-answer-table"><table><thead><tr><th>Question</th><th>Words</th><th>Foreground time</th><th>After deadline</th><th>Self-assessment</th></tr></thead><tbody>'+
-  evidence.rows.map(row=>'<tr><td>Q'+row.paperNumber+' · '+esc(row.section)+'</td>'+
+  evidence.rows.map(row=>'<tr><td>Q'+row.paperNumber+
+   (a.frozen.paper.sections.length>1?' · '+esc(row.section):'')+'</td>'+
    '<td class="'+(row.wordLimit!==null&&row.wordCount>row.wordLimit?"written-over":"")+'">'+esc(writtenWordSummary(row))+'</td>'+
    '<td>'+duration(row.foregroundMs)+'</td>'+
    '<td>'+(row.postDeadlineMs>0?"+"+duration(row.postDeadlineMs):"—")+'</td>'+
    '<td>'+(row.selfAssessedMarks===null?"Not yet assessed":
-      esc(String(row.selfAssessedMarks))+(row.selfAssessedMaximum===null?"":" / "+esc(String(row.selfAssessedMaximum)))+
+      esc(mark(a,row.selfAssessedMarks))+(row.selfAssessedMaximum===null?"":" / "+esc(mark(a,row.selfAssessedMaximum)))+
       (row.assessmentNote?'<small>'+esc(row.assessmentNote)+'</small>':""))+'</td></tr>').join("")+
   '</tbody></table></div>'+
   '<p class="fine result-method-note">Paper overtime is timer time. Written-answer overtime is only foreground exposure on written questions after an advisory deadline; other questions and hidden-page time are intentionally excluded. The Question times ledger shows attribution for every question.</p></section>';

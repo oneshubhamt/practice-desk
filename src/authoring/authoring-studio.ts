@@ -7,6 +7,7 @@ import type {AssetId,ContentHash} from "../domain/ids.ts";
 import {sha256} from "../domain/hash.ts";
 import {validateMediaInventory} from "../domain/media.ts";
 import type {RichDocument} from "../domain/rich-document.ts";
+import {plainRichDocument} from "../domain/rich-document.ts";
 import type {ExamPackage} from "../domain/exam-package.ts";
 import {inspectAuthoringPublication,publicationPlainText,PublicationValidationError,
  type PublicationIssue} from "./authoring-publisher.ts";
@@ -17,9 +18,12 @@ import {STAGING_MAX_BYTES,inspectStagingWorkspace,
  updateStagedSelection,updateStagedTriage,createStagingArchive,readStagingArchive,
  type StagingWorkspace}
  from "./authoring-staging.ts";
-import {setAuthoringSectionMinutes,assignAuthoringQuestionSection} from "./authoring-sections.ts";
+import {setAuthoringSectionMinutes,setAuthoringSectionScoring,assignAuthoringQuestionSection} from "./authoring-sections.ts";
+import {MAX_AUTHORED_ITEMS,resizeRichItems} from "./authoring-cardinality.ts";
 import {mathRenderer} from "../app/math-renderer-provider.ts";
 import {escapeText} from "../app/html-escape.ts";
+import {paperEditionLabel} from "../app/editorial-labels.ts";
+import {scoreableMaximum} from "../engine/score-ceiling.ts";
 import {downloadText} from "../app/download-file.ts";
 import {wordgardEditorPort} from "./wordgard-adapter.ts";
 import {syllabusForExam,syllabusHeading,UNCLASSIFIED_SUBJECT} from "../learning/syllabus-taxonomy.ts";
@@ -28,10 +32,10 @@ import {AUTHORING_MAX_BYTES,newAuthoringDraft,newAuthoringQuestion,validateAutho
  validateAuthoringShelf,requiresExternalQuality,
  type AuthoringDraft,type AuthoringDraftShelf,type AuthoringQuestion} from "./authoring-draft.ts";
 import {createAuthoringWorkspaceStore} from "./authoring-workspace-store.ts";
-import {handoffStagingToDraftShelf,ingestStagedFiles,inspectPublicationWorkflow,
- preparePublicationWorkflow} from "./authoring-workflow.ts";
-import {labels,type Field,initialField,fieldNames,fields,fieldOf,updatedField,option,
- controls,evidenceEditor,stagedDetail,toolbar,preview,sectionManager,draftsOptions}
+import {handoffStagingToDraftShelf,ingestStagedFiles,inspectAuthoringHealth,inspectPublicationWorkflow,
+ invalidateChangedQuestionReviews,preparePublicationWorkflow} from "./authoring-workflow.ts";
+import {labels,type Field,initialField,fieldName,fields,fieldOf,updatedField,option,
+ authoringIssueTarget,controls,evidenceEditor,stagedDetail,toolbar,preview,sectionManager,draftsOptions}
  from "./authoring-studio-view.ts";
 
 export interface AuthoringStudioController{
@@ -130,13 +134,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   });
   // Review acceptance belongs to the exact content checked. Any later edit
   // invalidates its previously attributed warning/reviewer evidence.
-  const reviewed=new Map(draft.questions.filter(q=>q.qa?.review).map(q=>
-   [q.id,JSON.stringify({...q,qa:undefined})]));
-  const current=reviewed.size?validateAuthoringDraft({...changed,questions:changed.questions.map(q=>{
-   const prior=reviewed.get(q.id);
-   return prior&&prior!==JSON.stringify({...q,qa:undefined})?
-    {...q,qa:{status:q.qa?.status??"needs-review"}}:q;
-  })}):changed;
+  const current=invalidateChangedQuestionReviews(draft,changed);
   shelf={...shelf,drafts:shelf.drafts.map(d=>d.id===draft.id?current:d)};
   persist();
  };
@@ -211,7 +209,23 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   if(before)sectionManagerExpanded=before.open;
   capture();
   const version=++renderSequence,container=host,d=active(),q=question();
-  if(!fields(q.kind).includes(field))field=initialField;
+  if(!fields(q).includes(field))field=initialField;
+  const health=inspectAuthoringHealth(d,actions.existing());
+  const qErrors=health.inspection.errors.filter(issue=>issue.questionId===q.id).length;
+  const qWarnings=health.inspection.warnings.filter(issue=>issue.questionId===q.id).length;
+  const qDuplicates=health.inspection.quality?.duplicates.filter(candidate=>
+   candidate.first.questionId===q.id||candidate.second.questionId===q.id).length??0;
+  const qNeedsReview=health.inspection.quality?.questions.find(item=>item.questionId===q.id)?.
+   recommendedStatus==="needs-review"||q.qa?.status==="needs-review";
+  const chip=(label:string,state:"bad"|"warn"|"review"|"good"|"neutral")=>
+   '<span class="pd-author-chip '+(state==="neutral"?"":state)+'">'+escapeText(label)+'</span>';
+  const questionChips=[
+   qErrors?chip(qErrors+" error"+(qErrors===1?"":"s"),"bad"):"",
+   qWarnings?chip(qWarnings+" warning"+(qWarnings===1?"":"s"),"warn"):"",
+   qDuplicates?chip(qDuplicates+" duplicate candidate"+(qDuplicates===1?"":"s"),"warn"):"",
+   qNeedsReview?chip("Needs review","review"):
+    (qErrors||qWarnings||qDuplicates?chip("QA unchecked","review"):chip("No flagged QA","good"))
+  ].join("");
   container.hidden=false;
   const questionOptions=d.questions.map((q,i)=>option(q.id,(i+1)+". "+q.section+
     " · "+(q.syllabusHeadingId?syllabusHeading(d.examId,q.syllabusHeadingId)?.label:
@@ -268,6 +282,19 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    '<input type="file" id="pd-stage-archive-file" accept=".json,application/json" hidden>'+
    '<input type="file" multiple accept=".json,application/json" id="pd-stage-input" hidden></div>'+
    stagePanel+
+   '<div class="pd-author-health" id="pd-author-health" role="status"><div><b>Draft health</b>'+
+    '<div class="pd-author-chips">'+
+     chip(health.questionCount+" question"+(health.questionCount===1?"":"s"),"neutral")+
+     chip(health.errorCount+" error"+(health.errorCount===1?"":"s"),health.errorCount?"bad":"good")+
+     chip(health.warningCount+" warning"+(health.warningCount===1?"":"s"),health.warningCount?"warn":"good")+
+     chip(health.questionsNeedingReview+" need review","review")+
+     chip(health.duplicateCandidates+" duplicate candidate"+(health.duplicateCandidates===1?"":"s"),
+      health.duplicateCandidates?"warn":"good")+
+    '</div>'+
+    (health.duplicateTruncated?'<p class="fine generic-warning">Duplicate scan reached its configured bound; split or review separately.</p>':"")+
+   '</div><button class="btn" id="pd-author-fix-next"'+
+    (health.errorCount||health.warningCount||health.questionsNeedingReview?'':' disabled')+
+    '>Fix next</button></div>'+
    (stageConflict?'<p class="generic-warning" role="alert">'+escapeText(stageError)+'</p>':"")+
    (lastSaveError?'<p class="generic-warning" role="alert">'+escapeText(lastSaveError)+'</p>':"")+
    '<div class="pd-author-top"><label>Saved draft<select id="pd-author-drafts">'+draftOptions+'</select></label>'+
@@ -280,7 +307,8 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    '<button class="btn" id="pd-author-import">Import draft / exchange JSON</button>'+
    (storageBlocked?'<button class="btn danger" id="pd-author-reset-corrupt">Reset damaged draft storage</button>':"")+
    '<input type="file" id="pd-author-import-file" accept=".json,application/json" hidden></div></div>'+
-   '<div class="pd-author-top"><label>Question<select id="pd-author-questions">'+questionOptions+'</select></label>'+
+   '<div class="pd-author-top"><div><label>Question<select id="pd-author-questions">'+questionOptions+'</select></label>'+
+    '<div class="pd-author-chips pd-author-question-chips" aria-label="Current question QA status">'+questionChips+'</div></div>'+
    '<div class="row"><button class="btn" id="pd-author-add-question">Add question</button>'+
    '<button class="btn" id="pd-author-copy-question">Duplicate</button>'+
    '<button class="btn" id="pd-author-up">Move up</button>'+
@@ -288,7 +316,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    '<button class="btn danger" id="pd-author-delete-question">Delete question</button></div></div>'+
    controls(d,q,field)+evidenceEditor(q)+sectionManager(d,sectionManagerExpanded)+
    toolbar()+
-   '<div id="pd-author-editor" class="pd-author-editor" role="group" aria-label="Edit '+escapeText(fieldNames[field])+'"></div>'+
+   '<div id="pd-author-editor" class="pd-author-editor" role="group" aria-label="Edit '+escapeText(fieldName(field))+'"></div>'+
    '<div class="pd-author-insert"><fieldset><legend>Insert equation</legend>'+
    '<label>LaTeX<input id="pd-author-tex" placeholder="\\frac{a}{b}" maxlength="2048"></label>'+
    '<label>Accessible spoken/text description<input id="pd-author-math-alt" maxlength="500" placeholder="a divided by b"></label>'+
@@ -314,17 +342,37 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    '<p class="fine" id="pd-author-status" role="status">Editing locally; changes are saved automatically.</p>'+
    '<div id="pd-author-preview" class="pd-author-preview" hidden></div></section>';
   const find=<T extends HTMLElement>(id:string)=>container.querySelector<T>("#"+id)!;
-  const click=(id:string,handler:()=>void)=>{find<HTMLButtonElement>(id).onclick=handler;};
+  const click=(id:string,handler:()=>void|Promise<void>)=>{
+   find<HTMLButtonElement>(id).onclick=()=>{void handler();};
+  };
+  const navigateToIssue=async(id:string,path:string,reason:string):Promise<void>=>{
+   const targetQuestion=active().questions.find(item=>item.id===id);
+   if(!targetQuestion)return;
+   capture();questionId=id;
+   const target=authoringIssueTarget(path,targetQuestion);
+   if(target.field)field=target.field;
+   await render();
+   if(target.sourceOwned){
+    status("This issue is in shared stimulus/media content. Correct the source or draft JSON and re-stage/re-import it; Wordgard edits question-local content only.",true);
+    return;
+   }
+   if(target.controlId&&host){
+    const el=host.querySelector<HTMLElement>("#"+target.controlId);
+    const details=el?.closest("details");if(details)details.open=true;
+    el?.scrollIntoView({block:"nearest"});el?.focus();
+   }
+   status("Next authoring issue: "+reason);
+  };
   click("pd-author-close",()=>close());
   click("pd-author-save",()=>{capture();persist();void render();});
 
   const validationBox=find<HTMLElement>("pd-author-validation");
   const inspectPublication=()=>inspectPublicationWorkflow(active(),actions.existing());
   const dryRun=():string=>{
-   if(!requiresExternalQuality(active()))return "";
    const compiled=inspectAuthoringPublication(active(),actions.existing()).compiled;
    if(!compiled)return "";
    const draft=active(),count=compiled.questions.length;
+   const maximum=scoreableMaximum(compiled.paper,compiled.answerKey,compiled.questions);
    const coverage=new Map<string,number>(),kinds=new Map<string,number>();
    for(const q of draft.questions){
     const label=q.syllabusHeadingId||q.subject||"Unclassified";
@@ -339,10 +387,9 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    return '<details class="pd-author-section-manager"><summary>Exact publication dry-run · '+
     count+' questions · '+escapeText(compiled.title)+'</summary>'+
     '<p class="fine">Paper '+escapeText(compiled.paper.paperId)+' · edition '+
-    escapeText(compiled.paper.edition)+' · revision '+compiled.paper.revision+
-    ' · sections '+compiled.paper.sections.length+' · correct-answer ceiling '+
-    (count*draft.marksCorrect)+' marks · wrong answer '+draft.marksIncorrect+
-    ' marks · '+escapeText(duration)+'</p>'+
+    escapeText(paperEditionLabel(compiled.paper))+
+    ' · sections '+compiled.paper.sections.length+' · automated correct-answer ceiling '+
+    maximum+' marks · compiled marking rules preserved · '+escapeText(duration)+'</p>'+
     '<p class="fine">Physical sections: '+
     escapeText(compiled.paper.sections.map(section=>section.title+' ('+
       section.questionRevisionIds.length+')').join('; '))+'</p>'+
@@ -366,18 +413,28 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
     '<ol>'+[...issues.map(i=>({field:i.field,reason:i.reason,questionId:i.questionId})),
     ...warnings.map(i=>({field:i.path,reason:i.code+": "+i.message,questionId:i.questionId}))].
      map(issue=>'<li>'+escapeText(issue.field+": "+issue.reason)+
-      (issue.questionId?'<button type="button" class="textlink" data-author-issue="'+escapeText(issue.questionId)+'">Edit question</button>':"")+
+      (issue.questionId?'<button type="button" class="textlink" data-author-issue="'+escapeText(issue.questionId)+
+       '" data-author-issue-path="'+escapeText(issue.field)+'">Locate issue</button>':"")+
       '</li>').join("")+'</ol>'+dryRun();
    validationBox.querySelectorAll<HTMLButtonElement>("[data-author-issue]").forEach(btn=>{
     btn.onclick=()=>{
-     const id=btn.dataset.authorIssue;
-     if(id&&active().questions.some(q=>q.id===id)){
-      capture();questionId=id;field="prompt";void render();
-     }
+     const id=btn.dataset.authorIssue,path=btn.dataset.authorIssuePath??"";
+     const row=[...issues.map(i=>({field:i.field,reason:i.reason,questionId:i.questionId})),
+      ...warnings.map(i=>({field:i.path,reason:i.code+": "+i.message,questionId:i.questionId}))]
+      .find(item=>item.questionId===id&&item.field===path);
+     if(id)void navigateToIssue(id,path,row?.reason??"review this issue");
     };
    });
    status(issues.length?"Publication blocked: "+issues.length+" errors":"Remaining unverified QA warnings: "+warnings.length,Boolean(issues.length));
   };
+  click("pd-author-fix-next",async()=>{
+   if(health.nextQuestionId&&active().questions.some(item=>item.id===health.nextQuestionId)){
+    await navigateToIssue(health.nextQuestionId,health.nextPath??"",health.nextReason??"review this question");
+    return;
+   }
+   showIssues(health.inspection.errors,health.inspection.warnings);
+   validationBox.scrollIntoView({block:"nearest"});
+  });
   click("pd-author-validate",()=>{
    try{
     flush();
@@ -605,14 +662,16 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    ["pd-author-section-nav","sectionNavigation"],
    ["pd-author-section-transition","sectionTransition"],
    ["pd-author-word-count","wordCountPolicy"],
-   ["pd-author-correct","marksCorrect"],["pd-author-wrong","marksIncorrect"]
+   ["pd-author-correct","marksCorrect"],["pd-author-wrong","marksIncorrect"],
+   ["pd-author-unanswered","marksUnanswered"],["pd-author-decimals","scoreDecimalPlaces"]
   ] as const;
   for(const [id,key] of metadata)find<HTMLInputElement|HTMLSelectElement>(id).onchange=e=>{
    const input=e.target as HTMLInputElement;
-   const value=["revision","durationMinutes","marksCorrect","marksIncorrect"].includes(key)?
+   const value=["revision","durationMinutes","marksCorrect","marksIncorrect","marksUnanswered","scoreDecimalPlaces"].includes(key)?
     Number(input.value):input.value;
-   if(key==="timingKind"&&value==="sectional"){
-     changeDraft(d=>({...d,timingKind:"sectional",sectionNavigation:"sequential-locked"}));
+   if(key==="timingKind"){
+     changeDraft(d=>({...d,timingKind:value as AuthoringDraft["timingKind"],
+       ...(value==="sectional"?{sectionNavigation:"sequential-locked"}:{})}));
      void render();
    }else updateMetadata(key,value);
    if(key==="examId")refreshOfficialHeadingChoices();
@@ -629,6 +688,34 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
       return withoutCalculator;
     });
   };
+  find<HTMLSelectElement>("pd-author-practice-modes").onchange=e=>{
+   const value=(e.target as HTMLSelectElement).value;
+   try{changeDraft(d=>{
+    if(value==="auto"){const {practiceModes:_,...rest}=d;return rest;}
+    return {...d,practiceModes:value.split(",") as ("strict"|"free"|"single")[]};
+   });void render();}catch(error){status(error instanceof Error?error.message:"Invalid practice modes",true);}
+  };
+  container.querySelectorAll<HTMLInputElement>("[data-author-kind-score]").forEach(toggle=>{
+   toggle.onchange=()=>{
+    const kind=toggle.dataset.authorKindScore as QuestionKind;
+    try{changeDraft(d=>{
+     const next={...(d.kindScoring??{})};
+     if(toggle.checked)next[kind]={correctMarks:d.marksCorrect,incorrectMarks:d.marksIncorrect,unansweredMarks:d.marksUnanswered};
+     else delete next[kind];
+     if(Object.keys(next).length)return {...d,kindScoring:next};
+     const {kindScoring:_,...rest}=d;return rest;
+    });void render();}catch(error){status(error instanceof Error?error.message:"Invalid question-kind scoring",true);}
+   };
+  });
+  container.querySelectorAll<HTMLInputElement>("[data-author-kind-mark]").forEach(input=>{
+   input.onchange=()=>{
+    const kind=input.dataset.authorKind as QuestionKind,field=input.dataset.authorKindMark as "correctMarks"|"incorrectMarks"|"unansweredMarks";
+    const value=Number(input.value);
+    try{changeDraft(d=>{const rule=d.kindScoring?.[kind];if(!rule)throw Error("Enable this question-kind override first");
+      return {...d,kindScoring:{...d.kindScoring,[kind]:{...rule,[field]:value}}};});}
+    catch(error){status(error instanceof Error?error.message:"Invalid question-kind scoring",true);}
+   };
+  });
   const editCurrentEvidence=(fn:(q:AuthoringQuestion)=>AuthoringQuestion):boolean=>{
    try{
     changeDraft(d=>({...d,questions:d.questions.map(q=>q.id===questionId?fn(q):q)}));
@@ -663,6 +750,36 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    const state=(e.target as HTMLSelectElement).value as "unchecked"|"needs-review";
    editCurrentEvidence(q=>({...q,qa:{...q.qa,status:state}}));
   };
+  const applicability=()=>question().qa?.applicability??
+   {mathematical:false,legal:false,timeSensitive:false};
+  const updateApplicability=(patch:Partial<NonNullable<NonNullable<AuthoringQuestion["qa"]>["applicability"]>>):boolean=>
+   editCurrentEvidence(q=>({...q,qa:{...q.qa,status:q.qa?.status??"unchecked",
+    applicability:{...applicability(),...patch}}}));
+  find<HTMLInputElement>("pd-author-qa-asof").onchange=e=>{
+   const input=e.target as HTMLInputElement,value=input.value.trim(),current=applicability();
+   if(value){updateApplicability({asOfDate:value});return;}
+   if(current.legal||current.timeSensitive){
+    input.value=current.asOfDate??"";
+    status("Turn off legal/time-sensitive applicability before clearing its required as-of date.",true);
+    return;
+   }
+   editCurrentEvidence(q=>{
+    const {asOfDate:_,...withoutDate}=applicability();
+    return {...q,qa:{...q.qa,status:q.qa?.status??"unchecked",applicability:withoutDate}};
+   });
+  };
+  find<HTMLInputElement>("pd-author-qa-mathematical").onchange=e=>{
+   updateApplicability({mathematical:(e.target as HTMLInputElement).checked});
+  };
+  for(const [id,key] of [["pd-author-qa-legal","legal"],["pd-author-qa-time-sensitive","timeSensitive"]] as const){
+   const input=find<HTMLInputElement>(id);
+   input.onchange=()=>{
+    if(input.checked&&!applicability().asOfDate){
+     input.checked=false;status("Set an applicability as-of date before enabling legal or time-sensitive QA.",true);return;
+    }
+    updateApplicability({[key]:input.checked});
+   };
+  }
   container.querySelectorAll<HTMLInputElement|HTMLSelectElement>("[data-author-source-field]").forEach(input=>{
    input.onchange=()=>{
     const index=Number(input.dataset.authorSourceIndex);
@@ -709,15 +826,36 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    const reviewer=find<HTMLInputElement>("pd-author-qa-reviewer").value.trim();
    const note=find<HTMLInputElement>("pd-author-qa-review-note").value.trim();
    if(!reviewer||!note){status("Provide both a named reviewer and an evidence note; identity is not authenticated.",true);return;}
-   if(editCurrentEvidence(q=>({...q,qa:{status:"needs-review",review:{
+   if(editCurrentEvidence(q=>({...q,qa:{...q.qa,status:"needs-review",review:{
     reviewer,reviewedAt:new Date().toISOString(),note,
     acceptedWarningCodes:q.qa?.review?.acceptedWarningCodes??[]
    }}})))void render();
   });
   const clearReview=container.querySelector<HTMLButtonElement>("#pd-author-qa-clear");
   if(clearReview)clearReview.onclick=()=>{
-   if(editCurrentEvidence(q=>({...q,qa:{status:q.qa?.status??"needs-review"}})))void render();
+   if(editCurrentEvidence(q=>{
+    const {review:_,...kept}=q.qa??{status:"needs-review" as const};
+    return {...q,qa:{...kept,status:q.qa?.status??"needs-review"}};
+   }))void render();
   };
+  const resizeCurrent=(listField:"options"|"leftItems"|"rightItems",count:number,min:number)=>{
+   if(!Number.isSafeInteger(count)||count<min||count>MAX_AUTHORED_ITEMS){status("Item count must be "+min+"–"+MAX_AUTHORED_ITEMS+".",true);return;}
+   capture();
+   try{changeDraft(d=>({...d,questions:d.questions.map(q=>{
+    if(q.id!==questionId)return q;
+    const resized=resizeRichItems(q[listField],count,()=>plainRichDocument(""));
+    if(listField!=="options")return {...q,[listField]:resized};
+    const maxSelections=Math.min(q.maxSelections??count,count);
+    const minSelections=Math.min(q.minSelections??1,maxSelections);
+    return {...q,options:resized,minSelections,maxSelections};
+   })}));field=initialField;void render();}catch(error){status(error instanceof Error?error.message:"Invalid item count",true);}
+  };
+  const optionCount=container.querySelector<HTMLInputElement>("#pd-author-option-count");
+  if(optionCount)optionCount.onchange=()=>resizeCurrent("options",Number(optionCount.value),2);
+  const leftCount=container.querySelector<HTMLInputElement>("#pd-author-left-count");
+  if(leftCount)leftCount.onchange=()=>resizeCurrent("leftItems",Number(leftCount.value),1);
+  const rightCount=container.querySelector<HTMLInputElement>("#pd-author-right-count");
+  if(rightCount)rightCount.onchange=()=>resizeCurrent("rightItems",Number(rightCount.value),1);
   const tolerance=find<HTMLInputElement>("pd-author-tolerance");
   if(tolerance)tolerance.onchange=e=>updateQuestion("tolerance",Number((e.target as HTMLInputElement).value));
   const refreshOfficialHeadingChoices=()=>{
@@ -807,8 +945,33 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   container.querySelectorAll<HTMLInputElement>("[data-author-section-timer]").forEach(input=>{
    input.onchange=()=>commitSectionTimer(input.dataset.authorSectionTimer??"",input);
   });
+  container.querySelectorAll<HTMLInputElement>("[data-author-section-score-enable]").forEach(toggle=>{
+   toggle.onchange=()=>{
+    const section=toggle.dataset.authorSectionScoreEnable??"";
+    try{changeDraft(d=>setAuthoringSectionScoring(d,section,toggle.checked?{
+      correctMarks:d.marksCorrect,incorrectMarks:d.marksIncorrect,unansweredMarks:d.marksUnanswered}:undefined));void render();}
+    catch(error){status(error instanceof Error?error.message:"Invalid section scoring",true);}
+   };
+  });
+  container.querySelectorAll<HTMLInputElement>("[data-author-section-score-field]").forEach(input=>{
+   input.onchange=()=>{
+    const section=input.dataset.authorSectionScore??"";
+    const field=input.dataset.authorSectionScoreField as "correctMarks"|"incorrectMarks"|"unansweredMarks";
+    try{changeDraft(d=>{const row=d.sections.find(x=>x.name===section);if(!row?.scoringOverride)throw Error("Enable section scoring first");
+      return setAuthoringSectionScoring(d,section,{...row.scoringOverride,[field]:Number(input.value)});});}
+    catch(error){status(error instanceof Error?error.message:"Invalid section scoring",true);}
+   };
+  });
+  const wordLimit=container.querySelector<HTMLInputElement>("#pd-author-word-limit");
+  if(wordLimit)wordLimit.onchange=()=>{
+   const value=wordLimit.value.trim();
+   try{changeDraft(d=>({...d,questions:d.questions.map(q=>{
+    if(q.id!==questionId)return q;
+    if(value)return {...q,wordLimit:Number(value)};
+    const {wordLimit:_,...rest}=q;return rest;
+   })}));}catch(error){status(error instanceof Error?error.message:"Invalid word limit",true);}
+  };
   for(const [id,key] of [["pd-author-min-choices","minSelections"],["pd-author-max-choices","maxSelections"],
-    ["pd-author-word-limit","wordLimit"],
     ["pd-author-partial-credit","partialCreditEach"],
     ["pd-author-partial-penalty","partialPenaltyEach"]] as const){
     const input=container.querySelector<HTMLInputElement>("#"+id);
@@ -818,7 +981,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    const enabled=(e.target as HTMLInputElement).checked;
    updateQuestion("scoringOverride",enabled?{
     correctMarks:active().marksCorrect,incorrectMarks:active().marksIncorrect,
-    unansweredMarks:0}:undefined);
+    unansweredMarks:active().marksUnanswered}:undefined);
    for(const key of ["correctMarks","incorrectMarks","unansweredMarks"] as const)
     find<HTMLInputElement>("pd-author-mark-"+key).disabled=!enabled;
   };
@@ -831,8 +994,22 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    };
   }
   find<HTMLSelectElement>("pd-author-kind").onchange=e=>{
-   updateQuestion("kind",(e.target as HTMLSelectElement).value as QuestionKind);
-   field=initialField;void render();
+   const nextKind=(e.target as HTMLSelectElement).value as QuestionKind;
+   capture();
+   try{
+    changeDraft(d=>({...d,questions:d.questions.map(q=>{
+     if(q.id!==questionId)return q;
+     let next:AuthoringQuestion={...q,kind:nextKind};
+     if(nextKind!=="multiple-select"&&nextKind!=="matching")
+      next={...next,partialCreditEach:0,partialPenaltyEach:0};
+     if(nextKind!=="free-response"&&next.wordLimit!==undefined){
+      const {wordLimit:_,...withoutWordLimit}=next;next=withoutWordLimit;
+     }
+     if(nextKind!=="numeric-entry")next={...next,tolerance:0};
+     return next;
+    })}));
+    field=initialField;void render();
+   }catch(error){status(error instanceof Error?error.message:"Invalid question kind",true);}
   };
   find<HTMLSelectElement>("pd-author-questions").onchange=e=>{
    capture();questionId=(e.target as HTMLSelectElement).value;field=initialField;void render();

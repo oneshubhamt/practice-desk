@@ -50,6 +50,18 @@ test("P60-B RED: exact syllabus counts and all specified quotas produce a compac
  assert.ok(result.stdout.length<13000);
 }));
 
+test("P60-B: answer-position statistics expand to the actual authored option cardinality",()=>temp(async dir=>{
+ const src=JSON.parse(await readFile(example,"utf8"));
+ src.questions[0].options=["One","Two","Three","Four","Five"];
+ src.questions[0].answer="E";
+ const input=await write(dir,"five-option.json",src);
+ const plan=await write(dir,"five-plan.json",mkPlan());
+ const audited=run("audit",plan,input);
+ assert.equal(audited.status,0,audited.stderr);
+ assert.equal(audited.data.answerPositionCounts.E,1);
+ assert.deepEqual(Object.keys(audited.data.answerPositionCounts),["A","B","C","D","E"]);
+}));
+
 test("P60-B RED: count mismatch, subject drift, mixed paper and duplicated question IDs are hard failures",()=>temp(async dir=>{
  const base=JSON.parse(await readFile(example,"utf8"));
  const plan=await write(dir,"plan.json",mkPlan());
@@ -391,6 +403,16 @@ test("P60-C RED: misleading option markers, shared stimulus leakage and answer-g
  const qa=inspectExternalQuestionBank(subtle);
  assert.ok(qa.issues.some(x=>x.code==="candidate-unintended-clue"&&x.severity==="warning"));
 });
+test("P60-C: five-option blind candidate packets preserve every authored choice label",()=>temp(async dir=>{
+ const src=JSON.parse(await readFile(apfc,"utf8"));
+ src.questions[0].options=["One","Two","Three","Four","Five"];
+ src.questions[0].answer="E";
+ const input=await write(dir,"five-option.json",src);
+ const packet=command(tool,"candidate",input,"--limit","1");
+ assert.equal(packet.status,0,packet.stderr);
+ assert.deepEqual(packet.data.items[0].choices.map(x=>x.label),["A","B","C","D","E"]);
+}));
+
 test("P60-C RED: blinded review packet exposes single candidate-only question, never key/explanation/source QA",()=>temp(async dir=>{
  const src=JSON.parse(await readFile(apfc,"utf8"));
  const input=await write(dir,"source.json",src);

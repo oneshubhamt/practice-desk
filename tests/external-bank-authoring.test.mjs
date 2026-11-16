@@ -123,7 +123,7 @@ test("P57-A external source rejects unsupported fields, fake IDs, broken referen
   {questions:source.questions.map((q,i)=>i?{...q}:{...q,contentHash:"forged"})},
   {questions:source.questions.map((q,i)=>i?{...q}:{...q,stimulusRef:"missing"})},
   {questions:source.questions.map((q,i)=>i?{...q}:{...q,answer:"Z"})},
-  {questions:source.questions.map((q,i)=>i?{...q}:{...q,options:["x","y"]})},
+  {questions:source.questions.map((q,i)=>i?{...q}:{...q,options:["x"]})},
   {questions:source.questions.map((q,i)=>i?{...q}:{...q,prompt:"<script>alert(1)</script>"})},
   {timing:{...source.timing,kind:"sectional",sectionTransition:"automatic"},navigation:{...source.navigation,sectionNavigation:"free"}}
  ];
@@ -265,6 +265,25 @@ test("P57-B valid CAT/APFC reports explicit unverified states; real engine oracl
   assert.equal(r.compiled.questions[0].editorial.status,"caution");
  }
 });
+test("P57-B registered syllabus policy uses the exact taxonomy registry, never an exam-id suffix",async()=>{
+ const exact=await load("apfc");
+ delete exact.questions[0].syllabusHeadingId;
+ let r=inspect(exact);
+ assert.equal(r.valid,false);
+ assert.ok(r.issues.some(i=>i.code==="syllabus-heading-missing"&&i.questionId==="labour-01"));
+
+ const lookalike=await load("apfc");
+ lookalike.examId="vendor-apfc";
+ lookalike.questions=lookalike.questions.map(q=>{
+  const {syllabusHeadingId:_,...rest}=q;
+  return {...rest,subject:rest.subject||"General"};
+ });
+ r=inspect(lookalike);
+ assert.equal(r.issues.some(i=>i.code==="syllabus-heading-missing"),false,
+  "an APFC-looking ID must not activate a registered taxonomy");
+ assert.equal(r.valid,true,JSON.stringify(r.issues));
+});
+
 test("P57-B block equivalent MCQ answer options with question/field diagnosis",async()=>{
  const s=await load("apfc");
  s.questions[0].options[2]=" B ";
@@ -292,6 +311,22 @@ test("P57-B recognizes proved arithmetic but does not claim general factual proo
  assert.equal(r.quality.questions[0].checks.solution_checked,"unverified");
  assert.equal(r.factualVerification,"not-performed");
 });
+test("P57-B declared QA applicability survives import and actively routes bounded checks",async()=>{
+ const s=await load("apfc");
+ s.questions[0].qa={status:"unchecked",applicability:{
+  mathematical:true,legal:true,timeSensitive:true,asOfDate:"2026-11-05"
+ }};
+ const draft=toAuthoringDraft(s);
+ assert.deepEqual(draft.questions[0].qa.applicability,{
+  mathematical:true,legal:true,timeSensitive:true,asOfDate:"2026-11-05"
+ });
+ const r=inspect(s);
+ assert.ok(r.issues.some(i=>i.code==="legal-asof-evidence-missing"&&i.questionId==="labour-01"));
+ assert.ok(r.issues.some(i=>i.code==="legal-currentness-unverified"&&i.questionId==="labour-01"));
+ assert.ok(r.issues.some(i=>i.code==="time-sensitive-evidence-missing"&&i.questionId==="labour-01"));
+ assert.ok(r.issues.some(i=>i.code==="mathematical-solution-unverified"&&i.questionId==="labour-01"));
+});
+
 test("P57-B legal claims require provision and as-of evidence, and still cannot be source corroborated",async()=>{
  const s=await load("apfc");
  s.questions[0].prompt="Under the Example Code 2020, section 5 is effective from 2025; which is second alphabetically?";
@@ -391,7 +426,7 @@ test("P57-B APFC academic syllabus attribution is mandatory and never inferred f
  delete s.questions[1].syllabusHeadingId;
  const r=inspect(s);
  assert.equal(r.valid,false);
- assert.ok(r.issues.some(i=>i.code==="apfc-heading-missing"&&i.questionId==="economy-01"));
+ assert.ok(r.issues.some(i=>i.code==="syllabus-heading-missing"&&i.questionId==="economy-01"));
 });
 test("P57-B distinct matching labels and redundant numeric-answer tolerance trigger appropriate severity",async()=>{
  const cat=await load("cat");
@@ -566,6 +601,9 @@ test("Authoring workflow ingests staging and hands off one deterministic unpubli
 
 test("Authoring publication workflow is sole owner of external QA acknowledgement and recompiles exact evidence",async()=>{
  const source=await load("apfc");
+ source.questions[0].qa={status:"needs-review",applicability:{
+  mathematical:false,legal:true,timeSensitive:true,asOfDate:"2026-11-12"
+ }};
  const draft=stagedToAuthoringDraft(staged(source));
  const inspection=inspectPublicationWorkflow(draft,[]);
  assert.equal(inspection.report.valid,true,JSON.stringify(inspection.report.issues));
@@ -593,6 +631,9 @@ test("Authoring publication workflow is sole owner of external QA acknowledgemen
  assert.equal(prepared.draftChanged,true);
  assert.equal(prepared.packageValue.questions.length,draft.questions.length);
  assert.ok(prepared.draft.questions.every(q=>q.qa?.review?.reviewer==="Named reader"));
+ assert.deepEqual(prepared.draft.questions[0].qa?.applicability,{
+  mathematical:false,legal:true,timeSensitive:true,asOfDate:"2026-11-12"
+ },"Publication acknowledgement must preserve author QA-routing declarations");
  assert.ok(prepared.packageValue.questions.every(q=>q.editorial.notes.includes("Named reader")));
  assert.equal(prepared.inspection.errors.length,0);
 });

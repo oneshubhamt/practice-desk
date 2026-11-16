@@ -22,6 +22,7 @@ import {editorialStatusLabel} from "./editorial-labels.ts";
 
 import {reviewMatch,reviewFiltersHTML,resultTabsHTML,timingLedgerHTML,resultInsightsHTML,
  resultCompletionLabel,writtenWordSummary,type ResultTab,type ReviewFilter} from "./result-presentation.ts";
+import {paperProvenanceText} from "./exam-preflight.ts";
 
 import type {ResultControllerContext} from "./coordinator-context.ts";
 
@@ -58,18 +59,21 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
      paper:owner.attempt.frozen.paper,answerKey:owner.attempt.frozen.key,
      questions:owner.attempt.frozen.questions,stimuli:owner.attempt.frozen.stimuli,
      assets:owner.attempt.frozen.assets};
+   const frozenProvenance=paperProvenanceText(frozenTarget);
+   const multiSection=paper.sections.length>1;
    const grades=owner.resultTab==="overview"?manualGradeSummary(owner.attempt):{graded:0,pending:0,total:0};
    const selfAssessed=s.snapshot.earnedMarks+grades.total;
+   const scorePrecision=paper.scoring.decimalPlaces??2;
+   const markLabel=(value:number)=>value.toFixed(scorePrecision);
+   const markStep=scorePrecision===0?"1":(10**-scorePrecision).toFixed(scorePrecision);
    const originalKey=owner.resultTab==="overview"?sourceKeyScore(owner.attempt):null;
    const sourceKeyText=paper.edition==="reviewed"&&!owner.attempt.sourceKeyReference?
      "Original-source comparison unavailable: no unambiguous original revision was frozen at attempt start":
      originalKey&&originalKey.comparable>0?
      (originalKey.unavailable>0?"Comparable original-source subset only":"Original-source key comparison")+
-     ": "+originalKey.marks.toFixed(1)+" / "+originalKey.maxMarks.toFixed(1)+
+     ": "+markLabel(originalKey.marks)+" / "+markLabel(originalKey.maxMarks)+
      " marks ("+originalKey.comparable+" of "+originalKey.total+" comparable; "+
      originalKey.unavailable+" unavailable)":null;
-   const scorePrecision=paper.scoring.decimalPlaces??2;
-   const markLabel=(value:number)=>value.toFixed(scorePrecision);
    const eligibleMax=owner.resultTab==="overview"?scoreableMaximum(paper,owner.attempt.frozen.key,owner.attempt.frozen.questions):0;
    const conservativeFloor=owner.resultTab==="overview"?scoreableLowerBound(paper,owner.attempt.frozen.key,owner.attempt.frozen.questions):0;
    const resultPackage=owner.packageForAttempt(owner.attempt);
@@ -80,7 +84,7 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
    const resultMeta=escapeText(resultName)+' · '+escapeText(readablePracticeMode(owner.attempt.frozen.snapshot.mode))+
      (resultDate?' · '+escapeText(resultDate):"");
    const paperSectionRows=owner.resultTab==="overview"?sectionScoreSummaries(owner.attempt,s).map(row=>
-     '<tr><td>'+escapeText(row.title)+'</td><td>'+row.attempted+'/'+
+     '<tr><td>'+escapeText(multiSection?row.title:"Whole paper")+'</td><td>'+row.attempted+'/'+
        (row.questions-row.excluded)+'</td><td>'+row.correct+'</td><td>'+row.incorrect+
        '</td><td>'+escapeText(markLabel(row.marks))+' / '+
        escapeText(markLabel(row.eligibleMax))+'</td><td>'+
@@ -95,6 +99,7 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
        (sourceKeyText?' · '+escapeText(sourceKeyText):"")+'.</p>':"";
    const scoringDetails=owner.resultTab==="overview"?'<details class="result-scoring-details">'+
      '<summary>Scoring details</summary><div class="result-scoring-detail-body">'+
+     '<p class="fine"><b>Frozen source &amp; independence:</b> '+escapeText(frozenProvenance)+'</p>'+
      (owner.attempt.practiceComposition?'<p class="fine"><b>Custom selection provenance:</b> source paper '+
        escapeText(owner.attempt.practiceComposition.sourcePaperRevisionId)+
        ' · source key '+escapeText(owner.attempt.practiceComposition.sourceAnswerKeyRevisionId)+
@@ -106,8 +111,8 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
      (originalKey&&originalKey.comparable>0?
        '<p class="fine"><b>'+escapeText(originalKey.unavailable?
          "Original-source key — comparable subset only":"Original-source key comparison")+
-       ':</b> '+escapeText(originalKey.marks.toFixed(1))+' / '+
-       escapeText(originalKey.maxMarks.toFixed(1))+' marks · '+
+       ':</b> '+escapeText(markLabel(originalKey.marks))+' / '+
+       escapeText(markLabel(originalKey.maxMarks))+' marks · '+
        originalKey.correct+' correct · '+originalKey.incorrect+' incorrect · '+
        originalKey.unanswered+' unanswered · '+originalKey.comparable+' of '+
        originalKey.total+' questions comparable; '+originalKey.unavailable+
@@ -122,7 +127,7 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
      (!revealReview?'<p class="fine"><b>Detailed answers withheld:</b> this exam releases numerical results and timing feedback but not its question-by-question answer key or worked solutions.</p>':"")+
      (grades.graded||grades.pending?'<p class="fine"><b>Separate self-assessment:</b> '+escapeText(grades.graded)+
        ' of '+escapeText(grades.graded+grades.pending)+' written responses marked; self-assessed total '+
-       escapeText(selfAssessed.toFixed(2))+'. The automated score above remains unchanged.</p>':
+       escapeText(markLabel(selfAssessed))+'. The automated score above remains unchanged.</p>':
        '<p class="fine">Automated marks reflect only scoreable questions.</p>')+
      '</div></details>':"";
    return '<div class="generic-heading results-heading"><div>'+
@@ -145,7 +150,7 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
     '</b><small>Unanswered</small></div><div class="score"><b>'+s.snapshot.excludedCount+
     '</b><small>Excluded</small></div></div>'+
     scoreExplainer+
-    '<div class="scroll-table result-section-table"><table><thead><tr><th>Section</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Marks</th><th>Time used</th></tr></thead><tbody>'+
+    '<div class="scroll-table result-section-table"><table><thead><tr><th>'+(multiSection?"Section":"Paper")+'</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Marks</th><th>Time used</th></tr></thead><tbody>'+
      paperSectionRows+'</tbody></table></div>'+scoringDetails+'</section>'+
      resultInsightsHTML(owner.attempt,revealReview)+
     '<div class="row result-footer-actions">'+
@@ -188,15 +193,15 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
          '<span>'+minutes(written.foregroundMs)+' foreground'+
            (written.postDeadlineMs>0?' · +'+minutes(written.postDeadlineMs)+' after deadline':' · no recorded overtime')+'</span>'+
          '<span>'+(written.selfAssessedMarks===null?'Not yet self-assessed':
-           'Self-assessed '+escapeText(String(written.selfAssessedMarks))+
-           (written.selfAssessedMaximum===null?'':' / '+escapeText(String(written.selfAssessedMaximum))))+'</span>'+
+           'Self-assessed '+escapeText(markLabel(written.selfAssessedMarks))+
+           (written.selfAssessedMaximum===null?'':' / '+escapeText(markLabel(written.selfAssessedMaximum))))+'</span>'+
          (written.assessmentNote?'<small>'+escapeText(written.assessmentNote)+'</small>':'')+'</div>':"")+
        frozenReviewMedia(owner.attempt!,q,response,answer,it.verdict)+
        (origin?'<p class="fine">Notebook source: '+escapeText(origin.sourcePaperId)+
          ' · '+escapeText(origin.sourcePaperEdition)+' · '+escapeText(origin.sourceSectionTitle)+
          ' · source attempt '+escapeText(origin.sourceAttemptId)+'</p>':"")+
        '<p class="fine"><span class="verdict '+escapeText(it.verdict)+'">'+
-        escapeText(it.verdict)+'</span> · '+it.marks+' automated marks</p>'+
+        escapeText(it.verdict)+'</span> · '+escapeText(markLabel(it.marks))+' automated marks</p>'+
        '<p class="fine">Your answer: '+escapeText(readableAnswer(q,response))+'</p>'+
        '<p class="fine">'+(it.verdict==="excluded"?"Frozen answer key (not scored): ":
          it.verdict==="pending"?"Manual assessment: ":"Expected: ")+
@@ -216,7 +221,7 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
          escapeText(source.title)+'</a>').join(' · ')+'</p>':"")+
        (limit!==null?'<div class="generic-manual-grade"><p class="fine">Content quality requires explicit human assessment. Objective word/time evidence above is descriptive only; self-marked results remain separate from the immutable automated exam score. Unsaved assessment drafts stay in this tab only and are not included in backups.</p>'+ 
           '<p class="fine" data-manual-status="'+escapeText(q.id)+'" role="status">'+(draft?"Unsaved changes — select Save self-assessment to commit.":"No unsaved assessment changes.")+'</p>'+
-          '<label>Self-assessed marks (0–'+limit+')<input type="number" step="0.01" min="0" max="'+limit+'" data-manual-marks="'+escapeText(q.id)+'" value="'+escapeText(draft?.marks??prior?.marks??"")+'"></label>'+
+          '<label>Self-assessed marks (0–'+escapeText(markLabel(limit))+')<input type="number" step="'+markStep+'" min="0" max="'+limit+'" data-manual-marks="'+escapeText(q.id)+'" value="'+escapeText(draft?.marks??(prior?markLabel(prior.marks):""))+'"></label>'+
           '<label>Assessment note (optional)<textarea maxlength="2000" rows="2" data-manual-note="'+escapeText(q.id)+'">'+escapeText(draft?.note??prior?.note??"")+'</textarea></label>'+
           '<button class="btn" data-manual-save="'+escapeText(q.id)+'">Save self-assessment</button></div>':"")+
        '<button class="btn" data-add-card="'+escapeText(q.id)+'"'+

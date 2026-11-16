@@ -4,9 +4,9 @@ export async function candidateCore(){
 // Consolidated from scripts/acceptance-critical.mjs; retained browser-only assertions remain intact.
 /** Current-app critical journeys: no frozen historical screenshots or hard-coded prior SHA. */
 const {openHarness,records,check,assertNoOverflow,route,claimNativeNavigation}=await import("../../browser/fixtures.mjs");
-const {chooseModernPaper}=await import("../../paper-select.mjs");
+const {chooseModernPaper,findModernPaper,importModernPaper,choosePracticeMode}=await import("../../paper-select.mjs");
 const {pkg : sixKinds}=await import("../../../tests/fixtures/six-kinds.mjs");
-const {paperRevisionHash}=await import("../../../src/domain/integrity.ts");
+const {paperRevisionHash,answerKeyRevisionHash}=await import("../../../src/domain/integrity.ts");
 const shortTimed=(id,durationMs,edition)=>{
  const {contentHash:_oldHash,...paperCore}=sixKinds.paper;
  const base={...paperCore,id,edition,timing:{kind:"whole-paper",durationMs,pausePolicy:"allowed"}};
@@ -14,6 +14,36 @@ const shortTimed=(id,durationMs,edition)=>{
 };
 const hardWritten=shortTimed("rev-paper:hard-written",4000,"source");
 const advisoryWritten=shortTimed("rev-paper:advisory-written",2000,"custom");
+const unsectioned=(()=>{
+ const {contentHash:_oldHash,...paperCore}=sixKinds.paper;
+ const base={...paperCore,id:"rev-paper:unsectioned-precision",paperId:"unsectioned-precision",
+  edition:"custom",practiceModes:["strict","free"],
+  sections:[{id:"whole",title:"Whole paper",questionRevisionIds:sixKinds.questions.map(q=>q.id)}],
+  timing:{kind:"whole-paper",durationMs:20*60000,pausePolicy:"allowed"},
+  navigation:{...paperCore.navigation,questionNavigation:"free",sectionNavigation:"free"},
+  scoring:{...paperCore.scoring,
+   defaultRule:{correctMarks:1/3,incorrectMarks:-1/9,unansweredMarks:0},decimalPlaces:3}};
+ const keyCore={...sixKinds.answerKey,paperId:base.paperId};
+ const answerKey={...keyCore,contentHash:answerKeyRevisionHash(keyCore)};
+ return {...sixKinds,examId:"generic-structure",title:"Unsectioned precision demo",
+  paper:{...base,answerKeyRevisionId:answerKey.id,contentHash:paperRevisionHash({...base,answerKeyRevisionId:answerKey.id})},
+  answerKey};
+})();
+const mixedSections=(()=>{
+ const {contentHash:_oldHash,...paperCore}=sixKinds.paper;
+ const base={...paperCore,id:"rev-paper:mixed-sections",paperId:"mixed-sections",
+  edition:"custom",practiceModes:["strict","single"],
+  timing:{kind:"sectional",sectionLimits:[
+   {sectionId:paperCore.sections[0].id,durationMs:60000},
+   {sectionId:paperCore.sections[1].id,durationMs:null}
+  ],transition:"manual",allowEarlySubmit:true,pausePolicy:"allowed"},
+  navigation:{...paperCore.navigation,sectionNavigation:"sequential-locked"}};
+ const keyCore={...sixKinds.answerKey,id:"key:mixed-sections",paperId:base.paperId};
+ const answerKey={...keyCore,contentHash:answerKeyRevisionHash(keyCore)};
+ const paperBase={...base,answerKeyRevisionId:answerKey.id};
+ return {...sixKinds,examId:"generic-mixed-sections",title:"Mixed section timing demo",
+  paper:{...paperBase,contentHash:paperRevisionHash(paperBase)},answerKey};
+})();
 const h=await openHarness({artifactDir:"artifacts/acceptance-modern"});
 const evidence=[];
 async function scenario(name,run){
@@ -28,16 +58,10 @@ async function scenario(name,run){
 try{
  await scenario("source-reviewed-cgl-immutable-results-and-history",async page=>{
   check(await claimNativeNavigation(page),"native Navigation API not supported");
-  const options=await page.locator("#g-papers option").evaluateAll(xs=>xs.map(x=>x.value));
-  check(options.length>=5,"no built-in CGL papers");
-  check(await page.locator('[data-edition="reviewed"]').getAttribute("aria-pressed")==="true"||
-    await page.locator('[data-edition="source"]').getAttribute("aria-pressed")==="true",
-    "edition segment missing");
-  await page.locator('[data-edition="reviewed"]').click();
-  const reviewed=await page.locator("#g-papers option").evaluateAll(xs=>
-   xs.find(x=>x.value.includes("cgl-2026-09-30")&&x.value.includes("reviewed"))?.value??"");
-  check(Boolean(reviewed),"no reviewed paper");
+  const reviewed=await findModernPaper(page,"reviewed",o=>o.value.includes("cgl-2026-09-30"));
   await chooseModernPaper(page,reviewed);
+  check(await page.locator('[data-edition="reviewed"]').getAttribute("aria-pressed")==="true",
+    "reviewed edition segment missing");
   const title=await page.locator("#g-papers option:checked").innerText();
   await page.locator('[data-edition="source"]').click();
   check(await page.locator("#g-papers option").evaluateAll(xs=>
@@ -57,6 +81,10 @@ try{
   const attemptId=new URL(await page.url()).searchParams.get("attempt");
   check(Boolean(attemptId),"exam URL not pinned to saved attempt");
   check(await page.locator("#result-review").count()===0,"pre-submit review/solutions leaked");
+  await page.locator('[data-q="4"]').click();
+  check(await page.locator('.exam-question [data-image-open]').count()>0,
+    "canonical CGL package lost question/option media in the candidate browser");
+  await page.locator('[data-q="0"]').click();
   await page.locator(".exam-question input[data-choice]").first().click();
   await page.locator("#g-flag").click();
   await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
@@ -80,6 +108,8 @@ try{
     "reviewed CGL lost independently pinned source key");
   await page.locator("#result-tab-review").click();await page.locator("#result-review").waitFor({state:"visible"});
   check(await page.locator(".generic-review").count()===25,"lazy review wrong question count");
+  check((await page.locator("#result-review").innerText()).includes("Compare with frozen source edition"),
+    "Reviewed CGL browser review lost its exact frozen Source comparison lineage");
   await page.locator("#result-tab-timing").click();await page.locator("#result-timing").waitFor({state:"visible"});
   check(await page.locator("#result-timing tbody tr").count()===25,"item time ledger missing");
   await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
@@ -98,10 +128,74 @@ try{
     "History restore changed frozen revision, score ledger or completion provenance");
   await assertNoOverflow(page,"CGL History");
  });
+ await scenario("exam-shape-unsectioned-fractional-and-mixed-sections",async page=>{
+  await importModernPaper(page,unsectioned,"unsectioned.json");
+  check(await page.locator(".generic-modes [data-mode]").count()===2,
+    "one physical section must expose only compatible declared full-paper modes");
+  check(await page.locator('[data-mode="single"]').count()===0,
+    "one physical section exposed artificial section practice");
+  const preview=await page.locator(".preview-metrics").innerText();
+  check(preview.includes("Whole paper")&&preview.includes("Structure"),
+    "unsectioned Library preview exposed an artificial section count");
+  await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
+  check(await page.locator(".generic-sections").count()===0,
+    "unsectioned paper rendered a section-tab bar");
+  check(!(await page.locator("main").innerText()).includes("Section 1 of 1"),
+    "unsectioned paper leaked internal section numbering");
+  check((await page.locator(".navigator-intro").innerText())==="Jump to a question",
+    "unsectioned navigator used section-specific wording");
+  await page.locator('input[data-choice]').first().click();
+  await page.locator("#g-submit").click();await route(page,"result");
+  const overview=await page.locator(".result-performance-overview").innerText();
+  check(overview.includes("0.333"),
+    "fractional marks ignored the frozen three-decimal scoring policy");
+  check((await page.locator(".result-section-table thead").innerText()).includes("Paper"),
+    "unsectioned Results retained a Section table heading");
+  check((await page.locator(".result-section-diagnostics").innerText()).includes("Paper diagnostics"),
+    "unsectioned Results retained section diagnostics chrome");
+  check((await page.locator(".result-scoring-details").textContent()).includes("does not independently authenticate official status"),
+    "custom-paper result lost neutral frozen provenance wording");
+  await page.locator("#result-tab-review").click();await page.locator("#result-review").waitFor({state:"visible"});
+  check((await page.locator(".generic-review").first().innerText()).includes("0.333 automated marks"),
+    "question review ignored frozen three-decimal result precision");
+
+  await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
+  await importModernPaper(page,mixedSections,"mixed-sections.json");
+  check(await page.locator(".generic-modes [data-mode]").count()===2,
+    "authored optional mode eligibility was not respected");
+  check(await page.locator('[data-mode="free"]').count()===0,
+    "paper that declares strict+single unexpectedly exposed flexible mode");
+  check((await page.locator(".preview-metrics").innerText()).includes("01:00 + Untimed"),
+    "mixed sectional timing was flattened or fabricated");
+  await choosePracticeMode(page,"single");
+  await page.locator("#g-single-section").selectOption("0");
+  check((await page.locator(".preview-metrics").innerText()).includes("01:00"),
+    "timed section practice lost its authored section limit");
+  await page.locator("#g-single-section").selectOption("1");
+  check((await page.locator(".preview-metrics").innerText()).includes("Untimed"),
+    "untimed section practice inherited a fabricated timer");
+  await page.locator("#g-single-section").selectOption("0");
+  await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
+  check((await page.locator("#g-timer").innerText())==="01:00",
+    "declared section-practice mode could not execute its authored timed section");
+  check(await page.locator(".generic-sections").count()===0,
+    "one selected practice section rendered a fake section-tab bar");
+  await page.locator("#g-submit").click();await route(page,"result");
+  await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
+  await chooseModernPaper(page,mixedSections.paper.id);
+  await choosePracticeMode(page,"strict");
+  await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
+  check(await page.locator(".generic-sections").count()===1&&
+    await page.locator(".exam-section-tab").count()===2,
+    "mixed-section exam did not retain two real sections");
+  check((await page.locator("#g-timer").innerText())==="01:00",
+    "first mixed section did not retain its authored timer");
+  await page.locator("#g-submit").click();
+  check((await page.locator("#g-timer").innerText())==="Untimed",
+    "second mixed section did not retain its explicit untimed status");
+ });
  await scenario("written-hard-timeout-preserves-visible-draft",async page=>{
-  await page.locator("#g-file").setInputFiles({name:"hard-written.json",mimeType:"application/json",
-   buffer:Buffer.from(JSON.stringify(hardWritten))});
-  await chooseModernPaper(page,hardWritten.paper.id);
+  await importModernPaper(page,hardWritten,"hard-written.json");
   await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
   await page.locator('[data-section="1"]').click();
   await page.locator("#g-next").click();await page.locator("#g-next").click();
@@ -118,9 +212,9 @@ try{
     "written analytics should summarize evidence, not duplicate candidate prose in Insights");
  });
  await scenario("written-advisory-overtime-continues-live",async page=>{
-  await page.locator("#g-file").setInputFiles({name:"advisory-written.json",mimeType:"application/json",
-   buffer:Buffer.from(JSON.stringify(advisoryWritten))});
-  await chooseModernPaper(page,advisoryWritten.paper.id);
+  await importModernPaper(page,advisoryWritten,"advisory-written.json");
+  check(await page.locator('[data-mode="free"]').getAttribute("aria-pressed")==="true",
+   "a newly imported custom paper must retain its advisory practice default");
   await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
   await page.locator('[data-section="1"]').click();
   await page.locator("#g-next").click();await page.locator("#g-next").click();
@@ -141,9 +235,7 @@ try{
     "Results omitted derived overtime percentage or completion mode");
  });
  await scenario("six-kinds-manual-assessment-and-fsrs",async page=>{
-  await page.locator("#g-file").setInputFiles({name:"six-kinds.json",mimeType:"application/json",
-   buffer:Buffer.from(JSON.stringify(sixKinds))});
-  await chooseModernPaper(page,sixKinds.paper.id);
+  await importModernPaper(page,sixKinds,"six-kinds.json");
   const importedPreflight=await page.locator("#g-preflight").innerText();
   check(importedPreflight.includes("10.00")&&
     importedPreflight.includes("manual-response")&&
@@ -241,7 +333,7 @@ export async function statusPalette(){
  * kinds and built-in CGL, including draft transitions, reload and dark mode.
  */
 const {openHarness,route,check,assertNoOverflow}=await import("../../browser/fixtures.mjs");
-const {chooseModernPaper}=await import("../../paper-select.mjs");
+const {chooseModernPaper,findModernPaper,importModernPaper}=await import("../../paper-select.mjs");
 const {pkg}=await import("../../../tests/fixtures/six-kinds.mjs");
 const engine=process.argv[2]??"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
@@ -288,9 +380,7 @@ async function flagAndCheck(index){
  return status(index,false);
 }
 try{
- await page.locator("#g-file").setInputFiles({name:"six-kinds.json",mimeType:"application/json",
-  buffer:Buffer.from(JSON.stringify(pkg))});
- await chooseModernPaper(page,pkg.paper.id);
+ await importModernPaper(page,pkg,"six-kinds.json");
  await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
  const pending=await flagAndCheck(0);
  await page.locator('input[data-choice]').first().check();
@@ -348,8 +438,7 @@ try{
  await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
  await page.setViewportSize({width:1100,height:790});
  await page.evaluate(()=>document.documentElement.style.setProperty("--type-scale","1"));
- await page.locator("#g-family").selectOption("builtin:ssc-cgl");
- const cgl=await page.locator("#g-papers option").first().getAttribute("value");
+ const cgl=await findModernPaper(page,"reviewed",o=>o.value.includes("cgl-"));
  check(Boolean(cgl),engine+" no source/reviewed CGL paper to verify shared renderer");
  await chooseModernPaper(page,cgl);
  await page.locator('[data-mode="single"]').click();

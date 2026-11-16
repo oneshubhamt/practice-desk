@@ -8,7 +8,7 @@ export type ShortcutContext={readonly key:string;readonly alt:boolean;readonly r
  readonly blocked:boolean;readonly allowFlagging:boolean};
 export type ShortcutCommand=
  | {readonly kind:"navigate";readonly delta:-1|1}
- | {readonly kind:"answer";readonly index:0|1|2|3}
+ | {readonly kind:"answer";readonly index:number}
  | {readonly kind:"flag"}|{readonly kind:"fullscreen"};
 export type ShortcutBindings={
  readonly previous:string;readonly next:string;
@@ -69,7 +69,7 @@ export const shortcutKeyLabel=(key:string):string=>key==="arrowleft"?"←":
 export function examShortcutHelp(bindings:ShortcutBindings=readShortcutBindings()):string{
  const b=bindings;
  return "Answer "+[b.answerA,b.answerB,b.answerC,b.answerD].map(shortcutKeyLabel).join("/")+
-   " for options A–D; "+shortcutKeyLabel(b.previous)+"/"+shortcutKeyLabel(b.next)+
+   " for options A–D; options E–Z use their letter when present; "+shortcutKeyLabel(b.previous)+"/"+shortcutKeyLabel(b.next)+
    " previous/next (use Alt with navigation keys when a native radio is focused); "+
    shortcutKeyLabel(b.flag)+" marks for review even while paused; "+
    shortcutKeyLabel(b.fullscreen)+" toggles full screen. Typing, IME, Display and dialogs suspend shortcuts.";
@@ -88,5 +88,6 @@ export function resolveExamShortcut(c:ShortcutContext,bindings:ShortcutBindings=
  if(key===bindings.fullscreen)return {kind:"fullscreen"};
  if(key===bindings.flag)return c.allowFlagging?{kind:"flag"}:null;
  const i=[bindings.answerA,bindings.answerB,bindings.answerC,bindings.answerD].indexOf(key);
- return i>=0?{kind:"answer",index:i as 0|1|2|3}:null;
+ if(i>=0)return {kind:"answer",index:i};
+ return /^[e-z]$/.test(key)?{kind:"answer",index:key.charCodeAt(0)-97}:null;
 }

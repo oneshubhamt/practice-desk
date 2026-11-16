@@ -80,6 +80,8 @@ export interface NavigationPolicy {
 }
 
 export type PaperEdition = "source" | "reviewed" | "custom";
+/** Optional paper-authored practice affordances. Omitted means derive safe defaults from structure. */
+export type PaperPracticeMode = "strict" | "free" | "single";
 
 export interface PaperRevision {
   /** Immutable identity for a paper's exact structure and rules. */
@@ -98,6 +100,8 @@ export interface PaperRevision {
   readonly navigation: NavigationPolicy;
   /** Candidate-facing tools are explicit paper policy; never inferred from exam name. */
   readonly candidateTools?: CandidateTools;
+  /** Optional eligibility only; actual attempt mode remains user workspace state. */
+  readonly practiceModes?: readonly PaperPracticeMode[];
   readonly scoring: ScoringPolicy;
   readonly createdAt?: string;
 }

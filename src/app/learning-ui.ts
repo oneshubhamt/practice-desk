@@ -454,7 +454,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     '<div class="scroll-table"><table><thead><tr><th>Paper revision</th><th>Attempts</th><th>Accuracy sequence</th><th>Marks sequence</th></tr></thead><tbody>'+
      (cohorts.length?cohorts.map(g=>'<tr><td>'+esc(g.label)+'</td><td>'+g.count+'</td><td>'+
        g.points.map(p=>p.accuracy===null?"—":Math.round(p.accuracy*100)+"%").join(" → ")+
-       '</td><td>'+g.points.map(p=>p.marks.toFixed(1)).join(" → ")+'</td></tr>').join(""):
+       '</td><td>'+g.points.map(p=>p.marks.toFixed(g.decimals)).join(" → ")+'</td></tr>').join(""):
        '<tr><td colspan="4">Complete the same paper revision twice to see a valid comparison.</td></tr>')+
     '</tbody></table></div></section>';
   present(html,"main");

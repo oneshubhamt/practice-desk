@@ -1,40 +1,55 @@
-/** Test helper: choose a real paper through the user-visible edition filter.
- * Off-edition options must NOT be kept in the select just for old tests.
+/** Test helper: discover papers through user-visible family and edition controls.
+ * It deliberately knows no exam IDs, family IDs or paper-id prefixes.
  */
-async function selectCglFamily(page){
- await page.locator("#g-family").selectOption("builtin:ssc-cgl");
- await page.waitForFunction(()=>Boolean(
-  document.querySelector('[data-edition="source"]')&&
-  document.querySelector('[data-edition="reviewed"]')&&
-  document.querySelector("#g-papers option")
- ));
-}
-export async function chooseModernPaper(page,id){
- const available=()=>page.locator("#g-papers option").evaluateAll((opts,want)=>
-  opts.some(o=>o.value===want),id);
- if(!id.includes("cgl-")){
-  if(!await available())await page.waitForFunction(want=>
-   [...document.querySelectorAll("#g-papers option")].some(o=>o.value===want),id);
-  await page.locator("#g-papers").selectOption(id);
-  return;
- }
- if(!await available())await selectCglFamily(page);
- if(!await available()){
-  for(const edition of ["source","reviewed"]){
-   await page.getByRole("button",{name:new RegExp("^"+edition+"$","i")}).click();
-   if(await available())break;
+const offered=async(page,id)=>page.locator("#g-papers option").evaluateAll((opts,want)=>
+ opts.some(o=>o.value===want),id);
+const familyValues=async page=>page.locator("#g-family option").evaluateAll(opts=>
+ opts.map(o=>o.value).filter(Boolean));
+const editionValues=async page=>page.locator("[data-edition]").evaluateAll(nodes=>
+ [...new Set(nodes.map(node=>node.getAttribute("data-edition")).filter(Boolean))]);
+
+async function exposePaper(page,id){
+ if(await offered(page,id))return true;
+ for(const family of await familyValues(page)){
+  await page.locator("#g-family").selectOption(family);
+  if(await offered(page,id))return true;
+  for(const edition of await editionValues(page)){
+   const button=page.locator('[data-edition="'+edition+'"]');
+   if(await button.count())await button.click();
+   if(await offered(page,id))return true;
   }
  }
- if(!await available())throw Error("Paper not offered in either edition: "+id);
+ return false;
+}
+export async function chooseModernPaper(page,id){
+ if(!await exposePaper(page,id))throw Error("Paper not offered by any installed family/edition: "+id);
  await page.locator("#g-papers").selectOption(id);
 }
 export async function findModernPaper(page,edition,predicate){
- if(!(await page.getByRole("button",{name:new RegExp("^"+edition+"$","i")}).count()))
-  await selectCglFamily(page);
- await page.getByRole("button",{name:new RegExp("^"+edition+"$","i")}).click();
- const options=await page.locator("#g-papers option").evaluateAll(opts=>
-  opts.map(o=>({value:o.value,text:o.textContent??""})));
- const matching=options.find(o=>predicate(o));
- if(!matching)throw Error("No visible "+edition+" paper matches predicate");
- return matching.value;
+ for(const family of await familyValues(page)){
+  await page.locator("#g-family").selectOption(family);
+  const button=page.locator('[data-edition="'+edition+'"]');
+  if(!(await button.count()))continue;
+  await button.click();
+  const options=await page.locator("#g-papers option").evaluateAll(opts=>
+   opts.map(o=>({value:o.value,text:o.textContent??""})));
+  const matching=options.find(o=>predicate(o));
+  if(matching)return matching.value;
+ }
+ throw Error("No visible "+edition+" paper matches predicate in any installed family");
+}
+
+export async function choosePracticeMode(page,mode){
+ const button=page.locator('[data-mode="'+mode+'"]');
+ if(await button.count()!==1)throw Error("Practice mode not offered by selected paper: "+mode);
+ await button.click();
+ if(await button.getAttribute("aria-pressed")!=="true")
+  throw Error("Practice mode did not become active: "+mode);
+}
+export async function importModernPaper(page,pkg,name="imported-exam.json"){
+ await page.locator("#g-file").setInputFiles({name,mimeType:"application/json",
+  buffer:Buffer.from(JSON.stringify(pkg))});
+ await page.waitForFunction(id=>[...document.querySelectorAll("#g-papers option")]
+  .some(option=>option.value===id),pkg.paper.id);
+ await chooseModernPaper(page,pkg.paper.id);
 }

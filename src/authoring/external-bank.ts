@@ -4,7 +4,7 @@
  */
 import {validateExamImportBudget} from "../domain/exam-package.ts";
 import type {ExamPackage} from "../domain/exam-package.ts";
-import type {AuthoringDraft,AuthoringQuestion} from "./authoring-draft.ts";
+import type {AuthoringDraft,AuthoringQuestion,AuthoringMarkingRule} from "./authoring-draft.ts";
 import {validateAuthoringDraft} from "./authoring-draft.ts";
 import {inspectAuthoringPublication,publicationPlainText} from "./authoring-publisher.ts";
 import type {ImageAsset,QuestionKind,StimulusDefinition} from "../domain/question.ts";
@@ -108,8 +108,17 @@ const assetRefs=(doc:RichDocument):AssetId[]=>{
  }
  return [...ids] as AssetId[];
 };
-const four=(items:unknown,path:string,known:ReadonlySet<string>):RichDocument[]=>
- array(items,path,4,4).map((v,i)=>rich(v,path+"["+i+"]",known));
+const documents=(items:unknown,path:string,known:ReadonlySet<string>,min:number,max=26):RichDocument[]=>
+ array(items,path,max,min).map((v,i)=>rich(v,path+"["+i+"]",known));
+const markRule=(value:unknown,path:string):AuthoringMarkingRule=>{
+ const rule=object(value,path,["correctMarks","incorrectMarks","unansweredMarks"]);
+ const correctMarks=num(rule.correctMarks,path+".correctMarks",0,1000);
+ const incorrectMarks=num(rule.incorrectMarks,path+".incorrectMarks",-1000,0);
+ const unansweredMarks=num(rule.unansweredMarks,path+".unansweredMarks",-1000,1000);
+ if(unansweredMarks<incorrectMarks||unansweredMarks>correctMarks)
+  return err(path+".unansweredMarks","Blank marks must lie between incorrect and correct marks");
+ return {correctMarks,incorrectMarks,unansweredMarks};
+};
 function media(value:unknown):ImageAsset[]{
  const source=array(value??[],"media",100);
  const ids=new Set<string>();
@@ -187,7 +196,7 @@ function toAnswer(value:unknown,kind:QuestionKind,path:string):string{
 export function toAuthoringDraft(value:unknown):AuthoringDraft {
  validateExamImportBudget(value);
  const bank=object(value,"$",["format","version","bankId","examId","paperId",
-  "title","edition","revision","scoring","timing","navigation","tools","sections",
+  "title","edition","revision","scoring","timing","navigation","tools","practiceModes","sections",
   "stimuli","media","questions"]);
  if(bank.format!=="practice-desk-authoring"||bank.version!==1)
   err("$.format","Expected practice-desk-authoring version 1");
@@ -197,9 +206,29 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
  if(bank.edition!=="custom")
   err("$.edition","P57-A source files support custom only; source/reviewed authenticity awaits P57-B/C");
  const revision=num(bank.revision,"$.revision",1,1000000,true);
- const scoring=object(bank.scoring,"$.scoring",["correctMarks","incorrectMarks"]);
- const marksCorrect=num(scoring.correctMarks,"$.scoring.correctMarks",0.01,1000);
- const marksIncorrect=num(scoring.incorrectMarks,"$.scoring.incorrectMarks",-1000,0);
+ const scoring=object(bank.scoring,"$.scoring",["correctMarks","incorrectMarks","unansweredMarks","decimalPlaces","byQuestionKind"]);
+ const defaultRule=markRule({correctMarks:scoring.correctMarks,incorrectMarks:scoring.incorrectMarks,
+  unansweredMarks:scoring.unansweredMarks??0},"$.scoring");
+ const marksCorrect=defaultRule.correctMarks,marksIncorrect=defaultRule.incorrectMarks,
+  marksUnanswered=defaultRule.unansweredMarks;
+ const scoreDecimalPlaces=scoring.decimalPlaces===undefined?2:
+  num(scoring.decimalPlaces,"$.scoring.decimalPlaces",0,6,true);
+ let kindScoring:AuthoringDraft["kindScoring"];
+ if(scoring.byQuestionKind!==undefined){
+  const by=object(scoring.byQuestionKind,"$.scoring.byQuestionKind",QUESTION_KINDS);
+  const parsed:Partial<Record<QuestionKind,AuthoringMarkingRule>>={};
+  for(const [kind,value] of Object.entries(by))parsed[kind as QuestionKind]=markRule(value,"$.scoring.byQuestionKind."+kind);
+  kindScoring=parsed;
+ }
+ let practiceModes:AuthoringDraft["practiceModes"];
+ if(bank.practiceModes!==undefined){
+  const values=array(bank.practiceModes,"$.practiceModes",3,1).map((value,i)=>{
+   if(!["strict","free","single"].includes(String(value)))return err("$.practiceModes["+i+"]","Choose strict, free or single");
+   return value as "strict"|"free"|"single";
+  });
+  if(new Set(values).size!==values.length)return err("$.practiceModes","Duplicate practice mode");
+  practiceModes=values;
+ }
  const timing=object(bank.timing,"$.timing",
   ["kind","minutes","pausePolicy","sectionTransition","allowEarlySubmit"]);
  if(!["untimed","whole-paper","sectional"].includes(String(timing.kind)))
@@ -244,11 +273,11 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
    wordCountPolicy=tools.wordCount as AuthoringDraft["wordCountPolicy"];
   }
  }
- const sections=new Map<string,{title:string;minutes:number}>();
+ const sections=new Map<string,{title:string;minutes:number;scoringOverride?:AuthoringMarkingRule}>();
  const titles=new Set<string>();
  array(bank.sections,"$.sections",40,1).forEach((v,i)=>{
   const path="$.sections["+i+"]";
-  const row=object(v,path,["id","title","minutes"]);
+  const row=object(v,path,["id","title","minutes","scoringOverride"]);
   const id=key(row.id,path+".id");
   if(sections.has(id))err(path+".id","Duplicate physical section");
   const label=text(row.title,path+".title",100).trim();
@@ -259,7 +288,8 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
   if(timing.kind!=="sectional"&&row.minutes!==undefined)
    err(path+".minutes","Section minutes require sectional timing");
   const minutes=row.minutes===undefined?0:num(row.minutes,path+".minutes",0,600,true);
-  sections.set(id,{title:label,minutes});
+  const scoringOverride=row.scoringOverride===undefined?undefined:markRule(row.scoringOverride,path+".scoringOverride");
+  sections.set(id,{title:label,minutes,...(scoringOverride?{scoringOverride}:{})});
  });
  const assets=media(bank.media);
  const known=new Set(assets.map(a=>a.id as string));
@@ -287,36 +317,32 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
   const explanation=rich(q.explanation??"",path+".explanation",known);
   const passage=empty();
   const options=questionKind==="single-choice"||questionKind==="multiple-select"?
-    four(q.options,path+".options",known):Array.from({length:4},empty);
+    documents(q.options,path+".options",known,2):Array.from({length:4},empty);
   if(!["single-choice","multiple-select"].includes(questionKind)&&q.options!==undefined)
    err(path+".options","Options belong to choice questions only");
-  const leftItems=questionKind==="matching"?four(q.leftItems,path+".leftItems",known):
+  const leftItems=questionKind==="matching"?documents(q.leftItems,path+".leftItems",known,1):
    Array.from({length:4},empty);
-  const rightItems=questionKind==="matching"?four(q.rightItems,path+".rightItems",known):
+  const rightItems=questionKind==="matching"?documents(q.rightItems,path+".rightItems",known,1):
    Array.from({length:4},empty);
   if(questionKind!=="matching"&&(q.leftItems!==undefined||q.rightItems!==undefined))
    err(path+".leftItems","Matching items belong to matching questions only");
   const answer=toAnswer(q.answer,questionKind,path+".answer");
   let scoringOverride:AuthoringQuestion["scoringOverride"];
   if(q.scoringOverride!==undefined){
-   const rule=object(q.scoringOverride,path+".scoringOverride",
-    ["correctMarks","incorrectMarks","unansweredMarks"]);
-   scoringOverride={
-    correctMarks:num(rule.correctMarks,path+".scoringOverride.correctMarks",0.01,1000),
-    incorrectMarks:num(rule.incorrectMarks,path+".scoringOverride.incorrectMarks",-1000,0),
-    unansweredMarks:num(rule.unansweredMarks,path+".scoringOverride.unansweredMarks",0,1000)};
+   scoringOverride=markRule(q.scoringOverride,path+".scoringOverride");
   }
   const tolerance=q.tolerance===undefined?0:num(q.tolerance,path+".tolerance",0,1000000);
   if(questionKind!=="numeric-entry"&&q.tolerance!==undefined)
    err(path+".tolerance","Tolerance applies only to numeric-entry questions");
+  const choiceCount=Math.max(1,options.length);
   const minSelections=q.minSelections===undefined?1:
-   num(q.minSelections,path+".minSelections",1,4,true);
-  const maxSelections=q.maxSelections===undefined?4:
-   num(q.maxSelections,path+".maxSelections",1,4,true);
+   num(q.minSelections,path+".minSelections",1,choiceCount,true);
+  const maxSelections=q.maxSelections===undefined?choiceCount:
+   num(q.maxSelections,path+".maxSelections",1,choiceCount,true);
   if(minSelections>maxSelections)err(path+".minSelections","Minimum exceeds maximum");
   if(questionKind!=="multiple-select"&&(q.minSelections!==undefined||q.maxSelections!==undefined))
    err(path+".minSelections","Selection limits apply only to multiple-select");
-  const wordLimit=q.wordLimit===undefined?300:
+  const wordLimit=q.wordLimit===undefined?undefined:
    num(q.wordLimit,path+".wordLimit",1,10000,true);
   if(questionKind!=="free-response"&&q.wordLimit!==undefined)
    err(path+".wordLimit","Word limits apply only to written responses");
@@ -359,6 +385,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
     return clean as NonNullable<NonNullable<AuthoringQuestion["provenance"]>["sources"]>[number];
    });
   const qa=object(q.qa,path+".qa",["status","applicability"]);
+  let applicability:NonNullable<NonNullable<AuthoringQuestion["qa"]>["applicability"]>|undefined;
   // The author can declare applicability before review. This is a separate,
   // source-hash-bound assertion, never a fact-verified certification.
   if(qa.applicability!==undefined){
@@ -377,6 +404,9 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
    }
    if((flags.legal||flags.timeSensitive)&&!flags.asOfDate)
     err(path+".qa.applicability.asOfDate","Applicable source law/data must declare an as-of date");
+   applicability={mathematical:flags.mathematical as boolean,legal:flags.legal as boolean,
+    timeSensitive:flags.timeSensitive as boolean,
+    ...(flags.asOfDate?{asOfDate:String(flags.asOfDate)}:{})};
   }
   if(qa.status!=="unchecked"&&qa.status!=="needs-review")
    err(path+".qa.status","Only unchecked or needs-review are accepted; no self-certification");
@@ -394,7 +424,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
   return {id,section:section!.title,subject,syllabusHeadingId,
    topic,subtopic,difficulty:difficulty as NonNullable<AuthoringQuestion["difficulty"]>,
    minSelections,maxSelections,
-   ...(questionKind==="free-response"?{wordLimit}:{}),
+   ...(questionKind==="free-response"&&wordLimit!==undefined?{wordLimit}:{}),
    ...(scoringOverride?{scoringOverride}:{}),
    partialCreditEach,partialPenaltyEach,
    kind:questionKind,prompt,passage,options,leftItems,rightItems,explanation,
@@ -404,7 +434,8 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
    provenance:{kind:provenance.kind as NonNullable<AuthoringQuestion["provenance"]>["kind"],
      ...(sourceNote===undefined?{}:{sourceNote}),
      ...(examYear===undefined?{}:{examYear}),...(sources===undefined?{}:{sources})},
-   qa:{status:qa.status as NonNullable<AuthoringQuestion["qa"]>["status"]}};
+   qa:{status:qa.status as NonNullable<AuthoringQuestion["qa"]>["status"],
+    ...(applicability?{applicability}:{})}};
  });
  const draft:AuthoringDraft={schema:1,id:"agent:"+bankId,ingestionMode:"external-source",examId,paperId,title,
   edition:"custom",revision,durationMinutes,
@@ -413,9 +444,12 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
   questionNavigation:questionNavigation as AuthoringDraft["questionNavigation"],
   sectionNavigation:sectionNavigation as AuthoringDraft["sectionNavigation"],
   sectionTransition:sectionTransition as AuthoringDraft["sectionTransition"],
-  allowEarlySubmit,allowReview,...(calculatorTool?{calculatorTool}:{}),wordCountPolicy,marksCorrect,marksIncorrect,
+  allowEarlySubmit,allowReview,...(calculatorTool?{calculatorTool}:{}),wordCountPolicy,
+  ...(practiceModes?{practiceModes}:{}),marksCorrect,marksIncorrect,marksUnanswered,scoreDecimalPlaces,
+  ...(kindScoring&&Object.keys(kindScoring).length?{kindScoring}:{}),
   updatedAt:"1970-01-01T00:00:00.000Z",assets,
-  sections:[...sections.values()].map(section=>({name:section.title,minutes:section.minutes})),
+  sections:[...sections.values()].map(section=>({name:section.title,minutes:section.minutes,
+   ...(section.scoringOverride?{scoringOverride:section.scoringOverride}:{})})),
   stimuli,questions};
  try{return validateAuthoringDraft(draft);}
  catch(error){return err("$",error instanceof Error?error.message:"Invalid canonical authoring draft");}

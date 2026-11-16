@@ -99,7 +99,7 @@ test("written Results derive word/time/overtime evidence and keep self-assessmen
  assert.match(html,/Written answers/);
  assert.match(html,/41 \/ 40 words · \+1 \(2\.5% over\)/);
  assert.match(html,/\+00:01/);
- assert.match(html,/1\.5 \/ 2/);
+ assert.match(html,/1\.50 \/ 2\.00/,"self-assessment must follow frozen two-decimal mark policy");
  assert.match(html,/Good coverage; tighten conclusion/);
  assert.doesNotMatch(html,/typing speed|readability|semantic score/i);
  const timing=timingLedgerHTML(a,true);

@@ -281,9 +281,10 @@ export function stagedToAuthoringDraft(state:StagingWorkspace):AuthoringDraft{
      acceptedWarningCodes:[] as string[]
     }
    }:undefined;
-   questions.push({...remapMediaRefs(q,mediaIds),id:idStable,
-    ...(stimulusRef?{stimulusRef}:{}),
-    ...(attributed?{qa:attributed}:{})});
+   const mapped={...remapMediaRefs(q,mediaIds),id:idStable,
+    ...(stimulusRef?{stimulusRef}:{})};
+   questions.push({...mapped,
+    ...(attributed?{qa:{...mapped.qa,...attributed}}:{})});
   }
   for(const s of draft.stimuli??[]){
    if(!chosen.some(q=>q.stimulusRef===s.id))continue;

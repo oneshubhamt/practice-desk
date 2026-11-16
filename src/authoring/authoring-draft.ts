@@ -3,6 +3,7 @@ import {STORAGE_TOPOLOGY} from "../storage-topology.ts";
  * Never reuse a saved draft as an executable paper, attempt, answer key or score.
  */
 import type {QuestionKind,ImageAsset,StimulusDefinition} from "../domain/question.ts";
+import type {PaperPracticeMode} from "../domain/exam.ts";
 import {QUESTION_KINDS} from "../domain/question.ts";
 import type {RichDocument} from "../domain/rich-document.ts";
 import {plainRichDocument,validateRichDocument} from "../domain/rich-document.ts";
@@ -10,10 +11,13 @@ import {validateMediaInventory} from "../domain/media.ts";
 import {attributedTopicPath,validateTopicPath} from "../learning/syllabus-taxonomy.ts";
 import {WORD_COUNT_POLICIES,type WordCountPolicy} from "../domain/word-count.ts";
 
+export type AuthoringMarkingRule={readonly correctMarks:number;readonly incorrectMarks:number;readonly unansweredMarks:number};
 export type AuthoringDraftSection={
  readonly name:string;
  /** Single canonical owner of this physical section's timer budget. */
  readonly minutes:number;
+ /** Optional section-wide override; omitted inherits paper/question-kind policy. */
+ readonly scoringOverride?:AuthoringMarkingRule;
 };
 export type AuthoringQuestion={
  readonly id:string;
@@ -35,8 +39,7 @@ export type AuthoringQuestion={
  /** Advisory limit for written responses; never a save gate. */
  readonly wordLimit?:number;
  /** Optional question-specific marking rule; also sets the manual grade ceiling. */
- readonly scoringOverride?:{readonly correctMarks:number;readonly incorrectMarks:number;
-  readonly unansweredMarks:number};
+ readonly scoringOverride?:AuthoringMarkingRule;
  readonly kind:QuestionKind;
  readonly prompt:RichDocument;
  readonly passage:RichDocument;
@@ -61,6 +64,9 @@ export type AuthoringQuestion={
   readonly publicationDate?:string;readonly asOfDate?:string;
   readonly stance?:"supports"|"disputes"}[];};
  readonly qa?:{readonly status:"unchecked"|"needs-review";
+  /** Author-declared applicability guides offline QA; it is never factual certification. */
+  readonly applicability?:{readonly mathematical:boolean;readonly legal:boolean;
+   readonly timeSensitive:boolean;readonly asOfDate?:string};
   /** Author-entered, unverified review/acceptance, never source authentication. */
   readonly review?:{readonly reviewer:string;readonly reviewedAt:string;readonly note:string;
    readonly acceptedWarningCodes:readonly string[]};};
@@ -85,8 +91,13 @@ export type AuthoringDraft={
  readonly allowReview:boolean;
  readonly calculatorTool?:"basic-v1";
  readonly wordCountPolicy:WordCountPolicy;
+ /** Optional paper-authored mode eligibility; omitted derives from physical section structure. */
+ readonly practiceModes?:readonly PaperPracticeMode[];
  readonly marksCorrect:number;
  readonly marksIncorrect:number;
+ readonly marksUnanswered:number;
+ readonly scoreDecimalPlaces:number;
+ readonly kindScoring?:Partial<Record<QuestionKind,AuthoringMarkingRule>>;
  readonly updatedAt:string;
  readonly assets:readonly ImageAsset[];
  /** Physical exam sections. This is the only draft owner of section timer budgets. */
@@ -110,7 +121,6 @@ export function newAuthoringQuestion(kind:QuestionKind="single-choice"):Authorin
   topic:"",subtopic:"",difficulty:"",
   minSelections:1,maxSelections:4,
   partialCreditEach:0,partialPenaltyEach:0,
-  ...(kind==="free-response"?{wordLimit:300}:{}),
   kind,prompt:fresh(),passage:fresh(),
   options:Array.from({length:4},fresh),leftItems:Array.from({length:4},fresh),
   rightItems:Array.from({length:4},fresh),explanation:fresh(),answer:"",tolerance:0,source:""};
@@ -118,12 +128,12 @@ export function newAuthoringQuestion(kind:QuestionKind="single-choice"):Authorin
 export function newAuthoringDraft():AuthoringDraft{
  const now=new Date().toISOString();
  return {schema:1,id:id(),ingestionMode:"manual",examId:"new-exam",paperId:"new-paper",title:"Untitled question bank",
-  edition:"custom",revision:1,durationMinutes:120,timingKind:"whole-paper",
+  edition:"custom",revision:1,durationMinutes:0,timingKind:"untimed",
   pausePolicy:"allowed",questionNavigation:"free",sectionNavigation:"free",
   sectionTransition:"manual",allowEarlySubmit:true,allowReview:true,
   wordCountPolicy:"auto",
-  marksCorrect:2.5,marksIncorrect:-0.8333333333333334,
-  updatedAt:now,assets:[],sections:[{name:"General",minutes:15}],questions:[newAuthoringQuestion()]};
+  marksCorrect:1,marksIncorrect:0,marksUnanswered:0,scoreDecimalPlaces:2,
+  updatedAt:now,assets:[],sections:[{name:"General",minutes:0}],questions:[newAuthoringQuestion()]};
 }
 const rec=(x:unknown,label:string,keys:readonly string[]):Record<string,unknown>=>{
  if(!x||typeof x!=="object"||Array.isArray(x)||Object.getPrototypeOf(x)!==Object.prototype)
@@ -147,22 +157,32 @@ const list=(value:unknown,max:number,label:string):unknown[]=>{
  if(!Array.isArray(value)||value.length>max)throw Error("Invalid "+label);
  return value;
 };
+const markingRule=(value:unknown,label:string):AuthoringMarkingRule=>{
+ const rule=rec(value,label,["correctMarks","incorrectMarks","unansweredMarks"]);
+ const correctMarks=num(rule.correctMarks,label+" correct marks",0,1000);
+ const incorrectMarks=num(rule.incorrectMarks,label+" incorrect marks",-1000,0);
+ const unansweredMarks=num(rule.unansweredMarks,label+" unanswered marks",-1000,1000);
+ if(unansweredMarks<incorrectMarks||unansweredMarks>correctMarks)
+  throw Error("Invalid "+label+" unanswered marks");
+ return {correctMarks,incorrectMarks,unansweredMarks};
+};
 export function validateAuthoringDraft(value:unknown):AuthoringDraft{
  const p=rec(value,"authoring draft",["schema","id","ingestionMode","examId","paperId","title","edition",
   "revision","durationMinutes","timingKind","pausePolicy","questionNavigation",
-  "sectionNavigation","sectionTransition","allowEarlySubmit","allowReview","calculatorTool","wordCountPolicy",
-  "marksCorrect","marksIncorrect","updatedAt","assets","sections","stimuli","questions"]);
+  "sectionNavigation","sectionTransition","allowEarlySubmit","allowReview","calculatorTool","wordCountPolicy","practiceModes",
+  "marksCorrect","marksIncorrect","marksUnanswered","scoreDecimalPlaces","kindScoring","updatedAt","assets","sections","stimuli","questions"]);
  if(p.schema!==1)throw Error("Unsupported draft schema");
  if(p.ingestionMode!=="manual"&&p.ingestionMode!=="external-source")
   throw Error("Invalid authoring ingestion mode");
  const assets=structuredClone(list(p.assets,100,"images") as ImageAsset[]);
  const sections=list(p.sections,40,"sections").map((item,i)=>{
-  const s=rec(item,"section "+i,["name","minutes"]);
+  const s=rec(item,"section "+i,["name","minutes","scoringOverride"]);
   const name=text(s.name,"section name",100,true).trim();
   validateTopicPath([name]);
   const minutes=num(s.minutes,"section minutes",0,600);
   if(!Number.isSafeInteger(minutes))throw Error("Section minutes must be whole numbers");
-  return {name,minutes};
+  const scoringOverride=s.scoringOverride===undefined?undefined:markingRule(s.scoringOverride,"section scoring override");
+  return {name,minutes,...(scoringOverride?{scoringOverride}:{})};
  });
  if(!sections.length)throw Error("A draft needs at least one exam section");
  if(new Set(sections.map(s=>s.name)).size!==sections.length)throw Error("Duplicate exam section");
@@ -235,9 +255,27 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   }
   let qa:AuthoringQuestion["qa"];
   if(q.qa!==undefined){
-   const checking=rec(q.qa,"QA metadata",["status","review"]);
+   const checking=rec(q.qa,"QA metadata",["status","applicability","review"]);
    if(checking.status!=="unchecked"&&checking.status!=="needs-review")
     throw Error("Unsupported unverified QA status");
+   let applicability:NonNullable<NonNullable<AuthoringQuestion["qa"]>["applicability"]>|undefined;
+   if(checking.applicability!==undefined){
+    const value=rec(checking.applicability,"QA applicability",
+     ["mathematical","legal","timeSensitive","asOfDate"]);
+    for(const field of ["mathematical","legal","timeSensitive"] as const)
+     if(typeof value[field]!=="boolean")throw Error("QA applicability flags must be explicit booleans");
+    let asOfDate:string|undefined;
+    if(value.asOfDate!==undefined){
+     asOfDate=text(value.asOfDate,"QA applicability as-of date",10,true);
+     if(!/^\d{4}-\d{2}-\d{2}$/.test(asOfDate)||Number.isNaN(Date.parse(asOfDate+"T00:00:00.000Z"))||
+        new Date(asOfDate+"T00:00:00.000Z").toISOString().slice(0,10)!==asOfDate)
+      throw Error("Invalid QA applicability as-of date");
+    }
+    if((value.legal||value.timeSensitive)&&!asOfDate)
+     throw Error("Legal or time-sensitive applicability requires an as-of date");
+    applicability={mathematical:value.mathematical as boolean,legal:value.legal as boolean,
+     timeSensitive:value.timeSensitive as boolean,...(asOfDate?{asOfDate}:{})};
+   }
    let review:NonNullable<NonNullable<AuthoringQuestion["qa"]>["review"]>|undefined;
    if(checking.review!==undefined){
     const value=rec(checking.review,"authored review",["reviewer","reviewedAt","note","acceptedWarningCodes"]);
@@ -254,15 +292,17 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
     review={reviewer:text(value.reviewer,"reviewer claim",120,true),
      reviewedAt,note:text(value.note,"review note",500,true),acceptedWarningCodes:codes};
    }
-   qa={status:checking.status,...(review?{review}:{})};
+   qa={status:checking.status,...(applicability?{applicability}:{}),...(review?{review}:{})};
   }
   const kind=q.kind;
   if(typeof kind!=="string"||!QUESTION_KINDS.includes(kind as QuestionKind))
    throw Error("Unsupported question kind");
-  const qOpts=list(q.options,4,"options"),left=list(q.leftItems,4,"matching left"),
-    right=list(q.rightItems,4,"matching right");
-  if(qOpts.length!==4||left.length!==4||right.length!==4)
-   throw Error("Draft has invalid option/item count");
+  const qOpts=list(q.options,26,"options"),left=list(q.leftItems,26,"matching left"),
+    right=list(q.rightItems,26,"matching right");
+  if((kind==="single-choice"||kind==="multiple-select")&&qOpts.length<2)
+   throw Error("Choice questions require 2–26 options");
+  if(kind==="matching"&&(!left.length||!right.length))
+   throw Error("Matching questions require 1–26 items on each side");
   const section=text(q.section,"section",100,true).trim();
   if(!sectionNames.has(section))throw Error("Question references unknown exam section");
   const stimulusRef=q.stimulusRef===undefined?undefined:text(q.stimulusRef,"stimulus reference",128,true);
@@ -278,21 +318,18 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   const difficulty=q.difficulty??"";
   if(!["","easy","medium","hard"].includes(String(difficulty)))
     throw Error("Invalid authored difficulty");
-  const minSelections=num(q.minSelections??1,"minimum selections",1,4);
-  const maxSelections=num(q.maxSelections??4,"maximum selections",1,4);
+  const optionCount=Math.max(1,qOpts.length);
+  const minSelections=num(q.minSelections??1,"minimum selections",1,optionCount);
+  const maxSelections=num(q.maxSelections??optionCount,"maximum selections",1,optionCount);
   if(!Number.isInteger(minSelections)||!Number.isInteger(maxSelections)||
      minSelections>maxSelections)throw Error("Invalid selection bounds");
-  const wordLimit=kind==="free-response"?
-    num(q.wordLimit??300,"advisory word limit",1,10000):undefined;
+  if(kind!=="free-response"&&q.wordLimit!==undefined)throw Error("Word limits apply only to written responses");
+  const wordLimit=q.wordLimit===undefined?undefined:num(q.wordLimit,"advisory word limit",1,10000);
   if(wordLimit!==undefined&&!Number.isSafeInteger(wordLimit))
     throw Error("Advisory word limit must be a whole number");
   let scoringOverride:AuthoringQuestion["scoringOverride"];
   if(q.scoringOverride!==undefined){
-   const rule=rec(q.scoringOverride,"question scoring override",
-    ["correctMarks","incorrectMarks","unansweredMarks"]);
-   scoringOverride={correctMarks:num(rule.correctMarks,"question correct marks",0.01,1000),
-    incorrectMarks:num(rule.incorrectMarks,"question incorrect marks",-1000,0),
-    unansweredMarks:num(rule.unansweredMarks,"question blank marks",0,1000)};
+   scoringOverride=markingRule(q.scoringOverride,"question scoring override");
   }
   return {id:questionId,section,subject,syllabusHeadingId,
    topic,subtopic,difficulty:difficulty as ""|"easy"|"medium"|"hard",
@@ -328,13 +365,37 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
  const wordCountPolicy=p.wordCountPolicy;
  if(!WORD_COUNT_POLICIES.includes(wordCountPolicy as WordCountPolicy))
    throw Error("Invalid authored word-count policy");
+ let practiceModes:PaperPracticeMode[]|undefined;
+ if(p.practiceModes!==undefined){
+  const values=list(p.practiceModes,3,"practice modes");
+  if(!values.length)throw Error("At least one practice mode is required when explicitly configured");
+  practiceModes=values.map((value,i)=>{
+   if(!["strict","free","single"].includes(String(value)))throw Error("Invalid practice mode "+i);
+   return value as PaperPracticeMode;
+  });
+  if(new Set(practiceModes).size!==practiceModes.length)throw Error("Duplicate practice mode");
+  if(practiceModes.includes("single")&&sections.length<2)throw Error("Section practice requires multiple physical sections");
+ }
+ const defaultRule=markingRule({correctMarks:p.marksCorrect,incorrectMarks:p.marksIncorrect,
+  unansweredMarks:p.marksUnanswered},"paper scoring");
+ const durationMinutes=num(p.durationMinutes,"duration",0,600);
+ if(!Number.isSafeInteger(durationMinutes))throw Error("Duration must be a whole number of minutes");
+ const scoreDecimalPlaces=num(p.scoreDecimalPlaces,"score decimal places",0,6);
+ if(!Number.isSafeInteger(scoreDecimalPlaces))throw Error("Score decimal places must be a whole number");
+ let kindScoring:AuthoringDraft["kindScoring"];
+ if(p.kindScoring!==undefined){
+  const raw=rec(p.kindScoring,"question-kind scoring",QUESTION_KINDS);
+  const parsed:Partial<Record<QuestionKind,AuthoringMarkingRule>>={};
+  for(const [kind,value] of Object.entries(raw))parsed[kind as QuestionKind]=markingRule(value,"question-kind scoring "+kind);
+  kindScoring=parsed;
+ }
  const draft:AuthoringDraft={
   schema:1,id:text(p.id,"draft ID",128,true),
   ingestionMode:p.ingestionMode as "manual"|"external-source",
   examId:text(p.examId,"exam ID",80,true),
   paperId:text(p.paperId,"paper ID",80,true),title:text(p.title,"paper title",180,true),
   edition,revision:num(p.revision,"revision",1,1000000),
-  durationMinutes:num(p.durationMinutes,"duration",0,600),
+  durationMinutes,
   timingKind:timingKind as AuthoringDraft["timingKind"],
   pausePolicy:pausePolicy as AuthoringDraft["pausePolicy"],
   questionNavigation:questionNavigation as AuthoringDraft["questionNavigation"],
@@ -343,8 +404,10 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   allowEarlySubmit:p.allowEarlySubmit as boolean,allowReview:p.allowReview as boolean,
   ...(calculatorTool?{calculatorTool:"basic-v1" as const}:{}),
   wordCountPolicy:wordCountPolicy as WordCountPolicy,
-  marksCorrect:num(p.marksCorrect,"positive marks",0.01,1000),
-  marksIncorrect:num(p.marksIncorrect,"negative marks",-1000,0),
+  ...(practiceModes?{practiceModes}:{}),
+  marksCorrect:defaultRule.correctMarks,marksIncorrect:defaultRule.incorrectMarks,
+  marksUnanswered:defaultRule.unansweredMarks,scoreDecimalPlaces,
+  ...(kindScoring&&Object.keys(kindScoring).length?{kindScoring}:{}),
   updatedAt:text(p.updatedAt,"updated time",100,true),assets,sections,
   ...(stimuli.length?{stimuli}:{}),questions:verified
  };

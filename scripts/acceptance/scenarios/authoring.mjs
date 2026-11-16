@@ -26,6 +26,11 @@ try{
   "Catalog-preinstalled PFRDA family is missing from Library");
  await page.locator("#g-author-open").click();
  await page.locator("#pd-author-editor wg-content").waitFor({state:"visible"});
+ check(await page.locator("#pd-author-health").isVisible(),"Derived authoring health summary missing");
+ check(await page.locator("#pd-author-fix-next").isEnabled(),"Invalid draft did not expose Fix next");
+ check(await page.locator(".pd-author-question-chips").count()===1,"Current-question QA chips missing");
+ check((await page.locator("#pd-author-health").innerText()).includes("Draft health"),
+  "Authoring health summary did not identify itself");
  check(await page.locator("#pd-author-publish").isEnabled(),"Publish entrypoint absent");
  await page.locator("#pd-author-publish").click();
  check((await page.locator("#pd-author-validation").innerText()).includes("Fix"),
@@ -33,12 +38,15 @@ try{
  check(!(await records(page)).some(x=>x.recordType==="generic-package"&&
   x.bundle?.paper?.paperId==="authored:cat-practice:local-math-quiz"),
   "Blank authoring draft escaped validation");
- await page.locator(".pd-author-paper-settings summary").click();
+ await page.locator(".pd-author-paper-settings > summary").click();
  await page.locator("#pd-author-title").fill("Authored mathematics and CAT practice");
  await page.locator("#pd-author-exam").fill("cat-practice");
  await page.locator("#pd-author-paper").fill("local-math-quiz");
+ await page.locator("#pd-author-timing-kind").selectOption("whole-paper");
+ await page.locator(".pd-author-paper-settings > summary").click();
  await page.locator("#pd-author-duration").fill("20");
- await page.locator(".pd-author-paper-settings summary").click();
+ await page.locator("#pd-author-correct").fill("2.5");
+ await page.locator(".pd-author-paper-settings > summary").click();
  await page.locator("#pd-author-answer").fill("B");
  await page.locator("#pd-author-answer").blur();
  await fillField("prompt","What is the value of x when x divided by 2 equals 2?");
@@ -46,8 +54,15 @@ try{
  await page.locator("#pd-author-math-alt").fill("x divided by 2");
  check(await page.locator("#pd-author-math-live .katex-mathml").count()===1,"Live authored maths missing");
  await page.locator("#pd-author-math-insert").click();
- for(const [letter,text] of [["A","2"],["B","4"],["C","6"],["D","8"]])await fillField(letter,text);
+ for(const [field,text] of [["O1","2"],["O2","4"],["O3","6"],["O4","8"]])await fillField(field,text);
  await fillField("explanation","WORKED-SOLUTION-SECRET. Multiply both sides by 2.");
+ // A kind transition must not strand hidden component-scoring metadata.
+ await page.locator("#pd-author-kind").selectOption("multiple-select");
+ await page.locator("#pd-author-partial-credit").fill("0.5");
+ await page.locator("#pd-author-partial-credit").blur();
+ await page.locator("#pd-author-kind").selectOption("single-choice");
+ check(await page.locator("#pd-author-partial-credit").count()===0,
+  "Changing to a non-component kind left obsolete partial-scoring controls/state visible");
  await page.locator("#pd-author-field").selectOption("prompt");
  await page.locator("#pd-author-validate").click();
  check((await page.locator("#pd-author-validation").innerText()).includes("Ready to publish"),
@@ -114,12 +129,14 @@ try{
  await page.locator("#g-author-open").click();
  await page.locator("#pd-author-new").click();
  await page.locator("#pd-author-editor wg-content").waitFor({state:"visible"});
- await page.locator(".pd-author-paper-settings summary").click();
+ await page.locator(".pd-author-paper-settings > summary").click();
  await page.locator("#pd-author-title").fill("Twenty mark written practice");
  await page.locator("#pd-author-exam").fill("manual-mark-practice");
  await page.locator("#pd-author-paper").fill("written-20");
+ await page.locator("#pd-author-timing-kind").selectOption("whole-paper");
+ await page.locator(".pd-author-paper-settings > summary").click();
  await page.locator("#pd-author-duration").fill("10");
- await page.locator(".pd-author-paper-settings summary").click();
+ await page.locator(".pd-author-paper-settings > summary").click();
  await page.locator("#pd-author-kind").selectOption("free-response");
  await page.locator("#pd-author-editor wg-content").waitFor({state:"visible"});
  await page.locator("#pd-author-answer").fill("");
@@ -131,8 +148,13 @@ try{
  await page.locator("#pd-author-mark-correctMarks").fill("20");
  await page.locator("#pd-author-mark-correctMarks").blur();
  await page.locator("#pd-author-validate").click();
- check((await page.locator("#pd-author-validation").innerText()).includes("Ready to publish"),
+ const writtenValidationBox=page.locator("#pd-author-validation");
+ check((await writtenValidationBox.innerText()).includes("Ready to publish"),
   "Valid twenty-mark written question did not pass authoring validation");
+ await writtenValidationBox.locator("details > summary").click();
+ const writtenValidation=await writtenValidationBox.innerText();
+ check(writtenValidation.includes("automated correct-answer ceiling 0 marks"),
+  "Authoring dry-run did not use the canonical automated score ceiling for manual written grading");
  await page.locator("#pd-author-confirm").check();
  await page.locator("#pd-author-publish").click();
  const writtenId="authored:manual-mark-practice:written-20:r1:custom";
@@ -317,6 +339,9 @@ try{
  // P57-C: a second, overlapping APFC revision arrives in two files.
  // The bad arithmetic key must be corrected in Wordgard before publication.
  const second=structuredClone(apfc);second.revision=2;second.questions[2].answer="B";
+ second.questions[0].qa={status:"needs-review",applicability:{
+  mathematical:false,legal:true,timeSensitive:true,asOfDate:"2026-11-12"
+ }};
  const overlap=structuredClone(apfc);overlap.revision=2;overlap.bankId="second-source-p57c";
  overlap.questions=overlap.questions.map(q=>({...q,id:"copy-"+q.id}));
  await page.locator("#g-author-open").click();
@@ -336,6 +361,13 @@ try{
  await page.waitForFunction(()=>document.querySelector("#pd-author-drafts")?.value.startsWith("stage:"));
  check(await page.locator("#pd-author-questions option").count()===5,
   engine+" selected source questions did not transfer to Wordgard");
+ const firstQuestion=await page.locator("#pd-author-questions option").first().getAttribute("value");
+ await page.locator("#pd-author-questions").selectOption(firstQuestion);
+ await page.locator("#pd-author-evidence > summary").click();
+ check(await page.locator("#pd-author-qa-legal").isChecked()&&
+  await page.locator("#pd-author-qa-time-sensitive").isChecked()&&
+  await page.locator("#pd-author-qa-asof").inputValue()==="2026-11-12",
+  engine+" author-declared QA applicability was lost during staged Wordgard handoff");
  await page.locator("#pd-author-validate").click();
  check((await page.locator("#pd-author-validation").innerText()).includes("math-answer-conflict"),
   engine+" bad key bypassed Wordgard QA");

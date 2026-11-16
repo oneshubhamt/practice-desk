@@ -1,7 +1,8 @@
 import type { ExamPackage } from "../domain/exam-package.ts";
-import type { QuestionKind } from "../domain/question.js";
 import type { MarkingRule } from "../domain/scoring.js";
 import { scoreableMaximum } from "../engine/score-ceiling.ts";
+import {effectiveMarkingRule} from "../engine/scoring.ts";
+import {sectionTimeBudgetMs} from "../domain/timing.ts";
 import {escapeText} from "./html-escape.ts";
 
 const excludedStatuses=new Set(["draft","invalid","incomplete-source","under-review","superseded"]);
@@ -16,6 +17,17 @@ const timeLabel=(ms:number):string=>{
 };
 const plural=(n:number,word:string):string=>n+" "+word+(n===1?"":"s");
 
+export function paperProvenanceText(bundle:Pick<ExamPackage,"paper"|"questions">):string{
+ const hasCitations=bundle.questions.some(q=>Boolean(q.editorial.sources?.length));
+ const provenance=bundle.paper.edition==="source"?
+   "Source edition frozen as supplied by this package. Practice Desk does not independently authenticate publisher identity, official status or answer-key accuracy.":
+  bundle.paper.edition==="reviewed"?
+   "Reviewed edition frozen as supplied and pinned to its declared Source paper and key revisions. Practice Desk preserves that lineage but does not independently certify the reviewer, corrections or official status.":
+   "Custom exam content and scoring were supplied by the author/importer. Practice Desk does not independently authenticate official status.";
+ return provenance+(hasCitations?
+   " Question-level citations, where supplied, are disclosed with the frozen review evidence.":"");
+}
+
 export interface ExamPreflight {
  readonly maximum:number;
  readonly decimals:number;
@@ -24,6 +36,7 @@ export interface ExamPreflight {
  readonly manualQuestions:number;
  readonly correctedQuestions:number;
  readonly cautionQuestions:number;
+ readonly changedQuestions:number;
  readonly totalQuestions:number;
  readonly ruleSummary:string;
  readonly hasVariableRules:boolean;
@@ -31,36 +44,30 @@ export interface ExamPreflight {
  readonly timingRules:readonly string[];
  readonly navigationRules:readonly string[];
  readonly provenance:string;
- readonly patchCount:number|null;
- readonly builtinCgl:boolean;
  readonly sectionTitles:readonly string[];
 }
 
 /** Read-only pre-start metadata from the exact executable selection. Never
  * expose answers, solution notes, source-review diffs, or a mutable key.
  */
-export function examPreflight(bundle:ExamPackage,options:{
-  readonly builtinCgl?:boolean;
-  readonly reviewedPatchCount?:number;
-}={}):ExamPreflight{
+export function examPreflight(bundle:ExamPackage):ExamPreflight{
  const paper=bundle.paper;
  const entries=new Map(bundle.answerKey.entries.map(e=>[e.questionRevisionId,e]));
  const questions=new Map(bundle.questions.map(q=>[q.id,q]));
  const rules:MarkingRule[]=[];
  let excludedQuestions=0,manualQuestions=0,eligibleQuestions=0;
- let cautionQuestions=0,correctedQuestions=0;
+ let cautionQuestions=0,correctedQuestions=0,changedQuestions=0;
  for(const section of paper.sections){
   for(const id of section.questionRevisionIds){
    const q=questions.get(id),entry=entries.get(id);
    if(!q||!entry)throw Error("Preflight cannot inspect an incomplete exam package");
    if(q.editorial.status==="caution")cautionQuestions++;
    if(q.editorial.status==="corrected")correctedQuestions++;
+   if(q.editorial.changes?.length)changedQuestions++;
    if(excludedStatuses.has(q.editorial.status)){excludedQuestions++;continue;}
    if(q.content.kind==="free-response"){manualQuestions++;continue;}
    eligibleQuestions++;
-   const kind=q.content.kind as QuestionKind;
-   rules.push(entry.scoringOverride??section.scoringOverride??
-     paper.scoring.byQuestionKind?.[kind]??paper.scoring.defaultRule);
+   rules.push(effectiveMarkingRule(paper,section,q,entry));
   }
  }
  const hasVariableRules=new Set(rules.map(r=>JSON.stringify(r))).size>1;
@@ -82,10 +89,9 @@ export function examPreflight(bundle:ExamPackage,options:{
   timingRules.push("One shared "+timeLabel(paper.timing.durationMs)+" paper timer across "+
    plural(paper.sections.length,"section")+". Changing/closing a section does not reset this total.");
  }else{
-  timingRules.push("Independent section timers: "+paper.sections.map(s=>{
-   const d=paper.timing.kind==="sectional"?
-     paper.timing.sectionLimits.find(x=>x.sectionId===s.id)?.durationMs:null;
-   return s.title+" "+(d===null?"untimed":typeof d==="number"?timeLabel(d):"not specified");
+  timingRules.push("Independent section timers: "+paper.sections.map((s,index)=>{
+   const d=sectionTimeBudgetMs(paper,index);
+   return s.title+" "+(d===null?"untimed":timeLabel(d));
   }).join("; ")+".");
   timingRules.push(paper.timing.allowEarlySubmit?
    "You may submit a timed section early and advance. Unused minutes do not carry into the next section.":
@@ -111,29 +117,14 @@ export function examPreflight(bundle:ExamPackage,options:{
    "Detailed answer-key/solution review becomes available only after completion.":
    "After completion, numerical score and timing appear; detailed answer-key/solution review is withheld."
  ];
- const builtinCgl=options.builtinCgl===true;
- const provenance=builtinCgl?
-  (paper.edition==="source"?
-   "SSC CGL original transcription: publisher-provided question wording and answer labels are preserved; disputed/invalid items can be excluded. This is not an SSC-operated or official answer-key service.":
-   "SSC CGL reviewed edition: independent educational corrections, not official SSC answer keys. "+
-   (cautionQuestions?
-     "Some disputed published answers remain scoreable with an editorial caution. ":
-     "This edition has no currently flagged caution questions. ")+
-   "The identity and reasoning for any individual correction are disclosed only after submission."):
-  paper.edition==="source"?
-   "Source edition supplied by the paper author/importer. Publication, key accuracy and any claimed official status are not independently authenticated by Practice Desk.":
-  paper.edition==="reviewed"?
-   "Reviewed edition label and corrections are author/importer supplied. Practice Desk does not independently certify their accuracy or official status.":
-   "Custom exam content and scoring were provided by the author/importer; Practice Desk is independent of examining organisations.";
+ const provenanceDetail=paperProvenanceText(bundle);
  return {
   maximum:scoreableMaximum(paper,bundle.answerKey,bundle.questions),
   decimals:paper.scoring.decimalPlaces??2,
-  eligibleQuestions,excludedQuestions,manualQuestions,correctedQuestions,cautionQuestions,
+  eligibleQuestions,excludedQuestions,manualQuestions,correctedQuestions,cautionQuestions,changedQuestions,
   totalQuestions:paper.sections.reduce((n,s)=>n+s.questionRevisionIds.length,0),
   ruleSummary,hasVariableRules,hasComponentScoring,timingRules,navigationRules,
-  provenance,patchCount:builtinCgl&&paper.edition==="reviewed"?
-    options.reviewedPatchCount??0:null,
-  builtinCgl,sectionTitles:paper.sections.map(s=>s.title)
+  provenance:provenanceDetail,sectionTitles:paper.sections.map(s=>s.title)
  };
 }
 
@@ -150,9 +141,8 @@ export function preflightHTML(p:ExamPreflight):string{
   '; '+plural(p.excludedQuestions,"excluded")+
   '; '+plural(p.manualQuestions,"manual-response")+
   '; '+plural(p.cautionQuestions,"editorial caution")+
-  '; '+plural(p.correctedQuestions,"corrected")+'.'+
-  (p.patchCount===null?"":' Independently reviewed changes in this built-in edition: '+
-    p.patchCount+'.')+'</p>'+
+  '; '+plural(p.correctedQuestions,"corrected")+
+  '; '+plural(p.changedQuestions,"reviewed change")+'.</p>'+
   '<p class="preflight-provenance"><b>Source & independence:</b> '+escapeText(p.provenance)+'</p>'+
   '<p class="fine">Exact key choices, editorial disputes, worked solutions and original-versus-reviewed answer comparisons remain hidden until permitted after completion.</p>'+
  '</section>';
@@ -168,7 +158,7 @@ export function examRulesHTML(p:ExamPreflight):string{
   '<h3>Scoring for this selection</h3><p>'+escapeText(p.ruleSummary)+
   '. Maximum eligible automated marks: <b>'+escapeText(p.maximum.toFixed(p.decimals))+
   '</b>. Excluded items are omitted; written/manual questions are self-assessed separately.</p>'+
-  '<h3>Exam keyboard shortcuts</h3><p>During a running exam, A–D answer a single-choice question; '+
+  '<h3>Exam keyboard shortcuts</h3><p>During a running exam, A–D answer the first four options and E–Z answer additional lettered options when present; '+
   'left/right arrows navigate between questions except when a native answer radio is focused. '+
   'On a focused radio, unmodified arrows select answer options; Alt+left/right navigates questions instead. '+
   'M toggles a flag if permitted, including while paused; F toggles full-screen/focus layout. '+

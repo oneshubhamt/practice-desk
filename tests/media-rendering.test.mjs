@@ -260,7 +260,7 @@ test("P47-5B source/review presentation supports math only from frozen verified 
   entries:[{targetQuestionRevisionId:q.id,sourceQuestion:q,sourceAnswer:ans}]};
  const html=sourceReviewHTML(a,q,reference);
  assert.match(html,/katex-mathml/);
- assert.match(html,/Original published answer/);
+ assert.match(html,/Source-edition answer/);
 });
 test("P47-5C release carries only local WOFF2 and both KaTeX/Wordgard MIT notices",async()=>{
  const html=await readFile(new URL("../Practice_Desk_Offline_Mock_Tests.html",import.meta.url),"utf8");
@@ -360,8 +360,8 @@ test("P47-1 review display uses exact frozen answers and separate source edition
   entries:[{targetQuestionRevisionId:q.id,sourceQuestion:q,sourceAnswer:answers[0]}]
  };
  const compare=sourceReviewHTML(a,q,source);
- assert.match(compare,/Original published answer:/);
- assert.match(compare,/Compare with original source edition/);
+ assert.match(compare,/Source-edition answer:/);
+ assert.match(compare,/Compare with frozen source edition/);
  assert.equal(sourceReviewHTML(a,questions[1],source),"");
 });
 test("P47-1 validator is standalone, fail-closed and never modifies the input",()=>{

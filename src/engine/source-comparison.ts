@@ -4,6 +4,7 @@ import type { QuestionRevision } from "../domain/question.js";
 import type { QuestionRevisionId,OptionId,PaperId,PaperRevisionId,AnswerKeyRevisionId } from "../domain/ids.js";
 import type { MarkingRule } from "../domain/scoring.js";
 import { hashJson } from "../domain/hash.ts";
+import {effectiveMarkingRule} from "./scoring.ts";
 
 /** Hypothetical original-key score. Never changes the actual frozen result.
  * Only the canonical current representation is accepted.
@@ -99,8 +100,7 @@ export function createSourceKeyReference(
   const sourceSemanticHash=candidateSemanticHash(original,source);
   const comparable=sourceSemanticHash===candidateSemanticHash(q,target)&&
    q.content.options.some(o=>o.id===originalOptionId);
-  const rule=sourceEntry.scoringOverride??section.scoringOverride??
-   source.paper.scoring.byQuestionKind?.["single-choice"]??source.paper.scoring.defaultRule;
+  const rule=effectiveMarkingRule(source.paper,section,original,sourceEntry);
   entries.push({kind:"single-choice",questionRevisionId:q.id,originalOptionId,
    markingRule:structuredClone(rule),sourceSemanticHash,comparable});
  }

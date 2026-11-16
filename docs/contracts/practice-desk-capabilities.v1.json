@@ -1,13 +1,13 @@
 {
   "format": "practice-desk-agent-capabilities",
   "version": 1,
-  "contractStatus": "P60-A/B/C/D/E and P60-F approved automated software scope VERIFIED. P60-F exact-source five-job CI 42194153793 succeeded on 784a31e145855329cb4388a520ca8e92a95ee7d6 (426/426 Node, strict TypeScript, reproducible unchanged offline HTML SHA-256 1900846adda793e224c3e63ef2fbec6bafdd0b3b2acd3ecc89d5d6a3bbdc541e, Chromium/Firefox/WebKit and guarded publication). External PDF/PYQ/factual/reviewer authentication, real LLM token/educational outcomes, physical devices, user human validation and release HOLD. No direct app/History/device agent bridge.",
+  "contractStatus": "Implemented automated software capabilities are source-backed by the paths in this contract and release-gated by the repository Fast/Smoke/Cross/Deep/mutation/guarded-publish workflow. External PDF/PYQ/factual/reviewer authentication, real LLM token/educational outcomes, physical devices, user human validation and release authorization remain outside the automated contract. No direct app/History/device agent bridge.",
   "product": {
     "name": "Practice Desk",
     "purpose": "Offline examination authoring, practice, scoring, history, analytics and spaced revision",
     "runtime": "Standalone offline HTML with local device storage; external Node 24 authoring CLI",
     "sourceBranch": "working",
-    "asOfDate": "2026-11-06",
+    "asOfDate": "2026-11-16",
     "embeddedLLM": false,
     "automaticCloudSync": false,
     "agentDeviceBridge": false
@@ -46,16 +46,22 @@
       "effect": "Bounded metadata/QA issues; no entire question set"
     },
     {
-      "operation": "show-question",
-      "command": "node scripts/question-bank-agent.mjs show <source.json> <question-id>",
+      "operation": "next-bank-issues",
+      "command": "node scripts/question-bank-agent.mjs next <source.json> [--limit 1..20]",
       "privilege": "read-only",
-      "effect": "One source question + shared context; image bytes omitted"
+      "effect": "Highest-priority distinct repair targets only; repeated warnings on one question do not consume the whole context budget"
+    },
+    {
+      "operation": "show-question",
+      "command": "node scripts/question-bank-agent.mjs show <source.json> <question-id> [question-id ... up to 10]",
+      "privilege": "read-only",
+      "effect": "One to ten source questions; shared stimuli/media metadata deduplicated and inline image bytes omitted"
     },
     {
       "operation": "patch-bank",
       "command": "node scripts/question-bank-agent.mjs patch <source.json> <patch.json> <NEW-output.json> [--dry-run]",
       "privilege": "create-new-file",
-      "effect": "SHA-guarded question edits, including question-specific scoringOverride; no original overwrite; material edits reopen review"
+      "effect": "SHA-guarded question edits with mandatory increasing nextRevision, including question-specific scoringOverride; no original overwrite; added/materially edited questions reopen review"
     },
     {
       "operation": "qa-bank",
@@ -196,7 +202,7 @@
       "limitations": [
         "Catalog/manifest inclusion is packaging and discovery policy, not certification that a paper is official or factually correct",
         "User-imported papers sharing a maintained examId remain user supplied",
-        "SSC CGL still uses its established Source/Reviewed converter at build time, but storage is paper-isolated and manifest-addressed",
+        "SSC CGL runtime uses the same canonical Source/Reviewed ExamPackage path as other included exams; preserved raw CGL conversion is archive-only equivalence tooling.",
         "Disabling every maintained family intentionally yields an empty Library; import/authoring remain the recovery path"
       ],
       "sourcePaths": [
@@ -353,7 +359,7 @@
         "An original printed key remains a caution-labelled source key; reviewer proof and publisher authenticity are not authenticated."
       ],
       "sourcePaths": [
-        "src/content/import-cgl.ts",
+        "tools/cgl-archive-converter.ts",
         "src/engine/source-comparison.ts",
         "src/domain/question.ts",
         "scripts/editorial-editions.mjs"
@@ -365,7 +371,7 @@
       "summary": "P57–P59 external AI source format, strict deterministic compiler and QA, compact inspect/show/patch and offline Wordgard staging/publishing.",
       "provides": [
         "practice-desk-authoring v1 source, versioned source IDs",
-        "Headless inspect (paged issues) and show (single item, no image bytes)",
+        "Headless inspect, distinct-target next queue and show (1–10 items; shared context deduplicated; no inline image bytes)",
         "Guarded create-new patch/add/update/unset/remove",
         "Cross-bank duplicate candidates and source-metadata warnings",
         "Wordgard manual correction, lossless distinct draft exchange, immutable caution publication",

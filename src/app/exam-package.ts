@@ -1,70 +1,46 @@
 /** Application assembly/configuration adapters. Canonical package and attempt contracts live below app/. */
-import { importCglBank } from "../content/import-cgl.ts";
-import { sha256 } from "../domain/hash.ts";
 import { answerKeyRevisionHash, paperRevisionHash } from "../domain/integrity.ts";
-import type { SourcePaperBank, ReviewPatchBank } from "../content/schema.js";
 import type { PaperRevision } from "../domain/exam.js";
-import type { QuestionRevision, StimulusDefinition, ImageAsset, CandidateResponse } from "../domain/question.js";
+import type { QuestionRevision, CandidateResponse } from "../domain/question.js";
 import type { AnswerKeyRevision, CorrectAnswer } from "../domain/answer-key.js";
-import type { ExamId, QuestionRevisionId } from "../domain/ids.js";
+import type { QuestionRevisionId } from "../domain/ids.js";
 import {validateExamPackage} from "../domain/exam-package.ts";
 import type {ExamPackage} from "../domain/exam-package.ts";
 import type {AttemptMode} from "../domain/attempt.js";
-import type {CglPracticeMode} from "../workspace-settings.ts";
+import type {PracticeMode} from "../workspace-settings.ts";
 import type {GenericAttempt} from "../engine/generic-attempt.ts";
+import {paperTimeBudgetMs,sectionTimeBudgetMs} from "../domain/timing.ts";
 export {validateExamImportBudget,validateExamPackage} from "../domain/exam-package.ts";
 import { startSession } from "../engine/session.ts";
 import { freezeAttempt } from "../history/frozen.ts";
 
-/** Convert existing CGL content without changing the original bank or editions. */
-export function builtinCglPackages(sources: SourcePaperBank, patches: ReviewPatchBank,
-  solutions: Readonly<Record<string,Readonly<Record<string,string>>>> = {}): ExamPackage[] {
- const editions = importCglBank(sources, patches);
- return editions.map(({ paper, key, questions }) => {
-   const source = sources[paper.paperId];
-   if (!source) throw new Error("Missing CGL source");
-   const assets: ImageAsset[] = [];
-   const stimuli: StimulusDefinition[] = [];
-   const explanations: Record<string,string> = {};
-   const patchMap = paper.edition === "reviewed" ? patches[paper.paperId] ?? {} : {};
-   for (const [id, text] of Object.entries(source.passages))
-      stimuli.push({id: `${paper.paperId}:passage:${id}` as StimulusDefinition["id"],kind:"passage",text});
-   // CGL images are pre-embedded as data URIs. Never request remote resources.
-   for (const question of questions) {
-     const n = Number(question.questionId.split(":").at(-1));
-     const original = source.questions.find(q => q.n === n)!;
-     const merged = {...original, ...(patchMap[String(n)] ?? {})};
-     const explanation = merged.explanation || solutions[paper.paperId]?.[String(n)] || "";
-     if (explanation) explanations[question.id] = explanation;
-     const stemId = `${paper.paperId}:q:${n}:stem`;
-     // The immutable packaged media should identify its question/option to
-     // assist screen readers in both the live paper and frozen post-test review.
-     const asImage=(id:string, uri:string, altText:string):ImageAsset=>({
-       id:id as ImageAsset["id"],mediaType:(uri.match(/^data:(image\/[a-z]+);/)?.[1]??"image/webp") as ImageAsset["mediaType"],
-       dataUri:uri,contentHash:sha256(Uint8Array.from(atob(uri.slice(uri.indexOf(",")+1)),char=>char.charCodeAt(0))) as ImageAsset["contentHash"],
-       altText
-     });
-     if (merged.images.stem) assets.push(asImage(stemId,merged.images.stem,"Diagram for question "+n));
-     merged.images.options?.forEach((uri,i)=>{
-       if(uri)assets.push(asImage(`${paper.paperId}:q:${n}:option:${i}`,uri,
-         "Image for option "+String.fromCharCode(65+i)+" of question "+n));
-     });
-   }
-   return {format:"practice-desk-exam",version:1,examId:"ssc-cgl" as ExamId,
-     title:`${source.name} · ${paper.edition === "reviewed" ? "Reviewed" : "Original"}`,
-     paper,answerKey:key,questions,stimuli,assets,explanations};
- });
+/** Derive practice policies from any validated paper without modifying its source.
+ * Only authored section limits may become individual section-practice timers;
+ * never invent an equal division of a whole-paper timer. */
+export function availablePracticeModes(paper:PaperRevision):readonly PracticeMode[]{
+ const structural:readonly PracticeMode[]=paper.sections.length>1?["strict","free","single"]:["strict","free"];
+ const declared=paper.practiceModes??structural;
+ return declared.filter(mode=>structural.includes(mode));
 }
 
-/** Runtime-only CGL practice policies share the same versioned model as every exam. */
-export function configureCglPractice(base: ExamPackage, mode:CglPracticeMode, sectionIndex=0):ExamPackage {
- if(base.examId!=="ssc-cgl")return base;
+export function resolvePracticeMode(paper:PaperRevision,selected:PracticeMode):PracticeMode{
+ const available=availablePracticeModes(paper);
+ if(available.includes(selected))return selected;
+ const preferred:PracticeMode=paper.edition==="custom"?"free":"strict";
+ return available.includes(preferred)?preferred:available[0]!;
+}
+/** One canonical initial mode rule for first mount, new families and imports. */
+export function defaultPracticeMode(paper:PaperRevision):PracticeMode{
+ return resolvePracticeMode(paper,paper.edition==="custom"?"free":"strict");
+}
+
+export function configurePracticeMode(base:ExamPackage,mode:PracticeMode,sectionIndex=0):ExamPackage{
+ if(!availablePracticeModes(base.paper).includes(mode))
+   throw new Error("Selected practice mode is unavailable for this paper");
  if(mode==="strict"){
-   // The raw editorial/source package is an immutable document with a manual
-   // transition declaration. The actual exam simulation must instead
-   // explicitly freeze an AUTOMATIC 15-minute section policy; otherwise a
-   // correctly implemented manual expiry would strand the strict exam.
-   if(base.paper.timing.kind!=="sectional")throw new Error("Strict CGL requires sectional timing");
+   if(base.paper.timing.kind!=="sectional")return base;
+   // A hard deadline must automatically advance, not strand the candidate
+   // behind a frozen manual-expiry section. Preserve each authored limit.
    const derived={...base.paper,
      id:(base.paper.id+":practice:strict") as PaperRevision["id"],
      timing:{...base.paper.timing,transition:"automatic" as const}};
@@ -72,6 +48,12 @@ export function configureCglPractice(base: ExamPackage, mode:CglPracticeMode, se
    return {...base,paper};
  }
  const source=base.paper;
+ // A whole-paper or untimed package with already-flexible navigation and pause
+ // policy needs only the frozen advisory AttemptMode, not a duplicate paper/key.
+ if(mode==="free"&&source.timing.kind!=="sectional"&&
+   (source.timing.kind==="untimed"||source.timing.pausePolicy==="allowed")&&
+   source.navigation.questionNavigation==="free"&&source.navigation.sectionNavigation==="free")
+   return base;
  if(mode==="single"&&!source.sections[sectionIndex])throw new Error("Unknown practice section");
  const sections=mode==="single"?[source.sections[sectionIndex]!]:[...source.sections];
  const included=new Set(sections.flatMap(s=>s.questionRevisionIds));
@@ -80,11 +62,19 @@ export function configureCglPractice(base: ExamPackage, mode:CglPracticeMode, se
  const answerKey={...base.answerKey,
    id:(base.answerKey.id+":practice:"+mode+(mode==="single"?":"+sectionIndex:"")) as AnswerKeyRevision["id"],
    contentHash:answerKeyRevisionHash({entries}),entries};
- const paperBase={...source,
+ const duration=mode==="free"?paperTimeBudgetMs(source):
+   source.timing.kind==="sectional"?sectionTimeBudgetMs(source,sectionIndex):
+   source.timing.kind==="whole-paper"&&source.sections.length===1?
+     source.timing.durationMs:null;
+ const sourcePolicy=mode==="single"?((({practiceModes:_,...rest})=>rest)(source)):source;
+ const paperBase={...sourcePolicy,
    id:(source.id+":practice:"+mode+(mode==="single"?":"+sectionIndex:"")) as PaperRevision["id"],
    answerKeyRevisionId:answerKey.id,sections,
-   timing:{kind:"whole-paper" as const,durationMs:mode==="single"?900000:3600000,pausePolicy:"allowed" as const},
-   navigation:{...source.navigation,sectionNavigation:mode==="free"?"free" as const:"sequential-locked" as const}};
+   timing:duration===null?{kind:"untimed" as const}:
+     {kind:"whole-paper" as const,durationMs:duration,pausePolicy:"allowed" as const},
+   navigation:{...source.navigation,
+     questionNavigation:mode==="free"?"free" as const:source.navigation.questionNavigation,
+     sectionNavigation:mode==="free"?"free" as const:"sequential-locked" as const}};
  const paper:PaperRevision={...paperBase,contentHash:paperRevisionHash(paperBase)};
  return {...base,paper,answerKey,questions,
    ...(base.explanations?{explanations:Object.fromEntries(Object.entries(base.explanations)
@@ -103,7 +93,11 @@ export function configureUntimedPractice(base:ExamPackage,enabled:boolean):ExamP
  return {...base,paper};
 }
 
-export function cglAttemptMode(mode:CglPracticeMode):AttemptMode{
+export function attemptModeForPractice(mode:PracticeMode,untimed=false):AttemptMode{
+ // An explicit untimed override is practice even when strict navigation is retained.
+ // Free/single already have practice attempt modes; strict+untimed needs the generic
+ // custom-practice mode so advisory practice UI (including Auto word count) is honest.
+ if(untimed&&mode==="strict")return "custom-practice";
  return mode==="free"?"full-paper-practice":mode==="single"?"section-practice":"exam-simulation";
 }
 

@@ -1,9 +1,11 @@
 import {loadCglFixture,loadQuestionBankGraph,repositoryRoot} from "./fixtures/cgl-bank.mjs";
+import {archiveCglPackages as builtinCglPackages} from "../tools/cgl-archive-converter.ts";
 /** Canonical executable contracts, grouped by stable product responsibility. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
-import {builtinCglPackages,validateExamPackage,startGenericAttempt,configureCglPractice,readableAnswer,validateExamImportBudget} from "../src/app/exam-package.ts";
+import {validateExamPackage,startGenericAttempt,configurePracticeMode,readableAnswer,validateExamImportBudget,
+ availablePracticeModes,resolvePracticeMode,attemptModeForPractice} from "../src/app/exam-package.ts";
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {validateAnswerKeyRevision,validatePaperRevision,validateQuestionRevision} from "../src/domain/validate.ts";
 import {paperRevisionHash} from "../src/domain/integrity.ts";
@@ -61,11 +63,45 @@ const papers=(await loadCglFixture()).sources;
 const patches=(await loadCglFixture()).patches;
 const solutions=(await loadCglFixture()).solutions;
 const all=builtinCglPackages(papers,patches,solutions);
+test("optional practice-mode eligibility is declarative, structural and hash-bound",()=>{
+ const oneSection={...pkg.paper,sections:[{id:"whole",title:"Whole paper",
+  questionRevisionIds:pkg.questions.map(q=>q.id)}],timing:{kind:"untimed"}};
+ assert.deepEqual(availablePracticeModes(oneSection),["strict","free"]);
+ const freeOnly={...oneSection,practiceModes:["free"]};
+ assert.deepEqual(availablePracticeModes(freeOnly),["free"]);
+ assert.equal(resolvePracticeMode(freeOnly,"single"),"free");
+ assert.equal(attemptModeForPractice("strict"),"exam-simulation");
+ assert.equal(attemptModeForPractice("free"),"full-paper-practice");
+ assert.equal(attemptModeForPractice("single"),"section-practice");
+ assert.equal(attemptModeForPractice("strict",true),"custom-practice",
+  "An explicit untimed override must not masquerade as exam simulation");
+ assert.throws(()=>configurePracticeMode({...pkg,paper:freeOnly},"strict"),/unavailable/);
+
+ const multi={...pkg.paper,practiceModes:["strict","single"]};
+ assert.deepEqual(availablePracticeModes(multi),["strict","single"]);
+ assert.equal(resolvePracticeMode(multi,"free"),"strict");
+ const multiBundle=validateExamPackage({...pkg,paper:{...multi,contentHash:paperRevisionHash(multi)}});
+ const single=configurePracticeMode(multiBundle,"single",0);
+ assert.equal(single.paper.sections.length,1);
+ assert.equal(single.paper.practiceModes,undefined,
+  "derived one-section executable paper must not inherit source menu eligibility");
+ assert.equal(validateExamPackage(single),single);
+ assert.equal(startGenericAttempt(single,"declared-single",0,"section-practice").frozen.snapshot.mode,
+  "section-practice");
+ const originalHash=paperRevisionHash({...pkg.paper,practiceModes:["strict","free"]});
+ const changedHash=paperRevisionHash({...pkg.paper,practiceModes:["free"]});
+ assert.notEqual(originalHash,changedHash,"candidate-visible mode eligibility must be part of paper identity");
+
+ const invalidBase={...oneSection,practiceModes:["single"]};
+ const invalid={...invalidBase,contentHash:paperRevisionHash(invalidBase)};
+ assert.throws(()=>validateExamPackage({...pkg,paper:invalid}),/section practice requires multiple physical sections/);
+});
+
 test("one engine supports strict, flexible and single CGL policies",()=>{
  const standard=all[0];
- const strict=configureCglPractice(standard,"strict");
- const free=configureCglPractice(standard,"free");
- const single=configureCglPractice(standard,"single",2);
+ const strict=configurePracticeMode(standard,"strict");
+ const free=configurePracticeMode(standard,"free");
+ const single=configurePracticeMode(standard,"single",2);
  assert.equal(strict.paper.timing.kind,"sectional");
  assert.equal(strict.paper.timing.transition,"automatic","Actual strict mode must not inherit raw manual source transition");
  assert.notEqual(strict.paper.id,standard.paper.id,"Derived strict policy must have distinct frozen revision identity");

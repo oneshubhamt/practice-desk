@@ -4,7 +4,7 @@
   "id": "ssc-cgl",
   "examId": "ssc-cgl",
   "title": "SSC CGL",
-  "representation": "legacy-cgl",
+  "representation": "exam-packages",
   "contentTypes": [
     "pyq"
   ],
@@ -13,5 +13,6 @@
   ],
   "paths": {
     "2026": "2026/manifest.json"
-  }
+  },
+  "currentPaperRef": "cgl-2026-09-30"
 }

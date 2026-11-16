@@ -4,11 +4,12 @@ import { scoreableMaximum } from "../engine/score-ceiling.ts";
 export interface ComparableScoreTrend{
  readonly label:string;
  readonly count:number;
+ readonly decimals:number;
  readonly points:readonly {at:number;percent:number;marks:number;max:number}[];
 }
 /** Score trends must never join different key revisions, content or practice modes. */
 export function comparableScoreTrends(attempts:readonly GenericAttempt[]):ComparableScoreTrend[]{
- const groups=new Map<string,{label:string;points:{at:number;percent:number;marks:number;max:number}[]}>();
+ const groups=new Map<string,{label:string;decimals:number;points:{at:number;percent:number;marks:number;max:number}[]}>();
  for(const a of attempts){
    if(a.finishedAt===null||!a.result||a.frozen.paper.paperId.startsWith("notebook-revision:")||
       a.result.snapshot.correctCount+a.result.snapshot.incorrectCount===0)continue;
@@ -18,12 +19,12 @@ export function comparableScoreTrends(attempts:readonly GenericAttempt[]):Compar
      a.frozen.key.contentHash,a.frozen.snapshot.mode].join("|");
    const group=groups.get(identity)??{
      label:a.frozen.paper.paperId+" · "+a.frozen.paper.edition+" · "+a.frozen.snapshot.mode,
-     points:[]};
+     decimals:a.frozen.paper.scoring.decimalPlaces??2,points:[]};
    group.points.push({at:a.finishedAt,percent:100*a.result.snapshot.earnedMarks/max,
      marks:a.result.snapshot.earnedMarks,max});
    groups.set(identity,group);
  }
- return [...groups.values()].map(x=>({label:x.label,count:x.points.length,
+ return [...groups.values()].map(x=>({label:x.label,count:x.points.length,decimals:x.decimals,
    points:x.points.sort((a,b)=>a.at-b.at)}))
    .sort((a,b)=>(b.points.at(-1)?.at??0)-(a.points.at(-1)?.at??0));
 }

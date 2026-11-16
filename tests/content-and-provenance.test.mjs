@@ -1,10 +1,11 @@
 import {loadCglFixture,loadQuestionBankGraph,repositoryRoot} from "./fixtures/cgl-bank.mjs";
+import {archiveCglPackages as builtinCglPackages} from "../tools/cgl-archive-converter.ts";
 /** Canonical source, editorial lineage and frozen-result contracts. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {pkg,questions} from "./fixtures/six-kinds.mjs";
-import {builtinCglPackages,configureCglPractice,cglAttemptMode,validateExamPackage,startGenericAttempt} from "../src/app/exam-package.ts";
+import {configurePracticeMode,attemptModeForPractice,validateExamPackage,startGenericAttempt} from "../src/app/exam-package.ts";
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {scoreAttempt} from "../src/engine/scoring.ts";
 import {scoreableMaximum,sectionScoreSummaries,scoreableLowerBound} from "../src/engine/score-ceiling.ts";
@@ -12,7 +13,7 @@ import {paperRevisionHash,answerKeyRevisionHash,questionRevisionHash} from "../s
 import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
 import {renderModelExam,readablePracticeMode} from "../src/app/exam-view.ts";
 import {createSourceReviewReference,validateSourceReviewReference} from "../src/engine/review-source.ts";
-import {importCglBank} from "../src/content/import-cgl.ts";
+import {importCglBank} from "../tools/cgl-archive/import.ts";
 import {validateResponse} from "../src/engine/response.ts";
 import {editorialStatusLabel} from "../src/app/editorial-labels.ts";
 import {execFileSync} from "node:child_process";
@@ -26,7 +27,7 @@ import {duplicateMatchingTargets,multipleDraftMessage} from "../src/app/response
 import {assertDeletionAllowed} from "../src/history/deletion-policy.ts";
 import {makeBackup,verifyBackup,planBackupMerge} from "../src/history/backup.ts";
 import {createSourceKeyReference} from "../src/engine/source-comparison.ts";
-import {validateContent} from "../src/content/validate.ts";
+import {validateContent} from "../tools/cgl-archive/validate.ts";
 import {Script} from "node:vm";
 import {sha256} from "../src/domain/hash.ts";
 import {addLearningCard,validateLearningCard} from "../src/learning/learning.ts";
@@ -152,7 +153,7 @@ test("standard CGL marking and nominal denominator are unchanged by generic cap"
   response:{kind:"single-choice",optionId:wrong.id},timeSpentMs:1,answerChangeCount:0,flagged:false}],
   new Date().toISOString());
  assert.equal(r.items[0].marks,q.editorial.status==="invalid"?0:-0.5);
- const a=startGenericAttempt(configureCglPractice(x,"single",0),"pass16-standard",1000);
+ const a=startGenericAttempt(configurePracticeMode(x,"single",0),"pass16-standard",1000);
  assert.equal(validateGenericStoredRecord(a),a);
  const ended=transitionGenericAttempt(a,{type:"SUBMIT_ATTEMPT",nowMs:1200},
     new Map(a.frozen.questions.map(q=>[q.id,q])));
@@ -250,12 +251,14 @@ test("L08: 30 Sep Q6 C to D, wording-only Q3, and disputed 6 Oct Q62 unchanged",
 test("L09/L10: timing type and frozen mode have accurate labels, untimed included",()=>{
  const p=find("cgl-2026-09-30","reviewed");
  for(const [configured,frozenMode,mode,scope,aria] of [
-  [configureCglPractice(p,"free"),"full-paper-practice","Full paper · flexible navigation","Whole-paper timer","Whole-paper time used"],
-  [configureCglPractice(p,"strict"),"exam-simulation","Exam simulation","Section timer","Section time used"],
-  [configureCglPractice(p,"single",1),"section-practice","Single-section practice","Whole-paper timer","Whole-paper time used"]]){
+  [configurePracticeMode(p,"free"),"full-paper-practice","Full paper · flexible navigation","Whole-paper timer","Whole-paper time used"],
+  [configurePracticeMode(p,"strict"),"exam-simulation","Exam simulation","Section timer","Section time used"],
+  [configurePracticeMode(p,"single",1),"section-practice","Single-section practice","Whole-paper timer","Whole-paper time used"]]){
   const a=startGenericAttempt(configured,mode,0,frozenMode),html=renderModelExam(a,configured);
-  assert.ok(html.includes(mode+" · "),
+  assert.ok(html.includes(mode),
    "Human-readable frozen exam mode must remain visible in the active exam");
+  if(frozenMode==="section-practice")assert.ok(!html.includes("Section 1 of 1"),
+   "single-section practice should keep its title without artificial one-of-one chrome");
   assert.ok(html.includes('aria-valuetext="'+scope+' '),
    scope+" must remain available to screen readers in the compact progress bar");
   assert.ok(html.includes('aria-label="'+aria+'"'),aria+" missing");
@@ -312,21 +315,21 @@ const keyUpdate=entries=>({...pkg.answerKey,entries,contentHash:answerKeyRevisio
 
 test("SOURCE A/V01/V05/V19: split CGL artifacts retain their canonical normalized blobs",async()=>{
  const canonicalSourceBlobs={
-  "question-banks/ssc-cgl/2026/pyqs/2026-09-30/original/paper.json":"0a8994b50558694722837d3fa4d6e58c344332e8",
-  "question-banks/ssc-cgl/2026/pyqs/2026-09-30/revised/patches.json":"d74169356ab153da61d904f307364c51a23ea872",
-  "question-banks/ssc-cgl/2026/pyqs/2026-09-30/revised/solutions.json":"a3f300769a6e4d37c0c292974f7d45112d26b5a2",
-  "question-banks/ssc-cgl/2026/pyqs/2026-10-05/original/paper.json":"74ff088ec038976e08c6fef9091b584093da8821",
-  "question-banks/ssc-cgl/2026/pyqs/2026-10-05/revised/patches.json":"6bfff9e3eedc65493df831284b68f327c1576cdb",
-  "question-banks/ssc-cgl/2026/pyqs/2026-10-05/revised/solutions.json":"7a824166bad7f91987319c5b322c20f9c3b0c5cf",
-  "question-banks/ssc-cgl/2026/pyqs/2026-10-06/original/paper.json":"9afcbc214365bda65b240a6901b98c826661235d",
-  "question-banks/ssc-cgl/2026/pyqs/2026-10-06/revised/patches.json":"249f191fac7e75f77a8b34015aa1dd853b773767",
-  "question-banks/ssc-cgl/2026/pyqs/2026-10-06/revised/solutions.json":"2b7c28b1aa7f9a741e5b29e3f372c151627b477f",
-  "question-banks/ssc-cgl/2026/pyqs/2026-10-07/original/paper.json":"8ef3f05f609456535443e8e8d98a884e32400c65",
-  "question-banks/ssc-cgl/2026/pyqs/2026-10-07/revised/patches.json":"22f5db9bb621d6d42f3f541360f5200eb318474f",
-  "question-banks/ssc-cgl/2026/pyqs/2026-10-07/revised/solutions.json":"5c1d7baf9a3d5c3159ab8edb45505fc34e697b6b",
-  "question-banks/ssc-cgl/2026/pyqs/2026-10-08/original/paper.json":"895f99a07126819ae9f960685a4eb51002b4f048",
-  "question-banks/ssc-cgl/2026/pyqs/2026-10-08/revised/patches.json":"aff32e0741271b54b3e6b8c30e2f710a738f941e",
-  "question-banks/ssc-cgl/2026/pyqs/2026-10-08/revised/solutions.json":"5f23d5f51b1185d73b4c0d3240654d91039c70ba"
+  "question-banks/ssc-cgl/2026/pyqs/2026-09-30/archive/paper.json":"0a8994b50558694722837d3fa4d6e58c344332e8",
+  "question-banks/ssc-cgl/2026/pyqs/2026-09-30/archive/patches.json":"d74169356ab153da61d904f307364c51a23ea872",
+  "question-banks/ssc-cgl/2026/pyqs/2026-09-30/archive/solutions.json":"a3f300769a6e4d37c0c292974f7d45112d26b5a2",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-05/archive/paper.json":"74ff088ec038976e08c6fef9091b584093da8821",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-05/archive/patches.json":"6bfff9e3eedc65493df831284b68f327c1576cdb",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-05/archive/solutions.json":"7a824166bad7f91987319c5b322c20f9c3b0c5cf",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-06/archive/paper.json":"9afcbc214365bda65b240a6901b98c826661235d",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-06/archive/patches.json":"249f191fac7e75f77a8b34015aa1dd853b773767",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-06/archive/solutions.json":"2b7c28b1aa7f9a741e5b29e3f372c151627b477f",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-07/archive/paper.json":"8ef3f05f609456535443e8e8d98a884e32400c65",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-07/archive/patches.json":"22f5db9bb621d6d42f3f541360f5200eb318474f",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-07/archive/solutions.json":"5c1d7baf9a3d5c3159ab8edb45505fc34e697b6b",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-08/archive/paper.json":"895f99a07126819ae9f960685a4eb51002b4f048",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-08/archive/patches.json":"aff32e0741271b54b3e6b8c30e2f710a738f941e",
+  "question-banks/ssc-cgl/2026/pyqs/2026-10-08/archive/solutions.json":"5f23d5f51b1185d73b4c0d3240654d91039c70ba"
  };
  for(const [relative,expected] of Object.entries(canonicalSourceBlobs)){
   const hash=execFileSync("git",["hash-object",relative],{cwd:root,encoding:"utf8"}).trim();
@@ -353,9 +356,9 @@ test("SOURCE A/V01/V05/V19: split CGL artifacts retain their canonical normalize
 
 test("V02/V07/F02/F06: all 10 paper editions have derived full/section marks, no hardcoded ceiling",()=>{
  for(const b of banks){
-  const strict=configureCglPractice(b,"strict");
-  const free=configureCglPractice(b,"free");
-  const single=configureCglPractice(b,"single",3);
+  const strict=configurePracticeMode(b,"strict");
+  const free=configurePracticeMode(b,"free");
+  const single=configurePracticeMode(b,"single",3);
   for(const mode of [strict,free,single]){
    const max=scoreableMaximum(mode.paper,mode.answerKey,mode.questions);
    assert.equal(examPreflight(mode,{builtinCgl:true}).maximum,max);
@@ -433,7 +436,7 @@ test("CGL original wording, options, source key and media are frozen at reviewed
 });
 
 test("edited single-section CGL preserves only its changed question subset and adjusted max",()=>{
- const r=configureCglPractice(reviewed,"single",2);
+ const r=configurePracticeMode(reviewed,"single",2);
  const o=original;
  const ref=createSourceReviewReference(r,o);
  if(ref)assert.ok(ref.entries.every(e=>r.questions.some(q=>q.id===e.targetQuestionRevisionId)));
@@ -622,8 +625,9 @@ test('single-file release contains a complete inline app',async()=>{
  const html=await readFile(new URL('../Practice_Desk_Offline_Mock_Tests.html',import.meta.url),'utf8');
  assert.match(html,/^<!doctype html>/i);
  assert.equal((html.match(/<style>/g)||[]).length,1);
- assert.equal(html.split('type="application/json"').length-1,4);
+ assert.equal(html.split('type="application/json"').length-1,1);
  assert.match(html,/id="preinstalled-exams"/);
+ assert.doesNotMatch(html,/id="paper-bank"|id="review-patches"|id="solution-bank"/);
  assert.equal((html.match(/<script>/g)||[]).length,1);
  assert.doesNotMatch(html,/<!-- PD:[A-Z_]+ -->/);
  assert.doesNotMatch(html,/<script[^>]+src=|<link[^>]+rel=["']stylesheet/i);

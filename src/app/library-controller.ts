@@ -4,10 +4,12 @@ import {minutes} from "./exam-view.ts";
 import {isAttempt,isLearning} from "./stored-record-validator.ts";
 
 
-import {cglAttemptMode,configureCglPractice,configureUntimedPractice,startGenericAttempt} from "./exam-package.ts";
+import {attemptModeForPractice,availablePracticeModes,configurePracticeMode,configureUntimedPractice,
+ defaultPracticeMode,resolvePracticeMode,startGenericAttempt} from "./exam-package.ts";
 import {validateExamPackage} from "../domain/exam-package.ts";
 import type {ExamPackage} from "../domain/exam-package.ts";
-import type {CglPracticeMode} from "../workspace-settings.ts";
+import type {PracticeMode} from "../workspace-settings.ts";
+import {paperTimeBudgetMs,sectionTimeBudgetMs} from "../domain/timing.ts";
 import type {GenericAttempt} from "../engine/generic-attempt.ts";
 
 import {createSourceKeyReference} from "../engine/source-comparison.ts";
@@ -21,9 +23,10 @@ import {frozenScoreSummary} from "./history-score.ts";
 
 
 import {examPreflight,preflightHTML,examRulesHTML} from "./exam-preflight.ts";
+import {paperEditionLabel} from "./editorial-labels.ts";
 
 import {writePracticeSetups,type PracticeSetups} from "./practice-selection.ts";
-import {pairedEdition,BUILTIN_CGL_FAMILY} from "./exam-families.ts";
+import {pairedCounterpart,pairedEdition} from "./exam-families.ts";
 
 import type {LibraryControllerContext} from "./coordinator-context.ts";
 
@@ -37,26 +40,36 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
      b.startedAt-a.startedAt).slice(0,3);
    const catalog=owner.families(),family=catalog.find(f=>f.id===owner.selectedFamilyId);
    const selected=family?.papers.find(p=>p.paper.id===owner.choice);
-   const cgl=owner.selectedFamilyId===BUILTIN_CGL_FAMILY&&Boolean(selected);
+   const mode=selected?resolvePracticeMode(selected.paper,owner.practiceMode):owner.practiceMode;
+   const availableModes=selected?availablePracticeModes(selected.paper):[];
    const selectedIncluded=Boolean(selected&&family?.includedPaperIds.includes(selected.paper.id));
    const configured=selected?configureUntimedPractice(
-     cgl?configureCglPractice(selected,owner.cglMode,owner.singleSection):selected,owner.untimedPractice):null;
-   const selectedNumbers=new Set(configured?.questions.map(q=>q.questionId.split(":").at(-1))??[]);
-   const preflight=configured?examPreflight(configured,{
-     builtinCgl:cgl,
-     ...(cgl?{reviewedPatchCount:Object.keys(owner.patches[selected!.paper.paperId]??{})
-       .filter(id=>selectedNumbers.has(id)).length}:{})
-   }):null;
-   const count=selected?.paper.sections.reduce((n,z)=>n+z.questionRevisionIds.length,0)??0;
-   const modeLabel=cgl?owner.cglMode==="strict"?"Exam simulation":owner.cglMode==="free"?"Full paper practice":"Section practice":"Custom examination";
-   const time=configured?.paper.timing.kind==="untimed"?"Untimed":cgl?
-     owner.cglMode==="strict"?"15 min per section":owner.cglMode==="single"?"15 minutes":"60 minutes":
+     configurePracticeMode(selected,mode,owner.singleSection),owner.untimedPractice):null;
+   const preflight=configured?examPreflight(configured):null;
+   const modeLabel=mode==="strict"?"Exam simulation":
+     mode==="free"?"Flexible full paper":"Section practice";
+   const policy=configured?.paper.timing;
+   const sectionBudgets=policy?.kind==="sectional"?
+     configured!.paper.sections.map((_,index)=>sectionTimeBudgetMs(configured!.paper,index)):[];
+   const time=configured?.paper.timing.kind==="untimed"?"Untimed":
      configured?.paper.timing.kind==="whole-paper"?minutes(configured.paper.timing.durationMs):
-     "Section timers";
-   const questionCount=cgl&&owner.cglMode==="single"?selected?.paper.sections[owner.singleSection]?.questionRevisionIds.length??0:count;
-   const previewSections=cgl&&owner.cglMode==="single"?1:selected?.paper.sections.length??0;
-   const previewNavigation=cgl?owner.cglMode==="free"?"Free":owner.cglMode==="single"?"One section":"Section locked":
-     selected?.paper.navigation.sectionNavigation==="free"?"Free":"Sequential";
+       sectionBudgets.length&&sectionBudgets.every(ms=>ms===sectionBudgets[0])?
+       (sectionBudgets[0]===null?"Untimed sections":minutes(sectionBudgets[0]!)+" per section"):
+       sectionBudgets.map(ms=>ms===null?"Untimed":minutes(ms)).join(" + ");
+   const questionCount=configured?.questions.length??0;
+   const previewSections=configured?.paper.sections.length??0;
+   const previewStructure=previewSections===1?"Whole paper":String(previewSections);
+   const previewStructureLabel=previewSections===1?"Structure":"Sections";
+   const previewNavigation=configured?.paper.navigation.sectionNavigation==="free"?"Free":"Sequential";
+   const sourceTime=selected?paperTimeBudgetMs(selected.paper):null;
+   const strictDetail=selected?.paper.timing.kind==="sectional"?
+     "Original section clocks · automatic expiry":selected?.paper.timing.kind==="whole-paper"?
+     "Original paper clock · automatic expiry":"No configured exam timer";
+   const flexibleDetail=sourceTime===null?"No combined timer specified · free navigation":
+     minutes(sourceTime)+" total · free navigation · overtime allowed";
+   const singleDetail=selected?.paper.timing.kind==="sectional"?
+     "One selected section · its authored timer when defined":
+     "One selected section · untimed (no per-section limit supplied)";
    // Edition switches filter only the active family; custom papers remain visible.
    const available=family?.papers??[];
    const published=available.filter(p=>p.paper.edition===owner.editionView);
@@ -71,8 +84,7 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
      (custom.length?'<optgroup label="'+(family?.origin==="included"?"Included / custom practice papers":"Imported / custom examinations")+'">'+
        custom.map(option).join("")+'</optgroup>':"")+
      (!selected&&!missing?'<option value="" selected disabled>Choose a paper</option>':"");
-   const hasEditions=available.some(p=>p.paper.edition==="source")&&
-     available.some(p=>p.paper.edition==="reviewed");
+   const hasEditions=Boolean(selected&&family&&pairedCounterpart(family,selected));
    const familyOptions=(owner.selectedFamilyId&&!family?
      '<option value="'+escapeText(owner.selectedFamilyId)+'" selected disabled>Saved exam family unavailable — re-import</option>':"")+
      catalog.map(f=>'<option value="'+escapeText(f.id)+'"'+
@@ -161,20 +173,17 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
        (["reviewed","source"] as const).map(edition=>
          '<button type="button" class="edition-choice '+(owner.editionView===edition?"active":"")+
          '" data-edition="'+edition+'" aria-pressed="'+(owner.editionView===edition)+'">'+
-         (cgl?(edition==="reviewed"?"Reviewed &amp; Corrected":"Original PDF"):
-           edition==="reviewed"?"Imported reviewed":"Imported source")+'</button>').join("")+
-       '</div><p class="fine edition-note">'+(family?.imported?
-         "User-supplied edition; Practice Desk does not certify its questions or keys.":
-         owner.editionView==="reviewed"?
-           "Independently reviewed wording and answer keys; disputed items are labelled after submission.":
-           "Original publisher transcription; no independent key changes applied.")+
+         (edition==="reviewed"?"Reviewed":"Source")+'</button>').join("")+
+       '</div><p class="fine edition-note">'+escapeText(preflight?.provenance??
+         "Package provenance unavailable for this selection.")+
        '</p></div>':"")+
-     (cgl?'<h3 class="subhead">Practice mode</h3><div class="generic-modes" role="group" aria-label="SSC CGL practice mode">'+
-      ([["strict","Exam simulation","4 locked sections · 15 minutes each"],["free","Flexible full paper","60 minutes · move between sections"],
-       ["single","Section practice","25 questions · 15 minutes"]] as const).map(([key,title,detail])=>
-      '<button type="button" class="mode '+(owner.cglMode===key?"on":"")+'" data-mode="'+key+'" aria-pressed="'+(owner.cglMode===key)+'">'+
-      '<span class="radio-dot"></span><span><strong>'+title+'</strong><small>'+detail+'</small></span></button>').join("")+'</div>'+
-      (owner.cglMode==="single"?'<label class="picker" for="g-single-section">Choose section</label><select id="g-single-section">'+
+     (selected?'<h3 class="subhead">Practice mode</h3><div class="generic-modes" role="group" aria-label="Practice mode">'+
+      ([["strict","Exam simulation",strictDetail],["free","Flexible full paper",flexibleDetail],
+       ["single","Section practice",singleDetail]] as const)
+       .filter(([key])=>availableModes.includes(key)).map(([key,title,detail])=>
+      '<button type="button" class="mode '+(mode===key?"on":"")+'" data-mode="'+key+'" aria-pressed="'+(mode===key)+'">'+
+      '<span class="radio-dot"></span><span><strong>'+title+'</strong><small>'+escapeText(detail)+'</small></span></button>').join("")+'</div>'+
+      (mode==="single"?'<label class="picker" for="g-single-section">Choose section</label><select id="g-single-section">'+
        selected!.paper.sections.map((z,i)=>'<option value="'+i+'"'+(owner.singleSection===i?" selected":"")+'>'+escapeText(z.title)+'</option>').join("")+'</select>':""):"")+
      '<label class="untimed-option" for="g-untimed"><input type="checkbox" id="g-untimed"'+
         (owner.untimedPractice?" checked":"")+'><span><strong>Untimed practice</strong>'+
@@ -190,14 +199,15 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
      '<aside class="home-side"><section class="panel pad paper-preview"><span class="eyebrow">SELECTED PAPER</span>'+
       '<h2>'+escapeText(selected?.title??"Choose a paper")+'</h2>'+
       '<p class="fine family-provenance">'+(family?.origin==="imported"?
-        "Imported/user-supplied content; not an official exam bank.":
+        "Imported/user-supplied package; Practice Desk does not authenticate official status.":
         family?.origin==="included"?
-          (selectedIncluded?"Included practice package from the repository question-bank catalog; provenance still governs official status.":"Imported/user-supplied paper grouped under this included examination family."):
-        family?"Included SSC CGL papers. Original and reviewed versions remain distinct.":
+          (selectedIncluded?"Included practice package from the repository question-bank catalog; inclusion does not establish official status.":"Imported/user-supplied paper grouped under this included examination family; family membership does not establish official status."):
+        family?"Selected examination family; package provenance determines source/review status.":
         "Saved examination unavailable. Re-import the bank or select another.")+'</p>'+
-      '<p class="fine">'+escapeText(selected?.paper.paperId??"")+' · '+escapeText(selected?.paper.edition??"")+'</p>'+
+      '<p class="fine">'+escapeText(selected?.paper.paperId??"")+
+       (selected?' · '+escapeText(paperEditionLabel(selected.paper)):'')+'</p>'+
       '<div class="preview-metrics"><div><b>'+questionCount+'</b><small>Questions</small></div>'+
-      '<div><b>'+escapeText(time)+'</b><small>Time</small></div><div><b>'+escapeText(previewSections)+'</b><small>Sections</small></div>'+
+      '<div><b>'+escapeText(time)+'</b><small>Time</small></div><div><b>'+escapeText(previewStructure)+'</b><small>'+previewStructureLabel+'</small></div>'+
       '<div><b>'+escapeText(previewNavigation)+
       '</b><small>Navigation</small></div></div>'+
       '<p class="fine">Scoring and timer rules are frozen when you start; later paper edits cannot change a saved result.</p>'+
@@ -233,23 +243,28 @@ export const applyLibraryFamily=(owner:LibraryControllerContext,id:string):void=
    owner.selectedFamilyId=id;
    const previous=owner.setups.families[id];
    if(previous){
-     owner.choice=previous.paperRevisionId;owner.cglMode=previous.mode;
+     owner.choice=previous.paperRevisionId;owner.practiceMode=previous.mode;
      owner.singleSection=previous.section;owner.untimedPractice=previous.untimed;
      owner.editionView=previous.edition;
    }else{
      const family=owner.families().find(f=>f.id===id);
-     const paper=family?.papers.find(p=>p.paper.id===family.currentPaperId)??family?.papers.find(p=>p.paper.edition==="reviewed")??family?.papers[0];
-     owner.choice=paper?.paper.id??"";owner.cglMode="strict";owner.singleSection=0;
+     const paper=family?.papers.find(p=>p.paper.id===family.currentPaperRevisionId)??family?.papers.find(p=>p.paper.edition==="reviewed")??family?.papers[0];
+     owner.choice=paper?.paper.id??"";
+     owner.practiceMode=paper?defaultPracticeMode(paper.paper):"free";
+     owner.singleSection=0;
      owner.untimedPractice=false;owner.editionView=paper?.paper.edition==="source"?"source":"reviewed";
    }
-   if(owner.packages.has(owner.choice))
+   if(owner.packages.has(owner.choice)){
+     const chosen=owner.packages.get(owner.choice)!;
+     owner.practiceMode=resolvePracticeMode(chosen.paper,owner.practiceMode);
      owner.singleSection=Math.min(owner.singleSection,Math.max(0,owner.packages.get(owner.choice)!.paper.sections.length-1));
+   }
  };
 
 export const persistLibrarySelection=(owner:LibraryControllerContext):void=>{
    const next:PracticeSetups={schema:2,selectedFamilyId:owner.selectedFamilyId,
      families:{...owner.setups.families,[owner.selectedFamilyId]:{
-       paperRevisionId:owner.choice,mode:owner.cglMode,section:owner.singleSection,
+       paperRevisionId:owner.choice,mode:owner.practiceMode,section:owner.singleSection,
        untimed:owner.untimedPractice,edition:owner.editionView
      }}};
    owner.setups=next;
@@ -271,6 +286,7 @@ export function bindLibraryScreen(owner:LibraryControllerContext):void{
        const chosen=owner.packages.get(owner.choice);
        if(chosen?.paper.edition==="source"||chosen?.paper.edition==="reviewed")
          owner.editionView=chosen.paper.edition;
+       if(chosen)owner.practiceMode=resolvePracticeMode(chosen.paper,owner.practiceMode);
        owner.singleSection=Math.min(owner.singleSection,Math.max(0,(owner.packages.get(owner.choice)?.paper.sections.length??1)-1));
        owner.saveSelection();owner.draw();
      };
@@ -282,8 +298,10 @@ export function bindLibraryScreen(owner:LibraryControllerContext):void{
        owner.editionView=next;
        const family=owner.families().find(f=>f.id===owner.selectedFamilyId);
        const same=current&&family?pairedEdition(family,current,next):undefined;
-       const first=family?.papers.find(p=>p.paper.edition===next);
-       owner.choice=(same??first??current)?.paper.id??owner.choice;
+       if(!same){owner.editionView=current?.paper.edition==="source"?"source":"reviewed";owner.draw();return;}
+       owner.choice=same.paper.id;
+       const chosen=owner.packages.get(owner.choice);
+       if(chosen)owner.practiceMode=resolvePracticeMode(chosen.paper,owner.practiceMode);
        owner.singleSection=Math.min(owner.singleSection,Math.max(0,(owner.packages.get(owner.choice)?.paper.sections.length??1)-1));
        owner.saveSelection();owner.draw();
      });
@@ -298,13 +316,13 @@ export function bindLibraryScreen(owner:LibraryControllerContext):void{
        owner.go({screen:"history"});
      };
      owner.root.querySelectorAll<HTMLButtonElement>("[data-mode]").forEach(button=>button.onclick=()=>{
-       owner.cglMode=button.dataset.mode as CglPracticeMode;owner.saveSelection();owner.draw();
+       owner.practiceMode=button.dataset.mode as PracticeMode;owner.saveSelection();owner.draw();
      });
      owner.root.querySelector<HTMLInputElement>("#g-untimed")!.onchange=e=>{
        owner.untimedPractice=(e.target as HTMLInputElement).checked;owner.saveSelection();owner.draw();
      };
      const single=owner.root.querySelector<HTMLSelectElement>("#g-single-section");
-     if(single)single.onchange=()=>{owner.singleSection=Number(single.value);owner.saveSelection();};
+     if(single)single.onchange=()=>{owner.singleSection=Number(single.value);owner.saveSelection();owner.draw();};
      const builderDetails=owner.root.querySelector<HTMLDetailsElement>("#g-compose-details");
      if(builderDetails){
        builderDetails.ontoggle=()=>{
@@ -341,8 +359,7 @@ export function bindLibraryScreen(owner:LibraryControllerContext):void{
          if(!p||!selectedFamily?.papers.some(item=>item.paper.id===p.paper.id))
            throw Error("Selected paper unavailable");
          const base=configureUntimedPractice(
-           owner.selectedFamilyId===BUILTIN_CGL_FAMILY?
-             configureCglPractice(p,owner.cglMode,owner.singleSection):p,owner.untimedPractice);
+           configurePracticeMode(p,resolvePracticeMode(p.paper,owner.practiceMode),owner.singleSection),owner.untimedPractice);
          return composePracticeSet(base,{count:owner.composeCount,seed:owner.composeSeed,
            filters:{...(owner.composeSection?{sectionId:owner.composeSection}:{}),
              ...(owner.composeTopic?{topicId:owner.composeTopic}:{}),
@@ -351,7 +368,7 @@ export function bindLibraryScreen(owner:LibraryControllerContext):void{
        owner.root.querySelector<HTMLButtonElement>("#g-compose-preview")!.onclick=()=>{
          try{
            const {bundle,manifest}=make();
-           const pf=examPreflight(bundle,{builtinCgl:owner.selectedFamilyId===BUILTIN_CGL_FAMILY});
+           const pf=examPreflight(bundle);
            owner.composePreview=manifest.selectedQuestionRevisionIds.length+" selected from "+
              manifest.eligibleCount+" eligible · maximum "+pf.maximum.toFixed(pf.decimals)+
              " marks · "+(bundle.paper.timing.kind==="untimed"?"untimed":bundle.paper.timing.kind)+
@@ -393,11 +410,10 @@ export function bindLibraryScreen(owner:LibraryControllerContext):void{
          "You have "+unfinished.length+" unfinished test"+(unfinished.length===1?"":"s")+
          ". Start a separate attempt? Existing attempts will be kept; their timers continue until expiry when resumed or while active."))return;
        const id=typeof crypto!=="undefined"&&crypto.randomUUID?crypto.randomUUID():"generic-"+owner.now()+"-"+Math.random();
+       const practiceMode=resolvePracticeMode(p.paper,owner.practiceMode);
        const configured=configureUntimedPractice(
-         owner.selectedFamilyId===BUILTIN_CGL_FAMILY?configureCglPractice(p,owner.cglMode,owner.singleSection):p,owner.untimedPractice);
-       const attemptMode=owner.selectedFamilyId===BUILTIN_CGL_FAMILY?
-         cglAttemptMode(owner.cglMode):
-         configured.paper.edition==="custom"?"custom-practice":"exam-simulation";
+         configurePracticeMode(p,practiceMode,owner.singleSection),owner.untimedPractice);
+       const attemptMode=attemptModeForPractice(practiceMode,owner.untimedPractice);
        owner.attempt=startGenericAttempt(configured,id,owner.now(),attemptMode);
        owner.freshlyStartedAttemptId=owner.attempt.id;
        if(configured.paper.edition==="reviewed"){
@@ -447,6 +463,7 @@ export function bindLibraryScreen(owner:LibraryControllerContext):void{
          if(!targetFamily)throw new Error("Imported package has no exam family");
          owner.applyFamily(targetFamily.id);
          owner.choice=pkg.paper.id;owner.singleSection=0;
+         owner.practiceMode=resolvePracticeMode(pkg.paper,owner.practiceMode);
          if(pkg.paper.edition==="source"||pkg.paper.edition==="reviewed")owner.editionView=pkg.paper.edition;
          owner.saveSelection();
          owner.notice("Exam package validated and imported. Your paper is ready to practise.");

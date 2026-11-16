@@ -245,14 +245,15 @@ export function topicMetrics(attempts:readonly GenericAttempt[],cards:readonly L
  return [...rows.values()].sort((a,b)=>a.examId.localeCompare(b.examId)||
    a.kind.localeCompare(b.kind)||a.label.localeCompare(b.label));
 }
-export interface ComparableTrend {paperRevisionId:string;label:string;count:number;points:{at:number;accuracy:number|null;coverage:number;marks:number}[]}
+export interface ComparableTrend {paperRevisionId:string;label:string;count:number;decimals:number;points:{at:number;accuracy:number|null;coverage:number;marks:number}[]}
 export function comparableTrends(attempts:readonly GenericAttempt[]):ComparableTrend[]{
  const groups=new Map<string,ComparableTrend>();
  for(const a of attempts){
    if(!a.result||a.finishedAt===null||Boolean(a.notebookLineage)||a.frozen.paper.paperId.startsWith("notebook-revision:"))continue;
    // Exact revision: same questions, edition, scoring, timing and navigation. Never blend unrelated exams.
    const id=a.frozen.paper.id;
-   const group=groups.get(id)??{paperRevisionId:id,label:a.frozen.paper.paperId+" · "+a.frozen.paper.edition,count:0,points:[]};
+   const group=groups.get(id)??{paperRevisionId:id,label:a.frozen.paper.paperId+" · "+a.frozen.paper.edition,count:0,
+     decimals:a.frozen.paper.scoring.decimalPlaces??2,points:[]};
    const s=a.result.snapshot;
    const attempted=s.correctCount+s.incorrectCount;
    const total=attempted+s.unansweredCount;

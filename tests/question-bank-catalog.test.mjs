@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {readFile,mkdtemp,writeFile,rm,mkdir} from "node:fs/promises";
+import {readFile,mkdtemp,writeFile,rm,mkdir,cp} from "node:fs/promises";
+import {gunzipSync} from "node:zlib";
 import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {tmpdir} from "node:os";
@@ -9,6 +10,11 @@ import {fileURLToPath} from "node:url";
 import {loadQuestionBankCatalog,readQuestionBankManifestGraph} from "../scripts/question-bank-catalog.mjs";
 import {buildPracticeDeskHtml} from "../scripts/build-target.mjs";
 import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
+import {shouldShowWordCount} from "../src/domain/word-count.ts";
+import {renderGenericControls} from "../src/app/question-content-view.ts";
+import {packPreinstalledExamCatalog,unpackPreinstalledExamCatalog} from "../src/app/preinstalled-pack.ts";
+import {archiveCglPackages} from "../tools/cgl-archive-converter.ts";
+import {loadCglFixture} from "./fixtures/cgl-bank.mjs";
 
 const root=resolve(fileURLToPath(new URL("../",import.meta.url)));
 const sha=value=>createHash("sha256").update(value).digest("hex");
@@ -23,26 +29,100 @@ const embedded=(html,id)=>{
  assert.ok(match,"Missing embedded payload "+id);
  return JSON.parse(match[1]);
 };
+const embeddedPreinstalled=html=>{
+ const wrapper=embedded(html,"preinstalled-exams");
+ assert.equal(wrapper.format,"practice-desk-preinstalled-exams-gzip");
+ const unpacked=JSON.parse(gunzipSync(Buffer.from(wrapper.data,"base64")).toString("utf8"));
+ return unpackPreinstalledExamCatalog(unpacked);
+};
 
 test("manifest graph is authoritative for five CGL PYQs and current PFRDA",async()=>{
  const graph=await readQuestionBankManifestGraph(root);
  assert.equal(graph.families.length,2);
  const cgl=graph.families.find(x=>x.family.id==="ssc-cgl");
  const pfrda=graph.families.find(x=>x.family.id==="pfrda-grade-a-2026-phase-ii");
- assert.equal(cgl?.exam.representation,"legacy-cgl");
+ assert.equal(cgl?.exam.representation,"exam-packages");
  assert.equal(cgl?.papers.length,5);
+ for(const paper of cgl?.papers??[]){
+  assert.equal(paper.canonicalEdition,"reviewed");
+  assert.deepEqual(Object.keys(paper.editions).sort(),["reviewed","source"]);
+ }
  assert.deepEqual(cgl?.papers.map(x=>x.id),[
   "cgl-2026-09-30","cgl-2026-10-05","cgl-2026-10-06","cgl-2026-10-07","cgl-2026-10-08"
  ]);
  assert.equal(pfrda?.exam.representation,"exam-packages");
- assert.equal(pfrda?.exam.currentPaperId,"pfrda-grade-a-2026-day-01");
+ assert.equal(pfrda?.exam.currentPaperRef,"pfrda-grade-a-2026-day-01");
  assert.equal(pfrda?.papers.length,1);
  for(const family of graph.catalog.families)
   assert.deepEqual(Object.keys(family).sort(),["examId","id","manifest","preinstalled","title"]);
  const loaded=await loadQuestionBankCatalog(root);
- assert.equal(Object.keys(JSON.parse(loaded.legacy.papersRaw)).length,5);
- assert.equal(loaded.preinstalled.packages.length,1);
- assert.equal(loaded.preinstalled.families[0].currentPaperId,loaded.preinstalled.packages[0].paper.id);
+ assert.equal(loaded.preinstalled.packages.filter(x=>x.examId==="ssc-cgl").length,10);
+ assert.equal(loaded.preinstalled.packages.filter(x=>x.examId==="pfrda-grade-a-2026-phase-ii").length,2);
+ const cglFamily=loaded.preinstalled.families.find(x=>x.id==="ssc-cgl");
+ const pfrdaFamily=loaded.preinstalled.families.find(x=>x.id==="pfrda-grade-a-2026-phase-ii");
+ assert.equal(cglFamily.paperIds.length,10);
+ assert.ok(cglFamily.paperIds.includes(cglFamily.currentPaperRevisionId));
+ assert.equal(loaded.preinstalled.packages.find(x=>x.paper.id===cglFamily.currentPaperRevisionId)?.paper.edition,"reviewed");
+ assert.equal(pfrdaFamily.paperIds.length,2);
+ assert.ok(pfrdaFamily.paperIds.includes(pfrdaFamily.currentPaperRevisionId));
+});
+
+
+test("materialized CGL canonical packages are exactly equivalent to archived source/review conversion",async()=>{
+ const {sources,patches,solutions}=await loadCglFixture();
+ const expected=archiveCglPackages(sources,patches,solutions);
+ const actual=(await loadQuestionBankCatalog(root)).preinstalled.packages.filter(x=>x.examId==="ssc-cgl");
+ assert.equal(actual.length,10);
+ const byId=new Map(actual.map(pkg=>[pkg.paper.id,pkg]));
+ for(const pkg of expected){
+  assert.deepEqual(byId.get(pkg.paper.id),pkg,
+   "canonical CGL package diverged from archived source/review evidence: "+pkg.paper.id);
+ }
+});
+
+test("active question-bank content is reciprocally reachable from the catalog graph",async()=>{
+ await readQuestionBankManifestGraph(root);
+ const dir=await mkdtemp(join(tmpdir(),"pd-bank-orphan-"));
+ try{
+  await cp(join(root,"question-banks"),join(dir,"question-banks"),{recursive:true});
+  await mkdir(join(dir,"question-banks","orphan"),{recursive:true});
+  await writeFile(join(dir,"question-banks","orphan","package.exam.json"),"{}");
+  await assert.rejects(()=>loadQuestionBankCatalog(dir),/Orphan active question-bank content/);
+ }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+test("custom revision identity is unique and the canonical custom edition is the highest maintained revision",async()=>{
+ const loaded=(await loadQuestionBankCatalog(root)).preinstalled;
+ const groups=new Map();
+ for(const pkg of loaded.packages.filter(x=>x.paper.edition==="custom")){
+  const rows=groups.get(pkg.paper.paperId)??[];rows.push(pkg.paper.revision);groups.set(pkg.paper.paperId,rows);
+ }
+ for(const revisions of groups.values())assert.equal(new Set(revisions).size,revisions.length);
+ const family=loaded.families.find(x=>x.id==="pfrda-grade-a-2026-phase-ii");
+ const current=loaded.packages.find(x=>x.paper.id===family.currentPaperRevisionId);
+ const pfrda=loaded.packages.filter(x=>x.examId==="pfrda-grade-a-2026-phase-ii"&&x.paper.edition==="custom");
+ assert.deepEqual(pfrda.map(x=>x.paper.revision).sort((a,b)=>a-b),[1,4]);
+ assert.equal(current.paper.revision,Math.max(...pfrda.map(x=>x.paper.revision)));
+});
+
+test("generic preinstalled packing round-trips canonical packages without semantic drift",async()=>{
+ const loaded=(await loadQuestionBankCatalog(root)).preinstalled;
+ assert.deepEqual(unpackPreinstalledExamCatalog(packPreinstalledExamCatalog(loaded)),loaded);
+});
+
+test("every manifest-declared authoring source deterministically reproduces its checked-in package",async()=>{
+ const graph=await readQuestionBankManifestGraph(root);
+ let authored=0;
+ for(const family of graph.families)for(const paper of family.papers)
+  for(const edition of Object.values(paper.editions))if(edition.authoring){
+   const base=dirname(join(root,paper.path));
+   const source=JSON.parse(await readFile(join(base,edition.authoring),"utf8"));
+   const pkg=JSON.parse(await readFile(join(base,edition.package),"utf8"));
+   assert.deepEqual(compileExternalQuestionBank(source),pkg,
+    "Maintained bank.authoring.json drifted from package "+paper.id);
+   authored++;
+  }
+ assert.equal(authored,2,"Current corpus should expose both maintained PFRDA authoring editions");
 });
 
 test("PFRDA Original and Revised packages retain distinct immutable identities",async()=>{
@@ -51,21 +131,48 @@ test("PFRDA Original and Revised packages retain distinct immutable identities",
   JSON.parse(await readFile(join(base,edition,"package.exam.json"),"utf8"))));
  assert.equal(new Set(packages.map(x=>x.paper.id)).size,2);
  assert.equal(new Set(packages.map(x=>x.answerKey.id)).size,2);
- assert.deepEqual(packages.map(x=>x.paper.revision),[1,2]);
+ assert.deepEqual(packages.map(x=>x.paper.revision),[1,4]);
+ assert.deepEqual(packages.map(x=>x.paper.edition),["custom","custom"],
+  "workflow labels Original/Revised must not be misrepresented as Source/Reviewed provenance");
  for(const pkg of packages){
   assert.equal(pkg.questions.length,51);
   assert.deepEqual(pkg.paper.scoring.defaultRule,{correctMarks:2,incorrectMarks:-0.5,unansweredMarks:0});
   assert.equal(pkg.answerKey.entries[0].scoringOverride?.correctMarks,20);
  }
- const installed=(await loadQuestionBankCatalog(root)).preinstalled.packages;
- assert.equal(installed.length,1);
- assert.equal(installed[0].paper.id,packages[1].paper.id);
+ const catalog=(await loadQuestionBankCatalog(root)).preinstalled;
+ const family=catalog.families.find(x=>x.id==="pfrda-grade-a-2026-phase-ii");
+ const installed=catalog.packages.filter(x=>x.examId==="pfrda-grade-a-2026-phase-ii");
+ assert.equal(installed.length,2);
+ assert.equal(family.currentPaperRevisionId,packages[1].paper.id);
+});
+
+test("preinstalled PFRDA précis follows Auto: hidden in strict and shown in practice",async()=>{
+ const base=join(root,"question-banks","pfrda","2026","mocks","day-01","revised");
+ const source=JSON.parse(await readFile(join(base,"bank.authoring.json"),"utf8"));
+ const pkg=JSON.parse(await readFile(join(base,"package.exam.json"),"utf8"));
+ assert.deepEqual(pkg,compileExternalQuestionBank(source),"checked-in package must match authored source");
+ const catalog=(await loadQuestionBankCatalog(root)).preinstalled;
+ const family=catalog.families.find(x=>x.id==="pfrda-grade-a-2026-phase-ii");
+ const installed=catalog.packages.find(x=>x.paper.id===family.currentPaperRevisionId);
+ const precis=installed.questions.find(q=>q.content.kind==="free-response");
+ assert.ok(precis,"PFRDA précis must be present");
+ assert.equal(installed.paper.candidateTools?.wordCount,undefined);
+ assert.equal(precis.content.responseRules.wordLimit,120);
+ for(const [mode,expected] of [["exam-simulation",false],["full-paper-practice",true],
+  ["section-practice",true],["custom-practice",true]]){
+  const show=shouldShowWordCount(installed.paper.candidateTools?.wordCount,mode);
+  assert.equal(show,expected,mode);
+  const html=renderGenericControls(installed,precis,undefined,{showWordCount:show});
+  if(expected){assert.match(html,/id="g-word-count"/);assert.match(html,/0 \/ 120 words/);}
+  else assert.doesNotMatch(html,/id="g-word-count"/);
+ }
 });
 
 test("manifest-only append discovers a synthetic second generic paper without root-catalog edits",async()=>{
  const source=JSON.parse(await readFile(join(root,"examples","ai-first-apfc.json"),"utf8"));
- const make=(paperId,title)=>compileExternalQuestionBank({...source,
+ const makeSource=(paperId,title)=>({...source,
   bankId:"synthetic-"+paperId,examId:"upsc-epfo-apfc",paperId,title,revision:1});
+ const make=(paperId,title)=>compileExternalQuestionBank(makeSource(paperId,title));
  const first=make("paper-one","Synthetic paper one"),second=make("paper-two","Synthetic paper two");
  const dir=await mkdtemp(join(tmpdir(),"pd-bank-append-"));
  const write=async(relative,value)=>{
@@ -78,7 +185,7 @@ test("manifest-only append discovers a synthetic second generic paper without ro
   ]});
   await write("question-banks/synthetic/manifest.json",{format:"practice-desk-exam-bank-manifest",version:1,
    id:"synthetic",examId:"upsc-epfo-apfc",title:"Synthetic",representation:"exam-packages",
-   contentTypes:["mock"],years:[2026],paths:{"2026":"2026/manifest.json"},currentPaperId:"paper-two-manifest"});
+   contentTypes:["mock"],years:[2026],paths:{"2026":"2026/manifest.json"},currentPaperRef:"paper-two-manifest"});
   await write("question-banks/synthetic/2026/manifest.json",{format:"practice-desk-exam-year-manifest",version:1,
    id:"synthetic-2026",examId:"upsc-epfo-apfc",title:"Synthetic 2026",year:2026,pyqs:[],mocks:[
     {id:"paper-one-manifest",path:"mocks/paper-one/manifest.json"},
@@ -88,7 +195,8 @@ test("manifest-only append discovers a synthetic second generic paper without ro
    await write("question-banks/synthetic/2026/mocks/"+slug+"/manifest.json",{
     format:"practice-desk-paper-manifest",version:1,id:slug+"-manifest",examId:"upsc-epfo-apfc",
     paperId:slug,kind:"mock",title:pkg.title,canonicalEdition:"revised",
-    editions:{revised:{package:"revised/package.exam.json"}}});
+    editions:{revised:{authoring:"revised/bank.authoring.json",package:"revised/package.exam.json"}}});
+   await write("question-banks/synthetic/2026/mocks/"+slug+"/revised/bank.authoring.json",makeSource(slug,pkg.title));
    await write("question-banks/synthetic/2026/mocks/"+slug+"/revised/package.exam.json",pkg);
   }
   // Align the manifest IDs referenced by the year/current fields.
@@ -98,29 +206,70 @@ test("manifest-only append discovers a synthetic second generic paper without ro
   await writeFile(yearPath,JSON.stringify(year,null,2));
   const loaded=await loadQuestionBankCatalog(dir);
   assert.deepEqual(loaded.preinstalled.packages.map(x=>x.title),["Synthetic paper one","Synthetic paper two"]);
-  assert.equal(loaded.preinstalled.families[0].currentPaperId,second.paper.id);
+  assert.equal(loaded.preinstalled.families[0].currentPaperRevisionId,second.paper.id);
+
+  const examPath=join(dir,"question-banks/synthetic/manifest.json");
+  const paperPath=join(dir,"question-banks/synthetic/2026/mocks/paper-two/manifest.json");
+  const packagePath=join(dir,"question-banks/synthetic/2026/mocks/paper-two/revised/package.exam.json");
+  const canonicalPackage=JSON.parse(await readFile(packagePath,"utf8"));
+  await writeFile(packagePath,JSON.stringify({...canonicalPackage,title:"Drifted generated package"},null,2));
+  await assert.rejects(()=>loadQuestionBankCatalog(dir),/diverges from canonical bank\.authoring\.json/);
+  await writeFile(packagePath,JSON.stringify(canonicalPackage,null,2));
+
+  const exam=JSON.parse(await readFile(examPath,"utf8"));
+  exam.contentTypes=["pyq"];await writeFile(examPath,JSON.stringify(exam,null,2));
+  await assert.rejects(()=>loadQuestionBankCatalog(dir),/contentTypes does not allow mock/);
+  exam.contentTypes=["mock"];await writeFile(examPath,JSON.stringify(exam,null,2));
+
+  const paper=JSON.parse(await readFile(paperPath,"utf8"));
+  paper.identityPolicy="Narrative policy must not be executable";
+  await writeFile(paperPath,JSON.stringify(paper,null,2));
+  await assert.rejects(()=>loadQuestionBankCatalog(dir),/unsupported field identityPolicy/);
+  delete paper.identityPolicy;
+  paper.archive={bad:"../outside.txt"};await writeFile(paperPath,JSON.stringify(paper,null,2));
+  await assert.rejects(()=>loadQuestionBankCatalog(dir),/Archive path must stay under archive\//);
+  delete paper.archive;
+  paper.audit="missing.md";await writeFile(paperPath,JSON.stringify(paper,null,2));
+  await assert.rejects(()=>loadQuestionBankCatalog(dir),/Paper audit .* does not exist/);
+ }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+test("preinstalled false never exempts an installed family from corpus validation",async()=>{
+ const dir=await mkdtemp(join(tmpdir(),"pd-disabled-family-"));
+ try{
+  await cp(join(root,"question-banks"),join(dir,"question-banks"),{recursive:true});
+  const catalog=JSON.parse(await readFile(join(dir,"question-banks/catalog.json"),"utf8"));
+  catalog.families.find(x=>x.id==="pfrda-grade-a-2026-phase-ii").preinstalled=false;
+  const packagePath=join(dir,"question-banks/pfrda/2026/mocks/day-01/revised/package.exam.json");
+  const pkg=JSON.parse(await readFile(packagePath,"utf8"));
+  pkg.title+=" — corrupted while disabled";
+  await writeFile(packagePath,JSON.stringify(pkg,null,2));
+  await assert.rejects(()=>loadQuestionBankCatalog(dir,catalog),
+   /diverges from canonical bank\.authoring\.json/);
  }finally{await rm(dir,{recursive:true,force:true});}
 });
 
 test("catalog switches independently remove PFRDA, CGL, or every bundled bank",async()=>{
  const noPfrda=await loadQuestionBankCatalog(root,await withPreinstall({"pfrda-grade-a-2026-phase-ii":false}));
- assert.ok(noPfrda.legacy);assert.deepEqual(noPfrda.preinstalled.packages,[]);
+ assert.equal(noPfrda.preinstalled.packages.length,10);
+ assert.ok(noPfrda.preinstalled.packages.every(x=>x.examId==="ssc-cgl"));
  const noCgl=await loadQuestionBankCatalog(root,await withPreinstall({"ssc-cgl":false}));
- assert.equal(noCgl.legacy,null);assert.equal(noCgl.preinstalled.packages.length,1);
+ assert.equal(noCgl.preinstalled.packages.length,2);
+ assert.ok(noCgl.preinstalled.packages.every(x=>x.examId==="pfrda-grade-a-2026-phase-ii"));
  const empty=await loadQuestionBankCatalog(root,await withPreinstall({"ssc-cgl":false,"pfrda-grade-a-2026-phase-ii":false}));
- assert.equal(empty.legacy,null);assert.deepEqual(empty.preinstalled.families,[]);assert.deepEqual(empty.preinstalled.packages,[]);
+ assert.deepEqual(empty.preinstalled.families,[]);assert.deepEqual(empty.preinstalled.packages,[]);
 });
 
 test("standalone builds honor each removal switch without stale embedded banks",async()=>{
  const noPfrda=await buildPracticeDeskHtml("standalone",{catalogOverride:await withPreinstall({"pfrda-grade-a-2026-phase-ii":false})});
- assert.equal(Object.keys(embedded(noPfrda.html,"paper-bank")).length,5);
- assert.deepEqual(embedded(noPfrda.html,"preinstalled-exams").packages,[]);
+ assert.equal(embeddedPreinstalled(noPfrda.html).packages.length,10);
+ assert.doesNotMatch(noPfrda.html,/id="paper-bank"|id="review-patches"|id="solution-bank"/);
  const noCgl=await buildPracticeDeskHtml("standalone",{catalogOverride:await withPreinstall({"ssc-cgl":false})});
- assert.deepEqual(embedded(noCgl.html,"paper-bank"),{});
- assert.equal(embedded(noCgl.html,"preinstalled-exams").packages.length,1);
+ assert.equal(embeddedPreinstalled(noCgl.html).packages.length,2);
+ assert.doesNotMatch(noCgl.html,/id="paper-bank"|id="review-patches"|id="solution-bank"/);
  const empty=await buildPracticeDeskHtml("standalone",{catalogOverride:await withPreinstall({"ssc-cgl":false,"pfrda-grade-a-2026-phase-ii":false})});
- assert.deepEqual(embedded(empty.html,"paper-bank"),{});
- assert.deepEqual(embedded(empty.html,"preinstalled-exams").packages,[]);
+ assert.deepEqual(embeddedPreinstalled(empty.html).packages,[]);
+ assert.doesNotMatch(empty.html,/id="paper-bank"|id="review-patches"|id="solution-bank"/);
 });
 
 test("agent patch accepts scoringOverride",async()=>{

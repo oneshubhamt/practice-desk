@@ -5,11 +5,12 @@
 import type {AuthoringDraft,AuthoringQuestion} from "./authoring-draft.ts";
 import type {ExamPackage} from "../domain/exam-package.ts";
 import {publicationPlainText} from "./authoring-publisher.ts";
-import {scoreAttempt} from "../engine/scoring.ts";
+import {effectiveMarkingRule,scoreAttempt} from "../engine/scoring.ts";
 import type {CandidateResponse} from "../domain/question.ts";
 import type {CorrectAnswer} from "../domain/answer-key.ts";
 import type {AttemptResponseRecord} from "../domain/attempt.ts";
 import {inspectCandidateIntegrity} from "./candidate-integrity.ts";
+import {syllabusForExam} from "../learning/syllabus-taxonomy.ts";
 
 export type QualityIssue={
  readonly path:string;
@@ -189,6 +190,7 @@ export function inspectExternalQuality(
    "Review provenance and both keys; do not automatically remove either question");
  }
  const results:QuestionQuality[]=[];
+ const registeredSyllabus=syllabusForExam(draft.examId);
  let checked=0,sourcesCount=0;
  for(let i=0;i<draft.questions.length;i++){
   const q=draft.questions[i]!;
@@ -196,11 +198,11 @@ export function inspectExternalQuality(
   const explanation=publicationPlainText(q.explanation).trim();
   const src=q.provenance?.sources??[];
   sourcesCount+=src.length;
-  if(/(?:^|[-_])apfc$/iu.test(draft.examId)&&!q.syllabusHeadingId)
-   add("apfc-heading-missing","error",
-    "APFC question requires an explicitly assigned official broad syllabus heading",
-    q.id,"syllabusHeadingId","deterministic",undefined,
-    "Select one of the nine already supported APFC heading IDs; do not infer it from section");
+  if(registeredSyllabus&&!q.syllabusHeadingId)
+   add("syllabus-heading-missing","error",
+    "This registered exam taxonomy requires an explicitly assigned broad syllabus heading",
+    q.id,"syllabusHeadingId","deterministic",registeredSyllabus.id+" v"+registeredSyllabus.version,
+    "Select a heading from the registered taxonomy; do not infer it from the exam ID, section or question text");
   else if(!q.syllabusHeadingId&&!q.subject)
    add("subject-unattributed","warning",
     "Academic subject is missing; it is not equivalent to the exam section",
@@ -256,7 +258,8 @@ export function inspectExternalQuality(
    if(!src.length)add("pyq-primary-source-missing","warning",
     "Official PYQ identity has no cited source",q.id,"provenance.sources","unverified");
   }
-  const law=/(?:\b(?:Act|Code|Rules|Regulations|Gazette|Notification)\b(?:\s+[A-Za-z&\x27-]+){0,8}\s*,?\s*(?:19|20)\d{2}\b|\b(?:commenc(?:ed|ement)|amend(?:ed|ment)|section\s+\d+|effective\s+(?:from|on))\b)/iu
+  const applicability=q.qa?.applicability;
+  const law=Boolean(applicability?.legal)||/(?:\b(?:Act|Code|Rules|Regulations|Gazette|Notification)\b(?:\s+[A-Za-z&\x27-]+){0,8}\s*,?\s*(?:19|20)\d{2}\b|\b(?:commenc(?:ed|ement)|amend(?:ed|ment)|section\s+\d+|effective\s+(?:from|on))\b)/iu
     .test(prompt+" "+explanation);
   if(law){
    if(!src.some(s=>s.asOfDate&&s.provision))
@@ -269,6 +272,11 @@ export function inspectExternalQuality(
     q.id,"provenance.sources","unverified",undefined,
     "Confirm current law, effective date and relevant rules outside this offline tool");
   }
+  if(applicability?.timeSensitive&&!src.some(s=>s.asOfDate||s.publicationDate))
+   add("time-sensitive-evidence-missing","warning",
+    "Author marked this question time-sensitive but supplied no dated source evidence",
+    q.id,"provenance.sources","unverified",applicability.asOfDate,
+    "Add dated authoritative evidence and verify it against the declared as-of date");
   if(src.some(s=>s.stance==="disputes")&&src.some(s=>s.stance==="supports"))
    add("source-disagreement","warning",
     "Author reports mutually disagreeing sources; factual resolution requires review",
@@ -281,8 +289,11 @@ export function inspectExternalQuality(
   if(exact!==undefined&&(q.kind==="numeric-entry"||q.kind==="single-choice")){
    const answer=compiled.answerKey.entries[i]!.answer;
    const chosen=answer.kind==="numeric-entry"?answer.acceptedValues:
-    answer.kind==="single-choice"?
-     [Number(publicationPlainText(q.options["ABCD".indexOf(answer.optionId)]!).trim())]:[];
+    answer.kind==="single-choice"?(()=>{
+     const index=answer.optionId.length===1?answer.optionId.charCodeAt(0)-65:-1;
+     const option=q.options[index];
+     return option?[Number(publicationPlainText(option).trim())]:[];
+    })():[];
    if(chosen.length&&chosen.every(Number.isFinite)){
     checked++;
     const tolerance=answer.kind==="numeric-entry"?answer.absoluteTolerance??0:0;
@@ -296,8 +307,13 @@ export function inspectExternalQuality(
     }
    }
   }
+  if(applicability?.mathematical&&math==="unverified")
+   add("mathematical-solution-unverified","warning",
+    "Author marked this question mathematical but the bounded deterministic checker could not verify the solution",
+    q.id,"answer","unverified",undefined,
+    "Independently verify the derivation/key; automated QA only proves simple supported arithmetic");
   if(q.kind==="single-choice"){
-   const m=/(?:^|\.\s+)(?:the\s+)?(?:correct\s+)?answer\s+(?:is|:)\s*([A-D])\b/iu.exec(explanation);
+   const m=/(?:^|\.\s+)(?:the\s+)?(?:correct\s+)?answer\s+(?:is|:)\s*([A-Z])\b/iu.exec(explanation);
    if(m&&q.answer.trim().toUpperCase()!==m[1]!.toUpperCase())
     add("explanation-key-conflict","warning",
      "Explicit answer letter in explanation differs from the key",
@@ -314,8 +330,8 @@ export function inspectExternalQuality(
     [record],"1970-01-01T00:00:00.000Z");
    const item=result.items.find(r=>r.questionRevisionId===question.id);
    const section=compiled.paper.sections.find(s=>s.questionRevisionIds.includes(question.id));
-   const rule=entry.scoringOverride??section?.scoringOverride??
-    compiled.paper.scoring.byQuestionKind?.[q.kind]??compiled.paper.scoring.defaultRule;
+   if(!section)throw Error("Compiled question is absent from all paper sections");
+   const rule=effectiveMarkingRule(compiled.paper,section,question,entry);
    if(!item||item.verdict!=="correct"||Math.abs(item.marks-rule.correctMarks)>1e-9)
     add("scoring-oracle-conflict","error",
      "Canonical scorer did not award full credit to the exact published key",

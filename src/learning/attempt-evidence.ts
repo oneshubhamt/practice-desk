@@ -1,7 +1,6 @@
 import type { GenericAttempt } from "../engine/generic-attempt.ts";
 import type { QuestionRevisionId } from "../domain/ids.js";
-import type { MarkingRule } from "../domain/scoring.js";
-import type { Verdict } from "../engine/scoring.ts";
+import {effectiveMarkingRule,type Verdict} from "../engine/scoring.ts";
 
 export interface SectionEvidence {
  sectionId:string;title:string;total:number;answered:number;correct:number;incorrect:number;unanswered:number;
@@ -51,12 +50,10 @@ export function attemptEvidence(a:GenericAttempt):AttemptEvidence|null{
  const sectionsByQuestion=new Map<QuestionRevisionId,GenericAttempt["frozen"]["paper"]["sections"][number]>();
  for(const section of a.frozen.paper.sections)
   for(const id of section.questionRevisionIds)sectionsByQuestion.set(id,section);
- const scoringRule=(id:QuestionRevisionId):MarkingRule=>{
-  const section=sectionsByQuestion.get(id),question=questions.get(id);
-  if(!section||!question)throw Error("Question not in frozen attempt");
-  const override=keyEntries.get(id)?.scoringOverride;
-  return override??section.scoringOverride??a.frozen.paper.scoring.byQuestionKind?.[question.content.kind]??
-    a.frozen.paper.scoring.defaultRule;
+ const scoringRule=(id:QuestionRevisionId)=>{
+  const section=sectionsByQuestion.get(id),question=questions.get(id),entry=keyEntries.get(id);
+  if(!section||!question||!entry)throw Error("Question not in complete frozen scoring evidence");
+  return effectiveMarkingRule(a.frozen.paper,section,question,entry);
  };
  const sectionRows:SectionEvidence[]=[];
  const speeds:SpeedBucket[]=[

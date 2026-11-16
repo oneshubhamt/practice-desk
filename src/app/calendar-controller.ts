@@ -12,8 +12,8 @@ import {scheduledCard} from "../learning/learning.ts";
 import {isAttempt,isLearning,isScheduledMock} from "./stored-record-validator.ts";
 import {createScheduledMock,type ScheduledMockRecord} from "../calendar/scheduled-mock.ts";
 import {escapeText} from "./html-escape.ts";
-import {BUILTIN_CGL_FAMILY,pairedEdition} from "./exam-families.ts";
-import {cglAttemptMode,configureCglPractice,startGenericAttempt} from "./exam-package.ts";
+import {pairedEdition} from "./exam-families.ts";
+import {attemptModeForPractice,configurePracticeMode,startGenericAttempt} from "./exam-package.ts";
 import {createSourceKeyReference} from "../engine/source-comparison.ts";
 import {createSourceReviewReference} from "../engine/review-source.ts";
 import type {CalendarControllerContext} from "./coordinator-context.ts";
@@ -125,9 +125,8 @@ export function createWorkspaceCalendarController(owner:CalendarControllerContex
     }
     const familyId=owner.families().find(f=>f.papers.some(p=>p.paper.id===base.paper.id))?.id;
     if(!familyId){owner.notice("The scheduled paper has no exam family.");return;}
-    const configured=familyId===BUILTIN_CGL_FAMILY?configureCglPractice(base,"strict",0):base;
-    const attemptMode=familyId===BUILTIN_CGL_FAMILY?cglAttemptMode("strict"):
-      configured.paper.edition==="custom"?"custom-practice":"exam-simulation";
+    const configured=configurePracticeMode(base,"strict");
+    const attemptMode=attemptModeForPractice("strict");
     const idValue=typeof crypto!=="undefined"&&crypto.randomUUID?crypto.randomUUID():
       "calendar-"+owner.now()+"-"+Math.random();
     let attempt=startGenericAttempt(configured,idValue,owner.now(),attemptMode);

@@ -15,6 +15,20 @@ export interface AuthoringPublicationInspection {
  readonly report:ReturnType<typeof inspectAuthoringPublication>;
  readonly errors:readonly PublicationIssue[];
  readonly warnings:readonly QualityIssue[];
+ readonly quality:ReturnType<typeof inspectExternalQuality>|null;
+}
+
+export interface AuthoringHealthSummary {
+ readonly inspection:AuthoringPublicationInspection;
+ readonly questionCount:number;
+ readonly errorCount:number;
+ readonly warningCount:number;
+ readonly questionsNeedingReview:number;
+ readonly duplicateCandidates:number;
+ readonly duplicateTruncated:boolean;
+ readonly nextQuestionId:string|null;
+ readonly nextPath:string|null;
+ readonly nextReason:string|null;
 }
 
 export interface PublicationAcceptance {
@@ -60,6 +74,26 @@ export function handoffStagingToDraftShelf(
  return {shelf:next,draft:incoming};
 }
 
+export function invalidateChangedQuestionReviews(
+ before:AuthoringDraft,after:AuthoringDraft
+):AuthoringDraft{
+ const withoutReview=(question:AuthoringDraft["questions"][number])=>{
+  if(!question.qa)return question;
+  const {review:_,...qa}=question.qa;
+  return {...question,qa};
+ };
+ const reviewed=new Map(before.questions.filter(question=>question.qa?.review).map(question=>
+  [question.id,JSON.stringify(withoutReview(question))]));
+ if(!reviewed.size)return after;
+ return validateAuthoringDraft({...after,questions:after.questions.map(question=>{
+  const previous=reviewed.get(question.id);
+  if(!previous||previous===JSON.stringify(withoutReview(question)))return question;
+  if(!question.qa)return {...question,qa:{status:"needs-review"}};
+  const {review:_,...qa}=question.qa;
+  return {...question,qa:{...qa,status:"needs-review"}};
+ })});
+}
+
 export function inspectPublicationWorkflow(
  draft:AuthoringDraft,existing:readonly ExamPackage[]
 ):AuthoringPublicationInspection{
@@ -75,7 +109,32 @@ export function inspectPublicationWorkflow(
   }))??[])
  ];
  const warnings=quality?.issues.filter(issue=>issue.severity==="warning")??[];
- return {report,errors,warnings};
+ return {report,errors,warnings,quality};
+}
+
+export function inspectAuthoringHealth(
+ draft:AuthoringDraft,existing:readonly ExamPackage[]
+):AuthoringHealthSummary{
+ const inspection=inspectPublicationWorkflow(draft,existing);
+ const quality=inspection.quality;
+ const needsReview=quality?.summary.questionsNeedingReview??
+  draft.questions.filter(q=>q.qa?.status==="needs-review").length;
+ const next=[...inspection.errors.map(issue=>({questionId:issue.questionId??null,
+    path:issue.field,reason:issue.field+": "+issue.reason})),
+  ...inspection.warnings.map(issue=>({questionId:issue.questionId??null,
+    path:issue.path,reason:issue.code+": "+issue.message}))].find(item=>item.questionId)??null;
+ const fallback=!next&&needsReview?
+  draft.questions.find(q=>q.qa?.status==="needs-review")??null:null;
+ return {
+  inspection,questionCount:draft.questions.length,
+  errorCount:inspection.errors.length,warningCount:inspection.warnings.length,
+  questionsNeedingReview:needsReview,
+  duplicateCandidates:quality?.summary.duplicateCandidates??0,
+  duplicateTruncated:quality?.summary.duplicateTruncated??false,
+  nextQuestionId:next?.questionId??fallback?.id??null,
+  nextPath:next?.path??null,
+  nextReason:next?.reason??(fallback?"Question is marked needs-review":null)
+ };
 }
 
 function attachPublicationAcknowledgement(
@@ -97,7 +156,7 @@ function attachPublicationAcknowledgement(
    "Earlier attributed review by "+previous.reviewer+" ("+previous.reviewedAt+"): "+
     previous.note+"; ":"";
   const note=(priorLine+(reviewNote||warningNote)).slice(0,500);
-  return {...question,qa:{status:question.qa?.status??"needs-review",review:{
+  return {...question,qa:{...question.qa,status:question.qa?.status??"needs-review",review:{
    reviewer:reviewer||previous?.reviewer||"Author",
    reviewedAt:acceptance.acceptedAt,
    note,

@@ -55,6 +55,28 @@ test("P59: agent inspect returns bounded, paginated actionable errors without fu
  assert.equal(bad.data.code,"agent-input-invalid");
 }));
 
+test("P59: agent next prioritizes a bounded actionable queue without question-body flooding",async()=>inTemp(async dir=>{
+ const source=JSON.parse(await readFile(apfc,"utf8"));
+ source.questions[0].explanation="";
+ source.questions[0].provenance={kind:"official-pyq"};
+ source.questions[1].explanation="";
+ const input=join(dir,"next.json");await writeFile(input,JSON.stringify(source));
+ const result=exec("next",input,"--limit","2");
+ assert.equal(result.status,0,result.stderr);
+ assert.equal(result.data.format,"practice-desk-agent-next-issues");
+ assert.equal(result.data.issues.limit,2);
+ assert.equal(result.data.issues.items.length,2);
+ assert.ok(result.data.issues.rawTotal>result.data.issues.items.length,
+  "Repeated warnings on one question should be collapsed for next-target retrieval");
+ assert.equal(new Set(result.data.questionIds).size,2,
+  "A two-target limit should surface two distinct affected questions");
+ assert.ok(Array.isArray(result.data.questionIds));
+ assert.ok(!result.stdout.includes("Which letter comes second alphabetically?"),"next must not dump full question bodies");
+ assert.ok(result.stdout.length<9000,"next issue queue must stay bounded");
+ const bad=exec("next",input,"--limit","21");
+ assert.notEqual(bad.status,0);
+}));
+
 test("P59: agent show retrieves exactly one question with stable per-item fingerprint and separate shared context, no unnecessary bank or image bytes",async()=>inTemp(async dir=>{
  const source=JSON.parse(await readFile(cat,"utf8"));
  const input=join(dir,"cat.json");
@@ -71,6 +93,15 @@ test("P59: agent show retrieves exactly one question with stable per-item finger
  const unknown=exec("show",input,"no-such-question");
  assert.notEqual(unknown.status,0);
  assert.equal(unknown.data.code,"agent-input-invalid");
+ const multi=exec("show",input,"rc-1","dilr-1");
+ assert.equal(multi.status,0,multi.stderr);
+ assert.equal(multi.data.format,"practice-desk-agent-questions");
+ assert.equal(multi.data.count,2);
+ assert.deepEqual(multi.data.items.map(x=>x.question.id),["rc-1","dilr-1"]);
+ assert.ok(multi.data.stimuli.length<=2,"multi-show must deduplicate any shared stimuli");
+ assert.ok(!multi.stdout.includes("data:image/"));
+ assert.notEqual(exec("show",input,...Array.from({length:11},(_,i)=>"q"+i)).status,0,
+  "multi-show must remain hard bounded");
 }));
 
 test("P59: guarded delta edits preserve original, validate canonical publisher, compile as caution, permit a new numbered revision and refuse overwrite",async()=>inTemp(async dir=>{
@@ -115,11 +146,14 @@ test("P59: guarded delta edits preserve original, validate canonical publisher, 
 test("P59: bad source hash, item hash, id, path, revisions and wrong keyed schema fail closed without partial output",async()=>inTemp(async dir=>{
  const input=join(dir,"source.json"),output=join(dir,"result.json"),patch=join(dir,"patch.json");
  await writeFile(input,await readFile(apfc));
- const h=exec("inspect",input).data.sourceSha256;
+ const inspected=exec("inspect",input).data;
+ const h=inspected.sourceSha256;
  const item=exec("show",input,"labour-01").data.questionSha256;
- const base={format:"practice-desk-agent-patch",version:1,baseSha256:h,
+ const base={format:"practice-desk-agent-patch",version:1,baseSha256:h,nextRevision:inspected.revision+1,
   updates:[{id:"labour-01",expectedQuestionSha256:item,set:{explanation:"New explanation with existing B key."}}]};
+ const {nextRevision:_missingRevision,...missingRevision}=base;
  const cases=[
+  missingRevision,
   {...base,baseSha256:"0".repeat(64)},
   {...base,updates:[{...base.updates[0],expectedQuestionSha256:"0".repeat(64)}]},
   {...base,updates:[{...base.updates[0],id:"question-does-not-exist"}]},
@@ -130,6 +164,9 @@ test("P59: bad source hash, item hash, id, path, revisions and wrong keyed schem
   {...base,nextRevision:1},
   {...base,evil:"surprise"},
   {...base,updates:[{...base.updates[0],set:{qa:{status:"verified"}}}]},
+  {...base,updates:[{...base.updates[0],set:{qa:{status:"unchecked",applicability:{
+   mathematical:true,legal:false,timeSensitive:false
+  }}}}]},
   {...base,updates:[{...base.updates[0],set:{answer:"C",qa:{status:"unchecked"}}}]}
  ];
  for(const [i,shape] of cases.entries()){
@@ -171,9 +208,10 @@ test("P59: AI appends or removes only named questions with a non-destructive gua
  const q=exec("show",input,"labour-01");
  const appended={...structuredClone(source.questions[0]),
   id:"labour-02",prompt:"Which letter immediately follows B in the English alphabet?",
-  answer:"C",explanation:"C follows B; A precedes B and D comes after C."};
+  answer:"C",explanation:"C follows B; A precedes B and D comes after C.",
+  qa:{status:"unchecked"}};
  const operations={
-  format:"practice-desk-agent-patch",version:1,baseSha256:base,
+  format:"practice-desk-agent-patch",version:1,baseSha256:base,nextRevision:source.revision+1,
   add:[appended],
   remove:[{id:"labour-01",expectedQuestionSha256:q.data.questionSha256}]
  };
@@ -189,6 +227,9 @@ test("P59: AI appends or removes only named questions with a non-destructive gua
  const next=JSON.parse(await readFile(output,"utf8"));
  assert.ok(!next.questions.some(q=>q.id==="labour-01"));
  assert.ok(next.questions.some(q=>q.id==="labour-02"));
+ assert.equal(next.questions.find(q=>q.id==="labour-02").qa.status,"needs-review",
+  "New agent-added content must always re-enter review");
+ assert.equal(next.revision,source.revision+1);
  assert.equal(next.questions.length,3);
  assert.equal(source.questions[0].id,"labour-01");
  assert.equal(inspectExternalQuestionBank(next).valid,true);
@@ -205,7 +246,7 @@ test("P59: focused optional-field removal needs exact question identity; no arbi
  const base=exec("inspect",input).data.sourceSha256;
  const item=exec("show",input,"labour-01").data.questionSha256;
  await writeFile(patch,JSON.stringify({
-  format:"practice-desk-agent-patch",version:1,baseSha256:base,
+  format:"practice-desk-agent-patch",version:1,baseSha256:base,nextRevision:source.revision+1,
   updates:[{id:"labour-01",expectedQuestionSha256:item,unset:["topic"]}]
  }));
  const out=exec("patch",input,patch,output);
@@ -252,7 +293,7 @@ test("P59: editing an alleged official PYQ cannot silently retain its provenance
  const set={prompt:"Which letter comes third in the English alphabet?",
   answer:"C",explanation:"C comes third in this synthetic practice example."};
  const patch={
-  format:"practice-desk-agent-patch",version:1,baseSha256,
+  format:"practice-desk-agent-patch",version:1,baseSha256,nextRevision:source.revision+1,
   updates:[{id:"labour-01",expectedQuestionSha256,set}]
  };
  await writeFile(ops,JSON.stringify(patch));
@@ -308,7 +349,7 @@ test("P60-A: source-backed capability catalogue is versioned, unique, nonempty a
   assert.ok(cap.limitations.length>=1);
   assert.ok(cap.provides.length>=2);
   for(const src of cap.sourcePaths){
-   assert.ok(/^(?:src|scripts|question-banks)\/[\w./-]+\.(?:ts|mjs|json|md)$/.test(src),"No external/untrusted evidence path");
+   assert.ok(/^(?:src|scripts|tools|question-banks)\/[\w./-]+\.(?:ts|mjs|json|md)$/.test(src),"No external/untrusted evidence path");
    assert.ok(!src.includes(".."),"Source paths must remain repository-relative");
    await access(resolve(root,src));
   }
@@ -347,7 +388,11 @@ test("P60-A: agent can inspect exactly one capability and concrete operation sep
  assert.ok(!f.stdout.includes("Exam source and answer-key integrity maintained"));
  const ops=cli("operations");
  assert.equal(ops.status,0,ops.stderr);
- assert.equal(ops.json.operations.length,21);
+ assert.equal(ops.json.operations.length,22);
+ assert.ok(ops.json.operations.some(x=>x.operation==="next-bank-issues"&&
+  x.command.includes("question-bank-agent.mjs next")),"Discovery must advertise bounded next-issue retrieval");
+ assert.ok(ops.json.operations.some(x=>x.operation==="show-question"&&
+  x.command.includes("up to 10")),"Discovery must advertise bounded multi-question retrieval");
   assert.ok(ops.json.operations.some(x=>x.operation==="prepare-blind-review"&&
    x.command.includes("--allow-create")),"Discovery must advertise the real full-bank preparation action");
  assert.ok(ops.json.operations.every(x=>["read-only","create-new-file"].includes(x.privilege)));

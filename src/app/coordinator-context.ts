@@ -6,7 +6,7 @@
 import {type RecordItem} from "./stored-record-validator.ts";
 
 import type {ExamPackage} from "../domain/exam-package.ts";
-import type {CglPracticeMode} from "../workspace-settings.ts";
+import type {PracticeMode} from "../workspace-settings.ts";
 import type {GenericAttempt} from "../engine/generic-attempt.ts";
 import type {ExamCalculatorState} from "../domain/calculator.ts";
 
@@ -14,7 +14,6 @@ import type {OptionId} from "../domain/ids.js";
 import type {SessionEvent} from "../engine/session.ts";
 
 import {type DeletionIntent} from "../history/deletion-policy.ts";
-import type {SourcePaperBank,ReviewPatchBank} from "../content/schema.js";
 
 import type {StorageHealth} from "./storage-health.ts";
 import {type HistoryQuery} from "./history-query.ts";
@@ -28,7 +27,6 @@ import {type PracticeSetups} from "./practice-selection.ts";
 
 import {type AppRoute,type NativeRouter} from "./navigation.ts";
 import type {ExamFamily} from "./exam-families.ts";
-import type {PaperRevisionId} from "../domain/ids.ts";
 import type {ScreenRenderer} from "./screen-renderer.ts";
 import type {ImageViewer} from "./image-viewer.ts";
 import type {ImagePreparation} from "./image-preparation.ts";
@@ -41,10 +39,8 @@ export interface WorkspaceContext{
  readonly applyFamily:(id: string) => void;
  attempt:GenericAttempt | null;
  readonly authoringStudio:AuthoringStudioController;
- readonly builtinPaperIds:Set<PaperRevisionId>;
- readonly builtins:ExamPackage[];
  readonly calculatorStates:Map<string,ExamCalculatorState>;
- cglMode:CglPracticeMode;
+ practiceMode:PracticeMode;
  readonly changeHistoryQuery:(next: HistoryQuery, redraw?: boolean) => void;
  choice:string;
  readonly choiceDrafts:Map<string, { questionId: string; optionIds: OptionId[]; message: string; }>;
@@ -94,7 +90,6 @@ export interface WorkspaceContext{
  readonly packageForAttempt:(saved: GenericAttempt) => ExamPackage | undefined;
  readonly packages:Map<string, ExamPackage>;
  readonly pagehide:() => void;
- readonly patches:ReviewPatchBank;
  pendingWrites:number;
  readonly recordStorageFailure:(error: unknown) => void;
  readonly records:Map<string, RecordItem>;
@@ -113,8 +108,6 @@ export interface WorkspaceContext{
  setups:PracticeSetups;
  readonly showStorageEstimate:() => Promise<void>;
  singleSection:number;
- readonly solutions:Readonly<Record<string, Readonly<Record<string, string>>>>;
- readonly sources:SourcePaperBank;
  readonly storage:(event: StorageEvent) => void;
  storageFault:boolean;
  storageBackend:WorkspaceStore | null;
@@ -139,7 +132,7 @@ export type StorageHealthControllerContext=Slice<
 >;
 
 export type AuthoringControllerContext=Slice<
- "applyFamily"|"builtinPaperIds"|"choice"|"disposed"|"draw"|"families"|
+ "applyFamily"|"choice"|"disposed"|"draw"|"families"|
  "editionView"|"fallbackConflict"|"loading"|"packages"|"records"|"save"|
  "saveSelection"|"singleSection"|"storageFault"|"view"|"warning"
 >;
@@ -150,7 +143,7 @@ export type LearningControllerContext=Slice<
 >;
 
 export type CalendarControllerContext=Slice<
- "attempt"|"builtinPaperIds"|"choice"|"fallbackConflict"|"families"|"freshlyStartedAttemptId"|
+ "attempt"|"choice"|"fallbackConflict"|"families"|"freshlyStartedAttemptId"|
  "go"|"learningDesk"|"loading"|"notice"|"now"|"packages"|"records"|"removeSavedAttempt"|
  "root"|"save"|"storageFault"|"warning"
 >;
@@ -173,12 +166,12 @@ export type HistoryControllerContext=Slice<
 >;
 
 export type LibraryControllerContext=Slice<
- "applyFamily"|"attempt"|"authoringStudio"|"builtinPaperIds"|"cglMode"|
+ "applyFamily"|"attempt"|"authoringStudio"|"practiceMode"|
  "changeHistoryQuery"|"choice"|"composeCount"|"composeDifficulty"|"composeError"|
  "composeOpen"|"composePreview"|"composeSection"|"composeSeed"|"composeTopic"|
  "downloadBackup"|"draw"|"editionView"|"fallbackConflict"|"families"|
  "freshlyStartedAttemptId"|"go"|"imagePreparation"|"importHistory"|"loading"|
- "notice"|"now"|"openSaved"|"packages"|"patches"|"records"|"removeSavedAttempt"|
+ "notice"|"now"|"openSaved"|"packages"|"records"|"removeSavedAttempt"|
  "root"|"save"|"saveSelection"|"selectedFamilyId"|"setups"|"singleSection"|
  "storageFault"|"untimedPractice"|"warning"
 >;

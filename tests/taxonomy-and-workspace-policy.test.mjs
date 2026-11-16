@@ -204,6 +204,7 @@ const q=(section,subject,topic,subtopic)=>({
 });
 function paper(){
  return {...newAuthoringDraft(),examId:"upsc-epfo-apfc",paperId:"p53-mixed",title:"Mixed subject practice",
+  timingKind:"whole-paper",durationMinutes:120,
   sections:[{name:"General Paper",minutes:15}],questions:[
    {...q("General Paper","", "Labour Codes","Wages"),syllabusHeadingId:"labour"},
    {...q("General Paper","", "Accounting","Ledger"),syllabusHeadingId:"accountancy"},

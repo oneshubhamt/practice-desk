@@ -1,5 +1,5 @@
-/** Built-in CGL runtime policy belongs to workspace/application state, not ExamPackage. */
-export type CglPracticeMode="strict"|"free"|"single";
+/** Practice setup is user workspace state, never a property of the source ExamPackage. */
+export type PracticeMode="strict"|"free"|"single";
 
 /** Pure persisted workspace contracts. Browser storage adapters live in app/. */
 export interface DisplayPreferences{
@@ -19,7 +19,7 @@ export function validateDisplayPreferences(value:unknown):DisplayPreferences{
 
 export interface FamilySetup {
  readonly paperRevisionId:string;
- readonly mode:CglPracticeMode;
+ readonly mode:PracticeMode;
  readonly section:number;
  readonly untimed:boolean;
  readonly edition:"source"|"reviewed";
@@ -51,7 +51,7 @@ export function validatePracticeSetups(value:unknown):PracticeSetups{
      !Number.isSafeInteger(v.section)||Number(v.section)<0||Number(v.section)>1999||
      typeof v.untimed!=="boolean"||!["source","reviewed"].includes(String(v.edition)))
      throw Error("Invalid exam family setup");
-   families[familyId]={paperRevisionId:v.paperRevisionId,mode:v.mode as CglPracticeMode,
+   families[familyId]={paperRevisionId:v.paperRevisionId,mode:v.mode as PracticeMode,
      section:v.section as number,untimed:v.untimed,edition:v.edition as "source"|"reviewed"};
  }
  return {schema:2,selectedFamilyId:raw.selectedFamilyId,families};

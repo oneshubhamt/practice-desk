@@ -99,8 +99,14 @@ if(q.content.kind==="free-response"){
      const limit=q.content.responseRules.wordLimit;
      if(field){
        const updateWordCount=()=>{
-         if(!counter||limit===undefined)return;
+         if(!counter)return;
          const count=countWords(field.value);
+         if(limit===undefined){
+           counter.dataset.wordCountState="normal";
+           counter.textContent=count+" words";
+           counter.setAttribute("aria-label","Word count: "+count+" words");
+           return;
+         }
          const band=wordCountBand(count,limit);
          counter.dataset.wordCountState=band;
          counter.textContent=count+" / "+limit+" words";

@@ -1,9 +1,15 @@
 import {loadCglFixture,loadQuestionBankGraph,repositoryRoot} from "./fixtures/cgl-bank.mjs";
+import {archiveCglPackages as builtinCglPackages} from "../tools/cgl-archive-converter.ts";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
-import {validateExamPackage,builtinCglPackages,configureCglPractice,configureUntimedPractice,startGenericAttempt} from "../src/app/exam-package.ts";
+import {validateExamPackage,availablePracticeModes,defaultPracticeMode,resolvePracticeMode,
+ configurePracticeMode,attemptModeForPractice,configureUntimedPractice,startGenericAttempt} from "../src/app/exam-package.ts";
+import {loadQuestionBankCatalog} from "../scripts/question-bank-catalog.mjs";
+import {applyLibraryFamily} from "../src/app/library-controller.ts";
+import {shouldShowWordCount} from "../src/domain/word-count.ts";
+import {newAuthoringDraft} from "../src/authoring/authoring-draft.ts";
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {validatePracticeSetups} from "../src/app/practice-selection.ts";
 const starter=JSON.parse(await readFile(new URL("../examples/apfc-authoring-example.json",import.meta.url),"utf8"));
@@ -45,7 +51,7 @@ test("untimed option derives new validated frozen policy for every built-in mode
  const p=builtinCglPackages(sources,patches,solutions).find(x=>x.paper.edition==="reviewed");
  assert(p);
  for(const mode of ["strict","free","single"]){
-  const base=configureCglPractice(p,mode,2);
+  const base=configurePracticeMode(p,mode,2);
   const untimed=configureUntimedPractice(base,true);
   assert.notEqual(untimed.paper.id,base.paper.id);
   assert.notEqual(untimed.paper.contentHash,base.paper.contentHash);
@@ -72,6 +78,119 @@ test("untimed option derives new validated frozen policy for every built-in mode
  assert.equal(unlocked.paper.edition,"custom");
  assert.equal(validateExamPackage(unlocked),unlocked);
 });
+
+test("PFRDA generic modes preserve authored 20+40 minutes, keys and live word-counter policy",async()=>{
+ const preinstalled=(await loadQuestionBankCatalog(repositoryRoot)).preinstalled;
+ const pfrda=preinstalled.families.find(f=>f.id==="pfrda-grade-a-2026-phase-ii");
+ const packageValue=preinstalled.packages.find(p=>p.paper.id===pfrda?.currentPaperRevisionId);
+ assert.ok(packageValue);
+ assert.equal(packageValue.examId,"pfrda-grade-a-2026-phase-ii");
+ const strict=configurePracticeMode(packageValue,"strict");
+ assert.equal(strict.paper.timing.kind,"sectional");
+ assert.deepEqual(strict.paper.timing.sectionLimits.map(x=>x.durationMs),[20*60000,40*60000]);
+ assert.equal(strict.paper.timing.transition,"automatic");
+ assert.equal(validateExamPackage(strict),strict);
+ const hard=startGenericAttempt(strict,"pfrda-strict",1000,attemptModeForPractice("strict"));
+ const lookup=new Map(strict.questions.map(q=>[q.id,q]));
+ const advanced=transitionGenericAttempt(hard,{type:"TICK",nowMs:1000+20*60000},lookup);
+ assert.equal(advanced.state.sectionIndex,1,"hard deadline must advance to General Stream");
+ assert.equal(advanced.state.status,"running");
+ const expired=transitionGenericAttempt(advanced,{type:"TICK",nowMs:1000+60*60000},lookup);
+ assert.equal(expired.state.status,"completed","hard exam must finish after both sections");
+
+ const flexible=configurePracticeMode(packageValue,"free");
+ assert.equal(flexible.paper.timing.kind,"whole-paper");
+ assert.equal(flexible.paper.timing.durationMs,60*60000);
+ assert.equal(flexible.paper.navigation.sectionNavigation,"free");
+ assert.equal(flexible.paper.navigation.questionNavigation,"free");
+ assert.equal(validateExamPackage(flexible),flexible);
+ const advisory=startGenericAttempt(flexible,"pfrda-flexible",1000,attemptModeForPractice("free"));
+ assert.equal(transitionGenericAttempt(advisory,{type:"TICK",nowMs:1000+65*60000},lookup).state.status,"running",
+  "flexible PFRDA must allow truthful overtime");
+
+ for(const [sectionIndex,count,minutes] of [[0,1,20],[1,50,40]]){
+  const single=configurePracticeMode(packageValue,"single",sectionIndex);
+  assert.equal(single.questions.length,count);
+  assert.equal(single.answerKey.entries.length,count);
+  assert.equal(single.paper.sections.length,1);
+  assert.equal(single.paper.timing.kind,"whole-paper");
+  assert.equal(single.paper.timing.durationMs,minutes*60000);
+  assert.equal(single.paper.candidateTools?.wordCount,undefined);
+  assert.equal(validateExamPackage(single),single);
+  assert.equal(startGenericAttempt(single,"pfrda-section-"+sectionIndex,1000,
+   attemptModeForPractice("single")).frozen.snapshot.mode,"section-practice");
+ }
+ assert.deepEqual(strict.answerKey.entries,packageValue.answerKey.entries);
+ assert.deepEqual(flexible.answerKey.entries,packageValue.answerKey.entries);
+ assert.equal(flexible.questions[0].content.responseRules.wordLimit,120);
+ assert.equal(shouldShowWordCount(strict.paper.candidateTools?.wordCount,"exam-simulation"),false);
+ assert.equal(shouldShowWordCount(flexible.paper.candidateTools?.wordCount,"full-paper-practice"),true);
+ assert.equal(resolvePracticeMode(packageValue.paper,"strict"),"strict");
+});
+
+test("mode availability follows authored physical sections, not exam names",()=>{
+ const oneSection={...starter,
+  paperId:"one-section-exam",bankId:"one-section-exam",examId:"upsc-cse-prelims",
+  sections:[{id:"whole",title:"Complete paper"}],
+  questions:starter.questions.map(({syllabusHeadingId:_,...q})=>({...q,subject:"General",examSection:"whole"})),
+  timing:{kind:"whole-paper",minutes:120,pausePolicy:"forbidden"}};
+ const single=compileExternalQuestionBank(oneSection);
+ assert.deepEqual(availablePracticeModes(single.paper),["strict","free"]);
+ assert.equal(resolvePracticeMode(single.paper,"single"),"free",
+  "a custom one-section paper must not retain an unavailable mode");
+ assert.throws(()=>configurePracticeMode(single,"single",0),/unavailable/);
+ assert.equal(configurePracticeMode(single,"strict").paper.timing.durationMs,120*60000);
+ assert.equal(configurePracticeMode(single,"free").paper.timing.durationMs,120*60000);
+
+ const multi=compileExternalQuestionBank({...oneSection,
+  bankId:"multi-section-exam",paperId:"multi-section-exam",examId:"xat",
+  sections:starter.sections,
+  questions:starter.questions.map(({syllabusHeadingId:_,...q})=>({...q,subject:"General"}))});
+ assert.deepEqual(availablePracticeModes(multi.paper),["strict","free","single"]);
+ assert.equal(configurePracticeMode(multi,"single",1).paper.timing.kind,"untimed",
+  "whole-paper limit must not fabricate a section-only time budget");
+});
+
+test("fresh custom families retain advisory default; CGL stays strict; saved modes remain deliberate",()=>{
+ const custom=compileExternalQuestionBank({...starter,
+  timing:{kind:"whole-paper",minutes:2,pausePolicy:"allowed"}});
+ assert.equal(defaultPracticeMode(custom.paper),"free");
+ const cgl=builtinCglPackages(sources,patches)[0];
+ assert.equal(defaultPracticeMode(cgl.paper),"strict");
+ const families=[
+  {id:"imported:custom",papers:[custom],currentPaperRevisionId:custom.paper.id},
+  {id:"builtin:ssc-cgl",papers:[cgl],currentPaperRevisionId:cgl.paper.id}
+ ];
+ const owner={selectedFamilyId:"",setups:{schema:2,selectedFamilyId:"imported:custom",families:{}},
+  choice:"",practiceMode:"strict",singleSection:0,untimedPractice:false,editionView:"reviewed",
+  packages:new Map([[custom.paper.id,custom],[cgl.paper.id,cgl]]),families:()=>families};
+ applyLibraryFamily(owner,"imported:custom");
+ assert.equal(owner.practiceMode,"free","new authored/imported papers must not silently gain hard expiry");
+ applyLibraryFamily(owner,"builtin:ssc-cgl");
+ assert.equal(owner.practiceMode,"strict","CGL default must remain strict");
+ owner.setups.families["imported:custom"]={paperRevisionId:custom.paper.id,mode:"strict",
+  section:0,untimed:false,edition:"reviewed"};
+ applyLibraryFamily(owner,"imported:custom");
+ assert.equal(owner.practiceMode,"strict","an explicitly saved strict selection must be respected");
+});
+
+test("generic mode derivation never invents timers for unallocated sections",()=>{
+ const noClock=compileExternalQuestionBank(starter);
+ assert.equal(resolvePracticeMode(noClock.paper,"strict"),"strict");
+ assert.equal(configurePracticeMode(noClock,"free"),noClock,
+  "already-flexible untimed papers need no duplicate paper/key revisions");
+ assert.equal(configurePracticeMode(noClock,"free").paper.timing.kind,"untimed");
+ assert.equal(configurePracticeMode(noClock,"single",1).paper.timing.kind,"untimed");
+ const whole=compileExternalQuestionBank({...starter,timing:{kind:"whole-paper",minutes:50,pausePolicy:"forbidden"}});
+ const alreadyFlexible=compileExternalQuestionBank({...starter,
+  timing:{kind:"whole-paper",minutes:50,pausePolicy:"allowed"}});
+ assert.equal(configurePracticeMode(alreadyFlexible,"free"),alreadyFlexible,
+  "existing whole-paper free navigation must retain its package identity");
+ assert.equal(configurePracticeMode(whole,"free").paper.timing.durationMs,50*60000);
+ assert.equal(configurePracticeMode(whole,"single",1).paper.timing.kind,"untimed",
+  "the whole-paper limit is not evidence of a particular section's allowance");
+ assert.throws(()=>configurePracticeMode(whole,"single",100),/Unknown practice section/);
+});
 test("P43 per-family selection rejects invalid mode, edition and untimed values",()=>{
  const valid={schema:2,selectedFamilyId:"builtin:ssc-cgl",families:{
    "builtin:ssc-cgl":{paperRevisionId:"paper-x",mode:"free",section:2,untimed:true,edition:"source"}
@@ -84,24 +203,38 @@ test("P43 per-family selection rejects invalid mode, edition and untimed values"
  }
 });
 
+test("included family bootstrap preserves catalog-declared order without exam-name special cases",async()=>{
+ const {examFamilyCatalog}=await import("../src/app/exam-families.ts");
+ const cgl=builtinCglPackages(sources,patches)[0];
+ const apfc=compileExternalQuestionBank(starter);
+ const included=[
+  {id:"first-declared",examId:cgl.examId,title:"Zeta title",paperIds:[cgl.paper.id],currentPaperRevisionId:cgl.paper.id},
+  {id:"second-declared",examId:apfc.examId,title:"Alpha title",paperIds:[apfc.paper.id],currentPaperRevisionId:apfc.paper.id}
+ ];
+ const catalog=examFamilyCatalog([apfc,cgl],included);
+ assert.deepEqual(catalog.map(f=>f.id),["included:first-declared","included:second-declared"],
+  "bootstrap order must follow the catalog, not alphabetical titles or package iteration order");
+});
+
 test("P43 catalog keeps imported families distinct, sorted and never claims official CGL identity",async()=>{
- const {examFamilyCatalog,BUILTIN_CGL_FAMILY,pairedEdition,familyIdFor}=
-   await import("../src/app/exam-families.ts");
+ const {examFamilyCatalog,pairedEdition,familyIdFor}=await import("../src/app/exam-families.ts");
  const originals=builtinCglPackages(sources,patches);
- const builtins=new Set(originals.map(p=>p.paper.id));
+ const included=[{id:"ssc-cgl",examId:"ssc-cgl",title:"SSC CGL",
+   paperIds:originals.map(p=>p.paper.id),
+   currentPaperRevisionId:originals.find(p=>p.paper.edition==="reviewed")?.paper.id}];
  const apfc=compileExternalQuestionBank(starter);
  const imposterSource={...starter,examId:"ssc-cgl",bankId:"user-supplied-cgl",
    paperId:"user-supplied-cgl",title:"Unverified SSC labelled bank",
    questions:starter.questions.map(q=>{const {syllabusHeadingId:_,...rest}=q;
      return {...rest,subject:"User supplied"};})};
  const imposter=compileExternalQuestionBank(imposterSource);
- const catalog=examFamilyCatalog([...originals,imposter,apfc],builtins);
+ const catalog=examFamilyCatalog([...originals,imposter,apfc],included);
  assert.deepEqual(catalog.map(f=>f.id),
-   [BUILTIN_CGL_FAMILY,"imported:ssc-cgl","imported:upsc-epfo-apfc"]);
+   ["included:ssc-cgl","imported:ssc-cgl","imported:upsc-epfo-apfc"]);
  assert.equal(catalog[0].papers.length,10);
  assert.equal(catalog[1].imported,true);
  assert.equal(catalog[1].papers.length,1);
- assert.equal(familyIdFor(imposter,builtins),"imported:ssc-cgl");
+ assert.equal(familyIdFor(imposter,included),"imported:ssc-cgl");
  const reviewed=catalog[0].papers.find(p=>p.paper.edition==="reviewed");
  const original=pairedEdition(catalog[0],reviewed,"source");
  assert.equal(original?.paper.paperId,reviewed.paper.paperId);
@@ -206,4 +339,105 @@ test("P44 explicit topic and difficulty metadata work without guessing or changi
  assert.equal(selected.manifest.eligibleCount,1);
  assert.equal(JSON.stringify(decorated),snapshot,"No mutation of original bank");
  assert.equal(validateExamPackage(selected.bundle),selected.bundle);
+});
+
+
+test("authoring cardinality and scoring are data-driven for 2/4/5 options and variable matching",()=>{
+ const source=structuredClone(starter);
+ source.questions[0].options=["Alpha","Beta"];
+ source.questions[0].answer="B";
+ source.questions[1].options=["A","B","C","D","E"];
+ source.questions[1].answer="E";
+ const third=source.questions[2];
+ delete third.tolerance;
+ third.kind="matching";
+ third.leftItems=["Left 1","Left 2","Left 3"];
+ third.rightItems=["Right A","Right B","Right C","Right D","Right E"];
+ third.answer="1-A,2-C,3-E";
+ source.scoring={
+  correctMarks:3,incorrectMarks:-1,unansweredMarks:-0.25,decimalPlaces:3,
+  byQuestionKind:{"matching":{correctMarks:4,incorrectMarks:-1,unansweredMarks:0}}
+ };
+ source.sections[1].scoringOverride={correctMarks:2,incorrectMarks:-0.5,unansweredMarks:0};
+ const pkg=compileExternalQuestionBank(source);
+ assert.deepEqual(pkg.questions.slice(0,2).map(q=>q.content.options.length),[2,5]);
+ assert.equal(pkg.answerKey.entries[0].answer.optionId,"B");
+ assert.equal(pkg.answerKey.entries[1].answer.optionId,"E");
+ assert.equal(pkg.questions[2].content.leftItems.length,3);
+ assert.equal(pkg.questions[2].content.rightItems.length,5);
+ assert.deepEqual(pkg.answerKey.entries[2].answer.pairs.map(p=>p.rightId),["A","C","E"]);
+ assert.deepEqual(pkg.paper.scoring.defaultRule,{correctMarks:3,incorrectMarks:-1,unansweredMarks:-0.25});
+ assert.deepEqual(pkg.paper.scoring.byQuestionKind.matching,{correctMarks:4,incorrectMarks:-1,unansweredMarks:0});
+ assert.equal(pkg.paper.scoring.decimalPlaces,3);
+ assert.deepEqual(pkg.paper.sections[1].scoringOverride,{correctMarks:2,incorrectMarks:-0.5,unansweredMarks:0});
+ assert.equal(validateExamPackage(pkg),pkg);
+ const four=compileExternalQuestionBank(starter);
+ assert.deepEqual(four.questions.filter(q=>q.content.kind==="single-choice").map(q=>q.content.options.length),[4,4]);
+});
+
+test("omitted written target stays omitted and new manual authoring starts from neutral policy",()=>{
+ const source=structuredClone(starter),written=source.questions[2];
+ delete written.tolerance;
+ written.kind="free-response";
+ delete written.answer;
+ delete written.wordLimit;
+ written.prompt="Write a short analytical response.";
+ const pkg=compileExternalQuestionBank(source);
+ const q=pkg.questions[2];
+ assert.equal(q.content.kind,"free-response");
+ assert.equal(q.content.responseRules.wordLimit,undefined,
+  "AI authoring must never invent a 300-word target");
+ const draft=newAuthoringDraft();
+ assert.equal(draft.timingKind,"untimed");
+ assert.equal(draft.durationMinutes,0);
+ assert.equal(draft.marksCorrect,1);
+ assert.equal(draft.marksIncorrect,0);
+ assert.equal(draft.marksUnanswered,0);
+ assert.equal(draft.scoreDecimalPlaces,2);
+ assert.equal(draft.sections[0].minutes,0);
+ assert.equal(draft.questions[0].wordLimit,undefined);
+});
+
+test("explicit practice eligibility can narrow structural modes without exam-name special cases",()=>{
+ const one={...starter,bankId:"one-mode",paperId:"one-mode",examId:"generic-one",
+  practiceModes:["free"],sections:[{id:"whole",title:"Whole paper"}],
+  questions:starter.questions.map(({syllabusHeadingId:_,...q})=>({...q,subject:"General",examSection:"whole"}))};
+ const onePkg=compileExternalQuestionBank(one);
+ assert.deepEqual(availablePracticeModes(onePkg.paper),["free"]);
+ assert.equal(resolvePracticeMode(onePkg.paper,"strict"),"free");
+ assert.throws(()=>configurePracticeMode(onePkg,"strict"),/unavailable/);
+ const multi={...starter,bankId:"multi-modes",paperId:"multi-modes",examId:"generic-multi",
+  practiceModes:["strict","free"],
+  questions:starter.questions.map(({syllabusHeadingId:_,...q})=>({...q,subject:"General"}))};
+ const multiPkg=compileExternalQuestionBank(multi);
+ assert.deepEqual(availablePracticeModes(multiPkg.paper),["strict","free"]);
+ assert.throws(()=>configurePracticeMode(multiPkg,"single",0),/unavailable/);
+ const invalid={...one,practiceModes:["single"]};
+ assert.throws(()=>compileExternalQuestionBank(invalid),/Section practice requires multiple physical sections/);
+});
+
+test("edition pairing never substitutes a different logical paper",async()=>{
+ const {pairedCounterpart,pairedEdition}=await import("../src/app/exam-families.ts");
+ const genericQuestions=starter.questions.map(({syllabusHeadingId:_,...q})=>({...q,subject:"General"}));
+ const source=compileExternalQuestionBank({...starter,bankId:"paper-a",paperId:"paper-a",examId:"mixed-editions",questions:genericQuestions});
+ const reviewedLike=compileExternalQuestionBank({...starter,bankId:"paper-b",paperId:"paper-b",examId:"mixed-editions",questions:genericQuestions});
+ const fakeSource={...source,paper:{...source.paper,edition:"source"}};
+ const fakeReviewed={...reviewedLike,paper:{...reviewedLike.paper,edition:"reviewed",
+  sourcePaperRevisionId:"other-source",sourceAnswerKeyRevisionId:"other-key"}};
+ const family={id:"included:mixed-editions",title:"Mixed",imported:false,origin:"included",
+  examId:"mixed-editions",includedPaperIds:[],papers:[fakeSource,fakeReviewed]};
+ assert.equal(pairedEdition(family,fakeSource,"reviewed"),undefined);
+ assert.equal(pairedEdition(family,fakeReviewed,"source"),undefined);
+ assert.equal(pairedCounterpart(family,fakeSource),undefined,
+  "an unrelated reviewed paper must not make a source-only paper look paired");
+ assert.equal(pairedCounterpart(family,fakeReviewed),undefined,
+  "an unrelated source paper must not make a reviewed-only paper look paired");
+ const actual=builtinCglPackages(sources,patches);
+ const realSource=actual.find(p=>p.paper.edition==="source");
+ const realReviewed=actual.find(p=>p.paper.edition==="reviewed"&&
+   p.paper.sourcePaperRevisionId===realSource?.paper.id);
+ assert.ok(realSource&&realReviewed);
+ const realFamily={...family,examId:"ssc-cgl",papers:[realSource,realReviewed]};
+ assert.equal(pairedCounterpart(realFamily,realSource)?.paper.id,realReviewed.paper.id);
+ assert.equal(pairedCounterpart(realFamily,realReviewed)?.paper.id,realSource.paper.id);
 });

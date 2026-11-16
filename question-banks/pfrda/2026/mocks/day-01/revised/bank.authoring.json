@@ -6,7 +6,7 @@
   "paperId": "pfrda-grade-a-2026-day1",
   "title": "PFRDA Grade A 2026 — Day 1 — Revised Practice",
   "edition": "custom",
-  "revision": 2,
+  "revision": 4,
   "scoring": {
     "correctMarks": 2,
     "incorrectMarks": -0.5
@@ -155,7 +155,8 @@
         "correctMarks": 20,
         "incorrectMarks": 0,
         "unansweredMarks": 0
-      }
+      },
+      "wordLimit": 120
     },
     {
       "id": "day1-general-01",
@@ -1765,5 +1766,8 @@
         }
       }
     }
-  ]
+  ],
+  "tools": {
+    "wordCount": "auto"
+  }
 }

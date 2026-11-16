@@ -93,10 +93,10 @@ export function renderGenericControls(
     const limit=c.responseRules.wordLimit;
     const count=countWords(value);
     const band=limit?wordCountBand(count,limit):"normal";
-    const counter=options.showWordCount&&limit?
+    const counter=options.showWordCount?
       '<span class="generic-word-count" id="g-word-count" data-word-count-state="'+band+
-      '" aria-label="Word count: '+count+' of '+limit+' words">'+
-      count+' / '+limit+' words</span>':"";
+      '" aria-label="Word count: '+count+(limit?' of '+limit:'')+' words">'+
+      count+(limit?' / '+limit:'')+' words</span>':"";
     return '<div class="generic-written-response"><div class="generic-written-response-head">'+
       '<label class="picker" for="g-text">Written response</label>'+counter+'</div>'+
       '<textarea id="g-text" rows="10"'+(counter?' aria-describedby="g-word-count"':"")+'>'+

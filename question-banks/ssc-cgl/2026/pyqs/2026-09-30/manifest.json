@@ -6,14 +6,18 @@
   "paperId": "cgl-2026-09-30",
   "kind": "pyq",
   "title": "SSC CGL · 30 Sep 2026",
-  "canonicalEdition": "revised",
+  "canonicalEdition": "reviewed",
   "editions": {
-    "original": {
-      "source": "original/paper.json"
+    "source": {
+      "package": "source/package.exam.json"
     },
-    "revised": {
-      "patches": "revised/patches.json",
-      "solutions": "revised/solutions.json"
+    "reviewed": {
+      "package": "reviewed/package.exam.json"
     }
+  },
+  "archive": {
+    "originalSource": "archive/paper.json",
+    "reviewedPatches": "archive/patches.json",
+    "reviewedSolutions": "archive/solutions.json"
   }
 }

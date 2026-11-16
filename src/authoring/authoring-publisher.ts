@@ -4,12 +4,12 @@
  */
 import type {ExamPackage} from "../domain/exam-package.ts";
 import {validateExamPackage} from "../domain/exam-package.ts";
-import type {AuthoringDraft,AuthoringQuestion} from "./authoring-draft.ts";
+import type {AuthoringDraft,AuthoringQuestion,AuthoringMarkingRule} from "./authoring-draft.ts";
 import {validateAuthoringDraft} from "./authoring-draft.ts";
 import type {CorrectAnswer,AnswerKeyEntry,AnswerKeyRevision} from "../domain/answer-key.ts";
 import type {PaperRevision,SectionDefinition,TimingPolicy} from "../domain/exam.ts";
 import {attributedTopicPath,topicAncestors} from "../learning/syllabus-taxonomy.ts";
-import type {QuestionContent,QuestionRevision,QuestionKind,StimulusDefinition,ImageAsset} from "../domain/question.ts";
+import type {QuestionContent,QuestionRevision,StimulusDefinition,ImageAsset} from "../domain/question.ts";
 import type {RichDocument,RichInline} from "../domain/rich-document.ts";
 import {validateRichDocument} from "../domain/rich-document.ts";
 import {publicationPlainText} from "./plain-rich-text.ts";
@@ -33,7 +33,11 @@ export class PublicationValidationError extends Error{
   this.issues=issues;
  }
 }
-const letters=["A","B","C","D"] as const;
+const optionLabel=(index:number):string=>String.fromCharCode(65+index);
+const optionIndex=(label:string,count:number):number=>{
+ const index=label.length===1?label.charCodeAt(0)-65:-1;
+ return index>=0&&index<count?index:-1;
+};
 const id=(label:string,value:string)=>label+":"+sha256(value).slice(0,24);
 const shell=(doc:RichDocument):RichDocument=>validateRichDocument(doc,{
  knownAssets:new Set([...collectAssets(doc)])
@@ -52,18 +56,20 @@ function collectAssets(doc:RichDocument):Set<string>{
 const resources=(doc:RichDocument):AssetId[]=>[...collectAssets(doc)] as AssetId[];
 const hasContent=(doc:RichDocument):boolean=>publicationPlainText(doc).length>0;
 const name=(n:number)=>"Question "+n;
-const answerText=(raw:string,kind:QuestionKind):CorrectAnswer=>{
- const value=raw.trim();
+const answerText=(raw:string,q:AuthoringQuestion):CorrectAnswer=>{
+ const value=raw.trim(),kind=q.kind;
  if(kind==="single-choice"){
-  const option=value.toUpperCase();
-  if(!letters.includes(option as typeof letters[number]))throw Error("Enter one correct option A, B, C or D");
-  return {kind,optionId:option as OptionId};
+  const option=value.toUpperCase(),index=optionIndex(option,q.options.length);
+  if(index<0)throw Error("Enter one correct option A–"+optionLabel(q.options.length-1));
+  return {kind,optionId:optionLabel(index) as OptionId};
  }
  if(kind==="multiple-select"){
-  const options=value.toUpperCase().replace(/[\s,;+]/g,"");
-  if(!/^[A-D]{1,4}$/.test(options)||new Set(options).size!==options.length)
-    throw Error("Use unique option letters, e.g. A,C or B,D");
-  return {kind,optionIds:[...options].sort() as OptionId[]};
+  const compact=value.toUpperCase().replace(/[\s,;+]/g,"");
+  const options=[...compact];
+  if(!options.length||options.length>q.options.length||new Set(options).size!==options.length||
+     options.some(label=>optionIndex(label,q.options.length)<0))
+    throw Error("Use unique option letters from A–"+optionLabel(q.options.length-1));
+  return {kind,optionIds:options.sort() as OptionId[]};
  }
  if(kind==="numeric-entry"){
   const parts=value.split(",").map(x=>x.trim());
@@ -79,24 +85,28 @@ const answerText=(raw:string,kind:QuestionKind):CorrectAnswer=>{
   return {kind,value:value.toLowerCase()==="true"};
  }
  if(kind==="matching"){
-  // Preferred: 1-C,2-A,3-D,4-B; abbreviated equivalent: C,A,D,B.
-  const entries=value.toUpperCase().split(",").map(s=>s.trim());
-  if(entries.length!==4)throw Error("Enter four matching pairs: 1-C,2-A,3-D,4-B");
-  const mapped=entries.map((x,i)=>{
-   const m=/^([1-4])\s*[-:=]\s*([A-D])$/.exec(x);
-   if(m)return {left:Number(m[1]),right:m[2]!};
-   if(/^[A-D]$/.test(x))return {left:i+1,right:x};
-   throw Error("Matching format: 1-C,2-A,3-D,4-B (or C,A,D,B)");
+  const entries=value.toUpperCase().split(",").map(x=>x.trim()).filter(Boolean);
+  if(entries.length!==q.leftItems.length)
+    throw Error("Enter exactly "+q.leftItems.length+" matching pairs");
+  const mapped=entries.map((entry,i)=>{
+   const match=/^(\d+)\s*[-:=]\s*([A-Z])$/.exec(entry);
+   const left=match?Number(match[1]):i+1;
+   const right=match?match[2]!:entry;
+   if(left<1||left>q.leftItems.length||optionIndex(right,q.rightItems.length)<0)
+    throw Error("Matching answers must use left numbers 1–"+q.leftItems.length+
+      " and right letters A–"+optionLabel(q.rightItems.length-1));
+   return {left,right};
   });
-  if(new Set(mapped.map(x=>x.left)).size!==4||new Set(mapped.map(x=>x.right)).size!==4)
-   throw Error("Match each left and right item exactly once");
-  return {kind,pairs:mapped.sort((a,b)=>a.left-b.left)
-   .map(pair=>({leftId:("L"+pair.left) as MatchItemId,rightId:pair.right as MatchItemId}))};
+  if(new Set(mapped.map(x=>x.left)).size!==q.leftItems.length||
+     new Set(mapped.map(x=>x.right)).size!==mapped.length)
+   throw Error("Match every left item once, without reusing a right item");
+  return {kind,pairs:mapped.sort((a,b)=>a.left-b.left).map(pair=>({
+   leftId:("L"+pair.left) as MatchItemId,rightId:pair.right as MatchItemId}))};
  }
  return {kind:"free-response",evaluation:"manual"};
 };
 const keyFrom=(q:AuthoringQuestion):CorrectAnswer=>{
- const result=answerText(q.answer,q.kind);
+ const result=answerText(q.answer,q);
  if(result.kind==="numeric-entry")return {...result,absoluteTolerance:q.tolerance??0};
  return result;
 };
@@ -147,17 +157,17 @@ function issuesFor(d:AuthoringDraft,existing:readonly ExamPackage[],reviewedSour
   if(d.edition!=="custom"&&q.source.trim().length<6)
    item("Provenance","Provide a source/reference note for each Source or Reviewed question");
   if(["single-choice","multiple-select"].includes(q.kind))
-   q.options.forEach((o,i)=>{if(!hasContent(o))item("Option "+letters[i],"Option cannot be blank");});
+   q.options.forEach((o,i)=>{if(!hasContent(o))item("Option "+optionLabel(i),"Option cannot be blank");});
   if(q.kind==="matching"){
    q.leftItems.forEach((o,i)=>{if(!hasContent(o))item("Left "+(i+1),"Matching item cannot be blank");});
-   q.rightItems.forEach((o,i)=>{if(!hasContent(o))item("Right "+letters[i],"Matching item cannot be blank");});
+   q.rightItems.forEach((o,i)=>{if(!hasContent(o))item("Right "+optionLabel(i),"Matching item cannot be blank");});
   }
   if(q.kind==="multiple-select"){
    try{
     const key=keyFrom(q);
     if(key.kind==="multiple-select"&&
        (key.optionIds.length<(q.minSelections??1)||
-        key.optionIds.length>(q.maxSelections??4)))
+        key.optionIds.length>(q.maxSelections??q.options.length)))
        item("Answer key","Correct option count must respect the published selection bounds");
    }catch{/* Separate answer-key error below has exact input details. */}
   }
@@ -170,9 +180,9 @@ function issuesFor(d:AuthoringDraft,existing:readonly ExamPackage[],reviewedSour
   try{keyFrom(q);}catch(e){item("Answer key",e instanceof Error?e.message:"Invalid answer");}
   for(const [field,doc] of [
     ["Question stem",q.prompt],["Passage",q.passage],["Worked explanation",q.explanation],
-    ...q.options.map((o,i)=>["Option "+letters[i],o] as const),
+    ...q.options.map((o,i)=>["Option "+optionLabel(i),o] as const),
     ...q.leftItems.map((o,i)=>["Left "+(i+1),o] as const),
-    ...q.rightItems.map((o,i)=>["Right "+letters[i],o] as const)
+    ...q.rightItems.map((o,i)=>["Right "+optionLabel(i),o] as const)
   ] as (readonly [string,RichDocument])[]){
    try{
     const normalized=shell(doc);
@@ -286,10 +296,10 @@ export function compileAuthoringPublication(
      ...(assetIds.length?{assetIds}:{})};
   };
   if(q.kind==="single-choice"||q.kind==="multiple-select"){
-   const options=q.options.map((doc,i)=>item(doc,letters[i]!));
+   const options=q.options.map((doc,i)=>item(doc,optionLabel(i)));
    content=q.kind==="single-choice"?{...baseContent,kind:q.kind,options}:
     {...baseContent,kind:q.kind,options,
-      minSelections:q.minSelections??1,maxSelections:q.maxSelections??4};
+      minSelections:q.minSelections??1,maxSelections:q.maxSelections??q.options.length};
   }else if(q.kind==="numeric-entry"){
    content={...baseContent,kind:q.kind,numericRules:{allowNegative:true}};
   }else if(q.kind==="true-false"){
@@ -300,11 +310,11 @@ export function compileAuthoringPublication(
     return {...result,id:result.id as unknown as MatchItemId};
    });
    content={...baseContent,kind:q.kind,
-    leftItems:items(q.leftItems,["L1","L2","L3","L4"]),
-    rightItems:items(q.rightItems,letters)};
+    leftItems:items(q.leftItems,q.leftItems.map((_,i)=>"L"+(i+1))),
+    rightItems:items(q.rightItems,q.rightItems.map((_,i)=>optionLabel(i)))};
   }else{
    content={...baseContent,kind:"free-response",responseRules:{
-    minWords:1,wordLimit:q.wordLimit??300
+    ...(q.wordLimit===undefined?{}:{wordLimit:q.wordLimit})
    }};
   }
   const editorial={
@@ -339,11 +349,14 @@ export function compileAuthoringPublication(
   questions.push({...signed,contentHash:questionRevisionHash(signed)});
   const partialCredit=q.partialCreditEach??0;
   const scoringRule=q.scoringOverride;
+  const sectionRule=d.sections.find(section=>section.name===q.section)?.scoringOverride;
+  const effectiveRule:AuthoringMarkingRule=scoringRule??sectionRule??d.kindScoring?.[q.kind]??{
+   correctMarks:d.marksCorrect,incorrectMarks:d.marksIncorrect,unansweredMarks:d.marksUnanswered};
   entries.push({questionRevisionId:revisionId,answer:keyFrom(q),
     ...(scoringRule||(partialCredit>0&&["multiple-select","matching"].includes(q.kind))?{
-      scoringOverride:{correctMarks:scoringRule?.correctMarks??d.marksCorrect,
-       incorrectMarks:scoringRule?.incorrectMarks??d.marksIncorrect,
-       unansweredMarks:scoringRule?.unansweredMarks??0,
+      scoringOverride:{correctMarks:effectiveRule.correctMarks,
+       incorrectMarks:effectiveRule.incorrectMarks,
+       unansweredMarks:effectiveRule.unansweredMarks,
        ...(partialCredit>0&&["multiple-select","matching"].includes(q.kind)?{
         partialCredit:{kind:"per-correct-component" as const,
          marksPerCorrectComponent:partialCredit,
@@ -359,7 +372,8 @@ export function compileAuthoringPublication(
   const ids=groups.get(section.name);
   if(!ids?.length)throw Error("Canonical draft section has no questions");
   return {id:(paperId+":section:"+sha256(section.name).slice(0,12)) as SectionId,
-    title:section.name,questionRevisionIds:ids};
+    title:section.name,questionRevisionIds:ids,
+    ...(section.scoringOverride?{scoringOverride:section.scoringOverride}:{})};
  });
  const answerBase={id:keyId,paperId,revision:d.revision,entries};
  const answerKey:AnswerKeyRevision={...answerBase,contentHash:answerKeyRevisionHash(answerBase)};
@@ -389,8 +403,11 @@ export function compileAuthoringPublication(
    sectionNavigation:d.sectionNavigation,
    allowFlagging:true,allowReview:d.allowReview},
   ...(Object.keys(candidateTools).length?{candidateTools}:{}),
+  ...(d.practiceModes?{practiceModes:d.practiceModes}:{}),
   scoring:{defaultRule:{correctMarks:d.marksCorrect,incorrectMarks:d.marksIncorrect,
-   unansweredMarks:0}}
+   unansweredMarks:d.marksUnanswered},
+   ...(d.kindScoring&&Object.keys(d.kindScoring).length?{byQuestionKind:d.kindScoring}:{}),
+   decimalPlaces:d.scoreDecimalPlaces}
  };
  const paper:PaperRevision={...paperBase,contentHash:paperRevisionHash(paperBase)};
  const assets:ImageAsset[]=d.assets.filter(x=>referenced.has(x.id));
