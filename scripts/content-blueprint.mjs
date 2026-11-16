@@ -40,6 +40,11 @@ const int=(x,label,min,max)=>{
  if(!Number.isSafeInteger(x)||x<min||x>max)fail(label+" must be an integer from "+min+" to "+max);
  return x;
 };
+const finite=(x,label,min,max)=>{
+ if(typeof x!=="number"||!Number.isFinite(x)||x<min||x>max)
+  fail(label+" must be a finite number from "+min+" to "+max);
+ return x;
+};
 const bool=(x,label)=>{if(typeof x!=="boolean")fail(label+" must be boolean");return x;};
 const date=(x,label)=>{
  str(x,label,10);
@@ -95,9 +100,9 @@ function validateBlueprint(value){
    const rule=obj(value,label,["correctMarks","incorrectMarks","unansweredMarks"]);
    if(complete&&["correctMarks","incorrectMarks","unansweredMarks"].some(k=>rule[k]===undefined))
     fail(label+" must declare correctMarks, incorrectMarks and unansweredMarks");
-   if(rule.correctMarks!==undefined)num(rule.correctMarks,label+".correctMarks",0,1000);
-   if(rule.incorrectMarks!==undefined)num(rule.incorrectMarks,label+".incorrectMarks",-1000,0);
-   if(rule.unansweredMarks!==undefined)num(rule.unansweredMarks,label+".unansweredMarks",-1000,1000);
+   if(rule.correctMarks!==undefined)finite(rule.correctMarks,label+".correctMarks",0,1000);
+   if(rule.incorrectMarks!==undefined)finite(rule.incorrectMarks,label+".incorrectMarks",-1000,0);
+   if(rule.unansweredMarks!==undefined)finite(rule.unansweredMarks,label+".unansweredMarks",-1000,1000);
    if(rule.correctMarks!==undefined&&rule.incorrectMarks!==undefined&&rule.unansweredMarks!==undefined&&
       (rule.unansweredMarks<rule.incorrectMarks||rule.unansweredMarks>rule.correctMarks))
     fail(label+".unansweredMarks must lie between incorrect and correct marks");
