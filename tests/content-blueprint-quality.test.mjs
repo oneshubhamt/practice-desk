@@ -114,7 +114,10 @@ test("P60-B RED: contradicted blueprint, impossible allocations, unsupported fie
   p=>{p.quotas.subjects.targets[0].key="heading:not-official";},
   p=>{p.fakeVerified=true;},
   p=>{p.syllabus.basis="official-confirmed";},
-  p=>{p.requirements.allowedOrigins=["verified-pyq"];}
+  p=>{p.requirements.allowedOrigins=["verified-pyq"];},
+  p=>{p.paperRules={tools:{calculator:"scientific-v9"}};},
+  p=>{p.paperRules={practiceModes:["strict","strict"]};},
+  p=>{p.paperRules={scoring:{correctMarks:2,incorrectMarks:-0.5,unansweredMarks:3}};}
  ]){
   const p=mkPlan();mutate(p);
   const file=await write(dir,"broken-"+Math.random()+".json",p);
@@ -312,7 +315,11 @@ test("Authoring brief: new-bank packet is compact, single-agent compatible and c
  assert.equal(result.data.format,"practice-desk-authoring-brief");
  assert.equal(result.data.valid,true);
  assert.deepEqual(result.data.workflow,{singleAgentCompatible:true,multipleAgentsRequired:false});
- assert.deepEqual(result.data.task,{targetCount:3,alreadyAuthored:0,remainingCount:3,requestedNow:2});
+ assert.equal(result.data.task.targetCount,3);
+ assert.equal(result.data.task.alreadyAuthored,0);
+ assert.equal(result.data.task.remainingCount,3);
+ assert.equal(result.data.task.requestedNow,2);
+ assert.deepEqual(result.data.task.suggestedQuestionIds,["apfc-next-batch-q01","apfc-next-batch-q02"]);
  assert.equal(result.data.outputContract.sourceEnvelope.format,"practice-desk-authoring");
  assert.equal(result.data.outputContract.sourceEnvelope.bankId,"apfc-next-batch");
  assert.equal(result.data.outputContract.sourceEnvelope.questions,undefined);
@@ -344,6 +351,7 @@ test("Authoring brief: existing partial batches contribute only compact coverage
  assert.equal(result.data.task.alreadyAuthored,1);
  assert.equal(result.data.task.remainingCount,2);
  assert.equal(result.data.task.requestedNow,2);
+ assert.deepEqual(result.data.task.suggestedQuestionIds,["apfc-batch-2-q01","apfc-batch-2-q02"]);
  assert.equal(result.data.outputContract.sourceEnvelope.tools.wordCount,"auto");
  assert.equal(result.data.outputContract.sourceEnvelope.bankId,"apfc-batch-2");
  assert.equal(result.data.outputContract.sourceEnvelope.questions,undefined);
@@ -351,6 +359,32 @@ test("Authoring brief: existing partial batches contribute only compact coverage
  const duplicate=run("brief",plan,input,"--bank-id",source.bankId,"--title","Duplicate");
  assert.notEqual(duplicate.status,0);
  assert.match(duplicate.data.message,/bank-id.*new/i);
+}));
+
+test("Authoring brief: first-batch envelope preserves full generic paper capabilities and is canonically parseable",()=>temp(async dir=>{
+ const p=mkPlan();
+ p.paperRules={
+  scoring:{
+   correctMarks:3,incorrectMarks:-1,unansweredMarks:0,decimalPlaces:2,
+   byQuestionKind:{"free-response":{correctMarks:10,incorrectMarks:0,unansweredMarks:0}}
+  },
+  timing:{kind:"whole-paper",minutes:30,pausePolicy:"forbidden",sectionTransition:"manual",allowEarlySubmit:true},
+  navigation:{questionNavigation:"free",sectionNavigation:"free",allowReview:true},
+  tools:{calculator:"basic-v1",wordCount:"auto"},
+  practiceModes:["strict","free"],
+  sections:[{id:"combined",title:"Combined",scoringOverride:{correctMarks:3,incorrectMarks:-1,unansweredMarks:0}}]
+ };
+ const plan=await write(dir,"full-paper-brief.json",p);
+ const result=run("brief",plan,"--bank-id","generic-batch","--title","Generic batch","--batch-size","3");
+ assert.equal(result.status,0,result.stderr);
+ assert.deepEqual(result.data.paper.scoring,p.paperRules.scoring);
+ assert.deepEqual(result.data.paper.tools,p.paperRules.tools);
+ assert.deepEqual(result.data.paper.practiceModes,p.paperRules.practiceModes);
+ assert.deepEqual(result.data.paper.sections,p.paperRules.sections);
+ assert.deepEqual(result.data.outputContract.sourceEnvelope.scoring,p.paperRules.scoring);
+ assert.deepEqual(result.data.outputContract.sourceEnvelope.tools,p.paperRules.tools);
+ assert.deepEqual(result.data.outputContract.sourceEnvelope.practiceModes,p.paperRules.practiceModes);
+ assert.equal(result.data.itemWritingPriorities.length,5);
 }));
 
 test("Authoring brief: deficit accounting stays exact beyond the ordinary audit display bound",()=>temp(async dir=>{

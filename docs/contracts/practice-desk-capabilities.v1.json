@@ -80,7 +80,7 @@
       "operation": "authoring-brief",
       "command": "node scripts/content-blueprint.mjs brief <plan.json> [existing-source.json ...] --bank-id <new-batch-id> --title <title> [--batch-size 1..20] [--cognitive tags.json] [--against prior-bank.json]...",
       "privilege": "read-only",
-      "effect": "Compact single-agent-compatible authoring task packet: remaining blueprint deficits, source policy, exact non-question paper envelope and minimal question contract; omits existing question bodies, media bytes and repository/package placement"
+      "effect": "Compact single-agent-compatible authoring task packet: exact paper configuration, suggested stable question IDs, remaining blueprint deficits, source policy and minimal question contract; omits existing question bodies, media bytes and repository/package placement"
     },
     {
       "operation": "validate-content-blueprint",
@@ -448,7 +448,7 @@
       "summary": "P60-B versioned content production blueprint, bounded multi-batch quota audit and optional exact canonical compiler preflight.",
       "provides": [
         "Validate user-authored exam, paper, subject and topic targets before content generation",
-        "Generate a bounded single-agent-compatible authoring brief for a fresh batch, preserving exact paper rules while hiding existing question bodies and repository/package mechanics",
+        "Generate a bounded single-agent-compatible authoring brief for a fresh batch, preserving full generic paper configuration, suggesting stable item IDs and hiding existing question bodies and repository/package mechanics",
         "Enforce exhaustive or partial exact counts across subject, topic, subtopic, difficulty, kind, origin and physical section",
         "Optional explicit user marking, timer and navigation constraints",
         "Unverified author-attributed cognitive-level sidecar and counts",

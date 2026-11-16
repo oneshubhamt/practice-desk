@@ -8,7 +8,7 @@ import {createHash} from "node:crypto";
 import {isDeepStrictEqual} from "node:util";
 import {fileURLToPath} from "node:url";
 import {resolve} from "node:path";
-import {inspectExternalQuestionBank} from "../src/authoring/external-bank.ts";
+import {inspectExternalQuestionBank,toAuthoringDraft} from "../src/authoring/external-bank.ts";
 import {publicationPlainText} from "../src/authoring/authoring-publisher.ts";
 import {syllabusHeading} from "../src/learning/syllabus-taxonomy.ts";
 
@@ -89,17 +89,77 @@ function validateBlueprint(value){
  int(b.revision,"revision",1,1000000);int(b.targetCount,"targetCount",1,MAX_TOTAL);
  if(b.allowPartial!==undefined)bool(b.allowPartial,"allowPartial");
  if(b.paperRules!==undefined){
-  const policy=obj(b.paperRules,"paperRules",["scoring","timing","navigation","sections"]);
+  const policy=obj(b.paperRules,"paperRules",["scoring","timing","navigation","tools","practiceModes","sections"]);
   if(!Object.keys(policy).length)fail("paperRules cannot be empty");
-  const legal={scoring:["correctMarks","incorrectMarks"],
-   timing:["kind","minutes","pausePolicy","sectionTransition","allowEarlySubmit"],
-   navigation:["questionNavigation","sectionNavigation","allowReview"]};
-  for(const k of Object.keys(legal)){
-   if(policy[k]!==undefined)obj(policy[k],"paperRules."+k,legal[k]);
+  const marking=(value,label,complete=false)=>{
+   const rule=obj(value,label,["correctMarks","incorrectMarks","unansweredMarks"]);
+   if(complete&&["correctMarks","incorrectMarks","unansweredMarks"].some(k=>rule[k]===undefined))
+    fail(label+" must declare correctMarks, incorrectMarks and unansweredMarks");
+   if(rule.correctMarks!==undefined)num(rule.correctMarks,label+".correctMarks",0,1000);
+   if(rule.incorrectMarks!==undefined)num(rule.incorrectMarks,label+".incorrectMarks",-1000,0);
+   if(rule.unansweredMarks!==undefined)num(rule.unansweredMarks,label+".unansweredMarks",-1000,1000);
+   if(rule.correctMarks!==undefined&&rule.incorrectMarks!==undefined&&rule.unansweredMarks!==undefined&&
+      (rule.unansweredMarks<rule.incorrectMarks||rule.unansweredMarks>rule.correctMarks))
+    fail(label+".unansweredMarks must lie between incorrect and correct marks");
+   return rule;
+  };
+  if(policy.scoring!==undefined){
+   const score=obj(policy.scoring,"paperRules.scoring",
+    ["correctMarks","incorrectMarks","unansweredMarks","decimalPlaces","byQuestionKind"]);
+   marking(score,"paperRules.scoring");
+   if(score.decimalPlaces!==undefined)int(score.decimalPlaces,"paperRules.scoring.decimalPlaces",0,6);
+   if(score.byQuestionKind!==undefined){
+    const by=obj(score.byQuestionKind,"paperRules.scoring.byQuestionKind",KINDS);
+    for(const [kind,rule] of Object.entries(by))marking(rule,"paperRules.scoring.byQuestionKind."+kind,true);
+   }
+  }
+  if(policy.timing!==undefined){
+   const timing=obj(policy.timing,"paperRules.timing",
+    ["kind","minutes","pausePolicy","sectionTransition","allowEarlySubmit"]);
+   if(timing.kind!==undefined&&!["untimed","whole-paper","sectional"].includes(timing.kind))
+    fail("paperRules.timing.kind is unsupported");
+   if(timing.minutes!==undefined)int(timing.minutes,"paperRules.timing.minutes",1,600);
+   if(timing.pausePolicy!==undefined&&!["allowed","forbidden"].includes(timing.pausePolicy))
+    fail("paperRules.timing.pausePolicy is unsupported");
+   if(timing.sectionTransition!==undefined&&!["manual","automatic"].includes(timing.sectionTransition))
+    fail("paperRules.timing.sectionTransition is unsupported");
+   if(timing.allowEarlySubmit!==undefined)bool(timing.allowEarlySubmit,"paperRules.timing.allowEarlySubmit");
+  }
+  if(policy.navigation!==undefined){
+   const navigation=obj(policy.navigation,"paperRules.navigation",
+    ["questionNavigation","sectionNavigation","allowReview"]);
+   if(navigation.questionNavigation!==undefined&&!["free","forward-only"].includes(navigation.questionNavigation))
+    fail("paperRules.navigation.questionNavigation is unsupported");
+   if(navigation.sectionNavigation!==undefined&&!["free","sequential-locked"].includes(navigation.sectionNavigation))
+    fail("paperRules.navigation.sectionNavigation is unsupported");
+   if(navigation.allowReview!==undefined)bool(navigation.allowReview,"paperRules.navigation.allowReview");
+  }
+  if(policy.tools!==undefined){
+   const tools=obj(policy.tools,"paperRules.tools",["calculator","wordCount"]);
+   if(tools.calculator!==undefined&&tools.calculator!=="basic-v1")
+    fail('paperRules.tools.calculator must be "basic-v1"');
+   if(tools.wordCount!==undefined&&!["auto","shown","hidden"].includes(tools.wordCount))
+    fail("paperRules.tools.wordCount is unsupported");
+  }
+  if(policy.practiceModes!==undefined){
+   const modes=list(policy.practiceModes,"paperRules.practiceModes",3,1);
+   if(new Set(modes).size!==modes.length||modes.some(x=>!["strict","free","single"].includes(x)))
+    fail("paperRules.practiceModes must contain unique strict/free/single values");
   }
   if(policy.sections!==undefined){
-   for(const entry of list(policy.sections,"paperRules.sections",40,1))
-    obj(entry,"paperRules.sections[]",["id","title","minutes"]);
+   const ids=new Set(),titles=new Set();
+   for(const entry of list(policy.sections,"paperRules.sections",40,1)){
+    const section=obj(entry,"paperRules.sections[]",["id","title","minutes","scoringOverride"]);
+    const id=str(section.id,"paperRules.sections[].id",80);
+    if(!/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(id)||ids.has(id))
+     fail("paperRules.sections[].id must be unique stable IDs");
+    ids.add(id);
+    const title=str(section.title,"paperRules.sections[].title",100);
+    if(titles.has(title))fail("paperRules.sections[].title must be unique");
+    titles.add(title);
+    if(section.minutes!==undefined)int(section.minutes,"paperRules.sections[].minutes",0,600);
+    if(section.scoringOverride!==undefined)marking(section.scoringOverride,"paperRules.sections[].scoringOverride",true);
+   }
   }
  }
  const s=obj(b.syllabus,"syllabus",["basis","asOfDate","reference"]);
@@ -195,7 +255,8 @@ function validateBlueprint(value){
 function audit(plan,sources,tagDoc,{offset=0,limit=12,priorSources=[],coverageLimit=12}={}){
  const issues=[],all=[],batches=[],sourceHashes=[],bankIds=new Set(),questionIds=new Set();
  const add=(code,message,path="$",severity="error")=>issues.push({code,severity,basis:severity==="warning"?"heuristic":"deterministic",path,message});
- const first=sources[0]?.value,head=first?{scoring:first.scoring,timing:first.timing,navigation:first.navigation,sections:first.sections}:null;
+ const first=sources[0]?.value,head=first?{scoring:first.scoring,timing:first.timing,navigation:first.navigation,
+  tools:first.tools,practiceModes:first.practiceModes,sections:first.sections}:null;
  for(const [k,expected] of Object.entries(plan.paperRules??{}))
   if(first&&!matchesSpecified(first[k],expected))add("paper-policy-mismatch","Authored "+k+" does not match user blueprint paperRules."+k,"paperRules."+k);
  for(const {value:source,digest} of sources){
@@ -210,8 +271,10 @@ function audit(plan,sources,tagDoc,{offset=0,limit=12,priorSources=[],coverageLi
   if(!isDeepStrictEqual(source.scoring,head.scoring)||
     !isDeepStrictEqual(source.timing,head.timing)||
     !isDeepStrictEqual(source.navigation,head.navigation)||
+    !isDeepStrictEqual(source.tools,head.tools)||
+    !isDeepStrictEqual(source.practiceModes,head.practiceModes)||
     !isDeepStrictEqual(source.sections,head.sections))
-   add("paper-rules-mismatch","Batches have different scoring/timing/navigation/physical sections",at);
+   add("paper-rules-mismatch","Batches have different scoring/timing/navigation/tools/practice modes/physical sections",at);
   const check=inspectExternalQuestionBank(source);
   if(!check.valid)add("source-invalid","Canonical P57/P59 source QA failed for "+bankId,at);
   batches.push({bankId,count:check.questionCount,sourceValid:check.valid,
@@ -438,6 +501,21 @@ const sourceEnvelope=(plan,sources,bankId,title)=>{
  }
  envelope.bankId=bankId;envelope.title=title;
  envelope.examId=plan.examId;envelope.paperId=plan.paperId;envelope.revision=plan.revision;
+ const sectionId=envelope.sections?.[0]?.id;
+ if(!sectionId)fail("Authoring brief paper envelope must contain at least one physical section");
+ try{
+  toAuthoringDraft({...structuredClone(envelope),questions:[{
+   id:"brief_probe",examSection:sectionId,kind:"single-choice",
+   prompt:"Authoring-envelope validation placeholder.",
+   options:["One","Two"],answer:"A",
+   explanation:"Synthetic parser probe only; never emitted as authored content.",
+   provenance:{kind:"ai-original",sourceNote:"Internal brief-envelope validation only"},
+   qa:{status:"unchecked"}
+  }]});
+ }catch(error){
+  fail("Authoring brief paper envelope is not a valid canonical source configuration: "+
+   (error instanceof Error?error.message:"unknown validation failure"));
+ }
  return envelope;
 };
 function buildAuthoringBrief(plan,planSha,sources,tagDoc,{priorSources=[],batchSize=8,bankId,title}={}){
@@ -460,6 +538,17 @@ function buildAuthoringBrief(plan,planSha,sources,tagDoc,{priorSources=[],batchS
  }
  const requestedNow=Math.min(batchSize,audited.remainingCount);
  const envelope=sourceEnvelope(plan,sources,bankId,title);
+ const occupiedIds=new Set(sources.flatMap(x=>Array.isArray(x.value?.questions)?
+  x.value.questions.map(q=>q?.id).filter(id=>typeof id==="string"):[]));
+ const suggestedQuestionIds=[];
+ const prefix=bankId.slice(0,70).replace(/[-_]+$/u,"")||"batch";
+ for(let serial=1;suggestedQuestionIds.length<requestedNow&&serial<=10000;serial++){
+  const candidate=prefix+"-q"+String(serial).padStart(2,"0");
+  if(candidate.length<=80&&!occupiedIds.has(candidate)){
+   suggestedQuestionIds.push(candidate);occupiedIds.add(candidate);
+  }
+ }
+ if(suggestedQuestionIds.length!==requestedNow)fail("Unable to reserve stable question IDs for requested batch");
  const sourcePolicy={
   syllabus:structuredClone(plan.syllabus),
   minCitations:plan.requirements.minCitations??0,
@@ -477,7 +566,7 @@ function buildAuthoringBrief(plan,planSha,sources,tagDoc,{priorSources=[],batchS
   blueprint:{id:plan.id,sha256:planSha,examId:plan.examId,paperId:plan.paperId,revision:plan.revision},
   workflow:{singleAgentCompatible:true,multipleAgentsRequired:false},
   task:{targetCount:plan.targetCount,alreadyAuthored:audited.actualCount,
-   remainingCount:audited.remainingCount,requestedNow},
+   remainingCount:audited.remainingCount,requestedNow,suggestedQuestionIds},
   paper:{
    scoring:structuredClone(envelope.scoring),timing:structuredClone(envelope.timing),
    navigation:structuredClone(envelope.navigation),sections:structuredClone(envelope.sections),
@@ -485,6 +574,13 @@ function buildAuthoringBrief(plan,planSha,sources,tagDoc,{priorSources=[],batchS
    ...(envelope.practiceModes?{practiceModes:structuredClone(envelope.practiceModes)}:{})
   },
   sourcePolicy,classification,
+  itemWritingPriorities:[
+   "Spend reasoning on exam-relevant substance, not Practice Desk mechanics.",
+   "For automatically scored items, make the keyed answer uniquely defensible and distractors plausible.",
+   "Avoid answer leakage, accidental hints, trivia-only wording traps and semantic duplicates.",
+   "Use explanations to justify the key and resolve the misconception or distinction being tested.",
+   "Research and verify legal, numerical, current and PYQ claims; never infer authority from this packet."
+  ],
   priorityDeficits:deficits.slice(0,24),
   deficitSummary:{shown:Math.min(24,deficits.length),remaining:Math.max(0,deficits.length-24),
    note:"Quota groups overlap; satisfy these constraints jointly rather than summing their remaining counts."},

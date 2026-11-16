@@ -22,7 +22,7 @@ node scripts/content-blueprint.mjs brief plan.json batch-01.json batch-02.json \
   --batch-size 8
 ```
 
-The packet contains the exam/paper identity, current remaining count, bounded quota deficits, source policy, the exact non-question paper envelope and the small question-output contract. It deliberately omits repository/package placement, existing question bodies and media bytes. The workflow is fully usable with **one AI agent**; multiple agents or clean-context review may strengthen later review but are not prerequisites for authoring. The current brief does not include learner-performance context; any later personalized focus is an explicit optional input, not a requirement for this baseline flow.
+The packet contains the exam/paper identity, current remaining count, bounded quota deficits, source policy, suggested stable question IDs, the exact non-question paper envelope (including generic scoring/timing/navigation/tools/practice-mode rules when declared) and the small question-output contract. It deliberately omits repository/package placement, existing question bodies and media bytes. The workflow is fully usable with **one AI agent**; multiple agents or clean-context review may strengthen later review but are not prerequisites for authoring. The current brief does not include learner-performance context; any later personalized focus is an explicit optional input, not a requirement for this baseline flow.
 
 ## Canonical source
 
