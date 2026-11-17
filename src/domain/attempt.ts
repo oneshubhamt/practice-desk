@@ -10,6 +10,7 @@ import type { ScoringPolicy } from "./scoring.js";
 import type { CandidateResponse, ImageAsset, QuestionRevision, StimulusDefinition } from "./question.js";
 import type { PaperRevision } from "./exam.js";
 import type { AnswerKeyRevision } from "./answer-key.js";
+import type {ExamTaxonomy,TaxonomyAssignments} from "./taxonomy.ts";
 
 export type AttemptMode =
   | "exam-simulation"
@@ -90,6 +91,9 @@ export interface FrozenAttemptContent {
   readonly questions: readonly QuestionRevision[];
   readonly stimuli: readonly StimulusDefinition[];
   readonly assets: readonly ImageAsset[];
+  /** Exact taxonomy context used for semantic analytics/practice at attempt start. */
+  readonly taxonomy?: ExamTaxonomy;
+  readonly taxonomyAssignments?: TaxonomyAssignments;
 }
 
 /** User-entered assessment only; never mutates the machine-scored snapshot. */
