@@ -10,7 +10,6 @@ import type {CandidateResponse} from "../domain/question.ts";
 import type {CorrectAnswer} from "../domain/answer-key.ts";
 import type {AttemptResponseRecord} from "../domain/attempt.ts";
 import {inspectCandidateIntegrity} from "./candidate-integrity.ts";
-import {syllabusForExam} from "../learning/syllabus-taxonomy.ts";
 
 export type QualityIssue={
  readonly path:string;
@@ -190,7 +189,6 @@ export function inspectExternalQuality(
    "Review provenance and both keys; do not automatically remove either question");
  }
  const results:QuestionQuality[]=[];
- const registeredSyllabus=syllabusForExam(draft.examId);
  let checked=0,sourcesCount=0;
  for(let i=0;i<draft.questions.length;i++){
   const q=draft.questions[i]!;
@@ -198,16 +196,11 @@ export function inspectExternalQuality(
   const explanation=publicationPlainText(q.explanation).trim();
   const src=q.provenance?.sources??[];
   sourcesCount+=src.length;
-  if(registeredSyllabus&&!q.syllabusHeadingId)
-   add("syllabus-heading-missing","error",
-    "This registered exam taxonomy requires an explicitly assigned broad syllabus heading",
-    q.id,"syllabusHeadingId","deterministic",registeredSyllabus.id+" v"+registeredSyllabus.version,
-    "Select a heading from the registered taxonomy; do not infer it from the exam ID, section or question text");
-  else if(!q.syllabusHeadingId&&!q.subject)
+  if(!q.subject)
    add("subject-unattributed","warning",
     "Academic subject is missing; it is not equivalent to the exam section",
     q.id,"subject","unverified",undefined,
-    "Supply an explicit subject or applicable official syllabus heading");
+    "Supply an explicit subject; maintained corpus taxonomy policy is validated separately from generic source QA");
   if(["single-choice","multiple-select"].includes(q.kind)){
    const labels=q.options.map(o=>optionSignature(publicationPlainText(o)));
    for(let x=0;x<labels.length;x++)if(!labels[x])
