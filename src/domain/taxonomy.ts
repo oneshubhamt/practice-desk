@@ -142,7 +142,7 @@ export function resolveTaxonomyPath(taxonomy:ExamTaxonomy,labels:readonly string
   const matches=taxonomy.nodes.filter(node=>(node.parentId??undefined)===parentId&&
     [node.label,...(node.aliases??[])].some(label=>normalizedLabel(label)===wanted));
   if(matches.length!==1)return undefined;
-  found=matches[0];parentId=found.id;
+  found=matches[0]!;parentId=found.id;
  }
  return found;
 }
