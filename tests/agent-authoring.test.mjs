@@ -337,7 +337,7 @@ test("P60-A: source-backed capability catalogue is versioned, unique, nonempty a
  assert.equal(doc.product.embeddedLLM,false);
  assert.equal(doc.product.automaticCloudSync,false);
  assert.equal(doc.product.agentDeviceBridge,false);
- assert.equal(doc.capabilities.length,16);
+ assert.equal(doc.capabilities.length,18);
  const ids=new Set();
  for(const cap of doc.capabilities){
   assert.match(cap.id,/^[a-z0-9-]+$/);
@@ -366,14 +366,14 @@ test("P60-A: default summary and list are bounded, source-private, machine-reada
  assert.equal(s.status,0,s.stderr);
  assert.equal(s.json.format,"practice-desk-capability-summary");
  assert.equal(s.json.version,1);
- assert.equal(s.json.capabilityCount,16);
+ assert.equal(s.json.capabilityCount,18);
  assert.equal(s.json.product.runtime.includes("offline"),true);
  assert.ok(s.stdout.length<5500,"Summary should not dump whole contract");
  assert.ok(!s.stdout.includes("sourcePaths"),"Summary should not dump source code paths");
  const list=cli("list");
  assert.equal(list.status,0,list.stderr);
  assert.equal(list.json.format,"practice-desk-capability-list");
- assert.equal(list.json.capabilities.length,16);
+ assert.equal(list.json.capabilities.length,18);
  assert.ok(list.stdout.length<7500);
  assert.ok(!list.stdout.includes("sourcePaths"),"List should not dump source references");
  assert.ok(!list.stdout.includes("correctMarks"),"List should not expose paper/answer data");
@@ -400,7 +400,11 @@ test("P60-A: agent can inspect exactly one capability and concrete operation sep
   x.command.includes("up to 10")),"Discovery must advertise bounded multi-question retrieval");
   assert.ok(ops.json.operations.some(x=>x.operation==="prepare-quality-review"&&
    x.command.includes("--allow-create")),"Discovery must advertise the real full-bank preparation action");
- assert.ok(ops.json.operations.every(x=>["read-only","create-new-file"].includes(x.privilege)));
+ assert.ok(ops.json.operations.every(x=>["read-only","create-new-file","repository-update"].includes(x.privilege)));
+ assert.ok(ops.json.operations.some(x=>x.operation==="corpus-add-paper"&&
+  x.privilege==="repository-update"&&x.command.includes("--dry-run")));
+ assert.ok(ops.json.operations.some(x=>x.operation==="corpus-append-revision"&&
+  x.privilege==="repository-update"));
  assert.ok(!ops.stdout.includes("IndexedDB"));
  const intake=cli("show","agent-pdf-intake");
  assert.equal(intake.status,0,intake.stderr);
