@@ -133,9 +133,13 @@ export function composePracticeSet(source:ExamPackage,request:PracticeRequest):{
  const questions=picked.map(c=>c.question);
  const resources=selectDisplayResources(questions,source.stimuli??[],source.assets??[]);
  const explanations=Object.fromEntries(Object.entries(source.explanations??{}).filter(([id])=>included.has(id as QuestionRevisionId)));
+ const taxonomyAssignments=source.taxonomyAssignments?
+   Object.fromEntries(ids.flatMap(id=>source.taxonomyAssignments?.[id]?
+     [[id,source.taxonomyAssignments[id]]]:[])):{};
  const bundle:ExamPackage={format:"practice-desk-exam",version:1,
    examId:source.examId,title:source.title+" · Custom set ("+request.count+")",
-   paper,answerKey,questions,...resources,explanations};
+   paper,answerKey,questions,...resources,explanations,
+   ...(source.taxonomy?{taxonomy:source.taxonomy,taxonomyAssignments}:{} )};
  validateExamPackage(bundle);
  const core:Omit<PracticeComposition,"contentHash">={
    schema:1,sourceExamId:source.examId,sourcePaperRevisionId:source.paper.id,
