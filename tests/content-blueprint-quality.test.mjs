@@ -368,6 +368,15 @@ test("Pass 4: taxonomy-aware PFRDA brief exposes data-owned A-L nodes and reject
  assert.ok(brief.data.taxonomy.nodes.some(x=>x.id==="pfrda-act"&&x.code==="A"));
  assert.ok(brief.data.taxonomy.nodes.some(x=>x.id==="marketing-communication"&&x.code==="L"));
  assert.equal(brief.data.classification.requireTaxonomy,true);
+ const cli=fileURLToPath(new URL("../scripts/question-bank-cli.mjs",import.meta.url));
+ const output=join(dir,"pfrda-taxonomy.exam.json");
+ const compiled=spawnSync(process.execPath,[cli,"compile-bank",source,output,
+  "--blueprint",plan,"--taxonomy",taxonomy],{encoding:"utf8",timeout:30000,maxBuffer:250000});
+ assert.equal(compiled.status,0,compiled.stderr||compiled.stdout);
+ const runtime=JSON.parse(await readFile(output,"utf8"));
+ assert.equal(runtime.taxonomy.id,"pfrda-grade-a-2026-general");
+ assert.equal(Object.keys(runtime.taxonomyAssignments).length,1);
+ assert.equal(runtime.taxonomyAssignments[runtime.questions[0].id],"pfrda-act");
  const drift=structuredClone(base);drift.questions[0].subject="Invented Off-Syllabus Root";
  const bad=run("audit",plan,await write(dir,"drift.json",drift),"--taxonomy",taxonomy,"--limit","20");
  assert.notEqual(bad.status,0);
