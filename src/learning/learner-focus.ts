@@ -352,7 +352,7 @@ export function buildLearnerFocusPacket(
 function validateResponse(value:unknown):CandidateResponse{
  const row=plain(value,"selectedResponse"),kind=text(row.kind,"selectedResponse.kind",40);
  if(kind==="single-choice"){
-  only(row,["kind","optionId"],"selectedResponse");return {kind,optionId:text(row.optionId,"optionId",120) as CandidateResponse&never} as CandidateResponse;
+  only(row,["kind","optionId"],"selectedResponse");return {kind,optionId:text(row.optionId,"optionId",120)} as CandidateResponse;
  }
  if(kind==="multiple-select"){
   only(row,["kind","optionIds"],"selectedResponse");
