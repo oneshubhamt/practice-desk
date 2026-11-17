@@ -1,0 +1,115 @@
+{
+  "format": "practice-desk-content-blueprint",
+  "version": 1,
+  "id": "pfrda-grade-a-2026-day1-rev4",
+  "examId": "pfrda-grade-a-2026-phase-ii",
+  "paperId": "pfrda-grade-a-2026-day1",
+  "revision": 4,
+  "targetCount": 51,
+  "allowPartial": false,
+  "syllabus": {
+    "basis": "inferred-practice",
+    "asOfDate": "2026-11-17",
+    "reference": "Recovered PFRDA Grade A 2026 Day-1 mixed-practice composition; exact observed allocation, not an official UPSC/PFRDA subject-weight blueprint."
+  },
+  "requirements": {
+    "requireExplanation": true,
+    "allowedOrigins": [
+      "ai-original"
+    ]
+  },
+  "quotas": {
+    "sections": {
+      "exhaustive": true,
+      "targets": [
+        {
+          "key": "descriptive",
+          "count": 1
+        },
+        {
+          "key": "general",
+          "count": 50
+        }
+      ]
+    },
+    "kinds": {
+      "exhaustive": true,
+      "targets": [
+        {
+          "key": "free-response",
+          "count": 1
+        },
+        {
+          "key": "single-choice",
+          "count": 50
+        }
+      ]
+    },
+    "origins": {
+      "exhaustive": true,
+      "targets": [
+        {
+          "key": "ai-original",
+          "count": 51
+        }
+      ]
+    },
+    "subjects": {
+      "exhaustive": true,
+      "targets": [
+        {
+          "key": "subject:Accountancy",
+          "count": 4
+        },
+        {
+          "key": "subject:AI/ML",
+          "count": 3
+        },
+        {
+          "key": "subject:Budget/Survey",
+          "count": 5
+        },
+        {
+          "key": "subject:Companies Act",
+          "count": 7
+        },
+        {
+          "key": "subject:Costing",
+          "count": 4
+        },
+        {
+          "key": "subject:Descriptive English",
+          "count": 1
+        },
+        {
+          "key": "subject:Economics",
+          "count": 5
+        },
+        {
+          "key": "subject:Finance",
+          "count": 5
+        },
+        {
+          "key": "subject:Management",
+          "count": 4
+        },
+        {
+          "key": "subject:Marketing/Communication",
+          "count": 2
+        },
+        {
+          "key": "subject:Media",
+          "count": 2
+        },
+        {
+          "key": "subject:Pension Sector",
+          "count": 5
+        },
+        {
+          "key": "subject:PFRDA Act",
+          "count": 4
+        }
+      ]
+    }
+  }
+}
