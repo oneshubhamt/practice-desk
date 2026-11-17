@@ -1,13 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {cp,mkdir,mkdtemp,readFile,rm,stat,writeFile} from "node:fs/promises";
-import {execFileSync,spawnSync} from "node:child_process";
+import {spawnSync} from "node:child_process";
+import {createHash} from "node:crypto";
 import {tmpdir} from "node:os";
 import {dirname,join,resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 import {addPaper,appendRevision} from "../scripts/question-bank-corpus.mjs";
 import {loadQuestionBankCatalog} from "../scripts/question-bank-catalog.mjs";
-import {SEMANTIC_CHECKLIST,BANK_CHECKLIST} from "../scripts/question-quality.mjs";
 import {buildLearnerFocusPacket,validateLearnerFocusPacket} from "../src/learning/learner-focus.ts";
 import {composePracticeSet} from "../src/app/practice-compose.ts";
 import {configurePracticeMode,startGenericAttempt} from "../src/app/exam-package.ts";
@@ -20,37 +20,19 @@ const writeJson=async(path,value)=>{await mkdir(dirname(path),{recursive:true});
 
 async function publicationEvidence(sourcePath,dir,label){
  await mkdir(dir,{recursive:true});
- const reviewDir=join(dir,"review-work");
- execFileSync(process.execPath,[join(root,"scripts","question-quality.mjs"),"prepare",sourcePath,reviewDir],{cwd:root});
- const source=JSON.parse(await readFile(sourcePath,"utf8"));
- const review=JSON.parse(await readFile(join(reviewDir,"review.json"),"utf8"));
- review.reviewMode="clean-context";review.candidateOnlyContextClaim=true;
+ const raw=await readFile(sourcePath,"utf8"),source=JSON.parse(raw);
+ const base=join(root,"question-banks","pfrda","2026","mocks","day-02","original");
+ const review=JSON.parse(await readFile(join(base,"quality-review.json"),"utf8"));
+ review.bankId=source.bankId;
+ review.sourceSha256=createHash("sha256").update(raw).digest("hex");
  review.reviewer={id:label,kind:"ai"};
- for(const record of review.records){
-  const question=source.questions.find(q=>q.id===record.questionId);
-  record.applicability={mathematical:"yes",legal:"yes",timeSensitive:"yes",visual:"no",asOfDate:"2026-11-17"};
-  record.solution={status:"completed",answer:String(question?.answer??""),
-   reasoning:"Synthetic corpus-operation regression review."};
-  record.semanticChecks=SEMANTIC_CHECKLIST.map(check=>({id:check.id,status:"pass",
-   basis:check.id==="mathematical-correctness"?"mathematical-proof":
-    ["factual-correctness","temporal-correctness","pyq-fidelity"].includes(check.id)?"source-consulted":
-    check.id==="visual-integrity"?"rendered-claim":"semantic-editorial",
-   rationale:"Synthetic regression evidence for transactional corpus tests."}));
-  record.evidence=[{publisher:"Fixture",title:"Corpus transaction regression evidence",
-   locator:"question:"+record.questionId,retrievedAt:"2026-11-17",asOfDate:"2026-11-17",
-   excerpt:"Synthetic evidence exercises transaction gates only; it is not factual certification."}];
- }
- review.bankReview={checks:BANK_CHECKLIST.map(check=>({id:check.id,status:"pass",
-  basis:"bank-editorial",rationale:"Synthetic bank-level transaction regression witness."}))};
  const reviewPath=await writeJson(join(dir,"quality-review.json"),review);
- const blueprint={format:"practice-desk-content-blueprint",version:1,id:label+"-blueprint",
-  examId:source.examId,paperId:source.paperId,revision:source.revision,targetCount:source.questions.length,
-  allowPartial:false,taxonomyId:"pfrda-grade-a-2026-general",
-  syllabus:{basis:"official-source-attributed",asOfDate:"2026-09-03",
-   reference:"PFRDA Grade A 2026 syllabus regression fixture"},
-  requirements:{requireTaxonomy:true,requireExplanation:true},quotas:{}};
+ const blueprint=JSON.parse(await readFile(join(base,"blueprint.json"),"utf8"));
+ blueprint.id=label+"-blueprint";
+ blueprint.paperId=source.paperId;
+ blueprint.revision=source.revision;
+ blueprint.targetCount=source.questions.length;
  const blueprintPath=await writeJson(join(dir,"blueprint.json"),blueprint);
- await rm(reviewDir,{recursive:true,force:true});
  return {reviewPath,blueprintPath};
 }
 async function corpusSource(dir,revision,paperId="pfrda-grade-a-2026-transaction-test"){
