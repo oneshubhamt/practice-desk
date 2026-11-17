@@ -1,0 +1,117 @@
+{
+  "format": "practice-desk-content-blueprint",
+  "version": 1,
+  "id": "pfrda-grade-a-2026-day2-original-r1",
+  "examId": "pfrda-grade-a-2026-phase-ii",
+  "paperId": "pfrda-grade-a-2026-day2",
+  "revision": 1,
+  "targetCount": 41,
+  "allowPartial": false,
+  "syllabus": {
+    "basis": "inferred-practice",
+    "asOfDate": "2026-11-17",
+    "reference": "Recovered PFRDA Grade A 2026 Day-2 mixed-practice composition; exact observed allocation, not an official PFRDA subject-weight blueprint."
+  },
+  "requirements": {
+    "requireExplanation": true,
+    "allowedOrigins": [
+      "ai-original"
+    ],
+    "requireTaxonomy": true
+  },
+  "quotas": {
+    "sections": {
+      "exhaustive": true,
+      "targets": [
+        {
+          "key": "descriptive",
+          "count": 1
+        },
+        {
+          "key": "general",
+          "count": 40
+        }
+      ]
+    },
+    "kinds": {
+      "exhaustive": true,
+      "targets": [
+        {
+          "key": "free-response",
+          "count": 1
+        },
+        {
+          "key": "single-choice",
+          "count": 40
+        }
+      ]
+    },
+    "origins": {
+      "exhaustive": true,
+      "targets": [
+        {
+          "key": "ai-original",
+          "count": 41
+        }
+      ]
+    },
+    "subjects": {
+      "exhaustive": true,
+      "targets": [
+        {
+          "key": "taxonomy:ai-ml",
+          "count": 2
+        },
+        {
+          "key": "taxonomy:budget-survey",
+          "count": 3
+        },
+        {
+          "key": "taxonomy:commerce-accountancy",
+          "count": 5
+        },
+        {
+          "key": "taxonomy:companies-act",
+          "count": 4
+        },
+        {
+          "key": "taxonomy:costing",
+          "count": 6
+        },
+        {
+          "key": "taxonomy:economics",
+          "count": 3
+        },
+        {
+          "key": "taxonomy:english-writing",
+          "count": 1
+        },
+        {
+          "key": "taxonomy:finance",
+          "count": 5
+        },
+        {
+          "key": "taxonomy:management",
+          "count": 2
+        },
+        {
+          "key": "taxonomy:marketing-communication",
+          "count": 1
+        },
+        {
+          "key": "taxonomy:media",
+          "count": 1
+        },
+        {
+          "key": "taxonomy:pension-sector",
+          "count": 3
+        },
+        {
+          "key": "taxonomy:pfrda-act",
+          "count": 5
+        }
+      ]
+    }
+  },
+  "taxonomyId": "pfrda-grade-a-2026-general"
+}
