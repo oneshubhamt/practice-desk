@@ -211,6 +211,12 @@ test("maintained authoring evidence bindings are required, source-bound and fail
   manifest.editions.revised.qualityReview="revised/quality-review.json";
   await writeFile(manifestPath,JSON.stringify(manifest,null,2));
 
+  manifest.editions.revised.qualityReview="original/quality-review.json";
+  await writeFile(manifestPath,JSON.stringify(manifest,null,2));
+  await assert.rejects(()=>loadQuestionBankCatalog(dir),/must be colocated with bank\.authoring\.json/);
+  manifest.editions.revised.qualityReview="revised/quality-review.json";
+  await writeFile(manifestPath,JSON.stringify(manifest,null,2));
+
   const staleReview=structuredClone(review);staleReview.sourceSha256="0".repeat(64);
   await writeFile(reviewPath,JSON.stringify(staleReview,null,2));
   await assert.rejects(()=>loadQuestionBankCatalog(dir),/Declared quality review is not publication-ready/);
