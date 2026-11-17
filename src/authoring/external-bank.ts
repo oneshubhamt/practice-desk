@@ -298,7 +298,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
  const qIds=new Set<string>();
  const questions:AuthoringQuestion[]=array(bank.questions,"$.questions",200,1).map((item,i)=>{
   const path="$.questions["+i+"]";
-  const q=object(item,path,["id","examSection","subject","syllabusHeadingId",
+  const q=object(item,path,["id","examSection","subject",
    "topic","subtopic","difficulty","kind","prompt","stimulusRef","options",
    "leftItems","rightItems","explanation","answer","tolerance","minSelections",
    "maxSelections","wordLimit","partialCreditEach","partialPenaltyEach","scoringOverride","provenance","qa"]);
@@ -414,14 +414,12 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
   if(stimulusRef&&!knownStimuli.has(stimulusRef))
    err(path+".stimulusRef","Unknown shared passage/table/chart/image");
   const subject=q.subject===undefined?"":text(q.subject,path+".subject",120,false);
-  const syllabusHeadingId=q.syllabusHeadingId===undefined?"":text(q.syllabusHeadingId,path+".syllabusHeadingId",80,false);
-  if(syllabusHeadingId&&subject)err(path+".subject","Use official heading OR custom subject");
   const topic=q.topic===undefined?"":text(q.topic,path+".topic",120,false);
   const subtopic=q.subtopic===undefined?"":text(q.subtopic,path+".subtopic",120,false);
   const difficulty=q.difficulty===undefined?"":q.difficulty;
   if(!["","easy","medium","hard"].includes(String(difficulty)))
    err(path+".difficulty","Invalid difficulty label");
-  return {id,section:section!.title,subject,syllabusHeadingId,
+  return {id,section:section!.title,subject,
    topic,subtopic,difficulty:difficulty as NonNullable<AuthoringQuestion["difficulty"]>,
    minSelections,maxSelections,
    ...(questionKind==="free-response"&&wordLimit!==undefined?{wordLimit}:{}),
