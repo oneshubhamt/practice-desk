@@ -98,7 +98,7 @@
       "operation": "compile-with-blueprint",
       "command": "node scripts/question-bank-cli.mjs compile-bank <bank.json> <NEW-output.json> --blueprint <plan.json> [--taxonomy taxonomy.json]",
       "privilege": "create-new-file",
-      "effect": "Single-bank canonical compiler refuses publication output when explicit content quotas fail"
+      "effect": "Single-bank canonical compiler refuses publication output when explicit content quotas fail; when --taxonomy is supplied, the emitted package also carries the validated taxonomy and stable question-revision assignments."
     },
     {
       "operation": "candidate-review-packet",
@@ -277,6 +277,7 @@
         "Year manifests may bind practice-desk-taxonomy v1 sidecars with stable node IDs, parentage, canonical labels and bounded aliases",
         "Maintained authored subject/topic/subtopic paths must resolve to the bound taxonomy before corpus packaging",
         "Runtime packages and attempts carry resolved question-revision → taxonomy-node assignments for stable historical analytics",
+        "Taxonomy-gated canonical compilation embeds the supplied taxonomy and stable assignments rather than using it only as an audit hint",
         "Practice-builder filters use taxonomy ancestry so parent subject/topic selection includes classified descendants",
         "PFRDA Grade A 2026 carries the official A–L General Stream hierarchy plus Paper 1 English as year-owned data"
       ],
