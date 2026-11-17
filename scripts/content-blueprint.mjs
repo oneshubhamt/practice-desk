@@ -11,6 +11,7 @@ import {resolve} from "node:path";
 import {inspectExternalQuestionBank,toAuthoringDraft} from "../src/authoring/external-bank.ts";
 import {publicationPlainText} from "../src/authoring/authoring-publisher.ts";
 import {resolveTaxonomyPath,taxonomyNode,taxonomyPathNodes,validateExamTaxonomy} from "../src/domain/taxonomy.ts";
+import {validateLearnerFocusPacket} from "../src/learning/learner-focus.ts";
 
 const FORMAT="practice-desk-content-blueprint",TAG_FORMAT="practice-desk-cognitive-tags";
 const GROUPS=["subjects","topics","subtopics","difficulties","kinds","origins","sections","cognitive"];
@@ -550,7 +551,7 @@ const sourceEnvelope=(plan,sources,bankId,title)=>{
  }
  return envelope;
 };
-function buildAuthoringBrief(plan,planSha,sources,tagDoc,{priorSources=[],batchSize=8,bankId,title,taxonomy=undefined}={}){
+function buildAuthoringBrief(plan,planSha,sources,tagDoc,{priorSources=[],batchSize=8,bankId,title,taxonomy=undefined,learnerFocus=undefined}={}){
  stableSourceId(bankId,"--bank-id");
  str(title,"--title",180);
  if(sources.some(x=>x.value?.bankId===bankId))
@@ -623,6 +624,14 @@ function buildAuthoringBrief(plan,planSha,sources,tagDoc,{priorSources=[],batchS
   sourcePolicy,classification,
   ...(taxonomy?{taxonomy:{id:taxonomy.id,title:taxonomy.title,basis:taxonomy.basis,
     asOfDate:taxonomy.asOfDate,reference:taxonomy.reference,nodes:taxonomy.nodes}}:{}),
+  ...(learnerFocus?{
+   learnerFocus:structuredClone(learnerFocus),
+   personalisationIntent:{
+    mode:learnerFocus.mode,intent:learnerFocus.intent,
+    compositionPolicy:learnerFocus.compositionPolicy,
+    guidance:structuredClone(learnerFocus.generationGuidance)
+   }
+  }:{}),
   itemWritingPriorities:[
    "Spend reasoning on exam-relevant substance, not Practice Desk mechanics.",
    "For automatically scored items, make the keyed answer uniquely defensible and distractors plausible.",
@@ -654,7 +663,7 @@ function buildAuthoringBrief(plan,planSha,sources,tagDoc,{priorSources=[],batchS
     qa:"Author-created or materially changed items remain unchecked/needs-review; do not self-certify."
    }
   },
-  learnerFocusIncluded:false,
+  learnerFocusIncluded:Boolean(learnerFocus),
   factualVerification:"not-performed",
   note:"Decision-ready authoring context only. It omits existing question bodies, media bytes and repository/package placement. Research and verify factual, legal, current and PYQ claims outside this packet."
  };
@@ -666,18 +675,21 @@ const failure=message=>{
 };
 async function main(){
  const [command,...args]=process.argv.slice(2);
- const usage="Usage: content-blueprint.mjs validate <plan.json> [--taxonomy taxonomy.json] | audit <plan.json> <source.json>... [--taxonomy taxonomy.json] [--cognitive tags.json] [--against prior-bank.json]... [--offset N] [--limit 1..50] | brief <plan.json> [existing-source.json ...] --bank-id ID --title TITLE [--taxonomy taxonomy.json] [--batch-size 1..20] [--cognitive tags.json] [--against prior-bank.json]...";
+ const usage="Usage: content-blueprint.mjs validate <plan.json> [--taxonomy taxonomy.json] | audit <plan.json> <source.json>... [--taxonomy taxonomy.json] [--cognitive tags.json] [--against prior-bank.json]... [--offset N] [--limit 1..50] | brief <plan.json> [existing-source.json ...] --bank-id ID --title TITLE [--taxonomy taxonomy.json] [--learner-focus focus.json] [--batch-size 1..20] [--cognitive tags.json] [--against prior-bank.json]...";
  if(!["validate","audit","brief"].includes(command))fail(usage);
  if(command==="audit"&&args.length<2)fail("audit needs blueprint and at least one source");
  if(command==="brief"&&args.length<1)fail(usage);
  const planFile=await load(args[0],MAX_PLAN,"Blueprint");
- const files=[],priorPaths=[];let tagPath=null,taxonomyPath=null,limit=12,offset=0,batchSize=8,bankId=null,title=null;
+ const files=[],priorPaths=[];let tagPath=null,taxonomyPath=null,focusPath=null,limit=12,offset=0,batchSize=8,bankId=null,title=null;
  for(let i=1;i<args.length;i++){
   const flag=args[i];
-  if(["--taxonomy","--cognitive","--limit","--offset","--against","--batch-size","--bank-id","--title"].includes(flag)){
+  if(["--taxonomy","--learner-focus","--cognitive","--limit","--offset","--against","--batch-size","--bank-id","--title"].includes(flag)){
    if(i+1>=args.length)fail("Missing argument after "+flag);
    if(flag==="--taxonomy"){
     if(taxonomyPath)fail("Duplicate --taxonomy");taxonomyPath=args[++i];
+   }else if(flag==="--learner-focus"){
+    if(command!=="brief")fail("--learner-focus is only valid for brief");
+    if(focusPath)fail("Duplicate --learner-focus");focusPath=args[++i];
    }else if(flag==="--cognitive"){
     if(command==="validate")fail("--cognitive is not valid for validate");
     if(tagPath)fail("Duplicate --cognitive");tagPath=args[++i];
@@ -711,6 +723,8 @@ async function main(){
  if(command==="validate"&&files.length)fail("validate accepts only the blueprint and optional --taxonomy");
  const taxonomy=taxonomyPath?validateExamTaxonomy((await load(taxonomyPath,MAX_PLAN,"Taxonomy")).value):undefined;
  const plan=validateBlueprint(planFile.value,taxonomy);
+ const learnerFocus=focusPath?validateLearnerFocusPacket((await load(focusPath,MAX_PLAN,"Learner focus")).value):undefined;
+ if(learnerFocus&&learnerFocus.examId!==plan.examId)fail("Learner focus examId does not match blueprint examId");
  if(command==="validate"){
   emit({format:"practice-desk-blueprint-validation",version:1,valid:true,
    id:plan.id,targetCount:plan.targetCount,examId:plan.examId,paperId:plan.paperId,
@@ -730,7 +744,7 @@ async function main(){
  const priorSources=[];
  for(const path of priorPaths)priorSources.push(await load(path,MAX_SOURCE,"Prior comparison source"));
  if(command==="brief"){
-  const result=buildAuthoringBrief(plan,planFile.digest,sources,tags,{priorSources,batchSize,bankId,title,taxonomy});
+  const result=buildAuthoringBrief(plan,planFile.digest,sources,tags,{priorSources,batchSize,bankId,title,taxonomy,learnerFocus});
   emit(result);return;
  }
  const result=audit(plan,sources,tags,{limit,offset,priorSources,taxonomy});
