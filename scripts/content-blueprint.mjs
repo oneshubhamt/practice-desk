@@ -10,7 +10,7 @@ import {fileURLToPath} from "node:url";
 import {resolve} from "node:path";
 import {inspectExternalQuestionBank,toAuthoringDraft} from "../src/authoring/external-bank.ts";
 import {publicationPlainText} from "../src/authoring/authoring-publisher.ts";
-import {syllabusHeading} from "../src/learning/syllabus-taxonomy.ts";
+import {resolveTaxonomyPath,taxonomyNode,taxonomyPathNodes,validateExamTaxonomy} from "../src/domain/taxonomy.ts";
 
 const FORMAT="practice-desk-content-blueprint",TAG_FORMAT="practice-desk-cognitive-tags";
 const GROUPS=["subjects","topics","subtopics","difficulties","kinds","origins","sections","cognitive"];
@@ -53,8 +53,17 @@ const date=(x,label)=>{
  if(!Number.isFinite(d.getTime())||d.toISOString().slice(0,10)!==x)fail(label+" must be a real ISO date");
  return x;
 };
-const sourceKey=(q)=>q.syllabusHeadingId?"heading:"+q.syllabusHeadingId:
- "subject:"+(q.subject||"Unclassified");
+const classification=(q,taxonomy)=>{
+ const subject=String(q?.subject??"").trim(),topic=String(q?.topic??"").trim(),subtopic=String(q?.subtopic??"").trim();
+ if(!taxonomy||!subject)return {subject,topic,subtopic,node:null,root:null};
+ const node=resolveTaxonomyPath(taxonomy,[subject,...(topic?[topic]:[]),...(subtopic?[subtopic]:[])])??null;
+ const root=node?taxonomyPathNodes(taxonomy,node.id)[0]??null:null;
+ return {subject,topic,subtopic,node,root};
+};
+const sourceKey=(q,taxonomy)=>{
+ const c=classification(q,taxonomy);
+ return c.root?"taxonomy:"+c.root.id:"subject:"+(c.subject||"Unclassified");
+};
 const topicKey=(s,t)=>JSON.stringify([s,t]);
 const subtopicKey=(s,t,u)=>JSON.stringify([s,t,u]);
 const normalize=(x)=>typeof x==="string"?x.normalize("NFKC").toLocaleLowerCase("en").replace(/^\s*(?:q(?:uestion)?\s*)?\d+[.)\s]+/iu,"").replace(/[^\p{L}\p{N}]+/gu," ").trim().replace(/\s+/g," "):"";
@@ -78,20 +87,31 @@ async function load(path,max,label){
  try{parsed=JSON.parse(raw);}catch{fail(label+" is not valid JSON");}
  return {raw,value:parsed,digest:hash(raw)};
 }
-function validateSubject(examId,s){
+function validateSubject(examId,s,taxonomy){
  str(s,"subjectKey",180);
- if(s.startsWith("heading:")){
-  if(!syllabusHeading(examId,s.slice(8)))fail("Unknown official broad syllabus heading "+s+" for "+examId);
+ if(s.startsWith("taxonomy:")){
+  if(!taxonomy)fail("taxonomy:<id> subject keys require an exam taxonomy");
+  if(taxonomy.examId!==examId)fail("Taxonomy exam does not match blueprint exam");
+  const node=taxonomyNode(taxonomy,s.slice(9));
+  if(!node||node.kind!=="subject")fail("Unknown taxonomy subject "+s+" for "+examId);
  }else if(!s.startsWith("subject:")||!s.slice(8).trim()||s.length>180)
-  fail("subjectKey must be heading:<official-id> or subject:<user label>");
+  fail("subjectKey must be taxonomy:<subject-id> or subject:<user label>");
  return s;
 }
-function validateBlueprint(value){
+function validateBlueprint(value,taxonomy=undefined){
  const b=obj(value,"blueprint",["format","version","id","examId","paperId","revision",
-  "targetCount","allowPartial","syllabus","requirements","quotas","paperRules"]);
+  "targetCount","allowPartial","syllabus","taxonomyId","requirements","quotas","paperRules"]);
  if(b.format!==FORMAT||b.version!==1)fail("Expected "+FORMAT+" v1");
  str(b.id,"id",80);str(b.examId,"examId",80);str(b.paperId,"paperId",80);
  int(b.revision,"revision",1,1000000);int(b.targetCount,"targetCount",1,MAX_TOTAL);
+ if(taxonomy){
+  taxonomy=validateExamTaxonomy(taxonomy);
+  if(taxonomy.examId!==b.examId)fail("Taxonomy examId does not match blueprint");
+ }
+ if(b.taxonomyId!==undefined){
+  str(b.taxonomyId,"taxonomyId",120);
+  if(!taxonomy||taxonomy.id!==b.taxonomyId)fail("Blueprint taxonomyId requires the matching taxonomy");
+ }
  if(b.allowPartial!==undefined)bool(b.allowPartial,"allowPartial");
  if(b.paperRules!==undefined){
   const policy=obj(b.paperRules,"paperRules",["scoring","timing","navigation","tools","practiceModes","sections"]);
@@ -173,10 +193,11 @@ function validateBlueprint(value){
   fail("Syllabus basis is attribution only: user-defined, official-source-attributed or inferred-practice");
  date(s.asOfDate,"syllabus.asOfDate");str(s.reference,"syllabus.reference",500);
  const r=obj(b.requirements,"requirements",
-  ["requireTopic","requireSubtopic","requireDifficulty","requireExplanation",
+  ["requireTaxonomy","requireTopic","requireSubtopic","requireDifficulty","requireExplanation",
    "minCitations","allowedOrigins","maxTopicSharePercent","excludedTopics"]);
- for(const k of ["requireTopic","requireSubtopic","requireDifficulty","requireExplanation"])
+ for(const k of ["requireTaxonomy","requireTopic","requireSubtopic","requireDifficulty","requireExplanation"])
   if(r[k]!==undefined)bool(r[k],"requirements."+k);
+ if(r.requireTaxonomy&&!taxonomy)fail("requireTaxonomy requires the matching exam taxonomy");
  if(r.minCitations!==undefined)int(r.minCitations,"requirements.minCitations",0,12);
  if(r.maxTopicSharePercent!==undefined)int(r.maxTopicSharePercent,"requirements.maxTopicSharePercent",1,100);
  if(r.allowedOrigins!==undefined){
@@ -188,7 +209,7 @@ function validateBlueprint(value){
   const seen=new Set();
   for(const x of list(r.excludedTopics,"excludedTopics",100)){
    obj(x,"excluded topic",["subjectKey","topic"]);
-   validateSubject(b.examId,x.subjectKey);str(x.topic,"excluded topic",120);
+   validateSubject(b.examId,x.subjectKey,taxonomy);str(x.topic,"excluded topic",120);
    const k=topicKey(x.subjectKey,x.topic);if(seen.has(k))fail("Repeated excluded topic");seen.add(k);
   }
  }
@@ -206,12 +227,12 @@ function validateBlueprint(value){
    int(x.count,group+" count",0,b.targetCount);
    let key;
    if(isTopic||isSubtopic){
-    validateSubject(b.examId,x.subjectKey);str(x.topic,"topic",120);
+    validateSubject(b.examId,x.subjectKey,taxonomy);str(x.topic,"topic",120);
     if(isSubtopic)str(x.subtopic,"subtopic",120);
     key=isSubtopic?subtopicKey(x.subjectKey,x.topic,x.subtopic):topicKey(x.subjectKey,x.topic);
    }else{
     key=str(x.key,group+" key",180);
-    if(group==="subjects")validateSubject(b.examId,key);
+    if(group==="subjects")validateSubject(b.examId,key,taxonomy);
     if(group==="difficulties"&&!DIFFICULTIES.includes(key))fail("Invalid difficulty quota "+key);
     if(group==="kinds"&&!KINDS.includes(key))fail("Invalid question-kind quota "+key);
     if(group==="origins"&&!ORIGINS.includes(key))fail("Invalid provenance quota "+key);
@@ -258,7 +279,7 @@ function validateBlueprint(value){
  }
  return b;
 }
-function audit(plan,sources,tagDoc,{offset=0,limit=12,priorSources=[],coverageLimit=12}={}){
+function audit(plan,sources,tagDoc,{offset=0,limit=12,priorSources=[],coverageLimit=12,taxonomy=undefined}={}){
  const issues=[],all=[],batches=[],sourceHashes=[],bankIds=new Set(),questionIds=new Set();
  const add=(code,message,path="$",severity="error")=>issues.push({code,severity,basis:severity==="warning"?"heuristic":"deterministic",path,message});
  const first=sources[0]?.value,head=first?{scoring:first.scoring,timing:first.timing,navigation:first.navigation,
@@ -336,7 +357,10 @@ function audit(plan,sources,tagDoc,{offset=0,limit=12,priorSources=[],coverageLi
  const originAllowed=plan.requirements.allowedOrigins;
  const excluded=new Set((plan.requirements.excludedTopics??[]).map(x=>topicKey(x.subjectKey,x.topic)));
  for(const {bankId,q} of all){
-  const name=bankId+"/"+q.id,root=sourceKey(q),topic=q.topic??"",subtopic=q.subtopic??"";
+  const c=classification(q,taxonomy);
+  const name=bankId+"/"+q.id,root=sourceKey(q,taxonomy),topic=q.topic??"",subtopic=q.subtopic??"";
+  if(plan.requirements.requireTaxonomy&&!c.node)
+   add("taxonomy-classification-required","Question classification does not resolve through the bound exam taxonomy on "+name,"questions["+name+"]");
   tick("subjects",root);tick("sections",q.examSection??"unspecified");
   tick("difficulties",q.difficulty||"unspecified");
   tick("kinds",q.kind||"unspecified");
@@ -526,14 +550,14 @@ const sourceEnvelope=(plan,sources,bankId,title)=>{
  }
  return envelope;
 };
-function buildAuthoringBrief(plan,planSha,sources,tagDoc,{priorSources=[],batchSize=8,bankId,title}={}){
+function buildAuthoringBrief(plan,planSha,sources,tagDoc,{priorSources=[],batchSize=8,bankId,title,taxonomy=undefined}={}){
  stableSourceId(bankId,"--bank-id");
  str(title,"--title",180);
  if(sources.some(x=>x.value?.bankId===bankId))
   fail("--bank-id must be new for this authored batch");
  const planning={...plan,allowPartial:true};
  const tagsForEmpty=sources.length||tagDoc?tagDoc:{format:TAG_FORMAT,version:1,tags:[]};
- const audited=audit(planning,sources,tagsForEmpty,{limit:50,offset:0,priorSources,coverageLimit:MAX_TOTAL});
+ const audited=audit(planning,sources,tagsForEmpty,{limit:50,offset:0,priorSources,coverageLimit:MAX_TOTAL,taxonomy});
  if(audited.issues.blocking)
   fail("Cannot build authoring brief while current sources contradict the blueprint: "+
    audited.issues.items.filter(x=>x.severity==="error").slice(0,3).map(x=>x.code).join(", "));
@@ -579,6 +603,7 @@ function buildAuthoringBrief(plan,planSha,sources,tagDoc,{priorSources=[],batchS
   maxTopicSharePercent:plan.requirements.maxTopicSharePercent??100
  };
  const classification={
+  requireTaxonomy:plan.requirements.requireTaxonomy===true,
   requireTopic:plan.requirements.requireTopic===true,
   requireSubtopic:plan.requirements.requireSubtopic===true,
   requireDifficulty:plan.requirements.requireDifficulty===true
@@ -596,6 +621,8 @@ function buildAuthoringBrief(plan,planSha,sources,tagDoc,{priorSources=[],batchS
    ...(envelope.practiceModes?{practiceModes:structuredClone(envelope.practiceModes)}:{})
   },
   sourcePolicy,classification,
+  ...(taxonomy?{taxonomy:{id:taxonomy.id,title:taxonomy.title,basis:taxonomy.basis,
+    asOfDate:taxonomy.asOfDate,reference:taxonomy.reference,nodes:taxonomy.nodes}}:{}),
   itemWritingPriorities:[
    "Spend reasoning on exam-relevant substance, not Practice Desk mechanics.",
    "For automatically scored items, make the keyed answer uniquely defensible and distractors plausible.",
