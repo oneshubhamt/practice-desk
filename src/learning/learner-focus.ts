@@ -32,7 +32,7 @@ export interface LearnerFocusObservation{
  readonly bookmarkedQuestions:number;
  readonly dueQuestions:number;
  readonly observedAccuracy:number|null;
- readonly recent?:{readonly attempts:number;readonly correct:number;readonly incorrect:number;readonly unanswered:number};
+ readonly recent?:{readonly windowDays:30;readonly attempts:number;readonly correct:number;readonly incorrect:number;readonly unanswered:number};
  readonly signals:readonly LearnerFocusSignal[];
 }
 export interface LearnerFocusQuestionEvidence{
@@ -49,6 +49,7 @@ export interface LearnerFocusQuestionEvidence{
  readonly wrongAttempts:number;
  readonly lastVerdict:"correct"|"incorrect"|"unanswered";
  readonly selectedResponse?:CandidateResponse;
+ readonly selectedResponseText?:string;
  readonly foregroundMs:number|null;
  readonly visits:number|null;
  readonly revisited:boolean|null;
@@ -103,7 +104,7 @@ interface MutableQuestion{
  questionRevisionId:string;questionId:string;questionHash:string;prompt:string;
  classification?:Classification;observedAttemptIds:Set<string>;wrongAttemptIds:Set<string>;
  lastFinishedAt:number;lastVerdict:"correct"|"incorrect"|"unanswered";
- selectedResponse?:CandidateResponse;foregroundMs:number|null;visits:number|null;
+ selectedResponse?:CandidateResponse;selectedResponseText?:string;foregroundMs:number|null;visits:number|null;
  revisited:boolean|null;flagged:boolean;slow:boolean;
  selfReportedErrorLabel?:string;bookmarked:boolean;fsrsDue:boolean;fsrsReviewCount:number;
  explanation?:string;
@@ -135,6 +136,23 @@ const only=(row:Record<string,unknown>,allowed:readonly string[],label:string):v
 };
 const cloneResponse=(response:CandidateResponse|undefined):CandidateResponse|undefined=>
  response===undefined?undefined:structuredClone(response);
+function responseText(q:QuestionRevision,response:CandidateResponse|undefined):string|undefined{
+ if(!response||response.kind==="free-response")return undefined;
+ const c=q.content;
+ if(response.kind==="single-choice"&&(c.kind==="single-choice"||c.kind==="multiple-select"))
+  return c.options.find(x=>x.id===response.optionId)?.text;
+ if(response.kind==="multiple-select"&&c.kind==="multiple-select")
+  return c.options.filter(x=>response.optionIds.includes(x.id)).map(x=>x.text).join("; ");
+ if(response.kind==="numeric-entry")return String(response.value);
+ if(response.kind==="true-false")return response.value?"True":"False";
+ if(response.kind==="matching"&&c.kind==="matching")
+  return response.pairs.map(pair=>{
+   const left=c.leftItems.find(x=>x.id===pair.leftId)?.text??String(pair.leftId);
+   const right=c.rightItems.find(x=>x.id===pair.rightId)?.text??String(pair.rightId);
+   return left+" → "+right;
+  }).join("; ");
+ return undefined;
+}
 
 function attemptClassification(a:GenericAttempt,q:QuestionRevision):Classification|undefined{
  const nodeId=a.frozen.taxonomyAssignments?.[q.id];
@@ -265,9 +283,13 @@ export function buildLearnerFocusPacket(
    if(verdict==="incorrect")detail.wrongAttemptIds.add(a.id);
    if(a.finishedAt!>=detail.lastFinishedAt){
     detail.lastFinishedAt=a.finishedAt!;detail.lastVerdict=verdict;
-    const selectedResponse=cloneResponse(response?.response);
+    const selectedResponse=verdict==="incorrect"&&response?.response?.kind!=="free-response"?
+      cloneResponse(response.response):undefined;
+    const selectedResponseText=selectedResponse?responseText(q,selectedResponse):undefined;
     if(selectedResponse!==undefined)detail.selectedResponse=selectedResponse;
     else delete detail.selectedResponse;
+    if(selectedResponseText!==undefined)detail.selectedResponseText=selectedResponseText;
+    else delete detail.selectedResponseText;
     detail.foregroundMs=response?.timeSpentMs??null;detail.visits=phases?.visits??null;
     detail.revisited=phases?phases.visits>1:null;detail.flagged=response?.flagged??false;
     detail.slow=questionSpeed(a,q.id)==="Slow";
@@ -313,7 +335,7 @@ export function buildLearnerFocusPacket(
    slowObservations:row.slowObservations,revisitedAttempts:row.revisitedAttemptIds.size,
    flaggedAttempts:row.flaggedAttemptIds.size,bookmarkedQuestions:row.bookmarkedQuestions.size,
    dueQuestions:row.dueQuestions.size,observedAccuracy:answered?row.correct/answered:null,
-   ...(recentCount?{recent:{attempts:row.recentAttemptIds.size,correct:row.recentCorrect,
+   ...(recentCount?{recent:{windowDays:30 as const,attempts:row.recentAttemptIds.size,correct:row.recentCorrect,
     incorrect:row.recentIncorrect,unanswered:row.recentUnanswered}}:{}),signals:signals(row)};
  });
  const relevantKeys=new Set(selected.map(row=>classificationKey(row.classification)));
@@ -338,6 +360,7 @@ export function buildLearnerFocusPacket(
     prompt:row.prompt,...(row.classification?{classification:row.classification}:{}),
     observedAttempts:row.observedAttemptIds.size,wrongAttempts:row.wrongAttemptIds.size,
     lastVerdict:row.lastVerdict,...(row.selectedResponse?{selectedResponse:row.selectedResponse}:{}),
+    ...(row.selectedResponseText?{selectedResponseText:row.selectedResponseText}:{}),
     foregroundMs:row.foregroundMs,visits:row.visits,revisited:row.revisited,flagged:row.flagged,reasons,
     ...(row.selfReportedErrorLabel?{selfReportedErrorLabel:row.selfReportedErrorLabel}:{}),
     bookmarked:row.bookmarked,fsrsDue:row.fsrsDue,fsrsReviewCount:row.fsrsReviewCount,
@@ -441,8 +464,9 @@ export function validateLearnerFocusPacket(value:unknown):LearnerFocusPacket{
   if((answered===0)!==(observedAccuracy===null))throw Error("Learner-focus accuracy evidence mismatch");
   let recent;
   if(row.recent!==undefined){
-   const r=plain(row.recent,"recent");only(r,["attempts","correct","incorrect","unanswered"],"recent");
-   recent={attempts:boundedInt(r.attempts,"recent.attempts",0,100000),
+   const r=plain(row.recent,"recent");only(r,["windowDays","attempts","correct","incorrect","unanswered"],"recent");
+   if(r.windowDays!==30)throw Error("Learner-focus recent window must be 30 days");
+   recent={windowDays:30 as const,attempts:boundedInt(r.attempts,"recent.attempts",0,100000),
     correct:boundedInt(r.correct,"recent.correct",0,100000),
     incorrect:boundedInt(r.incorrect,"recent.incorrect",0,100000),
     unanswered:boundedInt(r.unanswered,"recent.unanswered",0,100000)};
@@ -464,7 +488,7 @@ export function validateLearnerFocusPacket(value:unknown):LearnerFocusPacket{
   questionEvidence=raw.questionEvidence.map((value,index)=>{
    const row=plain(value,"questionEvidence "+index);
    only(row,["questionRevisionId","questionId","questionHash","prompt","classification","observedAttempts","wrongAttempts",
-    "lastVerdict","selectedResponse","foregroundMs","visits","revisited","flagged","reasons","selfReportedErrorLabel",
+    "lastVerdict","selectedResponse","selectedResponseText","foregroundMs","visits","revisited","flagged","reasons","selfReportedErrorLabel",
     "bookmarked","fsrsDue","fsrsReviewCount","explanation"],"questionEvidence "+index);
    if(!["correct","incorrect","unanswered"].includes(String(row.lastVerdict)))throw Error("Invalid detailed verdict");
    const foregroundMs=row.foregroundMs===null?null:
@@ -482,6 +506,7 @@ export function validateLearnerFocusPacket(value:unknown):LearnerFocusPacket{
     wrongAttempts:boundedInt(row.wrongAttempts,"wrongAttempts",0,100000),
     lastVerdict:row.lastVerdict as LearnerFocusQuestionEvidence["lastVerdict"],
     ...(row.selectedResponse===undefined?{}:{selectedResponse:validateResponse(row.selectedResponse)}),
+    ...(row.selectedResponseText===undefined?{}:{selectedResponseText:text(row.selectedResponseText,"selected response text",2000)}),
     foregroundMs,visits,revisited:row.revisited as boolean|null,flagged:row.flagged,
     reasons:validateSignalList(row.reasons,"question reasons"),
     ...(row.selfReportedErrorLabel===undefined?{}:{selfReportedErrorLabel:text(row.selfReportedErrorLabel,"error label",80)}),
