@@ -1,0 +1,896 @@
+{
+  "format": "practice-desk-taxonomy",
+  "version": 1,
+  "id": "pfrda-grade-a-2026-general",
+  "examId": "pfrda-grade-a-2026-phase-ii",
+  "title": "PFRDA Grade A 2026 — General Stream syllabus taxonomy",
+  "basis": "official-source-attributed",
+  "asOfDate": "2026-09-03",
+  "reference": "PFRDA Advertisement No. 03/2026, Annexure: Syllabus for Paper 2 for General Stream; Paper 1 English Writing Skills",
+  "nodes": [
+    {
+      "id": "english-writing",
+      "label": "English Writing Skills",
+      "kind": "subject",
+      "aliases": [
+        "Descriptive English"
+      ]
+    },
+    {
+      "id": "english-writing.precis",
+      "label": "Précis writing",
+      "kind": "topic",
+      "parentId": "english-writing",
+      "aliases": [
+        "Precis writing"
+      ]
+    },
+    {
+      "id": "english-writing.essay",
+      "label": "Essay writing",
+      "kind": "topic",
+      "parentId": "english-writing"
+    },
+    {
+      "id": "english-writing.comprehension",
+      "label": "Comprehension",
+      "kind": "topic",
+      "parentId": "english-writing"
+    },
+    {
+      "id": "pfrda-act",
+      "label": "PFRDA Act 2013 & amendments thereto",
+      "kind": "subject",
+      "code": "A",
+      "aliases": [
+        "PFRDA Act"
+      ]
+    },
+    {
+      "id": "budget-survey",
+      "label": "Union Budget — Concepts, approach and broad trends & Economic Survey",
+      "kind": "subject",
+      "code": "B",
+      "aliases": [
+        "Budget/Survey"
+      ]
+    },
+    {
+      "id": "budget-survey.union-budget",
+      "label": "Union Budget",
+      "kind": "topic",
+      "parentId": "budget-survey"
+    },
+    {
+      "id": "budget-survey.economic-survey",
+      "label": "Economic Survey",
+      "kind": "topic",
+      "parentId": "budget-survey"
+    },
+    {
+      "id": "commerce-accountancy",
+      "label": "Commerce & Accountancy",
+      "kind": "subject",
+      "code": "C",
+      "aliases": [
+        "Accountancy"
+      ]
+    },
+    {
+      "id": "commerce-accountancy.financial-information",
+      "label": "Accounting as a financial information system",
+      "kind": "topic",
+      "parentId": "commerce-accountancy"
+    },
+    {
+      "id": "commerce-accountancy.accounting-standards",
+      "label": "Accounting Standards",
+      "kind": "topic",
+      "parentId": "commerce-accountancy"
+    },
+    {
+      "id": "commerce-accountancy.accounting-standards.depreciation",
+      "label": "Depreciation",
+      "kind": "subtopic",
+      "parentId": "commerce-accountancy.accounting-standards"
+    },
+    {
+      "id": "commerce-accountancy.accounting-standards.inventories",
+      "label": "Inventories",
+      "kind": "subtopic",
+      "parentId": "commerce-accountancy.accounting-standards"
+    },
+    {
+      "id": "commerce-accountancy.accounting-standards.revenue-recognition",
+      "label": "Revenue Recognition",
+      "kind": "subtopic",
+      "parentId": "commerce-accountancy.accounting-standards"
+    },
+    {
+      "id": "commerce-accountancy.accounting-standards.fixed-assets",
+      "label": "Fixed Assets",
+      "kind": "subtopic",
+      "parentId": "commerce-accountancy.accounting-standards"
+    },
+    {
+      "id": "commerce-accountancy.accounting-standards.foreign-exchange",
+      "label": "Foreign Exchange Transactions",
+      "kind": "subtopic",
+      "parentId": "commerce-accountancy.accounting-standards"
+    },
+    {
+      "id": "commerce-accountancy.accounting-standards.investments",
+      "label": "Investments",
+      "kind": "subtopic",
+      "parentId": "commerce-accountancy.accounting-standards"
+    },
+    {
+      "id": "commerce-accountancy.financial-statements",
+      "label": "Cash flow, fund flow and financial statement analysis",
+      "kind": "topic",
+      "parentId": "commerce-accountancy"
+    },
+    {
+      "id": "commerce-accountancy.financial-statements.cash-flow",
+      "label": "Cash Flow Statement",
+      "kind": "subtopic",
+      "parentId": "commerce-accountancy.financial-statements"
+    },
+    {
+      "id": "commerce-accountancy.financial-statements.fund-flow",
+      "label": "Fund Flow Statement",
+      "kind": "subtopic",
+      "parentId": "commerce-accountancy.financial-statements"
+    },
+    {
+      "id": "commerce-accountancy.financial-statements.ratio-analysis",
+      "label": "Ratio Analysis",
+      "kind": "subtopic",
+      "parentId": "commerce-accountancy.financial-statements"
+    },
+    {
+      "id": "commerce-accountancy.share-capital",
+      "label": "Share Capital Transactions",
+      "kind": "topic",
+      "parentId": "commerce-accountancy"
+    },
+    {
+      "id": "commerce-accountancy.share-capital.bonus-rights",
+      "label": "Bonus Shares and Rights Shares",
+      "kind": "subtopic",
+      "parentId": "commerce-accountancy.share-capital"
+    },
+    {
+      "id": "commerce-accountancy.esop-buyback",
+      "label": "Employee Stock Option and Buy-Back of Securities",
+      "kind": "topic",
+      "parentId": "commerce-accountancy"
+    },
+    {
+      "id": "commerce-accountancy.company-final-accounts",
+      "label": "Preparation and Presentation of Company Final Accounts",
+      "kind": "topic",
+      "parentId": "commerce-accountancy"
+    },
+    {
+      "id": "management",
+      "label": "Management",
+      "kind": "subject",
+      "code": "D"
+    },
+    {
+      "id": "management.processes",
+      "label": "Nature, scope and management processes",
+      "kind": "topic",
+      "parentId": "management"
+    },
+    {
+      "id": "management.processes.functions",
+      "label": "Planning, Organization, Staffing, Directing and Controlling",
+      "kind": "subtopic",
+      "parentId": "management.processes"
+    },
+    {
+      "id": "management.leadership",
+      "label": "Managerial role and Leadership",
+      "kind": "topic",
+      "parentId": "management"
+    },
+    {
+      "id": "management.leadership.styles-theories",
+      "label": "Leadership styles and theories",
+      "kind": "subtopic",
+      "parentId": "management.leadership"
+    },
+    {
+      "id": "management.hrd",
+      "label": "Human Resource Development",
+      "kind": "topic",
+      "parentId": "management"
+    },
+    {
+      "id": "management.motivation",
+      "label": "Motivation, Morale and Incentives",
+      "kind": "topic",
+      "parentId": "management"
+    },
+    {
+      "id": "management.communication",
+      "label": "Communication",
+      "kind": "topic",
+      "parentId": "management"
+    },
+    {
+      "id": "management.communication.channels-barriers",
+      "label": "Channels, forms and barriers to communication",
+      "kind": "subtopic",
+      "parentId": "management.communication"
+    },
+    {
+      "id": "finance",
+      "label": "Finance",
+      "kind": "subject",
+      "code": "E"
+    },
+    {
+      "id": "finance.financial-system",
+      "label": "Financial System",
+      "kind": "topic",
+      "parentId": "finance"
+    },
+    {
+      "id": "finance.financial-system.regulators",
+      "label": "Role and functions of regulatory bodies in the financial sector",
+      "kind": "subtopic",
+      "parentId": "finance.financial-system"
+    },
+    {
+      "id": "finance.financial-markets",
+      "label": "Financial Markets",
+      "kind": "topic",
+      "parentId": "finance"
+    },
+    {
+      "id": "finance.financial-markets.primary-secondary",
+      "label": "Primary and Secondary Markets",
+      "kind": "subtopic",
+      "parentId": "finance.financial-markets"
+    },
+    {
+      "id": "finance.derivatives",
+      "label": "Basics of Derivatives",
+      "kind": "topic",
+      "parentId": "finance"
+    },
+    {
+      "id": "finance.recent-developments",
+      "label": "Recent Developments in the Financial Sector",
+      "kind": "topic",
+      "parentId": "finance"
+    },
+    {
+      "id": "finance.financial-inclusion",
+      "label": "Financial Inclusion and use of technology",
+      "kind": "topic",
+      "parentId": "finance"
+    },
+    {
+      "id": "finance.alternate-finance",
+      "label": "Alternate sources of finance and Public-Private Partnership",
+      "kind": "topic",
+      "parentId": "finance"
+    },
+    {
+      "id": "finance.fiscal",
+      "label": "Taxes, Finance Commission and Fiscal Policy",
+      "kind": "topic",
+      "parentId": "finance"
+    },
+    {
+      "id": "finance.fiscal.frbm",
+      "label": "Fiscal Responsibility and Budget Management Act",
+      "kind": "subtopic",
+      "parentId": "finance.fiscal"
+    },
+    {
+      "id": "finance.inflation",
+      "label": "Inflation",
+      "kind": "topic",
+      "parentId": "finance"
+    },
+    {
+      "id": "finance.inflation.indices",
+      "label": "WPI and CPI",
+      "kind": "subtopic",
+      "parentId": "finance.inflation"
+    },
+    {
+      "id": "costing",
+      "label": "Costing",
+      "kind": "subject",
+      "code": "F"
+    },
+    {
+      "id": "costing.overview",
+      "label": "Overview of Cost and Management Accounting",
+      "kind": "topic",
+      "parentId": "costing"
+    },
+    {
+      "id": "costing.methods",
+      "label": "Methods of Costing",
+      "kind": "topic",
+      "parentId": "costing"
+    },
+    {
+      "id": "costing.methods.unit-job-batch-contract",
+      "label": "Unit, Job, Batch and Contract Costing",
+      "kind": "subtopic",
+      "parentId": "costing.methods"
+    },
+    {
+      "id": "costing.methods.process-service",
+      "label": "Process, Operation and Service Costing",
+      "kind": "subtopic",
+      "parentId": "costing.methods"
+    },
+    {
+      "id": "costing.control-analysis",
+      "label": "Basics of Cost Control and Analysis",
+      "kind": "topic",
+      "parentId": "costing"
+    },
+    {
+      "id": "costing.control-analysis.standard",
+      "label": "Standard Costing",
+      "kind": "subtopic",
+      "parentId": "costing.control-analysis"
+    },
+    {
+      "id": "costing.control-analysis.marginal",
+      "label": "Marginal Costing",
+      "kind": "subtopic",
+      "parentId": "costing.control-analysis"
+    },
+    {
+      "id": "costing.control-analysis.budgetary",
+      "label": "Budget and Budgetary Control",
+      "kind": "subtopic",
+      "parentId": "costing.control-analysis"
+    },
+    {
+      "id": "costing.lean-innovation",
+      "label": "Lean System and Innovation",
+      "kind": "topic",
+      "parentId": "costing"
+    },
+    {
+      "id": "costing.lean-innovation.jit",
+      "label": "Just-in-Time",
+      "kind": "subtopic",
+      "parentId": "costing.lean-innovation"
+    },
+    {
+      "id": "costing.lean-innovation.kaizen",
+      "label": "Kaizen Costing",
+      "kind": "subtopic",
+      "parentId": "costing.lean-innovation"
+    },
+    {
+      "id": "costing.lean-innovation.five-s",
+      "label": "5S",
+      "kind": "subtopic",
+      "parentId": "costing.lean-innovation"
+    },
+    {
+      "id": "costing.lean-innovation.tpm",
+      "label": "Total Productive Maintenance",
+      "kind": "subtopic",
+      "parentId": "costing.lean-innovation"
+    },
+    {
+      "id": "costing.lean-innovation.cellular",
+      "label": "Cellular Manufacturing / One-Piece Flow",
+      "kind": "subtopic",
+      "parentId": "costing.lean-innovation"
+    },
+    {
+      "id": "costing.lean-innovation.six-sigma",
+      "label": "Six Sigma",
+      "kind": "subtopic",
+      "parentId": "costing.lean-innovation"
+    },
+    {
+      "id": "costing.lean-innovation.bpr",
+      "label": "Business Process Re-engineering",
+      "kind": "subtopic",
+      "parentId": "costing.lean-innovation"
+    },
+    {
+      "id": "companies-act",
+      "label": "Companies Act",
+      "kind": "subject",
+      "code": "G",
+      "aliases": [
+        "Companies Act 2013"
+      ]
+    },
+    {
+      "id": "companies-act.chapter-iii",
+      "label": "Chapter III — Prospectus and Allotment of Securities",
+      "kind": "topic",
+      "parentId": "companies-act"
+    },
+    {
+      "id": "companies-act.chapter-iv",
+      "label": "Chapter IV — Share Capital and Debentures",
+      "kind": "topic",
+      "parentId": "companies-act"
+    },
+    {
+      "id": "companies-act.chapter-viii",
+      "label": "Chapter VIII — Declaration and Payment of Dividend",
+      "kind": "topic",
+      "parentId": "companies-act"
+    },
+    {
+      "id": "companies-act.chapter-x",
+      "label": "Chapter X — Audit and Auditors",
+      "kind": "topic",
+      "parentId": "companies-act"
+    },
+    {
+      "id": "companies-act.chapter-xi",
+      "label": "Chapter XI — Appointment and Qualifications of Directors",
+      "kind": "topic",
+      "parentId": "companies-act"
+    },
+    {
+      "id": "companies-act.chapter-xii",
+      "label": "Chapter XII — Meetings of Board and its Powers",
+      "kind": "topic",
+      "parentId": "companies-act"
+    },
+    {
+      "id": "companies-act.chapter-xxvii",
+      "label": "Chapter XXVII — National Company Law Tribunal and Appellate Tribunal",
+      "kind": "topic",
+      "parentId": "companies-act"
+    },
+    {
+      "id": "economics",
+      "label": "Economics",
+      "kind": "subject",
+      "code": "H"
+    },
+    {
+      "id": "economics.demand-supply-markets",
+      "label": "Demand, Supply and Market Structures",
+      "kind": "topic",
+      "parentId": "economics"
+    },
+    {
+      "id": "economics.national-income",
+      "label": "National Income: Concepts and Measurement",
+      "kind": "topic",
+      "parentId": "economics"
+    },
+    {
+      "id": "economics.output-employment",
+      "label": "Classical and Keynesian determination of output and employment",
+      "kind": "topic",
+      "parentId": "economics"
+    },
+    {
+      "id": "economics.consumption-investment",
+      "label": "Consumption and Investment Functions",
+      "kind": "topic",
+      "parentId": "economics"
+    },
+    {
+      "id": "economics.multiplier-accelerator",
+      "label": "Multiplier and Accelerator",
+      "kind": "topic",
+      "parentId": "economics"
+    },
+    {
+      "id": "economics.money-is-lm",
+      "label": "Demand and Supply for Money and IS-LM",
+      "kind": "topic",
+      "parentId": "economics"
+    },
+    {
+      "id": "economics.inflation-phillips-cycles",
+      "label": "Inflation, Phillips Curve and Business Cycles",
+      "kind": "topic",
+      "parentId": "economics"
+    },
+    {
+      "id": "economics.bop-fx",
+      "label": "Balance of Payments and Foreign Exchange Markets",
+      "kind": "topic",
+      "parentId": "economics"
+    },
+    {
+      "id": "economics.monetary-fiscal",
+      "label": "Monetary and Fiscal Policy",
+      "kind": "topic",
+      "parentId": "economics"
+    },
+    {
+      "id": "economics.nbfi",
+      "label": "Non-banking Financial Institutions",
+      "kind": "topic",
+      "parentId": "economics"
+    },
+    {
+      "id": "pension-sector",
+      "label": "Pension Sector",
+      "kind": "subject",
+      "code": "I"
+    },
+    {
+      "id": "pension-sector.status",
+      "label": "Status of pension sector in India",
+      "kind": "topic",
+      "parentId": "pension-sector"
+    },
+    {
+      "id": "pension-sector.retirement-schemes",
+      "label": "Types of retirement schemes in India and their features",
+      "kind": "topic",
+      "parentId": "pension-sector"
+    },
+    {
+      "id": "pension-sector.nps",
+      "label": "National Pension System",
+      "kind": "topic",
+      "parentId": "pension-sector"
+    },
+    {
+      "id": "pension-sector.apy",
+      "label": "Atal Pension Yojana",
+      "kind": "topic",
+      "parentId": "pension-sector"
+    },
+    {
+      "id": "pension-sector.annuity",
+      "label": "Annuity Plans",
+      "kind": "topic",
+      "parentId": "pension-sector"
+    },
+    {
+      "id": "pension-sector.investment-basics",
+      "label": "Basics of investment",
+      "kind": "topic",
+      "parentId": "pension-sector"
+    },
+    {
+      "id": "ai-ml",
+      "label": "Artificial Intelligence (AI) / Machine Learning (ML)",
+      "kind": "subject",
+      "code": "J",
+      "aliases": [
+        "AI/ML"
+      ]
+    },
+    {
+      "id": "ai-ml.machine-learning",
+      "label": "Machine Learning",
+      "kind": "topic",
+      "parentId": "ai-ml"
+    },
+    {
+      "id": "ai-ml.supervised",
+      "label": "Supervised Learning",
+      "kind": "topic",
+      "parentId": "ai-ml"
+    },
+    {
+      "id": "ai-ml.unsupervised",
+      "label": "Unsupervised Learning",
+      "kind": "topic",
+      "parentId": "ai-ml"
+    },
+    {
+      "id": "ai-ml.preprocessing",
+      "label": "Data Preprocessing",
+      "kind": "topic",
+      "parentId": "ai-ml"
+    },
+    {
+      "id": "ai-ml.model-evaluation",
+      "label": "Model Evaluation",
+      "kind": "topic",
+      "parentId": "ai-ml"
+    },
+    {
+      "id": "ai-ml.nlp",
+      "label": "Natural Language Processing",
+      "kind": "topic",
+      "parentId": "ai-ml",
+      "aliases": [
+        "NLP"
+      ]
+    },
+    {
+      "id": "ai-ml.sentiment",
+      "label": "Sentiment Analysis",
+      "kind": "topic",
+      "parentId": "ai-ml"
+    },
+    {
+      "id": "ai-ml.over-underfitting",
+      "label": "Overfitting and Underfitting",
+      "kind": "topic",
+      "parentId": "ai-ml"
+    },
+    {
+      "id": "ai-ml.llm",
+      "label": "Large Language Models",
+      "kind": "topic",
+      "parentId": "ai-ml",
+      "aliases": [
+        "LLM"
+      ]
+    },
+    {
+      "id": "ai-ml.agentic",
+      "label": "Agentic AI",
+      "kind": "topic",
+      "parentId": "ai-ml"
+    },
+    {
+      "id": "ai-ml.responsible",
+      "label": "Responsible AI",
+      "kind": "topic",
+      "parentId": "ai-ml"
+    },
+    {
+      "id": "ai-ml.cross-validation",
+      "label": "Cross-Validation",
+      "kind": "topic",
+      "parentId": "ai-ml"
+    },
+    {
+      "id": "ai-ml.reinforcement",
+      "label": "Reinforcement Learning",
+      "kind": "topic",
+      "parentId": "ai-ml"
+    },
+    {
+      "id": "media",
+      "label": "Media",
+      "kind": "subject",
+      "code": "K"
+    },
+    {
+      "id": "media.micro-targeting",
+      "label": "Micro-Targeting",
+      "kind": "topic",
+      "parentId": "media",
+      "aliases": [
+        "Micro-Targetting"
+      ]
+    },
+    {
+      "id": "media.consumer-behaviour",
+      "label": "Consumer Behaviour",
+      "kind": "topic",
+      "parentId": "media"
+    },
+    {
+      "id": "media.convergence",
+      "label": "Media Convergence",
+      "kind": "topic",
+      "parentId": "media"
+    },
+    {
+      "id": "media.virtual-augmented",
+      "label": "Virtual and Augmented",
+      "kind": "topic",
+      "parentId": "media"
+    },
+    {
+      "id": "media.digital-divide",
+      "label": "Digital Divide",
+      "kind": "topic",
+      "parentId": "media"
+    },
+    {
+      "id": "media.audience-reception",
+      "label": "Audience Reception",
+      "kind": "topic",
+      "parentId": "media"
+    },
+    {
+      "id": "media.cultural-representation",
+      "label": "Cultural Representation",
+      "kind": "topic",
+      "parentId": "media"
+    },
+    {
+      "id": "media.entertainment-platform",
+      "label": "Entertainment Digital Platform",
+      "kind": "topic",
+      "parentId": "media"
+    },
+    {
+      "id": "media.social-algorithm",
+      "label": "Social Media Algorithm",
+      "kind": "topic",
+      "parentId": "media"
+    },
+    {
+      "id": "media.market-trends",
+      "label": "Market Trends",
+      "kind": "topic",
+      "parentId": "media"
+    },
+    {
+      "id": "media.global-practices",
+      "label": "Best Global Practices",
+      "kind": "topic",
+      "parentId": "media"
+    },
+    {
+      "id": "media.negotiation",
+      "label": "Negotiation Skills",
+      "kind": "topic",
+      "parentId": "media"
+    },
+    {
+      "id": "marketing-communication",
+      "label": "Marketing & Communication",
+      "kind": "subject",
+      "code": "L",
+      "aliases": [
+        "Marketing/Communication"
+      ]
+    },
+    {
+      "id": "marketing-communication.marketing",
+      "label": "Marketing",
+      "kind": "topic",
+      "parentId": "marketing-communication"
+    },
+    {
+      "id": "marketing-communication.marketing.management",
+      "label": "Marketing Management",
+      "kind": "subtopic",
+      "parentId": "marketing-communication.marketing"
+    },
+    {
+      "id": "marketing-communication.marketing.research",
+      "label": "Marketing Research",
+      "kind": "subtopic",
+      "parentId": "marketing-communication.marketing"
+    },
+    {
+      "id": "marketing-communication.marketing.planning",
+      "label": "Marketing Planning & Strategies",
+      "kind": "subtopic",
+      "parentId": "marketing-communication.marketing"
+    },
+    {
+      "id": "marketing-communication.marketing.types",
+      "label": "Marketing Types",
+      "kind": "subtopic",
+      "parentId": "marketing-communication.marketing"
+    },
+    {
+      "id": "marketing-communication.marketing.product",
+      "label": "Product Management",
+      "kind": "subtopic",
+      "parentId": "marketing-communication.marketing"
+    },
+    {
+      "id": "marketing-communication.marketing.pricing",
+      "label": "Pricing Decisions",
+      "kind": "subtopic",
+      "parentId": "marketing-communication.marketing"
+    },
+    {
+      "id": "marketing-communication.marketing.distribution",
+      "label": "Distribution Strategy",
+      "kind": "subtopic",
+      "parentId": "marketing-communication.marketing"
+    },
+    {
+      "id": "marketing-communication.marketing.promotion",
+      "label": "Promotion Mix and Sales",
+      "kind": "subtopic",
+      "parentId": "marketing-communication.marketing"
+    },
+    {
+      "id": "marketing-communication.marketing.brand",
+      "label": "Brand Management",
+      "kind": "subtopic",
+      "parentId": "marketing-communication.marketing"
+    },
+    {
+      "id": "marketing-communication.marketing.digital",
+      "label": "Digital Marketing",
+      "kind": "subtopic",
+      "parentId": "marketing-communication.marketing"
+    },
+    {
+      "id": "marketing-communication.marketing.advanced",
+      "label": "Advanced Marketing Techniques",
+      "kind": "subtopic",
+      "parentId": "marketing-communication.marketing"
+    },
+    {
+      "id": "marketing-communication.marketing.financial-literacy",
+      "label": "Financial Literacy",
+      "kind": "subtopic",
+      "parentId": "marketing-communication.marketing"
+    },
+    {
+      "id": "marketing-communication.communication",
+      "label": "Communication",
+      "kind": "topic",
+      "parentId": "marketing-communication"
+    },
+    {
+      "id": "marketing-communication.communication.active-listening",
+      "label": "Active Listening",
+      "kind": "subtopic",
+      "parentId": "marketing-communication.communication"
+    },
+    {
+      "id": "marketing-communication.communication.body-language",
+      "label": "Non Verbal Body Language",
+      "kind": "subtopic",
+      "parentId": "marketing-communication.communication"
+    },
+    {
+      "id": "marketing-communication.communication.verbal-clarity",
+      "label": "Verbal Clarity",
+      "kind": "subtopic",
+      "parentId": "marketing-communication.communication"
+    },
+    {
+      "id": "marketing-communication.communication.written-etiquette",
+      "label": "Written Etiquette",
+      "kind": "subtopic",
+      "parentId": "marketing-communication.communication"
+    },
+    {
+      "id": "marketing-communication.communication.conflict-resolution",
+      "label": "Conflict Resolution",
+      "kind": "subtopic",
+      "parentId": "marketing-communication.communication"
+    },
+    {
+      "id": "marketing-communication.communication.feedback",
+      "label": "Feedback delivery",
+      "kind": "subtopic",
+      "parentId": "marketing-communication.communication"
+    },
+    {
+      "id": "marketing-communication.communication.conciseness",
+      "label": "Clarity & Conciseness",
+      "kind": "subtopic",
+      "parentId": "marketing-communication.communication"
+    },
+    {
+      "id": "marketing-communication.communication.public-speaking",
+      "label": "Public Speaking",
+      "kind": "subtopic",
+      "parentId": "marketing-communication.communication"
+    },
+    {
+      "id": "marketing-communication.communication.emotional-intelligence",
+      "label": "Emotional Intelligence",
+      "kind": "subtopic",
+      "parentId": "marketing-communication.communication"
+    },
+    {
+      "id": "marketing-communication.communication.tone-pitch",
+      "label": "Verbal Tone & Pitch",
+      "kind": "subtopic",
+      "parentId": "marketing-communication.communication"
+    }
+  ]
+}
