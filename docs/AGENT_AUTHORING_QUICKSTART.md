@@ -28,7 +28,7 @@ The packet contains the exam/paper identity, current remaining count, bounded qu
 
 Author one `practice-desk-authoring` v1 JSON file. Generic format examples remain under `examples/`; maintained exam content belongs under [`question-banks/`](../question-banks/). For maintained content, read `question-banks/catalog.json`, follow the selected family’s root manifest → year manifest → paper manifest, then open only the required canonical authoring/source file. The root catalog is not a paper index. Do not ingest generated `.exam.json` packages unless runtime-package inspection is actually needed. Source-traced examples in `examples/source-grounded-*.json` are **reconstructions**, not authenticated official PYQs.
 
-A bank declares paper identity/edition/revision, scoring, timing/navigation, physical sections, optional shared stimuli/media and questions. Each question carries a stable id, section, semantic classification, response kind, candidate content, key, explanation and provenance/QA claims. Choice questions may use **2–26 options**; matching may use **1–26 left items and 1–26 right items**, and the key must reference only those declared items. Supported response kinds are `single-choice`, `multiple-select`, `numeric-entry`, `true-false`, `matching` and `free-response`; written responses are manually/self-assessed rather than silently machine-graded. A `free-response` question may declare an advisory whole-number `wordLimit`; **omitting it means no authored word target** and the compiler does not invent one. Paper `tools.wordCount` may be `auto`, `shown` or `hidden`; `auto` shows the counter in practice modes and hides it in exam simulation. Crossing an advisory limit never prevents saving. Section timers belong to physical sections, not subjects/topics.
+A bank declares paper identity/edition/revision, scoring, timing/navigation, physical sections, optional shared stimuli/media and questions. Each question carries a stable id, section, semantic classification, response kind, candidate content, key, explanation and provenance/QA claims. Semantic classification is authored as explicit `subject`, optional `topic` and optional `subtopic` labels. There is no `syllabusHeadingId` registry field and no exam-ID inference. Choice questions may use **2–26 options**; matching may use **1–26 left items and 1–26 right items**, and the key must reference only those declared items. Supported response kinds are `single-choice`, `multiple-select`, `numeric-entry`, `true-false`, `matching` and `free-response`; written responses are manually/self-assessed rather than silently machine-graded. A `free-response` question may declare an advisory whole-number `wordLimit`; **omitting it means no authored word target** and the compiler does not invent one. Paper `tools.wordCount` may be `auto`, `shown` or `hidden`; `auto` shows the counter in practice modes and hides it in exam simulation. Crossing an advisory limit never prevents saving. Section timers belong to physical sections, not subjects/topics.
 
 Scoring is data-driven rather than exam-name-driven. Paper scoring carries `correctMarks`, `incorrectMarks`, optional `unansweredMarks` (defaults to 0 in external authoring), optional `decimalPlaces`, and optional `byQuestionKind` rules. A physical section may declare `scoringOverride`, and `questions[].scoringOverride` may replace the resolved rule for one question, including a manual written-response ceiling. Runtime precedence remains question override → section override → question-kind rule → paper default. Studio and `question-bank-agent.mjs patch` use the same canonical fields.
 
@@ -55,12 +55,23 @@ node scripts/question-bank-agent.mjs show bank.json q-17 q-23 q-31
 
 Multi-question output deduplicates shared stimuli and media metadata and never emits inline media bytes. The existing one-question `show` response remains unchanged.
 
+
+### Maintained exam taxonomy
+
+When the selected year manifest declares `taxonomy.json`, use that file as the classification authority for maintained content. A blueprint may bind its stable `taxonomyId`, require taxonomy classification, and use stable `taxonomy:<subject-node-id>` subject quotas. Supply the same file with `--taxonomy` to `content-blueprint.mjs`, `question-bank-cli.mjs` or strict handoff operations that use the blueprint.
+
+The authoring brief includes the relevant taxonomy nodes so the authoring agent does not need to learn repository code. Write the canonical label or a declared alias into `subject` / `topic` / `subtopic`; corpus loading resolves that explicit path to stable node IDs and rejects maintained questions outside the bound taxonomy. Parent-only classification is allowed when the source supports only that level. Do not invent a topic or difficulty solely to fill metadata.
+
 ## Ordinary workflow
 
 ```bash
 node scripts/question-bank-cli.mjs validate-bank bank.json
 node scripts/question-bank-cli.mjs qa-bank bank.json
 node scripts/question-bank-cli.mjs compile-bank bank.json NEW.exam.json
+
+# Taxonomy-gated blueprint publication
+node scripts/question-bank-cli.mjs compile-bank bank.json NEW.exam.json \
+  --blueprint plan.json --taxonomy question-banks/<exam>/<year>/taxonomy.json
 
 # Small-context inspection/correction
 node scripts/question-bank-agent.mjs inspect bank.json
