@@ -26,7 +26,7 @@ const MAX_SOURCE_BYTES=25*1024*1024,MAX_DECISIONS_BYTES=2*1024*1024,
 const CHOICE_FIELDS=["answer","explanation","prompt","options","kind",
  "leftItems","rightItems","stimulusRef","tolerance","minSelections",
  "maxSelections","partialCreditEach","partialPenaltyEach","provenance",
- "subject","syllabusHeadingId","topic","subtopic","difficulty","examSection","qa"];
+ "subject","topic","subtopic","difficulty","examSection","qa"];
 const BAD_INPUT="editorial-pair-input-invalid";
 const plain=(value,name,keys)=>{
  if(!value||typeof value!=="object"||Array.isArray(value)||
