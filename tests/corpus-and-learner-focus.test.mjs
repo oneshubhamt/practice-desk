@@ -8,7 +8,8 @@ import {dirname,join,resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 import {addPaper,appendRevision} from "../scripts/question-bank-corpus.mjs";
 import {loadQuestionBankCatalog} from "../scripts/question-bank-catalog.mjs";
-import {buildLearnerFocusPacket,validateLearnerFocusPacket} from "../src/learning/learner-focus.ts";
+import {buildLearnerFocusPacket,personalizeAuthoringBrief,validateLearnerFocusPacket,
+ validateStandardAuthoringBrief} from "../src/learning/learner-focus.ts";
 import {composePracticeSet} from "../src/app/practice-compose.ts";
 import {configurePracticeMode,startGenericAttempt} from "../src/app/exam-package.ts";
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
@@ -150,6 +151,7 @@ test("Pass 5 learner focus is exam-scoped, opt-in, evidence-only and detailed mo
  assert.equal(detailed.questionEvidence[0].wrongAttempts,2);
  assert.equal(detailed.questionEvidence[0].selfReportedErrorLabel,"knowledge-gap");
  assert.ok(detailed.questionEvidence[0].selectedResponse);
+ assert.ok(detailed.questionEvidence[0].selectedResponseText);
  assert.equal(JSON.stringify(detailed).includes("answerKey"),false,
   "Detailed learner evidence may share the response/explanation but not a hidden answer-key object");
 });
@@ -177,9 +179,11 @@ test("Pass 5 authoring brief inserts validated learner focus and rejects cross-e
   assert.equal(brief.learnerFocusIncluded,true);assert.equal(brief.learnerFocus.mode,"focused");
   assert.equal(brief.personalisationIntent.intent,"targeted-practice");
   const standard=spawnSync(process.execPath,[script,"brief",blueprint,bank,"--taxonomy",taxonomy,
-   "--bank-id","plain-next","--title","Plain next"],{encoding:"utf8",timeout:30000,maxBuffer:2_000_000});
+   "--bank-id","focus-next","--title","Focus next"],{encoding:"utf8",timeout:30000,maxBuffer:2_000_000});
   assert.equal(standard.status,0,standard.stderr);const plain=JSON.parse(standard.stdout);
   assert.equal(plain.learnerFocusIncluded,false);assert.equal(plain.learnerFocus,undefined);
+  const local=personalizeAuthoringBrief(validateStandardAuthoringBrief(plain),focus);
+  assert.deepEqual(local,brief,"Browser/local bridge and CLI must use the same brief personalisation contract");
 
   const mismatch={...focus,examId:"different-exam"};
   const mismatchPath=await writeJson(join(dir,"mismatch.json"),mismatch);
