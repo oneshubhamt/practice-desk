@@ -196,7 +196,7 @@ function annotateReviewed(bundle,rawReviewed,decisionMap,changes){
    kind:"source-correction",stimulusRef:"figure",stimuli:"figure",media:"figure",
    explanation:"explanation",provenance:"source-correction",tolerance:"answer-key",
    minSelections:"answer-key",maxSelections:"answer-key",partialCreditEach:"answer-key",
-   partialPenaltyEach:"answer-key",subject:"formatting",syllabusHeadingId:"formatting",
+   partialPenaltyEach:"answer-key",subject:"formatting",
    topic:"formatting",subtopic:"formatting",difficulty:"formatting",examSection:"formatting",qa:"source-correction"
   };
   const types=[...new Set(change.changedFields.map(x=>kindMap[x]??"source-correction"))];
