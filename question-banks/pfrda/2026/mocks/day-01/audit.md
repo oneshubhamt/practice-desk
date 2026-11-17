@@ -34,7 +34,7 @@
 | Deep gate | **Not run on this draft branch by CI design**; repository workflow runs Deep only on pushes to `working`, so no Deep result is claimed here |
 | Independent legal-currentness certification | **Not completed; 11 automated advisory warnings remain** |
 
-The program's quality scanner intentionally reports `legal-currentness-unverified` even when a dated, provision-specific citation exists: it cannot itself inspect commencement orders, every later statutory amendment or subordinate rule. A reference and a reasoned manual check are not an independently signed publication review. The packages retain truthful `qa: needs-review` metadata and **do not bypass** this gate. The canonical revised edition therefore declares `qualityReview: null` and `blueprint: null` in its manifest: this makes the absence of bound Pass-3 evidence explicit and must not be read as a quality pass.
+The program's quality scanner intentionally reports `legal-currentness-unverified` even when a dated, provision-specific citation exists: it cannot itself authenticate every external source or convert an attributed review into independent certification. Pass 3 now binds a source-hash-matched `quality-review.json` and an `inferred-practice` `blueprint.json` to the canonical revised edition. The review mode is truthfully recorded as `self-review`, so the bank has passed the repository's substantive publication gates without being represented as independent-agent certification or an official PYQ. The authoring source retains its conservative `qa: needs-review` provenance metadata; the sidecar is the maintained review evidence for this exact revision, not a rewrite of source provenance.
 
 ## High-yield primary references
 
