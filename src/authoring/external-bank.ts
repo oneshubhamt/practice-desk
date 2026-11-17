@@ -4,7 +4,6 @@
  */
 import {validateExamImportBudget,validateExamPackage} from "../domain/exam-package.ts";
 import type {ExamPackage} from "../domain/exam-package.ts";
-import type {ExamTaxonomy} from "../domain/taxonomy.ts";
 import {assertTaxonomyExam,resolveTaxonomyPath,taxonomyPathNodes,validateExamTaxonomy} from "../domain/taxonomy.ts";
 import type {AuthoringDraft,AuthoringQuestion,AuthoringMarkingRule} from "./authoring-draft.ts";
 import {validateAuthoringDraft} from "./authoring-draft.ts";
