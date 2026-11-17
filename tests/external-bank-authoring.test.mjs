@@ -113,7 +113,7 @@ test("P57-A APFC academic subject hierarchy remains independent of one physical 
  assert.ok(Math.abs(result.snapshot.earnedMarks-(-5/6))<1e-10);
  const draft=toAuthoringDraft(source);
  assert.equal(draft.questions[0].section,"Combined Examination");
- assert.equal(draft.questions[0].syllabusHeadingId,"labour");
+ assert.equal(draft.questions[0].subject,"Industrial Relations, Labour Codes and Social Security in India");
  assert.equal(entries[0].answer.optionId,"B");
 });
 test("P57-A external source rejects unsupported fields, fake IDs, broken references, suspect math and conflicting answer keys",async()=>{
@@ -265,22 +265,19 @@ test("P57-B valid CAT/APFC reports explicit unverified states; real engine oracl
   assert.equal(r.compiled.questions[0].editorial.status,"caution");
  }
 });
-test("P57-B registered syllabus policy uses the exact taxonomy registry, never an exam-id suffix",async()=>{
+test("P57-B generic source QA never activates an exam taxonomy from the exam ID",async()=>{
  const exact=await load("apfc");
- delete exact.questions[0].syllabusHeadingId;
+ exact.questions[0].subject="";
  let r=inspect(exact);
- assert.equal(r.valid,false);
- assert.ok(r.issues.some(i=>i.code==="syllabus-heading-missing"&&i.questionId==="labour-01"));
+ assert.equal(r.valid,true,JSON.stringify(r.issues));
+ assert.ok(r.issues.some(i=>i.code==="subject-unattributed"&&i.questionId==="labour-01"));
 
  const lookalike=await load("apfc");
  lookalike.examId="vendor-apfc";
- lookalike.questions=lookalike.questions.map(q=>{
-  const {syllabusHeadingId:_,...rest}=q;
-  return {...rest,subject:rest.subject||"General"};
- });
+ lookalike.questions=lookalike.questions.map(q=>({...q,subject:q.subject||"General"}));
  r=inspect(lookalike);
  assert.equal(r.issues.some(i=>i.code==="syllabus-heading-missing"),false,
-  "an APFC-looking ID must not activate a registered taxonomy");
+  "exam-name resemblance must never activate a hidden runtime taxonomy");
  assert.equal(r.valid,true,JSON.stringify(r.issues));
 });
 
@@ -421,12 +418,12 @@ test("P57-B do not silently discard zero-question physical exam sections",async(
   i.path.includes("declared-empty")));
  assert.equal(r.compiled,undefined);
 });
-test("P57-B APFC academic syllabus attribution is mandatory and never inferred from physical section",async()=>{
+test("P57-B academic subject attribution is explicit and never inferred from a physical section",async()=>{
  const s=await load("apfc");
- delete s.questions[1].syllabusHeadingId;
+ s.questions[1].subject="";
  const r=inspect(s);
- assert.equal(r.valid,false);
- assert.ok(r.issues.some(i=>i.code==="syllabus-heading-missing"&&i.questionId==="economy-01"));
+ assert.equal(r.valid,true,JSON.stringify(r.issues));
+ assert.ok(r.issues.some(i=>i.code==="subject-unattributed"&&i.questionId==="economy-01"));
 });
 test("P57-B distinct matching labels and redundant numeric-answer tolerance trigger appropriate severity",async()=>{
  const cat=await load("cat");
