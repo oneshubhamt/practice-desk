@@ -1,39 +1,6 @@
-/** Explicit, versioned syllabus labels. This catalogue never infers a question's topic.
- * Broad APFC headings are supplied as an authoring aid; author/user attribution
- * must be explicit, and official status is not inferred for imported papers.
+/** Generic semantic topic-path helpers.
+ * Exam-specific syllabus/taxonomy knowledge belongs in data sidecars, never here.
  */
-export interface SyllabusHeading {readonly id:string;readonly label:string}
-export interface SyllabusTaxonomy {
- readonly id:string;readonly version:number;readonly examId:string;
- readonly headings:readonly SyllabusHeading[];
-}
-export const APFC_SYLLABUS_V1:SyllabusTaxonomy={
- id:"apfc-broad",version:1,examId:"upsc-epfo-apfc",
- headings:[
-  {id:"english",label:"General English"},
-  {id:"culture",label:"Indian Culture, Heritage and Freedom Movements"},
-  {id:"economy",label:"Developmental Issues and Present Trends in Indian Economy"},
-  {id:"governance",label:"Governance and Constitution of India"},
-  {id:"science-computers",label:"General Science and Basic Knowledge of Computer Applications"},
-  {id:"maths",label:"Elementary Mathematics, Statistics and General Mental Ability"},
-  {id:"labour",label:"Industrial Relations, Labour Codes and Social Security in India"},
-  {id:"accountancy",label:"Principles of Accountancy, Auditing and Insurance"},
-  {id:"current-events",label:"Current Events of National and International Importance"}
- ]
-};
-export const SUPPORTED_TAXONOMIES:readonly SyllabusTaxonomy[]=[APFC_SYLLABUS_V1];
-export function syllabusForExam(examId:string):SyllabusTaxonomy|undefined{
- return SUPPORTED_TAXONOMIES.find(t=>t.examId===examId);
-}
-export function syllabusHeading(examId:string,headingId:string):SyllabusHeading|undefined{
- return syllabusForExam(examId)?.headings.find(h=>h.id===headingId);
-}
-
-
-/** P49: explicit user/publisher-attributed hierarchy, never inferred from
- * question prose or treated as an official syllabus endorsement.
- * IDs encode the FULL path to avoid joining homonymous topics under
- * different examination subjects. Each ancestor has its own stable key. */
 export interface TopicPathNode{
  readonly id:string;readonly parentId:string|null;
  readonly label:string;readonly path:readonly string[];readonly depth:number;
@@ -68,25 +35,18 @@ export function topicAncestors(input:readonly string[]):readonly TopicPathNode[]
      label,path:prefix,depth:index+1};
  });
 }
-/** Author- or learner-attributed semantic classification, NOT an exam section.
- * An empty subject is honestly marked "Unclassified"; an official heading is
- * used only after explicit choice, and is not inferred from section or text.
- * The canonical label path is published in the frozen question metadata.
+/** Author- or learner-attributed custom classification, not an exam section.
+ * Official/data-backed classification is resolved through the separate taxonomy contract.
  */
 export const UNCLASSIFIED_SUBJECT="Unclassified";
-export function attributedTopicPath(examId:string,subject:string,
- headingId:string|undefined,topic:string,subtopic:string):readonly string[]{
- if(typeof subject!=="string"||typeof topic!=="string"||
-    typeof subtopic!=="string")throw Error("Invalid topic classification");
+export function attributedTopicPath(subject:string,topic:string,subtopic:string):readonly string[]{
+ if(typeof subject!=="string"||typeof topic!=="string"||typeof subtopic!=="string")
+  throw Error("Invalid topic classification");
  if(subtopic.trim()&&!topic.trim())throw Error("Choose a topic before a subtopic");
- const heading=headingId?syllabusHeading(examId,headingId):undefined;
- if(headingId&&!heading)throw Error("Unknown syllabus heading");
- if(heading&&subject.trim())throw Error("Choose either an official syllabus heading or a custom subject");
- const root=heading?.label??(subject.trim()||UNCLASSIFIED_SUBJECT);
+ const root=subject.trim()||UNCLASSIFIED_SUBJECT;
  return validateTopicPath([root,...(topic.trim()?[topic.trim()]:[]),
    ...(subtopic.trim()?[subtopic.trim()]:[])]);
 }
-/** Display nested topic nodes without revealing opaque encoded storage IDs. */
 export function topicPathLabel(id:string):string{
  const path=parseTopicPathId(id);
  return path?path.join(" › "):id;
