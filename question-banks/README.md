@@ -26,7 +26,7 @@ Nested manifests own year, paper, edition and canonical paths. The build loader 
 - `currentPaperRef` names a **paper-manifest node**. Catalog loading resolves it to the canonical immutable runtime `currentPaperRevisionId`.
 - An edition that declares `authoring` must point to a file named `bank.authoring.json`. That file is the sole maintained source for the edition; `package.exam.json` is generated material and catalog loading rejects any source/package divergence.
 - A maintained authoring edition may bind `qualityReview` to `quality-review.json` and `blueprint` to `blueprint.json`. A non-null binding is executable evidence: catalog loading re-runs the corresponding gate against the exact current `bank.authoring.json` and rejects stale, invalid or publication-incomplete evidence.
-- A preinstalled canonical maintained **mock** must declare both evidence fields explicitly. `null` means no bound review/blueprint and carries no certification; it is deliberately different from a passing sidecar.
+- A preinstalled canonical maintained **mock** backed by `bank.authoring.json` must bind both passing sidecars. Missing or `null` evidence is rejected rather than being treated as publication-ready. Noncanonical/nonpreinstalled editions may still omit evidence when they are intentionally retained as source/archive material.
 - Runtime packages are always named `package.exam.json`.
 - `archive` entries must stay under the paper's `archive/` directory and name existing files.
 - `audit`, when present, must name an existing Markdown file.
