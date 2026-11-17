@@ -222,7 +222,9 @@ test("maintained authoring evidence bindings are required, source-bound and fail
   await assert.rejects(()=>loadQuestionBankCatalog(dir),/Declared quality review is not publication-ready/);
   await writeFile(reviewPath,JSON.stringify(review,null,2));
 
-  const incompleteBlueprint={...blueprint,targetCount:blueprint.targetCount+1};
+  const incompleteBlueprint=structuredClone(blueprint);
+  incompleteBlueprint.quotas.subjects.targets[0].count+=1;
+  incompleteBlueprint.quotas.subjects.targets[1].count-=1;
   await writeFile(blueprintPath,JSON.stringify(incompleteBlueprint,null,2));
   await assert.rejects(()=>loadQuestionBankCatalog(dir),/Declared blueprint is not publication-ready/);
  }finally{await rm(dir,{recursive:true,force:true});}
