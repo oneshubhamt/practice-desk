@@ -22,7 +22,28 @@ node scripts/content-blueprint.mjs brief plan.json batch-01.json batch-02.json \
   --batch-size 8
 ```
 
-The packet contains the exam/paper identity, current remaining count, bounded quota deficits, source policy, suggested stable question IDs, the exact non-question paper envelope (including generic scoring/timing/navigation/tools/practice-mode rules when declared) and the small question-output contract. It deliberately omits repository/package placement, existing question bodies and media bytes. The workflow is fully usable with **one AI agent**; multiple agents or clean-context review may strengthen later review but are not prerequisites for authoring. The current brief does not include learner-performance context; any later personalized focus is an explicit optional input, not a requirement for this baseline flow.
+The packet contains the exam/paper identity, current remaining count, bounded quota deficits, source policy, suggested stable question IDs, the exact non-question paper envelope (including generic scoring/timing/navigation/tools/practice-mode rules when declared) and the small question-output contract. It deliberately omits repository/package placement, existing question bodies and media bytes. The workflow is fully usable with **one AI agent**; multiple agents or clean-context review may strengthen later review but are not prerequisites for authoring. Learner context remains optional: the ordinary brief contains none unless the user explicitly supplies a validated learner-focus packet.
+
+## Optional personalised authoring
+
+Practice Desk does **not** expose unrestricted browser History to an external agent. The Learning desk can instead derive a local `practice-desk-learner-focus` v1 packet for one selected exam:
+
+- **Off:** no learner block at all.
+- **Focused (recommended):** bounded aggregate observations such as attempts, correct/incorrect/unanswered, repeated misses, measured slow/revisit/flag evidence, bookmarks and FSRS-due counts. It contains no prior question bodies or selected responses.
+- **Detailed:** explicitly user-selected richer sharing. It may add bounded prior question prompts, wrong objective response/value text, measured timing/visits, self-reported error labels, FSRS evidence and source explanations. Correct responses and learner-authored free-response text are deliberately omitted.
+
+Choose the authoring intent truthfully. `exam-simulation` is **blueprint-first**: learner evidence may influence framing/selection only inside the required exam composition. `targeted-practice` is **focus-first with syllabus/blueprint guardrails**. The packet reports observations, not diagnoses.
+
+The Learning desk lets the user inspect/copy/export the focus packet. It can also load a standard `practice-desk-authoring-brief` and generate the complete personalised Authoring Brief locally using the same personalisation function as the CLI. For file/CLI workflows:
+
+```bash
+node scripts/content-blueprint.mjs brief plan.json existing-batch.json \
+  --taxonomy question-banks/<exam>/<year>/taxonomy.json \
+  --learner-focus practice-desk-learner-focus-<exam>.json \
+  --bank-id next-batch --title "Next personalised batch" --batch-size 8
+```
+
+The brief records `learnerFocusIncluded`, the exact packet and `personalisationIntent`. A cross-exam packet is rejected.
 
 ## Canonical source
 
@@ -116,6 +137,8 @@ node scripts/agent-handoff.mjs publish pdf intake.json original.json paper.pdf r
 
 Optional blueprint/cognitive files can enforce planned quotas. Partial batches may remain structurally valid for continued work but cannot publish until required totals/allocations are complete.
 
-Ad-hoc external packages are imported **manually** into Library. A repository-maintained family is preinstalled only when its root catalog entry has `preinstalled: true`; the build then follows that family’s manifest graph to its canonical papers. For a preinstalled canonical maintained mock backed by `bank.authoring.json`, the paper manifest must bind completed `quality-review.json` and `blueprint.json` sidecars. Catalog loading re-audits both against the exact current source and rejects missing, null, stale or publication-incomplete evidence. Never manufacture a passing sidecar merely to satisfy the manifest; keep an unfinished paper noncanonical/nonpreinstalled until genuine evidence exists. Set `preinstalled: false` and rebuild to exclude the family while keeping its corpus installed. To remove the family from the repository corpus itself, delete both its catalog entry and active family directory in the same change; reciprocal reachability rejects unregistered active bank files. Append maintained papers by adding a self-contained paper folder plus one year-manifest entry; do not add package paths to the root catalog. For paired/PDF results outside that maintained corpus, import Source first, then Reviewed, and retain source documents/sidecars externally. Never overwrite an existing immutable revision.
+Ad-hoc external packages are imported **manually** into Library. For repository-maintained **custom mocks**, use `scripts/question-bank-corpus.mjs add-paper` or `append-revision` after strict review/blueprint completion rather than manually editing the corpus graph. Both commands support `--dry-run`, stage and validate the complete prospective graph, create new edition folders without overwrite and roll back their own writes if final validation fails. PYQ Source/Reviewed publication remains on the editorial/PDF pathway.
+
+A repository-maintained family is preinstalled only when its root catalog entry has `preinstalled: true`; the build then follows that family’s manifest graph to its canonical papers. For a preinstalled canonical maintained mock backed by `bank.authoring.json`, the paper manifest must bind completed `quality-review.json` and `blueprint.json` sidecars. Catalog loading re-audits both against the exact current source and rejects missing, null, stale or publication-incomplete evidence. Never manufacture a passing sidecar merely to satisfy the manifest; keep an unfinished paper noncanonical/nonpreinstalled until genuine evidence exists. Set `preinstalled: false` and rebuild to exclude the family while keeping its corpus installed. To remove the family from the repository corpus itself, delete both its catalog entry and active family directory in the same change; reciprocal reachability rejects unregistered active bank files. Append maintained papers by adding a self-contained paper folder plus one year-manifest entry; do not add package paths to the root catalog. For paired/PDF results outside that maintained corpus, import Source first, then Reviewed, and retain source documents/sidecars externally. Never overwrite an existing immutable revision.
 
 For advanced quota, Source/Reviewed and PDF semantics read [AGENT_CONTENT_PIPELINE.md](architecture/AGENT_CONTENT_PIPELINE.md). Exact runtime/domain invariants live in [DATA_CONTRACTS.md](architecture/DATA_CONTRACTS.md). Machine-discoverable actions are in [practice-desk-capabilities.v1.json](contracts/practice-desk-capabilities.v1.json).
