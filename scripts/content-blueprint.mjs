@@ -666,27 +666,20 @@ const failure=message=>{
 };
 async function main(){
  const [command,...args]=process.argv.slice(2);
- const usage="Usage: content-blueprint.mjs validate <plan.json> | audit <plan.json> <source.json>... [--cognitive tags.json] [--against prior-bank.json]... [--offset N] [--limit 1..50] | brief <plan.json> [existing-source.json ...] --bank-id ID --title TITLE [--batch-size 1..20] [--cognitive tags.json] [--against prior-bank.json]...";
+ const usage="Usage: content-blueprint.mjs validate <plan.json> [--taxonomy taxonomy.json] | audit <plan.json> <source.json>... [--taxonomy taxonomy.json] [--cognitive tags.json] [--against prior-bank.json]... [--offset N] [--limit 1..50] | brief <plan.json> [existing-source.json ...] --bank-id ID --title TITLE [--taxonomy taxonomy.json] [--batch-size 1..20] [--cognitive tags.json] [--against prior-bank.json]...";
  if(!["validate","audit","brief"].includes(command))fail(usage);
- if(command==="validate"&&args.length!==1)fail("validate takes only one blueprint file");
  if(command==="audit"&&args.length<2)fail("audit needs blueprint and at least one source");
  if(command==="brief"&&args.length<1)fail(usage);
  const planFile=await load(args[0],MAX_PLAN,"Blueprint");
- const plan=validateBlueprint(planFile.value);
- if(command==="validate"){
-  emit({format:"practice-desk-blueprint-validation",version:1,valid:true,
-   id:plan.id,targetCount:plan.targetCount,examId:plan.examId,paperId:plan.paperId,
-   revision:plan.revision,sha256:planFile.digest,
-   quotaGroups:GROUPS.filter(g=>plan.quotas?.[g]),
-   factualVerification:"not-performed",note:"A valid blueprint does not authenticate the curriculum or prove question quality."});
-  return;
- }
- const files=[],priorPaths=[];let tagPath=null,limit=12,offset=0,batchSize=8,bankId=null,title=null;
+ const files=[],priorPaths=[];let tagPath=null,taxonomyPath=null,limit=12,offset=0,batchSize=8,bankId=null,title=null;
  for(let i=1;i<args.length;i++){
   const flag=args[i];
-  if(["--cognitive","--limit","--offset","--against","--batch-size","--bank-id","--title"].includes(flag)){
+  if(["--taxonomy","--cognitive","--limit","--offset","--against","--batch-size","--bank-id","--title"].includes(flag)){
    if(i+1>=args.length)fail("Missing argument after "+flag);
-   if(flag==="--cognitive"){
+   if(flag==="--taxonomy"){
+    if(taxonomyPath)fail("Duplicate --taxonomy");taxonomyPath=args[++i];
+   }else if(flag==="--cognitive"){
+    if(command==="validate")fail("--cognitive is not valid for validate");
     if(tagPath)fail("Duplicate --cognitive");tagPath=args[++i];
    }else if(flag==="--against"){
     priorPaths.push(args[++i]);
@@ -715,6 +708,18 @@ async function main(){
   }else if(flag.startsWith("--"))fail("Unknown flag "+flag);
   else files.push(flag);
  }
+ if(command==="validate"&&files.length)fail("validate accepts only the blueprint and optional --taxonomy");
+ const taxonomy=taxonomyPath?validateExamTaxonomy((await load(taxonomyPath,MAX_PLAN,"Taxonomy")).value):undefined;
+ const plan=validateBlueprint(planFile.value,taxonomy);
+ if(command==="validate"){
+  emit({format:"practice-desk-blueprint-validation",version:1,valid:true,
+   id:plan.id,targetCount:plan.targetCount,examId:plan.examId,paperId:plan.paperId,
+   revision:plan.revision,sha256:planFile.digest,
+   ...(taxonomy?{taxonomyId:taxonomy.id}:{}),
+   quotaGroups:GROUPS.filter(g=>plan.quotas?.[g]),
+   factualVerification:"not-performed",note:"A valid blueprint does not authenticate the curriculum or prove question quality."});
+  return;
+ }
  if(command==="audit"&&(files.length<1||files.length>MAX_FILES))
   fail("Supply 1.."+MAX_FILES+" source JSON files");
  if(command==="brief"&&files.length>MAX_FILES)fail("Supply at most "+MAX_FILES+" existing source JSON files");
@@ -725,10 +730,10 @@ async function main(){
  const priorSources=[];
  for(const path of priorPaths)priorSources.push(await load(path,MAX_SOURCE,"Prior comparison source"));
  if(command==="brief"){
-  const result=buildAuthoringBrief(plan,planFile.digest,sources,tags,{priorSources,batchSize,bankId,title});
+  const result=buildAuthoringBrief(plan,planFile.digest,sources,tags,{priorSources,batchSize,bankId,title,taxonomy});
   emit(result);return;
  }
- const result=audit(plan,sources,tags,{limit,offset,priorSources});
+ const result=audit(plan,sources,tags,{limit,offset,priorSources,taxonomy});
  result.blueprintSha256=planFile.digest;
  emit(result);
  if(!result.valid)process.exitCode=1;
