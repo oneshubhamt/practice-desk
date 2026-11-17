@@ -11,7 +11,7 @@ import {resolve} from "node:path";
 import {inspectExternalQuestionBank,toAuthoringDraft} from "../src/authoring/external-bank.ts";
 import {publicationPlainText} from "../src/authoring/authoring-publisher.ts";
 import {resolveTaxonomyPath,taxonomyNode,taxonomyPathNodes,validateExamTaxonomy} from "../src/domain/taxonomy.ts";
-import {validateLearnerFocusPacket} from "../src/learning/learner-focus.ts";
+import {personalizeAuthoringBrief,validateLearnerFocusPacket} from "../src/learning/learner-focus.ts";
 
 const FORMAT="practice-desk-content-blueprint",TAG_FORMAT="practice-desk-cognitive-tags";
 const GROUPS=["subjects","topics","subtopics","difficulties","kinds","origins","sections","cognitive"];
@@ -611,7 +611,7 @@ function buildAuthoringBrief(plan,planSha,sources,tagDoc,{priorSources=[],batchS
   requireSubtopic:plan.requirements.requireSubtopic===true,
   requireDifficulty:plan.requirements.requireDifficulty===true
  };
- return {
+ const brief={
   format:"practice-desk-authoring-brief",version:1,valid:true,
   blueprint:{id:plan.id,sha256:planSha,examId:plan.examId,paperId:plan.paperId,revision:plan.revision},
   workflow:{singleAgentCompatible:true,multipleAgentsRequired:false},
@@ -626,14 +626,6 @@ function buildAuthoringBrief(plan,planSha,sources,tagDoc,{priorSources=[],batchS
   sourcePolicy,classification,
   ...(taxonomy?{taxonomy:{id:taxonomy.id,title:taxonomy.title,basis:taxonomy.basis,
     asOfDate:taxonomy.asOfDate,reference:taxonomy.reference,nodes:taxonomy.nodes}}:{}),
-  ...(learnerFocus?{
-   learnerFocus:structuredClone(learnerFocus),
-   personalisationIntent:{
-    mode:learnerFocus.mode,intent:learnerFocus.intent,
-    compositionPolicy:learnerFocus.compositionPolicy,
-    guidance:structuredClone(learnerFocus.generationGuidance)
-   }
-  }:{}),
   itemWritingPriorities:[
    "Spend reasoning on exam-relevant substance, not Practice Desk mechanics.",
    "For automatically scored items, make the keyed answer uniquely defensible and distractors plausible.",
@@ -665,10 +657,11 @@ function buildAuthoringBrief(plan,planSha,sources,tagDoc,{priorSources=[],batchS
     qa:"Author-created or materially changed items remain unchecked/needs-review; do not self-certify."
    }
   },
-  learnerFocusIncluded:Boolean(learnerFocus),
+  learnerFocusIncluded:false,
   factualVerification:"not-performed",
   note:"Decision-ready authoring context only. It omits existing question bodies, media bytes and repository/package placement. Research and verify factual, legal, current and PYQ claims outside this packet."
  };
+ return learnerFocus?personalizeAuthoringBrief(brief,learnerFocus):brief;
 }
 const emit=v=>process.stdout.write(JSON.stringify(v,null,2)+"\n");
 const failure=message=>{
