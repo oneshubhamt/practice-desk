@@ -97,7 +97,7 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
    const topicGroups=new Map<string,{id:string;count:number;path:readonly string[]}[]>();
    const rawTopics:{id:string;count:number}[]=[];
    for(const entry of composeInventory?.topics??[]){
-     const path=parseTopicPathId(entry.id);
+     const path=entry.path??parseTopicPathId(entry.id);
      if(!path){rawTopics.push(entry);continue;}
      const group=topicGroups.get(path[0]!)??[];
      group.push({...entry,path});
