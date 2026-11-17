@@ -11,5 +11,6 @@
       "path": "mocks/day-01/manifest.json"
     }
   ],
-  "pyqs": []
+  "pyqs": [],
+  "taxonomy": "taxonomy.json"
 }
