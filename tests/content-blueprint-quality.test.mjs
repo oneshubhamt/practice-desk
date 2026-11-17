@@ -23,8 +23,8 @@ const mkPlan=()=>({
  requirements:{requireTopic:false,requireDifficulty:false,requireExplanation:true,minCitations:0,
   allowedOrigins:["ai-original"],maxTopicSharePercent:100},
  quotas:{
-  subjects:{exhaustive:true,targets:[{key:"heading:labour",count:1},
-    {key:"heading:economy",count:1},{key:"heading:accountancy",count:1}]},
+  subjects:{exhaustive:true,targets:[{key:"subject:Industrial Relations, Labour Codes and Social Security in India",count:1},
+    {key:"subject:Developmental Issues and Present Trends in Indian Economy",count:1},{key:"subject:Principles of Accountancy, Auditing and Insurance",count:1}]},
   kinds:{exhaustive:true,targets:[{key:"single-choice",count:3}]}
  }
 });
@@ -69,7 +69,7 @@ test("P60-B RED: count mismatch, subject drift, mixed paper and duplicated quest
  const short=run("audit",plan,await write(dir,"short.json",reduced));
  assert.notEqual(short.status,0);
  assert.ok(short.data.issues.items.some(x=>x.code==="target-count"||x.code==="quota-mismatch"));
- const drift=structuredClone(base);drift.questions[0].syllabusHeadingId="economy";
+ const drift=structuredClone(base);drift.questions[0].subject="Developmental Issues and Present Trends in Indian Economy";
  const wrong=run("audit",plan,await write(dir,"wrong.json",drift));
  assert.notEqual(wrong.status,0);
  assert.ok(wrong.data.issues.items.some(x=>x.code==="quota-mismatch"));
@@ -109,9 +109,9 @@ test("P60-B RED: untrusted cognitive labels require a complete separate sidecar,
 test("P60-B RED: contradicted blueprint, impossible allocations, unsupported fields and false official claims fail closed",()=>temp(async dir=>{
  for(const mutate of [
   p=>{p.targetCount=2;},
-  p=>{p.quotas.subjects.targets[1].key="heading:labour";},
+  p=>{p.quotas.subjects.targets[1].key="subject:Industrial Relations, Labour Codes and Social Security in India";},
   p=>{p.quotas.subjects.targets[0].count=4;},
-  p=>{p.quotas.subjects.targets[0].key="heading:not-official";},
+  p=>{p.quotas.subjects.targets[0].key="not-a-valid-subject-key";},
   p=>{p.fakeVerified=true;},
   p=>{p.syllabus.basis="official-confirmed";},
   p=>{p.requirements.allowedOrigins=["verified-pyq"];},
@@ -201,9 +201,9 @@ test("P60-B: canonical compiler optionally gates exact single-source publication
 
 test("P60-B: parent-child allocation contradictions are rejected at plan time, not silently audited",()=>temp(async dir=>{
  for(const mut of [
-  p=>{p.quotas.topics={targets:[{subjectKey:"heading:labour",topic:"A",count:2}]};},
-  p=>{p.quotas.subtopics={targets:[{subjectKey:"heading:labour",topic:"A",subtopic:"B",count:2}]};},
-  p=>{p.quotas.topics={exhaustive:true,targets:[{subjectKey:"heading:labour",topic:"A",count:3}]};}
+  p=>{p.quotas.topics={targets:[{subjectKey:"subject:Industrial Relations, Labour Codes and Social Security in India",topic:"A",count:2}]};},
+  p=>{p.quotas.subtopics={targets:[{subjectKey:"subject:Industrial Relations, Labour Codes and Social Security in India",topic:"A",subtopic:"B",count:2}]};},
+  p=>{p.quotas.topics={exhaustive:true,targets:[{subjectKey:"subject:Industrial Relations, Labour Codes and Social Security in India",topic:"A",count:3}]};}
  ]){
   const p=mkPlan();mut(p);
   const r=run("validate",await write(dir,"contradiction-"+Math.random()+".json",p));
@@ -242,8 +242,8 @@ test("P60-B: separate coherent source batches meet an exact aggregate blueprint 
 
 test("P60-B: combined sibling topic targets cannot exceed a parent allocation",()=>temp(async dir=>{
  const p=mkPlan();
- p.quotas.topics={targets:[{subjectKey:"heading:labour",topic:"Wages",count:1},
-  {subjectKey:"heading:labour",topic:"Disputes",count:1}]};
+ p.quotas.topics={targets:[{subjectKey:"subject:Industrial Relations, Labour Codes and Social Security in India",topic:"Wages",count:1},
+  {subjectKey:"subject:Industrial Relations, Labour Codes and Social Security in India",topic:"Disputes",count:1}]};
  const bad=run("validate",await write(dir,"parent.json",p));
  assert.notEqual(bad.status,0);
  assert.match(bad.data.message,/Combined topic allocations exceed/);
@@ -282,7 +282,7 @@ test("P60-B: agents can page errors without loading 200 questions and coverage o
  p.requirements.requireDifficulty=true;
  p.requirements.minCitations=1;
  p.quotas.topics={exhaustive:false,targets:Array.from({length:20},(_,i)=>({
-  subjectKey:"heading:labour",topic:"Synthetic unrequested "+i,count:0
+  subjectKey:"subject:Industrial Relations, Labour Codes and Social Security in India",topic:"Synthetic unrequested "+i,count:0
  }))};
  const plan=await write(dir,"pages.json",p);
  const first=run("audit",plan,example,"--offset","0","--limit","1");
