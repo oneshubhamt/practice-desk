@@ -4,7 +4,7 @@ import {readFile,writeFile} from "node:fs/promises";
 import {createHash} from "node:crypto";
 import {validateBlueprint,auditBlueprint} from "./content-blueprint.mjs";
 import {auditQuestionQuality} from "./question-quality.mjs";
-import {inspectExternalQuestionBank} from "../src/authoring/external-bank.ts";
+import {bindExternalQuestionTaxonomy,inspectExternalQuestionBank} from "../src/authoring/external-bank.ts";
 import {validateExamTaxonomy} from "../src/domain/taxonomy.ts";
 import {isDraftExchange,inspectDraftExchange} from "../src/authoring/authoring-exchange.ts";
 const [command,input,...rest]=process.argv.slice(2);
@@ -54,7 +54,7 @@ if(!["validate-bank","compile-bank","qa-bank"].includes(command)||!input||!flagO
    if(Buffer.byteLength(reviewRaw,"utf8")>3*1024*1024)throw Error("Quality review exceeds 3 MiB");
    qualityAudit=auditQuestionQuality(source,raw,JSON.parse(reviewRaw));
   }
-  let blueprintAudit=null;
+  let blueprintAudit=null,taxonomy=null;
   if(cognitivePath&&!blueprintPath)throw Error("--cognitive requires --blueprint");
   if(taxonomyPath&&!blueprintPath)throw Error("--taxonomy requires --blueprint");
   if(blueprintPath){
@@ -62,7 +62,6 @@ if(!["validate-bank","compile-bank","qa-bank"].includes(command)||!input||!flagO
     throw Error("Blueprint guard supports original practice-desk-authoring v1; use content-blueprint.mjs audit for source batches");
    const rawPlan=await readFile(blueprintPath,"utf8");
    if(Buffer.byteLength(rawPlan,"utf8")>1024*1024)throw Error("Blueprint exceeds 1 MiB");
-   let taxonomy;
    if(taxonomyPath){
     const taxonomyRaw=await readFile(taxonomyPath,"utf8");
     if(Buffer.byteLength(taxonomyRaw,"utf8")>1024*1024)throw Error("Taxonomy exceeds 1 MiB");
@@ -78,11 +77,13 @@ if(!["validate-bank","compile-bank","qa-bank"].includes(command)||!input||!flagO
    }
    blueprintAudit=auditBlueprint(plan,[{value:source,digest}],cognitiveTags,{priorSources:comparisonSources,taxonomy});
   }
+  const compiledOutput=compiled&&taxonomy&&!isDraftExchange(source)?
+   bindExternalQuestionTaxonomy(source,compiled,taxonomy):compiled;
   // A partial blueprint can be valid for continued authoring, but must not
   // produce a signed, final exam package until all requested quotas are met.
-  const readyForPublication=report.valid&&Boolean(compiled)&&
+  const readyForPublication=report.valid&&Boolean(compiledOutput)&&
    blueprintAudit?.readyForPublication!==false&&qualityAudit?.readyForPublication!==false;
-  if(!report.valid||!compiled||blueprintAudit?.valid===false||
+  if(!report.valid||!compiledOutput||blueprintAudit?.valid===false||
      (compiling&&!readyForPublication)||qualityAudit?.readyForPublication===false){
    process.stdout.write(JSON.stringify({...publicReport,readyForPublication,compiled:false,
     ...(blueprintAudit?{blueprint:{valid:blueprintAudit.valid,readyForPublication:blueprintAudit.readyForPublication,requestedCount:blueprintAudit.requestedCount,
@@ -95,7 +96,7 @@ if(!["validate-bank","compile-bank","qa-bank"].includes(command)||!input||!flagO
   }else{
    if(compiling){
     // Atomic create-new in the same folder; no destructive overwrite of a prior output.
-    await writeFile(output,JSON.stringify(compiled,null,2)+"\n",{flag:"wx"});
+    await writeFile(output,JSON.stringify(compiledOutput,null,2)+"\n",{flag:"wx"});
    }
    process.stdout.write(JSON.stringify({...publicReport,readyForPublication,
     compiled:compiling,...(blueprintAudit?{blueprint:{valid:true,readyForPublication:blueprintAudit.readyForPublication,requestedCount:blueprintAudit.requestedCount,actualCount:blueprintAudit.actualCount,
