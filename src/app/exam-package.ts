@@ -107,7 +107,8 @@ export function startGenericAttempt(
  const validated=validateExamPackage(bundle);
  const frozenMode=mode??(validated.paper.edition==="custom"?"custom-practice":"exam-simulation");
  const frozen=freezeAttempt(validated.paper,validated.answerKey,validated.questions,
-   validated.stimuli??[],validated.assets??[],frozenMode,new Date(timestamp).toISOString(),validated.examId);
+   validated.stimuli??[],validated.assets??[],frozenMode,new Date(timestamp).toISOString(),validated.examId,
+   validated.taxonomy,validated.taxonomyAssignments);
  return {recordType:"generic-attempt",saveRevision:0,id,packageId:validated.paper.id,startedAt:timestamp,
    updatedAt:timestamp,finishedAt:null,completionReason:null,frozen,state:startSession(validated.paper,timestamp),
    ...(validated.explanations?{explanations:structuredClone(validated.explanations)}:{})};
