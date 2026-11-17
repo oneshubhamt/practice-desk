@@ -78,9 +78,9 @@
     },
     {
       "operation": "authoring-brief",
-      "command": "node scripts/content-blueprint.mjs brief <plan.json> [existing-source.json ...] --bank-id <new-batch-id> --title <title> [--taxonomy taxonomy.json] [--batch-size 1..20] [--cognitive tags.json] [--against prior-bank.json]...",
+      "command": "node scripts/content-blueprint.mjs brief <plan.json> [existing-source.json ...] --bank-id <new-batch-id> --title <title> [--taxonomy taxonomy.json] [--learner-focus focus.json] [--batch-size 1..20] [--cognitive tags.json] [--against prior-bank.json]...",
       "privilege": "read-only",
-      "effect": "Compact single-agent-compatible authoring task packet: exact paper configuration, suggested stable question IDs, remaining blueprint deficits, source policy and minimal question contract; omits existing question bodies, media bytes and repository/package placement"
+      "effect": "Compact single-agent-compatible authoring task packet: exact paper configuration, stable IDs, remaining blueprint deficits, source policy and minimal question contract; optional validated exam-scoped learner focus is inserted with explicit personalization intent; existing question bodies/media/repository plumbing remain omitted."
     },
     {
       "operation": "validate-content-blueprint",
@@ -99,6 +99,18 @@
       "command": "node scripts/question-bank-cli.mjs compile-bank <bank.json> <NEW-output.json> --blueprint <plan.json> [--taxonomy taxonomy.json]",
       "privilege": "create-new-file",
       "effect": "Single-bank canonical compiler refuses publication output when explicit content quotas fail; when --taxonomy is supplied, the emitted package also carries the validated taxonomy and stable question-revision assignments."
+    },
+    {
+      "operation": "corpus-add-paper",
+      "command": "node scripts/question-bank-corpus.mjs add-paper --family <family-id> --year <YYYY> --paper-id <slug> --source <bank.json> --quality-review <review.json> --blueprint <plan.json> [--set-current] [--dry-run]",
+      "privilege": "repository-maintained-create/update",
+      "effect": "For maintained custom mocks only: stage and validate the complete prospective corpus, then create one self-contained paper folder and year-manifest entry without overwrite; optional explicit currentPaperRef move; rollback own writes on final validation failure."
+    },
+    {
+      "operation": "corpus-append-revision",
+      "command": "node scripts/question-bank-corpus.mjs append-revision --family <family-id> --year <YYYY> --paper-id <slug-or-manifest-id> --source <bank.json> --quality-review <review.json> --blueprint <plan.json> [--dry-run]",
+      "privilege": "repository-maintained-create/update",
+      "effect": "For maintained custom mocks only: require a strictly higher custom revision, stage full graph validation, create a new immutable rN edition and atomically move that paper's canonical edition; no overwrite and rollback own writes on failure."
     },
     {
       "operation": "candidate-review-packet",
@@ -182,7 +194,7 @@
   "trustBoundaries": [
     "A claim, link, SHA hash, second-model agreement or structurally valid package does not authenticate answers/PYQs/sources",
     "Preserve candidate-facing content separately from answers, rubrics and editorial notes until authorized result review",
-    "User-local history and learning data are not accessible to the external agent by default",
+    "User-local History and learning data are not accessible to the external agent by default; only an explicit exam-scoped reduced learner-focus/personalised brief may be shared",
     "Do not promise direct app UI or database mutation from the Node source CLI",
     "P60-D provides source-preserving paired external editorial publication; P60-E PDF provenance and P60-F scoped agent handoff are implemented local CLIs with no automatic content/source authentication or browser/device bridge."
   ],
@@ -201,7 +213,7 @@
         "Browse available repository-maintained and imported exam families and paper revisions",
         "Family-level catalog switch controls explicit build-time preinstallation/removal",
         "Authoritative exam → year → paper manifests own discovery, PYQ/mock classification, canonical edition and paths",
-        "Appending a maintained paper requires one self-contained paper folder plus a year-manifest entry, not a root-catalog edit",
+        "Maintained custom mocks can be added or revised through a dry-runnable staged corpus transaction; root catalog package paths remain unnecessary",
         "Distinguish source/reviewed/custom identities and included-vs-user-supplied provenance",
         "Effective exam rules derive from the selected frozen paper"
       ],
@@ -218,7 +230,8 @@
         "scripts/question-bank-catalog.mjs",
         "src/app/preinstalled-exams.ts",
         "src/app/exam-families.ts",
-        "src/app/library-controller.ts"
+        "src/app/library-controller.ts",
+        "scripts/question-bank-corpus.mjs"
       ]
     },
     {
@@ -341,17 +354,45 @@
       "provides": [
         "User-authored notes, error labels, bookmarks and topic assignments",
         "Wrong, blank, slow, repeated, flagged, bookmarked and due revision reasons",
-        "Frozen source and answer lineage; user review grades separated from exam marks"
+        "Frozen source and answer lineage; user review grades separated from exam marks",
+        "Opt-in exam-scoped learner-focus reduction from observed attempt/notebook/FSRS evidence for fresh question authoring"
       ],
-      "agentUse": "Suggest revision from evidence and learner authorization, not a medical/cognitive diagnosis or automatic regrade.",
+      "agentUse": "Suggest revision from evidence and learner authorization, not a medical/cognitive diagnosis or automatic regrade. External authoring receives learner data only through a user-approved reduced focus/personalised brief, never unrestricted History.",
       "limitations": [
         "Revision reasons do not prove why a learner got an answer wrong",
-        "No built-in external AI agent access to private learning cards"
+        "No unrestricted external AI agent access to browser History or private learning cards; only explicit user-approved reduced focus may cross the boundary"
       ],
       "sourcePaths": [
         "src/learning/learning.ts",
         "src/learning/revision-selection.ts",
-        "src/learning/revision-test.ts"
+        "src/learning/revision-test.ts",
+        "src/learning/learner-focus.ts",
+        "src/app/learning-ui.ts"
+      ]
+    },
+    {
+      "id": "learner-focus",
+      "status": "implemented",
+      "summary": "User-controlled local practice-evidence reduction and optional personalised Authoring Brief generation with Off, Focused and Detailed sharing.",
+      "provides": [
+        "Off emits no learner packet and leaves the standard Authoring Brief unchanged",
+        "Focused emits bounded exam-only aggregates: observed answers/errors, repeated misses, measured slow/revisit/flag evidence, bookmarks, FSRS due counts and explicit recent-window statistics",
+        "Detailed is a separate richer opt-in with bounded prior prompt, wrong non-free-response selection/value text, measured timing/visits, self-reported error label, FSRS state and source explanation",
+        "Exam-simulation intent is blueprint-first; targeted-practice intent is focus-first with syllabus/blueprint guardrails",
+        "Learning desk can inspect/copy/export the focus packet and locally combine it with a loaded standard Authoring Brief",
+        "CLI --learner-focus and browser local personalization use the same validated transformation"
+      ],
+      "agentUse": "Use only the learnerFocus block supplied in the Authoring Brief. Treat it as observed evidence, not diagnosis; generate fresh transfer items rather than reproducing prior questions.",
+      "limitations": [
+        "No identity/device/unrelated-exam/unrestricted-History data in the learner-focus contract",
+        "Focused contains no prior question bodies or selected responses",
+        "Detailed omits correct responses and learner-authored free-response text",
+        "FSRS due/review evidence describes memory scheduling state; it does not itself identify why an answer was wrong"
+      ],
+      "sourcePaths": [
+        "src/learning/learner-focus.ts",
+        "src/app/learning-ui.ts",
+        "scripts/content-blueprint.mjs"
       ]
     },
     {
@@ -401,6 +442,29 @@
         "src/authoring/external-bank.ts",
         "src/authoring/external-bank-qa.ts",
         "src/authoring/authoring-exchange.ts"
+      ]
+    },
+    {
+      "id": "transactional-corpus",
+      "status": "implemented-with-limits",
+      "summary": "Dry-runnable staged add-paper/append-revision bridge for repository-maintained custom mocks.",
+      "provides": [
+        "Reuses canonical source compiler plus bound taxonomy, layered quality-review, blueprint and full catalog validation",
+        "Stages the complete prospective question-banks graph before any repository mutation",
+        "Exclusive corpus lock plus byte preconditions, create-only folders and atomic manifest replacement",
+        "Final real-graph validation with rollback of the operation's own writes on failure",
+        "add-paper optionally moves currentPaperRef only with explicit --set-current; append-revision requires a strictly higher immutable custom revision"
+      ],
+      "agentUse": "After authoring/review/blueprint completion, run --dry-run and inspect the returned plan before the real maintained-corpus operation. Do not hand-edit manifests for the supported custom-mock case.",
+      "limitations": [
+        "Maintained custom mocks only; genuine PYQ Source/Reviewed/PDF provenance stays on editorial/PDF publication workflows",
+        "Repository filesystem permission is required; this is not a browser/remote database mutation API",
+        "The transaction protects Practice Desk corpus operations; it cannot prevent arbitrary external filesystem mutation outside the lock protocol"
+      ],
+      "sourcePaths": [
+        "scripts/question-bank-corpus.mjs",
+        "scripts/question-bank-catalog.mjs",
+        "question-banks/README.md"
       ]
     },
     {
