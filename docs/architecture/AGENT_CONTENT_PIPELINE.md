@@ -9,11 +9,13 @@
 | Compact new-batch authoring brief | `content-blueprint.mjs brief` | Decision-ready exam/coverage/source contract; no repository/package plumbing or existing question bodies |
 | Validate/compile one source bank | `question-bank-cli.mjs` | One canonical `practice-desk-authoring` v1 source compiled through the canonical publisher |
 | Small-context corrections | `question-bank-agent.mjs` | Paged inspection, question-scoped retrieval, SHA preconditions, new-file output |
-| Planned distribution | `content-blueprint.mjs` + optional cognitive tags | Explicit quotas/partial delivery; structurally valid partial work is not publication-ready |
+| Planned distribution | `content-blueprint.mjs` + optional exam taxonomy/cognitive tags | Explicit stable-node coverage, quotas/partial delivery; structurally valid partial work is not publication-ready |
 | Layered editorial/key challenge | `question-quality.mjs` | Candidate-only packet, v3 review modes/applicability, compact semantic checks, one bank review and source-hash freshness |
 | Source + separately corrected Reviewed | `editorial-editions.mjs` | Preserve Source bytes/key; bind Reviewed to exact Source paper/key identities |
 | Supplied PDF/document | `pdf-ingest.mjs` | External reviewer actually inspects pages/math/figures; bind document/key bytes and per-item provenance; no internal OCR |
 | Scoped orchestration | `agent-handoff.mjs` | Read-only assess; publication requires explicit create permission and fresh evidence |
+
+For maintained exams with a year-owned taxonomy, pass that taxonomy explicitly to blueprint/brief/compile operations; exam IDs never activate a hidden syllabus registry. The taxonomy supplies stable Subject → Topic → Subtopic nodes, while the authoring source remains ordinary `subject` / `topic` / `subtopic` labels that must resolve to those nodes.
 
 For the common strict-review flow:
 
@@ -33,7 +35,7 @@ For paired editions, create/complete an `editorial-editions.mjs template`, revie
 - Candidate-visible stem/options/media/stimuli determine Source/Reviewed semantic comparability. Explanation/taxonomy-only changes do not; unsupported response kinds are individually unavailable rather than destroying otherwise valid comparisons.
 - Reviewed packages bind exact Source paper/key identities. Noncurrent source-key shapes are rejected rather than migrated.
 - Candidate explanations, keys and explanation-only media remain private until the permitted review boundary.
-- A partial blueprint can be `valid:true` while `readyForPublication:false`; strict publication rejects incomplete required quotas.
+- A partial blueprint can be `valid:true` while `readyForPublication:false`; strict publication rejects incomplete required quotas. A blueprint bound with `taxonomyId` must be assessed with the matching `--taxonomy` sidecar; `requireTaxonomy` rejects authored classifications that do not resolve through it.
 - Repository-maintained authoring editions may bind `quality-review.json` and `blueprint.json` in the paper manifest. Non-null bindings are executable gates against the exact current authoring source; stale or incomplete evidence rejects catalog loading. A preinstalled canonical maintained mock backed by an authoring source must bind both passing sidecars; null/missing evidence is rejected rather than treated as a weaker publication state.
 - Source and Reviewed remain explicit separate immutable packages. For ad-hoc external work they are separate Library imports; a repository-maintained family may instead list the intended packages explicitly in the question-bank catalog. Retain original documents and review/decision sidecars outside browser History.
 
