@@ -1,8 +1,13 @@
 import {readFile,stat,readdir} from "node:fs/promises";
+import {createHash} from "node:crypto";
 import {basename,dirname,join,resolve,sep} from "node:path";
 import {isDeepStrictEqual} from "node:util";
 import {validateExamPackage} from "../src/domain/exam-package.ts";
 import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
+import {auditQuestionQuality} from "./question-quality.mjs";
+import {validateBlueprint,auditBlueprint} from "./content-blueprint.mjs";
+
+const sha=value=>createHash("sha256").update(value).digest("hex");
 
 const plain=(value,label)=>{
  if(!value||typeof value!=="object"||Array.isArray(value))throw Error(label+" must be an object");
@@ -29,7 +34,11 @@ const fileAt=(root,path)=>{
  if(full!==base&&!full.startsWith(base+sep))throw Error("Question-bank path escapes repository root: "+path);
  return full;
 };
-const readJson=async(root,path)=>JSON.parse(await readFile(fileAt(root,path),"utf8"));
+const readJsonSource=async(root,path)=>{
+ const raw=await readFile(fileAt(root,path),"utf8");
+ return {raw,value:JSON.parse(raw),digest:sha(raw)};
+};
+const readJson=async(root,path)=>(await readJsonSource(root,path)).value;
 const childPath=(manifestPath,child,label="Manifest child path")=>{
  const value=str(child,label);
  if(value.startsWith("/")||value.includes("\\")||
@@ -129,7 +138,7 @@ function validatePaperManifest(raw,exam,entry,path){
  if(!Object.hasOwn(rawEditions,canonicalEdition))throw Error("Canonical edition missing from "+path);
  for(const [name,rawEdition] of Object.entries(rawEditions)){
   const edition=plain(rawEdition,"Paper edition "+name+" in "+path);
-  only(edition,["authoring","package"],"Paper edition "+name+" in "+path);
+  only(edition,["authoring","package","qualityReview","blueprint"],"Paper edition "+name+" in "+path);
   const packagePath=str(edition.package,"Package path for "+name+" in "+path);
   childPath(path,packagePath,"Package path for "+name+" in "+path);
   if(basename(packagePath)!=="package.exam.json")
@@ -141,7 +150,19 @@ function validatePaperManifest(raw,exam,entry,path){
    if(basename(authoring)!=="bank.authoring.json")
     throw Error("Canonical maintained authoring source must be named bank.authoring.json in "+path);
   }
-  editions[name]={...(authoring?{authoring}:{}),package:packagePath};
+  const normalized={...(authoring?{authoring}:{}),package:packagePath};
+  for(const [field,fileName] of [["qualityReview","quality-review.json"],["blueprint","blueprint.json"]]){
+   if(!Object.hasOwn(edition,field))continue;
+   if(edition[field]===null){normalized[field]=null;continue;}
+   const binding=str(edition[field],field+" path for "+name+" in "+path);
+   childPath(path,binding,field+" path for "+name+" in "+path);
+   if(basename(binding)!==fileName)
+    throw Error(field+" binding must be named "+fileName+" in "+path);
+   normalized[field]=binding;
+  }
+  if((normalized.qualityReview!==undefined||normalized.blueprint!==undefined)&&!authoring)
+   throw Error("Quality/blueprint bindings require a canonical bank.authoring.json source in "+path+" "+name);
+  editions[name]=normalized;
  }
  let archive;
  if(manifest.archive!==undefined){
@@ -178,6 +199,13 @@ async function manifestPapers(root,family){
    const paperPath=childPath(yearPath,entry.path,"Paper manifest path");
    activePaths.add(paperPath.replaceAll("\\","/"));
    const paper=validatePaperManifest(await readJson(root,paperPath),exam,entry,paperPath);
+   const canonical=paper.editions[paper.canonicalEdition];
+   if(family.preinstalled&&paper.kind==="mock"&&canonical.authoring){
+    for(const field of ["qualityReview","blueprint"])
+     if(!Object.hasOwn(canonical,field))
+      throw Error("Preinstalled canonical maintained mock must explicitly declare "+field+
+       " as "+(field==="qualityReview"?"quality-review.json":"blueprint.json")+" or null: "+paper.id);
+   }
    if(manifestIds.has(paper.id)||logicalPaperIds.has(paper.paperId))
     throw Error("Duplicate paper identity in manifest graph: "+paper.id);
    for(const [name,edition] of Object.entries(paper.editions)){
@@ -189,6 +217,12 @@ async function manifestPapers(root,family){
      activePaths.add(authoringPath.replaceAll("\\","/"));
      await requireFile(root,authoringPath,"Authoring source "+paper.id+" "+name);
     }
+    for(const [field,label] of [["qualityReview","Quality review"],["blueprint","Blueprint"]])
+     if(Object.hasOwn(edition,field)&&edition[field]!==null){
+      const evidencePath=childPath(paperPath,edition[field],field+" path");
+      activePaths.add(evidencePath.replaceAll("\\","/"));
+      await requireFile(root,evidencePath,label+" "+paper.id+" "+name);
+     }
    }
    if(paper.archive)for(const [name,archivePath] of Object.entries(paper.archive))
     await requireFile(root,childPath(paperPath,archivePath,"Archive path"),
@@ -208,7 +242,8 @@ async function assertNoOrphanActiveContent(root,reachable){
  const active=names.map(name=>"question-banks/"+String(name).replaceAll("\\","/"))
   .filter(path=>!path.includes("/archive/")&&
     (path.endsWith("/manifest.json")||path.endsWith("/bank.authoring.json")||
-     path.endsWith("/package.exam.json")));
+     path.endsWith("/package.exam.json")||path.endsWith("/quality-review.json")||
+     path.endsWith("/blueprint.json")));
  const orphans=active.filter(path=>!reachable.has(path)).sort();
  if(orphans.length)throw Error("Orphan active question-bank content is not reachable from catalog manifests: "+orphans.join(", "));
 }
@@ -222,11 +257,33 @@ async function loadExamPackages(root,family,manifestSet,seenPaperIds){
    const packagePath=childPath(paper.path,str(edition.package,"Package path "+paper.id+" "+editionName),
     "Package path "+paper.id+" "+editionName);
    const pkg=validateExamPackage(await readJson(root,packagePath));
+   let sourceFile=null;
    if(edition.authoring){
     const authoringPath=childPath(paper.path,edition.authoring,"Authoring path "+paper.id+" "+editionName);
-    const generated=compileExternalQuestionBank(await readJson(root,authoringPath));
+    sourceFile=await readJsonSource(root,authoringPath);
+    const generated=compileExternalQuestionBank(sourceFile.value);
     if(!isDeepStrictEqual(generated,pkg))
      throw Error("Generated package diverges from canonical bank.authoring.json: "+paper.id+" "+editionName);
+   }
+   if(Object.hasOwn(edition,"qualityReview")&&edition.qualityReview!==null){
+    if(!sourceFile)throw Error("Quality review binding has no authoring source: "+paper.id+" "+editionName);
+    const reviewPath=childPath(paper.path,edition.qualityReview,"Quality review path "+paper.id+" "+editionName);
+    const review=await readJson(root,reviewPath);
+    const quality=auditQuestionQuality(sourceFile.value,sourceFile.raw,review,{offset:0,limit:50});
+    if(!quality.readyForPublication)
+     throw Error("Declared quality review is not publication-ready for "+paper.id+" "+editionName+
+      ": "+(quality.issues?.items?.[0]?.code??"quality-review-rejected"));
+   }
+   if(Object.hasOwn(edition,"blueprint")&&edition.blueprint!==null){
+    if(!sourceFile)throw Error("Blueprint binding has no authoring source: "+paper.id+" "+editionName);
+    const blueprintPath=childPath(paper.path,edition.blueprint,"Blueprint path "+paper.id+" "+editionName);
+    const blueprint=validateBlueprint(await readJson(root,blueprintPath));
+    const coverage=auditBlueprint(blueprint,[sourceFile],undefined,{
+     offset:0,limit:50,priorSources:[],coverageLimit:5000
+    });
+    if(!coverage.readyForPublication)
+     throw Error("Declared blueprint is not publication-ready for "+paper.id+" "+editionName+
+      ": "+(coverage.issues?.items?.[0]?.code??"blueprint-rejected"));
    }
    if(pkg.examId!==family.examId)throw Error("Package examId mismatch for "+paper.id+" "+editionName);
    if(pkg.paper.paperId!==paper.paperId&&!pkg.paper.paperId.endsWith(":"+paper.paperId))
