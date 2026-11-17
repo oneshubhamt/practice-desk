@@ -523,3 +523,29 @@ export function validateLearnerFocusPacket(value:unknown):LearnerFocusPacket{
    omitted:["identity","device-information","unrelated-exams","unrestricted-history"]},
   generationGuidance,observations,...(questionEvidence?{questionEvidence}:{})};
 }
+
+
+export function validateStandardAuthoringBrief(value:unknown):Readonly<Record<string,unknown>>{
+ const raw=plain(value,"authoring brief");
+ if(raw.format!=="practice-desk-authoring-brief"||raw.version!==1||raw.valid!==true)
+  throw Error("Expected a valid practice-desk-authoring-brief v1");
+ const blueprint=plain(raw.blueprint,"authoring brief blueprint");
+ const examId=text(blueprint.examId,"authoring brief blueprint.examId",120);
+ text(blueprint.id,"authoring brief blueprint.id",120);
+ if(raw.learnerFocusIncluded!==false||raw.learnerFocus!==undefined||raw.personalisationIntent!==undefined)
+  throw Error("Load a standard non-personalised Authoring Brief");
+ if(!raw.task||typeof raw.task!=="object"||!raw.paper||typeof raw.paper!=="object"||
+    !raw.outputContract||typeof raw.outputContract!=="object")
+  throw Error("Authoring Brief is missing required task/paper/output contract");
+ return structuredClone({...raw,blueprint:{...blueprint,examId}});
+}
+export function personalizeAuthoringBrief(
+ briefValue:unknown,focusValue:unknown
+):Readonly<Record<string,unknown>>{
+ const brief=validateStandardAuthoringBrief(briefValue),focus=validateLearnerFocusPacket(focusValue);
+ const blueprint=brief.blueprint as Record<string,unknown>;
+ if(focus.examId!==blueprint.examId)throw Error("Learner focus examId does not match Authoring Brief examId");
+ return {...structuredClone(brief),learnerFocusIncluded:true,learnerFocus:structuredClone(focus),
+  personalisationIntent:{mode:focus.mode,intent:focus.intent,
+   compositionPolicy:focus.compositionPolicy,guidance:structuredClone(focus.generationGuidance)}};
+}
