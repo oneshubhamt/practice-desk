@@ -10,7 +10,7 @@ import {loadQuestionBankCatalog} from "../scripts/question-bank-catalog.mjs";
 import {SEMANTIC_CHECKLIST,BANK_CHECKLIST} from "../scripts/question-quality.mjs";
 import {buildLearnerFocusPacket,validateLearnerFocusPacket} from "../src/learning/learner-focus.ts";
 import {composePracticeSet} from "../src/app/practice-compose.ts";
-import {startGenericAttempt} from "../src/app/exam-package.ts";
+import {configurePracticeMode,startGenericAttempt} from "../src/app/exam-package.ts";
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {addLearningCard,validateLearningCard} from "../src/learning/learning.ts";
 
@@ -19,6 +19,7 @@ const exists=async path=>(await stat(path).catch(()=>null))!==null;
 const writeJson=async(path,value)=>{await mkdir(dirname(path),{recursive:true});await writeFile(path,JSON.stringify(value,null,2)+"\n");return path;};
 
 async function publicationEvidence(sourcePath,dir,label){
+ await mkdir(dir,{recursive:true});
  const reviewDir=join(dir,"review-work");
  execFileSync(process.execPath,[join(root,"scripts","question-quality.mjs"),"prepare",sourcePath,reviewDir],{cwd:root});
  const source=JSON.parse(await readFile(sourcePath,"utf8"));
@@ -120,9 +121,10 @@ function wrongSingleChoice(bundle){
  assert.ok(option);return {kind:"single-choice",optionId:option.id};
 }
 function finishedAttempt(bundle,id,start){
- let a=startGenericAttempt(bundle,id,start,"custom-practice");
- const byId=new Map(bundle.questions.map(q=>[q.id,q]));
- a=transitionGenericAttempt(a,{type:"ANSWER",nowMs:start+1000,response:wrongSingleChoice(bundle)},byId);
+ const practice=configurePracticeMode(bundle,"free");
+ let a=startGenericAttempt(practice,id,start,"full-paper-practice");
+ const byId=new Map(practice.questions.map(q=>[q.id,q]));
+ a=transitionGenericAttempt(a,{type:"ANSWER",nowMs:start+1000,response:wrongSingleChoice(practice)},byId);
  a=transitionGenericAttempt(a,{type:"FLAG",nowMs:start+1100,flagged:true},byId);
  a=transitionGenericAttempt(a,{type:"SUBMIT_ATTEMPT",nowMs:start+1200},byId);
  assert.ok(a.result&&a.finishedAt!==null);return a;
