@@ -54,7 +54,7 @@ test("P46 bookmarked and genuinely due cards work after deleting source attempts
 });
 test("P46 learner notebook labels remain explicit user annotations and survive backup",()=>{
  const original=addLearningCard(finished("note"),source.questions[0].id,new Date(1600).toISOString());
- assert.throws(()=>validateLearningCard({...original,syllabusTopicId:"labour"}),/Invalid learning card fields/);
+ assert.throws(()=>validateGenericStoredRecord({...original,saveRevision:1,syllabusTopicId:"labour"}),/unsupported field/);
  const annotated=validateLearningCard({...original,customSubject:"Social Security",customTopic:"EPF contribution"});
  assert.equal(annotated.customSubject,"Social Security");
  assert.equal(annotated.customTopic,"EPF contribution");
