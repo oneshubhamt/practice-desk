@@ -534,17 +534,19 @@ const sourceEnvelope=(plan,sources,bankId,title)=>{
  }
  envelope.bankId=bankId;envelope.title=title;
  envelope.examId=plan.examId;envelope.paperId=plan.paperId;envelope.revision=plan.revision;
- const sectionId=envelope.sections?.[0]?.id;
- if(!sectionId)fail("Authoring brief paper envelope must contain at least one physical section");
+ const sections=envelope.sections;
+ if(!Array.isArray(sections)||!sections.length)
+  fail("Authoring brief paper envelope must contain at least one physical section");
  try{
-  toAuthoringDraft({...structuredClone(envelope),questions:[{
-   id:"brief_probe",examSection:sectionId,kind:"single-choice",
-   prompt:"Authoring-envelope validation placeholder.",
+  const probes=sections.map((section,index)=>({
+   id:"brief_probe_"+String(index+1).padStart(2,"0"),examSection:section.id,kind:"single-choice",
+   prompt:"Authoring-envelope validation placeholder for section "+String(index+1)+".",
    options:["One","Two"],answer:"A",
    explanation:"Synthetic parser probe only; never emitted as authored content.",
    provenance:{kind:"ai-original",sourceNote:"Internal brief-envelope validation only"},
    qa:{status:"unchecked"}
-  }]});
+  }));
+  toAuthoringDraft({...structuredClone(envelope),questions:probes});
  }catch(error){
   fail("Authoring brief paper envelope is not a valid canonical source configuration: "+
    (error instanceof Error?error.message:"unknown validation failure"));
