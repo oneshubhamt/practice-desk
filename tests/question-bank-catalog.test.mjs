@@ -16,6 +16,8 @@ import {packPreinstalledExamCatalog,unpackPreinstalledExamCatalog} from "../src/
 import {archiveCglPackages} from "../tools/cgl-archive-converter.ts";
 import {SEMANTIC_CHECKLIST,BANK_CHECKLIST} from "../scripts/question-quality.mjs";
 import {loadCglFixture} from "./fixtures/cgl-bank.mjs";
+import {practiceInventory,composePracticeSet} from "../src/app/practice-compose.ts";
+import {taxonomyPathNodes} from "../src/domain/taxonomy.ts";
 
 const root=resolve(fileURLToPath(new URL("../",import.meta.url)));
 const sha=value=>createHash("sha256").update(value).digest("hex");
@@ -107,6 +109,55 @@ test("manifest graph is authoritative for five CGL PYQs and current PFRDA",async
  assert.ok(pfrdaFamily.paperIds.includes(pfrdaFamily.currentPaperRevisionId));
 });
 
+
+test("PFRDA year taxonomy is data-owned, fully bound and drives stable practice filtering",async()=>{
+ const loaded=await loadQuestionBankCatalog(root);
+ const family=loaded.preinstalled.families.find(x=>x.id==="pfrda-grade-a-2026-phase-ii");
+ const pkg=loaded.preinstalled.packages.find(x=>x.paper.id===family.currentPaperRevisionId);
+ assert.ok(pkg?.taxonomy,"PFRDA canonical package must carry its year taxonomy");
+ assert.equal(pkg.taxonomy.id,"pfrda-grade-a-2026-general");
+ assert.equal(pkg.taxonomy.basis,"official-source-attributed");
+ assert.equal(pkg.taxonomy.nodes.length,142);
+ assert.equal(Object.keys(pkg.taxonomyAssignments??{}).length,pkg.questions.length);
+ const counts=new Map();
+ for(const q of pkg.questions){
+  const nodeId=pkg.taxonomyAssignments[q.id];
+  assert.ok(nodeId,"Every maintained PFRDA question must have a stable taxonomy assignment");
+  const rootNode=taxonomyPathNodes(pkg.taxonomy,nodeId)[0];
+  counts.set(rootNode.id,(counts.get(rootNode.id)??0)+1);
+ }
+ assert.deepEqual(Object.fromEntries([...counts.entries()].sort()),{
+  "ai-ml":3,"budget-survey":5,"commerce-accountancy":4,"companies-act":7,
+  "costing":4,"economics":5,"english-writing":1,"finance":5,"management":4,
+  "marketing-communication":2,"media":2,"pension-sector":5,"pfrda-act":4
+ });
+ const inventory=practiceInventory(pkg);
+ const rootId="taxonomy:"+pkg.taxonomy.id+":english-writing";
+ const precisId="taxonomy:"+pkg.taxonomy.id+":english-writing.precis";
+ assert.equal(inventory.topics.find(x=>x.id===rootId)?.count,1);
+ assert.equal(inventory.topics.find(x=>x.id===precisId)?.count,1);
+ assert.deepEqual(inventory.topics.find(x=>x.id===precisId)?.path,
+  ["English Writing Skills","Précis writing"]);
+ const subset=composePracticeSet(pkg,{count:1,seed:"taxonomy-parent",
+  filters:{topicId:rootId}}).bundle;
+ assert.equal(subset.questions.length,1);
+ assert.equal(Object.keys(subset.taxonomyAssignments??{}).length,1);
+ assert.equal(subset.taxonomy?.id,pkg.taxonomy.id);
+});
+
+test("maintained corpus fails closed when taxonomy aliases drift away from authored classifications",async()=>{
+ const dir=await mkdtemp(join(tmpdir(),"pd-taxonomy-drift-"));
+ try{
+  await cp(join(root,"question-banks"),join(dir,"question-banks"),{recursive:true});
+  const path=join(dir,"question-banks","pfrda","2026","taxonomy.json");
+  const taxonomy=JSON.parse(await readFile(path,"utf8"));
+  const node=taxonomy.nodes.find(x=>x.id==="pfrda-act");
+  node.aliases=[];
+  await writeFile(path,JSON.stringify(taxonomy,null,2));
+  await assert.rejects(()=>loadQuestionBankCatalog(dir),
+   /Authored classification is absent from taxonomy.*day1-general-01/);
+ }finally{await rm(dir,{recursive:true,force:true});}
+});
 
 test("materialized CGL canonical packages are exactly equivalent to archived source/review conversion",async()=>{
  const {sources,patches,solutions}=await loadCglFixture();
