@@ -37,6 +37,45 @@ const embeddedPreinstalled=html=>{
  return unpackPreinstalledExamCatalog(unpacked);
 };
 
+const writeSyntheticMaintainedEvidence=async(sourcePath,paperBase,label="catalog-regression-fixture")=>{
+ const source=JSON.parse(await readFile(sourcePath,"utf8"));
+ const reviewWork=join(dirname(paperBase),".review-"+label+"-"+Date.now());
+ execFileSync(process.execPath,[join(root,"scripts","question-quality.mjs"),"prepare",sourcePath,reviewWork],{cwd:root});
+ const review=JSON.parse(await readFile(join(reviewWork,"review.json"),"utf8"));
+ review.reviewMode="clean-context";review.candidateOnlyContextClaim=true;
+ review.reviewer={id:label,kind:"ai"};
+ for(const record of review.records){
+  const question=source.questions.find(q=>q.id===record.questionId);
+  const asOf=question.qa?.applicability?.asOfDate??"2026-11-15";
+  record.applicability={mathematical:"yes",legal:"yes",timeSensitive:"yes",visual:"no",asOfDate:asOf};
+  record.solution={status:"completed",answer:String(question.answer??""),
+   reasoning:"Synthetic software-contract second pass; no external factual certification is asserted."};
+  record.semanticChecks=SEMANTIC_CHECKLIST.map(check=>({
+   id:check.id,status:"pass",
+   basis:check.id==="mathematical-correctness"?"mathematical-proof":
+    ["factual-correctness","temporal-correctness","pyq-fidelity"].includes(check.id)?"source-consulted":
+    check.id==="visual-integrity"?"rendered-claim":"semantic-editorial",
+   rationale:"Synthetic regression witness exercises the maintained-evidence contract only."
+  }));
+  record.evidence=[{publisher:"Fixture",title:"Synthetic maintained-evidence witness",
+   locator:"question:"+question.id,retrievedAt:"2026-11-16",asOfDate:asOf,
+   excerpt:"Synthetic evidence exercises source freshness and manifest binding; it is not factual certification."}];
+ }
+ review.bankReview={checks:BANK_CHECKLIST.map(check=>({id:check.id,status:"pass",
+  basis:"bank-editorial",rationale:"Synthetic bank-level regression witness only."}))};
+ const reviewPath=join(paperBase,"quality-review.json");
+ await writeFile(reviewPath,JSON.stringify(review,null,2));
+ const blueprint={format:"practice-desk-content-blueprint",version:1,id:label,
+  examId:source.examId,paperId:source.paperId,revision:source.revision,targetCount:source.questions.length,
+  allowPartial:false,syllabus:{basis:"inferred-practice",asOfDate:"2026-11-16",
+   reference:"Synthetic maintained-evidence binding regression plan"},
+  requirements:{},quotas:{}};
+ const blueprintPath=join(paperBase,"blueprint.json");
+ await writeFile(blueprintPath,JSON.stringify(blueprint,null,2));
+ await rm(reviewWork,{recursive:true,force:true});
+ return {source,review,blueprint,reviewPath,blueprintPath};
+};
+
 test("manifest graph is authoritative for five CGL PYQs and current PFRDA",async()=>{
  const graph=await readQuestionBankManifestGraph(root);
  assert.equal(graph.families.length,2);
@@ -147,60 +186,30 @@ test("PFRDA Original and Revised packages retain distinct immutable identities",
  assert.equal(family.currentPaperRevisionId,packages[1].paper.id);
 });
 
-test("maintained authoring evidence bindings are explicit and fail closed when stale",async()=>{
+test("maintained authoring evidence bindings are required, source-bound and fail closed when stale",async()=>{
  const graph=await readQuestionBankManifestGraph(root);
  const pfrda=graph.families.find(x=>x.family.id==="pfrda-grade-a-2026-phase-ii");
  const paper=pfrda.papers.find(x=>x.id==="pfrda-grade-a-2026-day-01");
- assert.equal(paper.editions.revised.qualityReview,null);
- assert.equal(paper.editions.revised.blueprint,null);
+ assert.equal(paper.editions.revised.qualityReview,"revised/quality-review.json");
+ assert.equal(paper.editions.revised.blueprint,"revised/blueprint.json");
+ await loadQuestionBankCatalog(root);
 
  const dir=await mkdtemp(join(tmpdir(),"pd-maintained-evidence-"));
  try{
   await cp(join(root,"question-banks"),join(dir,"question-banks"),{recursive:true});
   const paperBase=join(dir,"question-banks","pfrda","2026","mocks","day-01");
-  const sourcePath=join(paperBase,"revised","bank.authoring.json");
-  const source=JSON.parse(await readFile(sourcePath,"utf8"));
-  const reviewWork=join(dir,"review-work");
-  execFileSync(process.execPath,[join(root,"scripts","question-quality.mjs"),"prepare",sourcePath,reviewWork],{cwd:root});
-  const reviewPath=join(paperBase,"revised","quality-review.json");
-  const review=JSON.parse(await readFile(join(reviewWork,"review.json"),"utf8"));
-  review.reviewMode="clean-context";review.candidateOnlyContextClaim=true;
-  review.reviewer={id:"catalog-regression-fixture",kind:"ai"};
-  for(const record of review.records){
-   const question=source.questions.find(q=>q.id===record.questionId);
-   const asOf=question.qa?.applicability?.asOfDate??"2026-11-15";
-   record.applicability={mathematical:"yes",legal:"yes",timeSensitive:"yes",visual:"no",asOfDate:asOf};
-   record.solution={status:"completed",answer:String(question.answer??""),
-    reasoning:"Synthetic catalog regression second-pass solution; not factual certification."};
-   record.semanticChecks=SEMANTIC_CHECKLIST.map(check=>({
-    id:check.id,status:"pass",
-    basis:check.id==="mathematical-correctness"?"mathematical-proof":
-     ["factual-correctness","temporal-correctness","pyq-fidelity"].includes(check.id)?"source-consulted":
-     check.id==="visual-integrity"?"rendered-claim":"semantic-editorial",
-    rationale:"Synthetic software-contract witness only; external factual authenticity is not asserted."
-   }));
-   record.evidence=[{publisher:"Fixture",title:"Synthetic maintained-evidence witness",
-    locator:"question:"+question.id,retrievedAt:"2026-11-16",asOfDate:asOf,
-    excerpt:"Synthetic test evidence exercises source-hash and manifest binding only."}];
-  }
-  review.bankReview={checks:BANK_CHECKLIST.map(check=>({id:check.id,status:"pass",
-   basis:"bank-editorial",rationale:"Synthetic bank-level regression witness only."}))};
-  await writeFile(reviewPath,JSON.stringify(review,null,2));
-
-  const blueprintPath=join(paperBase,"revised","blueprint.json");
-  const blueprint={format:"practice-desk-content-blueprint",version:1,id:"pfrda-day1-regression",
-   examId:source.examId,paperId:source.paperId,revision:source.revision,targetCount:source.questions.length,
-   allowPartial:false,syllabus:{basis:"inferred-practice",asOfDate:"2026-11-16",
-    reference:"Synthetic maintained-evidence binding regression plan"},
-   requirements:{},quotas:{}};
-  await writeFile(blueprintPath,JSON.stringify(blueprint,null,2));
-
   const manifestPath=join(paperBase,"manifest.json");
+  const reviewPath=join(paperBase,"revised","quality-review.json");
+  const blueprintPath=join(paperBase,"revised","blueprint.json");
   const manifest=JSON.parse(await readFile(manifestPath,"utf8"));
-  manifest.editions.revised.qualityReview="revised/quality-review.json";
-  manifest.editions.revised.blueprint="revised/blueprint.json";
+  const review=JSON.parse(await readFile(reviewPath,"utf8"));
+  const blueprint=JSON.parse(await readFile(blueprintPath,"utf8"));
+
+  manifest.editions.revised.qualityReview=null;
   await writeFile(manifestPath,JSON.stringify(manifest,null,2));
-  await loadQuestionBankCatalog(dir);
+  await assert.rejects(()=>loadQuestionBankCatalog(dir),/requires passing bound quality-review\.json/);
+  manifest.editions.revised.qualityReview="revised/quality-review.json";
+  await writeFile(manifestPath,JSON.stringify(manifest,null,2));
 
   const staleReview=structuredClone(review);staleReview.sourceSha256="0".repeat(64);
   await writeFile(reviewPath,JSON.stringify(staleReview,null,2));
@@ -263,9 +272,12 @@ test("manifest-only append discovers a synthetic second generic paper without ro
     format:"practice-desk-paper-manifest",version:1,id:slug+"-manifest",examId:"upsc-epfo-apfc",
     paperId:slug,kind:"mock",title:pkg.title,canonicalEdition:"revised",
     editions:{revised:{authoring:"revised/bank.authoring.json",package:"revised/package.exam.json",
-     qualityReview:null,blueprint:null}}});
+     qualityReview:"revised/quality-review.json",blueprint:"revised/blueprint.json"}}});
+   const sourcePath=join(dir,"question-banks/synthetic/2026/mocks/"+slug+"/revised/bank.authoring.json");
+   const revisedBase=join(dir,"question-banks/synthetic/2026/mocks/"+slug+"/revised");
    await write("question-banks/synthetic/2026/mocks/"+slug+"/revised/bank.authoring.json",makeSource(slug,pkg.title));
    await write("question-banks/synthetic/2026/mocks/"+slug+"/revised/package.exam.json",pkg);
+   await writeSyntheticMaintainedEvidence(sourcePath,revisedBase,"append-"+slug);
   }
   // Align the manifest IDs referenced by the year/current fields.
   const yearPath=join(dir,"question-banks/synthetic/2026/manifest.json");
