@@ -7,7 +7,7 @@
     "purpose": "Offline examination authoring, practice, scoring, history, analytics and spaced revision",
     "runtime": "Standalone offline HTML with local device storage; external Node 24 authoring CLI",
     "sourceBranch": "working",
-    "asOfDate": "2026-11-16",
+    "asOfDate": "2026-11-17",
     "embeddedLLM": false,
     "automaticCloudSync": false,
     "agentDeviceBridge": false
@@ -28,7 +28,7 @@
       "For multi-gate publish, run node scripts/agent-handoff.mjs actions; assess source-bound single, paired or PDF before a separately authorized create-only publication",
       "For supplied PDF papers, have an external authorized agent interpret original document and use P60-E source-bound intake audit before reviewed publication",
       "Read one relevant authoring example/task contract",
-      "Translate user coverage and source constraints to a v1 content blueprint and validate it before creating question batches",
+      "Translate user coverage and source constraints to a v1 content blueprint; when the maintained year owns taxonomy.json, validate/brief with that explicit taxonomy rather than inferring syllabus from examId",
       "Generate a compact content-blueprint brief for each new authoring batch so the model sees only decision-ready paper rules, remaining deficits and the output contract; one AI agent is sufficient",
       "Research facts outside app",
       "Generate only requested question batch",
@@ -78,25 +78,25 @@
     },
     {
       "operation": "authoring-brief",
-      "command": "node scripts/content-blueprint.mjs brief <plan.json> [existing-source.json ...] --bank-id <new-batch-id> --title <title> [--batch-size 1..20] [--cognitive tags.json] [--against prior-bank.json]...",
+      "command": "node scripts/content-blueprint.mjs brief <plan.json> [existing-source.json ...] --bank-id <new-batch-id> --title <title> [--taxonomy taxonomy.json] [--batch-size 1..20] [--cognitive tags.json] [--against prior-bank.json]...",
       "privilege": "read-only",
       "effect": "Compact single-agent-compatible authoring task packet: exact paper configuration, suggested stable question IDs, remaining blueprint deficits, source policy and minimal question contract; omits existing question bodies, media bytes and repository/package placement"
     },
     {
       "operation": "validate-content-blueprint",
-      "command": "node scripts/content-blueprint.mjs validate <plan.json>",
+      "command": "node scripts/content-blueprint.mjs validate <plan.json> [--taxonomy taxonomy.json]",
       "privilege": "read-only",
       "effect": "Check versioned plan, exact integer quotas, parent contradictions, source and paper-rule policy syntax; no content generation"
     },
     {
       "operation": "audit-content-coverage",
-      "command": "node scripts/content-blueprint.mjs audit <plan.json> <bank1.json> [bank2.json ...] [--cognitive tags.json] [--limit N]",
+      "command": "node scripts/content-blueprint.mjs audit <plan.json> <bank1.json> [bank2.json ...] [--taxonomy taxonomy.json] [--cognitive tags.json] [--limit N]",
       "privilege": "read-only",
       "effect": "Bounded cross-batch count/metadata/QA audit; not factual truth; no keys or media bytes in output"
     },
     {
       "operation": "compile-with-blueprint",
-      "command": "node scripts/question-bank-cli.mjs compile-bank <bank.json> <NEW-output.json> --blueprint <plan.json>",
+      "command": "node scripts/question-bank-cli.mjs compile-bank <bank.json> <NEW-output.json> --blueprint <plan.json> [--taxonomy taxonomy.json]",
       "privilege": "create-new-file",
       "effect": "Single-bank canonical compiler refuses publication output when explicit content quotas fail"
     },
@@ -168,7 +168,7 @@
     },
     {
       "operation": "assess-agent-handoff",
-      "command": "node scripts/agent-handoff.mjs assess <single|paired|pdf> <mode-inputs...> --quality-review <review.json> [--blueprint plan.json]",
+      "command": "node scripts/agent-handoff.mjs assess <single|paired|pdf> <mode-inputs...> --quality-review <review.json> [--blueprint plan.json --taxonomy taxonomy.json]",
       "privilege": "read-only",
       "effect": "One bounded, answer-private source/edition/PDF and layered-review/coverage gate; canonical tools reused, no browser/History access"
     },
@@ -272,22 +272,26 @@
     {
       "id": "taxonomy",
       "status": "implemented",
-      "summary": "Semantic academic Subject → Topic → Subtopic independent of physical exam sections, with nine APFC broad syllabus headings.",
+      "summary": "Versioned exam-data Subject → Topic → Subtopic taxonomy independent of physical sections, with stable nodes, frozen question assignments and no exam-specific runtime registry.",
       "provides": [
-        "Author-supplied subject/topic/subtopic",
-        "APFC official broad syllabus root IDs",
-        "Topic ancestor rollups and unclassified handling",
-        "Exam-specific filters and learning attribution"
+        "Year manifests may bind practice-desk-taxonomy v1 sidecars with stable node IDs, parentage, canonical labels and bounded aliases",
+        "Maintained authored subject/topic/subtopic paths must resolve to the bound taxonomy before corpus packaging",
+        "Runtime packages and attempts carry resolved question-revision → taxonomy-node assignments for stable historical analytics",
+        "Practice-builder filters use taxonomy ancestry so parent subject/topic selection includes classified descendants",
+        "PFRDA Grade A 2026 carries the official A–L General Stream hierarchy plus Paper 1 English as year-owned data"
       ],
-      "agentUse": "Distinguish one physical APFC exam section from multiple academic syllabus headings; never invent subtopic authority.",
+      "agentUse": "Follow the maintained year manifest. If it declares taxonomy.json, pass that file explicitly with --taxonomy for blueprint/brief/compile work and author explicit subject/topic/subtopic labels that resolve to its nodes. Never infer a syllabus from examId.",
       "limitations": [
-        "Detailed verified syllabi, topic quotas and automatically calibrated difficulty are not supplied",
-        "User metadata is not automatically official"
+        "Taxonomy source/basis is attributed data; schema validity and hashes do not independently authenticate the official syllabus",
+        "Parent-only classification is valid; do not invent missing topic/subtopic or difficulty labels",
+        "Learner notebook custom labels remain separate user annotations and are not promoted to official taxonomy"
       ],
       "sourcePaths": [
-        "src/learning/syllabus-taxonomy.ts",
+        "src/domain/taxonomy.ts",
+        "scripts/question-bank-catalog.mjs",
+        "question-banks/pfrda/2026/taxonomy.json",
         "src/app/practice-compose.ts",
-        "src/authoring/external-bank.ts"
+        "src/learning/learning.ts"
       ]
     },
     {
@@ -447,8 +451,8 @@
       "status": "implemented-with-limits",
       "summary": "P60-B versioned content production blueprint, bounded multi-batch quota audit and optional exact canonical compiler preflight.",
       "provides": [
-        "Validate user-authored exam, paper, subject and topic targets before content generation",
-        "Generate a bounded single-agent-compatible authoring brief for a fresh batch, preserving full generic paper configuration, suggesting stable item IDs and hiding existing question bodies and repository/package mechanics",
+        "Validate user-authored exam, paper, taxonomy/subject and topic targets before content generation",
+        "Generate a bounded single-agent-compatible authoring brief for a fresh batch, optionally including the explicitly supplied exam taxonomy while hiding existing question bodies and repository/package mechanics",
         "Enforce exhaustive or partial exact counts across subject, topic, subtopic, difficulty, kind, origin and physical section",
         "Optional explicit user marking, timer and navigation constraints",
         "Unverified author-attributed cognitive-level sidecar and counts",
@@ -456,9 +460,9 @@
         "Compact requested-versus-actual coverage and observed category inventories without question text",
         "Optional --blueprint guard for exact single-source canonical validate or compile"
       ],
-      "agentUse": "Validate the user-defined plan, then use content-blueprint.mjs brief as the normal new-batch interface. Supply only existing source batches needed to calculate remaining quotas; generate the requested batch, audit the aggregate plan, and compile through the canonical source pipeline.",
+      "agentUse": "Validate the user-defined plan, supplying the matching --taxonomy sidecar when taxonomyId/requireTaxonomy is used, then use content-blueprint.mjs brief as the normal new-batch interface. Generate the requested batch, audit aggregate plan/taxonomy coverage, and compile through the canonical source pipeline.",
       "limitations": [
-        "No automatic syllabus truth, cognitive calibration, fact verification or source authentication",
+        "No automatic syllabus discovery/authentication, cognitive calibration, fact verification or source authentication; taxonomy is explicitly supplied data",
         "The current offline browser can import without a blueprint; CLI enforcement requires an explicit --blueprint flag or content-blueprint audit",
         "Multi-file aggregate audit is not a new 400-item in-app staging interface or cross-paper engine",
         "Author cognitive labels require a separate explicit sidecar and are not independently assessed"
