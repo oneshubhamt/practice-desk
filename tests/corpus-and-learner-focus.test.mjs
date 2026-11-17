@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {cp,mkdir,mkdtemp,readFile,rm,stat,writeFile} from "node:fs/promises";
+import {chmod,cp,mkdir,mkdtemp,readFile,rm,stat,writeFile} from "node:fs/promises";
 import {spawnSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {tmpdir} from "node:os";
@@ -68,6 +68,30 @@ test("Pass 5 corpus add-paper is dry-runnable, strict and commits a validated se
   await loadQuestionBankCatalog(repo);
   await assert.rejects(()=>addPaper(args),/already exists|Logical paperId/);
  }finally{await rm(work,{recursive:true,force:true});}
+});
+
+test("Pass 5 add-paper rolls back its folder and year manifest when final current-ref write fails",async(t)=>{
+ if(process.platform==="win32"){t.skip("POSIX permission failure witness");return;}
+ const work=await mkdtemp(join(tmpdir(),"pd-corpus-rollback-")),repo=join(work,"repo");
+ const familyDir=join(repo,"question-banks","pfrda");
+ try{
+  await cp(join(root,"question-banks"),join(repo,"question-banks"),{recursive:true});
+  const authored=await corpusSource(work,1,"pfrda-grade-a-2026-rollback-test");
+  const yearPath=join(repo,"question-banks","pfrda","2026","manifest.json");
+  const before=await readFile(yearPath,"utf8");
+  await chmod(familyDir,0o555);
+  await assert.rejects(()=>addPaper({root:repo,familyId:"pfrda-grade-a-2026-phase-ii",year:2026,
+   paperId:"rollback-test",sourcePath:authored.path,qualityReviewPath:authored.reviewPath,
+   blueprintPath:authored.blueprintPath,setCurrent:true}),/EACCES|EPERM|permission/i);
+  await chmod(familyDir,0o755);
+  assert.equal(await readFile(yearPath,"utf8"),before,"year manifest must be restored byte-for-byte");
+  assert.equal(await exists(join(repo,"question-banks","pfrda","2026","mocks","rollback-test")),false,
+   "failed transaction must remove its newly-created paper folder");
+  await loadQuestionBankCatalog(repo);
+ }finally{
+  await chmod(familyDir,0o755).catch(()=>{});
+  await rm(work,{recursive:true,force:true});
+ }
 });
 
 test("Pass 5 append-revision advances canonical custom revision transactionally and refuses rollback",async()=>{
