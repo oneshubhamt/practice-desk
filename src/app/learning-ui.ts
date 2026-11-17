@@ -13,7 +13,6 @@ import { ERROR_LABELS, comparableTrends, inspectLearningCard, previewLearningCar
 import { evidenceProgression } from "../learning/attempt-evidence.ts";
 import { REVISION_MAX_QUESTIONS, type RevisionSelectionProvenance } from "../learning/revision-test.ts";
 import { REVISION_REASONS,revisionInventory,revisionTake,mockEvidenceAttempts,type RevisionReason } from "../learning/revision-selection.ts";
-import { syllabusForExam } from "../learning/syllabus-taxonomy.ts";
 import type { ErrorLabel, LearningCard, ReviewGrade } from "../learning/learning.ts";
 import type {RichDocument} from "../domain/rich-document.ts";
 import {authoredTextHTML} from "./rich-content-view.ts";
@@ -102,7 +101,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
    if(status)status.textContent=optimizerStatus;
  };
  type NotebookDraft={note:string;customSubject:string;customTopic:string;customSubtopic:string;
-   syllabusTopicId:string;errorLabel:string;bookmarked:boolean;revisionDisposition:"active"|"suspended"};
+   errorLabel:string;bookmarked:boolean;revisionDisposition:"active"|"suspended"};
  const notebookDrafts=new Map<string,NotebookDraft>();
  const present=(html:string,identity:string)=>{
    const same=previousLearningView===identity;
@@ -115,7 +114,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
    const active=document.activeElement;
    const activeEdit=active instanceof HTMLElement&&oldDetail?.contains(active)&&
      ["learning-note","learning-subject","learning-topic","learning-subtopic",
-       "learning-error","learning-syllabus","learning-bookmark","learning-suspend"].includes(active.id);
+       "learning-error","learning-bookmark","learning-suspend"].includes(active.id);
    const preserve=oldDetail&&cardId&&(notebookDrafts.has(cardId)||activeEdit);
    type NativeField=HTMLInputElement|HTMLTextAreaElement|HTMLSelectElement;
    const editor=preserve?Array.from(oldDetail.querySelectorAll<NativeField>(
@@ -405,10 +404,6 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
        '<input id="learning-topic" maxlength="120" value="'+esc(selectedDraft?.customTopic??selected.customTopic)+'" placeholder="e.g. Labour Codes">'+
        '<label class="picker" for="learning-subtopic">Subtopic (optional; requires Topic)</label>'+
        '<input id="learning-subtopic" maxlength="120" value="'+esc(selectedDraft?.customSubtopic??selected.customSubtopic??"")+'" placeholder="e.g. Wage definitions">'+
-       (syllabusForExam(selected.examId)?'<label class="picker" for="learning-syllabus">Subject / broad syllabus heading (optional, manually chosen)</label>'+
-         '<select id="learning-syllabus"><option value="">No heading assigned</option>'+
-         syllabusForExam(selected.examId)!.headings.map(h=>'<option value="'+esc(h.id)+'"'+
-           ((selectedDraft?.syllabusTopicId??selected.syllabusTopicId)===h.id?' selected':'')+'>'+esc(h.label)+'</option>').join("")+'</select>':'')+
        '<label class="picker" for="learning-note">Notes</label>'+
        '<textarea id="learning-note" maxlength="8000" rows="5">'+esc(selectedDraft?.note??selected.note)+'</textarea>'+
        '<label class="learning-bookmark"><input id="learning-bookmark" type="checkbox"'+
@@ -601,7 +596,6 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
       customSubject:root.querySelector<HTMLInputElement>("#learning-subject")!.value,
       customTopic:root.querySelector<HTMLInputElement>("#learning-topic")!.value,
       customSubtopic:root.querySelector<HTMLInputElement>("#learning-subtopic")!.value,
-      syllabusTopicId:root.querySelector<HTMLSelectElement>("#learning-syllabus")?.value??"",
       errorLabel:root.querySelector<HTMLSelectElement>("#learning-error")!.value,
       bookmarked:root.querySelector<HTMLInputElement>("#learning-bookmark")!.checked,
       revisionDisposition:root.querySelector<HTMLInputElement>("#learning-suspend")!.checked?"suspended":"active"
@@ -612,18 +606,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   };
   for(const id of ["learning-note","learning-topic","learning-subtopic"])
     (root.querySelector<HTMLInputElement|HTMLTextAreaElement>("#"+id)!).oninput=captureNotebook;
-  root.querySelector<HTMLInputElement>("#learning-subject")!.oninput=()=>{
-    if(root.querySelector<HTMLInputElement>("#learning-subject")!.value.trim()){
-      const heading=root.querySelector<HTMLSelectElement>("#learning-syllabus");
-      if(heading)heading.value="";
-    }
-    captureNotebook();
-  };
-  const officialHeading=root.querySelector<HTMLSelectElement>("#learning-syllabus");
-  if(officialHeading)officialHeading.onchange=()=>{
-    if(officialHeading.value)root.querySelector<HTMLInputElement>("#learning-subject")!.value="";
-    captureNotebook();
-  };
+  root.querySelector<HTMLInputElement>("#learning-subject")!.oninput=captureNotebook;
   for(const id of ["learning-error","learning-bookmark","learning-suspend"]){
     const field=root.querySelector<HTMLInputElement|HTMLSelectElement>("#"+id);
     if(field)field.onchange=captureNotebook;
@@ -634,12 +617,11 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
       const customSubject=root.querySelector<HTMLInputElement>("#learning-subject")!.value.trim();
       const customTopic=root.querySelector<HTMLInputElement>("#learning-topic")!.value.trim();
       const customSubtopic=root.querySelector<HTMLInputElement>("#learning-subtopic")!.value.trim();
-      const syllabusTopicId=root.querySelector<HTMLSelectElement>("#learning-syllabus")?.value||undefined;
       const errorLabel=root.querySelector<HTMLSelectElement>("#learning-error")!.value as ErrorLabel|"";
       const bookmarked=root.querySelector<HTMLInputElement>("#learning-bookmark")!.checked;
       const revisionDisposition=root.querySelector<HTMLInputElement>("#learning-suspend")!.checked?"suspended" as const:"active" as const;
       if(!await host.save(validateLearningCard({...selected,note,customSubject,customTopic,customSubtopic,
-         ...(syllabusForExam(selected.examId)?{syllabusTopicId}:{}),errorLabel:errorLabel||null,
+         errorLabel:errorLabel||null,
          bookmarked,revisionDisposition,updatedAt:now().toISOString()}))){
         message="Notebook changes could not be durably saved. Export a recovery backup.";draw();return;
       }
