@@ -47,6 +47,22 @@ Calculator display, pending operation, memory and open/closed state are recovera
 - Corrupted or missing snapshot references should be surfaced or quarantined, not silently replaced with newly computed key/marks. Explicit deletion/discard, stable archive IDs and recovery precedence apply.
 - Drafts/staging and local browser History are **separate export lifecycles**; noncanonical historical formats are not migration targets; do not promise implicit remote synchronization.
 
+## Learner-to-authoring evidence
+
+- `practice-desk-learner-focus` v1 is an **opt-in derived export**, not a new History store. It is scoped to exactly one `examId` and a declared `asOf` timestamp; unrelated exams, identity/account fields, device information and unrestricted raw History are outside the contract.
+- `mode: focused` contains bounded aggregate observations only: semantic classification, observed attempt/answer counts, repeated exact-revision misses, measured slow/revisit/flag evidence, bookmarks, currently-due FSRS counts, observed accuracy and an explicit 30-day recent window where evidence exists. It never contains prior question bodies or selected responses.
+- `mode: detailed` is a separate explicit consent level. It may add bounded question-revision identity/hash, prompt, **wrong non-free-response** selection/value plus readable text, measured timing/visits, flags, self-reported error label, bookmark/FSRS review state and source explanation. Correct responses and learner-authored free-response text are not exported.
+- `intent: exam-simulation` means `compositionPolicy: blueprint-first`; personalised evidence cannot alter required mock coverage/weighting. `targeted-practice` means `focus-first-with-blueprint-guardrails`. Both modes instruct the author to create fresh transfer items rather than repeat prior questions.
+- The reducer may state measured observations such as repeated misses or slower-than-usual timing; it must not infer a cognitive cause such as “does not understand” or “conceptual confusion”.
+- A standard `practice-desk-authoring-brief` has `learnerFocusIncluded:false` and no learner block. Personalisation validates exact exam identity, inserts the validated packet plus its intent, and otherwise preserves the canonical brief unchanged. Browser and CLI use the same transformation.
+
+## Transactional maintained-corpus writes
+
+- `question-bank-corpus.mjs add-paper` / `append-revision` currently target maintained **custom mocks** only. Source/Reviewed/PDF provenance keeps its dedicated publication path.
+- Inputs are canonical authoring source + publication-ready layered quality review + publication-ready blueprint. A bound year taxonomy is loaded from the maintained manifest graph and the authored classification must resolve through it.
+- A dry run stages and validates the complete prospective corpus without mutation. A real operation uses an exclusive corpus lock, manifest-byte preconditions, create-only directories, atomic manifest replacement, final catalog validation and rollback of its own writes on failure.
+- `append-revision` requires a strictly higher custom revision and never overwrites an existing edition. `add-paper` creates one self-contained paper folder plus one year-manifest entry; moving `currentPaperRef` is a separate explicit `--set-current` choice.
+
 ## Authoring and external sources
 
 - AI/human source: `practice-desk-authoring` v1, with explicit origins, section/subject differentiation, explicit `subject` / optional `topic` / optional `subtopic` labels, stable question IDs, author-supplied explanations, question-kind keys and declared scoring. Choice questions carry 2–26 options; matching carries 1–26 items per side. Paper scoring includes correct/incorrect/unanswered marks plus optional decimal precision and per-kind rules; sections and questions may supply `scoringOverride`. Runtime precedence remains question override → section override → question-kind rule → paper default, and free-response uses that resolved positive mark as its manual assessment ceiling. Physical section definitions own their timer budgets; questions only reference their assigned section. Optional `practiceModes` narrows eligible runtime modes but does not encode an exam-specific profile. The canonical compiler emits `practice-desk-exam` v1. There is no second simple-bank runtime format.
