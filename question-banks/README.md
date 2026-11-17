@@ -70,10 +70,26 @@ SSC CGL uses the same canonical package topology as every other included exam. I
 5. Open compiled `.exam.json` only for runtime inspection.
 6. Do not scan archives or unrelated papers by default.
 
-## Preinstallation, removal and append
+## Preinstallation, removal and transactional append
 
 Set a family to `preinstalled: true` in the root catalog to include all canonical papers reachable through its manifest graph. Set it to `false` and rebuild to exclude that family cleanly while keeping its corpus installed. To remove a family from the repository corpus entirely, delete both its catalog entry and its active family directory in the same change; reciprocal reachability intentionally rejects unregistered active bank files.
 
-To append a paper, create one self-contained paper folder and add exactly one entry to its year manifest. No root-catalog package path and no exam-specific scorer/UI branch are required.
+For maintained **custom mocks**, prefer the transactional corpus bridge instead of hand-editing folders/manifests:
+
+```bash
+node scripts/question-bank-corpus.mjs add-paper \
+  --family <family-id> --year 2026 --paper-id day-04 \
+  --source bank.authoring.json --quality-review quality-review.json --blueprint blueprint.json \
+  --dry-run
+
+node scripts/question-bank-corpus.mjs append-revision \
+  --family <family-id> --year 2026 --paper-id day-04 \
+  --source bank-r2.authoring.json --quality-review quality-review-r2.json --blueprint blueprint-r2.json \
+  --dry-run
+```
+
+Remove `--dry-run` only after inspecting the plan. `add-paper` creates a self-contained mock folder plus one year-manifest entry; `--set-current` may deliberately move the exam's `currentPaperRef`. `append-revision` creates a strictly higher immutable `rN` edition and makes it canonical within that paper.
+
+Both operations stage a full prospective corpus, reuse the canonical compiler/taxonomy/quality-review/blueprint/catalog gates, then take an exclusive corpus lock, verify that the manifest bytes have not changed, create new directories without overwrite, atomically replace only the necessary manifest(s), and revalidate the real graph. In-process failure rolls back the files/manifests written by the operation. They intentionally support maintained custom mocks only; genuine PYQ Source/Reviewed publication keeps using the provenance-aware editorial/PDF pipeline.
 
 Catalog inclusion is packaging policy, not proof that content is official or factually correct.
