@@ -38,7 +38,13 @@ const atomicJson=(path,value)=>atomicText(path,JSON.stringify(value,null,2)+"\n"
 const lockPath=root=>join(root,"question-banks",".corpus-operation.lock");
 async function withLock(root,task){
  await mkdir(join(root,"question-banks"),{recursive:true});
- const handle=await open(lockPath(root),"wx").catch(()=>{throw Error("Another corpus operation is already active");});
+ let handle;
+ try{handle=await open(lockPath(root),"wx");}
+ catch(error){
+  if(error&&typeof error==="object"&&"code" in error&&error.code==="EEXIST")
+   throw Error("Another corpus operation is already active");
+  throw error;
+ }
  try{return await task();}finally{await handle.close();await rm(lockPath(root),{force:true});}
 }
 function familyYear(graph,familyId,year){
