@@ -201,10 +201,9 @@ async function manifestPapers(root,family){
    const paper=validatePaperManifest(await readJson(root,paperPath),exam,entry,paperPath);
    const canonical=paper.editions[paper.canonicalEdition];
    if(family.preinstalled&&paper.kind==="mock"&&canonical.authoring){
-    for(const field of ["qualityReview","blueprint"])
-     if(!Object.hasOwn(canonical,field))
-      throw Error("Preinstalled canonical maintained mock must explicitly declare "+field+
-       " as "+(field==="qualityReview"?"quality-review.json":"blueprint.json")+" or null: "+paper.id);
+    for(const [field,fileName] of [["qualityReview","quality-review.json"],["blueprint","blueprint.json"]])
+     if(typeof canonical[field]!=="string"||!canonical[field])
+      throw Error("Preinstalled canonical maintained mock requires passing bound "+fileName+": "+paper.id);
    }
    if(manifestIds.has(paper.id)||logicalPaperIds.has(paper.paperId))
     throw Error("Duplicate paper identity in manifest graph: "+paper.id);
