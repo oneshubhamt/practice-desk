@@ -31,7 +31,6 @@
     {
       "id": "vocab-2023-q06",
       "examSection": "paper",
-      "syllabusHeadingId": "english",
       "topic": "Vocabulary in context",
       "subtopic": "Precision of meaning",
       "difficulty": "medium",
@@ -69,12 +68,12 @@
       },
       "qa": {
         "status": "unchecked"
-      }
+      },
+      "subject": "General English"
     },
     {
       "id": "vocab-2023-q09",
       "examSection": "paper",
-      "syllabusHeadingId": "english",
       "topic": "Vocabulary in context",
       "subtopic": "Attitudes and outlook",
       "difficulty": "medium",
@@ -112,7 +111,8 @@
       },
       "qa": {
         "status": "unchecked"
-      }
+      },
+      "subject": "General English"
     }
   ]
 }
