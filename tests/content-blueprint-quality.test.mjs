@@ -333,6 +333,47 @@ test("Authoring brief: new-bank packet is compact, single-agent compatible and c
  assert.ok(result.stdout.length<12000,"brief must stay decision-ready rather than becoming a source-tree dump");
 }));
 
+test("Pass 4: taxonomy-aware PFRDA brief exposes data-owned A-L nodes and rejects out-of-taxonomy authoring",()=>temp(async dir=>{
+ const taxonomy=fileURLToPath(new URL("../question-banks/pfrda/2026/taxonomy.json",import.meta.url));
+ const base=JSON.parse(await readFile(example,"utf8"));
+ base.bankId="pfrda-taxonomy-fixture";base.examId="pfrda-grade-a-2026-phase-ii";
+ base.paperId="pfrda-taxonomy-fixture";base.title="PFRDA taxonomy fixture";base.revision=1;
+ base.questions=[structuredClone(base.questions[0])];
+ base.questions[0].id="pfrda-act-01";base.questions[0].subject="PFRDA Act";
+ delete base.questions[0].topic;
+ const source=await write(dir,"pfrda-source.json",base);
+ const planObj={format:"practice-desk-content-blueprint",version:1,id:"pfrda-taxonomy-one",
+  examId:base.examId,paperId:base.paperId,revision:1,targetCount:1,allowPartial:false,
+  taxonomyId:"pfrda-grade-a-2026-general",
+  syllabus:{basis:"official-source-attributed",asOfDate:"2026-09-03",
+   reference:"PFRDA Advertisement No. 03/2026 syllabus fixture"},
+  paperRules:{scoring:structuredClone(base.scoring),timing:structuredClone(base.timing),
+   navigation:structuredClone(base.navigation),sections:structuredClone(base.sections)},
+  requirements:{requireTaxonomy:true,requireExplanation:true,allowedOrigins:["ai-original"]},
+  quotas:{subjects:{exhaustive:true,targets:[{key:"taxonomy:pfrda-act",count:1}]},
+   kinds:{exhaustive:true,targets:[{key:"single-choice",count:1}]},
+   origins:{exhaustive:true,targets:[{key:"ai-original",count:1}]}}};
+ const plan=await write(dir,"pfrda-plan.json",planObj);
+ const validated=run("validate",plan,"--taxonomy",taxonomy);
+ assert.equal(validated.status,0,validated.stderr);
+ assert.equal(validated.data.taxonomyId,"pfrda-grade-a-2026-general");
+ const audited=run("audit",plan,source,"--taxonomy",taxonomy);
+ assert.equal(audited.status,0,audited.stderr);
+ assert.equal(audited.data.readyForPublication,true);
+ assert.equal(audited.data.coverage.subjects[0].actual,1);
+ const brief=run("brief",plan,"--taxonomy",taxonomy,"--bank-id","pfrda-next","--title","PFRDA next","--batch-size","1");
+ assert.equal(brief.status,0,brief.stderr);
+ assert.equal(brief.data.taxonomy.id,"pfrda-grade-a-2026-general");
+ assert.equal(brief.data.taxonomy.nodes.length,142);
+ assert.ok(brief.data.taxonomy.nodes.some(x=>x.id==="pfrda-act"&&x.code==="A"));
+ assert.ok(brief.data.taxonomy.nodes.some(x=>x.id==="marketing-communication"&&x.code==="L"));
+ assert.equal(brief.data.classification.requireTaxonomy,true);
+ const drift=structuredClone(base);drift.questions[0].subject="Invented Off-Syllabus Root";
+ const bad=run("audit",plan,await write(dir,"drift.json",drift),"--taxonomy",taxonomy,"--limit","20");
+ assert.notEqual(bad.status,0);
+ assert.ok(bad.data.issues.items.some(x=>x.code==="taxonomy-classification-required"));
+}));
+
 test("Authoring brief: existing partial batches contribute only compact coverage and preserve exact paper envelope",()=>temp(async dir=>{
  const p=mkPlan();
  p.paperRules={
