@@ -6,7 +6,9 @@
 
 | Need | Tooling | Invariant |
 |---|---|---|
-| Compact new-batch authoring brief | `content-blueprint.mjs brief` | Decision-ready exam/coverage/source contract; no repository/package plumbing or existing question bodies |
+| Compact new-batch authoring brief | `content-blueprint.mjs brief` | Decision-ready exam/coverage/source contract; no repository/package plumbing or existing question bodies; optional validated `--learner-focus` |
+| User-controlled learner focus | Learning desk + `practice-desk-learner-focus` v1 | Off / Focused / Detailed sharing; exact-exam scope; observations rather than diagnoses |
+| Maintained custom-mock corpus add/revision | `question-bank-corpus.mjs` | Dry-runnable staged transaction; canonical taxonomy/review/blueprint/catalog gates; create-only revision folders |
 | Validate/compile one source bank | `question-bank-cli.mjs` | One canonical `practice-desk-authoring` v1 source compiled through the canonical publisher |
 | Small-context corrections | `question-bank-agent.mjs` | Paged inspection, question-scoped retrieval, SHA preconditions, new-file output |
 | Planned distribution | `content-blueprint.mjs` + optional exam taxonomy/cognitive tags | Explicit stable-node coverage, quotas/partial delivery; structurally valid partial work is not publication-ready |
@@ -14,6 +16,10 @@
 | Source + separately corrected Reviewed | `editorial-editions.mjs` | Preserve Source bytes/key; bind Reviewed to exact Source paper/key identities |
 | Supplied PDF/document | `pdf-ingest.mjs` | External reviewer actually inspects pages/math/figures; bind document/key bytes and per-item provenance; no internal OCR |
 | Scoped orchestration | `agent-handoff.mjs` | Read-only assess; publication requires explicit create permission and fresh evidence |
+
+The learning → authoring bridge is deliberately reductive rather than a History API. The browser locally reduces only the selected exam's completed non-revision attempts, notebook evidence and currently-due FSRS cards into a bounded learner-focus packet. Focused mode exposes aggregates only. Detailed mode is an explicit richer opt-in and still omits identity/device/unrelated-exam data, correct responses and learner free-response text. `exam-simulation` keeps the blueprint authoritative; `targeted-practice` may prioritize focus evidence inside syllabus/blueprint guardrails. The same personalisation function is used when the CLI attaches `--learner-focus` and when the Learning desk turns a loaded standard Authoring Brief into a personalised one.
+
+After strict content/review completion, maintained custom mocks can enter the repository through `question-bank-corpus.mjs add-paper` or `append-revision`. The command first stages the entire prospective `question-banks/` graph and runs the normal catalog gates. A real write then locks the corpus, checks manifest preconditions, creates new folders without overwrite, atomically replaces the affected manifest(s), revalidates and rolls back its own changes on failure. This bridge intentionally does not replace Source/Reviewed/PDF provenance workflows.
 
 For maintained exams with a year-owned taxonomy, pass that taxonomy explicitly to blueprint/brief/compile operations; exam IDs never activate a hidden syllabus registry. The taxonomy supplies stable Subject → Topic → Subtopic nodes, while the authoring source remains ordinary `subject` / `topic` / `subtopic` labels that must resolve to those nodes.
 
