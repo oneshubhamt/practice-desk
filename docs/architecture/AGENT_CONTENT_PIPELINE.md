@@ -34,6 +34,7 @@ For paired editions, create/complete an `editorial-editions.mjs template`, revie
 - Reviewed packages bind exact Source paper/key identities. Noncurrent source-key shapes are rejected rather than migrated.
 - Candidate explanations, keys and explanation-only media remain private until the permitted review boundary.
 - A partial blueprint can be `valid:true` while `readyForPublication:false`; strict publication rejects incomplete required quotas.
+- Repository-maintained authoring editions may bind `quality-review.json` and `blueprint.json` in the paper manifest. Non-null bindings are executable gates against the exact current authoring source; stale or incomplete evidence rejects catalog loading. For preinstalled canonical maintained mocks, both fields are explicit and `null` means “no bound evidence,” not “passed.”
 - Source and Reviewed remain explicit separate immutable packages. For ad-hoc external work they are separate Library imports; a repository-maintained family may instead list the intended packages explicitly in the question-bank catalog. Retain original documents and review/decision sidecars outside browser History.
 
 The CLI may report `factualVerification:not-performed`; treat reviewer/source statements as attributed claims unless independently authenticated.
