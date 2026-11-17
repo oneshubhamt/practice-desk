@@ -34,7 +34,7 @@
 | Deep gate | **Not run on this draft branch by CI design**; repository workflow runs Deep only on pushes to `working`, so no Deep result is claimed here |
 | Independent legal-currentness certification | **Not completed; 11 automated advisory warnings remain** |
 
-The program's quality scanner intentionally reports `legal-currentness-unverified` even when a dated, provision-specific citation exists: it cannot itself inspect commencement orders, every later statutory amendment or subordinate rule. A reference and a reasoned manual check are not an independently signed publication review. The packages retain truthful `qa: needs-review` metadata and **do not bypass** this gate.
+The program's quality scanner intentionally reports `legal-currentness-unverified` even when a dated, provision-specific citation exists: it cannot itself inspect commencement orders, every later statutory amendment or subordinate rule. A reference and a reasoned manual check are not an independently signed publication review. The packages retain truthful `qa: needs-review` metadata and **do not bypass** this gate. The canonical revised edition therefore declares `qualityReview: null` and `blueprint: null` in its manifest: this makes the absence of bound Pass-3 evidence explicit and must not be read as a quality pass.
 
 ## High-yield primary references
 
