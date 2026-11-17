@@ -533,6 +533,35 @@ try{
   engine+" P60-F card not derived from frozen reviewed source or FSRS was silently graded");
  await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
  await page.getByRole("button",{name:/Open learning desk/}).click();await route(page,"learning");
+ // Pass 5 native bridge: derive learner evidence locally, then attach it to a
+ // standard Authoring Brief without exposing unrestricted History to an agent.
+ await page.locator("#learning-focus-exam").selectOption(reviewedEdition.examId);
+ await page.locator("#learning-focus-mode").selectOption("focused");
+ await page.locator("#learning-focus-intent").selectOption("targeted-practice");
+ await page.locator("#learning-focus-generate").click();
+ await page.locator("#learning-focus-preview").waitFor({state:"visible"});
+ const focusPacket=JSON.parse(await page.locator("#learning-focus-preview").inputValue());
+ check(focusPacket.examId===reviewedEdition.examId&&focusPacket.mode==="focused"&&
+   focusPacket.intent==="targeted-practice"&&focusPacket.privacy?.scope==="exam-only"&&
+   !("questionEvidence" in focusPacket)&&!JSON.stringify(focusPacket).includes("answerKey"),
+   engine+" Pass 5 Focused learner packet leaked detailed/key data or lost exam scope");
+ const standardBrief={format:"practice-desk-authoring-brief",version:1,valid:true,
+   blueprint:{id:"p60f-browser-brief",examId:reviewedEdition.examId},
+   task:{remainingCount:2},paper:{source:"browser-regression"},
+   outputContract:{sourceEnvelope:{}},learnerFocusIncluded:false};
+ await page.locator("#learning-brief-file").setInputFiles({
+   name:"standard-authoring-brief.json",mimeType:"application/json",
+   buffer:Buffer.from(JSON.stringify(standardBrief))
+ });
+ await page.waitForFunction(()=>!document.querySelector("#learning-brief-personalise")?.disabled);
+ await page.locator("#learning-brief-personalise").click();
+ await page.locator("#learning-brief-preview").waitFor({state:"visible"});
+ const personalised=JSON.parse(await page.locator("#learning-brief-preview").inputValue());
+ check(personalised.learnerFocusIncluded===true&&
+   personalised.learnerFocus?.examId===reviewedEdition.examId&&
+   personalised.personalisationIntent?.compositionPolicy==="focus-first-with-blueprint-guardrails"&&
+   !JSON.stringify(personalised).includes("answerKey"),
+   engine+" Pass 5 native personalised Authoring Brief is incomplete or leaked answer-key state");
  await page.locator("#learning-due").click();
  check(await page.locator(".learning-answer").count()===0,
   engine+" P60-F user Learning answer leaked before reveal");
