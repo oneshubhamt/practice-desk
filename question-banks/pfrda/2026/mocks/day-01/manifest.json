@@ -15,8 +15,8 @@
     "revised": {
       "authoring": "revised/bank.authoring.json",
       "package": "revised/package.exam.json",
-      "qualityReview": null,
-      "blueprint": null
+      "qualityReview": "revised/quality-review.json",
+      "blueprint": "revised/blueprint.json"
     }
   },
   "archive": {
