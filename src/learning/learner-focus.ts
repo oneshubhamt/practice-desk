@@ -283,8 +283,9 @@ export function buildLearnerFocusPacket(
    if(verdict==="incorrect")detail.wrongAttemptIds.add(a.id);
    if(a.finishedAt!>=detail.lastFinishedAt){
     detail.lastFinishedAt=a.finishedAt!;detail.lastVerdict=verdict;
-    const selectedResponse=verdict==="incorrect"&&response?.response?.kind!=="free-response"?
-      cloneResponse(response.response):undefined;
+    const candidateResponse=response?.response;
+    const selectedResponse=verdict==="incorrect"&&candidateResponse&&candidateResponse.kind!=="free-response"?
+      cloneResponse(candidateResponse):undefined;
     const selectedResponseText=selectedResponse?responseText(q,selectedResponse):undefined;
     if(selectedResponse!==undefined)detail.selectedResponse=selectedResponse;
     else delete detail.selectedResponse;
