@@ -72,7 +72,8 @@ export function practiceInventory(source:ExamPackage,filters:PracticeFilters={})
    count:scoped.filter(q=>q.section.id===s.id).length
  })).filter(s=>s.count>0);
  const topics=count(scoped.flatMap(({question})=>[...questionTopicIds(source,question)]))
-   .map(entry=>({...entry,...(taxonomyTopicPath(source,entry.id)?{path:taxonomyTopicPath(source,entry.id)}:{})}));
+   .map(entry=>{const path=taxonomyTopicPath(source,entry.id);
+    return {...entry,...(path?{path}:{})};});
  const difficulties=count(scoped.flatMap(({question})=>
    (question.content.tags??[]).filter(t=>/^difficulty:(easy|medium|hard)$/.test(t))
      .map(t=>t.slice("difficulty:".length))));
