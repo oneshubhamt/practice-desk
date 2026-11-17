@@ -103,13 +103,13 @@
     {
       "operation": "corpus-add-paper",
       "command": "node scripts/question-bank-corpus.mjs add-paper --family <family-id> --year <YYYY> --paper-id <slug> --source <bank.json> --quality-review <review.json> --blueprint <plan.json> [--set-current] [--dry-run]",
-      "privilege": "repository-maintained-create/update",
+      "privilege": "repository-update",
       "effect": "For maintained custom mocks only: stage and validate the complete prospective corpus, then create one self-contained paper folder and year-manifest entry without overwrite; optional explicit currentPaperRef move; rollback own writes on final validation failure."
     },
     {
       "operation": "corpus-append-revision",
       "command": "node scripts/question-bank-corpus.mjs append-revision --family <family-id> --year <YYYY> --paper-id <slug-or-manifest-id> --source <bank.json> --quality-review <review.json> --blueprint <plan.json> [--dry-run]",
-      "privilege": "repository-maintained-create/update",
+      "privilege": "repository-update",
       "effect": "For maintained custom mocks only: require a strictly higher custom revision, stage full graph validation, create a new immutable rN edition and atomically move that paper's canonical edition; no overwrite and rollback own writes on failure."
     },
     {
