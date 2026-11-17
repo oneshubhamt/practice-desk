@@ -673,7 +673,6 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
        ...(value==="sectional"?{sectionNavigation:"sequential-locked"}:{})}));
      void render();
    }else updateMetadata(key,value);
-   if(key==="examId")
   };
   for(const [id,key] of [["pd-author-early-submit","allowEarlySubmit"],
     ["pd-author-allow-review","allowReview"]] as const)
