@@ -65,15 +65,19 @@ async function strictInputs(sourcePath,reviewPath,blueprintPath,taxonomy){
  if(taxonomy)bindExternalQuestionTaxonomy(source,pkg,taxonomy);
  const review=await json(reviewPath);
  const quality=auditQuestionQuality(source,raw,review,{offset:0,limit:50});
- if(!quality.readyForPublication)
-  throw Error("Quality review is not publication-ready: "+(quality.issues?.items?.[0]?.code??"review-rejected"));
+ if(!quality.readyForPublication){
+  const firstError=quality.issues?.items?.find(issue=>issue.severity==="error");
+  throw Error("Quality review is not publication-ready: "+(firstError?.code??quality.issues?.items?.[0]?.code??"review-rejected"));
+ }
  const blueprintRaw=await json(blueprintPath);
  const blueprint=validateBlueprint(blueprintRaw,taxonomy);
  const coverage=auditBlueprint(blueprint,[{value:source,raw,digest:sha(raw)}],undefined,{
   offset:0,limit:50,priorSources:[],coverageLimit:5000,taxonomy
  });
- if(!coverage.readyForPublication)
-  throw Error("Blueprint is not publication-ready: "+(coverage.issues?.items?.[0]?.code??"blueprint-rejected"));
+ if(!coverage.readyForPublication){
+  const firstError=coverage.issues?.items?.find(issue=>issue.severity==="error");
+  throw Error("Blueprint is not publication-ready: "+(firstError?.code??coverage.issues?.items?.[0]?.code??"blueprint-rejected"));
+ }
  if(blueprint.examId!==source.examId||blueprint.paperId!==source.paperId||blueprint.revision!==source.revision)
   throw Error("Blueprint identity must match the authored source exactly");
  return {raw,source,pkg,reviewRaw:await readFile(reviewPath,"utf8"),
