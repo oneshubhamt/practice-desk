@@ -158,6 +158,8 @@ function validatePaperManifest(raw,exam,entry,path){
    childPath(path,binding,field+" path for "+name+" in "+path);
    if(basename(binding)!==fileName)
     throw Error(field+" binding must be named "+fileName+" in "+path);
+   if(authoring&&dirname(binding)!==dirname(authoring))
+    throw Error(field+" binding must be colocated with bank.authoring.json in "+path+" "+name);
    normalized[field]=binding;
   }
   if((normalized.qualityReview!==undefined||normalized.blueprint!==undefined)&&!authoring)
