@@ -10,7 +10,7 @@ import type {StagedQuestion} from "./authoring-staging.ts";
 import {authoringSections} from "./authoring-sections.ts";
 import {authoringPublishedPreview,authoringDraftPreview} from "./authoring-preview.ts";
 import {escapeText} from "../app/html-escape.ts";
-import {syllabusForExam,syllabusHeading,UNCLASSIFIED_SUBJECT} from "../learning/syllabus-taxonomy.ts";
+import {UNCLASSIFIED_SUBJECT} from "../learning/syllabus-taxonomy.ts";
 import type {AuthoringDraft,AuthoringDraftShelf,AuthoringQuestion} from "./authoring-draft.ts";
 import {MAX_AUTHORED_ITEMS,optionLabel} from "./authoring-cardinality.ts";
 
@@ -51,7 +51,7 @@ export function authoringIssueTarget(path:string,q:AuthoringQuestion):AuthoringI
  if(/partial penalty/.test(lower))return {controlId:"pd-author-partial-penalty"};
  if(/partial credit/.test(lower))return {controlId:"pd-author-partial-credit"};
  if(/mark|scoring/.test(lower))return {controlId:"pd-author-custom-marks"};
- if(/syllabus/.test(lower))return {controlId:"pd-author-syllabus-heading"};
+ if(/syllabus|subject/.test(lower))return {controlId:"pd-author-subject"};
  if(/subtopic/.test(lower))return {controlId:"pd-author-subtopic"};
  if(/topic/.test(lower))return {controlId:"pd-author-topic"};
  if(/difficulty/.test(lower))return {controlId:"pd-author-difficulty"};
@@ -163,17 +163,10 @@ export function controls(draft:AuthoringDraft,current:AuthoringQuestion,field:Fi
    '<label>Left item count<input id="pd-author-left-count" type="number" min="1" max="'+MAX_AUTHORED_ITEMS+'" step="1" value="'+current.leftItems.length+'"></label>'+
    '<label>Right item count<input id="pd-author-right-count" type="number" min="1" max="'+MAX_AUTHORED_ITEMS+'" step="1" value="'+current.rightItems.length+'"></label>':"")+
   '<label>Actual exam section (controls timing and navigation)<input id="pd-author-section" maxlength="100" value="'+escapeText(current.section)+'"></label>'+
-  '<label>Academic subject (custom, not an exam section)<input id="pd-author-subject" maxlength="120" value="'+escapeText(current.subject??"")+'" placeholder="Leave blank for Unclassified"></label>'+
-  '<label>Official broad syllabus subject (author-chosen)<select id="pd-author-syllabus-heading"'+
-    (!syllabusForExam(draft.examId)?' disabled':'')+'>'+
-    option("",syllabusForExam(draft.examId)?"Custom subject / Unclassified":"No official catalogue for this exam",current.syllabusHeadingId??"")+
-    (syllabusForExam(draft.examId)?.headings??[]).map(h=>option(h.id,h.label,current.syllabusHeadingId??"")).join("")+
-    '</select></label>'+
+  '<label>Academic subject (not an exam section)<input id="pd-author-subject" maxlength="120" value="'+escapeText(current.subject??"")+'" placeholder="Leave blank for Unclassified"></label>'+
   '<p class="fine pd-author-taxonomy-summary">Classification: '+
-    escapeText(current.syllabusHeadingId?
-      syllabusHeading(draft.examId,current.syllabusHeadingId)?.label??"Unknown heading":
-      current.subject?.trim()||UNCLASSIFIED_SUBJECT)+
-    '. Section timers and subjects are independent; no classification is inferred.</p>'+
+    escapeText(current.subject?.trim()||UNCLASSIFIED_SUBJECT)+
+    '. Official exam taxonomies are supplied as data by maintained corpus/authoring briefs; Studio never infers one from the exam ID. Section timers and subjects are independent.</p>'+
   '<label>Topic (author supplied)<input id="pd-author-topic" maxlength="120" value="'+escapeText(current.topic??"")+'"></label>'+
   '<label>Subtopic (needs Topic)<input id="pd-author-subtopic" maxlength="120" value="'+escapeText(current.subtopic??"")+'"></label>'+
   '<label>Difficulty tag<select id="pd-author-difficulty">'+
