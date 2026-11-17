@@ -16,7 +16,8 @@
     "requireExplanation": true,
     "allowedOrigins": [
       "ai-original"
-    ]
+    ],
+    "requireTaxonomy": true
   },
   "quotas": {
     "sections": {
@@ -58,58 +59,59 @@
       "exhaustive": true,
       "targets": [
         {
-          "key": "subject:Accountancy",
+          "key": "taxonomy:commerce-accountancy",
           "count": 4
         },
         {
-          "key": "subject:AI/ML",
+          "key": "taxonomy:ai-ml",
           "count": 3
         },
         {
-          "key": "subject:Budget/Survey",
+          "key": "taxonomy:budget-survey",
           "count": 5
         },
         {
-          "key": "subject:Companies Act",
+          "key": "taxonomy:companies-act",
           "count": 7
         },
         {
-          "key": "subject:Costing",
+          "key": "taxonomy:costing",
           "count": 4
         },
         {
-          "key": "subject:Descriptive English",
+          "key": "taxonomy:english-writing",
           "count": 1
         },
         {
-          "key": "subject:Economics",
+          "key": "taxonomy:economics",
           "count": 5
         },
         {
-          "key": "subject:Finance",
+          "key": "taxonomy:finance",
           "count": 5
         },
         {
-          "key": "subject:Management",
+          "key": "taxonomy:management",
           "count": 4
         },
         {
-          "key": "subject:Marketing/Communication",
+          "key": "taxonomy:marketing-communication",
           "count": 2
         },
         {
-          "key": "subject:Media",
+          "key": "taxonomy:media",
           "count": 2
         },
         {
-          "key": "subject:Pension Sector",
+          "key": "taxonomy:pension-sector",
           "count": 5
         },
         {
-          "key": "subject:PFRDA Act",
+          "key": "taxonomy:pfrda-act",
           "count": 4
         }
       ]
     }
-  }
+  },
+  "taxonomyId": "pfrda-grade-a-2026-general"
 }
