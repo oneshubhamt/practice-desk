@@ -423,7 +423,14 @@ export function validateLearnerFocusPacket(value:unknown):LearnerFocusPacket{
   only(row,["classificationSource","taxonomyId","nodeId","subject","topic","subtopic","attempts","answered",
    "correct","incorrect","unanswered","distinctQuestions","repeatedMisses","slowObservations","revisitedAttempts",
    "flaggedAttempts","bookmarkedQuestions","dueQuestions","observedAccuracy","recent","signals"],"observation "+index);
-  const c=validateClassification(row,"observation "+index);
+  const c=validateClassification({
+   classificationSource:row.classificationSource,
+   ...(row.taxonomyId===undefined?{}:{taxonomyId:row.taxonomyId}),
+   ...(row.nodeId===undefined?{}:{nodeId:row.nodeId}),
+   subject:row.subject,
+   ...(row.topic===undefined?{}:{topic:row.topic}),
+   ...(row.subtopic===undefined?{}:{subtopic:row.subtopic})
+  },"observation "+index);
   const attempts=boundedInt(row.attempts,"attempts",0,100000),answered=boundedInt(row.answered,"answered",0,100000);
   const correct=boundedInt(row.correct,"correct",0,100000),incorrect=boundedInt(row.incorrect,"incorrect",0,100000);
   const unanswered=boundedInt(row.unanswered,"unanswered",0,100000);
