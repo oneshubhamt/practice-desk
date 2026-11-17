@@ -265,11 +265,15 @@ export function buildLearnerFocusPacket(
    if(verdict==="incorrect")detail.wrongAttemptIds.add(a.id);
    if(a.finishedAt!>=detail.lastFinishedAt){
     detail.lastFinishedAt=a.finishedAt!;detail.lastVerdict=verdict;
-    detail.selectedResponse=cloneResponse(response?.response);
+    const selectedResponse=cloneResponse(response?.response);
+    if(selectedResponse!==undefined)detail.selectedResponse=selectedResponse;
+    else delete detail.selectedResponse;
     detail.foregroundMs=response?.timeSpentMs??null;detail.visits=phases?.visits??null;
     detail.revisited=phases?phases.visits>1:null;detail.flagged=response?.flagged??false;
     detail.slow=questionSpeed(a,q.id)==="Slow";
-    detail.explanation=a.explanations?.[q.id];
+    const explanation=a.explanations?.[q.id];
+    if(explanation!==undefined)detail.explanation=explanation;
+    else delete detail.explanation;
    }
   }
  }
@@ -357,7 +361,7 @@ function validateResponse(value:unknown):CandidateResponse{
  if(kind==="multiple-select"){
   only(row,["kind","optionIds"],"selectedResponse");
   if(!Array.isArray(row.optionIds)||row.optionIds.length>26)throw Error("Invalid selectedResponse.optionIds");
-  return {kind,optionIds:row.optionIds.map((x,i)=>text(x,"optionIds["+i+"]",120))} as CandidateResponse;
+  return {kind,optionIds:row.optionIds.map((x,i)=>text(x,"optionIds["+i+"]",120))} as unknown as CandidateResponse;
  }
  if(kind==="numeric-entry"){only(row,["kind","value"],"selectedResponse");if(typeof row.value!=="number"||!Number.isFinite(row.value))throw Error("Invalid numeric response");return {kind,value:row.value};}
  if(kind==="true-false"){only(row,["kind","value"],"selectedResponse");if(typeof row.value!=="boolean")throw Error("Invalid true-false response");return {kind,value:row.value};}
@@ -366,7 +370,7 @@ function validateResponse(value:unknown):CandidateResponse{
   only(row,["kind","pairs"],"selectedResponse");
   if(!Array.isArray(row.pairs)||row.pairs.length>26)throw Error("Invalid matching response");
   return {kind,pairs:row.pairs.map((pair,i)=>{const p=plain(pair,"pair "+i);only(p,["leftId","rightId"],"pair "+i);
-   return {leftId:text(p.leftId,"leftId",120),rightId:text(p.rightId,"rightId",120)};})} as CandidateResponse;
+   return {leftId:text(p.leftId,"leftId",120),rightId:text(p.rightId,"rightId",120)};})} as unknown as CandidateResponse;
  }
  throw Error("Unsupported selectedResponse kind");
 }
