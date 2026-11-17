@@ -6,6 +6,7 @@ import {validateExamPackage} from "../src/domain/exam-package.ts";
 import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
 import {auditQuestionQuality} from "./question-quality.mjs";
 import {validateBlueprint,auditBlueprint} from "./content-blueprint.mjs";
+import {validateExamTaxonomy,resolveTaxonomyPath,taxonomyPathNodes} from "../src/domain/taxonomy.ts";
 
 const sha=value=>createHash("sha256").update(value).digest("hex");
 
@@ -99,7 +100,7 @@ function validateExamManifest(raw,family,path){
 
 function validateYearManifest(raw,exam,year,path){
  const manifest=plain(raw,"Year manifest "+path);
- only(manifest,["format","version","id","examId","title","year","mocks","pyqs"],"Year manifest "+path);
+ only(manifest,["format","version","id","examId","title","year","mocks","pyqs","taxonomy"],"Year manifest "+path);
  if(manifest.format!=="practice-desk-exam-year-manifest"||manifest.version!==1)
   throw Error("Unsupported year manifest "+path);
  if(str(manifest.examId,"Year manifest examId")!==exam.examId||integer(manifest.year,"Year")!==year)
@@ -120,7 +121,13 @@ function validateYearManifest(raw,exam,year,path){
  const papers=[...readEntries(manifest.pyqs,"pyq"),...readEntries(manifest.mocks,"mock")];
  const ids=new Set();
  for(const paper of papers){if(ids.has(paper.id))throw Error("Duplicate paper entry "+paper.id);ids.add(paper.id);}
- return papers;
+ let taxonomy;
+ if(manifest.taxonomy!==undefined){
+  taxonomy=str(manifest.taxonomy,"Year taxonomy path");
+  childPath(path,taxonomy,"Year taxonomy path");
+  if(basename(taxonomy)!=="taxonomy.json")throw Error("Year taxonomy must be named taxonomy.json in "+path);
+ }
+ return {papers,...(taxonomy?{taxonomy}:{})};
 }
 
 function validatePaperManifest(raw,exam,entry,path){
@@ -196,11 +203,20 @@ async function manifestPapers(root,family){
  for(const year of exam.years){
   const yearPath=childPath(examPath,exam.paths[String(year)],"Exam year manifest path");
   activePaths.add(yearPath.replaceAll("\\","/"));
-  const entries=validateYearManifest(await readJson(root,yearPath),exam,year,yearPath);
-  for(const entry of entries){
+  const yearManifest=validateYearManifest(await readJson(root,yearPath),exam,year,yearPath);
+  let taxonomy;
+  if(yearManifest.taxonomy){
+   const taxonomyPath=childPath(yearPath,yearManifest.taxonomy,"Year taxonomy path");
+   activePaths.add(taxonomyPath.replaceAll("\\","/"));
+   await requireFile(root,taxonomyPath,"Year taxonomy "+exam.id+" "+year);
+   taxonomy=validateExamTaxonomy(await readJson(root,taxonomyPath));
+   if(taxonomy.examId!==exam.examId)throw Error("Year taxonomy examId mismatch "+taxonomyPath);
+  }
+  for(const entry of yearManifest.papers){
    const paperPath=childPath(yearPath,entry.path,"Paper manifest path");
    activePaths.add(paperPath.replaceAll("\\","/"));
-   const paper=validatePaperManifest(await readJson(root,paperPath),exam,entry,paperPath);
+   const paper={...validatePaperManifest(await readJson(root,paperPath),exam,entry,paperPath),
+    ...(taxonomy?{taxonomy}:{})};
    const canonical=paper.editions[paper.canonicalEdition];
    if(family.preinstalled&&paper.kind==="mock"&&canonical.authoring){
     for(const [field,fileName] of [["qualityReview","quality-review.json"],["blueprint","blueprint.json"]])
@@ -244,10 +260,29 @@ async function assertNoOrphanActiveContent(root,reachable){
   .filter(path=>!path.includes("/archive/")&&
     (path.endsWith("/manifest.json")||path.endsWith("/bank.authoring.json")||
      path.endsWith("/package.exam.json")||path.endsWith("/quality-review.json")||
-     path.endsWith("/blueprint.json")));
+     path.endsWith("/blueprint.json")||path.endsWith("/taxonomy.json")));
  const orphans=active.filter(path=>!reachable.has(path)).sort();
  if(orphans.length)throw Error("Orphan active question-bank content is not reachable from catalog manifests: "+orphans.join(", "));
 }
+
+const authoredTaxonomyAssignments=(source,pkg,taxonomy)=>{
+ if(!taxonomy)return undefined;
+ if(!Array.isArray(source?.questions)||source.questions.length!==pkg.questions.length)
+  throw Error("Taxonomy binding needs source/package question parity");
+ const out={};
+ for(let i=0;i<source.questions.length;i++){
+  const q=source.questions[i],subject=String(q?.subject??"").trim(),
+   topic=String(q?.topic??"").trim(),subtopic=String(q?.subtopic??"").trim();
+  if(!subject)throw Error("Maintained taxonomy classification requires a subject: "+String(q?.id??i));
+  const labels=[subject,...(topic?[topic]:[]),...(subtopic?[subtopic]:[])];
+  const node=resolveTaxonomyPath(taxonomy,labels);
+  if(!node)throw Error("Authored classification is absent from taxonomy for "+String(q?.id??i)+": "+labels.join(" > "));
+  const path=taxonomyPathNodes(taxonomy,node.id);
+  if(path[0]?.kind!=="subject")throw Error("Taxonomy assignment must resolve from a subject root");
+  out[pkg.questions[i].id]=node.id;
+ }
+ return out;
+};
 
 async function loadExamPackages(root,family,manifestSet,seenPaperIds){
  const packages=[],paperIds=[],manifestToCanonical=new Map();
@@ -258,13 +293,14 @@ async function loadExamPackages(root,family,manifestSet,seenPaperIds){
    const packagePath=childPath(paper.path,str(edition.package,"Package path "+paper.id+" "+editionName),
     "Package path "+paper.id+" "+editionName);
    const pkg=validateExamPackage(await readJson(root,packagePath));
-   let sourceFile=null;
+   let sourceFile=null,taxonomyAssignments;
    if(edition.authoring){
     const authoringPath=childPath(paper.path,edition.authoring,"Authoring path "+paper.id+" "+editionName);
     sourceFile=await readJsonSource(root,authoringPath);
     const generated=compileExternalQuestionBank(sourceFile.value);
     if(!isDeepStrictEqual(generated,pkg))
      throw Error("Generated package diverges from canonical bank.authoring.json: "+paper.id+" "+editionName);
+    taxonomyAssignments=authoredTaxonomyAssignments(sourceFile.value,pkg,paper.taxonomy);
    }
    if(Object.hasOwn(edition,"qualityReview")&&edition.qualityReview!==null){
     if(!sourceFile)throw Error("Quality review binding has no authoring source: "+paper.id+" "+editionName);
@@ -278,23 +314,25 @@ async function loadExamPackages(root,family,manifestSet,seenPaperIds){
    if(Object.hasOwn(edition,"blueprint")&&edition.blueprint!==null){
     if(!sourceFile)throw Error("Blueprint binding has no authoring source: "+paper.id+" "+editionName);
     const blueprintPath=childPath(paper.path,edition.blueprint,"Blueprint path "+paper.id+" "+editionName);
-    const blueprint=validateBlueprint(await readJson(root,blueprintPath));
+    const blueprint=validateBlueprint(await readJson(root,blueprintPath),paper.taxonomy);
     const coverage=auditBlueprint(blueprint,[sourceFile],undefined,{
-     offset:0,limit:50,priorSources:[],coverageLimit:5000
+     offset:0,limit:50,priorSources:[],coverageLimit:5000,taxonomy:paper.taxonomy
     });
     if(!coverage.readyForPublication)
      throw Error("Declared blueprint is not publication-ready for "+paper.id+" "+editionName+
       ": "+(coverage.issues?.items?.[0]?.code??"blueprint-rejected"));
    }
-   if(pkg.examId!==family.examId)throw Error("Package examId mismatch for "+paper.id+" "+editionName);
-   if(pkg.paper.paperId!==paper.paperId&&!pkg.paper.paperId.endsWith(":"+paper.paperId))
+   const runtimePkg=paper.taxonomy?validateExamPackage({...pkg,taxonomy:paper.taxonomy,
+     taxonomyAssignments:taxonomyAssignments??{}}):pkg;
+   if(runtimePkg.examId!==family.examId)throw Error("Package examId mismatch for "+paper.id+" "+editionName);
+   if(runtimePkg.paper.paperId!==paper.paperId&&!runtimePkg.paper.paperId.endsWith(":"+paper.paperId))
     throw Error("Package paperId mismatch for "+paper.id+" "+editionName);
-   if((pkg.paper.edition==="source"||pkg.paper.edition==="reviewed")&&editionName!==pkg.paper.edition)
-    throw Error("Manifest edition role "+editionName+" disagrees with package "+pkg.paper.edition+" for "+paper.id);
-   if(seenPaperIds.has(pkg.paper.id))throw Error("Duplicate preinstalled paper revision "+pkg.paper.id);
-   seenPaperIds.add(pkg.paper.id);paperIds.push(pkg.paper.id);packages.push(pkg);paperPackages.push(pkg);
+   if((runtimePkg.paper.edition==="source"||runtimePkg.paper.edition==="reviewed")&&editionName!==runtimePkg.paper.edition)
+    throw Error("Manifest edition role "+editionName+" disagrees with package "+runtimePkg.paper.edition+" for "+paper.id);
+   if(seenPaperIds.has(runtimePkg.paper.id))throw Error("Duplicate preinstalled paper revision "+runtimePkg.paper.id);
+   seenPaperIds.add(runtimePkg.paper.id);paperIds.push(runtimePkg.paper.id);packages.push(runtimePkg);paperPackages.push(runtimePkg);
    if(editionName===paper.canonicalEdition){
-    manifestToCanonical.set(paper.id,pkg.paper.id);canonicalPackage=pkg;
+    manifestToCanonical.set(paper.id,runtimePkg.paper.id);canonicalPackage=runtimePkg;
    }
   }
   const custom=paperPackages.filter(pkg=>pkg.paper.edition==="custom");
