@@ -3,10 +3,10 @@ import {createHash} from "node:crypto";
 import {basename,dirname,join,resolve,sep} from "node:path";
 import {isDeepStrictEqual} from "node:util";
 import {validateExamPackage} from "../src/domain/exam-package.ts";
-import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
+import {bindExternalQuestionTaxonomy,compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
 import {auditQuestionQuality} from "./question-quality.mjs";
 import {validateBlueprint,auditBlueprint} from "./content-blueprint.mjs";
-import {validateExamTaxonomy,resolveTaxonomyPath,taxonomyPathNodes} from "../src/domain/taxonomy.ts";
+import {validateExamTaxonomy} from "../src/domain/taxonomy.ts";
 
 const sha=value=>createHash("sha256").update(value).digest("hex");
 
@@ -265,25 +265,6 @@ async function assertNoOrphanActiveContent(root,reachable){
  if(orphans.length)throw Error("Orphan active question-bank content is not reachable from catalog manifests: "+orphans.join(", "));
 }
 
-const authoredTaxonomyAssignments=(source,pkg,taxonomy)=>{
- if(!taxonomy)return undefined;
- if(!Array.isArray(source?.questions)||source.questions.length!==pkg.questions.length)
-  throw Error("Taxonomy binding needs source/package question parity");
- const out={};
- for(let i=0;i<source.questions.length;i++){
-  const q=source.questions[i],subject=String(q?.subject??"").trim(),
-   topic=String(q?.topic??"").trim(),subtopic=String(q?.subtopic??"").trim();
-  if(!subject)throw Error("Maintained taxonomy classification requires a subject: "+String(q?.id??i));
-  const labels=[subject,...(topic?[topic]:[]),...(subtopic?[subtopic]:[])];
-  const node=resolveTaxonomyPath(taxonomy,labels);
-  if(!node)throw Error("Authored classification is absent from taxonomy for "+String(q?.id??i)+": "+labels.join(" > "));
-  const path=taxonomyPathNodes(taxonomy,node.id);
-  if(path[0]?.kind!=="subject")throw Error("Taxonomy assignment must resolve from a subject root");
-  out[pkg.questions[i].id]=node.id;
- }
- return out;
-};
-
 async function loadExamPackages(root,family,manifestSet,seenPaperIds){
  const packages=[],paperIds=[],manifestToCanonical=new Map();
  for(const paper of manifestSet.papers){
@@ -293,14 +274,14 @@ async function loadExamPackages(root,family,manifestSet,seenPaperIds){
    const packagePath=childPath(paper.path,str(edition.package,"Package path "+paper.id+" "+editionName),
     "Package path "+paper.id+" "+editionName);
    const pkg=validateExamPackage(await readJson(root,packagePath));
-   let sourceFile=null,taxonomyAssignments;
+   let sourceFile=null,boundPackage=null;
    if(edition.authoring){
     const authoringPath=childPath(paper.path,edition.authoring,"Authoring path "+paper.id+" "+editionName);
     sourceFile=await readJsonSource(root,authoringPath);
     const generated=compileExternalQuestionBank(sourceFile.value);
     if(!isDeepStrictEqual(generated,pkg))
      throw Error("Generated package diverges from canonical bank.authoring.json: "+paper.id+" "+editionName);
-    taxonomyAssignments=authoredTaxonomyAssignments(sourceFile.value,pkg,paper.taxonomy);
+    if(paper.taxonomy)boundPackage=bindExternalQuestionTaxonomy(sourceFile.value,pkg,paper.taxonomy);
    }
    if(Object.hasOwn(edition,"qualityReview")&&edition.qualityReview!==null){
     if(!sourceFile)throw Error("Quality review binding has no authoring source: "+paper.id+" "+editionName);
@@ -322,8 +303,8 @@ async function loadExamPackages(root,family,manifestSet,seenPaperIds){
      throw Error("Declared blueprint is not publication-ready for "+paper.id+" "+editionName+
       ": "+(coverage.issues?.items?.[0]?.code??"blueprint-rejected"));
    }
-   const runtimePkg=paper.taxonomy?validateExamPackage({...pkg,taxonomy:paper.taxonomy,
-     taxonomyAssignments:taxonomyAssignments??{}}):pkg;
+   const runtimePkg=boundPackage??(paper.taxonomy?
+     validateExamPackage({...pkg,taxonomy:paper.taxonomy,taxonomyAssignments:{}}):pkg);
    if(runtimePkg.examId!==family.examId)throw Error("Package examId mismatch for "+paper.id+" "+editionName);
    if(runtimePkg.paper.paperId!==paper.paperId&&!runtimePkg.paper.paperId.endsWith(":"+paper.paperId))
     throw Error("Package paperId mismatch for "+paper.id+" "+editionName);
