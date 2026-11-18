@@ -1,0 +1,23 @@
+{
+  "format": "practice-desk-paper-manifest",
+  "version": 1,
+  "id": "pfrda-grade-a-2026-day-03",
+  "examId": "pfrda-grade-a-2026-phase-ii",
+  "paperId": "pfrda-grade-a-2026-day-03",
+  "kind": "mock",
+  "title": "PFRDA Grade A 2026 — Day 3",
+  "canonicalEdition": "original",
+  "editions": {
+    "original": {
+      "package": "original/package.exam.json"
+    }
+  },
+  "archive": {
+    "shareIndex": "archive/source-links.json",
+    "bankA": "archive/day3-bank-a.package.exam.json",
+    "bankB": "archive/day3-bank-b.package.exam.json",
+    "english": "archive/day3-english.package.exam.json",
+    "ps17": "archive/ps17.package.exam.json"
+  },
+  "audit": "audit.md"
+}

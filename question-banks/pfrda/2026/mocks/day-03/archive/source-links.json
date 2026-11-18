@@ -1,0 +1,62 @@
+{
+  "format": "practice-desk-day-source-index",
+  "version": 1,
+  "day": "PFRDA Grade A 2026 — Day 3",
+  "activeStructure": [
+    {
+      "section": 1,
+      "title": "General Stream (Banks A + B)",
+      "sourceSets": [
+        "A",
+        "B"
+      ],
+      "count": 60
+    },
+    {
+      "section": 2,
+      "title": "Descriptive English",
+      "sourceSets": [
+        "E"
+      ],
+      "count": 6
+    },
+    {
+      "section": 3,
+      "title": "Pension Landscape PS17",
+      "sourceSets": [
+        "P"
+      ],
+      "count": 20
+    }
+  ],
+  "sources": [
+    {
+      "set": "A",
+      "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932",
+      "expectedCount": 30
+    },
+    {
+      "set": "B",
+      "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025",
+      "expectedCount": 30
+    },
+    {
+      "set": "E",
+      "url": "https://chatgpt.com/s/t_6afd79b0630c81919cddceac41211f94",
+      "expectedCount": 6
+    },
+    {
+      "set": "P",
+      "url": "https://chatgpt.com/s/t_6afd79d661848191b921ca1ef8e96638",
+      "expectedCount": 20
+    }
+  ],
+  "verification": {
+    "keysA": "BCADBCABDCABDCABDACBCDACBADBCD",
+    "keysB": "CCDADBEACDBCCCDAEBCDDBACEBDBCE",
+    "keysPS17": "BDCCAEBDECBDACDABCEC",
+    "ps17ExactAgainstTracker": true,
+    "englishSharedPassage": true,
+    "note": "Bank A/B content is carried from the prior import; current-rule explanations were reviewed during consolidation. Share URLs are preserved as primary provenance."
+  }
+}

@@ -1,0 +1,4544 @@
+{
+  "format": "practice-desk-exam",
+  "version": 1,
+  "examId": "pfrda-grade-a-2026-phase-ii",
+  "title": "PFRDA Grade A 2026 — Day 3",
+  "questions": [
+    {
+      "id": "pfrda:day3:a:q:01:r1",
+      "questionId": "pfrda:day3:a:q:01",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A business sells goods worth ₹80,000 on credit. Ignoring GST and cost of goods sold, which journal entry records the sale?",
+        "topicIds": [
+          "topic:Commerce & Accountancy"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Debit Sales; Credit Trade Receivables"
+          },
+          {
+            "id": "B",
+            "text": "Debit Trade Receivables; Credit Sales"
+          },
+          {
+            "id": "C",
+            "text": "Debit Bank; Credit Sales"
+          },
+          {
+            "id": "D",
+            "text": "Debit Trade Receivables; Credit Bank"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "659e19655318ba0c4fc7f71e85ee4819295d390cde2fc251ca81991e24e8d5f2"
+    },
+    {
+      "id": "pfrda:day3:a:q:02:r1",
+      "questionId": "pfrda:day3:a:q:02",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A share has beta 1.25. The risk-free rate is 4% and the market risk premium is 6%. According to the Capital Asset Pricing Model, the required return is:",
+        "topicIds": [
+          "topic:Finance"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "7.5%"
+          },
+          {
+            "id": "B",
+            "text": "10%"
+          },
+          {
+            "id": "C",
+            "text": "11.5%"
+          },
+          {
+            "id": "D",
+            "text": "13.5%"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "6999a049bd814a452797425945ddfd9a78b664e3f8261b2967398bbabd8796e5"
+    },
+    {
+      "id": "pfrda:day3:a:q:03:r1",
+      "questionId": "pfrda:day3:a:q:03",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which section of the PFRDA Act broadly sets out the Authority's duties and powers, including protection of subscribers' interests?",
+        "topicIds": [
+          "topic:PFRDA Act"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Section 14"
+          },
+          {
+            "id": "B",
+            "text": "Section 20"
+          },
+          {
+            "id": "C",
+            "text": "Section 27"
+          },
+          {
+            "id": "D",
+            "text": "Section 36"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "4ad2107bf61c78697071345054ceb00d5c158a5df2713457ad3314d05fbd93e7"
+    },
+    {
+      "id": "pfrda:day3:a:q:04:r1",
+      "questionId": "pfrda:day3:a:q:04",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Under the National Pension System, which intermediary primarily maintains individual subscriber records, accounts and unit balances?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Pension Fund"
+          },
+          {
+            "id": "B",
+            "text": "Trustee Bank"
+          },
+          {
+            "id": "C",
+            "text": "Custodian"
+          },
+          {
+            "id": "D",
+            "text": "Central Recordkeeping Agency"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "b2be9d3e11ef3f4078aee179e656040a893eaaa3e0b0038529e027cf25d03124"
+    },
+    {
+      "id": "pfrda:day3:a:q:05:r1",
+      "questionId": "pfrda:day3:a:q:05",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Under Section 63 of the Companies Act, 2013, which reserve cannot be capitalised for issuing fully paid-up bonus shares?",
+        "topicIds": [
+          "topic:Companies Act"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Eligible free reserves"
+          },
+          {
+            "id": "B",
+            "text": "Reserve created by revaluation of assets"
+          },
+          {
+            "id": "C",
+            "text": "Securities premium account"
+          },
+          {
+            "id": "D",
+            "text": "Capital redemption reserve account"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "2b69454bb8ee0b5f0983252b92c79389c5089a3fd05544fc995019e3f9bc70d8"
+    },
+    {
+      "id": "pfrda:day3:a:q:06:r1",
+      "questionId": "pfrda:day3:a:q:06",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Union Budget 2026–27 Budget Estimates placed direct capital expenditure at about ₹12.22 lakh crore and effective capital expenditure at about ₹17.15 lakh crore. The ₹4.93 lakh crore difference principally represents:",
+        "topicIds": [
+          "topic:Budget/Survey"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Interest payments"
+          },
+          {
+            "id": "B",
+            "text": "Revenue deficit"
+          },
+          {
+            "id": "C",
+            "text": "Grants for creation of capital assets"
+          },
+          {
+            "id": "D",
+            "text": "Tax devolution"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "9561ce91bc78a5fbb91dba337c17e5d3c2994b0aca36764cbc6a21833c7cbcc3"
+    },
+    {
+      "id": "pfrda:day3:a:q:07:r1",
+      "questionId": "pfrda:day3:a:q:07",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A product sells for ₹150 per unit, variable cost is ₹90 per unit and total fixed cost is ₹1,80,000. What is the break-even sales volume?",
+        "topicIds": [
+          "topic:Costing"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "3,000 units"
+          },
+          {
+            "id": "B",
+            "text": "2,000 units"
+          },
+          {
+            "id": "C",
+            "text": "2,500 units"
+          },
+          {
+            "id": "D",
+            "text": "3,500 units"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "d28311fdb3a9aef7720957e288e25bfaf4b2ce35158d59468309395e08edd0d9"
+    },
+    {
+      "id": "pfrda:day3:a:q:08:r1",
+      "questionId": "pfrda:day3:a:q:08",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Using initial values, price rises by 10% and quantity demanded falls by 5%. What is the absolute value and classification of price elasticity of demand?",
+        "topicIds": [
+          "topic:Economics"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "2; elastic"
+          },
+          {
+            "id": "B",
+            "text": "0.5; inelastic"
+          },
+          {
+            "id": "C",
+            "text": "0.5; elastic"
+          },
+          {
+            "id": "D",
+            "text": "2; inelastic"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "59c099f0af0c2bf607ba09b60561f31f814e14423ccafe4f72b859f00df351bc"
+    },
+    {
+      "id": "pfrda:day3:a:q:09:r1",
+      "questionId": "pfrda:day3:a:q:09",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which of the following is a motivator rather than a hygiene factor in Herzberg's two-factor theory?",
+        "topicIds": [
+          "topic:Management"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Organisational policies"
+          },
+          {
+            "id": "B",
+            "text": "Salary"
+          },
+          {
+            "id": "C",
+            "text": "Physical working conditions"
+          },
+          {
+            "id": "D",
+            "text": "Recognition for achievement"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "103beb748a5592802795bafea06b0f5e88c792577c219686697c3e0cfa790ddf"
+    },
+    {
+      "id": "pfrda:day3:a:q:10:r1",
+      "questionId": "pfrda:day3:a:q:10",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A project requires an initial outlay of ₹1,000 and yields ₹550 after one year and ₹726 after two years. At a 10% discount rate, its net present value is:",
+        "topicIds": [
+          "topic:Finance"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "+₹1,100"
+          },
+          {
+            "id": "B",
+            "text": "+₹200"
+          },
+          {
+            "id": "C",
+            "text": "+₹100"
+          },
+          {
+            "id": "D",
+            "text": "−₹100"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "e97f449466104acee4734666ceeda06266183e13f388fc5005ed9444bfaf7e17"
+    },
+    {
+      "id": "pfrda:day3:a:q:11:r1",
+      "questionId": "pfrda:day3:a:q:11",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A customer pays ₹20,000 into the business bank account toward an existing trade receivable. Which entry is correct?",
+        "topicIds": [
+          "topic:Commerce & Accountancy"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Debit Bank; Credit Trade Receivables"
+          },
+          {
+            "id": "B",
+            "text": "Debit Sales; Credit Bank"
+          },
+          {
+            "id": "C",
+            "text": "Debit Trade Receivables; Credit Bank"
+          },
+          {
+            "id": "D",
+            "text": "Debit Bank; Credit Sales"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "812c9d6ab12dd747fd144492947e59aa017c078a3bf73e72da94cf3fbe0ab08f"
+    },
+    {
+      "id": "pfrda:day3:a:q:12:r1",
+      "questionId": "pfrda:day3:a:q:12",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which section of the PFRDA Act principally governs registration of pension intermediaries?",
+        "topicIds": [
+          "topic:PFRDA Act"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Section 14"
+          },
+          {
+            "id": "B",
+            "text": "Section 27"
+          },
+          {
+            "id": "C",
+            "text": "Section 20"
+          },
+          {
+            "id": "D",
+            "text": "Section 36"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "41def9ea07ca18197ef76353a2e28ea06e6989a6a04a5512b4793bbdc8e128fb"
+    },
+    {
+      "id": "pfrda:day3:a:q:13:r1",
+      "questionId": "pfrda:day3:a:q:13",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A model is trained on loan applications where each historical example is already labelled 'default' or 'no default'. This is primarily:",
+        "topicIds": [
+          "topic:AI/ML"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Unsupervised learning"
+          },
+          {
+            "id": "B",
+            "text": "Reinforcement learning"
+          },
+          {
+            "id": "C",
+            "text": "Unlabelled association-rule learning"
+          },
+          {
+            "id": "D",
+            "text": "Supervised learning"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "82b6e64ac4cabcd5961168a6f1c3d9854842dc60a489c5b7994ebf6401e95be2"
+    },
+    {
+      "id": "pfrda:day3:a:q:14:r1",
+      "questionId": "pfrda:day3:a:q:14",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Under Section 173(1) of the Companies Act, 2013, the first meeting of the Board of Directors must ordinarily be held within how many days of incorporation?",
+        "topicIds": [
+          "topic:Companies Act"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "15 days"
+          },
+          {
+            "id": "B",
+            "text": "60 days"
+          },
+          {
+            "id": "C",
+            "text": "30 days"
+          },
+          {
+            "id": "D",
+            "text": "90 days"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "2f6d93c00016e0431659ee688043acb0ad73edfcf21274eecfde3c5ad8151660"
+    },
+    {
+      "id": "pfrda:day3:a:q:15:r1",
+      "questionId": "pfrda:day3:a:q:15",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "The risk-free rate is 5%, beta is 0.8 and the expected total market return is 15%. According to CAPM, the required return is:",
+        "topicIds": [
+          "topic:Finance"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "13%"
+          },
+          {
+            "id": "B",
+            "text": "8%"
+          },
+          {
+            "id": "C",
+            "text": "17%"
+          },
+          {
+            "id": "D",
+            "text": "12%"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "87cf42ce3eaf10337b65f7892b103533f33ff10d916c06eeedbb1750d1913c79"
+    },
+    {
+      "id": "pfrda:day3:a:q:16:r1",
+      "questionId": "pfrda:day3:a:q:16",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "In digital-media discussions, a 'filter bubble' most closely refers to:",
+        "topicIds": [
+          "topic:Media"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Mandatory filtering of all messages by law"
+          },
+          {
+            "id": "B",
+            "text": "Personalised algorithms repeatedly exposing users to perspectives similar to their existing preferences"
+          },
+          {
+            "id": "C",
+            "text": "A paywall around news content"
+          },
+          {
+            "id": "D",
+            "text": "Complete removal of misinformation from a platform"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "3b7187f3527daf8cf3225633392b4f3dd91099d026829617f33917de884e3282"
+    },
+    {
+      "id": "pfrda:day3:a:q:17:r1",
+      "questionId": "pfrda:day3:a:q:17",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Standard material price is ₹40 per kg, actual price is ₹38 per kg and actual quantity purchased and used is 500 kg. If favourable variances are stated as positive, the material price variance is:",
+        "topicIds": [
+          "topic:Costing"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "₹1,000 adverse"
+          },
+          {
+            "id": "B",
+            "text": "₹500 favourable"
+          },
+          {
+            "id": "C",
+            "text": "₹2,000 favourable"
+          },
+          {
+            "id": "D",
+            "text": "₹1,000 favourable"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "397d8da281efbb653e0e5850ed03504b68a5a03622c22e2a265ee7b894739336"
+    },
+    {
+      "id": "pfrda:day3:a:q:18:r1",
+      "questionId": "pfrda:day3:a:q:18",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which pair correctly identifies the NPS entity principally handling fund-transfer operations and the entity principally holding securities for NPS Trust?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Trustee Bank; Custodian"
+          },
+          {
+            "id": "B",
+            "text": "Central Recordkeeping Agency; Point of Presence"
+          },
+          {
+            "id": "C",
+            "text": "Custodian; Trustee Bank"
+          },
+          {
+            "id": "D",
+            "text": "Pension Fund; Central Recordkeeping Agency"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "2f904be98927b4f44f0731769dba089245d85c769f987a26305f27d73bea328e"
+    },
+    {
+      "id": "pfrda:day3:a:q:19:r1",
+      "questionId": "pfrda:day3:a:q:19",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Under a perpetual inventory system, a business purchases inventory worth ₹45,000 on credit. Which journal entry is correct?",
+        "topicIds": [
+          "topic:Commerce & Accountancy"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Debit Trade Payables; Credit Inventory"
+          },
+          {
+            "id": "B",
+            "text": "Debit Bank; Credit Inventory"
+          },
+          {
+            "id": "C",
+            "text": "Debit Inventory; Credit Trade Payables"
+          },
+          {
+            "id": "D",
+            "text": "Debit Trade Receivables; Credit Sales"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "a584fb4fbce3c0c4f161077422066547e41e1fe6f3492f911b9518f5d999ea54"
+    },
+    {
+      "id": "pfrda:day3:a:q:20:r1",
+      "questionId": "pfrda:day3:a:q:20",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "The Economic Survey 2025–26 projected India's real GDP growth for FY 2026–27 in which range?",
+        "topicIds": [
+          "topic:Budget/Survey"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "5.0–5.5%"
+          },
+          {
+            "id": "B",
+            "text": "6.8–7.2%"
+          },
+          {
+            "id": "C",
+            "text": "7.4–7.8%"
+          },
+          {
+            "id": "D",
+            "text": "8.1–8.5%"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "f031cdecf57b1ccf34b3812da35d0e1d0ced615ce381e2f574cd05d9fbdf739f"
+    },
+    {
+      "id": "pfrda:day3:a:q:21:r1",
+      "questionId": "pfrda:day3:a:q:21",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A company's cost of equity under CAPM is 13%, the risk-free rate is 4%, and the market risk premium is 6%. What beta is implied?",
+        "topicIds": [
+          "topic:Finance"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "0.67"
+          },
+          {
+            "id": "B",
+            "text": "1.0"
+          },
+          {
+            "id": "C",
+            "text": "1.5"
+          },
+          {
+            "id": "D",
+            "text": "2.17"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "c07448e8eaf2d6202b296cc954af142af445f4a95da1f0b58c132921254b3c79"
+    },
+    {
+      "id": "pfrda:day3:a:q:22:r1",
+      "questionId": "pfrda:day3:a:q:22",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which option correctly states the ordinary appellate route and filing periods under Sections 36 and 38 of the PFRDA Act?",
+        "topicIds": [
+          "topic:PFRDA Act"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Section 36: NCLAT within 45 days; Section 38: Supreme Court within 60 days"
+          },
+          {
+            "id": "B",
+            "text": "Section 36: Securities Appellate Tribunal within 60 days; Supreme Court within 45 days"
+          },
+          {
+            "id": "C",
+            "text": "Section 36: Supreme Court within 45 days; Section 38: Securities Appellate Tribunal within 60 days"
+          },
+          {
+            "id": "D",
+            "text": "Section 36: Securities Appellate Tribunal within 45 days; Section 38: Supreme Court, on a question of law, within 60 days"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "1bbf10d171b98021494bf6a753ab1c113c42db0be6d4c1baef6e5f77d0def5fa"
+    },
+    {
+      "id": "pfrda:day3:a:q:23:r1",
+      "questionId": "pfrda:day3:a:q:23",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "In marketing, STP stands for:",
+        "topicIds": [
+          "topic:Marketing/Communication"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Segmentation → Targeting → Positioning"
+          },
+          {
+            "id": "B",
+            "text": "Strategy → Testing → Promotion"
+          },
+          {
+            "id": "C",
+            "text": "Targeting → Segmentation → Positioning"
+          },
+          {
+            "id": "D",
+            "text": "Segmentation → Promotion → Targeting"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "7255bf815bed060ccf33907b6b776a7c50a0dfed9684e7120d0115a5f63e4de3"
+    },
+    {
+      "id": "pfrda:day3:a:q:24:r1",
+      "questionId": "pfrda:day3:a:q:24",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A setup-cost pool of ₹90,000 is driven by 300 setups. Product X uses 12 setups. Under activity-based costing, how much setup overhead is assigned to Product X?",
+        "topicIds": [
+          "topic:Costing"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "₹3,000"
+          },
+          {
+            "id": "B",
+            "text": "₹900"
+          },
+          {
+            "id": "C",
+            "text": "₹3,600"
+          },
+          {
+            "id": "D",
+            "text": "₹7,500"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "edb4f4b7ad80591a60e92339c2459a7b5b4413b50bdda4c1b6ba45fa7ee35f0c"
+    },
+    {
+      "id": "pfrda:day3:a:q:25:r1",
+      "questionId": "pfrda:day3:a:q:25",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A project costs ₹1,200 initially and generates ₹660 after one year and ₹605 after two years. At a 10% discount rate, which result is correct?",
+        "topicIds": [
+          "topic:Finance"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "+₹100; accept"
+          },
+          {
+            "id": "B",
+            "text": "−₹100; reject"
+          },
+          {
+            "id": "C",
+            "text": "+₹1,100; accept"
+          },
+          {
+            "id": "D",
+            "text": "−₹1,200; reject"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "f7d0c267271426165cb04396ff3f31f5bb310243251352e0e15b2e11e7fa5e17"
+    },
+    {
+      "id": "pfrda:day3:a:q:26:r1",
+      "questionId": "pfrda:day3:a:q:26",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "In a simple Keynesian economy with no taxes or imports, the marginal propensity to consume is 0.75. What is the expenditure multiplier?",
+        "topicIds": [
+          "topic:Economics"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "4"
+          },
+          {
+            "id": "B",
+            "text": "1.33"
+          },
+          {
+            "id": "C",
+            "text": "0.75"
+          },
+          {
+            "id": "D",
+            "text": "3"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "05ded242507b6edbccaf38654c136a4d2b495b26efff89817b2b76d7d170cb2d"
+    },
+    {
+      "id": "pfrda:day3:a:q:27:r1",
+      "questionId": "pfrda:day3:a:q:27",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which statement best describes a private placement under Section 42 of the Companies Act, 2013?",
+        "topicIds": [
+          "topic:Companies Act"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "It may be advertised freely to the public"
+          },
+          {
+            "id": "B",
+            "text": "It can be offered to an unlimited number of persons without restriction"
+          },
+          {
+            "id": "C",
+            "text": "It automatically carries a right of renunciation"
+          },
+          {
+            "id": "D",
+            "text": "It is made to identified persons through the prescribed process and cannot be publicly advertised"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "33a44d439fa7c5c770d0462ccf8824c8a75f93916e3c1a29b3d78b96b32b8b38"
+    },
+    {
+      "id": "pfrda:day3:a:q:28:r1",
+      "questionId": "pfrda:day3:a:q:28",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A classifier achieves 99% accuracy on its training data but only 63% on an independent test set. This most strongly suggests:",
+        "topicIds": [
+          "topic:AI/ML"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Underfitting"
+          },
+          {
+            "id": "B",
+            "text": "Overfitting and poor generalisation"
+          },
+          {
+            "id": "C",
+            "text": "Guaranteed reliability"
+          },
+          {
+            "id": "D",
+            "text": "That labels are unnecessary"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "d54c864b6731431d67727b5b3adf3be595b10a2130391eb8bc8f2f6b74cd2495"
+    },
+    {
+      "id": "pfrda:day3:a:q:29:r1",
+      "questionId": "pfrda:day3:a:q:29",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Under Section 4 of the PFRDA Act, 2013, what composition of the Authority is specified?",
+        "topicIds": [
+          "topic:PFRDA Act"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "One Chairperson, four whole-time members and four part-time members"
+          },
+          {
+            "id": "B",
+            "text": "One Chairperson, three whole-time members and four part-time members"
+          },
+          {
+            "id": "C",
+            "text": "One Chairperson, three whole-time members and three part-time members"
+          },
+          {
+            "id": "D",
+            "text": "One Chairperson, two whole-time members and three part-time members"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "corrected",
+        "notes": "Corrected during Day 3 consolidation: Section 4 specifies one Chairperson, three whole-time members and three part-time members; the earlier 'up to three' wording was not the statutory text.",
+        "changes": [
+          "wording",
+          "options",
+          "explanation",
+          "source-correction"
+        ],
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          },
+          {
+            "title": "PFRDA — Compendium 2026, PFRDA Act section 4",
+            "url": "https://pfrda.org.in/documents/33652/0/COMPENDIUM%2B2026.pdf"
+          }
+        ]
+      },
+      "contentHash": "361934e5e3e72df5f7cde7a0051d8ca521e2d103102e78aeac8b51f83d5d5800"
+    },
+    {
+      "id": "pfrda:day3:a:q:30:r1",
+      "questionId": "pfrda:day3:a:q:30",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Current assets are ₹6,00,000 and current liabilities ₹3,00,000. The business settles ₹1,00,000 of trade payables using cash. What is the new current ratio?",
+        "topicIds": [
+          "topic:Commerce & Accountancy"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "2.00:1"
+          },
+          {
+            "id": "B",
+            "text": "1.67:1"
+          },
+          {
+            "id": "C",
+            "text": "3.00:1"
+          },
+          {
+            "id": "D",
+            "text": "2.50:1"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set A",
+            "url": "https://chatgpt.com/s/t_6afd794569d4819195202892231c4932"
+          }
+        ]
+      },
+      "contentHash": "aa46e0bbb35b891825f4734c92edcd138f992997770e68453740bc16b477f44a"
+    },
+    {
+      "id": "pfrda:day3:b:q:01:r1",
+      "questionId": "pfrda:day3:b:q:01",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which National Pension System entity is constituted to hold pension assets in trust and protect subscribers' interests?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Central Recordkeeping Agency"
+          },
+          {
+            "id": "B",
+            "text": "Trustee Bank"
+          },
+          {
+            "id": "C",
+            "text": "NPS Trust"
+          },
+          {
+            "id": "D",
+            "text": "Pension Fund"
+          },
+          {
+            "id": "E",
+            "text": "Custodian"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "72c3524bc7d59d8f61f774f6a6ce7132120b2171add07536eb2ff85766a29719"
+    },
+    {
+      "id": "pfrda:day3:b:q:02:r1",
+      "questionId": "pfrda:day3:b:q:02",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Under Section 36 of the PFRDA Act, an appeal to the Securities Appellate Tribunal is ordinarily to be filed within:",
+        "topicIds": [
+          "topic:PFRDA Act"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "30 days"
+          },
+          {
+            "id": "B",
+            "text": "60 days"
+          },
+          {
+            "id": "C",
+            "text": "45 days"
+          },
+          {
+            "id": "D",
+            "text": "90 days"
+          },
+          {
+            "id": "E",
+            "text": "120 days"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "2693b895da3f12fcccbae511bc40601d088367a5a2da2678b50f32bef9dfc66b"
+    },
+    {
+      "id": "pfrda:day3:b:q:03:r1",
+      "questionId": "pfrda:day3:b:q:03",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Under the Union Government's debt-consolidation path announced in Budget 2026–27, the Central Government debt-to-GDP objective for FY 2030–31 is approximately:",
+        "topicIds": [
+          "topic:Budget/Survey"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "40% ±1%"
+          },
+          {
+            "id": "B",
+            "text": "45% ±1%"
+          },
+          {
+            "id": "C",
+            "text": "55% ±1%"
+          },
+          {
+            "id": "D",
+            "text": "50% ±1%"
+          },
+          {
+            "id": "E",
+            "text": "60% ±1%"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "da08034a19c8e18c6843e52e6e9b8e07754154864a37e1d8e2d5f6e05331dd54"
+    },
+    {
+      "id": "pfrda:day3:b:q:04:r1",
+      "questionId": "pfrda:day3:b:q:04",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "According to the Economic Survey 2025–26, the gross non-performing asset ratio of scheduled commercial banks was about what level in September 2025?",
+        "topicIds": [
+          "topic:Budget/Survey"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "2.2%"
+          },
+          {
+            "id": "B",
+            "text": "2.8%"
+          },
+          {
+            "id": "C",
+            "text": "3.1%"
+          },
+          {
+            "id": "D",
+            "text": "1.5%"
+          },
+          {
+            "id": "E",
+            "text": "4.0%"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "Economic Survey 2025–26 source-specific item. The Survey itself states 2.2% as of September 2025; later RBI banking publications report 2.1% for end-September 2025, so the Survey figure is retained because the stem explicitly asks for the Survey.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          },
+          {
+            "title": "Economic Survey 2025–26",
+            "url": "https://www.indiabudget.gov.in/economicsurvey/"
+          }
+        ]
+      },
+      "contentHash": "d873b92c5cfff30a86ad8875bdd5c169b41943ac2c0973c35319243d3b736f09"
+    },
+    {
+      "id": "pfrda:day3:b:q:05:r1",
+      "questionId": "pfrda:day3:b:q:05",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Under a periodic inventory system, goods worth ₹12,000 previously purchased on credit are returned to the supplier. Which entry is correct?",
+        "topicIds": [
+          "topic:Commerce & Accountancy"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Debit Purchase Returns; Credit Trade Payables"
+          },
+          {
+            "id": "B",
+            "text": "Debit Purchases; Credit Trade Payables"
+          },
+          {
+            "id": "C",
+            "text": "Debit Inventory; Credit Trade Payables"
+          },
+          {
+            "id": "D",
+            "text": "Debit Trade Payables; Credit Purchase Returns"
+          },
+          {
+            "id": "E",
+            "text": "Debit Bank; Credit Purchase Returns"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "02c8551daba24cddf6dc910b45632db3f6ff899d7d7c28e8527dbe9d88b1abfd"
+    },
+    {
+      "id": "pfrda:day3:b:q:06:r1",
+      "questionId": "pfrda:day3:b:q:06",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Cash received from the sale of an item of property, plant and equipment is ordinarily classified in the cash-flow statement as:",
+        "topicIds": [
+          "topic:Commerce & Accountancy"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Operating cash inflow"
+          },
+          {
+            "id": "B",
+            "text": "Investing cash inflow"
+          },
+          {
+            "id": "C",
+            "text": "Financing cash inflow"
+          },
+          {
+            "id": "D",
+            "text": "Non-cash transaction"
+          },
+          {
+            "id": "E",
+            "text": "Extraordinary cash inflow"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "815bd14199a27cf2247bf65afe27097ac08ecc55f24cd29e90b4a06043afe483"
+    },
+    {
+      "id": "pfrda:day3:b:q:07:r1",
+      "questionId": "pfrda:day3:b:q:07",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A customer pays a company in advance for a service that will be provided next month. Until the service is provided, the amount is ordinarily recognised as:",
+        "topicIds": [
+          "topic:Commerce & Accountancy"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "An expense"
+          },
+          {
+            "id": "B",
+            "text": "An asset"
+          },
+          {
+            "id": "C",
+            "text": "Equity"
+          },
+          {
+            "id": "D",
+            "text": "A trade receivable"
+          },
+          {
+            "id": "E",
+            "text": "Unearned revenue / contract liability"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "f5608876e9ebbe21f0cd99f3090748f00fe18d2abb1ce99dbc876697369809d0"
+    },
+    {
+      "id": "pfrda:day3:b:q:08:r1",
+      "questionId": "pfrda:day3:b:q:08",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Vroom's expectancy theory explains motivation primarily through the interaction of:",
+        "topicIds": [
+          "topic:Management"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Expectancy, instrumentality and valence"
+          },
+          {
+            "id": "B",
+            "text": "Hygiene, motivation and equity"
+          },
+          {
+            "id": "C",
+            "text": "Need hierarchy, reinforcement and control"
+          },
+          {
+            "id": "D",
+            "text": "Authority, responsibility and accountability"
+          },
+          {
+            "id": "E",
+            "text": "Job rotation, enrichment and enlargement"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "03e5f78414074a99ec6dde0076f4dfc0387a034edb250432a03c434deda0ead9"
+    },
+    {
+      "id": "pfrda:day3:b:q:09:r1",
+      "questionId": "pfrda:day3:b:q:09",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which statement best reflects the principle of delegation in management?",
+        "topicIds": [
+          "topic:Management"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "A manager transfers all accountability permanently to the subordinate"
+          },
+          {
+            "id": "B",
+            "text": "Delegation eliminates the need for supervision"
+          },
+          {
+            "id": "C",
+            "text": "Authority may be delegated, but ultimate accountability of the superior remains"
+          },
+          {
+            "id": "D",
+            "text": "Only routine tasks can ever be delegated"
+          },
+          {
+            "id": "E",
+            "text": "Delegation and abdication are identical"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "35073e38dafd1a8fa5ceaf38a9189bb6bc1b2b121b39cd927c9746843b0ab274"
+    },
+    {
+      "id": "pfrda:day3:b:q:10:r1",
+      "questionId": "pfrda:day3:b:q:10",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "For a conventional fixed-coupon bond, other things equal, what normally happens to its market price when the required yield rises?",
+        "topicIds": [
+          "topic:Finance"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Price rises proportionately"
+          },
+          {
+            "id": "B",
+            "text": "Price is unchanged"
+          },
+          {
+            "id": "C",
+            "text": "Coupon rate automatically rises"
+          },
+          {
+            "id": "D",
+            "text": "Price falls"
+          },
+          {
+            "id": "E",
+            "text": "Face value changes"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "8a8a99b14edeeed47120e021796bb2f5bb1a2a09ac78aa9b898576a1fe899e55"
+    },
+    {
+      "id": "pfrda:day3:b:q:11:r1",
+      "questionId": "pfrda:day3:b:q:11",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "An Indian importer must pay US dollars after three months and wants to hedge against the rupee depreciating. Which forward position directly hedges this exposure?",
+        "topicIds": [
+          "topic:Finance"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Sell US dollars forward"
+          },
+          {
+            "id": "B",
+            "text": "Buy US dollars forward"
+          },
+          {
+            "id": "C",
+            "text": "Sell rupees only in the spot market today"
+          },
+          {
+            "id": "D",
+            "text": "Buy an equity-index future"
+          },
+          {
+            "id": "E",
+            "text": "Receive-fixed interest-rate swap"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "a56e355f7d25716f7ca2dbac4cdea4b58aae0d6e0f3e2e5ba4de5bcabccd1b76"
+    },
+    {
+      "id": "pfrda:day3:b:q:12:r1",
+      "questionId": "pfrda:day3:b:q:12",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A transaction in which existing listed shares are bought from another investor rather than issued by the company occurs in the:",
+        "topicIds": [
+          "topic:Finance"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Primary market"
+          },
+          {
+            "id": "B",
+            "text": "Money market only"
+          },
+          {
+            "id": "C",
+            "text": "Secondary market"
+          },
+          {
+            "id": "D",
+            "text": "Foreign-exchange market"
+          },
+          {
+            "id": "E",
+            "text": "Derivatives clearing market"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "2374ef73f29da3f672477c4d82ad2c3c3e4332b1820a765496781937e45cf846"
+    },
+    {
+      "id": "pfrda:day3:b:q:13:r1",
+      "questionId": "pfrda:day3:b:q:13",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "In a process-costing department, 800 units are completed and transferred out. Another 200 units remain in closing work-in-progress and are 50% complete for conversion costs. Conversion equivalent units are:",
+        "topicIds": [
+          "topic:Costing"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "800"
+          },
+          {
+            "id": "B",
+            "text": "850"
+          },
+          {
+            "id": "C",
+            "text": "900"
+          },
+          {
+            "id": "D",
+            "text": "1,000"
+          },
+          {
+            "id": "E",
+            "text": "1,100"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "d21ae344e5ede419419d0883e22b338fcdbfa4d2e2a0b24180442b74dfe9a477"
+    },
+    {
+      "id": "pfrda:day3:b:q:14:r1",
+      "questionId": "pfrda:day3:b:q:14",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Variable overhead is budgeted at ₹40 per unit of activity. Actual activity is 1,200 units. The flexible-budget amount for variable overhead is:",
+        "topicIds": [
+          "topic:Costing"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "₹40,000"
+          },
+          {
+            "id": "B",
+            "text": "₹44,000"
+          },
+          {
+            "id": "C",
+            "text": "₹48,000"
+          },
+          {
+            "id": "D",
+            "text": "₹52,000"
+          },
+          {
+            "id": "E",
+            "text": "₹60,000"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "b948cd99c5b18167cf81e07341a5d6a1f1ff93a2bbed7d128750530cf9fcf8e3"
+    },
+    {
+      "id": "pfrda:day3:b:q:15:r1",
+      "questionId": "pfrda:day3:b:q:15",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which risk becomes especially important in a just-in-time inventory system with very low buffer stocks?",
+        "topicIds": [
+          "topic:Costing"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Permanent overproduction"
+          },
+          {
+            "id": "B",
+            "text": "Automatic increase in holding cost"
+          },
+          {
+            "id": "C",
+            "text": "Guaranteed obsolescence"
+          },
+          {
+            "id": "D",
+            "text": "Supply interruption can stop production quickly"
+          },
+          {
+            "id": "E",
+            "text": "Standard costing becomes impossible"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "dbe0bba40a6587a594977c8eaeb05f1ad1a7b61a136e801c4a7892954612ab82"
+    },
+    {
+      "id": "pfrda:day3:b:q:16:r1",
+      "questionId": "pfrda:day3:b:q:16",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Subject to Section 123 of the Companies Act, 2013, dividend may ordinarily be declared out of:",
+        "topicIds": [
+          "topic:Companies Act"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Profits of the company after providing for depreciation as required"
+          },
+          {
+            "id": "B",
+            "text": "Share capital without restriction"
+          },
+          {
+            "id": "C",
+            "text": "Revaluation reserve only"
+          },
+          {
+            "id": "D",
+            "text": "Borrowed funds merely because cash is available"
+          },
+          {
+            "id": "E",
+            "text": "Securities premium for any purpose"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "dfd0a76aec0c9083cd108fb61f760c583fd411c6998739b8afce4fb75d70b8ca"
+    },
+    {
+      "id": "pfrda:day3:b:q:17:r1",
+      "questionId": "pfrda:day3:b:q:17",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which service is specifically prohibited to a company's statutory auditor under Section 144 of the Companies Act, 2013?",
+        "topicIds": [
+          "topic:Companies Act"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Tax compliance advice in every circumstance"
+          },
+          {
+            "id": "B",
+            "text": "Secretarial audit by an unrelated professional"
+          },
+          {
+            "id": "C",
+            "text": "Valuation by any external expert"
+          },
+          {
+            "id": "D",
+            "text": "Routine audit evidence collection"
+          },
+          {
+            "id": "E",
+            "text": "Internal audit"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "25fa12018ba3708e4f9bb4ba8817761928988bc064c8f2a075476df97dfb43a1"
+    },
+    {
+      "id": "pfrda:day3:b:q:18:r1",
+      "questionId": "pfrda:day3:b:q:18",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Under Section 149 of the Companies Act, an independent director may generally hold office for at most:",
+        "topicIds": [
+          "topic:Companies Act"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "One five-year term only"
+          },
+          {
+            "id": "B",
+            "text": "Two consecutive terms of up to five years each, followed by the prescribed cooling-off"
+          },
+          {
+            "id": "C",
+            "text": "Three consecutive five-year terms"
+          },
+          {
+            "id": "D",
+            "text": "Ten years with no break requirement"
+          },
+          {
+            "id": "E",
+            "text": "An unlimited number of consecutive terms"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "b54d4c922faca3e9fc190ae948af89009e54ac619d38dd70fcef44eb05ee0263"
+    },
+    {
+      "id": "pfrda:day3:b:q:19:r1",
+      "questionId": "pfrda:day3:b:q:19",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Under Section 174 of the Companies Act, the quorum for a Board meeting is ordinarily:",
+        "topicIds": [
+          "topic:Companies Act"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "One-fourth of total strength or one director, whichever is higher"
+          },
+          {
+            "id": "B",
+            "text": "Half of total strength"
+          },
+          {
+            "id": "C",
+            "text": "One-third of total strength or two directors, whichever is higher"
+          },
+          {
+            "id": "D",
+            "text": "Exactly three directors"
+          },
+          {
+            "id": "E",
+            "text": "All directors in office"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "05a9d95c296e83a06414fdd6c187b8eab7e9f1d0a98b8f08ffcd9ff85888bb46"
+    },
+    {
+      "id": "pfrda:day3:b:q:20:r1",
+      "questionId": "pfrda:day3:b:q:20",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "If nominal GDP is 1,100 and real GDP is 1,000 in the same base framework, the GDP deflator is:",
+        "topicIds": [
+          "topic:Economics"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "90"
+          },
+          {
+            "id": "B",
+            "text": "100"
+          },
+          {
+            "id": "C",
+            "text": "105"
+          },
+          {
+            "id": "D",
+            "text": "110"
+          },
+          {
+            "id": "E",
+            "text": "120"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "95e58c17bacc561bc125f641a34a683c28bcd93131c83605780f0ee20c3488c4"
+    },
+    {
+      "id": "pfrda:day3:b:q:21:r1",
+      "questionId": "pfrda:day3:b:q:21",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Workers' remittances received from abroad are ordinarily recorded in India's balance of payments under the:",
+        "topicIds": [
+          "topic:Economics"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Capital account as foreign direct investment"
+          },
+          {
+            "id": "B",
+            "text": "Financial account as portfolio investment"
+          },
+          {
+            "id": "C",
+            "text": "Official reserves account only"
+          },
+          {
+            "id": "D",
+            "text": "Current account as secondary income/transfers"
+          },
+          {
+            "id": "E",
+            "text": "Errors and omissions account"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "84074fcb91267cab6924e624a2a9cdce7ea42b8e7b7d3852af4296364f566ec0"
+    },
+    {
+      "id": "pfrda:day3:b:q:22:r1",
+      "questionId": "pfrda:day3:b:q:22",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "If the Reserve Bank of India cuts the repo rate and transmission is effective, the most likely broad effect is:",
+        "topicIds": [
+          "topic:Economics"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Borrowing costs must rise"
+          },
+          {
+            "id": "B",
+            "text": "Borrowing conditions may ease and interest-sensitive demand may be supported"
+          },
+          {
+            "id": "C",
+            "text": "Every bank lending rate falls by exactly the same percentage immediately"
+          },
+          {
+            "id": "D",
+            "text": "Money supply necessarily contracts"
+          },
+          {
+            "id": "E",
+            "text": "Bond prices must fall"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "f1b9e0c3f9228863391b71c15774facdf34f6ca9d00da0964efab41bb4913fc5"
+    },
+    {
+      "id": "pfrda:day3:b:q:23:r1",
+      "questionId": "pfrda:day3:b:q:23",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which statement best describes an ordinary National Pension System Tier II account?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "It is a voluntary account with ordinarily flexible withdrawals, linked to an active Tier I account"
+          },
+          {
+            "id": "B",
+            "text": "It always has the same exit restrictions as Tier I"
+          },
+          {
+            "id": "C",
+            "text": "Every withdrawal requires annuitisation"
+          },
+          {
+            "id": "D",
+            "text": "It is available only to minors"
+          },
+          {
+            "id": "E",
+            "text": "It is the same as the Atal Pension Yojana"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "0e98aa307a8a8429b968871ffa56b6852bd388d78bd5cabf8582268f0f088cc3"
+    },
+    {
+      "id": "pfrda:day3:b:q:24:r1",
+      "questionId": "pfrda:day3:b:q:24",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which statement correctly reflects the Atal Pension Yojana eligibility change effective from 1 October 2022?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "All existing subscribers became ineligible"
+          },
+          {
+            "id": "B",
+            "text": "Only Central Government employees may join"
+          },
+          {
+            "id": "C",
+            "text": "A person who is or has been an income-tax payer cannot open a new APY account, subject to the notified rule"
+          },
+          {
+            "id": "D",
+            "text": "Every NPS subscriber is barred from APY"
+          },
+          {
+            "id": "E",
+            "text": "The minimum entry age became 40"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "eb1933ee31df982f41ec970582109021668450ce36b65f24ee5a88292abe8ac4"
+    },
+    {
+      "id": "pfrda:day3:b:q:25:r1",
+      "questionId": "pfrda:day3:b:q:25",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which distinction between an immediate annuity and a deferred annuity is correct?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Both begin only at age 80"
+          },
+          {
+            "id": "B",
+            "text": "An immediate annuity has no periodic payments"
+          },
+          {
+            "id": "C",
+            "text": "A deferred annuity must be purchased only through NPS"
+          },
+          {
+            "id": "D",
+            "text": "Immediate and deferred annuities are legally identical terms"
+          },
+          {
+            "id": "E",
+            "text": "An immediate annuity starts periodic payments soon after purchase; a deferred annuity starts after a chosen deferment period"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "223bf1e2d7ac3a79ef4cc04aa074aa12ad6c027497b71710a02d8d8f4ee19e21"
+    },
+    {
+      "id": "pfrda:day3:b:q:26:r1",
+      "questionId": "pfrda:day3:b:q:26",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "In binary classification, recall (also called sensitivity) is:",
+        "topicIds": [
+          "topic:AI/ML"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "True Positives / (True Positives + False Positives)"
+          },
+          {
+            "id": "B",
+            "text": "True Positives / (True Positives + False Negatives)"
+          },
+          {
+            "id": "C",
+            "text": "True Negatives / (True Negatives + False Positives)"
+          },
+          {
+            "id": "D",
+            "text": "(True Positives + True Negatives) / All observations"
+          },
+          {
+            "id": "E",
+            "text": "False Positives / (False Positives + True Negatives)"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "dfa4059ab3d4b62f62383c2ec7e7b7d48a0492fbaf51aa83c1964ffff255533e"
+    },
+    {
+      "id": "pfrda:day3:b:q:27:r1",
+      "questionId": "pfrda:day3:b:q:27",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which example is the clearest case of data leakage in a model intended to predict loan default at the time a loan is approved?",
+        "topicIds": [
+          "topic:AI/ML"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Using the borrower's credit history available before approval"
+          },
+          {
+            "id": "B",
+            "text": "Using income documented at application"
+          },
+          {
+            "id": "C",
+            "text": "Using repayment history from older completed loans"
+          },
+          {
+            "id": "D",
+            "text": "Using a variable recorded only after the future default or repayment outcome has occurred"
+          },
+          {
+            "id": "E",
+            "text": "Using the loan amount requested at application"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "b35aeab0e0c3a9a6c96112da5e202a593eb704ef5cfbc773907c71f0ddb77eb1"
+    },
+    {
+      "id": "pfrda:day3:b:q:28:r1",
+      "questionId": "pfrda:day3:b:q:28",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Agenda-setting theory in media studies primarily proposes that media can influence:",
+        "topicIds": [
+          "topic:Media"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "The exact opinion every audience member must hold"
+          },
+          {
+            "id": "B",
+            "text": "Which issues audiences perceive as important or salient"
+          },
+          {
+            "id": "C",
+            "text": "Only entertainment preferences"
+          },
+          {
+            "id": "D",
+            "text": "The legal validity of public policy"
+          },
+          {
+            "id": "E",
+            "text": "Whether all misinformation disappears"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "808b921eb795817064848826be635a161cfee66c0376a4045ccfea57d2945819"
+    },
+    {
+      "id": "pfrda:day3:b:q:29:r1",
+      "questionId": "pfrda:day3:b:q:29",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "The three elements commonly added to the traditional 4Ps in the services-marketing 7Ps framework are:",
+        "topicIds": [
+          "topic:Marketing/Communication"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Policy, Performance, Partnership"
+          },
+          {
+            "id": "B",
+            "text": "Planning, Packaging, Publicity"
+          },
+          {
+            "id": "C",
+            "text": "People, Process, Physical Evidence"
+          },
+          {
+            "id": "D",
+            "text": "Purpose, Position, Pricing"
+          },
+          {
+            "id": "E",
+            "text": "Personnel, Profit, Procurement"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "8b3598244f2930b768f156736cf9f77fa1c62f25bdcb256a564f000e5df79b5c"
+    },
+    {
+      "id": "pfrda:day3:b:q:30:r1",
+      "questionId": "pfrda:day3:b:q:30",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "In the Shannon-Weaver communication model, 'noise' refers to:",
+        "topicIds": [
+          "topic:Marketing/Communication"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Only deliberate censorship"
+          },
+          {
+            "id": "B",
+            "text": "Feedback from the receiver"
+          },
+          {
+            "id": "C",
+            "text": "The original idea in the sender's mind"
+          },
+          {
+            "id": "D",
+            "text": "The communication channel itself"
+          },
+          {
+            "id": "E",
+            "text": "Interference or disturbance that can distort the transmitted message"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set B",
+            "url": "https://chatgpt.com/s/t_6afd796744748191aafde73cc508e025"
+          }
+        ]
+      },
+      "contentHash": "15eaac2a50afe13c48884bd7a8dd4961ee93785f3aebca988e82222602888b5d"
+    },
+    {
+      "id": "pfrda:day3:e:q:01:r1",
+      "questionId": "pfrda:day3:e:q:01",
+      "revision": 1,
+      "content": {
+        "kind": "free-response",
+        "prompt": "Public trust is as important as technology in expanding digital financial services in India. Discuss.",
+        "topicIds": [
+          "topic:Descriptive English"
+        ],
+        "responseRules": {
+          "minWords": 250,
+          "maxWords": 300,
+          "wordLimit": 300
+        }
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "Exact Day 3 essay topic preserved; practice target 250–300 words. Manual assessment.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set E",
+            "url": "https://chatgpt.com/s/t_6afd79b0630c81919cddceac41211f94"
+          }
+        ]
+      },
+      "contentHash": "cb663101b1781786388dca4dfa0f83107cbaaf6279c9141fda07fe2d9815a933"
+    },
+    {
+      "id": "pfrda:day3:e:q:02:r1",
+      "questionId": "pfrda:day3:e:q:02",
+      "revision": 1,
+      "content": {
+        "kind": "free-response",
+        "prompt": "Why does the passage argue that increasing water supply alone may not resolve urban water insecurity?",
+        "topicIds": [
+          "topic:Descriptive English"
+        ],
+        "responseRules": {},
+        "stimulusId": "pfrda:day3:stimulus:urban-water-security"
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "Exact Day 3 reading-comprehension question; shared Urban Water Security passage stored once as a passage stimulus. Manual assessment.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set E",
+            "url": "https://chatgpt.com/s/t_6afd79b0630c81919cddceac41211f94"
+          }
+        ]
+      },
+      "contentHash": "35eabc2c6239196d71a5b9a4268385169b105b3f43171635bb02214ed4a79dd6"
+    },
+    {
+      "id": "pfrda:day3:e:q:03:r1",
+      "questionId": "pfrda:day3:e:q:03",
+      "revision": 1,
+      "content": {
+        "kind": "free-response",
+        "prompt": "Explain how unequal access makes urban water security a question of social equity.",
+        "topicIds": [
+          "topic:Descriptive English"
+        ],
+        "responseRules": {},
+        "stimulusId": "pfrda:day3:stimulus:urban-water-security"
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "Exact Day 3 reading-comprehension question; shared Urban Water Security passage stored once as a passage stimulus. Manual assessment.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set E",
+            "url": "https://chatgpt.com/s/t_6afd79b0630c81919cddceac41211f94"
+          }
+        ]
+      },
+      "contentHash": "c08f3fa6b16105bc05e5ace0080e5939a283b8fcfd9161c2ccbac04c9205c080"
+    },
+    {
+      "id": "pfrda:day3:e:q:04:r1",
+      "questionId": "pfrda:day3:e:q:04",
+      "revision": 1,
+      "content": {
+        "kind": "free-response",
+        "prompt": "Identify two ways urban development can weaken groundwater sustainability.",
+        "topicIds": [
+          "topic:Descriptive English"
+        ],
+        "responseRules": {},
+        "stimulusId": "pfrda:day3:stimulus:urban-water-security"
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "Exact Day 3 reading-comprehension question; shared Urban Water Security passage stored once as a passage stimulus. Manual assessment.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set E",
+            "url": "https://chatgpt.com/s/t_6afd79b0630c81919cddceac41211f94"
+          }
+        ]
+      },
+      "contentHash": "a9c785a46670d96ed51e406a373be1c971ce1db99cd8d0b2b3591cce7ebb17be"
+    },
+    {
+      "id": "pfrda:day3:e:q:05:r1",
+      "questionId": "pfrda:day3:e:q:05",
+      "revision": 1,
+      "content": {
+        "kind": "free-response",
+        "prompt": "Why does the author caution against relying exclusively on either water pricing or technology?",
+        "topicIds": [
+          "topic:Descriptive English"
+        ],
+        "responseRules": {},
+        "stimulusId": "pfrda:day3:stimulus:urban-water-security"
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "Exact Day 3 reading-comprehension question; shared Urban Water Security passage stored once as a passage stimulus. Manual assessment.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set E",
+            "url": "https://chatgpt.com/s/t_6afd79b0630c81919cddceac41211f94"
+          }
+        ]
+      },
+      "contentHash": "fcbb8fa374e5da06e80afbaa4a946b5cb3ea53122bf744802c0c06c9d0ae8832"
+    },
+    {
+      "id": "pfrda:day3:e:q:06:r1",
+      "questionId": "pfrda:day3:e:q:06",
+      "revision": 1,
+      "content": {
+        "kind": "free-response",
+        "prompt": "State the central argument of the passage and explain how the success of urban water policy should be assessed.",
+        "topicIds": [
+          "topic:Descriptive English"
+        ],
+        "responseRules": {},
+        "stimulusId": "pfrda:day3:stimulus:urban-water-security"
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "Exact Day 3 reading-comprehension question; shared Urban Water Security passage stored once as a passage stimulus. Manual assessment.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set E",
+            "url": "https://chatgpt.com/s/t_6afd79b0630c81919cddceac41211f94"
+          }
+        ]
+      },
+      "contentHash": "fef2072f5758ee2cbc9c226c79336da26ebbef0134270f19688ce2aa36e5f609"
+    },
+    {
+      "id": "pfrda:day3:p:q:01:r1",
+      "questionId": "pfrda:day3:p:q:01",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Two subscribers have ₹24 lakh each at ordinary retirement: one under the NPS All Citizen Model and one under the government-sector NPS. Ignoring other choices or special circumstances, what are their respective maximum lump-sum portions under the current exit rules?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Both may take ₹19.2 lakh."
+          },
+          {
+            "id": "B",
+            "text": "Non-government ₹19.2 lakh; government-sector ₹14.4 lakh."
+          },
+          {
+            "id": "C",
+            "text": "Non-government ₹14.4 lakh; government-sector ₹19.2 lakh."
+          },
+          {
+            "id": "D",
+            "text": "Non-government ₹24 lakh; government-sector ₹14.4 lakh."
+          },
+          {
+            "id": "E",
+            "text": "Both may take ₹14.4 lakh."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "PS17 wording/options were cross-checked 20/20 against the immutable PS17 issue archived in the central PFRDA tracker; answer/explanation retained after current-rule review.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set P",
+            "url": "https://chatgpt.com/s/t_6afd79d661848191b921ca1ef8e96638"
+          }
+        ]
+      },
+      "contentHash": "6b1654c087c299ae66b2482475ff8246eb9f3d515ab5abb3b5536583706c5be7"
+    },
+    {
+      "id": "pfrda:day3:p:q:02:r1",
+      "questionId": "pfrda:day3:p:q:02",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A self-employed NPS All Citizen subscriber is 52 years old and has completed 16 years of subscription. Her accumulated wealth is ₹18 lakh. Which statement best describes her eligibility to exit?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Every subscriber must reach 60 irrespective of years subscribed."
+          },
+          {
+            "id": "B",
+            "text": "She must withdraw the entire corpus in cash."
+          },
+          {
+            "id": "C",
+            "text": "Any exit before 60 is premature and requires at least 80% annuitisation."
+          },
+          {
+            "id": "D",
+            "text": "The 15-year subscription route can permit normal exit, subject to the applicable rules."
+          },
+          {
+            "id": "E",
+            "text": "Only her Tier II account can be closed before age 65."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "PS17 wording/options were cross-checked 20/20 against the immutable PS17 issue archived in the central PFRDA tracker; answer/explanation retained after current-rule review.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set P",
+            "url": "https://chatgpt.com/s/t_6afd79d661848191b921ca1ef8e96638"
+          }
+        ]
+      },
+      "contentHash": "5e2a524054a8983b339a0f198f702e57ae9b81b38d6022e212ec91f033143c5d"
+    },
+    {
+      "id": "pfrda:day3:p:q:03:r1",
+      "questionId": "pfrda:day3:p:q:03",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A non-government NPS subscriber qualifies for normal exit with accumulated wealth of ₹10 lakh. Which special distribution option is expressly available in addition to the ordinary lump-sum-plus-annuity route?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "At least 40% must be used for annuity in every option."
+          },
+          {
+            "id": "B",
+            "text": "All ₹10 lakh must be paid out immediately in cash."
+          },
+          {
+            "id": "C",
+            "text": "Up to ₹6 lakh can be taken upfront and the balance placed into systematic unit redemption for at least six years."
+          },
+          {
+            "id": "D",
+            "text": "The remainder must be held permanently in Tier II."
+          },
+          {
+            "id": "E",
+            "text": "The account cannot be closed unless its balance exceeds ₹12 lakh."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "PS17 wording/options were cross-checked 20/20 against the immutable PS17 issue archived in the central PFRDA tracker; answer/explanation retained after current-rule review.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set P",
+            "url": "https://chatgpt.com/s/t_6afd79d661848191b921ca1ef8e96638"
+          }
+        ]
+      },
+      "contentHash": "f6cf6fd82d4c7a0f89944978f89c39e57519be83e84d21677804ccf8ba991261"
+    },
+    {
+      "id": "pfrda:day3:p:q:04:r1",
+      "questionId": "pfrda:day3:p:q:04",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "An eligible government-sector NPS subscriber retires normally with ₹7.8 lakh accumulated wealth. Which option is available under the small-corpus rules?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "No amount can be taken as cash."
+          },
+          {
+            "id": "B",
+            "text": "At least 20% must always be annuitised."
+          },
+          {
+            "id": "C",
+            "text": "The entire amount may be withdrawn as a lump sum."
+          },
+          {
+            "id": "D",
+            "text": "The subscriber must wait until age 85 to withdraw."
+          },
+          {
+            "id": "E",
+            "text": "The account can close only after 15 years, irrespective of retirement."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "PS17 wording/options were cross-checked 20/20 against the immutable PS17 issue archived in the central PFRDA tracker; answer/explanation retained after current-rule review.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set P",
+            "url": "https://chatgpt.com/s/t_6afd79d661848191b921ca1ef8e96638"
+          }
+        ]
+      },
+      "contentHash": "64b3ae188029199bca07107c7cfd5631809f8b7f080ec64d7c082d4841b289a2"
+    },
+    {
+      "id": "pfrda:day3:p:q:05:r1",
+      "questionId": "pfrda:day3:p:q:05",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A government-sector NPS subscriber is permitted to resign before the normal retirement event. The corpus is ₹9 lakh. Assuming the ordinary premature-exit rules apply, what is the minimum amount to be used to purchase an annuity?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "₹7.2 lakh"
+          },
+          {
+            "id": "B",
+            "text": "₹5.4 lakh"
+          },
+          {
+            "id": "C",
+            "text": "₹3.6 lakh"
+          },
+          {
+            "id": "D",
+            "text": "₹1.8 lakh"
+          },
+          {
+            "id": "E",
+            "text": "No annuity is required."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "PS17 wording/options were cross-checked 20/20 against the immutable PS17 issue archived in the central PFRDA tracker; answer/explanation retained after current-rule review.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set P",
+            "url": "https://chatgpt.com/s/t_6afd79d661848191b921ca1ef8e96638"
+          }
+        ]
+      },
+      "contentHash": "cc2ab47e97ebaa7ea5961a2bbc3783abe409512a246ed2da28e09f30b9f82c58"
+    },
+    {
+      "id": "pfrda:day3:p:q:06:r1",
+      "questionId": "pfrda:day3:p:q:06",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "An NPS All Citizen subscriber dies before exit, leaving ₹14 lakh of accumulated pension wealth. Which statement most accurately describes the entitlement of the nominee or legal heir?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "At least 80% must be used to purchase an annuity."
+          },
+          {
+            "id": "B",
+            "text": "Only 20% may be received as a lump sum."
+          },
+          {
+            "id": "C",
+            "text": "The corpus is forfeited because the subscriber died before 60."
+          },
+          {
+            "id": "D",
+            "text": "The funds must compulsorily be transferred to a Tier II account."
+          },
+          {
+            "id": "E",
+            "text": "The entire wealth may be paid out, with other approved payout choices also available."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "PS17 wording/options were cross-checked 20/20 against the immutable PS17 issue archived in the central PFRDA tracker; answer/explanation retained after current-rule review.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set P",
+            "url": "https://chatgpt.com/s/t_6afd79d661848191b921ca1ef8e96638"
+          }
+        ]
+      },
+      "contentHash": "f8db260a90e92f1427871952b1483c7e915957b7435c25e1cc8fdfd40166823f"
+    },
+    {
+      "id": "pfrda:day3:p:q:07:r1",
+      "questionId": "pfrda:day3:p:q:07",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "An eligible All Citizen NPS subscriber aged 62 made a partial withdrawal exactly two years ago. She now seeks another partial withdrawal for an eligible purpose. What is the key timing restriction?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "No interval is required after age 60."
+          },
+          {
+            "id": "B",
+            "text": "Ordinarily, she must wait until three years have elapsed since the last partial withdrawal."
+          },
+          {
+            "id": "C",
+            "text": "Partial withdrawal is never allowed after age 60."
+          },
+          {
+            "id": "D",
+            "text": "She can withdraw again only if her previous withdrawal occurred before age 40."
+          },
+          {
+            "id": "E",
+            "text": "One-year spacing is sufficient, but the lifetime limit is three withdrawals."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "PS17 wording/options were cross-checked 20/20 against the immutable PS17 issue archived in the central PFRDA tracker; answer/explanation retained after current-rule review.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set P",
+            "url": "https://chatgpt.com/s/t_6afd79d661848191b921ca1ef8e96638"
+          }
+        ]
+      },
+      "contentHash": "0ddf951583b2666c91c3871de291bc900a54be1921b4fdbd90eb6d95650b4cff"
+    },
+    {
+      "id": "pfrda:day3:p:q:08:r1",
+      "questionId": "pfrda:day3:p:q:08",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A subscriber has an active NPS Tier I account and ₹3 lakh in an ordinary Tier II account. She needs ₹1 lakh for an emergency. Which statement is correct?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Tier II money can be accessed only when Tier I reaches its normal exit age."
+          },
+          {
+            "id": "B",
+            "text": "A mandatory 20% Tier II annuity must be purchased before any withdrawal."
+          },
+          {
+            "id": "C",
+            "text": "Tier II withdrawals require a minimum three-year lock-in for every subscriber."
+          },
+          {
+            "id": "D",
+            "text": "She can ordinarily withdraw ₹1 lakh from Tier II while Tier I remains active; Tier II generally closes on Tier I exit."
+          },
+          {
+            "id": "E",
+            "text": "Every Tier II withdrawal requires an approved medical purpose."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "PS17 wording/options were cross-checked 20/20 against the immutable PS17 issue archived in the central PFRDA tracker; answer/explanation retained after current-rule review.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set P",
+            "url": "https://chatgpt.com/s/t_6afd79d661848191b921ca1ef8e96638"
+          }
+        ]
+      },
+      "contentHash": "dc7b1e6d2aa49dde523010e170591ad3e5234c096c785f52d1bf8b45373eabe7"
+    },
+    {
+      "id": "pfrda:day3:p:q:09:r1",
+      "questionId": "pfrda:day3:p:q:09",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which feature distinguishes the NPS Tier II Tax Saver Scheme from an ordinary Tier II account?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Any Indian citizen may open it without Tier I."
+          },
+          {
+            "id": "B",
+            "text": "It carries a mandatory 20% annuity on each withdrawal."
+          },
+          {
+            "id": "C",
+            "text": "It is available only to Atal Pension Yojana subscribers."
+          },
+          {
+            "id": "D",
+            "text": "It is open only to minors."
+          },
+          {
+            "id": "E",
+            "text": "It is limited to eligible Central Government NPS subscribers and has a three-year lock-in."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "PS17 wording/options were cross-checked 20/20 against the immutable PS17 issue archived in the central PFRDA tracker; answer/explanation retained after current-rule review.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set P",
+            "url": "https://chatgpt.com/s/t_6afd79d661848191b921ca1ef8e96638"
+          }
+        ]
+      },
+      "contentHash": "a1de275ad4a11ce467b6254780f6f6b28ecdfd61a65bf58e9d63e832bf1eb92c"
+    },
+    {
+      "id": "pfrda:day3:p:q:10:r1",
+      "questionId": "pfrda:day3:p:q:10",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "An NPS Vatsalya account was opened when the child was eight. Two permitted partial withdrawals were already made before age 18. At age 19, the subscriber has completed the required fresh identity verification. How many additional partial withdrawals may be available between ages 18 and 21, subject to the other conditions?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "None"
+          },
+          {
+            "id": "B",
+            "text": "One"
+          },
+          {
+            "id": "C",
+            "text": "Two"
+          },
+          {
+            "id": "D",
+            "text": "Three"
+          },
+          {
+            "id": "E",
+            "text": "Unlimited"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "PS17 wording/options were cross-checked 20/20 against the immutable PS17 issue archived in the central PFRDA tracker; answer/explanation retained after current-rule review.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set P",
+            "url": "https://chatgpt.com/s/t_6afd79d661848191b921ca1ef8e96638"
+          }
+        ]
+      },
+      "contentHash": "ac5c5e50f94766b5ac4b100b57c4a7c4603773aba284105326a76ced5fbe7cac"
+    },
+    {
+      "id": "pfrda:day3:p:q:11:r1",
+      "questionId": "pfrda:day3:p:q:11",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "An NPS Vatsalya subscriber is 19, has completed the required identity verification, and wants to exit with ₹7.5 lakh accumulated wealth. Which option is provided under the applicable Vatsalya guidelines?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "A compulsory 60% lump sum and 40% annuity."
+          },
+          {
+            "id": "B",
+            "text": "Full lump-sum withdrawal may be chosen because the corpus is below ₹8 lakh."
+          },
+          {
+            "id": "C",
+            "text": "Only 20% may be received in cash."
+          },
+          {
+            "id": "D",
+            "text": "The money must remain locked until age 60."
+          },
+          {
+            "id": "E",
+            "text": "Only 25% of contributions can be received on exit."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "PS17 wording/options were cross-checked 20/20 against the immutable PS17 issue archived in the central PFRDA tracker; answer/explanation retained after current-rule review.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set P",
+            "url": "https://chatgpt.com/s/t_6afd79d661848191b921ca1ef8e96638"
+          }
+        ]
+      },
+      "contentHash": "f489055f13ccd5ff4c23eca7b317fbfa53fe57e60d6d5067f20a260c361c1ab5"
+    },
+    {
+      "id": "pfrda:day3:p:q:12:r1",
+      "questionId": "pfrda:day3:p:q:12",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "An NPS Vatsalya subscriber reaches age 21 without choosing exit or a shift to another NPS model during the 18–21 option period. What is the prescribed default transition?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "The full corpus is automatically transferred to the subscriber's bank account."
+          },
+          {
+            "id": "B",
+            "text": "The account converts to Atal Pension Yojana."
+          },
+          {
+            "id": "C",
+            "text": "The corpus is invested exclusively in government securities."
+          },
+          {
+            "id": "D",
+            "text": "The account shifts to a higher-equity variant under the Multiple Scheme Framework of the same pension fund."
+          },
+          {
+            "id": "E",
+            "text": "The account is permanently frozen with no further investment."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "PS17 wording/options were cross-checked 20/20 against the immutable PS17 issue archived in the central PFRDA tracker; answer/explanation retained after current-rule review.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set P",
+            "url": "https://chatgpt.com/s/t_6afd79d661848191b921ca1ef8e96638"
+          }
+        ]
+      },
+      "contentHash": "9287ca8a1302a82af1bf0e001e2bc8111077f4d68f7d6a053f94dd86d8885d34"
+    },
+    {
+      "id": "pfrda:day3:p:q:13:r1",
+      "questionId": "pfrda:day3:p:q:13",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A 14-year-old NPS Vatsalya subscriber dies with ₹5 lakh in the account. Which treatment matches the scheme rules?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "The entire accumulated wealth is payable to the guardian, nominee or legal heir, as applicable, with an option to transfer proceeds to an eligible NPS account."
+          },
+          {
+            "id": "B",
+            "text": "At least 40% must be annuitised for the guardian."
+          },
+          {
+            "id": "C",
+            "text": "The entire balance goes to the Central Government."
+          },
+          {
+            "id": "D",
+            "text": "The account must remain open until the deceased child would have turned 18."
+          },
+          {
+            "id": "E",
+            "text": "Only the original deposits, without investment gains, can be returned."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "PS17 wording/options were cross-checked 20/20 against the immutable PS17 issue archived in the central PFRDA tracker; answer/explanation retained after current-rule review.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set P",
+            "url": "https://chatgpt.com/s/t_6afd79d661848191b921ca1ef8e96638"
+          }
+        ]
+      },
+      "contentHash": "cd33fc2ebcbfe3a11f5e2c0a017118192ebf16319735e732d832a929842b05b1"
+    },
+    {
+      "id": "pfrda:day3:p:q:14:r1",
+      "questionId": "pfrda:day3:p:q:14",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which statement correctly applies the income-taxpayer eligibility change under the Atal Pension Yojana (APY)?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Anyone below 40 may join, even if an income-taxpayer."
+          },
+          {
+            "id": "B",
+            "text": "An existing NPS subscriber is automatically barred from APY."
+          },
+          {
+            "id": "C",
+            "text": "An income-taxpayer who joined APY in 2021 can ordinarily continue, but someone who is or has been an income-taxpayer cannot open a new APY account in 2026."
+          },
+          {
+            "id": "D",
+            "text": "Income-taxpayers may enter APY after retirement."
+          },
+          {
+            "id": "E",
+            "text": "APY is restricted to Central Government employees."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "PS17 wording/options were cross-checked 20/20 against the immutable PS17 issue archived in the central PFRDA tracker; answer/explanation retained after current-rule review.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set P",
+            "url": "https://chatgpt.com/s/t_6afd79d661848191b921ca1ef8e96638"
+          }
+        ]
+      },
+      "contentHash": "04e1ead5a47e506a083843f1d46f55cec76a962344a0c22d892ce5cdf3cb1a95"
+    },
+    {
+      "id": "pfrda:day3:p:q:15:r1",
+      "questionId": "pfrda:day3:p:q:15",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "An APY subscriber receives a guaranteed minimum pension of ₹3,000 per month after age 60 and subsequently dies. The spouse survives and later dies. Which benefit sequence is correct?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "The spouse receives 60% of the monthly pension and no corpus is returned."
+          },
+          {
+            "id": "B",
+            "text": "The spouse receives only a one-time lump sum."
+          },
+          {
+            "id": "C",
+            "text": "Both subscriber and spouse receive ₹3,000, but the nominee has no corpus entitlement."
+          },
+          {
+            "id": "D",
+            "text": "The spouse receives the same ₹3,000 minimum monthly pension until death; the nominee then receives the prescribed accumulated pension wealth."
+          },
+          {
+            "id": "E",
+            "text": "The nominee receives the entire corpus immediately upon the subscriber's death, replacing the spouse's pension."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "PS17 wording/options were cross-checked 20/20 against the immutable PS17 issue archived in the central PFRDA tracker; answer/explanation retained after current-rule review.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set P",
+            "url": "https://chatgpt.com/s/t_6afd79d661848191b921ca1ef8e96638"
+          }
+        ]
+      },
+      "contentHash": "2c86be37d447600d29dffe760cecd4db7b5b48a6ea718e1887b51914f9dd8f71"
+    },
+    {
+      "id": "pfrda:day3:p:q:16:r1",
+      "questionId": "pfrda:day3:p:q:16",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "An eligible Unified Pension Scheme (UPS) subscriber retires on superannuation with 15 years (180 months) of qualifying service. The average basic pay over the final 12 months is ₹80,000 per month. Assuming all conditions for the standard proportionate payout are satisfied and ignoring dearness relief or withdrawal reductions, what is the monthly assured payout?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "₹24,000"
+          },
+          {
+            "id": "B",
+            "text": "₹40,000"
+          },
+          {
+            "id": "C",
+            "text": "₹10,000"
+          },
+          {
+            "id": "D",
+            "text": "₹20,000"
+          },
+          {
+            "id": "E",
+            "text": "₹30,000"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "PS17 wording/options were cross-checked 20/20 against the immutable PS17 issue archived in the central PFRDA tracker; answer/explanation retained after current-rule review.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set P",
+            "url": "https://chatgpt.com/s/t_6afd79d661848191b921ca1ef8e96638"
+          }
+        ]
+      },
+      "contentHash": "6eee5fd3a9b1f8daba15263f3baffef283eeff52265bafc36dab1de805ebb390"
+    },
+    {
+      "id": "pfrda:day3:p:q:17:r1",
+      "questionId": "pfrda:day3:p:q:17",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Under UPS, an eligible retiree has an individual corpus of ₹25 lakh and a benchmark corpus of ₹20 lakh. What is the maximum final withdrawal under the 60%-of-lower-corpus rule, and what is its effect on assured payout?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "₹15 lakh; no reduction in assured payout."
+          },
+          {
+            "id": "B",
+            "text": "₹12 lakh; assured payout is proportionately reduced."
+          },
+          {
+            "id": "C",
+            "text": "₹12 lakh; assured payout is unaffected."
+          },
+          {
+            "id": "D",
+            "text": "₹20 lakh; the entire benchmark corpus may be withdrawn."
+          },
+          {
+            "id": "E",
+            "text": "₹15 lakh; assured payout is proportionately reduced."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "PS17 wording/options were cross-checked 20/20 against the immutable PS17 issue archived in the central PFRDA tracker; answer/explanation retained after current-rule review.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set P",
+            "url": "https://chatgpt.com/s/t_6afd79d661848191b921ca1ef8e96638"
+          }
+        ]
+      },
+      "contentHash": "d85ba924bf28cc68ac0a80e32b8f2edf48124da7a147b8e90ff2d5cc117887c5"
+    },
+    {
+      "id": "pfrda:day3:p:q:18:r1",
+      "questionId": "pfrda:day3:p:q:18",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A UPS subscriber takes permitted voluntary retirement after 25 years of qualifying service, two years before the date on which normal superannuation would have occurred. What happens to the assured periodic payout under the UPS rules?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "It necessarily starts the day after voluntary retirement."
+          },
+          {
+            "id": "B",
+            "text": "It is available only after 30 years of qualifying service."
+          },
+          {
+            "id": "C",
+            "text": "The one-time lump-sum payment and final withdrawal may be available at voluntary retirement, while assured payout starts from the date of notional normal superannuation."
+          },
+          {
+            "id": "D",
+            "text": "All UPS benefits are forfeited on voluntary retirement."
+          },
+          {
+            "id": "E",
+            "text": "The subscriber is automatically transferred to APY."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "PS17 wording/options were cross-checked 20/20 against the immutable PS17 issue archived in the central PFRDA tracker; answer/explanation retained after current-rule review.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set P",
+            "url": "https://chatgpt.com/s/t_6afd79d661848191b921ca1ef8e96638"
+          }
+        ]
+      },
+      "contentHash": "9ae639ce6225411109cb5163c7774b3db1d090781ca84fb1aba62ab31eda0e9d"
+    },
+    {
+      "id": "pfrda:day3:p:q:19:r1",
+      "questionId": "pfrda:day3:p:q:19",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "An NPS-Lite/Swavalamban subscriber attains age 60 with accumulated pension wealth of ₹1.9 lakh. Which special option is available under the applicable exit schedule?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "An 80% lump-sum withdrawal with mandatory 20% annuity is the only option."
+          },
+          {
+            "id": "B",
+            "text": "Only 20% may be paid in cash."
+          },
+          {
+            "id": "C",
+            "text": "The account cannot be closed before age 85."
+          },
+          {
+            "id": "D",
+            "text": "The government-sector ₹8-lakh rule automatically governs this account."
+          },
+          {
+            "id": "E",
+            "text": "The entire ₹1.9 lakh may be taken as a lump sum under the relevant small-corpus option."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "PS17 wording/options were cross-checked 20/20 against the immutable PS17 issue archived in the central PFRDA tracker; answer/explanation retained after current-rule review.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set P",
+            "url": "https://chatgpt.com/s/t_6afd79d661848191b921ca1ef8e96638"
+          }
+        ]
+      },
+      "contentHash": "4d494afe354373b46d19010af15a06278def6f56a5f38ee19943515318e76f02"
+    },
+    {
+      "id": "pfrda:day3:p:q:20:r1",
+      "questionId": "pfrda:day3:p:q:20",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A parent compares NPS Vatsalya with the Sukanya Samriddhi Account (a girl-child savings scheme, not an NPS pension tier). Which comparison is accurate?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Both schemes are restricted to girls and guarantee a ₹5,000 monthly pension."
+          },
+          {
+            "id": "B",
+            "text": "NPS Vatsalya always permits education withdrawals of 50% of the previous year-end account balance."
+          },
+          {
+            "id": "C",
+            "text": "Sukanya education withdrawals can be up to 50% of the preceding financial year-end balance after the girl turns 18 or passes Class 10, whichever is earlier; Vatsalya has a separate contribution-based partial-withdrawal limit."
+          },
+          {
+            "id": "D",
+            "text": "Both schemes automatically become APY accounts at age 18."
+          },
+          {
+            "id": "E",
+            "text": "Sukanya is a PFRDA-regulated Tier II pension account."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "PS17 wording/options were cross-checked 20/20 against the immutable PS17 issue archived in the central PFRDA tracker; answer/explanation retained after current-rule review.",
+        "sources": [
+          {
+            "title": "User-provided Day 3 source set P",
+            "url": "https://chatgpt.com/s/t_6afd79d661848191b921ca1ef8e96638"
+          }
+        ]
+      },
+      "contentHash": "c8fe64559ce9711c9d3ff8cf45c6bd900392be3047fc80b8b959f21fd4602ed2"
+    }
+  ],
+  "answerKey": {
+    "id": "pfrda-grade-a-2026-day-03:r1:key",
+    "paperId": "pfrda-grade-a-2026-day-03",
+    "revision": 1,
+    "entries": [
+      {
+        "questionRevisionId": "pfrda:day3:a:q:01:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:02:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:03:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:04:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:05:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:06:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:07:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:08:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:09:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:10:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:11:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:12:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:13:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:14:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:15:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:16:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:17:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:18:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:19:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:20:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:21:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:22:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:23:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:24:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:25:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:26:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:27:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:28:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:29:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:a:q:30:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:01:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:02:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:03:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:04:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:05:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:06:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:07:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "E"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:08:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:09:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:10:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:11:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:12:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:13:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:14:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:15:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:16:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:17:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "E"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:18:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:19:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:20:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:21:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:22:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:23:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:24:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:25:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "E"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:26:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:27:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:28:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:29:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:b:q:30:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "E"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:e:q:01:r1",
+        "answer": {
+          "kind": "free-response",
+          "evaluation": "manual"
+        },
+        "scoringOverride": {
+          "correctMarks": 20,
+          "incorrectMarks": 0,
+          "unansweredMarks": 0
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:e:q:02:r1",
+        "answer": {
+          "kind": "free-response",
+          "evaluation": "manual"
+        },
+        "scoringOverride": {
+          "correctMarks": 4,
+          "incorrectMarks": 0,
+          "unansweredMarks": 0
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:e:q:03:r1",
+        "answer": {
+          "kind": "free-response",
+          "evaluation": "manual"
+        },
+        "scoringOverride": {
+          "correctMarks": 4,
+          "incorrectMarks": 0,
+          "unansweredMarks": 0
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:e:q:04:r1",
+        "answer": {
+          "kind": "free-response",
+          "evaluation": "manual"
+        },
+        "scoringOverride": {
+          "correctMarks": 4,
+          "incorrectMarks": 0,
+          "unansweredMarks": 0
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:e:q:05:r1",
+        "answer": {
+          "kind": "free-response",
+          "evaluation": "manual"
+        },
+        "scoringOverride": {
+          "correctMarks": 4,
+          "incorrectMarks": 0,
+          "unansweredMarks": 0
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:e:q:06:r1",
+        "answer": {
+          "kind": "free-response",
+          "evaluation": "manual"
+        },
+        "scoringOverride": {
+          "correctMarks": 4,
+          "incorrectMarks": 0,
+          "unansweredMarks": 0
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:p:q:01:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:p:q:02:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:p:q:03:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:p:q:04:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:p:q:05:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:p:q:06:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "E"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:p:q:07:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:p:q:08:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:p:q:09:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "E"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:p:q:10:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:p:q:11:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:p:q:12:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:p:q:13:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:p:q:14:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:p:q:15:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:p:q:16:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:p:q:17:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:p:q:18:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:p:q:19:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "E"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3:p:q:20:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      }
+    ],
+    "contentHash": "20ae7ea47bbd820ab819eb27b722ba20f5879e5a24ac38cf41509e8c439b3849"
+  },
+  "paper": {
+    "id": "pfrda-grade-a-2026-day-03:r1:custom",
+    "paperId": "pfrda-grade-a-2026-day-03",
+    "revision": 1,
+    "edition": "custom",
+    "sections": [
+      {
+        "id": "pfrda-grade-a-2026-day-03:section:general-stream",
+        "title": "Section 1 — General Stream (Banks A + B)",
+        "questionRevisionIds": [
+          "pfrda:day3:a:q:01:r1",
+          "pfrda:day3:a:q:02:r1",
+          "pfrda:day3:a:q:03:r1",
+          "pfrda:day3:a:q:04:r1",
+          "pfrda:day3:a:q:05:r1",
+          "pfrda:day3:a:q:06:r1",
+          "pfrda:day3:a:q:07:r1",
+          "pfrda:day3:a:q:08:r1",
+          "pfrda:day3:a:q:09:r1",
+          "pfrda:day3:a:q:10:r1",
+          "pfrda:day3:a:q:11:r1",
+          "pfrda:day3:a:q:12:r1",
+          "pfrda:day3:a:q:13:r1",
+          "pfrda:day3:a:q:14:r1",
+          "pfrda:day3:a:q:15:r1",
+          "pfrda:day3:a:q:16:r1",
+          "pfrda:day3:a:q:17:r1",
+          "pfrda:day3:a:q:18:r1",
+          "pfrda:day3:a:q:19:r1",
+          "pfrda:day3:a:q:20:r1",
+          "pfrda:day3:a:q:21:r1",
+          "pfrda:day3:a:q:22:r1",
+          "pfrda:day3:a:q:23:r1",
+          "pfrda:day3:a:q:24:r1",
+          "pfrda:day3:a:q:25:r1",
+          "pfrda:day3:a:q:26:r1",
+          "pfrda:day3:a:q:27:r1",
+          "pfrda:day3:a:q:28:r1",
+          "pfrda:day3:a:q:29:r1",
+          "pfrda:day3:a:q:30:r1",
+          "pfrda:day3:b:q:01:r1",
+          "pfrda:day3:b:q:02:r1",
+          "pfrda:day3:b:q:03:r1",
+          "pfrda:day3:b:q:04:r1",
+          "pfrda:day3:b:q:05:r1",
+          "pfrda:day3:b:q:06:r1",
+          "pfrda:day3:b:q:07:r1",
+          "pfrda:day3:b:q:08:r1",
+          "pfrda:day3:b:q:09:r1",
+          "pfrda:day3:b:q:10:r1",
+          "pfrda:day3:b:q:11:r1",
+          "pfrda:day3:b:q:12:r1",
+          "pfrda:day3:b:q:13:r1",
+          "pfrda:day3:b:q:14:r1",
+          "pfrda:day3:b:q:15:r1",
+          "pfrda:day3:b:q:16:r1",
+          "pfrda:day3:b:q:17:r1",
+          "pfrda:day3:b:q:18:r1",
+          "pfrda:day3:b:q:19:r1",
+          "pfrda:day3:b:q:20:r1",
+          "pfrda:day3:b:q:21:r1",
+          "pfrda:day3:b:q:22:r1",
+          "pfrda:day3:b:q:23:r1",
+          "pfrda:day3:b:q:24:r1",
+          "pfrda:day3:b:q:25:r1",
+          "pfrda:day3:b:q:26:r1",
+          "pfrda:day3:b:q:27:r1",
+          "pfrda:day3:b:q:28:r1",
+          "pfrda:day3:b:q:29:r1",
+          "pfrda:day3:b:q:30:r1"
+        ]
+      },
+      {
+        "id": "pfrda-grade-a-2026-day-03:section:descriptive-english",
+        "title": "Section 2 — Descriptive English",
+        "questionRevisionIds": [
+          "pfrda:day3:e:q:01:r1",
+          "pfrda:day3:e:q:02:r1",
+          "pfrda:day3:e:q:03:r1",
+          "pfrda:day3:e:q:04:r1",
+          "pfrda:day3:e:q:05:r1",
+          "pfrda:day3:e:q:06:r1"
+        ]
+      },
+      {
+        "id": "pfrda-grade-a-2026-day-03:section:pension-landscape",
+        "title": "Section 3 — Pension Landscape PS17",
+        "questionRevisionIds": [
+          "pfrda:day3:p:q:01:r1",
+          "pfrda:day3:p:q:02:r1",
+          "pfrda:day3:p:q:03:r1",
+          "pfrda:day3:p:q:04:r1",
+          "pfrda:day3:p:q:05:r1",
+          "pfrda:day3:p:q:06:r1",
+          "pfrda:day3:p:q:07:r1",
+          "pfrda:day3:p:q:08:r1",
+          "pfrda:day3:p:q:09:r1",
+          "pfrda:day3:p:q:10:r1",
+          "pfrda:day3:p:q:11:r1",
+          "pfrda:day3:p:q:12:r1",
+          "pfrda:day3:p:q:13:r1",
+          "pfrda:day3:p:q:14:r1",
+          "pfrda:day3:p:q:15:r1",
+          "pfrda:day3:p:q:16:r1",
+          "pfrda:day3:p:q:17:r1",
+          "pfrda:day3:p:q:18:r1",
+          "pfrda:day3:p:q:19:r1",
+          "pfrda:day3:p:q:20:r1"
+        ]
+      }
+    ],
+    "answerKeyRevisionId": "pfrda-grade-a-2026-day-03:r1:key",
+    "timing": {
+      "kind": "sectional",
+      "sectionLimits": [
+        {
+          "sectionId": "pfrda-grade-a-2026-day-03:section:general-stream",
+          "durationMs": 2880000
+        },
+        {
+          "sectionId": "pfrda-grade-a-2026-day-03:section:descriptive-english",
+          "durationMs": 2460000
+        },
+        {
+          "sectionId": "pfrda-grade-a-2026-day-03:section:pension-landscape",
+          "durationMs": 960000
+        }
+      ],
+      "transition": "automatic",
+      "allowEarlySubmit": true,
+      "pausePolicy": "forbidden"
+    },
+    "navigation": {
+      "questionNavigation": "free",
+      "sectionNavigation": "sequential-locked",
+      "allowFlagging": true,
+      "allowReview": true
+    },
+    "practiceModes": [
+      "strict",
+      "free",
+      "single"
+    ],
+    "scoring": {
+      "defaultRule": {
+        "correctMarks": 2,
+        "incorrectMarks": -0.5,
+        "unansweredMarks": 0
+      },
+      "decimalPlaces": 2
+    },
+    "contentHash": "bad17da7f4030d9c0aff02d6627a018cee536ff0af91fa9bbb72ed38bcd3bc6c"
+  },
+  "stimuli": [
+    {
+      "id": "pfrda:day3:stimulus:urban-water-security",
+      "kind": "passage",
+      "title": "Urban Water Security",
+      "text": "Water scarcity in cities is often described as a consequence of insufficient rainfall. Yet the availability of rainfall alone does not determine whether residents receive dependable water supplies. Urban water security depends equally on infrastructure, institutions, distribution practices and the condition of surrounding ecosystems.\n\nMany cities draw water from distant rivers and reservoirs while losing a substantial portion through leaking pipes, unauthorised connections and inaccurate metering. Expanding supply without addressing these losses can increase financial and environmental costs. New pipelines and reservoirs may temporarily relieve shortages, but they do little to correct inefficient management. Consequently, cities may experience simultaneous infrastructure expansion and persistent water insecurity.\n\nDemand is also distributed unequally. Well-served neighbourhoods may consume large quantities of treated water, whereas informal settlements often rely on expensive private suppliers or irregular communal sources. Such differences show that water security concerns not merely the total volume available but also affordability, reliability and equitable access.\n\nGroundwater adds another complication. It provides an important buffer during interruptions in municipal supply, but excessive extraction can lower water tables and damage aquifers. Urban construction that covers permeable land with concrete further restricts natural recharge. Rainwater harvesting and the restoration of lakes, wetlands and drainage channels can therefore support long-term resilience, although their effectiveness depends on maintenance and local conditions.\n\nA more sustainable strategy combines reliable measurement, leakage reduction, appropriate pricing, targeted support for vulnerable households, wastewater treatment and reuse, groundwater regulation and protection of local ecosystems. Pricing can encourage conservation, but poorly designed tariffs may burden poorer residents. Similarly, technological tools such as sensors and digital meters can improve monitoring, but they cannot substitute for accountable institutions.\n\nUltimately, urban water security is a governance challenge as much as an engineering challenge. Success should be judged not simply by the quantity of water supplied or the number of projects completed, but by whether residents receive safe, affordable and dependable water without compromising the resources needed by future generations."
+    }
+  ],
+  "explanations": {
+    "pfrda:day3:a:q:01:r1": "A credit sale creates an asset (Trade Receivables) and revenue. Debit Trade Receivables ₹80,000; credit Sales ₹80,000.",
+    "pfrda:day3:a:q:02:r1": "Required return = 4% + 1.25×6% = 11.5%.",
+    "pfrda:day3:a:q:03:r1": "Section 14 sets out the duties, powers and functions of the Pension Fund Regulatory and Development Authority (PFRDA), including protection of subscribers' interests.",
+    "pfrda:day3:a:q:04:r1": "The Central Recordkeeping Agency (CRA) maintains central subscriber records and account information. Pension Funds manage investments; the Trustee Bank handles fund flows; the Custodian holds securities.",
+    "pfrda:day3:a:q:05:r1": "Section 63 permits specified free reserves, securities premium and capital redemption reserve, but excludes reserves created by revaluation of assets.",
+    "pfrda:day3:a:q:06:r1": "Effective capital expenditure adds grants-in-aid for creation of capital assets (about ₹4.93 lakh crore) to direct capital expenditure.",
+    "pfrda:day3:a:q:07:r1": "Contribution per unit = ₹60. Break-even units = ₹1,80,000/₹60 = 3,000.",
+    "pfrda:day3:a:q:08:r1": "Absolute price elasticity = 5%/10% = 0.5, which is inelastic because it is below 1.",
+    "pfrda:day3:a:q:09:r1": "Recognition and achievement are motivators; salary, policy and working conditions are hygiene factors.",
+    "pfrda:day3:a:q:10:r1": "Present values are ₹550/1.1 = ₹500 and ₹726/1.1² = ₹600. Total inflows ₹1,100 less ₹1,000 outlay gives NPV +₹100.",
+    "pfrda:day3:a:q:11:r1": "Bank, an asset, increases and the receivable asset falls. Debit Bank; credit Trade Receivables.",
+    "pfrda:day3:a:q:12:r1": "Section 27 deals with registration of intermediaries.",
+    "pfrda:day3:a:q:13:r1": "Supervised learning uses labelled input-output examples.",
+    "pfrda:day3:a:q:14:r1": "Section 173(1) requires the first Board meeting within 30 days of incorporation.",
+    "pfrda:day3:a:q:15:r1": "Market risk premium = 15%−5%=10%. Required return = 5% + 0.8×10% = 13%.",
+    "pfrda:day3:a:q:16:r1": "A filter bubble is an information environment shaped by personalisation that can repeatedly reinforce similar views and reduce exposure to alternatives.",
+    "pfrda:day3:a:q:17:r1": "Material price variance = (Standard Price − Actual Price)×Actual Quantity = (40−38)×500 = ₹1,000 favourable.",
+    "pfrda:day3:a:q:18:r1": "The Trustee Bank handles fund flows; the Custodian holds securities/assets in custody.",
+    "pfrda:day3:a:q:19:r1": "Inventory, an asset, increases and a liability to the supplier arises. Debit Inventory; credit Trade Payables.",
+    "pfrda:day3:a:q:20:r1": "The Economic Survey 2025–26 projected real GDP growth for FY 2026–27 at 6.8–7.2%.",
+    "pfrda:day3:a:q:21:r1": "13 = 4 + β×6, so β = 9/6 = 1.5.",
+    "pfrda:day3:a:q:22:r1": "Section 36 provides an appeal to the Securities Appellate Tribunal ordinarily within 45 days. Section 38 provides a further appeal to the Supreme Court on a question of law ordinarily within 60 days, subject to statutory provisions for delay.",
+    "pfrda:day3:a:q:23:r1": "STP means Segmentation, Targeting and Positioning.",
+    "pfrda:day3:a:q:24:r1": "Cost per setup = ₹90,000/300 = ₹300. For 12 setups: ₹3,600.",
+    "pfrda:day3:a:q:25:r1": "PV of inflows = ₹660/1.1 + ₹605/1.1² = ₹600+₹500=₹1,100. NPV = −₹100, so reject.",
+    "pfrda:day3:a:q:26:r1": "Multiplier = 1/(1−MPC) = 1/0.25 = 4. MPC means Marginal Propensity to Consume.",
+    "pfrda:day3:a:q:27:r1": "Private placement is an offer to identified persons through the statutory process; public advertising is not permitted.",
+    "pfrda:day3:a:q:28:r1": "Very high training performance with much weaker independent-test performance is a classic sign of overfitting.",
+    "pfrda:day3:a:q:29:r1": "Section 4 specifies one Chairperson, three whole-time members and three part-time members, appointed by the Central Government. The Act states these numbers directly; it does not phrase them as 'up to three'.",
+    "pfrda:day3:a:q:30:r1": "New current assets = ₹5,00,000 and current liabilities = ₹2,00,000; ratio = 2.5:1.",
+    "pfrda:day3:b:q:01:r1": "NPS Trust holds pension assets in trust for subscribers and protects their interests. The other intermediaries perform recordkeeping, banking, investment-management or custody functions.",
+    "pfrda:day3:b:q:02:r1": "Section 36 provides an ordinary 45-day period, with statutory scope to condone delay on sufficient cause.",
+    "pfrda:day3:b:q:03:r1": "The stated FY 2030–31 objective is 50% of GDP with a ±1 percentage-point range.",
+    "pfrda:day3:b:q:04:r1": "A is correct for this source-specific question. Economic Survey 2025–26 states that the gross non-performing asset ratio of scheduled commercial banks had declined to 2.2% as of September 2025. Later RBI publications report 2.1% at end-September 2025; do not substitute that later/source-different figure when the stem expressly asks for the Survey.",
+    "pfrda:day3:b:q:05:r1": "Returning goods reduces the liability to the supplier, so Trade Payables is debited. Under the periodic system, Purchase Returns is credited.",
+    "pfrda:day3:b:q:06:r1": "Purchase and disposal of long-term assets such as property, plant and equipment are ordinarily investing activities.",
+    "pfrda:day3:b:q:07:r1": "The company has received cash but still owes the service; that obligation is a liability commonly called unearned revenue or a contract liability.",
+    "pfrda:day3:b:q:08:r1": "Vroom links motivation to expectancy (effort→performance), instrumentality (performance→outcome) and valence (value of outcome).",
+    "pfrda:day3:b:q:09:r1": "A superior can delegate authority and responsibility for work, but cannot fully abdicate ultimate accountability.",
+    "pfrda:day3:b:q:10:r1": "Bond price and required yield move inversely because the fixed future cash flows are discounted at a higher rate when yield rises.",
+    "pfrda:day3:b:q:11:r1": "The importer will need dollars later, so buying (going long) US dollars forward locks in the future exchange rate.",
+    "pfrda:day3:b:q:12:r1": "The secondary market facilitates trading of securities that have already been issued.",
+    "pfrda:day3:b:q:13:r1": "Equivalent units for conversion = 800 completed + 200×50% = 900.",
+    "pfrda:day3:b:q:14:r1": "Flexible variable overhead = 1,200×₹40 = ₹48,000.",
+    "pfrda:day3:b:q:15:r1": "Just-in-time systems minimise inventory buffers, so supplier or logistics disruption can halt production rapidly.",
+    "pfrda:day3:b:q:16:r1": "Section 123 permits dividend from eligible profits subject to statutory conditions, including the depreciation requirement.",
+    "pfrda:day3:b:q:17:r1": "Section 144 lists internal audit among services that the statutory auditor must not provide to the audited company, subject to the statutory framework.",
+    "pfrda:day3:b:q:18:r1": "An independent director can generally serve up to two consecutive terms, each up to five years, followed by the statutory cooling-off period.",
+    "pfrda:day3:b:q:19:r1": "The ordinary quorum is one-third of total strength or two directors, whichever is higher, subject to the Act's qualifications.",
+    "pfrda:day3:b:q:20:r1": "GDP deflator = (Nominal GDP / Real GDP)×100 = 110.",
+    "pfrda:day3:b:q:21:r1": "Personal remittances are current-account secondary income/transfers, not capital or portfolio investment flows.",
+    "pfrda:day3:b:q:22:r1": "A repo-rate cut generally eases monetary conditions and can reduce borrowing costs, though transmission is not mechanically one-for-one.",
+    "pfrda:day3:b:q:23:r1": "Ordinary Tier II is a voluntary savings account with flexible access, distinct from Tier I retirement-exit restrictions.",
+    "pfrda:day3:b:q:24:r1": "From 1 October 2022, a person who is or has been an income-tax payer cannot open a new Atal Pension Yojana account under the notified eligibility rule; earlier qualifying accounts are not automatically cancelled.",
+    "pfrda:day3:b:q:25:r1": "The defining difference is when periodic annuity payments commence.",
+    "pfrda:day3:b:q:26:r1": "Recall asks: of all actual positives, how many were found? Hence TP/(TP+FN), where TP = True Positive and FN = False Negative.",
+    "pfrda:day3:b:q:27:r1": "A post-outcome variable contains information unavailable at real prediction time and leaks the target/future into model development.",
+    "pfrda:day3:b:q:28:r1": "Agenda-setting is about issue salience—what people think about—not deterministic control of what they think.",
+    "pfrda:day3:b:q:29:r1": "The services-marketing additions are People, Process and Physical Evidence.",
+    "pfrda:day3:b:q:30:r1": "Noise is any interference that distorts or disrupts the signal/message between sender and receiver.",
+    "pfrda:day3:e:q:01:r1": "Manual marking guide (/20): relevance and balanced argument; logical structure; accurate India-specific examples; language and grammar; concision and word discipline. A strong response should show that technology expands access while trust, fraud prevention, grievance redressal, privacy, literacy and accountable institutions sustain adoption.",
+    "pfrda:day3:e:q:02:r1": "Increasing water supply alone cannot solve urban water insecurity because leakages, inefficient distribution, weak institutions and environmental degradation also affect availability and reliability.",
+    "pfrda:day3:e:q:03:r1": "Unequal access makes water security an equity issue because well-served neighbourhoods may receive abundant reliable water while poorer or informal settlements depend on costly or irregular sources.",
+    "pfrda:day3:e:q:04:r1": "Excessive groundwater extraction can lower water tables and damage aquifers; urban construction that covers permeable land with concrete restricts natural recharge.",
+    "pfrda:day3:e:q:05:r1": "Pricing can promote conservation but may burden poorer households if badly designed. Technology can improve monitoring but cannot substitute for accountable institutions.",
+    "pfrda:day3:e:q:06:r1": "Urban water security requires integrated governance, efficient infrastructure, equitable distribution and ecological protection. Success should be judged by safe, affordable and dependable access without compromising future resources, not merely by supply volumes or projects completed.",
+    "pfrda:day3:p:q:01:r1": "For a large corpus at normal exit under the current rules, a non-government subscriber may ordinarily take up to 80% as lump sum (₹19.2 lakh of ₹24 lakh), while a government-sector subscriber may ordinarily take up to 60% (₹14.4 lakh), subject to applicable conditions.",
+    "pfrda:day3:p:q:02:r1": "Under the current All Citizen exit framework, completion of the prescribed 15-year subscription route can permit normal exit before age 60, subject to the applicable conditions.",
+    "pfrda:day3:p:q:03:r1": "For the applicable ₹8–12 lakh band, the current exit framework provides a special route allowing up to ₹6 lakh upfront and the balance through systematic unit redemption for at least six years, subject to the regulation.",
+    "pfrda:day3:p:q:04:r1": "At normal government-sector exit, the small-corpus rule permits full lump-sum withdrawal where the accumulated pension wealth is within the prescribed threshold; ₹7.8 lakh falls within that band.",
+    "pfrda:day3:p:q:05:r1": "Ordinary premature exit generally requires at least 80% of the corpus for annuity. 80% of ₹9 lakh = ₹7.2 lakh.",
+    "pfrda:day3:p:q:06:r1": "Death is governed by a separate exit treatment; the nominee/legal heir can receive the entire accumulated wealth, with other approved payout options also available under the applicable framework.",
+    "pfrda:day3:p:q:07:r1": "The current rule ordinarily requires a three-year interval between partial withdrawals, subject to the applicable conditions.",
+    "pfrda:day3:p:q:08:r1": "Ordinary Tier II is a voluntary, relatively liquid account. It ordinarily permits withdrawal while Tier I remains active; it is distinct from Tier I exit/annuity restrictions.",
+    "pfrda:day3:p:q:09:r1": "The Tier II Tax Saver variant is a special arrangement for eligible Central Government NPS subscribers and carries a three-year lock-in, unlike ordinary Tier II liquidity.",
+    "pfrda:day3:p:q:10:r1": "Under the 2026 NPS Vatsalya guidelines, up to two partial withdrawals are permitted before age 18 and up to two additional withdrawals between 18 and 21 after the prescribed fresh identity verification and subject to other conditions.",
+    "pfrda:day3:p:q:11:r1": "For the applicable Vatsalya exit after majority, a corpus below ₹8 lakh may be withdrawn fully, subject to the prescribed conditions.",
+    "pfrda:day3:p:q:12:r1": "If no choice is exercised by age 21, the current Vatsalya guidelines prescribe transition to the specified higher-equity Multiple Scheme Framework variant of the same pension fund rather than an automatic cash payout.",
+    "pfrda:day3:p:q:13:r1": "On death of the minor subscriber, the accumulated wealth is payable to the appropriate guardian/nominee/legal heir, with the applicable option to transfer to an eligible NPS account.",
+    "pfrda:day3:p:q:14:r1": "The post-1 October 2022 restriction applies to opening a new APY account by a person who is or has been an income-tax payer; it does not automatically cancel a qualifying earlier account.",
+    "pfrda:day3:p:q:15:r1": "Under APY, the spouse receives the same guaranteed minimum pension after the subscriber's death; after both subscriber and spouse die, the nominee receives the prescribed pension wealth. The 60% family-payout rule belongs to UPS, not APY.",
+    "pfrda:day3:p:q:16:r1": "Full assured payout benchmark = 50% of ₹80,000 = ₹40,000 for 25 years (300 months). Proportionate payout = ₹40,000×180/300 = ₹24,000.",
+    "pfrda:day3:p:q:17:r1": "The lower corpus is ₹20 lakh; 60% is ₹12 lakh. A final withdrawal reduces the assured payout proportionately under the UPS framework.",
+    "pfrda:day3:p:q:18:r1": "For the stated qualifying voluntary-retirement case, the UPS assured periodic payout begins from the date of notional normal superannuation, while specified lump-sum/final-withdrawal benefits may be available at voluntary retirement.",
+    "pfrda:day3:p:q:19:r1": "The applicable NPS-Lite/Swavalamban small-corpus schedule permits full lump-sum withdrawal at normal exit where accumulated pension wealth does not exceed the specified ₹2 lakh threshold.",
+    "pfrda:day3:p:q:20:r1": "Sukanya Samriddhi uses a balance-based education-withdrawal rule (up to 50% of the preceding financial year-end balance under the stated age/Class 10 condition). NPS Vatsalya uses a distinct contribution-based partial-withdrawal rule, currently up to 25% of contributions excluding returns for permitted purposes and subject to conditions."
+  }
+}
