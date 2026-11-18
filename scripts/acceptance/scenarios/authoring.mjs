@@ -545,18 +545,23 @@ try{
    focusPacket.intent==="targeted-practice"&&focusPacket.privacy?.scope==="exam-only"&&
    !("questionEvidence" in focusPacket)&&!JSON.stringify(focusPacket).includes("answerKey"),
    engine+" Pass 5 Focused learner packet leaked detailed/key data or lost exam scope");
- const baseBlueprint=JSON.parse(await readFile(new URL("../../../question-banks/pfrda/2026/mocks/day-01/revised/blueprint.json",import.meta.url),"utf8"));
- const sourceForRules=JSON.parse(await readFile(new URL("../../../question-banks/pfrda/2026/mocks/day-01/revised/bank.authoring.json",import.meta.url),"utf8"));
- const nativeBlueprint={...baseBlueprint,paperRules:{scoring:sourceForRules.scoring,timing:sourceForRules.timing,
-   navigation:sourceForRules.navigation,sections:sourceForRules.sections,...(sourceForRules.tools?{tools:sourceForRules.tools}:{}),
-   ...(sourceForRules.practiceModes?{practiceModes:sourceForRules.practiceModes}:{})}};
+ const nativeBlueprint={
+   format:"practice-desk-content-blueprint",version:1,id:"p60f-browser-brief",
+   examId:reviewedBank.examId,paperId:reviewedBank.paperId,revision:reviewedBank.revision,
+   targetCount:Math.max(2,reviewedBank.questions.length),allowPartial:true,
+   syllabus:{basis:"user-defined",asOfDate:"2026-11-18",
+    reference:"Synthetic browser regression fixture only; not an authentic exam allocation."},
+   requirements:{requireExplanation:true,minCitations:0,allowedOrigins:["ai-original"],
+    maxTopicSharePercent:100},
+   quotas:{},
+   paperRules:{scoring:reviewedBank.scoring,timing:reviewedBank.timing,
+    ...(reviewedBank.navigation?{navigation:reviewedBank.navigation}:{}),sections:reviewedBank.sections,
+    ...(reviewedBank.tools?{tools:reviewedBank.tools}:{}),
+    ...(reviewedBank.practiceModes?{practiceModes:reviewedBank.practiceModes}:{})}
+ };
  const blueprintRaw=JSON.stringify(nativeBlueprint,null,2)+"\n";
- const taxonomyRaw=await readFile(new URL("../../../question-banks/pfrda/2026/taxonomy.json",import.meta.url),"utf8");
  await page.locator("#learning-blueprint-file").setInputFiles({
    name:"blueprint.json",mimeType:"application/json",buffer:Buffer.from(blueprintRaw)
- });
- await page.locator("#learning-taxonomy-file").setInputFiles({
-   name:"taxonomy.json",mimeType:"application/json",buffer:Buffer.from(taxonomyRaw)
  });
  await page.locator("#learning-brief-bank-id").fill("p60f-native-next");
  await page.locator("#learning-brief-title").fill("P60-F native browser brief");
@@ -565,9 +570,10 @@ try{
  await page.locator("#learning-standard-brief-preview").waitFor({state:"visible"});
  const standardBrief=JSON.parse(await page.locator("#learning-standard-brief-preview").inputValue());
  check(standardBrief.learnerFocusIncluded===false&&standardBrief.task?.requestedNow===2&&
-   standardBrief.taxonomyScope?.includedNodes<standardBrief.taxonomyScope?.totalNodes&&
-   standardBrief.classification?.taxonomyAssignmentPolicy==="deepest-defensible",
-   engine+" native standard Authoring Brief was not generated from the real blueprint contract");
+   standardBrief.blueprint?.examId===reviewedEdition.examId&&
+   standardBrief.classification?.taxonomyAssignmentPolicy==="deepest-defensible"&&
+   standardBrief.classification?.requireTaxonomy===false,
+   engine+" native standard Authoring Brief was not generated for the learner-focus exam");
  await page.waitForFunction(()=>!document.querySelector("#learning-brief-personalise")?.disabled);
  await page.locator("#learning-brief-personalise").click();
  await page.locator("#learning-brief-preview").waitFor({state:"visible"});
