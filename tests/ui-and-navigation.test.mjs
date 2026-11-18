@@ -392,7 +392,7 @@ async function registerNativeNavigationTests(){
 const file="file:///tmp/Practice_Desk_Offline_Mock_Tests.html";
 test("native-only query codec round-trips every routable screen on file URL",()=>{
   const cases=[
-   {screen:"library"},{screen:"history"},{screen:"learning"},{screen:"authoring"},{screen:"authoring"},
+   {screen:"library"},{screen:"history"},{screen:"learning"},{screen:"calendar"},{screen:"authoring"},{screen:"calendar"},{screen:"authoring"},
    {screen:"exam",attemptId:"attempt-1"},
    {screen:"result",attemptId:"attempt-1",tab:"overview"},
    {screen:"result",attemptId:"imported:é/& +",tab:"review"},
