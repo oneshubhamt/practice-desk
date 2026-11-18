@@ -12,6 +12,7 @@ import {inspectExternalQuestionBank,toAuthoringDraft} from "../src/authoring/ext
 import {publicationPlainText} from "../src/authoring/authoring-publisher.ts";
 import {resolveTaxonomyPath,taxonomyNode,taxonomyPathNodes,validateExamTaxonomy} from "../src/domain/taxonomy.ts";
 import {personalizeAuthoringBrief,validateLearnerFocusPacket} from "../src/learning/learner-focus.ts";
+import {authoringClassificationPolicy,buildAuthoringTaxonomySlice,validateStandardAuthoringBrief} from "../src/authoring/authoring-brief.ts";
 
 const FORMAT="practice-desk-content-blueprint",TAG_FORMAT="practice-desk-cognitive-tags";
 const GROUPS=["subjects","topics","subtopics","difficulties","kinds","origins","sections","cognitive"];
@@ -605,12 +606,8 @@ function buildAuthoringBrief(plan,planSha,sources,tagDoc,{priorSources=[],batchS
   excludedTopics:structuredClone(plan.requirements.excludedTopics??[]),
   maxTopicSharePercent:plan.requirements.maxTopicSharePercent??100
  };
- const classification={
-  requireTaxonomy:plan.requirements.requireTaxonomy===true,
-  requireTopic:plan.requirements.requireTopic===true,
-  requireSubtopic:plan.requirements.requireSubtopic===true,
-  requireDifficulty:plan.requirements.requireDifficulty===true
- };
+ const classification=authoringClassificationPolicy(plan.requirements);
+ const taxonomyContext=taxonomy?buildAuthoringTaxonomySlice(taxonomy,deficits,requestedNow):undefined;
  const brief={
   format:"practice-desk-authoring-brief",version:1,valid:true,
   blueprint:{id:plan.id,sha256:planSha,examId:plan.examId,paperId:plan.paperId,revision:plan.revision},
@@ -624,13 +621,12 @@ function buildAuthoringBrief(plan,planSha,sources,tagDoc,{priorSources=[],batchS
    ...(envelope.practiceModes?{practiceModes:structuredClone(envelope.practiceModes)}:{})
   },
   sourcePolicy,classification,
-  ...(taxonomy?{taxonomy:{id:taxonomy.id,title:taxonomy.title,basis:taxonomy.basis,
-    asOfDate:taxonomy.asOfDate,reference:taxonomy.reference,nodes:taxonomy.nodes}}:{}),
+  ...(taxonomyContext?{taxonomy:taxonomyContext.taxonomy,taxonomyScope:taxonomyContext.scope}:{}),
   itemWritingPriorities:[
    "Spend reasoning on exam-relevant substance, not Practice Desk mechanics.",
    "For automatically scored items, make the keyed answer uniquely defensible and distractors plausible.",
-   "Avoid answer leakage, accidental hints, trivia-only wording traps and semantic duplicates.",
-   "Use explanations to justify the key and resolve the misconception or distinction being tested.",
+   "Use the deepest defensible taxonomy node supported by the item; root-only is valid when the item genuinely spans the subject.",
+   "Assign difficulty when it is defensible from the item; do not invent precision merely to fill metadata.",
    "Research and verify legal, numerical, current and PYQ claims; never infer authority from this packet."
   ],
   priorityDeficits,
@@ -661,7 +657,8 @@ function buildAuthoringBrief(plan,planSha,sources,tagDoc,{priorSources=[],batchS
   factualVerification:"not-performed",
   note:"Decision-ready authoring context only. It omits existing question bodies, media bytes and repository/package placement. Research and verify factual, legal, current and PYQ claims outside this packet."
  };
- return learnerFocus?personalizeAuthoringBrief(brief,learnerFocus):brief;
+ const standard=validateStandardAuthoringBrief(brief);
+ return learnerFocus?personalizeAuthoringBrief(standard,learnerFocus):standard;
 }
 const emit=v=>process.stdout.write(JSON.stringify(v,null,2)+"\n");
 const failure=message=>{
