@@ -4,6 +4,7 @@ import {validateExamPackage} from "../domain/exam-package.ts";
 import {paperEditionLabel,paperIdentifierLabel} from "./editorial-labels.ts";
 import type {ExamPackage} from "../domain/exam-package.ts";
 import type {AuthoringScreenControllerContext} from "./coordinator-context.ts";
+import {downloadText} from "./download-file.ts";
 
 function packageRows(owner:AuthoringScreenControllerContext):string{
   const rows=[...owner.packages.values()].sort((a,b)=>
@@ -23,8 +24,10 @@ function packageRows(owner:AuthoringScreenControllerContext):string{
       ' · '+pkg.paper.sections.length+' section'+(pkg.paper.sections.length===1?"":"s")+'</p>'+
       '<details class="authoring-technical"><summary>Technical identity</summary><code>'+escapeText(pkg.paper.id)+
       '</code></details></div>'+
+      '<div class="row authoring-bank-actions">'+
+      '<button type="button" class="btn quiet" data-authoring-export-paper="'+escapeText(pkg.paper.id)+'">Export package</button>'+
       '<button type="button" class="btn quiet" data-authoring-open-paper="'+escapeText(pkg.paper.id)+'">Open in library →</button>'+
-      '</article>';
+      '</div></article>';
   }).join("")+'</div>';
 }
 
@@ -79,6 +82,12 @@ export function bindAuthoringScreen(owner:AuthoringScreenControllerContext):void
     const target=owner.root.querySelector<HTMLElement>("#pd-authoring-container");
     if(target)void owner.authoringStudio.open(target,e.currentTarget as HTMLElement);
   };
+  owner.root.querySelectorAll<HTMLButtonElement>("[data-authoring-export-paper]").forEach(button=>button.onclick=()=>{
+    const id=button.dataset.authoringExportPaper??"",pkg=owner.packages.get(id);
+    if(!pkg)return;
+    const stem=pkg.paper.paperId.replace(/[^a-z0-9._-]+/gi,"-").replace(/^-+|-+$/g,"").slice(0,100)||"practice-desk-paper";
+    downloadText(stem+"-r"+pkg.paper.revision+".exam.json",JSON.stringify(pkg,null,2),"application/json;charset=utf-8");
+  });
   owner.root.querySelectorAll<HTMLButtonElement>("[data-authoring-open-paper]").forEach(button=>button.onclick=()=>{
     const id=button.dataset.authoringOpenPaper??"",pkg=owner.packages.get(id);
     if(!pkg)return;
