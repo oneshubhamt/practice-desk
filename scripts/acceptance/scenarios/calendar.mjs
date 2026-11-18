@@ -142,7 +142,7 @@ try{
     engine+" Calendar Learning action did not select the source card");
   await page.getByRole("button",{name:"Calendar",exact:true}).click();await route(page,"calendar");
 
-  await page.getByRole("button",{name:"Library",exact:true}).click();await route(page,"library");
+  await page.getByRole("button",{name:/^(?:← )?Test library$/i}).click();await route(page,"library");
   await page.getByRole("button",{name:/History & insights/}).click();await route(page,"history");
   const downloadPromise=page.waitForEvent("download");
   await page.locator("#g-export-history").click();
@@ -169,7 +169,7 @@ try{
     }finally{db.close();}
   },scheduled.id);
 
-  await page.getByRole("button",{name:"Library",exact:true}).click();await route(page,"library");
+  await page.getByRole("button",{name:/^(?:← )?Test library$/i}).click();await route(page,"library");
   await page.getByRole("button",{name:/History & insights/}).click();await route(page,"history");
   await page.locator("#g-history-file").setInputFiles(downloadedPath);
   check(Boolean(await waitRecord(x=>x.recordType==="calendar-scheduled-mock"&&x.id===scheduled.id)),
