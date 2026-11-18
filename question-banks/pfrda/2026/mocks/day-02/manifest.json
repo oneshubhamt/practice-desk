@@ -1,0 +1,19 @@
+{
+  "format": "practice-desk-paper-manifest",
+  "version": 1,
+  "id": "pfrda-grade-a-2026-day-02",
+  "examId": "pfrda-grade-a-2026-phase-ii",
+  "paperId": "pfrda-grade-a-2026-day2",
+  "kind": "mock",
+  "title": "PFRDA Grade A 2026 — Day 2",
+  "canonicalEdition": "original",
+  "editions": {
+    "original": {
+      "authoring": "original/bank.authoring.json",
+      "package": "original/package.exam.json",
+      "qualityReview": "original/quality-review.json",
+      "blueprint": "original/blueprint.json"
+    }
+  },
+  "audit": "audit.md"
+}

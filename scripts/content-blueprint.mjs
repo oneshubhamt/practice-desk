@@ -8,9 +8,11 @@ import {createHash} from "node:crypto";
 import {isDeepStrictEqual} from "node:util";
 import {fileURLToPath} from "node:url";
 import {resolve} from "node:path";
-import {inspectExternalQuestionBank} from "../src/authoring/external-bank.ts";
+import {inspectExternalQuestionBank,toAuthoringDraft} from "../src/authoring/external-bank.ts";
 import {publicationPlainText} from "../src/authoring/authoring-publisher.ts";
-import {syllabusHeading} from "../src/learning/syllabus-taxonomy.ts";
+import {resolveTaxonomyPath,taxonomyNode,taxonomyPathNodes,validateExamTaxonomy} from "../src/domain/taxonomy.ts";
+import {personalizeAuthoringBrief,validateLearnerFocusPacket} from "../src/learning/learner-focus.ts";
+import {authoringClassificationPolicy,buildAuthoringTaxonomySlice,validateStandardAuthoringBrief} from "../src/authoring/authoring-brief.ts";
 
 const FORMAT="practice-desk-content-blueprint",TAG_FORMAT="practice-desk-cognitive-tags";
 const GROUPS=["subjects","topics","subtopics","difficulties","kinds","origins","sections","cognitive"];
@@ -40,6 +42,11 @@ const int=(x,label,min,max)=>{
  if(!Number.isSafeInteger(x)||x<min||x>max)fail(label+" must be an integer from "+min+" to "+max);
  return x;
 };
+const finite=(x,label,min,max)=>{
+ if(typeof x!=="number"||!Number.isFinite(x)||x<min||x>max)
+  fail(label+" must be a finite number from "+min+" to "+max);
+ return x;
+};
 const bool=(x,label)=>{if(typeof x!=="boolean")fail(label+" must be boolean");return x;};
 const date=(x,label)=>{
  str(x,label,10);
@@ -48,8 +55,17 @@ const date=(x,label)=>{
  if(!Number.isFinite(d.getTime())||d.toISOString().slice(0,10)!==x)fail(label+" must be a real ISO date");
  return x;
 };
-const sourceKey=(q)=>q.syllabusHeadingId?"heading:"+q.syllabusHeadingId:
- "subject:"+(q.subject||"Unclassified");
+const classification=(q,taxonomy)=>{
+ const subject=String(q?.subject??"").trim(),topic=String(q?.topic??"").trim(),subtopic=String(q?.subtopic??"").trim();
+ if(!taxonomy||!subject)return {subject,topic,subtopic,node:null,root:null};
+ const node=resolveTaxonomyPath(taxonomy,[subject,...(topic?[topic]:[]),...(subtopic?[subtopic]:[])])??null;
+ const root=node?taxonomyPathNodes(taxonomy,node.id)[0]??null:null;
+ return {subject,topic,subtopic,node,root};
+};
+const sourceKey=(q,taxonomy)=>{
+ const c=classification(q,taxonomy);
+ return c.root?"taxonomy:"+c.root.id:"subject:"+(c.subject||"Unclassified");
+};
 const topicKey=(s,t)=>JSON.stringify([s,t]);
 const subtopicKey=(s,t,u)=>JSON.stringify([s,t,u]);
 const normalize=(x)=>typeof x==="string"?x.normalize("NFKC").toLocaleLowerCase("en").replace(/^\s*(?:q(?:uestion)?\s*)?\d+[.)\s]+/iu,"").replace(/[^\p{L}\p{N}]+/gu," ").trim().replace(/\s+/g," "):"";
@@ -73,33 +89,105 @@ async function load(path,max,label){
  try{parsed=JSON.parse(raw);}catch{fail(label+" is not valid JSON");}
  return {raw,value:parsed,digest:hash(raw)};
 }
-function validateSubject(examId,s){
+function validateSubject(examId,s,taxonomy){
  str(s,"subjectKey",180);
- if(s.startsWith("heading:")){
-  if(!syllabusHeading(examId,s.slice(8)))fail("Unknown official broad syllabus heading "+s+" for "+examId);
+ if(s.startsWith("taxonomy:")){
+  if(!taxonomy)fail("taxonomy:<id> subject keys require an exam taxonomy");
+  if(taxonomy.examId!==examId)fail("Taxonomy exam does not match blueprint exam");
+  const node=taxonomyNode(taxonomy,s.slice(9));
+  if(!node||node.kind!=="subject")fail("Unknown taxonomy subject "+s+" for "+examId);
  }else if(!s.startsWith("subject:")||!s.slice(8).trim()||s.length>180)
-  fail("subjectKey must be heading:<official-id> or subject:<user label>");
+  fail("subjectKey must be taxonomy:<subject-id> or subject:<user label>");
  return s;
 }
-function validateBlueprint(value){
+function validateBlueprint(value,taxonomy=undefined){
  const b=obj(value,"blueprint",["format","version","id","examId","paperId","revision",
-  "targetCount","allowPartial","syllabus","requirements","quotas","paperRules"]);
+  "targetCount","allowPartial","syllabus","taxonomyId","requirements","quotas","paperRules"]);
  if(b.format!==FORMAT||b.version!==1)fail("Expected "+FORMAT+" v1");
  str(b.id,"id",80);str(b.examId,"examId",80);str(b.paperId,"paperId",80);
  int(b.revision,"revision",1,1000000);int(b.targetCount,"targetCount",1,MAX_TOTAL);
+ if(taxonomy){
+  taxonomy=validateExamTaxonomy(taxonomy);
+  if(taxonomy.examId!==b.examId)fail("Taxonomy examId does not match blueprint");
+ }
+ if(b.taxonomyId!==undefined){
+  str(b.taxonomyId,"taxonomyId",120);
+  if(!taxonomy||taxonomy.id!==b.taxonomyId)fail("Blueprint taxonomyId requires the matching taxonomy");
+ }
  if(b.allowPartial!==undefined)bool(b.allowPartial,"allowPartial");
  if(b.paperRules!==undefined){
-  const policy=obj(b.paperRules,"paperRules",["scoring","timing","navigation","sections"]);
+  const policy=obj(b.paperRules,"paperRules",["scoring","timing","navigation","tools","practiceModes","sections"]);
   if(!Object.keys(policy).length)fail("paperRules cannot be empty");
-  const legal={scoring:["correctMarks","incorrectMarks"],
-   timing:["kind","minutes","pausePolicy","sectionTransition","allowEarlySubmit"],
-   navigation:["questionNavigation","sectionNavigation","allowReview"]};
-  for(const k of Object.keys(legal)){
-   if(policy[k]!==undefined)obj(policy[k],"paperRules."+k,legal[k]);
+  const marking=(value,label,complete=false)=>{
+   const rule=obj(value,label,["correctMarks","incorrectMarks","unansweredMarks"]);
+   if(complete&&["correctMarks","incorrectMarks","unansweredMarks"].some(k=>rule[k]===undefined))
+    fail(label+" must declare correctMarks, incorrectMarks and unansweredMarks");
+   if(rule.correctMarks!==undefined)finite(rule.correctMarks,label+".correctMarks",0,1000);
+   if(rule.incorrectMarks!==undefined)finite(rule.incorrectMarks,label+".incorrectMarks",-1000,0);
+   if(rule.unansweredMarks!==undefined)finite(rule.unansweredMarks,label+".unansweredMarks",-1000,1000);
+   if(rule.correctMarks!==undefined&&rule.incorrectMarks!==undefined&&rule.unansweredMarks!==undefined&&
+      (rule.unansweredMarks<rule.incorrectMarks||rule.unansweredMarks>rule.correctMarks))
+    fail(label+".unansweredMarks must lie between incorrect and correct marks");
+   return rule;
+  };
+  if(policy.scoring!==undefined){
+   const score=obj(policy.scoring,"paperRules.scoring",
+    ["correctMarks","incorrectMarks","unansweredMarks","decimalPlaces","byQuestionKind"]);
+   marking({correctMarks:score.correctMarks,incorrectMarks:score.incorrectMarks,
+    unansweredMarks:score.unansweredMarks},"paperRules.scoring");
+   if(score.decimalPlaces!==undefined)int(score.decimalPlaces,"paperRules.scoring.decimalPlaces",0,6);
+   if(score.byQuestionKind!==undefined){
+    const by=obj(score.byQuestionKind,"paperRules.scoring.byQuestionKind",KINDS);
+    for(const [kind,rule] of Object.entries(by))marking(rule,"paperRules.scoring.byQuestionKind."+kind,true);
+   }
+  }
+  if(policy.timing!==undefined){
+   const timing=obj(policy.timing,"paperRules.timing",
+    ["kind","minutes","pausePolicy","sectionTransition","allowEarlySubmit"]);
+   if(timing.kind!==undefined&&!["untimed","whole-paper","sectional"].includes(timing.kind))
+    fail("paperRules.timing.kind is unsupported");
+   if(timing.minutes!==undefined)int(timing.minutes,"paperRules.timing.minutes",1,600);
+   if(timing.pausePolicy!==undefined&&!["allowed","forbidden"].includes(timing.pausePolicy))
+    fail("paperRules.timing.pausePolicy is unsupported");
+   if(timing.sectionTransition!==undefined&&!["manual","automatic"].includes(timing.sectionTransition))
+    fail("paperRules.timing.sectionTransition is unsupported");
+   if(timing.allowEarlySubmit!==undefined)bool(timing.allowEarlySubmit,"paperRules.timing.allowEarlySubmit");
+  }
+  if(policy.navigation!==undefined){
+   const navigation=obj(policy.navigation,"paperRules.navigation",
+    ["questionNavigation","sectionNavigation","allowReview"]);
+   if(navigation.questionNavigation!==undefined&&!["free","forward-only"].includes(navigation.questionNavigation))
+    fail("paperRules.navigation.questionNavigation is unsupported");
+   if(navigation.sectionNavigation!==undefined&&!["free","sequential-locked"].includes(navigation.sectionNavigation))
+    fail("paperRules.navigation.sectionNavigation is unsupported");
+   if(navigation.allowReview!==undefined)bool(navigation.allowReview,"paperRules.navigation.allowReview");
+  }
+  if(policy.tools!==undefined){
+   const tools=obj(policy.tools,"paperRules.tools",["calculator","wordCount"]);
+   if(tools.calculator!==undefined&&tools.calculator!=="basic-v1")
+    fail('paperRules.tools.calculator must be "basic-v1"');
+   if(tools.wordCount!==undefined&&!["auto","shown","hidden"].includes(tools.wordCount))
+    fail("paperRules.tools.wordCount is unsupported");
+  }
+  if(policy.practiceModes!==undefined){
+   const modes=list(policy.practiceModes,"paperRules.practiceModes",3,1);
+   if(new Set(modes).size!==modes.length||modes.some(x=>!["strict","free","single"].includes(x)))
+    fail("paperRules.practiceModes must contain unique strict/free/single values");
   }
   if(policy.sections!==undefined){
-   for(const entry of list(policy.sections,"paperRules.sections",40,1))
-    obj(entry,"paperRules.sections[]",["id","title","minutes"]);
+   const ids=new Set(),titles=new Set();
+   for(const entry of list(policy.sections,"paperRules.sections",40,1)){
+    const section=obj(entry,"paperRules.sections[]",["id","title","minutes","scoringOverride"]);
+    const id=str(section.id,"paperRules.sections[].id",80);
+    if(!/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(id)||ids.has(id))
+     fail("paperRules.sections[].id must be unique stable IDs");
+    ids.add(id);
+    const title=str(section.title,"paperRules.sections[].title",100);
+    if(titles.has(title))fail("paperRules.sections[].title must be unique");
+    titles.add(title);
+    if(section.minutes!==undefined)int(section.minutes,"paperRules.sections[].minutes",0,600);
+    if(section.scoringOverride!==undefined)marking(section.scoringOverride,"paperRules.sections[].scoringOverride",true);
+   }
   }
  }
  const s=obj(b.syllabus,"syllabus",["basis","asOfDate","reference"]);
@@ -107,10 +195,11 @@ function validateBlueprint(value){
   fail("Syllabus basis is attribution only: user-defined, official-source-attributed or inferred-practice");
  date(s.asOfDate,"syllabus.asOfDate");str(s.reference,"syllabus.reference",500);
  const r=obj(b.requirements,"requirements",
-  ["requireTopic","requireSubtopic","requireDifficulty","requireExplanation",
+  ["requireTaxonomy","requireTopic","requireSubtopic","requireDifficulty","requireExplanation",
    "minCitations","allowedOrigins","maxTopicSharePercent","excludedTopics"]);
- for(const k of ["requireTopic","requireSubtopic","requireDifficulty","requireExplanation"])
+ for(const k of ["requireTaxonomy","requireTopic","requireSubtopic","requireDifficulty","requireExplanation"])
   if(r[k]!==undefined)bool(r[k],"requirements."+k);
+ if(r.requireTaxonomy&&!taxonomy)fail("requireTaxonomy requires the matching exam taxonomy");
  if(r.minCitations!==undefined)int(r.minCitations,"requirements.minCitations",0,12);
  if(r.maxTopicSharePercent!==undefined)int(r.maxTopicSharePercent,"requirements.maxTopicSharePercent",1,100);
  if(r.allowedOrigins!==undefined){
@@ -122,7 +211,7 @@ function validateBlueprint(value){
   const seen=new Set();
   for(const x of list(r.excludedTopics,"excludedTopics",100)){
    obj(x,"excluded topic",["subjectKey","topic"]);
-   validateSubject(b.examId,x.subjectKey);str(x.topic,"excluded topic",120);
+   validateSubject(b.examId,x.subjectKey,taxonomy);str(x.topic,"excluded topic",120);
    const k=topicKey(x.subjectKey,x.topic);if(seen.has(k))fail("Repeated excluded topic");seen.add(k);
   }
  }
@@ -140,12 +229,12 @@ function validateBlueprint(value){
    int(x.count,group+" count",0,b.targetCount);
    let key;
    if(isTopic||isSubtopic){
-    validateSubject(b.examId,x.subjectKey);str(x.topic,"topic",120);
+    validateSubject(b.examId,x.subjectKey,taxonomy);str(x.topic,"topic",120);
     if(isSubtopic)str(x.subtopic,"subtopic",120);
     key=isSubtopic?subtopicKey(x.subjectKey,x.topic,x.subtopic):topicKey(x.subjectKey,x.topic);
    }else{
     key=str(x.key,group+" key",180);
-    if(group==="subjects")validateSubject(b.examId,key);
+    if(group==="subjects")validateSubject(b.examId,key,taxonomy);
     if(group==="difficulties"&&!DIFFICULTIES.includes(key))fail("Invalid difficulty quota "+key);
     if(group==="kinds"&&!KINDS.includes(key))fail("Invalid question-kind quota "+key);
     if(group==="origins"&&!ORIGINS.includes(key))fail("Invalid provenance quota "+key);
@@ -192,10 +281,11 @@ function validateBlueprint(value){
  }
  return b;
 }
-function audit(plan,sources,tagDoc,{offset=0,limit=12,priorSources=[]}={}){
+function audit(plan,sources,tagDoc,{offset=0,limit=12,priorSources=[],coverageLimit=12,taxonomy=undefined}={}){
  const issues=[],all=[],batches=[],sourceHashes=[],bankIds=new Set(),questionIds=new Set();
  const add=(code,message,path="$",severity="error")=>issues.push({code,severity,basis:severity==="warning"?"heuristic":"deterministic",path,message});
- const first=sources[0]?.value,head=first?{scoring:first.scoring,timing:first.timing,navigation:first.navigation,sections:first.sections}:null;
+ const first=sources[0]?.value,head=first?{scoring:first.scoring,timing:first.timing,navigation:first.navigation,
+  tools:first.tools,practiceModes:first.practiceModes,sections:first.sections}:null;
  for(const [k,expected] of Object.entries(plan.paperRules??{}))
   if(first&&!matchesSpecified(first[k],expected))add("paper-policy-mismatch","Authored "+k+" does not match user blueprint paperRules."+k,"paperRules."+k);
  for(const {value:source,digest} of sources){
@@ -210,8 +300,10 @@ function audit(plan,sources,tagDoc,{offset=0,limit=12,priorSources=[]}={}){
   if(!isDeepStrictEqual(source.scoring,head.scoring)||
     !isDeepStrictEqual(source.timing,head.timing)||
     !isDeepStrictEqual(source.navigation,head.navigation)||
+    !isDeepStrictEqual(source.tools,head.tools)||
+    !isDeepStrictEqual(source.practiceModes,head.practiceModes)||
     !isDeepStrictEqual(source.sections,head.sections))
-   add("paper-rules-mismatch","Batches have different scoring/timing/navigation/physical sections",at);
+   add("paper-rules-mismatch","Batches have different scoring/timing/navigation/tools/practice modes/physical sections",at);
   const check=inspectExternalQuestionBank(source);
   if(!check.valid)add("source-invalid","Canonical P57/P59 source QA failed for "+bankId,at);
   batches.push({bankId,count:check.questionCount,sourceValid:check.valid,
@@ -267,7 +359,10 @@ function audit(plan,sources,tagDoc,{offset=0,limit=12,priorSources=[]}={}){
  const originAllowed=plan.requirements.allowedOrigins;
  const excluded=new Set((plan.requirements.excludedTopics??[]).map(x=>topicKey(x.subjectKey,x.topic)));
  for(const {bankId,q} of all){
-  const name=bankId+"/"+q.id,root=sourceKey(q),topic=q.topic??"",subtopic=q.subtopic??"";
+  const c=classification(q,taxonomy);
+  const name=bankId+"/"+q.id,root=sourceKey(q,taxonomy),topic=q.topic??"",subtopic=q.subtopic??"";
+  if(plan.requirements.requireTaxonomy&&!c.node)
+   add("taxonomy-classification-required","Question classification does not resolve through the bound exam taxonomy on "+name,"questions["+name+"]");
   tick("subjects",root);tick("sections",q.examSection??"unspecified");
   tick("difficulties",q.difficulty||"unspecified");
   tick("kinds",q.kind||"unspecified");
@@ -374,8 +469,8 @@ function audit(plan,sources,tagDoc,{offset=0,limit=12,priorSources=[]}={}){
   const rows=coverage[group];
   const mismatches=rows.filter(x=>x.difference!==0);
   coverageSummary[group]={totalTargets:rows.length,mismatches:mismatches.length,
-   shown:Math.min(12,rows.length),remainingTargets:Math.max(0,rows.length-12)};
-  coverage[group]=[...mismatches,...rows.filter(x=>x.difference===0)].slice(0,12);
+   shown:Math.min(coverageLimit,rows.length),remainingTargets:Math.max(0,rows.length-coverageLimit)};
+  coverage[group]=[...mismatches,...rows.filter(x=>x.difference===0)].slice(0,coverageLimit);
  }
  const countsByGroup=Object.fromEntries(GROUPS.map(g=>[g,counts[g].size]));
  const observed=Object.fromEntries(GROUPS.map(g=>{
@@ -396,6 +491,175 @@ function audit(plan,sources,tagDoc,{offset=0,limit=12,priorSources=[]}={}){
    nextOffset:offset+limit<issueCount?offset+limit:null,
    remaining:Math.max(0,issueCount-offset-limit),items:issues.slice(offset,offset+limit)}};
 }
+const briefGroupOrder=["subjects","topics","subtopics","difficulties","kinds","origins","sections","cognitive"];
+const stableSourceId=(value,label)=>{
+ str(value,label,80);
+ if(!/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(value))
+  fail(label+" must use letters, numbers, underscores or hyphens");
+ return value;
+};
+const briefKey=(group,key)=>{
+ if(group==="topics"||group==="subtopics"){
+  try{
+   const parts=JSON.parse(key);
+   if(Array.isArray(parts))return group==="topics"?
+    {subjectKey:parts[0],topic:parts[1]}:
+    {subjectKey:parts[0],topic:parts[1],subtopic:parts[2]};
+  }catch{}
+ }
+ return {key};
+};
+const sourceEnvelope=(plan,sources,bankId,title)=>{
+ let envelope;
+ if(sources.length){
+  envelope=structuredClone(sources[0].value);
+  delete envelope.questions;delete envelope.stimuli;delete envelope.media;
+ }else{
+  const rules=plan.paperRules;
+  if(!rules?.scoring||rules.scoring.correctMarks===undefined||rules.scoring.incorrectMarks===undefined||
+     !rules?.timing?.kind||!Array.isArray(rules.sections)||!rules.sections.length)
+   fail("brief without an existing source requires blueprint paperRules.scoring, paperRules.timing.kind and at least one paperRules.sections entry");
+  const timing=structuredClone(rules.timing);
+  const navigation=rules.navigation?structuredClone(rules.navigation):{
+   questionNavigation:"free",
+   sectionNavigation:timing.kind==="sectional"?"sequential-locked":"free",
+   allowReview:true
+  };
+  envelope={
+   format:"practice-desk-authoring",version:1,bankId,examId:plan.examId,paperId:plan.paperId,
+   title,edition:"custom",revision:plan.revision,scoring:structuredClone(rules.scoring),
+   timing,navigation,sections:structuredClone(rules.sections),
+   ...(rules.tools?{tools:structuredClone(rules.tools)}:{}),
+   ...(rules.practiceModes?{practiceModes:structuredClone(rules.practiceModes)}:{})
+  };
+ }
+ envelope.bankId=bankId;envelope.title=title;
+ envelope.examId=plan.examId;envelope.paperId=plan.paperId;envelope.revision=plan.revision;
+ const sections=envelope.sections;
+ if(!Array.isArray(sections)||!sections.length)
+  fail("Authoring brief paper envelope must contain at least one physical section");
+ try{
+  const probes=sections.map((section,index)=>({
+   id:"brief_probe_"+String(index+1).padStart(2,"0"),examSection:section.id,kind:"single-choice",
+   prompt:"Authoring-envelope validation placeholder for section "+String(index+1)+".",
+   options:["One","Two"],answer:"A",
+   explanation:"Synthetic parser probe only; never emitted as authored content.",
+   provenance:{kind:"ai-original",sourceNote:"Internal brief-envelope validation only"},
+   qa:{status:"unchecked"}
+  }));
+  toAuthoringDraft({...structuredClone(envelope),questions:probes});
+ }catch(error){
+  fail("Authoring brief paper envelope is not a valid canonical source configuration: "+
+   (error instanceof Error?error.message:"unknown validation failure"));
+ }
+ return envelope;
+};
+function buildAuthoringBrief(plan,planSha,sources,tagDoc,{priorSources=[],batchSize=8,bankId,title,taxonomy=undefined,learnerFocus=undefined}={}){
+ stableSourceId(bankId,"--bank-id");
+ str(title,"--title",180);
+ if(sources.some(x=>x.value?.bankId===bankId))
+  fail("--bank-id must be new for this authored batch");
+ const planning={...plan,allowPartial:true};
+ const tagsForEmpty=sources.length||tagDoc?tagDoc:{format:TAG_FORMAT,version:1,tags:[]};
+ const audited=audit(planning,sources,tagsForEmpty,{limit:50,offset:0,priorSources,coverageLimit:MAX_TOTAL,taxonomy});
+ if(audited.issues.blocking)
+  fail("Cannot build authoring brief while current sources contradict the blueprint: "+
+   audited.issues.items.filter(x=>x.severity==="error").slice(0,3).map(x=>x.code).join(", "));
+ const deficits=[];
+ for(const group of briefGroupOrder){
+  for(const row of audited.coverage[group]??[]){
+   if(row.difference>=0)continue;
+   deficits.push({group,...briefKey(group,row.key),target:row.target,actual:row.actual,remaining:-row.difference});
+  }
+ }
+ const byGroup=new Map(briefGroupOrder.map(group=>[group,deficits.filter(x=>x.group===group)]));
+ const priorityDeficits=[];
+ for(let round=0;priorityDeficits.length<24;round++){
+  let added=false;
+  for(const group of briefGroupOrder){
+   const row=byGroup.get(group)?.[round];
+   if(row&&priorityDeficits.length<24){priorityDeficits.push(row);added=true;}
+  }
+  if(!added)break;
+ }
+ const deficitByGroup=Object.fromEntries(briefGroupOrder.map(group=>{
+  const rows=byGroup.get(group)??[],shown=priorityDeficits.filter(x=>x.group===group).length;
+  return [group,{total:rows.length,shown,remaining:Math.max(0,rows.length-shown)}];
+ }).filter(([,v])=>v.total>0));
+ const requestedNow=Math.min(batchSize,audited.remainingCount);
+ const envelope=sourceEnvelope(plan,sources,bankId,title);
+ const occupiedIds=new Set(sources.flatMap(x=>Array.isArray(x.value?.questions)?
+  x.value.questions.map(q=>q?.id).filter(id=>typeof id==="string"):[]));
+ const suggestedQuestionIds=[];
+ const prefix=bankId.slice(0,70).replace(/[-_]+$/u,"")||"batch";
+ for(let serial=1;suggestedQuestionIds.length<requestedNow&&serial<=10000;serial++){
+  const candidate=prefix+"-q"+String(serial).padStart(2,"0");
+  if(candidate.length<=80&&!occupiedIds.has(candidate)){
+   suggestedQuestionIds.push(candidate);occupiedIds.add(candidate);
+  }
+ }
+ if(suggestedQuestionIds.length!==requestedNow)fail("Unable to reserve stable question IDs for requested batch");
+ const sourcePolicy={
+  syllabus:structuredClone(plan.syllabus),
+  minCitations:plan.requirements.minCitations??0,
+  allowedOrigins:structuredClone(plan.requirements.allowedOrigins??ORIGINS),
+  excludedTopics:structuredClone(plan.requirements.excludedTopics??[]),
+  maxTopicSharePercent:plan.requirements.maxTopicSharePercent??100
+ };
+ const classification=authoringClassificationPolicy(plan.requirements);
+ const taxonomyContext=taxonomy?buildAuthoringTaxonomySlice(taxonomy,deficits,requestedNow):undefined;
+ const brief={
+  format:"practice-desk-authoring-brief",version:1,valid:true,
+  blueprint:{id:plan.id,sha256:planSha,examId:plan.examId,paperId:plan.paperId,revision:plan.revision},
+  workflow:{singleAgentCompatible:true,multipleAgentsRequired:false},
+  task:{targetCount:plan.targetCount,alreadyAuthored:audited.actualCount,
+   remainingCount:audited.remainingCount,requestedNow,suggestedQuestionIds},
+  paper:{
+   scoring:structuredClone(envelope.scoring),timing:structuredClone(envelope.timing),
+   navigation:structuredClone(envelope.navigation),sections:structuredClone(envelope.sections),
+   ...(envelope.tools?{tools:structuredClone(envelope.tools)}:{}),
+   ...(envelope.practiceModes?{practiceModes:structuredClone(envelope.practiceModes)}:{})
+  },
+  sourcePolicy,classification,
+  ...(taxonomyContext?{taxonomy:taxonomyContext.taxonomy,taxonomyScope:taxonomyContext.scope}:{}),
+  itemWritingPriorities:[
+   "Spend reasoning on exam-relevant substance, not Practice Desk mechanics.",
+   "For automatically scored items, make the keyed answer uniquely defensible and distractors plausible.",
+   "Use the deepest defensible taxonomy node supported by the item; root-only is valid when the item genuinely spans the subject.",
+   "Assign difficulty when it is defensible from the item; do not invent precision merely to fill metadata.",
+   "Research and verify legal, numerical, current and PYQ claims; never infer authority from this packet."
+  ],
+  priorityDeficits,
+  deficitSummary:{shown:priorityDeficits.length,remaining:Math.max(0,deficits.length-priorityDeficits.length),
+   byGroup:deficitByGroup,
+   note:"Quota groups overlap; satisfy these constraints jointly rather than summing their remaining counts. Bounded output is interleaved across active quota groups so one dimension cannot hide all others."},
+  dedupe:{comparisonSourceCount:audited.comparisonSourceCount,
+   nearDuplicateCandidates:audited.nearDuplicateCandidates},
+  outputContract:{
+   sourceEnvelope:envelope,
+   add:["questions","optional stimuli/media only when the authored items need shared context or images"],
+   question:{
+    coreRequired:["id","examSection","kind","prompt","answer","provenance","qa",
+     ...(plan.requirements.requireExplanation===true?["explanation"]:[])],
+    classification,
+    kindSpecific:{
+     "single-choice":"options: 2..26; one defensible keyed option",
+     "multiple-select":"options: 2..26; answer plus optional selection/partial-credit fields",
+     "numeric-entry":"numeric answer(s); optional tolerance",
+     "true-false":"boolean or True/False answer",
+     "matching":"leftItems/rightItems: 1..26 each",
+     "free-response":"manual/self-assessed; wordLimit only when defensible"
+    },
+    qa:"Author-created or materially changed items remain unchecked/needs-review; do not self-certify."
+   }
+  },
+  learnerFocusIncluded:false,
+  factualVerification:"not-performed",
+  note:"Decision-ready authoring context only. It omits existing question bodies, media bytes and repository/package placement. Research and verify factual, legal, current and PYQ claims outside this packet."
+ };
+ const standard=validateStandardAuthoringBrief(brief);
+ return learnerFocus?personalizeAuthoringBrief(standard,learnerFocus):standard;
+}
 const emit=v=>process.stdout.write(JSON.stringify(v,null,2)+"\n");
 const failure=message=>{
  process.stderr.write(JSON.stringify({valid:false,code:"blueprint-input-invalid",message},null,2)+"\n");
@@ -403,47 +667,79 @@ const failure=message=>{
 };
 async function main(){
  const [command,...args]=process.argv.slice(2);
- if(!["validate","audit"].includes(command))fail("Usage: content-blueprint.mjs validate <plan.json> | audit <plan.json> <source.json>... [--cognitive tags.json] [--against prior-bank.json]... [--offset N] [--limit 1..50]");
- if(command==="validate"&&args.length!==1)fail("validate takes only one blueprint file");
+ const usage="Usage: content-blueprint.mjs validate <plan.json> [--taxonomy taxonomy.json] | audit <plan.json> <source.json>... [--taxonomy taxonomy.json] [--cognitive tags.json] [--against prior-bank.json]... [--offset N] [--limit 1..50] | brief <plan.json> [existing-source.json ...] --bank-id ID --title TITLE [--taxonomy taxonomy.json] [--learner-focus focus.json] [--batch-size 1..20] [--cognitive tags.json] [--against prior-bank.json]...";
+ if(!["validate","audit","brief"].includes(command))fail(usage);
  if(command==="audit"&&args.length<2)fail("audit needs blueprint and at least one source");
+ if(command==="brief"&&args.length<1)fail(usage);
  const planFile=await load(args[0],MAX_PLAN,"Blueprint");
- const plan=validateBlueprint(planFile.value);
+ const files=[],priorPaths=[];let tagPath=null,taxonomyPath=null,focusPath=null,limit=12,offset=0,batchSize=8,bankId=null,title=null;
+ for(let i=1;i<args.length;i++){
+  const flag=args[i];
+  if(["--taxonomy","--learner-focus","--cognitive","--limit","--offset","--against","--batch-size","--bank-id","--title"].includes(flag)){
+   if(i+1>=args.length)fail("Missing argument after "+flag);
+   if(flag==="--taxonomy"){
+    if(taxonomyPath)fail("Duplicate --taxonomy");taxonomyPath=args[++i];
+   }else if(flag==="--learner-focus"){
+    if(command!=="brief")fail("--learner-focus is only valid for brief");
+    if(focusPath)fail("Duplicate --learner-focus");focusPath=args[++i];
+   }else if(flag==="--cognitive"){
+    if(command==="validate")fail("--cognitive is not valid for validate");
+    if(tagPath)fail("Duplicate --cognitive");tagPath=args[++i];
+   }else if(flag==="--against"){
+    priorPaths.push(args[++i]);
+   }else if(flag==="--limit"){
+    if(command!=="audit")fail("--limit is only valid for audit");
+    const num=Number(args[++i]);
+    if(!Number.isSafeInteger(num)||num<1||num>50)fail("Limit must be 1..50");
+    limit=num;
+   }else if(flag==="--offset"){
+    if(command!=="audit")fail("--offset is only valid for audit");
+    const num=Number(args[++i]);
+    if(!Number.isSafeInteger(num)||num<0||num>1000000)fail("Offset must be 0..1000000");
+    offset=num;
+   }else if(flag==="--batch-size"){
+    if(command!=="brief")fail("--batch-size is only valid for brief");
+    const num=Number(args[++i]);
+    if(!Number.isSafeInteger(num)||num<1||num>20)fail("Batch size must be 1..20");
+    batchSize=num;
+   }else if(flag==="--bank-id"){
+    if(command!=="brief"||bankId!==null)fail("Duplicate or misplaced --bank-id");
+    bankId=args[++i];
+   }else{
+    if(command!=="brief"||title!==null)fail("Duplicate or misplaced --title");
+    title=args[++i];
+   }
+  }else if(flag.startsWith("--"))fail("Unknown flag "+flag);
+  else files.push(flag);
+ }
+ if(command==="validate"&&files.length)fail("validate accepts only the blueprint and optional --taxonomy");
+ const taxonomy=taxonomyPath?validateExamTaxonomy((await load(taxonomyPath,MAX_PLAN,"Taxonomy")).value):undefined;
+ const plan=validateBlueprint(planFile.value,taxonomy);
+ const learnerFocus=focusPath?validateLearnerFocusPacket((await load(focusPath,MAX_PLAN,"Learner focus")).value):undefined;
+ if(learnerFocus&&learnerFocus.examId!==plan.examId)fail("Learner focus examId does not match blueprint examId");
  if(command==="validate"){
   emit({format:"practice-desk-blueprint-validation",version:1,valid:true,
    id:plan.id,targetCount:plan.targetCount,examId:plan.examId,paperId:plan.paperId,
    revision:plan.revision,sha256:planFile.digest,
+   ...(taxonomy?{taxonomyId:taxonomy.id}:{}),
    quotaGroups:GROUPS.filter(g=>plan.quotas?.[g]),
    factualVerification:"not-performed",note:"A valid blueprint does not authenticate the curriculum or prove question quality."});
   return;
  }
- const files=[],priorPaths=[];let tagPath=null,limit=12,offset=0;
- for(let i=1;i<args.length;i++){
-  if(args[i]==="--cognitive"||args[i]==="--limit"||args[i]==="--offset"||args[i]==="--against"){
-   if(i+1>=args.length)fail("Missing argument after "+args[i]);
-   if(args[i]==="--cognitive"){
-    if(tagPath)fail("Duplicate --cognitive");tagPath=args[++i];
-   }else if(args[i]==="--against"){
-    priorPaths.push(args[++i]);
-   }else if(args[i]==="--limit"){
-    const num=Number(args[++i]);
-    if(!Number.isSafeInteger(num)||num<1||num>50)fail("Limit must be 1..50");
-    limit=num;
-   }else{
-    const num=Number(args[++i]);
-    if(!Number.isSafeInteger(num)||num<0||num>1000000)fail("Offset must be 0..1000000");
-    offset=num;
-   }
-  }else if(args[i].startsWith("--"))fail("Unknown flag "+args[i]);
-  else files.push(args[i]);
- }
- if(files.length<1||files.length>MAX_FILES)fail("Supply 1.."+MAX_FILES+" source JSON files");
+ if(command==="audit"&&(files.length<1||files.length>MAX_FILES))
+  fail("Supply 1.."+MAX_FILES+" source JSON files");
+ if(command==="brief"&&files.length>MAX_FILES)fail("Supply at most "+MAX_FILES+" existing source JSON files");
  const sources=[];
  for(const path of files)sources.push(await load(path,MAX_SOURCE,"Source"));
  const tags=tagPath?(await load(tagPath,MAX_PLAN,"Cognitive tags")).value:undefined;
  if(priorPaths.length>MAX_FILES)fail("Too many comparison banks");
  const priorSources=[];
  for(const path of priorPaths)priorSources.push(await load(path,MAX_SOURCE,"Prior comparison source"));
- const result=audit(plan,sources,tags,{limit,offset,priorSources});
+ if(command==="brief"){
+  const result=buildAuthoringBrief(plan,planFile.digest,sources,tags,{priorSources,batchSize,bankId,title,taxonomy,learnerFocus});
+  emit(result);return;
+ }
+ const result=audit(plan,sources,tags,{limit,offset,priorSources,taxonomy});
  result.blueprintSha256=planFile.digest;
  emit(result);
  if(!result.valid)process.exitCode=1;

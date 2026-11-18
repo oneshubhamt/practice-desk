@@ -1,0 +1,3630 @@
+{
+  "format": "practice-desk-quality-review",
+  "version": 3,
+  "bankId": "pfrda-grade-a-2026-day1",
+  "sourceSha256": "90ffd043d793b4af3101d357d7d7fd1063717d4448112f37cc1692b2b3468dd5",
+  "reviewMode": "self-review",
+  "candidateOnlyContextClaim": false,
+  "reviewer": {
+    "id": "pass3-self-review-2026-11-17",
+    "kind": "ai"
+  },
+  "records": [
+    {
+      "questionId": "day1-english-precis",
+      "questionSha256": "dd6cc41e1699d2834a7ef3d2a0f6335d4604514bb7b936672db34144e0ce8cfa",
+      "candidateSha256": "58ac4ec48ac71c3bfdf580a335f53b74d0ceb88df079736a21fcff3a9d8f784b",
+      "solution": {
+        "status": "completed",
+        "answer": "",
+        "reasoning": "Self-review second pass: Illustrative title: Retirement Security in a Changing Economy Model précis: Retirement security depends not simply on accumulated savings but also on stable earnings, accessible institutions and systems that manage uncertainty. Traditional pensions assumed predictable employment, whereas irregular incomes and interrupted careers now make regular contributions difficult. Genuine financial inclusion therefore requires affordable, convenient and transparent arrangements that build trust. Policymakers must balance investment flexibility against market risk, guarantees against financial sustainability, and emergency withdrawals against future adequacy. Women, informal workers and those with interrupted careers face particular disadvantages, calling for inclusive yet administratively sustainable designs. Pension systems should consequently be assessed not only by enrolment or assets, but by their ability to provide dependable old-age income while balancing personal responsibility and social protection. Unofficial practice rubric (/20): fidelity and coverage 8; compression 4; logical structure 3; language and grammar 3; title 2. Manually assess writing; the model is not the only acceptable response."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "International Labour Organization",
+          "title": "World Social Protection Report 2024–26",
+          "locator": "Chapter 4.3 — old-age pension coverage and adequacy",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Older-age protection gaps are especially relevant for women, low earners and workers with precarious or fragmented employment.",
+          "url": "https://webapps.ilo.org/static/english/reports/flagship/world_social_protection_report_2024-26/Chapter%2004.html"
+        },
+        {
+          "publisher": "OECD",
+          "title": "OECD Pensions Outlook 2026",
+          "locator": "Executive summary and contribution adequacy chapter",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Retirement adequacy depends on contribution histories, investment outcomes, participation barriers and sustainable pension design.",
+          "url": "https://www.oecd.org/en/publications/oecd-pensions-outlook-2026_a51aa775-en.html"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-01",
+      "questionSha256": "4286c3b5c2fb68f484298da72581c4059f908e36fbdff5263d4435598e8ae709",
+      "candidateSha256": "52f9a72bab02005fb0197da29b285c24010978535fdd14a5e444f56b18c813c2",
+      "solution": {
+        "status": "completed",
+        "answer": "A",
+        "reasoning": "Self-review second pass: A is correct. The PFRDA Act regulates the NPS and the pension schemes within its statutory scope; it is not a universal law for every provident fund. B ignores exclusions and other regulators; C wrongly confines it to Central employees; D confuses pension regulation with insurance annuity regulation. Recall: identify the scheme and its governing enactment before naming its regulator."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "yes",
+        "timeSensitive": "yes",
+        "visual": "no",
+        "asOfDate": "2026-11-15"
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "temporal-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The legal, regulatory or time-sensitive proposition was checked against a current/dated source for the declared as-of date."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "India Code",
+          "title": "PFRDA Act, 2013",
+          "locator": "Section 1(4)",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "The Act applies to the National Pension System and other pension schemes within its statutory scope, subject to exclusions.",
+          "url": "https://upload.indiacode.nic.in/showfile?actid=AC_CEN_2_45_00007_201323_1517807327819&filename=201323.pdf&type=actfile",
+          "asOfDate": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-02",
+      "questionSha256": "2fb991a318451fc76524b54f94f52ff28652963f8d769b601c0c057adaaf08eb",
+      "candidateSha256": "ddabce0ac0e7b9fea1c4ee1d29249672f55cc551cff9117b6950f1fab4821c2a",
+      "solution": {
+        "status": "completed",
+        "answer": "B",
+        "reasoning": "Self-review second pass: B, 4.3% of GDP, is the FY 2026–27 Budget Estimate for fiscal deficit. C (4.4%) belongs to a different Budget-period comparison; A and D are not the specified BE figure. Fiscal deficit measures borrowing requirements, not capital expenditure or the revenue deficit. Always distinguish BE from RE and identify the financial year before memorising a Budget number."
+      },
+      "applicability": {
+        "mathematical": "yes",
+        "legal": "no",
+        "timeSensitive": "yes",
+        "visual": "no",
+        "asOfDate": "2026-11-15"
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "mathematical-correctness",
+          "status": "pass",
+          "basis": "mathematical-proof",
+          "rationale": "Arithmetic/formula application was independently recomputed from the stated inputs, including sign, unit and denominator conventions."
+        },
+        {
+          "id": "temporal-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The legal, regulatory or time-sensitive proposition was checked against a current/dated source for the declared as-of date."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "Ministry of Finance",
+          "title": "Union Budget 2026–27: Fiscal Policy Strategy Statement",
+          "locator": "Fiscal Policy Strategy Statement — fiscal deficit BE 2026–27",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Budget Estimates 2026–27 place the fiscal deficit at 4.3 per cent of GDP.",
+          "url": "https://www.indiabudget.gov.in/doc/frbm1.pdf",
+          "asOfDate": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-03",
+      "questionSha256": "2446afb3025d67fec8cff1aa104dbff5e7027463ece46776943817d6f17c02e3",
+      "candidateSha256": "54c7923a50c40180ae47a0c08ec9706b712cceaa6efe338c35ad157609e0438e",
+      "solution": {
+        "status": "completed",
+        "answer": "C",
+        "reasoning": "Self-review second pass: C, ₹7.5 lakh. NRV is expected sale proceeds less costs necessary to complete and sell: ₹7.8 − ₹0.3 = ₹7.5 lakh. Inventory is measured at the lower of its ₹8 lakh cost and ₹7.5 lakh NRV. A ignores the write-down; B ignores selling expenses; D incorrectly adds expenses. The rule is lower of cost and NRV, not lower of cost and selling price."
+      },
+      "applicability": {
+        "mathematical": "yes",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "mathematical-proof",
+          "rationale": "The result follows from an independently recomputed relationship using the quantities stated in the stem."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "mathematical-correctness",
+          "status": "pass",
+          "basis": "mathematical-proof",
+          "rationale": "Arithmetic/formula application was independently recomputed from the stated inputs, including sign, unit and denominator conventions."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "ICAI",
+          "title": "AS 2: Valuation of Inventories",
+          "locator": "Referenced source section",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "AS 2 requires inventories to be measured at the lower of cost and net realisable value.",
+          "url": "https://kb.icai.org/pdfs/69232asb55316-as2.pdf"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-04",
+      "questionSha256": "08e83ac1d1cab60dbb1332eeccca6d00630eab52f2afdf9d900d3a6134acdc45",
+      "candidateSha256": "77136ddeae615b5a66dfd54d7f9e2b79b983fd8e0b8c0f70332dc4a15853ab02",
+      "solution": {
+        "status": "completed",
+        "answer": "B",
+        "reasoning": "Self-review second pass: B is controlling: measure actual performance, compare it with standards, identify deviations and take corrective action. Planning sets objectives (A), staffing secures people (C), and organising allocates roles/resources (D). Controlling is the feedback-and-correction function, not simply drawing up a plan. The question’s decisive clue is comparison of actual results with standards followed by corrective action."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "OpenStax",
+          "title": "Introduction to Business 2e",
+          "locator": "6.5 Controlling",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Control sets standards, measures performance, compares actual results with standards and takes corrective action.",
+          "url": "https://openstax.org/books/introduction-business-2e/pages/6-5-controlling"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-05",
+      "questionSha256": "a14227c44749158876b3112d346f55b7818f24cfc8f73a7ac2d3bbbec13c5c10",
+      "candidateSha256": "f8f6c7364b1eccb5eb94dd3d235c4db5facff9632dced24ef8d3b6510b78d515",
+      "solution": {
+        "status": "completed",
+        "answer": "D",
+        "reasoning": "Self-review second pass: D. For an existing fixed-coupon bond, higher market price means lower yield to maturity and vice versa, other inputs held constant. A reverses the relationship; B denies the price sensitivity of yield; C confuses the contractually fixed coupon rate with the changing market yield. A bond can keep paying the same coupon while its traded price and yield move in opposite directions."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "U.S. SEC Investor.gov",
+          "title": "What Are Corporate Bonds?",
+          "locator": "Bond prices, interest rates and yield",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "For a fixed-rate bond, price and yield move inversely.",
+          "url": "https://www.investor.gov/introduction-investing/general-resources/news-alerts/alerts-bulletins/investor-bulletins/what-are"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-06",
+      "questionSha256": "c5ca877dee59772071835ee4929bca4dc42b8fa614cd553d74c8173a78bc0e2c",
+      "candidateSha256": "f3192b386db15214349b7ceda74eda3b4660d0bb67ad0c7317feb8828352d2d6",
+      "solution": {
+        "status": "completed",
+        "answer": "B",
+        "reasoning": "Self-review second pass: B, 1,200 units. Contribution per unit = ₹500 selling price − ₹300 variable cost = ₹200. Break-even units = fixed costs / contribution per unit = ₹2,40,000 / ₹200 = 1,200. A understates fixed-cost recovery; C and D exceed the break-even output. Fixed costs are not divided by selling price: only the contribution left after variable costs pays for fixed costs."
+      },
+      "applicability": {
+        "mathematical": "yes",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "mathematical-proof",
+          "rationale": "The result follows from an independently recomputed relationship using the quantities stated in the stem."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "mathematical-correctness",
+          "status": "pass",
+          "basis": "mathematical-proof",
+          "rationale": "Arithmetic/formula application was independently recomputed from the stated inputs, including sign, unit and denominator conventions."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "ICMAI",
+          "title": "Cost Accounting study material",
+          "locator": "Referenced source section",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Break-even volume equals fixed cost divided by contribution per unit.",
+          "url": "https://www.icmai.in/upload/Students/Syllabus2022/Inter_Stdy_Mtrl/P8.pdf"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-07",
+      "questionSha256": "c4f8c46836a6b58e411af4c2653ea9159eb2933c60a5b15f60be45bbddf0d5f2",
+      "candidateSha256": "14182c0e505d87a81143802683eca441ea62821c5565beb5019e8062c31d1293",
+      "solution": {
+        "status": "completed",
+        "answer": "B",
+        "reasoning": "Self-review second pass: B. Section 42 private placement is an offer/invitation to a selected, identified set of persons subject to the statutory process. A describes a public offer, C resembles a proportionate rights issue under Section 62, and D a bonus issue under Section 63. The distinction is the mode and target of invitation; a private placement is not an unrestricted appeal to the public."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "yes",
+        "timeSensitive": "yes",
+        "visual": "no",
+        "asOfDate": "2026-11-15"
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "temporal-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The legal, regulatory or time-sensitive proposition was checked against a current/dated source for the declared as-of date."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "Ministry of Corporate Affairs",
+          "title": "Companies Act, 2013",
+          "locator": "Section 42",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Section 42 private placement is an offer or invitation to a select/identified group, subject to statutory conditions.",
+          "url": "https://www.mca.gov.in/Ministry/pdf/CompaniesAct2013.pdf",
+          "asOfDate": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-08",
+      "questionSha256": "305c8c20e01bcbc5d13101b2a4a6102b71a0289544730c8ed664207b0d9dfb2b",
+      "candidateSha256": "aac2aa7abb79bedc8cc7d3f5a30d7efd88f75b2b00f5cce301ac052ff7a66024",
+      "solution": {
+        "status": "completed",
+        "answer": "D",
+        "reasoning": "Self-review second pass: D. A cash transfer does not itself buy newly produced goods or services and is excluded from the expenditure measure of GDP. A is government consumption/investment expenditure, B household final consumption, and C business investment in equipment. If the recipient later spends the transfer on current output, that spending may enter GDP; the transfer itself is not counted again."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "no",
+        "timeSensitive": "yes",
+        "visual": "no",
+        "asOfDate": "2026-11-15"
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "temporal-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The legal, regulatory or time-sensitive proposition was checked against a current/dated source for the declared as-of date."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "OpenStax",
+          "title": "Principles of Economics 3e",
+          "locator": "19.1 Measuring GDP",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Government transfer payments are excluded from GDP because they do not represent current production.",
+          "url": "https://openstax.org/books/principles-economics-3e/pages/19-1-measuring-the-size-of-the-economy-gross-domestic-product",
+          "asOfDate": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-09",
+      "questionSha256": "0ff310cbc1905335d581a968511e51cc1e3473708819b04a03d812411fd5be80",
+      "candidateSha256": "345df74afd8d8e6fb9c7463aa2715954204af080db3a2a13f6381748b7b72186",
+      "solution": {
+        "status": "completed",
+        "answer": "B",
+        "reasoning": "Self-review second pass: B. The Central Recordkeeping Agency maintains subscriber records and PRAN-linked transactions. A pension fund manages invested assets; C an annuity service provider contracts for pension/annuity payments at the applicable stage; D a custodian safeguards securities/assets. The CRA is the recordkeeping and transaction-information hub, not the owner or portfolio manager of the underlying investments."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "yes",
+        "timeSensitive": "yes",
+        "visual": "no",
+        "asOfDate": "2026-11-15"
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "temporal-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The legal, regulatory or time-sensitive proposition was checked against a current/dated source for the declared as-of date."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "PFRDA",
+          "title": "Central Recordkeeping Agency functions",
+          "locator": "CRA functions — recordkeeping and PRAN",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "The CRA maintains subscriber records and PRAN-linked recordkeeping/transaction services under the NPS architecture.",
+          "url": "https://pfrda.org.in/en/intermediaries/registered-intermediaries/central-record-keeping-agency",
+          "asOfDate": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-10",
+      "questionSha256": "e3cc6bab12536b20a438286187be779b2487a1fe87d88d7842b788adf63de641",
+      "candidateSha256": "cf6fc383a1aaa57fed615594e53520cf540a61e3f3adc48348420a7d67a07508",
+      "solution": {
+        "status": "completed",
+        "answer": "C",
+        "reasoning": "Self-review second pass: C. Historical applications labelled default/not default supply the known target classes needed for supervised classification. A clustering and D dimensionality reduction are unsupervised methods without such outcome labels; B reinforcement learning uses reward-based interaction rather than labelled examples as the central training signal. Key distinction: labels + predicted category = supervised classification."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "Google for Developers",
+          "title": "Machine Learning Glossary: ML Fundamentals",
+          "locator": "Labeled example / supervised learning",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Supervised learning trains on labeled examples and predicts labels for new examples.",
+          "url": "https://developers.google.com/machine-learning/glossary/fundamentals"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-11",
+      "questionSha256": "3cb2d390e9e86630c8733994d931e12b8016d8acf2468eddc249fb1a08286b3d",
+      "candidateSha256": "a216e866ae6ea25013fd2c25c4e766ba59728700cbdee5fa61ca37cb473af9f7",
+      "solution": {
+        "status": "completed",
+        "answer": "B",
+        "reasoning": "Self-review second pass: B, media convergence, combines distribution and often production across broadcast, websites, apps and social channels. A digital exclusion is about access barriers; C audience fragmentation may coexist but does not explain integrated cross-platform distribution; D price discrimination concerns varying prices across buyers. Convergence involves media technologies, content and platforms coming together, not merely the existence of several audiences."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "UNESCO",
+          "title": "Media and Information Literacy Curriculum for Teachers",
+          "locator": "Media convergence / changing media landscape",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Media convergence brings formerly separate media technologies, content and distribution channels together."
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-12",
+      "questionSha256": "2d1acd2568cce399cd13e8f09a173ebd57beaf1d1bf055d174d7589ee0f4453f",
+      "candidateSha256": "7e37697214b63178787078bb7057b29989fbdf40cf29cea97986a024efb1675b",
+      "solution": {
+        "status": "completed",
+        "answer": "C",
+        "reasoning": "Self-review second pass: C, Place. The provider is changing how and where users reach its service through branches, apps and partners. Product refers to the service offered (A), Price to what users pay (B), and Promotion to persuasive communications (D). In the four Ps, access and distribution channels belong to Place even if the channel is digital rather than a physical shop."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "OpenStax",
+          "title": "Principles of Marketing",
+          "locator": "17.1 Marketing channels",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Distribution channels determine how and where consumers access goods and services.",
+          "url": "https://openstax.org/books/principles-marketing/pages/17-1-the-use-and-value-of-marketing-channels"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-13",
+      "questionSha256": "aff7db37d58fb7135b0d55078026901c6104c115971c6a4efcf58fe779e2ddf9",
+      "candidateSha256": "210a63eb7978196cb33f2808fb6b0fe16169e4984d686543d26a2ed0fa448f62",
+      "solution": {
+        "status": "completed",
+        "answer": "C",
+        "reasoning": "Self-review second pass: C. Section 14(2)(f) empowers PFRDA to establish subscriber-grievance redressal mechanisms by regulation. A is not a universal guarantee of investment returns; B would confer judicial powers not supplied by that clause; D concerns insurance-product pricing, not PFRDA subscriber grievance redressal. Memorise the function and the provision together: protection of subscribers includes grievance handling, not underwriting all investment risk."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "yes",
+        "timeSensitive": "yes",
+        "visual": "no",
+        "asOfDate": "2026-11-15"
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "temporal-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The legal, regulatory or time-sensitive proposition was checked against a current/dated source for the declared as-of date."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "India Code",
+          "title": "PFRDA Act, 2013",
+          "locator": "Section 14(2)(f)",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Section 14 includes establishment of a mechanism for redressal of subscriber grievances.",
+          "url": "https://upload.indiacode.nic.in/showfile?actid=AC_CEN_2_45_00007_201323_1517807327819&filename=201323.pdf&type=actfile",
+          "asOfDate": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-14",
+      "questionSha256": "dc670e863fabc408bf8a238a22c709f758cc5f7eed0db5641905bea40a2e2fb2",
+      "candidateSha256": "63eddef0bd911d6ca7cde06dd51a1cf75e296c0aebc799f66b3e5e87d134874b",
+      "solution": {
+        "status": "completed",
+        "answer": "B",
+        "reasoning": "Self-review second pass: B, ₹12.22 lakh crore, is direct Central Government capital expenditure in BE 2026–27. D, ₹17.15 lakh crore, is the broader effective capital expenditure including grants for creation of capital assets; A and C are not the direct capex BE total. An MCQ may deliberately swap direct and effective capex: check the exact expenditure concept and the BE/RE label."
+      },
+      "applicability": {
+        "mathematical": "yes",
+        "legal": "no",
+        "timeSensitive": "yes",
+        "visual": "no",
+        "asOfDate": "2026-11-15"
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "mathematical-correctness",
+          "status": "pass",
+          "basis": "mathematical-proof",
+          "rationale": "Arithmetic/formula application was independently recomputed from the stated inputs, including sign, unit and denominator conventions."
+        },
+        {
+          "id": "temporal-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The legal, regulatory or time-sensitive proposition was checked against a current/dated source for the declared as-of date."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "Ministry of Finance",
+          "title": "Union Budget 2026–27: Fiscal Policy Strategy Statement",
+          "locator": "Fiscal Policy Strategy Statement — capital expenditure BE 2026–27",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Budget Estimates 2026–27 provide ₹12.22 lakh crore for direct Central Government capital expenditure.",
+          "url": "https://www.indiabudget.gov.in/doc/frbm1.pdf",
+          "asOfDate": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-15",
+      "questionSha256": "2e31853e7631602a55a9e374b6db1acb4b3cf63951f7e72cac8b4519bada353b",
+      "candidateSha256": "2e5aee080b39570155cfab4bc73aa2a16fe079276a8313fc46c8786edac298b1",
+      "solution": {
+        "status": "completed",
+        "answer": "A",
+        "reasoning": "Self-review second pass: A. Under the indirect method, increasing inventory ordinarily uses operating resources; its increase is deducted while reconciling accrual profit to operating cash flow, other things equal. B has the cash-flow direction reversed; C misclassifies working capital as financing; D wrongly ignores non-cash working-capital changes in the reconciliation. A cash purchase of inventory is already reflected through working-capital adjustment."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "ICAI",
+          "title": "Accounting Standard (AS) 3: Cash Flow Statements",
+          "locator": "Paragraph 20 — indirect method",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "The indirect method adjusts profit for changes in inventories and operating receivables and payables.",
+          "url": "https://indasaccess.icai.org/Volume-III/AS/asb.html?a=106"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-16",
+      "questionSha256": "6e232e5857a2fc2581417c81cefa58825ece8f325245794100cab72fb7798fa7",
+      "candidateSha256": "1778d8869e44eaab83e11418872efd051db784bd0844d4ba8355ed52c7ab7a2b",
+      "solution": {
+        "status": "completed",
+        "answer": "C",
+        "reasoning": "Self-review second pass: C, matrix structure, because an employee has both functional and project reporting relationships. A line or B purely functional structure ordinarily has a single vertical command chain; D divisional structure is arranged around products, regions or markets and need not create dual reporting. The identifying feature of a matrix is the coexistence of functional and project authority."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "OpenStax",
+          "title": "Principles of Management",
+          "locator": "4.3 Organizational Designs and Structures",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Matrix structures create dual reporting relationships to functional and product/project authority.",
+          "url": "https://openstax.org/books/principles-management/pages/4-3-organizational-designs-and-structures"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-17",
+      "questionSha256": "a962335df7461a91383ac86ae1bc4992d11d50fefb66bc8b2c0fed3faaf3ec69",
+      "candidateSha256": "077839cba83c093451f34ae7f1e24c86ce36e3c8c39b18c0e06737a773bf6756",
+      "solution": {
+        "status": "completed",
+        "answer": "D",
+        "reasoning": "Self-review second pass: D. A put option gives its buyer the right, not the obligation, to sell the underlying at the strike under the option terms. A and B mistakenly impose exercise obligations on the buyer; C describes the buyer of a call option. The seller/writer, not the buyer, undertakes the corresponding obligation if valid exercise occurs. Put = right to sell; call = right to buy."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "U.S. SEC Investor.gov",
+          "title": "Options investor education",
+          "locator": "Put option definition",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "A put gives its buyer the right, not the obligation, to sell at the strike price."
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-18",
+      "questionSha256": "1952619d5f4d0fd51b82042ed7f8cc34d11e82a0ab26ee2b1fe09f0e1bdfb575",
+      "candidateSha256": "728dd00016e72f0c8b9ee6a74f2e73413d48246606a2ff93e52a9d6b59b2b206",
+      "solution": {
+        "status": "completed",
+        "answer": "B",
+        "reasoning": "Self-review second pass: B. Activity-based costing first groups overhead by activity, then charges products using an activity cost driver such as number of set-ups. A uses a broad allocation base regardless of the actual driver; C marginal costing focuses on variable contribution and does not solve this overhead-driver allocation; D equivalent-unit process costing addresses homogeneous production. Allocate set-up cost by set-ups when set-ups cause that overhead."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "ICMAI",
+          "title": "Cost Accounting study material",
+          "locator": "Referenced source section",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Activity-based costing uses activity cost drivers; set-up cost is driven by the number of set-ups.",
+          "url": "https://www.icmai.in/upload/Students/Syllabus2022/Inter_Stdy_Mtrl/P8.pdf"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-19",
+      "questionSha256": "daedf904db41bbfac199abbc6e70edd0da9861859bfef8ddc9e0ce20acee2274",
+      "candidateSha256": "c8779266ad08aca8412b1cbabe8c9293882270e32d29871618699f400cf579bd",
+      "solution": {
+        "status": "completed",
+        "answer": "C",
+        "reasoning": "Self-review second pass: C. Section 63 allows eligible free reserves, the securities premium account and the capital redemption reserve account to be capitalised for fully paid bonus shares, subject to conditions. It expressly excludes reserves created by asset revaluation. Hence A, B and D name eligible sources, while C is prohibited. Exam trap: an accounting reserve appearing in equity is not automatically distributable or eligible for bonus capitalisation."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "yes",
+        "timeSensitive": "yes",
+        "visual": "no",
+        "asOfDate": "2026-11-15"
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "temporal-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The legal, regulatory or time-sensitive proposition was checked against a current/dated source for the declared as-of date."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "Ministry of Corporate Affairs",
+          "title": "Companies Act, 2013",
+          "locator": "Section 63",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Section 63 permits specified reserves for bonus shares but excludes reserves created by revaluation of assets.",
+          "url": "https://www.mca.gov.in/Ministry/pdf/CompaniesAct2013.pdf",
+          "asOfDate": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-20",
+      "questionSha256": "5487ca5ee988a0e6719ab36c040d3b86957be05859d629d8dd737b0248202d9f",
+      "candidateSha256": "578fff75a430b5ab4e98ce401afddef1d853d419a6baecf57bd5e0b2876bef1f",
+      "solution": {
+        "status": "completed",
+        "answer": "B",
+        "reasoning": "Self-review second pass: B, 110. GDP deflator = nominal GDP / real GDP × 100 = 2,200 / 2,000 × 100. A (90.9) inverts the ratio; C treats the figure as a percentage by an incorrect operation; D omits the base-100 scaling. A value of 110 indicates the current-price level of measured output is 10% above the base-year price level in this calculation."
+      },
+      "applicability": {
+        "mathematical": "yes",
+        "legal": "no",
+        "timeSensitive": "yes",
+        "visual": "no",
+        "asOfDate": "2026-11-15"
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "mathematical-correctness",
+          "status": "pass",
+          "basis": "mathematical-proof",
+          "rationale": "Arithmetic/formula application was independently recomputed from the stated inputs, including sign, unit and denominator conventions."
+        },
+        {
+          "id": "temporal-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The legal, regulatory or time-sensitive proposition was checked against a current/dated source for the declared as-of date."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "OpenStax",
+          "title": "Principles of Economics 3e",
+          "locator": "Relevant macroeconomics principle",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "The reviewed economics relationship follows standard national-income and macroeconomic definitions.",
+          "url": "https://openstax.org/books/principles-economics-3e",
+          "asOfDate": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-21",
+      "questionSha256": "a674f24cf5dcc079fef9ef3938c6992de572a6ef99d403f07ab347faf00d159c",
+      "candidateSha256": "60868f7baf618746784c18b46094effc5bf69df587d82300d147a3c08542349b",
+      "solution": {
+        "status": "completed",
+        "answer": "B",
+        "reasoning": "Self-review second pass: B. APY offers specified Government-guaranteed minimum monthly pensions of ₹1,000, ₹2,000, ₹3,000, ₹4,000 or ₹5,000 after age 60, subject to enrolment and contribution conditions. A gives the wrong amount and age; C wrongly denies the defined guarantee; D wrongly presents a lump-sum at age 40. Do not confuse APY’s specified minimum benefit with ordinary market-linked NPS accumulation."
+      },
+      "applicability": {
+        "mathematical": "yes",
+        "legal": "yes",
+        "timeSensitive": "yes",
+        "visual": "no",
+        "asOfDate": "2026-11-15"
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "mathematical-correctness",
+          "status": "pass",
+          "basis": "mathematical-proof",
+          "rationale": "Arithmetic/formula application was independently recomputed from the stated inputs, including sign, unit and denominator conventions."
+        },
+        {
+          "id": "temporal-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The legal, regulatory or time-sensitive proposition was checked against a current/dated source for the declared as-of date."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "PFRDA",
+          "title": "Atal Pension Yojana FAQs",
+          "locator": "APY FAQs — guaranteed pension choices",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "APY provides Government-guaranteed minimum pension choices of ₹1,000 to ₹5,000 per month after age 60, subject to conditions.",
+          "url": "https://pfrda.org.in/web/pfrda/w/faqs/atal-pension-yojana",
+          "asOfDate": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-22",
+      "questionSha256": "f0546c96acf3d7e37396dceea6721e364d8a6845e2d36ed0bb3db1c61dcfbe25",
+      "candidateSha256": "899207787ade55d78d886e188ca71590323ad1b7ab649aec9a998fd7d49d6596",
+      "solution": {
+        "status": "completed",
+        "answer": "C",
+        "reasoning": "Self-review second pass: C. Excellent training accuracy with much weaker performance on independent representative data suggests overfitting or poor generalisation. A underfitting would usually show weak training performance too; B accuracy alone cannot guarantee data integrity; D successful cross-validation cannot be inferred from one reported test result. Look at the gap between in-sample and out-of-sample performance, not the training score alone."
+      },
+      "applicability": {
+        "mathematical": "yes",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "mathematical-proof",
+          "rationale": "The result follows from an independently recomputed relationship using the quantities stated in the stem."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "mathematical-correctness",
+          "status": "pass",
+          "basis": "mathematical-proof",
+          "rationale": "Arithmetic/formula application was independently recomputed from the stated inputs, including sign, unit and denominator conventions."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "Google for Developers",
+          "title": "Machine Learning: Overfitting and pruning",
+          "locator": "Overfitting example",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "A model can fit training examples very well yet perform poorly on new data when it overfits.",
+          "url": "https://developers.google.com/machine-learning/decision-forests/overfitting-and-pruning"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-23",
+      "questionSha256": "b6e5f1af1c199e73316dca8668f72fc3615726d569db1f44110e67b20eb2581a",
+      "candidateSha256": "dcdf19c0cf6c7d8ad9de41e56e9820906316d2d0a486668e56f592cf736262c5",
+      "solution": {
+        "status": "completed",
+        "answer": "B",
+        "reasoning": "Self-review second pass: B. Behavioural microtargeting creates privacy and profiling concerns, particularly when personal data and tailored messages can be used manipulatively. A spectrum licensing, C copyright ownership and D circulation audit may be genuine media-law subjects, but none responds as directly to individual behavioural profiling. The ethical issue is not personalisation as such; it is data use, consent, fairness and manipulation risk."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "U.S. Federal Trade Commission",
+          "title": "Online Behavioral Advertising: Moving the Discussion Forward",
+          "locator": "Privacy and behavioral targeting",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Behavioral advertising relies on tracking and profiling, creating privacy and transparency concerns."
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-24",
+      "questionSha256": "b2e76257b0c41662b6b2389dbda0ad0c80dcccc65b8ec2789d45254294a8d305",
+      "candidateSha256": "ec7fd5979891e66d9e76afa48652d27f24a1ebbff9956fbc28f070eb231c7930",
+      "solution": {
+        "status": "completed",
+        "answer": "B",
+        "reasoning": "Self-review second pass: B, active listening and clarification. Paraphrasing another person’s concern and checking accuracy verifies shared understanding. A one-way persuasion seeks to influence rather than clarify; C avoids the feedback just used; D selectively withholds information. The question gives two clues: restating in one’s own words and seeking confirmation. Together they distinguish genuine listening from passive silence."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "OpenStax",
+          "title": "Clinical Nursing Skills",
+          "locator": "3.1 Therapeutic Communication — Active Listening",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Active listening includes restating what was said and verifying that the listener understood correctly.",
+          "url": "https://openstax.org/books/clinical-nursing-skills/pages/3-1-therapeutic-communication"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-25",
+      "questionSha256": "5a66c70c05da43b9e0cca2b6627d68c7f11f9b02f879cdcebc9888a924b35995",
+      "candidateSha256": "5f4fc2bec1c1c8d025c52c0273dd7f0cce83a53e27dc161a4e360c5148887c7a",
+      "solution": {
+        "status": "completed",
+        "answer": "A",
+        "reasoning": "Self-review second pass: A. Under PFRDA Act Section 51, the Central Government may make rules; Section 52 empowers PFRDA to make regulations consistent with the Act and rules. B and C incorrectly give both law-making powers to one institution; D reverses their statutory roles. Rules and regulations are both subordinate instruments, but the maker and statutory delegation differ. Do not confuse a regulator’s circulars with its regulations."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "yes",
+        "timeSensitive": "yes",
+        "visual": "no",
+        "asOfDate": "2026-11-15"
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "temporal-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The legal, regulatory or time-sensitive proposition was checked against a current/dated source for the declared as-of date."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "India Code",
+          "title": "PFRDA Act, 2013",
+          "locator": "Sections 51 and 52",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "The Central Government makes rules under section 51; PFRDA makes regulations under section 52.",
+          "url": "https://upload.indiacode.nic.in/showfile?actid=AC_CEN_2_45_00007_201323_1517807327819&filename=201323.pdf&type=actfile",
+          "asOfDate": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-26",
+      "questionSha256": "6d8404a47a9bed0ffb977569ad6271b4c095deaecbfcb34f4378c0b9921b24b1",
+      "candidateSha256": "ad06fe36439292feaa098f11174045e3504018aa0f083a026504b56b113829e4",
+      "solution": {
+        "status": "completed",
+        "answer": "D",
+        "reasoning": "Self-review second pass: D, 6.8–7.2%, is the Economic Survey 2025–26 projection for real GDP growth in FY 2026–27. A and B are below this stated projection, while C is above it. The Survey figure is a forward-looking range, not a realised FY27 growth rate. In dynamic-data questions, first identify whether the number is an estimate, projection or actual and then match the fiscal year."
+      },
+      "applicability": {
+        "mathematical": "yes",
+        "legal": "no",
+        "timeSensitive": "yes",
+        "visual": "no",
+        "asOfDate": "2026-11-15"
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "mathematical-correctness",
+          "status": "pass",
+          "basis": "mathematical-proof",
+          "rationale": "Arithmetic/formula application was independently recomputed from the stated inputs, including sign, unit and denominator conventions."
+        },
+        {
+          "id": "temporal-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The legal, regulatory or time-sensitive proposition was checked against a current/dated source for the declared as-of date."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "Ministry of Finance",
+          "title": "Economic Survey 2025–26, Chapter 1",
+          "locator": "Economic Survey 2025–26 Chapter 1 — growth outlook",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "The Economic Survey 2025–26 projected real GDP growth of 6.8–7.2 per cent for FY 2026–27.",
+          "url": "https://www.indiabudget.gov.in/economicsurvey/doc/echapter.pdf",
+          "asOfDate": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-27",
+      "questionSha256": "374c27738f2de2253e5292cd0d237d7905274dab240a16ee4569e3d6eb4a43c5",
+      "candidateSha256": "b5f162283cd94e57c4bebc144c800b0e06bce7593b3f83ef0390f1d9e9c42fbd",
+      "solution": {
+        "status": "completed",
+        "answer": "C",
+        "reasoning": "Self-review second pass: C, 2.20:1. Initial current ratio = 480/240 = 2. After paying ₹40 lakh of current payables from cash, current assets become ₹440 lakh and current liabilities ₹200 lakh. New ratio = 440/200 = 2.2. B wrongly assumes the ratio is unchanged; A and D reflect incorrect adjustments. Paying liabilities from cash increases an initially above-one current ratio under the stated assumptions."
+      },
+      "applicability": {
+        "mathematical": "yes",
+        "legal": "no",
+        "timeSensitive": "yes",
+        "visual": "no",
+        "asOfDate": "2026-11-15"
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "mathematical-correctness",
+          "status": "pass",
+          "basis": "mathematical-proof",
+          "rationale": "Arithmetic/formula application was independently recomputed from the stated inputs, including sign, unit and denominator conventions."
+        },
+        {
+          "id": "temporal-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The legal, regulatory or time-sensitive proposition was checked against a current/dated source for the declared as-of date."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "ICAI",
+          "title": "Accounting Standards",
+          "locator": "Relevant accounting-standard principle",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "The reviewed accounting treatment follows the cited accounting-standard framework.",
+          "url": "https://publication.icai.org/post-data/accounting-standards-april-2025",
+          "asOfDate": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-28",
+      "questionSha256": "727685486450137224fd23bbfb636ed04224077554cf49f849626bbb2f3e7890",
+      "candidateSha256": "8738f58c7f51b3f409746b90495eb1f7f86c1c7a8ed1f7c72afc800798d5c50e",
+      "solution": {
+        "status": "completed",
+        "answer": "D",
+        "reasoning": "Self-review second pass: D. In Herzberg’s two-factor theory, pay and working conditions are hygiene factors: their inadequacy causes dissatisfaction, while their adequacy does not automatically produce intrinsic satisfaction. Achievement, responsibility and recognition are more typical motivators. A incorrectly calls salary necessarily intrinsic, B misclassifies recognition, and C claims an automatic long-term motivating effect from working conditions. Avoid equating the absence of dissatisfaction with positive motivation."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "OpenStax",
+          "title": "Principles of Management",
+          "locator": "14.2 Herzberg’s Motivator-Hygiene Theory",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Pay and working conditions are hygiene factors; adequacy prevents dissatisfaction but does not necessarily motivate.",
+          "url": "https://openstax.org/books/principles-management/pages/14-2-content-theories-of-motivation"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-29",
+      "questionSha256": "225762c059ea11810a8007243fe1214eaeeb962bcee8c898aa67fd14fbd3c9cf",
+      "candidateSha256": "4a20fe693382c073ce61b6a44adab255a8dcb333ad2a987b422b39bac1f46c5a",
+      "solution": {
+        "status": "completed",
+        "answer": "A",
+        "reasoning": "Self-review second pass: A, 12%. CAPM required return = risk-free rate + beta × (market return − risk-free rate) = 6% + 1.2 × (11% − 6%) = 12%. B ignores beta-adjusted premium; C typically results from multiplying by the wrong base; D incorrectly adds beta times the full market return. The market risk premium is 5 percentage points, not 11%."
+      },
+      "applicability": {
+        "mathematical": "yes",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "mathematical-proof",
+          "rationale": "The result follows from an independently recomputed relationship using the quantities stated in the stem."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "mathematical-correctness",
+          "status": "pass",
+          "basis": "mathematical-proof",
+          "rationale": "Arithmetic/formula application was independently recomputed from the stated inputs, including sign, unit and denominator conventions."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "CFA Institute / SEC Investor education",
+          "title": "Investment fundamentals",
+          "locator": "Relevant finance principle",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "The reviewed finance relationship follows standard investment and valuation definitions."
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-30",
+      "questionSha256": "05b40099adc727f5385b499aedc1a1eaa03d8cb5aaf623eaaebb02fd8daf08e3",
+      "candidateSha256": "87320c0f7c18173b80869a83dc2e0781268e077e6852e41d92559bd83759777f",
+      "solution": {
+        "status": "completed",
+        "answer": "B",
+        "reasoning": "Self-review second pass: B, flexible budgeting, adjusts variable and other activity-dependent budget amounts to the actual 12,000-unit output. A retains the original static activity assumption; C confuses zero-based justification of expenditures with activity-flexing; D addresses allocation among competing capital projects. A fixed budget is useful for initial planning, but comparing actual costs with an activity-adjusted flexible budget isolates efficiency from volume differences."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "no",
+        "timeSensitive": "yes",
+        "visual": "no",
+        "asOfDate": "2026-11-15"
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "temporal-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The legal, regulatory or time-sensitive proposition was checked against a current/dated source for the declared as-of date."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "ICMAI",
+          "title": "Cost Accounting study material",
+          "locator": "Referenced source section",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "A flexible budget is designed to change with the level of activity.",
+          "url": "https://www.icmai.in/upload/Students/Syllabus2022/Inter_Stdy_Mtrl/P8.pdf",
+          "asOfDate": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-31",
+      "questionSha256": "fd63b268b543493f2f63bf08493b3151c5517ac92a49ecc6d44cbd93df5171e2",
+      "candidateSha256": "68b64f7dee2519fe90c6d5db2c7206f71019ce500abbab08a11f24330c28fa50",
+      "solution": {
+        "status": "completed",
+        "answer": "A",
+        "reasoning": "Self-review second pass: A. Section 123 permits the Board of Directors to declare an interim dividend, subject to statutory conditions. B refers to shareholder approval associated with final dividends, not the Board’s interim power. C can review financial information but does not itself declare the dividend; D, the auditor, expresses an audit opinion rather than taking the Board’s distribution decision. Separate authority to recommend, approve and declare dividends."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "yes",
+        "timeSensitive": "yes",
+        "visual": "no",
+        "asOfDate": "2026-11-15"
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "temporal-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The legal, regulatory or time-sensitive proposition was checked against a current/dated source for the declared as-of date."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "Ministry of Corporate Affairs",
+          "title": "Companies Act, 2013",
+          "locator": "Section 123",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Section 123 permits the Board of Directors to declare interim dividend subject to statutory conditions.",
+          "url": "https://www.mca.gov.in/Ministry/pdf/CompaniesAct2013.pdf",
+          "asOfDate": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-32",
+      "questionSha256": "c9591ba1c1036713e04a62961ad944847500c9dca7980b7dd5c6a7b58416689d",
+      "candidateSha256": "ee5d0b16a389d627e388bbc62db81e0852c5feeb62d78694a072690caf6a8dba",
+      "solution": {
+        "status": "completed",
+        "answer": "D",
+        "reasoning": "Self-review second pass: D, 5. In the simple closed-economy Keynesian model, government-expenditure multiplier = 1/(1 − MPC) = 1/(1 − 0.8) = 5. A is the reciprocal of MPC; B and C do not follow the stated formula. The result relies on the question’s assumptions: leakage through taxes or imports, or other changes in behaviour, would reduce the multiplier."
+      },
+      "applicability": {
+        "mathematical": "yes",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "mathematical-proof",
+          "rationale": "The result follows from an independently recomputed relationship using the quantities stated in the stem."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "mathematical-correctness",
+          "status": "pass",
+          "basis": "mathematical-proof",
+          "rationale": "Arithmetic/formula application was independently recomputed from the stated inputs, including sign, unit and denominator conventions."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "OpenStax",
+          "title": "Principles of Economics 3e",
+          "locator": "Relevant macroeconomics principle",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "The reviewed economics relationship follows standard national-income and macroeconomic definitions.",
+          "url": "https://openstax.org/books/principles-economics-3e"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-33",
+      "questionSha256": "6197082b43a8fc939a9e0a05c36480530a853c3eccd02c053da27455ed570b4c",
+      "candidateSha256": "d0ed0961021fa6be35d386a248f76ca3cf814dad4d50ecefeb204eafe1efb0f6",
+      "solution": {
+        "status": "completed",
+        "answer": "C",
+        "reasoning": "Self-review second pass: C. A conventional life annuity transfers the contractual longevity/payment-duration risk to the insurer: payments continue according to the contract even if the annuitant lives longer than expected. A employment eligibility, B the retiree’s other equity portfolio risk and D tax-law changes are not the principal risk transferred. The annuity does not by itself eliminate inflation or insurer counterparty risk."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "National Association of Insurance Commissioners",
+          "title": "Annuities",
+          "locator": "Background — income for life",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Life annuities can provide income for life; greater longevity increases the duration of insurer payment obligations.",
+          "url": "https://content.naic.org/insurance-topics/annuities"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-34",
+      "questionSha256": "cf9217c72df16a8c3e8b5f0d04ea2585eb98ec862383e42ed6804c4d4b6aa3c4",
+      "candidateSha256": "8ec4d3b5d4e4d4e03d11be38387be080e59351405426393e38bfa85aecf9c2ce",
+      "solution": {
+        "status": "completed",
+        "answer": "A",
+        "reasoning": "Self-review second pass: A. An agentic system can select and sequence actions, use tools, observe feedback and iterate toward a specified goal. B a longer one-off output and D ranking drafts can occur without multi-step agency; C is a training method, not a defining property of agentic operation. Agentic does not mean ungoverned or independently self-directed: constraints, permissions and human oversight still matter."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "IBM",
+          "title": "What is agentic AI?",
+          "locator": "Planning, tools and goal-directed action",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Agentic AI systems plan and execute multi-step actions, use tools and adapt from feedback toward objectives."
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-35",
+      "questionSha256": "7a9937250e8d08945dccb4eee3e758d9beeba9130088ebbdcc07cf0db766ce07",
+      "candidateSha256": "577634e177b8fd8b1dde3a4fb657cc487ee53e5e1f743a6daf08028a4f106a65",
+      "solution": {
+        "status": "completed",
+        "answer": "C",
+        "reasoning": "Self-review second pass: C. Section 14 expressly empowers PFRDA to register and regulate pension intermediaries. A wrongly treats PFRDA as the guarantor of all market-linked pension returns; B confuses regulation with selecting an individual subscriber’s investments under NPS Active Choice; D confuses the Authority with the Central Recordkeeping Agency, which maintains subscriber/PRAN records. Distinguish the regulator’s powers from functions of supervised intermediaries and decisions reserved to subscribers."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "yes",
+        "timeSensitive": "yes",
+        "visual": "no",
+        "asOfDate": "2026-11-15"
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "temporal-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The legal, regulatory or time-sensitive proposition was checked against a current/dated source for the declared as-of date."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "India Code",
+          "title": "PFRDA Act, 2013",
+          "locator": "Section 14(2)(d)",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Section 14 empowers PFRDA to register and regulate intermediaries.",
+          "url": "https://upload.indiacode.nic.in/showfile?actid=AC_CEN_2_45_00007_201323_1517807327819&filename=201323.pdf&type=actfile",
+          "asOfDate": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-36",
+      "questionSha256": "3cec49484992b5da9b6b58deff841edd64e12a349f687d9b12100395acb1be2f",
+      "candidateSha256": "2ef6cc6f17e60e2ab16437a065ad6df7af8a0721549363d89a2c0f9638f58dee",
+      "solution": {
+        "status": "completed",
+        "answer": "D",
+        "reasoning": "Self-review second pass: D. Effective capital expenditure in BE 2026–27 was ₹17.15 lakh crore: direct GoI capital spending ₹12.22 lakh crore plus grants-in-aid for creation of capital assets ₹4.93 lakh crore. A and C leave out one of these components; B mistakes the direct capex subtotal for the effective total. A grant that creates a capital asset expands effective capex even though it is classified differently in Union accounts."
+      },
+      "applicability": {
+        "mathematical": "yes",
+        "legal": "no",
+        "timeSensitive": "yes",
+        "visual": "no",
+        "asOfDate": "2026-11-15"
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "mathematical-correctness",
+          "status": "pass",
+          "basis": "mathematical-proof",
+          "rationale": "Arithmetic/formula application was independently recomputed from the stated inputs, including sign, unit and denominator conventions."
+        },
+        {
+          "id": "temporal-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The legal, regulatory or time-sensitive proposition was checked against a current/dated source for the declared as-of date."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "Ministry of Finance",
+          "title": "Union Budget 2026–27: Fiscal Policy Strategy Statement",
+          "locator": "Fiscal Policy Strategy Statement — effective capital expenditure",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Effective capital expenditure in BE 2026–27 is ₹17.15 lakh crore, including ₹4.93 lakh crore grants for capital-asset creation.",
+          "url": "https://www.indiabudget.gov.in/doc/frbm1.pdf",
+          "asOfDate": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-37",
+      "questionSha256": "10e025c059a0087036b29a5575b062396c059872d10ff927186a635df6ab5b9a",
+      "candidateSha256": "aa8bc752a23fc32bb4309839514f5eb030981196b8fdc48de18a183a648fc960",
+      "solution": {
+        "status": "completed",
+        "answer": "B",
+        "reasoning": "Self-review second pass: B, financing cash inflow. Issuing equity raises funds from owners and therefore changes financing, not operations or investment. A would involve the company’s main revenue-generating activity; C usually concerns buying/selling long-term assets or investments; D applies when no cash actually changes hands. Share issuance for cash is a financing receipt even if the proceeds are later spent on capital equipment."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "ICAI",
+          "title": "Accounting Standard (AS) 3: Cash Flow Statements",
+          "locator": "Paragraph 17 — financing activities",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Cash proceeds from issuing shares are financing cash flows.",
+          "url": "https://indasaccess.icai.org/Volume-III/AS/asb.html?a=106"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-38",
+      "questionSha256": "be6eda3ba5388284d2afabe6fa665778c545bc5bb6c51b5dd1d2336347b850c0",
+      "candidateSha256": "49eab59702f5c1b91f2a26a7e2126d1f535f630a0c0c61553d3ea011a55d038e",
+      "solution": {
+        "status": "completed",
+        "answer": "C",
+        "reasoning": "Self-review second pass: C, a supporting/participating style, because employees are technically competent yet need consultation and encouragement. A directing provides too much task instruction; B coaching retains more task direction than needed; D delegating withdraws support despite the stated participation need. Situational leadership varies direction and support with competence and commitment; high skill does not always imply low need for relationship support."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "OpenStax",
+          "title": "Principles of Management",
+          "locator": "13.6 Situational approaches to leadership",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Participative leadership consults followers and is useful where followers have expertise to contribute.",
+          "url": "https://openstax.org/books/principles-management/pages/13-6-situational-contingency-approaches-to-leadership"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-39",
+      "questionSha256": "f8707f0a259b72434c15f4874e44de0b1776082e1f1c3e64e8c07d4309a1d539",
+      "candidateSha256": "d0da7eef1b8782e1b08c34d4593fc0eb87c69662439b4f75c1bbccff3b344001",
+      "solution": {
+        "status": "completed",
+        "answer": "B",
+        "reasoning": "Self-review second pass: B. A repo-rate cut can lower banks’ marginal funding cost and, with effective transmission, make borrowing and investment more attractive. A incorrectly assumes a mechanical one-for-one reduction in every lending rate; C reverses the expected monetary direction; D confuses repo policy with the independent CRR instrument. Actual credit growth depends on risk appetite, demand, liquidity and transmission, so the question correctly says potentially."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "Reserve Bank of India",
+          "title": "Monetary Policy Transmission in India: The Recent Experience",
+          "locator": "Interest-rate transmission channel",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Expansionary policy lowers loanable-fund costs and can raise investment, consumption and aggregate demand.",
+          "url": "https://www.rbi.org.in/Scripts/BS_ViewBulletin.aspx?Id=22929"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-40",
+      "questionSha256": "d23341f47969bf3ce9f21fcce2cd0a9c01ccaef3a6f888473d756ab9047fa77e",
+      "candidateSha256": "5d3c7fd857e13f48a225dd149eed04c577492f8d09eb8e7f2583b37f4512bb50",
+      "solution": {
+        "status": "completed",
+        "answer": "C",
+        "reasoning": "Self-review second pass: C, ₹6,000 adverse. Material price variance = (standard price − actual price) × actual quantity = (₹60 − ₹66) × 1,000 = −₹6,000. Under the stated sign convention a negative result is adverse because the firm paid ₹6/kg above standard. A reverses the favourable/adverse label; B uses the wrong magnitude; D is neither the difference nor the correct sign."
+      },
+      "applicability": {
+        "mathematical": "yes",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "mathematical-proof",
+          "rationale": "The result follows from an independently recomputed relationship using the quantities stated in the stem."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "mathematical-correctness",
+          "status": "pass",
+          "basis": "mathematical-proof",
+          "rationale": "Arithmetic/formula application was independently recomputed from the stated inputs, including sign, unit and denominator conventions."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "ICMAI",
+          "title": "Standard Costing and Variance Analysis",
+          "locator": "Referenced source section",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Material price variance is the difference between standard and actual price multiplied by actual quantity, with sign interpreted as favourable/adverse.",
+          "url": "https://icmai.in/upload/Students/Syllabus2022/Inter_Stdy_Mtrl/P12_160824.pdf"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-41",
+      "questionSha256": "786d8d47a9569d446d3239b511ace2ceff95db7c14a86d495013e823a5425a3f",
+      "candidateSha256": "131deb3cea54c78c1e8418cf5da64d7a718f005b0bfebb0473f729d60454b697",
+      "solution": {
+        "status": "completed",
+        "answer": "A",
+        "reasoning": "Self-review second pass: A. Section 143 gives the statutory auditor access to the company’s books and vouchers at all times for audit purposes. B declaring dividends and C appointing directors are governance decisions, not audit powers. D wrongly makes statutory inspection dependent on a fresh shareholder resolution. Auditors may seek information and explanations, but access and audit opinion do not make them the company’s management."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "yes",
+        "timeSensitive": "yes",
+        "visual": "no",
+        "asOfDate": "2026-11-15"
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "temporal-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The legal, regulatory or time-sensitive proposition was checked against a current/dated source for the declared as-of date."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "Ministry of Corporate Affairs",
+          "title": "Companies Act, 2013",
+          "locator": "Section 143",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Section 143 gives the statutory auditor access to company books of account and vouchers at all times.",
+          "url": "https://www.mca.gov.in/Ministry/pdf/CompaniesAct2013.pdf",
+          "asOfDate": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-42",
+      "questionSha256": "d83e97e81a8886768eaa27550b290419c3ef5de8c272c5acec31c8d4a227c0ac",
+      "candidateSha256": "4e37f9ec2cdadefc24015110066cc7f8c392da160fe589e6e4f5dcc783ba26de",
+      "solution": {
+        "status": "completed",
+        "answer": "C",
+        "reasoning": "Self-review second pass: C. Ordinary personal remittances from non-residents to residents are recorded as secondary-income transfers in the current account. A foreign direct investment, B external commercial borrowing and D reserve-asset transactions fall in the financial account under BPM6, rather than being personal transfers. The capital account is a separate category mainly for capital transfers and non-produced non-financial assets; do not collapse capital and financial accounts."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "no",
+        "timeSensitive": "yes",
+        "visual": "no",
+        "asOfDate": "2026-11-15"
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "temporal-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The legal, regulatory or time-sensitive proposition was checked against a current/dated source for the declared as-of date."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "RBI",
+          "title": "Balance of Payments: Concepts and Definitions",
+          "locator": "Referenced source section",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Personal remittances are secondary-income current-account transfers; direct investment, borrowing and reserve assets are financial-account items.",
+          "url": "https://rbi.org.in/scripts/PublicationsView.aspx?id=13013",
+          "asOfDate": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-43",
+      "questionSha256": "159c293e15096f0b437ebac1ef642f9b1d65bc599f0ba59ab936fafe14210c73",
+      "candidateSha256": "539aedf04f1c2e1c1838319dbac65aca6edd0b1fc3aa775074ef92caf3dff3ee",
+      "solution": {
+        "status": "completed",
+        "answer": "B",
+        "reasoning": "Self-review second pass: B. Ordinary NPS is a defined-contribution, market-linked arrangement: benefits depend on contributions, accumulated investment returns and the applicable exit/annuitisation rules. A describes a final-salary defined-benefit formula; C invents a universal government guarantee across NPS assets; D wrongly gives everyone the same annuity regardless of corpus. Do not confuse NPS with APY’s guaranteed minimum options or separate government pension arrangements."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "yes",
+        "timeSensitive": "yes",
+        "visual": "no",
+        "asOfDate": "2026-11-15"
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "temporal-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The legal, regulatory or time-sensitive proposition was checked against a current/dated source for the declared as-of date."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "PFRDA",
+          "title": "NPS for All Citizen Models",
+          "locator": "NPS for All Citizen Models — defined contribution and market-linked features",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "NPS is a defined-contribution system with market-linked returns; outcomes depend on contributions, investment performance and exit arrangements.",
+          "url": "https://pfrda.org.in/en/schemes/national-pension-system/nps-for-all-citizen-models",
+          "asOfDate": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-44",
+      "questionSha256": "b645c76ddd29698fb0498e7e5af8331fc789cdd59a45c7a267f67161edd348f2",
+      "candidateSha256": "902e5106fb01d326050d9be3adfa9cd36d670da051040420d451ed4b8ffbc009",
+      "solution": {
+        "status": "completed",
+        "answer": "A",
+        "reasoning": "Self-review second pass: A. Section 149’s independent-director test uses detailed conditions involving promoter/management connections, pecuniary relationships and other eligibility criteria. B mere minority nomination, C non-executive status and D length of service do not by themselves establish statutory independence. Independence is substantive, not a title; relevant relationships and disqualifications must be checked against the law and applicable rules."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "yes",
+        "timeSensitive": "yes",
+        "visual": "no",
+        "asOfDate": "2026-11-15"
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "temporal-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The legal, regulatory or time-sensitive proposition was checked against a current/dated source for the declared as-of date."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "Ministry of Corporate Affairs",
+          "title": "Companies Act, 2013",
+          "locator": "Section 149",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Section 149 defines independent-director eligibility through substantive statutory criteria including promoter and pecuniary relationships.",
+          "url": "https://www.mca.gov.in/Ministry/pdf/CompaniesAct2013.pdf",
+          "asOfDate": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-45",
+      "questionSha256": "b9b69291b1f397069f4bf6f224713cc485058b54d2249d356a793e19ddcc4df1",
+      "candidateSha256": "434ab4c4fa71cc41b92151a16a08308265562458f4cd2fda116ea57a083b6b23",
+      "solution": {
+        "status": "completed",
+        "answer": "A",
+        "reasoning": "Self-review second pass: A, the secondary market. Investors trade securities already issued, transferring ownership without the issuer necessarily receiving fresh capital. B the primary market raises new funds by issuance; C IPO and D new subscription are specific primary-issue mechanisms. A securities exchange is commonly a secondary-market venue, whereas applying to a fresh public issue belongs to the primary market."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "U.S. SEC Investor.gov",
+          "title": "Introduction to Investing — Markets",
+          "locator": "Primary and secondary markets",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "The secondary market is where investors trade securities after issuance."
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-46",
+      "questionSha256": "f03dc93c84be4e45cc4f76021dc2fbb616abbf5ea2fe60af1819622182a54412",
+      "candidateSha256": "a63633a5949aa21cd47c35e784900136e4fb8e842da5c5afadab9d5867679b17",
+      "solution": {
+        "status": "completed",
+        "answer": "D",
+        "reasoning": "Self-review second pass: D, rights issue. Under Section 62, a company offering further shares for cash to existing equity shareholders in proportion to holdings is ordinarily making a rights offer. A bonus shares involve capitalising eligible reserves rather than fresh cash; B employee options target employees under an incentive plan; C IPO offers securities to the public as an initial listing. The decisive clues are existing shareholders and proportionate cash subscription."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "yes",
+        "timeSensitive": "yes",
+        "visual": "no",
+        "asOfDate": "2026-11-15"
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "temporal-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The legal, regulatory or time-sensitive proposition was checked against a current/dated source for the declared as-of date."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "Ministry of Corporate Affairs",
+          "title": "Companies Act, 2013",
+          "locator": "Section 62",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Section 62 provides for further shares to be offered to existing equity holders proportionately, subject to the statutory process.",
+          "url": "https://www.mca.gov.in/Ministry/pdf/CompaniesAct2013.pdf",
+          "asOfDate": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-47",
+      "questionSha256": "41b3abf1528550ca2fb0b099ca138c17f75e653b6f29e70f89478a312120ee0c",
+      "candidateSha256": "dbf81756fa61dc1ec9244aa196371536f1f51bd935f23fc55fd4d7a21102139c",
+      "solution": {
+        "status": "completed",
+        "answer": "B",
+        "reasoning": "Self-review second pass: B, 1.0 in absolute value. Quantity falls by 20/200 = 10%; price rises by 10/100 = 10%; PED = −10%/10% = −1, so absolute elasticity is 1. A, C and D use incorrect percentage bases or ratios. The question specifies original-value percentage changes; midpoint/arc elasticity would differ slightly, so do not silently change the convention."
+      },
+      "applicability": {
+        "mathematical": "yes",
+        "legal": "no",
+        "timeSensitive": "no",
+        "visual": "no",
+        "asOfDate": null
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "mathematical-proof",
+          "rationale": "The result follows from an independently recomputed relationship using the quantities stated in the stem."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "mathematical-correctness",
+          "status": "pass",
+          "basis": "mathematical-proof",
+          "rationale": "Arithmetic/formula application was independently recomputed from the stated inputs, including sign, unit and denominator conventions."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "OpenStax",
+          "title": "Principles of Economics 3e",
+          "locator": "Relevant macroeconomics principle",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "The reviewed economics relationship follows standard national-income and macroeconomic definitions.",
+          "url": "https://openstax.org/books/principles-economics-3e"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-48",
+      "questionSha256": "9fb2e3e9db43e2c8332a5c4326c3d7ed81ce78a065d187d8da1015f353a08bed",
+      "candidateSha256": "4abfa093a710da32286147a78c8ee36e442ad43865e854afb326f3c789bf802c",
+      "solution": {
+        "status": "completed",
+        "answer": "C",
+        "reasoning": "Self-review second pass: C. A lifecycle fund normally tapers equity exposure as retirement approaches to reduce vulnerability to equity-market swings when time for recovery is shorter. A incorrectly increases risk with age as a supposed necessity; B mistakes risk reduction for a benefit guarantee; D confuses strategy design with a promise to replicate historical returns. Changing the allocation cannot eliminate all market, interest-rate or inflation risk."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "yes",
+        "timeSensitive": "yes",
+        "visual": "no",
+        "asOfDate": "2026-11-15"
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "temporal-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The legal, regulatory or time-sensitive proposition was checked against a current/dated source for the declared as-of date."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "PFRDA",
+          "title": "NPS for All Citizen Models",
+          "locator": "NPS Auto Choice/lifecycle allocation",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "NPS Auto Choice/lifecycle arrangements reduce equity allocation as age rises, lowering equity exposure near retirement.",
+          "url": "https://pfrda.org.in/en/schemes/national-pension-system/nps-for-all-citizen-models",
+          "asOfDate": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-49",
+      "questionSha256": "500d2d2c9678177f34527aa4ebe8fff37bbe0975e46cf2ca3ddee77482f18a6d",
+      "candidateSha256": "e6f665902123fb65f8fcf9f1be4f3404763a79ebb72a468116c2ec0186041b6a",
+      "solution": {
+        "status": "completed",
+        "answer": "D",
+        "reasoning": "Self-review second pass: D: both statements are correct. Section 173(1) generally requires at least four Board meetings a year and no more than 120 days between consecutive meetings, subject to statutory exemptions. Section 410 constitutes the NCLAT, while Section 421 provides for appeals against NCLT orders. A omits the true appellate statement; B omits the true meeting rule; C wrongly rejects both. Do not cite Section 410 alone for the right of appeal."
+      },
+      "applicability": {
+        "mathematical": "no",
+        "legal": "yes",
+        "timeSensitive": "yes",
+        "visual": "no",
+        "asOfDate": "2026-11-15"
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "temporal-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The legal, regulatory or time-sensitive proposition was checked against a current/dated source for the declared as-of date."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "Ministry of Corporate Affairs",
+          "title": "Companies Act, 2013",
+          "locator": "Sections 173(1), 410 and 421",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "Section 173 generally limits the gap between consecutive Board meetings to 120 days; section 421 provides appeals from Tribunal orders.",
+          "url": "https://www.mca.gov.in/Ministry/pdf/CompaniesAct2013.pdf",
+          "asOfDate": "2026-11-15"
+        }
+      ]
+    },
+    {
+      "questionId": "day1-general-50",
+      "questionSha256": "c9a84f492b491863b8b67eff102ea58643fac433e7f31d1ce4b9b5ab2ed27731",
+      "candidateSha256": "569fcce836b81e2e829bf722ae65fde6bd785c3bc2e7f54376dd3ad7edd7429b",
+      "solution": {
+        "status": "completed",
+        "answer": "A",
+        "reasoning": "Self-review second pass: A, 61.5% of nominal GDP, is the Economic Survey 2025–26 figure for private final consumption expenditure in FY 2025–26 using first advance estimates. B, C and D are not that reported share. Note the precision of the label: the Survey also cites 61.4% for H1 FY26, which must not be confused with the full-year FAE 61.5%. Estimates can later be revised."
+      },
+      "applicability": {
+        "mathematical": "yes",
+        "legal": "no",
+        "timeSensitive": "yes",
+        "visual": "no",
+        "asOfDate": "2026-11-15"
+      },
+      "semanticChecks": [
+        {
+          "id": "exam-relevance",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Fits the declared PFRDA Day-1 mixed-practice scope and tests the stated subject at general-stream level."
+        },
+        {
+          "id": "clarity-defensibility",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The stem supplies the assumptions needed to decide the item; the second-pass solution leaves one defensible keyed response."
+        },
+        {
+          "id": "distractor-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Alternatives represent identifiable role, definition, formula or category confusions and are materially distinct from the key."
+        },
+        {
+          "id": "reasoning-correctness",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "Second-pass reasoning reaches the authored key without relying on option position or answer leakage."
+        },
+        {
+          "id": "factual-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The material factual proposition was checked against the recorded source evidence."
+        },
+        {
+          "id": "explanation-quality",
+          "status": "pass",
+          "basis": "semantic-editorial",
+          "rationale": "The explanation reaches the same response and usefully distinguishes the main distractor errors or governing concept."
+        },
+        {
+          "id": "mathematical-correctness",
+          "status": "pass",
+          "basis": "mathematical-proof",
+          "rationale": "Arithmetic/formula application was independently recomputed from the stated inputs, including sign, unit and denominator conventions."
+        },
+        {
+          "id": "temporal-correctness",
+          "status": "pass",
+          "basis": "source-consulted",
+          "rationale": "The legal, regulatory or time-sensitive proposition was checked against a current/dated source for the declared as-of date."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "Ministry of Finance",
+          "title": "Economic Survey 2025–26, Chapter 1",
+          "locator": "Economic Survey 2025–26 Chapter 1 — demand side",
+          "retrievedAt": "2026-11-17",
+          "excerpt": "The Economic Survey reports PFCE at 61.5 per cent of GDP in FY 2025–26 using the first advance estimates.",
+          "url": "https://www.indiabudget.gov.in/economicsurvey/doc/echapter.pdf",
+          "asOfDate": "2026-11-15"
+        }
+      ]
+    }
+  ],
+  "bankReview": {
+    "checks": [
+      {
+        "id": "coverage-balance",
+        "status": "pass",
+        "basis": "blueprint-audit",
+        "rationale": "The bound inferred-practice blueprint records the exact 51-item Day-1 composition across descriptive/general sections and the represented General Stream subjects; no official subject allocation is claimed."
+      },
+      {
+        "id": "difficulty-distribution",
+        "status": "pass",
+        "basis": "bank-editorial",
+        "rationale": "The bank intentionally functions as mixed Day-1 practice: predominantly foundational-to-moderate conceptual items with a smaller calculation/application component; it is not represented as a calibrated prediction of the real paper."
+      },
+      {
+        "id": "cognitive-diversity",
+        "status": "pass",
+        "basis": "bank-editorial",
+        "rationale": "Across the bank, questions require definition discrimination, statutory role/provision identification, numerical application and conceptual transfer rather than a single repeated cognitive operation."
+      },
+      {
+        "id": "duplication-diversity",
+        "status": "pass",
+        "basis": "bank-editorial",
+        "rationale": "Repeated syllabus areas use distinct propositions or operations; second-pass inspection found no pair that merely re-asks the same fact through trivial wording changes."
+      },
+      {
+        "id": "style-consistency",
+        "status": "pass",
+        "basis": "bank-editorial",
+        "rationale": "The 50 objective items use consistent four-option single-choice construction and explanation style, while the descriptive item is explicitly separated as précis practice."
+      },
+      {
+        "id": "exam-fidelity",
+        "status": "pass",
+        "basis": "bank-editorial",
+        "rationale": "The content and two-part structure are plausible PFRDA Grade A Phase-II practice and remain explicitly labelled as Day-1 practice rather than an official PYQ or a prediction of the examination's exact allocation/difficulty."
+      }
+    ]
+  }
+}

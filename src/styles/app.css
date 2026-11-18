@@ -1246,6 +1246,20 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
 .learning-evidence-preview li{margin:6px 0;font-size:13px}
 .learning-evidence-preview small{color:var(--muted)}
 .learning-evidence-builder .btn{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+/* Learner-focus and personalised-brief actions intentionally use descriptive labels.
+ Keep them inside the same 195px/140% supported Learning viewport. */
+.learning-authoring-focus{min-width:0;max-width:100%;overflow-wrap:anywhere}
+.learning-authoring-focus :is(p,label,select,textarea,details,summary,code){
+ min-width:0;max-width:100%;box-sizing:border-box;overflow-wrap:anywhere
+}
+.learning-authoring-focus code{white-space:normal;word-break:break-word}
+.learning-authoring-focus .generic-actions .btn{
+ flex:1 1 150px;min-width:0;max-width:100%;box-sizing:border-box;
+ white-space:normal;overflow-wrap:anywhere
+}
+@media(max-width:300px){
+ .learning-authoring-focus .generic-actions .btn{flex-basis:100%;padding:7px 8px}
+}
 /* FSRS policy actions use long accessible labels; let flex items shrink/wrap under the
  existing 195px/140% stress viewport instead of widening the document. */
 .learning-scheduler-policy{

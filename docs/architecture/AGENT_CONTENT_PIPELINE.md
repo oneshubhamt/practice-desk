@@ -6,19 +6,28 @@
 
 | Need | Tooling | Invariant |
 |---|---|---|
+| Compact new-batch authoring brief | `content-blueprint.mjs brief` | Decision-ready exam/coverage/source contract; no repository/package plumbing or existing question bodies; optional validated `--learner-focus` |
+| User-controlled learner focus | Learning desk + `practice-desk-learner-focus` v1 | Off / Focused / Detailed sharing; exact-exam scope; observations rather than diagnoses |
+| Maintained custom-mock corpus add/revision | `question-bank-corpus.mjs` | Dry-runnable staged transaction; canonical taxonomy/review/blueprint/catalog gates; create-only revision folders |
 | Validate/compile one source bank | `question-bank-cli.mjs` | One canonical `practice-desk-authoring` v1 source compiled through the canonical publisher |
 | Small-context corrections | `question-bank-agent.mjs` | Paged inspection, question-scoped retrieval, SHA preconditions, new-file output |
-| Planned distribution | `content-blueprint.mjs` + optional cognitive tags | Explicit quotas/partial delivery; structurally valid partial work is not publication-ready |
-| Blind editorial/key challenge | `question-quality.mjs` | Candidate-only packet, v2 applicability declarations, all 20 checks, source-hash freshness |
+| Planned distribution | `content-blueprint.mjs` + optional exam taxonomy/cognitive tags | Explicit stable-node coverage, quotas/partial delivery; structurally valid partial work is not publication-ready |
+| Layered editorial/key challenge | `question-quality.mjs` | Candidate-only packet, v3 review modes/applicability, compact semantic checks, one bank review and source-hash freshness |
 | Source + separately corrected Reviewed | `editorial-editions.mjs` | Preserve Source bytes/key; bind Reviewed to exact Source paper/key identities |
 | Supplied PDF/document | `pdf-ingest.mjs` | External reviewer actually inspects pages/math/figures; bind document/key bytes and per-item provenance; no internal OCR |
 | Scoped orchestration | `agent-handoff.mjs` | Read-only assess; publication requires explicit create permission and fresh evidence |
+
+The learning → authoring bridge is deliberately reductive rather than a History API. The browser locally reduces only the selected exam's completed non-revision attempts, notebook evidence and currently-due FSRS cards into a bounded learner-focus packet. Focused mode exposes aggregates only. Detailed mode is an explicit richer opt-in and still omits identity/device/unrelated-exam data, correct responses and learner free-response text. `exam-simulation` keeps the blueprint authoritative; `targeted-practice` may prioritize focus evidence inside syllabus/blueprint guardrails. The same personalisation function is used when the CLI attaches `--learner-focus` and when the Learning desk turns a loaded standard Authoring Brief into a personalised one.
+
+After strict content/review completion, maintained custom mocks can enter the repository through `question-bank-corpus.mjs add-paper` or `append-revision`. The command first stages the entire prospective `question-banks/` graph and runs the normal catalog gates. A real write then locks the corpus, checks manifest preconditions, creates new folders without overwrite, atomically replaces the affected manifest(s), revalidates and rolls back its own changes on failure. This bridge intentionally does not replace Source/Reviewed/PDF provenance workflows.
+
+For maintained exams with a year-owned taxonomy, pass that taxonomy explicitly to blueprint/brief/compile operations; exam IDs never activate a hidden syllabus registry. The taxonomy supplies stable Subject → Topic → Subtopic nodes, while the authoring source remains ordinary `subject` / `topic` / `subtopic` labels that must resolve to those nodes.
 
 For the common strict-review flow:
 
 ```bash
 node scripts/agent-handoff.mjs prepare bank.json NEW-review-dir --allow-create
-# Independently solve candidate-only material and genuinely inspect cited sources.
+# Complete the second-pass solution and evidence checks. Use self-review, clean-context, or independent-agent truthfully.
 node scripts/agent-handoff.mjs assess single bank.json --quality-review NEW-review-dir/review.json
 node scripts/agent-handoff.mjs publish single bank.json NEW.exam.json --quality-review NEW-review-dir/review.json --allow-create
 ```
@@ -32,7 +41,8 @@ For paired editions, create/complete an `editorial-editions.mjs template`, revie
 - Candidate-visible stem/options/media/stimuli determine Source/Reviewed semantic comparability. Explanation/taxonomy-only changes do not; unsupported response kinds are individually unavailable rather than destroying otherwise valid comparisons.
 - Reviewed packages bind exact Source paper/key identities. Noncurrent source-key shapes are rejected rather than migrated.
 - Candidate explanations, keys and explanation-only media remain private until the permitted review boundary.
-- A partial blueprint can be `valid:true` while `readyForPublication:false`; strict publication rejects incomplete required quotas.
+- A partial blueprint can be `valid:true` while `readyForPublication:false`; strict publication rejects incomplete required quotas. A blueprint bound with `taxonomyId` must be assessed with the matching `--taxonomy` sidecar; `requireTaxonomy` rejects authored classifications that do not resolve through it.
+- Repository-maintained authoring editions may bind `quality-review.json` and `blueprint.json` in the paper manifest. Non-null bindings are executable gates against the exact current authoring source; stale or incomplete evidence rejects catalog loading. A preinstalled canonical maintained mock backed by an authoring source must bind both passing sidecars; null/missing evidence is rejected rather than treated as a weaker publication state.
 - Source and Reviewed remain explicit separate immutable packages. For ad-hoc external work they are separate Library imports; a repository-maintained family may instead list the intended packages explicitly in the question-bank catalog. Retain original documents and review/decision sidecars outside browser History.
 
 The CLI may report `factualVerification:not-performed`; treat reviewer/source statements as attributed claims unless independently authenticated.

@@ -203,7 +203,7 @@ const {join}=await import("node:path");
 const {execFileSync}=await import("node:child_process");
 const {fileURLToPath}=await import("node:url");
 const {editorialDecisionTemplate,inspectEditorialPair}=await import("../../editorial-editions.mjs");
-const {QUALITY_CHECKLIST}=await import("../../question-quality.mjs");
+const {SEMANTIC_CHECKLIST,BANK_CHECKLIST}=await import("../../question-quality.mjs");
 const engine=process.argv[2]??"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
 const {page,errors}=await h.open({viewport:{width:1280,height:840}});
@@ -418,22 +418,31 @@ try{
    evidence:[{publisher:"Fixture",title:"Synthetic editorial decision",locator:"P60-D browser test",
     sourceNote:"Test-only user-attributed note; independent factual correctness not asserted"}]
   }));
-  const review={format:"practice-desk-quality-review",version:2,bankId:reviewedBank.bankId,
-   sourceSha256:packet.sourceSha256,records:packet.items.map(entry=>{
-    const question=reviewedBank.questions.find(q=>q.id===entry.questionId);
+  const reviewCore=new Set(["exam-relevance","clarity-defensibility","reasoning-correctness",
+   "factual-correctness","explanation-quality"]);
+  const review={format:"practice-desk-quality-review",version:3,bankId:reviewedBank.bankId,
+   sourceSha256:packet.sourceSha256,reviewMode:"self-review",candidateOnlyContextClaim:false,
+   reviewer:{id:"regression-only",kind:"ai"},
+   records:packet.items.map(entry=>{
+    const question=reviewedBank.questions.find(q=>q.id===entry.questionId),
+     mathematical=question.id==="account-01",required=new Set(reviewCore);
+    if(["single-choice","multiple-select"].includes(question.kind))required.add("distractor-quality");
+    if(mathematical)required.add("mathematical-correctness");
     return {questionId:entry.questionId,questionSha256:digest(JSON.stringify(question)),
       candidateSha256:entry.candidateSha256,
-      applicability:{mathematical:question.id==="account-01"?"yes":"no",legal:"no",timeSensitive:"no",asOfDate:null},
-      reviewer:{id:"regression-only",kind:"ai"},
-      independentSolution:{blindClaim:true,answer:question.answer,
-       reasoning:"Synthetic software-fixture assertion, not a checked external answer."},
-      checks:QUALITY_CHECKLIST.map((x,i)=>({id:x.id,status:"pass",
-       basis:i===9?"mathematical-proof":[11,12,13].includes(i)?"source-consulted":i===19?"rendered-claim":"independent-editorial",
+      applicability:{mathematical:mathematical?"yes":"no",legal:"no",timeSensitive:"no",visual:"no",asOfDate:null},
+      solution:{status:"completed",answer:String(question.answer),
+       reasoning:"Synthetic second-pass software-fixture assertion, not a checked external answer."},
+      semanticChecks:SEMANTIC_CHECKLIST.filter(x=>required.has(x.id)).map(x=>({id:x.id,status:"pass",
+       basis:x.id==="mathematical-correctness"||x.id==="factual-correctness"&&mathematical?
+        "mathematical-proof":x.id==="factual-correctness"?"source-consulted":"semantic-editorial",
        rationale:"Synthetic regression fixture, verification not authenticated."})),
       evidence:[{publisher:"Fixture",title:"P60-D browser QA",locator:"question:"+question.id,
        retrievedAt:"2026-11-06",excerpt:"Only tests code contracts; not factual source verification."}]
     };
-   })};
+   }),
+   bankReview:{checks:BANK_CHECKLIST.map(x=>({id:x.id,status:"pass",basis:"bank-editorial",
+    rationale:"Synthetic bank-level browser regression assertion only."}))}};
   editionPair=inspectEditorialPair(
    {data:originalBank,raw:originalRaw,sha256:digest(originalRaw)},
    {data:reviewedBank,raw:reviewedRaw,sha256:digest(reviewedRaw)},
@@ -524,6 +533,56 @@ try{
   engine+" P60-F card not derived from frozen reviewed source or FSRS was silently graded");
  await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
  await page.getByRole("button",{name:/Open learning desk/}).click();await route(page,"learning");
+ // Pass 5 native bridge: derive learner evidence locally, then attach it to a
+ // standard Authoring Brief without exposing unrestricted History to an agent.
+ await page.locator("#learning-focus-exam").selectOption(reviewedEdition.examId);
+ await page.locator("#learning-focus-mode").selectOption("focused");
+ await page.locator("#learning-focus-intent").selectOption("targeted-practice");
+ await page.locator("#learning-focus-generate").click();
+ await page.locator("#learning-focus-preview").waitFor({state:"visible"});
+ const focusPacket=JSON.parse(await page.locator("#learning-focus-preview").inputValue());
+ check(focusPacket.examId===reviewedEdition.examId&&focusPacket.mode==="focused"&&
+   focusPacket.intent==="targeted-practice"&&focusPacket.privacy?.scope==="exam-only"&&
+   !("questionEvidence" in focusPacket)&&!JSON.stringify(focusPacket).includes("answerKey"),
+   engine+" Pass 5 Focused learner packet leaked detailed/key data or lost exam scope");
+ const nativeBlueprint={
+   format:"practice-desk-content-blueprint",version:1,id:"p60f-browser-brief",
+   examId:reviewedBank.examId,paperId:reviewedBank.paperId,revision:reviewedBank.revision,
+   targetCount:Math.max(2,reviewedBank.questions.length),allowPartial:true,
+   syllabus:{basis:"user-defined",asOfDate:"2026-11-18",
+    reference:"Synthetic browser regression fixture only; not an authentic exam allocation."},
+   requirements:{requireExplanation:true,minCitations:0,allowedOrigins:["ai-original"],
+    maxTopicSharePercent:100},
+   quotas:{},
+   paperRules:{scoring:reviewedBank.scoring,timing:reviewedBank.timing,
+    ...(reviewedBank.navigation?{navigation:reviewedBank.navigation}:{}),sections:reviewedBank.sections,
+    ...(reviewedBank.tools?{tools:reviewedBank.tools}:{}),
+    ...(reviewedBank.practiceModes?{practiceModes:reviewedBank.practiceModes}:{})}
+ };
+ const blueprintRaw=JSON.stringify(nativeBlueprint,null,2)+"\n";
+ await page.locator("#learning-blueprint-file").setInputFiles({
+   name:"blueprint.json",mimeType:"application/json",buffer:Buffer.from(blueprintRaw)
+ });
+ await page.locator("#learning-brief-bank-id").fill("p60f-native-next");
+ await page.locator("#learning-brief-title").fill("P60-F native browser brief");
+ await page.locator("#learning-brief-batch-size").fill("2");
+ await page.locator("#learning-brief-generate").click();
+ await page.locator("#learning-standard-brief-preview").waitFor({state:"visible"});
+ const standardBrief=JSON.parse(await page.locator("#learning-standard-brief-preview").inputValue());
+ check(standardBrief.learnerFocusIncluded===false&&standardBrief.task?.requestedNow===2&&
+   standardBrief.blueprint?.examId===reviewedEdition.examId&&
+   standardBrief.classification?.taxonomyAssignmentPolicy==="deepest-defensible"&&
+   standardBrief.classification?.requireTaxonomy===false,
+   engine+" native standard Authoring Brief was not generated for the learner-focus exam");
+ await page.waitForFunction(()=>!document.querySelector("#learning-brief-personalise")?.disabled);
+ await page.locator("#learning-brief-personalise").click();
+ await page.locator("#learning-brief-preview").waitFor({state:"visible"});
+ const personalised=JSON.parse(await page.locator("#learning-brief-preview").inputValue());
+ check(personalised.learnerFocusIncluded===true&&
+   personalised.learnerFocus?.examId===reviewedEdition.examId&&
+   personalised.personalisationIntent?.compositionPolicy==="focus-first-with-blueprint-guardrails"&&
+   !JSON.stringify(personalised).includes("answerKey"),
+   engine+" Pass 5 native personalised Authoring Brief is incomplete or leaked answer-key state");
  await page.locator("#learning-due").click();
  check(await page.locator(".learning-answer").count()===0,
   engine+" P60-F user Learning answer leaked before reveal");

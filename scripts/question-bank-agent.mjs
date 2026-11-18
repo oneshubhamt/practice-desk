@@ -16,13 +16,13 @@ const shaRule=/^[a-f0-9]{64}$/;
 const idRule=/^[A-Za-z0-9][A-Za-z0-9_-]*$/;
 const MAX_SOURCE=25*1024*1024,MAX_PATCH=1024*1024;
 const EDITABLE_FIELDS=new Set([
- "examSection","subject","syllabusHeadingId","topic","subtopic","difficulty",
+ "examSection","subject","topic","subtopic","difficulty",
  "kind","prompt","options","answer","explanation","stimulusRef","tolerance",
  "minSelections","maxSelections","partialCreditEach","partialPenaltyEach",
  "leftItems","rightItems","provenance","qa","scoringOverride"
 ]);
 const OPTIONAL_FIELDS=new Set([
- "subject","syllabusHeadingId","topic","subtopic","difficulty","stimulusRef",
+ "subject","topic","subtopic","difficulty","stimulusRef",
  "tolerance","minSelections","maxSelections","partialCreditEach","partialPenaltyEach",
  "leftItems","rightItems","options","scoringOverride"
 ]);

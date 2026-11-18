@@ -232,7 +232,7 @@ export function inspectStagingWorkspace(state:StagingWorkspace):StagingInspectio
     selected:picked,duplicates:related,
     ...(quality?{quality}:{}),...(triage?{triage}:{})});
    if(picked){
-    const topic=q.syllabusHeadingId||q.subject||"Unclassified";
+    const topic=q.subject||"Unclassified";
     subjects.set(topic,(subjects.get(topic)??0)+1);
     kinds.set(q.kind,(kinds.get(q.kind)??0)+1);
     sourceCount+=q.provenance?.sources?.length??0;

@@ -26,7 +26,7 @@ const MAX_SOURCE_BYTES=25*1024*1024,MAX_DECISIONS_BYTES=2*1024*1024,
 const CHOICE_FIELDS=["answer","explanation","prompt","options","kind",
  "leftItems","rightItems","stimulusRef","tolerance","minSelections",
  "maxSelections","partialCreditEach","partialPenaltyEach","provenance",
- "subject","syllabusHeadingId","topic","subtopic","difficulty","examSection","qa"];
+ "subject","topic","subtopic","difficulty","examSection","qa"];
 const BAD_INPUT="editorial-pair-input-invalid";
 const plain=(value,name,keys)=>{
  if(!value||typeof value!=="object"||Array.isArray(value)||
@@ -196,7 +196,7 @@ function annotateReviewed(bundle,rawReviewed,decisionMap,changes){
    kind:"source-correction",stimulusRef:"figure",stimuli:"figure",media:"figure",
    explanation:"explanation",provenance:"source-correction",tolerance:"answer-key",
    minSelections:"answer-key",maxSelections:"answer-key",partialCreditEach:"answer-key",
-   partialPenaltyEach:"answer-key",subject:"formatting",syllabusHeadingId:"formatting",
+   partialPenaltyEach:"answer-key",subject:"formatting",
    topic:"formatting",subtopic:"formatting",difficulty:"formatting",examSection:"formatting",qa:"source-correction"
   };
   const types=[...new Set(change.changedFields.map(x=>kindMap[x]??"source-correction"))];
@@ -242,7 +242,7 @@ function inspectPair(sourceInput,reviewedInput,decisions,qualityReview){
   add("reviewed-bank-invalid",issue.code+": "+issue.message);
  let qqa=null;
  if(qualityReview===undefined)add("review-required",
-  "Strict pairing requires complete P60-C SHA-bound independent review; no external factual certification is implied");
+  "Strict pairing requires complete P60-C SHA-bound layered review; no external factual certification is implied");
  else{
   qqa=auditQuestionQuality(reviewed,reviewedInput.raw,qualityReview);
   if(!qqa.readyForPublication)
@@ -264,7 +264,7 @@ function inspectPair(sourceInput,reviewedInput,decisions,qualityReview){
  }catch(error){add("pair-publication-invalid",error instanceof Error?error.message:"Invalid paired publication");}
  const errorCount=sumErrors(issues),valid=errorCount===0;
  return {valid,readyForPublication:valid,issues,changes,hashes,packages,comparison,
-  reviewAssurance:qqa?.reviewAssurance??"not-performed",
+  reviewMode:qqa?.reviewMode??"not-performed",reviewAssurance:qqa?.reviewAssurance??"not-performed",
   factualVerification:"not-performed",externalSourceFetches:0,
   originalOriginClaims:[...new Set(source.questions.map(q=>q.provenance?.kind??"unspecified"))],
   reviewedQaWarnings:reviewedQA.issues.filter(i=>i.severity==="warning").length,
@@ -279,7 +279,7 @@ function publicAudit(result,offset=0,limit=12){
   sourceRevision:result.sourceRevision,reviewedRevision:result.reviewedRevision,
   ...result.hashes,changes:{total:changed.length,shown:changed.slice(0,12),
    remaining:Math.max(0,changed.length-12)},
-  sourceKeyComparison:result.comparison,reviewAssurance:result.reviewAssurance,
+  sourceKeyComparison:result.comparison,reviewMode:result.reviewMode,reviewAssurance:result.reviewAssurance,
   factualVerification:result.factualVerification,externalSourceFetches:0,
   originalOriginClaims:result.originalOriginClaims,
   reviewedQaWarnings:result.reviewedQaWarnings,
@@ -307,7 +307,7 @@ function createLineage(result,decisions,sourceInput,reviewedInput){
   sourceKeyComparison:result.comparison,
   editorialStatus:"source-preserved-reviewed-claimed-not-authenticated",
   factualVerification:"not-performed",externalSourceFetches:0,
-  reviewAssurance:result.reviewAssurance,
+  reviewMode:result.reviewMode,reviewAssurance:result.reviewAssurance,
   sourceFile:"original-source.json",reviewedSourceFile:"reviewed-source.json",
   sourcePackageFile:"source.exam.json",reviewedPackageFile:"reviewed.exam.json"};
 }
@@ -357,7 +357,7 @@ async function main(){
  }
  if(op==="compile"&&!reviewPath)throw Error("compile requires a P60-C --quality-review file");
  const decisionData=(await load(args[2],MAX_DECISIONS_BYTES,"Editorial decisions")).data;
- const review=reviewPath?(await load(reviewPath,MAX_REVIEW_BYTES,"P60-C independent review")).data:undefined;
+ const review=reviewPath?(await load(reviewPath,MAX_REVIEW_BYTES,"P60-C layered review")).data:undefined;
  const result=inspectPair(original,reviewed,decisionData,review);
  const summary=publicAudit(result,offset,limit);
  if(op==="audit"){emit(summary);if(!result.valid)process.exitCode=1;return;}

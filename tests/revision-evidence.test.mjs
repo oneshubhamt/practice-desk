@@ -5,7 +5,6 @@ import {validateExamPackage,startGenericAttempt} from "../src/app/exam-package.t
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {addLearningCard,validateLearningCard,topicMetrics,comparableTrends} from "../src/learning/learning.ts";
 import {revisionInventory,revisionTake,mockEvidenceAttempts,isRevisionAttempt} from "../src/learning/revision-selection.ts";
-import {APFC_SYLLABUS_V1,syllabusForExam} from "../src/learning/syllabus-taxonomy.ts";
 import {makeRevisionPackage,createNotebookLineage,validateNotebookLineage} from "../src/learning/revision-test.ts";
 import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
 import {makeBackup,verifyBackup} from "../src/history/backup.ts";
@@ -53,20 +52,17 @@ test("P46 bookmarked and genuinely due cards work after deleting source attempts
  assert.equal(revisionInventory([],[annotated],new Set(),source.examId,["due"]).eligibleCount,0);
  assert.equal(revisionInventory([],[annotated],new Set(),source.examId,["bookmarked"]).eligibleCount,1);
 });
-test("P46 explicit APFC syllabus is versioned, self-assigned and never inferred",()=>{
- assert.equal(APFC_SYLLABUS_V1.version,1);
- assert.equal(APFC_SYLLABUS_V1.headings.length,9);
- assert.equal(syllabusForExam("ssc-cgl"),undefined);
+test("P46 learner notebook labels remain explicit user annotations and survive backup",()=>{
  const original=addLearningCard(finished("note"),source.questions[0].id,new Date(1600).toISOString());
- assert.throws(()=>validateLearningCard({...original,syllabusTopicId:"labour"}),/Invalid learning card fields/);
- const apfc=validateLearningCard({...original,examId:"upsc-epfo-apfc",syllabusTopicId:"labour",
-  customTopic:"EPF contribution"});
- assert.equal(apfc.syllabusTopicId,"labour");
- assert.equal(apfc.customTopic,"EPF contribution");
- assert.throws(()=>validateLearningCard({...apfc,syllabusTopicId:"invented"}),/Invalid learning card fields/);
- const archive=verifyBackup(makeBackup([{...apfc,saveRevision:1}],
+ assert.throws(()=>validateGenericStoredRecord({...original,saveRevision:1,syllabusTopicId:"labour"}),/unsupported field/);
+ const annotated=validateLearningCard({...original,customSubject:"Social Security",customTopic:"EPF contribution"});
+ assert.equal(annotated.customSubject,"Social Security");
+ assert.equal(annotated.customTopic,"EPF contribution");
+ const archive=verifyBackup(makeBackup([{...annotated,saveRevision:1}],
    {schema:1,dark:false,scale:100},"2026-11-02T12:00:00Z"));
- assert.equal(validateLearningCard(archive.records[0]).syllabusTopicId,"labour");
+ const restored=validateLearningCard(archive.records[0]);
+ assert.equal(restored.customSubject,"Social Security");
+ assert.equal(restored.customTopic,"EPF contribution");
 });
 test("P46 selection filters are authenticated and mock trends exclude revision results",()=>{
  const a=finished("original"),card=addLearningCard(a,source.questions[0].id,new Date(1600).toISOString());
@@ -128,21 +124,28 @@ test("P46 pacing evidence does not invent first-answer or revisit timestamps",()
  assert.equal(inspected.selected[0].firstVisitMs,inspected.selected[0].measuredForegroundMs);
 });
 
-test("P46 explicitly assigned broad APFC syllabus heading becomes a separate measured topic row",()=>{
- const apfc=validateExamPackage({...source,examId:"upsc-epfo-apfc"});
+test("P46 frozen exam taxonomy becomes measured evidence without learner-side inference",()=>{
+ const examId="upsc-epfo-apfc";
+ const taxonomy={format:"practice-desk-taxonomy",version:1,id:"apfc-test-taxonomy",examId,
+  title:"Synthetic APFC taxonomy",basis:"user-defined",asOfDate:"2026-11-17",reference:"Regression fixture",
+  nodes:[{id:"labour",label:"Industrial Relations, Labour Codes and Social Security in India",kind:"subject"}]};
+ const apfc=validateExamPackage({...source,examId,taxonomy,
+  taxonomyAssignments:{[source.questions[0].id]:"labour"}});
  const byId=new Map(apfc.questions.map(q=>[q.id,q]));
  let a=startGenericAttempt(apfc,"apfc-source",1000);
  a=transitionGenericAttempt(a,{type:"ANSWER",nowMs:1010,
   response:{kind:"single-choice",optionId:"a"}},byId);
  a=transitionGenericAttempt(a,{type:"SUBMIT_ATTEMPT",nowMs:1200},byId);
  const note=addLearningCard(a,apfc.questions[0].id,new Date(1300).toISOString());
- const card=validateLearningCard({...note,syllabusTopicId:"labour",customTopic:"EPFO"});
+ const card=validateLearningCard({...note,customTopic:"EPFO"});
  const rows=topicMetrics([a],[card]);
- const official=rows.find(x=>x.kind==="syllabus"&&x.label===APFC_SYLLABUS_V1.headings[6].label);
- assert.equal(official.examId,"upsc-epfo-apfc");
+ const official=rows.find(x=>x.kind==="taxonomy"&&
+  x.label==="Industrial Relations, Labour Codes and Social Security in India");
+ assert.equal(official.examId,examId);
  assert.equal(official.answered,1);
  assert.ok(rows.some(x=>x.kind==="user-topic"&&x.label==="EPFO"));
  assert.ok(rows.some(x=>x.kind==="section"));
- assert.equal(rows.filter(x=>x.kind==="source-topic").length,0,"Never infer unavailable topic IDs");
+ assert.equal(rows.filter(x=>x.kind==="source-topic").length,0,
+  "A bound taxonomy must replace legacy label-derived source paths for analytics");
 });
 

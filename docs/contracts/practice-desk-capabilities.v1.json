@@ -7,7 +7,7 @@
     "purpose": "Offline examination authoring, practice, scoring, history, analytics and spaced revision",
     "runtime": "Standalone offline HTML with local device storage; external Node 24 authoring CLI",
     "sourceBranch": "working",
-    "asOfDate": "2026-11-16",
+    "asOfDate": "2026-11-17",
     "embeddedLLM": false,
     "automaticCloudSync": false,
     "agentDeviceBridge": false
@@ -28,10 +28,11 @@
       "For multi-gate publish, run node scripts/agent-handoff.mjs actions; assess source-bound single, paired or PDF before a separately authorized create-only publication",
       "For supplied PDF papers, have an external authorized agent interpret original document and use P60-E source-bound intake audit before reviewed publication",
       "Read one relevant authoring example/task contract",
-      "Translate user coverage and source constraints to a v1 content blueprint and validate it before creating question batches",
+      "Translate user coverage and source constraints to a v1 content blueprint; when the maintained year owns taxonomy.json, validate/brief with that explicit taxonomy rather than inferring syllabus from examId",
+      "Generate a compact content-blueprint brief for each new authoring batch so the model sees only decision-ready paper rules, remaining deficits and the output contract; one AI agent is sufficient",
       "Research facts outside app",
       "Generate only requested question batch",
-      "For source-bound review, create one complete blind packet via agent-handoff.mjs prepare ... --allow-create; do not expose answer keys to the blind reviewer",
+      "For source-bound review, create one complete candidate-only packet via agent-handoff.mjs prepare ... --allow-create; do not expose answer keys to the semantic reviewer",
       "When reviewing an authentic source or AI-original, preserve the original as a separate file and create a reviewed source via P59 guarded patch; compare with editorial-editions.mjs template/audit/compile.",
       "Audit all planned source batches against the exact blueprint; do not treat authored classification as factual truth",
       "Run canonical QA/compile and targeted corrections",
@@ -76,25 +77,43 @@
       "effect": "Canonical validated publication package; manual browser import unless a repository maintainer places it under the exam/year/paper manifest graph of an enabled catalog family"
     },
     {
+      "operation": "authoring-brief",
+      "command": "node scripts/content-blueprint.mjs brief <plan.json> [existing-source.json ...] --bank-id <new-batch-id> --title <title> [--taxonomy taxonomy.json] [--learner-focus focus.json] [--batch-size 1..20] [--cognitive tags.json] [--against prior-bank.json]...",
+      "privilege": "read-only",
+      "effect": "Compact single-agent-compatible authoring task packet: exact paper configuration, stable IDs, remaining blueprint deficits, source policy and minimal question contract; optional validated exam-scoped learner focus is inserted with explicit personalization intent; existing question bodies/media/repository plumbing remain omitted."
+    },
+    {
       "operation": "validate-content-blueprint",
-      "command": "node scripts/content-blueprint.mjs validate <plan.json>",
+      "command": "node scripts/content-blueprint.mjs validate <plan.json> [--taxonomy taxonomy.json]",
       "privilege": "read-only",
       "effect": "Check versioned plan, exact integer quotas, parent contradictions, source and paper-rule policy syntax; no content generation"
     },
     {
       "operation": "audit-content-coverage",
-      "command": "node scripts/content-blueprint.mjs audit <plan.json> <bank1.json> [bank2.json ...] [--cognitive tags.json] [--limit N]",
+      "command": "node scripts/content-blueprint.mjs audit <plan.json> <bank1.json> [bank2.json ...] [--taxonomy taxonomy.json] [--cognitive tags.json] [--limit N]",
       "privilege": "read-only",
       "effect": "Bounded cross-batch count/metadata/QA audit; not factual truth; no keys or media bytes in output"
     },
     {
       "operation": "compile-with-blueprint",
-      "command": "node scripts/question-bank-cli.mjs compile-bank <bank.json> <NEW-output.json> --blueprint <plan.json>",
+      "command": "node scripts/question-bank-cli.mjs compile-bank <bank.json> <NEW-output.json> --blueprint <plan.json> [--taxonomy taxonomy.json]",
       "privilege": "create-new-file",
-      "effect": "Single-bank canonical compiler refuses publication output when explicit content quotas fail"
+      "effect": "Single-bank canonical compiler refuses publication output when explicit content quotas fail; when --taxonomy is supplied, the emitted package also carries the validated taxonomy and stable question-revision assignments."
     },
     {
-      "operation": "blind-question-review",
+      "operation": "corpus-add-paper",
+      "command": "node scripts/question-bank-corpus.mjs add-paper --family <family-id> --year <YYYY> --paper-id <slug> --source <bank.json> --quality-review <review.json> --blueprint <plan.json> [--set-current] [--dry-run]",
+      "privilege": "repository-update",
+      "effect": "For maintained custom mocks only: stage and validate the complete prospective corpus, then create one self-contained paper folder and year-manifest entry without overwrite; optional explicit currentPaperRef move; rollback own writes on final validation failure."
+    },
+    {
+      "operation": "corpus-append-revision",
+      "command": "node scripts/question-bank-corpus.mjs append-revision --family <family-id> --year <YYYY> --paper-id <slug-or-manifest-id> --source <bank.json> --quality-review <review.json> --blueprint <plan.json> [--dry-run]",
+      "privilege": "repository-update",
+      "effect": "For maintained custom mocks only: require a strictly higher custom revision, stage full graph validation, create a new immutable rN edition and atomically move that paper's canonical edition; no overwrite and rollback own writes on failure."
+    },
+    {
+      "operation": "candidate-review-packet",
       "command": "node scripts/question-quality.mjs candidate <bank.json> [--offset N --limit N]",
       "privilege": "read-only",
       "effect": "One bounded candidate-only page with source/candidate digest; hides keyed solution and media bytes"
@@ -103,19 +122,19 @@
       "operation": "quality-review-template",
       "command": "node scripts/question-quality.mjs template <bank.json> [--offset N --limit N]",
       "privilege": "read-only",
-      "effect": "Incomplete-by-default 20-check review records bound to question and candidate hashes; no keys"
+      "effect": "Incomplete-by-default layered v3 review: compact semantic checks per question plus one bank-level review and explicit reviewMode"
     },
     {
-      "operation": "prepare-blind-review",
+      "operation": "prepare-quality-review",
       "command": "node scripts/agent-handoff.mjs prepare <source.json> <NEW-review-dir> --allow-create",
       "privilege": "create-new-file",
-      "effect": "One complete key-hidden candidate review packet plus matching incomplete 20-check reviewer sidecar; never authenticates sources or approves publication Explicit --allow-create required."
+      "effect": "Create candidate-only packet plus matching incomplete layered v3 review sidecar; --allow-create required; no reviewer/source authentication"
     },
     {
       "operation": "audit-question-quality",
       "command": "node scripts/question-quality.mjs audit <bank.json> [--review review.json] [--offset N --limit N]",
       "privilege": "read-only",
-      "effect": "Check canonical source, recorded independent answer, checklist, evidence basis and SHA freshness; never authenticates factual claims"
+      "effect": "Check canonical source, second-pass solution, semantic/conditional item review, bank-level review, evidence basis, reviewMode and SHA freshness; never authenticates factual claims"
     },
     {
       "operation": "compile-with-quality-review",
@@ -151,7 +170,7 @@
       "operation": "pdf-intake-audit",
       "command": "node scripts/pdf-ingest.mjs audit <intake.json> <original.json> <paper.pdf> [--key-document key.pdf] [--reviewed reviewed.json --decisions decisions.json --quality-review review.json] [--blueprint plan.json]",
       "privilege": "read-only",
-      "effect": "Fail-closed document/item/page/key/visual provenance and optional independently recorded P60-C/D/B review; bounded answer-free output"
+      "effect": "Fail-closed document/item/page/key/visual provenance and optional layered P60-C/D/B review evidence; bounded answer-free output"
     },
     {
       "operation": "pdf-intake-compile",
@@ -161,9 +180,9 @@
     },
     {
       "operation": "assess-agent-handoff",
-      "command": "node scripts/agent-handoff.mjs assess <single|paired|pdf> <mode-inputs...> --quality-review <review.json> [--blueprint plan.json]",
+      "command": "node scripts/agent-handoff.mjs assess <single|paired|pdf> <mode-inputs...> --quality-review <review.json> [--blueprint plan.json --taxonomy taxonomy.json]",
       "privilege": "read-only",
-      "effect": "One bounded, answer-private source/edition/PDF and independent-review/coverage gate; canonical tools reused, no browser/History access"
+      "effect": "One bounded, answer-private source/edition/PDF and layered-review/coverage gate; canonical tools reused, no browser/History access"
     },
     {
       "operation": "publish-agent-handoff",
@@ -175,7 +194,7 @@
   "trustBoundaries": [
     "A claim, link, SHA hash, second-model agreement or structurally valid package does not authenticate answers/PYQs/sources",
     "Preserve candidate-facing content separately from answers, rubrics and editorial notes until authorized result review",
-    "User-local history and learning data are not accessible to the external agent by default",
+    "User-local History and learning data are not accessible to the external agent by default; only an explicit exam-scoped reduced learner-focus/personalised brief may be shared",
     "Do not promise direct app UI or database mutation from the Node source CLI",
     "P60-D provides source-preserving paired external editorial publication; P60-E PDF provenance and P60-F scoped agent handoff are implemented local CLIs with no automatic content/source authentication or browser/device bridge."
   ],
@@ -194,7 +213,7 @@
         "Browse available repository-maintained and imported exam families and paper revisions",
         "Family-level catalog switch controls explicit build-time preinstallation/removal",
         "Authoritative exam → year → paper manifests own discovery, PYQ/mock classification, canonical edition and paths",
-        "Appending a maintained paper requires one self-contained paper folder plus a year-manifest entry, not a root-catalog edit",
+        "Maintained custom mocks can be added or revised through a dry-runnable staged corpus transaction; root catalog package paths remain unnecessary",
         "Distinguish source/reviewed/custom identities and included-vs-user-supplied provenance",
         "Effective exam rules derive from the selected frozen paper"
       ],
@@ -211,7 +230,8 @@
         "scripts/question-bank-catalog.mjs",
         "src/app/preinstalled-exams.ts",
         "src/app/exam-families.ts",
-        "src/app/library-controller.ts"
+        "src/app/library-controller.ts",
+        "scripts/question-bank-corpus.mjs"
       ]
     },
     {
@@ -265,22 +285,27 @@
     {
       "id": "taxonomy",
       "status": "implemented",
-      "summary": "Semantic academic Subject → Topic → Subtopic independent of physical exam sections, with nine APFC broad syllabus headings.",
+      "summary": "Versioned exam-data Subject → Topic → Subtopic taxonomy independent of physical sections, with stable nodes, frozen question assignments and no exam-specific runtime registry.",
       "provides": [
-        "Author-supplied subject/topic/subtopic",
-        "APFC official broad syllabus root IDs",
-        "Topic ancestor rollups and unclassified handling",
-        "Exam-specific filters and learning attribution"
+        "Year manifests may bind practice-desk-taxonomy v1 sidecars with stable node IDs, parentage, canonical labels and bounded aliases",
+        "Maintained authored subject/topic/subtopic paths must resolve to the bound taxonomy before corpus packaging",
+        "Runtime packages and attempts carry resolved question-revision → taxonomy-node assignments for stable historical analytics",
+        "Taxonomy-gated canonical compilation embeds the supplied taxonomy and stable assignments rather than using it only as an audit hint",
+        "Practice-builder filters use taxonomy ancestry so parent subject/topic selection includes classified descendants",
+        "PFRDA Grade A 2026 carries the official A–L General Stream hierarchy plus Paper 1 English as year-owned data"
       ],
-      "agentUse": "Distinguish one physical APFC exam section from multiple academic syllabus headings; never invent subtopic authority.",
+      "agentUse": "Follow the maintained year manifest. If it declares taxonomy.json, pass that file explicitly with --taxonomy for blueprint/brief/compile work and author explicit subject/topic/subtopic labels that resolve to its nodes. Never infer a syllabus from examId.",
       "limitations": [
-        "Detailed verified syllabi, topic quotas and automatically calibrated difficulty are not supplied",
-        "User metadata is not automatically official"
+        "Taxonomy source/basis is attributed data; schema validity and hashes do not independently authenticate the official syllabus",
+        "Parent-only classification is valid; do not invent missing topic/subtopic or difficulty labels",
+        "Learner notebook custom labels remain separate user annotations and are not promoted to official taxonomy"
       ],
       "sourcePaths": [
-        "src/learning/syllabus-taxonomy.ts",
+        "src/domain/taxonomy.ts",
+        "scripts/question-bank-catalog.mjs",
+        "question-banks/pfrda/2026/taxonomy.json",
         "src/app/practice-compose.ts",
-        "src/authoring/external-bank.ts"
+        "src/learning/learning.ts"
       ]
     },
     {
@@ -329,17 +354,45 @@
       "provides": [
         "User-authored notes, error labels, bookmarks and topic assignments",
         "Wrong, blank, slow, repeated, flagged, bookmarked and due revision reasons",
-        "Frozen source and answer lineage; user review grades separated from exam marks"
+        "Frozen source and answer lineage; user review grades separated from exam marks",
+        "Opt-in exam-scoped learner-focus reduction from observed attempt/notebook/FSRS evidence for fresh question authoring"
       ],
-      "agentUse": "Suggest revision from evidence and learner authorization, not a medical/cognitive diagnosis or automatic regrade.",
+      "agentUse": "Suggest revision from evidence and learner authorization, not a medical/cognitive diagnosis or automatic regrade. External authoring receives learner data only through a user-approved reduced focus/personalised brief, never unrestricted History.",
       "limitations": [
         "Revision reasons do not prove why a learner got an answer wrong",
-        "No built-in external AI agent access to private learning cards"
+        "No unrestricted external AI agent access to browser History or private learning cards; only explicit user-approved reduced focus may cross the boundary"
       ],
       "sourcePaths": [
         "src/learning/learning.ts",
         "src/learning/revision-selection.ts",
-        "src/learning/revision-test.ts"
+        "src/learning/revision-test.ts",
+        "src/learning/learner-focus.ts",
+        "src/app/learning-ui.ts"
+      ]
+    },
+    {
+      "id": "learner-focus",
+      "status": "implemented",
+      "summary": "User-controlled local practice-evidence reduction and optional personalised Authoring Brief generation with Off, Focused and Detailed sharing.",
+      "provides": [
+        "Off emits no learner packet and leaves the standard Authoring Brief unchanged",
+        "Focused emits bounded exam-only aggregates: observed answers/errors, repeated misses, measured slow/revisit/flag evidence, bookmarks, FSRS due counts and explicit recent-window statistics",
+        "Detailed is a separate richer opt-in with bounded prior prompt, wrong non-free-response selection/value text, measured timing/visits, self-reported error label, FSRS state and source explanation",
+        "Exam-simulation intent is blueprint-first; targeted-practice intent is focus-first with syllabus/blueprint guardrails",
+        "Learning desk can inspect/copy/export the focus packet and locally combine it with a loaded standard Authoring Brief",
+        "CLI --learner-focus and browser local personalization use the same validated transformation"
+      ],
+      "agentUse": "Use only the learnerFocus block supplied in the Authoring Brief. Treat it as observed evidence, not diagnosis; generate fresh transfer items rather than reproducing prior questions.",
+      "limitations": [
+        "No identity/device/unrelated-exam/unrestricted-History data in the learner-focus contract",
+        "Focused contains no prior question bodies or selected responses",
+        "Detailed omits correct responses and learner-authored free-response text",
+        "FSRS due/review evidence describes memory scheduling state; it does not itself identify why an answer was wrong"
+      ],
+      "sourcePaths": [
+        "src/learning/learner-focus.ts",
+        "src/app/learning-ui.ts",
+        "scripts/content-blueprint.mjs"
       ]
     },
     {
@@ -352,7 +405,7 @@
         "Editorial/provenance fields in question revisions",
         "P60-D source-preserving external editorial decision/lineage records, source and reviewed package outputs, and explicit unchanged source keys."
       ],
-      "agentUse": "For any exam, preserve an exact original practice-desk-authoring source, create the reviewed source separately, derive decisions with editorial-editions.mjs, complete P60-C independent review, and import the two signed packages Source first then Reviewed. Existing Library/source-reference features handle comparison.",
+      "agentUse": "For any exam, preserve an exact original practice-desk-authoring source, create the reviewed source separately, derive decisions with editorial-editions.mjs, complete P60-C layered review, and import the two signed packages Source first then Reviewed. Existing Library/source-reference features handle comparison.",
       "limitations": [
         "An attributed official PYQ URL is not independently authenticated",
         "Current P60-D workflow writes two separately imported signed exam files, not a transactional in-browser pair import.",
@@ -389,6 +442,29 @@
         "src/authoring/external-bank.ts",
         "src/authoring/external-bank-qa.ts",
         "src/authoring/authoring-exchange.ts"
+      ]
+    },
+    {
+      "id": "transactional-corpus",
+      "status": "implemented-with-limits",
+      "summary": "Dry-runnable staged add-paper/append-revision bridge for repository-maintained custom mocks.",
+      "provides": [
+        "Reuses canonical source compiler plus bound taxonomy, layered quality-review, blueprint and full catalog validation",
+        "Stages the complete prospective question-banks graph before any repository mutation",
+        "Exclusive corpus lock plus byte preconditions, create-only folders and atomic manifest replacement",
+        "Final real-graph validation with rollback of the operation's own writes on failure",
+        "add-paper optionally moves currentPaperRef only with explicit --set-current; append-revision requires a strictly higher immutable custom revision"
+      ],
+      "agentUse": "After authoring/review/blueprint completion, run --dry-run and inspect the returned plan before the real maintained-corpus operation. Do not hand-edit manifests for the supported custom-mock case.",
+      "limitations": [
+        "Maintained custom mocks only; genuine PYQ Source/Reviewed/PDF provenance stays on editorial/PDF publication workflows",
+        "Repository filesystem permission is required; this is not a browser/remote database mutation API",
+        "The transaction protects Practice Desk corpus operations; it cannot prevent arbitrary external filesystem mutation outside the lock protocol"
+      ],
+      "sourcePaths": [
+        "scripts/question-bank-corpus.mjs",
+        "scripts/question-bank-catalog.mjs",
+        "question-banks/README.md"
       ]
     },
     {
@@ -440,7 +516,8 @@
       "status": "implemented-with-limits",
       "summary": "P60-B versioned content production blueprint, bounded multi-batch quota audit and optional exact canonical compiler preflight.",
       "provides": [
-        "Validate user-authored exam, paper, subject and topic targets before content generation",
+        "Validate user-authored exam, paper, taxonomy/subject and topic targets before content generation",
+        "Generate a bounded single-agent-compatible authoring brief for a fresh batch, optionally including the explicitly supplied exam taxonomy while hiding existing question bodies and repository/package mechanics",
         "Enforce exhaustive or partial exact counts across subject, topic, subtopic, difficulty, kind, origin and physical section",
         "Optional explicit user marking, timer and navigation constraints",
         "Unverified author-attributed cognitive-level sidecar and counts",
@@ -448,9 +525,9 @@
         "Compact requested-versus-actual coverage and observed category inventories without question text",
         "Optional --blueprint guard for exact single-source canonical validate or compile"
       ],
-      "agentUse": "Start from docs/architecture/AGENT_CONTENT_PIPELINE.md plus one exam blueprint example; validate the user-defined plan, generate batches, audit entire intended composition before importing; use --blueprint on one-file compilation.",
+      "agentUse": "Validate the user-defined plan, supplying the matching --taxonomy sidecar when taxonomyId/requireTaxonomy is used, then use content-blueprint.mjs brief as the normal new-batch interface. Generate the requested batch, audit aggregate plan/taxonomy coverage, and compile through the canonical source pipeline.",
       "limitations": [
-        "No automatic syllabus truth, cognitive calibration, fact verification or source authentication",
+        "No automatic syllabus discovery/authentication, cognitive calibration, fact verification or source authentication; taxonomy is explicitly supplied data",
         "The current offline browser can import without a blueprint; CLI enforcement requires an explicit --blueprint flag or content-blueprint audit",
         "Multi-file aggregate audit is not a new 400-item in-app staging interface or cross-paper engine",
         "Author cognitive labels require a separate explicit sidecar and are not independently assessed"
@@ -463,24 +540,24 @@
     {
       "id": "question-quality",
       "status": "implemented-with-limits",
-      "summary": "P60-C candidate-facing hint detection, 20-check attributed editorial review sidecars, blind question packets, stale-source checks and opt-in publication gate.",
+      "summary": "P60-C layered quality assurance: deterministic candidate/source guards, compact per-question semantic review, one bank-level review, explicit conditional evidence and truthful review modes.",
       "provides": [
-        "Automatic blocking of explicit candidate-visible answer labels across prompts, options, shared stimuli and referenced image alt text",
-        "Heuristic warnings for prematurely revealed reasoning patterns and literal keyed-answer echoes",
-        "Answer-free, source-bound blind solver packets and deliberately incomplete review templates",
-        "Twenty quality dimensions with evidence/rationale status and per-item source/candidate SHA fingerprints",
-        "Independent answer comparison to authored key for automatically scorable response kinds",
-        "Fail-closed stale source/review, unsupported evidence and missing-check detection",
-        "Temporal source claims require an evidence as-of date and official PYQ claims demand locatable original evidence",
-        "Optional --quality-review gate for canonical source validate and compile"
+        "Automatic deterministic blocking/warning for canonical source defects, candidate answer leakage, unintended clues and structural option/key problems",
+        "Source-bound candidate-only packets and deliberately incomplete v3 layered review templates",
+        "Compact semantic item review for exam relevance, clarity/defensibility, distractors, reasoning, facts and explanations",
+        "Conditional mathematics, legal/current, official-PYQ and visual review only when applicable",
+        "One bank-level review for coverage, difficulty distribution, cognitive diversity, duplication/diversity, style consistency and overall exam fidelity",
+        "Explicit self-review, clean-context and independent-agent assurance modes; substantive correctness/evidence gates are identical in every mode",
+        "Second-pass answer comparison to the authored key for automatically scorable response kinds",
+        "Fail-closed SHA freshness, source evidence/as-of requirements and optional --quality-review canonical publication gate"
       ],
-      "agentUse": "Read docs/architecture/AGENT_CONTENT_PIPELINE.md after the P59 quickstart; send candidate packet only to independent solver, research sources with externally connected tools, fill separate 20-check records, audit bounded issues and compile with --quality-review when records are complete.",
+      "agentUse": "Use question-quality.mjs prepare/template to review candidate material. Complete only required semantic/conditional checks per item, then the six bank-level checks once. Set reviewMode truthfully: self-review is fully supported; clean-context or independent-agent adds epistemic separation but is never a publication prerequisite.",
       "limitations": [
-        "No offline network fetch, independent citation/PYQ authentication or provable agent identity/blinding",
-        "Self-attested reviewer/source/rendered UI claims are never certificates of factual accuracy",
-        "Structurally valid unreviewed local authoring remains caution-labelled and is not automatically required to supply the external review sidecar",
-        "Candidate-only text/alt packet does not replace looking at actual image pixels or device-rendered question UI",
-        "P60-D source/reviewed pairing is implemented externally with caution only; P60-E external-agent source-bound intake is implemented, but automatic PDF extraction is not."
+        "No offline network fetch, citation/PYQ authentication or provable reviewer identity/context separation",
+        "Self-review is a valid layered review but provides no independent context; clean-context and independent-agent separation remain attributed claims, not authenticated identities",
+        "Structurally valid unreviewed local authoring remains caution-labelled unless a strict quality-review gate is requested",
+        "Candidate-only text/alt packets do not replace inspecting actual visual pixels when visual material is applicable",
+        "P60-D/P60-E source and document provenance remain separate from factual truth certification"
       ],
       "sourcePaths": [
         "src/authoring/candidate-integrity.ts",
@@ -496,13 +573,13 @@
       "provides": [
         "Derive a low-context correction-decision template from source/reviewed v1 banks without showing answers",
         "Require exact source/reviewed SHA, per-question and changed-field correspondence plus recorded reasons/evidence",
-        "Run existing P60-C source-bound independent review gate on reviewed content before paired compilation",
+        "Run existing P60-C source-bound layered review gate on reviewed content before paired compilation",
         "Archive exact original and reviewed source bytes along with source/reviewed signed exam packages and lineage",
         "Report conservative source-key score comparability, preserving altered wording and media as unavailable",
         "Use current Library paired edition/source review/frozen key modules without duplicating scorer or History",
         "Exclude explicitly unresolved reviewed questions from scoring under existing invalid editorial status"
       ],
-      "agentUse": "Read docs/architecture/AGENT_CONTENT_PIPELINE.md. Use existing P59 patches to make a separate reviewed file; run editorial-editions.mjs template, fill decisions, independently review P60-C, audit then compile into a new directory; import source.exam.json before reviewed.exam.json.",
+      "agentUse": "Read docs/architecture/AGENT_CONTENT_PIPELINE.md. Use existing P59 patches to make a separate reviewed file; run editorial-editions.mjs template, fill decisions, complete the P60-C layered review using the truthful reviewMode, audit then compile into a new directory; import source.exam.json before reviewed.exam.json.",
       "limitations": [
         "Does not authenticate official PYQs, original publishers, external evidence or reviewer independence.",
         "Requires structurally publishable original with no explicit candidate answer leak; unreadable historical scans stay outside executable Source.",
@@ -530,7 +607,7 @@
         "Existing P60-D source/reviewed signed immutable paired exams, exact raw source archives and extra PDF provenance sidecar",
         "No browser/app access without the user's explicit offline import"
       ],
-      "agentUse": "Read docs/architecture/AGENT_CONTENT_PIPELINE.md only for a supplied document; transcribe externally and preserve bytes, template, source-inspect, audit, independently review the corrected edition, compile into a new directory.",
+      "agentUse": "Read docs/architecture/AGENT_CONTENT_PIPELINE.md only for a supplied document; transcribe externally and preserve bytes, template, source-inspect, audit, complete the corrected edition's P60-C layered review in the truthful reviewMode, then compile into a new directory.",
       "limitations": [
         "No PDF text parsing/OCR/image recognition, no independently verified document page count or content fidelity",
         "Actual source-key/PYQ/source publisher/reviewer identity and factual verification cannot follow from a SHA or model declaration",
@@ -550,14 +627,14 @@
       "status": "implemented-with-limits",
       "summary": "P60-F model-agnostic low-context local handoff combines existing strict source, review, original/reviewed, document provenance and coverage gates into explicit read-only assess or create-only publication.",
       "provides": [
-        "One-command answer-hidden full-bank review preparation and exact fillable SHA-bound review-v1 sidecar",
+        "One-command answer-hidden full-bank review preparation and exact fillable SHA-bound layered v3 review sidecar",
         "Discover agent actions and privileges without source-tree scans or backend access",
         "Read-only single/paired/PDF assessment with SHA-bound review and optional exact blueprint",
         "Mandatory reviewed-quality sidecar, explicit --allow-create for new-only canonical package writes, compact diagnostics without answer/media dumps",
         "Existing immutable source/reviewed package importer and actual offline exam, scoring and FSRS lifecycle exercised with externally generated files",
         "Matched baseline-vs-integrated CLI call count, output bytes and wall-clock observations with independently checked elementary synthetic answers"
       ],
-      "agentUse": "Read docs/architecture/AGENT_CONTENT_PIPELINE.md only for a multi-gate workflow. Use agent-handoff.mjs actions; prepare the blind review packet (source files only) with explicit --allow-create, complete actual review and evidence, then assess single|paired|pdf with a current P60-C review and optional P60-B plan; publish only to a new path with --allow-create. User imports manually into offline Library.",
+      "agentUse": "Read docs/architecture/AGENT_CONTENT_PIPELINE.md only for a multi-gate workflow. Use agent-handoff.mjs actions; prepare the candidate-only review packet (source files only) with explicit --allow-create, complete actual review and evidence, then assess single|paired|pdf with a current P60-C review and optional P60-B plan; publish only to a new path with --allow-create. User imports manually into offline Library.",
       "limitations": [
         "A local CLI flag is not an authenticated remote permission grant; OS sandbox and user-operated file choice remain binding",
         "No direct cloud/local-app, browser or History/learning/performance access and no agent-to-device synchronization",

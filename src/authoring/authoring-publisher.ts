@@ -261,8 +261,7 @@ export function compileAuthoringPublication(
   const explanationRefs=[...new Set(resources(explanation))];
   addRefs(stemRefs);
   addRefs(explanationRefs);
-  const hierarchy=topicAncestors(attributedTopicPath(d.examId,q.subject??"",
-    q.syllabusHeadingId||undefined,q.topic??"",q.subtopic??"")).map(n=>n.id);
+  const hierarchy=topicAncestors(attributedTopicPath(q.subject??"",q.topic??"",q.subtopic??"")).map(n=>n.id);
   const shared=q.stimulusRef?sharedStimuli.get(q.stimulusRef):undefined;
   if(shared){
    usedStimuli.add(shared.id);

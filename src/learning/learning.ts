@@ -6,7 +6,8 @@ import type { CorrectAnswer } from "../domain/answer-key.js";
 import type { QuestionRevisionId } from "../domain/ids.js";
 import type {RevisionMemoryState,RevisionSchedulerPort} from "./revision-scheduler-port.ts";
 import { validateQuestionRevision, validateAnswerKeyRevision } from "../domain/validate.ts";
-import { syllabusHeading,attributedTopicPath,topicAncestors,parseTopicPathId } from "./syllabus-taxonomy.ts";
+import {attributedTopicPath,topicAncestors,parseTopicPathId} from "./syllabus-taxonomy.ts";
+import {taxonomyPathNodes} from "../domain/taxonomy.ts";
 import {validateReviewDurationEvidence,type ReviewDurationEvidence} from "./review-duration.ts";
 
 export const ERROR_LABELS=["conceptual","calculation","interpretation","time-pressure","guessing","careless","knowledge-gap","other"] as const;
@@ -39,8 +40,6 @@ export interface LearningCard {
  readonly customSubject?:string;
  /** User-entered third-level topic, only meaningful beneath a named topic. */
  readonly customSubtopic?:string;
- /** Optional explicit broad syllabus heading, never inferred from question text. */
- readonly syllabusTopicId?:string;
  readonly bookmarked:boolean;
  readonly revisionDisposition:"active"|"suspended";
  readonly createdAt:string;
@@ -62,13 +61,11 @@ export function validateLearningCard(input:unknown):LearningCard{
     /[\u0000-\u001f\u007f]/u.test(raw.customTopic)||
     (raw.customSubject!==undefined&&
       (typeof raw.customSubject!=="string"||raw.customSubject.length>120||
-       /[\u0000-\u001f\u007f]/u.test(raw.customSubject)||
-       Boolean(raw.customSubject.trim()&&raw.syllabusTopicId)))||
+       /[\u0000-\u001f\u007f]/u.test(raw.customSubject)))||
     (raw.customSubtopic!==undefined&&
      (typeof raw.customSubtopic!=="string"||raw.customSubtopic.length>120||
       Boolean(raw.customSubtopic.trim()&&!raw.customTopic.trim())||
       /[\u0000-\u001f\u007f]/u.test(raw.customSubtopic)))||
-    (raw.syllabusTopicId!==undefined&&(!syllabusHeading(raw.examId!,raw.syllabusTopicId)))||
     typeof raw.bookmarked!=="boolean"||
     raw.revisionDisposition!=="active"&&raw.revisionDisposition!=="suspended"||
     !(raw.errorLabel===null||ERROR_LABELS.includes(raw.errorLabel as ErrorLabel))||
@@ -147,13 +144,11 @@ export interface TopicMetrics {
  distinctRevisions:number;distinctAnsweredRevisions:number;
  /** Optional semantic hierarchy, independent of exam's navigation sections. */
  parentId?:string;depth?:number;
- kind:"section"|"source-topic"|"user-topic"|"syllabus"|"hierarchy";
+ kind:"section"|"source-topic"|"user-topic"|"taxonomy"|"hierarchy";
 }
 export function topicMetrics(attempts:readonly GenericAttempt[],cards:readonly LearningCard[]=[]):TopicMetrics[]{
  const manual=new Map(cards.filter(c=>c.customTopic.trim()).map(c=>[
    c.examId+"|"+c.question.id+"|"+c.question.contentHash,c.customTopic.trim()]));
- const mapped=new Map(cards.filter(c=>c.syllabusTopicId).map(c=>[
-   c.examId+"|"+c.question.id+"|"+c.question.contentHash,c.syllabusTopicId!]));
  const annotated=new Map(cards.map(c=>[
    c.examId+"|"+c.question.id+"|"+c.question.contentHash,c] as const));
  const rows=new Map<string,TopicMetrics>();
@@ -171,27 +166,33 @@ export function topicMetrics(attempts:readonly GenericAttempt[],cards:readonly L
      const section=sections.find(s=>s.questionRevisionIds.includes(item.questionRevisionId));
      if(!q||!section)continue;
      const annotationKey=attempt.frozen.snapshot.examId+"|"+q.id+"|"+q.contentHash;
-     const heading=mapped.get(annotationKey);
      const annotatedCard=annotated.get(annotationKey);
      const sourceTags=q.content.topicIds??[];
-     const sourcePaths=sourceTags.map(parseTopicPathId)
+     const assignment=attempt.frozen.taxonomyAssignments?.[q.id];
+     const taxonomyHierarchy=attempt.frozen.taxonomy&&assignment?
+       taxonomyPathNodes(attempt.frozen.taxonomy,assignment):[];
+     const sourcePaths=taxonomyHierarchy.length?[]:sourceTags.map(parseTopicPathId)
        .filter((path):path is readonly string[]=>path!==null);
      const manualPath=annotatedCard&&
-       (annotatedCard.syllabusTopicId||annotatedCard.customSubject?.trim()||
-        annotatedCard.customTopic.trim())?
-       attributedTopicPath(attempt.frozen.snapshot.examId,
-         annotatedCard.customSubject??"",annotatedCard.syllabusTopicId,
+       (annotatedCard.customSubject?.trim()||annotatedCard.customTopic.trim())?
+       attributedTopicPath(annotatedCard.customSubject??"",
          annotatedCard.customTopic,annotatedCard.customSubtopic??""):null;
      const hierarchy=[...sourcePaths,...(manualPath?[manualPath]:[])]
        .flatMap(path=>topicAncestors(path));
+     const taxonomyRows=taxonomyHierarchy.map((node,index)=>({
+       label:taxonomyHierarchy.slice(0,index+1).map(x=>x.label).join(" › "),
+       kind:"taxonomy" as const,
+       sourceId:"taxonomy:"+attempt.frozen.taxonomy!.id+":"+node.id,
+       ...(index?{parentId:"taxonomy:"+attempt.frozen.taxonomy!.id+":"+taxonomyHierarchy[index-1]!.id}:{}),
+       depth:index+1
+     }));
      const labels:{label:string;kind:TopicMetrics["kind"];sourceId?:string;
        parentId?:string;depth?:number}[]=[
        {label:section.title,kind:"section"},
-       ...sourceTags.filter(label=>!parseTopicPathId(label))
-         .map(label=>({label,kind:"source-topic" as const})),
+       ...(!taxonomyHierarchy.length?sourceTags.filter(label=>!parseTopicPathId(label))
+         .map(label=>({label,kind:"source-topic" as const})):[]),
        ...(manual.get(annotationKey)?[{label:manual.get(annotationKey)!,kind:"user-topic" as const}]:[]),
-       ...(heading&&syllabusHeading(attempt.frozen.snapshot.examId,heading)?
-         [{label:syllabusHeading(attempt.frozen.snapshot.examId,heading)!.label,kind:"syllabus" as const}]:[]),
+       ...taxonomyRows,
        ...hierarchy.map(node=>({label:node.path.join(" › "),
          kind:"hierarchy" as const,sourceId:node.id,...(node.parentId?{parentId:node.parentId}:{}),
          depth:node.depth}))

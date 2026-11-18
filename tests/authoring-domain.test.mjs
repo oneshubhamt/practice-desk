@@ -453,7 +453,7 @@ test("external authoring carries a written question's advisory word limit into t
  source.sections=[source.sections[0]];
  source.tools={wordCount:"hidden"};
  source.questions=[{
-  id:"essay-1",examSection:source.sections[0].id,syllabusHeadingId:"labour",
+  id:"essay-1",examSection:source.sections[0].id,subject:"Industrial Relations, Labour Codes and Social Security in India",
   kind:"free-response",prompt:"Discuss a labour-law principle.",wordLimit:250,
   explanation:"Illustrative rubric.",provenance:{kind:"manual",sourceNote:"Illustrative only"},
   qa:{status:"unchecked"}

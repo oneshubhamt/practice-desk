@@ -8,22 +8,30 @@ import { assertRevisionHashes } from "../domain/integrity.ts";
 import { selectDisplayResources, validateMediaInventory, validateQuestionMediaReferences } from "../domain/media.ts";
 import type { AttemptSnapshot, AttemptMode, FrozenAttemptContent } from "../domain/attempt.js";
 import type { ExamId } from "../domain/ids.js";
+import type {ExamTaxonomy,TaxonomyAssignments} from "../domain/taxonomy.ts";
+import {assertTaxonomyExam,validateExamTaxonomy,validateTaxonomyAssignments} from "../domain/taxonomy.ts";
 
 /** Freeze exact scoring/display resources into the canonical attempt contract. */
 export function freezeAttempt(
   paper: PaperRevision, key: AnswerKeyRevision, questions: readonly QuestionRevision[],
   stimuli:readonly StimulusDefinition[],assets:readonly ImageAsset[],
   mode: AttemptMode, frozenAt: string, examId: ExamId,
+  taxonomy?:ExamTaxonomy,taxonomyAssignments?:TaxonomyAssignments,
 ): FrozenAttemptContent {
   validateAnswerKeyRevision(key, questions);
   validatePaperRevision(paper, questions, key);
   assertRevisionHashes(questions,key,paper);
   const display=selectDisplayResources(questions,stimuli,assets);
+  if(taxonomy){
+    const checked=validateExamTaxonomy(taxonomy);assertTaxonomyExam(checked,examId);
+    validateTaxonomyAssignments(checked,taxonomyAssignments,new Set(questions.map(q=>q.id as string)));
+  }else if(taxonomyAssignments)throw Error("Frozen taxonomy assignments require taxonomy");
   const snapshot: AttemptSnapshot = {
     examId, paperId: paper.paperId, paperRevisionId: paper.id,
     answerKeyRevisionId: key.id, scoringPolicy: paper.scoring, mode,
   };
-  return structuredClone({ schema: 2 as const, frozenAt, snapshot, paper, key, questions, ...display });
+  return structuredClone({ schema: 2 as const, frozenAt, snapshot, paper, key, questions, ...display,
+    ...(taxonomy?{taxonomy,taxonomyAssignments:taxonomyAssignments??{}}:{}) });
 }
 export function assertFrozenContent(value: FrozenAttemptContent): FrozenAttemptContent {
   if (!value || value.schema !== 2 ||
@@ -41,6 +49,12 @@ export function assertFrozenContent(value: FrozenAttemptContent): FrozenAttemptC
   assertRevisionHashes(value.questions,value.key,value.paper);
   validateMediaInventory(value.stimuli,value.assets);
   validateQuestionMediaReferences(value.questions,value.stimuli,value.assets);
+  if(value.taxonomy){
+    const taxonomy=validateExamTaxonomy(value.taxonomy);
+    assertTaxonomyExam(taxonomy,value.snapshot.examId);
+    validateTaxonomyAssignments(taxonomy,value.taxonomyAssignments,
+      new Set(value.questions.map(q=>q.id as string)));
+  }else if(value.taxonomyAssignments)throw Error("Frozen taxonomy assignments require taxonomy");
   return value;
 }
 export interface RestoredSession {

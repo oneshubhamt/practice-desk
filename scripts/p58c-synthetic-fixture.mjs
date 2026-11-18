@@ -29,7 +29,9 @@ export function makeP58cSources({files=8,each=50,duplicates=false,media=true}={}
       "The same synthetic premise is intentionally repeated to test the five hundred candidate duplicate cap.":
       "Synthetic scenario "+bank+" case "+i+" asks for the appropriate test response; this is not an official paper.";
     const base={id,examSection:"general",
-     syllabusHeadingId:["labour","economy","accountancy"][i%3],
+     subject:["Industrial Relations, Labour Codes and Social Security in India",
+      "Developmental Issues and Present Trends in Indian Economy",
+      "Principles of Accountancy, Auditing and Insurance"][i%3],
      topic:"Synthetic bounds test "+Math.floor(i/10),
      kind,prompt:stem,
      explanation:"This is a synthetic source and key, supplied solely to exercise the offline authoring and scoring pipeline.",
