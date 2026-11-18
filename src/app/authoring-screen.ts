@@ -61,7 +61,7 @@ export function renderAuthoringScreenHTML(owner:AuthoringScreenControllerContext
     '<p class="fine">Generate a standard Authoring Brief from a self-contained blueprint in Learning Desk. Optional learner focus can add bounded, exam-only evidence without exposing unrestricted History.</p></div>'+
     '<div class="authoring-ai-path"><strong>Continuation of an existing bank</strong>'+
     '<p class="fine">Use the coverage-aware corpus CLI so existing coverage and duplicate context are measured from the authored source. Bring the resulting authoring source here for staging and review; Practice Desk does not maintain a second browser-only continuation engine.</p></div>'+
-    '<button type="button" class="btn primary" id="authoring-learning-focus">Open Learning-directed authoring →</button>'+
+    '<button type="button" class="btn primary" id="authoring-learning-focus">Open Authoring Brief tools →</button>'+
     '</section></div>'+
     '<section class="panel pad authoring-banks"><div class="row between"><div><span class="eyebrow">PUBLISHED CONTENT</span>'+
     '<h2>Question banks & paper editions</h2><p class="fine">Published editions are immutable. Open one in Library to practise it; unpublished drafts remain in the authoring workspace.</p></div>'+
