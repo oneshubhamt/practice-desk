@@ -233,6 +233,7 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
          escapeText(frozenScoreSummary(a)?.text??"Score unavailable")+'</small></button>').join(""):
        '<p class="fine">Your three most recent completed results will appear here; unfinished attempts stay in their own Resume area.</p>')+
       '</section></aside></div>'+
+      (preflight?examRulesHTML(preflight):"")+
       '<section class="panel pad backup-home home-backup-compact"><div><span class="eyebrow">YOUR DATA</span><h2>Data & backup</h2>'+
        '<p class="fine">Attempts, notes and preferences live in this browser. Export a checksum-verified backup to protect them.</p></div>'+
        '<div class="row generic-actions"><button class="btn" id="g-export-history"'+(owner.loading?" disabled":"")+'>Export backup</button>'+
@@ -242,8 +243,7 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
      '<div class="home-stats home-status-strip">'+
        [['Paper editions',owner.packages.size],['Completed tests',complete.length],['Attempts in progress',pending.length],['Notebook cards',[...owner.records.values()].filter(isLearning).length]]
          .map(([name,value])=>'<div class="home-stat"><small>'+escapeText(name)+'</small><b>'+escapeText(value)+'</b></div>').join("")+
-     '</div>'+
-       (preflight?examRulesHTML(preflight):"");
+     '</div>';
  }
 
 export const applyLibraryFamily=(owner:LibraryControllerContext,id:string):void=>{
