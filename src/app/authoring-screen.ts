@@ -1,16 +1,9 @@
 import {escapeText} from "./html-escape.ts";
 import {resolvePracticeMode} from "./exam-package.ts";
 import {validateExamPackage} from "../domain/exam-package.ts";
-import {paperEditionLabel} from "./editorial-labels.ts";
+import {paperEditionLabel,paperIdentifierLabel} from "./editorial-labels.ts";
 import type {ExamPackage} from "../domain/exam-package.ts";
 import type {AuthoringScreenControllerContext} from "./coordinator-context.ts";
-
-const humanPaperLabel=(value:string):string=>{
-  const raw=value.replace(/^authored:/,"").split(":").at(-1)??value;
-  return raw.replace(/[-_]+/g," ").replace(/\bday\s*(\d+)\b/gi,"Day $1")
-    .replace(/\b(apfc|pfrda|epfo|cgl|cat|upsc)\b/gi,m=>m.toUpperCase())
-    .replace(/\br(\d+)\b/gi,"r$1").replace(/\s+/g," ").trim();
-};
 
 function packageRows(owner:AuthoringScreenControllerContext):string{
   const rows=[...owner.packages.values()].sort((a,b)=>
@@ -22,7 +15,7 @@ function packageRows(owner:AuthoringScreenControllerContext):string{
     const included=Boolean(family?.includedPaperIds.includes(pkg.paper.id));
     const origin=included?"Repository catalog":"User / imported";
     const title=pkg.title.trim()&&!pkg.title.startsWith("authored:")?
-      pkg.title:(family?.title?family.title+" — "+humanPaperLabel(pkg.paper.paperId):humanPaperLabel(pkg.paper.paperId));
+      pkg.title:(family?.title?family.title+" — "+paperIdentifierLabel(pkg.paper.paperId):paperIdentifierLabel(pkg.paper.paperId));
     return '<article class="authoring-bank-row">'+
       '<div class="authoring-bank-main"><div class="authoring-bank-title"><strong>'+escapeText(title)+'</strong>'+
       '<span class="authoring-bank-badge">'+escapeText(paperEditionLabel(pkg.paper))+'</span></div>'+
