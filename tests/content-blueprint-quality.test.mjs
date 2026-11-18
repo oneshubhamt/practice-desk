@@ -10,6 +10,7 @@ import {createHash} from "node:crypto";
 import {inspectExternalQuestionBank,toAuthoringDraft} from "../src/authoring/external-bank.ts";
 import {inspectCandidateIntegrity} from "../src/authoring/candidate-integrity.ts";
 import {inspectAuthoringPublication} from "../src/authoring/authoring-publisher.ts";
+import {buildInitialAuthoringBrief,validateStandardAuthoringBrief} from "../src/authoring/authoring-brief.ts";
 
 /** Content Blueprints — canonical domain contracts. */
 async function registerContentBlueprintsTests(){
@@ -364,10 +365,17 @@ test("Pass 4: taxonomy-aware PFRDA brief exposes data-owned A-L nodes and reject
  const brief=run("brief",plan,"--taxonomy",taxonomy,"--bank-id","pfrda-next","--title","PFRDA next","--batch-size","1");
  assert.equal(brief.status,0,brief.stderr);
  assert.equal(brief.data.taxonomy.id,"pfrda-grade-a-2026-general");
- assert.equal(brief.data.taxonomy.nodes.length,142);
+ assert.equal(brief.data.taxonomyScope.totalNodes,142);
+ assert.ok(brief.data.taxonomyScope.includedNodes<142,"batch brief must not embed the full exam taxonomy");
+ assert.ok(brief.data.taxonomyScope.omittedNodes>0);
+ assert.deepEqual(brief.data.taxonomyScope.selectedRootIds,["pfrda-act"]);
  assert.ok(brief.data.taxonomy.nodes.some(x=>x.id==="pfrda-act"&&x.code==="A"));
- assert.ok(brief.data.taxonomy.nodes.some(x=>x.id==="marketing-communication"&&x.code==="L"));
+ assert.equal(brief.data.taxonomy.nodes.some(x=>x.id==="marketing-communication"),false,
+  "irrelevant distant syllabus roots should stay out of a one-question batch brief");
  assert.equal(brief.data.classification.requireTaxonomy,true);
+ assert.equal(brief.data.classification.taxonomyAssignmentPolicy,"deepest-defensible");
+ assert.equal(brief.data.classification.difficultyAssignmentPolicy,"when-defensible");
+ assert.ok(brief.stdout.length<12000,"taxonomy-backed authoring brief should remain decision-ready");
  const cli=fileURLToPath(new URL("../scripts/question-bank-cli.mjs",import.meta.url));
  const output=join(dir,"pfrda-taxonomy.exam.json");
  const compiled=spawnSync(process.execPath,[cli,"compile-bank",source,output,
@@ -382,6 +390,27 @@ test("Pass 4: taxonomy-aware PFRDA brief exposes data-owned A-L nodes and reject
  assert.notEqual(bad.status,0);
  assert.ok(bad.data.issues.items.some(x=>x.code==="taxonomy-classification-required"));
 }));
+
+test("Authoring Brief shared contract rejects shallow lookalikes and browser-native first-batch generation matches it",()=>temp(async dir=>{
+ const blueprintPath=fileURLToPath(new URL("../question-banks/pfrda/2026/mocks/day-01/revised/blueprint.json",import.meta.url));
+ const taxonomyPath=fileURLToPath(new URL("../question-banks/pfrda/2026/taxonomy.json",import.meta.url));
+ const blueprintRaw=await readFile(blueprintPath,"utf8"),blueprint=JSON.parse(blueprintRaw);
+ const taxonomy=JSON.parse(await readFile(taxonomyPath,"utf8"));
+ const brief=buildInitialAuthoringBrief(blueprint,blueprintRaw,{
+  bankId:"browser-native-pfrda",title:"Browser native PFRDA batch",batchSize:2,taxonomy
+ });
+ assert.deepEqual(validateStandardAuthoringBrief(brief),brief);
+ assert.equal(brief.task.alreadyAuthored,0);
+ assert.equal(brief.task.requestedNow,2);
+ assert.ok(brief.taxonomyScope.includedNodes<brief.taxonomyScope.totalNodes);
+ assert.equal(brief.classification.taxonomyAssignmentPolicy,"deepest-defensible");
+ assert.throws(()=>validateStandardAuthoringBrief({
+  format:"practice-desk-authoring-brief",version:1,valid:true,
+  blueprint:{id:"shallow",examId:blueprint.examId},task:{remainingCount:2},
+  paper:{source:"not-a-paper-contract"},outputContract:{sourceEnvelope:{}},learnerFocusIncluded:false
+ }),/blueprint|Authoring Brief|sha256|unsupported/i);
+}));
+
 
 test("Authoring brief: existing partial batches contribute only compact coverage and preserve exact paper envelope",()=>temp(async dir=>{
  const p=mkPlan();
