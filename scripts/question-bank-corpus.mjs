@@ -61,7 +61,10 @@ async function withLock(root,task){
    startedAt:new Date().toISOString()})+"\n");
  }catch(error){
   if(error&&typeof error==="object"&&"code" in error&&error.code==="EEXIST"){
-   const hasJournal=await exists(journalPath(root));
+   const hasJournal=await exists(journalPath(root)),lock=await json(lockPath(root)).catch(()=>null);
+   if(!hasJournal&&lock?.format==="practice-desk-corpus-lock"&&lock?.version===1&&!processAlive(lock.pid)){
+    await rm(lockPath(root),{force:true});return await withLock(root,task);
+   }
    throw Error(hasJournal?
     "An incomplete corpus transaction is recorded. If no corpus process is active, run question-bank-corpus.mjs recover --root <repo>.":
     "Another corpus operation is already active");
