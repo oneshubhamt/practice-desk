@@ -116,7 +116,7 @@ export interface WorkspaceContext{
  readonly timer:number;
  untimedPractice:boolean;
  readonly updateStorageHealth:() => void;
- view:"result" | "exam" | "library" | "history" | "learning" | "calendar";
+ view:"result" | "exam" | "library" | "history" | "learning" | "calendar" | "authoring";
  readonly visibility:() => void;
  warning:string;
  readonly writeMirror:(record: GenericAttempt) => void;
@@ -176,6 +176,12 @@ export type LibraryControllerContext=Slice<
  "storageFault"|"untimedPractice"|"warning"
 >;
 
+export type AuthoringScreenControllerContext=Slice<
+ "applyFamily"|"authoringStudio"|"choice"|"editionView"|"fallbackConflict"|"families"|
+ "go"|"imagePreparation"|"loading"|"notice"|"packages"|"practiceMode"|"root"|"save"|
+ "saveSelection"|"singleSection"|"storageFault"|"warning"
+>;
+
 export type RouteControllerContext=Slice<
  "activationGeneration"|"attempt"|"writtenDrafts"|"disposed"|"draw"|"freshlyStartedAttemptId"|"go"|
  "hydration"|"now"|"records"|"resultTab"|"reviewFilter"|"routeHydrated"|"router"|
@@ -203,4 +209,4 @@ export type ScreenControllerContext=Slice<
  "go"|"historyQuery"|"imagePreparation"|"imageViewer"|"learningDesk"|"calendarController"|"listHTML"|
  "loading"|"packages"|"records"|"resultHTML"|"resultTab"|"root"|"screenRenderer"|
  "storageBackend"|"storageFault"|"storageSnapshot"|"view"|"warning"
-> & HistoryControllerContext & LibraryControllerContext & ResultControllerContext & ExamControllerContext;
+> & HistoryControllerContext & LibraryControllerContext & AuthoringScreenControllerContext & ResultControllerContext & ExamControllerContext;
