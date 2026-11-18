@@ -86,7 +86,7 @@ export function bindAuthoringScreen(owner:AuthoringScreenControllerContext):void
     const id=button.dataset.authoringExportPaper??"",pkg=owner.packages.get(id);
     if(!pkg)return;
     const stem=pkg.paper.paperId.replace(/[^a-z0-9._-]+/gi,"-").replace(/^-+|-+$/g,"").slice(0,100)||"practice-desk-paper";
-    downloadText(stem+"-r"+pkg.paper.revision+".exam.json",JSON.stringify(pkg,null,2),"application/json;charset=utf-8");
+    downloadText(stem+"-"+pkg.paper.edition+"-r"+pkg.paper.revision+".exam.json",JSON.stringify(pkg,null,2),"application/json;charset=utf-8");
   });
   owner.root.querySelectorAll<HTMLButtonElement>("[data-authoring-open-paper]").forEach(button=>button.onclick=()=>{
     const id=button.dataset.authoringOpenPaper??"",pkg=owner.packages.get(id);
