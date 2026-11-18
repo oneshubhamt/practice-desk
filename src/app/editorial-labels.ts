@@ -31,3 +31,13 @@ export function paperEditionLabel(
  return "Reviewed edition r"+paper.revision+
   (paper.sourcePaperRevisionId?" · exact Source lineage pinned":"");
 }
+
+
+/** Human-facing fallback for logical paper identifiers. This never changes
+ * stored identity; technical IDs remain available in provenance/details. */
+export function paperIdentifierLabel(value:string):string{
+ const raw=value.replace(/^authored:/,"").split(":").at(-1)??value;
+ return raw.replace(/[-_]+/g," ").replace(/\bday\s*(\d+)\b/gi,"Day $1")
+  .replace(/\b(apfc|pfrda|epfo|cgl|cat|upsc)\b/gi,m=>m.toUpperCase())
+  .replace(/\br(\d+)\b/gi,"r$1").replace(/\s+/g," ").trim();
+}

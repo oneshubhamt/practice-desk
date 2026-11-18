@@ -29,6 +29,8 @@ export interface LearningDeskHost {
   remove:(id:string)=>Promise<void>;
   startRevision:(cards:readonly LearningCard[],selection?:RevisionSelectionProvenance)=>Promise<boolean>;
   openCalendar:()=>void;
+  openHistory:()=>void;
+  openAuthoring:()=>void;
   calendarChanged:()=>void;
   close:()=>void;
 }
@@ -93,6 +95,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
  let selectedId:string|null=null,reviewId:string|null=null,revealed=false;
  let filter:"all"|"due"|"remediation"|"bookmarked"="all",hierarchyRoot="",message="",closed=false,opened=false;
  let previousLearningView="";
+ let focusAuthoringToolsOnShow=false;
  const optimizerAvailability=browserFsrsOptimizerAvailability();
  let optimizerStatus=optimizerAvailability.reason;
  let optimizerRun:BrowserFsrsOptimizerRun|null=null;
@@ -286,8 +289,11 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   const candidates=visible.filter(c=>c.examId===exam&&
     ["verified","corrected","caution"].includes(c.question.editorial.status)).slice(0,REVISION_MAX_QUESTIONS);
   const html='<div class="generic-heading"><div><h1>Learning & revision</h1><p class="muted">Error notebook · FSRS-7 spaced review · Topic evidence</p></div>'+
-    '<div class="row"><button class="btn quiet" id="learning-calendar">Calendar</button>'+
-    '<button class="btn" id="learning-close">← Test library</button></div></div>'+
+    '<nav class="row workspace-nav" aria-label="Practice Desk sections">'+
+    '<button class="btn quiet" id="learning-calendar">Calendar</button>'+
+    '<button class="btn quiet" id="learning-history">History & insights</button>'+
+    '<button class="btn quiet" id="learning-authoring">Authoring</button>'+
+    '<button class="btn quiet" id="learning-close">← Test library</button></nav></div>'+
     '<p class="generic-warning" role="status" id="learning-message"'+
       (message?'':' hidden')+'>'+esc(message)+'</p>'+
     '<div class="learning-summary">'+
@@ -787,6 +793,8 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   };
   root.querySelector<HTMLButtonElement>("#learning-close")!.onclick=host.close;
   root.querySelector<HTMLButtonElement>("#learning-calendar")!.onclick=host.openCalendar;
+  root.querySelector<HTMLButtonElement>("#learning-history")!.onclick=host.openHistory;
+  root.querySelector<HTMLButtonElement>("#learning-authoring")!.onclick=host.openAuthoring;
   root.querySelector<HTMLButtonElement>("#learning-test")!.onclick=async()=>{
     const button=root.querySelector<HTMLButtonElement>("#learning-test");
     if(button)button.disabled=true;
@@ -860,8 +868,15 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
       cache.clear();message="Saved FSRS settings were invalid; safe defaults were restored.";draw();
     }catch(fallback){message="FSRS scheduler failed to initialize.";console.error(fallback);draw();}
   });
- return {show(){opened=true;if(reviewId)reviewDuration.visibility(clock(),reviewVisible());draw();},
+ const revealAuthoringTools=()=>{
+  if(!focusAuthoringToolsOnShow)return;
+  focusAuthoringToolsOnShow=false;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>
+    root.querySelector<HTMLElement>(".learning-authoring-focus")?.scrollIntoView({block:"start"})));
+ };
+ return {show(){opened=true;if(reviewId)reviewDuration.visibility(clock(),reviewVisible());draw();revealAuthoringTools();},
   hide(){if(reviewId)reviewDuration.visibility(clock(),false);opened=false;previousLearningView="";},
   select(id:string){selectedId=id;},
+  focusAuthoringTools(){focusAuthoringToolsOnShow=true;if(opened){draw();revealAuthoringTools();}},
    dispose(){optimizerRun?.cancel();optimizerRun=null;reviewDuration.reset();document.removeEventListener("visibilitychange",onReviewVisibility);closed=true;previousLearningView="";notebookDrafts.clear();}};
 }

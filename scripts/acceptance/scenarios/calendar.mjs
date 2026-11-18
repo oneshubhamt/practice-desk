@@ -10,7 +10,7 @@ const {createServer}=await import("node:http");
 const {readFile}=await import("node:fs/promises");
 const {extname,join}=await import("node:path");
 const {openHarness,route,check,records,assertNoOverflow,root,offlineUrl}=await import("../../browser/fixtures.mjs");
-const {chooseModernPaper}=await import("../../paper-select.mjs");
+const {chooseModernPaper,importModernPaper}=await import("../../paper-select.mjs");
 const {pkg}=await import("../../../tests/fixtures/six-kinds.mjs");
 const engine=process.argv[2]??"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/calendar"});
@@ -48,11 +48,7 @@ async function openCalendar(){
 
 let downloadedPath="";
 try{
-  await page.locator("#g-file").setInputFiles({
-    name:"calendar-six-kinds.json",mimeType:"application/json",
-    buffer:Buffer.from(JSON.stringify(pkg))
-  });
-  await chooseModernPaper(page,pkg.paper.id);
+  await importModernPaper(page,pkg,"calendar-six-kinds.json");
   await openCalendar();
 
   const light=await page.locator("#pd-calendar-mount .dc-root").evaluate(el=>({
@@ -146,7 +142,7 @@ try{
     engine+" Calendar Learning action did not select the source card");
   await page.getByRole("button",{name:"Calendar",exact:true}).click();await route(page,"calendar");
 
-  await page.getByRole("button",{name:"Library",exact:true}).click();await route(page,"library");
+  await page.getByRole("button",{name:/^(?:← )?Test library$/i}).click();await route(page,"library");
   await page.getByRole("button",{name:/History & insights/}).click();await route(page,"history");
   const downloadPromise=page.waitForEvent("download");
   await page.locator("#g-export-history").click();
@@ -173,7 +169,7 @@ try{
     }finally{db.close();}
   },scheduled.id);
 
-  await page.getByRole("button",{name:"Library",exact:true}).click();await route(page,"library");
+  await page.getByRole("button",{name:/^(?:← )?Test library$/i}).click();await route(page,"library");
   await page.getByRole("button",{name:/History & insights/}).click();await route(page,"history");
   await page.locator("#g-history-file").setInputFiles(downloadedPath);
   check(Boolean(await waitRecord(x=>x.recordType==="calendar-scheduled-mock"&&x.id===scheduled.id)),
@@ -193,11 +189,7 @@ try{
     tzPage.setDefaultTimeout(18000);
     await tzPage.goto(offlineUrl,{waitUntil:"load"});
     await tzPage.locator("#g-papers").waitFor({state:"visible"});
-    await tzPage.locator("#g-file").setInputFiles({
-      name:"timezone-six-kinds.json",mimeType:"application/json",
-      buffer:Buffer.from(JSON.stringify(pkg))
-    });
-    await chooseModernPaper(tzPage,pkg.paper.id);
+    await importModernPaper(tzPage,pkg,"timezone-six-kinds.json");
     await tzPage.getByRole("button",{name:"Calendar",exact:true}).click();await route(tzPage,"calendar");
     await tzPage.locator("#calendar-package").selectOption(pkg.paper.id);
     await tzPage.locator("#calendar-start").fill("2027-01-01T00:15");

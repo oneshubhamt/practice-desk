@@ -79,7 +79,7 @@ export interface WorkspaceContext{
  lastCommittedAt:number | null;
  lastStorageFailure:string | null;
  lastTimerSave:number;
- readonly learningDesk:{ show(): void; hide(): void; select(id: string): void; dispose(): void; };
+ readonly learningDesk:{ show(): void; hide(): void; select(id: string): void; focusAuthoringTools(): void; dispose(): void; };
  readonly calendarController:{ show(): void; hide(): void; refresh(): Promise<void>; dispose(): void; invalidate(): void; };
  readonly listHTML:() => string;
  loading:boolean;
@@ -116,7 +116,7 @@ export interface WorkspaceContext{
  readonly timer:number;
  untimedPractice:boolean;
  readonly updateStorageHealth:() => void;
- view:"result" | "exam" | "library" | "history" | "learning" | "calendar";
+ view:"result" | "exam" | "library" | "history" | "learning" | "calendar" | "authoring";
  readonly visibility:() => void;
  warning:string;
  readonly writeMirror:(record: GenericAttempt) => void;
@@ -166,14 +166,20 @@ export type HistoryControllerContext=Slice<
 >;
 
 export type LibraryControllerContext=Slice<
- "applyFamily"|"attempt"|"authoringStudio"|"practiceMode"|
+ "applyFamily"|"attempt"|"practiceMode"|
  "changeHistoryQuery"|"choice"|"composeCount"|"composeDifficulty"|"composeError"|
  "composeOpen"|"composePreview"|"composeSection"|"composeSeed"|"composeTopic"|
  "downloadBackup"|"draw"|"editionView"|"fallbackConflict"|"families"|
- "freshlyStartedAttemptId"|"go"|"imagePreparation"|"importHistory"|"loading"|
+ "freshlyStartedAttemptId"|"go"|"importHistory"|"loading"|
  "notice"|"now"|"openSaved"|"packages"|"records"|"removeSavedAttempt"|
  "root"|"save"|"saveSelection"|"selectedFamilyId"|"setups"|"singleSection"|
  "storageFault"|"untimedPractice"|"warning"
+>;
+
+export type AuthoringScreenControllerContext=Slice<
+ "applyFamily"|"authoringStudio"|"choice"|"editionView"|"fallbackConflict"|"families"|"learningDesk"|
+ "go"|"imagePreparation"|"loading"|"notice"|"packages"|"practiceMode"|"root"|"save"|
+ "saveSelection"|"singleSection"|"storageFault"|"warning"
 >;
 
 export type RouteControllerContext=Slice<
@@ -203,4 +209,4 @@ export type ScreenControllerContext=Slice<
  "go"|"historyQuery"|"imagePreparation"|"imageViewer"|"learningDesk"|"calendarController"|"listHTML"|
  "loading"|"packages"|"records"|"resultHTML"|"resultTab"|"root"|"screenRenderer"|
  "storageBackend"|"storageFault"|"storageSnapshot"|"view"|"warning"
-> & HistoryControllerContext & LibraryControllerContext & ResultControllerContext & ExamControllerContext;
+> & HistoryControllerContext & LibraryControllerContext & AuthoringScreenControllerContext & ResultControllerContext & ExamControllerContext;
