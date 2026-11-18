@@ -871,7 +871,8 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
  const revealAuthoringTools=()=>{
   if(!focusAuthoringToolsOnShow)return;
   focusAuthoringToolsOnShow=false;
-  requestAnimationFrame(()=>root.querySelector<HTMLElement>(".learning-authoring-focus")?.scrollIntoView({block:"start"}));
+  requestAnimationFrame(()=>requestAnimationFrame(()=>
+    root.querySelector<HTMLElement>(".learning-authoring-focus")?.scrollIntoView({block:"start"})));
  };
  return {show(){opened=true;if(reviewId)reviewDuration.visibility(clock(),reviewVisible());draw();revealAuthoringTools();},
   hide(){if(reviewId)reviewDuration.visibility(clock(),false);opened=false;previousLearningView="";},
