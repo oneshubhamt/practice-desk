@@ -6,7 +6,7 @@ import {createHash} from "node:crypto";
 import {tmpdir} from "node:os";
 import {dirname,join,resolve} from "node:path";
 import {fileURLToPath} from "node:url";
-import {addPaper,appendRevision} from "../scripts/question-bank-corpus.mjs";
+import {addPaper,appendRevision,recoverCorpus} from "../scripts/question-bank-corpus.mjs";
 import {loadQuestionBankCatalog} from "../scripts/question-bank-catalog.mjs";
 import {buildLearnerFocusPacket,personalizeAuthoringBrief,validateLearnerFocusPacket,
  validateStandardAuthoringBrief} from "../src/learning/learner-focus.ts";
@@ -92,6 +92,38 @@ test("Pass 5 add-paper rolls back its folder and year manifest when final curren
   await chmod(familyDir,0o755).catch(()=>{});
   await rm(work,{recursive:true,force:true});
  }
+});
+
+test("Pass 5 corpus recovery journal safely repairs a killed-process intermediate state",async()=>{
+ const work=await mkdtemp(join(tmpdir(),"pd-corpus-recovery-")),repo=join(work,"repo");
+ try{
+  await cp(join(root,"question-banks"),join(repo,"question-banks"),{recursive:true});
+  const yearPath=join(repo,"question-banks","pfrda","2026","manifest.json");
+  const original=await readFile(yearPath,"utf8"),next=JSON.parse(original);
+  next.mocks=[...next.mocks,{id:"pfrda-grade-a-2026-crash-recovery",path:"mocks/crash-recovery/manifest.json"}];
+  const nextRaw=JSON.stringify(next,null,2)+"\n";
+  await writeFile(yearPath,nextRaw);
+  const created=join(repo,"question-banks","pfrda","2026","mocks","crash-recovery");
+  await mkdir(created,{recursive:true});
+  await writeFile(join(created,"interrupted.tmp"),"partial\n");
+  const operationId="simulated-dead-operation";
+  await writeJson(join(repo,"question-banks",".corpus-operation.json"),{
+   format:"practice-desk-corpus-journal",version:1,operationId,operation:"add-paper",
+   phase:"year-manifest-written",createdPath:"question-banks/pfrda/2026/mocks/crash-recovery",
+   manifests:[{path:"question-banks/pfrda/2026/manifest.json",original,next:nextRaw}]
+  });
+  await writeJson(join(repo,"question-banks",".corpus-operation.lock"),{
+   format:"practice-desk-corpus-lock",version:1,operationId,pid:99999999,startedAt:"2026-11-18T00:00:00.000Z"
+  });
+  const recovered=await recoverCorpus({root:repo});
+  assert.equal(recovered.operation,"recover");assert.equal(recovered.recoveredOperation,"add-paper");
+  assert.equal(recovered.recoveredFromPhase,"year-manifest-written");
+  assert.equal(await readFile(yearPath,"utf8"),original);
+  assert.equal(await exists(created),false);
+  assert.equal(await exists(join(repo,"question-banks",".corpus-operation.json")),false);
+  assert.equal(await exists(join(repo,"question-banks",".corpus-operation.lock")),false);
+  await loadQuestionBankCatalog(repo);
+ }finally{await rm(work,{recursive:true,force:true});}
 });
 
 test("Pass 5 append-revision advances canonical custom revision transactionally and refuses rollback",async()=>{
