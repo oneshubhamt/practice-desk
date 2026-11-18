@@ -22,24 +22,19 @@ import {frozenScoreSummary} from "./history-score.ts";
 
 
 import {examPreflight,preflightHTML,examRulesHTML} from "./exam-preflight.ts";
-import {paperEditionLabel} from "./editorial-labels.ts";
+import {paperEditionLabel,paperIdentifierLabel} from "./editorial-labels.ts";
 
 import {writePracticeSetups,type PracticeSetups} from "./practice-selection.ts";
 import {pairedCounterpart,pairedEdition} from "./exam-families.ts";
 
 import type {LibraryControllerContext} from "./coordinator-context.ts";
 
-const humanPaperId=(id:string):string=>(id.replace(/^authored:/,"").split(":").at(-1)??id)
-  .replace(/[-_]+/g," ").replace(/\bday\s*(\d+)\b/gi,"Day $1")
-  .replace(/\b(apfc|pfrda|epfo|cgl|cat|upsc)\b/gi,m=>m.toUpperCase())
-  .replace(/\s+/g," ").trim();
-
 const recentAttemptTitle=(owner:LibraryControllerContext,a:GenericAttempt):string=>{
   const direct=owner.packages.get(a.packageId)?.title?.trim();
   if(direct&&!direct.startsWith("authored:"))return direct;
   const family=owner.families().find(f=>f.papers.some(p=>
     p.examId===a.frozen.snapshot.examId&&p.paper.paperId===a.frozen.paper.paperId));
-  const paper=humanPaperId(a.frozen.paper.paperId);
+  const paper=paperIdentifierLabel(a.frozen.paper.paperId);
   return family?.title?family.title+" — "+paper:paper;
 };
 
