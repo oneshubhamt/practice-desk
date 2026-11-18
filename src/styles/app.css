@@ -1764,3 +1764,6 @@ html[data-theme="dark"] .pd-author-studio .pd-author-preview-choice>span{
  .home-status-strip .home-stat+.home-stat{border-left:0;border-top:1px solid var(--line)}
  .authoring-action-grid .btn,.authoring-bank-row>.btn{min-width:0;max-width:100%;overflow-wrap:anywhere}
 }
+
+.paper-marking-summary{margin:5px 0 8px;font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.paper-marking-summary b{color:var(--ink)}
