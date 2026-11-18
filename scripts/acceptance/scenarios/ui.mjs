@@ -182,7 +182,18 @@ try{
     historyAttribution.toLowerCase().includes("imported"),
     "History independent/imported educational attribution missing "+name);
    await page.getByRole("button",{name:/^(?:← )?Test library$/i}).click();await route(page,"library");
-   await page.getByRole("button",{name:/Open learning desk/}).click();await route(page,"learning");
+   check(await page.locator("#g-import").count()===0&&await page.locator("#g-author-open").count()===0,
+    "Library still mixes content-management actions into practice "+name);
+   await page.locator("#g-authoring").click();await route(page,"authoring");
+   await inspect(page,name+"-authoring");
+   check(await page.locator("#authoring-import").isVisible()&&
+     await page.locator("#authoring-image-prep").isVisible()&&
+     await page.locator("#authoring-open-studio").isVisible(),
+    "Authoring hub missing canonical entry points "+name);
+   check((await page.locator(".authoring-bank-row").count())>0,
+    "Authoring hub did not expose published editions "+name);
+   await page.locator("#authoring-library").click();await route(page,"library");
+   await page.locator("#g-learning").click();await route(page,"learning");
    await inspect(page,name+"-learning");
    await page.locator("#learning-close").click();await route(page,"library");
    await page.locator('[data-mode="single"]').click();

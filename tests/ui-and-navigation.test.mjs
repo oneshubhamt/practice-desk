@@ -392,7 +392,7 @@ async function registerNativeNavigationTests(){
 const file="file:///tmp/Practice_Desk_Offline_Mock_Tests.html";
 test("native-only query codec round-trips every routable screen on file URL",()=>{
   const cases=[
-   {screen:"library"},{screen:"history"},{screen:"learning"},
+   {screen:"library"},{screen:"history"},{screen:"learning"},{screen:"authoring"},{screen:"authoring"},
    {screen:"exam",attemptId:"attempt-1"},
    {screen:"result",attemptId:"attempt-1",tab:"overview"},
    {screen:"result",attemptId:"imported:é/& +",tab:"review"},
@@ -411,7 +411,7 @@ test("native codec rejects ambiguous, malformed or answer-bearing route schema",
   "?pd=bogus","?pd=exam","?pd=result","?pd=exam&attempt=",
   "?pd=exam&attempt=x&attempt=y","?pd=result&attempt=x&tab=bogus",
   "?pd=result&attempt=x&tab=review&tab=timing",
-  "?pd=library&attempt=wrong","?pd=learning&tab=review",
+  "?pd=library&attempt=wrong","?pd=learning&tab=review","?pd=authoring&attempt=wrong",
   "?pd=exam&attempt="+encodeURIComponent("\u0001"),
   "?pd=exam&attempt="+"a".repeat(257),
   "?pd=history&pd=exam"

@@ -74,8 +74,9 @@ try{
    "edition switch lost the paper family");
   await page.locator('[data-mode="single"]').click();
   await page.locator("#g-single-section").selectOption("0");
+  await page.locator(".paper-detail-disclosure > summary").click();
   check((await page.locator("#g-preflight").innerText()).includes("50"),
-   "single-section preflight should display 50 nominal points");
+   "single-section preflight should display 50 nominal points after opening details");
   await page.getByRole("button",{name:/^Start /}).click();
   await route(page,"exam");
   const attemptId=new URL(await page.url()).searchParams.get("attempt");
@@ -236,6 +237,7 @@ try{
  });
  await scenario("six-kinds-manual-assessment-and-fsrs",async page=>{
   await importModernPaper(page,sixKinds,"six-kinds.json");
+  await page.locator(".paper-detail-disclosure > summary").click();
   const importedPreflight=await page.locator("#g-preflight").innerText();
   check(importedPreflight.includes("10.00")&&
     importedPreflight.includes("manual-response")&&
@@ -311,7 +313,7 @@ try{
   await page.locator("#result-tab-review").click();
   await page.locator("[data-add-card]").first().click();
   await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
-  await page.getByRole("button",{name:/Open learning desk/}).click();await route(page,"learning");
+  await page.locator("#g-learning").click();await route(page,"learning");
   await page.locator("#learning-due").click();
   check(await page.locator(".learning-answer").count()===0,"FSRS answer leaked before reveal");
   await page.locator("#learning-reveal").click();

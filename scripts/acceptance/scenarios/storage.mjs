@@ -235,7 +235,7 @@ try{
   check(await restored.locator('[data-attempt="'+persistedId+'"]').count()===1,
    "Offline profile restart lost frozen result");
   await restored.getByRole("button",{name:/^(?:← )?Test library$/i}).click();await route(restored,"library");
-  await restored.getByRole("button",{name:/Open learning desk/}).click();await route(restored,"learning");
+  await restored.locator("#g-learning").click();await route(restored,"learning");
   check((await records(restored)).some(x=>x.recordType==="learning-card"&&
    x.sourceAttemptId===persistedId),
    "Offline profile restart lost separately saved FSRS learning card");

@@ -47,9 +47,16 @@ export async function choosePracticeMode(page,mode){
   throw Error("Practice mode did not become active: "+mode);
 }
 export async function importModernPaper(page,pkg,name="imported-exam.json"){
- await page.locator("#g-file").setInputFiles({name,mimeType:"application/json",
+ if(!(await page.locator("#authoring-import-file").count())){
+  if(await page.locator("#g-authoring").count())await page.locator("#g-authoring").click();
+  else throw Error("Authoring destination is not reachable from the current screen");
+  await page.locator("#authoring-import-file").waitFor({state:"attached"});
+ }
+ await page.locator("#authoring-import-file").setInputFiles({name,mimeType:"application/json",
   buffer:Buffer.from(JSON.stringify(pkg))});
- await page.waitForFunction(id=>[...document.querySelectorAll("#g-papers option")]
-  .some(option=>option.value===id),pkg.paper.id);
+ await page.waitForFunction(id=>[...document.querySelectorAll("[data-authoring-open-paper]")]
+  .some(button=>button.dataset.authoringOpenPaper===id),pkg.paper.id);
+ await page.locator('[data-authoring-open-paper="'+pkg.paper.id+'"]').click();
+ await page.locator("#g-papers").waitFor({state:"visible"});
  await chooseModernPaper(page,pkg.paper.id);
 }

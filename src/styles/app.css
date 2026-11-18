@@ -128,7 +128,7 @@ select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-vis
 .display-hint{font-size:11px;margin:10px 0 0}
 #preferences-warning:empty{display:none}
 /* Home: hierarchy, status, responsive cards and a real selected-paper preview. */
-.home-heading .btn{margin-left:auto}
+.home-heading .workspace-nav .btn{margin-left:0}
 .home-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:20px 0}
 .home-stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 21px;box-shadow:var(--shadow)}
 .home-stat small{display:block;color:var(--muted);font-size:12px;letter-spacing:.15px}
@@ -1685,3 +1685,82 @@ html[data-theme="dark"] .pd-author-studio .pd-author-preview-choice>span{
 .written-review-metrics small{flex:1 1 100%}
 @media(max-width:700px){.written-answer-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:300px){.written-answer-summary{grid-template-columns:minmax(0,1fr)}.result-written-answers{padding:12px}}
+
+
+/* Task-first Library navigation and content-management separation.
+   Practice remains select → mode → start; Authoring owns content operations. */
+.workspace-nav{justify-content:flex-end;gap:8px}
+.workspace-nav .btn{white-space:nowrap}
+.paper-meta-strip{display:flex;flex-wrap:wrap;gap:7px 12px;margin:8px 0 2px;color:var(--muted);font-size:12px}
+.paper-meta-strip span{display:inline-flex;gap:5px;align-items:baseline}
+.paper-meta-strip b{color:var(--ink);font-weight:700}
+.paper-detail-disclosure{border-top:1px solid var(--line);margin-top:14px;padding-top:11px}
+.paper-detail-disclosure>summary{cursor:pointer;color:var(--blue);font-size:12px;font-weight:750}
+.paper-detail-disclosure .paper-preflight{border-top:0;margin-top:10px;padding-top:0}
+.paper-detail-disclosure .technical-paper-id{margin:10px 0 0;overflow-wrap:anywhere}
+.paper-detail-disclosure code,.authoring-technical code{overflow-wrap:anywhere;word-break:break-word}
+.home-picker .practice-builder{border-top:1px solid var(--line);margin:14px 0 0;padding-top:12px}
+.home-picker .practice-builder details>summary{color:var(--blue)}
+.home-backup-compact{margin-top:18px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-direction:row}
+.home-backup-compact>div:first-child{min-width:0}
+.home-backup-compact h2{margin:3px 0}
+.home-backup-compact p{margin-bottom:0}
+.home-backup-compact .generic-actions{flex:none;margin:0}
+.home-status-strip{border:1px solid var(--line);border-radius:13px;background:var(--panel);box-shadow:var(--shadow);gap:0;overflow:hidden}
+.home-status-strip .home-stat{border:0;border-radius:0;box-shadow:none;padding:10px 14px;background:transparent}
+.home-status-strip .home-stat+.home-stat{border-left:1px solid var(--line)}
+.home-status-strip .home-stat small{font-size:11px}
+.home-status-strip .home-stat b{font-size:19px;margin-top:1px}
+
+/* One dedicated Authoring destination; all content paths converge on the
+   existing staging/review/publish controller instead of duplicating it. */
+.authoring-heading{align-items:flex-start}
+.authoring-hub-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,1fr);gap:18px;margin-bottom:18px;align-items:start}
+.authoring-add h2,.authoring-ai h2,.authoring-banks h2{margin:0 0 7px}
+.authoring-add>.fine,.authoring-ai>.fine,.authoring-banks .fine{margin-top:0}
+.authoring-action-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0 12px}
+.authoring-action-grid .btn{display:block;min-width:0;text-align:left;white-space:normal;padding:14px}
+.authoring-action-grid strong,.authoring-action-grid small{display:block}
+.authoring-action-grid strong{font-size:13px;margin-bottom:5px}
+.authoring-action-grid small{font-size:11px;line-height:1.45;color:inherit;opacity:.82;font-weight:500;overflow-wrap:anywhere}
+.authoring-action-grid code{font-size:.93em}
+.authoring-ai-path{border-top:1px solid var(--line);padding:12px 0}
+.authoring-ai-path:first-of-type{margin-top:13px}
+.authoring-ai-path strong{font-size:13px}
+.authoring-ai-path p{margin:4px 0 0}
+.authoring-banks{margin-bottom:18px}
+.authoring-bank-count{display:inline-flex;align-items:center;min-height:29px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--muted);font-size:11px;font-weight:700}
+.authoring-bank-list{margin-top:13px;border-top:1px solid var(--line)}
+.authoring-bank-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--line);min-width:0}
+.authoring-bank-main{min-width:0;flex:1}
+.authoring-bank-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.authoring-bank-title strong{min-width:0;overflow-wrap:anywhere}
+.authoring-bank-badge{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:2px 8px;background:var(--soft);color:var(--muted);font-size:10px;font-weight:750}
+.authoring-bank-row p{margin:3px 0 0}
+.authoring-bank-row>.btn{flex:none}
+.authoring-technical{margin-top:3px}
+.authoring-technical summary{cursor:pointer;color:var(--muted);font-size:10px;font-weight:650}
+.authoring-technical code{display:block;margin-top:4px;color:var(--muted);font-size:10px}
+.authoring-banks+.pd-authoring-container:not([hidden]){margin-top:18px}
+
+@media(max-width:900px){
+ .authoring-hub-grid{grid-template-columns:minmax(0,1fr)}
+ .authoring-action-grid{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:760px){
+ .workspace-nav{justify-content:flex-start;width:100%}
+ .workspace-nav .btn{flex:1 1 auto;white-space:normal}
+ .home-backup-compact{align-items:flex-start;flex-direction:column}
+ .home-backup-compact .generic-actions{width:100%}
+ .home-status-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .home-status-strip .home-stat:nth-child(3){border-left:0;border-top:1px solid var(--line)}
+ .home-status-strip .home-stat:nth-child(4){border-top:1px solid var(--line)}
+ .authoring-bank-row{align-items:flex-start;flex-direction:column}
+ .authoring-bank-row>.btn{width:100%}
+}
+@media(max-width:300px){
+ .workspace-nav .btn{flex:1 1 100%;min-width:0;overflow-wrap:anywhere}
+ .home-status-strip{grid-template-columns:minmax(0,1fr)}
+ .home-status-strip .home-stat+.home-stat{border-left:0;border-top:1px solid var(--line)}
+ .authoring-action-grid .btn,.authoring-bank-row>.btn{min-width:0;max-width:100%;overflow-wrap:anywhere}
+}

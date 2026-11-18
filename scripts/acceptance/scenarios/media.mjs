@@ -316,11 +316,17 @@ export async function imagePreparation(){
 const {readFile}=await import("node:fs/promises");
 const {openHarness,route,records,check,assertNoOverflow}=await import("../../browser/fixtures.mjs");
 const {compileExternalQuestionBank}=await import("../../../src/authoring/external-bank.ts");
+const {importModernPaper}=await import("../../paper-select.mjs");
 const engine=process.argv[2]||"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
 const {page,context,errors}=await h.open();
 const remote=[];
 page.on("request",request=>{if(/^https?:/i.test(request.url()))remote.push(request.url());});
+async function openAuthoring(){
+ if(await page.locator("#authoring-image-prep").count())return;
+ await page.locator("#g-authoring").click();await route(page,"authoring");
+ await page.locator("#authoring-image-prep").waitFor({state:"visible"});
+}
 async function imageData({photograph}){
  return page.evaluate(({photograph})=>{
   const c=document.createElement("canvas");
@@ -366,9 +372,10 @@ async function downloadEntry(selector){
 }
 try{
  await route(page,"library");
- check(await page.locator("#g-image-prep").count()===1,"Library image preparation is not discoverable");
+ check(await page.locator("#g-image-prep").count()===0,"Library still exposes image-preparation controls");
  const before=await records(page);
- const button=page.locator("#g-image-prep");
+ await openAuthoring();
+ const button=page.locator("#authoring-image-prep");
  await button.click();
  const modal=page.locator("dialog.generic-image-preparation");
  await modal.waitFor({state:"visible"});
@@ -404,14 +411,11 @@ try{
    options:[imageDoc("One","math-fig"),"Two","Three","Four"],answer:"C",
    provenance:{kind:"manual"},qa:{status:"unchecked"}}]
  });
- // Close, verify focus returns to actual Library trigger, then import the JSON.
+ // Close, verify focus returns to the Authoring trigger, then import the finished package.
  await page.locator("dialog.generic-image-preparation button:text-is('Close')").click();
  await modal.waitFor({state:"detached"});
  check(await button.evaluate(el=>document.activeElement===el),"focus was not restored to preparation trigger");
- await page.locator("#g-file").setInputFiles({name:"authored-cat-figure.json",
-  mimeType:"application/json",buffer:Buffer.from(JSON.stringify(validBank))});
- await page.waitForFunction(id=>document.querySelector("#g-papers")?.value===id,
-  validBank.paper.id);
+ await importModernPaper(page,validBank,"authored-cat-figure.json");
  check((await page.locator("#g-papers").inputValue()).includes("cat-figure-prepared"),
   "imported authored media package not selected after validation");
  await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
@@ -436,7 +440,8 @@ try{
   "image viewer selected an option while inspecting the imported diagram");
  await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
  // Explicitly opt in to lossy high-quality WebP for PHOTOGRAPHS only.
- await page.locator("#g-image-prep").click();await modal.waitFor({state:"visible"});
+ await openAuthoring();
+ await page.locator("#authoring-image-prep").click();await modal.waitFor({state:"visible"});
  await page.locator("#prep-image-type").selectOption("photo");
  const photograph=await imageData({photograph:true});
  await chooseImage(photograph,"local-photo.png");
@@ -488,11 +493,7 @@ try{
     prompt:photoDoc,options:["First","Second","Third","Fourth"],answer:"A",
     provenance:{kind:"manual"},qa:{status:"unchecked"}}]
   });
-  await page.locator("#g-file").setInputFiles({
-   name:"pgdba-prepared-webp.json",mimeType:"application/json",
-   buffer:Buffer.from(JSON.stringify(photographicBank))
-  });
-  await page.waitForFunction(id=>document.querySelector("#g-papers")?.value===id,photographicBank.paper.id);
+  await importModernPaper(page,photographicBank,"pgdba-prepared-webp.json");
   const stored=(await records(page)).find(x=>x.recordType==="generic-package"&&
     x.bundle?.paper?.paperId===photographicBank.paper.paperId);
   check(stored?.bundle?.assets?.length===1&&
@@ -509,7 +510,8 @@ try{
   check(n<140,"font scaling failed");await page.locator("#fontMore").click();
  }
  await page.locator("#displayClose").click();
- await page.locator("#g-image-prep").click();await modal.waitFor({state:"visible"});
+ await openAuthoring();
+ await page.locator("#authoring-image-prep").click();await modal.waitFor({state:"visible"});
  await assertNoOverflow(page,"P47-3B 195px and 140% image pre-import dialog");
  check(await page.locator("#prep-image-file").count()===1&&
   await page.locator("#prep-image-approve").count()===1,
@@ -537,6 +539,7 @@ export async function mathRendering(){
 const {openHarness,route,check,assertNoOverflow,records}=await import("../../browser/fixtures.mjs");
 const {pkg}=await import("../../../tests/fixtures/six-kinds.mjs");
 const {questionRevisionHash}=await import("../../../src/domain/integrity.ts");
+const {importModernPaper}=await import("../../paper-select.mjs");
 const engine=process.argv[2]??"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
 const {page,errors}=await h.open({viewport:{width:390,height:844}});
@@ -570,13 +573,12 @@ try{
  // Invalid changed TeX with stale SHA is rejected before current-source installation.
  const tampered=structuredClone(p);
  tampered.questions[0].content.richPrompt.blocks[0].content[1].tex="x^2";
- await page.locator("#g-file").setInputFiles({name:"bad-maths.json",mimeType:"application/json",
+ await page.locator("#g-authoring").click();await route(page,"authoring");
+ await page.locator("#authoring-import-file").setInputFiles({name:"bad-maths.json",mimeType:"application/json",
   buffer:Buffer.from(JSON.stringify(tampered))});
  check((await page.locator(".generic-warning").allTextContents()).some(s=>/hash|mismatch|import/i.test(s)),
   "Tampered rich mathematical content accepted silently");
- await page.locator("#g-file").setInputFiles({name:"cat-rich-maths.json",mimeType:"application/json",
-  buffer:Buffer.from(JSON.stringify(p))});
- await page.waitForFunction(id=>document.querySelector("#g-papers")?.value===id,p.paper.id);
+ await importModernPaper(page,p,"cat-rich-maths.json");
  await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
  check(await page.locator(".pd-math .katex-mathml").count()>=2,"Read-only rich question and option maths missing");
  check((await page.locator(".pd-rich-prompt .pd-rich-content").innerText()).includes("Question 0 algebra"),

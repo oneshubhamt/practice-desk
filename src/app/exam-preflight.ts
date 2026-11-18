@@ -131,7 +131,7 @@ export function examPreflight(bundle:ExamPackage):ExamPreflight{
 export function preflightHTML(p:ExamPreflight):string{
  const label=(n:number)=>n.toFixed(p.decimals);
  return '<section id="g-preflight" class="paper-preflight" aria-label="Pre-test scoring and editorial information">'+
-  '<h3>Scoring & source audit</h3>'+
+  '<h3>Scoring & source details</h3>'+
   '<div class="preflight-scoreline"><strong>'+escapeText(label(p.maximum))+
   '</strong><span>eligible automated marks</span></div>'+
   '<p class="fine">Computed for this selected practice mode and edition; not the unadjusted printed maximum.</p>'+
@@ -151,7 +151,7 @@ export function preflightHTML(p:ExamPreflight):string{
 export function examRulesHTML(p:ExamPreflight):string{
  const list=(items:readonly string[])=>'<ul>'+items.map(item=>'<li>'+escapeText(item)+'</li>').join("")+'</ul>';
  return '<details class="panel pad help-rules" id="g-exam-rules">'+
-  '<summary>Full exam rules, shortcuts, source audit & offline storage</summary>'+
+  '<summary>Exam rules, shortcuts & offline details</summary>'+
   '<div class="help-rules-body">'+
   '<h3>Exam clock and sections</h3>'+list(p.timingRules)+
   '<h3>Questions, review and navigation</h3>'+list(p.navigationRules)+
