@@ -120,6 +120,10 @@ try{
  const saved=(await records(page)).find(a=>a.id===id);
  check(saved?.finishedAt===null&&saved.state.responses.some(r=>r.response),
   engine+" saved attempt not checkpointed by fallback routing");
+ await page.locator("#g-authoring").click();await route(page,"authoring");
+ check(new URL(await page.url()).hash==="#pd=authoring","Authoring fragment not updated");
+ await page.locator("#authoring-library").click();await route(page,"library");
+ check(new URL(await page.url()).hash==="#pd=library","Library fragment after Authoring not updated");
  await page.getByRole("button",{name:/History & insights/}).click();await route(page,"history");
  check(new URL(await page.url()).hash==="#pd=history","History fragment not updated");
  // The browser's own Back and Forward buttons must restore SPA content.
