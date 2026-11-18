@@ -2,7 +2,7 @@ import {reconcileSameExamQuestion} from "./exam-dom-reconcile.ts";
 /** Presentation-only screen renderer.
  * No URL/history, persistent storage, exam policy or navigation decisions.
  */
-export type DisplayScreen="library"|"history"|"learning"|"calendar"|"exam"|"result";
+export type DisplayScreen="library"|"history"|"learning"|"calendar"|"authoring"|"exam"|"result";
 export type ResultPane="overview"|"review"|"timing";
 export type ScreenPresentation={
   readonly screen:DisplayScreen;
