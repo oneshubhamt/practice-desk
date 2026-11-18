@@ -95,6 +95,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
  let selectedId:string|null=null,reviewId:string|null=null,revealed=false;
  let filter:"all"|"due"|"remediation"|"bookmarked"="all",hierarchyRoot="",message="",closed=false,opened=false;
  let previousLearningView="";
+ let focusAuthoringToolsOnShow=false;
  const optimizerAvailability=browserFsrsOptimizerAvailability();
  let optimizerStatus=optimizerAvailability.reason;
  let optimizerRun:BrowserFsrsOptimizerRun|null=null;
@@ -867,8 +868,14 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
       cache.clear();message="Saved FSRS settings were invalid; safe defaults were restored.";draw();
     }catch(fallback){message="FSRS scheduler failed to initialize.";console.error(fallback);draw();}
   });
- return {show(){opened=true;if(reviewId)reviewDuration.visibility(clock(),reviewVisible());draw();},
+ const revealAuthoringTools=()=>{
+  if(!focusAuthoringToolsOnShow)return;
+  focusAuthoringToolsOnShow=false;
+  requestAnimationFrame(()=>root.querySelector<HTMLElement>(".learning-authoring-focus")?.scrollIntoView({block:"start"}));
+ };
+ return {show(){opened=true;if(reviewId)reviewDuration.visibility(clock(),reviewVisible());draw();revealAuthoringTools();},
   hide(){if(reviewId)reviewDuration.visibility(clock(),false);opened=false;previousLearningView="";},
   select(id:string){selectedId=id;},
+  focusAuthoringTools(){focusAuthoringToolsOnShow=true;if(opened){draw();revealAuthoringTools();}},
    dispose(){optimizerRun?.cancel();optimizerRun=null;reviewDuration.reset();document.removeEventListener("visibilitychange",onReviewVisibility);closed=true;previousLearningView="";notebookDrafts.clear();}};
 }
