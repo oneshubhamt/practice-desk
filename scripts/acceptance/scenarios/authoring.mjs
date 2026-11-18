@@ -24,7 +24,14 @@ try{
  const installedFamilies=await page.locator("#g-family option").allTextContents();
  check(installedFamilies.some(x=>x.includes("PFRDA Grade A 2026 — Phase II")),
   "Catalog-preinstalled PFRDA family is missing from Library");
- await page.locator("#g-author-open").click();
+ check(await page.locator("#g-import").count()===0&&await page.locator("#g-author-open").count()===0,
+  "Library still exposes content-management controls");
+ await page.locator("#g-authoring").click();await route(page,"authoring");
+ check(await page.locator("#authoring-import").isVisible()&&
+   await page.locator("#authoring-image-prep").isVisible()&&
+   await page.locator("#authoring-open-studio").isVisible(),
+  "Dedicated Authoring entry points are incomplete");
+ await page.locator("#authoring-open-studio").click();
  await page.locator("#pd-author-editor wg-content").waitFor({state:"visible"});
  check(await page.locator("#pd-author-health").isVisible(),"Derived authoring health summary missing");
  check(await page.locator("#pd-author-fix-next").isEnabled(),"Invalid draft did not expose Fix next");
@@ -74,8 +81,10 @@ try{
  await shot("author-validation-phone");
  await page.locator("#pd-author-confirm").check();
  await page.locator("#pd-author-publish").click();
- await page.locator("#g-papers").waitFor({state:"visible"});
  const paperId="authored:cat-practice:local-math-quiz:r1:custom";
+ await page.waitForFunction(id=>[...document.querySelectorAll("[data-authoring-open-paper]")]
+   .some(x=>x.dataset.authoringOpenPaper===id),paperId);
+ await page.locator('[data-authoring-open-paper="'+paperId+'"]').click();await route(page,"library");
  await page.waitForFunction(id=>document.querySelector("#g-papers")?.value===id,paperId);
  const record=(await records(page)).find(x=>x.recordType==="generic-package"&&x.bundle?.paper?.id===paperId);
  check(Boolean(record),"Published package not durable in single IndexedDB record store");
@@ -126,7 +135,8 @@ try{
  check((await page.locator(".worked-solution").first().innerText()).includes("WORKED-SOLUTION-SECRET"),
   "Restored post-submission review lost the authored private explanation");
  await page.locator("#g-library").click();await route(page,"library");
- await page.locator("#g-author-open").click();
+ await page.locator("#g-authoring").click();await route(page,"authoring");
+ await page.locator("#authoring-open-studio").click();
  await page.locator("#pd-author-new").click();
  await page.locator("#pd-author-editor wg-content").waitFor({state:"visible"});
  await page.locator(".pd-author-paper-settings > summary").click();
@@ -158,6 +168,9 @@ try{
  await page.locator("#pd-author-confirm").check();
  await page.locator("#pd-author-publish").click();
  const writtenId="authored:manual-mark-practice:written-20:r1:custom";
+ await page.waitForFunction(id=>[...document.querySelectorAll("[data-authoring-open-paper]")]
+   .some(x=>x.dataset.authoringOpenPaper===id),writtenId);
+ await page.locator('[data-authoring-open-paper="'+writtenId+'"]').click();await route(page,"library");
  await page.waitForFunction(id=>document.querySelector("#g-papers")?.value===id,writtenId);
  const writtenPackage=(await records(page)).find(x=>
   x.recordType==="generic-package"&&x.bundle?.paper?.id===writtenId);
@@ -208,8 +221,20 @@ const engine=process.argv[2]??"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
 const {page,errors}=await h.open({viewport:{width:1280,height:840}});
 const fixture=async name=>JSON.parse(await readFile(new URL("../../../examples/ai-first-"+name+".json",import.meta.url),"utf8"));
+async function ensureAuthoring(){
+ if(await page.locator("#authoring-import-file").count())return;
+ if(await page.locator("#g-authoring").count()){
+  await page.locator("#g-authoring").click();await route(page,"authoring");return;
+ }
+ if(await page.locator("#g-library").count()){
+  await page.locator("#g-library").click();await route(page,"library");
+  await page.locator("#g-authoring").click();await route(page,"authoring");return;
+ }
+ throw Error("Cannot reach Authoring from current acceptance state");
+}
 async function stage(source,label){
- await page.locator("#g-file").setInputFiles({name:label+".json",mimeType:"application/json",
+ await ensureAuthoring();
+ await page.locator("#authoring-import-file").setInputFiles({name:label+".json",mimeType:"application/json",
   buffer:Buffer.from(JSON.stringify(source))});
  await page.locator("#pd-author-heading").waitFor({state:"visible"});
  await page.locator("#pd-stage-handoff").waitFor({state:"visible"});
@@ -236,6 +261,9 @@ async function publishStage(source,label){
   await page.locator("#pd-author-accept-warnings").check();
  await page.locator("#pd-author-publish").click();
  const id="authored:"+source.examId+":"+source.paperId+":r"+source.revision+":custom";
+ await page.waitForFunction(id=>[...document.querySelectorAll("[data-authoring-open-paper]")]
+   .some(x=>x.dataset.authoringOpenPaper===id),id);
+ await page.locator('[data-authoring-open-paper="'+id+'"]').click();await route(page,"library");
  await page.waitForFunction(id=>document.querySelector("#g-papers")?.value===id,id);
  return id;
 }
@@ -344,7 +372,8 @@ try{
  }};
  const overlap=structuredClone(apfc);overlap.revision=2;overlap.bankId="second-source-p57c";
  overlap.questions=overlap.questions.map(q=>({...q,id:"copy-"+q.id}));
- await page.locator("#g-author-open").click();
+ await ensureAuthoring();
+ await page.locator("#authoring-open-studio").click();
  await page.locator("#pd-stage-input").setInputFiles([
   {name:"p57c-main.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(second))},
   {name:"p57c-overlap.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(overlap))}
@@ -480,13 +509,16 @@ try{
  }finally{await rm(temp,{recursive:true,force:true});}
  const sourceEdition=editionPair.packages.sourcePkg,reviewedEdition=editionPair.packages.reviewedPkg;
  const importEdition=async(bundle,name)=>{
-  await page.locator("#g-file").setInputFiles({name,mimeType:"application/json",
+  await ensureAuthoring();
+  await page.locator("#authoring-import-file").setInputFiles({name,mimeType:"application/json",
    buffer:Buffer.from(JSON.stringify(bundle))});
-  await page.waitForFunction(id=>document.querySelector("#g-papers")?.value===id,bundle.paper.id);
+  await page.waitForFunction(id=>[...document.querySelectorAll("[data-authoring-open-paper]")]
+   .some(x=>x.dataset.authoringOpenPaper===id),bundle.paper.id);
  };
- await route(page,"library"); // Already in Library after Wordgard publish; #g-library exists only on other screens.
  await importEdition(sourceEdition,"p60d-original.exam.json");
  await importEdition(reviewedEdition,"p60d-reviewed.exam.json");
+ await page.locator('[data-authoring-open-paper="'+reviewedEdition.paper.id+'"]').click();
+ await route(page,"library");
  check(await page.locator('#g-edition [data-edition="source"]').count()===1&&
   await page.locator('#g-edition [data-edition="reviewed"]').count()===1,
   engine+" P60-D source/reviewed switch not visible in imported family");
@@ -532,7 +564,7 @@ try{
  check(Boolean(card)&&card.reviews?.length===0,
   engine+" P60-F card not derived from frozen reviewed source or FSRS was silently graded");
  await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
- await page.getByRole("button",{name:/Open learning desk/}).click();await route(page,"learning");
+ await page.locator("#g-learning").click();await route(page,"learning");
  // Pass 5 native bridge: derive learner evidence locally, then attach it to a
  // standard Authoring Brief without exposing unrestricted History to an agent.
  await page.locator("#learning-focus-exam").selectOption(reviewedEdition.examId);
