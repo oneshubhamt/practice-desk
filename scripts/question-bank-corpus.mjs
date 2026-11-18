@@ -339,27 +339,29 @@ export async function appendRevision(options){
 
 function parse(argv){
  const [operation,...rest]=argv;
- if(!["add-paper","append-revision"].includes(operation))throw Error(
-  "Usage: question-bank-corpus.mjs add-paper|append-revision --family ID --year YYYY --paper-id SLUG --source bank.json --quality-review review.json --blueprint plan.json [--set-current] [--dry-run]");
+ if(!["add-paper","append-revision","recover"].includes(operation))throw Error(
+  "Usage: question-bank-corpus.mjs add-paper|append-revision ... | recover [--root <repo>]");
  const out={operation,dryRun:false,setCurrent:false};
  for(let i=0;i<rest.length;i++){
   const key=rest[i];
-  if(key==="--dry-run"){out.dryRun=true;continue;}
+  if(key==="--dry-run"){if(operation==="recover")throw Error("--dry-run is not valid for recover");out.dryRun=true;continue;}
   if(key==="--set-current"){if(operation!=="add-paper")throw Error("--set-current is add-paper only");out.setCurrent=true;continue;}
-  if(!["--family","--year","--paper-id","--source","--quality-review","--blueprint","--root"].includes(key))
-   throw Error("Unknown corpus flag "+key);
+  const allowed=operation==="recover"?["--root"]:
+   ["--family","--year","--paper-id","--source","--quality-review","--blueprint","--root"];
+  if(!allowed.includes(key))throw Error("Unknown corpus flag "+key);
   if(i+1>=rest.length)throw Error("Missing value after "+key);
   const value=rest[++i],name={"--family":"familyId","--year":"year","--paper-id":"paperId",
    "--source":"sourcePath","--quality-review":"qualityReviewPath","--blueprint":"blueprintPath","--root":"root"}[key];
   if(out[name]!==undefined)throw Error("Duplicate corpus flag "+key);out[name]=value;
  }
- for(const key of ["familyId","year","paperId","sourcePath","qualityReviewPath","blueprintPath"])
+ if(operation!=="recover")for(const key of ["familyId","year","paperId","sourcePath","qualityReviewPath","blueprintPath"])
   if(out[key]===undefined)throw Error("Missing required corpus option "+key);
  return out;
 }
 async function main(){
  const args=parse(process.argv.slice(2));
- const result=args.operation==="add-paper"?await addPaper(args):await appendRevision(args);
+ const result=args.operation==="add-paper"?await addPaper(args):
+  args.operation==="append-revision"?await appendRevision(args):await recoverCorpus(args);
  process.stdout.write(JSON.stringify(result,null,2)+"\n");
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
