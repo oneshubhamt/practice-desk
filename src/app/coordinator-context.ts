@@ -166,11 +166,11 @@ export type HistoryControllerContext=Slice<
 >;
 
 export type LibraryControllerContext=Slice<
- "applyFamily"|"attempt"|"authoringStudio"|"practiceMode"|
+ "applyFamily"|"attempt"|"practiceMode"|
  "changeHistoryQuery"|"choice"|"composeCount"|"composeDifficulty"|"composeError"|
  "composeOpen"|"composePreview"|"composeSection"|"composeSeed"|"composeTopic"|
  "downloadBackup"|"draw"|"editionView"|"fallbackConflict"|"families"|
- "freshlyStartedAttemptId"|"go"|"imagePreparation"|"importHistory"|"loading"|
+ "freshlyStartedAttemptId"|"go"|"importHistory"|"loading"|
  "notice"|"now"|"openSaved"|"packages"|"records"|"removeSavedAttempt"|
  "root"|"save"|"saveSelection"|"selectedFamilyId"|"setups"|"singleSection"|
  "storageFault"|"untimedPractice"|"warning"
