@@ -207,9 +207,12 @@ try{
      await page.locator("#authoring-calendar").count()===1&&
      await page.locator("#authoring-history").count()===1&&await page.locator("#authoring-library").count()===1,
     "Authoring workspace navigation is incomplete "+name);
-   await page.locator("#authoring-library").click();await route(page,"library");
-   await page.locator("#g-learning").click();await route(page,"learning");
+   await page.locator("#authoring-learning-focus").click();await route(page,"learning");
+   await page.waitForFunction(()=>{const el=document.querySelector(".learning-authoring-focus");
+     if(!el)return false;const r=el.getBoundingClientRect();return r.top>=0&&r.top<innerHeight;});
    await inspect(page,name+"-learning");
+   check(await page.locator(".learning-authoring-focus").isVisible(),
+    "Authoring Brief CTA did not land on its existing tools "+name);
    check(await page.locator("#learning-calendar").count()===1&&
      await page.locator("#learning-history").count()===1&&
      await page.locator("#learning-authoring").count()===1&&await page.locator("#learning-close").count()===1,
