@@ -1767,3 +1767,7 @@ html[data-theme="dark"] .pd-author-studio .pd-author-preview-choice>span{
 
 .paper-marking-summary{margin:5px 0 8px;font-size:12px;color:var(--muted);overflow-wrap:anywhere}
 .paper-marking-summary b{color:var(--ink)}
+
+.authoring-bank-actions{flex:none;justify-content:flex-end}
+@media(max-width:760px){.authoring-bank-actions{width:100%}.authoring-bank-actions .btn{flex:1 1 140px}}
+@media(max-width:300px){.authoring-bank-actions .btn{flex:1 1 100%;min-width:0;overflow-wrap:anywhere}}
