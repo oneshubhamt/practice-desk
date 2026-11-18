@@ -545,14 +545,24 @@ try{
    focusPacket.intent==="targeted-practice"&&focusPacket.privacy?.scope==="exam-only"&&
    !("questionEvidence" in focusPacket)&&!JSON.stringify(focusPacket).includes("answerKey"),
    engine+" Pass 5 Focused learner packet leaked detailed/key data or lost exam scope");
- const standardBrief={format:"practice-desk-authoring-brief",version:1,valid:true,
-   blueprint:{id:"p60f-browser-brief",examId:reviewedEdition.examId},
-   task:{remainingCount:2},paper:{source:"browser-regression"},
-   outputContract:{sourceEnvelope:{}},learnerFocusIncluded:false};
- await page.locator("#learning-brief-file").setInputFiles({
-   name:"standard-authoring-brief.json",mimeType:"application/json",
-   buffer:Buffer.from(JSON.stringify(standardBrief))
+ const blueprintRaw=await readFile(new URL("../../../question-banks/pfrda/2026/mocks/day-01/revised/blueprint.json",import.meta.url),"utf8");
+ const taxonomyRaw=await readFile(new URL("../../../question-banks/pfrda/2026/taxonomy.json",import.meta.url),"utf8");
+ await page.locator("#learning-blueprint-file").setInputFiles({
+   name:"blueprint.json",mimeType:"application/json",buffer:Buffer.from(blueprintRaw)
  });
+ await page.locator("#learning-taxonomy-file").setInputFiles({
+   name:"taxonomy.json",mimeType:"application/json",buffer:Buffer.from(taxonomyRaw)
+ });
+ await page.locator("#learning-brief-bank-id").fill("p60f-native-next");
+ await page.locator("#learning-brief-title").fill("P60-F native browser brief");
+ await page.locator("#learning-brief-batch-size").fill("2");
+ await page.locator("#learning-brief-generate").click();
+ await page.locator("#learning-standard-brief-preview").waitFor({state:"visible"});
+ const standardBrief=JSON.parse(await page.locator("#learning-standard-brief-preview").inputValue());
+ check(standardBrief.learnerFocusIncluded===false&&standardBrief.task?.requestedNow===2&&
+   standardBrief.taxonomyScope?.includedNodes<standardBrief.taxonomyScope?.totalNodes&&
+   standardBrief.classification?.taxonomyAssignmentPolicy==="deepest-defensible",
+   engine+" native standard Authoring Brief was not generated from the real blueprint contract");
  await page.waitForFunction(()=>!document.querySelector("#learning-brief-personalise")?.disabled);
  await page.locator("#learning-brief-personalise").click();
  await page.locator("#learning-brief-preview").waitFor({state:"visible"});
