@@ -50,11 +50,11 @@ test("P49 topic paths have stable ancestors and never collapse same label across
  assert.equal(parseTopicPathId("topic:Economy/%ZZ"),null);
  for(const item of [[],["Economy","","CPI"],["Economy","Inflation","CPI","extra"],["x\n"]])
   assert.throws(()=>topicPathId(item));
- assert.throws(()=>attributedTopicPath("upsc-epfo-apfc","General","labour","","Wages"));
- assert.throws(()=>attributedTopicPath("upsc-epfo-apfc","General","labour","Labour Codes","Wages"),
-  /either an official/);
- assert.deepEqual(attributedTopicPath("upsc-epfo-apfc","","labour","Labour Codes","Wages"),
-  ["Industrial Relations, Labour Codes and Social Security in India","Labour Codes","Wages"]);
+ assert.throws(()=>attributedTopicPath("General","","Wages"),/topic/i);
+ assert.deepEqual(attributedTopicPath("","Labour Codes","Wages"),
+  ["Unclassified","Labour Codes","Wages"]);
+ assert.deepEqual(attributedTopicPath("Industrial Relations","Labour Codes","Wages"),
+  ["Industrial Relations","Labour Codes","Wages"]);
 });
 test("P50 authored sectional paper freezes exact navigation, source topic hierarchy and difficulty",()=>{
  const draft=validateAuthoringDraft(paper());
@@ -112,7 +112,8 @@ test("P49 real completed attempts aggregate full author and self-labelled paths 
   new Map(pkg.questions.map(q=>[q.id,q])));
  assert.notEqual(finished.finishedAt,null,"actual sectional expiry must finish both sections");
  const original=addLearningCard(finished,pkg.questions[0].id,new Date(start+30*60*1000).toISOString());
- const card=validateLearningCard({...original,syllabusTopicId:"labour",
+ const card=validateLearningCard({...original,
+  customSubject:"Industrial Relations, Labour Codes and Social Security in India",
   customTopic:"Labour Codes",customSubtopic:"Wages"});
  const metrics=topicMetrics([finished],[card]).filter(x=>x.kind==="hierarchy");
  const label=x=>metrics.find(m=>m.label===x);
@@ -173,8 +174,9 @@ test("P49 hierarchical Learning note and subtopic survive strict v4 backup and i
  const base=addLearningCard(completed,pkg.questions[0].id,
    new Date(start+1800000).toISOString());
  const card=validateLearningCard({...base,
+   customSubject:"Industrial Relations, Labour Codes and Social Security in India",
    customTopic:"Labour Codes",customSubtopic:"Wage definitions",
-   syllabusTopicId:"labour",note:"Retain independently authored explanation"});
+   note:"Retain independently authored explanation"});
  assert.doesNotThrow(()=>validateGenericStoredRecord(card));
  const archive=makeBackup([{...completed,saveRevision:1},{...card,saveRevision:1}],DEFAULT_PREFERENCES,
    new Date(start+1900000).toISOString());
@@ -206,9 +208,9 @@ function paper(){
  return {...newAuthoringDraft(),examId:"upsc-epfo-apfc",paperId:"p53-mixed",title:"Mixed subject practice",
   timingKind:"whole-paper",durationMinutes:120,
   sections:[{name:"General Paper",minutes:15}],questions:[
-   {...q("General Paper","", "Labour Codes","Wages"),syllabusHeadingId:"labour"},
-   {...q("General Paper","", "Accounting","Ledger"),syllabusHeadingId:"accountancy"},
-   {...q("General Paper","", "",""),syllabusHeadingId:"economy"}
+   q("General Paper","Industrial Relations, Labour Codes and Social Security in India","Labour Codes","Wages"),
+   q("General Paper","Principles of Accountancy, Auditing and Insurance","Accounting","Ledger"),
+   q("General Paper","Developmental Issues and Present Trends in Indian Economy","","")
   ]};
 }
 const complete=(pkg,id,ms)=>{
@@ -248,15 +250,15 @@ test("P53: author-declared non-APFC subject has no phantom exam section/syllabus
  assert.deepEqual(pkg.questions[0].content.topicIds,topicAncestors(["Quantitative Aptitude","Ratios"]).map(x=>x.id));
  assert.deepEqual(pkg.questions[1].content.topicIds,topicAncestors(["Verbal Ability","Reading","Passages"]).map(x=>x.id));
 });
-test("P53: exact source subject selection is validated; unknown APFC or orphaned path fails",()=>{
+test("P53: semantic paths validate explicitly and legacy hidden heading fields fail closed",()=>{
  assert.throws(()=>validateAuthoringDraft({...paper(),questions:[
   {...paper().questions[0],syllabusHeadingId:"fictitious"}
- ]}),/heading|syllabus/i);
+ ]}),/Unexpected draft question field/);
  assert.throws(()=>validateAuthoringDraft({...paper(),questions:[
   {...paper().questions[0],topic:"",subtopic:"Wages"}
  ]}),/subtopic/i);
  assert.throws(()=>validateAuthoringDraft({...paper(),questions:[
-  {...paper().questions[0],subject:"Labour"+String.fromCharCode(10)+"Codes",syllabusHeadingId:""}
+  {...paper().questions[0],subject:"Labour"+String.fromCharCode(10)+"Codes"}
  ]}),/Invalid|topic/i);
 });
 test("P53: source-root totals include topicless questions and child subtree filters select correct questions",()=>{
@@ -293,7 +295,7 @@ test("P53: notebook subject is a separate explicit annotation, not exam section"
  assert.throws(()=>validateLearningCard({...item,customTopic:"Labour"+String.fromCharCode(10)+"Codes"}),
    /Invalid learning card/,"untrusted newline must not crash later metrics");
  const card=validateLearningCard({...item,customSubject:"Industrial Relations",
-  customTopic:"Trade Unions",customSubtopic:"Recognition",syllabusTopicId:undefined});
+  customTopic:"Trade Unions",customSubtopic:"Recognition"});
  const m=topicMetrics([finished],[card]);
  assert.equal(m.find(x=>x.kind==="hierarchy"&&x.label==="Industrial Relations › Trade Unions › Recognition")?.total,1);
  assert.equal(m.find(x=>x.kind==="hierarchy"&&x.label==="General Paper › Trade Unions › Recognition"),undefined);

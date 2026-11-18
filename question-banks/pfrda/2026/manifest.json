@@ -9,7 +9,12 @@
     {
       "id": "pfrda-grade-a-2026-day-01",
       "path": "mocks/day-01/manifest.json"
+    },
+    {
+      "id": "pfrda-grade-a-2026-day-02",
+      "path": "mocks/day-02/manifest.json"
     }
   ],
-  "pyqs": []
+  "pyqs": [],
+  "taxonomy": "taxonomy.json"
 }

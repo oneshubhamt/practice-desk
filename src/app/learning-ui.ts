@@ -13,13 +13,14 @@ import { ERROR_LABELS, comparableTrends, inspectLearningCard, previewLearningCar
 import { evidenceProgression } from "../learning/attempt-evidence.ts";
 import { REVISION_MAX_QUESTIONS, type RevisionSelectionProvenance } from "../learning/revision-test.ts";
 import { REVISION_REASONS,revisionInventory,revisionTake,mockEvidenceAttempts,type RevisionReason } from "../learning/revision-selection.ts";
-import { syllabusForExam } from "../learning/syllabus-taxonomy.ts";
 import type { ErrorLabel, LearningCard, ReviewGrade } from "../learning/learning.ts";
 import type {RichDocument} from "../domain/rich-document.ts";
 import {authoredTextHTML} from "./rich-content-view.ts";
 import {escapeText as esc} from "./html-escape.ts";
 import {downloadText} from "./download-file.ts";
 import {createReviewDurationTracker} from "../learning/review-duration.ts";
+import {buildLearnerFocusPacket,personalizeAuthoringBrief,type AuthoringIntent} from "../learning/learner-focus.ts";
+import {buildInitialAuthoringBrief,validateStandardAuthoringBrief} from "../authoring/authoring-brief.ts";
 
 export interface LearningDeskHost {
   cards:()=>LearningCard[];
@@ -102,7 +103,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
    if(status)status.textContent=optimizerStatus;
  };
  type NotebookDraft={note:string;customSubject:string;customTopic:string;customSubtopic:string;
-   syllabusTopicId:string;errorLabel:string;bookmarked:boolean;revisionDisposition:"active"|"suspended"};
+   errorLabel:string;bookmarked:boolean;revisionDisposition:"active"|"suspended"};
  const notebookDrafts=new Map<string,NotebookDraft>();
  const present=(html:string,identity:string)=>{
    const same=previousLearningView===identity;
@@ -115,7 +116,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
    const active=document.activeElement;
    const activeEdit=active instanceof HTMLElement&&oldDetail?.contains(active)&&
      ["learning-note","learning-subject","learning-topic","learning-subtopic",
-       "learning-error","learning-syllabus","learning-bookmark","learning-suspend"].includes(active.id);
+       "learning-error","learning-bookmark","learning-suspend"].includes(active.id);
    const preserve=oldDetail&&cardId&&(notebookDrafts.has(cardId)||activeEdit);
    type NativeField=HTMLInputElement|HTMLTextAreaElement|HTMLSelectElement;
    const editor=preserve?Array.from(oldDetail.querySelectorAll<NativeField>(
@@ -156,6 +157,12 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
  };
  let evidenceExam="",evidenceCount=10;
  let evidenceReasons:RevisionReason[]=["wrong","blank"];
+ let focusExam="",focusMode:"off"|"focused"|"detailed"="focused";
+ let focusIntent:AuthoringIntent="targeted-practice",focusPacketText="";
+ let standardBrief:Readonly<Record<string,unknown>>|null=null,standardBriefName="";
+ let briefBlueprintRaw="",briefBlueprintName="",briefTaxonomy:unknown|undefined,briefTaxonomyName="";
+ let briefBankId="new-authoring-batch",briefTitle="New authoring batch",briefBatchSize=8;
+ let personalisedBriefText="";
  const cache=new Map<string,{record:LearningCard;scheduled:ReturnType<typeof scheduledCard>}>();
  const schedule=(card:LearningCard)=>{
    const current=cache.get(card.id);
@@ -270,6 +277,9 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   const sourceAttempts=mockEvidenceAttempts(done);
   const availableExams=[...new Set([...sourceAttempts.map(a=>a.frozen.snapshot.examId),...all.map(c=>c.examId)])].sort();
   if(!availableExams.includes(evidenceExam))evidenceExam=availableExams[0]??"";
+  if(!availableExams.includes(focusExam)){
+   focusExam=availableExams[0]??"";focusPacketText="";personalisedBriefText="";
+  }
   const assembled=revisionInventory(sourceAttempts,all,new Set(dueNow.map(c=>c.id)),evidenceExam,evidenceReasons);
   const preview=assembled.selected.slice(0,REVISION_MAX_QUESTIONS);
   const exam=visible.find(c=>c.id===selectedId)?.examId??visible[0]?.examId;
@@ -371,6 +381,56 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     '<p class="fine">New sessions record first-visit, revisit and pre-first-answer foreground exposure. Unmeasured phases remain unavailable. These are not continuous wall-clock intervals or evidence of why an answer changed.</p>'+
     '<button class="btn primary" id="learning-build-evidence"'+(!evidenceReasons.length||assembled.eligibleCount<evidenceCount||evidenceCount<1?' disabled':'')+
       '>Start targeted revision ('+Math.min(evidenceCount,assembled.eligibleCount)+')</button></section>'+
+    '<section class="panel pad learning-authoring-focus"><h2>Personalised authoring focus</h2>'+
+    '<p class="fine">Create an inspectable, exam-only learner evidence packet for fresh AI-authored practice. Focused shares aggregates only; Detailed additionally shares bounded question-level prompt/response/timing/explanation evidence. Identity, device data, unrelated exams and unrestricted History are omitted.</p>'+
+    '<div class="learning-evidence-controls"><label>Exam <select id="learning-focus-exam">'+
+      availableExams.map(id=>'<option value="'+esc(id)+'"'+(id===focusExam?' selected':'')+'>'+esc(id)+'</option>').join("")+
+    '</select></label><label>Sharing <select id="learning-focus-mode">'+
+      [['off','Off — share no learner data'],['focused','Focused — recommended'],['detailed','Detailed — question-level evidence']].map(([value,label])=>
+       '<option value="'+value+'"'+(focusMode===value?' selected':'')+'>'+label+'</option>').join("")+
+    '</select></label><label>Authoring intent <select id="learning-focus-intent">'+
+      [['targeted-practice','Targeted practice'],['exam-simulation','Exam simulation / mock']].map(([value,label])=>
+       '<option value="'+value+'"'+(focusIntent===value?' selected':'')+'>'+label+'</option>').join("")+
+    '</select></label></div>'+
+    '<p class="fine">'+(focusIntent==="exam-simulation"?
+      'Blueprint-first: learner evidence may influence framing/selection only within the declared exam composition.':
+      'Focus-first with syllabus/blueprint guardrails: emphasize observed weak, repeated-error and due areas using fresh transfer questions.')+'</p>'+
+    '<div class="row generic-actions"><button class="btn primary" id="learning-focus-generate"'+
+      (!focusExam?' disabled':'')+'>'+(focusMode==="off"?'Confirm personalisation off':'Generate learner focus')+'</button>'+
+    '<button class="btn" id="learning-focus-copy"'+(!focusPacketText?' disabled':'')+'>Copy focus</button>'+
+    '<button class="btn" id="learning-focus-export"'+(!focusPacketText?' disabled':'')+'>Export focus JSON</button></div>'+
+    (focusPacketText?'<label class="picker" for="learning-focus-preview">Inspect exactly what learner evidence would be shared</label>'+
+      '<textarea id="learning-focus-preview" readonly rows="10">'+esc(focusPacketText)+'</textarea>':
+      '<p class="fine">No learner packet generated. Off mode remains a standard non-personalised Authoring Brief with no learner block.</p>')+
+    '<details open class="learning-native-brief"><summary>Generate a standard Authoring Brief</summary>'+
+      '<p class="fine">For a new/first authoring batch, load its content blueprint and optional matching taxonomy. Continuation briefs that depend on existing authored batches should still be generated by the coverage-aware CLI and can be loaded below.</p>'+
+      '<div class="row generic-actions"><button class="btn" id="learning-blueprint-load">Load blueprint</button>'+
+      '<input id="learning-blueprint-file" type="file" accept="application/json,.json" hidden>'+
+      '<button class="btn" id="learning-taxonomy-load">Load taxonomy (optional)</button>'+
+      '<input id="learning-taxonomy-file" type="file" accept="application/json,.json" hidden>'+
+      '<button class="btn" id="learning-brief-load">Load existing standard brief</button>'+
+      '<input id="learning-brief-file" type="file" accept="application/json,.json" hidden></div>'+
+      '<p class="fine">'+(briefBlueprintName?'Blueprint: <strong>'+esc(briefBlueprintName)+'</strong>.':'No blueprint loaded.')+
+        (briefTaxonomyName?' Taxonomy: <strong>'+esc(briefTaxonomyName)+'</strong>.':'')+'</p>'+
+      '<div class="learning-evidence-controls"><label>New bank ID <input id="learning-brief-bank-id" maxlength="80" value="'+esc(briefBankId)+'"></label>'+
+      '<label>Title <input id="learning-brief-title" maxlength="180" value="'+esc(briefTitle)+'"></label>'+
+      '<label>Batch size <input id="learning-brief-batch-size" type="number" min="1" max="20" value="'+briefBatchSize+'"></label></div>'+
+      '<button class="btn primary" id="learning-brief-generate"'+(!briefBlueprintRaw?' disabled':'')+'>Generate Standard Authoring Brief</button>'+
+    '</details>'+
+    '<div class="row between"><p class="fine">'+
+      (standardBrief?'Standard brief ready: <strong>'+esc(standardBriefName||"Authoring Brief")+'</strong>.':
+       'Generate or load a validated <code>practice-desk-authoring-brief</code>.')+
+      '</p><button class="btn primary" id="learning-brief-personalise"'+
+      (!standardBrief||!focusPacketText||focusMode==="off"?' disabled':'')+'>Generate Personalised Authoring Brief</button></div>'+
+    (standardBrief?'<details open><summary>Inspect standard Authoring Brief</summary>'+
+      '<textarea id="learning-standard-brief-preview" readonly rows="12">'+esc(JSON.stringify(standardBrief,null,2))+'</textarea>'+
+      '<div class="row generic-actions"><button class="btn" id="learning-standard-brief-copy">Copy standard brief</button>'+
+      '<button class="btn" id="learning-standard-brief-export">Export standard brief</button></div></details>':'')+
+    (personalisedBriefText?'<details open><summary>Inspect personalised Authoring Brief</summary>'+
+      '<textarea id="learning-brief-preview" readonly rows="12">'+esc(personalisedBriefText)+'</textarea>'+
+      '<div class="row generic-actions"><button class="btn" id="learning-brief-copy">Copy personalised brief</button>'+
+      '<button class="btn" id="learning-brief-export">Export personalised brief</button></div></details>':'')+
+    '<p class="fine">Focused/Detailed evidence is inserted into the same canonical Authoring Brief contract used by the CLI. The standard blueprint remains authoritative for exam simulation; learner evidence reports observations only and does not diagnose causes.</p></section>'+
     '<div class="generic-layout learning-layout"><section class="panel pad"><div class="row between"><h2>Error notebook</h2>'+
       '<select id="learning-filter" aria-label="Filter notebook" class="learning-filter">'+
       [["all","All cards"],["due","Due now"],["remediation","Remediation"],["bookmarked","Bookmarked"]].map(([key,label])=>
@@ -405,10 +465,6 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
        '<input id="learning-topic" maxlength="120" value="'+esc(selectedDraft?.customTopic??selected.customTopic)+'" placeholder="e.g. Labour Codes">'+
        '<label class="picker" for="learning-subtopic">Subtopic (optional; requires Topic)</label>'+
        '<input id="learning-subtopic" maxlength="120" value="'+esc(selectedDraft?.customSubtopic??selected.customSubtopic??"")+'" placeholder="e.g. Wage definitions">'+
-       (syllabusForExam(selected.examId)?'<label class="picker" for="learning-syllabus">Subject / broad syllabus heading (optional, manually chosen)</label>'+
-         '<select id="learning-syllabus"><option value="">No heading assigned</option>'+
-         syllabusForExam(selected.examId)!.headings.map(h=>'<option value="'+esc(h.id)+'"'+
-           ((selectedDraft?.syllabusTopicId??selected.syllabusTopicId)===h.id?' selected':'')+'>'+esc(h.label)+'</option>').join("")+'</select>':'')+
        '<label class="picker" for="learning-note">Notes</label>'+
        '<textarea id="learning-note" maxlength="8000" rows="5">'+esc(selectedDraft?.note??selected.note)+'</textarea>'+
        '<label class="learning-bookmark"><input id="learning-bookmark" type="checkbox"'+
@@ -539,6 +595,158 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   root.querySelector<HTMLSelectElement>("#learning-evidence-exam")!.onchange=e=>{
     evidenceExam=(e.target as HTMLSelectElement).value;draw();
   };
+  root.querySelector<HTMLSelectElement>("#learning-focus-exam")!.onchange=e=>{
+    focusExam=(e.target as HTMLSelectElement).value;focusPacketText="";personalisedBriefText="";draw();
+  };
+  root.querySelector<HTMLSelectElement>("#learning-focus-mode")!.onchange=e=>{
+    focusMode=(e.target as HTMLSelectElement).value as typeof focusMode;
+    focusPacketText="";personalisedBriefText="";draw();
+  };
+  root.querySelector<HTMLSelectElement>("#learning-focus-intent")!.onchange=e=>{
+    focusIntent=(e.target as HTMLSelectElement).value as AuthoringIntent;
+    focusPacketText="";personalisedBriefText="";draw();
+  };
+  root.querySelector<HTMLButtonElement>("#learning-focus-generate")!.onclick=()=>{
+    if(focusMode==="off"){
+      focusPacketText="";message="Personalisation is off. Generate the standard Authoring Brief without learner data.";draw();return;
+    }
+    try{
+      const packet=buildLearnerFocusPacket(sourceAttempts,all,new Set(dueNow.map(c=>c.id)),{
+        examId:focusExam,mode:focusMode,intent:focusIntent,asOf:now().toISOString()
+      });
+      focusPacketText=packet?JSON.stringify(packet,null,2):"";
+      personalisedBriefText="";
+      message=packet?"Learner focus generated locally. Inspect it before copying/exporting.":"Personalisation is off.";
+      draw();
+    }catch(error){message=error instanceof Error?error.message:"Could not build learner focus";draw();}
+  };
+  root.querySelector<HTMLButtonElement>("#learning-focus-copy")!.onclick=async()=>{
+    if(!focusPacketText)return;
+    try{
+      if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(focusPacketText);
+      else{
+        const area=root.querySelector<HTMLTextAreaElement>("#learning-focus-preview");
+        area?.select();
+        if(!document.execCommand("copy"))throw Error("Browser copy command unavailable");
+      }
+      message="Learner focus copied.";draw();
+    }catch{message="Automatic copy is unavailable here. Select the inspectable JSON and copy it manually.";draw();}
+  };
+  root.querySelector<HTMLButtonElement>("#learning-focus-export")!.onclick=()=>{
+    if(focusPacketText)downloadText("practice-desk-learner-focus-"+focusExam+".json",
+      focusPacketText,"application/json;charset=utf-8");
+  };
+  const blueprintFile=root.querySelector<HTMLInputElement>("#learning-blueprint-file")!;
+  root.querySelector<HTMLButtonElement>("#learning-blueprint-load")!.onclick=()=>blueprintFile.click();
+  blueprintFile.onchange=async()=>{
+    const file=blueprintFile.files?.[0];blueprintFile.value="";if(!file)return;
+    try{
+      const raw=await file.text();JSON.parse(raw);
+      briefBlueprintRaw=raw;briefBlueprintName=file.name;standardBrief=null;standardBriefName="";
+      personalisedBriefText="";message="Blueprint loaded. Review bank identity and batch size, then generate the standard Authoring Brief.";draw();
+    }catch(error){
+      briefBlueprintRaw="";briefBlueprintName="";standardBrief=null;standardBriefName="";personalisedBriefText="";
+      message=error instanceof Error?error.message:"Invalid blueprint JSON";draw();
+    }
+  };
+  const taxonomyFile=root.querySelector<HTMLInputElement>("#learning-taxonomy-file")!;
+  root.querySelector<HTMLButtonElement>("#learning-taxonomy-load")!.onclick=()=>taxonomyFile.click();
+  taxonomyFile.onchange=async()=>{
+    const file=taxonomyFile.files?.[0];taxonomyFile.value="";if(!file)return;
+    try{
+      briefTaxonomy=JSON.parse(await file.text());briefTaxonomyName=file.name;
+      standardBrief=null;standardBriefName="";personalisedBriefText="";
+      message="Taxonomy loaded. It will be checked against the blueprint when the brief is generated.";draw();
+    }catch(error){
+      briefTaxonomy=undefined;briefTaxonomyName="";standardBrief=null;standardBriefName="";personalisedBriefText="";
+      message=error instanceof Error?error.message:"Invalid taxonomy JSON";draw();
+    }
+  };
+  root.querySelector<HTMLInputElement>("#learning-brief-bank-id")!.oninput=e=>{
+    briefBankId=(e.target as HTMLInputElement).value;standardBrief=null;standardBriefName="";personalisedBriefText="";
+  };
+  root.querySelector<HTMLInputElement>("#learning-brief-title")!.oninput=e=>{
+    briefTitle=(e.target as HTMLInputElement).value;standardBrief=null;standardBriefName="";personalisedBriefText="";
+  };
+  root.querySelector<HTMLInputElement>("#learning-brief-batch-size")!.oninput=e=>{
+    briefBatchSize=Number((e.target as HTMLInputElement).value);standardBrief=null;standardBriefName="";personalisedBriefText="";
+  };
+  root.querySelector<HTMLButtonElement>("#learning-brief-generate")!.onclick=()=>{
+    if(!briefBlueprintRaw)return;
+    try{
+      const generated=buildInitialAuthoringBrief(JSON.parse(briefBlueprintRaw),briefBlueprintRaw,{
+        bankId:briefBankId.trim(),title:briefTitle.trim(),batchSize:briefBatchSize,
+        ...(briefTaxonomy===undefined?{}:{taxonomy:briefTaxonomy})
+      });
+      standardBrief=generated;standardBriefName=briefBlueprintName+" · generated";personalisedBriefText="";
+      const blueprint=generated.blueprint as Record<string,unknown>;
+      message=blueprint.examId===focusExam?
+       "Standard Authoring Brief generated locally. Inspect it before personalising or sharing.":
+       "Standard Authoring Brief generated, but its exam does not match the selected learner-focus exam.";
+      draw();
+    }catch(error){
+      standardBrief=null;standardBriefName="";personalisedBriefText="";
+      message=error instanceof Error?error.message:"Could not generate Authoring Brief";draw();
+    }
+  };
+  const briefFile=root.querySelector<HTMLInputElement>("#learning-brief-file")!;
+  root.querySelector<HTMLButtonElement>("#learning-brief-load")!.onclick=()=>briefFile.click();
+  briefFile.onchange=async()=>{
+    const file=briefFile.files?.[0];briefFile.value="";if(!file)return;
+    try{
+      standardBrief=validateStandardAuthoringBrief(JSON.parse(await file.text()));
+      standardBriefName=file.name;personalisedBriefText="";
+      const blueprint=standardBrief.blueprint as Record<string,unknown>;
+      message=blueprint.examId===focusExam?
+       "Standard Authoring Brief loaded. Generate or inspect learner focus, then create the personalised brief.":
+       "Brief loaded, but its exam does not match the selected learner-focus exam.";
+      draw();
+    }catch(error){
+      standardBrief=null;standardBriefName="";personalisedBriefText="";
+      message=error instanceof Error?error.message:"Invalid Authoring Brief";draw();
+    }
+  };
+  root.querySelector<HTMLButtonElement>("#learning-standard-brief-copy")?.addEventListener("click",async()=>{
+    if(!standardBrief)return;
+    const value=JSON.stringify(standardBrief,null,2);
+    try{
+      if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(value);
+      else{
+        const area=root.querySelector<HTMLTextAreaElement>("#learning-standard-brief-preview");area?.select();
+        if(!document.execCommand("copy"))throw Error("Browser copy command unavailable");
+      }
+      message="Standard Authoring Brief copied.";draw();
+    }catch{message="Automatic copy is unavailable here. Select the standard brief and copy it manually.";draw();}
+  });
+  root.querySelector<HTMLButtonElement>("#learning-standard-brief-export")?.addEventListener("click",()=>{
+    if(!standardBrief)return;
+    const blueprint=standardBrief.blueprint as Record<string,unknown>;
+    downloadText("practice-desk-authoring-brief-"+String(blueprint.examId)+".json",
+      JSON.stringify(standardBrief,null,2),"application/json;charset=utf-8");
+  });
+  root.querySelector<HTMLButtonElement>("#learning-brief-personalise")!.onclick=()=>{
+    if(!standardBrief||!focusPacketText)return;
+    try{
+      const focus=JSON.parse(focusPacketText);
+      personalisedBriefText=JSON.stringify(personalizeAuthoringBrief(standardBrief,focus),null,2);
+      message="Personalised Authoring Brief generated locally. Inspect it before sharing.";draw();
+    }catch(error){personalisedBriefText="";message=error instanceof Error?error.message:"Cannot personalise Authoring Brief";draw();}
+  };
+  root.querySelector<HTMLButtonElement>("#learning-brief-copy")?.addEventListener("click",async()=>{
+    if(!personalisedBriefText)return;
+    try{
+      if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(personalisedBriefText);
+      else{
+        const area=root.querySelector<HTMLTextAreaElement>("#learning-brief-preview");area?.select();
+        if(!document.execCommand("copy"))throw Error("Browser copy command unavailable");
+      }
+      message="Personalised Authoring Brief copied.";draw();
+    }catch{message="Automatic copy is unavailable here. Select the personalised brief and copy it manually.";draw();}
+  });
+  root.querySelector<HTMLButtonElement>("#learning-brief-export")?.addEventListener("click",()=>{
+    if(personalisedBriefText)downloadText("practice-desk-personalised-authoring-brief-"+focusExam+".json",
+      personalisedBriefText,"application/json;charset=utf-8");
+  });
   // Update the preview/eligibility in place: full redraw on blur could swallow Start.
   root.querySelector<HTMLInputElement>("#learning-evidence-count")!.oninput=e=>{
     const input=e.target as HTMLInputElement;
@@ -601,7 +809,6 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
       customSubject:root.querySelector<HTMLInputElement>("#learning-subject")!.value,
       customTopic:root.querySelector<HTMLInputElement>("#learning-topic")!.value,
       customSubtopic:root.querySelector<HTMLInputElement>("#learning-subtopic")!.value,
-      syllabusTopicId:root.querySelector<HTMLSelectElement>("#learning-syllabus")?.value??"",
       errorLabel:root.querySelector<HTMLSelectElement>("#learning-error")!.value,
       bookmarked:root.querySelector<HTMLInputElement>("#learning-bookmark")!.checked,
       revisionDisposition:root.querySelector<HTMLInputElement>("#learning-suspend")!.checked?"suspended":"active"
@@ -612,18 +819,7 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   };
   for(const id of ["learning-note","learning-topic","learning-subtopic"])
     (root.querySelector<HTMLInputElement|HTMLTextAreaElement>("#"+id)!).oninput=captureNotebook;
-  root.querySelector<HTMLInputElement>("#learning-subject")!.oninput=()=>{
-    if(root.querySelector<HTMLInputElement>("#learning-subject")!.value.trim()){
-      const heading=root.querySelector<HTMLSelectElement>("#learning-syllabus");
-      if(heading)heading.value="";
-    }
-    captureNotebook();
-  };
-  const officialHeading=root.querySelector<HTMLSelectElement>("#learning-syllabus");
-  if(officialHeading)officialHeading.onchange=()=>{
-    if(officialHeading.value)root.querySelector<HTMLInputElement>("#learning-subject")!.value="";
-    captureNotebook();
-  };
+  root.querySelector<HTMLInputElement>("#learning-subject")!.oninput=captureNotebook;
   for(const id of ["learning-error","learning-bookmark","learning-suspend"]){
     const field=root.querySelector<HTMLInputElement|HTMLSelectElement>("#"+id);
     if(field)field.onchange=captureNotebook;
@@ -634,12 +830,11 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
       const customSubject=root.querySelector<HTMLInputElement>("#learning-subject")!.value.trim();
       const customTopic=root.querySelector<HTMLInputElement>("#learning-topic")!.value.trim();
       const customSubtopic=root.querySelector<HTMLInputElement>("#learning-subtopic")!.value.trim();
-      const syllabusTopicId=root.querySelector<HTMLSelectElement>("#learning-syllabus")?.value||undefined;
       const errorLabel=root.querySelector<HTMLSelectElement>("#learning-error")!.value as ErrorLabel|"";
       const bookmarked=root.querySelector<HTMLInputElement>("#learning-bookmark")!.checked;
       const revisionDisposition=root.querySelector<HTMLInputElement>("#learning-suspend")!.checked?"suspended" as const:"active" as const;
       if(!await host.save(validateLearningCard({...selected,note,customSubject,customTopic,customSubtopic,
-         ...(syllabusForExam(selected.examId)?{syllabusTopicId}:{}),errorLabel:errorLabel||null,
+         errorLabel:errorLabel||null,
          bookmarked,revisionDisposition,updatedAt:now().toISOString()}))){
         message="Notebook changes could not be durably saved. Export a recovery backup.";draw();return;
       }

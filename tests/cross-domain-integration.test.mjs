@@ -36,11 +36,11 @@ function mixedDraft(){
   pausePolicy:"forbidden",sectionTransition:"manual",allowEarlySubmit:true,allowReview:true,
   marksCorrect:2.5,marksIncorrect:-5/6,
   sections:[{name:"Combined",minutes:10},{name:"General",minutes:5}],questions:[
-    Q("single-choice","Combined","B",{syllabusHeadingId:"labour",
+    Q("single-choice","Combined","B",{subject:"Industrial Relations, Labour Codes and Social Security in India",
       topic:"Labour Codes",subtopic:"Wages"}),
-    Q("multiple-select","Combined","A,C",{syllabusHeadingId:"accountancy",topic:"Ledger",
+    Q("multiple-select","Combined","A,C",{subject:"Principles of Accountancy, Auditing and Insurance",topic:"Ledger",
       minSelections:1,maxSelections:3,partialCreditEach:0.4,partialPenaltyEach:0.1}),
-    Q("numeric-entry","Combined","20",{syllabusHeadingId:"economy",tolerance:0.1}),
+    Q("numeric-entry","Combined","20",{subject:"Developmental Issues and Present Trends in Indian Economy",tolerance:0.1}),
     Q("matching","General","1-C,2-A,3-D,4-B",{subject:"Quantitative Reasoning",
       topic:"Matching",partialCreditEach:0.6,partialPenaltyEach:0.1}),
     Q("free-response","General","Manual rubric",{subject:"Quantitative Reasoning",
@@ -171,8 +171,7 @@ test("P56 exact v4 manifest and shared SHA survive multi-type sourceâ†’notebookâ
 test("P56 invalid semantic/canonical taxonomy cannot acquire publisher readiness or mutate approved source revision",()=>{
  const draft=mixedDraft(),prior=compileAuthoringPublication(draft);
  for(const subject of ["Bad"+String.fromCharCode(10)+"Subject","Bad"+String.fromCharCode(0)+"Subject"]){
-  const invalid={...draft,questions:[{...draft.questions[0],
-     syllabusHeadingId:"",subject},...draft.questions.slice(1)]};
+  const invalid={...draft,questions:[{...draft.questions[0],subject},...draft.questions.slice(1)]};
   const report=inspectAuthoringPublication(invalid);
   assert.equal(report.valid,false);
   assert.equal(report.compiled,undefined);

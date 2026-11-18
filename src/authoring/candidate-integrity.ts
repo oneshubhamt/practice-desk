@@ -95,7 +95,7 @@ export function inspectCandidateIntegrity(draft:AuthoringDraft):readonly Candida
        .includes(keyed.trim().toLocaleLowerCase("en"))){
      issues.push({questionId:q.id,field:"prompt",code:"candidate-unintended-clue",
       severity:"warning",message:"Question stem repeats the entire keyed response text, which may unintentionally reveal the answer.",
-      suggestion:"Ask a blind reviewer whether the keyed phrase belongs in the stimulus; revise if it bypasses the intended reasoning."});
+      suggestion:"Ask a semantic reviewer whether the keyed phrase belongs in the stimulus; revise if it bypasses the intended reasoning."});
     }
    }
   }
@@ -107,7 +107,7 @@ export function inspectCandidateIntegrity(draft:AuthoringDraft):readonly Candida
    }else if(unintendedClue.test(text)){
     issues.push({questionId:q.id,field,code:"candidate-unintended-clue",severity:"warning",
      message:"Candidate-visible wording appears to disclose the solution method or underlying pattern.",
-     suggestion:"Review the blind candidate view and remove unintended reasoning clues without changing the tested skill."});
+     suggestion:"Review the candidate-only view and remove unintended reasoning clues without changing the tested skill."});
    }
   }
  }

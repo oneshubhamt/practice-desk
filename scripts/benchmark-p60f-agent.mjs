@@ -10,7 +10,7 @@ import {join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {performance} from "node:perf_hooks";
 import {createHash} from "node:crypto";
-import {QUALITY_CHECKLIST} from "./question-quality.mjs";
+import {SEMANTIC_CHECKLIST,BANK_CHECKLIST} from "./question-quality.mjs";
 const scripts=Object.fromEntries(["question-bank-agent.mjs","question-quality.mjs",
  "question-bank-cli.mjs","agent-handoff.mjs"].map(n=>[n,fileURLToPath(new URL("./"+n,import.meta.url))]));
 const sha=s=>createHash("sha256").update(s).digest("hex");
@@ -26,24 +26,22 @@ function call(script,args){
 }
 const median=x=>[...x].sort((a,b)=>a-b)[Math.floor(x.length/2)];
 function reviewFor(source,raw,packet){
- const questions=new Map(source.questions.map(q=>[q.id,q]));
- return {format:"practice-desk-quality-review",version:2,
-  bankId:source.bankId,sourceSha256:packet.sourceSha256,
-  records:packet.items.map(item=>{
-   const q=questions.get(item.questionId);
-   return {questionId:q.id,questionSha256:sha(JSON.stringify(q)),
-    candidateSha256:item.candidateSha256,
-    applicability:{mathematical:["account-01","dilr-1","qa-1"].includes(q.id)?"yes":"no",legal:"no",timeSensitive:"no",asOfDate:null},
-    reviewer:{id:"synthetic-benchmark-claim",kind:"ai"},
-    independentSolution:{blindClaim:true,answer:Array.isArray(q.answer)?String(q.answer[0]):String(q.answer),
-     reasoning:"Synthetic review assertion for measuring workflow, not genuine blinded verification."},
-    checks:QUALITY_CHECKLIST.map((x,i)=>({id:x.id,status:"pass",
-     basis:i===9?"mathematical-proof":[11,12,13].includes(i)?"source-consulted":i===19?"rendered-claim":"independent-editorial",
+ const questions=new Map(source.questions.map(q=>[q.id,q])),mathIds=new Set(["account-01","dilr-1","qa-1"]);
+ const core=new Set(["exam-relevance","clarity-defensibility","reasoning-correctness","factual-correctness","explanation-quality"]);
+ return {format:"practice-desk-quality-review",version:3,bankId:source.bankId,sourceSha256:packet.sourceSha256,
+  reviewMode:"self-review",candidateOnlyContextClaim:false,reviewer:{id:"synthetic-benchmark-claim",kind:"ai"},
+  records:packet.items.map(item=>{const q=questions.get(item.questionId),math=mathIds.has(q.id),needed=new Set(core);
+   if(["single-choice","multiple-select"].includes(q.kind))needed.add("distractor-quality");if(math)needed.add("mathematical-correctness");
+   return {questionId:q.id,questionSha256:sha(JSON.stringify(q)),candidateSha256:item.candidateSha256,
+    applicability:{mathematical:math?"yes":"no",legal:"no",timeSensitive:"no",visual:"no",asOfDate:null},
+    solution:{status:"completed",answer:Array.isArray(q.answer)?String(q.answer[0]):String(q.answer),
+     reasoning:"Synthetic review assertion for measuring workflow, not genuine independent verification."},
+    semanticChecks:SEMANTIC_CHECKLIST.filter(x=>needed.has(x.id)).map(x=>({id:x.id,status:"pass",
+     basis:x.id==="mathematical-correctness"||x.id==="factual-correctness"&&math?"mathematical-proof":
+      x.id==="factual-correctness"?"source-consulted":"semantic-editorial",
      rationale:"Synthetic attributed assertion; external source not fetched or checked."})),
-    evidence:[{publisher:"Synthetic fixture",title:"Not a real source",locator:"question:"+q.id,
-     retrievedAt:"2026-11-06",excerpt:"Only measured workflow; not real evidence."}]
-   };
-  })};
+    evidence:[{publisher:"Synthetic fixture",title:"Not a real source",locator:"question:"+q.id,retrievedAt:"2026-11-06",excerpt:"Only measured workflow; not real evidence."}]};}),
+  bankReview:{checks:BANK_CHECKLIST.map(x=>({id:x.id,status:"pass",basis:"bank-editorial",rationale:"Synthetic bank-level benchmark assertion; educational quality was not measured."}))}};
 }
 // Independent limited fixture oracles: intentionally separate from authored keys.
 // Only simple arithmetic and a stipulated seven-day/letter ordinal are checked.
@@ -75,7 +73,7 @@ async function measure(){
    const sourceRaw=JSON.stringify(source),sourcePath=join(dir,type+"-bank.json");
    await writeFile(sourcePath,sourceRaw);
    const packet=call("question-quality.mjs",["candidate",sourcePath,"--limit","10"]);
-   if(!packet.ok)throw Error("Synthetic blind packet failed for "+type);
+   if(!packet.ok)throw Error("Synthetic candidate-only packet failed for "+type);
    const review=reviewFor(source,sourceRaw,packet.data);
    const reviewPath=join(dir,type+"-review.json");
    await writeFile(reviewPath,JSON.stringify(review));

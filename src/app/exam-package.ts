@@ -76,9 +76,13 @@ export function configurePracticeMode(base:ExamPackage,mode:PracticeMode,section
      questionNavigation:mode==="free"?"free" as const:source.navigation.questionNavigation,
      sectionNavigation:mode==="free"?"free" as const:"sequential-locked" as const}};
  const paper:PaperRevision={...paperBase,contentHash:paperRevisionHash(paperBase)};
+ const taxonomyAssignments=base.taxonomyAssignments?
+   Object.fromEntries(Object.entries(base.taxonomyAssignments).filter(([id])=>
+     included.has(id as QuestionRevisionId))):undefined;
  return {...base,paper,answerKey,questions,
    ...(base.explanations?{explanations:Object.fromEntries(Object.entries(base.explanations)
      .filter(([id])=>included.has(id as QuestionRevisionId)))}:{}),
+   ...(taxonomyAssignments?{taxonomyAssignments}:{}),
    title:base.title+(mode==="free"?" · Flexible practice":" · "+sections[0]!.title+" practice")};
 }
 /** Optional timing override for any valid exam: never mutate the supplied paper.
@@ -107,7 +111,8 @@ export function startGenericAttempt(
  const validated=validateExamPackage(bundle);
  const frozenMode=mode??(validated.paper.edition==="custom"?"custom-practice":"exam-simulation");
  const frozen=freezeAttempt(validated.paper,validated.answerKey,validated.questions,
-   validated.stimuli??[],validated.assets??[],frozenMode,new Date(timestamp).toISOString(),validated.examId);
+   validated.stimuli??[],validated.assets??[],frozenMode,new Date(timestamp).toISOString(),validated.examId,
+   validated.taxonomy,validated.taxonomyAssignments);
  return {recordType:"generic-attempt",saveRevision:0,id,packageId:validated.paper.id,startedAt:timestamp,
    updatedAt:timestamp,finishedAt:null,completionReason:null,frozen,state:startSession(validated.paper,timestamp),
    ...(validated.explanations?{explanations:structuredClone(validated.explanations)}:{})};

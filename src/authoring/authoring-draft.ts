@@ -25,7 +25,6 @@ export type AuthoringQuestion={
  /** Semantic syllabus classification, unrelated to navigable/timed exam section. */
  readonly subject?:string;
  /** Only an explicitly chosen official heading for the currently selected exam. */
- readonly syllabusHeadingId?:string;
  /** Explicit author tags; never inferred or certified as official content. */
  readonly topic?:string;
  readonly subtopic?:string;
@@ -117,7 +116,7 @@ const id=():string=>typeof crypto!=="undefined"&&crypto.randomUUID?crypto.random
   "draft-"+Date.now()+"-"+Math.floor(Math.random()*1000000);
 const fresh=()=>plainRichDocument("");
 export function newAuthoringQuestion(kind:QuestionKind="single-choice"):AuthoringQuestion{
- return {id:id(),section:"General",subject:"",syllabusHeadingId:"",
+ return {id:id(),section:"General",subject:"",
   topic:"",subtopic:"",difficulty:"",
   minSelections:1,maxSelections:4,
   partialCreditEach:0,partialPenaltyEach:0,
@@ -198,7 +197,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
  const verified=questions.map(item=>{
   const q=rec(item,"draft question",["id","section","kind","prompt","passage","options","leftItems",
    "rightItems","explanation","answer","tolerance","source",
-   "subject","syllabusHeadingId","topic","subtopic","difficulty",
+   "subject","topic","subtopic","difficulty",
     "minSelections","maxSelections","wordLimit","scoringOverride",
    "partialCreditEach","partialPenaltyEach","stimulusRef","sourceOrigin","provenance","qa"]);
   const questionId=text(q.id,"question ID",128,true);
@@ -309,12 +308,10 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   if(stimulusRef&&!stimulusIds.has(stimulusRef))throw Error("Unknown shared stimulus "+stimulusRef);
   validateTopicPath([section]);
   const subject=text(q.subject??"","subject",120).trim();
-  const syllabusHeadingId=text(q.syllabusHeadingId??"","syllabus heading ID",80).trim();
   const topic=text(q.topic??"","topic",120).trim();
   const subtopic=text(q.subtopic??"","subtopic",120).trim();
   // A genuine syllabus root is a user choice, not the navigation section.
-  attributedTopicPath(text(p.examId,"exam ID",80,true),subject,
-    syllabusHeadingId||undefined,topic,subtopic);
+  attributedTopicPath(subject,topic,subtopic);
   const difficulty=q.difficulty??"";
   if(!["","easy","medium","hard"].includes(String(difficulty)))
     throw Error("Invalid authored difficulty");
@@ -331,7 +328,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   if(q.scoringOverride!==undefined){
    scoringOverride=markingRule(q.scoringOverride,"question scoring override");
   }
-  return {id:questionId,section,subject,syllabusHeadingId,
+  return {id:questionId,section,subject,
    topic,subtopic,difficulty:difficulty as ""|"easy"|"medium"|"hard",
    minSelections,maxSelections,
    ...(wordLimit===undefined?{}:{wordLimit}),

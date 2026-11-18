@@ -1,0 +1,1532 @@
+{
+  "format": "practice-desk-authoring",
+  "version": 1,
+  "bankId": "pfrda-grade-a-2026-day2",
+  "examId": "pfrda-grade-a-2026-phase-ii",
+  "paperId": "pfrda-grade-a-2026-day2",
+  "title": "PFRDA Grade A 2026 — Day 2 — Original Practice",
+  "edition": "custom",
+  "revision": 1,
+  "scoring": {
+    "correctMarks": 2,
+    "incorrectMarks": -0.5
+  },
+  "timing": {
+    "kind": "sectional",
+    "pausePolicy": "forbidden",
+    "sectionTransition": "automatic",
+    "allowEarlySubmit": true
+  },
+  "navigation": {
+    "questionNavigation": "free",
+    "sectionNavigation": "sequential-locked",
+    "allowReview": true
+  },
+  "sections": [
+    {
+      "id": "descriptive",
+      "title": "Paper 1 — Descriptive English (Day 2 essay practice)",
+      "minutes": 25
+    },
+    {
+      "id": "general",
+      "title": "Paper 2 — General Stream (Day 2 40-MCQ practice)",
+      "minutes": 32
+    }
+  ],
+  "stimuli": [],
+  "tools": {
+    "wordCount": "auto"
+  },
+  "questions": [
+    {
+      "id": "day2-english-essay",
+      "examSection": "descriptive",
+      "subject": "Descriptive English",
+      "topic": "Essay writing",
+      "kind": "free-response",
+      "prompt": "Write an essay in 250–300 words on: Artificial Intelligence and Employment: Threat or Opportunity for India's Workforce?",
+      "answer": "",
+      "explanation": {
+        "format": "practice-desk-rich",
+        "version": 1,
+        "blocks": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Unofficial practice rubric (/20): relevance and content 7; analysis and balance 5; organisation and coherence 4; language, grammar and expression 4. This is a manually assessed Day 2 practice essay; the topic and limits are practice specifications, not a claim about the official 2026 paper's exact word limit."
+              }
+            ]
+          }
+        ]
+      },
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Day 2 descriptive-English essay prompt from the user's PFRDA preparation tracker; not part of the 40-MCQ public share and not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "International Labour Organization",
+            "title": "Generative AI and Jobs: A Refined Global Index of Occupational Exposure",
+            "url": "https://www.ilo.org/publications/major-publications/generative-ai-and-jobs-refined-global-index-occupational-exposure",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      },
+      "scoringOverride": {
+        "correctMarks": 20,
+        "incorrectMarks": 0,
+        "unansweredMarks": 0
+      },
+      "wordLimit": 300
+    },
+    {
+      "id": "day2-general-01",
+      "examSection": "general",
+      "subject": "PFRDA Act",
+      "kind": "single-choice",
+      "prompt": "Under the PFRDA Act, 2013, an eligible person aggrieved by an appealable order of the Authority ordinarily appeals first to which forum?",
+      "options": [
+        "National Company Law Tribunal",
+        "Securities Appellate Tribunal",
+        "Central Administrative Tribunal",
+        "Insurance Ombudsman"
+      ],
+      "answer": "B",
+      "explanation": "B is correct. Section 37 provides the appeal from an appealable PFRDA order to the Securities Appellate Tribunal; the other listed bodies are not the ordinary first appellate forum under the Act.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q1 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "India Code",
+            "title": "Pension Fund Regulatory and Development Authority Act, 2013",
+            "url": "https://upload.indiacode.nic.in/showfile?actid=AC_CEN_2_45_00007_201323_1517807327819&filename=201323.pdf&type=actfile",
+            "stance": "supports",
+            "provision": "Sections 37–38",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": true,
+          "timeSensitive": true,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day2-general-02",
+      "examSection": "general",
+      "subject": "Costing",
+      "kind": "single-choice",
+      "prompt": "A firm sells its product for ₹250 per unit. Variable cost is ₹150 per unit and total fixed cost is ₹4,00,000. How many units must it sell to earn a target profit of ₹2,00,000?",
+      "options": [
+        "4,000 units",
+        "5,000 units",
+        "6,000 units",
+        "8,000 units"
+      ],
+      "answer": "C",
+      "explanation": "Contribution per unit is ₹250−₹150=₹100. Required units=(₹4,00,000+₹2,00,000)/₹100=6,000, so C is correct.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q2 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "OpenStax",
+            "title": "Principles of Accounting, Volume 2: Managerial Accounting",
+            "url": "https://openstax.org/details/books/principles-managerial-accounting",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": true,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day2-general-03",
+      "examSection": "general",
+      "subject": "Finance",
+      "kind": "single-choice",
+      "prompt": "An equity security has a beta of 1.2, the risk-free rate is 6%, and the expected market return is 11%. According to CAPM, its required return is:",
+      "options": [
+        "12%",
+        "13.2%",
+        "11%",
+        "19.2%"
+      ],
+      "answer": "A",
+      "explanation": "CAPM: 6% + 1.2×(11%−6%) = 12%. Hence A.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q3 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "OpenStax",
+            "title": "Principles of Finance",
+            "url": "https://openstax.org/details/books/principles-finance",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": true,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day2-general-04",
+      "examSection": "general",
+      "subject": "Companies Act",
+      "kind": "single-choice",
+      "prompt": "Under Section 63 of the Companies Act, 2013, which source cannot be capitalised for issuing fully paid-up bonus shares?",
+      "options": [
+        "Free reserves eligible under the Act",
+        "Securities premium account",
+        "Capital redemption reserve account",
+        "Reserve created by revaluation of assets"
+      ],
+      "answer": "D",
+      "explanation": "Section 63 permits eligible free reserves, securities premium and capital redemption reserve, but not reserves created by revaluation of assets. Hence D.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q4 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "Ministry of Corporate Affairs",
+            "title": "Companies Act, 2013",
+            "url": "https://www.mca.gov.in/Ministry/pdf/CompaniesAct2013.pdf",
+            "stance": "supports",
+            "provision": "Section 63",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": true,
+          "timeSensitive": true,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day2-general-05",
+      "examSection": "general",
+      "subject": "Pension Sector",
+      "kind": "single-choice",
+      "prompt": "An NPS subscriber wants to correct personal details linked to their PRAN and obtain a consolidated statement of account transactions. Which intermediary primarily maintains these records?",
+      "options": [
+        "Custodian",
+        "Central Recordkeeping Agency",
+        "Trustee Bank",
+        "Annuity Service Provider"
+      ],
+      "answer": "B",
+      "explanation": "The Central Recordkeeping Agency maintains the subscriber's central records/PRAN-linked account information and statements. Hence B.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q5 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "Pension Fund Regulatory and Development Authority",
+            "title": "NPS and APY scheme information",
+            "url": "https://www.pfrda.org.in/",
+            "stance": "supports",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": true,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day2-general-06",
+      "examSection": "general",
+      "subject": "Budget/Survey",
+      "kind": "single-choice",
+      "prompt": "According to Union Budget 2026–27, the Central Government's fiscal deficit was estimated at what percentage of GDP in BE 2026–27?",
+      "options": [
+        "4.8%",
+        "4.4%",
+        "4.3%",
+        "3.9%"
+      ],
+      "answer": "C",
+      "explanation": "Budget Estimates 2026–27 place the fiscal deficit at 4.3% of GDP. Hence C; the nearby figures belong to other years/stages.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q6 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "Ministry of Finance",
+            "title": "Union Budget 2026–27 / Economic Survey 2025–26",
+            "url": "https://www.indiabudget.gov.in/",
+            "stance": "supports",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": true,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day2-general-07",
+      "examSection": "general",
+      "subject": "Commerce & Accountancy",
+      "kind": "single-choice",
+      "prompt": "A company has current assets of ₹6,00,000 and current liabilities of ₹3,00,000. It pays ₹1,00,000 to trade creditors using cash. What is the new current ratio?",
+      "options": [
+        "1.67:1",
+        "2.00:1",
+        "2.50:1",
+        "3.00:1"
+      ],
+      "answer": "C",
+      "explanation": "After paying ₹1,00,000 of creditors in cash, current assets become ₹5,00,000 and current liabilities ₹2,00,000; current ratio=2.5:1. Hence C.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q7 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "OpenStax",
+            "title": "Principles of Financial Accounting",
+            "url": "https://openstax.org/details/books/principles-financial-accounting",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": true,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day2-general-08",
+      "examSection": "general",
+      "subject": "Management",
+      "kind": "single-choice",
+      "prompt": "According to Herzberg's two-factor theory, an organisation substantially improves salary administration, physical working conditions and company policies. Which result is most consistent with the theory?",
+      "options": [
+        "Employees must become highly motivated",
+        "Dissatisfaction may decline, without necessarily increasing positive motivation",
+        "Achievement and recognition become irrelevant",
+        "Hygiene factors automatically replace all motivators"
+      ],
+      "answer": "B",
+      "explanation": "Salary, policies and working conditions are hygiene factors in Herzberg's model: improving them can reduce dissatisfaction without necessarily creating positive motivation. Hence B.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q8 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "OpenStax",
+            "title": "Principles of Management",
+            "url": "https://openstax.org/details/books/principles-management",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day2-general-09",
+      "examSection": "general",
+      "subject": "Costing",
+      "kind": "single-choice",
+      "prompt": "A factory incurs ₹2,40,000 of machine-setup overhead for 60 setups. Under activity-based costing, Product X requires 8 setups. How much setup overhead should be assigned to Product X?",
+      "options": [
+        "₹24,000",
+        "₹30,000",
+        "₹32,000",
+        "₹40,000"
+      ],
+      "answer": "C",
+      "explanation": "Setup cost per setup=₹2,40,000/60=₹4,000. For 8 setups, allocated overhead=₹32,000. Hence C.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q9 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "OpenStax",
+            "title": "Principles of Accounting, Volume 2: Managerial Accounting",
+            "url": "https://openstax.org/details/books/principles-managerial-accounting",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": true,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day2-general-10",
+      "examSection": "general",
+      "subject": "Economics",
+      "kind": "single-choice",
+      "prompt": "Using the initial-value method, price rises by 20% while quantity demanded falls by 10%, with other influences unchanged. Which statement correctly describes the price elasticity of demand?",
+      "options": [
+        "Magnitude 2.0; elastic",
+        "Magnitude 0.5; inelastic",
+        "Magnitude 0.5; elastic",
+        "Magnitude 2.0; inelastic"
+      ],
+      "answer": "B",
+      "explanation": "Elasticity magnitude=(10%)/(20%)=0.5, so demand is inelastic. Hence B.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q10 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "OpenStax",
+            "title": "Principles of Economics 3e",
+            "url": "https://openstax.org/details/books/principles-economics-3e",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": true,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day2-general-11",
+      "examSection": "general",
+      "subject": "PFRDA Act",
+      "kind": "single-choice",
+      "prompt": "Under Section 4 of the PFRDA Act, 2013, what is the statutory composition of the Authority?",
+      "options": [
+        "One Chairperson, two whole-time and two part-time members",
+        "One Chairperson, three whole-time and three part-time members",
+        "One Chairperson, four whole-time and two part-time members",
+        "One Chairperson and six whole-time members"
+      ],
+      "answer": "B",
+      "explanation": "Section 4 provides one Chairperson, three whole-time members and three part-time members. Hence B.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q11 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "India Code",
+            "title": "Pension Fund Regulatory and Development Authority Act, 2013",
+            "url": "https://upload.indiacode.nic.in/showfile?actid=AC_CEN_2_45_00007_201323_1517807327819&filename=201323.pdf&type=actfile",
+            "stance": "supports",
+            "provision": "Section 4",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": true,
+          "timeSensitive": true,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day2-general-12",
+      "examSection": "general",
+      "subject": "Finance",
+      "kind": "single-choice",
+      "prompt": "An existing conventional fixed-coupon bond has no change in its promised cash flows or default risk. If the market-required yield increases, its market price will ordinarily:",
+      "options": [
+        "Increase",
+        "Decrease",
+        "Remain unchanged",
+        "Equal its coupon rate"
+      ],
+      "answer": "B",
+      "explanation": "For an existing fixed-coupon bond, price and required yield ordinarily move inversely, all else equal. A higher required yield therefore lowers price. Hence B.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q12 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "OpenStax",
+            "title": "Principles of Finance",
+            "url": "https://openstax.org/details/books/principles-finance",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day2-general-13",
+      "examSection": "general",
+      "subject": "Commerce & Accountancy",
+      "kind": "single-choice",
+      "prompt": "Machinery has an opening written-down value of ₹90,000 at the beginning of the year. Depreciation is charged at 20% per annum using the written-down-value method. What is the depreciation for that year?",
+      "options": [
+        "₹18,000",
+        "₹20,000",
+        "₹22,500",
+        "₹72,000"
+      ],
+      "answer": "A",
+      "explanation": "WDV depreciation=20% of ₹90,000=₹18,000. Hence A.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q13 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "OpenStax",
+            "title": "Principles of Financial Accounting",
+            "url": "https://openstax.org/details/books/principles-financial-accounting",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": true,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day2-general-14",
+      "examSection": "general",
+      "subject": "Pension Sector",
+      "kind": "single-choice",
+      "prompt": "Which entity principally provides the annuity purchased by an NPS subscriber upon exit, under an applicable annuity option?",
+      "options": [
+        "Central Recordkeeping Agency",
+        "Trustee Bank",
+        "Annuity Service Provider",
+        "Point of Presence"
+      ],
+      "answer": "C",
+      "explanation": "The annuity is supplied by an empanelled/registered Annuity Service Provider, not the CRA, Trustee Bank or PoP. Hence C.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q14 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "Pension Fund Regulatory and Development Authority",
+            "title": "NPS and APY scheme information",
+            "url": "https://www.pfrda.org.in/",
+            "stance": "supports",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": true,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day2-general-15",
+      "examSection": "general",
+      "subject": "Costing",
+      "kind": "single-choice",
+      "prompt": "The standard material price is ₹70 per kg, the actual price is ₹65 per kg, and actual quantity purchased and used is 500 kg. What is the material price variance, using the standard cost minus actual cost convention?",
+      "options": [
+        "₹2,500 adverse",
+        "₹2,500 favourable",
+        "₹3,500 adverse",
+        "₹3,500 favourable"
+      ],
+      "answer": "B",
+      "explanation": "Material price variance=(standard price−actual price)×actual quantity=(₹70−₹65)×500=₹2,500 favourable. Hence B.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q15 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "OpenStax",
+            "title": "Principles of Accounting, Volume 2: Managerial Accounting",
+            "url": "https://openstax.org/details/books/principles-managerial-accounting",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": true,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day2-general-16",
+      "examSection": "general",
+      "subject": "AI/ML",
+      "kind": "single-choice",
+      "prompt": "A machine-learning model is trained on past customer records where every observation has an input set and a known outcome label. Which learning approach is most directly represented?",
+      "options": [
+        "Unsupervised learning",
+        "Reinforcement learning",
+        "Supervised learning",
+        "Clustering without labelled outcomes"
+      ],
+      "answer": "C",
+      "explanation": "Known outcome labels paired with inputs define supervised learning. Hence C.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q16 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "Google for Developers",
+            "title": "Machine Learning Crash Course",
+            "url": "https://developers.google.com/machine-learning/crash-course",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day2-general-17",
+      "examSection": "general",
+      "subject": "Commerce & Accountancy",
+      "kind": "single-choice",
+      "prompt": "A business sells goods for ₹80,000 on credit in the current accounting period. Ignore GST and cost of goods sold. Which is the immediate accounting effect under accrual accounting?",
+      "options": [
+        "Cash and revenue both increase by ₹80,000",
+        "Trade receivables and revenue both increase by ₹80,000",
+        "Inventory and cash both increase by ₹80,000",
+        "No accounting entry arises until payment is received"
+      ],
+      "answer": "B",
+      "explanation": "A credit sale under accrual accounting recognises revenue and a receivable immediately; cash need not be received. Hence B.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q17 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "OpenStax",
+            "title": "Principles of Financial Accounting",
+            "url": "https://openstax.org/details/books/principles-financial-accounting",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day2-general-18",
+      "examSection": "general",
+      "subject": "Companies Act",
+      "kind": "single-choice",
+      "prompt": "Under Section 68 of the Companies Act, 2013, which source of funds is specifically prohibited for buying back ordinary equity shares?",
+      "options": [
+        "Eligible free reserves",
+        "Securities premium account",
+        "Proceeds of an earlier issue of the same kind of equity shares",
+        "Proceeds of an eligible issue of securities of another kind"
+      ],
+      "answer": "C",
+      "explanation": "Section 68 bars financing a buy-back out of proceeds of an earlier issue of the same kind of shares/securities. Hence C.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q18 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "Ministry of Corporate Affairs",
+            "title": "Companies Act, 2013",
+            "url": "https://www.mca.gov.in/Ministry/pdf/CompaniesAct2013.pdf",
+            "stance": "supports",
+            "provision": "Section 68",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": true,
+          "timeSensitive": true,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day2-general-19",
+      "examSection": "general",
+      "subject": "Finance",
+      "kind": "single-choice",
+      "prompt": "A project requires ₹100 immediately and generates ₹55 at the end of Year 1 and ₹66 at the end of Year 2. At a discount rate of 10% annually, its approximate net present value is:",
+      "options": [
+        "−₹4.55",
+        "+₹4.55",
+        "+₹10.00",
+        "−₹10.00"
+      ],
+      "answer": "B",
+      "explanation": "PV=₹55/1.10 + ₹66/(1.10)^2 = ₹50+₹54.55≈₹104.55. NPV≈+₹4.55. Hence B.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q19 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "OpenStax",
+            "title": "Principles of Finance",
+            "url": "https://openstax.org/details/books/principles-finance",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": true,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day2-general-20",
+      "examSection": "general",
+      "subject": "Media",
+      "kind": "single-choice",
+      "prompt": "In mass communication, the agenda-setting effect most directly refers to the media's ability to influence:",
+      "options": [
+        "Which issues audiences consider important",
+        "The exact opinion every audience member holds on an issue",
+        "The legal validity of a government decision",
+        "The complete elimination of selective exposure"
+      ],
+      "answer": "A",
+      "explanation": "Agenda-setting concerns issue salience—what audiences regard as important—not forcing a particular opinion. Hence A.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q20 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "OpenStax",
+            "title": "Introduction to Communication",
+            "url": "https://openstax.org/details/books/introduction-communication",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day2-general-21",
+      "examSection": "general",
+      "subject": "PFRDA Act",
+      "kind": "single-choice",
+      "prompt": "Which statutory provision of the PFRDA Act, 2013, principally governs registration of NPS intermediaries such as pension funds, CRAs and points of presence?",
+      "options": [
+        "Section 4",
+        "Section 14",
+        "Section 27",
+        "Section 41"
+      ],
+      "answer": "C",
+      "explanation": "Section 27 principally governs registration of intermediaries. Hence C.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q21 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "India Code",
+            "title": "Pension Fund Regulatory and Development Authority Act, 2013",
+            "url": "https://upload.indiacode.nic.in/showfile?actid=AC_CEN_2_45_00007_201323_1517807327819&filename=201323.pdf&type=actfile",
+            "stance": "supports",
+            "provision": "Section 27",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": true,
+          "timeSensitive": true,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day2-general-22",
+      "examSection": "general",
+      "subject": "Costing",
+      "kind": "single-choice",
+      "prompt": "For the actual level of output, standard material quantity is 800 kg, but actual usage is 850 kg. Standard material price is ₹40 per kg. What is the material usage variance?",
+      "options": [
+        "₹2,000 favourable",
+        "₹2,000 adverse",
+        "₹34,000 adverse",
+        "₹32,000 favourable"
+      ],
+      "answer": "B",
+      "explanation": "Usage variance=(standard quantity−actual quantity)×standard price=(800−850)×₹40=−₹2,000, i.e. ₹2,000 adverse. Hence B.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q22 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "OpenStax",
+            "title": "Principles of Accounting, Volume 2: Managerial Accounting",
+            "url": "https://openstax.org/details/books/principles-managerial-accounting",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": true,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day2-general-23",
+      "examSection": "general",
+      "subject": "Budget/Survey",
+      "kind": "single-choice",
+      "prompt": "The Economic Survey 2025–26 projected India's real GDP growth in FY 2026–27 within which range? Use the Survey's own January 2026 projection, not later revisions.",
+      "options": [
+        "5.5–6.0%",
+        "6.0–6.5%",
+        "6.8–7.2%",
+        "7.8–8.2%"
+      ],
+      "answer": "C",
+      "explanation": "The Economic Survey 2025–26 projected real GDP growth for FY 2026–27 at 6.8–7.2%. Hence C.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q23 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "Ministry of Finance",
+            "title": "Union Budget 2026–27 / Economic Survey 2025–26",
+            "url": "https://www.indiabudget.gov.in/",
+            "stance": "supports",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": true,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day2-general-24",
+      "examSection": "general",
+      "subject": "Commerce & Accountancy",
+      "kind": "single-choice",
+      "prompt": "A company incurs ₹40,000 of wages relating to work completed in March, but pays the workers in April. Its accounting year ends on 31 March. Under accrual accounting, the March year-end financial statements should ordinarily:",
+      "options": [
+        "Recognise neither an expense nor a liability until April",
+        "Recognise a wages expense and corresponding outstanding liability",
+        "Recognise a prepaid expense",
+        "Recognise an expense only when the bank balance decreases"
+      ],
+      "answer": "B",
+      "explanation": "Accrual accounting recognises the March wages expense when earned by workers and an outstanding liability until paid. Hence B.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q24 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "OpenStax",
+            "title": "Principles of Financial Accounting",
+            "url": "https://openstax.org/details/books/principles-financial-accounting",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day2-general-25",
+      "examSection": "general",
+      "subject": "Finance",
+      "kind": "single-choice",
+      "prompt": "An investor holds a large, well-diversified equity portfolio. Which type of risk is generally not eliminated through diversification alone?",
+      "options": [
+        "Company-specific management risk",
+        "Firm-specific product failure risk",
+        "Systematic market risk",
+        "Idiosyncratic operational risk"
+      ],
+      "answer": "C",
+      "explanation": "Diversification reduces idiosyncratic risk but not systematic market risk. Hence C.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q25 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "OpenStax",
+            "title": "Principles of Finance",
+            "url": "https://openstax.org/details/books/principles-finance",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day2-general-26",
+      "examSection": "general",
+      "subject": "Companies Act",
+      "kind": "single-choice",
+      "prompt": "Under Section 173(1) of the Companies Act, 2013, within how many days of incorporation must an ordinary public company hold its first Board meeting?",
+      "options": [
+        "15 days",
+        "30 days",
+        "60 days",
+        "90 days"
+      ],
+      "answer": "B",
+      "explanation": "Section 173(1) requires the first Board meeting within 30 days of incorporation. Hence B.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q26 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "Ministry of Corporate Affairs",
+            "title": "Companies Act, 2013",
+            "url": "https://www.mca.gov.in/Ministry/pdf/CompaniesAct2013.pdf",
+            "stance": "supports",
+            "provision": "Section 173(1)",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": true,
+          "timeSensitive": true,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day2-general-27",
+      "examSection": "general",
+      "subject": "Costing",
+      "kind": "single-choice",
+      "prompt": "A company produces 1,000 units and sells 800 units in a period, with no opening inventory. Fixed production overhead is fully absorbed at ₹100 per unit. All other accounting treatments are identical. How does absorption-costing profit compare with marginal-costing profit?",
+      "options": [
+        "Absorption profit is ₹20,000 higher",
+        "Marginal profit is ₹20,000 higher",
+        "Both profits are identical",
+        "Absorption profit is ₹80,000 higher"
+      ],
+      "answer": "A",
+      "explanation": "200 unsold units carry ₹100 fixed production overhead each under absorption costing, deferring ₹20,000 in closing inventory. Absorption profit is therefore ₹20,000 higher. Hence A.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q27 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "OpenStax",
+            "title": "Principles of Accounting, Volume 2: Managerial Accounting",
+            "url": "https://openstax.org/details/books/principles-managerial-accounting",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": true,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day2-general-28",
+      "examSection": "general",
+      "subject": "Economics",
+      "kind": "single-choice",
+      "prompt": "The price of a product rises from ₹100 to ₹110 while quantity demanded falls from 100 to 80 units. Assuming these are the only changes, what happens to total revenue?",
+      "options": [
+        "It increases by 10%",
+        "It decreases by 10%",
+        "It decreases by 12%",
+        "It increases by 12%"
+      ],
+      "answer": "C",
+      "explanation": "Revenue falls from ₹100×100=₹10,000 to ₹110×80=₹8,800, a 12% decline. Hence C.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q28 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "OpenStax",
+            "title": "Principles of Economics 3e",
+            "url": "https://openstax.org/details/books/principles-economics-3e",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": true,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day2-general-29",
+      "examSection": "general",
+      "subject": "PFRDA Act",
+      "kind": "single-choice",
+      "prompt": "Which activity is most closely aligned with the statutory duties and powers of PFRDA under Section 14 of the PFRDA Act, 2013?",
+      "options": [
+        "Regulating registered pension intermediaries and protecting subscribers' interests",
+        "Issuing banknotes for pension contribution payments",
+        "Setting all commercial banks' repo-linked lending rates",
+        "Approving the listing of every company on a stock exchange"
+      ],
+      "answer": "A",
+      "explanation": "Section 14 includes regulation of pension intermediaries and protection of subscribers' interests among PFRDA's duties/powers. Hence A.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q29 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "India Code",
+            "title": "Pension Fund Regulatory and Development Authority Act, 2013",
+            "url": "https://upload.indiacode.nic.in/showfile?actid=AC_CEN_2_45_00007_201323_1517807327819&filename=201323.pdf&type=actfile",
+            "stance": "supports",
+            "provision": "Section 14",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": true,
+          "timeSensitive": true,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day2-general-30",
+      "examSection": "general",
+      "subject": "Commerce & Accountancy",
+      "kind": "single-choice",
+      "prompt": "A company acquires equipment worth ₹5,00,000, financed entirely by a new bank loan paid directly to the supplier. Ignore transaction costs. What is the immediate effect on the accounting equation?",
+      "options": [
+        "Assets increase and equity decreases by ₹5,00,000",
+        "Assets and liabilities each increase by ₹5,00,000",
+        "Liabilities increase but assets remain unchanged",
+        "Assets decrease and liabilities increase by ₹5,00,000"
+      ],
+      "answer": "B",
+      "explanation": "Equipment increases assets by ₹5,00,000 and the new bank loan increases liabilities by the same amount. Hence B.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q30 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "OpenStax",
+            "title": "Principles of Financial Accounting",
+            "url": "https://openstax.org/details/books/principles-financial-accounting",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day2-general-31",
+      "examSection": "general",
+      "subject": "AI/ML",
+      "kind": "single-choice",
+      "prompt": "A predictive model achieves 99% accuracy on training data but only 62% on an independent test set from the same population. What is the most likely modelling problem?",
+      "options": [
+        "Underfitting",
+        "Overfitting",
+        "Perfect generalisation",
+        "A necessarily unbiased prediction model"
+      ],
+      "answer": "B",
+      "explanation": "Very high training accuracy with much lower independent-test accuracy is the classic pattern of overfitting. Hence B.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q31 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "Google for Developers",
+            "title": "Machine Learning Crash Course",
+            "url": "https://developers.google.com/machine-learning/crash-course",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day2-general-32",
+      "examSection": "general",
+      "subject": "Pension Sector",
+      "kind": "single-choice",
+      "prompt": "Which statement correctly describes the core pension benefit promised under Atal Pension Yojana (APY), subject to its scheme conditions?",
+      "options": [
+        "Every subscriber receives a pension determined solely by daily equity-market returns",
+        "The Central Government guarantees an eligible minimum monthly pension according to the selected APY pension slab",
+        "The subscriber is guaranteed a lump sum equal to twice all contributions at age 50",
+        "APY provides only an investment account without any pension guarantee"
+      ],
+      "answer": "B",
+      "explanation": "APY provides, subject to scheme conditions, a Central-Government-guaranteed minimum monthly pension according to the selected pension slab. Hence B.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q32 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "Pension Fund Regulatory and Development Authority",
+            "title": "NPS and APY scheme information",
+            "url": "https://www.pfrda.org.in/",
+            "stance": "supports",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": true,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day2-general-33",
+      "examSection": "general",
+      "subject": "Costing",
+      "kind": "single-choice",
+      "prompt": "A labour operation has standard hours of 200 for actual output, actual hours of 180 and a standard wage rate of ₹100 per hour. What is the labour efficiency variance?",
+      "options": [
+        "₹2,000 favourable",
+        "₹2,000 adverse",
+        "₹18,000 favourable",
+        "₹20,000 adverse"
+      ],
+      "answer": "A",
+      "explanation": "Labour efficiency variance=(standard hours−actual hours)×standard rate=(200−180)×₹100=₹2,000 favourable. Hence A.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q33 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "OpenStax",
+            "title": "Principles of Accounting, Volume 2: Managerial Accounting",
+            "url": "https://openstax.org/details/books/principles-managerial-accounting",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": true,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day2-general-34",
+      "examSection": "general",
+      "subject": "Budget/Survey",
+      "kind": "single-choice",
+      "prompt": "According to the Union Budget 2026–27, the total capital expenditure in BE 2026–27 was approximately:",
+      "options": [
+        "₹10.96 lakh crore",
+        "₹12.22 lakh crore",
+        "₹17.15 lakh crore",
+        "₹53.47 lakh crore"
+      ],
+      "answer": "B",
+      "explanation": "Union Budget 2026–27 put total capital expenditure in BE 2026–27 at about ₹12.22 lakh crore. Hence B.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q34 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "Ministry of Finance",
+            "title": "Union Budget 2026–27 / Economic Survey 2025–26",
+            "url": "https://www.indiabudget.gov.in/",
+            "stance": "supports",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": true,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day2-general-35",
+      "examSection": "general",
+      "subject": "Companies Act",
+      "kind": "single-choice",
+      "prompt": "Subject to the conditions of Section 123 of the Companies Act, 2013, which is an ordinarily permissible source for declaration of dividend?",
+      "options": [
+        "Borrowed share capital",
+        "Unrealised gain in an asset revaluation reserve",
+        "Current-year profits after providing for depreciation as required",
+        "The capital redemption reserve merely because it is part of shareholders' funds"
+      ],
+      "answer": "C",
+      "explanation": "Section 123 permits dividend from current-year profits after providing for depreciation as required, subject to the section's conditions. Hence C.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q35 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "Ministry of Corporate Affairs",
+            "title": "Companies Act, 2013",
+            "url": "https://www.mca.gov.in/Ministry/pdf/CompaniesAct2013.pdf",
+            "stance": "supports",
+            "provision": "Section 123",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": true,
+          "timeSensitive": true,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day2-general-36",
+      "examSection": "general",
+      "subject": "Finance",
+      "kind": "single-choice",
+      "prompt": "Under CAPM, the risk-free rate is 4%, a security's beta is 0.5, and the expected market risk premium is 7 percentage points. What is the security's required return?",
+      "options": [
+        "5.5%",
+        "7.5%",
+        "9.0%",
+        "11.0%"
+      ],
+      "answer": "B",
+      "explanation": "CAPM required return=4% + 0.5×7%=7.5%. Hence B.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q36 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "OpenStax",
+            "title": "Principles of Finance",
+            "url": "https://openstax.org/details/books/principles-finance",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": true,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day2-general-37",
+      "examSection": "general",
+      "subject": "PFRDA Act",
+      "kind": "single-choice",
+      "prompt": "Under Section 38 of the PFRDA Act, 2013, an eligible appeal against an order of the Securities Appellate Tribunal lies to:",
+      "options": [
+        "The Supreme Court of India",
+        "The National Company Law Appellate Tribunal",
+        "The Central Administrative Tribunal",
+        "The Comptroller and Auditor General"
+      ],
+      "answer": "A",
+      "explanation": "Section 38 provides an appeal from SAT to the Supreme Court of India, subject to the statutory conditions. Hence A.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q37 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "India Code",
+            "title": "Pension Fund Regulatory and Development Authority Act, 2013",
+            "url": "https://upload.indiacode.nic.in/showfile?actid=AC_CEN_2_45_00007_201323_1517807327819&filename=201323.pdf&type=actfile",
+            "stance": "supports",
+            "provision": "Section 38",
+            "asOfDate": "2026-11-15"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": true,
+          "timeSensitive": true,
+          "asOfDate": "2026-11-15"
+        }
+      }
+    },
+    {
+      "id": "day2-general-38",
+      "examSection": "general",
+      "subject": "Management",
+      "kind": "single-choice",
+      "prompt": "In management by objectives (MBO), which practice is most central to the approach?",
+      "options": [
+        "Setting objectives only at the top, without discussion",
+        "Jointly establishing measurable objectives and periodically reviewing performance against them",
+        "Replacing performance objectives with informal supervision",
+        "Evaluating employees entirely on hours spent at work"
+      ],
+      "answer": "B",
+      "explanation": "MBO centres on jointly establishing measurable objectives and periodically reviewing performance against them. Hence B.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q38 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "OpenStax",
+            "title": "Principles of Management",
+            "url": "https://openstax.org/details/books/principles-management",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day2-general-39",
+      "examSection": "general",
+      "subject": "Marketing/Communication",
+      "kind": "single-choice",
+      "prompt": "In the STP framework of marketing strategy, what is the correct sequence?",
+      "options": [
+        "Positioning → Segmentation → Targeting",
+        "Targeting → Positioning → Segmentation",
+        "Segmentation → Targeting → Positioning",
+        "Segmentation → Positioning → Targeting"
+      ],
+      "answer": "C",
+      "explanation": "STP stands for Segmentation → Targeting → Positioning. Hence C.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q39 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "OpenStax",
+            "title": "Principles of Marketing",
+            "url": "https://openstax.org/details/books/principles-marketing",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    },
+    {
+      "id": "day2-general-40",
+      "examSection": "general",
+      "subject": "Economics",
+      "kind": "single-choice",
+      "prompt": "Assuming effective monetary-policy transmission and other conditions unchanged, a reduction in the policy repo rate by the RBI would generally tend to:",
+      "options": [
+        "Increase borrowing costs and reduce aggregate demand",
+        "Reduce borrowing costs and support interest-sensitive spending",
+        "Automatically increase every commercial bank's lending rate by the same amount",
+        "Have no possible influence on investment or consumption"
+      ],
+      "answer": "B",
+      "explanation": "With effective transmission, a repo-rate reduction generally lowers borrowing costs and supports interest-sensitive spending; it does not mechanically force every bank rate to move one-for-one. Hence B.",
+      "provenance": {
+        "kind": "ai-original",
+        "sourceNote": "Verbatim Day 2 ChatGPT mixed-practice Q40 from the user-provided public share; answer key recovered from the recorded evaluation and independently solved. Not an official PYQ.",
+        "sources": [
+          {
+            "publisher": "OpenStax",
+            "title": "Principles of Economics 3e",
+            "url": "https://openstax.org/details/books/principles-economics-3e",
+            "stance": "supports"
+          }
+        ]
+      },
+      "qa": {
+        "status": "needs-review",
+        "applicability": {
+          "mathematical": false,
+          "legal": false,
+          "timeSensitive": false
+        }
+      }
+    }
+  ]
+}

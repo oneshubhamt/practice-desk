@@ -14,7 +14,9 @@
     },
     "revised": {
       "authoring": "revised/bank.authoring.json",
-      "package": "revised/package.exam.json"
+      "package": "revised/package.exam.json",
+      "qualityReview": "revised/quality-review.json",
+      "blueprint": "revised/blueprint.json"
     }
   },
   "archive": {

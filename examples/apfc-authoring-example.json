@@ -38,7 +38,6 @@
     {
       "id": "labour-1",
       "examSection": "labour",
-      "syllabusHeadingId": "labour",
       "kind": "single-choice",
       "prompt": "For EPFO APFC, which type of question is shown in this example?",
       "options": [
@@ -55,12 +54,12 @@
       },
       "qa": {
         "status": "unchecked"
-      }
+      },
+      "subject": "Industrial Relations, Labour Codes and Social Security in India"
     },
     {
       "id": "accounts-1",
       "examSection": "accountancy",
-      "syllabusHeadingId": "accountancy",
       "kind": "single-choice",
       "prompt": "In double-entry accounting, each transaction has:",
       "options": [
@@ -77,12 +76,12 @@
       },
       "qa": {
         "status": "unchecked"
-      }
+      },
+      "subject": "Principles of Accountancy, Auditing and Insurance"
     },
     {
       "id": "nat-1",
       "examSection": "statistics",
-      "syllabusHeadingId": "maths",
       "kind": "numeric-entry",
       "prompt": "Find the arithmetic mean of 3, 4 and 5.",
       "answer": [
@@ -96,7 +95,8 @@
       },
       "qa": {
         "status": "unchecked"
-      }
+      },
+      "subject": "Elementary Mathematics, Statistics and General Mental Ability"
     }
   ]
 }

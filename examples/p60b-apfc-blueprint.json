@@ -43,15 +43,15 @@
       "exhaustive": true,
       "targets": [
         {
-          "key": "heading:labour",
+          "key": "subject:Industrial Relations, Labour Codes and Social Security in India",
           "count": 1
         },
         {
-          "key": "heading:economy",
+          "key": "subject:Developmental Issues and Present Trends in Indian Economy",
           "count": 1
         },
         {
-          "key": "heading:accountancy",
+          "key": "subject:Principles of Accountancy, Auditing and Insurance",
           "count": 1
         }
       ]

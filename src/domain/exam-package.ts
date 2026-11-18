@@ -5,6 +5,8 @@ import type { PaperRevision } from "./exam.js";
 import type { QuestionRevision, StimulusDefinition, ImageAsset } from "./question.js";
 import type { AnswerKeyRevision } from "./answer-key.js";
 import type { ExamId, QuestionRevisionId } from "./ids.js";
+import type {ExamTaxonomy,TaxonomyAssignments} from "./taxonomy.ts";
+import {assertTaxonomyExam,validateExamTaxonomy,validateTaxonomyAssignments} from "./taxonomy.ts";
 
 export interface ExamPackage {
   readonly format: "practice-desk-exam";
@@ -17,6 +19,10 @@ export interface ExamPackage {
   readonly stimuli?: readonly StimulusDefinition[];
   readonly assets?: readonly ImageAsset[];
   readonly explanations?: Readonly<Record<string,string>>;
+  /** Optional exam-owned semantic taxonomy, supplied by package/corpus data rather than runtime code. */
+  readonly taxonomy?: ExamTaxonomy;
+  /** Deepest taxonomy node explicitly assigned to each classified question revision. */
+  readonly taxonomyAssignments?: TaxonomyAssignments;
 }
 
 /** Reject hostile deep/broad/oversized authored JSON before hashing or cloning it. */
@@ -70,7 +76,7 @@ export function validateExamPackage(value: unknown): ExamPackage {
  if(![Object.prototype,null].includes(Object.getPrototypeOf(value)))
    throw new Error("Exam package must be a plain object");
  const fields=["format","version","examId","title","paper","answerKey","questions",
-   "stimuli","assets","explanations"];
+   "stimuli","assets","explanations","taxonomy","taxonomyAssignments"];
  for(const field of Object.keys(raw))
    if(!fields.includes(field))throw new Error("Exam package."+field+": unsupported field");
  if (raw.format !== "practice-desk-exam" || raw.version !== 1 ||
@@ -79,6 +85,10 @@ export function validateExamPackage(value: unknown): ExamPackage {
     !Array.isArray(raw.questions) || raw.questions.length > 2000)
     throw new Error("Invalid exam package header or question count");
  const questions = raw.questions.map(x => validateQuestionRevision(x));
+ const taxonomy=raw.taxonomy===undefined?undefined:validateExamTaxonomy(raw.taxonomy);
+ if(taxonomy)assertTaxonomyExam(taxonomy,raw.examId as ExamId);
+ const questionIds=new Set(questions.map(q=>q.id as string));
+ validateTaxonomyAssignments(taxonomy,raw.taxonomyAssignments,questionIds);
  const key = validateAnswerKeyRevision(raw.answerKey, questions);
  const paper = validatePaperRevision(raw.paper, questions, key);
  const ids = new Set(paper.sections.flatMap(s => s.questionRevisionIds));

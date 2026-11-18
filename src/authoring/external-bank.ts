@@ -2,8 +2,9 @@
  * This is NOT an editorial factual-verification service. Untrusted source and QA
  * assertions are always published with caution via the existing Wordgard compiler.
  */
-import {validateExamImportBudget} from "../domain/exam-package.ts";
+import {validateExamImportBudget,validateExamPackage} from "../domain/exam-package.ts";
 import type {ExamPackage} from "../domain/exam-package.ts";
+import {assertTaxonomyExam,resolveTaxonomyPath,taxonomyPathNodes,validateExamTaxonomy} from "../domain/taxonomy.ts";
 import type {AuthoringDraft,AuthoringQuestion,AuthoringMarkingRule} from "./authoring-draft.ts";
 import {validateAuthoringDraft} from "./authoring-draft.ts";
 import {inspectAuthoringPublication,publicationPlainText} from "./authoring-publisher.ts";
@@ -298,7 +299,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
  const qIds=new Set<string>();
  const questions:AuthoringQuestion[]=array(bank.questions,"$.questions",200,1).map((item,i)=>{
   const path="$.questions["+i+"]";
-  const q=object(item,path,["id","examSection","subject","syllabusHeadingId",
+  const q=object(item,path,["id","examSection","subject",
    "topic","subtopic","difficulty","kind","prompt","stimulusRef","options",
    "leftItems","rightItems","explanation","answer","tolerance","minSelections",
    "maxSelections","wordLimit","partialCreditEach","partialPenaltyEach","scoringOverride","provenance","qa"]);
@@ -414,14 +415,12 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
   if(stimulusRef&&!knownStimuli.has(stimulusRef))
    err(path+".stimulusRef","Unknown shared passage/table/chart/image");
   const subject=q.subject===undefined?"":text(q.subject,path+".subject",120,false);
-  const syllabusHeadingId=q.syllabusHeadingId===undefined?"":text(q.syllabusHeadingId,path+".syllabusHeadingId",80,false);
-  if(syllabusHeadingId&&subject)err(path+".subject","Use official heading OR custom subject");
   const topic=q.topic===undefined?"":text(q.topic,path+".topic",120,false);
   const subtopic=q.subtopic===undefined?"":text(q.subtopic,path+".subtopic",120,false);
   const difficulty=q.difficulty===undefined?"":q.difficulty;
   if(!["","easy","medium","hard"].includes(String(difficulty)))
    err(path+".difficulty","Invalid difficulty label");
-  return {id,section:section!.title,subject,syllabusHeadingId,
+  return {id,section:section!.title,subject,
    topic,subtopic,difficulty:difficulty as NonNullable<AuthoringQuestion["difficulty"]>,
    minSelections,maxSelections,
    ...(questionKind==="free-response"&&wordLimit!==undefined?{wordLimit}:{}),
@@ -524,4 +523,31 @@ export function compileExternalQuestionBank(value:unknown,existing:readonly Exam
  const report=inspectExternalQuestionBank(value,existing,comparisonSources);
  if(!report.valid||!report.compiled)throw new ExternalBankError(report.issues);
  return report.compiled;
+}
+
+/** Bind an explicitly supplied exam taxonomy to an already canonical external-source package.
+ * This never discovers taxonomy from examId. The authored Subject → Topic → Subtopic path
+ * must resolve exactly (canonical label or declared alias) and source/package order parity
+ * must hold before stable question-revision assignments are emitted.
+ */
+export function bindExternalQuestionTaxonomy(value:unknown,pkg:ExamPackage,input:unknown):ExamPackage {
+ const taxonomy=validateExamTaxonomy(input);
+ assertTaxonomyExam(taxonomy,pkg.examId);
+ const draft=toAuthoringDraft(value);
+ if(draft.examId!==pkg.examId)throw Error("Taxonomy binding source/package exam mismatch");
+ if(draft.questions.length!==pkg.questions.length)
+  throw Error("Taxonomy binding needs source/package question parity");
+ const assignments:Record<string,string>={};
+ for(let i=0;i<draft.questions.length;i++){
+  const q=draft.questions[i]!,subject=(q.subject??"").trim(),
+   topic=(q.topic??"").trim(),subtopic=(q.subtopic??"").trim();
+  if(!subject)throw Error("Maintained taxonomy classification requires a subject: "+q.id);
+  const labels=[subject,...(topic?[topic]:[]),...(subtopic?[subtopic]:[])];
+  const node=resolveTaxonomyPath(taxonomy,labels);
+  if(!node)throw Error("Authored classification is absent from taxonomy for "+q.id+": "+labels.join(" > "));
+  const hierarchy=taxonomyPathNodes(taxonomy,node.id);
+  if(hierarchy[0]?.kind!=="subject")throw Error("Taxonomy assignment must resolve from a subject root");
+  assignments[pkg.questions[i]!.id]=node.id;
+ }
+ return validateExamPackage({...pkg,taxonomy,taxonomyAssignments:assignments});
 }

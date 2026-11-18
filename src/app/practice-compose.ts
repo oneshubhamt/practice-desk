@@ -10,6 +10,7 @@ import type { PaperId,PaperRevisionId,AnswerKeyRevisionId,QuestionRevisionId } f
 import { answerKeyRevisionHash,paperRevisionHash } from "../domain/integrity.ts";
 import { selectDisplayResources } from "../domain/media.ts";
 import { hashJson,sha256 } from "../domain/hash.ts";
+import {taxonomyPathNodes} from "../domain/taxonomy.ts";
 
 /** This is a composition of ONE already validated, precisely selected paper.
  * No cross-exam mixing, guessed topics, or new scoring engine. */
@@ -22,12 +23,24 @@ export interface PracticeRequest {
 export interface PracticeInventory {
  readonly eligible:number;
  readonly sectionChoices:readonly {id:string;title:string;count:number}[];
- readonly topics:readonly {id:string;count:number}[];
+ readonly topics:readonly {id:string;count:number;path?:readonly string[]}[];
  readonly difficulties:readonly {id:string;count:number}[];
  readonly excluded:number;
  readonly cautions:number;
 }
 interface Candidate {readonly question:QuestionRevision;readonly section:SectionDefinition}
+const taxonomyTopicId=(taxonomyId:string,nodeId:string)=>"taxonomy:"+taxonomyId+":"+nodeId;
+const questionTopicIds=(source:ExamPackage,q:QuestionRevision):readonly string[]=>{
+ const assigned=source.taxonomyAssignments?.[q.id];
+ if(source.taxonomy&&assigned)
+  return taxonomyPathNodes(source.taxonomy,assigned).map(node=>taxonomyTopicId(source.taxonomy!.id,node.id));
+ return q.content.topicIds??[];
+};
+const taxonomyTopicPath=(source:ExamPackage,id:string):readonly string[]|undefined=>{
+ if(!source.taxonomy||!id.startsWith("taxonomy:"+source.taxonomy.id+":"))return undefined;
+ const nodeId=id.slice(("taxonomy:"+source.taxonomy.id+":").length);
+ try{return taxonomyPathNodes(source.taxonomy,nodeId).map(node=>node.label);}catch{return undefined;}
+};
 function candidates(source:ExamPackage,filters:PracticeFilters):Candidate[]{
  const byId=new Map(source.questions.map(q=>[q.id,q]));
  const eligible:Candidate[]=[];
@@ -37,7 +50,7 @@ function candidates(source:ExamPackage,filters:PracticeFilters):Candidate[]{
    if(!q)throw Error("Invalid source question inventory");
    if(!PRACTICE_ELIGIBLE_STATUSES.some(s=>s===q.editorial.status))continue;
    if(filters.sectionId&&section.id!==filters.sectionId)continue;
-   if(filters.topicId&&!(q.content.topicIds??[]).includes(filters.topicId as never))continue;
+   if(filters.topicId&&!questionTopicIds(source,q).includes(filters.topicId))continue;
    if(filters.difficulty&&!(q.content.tags??[]).includes("difficulty:"+filters.difficulty))continue;
    eligible.push({question:q,section});
   }
@@ -51,14 +64,16 @@ export function practiceInventory(source:ExamPackage,filters:PracticeFilters={})
  const scoped=candidates(source,filters);
  const count=(values:readonly string[])=>[...new Set(values)].sort().map(id=>({
    id,count:scoped.filter(({question})=>(
-     (question.content.topicIds??[]).includes(id as never)||
+     questionTopicIds(source,question).includes(id)||
      (question.content.tags??[]).includes("difficulty:"+id))).length
  }));
  const sectionChoices=source.paper.sections.map(s=>({
    id:s.id,title:s.title,
    count:scoped.filter(q=>q.section.id===s.id).length
  })).filter(s=>s.count>0);
- const topics=count(scoped.flatMap(({question})=>[...(question.content.topicIds??[])]));
+ const topics=count(scoped.flatMap(({question})=>[...questionTopicIds(source,question)]))
+   .map(entry=>{const path=taxonomyTopicPath(source,entry.id);
+    return {...entry,...(path?{path}:{})};});
  const difficulties=count(scoped.flatMap(({question})=>
    (question.content.tags??[]).filter(t=>/^difficulty:(easy|medium|hard)$/.test(t))
      .map(t=>t.slice("difficulty:".length))));
@@ -133,9 +148,13 @@ export function composePracticeSet(source:ExamPackage,request:PracticeRequest):{
  const questions=picked.map(c=>c.question);
  const resources=selectDisplayResources(questions,source.stimuli??[],source.assets??[]);
  const explanations=Object.fromEntries(Object.entries(source.explanations??{}).filter(([id])=>included.has(id as QuestionRevisionId)));
+ const taxonomyAssignments=source.taxonomyAssignments?
+   Object.fromEntries(ids.flatMap(id=>source.taxonomyAssignments?.[id]?
+     [[id,source.taxonomyAssignments[id]]]:[])):{};
  const bundle:ExamPackage={format:"practice-desk-exam",version:1,
    examId:source.examId,title:source.title+" · Custom set ("+request.count+")",
-   paper,answerKey,questions,...resources,explanations};
+   paper,answerKey,questions,...resources,explanations,
+   ...(source.taxonomy?{taxonomy:source.taxonomy,taxonomyAssignments}:{} )};
  validateExamPackage(bundle);
  const core:Omit<PracticeComposition,"contentHash">={
    schema:1,sourceExamId:source.examId,sourcePaperRevisionId:source.paper.id,

@@ -2,11 +2,54 @@
 
 **Goal:** create, review and package exam questions through local files/CLI with minimal context. Practice Desk has no embedded LLM, network source authenticator or external-agent access to browser History. Repository-maintained exam families may be explicitly preinstalled through the family switch in `question-banks/catalog.json`; their papers/editions are discovered through the nested manifest graph. Ad-hoc external outputs still require user-controlled import.
 
+## Start new authoring with a compact brief
+
+For new question generation, prefer a blueprint-driven authoring brief instead of making the model learn repository structure:
+
+```bash
+node scripts/content-blueprint.mjs brief plan.json \
+  --bank-id day4-batch-01 \
+  --title "Day 4 batch 1" \
+  --batch-size 8
+```
+
+If earlier batches already exist, list only those source files before the flags. The brief then reports the remaining blueprint deficits without emitting their question bodies:
+
+```bash
+node scripts/content-blueprint.mjs brief plan.json batch-01.json batch-02.json \
+  --bank-id day4-batch-03 \
+  --title "Day 4 batch 3" \
+  --batch-size 8
+```
+
+The packet contains the exam/paper identity, current remaining count, bounded quota deficits, source policy, suggested stable question IDs, the exact non-question paper envelope (including generic scoring/timing/navigation/tools/practice-mode rules when declared) and the small question-output contract. It deliberately omits repository/package placement, existing question bodies and media bytes. The workflow is fully usable with **one AI agent**; multiple agents or clean-context review may strengthen later review but are not prerequisites for authoring. Learner context remains optional: the ordinary brief contains none unless the user explicitly supplies a validated learner-focus packet.
+
+## Optional personalised authoring
+
+Practice Desk does **not** expose unrestricted browser History to an external agent. The Learning desk can instead derive a local `practice-desk-learner-focus` v1 packet for one selected exam:
+
+- **Off:** no learner block at all.
+- **Focused (recommended):** bounded aggregate observations such as attempts, correct/incorrect/unanswered, repeated misses, measured slow/revisit/flag evidence, bookmarks and FSRS-due counts. It contains no prior question bodies or selected responses.
+- **Detailed:** explicitly user-selected richer sharing. It may add bounded prior question prompts, wrong objective response/value text, measured timing/visits, self-reported error labels, FSRS evidence and source explanations. Correct responses and learner-authored free-response text are deliberately omitted.
+
+Choose the authoring intent truthfully. `exam-simulation` is **blueprint-first**: learner evidence may influence framing/selection only inside the required exam composition. `targeted-practice` is **focus-first with syllabus/blueprint guardrails**. The packet reports observations, not diagnoses.
+
+The Learning desk lets the user inspect/copy/export the focus packet. It can also load a standard `practice-desk-authoring-brief` and generate the complete personalised Authoring Brief locally using the same personalisation function as the CLI. For file/CLI workflows:
+
+```bash
+node scripts/content-blueprint.mjs brief plan.json existing-batch.json \
+  --taxonomy question-banks/<exam>/<year>/taxonomy.json \
+  --learner-focus practice-desk-learner-focus-<exam>.json \
+  --bank-id next-batch --title "Next personalised batch" --batch-size 8
+```
+
+The brief records `learnerFocusIncluded`, the exact packet and `personalisationIntent`. A cross-exam packet is rejected.
+
 ## Canonical source
 
 Author one `practice-desk-authoring` v1 JSON file. Generic format examples remain under `examples/`; maintained exam content belongs under [`question-banks/`](../question-banks/). For maintained content, read `question-banks/catalog.json`, follow the selected family’s root manifest → year manifest → paper manifest, then open only the required canonical authoring/source file. The root catalog is not a paper index. Do not ingest generated `.exam.json` packages unless runtime-package inspection is actually needed. Source-traced examples in `examples/source-grounded-*.json` are **reconstructions**, not authenticated official PYQs.
 
-A bank declares paper identity/edition/revision, scoring, timing/navigation, physical sections, optional shared stimuli/media and questions. Each question carries a stable id, section, semantic classification, response kind, candidate content, key, explanation and provenance/QA claims. Choice questions may use **2–26 options**; matching may use **1–26 left items and 1–26 right items**, and the key must reference only those declared items. Supported response kinds are `single-choice`, `multiple-select`, `numeric-entry`, `true-false`, `matching` and `free-response`; written responses are manually/self-assessed rather than silently machine-graded. A `free-response` question may declare an advisory whole-number `wordLimit`; **omitting it means no authored word target** and the compiler does not invent one. Paper `tools.wordCount` may be `auto`, `shown` or `hidden`; `auto` shows the counter in practice modes and hides it in exam simulation. Crossing an advisory limit never prevents saving. Section timers belong to physical sections, not subjects/topics.
+A bank declares paper identity/edition/revision, scoring, timing/navigation, physical sections, optional shared stimuli/media and questions. Each question carries a stable id, section, semantic classification, response kind, candidate content, key, explanation and provenance/QA claims. Semantic classification is authored as explicit `subject`, optional `topic` and optional `subtopic` labels. There is no `syllabusHeadingId` registry field and no exam-ID inference. Choice questions may use **2–26 options**; matching may use **1–26 left items and 1–26 right items**, and the key must reference only those declared items. Supported response kinds are `single-choice`, `multiple-select`, `numeric-entry`, `true-false`, `matching` and `free-response`; written responses are manually/self-assessed rather than silently machine-graded. A `free-response` question may declare an advisory whole-number `wordLimit`; **omitting it means no authored word target** and the compiler does not invent one. Paper `tools.wordCount` may be `auto`, `shown` or `hidden`; `auto` shows the counter in practice modes and hides it in exam simulation. Crossing an advisory limit never prevents saving. Section timers belong to physical sections, not subjects/topics.
 
 Scoring is data-driven rather than exam-name-driven. Paper scoring carries `correctMarks`, `incorrectMarks`, optional `unansweredMarks` (defaults to 0 in external authoring), optional `decimalPlaces`, and optional `byQuestionKind` rules. A physical section may declare `scoringOverride`, and `questions[].scoringOverride` may replace the resolved rule for one question, including a manual written-response ceiling. Runtime precedence remains question override → section override → question-kind rule → paper default. Studio and `question-bank-agent.mjs patch` use the same canonical fields.
 
@@ -33,6 +76,13 @@ node scripts/question-bank-agent.mjs show bank.json q-17 q-23 q-31
 
 Multi-question output deduplicates shared stimuli and media metadata and never emits inline media bytes. The existing one-question `show` response remains unchanged.
 
+
+### Maintained exam taxonomy
+
+When the selected year manifest declares `taxonomy.json`, use that file as the classification authority for maintained content. A blueprint may bind its stable `taxonomyId`, require taxonomy classification, and use stable `taxonomy:<subject-node-id>` subject quotas. Supply the same file with `--taxonomy` to `content-blueprint.mjs`, `question-bank-cli.mjs` or strict handoff operations that use the blueprint.
+
+The authoring brief includes the relevant taxonomy nodes so the authoring agent does not need to learn repository code. Write the canonical label or a declared alias into `subject` / `topic` / `subtopic`; corpus loading resolves that explicit path to stable node IDs and rejects maintained questions outside the bound taxonomy. Parent-only classification is allowed when the source supports only that level. Do not invent a topic or difficulty solely to fill metadata.
+
 ## Ordinary workflow
 
 ```bash
@@ -40,23 +90,29 @@ node scripts/question-bank-cli.mjs validate-bank bank.json
 node scripts/question-bank-cli.mjs qa-bank bank.json
 node scripts/question-bank-cli.mjs compile-bank bank.json NEW.exam.json
 
+# Taxonomy-gated blueprint publication
+node scripts/question-bank-cli.mjs compile-bank bank.json NEW.exam.json \
+  --blueprint plan.json --taxonomy question-banks/<exam>/<year>/taxonomy.json
+
 # Small-context inspection/correction
 node scripts/question-bank-agent.mjs inspect bank.json
 node scripts/question-bank-agent.mjs show bank.json QUESTION-ID
 node scripts/question-bank-agent.mjs patch bank.json ops.json NEW-bank.json --dry-run
 ```
 
+When `compile-bank` receives a matching `--taxonomy`, the emitted exam package carries that validated taxonomy plus stable question-revision → taxonomy-node assignments; it is not merely a blueprint-time hint.
+
 Every agent patch creates a new immutable source revision: `nextRevision` is required and must strictly exceed the input revision. New questions and materially edited questions are forced back to `needs-review`; a patch cannot self-certify its own changes.
 
 Research actual syllabus/source documents, dates/current law, original item numbers and answer rationale outside the offline app. Label paraphrases `reconstruction`; claim `official-pyq` only when independently authenticated.
 
-## Blind quality review
+## Layered quality review
 
 ```bash
 node scripts/agent-handoff.mjs prepare bank.json NEW-review-dir --allow-create
 ```
 
-This creates candidate-only review material without printing answers/explanations/base64 media. The reviewer independently solves the items and fills all 20 assessments plus evidence. Current v2 review records explicitly declare `mathematical`, `legal` and `timeSensitive` applicability; legal/time-sensitive claims require an ISO `asOfDate` and matching source evidence, while mathematics requires proof/source-backed checking.
+This creates answer-hidden candidate-only material without printing answers/explanations/base64 media. The v3 review records the truthful `reviewMode` (`self-review`, `clean-context`, or `independent-agent`), requires a second-pass solution, compact semantic checks per item, and six bank-level checks once. It explicitly declares `mathematical`, `legal`, `timeSensitive`, and `visual` applicability; legal/time-sensitive claims require an ISO `asOfDate` and matching source evidence, mathematics requires proof/source-backed checking, and visual items require an actual visual-inspection claim.
 
 The initial template is intentionally pending and **cannot publish**. A completed checklist, SHA, URL, reviewer label or timestamp is not independent factual authentication.
 
@@ -81,6 +137,8 @@ node scripts/agent-handoff.mjs publish pdf intake.json original.json paper.pdf r
 
 Optional blueprint/cognitive files can enforce planned quotas. Partial batches may remain structurally valid for continued work but cannot publish until required totals/allocations are complete.
 
-Ad-hoc external packages are imported **manually** into Library. A repository-maintained family is preinstalled only when its root catalog entry has `preinstalled: true`; the build then follows that family’s manifest graph to its canonical papers. Set `preinstalled: false` and rebuild to exclude the family while keeping its corpus installed. To remove the family from the repository corpus itself, delete both its catalog entry and active family directory in the same change; reciprocal reachability rejects unregistered active bank files. Append maintained papers by adding a self-contained paper folder plus one year-manifest entry; do not add package paths to the root catalog. For paired/PDF results outside that maintained corpus, import Source first, then Reviewed, and retain source documents/sidecars externally. Never overwrite an existing immutable revision.
+Ad-hoc external packages are imported **manually** into Library. For repository-maintained **custom mocks**, use `scripts/question-bank-corpus.mjs add-paper` or `append-revision` after strict review/blueprint completion rather than manually editing the corpus graph. Both commands support `--dry-run`, stage and validate the complete prospective graph, create new edition folders without overwrite and roll back their own writes if final validation fails. PYQ Source/Reviewed publication remains on the editorial/PDF pathway.
+
+A repository-maintained family is preinstalled only when its root catalog entry has `preinstalled: true`; the build then follows that family’s manifest graph to its canonical papers. For a preinstalled canonical maintained mock backed by `bank.authoring.json`, the paper manifest must bind completed `quality-review.json` and `blueprint.json` sidecars. Catalog loading re-audits both against the exact current source and rejects missing, null, stale or publication-incomplete evidence. Never manufacture a passing sidecar merely to satisfy the manifest; keep an unfinished paper noncanonical/nonpreinstalled until genuine evidence exists. Set `preinstalled: false` and rebuild to exclude the family while keeping its corpus installed. To remove the family from the repository corpus itself, delete both its catalog entry and active family directory in the same change; reciprocal reachability rejects unregistered active bank files. For supported maintained custom mocks, let the transactional corpus command create the self-contained folder/year-manifest change; no root-catalog package path is needed. For paired/PDF results outside that maintained corpus, import Source first, then Reviewed, and retain source documents/sidecars externally. Never overwrite an existing immutable revision.
 
 For advanced quota, Source/Reviewed and PDF semantics read [AGENT_CONTENT_PIPELINE.md](architecture/AGENT_CONTENT_PIPELINE.md). Exact runtime/domain invariants live in [DATA_CONTRACTS.md](architecture/DATA_CONTRACTS.md). Machine-discoverable actions are in [practice-desk-capabilities.v1.json](contracts/practice-desk-capabilities.v1.json).

@@ -26,7 +26,7 @@ import {paperEditionLabel} from "../app/editorial-labels.ts";
 import {scoreableMaximum} from "../engine/score-ceiling.ts";
 import {downloadText} from "../app/download-file.ts";
 import {wordgardEditorPort} from "./wordgard-adapter.ts";
-import {syllabusForExam,syllabusHeading,UNCLASSIFIED_SUBJECT} from "../learning/syllabus-taxonomy.ts";
+import {UNCLASSIFIED_SUBJECT} from "../learning/syllabus-taxonomy.ts";
 import type {EditorSession,AuthoringEditCommand} from "./vendor-ports.ts";
 import {AUTHORING_MAX_BYTES,newAuthoringDraft,newAuthoringQuestion,validateAuthoringDraft,
  validateAuthoringShelf,requiresExternalQuality,
@@ -228,8 +228,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   ].join("");
   container.hidden=false;
   const questionOptions=d.questions.map((q,i)=>option(q.id,(i+1)+". "+q.section+
-    " · "+(q.syllabusHeadingId?syllabusHeading(d.examId,q.syllabusHeadingId)?.label:
-      q.subject?.trim()||UNCLASSIFIED_SUBJECT)+" · "+labels[q.kind],questionId)).join("");
+    " · "+(q.subject?.trim()||UNCLASSIFIED_SUBJECT)+" · "+labels[q.kind],questionId)).join("");
   const draftOptions=draftsOptions(shelf);
   const staged=stage?inspectStagingWorkspace(stage):null;
   const shown=staged?.questions.filter(item=>stageFilter==="errors"?
@@ -375,7 +374,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
    const maximum=scoreableMaximum(compiled.paper,compiled.answerKey,compiled.questions);
    const coverage=new Map<string,number>(),kinds=new Map<string,number>();
    for(const q of draft.questions){
-    const label=q.syllabusHeadingId||q.subject||"Unclassified";
+    const label=q.subject||"Unclassified";
     coverage.set(label,(coverage.get(label)??0)+1);
     kinds.set(q.kind,(kinds.get(q.kind)??0)+1);
    }
@@ -674,7 +673,6 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
        ...(value==="sectional"?{sectionNavigation:"sequential-locked"}:{})}));
      void render();
    }else updateMetadata(key,value);
-   if(key==="examId")refreshOfficialHeadingChoices();
   };
   for(const [id,key] of [["pd-author-early-submit","allowEarlySubmit"],
     ["pd-author-allow-review","allowReview"]] as const)
@@ -858,41 +856,16 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
   if(rightCount)rightCount.onchange=()=>resizeCurrent("rightItems",Number(rightCount.value),1);
   const tolerance=find<HTMLInputElement>("pd-author-tolerance");
   if(tolerance)tolerance.onchange=e=>updateQuestion("tolerance",Number((e.target as HTMLInputElement).value));
-  const refreshOfficialHeadingChoices=()=>{
-   const select=find<HTMLSelectElement>("pd-author-syllabus-heading");
-   const catalogue=syllabusForExam(active().examId);
-   const selected=question().syllabusHeadingId??"";
-   select.innerHTML=option("",catalogue?"Custom subject / Unclassified":"No official catalogue for this exam",selected)+
-     (catalogue?.headings??[]).map(h=>option(h.id,h.label,selected)).join("");
-   select.disabled=!catalogue;
-  };
   const refreshSubjectSummary=()=>{
-   const q=question();
-   const value=q.syllabusHeadingId?
-     syllabusHeading(active().examId,q.syllabusHeadingId)?.label??"Unknown heading":
-     q.subject?.trim()||UNCLASSIFIED_SUBJECT;
+   const value=question().subject?.trim()||UNCLASSIFIED_SUBJECT;
    const line=container.querySelector<HTMLElement>(".pd-author-taxonomy-summary");
    if(line)line.textContent="Classification: "+value+
-     ". Section timers and subjects are independent; no classification is inferred.";
+     ". Official exam taxonomies are supplied as data by the corpus/authoring brief; Studio never infers one from the exam ID. Section timers and subjects are independent.";
   };
-  // Timed examination sections and syllabus subjects are unrelated dimensions.
   find<HTMLInputElement>("pd-author-subject").onchange=e=>{
    const subject=(e.target as HTMLInputElement).value;
-   const heading=container.querySelector<HTMLSelectElement>("#pd-author-syllabus-heading");
-   if(subject.trim()&&heading)heading.value="";
-   try{changeDraft(d=>({...d,questions:d.questions.map(q=>q.id===questionId?
-     {...q,subject,syllabusHeadingId:subject.trim()?"":q.syllabusHeadingId??""}:q)}));}
+   try{changeDraft(d=>({...d,questions:d.questions.map(q=>q.id===questionId?{...q,subject}:q)}));}
    catch(error){status(error instanceof Error?error.message:"Invalid subject",true);}
-   refreshSubjectSummary();
-  };
-  const heading=container.querySelector<HTMLSelectElement>("#pd-author-syllabus-heading");
-  if(heading)heading.onchange=e=>{
-   const id=(e.target as HTMLSelectElement).value;
-   const subject=find<HTMLInputElement>("pd-author-subject");
-   if(id)subject.value="";
-   try{changeDraft(d=>({...d,questions:d.questions.map(q=>q.id===questionId?
-     {...q,syllabusHeadingId:id,subject:id?"":q.subject??""}:q)}));}
-   catch(error){status(error instanceof Error?error.message:"Invalid heading",true);}
    refreshSubjectSummary();
   };
   // A question's actual exam-section assignment is independent of subject.
