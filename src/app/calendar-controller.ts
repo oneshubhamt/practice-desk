@@ -186,8 +186,11 @@ export function createWorkspaceCalendarController(owner:CalendarControllerContex
     return '<div class="pd-calendar-screen"><div class="generic-heading page-heading"><div>'+
       '<span class="eyebrow">PLANNING</span><h1>Calendar</h1>'+
       '<p class="muted">Completed attempts, spaced-revision due points and durable scheduled mocks.</p></div>'+
-      '<div class="row"><button class="btn quiet" id="calendar-learning">Learning</button>'+
-      '<button class="btn" id="calendar-library">Library</button></div></div>'+
+      '<nav class="row workspace-nav" aria-label="Practice Desk sections">'+
+      '<button class="btn quiet" id="calendar-learning">Learning desk</button>'+
+      '<button class="btn quiet" id="calendar-history">History & insights</button>'+
+      '<button class="btn quiet" id="calendar-authoring">Authoring</button>'+
+      '<button class="btn quiet" id="calendar-library">← Test library</button></nav></div>'+
       (owner.warning?'<p class="generic-warning" role="status">'+escapeText(owner.warning)+'</p>':"")+
       '<section class="panel pad pd-calendar-scheduler"><div><h2>Schedule a full mock</h2>'+
       '<p class="fine">Stored with Practice Desk history and included in the same backup/restore archive.</p></div>'+
@@ -203,6 +206,8 @@ export function createWorkspaceCalendarController(owner:CalendarControllerContex
   function bindShell():void{
     owner.root.querySelector<HTMLButtonElement>("#calendar-library")!.onclick=()=>owner.go({screen:"library"});
     owner.root.querySelector<HTMLButtonElement>("#calendar-learning")!.onclick=()=>owner.go({screen:"learning"});
+    owner.root.querySelector<HTMLButtonElement>("#calendar-history")!.onclick=()=>owner.go({screen:"history"});
+    owner.root.querySelector<HTMLButtonElement>("#calendar-authoring")!.onclick=()=>owner.go({screen:"authoring"});
     const packageSelect=owner.root.querySelector<HTMLSelectElement>("#calendar-package")!;
     const duration=owner.root.querySelector<HTMLInputElement>("#calendar-duration")!;
     const deriveDuration=()=>{

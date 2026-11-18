@@ -6,7 +6,6 @@ import {isAttempt,isLearning} from "./stored-record-validator.ts";
 
 import {attemptModeForPractice,availablePracticeModes,configurePracticeMode,configureUntimedPractice,
  defaultPracticeMode,resolvePracticeMode,startGenericAttempt} from "./exam-package.ts";
-import {validateExamPackage} from "../domain/exam-package.ts";
 import type {ExamPackage} from "../domain/exam-package.ts";
 import type {PracticeMode} from "../workspace-settings.ts";
 import {paperTimeBudgetMs,sectionTimeBudgetMs} from "../domain/timing.ts";
@@ -23,12 +22,21 @@ import {frozenScoreSummary} from "./history-score.ts";
 
 
 import {examPreflight,preflightHTML,examRulesHTML} from "./exam-preflight.ts";
-import {paperEditionLabel} from "./editorial-labels.ts";
+import {paperEditionLabel,paperIdentifierLabel} from "./editorial-labels.ts";
 
 import {writePracticeSetups,type PracticeSetups} from "./practice-selection.ts";
 import {pairedCounterpart,pairedEdition} from "./exam-families.ts";
 
 import type {LibraryControllerContext} from "./coordinator-context.ts";
+
+const recentAttemptTitle=(owner:LibraryControllerContext,a:GenericAttempt):string=>{
+  const direct=owner.packages.get(a.packageId)?.title?.trim();
+  if(direct&&!direct.startsWith("authored:"))return direct;
+  const family=owner.families().find(f=>f.papers.some(p=>
+    p.examId===a.frozen.snapshot.examId&&p.paper.paperId===a.frozen.paper.paperId));
+  const paper=paperIdentifierLabel(a.frozen.paper.paperId);
+  return family?.title?family.title+" — "+paper:paper;
+};
 
 export function renderLibraryHTML(owner:LibraryControllerContext):string {
    const all=[...owner.records.values()].filter(isAttempt).sort((a,b)=>b.startedAt-a.startedAt);
@@ -113,7 +121,7 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
      (rawTopics.length?'<optgroup label="Source-supplied topic tags">'+
        rawTopics.map(entry=>filterOption(entry.id,entry.id+" ("+entry.count+")",owner.composeTopic)).join("")+
        '</optgroup>':"");
-   const builder=selected?'<section class="panel pad practice-builder" id="g-compose">'+
+   const builder=selected?'<div class="practice-builder" id="g-compose">'+
      '<details id="g-compose-details"'+(owner.composeOpen?' open':'')+'>'+
      '<summary>Create a custom practice set from this paper</summary>'+
      '<p class="fine">Draw from this paper and edition only. Preserve marking, navigation and timers. Excluded questions are not drawn; tags are never inferred.</p>'+
@@ -138,11 +146,14 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
      '<div class="row generic-actions"><button type="button" class="btn" id="g-compose-preview">Preview draw</button>'+
      '<button type="button" class="btn primary" id="g-compose-start"'+
      (owner.loading||owner.fallbackConflict||owner.storageFault?" disabled":"")+
-     '>Start custom set</button></div></details></section>':"";
+     '>Start custom set</button></div></details></div>':"";
    return '<div class="generic-heading home-heading"><div><span class="eyebrow">OFFLINE PRACTICE STUDIO</span>'+
      '<h1>Test library</h1><p class="muted">Choose a paper, work in exam conditions and learn from every attempt.</p></div>'+
-     '<div class="row"><button class="btn quiet" id="g-calendar">Calendar</button>'+
-     '<button class="btn quiet" id="g-history">History & insights →</button></div></div>'+
+     '<nav class="row workspace-nav" aria-label="Practice Desk sections">'+
+     '<button class="btn quiet" id="g-learning">Learning desk</button>'+
+     '<button class="btn quiet" id="g-calendar">Calendar</button>'+
+     '<button class="btn quiet" id="g-history">History & insights</button>'+
+     '<button class="btn quiet" id="g-authoring">Authoring</button></nav></div>'+
      (owner.warning?'<p class="generic-warning" role="status">'+escapeText(owner.warning)+'</p>':"")+
      (pending.length?'<section class="panel pad pending-panel" id="g-pending-attempts">'+
       '<div class="row between"><div><span class="eyebrow">PICK UP WHERE YOU LEFT OFF</span>'+
@@ -151,7 +162,7 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
       (pending.length>5?'<button type="button" class="textlink" id="g-pending-history">View all '+pending.length+' →</button>':"")+
       '</div><div class="pending-attempt-list">'+pending.slice(0,5).map(a=>
         '<button class="recent-attempt" data-attempt="'+escapeText(a.id)+'" aria-label="Resume '+escapeText(owner.packages.get(a.packageId)?.title??a.frozen.paper.paperId)+'">'+
-        '<b>'+escapeText(owner.packages.get(a.packageId)?.title??a.frozen.paper.paperId)+'</b>'+
+        '<b>'+escapeText(recentAttemptTitle(owner,a))+'</b>'+
         '<small>'+new Date(a.startedAt).toLocaleString()+' · '+
           escapeText(a.frozen.snapshot.mode.replaceAll("-"," "))+' · '+
           a.state.responses.filter(z=>z.response!==undefined).length+' answers · Resume →</small></button>').join("")+
@@ -165,7 +176,7 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
      '<select id="g-papers">'+options+'</select></div></div>'+
      (!selected?'<p class="generic-warning" role="status">'+
        (catalog.length===0&&!owner.choice?
-        'No examination bank is installed. Import a package or author a question bank to begin.':
+        'No examination bank is installed. Open Authoring to import or create one.':
         'Saved paper unavailable. Re-import its revision or select an installed paper.')+
        '</p>':"")+
      (hasEditions?'<div class="edition-row"><span class="picker" id="editionLabel">Paper edition</span>'+
@@ -189,54 +200,45 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
         (owner.untimedPractice?" checked":"")+'><span><strong>Untimed practice</strong>'+
         '<small>No countdown or automatic expiry. Keep the selected navigation and scoring rules; finish when ready.</small></span></label>'+
      '<div class="row generic-actions home-start"><button class="btn primary" id="g-start"'+
-      (owner.loading||owner.fallbackConflict||owner.storageFault||!selected?' disabled':'')+'>Start '+escapeText(modeLabel)+' →</button>'+
-      '<button class="btn" id="g-import"'+(owner.loading||owner.fallbackConflict||owner.storageFault?' disabled':'')+'>Import exam package</button>'+
-      '<button type="button" class="btn" id="g-image-prep">Prepare image for authoring</button>'+
-      '<button type="button" class="btn" id="g-author-open"'+(owner.loading?' disabled':'')+'>Author question bank</button></div>'+
-      '<input type="file" id="g-file" accept=".json,application/json" hidden>'+
-      '<p class="fine">Import a canonical <code>practice-desk-exam</code> package, or open Author question bank to stage a <code>practice-desk-authoring</code> source. '+
-      'Source and reviewed editions remain distinct. Answers, keys and solutions are hidden until the attempt ends.</p></section>'+
+      (owner.loading||owner.fallbackConflict||owner.storageFault||!selected?' disabled':'')+'>Start '+escapeText(modeLabel)+' →</button></div>'+
+      '<p class="fine">Answers, keys and solutions remain hidden until the attempt ends. Content import and authoring are managed separately in Authoring.</p>'+
+      builder+'</section>'+
      '<aside class="home-side"><section class="panel pad paper-preview"><span class="eyebrow">SELECTED PAPER</span>'+
       '<h2>'+escapeText(selected?.title??"Choose a paper")+'</h2>'+
-      '<p class="fine family-provenance">'+(family?.origin==="imported"?
-        "Imported/user-supplied package; Practice Desk does not authenticate official status.":
-        family?.origin==="included"?
-          (selectedIncluded?"Included practice package from the repository question-bank catalog; inclusion does not establish official status.":"Imported/user-supplied paper grouped under this included examination family; family membership does not establish official status."):
-        family?"Selected examination family; package provenance determines source/review status.":
-        "Saved examination unavailable. Re-import the bank or select another.")+'</p>'+
-      '<p class="fine">'+escapeText(selected?.paper.paperId??"")+
-       (selected?' · '+escapeText(paperEditionLabel(selected.paper)):'')+'</p>'+
+      '<div class="paper-meta-strip"><span><b>Source</b> '+
+        escapeText(family?.origin==="included"&&selectedIncluded?"Repository catalog":
+          family?"User / imported":"Unavailable")+'</span>'+
+      '<span><b>Edition</b> '+escapeText(selected?paperEditionLabel(selected.paper):"—")+'</span></div>'+
       '<div class="preview-metrics"><div><b>'+questionCount+'</b><small>Questions</small></div>'+
       '<div><b>'+escapeText(time)+'</b><small>Time</small></div><div><b>'+escapeText(previewStructure)+'</b><small>'+previewStructureLabel+'</small></div>'+
       '<div><b>'+escapeText(previewNavigation)+
       '</b><small>Navigation</small></div></div>'+
+      (preflight?'<p class="paper-marking-summary"><b>Marking:</b> '+
+        escapeText(preflight.hasVariableRules?'Variable by question · see details':preflight.ruleSummary)+'</p>':"")+
       '<p class="fine">Scoring and timer rules are frozen when you start; later paper edits cannot change a saved result.</p>'+
-      (preflight?preflightHTML(preflight):"")+'</section>'+
+      (preflight?'<details class="paper-detail-disclosure"><summary>Source & scoring details</summary>'+
+        preflightHTML(preflight)+'<p class="fine technical-paper-id"><b>Technical paper ID:</b> <code>'+
+        escapeText(selected?.paper.id??"")+'</code></p></details>':"")+'</section>'+
       '<section class="panel pad recent-panel"><div class="row between"><h2>Recent completed results</h2>'+
       '<button class="textlink" id="g-history-recent">View all →</button></div>'+
       (latest.length?latest.map(a=>'<button class="recent-attempt" data-attempt="'+escapeText(a.id)+'">'+
-       '<b>'+escapeText(owner.packages.get(a.packageId)?.title??a.frozen.paper.paperId)+'</b>'+
+       '<b>'+escapeText(recentAttemptTitle(owner,a))+'</b>'+
        '<small>'+new Date(a.finishedAt??a.startedAt).toLocaleDateString()+' · '+
          escapeText(a.frozen.snapshot.mode.replaceAll("-"," "))+' · '+
          escapeText(frozenScoreSummary(a)?.text??"Score unavailable")+'</small></button>').join(""):
        '<p class="fine">Your three most recent completed results will appear here; unfinished attempts stay in their own Resume area.</p>')+
-      '</section></aside></div>'+builder+
-      '<div id="pd-authoring-container" class="pd-authoring-container" hidden></div>'+
-      '<div class="home-utilities"><section class="panel pad learning-entry"><div><span class="eyebrow">REVISE & IMPROVE</span>'+
-       '<h2>Learning & revision</h2><p class="fine">Error notebook, FSRS-7 spaced review, source-linked revision tests and topic evidence.</p></div>'+
-       '<button class="btn primary" id="g-learning">Open learning desk →</button></section>'+
-      '<section class="panel pad backup-home"><div><span class="eyebrow">YOUR DATA</span><h2>Portable offline history</h2>'+
-       '<p class="fine">Stored in this browser. Export a backup to protect your history and notes.</p></div>'+
+      '</section></aside></div>'+
+      (preflight?examRulesHTML(preflight):"")+
+      '<section class="panel pad backup-home home-backup-compact"><div><span class="eyebrow">YOUR DATA</span><h2>Data & backup</h2>'+
+       '<p class="fine">Attempts, notes and preferences live in this browser. Export a checksum-verified backup to protect them.</p></div>'+
        '<div class="row generic-actions"><button class="btn" id="g-export-history"'+(owner.loading?" disabled":"")+'>Export backup</button>'+
        '<button class="btn" id="g-import-history"'+(owner.loading||owner.fallbackConflict||owner.storageFault?" disabled":"")+'>Import backup</button></div>'+
-       '<input type="file" id="g-history-file" accept=".json,.gz,application/json,application/gzip" hidden></section></div>'+
-       // At desktop widths the user should see the exam setup, not four
-       // dashboard totals, first. Retain all counts after primary workflows.
-     '<div class="home-stats">'+
+       '<input type="file" id="g-history-file" accept=".json,.gz,application/json,application/gzip" hidden></section>'+
+       // Keep a compact status strip after the primary practice workflow.
+     '<div class="home-stats home-status-strip">'+
        [['Paper editions',owner.packages.size],['Completed tests',complete.length],['Attempts in progress',pending.length],['Notebook cards',[...owner.records.values()].filter(isLearning).length]]
          .map(([name,value])=>'<div class="home-stat"><small>'+escapeText(name)+'</small><b>'+escapeText(value)+'</b></div>').join("")+
-     '</div>'+
-       (preflight?examRulesHTML(preflight):"");
+     '</div>';
  }
 
 export const applyLibraryFamily=(owner:LibraryControllerContext,id:string):void=>{
@@ -276,6 +278,7 @@ export function bindLibraryScreen(owner:LibraryControllerContext):void{
 
      owner.root.querySelector<HTMLButtonElement>("#g-learning")!.onclick=()=>owner.go({screen:"learning"});
      owner.root.querySelector<HTMLButtonElement>("#g-calendar")!.onclick=()=>owner.go({screen:"calendar"});
+     owner.root.querySelector<HTMLButtonElement>("#g-authoring")!.onclick=()=>owner.go({screen:"authoring"});
      owner.root.querySelector<HTMLSelectElement>("#g-family")!.onchange=e=>{
        const id=(e.target as HTMLSelectElement).value;
        if(!owner.families().some(f=>f.id===id))return;
@@ -429,45 +432,11 @@ export function bindLibraryScreen(owner:LibraryControllerContext):void{
        }
        owner.warning="";void owner.save(owner.attempt);owner.go({screen:"exam",attemptId:owner.attempt.id});
      };
-     owner.root.querySelector<HTMLButtonElement>("#g-import")!.onclick=()=>owner.root.querySelector<HTMLInputElement>("#g-file")?.click();
-     owner.root.querySelector<HTMLButtonElement>("#g-image-prep")!.onclick=e=>owner.imagePreparation.open(e.currentTarget as HTMLElement);
-     owner.root.querySelector<HTMLButtonElement>("#g-author-open")!.onclick=e=>{
-       const target=owner.root.querySelector<HTMLElement>("#pd-authoring-container");
-       if(target)void owner.authoringStudio.open(target,e.currentTarget as HTMLElement);
-     };
      owner.root.querySelector<HTMLButtonElement>("#g-export-history")!.onclick=()=>{void owner.downloadBackup();};
      owner.root.querySelector<HTMLButtonElement>("#g-import-history")!.onclick=()=>owner.root.querySelector<HTMLInputElement>("#g-history-file")?.click();
      owner.root.querySelector<HTMLInputElement>("#g-history-file")!.onchange=async e=>{
        const file=(e.target as HTMLInputElement).files?.[0];if(!file)return;
        try{await owner.importHistory(file);}catch(error){owner.notice(error instanceof Error?error.message:"History import failed");}
-     };
-     owner.root.querySelector<HTMLInputElement>("#g-file")!.onchange=async e=>{
-       const file=(e.target as HTMLInputElement).files?.[0];if(!file)return;
-       if(file.size>25*1024*1024){owner.notice("Exam package exceeds the 25 MiB import limit.");return;}
-       try{
-         const source=JSON.parse(await file.text());
-         if(source&&typeof source==="object"&&!Array.isArray(source)&&
-           source.format==="practice-desk-authoring"){
-           const target=owner.root.querySelector<HTMLElement>("#pd-authoring-container");
-           const trigger=owner.root.querySelector<HTMLElement>("#g-author-open");
-           if(!target||!trigger)throw Error("Authoring studio unavailable");
-           await owner.authoringStudio.open(target,trigger);
-           await owner.authoringStudio.stageFiles([file]);
-           return; // AI source is staged, never silently published.
-         }
-         const pkg=validateExamPackage(source);
-         if(owner.packages.has(pkg.paper.id))throw new Error("Paper revision ID already exists. Supply a new revision ID.");
-         if(!await owner.save({recordType:"generic-package",saveRevision:0,id:"generic-package:"+pkg.paper.id,bundle:pkg}))return;
-         owner.packages.set(pkg.paper.id,pkg);
-         const targetFamily=owner.families().find(f=>f.papers.some(p=>p.paper.id===pkg.paper.id));
-         if(!targetFamily)throw new Error("Imported package has no exam family");
-         owner.applyFamily(targetFamily.id);
-         owner.choice=pkg.paper.id;owner.singleSection=0;
-         owner.practiceMode=resolvePracticeMode(pkg.paper,owner.practiceMode);
-         if(pkg.paper.edition==="source"||pkg.paper.edition==="reviewed")owner.editionView=pkg.paper.edition;
-         owner.saveSelection();
-         owner.notice("Exam package validated and imported. Your paper is ready to practise.");
-       }catch(error){owner.notice(error instanceof Error?error.message:"Invalid exam package");}
      };
      owner.root.querySelectorAll<HTMLButtonElement>("[data-delete]").forEach(button=>button.onclick=()=>{
        void owner.removeSavedAttempt(button.dataset.delete??"","completed");

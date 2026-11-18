@@ -1,5 +1,6 @@
 import type {ExamPackage} from "../domain/exam-package.ts";
 import type {GenericAttempt} from "../engine/generic-attempt.ts";
+import {paperIdentifierLabel} from "./editorial-labels.ts";
 
 /** The archive query is VIEW-ONLY. Filters never alter saved attempts or
  * all-time mock/learning statistics. All identities come from frozen attempts,
@@ -57,7 +58,7 @@ export function activeHistoryFilterCount(query:HistoryQuery):number{
 }
 export function historyAttemptLabel(a:GenericAttempt,packages:ReadonlyMap<string,ExamPackage>):string{
  return packages.get(a.packageId)?.title??
-  a.frozen.paper.paperId+(a.frozen.paper.edition==="custom"?" · Practice":" · "+a.frozen.paper.edition);
+  paperIdentifierLabel(a.frozen.paper.paperId)+(a.frozen.paper.edition==="custom"?" · Practice":" · "+a.frozen.paper.edition);
 }
 export function filteredHistory(attempts:readonly GenericAttempt[],packages:ReadonlyMap<string,ExamPackage>,
  query:HistoryQuery):GenericAttempt[]{

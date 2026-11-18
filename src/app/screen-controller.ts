@@ -10,13 +10,14 @@ import {bindHistoryScreen} from "./history-controller.ts";
 import {bindLibraryScreen} from "./library-controller.ts";
 import {bindResultScreen} from "./result-controller.ts";
 import {bindExamScreen} from "./exam-controller.ts";
+import {renderAuthoringScreenHTML,bindAuthoringScreen} from "./authoring-screen.ts";
 export const reportWorkspaceNotice=(owner:ScreenControllerContext,s:string)=>{owner.warning=s;owner.draw();};
 
 export function drawWorkspaceScreen(owner:ScreenControllerContext,):void{
    if(owner.disposed)return;
    // Do not destroy a live Wordgard editor for a background state notification.
    // Manual close or successful publication refreshes Library explicitly.
-   if(owner.view==="library"&&owner.authoringStudio.isOpen())return;
+   if(owner.view==="authoring"&&owner.authoringStudio.isOpen())return;
    owner.imageViewer.beforeRender();owner.imagePreparation.beforeRender();owner.authoringStudio.beforeRender();
    const currentSection=owner.attempt?.frozen.paper.sections[owner.attempt.state.sectionIndex];
    const currentQuestion=owner.attempt?.state.questionIndex;
@@ -30,18 +31,21 @@ export function drawWorkspaceScreen(owner:ScreenControllerContext,):void{
        owner.resultTab==="review"?"Question review":"Question timing ledger")+".": 
      owner.view==="history"?"History and insights.":
      owner.view==="learning"?"Learning and spaced revision.":
-     owner.view==="calendar"?"Practice calendar.":"Test library.";
+     owner.view==="calendar"?"Practice calendar.":
+     owner.view==="authoring"?"Authoring and content management.":"Test library.";
    owner.screenRenderer.render({
      screen:owner.view,screenKey,announcement,resultPane:owner.resultTab,
      html:()=>owner.view==="library"?owner.listHTML():owner.view==="history"?
        historyHTML([...owner.records.values()].filter(isAttempt),owner.packages,
          owner.historyQuery,
          owner.loading,owner.fallbackConflict||owner.storageFault,owner.warning,owner.storageBackend?.kind==="indexeddb"?"indexeddb":"fallback",owner.storageSnapshot()):
-       owner.view==="exam"?owner.examHTML():owner.view==="calendar"?"":owner.resultHTML()
+       owner.view==="exam"?owner.examHTML():owner.view==="calendar"?"":owner.view==="authoring"?
+       renderAuthoringScreenHTML(owner):owner.resultHTML()
    },owner.learningDesk,owner.calendarController);
    if(owner.view==="learning"||owner.view==="calendar")return;
    if(owner.view==="history"){bindHistoryScreen(owner);return;}
    if(owner.view==="library"){bindLibraryScreen(owner);return;}
+   if(owner.view==="authoring"){bindAuthoringScreen(owner);return;}
    owner.root.querySelector<HTMLButtonElement>("#g-library")!.onclick=()=>{
      if(owner.view==="exam"&&owner.attempt?.finishedAt===null){
        if(!confirm("Return to library? Your test timer will keep running and the attempt can be resumed."))return;

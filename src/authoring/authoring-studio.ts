@@ -1,4 +1,4 @@
-/** P47-5C: one integrated Library authoring surface.
+/** P47-5C: one integrated authoring surface.
  * Independently mounted controller; no exam state, scoring, routes or publisher writes.
  * P47-5D will take these validated drafts through a separate freeze/publish service.
  */
@@ -469,7 +469,7 @@ export function createQuestionAuthoringStudio(actions:AuthoringPublicationAction
      }
     }
     await actions.publish(prepared.packageValue);
-    // The integrated Library owner refreshes the screen only after a
+    // The authoring-screen owner refreshes only after a
     // successfully committed package; do not change anything here afterwards.
    }catch(error){
     if(error instanceof PublicationValidationError)showIssues(error.issues);
