@@ -313,7 +313,7 @@ try{
   await page.locator("#result-tab-review").click();
   await page.locator("[data-add-card]").first().click();
   await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
-  await page.getByRole("button",{name:/Open learning desk/}).click();await route(page,"learning");
+  await page.locator("#g-learning").click();await route(page,"learning");
   await page.locator("#learning-due").click();
   check(await page.locator(".learning-answer").count()===0,"FSRS answer leaked before reveal");
   await page.locator("#learning-reveal").click();
