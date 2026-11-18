@@ -273,10 +273,11 @@ test("P47-5C release carries only local WOFF2 and both KaTeX/Wordgard MIT notice
  assert.doesNotMatch(html,/url\([^)]*\.woff\)/);
  // Pass 3 adds the full pinned Calendar surface (~212 KB minified runtime, measured in CI).
  // Keep a bounded post-integration review ceiling rather than silently dropping Calendar functionality.
- // The standalone intentionally includes the current PFRDA Day 1 package (~207 KiB
- // over the 2.66 MiB CGL-only build). Keep a tight bound so future preinstalls
+ // The standalone intentionally includes the current PFRDA Day 1 package plus
+ // the consolidated Day 3 package. Day 3 adds ~46 KiB to the generated standalone
+ // versus the previously reviewed build. Keep a tight bound so future preinstalls
  // must make an explicit payload-budget decision rather than growing silently.
- assert.ok(size<2_900_000,"Bundled file exceeds reviewed preinstalled-bank size limit: "+size);
+ assert.ok(size<2_950_000,"Bundled file exceeds reviewed preinstalled-bank size limit: "+size);
 });
 }
 await registerMathRenderingTests();
