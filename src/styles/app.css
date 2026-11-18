@@ -1771,3 +1771,5 @@ html[data-theme="dark"] .pd-author-studio .pd-author-preview-choice>span{
 .authoring-bank-actions{flex:none;justify-content:flex-end}
 @media(max-width:760px){.authoring-bank-actions{width:100%}.authoring-bank-actions .btn{flex:1 1 140px}}
 @media(max-width:300px){.authoring-bank-actions .btn{flex:1 1 100%;min-width:0;overflow-wrap:anywhere}}
+
+.learning-authoring-focus{scroll-margin-block-start:12px}
