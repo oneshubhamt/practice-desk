@@ -218,6 +218,8 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
       '<div><b>'+escapeText(time)+'</b><small>Time</small></div><div><b>'+escapeText(previewStructure)+'</b><small>'+previewStructureLabel+'</small></div>'+
       '<div><b>'+escapeText(previewNavigation)+
       '</b><small>Navigation</small></div></div>'+
+      (preflight?'<p class="paper-marking-summary"><b>Marking:</b> '+
+        escapeText(preflight.hasVariableRules?'Variable by question · see details':preflight.ruleSummary)+'</p>':"")+
       '<p class="fine">Scoring and timer rules are frozen when you start; later paper edits cannot change a saved result.</p>'+
       (preflight?'<details class="paper-detail-disclosure"><summary>Source & scoring details</summary>'+
         preflightHTML(preflight)+'<p class="fine technical-paper-id"><b>Technical paper ID:</b> <code>'+
@@ -225,7 +227,7 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
       '<section class="panel pad recent-panel"><div class="row between"><h2>Recent completed results</h2>'+
       '<button class="textlink" id="g-history-recent">View all →</button></div>'+
       (latest.length?latest.map(a=>'<button class="recent-attempt" data-attempt="'+escapeText(a.id)+'">'+
-       '<b>'+escapeText(owner.packages.get(a.packageId)?.title??a.frozen.paper.paperId)+'</b>'+
+       '<b>'+escapeText(recentAttemptTitle(owner,a))+'</b>'+
        '<small>'+new Date(a.finishedAt??a.startedAt).toLocaleDateString()+' · '+
          escapeText(a.frozen.snapshot.mode.replaceAll("-"," "))+' · '+
          escapeText(frozenScoreSummary(a)?.text??"Score unavailable")+'</small></button>').join(""):
