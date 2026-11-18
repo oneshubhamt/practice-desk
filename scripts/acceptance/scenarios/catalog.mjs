@@ -6,6 +6,7 @@ export async function catalogLifecycle(){
  const {pathToFileURL}=await import("node:url");
  const {openHarness,check,root}=await import("../../browser/fixtures.mjs");
  const {buildPracticeDeskHtml}=await import("../../build-target.mjs");
+ const {importModernPaper}=await import("../../paper-select.mjs");
  const base=JSON.parse(await readFile(join(root,"question-banks","catalog.json"),"utf8"));
  const dir=await mkdtemp(join(tmpdir(),"pd-catalog-removal-"));
  const variant=async(name,disabled)=>{
@@ -64,11 +65,11 @@ export async function catalogLifecycle(){
   check(await page.locator("#g-family option").count()===0,"Empty catalog rendered a phantom exam family");
   check(await page.locator("#g-papers option").count()===1,"Empty catalog did not render one neutral paper placeholder");
   check(await page.locator("#g-start").isDisabled(),"Empty catalog enabled Start without a paper");
-  check(!(await page.locator("#g-import").isDisabled()),"Empty catalog disabled package import");
+  check(await page.locator("#g-authoring").isEnabled(),"Empty catalog disabled Authoring destination");
   check((await page.locator(".generic-warning").innerText()).includes("No examination bank is installed"),
    "Empty Library did not explain the removable-bank state");
-  const pkg=await readFile(join(root,"question-banks","pfrda","2026","mocks","day-01","revised","package.exam.json"),"utf8");
-  await page.locator("#g-file").setInputFiles({name:"pfrda-day1.json",mimeType:"application/json",buffer:Buffer.from(pkg)});
+  const pkg=JSON.parse(await readFile(join(root,"question-banks","pfrda","2026","mocks","day-01","revised","package.exam.json"),"utf8"));
+  await importModernPaper(page,pkg,"pfrda-day1.json");
   await page.waitForFunction(()=>document.querySelectorAll("#g-family option").length===1);
   check((await page.locator("#g-family option").first().innerText()).includes("pfrda-grade-a-2026-phase-ii"),
    "Import into an empty Library did not create the PFRDA family");
